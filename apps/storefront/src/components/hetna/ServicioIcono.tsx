@@ -1,0 +1,78 @@
+// Iconos de linea para cada servicio de HETNA CNC
+const TRAZOS: Record<string, React.ReactNode> = {
+  generador: (
+    <>
+      <path d="M4 20l4-1 10-10-3-3L5 16l-1 4z" />
+      <path d="M13.5 6.5l3 3" />
+      <path d="M15 3l1 1M20 8l1 1M19 3v2M22 5h-2" />
+    </>
+  ),
+  cam: (
+    <>
+      <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />
+      <path d="M7.5 14h9" />
+    </>
+  ),
+  ejes: (
+    <>
+      <path d="M12 12V3M12 12l8 5M12 12l-8 5" />
+      <path d="M9.5 5.5L12 3l2.5 2.5M18 14.5l2 2.5-3 .5M6 14.5L4 17l3 .5" />
+    </>
+  ),
+  torno: (
+    <>
+      <rect x="3" y="8" width="4" height="8" rx="1" />
+      <path d="M7 10h10v4H7M17 11h4v2h-4" />
+      <path d="M11 10v4M14 10v4" />
+    </>
+  ),
+  aprender: (
+    <>
+      <path d="M2 9l10-5 10 5-10 5L2 9z" />
+      <path d="M6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6" />
+    </>
+  ),
+  cotizador: (
+    <>
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5M9 13h7M9 17h4" />
+    </>
+  ),
+  calculadora: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M8 7h8v3H8zM8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01M16 17.5h.01" />
+    </>
+  ),
+  tienda: (
+    <>
+      <path d="M4 7h16l-1 13H5L4 7z" />
+      <path d="M9 7a3 3 0 0 1 6 0" />
+    </>
+  ),
+}
+
+export const ServicioIcono = ({
+  nombre,
+  size = 24,
+  className,
+}: {
+  nombre: string
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.7"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    {TRAZOS[nombre] || TRAZOS.cotizador}
+  </svg>
+)
