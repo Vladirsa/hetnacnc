@@ -4,11 +4,11 @@
 set -e
 cd "$(dirname "$0")/.."
 
-echo "== 1/3 Tablas del cotizador (esquema taller)"
+echo "== 1/4 Tablas del cotizador (esquema taller)"
 docker exec -i hetnacnc-postgres psql -U postgres -d hetnacnc -v ON_ERROR_STOP=1 -q < hetna/taller-001.sql
 docker exec hetnacnc-postgres psql -U postgres -d hetnacnc -tAc "select 'tablas listas: ' || count(*) from information_schema.tables where table_schema='taller'"
 
-echo "== 2/3 Conexion de la tienda con la base (sin mostrar la contrasena)"
+echo "== 2/4 Conexion de la tienda con la base (sin mostrar la contrasena)"
 ENV_TIENDA=apps/storefront/.env.local
 if grep -q '^HETNA_TALLER_DB=' "$ENV_TIENDA" 2>/dev/null; then
   echo "ya estaba configurada"
@@ -19,7 +19,7 @@ else
   echo "configurada en $ENV_TIENDA"
 fi
 
-echo "== 3/3 Libreria de base de datos para la tienda"
+echo "== 3/4 Libreria de base de datos para la tienda"
 if [ -d apps/storefront/node_modules/pg ] || [ -d node_modules/pg ]; then
   echo "pg disponible"
 else
@@ -27,4 +27,6 @@ else
   BUN=$(command -v bun || echo /root/.bun/bin/bun)
   (cd apps/storefront && "$BUN" add pg@^8.11.3) || { echo "ERROR: no se pudo instalar pg"; exit 1; }
 fi
+echo "== 4/4 Armando el cotizador"
+python3 hetna/cotizador/build-cotizador.py
 echo "== LISTO"
