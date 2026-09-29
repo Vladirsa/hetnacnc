@@ -73,8 +73,8 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         </div>
       </div>
 
-      {/* Barra principal */}
-      <div className="bg-white border-b border-[#E7E4DC] px-4 lg:px-16 py-3 lg:py-4 flex items-center gap-4 lg:gap-8">
+      {/* Barra principal (z-50: sus menus, como el carrito, quedan por encima de la barra azul) */}
+      <div className="relative z-50 bg-white border-b border-[#E7E4DC] px-4 lg:px-16 py-3 lg:py-4 flex items-center gap-4 lg:gap-8">
         <MobileNavbar
           parentCategories={parentCategories}
           categories={categories}
