@@ -30,6 +30,11 @@ cabeza = (
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
     '<meta name="robots" content="noindex">'
     "<style>html,body{margin:0}:root{padding-top:env(safe-area-inset-top,0px)}img{max-width:100%}[hidden]{display:none!important}"
+    # Va debajo del encabezado de la tienda: la barra de la app es clara y discreta, no un segundo encabezado.
+    "html body .top{background:#fff;color:#1B1B18;border-bottom:1px solid #E7E4DC;padding-top:8px;padding-bottom:8px}"
+    "html body .marca b{font-size:17px}html body .marca svg{width:24px;height:24px}"
+    "html body .taller-pill{background:#FAF6EF;border-color:#E7E4DC;color:#1B1B18}"
+    "html body .volver{border-color:#E7E4DC;color:#1B1B18}"
     # Pantalla completa en computadora: ancho total, cabecera de lado a lado y dos columnas (pieza | datos).
     "@media(min-width:900px){"
     "html body .app{max-width:none;padding-inline:0}"

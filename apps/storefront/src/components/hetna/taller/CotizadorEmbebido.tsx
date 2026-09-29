@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 
+import { usarAltoLibre } from "../usarAltoLibre"
+
 import {
   tallerBorrar,
   tallerCargar,
@@ -10,7 +12,7 @@ import {
   tallerRegistrar,
 } from "@/lib/taller/acciones"
 
-// Abre el Cotizador CNC a pantalla completa, como app, dentro de la pagina.
+// Abre el Cotizador CNC como app a todo lo ancho, debajo del encabezado de la tienda.
 // La app (public/hetna-cotizador/app.html) habla con la tienda por este puente:
 // cargar/guardar la cuenta del taller, registrar cotizaciones y cambiar de pagina.
 
@@ -32,6 +34,7 @@ export const CotizadorEmbebido = ({
   onCerrar?: () => void
 }) => {
   const [listo, setListo] = useState(false)
+  const cajaRef = usarAltoLibre<HTMLDivElement>()
 
   useEffect(() => {
     const aqui = `/${locale}/servicios/cotizador-cnc`
@@ -54,25 +57,17 @@ export const CotizadorEmbebido = ({
         window.location.href = rutas[destino] || `/${locale}`
       },
     }
-    const html = document.documentElement
-    const antes = html.style.overflow
-    html.style.overflow = "hidden"
     setListo(true)
     return () => {
-      html.style.overflow = antes
       delete window.HETNA_PUENTE
     }
   }, [modo, locale, onCerrar])
 
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-[#142033]"
-      role="dialog"
-      aria-label="Cotizador CNC"
-    >
+    <div ref={cajaRef} className="w-full bg-[#EEF0F3]" aria-label="Cotizador CNC">
       {listo && (
         <iframe
-          src="/hetna-cotizador/app.html?v=4"
+          src="/hetna-cotizador/app.html?v=5"
           title="Cotizador CNC de HetNa"
           className="w-full h-full border-0 block"
           allow="clipboard-write; web-share"
