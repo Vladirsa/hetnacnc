@@ -1,0 +1,373 @@
+<title>HetNa Cotizador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de una columna pensada para el celular del taller; barra de pestañas abajo, hoja de trabajo que baja en pasos */
+:root {
+  --bg: #EEF1F5;
+  --surface: #FFFFFF;
+  --surface-2: #F6F8FB;
+  --ink: #131A25;
+  --muted: #5A6576;
+  --line: #D8DEE7;
+  --accent: #C2560A;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #FBE9DC;
+  --navy: #142033;
+  --navy-ink: #E9EEF6;
+  --ok: #17784D;
+  --ok-soft: #DDF3E8;
+  --warn: #9A6212;
+  --warn-soft: #FDF1DC;
+  --wa: #1FAF5A;
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1119; --surface: #151C27; --surface-2: #1B2431; --ink: #E8ECF2; --muted: #9AA5B5; --line: #2A3647;
+    --accent: #E4803A; --accent-ink: #1A0E05; --accent-soft: #3A2414; --navy: #0A1019; --navy-ink: #E9EEF6;
+    --ok: #5FD39A; --ok-soft: #123526; --warn: #F0BE6B; --warn-soft: #3A2C12; --wa: #2BC46A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1119; --surface: #151C27; --surface-2: #1B2431; --ink: #E8ECF2; --muted: #9AA5B5; --line: #2A3647;
+  --accent: #E4803A; --accent-ink: #1A0E05; --accent-soft: #3A2414; --navy: #0A1019; --navy-ink: #E9EEF6;
+  --ok: #5FD39A; --ok-soft: #123526; --warn: #F0BE6B; --warn-soft: #3A2C12; --wa: #2BC46A; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font-body); font-size: 15.5px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.app { max-width: 620px; margin: 0 auto; padding-inline: 16px; padding-block: 0 110px; }
+
+/* Encabezado */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--navy); color: var(--navy-ink); margin-inline: -16px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.marca { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.marca svg { flex: none; }
+.marca b { font-family: var(--font-display); font-size: 21px; letter-spacing: .02em; font-weight: 700; }
+.marca b span { color: var(--accent); }
+.taller-pill { margin-left: auto; font-size: 12.5px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); padding: 4px 10px; border-radius: 999px; max-width: 45%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Tarjetas de paso */
+.paso { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.pila { display: flex; flex-direction: column; gap: 14px; padding-block: 16px; }
+.paso-h { display: flex; align-items: baseline; gap: 10px; }
+.paso-h .n { font-family: var(--font-mono); font-size: 12px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
+.paso-h h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.paso-h .extra { margin-left: auto; font-size: 13px; color: var(--muted); }
+.ayuda { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* Subir archivo */
+.soltar { border: 2px dashed var(--line); border-radius: 12px; padding: 20px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--surface-2); transition: border-color .15s, background .15s; }
+.soltar.encima { border-color: var(--accent); background: var(--accent-soft); }
+.soltar strong { font-size: 17px; }
+.formatos { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.formatos span { font-family: var(--font-mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--muted); background: var(--surface); }
+.fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .chip:focus-visible, .opc:focus-visible, .tab:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+.btn.primario { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.wa { background: var(--wa); border-color: var(--wa); color: #fff; }
+.btn.chico { min-height: 36px; padding: 6px 11px; font-size: 13.5px; }
+.btn.bloque { width: 100%; }
+.btn.fantasma { background: transparent; }
+
+/* Vista previa */
+.vista { position: relative; background: var(--navy); border-radius: 12px; overflow: hidden; aspect-ratio: 4 / 3; max-width: 100%; touch-action: none; }
+.vista canvas { width: 100%; height: 100%; display: block; }
+.vista .etq { position: absolute; left: 10px; top: 10px; font-family: var(--font-mono); font-size: 11.5px; color: var(--navy-ink); background: rgba(0,0,0,.35); padding: 3px 7px; border-radius: 6px; }
+.vista .gira { position: absolute; right: 10px; bottom: 10px; font-size: 12px; color: var(--navy-ink); opacity: .8; }
+.medidas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.medida { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.medida small { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.medida b { font-family: var(--font-mono); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
+.archivo-nombre { font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
+.aviso { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--warn-soft); color: var(--warn); }
+.aviso.ok { background: var(--ok-soft); color: var(--ok); }
+
+/* Formularios */
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.campo.ancho { grid-column: 1 / -1; }
+.campo label, .etiqueta { font-size: 13px; font-weight: 600; color: var(--muted); }
+.campo input, .campo select, .campo textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 9px 11px; }
+.campo input[type="number"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.campo .del-archivo { font-size: 11px; color: var(--ok); font-weight: 600; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-weight: 600; cursor: pointer; white-space: nowrap; min-height: 40px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .sug { font-size: 11px; color: var(--accent); margin-left: 6px; }
+.chip[aria-pressed="true"] .sug { color: var(--accent); }
+.segmento { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.segmento button { border: 0; background: var(--surface); padding: 10px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.segmento button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.contador { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.contador button { width: 44px; height: 44px; border: 0; background: var(--surface-2); font-size: 20px; cursor: pointer; }
+.contador input { border: 0 !important; text-align: center; border-radius: 0 !important; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 14.5px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+/* Precios */
+.opciones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.opc { border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0; }
+.opc small { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.opc b { font-family: var(--font-mono); font-weight: 500; font-size: clamp(15px, 4.2vw, 20px); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.opc span { font-size: 11.5px; color: var(--muted); }
+.opc[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); padding: 9px 7px; }
+.opc[aria-pressed="true"] small { color: var(--accent); }
+.interno { border-top: 1px dashed var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.interno-h { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.interno-h svg { flex: none; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kpi { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.kpi small { display: block; font-size: 11.5px; color: var(--muted); }
+.kpi b { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; font-size: 15px; overflow-wrap: anywhere; }
+details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+.tabla td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.tabla td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Historial y ajustes */
+.item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.item-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.item-h b { font-family: var(--font-mono); font-weight: 500; }
+.item-h .fecha { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.pill { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--line); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.vacio { text-align: center; padding: 30px 10px; color: var(--muted); }
+.acordeon details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.acordeon details + details { margin-top: 8px; }
+.acordeon summary { padding: 12px 14px; cursor: pointer; font-weight: 700; }
+.acordeon .dentro { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.tarifa { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; align-items: center; }
+.tarifa label { font-size: 13.5px; min-width: 0; }
+.tarifa input { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 6px 9px; font-family: var(--font-mono); text-align: right; width: 100%; }
+.mat-fila { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; align-items: center; padding-block: 6px; border-bottom: 1px solid var(--line); }
+.mat-fila small { display: block; color: var(--muted); font-size: 12px; }
+
+/* Pestañas */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(3, 1fr); max-width: 620px; margin: 0 auto; }
+.tab { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: 10px; min-height: 48px; }
+.tab[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+.sim { display: flex; flex-direction: column; gap: 8px; }
+.sim-panel { display: flex; flex-direction: column; gap: 6px; }
+.sim-dato { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.volver { flex: none; border: 1px solid rgba(255,255,255,.25); background: transparent; color: var(--navy-ink); border-radius: 8px; padding: 5px 10px; font-weight: 600; font-size: 13px; cursor: pointer; min-height: 34px; }
+.banner { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.banner.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.banner span { min-width: 0; flex: 1 1 220px; }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(8,12,18,.55); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+.modal-caja { position: relative; background: var(--surface); color: var(--ink); border-radius: 16px; padding: 20px 18px 18px; width: 100%; max-width: 520px; max-height: calc(100% - 32px); overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.modal-caja h3 { font-family: var(--font-display); font-size: 23px; margin: 0; padding-right: 28px; }
+.modal-caja p { margin: 0; }
+.modal-x { position: absolute; right: 10px; top: 8px; border: 0; background: transparent; font-size: 26px; cursor: pointer; color: var(--muted); width: 40px; height: 40px; }
+.plan { display: flex; gap: 10px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.plan .precio { font-family: var(--font-mono); font-size: 14px; color: var(--accent); }
+@media (min-width: 640px) { .modal { align-items: center; } }
+.oculto-svg { position: fixed; left: -20000px; top: 0; width: 1200px; height: 1200px; visibility: hidden; pointer-events: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 40; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media (max-width: 380px) { .opciones { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="marca">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 10v12M21 10v12M11 16h10" stroke="#C2560A" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <b>HetNa <span>Cotizador</span></b>
+    </div>
+    <div class="taller-pill" id="pill-taller">Mi taller CNC</div>
+    <button type="button" class="volver" id="volver-tienda" hidden>Tienda</button>
+  </header>
+
+  <!-- ===================== COTIZAR ===================== -->
+  <main id="vista-cotizar" class="pila">
+    <div id="banner-plan" class="banner" hidden></div>
+    <section class="paso" aria-labelledby="h-archivo">
+      <div class="paso-h"><span class="n">1</span><h2 id="h-archivo">Archivo de la pieza</h2></div>
+      <div id="zona-subir">
+        <label class="soltar" id="soltar" for="archivo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <strong>Sube el archivo del cliente</strong>
+          <span class="ayuda">Desde WhatsApp, Drive o tu correo. Lo medimos aquí mismo, no se sube a ningún servidor.</span>
+          <div class="formatos"><span>DXF</span><span>SVG</span><span>STL</span><span>OBJ</span></div>
+        </label>
+        <input id="archivo" class="sr" type="file" accept=".dxf,.svg,.stl,.obj">
+        <div class="fila-btn" style="margin-top:10px">
+          <button class="btn chico" type="button" id="ej-2d">Probar ejemplo 2D (DXF)</button>
+          <button class="btn chico" type="button" id="ej-3d">Probar ejemplo 3D (STL)</button>
+          <button class="btn chico fantasma" type="button" id="sin-archivo">Sin archivo: capturo medidas</button>
+        </div>
+      </div>
+      <div id="zona-archivo" hidden>
+        <div class="vista" id="vista"><canvas id="lienzo" aria-label="Vista previa de la pieza"></canvas><canvas id="lienzo3d" aria-label="Vista 3D de la pieza" hidden></canvas><span class="etq" id="vista-etq">DXF</span><span class="gira" id="vista-gira" hidden>Arrastra para girar · pellizca para acercar</span></div>
+        <div class="sim">
+          <button class="btn chico primario" type="button" id="btn-sim">Simular corte</button>
+          <div id="sim-panel" class="sim-panel" hidden>
+            <div class="fila-btn"><button class="btn chico" type="button" id="sim-vel" aria-label="Velocidad de la simulación">1×</button><button class="btn chico" type="button" id="sim-repetir">Repetir</button></div>
+            <div class="sim-dato" id="sim-dato"></div>
+            <div class="ayuda" id="sim-tiempo"></div>
+          </div>
+        </div>
+        <div class="archivo-nombre" id="archivo-nombre"></div>
+        <div class="medidas" id="medidas"></div>
+        <div class="campos">
+          <div class="campo">
+            <label for="unidad">Unidades del archivo</label>
+            <select id="unidad"></select>
+          </div>
+          <div class="campo" style="justify-content:flex-end">
+            <button class="btn" type="button" id="cambiar-archivo">Cambiar archivo</button>
+          </div>
+        </div>
+        <div id="avisos-archivo" class="checks"></div>
+      </div>
+      <div id="zona-manual" hidden>
+        <div class="aviso ok">Cotización sin archivo: escribe las medidas en el paso 2.</div>
+        <button class="btn chico" type="button" id="volver-subir" style="margin-top:8px">Mejor subo un archivo</button>
+      </div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-trabajo">
+      <div class="paso-h"><span class="n">2</span><h2 id="h-trabajo">Trabajo</h2></div>
+      <div>
+        <div class="etiqueta" id="lbl-servicio">Servicio</div>
+        <div class="chips" id="servicios" role="group" aria-labelledby="lbl-servicio"></div>
+      </div>
+      <div class="campos">
+        <div class="campo ancho"><label for="tipo">Tipo de trabajo</label><select id="tipo"></select></div>
+      </div>
+      <div class="campos" id="campos-medidas"></div>
+      <div class="campos">
+        <div class="campo">
+          <label for="cantidad">Cantidad de piezas</label>
+          <div class="contador"><button type="button" id="menos" aria-label="Menos piezas">−</button><input id="cantidad" type="number" min="1" step="1" value="1" inputmode="numeric"><button type="button" id="mas" aria-label="Más piezas">+</button></div>
+        </div>
+        <div class="campo" id="campo-material"><label for="material">Material</label><select id="material"></select></div>
+      </div>
+      <div class="campos" id="campos-servicio"></div>
+      <div id="bloque-material" class="checks">
+        <div class="etiqueta">¿Quién pone el material?</div>
+        <div class="segmento" role="group" aria-label="Quién pone el material">
+          <button type="button" id="mat-taller" aria-pressed="true">El taller</button>
+          <button type="button" id="mat-cliente" aria-pressed="false">El cliente</button>
+        </div>
+        <div id="mat-info" class="ayuda"></div>
+      </div>
+      <div class="campos">
+        <div class="campo" id="campo-acabado"><label for="acabado">Acabado</label><select id="acabado"></select></div>
+        <div class="campo" style="justify-content:flex-end"><label class="check"><input type="checkbox" id="iva" checked> Precios con IVA</label></div>
+      </div>
+      <div class="checks" id="extras"></div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-precio">
+      <div class="paso-h"><span class="n">3</span><h2 id="h-precio">Precio</h2><span class="extra" id="precio-nota">con IVA</span></div>
+      <div class="opciones" id="opciones" role="group" aria-label="Opción que se envía al cliente"></div>
+      <div id="aviso-precio"></div>
+      <div class="interno">
+        <div class="interno-h"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Solo lo ves tú (opción Estándar)</div>
+        <div class="kpis" id="kpis"></div>
+        <details class="desglose"><summary>Ver desglose del cálculo</summary><table class="tabla" id="desglose"></table></details>
+      </div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-enviar">
+      <div class="paso-h"><span class="n">4</span><h2 id="h-enviar">Enviar al cliente</h2></div>
+      <div class="campos">
+        <div class="campo"><label for="cli-nombre">Nombre del cliente</label><input id="cli-nombre" autocomplete="off" placeholder="Ej. Carpintería López"></div>
+        <div class="campo"><label for="cli-tel">WhatsApp del cliente</label><input id="cli-tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos"></div>
+        <div class="campo ancho"><label for="cli-nota">Nota para el cliente (opcional)</label><textarea id="cli-nota" rows="2" placeholder="Ej. Tiempo de entrega 3 días hábiles"></textarea></div>
+      </div>
+      <a class="btn wa bloque" id="btn-wa" href="#" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>
+        Enviar por WhatsApp
+      </a>
+      <div class="fila-btn">
+        <button class="btn" type="button" id="btn-copiar" style="flex:1">Copiar mensaje</button>
+        <button class="btn primario" type="button" id="btn-guardar" style="flex:1">Guardar en historial</button>
+      </div>
+      <button class="btn bloque" type="button" id="btn-pdf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar PDF de la cotización</button>
+      <p class="ayuda">Descarga el PDF y mándalo por WhatsApp junto con el mensaje.</p>
+      <details class="desglose"><summary>Ver el mensaje</summary><pre id="mensaje" style="white-space:pre-wrap;font-family:var(--font-body);font-size:14px;background:var(--surface-2);padding:10px;border-radius:10px;margin:8px 0 0"></pre></details>
+    </section>
+  </main>
+
+  <!-- ===================== HISTORIAL ===================== -->
+  <main id="vista-historial" class="pila" hidden>
+    <section class="paso">
+      <div class="paso-h"><h2>Historial de cotizaciones</h2><span class="extra" id="hist-cuenta"></span></div>
+      <p class="ayuda">Se guardan en este celular. En la versión completa se guardan en tu cuenta y las ves desde cualquier dispositivo.</p>
+      <div id="historial" class="checks"></div>
+    </section>
+  </main>
+
+  <!-- ===================== MI TALLER ===================== -->
+  <main id="vista-taller" class="pila" hidden>
+    <section class="paso">
+      <div class="paso-h"><h2>Datos del taller</h2></div>
+      <div class="campos">
+        <div class="campo ancho"><label for="t-nombre">Nombre del taller</label><input id="t-nombre"></div>
+        <div class="campo"><label for="t-wa">WhatsApp del taller</label><input id="t-wa" inputmode="tel" placeholder="10 dígitos"></div>
+        <div class="campo"><label for="t-vigencia">Vigencia (días)</label><input id="t-vigencia" type="number" min="1"></div>
+        <div class="campo ancho"><span class="etiqueta">Logo (sale en el PDF)</span><div class="fila-btn" style="align-items:center"><span id="logo-prev"></span><label class="btn chico" for="t-logo">Subir logo</label><input id="t-logo" class="sr" type="file" accept="image/png,image/jpeg,image/webp"><button class="btn chico fantasma" type="button" id="quitar-logo">Quitar</button></div></div>
+        <div class="campo ancho"><label for="t-condiciones">Condiciones (salen en el PDF)</label><textarea id="t-condiciones" rows="3"></textarea></div>
+        <div class="campo ancho"><label for="t-minimo">Cobro mínimo por trabajo (sin IVA)</label><input id="t-minimo" type="number" min="0" step="10"><span class="ayuda">Si una cotización sale más baja, se cobra este mínimo. Pon 0 para no usarlo.</span></div>
+      </div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Márgenes y costos por hora</h2></div>
+      <p class="ayuda">Vienen de tu app Cotizador. Económico usa el margen mínimo, Estándar el recomendado y Express suma 15 puntos.</p>
+      <div class="campos" id="costos"></div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Precios de materiales</h2><span class="extra">por m²</span></div>
+      <div class="aviso">Pronto se actualizarán solos con los precios de tus proveedores. Mientras, pon aquí lo que pagas; los vacíos no se cobran.</div>
+      <div id="materiales"></div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Tarifas por servicio</h2></div>
+      <p class="ayuda">Son las tarifas reales de tu app Cotizador. Cambia la que quieras y el precio se recalcula al momento.</p>
+      <div class="acordeon" id="tarifas"></div>
+      <button class="btn" type="button" id="restaurar">Volver a las tarifas de mi app</button>
+      <div id="restaurar-conf" hidden class="fila-btn"><span class="ayuda" style="align-self:center">¿Seguro? Se pierden tus cambios.</span><button class="btn chico primario" type="button" id="restaurar-si">Sí, restaurar</button><button class="btn chico" type="button" id="restaurar-no">No</button></div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Secciones">
+  <button class="tab" role="tab" aria-selected="true" data-vista="cotizar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h4"/></svg>Cotizar</button>
+  <button class="tab" role="tab" aria-selected="false" data-vista="historial"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Historial</button>
+  <button class="tab" role="tab" aria-selected="false" data-vista="taller"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Mi taller</button>
+</nav>
+<div class="oculto-svg" id="svg-host" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="modal" id="modal" hidden><div class="modal-caja" role="dialog" aria-modal="true" aria-label="Cuenta"><button type="button" class="modal-x" data-cerrar aria-label="Cerrar">×</button><div id="modal-cuerpo"></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const DATOS = __DATOS__;
+</script>
+<script>
+__ENGINE__
+</script>
+<script>
+__GEO__
+</script>
+<script>
+__EJEMPLOS__
+</script>
+<script>
+__APP__
+</script>
