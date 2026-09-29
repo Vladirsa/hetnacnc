@@ -8,13 +8,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function LoginPage() {
+type Props = { searchParams: Promise<{ volver?: string }> }
+
+export default async function Pagina({ searchParams }: Props) {
   const user = await retrieveCustomer()
+  const { volver } = await searchParams
 
   if (user) {
-    redirect("/user")
+    // HETNA: si ya tiene sesion, regresa a donde iba (p. ej. el Cotizador CNC)
+    redirect(volver && volver.startsWith("/") && !volver.startsWith("//") ? volver : "/user")
   }
 
   return <LoginForm />
 }
-
