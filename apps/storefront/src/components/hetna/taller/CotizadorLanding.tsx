@@ -9,6 +9,7 @@ import { CotizadorEmbebido } from "./CotizadorEmbebido"
 
 // Pagina del Cotizador CNC para quien no ha iniciado sesion:
 // explica la herramienta, muestra los planes y deja probarla sin cuenta.
+// Ocupa toda la pantalla con su propia cabecera (tapa la cabecera de la tienda).
 
 const PASOS = [
   ["Sube el archivo", "DXF, SVG, STL u OBJ desde WhatsApp, Drive o tu correo."],
@@ -40,14 +41,25 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
   const volver = encodeURIComponent(`/${locale}/servicios/cotizador-cnc`)
 
   return (
-    <main className="w-full bg-[#FAF9F6]">
-      <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
-        <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Cotizador CNC</span>
-      </div>
+    <main className="fixed inset-0 z-[100] overflow-y-auto bg-[#FAF9F6]">
+      <header className="sticky top-0 z-10 bg-[#142033] text-white px-4 lg:px-16 py-3 flex items-center gap-3">
+        <LocalizedClientLink href="/" className="font-display font-bold text-[18px] tracking-wide text-white">
+          HETNA <span className="text-[#F08A3C]">Taller</span>
+        </LocalizedClientLink>
+        <span className="hidden sm:inline text-[13px] text-[#9FB0C8]">Cotizador CNC</span>
+        <div className="ml-auto flex items-center gap-2">
+          <LocalizedClientLink href="/" className="text-[13px] text-[#C9D2E0] hover:text-white px-2 py-2">
+            ← Tienda
+          </LocalizedClientLink>
+          <a href={`/${locale}/login?volver=${volver}`} className="text-[13px] font-semibold border border-[#3A4A63] hover:border-white px-3 py-2 rounded-lg">
+            Entrar
+          </a>
+          <a href={`/${locale}/register?volver=${volver}`} className="text-[13px] font-semibold bg-[#C2560A] hover:bg-[#A84A08] px-3 py-2 rounded-lg">
+            Crear cuenta
+          </a>
+        </div>
+      </header>
+      <div className="pt-2" />
 
       <section className="px-4 lg:px-16 pt-5 pb-8">
         <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 flex flex-col gap-4">
