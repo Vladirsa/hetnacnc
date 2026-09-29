@@ -278,47 +278,49 @@ export const SERVICIOS: Servicio[] = [
     "boton": "Cotizar ahora"
   },
   {
-    "slug": "calculadora-cnc",
+    "slug": "copiloto-ia-cnc",
     "padre": null,
     "numero": "5",
     "icono": "calculadora",
-    "nombre": "Calculadora CNC",
-    "resumen": "Velocidades, avances, tiempos y costos de corte.",
-    "titulo": "Calculadora CNC",
-    "subtitulo": "Calcula RPM, avance y tiempo de corte para trabajar más rápido y sin romper herramientas.",
+    "nombre": "Copiloto IA CNC",
+    "resumen": "Inteligencia artificial experta en CNC: parámetros, errores, G-code y costos.",
+    "titulo": "Copiloto IA CNC",
+    "subtitulo": "Pregunta lo que sea de tu router, láser, plasma, fibra o impresora 3D.",
     "incluye": [
-      "RPM y avance según fresa y material",
-      "Carga de viruta y profundidad de pasada",
-      "Tiempo estimado de corte",
-      "Costo de material y de máquina"
+      "Parámetros de corte según tu máquina",
+      "Diagnóstico de problemas y errores",
+      "Revisión de G-code, DXF y STL",
+      "Ayuda con Mach3, GRBL, Vectric, Fusion y ArtCAM",
+      "Calculadoras gratis de velocidades, tiempos y costos"
     ],
     "pasos": [
       {
-        "titulo": "Elige tu material",
-        "texto": "Madera, MDF, acrílico, aluminio y más."
+        "titulo": "Registra tu máquina",
+        "texto": "Spindle, RPM, avance y controlador."
       },
       {
-        "titulo": "Datos de tu herramienta",
-        "texto": "Diámetro y número de filos."
+        "titulo": "Pregunta",
+        "texto": "Material, herramienta o el problema que tienes."
       },
       {
-        "titulo": "Obtén los valores",
-        "texto": "RPM, avance y tiempo estimado."
+        "titulo": "Sube tu archivo o foto",
+        "texto": "G-code, DXF, STL o foto del corte."
       },
       {
-        "titulo": "Copia a tu CAM",
-        "texto": "Úsalos directo en tu programa."
+        "titulo": "Recibe los valores",
+        "texto": "Punto de partida y qué datos faltan."
       }
     ],
     "formatos": [
       "Router",
       "Láser",
       "Plasma",
-      "Torno"
+      "Fibra",
+      "3D"
     ],
-    "proximo": "Muy pronto: calculadora en línea gratuita en esta página.",
-    "whatsapp": "Hola HETNA CNC, tengo una duda de velocidades y avances.",
-    "boton": "Preguntar a un experto"
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, tengo una duda de mi máquina CNC.",
+    "boton": "Abrir el Copiloto"
   }
 ]
 
