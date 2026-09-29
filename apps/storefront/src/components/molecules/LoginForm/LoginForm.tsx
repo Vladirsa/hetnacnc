@@ -15,6 +15,9 @@ import { toast } from '@/lib/helpers/toast';
 
 import { LoginFormData, loginFormSchema } from './schema';
 
+// HETNA: a donde regresar despues de iniciar sesion (?volver=/mx/servicios/cotizador-cnc)
+const destinoSeguro = (v: string | null) => (v && v.startsWith('/') && !v.startsWith('//') ? v : '/user');
+
 export const LoginForm = () => {
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
@@ -42,6 +45,8 @@ const Form = () => {
   const searchParams = useSearchParams();
   const isSessionExpired = searchParams.get('sessionExpired') === 'true';
   const isSessionRequired = searchParams.get('sessionRequired') === 'true';
+  const volver = searchParams.get('volver');
+  const destino = destinoSeguro(volver);
 
   const submit = async (data: FieldValues) => {
     const formData = new FormData();
@@ -51,14 +56,14 @@ const Form = () => {
     const res = await login(formData);
 
     if (res.success) {
-      router.push('/user');
+      router.push(destino);
       await transferCart();
     } else {
       toast.error({ title: res.message || 'An error occurred. Please try again.' });
     }
 
     setIsAuthError(false);
-    router.push('/user');
+    router.push(destino);
   };
 
   const clearApiError = () => {
@@ -151,7 +156,7 @@ const Form = () => {
             ¿Aún no tienes cuenta?
           </h2>
           <Link
-            href="/register"
+            href={volver ? `/register?volver=${encodeURIComponent(destino)}` : '/register'}
             data-testid="login-register-link"
           >
             <Button

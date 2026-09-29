@@ -11,11 +11,18 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { LabeledInput } from "@/components/cells"
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { signup } from "@/lib/data/customer"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
 import { PasswordValidator } from "@/components/cells/PasswordValidator/PasswordValidator"
 import { toast } from "@/lib/helpers/toast"
+
+// HETNA: a donde regresar despues de crear la cuenta (?volver=/mx/servicios/cotizador-cnc)
+const leerVolver = () => {
+  if (typeof window === "undefined") return null
+  const v = new URLSearchParams(window.location.search).get("volver")
+  return v && v.startsWith("/") && !v.startsWith("//") ? v : null
+}
 
 export const RegisterForm = () => {
   const methods = useForm<RegisterFormData>({
@@ -44,6 +51,8 @@ const Form = () => {
     "8chars": false,
     symbolOrDigit: false,
   })
+  const [volver, setVolver] = useState<string | null>(null)
+  useEffect(() => setVolver(leerVolver()), [])
 
   const {
     handleSubmit,
@@ -65,6 +74,11 @@ const Form = () => {
     formData.append("phone", data.phone)
 
     const res = await signup(formData)
+
+    if (res && res?.id) {
+      window.location.href = leerVolver() || "/user"
+      return
+    }
 
     if (res && !res?.id) {
 
@@ -147,7 +161,7 @@ const Form = () => {
         <h2 className="heading-md text-primary uppercase mb-8">
           ¿Ya tienes cuenta?
         </h2>
-        <Link href="/login" data-testid="register-login-link">
+        <Link href={volver ? `/login?volver=${encodeURIComponent(volver)}` : "/login"} data-testid="register-login-link">
           <Button
             variant="tonal"
             className="w-full flex justify-center mt-8 uppercase"
