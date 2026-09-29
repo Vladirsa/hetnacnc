@@ -72,7 +72,7 @@ export const CotizadorEmbebido = ({
     >
       {listo && (
         <iframe
-          src="/hetna-cotizador/app.html?v=3"
+          src="/hetna-cotizador/app.html?v=4"
           title="Cotizador CNC de HetNa"
           className="w-full h-full border-0 block"
           allow="clipboard-write; web-share"
