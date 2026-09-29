@@ -5,6 +5,7 @@ import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
+import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
@@ -36,6 +37,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Crea gratis una caja con juntas de dedo para corte láser o router CNC: escribe medidas y espesor de MDF o acrílico y descarga en DXF, SVG o PDF.",
     }
   }
+  if (s.slug === "generador-2d-3d/plantillas-empaque") {
+    return {
+      title: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
+      description: "Crea gratis plantillas de caja con solapas, pirámide, cono, sobre, bolsa y caja hexagonal a tu medida. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -63,6 +70,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
 
   // Generador 2D y 3D: herramienta gratis de caja con juntas de dedo
   if (s.slug === "generador-2d-3d/caja-con-juntas") return <GeneradorCaja />
+  if (s.slug === "generador-2d-3d/plantillas-empaque") return <GeneradorEmpaques />
 
   return <ServicioPagina s={s} />
 }
