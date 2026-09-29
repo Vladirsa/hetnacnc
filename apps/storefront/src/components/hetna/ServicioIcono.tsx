@@ -7,6 +7,13 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M15 3l1 1M20 8l1 1M19 3v2M22 5h-2" />
     </>
   ),
+  caja: (
+    <>
+      <path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z" />
+      <path d="M3 7.5l9 4.5 9-4.5M12 12v9" />
+      <path d="M7 9.5v2l2 1v-2M15 12.5v2l2-1v-2" />
+    </>
+  ),
   cam: (
     <>
       <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />

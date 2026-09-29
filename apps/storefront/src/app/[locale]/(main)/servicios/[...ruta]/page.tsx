@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
+import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
@@ -27,6 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "Cotizador CNC para talleres",
       description: "Cotiza desde tu celular: sube DXF, SVG, STL u OBJ, obtén el precio con tus tarifas y envíalo por WhatsApp con PDF. Gratis para empezar.",
+    }
+  }
+  if (s.slug === "generador-2d-3d/caja-con-juntas") {
+    return {
+      title: "Generador de caja con juntas de dedo gratis (DXF y SVG)",
+      description: "Crea gratis una caja con juntas de dedo para corte láser o router CNC: escribe medidas y espesor de MDF o acrílico y descarga en DXF, SVG o PDF.",
     }
   }
   return { title: s.nombre, description: s.resumen }
@@ -53,6 +60,9 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
     const cliente = await retrieveCustomer().catch(() => null)
     return cliente ? <CotizadorEmbebido modo="cuenta" locale={locale} /> : <CotizadorLanding locale={locale} />
   }
+
+  // Generador 2D y 3D: herramienta gratis de caja con juntas de dedo
+  if (s.slug === "generador-2d-3d/caja-con-juntas") return <GeneradorCaja />
 
   return <ServicioPagina s={s} />
 }
