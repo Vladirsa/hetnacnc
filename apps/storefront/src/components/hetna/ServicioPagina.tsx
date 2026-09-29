@@ -188,9 +188,9 @@ export const ServicioPagina = ({ s }: { s: Servicio }) => {
         {hijos.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
-              Servicios de este laboratorio
+              {s.slug === "laboratorio-cam" ? "Servicios de este laboratorio" : "Herramientas y servicios"}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {hijos.map((h) => (
                 <TarjetaServicio key={h.slug} s={h} />
               ))}

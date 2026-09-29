@@ -58,9 +58,244 @@ export const SERVICIOS: Servicio[] = [
       "STL",
       "STEP"
     ],
-    "proximo": "Muy pronto: generador automático en línea para letreros, nombres y piezas.",
+    "proximo": "Ya disponible: generador gratis de cajas con juntas de dedo. Muy pronto: plantillas de empaques, letreros y nombres.",
     "whatsapp": "Hola HETNA CNC, quiero un diseño 2D/3D.",
     "boton": "Pedir mi diseño"
+  },
+  {
+    "slug": "generador-2d-3d/caja-con-juntas",
+    "padre": "generador-2d-3d",
+    "numero": "1.1",
+    "icono": "caja",
+    "nombre": "Caja con juntas de dedo (gratis)",
+    "resumen": "Escribe medidas y espesor, y descarga tu caja en DXF, SVG o PDF.",
+    "titulo": "Generador de caja con juntas de dedo",
+    "subtitulo": "Descarga el archivo listo para láser o router CNC.",
+    "incluye": [],
+    "pasos": [],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "PDF"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero cotizar el corte de una caja.",
+    "boton": "Cotizar el corte"
+  },
+  {
+    "slug": "generador-2d-3d/diseno-desde-cero",
+    "padre": "generador-2d-3d",
+    "numero": "1.2",
+    "icono": "generador",
+    "nombre": "Diseño desde cero",
+    "resumen": "De tu idea, foto o boceto a un archivo CNC hecho a la medida.",
+    "titulo": "Diseñamos tu pieza desde cero",
+    "subtitulo": "Nos cuentas qué necesitas y lo dibujamos con medidas reales, listo para tu máquina.",
+    "incluye": [
+      "Piezas 2D para corte láser, plasma y router",
+      "Modelos 3D y relieves para router e impresión 3D",
+      "Letreros, logotipos, muebles y piezas técnicas",
+      "Vista previa antes de entregar el archivo"
+    ],
+    "pasos": [
+      {
+        "titulo": "Cuéntanos tu idea",
+        "texto": "Foto, boceto, medidas o una pieza de muestra."
+      },
+      {
+        "titulo": "Te cotizamos",
+        "texto": "Precio y tiempo de entrega antes de empezar."
+      },
+      {
+        "titulo": "Revisas la vista previa",
+        "texto": "Hacemos los ajustes que necesites."
+      },
+      {
+        "titulo": "Recibe tu archivo",
+        "texto": "En el formato de tu máquina, o te lo maquilamos."
+      }
+    ],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "STL",
+      "STEP"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero un diseño desde cero.",
+    "boton": "Cotizar mi diseño"
+  },
+  {
+    "slug": "generador-2d-3d/modificacion-de-archivos",
+    "padre": "generador-2d-3d",
+    "numero": "1.3",
+    "icono": "generador",
+    "nombre": "Modificación de archivos",
+    "resumen": "Cambiamos medidas, textos o detalles de un archivo que ya tienes.",
+    "titulo": "Modificamos tu archivo",
+    "subtitulo": "Ajustamos medidas, espesores, textos y detalles para que el archivo sirva para tu proyecto.",
+    "incluye": [
+      "Cambio de medidas y escala",
+      "Ajuste a otro espesor de material",
+      "Cambio de nombres, textos y logotipos",
+      "Unir, separar o agregar piezas"
+    ],
+    "pasos": [
+      {
+        "titulo": "Envíanos tu archivo",
+        "texto": "DXF, SVG, STL, STEP o el formato que tengas."
+      },
+      {
+        "titulo": "Dinos qué cambiar",
+        "texto": "Medidas, material, textos o detalles."
+      },
+      {
+        "titulo": "Te cotizamos",
+        "texto": "Precio y tiempo antes de empezar."
+      },
+      {
+        "titulo": "Recibe tu archivo",
+        "texto": "Revisado y listo para cortar."
+      }
+    ],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "STL",
+      "STEP"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero modificar un archivo.",
+    "boton": "Cotizar el cambio"
+  },
+  {
+    "slug": "generador-2d-3d/vectorizacion",
+    "padre": "generador-2d-3d",
+    "numero": "1.4",
+    "icono": "generador",
+    "nombre": "Vectorización",
+    "resumen": "Tu logotipo, dibujo o foto convertido en vector limpio para cortar o grabar.",
+    "titulo": "Vectorizamos tu imagen",
+    "subtitulo": "Convertimos imágenes en vectores limpios, con contornos cerrados, listos para láser, router o plasma.",
+    "incluye": [
+      "Logotipos y letreros",
+      "Dibujos, siluetas y firmas",
+      "Contornos cerrados y sin nodos de más",
+      "Separación en capas de corte y grabado"
+    ],
+    "pasos": [
+      {
+        "titulo": "Envíanos tu imagen",
+        "texto": "JPG, PNG, PDF o una foto clara."
+      },
+      {
+        "titulo": "Te cotizamos",
+        "texto": "Según el detalle de la imagen."
+      },
+      {
+        "titulo": "Revisas la vista previa",
+        "texto": "Antes de recibir el archivo final."
+      },
+      {
+        "titulo": "Recibe tu vector",
+        "texto": "En DXF, SVG o el formato de tu máquina."
+      }
+    ],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "PDF",
+      "AI"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero vectorizar una imagen.",
+    "boton": "Cotizar vectorización"
+  },
+  {
+    "slug": "generador-2d-3d/conversion-de-formatos",
+    "padre": "generador-2d-3d",
+    "numero": "1.5",
+    "icono": "generador",
+    "nombre": "Conversión de formatos",
+    "resumen": "Pasamos tu archivo al formato que acepta tu máquina o tu programa.",
+    "titulo": "Convertimos tu archivo",
+    "subtitulo": "Cambiamos el formato de tu archivo sin perder medidas, para que abra en tu programa o tu máquina.",
+    "incluye": [
+      "DXF, SVG, PDF y AI entre sí",
+      "STL, OBJ y STEP para 3D",
+      "Revisión de unidades (mm o pulgadas)",
+      "Archivo listo para Mach3, LightBurn, VCarve o Fusion"
+    ],
+    "pasos": [
+      {
+        "titulo": "Envíanos tu archivo",
+        "texto": "Y dinos a qué formato lo necesitas."
+      },
+      {
+        "titulo": "Te cotizamos",
+        "texto": "Precio y tiempo antes de empezar."
+      },
+      {
+        "titulo": "Revisamos medidas",
+        "texto": "Comprobamos que no cambie la escala."
+      },
+      {
+        "titulo": "Recibe tu archivo",
+        "texto": "En el formato que pediste."
+      }
+    ],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "STL",
+      "STEP"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero convertir un archivo de formato.",
+    "boton": "Cotizar conversión"
+  },
+  {
+    "slug": "generador-2d-3d/preparacion-para-cam",
+    "padre": "generador-2d-3d",
+    "numero": "1.6",
+    "icono": "cam",
+    "nombre": "Preparación para CAM",
+    "resumen": "Limpiamos y revisamos tu archivo para que corte sin errores.",
+    "titulo": "Tu archivo listo para CAM",
+    "subtitulo": "Revisamos y corregimos tu archivo antes de hacer las trayectorias, para no perder material ni tiempo de máquina.",
+    "incluye": [
+      "Cierre de contornos abiertos",
+      "Eliminación de líneas duplicadas y nodos de más",
+      "Revisión de unidades, escala y origen",
+      "Separación en capas por herramienta u operación"
+    ],
+    "pasos": [
+      {
+        "titulo": "Envíanos tu archivo",
+        "texto": "DXF, SVG, STL o STEP."
+      },
+      {
+        "titulo": "Lo revisamos",
+        "texto": "Te decimos qué errores tiene y el precio."
+      },
+      {
+        "titulo": "Lo corregimos",
+        "texto": "Contornos, capas, unidades y origen."
+      },
+      {
+        "titulo": "Recibe tu archivo",
+        "texto": "Listo para VCarve, Fusion, Mach3 o LightBurn."
+      }
+    ],
+    "formatos": [
+      "DXF",
+      "SVG",
+      "STL",
+      "STEP"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero preparar mi archivo para CAM.",
+    "boton": "Revisar mi archivo"
   },
   {
     "slug": "laboratorio-cam",
