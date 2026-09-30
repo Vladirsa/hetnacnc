@@ -394,7 +394,8 @@ function curvaDe(p: Pt[], hueco: boolean, suave: boolean): Curva {
   return { inicio: p[0], tramos, hueco }
 }
 
-function curvasDeMascara(m: Uint8Array, w: number, h: number, o: OpcionesVector): Curva[] {
+// Máscara (1 = tinta) a curvas cerradas; también la usan los letreros
+export function curvasDeMascara(m: Uint8Array, w: number, h: number, o: Pick<OpcionesVector, "tolerancia" | "manchas" | "suave">): Curva[] {
   return contornos(m, w, h, o.manchas).map((l) => curvaDe(simplificarCerrado(sinEscalones(l.pts), o.tolerancia), l.area < 0, o.suave))
 }
 
