@@ -5,6 +5,7 @@ import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
+import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
@@ -43,6 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Crea gratis plantillas de caja con solapas, pirámide, cono, sobre, bolsa y caja hexagonal a tu medida. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
     }
   }
+  if (s.slug === "generador-2d-3d/convertidor") {
+    return {
+      title: "Convertir DXF a SVG, SVG a DXF y STL a OBJ gratis en línea",
+      description: "Convierte gratis archivos DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -71,6 +78,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   // Generador 2D y 3D: herramienta gratis de caja con juntas de dedo
   if (s.slug === "generador-2d-3d/caja-con-juntas") return <GeneradorCaja />
   if (s.slug === "generador-2d-3d/plantillas-empaque") return <GeneradorEmpaques />
+  if (s.slug === "generador-2d-3d/convertidor") return <GeneradorConvertidor />
 
   return <ServicioPagina s={s} />
 }
