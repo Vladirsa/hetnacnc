@@ -7,6 +7,7 @@ import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
+import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
@@ -64,6 +65,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Convierte gratis un logotipo, dibujo o foto en vector: contornos cerrados en DXF o SVG listos para corte láser, router CNC o plasma. Tu imagen no se sube a ningún servidor.",
     }
   }
+  if (s.slug === "generador-2d-3d/letreros") {
+    return {
+      title: "Generador de letreros y nombres en DXF gratis para router CNC y láser",
+      description: "Escribe un nombre o un letrero, elige entre 19 tipografías y descarga gratis el DXF con las letras unidas, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -95,6 +102,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/convertidor") return <GeneradorConvertidor />
   if (s.slug === "generador-2d-3d/despiece-muebles") return <GeneradorMueble />
   if (s.slug === "generador-2d-3d/vectorizador") return <GeneradorVectorizador />
+  if (s.slug === "generador-2d-3d/letreros") return <GeneradorLetrero />
 
   return <ServicioPagina s={s} />
 }

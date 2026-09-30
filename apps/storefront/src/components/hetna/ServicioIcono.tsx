@@ -40,6 +40,12 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M5.5 19H10M20 6.5V11" />
     </>
   ),
+  letrero: (
+    <>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <path d="M7.5 15l2.5-6 2.5 6M8.5 13h3M15 9v6h2.5" />
+    </>
+  ),
   cam: (
     <>
       <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />
