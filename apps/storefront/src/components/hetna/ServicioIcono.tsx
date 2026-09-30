@@ -26,6 +26,12 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M4 7v3M20 17v-3" />
     </>
   ),
+  mueble: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="1" />
+      <path d="M4 11h16M12 3v8M9 7h1M14 7h1M10.5 15h3" />
+    </>
+  ),
   cam: (
     <>
       <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />

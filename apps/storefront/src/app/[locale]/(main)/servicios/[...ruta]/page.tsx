@@ -7,6 +7,7 @@ import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
+import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
@@ -50,6 +51,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Convierte gratis archivos DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
     }
   }
+  if (s.slug === "generador-2d-3d/despiece-muebles") {
+    return {
+      title: "Despiece de muebles gratis: lista de corte y acomodo en hojas (DXF)",
+      description: "Calcula gratis el despiece de gabinetes, libreros, closets y cocinas en melamina o MDF: lista de corte, acomodo en hojas, metros de canto y herrajes. Descarga el DXF para tu router CNC.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -79,6 +86,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/caja-con-juntas") return <GeneradorCaja />
   if (s.slug === "generador-2d-3d/plantillas-empaque") return <GeneradorEmpaques />
   if (s.slug === "generador-2d-3d/convertidor") return <GeneradorConvertidor />
+  if (s.slug === "generador-2d-3d/despiece-muebles") return <GeneradorMueble />
 
   return <ServicioPagina s={s} />
 }
