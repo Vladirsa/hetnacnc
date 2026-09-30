@@ -46,6 +46,12 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M7.5 15l2.5-6 2.5 6M8.5 13h3M15 9v6h2.5" />
     </>
   ),
+  grabado: (
+    <>
+      <path d="M9 3h6v5l-3 3-3-3z" />
+      <path d="M12 11v5M8 20h8M9.5 17.5l-1.5 1M14.5 17.5l1.5 1" />
+    </>
+  ),
   cam: (
     <>
       <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />

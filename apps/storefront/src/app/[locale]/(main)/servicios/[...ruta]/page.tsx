@@ -7,6 +7,7 @@ import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
+import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
 import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
@@ -71,6 +72,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Escribe un nombre o un letrero, elige entre 19 tipografías y descarga gratis el DXF con las letras unidas, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
     }
   }
+  if (s.slug === "generador-2d-3d/grabado-foto") {
+    return {
+      title: "Foto para grabado láser gratis: tramado Jarvis, semitono y DPI exacto",
+      description: "Prepara gratis tu foto para grabar con láser en madera, MDF, piel, pizarra o acrílico: brillo, contraste, tramado Jarvis, Stucki o Floyd, semitono y PNG con la resolución exacta para LightBurn.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -103,6 +110,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/despiece-muebles") return <GeneradorMueble />
   if (s.slug === "generador-2d-3d/vectorizador") return <GeneradorVectorizador />
   if (s.slug === "generador-2d-3d/letreros") return <GeneradorLetrero />
+  if (s.slug === "generador-2d-3d/grabado-foto") return <GeneradorGrabado />
 
   return <ServicioPagina s={s} />
 }
