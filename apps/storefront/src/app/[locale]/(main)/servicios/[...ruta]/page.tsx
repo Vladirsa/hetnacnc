@@ -8,6 +8,7 @@ import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
+import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
@@ -57,6 +58,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Calcula gratis el despiece de gabinetes, libreros, closets y cocinas en melamina o MDF: lista de corte, acomodo en hojas, metros de canto y herrajes. Descarga el DXF para tu router CNC.",
     }
   }
+  if (s.slug === "generador-2d-3d/vectorizador") {
+    return {
+      title: "Vectorizar imagen gratis para CNC y láser: de JPG o PNG a DXF y SVG",
+      description: "Convierte gratis un logotipo, dibujo o foto en vector: contornos cerrados en DXF o SVG listos para corte láser, router CNC o plasma. Tu imagen no se sube a ningún servidor.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -87,6 +94,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/plantillas-empaque") return <GeneradorEmpaques />
   if (s.slug === "generador-2d-3d/convertidor") return <GeneradorConvertidor />
   if (s.slug === "generador-2d-3d/despiece-muebles") return <GeneradorMueble />
+  if (s.slug === "generador-2d-3d/vectorizador") return <GeneradorVectorizador />
 
   return <ServicioPagina s={s} />
 }

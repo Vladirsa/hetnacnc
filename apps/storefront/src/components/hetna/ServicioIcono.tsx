@@ -32,6 +32,14 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M4 11h16M12 3v8M9 7h1M14 7h1M10.5 15h3" />
     </>
   ),
+  vector: (
+    <>
+      <path d="M4 19c3-9 7-14 16-14" />
+      <rect x="2.5" y="17.5" width="3" height="3" rx=".5" />
+      <rect x="18.5" y="3.5" width="3" height="3" rx=".5" />
+      <path d="M5.5 19H10M20 6.5V11" />
+    </>
+  ),
   cam: (
     <>
       <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" />
