@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { hayArchivoPendiente } from "@/lib/generador/aCotizador"
 
 import { FranjaAyuda } from "../ServicioPagina"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
@@ -38,6 +39,11 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
   const [demo, setDemo] = useState(false)
   const cerrar = useCallback(() => setDemo(false), [])
   const volver = encodeURIComponent(`/${locale}/servicios/cotizador-cnc`)
+
+  // si viene un archivo del Generador 2D y 3D, se abre la prueba sin cuenta con ese archivo
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("archivo") === "generador" && hayArchivoPendiente()) setDemo(true)
+  }, [])
 
   // "Probar sin cuenta" abre la app en la misma pagina, debajo del encabezado de la tienda
   if (demo) return <CotizadorEmbebido modo="demo" locale={locale} onCerrar={cerrar} />

@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { usarAltoLibre } from "../usarAltoLibre"
 
+import { cargarEnCotizador } from "@/lib/generador/aCotizador"
 import {
   tallerBorrar,
   tallerCargar,
@@ -35,6 +36,7 @@ export const CotizadorEmbebido = ({
 }) => {
   const [listo, setListo] = useState(false)
   const cajaRef = usarAltoLibre<HTMLDivElement>()
+  const marcoRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     const aqui = `/${locale}/servicios/cotizador-cnc`
@@ -67,10 +69,13 @@ export const CotizadorEmbebido = ({
     <div ref={cajaRef} className="w-full bg-[#EEF0F3]" aria-label="Cotizador CNC">
       {listo && (
         <iframe
+          ref={marcoRef}
           src="/hetna-cotizador/app.html?v=5"
           title="Cotizador CNC de HetNa"
           className="w-full h-full border-0 block"
           allow="clipboard-write; web-share"
+          // si llega un archivo desde el Generador 2D y 3D, se carga solo
+          onLoad={() => marcoRef.current && cargarEnCotizador(marcoRef.current)}
         />
       )}
     </div>
