@@ -185,6 +185,28 @@ export const ServicioPagina = ({ s }: { s: Servicio }) => {
           </div>
         )}
 
+        {s.slug === "aprendizaje-cnc" && (
+          <LocalizedClientLink
+            href="/foro-cnc"
+            className="group bg-white border border-[#E7E4DC] hover:border-[#C2560A] rounded-[16px] p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
+          >
+            <div className="flex gap-4 items-start">
+              <span className="w-12 h-12 rounded-[12px] bg-[#FDEEE1] text-[#C2560A] flex items-center justify-center shrink-0">
+                <ServicioIcono nombre="aprender" size={26} />
+              </span>
+              <div>
+                <h2 className="font-display text-[20px] font-bold m-0 text-[#1B1B18]">Foro CNC México</h2>
+                <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] leading-relaxed max-w-[620px]">
+                  Pregunta a talleres y profesionales, comparte tus trabajos y videos, y date a conocer con tu perfil. Gratis.
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 self-start sm:self-auto bg-[#C2560A] group-hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]">
+              Entrar al foro
+            </span>
+          </LocalizedClientLink>
+        )}
+
         {hijos.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">

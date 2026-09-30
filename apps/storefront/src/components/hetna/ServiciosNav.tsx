@@ -123,6 +123,10 @@ export const ServiciosNav = ({
       )
     })}
 
+    <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
+      Foro CNC
+    </LocalizedClientLink>
+
     <span className="flex-1" />
     <a
       href="/seller"
