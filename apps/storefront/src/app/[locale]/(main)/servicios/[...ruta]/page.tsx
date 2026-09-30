@@ -10,6 +10,7 @@ import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaque
 import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
 import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
+import { GeneradorRelieve } from "@/components/hetna/generador/GeneradorRelieve"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
@@ -78,6 +79,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Prepara gratis tu foto para grabar con láser en madera, MDF, piel, pizarra o acrílico: brillo, contraste, tramado Jarvis, Stucki o Floyd, semitono y PNG con la resolución exacta para LightBurn.",
     }
   }
+  if (s.slug === "generador-2d-3d/litofania-relieve") {
+    return {
+      title: "Generador de litofanías y relieves 3D gratis: de foto a STL",
+      description: "Convierte gratis una foto en STL: litofanía plana, curva o en cilindro para lámpara lista para imprimir, o relieve 3D con mapa de alturas para tallar en router CNC con VCarve o Aspire.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -111,6 +118,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/vectorizador") return <GeneradorVectorizador />
   if (s.slug === "generador-2d-3d/letreros") return <GeneradorLetrero />
   if (s.slug === "generador-2d-3d/grabado-foto") return <GeneradorGrabado />
+  if (s.slug === "generador-2d-3d/litofania-relieve") return <GeneradorRelieve />
 
   return <ServicioPagina s={s} />
 }

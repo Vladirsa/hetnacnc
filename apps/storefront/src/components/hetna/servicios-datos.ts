@@ -58,7 +58,7 @@ export const SERVICIOS: Servicio[] = [
       "STL",
       "STEP"
     ],
-    "proximo": "Ya disponibles gratis: cajas con juntas de dedo, plantillas de empaque, convertidor de archivos, despiece de muebles, vectorizador de imágenes, letreros con nombres y foto para grabado láser. Muy pronto: arte con IA.",
+    "proximo": "Ya disponibles gratis: cajas con juntas de dedo, plantillas de empaque, convertidor de archivos, despiece de muebles, vectorizador de imágenes, letreros con nombres, foto para grabado láser y litofanías y relieves 3D. Muy pronto: arte con IA.",
     "whatsapp": "Hola HETNA CNC, quiero un diseño 2D/3D.",
     "boton": "Pedir mi diseño"
   },
@@ -201,9 +201,28 @@ export const SERVICIOS: Servicio[] = [
     "boton": "Cotizar el grabado"
   },
   {
-    "slug": "generador-2d-3d/diseno-desde-cero",
+    "slug": "generador-2d-3d/litofania-relieve",
     "padre": "generador-2d-3d",
     "numero": "1.8",
+    "icono": "relieve",
+    "nombre": "Litofanías y relieves 3D (gratis)",
+    "resumen": "Tu foto convertida en STL: litofanía plana, curva o de lámpara, o relieve para tallar en router.",
+    "titulo": "Litofanías y relieves 3D desde una foto",
+    "subtitulo": "La foto se convierte en tu navegador, sin subirla.",
+    "incluye": [],
+    "pasos": [],
+    "formatos": [
+      "STL",
+      "PNG"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero una litofanía o un relieve 3D.",
+    "boton": "Cotizar mi pieza"
+  },
+  {
+    "slug": "generador-2d-3d/diseno-desde-cero",
+    "padre": "generador-2d-3d",
+    "numero": "1.9",
     "icono": "generador",
     "nombre": "Diseño desde cero",
     "resumen": "De tu idea, foto o boceto a un archivo CNC hecho a la medida.",
@@ -246,7 +265,7 @@ export const SERVICIOS: Servicio[] = [
   {
     "slug": "generador-2d-3d/modificacion-de-archivos",
     "padre": "generador-2d-3d",
-    "numero": "1.9",
+    "numero": "1.10",
     "icono": "generador",
     "nombre": "Modificación de archivos",
     "resumen": "Cambiamos medidas, textos o detalles de un archivo que ya tienes.",
@@ -289,7 +308,7 @@ export const SERVICIOS: Servicio[] = [
   {
     "slug": "generador-2d-3d/vectorizacion",
     "padre": "generador-2d-3d",
-    "numero": "1.10",
+    "numero": "1.11",
     "icono": "generador",
     "nombre": "Vectorización",
     "resumen": "Tu logotipo, dibujo o foto convertido en vector limpio para cortar o grabar.",
@@ -332,7 +351,7 @@ export const SERVICIOS: Servicio[] = [
   {
     "slug": "generador-2d-3d/conversion-de-formatos",
     "padre": "generador-2d-3d",
-    "numero": "1.11",
+    "numero": "1.12",
     "icono": "generador",
     "nombre": "Conversión de formatos",
     "resumen": "Pasamos tu archivo al formato que acepta tu máquina o tu programa.",
@@ -375,7 +394,7 @@ export const SERVICIOS: Servicio[] = [
   {
     "slug": "generador-2d-3d/preparacion-para-cam",
     "padre": "generador-2d-3d",
-    "numero": "1.12",
+    "numero": "1.13",
     "icono": "cam",
     "nombre": "Preparación para CAM",
     "resumen": "Limpiamos y revisamos tu archivo para que corte sin errores.",
