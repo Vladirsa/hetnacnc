@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useParams } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import {
@@ -20,6 +21,7 @@ import {
   medidasMalla,
   unir,
 } from "@/lib/generador/vectores"
+import { mandarACotizador } from "@/lib/generador/aCotizador"
 
 type Archivo =
   | { tipo: "2d"; nombre: string; formato: "dxf" | "svg"; dibujo: Dibujo }
@@ -73,6 +75,8 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo }: { etiqueta: string; valor: 
 )
 
 export function GeneradorConvertidor() {
+  const { locale } = useParams<{ locale: string }>()
+  const [avisoCotizar, setAvisoCotizar] = useState("")
   const [archivo, setArchivo] = useState<Archivo | null>(null)
   const [error, setError] = useState("")
   const [cargando, setCargando] = useState(false)
@@ -265,6 +269,16 @@ export function GeneradorConvertidor() {
                 </p>
               )}
               {salida2d && salida2d.trazos.length > 0 && (
+                <>
+                <button
+                  type="button"
+                  onClick={() => { if (!mandarACotizador(`${raiz}.dxf`, dibujoDXF(salida2d), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                  className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
+                  Ver precio al instante en el Cotizador
+                </button>
+                {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.dxf`, dibujoDXF(salida2d), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar DXF
@@ -273,9 +287,10 @@ export function GeneradorConvertidor() {
                     Descargar SVG
                   </button>
                   <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                    Cotizar el corte
+                    Pedir por WhatsApp
                   </a>
                 </div>
+                </>
               )}
             </>
           )}
@@ -296,6 +311,16 @@ export function GeneradorConvertidor() {
                 ))}
               </dl>
               {salida3d && salida3d.tris.length > 0 && (
+                <>
+                <button
+                  type="button"
+                  onClick={() => { if (!mandarACotizador(`${raiz}.stl`, mallaSTL(salida3d), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                  className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
+                  Ver precio al instante en el Cotizador
+                </button>
+                {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.stl`, mallaSTL(salida3d), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar STL
@@ -304,9 +329,10 @@ export function GeneradorConvertidor() {
                     Descargar OBJ
                   </button>
                   <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                    Cotizar la pieza
+                    Pedir por WhatsApp
                   </a>
                 </div>
+                </>
               )}
             </>
           )}
