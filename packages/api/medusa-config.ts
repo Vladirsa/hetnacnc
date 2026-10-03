@@ -10,6 +10,28 @@ const dashboardAppDir = (name: string) => {
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, `../../apps/${name}`)
 }
 
+// Mercado Pago solo se activa si existe el token; así el servidor arranca aunque falte
+const pagos = process.env.MERCADOPAGO_ACCESS_TOKEN
+  ? [
+      {
+        resolve: '@medusajs/medusa/payment',
+        options: {
+          providers: [
+            {
+              resolve: './src/modules/mercadopago',
+              id: 'mercadopago',
+              options: {
+                accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+                storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
+                statementDescriptor: 'HETNA CNC',
+              },
+            },
+          ],
+        },
+      },
+    ]
+  : []
+
 module.exports = withMercur({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -68,5 +90,6 @@ module.exports = withMercur({
         ],
       },
     },
+    ...pagos,
   ],
 })
