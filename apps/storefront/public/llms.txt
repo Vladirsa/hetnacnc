@@ -1,0 +1,23 @@
+# HETNA CNC
+
+> Marketplace especializado en CNC en México. Reúne máquinas, herramientas, refacciones, materiales y diseños DXF, SVG y STL, además de servicios de diseño y maquila ofrecidos por talleres y vendedores de todo el país. Envíos a toda la República Mexicana.
+
+## Tienda
+
+- [Inicio y catálogo](https://hetnacnc.com/mx): productos CNC de varios vendedores con precios en pesos mexicanos.
+- [Crear cuenta](https://hetnacnc.com/mx/register): registro gratuito para comprar, guardar favoritos y dar seguimiento a pedidos.
+
+## Servicios
+
+- [Servicios CNC](https://hetnacnc.com/mx/servicios): herramientas y servicios para talleres y fabricantes.
+- [Cotizador CNC](https://hetnacnc.com/mx/servicios/cotizador-cnc): cotización de corte y maquila a partir de un archivo y un material.
+- [Copiloto IA CNC](https://hetnacnc.com/mx/servicios/copiloto-ia-cnc): asistente de IA para parámetros de corte, selección de herramienta, G-code y diagnóstico de errores.
+- [Aprendizaje CNC](https://hetnacnc.com/mx/servicios/aprendizaje-cnc): guías y cursos de router, láser, plasma y torno CNC.
+
+## Comunidad
+
+- [Foro CNC México](https://hetnacnc.com/mx/foro-cnc): preguntas, trabajos terminados y perfiles de talleres, proveedores y profesionales.
+
+## Vendedores
+
+- [Vender en HETNA CNC](https://hetnacnc.com/seller): panel para que talleres y proveedores publiquen productos y atiendan pedidos.

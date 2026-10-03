@@ -55,3 +55,8 @@ dist/
 uploads/
 packages/api/static/
 *.log
+
+# respaldos locales
+*.bak
+*.bak[0-9]
+*.save

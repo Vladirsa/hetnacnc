@@ -12,7 +12,7 @@ export function HtmlLangSetter() {
   useEffect(() => {
     const localeMatch = pathname?.match(/^\/([a-z]{2})(?:\/|$)/i);
     const locale = localeMatch?.[1] || 'en';
-    const htmlLang = toHreflang(locale);
+    const htmlLang = locale.toLowerCase() === 'mx' ? 'es-MX' : toHreflang(locale);
 
     if (typeof document !== 'undefined') {
       document.documentElement.lang = htmlLang;

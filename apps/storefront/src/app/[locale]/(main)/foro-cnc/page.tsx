@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 
-import { BotonPublicar, Buscador, Lateral, Pestanas } from "@/components/hetna/foro/ForoMarco"
-import { ForoCerrado, Paginacion, TarjetaTema } from "@/components/hetna/foro/Piezas"
+import { BotonPublicar, Buscador, Pestanas } from "@/components/hetna/foro/ForoMarco"
+import { ChipsSecciones, ColDerecha, ColIzquierda, Composer, Publicacion } from "@/components/hetna/foro/Feed"
+import { ForoCerrado, Paginacion } from "@/components/hetna/foro/Piezas"
 import { type Orden, POR_PAGINA, destacados, listaTemas, secciones, sesionForo } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
 
@@ -42,37 +43,21 @@ export default async function ForoInicio({ params, searchParams }: Props) {
   ])
   if (!lista || !secs) return <ForoCerrado />
 
-  const totalTemas = secs.reduce((a, s) => a + s.temas, 0)
   const base = buscar ? `/foro-cnc?q=${encodeURIComponent(buscar)}${seccionBusqueda ? `&seccion=${seccionBusqueda}` : ""}` : "/foro-cnc"
   const baseOrden = orden === "recientes" ? base : `${base}${base.includes("?") ? "&" : "?"}orden=${orden}`
 
   return (
-    <main className="w-full bg-[#FAF9F6]">
-      <section className="bg-[#142033] text-white px-4 lg:px-16 py-8 lg:py-10">
-        <div className="max-w-[1180px] mx-auto flex flex-col gap-4">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div>
-              <span className="text-[12px] font-bold tracking-wide uppercase bg-[#C2560A] px-3 py-1 rounded-full">Comunidad</span>
-              <h1 className="font-display text-[30px] lg:text-[40px] leading-[1.1] font-bold m-0 mt-3">Foro CNC México</h1>
-              <p className="m-0 mt-2 text-[15.5px] text-[#C9D2E0] max-w-[640px] leading-relaxed">
-                Resuelve dudas de router, láser, plasma y torno CNC, muestra tus trabajos y encuentra talleres y proveedores en todo México.
-              </p>
-            </div>
-            <BotonPublicar className="self-start lg:self-auto" />
-          </div>
-          <div className="max-w-[720px]">
-            <Buscador locale={locale} valor={buscar} />
-          </div>
-          <span className="text-[13px] text-[#9FB0C8]">
-            {totalTemas} {totalTemas === 1 ? "tema" : "temas"} en {secs.length} secciones
-          </span>
-        </div>
-      </section>
+    <main className="w-full bg-[#F4F1EA]">
+      <h1 className="sr-only">Foro CNC México</h1>
+      <div className="max-w-[1180px] mx-auto px-4 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_290px] gap-4 lg:gap-5">
+        <ColIzquierda secciones={secs} sesion={sesion} />
 
-      <div className="max-w-[1180px] mx-auto px-4 lg:px-16 xl:px-0 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-8">
-        <div className="flex flex-col gap-4 min-w-0">
+        <div className="flex flex-col gap-3 min-w-0">
+          <Buscador locale={locale} valor={buscar} />
+          <ChipsSecciones secciones={secs} />
+          <Composer sesion={sesion} />
           {buscar ? (
-            <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
+            <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]">
               {lista.total} {lista.total === 1 ? "resultado" : "resultados"} para “{buscar}”
             </h2>
           ) : null}
@@ -89,11 +74,11 @@ export default async function ForoInicio({ params, searchParams }: Props) {
           {lista.temas.length ? (
             <div className="flex flex-col gap-3">
               {lista.temas.map((t) => (
-                <TarjetaTema key={t.id} t={t} />
+                <Publicacion key={t.id} t={t} />
               ))}
             </div>
           ) : (
-            <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[14px] p-8 text-center flex flex-col items-center gap-3">
+            <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[12px] p-8 text-center flex flex-col items-center gap-3">
               <p className="m-0 text-[15px] text-[#44433D]">
                 {buscar ? "No encontramos temas con esas palabras. Pregúntalo tú y la comunidad te ayuda." : "Todavía no hay temas aquí. ¡Sé el primero en publicar!"}
               </p>
@@ -102,7 +87,8 @@ export default async function ForoInicio({ params, searchParams }: Props) {
           )}
           <Paginacion pagina={pagina} total={lista.total} porPagina={POR_PAGINA} base={baseOrden} />
         </div>
-        <Lateral secciones={secs} sesion={sesion} destacados={top} />
+
+        <ColDerecha destacados={top} />
       </div>
     </main>
   )

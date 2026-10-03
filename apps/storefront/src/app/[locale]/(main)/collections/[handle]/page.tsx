@@ -74,7 +74,7 @@ const SingleCollectionsPage = async ({
 }) => {
   const { handle, locale } = await params
 
-  const bot = isBot(navigator.userAgent)
+  const bot = isBot((await headers()).get("user-agent") || "")
   const collection = await getCollectionByHandle(handle)
 
   if (!collection) return <NotFound />

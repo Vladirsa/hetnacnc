@@ -5,12 +5,6 @@ import path from 'path'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
-// Resolves where a dashboard app lives:
-// - in the source tree (development): ../../apps/<name>
-// - in the production build artifact: hosts that deploy only `.medusa/server` (for example
-//   Medusa Cloud) get the panels bundled into ./dashboards/<name> by
-//   scripts/bundle-dashboards.mjs during `build`. The compiled config runs from the
-//   artifact root, so __dirname points there.
 const dashboardAppDir = (name: string) => {
   const bundled = path.join(__dirname, 'dashboards', name)
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, `../../apps/${name}`)
@@ -33,6 +27,20 @@ module.exports = withMercur({
   },
   modules: [
     {
+      resolve: "@medusajs/medusa/auth",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/auth-emailpass",
+            id: "emailpass",
+            options: {
+              autoRegister: true,
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: '@mercurjs/core/modules/admin-ui',
       options: {
         appDir: dashboardAppDir('admin'),
@@ -54,9 +62,6 @@ module.exports = withMercur({
             resolve: '@medusajs/medusa/file-local',
             id: 'local',
             options: {
-              // The local provider bakes this into every uploaded file URL.
-              // It must be the publicly reachable origin in production, or
-              // images resolve to localhost and render broken.
               backend_url: process.env.FILE_BACKEND_URL || 'http://localhost:9000/static',
             },
           },

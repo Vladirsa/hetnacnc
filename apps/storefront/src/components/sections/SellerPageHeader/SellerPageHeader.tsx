@@ -11,7 +11,7 @@ export const SellerPageHeader = ({
   user: HttpTypes.StoreCustomer | null
 }) => {
   return (
-    <div className="border rounded-sm">
+    <div className="border border-[#E7E4DC] rounded-xl overflow-hidden bg-white">
       <SellerHeading header seller={seller} user={user} />
       <SellerFooter seller={seller} />
     </div>

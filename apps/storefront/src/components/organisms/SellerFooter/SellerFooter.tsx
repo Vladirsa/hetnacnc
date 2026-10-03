@@ -14,7 +14,7 @@ export const SellerFooter = ({ seller }: { seller: SellerDTO }) => {
       <div className="flex gap-2 lg:gap-4 items-center label-sm lg:label-md text-secondary mb-4 lg:mb-0 justify-between w-full lg:justify-start lg:w-auto">
         <Divider square />
         {seller.created_at && (
-          <p>Joined {format(new Date(seller.created_at), "yyyy-MM-dd")}</p>
+          <p>Miembro desde {format(new Date(seller.created_at), "yyyy-MM-dd")}</p>
         )}
       </div>
       <Button

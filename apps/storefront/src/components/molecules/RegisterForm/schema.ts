@@ -18,7 +18,7 @@ export const registerFormSchema = z.object({
     .string()
     .nonempty('Please enter password')
     .min(8, 'Password must be at least 8 characters long')
-    .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/, {
+    .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`])/, {
       message:
         'Password must contain at least one uppercase letter, one number and one special character'
     })

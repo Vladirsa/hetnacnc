@@ -36,7 +36,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
   const whatsapp = redes.find((r) => r.label === "WhatsApp")?.path
 
   return (
-    <header data-testid="header" data-locale={locale} className="w-full">
+    <header data-testid="header" data-locale={locale} className="w-full sticky top-0 z-50 md:static">
       {/* Barra superior */}
       <div className="hidden md:flex bg-[#0F1826] text-[#C9D2E0] text-[12px] px-4 lg:px-16 py-2 justify-between items-center">
         <span>Envíos a toda la República Mexicana</span>
@@ -84,7 +84,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           className="shrink-0 flex items-center"
           data-testid="header-logo-link"
         >
-          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority />
+          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority className="h-auto w-[120px] md:w-[180px]" />
         </LocalizedClientLink>
         <div className="hidden md:flex shrink-0">
           <EnvioA user={user} />
@@ -95,7 +95,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           </Suspense>
         </div>
         <div
-          className="ml-auto flex items-center gap-4 lg:gap-6"
+          className="ml-auto hidden md:flex items-center gap-4 lg:gap-6"
           data-testid="header-actions"
         >
           <FavoritosBoton />
@@ -103,20 +103,20 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           <UserDropdown isLoggedIn={isLoggedIn} />
           <CartDropdown />
         </div>
-      </div>
-
-      {/* Buscador en celular */}
-      <div className="md:hidden bg-white px-4 pb-3 border-b border-[#E7E4DC]">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <EnvioA user={user} />
-          <div className="flex items-center gap-2">
-            <IdiomaSelector />
-            <MonedaSelector regions={regions} />
-          </div>
+        {/* Celular: notificaciones, idioma y moneda */}
+        <div className="ml-auto flex md:hidden items-center gap-2">
+          <LocalizedClientLink
+            href="/user/messages"
+            aria-label="Notificaciones"
+            className="p-1.5 text-[#142033]"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />
+            </svg>
+          </LocalizedClientLink>
+          <IdiomaSelector />
+          <MonedaSelector regions={regions} />
         </div>
-        <Suspense fallback={null}>
-          <NavbarSearch />
-        </Suspense>
       </div>
 
       {/* Tienda y servicios */}

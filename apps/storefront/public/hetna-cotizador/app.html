@@ -1,0 +1,2545 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>html,body{margin:0}:root{padding-top:env(safe-area-inset-top,0px)}img{max-width:100%}[hidden]{display:none!important}html body .top{background:#fff;color:#1B1B18;border-bottom:1px solid #E7E4DC;padding-top:8px;padding-bottom:8px}html body .marca b{font-size:17px}html body .marca svg{width:24px;height:24px}html body .taller-pill{background:#FAF6EF;border-color:#E7E4DC;color:#1B1B18}html body .volver{border-color:#E7E4DC;color:#1B1B18}@media(min-width:900px){html body .app{max-width:none;padding-inline:0}html body .top{margin-inline:0;padding:14px 32px}html body .taller-pill{max-width:none}#vista-cotizar{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start;max-width:1600px;margin:0 auto;padding:24px 32px}#vista-cotizar>#banner-plan{grid-column:1/-1;grid-row:1}#vista-cotizar>section{grid-column:2}#vista-cotizar>section:nth-of-type(1){grid-column:1;grid-row:2/span 4;position:sticky;top:84px}#vista-historial,#vista-taller{max-width:1100px;margin:0 auto;padding:24px 32px}html body .tabs{max-width:720px}}</style></head><body><title>HetNa Cotizador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de una columna pensada para el celular del taller; barra de pestañas abajo, hoja de trabajo que baja en pasos */
+:root {
+  --bg: #EEF1F5;
+  --surface: #FFFFFF;
+  --surface-2: #F6F8FB;
+  --ink: #131A25;
+  --muted: #5A6576;
+  --line: #D8DEE7;
+  --accent: #C2560A;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #FBE9DC;
+  --navy: #142033;
+  --navy-ink: #E9EEF6;
+  --ok: #17784D;
+  --ok-soft: #DDF3E8;
+  --warn: #9A6212;
+  --warn-soft: #FDF1DC;
+  --wa: #1FAF5A;
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1119; --surface: #151C27; --surface-2: #1B2431; --ink: #E8ECF2; --muted: #9AA5B5; --line: #2A3647;
+    --accent: #E4803A; --accent-ink: #1A0E05; --accent-soft: #3A2414; --navy: #0A1019; --navy-ink: #E9EEF6;
+    --ok: #5FD39A; --ok-soft: #123526; --warn: #F0BE6B; --warn-soft: #3A2C12; --wa: #2BC46A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1119; --surface: #151C27; --surface-2: #1B2431; --ink: #E8ECF2; --muted: #9AA5B5; --line: #2A3647;
+  --accent: #E4803A; --accent-ink: #1A0E05; --accent-soft: #3A2414; --navy: #0A1019; --navy-ink: #E9EEF6;
+  --ok: #5FD39A; --ok-soft: #123526; --warn: #F0BE6B; --warn-soft: #3A2C12; --wa: #2BC46A; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font-body); font-size: 15.5px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.app { max-width: 620px; margin: 0 auto; padding-inline: 16px; padding-block: 0 110px; }
+
+/* Encabezado */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--navy); color: var(--navy-ink); margin-inline: -16px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.marca { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.marca svg { flex: none; }
+.marca b { font-family: var(--font-display); font-size: 21px; letter-spacing: .02em; font-weight: 700; }
+.marca b span { color: var(--accent); }
+.taller-pill { margin-left: auto; font-size: 12.5px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); padding: 4px 10px; border-radius: 999px; max-width: 45%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Tarjetas de paso */
+.paso { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.pila { display: flex; flex-direction: column; gap: 14px; padding-block: 16px; }
+.paso-h { display: flex; align-items: baseline; gap: 10px; }
+.paso-h .n { font-family: var(--font-mono); font-size: 12px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
+.paso-h h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.paso-h .extra { margin-left: auto; font-size: 13px; color: var(--muted); }
+.ayuda { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* Subir archivo */
+.soltar { border: 2px dashed var(--line); border-radius: 12px; padding: 20px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--surface-2); transition: border-color .15s, background .15s; }
+.soltar.encima { border-color: var(--accent); background: var(--accent-soft); }
+.soltar strong { font-size: 17px; }
+.formatos { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.formatos span { font-family: var(--font-mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--muted); background: var(--surface); }
+.fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .chip:focus-visible, .opc:focus-visible, .tab:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+.btn.primario { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.wa { background: var(--wa); border-color: var(--wa); color: #fff; }
+.btn.chico { min-height: 36px; padding: 6px 11px; font-size: 13.5px; }
+.btn.bloque { width: 100%; }
+.btn.fantasma { background: transparent; }
+
+/* Vista previa */
+.vista { position: relative; background: var(--navy); border-radius: 12px; overflow: hidden; aspect-ratio: 4 / 3; max-width: 100%; touch-action: none; }
+.vista canvas { width: 100%; height: 100%; display: block; }
+.vista .etq { position: absolute; left: 10px; top: 10px; font-family: var(--font-mono); font-size: 11.5px; color: var(--navy-ink); background: rgba(0,0,0,.35); padding: 3px 7px; border-radius: 6px; }
+.vista .gira { position: absolute; right: 10px; bottom: 10px; font-size: 12px; color: var(--navy-ink); opacity: .8; }
+.medidas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.medida { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.medida small { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.medida b { font-family: var(--font-mono); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
+.archivo-nombre { font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
+.aviso { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--warn-soft); color: var(--warn); }
+.aviso.ok { background: var(--ok-soft); color: var(--ok); }
+
+/* Formularios */
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.campo.ancho { grid-column: 1 / -1; }
+.campo label, .etiqueta { font-size: 13px; font-weight: 600; color: var(--muted); }
+.campo input, .campo select, .campo textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 9px 11px; }
+.campo input[type="number"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.campo .del-archivo { font-size: 11px; color: var(--ok); font-weight: 600; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-weight: 600; cursor: pointer; white-space: nowrap; min-height: 40px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .sug { font-size: 11px; color: var(--accent); margin-left: 6px; }
+.chip[aria-pressed="true"] .sug { color: var(--accent); }
+.segmento { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.segmento button { border: 0; background: var(--surface); padding: 10px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.segmento button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.contador { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.contador button { width: 44px; height: 44px; border: 0; background: var(--surface-2); font-size: 20px; cursor: pointer; }
+.contador input { border: 0 !important; text-align: center; border-radius: 0 !important; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 14.5px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+/* Precios */
+.opciones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.opc { border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0; }
+.opc small { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.opc b { font-family: var(--font-mono); font-weight: 500; font-size: clamp(15px, 4.2vw, 20px); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.opc span { font-size: 11.5px; color: var(--muted); }
+.opc[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); padding: 9px 7px; }
+.opc[aria-pressed="true"] small { color: var(--accent); }
+.interno { border-top: 1px dashed var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.interno-h { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.interno-h svg { flex: none; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kpi { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.kpi small { display: block; font-size: 11.5px; color: var(--muted); }
+.kpi b { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; font-size: 15px; overflow-wrap: anywhere; }
+details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+.tabla td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.tabla td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Historial y ajustes */
+.item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.item-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.item-h b { font-family: var(--font-mono); font-weight: 500; }
+.item-h .fecha { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.pill { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--line); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.vacio { text-align: center; padding: 30px 10px; color: var(--muted); }
+.acordeon details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.acordeon details + details { margin-top: 8px; }
+.acordeon summary { padding: 12px 14px; cursor: pointer; font-weight: 700; }
+.acordeon .dentro { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.tarifa { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; align-items: center; }
+.tarifa label { font-size: 13.5px; min-width: 0; }
+.tarifa input { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 6px 9px; font-family: var(--font-mono); text-align: right; width: 100%; }
+.mat-fila { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; align-items: center; padding-block: 6px; border-bottom: 1px solid var(--line); }
+.mat-fila small { display: block; color: var(--muted); font-size: 12px; }
+
+/* Pestañas */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(3, 1fr); max-width: 620px; margin: 0 auto; }
+.tab { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: 10px; min-height: 48px; }
+.tab[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+.sim { display: flex; flex-direction: column; gap: 8px; }
+.sim-panel { display: flex; flex-direction: column; gap: 6px; }
+.sim-dato { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.volver { flex: none; border: 1px solid rgba(255,255,255,.25); background: transparent; color: var(--navy-ink); border-radius: 8px; padding: 5px 10px; font-weight: 600; font-size: 13px; cursor: pointer; min-height: 34px; }
+.banner { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.banner.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.banner span { min-width: 0; flex: 1 1 220px; }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(8,12,18,.55); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+.modal-caja { position: relative; background: var(--surface); color: var(--ink); border-radius: 16px; padding: 20px 18px 18px; width: 100%; max-width: 520px; max-height: calc(100% - 32px); overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.modal-caja h3 { font-family: var(--font-display); font-size: 23px; margin: 0; padding-right: 28px; }
+.modal-caja p { margin: 0; }
+.modal-x { position: absolute; right: 10px; top: 8px; border: 0; background: transparent; font-size: 26px; cursor: pointer; color: var(--muted); width: 40px; height: 40px; }
+.plan { display: flex; gap: 10px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.plan .precio { font-family: var(--font-mono); font-size: 14px; color: var(--accent); }
+@media (min-width: 640px) { .modal { align-items: center; } }
+.oculto-svg { position: fixed; left: -20000px; top: 0; width: 1200px; height: 1200px; visibility: hidden; pointer-events: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 40; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media (max-width: 380px) { .opciones { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="marca">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 10v12M21 10v12M11 16h10" stroke="#C2560A" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <b>HetNa <span>Cotizador</span></b>
+    </div>
+    <div class="taller-pill" id="pill-taller">Mi taller CNC</div>
+    <button type="button" class="volver" id="volver-tienda" hidden>Tienda</button>
+  </header>
+
+  <!-- ===================== COTIZAR ===================== -->
+  <main id="vista-cotizar" class="pila">
+    <div id="banner-plan" class="banner" hidden></div>
+    <section class="paso" aria-labelledby="h-archivo">
+      <div class="paso-h"><span class="n">1</span><h2 id="h-archivo">Archivo de la pieza</h2></div>
+      <div id="zona-subir">
+        <label class="soltar" id="soltar" for="archivo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <strong>Sube el archivo del cliente</strong>
+          <span class="ayuda">Desde WhatsApp, Drive o tu correo. Lo medimos aquí mismo, no se sube a ningún servidor.</span>
+          <div class="formatos"><span>DXF</span><span>SVG</span><span>STL</span><span>OBJ</span></div>
+        </label>
+        <input id="archivo" class="sr" type="file" accept=".dxf,.svg,.stl,.obj">
+        <div class="fila-btn" style="margin-top:10px">
+          <button class="btn chico" type="button" id="ej-2d">Probar ejemplo 2D (DXF)</button>
+          <button class="btn chico" type="button" id="ej-3d">Probar ejemplo 3D (STL)</button>
+          <button class="btn chico fantasma" type="button" id="sin-archivo">Sin archivo: capturo medidas</button>
+        </div>
+      </div>
+      <div id="zona-archivo" hidden>
+        <div class="vista" id="vista"><canvas id="lienzo" aria-label="Vista previa de la pieza"></canvas><canvas id="lienzo3d" aria-label="Vista 3D de la pieza" hidden></canvas><span class="etq" id="vista-etq">DXF</span><span class="gira" id="vista-gira" hidden>Arrastra para girar · pellizca para acercar</span></div>
+        <div class="sim">
+          <button class="btn chico primario" type="button" id="btn-sim">Simular corte</button>
+          <div id="sim-panel" class="sim-panel" hidden>
+            <div class="fila-btn"><button class="btn chico" type="button" id="sim-vel" aria-label="Velocidad de la simulación">1×</button><button class="btn chico" type="button" id="sim-repetir">Repetir</button></div>
+            <div class="sim-dato" id="sim-dato"></div>
+            <div class="ayuda" id="sim-tiempo"></div>
+          </div>
+        </div>
+        <div class="archivo-nombre" id="archivo-nombre"></div>
+        <div class="medidas" id="medidas"></div>
+        <div class="campos">
+          <div class="campo">
+            <label for="unidad">Unidades del archivo</label>
+            <select id="unidad"></select>
+          </div>
+          <div class="campo" style="justify-content:flex-end">
+            <button class="btn" type="button" id="cambiar-archivo">Cambiar archivo</button>
+          </div>
+        </div>
+        <div id="avisos-archivo" class="checks"></div>
+      </div>
+      <div id="zona-manual" hidden>
+        <div class="aviso ok">Cotización sin archivo: escribe las medidas en el paso 2.</div>
+        <button class="btn chico" type="button" id="volver-subir" style="margin-top:8px">Mejor subo un archivo</button>
+      </div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-trabajo">
+      <div class="paso-h"><span class="n">2</span><h2 id="h-trabajo">Trabajo</h2></div>
+      <div>
+        <div class="etiqueta" id="lbl-servicio">Servicio</div>
+        <div class="chips" id="servicios" role="group" aria-labelledby="lbl-servicio"></div>
+      </div>
+      <div class="campos">
+        <div class="campo ancho"><label for="tipo">Tipo de trabajo</label><select id="tipo"></select></div>
+      </div>
+      <div class="campos" id="campos-medidas"></div>
+      <div class="campos">
+        <div class="campo">
+          <label for="cantidad">Cantidad de piezas</label>
+          <div class="contador"><button type="button" id="menos" aria-label="Menos piezas">−</button><input id="cantidad" type="number" min="1" step="1" value="1" inputmode="numeric"><button type="button" id="mas" aria-label="Más piezas">+</button></div>
+        </div>
+        <div class="campo" id="campo-material"><label for="material">Material</label><select id="material"></select></div>
+      </div>
+      <div class="campos" id="campos-servicio"></div>
+      <div id="bloque-material" class="checks">
+        <div class="etiqueta">¿Quién pone el material?</div>
+        <div class="segmento" role="group" aria-label="Quién pone el material">
+          <button type="button" id="mat-taller" aria-pressed="true">El taller</button>
+          <button type="button" id="mat-cliente" aria-pressed="false">El cliente</button>
+        </div>
+        <div id="mat-info" class="ayuda"></div>
+      </div>
+      <div class="campos">
+        <div class="campo" id="campo-acabado"><label for="acabado">Acabado</label><select id="acabado"></select></div>
+        <div class="campo" style="justify-content:flex-end"><label class="check"><input type="checkbox" id="iva" checked> Precios con IVA</label></div>
+      </div>
+      <div class="checks" id="extras"></div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-precio">
+      <div class="paso-h"><span class="n">3</span><h2 id="h-precio">Precio</h2><span class="extra" id="precio-nota">con IVA</span></div>
+      <div class="opciones" id="opciones" role="group" aria-label="Opción que se envía al cliente"></div>
+      <div id="aviso-precio"></div>
+      <div class="interno">
+        <div class="interno-h"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Solo lo ves tú (opción Estándar)</div>
+        <div class="kpis" id="kpis"></div>
+        <details class="desglose"><summary>Ver desglose del cálculo</summary><table class="tabla" id="desglose"></table></details>
+      </div>
+    </section>
+
+    <section class="paso" aria-labelledby="h-enviar">
+      <div class="paso-h"><span class="n">4</span><h2 id="h-enviar">Enviar al cliente</h2></div>
+      <div class="campos">
+        <div class="campo"><label for="cli-nombre">Nombre del cliente</label><input id="cli-nombre" autocomplete="off" placeholder="Ej. Carpintería López"></div>
+        <div class="campo"><label for="cli-tel">WhatsApp del cliente</label><input id="cli-tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos"></div>
+        <div class="campo ancho"><label for="cli-nota">Nota para el cliente (opcional)</label><textarea id="cli-nota" rows="2" placeholder="Ej. Tiempo de entrega 3 días hábiles"></textarea></div>
+      </div>
+      <a class="btn wa bloque" id="btn-wa" href="#" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>
+        Enviar por WhatsApp
+      </a>
+      <div class="fila-btn">
+        <button class="btn" type="button" id="btn-copiar" style="flex:1">Copiar mensaje</button>
+        <button class="btn primario" type="button" id="btn-guardar" style="flex:1">Guardar en historial</button>
+      </div>
+      <button class="btn bloque" type="button" id="btn-pdf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar PDF de la cotización</button>
+      <p class="ayuda">Descarga el PDF y mándalo por WhatsApp junto con el mensaje.</p>
+      <details class="desglose"><summary>Ver el mensaje</summary><pre id="mensaje" style="white-space:pre-wrap;font-family:var(--font-body);font-size:14px;background:var(--surface-2);padding:10px;border-radius:10px;margin:8px 0 0"></pre></details>
+    </section>
+  </main>
+
+  <!-- ===================== HISTORIAL ===================== -->
+  <main id="vista-historial" class="pila" hidden>
+    <section class="paso">
+      <div class="paso-h"><h2>Historial de cotizaciones</h2><span class="extra" id="hist-cuenta"></span></div>
+      <p class="ayuda">Se guardan en este celular. En la versión completa se guardan en tu cuenta y las ves desde cualquier dispositivo.</p>
+      <div id="historial" class="checks"></div>
+    </section>
+  </main>
+
+  <!-- ===================== MI TALLER ===================== -->
+  <main id="vista-taller" class="pila" hidden>
+    <section class="paso">
+      <div class="paso-h"><h2>Datos del taller</h2></div>
+      <div class="campos">
+        <div class="campo ancho"><label for="t-nombre">Nombre del taller</label><input id="t-nombre"></div>
+        <div class="campo"><label for="t-wa">WhatsApp del taller</label><input id="t-wa" inputmode="tel" placeholder="10 dígitos"></div>
+        <div class="campo"><label for="t-vigencia">Vigencia (días)</label><input id="t-vigencia" type="number" min="1"></div>
+        <div class="campo ancho"><span class="etiqueta">Logo (sale en el PDF)</span><div class="fila-btn" style="align-items:center"><span id="logo-prev"></span><label class="btn chico" for="t-logo">Subir logo</label><input id="t-logo" class="sr" type="file" accept="image/png,image/jpeg,image/webp"><button class="btn chico fantasma" type="button" id="quitar-logo">Quitar</button></div></div>
+        <div class="campo ancho"><label for="t-condiciones">Condiciones (salen en el PDF)</label><textarea id="t-condiciones" rows="3"></textarea></div>
+        <div class="campo ancho"><label for="t-minimo">Cobro mínimo por trabajo (sin IVA)</label><input id="t-minimo" type="number" min="0" step="10"><span class="ayuda">Si una cotización sale más baja, se cobra este mínimo. Pon 0 para no usarlo.</span></div>
+      </div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Márgenes y costos por hora</h2></div>
+      <p class="ayuda">Vienen de tu app Cotizador. Económico usa el margen mínimo, Estándar el recomendado y Express suma 15 puntos.</p>
+      <div class="campos" id="costos"></div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Precios de materiales</h2><span class="extra">por m²</span></div>
+      <div class="aviso">Pronto se actualizarán solos con los precios de tus proveedores. Mientras, pon aquí lo que pagas; los vacíos no se cobran.</div>
+      <div id="materiales"></div>
+    </section>
+    <section class="paso">
+      <div class="paso-h"><h2>Tarifas por servicio</h2></div>
+      <p class="ayuda">Son las tarifas reales de tu app Cotizador. Cambia la que quieras y el precio se recalcula al momento.</p>
+      <div class="acordeon" id="tarifas"></div>
+      <button class="btn" type="button" id="restaurar">Volver a las tarifas de mi app</button>
+      <div id="restaurar-conf" hidden class="fila-btn"><span class="ayuda" style="align-self:center">¿Seguro? Se pierden tus cambios.</span><button class="btn chico primario" type="button" id="restaurar-si">Sí, restaurar</button><button class="btn chico" type="button" id="restaurar-no">No</button></div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Secciones">
+  <button class="tab" role="tab" aria-selected="true" data-vista="cotizar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h4"/></svg>Cotizar</button>
+  <button class="tab" role="tab" aria-selected="false" data-vista="historial"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Historial</button>
+  <button class="tab" role="tab" aria-selected="false" data-vista="taller"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Mi taller</button>
+</nav>
+<div class="oculto-svg" id="svg-host" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="modal" id="modal" hidden><div class="modal-caja" role="dialog" aria-modal="true" aria-label="Cuenta"><button type="button" class="modal-x" data-cerrar aria-label="Cerrar">×</button><div id="modal-cuerpo"></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const DATOS = {"servicios":[{"clave":"plasma","nombre":"Plasma CNC","emoji":"🔥","tipos":[{"n":"Corte por m²","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Celosía/Calado","f":"por_area","k":1.2,"nec":["ancho","largo"]},{"n":"Metro lineal","f":"por_metro","k":1.0,"nec":["metros"]},{"n":"Por pieza/Proyecto","f":"precio_fijo","k":1.0,"nec":[]}],"tarifas":{"tarifa_m2_medio":680.0,"minimo_apertura":100.0,"limpieza_pieza":320.0,"tarifa_m2_delgado":480.0,"tarifa_metro_delgado":80.0,"tarifa_metro_medio":150.0,"factor_inox":1.4,"factor_aluminio":1.3,"umbral_minimo_m2":0.09,"consumibles_hora":75.0,"flete_mediano":350.0,"flete_grande":800.0,"tarifa_diseno_hora":250.0,"setup_archivo":75.0},"etiquetas":{"tarifa_m2_medio":"Por m² Cal 10-8 Acero negro","minimo_apertura":"Mínimo apertura máquina","limpieza_pieza":"Limpieza por pieza","tarifa_m2_delgado":"Por m² Cal 20-12 Acero negro","tarifa_metro_delgado":"Por metro lineal Cal 20-12","tarifa_metro_medio":"Por metro lineal Cal 10-8","factor_inox":"Factor Acero Inox (multiplicador)","factor_aluminio":"Factor Aluminio (multiplicador)","umbral_minimo_m2":"Área mínima para apertura (m²)","consumibles_hora":"Consumibles por hora","flete_mediano":"Flete pieza mediana 1-3m²","flete_grande":"Flete pieza grande >3m²","tarifa_diseno_hora":"Diseño por hora","setup_archivo":"Setup archivo DXF listo"},"rangos":[],"acabados":[],"materiales":["Acero al carbon","Acero inoxidable","Aluminio"]},{"clave":"laser_co2","nombre":"Laser CO2","emoji":"🔴","tipos":[{"n":"Solo corte","f":"por_minuto","k":1.0,"nec":["ancho","largo"]},{"n":"Solo grabado","f":"por_minuto","k":1.0,"nec":["ancho","largo"]},{"n":"Corte + Grabado","f":"por_minuto","k":1.3,"nec":["ancho","largo"]}],"tarifas":{"intervalo_ligero":0.25,"intervalo_normal":0.2,"tarifa_min":10.0,"vel_mdf_fino":30.0,"vel_mdf_medio":21.0,"vel_otros":15.0,"vel_grabado":190.0,"costo_tubo_min":0.8,"flete_mediano":200.0,"flete_grande":500.0,"intervalo_denso":0.3,"costo_diseno":150.0},"etiquetas":{"intervalo_ligero":"Intervalo grabado ligero (mm)","intervalo_normal":"Intervalo grabado normal (mm)","tarifa_min":"Tarifa por minuto","vel_mdf_fino":"Velocidad MDF 2.5mm (mm/s)","vel_mdf_medio":"Velocidad MDF 3-5mm (mm/s)","vel_otros":"Velocidad otros materiales (mm/s)","vel_grabado":"Velocidad grabado (mm/s)","costo_tubo_min":"Desgaste tubo CO₂ por minuto","flete_mediano":"Flete pieza mediana","flete_grande":"Flete pieza grande","intervalo_denso":"Intervalo grabado denso (mm)","costo_diseno":"Diseño por hora"},"rangos":[],"acabados":[],"materiales":["MDF","Acrilico","Madera","Cuero","Tela","Otro"]},{"clave":"router","nombre":"Router CNC","emoji":"🔧","tipos":[{"n":"Corte simple","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Corte complejo","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Grabado delineado simple","f":"por_area","k":0.8,"nec":["ancho","largo"]},{"n":"Grabado delineado complejo","f":"por_area","k":1.1,"nec":["ancho","largo"]},{"n":"Grabado 2.5D","f":"por_area","k":1.4,"nec":["alto","ancho","largo"]},{"n":"Relieve 3D","f":"por_volumen","k":1.0,"nec":["alto","ancho","largo"]},{"n":"Relieve Premium","f":"por_volumen","k":1.5,"nec":["alto","ancho","largo"]},{"n":"Escultura 3D","f":"por_volumen","k":1.8,"nec":["alto","ancho","largo"]},{"n":"Rotativo 4° eje","f":"por_volumen","k":2.5,"nec":["alto","ancho","largo"]}],"tarifas":{"tarifa_m2_normal":450.0,"costo_lijado_hora":0.0,"costo_barnizado":0.0,"costo_diseno":150.0,"tarifa_m2_celosia":450.0,"tarifa_m2_grabado_simple":280.0,"tarifa_m2_grabado_complejo":385.0,"tarifa_m2_grabado_2_5d":490.0},"etiquetas":{"tarifa_m2_normal":"Corte 2D Normal ($/m²)","costo_lijado_hora":"Mano de obra Lijado ($/hr)","costo_barnizado":"Barnizado/Acabado ($/m²)","costo_diseno":"Diseño adicional ($/hr)","tarifa_m2_celosia":"Corte 2D Celosía ($/m²)","tarifa_m2_grabado_simple":"Grabado delineado simple ($/m²)","tarifa_m2_grabado_complejo":"Grabado delineado complejo ($/m²)","tarifa_m2_grabado_2_5d":"Grabado 2.5D ($/m²)"},"rangos":[{"desde":0.0,"hasta":1200.0,"precio":580.0},{"desde":1201.0,"hasta":3000.0,"precio":1200.0},{"desde":3001.0,"hasta":7000.0,"precio":2000.0},{"desde":7001.0,"hasta":20000.0,"precio":4200.0},{"desde":20001.0,"hasta":60000.0,"precio":12000.0},{"desde":60001.0,"hasta":150000.0,"precio":25000.0},{"desde":150001.0,"hasta":999999.0,"precio":45000.0}],"acabados":[{"n":"Sin acabado","p":0.0},{"n":"Entregado terminado","p":600.0},{"n":"Semi Pulido","p":250.0}],"materiales":["MDF 3mm","MDF 9mm","MDF 15mm","MDF 18mm","Acrilico","Pino","Cedro","Parota","Encino","Aluminio"]},{"clave":"impresion_3d","nombre":"Impresion 3D","emoji":"🖨️","tipos":[{"n":"Prototipo rápido","f":"por_volumen","k":0.8,"nec":["alto","ancho","largo"]},{"n":"Pieza funcional","f":"por_volumen","k":1.2,"nec":["alto","ancho","largo"]},{"n":"Alta calidad","f":"por_volumen","k":2.0,"nec":["alto","ancho","largo"]}],"tarifas":{"tarifa_hora":80.0,"costo_pla":0.3,"costo_abs":0.35,"costo_petg":0.4,"costo_tpu":0.55,"factor_rapida":0.8,"factor_normal":1.2,"factor_alta":2.0,"relleno_pct":20.0,"minimo":200.0,"costo_diseno":400.0,"post_proceso":150.0},"etiquetas":{"tarifa_hora":"Tarifa hora impresora","costo_pla":"Costo PLA por gramo","costo_abs":"Costo ABS por gramo","costo_petg":"Costo PETG por gramo","costo_tpu":"Costo TPU/Flex por gramo","factor_rapida":"Factor calidad rápida (min/cm³)","factor_normal":"Factor calidad normal (min/cm³)","factor_alta":"Factor calidad alta (min/cm³)","relleno_pct":"Porcentaje de relleno (%)","minimo":"Precio mínimo","costo_diseno":"Modelado 3D por hora","post_proceso":"Post-proceso (lijado/pintura)"},"rangos":[],"acabados":[],"materiales":["PLA","ABS","PETG","TPU Flexible","Resina"]},{"clave":"carpinteria","nombre":"Carpinteria","emoji":"🪵","tipos":[{"n":"Pieza decorativa","f":"por_pieza","k":1.0,"nec":["alto","ancho","largo"]},{"n":"Caja/Contenedor","f":"por_volumen","k":1.0,"nec":["alto","ancho","largo"]},{"n":"Mueble/Repisa MDF","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Mueble madera fina","f":"por_area","k":1.5,"nec":["ancho","largo"]},{"n":"Espejo/Marco","f":"por_area","k":0.8,"nec":["ancho","largo"]},{"n":"Proyecto especial","f":"precio_fijo","k":1.0,"nec":[]}],"tarifas":{"tarifa_hora":180.0,"material_mdf_m2":320.0,"material_triplay_m2":450.0,"material_madera_m2":800.0,"barniz_m2":150.0,"pintura_m2":120.0,"herrajes":300.0,"instalacion_hora":200.0},"etiquetas":{"tarifa_hora":"Hora de taller carpintería","material_mdf_m2":"MDF 15mm por m²","material_triplay_m2":"Triplay 18mm por m²","material_madera_m2":"Madera sólida por m²","barniz_m2":"Barnizado por m²","pintura_m2":"Pintura por m²","herrajes":"Herrajes estimados","instalacion_hora":"Instalación por hora"},"rangos":[],"acabados":[{"n":"Sin acabado","p":0.0},{"n":"Barniz","p":300.0},{"n":"Pintura","p":500.0},{"n":"Laca","p":700.0}],"materiales":["MDF 15mm","MDF 18mm","Triplay 9mm","Pino","Cedro"]},{"clave":"laser_fibra","nombre":"Láser Fibra","emoji":"✨","tipos":[{"n":"Marcado superficial","f":"por_pieza","k":1.0,"nec":["ancho","largo"]},{"n":"Grabado profundo","f":"por_pieza","k":1.5,"nec":["ancho","largo"]},{"n":"Coloración/Recocido","f":"por_pieza","k":1.3,"nec":["ancho","largo"]},{"n":"Por minuto","f":"por_minuto","k":1.0,"nec":["ancho","largo"]}],"tarifas":{"precio_1_10":80.0,"setup_plantilla":150.0,"cargo_rotativo":25.0,"costo_diseno":100.0,"minimo_apertura":150.0,"precio_51_200":55.0,"precio_11_50":65.0,"precio_200_mas":50.0,"tarifa_min_marcado":35.0,"tarifa_min_profundo":18.0},"etiquetas":{"precio_1_10":"Precio unitario 1-10 pzas","setup_plantilla":"Plantilla de sujeción","cargo_rotativo":"Eje rotativo por pieza","costo_diseno":"Setup/Diseño","minimo_apertura":"Mínimo de apertura","precio_51_200":"Precio unitario 51-200 pzas","precio_11_50":"Precio unitario 11-50 pzas","precio_200_mas":"Precio unitario 200+ pzas","tarifa_min_marcado":"Tarifa marcado superficial ($/min)","tarifa_min_profundo":"Tarifa grabado profundo ($/min)"},"rangos":[],"acabados":[],"materiales":[]},{"clave":"herreria","nombre":"Herreria","emoji":"🔩","tipos":[{"n":"Celosía decorativa","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Mueble industrial","f":"por_hora","k":1.2,"nec":[]},{"n":"Reja/Portón","f":"por_area","k":1.0,"nec":["ancho","largo"]},{"n":"Estructura/Soporte","f":"por_metro","k":1.0,"nec":["metros"]},{"n":"Proyecto especial","f":"precio_fijo","k":1.0,"nec":[]}],"tarifas":{"tarifa_hora":200.0,"pintura_anticorrosivo":120.0,"pintura_epoxica":180.0,"instalacion_hora":250.0,"material_hora":400.0},"etiquetas":{"tarifa_hora":"Hora de taller herrería","pintura_anticorrosivo":"Pintura anticorrosivo ($/m²)","pintura_epoxica":"Pintura epóxica ($/m²)","instalacion_hora":"Instalación por hora","material_hora":"Material estimado por hora"},"rangos":[],"acabados":[],"materiales":["Acero negro","Acero inoxidable","Aluminio"]},{"clave":"diseno","nombre":"Diseno Digital","emoji":"✏️","tipos":[{"n":"2D Simple","f":"por_diseno","k":0.5,"nec":[]},{"n":"2D Media","f":"por_diseno","k":1.5,"nec":[]},{"n":"2D Alta","f":"por_diseno","k":3.0,"nec":[]},{"n":"2D Premium","f":"por_diseno","k":6.0,"nec":[]},{"n":"CAD Simple","f":"por_diseno","k":1.0,"nec":[]},{"n":"CAD Completo","f":"por_diseno","k":4.0,"nec":[]},{"n":"3D Simple","f":"por_diseno","k":1.0,"nec":[]},{"n":"3D Medio","f":"por_diseno","k":3.0,"nec":[]},{"n":"3D Complejo","f":"por_diseno","k":6.0,"nec":[]},{"n":"3D Premium","f":"por_diseno","k":12.0,"nec":[]},{"n":"CAM Básico","f":"por_diseno","k":0.5,"nec":[]},{"n":"CAM Complejo","f":"por_diseno","k":3.0,"nec":[]}],"tarifas":{"tarifa_hora_3d":250.0,"tarifa_hora_2d":150.0,"cargo_urgente":80.0,"tarifa_hora_cam":400.0,"tarifa_setup":75.0,"cargo_revision":150.0,"cargo_archivo_editable":200.0},"etiquetas":{"tarifa_hora_3d":"Tarifa hora Modelado 3D","tarifa_hora_2d":"Tarifa hora Diseño 2D","cargo_urgente":"Cargo entrega urgente (%)","tarifa_hora_cam":"Tarifa hora CAM/Toolpath","tarifa_setup":"Setup (cliente trae vector)","cargo_revision":"Cargo por revisión extra","cargo_archivo_editable":"Archivo editable al cliente (%)"},"rangos":[],"acabados":[],"materiales":[]}],"costos":{"costoHoraTaller":69.43,"costoHoraMaquina":46.25,"costoHoraOperador":45.7,"margenMinimo":45.0,"margenRecomendado":55.0,"ivaPct":16.0}};
+</script>
+<script>
+// src/cnc-pricing/engine.js
+// HETNA CNC — Motor de cálculo portado 1:1 desde MotorCalculo (Flutter/Dart,
+// lib/screens/simulador_screen.dart del Cotizador). Framework-agnóstico:
+// no depende de Medusa, solo recibe objetos planos (JSON) y regresa un
+// resultado plano. Así se puede probar y reusar en Node normal, en las
+// rutas de Medusa, o en un futuro backend distinto.
+//
+// Fórmula maestra:  PV = (CM + CMO + CMaq + CC + CA + CI) ÷ (1 - Margen)
+//
+// cfg.tarifas es un Map<clave, valor numérico> — igual que SimConfig.getTarifa()
+// en Dart. cfg.rangos es una lista [{desde, hasta, precio}] ordenada.
+
+function getTarifa(cfg, clave) {
+  const t = cfg.tarifas && cfg.tarifas[clave];
+  return typeof t === 'number' ? t : 0;
+}
+
+function calcularPrecioRango(cfg, indice) {
+  const rangos = cfg.rangos || [];
+  for (const r of rangos) {
+    if (indice >= r.desde && indice <= r.hasta) return r.precio;
+  }
+  return rangos.length ? rangos[rangos.length - 1].precio : 0;
+}
+
+/**
+ * calcular(params) — réplica exacta de MotorCalculo.calcular()
+ *
+ * params.cfg: { servicio, tipo: {nombre, formula, factor}, tarifas, rangos }
+ * params.costos: { costoHoraTaller, costoHoraMaquina, costoHoraOperador,
+ *                   margenRecomendado, margenMinimo, ivaPct }
+ * (resto de params son los mismos nombres que en Dart, en camelCase)
+ */
+function calcular(params) {
+  const {
+    cfg, costos, tipo,
+    nombreServicio, emojiServicio,
+    largo = 0, ancho = 0, alto = 0,
+    peso = 0, metros = 0,
+    horas = 0, minutos = 0,
+    cantidad = 1, complejidad = 'normal',
+    clienteTraeMaterial = false,
+    usarInventario = false,
+    materialInv = null,
+    materialLibreNombre = '',
+    materialLibrePrecio = 0,
+    acabado = null, // {nombre, precio} | null
+    aplicarIva = false,
+    extrasSeleccionados = [], // [{nombre, precio}]
+    descripcionEditable = '',
+    // Diseño Digital
+    clienteTraeArchivo = false,
+    archivoEsVector = false,
+    entregaUrgente = false,
+    revisionesExtra = 0,
+    archivoEditableAlCliente = false,
+    // Router 2D
+    horasLijado = 0,
+    horasBarnizado = 0,
+    llevaDiseno = false,
+    // Plasma CNC
+    calibre = 'Cal 14',
+    material = 'acero_negro',
+    llevaLimpieza = false,
+    llevaFlete = false,
+    llevaDisenoPlasma = false,
+    clienteTraeArchivoDXF = false,
+    horasDisenoPlasma = 1.0,
+    // Láser CO2
+    materialLaser = 'mdf_fino',
+    densidadLaser = 'normal',
+    tipoLaser = 'corte',
+    // Láser Fibra
+    llevaPlantilla = false,
+    llevaRotativo = false,
+    // Impresión 3D
+    materialImpresion = 'pla',
+    // HETNA: medidas reales leídas del archivo (0 = usar la caja)
+    perimetroRealMm = 0,
+    volumenRealCm3 = 0,
+  } = params;
+
+  const formula = tipo.formula;
+  const desglose = {};
+
+  let precioMaquila = 0;
+  let tiempoHoras = 0;
+  let cm = 0;
+
+  switch (formula) {
+    // ── ROUTER 2D / PLASMA CNC: por área × tarifa ──────────
+    case 'por_area': {
+      const areaM2 = (largo / 100) * (ancho / 100);
+      const nombreLower = tipo.nombre.toLowerCase();
+      const esCelosia = nombreLower.includes('celosia') || nombreLower.includes('celosía') || nombreLower.includes('calado');
+      const esPlasma = getTarifa(cfg, 'tarifa_m2_delgado') > 0;
+      let tarifaM2;
+      if (esPlasma) {
+        const calibresDelgados = ['Cal 20', 'Cal 18', 'Cal 16', 'Cal 14', 'Cal 12'];
+        const esDelgado = calibresDelgados.includes(calibre);
+        const tarifaBase = esDelgado
+          ? (getTarifa(cfg, 'tarifa_m2_delgado') > 0 ? getTarifa(cfg, 'tarifa_m2_delgado') : 480)
+          : (getTarifa(cfg, 'tarifa_m2_medio') > 0 ? getTarifa(cfg, 'tarifa_m2_medio') : 680);
+        const factorMat = material === 'inox'
+          ? (getTarifa(cfg, 'factor_inox') > 0 ? getTarifa(cfg, 'factor_inox') : 1.4)
+          : material === 'aluminio'
+            ? (getTarifa(cfg, 'factor_aluminio') > 0 ? getTarifa(cfg, 'factor_aluminio') : 1.3)
+            : 1.0;
+        tarifaM2 = tarifaBase * factorMat * (esCelosia ? tipo.factor : 1.0);
+        desglose.material_factor = factorMat;
+        const umbral = getTarifa(cfg, 'umbral_minimo_m2') > 0 ? getTarifa(cfg, 'umbral_minimo_m2') : 0.09;
+        const minAp = getTarifa(cfg, 'minimo_apertura') > 0 ? getTarifa(cfg, 'minimo_apertura') : 150;
+        if (areaM2 < umbral) desglose.minimo_apertura = minAp;
+      } else {
+        tarifaM2 = esCelosia
+          ? (getTarifa(cfg, 'tarifa_m2_celosia') > 0 ? getTarifa(cfg, 'tarifa_m2_celosia') : 450)
+          : (getTarifa(cfg, 'tarifa_m2_normal') > 0 ? getTarifa(cfg, 'tarifa_m2_normal') : 350);
+        // HETNA: usa las tarifas de grabado del router cuando existen
+        if (nombreLower.includes('grabado')) {
+          const kG = nombreLower.includes('2.5') ? 'tarifa_m2_grabado_2_5d' : (nombreLower.includes('complejo') ? 'tarifa_m2_grabado_complejo' : 'tarifa_m2_grabado_simple');
+          if (getTarifa(cfg, kG) > 0) tarifaM2 = getTarifa(cfg, kG);
+        }
+      }
+      precioMaquila = areaM2 * tarifaM2 * cantidad;
+      if (esPlasma) {
+        const umbral2 = getTarifa(cfg, 'umbral_minimo_m2') > 0 ? getTarifa(cfg, 'umbral_minimo_m2') : 0.09;
+        const minAp2 = getTarifa(cfg, 'minimo_apertura') > 0 ? getTarifa(cfg, 'minimo_apertura') : 150;
+        if (areaM2 < umbral2 && precioMaquila < minAp2) precioMaquila = minAp2;
+      }
+      desglose.area_m2 = areaM2;
+      desglose.tarifa_m2 = tarifaM2;
+      if (horasLijado > 0) {
+        const tl = getTarifa(cfg, 'costo_lijado_hora') > 0 ? getTarifa(cfg, 'costo_lijado_hora') : 150;
+        desglose.mano_obra_lijado = horasLijado * tl * cantidad;
+      }
+      if (horasBarnizado > 0) {
+        const tb = getTarifa(cfg, 'costo_barnizado') > 0 ? getTarifa(cfg, 'costo_barnizado') : 200;
+        desglose.mano_obra_barnizado = horasBarnizado * tb * cantidad;
+      }
+      if (llevaDiseno) {
+        const td = getTarifa(cfg, 'costo_diseno') > 0 ? getTarifa(cfg, 'costo_diseno') : 300;
+        desglose.diseno_adicional = td;
+      }
+      tiempoHoras = areaM2 * 0.5 * cantidad;
+      break;
+    }
+
+    // ── ROUTER 3D / IMPRESIÓN 3D / CARPINTERÍA ─────────────
+    case 'por_volumen': {
+      const volumen = largo * ancho * alto;
+      const esImpresion = getTarifa(cfg, 'factor_rapida') > 0 || getTarifa(cfg, 'costo_pla') > 0;
+
+      if (esImpresion) {
+        const volumen3D = volumenRealCm3 > 0 ? volumenRealCm3 : volumen;
+        const relleno = getTarifa(cfg, 'relleno_pct') > 0 ? getTarifa(cfg, 'relleno_pct') / 100 : 0.20;
+        const volEfectivo = volumen3D * relleno;
+        const densidades = { pla: 1.24, abs: 1.04, petg: 1.27, tpu: 1.20 };
+        const densidad = densidades[materialImpresion] || 1.24;
+        const gramos = volEfectivo * densidad;
+        const costoGrClaves = { pla: 'costo_pla', abs: 'costo_abs', petg: 'costo_petg', tpu: 'costo_tpu' };
+        const claveGr = costoGrClaves[materialImpresion] || 'costo_pla';
+        const costoGr = getTarifa(cfg, claveGr) > 0 ? getTarifa(cfg, claveGr) : 0.35;
+        cm = gramos * costoGr * cantidad;
+        const factorCalidad = tipo.factor; // rapida=0.8, normal=1.2, alta=2.0
+        const minutos3D = volEfectivo * factorCalidad;
+        tiempoHoras = (minutos3D / 60) * cantidad;
+        const tarifaHr3D = getTarifa(cfg, 'tarifa_hora') > 0 ? getTarifa(cfg, 'tarifa_hora') : 80;
+        precioMaquila = tiempoHoras * tarifaHr3D;
+        desglose.volumen_cm3 = volumen3D;
+        desglose.gramos_estimados = gramos;
+        desglose.tiempo_min = minutos3D;
+        const minImp = getTarifa(cfg, 'minimo') > 0 ? getTarifa(cfg, 'minimo') : 200;
+        if (precioMaquila + cm < minImp) {
+          precioMaquila = minImp;
+          desglose.precio_minimo = minImp;
+        }
+      } else {
+        // Router 3D / Carpintería: precio por tabla de rangos
+        let precioRango = calcularPrecioRango(cfg, volumen);
+        if (precioRango === 0 && volumen > 0) precioRango = 580;
+        precioMaquila = precioRango * tipo.factor * cantidad;
+        desglose.volumen_cm3 = volumen;
+        desglose.precio_rango_base = precioRango;
+        desglose.factor_tipo = tipo.factor;
+        let horasBase;
+        if (volumen <= 1200) horasBase = 1.0;
+        else if (volumen <= 3000) horasBase = 2.0;
+        else if (volumen <= 7000) horasBase = 3.5;
+        else if (volumen <= 20000) horasBase = 5.0;
+        else if (volumen <= 60000) horasBase = 10.0;
+        else if (volumen <= 150000) horasBase = 20.0;
+        else horasBase = 40.0;
+        tiempoHoras = horasBase * tipo.factor * cantidad;
+        desglose.tiempo_estimado_ref = tiempoHoras;
+      }
+      break;
+    }
+
+    // ── DISEÑO DIGITAL ──────────────────────────────
+    case 'por_diseno': {
+      if (clienteTraeArchivo && archivoEsVector) {
+        precioMaquila = getTarifa(cfg, 'tarifa_setup') > 0 ? getTarifa(cfg, 'tarifa_setup') : 75;
+        tiempoHoras = 0.25;
+        desglose.setup_montaje = precioMaquila;
+      } else {
+        let tarifaHr;
+        const nombreU = tipo.nombre;
+        if (nombreU.includes('3D') || nombreU.includes('3d')) {
+          tarifaHr = getTarifa(cfg, 'tarifa_hora_3d') > 0 ? getTarifa(cfg, 'tarifa_hora_3d') : 500;
+        } else if (nombreU.toUpperCase().includes('CAM')) {
+          tarifaHr = getTarifa(cfg, 'tarifa_hora_cam') > 0 ? getTarifa(cfg, 'tarifa_hora_cam') : 400;
+        } else {
+          tarifaHr = getTarifa(cfg, 'tarifa_hora_2d') > 0 ? getTarifa(cfg, 'tarifa_hora_2d') : 300;
+        }
+        tiempoHoras = tipo.factor;
+        precioMaquila = tiempoHoras * tarifaHr;
+        desglose.horas_diseno = tiempoHoras;
+        desglose.tarifa_hora = tarifaHr;
+        if (clienteTraeArchivo && !archivoEsVector) {
+          desglose.vectorizacion_imagen = precioMaquila;
+        }
+      }
+      if (entregaUrgente) {
+        const pctUrgente = getTarifa(cfg, 'cargo_urgente') > 0 ? getTarifa(cfg, 'cargo_urgente') : 40;
+        const cargoUrgente = precioMaquila * pctUrgente / 100;
+        precioMaquila += cargoUrgente;
+        desglose.cargo_urgente = cargoUrgente;
+      }
+      if (revisionesExtra > 0) {
+        const cargoRev = getTarifa(cfg, 'cargo_revision') > 0 ? getTarifa(cfg, 'cargo_revision') : 150;
+        const totalRev = cargoRev * revisionesExtra;
+        precioMaquila += totalRev;
+        desglose.revisiones_extra = totalRev;
+      }
+      if (archivoEditableAlCliente) {
+        const pctArch = getTarifa(cfg, 'cargo_archivo_editable') > 0 ? getTarifa(cfg, 'cargo_archivo_editable') : 200;
+        const cargoArch = precioMaquila * pctArch / 100;
+        precioMaquila += cargoArch;
+        desglose.archivo_editable = cargoArch;
+      }
+      break;
+    }
+
+    // ── HERRERÍA (y genérico por hora) ─────────────────────
+    case 'por_hora': {
+      tiempoHoras = horas > 0 ? horas : 1.0;
+      const tarifaHr = getTarifa(cfg, 'tarifa_hora') > 0 ? getTarifa(cfg, 'tarifa_hora') : costos.costoHoraTotal * 1.5;
+      precioMaquila = tiempoHoras * tarifaHr * cantidad;
+      if (getTarifa(cfg, 'material_hora') > 0 && !clienteTraeMaterial) {
+        const matHr = getTarifa(cfg, 'material_hora');
+        precioMaquila += matHr * tiempoHoras * cantidad;
+        desglose.material_estimado = matHr * tiempoHoras * cantidad;
+      }
+      tiempoHoras *= cantidad;
+      break;
+    }
+
+    // ── LÁSER CO2 (por minuto) ──────────────────────────────
+    case 'por_minuto': {
+      const areaM2min = (largo / 100) * (ancho / 100);
+      let minEst = 0;
+      const tieneVelLaser = getTarifa(cfg, 'vel_mdf_fino') > 0;
+      if (tieneVelLaser) {
+        let velCorte;
+        switch (materialLaser) {
+          case 'mdf_fino': velCorte = getTarifa(cfg, 'vel_mdf_fino') > 0 ? getTarifa(cfg, 'vel_mdf_fino') : 30; break;
+          case 'mdf_medio': velCorte = getTarifa(cfg, 'vel_mdf_medio') > 0 ? getTarifa(cfg, 'vel_mdf_medio') : 21; break;
+          default: velCorte = getTarifa(cfg, 'vel_otros') > 0 ? getTarifa(cfg, 'vel_otros') : 15;
+        }
+        const velGrab = getTarifa(cfg, 'vel_grabado') > 0 ? getTarifa(cfg, 'vel_grabado') : 190;
+        const intervalo = densidadLaser === 'ligero'
+          ? (getTarifa(cfg, 'intervalo_ligero') > 0 ? getTarifa(cfg, 'intervalo_ligero') : 0.2)
+          : densidadLaser === 'denso'
+            ? (getTarifa(cfg, 'intervalo_denso') > 0 ? getTarifa(cfg, 'intervalo_denso') : 0.1)
+            : (getTarifa(cfg, 'intervalo_normal') > 0 ? getTarifa(cfg, 'intervalo_normal') : 0.15);
+        const perimetro = perimetroRealMm > 0 ? perimetroRealMm : 2 * (largo + ancho) * 10;
+        const minCorte = perimetro / velCorte / 60;
+        const areaGrab = largo * ancho;
+        const minGrabado = (areaGrab * 100) / (intervalo * velGrab * 60);
+        switch (tipoLaser) {
+          case 'grabado': minEst = minGrabado; break;
+          case 'ambos': minEst = (minCorte + minGrabado) * tipo.factor; break;
+          default: minEst = minCorte;
+        }
+        const costoTubo = getTarifa(cfg, 'costo_tubo_min') > 0 ? getTarifa(cfg, 'costo_tubo_min') : 0.80;
+        desglose.desgaste_tubo = minEst * costoTubo * cantidad;
+      } else {
+        minEst = minutos > 0 ? minutos : areaM2min * 60 * tipo.factor;
+      }
+      const tieneMinFibra = getTarifa(cfg, 'tarifa_min_marcado') > 0;
+      let tarifaMinuto;
+      if (tieneMinFibra) {
+        const esProfundo = tipo.nombre.toLowerCase().includes('profundo');
+        tarifaMinuto = esProfundo
+          ? (getTarifa(cfg, 'tarifa_min_profundo') > 0 ? getTarifa(cfg, 'tarifa_min_profundo') : 18)
+          : (getTarifa(cfg, 'tarifa_min_marcado') > 0 ? getTarifa(cfg, 'tarifa_min_marcado') : 12);
+      } else {
+        tarifaMinuto = getTarifa(cfg, 'tarifa_min') > 0 ? getTarifa(cfg, 'tarifa_min') : 10;
+      }
+      tiempoHoras = (minEst / 60) * cantidad;
+      precioMaquila = minEst * tarifaMinuto * cantidad;
+      desglose.minutos_estimados = minEst * cantidad;
+      desglose.tarifa_min = tarifaMinuto;
+      break;
+    }
+
+    // ── HERRERÍA / CARPINTERÍA / PLASMA (por metro) ────────
+    case 'por_metro': {
+      const tieneMetroPlasma = getTarifa(cfg, 'tarifa_metro_delgado') > 0;
+      let tarifaMt;
+      if (tieneMetroPlasma) {
+        const calibresD = ['Cal 20', 'Cal 18', 'Cal 16', 'Cal 14', 'Cal 12'];
+        const esD = calibresD.includes(calibre);
+        const tarifaBaseM = esD
+          ? (getTarifa(cfg, 'tarifa_metro_delgado') > 0 ? getTarifa(cfg, 'tarifa_metro_delgado') : 80.0)
+          : (getTarifa(cfg, 'tarifa_metro_medio') > 0 ? getTarifa(cfg, 'tarifa_metro_medio') : 150.0);
+        const fMat = material === 'inox'
+          ? (getTarifa(cfg, 'factor_inox') > 0 ? getTarifa(cfg, 'factor_inox') : 1.4)
+          : material === 'aluminio'
+            ? (getTarifa(cfg, 'factor_aluminio') > 0 ? getTarifa(cfg, 'factor_aluminio') : 1.3)
+            : 1.0;
+        tarifaMt = tarifaBaseM * fMat;
+      } else {
+        tarifaMt = getTarifa(cfg, 'tarifa_metro') > 0 ? getTarifa(cfg, 'tarifa_metro') : 100.0;
+      }
+      precioMaquila = metros * tarifaMt * cantidad;
+      tiempoHoras = metros * 0.1 * cantidad;
+      desglose.metros = metros;
+      desglose.tarifa_metro = tarifaMt;
+      break;
+    }
+
+    case 'por_kg': {
+      const tarifaKg = getTarifa(cfg, 'tarifa_kg') > 0 ? getTarifa(cfg, 'tarifa_kg') : 50;
+      precioMaquila = peso * tarifaKg * cantidad;
+      tiempoHoras = peso * 0.05 * cantidad;
+      break;
+    }
+
+    // ── LÁSER FIBRA (por pieza, escalonado) ────────────────
+    case 'por_pieza': {
+      const tienePrecioEscalonado = getTarifa(cfg, 'precio_1_10') > 0;
+      let tarifaPza;
+      if (tienePrecioEscalonado) {
+        if (cantidad <= 10) tarifaPza = getTarifa(cfg, 'precio_1_10');
+        else if (cantidad <= 50) tarifaPza = getTarifa(cfg, 'precio_11_50');
+        else if (cantidad <= 200) tarifaPza = getTarifa(cfg, 'precio_51_200');
+        else tarifaPza = getTarifa(cfg, 'precio_200_mas');
+        tarifaPza *= tipo.factor;
+        desglose.tarifa_por_pieza = tarifaPza;
+        if (llevaPlantilla) {
+          const pPlant = getTarifa(cfg, 'setup_plantilla') > 0 ? getTarifa(cfg, 'setup_plantilla') : 150;
+          desglose.plantilla_sujecion = pPlant;
+          precioMaquila += pPlant;
+        }
+        if (llevaRotativo) {
+          const pRot = getTarifa(cfg, 'cargo_rotativo') > 0 ? getTarifa(cfg, 'cargo_rotativo') : 25;
+          desglose.eje_rotativo = pRot * cantidad;
+          precioMaquila += pRot * cantidad;
+        }
+        const minAp = getTarifa(cfg, 'minimo_apertura') > 0 ? getTarifa(cfg, 'minimo_apertura') : 150;
+        if (tarifaPza * cantidad < minAp) desglose.minimo_apertura = minAp;
+      } else {
+        tarifaPza = getTarifa(cfg, 'tarifa_pieza') > 0 ? getTarifa(cfg, 'tarifa_pieza') : 100;
+      }
+      precioMaquila += tarifaPza * cantidad;
+      if (tienePrecioEscalonado) {
+        const minAp2 = getTarifa(cfg, 'minimo_apertura') > 0 ? getTarifa(cfg, 'minimo_apertura') : 150;
+        if (precioMaquila < minAp2) precioMaquila = minAp2;
+      }
+      tiempoHoras = (tipo.factor * cantidad) / 60;
+      break;
+    }
+
+    case 'precio_fijo': {
+      precioMaquila = getTarifa(cfg, 'precio_fijo') * cantidad;
+      tiempoHoras = 1.0;
+      break;
+    }
+
+    default:
+      tiempoHoras = 1.0;
+  }
+
+  // Extras Router 2D
+  const moLijado = desglose.mano_obra_lijado || 0;
+  const moBarniz = desglose.mano_obra_barnizado || 0;
+  const moDis = desglose.diseno_adicional || 0;
+  const extrasRouter = moLijado + moBarniz + moDis;
+
+  // Extras Plasma CNC
+  let extrasPlasma = 0;
+  if (llevaLimpieza) {
+    const costoLimp = getTarifa(cfg, 'limpieza_pieza') > 0 ? getTarifa(cfg, 'limpieza_pieza') : 80;
+    extrasPlasma += costoLimp * cantidad;
+    desglose.limpieza_pieza = costoLimp * cantidad;
+  }
+  if (llevaFlete) {
+    const areaTotal = (largo / 100) * (ancho / 100) * cantidad;
+    let costoFlete = 0;
+    if (areaTotal < 1.0) costoFlete = 0;
+    else if (areaTotal <= 3.0) costoFlete = getTarifa(cfg, 'flete_mediano') > 0 ? getTarifa(cfg, 'flete_mediano') : 350;
+    else costoFlete = getTarifa(cfg, 'flete_grande') > 0 ? getTarifa(cfg, 'flete_grande') : 800;
+    if (costoFlete > 0) {
+      extrasPlasma += costoFlete;
+      desglose.flete_maniobra = costoFlete;
+    }
+  }
+  if (llevaDisenoPlasma) {
+    if (clienteTraeArchivoDXF) {
+      const setupDXF = getTarifa(cfg, 'setup_archivo') > 0 ? getTarifa(cfg, 'setup_archivo') : 75;
+      extrasPlasma += setupDXF;
+      desglose.setup_dxf = setupDXF;
+    } else {
+      const tarifaDis = getTarifa(cfg, 'tarifa_diseno_hora') > 0 ? getTarifa(cfg, 'tarifa_diseno_hora') : 250;
+      const costoDis = tarifaDis * horasDisenoPlasma;
+      extrasPlasma += costoDis;
+      desglose.diseno_plasma = costoDis;
+    }
+  }
+
+  // ── COSTOS DIRECTOS ──────────────────────────────────────
+  let materialNombre = null;
+  if (!clienteTraeMaterial) {
+    if (usarInventario && materialInv) {
+      cm = ((materialInv.costo_unitario) || 0) * cantidad;
+      cm *= 1.15; // merma 15%
+      materialNombre = materialInv.nombre || null;
+    } else if (!usarInventario && materialLibrePrecio > 0) {
+      cm = materialLibrePrecio * cantidad * 1.15;
+      materialNombre = materialLibreNombre || 'Material';
+    }
+  }
+
+  const cmaq = costos.costoHoraMaquina * tiempoHoras;
+  const cmo = costos.costoHoraOperador * tiempoHoras;
+
+  let cc;
+  const tarifaCons = getTarifa(cfg, 'consumibles_hora');
+  cc = tarifaCons > 0 ? tarifaCons * tiempoHoras : 25 * tiempoHoras;
+
+  const ca = (acabado && acabado.precio ? acabado.precio : 0) * cantidad;
+  const ci = costos.costoHoraTaller * tiempoHoras;
+
+  let extrasTotal = 0;
+  for (const e of extrasSeleccionados) extrasTotal += (e.precio || 0) * cantidad;
+
+  // ── COSTO TOTAL ────────────────────────────────────────
+  let costoTotal;
+  if (precioMaquila > 0) {
+    costoTotal = precioMaquila + cm + ca + extrasTotal + extrasRouter + extrasPlasma;
+  } else {
+    costoTotal = cm + cmaq + cmo + cc + ca + ci + extrasTotal;
+  }
+
+  // ── 3 PRECIOS CON MARGEN ────────────────────────────────
+  const mMin = costos.margenMinimo / 100;
+  const mRec = costos.margenRecomendado / 100;
+  const mPrem = (costos.margenRecomendado + 15) / 100;
+
+  let baseMin, baseRec, basePrem;
+  if (precioMaquila > 0) {
+    baseRec = costoTotal;
+    baseMin = costoTotal * (1 - (mRec - mMin));
+    basePrem = costoTotal * (1 + (mPrem - mRec));
+  } else {
+    baseMin = costoTotal > 0 ? costoTotal / (1 - mMin) : 0;
+    baseRec = costoTotal > 0 ? costoTotal / (1 - mRec) : 0;
+    basePrem = costoTotal > 0 ? costoTotal / (1 - mPrem) : 0;
+  }
+
+  const iva = aplicarIva ? baseRec * (costos.ivaPct / 100) : 0.0;
+  const pvConIva = baseRec + iva;
+
+  const utilidad = baseRec - costoTotal;
+  const margenReal = baseRec > 0 ? (utilidad / baseRec) * 100 : 0;
+  const gananciaHora = tiempoHoras > 0 ? utilidad / tiempoHoras : 0;
+
+  return {
+    servicio: nombreServicio,
+    emoji: emojiServicio,
+    descripcion: descripcionEditable,
+    total: round2(pvConIva),
+    subtotal: round2(baseRec),
+    iva: round2(iva),
+    costoTotal: round2(costoTotal),
+    pvMinimo: round2(baseMin),
+    pvRecomendado: round2(baseRec),
+    pvPremium: round2(basePrem),
+    utilidad: round2(utilidad),
+    margenReal: round2(margenReal),
+    gananciaHora: round2(gananciaHora),
+    tiempoHoras: round2(tiempoHoras),
+    cm: round2(cm), cmo: round2(cmo), cmaq: round2(cmaq),
+    cc: round2(cc), ca: round2(ca), ci: round2(ci),
+    costosDesglose: {
+      Material: round2(cm), Maquina: round2(cmaq), Operador: round2(cmo),
+      Consumibles: round2(cc), Acabado: round2(ca), 'Taller (CI)': round2(ci),
+      Extras: round2(extrasTotal),
+    },
+    detalle: mapRound2(desglose),
+    incluyeIva: aplicarIva,
+    materialNombre,
+  };
+}
+
+function round2(n) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+function mapRound2(obj) {
+  const out = {};
+  for (const k in obj) out[k] = round2(obj[k]);
+  return out;
+}
+
+const calcular_hetna = calcular;
+
+</script>
+<script>
+// ===== Lectura de archivos: DXF, SVG, STL, OBJ =====
+// Todo se mide en el navegador del taller; nada se sube a ningun servidor.
+
+const GEO = (() => {
+  const TAU = Math.PI * 2;
+
+  // ---------- utilidades 2D ----------
+  const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const largoPolilinea = (p) => {
+    let s = 0;
+    for (let i = 1; i < p.pts.length; i++) s += dist(p.pts[i - 1], p.pts[i]);
+    if (p.cerrada && p.pts.length > 2) s += dist(p.pts[p.pts.length - 1], p.pts[0]);
+    return s;
+  };
+  const arco = (cx, cy, r, a0, a1, pasos) => {
+    const n = pasos || Math.max(8, Math.ceil((Math.abs(a1 - a0) / TAU) * 72));
+    const pts = [];
+    for (let k = 0; k <= n; k++) {
+      const a = a0 + ((a1 - a0) * k) / n;
+      pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+    return pts;
+  };
+  const bulge = (p1, p2, b) => {
+    const th = 4 * Math.atan(b);
+    const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+    const c = Math.hypot(dx, dy);
+    if (c === 0 || Math.abs(b) < 1e-9) return [p2];
+    const r = c / (2 * Math.sin(th / 2));
+    const h = r * Math.cos(th / 2);
+    const mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2;
+    const cx = mx + (-dy / c) * h, cy = my + (dx / c) * h;
+    const a1 = Math.atan2(p1[1] - cy, p1[0] - cx);
+    const n = Math.max(2, Math.ceil(Math.abs(th) / (Math.PI / 36)));
+    const pts = [];
+    for (let k = 1; k <= n; k++) {
+      const a = a1 + (th * k) / n;
+      pts.push([cx + Math.abs(r) * Math.cos(a), cy + Math.abs(r) * Math.sin(a)]);
+    }
+    return pts;
+  };
+
+  // B-spline (de Boor), racional si trae pesos
+  const bspline = (ctrl, grado, nudos, pesos) => {
+    const n = ctrl.length;
+    if (n < 2) return ctrl.slice();
+    const p = Math.min(grado || 3, n - 1);
+    let U = nudos && nudos.length === n + p + 1 ? nudos : null;
+    if (!U) {
+      U = [];
+      for (let i = 0; i <= n + p; i++) U.push(i <= p ? 0 : i >= n ? 1 : (i - p) / (n - p));
+    }
+    const w = pesos && pesos.length === n ? pesos : ctrl.map(() => 1);
+    const t0 = U[p], t1 = U[n];
+    const muestras = Math.min(400, Math.max(24, n * 12));
+    const pts = [];
+    for (let s = 0; s <= muestras; s++) {
+      let t = t0 + ((t1 - t0) * s) / muestras;
+      if (t >= t1) t = t1 - 1e-9;
+      let k = p;
+      while (k < n - 1 && U[k + 1] <= t) k++;
+      const d = [];
+      for (let j = 0; j <= p; j++) {
+        const c = ctrl[j + k - p], ww = w[j + k - p];
+        d.push([c[0] * ww, c[1] * ww, ww]);
+      }
+      for (let r = 1; r <= p; r++) {
+        for (let j = p; j >= r; j--) {
+          const i = j + k - p;
+          const den = U[i + p - r + 1] - U[i];
+          const a = den === 0 ? 0 : (t - U[i]) / den;
+          d[j] = [
+            (1 - a) * d[j - 1][0] + a * d[j][0],
+            (1 - a) * d[j - 1][1] + a * d[j][1],
+            (1 - a) * d[j - 1][2] + a * d[j][2],
+          ];
+        }
+      }
+      pts.push([d[p][0] / d[p][2], d[p][1] / d[p][2]]);
+    }
+    return pts;
+  };
+
+  // Une trazos abiertos que comparten extremos para contar contornos (perforaciones)
+  const contarContornos = (polis, tol) => {
+    const padre = polis.map((_, i) => i);
+    const raiz = (i) => (padre[i] === i ? i : (padre[i] = raiz(padre[i])));
+    const unir = (a, b) => { a = raiz(a); b = raiz(b); if (a !== b) padre[a] = b; };
+    const celda = new Map();
+    const clave = (pt) => Math.round(pt[0] / tol) + "," + Math.round(pt[1] / tol);
+    polis.forEach((p, i) => {
+      if (p.cerrada || p.pts.length < 2) return;
+      for (const pt of [p.pts[0], p.pts[p.pts.length - 1]]) {
+        const k = clave(pt);
+        if (celda.has(k)) unir(i, celda.get(k));
+        else celda.set(k, i);
+      }
+    });
+    const grupos = new Set();
+    polis.forEach((p, i) => { if (p.pts.length >= 2) grupos.add(raiz(i)); });
+    return grupos.size;
+  };
+
+  const caja2D = (polis) => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of polis) for (const [x, y] of p.pts) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    return { x0, y0, x1, y1 };
+  };
+
+  // ---------- DXF ----------
+  const UNIDADES_DXF = { 1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000, 13: 0.001 };
+
+  const leerDXF = (texto) => {
+    if (/^AutoCAD Binary DXF/.test(texto)) throw new Error("Este DXF está en formato binario. Guárdalo como DXF de texto (ASCII) y vuelve a subirlo.");
+    const lin = texto.split(/\r\n|\r|\n/);
+    const pares = [];
+    for (let i = 0; i + 1 < lin.length; i += 2) {
+      const c = parseInt(lin[i].trim(), 10);
+      if (Number.isNaN(c)) continue;
+      pares.push([c, lin[i + 1].trim()]);
+    }
+    let insunits = 0;
+    for (let i = 0; i < pares.length - 1; i++) {
+      if (pares[i][0] === 9 && pares[i][1] === "$INSUNITS") { insunits = parseInt(pares[i + 1][1], 10) || 0; break; }
+    }
+    // secciones BLOCKS y ENTITIES
+    const bloques = {};
+    const entidades = [];
+    let seccion = null, bloque = null, actual = null;
+    const cerrarActual = () => {
+      if (!actual) return;
+      if (seccion === "ENTITIES") entidades.push(actual);
+      else if (seccion === "BLOCKS" && bloque && !["BLOCK", "ENDBLK"].includes(actual.tipo)) bloque.ents.push(actual);
+      actual = null;
+    };
+    for (let i = 0; i < pares.length; i++) {
+      const [c, v] = pares[i];
+      if (c === 0 && v === "SECTION") { cerrarActual(); seccion = pares[i + 1] ? pares[i + 1][1] : null; i++; continue; }
+      if (c === 0 && v === "ENDSEC") { cerrarActual(); seccion = null; continue; }
+      if (seccion !== "ENTITIES" && seccion !== "BLOCKS") continue;
+      if (c === 0) {
+        cerrarActual();
+        if (seccion === "BLOCKS" && v === "BLOCK") {
+          bloque = { nombre: "", base: [0, 0], ents: [] };
+          actual = { tipo: "BLOCK", g: [] };
+          // leer cabecera del bloque
+          let j = i + 1;
+          while (j < pares.length && pares[j][0] !== 0) {
+            if (pares[j][0] === 2) bloque.nombre = pares[j][1];
+            if (pares[j][0] === 10) bloque.base[0] = parseFloat(pares[j][1]);
+            if (pares[j][0] === 20) bloque.base[1] = parseFloat(pares[j][1]);
+            j++;
+          }
+          bloques[bloque.nombre] = bloque;
+          actual = null;
+          i = j - 1;
+          continue;
+        }
+        if (seccion === "BLOCKS" && v === "ENDBLK") { bloque = null; continue; }
+        actual = { tipo: v, g: [] };
+        continue;
+      }
+      if (actual) actual.g.push([c, v]);
+    }
+    cerrarActual();
+
+    const ignoradas = {};
+    const polis = [];
+
+    const convertir = (lista, T, prof) => {
+      for (let i = 0; i < lista.length; i++) {
+        const e = lista[i];
+        const g = e.g;
+        const num = (code, def = 0) => { const x = g.find((q) => q[0] === code); return x ? parseFloat(x[1]) : def; };
+        const agregar = (pts, cerrada) => { if (pts.length >= 2) polis.push({ pts: pts.map(T), cerrada }); };
+        switch (e.tipo) {
+          case "LINE":
+            agregar([[num(10), num(20)], [num(11), num(21)]], false);
+            break;
+          case "LWPOLYLINE": {
+            const flags = num(70);
+            const vs = [];
+            for (const [c, v] of g) {
+              if (c === 10) vs.push({ x: parseFloat(v), y: 0, b: 0 });
+              else if (c === 20 && vs.length) vs[vs.length - 1].y = parseFloat(v);
+              else if (c === 42 && vs.length) vs[vs.length - 1].b = parseFloat(v);
+            }
+            const cerrada = (flags & 1) === 1;
+            const pts = [];
+            vs.forEach((q, k) => {
+              if (k === 0) pts.push([q.x, q.y]);
+              else pts.push(...bulge([vs[k - 1].x, vs[k - 1].y], [q.x, q.y], vs[k - 1].b));
+            });
+            if (cerrada && vs.length > 1) {
+              const u = vs[vs.length - 1];
+              if (Math.abs(u.b) > 1e-9) pts.push(...bulge([u.x, u.y], [vs[0].x, vs[0].y], u.b).slice(0, -1));
+            }
+            agregar(pts, cerrada);
+            break;
+          }
+          case "POLYLINE": {
+            const flags = num(70);
+            if (flags & 16 || flags & 64) { ignoradas["Malla 3D"] = (ignoradas["Malla 3D"] || 0) + 1; while (i + 1 < lista.length && lista[i + 1].tipo !== "SEQEND") i++; i++; break; }
+            const vs = [];
+            while (i + 1 < lista.length && lista[i + 1].tipo === "VERTEX") {
+              i++;
+              const gv = lista[i].g;
+              const n2 = (code) => { const x = gv.find((q) => q[0] === code); return x ? parseFloat(x[1]) : 0; };
+              vs.push({ x: n2(10), y: n2(20), b: n2(42) });
+            }
+            if (i + 1 < lista.length && lista[i + 1].tipo === "SEQEND") i++;
+            const cerrada = (flags & 1) === 1;
+            const pts = [];
+            vs.forEach((q, k) => {
+              if (k === 0) pts.push([q.x, q.y]);
+              else pts.push(...bulge([vs[k - 1].x, vs[k - 1].y], [q.x, q.y], vs[k - 1].b));
+            });
+            if (cerrada && vs.length > 1) {
+              const u = vs[vs.length - 1];
+              if (Math.abs(u.b) > 1e-9) pts.push(...bulge([u.x, u.y], [vs[0].x, vs[0].y], u.b).slice(0, -1));
+            }
+            agregar(pts, cerrada);
+            break;
+          }
+          case "CIRCLE": {
+            const pts = arco(num(10), num(20), num(40), 0, TAU, 72);
+            pts.pop();
+            agregar(pts, true);
+            break;
+          }
+          case "ARC": {
+            let a0 = (num(50) * Math.PI) / 180, a1 = (num(51) * Math.PI) / 180;
+            if (a1 <= a0) a1 += TAU;
+            agregar(arco(num(10), num(20), num(40), a0, a1), false);
+            break;
+          }
+          case "ELLIPSE": {
+            const cx = num(10), cy = num(20), mx = num(11), my = num(21), ratio = num(40, 1);
+            let t0 = num(41, 0), t1 = num(42, TAU);
+            if (t1 <= t0) t1 += TAU;
+            const completa = Math.abs(t1 - t0 - TAU) < 1e-6;
+            const n = Math.max(12, Math.ceil(((t1 - t0) / TAU) * 96));
+            const pts = [];
+            for (let k = 0; k <= n; k++) {
+              const t = t0 + ((t1 - t0) * k) / n;
+              pts.push([cx + mx * Math.cos(t) - ratio * my * Math.sin(t), cy + my * Math.cos(t) + ratio * mx * Math.sin(t)]);
+            }
+            if (completa) pts.pop();
+            agregar(pts, completa);
+            break;
+          }
+          case "SPLINE": {
+            const flags = num(70);
+            const grado = num(71, 3);
+            const nudos = [], ctrl = [], ajuste = [], pesos = [];
+            for (const [c, v] of g) {
+              if (c === 40) nudos.push(parseFloat(v));
+              else if (c === 41) pesos.push(parseFloat(v));
+              else if (c === 10) ctrl.push([parseFloat(v), 0]);
+              else if (c === 20 && ctrl.length) ctrl[ctrl.length - 1][1] = parseFloat(v);
+              else if (c === 11) ajuste.push([parseFloat(v), 0]);
+              else if (c === 21 && ajuste.length) ajuste[ajuste.length - 1][1] = parseFloat(v);
+            }
+            const pts = ctrl.length >= 2 ? bspline(ctrl, grado, nudos, pesos) : ajuste;
+            agregar(pts, (flags & 1) === 1);
+            break;
+          }
+          case "INSERT": {
+            const nombre = (g.find((q) => q[0] === 2) || [0, ""])[1];
+            const b = bloques[nombre];
+            if (!b || prof > 4) break;
+            const ix = num(10), iy = num(20), sx = num(41, 1), sy = num(42, 1), rot = (num(50) * Math.PI) / 180;
+            const cs = Math.cos(rot), sn = Math.sin(rot);
+            const T2 = (p) => {
+              const x = (p[0] - b.base[0]) * sx, y = (p[1] - b.base[1]) * sy;
+              return T([ix + x * cs - y * sn, iy + x * sn + y * cs]);
+            };
+            convertir(b.ents, T2, prof + 1);
+            break;
+          }
+          case "POINT": case "SEQEND": case "VERTEX": case "ATTRIB": case "ATTDEF":
+            break;
+          default: {
+            const nombres = { TEXT: "Textos", MTEXT: "Textos", DIMENSION: "Cotas", HATCH: "Rellenos (hatch)", LEADER: "Flechas", SOLID: "Sólidos", "3DFACE": "Caras 3D", IMAGE: "Imágenes" };
+            const k = nombres[e.tipo] || e.tipo;
+            ignoradas[k] = (ignoradas[k] || 0) + 1;
+          }
+        }
+      }
+    };
+    convertir(entidades, (p) => p, 0);
+    if (!polis.length) throw new Error("No encontré líneas de corte en este DXF. Revisa que el dibujo no esté vacío o solo tenga textos.");
+    return { tipo: "2d", formato: "DXF", polis, unidadSugerida: UNIDADES_DXF[insunits] || null, insunits, ignoradas };
+  };
+
+  // ---------- SVG (usa el motor del navegador) ----------
+  const UNIDAD_CSS = { mm: 1, cm: 10, in: 25.4, pt: 25.4 / 72, pc: 25.4 / 6, px: 25.4 / 96, "": 25.4 / 96 };
+  const leerSVG = (texto, host) => {
+    const doc = new DOMParser().parseFromString(texto, "image/svg+xml");
+    const raiz = doc.documentElement;
+    if (!raiz || raiz.nodeName.toLowerCase() !== "svg" || doc.getElementsByTagName("parsererror").length) {
+      throw new Error("Este SVG no se pudo leer. Ábrelo en tu programa de diseño y guárdalo de nuevo como SVG.");
+    }
+    host.innerHTML = "";
+    const svg = document.importNode(raiz, true);
+    svg.querySelectorAll("script,foreignObject").forEach((n) => n.remove());
+    host.appendChild(svg);
+    // milimetros por unidad de usuario
+    let mmPorUnidad = 25.4 / 96;
+    const w = (raiz.getAttribute("width") || "").trim();
+    const m = w.match(/^([\d.]+)\s*(mm|cm|in|pt|pc|px)?$/i);
+    const vb = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal : null;
+    if (m) {
+      const ancho_mm = parseFloat(m[1]) * UNIDAD_CSS[(m[2] || "").toLowerCase()];
+      mmPorUnidad = vb ? ancho_mm / vb.width : UNIDAD_CSS[(m[2] || "").toLowerCase()];
+    }
+    const inv = svg.getScreenCTM() ? svg.getScreenCTM().inverse() : null;
+    const polis = [];
+    let subtrayectos = 0;
+    const formas = svg.querySelectorAll("path,line,polyline,polygon,rect,circle,ellipse");
+    formas.forEach((el) => {
+      if (el.closest("defs,clipPath,mask,symbol,marker,pattern")) return;
+      let L = 0;
+      try { L = el.getTotalLength(); } catch (e) { return; }
+      if (!(L > 0) || !inv) return;
+      const M = inv.multiply(el.getScreenCTM());
+      const n = Math.min(900, Math.max(12, Math.ceil(L / 1.5)));
+      const paso = L / n;
+      let actual = [];
+      let previo = null;
+      const cerradaForma = ["polygon", "rect", "circle", "ellipse"].includes(el.nodeName.toLowerCase());
+      for (let k = 0; k <= n; k++) {
+        const q = el.getPointAtLength(Math.min(L, k * paso));
+        if (previo && Math.hypot(q.x - previo.x, q.y - previo.y) > paso * 1.6) {
+          if (actual.length >= 2) polis.push({ pts: actual, cerrada: false });
+          actual = [];
+        }
+        actual.push([M.a * q.x + M.c * q.y + M.e, M.b * q.x + M.d * q.y + M.f]);
+        previo = q;
+      }
+      if (actual.length >= 2) polis.push({ pts: actual, cerrada: cerradaForma });
+      if (el.nodeName.toLowerCase() === "path") subtrayectos += ((el.getAttribute("d") || "").match(/[Mm]/g) || []).length;
+    });
+    host.innerHTML = "";
+    if (!polis.length) throw new Error("No encontré trazos en este SVG. Si tiene textos, conviértelos a curvas antes de exportar.");
+    // SVG tiene Y hacia abajo: se invierte para dibujar igual que en CAD
+    polis.forEach((p) => p.pts.forEach((pt) => (pt[1] = -pt[1])));
+    return { tipo: "2d", formato: "SVG", polis, unidadSugerida: mmPorUnidad, ignoradas: {} };
+  };
+
+  // Resumen 2D en milimetros
+  const medir2D = (datos, mmPorUnidad) => {
+    const f = mmPorUnidad;
+    const c = caja2D(datos.polis);
+    const anchoU = c.x1 - c.x0, altoU = c.y1 - c.y0;
+    const tol = Math.max(1e-6, Math.hypot(anchoU, altoU) * 1e-5);
+    let largo = 0;
+    for (const p of datos.polis) largo += largoPolilinea(p);
+    return {
+      tipo: "2d",
+      largoMm: anchoU * f,
+      anchoMm: altoU * f,
+      corteMm: largo * f,
+      perforaciones: contarContornos(datos.polis, tol),
+      trazos: datos.polis.length,
+      caja: c,
+    };
+  };
+
+  // ---------- STL / OBJ ----------
+  const leerSTL = (buf) => {
+    const dv = new DataView(buf);
+    let tris;
+    const esBinario = buf.byteLength >= 84 && 84 + dv.getUint32(80, true) * 50 === buf.byteLength;
+    if (esBinario) {
+      const n = dv.getUint32(80, true);
+      tris = new Float32Array(n * 9);
+      for (let i = 0; i < n; i++) {
+        const o = 84 + i * 50 + 12;
+        for (let j = 0; j < 9; j++) tris[i * 9 + j] = dv.getFloat32(o + j * 4, true);
+      }
+    } else {
+      const texto = new TextDecoder().decode(buf);
+      const re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g;
+      const v = [];
+      let m;
+      while ((m = re.exec(texto))) v.push(+m[1], +m[2], +m[3]);
+      tris = new Float32Array(v.length - (v.length % 9));
+      tris.set(v.slice(0, tris.length));
+    }
+    if (!tris.length) throw new Error("Este STL no tiene triángulos. Exporta de nuevo la pieza desde tu programa 3D.");
+    return { tipo: "3d", formato: "STL", tris };
+  };
+
+  const leerOBJ = (texto) => {
+    const vs = [];
+    const t = [];
+    for (const lin of texto.split(/\r?\n/)) {
+      const s = lin.trim();
+      if (s.startsWith("v ")) {
+        const [, x, y, z] = s.split(/\s+/);
+        vs.push([+x, +y, +z]);
+      } else if (s.startsWith("f ")) {
+        const idx = s.split(/\s+/).slice(1).map((tok) => {
+          const k = parseInt(tok.split("/")[0], 10);
+          return k < 0 ? vs.length + k : k - 1;
+        });
+        for (let k = 1; k + 1 < idx.length; k++) {
+          const a = vs[idx[0]], b = vs[idx[k]], c = vs[idx[k + 1]];
+          if (a && b && c) t.push(...a, ...b, ...c);
+        }
+      }
+    }
+    if (!t.length) throw new Error("Este OBJ no tiene caras. Exporta la pieza como malla (con caras) desde tu programa 3D.");
+    return { tipo: "3d", formato: "OBJ", tris: new Float32Array(t) };
+  };
+
+  const medir3D = (datos, mmPorUnidad) => {
+    const t = datos.tris, f = mmPorUnidad;
+    let vol = 0, area = 0;
+    let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+    for (let i = 0; i < t.length; i += 9) {
+      const ax = t[i], ay = t[i + 1], az = t[i + 2];
+      const bx = t[i + 3], by = t[i + 4], bz = t[i + 5];
+      const cx = t[i + 6], cy = t[i + 7], cz = t[i + 8];
+      vol += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6;
+      const ux = bx - ax, uy = by - ay, uz = bz - az, vx = cx - ax, vy = cy - ay, vz = cz - az;
+      area += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+      for (const [x, y, z] of [[ax, ay, az], [bx, by, bz], [cx, cy, cz]]) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z;
+      }
+    }
+    return {
+      tipo: "3d",
+      largoMm: (x1 - x0) * f,
+      anchoMm: (y1 - y0) * f,
+      altoMm: (z1 - z0) * f,
+      volumenCm3: (Math.abs(vol) * f * f * f) / 1000,
+      areaCm2: (area * f * f) / 100,
+      triangulos: t.length / 9,
+      cerrada: Math.abs(vol) > 1e-9,
+      caja: { x0, y0, z0, x1, y1, z1 },
+    };
+  };
+
+  return { leerDXF, leerSVG, leerSTL, leerOBJ, medir2D, medir3D, _bulge: bulge };
+})();
+if (typeof module !== "undefined") module.exports = GEO;
+
+</script>
+<script>
+// Archivos de ejemplo generados en el momento (no son de ningun cliente)
+const EJEMPLOS = (() => {
+  // Placa de montaje 200 x 120 mm: contorno con esquinas redondeadas,
+  // 4 barrenos de 8 mm y una ranura de 60 x 10 mm.
+  const dxf = () => {
+    const L = [];
+    const par = (c, v) => L.push(String(c), String(v));
+    par(0, "SECTION"); par(2, "HEADER"); par(9, "$INSUNITS"); par(70, 4); par(0, "ENDSEC");
+    par(0, "SECTION"); par(2, "ENTITIES");
+    // contorno con radio 10 en esquinas (bulge = tan(90°/4))
+    const b = Math.tan(Math.PI / 8);
+    const v = [[10, 0, 0], [190, 0, b], [200, 10, 0], [200, 110, b], [190, 120, 0], [10, 120, b], [0, 110, 0], [0, 10, b]];
+    par(0, "LWPOLYLINE"); par(8, "CORTE"); par(90, v.length); par(70, 1);
+    for (const [x, y, bb] of v) { par(10, x); par(20, y); if (bb) par(42, bb); }
+    for (const [x, y] of [[15, 15], [185, 15], [15, 105], [185, 105]]) {
+      par(0, "CIRCLE"); par(8, "BARRENOS"); par(10, x); par(20, y); par(40, 4);
+    }
+    // ranura: dos lineas y dos arcos
+    par(0, "LINE"); par(8, "CORTE"); par(10, 75); par(20, 55); par(11, 125); par(21, 55);
+    par(0, "LINE"); par(8, "CORTE"); par(10, 125); par(20, 65); par(11, 75); par(21, 65);
+    par(0, "ARC"); par(8, "CORTE"); par(10, 125); par(20, 60); par(40, 5); par(50, 270); par(51, 90);
+    par(0, "ARC"); par(8, "CORTE"); par(10, 75); par(20, 60); par(40, 5); par(50, 90); par(51, 270);
+    par(0, "ENDSEC"); par(0, "EOF");
+    return L.join("\n");
+  };
+
+  // Soporte en L de 60 x 40 x 30 mm (STL binario)
+  const stl = () => {
+    const cajas = [[0, 0, 0, 60, 40, 8], [0, 0, 8, 10, 40, 30]];
+    const tris = [];
+    const cara = (a, b, c, d) => { tris.push([a, b, c], [a, c, d]); };
+    for (const [x0, y0, z0, x1, y1, z1] of cajas) {
+      const p = (i, j, k) => [i ? x1 : x0, j ? y1 : y0, k ? z1 : z0];
+      cara(p(0, 0, 0), p(0, 1, 0), p(1, 1, 0), p(1, 0, 0));
+      cara(p(0, 0, 1), p(1, 0, 1), p(1, 1, 1), p(0, 1, 1));
+      cara(p(0, 0, 0), p(1, 0, 0), p(1, 0, 1), p(0, 0, 1));
+      cara(p(0, 1, 0), p(0, 1, 1), p(1, 1, 1), p(1, 1, 0));
+      cara(p(0, 0, 0), p(0, 0, 1), p(0, 1, 1), p(0, 1, 0));
+      cara(p(1, 0, 0), p(1, 1, 0), p(1, 1, 1), p(1, 0, 1));
+    }
+    const buf = new ArrayBuffer(84 + tris.length * 50);
+    const dv = new DataView(buf);
+    dv.setUint32(80, tris.length, true);
+    tris.forEach((t, i) => {
+      const o = 84 + i * 50 + 12;
+      t.flat().forEach((val, j) => dv.setFloat32(o + j * 4, val, true));
+    });
+    return buf;
+  };
+  return { dxf, stl };
+})();
+if (typeof module !== "undefined") module.exports = EJEMPLOS;
+
+</script>
+<script>
+// ===== HetNa Cotizador: interfaz =====
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const dinero = (n) => "$" + (Math.round(n * 100) / 100).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+  const fmt = (n, d = 1) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("es-MX", { maximumFractionDigits: d });
+
+  // ---------- Configuracion guardada (solo en este celular) ----------
+  const MATERIALES_BASE = [
+    { id: "MDF", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_mdf_m2 ?? null, origen: "Tu app: Carpintería (material MDF por m²)" },
+    { id: "Triplay", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_triplay_m2 ?? null, origen: "Tu app: Carpintería (material triplay por m²)" },
+    { id: "Madera sólida", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_madera_m2 ?? null, origen: "Tu app: Carpintería (material madera por m²)" },
+    { id: "Acrílico", precio: null, origen: "Falta precio" },
+    { id: "Acero al carbón", precio: null, origen: "Falta precio" },
+    { id: "Acero inoxidable", precio: null, origen: "Falta precio" },
+    { id: "Aluminio", precio: null, origen: "Falta precio" },
+    { id: "Cuero", precio: null, origen: "Falta precio" },
+    { id: "Tela", precio: null, origen: "Falta precio" },
+  ];
+  const grupoMaterial = (nombre) => {
+    const n = (nombre || "").toLowerCase();
+    if (n.includes("mdf")) return "MDF";
+    if (n.includes("triplay")) return "Triplay";
+    if (/pino|cedro|parota|encino|madera/.test(n)) return "Madera sólida";
+    if (n.includes("acril")) return "Acrílico";
+    if (n.includes("inox")) return "Acero inoxidable";
+    if (n.includes("acero")) return "Acero al carbón";
+    if (n.includes("alumin")) return "Aluminio";
+    if (n.includes("cuero")) return "Cuero";
+    if (n.includes("tela")) return "Tela";
+    return null;
+  };
+
+  const inicial = () => ({
+    taller: { nombre: "Mi taller CNC", whatsapp: "", vigencia: 15, minimo: 150, logo: null, condiciones: "Precios sujetos a revisión del archivo final. El tiempo de entrega corre a partir de tu confirmación y anticipo." },
+    costos: { ...DATOS.costos },
+    tarifas: Object.fromEntries(DATOS.servicios.map((s) => [s.clave, { ...s.tarifas }])),
+    materiales: Object.fromEntries(MATERIALES_BASE.map((m) => [m.id, m.precio])),
+    historial: [],
+    folio: 1,
+  });
+  // Modo de trabajo: "cuenta" (dentro de hetnacnc.com con sesión), "demo" (sin cuenta) o "local" (vista previa suelta)
+  const PUENTE = (() => { try { return window.parent !== window && window.parent.HETNA_PUENTE ? window.parent.HETNA_PUENTE : null; } catch (e) { return null; } })();
+  const MODO = PUENTE ? PUENTE.modo : "local";
+  const cuenta = { plan: "local", usadas: 0, limite: null, pruebaDias: 0, correo: "" };
+  let cotActual = null;
+  let conf = inicial();
+  try {
+    const g = JSON.parse(localStorage.getItem("hetna-cotizador") || "null");
+    if (g && g.tarifas) conf = { ...inicial(), ...g, taller: { ...inicial().taller, ...g.taller }, costos: { ...DATOS.costos, ...g.costos } };
+  } catch (e) { /* sin almacenamiento: se trabaja en memoria */ }
+  let tGuardar = null;
+  const guardarConf = () => {
+    if (MODO === "cuenta") {
+      clearTimeout(tGuardar);
+      tGuardar = setTimeout(() => {
+        const { historial, folio, ...resto } = conf;
+        Promise.resolve(PUENTE.guardarConfig(resto)).then((r) => { if (r && r.ok === false && r.mensaje) aviso(r.mensaje); }).catch(() => aviso("No se pudieron guardar tus ajustes. Revisa tu conexión."));
+      }, 800);
+      return;
+    }
+    if (MODO === "demo") return;
+    try { localStorage.setItem("hetna-cotizador", JSON.stringify(conf)); } catch (e) {}
+  };
+
+  // ---------- Estado de la cotizacion ----------
+  const st = {
+    datos: null, medidas: null, formato: null, nombreArchivo: "", mmPorUnidad: 1, manual: false,
+    servicio: null, tipoIdx: 0, campos: {}, camposArchivo: {}, cantidad: 1, material: "",
+    pone: "taller", acabadoIdx: 0, iva: true, extras: {}, elegida: "estandar", resultado: null,
+  };
+  const servicio = () => DATOS.servicios.find((s) => s.clave === st.servicio);
+  const tipo = () => (tiposVisibles()[st.tipoIdx] || tiposVisibles()[0]);
+
+  const SERV_2D = ["laser_co2", "plasma", "router", "laser_fibra", "herreria", "carpinteria", "diseno"];
+  const SERV_3D = ["impresion_3d", "router", "carpinteria", "diseno"];
+  const serviciosVisibles = () => {
+    const tipoArchivo = st.medidas?.tipo;
+    const lista = tipoArchivo === "2d" ? SERV_2D : tipoArchivo === "3d" ? SERV_3D : DATOS.servicios.map((s) => s.clave);
+    return DATOS.servicios.filter((s) => lista.includes(s.clave));
+  };
+  const sugerido = () => (st.medidas?.tipo === "3d" ? "impresion_3d" : st.medidas?.tipo === "2d" ? "laser_co2" : null);
+  const tiposVisibles = () => {
+    const s = servicio();
+    if (!s) return [];
+    const t = st.medidas?.tipo;
+    if (t === "2d" && ["router", "carpinteria"].includes(s.clave)) return s.tipos.filter((x) => ["por_area", "por_pieza", "precio_fijo"].includes(x.f));
+    if (t === "3d" && ["router", "carpinteria"].includes(s.clave)) return s.tipos.filter((x) => ["por_volumen", "por_pieza", "precio_fijo"].includes(x.f));
+    return s.tipos;
+  };
+
+  // ---------- Archivo ----------
+  const UNIDADES_2D = [["auto", "Automático"], ["1", "Milímetros"], ["10", "Centímetros"], ["25.4", "Pulgadas"], [String(25.4 / 96), "Pixeles (96 ppp)"], [String(25.4 / 72), "Pixeles (72 ppp)"]];
+  const UNIDADES_3D = [["1", "Milímetros"], ["10", "Centímetros"], ["25.4", "Pulgadas"], ["1000", "Metros"]];
+
+  const cargarArchivo = async (nombre, contenido) => {
+    const ext = (nombre.split(".").pop() || "").toLowerCase();
+    try {
+      let d;
+      if (ext === "dxf") d = GEO.leerDXF(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido));
+      else if (ext === "svg") d = GEO.leerSVG(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido), $("svg-host"));
+      else if (ext === "stl") d = GEO.leerSTL(contenido);
+      else if (ext === "obj") d = GEO.leerOBJ(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido));
+      else throw new Error("Ese tipo de archivo todavía no se puede leer. Usa DXF, SVG, STL u OBJ.");
+      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false;
+      st.unidadSel = d.tipo === "2d" ? "auto" : "1";
+      aplicarUnidad();
+      st.servicio = sugerido(); st.tipoIdx = 0; st.extras = {};
+      $("zona-subir").hidden = true; $("zona-manual").hidden = true; $("zona-archivo").hidden = false;
+      pintarArchivo();
+      pintarTrabajo();
+    } catch (e) {
+      aviso(e.message || "No se pudo leer el archivo.");
+    }
+  };
+  const aplicarUnidad = () => {
+    const d = st.datos;
+    if (!d) return;
+    if (d.tipo === "2d") {
+      st.mmPorUnidad = st.unidadSel === "auto" ? (d.unidadSugerida || 1) : num(st.unidadSel);
+      st.medidas = GEO.medir2D(d, st.mmPorUnidad);
+    } else {
+      st.mmPorUnidad = num(st.unidadSel) || 1;
+      st.medidas = GEO.medir3D(d, st.mmPorUnidad);
+    }
+    const m = st.medidas;
+    st.camposArchivo = m.tipo === "2d"
+      ? { largo: m.largoMm / 10, ancho: m.anchoMm / 10, metros: m.corteMm / 1000 }
+      : { largo: m.largoMm / 10, ancho: m.anchoMm / 10, alto: m.altoMm / 10 };
+    st.campos = { ...st.camposArchivo };
+  };
+
+  const pintarArchivo = () => {
+    const m = st.medidas, d = st.datos;
+    $("vista-etq").textContent = st.formato;
+    $("archivo-nombre").textContent = st.nombreArchivo;
+    const u = d.tipo === "2d" ? UNIDADES_2D : UNIDADES_3D;
+    $("unidad").innerHTML = u.map(([v, t]) => `<option value="${v}" ${v === st.unidadSel ? "selected" : ""}>${t}${v === "auto" && d.unidadSugerida ? " (" + nombreUnidad(d.unidadSugerida) + ")" : ""}</option>`).join("");
+    const celdas = m.tipo === "2d"
+      ? [["Medidas", `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} mm`], ["Corte total", `${fmt(m.corteMm / 1000, 2)} m`], ["Perforaciones", `${m.perforaciones}`], ["Área de lámina", `${fmt((m.largoMm * m.anchoMm) / 1e6, 3)} m²`]]
+      : [["Medidas", `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} × ${fmt(m.altoMm)} mm`], ["Volumen real", `${fmt(m.volumenCm3, 1)} cm³`], ["Superficie", `${fmt(m.areaCm2, 1)} cm²`], ["Triángulos", m.triangulos.toLocaleString("es-MX")]];
+    $("medidas").innerHTML = celdas.map(([a, b]) => `<div class="medida"><small>${a}</small><b>${b}</b></div>`).join("");
+    const av = [];
+    if (d.tipo === "2d" && !d.unidadSugerida && d.formato === "DXF") av.push("El DXF no dice en qué unidades está; lo tomé en milímetros. Si las medidas se ven raras, cambia las unidades.");
+    if (d.ignoradas && Object.keys(d.ignoradas).length) av.push("No se cobran: " + Object.entries(d.ignoradas).map(([k, v]) => `${k} (${v})`).join(", ") + ". Si eran cortes, conviértelos a líneas.");
+    if (m.tipo === "2d" && (m.largoMm < 1 || m.largoMm > 20000)) av.push("Las medidas se ven fuera de lo normal. Revisa las unidades del archivo.");
+    if (m.tipo === "3d" && !m.cerrada) av.push("La malla parece abierta: el volumen puede no ser exacto.");
+    $("avisos-archivo").innerHTML = av.map((t) => `<div class="aviso">${esc(t)}</div>`).join("");
+    prepararVista();
+  };
+  const nombreUnidad = (f) => (Math.abs(f - 1) < 1e-9 ? "mm" : Math.abs(f - 10) < 1e-9 ? "cm" : Math.abs(f - 25.4) < 1e-9 ? "pulgadas" : Math.abs(f - 1000) < 1e-9 ? "m" : Math.abs(f - 25.4 / 96) < 1e-6 ? "px 96 ppp" : f.toFixed(3) + " mm por unidad");
+
+  // ---------- Vista previa y simulador ----------
+  const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const colores = () => { const cs = getComputedStyle(document.documentElement); return { acento: cs.getPropertyValue("--accent").trim() || "#C2560A", tinta: cs.getPropertyValue("--navy-ink").trim() || "#E9EEF6", fondo: cs.getPropertyValue("--navy").trim() || "#142033" }; };
+  const hexRgb = (h) => { const m = h.replace("#", ""); const v = m.length === 3 ? m.split("").map((x) => x + x).join("") : m; return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16) || 0); };
+  const sim = { activo: false, t: 0, vel: 1, ultimo: 0, orden: null, largoTotal: 0 };
+
+  // ----- 2D: dibujo y simulacion del corte -----
+  const prepararRuta2D = () => {
+    const d = st.datos;
+    // agujeros e interiores primero, contorno exterior al final (como se corta en taller)
+    const cajaP = (p) => { let a = Infinity, b = Infinity, c = -Infinity, e = -Infinity; for (const [x, y] of p.pts) { a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); e = Math.max(e, y); } return (c - a) * (e - b); };
+    // une trazos sueltos que se tocan (lineas y arcos de un mismo contorno) en una sola cadena
+    const tol = Math.max(1e-6, Math.hypot(st.medidas.caja.x1 - st.medidas.caja.x0, st.medidas.caja.y1 - st.medidas.caja.y0) * 1e-5);
+    const igual = (p, q) => Math.abs(p[0] - q[0]) <= tol && Math.abs(p[1] - q[1]) <= tol;
+    const abiertas = d.polis.filter((p) => !p.cerrada).map((p) => p.pts.slice());
+    const cadenas = d.polis.filter((p) => p.cerrada).map((p) => ({ pts: p.pts, cerrada: true }));
+    while (abiertas.length) {
+      let c = abiertas.shift();
+      let crecio = true;
+      while (crecio) {
+        crecio = false;
+        for (let i = 0; i < abiertas.length; i++) {
+          const q = abiertas[i], fin = c[c.length - 1], ini = c[0];
+          if (igual(fin, q[0])) c = c.concat(q.slice(1));
+          else if (igual(fin, q[q.length - 1])) c = c.concat(q.slice(0, -1).reverse());
+          else if (igual(ini, q[q.length - 1])) c = q.slice(0, -1).concat(c);
+          else if (igual(ini, q[0])) c = q.slice(1).reverse().concat(c);
+          else continue;
+          abiertas.splice(i, 1); crecio = true; break;
+        }
+      }
+      cadenas.push({ pts: c, cerrada: false });
+    }
+    const polis = cadenas.map((p) => ({ ...p, area: cajaP(p) })).sort((a, b) => a.area - b.area);
+    const tramos = [];
+    let previo = null, total = 0;
+    for (const p of polis) {
+      const pts = p.cerrada ? [...p.pts, p.pts[0]] : p.pts;
+      if (previo) { const L = Math.hypot(pts[0][0] - previo[0], pts[0][1] - previo[1]); tramos.push({ tipo: "rapido", pts: [previo, pts[0]], L }); total += L; }
+      let L = 0;
+      for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      tramos.push({ tipo: "corte", pts, L });
+      total += L;
+      previo = pts[pts.length - 1];
+    }
+    sim.orden = tramos; sim.largoTotal = total;
+  };
+  const dibujar2D = (ctx, W, H) => {
+    const d = st.datos, { acento, tinta } = colores();
+    const c = st.medidas.caja, pad = 28;
+    const s = Math.min((W - pad * 2) / Math.max(1e-9, c.x1 - c.x0), (H - pad * 2) / Math.max(1e-9, c.y1 - c.y0));
+    const ox = (W - (c.x1 - c.x0) * s) / 2, oy = (H - (c.y1 - c.y0) * s) / 2;
+    const X = (x) => ox + (x - c.x0) * s, Y = (y) => H - (oy + (y - c.y0) * s);
+    const trazar = (pts, hasta) => {
+      ctx.beginPath();
+      let rec = 0, fin = null;
+      for (let i = 0; i < pts.length; i++) {
+        const [x, y] = pts[i];
+        if (i === 0) { ctx.moveTo(X(x), Y(y)); fin = [x, y]; continue; }
+        const [px, py] = pts[i - 1];
+        const l = Math.hypot(x - px, y - py);
+        if (hasta !== undefined && rec + l > hasta) { const f = (hasta - rec) / l; fin = [px + (x - px) * f, py + (y - py) * f]; ctx.lineTo(X(fin[0]), Y(fin[1])); return fin; }
+        rec += l; ctx.lineTo(X(x), Y(y)); fin = [x, y];
+      }
+      return fin;
+    };
+    if (!sim.activo) {
+      ctx.strokeStyle = acento; ctx.lineWidth = 1.6; ctx.lineJoin = "round";
+      for (const p of d.polis) { trazar(p.cerrada ? [...p.pts, p.pts[0]] : p.pts); ctx.stroke(); }
+    } else {
+      ctx.strokeStyle = "rgba(233,238,246,0.22)"; ctx.lineWidth = 1.2;
+      for (const p of d.polis) { trazar(p.cerrada ? [...p.pts, p.pts[0]] : p.pts); ctx.stroke(); }
+      let resta = sim.t * sim.largoTotal, cabeza = null, perf = 0, cortado = 0;
+      for (const tr of sim.orden) {
+        if (resta <= 0) break;
+        const hasta = Math.min(resta, tr.L);
+        if (tr.tipo === "rapido") { ctx.setLineDash([4, 4]); ctx.strokeStyle = "rgba(233,238,246,0.55)"; ctx.lineWidth = 1; }
+        else { ctx.setLineDash([]); ctx.strokeStyle = acento; ctx.lineWidth = 2.4; perf += 1; cortado += hasta; }
+        cabeza = trazar(tr.pts, hasta); ctx.stroke();
+        resta -= tr.L;
+      }
+      ctx.setLineDash([]);
+      if (cabeza) {
+        ctx.fillStyle = "rgba(255,210,150,0.35)"; ctx.beginPath(); ctx.arc(X(cabeza[0]), Y(cabeza[1]), 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FFE3C2"; ctx.beginPath(); ctx.arc(X(cabeza[0]), Y(cabeza[1]), 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+      const f = st.mmPorUnidad;
+      $("sim-dato").textContent = `Perforación ${Math.min(perf, st.medidas.perforaciones)} de ${st.medidas.perforaciones} · ${fmt((cortado * f) / 1000, 2)} de ${fmt(st.medidas.corteMm / 1000, 2)} m`;
+    }
+    ctx.fillStyle = tinta; ctx.font = "500 11px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+    ctx.fillText(`${fmt(st.medidas.largoMm)} mm`, W / 2, H - 8);
+    ctx.save(); ctx.translate(12, H / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(`${fmt(st.medidas.anchoMm)} mm`, 0, 0); ctx.restore();
+  };
+
+  // ----- 3D con WebGL (three.js) -----
+  const v3 = { listo: false, renderer: null, scene: null, camera: null, pieza: null, bloque: null, planoPieza: null, planoBloque: null, orb: { th: 0.8, ph: 1.05, dist: 100 }, altura: 1, girando: !quieto, usado: false };
+  const crear3D = () => {
+    if (!window.THREE) return false;
+    if (v3.listo) return true;
+    try {
+      const T = window.THREE;
+      v3.renderer = new T.WebGLRenderer({ canvas: $("lienzo3d"), antialias: true, preserveDrawingBuffer: true });
+      v3.renderer.localClippingEnabled = true;
+      v3.scene = new T.Scene();
+      v3.camera = new T.PerspectiveCamera(40, 1, 0.1, 100000);
+      v3.scene.add(new T.HemisphereLight(0xdfe8f5, 0x1a2230, 0.9));
+      const sol = new T.DirectionalLight(0xffffff, 0.85); sol.position.set(1, 2, 1.5); v3.scene.add(sol);
+      const sol2 = new T.DirectionalLight(0xffffff, 0.3); sol2.position.set(-1.5, 0.5, -1); v3.scene.add(sol2);
+      v3.listo = true;
+      return true;
+    } catch (e) { return false; }
+  };
+  const cargar3D = () => {
+    if (!crear3D()) return false;
+    const T = window.THREE, d = st.datos, f = st.mmPorUnidad, c = st.medidas.caja;
+    const { acento } = colores();
+    [v3.pieza, v3.bloque, v3.cama].forEach((o) => { if (o) { v3.scene.remove(o); o.geometry.dispose(); o.material.dispose(); } });
+    const n = d.tris.length;
+    const pos = new Float32Array(n);
+    const cx = (c.x0 + c.x1) / 2, cy = (c.y0 + c.y1) / 2;
+    for (let i = 0; i < n; i += 3) {
+      // Z del archivo hacia arriba (eje Y de la escena), base de la pieza en 0
+      pos[i] = (d.tris[i] - cx) * f;
+      pos[i + 1] = (d.tris[i + 2] - c.z0) * f;
+      pos[i + 2] = -(d.tris[i + 1] - cy) * f;
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute("position", new T.BufferAttribute(pos, 3));
+    g.computeVertexNormals();
+    v3.planoPieza = new T.Plane(new T.Vector3(0, -1, 0), 1e9);
+    v3.planoBloque = new T.Plane(new T.Vector3(0, 1, 0), 1e9);
+    v3.pieza = new T.Mesh(g, new T.MeshStandardMaterial({ color: new T.Color(acento), roughness: 0.55, metalness: 0.08, side: T.DoubleSide, clippingPlanes: [v3.planoPieza] }));
+    v3.scene.add(v3.pieza);
+    const L = st.medidas.largoMm, A = st.medidas.anchoMm, H = st.medidas.altoMm;
+    const bg = new T.BoxGeometry(L * 1.06, H * 1.03, A * 1.06); bg.translate(0, (H * 1.03) / 2, 0);
+    v3.bloque = new T.Mesh(bg, new T.MeshStandardMaterial({ color: 0xc9b89a, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false, clippingPlanes: [v3.planoBloque] }));
+    v3.bloque.visible = false;
+    v3.scene.add(v3.bloque);
+    const R = Math.max(L, A, H) || 10;
+    v3.cama = new T.GridHelper(R * 1.6, 16, 0x3a4a63, 0x243247);
+    v3.scene.add(v3.cama);
+    v3.orb = { th: 0.8, ph: 1.05, dist: R * 2.3 };
+    v3.centro = new T.Vector3(0, H / 2, 0);
+    v3.altura = H;
+    v3.renderer.setClearColor(new T.Color(colores().fondo));
+    return true;
+  };
+  const render3D = () => {
+    if (!v3.listo || !v3.pieza) return;
+    const caja = $("vista"), W = caja.clientWidth, H = caja.clientHeight;
+    if (!W || !H) return;
+    v3.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    v3.renderer.setSize(W, H, false);
+    v3.camera.aspect = W / H; v3.camera.updateProjectionMatrix();
+    const o = v3.orb, cc = v3.centro;
+    v3.camera.position.set(cc.x + o.dist * Math.sin(o.ph) * Math.sin(o.th), cc.y + o.dist * Math.cos(o.ph), cc.z + o.dist * Math.sin(o.ph) * Math.cos(o.th));
+    v3.camera.lookAt(cc);
+    // simulacion: impresion sube por capas; maquinado baja quitando material del bloque
+    const h = v3.altura;
+    if (sim.activo) {
+      const imprime = servicio()?.clave === "impresion_3d";
+      const nivel = imprime ? sim.t * h : h * (1 - sim.t);
+      v3.planoPieza.constant = imprime ? nivel : 1e9;
+      v3.planoBloque.constant = -nivel;
+      v3.bloque.visible = !imprime;
+      const capa = 0.2;
+      $("sim-dato").textContent = imprime
+        ? `Capa ${Math.max(1, Math.ceil(nivel / capa))} de ${Math.max(1, Math.ceil(h / capa))} (0.2 mm) · altura ${fmt(nivel, 1)} mm`
+        : `Profundidad ${fmt(h - nivel, 1)} de ${fmt(h, 1)} mm · desbaste por niveles`;
+    } else {
+      v3.planoPieza.constant = 1e9; v3.bloque.visible = false;
+    }
+    v3.renderer.render(v3.scene, v3.camera);
+  };
+
+  // ----- Respaldo 3D sin WebGL: dibujo en canvas -----
+  let rot = { x: -0.6, y: 0.7 };
+  const dibujar3DCanvas = (ctx, W, H) => {
+    const t = st.datos.tris, c = st.medidas.caja, { acento } = colores();
+    const cx = (c.x0 + c.x1) / 2, cy = (c.y0 + c.y1) / 2, cz = (c.z0 + c.z1) / 2;
+    const R = Math.max(c.x1 - c.x0, c.y1 - c.y0, c.z1 - c.z0) || 1;
+    const k0 = (Math.min(W, H) * 0.62) / R;
+    const n = t.length / 9, paso = Math.max(1, Math.ceil(n / 25000));
+    const sx = Math.sin(rot.x), cxr = Math.cos(rot.x), sy = Math.sin(rot.y), cyr = Math.cos(rot.y);
+    const lim = sim.activo ? c.z0 + (c.z1 - c.z0) * sim.t : Infinity;
+    const tr = (x, y, z) => { x -= cx; y -= cy; z -= cz; const X = x * cyr - y * sy, Yp = x * sy + y * cyr; return [W / 2 + X * k0, H / 2 - (Yp * sx + z * cxr) * k0, Yp * cxr - z * sx]; };
+    const caras = [];
+    for (let i = 0; i < n; i += paso) {
+      const o = i * 9;
+      if (Math.min(t[o + 2], t[o + 5], t[o + 8]) > lim) continue;
+      const a = tr(t[o], t[o + 1], t[o + 2]), b = tr(t[o + 3], t[o + 4], t[o + 5]), d = tr(t[o + 6], t[o + 7], t[o + 8]);
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = d[0] - a[0], vy = d[1] - a[1], vz = d[2] - a[2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      caras.push([a, b, d, (a[2] + b[2] + d[2]) / 3, Math.abs((nx * 0.3 - ny * 0.5 + nz * 0.8) / (Math.hypot(nx, ny, nz) || 1))]);
+    }
+    caras.sort((p, q) => p[3] - q[3]);
+    const rgb = hexRgb(acento);
+    for (const [a, b, d, , luz] of caras) {
+      const k = 0.35 + 0.65 * luz;
+      ctx.fillStyle = `rgb(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)})`;
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(d[0], d[1]); ctx.closePath(); ctx.fill();
+    }
+    if (sim.activo) $("sim-dato").textContent = `Altura ${fmt((lim - c.z0) * st.mmPorUnidad, 1)} de ${fmt(st.medidas.altoMm, 1)} mm`;
+  };
+
+  const usa3D = () => st.datos?.tipo === "3d" && v3.listo && v3.pieza;
+  const dibujar = () => {
+    const d = st.datos;
+    const es3D = d?.tipo === "3d" && usa3D();
+    $("lienzo").hidden = es3D; $("lienzo3d").hidden = !es3D;
+    $("vista-gira").hidden = d?.tipo !== "3d";
+    if (es3D) { render3D(); return; }
+    const cv = $("lienzo"), caja = $("vista");
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = caja.clientWidth, H = caja.clientHeight;
+    if (!W || !H) return;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = colores().fondo; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(233,238,246,0.07)"; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke(); }
+    if (!d) return;
+    if (d.tipo === "2d") dibujar2D(ctx, W, H); else dibujar3DCanvas(ctx, W, H);
+  };
+  const prepararVista = () => {
+    detenerSim();
+    if (st.datos?.tipo === "3d") cargar3D(); else prepararRuta2D();
+    requestAnimationFrame(dibujar);
+  };
+
+  // ----- Controles: girar, acercar, pellizcar -----
+  const vista = $("vista");
+  const punteros = new Map();
+  let distPellizco = 0;
+  vista.addEventListener("pointerdown", (e) => { if (st.datos?.tipo !== "3d") return; punteros.set(e.pointerId, [e.clientX, e.clientY]); vista.setPointerCapture(e.pointerId); v3.usado = true; });
+  vista.addEventListener("pointermove", (e) => {
+    if (!punteros.has(e.pointerId)) return;
+    const prev = punteros.get(e.pointerId);
+    punteros.set(e.pointerId, [e.clientX, e.clientY]);
+    if (punteros.size === 2) {
+      const [a, b] = [...punteros.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (distPellizco) acercar(distPellizco / d);
+      distPellizco = d;
+      return;
+    }
+    const dx = e.clientX - prev[0], dy = e.clientY - prev[1];
+    v3.orb.th -= dx * 0.01; v3.orb.ph = Math.min(3.0, Math.max(0.12, v3.orb.ph - dy * 0.01));
+    rot.y += dx * 0.01; rot.x += dy * 0.01;
+    dibujar();
+  });
+  const soltar = (e) => { punteros.delete(e.pointerId); if (punteros.size < 2) distPellizco = 0; };
+  vista.addEventListener("pointerup", soltar); vista.addEventListener("pointercancel", soltar);
+  const acercar = (f) => { v3.orb.dist = Math.min(v3.orb.dist * 8, Math.max(1, v3.orb.dist * f)); dibujar(); };
+  vista.addEventListener("wheel", (e) => { if (st.datos?.tipo !== "3d") return; e.preventDefault(); acercar(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: false });
+
+  // ----- Simulador -----
+  const detenerSim = () => { sim.activo = false; sim.t = 0; $("sim-panel").hidden = true; $("btn-sim").textContent = st.datos?.tipo === "3d" ? (servicio()?.clave === "impresion_3d" ? "Simular impresión" : "Simular maquinado") : "Simular corte"; };
+  const minutosSim = () => {
+    const r = st.resultado;
+    if (!r || !(r.tiempoHoras > 0)) return null;
+    return (r.tiempoHoras * 60) / Math.max(1, st.cantidad);
+  };
+  $("btn-sim").addEventListener("click", () => {
+    if (!st.datos) return;
+    if (sim.activo) { detenerSim(); dibujar(); return; }
+    sim.activo = true; sim.t = quieto ? 1 : 0; sim.ultimo = 0;
+    $("sim-panel").hidden = false; $("btn-sim").textContent = "Detener simulación";
+    const m = minutosSim();
+    $("sim-tiempo").textContent = m ? `Tiempo de máquina estimado: ${m < 1 ? fmt(m * 60, 0) + " s" : fmt(m, 1) + " min"} por pieza` : "";
+    dibujar();
+  });
+  $("sim-vel").addEventListener("click", () => { sim.vel = sim.vel >= 4 ? 1 : sim.vel * 2; $("sim-vel").textContent = sim.vel + "×"; });
+  $("sim-repetir").addEventListener("click", () => { sim.t = 0; dibujar(); });
+
+  // Bucle de animacion
+  const bucle = (ts) => {
+    const visible = !document.hidden && !$("zona-archivo").hidden && !$("vista-cotizar").hidden;
+    if (visible && st.datos) {
+      if (sim.activo && sim.t < 1) {
+        const dt = sim.ultimo ? (ts - sim.ultimo) / 1000 : 0;
+        sim.t = Math.min(1, sim.t + (dt * sim.vel) / 9);
+        dibujar();
+      } else if (st.datos.tipo === "3d" && !sim.activo && !v3.usado && !quieto && punteros.size === 0) {
+        v3.orb.th += 0.004; rot.y += 0.006;
+        if (usa3D() || st.datos.tris.length / 9 < 20000) dibujar();
+      }
+    }
+    sim.ultimo = ts;
+    requestAnimationFrame(bucle);
+  };
+  requestAnimationFrame(bucle);
+  window.addEventListener("resize", () => st.datos && dibujar());
+
+  // Imagen de la pieza para el PDF
+  const imagenPieza = () => {
+    const estaba = sim.activo;
+    sim.activo = false;
+    try {
+      dibujar();
+      return usa3D() ? $("lienzo3d").toDataURL("image/jpeg", 0.9) : $("lienzo").toDataURL("image/jpeg", 0.9);
+    } catch (e) { return null; }
+    finally { sim.activo = estaba; dibujar(); }
+  };
+
+  // ---------- Paso 2: trabajo ----------
+  const CAMPOS = { largo: ["Largo (cm)", 0.1], ancho: ["Ancho (cm)", 0.1], alto: ["Alto (cm)", 0.1], metros: ["Metros de corte", 0.01], horas: ["Horas de trabajo", 0.25], minutos: ["Minutos de máquina", 1], peso: ["Peso (kg)", 0.1] };
+  const pintarTrabajo = () => {
+    const vis = serviciosVisibles();
+    if (!vis.find((s) => s.clave === st.servicio)) st.servicio = vis[0]?.clave;
+    const sug = sugerido();
+    $("servicios").innerHTML = vis.map((s) => `<button type="button" class="chip" data-s="${s.clave}" aria-pressed="${s.clave === st.servicio}">${esc(nombreServicio(s))}${s.clave === sug ? '<span class="sug">sugerido</span>' : ""}</button>`).join("");
+    const tv = tiposVisibles();
+    if (st.tipoIdx >= tv.length) st.tipoIdx = 0;
+    $("tipo").innerHTML = tv.map((t, i) => `<option value="${i}" ${i === st.tipoIdx ? "selected" : ""}>${esc(t.n)}</option>`).join("");
+    const s = servicio();
+    // materiales
+    const mats = s.materiales || [];
+    const esImp = s.clave === "impresion_3d";
+    $("campo-material").hidden = !mats.length || s.clave === "diseno";
+    const matsOpc = esImp ? mats.filter((m) => !/resina/i.test(m)) : mats;
+    if (!matsOpc.includes(st.material)) st.material = matsOpc[0] || "";
+    $("material").innerHTML = matsOpc.map((m) => `<option ${m === st.material ? "selected" : ""}>${esc(m)}</option>`).join("");
+    // acabados
+    $("campo-acabado").hidden = !(s.acabados || []).length;
+    if (st.acabadoIdx >= (s.acabados || []).length) st.acabadoIdx = 0;
+    $("acabado").innerHTML = (s.acabados || []).map((a, i) => `<option value="${i}" ${i === st.acabadoIdx ? "selected" : ""}>${esc(a.n)}${a.p ? " (+" + dinero(a.p) + ")" : ""}</option>`).join("");
+    pintarCampos();
+    pintarOpcionesServicio();
+    calcular();
+    detenerSim();
+    if (st.datos) requestAnimationFrame(dibujar);
+  };
+  const nombreServicio = (s) => ({ "Laser CO2": "Láser CO2", Impresion: "Impresión 3D", "Impresion 3D": "Impresión 3D", Carpinteria: "Carpintería", Herreria: "Herrería", "Diseno Digital": "Diseño digital" }[s.nombre] || s.nombre);
+
+  const pintarCampos = () => {
+    const t = tipo();
+    const nec = t ? t.nec.filter((k) => CAMPOS[k]) : [];
+    if (t && t.f === "por_metro" && !nec.includes("metros")) nec.push("metros");
+    $("campos-medidas").innerHTML = nec.map((k) => {
+      const v = st.campos[k] ?? "";
+      const desdeArchivo = st.camposArchivo[k] !== undefined && Math.abs(num(st.camposArchivo[k]) - num(v)) < 1e-9;
+      return `<div class="campo"><label for="c-${k}">${CAMPOS[k][0]}</label><input id="c-${k}" data-campo="${k}" type="number" min="0" step="${CAMPOS[k][1]}" inputmode="decimal" value="${v === "" ? "" : Math.round(num(v) * 100) / 100}">${desdeArchivo ? '<span class="del-archivo">Leído del archivo</span>' : ""}</div>`;
+    }).join("");
+    $("bloque-material").hidden = !servicio() || ["diseno", "impresion_3d"].includes(servicio().clave) || t?.f === "por_hora";
+    pintarInfoMaterial();
+  };
+
+  const check = (id, texto, sub) => `<label class="check"><input type="checkbox" data-extra="${id}" ${st.extras[id] ? "checked" : ""}> <span>${texto}${sub ? `<br><small class="ayuda">${sub}</small>` : ""}</span></label>`;
+  const pintarOpcionesServicio = () => {
+    const s = servicio(), t = tipo();
+    const T = conf.tarifas[s.clave];
+    let campos = "", extras = "";
+    if (s.clave === "laser_co2") {
+      campos += sel("materialLaser", "Material en el láser", [["mdf_fino", "MDF delgado (3 mm)"], ["mdf_medio", "MDF medio (6 mm)"], ["otros", "Acrílico u otro"]]);
+      if (/grab/i.test(t.n)) campos += sel("densidadLaser", "Grabado", [["ligero", "Ligero"], ["normal", "Normal"], ["denso", "Denso"]]);
+    }
+    if (s.clave === "plasma") {
+      campos += sel("calibre", "Calibre", ["Cal 20", "Cal 18", "Cal 16", "Cal 14", "Cal 12", "Cal 10", "Cal 8", '3/16"', '1/4"'].map((c) => [c, c]), "Cal 14");
+      extras += check("llevaLimpieza", "Limpieza de piezas", dinero(T.limpieza_pieza || 80) + " por pieza");
+      extras += check("llevaFlete", "Flete y maniobra", "Según el tamaño total del pedido");
+      extras += check("llevaDisenoPlasma", st.datos ? "Preparar el archivo del cliente" : "Diseñar la pieza", st.datos ? dinero(T.setup_archivo || 75) : dinero(T.tarifa_diseno_hora || 250) + " por hora");
+    }
+    if (s.clave === "router" || s.clave === "laser_co2") extras += check("llevaDiseno", "Diseño adicional", dinero(T.costo_diseno || 300));
+    if (s.clave === "laser_fibra") {
+      extras += check("llevaPlantilla", "Plantilla de sujeción", dinero(T.setup_plantilla || 150));
+      extras += check("llevaRotativo", "Eje rotativo", dinero(T.cargo_rotativo || 25) + " por pieza");
+    }
+    if (s.clave === "impresion_3d") campos += sel("materialImpresion", "Filamento", [["pla", "PLA"], ["abs", "ABS"], ["petg", "PETG"], ["tpu", "TPU flexible"]]);
+    if (s.clave === "diseno") {
+      extras += check("clienteTraeArchivo", "El cliente trae archivo");
+      extras += check("archivoEsVector", "Su archivo ya es vector (DXF/SVG)", "Solo se cobra preparación");
+      extras += check("entregaUrgente", "Entrega urgente", "+" + (T.cargo_urgente || 40) + "%");
+      extras += check("archivoEditableAlCliente", "Entregar archivo editable", "+" + (T.cargo_archivo_editable || 200) + "%");
+      campos += `<div class="campo"><label for="o-revisionesExtra">Revisiones extra</label><input id="o-revisionesExtra" data-opc="revisionesExtra" type="number" min="0" step="1" value="${st.extras.revisionesExtra || 0}"></div>`;
+    }
+    if (t && t.f === "precio_fijo") campos += `<div class="campo"><label for="o-precioFijo">Precio por pieza</label><input id="o-precioFijo" data-opc="precioFijo" type="number" min="0" step="10" value="${st.extras.precioFijo || ""}" placeholder="Precio acordado"></div>`;
+    $("campos-servicio").innerHTML = campos;
+    $("extras").innerHTML = extras;
+  };
+  const sel = (id, etiqueta, opciones, def) => {
+    if (st.extras[id] === undefined) st.extras[id] = def ?? opciones[0][0];
+    return `<div class="campo"><label for="o-${id}">${etiqueta}</label><select id="o-${id}" data-opc="${id}">${opciones.map(([v, t]) => `<option value="${esc(v)}" ${v === st.extras[id] ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></div>`;
+  };
+
+  const precioMaterial = () => {
+    const g = grupoMaterial(st.material);
+    return g ? { grupo: g, precio: conf.materiales[g] } : { grupo: null, precio: null };
+  };
+  const pintarInfoMaterial = () => {
+    $("mat-taller").setAttribute("aria-pressed", st.pone === "taller");
+    $("mat-cliente").setAttribute("aria-pressed", st.pone === "cliente");
+    if (st.pone === "cliente") { $("mat-info").textContent = "No se cobra material."; return; }
+    const { grupo, precio } = precioMaterial();
+    const area = (num(st.campos.largo) * num(st.campos.ancho)) / 10000;
+    if (!grupo) $("mat-info").textContent = "Este material no tiene precio en tu lista. Agrégalo en Mi taller → Precios de materiales.";
+    else if (!(precio > 0)) $("mat-info").innerHTML = `Falta el precio de <b>${esc(grupo)}</b>. Agrégalo en Mi taller → Precios de materiales para cobrarlo.`;
+    else $("mat-info").innerHTML = `${esc(grupo)} a ${dinero(precio)}/m² × ${fmt(area, 3)} m² por pieza, más 15% de merma.`;
+  };
+
+  // ---------- Calculo con el motor de Vlado ----------
+  const calcular = () => {
+    const s = servicio(), t = tipo();
+    if (!s || !t) return;
+    const tarifas = { ...conf.tarifas[s.clave] };
+    if (t.f === "precio_fijo") tarifas.precio_fijo = num(st.extras.precioFijo);
+    const costos = { ...conf.costos, get costoHoraTotal() { return this.costoHoraTaller + this.costoHoraMaquina + this.costoHoraOperador; } };
+    const { grupo, precio } = precioMaterial();
+    const areaPieza = (num(st.campos.largo) * num(st.campos.ancho)) / 10000;
+    const usaMaterial = !["diseno", "impresion_3d"].includes(s.clave) && t.f !== "por_hora";
+    const tipoLaser = /corte/i.test(t.n) && /grab/i.test(t.n) ? "ambos" : /grab/i.test(t.n) ? "grabado" : "corte";
+    const matPlasma = /inox/i.test(st.material) ? "inox" : /alumin/i.test(st.material) ? "aluminio" : "acero_negro";
+    const acabado = (s.acabados || [])[st.acabadoIdx];
+    const m = st.medidas;
+    const archivoDe = (k) => st.campos[k] !== undefined && st.camposArchivo[k] !== undefined && Math.abs(num(st.campos[k]) - num(st.camposArchivo[k])) < 1e-9;
+    const p = {
+      cfg: { tarifas, rangos: s.rangos },
+      costos,
+      tipo: { nombre: t.n, formula: t.f, factor: t.k },
+      nombreServicio: nombreServicio(s), emojiServicio: s.emoji,
+      largo: num(st.campos.largo), ancho: num(st.campos.ancho), alto: num(st.campos.alto),
+      peso: num(st.campos.peso), metros: num(st.campos.metros), horas: num(st.campos.horas), minutos: num(st.campos.minutos),
+      cantidad: Math.max(1, Math.round(st.cantidad)),
+      clienteTraeMaterial: st.pone === "cliente",
+      materialLibreNombre: grupo || st.material,
+      materialLibrePrecio: usaMaterial && st.pone === "taller" && precio > 0 ? areaPieza * precio : 0,
+      acabado: acabado ? { nombre: acabado.n, precio: acabado.p } : null,
+      aplicarIva: false,
+      extrasSeleccionados: [],
+      clienteTraeArchivo: !!st.extras.clienteTraeArchivo, archivoEsVector: !!st.extras.archivoEsVector,
+      entregaUrgente: !!st.extras.entregaUrgente, revisionesExtra: Math.max(0, Math.round(num(st.extras.revisionesExtra))),
+      archivoEditableAlCliente: !!st.extras.archivoEditableAlCliente,
+      llevaDiseno: !!st.extras.llevaDiseno,
+      calibre: st.extras.calibre || "Cal 14", material: matPlasma,
+      llevaLimpieza: !!st.extras.llevaLimpieza, llevaFlete: !!st.extras.llevaFlete,
+      llevaDisenoPlasma: !!st.extras.llevaDisenoPlasma, clienteTraeArchivoDXF: !!st.datos,
+      materialLaser: st.extras.materialLaser || "mdf_fino", densidadLaser: st.extras.densidadLaser || "normal", tipoLaser,
+      llevaPlantilla: !!st.extras.llevaPlantilla, llevaRotativo: !!st.extras.llevaRotativo,
+      materialImpresion: st.extras.materialImpresion || "pla",
+      perimetroRealMm: m?.tipo === "2d" && archivoDe("largo") && archivoDe("ancho") ? m.corteMm : 0,
+      volumenRealCm3: m?.tipo === "3d" && archivoDe("largo") && archivoDe("ancho") && archivoDe("alto") ? m.volumenCm3 : 0,
+    };
+    let r;
+    try { r = calcular_motor(p); } catch (e) { r = null; }
+    st.resultado = r;
+    pintarPrecio(r, p);
+  };
+  const calcular_motor = (p) => calcular_hetna(p);
+
+  const NO_DINERO = new Set(["area_m2", "material_factor", "volumen_cm3", "gramos_estimados", "tiempo_min", "factor_tipo", "tiempo_estimado_ref", "horas_diseno", "minutos_estimados", "metros"]);
+  const ETIQ = {
+    area_m2: "Área por pieza (m²)", tarifa_m2: "Tarifa por m²", minimo_apertura: "Mínimo de apertura", material_factor: "Factor de material",
+    mano_obra_lijado: "Lijado", mano_obra_barnizado: "Barnizado", diseno_adicional: "Diseño adicional", volumen_cm3: "Volumen (cm³)",
+    gramos_estimados: "Filamento (g)", tiempo_min: "Minutos de impresión", precio_minimo: "Precio mínimo", precio_rango_base: "Precio base por tamaño",
+    factor_tipo: "Factor del trabajo", tiempo_estimado_ref: "Horas estimadas", setup_montaje: "Preparación del archivo", vectorizacion_imagen: "Vectorizar imagen",
+    horas_diseno: "Horas de diseño", tarifa_hora: "Tarifa por hora", cargo_urgente: "Cargo urgente", revisiones_extra: "Revisiones extra",
+    archivo_editable: "Archivo editable", material_estimado: "Material estimado", desgaste_tubo: "Desgaste del tubo", minutos_estimados: "Minutos de máquina",
+    tarifa_min: "Tarifa por minuto", metros: "Metros de corte", tarifa_metro: "Tarifa por metro", tarifa_por_pieza: "Tarifa por pieza",
+    plantilla_sujecion: "Plantilla de sujeción", eje_rotativo: "Eje rotativo", limpieza_pieza: "Limpieza", flete_maniobra: "Flete y maniobra",
+    setup_dxf: "Preparar DXF", diseno_plasma: "Diseño",
+  };
+
+  // Cobro minimo por trabajo: si el Estandar queda abajo, se suben las 3 opciones en la misma proporcion
+  const factorMinimo = (r) => (conf.taller.minimo > 0 && r.pvRecomendado > 0 && r.pvRecomendado < conf.taller.minimo ? conf.taller.minimo / r.pvRecomendado : 1);
+  const opcionesPrecio = (r) => {
+    const f = (st.iva ? 1 + conf.costos.ivaPct / 100 : 1) * factorMinimo(r);
+    return [
+      { id: "economico", nombre: "Económico", total: r.pvMinimo * f, nota: "Sin prioridad" },
+      { id: "estandar", nombre: "Estándar", total: r.pvRecomendado * f, nota: "Tiempo normal" },
+      { id: "express", nombre: "Express", total: r.pvPremium * f, nota: "Con prioridad" },
+    ];
+  };
+
+  const pintarPrecio = (r, p) => {
+    $("precio-nota").textContent = st.iva ? "con IVA" : "sin IVA";
+    if (!r || !(r.pvRecomendado > 0)) {
+      $("opciones").innerHTML = "";
+      $("aviso-precio").innerHTML = `<div class="aviso">Faltan datos para calcular: revisa las medidas${tipo()?.f === "precio_fijo" ? " o el precio por pieza" : ""}.</div>`;
+      $("kpis").innerHTML = ""; $("desglose").innerHTML = "";
+      actualizarMensaje();
+      return;
+    }
+    $("aviso-precio").innerHTML = factorMinimo(r) > 1 ? `<div class="aviso">Se aplicó tu cobro mínimo de ${dinero(conf.taller.minimo)} + IVA (el cálculo dio ${dinero(r.pvRecomendado)}). Lo cambias en Mi taller.</div>` : "";
+    $("opciones").innerHTML = opcionesPrecio(r).map((o) => `<button type="button" class="opc" data-opc-precio="${o.id}" aria-pressed="${o.id === st.elegida}"><small>${o.nombre}</small><b>${dinero(o.total)}</b><span>${o.nota}</span></button>`).join("");
+    const enTarifa = !(r.utilidad > 0.005);
+    const estandar = opcionesPrecio(r).find((o) => o.id === "estandar").total;
+    $("kpis").innerHTML = [
+      ["Subtotal sin IVA", dinero(r.pvRecomendado * factorMinimo(r))],
+      ["Material", r.cm > 0 ? dinero(r.cm) : "—"],
+      [enTarifa ? "Utilidad" : "Utilidad", enTarifa ? "En tu tarifa" : dinero(r.utilidad)],
+      ["Tiempo", fmt(r.tiempoHoras, 2) + " h"],
+      [enTarifa ? "Margen" : "Margen", enTarifa ? "En tu tarifa" : fmt(r.margenReal, 1) + "%"],
+      ["Por pieza", dinero(estandar / p.cantidad)],
+    ].map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
+    const filas = Object.entries(r.detalle).filter(([, v]) => v !== 0).map(([k, v]) => `<tr><td>${esc(ETIQ[k] || k)}</td><td>${NO_DINERO.has(k) ? fmt(v, 3) : dinero(v)}</td></tr>`);
+    if (r.cm > 0) filas.push(`<tr><td>Material${r.materialNombre ? " (" + esc(r.materialNombre) + ")" : ""}</td><td>${dinero(r.cm)}</td></tr>`);
+    if (r.ca > 0) filas.push(`<tr><td>Acabado</td><td>${dinero(r.ca)}</td></tr>`);
+    filas.push(`<tr><td><b>Subtotal Estándar sin IVA</b></td><td><b>${dinero(r.pvRecomendado)}</b></td></tr>`);
+    $("desglose").innerHTML = filas.join("");
+    actualizarMensaje();
+  };
+
+  // ---------- Mensaje de WhatsApp ----------
+  const firmaActual = () => JSON.stringify([st.servicio, st.tipoIdx, st.cantidad, st.material, st.pone, st.campos, st.extras, st.iva, st.acabadoIdx, st.nombreArchivo, st.resultado && st.resultado.pvRecomendado, $("cli-nombre").value.trim(), $("cli-tel").value.trim(), $("cli-nota").value.trim()]);
+  const folioActual = () => {
+    if (MODO === "local") return `COT-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${String(conf.folio).padStart(3, "0")}`;
+    return cotActual && cotActual.firma === firmaActual() ? cotActual.folio : "";
+  };
+  const textoMensaje = (folioForzado) => {
+    const r = st.resultado, s = servicio(), t = tipo();
+    if (!r || !(r.pvRecomendado > 0)) return "";
+    const ops = opcionesPrecio(r);
+    const m = st.medidas;
+    const cli = $("cli-nombre").value.trim();
+    const med = m ? (m.tipo === "2d" ? `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} mm` : `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} × ${fmt(m.altoMm)} mm`) : (st.campos.largo ? `${fmt(num(st.campos.largo))} × ${fmt(num(st.campos.ancho))} cm` : "");
+    const vig = new Date(Date.now() + conf.taller.vigencia * 864e5).toLocaleDateString("es-MX", { day: "numeric", month: "long" });
+    const L = [];
+    const fol = folioForzado !== undefined ? folioForzado : folioActual();
+    L.push(fol ? `*Cotización ${fol}*` : "*Cotización*");
+    L.push(`${conf.taller.nombre}`);
+    if (cli) L.push(`Para: ${cli}`);
+    L.push("");
+    L.push(`Trabajo: ${nombreServicio(s)} · ${t.n}`);
+    if (st.nombreArchivo) L.push(`Archivo: ${st.nombreArchivo}`);
+    if (med) L.push(`Medidas: ${med}`);
+    if (st.material && !$("campo-material").hidden) L.push(`Material: ${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`);
+    L.push(`Cantidad: ${st.cantidad} ${st.cantidad === 1 ? "pieza" : "piezas"}`);
+    L.push("");
+    for (const o of ops) L.push(`${o.id === st.elegida ? "▶ " : "• "}${o.nombre}: *${dinero(o.total)}*`);
+    L.push(st.iva ? "Precios con IVA incluido." : "Precios más IVA.");
+    const nota = $("cli-nota").value.trim();
+    if (nota) { L.push(""); L.push(nota); }
+    L.push("");
+    L.push(`Vigencia: hasta el ${vig}.`);
+    L.push("Responde con la opción que prefieres para apartar tu trabajo.");
+    return L.join("\n");
+  };
+  const actualizarMensaje = () => {
+    const t = textoMensaje();
+    $("mensaje").textContent = t || "Completa los datos para armar el mensaje.";
+    const tel = ($("cli-tel").value || "").replace(/\D/g, "");
+    const destino = tel.length === 10 ? "52" + tel : tel.length > 10 ? tel : "";
+    $("btn-wa").href = t ? `https://wa.me/${destino}?text=${encodeURIComponent(t)}` : "#";
+    $("btn-wa").setAttribute("aria-disabled", t ? "false" : "true");
+  };
+
+  // ---------- Historial ----------
+  // Registra la cotizacion en la cuenta (cuenta el limite del plan). Devuelve true si se puede continuar.
+  const asegurarRegistro = async () => {
+    const r = st.resultado;
+    if (!r || !(r.pvRecomendado > 0)) { aviso("Primero completa la cotización."); return false; }
+    if (MODO === "local") return true;
+    if (MODO === "demo") { abrirModal("registro"); return false; }
+    const firma = firmaActual();
+    if (cotActual && cotActual.firma === firma) return true;
+    const ops = opcionesPrecio(r);
+    const m = st.medidas;
+    let res = null;
+    try {
+      res = await PUENTE.registrar({
+        cliente: $("cli-nombre").value.trim(), tel: $("cli-tel").value.trim(),
+        servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: st.nombreArchivo, cantidad: st.cantidad,
+        elegida: st.elegida, opciones: ops.map((o) => ({ n: o.nombre, t: o.total })), totalEstandar: ops[1].total,
+        mensaje: textoMensaje("{{FOLIO}}"),
+        datos: { material: st.material, pone: st.pone, iva: st.iva, medidas: m ? { tipo: m.tipo, largoMm: m.largoMm, anchoMm: m.anchoMm, altoMm: m.altoMm, corteMm: m.corteMm, perforaciones: m.perforaciones, volumenCm3: m.volumenCm3 } : null },
+      });
+    } catch (e) { aviso("No se pudo guardar. Revisa tu conexión."); return false; }
+    if (!res || !res.ok) {
+      if (res && res.cuenta) { Object.assign(cuenta, res.cuenta); pintarCuenta(); }
+      if (res && res.motivo === "limite") abrirModal("limite");
+      else if (res && res.motivo === "sin_sesion") abrirModal("registro");
+      else aviso((res && res.mensaje) || "No se pudo guardar la cotización.");
+      return false;
+    }
+    cotActual = { firma, folio: res.folio, id: res.id };
+    Object.assign(cuenta, res.cuenta);
+    conf.historial.unshift(res.registro);
+    pintarCuenta();
+    actualizarMensaje();
+    return true;
+  };
+  const guardarHist = async () => {
+    const r = st.resultado;
+    if (!r || !(r.pvRecomendado > 0)) { aviso("Primero completa la cotización."); return; }
+    if (MODO !== "local") {
+      if (await asegurarRegistro()) aviso(`Guardada con folio ${cotActual.folio}.`);
+      return;
+    }
+    const ops = opcionesPrecio(r);
+    conf.historial.unshift({
+      folio: folioActual(), fecha: Date.now(), cliente: $("cli-nombre").value.trim(), tel: $("cli-tel").value.trim(),
+      servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: st.nombreArchivo, cantidad: st.cantidad,
+      opciones: ops.map((o) => ({ n: o.nombre, t: o.total })), elegida: st.elegida, mensaje: textoMensaje(), estado: "Enviada",
+    });
+    conf.folio += 1;
+    guardarConf();
+    aviso("Guardada en el historial.");
+    actualizarMensaje();
+  };
+  const pintarHist = () => {
+    $("hist-cuenta").textContent = conf.historial.length ? `${conf.historial.length}` : "";
+    if (!conf.historial.length) { $("historial").innerHTML = `<div class="vacio">Aún no guardas cotizaciones. Cuando cotices, toca <b>Guardar en historial</b>.</div>`; return; }
+    $("historial").innerHTML = conf.historial.map((h, i) => {
+      const el = h.opciones.find((o) => o.n.toLowerCase().startsWith(h.elegida.slice(0, 4))) || h.opciones[1];
+      const cls = h.estado === "Aceptada" ? "ok" : h.estado === "Perdida" ? "warn" : "";
+      const tel = (h.tel || "").replace(/\D/g, "");
+      return `<div class="item">
+        <div class="item-h"><b>${esc(h.folio)}</b><span class="pill ${cls}">${esc(h.estado)}</span><span class="fecha">${new Date(h.fecha).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</span></div>
+        <div>${esc(h.cliente || "Sin nombre")} · ${esc(h.servicio)} · ${h.cantidad} pza</div>
+        <div class="ayuda">${esc(h.tipo)}${h.archivo ? " · " + esc(h.archivo) : ""} · ${el.n}: <b>${dinero(el.t)}</b></div>
+        <div class="fila-btn">
+          <a class="btn chico" href="https://wa.me/${tel.length === 10 ? "52" + tel : tel}?text=${encodeURIComponent(h.mensaje)}" target="_blank" rel="noopener">Reenviar</a>
+          <button class="btn chico" type="button" data-estado="${i}" data-v="Aceptada">Aceptada</button>
+          <button class="btn chico" type="button" data-estado="${i}" data-v="Perdida">Perdida</button>
+          <button class="btn chico fantasma" type="button" data-borrar="${i}">Borrar</button>
+        </div></div>`;
+    }).join("");
+  };
+  $("historial").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.estado !== undefined) {
+      const h = conf.historial[+b.dataset.estado];
+      h.estado = b.dataset.v;
+      if (MODO === "cuenta" && h.id) PUENTE.estado(h.id, h.estado); else guardarConf();
+      pintarHist();
+    }
+    if (b.dataset.borrar !== undefined) {
+      if (b.dataset.seguro) {
+        const [h] = conf.historial.splice(+b.dataset.borrar, 1);
+        if (MODO === "cuenta" && h && h.id) PUENTE.borrar(h.id); else guardarConf();
+        pintarHist();
+      }
+      else { b.dataset.seguro = "1"; b.textContent = "¿Borrar? Toca otra vez"; }
+    }
+  });
+
+  // ---------- Mi taller ----------
+  const pintarTaller = () => {
+    $("t-condiciones").value = conf.taller.condiciones || "";
+    $("logo-prev").innerHTML = conf.taller.logo ? `<img src="${conf.taller.logo}" alt="Logo del taller" style="max-height:56px">` : "<span class='ayuda'>Sin logo</span>";
+    $("t-nombre").value = conf.taller.nombre; $("t-wa").value = conf.taller.whatsapp; $("t-vigencia").value = conf.taller.vigencia; $("t-minimo").value = conf.taller.minimo;
+    const C = [["margenMinimo", "Margen mínimo (%)"], ["margenRecomendado", "Margen recomendado (%)"], ["costoHoraMaquina", "Costo máquina por hora"], ["costoHoraOperador", "Costo operador por hora"], ["costoHoraTaller", "Costo fijo del taller por hora"], ["ivaPct", "IVA (%)"]];
+    $("costos").innerHTML = C.map(([k, t]) => `<div class="campo"><label for="k-${k}">${t}</label><input id="k-${k}" data-costo="${k}" type="number" step="0.01" value="${conf.costos[k]}"></div>`).join("");
+    $("materiales").innerHTML = MATERIALES_BASE.map((m) => `<div class="mat-fila"><label for="m-${m.id}">${esc(m.id)}<small>${conf.materiales[m.id] > 0 ? (conf.materiales[m.id] === m.precio ? esc(m.origen) : "Tu precio") : "Falta precio"}</small></label><div class="campo"><input id="m-${esc(m.id)}" data-mat="${esc(m.id)}" type="number" min="0" step="1" inputmode="decimal" placeholder="$ por m²" value="${conf.materiales[m.id] ?? ""}"></div></div>`).join("");
+    $("tarifas").innerHTML = DATOS.servicios.map((s) => `<details><summary>${esc(nombreServicio(s))}</summary><div class="dentro">${Object.keys(s.tarifas).map((k) => `<div class="tarifa"><label for="tf-${s.clave}-${k}">${esc(s.etiquetas[k] || k)}</label><input id="tf-${s.clave}-${k}" data-tarifa="${s.clave}|${k}" type="number" step="0.01" value="${conf.tarifas[s.clave][k]}"></div>`).join("")}</div></details>`).join("");
+    $("pill-taller").textContent = conf.taller.nombre;
+  };
+  $("vista-taller").addEventListener("input", (e) => {
+    const el = e.target;
+    if (el.id === "t-nombre") { conf.taller.nombre = el.value || "Mi taller CNC"; $("pill-taller").textContent = conf.taller.nombre; }
+    if (el.id === "t-wa") conf.taller.whatsapp = el.value;
+    if (el.id === "t-vigencia") conf.taller.vigencia = Math.max(1, Math.round(num(el.value)) || 15);
+    if (el.id === "t-minimo") conf.taller.minimo = Math.max(0, num(el.value));
+    if (el.id === "t-condiciones") conf.taller.condiciones = el.value;
+    if (el.dataset.costo) conf.costos[el.dataset.costo] = num(el.value);
+    if (el.dataset.mat) conf.materiales[el.dataset.mat] = el.value === "" ? null : num(el.value);
+    if (el.dataset.tarifa) { const [s, k] = el.dataset.tarifa.split("|"); conf.tarifas[s][k] = num(el.value); }
+    guardarConf();
+    pintarInfoMaterial();
+    calcular();
+  });
+  $("t-logo").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 300 / Math.max(img.width, img.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        conf.taller.logo = cv.toDataURL("image/png");
+        guardarConf(); pintarTaller(); aviso("Logo guardado. Sale en tus PDF.");
+      };
+      img.onerror = () => aviso("Esa imagen no se pudo leer. Usa PNG o JPG.");
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(f);
+  });
+  $("quitar-logo").addEventListener("click", () => { conf.taller.logo = null; guardarConf(); pintarTaller(); });
+  $("restaurar").addEventListener("click", () => { $("restaurar-conf").hidden = false; });
+  $("restaurar-no").addEventListener("click", () => { $("restaurar-conf").hidden = true; });
+  $("restaurar-si").addEventListener("click", () => {
+    conf.tarifas = inicial().tarifas; conf.costos = { ...DATOS.costos };
+    guardarConf(); pintarTaller(); calcular(); $("restaurar-conf").hidden = true; aviso("Tarifas restauradas.");
+  });
+
+  // ---------- Eventos de la cotizacion ----------
+  const leerArchivo = (f) => {
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => cargarArchivo(f.name, r.result);
+    r.onerror = () => aviso("No se pudo abrir el archivo.");
+    r.readAsArrayBuffer(f);
+  };
+  $("archivo").addEventListener("change", (e) => { leerArchivo(e.target.files[0]); e.target.value = ""; });
+  const zona = $("soltar");
+  ["dragenter", "dragover"].forEach((ev) => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add("encima"); }));
+  ["dragleave", "drop"].forEach((ev) => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.remove("encima"); }));
+  zona.addEventListener("drop", (e) => leerArchivo(e.dataTransfer.files[0]));
+  $("ej-2d").addEventListener("click", () => cargarArchivo("placa-montaje-ejemplo.dxf", EJEMPLOS.dxf()));
+  $("ej-3d").addEventListener("click", () => cargarArchivo("soporte-L-ejemplo.stl", EJEMPLOS.stl()));
+  $("sin-archivo").addEventListener("click", () => {
+    st.datos = null; st.medidas = null; st.nombreArchivo = ""; st.manual = true; st.camposArchivo = {}; st.campos = { largo: 60, ancho: 40, alto: 5, metros: 2, horas: 2, minutos: 10 };
+    $("zona-subir").hidden = true; $("zona-manual").hidden = false; $("zona-archivo").hidden = true;
+    pintarTrabajo();
+  });
+  const volverASubir = () => { $("zona-subir").hidden = false; $("zona-manual").hidden = true; $("zona-archivo").hidden = true; };
+  $("volver-subir").addEventListener("click", volverASubir);
+  $("cambiar-archivo").addEventListener("click", () => { volverASubir(); $("archivo").click(); });
+  $("unidad").addEventListener("change", (e) => { st.unidadSel = e.target.value; aplicarUnidad(); pintarArchivo(); pintarTrabajo(); });
+  $("servicios").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-s]");
+    if (!b) return;
+    st.servicio = b.dataset.s; st.tipoIdx = 0; st.extras = {}; st.acabadoIdx = 0;
+    pintarTrabajo();
+  });
+  $("tipo").addEventListener("change", (e) => { st.tipoIdx = +e.target.value; pintarCampos(); pintarOpcionesServicio(); calcular(); });
+  $("campos-medidas").addEventListener("input", (e) => { const k = e.target.dataset.campo; if (!k) return; st.campos[k] = e.target.value; pintarInfoMaterial(); calcular(); });
+  $("cantidad").addEventListener("input", (e) => { st.cantidad = Math.max(1, Math.round(num(e.target.value)) || 1); calcular(); });
+  $("menos").addEventListener("click", () => { st.cantidad = Math.max(1, st.cantidad - 1); $("cantidad").value = st.cantidad; calcular(); });
+  $("mas").addEventListener("click", () => { st.cantidad += 1; $("cantidad").value = st.cantidad; calcular(); });
+  $("material").addEventListener("change", (e) => { st.material = e.target.value; pintarInfoMaterial(); calcular(); });
+  $("mat-taller").addEventListener("click", () => { st.pone = "taller"; pintarInfoMaterial(); calcular(); });
+  $("mat-cliente").addEventListener("click", () => { st.pone = "cliente"; pintarInfoMaterial(); calcular(); });
+  $("acabado").addEventListener("change", (e) => { st.acabadoIdx = +e.target.value; calcular(); });
+  $("iva").addEventListener("change", (e) => { st.iva = e.target.checked; calcular(); });
+  $("campos-servicio").addEventListener("input", (e) => { const k = e.target.dataset.opc; if (!k) return; st.extras[k] = e.target.value; calcular(); });
+  $("extras").addEventListener("change", (e) => { const k = e.target.dataset.extra; if (!k) return; st.extras[k] = e.target.checked; calcular(); });
+  $("opciones").addEventListener("click", (e) => { const b = e.target.closest("[data-opc-precio]"); if (!b) return; st.elegida = b.dataset.opcPrecio; pintarPrecio(st.resultado, { cantidad: st.cantidad }); });
+  ["cli-nombre", "cli-tel", "cli-nota"].forEach((id) => $(id).addEventListener("input", actualizarMensaje));
+  $("btn-wa").addEventListener("click", async (e) => {
+    if ($("btn-wa").getAttribute("aria-disabled") === "true") { e.preventDefault(); aviso("Completa la cotización primero."); return; }
+    if (MODO === "local") return;
+    e.preventDefault();
+    if (MODO === "demo") { abrirModal("registro"); return; }
+    const ventana = cotActual && cotActual.firma === firmaActual() ? null : window.open("", "_blank");
+    const ok = await asegurarRegistro();
+    if (!ok) { if (ventana) ventana.close(); return; }
+    actualizarMensaje();
+    const url = $("btn-wa").href;
+    if (ventana) ventana.location.href = url;
+    else { const w = window.open(url, "_blank", "noopener"); if (!w) window.top.location.href = url; }
+  });
+  $("btn-copiar").addEventListener("click", async () => {
+    const t = textoMensaje();
+    if (!t) { aviso("Completa la cotización primero."); return; }
+    try { await navigator.clipboard.writeText(t); aviso("Mensaje copiado."); }
+    catch (e) { const d = $("mensaje").closest("details"); d.open = true; const r = document.createRange(); r.selectNodeContents($("mensaje")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); aviso("Selecciona y copia el mensaje."); }
+  });
+  $("btn-guardar").addEventListener("click", guardarHist);
+
+  // ---------- PDF de la cotizacion ----------
+  let descargas = null;
+  if (window.claude && window.claude.use) window.claude.use("downloads").then((d) => { descargas = d; }).catch(() => {});
+
+  const lineasDetalle = () => {
+    const s = servicio(), t = tipo(), m = st.medidas;
+    const filas = [["Servicio", `${nombreServicio(s)} · ${t.n}`]];
+    if (st.nombreArchivo) filas.push(["Archivo", st.nombreArchivo]);
+    if (m && m.tipo === "2d") {
+      filas.push(["Medidas", `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} mm`]);
+      filas.push(["Corte", `${fmt(m.corteMm / 1000, 2)} m · ${m.perforaciones} perforaciones`]);
+    } else if (m && m.tipo === "3d") {
+      filas.push(["Medidas", `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} × ${fmt(m.altoMm)} mm`]);
+      filas.push(["Volumen", `${fmt(m.volumenCm3, 1)} cm³`]);
+    } else if (st.campos.largo) {
+      filas.push(["Medidas", `${fmt(num(st.campos.largo))} × ${fmt(num(st.campos.ancho))} cm`]);
+    }
+    if (st.material && !$("campo-material").hidden) filas.push(["Material", `${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`]);
+    const ac = (s.acabados || [])[st.acabadoIdx];
+    if (ac && ac.p) filas.push(["Acabado", ac.n]);
+    filas.push(["Cantidad", `${st.cantidad} ${st.cantidad === 1 ? "pieza" : "piezas"}`]);
+    return filas;
+  };
+
+  const generarPDF = async () => {
+    const r = st.resultado;
+    if (!r || !(r.pvRecomendado > 0)) { aviso("Primero completa la cotización."); return; }
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (!J) { aviso("No se pudo cargar el generador de PDF. Revisa tu conexión e intenta de nuevo."); return; }
+    const enArtifact = !!(window.claude && window.claude.use);
+    const dl = enArtifact ? (descargas || await window.claude.use("downloads").catch(() => null)) : null;
+    if (enArtifact && !dl) { aviso("Descargar archivos no está disponible en esta vista."); return; }
+    if (!(await asegurarRegistro())) return;
+    const conMarca = MODO === "demo" || (MODO === "cuenta" && cuenta.plan === "gratis");
+
+    const doc = new J({ unit: "mm", format: "letter" });
+    const W = 215.9, M = 16;
+    const NAVY = [20, 32, 51], NAR = [194, 86, 10], GRIS = [90, 101, 118], LINEA = [216, 222, 231], SUAVE = [251, 233, 220];
+    const folio = folioActual();
+    const hoy = new Date();
+    const vig = new Date(Date.now() + conf.taller.vigencia * 864e5);
+    const fecha = (d) => d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+    const limpio = (t) => String(t).replace(/·/g, "-").replace(/³/g, "3").replace(/²/g, "2").replace(/[^\x00-\xFF]/g, "");
+    const txt = (t, x, y, o = {}) => { doc.setFont("helvetica", o.b ? "bold" : "normal"); doc.setFontSize(o.s || 10); doc.setTextColor(...(o.c || [19, 26, 37])); doc.text(limpio(t), x, y, o.a ? { align: o.a } : undefined); };
+
+    // Encabezado
+    doc.setFillColor(...NAVY); doc.rect(0, 0, W, 30, "F");
+    let xNombre = M;
+    if (conf.taller.logo && !conMarca) {
+      try { doc.setFillColor(255, 255, 255); doc.roundedRect(M, 6, 18, 18, 2, 2, "F"); doc.addImage(conf.taller.logo, "PNG", M + 1.5, 7.5, 15, 15); xNombre = M + 23; } catch (e) {}
+    }
+    txt(conf.taller.nombre, xNombre, 15, { b: true, s: 16, c: [255, 255, 255] });
+    if (conf.taller.whatsapp) txt(`WhatsApp ${conf.taller.whatsapp}`, xNombre, 21.5, { s: 9.5, c: [201, 210, 224] });
+    txt("COTIZACIÓN", W - M, 13, { b: true, s: 15, c: NAR, a: "right" });
+    txt(folio, W - M, 19.5, { s: 10, c: [255, 255, 255], a: "right" });
+
+    // Cliente y fechas
+    let y = 40;
+    txt("CLIENTE", M, y, { b: true, s: 8, c: GRIS });
+    txt("FECHA", 120, y, { b: true, s: 8, c: GRIS });
+    txt("VÁLIDA HASTA", 165, y, { b: true, s: 8, c: GRIS });
+    y += 5.5;
+    txt($("cli-nombre").value.trim() || "—", M, y, { b: true, s: 11.5 });
+    txt(fecha(hoy), 120, y, { s: 10 });
+    txt(fecha(vig), 165, y, { s: 10 });
+    const tel = $("cli-tel").value.trim();
+    if (tel) txt(`WhatsApp ${tel}`, M, y + 5, { s: 9.5, c: GRIS });
+    y += 12;
+    doc.setDrawColor(...LINEA); doc.line(M, y, W - M, y);
+    y += 7;
+
+    // Pieza y detalle
+    txt("TRABAJO", M, y, { b: true, s: 8, c: GRIS });
+    y += 3;
+    const img = st.datos ? imagenPieza() : null;
+    let xDet = M;
+    if (img) {
+      try { doc.addImage(img, "JPEG", M, y, 76, 57); xDet = M + 84; } catch (e) {}
+    }
+    let yd = y + 5;
+    for (const [k, v] of lineasDetalle()) {
+      txt(k, xDet, yd, { s: 8.5, c: GRIS });
+      const lineas = doc.splitTextToSize(limpio(v), W - M - xDet - 26);
+      txt(lineas[0], xDet + 26, yd, { s: 10 });
+      for (let i = 1; i < lineas.length; i++) { yd += 4.6; txt(lineas[i], xDet + 26, yd, { s: 10 }); }
+      yd += 7;
+    }
+    y = Math.max(y + (img ? 57 : 0), yd) + 8;
+
+    // Opciones de precio
+    txt("OPCIONES", M, y, { b: true, s: 8, c: GRIS });
+    y += 3;
+    const ops = opcionesPrecio(r);
+    const entregas = { economico: "Sin prioridad", estandar: "Tiempo normal", express: "Con prioridad" };
+    doc.setFillColor(246, 248, 251); doc.rect(M, y, W - 2 * M, 8, "F");
+    txt("Opción", M + 3, y + 5.4, { b: true, s: 9, c: GRIS });
+    txt("Entrega", 95, y + 5.4, { b: true, s: 9, c: GRIS });
+    txt("Por pieza", 145, y + 5.4, { b: true, s: 9, c: GRIS, a: "right" });
+    txt(st.iva ? "Total con IVA" : "Total más IVA", W - M - 3, y + 5.4, { b: true, s: 9, c: GRIS, a: "right" });
+    y += 8;
+    for (const o of ops) {
+      const elegida = o.id === st.elegida;
+      if (elegida) { doc.setFillColor(...SUAVE); doc.rect(M, y, W - 2 * M, 11, "F"); doc.setFillColor(...NAR); doc.rect(M, y, 1.4, 11, "F"); }
+      txt(o.nombre + (elegida ? "  (sugerida)" : ""), M + 4, y + 7, { b: elegida, s: 10.5, c: elegida ? NAR : [19, 26, 37] });
+      txt(entregas[o.id], 95, y + 7, { s: 9.5, c: GRIS });
+      txt(dinero(o.total / st.cantidad), 145, y + 7, { s: 10, a: "right" });
+      txt(dinero(o.total), W - M - 3, y + 7, { b: true, s: 11.5, a: "right" });
+      doc.setDrawColor(...LINEA); doc.line(M, y + 11, W - M, y + 11);
+      y += 11;
+    }
+    y += 5;
+    txt(st.iva ? `Precios en pesos mexicanos con IVA (${conf.costos.ivaPct}%) incluido.` : "Precios en pesos mexicanos más IVA.", M, y, { s: 9, c: GRIS });
+    y += 9;
+
+    // Nota y condiciones
+    const bloque = (titulo, texto) => {
+      if (!texto) return;
+      txt(titulo, M, y, { b: true, s: 8, c: GRIS }); y += 5;
+      const ls = doc.splitTextToSize(limpio(texto), W - 2 * M);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(19, 26, 37);
+      doc.text(ls, M, y); y += ls.length * 4.4 + 5;
+    };
+    bloque("NOTA", $("cli-nota").value.trim());
+    bloque("CONDICIONES", conf.taller.condiciones);
+
+    // Pie
+    doc.setDrawColor(...LINEA); doc.line(M, 262, W - M, 262);
+    txt("Para confirmar, responde por WhatsApp con la opción que prefieres.", M, 268, { s: 9, c: GRIS });
+    if (conMarca || MODO === "local") txt("Hecha con HetNa Cotizador · hetnacnc.com", W - M, 268, { s: 8.5, c: NAR, a: "right" });
+
+    const blob = doc.output("blob");
+    const nombre = `Cotizacion-${folio || "HetNa"}.pdf`;
+    if (!enArtifact) {
+      // En la pagina: compartir directo (celular) o descargar
+      try {
+        const archivo = new File([blob], nombre, { type: "application/pdf" });
+        if (navigator.canShare && navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], title: nombre }); return; }
+      } catch (e) { if (e && e.name === "AbortError") return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      aviso("PDF descargado. Compártelo por WhatsApp.");
+      return;
+    }
+    try {
+      await dl.save({ filename: nombre, data: blob });
+      aviso("PDF listo. Compártelo por WhatsApp desde tus descargas.");
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "declined") return;
+      if (code === "rate_limited") { aviso("Ya hay una descarga pendiente. Intenta en un momento."); return; }
+      aviso("No se pudo descargar el PDF en esta vista.");
+    }
+  };
+  $("btn-pdf").addEventListener("click", generarPDF);
+
+  // Pestañas
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x === t));
+    const v = t.dataset.vista;
+    $("vista-cotizar").hidden = v !== "cotizar"; $("vista-historial").hidden = v !== "historial"; $("vista-taller").hidden = v !== "taller";
+    if (v === "historial") pintarHist();
+    if (v === "taller") pintarTaller();
+    if (v === "cotizar") { pintarTrabajo(); if (st.datos) requestAnimationFrame(dibujar); }
+    window.scrollTo(0, 0);
+  }));
+
+  let tAviso = null;
+  const aviso = (t) => { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(tAviso); tAviso = setTimeout(() => (el.hidden = true), 2600); };
+
+  // ---------- Cuenta, plan y ventanas ----------
+  const NOMBRE_PLAN = { prueba: "Prueba Pro", gratis: "Plan Gratis", taller: "Plan Taller", pro: "Plan Pro", industrial: "Plan Industrial" };
+  const pintarCuenta = () => {
+    const b = $("banner-plan");
+    if (MODO === "local") { b.hidden = true; return; }
+    b.hidden = false;
+    let texto = "", boton = "Ver planes", accion = "planes", cls = "";
+    if (MODO === "demo") { texto = "Estás probando sin cuenta. Calcula todo lo que quieras; para guardar, enviar o sacar PDF crea tu cuenta gratis."; boton = "Crear cuenta gratis"; accion = "registro"; }
+    else if (cuenta.plan === "prueba") texto = `Prueba Pro: te quedan ${cuenta.pruebaDias} ${cuenta.pruebaDias === 1 ? "día" : "días"} con todo abierto.`;
+    else if (cuenta.plan === "gratis") { texto = `Plan Gratis: llevas ${cuenta.usadas} de ${cuenta.limite} cotizaciones este mes.`; if (cuenta.usadas >= (cuenta.limite || 10) - 2) cls = "warn"; }
+    else { texto = `${NOMBRE_PLAN[cuenta.plan] || "Tu plan"} activo.`; boton = ""; }
+    b.className = "banner " + cls;
+    b.innerHTML = `<span>${esc(texto)}</span>${boton ? `<button type="button" class="btn chico ${accion === "registro" ? "primario" : ""}" data-modal="${accion}">${boton}</button>` : ""}`;
+  };
+  const PLANES = [
+    ["Taller", "$299/mes", "Cotizaciones ilimitadas, PDF con tu logo y sin marca, historial ilimitado."],
+    ["Pro", "$599/mes", "Todo lo de Taller y, muy pronto, órdenes de trabajo, inventario, máquinas y reportes."],
+    ["Industrial", "$1,199/mes", "Todo lo de Pro, usuarios ilimitados y, pronto, facturación electrónica."],
+  ];
+  const abrirModal = (tipo) => {
+    const tel = (PUENTE && PUENTE.whatsappHetna) || "522461217072";
+    const quien = cuenta.correo ? ` Mi cuenta: ${cuenta.correo}.` : "";
+    const planes = PLANES.map(([n, p, d]) => `<div class="plan"><div><b>${n}</b> <span class="precio">${p}</span><p class="ayuda">${d}</p></div><a class="btn chico primario" target="_blank" rel="noopener" href="https://wa.me/${tel}?text=${encodeURIComponent(`Hola HETNA CNC, quiero contratar el plan ${n} de HetNa Taller.${quien}`)}">Contratar</a></div>`).join("");
+    let h = "";
+    if (tipo === "registro") h = `<h3>Crea tu cuenta gratis</h3><p>Guarda tus tarifas, envía cotizaciones por WhatsApp y descarga el PDF. Tienes 14 días con todo abierto y luego 10 cotizaciones gratis cada mes, sin tarjeta.</p><div class="fila-btn"><button class="btn primario" type="button" data-ir="registro">Crear cuenta gratis</button><button class="btn" type="button" data-ir="entrar">Ya tengo cuenta</button></div>`;
+    else if (tipo === "limite") h = `<h3>Llegaste a tus ${cuenta.limite || 10} cotizaciones de este mes</h3><p>Puedes seguir calculando precios. Para guardar, enviar o sacar el PDF, cambia de plan o espera al próximo mes.</p>${planes}<p class="ayuda">El pago en línea llega muy pronto; por ahora te atendemos por WhatsApp.</p>`;
+    else h = `<h3>Planes de HetNa Taller</h3>${planes}<p class="ayuda">El pago en línea con Mercado Pago y PayPal llega muy pronto; por ahora te atendemos por WhatsApp.</p>`;
+    $("modal-cuerpo").innerHTML = h;
+    $("modal").hidden = false;
+  };
+  $("modal").addEventListener("click", (e) => {
+    if (e.target.id === "modal" || e.target.closest("[data-cerrar]")) { $("modal").hidden = true; return; }
+    const ir = e.target.closest("[data-ir]");
+    if (ir && PUENTE) PUENTE.irA(ir.dataset.ir);
+  });
+  $("banner-plan").addEventListener("click", (e) => { const b = e.target.closest("[data-modal]"); if (b) abrirModal(b.dataset.modal); });
+  if (PUENTE) {
+    const v = $("volver-tienda");
+    v.hidden = false;
+    v.addEventListener("click", () => PUENTE.irA(MODO === "demo" ? "cerrar" : "tienda"));
+    v.textContent = MODO === "demo" ? "Cerrar" : "Tienda";
+  }
+
+  // Arranque: abre con el ejemplo 2D cargado para mostrar cómo funciona
+  const arrancar = () => {
+    $("pill-taller").textContent = conf.taller.nombre;
+    if (MODO !== "cuenta") $("cli-nombre").value = "Cliente de ejemplo";
+    pintarCuenta();
+    cargarArchivo("placa-montaje-ejemplo.dxf", EJEMPLOS.dxf());
+  };
+  if (MODO === "cuenta") {
+    Promise.resolve(PUENTE.cargar()).then((d) => {
+      if (d && d.ok) {
+        const base = inicial(), c = d.config || {};
+        conf = {
+          ...base, ...c,
+          taller: { ...base.taller, nombre: c.taller?.nombre || base.taller.nombre, ...(c.taller || {}) },
+          costos: { ...DATOS.costos, ...(c.costos || {}) },
+          tarifas: Object.fromEntries(Object.entries(base.tarifas).map(([k, v]) => [k, { ...v, ...((c.tarifas || {})[k] || {}) }])),
+          materiales: { ...base.materiales, ...(c.materiales || {}) },
+          historial: d.historial || [],
+        };
+        Object.assign(cuenta, d.cuenta);
+      } else if (d && d.motivo === "sin_sesion") {
+        abrirModal("registro");
+      }
+      arrancar();
+    }).catch(() => { aviso("No se pudo abrir tu cuenta. Revisa tu conexión."); arrancar(); });
+  } else {
+    arrancar();
+  }
+})();
+
+</script>
+</body></html>
