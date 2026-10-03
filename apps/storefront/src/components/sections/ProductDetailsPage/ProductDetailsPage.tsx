@@ -2,6 +2,8 @@ import { ProductDetails, ProductGallery } from "@/components/organisms"
 import { listProducts } from "@/lib/data/products"
 import { listOffers } from "@/lib/data/offers"
 import { StoreOffer } from "@/lib/helpers/buybox"
+import { getProductPrice } from "@/lib/helpers/get-product-price"
+import { TrackEvent } from "@/components/analytics/TrackEvent"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import NotFound from "@/app/not-found"
 
@@ -28,8 +30,17 @@ export const ProductDetailsPage = async ({
     countryCode: locale,
   })
 
+  const { cheapestPrice } = getProductPrice({ product: prod })
+  const eventPrice = cheapestPrice?.calculated_price_number ?? 0
+  const eventCurrency = cheapestPrice?.currency_code || "mxn"
+
   return (
     <>
+      <TrackEvent
+        event="view_item"
+        currency={eventCurrency}
+        item={{ item_id: prod.id, item_name: prod.title, price: eventPrice }}
+      />
       <div className="flex flex-col md:flex-row lg:gap-12" data-testid="product-details-page">
         <div className="md:w-1/2 md:px-2" data-testid="product-gallery-container">
           <ProductGallery images={prod?.images || []} />

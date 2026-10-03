@@ -2,6 +2,7 @@ import OrderDetails from "@/components/organisms/OrderDefails/OrderDetails"
 import OrderShipping from "@/components/organisms/OrderDefails/OrderShipping"
 import OrderTotals from "@/components/organisms/OrderDefails/OrderTotals"
 import OrderItems from "@/components/organisms/OrderItems/OrderItems"
+import { TrackEvent } from "@/components/analytics/TrackEvent"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 
@@ -12,6 +13,18 @@ export const OrderConfirmedSection = ({
 }) => {
   return (
     <div className="py-6">
+      <TrackEvent
+        event="purchase"
+        orderId={order.id}
+        currency={order.currency_code}
+        value={order.total ?? 0}
+        items={(order.items ?? []).map((item) => ({
+          item_id: item.product_id ?? item.id,
+          item_name: item.product_title ?? item.title ?? "",
+          price: item.unit_price ?? 0,
+          quantity: item.quantity,
+        }))}
+      />
       <div className="content-container flex flex-col justify-center items-center gap-y-10 max-w-4xl h-full w-full mx-auto">
         <div
           className="flex flex-col gap-4 max-w-4xl h-full bg-white w-full py-10"
