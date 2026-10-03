@@ -6,7 +6,7 @@ import { AddressFormData } from "@/components/molecules/AddressForm/schema"
 import { deleteCustomerAddress } from "@/lib/data/customer"
 import { cn } from "@/lib/utils"
 import { HttpTypes } from "@medusajs/types"
-import { isEmpty } from "lodash"
+import isEmpty from "lodash/isEmpty"
 import { useState } from "react"
 
 export const Addresses = ({
