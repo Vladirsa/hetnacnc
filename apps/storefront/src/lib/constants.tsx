@@ -5,6 +5,10 @@ export const paymentInfoMap: Record<
   string,
   { title: string; icon: React.JSX.Element }
 > = {
+  pp_mercadopago_mercadopago: {
+    title: "Mercado Pago (tarjeta o saldo)",
+    icon: <CreditCard />,
+  },
   "pp_card_stripe-connect": {
     title: "Tarjeta de crédito",
     icon: <CreditCard />,
@@ -40,6 +44,9 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+export const isMercadoPago = (providerId?: string) => {
+  return providerId?.startsWith("pp_mercadopago")
 }
 
 // Add currencies that don't need to be divided by 100
