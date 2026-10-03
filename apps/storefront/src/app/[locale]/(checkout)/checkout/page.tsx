@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
+import { TrackEvent } from '@/components/analytics/TrackEvent';
 import PaymentWrapper from '@/components/organisms/PaymentContainer/PaymentWrapper';
 import { CartAddressSection } from '@/components/sections/CartAddressSection/CartAddressSection';
 import CartPaymentSection from '@/components/sections/CartPaymentSection/CartPaymentSection';
@@ -42,6 +43,17 @@ async function CheckoutPageContent({}) {
 
   return (
     <PaymentWrapper cart={cart}>
+      <TrackEvent
+        event="begin_checkout"
+        currency={cart.currency_code}
+        value={cart.total ?? 0}
+        items={(cart.items ?? []).map((item) => ({
+          item_id: item.product_id ?? item.id,
+          item_name: item.product_title ?? item.title ?? '',
+          price: item.unit_price ?? 0,
+          quantity: item.quantity
+        }))}
+      />
       <main className="container" data-testid="checkout-page">
         <div className="grid gap-8 lg:grid-cols-11">
           <div className="flex flex-col gap-4 lg:col-span-6" data-testid="checkout-steps-container">
