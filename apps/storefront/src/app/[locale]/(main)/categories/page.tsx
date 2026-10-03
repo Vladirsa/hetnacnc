@@ -6,7 +6,6 @@ import { SearchProductsListing, ProductListing } from "@/components/sections"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
-import Script from "next/script"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import {
@@ -101,7 +100,9 @@ async function AllCategories({
 
   return (
     <main className="container">
-      <Script
+      {/* <script> plano (no next/script): necesario en el HTML inicial para
+          crawlers que no esperan a la hidratación. */}
+      <script
         id="ld-breadcrumbs-categories"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -116,10 +117,10 @@ async function AllCategories({
                 item: `${baseUrl}/${locale}/categories`,
               },
             ],
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="ld-itemlist-categories"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -127,7 +128,7 @@ async function AllCategories({
             "@context": "https://schema.org",
             "@type": "ItemList",
             itemListElement: itemList,
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
       <div className="hidden md:block mb-2">

@@ -10,7 +10,6 @@ import {
 
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import Script from "next/script"
 import { listRegions } from "@/lib/data/regions"
 import {
   buildHreflangAlternates,
@@ -116,7 +115,10 @@ export default async function Home({
 
   return (
     <main className="flex flex-col w-full text-primary">
-      <Script
+      {/* <script> plano (no next/script): los crawlers que no ejecutan JS
+          necesitan este JSON-LD presente en el HTML inicial, no inyectado
+          tras la hidratación. */}
+      <script
         id="ld-org"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -126,10 +128,10 @@ export default async function Home({
             name: siteName,
             url: `${baseUrl}/${locale}`,
             logo: `${baseUrl}/favicon.ico`,
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="ld-website"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -139,7 +141,7 @@ export default async function Home({
             name: siteName,
             url: `${baseUrl}/${locale}`,
             inLanguage: toHreflang(locale),
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
 
