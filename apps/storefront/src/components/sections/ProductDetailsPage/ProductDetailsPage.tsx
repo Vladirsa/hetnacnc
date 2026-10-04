@@ -6,6 +6,14 @@ import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { TrackEvent } from "@/components/analytics/TrackEvent"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import NotFound from "@/app/not-found"
+import { FichaProducto } from "@/components/hetna/FichaProducto"
+import type { HttpTypes } from "@medusajs/types"
+import type { Product } from "@/types/product"
+
+// La ficha necesita además las categorías (para productos relacionados) y el metadata
+// (compatibilidad, videos, archivos y preguntas frecuentes).
+const DETALLE_FIELDS =
+  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,*attribute_values,*attribute_values.attribute,*categories,+metadata"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -16,7 +24,7 @@ export const ProductDetailsPage = async ({
 }) => {
   const prod = await listProducts({
     countryCode: locale,
-    queryParams: { handle: [handle], limit: 1 },
+    queryParams: { handle: [handle], limit: 1, fields: DETALLE_FIELDS },
   }).then(({ response }) => response.products[0])
 
   if (!prod) return null
@@ -29,6 +37,22 @@ export const ProductDetailsPage = async ({
     productId: prod.id,
     countryCode: locale,
   })
+
+  // Relacionados: otros productos de la misma categoría.
+  // Si el producto no tiene categoría, se usan los del vendedor como antes.
+  let relacionados: HttpTypes.StoreProduct[] = []
+  const categoriaId = prod.categories?.[0]?.id
+  if (categoriaId) {
+    const { response } = await listProducts({
+      countryCode: locale,
+      queryParams: { limit: 9, fields: "id,title,handle" },
+      category_id: categoriaId,
+    })
+    relacionados = response.products.filter((p) => p.id !== prod.id).slice(0, 8)
+  }
+  const productosRelacionados = (
+    relacionados.length ? relacionados : prod.seller?.products || []
+  ) as unknown as Product[]
 
   const { cheapestPrice } = getProductPrice({ product: prod })
   const eventPrice = cheapestPrice?.calculated_price_number ?? 0
@@ -95,13 +119,19 @@ export const ProductDetailsPage = async ({
           />
         </div>
       </div>
-      <div className="my-8">
-        <HomeProductSection
-          heading="Productos similares"
-          products={prod.seller?.products}
-          locale={locale}
-        />
-      </div>
+      <FichaProducto
+        metadata={prod.metadata as Record<string, unknown> | null | undefined}
+        titulo={prod.title}
+      />
+      {productosRelacionados.length > 0 && (
+        <div className="my-8">
+          <HomeProductSection
+            heading="Productos relacionados"
+            products={productosRelacionados}
+            locale={locale}
+          />
+        </div>
+      )}
     </>
   )
 }

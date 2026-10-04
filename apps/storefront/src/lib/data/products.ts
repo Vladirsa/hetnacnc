@@ -3,6 +3,7 @@
 import { HttpTypes } from '@medusajs/types';
 
 import { sortProducts } from '@/lib/helpers/sort-products';
+import { getPricesForVariant } from '@/lib/helpers/get-product-price';
 import { SortOptions } from '@/types/product';
 
 import { sdk } from '../client';
@@ -22,6 +23,8 @@ export type SearchFacetBucket = { value: string; count: number };
  */
 export type SearchFacets = {
   attributes: Record<string, SearchFacetBucket[]>;
+  /** Nombre legible de cada atributo (clave = handle), p. ej. "Tipo de máquina". */
+  names?: Record<string, string>;
 };
 
 type StoreProductAttribute = {
@@ -44,7 +47,9 @@ export const getSearchFacets = async (): Promise<SearchFacets> => {
   ).catch(() => ({ product_attributes: [] as StoreProductAttribute[] }));
 
   const attributes: Record<string, SearchFacetBucket[]> = {};
+  const names: Record<string, string> = {};
   for (const attribute of product_attributes) {
+    if (attribute.name) names[attribute.handle] = attribute.name;
     attributes[attribute.handle] = (attribute.values ?? [])
       .slice()
       .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
@@ -54,7 +59,7 @@ export const getSearchFacets = async (): Promise<SearchFacets> => {
       }));
   }
 
-  return { attributes };
+  return { attributes, names };
 };
 
 /**
@@ -213,6 +218,9 @@ export const searchProducts = async ({
   page = 1,
   limit = 12,
   sortBy,
+  minPrice,
+  maxPrice,
+  onlyAvailable,
 }: {
   query?: string;
   countryCode?: string;
@@ -224,6 +232,11 @@ export const searchProducts = async ({
   page?: number;
   limit?: number;
   sortBy?: SortOptions;
+  /** Precio mínimo / máximo en la moneda de la región (p. ej. MXN). */
+  minPrice?: number;
+  maxPrice?: number;
+  /** Solo productos con al menos una variante con precio activo. */
+  onlyAvailable?: boolean;
 }): Promise<{
   products: HttpTypes.StoreProduct[];
   count: number;
@@ -241,32 +254,76 @@ export const searchProducts = async ({
   const hasAttributeFilters =
     attributes && Object.keys(attributes).length > 0;
 
-  const { products, count } = await (sdk.store.products.query({
-    q: query || undefined,
-    region_id: region.id,
-    category_id,
-    collection_id,
-    seller_id,
-    attributes: hasAttributeFilters ? attributes : undefined,
-    order,
-    limit,
-    offset,
-    fields: PRODUCT_LIST_FIELDS,
-    fetchOptions: { headers: { ...(await getAuthHeaders()) }, cache: 'no-cache' },
-  } as never) as unknown as Promise<{
-    products: HttpTypes.StoreProduct[];
-    count: number;
-  }>).catch(() => ({
-    products: [] as HttpTypes.StoreProduct[],
-    count: 0,
-  }));
+  const authHeaders = await getAuthHeaders();
 
-  const ordered =
-    sortBy === 'price_asc' || sortBy === 'price_desc'
-      ? sortProducts(products, sortBy)
-      : products;
+  const fetchPage = (pageOffset: number, pageLimit: number) =>
+    (sdk.store.products.query({
+      q: query || undefined,
+      region_id: region.id,
+      category_id,
+      collection_id,
+      seller_id,
+      attributes: hasAttributeFilters ? attributes : undefined,
+      order,
+      limit: pageLimit,
+      offset: pageOffset,
+      fields: PRODUCT_LIST_FIELDS,
+      fetchOptions: { headers: { ...authHeaders }, cache: 'no-cache' },
+    } as never) as unknown as Promise<{
+      products: HttpTypes.StoreProduct[];
+      count: number;
+    }>).catch(() => ({
+      products: [] as HttpTypes.StoreProduct[],
+      count: 0,
+    }));
 
-  const nextPage = count > offset + limit ? page + 1 : null;
+  const isPriceSort = sortBy === 'price_asc' || sortBy === 'price_desc';
+  const hasMin = typeof minPrice === 'number' && Number.isFinite(minPrice);
+  const hasMax = typeof maxPrice === 'number' && Number.isFinite(maxPrice);
 
-  return { products: ordered, count, nextPage };
+  // Sin filtros de precio/disponibilidad ni orden por precio, la API pagina sola.
+  if (!hasMin && !hasMax && !onlyAvailable && !isPriceSort) {
+    const { products, count } = await fetchPage(offset, limit);
+    const nextPage = count > offset + limit ? page + 1 : null;
+    return { products, count, nextPage };
+  }
+
+  // Precio y disponibilidad se calculan después de la consulta (la API no los filtra),
+  // así que se traen hasta SCAN_MAX productos y se filtra, ordena y pagina aquí.
+  const SCAN_PAGE = 100;
+  const SCAN_MAX = 300;
+  const all: HttpTypes.StoreProduct[] = [];
+  for (let o = 0; o < SCAN_MAX; o += SCAN_PAGE) {
+    const { products, count } = await fetchPage(o, SCAN_PAGE);
+    all.push(...products);
+    if (all.length >= count || products.length < SCAN_PAGE) break;
+  }
+
+  const lowestPrice = (product: HttpTypes.StoreProduct): number | null => {
+    const prices = (product.variants || [])
+      .map((variant) => {
+        try {
+          return getPricesForVariant(variant)?.calculated_price_number;
+        } catch {
+          // Una variante con precio incompleto no debe romper todo el listado.
+          return undefined;
+        }
+      })
+      .filter((value): value is number => typeof value === 'number');
+    return prices.length ? Math.min(...prices) : null;
+  };
+
+  const filtered = all.filter((product) => {
+    const price = lowestPrice(product);
+    if (onlyAvailable && price === null) return false;
+    if (hasMin && (price === null || price < (minPrice as number))) return false;
+    if (hasMax && (price === null || price > (maxPrice as number))) return false;
+    return true;
+  });
+
+  const ordered = isPriceSort ? sortProducts(filtered, sortBy) : filtered;
+  const pageItems = ordered.slice(offset, offset + limit);
+  const nextPage = ordered.length > offset + limit ? page + 1 : null;
+
+  return { products: pageItems, count: ordered.length, nextPage };
 };
