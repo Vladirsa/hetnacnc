@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => {
       mercurDashboardPlugin({
         medusaConfigPath: '../../packages/api/medusa-config.ts',
         ...(backendUrl ? { backendUrl } : {}),
+        // Marca HETNA: nombre, logo e idioma del panel de administración.
+        name: 'HETNA CNC',
+        logo: '/icons/icon-512.png',
+        i18n: { defaultLanguage: 'es' },
       }),
     ],
   }
