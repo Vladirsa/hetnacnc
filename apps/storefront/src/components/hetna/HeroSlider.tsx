@@ -19,7 +19,8 @@ export type Slide = {
   // ruta publica de la foto o null si todavia no existe en el servidor
   foto: string | null
   alt: string
-  botones: [BotonSlide, BotonSlide]
+  // 0 a 2 botones: el primero naranja, el segundo con borde blanco
+  botones: BotonSlide[]
 }
 
 const INTERVALO_MS = 5000
@@ -45,7 +46,7 @@ const Boton = ({
   i: number
   activo: boolean
 }) => {
-  const clase = `${claseBoton[i]} px-4 py-2 lg:px-5 lg:py-2.5 rounded-[8px] text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.06em] text-center`
+  const clase = `${claseBoton[i] ?? claseBoton[1]} px-4 py-2 lg:px-5 lg:py-2.5 rounded-[8px] text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.06em] text-center`
   const tab = activo ? undefined : -1
   if (boton.externo) {
     return (
@@ -154,29 +155,35 @@ export const HeroSlider = ({ slides }: { slides: Slide[] }) => {
               key={`texto-${i}`}
               role="group"
               aria-roledescription="diapositiva"
-              aria-label={`${i + 1} de ${total}: ${s.etiqueta}`}
+              aria-label={`${i + 1} de ${total}: ${s.etiqueta || s.titulo}`}
               aria-hidden={!activo}
               className={`[grid-area:1/1] flex flex-col items-start text-left gap-2.5 max-w-[620px] transition-all duration-700 ease-out ${
                 activo ? "opacity-100 translate-y-0 visible" : "opacity-0 translate-y-2 invisible"
               }`}
             >
-              <span className="uppercase tracking-[0.14em] text-[11px] font-semibold bg-[#C2560A] text-white px-3 py-1 rounded-full">
-                {s.etiqueta}
-              </span>
+              {s.etiqueta && (
+                <span className="uppercase tracking-[0.14em] text-[11px] font-semibold bg-[#C2560A] text-white px-3 py-1 rounded-full">
+                  {s.etiqueta}
+                </span>
+              )}
               <Titulo
                 className="m-0 uppercase font-bold leading-[1.02] tracking-[0.005em] text-[24px] sm:text-[30px] lg:text-[38px]"
                 style={{ fontFamily: "var(--font-condensed), var(--font-display), sans-serif" }}
               >
                 {s.titulo}
               </Titulo>
-              <p className="m-0 text-[14px] lg:text-[15.5px] leading-[1.5] text-[#D7DEEA] max-w-[560px]">
-                {s.texto}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {s.botones.map((b, j) => (
-                  <Boton key={b.texto} boton={b} i={j} activo={activo} />
-                ))}
-              </div>
+              {s.texto && (
+                <p className="m-0 text-[14px] lg:text-[15.5px] leading-[1.5] text-[#D7DEEA] max-w-[560px]">
+                  {s.texto}
+                </p>
+              )}
+              {s.botones.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {s.botones.slice(0, 2).map((b, j) => (
+                    <Boton key={`${b.texto}-${j}`} boton={b} i={j} activo={activo} />
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}
@@ -191,7 +198,7 @@ export const HeroSlider = ({ slides }: { slides: Slide[] }) => {
                 key={`punto-${i}`}
                 type="button"
                 onClick={() => ir(i)}
-                aria-label={`Ver ${s.etiqueta}`}
+                aria-label={`Ver ${s.etiqueta || s.titulo}`}
                 aria-current={i === actual}
                 className="h-6 flex items-center px-1"
               >
