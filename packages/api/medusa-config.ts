@@ -90,6 +90,10 @@ module.exports = withMercur({
         ],
       },
     },
+    // Portadas del carrusel principal (panel /dashboard/portadas)
+    {
+      resolve: './src/modules/portadas',
+    },
     ...pagos,
   ],
 })
