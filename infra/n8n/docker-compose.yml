@@ -1,23 +1,12 @@
 name: hetnacnc-automation
 
-services:
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment:
-      N8N_HOST: ${N8N_HOST}
-      EVOLUTION_HOST: ${EVOLUTION_HOST}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - n8n
-      - evolution-api
+# Pensado para correr junto al stack real de hetnacnc.com (nginx + certbot en
+# el host, Postgres/Redis de Medusa ya en Docker en 5432/6379). Por eso NO
+# trae su propio Caddy/reverse proxy: n8n y evolution-api solo escuchan en
+# 127.0.0.1 y es nginx (ya instalado en el VPS) el que expone los subdominios
+# con TLS, igual que hace hoy con hetnacnc.com.
 
+services:
   n8n-postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -31,6 +20,12 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    extra_hosts:
+      # Permite que n8n llame al backend de Medusa (PM2, puerto 9000 en el
+      # host) sin salir a internet y sin depender de nginx.
+      - "host.docker.internal:host-gateway"
     environment:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: n8n-postgres
@@ -45,12 +40,13 @@ services:
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       GENERIC_TIMEZONE: ${TIMEZONE:-America/Mexico_City}
       N8N_RUNNERS_ENABLED: "true"
+      N8N_PROXY_HOPS: "1"
       # Variables usadas dentro de los workflows (nodos HTTP Request / Code) vía $env.*
-      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://host.docker.internal:9000}
       MEDUSA_PUBLISHABLE_KEY: ${MEDUSA_PUBLISHABLE_KEY}
       MEDUSA_REGION_ID: ${MEDUSA_REGION_ID}
       MEDUSA_ADMIN_SECRET_KEY: ${MEDUSA_ADMIN_SECRET_KEY}
-      STOREFRONT_URL: ${STOREFRONT_URL}
+      STOREFRONT_URL: ${STOREFRONT_URL:-https://hetnacnc.com}
       ABANDONED_CART_MIN_HOURS: ${ABANDONED_CART_MIN_HOURS:-3}
       ABANDONED_CART_MAX_HOURS: ${ABANDONED_CART_MAX_HOURS:-72}
       EVOLUTION_API_URL: http://evolution-api:8080
@@ -64,6 +60,8 @@ services:
   evolution-api:
     image: atendai/evolution-api:latest
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
     environment:
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
       DATABASE_ENABLED: "false"
@@ -76,5 +74,3 @@ volumes:
   n8n_data:
   n8n_postgres_data:
   evolution_data:
-  caddy_data:
-  caddy_config:
