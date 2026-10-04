@@ -7,6 +7,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { BotonSlide, HeroSlider, Slide } from "@/components/hetna/HeroSlider"
 import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
 import { listCategories } from "@/lib/data/categories"
+import { ComoFunciona, HerramientasHome, PilaresHome } from "@/components/hetna/Secciones"
 import { listarPortadas, PortadaTienda } from "@/lib/data/portadas"
 
 const WHATSAPP_NUMERO =
@@ -203,13 +204,6 @@ const iconoGrupo = (nombre: string) => {
   return "diseno"
 }
 
-const herramientas = [
-  { nombre: "Cotizador CNC", icono: "cotizador" },
-  { nombre: "Calculadora de corte", icono: "calculadora" },
-  { nombre: "Visor de archivos", icono: "visor" },
-  { nombre: "Calculadora de torno", icono: "torno" },
-]
-
 const confianza = [
   { texto: "Envíos a toda la República", icono: "envio" },
   { texto: "Paga con tarjeta o Mercado Pago", icono: "pago" },
@@ -228,7 +222,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     listarPortadas(),
   ])
 
-  // Busca una categoria por nombre para ligar las tarjetas de "Asi trabajamos"
+  // Busca una categoria por nombre para ligar las tarjetas de los pilares
   const ligaCategoria = (nombre: string) => {
     const buscado = normaliza(nombre)
     const c = [...categories, ...parentCategories].find(
@@ -242,30 +236,74 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     return hijos.length ? hijos : padre.category_children || []
   }
 
-  const formas = [
+  const pilares = [
+    {
+      icono: "tienda",
+      titulo: "Marketplace de máquinas, herramientas y materiales",
+      texto: "Routers, láser, plasma, fresas y materiales de vendedores y talleres de todo México.",
+      accion: "Explorar tienda",
+      href: "/categories",
+    },
     {
       icono: "diseno",
-      titulo: "Compra el diseño",
-      texto:
-        "¿Ya tienes máquina? Descarga archivos DXF, SVG y STL listos para cortar.",
+      titulo: "Diseños digitales listos para cortar",
+      texto: "Archivos DXF, SVG y STL para descargar y fabricar en tu máquina.",
       accion: "Ver diseños",
       href: ligaCategoria("Diseños digitales"),
     },
     {
-      icono: "lapiz",
-      titulo: "Te lo diseñamos",
-      texto:
-        "¿Tienes la idea pero no el archivo? Lo diseñamos en CAD/CAM a tu medida.",
-      accion: "Diseño a la medida",
-      href: ligaCategoria("Diseño CAD/CAM"),
+      icono: "maquila",
+      titulo: "Maquila y piezas terminadas",
+      texto: "Te lo diseñamos y te lo fabricamos en router, láser o plasma.",
+      accion: "Pedir maquila",
+      href: ligaCategoria("Maquinado"),
     },
     {
-      icono: "maquila",
-      titulo: "Te lo maquilamos",
-      texto:
-        "¿No tienes cómo cortarlo? Lo fabricamos en router, láser o plasma.",
-      accion: "Servicio de maquila",
-      href: ligaCategoria("Maquinado"),
+      icono: "herramientas",
+      titulo: "Herramientas digitales para talleres",
+      texto: "Cotizador, generador 2D/3D y calculadoras para trabajar más rápido.",
+      accion: "Ver herramientas",
+      href: "/servicios",
+    },
+  ]
+
+  const herramientas = [
+    {
+      icono: "cotizador",
+      nombre: "Cotizador CNC",
+      que: "Calcula el precio de tu pieza según material, tiempo de máquina y acabado.",
+      beneficio: "Obtén precios estimados en minutos",
+      disponible: true,
+      href: "/servicios/cotizador-cnc",
+    },
+    {
+      icono: "generador",
+      nombre: "Generador 2D y 3D",
+      que: "Cajas, letreros, despieces y vectorizado: descarga en DXF, SVG o PDF.",
+      beneficio: "De la idea al archivo listo para cortar",
+      disponible: true,
+      href: "/servicios/generador-2d-3d",
+    },
+    {
+      icono: "corte",
+      nombre: "Calculadora de corte",
+      que: "Velocidades, avances y tiempos por material y herramienta.",
+      beneficio: "Optimiza tiempos y costos",
+      disponible: false,
+    },
+    {
+      icono: "visor",
+      nombre: "Visor de archivos",
+      que: "Abre y revisa DXF, SVG y STL desde el navegador.",
+      beneficio: "Revisa tu diseño antes de fabricar",
+      disponible: false,
+    },
+    {
+      icono: "torno",
+      nombre: "Calculadora de torno",
+      que: "RPM, avance y pasadas para trabajos en torno CNC.",
+      beneficio: "Menos errores y menos material perdido",
+      disponible: false,
     },
   ]
 
@@ -368,34 +406,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
         </ul>
       </section>
 
-      {/* Asi trabajamos */}
-      <section className="px-4 lg:px-16 pt-10 pb-10">
-        <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
-          Así trabajamos contigo
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {formas.map((f) => (
-            <LocalizedClientLink
-              key={f.titulo}
-              href={f.href}
-              className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-3 transition hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(27,27,24,0.08)]"
-            >
-              <span className="text-[#142033]">
-                <Icono nombre={f.icono} />
-              </span>
-              <span className="font-display font-semibold text-[17px]">
-                {f.titulo}
-              </span>
-              <span className="text-[14px] leading-[1.55] text-[#4A4A45]">
-                {f.texto}
-              </span>
-              <span className="mt-auto text-[13.5px] font-semibold text-[#B34D07]">
-                {f.accion} →
-              </span>
-            </LocalizedClientLink>
-          ))}
-        </div>
-      </section>
+      <PilaresHome pilares={pilares} />
 
       {/* Compra por categoria */}
       {parentCategories.length > 0 && (
@@ -453,28 +464,9 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
         <HomeProductSection heading="Lo más nuevo" locale={locale} home />
       </section>
 
-      {/* Herramientas (proximamente) */}
-      <section className="px-4 lg:px-16 pb-10">
-        <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
-          Herramientas para tu taller
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {herramientas.map((h) => (
-            <div
-              key={h.nombre}
-              className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2.5"
-            >
-              <span className="text-[#142033]">
-                <Icono nombre={h.icono} size={26} />
-              </span>
-              <span className="font-semibold text-[14.5px]">{h.nombre}</span>
-              <span className="text-[12.5px] font-semibold text-[#6B6A63]">
-                Próximamente
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <HerramientasHome herramientas={herramientas} />
+
+      <ComoFunciona />
 
       {/* Banner proyecto a la medida */}
       <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
