@@ -283,7 +283,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(180deg, rgba(14,23,38,0.72) 0%, rgba(20,32,51,0.82) 60%, rgba(14,23,38,0.92) 100%)",
+                  "linear-gradient(180deg, rgba(14,23,38,0.55) 0%, rgba(14,23,38,0.62) 55%, rgba(14,23,38,0.85) 100%)",
               }}
             />
           </>
