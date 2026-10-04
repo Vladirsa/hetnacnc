@@ -41,6 +41,10 @@ services:
       GENERIC_TIMEZONE: ${TIMEZONE:-America/Mexico_City}
       N8N_RUNNERS_ENABLED: "true"
       N8N_PROXY_HOPS: "1"
+      # Por defecto n8n bloquea $env.* dentro de los nodos (medida de
+      # seguridad para instancias compartidas). Acá son nuestras propias
+      # variables (URLs, claves internas), así que se habilita el acceso.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       # Variables usadas dentro de los workflows (nodos HTTP Request / Code) vía $env.*
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://host.docker.internal:9000}
       MEDUSA_PUBLISHABLE_KEY: ${MEDUSA_PUBLISHABLE_KEY}
