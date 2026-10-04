@@ -27,13 +27,14 @@ export const sendAbandonedCartEmailWorkflow = createWorkflow(
     // Solo marcamos el carrito como "notificado" si el correo salió de
     // verdad; si Resend no está configurado o falló, el job puede
     // reintentar en la siguiente corrida.
-    const marked = when(sendResult, (result) => result.sent).then(() => {
+    when(sendResult, (result) => result.sent).then(() => {
       return markAbandonedCartEmailSentStep({
         cart_id: input.cart_id,
         previous_metadata: input.metadata,
       })
     })
 
-    return new WorkflowResponse(marked)
+    // Devolvemos { sent } para que el job sepa si el correo salió
+    return new WorkflowResponse(sendResult)
   }
 )

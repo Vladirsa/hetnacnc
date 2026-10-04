@@ -66,18 +66,18 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
   let sent = 0
   for (const cart of eligible) {
     try {
-      const result = await sendAbandonedCartEmailWorkflow(container).run({
+      const { result } = await sendAbandonedCartEmailWorkflow(container).run({
         input: {
           cart_id: cart.id,
           email: cart.email as string,
           items: (cart.items || []).map((i) => ({ title: i.title, quantity: i.quantity })),
           total: cart.total || 0,
           currency_code: cart.currency_code,
-          cart_url: `${storefrontUrl}/cart`,
+          cart_url: `${storefrontUrl}/mx/cart`,
           metadata: cart.metadata,
         },
       })
-      if (result?.result) sent += 1
+      if (result?.sent) sent += 1
     } catch (e) {
       logger.error(`[abandoned-cart] fallo para cart ${cart.id}: ${e}`)
     }
