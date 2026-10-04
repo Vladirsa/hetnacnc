@@ -24,6 +24,11 @@ export default defineConfig(({ mode }) => {
       mercurDashboardPlugin({
         medusaConfigPath: '../../packages/api/medusa-config.ts',
         ...(backendUrl ? { backendUrl } : {}),
+        // Marca HETNA: reemplaza el nombre y la "M" de Mercur en el login y el registro.
+        // El logo lo sirve la tienda en el mismo dominio (hetnacnc.com/icons/...).
+        name: 'HETNA CNC',
+        logo: '/icons/icon-512.png',
+        i18n: { defaultLanguage: 'es' },
       }),
     ],
   }
