@@ -48,10 +48,12 @@ en producción.)
 
 ## 3. Crear la Secret API Key en Mercur (hazlo antes del paso 4)
 
-Entra a `https://hetnacnc.com/seller` con tu cuenta de administrador →
-**Configuración/Settings** → **Claves API / API Key Management** → **Crear
-clave secreta**. Dale un nombre como `n8n-automation` y copia el valor — solo
-se muestra una vez.
+Entra a `https://hetnacnc.com/dashboard` (el panel de operador/admin — no
+`/seller`, que es el panel de vendedores) con tu cuenta de administrador →
+**Configuración/Settings** → **Desarrollador/Developer** → **Gestión de
+claves API / API Key Management** → pestaña **Claves secretas/Secret API
+Keys** → **Crear clave secreta**. Dale un nombre como `n8n-automation` y
+copia el valor — solo se muestra una vez.
 
 ## 4. Configurar y levantar
 
