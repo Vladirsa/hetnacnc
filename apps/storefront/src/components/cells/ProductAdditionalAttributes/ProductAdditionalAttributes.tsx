@@ -12,7 +12,7 @@ export const ProductAdditionalAttributes = ({
   const nonEmptyAttributes = attributes.filter((attribute) => !!attribute && attribute.id)
 
   return (
-    <ProductPageAccordion heading="Additional attributes" defaultOpen={false} data-testid="product-additional-attributes-section">
+    <ProductPageAccordion heading="Especificaciones técnicas" defaultOpen data-testid="product-additional-attributes-section">
       {nonEmptyAttributes.map((attribute) => (
         <div
           key={attribute.id}

@@ -6,11 +6,12 @@ import { CloseIcon } from "@/icons"
 const filtersLabels = {
   category: "Category",
   brand: "Marca",
-  min_price: "Min Price",
-  max_price: "Max Price",
+  min_price: "Precio mín.",
+  max_price: "Precio máx.",
+  disponible: "Disponibilidad",
   color: "Color",
   size: "Size",
-  query: "Search",
+  query: "Búsqueda",
   condition: "Condition",
   rating: "Rating",
 }
@@ -19,6 +20,12 @@ export const ActiveFilterElement = ({ filter }: { filter: string[] }) => {
   const { updateFilters } = useFilters(filter[0])
 
   const activeFilters = filter[1].split(",")
+
+  const textoDe = (valor: string) => {
+    if (filter[0] === "disponible") return "Solo disponibles"
+    if (filter[0] === "min_price" || filter[0] === "max_price") return `$${valor} MXN`
+    return valor
+  }
 
   const removeFilterHandler = (filter: string) => {
     updateFilters(filter)
@@ -35,7 +42,7 @@ export const ActiveFilterElement = ({ filter }: { filter: string[] }) => {
         const Element = () => {
           return (
             <span className="flex gap-2 items-center cursor-default whitespace-nowrap">
-              {element}{" "}
+              {textoDe(element)}{" "}
               <span onClick={() => removeFilterHandler(element)}>
                 <CloseIcon size={16} className="cursor-pointer" />
               </span>
