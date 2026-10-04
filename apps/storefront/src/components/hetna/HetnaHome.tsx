@@ -4,9 +4,10 @@ import path from "path"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { HeroSlider, Slide } from "@/components/hetna/HeroSlider"
+import { BotonSlide, HeroSlider, Slide } from "@/components/hetna/HeroSlider"
 import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
 import { listCategories } from "@/lib/data/categories"
+import { listarPortadas, PortadaTienda } from "@/lib/data/portadas"
 
 const WHATSAPP_NUMERO =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -25,6 +26,19 @@ const fotoHero = (archivo: string) => {
     return null
   }
 }
+
+// Convierte una portada del panel en diapositiva del carrusel
+const botonDe = (texto: string | null, url: string | null): BotonSlide[] =>
+  texto && url ? [{ texto, href: url, externo: /^https?:\/\//i.test(url) }] : []
+
+const aSlide = (p: PortadaTienda): Slide => ({
+  etiqueta: p.etiqueta,
+  titulo: p.titulo,
+  texto: p.texto,
+  foto: p.imagen_url,
+  alt: p.titulo,
+  botones: [...botonDe(p.boton1_texto, p.boton1_url), ...botonDe(p.boton2_texto, p.boton2_url)],
+})
 
 const Icono = ({ nombre, size = 28 }: { nombre: string; size?: number }) => {
   const p = {
@@ -204,12 +218,15 @@ const confianza = [
 ]
 
 export const HetnaHome = async ({ locale }: { locale: string }) => {
-  const { categories, parentCategories } = (await listCategories({
-    query: { include_ancestors_tree: true },
-  }).catch(() => ({ categories: [], parentCategories: [] }))) as {
-    categories: HttpTypes.StoreProductCategory[]
-    parentCategories: HttpTypes.StoreProductCategory[]
-  }
+  const [{ categories, parentCategories }, portadas] = await Promise.all([
+    listCategories({
+      query: { include_ancestors_tree: true },
+    }).catch(() => ({ categories: [], parentCategories: [] })) as Promise<{
+      categories: HttpTypes.StoreProductCategory[]
+      parentCategories: HttpTypes.StoreProductCategory[]
+    }>,
+    listarPortadas(),
+  ])
 
   // Busca una categoria por nombre para ligar las tarjetas de "Asi trabajamos"
   const ligaCategoria = (nombre: string) => {
@@ -252,7 +269,8 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     },
   ]
 
-  const slides: Slide[] = [
+  // Portadas fijas: se usan mientras no haya portadas creadas en /dashboard → Portadas
+  const slidesFijas: Slide[] = [
     {
       etiqueta: "Marketplace CNC de México",
       titulo: "Todo lo que tu taller CNC necesita, en un solo lugar",
@@ -322,6 +340,8 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       ],
     },
   ]
+
+  const slides = portadas.length > 0 ? portadas.map(aSlide) : slidesFijas
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
