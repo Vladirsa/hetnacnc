@@ -1,4 +1,8 @@
+import fs from "fs"
+import path from "path"
+
 import { HttpTypes } from "@medusajs/types"
+import Image from "next/image"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
@@ -9,6 +13,17 @@ const WHATSAPP_NUMERO =
 
 const whatsappLink = (mensaje: string) =>
   `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`
+
+// Foto del hero: se coloca en apps/storefront/public/images/hero/hetna-hero.jpg.
+// Mientras no exista, el hero usa un fondo industrial dibujado con CSS.
+const FOTO_HERO = "/images/hero/hetna-hero.jpg"
+const existeFotoHero = () => {
+  try {
+    return fs.existsSync(path.join(process.cwd(), "public", "images", "hero", "hetna-hero.jpg"))
+  } catch {
+    return false
+  }
+}
 
 const Icono = ({ nombre, size = 28 }: { nombre: string; size?: number }) => {
   const p = {
@@ -120,6 +135,14 @@ const Icono = ({ nombre, size = 28 }: { nombre: string; size?: number }) => {
           <circle cx="18" cy="18.5" r="1.5" />
         </svg>
       )
+    case "pago":
+      return (
+        <svg {...p}>
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <line x1="2" y1="10" x2="22" y2="10" />
+          <line x1="6" y1="15" x2="10" y2="15" />
+        </svg>
+      )
     case "whatsapp":
       return (
         <svg {...p}>
@@ -174,12 +197,14 @@ const herramientas = [
 
 const confianza = [
   { texto: "Envíos a toda la República", icono: "envio" },
+  { texto: "Paga con tarjeta o Mercado Pago", icono: "pago" },
   { texto: "Atención directa por WhatsApp", icono: "whatsapp" },
-  { texto: "Diseño y maquila a la medida", icono: "check" },
   { texto: "Hecho en México", icono: "mexico" },
 ]
 
 export const HetnaHome = async ({ locale }: { locale: string }) => {
+  const hayFoto = existeFotoHero()
+
   const { categories, parentCategories } = (await listCategories({
     query: { include_ancestors_tree: true },
   }).catch(() => ({ categories: [], parentCategories: [] }))) as {
@@ -230,52 +255,121 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      {/* Hero */}
-      <section className="px-4 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row gap-10 lg:gap-12 items-center">
-        <div className="flex-1 flex flex-col gap-5">
-          <span className="uppercase tracking-[0.08em] text-[12px] font-semibold text-[#B34D07]">
-            Marketplace especializado en CNC
+      {/* Hero industrial: foto del taller (si existe) con capa azul marino */}
+      <section
+        className="relative w-full overflow-hidden text-white"
+        style={
+          hayFoto
+            ? { backgroundColor: "#0E1726" }
+            : {
+                backgroundColor: "#0E1726",
+                backgroundImage:
+                  "radial-gradient(ellipse at 78% 65%, rgba(194,86,10,0.38), transparent 55%), linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(135deg, #0B1424 0%, #142033 60%, #1E2C47 100%)",
+                backgroundSize: "auto, 44px 44px, 44px 44px, auto",
+              }
+        }
+      >
+        {hayFoto && (
+          <>
+            <Image
+              src={FOTO_HERO}
+              alt="Máquina CNC trabajando en un taller"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(14,23,38,0.72) 0%, rgba(20,32,51,0.82) 60%, rgba(14,23,38,0.92) 100%)",
+              }}
+            />
+          </>
+        )}
+
+        {/* Hexágono decorativo (solo escritorio, sin foto) */}
+        {!hayFoto && (
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 400 440"
+            className="hidden xl:block absolute right-[-70px] top-1/2 -translate-y-1/2 w-[440px] opacity-[0.10]"
+          >
+            <polygon
+              points="200,10 390,115 390,325 200,430 10,325 10,115"
+              fill="none"
+              stroke="#E8833A"
+              strokeWidth="10"
+            />
+            <rect x="130" y="110" width="140" height="120" rx="8" fill="none" stroke="#E8833A" strokeWidth="7" />
+            <path
+              d="M166 230 Q166 190 200 190 Q234 190 234 230 L234 300 Q234 318 216 318 L184 318 Q166 318 166 300 Z"
+              fill="none"
+              stroke="#E8833A"
+              strokeWidth="7"
+            />
+            <line x1="200" y1="318" x2="200" y2="380" stroke="#E8833A" strokeWidth="8" strokeLinecap="round" />
+          </svg>
+        )}
+
+        <div className="relative max-w-[1180px] mx-auto px-4 lg:px-16 py-20 lg:py-28 min-h-[520px] lg:min-h-[600px] flex flex-col items-center justify-center text-center gap-6">
+          <span className="uppercase tracking-[0.14em] text-[12px] font-semibold bg-[#C2560A] text-white px-3.5 py-1.5 rounded-full">
+            Marketplace CNC de México
           </span>
-          <h1 className="font-display m-0 text-[34px] leading-[1.1] lg:text-[46px] lg:leading-[1.08] font-bold tracking-[-0.02em]">
-            Diseño, maquila o pieza terminada: tú eliges
+          <h1
+            className="m-0 uppercase font-bold leading-[0.98] tracking-[0.005em] text-[42px] sm:text-[56px] lg:text-[76px] max-w-[980px]"
+            style={{ fontFamily: "var(--font-condensed), var(--font-display), sans-serif" }}
+          >
+            Todo lo que tu taller CNC necesita, en un solo lugar
           </h1>
-          <p className="m-0 text-[16px] leading-[1.6] text-[#4A4A45] max-w-[500px]">
-            Diseños listos para cortar, máquinas, herramientas, materiales y
-            servicios de maquila, de talleres y vendedores de todo México.
+          <p className="m-0 text-[16px] lg:text-[19px] leading-[1.55] text-[#D7DEEA] max-w-[720px]">
+            Compra máquinas, herramientas, materiales y diseños listos para
+            cortar. Cotiza y produce tus piezas con talleres de todo México.
           </p>
-          <div className="flex flex-wrap gap-3 mt-2">
+          <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full sm:w-auto">
             <LocalizedClientLink
               href="/categories"
-              className="bg-[#C2560A] hover:bg-[#A84A08] text-white px-6 py-3.5 rounded-[10px] text-[15px] font-semibold"
+              className="bg-[#C2560A] hover:bg-[#A84A08] text-white px-8 py-4 rounded-[8px] text-[15px] font-bold uppercase tracking-[0.06em] text-center"
             >
-              Explorar catálogo
+              Explorar tienda
             </LocalizedClientLink>
-            <a
-              href={whatsappLink("Hola HETNA CNC, quiero cotizar un proyecto")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border-[1.5px] border-[#142033] text-[#142033] hover:bg-[#142033] hover:text-white px-6 py-3.5 rounded-[10px] text-[15px] font-semibold"
+            <LocalizedClientLink
+              href="/servicios/cotizador-cnc"
+              className="border-2 border-white/85 text-white hover:bg-white hover:text-[#142033] px-8 py-4 rounded-[8px] text-[15px] font-bold uppercase tracking-[0.06em] text-center"
             >
-              Cotizar por WhatsApp
-            </a>
+              Cotizar proyecto
+            </LocalizedClientLink>
           </div>
-        </div>
-        {/* Panel visual: se reemplaza por una foto del taller cuando la tengamos */}
-        <div
-          className="w-full lg:flex-1 h-[240px] lg:h-[360px] rounded-[20px] border border-[#E7E4DC] flex items-center justify-center text-[#C2560A]"
-          style={{
-            backgroundColor: "#FDEEE1",
-            backgroundImage:
-              "radial-gradient(circle, #E7C9AC 1px, transparent 1px)",
-            backgroundSize: "18px 18px",
-          }}
-        >
-          <Icono nombre="diseno" size={120} />
+          <span className="text-[13px] text-[#9FB0C8]">
+            Para talleres, fabricantes, makers y empresas que trabajan con CNC
+          </span>
         </div>
       </section>
 
+      {/* Franja de confianza */}
+      <section className="w-full bg-[#1B2A42] text-white">
+        <ul className="m-0 p-0 list-none max-w-[1180px] mx-auto px-4 lg:px-16 py-6 grid grid-cols-2 lg:grid-cols-4 gap-y-5">
+          {confianza.map((c, i) => (
+            <li
+              key={c.texto}
+              className={`flex flex-col items-center text-center gap-2 px-3 ${
+                i > 0 ? "lg:border-l lg:border-white/15" : ""
+              }`}
+            >
+              <span className="text-[#F2A65E]">
+                <Icono nombre={c.icono} size={28} />
+              </span>
+              <span className="text-[12.5px] lg:text-[13px] font-semibold uppercase tracking-[0.06em] text-[#E6EBF3]">
+                {c.texto}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* Asi trabajamos */}
-      <section className="px-4 lg:px-16 pb-10">
+      <section className="px-4 lg:px-16 pt-10 pb-10">
         <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
           Así trabajamos contigo
         </h2>
@@ -383,7 +477,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       </section>
 
       {/* Banner proyecto a la medida */}
-      <section className="mx-4 lg:mx-16 mb-10 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+      <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         <div className="flex flex-col gap-2.5 max-w-[560px]">
           <span className="uppercase tracking-[0.08em] text-[11.5px] font-semibold text-[#F2A65A]">
             Proyectos a la medida
@@ -404,18 +498,6 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
         >
           Cotizar por WhatsApp
         </a>
-      </section>
-
-      {/* Franja de confianza */}
-      <section className="px-4 lg:px-16 pb-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {confianza.map((c) => (
-          <div key={c.texto} className="flex items-center gap-3">
-            <span className="text-[#16794F] shrink-0">
-              <Icono nombre={c.icono} size={26} />
-            </span>
-            <span className="text-[13px] font-medium">{c.texto}</span>
-          </div>
-        ))}
       </section>
     </div>
   )
