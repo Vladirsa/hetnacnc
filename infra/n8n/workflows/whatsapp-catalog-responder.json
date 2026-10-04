@@ -1,0 +1,102 @@
+{
+  "name": "WhatsApp - Respuestas de catálogo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-in",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-in",
+      "name": "WhatsApp entrante (Evolution API)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Evolution API manda el mensaje en body.data.\n// Ajusta estas rutas si tu versión de Evolution usa otro formato\n// (revisa una ejecución real en n8n: \"Executions\" > abrir > ver el JSON).\nconst body = $input.first().json.body || $input.first().json;\nconst data = body.data || body;\n\nconst remoteJid = data?.key?.remoteJid || data?.from || '';\nconst phone = remoteJid.replace('@s.whatsapp.net', '').replace(/\\D/g, '');\n\nconst text =\n  data?.message?.conversation ||\n  data?.message?.extendedTextMessage?.text ||\n  data?.body ||\n  '';\n\nif (!phone || !text) {\n  return [];\n}\n\nreturn [{ json: { phone, text: text.trim() } }];"
+      },
+      "id": "parse-message",
+      "name": "Extraer teléfono y texto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.MEDUSA_BACKEND_URL }}/store/products",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "={{ $json.text }}" },
+            { "name": "region_id", "value": "={{ $env.MEDUSA_REGION_ID }}" },
+            { "name": "limit", "value": "5" },
+            { "name": "fields", "value": "id,title,handle,thumbnail,*variants.calculated_price" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-publishable-api-key", "value": "={{ $env.MEDUSA_PUBLISHABLE_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "search-products",
+      "name": "Buscar productos (Store API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('Extraer teléfono y texto').first().json.text;\nconst phone = $('Extraer teléfono y texto').first().json.phone;\nconst products = $input.first().json.products || [];\nconst baseUrl = $env.STOREFRONT_URL || 'https://hetnacnc.com';\n\nlet reply;\nif (!products.length) {\n  reply = `No encontré productos para \"${query}\" 😕. ¿Puedes describirlo de otra forma (material, tamaño, tipo de pieza)?`;\n} else {\n  const lines = products.slice(0, 5).map((p) => {\n    const amount = p.variants?.[0]?.calculated_price?.calculated_amount;\n    const currency = p.variants?.[0]?.calculated_price?.currency_code?.toUpperCase();\n    const price = amount != null ? `$${amount} ${currency}` : 'Consultar precio';\n    return `• ${p.title} — ${price}\\n  ${baseUrl}/mx/products/${p.handle}`;\n  });\n  reply = `Encontré esto para \"${query}\":\\n\\n${lines.join('\\n\\n')}\\n\\n¿Quieres que te ayude con alguno?`;\n}\n\nreturn [{ json: { phone, reply } }];"
+      },
+      "id": "format-reply",
+      "name": "Formatear respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.phone, \"text\": $json.reply } }}",
+        "options": {}
+      },
+      "id": "send-reply",
+      "name": "Enviar respuesta por WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 0]
+    }
+  ],
+  "connections": {
+    "WhatsApp entrante (Evolution API)": {
+      "main": [[{ "node": "Extraer teléfono y texto", "type": "main", "index": 0 }]]
+    },
+    "Extraer teléfono y texto": {
+      "main": [[{ "node": "Buscar productos (Store API)", "type": "main", "index": 0 }]]
+    },
+    "Buscar productos (Store API)": {
+      "main": [[{ "node": "Formatear respuesta", "type": "main", "index": 0 }]]
+    },
+    "Formatear respuesta": {
+      "main": [[{ "node": "Enviar respuesta por WhatsApp", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}

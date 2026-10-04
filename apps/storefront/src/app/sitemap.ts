@@ -5,6 +5,7 @@ import type { MetadataRoute } from "next"
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
+import { listLearningArticles } from "@/lib/data/learning-articles"
 
 export const revalidate = 3600
 
@@ -22,10 +23,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: s.padre ? 0.7 : 0.8,
     })),
   ]
-  const [secs, temas] = await Promise.all([secciones().catch(() => null), temasParaMapa().catch(() => [])])
-  if (!secs) return fijas
+  const [secs, temas, { learning_articles }] = await Promise.all([
+    secciones().catch(() => null),
+    temasParaMapa().catch(() => []),
+    listLearningArticles({ limit: 200 }).catch(() => ({ learning_articles: [] })),
+  ])
+  const articulos: MetadataRoute.Sitemap = learning_articles.map((a) => ({
+    url: `${base}/aprendizaje-cnc/${a.slug}`,
+    lastModified: a.published_at ? new Date(a.published_at) : hoy,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }))
+  if (!secs) return [...fijas, ...articulos]
   return [
     ...fijas,
+    ...articulos,
     { url: `${base}/foro-cnc`, lastModified: hoy, changeFrequency: "hourly", priority: 0.8 },
     ...secs.map((s) => ({
       url: `${base}/foro-cnc/${s.slug}`,

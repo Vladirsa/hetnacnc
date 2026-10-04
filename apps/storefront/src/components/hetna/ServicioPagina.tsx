@@ -7,6 +7,7 @@ import {
   buscarServicio,
   subServicios,
 } from "./servicios-datos"
+import type { LearningArticle } from "@/lib/data/learning-articles"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
 export const enlaceWhatsApp = (mensaje: string) =>
@@ -94,7 +95,34 @@ export const ServiciosIndice = () => (
   </main>
 )
 
-export const ServicioPagina = ({ s }: { s: Servicio }) => {
+export const ArticuloAprendizajeCard = ({ a }: { a: LearningArticle }) => (
+  <LocalizedClientLink
+    href={`/aprendizaje-cnc/${a.slug}`}
+    className="group bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex flex-col hover:border-[#C2560A] hover:shadow-[0_8px_24px_rgba(27,27,24,0.08)] transition"
+  >
+    {a.cover_image_url && (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={a.cover_image_url} alt={a.title} className="w-full aspect-video object-cover" />
+    )}
+    <div className="p-4 flex flex-col gap-2">
+      <h3 className="font-display text-[16px] font-bold m-0 text-[#1B1B18] line-clamp-2">
+        {a.title}
+      </h3>
+      <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{a.excerpt}</p>
+      <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
+        Leer más
+      </span>
+    </div>
+  </LocalizedClientLink>
+)
+
+export const ServicioPagina = ({
+  s,
+  articulos,
+}: {
+  s: Servicio
+  articulos?: LearningArticle[]
+}) => {
   const padre = s.padre ? buscarServicio(s.padre) : undefined
   const hijos = subServicios(s.slug)
 
@@ -205,6 +233,19 @@ export const ServicioPagina = ({ s }: { s: Servicio }) => {
               Entrar al foro
             </span>
           </LocalizedClientLink>
+        )}
+
+        {s.slug === "aprendizaje-cnc" && articulos && articulos.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
+              Guías y artículos
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {articulos.map((a) => (
+                <ArticuloAprendizajeCard key={a.id} a={a} />
+              ))}
+            </div>
+          </section>
         )}
 
         {hijos.length > 0 && (

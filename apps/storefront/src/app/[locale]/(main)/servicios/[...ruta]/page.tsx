@@ -15,6 +15,7 @@ import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVec
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
+import { listLearningArticles } from "@/lib/data/learning-articles"
 
 type Props = {
   params: Promise<{ locale: string; ruta: string[] }>
@@ -119,6 +120,11 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/letreros") return <GeneradorLetrero />
   if (s.slug === "generador-2d-3d/grabado-foto") return <GeneradorGrabado />
   if (s.slug === "generador-2d-3d/litofania-relieve") return <GeneradorRelieve />
+
+  if (s.slug === "aprendizaje-cnc") {
+    const { learning_articles } = await listLearningArticles({ limit: 9 })
+    return <ServicioPagina s={s} articulos={learning_articles} />
+  }
 
   return <ServicioPagina s={s} />
 }

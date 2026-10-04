@@ -7,6 +7,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { HeroSlider, Slide } from "@/components/hetna/HeroSlider"
 import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
 import { listCategories } from "@/lib/data/categories"
+import { listLearningArticles } from "@/lib/data/learning-articles"
 
 const WHATSAPP_NUMERO =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -210,6 +211,10 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     categories: HttpTypes.StoreProductCategory[]
     parentCategories: HttpTypes.StoreProductCategory[]
   }
+
+  const { learning_articles: articulosAprendizaje } = await listLearningArticles({
+    limit: 3,
+  })
 
   // Busca una categoria por nombre para ligar las tarjetas de "Asi trabajamos"
   const ligaCategoria = (nombre: string) => {
@@ -455,6 +460,49 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
           ))}
         </div>
       </section>
+
+      {/* Aprendizaje CNC: artículos reales, solo si ya hay contenido publicado */}
+      {articulosAprendizaje.length > 0 && (
+        <section className="px-4 lg:px-16 pb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-[20px] font-semibold m-0">
+              Aprendizaje CNC
+            </h2>
+            <LocalizedClientLink
+              href="/servicios/aprendizaje-cnc"
+              className="text-[13.5px] font-semibold text-[#B34D07] hover:underline"
+            >
+              Ver todo
+            </LocalizedClientLink>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {articulosAprendizaje.map((a) => (
+              <LocalizedClientLink
+                key={a.id}
+                href={`/aprendizaje-cnc/${a.slug}`}
+                className="group bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex flex-col hover:border-[#C2560A] hover:shadow-[0_8px_24px_rgba(27,27,24,0.08)] transition"
+              >
+                {a.cover_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={a.cover_image_url}
+                    alt={a.title}
+                    className="w-full aspect-video object-cover"
+                  />
+                )}
+                <div className="p-4 flex flex-col gap-2">
+                  <h3 className="font-display text-[15.5px] font-bold m-0 text-[#1B1B18] line-clamp-2">
+                    {a.title}
+                  </h3>
+                  <p className="m-0 text-[13px] text-[#6B6A63] leading-relaxed line-clamp-2">
+                    {a.excerpt}
+                  </p>
+                </div>
+              </LocalizedClientLink>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Banner proyecto a la medida */}
       <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
