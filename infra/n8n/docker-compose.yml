@@ -1,0 +1,80 @@
+name: hetnacnc-automation
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      N8N_HOST: ${N8N_HOST}
+      EVOLUTION_HOST: ${EVOLUTION_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - n8n
+      - evolution-api
+
+  n8n-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: ${N8N_DB_PASSWORD}
+      POSTGRES_DB: n8n
+    volumes:
+      - n8n_postgres_data:/var/lib/postgresql/data
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: unless-stopped
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: n8n-postgres
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD}
+      N8N_HOST: ${N8N_HOST}
+      N8N_PROTOCOL: https
+      N8N_PORT: 5678
+      WEBHOOK_URL: https://${N8N_HOST}/
+      N8N_EDITOR_BASE_URL: https://${N8N_HOST}/
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      GENERIC_TIMEZONE: ${TIMEZONE:-America/Mexico_City}
+      N8N_RUNNERS_ENABLED: "true"
+      # Variables usadas dentro de los workflows (nodos HTTP Request / Code) vía $env.*
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      MEDUSA_PUBLISHABLE_KEY: ${MEDUSA_PUBLISHABLE_KEY}
+      MEDUSA_REGION_ID: ${MEDUSA_REGION_ID}
+      MEDUSA_ADMIN_SECRET_KEY: ${MEDUSA_ADMIN_SECRET_KEY}
+      STOREFRONT_URL: ${STOREFRONT_URL}
+      ABANDONED_CART_MIN_HOURS: ${ABANDONED_CART_MIN_HOURS:-3}
+      ABANDONED_CART_MAX_HOURS: ${ABANDONED_CART_MAX_HOURS:-72}
+      EVOLUTION_API_URL: http://evolution-api:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      EVOLUTION_INSTANCE: ${EVOLUTION_INSTANCE}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - n8n-postgres
+
+  evolution-api:
+    image: atendai/evolution-api:latest
+    restart: unless-stopped
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_ENABLED: "false"
+      CACHE_REDIS_ENABLED: "false"
+      LOG_LEVEL: ERROR
+    volumes:
+      - evolution_data:/evolution/instances
+
+volumes:
+  n8n_data:
+  n8n_postgres_data:
+  evolution_data:
+  caddy_data:
+  caddy_config:
