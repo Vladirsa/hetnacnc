@@ -2,9 +2,9 @@ import fs from "fs"
 import path from "path"
 
 import { HttpTypes } from "@medusajs/types"
-import Image from "next/image"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { HeroSlider, Slide } from "@/components/hetna/HeroSlider"
 import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
 import { listCategories } from "@/lib/data/categories"
 
@@ -14,14 +14,15 @@ const WHATSAPP_NUMERO =
 const whatsappLink = (mensaje: string) =>
   `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`
 
-// Foto del hero: se coloca en apps/storefront/public/images/hero/hetna-hero.jpg.
-// Mientras no exista, el hero usa un fondo industrial dibujado con CSS.
-const FOTO_HERO = "/images/hero/hetna-hero.jpg"
-const existeFotoHero = () => {
+// Fotos del carrusel: van en apps/storefront/public/images/hero/.
+// Si una foto no existe en el servidor, esa diapositiva usa el fondo industrial dibujado con CSS.
+const fotoHero = (archivo: string) => {
   try {
-    return fs.existsSync(path.join(process.cwd(), "public", "images", "hero", "hetna-hero.jpg"))
+    return fs.existsSync(path.join(process.cwd(), "public", "images", "hero", archivo))
+      ? `/images/hero/${archivo}`
+      : null
   } catch {
-    return false
+    return null
   }
 }
 
@@ -203,8 +204,6 @@ const confianza = [
 ]
 
 export const HetnaHome = async ({ locale }: { locale: string }) => {
-  const hayFoto = existeFotoHero()
-
   const { categories, parentCategories } = (await listCategories({
     query: { include_ancestors_tree: true },
   }).catch(() => ({ categories: [], parentCategories: [] }))) as {
@@ -253,96 +252,80 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     },
   ]
 
+  const slides: Slide[] = [
+    {
+      etiqueta: "Marketplace CNC de México",
+      titulo: "Todo lo que tu taller CNC necesita, en un solo lugar",
+      texto:
+        "Máquinas, herramientas, materiales y diseños listos para cortar. Cotiza y produce tus piezas con talleres de todo México.",
+      foto: fotoHero("hetna-hero.jpg"),
+      alt: "Router CNC cortando madera en un taller",
+      botones: [
+        { texto: "Explorar tienda", href: "/categories" },
+        { texto: "Cotizar proyecto", href: "/servicios/cotizador-cnc" },
+      ],
+    },
+    {
+      etiqueta: "Corte y grabado láser",
+      titulo: "Corte láser en madera, MDF y acrílico",
+      texto:
+        "Envía tu archivo y te cotizamos el corte, o compra diseños listos para tu máquina láser.",
+      foto: fotoHero("hero-laser.jpg"),
+      alt: "Láser CO2 cortando triplay",
+      botones: [
+        { texto: "Cotizar corte láser", href: "/servicios/cotizador-cnc" },
+        { texto: "Ver diseños", href: ligaCategoria("Diseños digitales") },
+      ],
+    },
+    {
+      etiqueta: "Corte por plasma",
+      titulo: "Plasma CNC para lámina y placa de acero",
+      texto:
+        "Rejas, letreros, piezas y estructuras metálicas cortadas a la medida.",
+      foto: fotoHero("hero-plasma.jpg"),
+      alt: "Mesa de plasma CNC cortando placa de acero",
+      botones: [
+        { texto: "Cotizar corte plasma", href: "/servicios/cotizador-cnc" },
+        { texto: "Ver plasma", href: ligaCategoria("Plasma") },
+      ],
+    },
+    {
+      etiqueta: "Impresión 3D y prototipos",
+      titulo: "De tu idea a la pieza en 3D",
+      texto:
+        "Modelamos tu pieza, la imprimimos o te entregamos el archivo listo para fabricar.",
+      foto: fotoHero("hero-3d.jpg"),
+      alt: "Impresora 3D fabricando una pieza",
+      botones: [
+        {
+          texto: "Cotizar impresión 3D",
+          href: whatsappLink("Hola HETNA CNC, quiero cotizar una impresión 3D"),
+          externo: true,
+        },
+        { texto: "Diseño 2D / 3D", href: "/servicios/generador-2d-3d" },
+      ],
+    },
+    {
+      etiqueta: "Grabado en metal",
+      titulo: "Grabado láser de fibra en acero y aluminio",
+      texto:
+        "Placas, herramientas, piezas industriales y marcaje permanente.",
+      foto: fotoHero("hero-fibra.jpg"),
+      alt: "Láser de fibra grabando una placa de acero",
+      botones: [
+        {
+          texto: "Cotizar grabado",
+          href: whatsappLink("Hola HETNA CNC, quiero cotizar un grabado láser en metal"),
+          externo: true,
+        },
+        { texto: "Ver máquinas láser", href: ligaCategoria("Láser") },
+      ],
+    },
+  ]
+
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      {/* Hero industrial compacto: foto del taller (si existe) con capa azul marino */}
-      <section
-        className="relative w-full overflow-hidden text-white"
-        style={
-          hayFoto
-            ? { backgroundColor: "#0E1726" }
-            : {
-                backgroundColor: "#0E1726",
-                backgroundImage:
-                  "radial-gradient(ellipse at 78% 65%, rgba(194,86,10,0.38), transparent 55%), linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(135deg, #0B1424 0%, #142033 60%, #1E2C47 100%)",
-                backgroundSize: "auto, 44px 44px, 44px 44px, auto",
-              }
-        }
-      >
-        {hayFoto && (
-          <>
-            <Image
-              src={FOTO_HERO}
-              alt="Máquina CNC trabajando en un taller"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(14,23,38,0.55) 0%, rgba(14,23,38,0.62) 55%, rgba(14,23,38,0.85) 100%)",
-              }}
-            />
-          </>
-        )}
-
-        {/* Hexágono decorativo (solo escritorio, sin foto) */}
-        {!hayFoto && (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 400 440"
-            className="hidden xl:block absolute right-[-30px] top-1/2 -translate-y-1/2 w-[280px] opacity-[0.10]"
-          >
-            <polygon
-              points="200,10 390,115 390,325 200,430 10,325 10,115"
-              fill="none"
-              stroke="#E8833A"
-              strokeWidth="10"
-            />
-            <rect x="130" y="110" width="140" height="120" rx="8" fill="none" stroke="#E8833A" strokeWidth="7" />
-            <path
-              d="M166 230 Q166 190 200 190 Q234 190 234 230 L234 300 Q234 318 216 318 L184 318 Q166 318 166 300 Z"
-              fill="none"
-              stroke="#E8833A"
-              strokeWidth="7"
-            />
-            <line x1="200" y1="318" x2="200" y2="380" stroke="#E8833A" strokeWidth="8" strokeLinecap="round" />
-          </svg>
-        )}
-
-        <div className="relative max-w-[1180px] mx-auto px-4 lg:px-16 py-10 lg:py-14 flex flex-col items-center justify-center text-center gap-4">
-          <span className="uppercase tracking-[0.14em] text-[11px] font-semibold bg-[#C2560A] text-white px-3 py-1 rounded-full">
-            Marketplace CNC de México
-          </span>
-          <h1
-            className="m-0 uppercase font-bold leading-[1.02] tracking-[0.005em] text-[30px] sm:text-[38px] lg:text-[50px] max-w-[860px]"
-            style={{ fontFamily: "var(--font-condensed), var(--font-display), sans-serif" }}
-          >
-            Todo lo que tu taller CNC necesita, en un solo lugar
-          </h1>
-          <p className="m-0 text-[15px] lg:text-[16.5px] leading-[1.5] text-[#D7DEEA] max-w-[640px]">
-            Compra máquinas, herramientas, materiales y diseños listos para
-            cortar. Cotiza y produce tus piezas con talleres de todo México.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-1 w-full sm:w-auto">
-            <LocalizedClientLink
-              href="/categories"
-              className="bg-[#C2560A] hover:bg-[#A84A08] text-white px-6 py-3 rounded-[8px] text-[14px] font-bold uppercase tracking-[0.06em] text-center"
-            >
-              Explorar tienda
-            </LocalizedClientLink>
-            <LocalizedClientLink
-              href="/servicios/cotizador-cnc"
-              className="border-2 border-white/85 text-white hover:bg-white hover:text-[#142033] px-6 py-3 rounded-[8px] text-[14px] font-bold uppercase tracking-[0.06em] text-center"
-            >
-              Cotizar proyecto
-            </LocalizedClientLink>
-          </div>
-        </div>
-      </section>
+      <HeroSlider slides={slides} />
 
       {/* Franja de confianza */}
       <section className="w-full bg-[#1B2A42] text-white">
