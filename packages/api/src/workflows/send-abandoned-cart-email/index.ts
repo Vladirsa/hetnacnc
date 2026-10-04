@@ -34,6 +34,9 @@ export const sendAbandonedCartEmailWorkflow = createWorkflow(
       })
     })
 
-    return new WorkflowResponse(marked)
+    // `when().then()` types its result as possibly undefined for the
+    // not-taken branch, but WorkflowResponse only ever sees the built graph
+    // reference, never a runtime undefined.
+    return new WorkflowResponse(marked!)
   }
 )

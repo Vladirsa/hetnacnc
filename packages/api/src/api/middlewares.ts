@@ -1,4 +1,6 @@
 import { defineMiddlewares } from "@medusajs/medusa";
+import { adminLearningArticlesMiddlewares } from "./admin/learning-articles/middlewares";
+import { storeLearningArticlesMiddlewares } from "./store/learning-articles/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -14,5 +16,7 @@ export default defineMiddlewares({
             matcher: "/api/store/*",
             middlewares: [],
         },
+        ...adminLearningArticlesMiddlewares,
+        ...storeLearningArticlesMiddlewares,
     ],
 });

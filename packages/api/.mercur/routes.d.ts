@@ -510,6 +510,7 @@ export type Routes = {
             };
         };
         custom: typeof import("../src/api/admin/custom/route");
+        learningArticles: typeof import("../src/api/admin/learning-articles/route");
     };
     auth: {
         $actorType: {
@@ -639,6 +640,9 @@ export type Routes = {
             };
         };
         custom: typeof import("../src/api/store/custom/route");
+        learningArticles: typeof import("../src/api/store/learning-articles/route") & {
+            $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
+        };
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core/api/vendor/campaigns/route") & {
