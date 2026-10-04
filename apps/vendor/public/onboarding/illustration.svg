@@ -1,41 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="HETNA CNC">
   <defs>
-    <linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0E1726"/>
-      <stop offset="0.6" stop-color="#142033"/>
-      <stop offset="1" stop-color="#1E2C47"/>
-    </linearGradient>
-    <radialGradient id="brillo" cx="0.5" cy="0.42" r="0.55">
-      <stop offset="0" stop-color="#C2560A" stop-opacity="0.28"/>
-      <stop offset="1" stop-color="#C2560A" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="rejilla" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0H0V40" fill="none" stroke="#2A3A57" stroke-width="1"/>
-    </pattern>
+    <linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E1726"/><stop offset="0.6" stop-color="#142033"/><stop offset="1" stop-color="#1E2C47"/></linearGradient>
+    <radialGradient id="brillo" cx="0.5" cy="0.42" r="0.55"><stop offset="0" stop-color="#C2560A" stop-opacity="0.28"/><stop offset="1" stop-color="#C2560A" stop-opacity="0"/></radialGradient>
+    <pattern id="rejilla" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#2A3A57" stroke-width="1"/></pattern>
   </defs>
-
-  <rect width="1200" height="1000" fill="url(#fondo)"/>
-  <rect width="1200" height="1000" fill="url(#rejilla)" opacity="0.55"/>
-  <rect width="1200" height="1000" fill="url(#brillo)"/>
-
-  <!-- trayectoria de corte -->
-  <path d="M180 760 L340 760 Q380 760 380 720 L380 600 Q380 560 420 560 L560 560" fill="none" stroke="#C2560A" stroke-width="3" stroke-dasharray="10 10" opacity="0.55"/>
+  <rect width="1200" height="1000" fill="url(#fondo)"/><rect width="1200" height="1000" fill="url(#rejilla)" opacity="0.55"/><rect width="1200" height="1000" fill="url(#brillo)"/>
+  <path d="M140 900 L300 900 Q340 900 340 860 L340 520 Q340 480 380 480 L410 480" fill="none" stroke="#C2560A" stroke-width="3" stroke-dasharray="10 10" opacity="0.55"/>
   <path d="M1020 240 L880 240 Q840 240 840 280 L840 380" fill="none" stroke="#C2560A" stroke-width="3" stroke-dasharray="10 10" opacity="0.4"/>
-
-  <!-- hexágono con husillo -->
   <g transform="translate(600 400)">
     <polygon points="0,-210 182,-105 182,105 0,210 -182,105 -182,-105" fill="#101B2E" stroke="#C2560A" stroke-width="10"/>
     <polygon points="0,-180 156,-90 156,90 0,180 -156,90 -156,-90" fill="none" stroke="#C2560A" stroke-width="3" opacity="0.5"/>
     <rect x="-70" y="-130" width="140" height="120" rx="8" fill="#1B2A4A" stroke="#E8833A" stroke-width="6"/>
-    <line x1="-120" y1="-95" x2="-70" y2="-95" stroke="#E8833A" stroke-width="6"/>
-    <line x1="70" y1="-95" x2="120" y2="-95" stroke="#E8833A" stroke-width="6"/>
+    <line x1="-120" y1="-95" x2="-70" y2="-95" stroke="#E8833A" stroke-width="6"/><line x1="70" y1="-95" x2="120" y2="-95" stroke="#E8833A" stroke-width="6"/>
     <path d="M-34 -10 Q-34 -50 0 -50 Q34 -50 34 -10 L34 60 Q34 78 16 78 L-16 78 Q-34 78 -34 60 Z" fill="#1B2A4A" stroke="#E8833A" stroke-width="6"/>
     <rect x="-14" y="78" width="28" height="22" fill="#1B2A4A" stroke="#E8833A" stroke-width="5"/>
     <line x1="0" y1="100" x2="0" y2="150" stroke="#E8833A" stroke-width="7" stroke-linecap="round"/>
   </g>
-
-  <!-- texto -->
-  <text x="600" y="720" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF" letter-spacing="2">HETNA <tspan fill="#E8833A">CNC</tspan></text>
+  <text x="515" y="720" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF" letter-spacing="2">HETNA</text>
+  <text x="736" y="720" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#E8833A" letter-spacing="2">CNC</text>
   <text x="600" y="778" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" fill="#C9D2E0">Vende tus máquinas, herramientas y servicios CNC</text>
   <text x="600" y="818" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" fill="#C9D2E0">a talleres y fabricantes de todo México</text>
 </svg>
