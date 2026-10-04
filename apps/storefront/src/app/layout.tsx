@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Barlow_Condensed, Inter, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
@@ -27,6 +27,14 @@ const hetnaDisplay = Space_Grotesk({
   variable: '--font-display',
   subsets: ['latin'],
   weight: ['500', '600', '700']
+});
+
+// Titulares grandes de estilo industrial (hero de la portada)
+const hetnaCondensed = Barlow_Condensed({
+  variable: '--font-condensed',
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  display: 'swap'
 });
 
 export const metadata: Metadata = {
@@ -124,7 +132,7 @@ export default async function RootLayout({
           href="https://api.mercurjs.com"
         />
       </Head>
-      <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
+      <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} ${hetnaCondensed.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
         <Analytics />
         <HtmlLangSetter />
