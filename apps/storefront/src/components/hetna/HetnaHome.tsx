@@ -255,7 +255,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      {/* Hero industrial: foto del taller (si existe) con capa azul marino */}
+      {/* Hero industrial compacto: foto del taller (si existe) con capa azul marino */}
       <section
         className="relative w-full overflow-hidden text-white"
         style={
@@ -294,7 +294,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
           <svg
             aria-hidden="true"
             viewBox="0 0 400 440"
-            className="hidden xl:block absolute right-[-70px] top-1/2 -translate-y-1/2 w-[440px] opacity-[0.10]"
+            className="hidden xl:block absolute right-[-30px] top-1/2 -translate-y-1/2 w-[280px] opacity-[0.10]"
           >
             <polygon
               points="200,10 390,115 390,325 200,430 10,325 10,115"
@@ -313,54 +313,51 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
           </svg>
         )}
 
-        <div className="relative max-w-[1180px] mx-auto px-4 lg:px-16 py-20 lg:py-28 min-h-[520px] lg:min-h-[600px] flex flex-col items-center justify-center text-center gap-6">
-          <span className="uppercase tracking-[0.14em] text-[12px] font-semibold bg-[#C2560A] text-white px-3.5 py-1.5 rounded-full">
+        <div className="relative max-w-[1180px] mx-auto px-4 lg:px-16 py-10 lg:py-14 flex flex-col items-center justify-center text-center gap-4">
+          <span className="uppercase tracking-[0.14em] text-[11px] font-semibold bg-[#C2560A] text-white px-3 py-1 rounded-full">
             Marketplace CNC de México
           </span>
           <h1
-            className="m-0 uppercase font-bold leading-[0.98] tracking-[0.005em] text-[42px] sm:text-[56px] lg:text-[76px] max-w-[980px]"
+            className="m-0 uppercase font-bold leading-[1.02] tracking-[0.005em] text-[30px] sm:text-[38px] lg:text-[50px] max-w-[860px]"
             style={{ fontFamily: "var(--font-condensed), var(--font-display), sans-serif" }}
           >
             Todo lo que tu taller CNC necesita, en un solo lugar
           </h1>
-          <p className="m-0 text-[16px] lg:text-[19px] leading-[1.55] text-[#D7DEEA] max-w-[720px]">
+          <p className="m-0 text-[15px] lg:text-[16.5px] leading-[1.5] text-[#D7DEEA] max-w-[640px]">
             Compra máquinas, herramientas, materiales y diseños listos para
             cortar. Cotiza y produce tus piezas con talleres de todo México.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 mt-1 w-full sm:w-auto">
             <LocalizedClientLink
               href="/categories"
-              className="bg-[#C2560A] hover:bg-[#A84A08] text-white px-8 py-4 rounded-[8px] text-[15px] font-bold uppercase tracking-[0.06em] text-center"
+              className="bg-[#C2560A] hover:bg-[#A84A08] text-white px-6 py-3 rounded-[8px] text-[14px] font-bold uppercase tracking-[0.06em] text-center"
             >
               Explorar tienda
             </LocalizedClientLink>
             <LocalizedClientLink
               href="/servicios/cotizador-cnc"
-              className="border-2 border-white/85 text-white hover:bg-white hover:text-[#142033] px-8 py-4 rounded-[8px] text-[15px] font-bold uppercase tracking-[0.06em] text-center"
+              className="border-2 border-white/85 text-white hover:bg-white hover:text-[#142033] px-6 py-3 rounded-[8px] text-[14px] font-bold uppercase tracking-[0.06em] text-center"
             >
               Cotizar proyecto
             </LocalizedClientLink>
           </div>
-          <span className="text-[13px] text-[#9FB0C8]">
-            Para talleres, fabricantes, makers y empresas que trabajan con CNC
-          </span>
         </div>
       </section>
 
       {/* Franja de confianza */}
       <section className="w-full bg-[#1B2A42] text-white">
-        <ul className="m-0 p-0 list-none max-w-[1180px] mx-auto px-4 lg:px-16 py-6 grid grid-cols-2 lg:grid-cols-4 gap-y-5">
+        <ul className="m-0 p-0 list-none max-w-[1180px] mx-auto px-4 lg:px-16 py-3 grid grid-cols-2 lg:grid-cols-4 gap-y-2.5">
           {confianza.map((c, i) => (
             <li
               key={c.texto}
-              className={`flex flex-col items-center text-center gap-2 px-3 ${
+              className={`flex items-center justify-center text-left gap-2 px-2 ${
                 i > 0 ? "lg:border-l lg:border-white/15" : ""
               }`}
             >
-              <span className="text-[#F2A65E]">
-                <Icono nombre={c.icono} size={28} />
+              <span className="text-[#F2A65E] shrink-0">
+                <Icono nombre={c.icono} size={20} />
               </span>
-              <span className="text-[12.5px] lg:text-[13px] font-semibold uppercase tracking-[0.06em] text-[#E6EBF3]">
+              <span className="text-[11.5px] lg:text-[12px] font-semibold uppercase tracking-[0.05em] text-[#E6EBF3]">
                 {c.texto}
               </span>
             </li>
