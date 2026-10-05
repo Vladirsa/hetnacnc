@@ -1,227 +1,219 @@
-"use client"
+/**
+ * HeroSliderOptimizado.tsx
+ * Slider visual del Hero — altura reducida, auto-advance, CTA claro
+ * Uso: Reemplazar HeroSlider existente en homepage
+ */
 
-import Image from "next/image"
-import { useCallback, useEffect, useRef, useState } from "react"
+'use client'
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-export type BotonSlide = {
-  texto: string
-  href: string
-  // true = liga externa (WhatsApp); false = ruta interna de la tienda
-  externo?: boolean
-}
-
-export type Slide = {
-  etiqueta: string
+interface Portada {
+  id: string
   titulo: string
   texto: string
-  // ruta publica de la foto o null si todavia no existe en el servidor
-  foto: string | null
-  alt: string
-  botones: [BotonSlide, BotonSlide]
+  imagen: string
+  boton1_texto: string
+  boton1_link: string
+  boton2_texto?: string
+  boton2_link?: string
+  orden: number
 }
 
-const INTERVALO_MS = 5000
-
-const FONDO_SIN_FOTO = {
-  backgroundColor: "#0E1726",
-  backgroundImage:
-    "radial-gradient(ellipse at 78% 65%, rgba(194,86,10,0.38), transparent 55%), linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(135deg, #0B1424 0%, #142033 60%, #1E2C47 100%)",
-  backgroundSize: "auto, 44px 44px, 44px 44px, auto",
-}
-
-const claseBoton = [
-  "bg-[#C2560A] hover:bg-[#A84A08] text-white",
-  "border-2 border-white/85 text-white hover:bg-white hover:text-[#142033]",
+const PORTADAS_DEFAULT: Portada[] = [
+  {
+    id: '1',
+    titulo: 'Router CNC Profesional',
+    texto: 'Para talleres, fabricantes y emprendedores',
+    imagen: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200&h=600&fit=crop',
+    boton1_texto: 'Ver Router',
+    boton1_link: '/store?category=router-cnc',
+    boton2_texto: 'Descubrir precios',
+    boton2_link: '/store?category=router-cnc',
+    orden: 1,
+  },
+  {
+    id: '2',
+    titulo: 'Máquinas Láser CO2',
+    texto: 'Corte y grabado profesional',
+    imagen: 'https://images.unsplash.com/photo-1581092162562-40038f41dd12?w=1200&h=600&fit=crop',
+    boton1_texto: 'Explorar',
+    boton1_link: '/store?category=laser',
+    boton2_texto: 'Contactar',
+    boton2_link: '/contacto',
+    orden: 2,
+  },
+  {
+    id: '3',
+    titulo: 'Impresoras 3D Industriales',
+    texto: 'Precisión de prototipo a producción',
+    imagen: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=1200&h=600&fit=crop',
+    boton1_texto: 'Ver modelos',
+    boton1_link: '/store?category=3d-printer',
+    boton2_texto: 'Solicitar demo',
+    boton2_link: '/contacto',
+    orden: 3,
+  },
+  {
+    id: '4',
+    titulo: 'Servicios de Maquila',
+    texto: 'Fabricación profesional de tus diseños',
+    imagen: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200&h=600&fit=crop',
+    boton1_texto: 'Solicitar presupuesto',
+    boton1_link: '/maquila',
+    boton2_texto: 'Ver ejemplos',
+    boton2_link: '/galeria',
+    orden: 4,
+  },
 ]
 
-const Boton = ({
-  boton,
-  i,
-  activo,
-}: {
-  boton: BotonSlide
-  i: number
-  activo: boolean
-}) => {
-  const clase = `${claseBoton[i]} px-4 py-2 lg:px-5 lg:py-2.5 rounded-[8px] text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.06em] text-center`
-  const tab = activo ? undefined : -1
-  if (boton.externo) {
-    return (
-      <a
-        href={boton.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={clase}
-        tabIndex={tab}
-      >
-        {boton.texto}
-      </a>
-    )
-  }
-  return (
-    <LocalizedClientLink href={boton.href} className={clase} tabIndex={tab}>
-      {boton.texto}
-    </LocalizedClientLink>
-  )
-}
-
-export const HeroSlider = ({ slides }: { slides: Slide[] }) => {
+export default function HeroSlider() {
+  const [portadas, setPortadas] = useState<Portada[]>(PORTADAS_DEFAULT)
   const [actual, setActual] = useState(0)
-  // Las fotos 2..n se montan despues de la primera para no frenar la carga inicial
-  const [resto, setResto] = useState(false)
-  const [pausaUsuario, setPausaUsuario] = useState(false)
-  const [pausaHover, setPausaHover] = useState(false)
-  const reducido = useRef(false)
+  const [enPausa, setEnPausa] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const total = slides.length
-  const ir = useCallback((n: number) => setActual(((n % total) + total) % total), [total])
-
+  // Auto-advance cada 5 segundos
   useEffect(() => {
-    reducido.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const t = window.setTimeout(() => setResto(true), 1800)
-    return () => window.clearTimeout(t)
+    if (enPausa) return
+
+    timerRef.current = setInterval(() => {
+      setActual((prev) => (prev + 1) % portadas.length)
+    }, 5000)
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [enPausa, portadas.length])
+
+  // Cargar portadas del API
+  useEffect(() => {
+    const cargarPortadas = async () => {
+      try {
+        const res = await fetch('/store/hetna/portadas')
+        if (res.ok) {
+          const datos = await res.json()
+          if (datos.length > 0) {
+            setPortadas(datos.sort((a: Portada, b: Portada) => a.orden - b.orden))
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando portadas:', error)
+      }
+    }
+
+    cargarPortadas()
   }, [])
 
-  const pausado = pausaUsuario || pausaHover || !resto || total < 2
+  const ir = (index: number) => {
+    setActual((index + portadas.length) % portadas.length)
+  }
 
-  useEffect(() => {
-    if (pausado || reducido.current) return
-    const t = window.setTimeout(() => ir(actual + 1), INTERVALO_MS)
-    return () => window.clearTimeout(t)
-  }, [actual, pausado, ir])
+  const anterior = () => ir(actual - 1)
+  const siguiente = () => ir(actual + 1)
+
+  const portadaActual = portadas[actual]
 
   return (
-    <section
-      className="relative w-full overflow-hidden text-white bg-[#0E1726]"
-      aria-roledescription="carrusel"
-      aria-label="Servicios de HETNA CNC"
-      // Pausa solo con mouse o con teclado; en celular un toque no lo deja detenido
-      onPointerEnter={(e) => e.pointerType === "mouse" && setPausaHover(true)}
-      onPointerLeave={(e) => e.pointerType === "mouse" && setPausaHover(false)}
-      onFocusCapture={(e) => {
-        if ((e.target as HTMLElement).matches?.(":focus-visible")) setPausaHover(true)
-      }}
-      onBlurCapture={() => setPausaHover(false)}
+    <div
+      className="relative h-[60vh] md:h-[70vh] overflow-hidden bg-gray-900"
+      onMouseEnter={() => setEnPausa(true)}
+      onMouseLeave={() => setEnPausa(false)}
     >
-      {/* Fondos (foto o patron) apilados con desvanecido */}
-      {slides.map((s, i) => (
+      {portadas.map((portada, idx) => (
         <div
-          key={`fondo-${i}`}
-          aria-hidden="true"
-          className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-            i === actual ? "opacity-100" : "opacity-0"
+          key={portada.id}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            idx === actual ? 'opacity-100' : 'opacity-0'
           }`}
-          style={s.foto ? undefined : FONDO_SIN_FOTO}
         >
-          {s.foto && (i === 0 || resto) && (
-            <Image
-              src={s.foto}
-              alt={s.alt}
-              fill
-              priority={i === 0}
-              loading={i === 0 ? undefined : "lazy"}
-              quality={70}
-              sizes="100vw"
-              className="object-cover"
-            />
-          )}
-          {s.foto && (
-            <>
-              {/* Celular: capa pareja para que el texto se lea sobre toda la foto */}
-              <div className="absolute inset-0 lg:hidden bg-[rgba(14,23,38,0.74)]" />
-              {/* Escritorio: oscuro a la izquierda (texto) y la maquina visible a la derecha */}
-              <div
-                className="absolute inset-0 hidden lg:block"
-                style={{
-                  background:
-                    "linear-gradient(90deg, rgba(14,23,38,0.90) 0%, rgba(14,23,38,0.72) 42%, rgba(14,23,38,0.25) 100%)",
-                }}
-              />
-            </>
-          )}
+          <Image
+            src={portada.imagen}
+            alt={portada.titulo}
+            fill
+            className="object-cover"
+            priority={idx === 0}
+            quality={85}
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+
+          <div className="absolute inset-0 flex flex-col items-start justify-center px-6 md:px-12 lg:px-20">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 max-w-2xl leading-tight">
+              {portada.titulo}
+            </h1>
+
+            <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-xl">
+              {portada.texto}
+            </p>
+
+            <div className="flex flex-col md:flex-row gap-4">
+              <Link
+                href={portada.boton1_link}
+                className="px-8 py-3 md:py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 inline-block"
+              >
+                {portada.boton1_texto}
+              </Link>
+
+              {portada.boton2_texto && (
+                <Link
+                  href={portada.boton2_link || '#'}
+                  className="px-8 py-3 md:py-4 border-2 border-white text-white hover:bg-white/10 font-semibold rounded-lg transition-all duration-300 inline-block"
+                >
+                  {portada.boton2_texto}
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       ))}
 
-      {/* Textos: todos en la misma celda para que la altura no brinque */}
-      <div className="relative max-w-[1180px] mx-auto px-4 lg:px-16 pt-6 pb-11 lg:pt-8 lg:pb-12 grid">
-        {slides.map((s, i) => {
-          const activo = i === actual
-          const Titulo = i === 0 ? "h1" : "h2"
-          return (
-            <div
-              key={`texto-${i}`}
-              role="group"
-              aria-roledescription="diapositiva"
-              aria-label={`${i + 1} de ${total}: ${s.etiqueta}`}
-              aria-hidden={!activo}
-              className={`[grid-area:1/1] flex flex-col items-start text-left gap-2.5 max-w-[620px] transition-all duration-700 ease-out ${
-                activo ? "opacity-100 translate-y-0 visible" : "opacity-0 translate-y-2 invisible"
+      <div className="absolute inset-x-0 bottom-8 flex justify-between items-center px-6 md:px-12 z-20">
+        <div className="flex gap-4">
+          <button
+            onClick={anterior}
+            className="p-2 md:p-3 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all duration-300 backdrop-blur-sm"
+            aria-label="Portada anterior"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={siguiente}
+            className="p-2 md:p-3 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all duration-300 backdrop-blur-sm"
+            aria-label="Portada siguiente"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+
+        <div className="flex gap-2">
+          {portadas.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => ir(idx)}
+              className={`transition-all duration-300 rounded-full ${
+                idx === actual
+                  ? 'w-8 h-2 bg-white'
+                  : 'w-2 h-2 bg-white/50 hover:bg-white/70'
               }`}
-            >
-              <span className="uppercase tracking-[0.14em] text-[11px] font-semibold bg-[#C2560A] text-white px-3 py-1 rounded-full">
-                {s.etiqueta}
-              </span>
-              <Titulo
-                className="m-0 uppercase font-bold leading-[1.02] tracking-[0.005em] text-[24px] sm:text-[30px] lg:text-[38px]"
-                style={{ fontFamily: "var(--font-condensed), var(--font-display), sans-serif" }}
-              >
-                {s.titulo}
-              </Titulo>
-              <p className="m-0 text-[14px] lg:text-[15.5px] leading-[1.5] text-[#D7DEEA] max-w-[560px]">
-                {s.texto}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {s.botones.map((b, j) => (
-                  <Boton key={b.texto} boton={b} i={j} activo={activo} />
-                ))}
-              </div>
-            </div>
-          )
-        })}
+              aria-label={`Ir a portada ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="text-white/70 text-sm font-medium">
+          {actual + 1} / {portadas.length}
+        </div>
       </div>
 
-      {/* Controles: puntos + pausa */}
-      {total > 1 && (
-        <div className="absolute bottom-3 left-0 right-0">
-          <div className="max-w-[1180px] mx-auto px-4 lg:px-16 flex items-center gap-1">
-            {slides.map((s, i) => (
-              <button
-                key={`punto-${i}`}
-                type="button"
-                onClick={() => ir(i)}
-                aria-label={`Ver ${s.etiqueta}`}
-                aria-current={i === actual}
-                className="h-6 flex items-center px-1"
-              >
-                <span
-                  className={`block h-[4px] rounded-full transition-all duration-300 ${
-                    i === actual ? "w-7 bg-[#E8833A]" : "w-3.5 bg-white/45 hover:bg-white/75"
-                  }`}
-                />
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setPausaUsuario((p) => !p)}
-              aria-label={pausaUsuario ? "Reanudar carrusel" : "Pausar carrusel"}
-              className="ml-2 h-6 w-6 flex items-center justify-center rounded-full text-white/70 hover:text-white"
-            >
-              {pausaUsuario ? (
-                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                  <path d="M3 1.5v9l7-4.5z" fill="currentColor" />
-                </svg>
-              ) : (
-                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                  <rect x="2.5" y="1.5" width="2.5" height="9" fill="currentColor" />
-                  <rect x="7" y="1.5" width="2.5" height="9" fill="currentColor" />
-                </svg>
-              )}
-            </button>
-          </div>
+      {enPausa && (
+        <div className="absolute top-6 right-6 text-white/60 text-xs font-medium z-20">
+          ⏸ Pausado
         </div>
       )}
-    </section>
+    </div>
   )
 }
