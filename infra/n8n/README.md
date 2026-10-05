@@ -120,6 +120,9 @@ En n8n: **Overflow menu (⋯) > Import from File**, y sube uno por uno:
   catálogo por WhatsApp.
 - `workflows/whatsapp-abandoned-cart-reminder.json` — cada hora revisa
   carritos abandonados con teléfono y manda un recordatorio por WhatsApp.
+- `workflows/redes-sociales-producto-nuevo.json` — publica en Facebook/
+  Instagram cuando subes un producto nuevo (ver sección 9 más abajo antes
+  de activarlo, necesita la app de Meta configurada primero).
 
 Abre cada uno y activa el switch **"Active"** arriba a la derecha.
 
@@ -131,6 +134,77 @@ Abre cada uno y activa el switch **"Active"** arriba a la derecha.
   workflow"** para correrlo manualmente (si no hay carritos abandonados con
   teléfono en ese momento, no enviará nada — es normal).
 
+## 9. Redes sociales: publicar en Facebook e Instagram al subir un producto
+
+Workflow: `workflows/redes-sociales-producto-nuevo.json`. Cuando subes un
+producto nuevo al catálogo de Mercur, el backend le avisa a n8n y este
+publica la foto + descripción en la Página de Facebook y, si está
+vinculada, en la cuenta de Instagram Business.
+
+### 9.1 Crear la app de Meta (una sola vez)
+
+1. Entra a **https://developers.facebook.com/apps** → **Crear app** → tipo
+   **"Negocio" (Business)**.
+2. Dentro de la app, agrega el producto **"Facebook Login for Business"** y
+   el producto **"Instagram Graph API"** (si quieres publicar también en
+   Instagram).
+3. Ve a **Herramientas > Graph API Explorer**
+   (https://developers.facebook.com/tools/explorer/):
+   - Selecciona tu app arriba a la derecha.
+   - En "User or Page", elige tu **Página de Facebook**.
+   - En "Permissions", agrega: `pages_show_list`, `pages_read_engagement`,
+     `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`.
+   - Dale **"Generate Access Token"** y autoriza.
+4. Con ese token generado, obtén el **token de la Página (no el tuyo
+   personal)**: en el mismo Explorer, corre `GET /me/accounts` — la
+   respuesta trae el `id` de tu Página y un `access_token` específico de
+   esa Página. **Ese es el que necesitas** (los tokens de página no
+   expiran mientras la app siga activa, a diferencia del tuyo personal que
+   dura ~1-2 horas).
+5. Para el ID de Instagram: con el token de la Página, corre
+   `GET /{ID_DE_LA_PAGINA}?fields=instagram_business_account`.
+
+Guarda tres valores: el **Page Access Token**, el **ID de la Página**
+(`FACEBOOK_PAGE_ID`), y el **ID de Instagram Business**
+(`INSTAGRAM_BUSINESS_ACCOUNT_ID`).
+
+<Warning>
+Mientras la app esté en modo "Desarrollo" (no publicada/verificada por
+Meta), estos permisos solo funcionan para las cuentas que agregues como
+"Tester" o "Admin" de la app (tu propia Página). Para publicar sin estar
+verificado por Meta, eso es suficiente — la verificación solo hace falta
+si otros negocios fueran a usar la misma app.
+</Warning>
+
+### 9.2 Configurar en el VPS
+
+En `.env` (infra/n8n), agrega `FACEBOOK_PAGE_ID` e
+`INSTAGRAM_BUSINESS_ACCOUNT_ID`, luego:
+
+```bash
+docker compose up -d n8n
+```
+
+En n8n, abre el workflow importado (paso 8) → nodo **"Publicar en
+Facebook"** → crea la credencial **"Facebook Graph API"** tipo **Access
+Token**, pega el Page Access Token del paso anterior. Los otros dos nodos
+de Facebook Graph API usan la misma credencial (selecciónala en cada uno).
+
+### 9.3 Conectar el aviso desde Medusa
+
+En `packages/api/.env` del backend (no en infra/n8n), agrega:
+
+```bash
+N8N_PRODUCT_CREATED_WEBHOOK_URL=https://n8n.hetnacnc.com/webhook/producto-nuevo
+```
+
+y reinicia el backend (`pm2 restart hetna-api`). Sin esta variable, el
+backend no avisa nada — no rompe la creación de productos.
+
+Activa el workflow en n8n (switch "Active"). Prueba subiendo un producto de
+verdad (con imagen) desde el panel de administrador — debería aparecer
+publicado en la Página de Facebook en unos segundos.
+
 ## Ajustar el formato de los mensajes entrantes
 
 Evolution API puede cambiar ligeramente el formato del webhook según la
@@ -141,9 +215,14 @@ que llegó al Webhook para ajustar las rutas (`data.key.remoteJid`,
 
 ## Próximos agentes (no incluidos todavía)
 
-Esta base (n8n + conexión directa al backend de Mercur) es el punto de
-partida para agregar más adelante, cuando se definan: publicidad
-(crear/pausar anuncios según ventas), generación de contenido (descripciones,
-posts), publicación en redes sociales, generación de videos para YouTube.
-Cada uno es un workflow nuevo dentro del mismo n8n — no hace falta tocar el
-servidor otra vez.
+Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
+recordatorio de carrito abandonado, el agente de SEO que escribe y publica
+artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
+instancia de n8n, no en este repo), y la publicación automática en
+Facebook/Instagram al subir un producto.
+
+Pendientes para más adelante, cuando se definan los datos que necesitan:
+publicidad (crear/pausar anuncios según ventas), SEO programático
+(landing pages por servicio×ciudad), scraping de precios de competidores,
+generación de videos para YouTube. Cada uno es un workflow nuevo dentro
+del mismo n8n — no hace falta tocar el servidor otra vez.
