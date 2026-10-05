@@ -1,0 +1,104 @@
+{
+  "name": "Redes sociales - Producto nuevo",
+  "nodes": [
+    {
+      "id": "dbb934a3-e21a-4d34-9599-82713019ebd9",
+      "name": "Producto nuevo (Medusa)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "parameters": { "httpMethod": "POST", "path": "producto-nuevo", "responseMode": "onReceived", "options": {} }
+    },
+    {
+      "id": "6e5a8f28-86d1-48f3-966b-84098391fc23",
+      "name": "Armar texto del post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "jsCode": "const p = $input.first().json.body;\nconst resumen = (p.description || '').split('.').slice(0, 2).join('.').trim();\nconst caption = `${p.title}\\n\\n${resumen}\\n\\nDisponible en hetnacnc.com\\n${p.product_url}`;\n\nreturn [{ json: { title: p.title, image_url: p.image_url, caption } }];"
+      }
+    },
+    {
+      "id": "e7026a65-debf-40b7-b013-2da814f2c07a",
+      "name": "Publicar en Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [440, -100],
+      "parameters": {
+        "authType": "accessToken",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v21.0",
+        "node": "={{ $env.FACEBOOK_PAGE_ID }}",
+        "edge": "photos",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              { "name": "url", "value": "={{ $json.image_url }}" },
+              { "name": "caption", "value": "={{ $json.caption }}" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "c0bb329e-c4be-4894-a162-d5fef16b7a65",
+      "name": "Crear contenedor en Instagram",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [440, 100],
+      "parameters": {
+        "authType": "accessToken",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v21.0",
+        "node": "={{ $env.INSTAGRAM_BUSINESS_ACCOUNT_ID }}",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              { "name": "image_url", "value": "={{ $('Armar texto del post').item.json.image_url }}" },
+              { "name": "caption", "value": "={{ $('Armar texto del post').item.json.caption }}" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "53560f55-2a7a-465a-a30e-c23229c0f0d7",
+      "name": "Publicar en Instagram",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [660, 100],
+      "parameters": {
+        "authType": "accessToken",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v21.0",
+        "node": "={{ $env.INSTAGRAM_BUSINESS_ACCOUNT_ID }}",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [{ "name": "creation_id", "value": "={{ $json.id }}" }]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Producto nuevo (Medusa)": {
+      "main": [[{ "node": "Armar texto del post", "type": "main", "index": 0 }]]
+    },
+    "Armar texto del post": {
+      "main": [
+        [
+          { "node": "Publicar en Facebook", "type": "main", "index": 0 },
+          { "node": "Crear contenedor en Instagram", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Crear contenedor en Instagram": {
+      "main": [[{ "node": "Publicar en Instagram", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}

@@ -56,6 +56,8 @@ services:
       EVOLUTION_API_URL: http://evolution-api:8080
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
       EVOLUTION_INSTANCE: ${EVOLUTION_INSTANCE}
+      FACEBOOK_PAGE_ID: ${FACEBOOK_PAGE_ID}
+      INSTAGRAM_BUSINESS_ACCOUNT_ID: ${INSTAGRAM_BUSINESS_ACCOUNT_ID}
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
