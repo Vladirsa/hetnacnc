@@ -10,6 +10,16 @@
       "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] } }
     },
     {
+      "id": "ed6f87c3-8666-40dd-a396-261ac39f69e0",
+      "name": "Calcular header de autenticacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, 0],
+      "parameters": {
+        "jsCode": "const authHeader = 'Basic ' + Buffer.from($env.MEDUSA_ADMIN_SECRET_KEY + ':').toString('base64');\nreturn [{ json: { authHeader } }];"
+      }
+    },
+    {
       "id": "f1f13c30-7b0f-4502-bf7d-c56599f01e39",
       "name": "Traer carritos (Admin API)",
       "type": "n8n-nodes-base.httpRequest",
@@ -17,18 +27,11 @@
       "position": [240, 0],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.MEDUSA_BACKEND_URL }}/admin/carts",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "limit", "value": "100" },
-            { "name": "fields", "value": "id,email,currency_code,total,metadata,updated_at,completed_at,items.title,items.quantity,shipping_address.phone" }
-          ]
-        },
+        "url": "={{ $env.MEDUSA_BACKEND_URL }}/admin/abandoned-carts",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $env.MEDUSA_ADMIN_SECRET_KEY }}" }
+            { "name": "Authorization", "value": "={{ $json.authHeader }}" }
           ]
         },
         "options": {}
@@ -90,7 +93,7 @@
         "url": "={{ $env.MEDUSA_BACKEND_URL }}/admin/carts/{{ $(\"Filtrar carritos elegibles\").item.json.id }}",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "Authorization", "value": "=Bearer {{ $env.MEDUSA_ADMIN_SECRET_KEY }}" }]
+          "parameters": [{ "name": "Authorization", "value": "={{ $('Calcular header de autenticacion').item.json.authHeader }}" }]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -101,6 +104,9 @@
   ],
   "connections": {
     "Cada hora": {
+      "main": [[{ "node": "Calcular header de autenticacion", "type": "main", "index": 0 }]]
+    },
+    "Calcular header de autenticacion": {
       "main": [[{ "node": "Traer carritos (Admin API)", "type": "main", "index": 0 }]]
     },
     "Traer carritos (Admin API)": {
