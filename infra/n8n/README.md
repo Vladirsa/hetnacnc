@@ -213,13 +213,62 @@ n8n, pestaña **Executions**, abre la ejecución fallida y revisa el JSON real
 que llegó al Webhook para ajustar las rutas (`data.key.remoteJid`,
 `data.message.conversation`, etc.) dentro del nodo.
 
+## 10. Post-venta y consumibles (ingresos recurrentes)
+
+Dos workflows nuevos en la instancia de n8n (no exportados a este repo, igual
+que el agente de SEO — viven directo en `n8n.hetnacnc.com`):
+
+- **"Post-venta - Registrar instalación"**: un formulario web (Form Trigger
+  de n8n) que llenas tú cada vez que terminas de instalar una máquina en
+  casa de un cliente. Guarda nombre, teléfono de WhatsApp, máquina y fecha
+  de instalación en una tabla de datos (`post_venta_maquinas`).
+- **"Post-venta - Revisar hitos"**: corre una vez al día, revisa esa tabla y,
+  por cada cliente, manda automáticamente por WhatsApp:
+  - A los **30 días**: checklist de mantenimiento.
+  - A los **90 días**: 10% de descuento en kit de consumibles (fresas,
+    brocas, lubricantes — categoría "Materiales y consumibles"), con un
+    código real generado en Medusa en ese momento.
+  - Cada **180 días** después: oferta de upgrade de software / capacitación
+    avanzada.
+
+  Usa banderas (`checklist_sent`, `consumibles_sent`, `last_upgrade_sent_at`)
+  para no repetir un mensaje ya enviado, así que no importa si el servidor
+  estuvo caído un día — al día siguiente retoma donde quedó.
+
+### 10.1 Activar el formulario de registro
+
+El workflow **"Post-venta - Registrar instalación"** no depende de WhatsApp
+— puedes activarlo ya. Ábrelo en n8n y prende **"Active"**. El Form Trigger
+te da una URL pública (botón **"Test URL" / "Production URL"** dentro del
+nodo) — guárdala como acceso rápido para llenarla desde el celular cada vez
+que instales una máquina.
+
+### 10.2 Activar el envío de recordatorios
+
+El workflow **"Post-venta - Revisar hitos"** sí manda WhatsApp, así que
+depende de que reactives esa conexión (ver sección de WhatsApp más arriba —
+sigue en pausa hasta tener el número dedicado del negocio). Antes de
+activarlo:
+
+```bash
+# en infra/n8n/.env del VPS, agrega:
+CONSUMIBLES_CATEGORY_ID=pcat_01M46SEX6076BBYBPSDXMB015D
+
+docker compose up -d n8n
+```
+
+Cuando el WhatsApp del negocio esté reconectado, abre el workflow en n8n y
+prende **"Active"**. No hace falta tocar nada más — ya quedó probado en vivo
+contra tu catálogo e instancia reales.
+
 ## Próximos agentes (no incluidos todavía)
 
 Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
 recordatorio de carrito abandonado, el agente de SEO que escribe y publica
 artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
-instancia de n8n, no en este repo), y la publicación automática en
-Facebook/Instagram al subir un producto.
+instancia de n8n, no en este repo), la publicación automática en
+Facebook/Instagram al subir un producto, y el seguimiento de post-venta y
+consumibles.
 
 Pendientes para más adelante, cuando se definan los datos que necesitan:
 publicidad (crear/pausar anuncios según ventas), SEO programático
