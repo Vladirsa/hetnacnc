@@ -261,14 +261,154 @@ Cuando el WhatsApp del negocio esté reconectado, abre el workflow en n8n y
 prende **"Active"**. No hace falta tocar nada más — ya quedó probado en vivo
 contra tu catálogo e instancia reales.
 
+## 11. Buscador de Proyectos (alertas de Upwork)
+
+Workflow **"Buscador de Proyectos - Alertas Upwork"** (vive en la instancia de
+n8n). Monitorea un correo de Gmail dedicado cada 20 minutos buscando alertas
+de empleo de Upwork, filtra con Claude Haiku cuáles son proyectos reales de
+maquinado/fabricación (no diseño gráfico, programación, etc.) y te avisa por
+WhatsApp con el título y el link — tú cotizas manualmente y rápido.
+
+<Warning>
+No hace scraping de Upwork, Workana, LinkedIn ni Facebook — eso viola sus
+términos de servicio y arriesga que te baneen la cuenta. Usa únicamente las
+alertas por correo que Upwork manda cuando guardas una búsqueda, que es una
+función que ellos mismos ofrecen para esto.
+</Warning>
+
+### 11.1 Crear el correo dedicado y la búsqueda en Upwork
+
+1. Crea una cuenta de Gmail nueva solo para esto (ej.
+   `proyectos.hetnacnc@gmail.com`) — mantenla separada de tu correo normal.
+   Este mismo correo también se usa para el agente de LinkedIn de la
+   sección 12 — cada workflow filtra por remitente (`from:upwork.com` /
+   `from:linkedin.com`), así que pueden compartir la bandeja sin pisarse.
+2. Entra a `https://www.upwork.com` con tu cuenta de freelancer, usa el
+   buscador de empleos con palabras como `CNC router`, `laser cutting`,
+   `aluminum fabrication`, `sheet metal`.
+3. Guarda la búsqueda (**"Save search"**) y activa las notificaciones por
+   correo hacia el Gmail que creaste en el paso 1.
+
+### 11.2 Conectar el Gmail en n8n
+
+1. En n8n, abre el workflow **"Buscador de Proyectos - Alertas Upwork"**.
+2. En el nodo **"Nuevo correo de Upwork"**, crea la credencial **Gmail
+   OAuth2** → sigue el flujo de Google para autorizar con el Gmail dedicado.
+3. Selecciona la misma credencial en el nodo **"Marcar correo como leido"**.
+
+### 11.3 Configurar en el VPS
+
+En `infra/n8n/.env`, agrega tu número de WhatsApp (el que ya usas para las
+alertas de los otros agentes):
+
+```bash
+OWNER_WHATSAPP_NUMBER=521XXXXXXXXXX
+
+docker compose up -d n8n
+```
+
+Activa el workflow (switch "Active"). Igual que el agente de post-venta,
+depende de que reconectes el WhatsApp del negocio (Evolution API) — mientras
+tanto el workflow se queda detectando y filtrando oportunidades sin problema,
+solo falla el envío del aviso. En cuanto reconectes el WhatsApp, estos avisos
+empiezan a llegar sin tocar nada más.
+
+## 12. Detective de Capacidad Instalada (prospectos en LinkedIn)
+
+Workflow **"Detective de Capacidad Instalada - LinkedIn"** (vive en la
+instancia de n8n). Usa el **mismo Gmail dedicado** del agente de Upwork
+(sección 11) — ahí también llegan las alertas de empleo de LinkedIn.
+Detecta cuando otras empresas publican vacantes de "operador CNC",
+"programador CAM" o similares (señal de que podrían necesitar máquina o
+subcontratar piezas) y te avisa por WhatsApp con el nombre de la empresa.
+
+<Warning>
+No automatiza solicitudes de conexión ni mensajes en LinkedIn — eso viola
+sus términos de servicio y arriesga que te baneen tu cuenta personal, no
+solo la del negocio (LinkedIn es mucho más agresivo detectando esto que
+Upwork). El agente solo te avisa; tú mandas la conexión y el mensaje a mano,
+como cualquier persona.
+</Warning>
+
+### 12.1 Guardar la búsqueda en LinkedIn
+
+1. En LinkedIn, busca en la pestaña de **Empleos**: `operador CNC`,
+   `programador CAM`, `maquinista` — filtra por tu ubicación/radio de
+   entrega.
+2. Guarda la búsqueda (**"Crear alerta de búsqueda"**) y activa las
+   notificaciones por **correo** hacia el mismo Gmail dedicado
+   (`proyectos.hetnacnc@gmail.com` o el que hayas creado en la sección 11.1).
+
+### 12.2 Conectar en n8n
+
+1. Abre el workflow **"Detective de Capacidad Instalada - LinkedIn"**.
+2. En el nodo **"Nuevo correo de LinkedIn"**, selecciona la **misma
+   credencial Gmail OAuth2** que ya creaste para el agente de Upwork.
+3. Selecciona esa misma credencial en el nodo **"Marcar correo como leido"**.
+4. Activa el workflow (switch "Active").
+
+No necesita variables de entorno nuevas — reutiliza `OWNER_WHATSAPP_NUMBER`
+y las credenciales de Evolution API y Claude que ya configuraste. Igual que
+los demás agentes de WhatsApp, el envío del aviso depende de que reconectes
+el WhatsApp del negocio.
+
+## 13. Leads de cotización rápida (funnel público, sin cuenta)
+
+Dos landing pages nuevas en el storefront — `/cotizar/corte-laser` y
+`/cotizar/router-cnc` — con una calculadora que da un estimado al instante
+usando el **mismo motor de precios real del Cotizador CNC**
+(`hetna/cotizador/engine.js`, copiado a `packages/api/src/lib/` para poder
+correrlo en el backend). No toca el Cotizador CNC de suscripción para
+talleres — es un funnel de ventas separado para tus propios clientes
+finales.
+
+Flujo: el visitante pone material, medidas, cantidad y correo → el backend
+(`POST /store/quote-leads`) calcula el estimado, lo muestra al instante, le
+manda confirmación por correo (Resend) y avisa a n8n → n8n guarda el lead en
+la tabla `cotizacion_leads` y te avisa por WhatsApp. Si marcó que necesita
+más de 100 piezas al mes, el aviso incluye una nota de "posible venta de
+máquina propia".
+
+<Warning>
+Torno CNC no tiene tarifas reales en `datos.json`, así que no se incluyó en
+estas landing pages. Si me das su tarifa (por hora u otra métrica), se
+agrega después sin tocar el resto.
+</Warning>
+
+### 13.1 Configurar en el VPS
+
+```bash
+# en packages/api/.env del backend, agrega:
+N8N_QUOTE_LEAD_WEBHOOK_URL=https://n8n.hetnacnc.com/webhook/cotizacion-lead
+
+pm2 restart hetna-api
+```
+
+El workflow **"Leads - Cotizacion rapida"** ya está activo en n8n — no hace
+falta tocar nada ahí.
+
+### 13.2 Pendiente: revisa estas dos variables
+
+Al probar este agente encontré que, en el contenedor de n8n ahora mismo:
+
+- **`EVOLUTION_API_KEY` está vacía** — esto rompe el envío de WhatsApp en
+  **todos** los agentes (carrito abandonado, post-venta, etc.), no solo
+  este. Revisa que `infra/n8n/.env` tenga el valor correcto y corre
+  `docker compose up -d n8n` de nuevo.
+- **`OWNER_WHATSAPP_NUMBER` nunca se configuró** — lo necesitan este
+  agente, el de post-venta y el Buscador de Proyectos/Detective de
+  LinkedIn. Agrégalo en `infra/n8n/.env` (ver sección 11.3) y reinicia n8n.
+
 ## Próximos agentes (no incluidos todavía)
 
 Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
 recordatorio de carrito abandonado, el agente de SEO que escribe y publica
 artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
 instancia de n8n, no en este repo), la publicación automática en
-Facebook/Instagram al subir un producto, y el seguimiento de post-venta y
-consumibles.
+Facebook/Instagram al subir un producto, el seguimiento de post-venta y
+consumibles, el buscador de proyectos con alertas de Upwork, el detective
+de capacidad instalada con alertas de LinkedIn, y el funnel de leads de
+cotización rápida.
 
 Pendientes para más adelante, cuando se definan los datos que necesitan:
 publicidad (crear/pausar anuncios según ventas), SEO programático

@@ -73,3 +73,34 @@ export function abandonedCartEmailHtml({
     `
   )
 }
+
+export function quoteLeadEmailHtml({
+  servicioNombre,
+  estimadoMin,
+  estimadoMax,
+  whatsappUrl,
+}: {
+  servicioNombre: string
+  estimadoMin: number
+  estimadoMax: number
+  whatsappUrl: string
+}): string {
+  return layout(
+    "Recibiste este correo por pedir una cotización en " + SITE_NAME,
+    `
+      <h1 style="font-size:20px;margin:0 0 16px;">Tu estimado de ${servicioNombre}</h1>
+      <p>Con los datos que nos diste, tu pieza costaría aproximadamente:</p>
+      <p style="font-size:24px;font-weight:700;margin:12px 0;">
+        $${estimadoMin.toFixed(0)} – $${estimadoMax.toFixed(0)} MXN
+      </p>
+      <p style="color:#666;font-size:13px;">Precio estimado, incluye IVA. El precio final puede variar según
+      el archivo real de tu pieza, acabados y disponibilidad de material.</p>
+      <p style="margin-top:24px;">
+        <a href="${whatsappUrl}"
+           style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">
+          Pedir cotización formal por WhatsApp
+        </a>
+      </p>
+    `
+  )
+}
