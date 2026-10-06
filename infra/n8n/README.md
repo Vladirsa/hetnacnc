@@ -117,7 +117,17 @@ Abre `https://whatsapp.hetnacnc.com` (panel de Evolution API Manager):
 En n8n: **Overflow menu (⋯) > Import from File**, y sube uno por uno:
 
 - `workflows/whatsapp-catalog-responder.json` — responde preguntas sobre el
-  catálogo por WhatsApp.
+  catálogo por WhatsApp. Si el cliente escribe algo como "quiero hablar con
+  un humano/agente/asesor", o si dos veces seguidas no encuentra el producto
+  que piden, el bot deja de responder automáticamente esa conversación (por
+  24h) y te avisa por WhatsApp a `HANDOFF_WHATSAPP_NUMBER` con el número del
+  cliente y su último mensaje, para que tú (o quien atienda) sigas la
+  conversación a mano desde ese mismo número de negocio. Antes de
+  importarlo, crea en n8n (Overflow menu > Data tables > Add table) una
+  tabla llamada `whatsapp_catalogo_estado` con columnas `phone` (string),
+  `handoff` (boolean), `no_match_count` (number) y `updated_at` (string) —
+  el workflow la usa para recordar, por número, si una conversación ya
+  está en traspaso.
 - `workflows/whatsapp-abandoned-cart-reminder.json` — cada hora revisa
   carritos abandonados con teléfono y manda un recordatorio por WhatsApp.
 - `workflows/redes-sociales-producto-nuevo.json` — publica en Facebook/

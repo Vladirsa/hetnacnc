@@ -2,31 +2,144 @@
   "name": "WhatsApp - Respuestas de catálogo",
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "whatsapp-in",
-        "responseMode": "onReceived",
-        "options": {}
-      },
+      "parameters": { "httpMethod": "POST", "path": "whatsapp-in", "options": {} },
       "id": "webhook-in",
       "name": "WhatsApp entrante (Evolution API)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-200, 0]
+      "position": [0, 0]
     },
     {
       "parameters": {
-        "jsCode": "// Evolution API manda el mensaje en body.data.\n// Ajusta estas rutas si tu versión de Evolution usa otro formato\n// (revisa una ejecución real en n8n: \"Executions\" > abrir > ver el JSON).\nconst body = $input.first().json.body || $input.first().json;\nconst data = body.data || body;\n\nconst remoteJid = data?.key?.remoteJid || data?.from || '';\nconst phone = remoteJid.replace('@s.whatsapp.net', '').replace(/\\D/g, '');\n\nconst text =\n  data?.message?.conversation ||\n  data?.message?.extendedTextMessage?.text ||\n  data?.body ||\n  '';\n\nif (!phone || !text) {\n  return [];\n}\n\nreturn [{ json: { phone, text: text.trim() } }];"
+        "jsCode": "// Evolution API manda el mensaje en body.data.\n// Ajusta estas rutas si tu version de Evolution usa otro formato.\nconst body = $input.first().json.body || $input.first().json;\nconst data = body.data || body;\n\nconst remoteJid = data?.key?.remoteJid || data?.from || '';\nconst phone = remoteJid.replace('@s.whatsapp.net', '').replace(/\\D/g, '');\n\nconst text =\n  data?.message?.conversation ||\n  data?.message?.extendedTextMessage?.text ||\n  data?.body ||\n  '';\n\nif (!phone || !text) {\n  return [];\n}\n\nconst palabrasHumano = ['humano', 'agente', 'asesor', 'representante', 'persona real', 'hablar con alguien'];\nconst textoLower = text.toLowerCase();\nlet quiereHumano = false;\nfor (let i = 0; i < palabrasHumano.length; i++) {\n  if (textoLower.indexOf(palabrasHumano[i]) !== -1) {\n    quiereHumano = true;\n  }\n}\n\nreturn [{ json: { phone, text: text.trim(), quiereHumano } }];"
       },
       "id": "parse-message",
-      "name": "Extraer teléfono y texto",
+      "name": "Extraer telefono y texto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [20, 0]
+      "position": [224, 0]
     },
     {
       "parameters": {
-        "method": "GET",
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "whatsapp_catalogo_estado" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "phone", "condition": "eq", "keyValue": "={{ $json.phone }}" }] },
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "id": "read-state",
+      "name": "Leer estado de conversacion",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [448, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const datos = $('Extraer telefono y texto').first().json;\nconst filas = $input.all();\nconst filaRaw = filas.length > 0 ? filas[0].json : null;\nconst fila = filaRaw && filaRaw.phone ? filaRaw : null;\n\nconst VENTANA_HANDOFF_HORAS = 24;\nlet handoffActivo = false;\nlet noMatchCountPrevio = 0;\n\nif (fila) {\n  noMatchCountPrevio = fila.no_match_count || 0;\n  if (fila.handoff) {\n    const actualizadoEn = new Date(fila.updated_at);\n    const horasDesde = (Date.now() - actualizadoEn.getTime()) / (1000 * 60 * 60);\n    if (horasDesde < VENTANA_HANDOFF_HORAS) {\n      handoffActivo = true;\n    }\n  }\n}\n\nif (handoffActivo) {\n  return [{ json: { accion: 'silenciar', phone: datos.phone } }];\n}\n\nif (datos.quiereHumano) {\n  return [{ json: { accion: 'traspaso', phone: datos.phone, text: datos.text, motivo: 'El cliente pidio hablar con una persona.' } }];\n}\n\nreturn [{ json: { accion: 'buscar', phone: datos.phone, text: datos.text, noMatchCountPrevio } }];"
+      },
+      "id": "decide-action",
+      "name": "Decidir que hacer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [672, 0]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "outputKey": "silenciar", "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.accion }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "silenciar" }], "combinator": "and" } },
+            { "outputKey": "traspaso", "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.accion }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "traspaso" }], "combinator": "and" } },
+            { "outputKey": "buscar", "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.accion }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "buscar" }], "combinator": "and" } }
+          ]
+        },
+        "options": {}
+      },
+      "id": "route-action",
+      "name": "Ruta segun accion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [896, 0]
+    },
+    {
+      "parameters": {},
+      "id": "noop-silence",
+      "name": "No hacer nada (humano atendiendo)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, -200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const datos = $json;\nlet mensajeCliente;\nif (datos.motivo && datos.motivo.indexOf('No encontre') !== -1) {\n  mensajeCliente = 'No logre encontrar lo que buscas. Te voy a conectar con alguien del equipo para ayudarte mejor, en un momento te contactan por aqui.';\n} else {\n  mensajeCliente = 'Claro, ya te conecto con alguien del equipo. En un momento te contactan por aqui mismo.';\n}\n\nconst mensajeHumano = 'Traspaso de conversacion de WhatsApp\\nCliente: ' + datos.phone + '\\nUltimo mensaje: \"' + datos.text + '\"\\nMotivo: ' + datos.motivo + '\\n\\nAtiendelo por WhatsApp Web o el manager de Evolution.';\n\nconst ahoraIso = new Date().toISOString();\n\nreturn [{ json: { phone: datos.phone, text: datos.text, motivo: datos.motivo, mensajeCliente, mensajeHumano, ahoraIso } }];"
+      },
+      "id": "prepare-handoff",
+      "name": "Preparar traspaso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 0]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "whatsapp_catalogo_estado" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "phone", "condition": "eq", "keyValue": "={{ $json.phone }}" }] },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": { "phone": "={{ $json.phone }}", "handoff": true, "no_match_count": 0, "updated_at": "={{ $json.ahoraIso }}" },
+          "schema": [
+            { "id": "phone", "displayName": "phone", "type": "string", "canBeUsedToMatch": true },
+            { "id": "handoff", "displayName": "handoff", "type": "boolean", "canBeUsedToMatch": true },
+            { "id": "no_match_count", "displayName": "no_match_count", "type": "number", "canBeUsedToMatch": true },
+            { "id": "updated_at", "displayName": "updated_at", "type": "string", "canBeUsedToMatch": true }
+          ]
+        }
+      },
+      "id": "save-handoff",
+      "name": "Guardar traspaso activo",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1344, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $(\"Preparar traspaso\").item.json.phone, \"text\": $(\"Preparar traspaso\").item.json.mensajeCliente } }}",
+        "options": {}
+      },
+      "id": "reply-customer-handoff",
+      "name": "Responder al cliente (traspaso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1568, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": ($env.HANDOFF_WHATSAPP_NUMBER || $env.OWNER_WHATSAPP_NUMBER), \"text\": $(\"Preparar traspaso\").item.json.mensajeHumano } }}",
+        "options": {}
+      },
+      "id": "notify-human",
+      "name": "Avisar a un humano",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1792, 0]
+    },
+    {
+      "parameters": {
         "url": "={{ $env.MEDUSA_BACKEND_URL }}/store/products",
         "sendQuery": true,
         "queryParameters": {
@@ -38,39 +151,45 @@
           ]
         },
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "x-publishable-api-key", "value": "={{ $env.MEDUSA_PUBLISHABLE_KEY }}" }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "x-publishable-api-key", "value": "={{ $env.MEDUSA_PUBLISHABLE_KEY }}" }] },
         "options": {}
       },
       "id": "search-products",
       "name": "Buscar productos (Store API)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [240, 0]
+      "position": [1120, 200]
     },
     {
       "parameters": {
-        "jsCode": "const query = $('Extraer teléfono y texto').first().json.text;\nconst phone = $('Extraer teléfono y texto').first().json.phone;\nconst products = $input.first().json.products || [];\nconst baseUrl = $env.STOREFRONT_URL || 'https://hetnacnc.com';\n\nlet reply;\nif (!products.length) {\n  reply = `No encontré productos para \"${query}\" 😕. ¿Puedes describirlo de otra forma (material, tamaño, tipo de pieza)?`;\n} else {\n  const lines = products.slice(0, 5).map((p) => {\n    const amount = p.variants?.[0]?.calculated_price?.calculated_amount;\n    const currency = p.variants?.[0]?.calculated_price?.currency_code?.toUpperCase();\n    const price = amount != null ? `$${amount} ${currency}` : 'Consultar precio';\n    return `• ${p.title} — ${price}\\n  ${baseUrl}/mx/products/${p.handle}`;\n  });\n  reply = `Encontré esto para \"${query}\":\\n\\n${lines.join('\\n\\n')}\\n\\n¿Quieres que te ayude con alguno?`;\n}\n\nreturn [{ json: { phone, reply } }];"
+        "jsCode": "const datos = $('Decidir que hacer').first().json;\nconst products = $input.first().json.products || [];\nconst baseUrl = $env.STOREFRONT_URL || 'https://hetnacnc.com';\n\nconst sinResultados = products.length === 0;\nconst noMatchCountNuevo = sinResultados ? (datos.noMatchCountPrevio || 0) + 1 : 0;\n\nif (sinResultados && noMatchCountNuevo >= 2) {\n  return [{ json: { accion: 'traspaso', phone: datos.phone, text: datos.text, motivo: 'No encontre resultados en dos intentos seguidos.' } }];\n}\n\nlet reply;\nif (sinResultados) {\n  reply = 'No encontre productos para \"' + datos.text + '\". Puedes describirlo de otra forma (material, tamano, tipo de pieza)?';\n} else {\n  const lineas = [];\n  const maxProductos = products.length < 5 ? products.length : 5;\n  for (let i = 0; i < maxProductos; i++) {\n    const p = products[i];\n    const amount = p.variants && p.variants[0] && p.variants[0].calculated_price ? p.variants[0].calculated_price.calculated_amount : null;\n    const currency = p.variants && p.variants[0] && p.variants[0].calculated_price ? p.variants[0].calculated_price.currency_code.toUpperCase() : '';\n    const precio = amount != null ? ('$' + amount + ' ' + currency) : 'Consultar precio';\n    lineas.push('- ' + p.title + ' - ' + precio + '\\n  ' + baseUrl + '/mx/products/' + p.handle);\n  }\n  reply = 'Encontre esto para \"' + datos.text + '\":\\n\\n' + lineas.join('\\n\\n') + '\\n\\nQuieres que te ayude con alguno?';\n}\n\nreturn [{ json: { accion: 'responder', phone: datos.phone, reply, noMatchCountNuevo } }];"
       },
       "id": "format-reply",
       "name": "Formatear respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 0]
+      "position": [1344, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [{ "leftValue": "={{ $json.accion }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "traspaso" }],
+          "combinator": "and"
+        }
+      },
+      "id": "needs-handoff",
+      "name": "Necesita traspaso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1568, 200]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }] },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { \"number\": $json.phone, \"text\": $json.reply } }}",
@@ -80,22 +199,62 @@
       "name": "Enviar respuesta por WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 0]
+      "position": [1792, 300]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "whatsapp_catalogo_estado" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "phone", "condition": "eq", "keyValue": "={{ $(\"Formatear respuesta\").item.json.phone }}" }] },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $(\"Formatear respuesta\").item.json.phone }}",
+            "handoff": false,
+            "no_match_count": "={{ $(\"Formatear respuesta\").item.json.noMatchCountNuevo }}",
+            "updated_at": "={{ $now.toISO() }}"
+          },
+          "schema": [
+            { "id": "phone", "displayName": "phone", "type": "string", "canBeUsedToMatch": true },
+            { "id": "handoff", "displayName": "handoff", "type": "boolean", "canBeUsedToMatch": true },
+            { "id": "no_match_count", "displayName": "no_match_count", "type": "number", "canBeUsedToMatch": true },
+            { "id": "updated_at", "displayName": "updated_at", "type": "string", "canBeUsedToMatch": true }
+          ]
+        }
+      },
+      "id": "save-normal-state",
+      "name": "Guardar estado normal",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [2016, 300]
     }
   ],
   "connections": {
-    "WhatsApp entrante (Evolution API)": {
-      "main": [[{ "node": "Extraer teléfono y texto", "type": "main", "index": 0 }]]
+    "WhatsApp entrante (Evolution API)": { "main": [[{ "node": "Extraer telefono y texto", "type": "main", "index": 0 }]] },
+    "Extraer telefono y texto": { "main": [[{ "node": "Leer estado de conversacion", "type": "main", "index": 0 }]] },
+    "Leer estado de conversacion": { "main": [[{ "node": "Decidir que hacer", "type": "main", "index": 0 }]] },
+    "Decidir que hacer": { "main": [[{ "node": "Ruta segun accion", "type": "main", "index": 0 }]] },
+    "Ruta segun accion": {
+      "main": [
+        [{ "node": "No hacer nada (humano atendiendo)", "type": "main", "index": 0 }],
+        [{ "node": "Preparar traspaso", "type": "main", "index": 0 }],
+        [{ "node": "Buscar productos (Store API)", "type": "main", "index": 0 }]
+      ]
     },
-    "Extraer teléfono y texto": {
-      "main": [[{ "node": "Buscar productos (Store API)", "type": "main", "index": 0 }]]
+    "Preparar traspaso": { "main": [[{ "node": "Guardar traspaso activo", "type": "main", "index": 0 }]] },
+    "Guardar traspaso activo": { "main": [[{ "node": "Responder al cliente (traspaso)", "type": "main", "index": 0 }]] },
+    "Responder al cliente (traspaso)": { "main": [[{ "node": "Avisar a un humano", "type": "main", "index": 0 }]] },
+    "Buscar productos (Store API)": { "main": [[{ "node": "Formatear respuesta", "type": "main", "index": 0 }]] },
+    "Formatear respuesta": { "main": [[{ "node": "Necesita traspaso?", "type": "main", "index": 0 }]] },
+    "Necesita traspaso?": {
+      "main": [
+        [{ "node": "Preparar traspaso", "type": "main", "index": 0 }],
+        [{ "node": "Enviar respuesta por WhatsApp", "type": "main", "index": 0 }]
+      ]
     },
-    "Buscar productos (Store API)": {
-      "main": [[{ "node": "Formatear respuesta", "type": "main", "index": 0 }]]
-    },
-    "Formatear respuesta": {
-      "main": [[{ "node": "Enviar respuesta por WhatsApp", "type": "main", "index": 0 }]]
-    }
+    "Enviar respuesta por WhatsApp": { "main": [[{ "node": "Guardar estado normal", "type": "main", "index": 0 }]] }
   },
   "pinData": {},
   "settings": { "executionOrder": "v1" }
