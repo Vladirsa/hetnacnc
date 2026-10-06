@@ -261,14 +261,63 @@ Cuando el WhatsApp del negocio esté reconectado, abre el workflow en n8n y
 prende **"Active"**. No hace falta tocar nada más — ya quedó probado en vivo
 contra tu catálogo e instancia reales.
 
+## 11. Buscador de Proyectos (alertas de Upwork)
+
+Workflow **"Buscador de Proyectos - Alertas Upwork"** (vive en la instancia de
+n8n). Monitorea un correo de Gmail dedicado cada 20 minutos buscando alertas
+de empleo de Upwork, filtra con Claude Haiku cuáles son proyectos reales de
+maquinado/fabricación (no diseño gráfico, programación, etc.) y te avisa por
+WhatsApp con el título y el link — tú cotizas manualmente y rápido.
+
+<Warning>
+No hace scraping de Upwork, Workana, LinkedIn ni Facebook — eso viola sus
+términos de servicio y arriesga que te baneen la cuenta. Usa únicamente las
+alertas por correo que Upwork manda cuando guardas una búsqueda, que es una
+función que ellos mismos ofrecen para esto.
+</Warning>
+
+### 11.1 Crear el correo dedicado y la búsqueda en Upwork
+
+1. Crea una cuenta de Gmail nueva solo para esto (ej.
+   `proyectos.hetnacnc@gmail.com`) — mantenla separada de tu correo normal.
+2. Entra a `https://www.upwork.com` con tu cuenta de freelancer, usa el
+   buscador de empleos con palabras como `CNC router`, `laser cutting`,
+   `aluminum fabrication`, `sheet metal`.
+3. Guarda la búsqueda (**"Save search"**) y activa las notificaciones por
+   correo hacia el Gmail que creaste en el paso 1.
+
+### 11.2 Conectar el Gmail en n8n
+
+1. En n8n, abre el workflow **"Buscador de Proyectos - Alertas Upwork"**.
+2. En el nodo **"Nuevo correo de Upwork"**, crea la credencial **Gmail
+   OAuth2** → sigue el flujo de Google para autorizar con el Gmail dedicado.
+3. Selecciona la misma credencial en el nodo **"Marcar correo como leido"**.
+
+### 11.3 Configurar en el VPS
+
+En `infra/n8n/.env`, agrega tu número de WhatsApp (el que ya usas para las
+alertas de los otros agentes):
+
+```bash
+OWNER_WHATSAPP_NUMBER=521XXXXXXXXXX
+
+docker compose up -d n8n
+```
+
+Activa el workflow (switch "Active"). Igual que el agente de post-venta,
+depende de que reconectes el WhatsApp del negocio (Evolution API) — mientras
+tanto el workflow se queda detectando y filtrando oportunidades sin problema,
+solo falla el envío del aviso. En cuanto reconectes el WhatsApp, estos avisos
+empiezan a llegar sin tocar nada más.
+
 ## Próximos agentes (no incluidos todavía)
 
 Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
 recordatorio de carrito abandonado, el agente de SEO que escribe y publica
 artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
 instancia de n8n, no en este repo), la publicación automática en
-Facebook/Instagram al subir un producto, y el seguimiento de post-venta y
-consumibles.
+Facebook/Instagram al subir un producto, el seguimiento de post-venta y
+consumibles, y el buscador de proyectos con alertas de Upwork.
 
 Pendientes para más adelante, cuando se definan los datos que necesitan:
 publicidad (crear/pausar anuncios según ventas), SEO programático
