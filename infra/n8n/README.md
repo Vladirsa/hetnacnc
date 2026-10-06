@@ -280,6 +280,9 @@ función que ellos mismos ofrecen para esto.
 
 1. Crea una cuenta de Gmail nueva solo para esto (ej.
    `proyectos.hetnacnc@gmail.com`) — mantenla separada de tu correo normal.
+   Este mismo correo también se usa para el agente de LinkedIn de la
+   sección 12 — cada workflow filtra por remitente (`from:upwork.com` /
+   `from:linkedin.com`), así que pueden compartir la bandeja sin pisarse.
 2. Entra a `https://www.upwork.com` con tu cuenta de freelancer, usa el
    buscador de empleos con palabras como `CNC router`, `laser cutting`,
    `aluminum fabrication`, `sheet metal`.
@@ -310,6 +313,45 @@ tanto el workflow se queda detectando y filtrando oportunidades sin problema,
 solo falla el envío del aviso. En cuanto reconectes el WhatsApp, estos avisos
 empiezan a llegar sin tocar nada más.
 
+## 12. Detective de Capacidad Instalada (prospectos en LinkedIn)
+
+Workflow **"Detective de Capacidad Instalada - LinkedIn"** (vive en la
+instancia de n8n). Usa el **mismo Gmail dedicado** del agente de Upwork
+(sección 11) — ahí también llegan las alertas de empleo de LinkedIn.
+Detecta cuando otras empresas publican vacantes de "operador CNC",
+"programador CAM" o similares (señal de que podrían necesitar máquina o
+subcontratar piezas) y te avisa por WhatsApp con el nombre de la empresa.
+
+<Warning>
+No automatiza solicitudes de conexión ni mensajes en LinkedIn — eso viola
+sus términos de servicio y arriesga que te baneen tu cuenta personal, no
+solo la del negocio (LinkedIn es mucho más agresivo detectando esto que
+Upwork). El agente solo te avisa; tú mandas la conexión y el mensaje a mano,
+como cualquier persona.
+</Warning>
+
+### 12.1 Guardar la búsqueda en LinkedIn
+
+1. En LinkedIn, busca en la pestaña de **Empleos**: `operador CNC`,
+   `programador CAM`, `maquinista` — filtra por tu ubicación/radio de
+   entrega.
+2. Guarda la búsqueda (**"Crear alerta de búsqueda"**) y activa las
+   notificaciones por **correo** hacia el mismo Gmail dedicado
+   (`proyectos.hetnacnc@gmail.com` o el que hayas creado en la sección 11.1).
+
+### 12.2 Conectar en n8n
+
+1. Abre el workflow **"Detective de Capacidad Instalada - LinkedIn"**.
+2. En el nodo **"Nuevo correo de LinkedIn"**, selecciona la **misma
+   credencial Gmail OAuth2** que ya creaste para el agente de Upwork.
+3. Selecciona esa misma credencial en el nodo **"Marcar correo como leido"**.
+4. Activa el workflow (switch "Active").
+
+No necesita variables de entorno nuevas — reutiliza `OWNER_WHATSAPP_NUMBER`
+y las credenciales de Evolution API y Claude que ya configuraste. Igual que
+los demás agentes de WhatsApp, el envío del aviso depende de que reconectes
+el WhatsApp del negocio.
+
 ## Próximos agentes (no incluidos todavía)
 
 Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
@@ -317,7 +359,8 @@ recordatorio de carrito abandonado, el agente de SEO que escribe y publica
 artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
 instancia de n8n, no en este repo), la publicación automática en
 Facebook/Instagram al subir un producto, el seguimiento de post-venta y
-consumibles, y el buscador de proyectos con alertas de Upwork.
+consumibles, el buscador de proyectos con alertas de Upwork, y el detective
+de capacidad instalada con alertas de LinkedIn.
 
 Pendientes para más adelante, cuando se definan los datos que necesitan:
 publicidad (crear/pausar anuncios según ventas), SEO programático
