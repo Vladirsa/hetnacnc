@@ -352,6 +352,53 @@ y las credenciales de Evolution API y Claude que ya configuraste. Igual que
 los demás agentes de WhatsApp, el envío del aviso depende de que reconectes
 el WhatsApp del negocio.
 
+## 13. Leads de cotización rápida (funnel público, sin cuenta)
+
+Dos landing pages nuevas en el storefront — `/cotizar/corte-laser` y
+`/cotizar/router-cnc` — con una calculadora que da un estimado al instante
+usando el **mismo motor de precios real del Cotizador CNC**
+(`hetna/cotizador/engine.js`, copiado a `packages/api/src/lib/` para poder
+correrlo en el backend). No toca el Cotizador CNC de suscripción para
+talleres — es un funnel de ventas separado para tus propios clientes
+finales.
+
+Flujo: el visitante pone material, medidas, cantidad y correo → el backend
+(`POST /store/quote-leads`) calcula el estimado, lo muestra al instante, le
+manda confirmación por correo (Resend) y avisa a n8n → n8n guarda el lead en
+la tabla `cotizacion_leads` y te avisa por WhatsApp. Si marcó que necesita
+más de 100 piezas al mes, el aviso incluye una nota de "posible venta de
+máquina propia".
+
+<Warning>
+Torno CNC no tiene tarifas reales en `datos.json`, así que no se incluyó en
+estas landing pages. Si me das su tarifa (por hora u otra métrica), se
+agrega después sin tocar el resto.
+</Warning>
+
+### 13.1 Configurar en el VPS
+
+```bash
+# en packages/api/.env del backend, agrega:
+N8N_QUOTE_LEAD_WEBHOOK_URL=https://n8n.hetnacnc.com/webhook/cotizacion-lead
+
+pm2 restart hetna-api
+```
+
+El workflow **"Leads - Cotizacion rapida"** ya está activo en n8n — no hace
+falta tocar nada ahí.
+
+### 13.2 Pendiente: revisa estas dos variables
+
+Al probar este agente encontré que, en el contenedor de n8n ahora mismo:
+
+- **`EVOLUTION_API_KEY` está vacía** — esto rompe el envío de WhatsApp en
+  **todos** los agentes (carrito abandonado, post-venta, etc.), no solo
+  este. Revisa que `infra/n8n/.env` tenga el valor correcto y corre
+  `docker compose up -d n8n` de nuevo.
+- **`OWNER_WHATSAPP_NUMBER` nunca se configuró** — lo necesitan este
+  agente, el de post-venta y el Buscador de Proyectos/Detective de
+  LinkedIn. Agrégalo en `infra/n8n/.env` (ver sección 11.3) y reinicia n8n.
+
 ## Próximos agentes (no incluidos todavía)
 
 Ya construidos sobre esta misma base: el bot de catálogo por WhatsApp, el
@@ -359,8 +406,9 @@ recordatorio de carrito abandonado, el agente de SEO que escribe y publica
 artículos en Aprendizaje CNC (ver `packages/api` — el workflow vive en la
 instancia de n8n, no en este repo), la publicación automática en
 Facebook/Instagram al subir un producto, el seguimiento de post-venta y
-consumibles, el buscador de proyectos con alertas de Upwork, y el detective
-de capacidad instalada con alertas de LinkedIn.
+consumibles, el buscador de proyectos con alertas de Upwork, el detective
+de capacidad instalada con alertas de LinkedIn, y el funnel de leads de
+cotización rápida.
 
 Pendientes para más adelante, cuando se definan los datos que necesitan:
 publicidad (crear/pausar anuncios según ventas), SEO programático
