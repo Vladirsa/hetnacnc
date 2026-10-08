@@ -10,6 +10,7 @@ import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaque
 import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
 import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
+import { GeneradorPatron } from "@/components/hetna/generador/GeneradorPatron"
 import { GeneradorRelieve } from "@/components/hetna/generador/GeneradorRelieve"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
@@ -86,6 +87,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "Convierte gratis una foto en STL: litofanía plana, curva o en cilindro para lámpara lista para imprimir, o relieve 3D con mapa de alturas para tallar en router CNC con VCarve o Aspire.",
     }
   }
+  if (s.slug === "generador-2d-3d/patrones-radiales") {
+    return {
+      title: "Generador de patrones radiales gratis: mandalas y arte de pared (DXF, SVG)",
+      description: "Crea gratis mandalas y patrones decorativos para corte láser: capas escaladas y rotadas con una fórmula matemática. Descarga en DXF o SVG.",
+    }
+  }
   return { title: s.nombre, description: s.resumen }
 }
 
@@ -120,6 +127,7 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/letreros") return <GeneradorLetrero />
   if (s.slug === "generador-2d-3d/grabado-foto") return <GeneradorGrabado />
   if (s.slug === "generador-2d-3d/litofania-relieve") return <GeneradorRelieve />
+  if (s.slug === "generador-2d-3d/patrones-radiales") return <GeneradorPatron />
 
   if (s.slug === "aprendizaje-cnc") {
     const { learning_articles } = await listLearningArticles({ limit: 9 })

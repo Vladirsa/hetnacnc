@@ -435,6 +435,25 @@ export const SERVICIOS: Servicio[] = [
     "boton": "Revisar mi archivo"
   },
   {
+    "slug": "generador-2d-3d/patrones-radiales",
+    "padre": "generador-2d-3d",
+    "numero": "1.14",
+    "icono": "generador",
+    "nombre": "Patrones radiales (gratis)",
+    "resumen": "Mandalas y arte de pared: capas de una figura escaladas y rotadas con una fórmula, listas para láser.",
+    "titulo": "Patrones radiales para corte láser",
+    "subtitulo": "El patrón se genera en tu navegador, con fórmulas matemáticas que tú controlas.",
+    "incluye": [],
+    "pasos": [],
+    "formatos": [
+      "DXF",
+      "SVG"
+    ],
+    "proximo": null,
+    "whatsapp": "Hola HETNA CNC, quiero cotizar el corte de un patrón decorativo.",
+    "boton": "Cotizar mi patrón"
+  },
+  {
     "slug": "laboratorio-cam",
     "padre": null,
     "numero": "2",
