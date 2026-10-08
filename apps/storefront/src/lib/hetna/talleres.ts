@@ -5,8 +5,6 @@ export type Maquina = { nombre: string; area?: string; detalle?: string }
 export type Perfil = {
   ciudad?: string
   estado?: string
-  lat?: number
-  lng?: number
   lema?: string
   servicios: string[]
   capacidades: string[]
@@ -16,7 +14,6 @@ export type Perfil = {
   anos?: number
   calificacion?: number
   resenas?: number
-  whatsapp?: string
 }
 
 export type Taller = {
@@ -66,8 +63,6 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
   return {
     ciudad: texto(p.ciudad),
     estado: texto(p.estado),
-    lat: num(p.lat),
-    lng: num(p.lng),
     lema: texto(p.lema),
     servicios: lista(p.servicios),
     capacidades: lista(p.capacidades),
@@ -77,7 +72,6 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     anos: num(p.anos),
     calificacion: num(p.calificacion),
     resenas: num(p.resenas),
-    whatsapp: texto(p.whatsapp)?.replace(/\D/g, ""),
   }
 }
 

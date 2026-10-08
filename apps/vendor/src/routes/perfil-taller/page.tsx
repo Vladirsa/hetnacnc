@@ -1,7 +1,13 @@
 // @ts-nocheck
 import { useEffect, useState } from "react"
-import { Building } from "lucide-react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
+
+const Building = (props) => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="4" y="2" width="16" height="20" rx="2" />
+    <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
+  </svg>
+)
 
 export const config: RouteConfig = {
   label: "Perfil público",
@@ -88,7 +94,7 @@ export default function PerfilTallerPage() {
   const [metaBase, setMetaBase] = useState({})
   const [nombre, setNombre] = useState("")
   const [f, setF] = useState({
-    lema: "", ciudad: "", estado: "", lat: "", lng: "", entrega: "", anos: "", whatsapp: "",
+    lema: "", ciudad: "", estado: "", entrega: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
   })
 
@@ -109,11 +115,8 @@ export default function PerfilTallerPage() {
           lema: p.lema || "",
           ciudad: p.ciudad || "",
           estado: p.estado || "",
-          lat: p.lat ?? "",
-          lng: p.lng ?? "",
           entrega: p.entrega || "",
           anos: p.anos ?? "",
-          whatsapp: p.whatsapp || "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
           materiales: mats.filter((m) => MATERIALES.includes(m)),
           otrosMateriales: mats.filter((m) => !MATERIALES.includes(m)).join(", "),
@@ -125,39 +128,20 @@ export default function PerfilTallerPage() {
       .finally(() => setCargando(false))
   }, [])
 
-  const ubicar = async () => {
-    if (!f.ciudad || !f.estado) {
-      setMsg({ ok: false, t: "Escribe ciudad y estado primero." })
-      return
-    }
-    setMsg({ ok: true, t: "Buscando ubicación..." })
-    try {
-      const q = encodeURIComponent(`${f.ciudad}, ${f.estado}, México`)
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${q}`)
-      const d = await r.json()
-      if (!d[0]) throw new Error("sin resultado")
-      setF((p) => ({ ...p, lat: Number(parseFloat(d[0].lat).toFixed(5)), lng: Number(parseFloat(d[0].lon).toFixed(5)) }))
-      setMsg({ ok: true, t: "Ubicación encontrada. Recuerda guardar los cambios." })
-    } catch {
-      setMsg({ ok: false, t: "No encontramos esa ubicación. Revisa ciudad y estado." })
-    }
-  }
-
   const guardar = async () => {
     setGuardando(true)
     setMsg(null)
-    const wa = String(f.whatsapp || "").replace(/\D/g, "")
     const otros = f.otrosMateriales.split(",").map((x) => x.trim()).filter(Boolean)
     const perfil = {
       ...(metaBase.perfil || {}),
       lema: f.lema.trim(),
       ciudad: f.ciudad.trim(),
       estado: f.estado,
-      lat: f.lat === "" ? undefined : Number(f.lat),
-      lng: f.lng === "" ? undefined : Number(f.lng),
+      lat: undefined,
+      lng: undefined,
       entrega: f.entrega.trim(),
       anos: f.anos === "" ? undefined : Number(f.anos),
-      whatsapp: wa ? (wa.length === 10 ? "52" + wa : wa) : "",
+      whatsapp: undefined,
       servicios: f.servicios,
       materiales: [...f.materiales, ...otros],
       capacidades: lineas(f.capacidades),
@@ -190,10 +174,10 @@ export default function PerfilTallerPage() {
       </p>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Ubicación y contacto</h2>
+        <h2 style={S.h2}>Ubicación</h2>
         <div style={S.grid}>
           <div>
-            <label style={S.label}>Ciudad</label>
+            <label style={S.label}>Municipio o ciudad</label>
             <input style={S.input} value={f.ciudad} onChange={(e) => set("ciudad", e.target.value)} placeholder="Ej. Apizaco" />
           </div>
           <div>
@@ -203,17 +187,11 @@ export default function PerfilTallerPage() {
               {ESTADOS.map((x) => <option key={x}>{x}</option>)}
             </select>
           </div>
-          <div>
-            <label style={S.label}>WhatsApp (10 dígitos)</label>
-            <input style={S.input} value={f.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="2411234567" inputMode="numeric" />
-          </div>
         </div>
-        <div style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" style={S.btn2} onClick={ubicar}>Ubicar en el mapa</button>
-          <span style={S.hint}>
-            {f.lat !== "" && f.lng !== "" ? `Coordenadas: ${f.lat}, ${f.lng}` : "Aún sin ubicación en el mapa"}
-          </span>
-        </div>
+        <p style={{ ...S.hint, marginTop: 12 }}>
+          En el mapa público solo se muestra cuántos talleres hay por estado y municipio. Tu dirección y teléfono no se publican:
+          los clientes te contactan por HETNA.
+        </p>
       </section>
 
       <section style={S.card}>
