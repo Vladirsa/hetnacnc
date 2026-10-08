@@ -2,51 +2,59 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sendEmail } from "../../../lib/resend"
+import {
+  T_SOLICITUD,
+  type Trabajo,
+  VENDOR_URL,
+  asegurarTablas,
+  boton,
+  esc,
+  fila,
+  folioTexto,
+  ligaPropuestas,
+  marco,
+  nuevoId,
+  nuevoToken,
+  ocultarContacto,
+  tablaTrabajo,
+} from "../../../lib/licitacion"
 
-// Solicitud de cotización general, opcionalmente dirigida a un taller.
-// HETNA recibe todo; el taller recibe el trabajo SIN los datos de contacto
-// del cliente (la relación pasa por HETNA); el cliente recibe confirmación.
+// Solicitud de fabricación (licitación HETNA).
+// - modo "directa": va a un taller elegido por el cliente.
+// - modo "abierta": la ven todos los talleres en su panel y mandan propuesta.
+// HETNA recibe todo; los talleres reciben el trabajo SIN datos de contacto;
+// el cliente recibe una liga privada para comparar y elegir propuestas.
 
 type Body = {
   taller?: string
+  abierta?: boolean | string
   nombre?: string
   email?: string
   telefono?: string
   ciudad?: string
+  estado_mx?: string
   servicio?: string
   material?: string
   cantidad?: string | number
+  medidas?: string
   fecha?: string
+  frecuencia?: string
+  presupuesto?: string
+  acepta_envio?: string
   descripcion?: string
   archivo_url?: string
   sitio_web?: string // trampa para bots: debe llegar vacío
 }
 
 const SITIO = process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"
-
-const esc = (v: unknown) =>
-  String(v ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-
 const corto = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max)
-
-const fila = (k: string, v: string) =>
-  v ? `<tr><td style="padding:6px 12px 6px 0;color:#6B675C;vertical-align:top">${esc(k)}</td><td style="padding:6px 0;color:#142033"><strong>${esc(v)}</strong></td></tr>` : ""
-
-const marco = (titulo: string, cuerpo: string) => `
-<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #E7E4DC;border-radius:12px;overflow:hidden">
-  <div style="background:#142033;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${esc(SITIO)}</div>
-  <div style="padding:22px">
-    <h2 style="margin:0 0 12px;color:#142033;font-size:18px">${esc(titulo)}</h2>
-    ${cuerpo}
-  </div>
-</div>`
+const DIAS_ABIERTA = 7
+const MAX_AVISOS = 60
+const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger") as any
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const b = ((req as any).validatedBody || req.body || {}) as Body
 
   if (b.sitio_web) {
@@ -62,96 +70,155 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     return res.status(400).json({ message: "Describe tu trabajo (mínimo 10 caracteres)." })
   }
 
-  const d = {
-    nombre: corto(b.nombre, 120),
-    telefono: corto(b.telefono, 40),
-    ciudad: corto(b.ciudad, 120),
+  const trabajo: Trabajo = {
+    descripcion,
     servicio: corto(b.servicio, 80),
     material: corto(b.material, 120),
     cantidad: corto(b.cantidad, 40),
+    medidas: corto(b.medidas, 120),
     fecha: corto(b.fecha, 40),
+    ciudad: corto(b.ciudad, 120),
+    estado_mx: corto(b.estado_mx, 60),
+    frecuencia: corto(b.frecuencia, 60),
+    presupuesto: corto(b.presupuesto, 60),
+    acepta_envio: corto(b.acepta_envio, 10),
     archivo: corto(b.archivo_url, 500),
   }
+  const contacto = {
+    nombre: corto(b.nombre, 120),
+    email,
+    telefono: corto(b.telefono, 40),
+  }
 
+  // Taller elegido (opcional)
   let taller: { id: string; name: string; email: string | null; handle: string } | null = null
   const handle = corto(b.taller, 120)
   if (handle) {
     try {
-      const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
       taller =
         (await knex("seller")
           .where({ handle })
           .whereNull("deleted_at")
           .first("id", "name", "email", "handle")) || null
     } catch (e) {
-      logger.warn(`[solicitud-taller] no se pudo buscar el taller ${handle}: ${(e as Error).message}`)
+      logger.warn(`[licitacion] no se pudo buscar el taller ${handle}: ${(e as Error).message}`)
     }
   }
+  const abierta = !taller || b.abierta === true || b.abierta === "1" || b.abierta === "true"
+  const modo = abierta ? "abierta" : "directa"
 
-  const trabajo =
-    `<table style="border-collapse:collapse;font-size:14px">` +
-    fila("Servicio", d.servicio) +
-    fila("Material", d.material) +
-    fila("Cantidad", d.cantidad) +
-    fila("Fecha requerida", d.fecha) +
-    fila("Ciudad de entrega", d.ciudad) +
-    fila("Archivos", d.archivo) +
-    `</table><p style="margin:14px 0 0;white-space:pre-line;color:#40403A">${esc(descripcion)}</p>`
+  // Guardar
+  const token = nuevoToken()
+  let folio = ""
+  try {
+    await asegurarTablas(knex)
+    const [fila0] = await knex(T_SOLICITUD)
+      .insert({
+        id: nuevoId("sol"),
+        token,
+        modo,
+        taller_id: taller?.id ?? null,
+        trabajo,
+        contacto,
+        cierra_en: new Date(Date.now() + DIAS_ABIERTA * 864e5),
+      })
+      .returning(["folio"])
+    folio = folioTexto(fila0.folio)
+  } catch (e) {
+    logger.error(`[licitacion] no se pudo guardar la solicitud: ${(e as Error).message}`)
+    return res.status(500).json({ message: "No se pudo registrar tu solicitud. Intenta de nuevo en unos minutos." })
+  }
 
-  const contacto =
-    `<table style="border-collapse:collapse;font-size:14px;margin-top:14px">` +
-    fila("Nombre", d.nombre) +
-    fila("Correo", email) +
-    fila("Teléfono", d.telefono) +
-    `</table>`
+  // Respondemos ya; los correos salen después (Resend permite ~2 por segundo).
+  res.status(200).json({ ok: true, folio, token, taller: taller ? taller.name : null })
+
+  const liga = ligaPropuestas(token)
+  const trabajoTaller: Trabajo = { ...trabajo, descripcion: ocultarContacto(trabajo.descripcion) }
 
   // 1) HETNA: todo
   const destinoHetna = process.env.HETNA_LEADS_EMAIL
   if (destinoHetna) {
     const r = await sendEmail({
       to: destinoHetna,
-      subject: `Nueva solicitud de cotización${taller ? ` para ${taller.name}` : ""}`,
+      subject: `[${folio}] Nueva solicitud ${modo}${taller ? ` · ${taller.name}` : ""}`,
       html: marco(
-        `Solicitud${taller ? ` para ${taller.name}` : " general"}`,
-        trabajo + contacto
+        `Solicitud ${folio} (${modo})${taller ? ` para ${taller.name}` : ""}`,
+        tablaTrabajo(trabajo) +
+          `<table style="border-collapse:collapse;font-size:14px;margin-top:14px">` +
+          fila("Nombre", contacto.nombre) +
+          fila("Correo", contacto.email) +
+          fila("Teléfono", contacto.telefono) +
+          `</table>` +
+          boton("Ver propuestas del cliente", liga)
       ),
     })
-    if (!r.sent) logger.info(`[solicitud-taller] correo a HETNA no enviado: ${r.reason}`)
-  } else {
-    logger.info("[solicitud-taller] HETNA_LEADS_EMAIL no configurado")
+    if (!r.sent) logger.info(`[licitacion] correo a HETNA no enviado: ${r.reason}`)
+    await pausa(600)
   }
 
-  // 2) Taller: el trabajo sin datos de contacto del cliente
-  if (taller?.email) {
-    const r = await sendEmail({
-      to: taller.email,
-      subject: `Nueva solicitud de cotización desde ${SITIO}`,
-      html: marco(
-        "Tienes una nueva solicitud de cotización",
-        trabajo +
-          `<p style="margin:16px 0 0;color:#40403A">Envía tu precio y tiempo de entrega respondiendo a ${esc(SITIO)}. ` +
-          `Nosotros lo hacemos llegar al cliente y el pedido se paga y se envía a través de la plataforma.</p>`
-      ),
-    })
-    if (!r.sent) logger.info(`[solicitud-taller] correo al taller no enviado: ${r.reason}`)
-  }
-
-  // 3) Cliente: confirmación
+  // 2) Cliente: confirmación con liga privada
   {
     const r = await sendEmail({
       to: email,
-      subject: `Recibimos tu solicitud de cotización — ${SITIO}`,
+      subject: `[${folio}] Recibimos tu solicitud — ${SITIO}`,
       html: marco(
         "Recibimos tu solicitud",
-        `<p style="margin:0 0 12px;color:#40403A">Hola${d.nombre ? ` ${esc(d.nombre)}` : ""}, ya tenemos tu solicitud` +
-          `${taller ? ` para <strong>${esc(taller.name)}</strong>` : ""}. Te enviaremos la cotización a este correo.</p>` +
-          trabajo
+        `<p style="margin:0 0 12px;color:#40403A">Hola${contacto.nombre ? ` ${esc(contacto.nombre)}` : ""}, tu folio es <strong>${esc(folio)}</strong>. ` +
+          (abierta
+            ? `Los talleres de la red recibirán tu solicitud y te mandarán sus propuestas durante los próximos ${DIAS_ABIERTA} días.`
+            : `<strong>${esc(taller!.name)}</strong> recibirá tu solicitud y te mandará su propuesta.`) +
+          ` Te avisaremos por correo cada vez que llegue una.</p>` +
+          `<p style="margin:0 0 12px;color:#40403A">Guarda esta liga: ahí puedes comparar precios y tiempos y elegir la propuesta que más te convenga.</p>` +
+          boton("Ver mis propuestas", liga) +
+          `<hr style="border:0;border-top:1px solid #E7E4DC;margin:20px 0"/>` +
+          tablaTrabajo(trabajo)
       ),
     })
-    if (!r.sent) logger.info(`[solicitud-taller] confirmación no enviada: ${r.reason}`)
+    if (!r.sent) logger.info(`[licitacion] confirmación no enviada: ${r.reason}`)
+    await pausa(600)
   }
 
-  // 4) n8n (misma alerta que los leads de cotización)
+  // 3) Talleres: trabajo sin contacto + liga a su panel
+  const avisoTaller = (nombreTaller?: string) =>
+    marco(
+      nombreTaller ? `${nombreTaller}: un cliente quiere tu cotización` : "Nueva solicitud de fabricación",
+      `<p style="margin:0 0 12px;color:#40403A">Folio <strong>${esc(folio)}</strong>. ` +
+        `Manda tu precio y tiempo de entrega desde tu panel de HETNA. El cliente compara propuestas y elige; ` +
+        `el pago y el envío se hacen dentro de la plataforma.</p>` +
+        tablaTrabajo(trabajoTaller) +
+        boton("Enviar mi propuesta", `${VENDOR_URL}/solicitudes`)
+    )
+
+  const destinos: { email: string; nombre?: string }[] = []
+  if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name })
+  if (abierta) {
+    try {
+      const otros = (await knex("seller")
+        .whereNull("deleted_at")
+        .whereNotNull("email")
+        .modify((q: any) => (taller ? q.whereNot({ id: taller.id }) : q))
+        .limit(500)
+        .select("email", "metadata")) as { email: string; metadata: any }[]
+      for (const s of otros) {
+        const servicios: string[] = s.metadata?.perfil?.servicios || []
+        const coincide = !trabajo.servicio || !servicios.length || servicios.includes(trabajo.servicio)
+        if (coincide && destinos.length < MAX_AVISOS) destinos.push({ email: s.email })
+      }
+    } catch (e) {
+      logger.warn(`[licitacion] no se pudo listar talleres: ${(e as Error).message}`)
+    }
+  }
+  for (const d of destinos) {
+    const r = await sendEmail({
+      to: d.email,
+      subject: `[${folio}] Nueva solicitud de fabricación en ${SITIO}`,
+      html: avisoTaller(d.nombre),
+    })
+    if (!r.sent) logger.info(`[licitacion] aviso a taller no enviado: ${r.reason}`)
+    await pausa(600)
+  }
+
+  // 4) n8n
   const n8n = process.env.N8N_QUOTE_LEAD_WEBHOOK_URL
   if (n8n) {
     try {
@@ -160,17 +227,18 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tipo: "solicitud_taller",
+          folio,
+          modo,
           taller: taller ? { nombre: taller.name, handle: taller.handle } : null,
-          ...d,
-          email,
-          descripcion,
+          ...trabajo,
+          ...contacto,
+          liga,
         }),
       })
     } catch (e) {
-      logger.warn(`[solicitud-taller] fallo aviso n8n: ${(e as Error).message}`)
+      logger.warn(`[licitacion] fallo aviso n8n: ${(e as Error).message}`)
     }
   }
 
-  logger.info(`[solicitud-taller] recibida${taller ? ` para ${taller.handle}` : ""}`)
-  return res.status(200).json({ ok: true, taller: taller ? taller.name : null })
+  logger.info(`[licitacion] ${folio} ${modo}${taller ? ` para ${taller.handle}` : ""}, avisos: ${destinos.length}`)
 }
