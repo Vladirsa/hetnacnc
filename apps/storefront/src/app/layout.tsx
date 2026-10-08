@@ -4,7 +4,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
 import { Toaster } from '@medusajs/ui';
-import Head from 'next/head';
+import Script from 'next/script';
 
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
 import { Traductor } from '@/components/hetna/Traductor';
@@ -57,7 +57,7 @@ export default async function RootLayout({
       lang={htmlLang}
       className=""
     >
-      <Head>
+      <head>
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
@@ -122,9 +122,11 @@ export default async function RootLayout({
           rel="dns-prefetch"
           href="https://api.mercurjs.com"
         />
-      </Head>
+      </head>
       <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
-        <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
+        <Script id="hetna-velo" strategy="beforeInteractive">
+          {SCRIPT_VELO}
+        </Script>
         <HtmlLangSetter />
         <Traductor />
         <Providers cart={cart}>
