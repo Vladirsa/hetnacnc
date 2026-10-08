@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# motor CAD (WASM) de replicad - se copia en postinstall, no se comete al repo
+/public/wasm/
+
 # production
 /build
 

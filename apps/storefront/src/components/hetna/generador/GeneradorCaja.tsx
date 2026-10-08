@@ -7,6 +7,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { aDXF, aSVG, acomodar, areaMaterial, generarCaja } from "@/lib/generador/caja"
 import { mandarACotizador } from "@/lib/generador/aCotizador"
 import Caja3D from "./Caja3D"
+import CajaSolido from "./CajaSolido"
 
 type Unidad = "mm" | "cm" | "in"
 const FACTOR: Record<Unidad, number> = { mm: 1, cm: 10, in: 25.4 }
@@ -332,6 +333,8 @@ export function GeneradorCaja() {
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
                 Revisa el archivo antes de cortar y haz una prueba en retazo para ajustar el kerf de tu máquina. ¿No tienes máquina? Te lo cortamos y te lo enviamos.
               </p>
+
+              <CajaSolido piezas={r.piezas} espesor={numero(espesor) * k} exterior={ext} nombreArchivo={nombreArchivo} />
             </>
           )}
         </section>
