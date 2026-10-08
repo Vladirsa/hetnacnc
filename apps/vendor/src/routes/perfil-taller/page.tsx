@@ -87,12 +87,57 @@ const parseMeta = (m) => {
 
 const lineas = (t) => t.split("\n").map((x) => x.trim()).filter(Boolean)
 
+const MAX_MB = 5
+const subir = async (archivo) => {
+  if (!/^image\/(jpeg|png|webp)$/.test(archivo.type)) throw new Error("Usa JPG, PNG o WEBP.")
+  if (archivo.size > MAX_MB * 1024 * 1024) throw new Error(`La imagen pesa más de ${MAX_MB} MB.`)
+  const fd = new FormData()
+  fd.append("files", archivo)
+  const r = await fetch("/vendor/uploads", { method: "POST", credentials: "include", body: fd })
+  const d = await r.json().catch(() => ({}))
+  if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || "No se pudo subir la imagen.")
+  return d.files[0].url
+}
+
+function CampoImagen({ titulo, ayuda, valor, alCambiar, ancho = 160, alto = 160 }) {
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState("")
+  return (
+    <div>
+      <label style={S.label}>{titulo}</label>
+      <div style={{ width: ancho, height: alto, maxWidth: "100%", borderRadius: 10, border: "1px dashed #D9D5C9", background: valor ? `center/cover no-repeat url(${valor})` : "#F3F1EA", display: "grid", placeItems: "center", color: "#6B675C", fontSize: 12 }}>
+        {!valor && "Sin imagen"}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <label style={{ ...S.btn2, display: "inline-block" }}>
+          {subiendo ? "Subiendo..." : valor ? "Cambiar" : "Subir imagen"}
+          <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={subiendo}
+            onChange={async (e) => {
+              const a = e.target.files?.[0]
+              e.target.value = ""
+              if (!a) return
+              setError(""); setSubiendo(true)
+              try { alCambiar(await subir(a)) } catch (err) { setError(err.message) } finally { setSubiendo(false) }
+            }} />
+        </label>
+        {valor && <button type="button" style={S.btn2} onClick={() => alCambiar("")}>Quitar</button>}
+      </div>
+      <p style={S.hint}>{ayuda}</p>
+      {error && <p style={{ ...S.hint, color: "#B3261E" }}>{error}</p>}
+    </div>
+  )
+}
+
 export default function PerfilTallerPage() {
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState(null)
   const [metaBase, setMetaBase] = useState({})
   const [nombre, setNombre] = useState("")
+  const [logo, setLogo] = useState("")
+  const [banner, setBanner] = useState("")
+  const [galeria, setGaleria] = useState([])
+  const [subiendoGal, setSubiendoGal] = useState(false)
   const [f, setF] = useState({
     lema: "", ciudad: "", estado: "", entrega: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
@@ -103,12 +148,15 @@ export default function PerfilTallerPage() {
     setF((p) => ({ ...p, [k]: p[k].includes(v) ? p[k].filter((x) => x !== v) : [...p[k], v] }))
 
   useEffect(() => {
-    fetch("/vendor/sellers/me?fields=id,name,metadata", { credentials: "include" })
+    fetch("/vendor/sellers/me?fields=id,name,metadata,logo,banner", { credentials: "include" })
       .then((r) => r.json())
       .then(({ seller }) => {
         const meta = parseMeta(seller?.metadata)
         const p = meta.perfil || {}
         setNombre(seller?.name || "")
+        setLogo(seller?.logo || "")
+        setBanner(seller?.banner || "")
+        setGaleria(Array.isArray(p.galeria) ? p.galeria : [])
         setMetaBase(meta)
         const mats = Array.isArray(p.materiales) ? p.materiales : []
         setF({
@@ -146,13 +194,14 @@ export default function PerfilTallerPage() {
       materiales: [...f.materiales, ...otros],
       capacidades: lineas(f.capacidades),
       maquinas: f.maquinas.filter((m) => (m.nombre || "").trim()),
+      galeria,
     }
     try {
       const r = await fetch("/vendor/sellers/me", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metadata: { ...metaBase, perfil } }),
+        body: JSON.stringify({ logo: logo || null, banner: banner || null, metadata: { ...metaBase, perfil } }),
       })
       if (!r.ok) throw new Error(String(r.status))
       setMetaBase({ ...metaBase, perfil })
@@ -172,6 +221,42 @@ export default function PerfilTallerPage() {
       <p style={S.sub}>
         Esto es lo que ven los clientes en tu página de taller{nombre ? ` (${nombre})` : ""} y en el mapa de HETNA.
       </p>
+
+      <section style={S.card}>
+        <h2 style={S.h2}>Imagen de tu taller</h2>
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <CampoImagen titulo="Logo" ayuda="Cuadrado, mínimo 400 x 400 px." valor={logo} alCambiar={setLogo} />
+          <CampoImagen titulo="Portada (banner)" ayuda="Horizontal, ideal 1600 x 400 px. Muestra tu taller o tus trabajos." valor={banner} alCambiar={setBanner} ancho={420} alto={110} />
+        </div>
+        <label style={{ ...S.label, marginTop: 16 }}>Galería de trabajos ({galeria.length}/12)</label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {galeria.map((u) => (
+            <div key={u} style={{ position: "relative", width: 96, height: 96, borderRadius: 8, background: `center/cover no-repeat url(${u})` }}>
+              <button type="button" aria-label="Quitar foto" onClick={() => setGaleria(galeria.filter((x) => x !== u))}
+                style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: 0, background: "rgba(0,0,0,.65)", color: "#fff", cursor: "pointer" }}>×</button>
+            </div>
+          ))}
+          {galeria.length < 12 && (
+            <label style={{ width: 96, height: 96, borderRadius: 8, border: "1px dashed #D9D5C9", display: "grid", placeItems: "center", cursor: "pointer", fontSize: 12, color: "#6B675C", textAlign: "center" }}>
+              {subiendoGal ? "Subiendo..." : "+ Agregar fotos"}
+              <input type="file" multiple accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={subiendoGal}
+                onChange={async (e) => {
+                  const archivos = Array.from(e.target.files || []).slice(0, 12 - galeria.length)
+                  e.target.value = ""
+                  if (!archivos.length) return
+                  setSubiendoGal(true)
+                  const nuevas = []
+                  for (const a of archivos) {
+                    try { nuevas.push(await subir(a)) } catch (err) { setMsg({ ok: false, t: err.message }) }
+                  }
+                  setGaleria((g) => [...g, ...nuevas].slice(0, 12))
+                  setSubiendoGal(false)
+                }} />
+            </label>
+          )}
+        </div>
+        <p style={S.hint}>Fotos de piezas terminadas, tu taller y tus máquinas. No pongas teléfonos ni datos de contacto en las imágenes. Recuerda guardar.</p>
+      </section>
 
       <section style={S.card}>
         <h2 style={S.h2}>Ubicación</h2>

@@ -14,6 +14,7 @@ export type Perfil = {
   anos?: number
   calificacion?: number
   resenas?: number
+  galeria: string[]
 }
 
 export type Taller = {
@@ -72,6 +73,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     anos: num(p.anos),
     calificacion: num(p.calificacion),
     resenas: num(p.resenas),
+    galeria: lista(p.galeria).filter((u) => /^https?:\/\//.test(u)).slice(0, 12),
   }
 }
 
