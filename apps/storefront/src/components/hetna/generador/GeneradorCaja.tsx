@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { aDXF, aSVG, acomodar, areaMaterial, generarCaja } from "@/lib/generador/caja"
 import { mandarACotizador } from "@/lib/generador/aCotizador"
+import Caja3D from "./Caja3D"
 
 type Unidad = "mm" | "cm" | "in"
 const FACTOR: Record<Unidad, number> = { mm: 1, cm: 10, in: 25.4 }
@@ -90,6 +91,7 @@ export function GeneradorCaja() {
   const [fresa, setFresa] = useState("3.175") // 1/8" en mm, fresa común para madera
   const [medidas, setMedidas] = useState<"exteriores" | "interiores">("exteriores")
   const [tapa, setTapa] = useState(true)
+  const [vista3D, setVista3D] = useState(false)
 
   const k = FACTOR[unidad]
   const r = useMemo(
@@ -243,12 +245,24 @@ export function GeneradorCaja() {
 
           {listo && (
             <>
-              <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-5">
-                <div
-                  className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[520px]"
-                  dangerouslySetInnerHTML={{ __html: vista }}
-                />
+              <div className="flex gap-2">
+                <Opcion activa={!vista3D} onClick={() => setVista3D(false)}>Plano de corte (2D)</Opcion>
+                <Opcion activa={vista3D} onClick={() => setVista3D(true)}>Vista armada (3D)</Opcion>
               </div>
+
+              <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-5">
+                {vista3D ? (
+                  <Caja3D piezas={r.piezas} espesor={numero(espesor) * k} exterior={ext} />
+                ) : (
+                  <div
+                    className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[520px]"
+                    dangerouslySetInnerHTML={{ __html: vista }}
+                  />
+                )}
+              </div>
+              {vista3D && (
+                <p className="m-0 -mt-2 text-[12.5px] text-[#6B6A63]">Arrastra para rotar, rueda del mouse para acercar. Es una vista de referencia del armado, no sustituye el archivo de corte.</p>
+              )}
 
               <dl className="grid grid-cols-2 sm:grid-cols-4 gap-2 m-0">
                 {[
