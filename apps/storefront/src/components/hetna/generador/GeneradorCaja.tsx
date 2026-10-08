@@ -87,6 +87,7 @@ export function GeneradorCaja() {
   const [dedo, setDedo] = useState("12")
   const [maquina, setMaquina] = useState<keyof typeof MAQUINAS>("laser")
   const [kerf, setKerf] = useState<string>(MAQUINAS.laser.kerf)
+  const [fresa, setFresa] = useState("3.175") // 1/8" en mm, fresa común para madera
   const [medidas, setMedidas] = useState<"exteriores" | "interiores">("exteriores")
   const [tapa, setTapa] = useState(true)
 
@@ -100,10 +101,11 @@ export function GeneradorCaja() {
         espesor: numero(espesor) * k,
         dedo: numero(dedo) * k,
         kerf: numero(kerf) || 0,
+        fresa: maquina === "router" ? numero(fresa) * k || 0 : 0,
         medidas,
         tapa,
       }),
-    [ancho, fondo, alto, espesor, dedo, kerf, medidas, tapa, k]
+    [ancho, fondo, alto, espesor, dedo, kerf, fresa, maquina, medidas, tapa, k]
   )
   const listo = r.piezas.length > 0
   const vista = useMemo(() => (listo ? aSVG(r.piezas, "vista") : ""), [r, listo])
@@ -116,7 +118,7 @@ export function GeneradorCaja() {
       const v = numero(s)
       return Number.isFinite(v) ? String(Math.round(((v * FACTOR[unidad]) / FACTOR[u]) * 1000) / 1000) : s
     }
-    setAncho(conv(ancho)); setFondo(conv(fondo)); setAlto(conv(alto)); setEspesor(conv(espesor)); setDedo(conv(dedo))
+    setAncho(conv(ancho)); setFondo(conv(fondo)); setAlto(conv(alto)); setEspesor(conv(espesor)); setDedo(conv(dedo)); setFresa(conv(fresa))
     setUnidad(u)
   }
 
@@ -218,7 +220,11 @@ export function GeneradorCaja() {
 
           <div className="grid grid-cols-2 gap-2">
             <Campo etiqueta="Ancho de dedo" valor={dedo} cambiar={setDedo} sufijo={unidad} />
-            <Campo etiqueta="Kerf (corte)" valor={kerf} cambiar={setKerf} sufijo="mm" />
+            {maquina === "router" ? (
+              <Campo etiqueta="Diámetro de fresa" valor={fresa} cambiar={setFresa} sufijo={unidad} />
+            ) : (
+              <Campo etiqueta="Kerf (corte)" valor={kerf} cambiar={setKerf} sufijo="mm" />
+            )}
           </div>
 
           <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
@@ -258,15 +264,15 @@ export function GeneradorCaja() {
                 ))}
               </dl>
 
-              {(r.avisos.length > 0 || maquina === "router") && (
+              {r.avisos.length > 0 && (
                 <ul className="m-0 pl-5 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] py-3 pr-4">
                   {r.avisos.map((a) => <li key={a}>{a}</li>)}
-                  {maquina === "router" && (
-                    <li>
-                      En router, la fresa deja redondas las esquinas interiores: activa las esquinas tipo &quot;dogbone&quot; en tu CAM (VCarve, Fusion) para que las piezas encajen.
-                    </li>
-                  )}
                 </ul>
+              )}
+              {maquina === "router" && numero(fresa) * k > 0 && (
+                <p className="m-0 text-[13px] text-[#16794F] bg-[#E6F4EC] border border-[#B7E0C8] rounded-[12px] px-4 py-2.5">
+                  El archivo ya incluye el alivio de esquina (&quot;dogbone&quot;) para tu fresa de {r1(numero(fresa) * k)} mm: no hace falta activarlo en tu CAM.
+                </p>
               )}
 
               <button

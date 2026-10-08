@@ -16,6 +16,7 @@ export type OpcionesCaja = {
   espesor: number // espesor del material, mm
   dedo: number // ancho deseado de cada dedo, mm
   kerf: number // grosor del corte (láser ~0.1-0.2 mm; router: 0), mm
+  fresa: number // diámetro de la fresa, mm (router: agrega alivio de esquina "dogbone"; láser/plasma: 0)
   medidas: "exteriores" | "interiores"
   tapa: boolean
 }
@@ -141,6 +142,42 @@ function compensarKerf(pts: Punto[], kerf: number): Punto[] {
   })
 }
 
+// Alivio de esquina "dogbone": en cada esquina interior (cóncava) de un contorno de
+// ángulos rectos, cambia el vértice por un arco que una fresa redonda sí puede cortar
+// por completo, para que la pieza que entra ahí quede a tope en su esquina cuadrada.
+// Solo tiene sentido en router (kerf=0); en láser el corte ya saca esquinas vivas.
+function alivioEsquinas(pts: Punto[], r: number): Punto[] {
+  if (!r) return pts
+  const n = pts.length
+  const pasos = 8
+  const out: Punto[] = []
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i + n - 1) % n]
+    const c = pts[i]
+    const b = pts[(i + 1) % n]
+    const dIn = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1
+    const dOut = Math.hypot(b[0] - c[0], b[1] - c[1]) || 1
+    const eIn: Punto = [(c[0] - a[0]) / dIn, (c[1] - a[1]) / dIn]
+    const eOut: Punto = [(b[0] - c[0]) / dOut, (b[1] - c[1]) / dOut]
+    const cruz = eIn[0] * eOut[1] - eIn[1] * eOut[0]
+    if (cruz >= -1e-9) {
+      out.push(c)
+      continue
+    }
+    const e1: Punto = [(eOut[0] - eIn[0]) / Math.SQRT2, (eOut[1] - eIn[1]) / Math.SQRT2] // hacia el hueco
+    const e2: Punto = [(eIn[0] + eOut[0]) / Math.SQRT2, (eIn[1] + eOut[1]) / Math.SQRT2]
+    const centro: Punto = [c[0] + r * e1[0], c[1] + r * e1[1]]
+    // el arco barre hacia -e1 (hacia el material): entra y sale por los mismos puntos
+    // que tocarían las paredes originales, pasando por la esquina original a la mitad
+    for (let k = 0; k <= pasos; k++) {
+      const t = -Math.PI / 2 + (Math.PI * k) / pasos
+      const co = -Math.cos(t), si = Math.sin(t)
+      out.push([centro[0] + r * co * e1[0] + r * si * e2[0], centro[1] + r * co * e1[1] + r * si * e2[1]])
+    }
+  }
+  return limpiar(out)
+}
+
 // deja la esquina inferior izquierda del contorno en (0,0)
 function aOrigen(pts: Punto[]) {
   const minX = Math.min(...pts.map((p) => p[0]))
@@ -188,7 +225,12 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     return vacio()
   }
   if (o.dedo < 2 * t) avisos.push("Con dedos menores a 2 veces el espesor la unión queda débil.")
-  if (o.kerf === 0) avisos.push("Sin kerf las uniones quedan sueltas en láser; en router usa 0 y compensa en el CAM.")
+  if (o.kerf === 0 && o.fresa === 0) avisos.push("Sin kerf las uniones quedan sueltas en láser. Si cortas con router, pon el diámetro de tu fresa para agregar alivio de esquina.")
+  if (o.fresa < 0) errores.push("La fresa no puede ser negativa.")
+  if (o.fresa > 0 && o.fresa > minSeg) {
+    errores.push(`La fresa (${o.fresa} mm) es más ancha que el dedo (${minSeg.toFixed(1)} mm); usa una fresa más delgada o dedos más anchos.`)
+  }
+  if (errores.length) return vacio()
 
   const arriba: TipoBorde = o.tapa ? "A" : "L"
   const crudas: { nombre: string; pts: Punto[] }[] = [
@@ -200,7 +242,10 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     { nombre: "Lateral derecho", pts: cara(D, H, ["A", "B", arriba, "B"], nD, nH, t) },
   ]
 
-  const piezas = crudas.map(({ nombre, pts }) => ({ nombre, ...aOrigen(compensarKerf(pts, o.kerf)) }))
+  const piezas = crudas.map(({ nombre, pts }) => ({
+    nombre,
+    ...aOrigen(alivioEsquinas(compensarKerf(pts, o.kerf), o.fresa / 2)),
+  }))
   return {
     piezas,
     errores,
