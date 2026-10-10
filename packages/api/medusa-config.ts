@@ -58,6 +58,12 @@ module.exports = withMercur({
       resolve: './src/modules/learning',
     },
     {
+      resolve: './src/modules/course',
+    },
+    {
+      resolve: './src/modules/enrollment',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [

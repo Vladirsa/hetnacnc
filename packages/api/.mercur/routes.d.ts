@@ -509,6 +509,8 @@ export type Routes = {
                 subscribe: typeof import("@medusajs/medusa/api/admin/workflows-executions/[workflow_id]/subscribe/route");
             };
         };
+        abandonedCarts: typeof import("../src/api/admin/abandoned-carts/route");
+        courses: typeof import("../src/api/admin/courses/route");
         custom: typeof import("../src/api/admin/custom/route");
         learningArticles: typeof import("../src/api/admin/learning-articles/route");
     };
@@ -643,6 +645,7 @@ export type Routes = {
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
+        quoteLeads: typeof import("../src/api/store/quote-leads/route");
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core/api/vendor/campaigns/route") & {
