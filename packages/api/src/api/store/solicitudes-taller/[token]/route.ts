@@ -51,6 +51,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     cierra_en: s.cierra_en,
     trabajo: s.trabajo,
     propuesta_elegida: s.propuesta_elegida,
+    pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" ? s.pago_url || null : null,
+    pago_estado: s.pago_estado || null,
     propuestas,
   })
 }

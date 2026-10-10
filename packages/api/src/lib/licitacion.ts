@@ -16,7 +16,7 @@ export const asegurarTablas = async (knex: any) => {
       t.text("token").notNullable().unique()
       t.text("modo").notNullable().defaultTo("abierta") // abierta | directa
       t.text("taller_id").nullable()
-      t.text("estado").notNullable().defaultTo("abierta") // abierta | elegida | cerrada
+      t.text("estado").notNullable().defaultTo("abierta") // abierta | elegida | pagada | cerrada
       t.jsonb("trabajo").notNullable()
       t.jsonb("contacto").notNullable()
       t.text("propuesta_elegida").nullable()
@@ -42,7 +42,61 @@ export const asegurarTablas = async (knex: any) => {
       t.unique(["solicitud_id", "seller_id"])
     })
   }
+  // Columnas de pago (se agregan solas si faltan)
+  for (const [col, tipo] of [["pago_url", "text"], ["pago_estado", "text"], ["pago_id", "text"], ["pago_monto", "decimal"]] as const) {
+    if (!(await knex.schema.hasColumn(T_SOLICITUD, col))) {
+      await knex.schema.alterTable(T_SOLICITUD, (t: any) => (tipo === "decimal" ? t.decimal(col, 12, 2).nullable() : t.text(col).nullable()))
+    }
+  }
   listo = true
+}
+
+// Mercado Pago ---------------------------------------------------------------
+// Usa la misma llave que el checkout de la tienda (MERCADOPAGO_ACCESS_TOKEN).
+const MP_API = "https://api.mercadopago.com"
+const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
+
+export const mpDisponible = () => Boolean(mpToken())
+
+export const crearPreferenciaPago = async (p: {
+  solicitudId: string
+  folio: string
+  titulo: string
+  monto: number
+  email?: string
+  retorno: string
+}): Promise<{ id: string; url: string } | null> => {
+  if (!mpDisponible()) return null
+  const webhook = process.env.MP_WEBHOOK_URL // ej. https://hetnacnc.com/hooks/mp-licitacion
+  const r = await fetch(`${MP_API}/checkout/preferences`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${mpToken()}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": `lic-${p.solicitudId}`,
+    },
+    body: JSON.stringify({
+      items: [{ id: p.folio, title: p.titulo.slice(0, 250), quantity: 1, unit_price: Math.round(p.monto * 100) / 100, currency_id: "MXN" }],
+      payer: p.email ? { email: p.email } : undefined,
+      external_reference: `licitacion:${p.solicitudId}`,
+      back_urls: { success: p.retorno, failure: p.retorno, pending: p.retorno },
+      auto_return: "approved",
+      statement_descriptor: "HETNA CNC",
+      ...(webhook ? { notification_url: webhook } : {}),
+    }),
+  })
+  if (!r.ok) throw new Error(`Mercado Pago respondió ${r.status}: ${(await r.text()).slice(0, 300)}`)
+  const d = (await r.json()) as { id: string; init_point: string; sandbox_init_point?: string }
+  const prueba = mpToken().startsWith("TEST-")
+  return { id: d.id, url: (prueba && d.sandbox_init_point) || d.init_point }
+}
+
+export const consultarPago = async (pagoId: string) => {
+  const r = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(pagoId)}`, {
+    headers: { Authorization: `Bearer ${mpToken()}` },
+  })
+  if (!r.ok) throw new Error(`Mercado Pago respondió ${r.status}`)
+  return (await r.json()) as { id: number; status: string; external_reference?: string; transaction_amount?: number; currency_id?: string }
 }
 
 export const nuevoId = (prefijo: string) =>
