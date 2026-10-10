@@ -17,6 +17,7 @@ import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listLearningArticles } from "@/lib/data/learning-articles"
+import { listCourses } from "@/lib/data/courses"
 
 type Props = {
   params: Promise<{ locale: string; ruta: string[] }>
@@ -130,8 +131,11 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "generador-2d-3d/patrones-radiales") return <GeneradorPatron />
 
   if (s.slug === "aprendizaje-cnc") {
-    const { learning_articles } = await listLearningArticles({ limit: 9 })
-    return <ServicioPagina s={s} articulos={learning_articles} />
+    const [{ learning_articles }, { courses }] = await Promise.all([
+      listLearningArticles({ limit: 9 }),
+      listCourses({ limit: 9 }),
+    ])
+    return <ServicioPagina s={s} articulos={learning_articles} cursos={courses} />
   }
 
   return <ServicioPagina s={s} />

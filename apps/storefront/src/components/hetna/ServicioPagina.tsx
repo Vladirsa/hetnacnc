@@ -8,6 +8,7 @@ import {
   subServicios,
 } from "./servicios-datos"
 import type { LearningArticle } from "@/lib/data/learning-articles"
+import type { Course } from "@/lib/data/courses"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
 export const enlaceWhatsApp = (mensaje: string) =>
@@ -116,12 +117,56 @@ export const ArticuloAprendizajeCard = ({ a }: { a: LearningArticle }) => (
   </LocalizedClientLink>
 )
 
+const NIVEL_ETIQUETA: Record<Course["level"], string> = {
+  principiante: "Principiante",
+  intermedio: "Intermedio",
+  avanzado: "Avanzado",
+}
+
+export const CursoCard = ({ c }: { c: Course }) => {
+  const totalLecciones = (c.sections || []).reduce((acc, sec) => acc + sec.lessons.length, 0)
+  return (
+    <LocalizedClientLink
+      href={`/aprendizaje-cnc/cursos/${c.slug}`}
+      className="group bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex flex-col hover:border-[#C2560A] hover:shadow-[0_8px_24px_rgba(27,27,24,0.08)] transition"
+    >
+      {c.thumbnail_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover" />
+      ) : (
+        <div className="w-full aspect-video bg-[#142033] flex items-center justify-center">
+          <ServicioIcono nombre="aprender" size={36} />
+        </div>
+      )}
+      <div className="p-4 flex flex-col gap-2">
+        <span className="self-start text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#C2560A] px-2.5 py-1 rounded-full">
+          {NIVEL_ETIQUETA[c.level] || c.level}
+        </span>
+        <h3 className="font-display text-[16px] font-bold m-0 text-[#1B1B18] line-clamp-2">
+          {c.title}
+        </h3>
+        {c.description && (
+          <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{c.description}</p>
+        )}
+        {totalLecciones > 0 && (
+          <span className="text-[12.5px] text-[#9A978C]">{totalLecciones} lecciones</span>
+        )}
+        <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
+          Ver curso
+        </span>
+      </div>
+    </LocalizedClientLink>
+  )
+}
+
 export const ServicioPagina = ({
   s,
   articulos,
+  cursos,
 }: {
   s: Servicio
   articulos?: LearningArticle[]
+  cursos?: Course[]
 }) => {
   const padre = s.padre ? buscarServicio(s.padre) : undefined
   const hijos = subServicios(s.slug)
@@ -233,6 +278,19 @@ export const ServicioPagina = ({
               Entrar al foro
             </span>
           </LocalizedClientLink>
+        )}
+
+        {s.slug === "aprendizaje-cnc" && cursos && cursos.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
+              Cursos de la Academia
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cursos.map((c) => (
+                <CursoCard key={c.id} c={c} />
+              ))}
+            </div>
+          </section>
         )}
 
         {s.slug === "aprendizaje-cnc" && articulos && articulos.length > 0 && (
