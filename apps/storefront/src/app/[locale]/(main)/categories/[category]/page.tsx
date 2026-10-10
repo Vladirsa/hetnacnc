@@ -6,9 +6,9 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms"
 import { SearchProductsListing, ProductListing } from "@/components/sections"
 import { notFound } from "next/navigation"
+import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
-import Script from "next/script"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import {
@@ -48,10 +48,11 @@ export async function generateMetadata({
     locales,
   })
 
-  const title = `${cat.name} Category`
-  const description = `${cat.name} Category - ${
-    process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"
-  }`
+  const servicio = esCategoriaServicio(categoryHandle)
+  const title = servicio ? `${cat.name} en México: cotiza con talleres CNC` : `${cat.name}`
+  const description = servicio
+    ? `${cat.name} con talleres CNC de todo México. Describe tu pieza, recibe propuestas y paga seguro en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}.`
+    : `Compra ${cat.name.toLowerCase()} en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}: precios en pesos y envío a todo México.`
 
   return {
     title,
@@ -121,7 +122,9 @@ async function Category({
 
   return (
     <main className="container">
-      <Script
+      {/* <script> plano (no next/script): necesario en el HTML inicial para
+          crawlers que no esperan a la hidratación. */}
+      <script
         id="ld-breadcrumbs-category"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -136,10 +139,10 @@ async function Category({
                 item: `${baseUrl}/${locale}/categories/${categoryHandle}`,
               },
             ],
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="ld-itemlist-category"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -147,22 +150,31 @@ async function Category({
             "@context": "https://schema.org",
             "@type": "ItemList",
             itemListElement: itemList,
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
       <div className="hidden md:block mb-2">
         <Breadcrumbs items={breadcrumbsItems} />
       </div>
 
-      <h1 className="heading-xl uppercase">{category.name}</h1>
+      {esCategoriaServicio(categoryHandle) ? (
+        <>
+          <h1 className="sr-only">{category.name}</h1>
+          <ServicioCategoria handle={categoryHandle} />
+        </>
+      ) : (
+        <h1 className="heading-xl uppercase">{category.name}</h1>
+      )}
 
+      {esCategoriaServicio(categoryHandle) && jsonLdProducts.length === 0 ? null : (
       <Suspense fallback={<div data-testid="category-page-loading"><ProductListingSkeleton /></div>}>
-        {bot ? (
+        {bot || process.env.NEXT_PUBLIC_LISTADO_CLIENTE !== "1" ? (
           <ProductListing category_id={categoryIds} showSidebar locale={locale} />
         ) : (
           <SearchProductsListing category_id={categoryIds} locale={locale} />
         )}
       </Suspense>
+      )}
     </main>
   )
 }
