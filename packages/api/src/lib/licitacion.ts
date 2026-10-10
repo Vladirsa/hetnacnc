@@ -67,7 +67,8 @@ export const crearPreferenciaPago = async (p: {
   retorno: string
 }): Promise<{ id: string; url: string } | null> => {
   if (!mpDisponible()) return null
-  const webhook = process.env.MP_WEBHOOK_URL // ej. https://hetnacnc.com/hooks/mp-licitacion
+  // La tienda reenvía el aviso a la API (/api/mp/licitacion -> /hooks/mp-licitacion)
+  const webhook = process.env.MP_WEBHOOK_URL || `${STORE_URL}/api/mp/licitacion`
   const r = await fetch(`${MP_API}/checkout/preferences`, {
     method: "POST",
     headers: {
