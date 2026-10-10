@@ -33,8 +33,16 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
     iniciar(async () => {
       setError("")
       const r = await elegirPropuesta(token, p.id)
-      if (!r.ok) setError(r.mensaje)
+      if (!r.ok) {
+        setError(r.mensaje)
+        setConfirmar(null)
+        return
+      }
       setConfirmar(null)
+      if (r.pago_url) {
+        window.location.href = r.pago_url
+        return
+      }
       router.refresh()
     })
 
@@ -75,6 +83,25 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
       </div>
 
       {error && <p className="mt-3 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}
+
+      {solicitud.pago_estado === "pagado" ? (
+        <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-5 text-[#1E7B3A]">
+          <p className="font-extrabold">✓ Pago recibido</p>
+          <p className="mt-1 text-sm">El taller ya está trabajando en tu pedido. Te avisaremos cuando salga el envío.</p>
+        </div>
+      ) : (
+        solicitud.pago_url && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#C2560A]/30 bg-[#FFF1E6] p-5">
+            <div>
+              <p className="font-extrabold text-[#142033]">Falta tu pago</p>
+              <p className="text-sm text-[#40403A]">Paga con Mercado Pago para que el taller empiece a fabricar.</p>
+            </div>
+            <a href={solicitud.pago_url} className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110">
+              Pagar ahora
+            </a>
+          </div>
+        )
+      )}
 
       <div className="mt-4 grid gap-4">
         {lista.map((p) => {
@@ -139,7 +166,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
             <h3 className="text-lg font-extrabold text-[#142033]">¿Elegir a {confirmar.taller.nombre}?</h3>
             <p className="mt-2 text-sm text-[#40403A]">
-              {pesos(confirmar.precio)} MXN · entrega en {confirmar.dias} días. Al confirmar, HETNA te enviará la liga de pago y las demás propuestas se cierran.
+              {pesos(confirmar.precio)} MXN · entrega en {confirmar.dias} días. Al confirmar te llevamos a pagar con Mercado Pago y las demás propuestas se cierran.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmar(null)} className="rounded-xl px-4 py-2 font-semibold text-[#40403A]">

@@ -75,6 +75,8 @@ export type VistaSolicitud = {
   cierra_en: string | null
   trabajo: Record<string, string>
   propuesta_elegida: string | null
+  pago_url: string | null
+  pago_estado: string | null
   propuestas: Propuesta[]
 }
 
@@ -96,7 +98,10 @@ export async function verSolicitud(token: string): Promise<VistaSolicitud | null
   }
 }
 
-export async function elegirPropuesta(token: string, propuestaId: string): Promise<SolicitudTallerResultado> {
+export async function elegirPropuesta(
+  token: string,
+  propuestaId: string
+): Promise<{ ok: true; pago_url: string | null } | { ok: false; mensaje: string }> {
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller/${encodeURIComponent(token)}/elegir`, {
       method: "POST",
@@ -105,7 +110,7 @@ export async function elegirPropuesta(token: string, propuestaId: string): Promi
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { ok: false, mensaje: body.message || "No se pudo elegir la propuesta." }
-    return { ok: true }
+    return { ok: true, pago_url: body.pago_url || null }
   } catch {
     return { ok: false, mensaje: "No se pudo elegir la propuesta. Intenta de nuevo." }
   }

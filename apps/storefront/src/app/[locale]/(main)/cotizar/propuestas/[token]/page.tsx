@@ -38,7 +38,9 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
       <p className="mt-2 text-[#6B675C]">
         {s.estado === "abierta"
           ? `Compara precio, tiempo y condiciones. ${s.modo === "abierta" && cierra ? `Los talleres pueden enviar propuestas hasta el ${cierra}.` : ""}`
-          : "Ya elegiste una propuesta. HETNA te contactará para el pago y el seguimiento."}
+          : s.pago_estado === "pagado"
+            ? "Pago recibido. El taller está fabricando tu pedido."
+            : "Ya elegiste una propuesta. Completa tu pago para que el taller empiece."}
       </p>
 
       <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
