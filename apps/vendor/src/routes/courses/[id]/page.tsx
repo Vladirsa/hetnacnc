@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Container, Heading, Text, Button, IconButton, Input, Textarea, Label, Badge, toast } from "@medusajs/ui"
@@ -174,12 +174,12 @@ export default function CourseDetailPage() {
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  useState(() => {
+  useEffect(() => {
     if (course) {
       setTitle(course.title)
       setDescription(course.description || "")
     }
-  })
+  }, [course?.id])
 
   const guardar = useMutation({
     mutationFn: () => client.vendor.courses.$id.mutate({ $id: id!, title, description }),
