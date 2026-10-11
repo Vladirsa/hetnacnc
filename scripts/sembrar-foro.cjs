@@ -89,14 +89,34 @@ const TEMAS = [
      on conflict (cliente_id) do update set nombre = excluded.nombre
      returning id`)
   const autor = r.rows[0].id
+  console.log("Base del foro:", new URL(URL_DB).hostname)
+  const slug = (t) =>
+    (t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80)) || "tema"
   let nuevos = 0
   for (const [seccion, titulo, pregunta, respuesta] of TEMAS) {
     const ya = await c.query("select 1 from foro.temas where titulo = $1", [titulo])
     if (ya.rowCount) continue
-    const t = await c.query("select * from foro.crear_tema($1, $2, 'pregunta', $3, $4)", [autor, seccion, titulo, INTRO + pregunta])
-    const temaId = t.rows[0].id
-    const resp = await c.query("select foro.responder($1, $2, $3) as id", [autor, temaId, respuesta + CIERRE])
-    await c.query("update foro.temas set mejor_respuesta_id = $1 where id = $2", [resp.rows[0].id, temaId])
+    const s = await c.query("select id from foro.secciones where slug = $1", [seccion])
+    if (!s.rowCount) { console.log("✗ no existe la sección", seccion); continue }
+    let sl = slug(titulo), n = 1
+    while ((await c.query("select 1 from foro.temas where seccion_id = $1 and slug = $2", [s.rows[0].id, sl])).rowCount) sl = `${slug(titulo).slice(0, 75)}-${++n}`
+    await c.query("begin")
+    try {
+      const t = await c.query(
+        "insert into foro.temas (seccion_id, autor_id, tipo, titulo, slug, cuerpo) values ($1, $2::uuid, 'pregunta', $3, $4, $5) returning id",
+        [s.rows[0].id, autor, titulo, sl, INTRO + pregunta])
+      const temaId = t.rows[0].id
+      const resp = await c.query(
+        "insert into foro.respuestas (tema_id, autor_id, cuerpo) values ($1, $2::uuid, $3) returning id",
+        [temaId, autor, respuesta + CIERRE])
+      await c.query(
+        "update foro.temas set mejor_respuesta_id = $1, respuestas = (select count(*) from foro.respuestas where tema_id = $2 and estado = 'publicado'), ultima_actividad = now() where id = $2",
+        [resp.rows[0].id, temaId])
+      await c.query("commit")
+    } catch (e) {
+      await c.query("rollback")
+      throw e
+    }
     nuevos++
     console.log("✓", seccion, "-", titulo)
   }
