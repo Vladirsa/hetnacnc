@@ -4,6 +4,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   trailingSlash: false,
   reactStrictMode: true,
+  experimental: {
+    // @medusajs/ui (y lodash) no se parten por componente/función al importar
+    // desde su punto de entrada principal: esto le pide a Next que reescriba
+    // esos imports a sus archivos internos para no cargar toda la librería
+    // (p. ej. el DataTable de @medusajs/ui, que el storefront no usa) en cada página.
+    optimizePackageImports: ["@medusajs/ui", "lodash"],
+  },
   logging: {
     fetches: {
       fullUrl: true

@@ -1,7 +1,7 @@
 import { OrdersPagination } from "@/components/organisms/OrdersPagination/OrdersPagination"
 import { SingleOrderReturn } from "@/components/organisms/SingleOrderReturn/SingleOrderReturn"
 import { Heading } from "@medusajs/ui"
-import { isEmpty } from "lodash"
+import isEmpty from "lodash/isEmpty"
 
 const LIMIT = 10
 

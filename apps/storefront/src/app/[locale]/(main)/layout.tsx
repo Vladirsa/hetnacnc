@@ -1,10 +1,18 @@
+import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
 import { Footer, Header } from '@/components/organisms';
 import { HetnaHeader } from '@/components/hetna/HetnaHeader';
-import { TalkJsProvider } from '@/components/providers';
 import { retrieveCustomer } from '@/lib/data/customer';
 import { checkRegion } from '@/lib/helpers/check-region';
+
+// El chat (TalkJS) solo se usa si hay sesión; se carga aparte para no
+// sumar su JS al bundle inicial de los visitantes anónimos.
+const TalkJsProvider = dynamic(() =>
+  import('@/components/providers/TalkJs/TalkJsProvider').then(
+    (mod) => mod.TalkJsProvider
+  )
+);
 
 export default async function RootLayout({
   children,

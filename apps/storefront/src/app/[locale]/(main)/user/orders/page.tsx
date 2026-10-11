@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 
 import { LoginForm, ParcelAccordion, UserNavigation } from '@/components/molecules';
 import { OrdersPagination } from '@/components/sections';

@@ -6,6 +6,7 @@ import './globals.css';
 import { Toaster } from '@medusajs/ui';
 import Head from 'next/head';
 
+import { Analytics } from '@/components/analytics/Analytics';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
 import { Traductor } from '@/components/hetna/Traductor';
 import { SCRIPT_VELO } from '@/i18n/idioma';
@@ -125,6 +126,7 @@ export default async function RootLayout({
       </Head>
       <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
+        <Analytics />
         <HtmlLangSetter />
         <Traductor />
         <Providers cart={cart}>

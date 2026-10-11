@@ -1,3 +1,5 @@
+import { PRODUCT_LIMIT } from "@/const"
+
 export const ProductListingSkeleton = () => {
   return (
     <div className='py-4' data-testid="product-listing-skeleton">
@@ -16,17 +18,16 @@ export const ProductListingSkeleton = () => {
           <div className='rounded-sm bg-secondary h-80 border border-white animate-pulse' />
         </div>
         <div className='col-span-3'>
-          <div className='grid sm:grid-cols-2 xl:grid-cols-3'>
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-            <div className='rounded-sm bg-secondary h-[600px] border border-white animate-pulse' />
-          </div>
+          {/* Mismas proporciones que ProductCard (imagen aspect-square + franja de texto)
+              para que el cambio de skeleton a contenido real no mueva el layout (CLS). */}
+          <ul className='flex flex-wrap gap-4'>
+            {Array.from({ length: PRODUCT_LIMIT }).map((_, i) => (
+              <li key={i} className='w-full lg:w-[calc(25%-1rem)] min-w-[250px]'>
+                <div className='rounded-sm bg-secondary aspect-square border border-white animate-pulse' />
+                <div className='h-[72px] mt-1 rounded-sm bg-secondary border border-white animate-pulse' />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

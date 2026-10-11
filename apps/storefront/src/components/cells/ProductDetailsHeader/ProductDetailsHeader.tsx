@@ -18,6 +18,7 @@ import { Chat } from "@/components/organisms/Chat/Chat"
 import { CompareOffersModal } from "@/components/organisms/CompareOffersModal/CompareOffersModal"
 import { SellerDTO } from "@mercurjs/types"
 import { toast } from "@/lib/helpers/toast"
+import { trackAddToCart } from "@/lib/analytics/events"
 import { useCartContext } from "@/components/providers"
 import { WhatsAppButton } from "@/components/atoms/WhatsAppButton/WhatsAppButton"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
@@ -137,6 +138,10 @@ export const ProductDetailsHeader = ({
         quantity: 1,
         countryCode: locale,
       })
+      trackAddToCart(
+        { item_id: product.id, item_name: product.title, price: offerAmount as number, quantity: 1 },
+        offerCurrency
+      )
     } catch (error) {
       toast.error({
         title: "Error al agregar al carrito",

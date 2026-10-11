@@ -1,0 +1,133 @@
+{
+  "name": "WhatsApp - Recordatorio de carrito abandonado",
+  "nodes": [
+    {
+      "id": "ea48ee12-85eb-4227-ab82-bb69b0124e39",
+      "name": "Cada hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] } }
+    },
+    {
+      "id": "ed6f87c3-8666-40dd-a396-261ac39f69e0",
+      "name": "Calcular header de autenticacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, 0],
+      "parameters": {
+        "jsCode": "const authHeader = 'Basic ' + Buffer.from($env.MEDUSA_ADMIN_SECRET_KEY + ':').toString('base64');\nreturn [{ json: { authHeader } }];"
+      }
+    },
+    {
+      "id": "f1f13c30-7b0f-4502-bf7d-c56599f01e39",
+      "name": "Traer carritos (Admin API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.MEDUSA_BACKEND_URL }}/admin/abandoned-carts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.authHeader }}" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "36dd66c9-7fb3-461c-93d3-2578e18baf00",
+      "name": "Filtrar carritos elegibles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 0],
+      "parameters": {
+        "jsCode": "const MIN_HOURS = Number($env.ABANDONED_CART_MIN_HOURS || 3);\nconst MAX_HOURS = Number($env.ABANDONED_CART_MAX_HOURS || 72);\n\nconst now = Date.now();\nconst upperBound = now - MIN_HOURS * 60 * 60 * 1000;\nconst lowerBound = now - MAX_HOURS * 60 * 60 * 1000;\n\nconst carts = $input.first().json.carts || [];\n\nconst eligible = carts.filter((cart) => {\n  if (cart.completed_at) return false;\n  if (!cart.items || !cart.items.length) return false;\n  const phone = cart.shipping_address && cart.shipping_address.phone;\n  if (!phone) return false;\n  if (cart.metadata && cart.metadata.abandoned_whatsapp_sent_at) return false;\n\n  const updatedAt = new Date(cart.updated_at).getTime();\n  return updatedAt <= upperBound && updatedAt >= lowerBound;\n});\n\nreturn eligible.slice(0, 50).map((cart) => ({\n  json: {\n    id: cart.id,\n    phone: cart.shipping_address.phone,\n    items: cart.items,\n    total: cart.total,\n    currency_code: cart.currency_code\n  }\n}));"
+      }
+    },
+    {
+      "id": "4ef5784e-e4a6-4e7e-a7d3-07d48466bfe2",
+      "name": "Procesar de uno en uno",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [680, 0],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "bb4a19f3-c424-44d5-8b5b-734274550e83",
+      "name": "Armar mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, -120],
+      "parameters": {
+        "jsCode": "const cart = $input.first().json;\nconst storefrontUrl = $env.STOREFRONT_URL || 'https://hetnacnc.com';\nconst firstItem = (cart.items[0] && cart.items[0].title) || 'tu producto';\nconst extra = cart.items.length > 1 ? ` y ${cart.items.length - 1} producto(s) más` : '';\n\nconst message = `¡Hola! Vimos que dejaste en tu carrito: ${firstItem}${extra}. ¿Te ayudamos a completar tu compra? ${storefrontUrl}/mx/cart`;\n\nreturn [{ json: Object.assign({}, cart, { message }) }];"
+      }
+    },
+    {
+      "id": "8d29d1b2-7707-4b82-93db-b032168111a3",
+      "name": "Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, -120],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.phone, \"text\": $json.message } }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "4b49ff5a-972d-4364-a8c4-0d5e1ea7e33c",
+      "name": "Marcar carrito como notificado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, -120],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MEDUSA_BACKEND_URL }}/admin/carts/{{ $(\"Filtrar carritos elegibles\").item.json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "={{ $('Calcular header de autenticacion').item.json.authHeader }}" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"metadata\": { \"abandoned_whatsapp_sent_at\": $now.toISO() } } }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Cada hora": {
+      "main": [[{ "node": "Calcular header de autenticacion", "type": "main", "index": 0 }]]
+    },
+    "Calcular header de autenticacion": {
+      "main": [[{ "node": "Traer carritos (Admin API)", "type": "main", "index": 0 }]]
+    },
+    "Traer carritos (Admin API)": {
+      "main": [[{ "node": "Filtrar carritos elegibles", "type": "main", "index": 0 }]]
+    },
+    "Filtrar carritos elegibles": {
+      "main": [[{ "node": "Procesar de uno en uno", "type": "main", "index": 0 }]]
+    },
+    "Procesar de uno en uno": {
+      "main": [[], [{ "node": "Armar mensaje", "type": "main", "index": 0 }]]
+    },
+    "Armar mensaje": {
+      "main": [[{ "node": "Enviar WhatsApp", "type": "main", "index": 0 }]]
+    },
+    "Enviar WhatsApp": {
+      "main": [[{ "node": "Marcar carrito como notificado", "type": "main", "index": 0 }]]
+    },
+    "Marcar carrito como notificado": {
+      "main": [[{ "node": "Procesar de uno en uno", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}

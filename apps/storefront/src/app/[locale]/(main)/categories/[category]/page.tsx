@@ -8,7 +8,6 @@ import { SearchProductsListing, ProductListing } from "@/components/sections"
 import { notFound } from "next/navigation"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
-import Script from "next/script"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import {
@@ -121,7 +120,9 @@ async function Category({
 
   return (
     <main className="container">
-      <Script
+      {/* <script> plano (no next/script): necesario en el HTML inicial para
+          crawlers que no esperan a la hidratación. */}
+      <script
         id="ld-breadcrumbs-category"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -136,10 +137,10 @@ async function Category({
                 item: `${baseUrl}/${locale}/categories/${categoryHandle}`,
               },
             ],
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="ld-itemlist-category"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -147,7 +148,7 @@ async function Category({
             "@context": "https://schema.org",
             "@type": "ItemList",
             itemListElement: itemList,
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
       <div className="hidden md:block mb-2">

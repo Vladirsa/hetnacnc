@@ -509,7 +509,10 @@ export type Routes = {
                 subscribe: typeof import("@medusajs/medusa/api/admin/workflows-executions/[workflow_id]/subscribe/route");
             };
         };
+        abandonedCarts: typeof import("../src/api/admin/abandoned-carts/route");
+        courses: typeof import("../src/api/admin/courses/route");
         custom: typeof import("../src/api/admin/custom/route");
+        learningArticles: typeof import("../src/api/admin/learning-articles/route");
     };
     auth: {
         $actorType: {
@@ -638,7 +641,14 @@ export type Routes = {
                 calculate: typeof import("@medusajs/medusa/api/store/shipping-options/[id]/calculate/route");
             };
         };
+        courses: typeof import("../src/api/store/courses/route") & {
+            $slug: typeof import("../src/api/store/courses/[slug]/route");
+        };
         custom: typeof import("../src/api/store/custom/route");
+        learningArticles: typeof import("../src/api/store/learning-articles/route") & {
+            $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
+        };
+        quoteLeads: typeof import("../src/api/store/quote-leads/route");
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core/api/vendor/campaigns/route") & {
@@ -925,5 +935,16 @@ export type Routes = {
         };
         stores: typeof import("@mercurjs/core/api/vendor/stores/route");
         uploads: typeof import("@mercurjs/core/api/vendor/uploads/route");
+        courses: typeof import("../src/api/vendor/courses/route") & {
+            $id: typeof import("../src/api/vendor/courses/[id]/route") & {
+                sections: typeof import("../src/api/vendor/courses/[id]/sections/route") & {
+                    $sectionId: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/route") & {
+                        lessons: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/lessons/route") & {
+                            $lessonId: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/lessons/[lessonId]/route");
+                        };
+                    };
+                };
+            };
+        };
     };
 };

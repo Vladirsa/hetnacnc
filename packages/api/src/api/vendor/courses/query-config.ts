@@ -1,0 +1,40 @@
+export const vendorCourseListFields = [
+  "id",
+  "title",
+  "slug",
+  "thumbnail_url",
+  "level",
+  "language",
+  "status",
+  "published_at",
+  "created_at",
+  "updated_at",
+  "product.id",
+  "product.handle",
+  "product.title",
+]
+
+export const vendorCourseRetrieveFields = [
+  ...vendorCourseListFields,
+  "description",
+  "sections.id",
+  "sections.title",
+  "sections.position",
+  "sections.lessons.id",
+  "sections.lessons.title",
+  "sections.lessons.description",
+  "sections.lessons.position",
+  "sections.lessons.duration_seconds",
+  "sections.lessons.is_preview",
+]
+
+export const vendorCourseQueryConfig = {
+  list: {
+    defaults: vendorCourseListFields,
+    isList: true,
+  },
+  retrieve: {
+    defaults: vendorCourseRetrieveFields,
+    isList: false,
+  },
+}
