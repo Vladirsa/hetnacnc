@@ -64,6 +64,7 @@ export default async function seedCursoEjemplo({ container }: ExecArgs) {
         "Aprende a leer, escribir y depurar G-code desde cero: coordenadas, comandos M/G, velocidades de avance y los errores más comunes en Mach3 y GRBL.",
       level: "principiante",
       language: "es",
+      seller_id: seller.id,
       product_id: product.id,
     },
   })

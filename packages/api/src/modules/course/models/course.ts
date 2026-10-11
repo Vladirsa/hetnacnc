@@ -5,6 +5,11 @@ import CourseSection from "./course-section"
 const Course = model
   .define("course", {
     id: model.id({ prefix: "course" }).primaryKey(),
+    // Denormalizado desde el seller del producto vinculado al crear el curso:
+    // query.graph no resuelve un segundo salto de link (course -> product ->
+    // seller), asi que guardamos el seller_id aqui para poder filtrar "mis
+    // cursos" en el panel de vendedor sin el Index Module.
+    seller_id: model.text().nullable(),
     title: model.text().searchable(),
     slug: model.text().unique(),
     description: model.text().nullable(),

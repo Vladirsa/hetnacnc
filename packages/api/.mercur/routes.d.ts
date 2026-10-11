@@ -935,5 +935,16 @@ export type Routes = {
         };
         stores: typeof import("@mercurjs/core/api/vendor/stores/route");
         uploads: typeof import("@mercurjs/core/api/vendor/uploads/route");
+        courses: typeof import("../src/api/vendor/courses/route") & {
+            $id: typeof import("../src/api/vendor/courses/[id]/route") & {
+                sections: typeof import("../src/api/vendor/courses/[id]/sections/route") & {
+                    $sectionId: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/route") & {
+                        lessons: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/lessons/route") & {
+                            $lessonId: typeof import("../src/api/vendor/courses/[id]/sections/[sectionId]/lessons/[lessonId]/route");
+                        };
+                    };
+                };
+            };
+        };
     };
 };

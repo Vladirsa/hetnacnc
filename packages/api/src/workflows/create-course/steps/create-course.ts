@@ -10,6 +10,7 @@ export type CreateCourseStepInput = {
   thumbnail_url?: string | null
   level?: "principiante" | "intermedio" | "avanzado"
   language?: string
+  seller_id?: string | null
 }
 
 export const createCourseStep = createStep(
