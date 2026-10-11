@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import Image from "next/image"
 import { HttpTypes } from "@medusajs/types"
 
-import { CartDropdown, MobileNavbar } from "@/components/cells"
+import { CartDropdown } from "@/components/cells"
 import { UserDropdown } from "@/components/cells/UserDropdown/UserDropdown"
 import { NavbarSearch } from "@/components/molecules"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -11,8 +11,9 @@ import { listCategories } from "@/lib/data/categories"
 import { retrieveCustomer } from "@/lib/data/customer"
 
 import { SocialIcon } from "./SocialIcon"
-import { ServiciosNav } from "./ServiciosNav"
-import { FavoritosBoton, MisComprasBoton } from "./Favoritos"
+import { BarraNavegacion } from "./BarraNavegacion"
+import { FavoritosBoton, MisComprasBoton, NotificacionesBoton } from "./Favoritos"
+import { OcultarAlBajar } from "./OcultarAlBajar"
 import { IdiomaSelector, MonedaSelector } from "./Selectores"
 import { listRegions } from "@/lib/data/regions"
 import { EnvioA } from "./EnvioA"
@@ -31,7 +32,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
     parentCategories: HttpTypes.StoreProductCategory[]
   }
 
-  const navCategories = categories.length ? categories : parentCategories
+  const navCategories = parentCategories
   const redes = footerLinks.connect
   const whatsapp = redes.find((r) => r.label === "WhatsApp")?.path
 
@@ -73,12 +74,10 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         </div>
       </div>
 
+      {/* En celular se oculta al bajar; solo queda el buscador */}
+      <OcultarAlBajar>
       {/* Barra principal (z-50: sus menus, como el carrito, quedan por encima de la barra azul) */}
       <div className="relative z-50 bg-white border-b border-[#E7E4DC] px-4 lg:px-16 py-3 lg:py-4 flex items-center gap-4 lg:gap-8">
-        <MobileNavbar
-          parentCategories={parentCategories}
-          categories={categories}
-        />
         <LocalizedClientLink
           href="/"
           className="shrink-0 flex items-center"
@@ -100,13 +99,14 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         >
           <FavoritosBoton />
           <MisComprasBoton isLoggedIn={isLoggedIn} />
+          <NotificacionesBoton isLoggedIn={isLoggedIn} />
           <UserDropdown isLoggedIn={isLoggedIn} />
           <CartDropdown />
         </div>
         {/* Celular: notificaciones, idioma y moneda */}
         <div className="ml-auto flex md:hidden items-center gap-2">
           <LocalizedClientLink
-            href="/user/messages"
+            href={isLoggedIn ? "/user/messages" : "/login"}
             aria-label="Notificaciones"
             className="p-1.5 text-[#142033]"
           >
@@ -118,9 +118,20 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           <MonedaSelector regions={regions} />
         </div>
       </div>
+      </OcultarAlBajar>
 
-      {/* Tienda y servicios */}
-      <ServiciosNav categorias={navCategories} />
+      {/* Buscador en celular (siempre visible) */}
+      <div className="md:hidden bg-white border-b border-[#E7E4DC] px-4 pb-3">
+        <Suspense fallback={null}>
+          <NavbarSearch />
+        </Suspense>
+      </div>
+
+      {/* Categorias, servicios y herramientas */}
+      {/* En celular no se muestra: ahí el encabezado es solo logo, campana, idioma, moneda y buscador */}
+      <div className="hidden md:block">
+        <BarraNavegacion categorias={navCategories} />
+      </div>
     </header>
   )
 }
