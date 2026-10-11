@@ -40,7 +40,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
 
   // Peso volumétrico (largo × ancho × alto / 5000): las paqueterías cobran el mayor.
   const volumetrico = Math.round(((largo * ancho * alto) / 5000) * 10) / 10
-  const margen = Number(process.env.ENVIO_MARGEN_PCT ?? process.env.SKYDROPX_MARGEN_PCT ?? 4)
+  const margen = Number(process.env.ENVIO_MARGEN_PCT || 0)
   const minimo = Number(process.env.ENVIO_TARIFA_MINIMA || 20)
   const permitidas = (process.env.ENVIO_PAQUETERIAS || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean)
 
