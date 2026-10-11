@@ -24,6 +24,7 @@ export type Taller = {
   descripcion?: string
   logo?: string | null
   banner?: string | null
+  fundador: boolean
   perfil: Perfil
 }
 
@@ -84,8 +85,12 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   descripcion: s.description ?? undefined,
   logo: s.logo,
   banner: s.banner,
+  fundador: s.metadata?.fundador === true,
   perfil: leerPerfil(s.metadata),
 })
+
+// Cuentas de prueba (metadata.prueba = true) no se muestran al público.
+const esPrueba = (s: SellerCrudo) => s.metadata?.prueba === true
 
 const CAMPOS = "id,name,handle,description,logo,banner,metadata"
 
@@ -96,7 +101,7 @@ export const listarTalleres = async (): Promise<Taller[]> => {
       limit: 100,
       fetchOptions: { next: { revalidate: 300 } },
     } as never)) as unknown as { sellers: SellerCrudo[] }
-    return (r.sellers ?? []).map(aTaller)
+    return (r.sellers ?? []).filter((s) => !esPrueba(s)).map(aTaller)
   } catch {
     return []
   }
@@ -110,7 +115,7 @@ export const tallerPorHandle = async (handle: string): Promise<Taller | null> =>
       fetchOptions: { next: { revalidate: 300 } },
     } as never)) as unknown as { sellers: SellerCrudo[] }
     const s = (r.sellers ?? []).find((x) => x.handle === handle)
-    return s ? aTaller(s) : null
+    return s && !esPrueba(s) ? aTaller(s) : null
   } catch {
     return null
   }
