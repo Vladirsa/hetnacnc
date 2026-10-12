@@ -74,6 +74,38 @@ export function abandonedCartEmailHtml({
   )
 }
 
+export function digitalDownloadEmailHtml({
+  productTitle,
+  downloadUrl,
+  expiresAt,
+}: {
+  productTitle: string
+  downloadUrl: string
+  expiresAt: string
+}): string {
+  const expiraFecha = new Date(expiresAt).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+
+  return layout(
+    "Recibiste este correo por comprar un producto digital en " + SITE_NAME,
+    `
+      <h1 style="font-size:20px;margin:0 0 16px;">¡Gracias por tu compra!</h1>
+      <p>Tu archivo de <strong>${productTitle}</strong> ya está listo para descargar.</p>
+      <p style="margin-top:24px;">
+        <a href="${downloadUrl}"
+           style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">
+          Descargar mi archivo
+        </a>
+      </p>
+      <p style="color:#666;font-size:13px;margin-top:16px;">Este link es válido hasta el ${expiraFecha}.
+      Si expira, contáctanos y te generamos uno nuevo.</p>
+    `
+  )
+}
+
 export function quoteLeadEmailHtml({
   servicioNombre,
   estimadoMin,
