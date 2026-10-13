@@ -2,9 +2,18 @@
 
 import { ReactNode, useEffect, useState } from "react"
 
-// Solo en celular: oculta su contenido cuando el cliente baja por la página y
-// lo vuelve a mostrar al regresar arriba. En computadora no hace nada.
-export const OcultarAlBajar = ({ children }: { children: ReactNode }) => {
+// Oculta su contenido cuando el cliente baja por la página y lo vuelve a
+// mostrar al regresar arriba.
+// - Por defecto solo actúa en celular (en computadora no hace nada).
+// - Con tambienEscritorio también actúa en computadora: así el encabezado
+//   se queda delgado y fijo (solo logo, buscador y botones) al hacer scroll.
+export const OcultarAlBajar = ({
+  children,
+  tambienEscritorio = false,
+}: {
+  children: ReactNode
+  tambienEscritorio?: boolean
+}) => {
   const [oculto, setOculto] = useState(false)
 
   useEffect(() => {
@@ -25,9 +34,11 @@ export const OcultarAlBajar = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
+  const soloCelular = tambienEscritorio ? "" : "md:max-h-none md:overflow-visible"
+
   return (
     <div
-      className={`transition-[max-height] duration-200 ease-out md:max-h-none md:overflow-visible ${
+      className={`transition-[max-height] duration-200 ease-out ${soloCelular} ${
         oculto ? "max-h-0 overflow-hidden" : "max-h-40"
       }`}
     >
