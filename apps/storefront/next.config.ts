@@ -1,9 +1,29 @@
 import type { NextConfig } from 'next';
 
+// Encabezados de seguridad que el navegador recibe en cada pagina.
+// (Se dejo fuera Content-Security-Policy a proposito: es estricto y, mal
+// configurado, puede romper el pago, el chat o la analitica. Se agrega
+// despues, probandolo con calma.)
+const encabezadosSeguridad = [
+  // Obliga a usar siempre HTTPS (1 año)
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  // Evita que el navegador "adivine" tipos de archivo
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Evita que otros sitios metan tu tienda dentro de un marco (clickjacking)
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  // Al salir a otro sitio solo se comparte el dominio, no la URL completa
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }
+];
+
 const nextConfig: NextConfig = {
   output: "standalone",
   trailingSlash: false,
   reactStrictMode: true,
+  // Oculta el encabezado "x-powered-by: Next.js" (no regalar pistas a atacantes)
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: encabezadosSeguridad }];
+  },
   experimental: {
     // @medusajs/ui (y lodash) no se parten por componente/función al importar
     // desde su punto de entrada principal: esto le pide a Next que reescriba
