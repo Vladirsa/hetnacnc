@@ -1,6 +1,13 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { piezasDe } from "@/lib/publicidad/consultas"
+import type { Pieza } from "@/lib/publicidad/tipos"
 
-// Texto editable del banner. Cambia aquí la promoción cuando quieras.
+import AnunciosEspacio from "./publicidad/AnunciosEspacio"
+import { EnlacePub, EtiquetaPublicidad, ImagenPieza, TextoPieza } from "./publicidad/PiezasBase"
+import PubVista from "./publicidad/PubVista"
+
+// Texto editable del banner. Cambia aquí la promoción cuando quieras
+// (o sube imágenes en el panel de publicidad, espacio "Banner promocional", y reemplazan estas tarjetas).
 const PROMO = {
   etiqueta: "Nuevo en HETNA",
   titulo: "Envíos HETNA: cotiza tu envío al instante",
@@ -20,40 +27,71 @@ const TALLER = {
 const REJILLA =
   "repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 26px)"
 
-export default function BannerPromo() {
-  return (
-    <section aria-label="Promociones" className="mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-8">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div
-          className="relative overflow-hidden rounded-2xl bg-[#C2560A] p-6 text-white sm:p-8"
-          style={{ backgroundImage: REJILLA }}
-        >
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-white/80">{PROMO.etiqueta}</p>
-          <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">{PROMO.titulo}</h2>
-          <p className="mt-2 max-w-md text-white/90">{PROMO.texto}</p>
-          <LocalizedClientLink
-            href={PROMO.href}
-            className="mt-5 inline-block rounded-xl bg-white px-5 py-2.5 font-bold text-[#142033] transition hover:-translate-y-0.5 hover:shadow-lg"
-          >
-            {PROMO.boton} →
-          </LocalizedClientLink>
-        </div>
+// Tarjeta hecha con una imagen subida en el panel
+const TarjetaImagen = ({ p }: { p: Pieza }) => (
+  <EnlacePub
+    id={p.id}
+    publicidad={p.es_publicidad}
+    className="group relative block overflow-hidden rounded-2xl bg-[#142033] text-white"
+  >
+    <div className="relative w-full" style={{ aspectRatio: "2 / 1" }}>
+      <ImagenPieza p={p} />
+      <TextoPieza p={p} />
+    </div>
+    {p.es_publicidad && <EtiquetaPublicidad />}
+  </EnlacePub>
+)
 
-        <div
-          className="relative overflow-hidden rounded-2xl bg-[#142033] p-6 text-white sm:p-8"
-          style={{ backgroundImage: REJILLA }}
-        >
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-[#F2A25F]">{TALLER.etiqueta}</p>
-          <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">{TALLER.titulo}</h2>
-          <p className="mt-2 max-w-md text-white/80">{TALLER.texto}</p>
-          <LocalizedClientLink
-            href={TALLER.href}
-            className="mt-5 inline-block rounded-xl bg-[#C2560A] px-5 py-2.5 font-bold text-white transition hover:-translate-y-0.5 hover:brightness-110"
-          >
-            {TALLER.boton} →
-          </LocalizedClientLink>
+export default async function BannerPromo() {
+  const piezas = await piezasDe("banner_promo")
+
+  return (
+    <>
+      <section aria-label="Promociones" className="mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-8">
+        <div className="grid gap-4 md:grid-cols-2">
+          {piezas[0] ? (
+            <TarjetaImagen p={piezas[0]} />
+          ) : (
+            <div
+              className="relative overflow-hidden rounded-2xl bg-[#C2560A] p-6 text-white sm:p-8"
+              style={{ backgroundImage: REJILLA }}
+            >
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-white/80">{PROMO.etiqueta}</p>
+              <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">{PROMO.titulo}</h2>
+              <p className="mt-2 max-w-md text-white/90">{PROMO.texto}</p>
+              <LocalizedClientLink
+                href={PROMO.href}
+                className="mt-5 inline-block rounded-xl bg-white px-5 py-2.5 font-bold text-[#142033] transition hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                {PROMO.boton} →
+              </LocalizedClientLink>
+            </div>
+          )}
+
+          {piezas[1] ? (
+            <TarjetaImagen p={piezas[1]} />
+          ) : (
+            <div
+              className="relative overflow-hidden rounded-2xl bg-[#142033] p-6 text-white sm:p-8"
+              style={{ backgroundImage: REJILLA }}
+            >
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-[#F2A25F]">{TALLER.etiqueta}</p>
+              <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">{TALLER.titulo}</h2>
+              <p className="mt-2 max-w-md text-white/80">{TALLER.texto}</p>
+              <LocalizedClientLink
+                href={TALLER.href}
+                className="mt-5 inline-block rounded-xl bg-[#C2560A] px-5 py-2.5 font-bold text-white transition hover:-translate-y-0.5 hover:brightness-110"
+              >
+                {TALLER.boton} →
+              </LocalizedClientLink>
+            </div>
+          )}
         </div>
-      </div>
-    </section>
+        {piezas.length > 0 && <PubVista ids={piezas.map((p) => p.id)} />}
+      </section>
+
+      {/* Franja de publicidad del inicio (no dibuja nada si no hay anuncios vigentes) */}
+      <AnunciosEspacio espacio="franja_inicio" />
+    </>
   )
 }
