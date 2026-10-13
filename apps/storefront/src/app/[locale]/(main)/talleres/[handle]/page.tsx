@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
+import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
@@ -99,12 +100,15 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
               ))}
             </div>
           </div>
-          <LocalizedClientLink
-            href={`/talleres/${t.handle}?tab=cotizar`}
-            className="rounded-xl bg-[#C2560A] px-5 py-3 text-center font-semibold text-white hover:brightness-110"
-          >
-            Solicitar cotización
-          </LocalizedClientLink>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <BotonPreguntarTaller tallerHandle={t.handle} tallerNombre={t.nombre} />
+            <LocalizedClientLink
+              href={`/talleres/${t.handle}?tab=cotizar`}
+              className="flex h-12 items-center justify-center rounded-xl bg-[#C2560A] px-5 text-center font-semibold text-white hover:brightness-110"
+            >
+              Solicitar cotización
+            </LocalizedClientLink>
+          </div>
         </div>
       </section>
 
