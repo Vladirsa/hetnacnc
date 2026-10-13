@@ -1,6 +1,7 @@
 import { defineMiddlewares } from "@medusajs/medusa";
 import { adminLearningArticlesMiddlewares } from "./admin/learning-articles/middlewares";
 import { storeLearningArticlesMiddlewares } from "./store/learning-articles/middlewares";
+import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -18,5 +19,6 @@ export default defineMiddlewares({
         },
         ...adminLearningArticlesMiddlewares,
         ...storeLearningArticlesMiddlewares,
+        ...vendorFondoBlancoMiddlewares,
     ],
 });
