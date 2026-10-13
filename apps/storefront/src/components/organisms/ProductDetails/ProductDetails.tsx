@@ -7,6 +7,7 @@ import {
   ProductAdditionalAttributes,
 } from "@/components/cells"
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
+import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 
 import { retrieveCustomer } from "@/lib/data/customer"
 import {
@@ -43,11 +44,8 @@ export const ProductDetails = async ({
         offers={offers}
         seller={seller}
       />
-      <ProductPageDetails details={product?.description || ""} />
-      <ProductAdditionalAttributes
-        attributes={product?.attribute_values || []}
-      />
-      <ProductDetailsShipping />
+      {/* Razones para comprar tranquilo, justo debajo del precio y el botón de compra */}
+      <ConfianzaProducto />
       {/* Chat con el taller que vende este producto (el taller se valida en el servidor) */}
       {seller?.handle && (
         <div className="my-4">
@@ -61,6 +59,11 @@ export const ProductDetails = async ({
         </div>
       )}
       <ProductDetailsSeller seller={seller} />
+      <ProductPageDetails details={product?.description || ""} />
+      <ProductAdditionalAttributes
+        attributes={product?.attribute_values || []}
+      />
+      <ProductDetailsShipping />
       <ProductDetailsFooter
         tags={product?.tags || []}
         posted={product?.created_at}
