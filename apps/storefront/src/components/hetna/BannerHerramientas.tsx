@@ -1,13 +1,28 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { piezasDe } from "@/lib/publicidad/consultas"
 
+import { EnlacePub, ImagenPieza } from "./publicidad/PiezasBase"
+import PubVista from "./publicidad/PubVista"
 import { ServicioIcono } from "./ServicioIcono"
 import { SERVICIOS_PRINCIPALES } from "./servicios-datos"
 
-export default function BannerHerramientas() {
+export default async function BannerHerramientas() {
   const primera = SERVICIOS_PRINCIPALES[0]
+  // Si subes una imagen en el panel (espacio "Banner de herramientas"), se usa como fondo.
+  // Los textos que dejes vacíos se quedan como siempre.
+  const p = (await piezasDe("banner_herramientas"))[0]
+  const claseBotonPrincipal =
+    "rounded-full bg-[#C2560A] px-6 py-3 text-[14.5px] font-bold text-white hover:bg-[#A84A08]"
+
   return (
     <section className="px-4 lg:px-16 py-8 md:py-10">
       <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0F1826] via-[#142033] to-[#1E3250] p-6 md:p-10 lg:p-12">
+        {p?.imagen_url && (
+          <>
+            <ImagenPieza p={p} />
+            <div aria-hidden="true" className="absolute inset-0 bg-[#0F1826]/70" />
+          </>
+        )}
         <div
           aria-hidden="true"
           className="absolute inset-0 opacity-[0.10]"
@@ -26,19 +41,22 @@ export default function BannerHerramientas() {
               Herramientas CNC
             </span>
             <h2 className="mt-4 text-[30px] md:text-[42px] font-extrabold leading-[1.08] text-white">
-              Del archivo a la pieza, con herramientas hechas para tu taller
+              {p?.titulo || "Del archivo a la pieza, con herramientas hechas para tu taller"}
             </h2>
             <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[#C9D2E0]">
-              Genera diseños, simula tu CAM, cotiza, aprende y resuelve dudas con IA especializada en CNC.
+              {p?.subtitulo || "Genera diseños, simula tu CAM, cotiza, aprende y resuelve dudas con IA especializada en CNC."}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              {primera && (
-                <LocalizedClientLink
-                  href={"/servicios/" + primera.slug}
-                  className="rounded-full bg-[#C2560A] px-6 py-3 text-[14.5px] font-bold text-white hover:bg-[#A84A08]"
-                >
-                  Explorar herramientas
-                </LocalizedClientLink>
+              {p?.boton ? (
+                <EnlacePub id={p.id} publicidad={p.es_publicidad} className={claseBotonPrincipal}>
+                  {p.boton}
+                </EnlacePub>
+              ) : (
+                primera && (
+                  <LocalizedClientLink href={"/servicios/" + primera.slug} className={claseBotonPrincipal}>
+                    Explorar herramientas
+                  </LocalizedClientLink>
+                )
               )}
               <LocalizedClientLink
                 href="/servicios/cotizador-cnc"
@@ -68,6 +86,7 @@ export default function BannerHerramientas() {
             ))}
           </div>
         </div>
+        {p && <PubVista ids={[p.id]} />}
       </div>
     </section>
   )

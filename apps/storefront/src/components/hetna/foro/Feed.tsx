@@ -1,4 +1,5 @@
 // Piezas del foro con estilo de red profesional: composer, feed, perfil lateral
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { SesionForo } from "@/lib/foro/consultas"
 import { type Autor, type Seccion, type TemaResumen, TIPOS_CUENTA, urlPerfil, urlTema } from "@/lib/foro/tipos"
@@ -151,6 +152,8 @@ export const ColDerecha = ({ destacados }: { destacados: Autor[] }) => (
       <strong className="text-[14.5px]">¿Prisa? Pregúntale al Copiloto IA CNC</strong>
       <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances y errores de tu máquina al instante.</span>
     </LocalizedClientLink>
+    {/* Publicidad del foro (no dibuja nada si no hay anuncios vigentes) */}
+    <AnunciosEspacio espacio="foro_lateral" />
     <AvisoSeguro />
   </aside>
 )
