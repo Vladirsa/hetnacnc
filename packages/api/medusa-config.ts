@@ -32,6 +32,35 @@ const pagos = process.env.MERCADOPAGO_ACCESS_TOKEN
     ]
   : []
 
+// Envíos HETNA (Skydropx) solo se activa si existen las llaves. Se registra junto al
+// proveedor manual para no quitar los envíos que ya usan los talleres.
+const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SECRET
+  ? [
+      {
+        resolve: '@medusajs/medusa/fulfillment',
+        options: {
+          providers: [
+            { resolve: '@medusajs/medusa/fulfillment-manual', id: 'manual' },
+            {
+              resolve: './src/modules/skydropx',
+              id: 'envios-hetna',
+              options: {
+                clientId: process.env.SKYDROPX_CLIENT_ID,
+                clientSecret: process.env.SKYDROPX_CLIENT_SECRET,
+                sandbox: process.env.SKYDROPX_SANDBOX === 'true',
+                margenPct: Number(process.env.ENVIO_MARGEN_PCT || 0),
+                origenCp: process.env.ENVIO_ORIGEN_CP || '',
+                origenEstado: process.env.ENVIO_ORIGEN_ESTADO || '',
+                origenMunicipio: process.env.ENVIO_ORIGEN_MUNICIPIO || '',
+                origenColonia: process.env.ENVIO_ORIGEN_COLONIA || '',
+              },
+            },
+          ],
+        },
+      },
+    ]
+  : []
+
 module.exports = withMercur({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -94,5 +123,6 @@ module.exports = withMercur({
       },
     },
     ...pagos,
+    ...envios,
   ],
 })

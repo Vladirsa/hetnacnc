@@ -18,7 +18,7 @@ export type CreateLearningArticleStepInput = {
 export const createLearningArticleStep = createStep(
   "create-learning-article-step",
   async (input: CreateLearningArticleStepInput, { container }) => {
-    const learningModuleService = container.resolve(LEARNING_MODULE)
+    const learningModuleService = container.resolve(LEARNING_MODULE) as any
 
     // external_links is a flat array stored in a JSON column; the generated
     // service types that column as a generic object, so it needs a cast here.
@@ -30,7 +30,7 @@ export const createLearningArticleStep = createStep(
   async (articleId: string | undefined, { container }) => {
     if (!articleId) return
 
-    const learningModuleService = container.resolve(LEARNING_MODULE)
+    const learningModuleService = container.resolve(LEARNING_MODULE) as any
     await learningModuleService.deleteLearningArticles(articleId)
   }
 )

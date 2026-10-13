@@ -27,7 +27,7 @@ export const SellerOffersListing = async ({
 
   return (
     <div className="py-4" data-testid="seller-offers-listing">
-      <div className="my-4 label-md">{`${count} listings`}</div>
+      <div className="my-4 label-md">{`${count} ${count === 1 ? "producto" : "productos"}`}</div>
       {offers.length === 0 ? (
         <ProductListingNoResultsView />
       ) : (

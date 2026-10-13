@@ -7,6 +7,7 @@ import { ligaValida } from "./contenido"
 import { sesionForo } from "./consultas"
 import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
+import { avisarRedes } from "@/lib/hetna/avisar-redes"
 import { ES_NEGOCIO, type Red, REDES, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
 
 type Res<T = {}> = ({ ok: true } & T) | { ok: false; error: string }
@@ -210,6 +211,7 @@ export async function publicarTema(
     )
     const nuevo = rows[0]
     await anotarRevision("tema", Number(nuevo.id), revisar, motivos)
+    if (!revisar) void avisarRedes({ tipo: "foro", titulo: t.texto, resumen: c.texto.slice(0, 200), url: "https://hetnacnc.com/mx" + urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }) })
     return {
       ok: true,
       url: urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }),

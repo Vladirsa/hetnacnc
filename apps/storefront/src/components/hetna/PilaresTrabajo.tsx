@@ -1,6 +1,6 @@
 /**
  * PilaresTrabajo.tsx
- * Visualización de los 4 pilares de HETNA — Así trabajamos contigo
+ * Visualización de los 4 pilares de HETNA — Nuestro proceso
  * Uso: Insertar en homepage después del Hero
  */
 
@@ -77,19 +77,19 @@ function PilarCard({ pilar, isVisible, delay }: PilarCardProps) {
         transitionDelay: isVisible ? `${delay}ms` : '0ms',
       }}
     >
-      <div className={`${pilar.colorBg} rounded-xl p-8 h-full hover:shadow-lg transition-all duration-300 transform hover:scale-105`}>
+      <div className={`${pilar.colorBg} rounded-xl p-4 h-full hover:shadow-lg transition-all duration-300 transform hover:scale-105`}>
         {/* Número y icono */}
-        <div className="mb-6">
+        <div className="mb-2">
           <div
-            className={`w-16 h-16 rounded-full bg-gradient-to-br ${pilar.color} flex items-center justify-center mb-4 transform transition-transform duration-300 group-hover:scale-110`}
+            className={`w-10 h-10 rounded-full bg-gradient-to-br ${pilar.color} flex items-center justify-center mb-2 transform transition-transform duration-300 group-hover:scale-110`}
           >
-            <span className="text-3xl font-bold text-white">{pilar.numero}</span>
+            <span className="text-lg font-bold text-white">{pilar.numero}</span>
           </div>
           <IconComponent className={`w-8 h-8 ${pilar.colorText}`} strokeWidth={1.5} />
         </div>
 
         {/* Título */}
-        <h3 className={`text-xl md:text-2xl font-bold ${pilar.colorText} mb-3`}>
+        <h3 className={`text-base font-bold ${pilar.colorText} mb-1`}>
           {pilar.titulo}
         </h3>
 
@@ -125,12 +125,12 @@ export default function PilaresTrabajo() {
   }, [])
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white px-4 md:px-6 lg:px-8">
+    <section className="py-5 md:py-6 bg-gradient-to-b from-gray-50 to-white px-4 md:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Encabezado */}
-        <div className="text-center mb-16 md:mb-20">
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Así trabajamos <span className="text-green-600">contigo</span>
+        <div className="text-center mb-3">
+          <h2 className="text-base font-bold text-gray-900 mb-1">
+            Nuestro <span className="text-green-600">proceso</span>
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Nuestro proceso es transparente, eficiente y orientado a entregar la máxima calidad en cada proyecto.
@@ -140,7 +140,7 @@ export default function PilaresTrabajo() {
         {/* Grid de pilares */}
         <div
           ref={containerRef}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"
         >
           {PILARES.map((pilar, idx) => (
             <PilarCard
@@ -157,12 +157,12 @@ export default function PilaresTrabajo() {
 
         {/* CTA */}
         <div className="text-center mt-12">
-          <p className="text-gray-700 mb-6">
+          <p className="text-gray-700 mb-3">
             ¿Listo para comenzar tu proyecto? Sube tu archivo ahora.
           </p>
           <a
             href="/maquila"
-            className="inline-block px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+            className="inline-block px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
           >
             Solicitar presupuesto gratis
           </a>

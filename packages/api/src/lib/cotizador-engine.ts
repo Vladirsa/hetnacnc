@@ -44,7 +44,7 @@ export function calcular(params: any): any {
     largo = 0, ancho = 0, alto = 0,
     peso = 0, metros = 0,
     horas = 0, minutos = 0,
-    cantidad = 1, complejidad = "normal",
+    cantidad = 1,
     clienteTraeMaterial = false,
     usarInventario = false,
     materialInv = null,

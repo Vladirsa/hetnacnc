@@ -19,7 +19,7 @@ export const ConditionFilter = () => {
   }
 
   return (
-    <Accordion heading="Condition" data-testid="filter-condition">
+    <Accordion heading="Estado" data-testid="filter-condition">
       <ul className="px-4" data-testid="filter-condition-options">
         {filters.map(({ label, amount }) => (
           <li key={label} className="mb-4">

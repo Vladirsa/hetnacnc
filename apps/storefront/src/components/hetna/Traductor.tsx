@@ -2,12 +2,14 @@
 
 import { useEffect } from "react"
 
-import { EN, REGLAS } from "@/i18n/en"
+import type * as Diccionario from "@/i18n/en"
 import { COOKIE_IDIOMA } from "@/i18n/idioma"
 
 // Traduce la tienda al ingles cuando el cliente elige EN.
 // Cambia solo el texto visible (sin tocar la estructura), asi React sigue
 // funcionando normal. Las palabras vienen del diccionario src/i18n/en.ts.
+// VELOCIDAD: el diccionario se descarga SOLO si el cliente eligio ingles
+// (import dinamico). Los visitantes en espanol ya no lo cargan.
 
 export const leerIdioma = (): "es" | "en" => {
   try {
@@ -20,13 +22,17 @@ export const leerIdioma = (): "es" | "en" => {
   }
 }
 
+// Se llenan cuando llega el diccionario (solo en ingles)
+let EN = {} as typeof Diccionario.EN
+let REGLAS = [] as unknown as typeof Diccionario.REGLAS
+
 const ATRIBUTOS = ["placeholder", "aria-label", "title", "alt"]
 const IGNORAR = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"])
 
 const traducir = (texto: string): string | null => {
   const limpio = texto.trim()
   if (!limpio) return null
-  const directo = EN[limpio]
+  const directo = (EN as Record<string, string>)[limpio]
   if (directo !== undefined) {
     return directo === limpio ? null : texto.replace(limpio, directo)
   }
@@ -70,6 +76,9 @@ export const Traductor = () => {
       return
     }
 
+    let activo = true
+    let observador: MutationObserver | null = null
+
     const titulo = () => {
       const r = traducir(document.title)
       if (r !== null && r !== document.title) document.title = r
@@ -78,29 +87,42 @@ export const Traductor = () => {
       if (document.documentElement.lang !== "en") document.documentElement.lang = "en"
     }
 
-    recorrer(document.body)
-    titulo()
-    idiomaHtml()
-    quitarVelo()
+    import("@/i18n/en")
+      .then((m) => {
+        if (!activo) return
+        EN = m.EN
+        REGLAS = m.REGLAS
 
-    const observador = new MutationObserver((cambios) => {
-      for (const c of cambios) {
-        if (c.type === "childList") c.addedNodes.forEach(recorrer)
-        else if (c.type === "characterData") recorrer(c.target)
-        else if (c.type === "attributes" && c.attributeName)
-          traducirAtributo(c.target as Element, c.attributeName)
-      }
-      titulo()
-      idiomaHtml()
-    })
-    observador.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ATRIBUTOS,
-    })
-    return () => observador.disconnect()
+        recorrer(document.body)
+        titulo()
+        idiomaHtml()
+        quitarVelo()
+
+        observador = new MutationObserver((cambios) => {
+          for (const c of cambios) {
+            if (c.type === "childList") c.addedNodes.forEach(recorrer)
+            else if (c.type === "characterData") recorrer(c.target)
+            else if (c.type === "attributes" && c.attributeName)
+              traducirAtributo(c.target as Element, c.attributeName)
+          }
+          titulo()
+          idiomaHtml()
+        })
+        observador.observe(document.body, {
+          subtree: true,
+          childList: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ATRIBUTOS,
+        })
+      })
+      // Si el diccionario no carga, al menos mostramos la pagina en espanol
+      .catch(() => quitarVelo())
+
+    return () => {
+      activo = false
+      observador?.disconnect()
+    }
   }, [])
 
   return null

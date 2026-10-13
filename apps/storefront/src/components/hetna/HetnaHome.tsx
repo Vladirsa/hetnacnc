@@ -4,8 +4,16 @@ import path from "path"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { HeroSlider, Slide } from "@/components/hetna/HeroSlider"
-import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
+import HeroSliderOptimizado from "@/components/hetna/HeroSliderOptimizado"
+import BarraConfianza from "@/components/hetna/BarraConfianza"
+import ProcesoClienteTaller from "./ProcesoClienteTaller"
+import BannerHerramientas from "./BannerHerramientas"
+import BannerPromo from "./BannerPromo"
+import PorQueHetna from "./PorQueHetna"
+import CarruselColeccion from "./CarruselColeccion"
+import CategoriasVisuales from "./CategoriasVisuales"
+import EstadisticasConfianza from "@/components/hetna/EstadisticasConfianza"
+import { FilasProductos } from "@/components/hetna/FilasProductos"
 import { listCategories } from "@/lib/data/categories"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 
@@ -237,7 +245,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       texto:
         "¿Ya tienes máquina? Descarga archivos DXF, SVG y STL listos para cortar.",
       accion: "Ver diseños",
-      href: ligaCategoria("Diseños digitales"),
+      href: ligaCategoria("Diseños CNC"),
     },
     {
       icono: "lapiz",
@@ -245,7 +253,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       texto:
         "¿Tienes la idea pero no el archivo? Lo diseñamos en CAD/CAM a tu medida.",
       accion: "Diseño a la medida",
-      href: ligaCategoria("Diseño CAD/CAM"),
+      href: ligaCategoria("Software CAD/CAM"),
     },
     {
       icono: "maquila",
@@ -253,11 +261,11 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       texto:
         "¿No tienes cómo cortarlo? Lo fabricamos en router, láser o plasma.",
       accion: "Servicio de maquila",
-      href: ligaCategoria("Maquinado"),
+      href: ligaCategoria("Maquinado CNC"),
     },
   ]
 
-  const slides: Slide[] = [
+  const slides: unknown[] = [
     {
       etiqueta: "Marketplace CNC de México",
       titulo: "Todo lo que tu taller CNC necesita, en un solo lugar",
@@ -279,7 +287,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       alt: "Láser CO2 cortando triplay",
       botones: [
         { texto: "Cotizar corte láser", href: "/servicios/cotizador-cnc" },
-        { texto: "Ver diseños", href: ligaCategoria("Diseños digitales") },
+        { texto: "Ver diseños", href: ligaCategoria("Diseños CNC") },
       ],
     },
     {
@@ -291,7 +299,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       alt: "Mesa de plasma CNC cortando placa de acero",
       botones: [
         { texto: "Cotizar corte plasma", href: "/servicios/cotizador-cnc" },
-        { texto: "Ver plasma", href: ligaCategoria("Plasma") },
+        { texto: "Ver plasma", href: ligaCategoria("Plasma CNC") },
       ],
     },
     {
@@ -323,143 +331,25 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
           href: whatsappLink("Hola HETNA CNC, quiero cotizar un grabado láser en metal"),
           externo: true,
         },
-        { texto: "Ver máquinas láser", href: ligaCategoria("Láser") },
+        { texto: "Ver máquinas láser", href: ligaCategoria("Láser CNC") },
       ],
     },
   ]
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      <HeroSlider slides={slides} />
+      <HeroSliderOptimizado />
+      <BarraConfianza />
+      <BannerPromo />
+      <FilasProductos locale={locale} />
+      <ProcesoClienteTaller />
+      <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
+      <BannerHerramientas />
+      <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
+      <PorQueHetna />
 
-      {/* Franja de confianza */}
-      <section className="w-full bg-[#1B2A42] text-white">
-        <ul className="m-0 p-0 list-none max-w-[1180px] mx-auto px-4 lg:px-16 py-3 grid grid-cols-2 lg:grid-cols-4 gap-y-2.5">
-          {confianza.map((c, i) => (
-            <li
-              key={c.texto}
-              className={`flex items-center justify-center text-left gap-2 px-2 ${
-                i > 0 ? "lg:border-l lg:border-white/15" : ""
-              }`}
-            >
-              <span className="text-[#F2A65E] shrink-0">
-                <Icono nombre={c.icono} size={20} />
-              </span>
-              <span className="text-[11.5px] lg:text-[12px] font-semibold uppercase tracking-[0.05em] text-[#E6EBF3]">
-                {c.texto}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      {/* Asi trabajamos */}
-      <section className="px-4 lg:px-16 pt-10 pb-10">
-        <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
-          Así trabajamos contigo
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {formas.map((f) => (
-            <LocalizedClientLink
-              key={f.titulo}
-              href={f.href}
-              className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-3 transition hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(27,27,24,0.08)]"
-            >
-              <span className="text-[#142033]">
-                <Icono nombre={f.icono} />
-              </span>
-              <span className="font-display font-semibold text-[17px]">
-                {f.titulo}
-              </span>
-              <span className="text-[14px] leading-[1.55] text-[#4A4A45]">
-                {f.texto}
-              </span>
-              <span className="mt-auto text-[13.5px] font-semibold text-[#B34D07]">
-                {f.accion} →
-              </span>
-            </LocalizedClientLink>
-          ))}
-        </div>
-      </section>
-
-      {/* Compra por categoria */}
-      {parentCategories.length > 0 && (
-        <section className="px-4 lg:px-16 pb-10">
-          <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
-            Compra por categoría
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {parentCategories.map((padre) => (
-              <div
-                key={padre.id}
-                className="bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex flex-col"
-              >
-                <LocalizedClientLink
-                  href={`/categories/${padre.handle}`}
-                  className="h-[96px] flex items-center justify-center text-[#142033]"
-                  style={{
-                    backgroundColor: "#F4F1EA",
-                    backgroundImage:
-                      "radial-gradient(circle, #E7E4DC 1px, transparent 1px)",
-                    backgroundSize: "14px 14px",
-                  }}
-                  aria-label={padre.name}
-                >
-                  <Icono nombre={iconoGrupo(padre.name)} size={38} />
-                </LocalizedClientLink>
-                <div className="p-4 flex flex-col gap-2">
-                  <LocalizedClientLink
-                    href={`/categories/${padre.handle}`}
-                    className="font-display font-semibold text-[15px] hover:text-[#B34D07]"
-                  >
-                    {padre.name}
-                  </LocalizedClientLink>
-                  <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
-                    {hijosDe(padre).map((hijo) => (
-                      <li key={hijo.id}>
-                        <LocalizedClientLink
-                          href={`/categories/${hijo.handle}`}
-                          className="text-[13px] text-[#6B6A63] hover:text-[#B34D07]"
-                        >
-                          {hijo.name}
-                        </LocalizedClientLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Productos reales */}
-      <section className="px-4 lg:px-16 pb-6">
-        <HomeProductSection heading="Lo más nuevo" locale={locale} home />
-      </section>
-
-      {/* Herramientas (proximamente) */}
-      <section className="px-4 lg:px-16 pb-10">
-        <h2 className="font-display text-[20px] font-semibold m-0 mb-4">
-          Herramientas para tu taller
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {herramientas.map((h) => (
-            <div
-              key={h.nombre}
-              className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2.5"
-            >
-              <span className="text-[#142033]">
-                <Icono nombre={h.icono} size={26} />
-              </span>
-              <span className="font-semibold text-[14.5px]">{h.nombre}</span>
-              <span className="text-[12.5px] font-semibold text-[#6B6A63]">
-                Próximamente
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <CategoriasVisuales categorias={parentCategories} />
 
       {/* Aprendizaje CNC: artículos reales, solo si ya hay contenido publicado */}
       {articulosAprendizaje.length > 0 && (
@@ -504,6 +394,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
         </section>
       )}
 
+      {/* <EstadisticasConfianza /> oculto: datos de relleno hasta tener cifras reales */}
       {/* Banner proyecto a la medida */}
       <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         <div className="flex flex-col gap-2.5 max-w-[560px]">

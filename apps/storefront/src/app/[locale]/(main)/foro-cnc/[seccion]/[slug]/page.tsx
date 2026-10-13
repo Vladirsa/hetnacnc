@@ -8,6 +8,8 @@ import { FormRespuesta, ResponderA } from "@/components/hetna/foro/FormRespuesta
 import { BotonMejor, BotonVoto, Compartir, EncuestaVotar, MenuMas } from "@/components/hetna/foro/Interaccion"
 import { AutorChip, Cuerpo, ForoCerrado, Fotos, InsigniaTema, Migas, haceCuanto } from "@/components/hetna/foro/Piezas"
 import { VideoLigero } from "@/components/hetna/foro/VideoLigero"
+import CompartirRedes from "@/components/hetna/Compartir"
+import SigueHetna from "@/components/hetna/SigueHetna"
 import { contarVisita, listaTemas, misVotos, respuestas as leerRespuestas, sesionForo, tema as leerTema } from "@/lib/foro/consultas"
 import { extracto, leerVideo } from "@/lib/foro/contenido"
 import { type Respuesta, SITIO, urlPerfil, urlTema } from "@/lib/foro/tipos"
@@ -224,6 +226,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
               <div className="flex items-center gap-2.5 flex-wrap border-t border-[#F0EDE6] mt-1 pt-4">
                 <BotonVoto temaId={t.id} votos={t.votos} votado={votos.tema} propio={esAutor} />
                 <Compartir url={`/mx${urlTema(t)}`} titulo={t.titulo} />
+                <CompartirRedes className="basis-full" url={`${SITIO}/mx${urlTema(t)}`} titulo={t.titulo} />
                 <a href="#responder" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A]">
                   Responder
                 </a>
@@ -268,6 +271,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
           </div>
 
           <aside className="flex flex-col gap-4">
+            <SigueHetna className="bg-white border border-[#E7E4DC] rounded-[14px] p-4" />
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex flex-col gap-3">
               <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Publicado por</span>
               <AutorChip a={t.autor} />

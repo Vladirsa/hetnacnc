@@ -7,6 +7,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import BadgesConfianza from './BadgesConfianza'
 import { Star } from 'lucide-react'
 
 interface Stat {
@@ -110,7 +111,7 @@ function CounterAnimado({ numero, label, isVisible }: CounterProps) {
 
   return (
     <div className="text-center">
-      <div className="text-5xl md:text-6xl font-bold text-green-600 mb-2">
+      <div className="text-3xl md:text-4xl font-bold text-green-600 mb-1">
         {displayNumber}
         {numero >= 100 && numero !== Math.floor(numero) && '%'}
       </div>
@@ -121,7 +122,7 @@ function CounterAnimado({ numero, label, isVisible }: CounterProps) {
 
 function TestimonioCard({ testimonio }: { testimonio: Testimonio }) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 md:p-8 hover:shadow-lg transition-all duration-300">
+    <div className="bg-white rounded-lg shadow-md p-6 md:p-5 hover:shadow-lg transition-all duration-300">
       {/* Rating */}
       <div className="flex gap-1 mb-4">
         {Array.from({ length: testimonio.rating }).map((_, i) => (
@@ -134,7 +135,7 @@ function TestimonioCard({ testimonio }: { testimonio: Testimonio }) {
       </div>
 
       {/* Mensaje */}
-      <p className="text-gray-700 mb-6 leading-relaxed italic">
+      <p className="text-gray-700 mb-3 leading-relaxed italic">
         "{testimonio.mensaje}"
       </p>
 
@@ -173,17 +174,17 @@ export default function EstadisticasConfianza() {
   return (
     <section
       ref={containerRef}
-      className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50 px-4 md:px-6 lg:px-8"
+      className="py-8 md:py-10 bg-gradient-to-b from-white to-gray-50 px-4 md:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
         {/* Sección de Estadísticas */}
-        <div className="mb-20">
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 text-center mb-16">
+        <div className="mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-6">
             Números que hablan por nosotros
           </h2>
 
           {/* Grid de estadísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {ESTADISTICAS.map((stat) => (
               <div
                 key={stat.label}
@@ -202,20 +203,20 @@ export default function EstadisticasConfianza() {
           </div>
 
           {/* Línea divisora */}
-          <div className="h-1 w-24 bg-gradient-to-r from-green-600 to-transparent mx-auto mb-16" />
+          <div className="h-1 w-24 bg-gradient-to-r from-green-600 to-transparent mx-auto mb-6" />
         </div>
 
         {/* Sección de Testimonios */}
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-2">
             Lo que dicen nuestros clientes
           </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-gray-600 text-center mb-4 max-w-2xl mx-auto">
             Empresas de todo México confían en HETNA para sus proyectos de fabricación.
           </p>
 
           {/* Grid de testimonios */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TESTIMONIOS.map((testimonio) => (
               <TestimonioCard
                 key={testimonio.nombre}
@@ -235,29 +236,7 @@ export default function EstadisticasConfianza() {
           </div>
         </div>
 
-        {/* Badges de confianza (opcional) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-gray-200">
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">🛡️</div>
-            <p className="text-sm font-medium text-gray-700">Pago seguro</p>
-            <p className="text-xs text-gray-500">MercadoPago</p>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">📦</div>
-            <p className="text-sm font-medium text-gray-700">Envío rastreado</p>
-            <p className="text-xs text-gray-500">En tiempo real</p>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">✓</div>
-            <p className="text-sm font-medium text-gray-700">Garantía</p>
-            <p className="text-xs text-gray-500">30 días</p>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">💬</div>
-            <p className="text-sm font-medium text-gray-700">Soporte 24/7</p>
-            <p className="text-xs text-gray-500">Chat y correo</p>
-          </div>
-        </div>
+        <BadgesConfianza />
       </div>
     </section>
   )

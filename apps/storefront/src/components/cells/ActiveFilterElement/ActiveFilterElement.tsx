@@ -9,9 +9,9 @@ const filtersLabels = {
   min_price: "Min Price",
   max_price: "Max Price",
   color: "Color",
-  size: "Size",
+  size: "Medida",
   query: "Search",
-  condition: "Condition",
+  condition: "Estado",
   rating: "Rating",
 }
 
