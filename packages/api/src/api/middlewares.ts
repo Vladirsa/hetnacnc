@@ -4,6 +4,7 @@ import { storeLearningArticlesMiddlewares } from "./store/learning-articles/midd
 import { adminCoursesMiddlewares } from "./admin/courses/middlewares";
 import { storeCoursesMiddlewares } from "./store/courses/middlewares";
 import { vendorCoursesMiddlewares } from "./vendor/courses/middlewares";
+import { vendorAnalyticsMiddlewares } from "./vendor/analytics/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -24,5 +25,6 @@ export default defineMiddlewares({
         ...adminCoursesMiddlewares,
         ...storeCoursesMiddlewares,
         ...vendorCoursesMiddlewares,
+        ...vendorAnalyticsMiddlewares,
     ],
 });

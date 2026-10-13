@@ -935,6 +935,7 @@ export type Routes = {
         };
         stores: typeof import("@mercurjs/core/api/vendor/stores/route");
         uploads: typeof import("@mercurjs/core/api/vendor/uploads/route");
+        analytics: typeof import("../src/api/vendor/analytics/route");
         courses: typeof import("../src/api/vendor/courses/route") & {
             $id: typeof import("../src/api/vendor/courses/[id]/route") & {
                 sections: typeof import("../src/api/vendor/courses/[id]/sections/route") & {
