@@ -85,7 +85,7 @@ export const ProductDetailsPage = async ({
       />
       <div className="flex flex-col md:flex-row lg:gap-12" data-testid="product-details-page">
         <div className="md:w-1/2 md:px-2" data-testid="product-gallery-container">
-          <ProductGallery images={prod?.images || []} />
+          <ProductGallery images={prod?.images || []} title={prod.title} />
         </div>
         <div className="md:w-1/2 md:px-2" data-testid="product-details-container">
           <ProductDetails
