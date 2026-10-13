@@ -1,9 +1,9 @@
 // Sube una imagen del panel de publicidad al almacén de archivos de Medusa.
-// Solo funciona si quien lo pide es administrador (cookie hetna_pub válida).
+// Solo funciona si quien lo pide es administrador del dashboard.
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { tokenAdmin, urlBackend } from "@/lib/publicidad/sesion"
+import { autorizacion, urlBackend } from "@/lib/publicidad/sesion"
 
 export const dynamic = "force-dynamic"
 
@@ -11,8 +11,9 @@ const TIPOS = ["image/webp", "image/jpeg", "image/png", "image/avif"]
 const MAX_BYTES = 6 * 1024 * 1024
 
 export async function POST(req: NextRequest) {
-  const token = await tokenAdmin()
-  if (!token) return NextResponse.json({ error: "Inicia sesión primero." }, { status: 401 })
+  if (req.headers.get("x-hetna-pub") !== "1") return NextResponse.json({ error: "Petición no permitida." }, { status: 403 })
+  const cabeceras = await autorizacion(req)
+  if (!cabeceras) return NextResponse.json({ error: "Inicia sesión en el dashboard primero." }, { status: 401 })
 
   try {
     const form = await req.formData()
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     envio.append("files", archivo, archivo.name || "banner.webp")
     const r = await fetch(`${urlBackend()}/admin/uploads`, {
       method: "POST",
-      headers: { authorization: `Bearer ${token}` },
+      headers: cabeceras,
       body: envio,
     })
     if (!r.ok) {
