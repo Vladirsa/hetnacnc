@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/atoms"
 import { SearchProductsListing, ProductListing } from "@/components/sections"
 import { notFound } from "next/navigation"
 import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import { listRegions } from "@/lib/data/regions"
@@ -165,6 +166,9 @@ async function Category({
       ) : (
         <h1 className="heading-xl uppercase">{category.name}</h1>
       )}
+
+      {/* Publicidad de categorías (no dibuja nada si no hay anuncios vigentes) */}
+      <AnunciosEspacio espacio="categorias_lateral" className="my-4" />
 
       {esCategoriaServicio(categoryHandle) && jsonLdProducts.length === 0 ? null : (
       <Suspense fallback={<div data-testid="category-page-loading"><ProductListingSkeleton /></div>}>
