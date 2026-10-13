@@ -1,84 +1,73 @@
-"use server"
-
-// Acciones del panel de publicidad. Cada una revisa primero que seas administrador.
+// Lógica de administración de anuncios (solo servidor). Quien la llama debe haber verificado
+// antes que es administrador (ver sesion.ts).
 
 import { revalidateTag } from "next/cache"
 
 import { db } from "@/lib/foro/db"
 
 import { todasLasPiezas } from "./consultas"
-import { entrar, esAdmin, salir } from "./sesion"
 import { esEspacio, type DatosPieza, type Pieza } from "./tipos"
 
-type Resp<T = object> = ({ ok: true } & T) | { ok: false; error: string }
+export type Res<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 
-const SIN_SESION = { ok: false as const, error: "sin_sesion" }
-
-export async function iniciarSesionPub(email: string, password: string): Promise<Resp> {
-  const r = await entrar(email.trim(), password)
-  return r.ok ? { ok: true } : { ok: false, error: r.error || "No se pudo iniciar sesión." }
-}
-
-export async function cerrarSesionPub(): Promise<Resp> {
-  await salir()
-  return { ok: true }
-}
-
-export async function listarPub(): Promise<Resp<{ piezas: Pieza[] }>> {
-  if (!(await esAdmin())) return SIN_SESION
-  try {
-    return { ok: true, piezas: await todasLasPiezas() }
-  } catch (e) {
-    const pg = e as { code?: string }
-    if (pg.code === "42P01" || pg.code === "3F000")
-      return { ok: false, error: "Falta crear la tabla. Corre el archivo esquema.sql en Supabase (SQL Editor)." }
-    return { ok: false, error: "No se pudo leer la base de datos." }
-  }
-}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Solo se aceptan enlaces internos (/ruta) o https://. Bloquea javascript: y similares.
 const enlaceSeguro = (v: string, vacioOk = false): string | null => {
-  const t = v.trim()
+  const t = (v || "").trim()
   if (!t) return vacioOk ? "" : null
   if (/^\/(?!\/)/.test(t) || /^https:\/\/[^\s]+$/i.test(t)) return t.slice(0, 1000)
   return null
 }
 
 const fechaONull = (v: string): string | null => {
-  const t = v.trim()
+  const t = (v || "").trim()
   if (!t) return null
   return Number.isNaN(Date.parse(t)) ? null : t
 }
 
-export async function guardarPub(d: DatosPieza): Promise<Resp<{ id: string }>> {
-  if (!(await esAdmin())) return SIN_SESION
-  if (!esEspacio(d.espacio)) return { ok: false, error: "Elige un espacio válido." }
-  const enlace = enlaceSeguro(d.enlace)
+export async function listar(): Promise<Res<{ piezas: Pieza[] }>> {
+  try {
+    return { ok: true, piezas: await todasLasPiezas() }
+  } catch (e) {
+    const pg = e as { code?: string }
+    if (pg.code === "42P01" || pg.code === "3F000")
+      return { ok: false, error: "Falta crear la tabla. Corre el archivo esquema.sql en Supabase (SQL Editor)." }
+    console.error("[publicidad] listar", e instanceof Error ? e.message : e)
+    return { ok: false, error: "No se pudo leer la base de datos." }
+  }
+}
+
+export async function guardar(d: DatosPieza): Promise<Res<{ id: string }>> {
+  if (!d || !esEspacio(String(d.espacio))) return { ok: false, error: "Elige un espacio válido." }
+  const enlace = enlaceSeguro(String(d.enlace ?? ""))
   if (enlace === null) return { ok: false, error: "El enlace debe empezar con / (dentro del sitio) o con https://" }
-  const imagen = enlaceSeguro(d.imagen_url, true)
-  const movil = enlaceSeguro(d.imagen_movil_url, true)
-  const video = enlaceSeguro(d.video_url, true)
+  const imagen = enlaceSeguro(String(d.imagen_url ?? ""), true)
+  const movil = enlaceSeguro(String(d.imagen_movil_url ?? ""), true)
+  const video = enlaceSeguro(String(d.video_url ?? ""), true)
   if (imagen === null || movil === null || video === null)
     return { ok: false, error: "La imagen o el video no tienen una dirección válida." }
-  if (!imagen && !d.titulo.trim()) return { ok: false, error: "Agrega una imagen o al menos un título." }
+  const titulo = String(d.titulo ?? "").trim().slice(0, 140)
+  if (!imagen && !titulo) return { ok: false, error: "Agrega una imagen o al menos un título." }
 
-  const desde = fechaONull(d.desde)
-  const hasta = fechaONull(d.hasta)
+  const desde = fechaONull(String(d.desde ?? ""))
+  const hasta = fechaONull(String(d.hasta ?? ""))
   if (hasta && desde && Date.parse(hasta) <= Date.parse(desde))
     return { ok: false, error: "La fecha de fin debe ser después de la de inicio." }
 
+  const orden = Number(d.orden)
   const valores = [
     d.espacio,
-    d.titulo.trim().slice(0, 140),
-    d.subtitulo.trim().slice(0, 300) || null,
-    d.boton.trim().slice(0, 40) || null,
+    titulo,
+    String(d.subtitulo ?? "").trim().slice(0, 300) || null,
+    String(d.boton ?? "").trim().slice(0, 40) || null,
     enlace,
     imagen || null,
     movil || null,
     video || null,
-    d.anunciante.trim().slice(0, 120) || null,
+    String(d.anunciante ?? "").trim().slice(0, 120) || null,
     Boolean(d.es_publicidad),
-    Number.isFinite(d.orden) ? Math.trunc(d.orden) : 0,
+    Number.isFinite(orden) ? Math.trunc(orden) : 0,
     desde,
     hasta,
     Boolean(d.activo),
@@ -87,6 +76,7 @@ export async function guardarPub(d: DatosPieza): Promise<Resp<{ id: string }>> {
   try {
     let id = d.id || ""
     if (id) {
+      if (!UUID.test(id)) return { ok: false, error: "Anuncio no válido." }
       await db().query(
         `update publicidad.piezas set espacio=$1, titulo=$2, subtitulo=$3, boton=$4, enlace=$5, imagen_url=$6,
            imagen_movil_url=$7, video_url=$8, anunciante=$9, es_publicidad=$10, orden=$11,
@@ -112,8 +102,8 @@ export async function guardarPub(d: DatosPieza): Promise<Resp<{ id: string }>> {
   }
 }
 
-export async function borrarPub(id: string): Promise<Resp> {
-  if (!(await esAdmin())) return SIN_SESION
+export async function borrar(id: string): Promise<Res> {
+  if (!UUID.test(id || "")) return { ok: false, error: "Anuncio no válido." }
   try {
     await db().query("delete from publicidad.piezas where id = $1", [id])
     revalidateTag("publicidad")
@@ -123,10 +113,10 @@ export async function borrarPub(id: string): Promise<Resp> {
   }
 }
 
-export async function alternarPub(id: string, activo: boolean): Promise<Resp> {
-  if (!(await esAdmin())) return SIN_SESION
+export async function alternar(id: string, activo: boolean): Promise<Res> {
+  if (!UUID.test(id || "")) return { ok: false, error: "Anuncio no válido." }
   try {
-    await db().query("update publicidad.piezas set activo = $2 where id = $1", [id, activo])
+    await db().query("update publicidad.piezas set activo = $2 where id = $1", [id, Boolean(activo)])
     revalidateTag("publicidad")
     return { ok: true }
   } catch {
