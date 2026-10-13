@@ -4,7 +4,6 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
 import { Toaster } from '@medusajs/ui';
-import Head from 'next/head';
 
 import { Analytics } from '@/components/analytics/Analytics';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
@@ -43,6 +42,11 @@ export const metadata: Metadata = {
 
 export const viewport = { themeColor: '#142033', viewportFit: 'cover' as const };
 
+// Nota: aqui habia un bloque <Head> de 'next/head' con "preconnect" a fuentes
+// e imagenes. En el App Router de Next.js ese componente no hace nada (no se
+// imprime en la pagina), asi que se quito. Las fuentes ya las sirve el propio
+// sitio via next/font, sin pasar por Google Fonts.
+
 export default async function RootLayout({
   children
 }: Readonly<{
@@ -58,72 +62,6 @@ export default async function RootLayout({
       lang={htmlLang}
       className=""
     >
-      <Head>
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://fonts.gstatic.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://fonts.googleapis.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://i.imgur.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://i.imgur.com"
-        />
-        {/* Image origins for faster LCP */}
-        <link
-          rel="preconnect"
-          href="https://medusa-public-images.s3.eu-west-1.amazonaws.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://medusa-public-images.s3.eu-west-1.amazonaws.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://mercur-connect.s3.eu-central-1.amazonaws.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://mercur-connect.s3.eu-central-1.amazonaws.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://s3.eu-central-1.amazonaws.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://s3.eu-central-1.amazonaws.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://api.mercurjs.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://api.mercurjs.com"
-        />
-      </Head>
       <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
         <Analytics />
