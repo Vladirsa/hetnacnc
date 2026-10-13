@@ -12,7 +12,8 @@ import { retrieveCustomer } from "@/lib/data/customer"
 
 import { SocialIcon } from "./SocialIcon"
 import { BarraNavegacion } from "./BarraNavegacion"
-import { FavoritosBoton, MisComprasBoton, NotificacionesBoton } from "./Favoritos"
+import { FavoritosBoton, MisComprasBoton } from "./Favoritos"
+import { CampanitaChat } from "./chat/CampanitaChat"
 import { MenuMovil } from "./MenuMovil"
 import { OcultarAlBajar } from "./OcultarAlBajar"
 import { IdiomaSelector, MonedaSelector } from "./Selectores"
@@ -23,7 +24,7 @@ import { EnvioA } from "./EnvioA"
 // y barra azul marino con las categorias reales de la tienda.
 // Siempre queda fijo arriba. Al bajar por la página, la barra superior y la
 // barra azul se esconden y solo quedan: logo, dirección, buscador, favoritos,
-// mis compras, notificaciones, login y carrito.
+// mis compras, campanita de mensajes, login y carrito.
 export const HetnaHeader = async ({ locale }: { locale: string }) => {
   const user = await retrieveCustomer().catch(() => null)
   const isLoggedIn = Boolean(user)
@@ -107,21 +108,13 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         >
           <FavoritosBoton />
           <MisComprasBoton isLoggedIn={isLoggedIn} />
-          <NotificacionesBoton isLoggedIn={isLoggedIn} />
+          <CampanitaChat isLoggedIn={isLoggedIn} />
           <UserDropdown isLoggedIn={isLoggedIn} />
           <CartDropdown />
         </div>
-        {/* Celular: notificaciones, idioma y moneda */}
+        {/* Celular: campanita de mensajes, idioma y moneda */}
         <div className="ml-auto flex md:hidden items-center gap-2">
-          <LocalizedClientLink
-            href={isLoggedIn ? "/user/messages" : "/login"}
-            aria-label="Notificaciones"
-            className="p-1.5 text-[#142033]"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />
-            </svg>
-          </LocalizedClientLink>
+          <CampanitaChat isLoggedIn={isLoggedIn} compacto />
           <IdiomaSelector />
           <MonedaSelector regions={regions} />
         </div>
