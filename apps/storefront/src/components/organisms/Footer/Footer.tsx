@@ -37,6 +37,8 @@ export function Footer() {
   const vendedores = [
     { label: "Vender en HETNA CNC", path: "/seller" },
     { label: "Panel de vendedor", path: "/seller" },
+    { label: "Talleres fundadores", path: "/talleres/fundadores" },
+    { label: "Anuncia tu taller", path: "/anunciate" },
   ]
 
   return (
