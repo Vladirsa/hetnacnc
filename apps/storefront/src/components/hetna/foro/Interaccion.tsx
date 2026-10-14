@@ -1,12 +1,15 @@
 "use client"
 
-// Botones del foro: votar, encuesta, mejor respuesta, compartir, reportar y ocultar
+// Botones del foro: votar, no útil, encuesta, mejor respuesta, compartir, reportar y ocultar
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cambiarEstado, marcarMejor, reportar, votar, votarEncuesta } from "@/lib/foro/acciones"
+import { noUtil } from "@/lib/foro/acciones-no-util"
 import { MENSAJES } from "@/lib/foro/tipos"
+
+import { IconoCompartir, IconoNoUtil, IconoUtil } from "./IconosCNC"
 
 const mensaje = (e: string) => MENSAJES[e] || e
 
@@ -59,10 +62,46 @@ export function BotonVoto({ temaId, respuestaId, votos, votado, propio }: { tema
           estado.votado ? "bg-[#C2560A] border-[#C2560A] text-white" : "bg-white border-[#E0DCD2] text-[#44433D] hover:border-[#C2560A]"
         } disabled:opacity-60`}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 19V5M5 12l7-7 7 7" />
-        </svg>
+        <IconoUtil size={18} />
         Útil · {estado.votos}
+      </button>
+      {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
+    </div>
+  )
+}
+
+// "No útil": solo informativo. Se guarda, pero no cambia contadores ni reputación.
+export function BotonNoUtil({ temaId, respuestaId, marcado, propio }: { temaId?: number; respuestaId?: number; marcado: boolean; propio?: boolean }) {
+  const [activo, setActivo] = useState(marcado)
+  const [error, setError] = useState("")
+  const [pendiente, iniciar] = useTransition()
+  const clic = () => {
+    setError("")
+    const antes = activo
+    setActivo(!antes)
+    iniciar(async () => {
+      const r = await noUtil({ temaId, respuestaId })
+      if (r.ok) setActivo(r.marcado)
+      else {
+        setActivo(antes)
+        setError(r.error)
+      }
+    })
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={clic}
+        disabled={pendiente || propio}
+        aria-pressed={activo}
+        title={propio ? "No puedes marcar lo tuyo" : "No me sirvió"}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[13.5px] font-semibold transition ${
+          activo ? "bg-[#142033] border-[#142033] text-white" : "bg-white border-[#E0DCD2] text-[#44433D] hover:border-[#142033]"
+        } disabled:opacity-60`}
+      >
+        <IconoNoUtil size={18} />
+        No útil
       </button>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </div>
@@ -177,9 +216,7 @@ export function Compartir({ url, titulo }: { url: string; titulo: string }) {
   }
   return (
     <button type="button" onClick={copiar} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A]">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
-      </svg>
+      <IconoCompartir size={18} />
       {copiado ? "Liga copiada" : "Compartir"}
     </button>
   )
