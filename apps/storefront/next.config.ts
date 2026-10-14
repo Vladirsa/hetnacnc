@@ -12,20 +12,23 @@ import type { NextConfig } from 'next';
 //
 // Etapa 1b: según el registro se agregaron TalkJS (mensajería) y Google
 // Analytics / Tag Manager (estadísticas).
+// Etapa 1c: según el registro real de clientes se agregaron Stripe (pagos),
+// Facebook (pixel de anuncios), jsDelivr (scripts y tipografías del generador
+// de letreros) y 'unsafe-eval' (lo usa alguna librería de estadísticas).
 // ---------------------------------------------------------------------
 const politicaCSP = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son servicios que usa la tienda.
-  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://js.stripe.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net",
-  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com https://www.facebook.com https://js.stripe.com https://*.stripe.com https://*.stripe.network",
   "media-src 'self' blob: https:",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self' https://*.mercadopago.com",
+  "form-action 'self' https://*.mercadopago.com https://www.facebook.com",
   "frame-ancestors 'self'",
   "upgrade-insecure-requests",
   "report-uri /api/csp-reporte"
