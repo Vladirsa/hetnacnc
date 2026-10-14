@@ -6,6 +6,7 @@ import { useState, useTransition } from "react"
 import { responder } from "@/lib/foro/acciones"
 import { MENSAJES } from "@/lib/foro/tipos"
 
+import { IconoResponder } from "./IconosCNC"
 import { PideCuenta } from "./Interaccion"
 import { type FotoSubida, SubirFotos } from "./SubirFotos"
 
@@ -48,7 +49,8 @@ export function FormRespuesta({ temaId, padreId, onListo, compacto = false }: { 
       {error && (["sin_sesion", "sin_perfil"].includes(error) ? <PideCuenta error={error} /> : <p className="m-0 text-[13.5px] text-[#A42A2A]">{MENSAJES[error] || error}</p>)}
       {aviso && <p className="m-0 text-[13.5px] text-[#16794F]">{aviso}</p>}
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={pendiente || cuerpo.trim().length < 2} className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-2.5 rounded-[10px] text-[14.5px] disabled:opacity-50">
+        <button type="submit" disabled={pendiente || cuerpo.trim().length < 2} className="inline-flex items-center gap-2 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-2.5 rounded-[10px] text-[14.5px] disabled:opacity-50">
+          <IconoResponder size={18} />
           {pendiente ? "Publicando…" : "Responder"}
         </button>
         {onListo && (
@@ -66,7 +68,8 @@ export function ResponderA({ temaId, padreId }: { temaId: number; padreId: numbe
   const [abierto, setAbierto] = useState(false)
   if (!abierto)
     return (
-      <button type="button" onClick={() => setAbierto(true)} className="text-[13.5px] font-semibold text-[#6B6A63] hover:text-[#B34D07]">
+      <button type="button" onClick={() => setAbierto(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A] hover:text-[#B34D07]">
+        <IconoResponder size={18} />
         Responder
       </button>
     )
