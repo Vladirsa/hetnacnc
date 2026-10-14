@@ -9,16 +9,19 @@ import type { NextConfig } from 'next';
 // incumpla se anota en el registro del servidor (/api/csp-reporte).
 // ETAPA 2: cuando el registro quede limpio, se cambia el encabezado a
 // 'Content-Security-Policy' (cambiar la clave de abajo) y empieza a bloquear.
+//
+// Etapa 1b: según el registro se agregaron TalkJS (mensajería) y Google
+// Analytics / Tag Manager (estadísticas).
 // ---------------------------------------------------------------------
 const politicaCSP = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son servicios que usa la tienda.
-  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net",
+  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net",
-  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com",
+  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com",
   "media-src 'self' blob: https:",
   "object-src 'none'",
   "base-uri 'self'",
