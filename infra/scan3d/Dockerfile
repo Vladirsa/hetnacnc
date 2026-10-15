@@ -28,7 +28,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # en RunPod) no exponen un campo para build args, así que el build tiene
 # que funcionar sin que nadie tenga que pasar nada.
 ARG MESHROOM_BUNDLE_URL=https://zenodo.org/records/16887472/files/Meshroom-2025.1.0-Linux.tar.gz
-RUN wget -O /tmp/meshroom.tar.gz "$MESHROOM_BUNDLE_URL" \
+# El archivo pesa 13.3GB -- en una descarga asi de larga es normal que la
+# conexion se corte a medias una vez en un rato. --tries/--timeout hacen que
+# wget reintente solo antes de tronar todo el build.
+RUN wget --tries=5 --timeout=60 --waitretry=10 -O /tmp/meshroom.tar.gz "$MESHROOM_BUNDLE_URL" \
     && mkdir -p /opt/Meshroom \
     && tar -xzf /tmp/meshroom.tar.gz -C /opt/Meshroom --strip-components=1 \
     && rm /tmp/meshroom.tar.gz
