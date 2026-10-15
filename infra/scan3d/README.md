@@ -72,10 +72,16 @@ build args, así que ya no depende de que nadie lo configure ahí.
 
 Si en el futuro sale un release más nuevo de
 <https://github.com/alicevision/meshroom/releases> y quieres usarlo, pisa el
-default solo si estás construyendo la imagen tú mismo con Docker local:
+default solo si estás construyendo la imagen tú mismo con Docker local. El
+`Dockerfile` espera el contexto de build en la **raíz del repo** (igual que
+lo corre RunPod, no desde dentro de `infra/scan3d/`):
 
 ```bash
-docker build --build-arg MESHROOM_BUNDLE_URL="<nuevo link .tar.gz>" -t hetna-scan3d .
+# parado en la raíz del repo (hetnacnc/), no dentro de infra/scan3d/
+docker build \
+  --build-arg MESHROOM_BUNDLE_URL="<nuevo link .tar.gz>" \
+  -f infra/scan3d/Dockerfile \
+  -t hetna-scan3d .
 ```
 
 ## 3. Variables de entorno en RunPod

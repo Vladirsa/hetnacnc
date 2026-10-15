@@ -3,10 +3,13 @@
 # porque torchmcubes (dependencia de TripoSR) se compila contra nvcc al
 # instalar -- con la imagen "runtime" esa instalacion falla.
 #
-# Nota de build: si ves "failed to compute cache key ... not found" en un
-# build de RunPod aunque el archivo si este en el repo, es cache de build
-# corrupta de un intento anterior -- forza un build limpio (nuevo commit o
-# "Rebuild" sin cache) en vez de asumir que falta el archivo.
+# El contexto de build que usa "Deploy from a GitHub repository" de RunPod
+# es la raiz del repositorio completo, no esta carpeta -- por eso los COPY
+# de abajo usan la ruta completa "infra/scan3d/..." en vez de solo el
+# nombre del archivo. Si construyes esto a mano con el contexto puesto en
+# infra/scan3d/ (ej. `docker build .` parado en esta carpeta), ajusta esas
+# rutas o usa `docker build -f infra/scan3d/Dockerfile .` desde la raiz del
+# repo para que coincida con como lo corre RunPod.
 FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -42,9 +45,9 @@ RUN python3 -m pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 \
     --index-url https://download.pytorch.org/whl/cu118
 RUN python3 -m pip install --no-cache-dir -r /opt/TripoSR/requirements.txt
 
-COPY requirements.txt /app/requirements.txt
+COPY infra/scan3d/requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 
-COPY handler.py preview_triposr.py scan_meshroom.py convert_to_stl.py storage.py /app/
+COPY infra/scan3d/handler.py infra/scan3d/preview_triposr.py infra/scan3d/scan_meshroom.py infra/scan3d/convert_to_stl.py infra/scan3d/storage.py /app/
 
 CMD ["python3", "-u", "handler.py"]
