@@ -1,0 +1,4 @@
+runpod==1.7.9
+trimesh==4.5.3
+numpy==1.26.4
+boto3==1.35.60
