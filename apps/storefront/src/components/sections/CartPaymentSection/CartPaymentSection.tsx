@@ -14,6 +14,7 @@ import { iniciarMercadoPago } from '@/lib/data/mercadopago';
 
 import {
   isMercadoPago as isMercadoPagoFunc,
+  isPaypal as isPaypalFunc,
   isStripe as isStripeFunc,
   paymentInfoMap
 } from '../../../lib/constants';
@@ -93,13 +94,15 @@ const CartPaymentSection = ({
 
       const checkActiveSession = activeSession?.provider_id === selectedPaymentMethod;
 
-      if (isMercadoPagoFunc(selectedPaymentMethod)) {
-        // Siempre renovamos la sesión para que el monto de Mercado Pago coincida con el carrito
+      if (isMercadoPagoFunc(selectedPaymentMethod) || isPaypalFunc(selectedPaymentMethod)) {
+        // Siempre renovamos la sesión para que el monto en Mercado Pago / PayPal coincida con el carrito.
+        // Al terminar de pagar, el cliente regresa a /checkout/mercadopago o /checkout/paypal.
         const locale = pathname.split('/')[1] || 'mx';
+        const rutaRetorno = isPaypalFunc(selectedPaymentMethod) ? 'paypal' : 'mercadopago';
         const res = await iniciarMercadoPago(
           cart,
           selectedPaymentMethod,
-          `${window.location.origin}/${locale}/checkout/mercadopago`
+          `${window.location.origin}/${locale}/checkout/${rutaRetorno}`
         );
         if (!res.ok) {
           throw new Error(res.error);
@@ -237,7 +240,9 @@ const CartPaymentSection = ({
                       ? cardBrand
                       : isMercadoPagoFunc(selectedPaymentMethod)
                         ? 'Pagarás en Mercado Pago'
-                        : 'Se confirma en el siguiente paso'}
+                        : isPaypalFunc(selectedPaymentMethod)
+                          ? 'Pagarás en PayPal'
+                          : 'Se confirma en el siguiente paso'}
                   </Text>
                 </div>
               </div>
