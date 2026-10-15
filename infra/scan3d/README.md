@@ -63,19 +63,20 @@ normal que aparezca algún ajuste de rutas/flags la primera vez.
 3. Elige un tipo de GPU económico (ej. RTX 4090 o RTX A5000) — ninguno de
    los dos motores necesita las GPU más caras del catálogo.
 
-## 2. Conseguir la URL del bundle de AliceVision
+## 2. El bundle de AliceVision ya viene fijo -- no hay que tocar nada
 
-Entra a <https://github.com/alicevision/meshroom/releases>, abre el release
-más reciente y copia el link del `.zip` para Linux (busca que mencione CUDA
-en el nombre si tu GPU la soporta). Ese link va en el build arg
-`MESHROOM_BUNDLE_URL`:
+El `Dockerfile` trae un default (`MESHROOM_BUNDLE_URL`, release 2025.1.0,
+confirmado y en uso) para que el build funcione solo. Algunas pantallas de
+RunPod (ej. "Deploy from a GitHub repository") no tienen campo para
+build args, así que ya no depende de que nadie lo configure ahí.
+
+Si en el futuro sale un release más nuevo de
+<https://github.com/alicevision/meshroom/releases> y quieres usarlo, pisa el
+default solo si estás construyendo la imagen tú mismo con Docker local:
 
 ```bash
-docker build --build-arg MESHROOM_BUNDLE_URL="<link que copiaste>" -t hetna-scan3d .
+docker build --build-arg MESHROOM_BUNDLE_URL="<nuevo link .tar.gz>" -t hetna-scan3d .
 ```
-
-Si usas la opción "Import from GitHub" de RunPod, ese build arg se configura
-en la pantalla de creación del endpoint, no por línea de comandos.
 
 ## 3. Variables de entorno en RunPod
 

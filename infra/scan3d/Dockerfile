@@ -13,16 +13,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # --- AliceVision / Meshroom (motor del escaneo profesional) ---
 # No hay un paquete pip -- se usa el bundle binario precompilado que
-# publican como "Release" en GitHub. Pasa la URL exacta del asset que
-# quieras (revisa https://github.com/alicevision/meshroom/releases y copia
-# el link del .zip para Linux con soporte CUDA) -- no viene fija aqui a
-# proposito porque cambia de version en version y una URL vieja rompe el
-# build en silencio.
-ARG MESHROOM_BUNDLE_URL
-RUN test -n "$MESHROOM_BUNDLE_URL" || (echo "Falta --build-arg MESHROOM_BUNDLE_URL" && exit 1)
-RUN wget -O /tmp/meshroom.zip "$MESHROOM_BUNDLE_URL" \
-    && unzip -q /tmp/meshroom.zip -d /opt/Meshroom \
-    && rm /tmp/meshroom.zip
+# publican como "Release" en Zenodo/GitHub. El default de abajo es el
+# release 2025.1.0 (confirmado y en uso); se puede pisar con
+# --build-arg MESHROOM_BUNDLE_URL=... si sale una version mas nueva, pero
+# no es obligatorio -- algunas UIs (ej. "Deploy from a GitHub repository"
+# en RunPod) no exponen un campo para build args, así que el build tiene
+# que funcionar sin que nadie tenga que pasar nada.
+ARG MESHROOM_BUNDLE_URL=https://zenodo.org/records/16887472/files/Meshroom-2025.1.0-Linux.tar.gz
+RUN wget -O /tmp/meshroom.tar.gz "$MESHROOM_BUNDLE_URL" \
+    && mkdir -p /opt/Meshroom \
+    && tar -xzf /tmp/meshroom.tar.gz -C /opt/Meshroom --strip-components=1 \
+    && rm /tmp/meshroom.tar.gz
 ENV MESHROOM_BIN_DIR=/opt/Meshroom
 ENV LD_LIBRARY_PATH=/opt/Meshroom/aliceVision/lib:${LD_LIBRARY_PATH}
 ENV PATH=/opt/Meshroom:/opt/Meshroom/aliceVision/bin:${PATH}
