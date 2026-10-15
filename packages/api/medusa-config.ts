@@ -10,24 +10,42 @@ const dashboardAppDir = (name: string) => {
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, `../../apps/${name}`)
 }
 
-// Mercado Pago solo se activa si existe el token; así el servidor arranca aunque falte
-const pagos = process.env.MERCADOPAGO_ACCESS_TOKEN
+// Cada forma de pago solo se activa si existen sus llaves; así el servidor arranca aunque falten.
+// Todas van dentro de UN solo módulo de pagos (Medusa no admite dos).
+const proveedoresPago: Record<string, unknown>[] = []
+
+if (process.env.MERCADOPAGO_ACCESS_TOKEN) {
+  proveedoresPago.push({
+    resolve: './src/modules/mercadopago',
+    id: 'mercadopago',
+    options: {
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
+      statementDescriptor: 'HETNA CNC',
+    },
+  })
+}
+
+if (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET) {
+  proveedoresPago.push({
+    resolve: './src/modules/paypal',
+    id: 'paypal',
+    options: {
+      clientId: process.env.PAYPAL_CLIENT_ID,
+      clientSecret: process.env.PAYPAL_CLIENT_SECRET,
+      // PAYPAL_SANDBOX=true usa el modo de pruebas de PayPal (sin dinero real)
+      sandbox: process.env.PAYPAL_SANDBOX === 'true',
+      storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
+      marca: 'HETNA CNC',
+    },
+  })
+}
+
+const pagos = proveedoresPago.length
   ? [
       {
         resolve: '@medusajs/medusa/payment',
-        options: {
-          providers: [
-            {
-              resolve: './src/modules/mercadopago',
-              id: 'mercadopago',
-              options: {
-                accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-                storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
-                statementDescriptor: 'HETNA CNC',
-              },
-            },
-          ],
-        },
+        options: { providers: proveedoresPago },
       },
     ]
   : []
