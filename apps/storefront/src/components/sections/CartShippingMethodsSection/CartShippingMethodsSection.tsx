@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState, useTransition, type FC } from 'react';
+import { Fragment, useEffect, useRef, useState, useTransition, type FC } from 'react';
 
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckCircleSolid, ChevronUpDown, Loader } from '@medusajs/icons';
@@ -59,6 +59,8 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPendingDeleteRow, startTransitionDeleteRow] = useTransition();
+  // Opciones que ya se eligieron automáticamente (para no repetirlo ni ciclarse)
+  const autoSeleccionadas = useRef<Set<string>>(new Set());
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -178,6 +180,21 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
   const sellerNameByOptionId = new Map<string, string | undefined>(
     (_shippingMethods ?? []).map((option: any) => [option.id, option.seller_name])
   );
+
+  // Si un taller tiene UNA sola opción de envío (por ejemplo "Entrega digital" $0),
+  // la elegimos sola para ahorrarle un paso al cliente. Una a la vez y solo una vez por opción.
+  useEffect(() => {
+    if (!isOpen || isLoadingPrices || isPendingDeleteRow) return;
+    for (const key of filteredGroupedBySellerId) {
+      const opciones = groupedBySellerId?.[key] ?? [];
+      if (opciones.length !== 1) continue;
+      const unica = opciones[0];
+      if (getSelectedMethodForSeller(key) || autoSeleccionadas.current.has(unica.id)) continue;
+      autoSeleccionadas.current.add(unica.id);
+      handleSetShippingMethod(unica.id);
+      break;
+    }
+  });
 
   return (
     <div className="bg-ui-bg-interactive rounded-sm border p-4">
