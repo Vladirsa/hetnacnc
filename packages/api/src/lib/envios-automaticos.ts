@@ -3,13 +3,15 @@
 //
 // Qué hace:
 //  1. Para cada ubicación (almacén) de cada taller deja listo, SOLO si falta:
-//       - el proveedor de envío Manual,
+//       - el proveedor de envío Manual (y Skydropx, si está activo),
 //       - el canal de ventas,
 //       - el conjunto de envíos y la zona México,
-//       - la opción "Envío estándar" (precio fijo inicial, por defecto $150 MXN),
+//       - con Skydropx activo: "Envío económico" y "Envío express" (precio calculado con el
+//         peso y las medidas reales del producto, paquetería real),
+//       - sin Skydropx: "Envío estándar" (precio fijo inicial, por defecto $150 MXN),
 //       - la opción "Entrega digital" ($0) para productos digitales.
-//     Si el taller ya tiene alguna opción propia de envío físico, NO crea otra ni cambia
-//     su precio. Si el taller borra una opción de otro tipo, no se la vuelve a poner.
+//     Si el taller ya tiene alguna opción propia de envío físico, NO la cambia ni la borra.
+//     Si el taller borra una opción de otro tipo, no se la vuelve a poner.
 //  2. Ajusta el "perfil de envío" de un producto: los productos de Tipo "Digital" (o con la
 //     etiqueta "digital") usan el perfil "Producto digital"; los demás, el perfil normal.
 //
@@ -28,6 +30,8 @@ const PERFIL_FISICO = "Marketplace Shipping"
 const PERFIL_DIGITAL = "Producto digital"
 const OPCION_FISICA = "Envío estándar"
 const OPCION_DIGITAL = "Entrega digital"
+const OPCION_ECONOMICA = "Envío económico"
+const OPCION_EXPRESS = "Envío express"
 
 export const precioInicial = () => {
   const n = Number(process.env.ENVIO_PRECIO_INICIAL ?? 150)
@@ -51,6 +55,23 @@ async function perfilFisico(container) {
   return perfiles.find((p) => p.name === PERFIL_FISICO) || perfiles.find((p) => p.name !== PERFIL_DIGITAL)
 }
 
+// Busca el proveedor Skydropx registrado (su id es algo como "skydropx_envios-hetna").
+// Devuelve null si no está activo (por ejemplo, si faltan las llaves).
+async function proveedorSkydropx(container) {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  try {
+    const { data } = await query.graph({ entity: "fulfillment_provider", fields: ["id"] })
+    return data.find((p) => String(p.id).startsWith("skydropx_"))?.id || null
+  } catch (e) {
+    return null
+  }
+}
+
+const reglasTienda = [
+  { attribute: "enabled_in_store", value: "true", operator: "eq" },
+  { attribute: "is_return", value: "false", operator: "eq" },
+]
+
 const opcionBase = (perfilId, zoneId, nombre, codigo, descripcion, monto) => ({
   name: nombre,
   price_type: "flat",
@@ -59,10 +80,19 @@ const opcionBase = (perfilId, zoneId, nombre, codigo, descripcion, monto) => ({
   shipping_profile_id: perfilId,
   type: { label: nombre, description: descripcion, code: codigo },
   prices: [{ currency_code: "mxn", amount: monto }],
-  rules: [
-    { attribute: "enabled_in_store", value: "true", operator: "eq" },
-    { attribute: "is_return", value: "false", operator: "eq" },
-  ],
+  rules: reglasTienda,
+})
+
+// Opción con precio calculado por Skydropx (no lleva precio fijo)
+const opcionCalculada = (proveedorId, perfilId, zoneId, nombre, codigo, descripcion, opcionId) => ({
+  name: nombre,
+  price_type: "calculated",
+  provider_id: proveedorId,
+  service_zone_id: zoneId,
+  shipping_profile_id: perfilId,
+  type: { label: nombre, description: descripcion, code: codigo },
+  data: { id: opcionId },
+  rules: reglasTienda,
 })
 
 // Deja listos los envíos de todos los talleres (o de uno). Devuelve cuántas cosas creó.
@@ -82,6 +112,7 @@ export async function aprovisionarEnvios(container, { sellerId, dry = false, log
 
   const fisico = await perfilFisico(container)
   const digital = await obtenerPerfilDigital(container)
+  const sky = await proveedorSkydropx(container)
   const { data: canales } = await query.graph({ entity: "sales_channel", fields: ["id"] })
   if (!fisico || !digital || !canales[0]) {
     log("Falta el perfil de envío o el canal de ventas; no se hizo nada")
@@ -91,7 +122,7 @@ export async function aprovisionarEnvios(container, { sellerId, dry = false, log
   // Una sola consulta para saber qué ya existe
   const { data: opciones } = await query.graph({
     entity: "shipping_option",
-    fields: ["id", "service_zone_id", "shipping_profile_id"],
+    fields: ["id", "name", "provider_id", "service_zone_id", "shipping_profile_id"],
   })
 
   for (const seller of conUbicacion) {
@@ -105,20 +136,34 @@ export async function aprovisionarEnvios(container, { sellerId, dry = false, log
         let fsId = det?.fulfillment_sets?.find((f) => f.type === "shipping")?.id
         let zoneId = det?.fulfillment_sets?.flatMap((f) => f.service_zones || [])[0]?.id
 
-        const hayFisica = zoneId && opciones.some((o) => o.service_zone_id === zoneId && o.shipping_profile_id === fisico.id)
-        const hayDigital = zoneId && opciones.some((o) => o.service_zone_id === zoneId && o.shipping_profile_id === digital.id)
-        if (hayFisica && hayDigital) continue
+        const enZona = (o) => zoneId && o.service_zone_id === zoneId
+        // Con Skydropx activo el envío físico son las dos opciones calculadas; el precio fijo ya no se crea
+        const hayFisica = sky
+          ? true
+          : opciones.some((o) => enZona(o) && o.shipping_profile_id === fisico.id)
+        const hayEco = sky ? opciones.some((o) => enZona(o) && o.provider_id === sky && o.name === OPCION_ECONOMICA) : true
+        const hayExp = sky ? opciones.some((o) => enZona(o) && o.provider_id === sky && o.name === OPCION_EXPRESS) : true
+        const hayDigital = opciones.some((o) => enZona(o) && o.shipping_profile_id === digital.id)
+        if (hayFisica && hayEco && hayExp && hayDigital) continue
 
-        log(`${seller.name} / ${loc.name}: falta ${hayFisica ? "" : "envío estándar "}${hayDigital ? "" : "entrega digital"}`)
+        const faltan = [
+          hayFisica ? "" : OPCION_FISICA,
+          hayEco ? "" : OPCION_ECONOMICA,
+          hayExp ? "" : OPCION_EXPRESS,
+          hayDigital ? "" : OPCION_DIGITAL,
+        ].filter(Boolean)
+        log(`${seller.name} / ${loc.name}: falta ${faltan.join(", ")}`)
         if (dry) continue
 
-        try {
-          await link.create({
-            [Modules.STOCK_LOCATION]: { stock_location_id: loc.id },
-            [Modules.FULFILLMENT]: { fulfillment_provider_id: PROVEEDOR },
-          })
-        } catch (e) {
-          // ya estaba activado
+        for (const proveedor of [PROVEEDOR, ...(sky ? [sky] : [])]) {
+          try {
+            await link.create({
+              [Modules.STOCK_LOCATION]: { stock_location_id: loc.id },
+              [Modules.FULFILLMENT]: { fulfillment_provider_id: proveedor },
+            })
+          } catch (e) {
+            // ya estaba activado
+          }
         }
         try {
           await linkSalesChannelsToStockLocationWorkflow(container).run({ input: { id: loc.id, add: [canales[0].id] } })
@@ -144,6 +189,12 @@ export async function aprovisionarEnvios(container, { sellerId, dry = false, log
         if (!hayFisica) {
           nuevas.push(opcionBase(fisico.id, zoneId, OPCION_FISICA, "envio-estandar", "Envío con precio fijo definido por el taller.", precio))
         }
+        if (!hayEco) {
+          nuevas.push(opcionCalculada(sky, fisico.id, zoneId, OPCION_ECONOMICA, "envio-economico", "La paquetería más barata para tu código postal.", "envios-hetna"))
+        }
+        if (!hayExp) {
+          nuevas.push(opcionCalculada(sky, fisico.id, zoneId, OPCION_EXPRESS, "envio-express", "La paquetería más rápida para tu código postal.", "envios-hetna-express"))
+        }
         if (!hayDigital) {
           nuevas.push(opcionBase(digital.id, zoneId, OPCION_DIGITAL, "entrega-digital", "Producto digital: se entrega por correo o descarga, sin costo de envío.", 0))
         }
@@ -153,7 +204,9 @@ export async function aprovisionarEnvios(container, { sellerId, dry = false, log
         })
         creadas += nuevas.length
         // Para que la siguiente vuelta del ciclo sepa que ya existen
-        for (const n of nuevas) opciones.push({ id: "nueva", service_zone_id: zoneId, shipping_profile_id: n.shipping_profile_id })
+        for (const n of nuevas) {
+          opciones.push({ id: "nueva", name: n.name, provider_id: n.provider_id, service_zone_id: zoneId, shipping_profile_id: n.shipping_profile_id })
+        }
         log(`  CREADAS: ${nuevas.map((n) => n.name).join(", ")}`)
       } catch (e) {
         log(`  ERROR en ${seller.name} / ${loc.name}: ${e?.message || e}`)
