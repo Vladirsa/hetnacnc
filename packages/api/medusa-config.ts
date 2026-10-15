@@ -64,6 +64,9 @@ module.exports = withMercur({
       resolve: './src/modules/enrollment',
     },
     {
+      resolve: './src/modules/credit',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
