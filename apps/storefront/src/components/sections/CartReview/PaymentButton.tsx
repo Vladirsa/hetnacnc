@@ -1,7 +1,7 @@
 "use client"
 
 import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
-import { isManual, isMercadoPago, isStripe } from "../../../lib/constants"
+import { isManual, isMercadoPago, isPaypal, isStripe } from "../../../lib/constants"
 import { placeOrder } from "@/lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
@@ -32,6 +32,14 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isMercadoPago(paymentSession?.provider_id):
       return (
         <MercadoPagoPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
+      )
+    case isPaypal(paymentSession?.provider_id):
+      return (
+        <PayPalPaymentButton
           notReady={notReady}
           cart={cart}
           data-testid={dataTestId}
@@ -103,6 +111,56 @@ const MercadoPagoPaymentButton = ({
       <ErrorMessage
         error={errorMessage}
         data-testid="mercadopago-payment-error-message"
+      />
+    </>
+  )
+}
+
+// Manda al cliente a la página segura de PayPal. Al terminar, PayPal
+// lo regresa a /checkout/paypal, donde se cobra y se crea el pedido.
+const PayPalPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => isPaypal(s.provider_id) && s.status === "pending"
+  )
+  const checkoutUrl = (session?.data as Record<string, unknown> | undefined)
+    ?.checkout_url as string | undefined
+
+  const handlePayment = () => {
+    if (!checkoutUrl) {
+      setErrorMessage(
+        "No se pudo preparar el pago. Regresa al paso de Pago y pulsa «Continuar a revisión» otra vez."
+      )
+      return
+    }
+    setSubmitting(true)
+    window.location.href = checkoutUrl
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        onClick={handlePayment}
+        loading={submitting}
+        className="w-full"
+        data-testid={dataTestId}
+      >
+        Pagar con PayPal
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="paypal-payment-error-message"
       />
     </>
   )
