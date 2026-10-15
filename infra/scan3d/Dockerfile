@@ -2,6 +2,11 @@
 # "docker run" + GPU NVIDIA). Usa la imagen "devel" de CUDA, no "runtime",
 # porque torchmcubes (dependencia de TripoSR) se compila contra nvcc al
 # instalar -- con la imagen "runtime" esa instalacion falla.
+#
+# Nota de build: si ves "failed to compute cache key ... not found" en un
+# build de RunPod aunque el archivo si este en el repo, es cache de build
+# corrupta de un intento anterior -- forza un build limpio (nuevo commit o
+# "Rebuild" sin cache) en vez de asumir que falta el archivo.
 FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
