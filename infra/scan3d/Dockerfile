@@ -15,8 +15,12 @@ FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
+# build-essential/python3-dev: TripoSR instala torchmcubes directo desde
+# git+https en su requirements.txt -- es una extension C++/CUDA que se
+# compila al vuelo con pip install, necesita gcc/g++/make y los headers de
+# Python, no solo el interprete.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip git wget unzip libgl1 libglib2.0-0 \
+    python3 python3-pip python3-dev build-essential git wget unzip libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # --- AliceVision / Meshroom (motor del escaneo profesional) ---
