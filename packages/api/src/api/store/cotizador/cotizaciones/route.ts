@@ -45,5 +45,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const cotizadorModuleService = req.scope.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
   const cotizacion = await cotizadorModuleService.retrieveCotizacion(result.cotizacion_id)
 
-  res.status(201).json({ cotizacion })
+  // cobro le dice a la interfaz si esta cotización entró en el tope gratis del
+  // mes o si consumió créditos, para poder avisarlo en pantalla.
+  res.status(201).json({ cotizacion, cobro: result.cobro })
 }
