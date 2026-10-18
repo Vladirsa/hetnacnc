@@ -641,6 +641,16 @@ export type Routes = {
                 calculate: typeof import("@medusajs/medusa/api/store/shipping-options/[id]/calculate/route");
             };
         };
+        cotizador: {
+            calcular: typeof import("../src/api/store/cotizador/calcular/route");
+            cotizaciones: typeof import("../src/api/store/cotizador/cotizaciones/route") & {
+                $id: typeof import("../src/api/store/cotizador/cotizaciones/[id]/route") & {
+                    enviar: typeof import("../src/api/store/cotizador/cotizaciones/[id]/enviar/route");
+                };
+            };
+            perfil: typeof import("../src/api/store/cotizador/perfil/route");
+            servicios: typeof import("../src/api/store/cotizador/servicios/route");
+        };
         courses: typeof import("../src/api/store/courses/route") & {
             $slug: typeof import("../src/api/store/courses/[slug]/route");
         };
@@ -950,5 +960,8 @@ export type Routes = {
                 };
             };
         };
+    };
+    cotizacion: {
+        $token: typeof import("../src/api/cotizacion/[token]/route");
     };
 };

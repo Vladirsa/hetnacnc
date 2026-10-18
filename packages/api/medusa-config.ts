@@ -67,6 +67,9 @@ module.exports = withMercur({
       resolve: './src/modules/credit',
     },
     {
+      resolve: './src/modules/cotizador',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
