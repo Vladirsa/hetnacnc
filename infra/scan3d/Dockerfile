@@ -69,17 +69,21 @@ ENV FORCE_CUDA=1
 # y CMake no mira dentro de site-packages por su cuenta. CMAKE_PREFIX_PATH con
 # la ruta que reporta el propio paquete es la forma documentada de decírselo.
 #
-# cmake<4 a propósito: CMake 4 pide el dialecto CUDA20 por defecto y el nvcc
-# de CUDA 11.8 sólo llega a C++17, así que la prueba de compilación de
-# FindOpenMP truena ("does not support this"). torchmcubes está escrito para
-# CMake 3.x. Los dos --config-settings fijan el estándar explícitamente para
-# que no dependa del default de la versión de CMake que toque.
-RUN python3 -m pip install --no-cache-dir scikit-build-core "cmake<4" ninja setuptools wheel pybind11 \
+# El commit va FIJO, y es lo importante de este paso: requirements.txt de
+# TripoSR pide torchmcubes del HEAD sin fijar nada, y el 10-sep-2026 upstream
+# subió su CMakeLists a C++20 ("as required by recent PyTorch headers"). CUDA
+# C++20 no existe en nvcc 11.8 -- llegó en CUDA 12 --, así que desde esa fecha
+# el build truena en la prueba de FindOpenMP, y no se arregla pasando
+# -DCMAKE_CUDA_STANDARD=17 porque su CMakeLists hace un set() que pisa el
+# cache. be4084b es el último commit con CUDA/C++17, que es el que corresponde
+# a torch 2.1.2.
+#
+# cmake<4 y pybind11<3 son las versiones mayores contra las que se escribió
+# ese commit; sin fijarlas, pip trae las nuevas y vuelve a tronar.
+RUN python3 -m pip install --no-cache-dir scikit-build-core "cmake<4" ninja setuptools wheel "pybind11<3" \
     && CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)" \
        python3 -m pip install --no-cache-dir --no-build-isolation \
-       --config-settings=cmake.define.CMAKE_CUDA_STANDARD=17 \
-       --config-settings=cmake.define.CMAKE_CXX_STANDARD=17 \
-       git+https://github.com/tatsy/torchmcubes.git
+       "git+https://github.com/tatsy/torchmcubes.git@be4084bdc1aac29ffeeb0ed53efaacf5c4b545e0"
 
 COPY infra/scan3d/requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
