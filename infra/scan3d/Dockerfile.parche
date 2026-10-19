@@ -1,0 +1,30 @@
+# Parche incremental sobre la imagen YA publicada.
+#
+# Para qué: el Dockerfile principal baja 13GB de Meshroom en su paso 4. Si la
+# caché de ese paso se pierde (un `docker builder prune`, un disco que se
+# llenó, otra máquina), reconstruir desde cero cuesta horas -- aunque el
+# cambio real sean tres líneas de Python.
+#
+# Este parche parte de la imagen publicada, que ya trae CUDA, Meshroom,
+# TripoSR, torch y torchmcubes compilado, y sólo vuelve a aplicar las capas
+# baratas del final. Construye en minutos y el push sube unos megas.
+#
+# El Dockerfile principal sigue siendo la verdad: cuando haya que reconstruir
+# limpio (cambiar la versión de CUDA, actualizar Meshroom, auditar qué hay
+# adentro), se usa ése. Este es para iterar.
+#
+# Uso, desde la raíz del repo:
+#   docker build -f infra/scan3d/Dockerfile.parche -t ghcr.io/vladirsa/hetna-scan3d:latest .
+#   docker push ghcr.io/vladirsa/hetna-scan3d:latest
+FROM ghcr.io/vladirsa/hetna-scan3d:latest
+
+COPY infra/scan3d/requirements.txt /app/requirements.txt
+RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
+
+# Deja cacheado el modelo u2net de rembg (~176MB) para que un worker frío no
+# tenga que descargarlo antes de poder atender.
+RUN python3 -c "from rembg import new_session; new_session('u2net')"
+
+COPY infra/scan3d/handler.py infra/scan3d/preview_triposr.py infra/scan3d/scan_meshroom.py infra/scan3d/convert_to_stl.py infra/scan3d/storage.py /app/
+
+CMD ["python3", "-u", "handler.py"]
