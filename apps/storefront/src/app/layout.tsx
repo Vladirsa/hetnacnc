@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import localFont from 'next/font/local';
 
 import './globals.css';
 
@@ -16,16 +16,26 @@ import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 
 import { Providers } from './providers';
 
-const funnelDisplay = Inter({
+// Las tipografías viven en el repo (src/fonts), no se bajan de Google al
+// construir. next/font/google hace esa descarga en cada build, y eso vuelve el
+// despliegue dependiente de una red ajena: el 19 de octubre tumbó una
+// publicación con "Cannot read properties of null" en next/font, teniendo el
+// sitio abajo y sin que el código tuviera nada malo.
+//
+// Son las versiones variables: un archivo cubre todo el rango de grosores, así
+// que pesan menos que un archivo por grosor. Ver src/fonts/LEEME.md.
+const funnelDisplay = localFont({
+  src: '../fonts/Inter-variable-latin.woff2',
   variable: '--font-body',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700']
+  weight: '300 700',
+  display: 'swap'
 });
 
-const hetnaDisplay = Space_Grotesk({
+const hetnaDisplay = localFont({
+  src: '../fonts/SpaceGrotesk-variable-latin.woff2',
   variable: '--font-display',
-  subsets: ['latin'],
-  weight: ['500', '600', '700']
+  weight: '500 700',
+  display: 'swap'
 });
 
 export const metadata: Metadata = {
