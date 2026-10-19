@@ -3,6 +3,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ESCANEO_MODULE } from "../../../modules/escaneo"
 import EscaneoModuleService from "../../../modules/escaneo/service"
 import { createEscaneoWorkflow } from "../../../workflows/create-escaneo"
+import { creditosDe } from "../../../workflows/create-escaneo/steps/create-escaneo"
 
 // El historial de escaneos del taller. Es la pantalla que vuelve esto un
 // servicio de la plataforma y no un archivo que se manda por WhatsApp: el
@@ -22,7 +23,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     skip: Number(req.query.offset) || 0,
   })
 
-  res.json({ escaneos, count })
+  res.json({
+    escaneos,
+    count,
+    // El precio del escaneo profesional, para que la pantalla lo muestre sin
+    // tener una copia propia que se desincronice de la que de verdad se cobra.
+    creditos_por_escaneo: creditosDe("scan"),
+  })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {

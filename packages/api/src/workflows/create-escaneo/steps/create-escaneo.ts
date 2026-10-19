@@ -23,7 +23,7 @@ const MAXIMO_FOTOS = { preview: 1, scan: 80 } as const
 // gancho que lleva al de paga.
 const CREDITOS_POR_ESCANEO_DEFAULT = 5
 
-function creditosDe(modo: "preview" | "scan"): number {
+export function creditosDe(modo: "preview" | "scan"): number {
   if (modo === "preview") return 0
   return Number(process.env.ESCANEO_CREDITOS_POR_TRABAJO) || CREDITOS_POR_ESCANEO_DEFAULT
 }

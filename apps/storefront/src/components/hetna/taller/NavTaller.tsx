@@ -8,6 +8,7 @@ const PESTANAS = [
   { href: "/taller", etiqueta: "Panel" },
   { href: "/taller/cotizaciones", etiqueta: "Cotizaciones" },
   { href: "/taller/calculadora", etiqueta: "Calculadora" },
+  { href: "/taller/escaneos", etiqueta: "Escaneos 3D" },
   { href: "/taller/perfil", etiqueta: "Mi taller" },
 ]
 
