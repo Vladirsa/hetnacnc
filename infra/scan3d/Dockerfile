@@ -50,7 +50,24 @@ ENV TRIPOSR_DIR=/opt/TripoSR
 RUN python3 -m pip install --no-cache-dir --upgrade pip
 RUN python3 -m pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 \
     --index-url https://download.pytorch.org/whl/cu118
-RUN python3 -m pip install --no-cache-dir -r /opt/TripoSR/requirements.txt
+
+# torchmcubes (dependencia de TripoSR) se compila CONTRA el torch ya
+# instalado arriba, y su backend de build (scikit-build-core) necesita ver
+# torch mientras compila. pip aisla el entorno de build por defecto y ahi
+# torch no existe -- de ahi "the 'torch' package was not found in the build
+# environment". Por eso va aparte del resto de requirements.txt, con
+# --no-build-isolation y sus dependencias de build puestas a mano.
+RUN grep -v torchmcubes /opt/TripoSR/requirements.txt > /tmp/triposr-req.txt \
+    && python3 -m pip install --no-cache-dir -r /tmp/triposr-req.txt
+
+# La maquina que construye la imagen no tiene GPU (es un VPS), asi que hay que
+# decirle para que arquitecturas compilar en vez de dejar que las detecte:
+# 7.5 = T4, 8.0 = A100, 8.6 = A5000/3090, 8.9 = 4090/L4.
+ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
+ENV FORCE_CUDA=1
+RUN python3 -m pip install --no-cache-dir scikit-build-core cmake ninja setuptools wheel \
+    && python3 -m pip install --no-cache-dir --no-build-isolation \
+       git+https://github.com/tatsy/torchmcubes.git
 
 COPY infra/scan3d/requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
