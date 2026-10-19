@@ -62,6 +62,37 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true
+  },
+  // replicad-opencascadejs (el motor B-rep del generador de caja) es un bundle
+  // de Emscripten que sirve para Node y para el navegador: trae un
+  // import("node:module") dentro de su rama de Node. Esa rama nunca se ejecuta
+  // en el navegador, pero webpack recorre el módulo entero al construir y
+  // truena con "UnhandledSchemeError: Reading from node:module", aunque el
+  // import de la librería ya sea dinámico.
+  //
+  // El prefijo node: lo atiende webpack antes de llegar a resolve.alias, por
+  // eso un alias a false no basta: hay que quitarle el prefijo primero
+  // (NormalModuleReplacementPlugin) y recién entonces fallback puede
+  // resolverlo a un módulo vacío. Sólo para el bundle del navegador -- del
+  // lado del servidor esos módulos sí existen y hay que dejarlos pasar.
+  webpack: (config, { isServer, webpack }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:/, (recurso: { request: string }) => {
+          recurso.request = recurso.request.replace(/^node:/, "")
+        })
+      )
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        module: false,
+        fs: false,
+        path: false,
+        crypto: false,
+        url: false,
+        worker_threads: false,
+      }
+    }
+    return config
   }
 };
 
