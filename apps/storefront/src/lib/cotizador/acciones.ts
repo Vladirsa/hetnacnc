@@ -81,7 +81,7 @@ export type TallerPerfil = {
   correo: string | null
   sitio_web: string | null
   logo_url: string | null
-  moneda: "MXN" | "USD" | "EUR"
+  moneda: "MXN" | "USD"
   iva_pct: number
   vigencia_dias: number
   costo_hora_taller: number
@@ -105,8 +105,23 @@ export type ResumenPlan = {
   prueba_dias: number
 }
 
+// Los costos con los que cotiza quien no ha capturado los suyos. Vienen del
+// backend en vez de estar copiados aquí para que no se desincronicen.
+export type CostosReferencia = {
+  costoHoraTaller: number
+  costoHoraMaquina: number
+  costoHoraOperador: number
+  margenMinimo: number
+  margenRecomendado: number
+  ivaPct: number
+}
+
 export async function cargarPerfil() {
-  return pedir<{ perfil: TallerPerfil | null; plan: ResumenPlan | null }>("/store/cotizador/perfil")
+  return pedir<{
+    perfil: TallerPerfil | null
+    plan: ResumenPlan | null
+    costos_referencia: CostosReferencia
+  }>("/store/cotizador/perfil")
 }
 
 export async function guardarPerfil(cambios: Partial<TallerPerfil>) {
