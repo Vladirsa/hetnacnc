@@ -88,6 +88,12 @@ RUN python3 -m pip install --no-cache-dir scikit-build-core "cmake<4" ninja setu
 COPY infra/scan3d/requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 
+# rembg baja su modelo (u2net, ~176MB) la primera vez que se usa. Si no se
+# deja cacheado aquí, cada worker frío de RunPod lo descarga antes de poder
+# atender -- y si GitHub no responde, el trabajo falla por algo que no tiene
+# que ver con el escaneo.
+RUN python3 -c "from rembg import new_session; new_session('u2net')"
+
 COPY infra/scan3d/handler.py infra/scan3d/preview_triposr.py infra/scan3d/scan_meshroom.py infra/scan3d/convert_to_stl.py infra/scan3d/storage.py /app/
 
 CMD ["python3", "-u", "handler.py"]

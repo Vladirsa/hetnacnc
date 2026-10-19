@@ -2,3 +2,12 @@ runpod==1.7.9
 trimesh==4.5.3
 numpy==1.26.4
 boto3==1.35.60
+
+# rembg (quita el fondo de la foto antes de generar la malla) lo pide el
+# requirements.txt de TripoSR, pero onnxruntime es un extra suyo: instalar
+# "rembg" a secas no lo trae y el import truena al arrancar run.py.
+# Va la versión CPU a propósito: onnxruntime-gpu tiene que coincidir con la
+# versión de CUDA (la 1.17+ ya pide CUDA 12) y aquí estamos en 11.8. Quitar
+# el fondo de una sola imagen en CPU toma un segundo, irrelevante al lado de
+# la inferencia 3D, y nos ahorra otra pelea de versiones.
+onnxruntime==1.19.2
