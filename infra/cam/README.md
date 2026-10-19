@@ -91,3 +91,33 @@ fresa y la pieza.
 3, 4 y 5 ejes siguen siendo un servicio manual, el que describe la página de
 `laboratorio-cam` en el storefront. No es una limitación temporal: es la
 decisión de dominar 2.5D antes de tocar lo demás.
+
+## Instalación en el servidor
+
+El motor es Python y el storefront lo lanza como subproceso. Hay que crearle
+su propio entorno — no se mezcla con nada más del sistema:
+
+```bash
+cd ~/hetnacnc/infra/cam
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Y decirle al storefront dónde quedó, en `apps/storefront/.env`:
+
+```
+CAM_PYTHON=/root/hetnacnc/infra/cam/.venv/bin/python
+```
+
+Sin esa variable la ruta responde "el generador no está disponible" en vez de
+tronar: es el "si un bridge falta, ese camino se apaga y el resto sigue" del
+patrón. La tienda entera sigue funcionando; sólo esa pantalla avisa que no.
+
+Para comprobar que quedó, sin levantar nada:
+
+```bash
+cd ~/hetnacnc/infra/cam
+.venv/bin/python bridges/dxf_gcode.py tu_archivo.dxf salida.nc mdf 6 18
+```
+
+Debe imprimir un JSON con `"ok": true` y el plan.
