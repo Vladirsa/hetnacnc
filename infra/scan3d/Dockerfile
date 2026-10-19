@@ -68,9 +68,17 @@ ENV FORCE_CUDA=1
 # pybind11 instalado con pip no basta: su CMakeLists hace find_package(pybind11)
 # y CMake no mira dentro de site-packages por su cuenta. CMAKE_PREFIX_PATH con
 # la ruta que reporta el propio paquete es la forma documentada de decírselo.
-RUN python3 -m pip install --no-cache-dir scikit-build-core cmake ninja setuptools wheel pybind11 \
+#
+# cmake<4 a propósito: CMake 4 pide el dialecto CUDA20 por defecto y el nvcc
+# de CUDA 11.8 sólo llega a C++17, así que la prueba de compilación de
+# FindOpenMP truena ("does not support this"). torchmcubes está escrito para
+# CMake 3.x. Los dos --config-settings fijan el estándar explícitamente para
+# que no dependa del default de la versión de CMake que toque.
+RUN python3 -m pip install --no-cache-dir scikit-build-core "cmake<4" ninja setuptools wheel pybind11 \
     && CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)" \
        python3 -m pip install --no-cache-dir --no-build-isolation \
+       --config-settings=cmake.define.CMAKE_CUDA_STANDARD=17 \
+       --config-settings=cmake.define.CMAKE_CXX_STANDARD=17 \
        git+https://github.com/tatsy/torchmcubes.git
 
 COPY infra/scan3d/requirements.txt /app/requirements.txt
