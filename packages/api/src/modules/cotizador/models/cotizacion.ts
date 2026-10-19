@@ -81,6 +81,15 @@ const Cotizacion = model
   })
   .cascades({ delete: ["partidas"] })
   .indexes([
+    // Único por taller incluyendo la revisión: dos cotizaciones no pueden
+    // compartir folio, pero la Rev B de un folio sí puede convivir con su
+    // Rev A. Sin esto, dos altas simultáneas del mismo taller podrían leer el
+    // mismo consecutivo y emitir dos documentos con el mismo folio.
+    {
+      on: ["perfil_id", "folio", "revision"],
+      unique: true,
+      where: "deleted_at IS NULL",
+    },
     {
       on: ["folio"],
     },

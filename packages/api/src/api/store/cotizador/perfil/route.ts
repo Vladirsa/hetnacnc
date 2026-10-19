@@ -2,12 +2,18 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 
 import { COTIZADOR_MODULE } from "../../../../modules/cotizador"
 import CotizadorModuleService from "../../../../modules/cotizador/service"
+import { resumenPlan } from "../../../../lib/cotizador-plan"
 
-// Campos que el taller puede escribir. folio_consecutivo NO está en la lista:
-// lo mueve sólo el workflow al emitir una cotización, si no se podría reusar
-// un folio ya enviado.
+// Campos que el taller puede escribir. Quedan fuera a propósito:
+// - folio_consecutivo: lo mueve sólo el workflow al emitir, si no se podría
+//   reusar un folio ya enviado.
+// - plan, plan_hasta, prueba_hasta, uso_mes, uso_n: son el cobro. Si el taller
+//   pudiera escribirlos se regalaría un plan industrial y cupo infinito.
+const DIAS_DE_PRUEBA = 14
+
 const CAMPOS_EDITABLES = [
   "nombre_comercial",
+  "nombre_contacto",
   "razon_social",
   "rfc",
   "direccion",
@@ -43,7 +49,12 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
 
   const [perfil] = await cotizadorModuleService.listTallerPerfils({ customer_id: customerId })
 
-  res.json({ perfil: perfil ?? null })
+  res.json({
+    perfil: perfil ?? null,
+    // Lo que la pantalla necesita para decir "prueba, 8 días" o "3 de 10
+    // cotizaciones del mes" sin tener que reimplementar la regla del plan.
+    plan: perfil ? resumenPlan(perfil) : null,
+  })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -70,8 +81,14 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     return res.status(400).json({ message: "nombre_comercial es requerido para crear el perfil del taller" })
   }
 
+  // La prueba se otorga aquí, al abrir el perfil: es el mismo trato que da hoy
+  // el esquema taller (14 días sin límite de cotizaciones). Va fuera de
+  // CAMPOS_EDITABLES para que el taller no se la pueda extender solo.
+  const pruebaHasta = new Date()
+  pruebaHasta.setDate(pruebaHasta.getDate() + DIAS_DE_PRUEBA)
+
   const [perfil] = await cotizadorModuleService.createTallerPerfils([
-    { customer_id: customerId, ...cambios } as any,
+    { customer_id: customerId, ...cambios, prueba_hasta: pruebaHasta } as any,
   ])
   res.status(201).json({ perfil })
 }

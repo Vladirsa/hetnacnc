@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto"
 import { COTIZADOR_MODULE } from "../../../modules/cotizador"
 import CotizadorModuleService from "../../../modules/cotizador/service"
 import { subtotalDePartida, totalesDeCotizacion } from "../../../lib/cotizador-config"
+import { mesActual } from "../../../lib/cotizador-plan"
 
 export type PartidaInput = {
   posicion?: number
@@ -74,9 +75,15 @@ export const createCotizacionStep = createStep(
     }
 
     const consecutivo = (perfil.folio_consecutivo ?? 0) + 1
+    // El contador del mes se mueve aquí, junto con el folio: así cuenta
+    // cotizaciones EMITIDAS y borrarlas después no devuelve cupo.
+    const mes = mesActual()
+    const usadasAntes = perfil.uso_mes === mes ? Number(perfil.uso_n) || 0 : 0
     await cotizadorModuleService.updateTallerPerfils({
       id: perfil.id,
       folio_consecutivo: consecutivo,
+      uso_mes: mes,
+      uso_n: usadasAntes + 1,
     })
 
     const fecha = new Date()
@@ -160,6 +167,20 @@ export const createCotizacionStep = createStep(
       return
     }
     const cotizadorModuleService = container.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
+
+    // El cupo del mes sí se devuelve aquí: esta cotización nunca llegó a
+    // existir (típicamente porque el taller se pasó del plan y no tenía
+    // créditos), y eso es distinto de borrar una ya emitida. El consecutivo
+    // del folio no se devuelve, a propósito.
+    const cotizacion = await cotizadorModuleService.retrieveCotizacion(cotizacionId)
+    const [perfil] = await cotizadorModuleService.listTallerPerfils({ id: cotizacion.perfil_id })
+    if (perfil && perfil.uso_mes === mesActual() && (perfil.uso_n ?? 0) > 0) {
+      await cotizadorModuleService.updateTallerPerfils({
+        id: perfil.id,
+        uso_n: perfil.uso_n - 1,
+      })
+    }
+
     // Las partidas se van en cascada (ver .cascades en el modelo Cotizacion).
     await cotizadorModuleService.deleteCotizacions(cotizacionId)
   }

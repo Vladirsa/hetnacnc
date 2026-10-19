@@ -2,6 +2,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 
 import { COTIZADOR_MODULE } from "../../../modules/cotizador"
 import CotizadorModuleService from "../../../modules/cotizador/service"
+import { resumenPlan, type PlanEfectivo } from "../../../lib/cotizador-plan"
 
 export type EvaluarCobroStepInput = {
   customer_id: string
@@ -10,24 +11,27 @@ export type EvaluarCobroStepInput = {
 export type EvaluarCobroStepOutput = {
   cobrar: boolean
   creditos: number
-  gratis_por_mes: number
-  usadas_este_mes: number
+  plan: PlanEfectivo
+  limite: number | null
+  usadas: number
+  prueba_dias: number
 }
 
-// Cuántas cotizaciones al mes son gratis antes de consumir créditos, y qué
-// cuesta cada una de más. Son decisiones de precio, no de código: se mueven
-// con variables de entorno sin tocar el flujo.
-const GRATIS_POR_MES_DEFAULT = 5
+// Cuántos créditos cuesta una cotización que se pasa del cupo del plan. Es
+// decisión de precio, no de código.
 const CREDITOS_POR_COTIZACION_DEFAULT = 1
 
-// Corre DESPUÉS de crear la cotización, así que la recién creada ya está en el
-// conteo: pasarse del tope significa usadas > gratis, no >=.
+// Corre DESPUÉS de crear la cotización, que ya movió el contador del mes, así
+// que la recién emitida va incluida en `usadas`: pasarse del cupo significa
+// usadas > límite.
+//
+// Los dos cobros conviven: el plan da el cupo mensual y los créditos sirven
+// para pasarse de él. Un plan de pago o la prueba no tienen límite, así que
+// nunca cobran créditos.
 export const evaluarCobroCotizacionStep = createStep(
   "evaluar-cobro-cotizacion-step",
   async (input: EvaluarCobroStepInput, { container }) => {
     const cotizadorModuleService = container.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
-
-    const gratisPorMes = Number(process.env.COTIZADOR_GRATIS_POR_MES) || GRATIS_POR_MES_DEFAULT
     const creditos = Number(process.env.COTIZADOR_CREDITOS_POR_COTIZACION) || CREDITOS_POR_COTIZACION_DEFAULT
 
     const [perfil] = await cotizadorModuleService.listTallerPerfils({
@@ -37,28 +41,22 @@ export const evaluarCobroCotizacionStep = createStep(
       return new StepResponse<EvaluarCobroStepOutput>({
         cobrar: false,
         creditos: 0,
-        gratis_por_mes: gratisPorMes,
-        usadas_este_mes: 0,
+        plan: "gratis",
+        limite: null,
+        usadas: 0,
+        prueba_dias: 0,
       })
     }
 
-    const inicioDeMes = new Date()
-    inicioDeMes.setDate(1)
-    inicioDeMes.setHours(0, 0, 0, 0)
-
-    const [, usadas] = await cotizadorModuleService.listAndCountCotizacions(
-      {
-        perfil_id: perfil.id,
-        created_at: { $gte: inicioDeMes },
-      } as any,
-      { take: 1 }
-    )
+    const resumen = resumenPlan(perfil)
 
     return new StepResponse<EvaluarCobroStepOutput>({
-      cobrar: usadas > gratisPorMes,
+      cobrar: resumen.limite !== null && resumen.usadas > resumen.limite,
       creditos,
-      gratis_por_mes: gratisPorMes,
-      usadas_este_mes: usadas,
+      plan: resumen.plan,
+      limite: resumen.limite,
+      usadas: resumen.usadas,
+      prueba_dias: resumen.prueba_dias,
     })
   }
 )

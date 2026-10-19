@@ -17,6 +17,7 @@ const TallerPerfil = model
     customer_id: model.text(),
 
     nombre_comercial: model.text(),
+    nombre_contacto: model.text().nullable(),
     razon_social: model.text().nullable(),
     rfc: model.text().nullable(),
     direccion: model.text().nullable(),
@@ -44,6 +45,20 @@ const TallerPerfil = model
     margen_recomendado: model.float().default(0),
     // tarifas y rangos propios del taller, con la forma de CotizadorCfg.
     tarifas: model.json().nullable(),
+
+    // Plan y cupo mensual. plan_hasta es el fin del periodo pagado y
+    // prueba_hasta el fin de la prueba; la regla que los interpreta vive en
+    // lib/cotizador-plan.ts.
+    plan: model.enum(["gratis", "taller", "pro", "industrial"]).default("gratis"),
+    plan_hasta: model.dateTime().nullable(),
+    prueba_hasta: model.dateTime().nullable(),
+
+    // Contador del mes en curso. Se mueve al emitir una cotización y NO baja
+    // si después la borran: si se contaran renglones de cotizaciones, borrar
+    // las del mes regalaría cupo. uso_mes guarda a qué mes pertenece el
+    // conteo, así que el cupo se reinicia solo sin ningún job.
+    uso_mes: model.text().nullable(),
+    uso_n: model.number().default(0),
 
     // Folio con trazabilidad: QT-2026-1048 sale de prefijo + consecutivo.
     folio_prefijo: model.text().default("QT"),
