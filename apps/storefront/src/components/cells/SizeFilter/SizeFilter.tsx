@@ -43,7 +43,7 @@ export const SizeFilter = () => {
     updateFilters(size)
   }
   return (
-    <Accordion heading="Size" data-testid="filter-size">
+    <Accordion heading="Medida" data-testid="filter-size">
       <ul className="grid grid-cols-3 mt-2 gap-2" data-testid="filter-size-options">
         {sizeOptions.map((option) => (
           <li key={option}>

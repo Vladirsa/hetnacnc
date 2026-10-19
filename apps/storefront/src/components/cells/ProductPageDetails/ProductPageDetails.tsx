@@ -1,10 +1,11 @@
 import { ProductPageAccordion } from "@/components/molecules"
 
+// Descripción del producto: abierta por defecto (es lo primero que busca quien compra)
 export const ProductPageDetails = ({ details }: { details: string }) => {
   if (!details) return null
 
   return (
-    <ProductPageAccordion heading="Product details" defaultOpen={false} data-testid="product-details-section">
+    <ProductPageAccordion heading="Descripción del producto" defaultOpen data-testid="product-details-section">
       <div
         className="product-details"
         dangerouslySetInnerHTML={{

@@ -6,6 +6,8 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms"
 import { SearchProductsListing, ProductListing } from "@/components/sections"
 import { notFound } from "next/navigation"
+import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import { listRegions } from "@/lib/data/regions"
@@ -47,10 +49,11 @@ export async function generateMetadata({
     locales,
   })
 
-  const title = `${cat.name} Category`
-  const description = `${cat.name} Category - ${
-    process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"
-  }`
+  const servicio = esCategoriaServicio(categoryHandle)
+  const title = servicio ? `${cat.name} en México: cotiza con talleres CNC` : `${cat.name}`
+  const description = servicio
+    ? `${cat.name} con talleres CNC de todo México. Describe tu pieza, recibe propuestas y paga seguro en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}.`
+    : `Compra ${cat.name.toLowerCase()} en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}: precios en pesos y envío a todo México.`
 
   return {
     title,
@@ -155,15 +158,27 @@ async function Category({
         <Breadcrumbs items={breadcrumbsItems} />
       </div>
 
-      <h1 className="heading-xl uppercase">{category.name}</h1>
+      {esCategoriaServicio(categoryHandle) ? (
+        <>
+          <h1 className="sr-only">{category.name}</h1>
+          <ServicioCategoria handle={categoryHandle} />
+        </>
+      ) : (
+        <h1 className="heading-xl uppercase">{category.name}</h1>
+      )}
 
+      {/* Publicidad de categorías (no dibuja nada si no hay anuncios vigentes) */}
+      <AnunciosEspacio espacio="categorias_lateral" className="my-4" />
+
+      {esCategoriaServicio(categoryHandle) && jsonLdProducts.length === 0 ? null : (
       <Suspense fallback={<div data-testid="category-page-loading"><ProductListingSkeleton /></div>}>
-        {bot ? (
+        {bot || process.env.NEXT_PUBLIC_LISTADO_CLIENTE !== "1" ? (
           <ProductListing category_id={categoryIds} showSidebar locale={locale} />
         ) : (
           <SearchProductsListing category_id={categoryIds} locale={locale} />
         )}
       </Suspense>
+      )}
     </main>
   )
 }

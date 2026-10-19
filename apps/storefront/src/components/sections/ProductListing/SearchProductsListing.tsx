@@ -120,7 +120,7 @@ export const SearchProductsListing = ({
   return (
     <div className="min-h-[70vh]">
       <div className="flex justify-between w-full items-center">
-        <div className="my-4 label-md">{`${count} listings`}</div>
+        <div className="my-4 label-md">{`${count} ${count === 1 ? "producto" : "productos"}`}</div>
       </div>
       <div className="hidden md:block">
         <ProductListingActiveFilters />

@@ -5,12 +5,16 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { ServicioIcono } from "./ServicioIcono"
 import { SERVICIOS_PRINCIPALES, subServicios } from "./servicios-datos"
 
-// Barra azul marino: Tienda (con sus categorias) y los servicios de HETNA CNC.
+// Barra azul marino: Tienda, Digital y Servicios (categorias en negritas, con
+// pestañas para ver las subcategorias) y los servicios de HETNA CNC.
 // En computadora los menus se abren al pasar el mouse; en celular la barra
-// se desliza de lado y cada boton lleva a la pagina del servicio.
+// se desliza de lado y cada boton lleva a la pagina de la categoria o servicio.
+
+type Cat = HttpTypes.StoreProductCategory
 
 const ENLACE =
   "h-full flex items-center gap-1 text-white text-[13.5px] font-medium hover:text-[#F2A65A] shrink-0"
+const ENLACE_NEGRITA = ENLACE.replace("font-medium", "font-bold")
 
 const Flecha = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="hidden lg:block opacity-70">
@@ -18,19 +22,27 @@ const Flecha = () => (
   </svg>
 )
 
+const FlechaDerecha = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="opacity-60 shrink-0">
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+)
+
 const Menu = ({
   etiqueta,
   href,
   ancho = "min-w-[260px]",
+  negrita = false,
   children,
 }: {
   etiqueta: string
   href: string
   ancho?: string
+  negrita?: boolean
   children: React.ReactNode
 }) => (
   <div className="group relative h-full flex items-center shrink-0">
-    <LocalizedClientLink href={href} className={ENLACE}>
+    <LocalizedClientLink href={href} className={negrita ? ENLACE_NEGRITA : ENLACE}>
       {etiqueta}
       <Flecha />
     </LocalizedClientLink>
@@ -69,6 +81,76 @@ const OpcionMenu = ({
   </LocalizedClientLink>
 )
 
+const hijosDe = (c: Cat): Cat[] => (c.category_children as Cat[] | undefined) ?? []
+
+const ListaHojas = ({ grupo }: { grupo: Cat }) => (
+  <div className="flex flex-col">
+    <LocalizedClientLink
+      href={`/categories/${grupo.handle}`}
+      className="rounded-[8px] px-3 py-2 text-[13px] font-bold text-[#B34D07] hover:underline"
+    >
+      Ver todo en {grupo.name}
+    </LocalizedClientLink>
+    {hijosDe(grupo).map((h) => (
+      <LocalizedClientLink
+        key={h.id}
+        href={`/categories/${h.handle}`}
+        className="rounded-[8px] px-3 py-2 text-[13.5px] text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
+      >
+        {h.name}
+      </LocalizedClientLink>
+    ))}
+  </div>
+)
+
+// Contenido del desplegable de una categoria raiz: grupos (negritas) a la
+// izquierda y sus subcategorias a la derecha al pasar el cursor.
+const PestanasCategoria = ({ raiz }: { raiz: Cat }) => {
+  const grupos = hijosDe(raiz)
+  const conSub = grupos.some((g) => hijosDe(g).length > 0)
+
+  if (!conSub) {
+    return (
+      <div className="grid grid-cols-2 gap-x-2">
+        {grupos.map((g) => (
+          <LocalizedClientLink
+            key={g.id}
+            href={`/categories/${g.handle}`}
+            className="rounded-[8px] px-3 py-2 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
+          >
+            {g.name}
+          </LocalizedClientLink>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="menu-tabs relative flex min-h-[250px]">
+      <div className="w-[230px] shrink-0 border-r border-[#E7E4DC] pr-1">
+        {grupos.map((g) => (
+          <div key={g.id} className="grupo">
+            <LocalizedClientLink
+              href={`/categories/${g.handle}`}
+              className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
+            >
+              {g.name}
+              {hijosDe(g).length > 0 && <FlechaDerecha />}
+            </LocalizedClientLink>
+            <div className="hidden [.grupo:hover_&]:block absolute left-[230px] top-0 bottom-0 right-0 z-10 bg-white pl-3 overflow-y-auto">
+              <ListaHojas grupo={g} />
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Panel inicial: muestra el primer grupo hasta que se pase el cursor por otro */}
+      <div className="absolute left-[230px] top-0 bottom-0 right-0 pl-3 overflow-y-auto [.menu-tabs:has(.grupo:hover)_&]:hidden">
+        <ListaHojas grupo={grupos[0]} />
+      </div>
+    </div>
+  )
+}
+
 export const ServiciosNav = ({
   categorias,
 }: {
@@ -78,25 +160,25 @@ export const ServiciosNav = ({
     aria-label="Servicios"
     className="relative z-40 bg-[#142033] px-4 lg:px-8 xl:px-16 h-[46px] flex items-center gap-6 lg:gap-5 xl:gap-7 overflow-x-auto lg:overflow-visible scrollbar-hide whitespace-nowrap"
   >
-    <Menu etiqueta="Tienda" href="/categories" ancho="w-[440px]">
-      <div className="grid grid-cols-2 gap-x-2">
-        {categorias.map((c) => (
+    {categorias
+      .filter((raiz) => hijosDe(raiz).length > 0)
+      .map((raiz) => (
+        <Menu
+          key={raiz.id}
+          etiqueta={raiz.name}
+          href={`/categories/${raiz.handle}`}
+          ancho="w-[560px]"
+          negrita
+        >
+          <PestanasCategoria raiz={raiz} />
           <LocalizedClientLink
-            key={c.id}
-            href={`/categories/${c.handle}`}
-            className="rounded-[8px] px-3 py-2 text-[13.5px] text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
+            href={`/categories/${raiz.handle}`}
+            className="mt-1 block border-t border-[#E7E4DC] px-3 pt-2.5 pb-1.5 text-[13px] font-semibold text-[#B34D07] hover:underline"
           >
-            {c.name}
+            Ver todo en {raiz.name}
           </LocalizedClientLink>
-        ))}
-      </div>
-      <LocalizedClientLink
-        href="/categories"
-        className="mt-1 block border-t border-[#E7E4DC] px-3 pt-2.5 pb-1.5 text-[13px] font-semibold text-[#B34D07] hover:underline"
-      >
-        Ver todo el catálogo
-      </LocalizedClientLink>
-    </Menu>
+        </Menu>
+      ))}
 
     {SERVICIOS_PRINCIPALES.map((s) => {
       const hijos = subServicios(s.slug)

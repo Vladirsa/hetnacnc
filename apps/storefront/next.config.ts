@@ -1,5 +1,53 @@
 import type { NextConfig } from 'next';
 
+// ---------------------------------------------------------------------
+// CONTENT-SECURITY-POLICY (CSP): lista de lugares desde donde el navegador
+// puede cargar scripts, imágenes, videos, etc. Frena ataques que inyectan
+// código ajeno en la página.
+//
+// ETAPA 1 (ahora): modo "solo reporte". No bloquea nada; cada cosa que
+// incumpla se anota en el registro del servidor (/api/csp-reporte).
+// ETAPA 2: cuando el registro quede limpio, se cambia el encabezado a
+// 'Content-Security-Policy' (cambiar la clave de abajo) y empieza a bloquear.
+//
+// Etapa 1b: según el registro se agregaron TalkJS (mensajería) y Google
+// Analytics / Tag Manager (estadísticas).
+// Etapa 1c: según el registro real de clientes se agregaron Stripe (pagos),
+// Facebook (pixel de anuncios), jsDelivr (scripts y tipografías del generador
+// de letreros) y 'unsafe-eval' (lo usa alguna librería de estadísticas).
+// ---------------------------------------------------------------------
+const politicaCSP = [
+  "default-src 'self'",
+  // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son servicios que usa la tienda.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://js.stripe.com https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com https://www.facebook.com https://js.stripe.com https://*.stripe.com https://*.stripe.network",
+  "media-src 'self' blob: https:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://*.mercadopago.com https://www.facebook.com",
+  "frame-ancestors 'self'",
+  "upgrade-insecure-requests",
+  "report-uri /api/csp-reporte"
+].join('; ');
+
+// Encabezados de seguridad que el navegador recibe en cada pagina.
+const encabezadosSeguridad = [
+  // Obliga a usar siempre HTTPS (1 año)
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  // Evita que el navegador "adivine" tipos de archivo
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Evita que otros sitios metan tu tienda dentro de un marco (clickjacking)
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  // Al salir a otro sitio solo se comparte el dominio, no la URL completa
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Solo reporte: no bloquea. Para activar de verdad, cambiar por 'Content-Security-Policy'
+  { key: 'Content-Security-Policy-Report-Only', value: politicaCSP }
+];
+
 const nextConfig: NextConfig = {
   // Sin output: "standalone" a propósito. Ese modo empaqueta un servidor
   // aparte en .next/standalone y rompe `next start`, que es justo con lo que
@@ -9,6 +57,11 @@ const nextConfig: NextConfig = {
   // despliega así: el repo vive en el servidor con sus node_modules.
   trailingSlash: false,
   reactStrictMode: true,
+  // Oculta el encabezado "x-powered-by: Next.js" (no regalar pistas a atacantes)
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: encabezadosSeguridad }];
+  },
   experimental: {
     // @medusajs/ui (y lodash) no se parten por componente/función al importar
     // desde su punto de entrada principal: esto le pide a Next que reescriba

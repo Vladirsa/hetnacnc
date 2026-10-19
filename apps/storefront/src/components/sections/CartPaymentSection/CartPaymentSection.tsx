@@ -10,8 +10,14 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/atoms';
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
 import { initiatePaymentSession } from '@/lib/data/cart';
+import { iniciarMercadoPago } from '@/lib/data/mercadopago';
 
-import { isStripe as isStripeFunc, paymentInfoMap } from '../../../lib/constants';
+import {
+  isMercadoPago as isMercadoPagoFunc,
+  isPaypal as isPaypalFunc,
+  isStripe as isStripeFunc,
+  paymentInfoMap
+} from '../../../lib/constants';
 import PaymentContainer, {
   StripeCardContainer
 } from '../../organisms/PaymentContainer/PaymentContainer';
@@ -88,7 +94,20 @@ const CartPaymentSection = ({
 
       const checkActiveSession = activeSession?.provider_id === selectedPaymentMethod;
 
-      if (!checkActiveSession) {
+      if (isMercadoPagoFunc(selectedPaymentMethod) || isPaypalFunc(selectedPaymentMethod)) {
+        // Siempre renovamos la sesión para que el monto en Mercado Pago / PayPal coincida con el carrito.
+        // Al terminar de pagar, el cliente regresa a /checkout/mercadopago o /checkout/paypal.
+        const locale = pathname.split('/')[1] || 'mx';
+        const rutaRetorno = isPaypalFunc(selectedPaymentMethod) ? 'paypal' : 'mercadopago';
+        const res = await iniciarMercadoPago(
+          cart,
+          selectedPaymentMethod,
+          `${window.location.origin}/${locale}/checkout/${rutaRetorno}`
+        );
+        if (!res.ok) {
+          throw new Error(res.error);
+        }
+      } else if (!checkActiveSession) {
         await initiatePaymentSession(cart, {
           provider_id: selectedPaymentMethod
         });
@@ -190,8 +209,8 @@ const CartPaymentSection = ({
             disabled={(isStripe && !cardComplete) || (!selectedPaymentMethod && !paidByGiftcard)}
           >
             {!activeSession && isStripeFunc(selectedPaymentMethod)
-              ? ' Enter card details'
-              : 'Continue to review'}
+              ? 'Ingresar datos de la tarjeta'
+              : 'Continuar a revisión'}
           </Button>
         </div>
 
@@ -219,7 +238,11 @@ const CartPaymentSection = ({
                   <Text>
                     {isStripeFunc(selectedPaymentMethod) && cardBrand
                       ? cardBrand
-                      : 'Another step will appear'}
+                      : isMercadoPagoFunc(selectedPaymentMethod)
+                        ? 'Pagarás en Mercado Pago'
+                        : isPaypalFunc(selectedPaymentMethod)
+                          ? 'Pagarás en PayPal'
+                          : 'Se confirma en el siguiente paso'}
                   </Text>
                 </div>
               </div>

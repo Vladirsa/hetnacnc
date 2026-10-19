@@ -6,6 +6,8 @@ import {
   ProductPageDetails,
   ProductAdditionalAttributes,
 } from "@/components/cells"
+import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
+import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 
 import { retrieveCustomer } from "@/lib/data/customer"
 import {
@@ -42,12 +44,26 @@ export const ProductDetails = async ({
         offers={offers}
         seller={seller}
       />
+      {/* Razones para comprar tranquilo, justo debajo del precio y el botón de compra */}
+      <ConfianzaProducto />
+      {/* Chat con el taller que vende este producto (el taller se valida en el servidor) */}
+      {seller?.handle && (
+        <div className="my-4">
+          <BotonPreguntarTaller
+            tallerHandle={seller.handle}
+            tallerNombre={seller.name || "el taller"}
+            productoHandle={product?.handle}
+            productoTitulo={product?.title}
+            className="inline-flex h-12 w-full items-center justify-center rounded-lg border-2 border-[#C2560A] px-5 text-base font-semibold text-[#C2560A] hover:bg-[#C2560A] hover:text-white"
+          />
+        </div>
+      )}
+      <ProductDetailsSeller seller={seller} />
       <ProductPageDetails details={product?.description || ""} />
       <ProductAdditionalAttributes
         attributes={product?.attribute_values || []}
       />
       <ProductDetailsShipping />
-      <ProductDetailsSeller seller={seller} />
       <ProductDetailsFooter
         tags={product?.tags || []}
         posted={product?.created_at}

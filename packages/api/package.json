@@ -40,7 +40,8 @@
     "@mercurjs/core": "2.3.6-canary.1",
     "@mercurjs/types": "2.3.6-canary.1",
     "http-proxy-middleware": "3.0.7",
-    "@mercurjs/cli": "2.3.6-canary.1"
+    "@mercurjs/cli": "2.3.6-canary.1",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@acme/admin": "*",

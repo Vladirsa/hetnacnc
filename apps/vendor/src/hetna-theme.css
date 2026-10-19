@@ -1,0 +1,85 @@
+/* Tema HETNA CNC para el panel de Mercur.
+   Sobrescribe los tokens de diseño de Medusa UI (se cargan después de @mercurjs/vendor/index.css).
+   Paleta tomada de apps/storefront/src/app/colors.css. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* Fondos */
+  --bg-base: #FFFFFF;
+  --bg-base-hover: #FAF9F6;
+  --bg-base-pressed: #F4F1EA;
+  --bg-subtle: #FAF9F6;
+  --bg-subtle-hover: #F4F1EA;
+  --bg-subtle-pressed: #ECE8DE;
+  --bg-component: #F4F1EA;
+  --bg-component-hover: #ECE8DE;
+  --bg-component-pressed: #E4DFD3;
+  --bg-field: #FAF9F6;
+  --bg-field-hover: #F4F1EA;
+  --bg-field-component: #FFFFFF;
+  --bg-field-component-hover: #FAF9F6;
+  --bg-highlight: #FDEEE1;
+  --bg-highlight-hover: #FBE3CF;
+  --bg-interactive: #C2560A;
+
+  /* Texto */
+  --fg-base: #1B1B18;
+  --fg-subtle: #55544D;
+  --fg-muted: #8A877D;
+  --fg-interactive: #B34D07;
+  --fg-interactive-hover: #8F3F07;
+
+  /* Bordes */
+  --border-base: #E7E4DC;
+  --border-strong: #D9D4C8;
+  --border-interactive: #C2560A;
+
+  /* Botón principal: naranja HETNA en lugar de negro */
+  --button-inverted: #C2560A;
+  --button-inverted-hover: #A84A08;
+  --button-inverted-pressed: #8F3F07;
+
+  /* Elementos oscuros (tooltips, avisos): azul marino HETNA */
+  --contrast-bg-base: #142033;
+  --contrast-bg-base-hover: #1B2A42;
+  --contrast-bg-base-pressed: #22334F;
+  --contrast-bg-subtle: #1B2A42;
+  --contrast-border-base: #2A3A57;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Space Grotesk', 'Inter', ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Menú lateral (escritorio) en azul marino, como la barra del sitio.
+   Se redefinen los tokens solo dentro del menú para que todo su contenido se adapte. */
+[class*='group/sidebar'] {
+  --bg-base: #22334F;
+  --bg-base-hover: #1B2A42;
+  --bg-base-pressed: #2A3A57;
+  --bg-subtle: #142033;
+  --bg-subtle-hover: #1B2A42;
+  --bg-subtle-pressed: #22334F;
+  --bg-component: #1B2A42;
+  --bg-component-hover: #22334F;
+  --bg-component-pressed: #2A3A57;
+  --bg-field: #1B2A42;
+  --bg-field-hover: #22334F;
+  --bg-highlight: #2A3A57;
+  --bg-highlight-hover: #33456A;
+  --fg-base: #FFFFFF;
+  --fg-subtle: #C9D2E0;
+  --fg-muted: #8FA0BA;
+  --fg-interactive: #F2A65E;
+  --border-base: #22334F;
+  --border-strong: #2A3A57;
+  background-color: #142033;
+  border-color: #22334F !important;
+}

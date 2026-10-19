@@ -555,6 +555,7 @@ export type Routes = {
             $provider: typeof import("@medusajs/medusa/api/hooks/payment/[provider]/route");
         };
         payout: typeof import("@mercurjs/core/api/hooks/payout/route");
+        mpLicitacion: typeof import("../src/api/hooks/mp-licitacion/route");
     };
     store: {
         carts: typeof import("@medusajs/medusa/api/store/carts/route") & {
@@ -580,6 +581,7 @@ export type Routes = {
                 addresses: typeof import("@medusajs/medusa/api/store/customers/me/addresses/route") & {
                     $addressId: typeof import("@medusajs/medusa/api/store/customers/me/addresses/[address_id]/route");
                 };
+                envios: typeof import("../src/api/store/customers/me/envios/route");
             };
         };
         locales: typeof import("@medusajs/medusa/api/store/locales/route");
@@ -658,10 +660,24 @@ export type Routes = {
             saldo: typeof import("../src/api/store/creditos-3d/saldo/route");
         };
         custom: typeof import("../src/api/store/custom/route");
+        envios: {
+            cotizacion: {
+                $id: typeof import("../src/api/store/envios/cotizacion/[id]/route");
+            };
+            cotizar: typeof import("../src/api/store/envios/cotizar/route");
+            cp: {
+                $cp: typeof import("../src/api/store/envios/cp/[cp]/route");
+            };
+        };
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
         quoteLeads: typeof import("../src/api/store/quote-leads/route");
+        solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
+            $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
+                elegir: typeof import("../src/api/store/solicitudes-taller/[token]/elegir/route");
+            };
+        };
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core/api/vendor/campaigns/route") & {
@@ -963,5 +979,14 @@ export type Routes = {
     };
     cotizacion: {
         $token: typeof import("../src/api/cotizacion/[token]/route");
+        hetnaSolicitudes: typeof import("../src/api/vendor/hetna-solicitudes/route") & {
+            $id: {
+                propuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/propuesta/route");
+            };
+        };
+    };
+    api: {
+        mpEnvio: typeof import("../src/api/api/mp-envio/route");
+        mpLicitacion: typeof import("../src/api/api/mp-licitacion/route");
     };
 };

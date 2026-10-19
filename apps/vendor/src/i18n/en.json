@@ -3,5 +3,46 @@
     "title": "Custom Fields",
     "description": "Manage your custom fields and configurations",
     "noFields": "No custom fields configured yet"
+  },
+  "login": {
+    "hint": "Log in to your HETNA CNC vendor account."
+  },
+  "onboarding": {
+    "wizard": {
+      "preview": {
+        "title": "Welcome to HETNA CNC"
+      }
+    }
+  },
+  "orders": {
+    "refund": {
+      "systemPaymentDesc": "One or more of your payments is a system payment. Captures and refunds for those payments are not processed automatically by HETNA CNC."
+    }
+  },
+  "profile": {
+    "edit": {
+      "usageInsightsHint": "Share usage insights and help us improve HETNA CNC."
+    }
+  },
+  "translations": {
+    "subtitle": "Manage translations of your data in HETNA CNC"
+  },
+  "apiKeyManagement": {
+    "create": {
+      "createSecretHint": "Create a new secret API key to access the HETNA CNC API as an authenticated user."
+    }
+  },
+  "workflowExecutions": {
+    "subtitle": "View and keep track of automated processes in HETNA CNC."
+  },
+  "notifications": {
+    "accessibility": {
+      "description": "Notifications about your HETNA CNC activity will be listed here."
+    }
+  },
+  "auth": {
+    "login": {
+      "cloud": "Log in with HETNA CNC"
+    }
   }
 }

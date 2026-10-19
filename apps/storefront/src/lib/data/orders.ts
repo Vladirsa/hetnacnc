@@ -16,10 +16,53 @@ type LooseRoute = {
 } & { [k: string]: LooseRoute };
 const storeLoose = sdk.store as unknown as LooseRoute;
 
+// Campos que pide la pantalla de confirmación del pedido.
+// Son los mismos que Mercur pide por defecto, SIN `orders.items.variant.product.handle`
+// ni `orders.items.variant.product.title`: esos dos llegan a 4 niveles de relación y la API
+// rechaza (error 400) cualquier consulta que pase de 3. El título del producto sigue
+// disponible en `orders.items.product_title`.
+const CAMPOS_GRUPO_DE_PEDIDOS = [
+  'id',
+  'display_id',
+  'customer_id',
+  'seller_count',
+  'total',
+  'created_at',
+  'updated_at',
+  'orders.id',
+  'orders.display_id',
+  'orders.status',
+  'orders.fulfillment_status',
+  'orders.payment_status',
+  'orders.currency_code',
+  'orders.total',
+  'orders.subtotal',
+  'orders.item_total',
+  'orders.shipping_total',
+  'orders.tax_total',
+  'orders.seller_id',
+  'orders.shipping_address',
+  'orders.seller.id',
+  'orders.seller.name',
+  'orders.seller.handle',
+  'orders.seller.logo',
+  'orders.items.id',
+  'orders.items.title',
+  'orders.items.subtitle',
+  'orders.items.thumbnail',
+  'orders.items.product_title',
+  'orders.items.variant_title',
+  'orders.items.quantity',
+  'orders.items.unit_price',
+  'orders.items.total',
+  'orders.items.variant_id'
+].join(',');
+
 export const retrieveOrderGroup = async (id: string) => {
   return (
     sdk.store.orderGroups.$id.query({
       $id: id,
+      fields: CAMPOS_GRUPO_DE_PEDIDOS,
       fetchOptions: {
         headers: { ...(await getAuthHeaders()) },
         cache: 'no-cache'

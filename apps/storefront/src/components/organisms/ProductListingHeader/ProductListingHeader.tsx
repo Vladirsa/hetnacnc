@@ -23,7 +23,7 @@ export const ProductListingHeader = ({ total }: { total: number }) => {
       className="flex w-full items-center justify-between"
       data-testid="product-listing-header"
     >
-      <div data-testid="product-listing-total">{total} listings</div>
+      <div data-testid="product-listing-total">{total} {total === 1 ? "producto" : "productos"}</div>
     </div>
   );
 };

@@ -10,6 +10,75 @@ const dashboardAppDir = (name: string) => {
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, `../../apps/${name}`)
 }
 
+// Cada forma de pago solo se activa si existen sus llaves; así el servidor arranca aunque falten.
+// Todas van dentro de UN solo módulo de pagos (Medusa no admite dos).
+const proveedoresPago: Record<string, unknown>[] = []
+
+if (process.env.MERCADOPAGO_ACCESS_TOKEN) {
+  proveedoresPago.push({
+    resolve: './src/modules/mercadopago',
+    id: 'mercadopago',
+    options: {
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
+      statementDescriptor: 'HETNA CNC',
+    },
+  })
+}
+
+if (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET) {
+  proveedoresPago.push({
+    resolve: './src/modules/paypal',
+    id: 'paypal',
+    options: {
+      clientId: process.env.PAYPAL_CLIENT_ID,
+      clientSecret: process.env.PAYPAL_CLIENT_SECRET,
+      // PAYPAL_SANDBOX=true usa el modo de pruebas de PayPal (sin dinero real)
+      sandbox: process.env.PAYPAL_SANDBOX === 'true',
+      storefrontUrl: process.env.STOREFRONT_URL || 'https://hetnacnc.com',
+      marca: 'HETNA CNC',
+    },
+  })
+}
+
+const pagos = proveedoresPago.length
+  ? [
+      {
+        resolve: '@medusajs/medusa/payment',
+        options: { providers: proveedoresPago },
+      },
+    ]
+  : []
+
+// Envíos HETNA (Skydropx) solo se activa si existen las llaves. Se registra junto al
+// proveedor manual para no quitar los envíos que ya usan los talleres.
+const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SECRET
+  ? [
+      {
+        resolve: '@medusajs/medusa/fulfillment',
+        options: {
+          providers: [
+            { resolve: '@medusajs/medusa/fulfillment-manual', id: 'manual' },
+            {
+              resolve: './src/modules/skydropx',
+              id: 'envios-hetna',
+              options: {
+                clientId: process.env.SKYDROPX_CLIENT_ID,
+                clientSecret: process.env.SKYDROPX_CLIENT_SECRET,
+                sandbox: process.env.SKYDROPX_SANDBOX === 'true',
+                margenPct: Number(process.env.ENVIO_MARGEN_PCT || 0),
+                origenCp: process.env.ENVIO_ORIGEN_CP || '',
+                origenEstado: process.env.ENVIO_ORIGEN_ESTADO || '',
+                origenMunicipio: process.env.ENVIO_ORIGEN_MUNICIPIO || '',
+                origenColonia: process.env.ENVIO_ORIGEN_COLONIA || '',
+              },
+            },
+          ],
+        },
+      },
+    ]
+  : []
+
 module.exports = withMercur({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -86,5 +155,7 @@ module.exports = withMercur({
         ],
       },
     },
+    ...pagos,
+    ...envios,
   ],
 })

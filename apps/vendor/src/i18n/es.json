@@ -1,0 +1,54 @@
+{
+  "customFields": {
+    "title": "Campos personalizados",
+    "description": "Administra tus campos personalizados y su configuración",
+    "noFields": "Todavía no hay campos personalizados"
+  },
+  "login": {
+    "title": "Bienvenido a HETNA CNC",
+    "hint": "Inicia sesión en tu panel de vendedor."
+  },
+  "invite": {
+    "title": "Bienvenido a HETNA CNC",
+    "successHint": "Ya puedes usar tu panel de vendedor de HETNA CNC.",
+    "successAction": "Entrar al panel"
+  },
+  "onboarding": {
+    "wizard": {
+      "preview": {
+        "title": "Bienvenido a HETNA CNC"
+      }
+    }
+  },
+  "orders": {
+    "refund": {
+      "systemPaymentDesc": "Uno o más de tus pagos son pagos del sistema. Ten en cuenta que HETNA CNC no procesa automáticamente las capturas y reembolsos de esos pagos."
+    }
+  },
+  "profile": {
+    "edit": {
+      "usageInsightsHint": "Comparte información de uso y ayúdanos a mejorar HETNA CNC."
+    }
+  },
+  "translations": {
+    "subtitle": "Gestiona las traducciones de tus datos en HETNA CNC"
+  },
+  "apiKeyManagement": {
+    "create": {
+      "createSecretHint": "Crea una clave API secreta para acceder a la API de HETNA CNC como usuario autenticado."
+    }
+  },
+  "workflowExecutions": {
+    "subtitle": "Consulta y da seguimiento a los procesos automáticos de HETNA CNC."
+  },
+  "notifications": {
+    "accessibility": {
+      "description": "Aquí verás las notificaciones de tu actividad en HETNA CNC."
+    }
+  },
+  "auth": {
+    "login": {
+      "cloud": "Iniciar sesión con HETNA CNC"
+    }
+  }
+}
