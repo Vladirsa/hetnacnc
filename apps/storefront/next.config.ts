@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Sin output: "standalone" a propósito. Ese modo empaqueta un servidor
+  // aparte en .next/standalone y rompe `next start`, que es justo con lo que
+  // PM2 arranca el storefront en el VPS -- truena con ENOENT buscando
+  // prerender-manifest.json y Next lo dice claro: "next start does not work
+  // with output: standalone". Sirve para imágenes de Docker, y aquí no se
+  // despliega así: el repo vive en el servidor con sus node_modules.
   trailingSlash: false,
   reactStrictMode: true,
   experimental: {
