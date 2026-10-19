@@ -65,8 +65,12 @@ RUN grep -v torchmcubes /opt/TripoSR/requirements.txt > /tmp/triposr-req.txt \
 # 7.5 = T4, 8.0 = A100, 8.6 = A5000/3090, 8.9 = 4090/L4.
 ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9"
 ENV FORCE_CUDA=1
-RUN python3 -m pip install --no-cache-dir scikit-build-core cmake ninja setuptools wheel \
-    && python3 -m pip install --no-cache-dir --no-build-isolation \
+# pybind11 instalado con pip no basta: su CMakeLists hace find_package(pybind11)
+# y CMake no mira dentro de site-packages por su cuenta. CMAKE_PREFIX_PATH con
+# la ruta que reporta el propio paquete es la forma documentada de decírselo.
+RUN python3 -m pip install --no-cache-dir scikit-build-core cmake ninja setuptools wheel pybind11 \
+    && CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)" \
+       python3 -m pip install --no-cache-dir --no-build-isolation \
        git+https://github.com/tatsy/torchmcubes.git
 
 COPY infra/scan3d/requirements.txt /app/requirements.txt
