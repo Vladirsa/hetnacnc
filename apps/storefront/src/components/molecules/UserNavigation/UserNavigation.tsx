@@ -26,6 +26,13 @@ const navigationItems = [
     label: "Direcciones",
     href: "/user/addresses",
   },
+  // El cotizador y los escaneos 3D viven fuera de /user, en su propia
+  // sección. Sin esta entrada no hay forma de llegar más que escribiendo la
+  // dirección a mano.
+  {
+    label: "Mi taller",
+    href: "/taller",
+  },
 ]
 
 export const UserNavigation = () => {
