@@ -1,0 +1,5 @@
+# Motores del Laboratorio CAM. No lleva cadgen: cadgen es STEP-first y de
+# salida a mallas (STL/GLB/3MF), no genera trayectorias de corte. Sirve para el
+# verificador de archivos 3D, que es otro bridge y va después.
+ezdxf==1.4.5
+shapely==2.2.0

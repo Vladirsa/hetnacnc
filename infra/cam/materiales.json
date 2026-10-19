@@ -1,0 +1,61 @@
+{
+  "_nota": "Tabla de corte por material y diámetro de fresa. Es el punto 3 del prototipo: el material y la fresa mandan, el plan se calcula solo. Los valores son conservadores a propósito -- una pasada lenta de más cuesta minutos, una rápida de más cuesta la fresa y la pieza. Cada taller podrá pisarlos desde su perfil; esto es el punto de partida para quien no sabe qué poner.",
+  "_unidades": {
+    "avance": "mm/min en el plano XY",
+    "penetracion": "mm/min al bajar en Z",
+    "profundidad_pasada": "mm que baja en cada vuelta",
+    "rpm": "revoluciones del husillo"
+  },
+  "materiales": [
+    {
+      "clave": "mdf",
+      "nombre": "MDF",
+      "notas": "El más común en router. Genera mucho polvo fino: aspiración obligatoria.",
+      "por_diametro": {
+        "3": { "avance": 1800, "penetracion": 600, "profundidad_pasada": 2.0, "rpm": 18000 },
+        "6": { "avance": 2400, "penetracion": 800, "profundidad_pasada": 4.0, "rpm": 16000 },
+        "8": { "avance": 2800, "penetracion": 900, "profundidad_pasada": 5.0, "rpm": 15000 }
+      }
+    },
+    {
+      "clave": "acrilico",
+      "nombre": "Acrílico",
+      "notas": "Se funde si la fresa va lenta. Mejor avance alto y una sola pasada de acabado.",
+      "por_diametro": {
+        "3": { "avance": 1200, "penetracion": 400, "profundidad_pasada": 1.5, "rpm": 16000 },
+        "6": { "avance": 1800, "penetracion": 600, "profundidad_pasada": 3.0, "rpm": 14000 },
+        "8": { "avance": 2000, "penetracion": 700, "profundidad_pasada": 4.0, "rpm": 13000 }
+      }
+    },
+    {
+      "clave": "pino",
+      "nombre": "Pino / madera blanda",
+      "notas": "Perdona mucho. Cuidado con la fibra en cortes a contrahílo.",
+      "por_diametro": {
+        "3": { "avance": 2000, "penetracion": 700, "profundidad_pasada": 3.0, "rpm": 18000 },
+        "6": { "avance": 3000, "penetracion": 1000, "profundidad_pasada": 6.0, "rpm": 16000 },
+        "8": { "avance": 3500, "penetracion": 1200, "profundidad_pasada": 8.0, "rpm": 15000 }
+      }
+    },
+    {
+      "clave": "encino",
+      "nombre": "Encino / madera dura",
+      "notas": "Menos profundidad por pasada que el pino o se quema el filo.",
+      "por_diametro": {
+        "3": { "avance": 1400, "penetracion": 500, "profundidad_pasada": 2.0, "rpm": 18000 },
+        "6": { "avance": 2000, "penetracion": 700, "profundidad_pasada": 4.0, "rpm": 16000 },
+        "8": { "avance": 2400, "penetracion": 800, "profundidad_pasada": 5.0, "rpm": 15000 }
+      }
+    },
+    {
+      "clave": "aluminio",
+      "nombre": "Aluminio",
+      "notas": "Necesita lubricación y fresa para aluminio. Pasadas chicas, avance constante: si la fresa se detiene sobre el material, se pega viruta y se rompe.",
+      "por_diametro": {
+        "3": { "avance": 400, "penetracion": 120, "profundidad_pasada": 0.4, "rpm": 14000 },
+        "6": { "avance": 600, "penetracion": 180, "profundidad_pasada": 0.8, "rpm": 12000 },
+        "8": { "avance": 700, "penetracion": 200, "profundidad_pasada": 1.0, "rpm": 11000 }
+      }
+    }
+  ]
+}
