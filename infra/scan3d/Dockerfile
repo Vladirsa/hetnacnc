@@ -94,6 +94,15 @@ RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 # que ver con el escaneo.
 RUN python3 -c "from rembg import new_session; new_session('u2net')"
 
+# El checkpoint de TripoSR (model.ckpt, 1.68GB) tampoco viene en el repo: su
+# run.py lo baja de Hugging Face la primera vez. Sin cachearlo aquí, cada
+# worker frío de RunPod se come ~36s y 1.68GB de descarga antes de empezar a
+# trabajar -- y si Hugging Face responde lento, el cliente espera eso de más.
+# HF_HOME va explícito para que la ruta del cache sea la misma al construir y
+# al correr; si cambia una, el modelo se vuelve a descargar en silencio.
+ENV HF_HOME=/opt/hf-cache
+RUN python3 -c "from huggingface_hub import hf_hub_download; [hf_hub_download('stabilityai/TripoSR', f) for f in ('config.yaml', 'model.ckpt')]"
+
 COPY infra/scan3d/handler.py infra/scan3d/preview_triposr.py infra/scan3d/scan_meshroom.py infra/scan3d/convert_to_stl.py infra/scan3d/storage.py /app/
 
 CMD ["python3", "-u", "handler.py"]
