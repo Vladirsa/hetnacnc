@@ -30,8 +30,12 @@ def generar_preview(ruta_foto: str, dir_salida: str) -> str:
         dir_salida,
         "--model-save-format",
         "obj",
-        "--bake-texture",
     ]
+    # Sin --bake-texture a propósito: ese paso usa moderngl, que pide un
+    # contexto OpenGL y por lo tanto una pantalla, y en un contenedor sin
+    # monitor truena con "XOpenDisplay: cannot open display". Tampoco hace
+    # falta -- lo que se entrega es un STL, y el formato STL no guarda
+    # texturas. La malla sale igual.
     resultado = subprocess.run(comando, cwd=TRIPOSR_DIR, capture_output=True, text=True, timeout=300)
     if resultado.returncode != 0:
         raise RuntimeError(f"TripoSR fallo ({resultado.returncode}): {resultado.stderr[-2000:]}")
