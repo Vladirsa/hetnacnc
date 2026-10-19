@@ -114,18 +114,52 @@ La respuesta trae un `id` de trabajo; consulta su estado en
 `COMPLETED`, con el resultado (`obj_storage_key`, y `stl_storage_key` si fue
 modo `scan`) adentro.
 
-## Pendiente: conectar con n8n y el catálogo
+## Cómo se conecta con la plataforma
 
-Este servicio solo procesa — todavía falta el workflow en n8n que:
+Ya está conectado, y no por n8n: el backend lo hace directo.
 
-1. Reciba las fotos del taller (Form Trigger), las suba a B2 y llame a este
-   endpoint de RunPod.
-2. Para el modo `scan`: solo dispare después de que el pago del producto
-   "Escaneo 3D profesional" esté capturado (mismo patrón que
-   `deliverDigitalProductsForOrder` en `packages/api/src/lib/digital-delivery.ts`).
-3. Avise al taller por Telegram/WhatsApp cuando el resultado esté listo, con
-   el link de descarga firmado (reutilizando `getSignedDownloadUrl` de
-   `packages/api/src/lib/backblaze.ts`).
+El taller sube las fotos en `/taller/escaneos/nuevo`. El backend crea un
+expediente (módulo `escaneo`, tabla `escaneo_3d`), cobra créditos si es modo
+`scan`, y un job (`packages/api/src/jobs/despachar-escaneos.ts`) que corre cada
+minuto se encarga del resto: firma las URLs de las fotos, llama a `/run` de
+este endpoint, y después consulta `/status/<id>` hasta que termina.
 
-Dilo cuando quieras seguir con esa parte — ya con esto puedo armar el
-workflow completo en n8n.
+Se eligió consultar en vez de esperar un webhook por una razón: si el aviso se
+pierde -- el backend reiniciando, una red intermitente -- el escaneo se queda
+"procesando" para siempre y nadie se entera. Consultando, se recupera solo en
+la siguiente vuelta.
+
+Si el trabajo falla o excede 3 horas, el job lo cierra y **devuelve los
+créditos**. El gasto se hace al disparar el trabajo, así que ese es el único
+momento en que se puede saber que no hubo nada a cambio.
+
+El resultado queda en el perfil del taller, en `/taller/escaneos/<id>`, con
+links de descarga firmados al momento de abrir la pantalla. No se manda por
+correo ni por un link que caduca: lo que persiste es la llave del archivo en
+B2, así se puede volver a bajar dentro de un año.
+
+Existe también `POST /escaneos/callback` por si algún día conviene que n8n
+reporte el resultado (protegido con `ESCANEO_CALLBACK_SECRET` en la cabecera
+`x-escaneo-secreto`). Los dos caminos son idempotentes, así que pueden
+convivir sin pisarse. Hoy no hace falta.
+
+### Variables de entorno en el backend (`packages/api/.env`)
+
+| Variable | Para qué | Si falta |
+|---|---|---|
+| `RUNPOD_API_KEY` | llamar a RunPod | el job no hace nada, en silencio |
+| `RUNPOD_SCAN3D_ENDPOINT_ID` | a qué endpoint | igual |
+| `ESCANEO_CREDITOS_POR_TRABAJO` | precio del escaneo profesional | se cobran 5 |
+| `ESCANEO_CALLBACK_SECRET` | proteger el callback de n8n | el callback responde 503 |
+
+Las de B2 (`B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_PRIVATE_BUCKET_NAME`) ya las
+usa el resto de la plataforma; sin ellas no se pueden subir las fotos ni firmar
+las descargas.
+
+### Lo que todavía no está probado
+
+- El modo `scan` (Meshroom) **nunca se ha ejecutado con fotos reales**. Lo
+  único verificado de punta a punta es el preview con TripoSR.
+- `bounding_box_mm` no está en milímetros: es el tamaño crudo de la malla, y
+  TripoSR entrega coordenadas normalizadas. Para el preview da igual; para el
+  escaneo de paga la escala es justo lo que se vende.
