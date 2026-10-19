@@ -70,6 +70,9 @@ module.exports = withMercur({
       resolve: './src/modules/cotizador',
     },
     {
+      resolve: './src/modules/escaneo',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
