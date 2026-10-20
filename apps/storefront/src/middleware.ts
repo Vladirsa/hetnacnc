@@ -166,7 +166,16 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|llms.txt|images|assets|png|svg|jpg|jpeg|gif|webp).*)'
-  ]
+  // Qué rutas pasan por el middleware. Se excluye TODO lo que traiga un punto,
+  // que es la forma corta de decir "cualquier archivo": .webp, .svg, .js,
+  // sw.js, llms.txt, robots.txt, sitemap.xml.
+  //
+  // La lista anterior nombraba 'png|svg|jpg|jpeg|gif|webp|assets' sueltos, y
+  // eso no hace lo que parece. Esos nombres se comparan contra el INICIO de la
+  // ruta, así que no excluían un archivo que TERMINA en .svg -- /Logo.svg y
+  // /logo-hetna.webp pasaban por el middleware en cada visita -- y en cambio sí
+  // excluían cualquier ruta que EMPEZARA con esas letras: /svg-a-dxf,
+  // /pngs-de-prueba o /assets-de-marca se habrían quedado sin el redirect de
+  // idioma y, peor, sin la revisión de sesión de PROTECTED_ROUTES.
+  matcher: ['/((?!api|_next/static|_next/image|.*\\.).*)']
 };

@@ -1,7 +1,24 @@
 import type { NextConfig } from 'next';
 
+// ---------------------------------------------------------------------
+// CONTENT-SECURITY-POLICY (CSP): la lista de lugares desde donde el navegador
+// puede cargar scripts, imágenes, videos, etc. Frena los ataques que inyectan
+// código ajeno en la página.
+//
+// ETAPA 1 (hoy): modo "sólo reporte". No bloquea nada; cada cosa que incumpla
+// se anota en /api/csp-reporte.
+// ETAPA 2: cuando el registro quede limpio, se cambia la clave de abajo a
+// 'Content-Security-Policy' (sin -Report-Only) y empieza a bloquear.
+//
+// Lo que se fue agregando según el registro real: TalkJS (mensajería), Google
+// Analytics / Tag Manager, Stripe y Mercado Pago (pagos), Facebook (pixel),
+// jsDelivr (scripts y tipografías del generador de letreros) y 'unsafe-eval',
+// que lo usa alguna librería de estadísticas.
+// ---------------------------------------------------------------------
 const politicaCSP = [
   "default-src 'self'",
+  // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son
+  // servicios que la tienda de verdad carga.
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://js.stripe.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
@@ -17,21 +34,38 @@ const politicaCSP = [
   "report-uri /api/csp-reporte"
 ].join('; ');
 
+// Encabezados de seguridad que el navegador recibe en cada página.
 const encabezadosSeguridad = [
+  // Obliga a usar siempre HTTPS (1 año).
   { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  // Evita que el navegador "adivine" tipos de archivo.
   { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Evita que otro sitio meta la tienda dentro de un marco (clickjacking).
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  // Al salir a otro sitio sólo se comparte el dominio, no la URL completa.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Sólo reporte: no bloquea. Para activarla de verdad, cambiar esta clave por
+  // 'Content-Security-Policy'.
   { key: 'Content-Security-Policy-Report-Only', value: politicaCSP }
 ];
 
 const nextConfig: NextConfig = {
+  // NO agregar output: "standalone". Ese modo empaqueta un servidor aparte en
+  // .next/standalone y rompe `next start`, que es justo con lo que PM2 arranca
+  // el storefront en el VPS: truena con ENOENT buscando prerender-manifest.json
+  // y Next lo dice tal cual, "next start does not work with output: standalone".
+  // Ya tiró el sitio una vez por esto. Sirve para imágenes de Docker, y aquí no
+  // se despliega así: el repo vive en el servidor con sus node_modules.
   trailingSlash: false,
   reactStrictMode: true,
+  // Oculta el encabezado "x-powered-by: Next.js" (no regalar pistas).
   poweredByHeader: false,
-  swcMinify: true,
+  // Comprime las respuestas que sirve Node. (No va `swcMinify`: Next 15 ya
+  // minifica siempre y esa llave sólo salía como advertencia en cada build.)
   compress: true,
   productionBrowserSourceMaps: false,
+  // Sólo afecta al modo desarrollo: cuántas páginas compiladas se guardan en
+  // memoria y por cuánto tiempo, para no recompilar a cada rato.
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,
     pagesBufferLength: 5,
@@ -39,10 +73,36 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: encabezadosSeguridad },
-      { source: '/public/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] }
+      // Caché de los archivos de public/. Antes esta regla decía
+      // '/public/:path*' y no cacheaba nada: Next sirve public/ en la raíz, o
+      // sea /images/foo.webp, no /public/images/foo.webp. Se nombran las
+      // carpetas una por una a propósito, porque public/sw.js es el service
+      // worker y ése NO se puede cachear: quedaría pegada una versión vieja de
+      // la tienda en los teléfonos.
+      {
+        // El WASM lo versiona el build, así que puede ser inmutable.
+        source: '/wasm/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }]
+      },
+      {
+        // Imágenes e iconos: una semana, y mientras se revalida se sirve la que
+        // ya está (el visitante no espera). No van como inmutables porque estos
+        // archivos se reemplazan a mano con el mismo nombre; si hay que cambiar
+        // uno YA, se sube con otro nombre.
+        source: '/:carpeta(images|icons)/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' }
+        ]
+      }
     ];
   },
-  experimental: { optimizePackageImports: ["@medusajs/ui", "lodash"] },
+  experimental: {
+    // @medusajs/ui (y lodash) no se parten por componente al importarlos desde
+    // su punto de entrada: esto le pide a Next que reescriba esos imports a los
+    // archivos internos, para no cargar la librería completa (por ejemplo el
+    // DataTable de @medusajs/ui, que la tienda no usa) en cada página.
+    optimizePackageImports: ["@medusajs/ui", "lodash"]
+  },
   logging: { fetches: { fullUrl: true } },
   images: {
     dangerouslyAllowSVG: true,
@@ -62,6 +122,10 @@ const nextConfig: NextConfig = {
     ]
   },
   typescript: { ignoreBuildErrors: true },
+  // Alguna dependencia importa módulos de Node con el prefijo nuevo
+  // ("node:module"), que el bundler del navegador no entiende. Se le quita el
+  // prefijo y luego se marcan esos módulos como ausentes. Tiene que ser este
+  // plugin: con resolve.alias no funciona, porque el prefijo se resuelve antes.
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
       config.plugins.push(new webpack.NormalModuleReplacementPlugin(/^node:/, (r: any) => { r.request = r.request.replace(/^node:/, "") }));
