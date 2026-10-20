@@ -669,6 +669,10 @@ export type Routes = {
                 $cp: typeof import("../src/api/store/envios/cp/[cp]/route");
             };
         };
+        escaneos: typeof import("../src/api/store/escaneos/route") & {
+            $id: typeof import("../src/api/store/escaneos/[id]/route");
+            subida: typeof import("../src/api/store/escaneos/subida/route");
+        };
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
@@ -976,9 +980,7 @@ export type Routes = {
                 };
             };
         };
-    };
-    cotizacion: {
-        $token: typeof import("../src/api/cotizacion/[token]/route");
+        hetnaEnvios: typeof import("../src/api/vendor/hetna-envios/route");
         hetnaSolicitudes: typeof import("../src/api/vendor/hetna-solicitudes/route") & {
             $id: {
                 propuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/propuesta/route");
@@ -988,5 +990,11 @@ export type Routes = {
     api: {
         mpEnvio: typeof import("../src/api/api/mp-envio/route");
         mpLicitacion: typeof import("../src/api/api/mp-licitacion/route");
+    };
+    cotizacion: {
+        $token: typeof import("../src/api/cotizacion/[token]/route");
+    };
+    escaneos: {
+        callback: typeof import("../src/api/escaneos/callback/route");
     };
 };
