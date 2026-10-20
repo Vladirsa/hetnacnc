@@ -48,11 +48,31 @@ if [ "$rama" != "$RAMA_ESPERADA" ]; then
     "Producción vive en $RAMA_ESPERADA. Cámbiate con: git checkout $RAMA_ESPERADA"
 fi
 
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-  git status --short --untracked-files=no
+# Archivos que el propio build reescribe en cada corrida. Están rastreados en
+# git, así que después de construir el árbol siempre queda "sucio" por ellos --
+# si contaran como cambios, este guion bloquearía todos los despliegues desde
+# el segundo. No son trabajo de nadie: se regeneran solos.
+GENERADOS=(
+  "packages/api/.mercur/routes.d.ts"
+)
+
+sucios="$(git status --porcelain --untracked-files=no)"
+for g in "${GENERADOS[@]}"; do
+  sucios="$(printf '%s\n' "$sucios" | grep -v -F -- "$g" || true)"
+done
+sucios="$(printf '%s' "$sucios" | sed '/^[[:space:]]*$/d')"
+
+if [ -n "$sucios" ]; then
+  printf '%s\n' "$sucios"
   abortar "Hay cambios sin guardar en el servidor." \
     "Guárdalos con un commit o descártalos antes de desplegar. Editar archivos directo en el servidor es como empiezan las ramas divergentes."
 fi
+
+# Los generados se descartan para que el avance en línea recta no choque con
+# ellos. Van a volver a escribirse en el build de más abajo.
+for g in "${GENERADOS[@]}"; do
+  git checkout -- "$g" 2>/dev/null || true
+done
 
 # --- 2. Traer lo nuevo, sin mezclar nunca ---
 
