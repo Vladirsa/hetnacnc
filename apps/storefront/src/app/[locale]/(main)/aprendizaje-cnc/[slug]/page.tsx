@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
@@ -72,11 +73,10 @@ export default async function AprendizajeArticulo({ params }: Props) {
       <article className="max-w-[760px] mx-auto px-4 lg:px-0 py-6 lg:py-10 flex flex-col gap-5">
         {article.cover_image_url && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={article.cover_image_url}
+          <Image             src={article.cover_image_url}
             alt={article.title}
             className="w-full rounded-[16px] object-cover aspect-[16/9]"
-          />
+          width={300} height={300} />
         )}
         <h1 className="font-display text-[28px] lg:text-[36px] font-bold m-0 text-[#1B1B18]">
           {article.title}

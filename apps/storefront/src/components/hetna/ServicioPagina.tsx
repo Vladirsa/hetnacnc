@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 import { ServicioIcono } from "./ServicioIcono"
@@ -103,7 +104,7 @@ export const ArticuloAprendizajeCard = ({ a }: { a: LearningArticle }) => (
   >
     {a.cover_image_url && (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={a.cover_image_url} alt={a.title} className="w-full aspect-video object-cover" />
+      <Image src={a.cover_image_url} alt={a.title} className="w-full aspect-video object-cover" width={300} height={300} />
     )}
     <div className="p-4 flex flex-col gap-2">
       <h3 className="font-display text-[16px] font-bold m-0 text-[#1B1B18] line-clamp-2">
@@ -132,7 +133,7 @@ export const CursoCard = ({ c }: { c: Course }) => {
     >
       {c.thumbnail_url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover" />
+        <Image src={c.thumbnail_url} alt={c.title} className="w-full aspect-video object-cover" width={300} height={300} />
       ) : (
         <div className="w-full aspect-video bg-[#142033] flex items-center justify-center">
           <ServicioIcono nombre="aprender" size={36} />

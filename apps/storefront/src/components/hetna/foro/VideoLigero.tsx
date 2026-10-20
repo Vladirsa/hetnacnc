@@ -41,7 +41,7 @@ export function VideoLigero({ video }: { video: Video }) {
     >
       {miniatura && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={miniatura} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100" />
+        <Image src={miniatura} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100" width={300} height={300} />
       )}
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-t from-black/50 to-transparent">
         <span className="w-16 h-16 rounded-full bg-[#C2560A] group-hover:bg-[#A84A08] flex items-center justify-center shadow-lg">

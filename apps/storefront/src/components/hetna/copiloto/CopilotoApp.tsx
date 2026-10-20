@@ -336,7 +336,7 @@ export const CopilotoApp = ({ locale, vistaInicial = "copiloto" }: { locale: str
                 <div className="flex items-center gap-3 bg-[#FAF9F6] border border-[#E7E4DC] rounded-[10px] px-3 py-2 text-[13px]">
                   {pendiente.tipo === "imagen" ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={pendiente.vista} alt="" className="w-12 h-12 object-cover rounded-md" />
+                    <Image src={pendiente.vista} alt="" className="w-12 h-12 object-cover rounded-md" width={300} height={300} />
                   ) : (
                     <span className="font-mono text-[11px] bg-[#142033] text-white px-2 py-1 rounded">{pendiente.analisis.tipo.toUpperCase()}</span>
                   )}
@@ -492,7 +492,7 @@ const Burbuja = ({ m, onPreguntar }: { m: Msg; onPreguntar: (r: Resultado) => vo
       <div className="self-end max-w-[88%] flex flex-col items-end gap-2">
         {m.imagen && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={m.imagen} alt="Foto adjunta" className="max-w-[220px] rounded-[10px] border border-[#E7E4DC]" />
+          <Image src={m.imagen} alt="Foto adjunta" className="max-w-[220px] rounded-[10px] border border-[#E7E4DC]" width={300} height={300} />
         )}
         {m.archivo && <TarjetaResultado r={m.archivo} />}
         <div className="bg-[#142033] text-white rounded-[14px] rounded-br-[4px] px-4 py-2.5 text-[15px] whitespace-pre-wrap">{m.texto}</div>

@@ -70,7 +70,7 @@ export function SubirFotos({ fotos, onCambio, max = 6, etiqueta = "Agregar fotos
         {fotos.map((f) => (
           <div key={f.id} className="relative w-[84px] h-[84px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={f.url} alt="" className="w-full h-full object-cover rounded-[10px] bg-[#F1EFEA]" />
+            <Image src={f.url} alt="" className="w-full h-full object-cover rounded-[10px] bg-[#F1EFEA]" width={300} height={300} />
             <button
               type="button"
               onClick={() => onCambio(fotos.filter((x) => x.id !== f.id))}

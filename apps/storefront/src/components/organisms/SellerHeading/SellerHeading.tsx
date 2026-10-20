@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { HttpTypes } from "@medusajs/types"
 import { SellerDTO } from "@mercurjs/types"
 
@@ -28,7 +29,7 @@ export const SellerHeading = ({
           <span className="w-24 h-24 md:w-28 md:h-28 rounded-2xl ring-4 ring-white bg-[#C2560A] text-white text-[40px] font-bold flex items-center justify-center overflow-hidden shrink-0">
             {foto ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={foto} alt={seller.name} className="w-full h-full object-cover" />
+              <Image src={foto} alt={seller.name} className="w-full h-full object-cover" width={300} height={300} />
             ) : (
               (seller.name?.trim()[0] || "?").toUpperCase()
             )}

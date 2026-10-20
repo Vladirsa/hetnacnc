@@ -151,7 +151,7 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
         {errorImg && <p className="m-0 text-[13.5px] text-[#A42A2A]">{errorImg}</p>}
         {vista && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={vista} alt="Vista previa de tu anuncio" className="w-full max-w-[520px] rounded-[10px] border border-[#E7E4DC]" />
+          <Image src={vista} alt="Vista previa de tu anuncio" className="w-full max-w-[520px] rounded-[10px] border border-[#E7E4DC]" width={300} height={300} />
         )}
       </div>
 

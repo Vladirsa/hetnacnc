@@ -323,7 +323,7 @@ export function GeneradorVectorizador() {
               <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 flex items-center justify-center min-h-[240px]">
                 {vista === "original" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={original} alt="Imagen original" className="max-w-full max-h-[520px] h-auto" />
+                  <Image src={original} alt="Imagen original" className="max-w-full max-h-[520px] h-auto" width={300} height={300} />
                 ) : (
                   <div className={`w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[520px] ${procesando ? "opacity-60" : ""}`} dangerouslySetInnerHTML={{ __html: vistaHTML }} />
                 )}

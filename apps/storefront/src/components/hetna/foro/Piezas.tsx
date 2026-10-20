@@ -37,7 +37,7 @@ export function haceCuanto(iso: string): string {
 export const Avatar = ({ a, size = 36 }: { a: Pick<Autor, "nombre" | "foto" | "tipo">; size?: number }) =>
   a.foto ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={a.foto} alt="" width={size} height={size} loading="lazy" className="rounded-full object-cover shrink-0 bg-[#EEE]" style={{ width: size, height: size }} />
+    <Image src={a.foto} alt="" width={size} height={size} loading="lazy" className="rounded-full object-cover shrink-0 bg-[#EEE]" style={{ width: size, height: size }} />
   ) : (
     <span
       aria-hidden="true"
@@ -162,7 +162,7 @@ export const TarjetaTema = ({ t, mostrarSeccion = true }: { t: TemaResumen; most
     {t.foto && (
       <LocalizedClientLink href={urlTema(t)} className="hidden sm:block shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={t.foto} alt="" loading="lazy" className="w-[112px] h-[84px] object-cover rounded-[10px] bg-[#F1EFEA]" />
+        <Image src={t.foto} alt="" loading="lazy" className="w-[112px] h-[84px] object-cover rounded-[10px] bg-[#F1EFEA]" width={300} height={300} />
       </LocalizedClientLink>
     )}
   </article>
@@ -214,12 +214,11 @@ export const Fotos = ({ fotos }: { fotos: string[] }) =>
       {fotos.map((f) => (
         <a key={f} href={f} target="_blank" rel="noopener" className="block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={f}
+          <Image             src={f}
             alt=""
             loading="lazy"
             className={`w-full rounded-[10px] bg-[#F1EFEA] ${fotos.length === 1 ? "max-h-[520px] object-contain" : "aspect-[4/3] object-cover"}`}
-          />
+          width={300} height={300} />
         </a>
       ))}
     </div>

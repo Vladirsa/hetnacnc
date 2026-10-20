@@ -61,7 +61,7 @@ export function ImageSearchModal({ isOpen, onClose }: { isOpen: boolean; onClose
 
         {preview ? (
           <div className="mb-4">
-            <img src={preview} alt="Vista previa" className="w-full h-48 object-cover rounded-lg border border-[#E7E4DC]" />
+            <Image src={preview} alt="Vista previa" className="w-full h-48 object-cover rounded-lg border border-[#E7E4DC]" width={300} height={300} />
             <button onClick={() => { setPreview(null); setMsg(null); }} className="w-full mt-2 text-sm text-[#6B6A63]">Cambiar imagen</button>
           </div>
         ) : (

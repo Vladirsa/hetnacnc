@@ -111,7 +111,7 @@ export default function DirectorioTalleres({
               <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#142033] text-xl font-bold text-white">
                 {t.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={t.logo} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <Image src={t.logo} alt="" className="h-full w-full object-cover" loading="lazy" width={300} height={300} />
                 ) : (
                   t.nombre.slice(0, 2).toUpperCase()
                 )}

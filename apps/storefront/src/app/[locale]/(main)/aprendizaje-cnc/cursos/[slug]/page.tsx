@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -59,11 +60,10 @@ export default async function CursoDetalle({ params }: Props) {
       <div className="max-w-[900px] mx-auto px-4 lg:px-0 py-6 lg:py-10 flex flex-col gap-6">
         {curso.thumbnail_url && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={curso.thumbnail_url}
+          <Image             src={curso.thumbnail_url}
             alt={curso.title}
             className="w-full rounded-[16px] object-cover aspect-video"
-          />
+          width={300} height={300} />
         )}
 
         <div className="flex flex-col gap-3">

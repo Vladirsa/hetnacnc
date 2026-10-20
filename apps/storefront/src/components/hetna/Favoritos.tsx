@@ -163,7 +163,7 @@ export const ListaFavoritos = () => {
             <div className="aspect-square bg-[#F4F1EA] flex items-center justify-center overflow-hidden">
               {f.thumbnail ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={f.thumbnail} alt={f.title} className="w-full h-full object-cover" />
+                <Image src={f.thumbnail} alt={f.title} className="w-full h-full object-cover" width={300} height={300} />
               ) : (
                 <span className="text-[#6B6A63] text-[12px]">Sin imagen</span>
               )}

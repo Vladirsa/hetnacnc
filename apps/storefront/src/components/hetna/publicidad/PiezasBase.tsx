@@ -37,14 +37,13 @@ export function ImagenPieza({
     <picture>
       {p.imagen_movil_url && <source media="(max-width: 767px)" srcSet={p.imagen_movil_url} />}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={p.imagen_url}
+      <Image         src={p.imagen_url}
         alt={p.titulo || p.anunciante || "Banner HETNA CNC"}
         className={className}
         loading={prioridad ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={prioridad ? "high" : "auto"}
-      />
+      width={300} height={300} />
     </picture>
   )
 }

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import fs from "fs"
 import path from "path"
 
@@ -374,11 +375,10 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
               >
                 {a.cover_image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={a.cover_image_url}
+                  <Image                     src={a.cover_image_url}
                     alt={a.title}
                     className="w-full aspect-video object-cover"
-                  />
+                  width={300} height={300} />
                 )}
                 <div className="p-4 flex flex-col gap-2">
                   <h3 className="font-display text-[15.5px] font-bold m-0 text-[#1B1B18] line-clamp-2">

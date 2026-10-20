@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
@@ -85,7 +86,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
           <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-[#142033] text-3xl font-extrabold text-white shadow-lg sm:-mt-16 sm:h-28 sm:w-28">
             {t.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={t.logo} alt={t.nombre} className="h-full w-full object-cover" />
+              <Image src={t.logo} alt={t.nombre} className="h-full w-full object-cover" width={300} height={300} />
             ) : (
               t.nombre.slice(0, 2).toUpperCase()
             )}
@@ -181,7 +182,7 @@ function Inicio({ t, datos }: { t: Taller; datos: [string, string][] }) {
             {p.galeria.map((u, i) => (
               <a key={u} href={u} target="_blank" rel="noopener" className="block aspect-square overflow-hidden rounded-xl bg-[#F3F1EA]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={u} alt={`${t.nombre} foto ${i + 1}`} loading="lazy" className="h-full w-full object-cover transition hover:scale-105" />
+                <Image src={u} alt={`${t.nombre} foto ${i + 1}`} loading="lazy" className="h-full w-full object-cover transition hover:scale-105" width={300} height={300} />
               </a>
             ))}
           </div>

@@ -207,7 +207,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
     {t.foto && (
       <LocalizedClientLink href={urlTema(t)} className="block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={t.foto} alt={t.titulo} loading="lazy" decoding="async" className="w-full max-h-[420px] object-cover bg-[#F1EFEA]" />
+        <Image src={t.foto} alt={t.titulo} loading="lazy" decoding="async" className="w-full max-h-[420px] object-cover bg-[#F1EFEA]" width={300} height={300} />
       </LocalizedClientLink>
     )}
 

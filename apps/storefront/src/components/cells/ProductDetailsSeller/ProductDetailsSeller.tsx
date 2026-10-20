@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { SellerInfo } from "@/components/molecules"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { tallerPorHandle, ubicacion } from "@/lib/hetna/talleres"
@@ -36,7 +37,7 @@ export const ProductDetailsSeller = async ({ seller }: { seller?: SellerDTO }) =
         <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#142033] text-lg font-extrabold text-white">
           {t.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={t.logo} alt={t.nombre} className="h-full w-full object-cover" />
+            <Image src={t.logo} alt={t.nombre} className="h-full w-full object-cover" width={300} height={300} />
           ) : (
             t.nombre.slice(0, 2).toUpperCase()
           )}

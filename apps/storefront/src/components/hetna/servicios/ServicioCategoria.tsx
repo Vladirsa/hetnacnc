@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres, ubicacion } from "@/lib/hetna/talleres"
 
@@ -140,7 +141,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
                 <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#142033] font-extrabold text-white">
                   {t.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={t.logo} alt="" className="h-full w-full object-cover" />
+                    <Image src={t.logo} alt="" className="h-full w-full object-cover" width={300} height={300} />
                   ) : (
                     t.nombre.slice(0, 2).toUpperCase()
                   )}
