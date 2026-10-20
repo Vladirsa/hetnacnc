@@ -143,6 +143,9 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
           <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>
             Foro CNC
           </LocalizedClientLink>
+          <LocalizedClientLink href="/cam" className={ENLACE_SIMPLE}>
+            Laboratorio CAM
+          </LocalizedClientLink>
           <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>
             Talleres
           </LocalizedClientLink>

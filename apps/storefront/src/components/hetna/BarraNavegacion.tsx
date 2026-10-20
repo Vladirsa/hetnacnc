@@ -266,6 +266,7 @@ export const BarraNavegacion = ({
         <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
           Foro CNC
         </LocalizedClientLink>
+        <LocalizedClientLink href="/cam" className={ENLACE}>Laboratorio CAM</LocalizedClientLink>
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
         <LocalizedClientLink href="/servicios/envios-hetna" className={ENLACE}>Envíos HETNA</LocalizedClientLink>
         <span className="flex-1" />
