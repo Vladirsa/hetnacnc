@@ -1,16 +1,17 @@
 const links = {
   customerServices: [
-    { label: 'Preguntas frecuentes', path: '#' },
-    { label: 'Rastrear pedido', path: '#' },
-    { label: 'Devoluciones', path: '#' },
-    { label: 'Envíos', path: '#' },
-    { label: 'Formas de pago', path: '#' },
+    { label: 'Preguntas frecuentes', path: '/preguntas-frecuentes' },
+    { label: 'Rastrear pedido', path: '/user/orders' },
+    { label: 'Devoluciones', path: '/devoluciones' },
+    { label: 'Envíos', path: '/servicios/envios-hetna' },
+    { label: 'Formas de pago', path: '/formas-de-pago' },
   ],
   about: [
-    { label: 'Quiénes somos', path: '#' },
-    { label: 'Blog', path: '#' },
-    { label: 'Aviso de privacidad', path: '#' },
-    { label: 'Términos y condiciones', path: '#' },
+    { label: 'Quiénes somos', path: '/quienes-somos' },
+    { label: 'Contacto', path: '/contacto' },
+    { label: 'Blog', path: '/servicios/aprendizaje-cnc' },
+    { label: 'Aviso de privacidad', path: '/aviso-de-privacidad' },
+    { label: 'Términos y condiciones', path: '/terminos-y-condiciones' },
   ],
   connect: [
     { label: 'Facebook', path: 'https://www.facebook.com/hetna.cnc' },
