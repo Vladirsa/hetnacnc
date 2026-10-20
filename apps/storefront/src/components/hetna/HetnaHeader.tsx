@@ -12,7 +12,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 
 import { SocialIcon } from "./SocialIcon"
 import { BarraNavegacion } from "./BarraNavegacion"
-import { FavoritosBoton, MisComprasBoton } from "./Favoritos"
+import { FavoritosBoton, MisComprasBoton, NotificacionesBoton } from "./Favoritos"
 import { CampanitaChat } from "./chat/CampanitaChat"
 import { MenuMovil } from "./MenuMovil"
 import { OcultarAlBajar } from "./OcultarAlBajar"
@@ -108,6 +108,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         >
           <FavoritosBoton />
           <MisComprasBoton isLoggedIn={isLoggedIn} />
+          <NotificacionesBoton isLoggedIn={isLoggedIn} />
           <CampanitaChat isLoggedIn={isLoggedIn} />
           <UserDropdown isLoggedIn={isLoggedIn} />
           <CartDropdown />
