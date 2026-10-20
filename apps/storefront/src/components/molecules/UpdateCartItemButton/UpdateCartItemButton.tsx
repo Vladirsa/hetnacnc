@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@/components/atoms';
 import { useCartContext } from '@/components/providers';
 import { toast } from '@/lib/helpers/toast';
 
@@ -63,32 +62,33 @@ export const UpdateCartItemButton = ({
   const isIncreaseDisabled = isUpdatingItem || !lineItemId;
 
   return (
-    <div className="mt-2 flex items-center gap-4">
-      <Button
-        variant="tonal"
-        className="flex h-8 w-8 items-center justify-center"
+    <div className="flex items-center overflow-hidden rounded-[8px] border border-[#E7E4DC]">
+      <button
+        type="button"
+        aria-label="Quitar uno"
+        className="flex h-8 w-8 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC] disabled:hover:bg-transparent"
         disabled={isDecreaseDisabled}
         onClick={() => handleQuantityChange(pendingQuantity - 1)}
       >
-        -
-      </Button>
+        −
+      </button>
       <span
-        className={`font-medium transition-all duration-300 ${
-          isDecreaseDisabled || isIncreaseDisabled
-            ? 'scale-95 text-secondary opacity-70'
-            : 'scale-100 text-primary opacity-100'
+        aria-live="polite"
+        className={`w-9 text-center text-[14px] font-semibold ${
+          isUpdatingItem ? 'text-[#8A8780]' : 'text-[#1B1B18]'
         }`}
       >
         {pendingQuantity}
       </span>
-      <Button
-        variant="tonal"
-        className="flex h-8 w-8 items-center justify-center"
+      <button
+        type="button"
+        aria-label="Agregar uno"
+        className="flex h-8 w-8 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC] disabled:hover:bg-transparent"
         disabled={isIncreaseDisabled}
         onClick={() => handleQuantityChange(pendingQuantity + 1)}
       >
         +
-      </Button>
+      </button>
     </div>
   );
 };

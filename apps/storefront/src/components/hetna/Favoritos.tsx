@@ -124,6 +124,35 @@ export const BotonFavorito = ({ producto }: { producto: Favorito }) => {
   )
 }
 
+// ---------- Boton de corazon, del tamano de un icono ----------
+// Para renglones donde no cabe un boton con texto (el carrito). Hace lo mismo
+// que BotonFavorito: guarda el producto en el navegador, sin pedir cuenta.
+export const BotonFavoritoIcono = ({ producto }: { producto: Favorito }) => {
+  const [activo, setActivo] = useState(false)
+  useEffect(() => {
+    const leer = () => setActivo(esFavorito(producto.id))
+    leer()
+    window.addEventListener(EVENTO_FAVORITOS, leer)
+    return () => window.removeEventListener(EVENTO_FAVORITOS, leer)
+  }, [producto.id])
+
+  return (
+    <button
+      type="button"
+      onClick={() => setActivo(alternarFavorito(producto))}
+      aria-pressed={activo}
+      title={activo ? "Quitar de favoritos" : "Guardar en favoritos"}
+      aria-label={activo ? "Quitar de favoritos" : "Guardar en favoritos"}
+      className={`flex h-9 w-9 items-center justify-center rounded-full ${
+        activo ? "text-[#C2560A]" : "text-[#8A8780] hover:text-[#C2560A]"
+      }`}
+      data-testid="cart-item-favorite"
+    >
+      <Corazon lleno={activo} size={18} />
+    </button>
+  )
+}
+
 // ---------- Pagina /favoritos ----------
 export const ListaFavoritos = () => {
   const lista = useFavoritos()

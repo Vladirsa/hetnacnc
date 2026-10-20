@@ -39,5 +39,15 @@ export const alternarFavorito = (f: Favorito): boolean => {
   return !existe
 }
 
+// Agregar sin alternar: lo necesita el carrito, donde se guardan varios de un
+// golpe y un "alternar" quitaría los que ya estaban.
+export const agregarFavoritos = (nuevos: Favorito[]) => {
+  if (!nuevos.length) return
+  const lista = leerFavoritos()
+  const faltantes = nuevos.filter((f) => !lista.some((x) => x.id === f.id))
+  if (!faltantes.length) return
+  guardar([...faltantes, ...lista])
+}
+
 export const quitarFavorito = (id: string) =>
   guardar(leerFavoritos().filter((x) => x.id !== id))

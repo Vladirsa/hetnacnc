@@ -1,61 +1,94 @@
+"use client"
+
+import { HttpTypes } from "@medusajs/types"
+
 import {
   CartItemsFooter,
   CartItemsHeader,
   CartItemsProducts,
 } from "@/components/cells"
-import { HttpTypes } from "@medusajs/types"
-import { EmptyCart } from "./EmptyCart"
+import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
+import { Cart } from "@/types/cart"
 
-export const CartItems = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
+import { EmptyCart } from "./EmptyCart"
+import type { Seleccion } from "@/components/sections/Cart/useSeleccion"
+
+export const CartItems = ({
+  cart,
+  seleccion,
+}: {
+  cart: Cart | null
+  seleccion?: Seleccion
+}) => {
   if (!cart) return null
 
-  const groupedItems: any = groupItemsBySeller(cart)
+  const grupos = agruparPorTaller(cart)
 
-  if (!Object.keys(groupedItems).length) return <EmptyCart />
+  if (!grupos.length) return <EmptyCart />
 
-  return Object.keys(groupedItems).map((key) => (
-    <div key={key} className="mb-4" data-testid={`cart-items-seller-${key}`}>
-      <CartItemsHeader seller={groupedItems[key]?.seller} />
-      <CartItemsProducts
-        products={groupedItems[key].items || []}
-        currency_code={cart.currency_code}
-      />
-      <CartItemsFooter
-        currency_code={cart.currency_code}
-        price={cart.shipping_subtotal}
-      />
+  return (
+    <div className="flex flex-col gap-4">
+      {grupos.map((grupo) => {
+        const ids = grupo.items.map((item) => item.id)
+        const subtotal = grupo.items.reduce(
+          (suma, item) => suma + (item.subtotal ?? 0),
+          0
+        )
+        const piezas = grupo.items.reduce((suma, item) => suma + item.quantity, 0)
+
+        return (
+          <div key={grupo.seller.id} data-testid={`cart-items-seller-${grupo.seller.id}`}>
+            <CartItemsHeader
+              seller={grupo.seller}
+              cantidad={piezas}
+              seleccion={
+                seleccion
+                  ? {
+                      seleccionado: seleccion.grupoSeleccionado(ids),
+                      alternar: () => seleccion.alternarGrupo(ids),
+                    }
+                  : undefined
+              }
+            />
+            <CartItemsProducts
+              products={grupo.items}
+              currency_code={cart.currency_code}
+              seleccion={seleccion}
+            />
+            <CartItemsFooter currency_code={cart.currency_code} subtotal={subtotal} />
+          </div>
+        )
+      })}
     </div>
-  ))
+  )
 }
 
-function groupItemsBySeller(cart: HttpTypes.StoreCart) {
-  const groupedBySeller: any = {}
+// Un renglón por oferta, agrupado por el taller que la vende. Se devuelve un
+// arreglo y no un objeto para que el orden sea el de llegada al carrito: con un
+// objeto el orden depende de los ids y los grupos brincan de lugar entre
+// recargas.
+function agruparPorTaller(cart: Cart) {
+  const porTaller = new Map<string, { seller: any; items: HttpTypes.StoreCartLineItem[] }>()
 
-  cart.items?.forEach((item: any) => {
-    const seller = item.offer?.seller
-    if (seller) {
-      if (!groupedBySeller[seller.id]) {
-        groupedBySeller[seller.id] = {
-          seller: { ...seller, photo: seller.photo ?? seller.logo },
-          items: [],
+  filterValidCartItems(cart.items).forEach((item) => {
+    const vendedor = (item as any).offer?.seller
+    // "fleek" es el id centinela que el encabezado reconoce como "lo vende HETNA".
+    const clave = vendedor?.id ?? "fleek"
+    const seller = vendedor
+      ? { ...vendedor, photo: vendedor.photo ?? vendedor.logo }
+      : {
+          name: "HETNA CNC",
+          id: "fleek",
+          handle: "",
+          photo: "/logo-hetna.webp",
+          created_at: new Date(),
         }
-      }
-      groupedBySeller[seller.id].items.push(item)
-    } else {
-      if (!groupedBySeller["fleek"]) {
-        groupedBySeller["fleek"] = {
-          seller: {
-            name: "Fleek",
-            id: "fleek",
-            photo: "/logo-hetna.webp",
-            created_at: new Date(),
-          },
-          items: [],
-        }
-      }
-      groupedBySeller["fleek"].items.push(item)
+
+    if (!porTaller.has(clave)) {
+      porTaller.set(clave, { seller, items: [] })
     }
+    porTaller.get(clave)!.items.push(item)
   })
 
-  return groupedBySeller
+  return [...porTaller.values()]
 }

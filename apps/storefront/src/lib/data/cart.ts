@@ -18,6 +18,19 @@ import {
 } from './cookies';
 import { getRegion } from './regions';
 
+// Lo que el carrito necesita siempre. Si algo de aquí falta, la página no se
+// puede dibujar.
+const CAMPOS_CARRITO =
+  '*items,*region, *items.product, *items.variant, *items.variant.options,' +
+  '*items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *items.offer, *items.offer.seller';
+
+// `inventory_quantity` no es una columna de la variante: es un campo calculado
+// que el backend sólo agrega si se lo pides. Sirve para avisar "quedan 2" en el
+// carrito, que es información real y mueve la compra, pero es un extra: si este
+// backend no lo expone, el carrito tiene que seguir funcionando igual. Por eso
+// va en una segunda cadena y la consulta reintenta sin él.
+const CAMPOS_CON_EXISTENCIAS = CAMPOS_CARRITO + ',+items.variant.inventory_quantity';
+
 export async function retrieveCart(cartId?: string) {
   const id = cartId || (await getCartId());
 
@@ -29,20 +42,28 @@ export async function retrieveCart(cartId?: string) {
     ...(await getAuthHeaders())
   };
 
-  return await sdk.store.carts.$id
-    .query({
-      $id: id,
-      fields:
-        '*items,*region, *items.product, *items.variant, *items.variant.options,' +
-        '*items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *items.offer, *items.offer.seller' +
-        '',
-      fetchOptions: { headers, cache: 'no-cache' }
-    })
-    .then(({ cart }) => cart)
-    .catch(error => {
+  const consultar = (fields: string) =>
+    sdk.store.carts.$id
+      .query({
+        $id: id,
+        fields,
+        fetchOptions: { headers, cache: 'no-cache' }
+      })
+      .then(({ cart }) => cart);
+
+  try {
+    return await consultar(CAMPOS_CON_EXISTENCIAS);
+  } catch {
+    // El extra no se pudo pedir. Se vuelve a intentar con lo indispensable
+    // antes de darse por vencido: perder el aviso de existencias es un detalle,
+    // perder el carrito completo no.
+    try {
+      return await consultar(CAMPOS_CARRITO);
+    } catch (error) {
       console.error('Failed to retrieve cart', error);
       return null;
-    });
+    }
+  }
 }
 
 export async function getOrSetCart(countryCode: string) {
