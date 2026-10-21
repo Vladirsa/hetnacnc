@@ -19,7 +19,7 @@
  *
  * Sale con 1 si encuentra algo, para que el despliegue se detenga.
  */
-import { globSync, readFileSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const RAIZ = new URL("../apps/storefront/src/", import.meta.url).pathname
@@ -33,7 +33,24 @@ const GLOBALES = new Set(["Fragment", "React"])
 // la diferencia, y alcanza para no confundirlos.
 const ETIQUETA = /(^|[\s(){}>,=])<([A-Z][A-Za-z0-9_]*)/g
 
-const archivos = globSync("**/*.tsx", { cwd: RAIZ })
+// Se recorre a mano en vez de usar fs.globSync: globSync existe desde Node 22
+// y el servidor corre Node 20. Un guion que cuida el despliegue no puede ser lo
+// que lo detenga, así que no usa nada que no esté en todas las versiones.
+function buscarTsx(dir, base = "") {
+  const encontrados = []
+  for (const entrada of readdirSync(dir, { withFileTypes: true })) {
+    if (entrada.name === "node_modules" || entrada.name.startsWith(".")) continue
+    const rel = base ? `${base}/${entrada.name}` : entrada.name
+    if (entrada.isDirectory()) {
+      encontrados.push(...buscarTsx(join(dir, entrada.name), rel))
+    } else if (entrada.name.endsWith(".tsx")) {
+      encontrados.push(rel)
+    }
+  }
+  return encontrados
+}
+
+const archivos = buscarTsx(RAIZ)
 const hallazgos = []
 
 for (const rel of archivos) {
