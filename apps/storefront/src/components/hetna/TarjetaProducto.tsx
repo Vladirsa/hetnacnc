@@ -8,11 +8,14 @@ import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 
 import { BotonAgregarRapido } from "./BotonAgregarRapido"
+import { Estrellas } from "./resenas/Estrellas"
 
 // Lo que la lista ya sabe de cada producto: quién lo vende y cuál es su mejor
 // oferta. La consulta de ofertas ya se hacía para poner "Vendido por"; ahora
 // además se guarda el id de la oferta ganadora, su precio y su inventario, y
 // con eso la tarjeta puede agregar al carrito sin pedir nada más.
+export type Calificacion = { promedio: number; total: number }
+
 export type Vendedor = {
   nombre: string
   total: number
@@ -78,10 +81,12 @@ const CARD =
 export default function TarjetaProducto({
   product,
   vendedor,
+  calificacion,
   locale = "mx",
 }: {
   product: HttpTypes.StoreProduct
   vendedor?: Vendedor
+  calificacion?: Calificacion
   locale?: string
 }) {
   const moneda = vendedor?.moneda || "mxn"
@@ -170,6 +175,16 @@ export default function TarjetaProducto({
               </span>
             )}
           </span>
+
+          {calificacion && (
+            <span className="flex items-center gap-1 text-[11.5px] text-[#6B6A63]">
+              <Estrellas valor={calificacion.promedio} size={12} />
+              <span className="font-semibold text-[#1B1B18]">
+                {calificacion.promedio.toFixed(1)}
+              </span>
+              <span>({calificacion.total})</span>
+            </span>
+          )}
 
           {pocas && (
             <span className="text-[11.5px] font-bold text-[#9B3225]">

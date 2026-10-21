@@ -6,6 +6,8 @@ import { getBuyboxWinner, getOfferAmount, getOfferStock, rankOffers, StoreOffer 
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { TrackEvent } from "@/components/analytics/TrackEvent"
 import { JsonLd } from "@/components/hetna/JsonLd"
+import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
+import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import NotFound from "@/app/not-found"
@@ -56,6 +58,15 @@ export const ProductDetailsPage = async ({
     winnerOffer?.calculated_price?.currency_code || eventCurrency
   const inStock = winnerOffer ? getOfferStock(winnerOffer) > 0 : false
   const vendedor = winnerOffer?.seller || prod.seller
+
+  // Las reseñas y, si el visitante compró esto y no lo ha reseñado, el pendiente
+  // que abre el formulario. Lo segundo devuelve vacío sin sesión, así que no
+  // hace falta preguntar antes si hay cliente.
+  const [resenas, pendientes] = await Promise.all([
+    resenasDeProducto(prod.id),
+    resenasPendientes(),
+  ])
+  const pendienteDeEste = pendientes.find((p) => p.product_id === prod.id)
 
   // Productos de la misma categoría, para "también te puede interesar". Se
   // piden unos de más porque hay que sacar el que ya se está viendo.
@@ -116,6 +127,13 @@ export const ProductDetailsPage = async ({
               locale={locale}
               taller={{ name: vendedor?.name, handle: vendedor?.handle }}
             />
+            <div className="mt-4">
+              <ResenasProducto
+                datos={resenas}
+                productId={prod.id}
+                pendiente={pendienteDeEste}
+              />
+            </div>
           </div>
         </div>
 
@@ -137,6 +155,13 @@ export const ProductDetailsPage = async ({
             locale={locale}
             taller={{ name: vendedor?.name, handle: vendedor?.handle }}
           />
+          <div className="mt-4">
+            <ResenasProducto
+              datos={resenas}
+              productId={prod.id}
+              pendiente={pendienteDeEste}
+            />
+          </div>
         </div>
       </div>
       {/* Dos listas distintas y con el nombre que les toca. La de abajo decía

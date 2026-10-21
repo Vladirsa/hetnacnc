@@ -1,4 +1,6 @@
 import Image from "next/image"
+import { promediosDeProductos } from "@/lib/resenas/acciones"
+
 import TarjetaProducto, { vendedoresPorProducto } from "./TarjetaProducto"
 import { HttpTypes } from "@medusajs/types"
 
@@ -72,6 +74,7 @@ export default async function CarruselColeccion(props: Props) {
   if (!productos.length) return null
 
   const mapa = await vendedoresPorProducto(locale)
+  const calificaciones = await promediosDeProductos(productos.map((p) => p.id))
 
   const fondoClase = fondo ? "bg-[#FAF6EF]" : ""
   return (
@@ -95,7 +98,13 @@ export default async function CarruselColeccion(props: Props) {
         </div>
         <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3">
           {productos.map((p) => (
-            <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} locale={locale} />
+            <TarjetaProducto
+                key={p.id}
+                product={p}
+                vendedor={mapa.get(p.id)}
+                calificacion={calificaciones.get(p.id)}
+                locale={locale}
+              />
           ))}
         </div>
       </div>

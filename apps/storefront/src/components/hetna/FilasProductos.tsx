@@ -1,4 +1,6 @@
 import Image from "next/image"
+import { promediosDeProductos } from "@/lib/resenas/acciones"
+
 import TarjetaProducto, { vendedoresPorProducto } from "./TarjetaProducto"
 import { HttpTypes } from "@medusajs/types"
 
@@ -127,6 +129,11 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
   if (!filas.length) return null
 
   const mapa = await vendedoresPorProducto(locale)
+  // Los promedios de TODAS las filas en una sola llamada. Una por tarjeta
+  // serían veinte peticiones en la pantalla donde más importa la velocidad.
+  const calificaciones = await promediosDeProductos(
+    [...new Set(filas.flatMap((f) => f.productos.map((p) => p.id)))]
+  )
 
   return (
     <div className="w-full">
@@ -147,7 +154,13 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
           </div>
           <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2">
             {f.productos.map((p) => (
-              <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} locale={locale} />
+              <TarjetaProducto
+                key={p.id}
+                product={p}
+                vendedor={mapa.get(p.id)}
+                calificacion={calificaciones.get(p.id)}
+                locale={locale}
+              />
             ))}
           </div>
         </section>
