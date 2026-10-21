@@ -1,4 +1,7 @@
-import Image from 'next/image'
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del
+// navegador, y next/image TRUENA con las que no empiezan en "/" o
+// "https://" (una vista previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres, ubicacion } from "@/lib/hetna/talleres"
 

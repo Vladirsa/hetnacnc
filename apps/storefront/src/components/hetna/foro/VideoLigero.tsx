@@ -1,6 +1,11 @@
 "use client"
 
 // Video incrustado que no carga nada pesado hasta que la persona le da play (la página abre rápido)
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import { useState } from "react"
 
 import { type Video, esVertical, reproductor } from "@/lib/foro/contenido"

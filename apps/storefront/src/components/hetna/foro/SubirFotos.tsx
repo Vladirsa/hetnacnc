@@ -1,6 +1,11 @@
 "use client"
 
 // Subir fotos al foro: se reducen en el celular antes de subir (rápido y ligero)
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import { useRef, useState } from "react"
 
 export type FotoSubida = { id: string; url: string }

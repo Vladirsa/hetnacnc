@@ -1,4 +1,9 @@
 // Piezas visuales compartidas por todos los espacios de publicidad.
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import type { ReactNode } from "react"
 
 import type { Pieza } from "@/lib/publicidad/tipos"

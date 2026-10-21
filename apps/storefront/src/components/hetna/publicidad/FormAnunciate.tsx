@@ -3,6 +3,11 @@
 // Formulario para comprar un espacio publicitario. La imagen se revisa y se reduce en el navegador
 // (WebP liviano) antes de enviarse. El pago se hace en Mercado Pago.
 
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import { useMemo, useState } from "react"
 
 export type EspacioVenta = {

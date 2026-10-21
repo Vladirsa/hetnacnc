@@ -1,4 +1,9 @@
 'use client';
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 

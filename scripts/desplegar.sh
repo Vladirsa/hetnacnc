@@ -98,6 +98,12 @@ fi
 
 # --- 3. Construir. Si truena, aquí se acaba. ---
 
+paso "Revisando que no falte ningún import de componente"
+# Barato y antes de todo lo demás: este repo publica con
+# `typescript: { ignoreBuildErrors: true }`, así que un <Componente> sin
+# importar compila y tumba la página al dibujarla. Ya pasó una vez.
+node scripts/revisar-jsx.mjs
+
 paso "Instalando dependencias"
 bun install
 

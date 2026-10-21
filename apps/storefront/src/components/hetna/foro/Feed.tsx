@@ -1,4 +1,9 @@
 // Piezas del foro con estilo de red profesional: composer, feed, perfil lateral
+// Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
+// y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
+// previa "blob:", por ejemplo).
+import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { SesionForo } from "@/lib/foro/consultas"
