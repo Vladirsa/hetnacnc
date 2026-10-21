@@ -70,37 +70,6 @@ export const FavoritosBoton = () => {
   )
 }
 
-// ---------- Boton "Mis compras" del encabezado ----------
-export const MisComprasBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
-  <LocalizedClientLink
-    href={isLoggedIn ? "/user/orders" : "/login"}
-    aria-label="Mis compras"
-    title="Mis compras"
-    className="flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"
-  >
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 8l-9-5-9 5v8l9 5 9-5z" />
-      <path d="M3 8l9 5 9-5M12 13v8" />
-    </svg>
-    <span className="hidden lg:inline text-[13px] font-medium">Mis compras</span>
-  </LocalizedClientLink>
-)
-
-// ---------- Boton "Notificaciones" del encabezado ----------
-export const NotificacionesBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
-  <LocalizedClientLink
-    href={isLoggedIn ? "/user/messages" : "/login"}
-    aria-label="Notificaciones"
-    title="Notificaciones"
-    className="flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"
-  >
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />
-    </svg>
-    <span className="hidden lg:inline text-[13px] font-medium">Notificaciones</span>
-  </LocalizedClientLink>
-)
-
 // ---------- Boton "Guardar en favoritos" en la ficha del producto ----------
 export const BotonFavorito = ({ producto }: { producto: Favorito }) => {
   const [activo, setActivo] = useState(false)
