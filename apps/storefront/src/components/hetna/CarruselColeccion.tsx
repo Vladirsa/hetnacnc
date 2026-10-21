@@ -95,7 +95,7 @@ export default async function CarruselColeccion(props: Props) {
         </div>
         <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3">
           {productos.map((p) => (
-            <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} />
+            <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} locale={locale} />
           ))}
         </div>
       </div>

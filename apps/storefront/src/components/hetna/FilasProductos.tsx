@@ -147,7 +147,7 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
           </div>
           <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2">
             {f.productos.map((p) => (
-              <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} />
+              <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} locale={locale} />
             ))}
           </div>
         </section>
