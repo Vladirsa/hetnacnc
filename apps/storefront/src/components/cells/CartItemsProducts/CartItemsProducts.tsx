@@ -56,6 +56,11 @@ export const CartItemsProducts = ({
           controlaExistencias && existencias! > 0 && existencias! <= EXISTENCIAS_BAJAS
         const noAlcanza = controlaExistencias && product.quantity > existencias!
 
+        // La clave del taller. En piezas de CNC es con lo que el cliente compara
+        // contra su lista o su plano, así que va visible y no escondida en las
+        // opciones.
+        const sku = product.variant_sku || product.variant?.sku || ""
+
         const seleccionado = seleccion ? seleccion.estaSeleccionado(product.id) : true
 
         return (
@@ -134,6 +139,12 @@ export const CartItemsProducts = ({
                   {delete_item && <DeleteCartItemButton id={product.id} />}
                 </div>
               </div>
+
+              {sku && (
+                <p className="mt-0.5 text-[12px] text-[#8A8780]" data-testid="cart-item-sku">
+                  {sku}
+                </p>
+              )}
 
               {options.length > 0 && (
                 <div

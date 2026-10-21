@@ -1,94 +1,113 @@
-'use client';
+"use client"
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react"
 
-import { useRouter } from 'next/navigation';
+import { useCartContext } from "@/components/providers"
+import { toast } from "@/lib/helpers/toast"
 
-import { useCartContext } from '@/components/providers';
-import { toast } from '@/lib/helpers/toast';
+// Cuánto se espera antes de mandar el cambio, para que apretar "+" cuatro
+// veces seguidas sea una sola llamada y no cuatro.
+const ESPERA_MS = 450
 
 export const UpdateCartItemButton = ({
   quantity,
-  lineItemId
+  lineItemId,
 }: {
-  quantity: number;
-  lineItemId: string;
+  quantity: number
+  lineItemId: string
 }) => {
-  const { updateCartItem, isUpdatingItem } = useCartContext();
-  const [pendingQuantity, setPendingQuantity] = useState(quantity);
-  const debounceTimerRef = useRef<NodeJS.Timeout>(null);
-  const router = useRouter();
+  const { updateCartItem } = useCartContext()
+  const [cantidad, setCantidad] = useState(quantity)
+  const [guardando, setGuardando] = useState(false)
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Lo último que el cliente pidió y todavía no se confirma. Mientras haya
+  // algo aquí, la cantidad que manda es la local.
+  const pedido = useRef<number | null>(null)
 
+  // El carrito se refresca solo (otra pestaña, un borrado, el servidor). Cuando
+  // eso pasa hay que hacerle caso -- pero NO mientras el cliente tiene un
+  // cambio en vuelo, o el número le brinca de vuelta al viejo mientras sigue
+  // apretando. Ése era el "no se actualizan las cantidades": el efecto pisaba
+  // el valor local en cada render.
   useEffect(() => {
-    setPendingQuantity(quantity);
-  }, [quantity]);
+    if (pedido.current === null) {
+      setCantidad(quantity)
+    }
+  }, [quantity])
 
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity < 1) return;
-
-    setPendingQuantity(newQuantity);
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+      if (temporizador.current) clearTimeout(temporizador.current)
     }
+  }, [])
 
-    debounceTimerRef.current = setTimeout(async () => {
+  const cambiar = (nueva: number) => {
+    if (nueva < 1 || !lineItemId) return
+
+    setCantidad(nueva)
+    pedido.current = nueva
+
+    if (temporizador.current) clearTimeout(temporizador.current)
+
+    temporizador.current = setTimeout(async () => {
+      const aGuardar = pedido.current
+      if (aGuardar === null) return
+
+      setGuardando(true)
       try {
-        await updateCartItem(lineItemId, newQuantity);
-        router.refresh();
+        await updateCartItem(lineItemId, aGuardar)
+        // Si mientras se guardaba el cliente volvió a apretar, lo suyo manda:
+        // no se suelta el valor local todavía.
+        if (pedido.current === aGuardar) pedido.current = null
       } catch (error: unknown) {
-        setPendingQuantity(quantity);
-        const errorMessage =
-          error instanceof Error
-            ? error.message.replace('Error setting up the request: ', '')
-            : 'Failed to update quantity';
+        pedido.current = null
+        setCantidad(quantity)
         toast.error({
-          title: 'Error al actualizar el carrito',
-          description: errorMessage
-        });
+          title: "No se pudo cambiar la cantidad",
+          description:
+            error instanceof Error
+              ? error.message.replace("Error setting up the request: ", "")
+              : "Vuelve a intentarlo.",
+        })
+      } finally {
+        setGuardando(false)
       }
-    }, 500);
-  };
+    }, ESPERA_MS)
+  }
 
-  const isDecreaseDisabled = pendingQuantity === 1 || isUpdatingItem || !lineItemId;
-  const isIncreaseDisabled = isUpdatingItem || !lineItemId;
-
+  // Los botones NO se apagan mientras se guarda. Antes usaban `isUpdatingItem`,
+  // que es del carrito entero: bastaba con que cualquier renglón estuviera
+  // guardando para que todos los botones de la página quedaran muertos medio
+  // segundo o más, y los clics de ese rato se perdían. El rebote ya se encarga
+  // de que no se manden llamadas de más.
   return (
     <div className="flex items-center overflow-hidden rounded-[8px] border border-[#E7E4DC]">
       <button
         type="button"
         aria-label="Quitar uno"
         className="flex h-8 w-8 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC] disabled:hover:bg-transparent"
-        disabled={isDecreaseDisabled}
-        onClick={() => handleQuantityChange(pendingQuantity - 1)}
+        disabled={cantidad <= 1}
+        onClick={() => cambiar(cantidad - 1)}
       >
         −
       </button>
       <span
         aria-live="polite"
         className={`w-9 text-center text-[14px] font-semibold ${
-          isUpdatingItem ? 'text-[#8A8780]' : 'text-[#1B1B18]'
+          guardando ? "text-[#8A8780]" : "text-[#1B1B18]"
         }`}
+        data-testid="cart-item-quantity"
       >
-        {pendingQuantity}
+        {cantidad}
       </span>
       <button
         type="button"
         aria-label="Agregar uno"
         className="flex h-8 w-8 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC] disabled:hover:bg-transparent"
-        disabled={isIncreaseDisabled}
-        onClick={() => handleQuantityChange(pendingQuantity + 1)}
+        onClick={() => cambiar(cantidad + 1)}
       >
         +
       </button>
     </div>
-  );
-};
+  )
+}

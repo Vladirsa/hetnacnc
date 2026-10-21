@@ -105,8 +105,12 @@ export function CartProvider({ cart, children }: CartProviderProps) {
       await apiUpdateLineItem({ lineId, quantity });
       await refreshCart();
     } catch (error) {
-      console.error('Error updating item quantity:', error);
+      // Se vuelve a traer el carrito para deshacer el cambio optimista, y se
+      // relanza el error. Antes se tragaba aquí: el número de la cantidad se
+      // regresaba solo y el cliente no veía ningún aviso, así que parecía que
+      // el botón no servía. Quien llama necesita enterarse para avisar.
       await refreshCart();
+      throw error;
     } finally {
       setIsUpdatingItem(false);
       setIsUpdating(false);
@@ -159,8 +163,10 @@ export function CartProvider({ cart, children }: CartProviderProps) {
       await apiDeleteLineItem(lineId);
       await refreshCart();
     } catch (error) {
-      console.error('Error removing item from cart:', error);
+      // Igual que arriba: se deshace el cambio optimista y se relanza, para
+      // que el producto no reaparezca en silencio.
       await refreshCart();
+      throw error;
     } finally {
       setIsRemovingItem(false);
       setIsUpdating(false);

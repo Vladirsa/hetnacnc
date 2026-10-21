@@ -24,12 +24,21 @@ const CAMPOS_CARRITO =
   '*items,*region, *items.product, *items.variant, *items.variant.options,' +
   '*items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *items.offer, *items.offer.seller';
 
-// `inventory_quantity` no es una columna de la variante: es un campo calculado
-// que el backend sólo agrega si se lo pides. Sirve para avisar "quedan 2" en el
-// carrito, que es información real y mueve la compra, pero es un extra: si este
-// backend no lo expone, el carrito tiene que seguir funcionando igual. Por eso
-// va en una segunda cadena y la consulta reintenta sin él.
-const CAMPOS_CON_EXISTENCIAS = CAMPOS_CARRITO + ',+items.variant.inventory_quantity';
+// Campos calculados: el backend sólo los manda si se los pides por nombre.
+//
+//   - inventory_quantity: para avisar "quedan 2" en el renglón.
+//   - subtotal / discount_total / tax_total por renglón: con esos tres el
+//     resumen puede sumar SÓLO los productos marcados. Sin ellos el resumen
+//     sigue armándose, nomás sin la línea de impuestos ni la de cupón.
+//
+// Van aparte porque son extras: si este backend no los expone, el carrito tiene
+// que seguir funcionando igual, así que la consulta reintenta sin ellos.
+const CAMPOS_CON_EXISTENCIAS =
+  CAMPOS_CARRITO +
+  ',+items.variant.inventory_quantity,+items.subtotal,+items.discount_total,+items.tax_total';
+
+// Se apaga sola la primera vez que el backend rechaza los extras.
+let extrasDisponibles = true;
 
 export async function retrieveCart(cartId?: string) {
   const id = cartId || (await getCartId());
@@ -51,12 +60,28 @@ export async function retrieveCart(cartId?: string) {
       })
       .then(({ cart }) => cart);
 
+  // Si los extras ya fallaron una vez, no se vuelven a pedir: de otro modo cada
+  // lectura del carrito costaría dos viajes al backend en vez de uno, en todas
+  // las páginas, para siempre.
+  if (!extrasDisponibles) {
+    try {
+      return await consultar(CAMPOS_CARRITO);
+    } catch (error) {
+      console.error('Failed to retrieve cart', error);
+      return null;
+    }
+  }
+
   try {
     return await consultar(CAMPOS_CON_EXISTENCIAS);
   } catch {
-    // El extra no se pudo pedir. Se vuelve a intentar con lo indispensable
-    // antes de darse por vencido: perder el aviso de existencias es un detalle,
-    // perder el carrito completo no.
+    // Los extras no se pudieron pedir. Se vuelve a intentar con lo
+    // indispensable antes de darse por vencido: perder el aviso de existencias
+    // es un detalle, perder el carrito completo no.
+    extrasDisponibles = false;
+    console.warn(
+      'El backend no aceptó los campos calculados del carrito; se sigue sin ellos.'
+    );
     try {
       return await consultar(CAMPOS_CARRITO);
     } catch (error) {

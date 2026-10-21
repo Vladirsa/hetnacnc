@@ -7,6 +7,7 @@ import { TrackEvent } from '@/components/analytics/TrackEvent';
 import PaymentWrapper from '@/components/organisms/PaymentContainer/PaymentWrapper';
 import { CartAddressSection } from '@/components/sections/CartAddressSection/CartAddressSection';
 import CartPaymentSection from '@/components/sections/CartPaymentSection/CartPaymentSection';
+import { CartItems as CheckoutItems } from '@/components/sections/CartReview/CartItems';
 import CartReview from '@/components/sections/CartReview/CartReview';
 import CartShippingMethodsSection from '@/components/sections/CartShippingMethodsSection/CartShippingMethodsSection';
 import { retrieveCart } from '@/lib/data/cart';
@@ -55,8 +56,12 @@ async function CheckoutPageContent({}) {
         }))}
       />
       <main className="container" data-testid="checkout-page">
+        {/* Los pasos y los productos van juntos a la izquierda, y el resumen
+            queda pegado a la derecha mientras se baja. Antes los productos
+            estaban en la columna del resumen, así que para ver qué se estaba
+            comprando había que buscarlo junto al botón de pagar. */}
         <div className="grid gap-8 lg:grid-cols-11">
-          <div className="flex flex-col gap-4 lg:col-span-6" data-testid="checkout-steps-container">
+          <div className="flex flex-col gap-4 lg:col-span-7" data-testid="checkout-steps-container">
             <CartAddressSection
               cart={cart}
               customer={customer}
@@ -69,10 +74,17 @@ async function CheckoutPageContent({}) {
               cart={cart}
               availablePaymentMethods={paymentMethods}
             />
+
+            <section data-testid="checkout-items-container">
+              <h2 className="mb-3 text-[18px] font-bold text-[#1B1B18]">Lo que vas a recibir</h2>
+              <CheckoutItems cart={cart} />
+            </section>
           </div>
 
-          <div className="lg:col-span-5" data-testid="checkout-review-container">
-            <CartReview cart={cart} />
+          <div className="lg:col-span-4" data-testid="checkout-review-container">
+            <div className="lg:sticky lg:top-6">
+              <CartReview cart={cart} />
+            </div>
           </div>
         </div>
       </main>

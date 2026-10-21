@@ -30,10 +30,13 @@ export const CartItems = ({
     <div className="flex flex-col gap-4">
       {grupos.map((grupo) => {
         const ids = grupo.items.map((item) => item.id)
-        const subtotal = grupo.items.reduce(
-          (suma, item) => suma + (item.subtotal ?? 0),
-          0
-        )
+        // El subtotal del taller cuenta sólo lo marcado, igual que el resumen de
+        // la derecha. Dos números del mismo carrito que no concuerdan es peor
+        // que no poner el segundo.
+        const contados = seleccion
+          ? grupo.items.filter((item) => seleccion.estaSeleccionado(item.id))
+          : grupo.items
+        const subtotal = contados.reduce((suma, item) => suma + (item.subtotal ?? 0), 0)
         const piezas = grupo.items.reduce((suma, item) => suma + item.quantity, 0)
 
         return (

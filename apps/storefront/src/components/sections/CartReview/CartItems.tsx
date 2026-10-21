@@ -1,56 +1,61 @@
-import { HttpTypes } from '@medusajs/types';
+"use client"
 
-import { CartItemsHeader, CartItemsProducts } from '@/components/cells';
+import { HttpTypes } from "@medusajs/types"
 
+import { CartItemsHeader, CartItemsProducts } from "@/components/cells"
+import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
+
+// Lo que se está comprando, agrupado por taller, dentro de la pasarela.
+//
+// Sin casillas, sin borrar y sin cambiar cantidades: a esta altura ya hay una
+// sesión de pago abierta contra un monto, y mover el carrito aquí la invalida.
+// Para cambiar algo se regresa al carrito, que es el botón de arriba.
 export const CartItems = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
-  if (!cart) return null;
+  if (!cart) return null
 
-  const groupedItems: any = groupItemsBySeller(cart);
+  const grupos = agruparPorTaller(cart)
+  if (!grupos.length) return null
 
-  return Object.keys(groupedItems).map(key => (
-    <div
-      key={key}
-      className="mb-4"
-    >
-      <CartItemsHeader seller={groupedItems[key]?.seller} />
-      <CartItemsProducts
-        delete_item={false}
-        change_quantity={false}
-        products={groupedItems[key].items || []}
-        currency_code={cart.currency_code}
-      />
+  return (
+    <div className="flex flex-col gap-4">
+      {grupos.map((grupo) => (
+        <div key={grupo.seller.id}>
+          <CartItemsHeader
+            seller={grupo.seller}
+            cantidad={grupo.items.reduce((s, i) => s + i.quantity, 0)}
+          />
+          <CartItemsProducts
+            delete_item={false}
+            change_quantity={false}
+            products={grupo.items}
+            currency_code={cart.currency_code}
+          />
+        </div>
+      ))}
     </div>
-  ));
-};
+  )
+}
 
-function groupItemsBySeller(cart: HttpTypes.StoreCart) {
-  const groupedBySeller: any = {};
+function agruparPorTaller(cart: HttpTypes.StoreCart) {
+  const porTaller = new Map<string, { seller: any; items: HttpTypes.StoreCartLineItem[] }>()
 
-  cart.items?.forEach((item: any) => {
-    const seller = item.offer?.seller;
-    if (seller) {
-      if (!groupedBySeller[seller.id]) {
-        groupedBySeller[seller.id] = {
-          seller: { ...seller, photo: seller.photo ?? seller.logo },
-          items: []
-        };
-      }
-      groupedBySeller[seller.id].items.push(item);
-    } else {
-      if (!groupedBySeller['fleek']) {
-        groupedBySeller['fleek'] = {
-          seller: {
-            name: 'Fleek',
-            id: 'fleek',
-            photo: '/logo-hetna.webp',
-            created_at: new Date()
-          },
-          items: []
-        };
-      }
-      groupedBySeller['fleek'].items.push(item);
-    }
-  });
+  filterValidCartItems(cart.items).forEach((item) => {
+    const vendedor = (item as any).offer?.seller
+    // "fleek" es el id centinela que el encabezado reconoce como "lo vende HETNA".
+    const clave = vendedor?.id ?? "fleek"
+    const seller = vendedor
+      ? { ...vendedor, photo: vendedor.photo ?? vendedor.logo }
+      : {
+          name: "HETNA CNC",
+          id: "fleek",
+          handle: "",
+          photo: "/logo-hetna.webp",
+          created_at: new Date(),
+        }
 
-  return groupedBySeller;
+    if (!porTaller.has(clave)) porTaller.set(clave, { seller, items: [] })
+    porTaller.get(clave)!.items.push(item)
+  })
+
+  return [...porTaller.values()]
 }
