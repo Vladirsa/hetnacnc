@@ -110,7 +110,11 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           <MisComprasBoton isLoggedIn={isLoggedIn} />
           <NotificacionesBoton isLoggedIn={isLoggedIn} />
           <CampanitaChat isLoggedIn={isLoggedIn} />
-          <UserDropdown isLoggedIn={isLoggedIn} />
+          <UserDropdown
+            isLoggedIn={isLoggedIn}
+            nombre={user?.first_name || user?.company_name || null}
+            correo={user?.email || null}
+          />
           <CartDropdown />
         </div>
         {/* Celular: campanita de mensajes, idioma y moneda */}
