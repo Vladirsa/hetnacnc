@@ -1,4 +1,5 @@
-import { ProductDetails, ProductGallery } from "@/components/organisms"
+import { ProductGallery } from "@/components/organisms"
+import { ProductDetails, ProductDetallesLargos } from "@/components/organisms/ProductDetails/ProductDetails"
 import { listProducts } from "@/lib/data/products"
 import { listOffers } from "@/lib/data/offers"
 import { getBuyboxWinner, getOfferAmount, getOfferStock, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
@@ -77,16 +78,34 @@ export const ProductDetailsPage = async ({
         })}
       />
       <JsonLd id="ld-migas" datos={migas(rutaMigas)} />
-      <div className="flex flex-col md:flex-row lg:gap-12" data-testid="product-details-page">
-        <div className="md:w-1/2 md:px-2" data-testid="product-gallery-container">
+      <div
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:gap-10"
+        data-testid="product-details-page"
+      >
+        <div className="min-w-0" data-testid="product-gallery-container">
           <ProductGallery images={prod?.images || []} title={prod.title} />
+          {/* La ficha larga va debajo de las fotos, no en la columna de la
+              compra: así el bloque de compra cabe en la pantalla y se puede
+              quedar pegado mientras se lee todo esto. */}
+          <div className="mt-8 hidden lg:block">
+            <ProductDetallesLargos product={prod} />
+          </div>
         </div>
-        <div className="md:w-1/2 md:px-2" data-testid="product-details-container">
-          <ProductDetails
-            product={prod}
-            locale={locale}
-            offers={offers as StoreOffer[]}
-          />
+
+        <div data-testid="product-details-container">
+          <div className="lg:sticky lg:top-6">
+            <ProductDetails
+              product={prod}
+              locale={locale}
+              offers={offers as StoreOffer[]}
+            />
+          </div>
+        </div>
+
+        {/* En celular no hay dos columnas, así que la ficha larga va al final
+            y no entre las fotos y el botón de comprar. */}
+        <div className="lg:hidden">
+          <ProductDetallesLargos product={prod} />
         </div>
       </div>
       <div className="my-8">
