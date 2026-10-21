@@ -5,10 +5,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/atoms"
-import { WhatsAppButton } from "@/components/atoms/WhatsAppButton/WhatsAppButton"
+import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
 import { ProductVariants } from "@/components/molecules"
-import { Chat } from "@/components/organisms/Chat/Chat"
 import { CompareOffersModal } from "@/components/organisms/CompareOffersModal/CompareOffersModal"
 import { useCartContext } from "@/components/providers"
 import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"
@@ -49,13 +48,11 @@ const optionsAsKeymap = (
 export const ProductDetailsHeader = ({
   product,
   locale,
-  user,
   offers = [],
   seller,
 }: {
   product: HttpTypes.StoreProduct
   locale: string
-  user: HttpTypes.StoreCustomer | null
   offers?: StoreOffer[]
   seller?: SellerDTO
 }) => {
@@ -330,8 +327,26 @@ export const ProductDetailsHeader = ({
         </button>
       </div>
 
-      <div className="mt-3">
-        <WhatsAppButton productTitle={product.title} seller={seller} />
+      {/* Mensaje al taller, dentro de HETNA.
+          Aquí había un botón de WhatsApp y se quitó, y no es sólo gusto: el
+          propio chat de la plataforma bloquea los mensajes que traen teléfono
+          o correo, con el aviso de que "los tratos se hacen dentro de HETNA,
+          donde estás protegido". Poner al lado un botón que manda justo fuera
+          de HETNA contradecía esa regla, dejaba la conversación sin registro
+          para una aclaración o una devolución, y se llevaba la venta -- y su
+          comisión -- fuera de la plataforma. */}
+      {seller?.handle && (
+        <BotonPreguntarTaller
+          tallerHandle={seller.handle}
+          tallerNombre={seller.name || "el taller"}
+          productoHandle={product?.handle}
+          productoTitulo={product?.title}
+          etiqueta="Preguntar al taller"
+          className="mt-2.5 flex h-12 w-full items-center justify-center gap-2 rounded-sm border border-[#E7E4DC] text-[15px] font-semibold text-[#1B1B18] hover:border-[#C2560A] hover:text-[#B34D07]"
+        />
+      )}
+
+      <div className="mt-1">
         <BotonFavorito
           producto={{
             id: product.id,
@@ -365,14 +380,6 @@ export const ProductDetailsHeader = ({
         />
       )}
 
-      {user && seller && (
-        <Chat
-          user={user}
-          seller={seller}
-          buttonClassNames="w-full uppercase"
-          product={product}
-        />
-      )}
     </div>
   )
 }

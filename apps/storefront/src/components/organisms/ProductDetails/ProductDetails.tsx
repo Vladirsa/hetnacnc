@@ -6,9 +6,7 @@ import {
   ProductDetailsShipping,
   ProductPageDetails,
 } from "@/components/cells"
-import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
-import { retrieveCustomer } from "@/lib/data/customer"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
@@ -29,8 +27,6 @@ type Props = {
 // pantalla nunca se ve pegado. Con la descripción adentro medía el doble de la
 // ventana.
 export const ProductDetails = async ({ product, locale, offers = [] }: Props) => {
-  const user = await retrieveCustomer()
-
   // Los productos maestros no tienen vendedor: el que se enseña sale de la
   // oferta que gana el buybox.
   const seller = getBuyboxWinner(rankOffers(offers))?.seller
@@ -40,22 +36,11 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
       <ProductDetailsHeader
         product={product}
         locale={locale}
-        user={user}
         offers={offers}
         seller={seller}
       />
 
       <ConfianzaProducto />
-
-      {seller?.handle && (
-        <BotonPreguntarTaller
-          tallerHandle={seller.handle}
-          tallerNombre={seller.name || "el taller"}
-          productoHandle={product?.handle}
-          productoTitulo={product?.title}
-          className="inline-flex h-12 w-full items-center justify-center rounded-lg border-2 border-[#C2560A] px-5 text-base font-semibold text-[#C2560A] hover:bg-[#C2560A] hover:text-white"
-        />
-      )}
 
       <ProductDetailsSeller seller={seller} />
     </div>
