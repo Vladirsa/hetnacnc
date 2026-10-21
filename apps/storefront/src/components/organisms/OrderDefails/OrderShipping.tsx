@@ -1,4 +1,5 @@
-import { isStripe, paymentInfoMap } from "@/lib/constants"
+import { isStripe } from "@/lib/constants"
+import { paymentInfoMap } from "@/lib/pagos"
 import { convertToLocale } from "@/lib/helpers/money"
 import { HttpTypes } from "@medusajs/types"
 import { Container, Text } from "@medusajs/ui"

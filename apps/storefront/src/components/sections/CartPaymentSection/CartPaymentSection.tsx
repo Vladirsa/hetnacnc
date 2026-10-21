@@ -15,9 +15,9 @@ import { iniciarMercadoPago } from '@/lib/data/mercadopago';
 import {
   isMercadoPago as isMercadoPagoFunc,
   isPaypal as isPaypalFunc,
-  isStripe as isStripeFunc,
-  paymentInfoMap
+  isStripe as isStripeFunc
 } from '../../../lib/constants';
+import { paymentInfoMap } from '../../../lib/pagos';
 import { PasoCheckout } from '../CartAddressSection/PasoCheckout';
 import PaymentContainer, {
   StripeCardContainer

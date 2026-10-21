@@ -73,25 +73,50 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     sm => sm.rules?.find((rule: any) => rule.attribute === 'is_return')?.value !== 'true'
   );
 
+  // Las opciones cuyo precio hay que preguntarle al backend, como una cadena
+  // estable.
+  //
+  // Esto no es un rodeo: `_shippingMethods` es un arreglo NUEVO en cada render,
+  // así que usarlo de dependencia hacía que el efecto corriera siempre. Y
+  // adentro se llama setCalculatedPricesMap, que provoca otro render, que
+  // vuelve a correr el efecto. Es un ciclo infinito, y React lo corta tirando
+  // "Maximum update depth exceeded" -- la pantalla de "¡Algo salió mal!".
+  //
+  // Antes casi no se notaba porque a este paso sólo se llegaba apretando
+  // "Continuar al envío". Ahora se entra directo cuando la dirección ya está
+  // guardada, así que el ciclo se dispara al abrir la pasarela.
+  const idsConPrecioCalculado = (_shippingMethods ?? [])
+    .filter(sm => sm.price_type === 'calculated')
+    .map(sm => sm.id)
+    .sort()
+    .join(',');
+
   useEffect(() => {
-    if (_shippingMethods?.length) {
-      const promises = _shippingMethods
-        .filter(sm => sm.price_type === 'calculated')
-        .map(sm => calculatePriceForShippingOption(sm.id, cart.id));
+    if (!idsConPrecioCalculado) return;
 
-      if (promises.length) {
-        Promise.allSettled(promises).then(res => {
-          const pricesMap: Record<string, number> = {};
-          res
-            .filter(r => r.status === 'fulfilled')
-            .forEach(p => (pricesMap[p.value?.id || ''] = p.value?.amount!));
+    let vigente = true;
+    setIsLoadingPrices(true);
 
-          setCalculatedPricesMap(pricesMap);
-          setIsLoadingPrices(false);
-        });
-      }
-    }
-  }, [availableShippingMethods, _shippingMethods, cart.id]);
+    Promise.allSettled(
+      idsConPrecioCalculado.split(',').map(id => calculatePriceForShippingOption(id, cart.id))
+    ).then(res => {
+      // Si el carrito cambió mientras se consultaban los precios, los que
+      // llegan ya no son de este carrito: se tiran.
+      if (!vigente) return;
+
+      const pricesMap: Record<string, number> = {};
+      res
+        .filter(r => r.status === 'fulfilled')
+        .forEach(p => (pricesMap[p.value?.id || ''] = p.value?.amount!));
+
+      setCalculatedPricesMap(pricesMap);
+      setIsLoadingPrices(false);
+    });
+
+    return () => {
+      vigente = false;
+    };
+  }, [idsConPrecioCalculado, cart.id]);
 
   const handleSubmit = () => {
     router.push(pathname + '?step=payment', { scroll: false });
@@ -183,7 +208,19 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
   );
 
   // Si un taller tiene UNA sola opción de envío (por ejemplo "Entrega digital" $0),
-  // la elegimos sola para ahorrarle un paso al cliente. Una a la vez y solo una vez por opción.
+  // la elegimos sola para ahorrarle un paso al cliente. Una a la vez y sólo una
+  // vez por opción.
+  //
+  // El efecto NO puede quedarse sin lista de dependencias (así estaba): correría
+  // en cada render, y adentro llama a handleSetShippingMethod, que termina en
+  // router.refresh(). Con el paso de envío abierto desde el principio eso es un
+  // ciclo. Las claves de abajo son cadenas, no objetos, para que comparen por
+  // valor y no por identidad.
+  const clavesDeTalleres = filteredGroupedBySellerId.join(',');
+  const enviosYaElegidos = (cart.shipping_methods ?? [])
+    .map(m => m.shipping_option_id)
+    .join(',');
+
   useEffect(() => {
     if (!isOpen || isLoadingPrices || isPendingDeleteRow) return;
     for (const key of filteredGroupedBySellerId) {
@@ -195,7 +232,8 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
       handleSetShippingMethod(unica.id);
       break;
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isLoadingPrices, isPendingDeleteRow, clavesDeTalleres, enviosYaElegidos]);
 
   // Falta elegir envío: mientras eso pase, la compra no puede avanzar, así que
   // se dice aquí mismo y no sólo en el resumen de la derecha.
