@@ -17,9 +17,19 @@ export const ProductDetailsPage = async ({
   handle: string
   locale: string
 }) => {
+  // Se piden las categorías por nombre: de ahí salen las migas de pan y los
+  // productos "que te pueden interesar". La cadena repite los campos que usa
+  // la lista porque `fields` REEMPLAZA, no agrega: dejarlo sólo en
+  // "*categories" tiraría los precios calculados.
   const prod = await listProducts({
     countryCode: locale,
-    queryParams: { handle: [handle], limit: 1 },
+    queryParams: {
+      handle: [handle],
+      limit: 1,
+      fields:
+        "*variants.calculated_price,+variants.inventory_quantity,*variants.options," +
+        "*attribute_values,*attribute_values.attribute,*categories,*tags,*type",
+    },
   }).then(({ response }) => response.products[0])
 
   if (!prod) return null
@@ -46,6 +56,19 @@ export const ProductDetailsPage = async ({
     winnerOffer?.calculated_price?.currency_code || eventCurrency
   const inStock = winnerOffer ? getOfferStock(winnerOffer) > 0 : false
   const vendedor = winnerOffer?.seller || prod.seller
+
+  // Productos de la misma categoría, para "también te puede interesar". Se
+  // piden unos de más porque hay que sacar el que ya se está viendo.
+  const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
+  const relacionados = categoriaId
+    ? await listProducts({
+        countryCode: locale,
+        category_id: categoriaId,
+        queryParams: { limit: 8 },
+      })
+        .then(({ response }) => response.products.filter((p) => p.id !== prod.id))
+        .catch(() => [])
+    : []
 
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto
   const base = baseSitio()
@@ -116,13 +139,31 @@ export const ProductDetailsPage = async ({
           />
         </div>
       </div>
-      <div className="my-8">
-        <HomeProductSection
-          heading="Productos similares"
-          products={prod.seller?.products}
-          locale={locale}
-        />
-      </div>
+      {/* Dos listas distintas y con el nombre que les toca. La de abajo decía
+          "Productos similares" pero enseñaba los del MISMO taller, que no es
+          lo mismo: una sirve para seguir comprándole a quien ya te convenció,
+          y la otra para comparar contra lo demás de su categoría. */}
+      {Boolean(prod.seller?.products?.length) && (
+        <div className="mt-8">
+          <HomeProductSection
+            heading={
+              vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller"
+            }
+            products={prod.seller?.products}
+            locale={locale}
+          />
+        </div>
+      )}
+
+      {relacionados.length > 0 && (
+        <div className="mt-4">
+          <HomeProductSection
+            heading="También te puede interesar"
+            products={relacionados as never}
+            locale={locale}
+          />
+        </div>
+      )}
     </>
   )
 }
