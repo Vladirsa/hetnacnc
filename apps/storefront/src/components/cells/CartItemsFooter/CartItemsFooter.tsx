@@ -13,13 +13,21 @@ export const CartItemsFooter = ({
   currency_code,
   subtotal,
   envio,
+  // Cuando debajo va la barra de envío gratis, la esquina redondeada le toca a
+  // ella: dos bloques pegados con la de arriba redondeada se ven partidos.
+  ultimo = true,
 }: {
   currency_code: string
   subtotal: number
   envio?: number | null
+  ultimo?: boolean
 }) => {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-b-[12px] border border-t-0 border-[#E7E4DC] bg-white px-3 py-3 sm:px-4">
+    <div
+      className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border border-t-0 border-[#E7E4DC] bg-white px-3 py-3 sm:px-4 ${
+        ultimo ? "rounded-b-[12px]" : ""
+      }`}
+    >
       <p className="text-[12px] text-[#6B6A63]">
         {typeof envio === "number" ? (
           <>

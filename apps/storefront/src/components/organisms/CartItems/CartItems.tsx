@@ -7,6 +7,8 @@ import {
   CartItemsHeader,
   CartItemsProducts,
 } from "@/components/cells"
+import { BarraEnvioGratis } from "@/components/hetna/promociones/BarraEnvioGratis"
+import { usePromosTalleres } from "@/components/hetna/promociones/usePromosTalleres"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 import { Cart } from "@/types/cart"
 
@@ -20,11 +22,29 @@ export const CartItems = ({
   cart: Cart | null
   seleccion?: Seleccion
 }) => {
+  const grupos = cart ? agruparPorTaller(cart) : []
+  const promos = usePromosTalleres(grupos.map((g) => g.seller.id))
+
   if (!cart) return null
-
-  const grupos = agruparPorTaller(cart)
-
   if (!grupos.length) return <EmptyCart />
+
+  // El umbral de envío gratis de un taller se evalúa contra el carrito
+  // COMPLETO, no contra lo que lleva de ese taller: Medusa calcula la promoción
+  // con el carrito entero y Mercur nomás limita el descuento al envío del
+  // taller dueño. Así que el avance de todas las barras es el mismo número, el
+  // de aquí, y sólo cambia el umbral.
+  const contadosEnTodo = seleccion
+    ? filterValidCartItems(cart.items).filter((item) =>
+        seleccion.estaSeleccionado(item.id)
+      )
+    : filterValidCartItems(cart.items)
+
+  const avancePorAtributo: Record<string, number> = {
+    subtotal: contadosEnTodo.reduce((s, i) => s + (i.subtotal ?? 0), 0),
+    item_subtotal: contadosEnTodo.reduce((s, i) => s + (i.subtotal ?? 0), 0),
+    item_total: contadosEnTodo.reduce((s, i) => s + (i.total ?? i.subtotal ?? 0), 0),
+    total: contadosEnTodo.reduce((s, i) => s + (i.total ?? i.subtotal ?? 0), 0),
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -38,6 +58,7 @@ export const CartItems = ({
           : grupo.items
         const subtotal = contados.reduce((suma, item) => suma + (item.subtotal ?? 0), 0)
         const piezas = grupo.items.reduce((suma, item) => suma + item.quantity, 0)
+        const envioGratis = promos[grupo.seller.id]?.envio_gratis ?? null
 
         return (
           <div key={grupo.seller.id} data-testid={`cart-items-seller-${grupo.seller.id}`}>
@@ -58,7 +79,22 @@ export const CartItems = ({
               currency_code={cart.currency_code}
               seleccion={seleccion}
             />
-            <CartItemsFooter currency_code={cart.currency_code} subtotal={subtotal} />
+            <CartItemsFooter
+              currency_code={cart.currency_code}
+              subtotal={subtotal}
+              ultimo={!envioGratis}
+            />
+            {envioGratis && (
+              <BarraEnvioGratis
+                nombre={grupo.seller.name}
+                umbral={envioGratis.umbral}
+                avance={
+                  avancePorAtributo[envioGratis.atributo] ??
+                  avancePorAtributo.item_total
+                }
+                currency_code={cart.currency_code}
+              />
+            )}
           </div>
         )
       })}
