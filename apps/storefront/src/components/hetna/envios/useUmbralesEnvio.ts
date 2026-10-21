@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState } from "react"
 
 import {
-  promocionesDeTalleres,
-  type PromosDeTaller,
-} from "@/lib/promociones/acciones"
+  umbralesDeEnvioGratis,
+  type UmbralDeTaller,
+} from "@/lib/envios/envio-gratis"
 
-// Las promociones de los talleres que hay en el carrito. Se piden una vez por
-// juego de talleres: subirle la cantidad a un renglón no cambia quién lo vende,
-// así que no tiene por qué costar otra llamada.
-export const usePromosTalleres = (sellerIds: string[]) => {
-  const [promos, setPromos] = useState<Record<string, PromosDeTaller>>({})
+// Los umbrales de envío gratis de los talleres que hay en el carrito. Se piden
+// una vez por juego de talleres: subirle la cantidad a un renglón no cambia
+// quién lo vende, así que no tiene por qué costar otra llamada.
+export const useUmbralesEnvio = (sellerIds: string[]) => {
+  const [umbrales, setUmbrales] = useState<Record<string, UmbralDeTaller>>({})
   const pedido = useRef<string>("")
 
   // La llave es el juego de talleres, ordenado: así "A,B" y "B,A" no cuentan
@@ -23,9 +23,9 @@ export const usePromosTalleres = (sellerIds: string[]) => {
     pedido.current = llave
 
     let vivo = true
-    promocionesDeTalleres(llave.split(","))
+    umbralesDeEnvioGratis(llave.split(","))
       .then((datos) => {
-        if (vivo) setPromos(datos)
+        if (vivo) setUmbrales(datos)
       })
       .catch(() => {
         // El carrito no depende de esto para funcionar.
@@ -36,5 +36,5 @@ export const usePromosTalleres = (sellerIds: string[]) => {
     }
   }, [llave])
 
-  return promos
+  return umbrales
 }

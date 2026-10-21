@@ -10,6 +10,7 @@ import { createSellerShippingOptionsWorkflow } from "@mercurjs/core/workflows"
 import { deleteShippingOptionsWorkflow, updateShippingOptionsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { aprovisionarEnvios, obtenerPerfilDigital } from "../../../lib/envios-automaticos"
+import { leerPreciosDeOpcion } from "../../../lib/envio-gratis"
 
 const PROVEEDOR = "manual_manual"
 const NOMBRE_RECOGER = "Recoger en taller"
@@ -51,31 +52,6 @@ async function cargarOpciones(container, sellerId) {
   return { seller, zonas, estandar, recoger, digital }
 }
 
-// Lee precio base y "gratis desde" de una opción. Si no se puede leer, devuelve nulls (la pantalla sigue funcionando).
-async function leerPrecios(container, optionId) {
-  try {
-    const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const { data: links } = await query.graph({
-      entity: "shipping_option_price_set",
-      fields: ["shipping_option_id", "price_set_id"],
-      filters: { shipping_option_id: optionId },
-    })
-    if (!links.length) return { precio: null, gratis_desde: null }
-    const pricing = container.resolve(Modules.PRICING)
-    const sets = await pricing.listPriceSets({ id: [links[0].price_set_id] }, { relations: ["prices", "prices.price_rules"] })
-    const precios = (sets[0]?.prices || []).filter((p) => String(p.currency_code).toLowerCase() === "mxn")
-    const base = precios.find((p) => !(p.price_rules || []).length)
-    const gratis = precios.find((p) => (p.price_rules || []).some((r) => r.attribute === "item_total"))
-    const regla = gratis?.price_rules?.find((r) => r.attribute === "item_total")
-    return {
-      precio: base ? Number(base.amount) : null,
-      gratis_desde: gratis && Number(gratis.amount) === 0 && regla ? Number(regla.value) : null,
-    }
-  } catch (e) {
-    return { precio: null, gratis_desde: null }
-  }
-}
-
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const sellerId = (req as any).seller_context?.seller_id as string | undefined
   if (!sellerId) return res.status(401).json({ message: "Sin taller." })
@@ -87,7 +63,9 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       mensaje: "Primero captura la dirección de tu taller. En unos minutos tus envíos quedan listos solos.",
     })
   }
-  const precios = estandar ? await leerPrecios(req.scope, estandar.id) : { precio: null, gratis_desde: null }
+  const precios = estandar
+    ? await leerPreciosDeOpcion(req.scope, estandar.id)
+    : { precio: null, gratis_desde: null }
   return res.json({
     listo: !!estandar,
     precio: precios.precio,

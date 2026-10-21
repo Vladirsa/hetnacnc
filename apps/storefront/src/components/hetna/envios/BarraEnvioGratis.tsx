@@ -8,10 +8,9 @@ import { convertToLocale } from "@/lib/helpers/money"
 // es donde más pesa decirle lo que le falta. Si ya lo alcanzó, también se dice:
 // un premio que no se anuncia no se siente.
 //
-// Sobre con qué se mide: el umbral del taller se evalúa contra el total del
-// CARRITO COMPLETO, no contra lo que lleva de ese taller. Así lo calcula Medusa
-// (la promoción se evalúa con el carrito entero) y así lo aplica Mercur (el
-// descuento sólo toca el envío del taller dueño de la promoción). Por eso el
+// Sobre con qué se mide: el umbral del taller es un precio de $0 en su opción de
+// envío con regla `item_total >= X`, y Medusa evalúa esa regla contra el
+// CARRITO COMPLETO, no contra lo que el cliente lleva de ese taller. Por eso el
 // avance que entra aquí es el del carrito y el texto dice "de tu carrito": si
 // midiéramos sólo lo de ese taller, la barra pediría más de lo que el backend
 // va a pedir, y el cliente pagaría envío creyendo que le faltaba.
@@ -19,11 +18,13 @@ export const BarraEnvioGratis = ({
   nombre,
   umbral,
   avance,
+  precioEnvio,
   currency_code,
 }: {
   nombre: string
   umbral: number
   avance: number
+  precioEnvio?: number | null
   currency_code: string
 }) => {
   if (!(umbral > 0)) return null
@@ -33,6 +34,7 @@ export const BarraEnvioGratis = ({
   const porcentaje = Math.max(0, Math.min(100, (avance / umbral) * 100))
 
   const dinero = (amount: number) => convertToLocale({ amount, currency_code })
+  const ahorro = typeof precioEnvio === "number" && precioEnvio > 0 ? precioEnvio : null
 
   return (
     <div
@@ -55,13 +57,18 @@ export const BarraEnvioGratis = ({
           {logrado ? (
             <>
               <span className="font-bold">¡Listo!</span> {nombre} te manda{" "}
-              <span className="font-bold">gratis</span> este pedido.
+              <span className="font-bold">gratis</span> este pedido
+              {ahorro !== null && (
+                <> — te ahorras {dinero(ahorro)} de envío</>
+              )}
+              .
             </>
           ) : (
             <>
               Te faltan <span className="font-bold">{dinero(falta)}</span> de tu
               carrito para que <span className="font-semibold">{nombre}</span> te
-              mande <span className="font-bold">gratis</span>.
+              mande <span className="font-bold">gratis</span>
+              {ahorro !== null && <> y te ahorres {dinero(ahorro)} de envío</>}.
             </>
           )}
         </p>
@@ -91,7 +98,7 @@ export const BarraEnvioGratis = ({
 
       {!logrado && (
         <p className="mt-1.5 text-[11px] text-[#8A6A33]">
-          Envío gratis a partir de {dinero(umbral)} en tu carrito.
+          {nombre} manda gratis a partir de {dinero(umbral)} en tu carrito.
         </p>
       )}
     </div>
