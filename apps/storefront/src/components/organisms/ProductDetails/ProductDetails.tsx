@@ -7,6 +7,7 @@ import {
   ProductPageDetails,
 } from "@/components/cells"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
+import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
@@ -48,8 +49,22 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
 }
 
 // Lo que se lee DESPUÉS de decidir: descripción, medidas, envío y etiquetas.
-export const ProductDetallesLargos = ({ product }: { product: Props["product"] }) => (
+export const ProductDetallesLargos = ({
+  product,
+  locale,
+  taller,
+}: {
+  product: Props["product"]
+  locale: string
+  taller?: { name?: string | null; handle?: string | null }
+}) => (
   <div className="flex flex-col gap-4">
+    <PuntosDestacados
+      product={product}
+      locale={locale}
+      taller={taller}
+      atributos={product?.attribute_values || []}
+    />
     <ProductPageDetails details={product?.description || ""} />
     <ProductAdditionalAttributes attributes={product?.attribute_values || []} />
     <ProductDetailsShipping />

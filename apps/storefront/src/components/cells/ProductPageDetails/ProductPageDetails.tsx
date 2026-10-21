@@ -5,7 +5,7 @@ export const ProductPageDetails = ({ details }: { details: string }) => {
   if (!details) return null
 
   return (
-    <ProductPageAccordion heading="Descripción del producto" defaultOpen data-testid="product-details-section">
+    <ProductPageAccordion heading="Descripción del producto" icono="📝" defaultOpen data-testid="product-details-section">
       <div
         className="product-details"
         dangerouslySetInnerHTML={{

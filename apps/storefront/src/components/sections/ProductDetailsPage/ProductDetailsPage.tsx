@@ -88,7 +88,11 @@ export const ProductDetailsPage = async ({
               compra: así el bloque de compra cabe en la pantalla y se puede
               quedar pegado mientras se lee todo esto. */}
           <div className="mt-8 hidden lg:block">
-            <ProductDetallesLargos product={prod} />
+            <ProductDetallesLargos
+              product={prod}
+              locale={locale}
+              taller={{ name: vendedor?.name, handle: vendedor?.handle }}
+            />
           </div>
         </div>
 
@@ -105,7 +109,11 @@ export const ProductDetailsPage = async ({
         {/* En celular no hay dos columnas, así que la ficha larga va al final
             y no entre las fotos y el botón de comprar. */}
         <div className="lg:hidden">
-          <ProductDetallesLargos product={prod} />
+          <ProductDetallesLargos
+            product={prod}
+            locale={locale}
+            taller={{ name: vendedor?.name, handle: vendedor?.handle }}
+          />
         </div>
       </div>
       <div className="my-8">

@@ -46,49 +46,71 @@ export default function GaleriaProducto({ imagenes, titulo }: { imagenes: Img[];
 
   return (
     <div data-testid="product-gallery">
-      {/* Foto principal */}
-      <button
-        type="button"
-        onClick={() => setGrande(true)}
-        className="relative block w-full cursor-zoom-in overflow-hidden rounded-lg border border-[#E7E4DC] bg-white"
-        aria-label="Ampliar foto"
-      >
-        <Image
-          priority
-          fetchPriority="high"
-          src={limpiaUrl(actual.url)}
-          alt={alt(i)}
-          width={800}
-          height={800}
-          quality={85}
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="aspect-square h-auto w-full object-contain"
-        />
-        <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-          Toca para ampliar{total > 1 ? ` · ${i + 1}/${total}` : ""}
-        </span>
-      </button>
+      {/* Miniaturas a la izquierda y foto a la derecha, como en cualquier
+          tienda grande. Antes la foto ocupaba el ancho completo de la columna
+          -- en una pantalla de escritorio eso es un cuadrado de casi 900 px --
+          y las miniaturas quedaban hasta abajo, fuera de la vista: parecía que
+          el producto tenía una sola foto.
 
-      {/* Miniaturas */}
-      {total > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Fotos del producto">
-          {imagenes.map((img, n) => (
-            <button
-              key={img.id || img.url}
-              type="button"
-              role="tab"
-              aria-selected={n === i}
-              aria-label={`Ver foto ${n + 1}`}
-              onClick={() => setI(n)}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 bg-white sm:h-20 sm:w-20 ${
-                n === i ? "border-[#C2560A]" : "border-[#E7E4DC] hover:border-[#C2560A]/60"
-              }`}
-            >
-              <Image src={limpiaUrl(img.url)} alt={alt(n)} width={120} height={120} quality={60} className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
+          La foto se topa en alto (no en ancho) para que no empuje el resto de
+          la ficha fuera de la pantalla. */}
+      <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-start">
+        <button
+          type="button"
+          onClick={() => setGrande(true)}
+          className="relative block min-w-0 flex-1 cursor-zoom-in overflow-hidden rounded-[14px] border border-[#E7E4DC] bg-white"
+          aria-label="Ampliar foto"
+        >
+          <Image
+            priority
+            fetchPriority="high"
+            src={limpiaUrl(actual.url)}
+            alt={alt(i)}
+            width={800}
+            height={800}
+            quality={85}
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className="mx-auto h-auto max-h-[300px] w-full object-contain sm:max-h-[420px] lg:max-h-[480px]"
+          />
+          <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+            Toca para ampliar{total > 1 ? ` · ${i + 1}/${total}` : ""}
+          </span>
+        </button>
+
+        {total > 1 && (
+          <div
+            className="flex shrink-0 gap-2 overflow-x-auto pb-1 sm:max-h-[480px] sm:flex-col sm:overflow-y-auto sm:overflow-x-visible sm:pb-0 sm:pr-1"
+            role="tablist"
+            aria-label="Fotos del producto"
+          >
+            {imagenes.map((img, n) => (
+              <button
+                key={img.id || img.url}
+                type="button"
+                role="tab"
+                aria-selected={n === i}
+                aria-label={`Ver foto ${n + 1}`}
+                onClick={() => setI(n)}
+                onMouseEnter={() => setI(n)}
+                className={`h-16 w-16 shrink-0 overflow-hidden rounded-[10px] border-2 bg-white transition sm:h-[68px] sm:w-[68px] ${
+                  n === i
+                    ? "border-[#C2560A] ring-2 ring-[#C2560A]/20"
+                    : "border-[#E7E4DC] hover:border-[#C2560A]/60"
+                }`}
+              >
+                <Image
+                  src={limpiaUrl(img.url)}
+                  alt={alt(n)}
+                  width={140}
+                  height={140}
+                  quality={60}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Foto ampliada */}
       {grande && (

@@ -14,7 +14,7 @@ export const ProductAdditionalAttributes = ({
   if (!conDatos.length) return null
 
   return (
-    <ProductPageAccordion heading="Especificaciones técnicas" defaultOpen data-testid="product-additional-attributes-section">
+    <ProductPageAccordion heading="Especificaciones técnicas" icono="📐" defaultOpen data-testid="product-additional-attributes-section">
       <dl className="overflow-hidden rounded-md border border-[#E7E4DC] text-sm">
         {conDatos.map((a, n) => (
           <div
