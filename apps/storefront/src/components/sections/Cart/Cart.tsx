@@ -85,7 +85,7 @@ export const Cart = () => {
       guardarEnFavoritos(noMarcados)
       await quitar(noMarcados)
       const locale = params?.locale || pathname?.split("/")[1] || "mx"
-      router.push(`/${locale}/checkout?step=address`)
+      router.push(`/${locale}/checkout`)
     })
 
   return (
@@ -121,7 +121,7 @@ export const Cart = () => {
             onClick={() => {
               if (noMarcados.length) return continuar()
               const locale = params?.locale || pathname?.split("/")[1] || "mx"
-              router.push(`/${locale}/checkout?step=address`)
+              router.push(`/${locale}/checkout`)
             }}
           >
             Continuar ({totalesMarcados.piezas})
@@ -182,7 +182,10 @@ export const Cart = () => {
       </div>
 
       <div className="col-span-12 mt-6 lg:col-span-4 lg:mt-0 lg:pl-6">
-        <div className="lg:sticky lg:top-6">
+        {/* El tope de alto es lo que hace que de verdad se quede pegado: un
+            bloque pegajoso más alto que la pantalla no se ve pegado -- se queda
+            quieto hasta que ya lo pasaste de largo. */}
+        <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto no-scrollbar">
           <ResumenCarrito
             cart={cart}
             marcados={marcados}

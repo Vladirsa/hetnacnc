@@ -141,7 +141,7 @@ export const ResumenCarrito = ({
         <div className="mt-4">
           {sinMarcar > 0 ? (
             <Button
-              className="flex w-full items-center justify-center py-3"
+              className="flex w-full items-center justify-center py-3.5 text-[16px] font-bold shadow-sm"
               onClick={onContinuar}
               disabled={!hayAlgo || trabajando}
               loading={trabajando}
@@ -150,15 +150,25 @@ export const ResumenCarrito = ({
               Continuar ({t.piezas})
             </Button>
           ) : (
-            <LocalizedClientLink href="/checkout?step=address" className="block">
+            // Se entra a /checkout sin paso: la pasarela decide. Antes se
+            // entraba siempre con ?step=address, así que al cliente que ya
+            // tenía su dirección guardada le abría el formulario y le pedía
+            // guardarla otra vez.
+            <LocalizedClientLink href="/checkout" className="block">
               <Button
-                className="flex w-full items-center justify-center py-3"
+                className="flex w-full items-center justify-center py-3.5 text-[16px] font-bold shadow-sm"
                 disabled={!hayAlgo}
                 data-testid="cart-checkout-button"
               >
                 Continuar ({t.piezas})
               </Button>
             </LocalizedClientLink>
+          )}
+
+          {t.ahorro > 0 && hayAlgo && (
+            <p className="mt-2 text-center text-[13px] font-semibold text-[#9B3225]">
+              ♥ Ahora a menor precio
+            </p>
           )}
 
           {sinMarcar > 0 && hayAlgo && (

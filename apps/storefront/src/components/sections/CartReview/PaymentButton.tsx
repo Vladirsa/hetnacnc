@@ -59,7 +59,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       )
     default:
       return (
-        <Button disabled className="w-full">
+        <Button disabled className="w-full py-3.5 text-[16px] font-bold shadow-sm">
           Selecciona un método de pago
         </Button>
       )
@@ -103,7 +103,7 @@ const MercadoPagoPaymentButton = ({
         disabled={notReady}
         onClick={handlePayment}
         loading={submitting}
-        className="w-full"
+        className="w-full py-3.5 text-[16px] font-bold shadow-sm"
         data-testid={dataTestId}
       >
         Pagar con Mercado Pago
@@ -153,7 +153,7 @@ const PayPalPaymentButton = ({
         disabled={notReady}
         onClick={handlePayment}
         loading={submitting}
-        className="w-full"
+        className="w-full py-3.5 text-[16px] font-bold shadow-sm"
         data-testid={dataTestId}
       >
         Pagar con PayPal
@@ -271,7 +271,7 @@ const StripePaymentButton = ({
         disabled={disabled || notReady}
         onClick={handlePayment}
         loading={submitting}
-        className="w-full"
+        className="w-full py-3.5 text-[16px] font-bold shadow-sm"
       >
         Realizar pedido
       </Button>
@@ -313,7 +313,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       <Button
         disabled={notReady}
         onClick={handlePayment}
-        className="w-full"
+        className="w-full py-3.5 text-[16px] font-bold shadow-sm"
         loading={submitting}
       >
         Realizar pedido

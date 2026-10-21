@@ -1,62 +1,72 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
+import { LogosPago } from "./LogosPago"
+
 // Las razones para pagar tranquilo, en el carrito y en la pasarela.
+//
+// Va en UNA tarjeta compacta y no en tres. El motivo no es de gusto: la columna
+// derecha está pegada al scroll, y un bloque pegajoso más alto que la pantalla
+// nunca se ve pegado -- se queda quieto hasta que ya lo pasaste. Con tres
+// tarjetas la columna medía más de 900 px y por eso el resumen "no se movía".
 //
 // Cada punto dice algo que HETNA de verdad hace hoy y que está publicado en una
 // página del sitio: si no se puede enlazar, no va aquí. Prometer en el carrito
 // lo que no se cumple en la entrega es la forma más cara de ganar una venta.
-const BLOQUES = [
+const PUNTOS = [
   {
-    titulo: "Entrega y devoluciones",
-    puntos: [
-      `${EMPRESA.diasDevolucion} días hábiles para devolver un producto físico sin uso.`,
-      "Si llegó dañado, incompleto o distinto, el envío de regreso no te cuesta.",
-      "Ves el costo y los días de entrega antes de pagar.",
-    ],
+    texto: `${EMPRESA.diasDevolucion} días para devolver. Si llegó dañado, el regreso no te cuesta.`,
     href: "/devoluciones",
-    liga: "Leer la política",
   },
   {
-    titulo: "Pago seguro",
-    puntos: [
-      "Pagas dentro de HETNA con Mercado Pago.",
-      "Los datos de tu tarjeta no pasan por el taller ni se guardan aquí.",
-    ],
+    texto: "Pagas dentro de HETNA. Tu tarjeta no pasa por el taller.",
     href: "/formas-de-pago",
-    liga: "Formas de pago",
   },
   {
-    titulo: "Tus datos",
-    puntos: [
-      "Tu dirección se comparte sólo con el taller que te envía.",
-      "Puedes pedir que se borren tus datos cuando quieras.",
-    ],
+    texto: "Tu dirección se comparte sólo con el taller que te envía.",
     href: "/aviso-de-privacidad",
-    liga: "Aviso de privacidad",
   },
 ]
 
 export const ConfianzaCompra = () => (
-  <div className="flex flex-col gap-3">
-    {BLOQUES.map((b) => (
-      <div key={b.titulo} className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-        <h3 className="text-[14px] font-bold text-[#1B1B18]">{b.titulo}</h3>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {b.puntos.map((p) => (
-            <li key={p} className="flex gap-2 text-[13px] leading-relaxed text-[#4A4943]">
-              <span className="font-bold text-[#C2560A]">✓</span>
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-        <LocalizedClientLink
-          href={b.href}
-          className="mt-2 inline-block text-[13px] font-semibold text-[#B34D07] underline"
-        >
-          {b.liga}
-        </LocalizedClientLink>
-      </div>
-    ))}
+  <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
+    <div className="flex items-center gap-2">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1E7A52"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 2l8 3.5v5.9c0 5-3.4 9.3-8 10.6-4.6-1.3-8-5.6-8-10.6V5.5L12 2z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+      <h3 className="text-[14px] font-bold text-[#1B1B18]">Tu compra está protegida</h3>
+    </div>
+
+    <ul className="mt-2.5 flex flex-col gap-2">
+      {PUNTOS.map((p) => (
+        <li key={p.href} className="flex gap-2 text-[13px] leading-relaxed text-[#4A4943]">
+          <span className="font-bold text-[#1E7A52]">✓</span>
+          <span>
+            {p.texto}{" "}
+            <LocalizedClientLink href={p.href} className="font-semibold text-[#B34D07] underline">
+              Ver
+            </LocalizedClientLink>
+          </span>
+        </li>
+      ))}
+    </ul>
+
+    <div className="mt-3 border-t border-[#EDEAE2] pt-3">
+      <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]">
+        Puedes pagar con
+      </p>
+      <LogosPago />
+    </div>
   </div>
 )

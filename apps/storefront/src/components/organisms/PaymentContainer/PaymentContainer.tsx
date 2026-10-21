@@ -2,6 +2,8 @@ import { Radio, Radio as RadioGroupOption } from "@headlessui/react"
 import { Text, clx } from "@medusajs/ui"
 import React, { useContext, useMemo, type JSX } from "react"
 
+import { LogoAmex, LogoMastercard, LogoVisa } from "@/components/hetna/LogosPago"
+
 import { isManual } from "../../../lib/constants"
 import SkeletonCardDetails from "./SkeletonCardDetails"
 import { CardElement } from "@stripe/react-stripe-js"
@@ -13,7 +15,10 @@ type PaymentContainerProps = {
   paymentProviderId: string
   selectedPaymentOptionId: string | null
   disabled?: boolean
-  paymentInfoMap: Record<string, { title: string; icon: JSX.Element }>
+  paymentInfoMap: Record<
+    string,
+    { title: string; descripcion?: string; icon: JSX.Element }
+  >
   children?: React.ReactNode
 }
 
@@ -25,6 +30,11 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   children,
 }) => {
   const isDevelopment = process.env.NODE_ENV === "development"
+  const info = paymentInfoMap[paymentProviderId]
+  const elegido = selectedPaymentOptionId === paymentProviderId
+  // Medios por los que pasa una tarjeta: ahí sí se enseñan las marcas.
+  const aceptaTarjetas =
+    paymentProviderId.includes("mercadopago") || paymentProviderId.includes("stripe")
 
   return (
     <RadioGroupOption
@@ -32,26 +42,43 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       value={paymentProviderId}
       disabled={disabled}
       className={clx(
-        "rounded-sm flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
-        {
-          "border-primary/20": selectedPaymentOptionId === paymentProviderId,
-        }
+        "mb-2 flex cursor-pointer flex-col gap-y-2 rounded-[12px] border px-4 py-3.5 transition-colors",
+        elegido
+          ? "border-[#C2560A] bg-[#FFF8F3]"
+          : "border-[#E7E4DC] bg-white hover:border-[#C2560A]"
       )}
     >
-      <div className="flex items-center justify-between ">
-        <div className="flex items-center gap-x-4">
-          <Radio value={selectedPaymentOptionId === paymentProviderId} />
-          <Text className="text-base-regular">
-            {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
-          </Text>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-x-3">
+          <Radio value={elegido} />
+          <div className="min-w-0">
+            <Text className="text-[14px] font-semibold text-[#1B1B18]">
+              {info?.title || paymentProviderId}
+            </Text>
+            {info?.descripcion && (
+              <Text className="text-[12px] leading-snug text-[#6B6A63]">
+                {info.descripcion}
+              </Text>
+            )}
+          </div>
           {isManual(paymentProviderId) && isDevelopment && (
-            <PaymentTest className="hidden small:block" />
+            <PaymentTest className="small:block hidden" />
           )}
         </div>
-        <span className="justify-self-end text-ui-fg-base">
-          {paymentInfoMap[paymentProviderId]?.icon}
-        </span>
+        <span className="shrink-0 justify-self-end">{info?.icon}</span>
       </div>
+
+      {/* Las marcas que de verdad se pueden pasar por ese medio. Es la
+          diferencia entre "Mercado Pago" a secas y saber que ahí entra tu
+          tarjeta. */}
+      {aceptaTarjetas && (
+        <div className="flex items-center gap-1.5 pl-8">
+          <LogoVisa />
+          <LogoMastercard />
+          <LogoAmex />
+        </div>
+      )}
+
       {isManual(paymentProviderId) && isDevelopment && (
         <PaymentTest className="small:hidden text-[10px]" />
       )}

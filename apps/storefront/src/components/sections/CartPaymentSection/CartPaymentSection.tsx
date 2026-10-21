@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { RadioGroup } from '@headlessui/react';
-import { CheckCircleSolid, CreditCard } from '@medusajs/icons';
-import { Container, Heading, Text } from '@medusajs/ui';
+import { CreditCard } from '@medusajs/icons';
+import { Container, Text } from '@medusajs/ui';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/atoms';
@@ -18,6 +18,7 @@ import {
   isStripe as isStripeFunc,
   paymentInfoMap
 } from '../../../lib/constants';
+import { PasoCheckout } from '../CartAddressSection/PasoCheckout';
 import PaymentContainer, {
   StripeCardContainer
 } from '../../organisms/PaymentContainer/PaymentContainer';
@@ -131,28 +132,19 @@ const CartPaymentSection = ({
 
   const isEditEnabled = !isOpen && !!cart?.payment_collection?.payment_sessions?.length;
 
+  // Sin método de envío elegido no se puede abrir una sesión de pago por el
+  // monto correcto, así que se dice aquí en vez de dejar que el botón falle.
+  const faltaEnvio = (cart?.shipping_methods?.length ?? 0) === 0
+
   return (
-    <div className="bg-ui-bg-interactive rounded-sm border p-4" data-testid="checkout-step-payment">
-      <div className="mb-6 flex flex-row items-center justify-between">
-        <Heading
-          level="h2"
-          className="text-3xl-regular flex flex-row items-center items-baseline gap-x-2"
-        >
-          {!isOpen && paymentReady && <CheckCircleSolid />}
-          Pago
-        </Heading>
-        {isEditEnabled && (
-          <Text>
-            <Button
-              data-testid="checkout-payment-edit-button"
-              onClick={handleEdit}
-              variant="tonal"
-            >
-              Editar
-            </Button>
-          </Text>
-        )}
-      </div>
+    <PasoCheckout
+      numero={3}
+      titulo="Forma de pago"
+      listo={!isOpen && paymentReady}
+      onEditar={isEditEnabled ? handleEdit : undefined}
+      alerta={isOpen && faltaEnvio ? "Primero elige el envío de arriba." : undefined}
+      testId="checkout-step-payment"
+    >
       <div>
         <div className={isOpen ? 'block' : 'hidden'}>
           {!paidByGiftcard && availablePaymentMethods?.length && (
@@ -203,10 +195,14 @@ const CartPaymentSection = ({
           />
 
           <Button
+            className="mt-4 px-6 py-2.5"
             onClick={handleSubmit}
-            variant="tonal"
             loading={isLoading}
-            disabled={(isStripe && !cardComplete) || (!selectedPaymentMethod && !paidByGiftcard)}
+            disabled={
+              faltaEnvio ||
+              (isStripe && !cardComplete) ||
+              (!selectedPaymentMethod && !paidByGiftcard)
+            }
           >
             {!activeSession && isStripeFunc(selectedPaymentMethod)
               ? 'Ingresar datos de la tarjeta'
@@ -260,7 +256,7 @@ const CartPaymentSection = ({
           ) : null}
         </div>
       </div>
-    </div>
+    </PasoCheckout>
   );
 };
 

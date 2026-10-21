@@ -1,6 +1,7 @@
 "use client"
 
 import { ConfianzaCompra } from "@/components/hetna/ConfianzaCompra"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PromoCode } from "@/components/organisms/PromoCode/PromoCode"
 import { convertToLocale } from "@/lib/helpers/money"
 
@@ -32,6 +33,23 @@ const Review = ({ cart }: { cart: any }) => {
     cart.shipping_address &&
     allSellersHaveShipping &&
     (cart.payment_collection || paidByGiftcard)
+
+  const falta: { paso: string; texto: string }[] = []
+  if (!cart.shipping_address) {
+    falta.push({ paso: "address", texto: "Captura tu dirección de entrega" })
+  }
+  if (!allSellersHaveShipping) {
+    falta.push({
+      paso: "delivery",
+      texto:
+        cartSellerCount > 1
+          ? "Elige cómo te envía cada taller"
+          : "Elige cómo te lo enviamos",
+    })
+  }
+  if (!cart.payment_collection && !paidByGiftcard) {
+    falta.push({ paso: "payment", texto: "Elige tu forma de pago" })
+  }
 
   const envio = cart?.shipping_subtotal || 0
   const descuento = cart?.discount_total || 0
@@ -84,12 +102,36 @@ const Review = ({ cart }: { cart: any }) => {
               data-testid="submit-order-button"
             />
           ) : (
-            <p className="rounded-[10px] bg-[#F4F2EC] px-3 py-2.5 text-[13px] leading-relaxed text-[#4A4943]">
-              Completa tu dirección, el envío y la forma de pago para terminar la compra.
-            </p>
+            // Se nombra lo que falta, no "completa los pasos". Quien llega aquí
+            // ya cree haber llenado todo; decirle en genérico que falta algo lo
+            // deja buscando.
+            <div
+              role="alert"
+              className="rounded-[10px] border border-[#E6C4BE] bg-[#FBF0EE] px-3 py-2.5"
+            >
+              <p className="text-[13px] font-semibold text-[#9B3225]">
+                {falta.length === 1 ? "Falta un paso:" : "Faltan estos pasos:"}
+              </p>
+              <ul className="mt-1 flex flex-col gap-1">
+                {falta.map((f) => (
+                  <li key={f.paso}>
+                    <LocalizedClientLink
+                      href={`/checkout?step=${f.paso}`}
+                      className="text-[13px] font-medium text-[#9B3225] underline"
+                    >
+                      {f.texto}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <p className="mt-2 text-[12px] leading-relaxed text-[#6B6A63]">
-            Al pagar confirmas que leíste y aceptas los términos y condiciones.
+            Al pagar confirmas que leíste y aceptas los{" "}
+            <LocalizedClientLink href="/terminos-y-condiciones" className="underline">
+              términos y condiciones
+            </LocalizedClientLink>
+            .
           </p>
         </div>
       </div>

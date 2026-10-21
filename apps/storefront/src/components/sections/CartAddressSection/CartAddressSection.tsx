@@ -1,17 +1,18 @@
 "use client"
 
-import { Heading, Text, useToggleState } from "@medusajs/ui"
+import { useActionState, useEffect } from "react"
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+
+import { Button } from "@/components/atoms"
+import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
+import ShippingAddress from "@/components/organisms/ShippingAddress/ShippingAddress"
 import { setAddresses } from "@/lib/data/cart"
 import compareAddresses from "@/lib/helpers/compare-addresses"
 import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect } from "react"
-import { Button } from "@/components/atoms"
-import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
-import Spinner from "@/icons/spinner"
-import ShippingAddress from "@/components/organisms/ShippingAddress/ShippingAddress"
-import { CheckCircleSolid } from "@medusajs/icons"
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { useToggleState } from "@medusajs/ui"
+
+import { PasoCheckout } from "./PasoCheckout"
 
 export const CartAddressSection = ({
   cart,
@@ -24,119 +25,91 @@ export const CartAddressSection = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isAddress = Boolean(
-    cart?.shipping_address &&
-      cart?.shipping_address.first_name &&
-      cart?.shipping_address.last_name &&
-      cart?.shipping_address.address_1 &&
-      cart?.shipping_address.city &&
-      cart?.shipping_address.postal_code &&
-      cart?.shipping_address.country_code
+  const direccion = cart?.shipping_address
+  const hayDireccion = Boolean(
+    direccion?.first_name &&
+      direccion?.last_name &&
+      direccion?.address_1 &&
+      direccion?.city &&
+      direccion?.postal_code &&
+      direccion?.country_code
   )
-  const isOpen = searchParams.get("step") === "address" || !isAddress
+
+  const paso = searchParams.get("step")
+  const abierto = paso === "address" || (!paso && !hayDireccion)
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
-      ? compareAddresses(cart?.shipping_address, cart?.billing_address)
+      ? compareAddresses(cart.shipping_address, cart.billing_address)
       : true
   )
 
   const [message, formAction] = useActionState(setAddresses, sameAsBilling)
 
+  // Al entrar sin paso, la pasarela decide dónde pararse: si la dirección ya
+  // está guardada no hay nada que capturar otra vez, así que arranca en el
+  // envío, que es lo que de verdad falta. Antes se entraba siempre al
+  // formulario de dirección y había que volver a guardar lo mismo.
   useEffect(() => {
-    if (!isAddress) {
-      router.replace(pathname + "?step=address")
+    if (!paso) {
+      router.replace(`${pathname}?step=${hayDireccion ? "delivery" : "address"}`)
     }
-  }, [isAddress])
-
-  const handleEdit = () => {
-    router.replace(pathname + "?step=address")
-  }
+  }, [paso, hayDireccion, pathname, router])
 
   return (
-    <div className="border p-4 rounded-sm bg-ui-bg-interactive" data-testid="checkout-step-address">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className="flex flex-row text-3xl-regular gap-x-2 items-baseline items-center"
+    <PasoCheckout
+      numero={1}
+      titulo="Dirección de entrega"
+      listo={hayDireccion && !abierto}
+      onEditar={
+        hayDireccion && !abierto
+          ? () => router.replace(`${pathname}?step=address`)
+          : undefined
+      }
+      testId="checkout-step-address"
+    >
+      {abierto ? (
+        <form
+          action={async (data) => {
+            await formAction(data)
+            router.replace(`${pathname}?step=delivery`)
+            router.refresh()
+          }}
         >
-          {!isOpen && <CheckCircleSolid />} Shipping Address
-        </Heading>
-        {!isOpen && isAddress && (
-          <Text>
-            <Button onClick={handleEdit} variant="tonal" data-testid="checkout-address-edit-button">
-              Editar
-            </Button>
-          </Text>
-        )}
-      </div>
-      <form
-        action={async (data) => {
-          await formAction(data)
-          router.replace(`${pathname}?step=delivery`)
-          router.refresh()
-        }}
-      >
-        {isOpen ? (
-          <div className="pb-8">
-            <ShippingAddress
-              customer={customer}
-              checked={sameAsBilling}
-              onChange={toggleSameAsBilling}
-              cart={cart}
-            />
-            <Button
-              className="mt-6"
-              data-testid="submit-address-button"
-              variant="tonal"
-            >
-              Guardar
-            </Button>
-            <ErrorMessage
-              error={message !== "success" && message}
-              data-testid="address-error-message"
-            />
-          </div>
-        ) : (
-          <div>
-            <div className="text-small-regular">
-              {cart && cart.shipping_address ? (
-                <div className="flex items-start gap-x-8">
-                  <div className="flex items-start gap-x-1 w-full">
-                    <div>
-                      <Text className="txt-medium-plus font-bold">
-                        {cart.shipping_address.first_name}{" "}
-                        {cart.shipping_address.last_name}
-                      </Text>
-                      <Text>
-                        {cart.shipping_address.address_1}{" "}
-                        {cart.shipping_address.address_2},{" "}
-                        {cart.shipping_address.postal_code}{" "}
-                        {cart.shipping_address.city},{" "}
-                        {cart.shipping_address.country_code?.toUpperCase()}
-                      </Text>
-                      <Text>
-                        {cart.email}, {cart.shipping_address.phone}
-                      </Text>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <Spinner />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        {isAddress && !searchParams.get("step") && (
-          <LocalizedClientLink href="/checkout?step=delivery">
-            <Button className="mt-6" variant="tonal">
-              Continuar al envío
-            </Button>
-          </LocalizedClientLink>
-        )}
-      </form>
-    </div>
+          <ShippingAddress
+            customer={customer}
+            checked={sameAsBilling}
+            onChange={toggleSameAsBilling}
+            cart={cart}
+          />
+          <Button
+            className="mt-5 px-6 py-2.5"
+            data-testid="submit-address-button"
+          >
+            {hayDireccion ? "Guardar y continuar" : "Continuar al envío"}
+          </Button>
+          <ErrorMessage
+            error={message !== "success" && message}
+            data-testid="address-error-message"
+          />
+        </form>
+      ) : hayDireccion ? (
+        <div className="text-[14px] leading-relaxed text-[#4A4943]">
+          <p className="font-semibold text-[#1B1B18]">
+            {direccion!.first_name} {direccion!.last_name}
+            {direccion!.phone ? ` · ${direccion!.phone}` : ""}
+          </p>
+          <p>
+            {direccion!.address_1}
+            {direccion!.address_2 ? `, ${direccion!.address_2}` : ""}, {direccion!.postal_code}{" "}
+            {direccion!.city}, {direccion!.province || ""}{" "}
+            {direccion!.country_code?.toUpperCase()}
+          </p>
+          {cart?.email && <p className="text-[#6B6A63]">{cart.email}</p>}
+        </div>
+      ) : (
+        <p className="text-[14px] text-[#6B6A63]">Cargando tu dirección…</p>
+      )}
+    </PasoCheckout>
   )
 }

@@ -116,7 +116,7 @@ export const CartDropdown = () => {
                   El envío se calcula con tu dirección.
                 </p>
 
-                <LocalizedClientLink href="/checkout?step=address" className="mt-3 block">
+                <LocalizedClientLink href="/checkout" className="mt-3 block">
                   <Button className="flex w-full items-center justify-center py-2.5">
                     Ir a pagar
                   </Button>

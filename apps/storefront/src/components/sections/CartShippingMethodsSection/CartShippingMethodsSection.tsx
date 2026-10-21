@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef, useState, useTransition, type FC } from 'react';
 
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckCircleSolid, ChevronUpDown, Loader } from '@medusajs/icons';
+import { ChevronUpDown, Loader } from '@medusajs/icons';
 import type { HttpTypes } from '@medusajs/types';
 import { clx, Heading, Text } from '@medusajs/ui';
 import clsx from 'clsx';
@@ -15,6 +15,7 @@ import { removeShippingMethod, setShippingMethod } from '@/lib/data/cart';
 import { calculatePriceForShippingOption } from '@/lib/data/fulfillment';
 import { convertToLocale } from '@/lib/helpers/money';
 
+import { PasoCheckout } from '../CartAddressSection/PasoCheckout';
 import { CartShippingMethodRow } from './CartShippingMethodRow';
 
 type ExtendedStoreProduct = HttpTypes.StoreProduct & {
@@ -196,34 +197,31 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     }
   });
 
+  // Falta elegir envío: mientras eso pase, la compra no puede avanzar, así que
+  // se dice aquí mismo y no sólo en el resumen de la derecha.
+  const faltaElegir = !allSellersHaveMethod
+
   return (
-    <div className="bg-ui-bg-interactive rounded-sm border p-4">
-      <div className="mb-6 flex flex-row items-center justify-between">
-        <Heading
-          level="h2"
-          className="text-3xl-regular flex flex-row items-baseline gap-x-2"
-        >
-          {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && <CheckCircleSolid />}
-          Envío
-        </Heading>
-        {isEditEnabled && (
-          <Text>
-            <Button
-              onClick={handleEdit}
-              variant="tonal"
-            >
-              Editar
-            </Button>
-          </Text>
-        )}
-      </div>
+    <PasoCheckout
+      numero={2}
+      titulo="Envío"
+      listo={(cart.shipping_methods?.length ?? 0) > 0 && !isOpen}
+      onEditar={isEditEnabled ? handleEdit : undefined}
+      alerta={
+        isOpen && faltaElegir && filteredGroupedBySellerId.length > 0
+          ? filteredGroupedBySellerId.length > 1
+            ? "Elige cómo te envía cada taller. Son envíos distintos porque cada pieza sale de un taller distinto."
+            : "Falta elegir cómo te lo enviamos. Sin eso no se puede calcular el total ni pagar."
+          : undefined
+      }
+    >
       {isOpen ? (
         <>
           <div className="grid">
             <div data-testid="delivery-options-container">
               <div className="pb-8 pt-2 md:pt-0">
                 {filteredGroupedBySellerId.length === 0
-                  ? 'No shipping options available'
+                  ? 'Todavía no hay envíos disponibles para tu dirección. Escríbenos y lo resolvemos.'
                   : filteredGroupedBySellerId.map(key => {
                       const selectedMethod = getSelectedMethodForSeller(key);
 
@@ -253,7 +251,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
                               {({ open }) => (
                                 <>
                                   <span className="block truncate">
-                                    {selectedMethod?.name ?? 'Choose delivery option'}
+                                    {selectedMethod?.name ?? 'Elige cómo te lo enviamos'}
                                   </span>
                                   <ChevronUpDown
                                     className={clx('transition-rotate duration-200', {
@@ -331,8 +329,8 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
               data-testid="delivery-option-error-message"
             />
             <Button
+              className="px-6 py-2.5"
               onClick={handleSubmit}
-              variant="tonal"
               disabled={!allSellersHaveMethod || isPendingDeleteRow}
               loading={isLoadingPrices}
             >
@@ -365,7 +363,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
           </div>
         </div>
       )}
-    </div>
+    </PasoCheckout>
   );
 };
 

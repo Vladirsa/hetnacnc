@@ -82,7 +82,10 @@ async function CheckoutPageContent({}) {
           </div>
 
           <div className="lg:col-span-4" data-testid="checkout-review-container">
-            <div className="lg:sticky lg:top-6">
+            {/* El tope de alto es lo que hace que de verdad se quede pegado:
+                un bloque pegajoso más alto que la pantalla no se ve pegado --
+                se queda quieto hasta que ya lo pasaste de largo. */}
+            <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto no-scrollbar">
               <CartReview cart={cart} />
             </div>
           </div>
