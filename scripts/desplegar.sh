@@ -17,8 +17,14 @@
 #   3. Si el build falla, NO reinicia nada. El sitio se queda sirviendo lo
 #      que ya tenía, que funciona.
 #
-# Uso:
+# Uso, en el VPS (srv2007412). El repo vive aquí:
+#
+#   cd /root/hetnacnc
 #   ./scripts/desplegar.sh
+#
+# Desde /root a secas falla con "not a git repository": hay que entrar primero.
+# No hace falta empujar nada desde el servidor -- el guion hace el pull de main
+# él solo.
 #
 set -euo pipefail
 
