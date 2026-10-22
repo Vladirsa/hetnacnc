@@ -2,28 +2,38 @@ import Image from "next/image"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listOffers } from "@/lib/data/offers"
+import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
 import { compareOffers, getOfferAmount, getOfferStock, StoreOffer } from "@/lib/helpers/buybox"
 import { convertToLocale } from "@/lib/helpers/money"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 
 import { BotonAgregarRapido } from "./BotonAgregarRapido"
+import { DistintivoEnvioGratis } from "./envios/DistintivoEnvioGratis"
 import { Estrellas } from "./resenas/Estrellas"
 
 // Lo que la lista ya sabe de cada producto: quién lo vende y cuál es su mejor
 // oferta. La consulta de ofertas ya se hacía para poner "Vendido por"; ahora
 // además se guarda el id de la oferta ganadora, su precio y su inventario, y
 // con eso la tarjeta puede agregar al carrito sin pedir nada más.
+//
+// El umbral de envío gratis del taller se resuelve aquí mismo, en una sola
+// llamada para la lista entera, para que los listados que usan esto no tengan
+// que enterarse: les sigue llegando un Vendedor y ya.
 export type Calificacion = { promedio: number; total: number }
 
 export type Vendedor = {
   nombre: string
   total: number
+  sellerId?: string
   ofertaId?: string
   precio?: number | null
   precioLista?: number | null
   moneda?: string
   existencias?: number
+  // Monto del carrito a partir del cual este taller manda gratis, si lo tiene
+  // puesto en su pantalla de Envíos.
+  envioGratisDesde?: number | null
 }
 
 export const vendedoresPorProducto = async (
@@ -41,6 +51,7 @@ export const vendedoresPorProducto = async (
         (oferta as { product?: { id?: string } }).product?.id
       const nombre = oferta.seller?.name
       if (!id || !nombre) continue
+      const sellerId = oferta.seller?.id
 
       const previo = mapa.get(id)
       // La que gana el buybox es la que se enseña y la que se agrega: la misma
@@ -58,6 +69,9 @@ export const vendedoresPorProducto = async (
       mapa.set(id, {
         nombre: previo ? previo.nombre : nombre,
         total: previo ? previo.total + 1 : 1,
+        // El taller que se nombra y el umbral que se enseña son los de la
+        // oferta ganadora, no los del primero que llegó.
+        sellerId: campeona.seller?.id ?? sellerId,
         ofertaId: campeona.id,
         precio: getOfferAmount(campeona),
         precioLista: precios?.original_amount ?? null,
@@ -68,6 +82,15 @@ export const vendedoresPorProducto = async (
   } catch {
     return mapa
   }
+
+  const umbrales = await umbralesDeEnvioGratis(
+    [...mapa.values()].map((v) => v.sellerId).filter((x): x is string => !!x)
+  )
+  for (const vendedor of mapa.values()) {
+    const umbral = vendedor.sellerId ? umbrales[vendedor.sellerId] : undefined
+    vendedor.envioGratisDesde = umbral ? umbral.gratis_desde : null
+  }
+
   return mapa
 }
 
@@ -191,6 +214,12 @@ export default function TarjetaProducto({
               {existencias === 1 ? "Queda 1" : `Quedan ${existencias}`}
             </span>
           )}
+
+          <DistintivoEnvioGratis
+            desde={vendedor?.envioGratisDesde}
+            currency_code={moneda}
+            compacto
+          />
         </div>
       </LocalizedClientLink>
 

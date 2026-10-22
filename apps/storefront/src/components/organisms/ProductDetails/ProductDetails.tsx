@@ -7,8 +7,10 @@ import {
   ProductPageDetails,
 } from "@/components/cells"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
+import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
 import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
+import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 
@@ -30,7 +32,15 @@ type Props = {
 export const ProductDetails = async ({ product, locale, offers = [] }: Props) => {
   // Los productos maestros no tienen vendedor: el que se enseña sale de la
   // oferta que gana el buybox.
-  const seller = getBuyboxWinner(rankOffers(offers))?.seller
+  const ganadora = getBuyboxWinner(rankOffers(offers))
+  const seller = ganadora?.seller
+
+  // El umbral de envío gratis del taller que gana el buybox -- el mismo que va
+  // a cobrar. Va junto al precio porque es parte del precio de la decisión, no
+  // un adorno de confianza.
+  const umbrales = seller?.id ? await umbralesDeEnvioGratis([seller.id]) : {}
+  const envioGratisDesde = seller?.id ? umbrales[seller.id]?.gratis_desde : null
+  const moneda = ganadora?.calculated_price?.currency_code || "mxn"
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +50,8 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
         offers={offers}
         seller={seller}
       />
+
+      <DistintivoEnvioGratis desde={envioGratisDesde} currency_code={moneda} />
 
       <ConfianzaProducto />
 
