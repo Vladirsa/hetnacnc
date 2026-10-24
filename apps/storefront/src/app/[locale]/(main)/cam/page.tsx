@@ -5,7 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 export const metadata: Metadata = {
   title: "Laboratorio CAM — HETNA CNC",
   description:
-    "Cuatro formas de llegar a una pieza cortada: empieza de una plantilla, sube tu DXF, escanea algo que ya existe o programa tu modelo 3D en 3, 4 y 5 ejes.",
+    "Cinco formas de llegar a una pieza cortada: empieza de una plantilla, sube tu DXF, escanea algo que ya existe, programa tu modelo 3D en 3, 4 y 5 ejes o tornea con tu eje rotativo.",
 }
 
 // Flujo 2 del prototipo: las tres puertas.
@@ -59,6 +59,16 @@ const PUERTAS = [
     cuenta: false,
     nota: "Prueba gratis, pagas el programa",
   },
+  {
+    numero: "5",
+    titulo: "Tornea con tu eje rotativo",
+    para: "Quiero hacer balaustres, patas o columnas",
+    texto:
+      "Arma la pieza por tramos (recto, cono, bola, cintura), mira el perfil al momento y descarga el G-code para tu router con 4to eje, de Mach3 o Mach4.",
+    href: "/cam/torno",
+    boton: "Abrir el torno",
+    cuenta: false,
+  },
 ]
 
 export default function LaboratorioCamIndice() {
@@ -77,11 +87,11 @@ export default function LaboratorioCamIndice() {
           ¿Por dónde empiezas?
         </h1>
         <p className="mt-3 text-[16px] text-[#4A4943] leading-relaxed max-w-[620px]">
-          Cuatro caminos hacia lo mismo: una pieza cortada. Elige el que se parezca a lo que
+          Cinco caminos hacia lo mismo: una pieza cortada. Elige el que se parezca a lo que
           tienes en la mano ahorita.
         </p>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 max-w-[1400px]">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 max-w-[1200px]">
           {PUERTAS.map((p) => (
             <article
               key={p.numero}
