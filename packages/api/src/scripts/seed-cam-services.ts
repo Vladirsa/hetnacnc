@@ -21,7 +21,7 @@
 import type { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
-import { createOffersWorkflow } from "@mercurjs/core/workflows"
+import { createOffersWorkflow, createSellerStockLocationsWorkflow } from "@mercurjs/core/workflows"
 import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
 import { aprovisionarEnvios, obtenerPerfilDigital } from "../lib/envios-automaticos"
 import {
@@ -96,11 +96,23 @@ export default async function seedCamServices({ container }: ExecArgs) {
   const handle = camSellerHandle()
   const { data: sellers } = await query.graph({
     entity: "seller",
-    fields: ["id", "name", "handle", "currency_code", "members.id", "stock_locations.id"],
+    fields: [
+      "id", "name", "handle", "email", "currency_code", "members.id", "stock_locations.id",
+      "address.address_1", "address.city", "address.province", "address.postal_code", "address.country_code",
+    ],
     filters: { handle } as Record<string, unknown>,
   })
+  type Direccion = { address_1?: string | null; city?: string | null; province?: string | null; postal_code?: string | null; country_code?: string | null }
   const seller = sellers[0] as
-    | { id: string; name: string; currency_code?: string; members?: { id: string }[]; stock_locations?: { id: string }[] }
+    | {
+        id: string
+        name: string
+        email?: string | null
+        currency_code?: string
+        members?: { id: string }[]
+        stock_locations?: { id: string }[]
+        address?: Direccion | null
+      }
     | undefined
   if (!seller) {
     logger.error(
@@ -108,12 +120,46 @@ export default async function seedCamServices({ container }: ExecArgs) {
     )
     return
   }
-  const memberId = seller.members?.[0]?.id
-  const locationId = seller.stock_locations?.[0]?.id
-  if (!memberId || !locationId) {
-    logger.error(
-      `La tienda ${seller.name} necesita un miembro y una ubicación (almacén). Entra a /seller, captura la dirección de la tienda y vuelve a correr el script.`
-    )
+
+  // Quién queda como autor de las ofertas (sólo es para el historial). Si la
+  // tienda no tiene miembros ligados, se anota el script.
+  let memberId = seller.members?.[0]?.id
+  if (!memberId && seller.email) {
+    const { data: miembros } = await query.graph({
+      entity: "member",
+      fields: ["id"],
+      filters: { email: seller.email } as Record<string, unknown>,
+    })
+    memberId = (miembros[0] as { id?: string } | undefined)?.id
+  }
+  memberId ||= "seed-cam-services"
+
+  // Las ofertas necesitan una ubicación (almacén) de la tienda aunque sea un
+  // servicio. Si la tienda no tiene ninguna, se crea una con su dirección (o con
+  // la de origen de envíos del .env) y aprovisionarEnvios, más abajo, le pone
+  // la zona México, el canal de ventas y "Entrega digital".
+  let locationId = seller.stock_locations?.[0]?.id
+  if (!locationId) {
+    const a = seller.address ?? {}
+    const address = {
+      address_1: a.address_1 || process.env.ENVIO_ORIGEN_COLONIA || "Servicios digitales HETNA",
+      city: a.city || process.env.ENVIO_ORIGEN_MUNICIPIO || undefined,
+      province: a.province || process.env.ENVIO_ORIGEN_ESTADO || undefined,
+      postal_code: a.postal_code || process.env.ENVIO_ORIGEN_CP || undefined,
+      country_code: (a.country_code || "mx").toLowerCase(),
+    }
+    if (dry) {
+      logger.info(`[prueba] La tienda no tiene almacén; se crearía uno en ${address.city || address.address_1}`)
+    } else {
+      const { result } = await createSellerStockLocationsWorkflow(container).run({
+        input: { seller_id: seller.id, locations: [{ name: `${seller.name} — Servicios`, address }] },
+      })
+      locationId = result[0]?.id
+      logger.info(`Almacén creado para la tienda: ${locationId}`)
+    }
+  }
+  if (!locationId && !dry) {
+    logger.error(`No se pudo crear un almacén para ${seller.name}. Créalo en /seller > Ubicaciones y vuelve a correr el script.`)
     return
   }
   logger.info(`Tienda: ${seller.name} (${seller.id})`)
