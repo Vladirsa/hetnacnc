@@ -3,6 +3,7 @@ import Image from "next/image"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listOffers } from "@/lib/data/offers"
 import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
+import { primerEscalon, type Escalon } from "@/lib/helpers/volumen"
 import { compareOffers, getOfferAmount, getOfferStock, StoreOffer } from "@/lib/helpers/buybox"
 import { convertToLocale } from "@/lib/helpers/money"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
@@ -10,6 +11,7 @@ import { HttpTypes } from "@medusajs/types"
 
 import { BotonAgregarRapido } from "./BotonAgregarRapido"
 import { DistintivoEnvioGratis } from "./envios/DistintivoEnvioGratis"
+import { DistintivoVolumen } from "./precios/EscalonesVolumen"
 import { Estrellas } from "./resenas/Estrellas"
 
 // Lo que la lista ya sabe de cada producto: quién lo vende y cuál es su mejor
@@ -34,6 +36,8 @@ export type Vendedor = {
   // Monto del carrito a partir del cual este taller manda gratis, si lo tiene
   // puesto en su pantalla de Envíos.
   envioGratisDesde?: number | null
+  // El primer escalón de precio por cantidad de la oferta ganadora, si tiene.
+  escalon?: Escalon | null
 }
 
 export const vendedoresPorProducto = async (
@@ -72,6 +76,7 @@ export const vendedoresPorProducto = async (
         // El taller que se nombra y el umbral que se enseña son los de la
         // oferta ganadora, no los del primero que llegó.
         sellerId: campeona.seller?.id ?? sellerId,
+        escalon: primerEscalon(campeona),
         ofertaId: campeona.id,
         precio: getOfferAmount(campeona),
         precioLista: precios?.original_amount ?? null,
@@ -214,6 +219,8 @@ export default function TarjetaProducto({
               {existencias === 1 ? "Queda 1" : `Quedan ${existencias}`}
             </span>
           )}
+
+          <DistintivoVolumen escalon={vendedor?.escalon} compacto />
 
           <DistintivoEnvioGratis
             desde={vendedor?.envioGratisDesde}

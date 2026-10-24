@@ -8,9 +8,11 @@ import {
 } from "@/components/cells"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
+import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"
 import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
+import { escalonesDeOferta } from "@/lib/helpers/volumen"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 
@@ -42,6 +44,12 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
   const envioGratisDesde = seller?.id ? umbrales[seller.id]?.gratis_desde : null
   const moneda = ganadora?.calculated_price?.currency_code || "mxn"
 
+  // Precios por cantidad del taller que gana el buybox. Van arriba del bloque
+  // de confianza porque aquí el cliente está decidiendo CUÁNTAS piezas pedir,
+  // y es el único lugar donde ver la tabla completa cambia ese número.
+  const escalones = ganadora ? escalonesDeOferta(ganadora) : []
+  const precioUnitario = ganadora?.calculated_price?.calculated_amount ?? null
+
   return (
     <div className="flex flex-col gap-4">
       <ProductDetailsHeader
@@ -50,6 +58,10 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
         offers={offers}
         seller={seller}
       />
+
+      {escalones.length > 0 && (
+        <EscalonesVolumen escalones={escalones} precioUnitario={precioUnitario} />
+      )}
 
       <DistintivoEnvioGratis desde={envioGratisDesde} currency_code={moneda} />
 
