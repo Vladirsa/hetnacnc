@@ -136,3 +136,51 @@ export function quoteLeadEmailHtml({
     `
   )
 }
+
+export type ProductoAResenar = { titulo: string; url: string }
+
+// "Califica lo que compraste". El único correo de la tienda que no pide dinero:
+// pide dos minutos. Vale la pena porque una ficha con reseñas vende y una en
+// ceros compite nada más por precio -- y si nadie invita, nadie reseña solo.
+//
+// Cada producto va con su propio enlace, directo a su ficha. Un botón genérico
+// a "mis pedidos" obliga a buscar, y lo que obliga a buscar no se hace.
+export function reviewRequestEmailHtml({
+  nombre,
+  productos,
+}: {
+  nombre?: string | null
+  productos: ProductoAResenar[]
+}): string {
+  const saludo = nombre ? `Hola ${nombre},` : "Hola,"
+
+  const filas = productos
+    .map(
+      (p) =>
+        `<tr><td style="padding:10px 0;border-bottom:1px solid #eee;">
+           <a href="${p.url}" style="color:${BRAND_COLOR};text-decoration:none;font-weight:600;">${p.titulo}</a>
+           <br/>
+           <a href="${p.url}" style="color:#B34D07;font-size:13px;">Calificar este producto →</a>
+         </td></tr>`
+    )
+    .join("")
+
+  const cuantos = productos.length === 1 ? "tu compra" : "tus compras"
+
+  return layout(
+    "Recibiste este correo porque compraste en " + SITE_NAME,
+    `
+      <h1 style="font-size:20px;margin:0 0 16px;">¿Cómo te fue con ${cuantos}?</h1>
+      <p>${saludo}</p>
+      <p>
+        Tu opinión le sirve a quien está decidiendo si le compra al mismo taller.
+        Son dos minutos y ayuda más de lo que parece.
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">${filas}</table>
+      <p style="color:#666;font-size:13px;margin-top:20px;">
+        Si algo salió mal con tu pedido, contéstanos este correo y lo vemos
+        nosotros antes de que escribas nada público.
+      </p>
+    `
+  )
+}
