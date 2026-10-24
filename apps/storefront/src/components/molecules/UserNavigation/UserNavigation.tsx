@@ -23,6 +23,10 @@ const navigationItems = [
   //   href: "/user/returns",
   // },
   {
+    label: "Mis trabajos CAM",
+    href: "/user/cam",
+  },
+  {
     label: "Direcciones",
     href: "/user/addresses",
   },

@@ -10,6 +10,7 @@ import { storeCotizadorMiddlewares } from "./store/cotizador/middlewares";
 import { storeEscaneosMiddlewares } from "./store/escaneos/middlewares";
 import { storeResenasMiddlewares } from "./store/resenas/middlewares";
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
+import { camMiddlewares } from "./cam-middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -36,5 +37,6 @@ export default defineMiddlewares({
         ...storeEscaneosMiddlewares,
         ...storeResenasMiddlewares,
         ...vendorFondoBlancoMiddlewares,
+        ...camMiddlewares,
     ],
 });

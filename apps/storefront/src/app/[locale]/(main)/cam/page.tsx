@@ -5,7 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 export const metadata: Metadata = {
   title: "Laboratorio CAM — HETNA CNC",
   description:
-    "Tres formas de llegar a una pieza cortada: empieza de una plantilla, sube tu archivo o escanea algo que ya existe.",
+    "Cuatro formas de llegar a una pieza cortada: empieza de una plantilla, sube tu DXF, escanea algo que ya existe o programa tu modelo 3D en 3, 4 y 5 ejes.",
 }
 
 // Flujo 2 del prototipo: las tres puertas.
@@ -48,6 +48,17 @@ const PUERTAS = [
     boton: "Escanear una pieza",
     cuenta: true,
   },
+  {
+    numero: "4",
+    titulo: "Programa en 3, 4 y 5 ejes",
+    para: "Tengo el modelo 3D",
+    texto:
+      "Un STL, OBJ o STEP. Configuras tu máquina y tu herramienta, ves la trayectoria con anticolisión y la remoción de material, y pides el programa para tu controlador.",
+    href: "/cam/lab",
+    boton: "Abrir el laboratorio",
+    cuenta: false,
+    nota: "Prueba gratis, pagas el programa",
+  },
 ]
 
 export default function LaboratorioCamIndice() {
@@ -66,11 +77,11 @@ export default function LaboratorioCamIndice() {
           ¿Por dónde empiezas?
         </h1>
         <p className="mt-3 text-[16px] text-[#4A4943] leading-relaxed max-w-[620px]">
-          Tres caminos hacia lo mismo: una pieza cortada. Elige el que se parezca a lo que
+          Cuatro caminos hacia lo mismo: una pieza cortada. Elige el que se parezca a lo que
           tienes en la mano ahorita.
         </p>
 
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5 max-w-[1100px]">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 max-w-[1400px]">
           {PUERTAS.map((p) => (
             <article
               key={p.numero}
@@ -90,7 +101,7 @@ export default function LaboratorioCamIndice() {
               </LocalizedClientLink>
 
               <p className="mt-2.5 text-[12px] text-[#6B6A63]">
-                {p.cuenta ? "Necesitas tu cuenta" : "Sin cuenta, gratis"}
+                {"nota" in p && p.nota ? p.nota : p.cuenta ? "Necesitas tu cuenta" : "Sin cuenta, gratis"}
               </p>
             </article>
           ))}
