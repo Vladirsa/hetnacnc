@@ -1,0 +1,2112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+</head>
+<body>
+<title>Hetna CAM Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#E4E8EC; --panel:#F7F9FA; --panel-2:#EDF0F3; --ink:#121A22; --ink-2:#4A5765; --ink-3:#7B8895;
+  --line:#D2D9E0; --accent:#1B57CF; --accent-2:#E2EAFA; --on-accent:#FFFFFF;
+  --ok:#1C7C45; --warn:#A96400; --bad:#C22F2A; --ok-bg:#E2F2E9; --warn-bg:#FAEFDC; --bad-bg:#FAE4E3; --info-bg:#E6ECF6;
+  --vp:#D6DDE3; --vp-grid:#B4BFC9; --part:#8F9DAB; --stock:#C39E6E; --path:#1B57CF; --rough:#7A8EA6; --rapid:#8B97A3;
+  --shadow:0 1px 2px rgba(18,26,34,.06),0 6px 20px rgba(18,26,34,.06);
+  --f-ui:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-label:"Barlow Semi Condensed","Barlow",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0B1015; --panel:#121920; --panel-2:#18212A; --ink:#E2E8EE; --ink-2:#9AA7B4; --ink-3:#687684;
+  --line:#232E38; --accent:#6B97FF; --accent-2:#18253D; --on-accent:#0A1120;
+  --ok:#4DC283; --warn:#F0A83C; --bad:#FF6F67; --ok-bg:#11271B; --warn-bg:#2B2011; --bad-bg:#2D1516; --info-bg:#162133;
+  --vp:#090D12; --vp-grid:#1C2732; --part:#7E8C9B; --stock:#A9844F; --path:#6B97FF; --rough:#58708C; --rapid:#5E6B78;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0B1015; --panel:#121920; --panel-2:#18212A; --ink:#E2E8EE; --ink-2:#9AA7B4; --ink-3:#687684;
+  --line:#232E38; --accent:#6B97FF; --accent-2:#18253D; --on-accent:#0A1120;
+  --ok:#4DC283; --warn:#F0A83C; --bad:#FF6F67; --ok-bg:#11271B; --warn-bg:#2B2011; --bad-bg:#2D1516; --info-bg:#162133;
+  --vp:#090D12; --vp-grid:#1C2732; --part:#7E8C9B; --stock:#A9844F; --path:#6B97FF; --rough:#58708C; --rapid:#5E6B78;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100%;display:grid;grid-template-columns:344px minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"top top top" "side view report";gap:12px;padding:0 16px 16px}
+.topbar{grid-area:top;display:flex;align-items:center;gap:16px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px;color:var(--accent)}
+.brand b{font:700 19px/1 var(--f-label);letter-spacing:.14em}
+.brand span{display:block;font:500 12px/1.2 var(--f-label);color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.jobinfo{display:flex;align-items:center;gap:10px;margin-left:8px;min-width:0;flex:1}
+#jobName{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font:600 11px/1 var(--f-label);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:99px;background:var(--panel-2);color:var(--ink-2);white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.topactions{display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.stale{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.side,.report{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column}
+.side{grid-area:side}
+.report{grid-area:report;overflow:auto;padding:14px 16px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--line);padding:6px 6px 0}
+.steps button{background:none;border:0;padding:8px 2px 9px;font:600 12px/1.1 var(--f-label);letter-spacing:.04em;color:var(--ink-2);border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:4px}
+.steps button i{font:600 11px/1 var(--f-mono);font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--ink-3)}
+.steps button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.steps button.on i{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.panes{overflow:auto;padding:14px 16px 18px;min-height:0;flex:1}
+.pane{display:flex;flex-direction:column;gap:16px}
+h2{font:700 13px/1.2 var(--f-label);letter-spacing:.1em;text-transform:uppercase;margin:0;color:var(--ink-2)}
+h3{font:700 13px/1.2 var(--f-label);letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px;color:var(--ink-2)}
+.group{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+label.f{display:flex;flex-direction:column;gap:3px;font:500 12px/1.2 var(--f-label);letter-spacing:.03em;color:var(--ink-2)}
+label.f input,label.f select,select.f{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:500 13px/1.3 var(--f-mono);color:var(--ink);width:100%;min-width:0}
+label.f select,select.f{font-family:var(--f-ui);font-size:14px}
+label.f input:focus,label.f select:focus,label.f textarea:focus{border-color:var(--accent);outline:none}
+label.f textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:13px/1.4 var(--f-ui);color:var(--ink);width:100%;resize:vertical}
+.order{border:1px solid var(--accent);border-radius:10px;padding:12px;background:var(--accent-2)}
+.order .seg{align-self:stretch}.order .seg button{flex:1}
+label.c{display:flex;align-items:center;gap:8px;font-size:13.5px}
+label.c input{accent-color:var(--accent);width:16px;height:16px}
+.hint{font-size:12.5px;color:var(--ink-3);margin:0}
+.drop{border:1.5px dashed var(--ink-3);border-radius:10px;padding:16px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;cursor:pointer;background:var(--panel-2)}
+.drop.over{border-color:var(--accent);background:var(--accent-2)}
+.drop b{font-size:15px}
+.drop input{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel-2);border-radius:99px;padding:5px 11px;font-size:13px}
+.chip.on{background:var(--accent-2);border-color:var(--accent);color:var(--accent)}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:13px}
+dl.kv dt{color:var(--ink-3)}
+dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:var(--panel-2);text-align:left;display:flex;flex-direction:column;gap:3px}
+.card b{font:700 13px/1.15 var(--f-label);letter-spacing:.03em}
+.card span{font-size:12px;color:var(--ink-3);line-height:1.3}
+.card.on{border-color:var(--accent);background:var(--accent-2)}
+.card.on b{color:var(--accent)}
+.toollist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.toollist button{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 10px;background:var(--panel);border:0;border-bottom:1px solid var(--line);text-align:left;font-size:13.5px}
+.toollist button:last-child{border-bottom:0}
+.toollist button .t{font:600 12px/1 var(--f-mono);color:var(--ink-3)}
+.toollist button .d{font:500 12px/1 var(--f-mono);color:var(--ink-3)}
+.toollist button.on{background:var(--accent-2)}
+.toollist button.on .t{color:var(--accent)}
+.toolfig{display:flex;justify-content:center;background:var(--panel-2);border-radius:9px;border:1px solid var(--line);padding:8px}
+.toolfig svg{width:100%;max-width:260px;height:190px}
+.calc{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--panel-2);display:flex;flex-direction:column;gap:8px}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.big3 div{display:flex;flex-direction:column}
+.big3 small{font:600 11px/1.2 var(--f-label);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.big3 strong{font:600 17px/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+.big3 em{font-style:normal;font-size:11px;color:var(--ink-3)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;align-self:flex-start}
+.seg button{background:var(--panel-2);border:0;padding:6px 11px;font-size:13px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:var(--on-accent)}
+.codebox{position:relative;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel-2)}
+.codebox textarea{width:100%;height:300px;border:0;background:transparent;resize:vertical;padding:10px 12px;font:12px/1.55 var(--f-mono);white-space:pre;overflow:auto;color:var(--ink)}
+.codebar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.codebar .sp{flex:1}
+.note{font-size:12.5px;border-radius:8px;padding:8px 10px;background:var(--info-bg);color:var(--ink-2);margin:0}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+/* viewport */
+.view{grid-area:view;position:relative;border-radius:12px;overflow:hidden;background:var(--vp);border:1px solid var(--line);min-height:0;min-width:0}
+#viewport{position:absolute;inset:0}
+#viewport canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;z-index:2}
+.dro{top:10px;left:10px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:9px;padding:8px 10px;backdrop-filter:blur(6px);min-width:178px}
+.dro .ttl{font:700 10.5px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;justify-content:space-between;gap:10px}
+.dro table{border-collapse:collapse;font:500 13px/1.35 var(--f-mono);font-variant-numeric:tabular-nums}
+.dro td{padding:0}
+.dro td.ax{color:var(--accent);font-weight:600;padding-right:10px}
+.dro td.v{text-align:right;min-width:92px}
+.dro .gl{margin-top:6px;font:11.5px/1.35 var(--f-mono);color:var(--ink-2);max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewtools{top:10px;right:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;max-width:calc(100% - 290px)}
+.vt{display:flex;gap:4px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:9px;padding:4px;backdrop-filter:blur(6px);flex-wrap:wrap;justify-content:flex-end}
+.vt button{background:none;border:0;padding:5px 8px;border-radius:6px;font:600 12px/1 var(--f-label);letter-spacing:.04em;color:var(--ink-2)}
+.vt button.on{background:var(--accent-2);color:var(--accent)}
+.vt button:hover{color:var(--ink)}
+.legend{left:10px;bottom:64px;display:flex;gap:10px;flex-wrap:wrap;font:600 11px/1 var(--f-label);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:6px 9px;border-radius:8px;border:1px solid var(--line)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.simbar{position:absolute;left:10px;right:10px;bottom:10px;z-index:2;display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:10px;padding:7px 10px;backdrop-filter:blur(6px)}
+.simbar .ib{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;flex:none}
+.simbar .ib svg{width:15px;height:15px}
+.simbar .ib.play{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.simbar input[type=range]{flex:1;accent-color:var(--accent);min-width:60px}
+.simbar .time{font:500 12px/1 var(--f-mono);color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.simbar select{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:5px;font:500 12px var(--f-mono)}
+.busy{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:color-mix(in srgb,var(--vp) 55%,transparent)}
+.busy .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;width:min(320px,86%);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.busy .bar{height:6px;border-radius:9px;background:var(--panel-2);overflow:hidden}
+.busy .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.busy span{font-size:13px;color:var(--ink-2)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:9px;font-weight:600;z-index:20;box-shadow:var(--shadow)}
+/* report */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.kpi{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel-2)}
+.kpi small{display:block;font:600 10.5px/1.2 var(--f-label);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.kpi strong{font:600 16px/1.35 var(--f-mono);font-variant-numeric:tabular-nums}
+.kpi.bad strong{color:var(--bad)}.kpi.warn strong{color:var(--warn)}.kpi.ok strong{color:var(--ok)}
+.kpi.wide{grid-column:1/-1}
+.issues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.issues li{border-radius:9px;padding:9px 10px 9px 12px;background:var(--panel-2);border:1px solid var(--line);position:relative;font-size:13px}
+.issues li::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--ink-3)}
+.issues li.err::before{background:var(--bad)}.issues li.warn::before{background:var(--warn)}.issues li.ok::before{background:var(--ok)}.issues li.info::before{background:var(--accent)}
+.issues b{display:block;font-weight:600;margin-bottom:3px}
+.issues p{margin:2px 0 0;color:var(--ink-2);font-size:12.5px}
+.issues p em{font-style:normal;font:600 10.5px/1 var(--f-label);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-right:4px}
+.disc{font-size:12px;color:var(--ink-3);margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
+@media (max-width:1240px){
+  #app{grid-template-columns:330px minmax(0,1fr);grid-template-areas:"top top" "side view" "report report";grid-template-rows:auto minmax(560px,1fr) auto;height:auto;min-height:100%}
+  .report{overflow:visible}
+  .kpis{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:860px){
+  #app{display:flex;flex-direction:column;height:auto}
+  .view{height:64vh;min-height:380px;order:1}
+  .side{order:2}.report{order:3}
+  .panes{overflow:visible}
+  .kpis{grid-template-columns:1fr 1fr}
+  .jobinfo{order:3;flex-basis:100%;margin-left:0}
+  .dro{top:auto;bottom:62px;left:10px;right:10px;min-width:0;padding:6px 9px}
+  .dro .ttl,.dro .gl{display:none}
+  .dro table{display:block;font-size:12px}.dro tbody{display:flex;flex-wrap:wrap;gap:2px 14px}.dro tr{display:flex;gap:6px}.dro td.v{min-width:0}.dro td.ax{padding-right:0}
+  .viewtools{max-width:none;left:10px}
+  .legend{display:none}
+  .viewtools .vt:last-child{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="11" y="2" width="10" height="9" rx="1.5"/><path d="M13 11v6l3 3 3-3v-6"/><path d="M16 20v5"/><path d="M4 29h24"/><path d="M13.5 13.5l5 2M13.5 16.5l5 2" stroke-width="1.4"/></svg>
+      <div><b>HETNA</b><span>CAM Lab · 3, 4 y 5 ejes</span></div>
+    </div>
+    <div class="jobinfo"><span id="jobName">—</span><span class="pill" id="jobState">Sin calcular</span></div>
+    <div class="topactions">
+      <button class="btn primary" id="btnCompute">Calcular trayectoria</button>
+      <button class="btn" id="btnGoPost">Ver G-code</button>
+      <button class="btn" id="btnOrder" hidden>Solicitar servicio</button>
+    </div>
+  </header>
+
+  <aside class="side">
+    <nav class="steps" role="tablist" aria-label="Pasos del trabajo">
+      <button data-tab="part" class="on" role="tab"><i>1</i>Pieza</button>
+      <button data-tab="machine" role="tab"><i>2</i>Máquina</button>
+      <button data-tab="tool" role="tab"><i>3</i>Herramienta</button>
+      <button data-tab="strat" role="tab"><i>4</i>Estrategia</button>
+      <button data-tab="post" role="tab"><i>5</i>Post</button>
+    </nav>
+    <div class="panes">
+      <!-- PIEZA -->
+      <section class="pane" data-pane="part">
+        <label class="drop" id="drop">
+          <input type="file" id="fileIn" accept=".stl,.obj,.step,.stp,.iges,.igs">
+          <b>Sube tu modelo 3D</b>
+          <span class="hint">STL, OBJ, STEP o IGES · arrastra aquí o toca para elegir</span>
+        </label>
+        <div class="group">
+          <h2>Piezas de muestra</h2>
+          <div class="chips" id="samples">
+            <button class="chip" data-sample="blade">Álabe de turbina · 5 ejes</button>
+            <button class="chip" data-sample="column">Columna salomónica · 4 ejes</button>
+            <button class="chip" data-sample="relief">Relieve · 3 ejes / 5 ejes</button>
+          </div>
+        </div>
+        <div class="group">
+          <h2>Unidades y orientación</h2>
+          <div class="row">
+            <label class="f">Unidades del archivo<select id="p_units"><option value="1">Milímetros</option><option value="25.4">Pulgadas</option></select></label>
+            <label class="f">Escala extra<input id="p_scale" type="number" step="0.1" min="0.01" value="1"></label>
+          </div>
+          <div class="chips">
+            <button class="chip" data-rot="x">Girar 90° en X</button>
+            <button class="chip" data-rot="y">Girar 90° en Y</button>
+            <button class="chip" data-rot="z">Girar 90° en Z</button>
+            <button class="chip" data-rot="reset">Original</button>
+          </div>
+          <p class="hint">En trabajos rotativos el eje de giro es X: orienta el largo de la pieza sobre X.</p>
+        </div>
+        <div class="group">
+          <h2>Diagnóstico de malla</h2>
+          <dl class="kv" id="meshInfo"></dl>
+        </div>
+        <div class="group">
+          <h2>Material en bruto</h2>
+          <div class="row">
+            <label class="f">Margen lateral (mm)<input id="stk_margin" type="number" step="0.5" min="0" value="3"></label>
+            <label class="f">Margen superior / radial (mm)<input id="stk_top" type="number" step="0.5" min="0" value="1"></label>
+          </div>
+          <p class="hint">El cero de pieza queda en el centro superior del bruto (3 ejes) o sobre el eje de giro al centro del largo (4 y 5 ejes rotativos).</p>
+        </div>
+      </section>
+
+      <!-- MAQUINA -->
+      <section class="pane" data-pane="machine" hidden>
+        <label class="f">Máquina predefinida<select id="m_preset"></select></label>
+        <div class="row">
+          <label class="f">Cinemática<select id="m_kin">
+            <option value="xyz">3 ejes XYZ</option>
+            <option value="xyza">4 ejes · rotativo A (sobre X)</option>
+            <option value="ab_mixed">5 ejes · rotativo A + cabezal B</option>
+            <option value="ac_table">5 ejes · mesa basculante A + C</option>
+            <option value="bc_table">5 ejes · mesa basculante B + C</option>
+            <option value="bc_head">5 ejes · cabezal horquilla B + C</option>
+          </select></label>
+          <label class="f">Controlador<select id="m_ctrl"></select></label>
+        </div>
+        <div class="group">
+          <h2>Recorridos (mm)</h2>
+          <div class="row3">
+            <label class="f">X mín<input id="m_xmin" type="number"></label><label class="f">X máx<input id="m_xmax" type="number"></label><span></span>
+            <label class="f">Y mín<input id="m_ymin" type="number"></label><label class="f">Y máx<input id="m_ymax" type="number"></label><span></span>
+            <label class="f">Z mín<input id="m_zmin" type="number"></label><label class="f">Z máx<input id="m_zmax" type="number"></label><span></span>
+          </div>
+        </div>
+        <div class="group" id="rotGroup">
+          <h2>Ejes rotativos (grados)</h2>
+          <div class="row3">
+            <label class="f"><span id="r1lbl">A</span> mín<input id="m_r1min" type="number"></label><label class="f"><span id="r1lbl2">A</span> máx<input id="m_r1max" type="number"></label>
+            <label class="c" style="align-self:end;padding-bottom:6px"><input type="checkbox" id="m_r1inv">Invertir</label>
+            <label class="f" id="r2a"><span id="r2lbl">B</span> mín<input id="m_r2min" type="number"></label><label class="f" id="r2b"><span id="r2lbl2">B</span> máx<input id="m_r2max" type="number"></label>
+            <label class="c" id="r2c" style="align-self:end;padding-bottom:6px"><input type="checkbox" id="m_r2inv">Invertir</label>
+          </div>
+          <p class="hint">Un rango de 720° o más se trata como giro continuo.</p>
+          <div class="row">
+            <label class="f" id="pivotWrap">Pivote → nariz del husillo (mm)<input id="m_pivot" type="number" step="1"></label>
+            <label class="c" style="align-self:end;padding-bottom:6px"><input type="checkbox" id="m_tcp">Control con TCP / RTCP</label>
+          </div>
+          <div class="row3">
+            <label class="f">Centro giro X<input id="m_cx" type="number" step="0.1"></label>
+            <label class="f">Centro giro Y<input id="m_cy" type="number" step="0.1"></label>
+            <label class="f">Centro giro Z<input id="m_cz" type="number" step="0.1"></label>
+          </div>
+          <p class="hint">Sin TCP, el posprocesador convierte cada punto a coordenadas de máquina con el pivote y el centro de giro. Mide esos valores en tu máquina: un error aquí se traslada directo a la pieza.</p>
+        </div>
+        <div class="group">
+          <h2>Husillo y avances</h2>
+          <div class="row3">
+            <label class="f">RPM máx<input id="m_rpm" type="number" step="500"></label>
+            <label class="f">Avance máx<input id="m_feed" type="number" step="100"></label>
+            <label class="f">Rápido<input id="m_rapid" type="number" step="100"></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- HERRAMIENTA -->
+      <section class="pane" data-pane="tool" hidden>
+        <div class="group">
+          <div class="codebar"><h2>Biblioteca</h2><span class="sp"></span><button class="btn sm" id="t_add">Nueva</button><button class="btn sm" id="t_dup">Duplicar</button><button class="btn sm" id="t_del">Eliminar</button></div>
+          <div class="toollist" id="toolList"></div>
+        </div>
+        <div class="toolfig"><svg id="toolSvg" viewBox="0 0 260 190" aria-label="Perfil de la herramienta"></svg></div>
+        <div class="group">
+          <label class="f">Nombre<input id="t_name" type="text" style="font-family:var(--f-ui)"></label>
+          <div class="row">
+            <label class="f">Tipo<select id="t_type">
+              <option value="ball">Bola (ball nose)</option>
+              <option value="flat">Plana (end mill)</option>
+              <option value="bull">Toroidal (radio de esquina)</option>
+              <option value="taperball">Cónica de bola</option>
+              <option value="vbit">V (grabado)</option>
+              <option value="drill">Broca</option>
+            </select></label>
+            <label class="f">Número T<input id="t_num" type="number" min="1" step="1"></label>
+          </div>
+          <div class="row3">
+            <label class="f">Diámetro<input id="t_D" type="number" step="0.1" min="0.1"></label>
+            <label class="f" id="w_r">Radio esquina<input id="t_r" type="number" step="0.1" min="0"></label>
+            <label class="f" id="w_ang">Ángulo incl.<input id="t_angle" type="number" step="1" min="1" max="179"></label>
+            <label class="f" id="w_tip">Ø punta<input id="t_tipD" type="number" step="0.1" min="0.1"></label>
+            <label class="f" id="w_taper">Cono/lado °<input id="t_taper" type="number" step="0.1" min="0.1" max="45"></label>
+            <label class="f">Filos<input id="t_flutes" type="number" step="1" min="1"></label>
+          </div>
+          <div class="row3">
+            <label class="f">Long. corte<input id="t_fl" type="number" step="0.5" min="0.5"></label>
+            <label class="f">Voladizo<input id="t_so" type="number" step="0.5" min="1"></label>
+            <label class="f">Ø zanco<input id="t_shank" type="number" step="0.1" min="0.5"></label>
+          </div>
+          <div class="row">
+            <label class="f">Ø portaherramienta<input id="t_hd" type="number" step="0.5" min="1"></label>
+            <label class="f">Largo portaherramienta<input id="t_hl" type="number" step="0.5" min="1"></label>
+          </div>
+        </div>
+        <div class="calc">
+          <h2>Datos de corte</h2>
+          <label class="f">Material<select id="f_mat"></select></label>
+          <div class="row">
+            <label class="f">Vc (m/min)<input id="f_vc" type="number" step="5" min="1"></label>
+            <label class="f">Avance por diente (mm)<input id="f_fz" type="number" step="0.005" min="0.001"></label>
+          </div>
+          <div class="big3">
+            <div><small>Husillo</small><strong id="o_rpm">—</strong><em>RPM</em></div>
+            <div><small>Avance</small><strong id="o_feed">—</strong><em>mm/min</em></div>
+            <div><small>Penetración</small><strong id="o_plunge">—</strong><em>mm/min</em></div>
+          </div>
+          <p class="hint" id="o_matnote"></p>
+          <label class="c"><input type="checkbox" id="f_deff">Compensar RPM por diámetro efectivo (bola)</label>
+          <p class="hint" id="o_deff"></p>
+        </div>
+      </section>
+
+      <!-- ESTRATEGIA -->
+      <section class="pane" data-pane="strat" hidden>
+        <div class="cards" id="stratCards">
+          <button class="card" data-kind="top3"><b>3 ejes · paralelo</b><span>Relieves y superficies vistas desde arriba</span></button>
+          <button class="card" data-kind="rot4"><b>4 ejes · rotativo</b><span>Columnas, patas, piezas torneadas</span></button>
+          <button class="card" data-kind="top5"><b>5 ejes · normal a superficie</b><span>Inclinación continua sobre superficies superiores</span></button>
+          <button class="card" data-kind="rot5"><b>5 ejes · envolvente</b><span>Álabes, impulsores, esculturas completas</span></button>
+        </div>
+        <div class="group">
+          <div id="w_pattern" class="group"><h2>Patrón</h2><div class="seg" id="s_pattern"><button data-v="spiral">Espiral continua</button><button data-v="lines">Líneas en X</button></div></div>
+          <div id="w_dir" class="group"><h2>Dirección</h2><div class="seg" id="s_dir"><button data-v="x">A lo largo de X</button><button data-v="y">A lo largo de Y</button></div></div>
+        </div>
+        <div class="group">
+          <h2>Acabado</h2>
+          <div class="row3">
+            <label class="f">Paso lateral<input id="s_stepover" type="number" step="0.05" min="0.05"></label>
+            <label class="f">Paso de muestreo<input id="s_step" type="number" step="0.05" min="0.05"></label>
+            <label class="f">Sobrematerial<input id="s_allow" type="number" step="0.05"></label>
+          </div>
+          <p class="hint" id="o_scallop"></p>
+        </div>
+        <div class="group" id="w_5ax">
+          <h2>Orientación 5 ejes y anticolisión</h2>
+          <div class="row3">
+            <label class="f">Avance (lead) °<input id="s_lead" type="number" step="1"></label>
+            <label class="f">Lateral (tilt) °<input id="s_tilt" type="number" step="1"></label>
+            <label class="f">Inclinación máx °<input id="s_maxtilt" type="number" step="1" min="0" max="110"></label>
+          </div>
+          <label class="c"><input type="checkbox" id="s_avoid">Reorientar automáticamente para evitar colisiones</label>
+          <label class="c"><input type="checkbox" id="s_smooth">Suavizar el eje de herramienta</label>
+          <label class="c"><input type="checkbox" id="s_skip">Omitir del G-code los puntos que siguen en colisión</label>
+          <label class="f">Holgura de seguridad del portaherramienta (mm)<input id="s_clear" type="number" step="0.5" min="0"></label>
+        </div>
+        <div class="group" id="w_rough">
+          <label class="c"><input type="checkbox" id="s_rough">Incluir desbaste previo</label>
+          <div class="row3">
+            <label class="f">Prof. por pasada<input id="s_rsd" type="number" step="0.5" min="0.1"></label>
+            <label class="f">Paso lateral<input id="s_rso" type="number" step="0.5" min="0.1"></label>
+            <label class="f">Sobrematerial<input id="s_rallow" type="number" step="0.1" min="0"></label>
+          </div>
+        </div>
+        <label class="f">Distancia de seguridad (mm)<input id="s_safe" type="number" step="1" min="1"></label>
+        <button class="btn primary" id="btnCompute2">Calcular trayectoria</button>
+      </section>
+
+      <!-- POST -->
+      <section class="pane" data-pane="post" hidden>
+        <div class="group order" id="orderBox" hidden>
+          <h2>Solicitar este servicio</h2>
+          <div class="seg" id="o_service"><button data-v="cam" class="on">Programa CAM con esta trayectoria</button><button data-v="post">Solo posprocesador</button></div>
+          <label class="c"><input type="checkbox" id="o_review">Revisión por especialista antes de entregar</label>
+          <label class="f">Correo para la entrega<input id="o_email" type="email" autocomplete="email" placeholder="tu@correo.com" style="font-family:var(--f-ui)"></label>
+          <label class="f">Notas para el técnico<textarea id="o_notes" rows="3" maxlength="2000" placeholder="Material, sujeción, tolerancias, fecha de entrega…"></textarea></label>
+          <p class="hint">El precio depende de la complejidad: tiempo de mecanizado y puntos de la trayectoria. Lo ves en el carrito antes de pagar.</p>
+          <button class="btn primary" id="btnOrderSend">Agregar al carrito</button>
+          <p class="note" id="o_status" hidden></p>
+        </div>
+        <div class="row">
+          <label class="f">Controlador<select id="p_ctrl"></select></label>
+          <label class="f">Refrigerante<select id="p_cool"><option value="M8">Inundación M8</option><option value="M7">Niebla M7</option><option value="none">Sin refrigerante</option></select></label>
+        </div>
+        <div class="row3">
+          <label class="f">Decimales<input id="p_dec" type="number" min="1" max="5" step="1"></label>
+          <label class="f">Programa<input id="p_prog" type="number" min="1" step="1"></label>
+          <label class="c" style="align-self:end;padding-bottom:6px"><input type="checkbox" id="p_lines">Numerar N</label>
+        </div>
+        <label class="c"><input type="checkbox" id="p_inv">Avance en tiempo inverso (G93) para movimientos multieje</label>
+        <p class="note" id="postNote"></p>
+        <div class="group">
+          <div class="seg" id="outTabs"><button data-v="gcode" class="on">G-code</button><button data-v="cps">Fusion .cps</button><button data-v="pp">Vectric .pp</button><button data-v="json">Hetna .json</button></div>
+          <p class="hint" id="outDesc"></p>
+          <div class="codebox"><textarea id="outText" spellcheck="false" readonly aria-label="Salida"></textarea></div>
+          <div class="codebar"><button class="btn sm" id="btnCopy">Copiar</button><button class="btn sm" id="btnDl">Descargar</button><span class="sp"></span><span class="hint" id="outSize"></span></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <main class="view">
+    <div id="viewport"></div>
+    <div class="hud dro" aria-live="off">
+      <div class="ttl"><span>Coordenadas máquina</span><span id="droMode">T1</span></div>
+      <table id="droTable"></table>
+      <div class="gl" id="droLine">—</div>
+    </div>
+    <div class="hud viewtools">
+      <div class="vt" id="viewToggles">
+        <button data-v="part" class="on">Pieza</button>
+        <button data-v="stock" class="on">Bruto</button>
+        <button data-v="path" class="on">Trayectoria</button>
+        <button data-v="needles">Ejes</button>
+        <button data-v="holder" class="on">Porta</button>
+        <button data-v="machine">Vista máquina</button>
+      </div>
+      <div class="vt">
+        <button data-cam="iso">Iso</button><button data-cam="top">Superior</button><button data-cam="front">Frente</button><button data-cam="side">Lateral</button>
+      </div>
+    </div>
+    <div class="hud legend" id="legend">
+      <span><i style="background:var(--path)"></i>Acabado</span>
+      <span><i style="background:var(--rough)"></i>Desbaste</span>
+      <span><i style="background:var(--warn)"></i>Reorientado</span>
+      <span><i style="background:var(--bad)"></i>Colisión / límite</span>
+      <span><i style="background:var(--rapid)"></i>Rápido</span>
+    </div>
+    <div class="simbar">
+      <button class="ib" id="simReset" aria-label="Reiniciar simulación"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h2v12H3zM6 8l8-6v12z"/></svg></button>
+      <button class="ib play" id="simPlay" aria-label="Reproducir"><svg viewBox="0 0 16 16" fill="currentColor" id="playIco"><path d="M4 2l10 6-10 6z"/></svg></button>
+      <button class="ib" id="simEnd" aria-label="Ir al final"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11 2h2v12h-2zM2 2l8 6-8 6z"/></svg></button>
+      <input type="range" id="simScrub" min="0" max="1000" value="0" aria-label="Posición de la simulación">
+      <select id="simSpeed" aria-label="Velocidad"><option value="5">×5</option><option value="20">×20</option><option value="60" selected>×60</option><option value="200">×200</option><option value="600">×600</option></select>
+      <span class="time" id="simTime">0:00 / 0:00</span>
+    </div>
+    <div class="busy" id="busy" hidden><div class="box"><span id="busyText">Calculando…</span><div class="bar"><i id="busyBar"></i></div></div></div>
+  </main>
+
+  <section class="report">
+    <h3>Verificación</h3>
+    <div class="kpis" id="kpis"></div>
+    <ul class="issues" id="issues"></ul>
+    <p class="disc">Simulación de referencia. No garantiza el resultado en la máquina real: verifica cero de pieza, longitudes de herramienta, sujeción y límites, y corre el programa primero en vacío con avance reducido. Ten a mano el paro de emergencia.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script>
+'use strict';
+/* ---- Conexión con la tienda (Medusa) ---- */
+const QS=new URLSearchParams(location.search);
+const HETNA={backend:(QS.get('backend')||'').replace(/\/$/,''),key:QS.get('key')||'',embedded:window.parent!==window};
+const HETNA_ON=!!(HETNA.backend&&HETNA.key);
+/* =========================================================
+   HETNA CAM LAB — motor CAM en navegador
+   Módulos: geometría · herramientas · cinemática · estrategias
+            anticolisión · enlaces · posprocesadores · simulación
+   ========================================================= */
+const DEG=Math.PI/180, RAD=180/Math.PI;
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const tick=()=>new Promise(r=>setTimeout(r,0));
+const now=()=>performance.now();
+const V={
+  add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+  sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+  mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+  madd:(a,b,s)=>[a[0]+b[0]*s,a[1]+b[1]*s,a[2]+b[2]*s],
+  dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+  cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+  len:a=>Math.hypot(a[0],a[1],a[2]),
+  norm:a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2]/l]},
+  lerp:(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],
+  dist:(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]),
+};
+const angBetween=(a,b)=>Math.acos(clamp(V.dot(a,b),-1,1));
+function perpOf(a){const t=Math.abs(a[0])<0.9?[1,0,0]:[0,1,0];return V.norm(V.cross(a,t));}
+function slerpDir(a,b,t){const w=angBetween(a,b);if(w<1e-6)return a.slice();if(w>Math.PI-1e-3){const p=perpOf(a);const m=w*t;return V.norm(V.add(V.mul(a,Math.cos(m)),V.mul(p,Math.sin(m))));}const s=Math.sin(w);return V.norm(V.add(V.mul(a,Math.sin((1-t)*w)/s),V.mul(b,Math.sin(t*w)/s)));}
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}
+function fmtTime(min){if(!Number.isFinite(min))return '—';const s=Math.round(min*60);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`:`${m}:${String(ss).padStart(2,'0')}`;}
+const nf=(v,d=1)=>Number.isFinite(v)?v.toLocaleString('es-MX',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+/* ---------------- Datos de referencia ---------------- */
+const MATERIALS={
+  mdf:{name:'MDF',vc:[300,600],fz6:[0.10,0.25]},
+  pino:{name:'Pino / madera blanda',vc:[300,600],fz6:[0.10,0.25]},
+  dura:{name:'Parota, cedro, caoba',vc:[250,500],fz6:[0.08,0.20]},
+  acrilico:{name:'Acrílico (PMMA)',vc:[150,300],fz6:[0.05,0.12]},
+  hdpe:{name:'HDPE / PVC',vc:[200,400],fz6:[0.08,0.18]},
+  aluminio:{name:'Aluminio 6061',vc:[150,300],fz6:[0.03,0.06]},
+  laton:{name:'Latón',vc:[100,200],fz6:[0.03,0.06]},
+  acero:{name:'Acero 1018 / 1045',vc:[80,150],fz6:[0.02,0.05]},
+  cera:{name:'Cera / espuma de modelado',vc:[300,600],fz6:[0.10,0.30]},
+};
+const CTRL={
+  mach3:{name:'Mach3',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  mach4:{name:'Mach4',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  linuxcnc:{name:'LinuxCNC',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  grbl:{name:'GRBL / grblHAL',tcp:false,maxAxes:3,style:'iso',comment:'paren'},
+  fanuc:{name:'Fanuc (G43.4)',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  haas:{name:'Haas (G234)',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  siemens:{name:'Siemens 840D (TRAORI)',tcp:true,maxAxes:9,style:'iso',comment:'semi'},
+  heidenhain:{name:'Heidenhain TNC (M128)',tcp:true,maxAxes:9,style:'heid',comment:'semi'},
+};
+const INF=100000;
+const MACHINES={
+  r3:{name:'Router 3 ejes',kin:'xyz',ctrl:'mach3',lim:{x:[-400,400],y:[-300,300],z:[-150,60]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:10000,rapid:8000},
+  r4:{name:'Router 4 ejes con eje A',kin:'xyza',ctrl:'mach3',lim:{x:[-400,400],y:[-150,150],z:[-40,160]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:8000,rapid:6000},
+  ab:{name:'5 ejes: rotativo A + cabezal B',kin:'ab_mixed',ctrl:'mach3',lim:{x:[-300,300],y:[-150,150],z:[-60,200]},rot:[[-INF,INF],[-95,95]],inv:[false,false],pivot:95,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:6000,rapid:6000},
+  ac:{name:'5 ejes: mesa basculante AC',kin:'ac_table',ctrl:'linuxcnc',lim:{x:[-250,250],y:[-200,200],z:[-150,150]},rot:[[-30,120],[-INF,INF]],inv:[false,false],pivot:0,tcp:true,rc:[0,0,0],maxRPM:24000,maxFeed:6000,rapid:8000},
+  bc:{name:'5 ejes: mesa basculante BC',kin:'bc_table',ctrl:'fanuc',lim:{x:[-250,250],y:[-200,200],z:[-150,150]},rot:[[-110,110],[-INF,INF]],inv:[false,false],pivot:0,tcp:true,rc:[0,0,0],maxRPM:18000,maxFeed:8000,rapid:15000},
+  hh:{name:'5 ejes: cabezal horquilla BC',kin:'bc_head',ctrl:'siemens',lim:{x:[-1000,1000],y:[-600,600],z:[-200,400]},rot:[[-100,100],[-INF,INF]],inv:[false,false],pivot:120,tcp:true,rc:[0,0,0],maxRPM:24000,maxFeed:12000,rapid:20000},
+};
+const KIN_AXES={xyz:[],xyza:['A'],ab_mixed:['A','B'],ac_table:['A','C'],bc_table:['B','C'],bc_head:['B','C']};
+const KIN_NAME={xyz:'3 ejes XYZ',xyza:'4 ejes A',ab_mixed:'5 ejes A+B',ac_table:'5 ejes mesa AC',bc_table:'5 ejes mesa BC',bc_head:'5 ejes cabezal BC'};
+const DEFAULT_TOOLS=[
+  {id:1,num:1,name:'Bola 6 mm 2F carburo',type:'ball',D:6,r:3,angle:90,tipD:1,taper:3,flutes:2,fluteLen:22,stickout:40,shankD:6,holderD:30,holderLen:36},
+  {id:2,num:2,name:'Plana 6 mm 3F',type:'flat',D:6,r:0,angle:90,tipD:1,taper:3,flutes:3,fluteLen:20,stickout:35,shankD:6,holderD:30,holderLen:36},
+  {id:3,num:3,name:'Toroidal 10 mm R1',type:'bull',D:10,r:1,angle:90,tipD:1,taper:3,flutes:4,fluteLen:25,stickout:45,shankD:10,holderD:34,holderLen:40},
+  {id:4,num:4,name:'Cónica de bola R0.8 · 3.6°',type:'taperball',D:6.35,r:0.8,angle:90,tipD:1.6,taper:3.6,flutes:2,fluteLen:25,stickout:38,shankD:6.35,holderD:30,holderLen:36},
+  {id:5,num:5,name:'V 90° · 12 mm',type:'vbit',D:12,r:0,angle:90,tipD:0,taper:3,flutes:2,fluteLen:8,stickout:30,shankD:6.35,holderD:30,holderLen:36},
+  {id:6,num:6,name:'Broca 5 mm 118°',type:'drill',D:5,r:0,angle:118,tipD:0,taper:3,flutes:2,fluteLen:40,stickout:55,shankD:5,holderD:30,holderLen:36},
+  {id:7,num:7,name:'Bola 3 mm cuello largo',type:'ball',D:3,r:1.5,angle:90,tipD:1,taper:3,flutes:2,fluteLen:9,stickout:32,shankD:3,holderD:22,holderLen:30},
+];
+
+/* ---------------- Estado ---------------- */
+const S={
+  rawPos:null, partName:'', units:1, scale:1, rotSeq:[],
+  M:null, frame:null, stock:null, cloudF:null, cloudC:null, fixtures:[],
+  machine:JSON.parse(JSON.stringify(MACHINES.ab)), presetKey:'ab',
+  tools:JSON.parse(JSON.stringify(DEFAULT_TOOLS)), toolId:1,
+  feeds:{mat:'mdf',vc:450,fz:0.15,deff:false},
+  strat:{kind:'rot5',pattern:'spiral',dir:'x',stepover:1.0,step:0.8,allow:0,lead:8,tilt:0,maxTilt:70,avoid:true,smooth:true,skip:true,clear:2,rough:false,rsd:3,rso:3,rallow:0.4,safe:8},
+  post:{ctrl:'mach3',cool:'M8',dec:3,prog:1000,lines:false,inv:true,out:'gcode'},
+  job:null, moves:null, gcode:null, gcodeLines:null, stale:true, busy:false,
+};
+const tool=()=>S.tools.find(t=>t.id===S.toolId)||S.tools[0];
+
+/* =========================================================
+   GEOMETRÍA: malla, rejilla de rayos, nube de puntos
+   ========================================================= */
+function buildMesh(pos){
+  const nT=pos.length/9|0;
+  const bmin=[Infinity,Infinity,Infinity],bmax=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<nT*9;i+=3){for(let c=0;c<3;c++){const v=pos[i+c];if(v<bmin[c])bmin[c]=v;if(v>bmax[c])bmax[c]=v;}}
+  const diag=Math.hypot(bmax[0]-bmin[0],bmax[1]-bmin[1],bmax[2]-bmin[2])||1;
+  const fn=new Float32Array(nT*3),area=new Float32Array(nT);
+  const q=diag*2e-6+1e-9;const map=new Map();const vid=new Int32Array(nT*3);let nv=0;const acc=[];
+  let vol=0,totalArea=0;
+  for(let t=0;t<nT;t++){
+    const o=t*9;
+    const ax=pos[o],ay=pos[o+1],az=pos[o+2],bx=pos[o+3],by=pos[o+4],bz=pos[o+5],cx=pos[o+6],cy=pos[o+7],cz=pos[o+8];
+    const ux=bx-ax,uy=by-ay,uz=bz-az,wx=cx-ax,wy=cy-ay,wz=cz-az;
+    const nx=uy*wz-uz*wy,ny=uz*wx-ux*wz,nz=ux*wy-uy*wx;const l=Math.hypot(nx,ny,nz);
+    area[t]=l/2;totalArea+=l/2;
+    if(l>0){fn[t*3]=nx/l;fn[t*3+1]=ny/l;fn[t*3+2]=nz/l;}
+    vol+=(ax*(by*cz-bz*cy)-ay*(bx*cz-bz*cx)+az*(bx*cy-by*cx))/6;
+    for(let k=0;k<3;k++){
+      const x=pos[o+k*3],y=pos[o+k*3+1],z=pos[o+k*3+2];
+      const key=Math.round(x/q)+'|'+Math.round(y/q)+'|'+Math.round(z/q);
+      let id=map.get(key);if(id===undefined){id=nv++;map.set(key,id);acc.push(0,0,0);}
+      vid[t*3+k]=id;acc[id*3]+=nx;acc[id*3+1]+=ny;acc[id*3+2]+=nz;
+    }
+  }
+  // cierre de malla (aristas compartidas por 2 caras)
+  const edges=new Map();
+  for(let t=0;t<nT;t++){for(let k=0;k<3;k++){let a=vid[t*3+k],b=vid[t*3+(k+1)%3];if(a===b)continue;if(a>b){const s=a;a=b;b=s;}const key=a*nv+b;edges.set(key,(edges.get(key)||0)+1);}}
+  let open=0,nonman=0;for(const c of edges.values()){if(c===1)open++;else if(c>2)nonman++;}
+  // normales suaves por esquina
+  const cn=new Float32Array(nT*9);const cosLim=Math.cos(40*DEG);
+  for(let t=0;t<nT;t++){for(let k=0;k<3;k++){const id=vid[t*3+k];let sx=acc[id*3],sy=acc[id*3+1],sz=acc[id*3+2];const l=Math.hypot(sx,sy,sz)||1;sx/=l;sy/=l;sz/=l;
+    const fx=fn[t*3],fy=fn[t*3+1],fz=fn[t*3+2];
+    if(sx*fx+sy*fy+sz*fz>cosLim){cn[t*9+k*3]=sx;cn[t*9+k*3+1]=sy;cn[t*9+k*3+2]=sz;}else{cn[t*9+k*3]=fx;cn[t*9+k*3+1]=fy;cn[t*9+k*3+2]=fz;}}}
+  const M={pos,nT,fn,cn,area,bmin,bmax,diag,closed:open===0&&nonman===0,open,nonman,vol:Math.abs(vol),totalArea,nv};
+  buildTriGrid(M);
+  return M;
+}
+function buildTriGrid(M){
+  const pad=M.diag*1e-3+1e-3;
+  const min=[M.bmin[0]-pad,M.bmin[1]-pad,M.bmin[2]-pad];
+  const ext=[M.bmax[0]-M.bmin[0]+2*pad,M.bmax[1]-M.bmin[1]+2*pad,M.bmax[2]-M.bmin[2]+2*pad];
+  const target=clamp(M.nT*1.2,1000,260000);
+  let cs=Math.cbrt(ext[0]*ext[1]*ext[2]/target);
+  const dims=ext.map(e=>clamp(Math.ceil(e/cs),1,160));
+  cs=Math.max(ext[0]/dims[0],ext[1]/dims[1],ext[2]/dims[2]);
+  const [nx,ny,nz]=[Math.ceil(ext[0]/cs),Math.ceil(ext[1]/cs),Math.ceil(ext[2]/cs)];
+  const nC=nx*ny*nz;const cnt=new Int32Array(nC+1);const P=M.pos;
+  const rng=(t)=>{const o=t*9;let x0=Math.min(P[o],P[o+3],P[o+6]),x1=Math.max(P[o],P[o+3],P[o+6]),y0=Math.min(P[o+1],P[o+4],P[o+7]),y1=Math.max(P[o+1],P[o+4],P[o+7]),z0=Math.min(P[o+2],P[o+5],P[o+8]),z1=Math.max(P[o+2],P[o+5],P[o+8]);
+    return [clamp(Math.floor((x0-min[0])/cs),0,nx-1),clamp(Math.floor((x1-min[0])/cs),0,nx-1),clamp(Math.floor((y0-min[1])/cs),0,ny-1),clamp(Math.floor((y1-min[1])/cs),0,ny-1),clamp(Math.floor((z0-min[2])/cs),0,nz-1),clamp(Math.floor((z1-min[2])/cs),0,nz-1)];};
+  const R=new Int32Array(M.nT*6);
+  for(let t=0;t<M.nT;t++){const r=rng(t);R.set(r,t*6);for(let k=r[4];k<=r[5];k++)for(let j=r[2];j<=r[3];j++)for(let i=r[0];i<=r[1];i++)cnt[i+nx*(j+ny*k)+1]++;}
+  for(let i=0;i<nC;i++)cnt[i+1]+=cnt[i];
+  const items=new Int32Array(cnt[nC]);const fill=cnt.slice(0,nC);
+  for(let t=0;t<M.nT;t++){const o=t*6;for(let k=R[o+4];k<=R[o+5];k++)for(let j=R[o+2];j<=R[o+3];j++)for(let i=R[o];i<=R[o+1];i++){items[fill[i+nx*(j+ny*k)]++]=t;}}
+  M.grid={min,cs,nx,ny,nz,start:cnt,items,max:[min[0]+nx*cs,min[1]+ny*cs,min[2]+nz*cs]};
+  M.mark=new Uint32Array(M.nT);M.stamp=1;
+}
+const HIT={t:0,tri:-1,u:0,v:0};
+function raycast(M,ox,oy,oz,dx,dy,dz,tmax){
+  const g=M.grid;let t0=0,t1=tmax;
+  const o=[ox,oy,oz],d=[dx,dy,dz];
+  for(let c=0;c<3;c++){
+    if(Math.abs(d[c])<1e-12){if(o[c]<g.min[c]||o[c]>g.max[c])return false;}
+    else{let ta=(g.min[c]-o[c])/d[c],tb=(g.max[c]-o[c])/d[c];if(ta>tb){const s=ta;ta=tb;tb=s;}if(ta>t0)t0=ta;if(tb<t1)t1=tb;if(t0>t1)return false;}
+  }
+  const cs=g.cs;
+  let ix=clamp(Math.floor((ox+dx*t0-g.min[0])/cs),0,g.nx-1),iy=clamp(Math.floor((oy+dy*t0-g.min[1])/cs),0,g.ny-1),iz=clamp(Math.floor((oz+dz*t0-g.min[2])/cs),0,g.nz-1);
+  const sx=dx>0?1:-1,sy=dy>0?1:-1,sz=dz>0?1:-1;
+  const tdx=dx!==0?cs/Math.abs(dx):Infinity,tdy=dy!==0?cs/Math.abs(dy):Infinity,tdz=dz!==0?cs/Math.abs(dz):Infinity;
+  let tmx=dx!==0?((g.min[0]+(ix+(dx>0?1:0))*cs)-ox)/dx:Infinity;
+  let tmy=dy!==0?((g.min[1]+(iy+(dy>0?1:0))*cs)-oy)/dy:Infinity;
+  let tmz=dz!==0?((g.min[2]+(iz+(dz>0?1:0))*cs)-oz)/dz:Infinity;
+  if(++M.stamp>4e9){M.mark.fill(0);M.stamp=1;}
+  const st=M.stamp,P=M.pos,mark=M.mark;let best=Infinity;
+  for(let guard=0;guard<10000;guard++){
+    const cell=ix+g.nx*(iy+g.ny*iz);
+    for(let q=g.start[cell],e=g.start[cell+1];q<e;q++){
+      const t=g.items[q];if(mark[t]===st)continue;mark[t]=st;
+      const b=t*9;const ax=P[b],ay=P[b+1],az=P[b+2];
+      const e1x=P[b+3]-ax,e1y=P[b+4]-ay,e1z=P[b+5]-az,e2x=P[b+6]-ax,e2y=P[b+7]-ay,e2z=P[b+8]-az;
+      const px=dy*e2z-dz*e2y,py=dz*e2x-dx*e2z,pz=dx*e2y-dy*e2x;
+      const det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-14)continue;
+      const inv=1/det;const tx=ox-ax,ty=oy-ay,tz=oz-az;
+      const u=(tx*px+ty*py+tz*pz)*inv;if(u<-1e-7||u>1+1e-7)continue;
+      const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x;
+      const v=(dx*qx+dy*qy+dz*qz)*inv;if(v<-1e-7||u+v>1+1e-7)continue;
+      const tt=(e2x*qx+e2y*qy+e2z*qz)*inv;
+      if(tt>=0&&tt<best&&tt<=tmax){best=tt;HIT.tri=t;HIT.u=u;HIT.v=v;}
+    }
+    const tExit=Math.min(tmx,tmy,tmz);
+    if(best<=tExit||tExit>t1)break;
+    if(tmx<=tmy&&tmx<=tmz){ix+=sx;if(ix<0||ix>=g.nx)break;tmx+=tdx;}
+    else if(tmy<=tmz){iy+=sy;if(iy<0||iy>=g.ny)break;tmy+=tdy;}
+    else{iz+=sz;if(iz<0||iz>=g.nz)break;tmz+=tdz;}
+  }
+  if(best===Infinity)return false;HIT.t=best;return true;
+}
+function hitNormal(M,dx,dy,dz){
+  const t=HIT.tri,u=HIT.u,v=HIT.v,w=1-u-v,c=M.cn,b=t*9;
+  let nx=c[b]*w+c[b+3]*u+c[b+6]*v,ny=c[b+1]*w+c[b+4]*u+c[b+7]*v,nz=c[b+2]*w+c[b+5]*u+c[b+8]*v;
+  const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
+  if(nx*dx+ny*dy+nz*dz>0){nx=-nx;ny=-ny;nz=-nz;}
+  return [nx,ny,nz];
+}
+function surfacePoints(M,maxPts=260000){
+  let s=clamp(M.diag/240,0.15,2.5);
+  if(M.totalArea/(s*s)>maxPts)s=Math.sqrt(M.totalArea/maxPts);
+  const rnd=mulberry(7);const out=[];const P=M.pos;const s2=s*s;
+  for(let t=0;t<M.nT;t++){
+    const n=Math.floor(M.area[t]/s2+rnd());const o=t*9;
+    for(let k=0;k<n;k++){let a=rnd(),b=rnd();if(a+b>1){a=1-a;b=1-b;}const c=1-a-b;
+      out.push(P[o]*c+P[o+3]*a+P[o+6]*b,P[o+1]*c+P[o+4]*a+P[o+7]*b,P[o+2]*c+P[o+5]*a+P[o+8]*b);}
+    if(t%3===0)out.push((P[o]+P[o+3]+P[o+6])/3,(P[o+1]+P[o+4]+P[o+7])/3,(P[o+2]+P[o+5]+P[o+8])/3);
+  }
+  for(let i=0;i<P.length;i+=9)out.push(P[i],P[i+1],P[i+2]);
+  return {pts:out,spacing:s};
+}
+function buildPointGrid(arr,cc){
+  const n=arr.length/3|0;const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<n;i++)for(let c=0;c<3;c++){const v=arr[i*3+c];if(v<min[c])min[c]=v;if(v>max[c])max[c]=v;}
+  for(let c=0;c<3;c++){min[c]-=1e-3;max[c]+=1e-3;}
+  const dims=[0,1,2].map(c=>clamp(Math.ceil((max[c]-min[c])/cc),1,96));
+  const cs=[0,1,2].map(c=>(max[c]-min[c])/dims[c]);
+  const [nx,ny,nz]=dims;const nC=nx*ny*nz;const cnt=new Int32Array(nC+1);const cellOf=new Int32Array(n);
+  for(let i=0;i<n;i++){const ix=Math.min(nx-1,Math.floor((arr[i*3]-min[0])/cs[0])),iy=Math.min(ny-1,Math.floor((arr[i*3+1]-min[1])/cs[1])),iz=Math.min(nz-1,Math.floor((arr[i*3+2]-min[2])/cs[2]));const c=ix+nx*(iy+ny*iz);cellOf[i]=c;cnt[c+1]++;}
+  for(let i=0;i<nC;i++)cnt[i+1]+=cnt[i];
+  const P=new Float32Array(n*3);const fill=cnt.slice(0,nC);
+  for(let i=0;i<n;i++){const d=fill[cellOf[i]]++;P[d*3]=arr[i*3];P[d*3+1]=arr[i*3+1];P[d*3+2]=arr[i*3+2];}
+  return {P,start:cnt,min,max,cs,nx,ny,nz,n};
+}
+function cellRange(G,lo,hi){
+  return [clamp(Math.floor((lo[0]-G.min[0])/G.cs[0]),0,G.nx-1),clamp(Math.floor((hi[0]-G.min[0])/G.cs[0]),0,G.nx-1),
+          clamp(Math.floor((lo[1]-G.min[1])/G.cs[1]),0,G.ny-1),clamp(Math.floor((hi[1]-G.min[1])/G.cs[1]),0,G.ny-1),
+          clamp(Math.floor((lo[2]-G.min[2])/G.cs[2]),0,G.nz-1),clamp(Math.floor((hi[2]-G.min[2])/G.cs[2]),0,G.nz-1)];
+}
+function sphereHit(G,cx,cy,cz,r){
+  if(r<=0)return false;
+  if(cx+r<G.min[0]||cx-r>G.max[0]||cy+r<G.min[1]||cy-r>G.max[1]||cz+r<G.min[2]||cz-r>G.max[2])return false;
+  const R=cellRange(G,[cx-r,cy-r,cz-r],[cx+r,cy+r,cz+r]);const r2=r*r,P=G.P;
+  for(let k=R[4];k<=R[5];k++)for(let j=R[2];j<=R[3];j++){const base=G.nx*(j+G.ny*k);
+    for(let q=G.start[base+R[0]],e=G.start[base+R[1]+1];q<e;q++){const dx=P[q*3]-cx,dy=P[q*3+1]-cy,dz=P[q*3+2]-cz;if(dx*dx+dy*dy+dz*dz<r2)return true;}}
+  return false;
+}
+function cylHit(G,A,d,h0,h1,r){
+  if(r<=0||h1<=h0)return false;
+  const p0=V.madd(A,d,h0),p1=V.madd(A,d,h1);
+  const lo=[Math.min(p0[0],p1[0])-r,Math.min(p0[1],p1[1])-r,Math.min(p0[2],p1[2])-r],hi=[Math.max(p0[0],p1[0])+r,Math.max(p0[1],p1[1])+r,Math.max(p0[2],p1[2])+r];
+  if(hi[0]<G.min[0]||lo[0]>G.max[0]||hi[1]<G.min[1]||lo[1]>G.max[1]||hi[2]<G.min[2]||lo[2]>G.max[2])return false;
+  const R=cellRange(G,lo,hi);const r2=r*r,P=G.P,ax=A[0],ay=A[1],az=A[2],dx=d[0],dy=d[1],dz=d[2];
+  for(let k=R[4];k<=R[5];k++)for(let j=R[2];j<=R[3];j++){const base=G.nx*(j+G.ny*k);
+    for(let q=G.start[base+R[0]],e=G.start[base+R[1]+1];q<e;q++){
+      const wx=P[q*3]-ax,wy=P[q*3+1]-ay,wz=P[q*3+2]-az;const s=wx*dx+wy*dy+wz*dz;if(s<h0||s>h1)continue;
+      if(wx*wx+wy*wy+wz*wz-s*s<r2)return true;}}
+  return false;
+}
+
+/* =========================================================
+   HERRAMIENTAS: perfil y radios efectivos
+   ========================================================= */
+function toolH(tl,d){ // altura del filo sobre la punta a distancia radial d (herramienta vertical)
+  const R=tl.D/2;if(d>R+1e-9)return Infinity;let h;
+  switch(tl.type){
+    case 'ball':h=R-Math.sqrt(Math.max(0,R*R-d*d));break;
+    case 'flat':h=0;break;
+    case 'bull':{const r=Math.min(tl.r,R),e=R-r;if(d<=e)h=0;else{const q=d-e;h=r-Math.sqrt(Math.max(0,r*r-q*q));}break;}
+    case 'vbit':case 'drill':h=d/Math.tan(clamp(tl.angle,1,179)/2*DEG);break;
+    case 'taperball':{const rt=Math.min(tl.tipD/2,R),a=clamp(tl.taper,0.1,45)*DEG,d0=rt*Math.cos(a);if(d<=d0)h=rt-Math.sqrt(Math.max(0,rt*rt-d*d));else h=rt-rt*Math.sin(a)+(d-d0)/Math.tan(a);break;}
+    default:h=0;
+  }
+  return Math.min(h,tl.fluteLen);
+}
+function toolRadiusAt(tl,h){let lo=0,hi=tl.D/2;if(toolH(tl,hi)<=h)return hi;for(let i=0;i<28;i++){const m=(lo+hi)/2;if(toolH(tl,m)<=h)lo=m;else hi=m;}return lo;}
+function cutterRadii(tl){
+  switch(tl.type){case 'ball':return{R:tl.D/2,r:tl.D/2};case 'flat':return{R:tl.D/2,r:0};case 'bull':return{R:tl.D/2,r:Math.min(tl.r,tl.D/2)};case 'taperball':return{R:tl.tipD/2,r:tl.tipD/2};default:return{R:0,r:0};}
+}
+function tipFromContact(P,n,a,tl){
+  const {R,r}=cutterRadii(tl);let u=V.sub(n,V.mul(a,V.dot(n,a)));const ul=V.len(u);u=ul>1e-6?V.mul(u,1/ul):[0,0,0];
+  return [P[0]+n[0]*r-a[0]*r+u[0]*(R-r),P[1]+n[1]*r-a[1]*r+u[1]*(R-r),P[2]+n[2]*r-a[2]*r+u[2]*(R-r)];
+}
+function feedsCalc(){
+  const tl=tool(),m=S.machine,f=S.feeds;
+  let D=tl.D;if(tl.type==='taperball')D=tl.tipD;
+  let Dc=D, note='';
+  const {R}=cutterRadii(tl);
+  const ap=Math.max(0.05,S.strat.stepover*0.5);
+  let deffInfo=null;
+  if((tl.type==='ball'||tl.type==='taperball')&&R>0){
+    const Db=2*R;const apc=Math.min(ap,Db/2);const base=Math.acos(clamp(1-2*apc/Db,-1,1));
+    const d0=Db*Math.sin(base);const beta=(S.strat.kind==='top5'||S.strat.kind==='rot5')?Math.abs(S.strat.lead)*DEG:0;const d1=Db*Math.sin(clamp(base+beta,0,Math.PI/2));
+    deffInfo={d0,d1,beta:beta*RAD};if(f.deff)Dc=Math.max(d1,0.05);
+  }
+  let rpm=f.vc*1000/(Math.PI*Dc);let clampedRPM=false;if(rpm>m.maxRPM){rpm=m.maxRPM;clampedRPM=true;}
+  let feed=rpm*tl.flutes*f.fz;let clampedFeed=false;if(feed>m.maxFeed){feed=m.maxFeed;clampedFeed=true;}
+  const plunge=feed*0.3;
+  return {rpm:Math.round(rpm),feed:Math.round(feed),plunge:Math.round(plunge),clampedRPM,clampedFeed,deffInfo,vcReal:Math.PI*Dc*rpm/1000};
+}
+
+/* =========================================================
+   CINEMÁTICA
+   ========================================================= */
+const I3=[1,0,0,0,1,0,0,0,1];
+const Rx=t=>{const c=Math.cos(t),s=Math.sin(t);return[1,0,0,0,c,-s,0,s,c];};
+const Ry=t=>{const c=Math.cos(t),s=Math.sin(t);return[c,0,s,0,1,0,-s,0,c];};
+const Rz=t=>{const c=Math.cos(t),s=Math.sin(t);return[c,-s,0,s,c,0,0,0,1];};
+function m3(a,b){const r=new Array(9);for(let i=0;i<3;i++)for(let j=0;j<3;j++)r[i*3+j]=a[i*3]*b[j]+a[i*3+1]*b[3+j]+a[i*3+2]*b[6+j];return r;}
+const m3v=(m,v)=>[m[0]*v[0]+m[1]*v[1]+m[2]*v[2],m[3]*v[0]+m[4]*v[1]+m[5]*v[2],m[6]*v[0]+m[7]*v[1]+m[8]*v[2]];
+function kinMats(kin,ang){
+  switch(kin){
+    case 'xyza':return{R:Rx(ang[0]*DEG),ha:[0,0,1]};
+    case 'ab_mixed':{const b=ang[1]*DEG;return{R:Rx(ang[0]*DEG),ha:[Math.sin(b),0,Math.cos(b)]};}
+    case 'ac_table':return{R:m3(Rx(ang[0]*DEG),Rz(ang[1]*DEG)),ha:[0,0,1]};
+    case 'bc_table':return{R:m3(Ry(ang[0]*DEG),Rz(ang[1]*DEG)),ha:[0,0,1]};
+    case 'bc_head':{const b=ang[0]*DEG,c=ang[1]*DEG;return{R:I3,ha:[Math.sin(b)*Math.cos(c),Math.sin(b)*Math.sin(c),Math.cos(b)]};}
+    default:return{R:I3,ha:[0,0,1]};
+  }
+}
+function kinSolve(m,a,prev){
+  const [i,j,k]=a;const kin=m.kin;let cands;const at=Math.atan2;
+  if(kin==='xyz'){if(k<0.99995)return null;return{ang:[],R:I3,ha:[0,0,1]};}
+  if(kin==='xyza'){if(Math.abs(i)>2e-3)return null;const rho=Math.hypot(j,k);cands=[[rho<1e-9&&prev?prev[0]:at(j,k)*RAD]];}
+  else if(kin==='ab_mixed'){const rho=Math.hypot(j,k);const A=rho<1e-6?(prev?prev[0]:0):at(j,k)*RAD;cands=[[A,at(i,rho)*RAD],[A+180,at(i,-rho)*RAD]];}
+  else{const rho=Math.hypot(i,j);
+    if(kin==='ac_table'){const A=at(rho,k)*RAD,C=rho<1e-6?(prev?prev[1]:0):at(i,j)*RAD;cands=[[A,C],[-A,C+180]];}
+    else if(kin==='bc_table'){const B=at(-rho,k)*RAD,C=rho<1e-6?(prev?prev[1]:0):at(-j,i)*RAD;cands=[[B,C],[-B,C+180]];}
+    else{const B=at(rho,k)*RAD,C=rho<1e-6?(prev?prev[1]:0):at(j,i)*RAD;cands=[[B,C],[-B,C+180]];}
+  }
+  let best=null,bestD=Infinity;
+  for(const c of cands){
+    const v=c.slice();let ok=true;
+    for(let q=0;q<v.length;q++){
+      const L=m.rot[q];
+      if(L[1]-L[0]>=720){if(prev&&prev.length>q)v[q]=v[q]+360*Math.round((prev[q]-v[q])/360);}
+      else{let bv=null,bd=Infinity;for(const s of[-360,0,360]){const w=v[q]+s;if(w>=L[0]-1e-6&&w<=L[1]+1e-6){const d=prev&&prev.length>q?Math.abs(w-prev[q]):Math.abs(w);if(d<bd){bd=d;bv=w;}}}if(bv===null){ok=false;break;}v[q]=bv;}
+    }
+    if(!ok)continue;
+    const d=v.reduce((s,x,q)=>s+Math.abs(x-(prev&&prev.length>q?prev[q]:0)),0);
+    if(d<bestD){bestD=d;best=v;}
+  }
+  if(!best)return null;
+  const mm=kinMats(kin,best);return{ang:best,R:mm.R,ha:mm.ha};
+}
+const isHeadKin=k=>k==='ab_mixed'||k==='bc_head';
+function useTCP(){const m=S.machine;return m.kin!=='xyz'&&m.tcp&&CTRL[S.post.ctrl].tcp;}
+function linearOut(mv,m,tl,tcp){
+  if(tcp||m.kin==='xyz')return mv.p;
+  const c=m.rc;let q=V.add(m3v(mv.R,V.sub(mv.p,c)),c);
+  if(isHeadKin(m.kin)){const Lp=m.pivot+tl.stickout+tl.holderLen;q=[q[0]+(mv.ha[0])*Lp,q[1]+(mv.ha[1])*Lp,q[2]+(mv.ha[2]-1)*Lp];}
+  return q;
+}
+
+/* =========================================================
+   PIEZAS DE MUESTRA
+   ========================================================= */
+function ringsToTris(rings,capA=true,capB=true){
+  const out=[];const n=rings[0].length;
+  const push=(a,b,c)=>out.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);
+  for(let s=0;s<rings.length-1;s++){const A=rings[s],B=rings[s+1];for(let i=0;i<n;i++){const i2=(i+1)%n;push(A[i],B[i],B[i2]);push(A[i],B[i2],A[i2]);}}
+  const cap=(ring,flip)=>{const c=[0,0,0];ring.forEach(p=>{c[0]+=p[0]/n;c[1]+=p[1]/n;c[2]+=p[2]/n;});for(let i=0;i<n;i++){const i2=(i+1)%n;flip?push(c,ring[i2],ring[i]):push(c,ring[i],ring[i2]);}};
+  if(capA)cap(rings[0],false);if(capB)cap(rings[rings.length-1],true);
+  return new Float32Array(out);
+}
+function sampleBlade(){
+  const N=46,st=44,rings=[];const m=0.03,p=0.4;
+  for(let s=0;s<=st;s++){
+    const u=s/st,x=-42+84*u,c=36-10*u,t=0.16-0.06*u,phi=(-28+50*u)*DEG;
+    const up=[],lo=[];
+    for(let k=0;k<N;k++){const xi=(1-Math.cos(Math.PI*k/(N-1)))/2;
+      const yt=5*t*(0.2969*Math.sqrt(xi)-0.1260*xi-0.3516*xi*xi+0.2843*xi**3-0.1036*xi**4);
+      const yc=xi<p?m/(p*p)*(2*p*xi-xi*xi):m/((1-p)**2)*((1-2*p)+2*p*xi-xi*xi);
+      const dy=xi<p?2*m/(p*p)*(p-xi):2*m/((1-p)**2)*(p-xi);const th=Math.atan(dy);
+      up.push([xi-yt*Math.sin(th),yc+yt*Math.cos(th)]);lo.push([xi+yt*Math.sin(th),yc-yt*Math.cos(th)]);}
+    const ring=[];
+    for(let k=N-1;k>=0;k--)ring.push(up[k]);for(let k=1;k<N-1;k++)ring.push(lo[k]);
+    rings.push(ring.map(([a,b])=>{const uu=(a-0.4)*c,vv=b*c;return[x,uu*Math.cos(phi)-vv*Math.sin(phi),uu*Math.sin(phi)+vv*Math.cos(phi)];}));
+  }
+  return ringsToTris(rings);
+}
+function sampleColumn(){
+  const M=128,st=150,rings=[];
+  for(let s=0;s<=st;s++){const x=-48+96*s/st;const ring=[];
+    for(let k=0;k<M;k++){const th=2*Math.PI*k/M;const ax=Math.abs(x);
+      let r;if(ax>40)r=15.5;else if(ax>36)r=15.5-1.2*Math.sin((40-ax)/4*Math.PI/2);else{const env=Math.min(1,(36-ax)/5);r=14.3-2.4*env+2.6*env*Math.cos(3*th-0.13*x);}
+      ring.push([x,r*Math.sin(th),r*Math.cos(th)]);}
+    rings.push(ring);}
+  return ringsToTris(rings);
+}
+function sampleRelief(){
+  const W=110,H=76,nx=132,ny=92,base=12,out=[];
+  const f=(x,y)=>7.5*Math.exp(-((x+8)**2+(y-3)**2)/420)+3.2*Math.exp(-((x-30)**2+(y+14)**2)/120)+1.2*Math.sin(x/5.5)*Math.cos(y/6.5)*Math.exp(-(x*x+y*y)/2600)+1.4;
+  const P=(i,j)=>{const x=-W/2+W*i/nx,y=-H/2+H*j/ny;return[x,y,f(x,y)];};
+  const push=(a,b,c)=>out.push(...a,...b,...c);
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const a=P(i,j),b=P(i+1,j),c=P(i+1,j+1),d=P(i,j+1);push(a,b,c);push(a,c,d);}
+  const bz=-base;
+  for(let i=0;i<nx;i++){let a=P(i,0),b=P(i+1,0);push([a[0],a[1],bz],[b[0],b[1],bz],b);push([a[0],a[1],bz],b,a);a=P(i,ny);b=P(i+1,ny);push([b[0],b[1],bz],[a[0],a[1],bz],a);push([b[0],b[1],bz],a,b);}
+  for(let j=0;j<ny;j++){let a=P(0,j),b=P(0,j+1);push([b[0],b[1],bz],[a[0],a[1],bz],a);push([b[0],b[1],bz],a,b);a=P(nx,j);b=P(nx,j+1);push([a[0],a[1],bz],[b[0],b[1],bz],b);push([a[0],a[1],bz],b,a);}
+  const B=(i,j)=>[-W/2+W*i/nx,-H/2+H*j/ny,bz];for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){push(B(i,j),B(i+1,j+1),B(i+1,j));push(B(i,j),B(i,j+1),B(i+1,j+1));}
+  return new Float32Array(out);
+}
+const SAMPLES={
+  blade:{name:'Álabe de turbina (muestra)',fn:sampleBlade,preset:'ab',tool:1,strat:{kind:'rot5',pattern:'spiral',stepover:1.0,step:0.8,lead:8,tilt:0,maxTilt:70,rough:false}},
+  column:{name:'Columna salomónica (muestra)',fn:sampleColumn,preset:'r4',tool:1,strat:{kind:'rot4',pattern:'spiral',stepover:0.9,step:0.6,rough:true,rsd:2.5,rso:3}},
+  relief:{name:'Relieve decorativo (muestra)',fn:sampleRelief,preset:'r3',tool:4,margin:0,strat:{kind:'top3',dir:'x',stepover:0.5,step:0.4,rough:true,rsd:3,rso:3}},
+};
+
+/* =========================================================
+   PREPARACIÓN DE PIEZA, BRUTO Y SUJECIÓN
+   ========================================================= */
+const frameOf=k=>(k==='rot4'||k==='rot5')?'rot':'top';
+function orientedPositions(){
+  const src=S.rawPos;const out=new Float32Array(src.length);const sc=S.units*S.scale;
+  for(let i=0;i<src.length;i+=3){let x=src[i]*sc,y=src[i+1]*sc,z=src[i+2]*sc;
+    for(const r of S.rotSeq){if(r==='x'){const t=y;y=-z;z=t;}else if(r==='y'){const t=z;z=-x;x=t;}else{const t=x;x=-y;y=t;}}
+    out[i]=x;out[i+1]=y;out[i+2]=z;}
+  return out;
+}
+async function preparePart(){
+  if(!S.rawPos)return;
+  setBusy('Analizando la malla…',0.05);await tick();
+  const frame=frameOf(S.strat.kind);
+  const pos=orientedPositions();
+  let bmin=[Infinity,Infinity,Infinity],bmax=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<pos.length;i+=3)for(let c=0;c<3;c++){const v=pos[i+c];if(v<bmin[c])bmin[c]=v;if(v>bmax[c])bmax[c]=v;}
+  const mg=+$('#stk_margin').value||0,tm=+$('#stk_top').value||0;
+  let off;
+  if(frame==='top')off=[-(bmin[0]+bmax[0])/2,-(bmin[1]+bmax[1])/2,-bmax[2]-tm];
+  else{ // eje de giro por el centroide de superficie (queda dentro de la pieza en piezas torcidas)
+    let cy=0,cz=0,aw=0;for(let i=0;i<pos.length;i+=9){const ux=pos[i+3]-pos[i],uy=pos[i+4]-pos[i+1],uz=pos[i+5]-pos[i+2],wx=pos[i+6]-pos[i],wy=pos[i+7]-pos[i+1],wz=pos[i+8]-pos[i+2];
+      const ar=Math.hypot(uy*wz-uz*wy,uz*wx-ux*wz,ux*wy-uy*wx);cy+=ar*(pos[i+1]+pos[i+4]+pos[i+7])/3;cz+=ar*(pos[i+2]+pos[i+5]+pos[i+8])/3;aw+=ar;}
+    off=[-(bmin[0]+bmax[0])/2,-(aw?cy/aw:(bmin[1]+bmax[1])/2),-(aw?cz/aw:(bmin[2]+bmax[2])/2)];}
+  for(let i=0;i<pos.length;i+=3){pos[i]+=off[0];pos[i+1]+=off[1];pos[i+2]+=off[2];}
+  const M=buildMesh(pos);S.M=M;S.frame=frame;
+  setBusy('Preparando detección de colisiones…',0.3);await tick();
+  // bruto
+  if(frame==='top'){S.stock={type:'box',min:[M.bmin[0]-mg,M.bmin[1]-mg,M.bmin[2]],max:[M.bmax[0]+mg,M.bmax[1]+mg,0]};}
+  else{let rmax=0;for(let i=0;i<pos.length;i+=3){const r=Math.hypot(pos[i+1],pos[i+2]);if(r>rmax)rmax=r;}
+    S.stock={type:'cyl',x0:M.bmin[0]-mg,x1:M.bmax[0]+mg,r:rmax+tm+0.5,rPart:rmax};}
+  // nube de puntos de colisión: pieza + sujeción
+  const sp=surfacePoints(M);const pts=sp.pts;S.fixtures=[];
+  if(frame==='rot'){
+    const st=S.stock,cr=st.r+12,cx0=st.x0-34,cx1=st.x0-2;S.fixtures.push({type:'chuck',x0:cx0,x1:cx1,r:cr});
+    const step=Math.max(1,sp.spacing*2);
+    for(let r=0;r<=cr;r+=step){const n=Math.max(1,Math.ceil(2*Math.PI*r/step));for(let k=0;k<n;k++){const th=2*Math.PI*k/n;pts.push(cx1,r*Math.sin(th),r*Math.cos(th));}}
+    const nc=Math.ceil(2*Math.PI*cr/step);for(let x=cx0;x<=cx1;x+=step)for(let k=0;k<nc;k++){const th=2*Math.PI*k/nc;pts.push(x,cr*Math.sin(th),cr*Math.cos(th));}
+    const tx=st.x1+2,tl=24,tr=Math.min(9,st.r*0.5);S.fixtures.push({type:'tail',x0:tx,x1:tx+tl,r:tr});
+    for(let x=tx;x<=tx+tl;x+=step){const r=tr*(x-tx)/tl+1;const n=Math.max(4,Math.ceil(2*Math.PI*r/step));for(let k=0;k<n;k++){const th=2*Math.PI*k/n;pts.push(x,r*Math.sin(th),r*Math.cos(th));}}
+  }
+  S.cloudSpacing=sp.spacing;
+  S.cloudF=buildPointGrid(pts,Math.max(sp.spacing*3,1.2));
+  S.cloudC=buildPointGrid(pts,Math.max(6,M.diag/18));
+  S.cloudN=pts.length/3|0;
+  setBusy('Listo',0.4);
+  buildPartScene();updateMeshInfo();
+}
+function updateMeshInfo(){
+  const M=S.M;if(!M){$('#meshInfo').innerHTML='';return;}
+  const sz=[0,1,2].map(c=>M.bmax[c]-M.bmin[c]);
+  const rows=[['Archivo',S.partName],['Triángulos',M.nT.toLocaleString('es-MX')],['Tamaño X×Y×Z',`${nf(sz[0])} × ${nf(sz[1])} × ${nf(sz[2])} mm`],['Volumen',M.closed?`${nf(M.vol/1000,1)} cm³`:'— (malla abierta)'],
+    ['Malla cerrada',M.closed?'Sí':`No · ${M.open} bordes abiertos`],['Puntos de colisión',S.cloudN.toLocaleString('es-MX')],
+    ['Bruto',S.stock.type==='box'?`${nf(S.stock.max[0]-S.stock.min[0])} × ${nf(S.stock.max[1]-S.stock.min[1])} × ${nf(S.stock.max[2]-S.stock.min[2])} mm`:`Ø${nf(S.stock.r*2)} × ${nf(S.stock.x1-S.stock.x0)} mm`]];
+  $('#meshInfo').innerHTML=rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
+}
+
+/* =========================================================
+   ESTRATEGIAS
+   ========================================================= */
+function checker(tl,st){
+  const G=S.cloudF,Gc=S.cloudC;const {R:Re,r:re}=cutterRadii(tl);
+  const tol=Math.max(0.03,Re*0.012);const fl=tl.fluteLen,so=Math.max(tl.stickout,fl),shR=tl.shankD/2,hR=tl.holderD/2,hL=tl.holderLen,clr=st.clear;
+  const slices=[];const hStart=(tl.type==='ball'||tl.type==='taperball')?re:(tl.type==='bull'?re:0);
+  const nS=5;for(let s=0;s<nS;s++){const h0=hStart+tol+(fl-hStart-tol)*s/nS,h1=hStart+tol+(fl-hStart-tol)*(s+1)/nS;const r=toolRadiusAt(tl,h0)-tol;if(r>0.05&&h1>h0)slices.push([h0,h1,r]);}
+  return function(T,a,vertical){
+    if(!vertical){
+      if((tl.type==='ball'||tl.type==='taperball')&&sphereHit(G,T[0]+a[0]*re,T[1]+a[1]*re,T[2]+a[2]*re,re-tol))return 'cutter';
+      for(const s of slices)if(cylHit(G,T,a,s[0],s[1],s[2]))return 'flute';
+    }
+    if(so>fl+0.01&&cylHit(G,T,a,fl+0.01,so,shR+clr*0.5))return 'shank';
+    if(cylHit(Gc,T,a,so,so+hL,hR+clr))return 'holder';
+    return 0;
+  };
+}
+async function progressYield(state,frac,label){if(now()-state.t>40){state.t=now();setBusy(label,frac);await tick();}}
+
+// ---- 3 ejes: mapa de alturas + dilatación con el perfil de la herramienta
+async function genTop3(tl,st){
+  const M=S.M,stock=S.stock,R=tl.D/2;const x0=stock.min[0],x1=stock.max[0],y0=stock.min[1],y1=stock.max[1];
+  let res=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.08,3);
+  let nx,ny,kr;
+  for(let it=0;it<60;it++){nx=Math.ceil((x1-x0+2*R)/res)+1;ny=Math.ceil((y1-y0+2*R)/res)+1;kr=Math.ceil(R/res);if(nx*ny<=420000&&nx*ny*Math.PI*kr*kr<=6e7)break;res*=1.12;}
+  const gx0=x0-R,gy0=y0-R;const H=new Float32Array(nx*ny);const zTop=M.bmax[2]+5,floor=stock.min[2];
+  const ps={t:now()};
+  for(let j=0;j<ny;j++){const y=gy0+j*res;for(let i=0;i<nx;i++){const x=gx0+i*res;H[j*nx+i]=raycast(M,x,y,zTop,0,0,-1,1e6)?zTop-HIT.t:floor;}
+    await progressYield(ps,0.05+0.35*j/ny,'Leyendo la superficie…');}
+  const ker=[];for(let dj=-kr;dj<=kr;dj++)for(let di=-kr;di<=kr;di++){const d=Math.hypot(di,dj)*res;if(d<=R+1e-9)ker.push(di,dj,toolH(tl,d));}
+  const T=new Float32Array(nx*ny);let unreached=0,cells=0;
+  for(let j=0;j<ny;j++){for(let i=0;i<nx;i++){let best=-1e9;for(let k=0;k<ker.length;k+=3){const ii=i+ker[k],jj=j+ker[k+1];if(ii<0||jj<0||ii>=nx||jj>=ny)continue;const v=H[jj*nx+ii]-ker[k+2];if(v>best)best=v;}
+      const v=Math.max(best+st.allow,floor);T[j*nx+i]=v;const hx=H[j*nx+i];if(hx>floor+0.01){cells++;if(v-hx-st.allow>0.05)unreached++;}}
+    await progressYield(ps,0.4+0.4*j/ny,'Calculando contacto de la herramienta…');}
+  const Tat=(x,y)=>{const fx=clamp((x-gx0)/res,0,nx-1.001),fy=clamp((y-gy0)/res,0,ny-1.001);const i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j;
+    return T[j*nx+i]*(1-u)*(1-v)+T[j*nx+i+1]*u*(1-v)+T[(j+1)*nx+i]*(1-u)*v+T[(j+1)*nx+i+1]*u*v;};
+  const chk=checker(tl,st);const passes=[];const alongX=st.dir==='x';
+  const lineSet=(so,zfn,rough)=>{
+    const [a0,a1,b0,b1]=alongX?[x0,x1,y0,y1]:[y0,y1,x0,x1];const nL=Math.max(1,Math.ceil((b1-b0)/so));let rev=false;
+    for(let l=0;l<=nL;l++){const b=Math.min(b0+l*so,b1);const pts=[];const n=Math.max(2,Math.ceil((a1-a0)/res));
+      for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n;const x=alongX?a:b,y=alongX?b:a;const z=zfn(x,y);if(z===null){if(pts.length>1)passes.push({pts:pts.splice(0),rough});else pts.length=0;continue;}pts.push({p:[x,y,z],a:[0,0,1],st:0});}
+      if(pts.length>1){if(rev)pts.reverse();passes.push({pts,rough});}rev=!rev;}
+  };
+  let minTall=Infinity;for(let i=0;i<T.length;i++)if(T[i]<minTall)minTall=T[i];
+  if(st.rough){const minT=minTall;const dA=st.rallow-st.allow;let prev=stock.max[2];
+    for(let L=stock.max[2]-st.rsd;L>minT+dA-st.rsd;L-=st.rsd){const lv=Math.max(L,minT+dA);const pv=prev;lineSet(st.rso,(x,y)=>{const z=Math.max(lv,Tat(x,y)+dA);return z<pv-0.01?z:null;},true);prev=lv;if(lv<=minT+dA)break;}}
+  lineSet(st.stepover,(x,y)=>Tat(x,y),false);
+  // verificación de zanco y porta (herramienta vertical)
+  let n=0;const tot=passes.reduce((s,p)=>s+p.pts.length,0);
+  for(const ps2 of passes){for(let i=0;i<ps2.pts.length;i+=3){const pt=ps2.pts[i];const c=chk(pt.p,pt.a,true);if(c){for(let k=Math.max(0,i-2);k<=Math.min(ps2.pts.length-1,i+2);k++)ps2.pts[k].st=2;}}
+    n+=ps2.pts.length;await progressYield(ps,0.8+0.2*n/tot,'Verificando zanco y portaherramienta…');}
+  passes.forEach(p=>p.pts=simplify(p.pts));
+  const dAl=st.rallow-st.allow;
+  const linkOK=(A,B,rough)=>{for(let s=1;s<12;s++){const u=s/12;const x=A[0]+(B[0]-A[0])*u,y=A[1]+(B[1]-A[1])*u,z=A[2]+(B[2]-A[2])*u;if(z<Tat(x,y)+(rough?dAl:0)-0.01)return false;}return true;};
+  return {passes,linkOK,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.max[2]-minTall};
+}
+// ---- 4 ejes: mapa radial + dilatación en coordenadas cilíndricas
+async function genRot4(tl,st){
+  const M=S.M,stock=S.stock,R=tl.D/2;const px0=M.bmin[0],px1=M.bmax[0];
+  let resx=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.1,3);const Rf=stock.r+5;
+  let nx,nt,dT,krx,w,rminG;
+  const build=async()=>{
+    nx=Math.ceil((px1-px0+2*R)/resx)+1;nt=clamp(Math.round(2*Math.PI*stock.r/resx),120,1080);dT=2*Math.PI/nt;
+  };
+  await build();
+  for(let it=0;it<30&&nx*nt>500000;it++){resx*=1.15;await build();}
+  const gx0=px0-R;const Rm=new Float32Array(nx*nt);const ps={t:now()};rminG=Infinity;
+  for(let ix=0;ix<nx;ix++){const x=gx0+ix*resx;for(let it=0;it<nt;it++){const th=it*dT,s=Math.sin(th),c=Math.cos(th);
+      const r=raycast(M,x,Rf*s,Rf*c,0,-s,-c,Rf)?Rf-HIT.t:0;Rm[ix*nt+it]=r;if(r>0&&r<rminG)rminG=r;}
+    await progressYield(ps,0.05+0.35*ix/nx,'Leyendo la superficie en giro…');}
+  if(!Number.isFinite(rminG))rminG=R;
+  let rmin=Math.max(rminG,R);w=Math.ceil(Math.asin(Math.min(1,R/rmin))/dT);krx=Math.ceil(R/resx);
+  while(nx*nt*(2*krx+1)*(2*w+1)>9e7&&w>2){w=Math.floor(w*0.8);}
+  const sinT=new Float32Array(2*w+1),cosT=new Float32Array(2*w+1);for(let d=-w;d<=w;d++){sinT[d+w]=Math.sin(d*dT);cosT[d+w]=Math.cos(d*dT);}
+  const hT=new Float32Array(64);for(let q=0;q<64;q++)hT[q]=toolH(tl,R*q/63);
+  const hOf=d=>{const f=d/R*63;const q=Math.floor(f);if(q>=63)return hT[63];return hT[q]+(hT[q+1]-hT[q])*(f-q);};
+  const Tm=new Float32Array(nx*nt);let unreached=0,cells=0;
+  for(let ix=0;ix<nx;ix++){for(let it=0;it<nt;it++){let best=0;
+      for(let dx=-krx;dx<=krx;dx++){const jx=ix+dx;if(jx<0||jx>=nx)continue;const dxm=dx*resx;if(Math.abs(dxm)>R)continue;const row=jx*nt;
+        for(let dt=-w;dt<=w;dt++){let jt=it+dt;if(jt<0)jt+=nt;else if(jt>=nt)jt-=nt;const r=Rm[row+jt];if(r<=0)continue;const y=r*sinT[dt+w];if(y>R||y<-R)continue;const d=Math.hypot(dxm,y);if(d>R)continue;const v=r*cosT[dt+w]-hOf(d);if(v>best)best=v;}}
+      const v=best+st.allow;Tm[ix*nt+it]=v;const r0=Rm[ix*nt+it];if(r0>0){cells++;if(v-r0-st.allow>0.05)unreached++;}}
+    await progressYield(ps,0.4+0.4*ix/nx,'Calculando contacto en 4 ejes…');}
+  const Tat=(x,th)=>{let fx=clamp((x-gx0)/resx,0,nx-1.001);th=((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI);const ft=th/dT;const i=Math.floor(fx),j=Math.floor(ft)%nt,j2=(j+1)%nt,u=fx-i,v=ft-Math.floor(ft);
+    return Tm[i*nt+j]*(1-u)*(1-v)+Tm[i*nt+j2]*(1-u)*v+Tm[(i+1)*nt+j]*u*(1-v)+Tm[(i+1)*nt+j2]*u*v;};
+  const pt=(x,th,r)=>{const s=Math.sin(th),c=Math.cos(th);return{p:[x,r*s,r*c],a:[0,s,c],st:0};};
+  const passes=[];const rT=Math.max(stock.rPart,1);
+  const spiral=(so,step,rfn,rough)=>{const turns=(px1-px0)/so;const dth=step/rT;const n=Math.min(400000,Math.ceil(turns*2*Math.PI/dth));const pts=[];
+    for(let k=0;k<=n;k++){const th=k*dth;const x=px0+th/(2*Math.PI)*so;if(x>px1)break;pts.push(pt(x,th,rfn(x,th)));}passes.push({pts,rough});};
+  const lines=(so,rfn,rough)=>{const nL=Math.max(8,Math.round(2*Math.PI*rT/so));let rev=false;const n=Math.ceil((px1-px0)/resx);
+    for(let l=0;l<nL;l++){const th=2*Math.PI*l/nL;const pts=[];for(let k=0;k<=n;k++){const x=px0+(px1-px0)*k/n;pts.push(pt(x,th,rfn(x,th)));}if(rev)pts.reverse();rev=!rev;passes.push({pts,rough});}};
+  if(st.rough){let minT=Infinity;for(let i=0;i<Tm.length;i+=5)if(Tm[i]<minT)minT=Tm[i];const dA=st.rallow-st.allow;
+    for(let L=stock.r-st.rsd;;L-=st.rsd){const lv=Math.max(L,minT+dA);spiral(st.rso,Math.max(resx*3,1.2),(x,th)=>Math.max(lv,Tat(x,th)+dA),true);if(lv<=minT+dA)break;}}
+  if(st.pattern==='lines')lines(st.stepover,Tat,false);else spiral(st.stepover,Math.max(resx,0.2),Tat,false);
+  const chk=checker(tl,st);let n=0;const tot=passes.reduce((s,p)=>s+p.pts.length,0);
+  for(const p2 of passes){for(let i=0;i<p2.pts.length;i+=3){const q=p2.pts[i];if(chk(q.p,q.a,true)){for(let k=Math.max(0,i-2);k<=Math.min(p2.pts.length-1,i+2);k++)p2.pts[k].st=2;}}
+    n+=p2.pts.length;await progressYield(ps,0.8+0.2*n/tot,'Verificando zanco, porta y sujeción…');}
+  passes.forEach(p=>p.pts=simplify(p.pts));
+  let minT=Infinity;for(let i=0;i<Tm.length;i+=3)if(Tm[i]<minT)minT=Tm[i];
+  return {passes,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.r-minT};
+}
+// ---- 5 ejes simultáneos: normal a superficie + búsqueda anticolisión
+function axisFromNormal(n,f,lead,tilt){
+  let fp=V.sub(f,V.mul(n,V.dot(f,n)));if(V.len(fp)<1e-6)fp=perpOf(n);fp=V.norm(fp);const side=V.cross(n,fp);
+  return V.norm(V.add(V.add(V.mul(n,Math.cos(lead)*Math.cos(tilt)),V.mul(fp,Math.sin(lead))),V.mul(side,Math.sin(tilt))));
+}
+function clampCone(a,ref,maxA){const w=angBetween(a,ref);if(w<=maxA)return a;return slerpDir(ref,a,maxA/w);}
+const DEVS=[5,10,15,20,26,32,40,50].map(d=>d*DEG),AZS=[0,45,-45,90,-90,135,-135,180].map(d=>d*DEG);
+async function gen5(tl,st){
+  const M=S.M,stock=S.stock,m=S.machine;const chk=checker(tl,st);const lead=st.lead*DEG,tilt=st.tilt*DEG,maxT=st.maxTilt*DEG;
+  const minDotN=(tl.type==='flat'||tl.type==='bull')?0.5:0.08;const stats={adjusted:0,coll:0,lim:0,devSum:0,why:{}};
+  const passes=[];const ps={t:now()};
+  const evalPoint=(P,n,f,ref,prevAng)=>{
+    const a0=clampCone(axisFromNormal(n,f,lead,tilt),ref,maxT);
+    const tryA=(a)=>{if(V.dot(a,n)<minDotN)return 4;const k=kinSolve(m,a,prevAng);if(!k)return 3;const T=tipFromContact(V.madd(P,n,st.allow),n,a,tl);const c=chk(T,a,false);return c?c:{T,k};};
+    let r=tryA(a0);if(typeof r==='object')return{a:a0,T:r.T,ang:r.k.ang,st:0};
+    const fail=r;
+    if(st.avoid){let e1=V.sub(ref,V.mul(a0,V.dot(ref,a0)));if(V.len(e1)<1e-3)e1=perpOf(a0);e1=V.norm(e1);const e2=V.cross(a0,e1);
+      for(const dv of DEVS){const cd=Math.cos(dv),sd=Math.sin(dv);for(const az of AZS){const dir=V.add(V.mul(e1,Math.cos(az)),V.mul(e2,Math.sin(az)));const a=V.norm(V.add(V.mul(a0,cd),V.mul(dir,sd)));
+          if(angBetween(a,ref)>maxT+1e-3)continue;r=tryA(a);if(typeof r==='object'){stats.devSum+=dv*RAD;return{a,T:r.T,ang:r.k.ang,st:1};}}}}
+    if(typeof fail==='string')stats.why[fail]=(stats.why[fail]||0)+1;
+    return{a:a0,T:tipFromContact(V.madd(P,n,st.allow),n,a0,tl),ang:prevAng,st:fail===3||fail===4?3:2,why:fail};
+  };
+  const runPass=(samples,rough,state)=>{ // samples: [{o,d,f,ref}]; state permite continuar una espiral entre bloques
+    const S0=state||{pts:[],prevAng:null};
+    for(const s of samples){
+      if(!raycast(M,s.o[0],s.o[1],s.o[2],s.d[0],s.d[1],s.d[2],1e6)){if(S0.pts.length>1)passes.push({pts:S0.pts,rough});S0.pts=[];continue;}
+      const P=V.madd(s.o,s.d,HIT.t);const n=hitNormal(M,s.d[0],s.d[1],s.d[2]);
+      const r=evalPoint(P,n,s.f,s.ref,S0.prevAng);if(r.st!==3&&r.ang)S0.prevAng=r.ang;
+      S0.pts.push({p:r.T,a:r.a,st:r.st,P,n,ref:s.ref,why:r.why});
+    }
+    if(!state&&S0.pts.length>1)passes.push({pts:S0.pts,rough});
+  };
+  if(S.frame==='top'){
+    const zTop=M.bmax[2]+5;const alongX=st.dir==='x';const x0=stock.min[0],x1=stock.max[0],y0=stock.min[1],y1=stock.max[1];
+    const [a0,a1,b0,b1]=alongX?[x0,x1,y0,y1]:[y0,y1,x0,x1];const nL=Math.ceil((b1-b0)/st.stepover);let rev=false;
+    for(let l=0;l<=nL;l++){const b=Math.min(b0+l*st.stepover,b1);const n=Math.ceil((a1-a0)/st.step);const sm=[];
+      for(let k=0;k<=n;k++){const a=a0+(a1-a0)*(rev?n-k:k)/n;const x=alongX?a:b,y=alongX?b:a;const f=alongX?[1,0,0]:[0,1,0];sm.push({o:[x,y,zTop],d:[0,0,-1],f,ref:[0,0,1]});}
+      runPass(sm,false);rev=!rev;await progressYield(ps,0.05+0.8*l/nL,'5 ejes: orientando la herramienta y evitando colisiones…');}
+  }else{
+    const eR=cutterRadii(tl).R*0.9;const Rf=stock.r+5,px0=M.bmin[0]+eR,px1=M.bmax[0]-eR;const rT=Math.max(stock.rPart,1);
+    if(st.pattern==='lines'){const nL=Math.max(8,Math.round(2*Math.PI*rT/st.stepover));let rev=false;const n=Math.ceil((px1-px0)/st.step);
+      for(let l=0;l<nL;l++){const th=2*Math.PI*l/nL,s=Math.sin(th),c=Math.cos(th);const sm=[];
+        for(let k=0;k<=n;k++){const x=px0+(px1-px0)*(rev?n-k:k)/n;sm.push({o:[x,Rf*s,Rf*c],d:[0,-s,-c],f:[rev?-1:1,0,0],ref:[0,s,c]});}
+        runPass(sm,false);rev=!rev;await progressYield(ps,0.05+0.8*l/nL,'5 ejes: orientando la herramienta y evitando colisiones…');}
+    }else{
+      const dth=st.step/rT;const turns=(px1-px0)/st.stepover;const n=Math.ceil(turns*2*Math.PI/dth);const chunk=Math.ceil(2*Math.PI/dth);let sm=[];const spS={pts:[],prevAng:null};
+      for(let k=0;k<=n;k++){const th=k*dth,x=px0+th/(2*Math.PI)*st.stepover;if(x>px1)break;const s=Math.sin(th),c=Math.cos(th);
+        sm.push({o:[x,Rf*s,Rf*c],d:[0,-s,-c],f:V.norm([st.stepover/(2*Math.PI*rT),c,-s]),ref:[0,s,c]});
+        if(sm.length>=chunk){runPass(sm,false,spS);sm=[];await progressYield(ps,0.05+0.8*k/n,'5 ejes: orientando la herramienta y evitando colisiones…');}}
+      if(sm.length)runPass(sm,false,spS);
+      if(spS.pts.length>1)passes.push({pts:spS.pts,rough:false});
+    }
+  }
+  // suavizado del eje de herramienta
+  if(st.smooth){let k=0;for(const p of passes){const pts=p.pts,N=pts.length;const W=[1,2,3,2,1];const newA=new Array(N);
+      for(let i=0;i<N;i++){if(pts[i].st>=2){newA[i]=null;continue;}let s=[0,0,0];for(let q=-2;q<=2;q++){const j=i+q;if(j<0||j>=N||pts[j].st>=2)continue;s=V.madd(s,pts[j].a,W[q+2]);}newA[i]=V.norm(s);}
+      let prevAng=null;
+      for(let i=0;i<N;i++){const q=pts[i];if(!newA[i]||angBetween(newA[i],q.a)<0.2*DEG){if(q.st<2){const kk=kinSolve(m,q.a,prevAng);if(kk)prevAng=kk.ang;}continue;}
+        const a=newA[i];if(angBetween(a,q.ref)>maxT+1e-3||V.dot(a,q.n)<minDotN)continue;const kk=kinSolve(m,a,prevAng);if(!kk)continue;const T=tipFromContact(V.madd(q.P,q.n,st.allow),q.n,a,tl);if(chk(T,a,false))continue;q.a=a;q.p=T;prevAng=kk.ang;}
+      if(++k%20===0)await progressYield(ps,0.86+0.1*k/passes.length,'Suavizando orientación…');}}
+  // limitador de velocidad angular del eje de herramienta (evita giros bruscos en aristas)
+  const maxStep=12*DEG;
+  const limitPass=(pts,dir)=>{const N=pts.length;let prevAng=null;
+    for(let c=0;c<N;c++){const i=dir>0?c:N-1-c,j=i-dir;if(j<0||j>=N)continue;const q=pts[i],pv=pts[j];if(q.st>=2||pv.st>=2)continue;
+      const w=angBetween(pv.a,q.a);if(w<=maxStep)continue;const a=slerpDir(pv.a,q.a,maxStep/w);
+      if(V.dot(a,q.n)<minDotN||angBetween(a,q.ref)>maxT+1e-3)continue;const kk=kinSolve(m,a,prevAng);if(!kk)continue;
+      const T=tipFromContact(V.madd(q.P,q.n,st.allow),q.n,a,tl);if(chk(T,a,false))continue;q.a=a;q.p=T;prevAng=kk.ang;}};
+  for(const p of passes){limitPass(p.pts,1);limitPass(p.pts,-1);}
+  // giro sobre el centro de la bola en aristas vivas: la herramienta rota sin mover el punto de contacto
+  const reB=(tl.type==='ball'||tl.type==='taperball')?cutterRadii(tl).r:0;
+  if(reB>0)for(const p of passes){const src=p.pts,out=[src[0]];
+    for(let i=1;i<src.length;i++){const A=src[i-1],B=src[i];const w=angBetween(A.a,B.a);
+      if(w>maxStep&&A.st<2&&B.st<2&&A.P&&B.P){const n=Math.ceil(w/maxStep);
+        for(let k=1;k<n;k++){const u=k/n;const a=slerpDir(A.a,B.a,u);const nk=slerpDir(A.n,B.n,u);const C=V.madd(V.lerp(A.P,B.P,u),nk,reB+st.allow);const T=V.madd(C,a,-reB);
+          if(V.dot(a,nk)<minDotN||chk(T,a,false))continue;out.push({p:T,a,st:(A.st||B.st)?1:0});}}
+      out.push(B);}
+    p.pts=out;}
+  for(const p of passes)for(const q of p.pts){if(q.st===1)stats.adjusted++;else if(q.st===2)stats.coll++;else if(q.st===3)stats.lim++;delete q.P;delete q.n;delete q.ref;}
+  return {passes,stats5:stats,unreachedPct:0,maxDepth:0};
+}
+function simplify(pts,tol=0.004){
+  if(pts.length<3)return pts;const out=[pts[0]];
+  for(let i=1;i<pts.length-1;i++){const A=out[out.length-1],B=pts[i],C=pts[i+1];
+    if(B.st!==A.st||B.st!==C.st||angBetween(A.a,C.a)>0.05*DEG){out.push(B);continue;}
+    const ac=V.sub(C.p,A.p),ab=V.sub(B.p,A.p);const L=V.len(ac);if(L<1e-9){continue;}const cr=V.len(V.cross(ab,ac))/L;
+    if(cr>tol||L>40)out.push(B);}
+  out.push(pts[pts.length-1]);return out;
+}
+
+/* =========================================================
+   ENLACES Y DATOS DE MÁQUINA
+   ========================================================= */
+function buildMoves(res,st){
+  const moves=[];const frame=S.frame,stock=S.stock;const push=(p,a,t,s=0,rough=false)=>moves.push({p,a,t,st:s,rough});
+  const safeTop=stock.type==='box'?stock.max[2]+st.safe:0;const safeR=stock.type==='cyl'?Math.max(stock.r+st.safe,(S.fixtures[0]?.r||0)+4):0;
+  const clr=Math.max(1,Math.min(st.safe,4));
+  // separar tramos en colisión si se pide omitir
+  let passes=[];for(const p of res.passes){if(!st.skip){passes.push(p);continue;}let cur=[];for(const q of p.pts){if(q.st>=2){if(cur.length>1)passes.push({pts:cur,rough:p.rough});cur=[];}else cur.push(q);}if(cur.length>1)passes.push({pts:cur,rough:p.rough});}
+  const toSafe=(p,a)=>{ // punto de retracción seguro
+    if(frame==='top'){const l=V.madd(p,a,clr);return[l,[l[0],l[1],Math.max(safeTop,l[2])]];}
+    const l=V.madd(p,a,clr);const r=Math.hypot(l[1],l[2])||1;const th=Math.atan2(l[1],l[2]);return[l,[l[0],safeR*Math.sin(th),safeR*Math.cos(th)]];
+  };
+  const travel=(A,aA,B,aB)=>{ // movimiento en zona segura interpolando orientación
+    if(frame==='top'){const ang=angBetween(aA,aB);const n=Math.max(1,Math.ceil(ang/(8*DEG)));for(let i=1;i<=n;i++)push(V.lerp(A,B,i/n),slerpDir(aA,aB,i/n),'R');return;}
+    let t0=Math.atan2(A[1],A[2]),t1=Math.atan2(B[1],B[2]);let dt=t1-t0;while(dt>Math.PI)dt-=2*Math.PI;while(dt<-Math.PI)dt+=2*Math.PI;
+    const n=Math.max(1,Math.ceil(Math.abs(dt)/(10*DEG)),Math.ceil(angBetween(aA,aB)/(8*DEG)));
+    for(let i=1;i<=n;i++){const u=i/n,th=t0+dt*u,x=A[0]+(B[0]-A[0])*u;push([x,safeR*Math.sin(th),safeR*Math.cos(th)],slerpDir(aA,aB,u),'R');}
+  };
+  const f0=passes[0]?.pts[0];if(!f0)return moves;
+  const [,s0]=toSafe(f0.p,f0.a);
+  const home=frame==='top'?[s0[0],s0[1],safeTop]:s0;push(home,f0.a,'R');
+  let last=null;
+  for(let pi=0;pi<passes.length;pi++){
+    const pts=passes[pi].pts,rough=passes[pi].rough;const first=pts[0];
+    const direct=last&&res.linkOK&&V.dist(last.p,first.p)<=(rough?st.rso:st.stepover)*1.6&&res.linkOK(last.p,first.p,rough);
+    if(direct){push(first.p,first.a,'F',first.st,rough);}
+    else{
+      if(last){const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P',0,rough);push(l2,last.a,'R');const [a1,a2]=toSafe(first.p,first.a);travel(l2,last.a,a2,first.a);push(a1,first.a,'R');}
+      else{const [a1,a2]=toSafe(first.p,first.a);travel(home,f0.a,a2,first.a);push(a1,first.a,'R');}
+      push(first.p,first.a,'P',first.st,rough);
+    }
+    for(let i=1;i<pts.length;i++)push(pts[i].p,pts[i].a,'F',pts[i].st,rough);
+    last=pts[pts.length-1];
+  }
+  const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P');push(l2,last.a,'R');
+  return moves;
+}
+function annotateMoves(moves){
+  const m=S.machine,tl=tool(),fd=feedsCalc();let prev=null,jumps=0,cum=0,lenCut=0,limFail=0;const tcp=useTCP();
+  const rot=KIN_AXES[m.kin].length;const rng=[[Infinity,-Infinity],[Infinity,-Infinity]];const lin=[[Infinity,-Infinity],[Infinity,-Infinity],[Infinity,-Infinity]];
+  for(let i=0;i<moves.length;i++){
+    const mv=moves[i];let k=kinSolve(m,mv.a,prev);
+    if(!k){k={ang:prev?prev.slice():new Array(rot).fill(0),...kinMats(m.kin,prev||new Array(rot).fill(0))};mv.kfail=true;if(mv.t!=='R')limFail++;}
+    mv.ang=k.ang;mv.R=k.R;mv.ha=k.ha;
+    if(prev&&mv.t==='F'&&rot){for(let q=0;q<rot;q++)if(Math.abs(mv.ang[q]-prev[q])>30){jumps++;mv.jump=true;break;}}
+    prev=k.ang;
+    for(let q=0;q<rot;q++){rng[q][0]=Math.min(rng[q][0],mv.ang[q]);rng[q][1]=Math.max(rng[q][1],mv.ang[q]);}
+    mv.pm=linearOut(mv,m,tl,tcp);for(let c=0;c<3;c++){lin[c][0]=Math.min(lin[c][0],mv.pm[c]);lin[c][1]=Math.max(lin[c][1],mv.pm[c]);}
+    let dur=0;if(i>0){const pv=moves[i-1];const d=V.dist(pv.p,mv.p);mv.len=d;
+      const dAng=rot?Math.max(...mv.ang.map((v,q)=>Math.abs(v-pv.ang[q]))):0;
+      if(mv.t==='R')dur=Math.max(V.dist(pv.pm,mv.pm)/m.rapid,dAng/5400);
+      else{const f=mv.t==='P'?fd.plunge:fd.feed;dur=Math.max(d/f,dAng/5400);if(mv.t==='F')lenCut+=d;}}
+    else mv.len=0;
+    cum+=dur;mv.cum=cum;
+  }
+  return {jumps,total:cum,lenCut,limFail,rng,lin,rot};
+}
+
+/* =========================================================
+   POSPROCESADORES
+   ========================================================= */
+function postProcess(){
+  const moves=S.moves;if(!moves||!moves.length)return{text:'',lines:[]};
+  const m=S.machine,tl=tool(),fd=feedsCalc(),c=S.post,ctrl=CTRL[c.ctrl];const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  const dec=clamp(c.dec|0,1,5);const heid=ctrl.style==='heid';
+  const fmt=v=>{let s=(Math.abs(v)<0.5*10**-dec?0:v).toFixed(dec);if(heid&&!s.startsWith('-'))s='+'+s;return s;};
+  const cm=s=>ctrl.comment==='paren'?`(${String(s).replace(/[()]/g,'')})`:`; ${s}`;
+  const L=[];let N=10;
+  const out=(s,num=true)=>{if(heid){L.push(`${L.length} ${s}`);return;}if(c.lines&&num&&!/^[(%;]/.test(s)){s=`N${N} ${s}`;N+=10;}L.push(s);};
+  const inv=c.inv&&axes.length>0&&!tcp&&c.ctrl!=='heidenhain';
+  const dirs=[m.inv[0]?-1:1,m.inv[1]?-1:1];
+  const name=(S.partName||'PIEZA').replace(/\.[^.]+$/,'').toUpperCase().replace(/[^A-Z0-9_-]/g,'_').slice(0,20)||'PIEZA';
+  const dt=new Date().toISOString().slice(0,10);
+  const tn=tl.num|0||1;const cool=c.cool==='none'?null:c.cool;
+  const stk=S.stock;
+  // encabezado
+  if(heid){
+    out(`BEGIN PGM ${name} MM`);out(`; HETNA CAM LAB ${dt} - ${KIN_NAME[m.kin]}`);out(`; T${tn} ${tl.name}`);out('; VERIFICAR EN VACIO ANTES DE CORTAR');
+    if(stk.type==='box'){out(`BLK FORM 0.1 Z X${fmt(stk.min[0])} Y${fmt(stk.min[1])} Z${fmt(stk.min[2])}`);out(`BLK FORM 0.2 X${fmt(stk.max[0])} Y${fmt(stk.max[1])} Z${fmt(stk.max[2])}`);}
+    else{out(`BLK FORM 0.1 X X${fmt(stk.x0)} Y${fmt(-stk.r)} Z${fmt(-stk.r)}`);out(`BLK FORM 0.2 X${fmt(stk.x1)} Y${fmt(stk.r)} Z${fmt(stk.r)}`);}
+    out(`TOOL CALL ${tn} Z S${fd.rpm}`);if(tcp&&axes.length)out('M128');
+  }else{
+    if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
+    if(c.ctrl==='fanuc'||c.ctrl==='haas')L.push(`O${String(c.prog|0).padStart(4,'0')} ${cm(name)}`);
+    out(cm(`HETNA CAM LAB - ${name} - ${dt}`),false);
+    out(cm(`MAQUINA ${KIN_NAME[m.kin]} - CONTROL ${ctrl.name}${tcp?' - TCP ACTIVO':' - SIN TCP (COORD. MAQUINA CALCULADAS)'}`),false);
+    out(cm(`T${tn} ${tl.name} D${tl.D} VOLADIZO ${tl.stickout}`),false);
+    if(!tcp&&isHeadKin(m.kin))out(cm(`PIVOTE ${m.pivot}+${tl.stickout}+${tl.holderLen} = ${m.pivot+tl.stickout+tl.holderLen} MM`),false);
+    if(tcp&&axes.length&&c.ctrl==='linuxcnc')out(cm('TCP: ACTIVA LA CINEMATICA TCP DE TU CONFIGURACION LINUXCNC ANTES DE EJECUTAR'),false);
+    out(cm('VERIFICAR EN VACIO CON AVANCE REDUCIDO ANTES DE CORTAR'),false);
+    if(c.ctrl==='siemens'){out('G17 G90 G71 G94');out('G54');out(`T${tn} D1`);out('M6');}
+    else if(c.ctrl==='grbl'){out('G21 G90 G94 G17');out('G54');out(cm(`CAMBIO MANUAL DE HERRAMIENTA T${tn}`),false);}
+    else{out('G21 G90 G94 G17 G40 G49 G80');out('G54');out(`T${tn} M6`);}
+    if(c.ctrl==='linuxcnc')out('G64 P0.02');
+    out(`S${fd.rpm} M3`);if(cool)out(cool);
+    if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAORI');}
+  }
+  const lineOf=new Int32Array(moves.length);let last={};let lastG=null,lastF=null,g93=false;
+  for(let i=0;i<moves.length;i++){
+    const mv=moves[i];const pm=mv.pm;const words=[];const W={X:pm[0],Y:pm[1],Z:pm[2]};axes.forEach((a,q)=>W[a]=mv.ang[q]*dirs[q]);
+    const rapid=mv.t==='R';
+    if(heid){
+      const parts=['X','Y','Z',...axes].map(k=>`${k}${fmt(W[k])}`);const f=rapid?'FMAX':`F${mv.t==='P'?fd.plunge:fd.feed}`;
+      let extra='';if(i===0)extra=' M3'+(cool?(cool==='M8'?' M8':' M7'):'');
+      out(`L ${parts.join(' ')} R0 ${f}${extra}`);lineOf[i]=L.length-1;continue;
+    }
+    for(const k of ['X','Y','Z',...axes]){const s=fmt(W[k]);if(last[k]!==s){words.push(k+s);last[k]=s;}}
+    const g=rapid?'G0':'G1';
+    let pre='';
+    if(i===0){if(tcp&&axes.length){if(c.ctrl==='fanuc')pre='G43.4 H'+tn+' ';else if(c.ctrl==='haas')pre='G234 H'+tn+' ';else if(c.ctrl==='linuxcnc')pre='G43 H'+tn+' ';}else if(c.ctrl!=='grbl')pre='G43 H'+tn+' ';
+      if(c.ctrl==='siemens')pre='';}
+    let feedWord='';
+    if(!rapid){
+      const f=mv.t==='P'?fd.plunge:fd.feed;const multi=inv&&i>0&&axes.some((a,q)=>Math.abs(mv.ang[q]-moves[i-1].ang[q])>1e-4);
+      if(multi){const len=Math.max(mv.len,1e-3);const Fi=Math.min(f/len,99999);if(!g93){pre+='G93 ';g93=true;}feedWord=' F'+Fi.toFixed(3);lastF=null;}
+      else{if(g93){pre+='G94 ';g93=false;lastF=null;}if(lastF!==f){feedWord=' F'+f;lastF=f;}}
+    }
+    if(!words.length&&!feedWord&&!pre){lineOf[i]=L.length-1;continue;}
+    const gw=(g!==lastG||pre)?g+' ':'';lastG=g;
+    out(`${pre}${gw}${words.join(' ')}${feedWord}`.trim());lineOf[i]=L.length-1;
+  }
+  // pie
+  if(heid){if(tcp&&axes.length)out('M129');out('M5');if(cool)out('M9');out('M30');out(`END PGM ${name} MM`);}
+  else{
+    if(g93)out('G94');
+    if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAFOOF');else out('G49');}
+    if(cool)out('M9');out('M5');
+    if(c.ctrl==='fanuc'||c.ctrl==='haas'){out('G91 G28 Z0.');out('G90');}
+    out(c.ctrl==='linuxcnc'?'M2':'M30');
+    if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
+  }
+  return{text:L.join('\n')+'\n',lines:L,lineOf};
+}
+function genCPS(){
+  const m=S.machine,c=S.post,ctrl=CTRL[c.ctrl],axes=KIN_AXES[m.kin],tcp=useTCP();
+  const ax=(letter,q)=>{const L=m.rot[q];const cyc=L[1]-L[0]>=720;const vec={A:[1,0,0],B:[0,1,0],C:[0,0,1]}[letter].map(v=>m.inv[q]&&v?-v:v);const coord={A:0,B:1,C:2}[letter];
+    const table=!(m.kin==='bc_head'||(m.kin==='ab_mixed'&&letter==='B'));
+    return `  var ${letter.toLowerCase()}Axis = createAxis({coordinate:${coord}, table:${table}, axis:[${vec.join(', ')}], offset:[${m.rc.join(', ')}], ${cyc?'cyclic:true':`range:[${L[0]}, ${L[1]}]`}, preference:0});`;};
+  let mc='';
+  if(axes.length){mc=axes.map((a,q)=>ax(a,q)).join('\n')+`\n  machineConfiguration = new MachineConfiguration(${axes.map(a=>a.toLowerCase()+'Axis').join(', ')});\n  setMachineConfiguration(machineConfiguration);\n  optimizeMachineAngles2(${tcp?0:1}); // 0 = TCP en el control, 1 = mapear punta a coordenadas de máquina`;}
+  const tcpOn=tcp?({fanuc:'"G43.4", "H" + toolFormat.format(tool.lengthOffset)',haas:'"G234", "H" + toolFormat.format(tool.lengthOffset)',linuxcnc:'"G43", "H" + toolFormat.format(tool.lengthOffset)',siemens:'"TRAORI"',heidenhain:'"M128"'}[c.ctrl]||null):null;
+  const ext={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[c.ctrl];
+  return `/**
+  Postprocesador Fusion 360 generado por HETNA CAM LAB (hetnacnc.com)
+  Controlador: ${ctrl.name} · Cinemática: ${KIN_NAME[m.kin]} · TCP: ${tcp?'sí':'no'}
+  ${isHeadKin(m.kin)&&!tcp?'Cabezal sin TCP: define la longitud de pivote ('+m.pivot+' mm) en la configuración de máquina de Fusion.':''}
+  IMPORTANTE: plantilla inicial. Valídala en el simulador de máquina de Fusion y corre
+  el primer programa en vacío con avance reducido. Arcos desactivados (todo se linealiza).
+*/
+description = "Hetna - ${ctrl.name} - ${KIN_NAME[m.kin]}";
+vendor = "Hetna CNC";
+vendorUrl = "https://hetnacnc.com";
+legal = "Generado por Hetna CAM Lab";
+certificationLevel = 2;
+minimumRevision = 45702;
+longDescription = "Post ${KIN_NAME[m.kin]} para ${ctrl.name} generado por Hetna CAM Lab.";
+extension = "${ext}";
+setCodePage("ascii");
+capabilities = CAPABILITY_MILLING;
+tolerance = spatial(0.002, MM);
+minimumChordLength = spatial(0.25, MM);
+minimumCircularRadius = spatial(0.01, MM);
+maximumCircularRadius = spatial(1000, MM);
+minimumCircularSweep = toRad(0.01);
+maximumCircularSweep = toRad(180);
+allowHelicalMoves = false;
+allowedCircularPlanes = 0;
+
+properties = {
+  showSequenceNumbers: {title:"Numerar líneas", description:"Agrega N a cada bloque", type:"boolean", value:${c.lines}, scope:"post"},
+  sequenceNumberStart: {title:"Inicio de numeración", type:"integer", value:10, scope:"post"},
+  sequenceNumberIncrement: {title:"Incremento", type:"integer", value:10, scope:"post"},
+  useInverseTime: {title:"Tiempo inverso (G93) en multieje", type:"boolean", value:${c.inv&&!tcp}, scope:"post"},
+  useCoolant: {title:"Refrigerante", type:"boolean", value:${c.cool!=='none'}, scope:"post"}
+};
+
+var gFormat = createFormat({prefix:"G", decimals:0});
+var mFormat = createFormat({prefix:"M", decimals:0});
+var xyzFormat = createFormat({decimals:${c.dec}, forceDecimal:true});
+var abcFormat = createFormat({decimals:${c.dec}, forceDecimal:true, scale:DEG});
+var feedFormat = createFormat({decimals:1, forceDecimal:true});
+var inverseTimeFormat = createFormat({decimals:3, forceDecimal:true});
+var rpmFormat = createFormat({decimals:0});
+var toolFormat = createFormat({decimals:0});
+
+var xOutput = createVariable({prefix:"X"}, xyzFormat);
+var yOutput = createVariable({prefix:"Y"}, xyzFormat);
+var zOutput = createVariable({prefix:"Z"}, xyzFormat);
+var aOutput = createVariable({prefix:"A"}, abcFormat);
+var bOutput = createVariable({prefix:"B"}, abcFormat);
+var cOutput = createVariable({prefix:"C"}, abcFormat);
+var feedOutput = createVariable({prefix:"F"}, feedFormat);
+var inverseTimeOutput = createVariable({prefix:"F", force:true}, inverseTimeFormat);
+var sOutput = createVariable({prefix:"S", force:true}, rpmFormat);
+var gMotionModal = createModal({}, gFormat);
+var gFeedModeModal = createModal({}, gFormat);
+var sequenceNumber = 10;
+var USE_TCP = ${tcp};
+
+function writeBlock() {
+  var text = formatWords(arguments);
+  if (!text) { return; }
+  if (getProperty("showSequenceNumbers")) {
+    writeln("N" + sequenceNumber + " " + text);
+    sequenceNumber += getProperty("sequenceNumberIncrement");
+  } else {
+    writeln(text);
+  }
+}
+function writeComment(text) { writeln("(" + String(text).replace(/[()]/g, "") + ")"); }
+
+function onOpen() {
+${mc||'  // Máquina de 3 ejes: sin ejes rotativos'}
+  if (!machineConfiguration.isMachineCoordinate(0)) { aOutput.disable(); }
+  if (!machineConfiguration.isMachineCoordinate(1)) { bOutput.disable(); }
+  if (!machineConfiguration.isMachineCoordinate(2)) { cOutput.disable(); }
+  sequenceNumber = getProperty("sequenceNumberStart");
+${['linuxcnc','fanuc','haas'].includes(c.ctrl)?'  writeln("%");\n':''}${c.ctrl==='fanuc'||c.ctrl==='haas'?`  writeln("O${String(c.prog).padStart(4,'0')}");\n`:''}  if (programName) { writeComment(programName); }
+  writeComment("Hetna CAM Lab - verificar en vacio antes de cortar");
+${c.ctrl==='siemens'?'  writeBlock(gFormat.format(17), gFormat.format(90), gFormat.format(71), gFormat.format(94));':c.ctrl==='grbl'?'  writeBlock(gFormat.format(21), gFormat.format(90), gFormat.format(94), gFormat.format(17));':'  writeBlock(gFormat.format(21), gFormat.format(90), gFormat.format(94), gFormat.format(17), gFormat.format(40), gFormat.format(49), gFormat.format(80));'}
+${c.ctrl==='linuxcnc'?'  writeBlock("G64 P0.02");\n':''}}
+
+function onSection() {
+  var insertToolCall = isFirstSection() || (tool.number != getPreviousSection().getTool().number);
+  if (insertToolCall) {
+    if (!isFirstSection()) { writeBlock(mFormat.format(5)); }
+${c.ctrl==='grbl'?'    writeComment("Cambio manual T" + toolFormat.format(tool.number));':c.ctrl==='siemens'?'    writeBlock("T" + toolFormat.format(tool.number), "D1");\n    writeBlock(mFormat.format(6));':'    writeBlock("T" + toolFormat.format(tool.number), mFormat.format(6));'}
+    if (tool.comment) { writeComment(tool.comment); }
+  }
+  writeBlock(gFormat.format(54));
+  if (machineConfiguration.isMultiAxisConfiguration()) {
+    if (currentSection.isMultiAxis()) {
+      cancelTransformation();
+    } else {
+      var abc = machineConfiguration.getABC(currentSection.workPlane);
+      gMotionModal.reset();
+      writeBlock(gMotionModal.format(0), conditional(machineConfiguration.isMachineCoordinate(0), "A" + abcFormat.format(abc.x)), conditional(machineConfiguration.isMachineCoordinate(1), "B" + abcFormat.format(abc.y)), conditional(machineConfiguration.isMachineCoordinate(2), "C" + abcFormat.format(abc.z)));
+      setCurrentABC(abc);
+      setRotation(machineConfiguration.getRemainingOrientation(abc, currentSection.workPlane));
+    }
+  } else {
+    if (!isSameDirection(currentSection.workPlane.forward, new Vector(0, 0, 1))) { error("Plano de trabajo inclinado no soportado en 3 ejes."); return; }
+    setRotation(currentSection.workPlane);
+  }
+  writeBlock(sOutput.format(spindleSpeed), mFormat.format(tool.clockwise ? 3 : 4));
+  if (getProperty("useCoolant")) { writeBlock(mFormat.format(${c.cool==='M7'?7:8})); }
+  var initialPosition = getFramePosition(currentSection.getInitialPosition());
+  gMotionModal.reset();
+  writeBlock(gMotionModal.format(0), xOutput.format(initialPosition.x), yOutput.format(initialPosition.y));
+${tcpOn?`  if (currentSection.isMultiAxis()) { writeBlock(${tcpOn}); }\n  else { writeBlock(gFormat.format(43), "H" + toolFormat.format(tool.lengthOffset), zOutput.format(initialPosition.z)); }`:c.ctrl==='grbl'?'  writeBlock(gMotionModal.format(0), zOutput.format(initialPosition.z));':'  writeBlock(gFormat.format(43), "H" + toolFormat.format(tool.lengthOffset), zOutput.format(initialPosition.z));'}
+}
+
+function onDwell(seconds) { writeBlock(gFormat.format(4), "P" + xyzFormat.format(seconds)); }
+function onSpindleSpeed(spindleSpeed) { writeBlock(sOutput.format(spindleSpeed)); }
+function onCommand(command) {}
+function onCircular(clockwise, cx, cy, cz, x, y, z, feed) { linearize(tolerance); }
+
+function onRapid(_x, _y, _z) {
+  var x = xOutput.format(_x), y = yOutput.format(_y), z = zOutput.format(_z);
+  if (x || y || z) { writeBlock(gMotionModal.format(0), x, y, z); feedOutput.reset(); }
+}
+function onLinear(_x, _y, _z, feed) {
+  var x = xOutput.format(_x), y = yOutput.format(_y), z = zOutput.format(_z), f = feedOutput.format(feed);
+  if (x || y || z) { writeBlock(gFeedModeModal.format(94), gMotionModal.format(1), x, y, z, f); }
+  else if (f) { writeBlock(gFeedModeModal.format(94), f); }
+}
+function onRapid5D(_x, _y, _z, _a, _b, _c) {
+  writeBlock(gMotionModal.format(0), xOutput.format(_x), yOutput.format(_y), zOutput.format(_z), aOutput.format(_a), bOutput.format(_b), cOutput.format(_c));
+  feedOutput.reset();
+}
+function onLinear5D(_x, _y, _z, _a, _b, _c, feed) {
+  var start = getCurrentPosition();
+  var len = Vector.diff(start, new Vector(_x, _y, _z)).length; // aproximación lineal: valida en tu máquina
+  var words = [xOutput.format(_x), yOutput.format(_y), zOutput.format(_z), aOutput.format(_a), bOutput.format(_b), cOutput.format(_c)];
+  if (getProperty("useInverseTime") && !USE_TCP && len > 0.001) {
+    writeBlock(gFeedModeModal.format(93), gMotionModal.format(1), words[0], words[1], words[2], words[3], words[4], words[5], inverseTimeOutput.format(Math.min(feed / len, 99999)));
+    feedOutput.reset();
+  } else {
+    writeBlock(gFeedModeModal.format(94), gMotionModal.format(1), words[0], words[1], words[2], words[3], words[4], words[5], feedOutput.format(feed));
+  }
+}
+function onSectionEnd() { forceAny(); }
+function forceAny() { xOutput.reset(); yOutput.reset(); zOutput.reset(); aOutput.reset(); bOutput.reset(); cOutput.reset(); feedOutput.reset(); }
+
+function onClose() {
+  writeBlock(gFeedModeModal.format(94));
+${tcp?(c.ctrl==='siemens'?'  writeBlock("TRAFOOF");':c.ctrl==='heidenhain'?'  writeBlock("M129");':'  writeBlock(gFormat.format(49));'):''}
+  if (getProperty("useCoolant")) { writeBlock(mFormat.format(9)); }
+  writeBlock(mFormat.format(5));
+${c.ctrl==='fanuc'||c.ctrl==='haas'?'  writeBlock(gFormat.format(91), gFormat.format(28), "Z0.");\n  writeBlock(gFormat.format(90));\n':''}  writeBlock(mFormat.format(${c.ctrl==='linuxcnc'?2:30}));
+${['linuxcnc','fanuc','haas'].includes(c.ctrl)?'  writeln("%");\n':''}}
+`;
+}
+function genPP(){
+  const c=S.post,ctrl=CTRL[c.ctrl],m=S.machine;const grbl=c.ctrl==='grbl';
+  const iso=['mach3','mach4','linuxcnc','grbl'].includes(c.ctrl);
+  const tc=grbl?['"( CAMBIO MANUAL T[T] )"']:['"T[T] M6"','"G43 H[T]"'];
+  const cool=c.cool==='none'?[]:[`"${c.cool}"`];
+  return `+================================================
++ Postprocesador Vectric (Aspire / VCarve) generado por
++ HETNA CAM LAB - hetnacnc.com
++ Controlador: ${ctrl.name} - Unidades: mm - 3 ejes
++ Plantilla inicial: pruébala en vacío antes de producción.
+${iso?'':'+ AVISO: este formato se probó con controles tipo Mach3/LinuxCNC.\n+ Para '+ctrl.name+' revisa encabezado y pie con tu manual.\n'}${m.kin!=='xyz'?'+ Para 4 ejes envolventes usa como base el post oficial\n+ "Wrap" de Vectric para tu controlador.\n':''}+================================================
+
+POST_NAME = "Hetna ${ctrl.name} (mm) (*.${c.ctrl==='linuxcnc'?'ngc':'tap'})"
+FILE_EXTENSION = "${c.ctrl==='linuxcnc'?'ngc':'tap'}"
+UNITS = "MM"
+
++------------------------------------------------
++ Numeración de líneas
++------------------------------------------------
+LINE_NUMBER_START     = 10
+LINE_NUMBER_INCREMENT = 10
+LINE_NUMBER_MAXIMUM   = 999999
+
++------------------------------------------------
++ Formato de variables
++------------------------------------------------
+VAR LINE_NUMBER = [N|A|N|1.0]
+VAR SPINDLE_SPEED = [S|A|S|1.0]
+VAR FEED_RATE = [F|C|F|1.1]
+VAR X_POSITION = [X|C|X|1.${c.dec}]
+VAR Y_POSITION = [Y|C|Y|1.${c.dec}]
+VAR Z_POSITION = [Z|C|Z|1.${c.dec}]
+VAR X_HOME_POSITION = [XH|A|X|1.${c.dec}]
+VAR Y_HOME_POSITION = [YH|A|Y|1.${c.dec}]
+VAR Z_HOME_POSITION = [ZH|A|Z|1.${c.dec}]
+
++------------------------------------------------
++ Bloques
++------------------------------------------------
+begin HEADER
+"( [TP_FILENAME] )"
+"( Herramienta: [TOOLNAME] )"
+"( Generado con post Hetna - verificar en vacio )"
+${c.ctrl==='linuxcnc'?'"%"\n':''}"G21 G90 G94 G17${grbl?'':' G40 G49 G80'}"
+"G54"
+${tc.join('\n')}
+"G0 [ZH]"
+"G0 [XH] [YH]"
+"[S] M3"
+${cool.join('\n')}
+
+begin RAPID_MOVE
+"G0 [X] [Y] [Z]"
+
+begin FIRST_FEED_MOVE
+"G1 [X] [Y] [Z] [F]"
+
+begin FEED_MOVE
+"G1 [X] [Y] [Z]"
+
+begin NEW_SEGMENT
+"[S] M3"
+
+begin TOOLCHANGE
+"M5"
+${tc.join('\n')}
+"[S] M3"
+
+begin FOOTER
+"G0 [ZH]"
+${c.cool==='none'?'':'"M9"\n'}"M5"
+"G0 [XH] [YH]"
+"${c.ctrl==='linuxcnc'?'M2':'M30'}"
+${c.ctrl==='linuxcnc'?'"%"\n':''}`;
+}
+function genJSON(){
+  const m=S.machine,c=S.post,tl=tool(),fd=feedsCalc();
+  return JSON.stringify({generator:'Hetna CAM Lab',version:1,date:new Date().toISOString(),
+    controller:{id:c.ctrl,name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
+    machine:{kinematics:m.kin,axes:['X','Y','Z',...KIN_AXES[m.kin]],travel:m.lim,rotary:KIN_AXES[m.kin].map((a,q)=>({axis:a,range:m.rot[q],continuous:m.rot[q][1]-m.rot[q][0]>=720,inverted:m.inv[q]})),
+      pivotToSpindleNose:m.pivot,rotationCenter:m.rc,maxRPM:m.maxRPM,maxFeed:m.maxFeed,rapid:m.rapid},
+    tool:{number:tl.num,name:tl.name,type:tl.type,diameter:tl.D,cornerRadius:tl.r,flutes:tl.flutes,fluteLength:tl.fluteLen,stickout:tl.stickout,shankDiameter:tl.shankD,holder:{diameter:tl.holderD,length:tl.holderLen}},
+    cutting:{material:MATERIALS[S.feeds.mat].name,vc:S.feeds.vc,fz:S.feeds.fz,rpm:fd.rpm,feed:fd.feed,plunge:fd.plunge},
+    strategy:S.strat},null,2);
+}
+
+/* =========================================================
+   ESCENA 3D
+   ========================================================= */
+let renderer,scene,camera,controls,workGroup,partMesh,stockMesh,pathGroup,needleObj,toolGroup,cutterMesh,holderMesh,fixtureGroup,gridHelper,axesHelper;
+const MAT={};
+function init3D(){
+  const host=$('#viewport');
+  renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));host.appendChild(renderer.domElement);
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(38,1,0.5,6000);camera.up.set(0,0,1);camera.position.set(170,-210,150);
+  controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.12;
+  scene.add(new THREE.HemisphereLight(0xffffff,0x445566,0.75));
+  const d1=new THREE.DirectionalLight(0xffffff,0.75);d1.position.set(120,-160,260);scene.add(d1);
+  const d2=new THREE.DirectionalLight(0xffffff,0.35);d2.position.set(-200,140,80);scene.add(d2);
+  workGroup=new THREE.Group();workGroup.matrixAutoUpdate=false;scene.add(workGroup);
+  pathGroup=new THREE.Group();workGroup.add(pathGroup);
+  fixtureGroup=new THREE.Group();workGroup.add(fixtureGroup);
+  toolGroup=new THREE.Group();scene.add(toolGroup);
+  MAT.part=new THREE.MeshStandardMaterial({color:0x888888,metalness:0.15,roughness:0.55,side:THREE.DoubleSide});
+  MAT.stock=new THREE.MeshStandardMaterial({color:0xaa8855,metalness:0,roughness:0.85,flatShading:true,side:THREE.DoubleSide,transparent:true,opacity:0.22,depthWrite:false});
+  MAT.cutter=new THREE.MeshStandardMaterial({color:0xd4d9de,metalness:0.8,roughness:0.28});
+  MAT.shank=new THREE.MeshStandardMaterial({color:0xb9c0c7,metalness:0.7,roughness:0.35});
+  MAT.holder=new THREE.MeshStandardMaterial({color:0x4a525b,metalness:0.6,roughness:0.4,transparent:true,opacity:1});
+  MAT.fixture=new THREE.MeshStandardMaterial({color:0x5b6570,metalness:0.5,roughness:0.5});
+  MAT.hot=new THREE.MeshStandardMaterial({color:0xff4444,metalness:0.3,roughness:0.4,emissive:0x440000});
+  new ResizeObserver(resize).observe(host);resize();
+  applyThemeColors();
+  const mq=matchMedia('(prefers-color-scheme: dark)');mq.addEventListener?.('change',applyThemeColors);
+  new MutationObserver(applyThemeColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  renderer.setAnimationLoop(frame);
+}
+function resize(){const host=$('#viewport');const w=host.clientWidth||1,h=host.clientHeight||1;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+function applyThemeColors(){
+  scene.background=new THREE.Color(cssVar('--vp'));
+  MAT.part.color.set(cssVar('--part'));MAT.stock.color.set(cssVar('--stock'));
+  if(S.M)buildGrid();if(S.moves)buildPathObjects();
+}
+function buildGrid(){
+  if(gridHelper){scene.remove(gridHelper);gridHelper.geometry.dispose();}
+  const size=Math.ceil((S.M?.diag||200)*2.2/10)*10;const g=new THREE.GridHelper(size,Math.round(size/10),new THREE.Color(cssVar('--vp-grid')),new THREE.Color(cssVar('--vp-grid')));
+  g.rotation.x=Math.PI/2;g.material.transparent=true;g.material.opacity=0.55;
+  const z=S.stock?(S.stock.type==='box'?S.stock.min[2]-0.2:-S.stock.r-25):0;g.position.z=z;gridHelper=g;scene.add(g);
+  if(axesHelper)scene.remove(axesHelper);axesHelper=new THREE.AxesHelper(Math.max(12,(S.M?.diag||100)*0.12));scene.add(axesHelper);
+}
+function buildPartScene(){
+  const M=S.M;
+  if(partMesh){workGroup.remove(partMesh);partMesh.geometry.dispose();}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(M.pos,3));g.setAttribute('normal',new THREE.BufferAttribute(M.cn,3));
+  partMesh=new THREE.Mesh(g,MAT.part);workGroup.add(partMesh);
+  while(fixtureGroup.children.length){const c=fixtureGroup.children.pop();c.geometry.dispose();}
+  for(const f of S.fixtures){let geo;
+    if(f.type==='chuck'){geo=new THREE.CylinderGeometry(f.r,f.r,f.x1-f.x0,48);}else{geo=new THREE.CylinderGeometry(f.r+1,1,f.x1-f.x0,32);}
+    const mesh=new THREE.Mesh(geo,MAT.fixture);mesh.rotation.z=f.type==='chuck'?-Math.PI/2:Math.PI/2;mesh.position.x=(f.x0+f.x1)/2;fixtureGroup.add(mesh);}
+  buildStock();buildGrid();applyVisibility();fitView('iso');
+}
+
+/* ---- bruto con remoción de material ---- */
+function buildStock(){
+  if(stockMesh){workGroup.remove(stockMesh);stockMesh.geometry.dispose();}
+  const st=S.stock;const sg={};S.sg=sg;
+  if(st.type==='box'){
+    const W=st.max[0]-st.min[0],Hh=st.max[1]-st.min[1];const res=Math.max(Math.max(W,Hh)/230,0.2);
+    const nx=Math.ceil(W/res)+1,ny=Math.ceil(Hh/res)+1;Object.assign(sg,{type:'top',nx,ny,x0:st.min[0],y0:st.min[1],rx:W/(nx-1),ry:Hh/(ny-1),z0:st.max[2],zb:st.min[2]});
+    sg.H=new Float32Array(nx*ny).fill(st.max[2]);
+    const ring=[];for(let i=0;i<nx;i++)ring.push(i);for(let j=1;j<ny;j++)ring.push(j*nx+nx-1);for(let i=nx-2;i>=0;i--)ring.push((ny-1)*nx+i);for(let j=ny-2;j>0;j--)ring.push(j*nx);
+    const nTop=nx*ny,nR=ring.length;const pos=new Float32Array((nTop+nR)*3);
+    const idx=[];for(let j=0;j<ny-1;j++)for(let i=0;i<nx-1;i++){const a=j*nx+i;idx.push(a,a+1,a+nx+1,a,a+nx+1,a+nx);}
+    for(let k=0;k<nR;k++){const a=ring[k],b=ring[(k+1)%nR],A=nTop+k,B=nTop+(k+1)%nR;idx.push(a,A,B,a,B,b);}
+    for(let k=1;k<nR-1;k++)idx.push(nTop,nTop+k+1,nTop+k);
+    sg.ring=ring;sg.nTop=nTop;
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setIndex(nTop+nR>65535?new THREE.Uint32BufferAttribute(idx,1):new THREE.Uint16BufferAttribute(idx,1));sg.geo=geo;
+  }else{
+    const L=st.x1-st.x0;const res=Math.max(L/260,0.25);const nx=Math.ceil(L/res)+1,nt=clamp(Math.round(2*Math.PI*st.r/res),96,420);
+    Object.assign(sg,{type:'rot',nx,nt,x0:st.x0,rx:L/(nx-1),dT:2*Math.PI/nt});sg.Rg=new Float32Array(nx*nt).fill(st.r);
+    const pos=new Float32Array((nx*nt+2)*3);const idx=[];
+    for(let i=0;i<nx-1;i++)for(let j=0;j<nt;j++){const a=i*nt+j,b=i*nt+(j+1)%nt,c=(i+1)*nt+(j+1)%nt,d=(i+1)*nt+j;idx.push(a,d,c,a,c,b);}
+    const cA=nx*nt,cB=nx*nt+1;for(let j=0;j<nt;j++){idx.push(cA,(j+1)%nt,j);idx.push(cB,(nx-1)*nt+j,(nx-1)*nt+(j+1)%nt);}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setIndex(new THREE.Uint32BufferAttribute(idx,1));sg.geo=geo;
+  }
+  syncStockGeo(true);
+  stockMesh=new THREE.Mesh(sg.geo,MAT.stock);stockMesh.renderOrder=2;workGroup.add(stockMesh);
+}
+function syncStockGeo(full){
+  const sg=S.sg;const pos=sg.geo.attributes.position.array;
+  if(sg.type==='top'){const {nx,ny}=sg;for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const k=j*nx+i;pos[k*3]=sg.x0+i*sg.rx;pos[k*3+1]=sg.y0+j*sg.ry;pos[k*3+2]=sg.H[k];}
+    if(full){sg.ring.forEach((a,k)=>{const q=(sg.nTop+k)*3;pos[q]=pos[a*3];pos[q+1]=pos[a*3+1];pos[q+2]=sg.zb;});}}
+  else{const {nx,nt}=sg;for(let i=0;i<nx;i++){const x=sg.x0+i*sg.rx;for(let j=0;j<nt;j++){const k=i*nt+j,r=sg.Rg[k],th=j*sg.dT;pos[k*3]=x;pos[k*3+1]=r*Math.sin(th);pos[k*3+2]=r*Math.cos(th);}}
+    const cA=nx*nt;pos[cA*3]=sg.x0;pos[cA*3+1]=0;pos[cA*3+2]=0;pos[cA*3+3]=sg.x0+(nx-1)*sg.rx;pos[cA*3+4]=0;pos[cA*3+5]=0;}
+  sg.geo.attributes.position.needsUpdate=true;if(full)sg.geo.computeBoundingSphere();
+}
+function cutAt(T,a){
+  const sg=S.sg,tl=tool();const R=tl.D/2;const {R:Re}=cutterRadii(tl);let dirty=false;
+  if(sg.type==='top'){
+    if(a[2]>0.9995){const i0=Math.max(0,Math.floor((T[0]-R-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((T[0]+R-sg.x0)/sg.rx)),j0=Math.max(0,Math.floor((T[1]-R-sg.y0)/sg.ry)),j1=Math.min(sg.ny-1,Math.ceil((T[1]+R-sg.y0)/sg.ry));
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=sg.x0+i*sg.rx,y=sg.y0+j*sg.ry;const d=Math.hypot(x-T[0],y-T[1]);if(d>R)continue;const z=T[2]+toolH(tl,d);const k=j*sg.nx+i;if(z<sg.H[k]){sg.H[k]=Math.max(z,sg.zb);dirty=true;}}}
+    else{const re=Math.max(Re,R*0.5);const nk=Math.max(1,Math.min(10,Math.ceil(Math.max(0,sg.z0-T[2])/re)+1));
+      for(let s=0;s<nk;s++){const C=V.madd(T,a,re*(1+s));const i0=Math.max(0,Math.floor((C[0]-re-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((C[0]+re-sg.x0)/sg.rx)),j0=Math.max(0,Math.floor((C[1]-re-sg.y0)/sg.ry)),j1=Math.min(sg.ny-1,Math.ceil((C[1]+re-sg.y0)/sg.ry));
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=sg.x0+i*sg.rx,y=sg.y0+j*sg.ry;const d2=(x-C[0])**2+(y-C[1])**2;if(d2>re*re)continue;const z=C[2]-Math.sqrt(re*re-d2);const k=j*sg.nx+i;if(z<sg.H[k]){sg.H[k]=Math.max(z,sg.zb);dirty=true;}}}}
+  }else{
+    const rt=Math.hypot(T[1],T[2]),tht=Math.atan2(T[1],T[2]);const u=[0,Math.sin(tht),Math.cos(tht)];
+    if(Math.abs(a[0])<0.02&&V.dot(a,u)>0.999){
+      const i0=Math.max(0,Math.floor((T[0]-R-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((T[0]+R-sg.x0)/sg.rx));const w=Math.ceil(Math.asin(Math.min(1,R/Math.max(rt,R)))/sg.dT)+1;const jc=Math.round(((tht%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/sg.dT);
+      for(let i=i0;i<=i1;i++){const dx=sg.x0+i*sg.rx-T[0];for(let dj=-w;dj<=w;dj++){const j=((jc+dj)%sg.nt+sg.nt)%sg.nt;const k=i*sg.nt+j;const th=j*sg.dT;let D=th-tht;D=Math.atan2(Math.sin(D),Math.cos(D));const cD=Math.cos(D);if(cD<0.05)continue;const r0=sg.Rg[k];const y=r0*Math.sin(D);const d=Math.hypot(dx,y);if(d>R)continue;const rn=(rt+toolH(tl,d))/cD;if(rn<r0){sg.Rg[k]=Math.max(rn,0);dirty=true;}}}
+    }else{
+      const re=Math.max(Re,R*0.5);const rStock=S.stock.r;const nk=Math.max(1,Math.min(12,Math.ceil(Math.max(0,rStock-rt)/re)+1));
+      for(let sI=0;sI<nk;sI++){const C=V.madd(T,a,re*(1+sI));const rc=Math.hypot(C[1],C[2]),thc=Math.atan2(C[1],C[2]);
+      const i0=Math.max(0,Math.floor((C[0]-re-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((C[0]+re-sg.x0)/sg.rx));const w=Math.ceil(Math.asin(Math.min(1,re/Math.max(rc,re)))/sg.dT)+1;const jc=Math.round(((thc%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/sg.dT);
+      for(let i=i0;i<=i1;i++){const x=sg.x0+i*sg.rx;for(let dj=-w;dj<=w;dj++){const j=((jc+dj)%sg.nt+sg.nt)%sg.nt;const k=i*sg.nt+j;const th=j*sg.dT,s=Math.sin(th),c=Math.cos(th);
+        const b=-(C[1]*s+C[2]*c);const w0=(x-C[0])**2+C[1]**2+C[2]**2-re*re;const disc=b*b-w0;if(disc<0)continue;const sq=Math.sqrt(disc);const rin=-b-sq;const r0=sg.Rg[k];if(rin<r0&&(a[1]*s+a[2]*c)>0.2){sg.Rg[k]=Math.max(rin,0);dirty=true;}}}}
+    }
+  }
+  return dirty;
+}
+
+/* ---- trayectoria visual ---- */
+function buildPathObjects(){
+  while(pathGroup.children.length){const c=pathGroup.children.pop();c.geometry.dispose();c.material.dispose();}
+  const mv=S.moves;if(!mv||!mv.length)return;
+  const cPath=new THREE.Color(cssVar('--path')),cRough=new THREE.Color(cssVar('--rough')),cWarn=new THREE.Color(cssVar('--warn')),cBad=new THREE.Color(cssVar('--bad')),cRapid=new THREE.Color(cssVar('--rapid'));
+  const fp=[],fc=[],rp=[];
+  for(let i=1;i<mv.length;i++){const a=mv[i-1].p,b=mv[i].p;
+    if(mv[i].t==='R'){rp.push(...a,...b);continue;}
+    const s=mv[i].st;const col=mv[i].kfail||s>=2?cBad:s===1?cWarn:mv[i].rough?cRough:cPath;fp.push(...a,...b);fc.push(col.r,col.g,col.b,col.r,col.g,col.b);}
+  const g1=new THREE.BufferGeometry();g1.setAttribute('position',new THREE.Float32BufferAttribute(fp,3));g1.setAttribute('color',new THREE.Float32BufferAttribute(fc,3));
+  pathGroup.add(new THREE.LineSegments(g1,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.9})));
+  const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute(rp,3));
+  const rl=new THREE.LineSegments(g2,new THREE.LineDashedMaterial({color:cRapid,dashSize:1.5,gapSize:1.5,transparent:true,opacity:0.55}));rl.computeLineDistances();pathGroup.add(rl);
+  // agujas de eje
+  if(needleObj){workGroup.remove(needleObj);needleObj.geometry.dispose();}
+  const feedIdx=[];for(let i=0;i<mv.length;i++)if(mv[i].t==='F')feedIdx.push(i);
+  const every=Math.max(1,Math.ceil(feedIdx.length/1400));const np=[],nc=[];const Ln=Math.max(4,(S.M?.diag||100)*0.05);
+  for(let q=0;q<feedIdx.length;q+=every){const m=mv[feedIdx[q]];const col=m.st===1?cWarn:m.st>=2?cBad:cPath;np.push(...m.p,...V.madd(m.p,m.a,Ln));nc.push(col.r,col.g,col.b,col.r,col.g,col.b);}
+  const g3=new THREE.BufferGeometry();g3.setAttribute('position',new THREE.Float32BufferAttribute(np,3));g3.setAttribute('color',new THREE.Float32BufferAttribute(nc,3));
+  needleObj=new THREE.LineSegments(g3,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.7}));workGroup.add(needleObj);
+  applyVisibility();
+}
+function buildToolMesh(){
+  while(toolGroup.children.length){const c=toolGroup.children.pop();c.geometry.dispose();}
+  const tl=tool();const R=tl.D/2;const pts=[];const n=24;
+  for(let i=0;i<=n;i++){const d=R*i/n;const h=toolH(tl,d);pts.push(new THREE.Vector2(Math.max(d,0.001),h));}
+  pts.push(new THREE.Vector2(R,tl.fluteLen));pts.push(new THREE.Vector2(0.001,tl.fluteLen));
+  const cut=new THREE.Mesh(new THREE.LatheGeometry(pts,40),MAT.cutter);cutterMesh=cut;toolGroup.add(cut);
+  const shL=Math.max(0.5,tl.stickout-tl.fluteLen);const sh=new THREE.Mesh(new THREE.CylinderGeometry(tl.shankD/2,tl.shankD/2,shL,32),MAT.shank);sh.position.y=tl.fluteLen+shL/2;toolGroup.add(sh);
+  const hg=new THREE.CylinderGeometry(tl.holderD/2,tl.holderD/2*0.72,tl.holderLen,40);holderMesh=new THREE.Mesh(hg,MAT.holder);holderMesh.position.y=tl.stickout+tl.holderLen/2;toolGroup.add(holderMesh);
+  const sp=new THREE.Mesh(new THREE.CylinderGeometry(tl.holderD*0.75,tl.holderD*0.75,40,40),MAT.fixture);sp.position.y=tl.stickout+tl.holderLen+20;toolGroup.add(sp);
+  toolGroup.userData.holder=[holderMesh,sp];
+  applyVisibility();
+}
+const VIS={part:true,stock:true,path:true,needles:false,holder:true,machine:false};
+function applyVisibility(){
+  if(partMesh)partMesh.visible=VIS.part;if(stockMesh)stockMesh.visible=VIS.stock;pathGroup.visible=VIS.path;if(needleObj)needleObj.visible=VIS.needles;
+  (toolGroup.userData.holder||[]).forEach(o=>o.visible=VIS.holder);
+}
+function fitView(kind){
+  if(!S.M)return;const M=S.M;const c=S.frame==='top'?[0,0,(M.bmin[2])/2]:[0,0,0];const d=M.diag*1.35+40;
+  const dirs={iso:[0.62,-0.78,0.55],top:[0,-0.0001,1],front:[0,-1,0.12],side:[1,0,0.12]};const v=V.norm(dirs[kind]||dirs.iso);
+  camera.position.set(c[0]+v[0]*d,c[1]+v[1]*d,c[2]+v[2]*d);controls.target.set(...c);controls.update();
+}
+
+/* =========================================================
+   SIMULACIÓN
+   ========================================================= */
+const SIM={t:0,playing:false,mult:60,cutIdx:0,cutFrac:0,resetting:false};
+function simTotal(){return S.moves&&S.moves.length?S.moves[S.moves.length-1].cum:0;}
+function moveAt(t){const mv=S.moves;let lo=1,hi=mv.length-1;if(t<=0)return 0;while(lo<hi){const m=(lo+hi)>>1;if(mv[m].cum<t)lo=m+1;else hi=m;}return lo;}
+function poseAt(t){
+  const mv=S.moves;const i=moveAt(t);if(i===0)return{p:mv[0].p,a:mv[0].a,ang:mv[0].ang,i:0,f:1};
+  const A=mv[i-1],B=mv[i];const dur=B.cum-A.cum;const f=dur>0?clamp((t-A.cum)/dur,0,1):1;
+  return{p:V.lerp(A.p,B.p,f),a:V.norm(V.lerp(A.a,B.a,f)),ang:B.ang.map((v,q)=>A.ang[q]+(v-A.ang[q])*f),i,f};
+}
+function advanceCut(ti,tf,budget){
+  // aplica remoción desde (cutIdx,cutFrac) hasta (ti,tf)
+  const mv=S.moves,tl=tool();const step=Math.max(cutterRadii(tl).R*0.45,tl.D*0.15,0.2);let used=0,dirty=false;
+  while(SIM.cutIdx<ti||(SIM.cutIdx===ti&&SIM.cutFrac<tf-1e-9)){
+    const i=SIM.cutIdx;if(i<=0||i>=mv.length){SIM.cutIdx=Math.max(1,i+1);SIM.cutFrac=0;if(i>=mv.length)break;continue;}
+    const B=mv[i],A=mv[i-1];const end=i<ti?1:tf;
+    if(B.t==='R'){SIM.cutIdx++;SIM.cutFrac=0;continue;}
+    const L=Math.max(B.len,V.dist(A.p,B.p));const n=Math.max(1,Math.ceil(L/step));
+    let k=Math.floor(SIM.cutFrac*n);const kEnd=Math.ceil(end*n);
+    for(;k<=kEnd&&k<=n;k++){const f=k/n;if(cutAt(V.lerp(A.p,B.p,f),V.norm(V.lerp(A.a,B.a,f))))dirty=true;used++;if(used>=budget){SIM.cutFrac=Math.min(1,(k+1)/n);if(dirty)syncStockGeo(false);return false;}}
+    if(end>=1){SIM.cutIdx++;SIM.cutFrac=0;}else{SIM.cutFrac=end;break;}
+  }
+  if(dirty)syncStockGeo(false);return true;
+}
+function resetStockCut(){S.sg.H?.fill(S.stock.max?.[2]??0);if(S.sg.Rg)S.sg.Rg.fill(S.stock.r);syncStockGeo(false);SIM.cutIdx=1;SIM.cutFrac=0;}
+let lastFrame=now();
+let lastBusyRender=0;
+function frame(){
+  const t=now();
+  if(S.busy){if(t-lastBusyRender<600)return;lastBusyRender=t;}
+  const dt=Math.min(0.1,(t-lastFrame)/1000);lastFrame=t;
+  if(S.moves&&S.moves.length>1){
+    const tot=simTotal();
+    if(SIM.playing){SIM.t=Math.min(tot,SIM.t+dt*SIM.mult/60);if(SIM.t>=tot)setPlaying(false);}
+    const pose=poseAt(SIM.t);
+    const done=advanceCut(pose.i,pose.f,SIM.playing?2500:6000);
+    placeTool(pose);updateDRO(pose);
+    if(!SIM.scrubbing)$('#simScrub').value=Math.round(SIM.t/tot*1000)||0;
+    $('#simTime').textContent=`${fmtTime(SIM.t)} / ${fmtTime(tot)}`;
+  }
+  controls.update();renderer.render(scene,camera);
+}
+function placeTool(pose){
+  const m=S.machine;let p=pose.p,a=pose.a;
+  if(VIS.machine&&pose.ang&&m.kin!=='xyz'){
+    const mm=kinMats(m.kin,pose.ang);const c=m.rc;const R=mm.R;
+    const M4=new THREE.Matrix4().set(R[0],R[1],R[2],0,R[3],R[4],R[5],0,R[6],R[7],R[8],0,0,0,0,1);
+    const T1=new THREE.Matrix4().makeTranslation(c[0],c[1],c[2]),T2=new THREE.Matrix4().makeTranslation(-c[0],-c[1],-c[2]);
+    workGroup.matrix.copy(T1.multiply(M4).multiply(T2));p=V.add(m3v(R,V.sub(p,c)),c);a=mm.ha;
+  }else workGroup.matrix.identity();
+  workGroup.matrixWorldNeedsUpdate=true;
+  toolGroup.position.set(p[0],p[1],p[2]);toolGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(a[0],a[1],a[2]));
+  const mv=S.moves[pose.i];const hot=mv&&(mv.st>=2||mv.kfail)&&mv.t!=='R';
+  if(cutterMesh)cutterMesh.material=hot?MAT.hot:MAT.cutter;if(holderMesh)holderMesh.material=hot?MAT.hot:MAT.holder;
+}
+function updateDRO(pose){
+  const m=S.machine,tl=tool(),fd=feedsCalc();const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  const mm=kinMats(m.kin,pose.ang||[]);const pm=linearOut({p:pose.p,R:mm.R,ha:mm.ha},m,tl,tcp);
+  const rows=[['X',pm[0]],['Y',pm[1]],['Z',pm[2]],...axes.map((a,q)=>[a,(pose.ang?.[q]||0)*(m.inv[q]?-1:1)])];
+  const mv=S.moves[pose.i];const F=mv?.t==='R'?'RÁPIDO':(mv?.t==='P'?fd.plunge:fd.feed);
+  rows.push(['F',F],['S',fd.rpm]);
+  $('#droTable').innerHTML=rows.map(([k,v])=>`<tr><td class="ax">${k}</td><td class="v">${typeof v==='number'?(k==='F'||k==='S'?v:v.toFixed(3)):v}</td></tr>`).join('');
+  $('#droMode').textContent=`T${tl.num} · ${tcp?'TCP':'MÁQ'}`;
+  const ln=S.gcode?.lineOf?S.gcode.lines[S.gcode.lineOf[pose.i]]:null;$('#droLine').textContent=ln||'—';
+}
+function setPlaying(on){SIM.playing=on;$('#playIco').innerHTML=on?'<path d="M3 2h4v12H3zM9 2h4v12H9z"/>':'<path d="M4 2l10 6-10 6z"/>';
+  if(on&&S.stock&&VIS.stock){MAT.stock.opacity=1;MAT.stock.transparent=false;MAT.stock.depthWrite=true;MAT.stock.needsUpdate=true;}}
+function stockSolid(on){MAT.stock.opacity=on?1:0.22;MAT.stock.transparent=!on;MAT.stock.depthWrite=on;MAT.stock.needsUpdate=true;}
+
+/* =========================================================
+   FLUJO: calcular, verificar, informe
+   ========================================================= */
+function setBusy(txt,f){const b=$('#busy');if(txt===null){b.hidden=true;return;}b.hidden=false;$('#busyText').textContent=txt;$('#busyBar').style.width=Math.round(clamp(f,0,1)*100)+'%';}
+function compatError(){
+  const k=S.strat.kind,kin=S.machine.kin;
+  if(k==='rot4'&&!['xyza','ab_mixed'].includes(kin))return'La estrategia de 4 ejes necesita un eje rotativo A sobre X. Elige "4 ejes · rotativo A" o "5 ejes · rotativo A + cabezal B" en Máquina.';
+  if((k==='top5'||k==='rot5')&&(kin==='xyz'||kin==='xyza'))return'Las estrategias de 5 ejes necesitan una máquina de 5 ejes. Cambia la cinemática en Máquina.';
+  if((k==='top5'||k==='rot5')&&(tool().type==='vbit'||tool().type==='drill'))return'Para 5 ejes simultáneos usa una herramienta de bola, plana, toroidal o cónica de bola.';
+  return null;
+}
+async function compute(){
+  if(S.busy||!S.rawPos)return;const err=compatError();if(err){renderIssues([{sev:'err',title:'No se puede calcular',cause:err,fix:''}]);toast('Revisa la compatibilidad máquina / estrategia');return;}
+  S.busy=true;$$('#btnCompute,#btnCompute2').forEach(b=>b.disabled=true);setPlaying(false);
+  try{
+    if(!S.M||S.frame!==frameOf(S.strat.kind)||S.partDirty){await preparePart();S.partDirty=false;}
+    const tl=tool(),st=S.strat;let res;const t0=now();
+    if(st.kind==='top3')res=await genTop3(tl,st);else if(st.kind==='rot4')res=await genRot4(tl,st);else res=await gen5(tl,st);
+    setBusy('Enlazando pasadas y resolviendo ejes de máquina…',0.97);await tick();
+    const moves=buildMoves(res,st);S.moves=moves;S.job={res,kind:st.kind,ms:now()-t0,toolId:tl.id};
+    S.jobStats=annotateMoves(moves);
+    S.gcode=postProcess();
+    buildPathObjects();buildToolMesh();resetStockCut();stockSolid(false);SIM.t=0;
+    S.stale=false;refreshOutputs();renderReport();
+  }catch(e){console.error(e);renderIssues([{sev:'err',title:'Error al calcular',cause:String(e.message||e),fix:'Revisa la malla y los parámetros. Si el archivo es muy grande, simplifícalo.'}]);}
+  finally{setBusy(null);S.busy=false;$$('#btnCompute,#btnCompute2').forEach(b=>b.disabled=false);updateStale();}
+}
+function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=postProcess();refreshOutputs();renderReport();}
+function renderReport(){
+  const js=S.jobStats,res=S.job?.res,m=S.machine,tl=tool(),fd=feedsCalc(),st=S.strat;if(!js||!res)return;
+  const s5=res.stats5;const axes=KIN_AXES[m.kin];const feedPts=S.moves.filter(x=>x.t==='F').length;
+  const collPts=S.moves.filter(x=>x.t!=='R'&&x.st>=2).length+ (st.skip&&s5?s5.coll:0);
+  const k=[];
+  k.push({l:'Tiempo estimado',v:fmtTime(js.total)});
+  k.push({l:'Corte',v:`${nf(js.lenCut/1000,1)} m`});
+  k.push({l:'Puntos de corte',v:feedPts.toLocaleString('es-MX')});
+  k.push({l:'Líneas G-code',v:(S.gcode?.lines.length||0).toLocaleString('es-MX')});
+  if(s5){k.push({l:'Reorientados',v:s5.adjusted.toLocaleString('es-MX'),c:s5.adjusted?'warn':'ok'});k.push({l:'Colisión sin resolver',v:(s5.coll).toLocaleString('es-MX'),c:s5.coll?'bad':'ok'});}
+  else{const cc=S.job.res.passes.reduce((s,p)=>s+p.pts.filter(q=>q.st>=2).length,0);k.push({l:'Zanco / porta',v:cc?`${cc} pts`:'Libre',c:cc?'bad':'ok'});k.push({l:'Sin alcanzar',v:`${nf(res.unreachedPct,1)} %`,c:res.unreachedPct>2?'warn':'ok'});}
+  axes.forEach((a,q)=>{const r=js.rng[q];k.push({l:`Rango ${a}`,v:Number.isFinite(r[0])?`${r[0].toFixed(0)}…${r[1].toFixed(0)}°`:'—'});});
+  $('#kpis').innerHTML=k.map(x=>`<div class="kpi ${x.c||''}"><small>${x.l}</small><strong>${x.v}</strong></div>`).join('');
+  const I=[];
+  if(!S.M.closed)I.push({sev:'warn',title:'La malla tiene bordes abiertos',cause:`${S.M.open} aristas sin cerrar${S.M.nonman?` y ${S.M.nonman} no-manifold`:''}. Los rayos pueden atravesar huecos.`,fix:'Repara la malla o expórtala otra vez como sólido cerrado.'});
+  const WHY={cutter:'el cortador (desbaste de la pieza)',flute:'la zona de filos',shank:'el zanco',holder:'el portaherramienta o la sujeción'};
+  if(s5&&s5.coll)I.push({sev:'err',title:`${s5.coll} puntos con colisión sin resolver`,cause:`Toca ${Object.entries(s5.why||{}).map(([k,v])=>`${WHY[k]||k} (${v})`).join(', ')} aun inclinando hasta ${st.maxTilt}°.`,fix:`${st.skip?'Se omitieron del G-code. ':''}Aumenta el voladizo, usa un porta más delgado, sube la inclinación máxima o usa herramienta de cuello largo.`});
+  if(s5&&s5.adjusted)I.push({sev:'info',title:`${s5.adjusted} puntos reorientados automáticamente`,cause:`Desvío promedio ${nf(s5.devSum/Math.max(1,s5.adjusted),1)}° respecto a la normal para librar la pieza.`,fix:'Revisa la zona en amarillo durante la simulación.'});
+  if(s5&&s5.lim)I.push({sev:'err',title:`${s5.lim} puntos fuera de los límites rotativos`,cause:`La orientación requerida excede ${axes.map((a,q)=>`${a} ${m.rot[q][0]}…${m.rot[q][1]}°`).join(', ')}.`,fix:'Reduce la inclinación máxima, cambia la cinemática o reposiciona la pieza.'});
+  if(!s5){const cc=res.passes.reduce((s,p)=>s+p.pts.filter(q=>q.st>=2).length,0);if(cc)I.push({sev:'err',title:`Zanco o portaherramienta tocan en ${cc} puntos`,cause:'La herramienta vertical no alcanza la profundidad sin que el zanco o el porta toquen material o sujeción.',fix:'Aumenta el voladizo o usa una herramienta más larga. En 4 ejes revisa la distancia al plato.'});
+    if(res.unreachedPct>0.5)I.push({sev:'warn',title:`${nf(res.unreachedPct,1)} % de la superficie no se alcanza`,cause:`El diámetro de ${tl.D} mm no cabe en detalles más finos.`,fix:'Programa un repaso con una herramienta de menor diámetro o cónica de bola.'});}
+  if(res.maxDepth>tl.fluteLen+0.1)I.push({sev:'warn',title:`Profundidad de ${nf(res.maxDepth,1)} mm mayor que la longitud de corte (${tl.fluteLen} mm)`,cause:'El zanco puede rozar las paredes en zonas profundas.',fix:'Usa desbaste por niveles y una herramienta con más longitud de corte.'});
+  if(js.jumps)I.push({sev:'warn',title:`${js.jumps} saltos de eje rotativo mayores a 30°`,cause:'Paso cerca de una singularidad (herramienta paralela a un eje rotativo) o cambio de solución cinemática.',fix:'Activa el suavizado, agrega inclinación lateral o gira la pieza 90°.'});
+  const out=[];['x','y','z'].forEach((a,c)=>{const L=m.lim[a],r=js.lin[c];if(r[0]<L[0]-1e-6||r[1]>L[1]+1e-6)out.push(`${a.toUpperCase()} ${nf(r[0],1)}…${nf(r[1],1)} (límite ${L[0]}…${L[1]})`);});
+  if(out.length)I.push({sev:'err',title:'Movimientos fuera de recorrido',cause:out.join(' · '),fix:'Mueve el cero de pieza, revisa el pivote / centro de giro o usa una máquina con más recorrido.'});
+  if(js.limFail)I.push({sev:'err',title:`${js.limFail} movimientos sin solución cinemática`,cause:'La orientación pedida no existe en esta máquina.',fix:'Cambia de cinemática o reduce la inclinación.'});
+  if(fd.clampedRPM)I.push({sev:'warn',title:`RPM limitadas a ${m.maxRPM}`,cause:`La Vc pedida requiere más velocidad que la del husillo.`,fix:'El avance se recalculó con las RPM reales para mantener la carga por diente.'});
+  if(fd.clampedFeed)I.push({sev:'warn',title:`Avance limitado a ${m.maxFeed} mm/min`,cause:'El avance calculado excede el máximo de la máquina.',fix:'La carga por diente real será menor que la indicada.'});
+  if(axes.length>=1&&S.post.ctrl==='grbl')I.push({sev:'err',title:'GRBL estándar solo controla 3 ejes',cause:`Este trabajo usa ${axes.join(' y ')}.`,fix:'Usa grblHAL o FluidNC con eje A, o elige Mach3 / LinuxCNC.'});
+  if(axes.length&&!useTCP())I.push({sev:'info',title:'Coordenadas de máquina calculadas por el post',cause:`${CTRL[S.post.ctrl].name}${m.tcp?' no ofrece TCP en este post':' sin TCP'}: X, Y, Z ya incluyen ${isHeadKin(m.kin)?`el pivote (${m.pivot+tl.stickout+tl.holderLen} mm)`:'el centro de giro'}.`,fix:'Si cambias de herramienta o voladizo, vuelve a generar el G-code.'});
+  if(!I.some(x=>x.sev==='err'||x.sev==='warn'))I.unshift({sev:'ok',title:'Sin problemas detectados',cause:`Calculado en ${nf(S.job.ms/1000,1)} s con ${S.cloudN.toLocaleString('es-MX')} puntos de verificación.`,fix:''});
+  renderIssues(I);
+  const ok=!I.some(x=>x.sev==='err');$('#jobState').className='pill '+(ok?(I.some(x=>x.sev==='warn')?'warn':'ok'):'bad');$('#jobState').textContent=ok?'Trayectoria lista':'Revisar antes de cortar';
+}
+function renderIssues(I){$('#issues').innerHTML=I.map(x=>`<li class="${x.sev}"><b>${x.title}</b>${x.cause?`<p><em>Causa</em>${x.cause}</p>`:''}${x.fix?`<p><em>Corrección</em>${x.fix}</p>`:''}</li>`).join('');}
+function updateStale(){const b=[$('#btnCompute'),$('#btnCompute2')];b.forEach(x=>x.classList.toggle('stale',S.stale));if(S.stale&&S.moves){$('#jobState').className='pill warn';$('#jobState').textContent='Parámetros cambiados · recalcula';}}
+function markStale(){S.stale=true;updateStale();}
+
+/* =========================================================
+   INTERFAZ
+   ========================================================= */
+function fillSelect(sel,obj,val){sel.innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');if(val)sel.value=val;}
+function bindNum(id,get,set,onChange){const el=$('#'+id);el.value=get();el.addEventListener('change',()=>{const v=parseFloat(el.value);if(!Number.isFinite(v)){el.value=get();return;}set(v);onChange&&onChange();});return el;}
+function bindChk(id,get,set,onChange){const el=$('#'+id);el.checked=get();el.addEventListener('change',()=>{set(el.checked);onChange&&onChange();});return el;}
+function syncMachineUI(){
+  const m=S.machine;$('#m_kin').value=m.kin;$('#m_ctrl').value=S.post.ctrl;
+  ['x','y','z'].forEach(a=>{$(`#m_${a}min`).value=m.lim[a][0];$(`#m_${a}max`).value=m.lim[a][1];});
+  const ax=KIN_AXES[m.kin];$('#rotGroup').hidden=!ax.length;
+  $('#r1lbl').textContent=$('#r1lbl2').textContent=ax[0]||'A';$('#r2lbl').textContent=$('#r2lbl2').textContent=ax[1]||'B';
+  ['#r2a','#r2b','#r2c'].forEach(s=>$(s).hidden=ax.length<2);
+  $('#m_r1min').value=m.rot[0][0];$('#m_r1max').value=m.rot[0][1];$('#m_r2min').value=m.rot[1][0];$('#m_r2max').value=m.rot[1][1];
+  $('#m_r1inv').checked=m.inv[0];$('#m_r2inv').checked=m.inv[1];$('#m_pivot').value=m.pivot;$('#pivotWrap').hidden=!isHeadKin(m.kin);$('#m_tcp').checked=m.tcp;
+  $('#m_cx').value=m.rc[0];$('#m_cy').value=m.rc[1];$('#m_cz').value=m.rc[2];
+  $('#m_rpm').value=m.maxRPM;$('#m_feed').value=m.maxFeed;$('#m_rapid').value=m.rapid;$('#p_ctrl').value=S.post.ctrl;
+}
+function initMachineUI(){
+  fillSelect($('#m_preset'),MACHINES,S.presetKey);fillSelect($('#m_ctrl'),CTRL,S.post.ctrl);fillSelect($('#p_ctrl'),CTRL,S.post.ctrl);
+  $('#m_preset').addEventListener('change',e=>{applyPreset(e.target.value);markStale();refreshPostIfAny();});
+  $('#m_kin').addEventListener('change',e=>{S.machine.kin=e.target.value;syncMachineUI();markStale();refreshPostIfAny();});
+  const ctrlChange=v=>{S.post.ctrl=v;syncMachineUI();refreshPostIfAny();syncPostUI();};
+  $('#m_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));$('#p_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));
+  const m=()=>S.machine;
+  ['x','y','z'].forEach(a=>{[0,1].forEach(q=>{const el=$(`#m_${a}${q?'max':'min'}`);el.addEventListener('change',()=>{const v=parseFloat(el.value);if(Number.isFinite(v)){m().lim[a][q]=v;refreshPostIfAny();}});});});
+  [['m_r1min',0,0],['m_r1max',0,1],['m_r2min',1,0],['m_r2max',1,1]].forEach(([id,a,q])=>{const el=$('#'+id);el.addEventListener('change',()=>{const v=parseFloat(el.value);if(Number.isFinite(v)){m().rot[a][q]=v;markStale();}});});
+  $('#m_r1inv').addEventListener('change',e=>{m().inv[0]=e.target.checked;refreshPostIfAny();});$('#m_r2inv').addEventListener('change',e=>{m().inv[1]=e.target.checked;refreshPostIfAny();});
+  $('#m_pivot').addEventListener('change',e=>{m().pivot=+e.target.value||0;refreshPostIfAny();});$('#m_tcp').addEventListener('change',e=>{m().tcp=e.target.checked;refreshPostIfAny();syncPostUI();});
+  ['cx','cy','cz'].forEach((k,q)=>$('#m_'+k).addEventListener('change',e=>{m().rc[q]=+e.target.value||0;refreshPostIfAny();}));
+  $('#m_rpm').addEventListener('change',e=>{m().maxRPM=+e.target.value||24000;updateFeedsUI();refreshPostIfAny();});
+  $('#m_feed').addEventListener('change',e=>{m().maxFeed=+e.target.value||5000;updateFeedsUI();refreshPostIfAny();});
+  $('#m_rapid').addEventListener('change',e=>{m().rapid=+e.target.value||5000;refreshPostIfAny();});
+  syncMachineUI();
+}
+function applyPreset(k){S.presetKey=k;S.machine=JSON.parse(JSON.stringify(MACHINES[k]));S.post.ctrl=MACHINES[k].ctrl;S.post.inv=KIN_AXES[S.machine.kin].length>0;$('#m_preset').value=k;syncMachineUI();syncPostUI();updateFeedsUI();}
+function refreshPostIfAny(){if(S.moves&&!S.busy){refreshPost();}}
+/* herramientas */
+function renderToolList(){
+  $('#toolList').innerHTML=S.tools.map(t=>`<button data-id="${t.id}" class="${t.id===S.toolId?'on':''}"><span class="t">T${t.num}</span><span>${t.name}</span><span class="d">Ø${t.D}</span></button>`).join('');
+}
+function syncToolForm(){
+  const t=tool();$('#t_name').value=t.name;$('#t_type').value=t.type;$('#t_num').value=t.num;$('#t_D').value=t.D;$('#t_r').value=t.r;$('#t_angle').value=t.angle;$('#t_tipD').value=t.tipD;$('#t_taper').value=t.taper;
+  $('#t_flutes').value=t.flutes;$('#t_fl').value=t.fluteLen;$('#t_so').value=t.stickout;$('#t_shank').value=t.shankD;$('#t_hd').value=t.holderD;$('#t_hl').value=t.holderLen;
+  $('#w_r').hidden=t.type!=='bull';$('#w_ang').hidden=!(t.type==='vbit'||t.type==='drill');$('#w_tip').hidden=$('#w_taper').hidden=t.type!=='taperball';
+  drawToolSvg();updateFeedsUI();
+}
+function drawToolSvg(){
+  const t=tool();const svg=$('#toolSvg');const hlv=t.holderLen*0.5;const total=t.stickout+hlv;const Rmax=Math.max(t.D,t.shankD,t.holderD)/2;
+  const sc=Math.min(148/total,58/Rmax);const cx=96,by=160;const X=d=>+(cx+d*sc).toFixed(1),Y=h=>+(by-h*sc).toFixed(1);
+  const prof=[];const n=30;for(let i=-n;i<=n;i++){const d=t.D/2*i/n;prof.push(`${X(d)},${Y(toolH(t,Math.abs(d)))}`);}
+  const fl=t.fluteLen,R=t.D/2,sh=t.shankD/2,so=Math.max(t.stickout,fl),hd=t.holderD/2;
+  const cutter=`M${X(-R)},${Y(fl)} L${prof.join(' L')} L${X(R)},${Y(fl)} Z`;
+  const shank=`M${X(-sh)},${Y(fl)} L${X(-sh)},${Y(so)} L${X(sh)},${Y(so)} L${X(sh)},${Y(fl)} Z`;
+  const holder=`M${X(-hd*0.72)},${Y(so)} L${X(-hd)},${Y(so+hlv)} L${X(hd)},${Y(so+hlv)} L${X(hd*0.72)},${Y(so)} Z`;
+  const tx=(x,y,s,a='start')=>`<text x="${x}" y="${y}" text-anchor="${a}" style="font:10px 'JetBrains Mono',monospace;fill:var(--ink-2)">${s}</text>`;
+  const ln=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:var(--ink-3);stroke-width:.8"/>`;
+  const xr=X(Rmax)+8;
+  svg.innerHTML=`<path d="${holder}" style="fill:var(--ink-3);opacity:.4"/>
+  <path d="${shank}" style="fill:var(--line);stroke:var(--ink-3);stroke-width:1"/>
+  <path d="${cutter}" style="fill:var(--accent-2);stroke:var(--accent);stroke-width:1.3"/>
+  <line x1="${cx}" y1="6" x2="${cx}" y2="${by+4}" style="stroke:var(--accent);stroke-dasharray:3 3;stroke-width:.7;opacity:.6"/>
+  ${ln(X(-R),by+8,X(R),by+8)}${tx(cx,by+22,'Ø'+t.D,'middle')}
+  ${ln(xr,Y(0),xr,Y(fl))}${ln(xr+12,Y(0),xr+12,Y(so))}
+  ${tx(xr+18,Y(fl/2)+3,'corte '+fl)}${tx(xr+18,Y(so)+8,'voladizo '+t.stickout)}
+  ${tx(xr+18,Y(so+hlv*0.6),'porta Ø'+t.holderD)}`;
+}
+function initToolUI(){
+  renderToolList();syncToolForm();
+  $('#toolList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.toolId=+b.dataset.id;renderToolList();syncToolForm();buildToolMesh();markStale();});
+  const t=()=>tool();
+  const map=[['t_D','D'],['t_r','r'],['t_angle','angle'],['t_tipD','tipD'],['t_taper','taper'],['t_flutes','flutes'],['t_fl','fluteLen'],['t_so','stickout'],['t_shank','shankD'],['t_hd','holderD'],['t_hl','holderLen'],['t_num','num']];
+  map.forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{const v=parseFloat(e.target.value);if(!Number.isFinite(v)||v<0){e.target.value=t()[k];return;}t()[k]=v;if(k==='D'&&t().type==='ball')t().r=v/2;renderToolList();syncToolForm();buildToolMesh();markStale();}));
+  $('#t_name').addEventListener('change',e=>{t().name=e.target.value||'Herramienta';renderToolList();});
+  $('#t_type').addEventListener('change',e=>{t().type=e.target.value;if(t().type==='ball')t().r=t().D/2;syncToolForm();buildToolMesh();markStale();});
+  $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta'});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
+  $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)'});S.toolId=id;renderToolList();syncToolForm();});
+  $('#t_del').addEventListener('click',()=>{if(S.tools.length<2){toast('Debe quedar al menos una herramienta');return;}S.tools=S.tools.filter(x=>x.id!==S.toolId);S.toolId=S.tools[0].id;renderToolList();syncToolForm();buildToolMesh();markStale();});
+  fillSelect($('#f_mat'),MATERIALS,S.feeds.mat);
+  $('#f_mat').addEventListener('change',e=>{S.feeds.mat=e.target.value;const M=MATERIALS[e.target.value];S.feeds.vc=Math.round((M.vc[0]+M.vc[1])/2);S.feeds.fz=+(((M.fz6[0]+M.fz6[1])/2)*clamp(tool().D/6,0.3,2)).toFixed(3);updateFeedsUI();refreshPostIfAny();});
+  $('#f_vc').addEventListener('change',e=>{S.feeds.vc=+e.target.value||S.feeds.vc;updateFeedsUI();refreshPostIfAny();});
+  $('#f_fz').addEventListener('change',e=>{S.feeds.fz=+e.target.value||S.feeds.fz;updateFeedsUI();refreshPostIfAny();});
+  $('#f_deff').addEventListener('change',e=>{S.feeds.deff=e.target.checked;updateFeedsUI();refreshPostIfAny();});
+}
+function updateFeedsUI(){
+  const f=S.feeds,M=MATERIALS[f.mat],fd=feedsCalc(),t=tool();$('#f_vc').value=f.vc;$('#f_fz').value=f.fz;$('#f_mat').value=f.mat;$('#f_deff').checked=f.deff;
+  $('#o_rpm').textContent=fd.rpm.toLocaleString('es-MX');$('#o_feed').textContent=fd.feed.toLocaleString('es-MX');$('#o_plunge').textContent=fd.plunge.toLocaleString('es-MX');
+  const s=clamp(t.D/6,0.3,2);
+  $('#o_matnote').textContent=`Referencia orientativa para ${M.name} con carburo: Vc ${M.vc[0]}–${M.vc[1]} m/min, fz ${(M.fz6[0]*s).toFixed(3)}–${(M.fz6[1]*s).toFixed(3)} mm para Ø${t.D}. Confirma con el fabricante de tu herramienta.${fd.clampedRPM?` RPM limitadas por el husillo (${S.machine.maxRPM}).`:''}`;
+  const di=fd.deffInfo;$('#o_deff').textContent=di?`Diámetro efectivo en el contacto: ${nf(di.d0,2)} mm sin inclinación${di.beta>0?` → ${nf(di.d1,2)} mm con ${nf(di.beta,0)}° de avance`:''}. Con bola, la punta gira casi a velocidad cero: inclinarla mejora el acabado.`:'';
+  updateScallop();
+}
+function updateScallop(){
+  const t=tool(),s=S.strat.stepover;const {R}=cutterRadii(t);let txt='';
+  if((t.type==='ball'||t.type==='taperball')&&R>0&&s<2*R){const h=R-Math.sqrt(R*R-(s/2)**2);txt=`Altura de cresta teórica: ${(h*1000).toFixed(1)} µm (${nf(h,4)} mm) en superficie plana.`;}
+  else if(t.type==='flat'||t.type==='bull')txt=`Paso lateral ${Math.round(s/t.D*100)} % del diámetro.`;
+  $('#o_scallop').textContent=txt;
+}
+/* estrategia */
+function syncStratUI(){
+  const st=S.strat;$$('#stratCards .card').forEach(c=>c.classList.toggle('on',c.dataset.kind===st.kind));
+  const rot=frameOf(st.kind)==='rot',five=st.kind==='top5'||st.kind==='rot5';
+  $('#w_pattern').hidden=!rot;$('#w_dir').hidden=rot;$('#w_5ax').hidden=!five;$('#w_rough').hidden=five;
+  $$('#s_pattern button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.pattern));$$('#s_dir button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.dir));
+  const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};
+  for(const [id,k] of Object.entries(ids))$('#'+id).value=st[k];
+  $('#s_avoid').checked=st.avoid;$('#s_smooth').checked=st.smooth;$('#s_skip').checked=st.skip;$('#s_rough').checked=st.rough;
+  updateScallop();
+}
+function initStratUI(){
+  $('#stratCards').addEventListener('click',e=>{const c=e.target.closest('.card');if(!c)return;const prevF=frameOf(S.strat.kind);S.strat.kind=c.dataset.kind;if(frameOf(S.strat.kind)!==prevF)S.partDirty=true;
+    const kin=S.machine.kin;
+    if(S.strat.kind==='rot4'&&!['xyza','ab_mixed'].includes(kin))applyPreset('r4');
+    if((S.strat.kind==='rot5')&&!['ab_mixed','bc_head'].includes(kin))applyPreset('ab');
+    if(S.strat.kind==='top5'&&(kin==='xyz'||kin==='xyza'))applyPreset('ac');
+    syncStratUI();markStale();updateFeedsUI();});
+  $('#s_pattern').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.strat.pattern=b.dataset.v;syncStratUI();markStale();});
+  $('#s_dir').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.strat.dir=b.dataset.v;syncStratUI();markStale();});
+  const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};
+  const mins={stepover:0.05,step:0.05,rsd:0.1,rso:0.1,safe:1,maxTilt:0,clear:0};
+  for(const [id,k] of Object.entries(ids))$('#'+id).addEventListener('change',e=>{let v=parseFloat(e.target.value);if(!Number.isFinite(v)){e.target.value=S.strat[k];return;}if(k in mins)v=Math.max(mins[k],v);S.strat[k]=v;e.target.value=v;markStale();updateFeedsUI();});
+  [['s_avoid','avoid'],['s_smooth','smooth'],['s_skip','skip'],['s_rough','rough']].forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{S.strat[k]=e.target.checked;markStale();}));
+  syncStratUI();
+}
+/* post */
+const OUT_DESC={gcode:'Programa listo para tu controlador con la trayectoria calculada.',cps:'Posprocesador para Autodesk Fusion con tu cinemática. Cópialo a la biblioteca de posts de Fusion.',pp:'Posprocesador para Vectric Aspire / VCarve (3 ejes). Guárdalo en la carpeta PostP de Vectric.',json:'Definición completa de máquina, herramienta y post para el motor Hetna en el servidor.'};
+function currentOut(){switch(S.post.out){case 'cps':return{text:genCPS(),ext:'cps'};case 'pp':return{text:genPP(),ext:'pp'};case 'json':return{text:genJSON(),ext:'json'};default:{const ext={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[S.post.ctrl];return{text:S.gcode?.text||'(Calcula una trayectoria para generar el G-code)',ext};}}}
+function refreshOutputs(){
+  const o=currentOut();const ta=$('#outText');const MAXV=400000;ta.value=o.text.length>MAXV?o.text.slice(0,MAXV)+'\n… (vista recortada; Copiar y Descargar incluyen el archivo completo)':o.text;
+  $('#outSize').textContent=`${(o.text.length/1024).toFixed(1)} KB · ${o.text.split('\n').length.toLocaleString('es-MX')} líneas`;$('#outDesc').textContent=OUT_DESC[S.post.out];
+  $$('#outTabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.post.out));
+}
+function syncPostUI(){
+  const c=S.post,m=S.machine,ctrl=CTRL[c.ctrl];$('#p_cool').value=c.cool;$('#p_dec').value=c.dec;$('#p_prog').value=c.prog;$('#p_lines').checked=c.lines;$('#p_inv').checked=c.inv;
+  const axes=KIN_AXES[m.kin];let note='';
+  if(!axes.length)note='Trabajo de 3 ejes: salida XYZ estándar.';
+  else if(useTCP())note=`${ctrl.name} con TCP: el programa lleva coordenadas de pieza y el control compensa la rotación (${{fanuc:'G43.4',haas:'G234',siemens:'TRAORI',heidenhain:'M128',linuxcnc:'cinemática TCP de LinuxCNC, p. ej. xyzac-trt-kins'}[c.ctrl]||'TCP'}).`;
+  else note=`${ctrl.name} sin TCP: el post calcula las coordenadas de máquina con ${isHeadKin(m.kin)?'la longitud de pivote':'el centro de giro'}. El G-code vale solo para esta herramienta y voladizo.`;
+  if(axes.length>ctrl.maxAxes-3)note+=' Este controlador no maneja ese número de ejes en su versión estándar.';
+  $('#postNote').textContent=note;$('#postNote').className='note'+(axes.length>ctrl.maxAxes-3?' warn':'');
+}
+function initPostUI(){
+  syncPostUI();
+  if(/claude/i.test(location.hostname))$('#btnDl').hidden=true; // en el visor de Claude las descargas están bloqueadas; en el servidor sí funcionan
+  $('#p_cool').addEventListener('change',e=>{S.post.cool=e.target.value;refreshPostIfAny();refreshOutputs();});
+  $('#p_dec').addEventListener('change',e=>{S.post.dec=clamp(parseInt(e.target.value)||3,1,5);e.target.value=S.post.dec;refreshPostIfAny();refreshOutputs();});
+  $('#p_prog').addEventListener('change',e=>{S.post.prog=parseInt(e.target.value)||1000;refreshPostIfAny();refreshOutputs();});
+  $('#p_lines').addEventListener('change',e=>{S.post.lines=e.target.checked;refreshPostIfAny();refreshOutputs();});
+  $('#p_inv').addEventListener('change',e=>{S.post.inv=e.target.checked;refreshPostIfAny();refreshOutputs();});
+  $('#outTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.post.out=b.dataset.v;refreshOutputs();});
+  $('#btnCopy').addEventListener('click',async()=>{const t=currentOut().text;try{await navigator.clipboard.writeText(t);toast('Copiado al portapapeles');}catch(err){const ta=$('#outText');ta.focus();ta.select();toast('Selecciona y copia con Ctrl+C');}});
+  $('#btnDl').addEventListener('click',()=>{const o=currentOut();const name=(S.partName||'hetna').replace(/\.[^.]+$/,'')+'.'+o.ext;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([o.text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);toast('Si la descarga no inicia, usa Copiar');});
+}
+/* pestañas y vista */
+function showTab(k){$$('.steps button').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==k);if(k==='post')refreshOutputs();}
+function initChrome(){
+  $$('.steps button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+  $('#btnGoPost').addEventListener('click',()=>{showTab('post');S.post.out='gcode';refreshOutputs();});
+  $('#btnCompute').addEventListener('click',compute);$('#btnCompute2').addEventListener('click',compute);
+  $('#viewToggles').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.v;VIS[k]=!VIS[k];b.classList.toggle('on',VIS[k]);applyVisibility();});
+  $$('[data-cam]').forEach(b=>b.addEventListener('click',()=>fitView(b.dataset.cam)));
+  $('#simPlay').addEventListener('click',()=>{if(!S.moves)return;if(SIM.t>=simTotal())SIM.t=0,resetStockCut();setPlaying(!SIM.playing);});
+  $('#simReset').addEventListener('click',()=>{setPlaying(false);SIM.t=0;resetStockCut();});
+  $('#simEnd').addEventListener('click',async()=>{if(!S.moves)return;setPlaying(false);stockSolid(true);SIM.t=simTotal();setBusy('Simulando remoción de material…',0);const pose=poseAt(SIM.t);let guard=0;while(!advanceCut(pose.i,pose.f,20000)&&guard++<5000){setBusy('Simulando remoción de material…',SIM.cutIdx/S.moves.length);await tick();}setBusy(null);});
+  const sc=$('#simScrub');sc.addEventListener('pointerdown',()=>SIM.scrubbing=true);sc.addEventListener('pointerup',()=>SIM.scrubbing=false);
+  sc.addEventListener('input',()=>{if(!S.moves)return;const t=sc.value/1000*simTotal();if(t<SIM.t-1e-9){resetStockCut();}SIM.t=t;stockSolid(true);});
+  $('#simSpeed').addEventListener('change',e=>SIM.mult=+e.target.value);
+  // archivos
+  const fi=$('#fileIn'),drop=$('#drop');fi.addEventListener('change',()=>{if(fi.files[0])loadFile(fi.files[0]);fi.value='';});
+  const view=$('.view');
+  [drop,view].forEach(el=>{el.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});el.addEventListener('dragleave',()=>drop.classList.remove('over'));el.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');const f=e.dataTransfer.files[0];if(f)loadFile(f);});});
+  $('#samples').addEventListener('click',e=>{const b=e.target.closest('[data-sample]');if(b)loadSample(b.dataset.sample);});
+  $$('[data-rot]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.rot==='reset')S.rotSeq=[];else S.rotSeq.push(b.dataset.rot);S.partDirty=true;reprep();}));
+  $('#p_units').addEventListener('change',e=>{S.units=+e.target.value;S.partDirty=true;reprep();});
+  $('#p_scale').addEventListener('change',e=>{S.scale=Math.max(0.01,+e.target.value||1);S.partDirty=true;reprep();});
+  ['stk_margin','stk_top'].forEach(id=>$('#'+id).addEventListener('change',()=>{S.partDirty=true;reprep();}));
+}
+async function reprep(){if(S.busy)return;S.busy=true;try{await preparePart();S.partDirty=false;S.moves=null;S.gcode=null;buildPathObjects();markStale();$('#kpis').innerHTML='';renderIssues([{sev:'info',title:'Pieza actualizada',cause:'Pulsa Calcular trayectoria para generar el programa.',fix:''}]);}finally{setBusy(null);S.busy=false;}}
+
+/* ---------------- Carga de archivos ---------------- */
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('No se pudo cargar '+src));document.head.appendChild(s);});}
+async function convertOnServer(file){
+  const fd=new FormData();fd.append('file',file,file.name);
+  const r=await fetch(HETNA.backend+'/store/cam/convert',{method:'POST',headers:{'x-publishable-api-key':HETNA.key},body:fd});
+  const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.message||('Error '+r.status+' al convertir'));
+  const bin=atob(b.positions);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  return new Float32Array(u8.buffer);
+}
+async function parseSTEP(buf,ext='step'){
+  const base='https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/';
+  if(!window.occtimportjs)await loadScript(base+'occt-import-js.js');
+  const occt=await Promise.race([occtimportjs({locateFile:f=>base+f}),new Promise((_,r)=>setTimeout(()=>r(new Error('tiempo agotado')),25000))]);
+  const res=(ext==='iges'||ext==='igs')?occt.ReadIgesFile(new Uint8Array(buf),null):occt.ReadStepFile(new Uint8Array(buf),null);if(!res||!res.success||!res.meshes?.length)throw new Error('El STEP no contiene sólidos legibles');
+  const out=[];for(const mesh of res.meshes){const p=mesh.attributes.position.array,ix=mesh.index.array;for(let i=0;i<ix.length;i++){out.push(p[ix[i]*3],p[ix[i]*3+1],p[ix[i]*3+2]);}}
+  return new Float32Array(out);
+}
+async function loadFile(file){
+  if(S.busy)return;const ext=file.name.split('.').pop().toLowerCase();
+  setBusy(`Leyendo ${file.name}…`,0.02);
+  try{
+    let pos;
+    if(ext==='stl'){const buf=await file.arrayBuffer();const g=new THREE.STLLoader().parse(buf);pos=new Float32Array((g.index?g.toNonIndexed():g).attributes.position.array);}
+    else if(ext==='obj'){const txt=await file.text();const grp=new THREE.OBJLoader().parse(txt);grp.updateMatrixWorld(true);const parts=[];let n=0;grp.traverse(o=>{if(o.isMesh){const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);const a=g.attributes.position.array;parts.push(a);n+=a.length;}});pos=new Float32Array(n);let off=0;for(const a of parts){pos.set(a,off);off+=a.length;}}
+    else if(['step','stp','iges','igs'].includes(ext)){setBusy('Convirtiendo '+ext.toUpperCase()+' a malla (OpenCascade)…',0.05);
+      try{pos=await parseSTEP(await file.arrayBuffer(),ext);}
+      catch(e){
+        if(!HETNA_ON)throw new Error('No se pudo convertir el archivo en este navegador ('+e.message+'). Exporta la pieza como STL.');
+        setBusy('Convirtiendo en el servidor…',0.1);pos=await convertOnServer(file);}
+    }
+    else throw new Error('Formato no soportado. Usa STL, OBJ o STEP.');
+    if(!pos||pos.length<9)throw new Error('El archivo no contiene triángulos.');
+    S.rawPos=pos;S.rawFile=file;S.partName=file.name;S.rotSeq=[];S.scale=1;$('#p_scale').value=1;$('#jobName').textContent=file.name;
+    const sz=[0,1,2].map(c=>{let a=Infinity,b=-Infinity;for(let i=c;i<pos.length;i+=3){if(pos[i]<a)a=pos[i];if(pos[i]>b)b=pos[i];}return b-a;});
+    if(Math.max(...sz)<12){S.units=25.4;$('#p_units').value='25.4';toast('La pieza es muy pequeña: se interpretó en pulgadas');}else{S.units=1;$('#p_units').value='1';}
+    S.busy=true;await preparePart();S.busy=false;S.partDirty=false;S.moves=null;S.gcode=null;buildPathObjects();
+    setBusy(null);await compute();
+  }catch(e){console.error(e);setBusy(null);S.busy=false;renderIssues([{sev:'err',title:'No se pudo abrir el archivo',cause:e.message,fix:''}]);toast('No se pudo abrir el archivo');}
+}
+async function loadSample(k){
+  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
+  $('#stk_margin').value=sm.margin??3;
+  applyPreset(sm.preset);S.toolId=sm.tool;Object.assign(S.strat,sm.strat);renderToolList();syncToolForm();syncStratUI();buildToolMesh();
+  $$('#samples .chip').forEach(c=>c.classList.toggle('on',c.dataset.sample===k));
+  S.M=null;await compute();
+}
+
+/* ---------------- Pedido a la tienda ---------------- */
+const ORDER={service:'cam',busy:false};
+function stlFromPositions(pos){
+  const n=pos.length/9|0;const buf=new ArrayBuffer(84+50*n);const dv=new DataView(buf);
+  dv.setUint32(80,n,true);let o=84;
+  for(let t=0;t<n;t++){o+=12;for(let k=0;k<9;k++){dv.setFloat32(o,pos[t*9+k],true);o+=4;}o+=2;}
+  return buf;
+}
+function orderStatus(text,tone){const el=$('#o_status');if(!text){el.hidden=true;return;}el.hidden=false;el.className='note'+(tone==='warn'?' warn':'');el.textContent=text;}
+async function sendOrder(){
+  if(ORDER.busy||!S.rawPos)return;
+  const service=ORDER.service;
+  if(service==='cam'&&(!S.moves||S.stale)){orderStatus('Calcula la trayectoria con los parámetros actuales antes de pedir el programa.','warn');return;}
+  const email=$('#o_email').value.trim();
+  if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){orderStatus('Revisa el correo: parece incompleto.','warn');return;}
+  ORDER.busy=true;$('#btnOrderSend').disabled=true;orderStatus('Enviando tu pieza…');
+  try{
+    const base=(S.partName||'pieza').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\.[^.]+$/,'').replace(/[^\w\-]+/g,'_').slice(0,60)||'pieza';
+    const modelBlob=S.rawFile||new Blob([stlFromPositions(S.rawPos)],{type:'model/stl'});
+    const modelName=S.rawFile?S.rawFile.name:base+'.stl';
+    const fd=new FormData();fd.append('model',modelBlob,modelName);
+    if(service==='cam'&&S.gcode?.text){const ext=currentOutExt();fd.append('gcode',new Blob([S.gcode.text],{type:'text/plain'}),base+'.'+ext);}
+    const res=S.job?.res,s5=res?.stats5;
+    const coll=s5?s5.coll:(res?res.passes.reduce((a,p)=>a+p.pts.filter(q=>q.st>=2).length,0):0);
+    const stats={minutes:+(S.jobStats?.total||0).toFixed(2),points:S.moves?S.moves.filter(m=>m.t==='F').length:0,triangles:S.M?.nT||0,
+      collisions:coll|0,adjusted:(s5?s5.adjusted:0)|0,cut_length_m:+((S.jobStats?.lenCut||0)/1000).toFixed(3),gcode_lines:S.gcode?.lines?.length||0};
+    const payload={service,review:$('#o_review').checked,email:email||null,notes:$('#o_notes').value.trim()||null,model_name:modelName,
+      controller:S.post.ctrl,kinematics:S.machine.kin,strategy_kind:S.strat.kind,config:JSON.parse(genJSON()),stats};
+    fd.append('payload',JSON.stringify(payload));
+    const r=await fetch(HETNA.backend+'/store/cam/jobs',{method:'POST',headers:{'x-publishable-api-key':HETNA.key},body:fd});
+    const body=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(body.message||('Error '+r.status));
+    const job=body.job;
+    if(HETNA.embedded){window.parent.postMessage({type:'hetna-cam:job-created',job_id:job.id,access_token:job.access_token,review:payload.review},location.origin);orderStatus('Pieza recibida. Agregando al carrito…');}
+    else{orderStatus('Pieza recibida. Folio '+job.id+'. Guarda este número para dar seguimiento.');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
+  }catch(e){orderStatus('No se pudo enviar: '+e.message,'warn');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
+}
+function currentOutExt(){return {mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[S.post.ctrl]||'nc';}
+function initOrderUI(){
+  if(!HETNA_ON)return;
+  $('#orderBox').hidden=false;$('#btnOrder').hidden=false;
+  $('#btnOrder').addEventListener('click',()=>{showTab('post');$('#orderBox').scrollIntoView({behavior:'smooth',block:'start'});});
+  $('#o_service').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ORDER.service=b.dataset.v;$$('#o_service button').forEach(x=>x.classList.toggle('on',x===b));});
+  $('#btnOrderSend').addEventListener('click',sendOrder);
+  window.addEventListener('message',e=>{
+    if(e.origin!==location.origin)return;const d=e.data||{};if(d.type!=='hetna-cam:cart-result')return;
+    ORDER.busy=false;$('#btnOrderSend').disabled=false;
+    if(d.ok)orderStatus('Listo: el servicio está en tu carrito.');else orderStatus('No se pudo agregar al carrito: '+(d.error||'error desconocido'),'warn');
+  });
+}
+
+/* ---------------- Arranque ---------------- */
+function boot(){
+  if(!window.THREE||!THREE.OrbitControls){document.body.insertAdjacentHTML('afterbegin','<p style="padding:16px">No se pudo cargar el motor 3D. Revisa tu conexión.</p>');return;}
+  init3D();initChrome();initMachineUI();initToolUI();initStratUI();initPostUI();initOrderUI();buildToolMesh();
+  loadSample('blade');
+}
+boot();
+</script>
+
+</body>
+</html>
