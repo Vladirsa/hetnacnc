@@ -142,6 +142,10 @@ module.exports = withMercur({
       resolve: './src/modules/escaneo',
     },
     {
+      // Laboratorio CAM 3/4/5 ejes: trabajos que el cliente manda desde /cam/lab
+      resolve: './src/modules/cam',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
