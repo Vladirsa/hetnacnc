@@ -30,12 +30,16 @@ const CAMPOS_CARRITO =
 //   - subtotal / discount_total / tax_total por renglón: con esos tres el
 //     resumen puede sumar SÓLO los productos marcados. Sin ellos el resumen
 //     sigue armándose, nomás sin la línea de impuestos ni la de cupón.
+//   - product.categories.id: para medir el avance de los packs por categoría
+//     ("llevas 2 de Bujes, te falta 1"). Sin esto el aviso del pack no sale, y
+//     el carrito funciona igual.
 //
 // Van aparte porque son extras: si este backend no los expone, el carrito tiene
 // que seguir funcionando igual, así que la consulta reintenta sin ellos.
 const CAMPOS_CON_EXISTENCIAS =
   CAMPOS_CARRITO +
-  ',+items.variant.inventory_quantity,+items.subtotal,+items.discount_total,+items.tax_total';
+  ',+items.variant.inventory_quantity,+items.subtotal,+items.discount_total,+items.tax_total' +
+  ',+items.product.categories.id';
 
 // Se apaga sola la primera vez que el backend rechaza los extras.
 let extrasDisponibles = true;

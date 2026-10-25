@@ -9,10 +9,12 @@ import {
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
 import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"
+import { AvisoPack } from "@/components/hetna/packs/AvisoPack"
 import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
 import { escalonesDeOferta } from "@/lib/helpers/volumen"
+import { packsDeTalleres } from "@/lib/packs/acciones"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 
@@ -50,6 +52,19 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
   const escalones = ganadora ? escalonesDeOferta(ganadora) : []
   const precioUnitario = ganadora?.calculated_price?.calculated_amount ?? null
 
+  // Los packs del taller, pero SÓLO los que incluyen alguna categoría de ESTE
+  // producto. Un taller con un pack de "Bujes" no debe anunciarlo en una placa:
+  // el cliente juntaría tres placas y no le aplicaría nada.
+  const categoriasDelProducto = new Set(
+    ((product as { categories?: { id?: string }[] }).categories || [])
+      .map((c) => c?.id)
+      .filter((id): id is string => !!id)
+  )
+  const todosLosPacks = seller?.id ? await packsDeTalleres([seller.id]) : []
+  const packs = todosLosPacks.filter((pack) =>
+    pack.categorias.some((c) => categoriasDelProducto.has(c.id))
+  )
+
   return (
     <div className="flex flex-col gap-4">
       <ProductDetailsHeader
@@ -58,6 +73,8 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
         offers={offers}
         seller={seller}
       />
+
+      <AvisoPack packs={packs} />
 
       {escalones.length > 0 && (
         <EscalonesVolumen escalones={escalones} precioUnitario={precioUnitario} />

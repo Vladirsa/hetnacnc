@@ -9,6 +9,8 @@ import {
 } from "@/components/cells"
 import { BarraEnvioGratis } from "@/components/hetna/envios/BarraEnvioGratis"
 import { useUmbralesEnvio } from "@/components/hetna/envios/useUmbralesEnvio"
+import { AvancePack, piezasQueCuentan } from "@/components/hetna/packs/AvancePack"
+import { usePacks } from "@/components/hetna/packs/usePacks"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 import { Cart } from "@/types/cart"
 
@@ -23,7 +25,9 @@ export const CartItems = ({
   seleccion?: Seleccion
 }) => {
   const grupos = cart ? agruparPorTaller(cart) : []
-  const umbrales = useUmbralesEnvio(grupos.map((g) => g.seller.id))
+  const idsTalleres = grupos.map((g) => g.seller.id)
+  const umbrales = useUmbralesEnvio(idsTalleres)
+  const packs = usePacks(idsTalleres)
 
   if (!cart) return null
   if (!grupos.length) return <EmptyCart />
@@ -56,6 +60,13 @@ export const CartItems = ({
         const subtotal = contados.reduce((suma, item) => suma + (item.subtotal ?? 0), 0)
         const piezas = grupo.items.reduce((suma, item) => suma + item.quantity, 0)
         const umbral = umbrales[grupo.seller.id] ?? null
+        // Los packs de ESTE taller, y sólo los que tienen algo que contar en su
+        // parte del carrito: anunciar un pack de Bujes a quien no lleva ningún
+        // buje es ruido.
+        const packsDelGrupo = packs
+          .filter((pack) => pack.seller_id === grupo.seller.id)
+          .map((pack) => ({ pack, cuentan: piezasQueCuentan(pack, grupo.items) }))
+          .filter(({ cuentan }) => cuentan > 0)
 
         return (
           <div key={grupo.seller.id} data-testid={`cart-items-seller-${grupo.seller.id}`}>
@@ -79,8 +90,16 @@ export const CartItems = ({
             <CartItemsFooter
               currency_code={cart.currency_code}
               subtotal={subtotal}
-              ultimo={!umbral}
+              ultimo={!umbral && !packsDelGrupo.length}
             />
+            {packsDelGrupo.map(({ pack, cuentan }, i) => (
+              <AvancePack
+                key={pack.promocion_id}
+                pack={pack}
+                piezas={cuentan}
+                ultimo={!umbral && i === packsDelGrupo.length - 1}
+              />
+            ))}
             {umbral && (
               <BarraEnvioGratis
                 nombre={grupo.seller.name}
