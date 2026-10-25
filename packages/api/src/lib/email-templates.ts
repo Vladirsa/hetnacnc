@@ -184,3 +184,101 @@ export function reviewRequestEmailHtml({
     `
   )
 }
+
+export type ResumenParaCorreo = {
+  dia: string
+  moneda: string
+  pedidos: number
+  ingresos: number
+  pedidos_sin_pagar: number
+  clientes_nuevos: number
+  carritos_abandonados: number
+  valor_abandonado: number
+  resenas_nuevas: number
+  talleres: { nombre: string; pedidos: number; ingresos: number }[]
+  pedidos_antier: number
+  ingresos_antier: number
+}
+
+// El resumen de ayer, en un correo que se lee en diez segundos.
+//
+// Cada cifra va con su comparación contra el día anterior, porque un número
+// solo no dice si fue buen día. Y se dice explícitamente que las visitas no
+// están, en vez de dejar un hueco que parezca un cero.
+export function resumenDiarioEmailHtml(r: ResumenParaCorreo): string {
+  const dinero = (n: number) =>
+    n.toLocaleString("es-MX", {
+      style: "currency",
+      currency: (r.moneda || "mxn").toUpperCase(),
+      maximumFractionDigits: 0,
+    })
+
+  const compara = (hoy: number, ayer: number): string => {
+    if (ayer === 0 && hoy === 0) return `<span style="color:#888;">igual que antier</span>`
+    if (ayer === 0) return `<span style="color:#1F5B29;">antier no hubo</span>`
+    const pct = Math.round(((hoy - ayer) / ayer) * 100)
+    if (pct === 0) return `<span style="color:#888;">igual que antier</span>`
+    const color = pct > 0 ? "#1F5B29" : "#9B3225"
+    const signo = pct > 0 ? "+" : ""
+    return `<span style="color:${color};">${signo}${pct}% vs antier</span>`
+  }
+
+  const fila = (etiqueta: string, valor: string, extra = "") =>
+    `<tr>
+       <td style="padding:7px 0;border-bottom:1px solid #eee;">${etiqueta}</td>
+       <td style="padding:7px 0;border-bottom:1px solid #eee;text-align:right;font-weight:700;">${valor}</td>
+       <td style="padding:7px 0 7px 10px;border-bottom:1px solid #eee;font-size:12px;white-space:nowrap;">${extra}</td>
+     </tr>`
+
+  const desglose = r.talleres.length
+    ? `<h2 style="font-size:15px;margin:22px 0 8px;">Por taller</h2>
+       <table style="width:100%;border-collapse:collapse;">
+         ${r.talleres
+           .map(
+             (t) =>
+               `<tr>
+                  <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${t.nombre}</td>
+                  <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;text-align:right;">${t.pedidos} ped.</td>
+                  <td style="padding:6px 0 6px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700;">${dinero(t.ingresos)}</td>
+                </tr>`
+           )
+           .join("")}
+       </table>`
+    : ""
+
+  const sinPagar = r.pedidos_sin_pagar
+    ? `<p style="margin:14px 0 0;color:#7A4A09;font-size:13px;">
+         ${r.pedidos_sin_pagar} pedido${r.pedidos_sin_pagar === 1 ? "" : "s"} sin pago confirmado.
+         Todavía no cuentan como venta.
+       </p>`
+    : ""
+
+  return layout(
+    `Resumen de ${r.dia} · ${SITE_NAME}`,
+    `
+      <h1 style="font-size:20px;margin:0 0 4px;">Ayer en ${SITE_NAME}</h1>
+      <p style="color:#888;font-size:13px;margin:0 0 18px;">${r.dia}</p>
+
+      <table style="width:100%;border-collapse:collapse;">
+        ${fila("Pedidos pagados", String(r.pedidos), compara(r.pedidos, r.pedidos_antier))}
+        ${fila("Ingresos", dinero(r.ingresos), compara(r.ingresos, r.ingresos_antier))}
+        ${fila("Clientes nuevos", String(r.clientes_nuevos))}
+        ${fila(
+          "Carritos abandonados",
+          String(r.carritos_abandonados),
+          r.valor_abandonado > 0 ? `${dinero(r.valor_abandonado)} en juego` : ""
+        )}
+        ${fila("Reseñas nuevas", String(r.resenas_nuevas))}
+      </table>
+
+      ${sinPagar}
+      ${desglose}
+
+      <p style="color:#888;font-size:12px;margin-top:22px;border-top:1px solid #eee;padding-top:12px;">
+        Las visitas y las fichas vistas no vienen aquí: ésas viven en GA4 y en el
+        Pixel de Meta, no en la base de la tienda. Esto es lo que la tienda sabe
+        de cierto.
+      </p>
+    `
+  )
+}
