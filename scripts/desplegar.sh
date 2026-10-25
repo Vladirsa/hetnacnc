@@ -22,6 +22,11 @@
 #   cd /root/hetnacnc
 #   ./scripts/desplegar.sh
 #
+# La comprobación final reintenta hasta 150 segundos antes de darse por
+# vencida. Si la máquina está cargada y hace falta más, se le sube:
+#
+#   DESPLIEGUE_ESPERA=300 ./scripts/desplegar.sh
+#
 # Desde /root a secas falla con "not a git repository": hay que entrar primero.
 # No hace falta empujar nada desde el servidor -- el guion hace el pull de main
 # él solo.
@@ -129,17 +134,52 @@ pm2 restart hetna-api hetna-web --update-env
 # --- 6. Comprobar que de verdad quedó arriba ---
 
 paso "Comprobando el sitio"
-echo "   Esperando a que arranquen…"
-sleep 15
+
+# Se espera a que arranquen reintentando, no con una espera fija.
+#
+# Antes esto era `sleep 15` y UN intento por ruta. El 24 de octubre dio por
+# caído un sitio que estaba perfectamente bien: el API de Medusa tarda más que
+# eso en estar listo (carga módulos, enlaces, workflows y subscribers), y ese
+# despliegue venía con el build en frío. La comprobación midió antes de tiempo,
+# imprimió 500 y 502, y nos mandó a revertir un despliegue bueno.
+#
+# Una falsa alarma aquí es peor que no comprobar nada: un guion que grita
+# "se cayó" cuando no se cayó enseña a desconfiar de él, y entonces el día que
+# de verdad se caiga nadie le va a creer. Así que ahora insiste hasta el plazo
+# y sólo falla si se le acaba.
+ESPERA_MAXIMA="${DESPLIEGUE_ESPERA:-150}"   # segundos
+ESPERA_ENTRE=5
 
 fallas=0
 for ruta in "/" "/mx/taller" "/mx/cam"; do
-  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITIO$ruta" || echo "000")"
-  # 200 y 307 son normales: 307 es el redirect de idioma o el envío al login.
-  if [ "$codigo" = "200" ] || [ "$codigo" = "307" ]; then
+  inicio="$(date +%s)"
+  codigo=""
+  listo=0
+
+  while :; do
+    # `curl` ya escribe 000 cuando no pudo ni conectarse, así que NO se le
+    # añade otro con `|| echo`: eso imprimía "000000" y confundía al leerlo.
+    # El `|| true` es para que un fallo de curl no aborte el guion (set -e).
+    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITIO$ruta" 2>/dev/null || true)"
+    [ -n "$codigo" ] || codigo="000"
+    # 200 y 307 son normales: 307 es el redirect de idioma o el envío al login.
+    if [ "$codigo" = "200" ] || [ "$codigo" = "307" ]; then
+      listo=1
+      break
+    fi
+    transcurrido=$(( $(date +%s) - inicio ))
+    if [ "$transcurrido" -ge "$ESPERA_MAXIMA" ]; then
+      break
+    fi
+    # Se dice en qué va, para que una espera larga no parezca un cuelgue.
+    echo "   … $ruta → $codigo (reintentando, ${transcurrido}s de ${ESPERA_MAXIMA}s)"
+    sleep "$ESPERA_ENTRE"
+  done
+
+  if [ "$listo" = "1" ]; then
     verde "   ✓ $ruta → $codigo"
   else
-    rojo  "   ✗ $ruta → $codigo"
+    rojo  "   ✗ $ruta → $codigo (sigue mal después de ${ESPERA_MAXIMA}s)"
     fallas=$((fallas + 1))
   fi
 done
@@ -147,8 +187,14 @@ done
 if [ "$fallas" -gt 0 ]; then
   rojo ""
   rojo "El sitio no responde bien después de reiniciar."
-  echo "  Revisa:  pm2 logs hetna-web --lines 40 --nostream"
-  echo "  Volver:  git reset --hard $antes && bun run build && pm2 restart hetna-api hetna-web"
+  echo "  Revisa primero si de verdad hay un error, no sólo un arranque lento:"
+  echo "    pm2 logs hetna-web --lines 40 --nostream"
+  echo "    pm2 logs hetna-api --lines 40 --nostream"
+  echo "  Si los logs NO tienen excepciones, lo más probable es que todavía"
+  echo "  estuviera arrancando. Comprueba a mano antes de revertir:"
+  echo "    curl -s -o /dev/null -w '%{http_code}\n' $SITIO/"
+  echo "  Volver (sólo si hay un error de verdad):"
+  echo "    git reset --hard $antes && bun run build && pm2 restart hetna-api hetna-web"
   exit 1
 fi
 
