@@ -14,16 +14,23 @@ import type { NextConfig } from 'next';
 // Analytics / Tag Manager, Stripe y Mercado Pago (pagos), Facebook (pixel),
 // jsDelivr (scripts y tipografías del generador de letreros) y 'unsafe-eval',
 // que lo usa alguna librería de estadísticas.
+//
+// CUIDADO con los comodines: en CSP, `https://*.analytics.google.com` NO cubre
+// `https://analytics.google.com`. El comodín exige un subdominio. Por eso GA4 y
+// Google Ads estuvieron bloqueados sin que nadie se enterara: la regla parecía
+// correcta de leerla. Los dominios de abajo salieron del log de /api/csp-reporte
+// del 25 de octubre -- están puestos porque el navegador reportó que los
+// bloqueó, uno por uno, no porque se parezcan a los que hacen falta.
 // ---------------------------------------------------------------------
 const politicaCSP = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son
   // servicios que la tienda de verdad carga.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://js.stripe.com https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://js.stripe.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
-  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
+  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://stats.g.doubleclick.net https://*.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com https://www.facebook.com https://js.stripe.com https://*.stripe.com https://*.stripe.network",
   "media-src 'self' blob: https:",
   "object-src 'none'",
@@ -121,6 +128,32 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**' }
     ]
   },
+  // URLs viejas que siguen circulando y daban 404.
+  //
+  // El 25 de octubre el log de GA mostró una visita real a
+  // /mx/producto/<handle> con el título "404 | HETNA CNC". La ruta de la tienda
+  // es /products/<handle>; nada en este repo genera la forma singular, así que
+  // viene de afuera -- un post, un enlace compartido, un buscador. Esos enlaces
+  // ya están publicados y no se pueden retractar, así que la URL tiene que
+  // funcionar en vez de que persigamos la fuente.
+  //
+  // Permanente (308) porque el destino es el definitivo: así el buscador
+  // transfiere el posicionamiento en lugar de indexar dos direcciones.
+  async redirects() {
+    return [
+      {
+        source: "/:locale/producto/:handle",
+        destination: "/:locale/products/:handle",
+        permanent: true,
+      },
+      {
+        source: "/producto/:handle",
+        destination: "/mx/products/:handle",
+        permanent: true,
+      },
+    ]
+  },
+
   typescript: { ignoreBuildErrors: true },
   // Alguna dependencia importa módulos de Node con el prefijo nuevo
   // ("node:module"), que el bundler del navegador no entiende. Se le quita el
