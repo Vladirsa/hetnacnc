@@ -146,6 +146,12 @@ module.exports = withMercur({
       resolve: './src/modules/cam',
     },
     {
+      // Conteo de vistas de ficha, agregado por día. Es de dónde sale "qué
+      // productos visitan" en el tablero del taller: GA4 y el Pixel viven en
+      // el navegador y no se pueden desglosar por vendedor.
+      resolve: './src/modules/vistas',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [

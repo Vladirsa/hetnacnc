@@ -10,6 +10,7 @@ import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
 import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"
 import { AvisoPack } from "@/components/hetna/packs/AvisoPack"
+import { ContarVista } from "@/components/hetna/vistas/ContarVista"
 import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
@@ -67,6 +68,11 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
 
   return (
     <div className="flex flex-col gap-4">
+      {/* No dibuja nada: avisa que se abrió esta ficha, para que el taller
+          pueda ver después qué productos visitan y a cuáles conviene bajarles
+          el precio. */}
+      <ContarVista productId={product.id} sellerId={seller?.id} />
+
       <ProductDetailsHeader
         product={product}
         locale={locale}
