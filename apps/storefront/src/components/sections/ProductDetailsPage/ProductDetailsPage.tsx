@@ -10,7 +10,7 @@ import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
 import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
-import NotFound from "@/app/not-found"
+import { notFound } from "next/navigation"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -34,10 +34,22 @@ export const ProductDetailsPage = async ({
     },
   }).then(({ response }) => response.products[0])
 
-  if (!prod) return null
+  // `notFound()` y no `return null`: devolver null dibujaba encabezado, una
+  // franja en blanco y pie, con estado 200. Para el cliente es una página rota
+  // sin explicación, y para Google es un "soft 404" -- la indexa como válida
+  // porque el servidor dijo que todo salió bien.
+  //
+  // Esto se descubrió el 25 de octubre: una ficha real en producción se veía
+  // vacía, y además era la razón de que el contador de vistas nunca registrara
+  // nada (sin ficha dibujada, no hay componente que avise).
+  if (!prod) {
+    notFound()
+  }
 
+  // Misma razón para el taller suspendido: antes renderizaba la pantalla de
+  // "no encontrado" pero con estado 200.
   if (prod.seller?.store_status === "SUSPENDED") {
-    return NotFound()
+    notFound()
   }
 
   const { offers } = await listOffers({
