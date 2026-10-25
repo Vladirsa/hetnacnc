@@ -26,6 +26,11 @@ export default async function probarResumenDiario({ container }: ExecArgs) {
     })
 
   logger.info(`[resumen] día reportado: ${r.dia}`)
+  // Los totales van PRIMERO: sin ellos, "0 pedidos ayer" no distingue entre un
+  // día tranquilo, una tienda sin datos todavía y un filtro de fechas roto.
+  logger.info(
+    `[resumen] EN TOTAL (histórico): ${r.total_pedidos} pedidos, ${r.total_clientes} clientes, ${r.total_carritos_sin_completar} carritos sin completar`
+  )
   logger.info(`[resumen] pedidos pagados: ${r.pedidos} (antier: ${r.pedidos_antier})`)
   logger.info(`[resumen] ingresos: ${dinero(r.ingresos)} (antier: ${dinero(r.ingresos_antier)})`)
   logger.info(`[resumen] pedidos sin pago confirmado: ${r.pedidos_sin_pagar}`)
@@ -40,6 +45,18 @@ export default async function probarResumenDiario({ container }: ExecArgs) {
   }
   for (const t of r.talleres) {
     logger.info(`[resumen] ${t.nombre}: ${t.pedidos} pedidos, ${dinero(t.ingresos)}`)
+  }
+
+  if (r.total_pedidos === 0) {
+    logger.info(
+      "[resumen] La tienda no tiene NINGÚN pedido todavía, así que los ceros de ayer son " +
+        "correctos y no un error de cálculo. Hasta que haya ventas, este resumen va a salir en ceros."
+    )
+  } else if (r.pedidos === 0) {
+    logger.info(
+      `[resumen] Ayer no hubo pedidos, pero la tienda lleva ${r.total_pedidos} en total: ` +
+        "el cálculo funciona y ayer simplemente estuvo tranquilo."
+    )
   }
 
   logger.info(

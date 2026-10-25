@@ -49,6 +49,13 @@ export type ResumenDiario = {
   valor_abandonado: number
   resenas_nuevas: number
   talleres: ResumenTaller[]
+  // Totales históricos. Van porque un reporte de ceros no se puede interpretar
+  // sin denominador: "0 pedidos ayer" significa cosas muy distintas si la
+  // tienda lleva 400 pedidos o si lleva 0. Sin esto, un día tranquilo y un
+  // filtro de fechas roto se ven idénticos.
+  total_pedidos: number
+  total_clientes: number
+  total_carritos_sin_completar: number
   // Comparación con el día anterior, para que una cifra sola no parezca buena
   // o mala sin referencia.
   pedidos_antier: number
@@ -92,6 +99,7 @@ export async function calcularResumenDiario(
     if (e?.order_id && e?.seller_id) tallerDeOrden.set(e.order_id, e.seller_id)
   }
 
+  let totalPedidos = 0
   let pedidos = 0
   let ingresos = 0
   let pedidosSinPagar = 0
@@ -103,6 +111,7 @@ export async function calcularResumenDiario(
   for (const orden of ordenes || []) {
     const total = Number(orden.total) || 0
     if (orden.currency_code) moneda = orden.currency_code
+    totalPedidos += 1
 
     if (dentro(orden.created_at, inicioAyer, finAyer)) {
       if (estaPagada(orden)) {
@@ -158,6 +167,7 @@ export async function calcularResumenDiario(
   })
   let carritosAbandonados = 0
   let valorAbandonado = 0
+  const totalCarritosSinCompletar = (carritos || []).length
   for (const carrito of carritos || []) {
     if (!dentro(carrito.created_at, inicioAyer, finAyer)) continue
     carritosAbandonados += 1
@@ -169,6 +179,7 @@ export async function calcularResumenDiario(
     entity: "customer",
     fields: ["id", "created_at"],
   })
+  const totalClientes = (clientes || []).length
   const clientesNuevos = (clientes || []).filter((c) =>
     dentro(c?.created_at, inicioAyer, finAyer)
   ).length
@@ -201,5 +212,8 @@ export async function calcularResumenDiario(
     talleres,
     pedidos_antier: pedidosAntier,
     ingresos_antier: ingresosAntier,
+    total_pedidos: totalPedidos,
+    total_clientes: totalClientes,
+    total_carritos_sin_completar: totalCarritosSinCompletar,
   }
 }
