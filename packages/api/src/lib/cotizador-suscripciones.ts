@@ -1,5 +1,6 @@
 // Suscripciones del Cotizador HETNA (app Flutter + Supabase) cobradas con
-// Mercado Pago.
+// Mercado Pago (México, MXN). PayPal (USD, mercado de EE. UU.) vive en
+// cotizador-paypal.ts y usa las mismas piezas de este archivo.
 //
 // La app no puede decidir su plan: el plan vive en `negocios.plan` de la base
 // de Supabase del Cotizador, protegido por un trigger que sólo deja cambiarlo
@@ -17,22 +18,43 @@
 //      El plan sigue hasta el fin del periodo pagado; el job
 //      cotizador-planes-vencidos lo baja a Gratis al vencer.
 //
+// Un taller tiene a lo más UNA suscripción activa: al activarse una (de
+// Mercado Pago o de PayPal) se cancela la anterior, sea del proveedor que sea.
+//
 // Variables (.env de packages/api):
 //   MERCADOPAGO_ACCESS_TOKEN        la misma de la tienda
 //   COTIZADOR_SUPABASE_URL          https://ldfmkfbhcbsbecfbzsny.supabase.co (por defecto)
 //   COTIZADOR_SUPABASE_SERVICE_KEY  Supabase > Project Settings > API > service_role
 
+// cotizador-paypal.ts también importa este archivo; sólo se usan sus funciones
+// dentro de otras funciones, así que el ciclo no causa problemas al cargar.
+import { cancelarSuscripcionPaypal, sincronizarSuscripcionPaypal } from "./cotizador-paypal"
+import { paypal, paypalListo } from "./paypal-api"
+
 const MP_API = "https://api.mercadopago.com"
 const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
 const supaUrl = () => (process.env.COTIZADOR_SUPABASE_URL || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
 const supaKey = () => process.env.COTIZADOR_SUPABASE_SERVICE_KEY || ""
-const RETORNO = process.env.COTIZADOR_URL_RETORNO || "https://hetnacnc.com/cotizador/"
+export const RETORNO = process.env.COTIZADOR_URL_RETORNO || "https://hetnacnc.com/cotizador/"
 
-// Mismos precios que lib/services/planes.dart de la app y hetnacnc.com (MXN al mes)
+// precio: MXN al mes con Mercado Pago (mismos que lib/services/planes.dart de la
+// app y hetnacnc.com). precioUsd: USD al mes con PayPal.
 export const PLANES_COTIZADOR = {
-  taller: { nombre: "Taller", precio: Number(process.env.COTIZADOR_PRECIO_TALLER || 299) },
-  pro: { nombre: "Pro", precio: Number(process.env.COTIZADOR_PRECIO_PRO || 599) },
-  industrial: { nombre: "Industrial", precio: Number(process.env.COTIZADOR_PRECIO_INDUSTRIAL || 1199) },
+  taller: {
+    nombre: "Taller",
+    precio: Number(process.env.COTIZADOR_PRECIO_TALLER || 299),
+    precioUsd: Number(process.env.COTIZADOR_PRECIO_USD_TALLER || 29),
+  },
+  pro: {
+    nombre: "Pro",
+    precio: Number(process.env.COTIZADOR_PRECIO_PRO || 599),
+    precioUsd: Number(process.env.COTIZADOR_PRECIO_USD_PRO || 59),
+  },
+  industrial: {
+    nombre: "Industrial",
+    precio: Number(process.env.COTIZADOR_PRECIO_INDUSTRIAL || 1199),
+    precioUsd: Number(process.env.COTIZADOR_PRECIO_USD_INDUSTRIAL || 99),
+  },
 } as const
 export type PlanPago = keyof typeof PLANES_COTIZADOR
 
@@ -43,6 +65,18 @@ export class ErrorSuscripcion extends Error {
 }
 
 export const suscripcionesListas = () => Boolean(mpToken() && supaKey())
+export const supabaseListo = () => Boolean(supaKey())
+
+/** Precios y medios de pago activos, para la pantalla de planes de la app. */
+export function preciosCotizador() {
+  return {
+    planes: Object.fromEntries(
+      Object.entries(PLANES_COTIZADOR).map(([k, v]) => [k, { nombre: v.nombre, mxn: v.precio, usd: v.precioUsd }])
+    ),
+    mercadopago: suscripcionesListas(),
+    paypal: Boolean(supaKey() && paypalListo()),
+  }
+}
 
 // ── Supabase (con la llave de servicio) ───────────────────────────────────
 async function supa<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
@@ -61,23 +95,28 @@ async function supa<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
   return (texto ? JSON.parse(texto) : null) as T
 }
 
-type Negocio = {
+export type Negocio = {
   id: string
   nombre: string | null
   plan: string | null
   plan_estado: string | null
+  plan_renueva: string | null
   plan_vence: string | null
+  pago_proveedor: string | null
   mp_suscripcion_id: string | null
   mp_suscripcion_pendiente: string | null
+  pp_suscripcion_id: string | null
+  pp_suscripcion_pendiente: string | null
 }
-const CAMPOS_NEGOCIO = "id,nombre,plan,plan_estado,plan_vence,mp_suscripcion_id,mp_suscripcion_pendiente"
+const CAMPOS_NEGOCIO =
+  "id,nombre,plan,plan_estado,plan_renueva,plan_vence,pago_proveedor,mp_suscripcion_id,mp_suscripcion_pendiente,pp_suscripcion_id,pp_suscripcion_pendiente"
 
-async function leerNegocio(id: string): Promise<Negocio | null> {
+export async function leerNegocio(id: string): Promise<Negocio | null> {
   const filas = await supa<Negocio[]>(`/rest/v1/negocios?id=eq.${encodeURIComponent(id)}&select=${CAMPOS_NEGOCIO}`)
   return filas[0] ?? null
 }
 
-async function actualizarNegocio(id: string, cambios: Record<string, unknown>) {
+export async function actualizarNegocio(id: string, cambios: Record<string, unknown>) {
   await supa(`/rest/v1/negocios?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: JSON.stringify(cambios),
@@ -85,7 +124,7 @@ async function actualizarNegocio(id: string, cambios: Record<string, unknown>) {
   })
 }
 
-async function anotarEvento(e: Record<string, unknown>) {
+export async function anotarEvento(e: Record<string, unknown>) {
   try {
     await supa("/rest/v1/suscripciones_eventos", {
       method: "POST",
@@ -143,8 +182,8 @@ type Preapproval = {
   auto_recurring?: { transaction_amount?: number; currency_id?: string }
 }
 
-const referencia = (negocioId: string, plan: PlanPago) => `cotizador:${negocioId}:${plan}`
-function leerReferencia(ref: string | undefined): { negocioId: string; plan: PlanPago } | null {
+export const referencia = (negocioId: string, plan: PlanPago) => `cotizador:${negocioId}:${plan}`
+export function leerReferencia(ref: string | undefined): { negocioId: string; plan: PlanPago } | null {
   const m = /^cotizador:([0-9a-f-]{36}):(taller|pro|industrial)$/i.exec(ref || "")
   return m ? { negocioId: m[1], plan: m[2].toLowerCase() as PlanPago } : null
 }
@@ -185,11 +224,54 @@ export async function crearSuscripcion(p: { token?: string; plan: string; correo
   return { url: pre.init_point, id: pre.id }
 }
 
+export type Bitacora = { info: (m: string) => void; error: (m: string) => void }
+
+/** Cancela en PayPal la suscripción anterior del taller (si tenía), al activarse otra. */
+export async function cancelarPaypalAnterior(negocio: Negocio, nuevaId: string, logger?: Bitacora) {
+  const anterior = negocio.pp_suscripcion_id
+  if (!anterior || anterior === nuevaId || !paypalListo()) return
+  try {
+    await paypal(`/v1/billing/subscriptions/${anterior}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "Cambio de plan o de forma de pago en el Cotizador HETNA" }),
+    })
+  } catch (e) {
+    logger?.error(`[cotizador] no se pudo cancelar la suscripción de PayPal ${anterior}: ${(e as Error).message}`)
+  }
+}
+
+/** Cancela en Mercado Pago la suscripción anterior del taller (si tenía), al activarse otra. */
+export async function cancelarMercadoPagoAnterior(negocio: Negocio, nuevaId: string, logger?: Bitacora) {
+  const anterior = negocio.mp_suscripcion_id
+  if (!anterior || anterior === nuevaId || !mpToken()) return
+  try {
+    await mp(`/preapproval/${anterior}`, { method: "PUT", body: JSON.stringify({ status: "cancelled" }) })
+  } catch (e) {
+    logger?.error(`[cotizador] no se pudo cancelar la suscripción anterior ${anterior}: ${(e as Error).message}`)
+  }
+}
+
+/** Lo ya pagado se respeta: el plan sigue hasta `hasta`; si ya pasó, baja a Gratis. */
+export async function marcarSuscripcionTerminada(
+  negocio: Negocio,
+  p: { id: string; proveedor: string; estado: "pausada" | "cancelada"; hasta: string | null; plan: string; monto?: number },
+  logger?: Bitacora
+) {
+  const hasta = p.hasta && new Date(p.hasta).getTime() > Date.now() ? p.hasta : null
+  await actualizarNegocio(
+    negocio.id,
+    hasta ? { plan_estado: p.estado, plan_vence: hasta } : { plan: "gratis", plan_estado: p.estado, plan_vence: null }
+  )
+  await anotarEvento({ negocio_id: negocio.id, preapproval_id: p.id, evento: p.estado, plan: p.plan, estado: p.proveedor, monto: p.monto ?? null })
+  logger?.info(`[cotizador] taller ${negocio.id}: suscripción de ${p.proveedor} ${p.estado}${hasta ? ` (plan hasta ${hasta})` : ", pasa a Gratis"}`)
+  return { plan: hasta ? negocio.plan : "gratis", estado: p.estado }
+}
+
 /**
  * Lee la suscripción en Mercado Pago y deja el taller como corresponde.
- * Es lo único que cambia `negocios.plan`. Se puede llamar las veces que sea.
+ * Junto con la de PayPal, es lo único que cambia `negocios.plan`. Se puede llamar las veces que sea.
  */
-export async function sincronizarSuscripcion(preapprovalId: string, logger?: { info: (m: string) => void; error: (m: string) => void }) {
+export async function sincronizarSuscripcion(preapprovalId: string, logger?: Bitacora) {
   if (!/^[0-9a-z]{10,64}$/i.test(preapprovalId)) return null
   const pre = await mp<Preapproval>(`/preapproval/${preapprovalId}`)
   const ref = leerReferencia(pre.external_reference)
@@ -204,23 +286,21 @@ export async function sincronizarSuscripcion(preapprovalId: string, logger?: { i
       logger?.error(`[cotizador] suscripción ${pre.id} con monto inesperado: ${monto} ${pre.auto_recurring?.currency_id}`)
       return null
     }
-    // Si ya tenía otra suscripción activa (cambio de plan), se cancela la anterior
-    if (negocio.mp_suscripcion_id && negocio.mp_suscripcion_id !== pre.id) {
-      try {
-        await mp(`/preapproval/${negocio.mp_suscripcion_id}`, { method: "PUT", body: JSON.stringify({ status: "cancelled" }) })
-      } catch (e) {
-        logger?.error(`[cotizador] no se pudo cancelar la suscripción anterior ${negocio.mp_suscripcion_id}: ${(e as Error).message}`)
-      }
-    }
+    // Si ya tenía otra suscripción activa (cambio de plan o venía de PayPal), se cancela la anterior
+    await cancelarMercadoPagoAnterior(negocio, pre.id, logger)
+    await cancelarPaypalAnterior(negocio, "", logger)
     await actualizarNegocio(negocio.id, {
       plan: ref.plan,
       plan_estado: "activa",
       plan_renueva: pre.next_payment_date ?? null,
       plan_vence: null,
+      pago_proveedor: "mercadopago",
       mp_suscripcion_id: pre.id,
-      mp_suscripcion_pendiente: null,
+      pp_suscripcion_id: null,
+      // la pendiente sólo se limpia si es ésta: puede haber otra en camino (cambio de plan)
+      ...(negocio.mp_suscripcion_pendiente === pre.id ? { mp_suscripcion_pendiente: null } : {}),
     })
-    if (negocio.plan !== ref.plan || negocio.plan_estado !== "activa") {
+    if (negocio.plan !== ref.plan || negocio.plan_estado !== "activa" || negocio.mp_suscripcion_id !== pre.id) {
       await anotarEvento({ negocio_id: negocio.id, preapproval_id: pre.id, evento: "activada", plan: ref.plan, estado: pre.status, monto })
       logger?.info(`[cotizador] taller ${negocio.id} con plan ${ref.plan} (suscripción ${pre.id})`)
     }
@@ -229,31 +309,48 @@ export async function sincronizarSuscripcion(preapprovalId: string, logger?: { i
 
   if ((pre.status === "paused" || pre.status === "cancelled") && negocio.mp_suscripcion_id === pre.id) {
     // Lo ya pagado se respeta: el plan sigue hasta la siguiente fecha de cobro
-    const hasta = pre.next_payment_date && new Date(pre.next_payment_date).getTime() > Date.now() ? pre.next_payment_date : null
-    const estado = pre.status === "paused" ? "pausada" : "cancelada"
-    await actualizarNegocio(negocio.id, hasta ? { plan_estado: estado, plan_vence: hasta } : { plan: "gratis", plan_estado: estado, plan_vence: null })
-    await anotarEvento({ negocio_id: negocio.id, preapproval_id: pre.id, evento: estado, plan: ref.plan, estado: pre.status, monto })
-    logger?.info(`[cotizador] taller ${negocio.id}: suscripción ${estado}${hasta ? ` (plan hasta ${hasta})` : ", pasa a Gratis"}`)
-    return { plan: hasta ? negocio.plan : "gratis", estado }
+    return marcarSuscripcionTerminada(
+      negocio,
+      {
+        id: pre.id,
+        proveedor: "mercadopago",
+        estado: pre.status === "paused" ? "pausada" : "cancelada",
+        hasta: pre.next_payment_date || negocio.plan_renueva,
+        plan: ref.plan,
+        monto,
+      },
+      logger
+    )
   }
 
   return { plan: negocio.plan, estado: pre.status }
 }
 
-/** Para "Ya pagué": revisa la suscripción pendiente (o la activa) del taller. */
+/** Para "Ya pagué": revisa las suscripciones pendientes (o la activa) del taller, de los dos proveedores. */
 export async function verificarSuscripcion(token?: string) {
-  if (!suscripcionesListas()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
+  if (!supabaseListo()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
   const { negocio } = await adminDesdeToken(token)
-  const id = negocio.mp_suscripcion_pendiente || negocio.mp_suscripcion_id
-  if (!id) return { plan: negocio.plan, estado: negocio.plan_estado }
-  return (await sincronizarSuscripcion(id)) ?? { plan: negocio.plan, estado: negocio.plan_estado }
+  let resultado: { plan: string | null; estado: string | null } | null = null
+  const mpId = negocio.mp_suscripcion_pendiente || negocio.mp_suscripcion_id
+  if (mpId && mpToken()) resultado = (await sincronizarSuscripcion(mpId)) ?? resultado
+  const ppId = negocio.pp_suscripcion_pendiente || negocio.pp_suscripcion_id
+  if (ppId && paypalListo()) {
+    resultado = (await sincronizarSuscripcionPaypal(ppId)) ?? resultado
+  }
+  if (resultado) return resultado
+  const actual = await leerNegocio(negocio.id)
+  return { plan: actual?.plan ?? negocio.plan, estado: actual?.plan_estado ?? negocio.plan_estado }
 }
 
-/** Cancela la suscripción; el plan se queda hasta el fin del periodo pagado. */
+/** Cancela la suscripción activa (del proveedor que sea); el plan se queda hasta el fin del periodo pagado. */
 export async function cancelarSuscripcion(token?: string) {
-  if (!suscripcionesListas()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
+  if (!supabaseListo()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
   const { negocio } = await adminDesdeToken(token)
+  if (negocio.pago_proveedor === "paypal" && negocio.pp_suscripcion_id) {
+    return cancelarSuscripcionPaypal(negocio)
+  }
   if (!negocio.mp_suscripcion_id) throw new ErrorSuscripcion("Tu taller no tiene una suscripción activa.")
+  if (!mpToken()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
   await mp(`/preapproval/${negocio.mp_suscripcion_id}`, { method: "PUT", body: JSON.stringify({ status: "cancelled" }) })
   return (await sincronizarSuscripcion(negocio.mp_suscripcion_id)) ?? { plan: negocio.plan, estado: "cancelada" }
 }
