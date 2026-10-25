@@ -4,12 +4,36 @@
 //
 // El cliente arma la pieza por segmentos (cilindro, cono, bola, cintura), ve
 // el perfil al momento y pide el G-code a /api/cam/torno, donde vive el motor
-// (lib/torno/gcode.ts). El perfil de la pantalla usa el MISMO lib/torno/pieza.ts
+// (lib/torno/gcode.ts). El perfil y la vista 3D usan el MISMO lib/torno/pieza.ts
 // que el generador, así que lo que se ve es lo que se corta.
+//
+// Etapa 2: vista 3D, estrías, espiral (salomónica) y "Mis diseños", que se
+// guardan en este navegador y se pueden bajar / subir como archivo .json.
 
-import { useMemo, useState } from "react"
+import dynamic from "next/dynamic"
+import { useEffect, useMemo, useState } from "react"
 
-import { longitudTotal, radioEn, radioMaximo, type Segmento, type TipoSegmento } from "@/lib/torno/pieza"
+import {
+  ESPIRAL_INICIAL,
+  ESTRIAS_INICIALES,
+  longitudTotal,
+  radioEn,
+  radioMaximo,
+  type Espiral,
+  type Estrias,
+  type Segmento,
+  type TipoSegmento,
+} from "@/lib/torno/pieza"
+
+// three.js sólo en el navegador, y sólo cuando se abre la pestaña 3D
+const Visor3DTorno = dynamic(() => import("./Visor3DTorno"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[260px] items-center justify-center rounded-[10px] bg-[#F7F5EF] text-[13px] text-[#6B6A63] sm:h-[320px]">
+      Cargando la vista 3D…
+    </div>
+  ),
+})
 
 const TIPOS: { valor: TipoSegmento; etiqueta: string }[] = [
   { valor: "cilindro", etiqueta: "Cilindro (recto)" },
@@ -38,7 +62,15 @@ const seg = (tipo: TipoSegmento, inicioY: number, finY: number, radioInicio: num
 })
 
 // Puntos de partida para no empezar en blanco. Medidas en mm.
-const EJEMPLOS: { nombre: string; bloque: number; segmentos: () => Segmento[] }[] = [
+type Ejemplo = {
+  nombre: string
+  bloque: number
+  segmentos: () => Segmento[]
+  estrias?: Partial<Estrias>
+  espiral?: Partial<Espiral>
+}
+
+const EJEMPLOS: Ejemplo[] = [
   {
     nombre: "Balaustre",
     bloque: 60,
@@ -72,7 +104,55 @@ const EJEMPLOS: { nombre: string; bloque: number; segmentos: () => Segmento[] }[
       seg("cilindro", 530, 570, 48, 48),
     ],
   },
+  {
+    nombre: "Pata con estrías",
+    bloque: 75,
+    segmentos: () => [
+      seg("cilindro", 0, 120, 35, 35),
+      seg("cova", 120, 150, 35, 27),
+      seg("cono", 150, 650, 30, 20),
+      seg("esfera", 650, 700, 20, 24),
+    ],
+    estrias: { activo: true, cantidad: 8, yDesde: 190, yHasta: 600, profundidad: 3 },
+  },
+  {
+    nombre: "Columna salomónica",
+    bloque: 80,
+    segmentos: () => [
+      seg("cilindro", 0, 60, 38, 38),
+      seg("cova", 60, 85, 38, 30),
+      seg("cilindro", 85, 515, 34, 34),
+      seg("cova", 515, 540, 38, 30),
+      seg("cilindro", 540, 600, 38, 38),
+    ],
+    espiral: { activo: true, entradas: 2, paso: 140, yDesde: 105, yHasta: 495, profundidad: 6, sentido: "derecha" },
+  },
 ]
+
+// ── Mis diseños (en este navegador) ──
+type Diseno = {
+  nombre: string
+  guardado: string
+  datos: Record<string, unknown>
+}
+const LLAVE = "hetna-torno-disenos"
+function leerDisenos(): Diseno[] {
+  try {
+    const t = window.localStorage.getItem(LLAVE)
+    const lista = t ? (JSON.parse(t) as Diseno[]) : []
+    return Array.isArray(lista) ? lista : []
+  } catch {
+    return []
+  }
+}
+function escribirDisenos(lista: Diseno[]): boolean {
+  try {
+    window.localStorage.setItem(LLAVE, JSON.stringify(lista))
+    return true
+  } catch {
+    return false
+  }
+}
 
 const caja = "rounded-[14px] border border-[#E7E4DC] bg-white p-4 lg:p-5"
 const etiqueta = "block text-[12px] font-semibold text-[#6B6A63]"
@@ -192,6 +272,145 @@ export function EstudioTorno() {
   const [generando, setGenerando] = useState(false)
   const [avisos, setAvisos] = useState<string[]>([])
 
+  const [estrias, setEstrias] = useState<Estrias>(ESTRIAS_INICIALES)
+  const [espiral, setEspiral] = useState<Espiral>(ESPIRAL_INICIAL)
+  const [vista, setVista] = useState<"3d" | "perfil">("3d")
+  const [encuadre, setEncuadre] = useState(0)
+
+  const [disenos, setDisenos] = useState<Diseno[]>([])
+  const [nombreDiseno, setNombreDiseno] = useState("")
+  const [avisoDiseno, setAvisoDiseno] = useState<string | null>(null)
+  useEffect(() => setDisenos(leerDisenos()), [])
+
+  const tallados = useMemo(() => ({ estrias, espiral }), [estrias, espiral])
+  const largoPieza = useMemo(() => {
+    const v = segmentos.filter((x) => Number.isFinite(x.finY))
+    return v.length ? longitudTotal(v) : 0
+  }, [segmentos])
+
+  // Al encender un tallado sin tramo, se propone del 15 % al 85 % de la pieza
+  const tramoInicial = () => ({
+    yDesde: Math.round(largoPieza * 0.15),
+    yHasta: Math.round(largoPieza * 0.85),
+  })
+  const cambiarEstrias = (c: Partial<Estrias>) => {
+    setEstrias((e) => {
+      const nuevo = { ...e, ...c }
+      if (c.activo && nuevo.yHasta <= nuevo.yDesde) Object.assign(nuevo, tramoInicial())
+      return nuevo
+    })
+    limpiarResultado()
+  }
+  const cambiarEspiral = (c: Partial<Espiral>) => {
+    setEspiral((e) => {
+      const nuevo = { ...e, ...c }
+      if (c.activo && nuevo.yHasta <= nuevo.yDesde) Object.assign(nuevo, tramoInicial())
+      return nuevo
+    })
+    limpiarResultado()
+  }
+
+  // Todo el diseño en un objeto (para guardar, bajar y subir)
+  const disenoActual = () => ({
+    version: 1,
+    segmentos: segmentos.map(({ id: _id, ...resto }) => resto),
+    material,
+    origenPunto,
+    maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
+    herramienta: { toolDiameterMm, feed },
+    rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
+    tallados: { estrias, espiral },
+  })
+
+  function aplicarDiseno(d: Record<string, any>): boolean {
+    if (!d || !Array.isArray(d.segmentos) || !d.segmentos.length) return false
+    const n = (v: unknown, def: number) => (Number.isFinite(Number(v)) ? Number(v) : def)
+    setSegmentos(
+      d.segmentos.slice(0, 60).map((x: any) =>
+        seg(
+          TIPOS.some((t) => t.valor === x?.tipo) ? x.tipo : "cilindro",
+          n(x?.inicioY, 0),
+          n(x?.finY, 50),
+          n(x?.radioInicio, 20),
+          n(x?.radioFin, 20)
+        )
+      )
+    )
+    if (typeof d.material === "string") setMaterial(d.material)
+    setOrigenPunto(d.origenPunto === "contrapunto" ? "contrapunto" : "mandril")
+    setStockWidthMm(n(d.maquina?.stockWidthMm, 60))
+    setStartOffsetMm(n(d.maquina?.startOffsetMm, 20))
+    setEndOffsetMm(n(d.maquina?.endOffsetMm, 20))
+    setSafeZClearanceMm(n(d.maquina?.safeZClearanceMm, 10))
+    setToolDiameterMm(n(d.herramienta?.toolDiameterMm, 6))
+    setFeed(n(d.herramienta?.feed, 1200))
+    setRpmCilindrado(n(d.rpm?.rpmCilindrado, 30))
+    setRpmDesbaste(n(d.rpm?.rpmDesbaste, 40))
+    setRpmAcabado(n(d.rpm?.rpmAcabado, 65))
+    setEstrias({ ...ESTRIAS_INICIALES, ...(d.tallados?.estrias ?? {}) })
+    setEspiral({ ...ESPIRAL_INICIAL, ...(d.tallados?.espiral ?? {}) })
+    setEncuadre((n) => n + 1)
+    limpiarResultado()
+    return true
+  }
+
+  function guardarDiseno() {
+    const nombre = nombreDiseno.trim() || `Pieza ${new Date().toLocaleDateString("es-MX")}`
+    const lista = [
+      { nombre, guardado: new Date().toISOString(), datos: disenoActual() },
+      ...disenos.filter((d) => d.nombre !== nombre),
+    ].slice(0, 30)
+    if (escribirDisenos(lista)) {
+      setDisenos(lista)
+      setAvisoDiseno(`Guardado: ${nombre}`)
+    } else {
+      setAvisoDiseno("Este navegador no deja guardar. Usa “Bajar archivo” para conservarlo.")
+    }
+  }
+
+  function abrirDiseno(d: Diseno) {
+    if (aplicarDiseno(d.datos)) {
+      setNombreDiseno(d.nombre)
+      setAvisoDiseno(`Abierto: ${d.nombre}`)
+    }
+  }
+
+  function borrarDiseno(nombre: string) {
+    const lista = disenos.filter((d) => d.nombre !== nombre)
+    escribirDisenos(lista)
+    setDisenos(lista)
+  }
+
+  function bajarDiseno() {
+    const nombre = (nombreDiseno.trim() || "pieza-torno").replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]+/g, "").replace(/\s+/g, "-")
+    const blob = new Blob([JSON.stringify(disenoActual(), null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${nombre}.hetna-torno.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function subirDiseno(archivo: File | undefined) {
+    if (!archivo) return
+    if (archivo.size > 200_000) {
+      setAvisoDiseno("Ese archivo es demasiado grande para ser un diseño.")
+      return
+    }
+    try {
+      const d = JSON.parse(await archivo.text())
+      if (aplicarDiseno(d)) {
+        setNombreDiseno(archivo.name.replace(/\.hetna-torno\.json$|\.json$/i, ""))
+        setAvisoDiseno(`Abierto: ${archivo.name}`)
+      } else {
+        setAvisoDiseno("Ese archivo no trae un diseño de torno.")
+      }
+    } catch {
+      setAvisoDiseno("No se pudo leer el archivo.")
+    }
+  }
+
   const limpiarResultado = () => {
     setGcode(null)
     setInfo(null)
@@ -199,8 +418,13 @@ export function EstudioTorno() {
   }
 
   function cargarEjemplo(i: number) {
-    setSegmentos(EJEMPLOS[i].segmentos())
-    setStockWidthMm(EJEMPLOS[i].bloque)
+    const e = EJEMPLOS[i]
+    setSegmentos(e.segmentos())
+    setStockWidthMm(e.bloque)
+    setEstrias({ ...ESTRIAS_INICIALES, ...(e.estrias ?? {}) })
+    setEspiral({ ...ESPIRAL_INICIAL, ...(e.espiral ?? {}) })
+    setNombreDiseno(e.nombre)
+    setEncuadre((n) => n + 1)
     limpiarResultado()
   }
 
@@ -237,6 +461,7 @@ export function EstudioTorno() {
           maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
           herramienta: { toolDiameterMm, feed },
           rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
+          tallados,
         }),
       })
       const data = await resp.json().catch(() => ({}))
@@ -295,8 +520,27 @@ export function EstudioTorno() {
               ))}
             </div>
           </div>
+          <div className="mt-3 inline-flex rounded-[10px] border border-[#E7E4DC] p-0.5 text-[13px] font-semibold">
+            {(["3d", "perfil"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setVista(v)}
+                className={`rounded-[8px] px-3 py-1.5 ${vista === v ? "bg-[#1B1B18] text-white" : "text-[#4A4943]"}`}
+              >
+                {v === "3d" ? "Vista 3D" : "Perfil"}
+              </button>
+            ))}
+          </div>
           <div className="mt-3">
-            <Perfil segmentos={segmentos} bloque={stockWidthMm} />
+            {vista === "3d" ? (
+              <>
+                <Visor3DTorno segmentos={segmentos} tallados={tallados} anchoFresa={toolDiameterMm} bloque={stockWidthMm} encuadre={encuadre} />
+                <p className="mt-2 text-[12px] text-[#6B6A63]">Arrastra para girar, pellizca o usa la rueda para acercar.</p>
+              </>
+            ) : (
+              <Perfil segmentos={segmentos} bloque={stockWidthMm} />
+            )}
           </div>
         </section>
 
@@ -362,6 +606,65 @@ export function EstudioTorno() {
           </button>
         </section>
 
+        <section className={caja}>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]">Tallados</h2>
+          <p className="mt-1 text-[13px] text-[#6B6A63]">
+            Se cortan al final, con la misma fresa. Para canales redondos usa fresa de punta de bola.
+          </p>
+
+          <div className="mt-3 rounded-[10px] border border-[#E7E4DC] p-3">
+            <label className="flex items-center gap-2 text-[14px] font-semibold text-[#1B1B18]">
+              <input
+                type="checkbox"
+                checked={estrias.activo}
+                onChange={(e) => cambiarEstrias({ activo: e.target.checked })}
+                className="h-4 w-4 accent-[#C2560A]"
+              />
+              Estrías (canales a lo largo)
+            </label>
+            {estrias.activo && (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Numero texto="Cuántas" valor={estrias.cantidad} min={1} paso={1} onChange={(n) => cambiarEstrias({ cantidad: n })} />
+                <Numero texto="Profundidad (mm)" valor={estrias.profundidad} min={0.2} onChange={(n) => cambiarEstrias({ profundidad: n })} />
+                <Numero texto="Desde (mm)" valor={estrias.yDesde} min={0} onChange={(n) => cambiarEstrias({ yDesde: n })} />
+                <Numero texto="Hasta (mm)" valor={estrias.yHasta} min={0} onChange={(n) => cambiarEstrias({ yHasta: n })} />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 rounded-[10px] border border-[#E7E4DC] p-3">
+            <label className="flex items-center gap-2 text-[14px] font-semibold text-[#1B1B18]">
+              <input
+                type="checkbox"
+                checked={espiral.activo}
+                onChange={(e) => cambiarEspiral({ activo: e.target.checked })}
+                className="h-4 w-4 accent-[#C2560A]"
+              />
+              Espiral (salomónica)
+            </label>
+            {espiral.activo && (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <Numero texto="Hilos" valor={espiral.entradas} min={1} paso={1} onChange={(n) => cambiarEspiral({ entradas: n })} />
+                <Numero texto="Paso por vuelta (mm)" valor={espiral.paso} min={5} onChange={(n) => cambiarEspiral({ paso: n })} />
+                <Numero texto="Profundidad (mm)" valor={espiral.profundidad} min={0.2} onChange={(n) => cambiarEspiral({ profundidad: n })} />
+                <Numero texto="Desde (mm)" valor={espiral.yDesde} min={0} onChange={(n) => cambiarEspiral({ yDesde: n })} />
+                <Numero texto="Hasta (mm)" valor={espiral.yHasta} min={0} onChange={(n) => cambiarEspiral({ yHasta: n })} />
+                <label className={etiqueta}>
+                  Sentido
+                  <select
+                    className={campo}
+                    value={espiral.sentido}
+                    onChange={(e) => cambiarEspiral({ sentido: e.target.value as Espiral["sentido"] })}
+                  >
+                    <option value="derecha">A la derecha</option>
+                    <option value="izquierda">A la izquierda</option>
+                  </select>
+                </label>
+              </div>
+            )}
+          </div>
+        </section>
+
         {(gcode || error || avisos.length > 0) && (
           <section className={caja}>
             <h2 className="text-[17px] font-bold text-[#1B1B18]">Resultado</h2>
@@ -393,6 +696,66 @@ export function EstudioTorno() {
       </div>
 
       <aside className="flex flex-col gap-5">
+        <section className={caja}>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños</h2>
+          <div className="mt-3 flex gap-2">
+            <input
+              className="w-full rounded-[8px] border border-[#E7E4DC] bg-white px-2.5 py-2 text-[14px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"
+              placeholder="Nombre del diseño"
+              value={nombreDiseno}
+              maxLength={60}
+              onChange={(e) => setNombreDiseno(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={guardarDiseno}
+              className="shrink-0 rounded-[8px] bg-[#1B1B18] px-3 text-[13px] font-semibold text-white hover:bg-black"
+            >
+              Guardar
+            </button>
+          </div>
+          {avisoDiseno && <p className="mt-2 text-[12px] text-[#16794F]">{avisoDiseno}</p>}
+          {disenos.length > 0 && (
+            <ul className="mt-3 flex max-h-[180px] flex-col gap-1 overflow-auto">
+              {disenos.map((d) => (
+                <li key={d.nombre} className="flex items-center justify-between gap-2 rounded-[8px] px-2 py-1 hover:bg-[#F7F5EF]">
+                  <button type="button" onClick={() => abrirDiseno(d)} className="min-w-0 flex-1 truncate text-left text-[13px] text-[#1B1B18]">
+                    {d.nombre}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => borrarDiseno(d.nombre)}
+                    aria-label={`Borrar ${d.nombre}`}
+                    className="text-[12px] text-[#9B1C1C]"
+                  >
+                    Borrar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+            <button type="button" onClick={bajarDiseno} className="rounded-[8px] border border-[#E7E4DC] px-3 py-1.5 font-semibold text-[#4A4943] hover:border-[#C2560A]">
+              Bajar archivo
+            </button>
+            <label className="cursor-pointer rounded-[8px] border border-[#E7E4DC] px-3 py-1.5 font-semibold text-[#4A4943] hover:border-[#C2560A]">
+              Abrir archivo
+              <input
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  void subirDiseno(e.target.files?.[0])
+                  e.target.value = ""
+                }}
+              />
+            </label>
+          </div>
+          <p className="mt-2 text-[11.5px] leading-snug text-[#6B6A63]">
+            Se guardan en este navegador. Para usarlos en otra computadora, baja el archivo y ábrelo allá.
+          </p>
+        </section>
+
         <section className={caja}>
           <h2 className="text-[17px] font-bold text-[#1B1B18]">Material y máquina</h2>
           <div className="mt-3 flex flex-col gap-3">
