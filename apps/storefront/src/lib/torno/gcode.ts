@@ -23,7 +23,19 @@
  * vueltas en vacío (lo que haría un G0 A0) y los números no crecen sin fin.
  */
 
-import { Segmento, TipoSegmento, radioEn, longitudTotal, radioMaximo, radioMinEnRango, MATERIAL_PRESETS } from "./pieza";
+import {
+  Segmento,
+  TipoSegmento,
+  Tallados,
+  Estrias,
+  Espiral,
+  anguloEspiral,
+  radioEn,
+  longitudTotal,
+  radioMaximo,
+  radioMinEnRango,
+  MATERIAL_PRESETS,
+} from "./pieza";
 
 export interface ParametrosMaquina {
   stockWidthMm: number;
@@ -54,6 +66,8 @@ export interface EntradaGCode {
   rpm: ParametrosRpm;
   origenPunto: OrigenPunto;
   numPasadasDesbaste?: number;
+  /** Estrías y espiral, que se cortan después del acabado */
+  tallados?: Tallados;
 }
 
 export interface ResultadoGCode {
@@ -165,7 +179,69 @@ export function validarEntrada(body: unknown): { ok: true; entrada: EntradaGCode
     ? Math.min(LIMITES.maxPasadasDesbaste, Math.max(1, Math.round(num(b.numPasadasDesbaste))))
     : undefined;
 
-  return { ok: true, entrada: { segmentos, material, maquina, herramienta, rpm, origenPunto, numPasadasDesbaste } };
+  const largoPieza = Math.max(...segmentos.map((x) => x.finY));
+  const t = (b.tallados ?? {}) as Record<string, any>;
+  const tallados: Tallados = {};
+
+  if (t.estrias?.activo) {
+    const e = t.estrias;
+    if (![e.cantidad, e.yDesde, e.yHasta, e.profundidad].every(finito))
+      return { ok: false, error: "Faltan datos de las estrías." };
+    const est: Estrias = {
+      activo: true,
+      cantidad: Math.round(num(e.cantidad)),
+      yDesde: num(e.yDesde),
+      yHasta: num(e.yHasta),
+      profundidad: num(e.profundidad),
+    };
+    if (est.cantidad < 1 || est.cantidad > 60) return { ok: false, error: "Las estrías deben ser entre 1 y 60." };
+    const err = revisarTramo("las estrías", est.yDesde, est.yHasta, est.profundidad, segmentos, largoPieza);
+    if (err) return { ok: false, error: err };
+    tallados.estrias = est;
+  }
+
+  if (t.espiral?.activo) {
+    const e = t.espiral;
+    if (![e.entradas, e.paso, e.yDesde, e.yHasta, e.profundidad].every(finito))
+      return { ok: false, error: "Faltan datos de la espiral." };
+    const esp: Espiral = {
+      activo: true,
+      entradas: Math.round(num(e.entradas)),
+      paso: num(e.paso),
+      yDesde: num(e.yDesde),
+      yHasta: num(e.yHasta),
+      profundidad: num(e.profundidad),
+      sentido: e.sentido === "izquierda" ? "izquierda" : "derecha",
+    };
+    if (esp.entradas < 1 || esp.entradas > 8) return { ok: false, error: "La espiral puede tener de 1 a 8 hilos." };
+    if (esp.paso < 5 || esp.paso > 2000) return { ok: false, error: "El paso de la espiral debe estar entre 5 y 2000 mm por vuelta." };
+    const err = revisarTramo("la espiral", esp.yDesde, esp.yHasta, esp.profundidad, segmentos, largoPieza);
+    if (err) return { ok: false, error: err };
+    tallados.espiral = esp;
+  }
+
+  return {
+    ok: true,
+    entrada: { segmentos, material, maquina, herramienta, rpm, origenPunto, numPasadasDesbaste, tallados },
+  };
+}
+
+/** Revisa el tramo y la profundidad de un tallado. Devuelve el error o null. */
+function revisarTramo(
+  que: string,
+  yDesde: number,
+  yHasta: number,
+  profundidad: number,
+  segmentos: Segmento[],
+  largo: number
+): string | null {
+  if (yDesde < 0 || yHasta > largo) return `El tramo de ${que} debe quedar dentro de la pieza (0 a ${largo} mm).`;
+  if (yHasta - yDesde < 5) return `El tramo de ${que} debe medir al menos 5 mm.`;
+  if (profundidad < 0.2 || profundidad > 30) return `La profundidad de ${que} debe estar entre 0.2 y 30 mm.`;
+  const rMin = radioMinEnRango(segmentos, yDesde, yHasta, 0.5);
+  if (profundidad >= rMin - 1)
+    return `Con ${profundidad} mm de profundidad, el tallado atravesaría la pieza en el tramo de ${que}: ahí el radio baja a ${rMin.toFixed(1)} mm.`;
+  return null;
 }
 
 export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
@@ -319,6 +395,110 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
 
   // ETAPA 3: acabado, sigue el perfil exacto
   pasadaEspiral("ETAPA 3: Acabado (perfil exacto)", rpm.rpmAcabado, leadAcabado, radioEnOrigen, yIni, yFin);
+
+  // ETAPA 4 y 5: tallados (estrías y espiral), con la pieza ya en su perfil.
+  // El ángulo de cada canal se toma desde donde quedó la pieza al terminar el
+  // acabado; lo que importa es que los canales queden repartidos entre sí.
+  const tallados = entrada.tallados ?? {};
+  if (tallados.estrias?.activo || tallados.espiral?.activo) {
+    const feedTallado = herramienta.feed > 0 ? herramienta.feed : preset.feed;
+    // Y de la máquina para una Y de la pieza (si se corre desde el contrapunto, al revés)
+    const yMaq = (yPieza: number) => (origenPunto === "contrapunto" ? largo - yPieza : yPieza);
+    let aActual = 0;
+    const normalizarA = () => {
+      // vuelve el contador a su equivalente entre 0 y 360 SIN girar la pieza,
+      // para que el siguiente G0 A gire menos de una vuelta
+      const equiv = ((aActual % 360) + 360) % 360;
+      if (Math.abs(equiv - aActual) > 1e-6) lines.push(`G92 A${equiv.toFixed(3)}`);
+      aActual = equiv;
+    };
+    const pasadasDe = (prof: number) => Math.max(1, Math.ceil(prof / profCorte));
+    const anchoCanal = (prof: number) => {
+      const r = herramienta.toolDiameterMm / 2;
+      return prof >= r ? 2 * r : 2 * Math.sqrt(r * r - (r - prof) ** 2);
+    };
+
+    lines.push("(--- TALLADOS: la pieza ya tiene su perfil ---)");
+    lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+    lines.push("G92 A0");
+    lines.push("G94");
+
+    const es = tallados.estrias;
+    if (es?.activo) {
+      const n = pasadasDe(es.profundidad);
+      const rMinTramo = radioMinEnRango(segmentos, es.yDesde, es.yHasta, 0.5);
+      if (es.cantidad * anchoCanal(es.profundidad) > 2 * Math.PI * (rMinTramo - es.profundidad)) {
+        avisos.push("Las estrías se enciman en la parte más delgada: usa menos estrías, menos profundidad o una fresa más chica.");
+      }
+      lines.push(`(--- ETAPA 4: ${es.cantidad} estrias de ${es.profundidad}mm, de ${es.yDesde} a ${es.yHasta}mm ---)`);
+      let ida = true;
+      for (let p = 1; p <= n; p++) {
+        const d = (es.profundidad * p) / n;
+        for (let k = 0; k < es.cantidad; k++) {
+          const ang = (360 * k) / es.cantidad;
+          const ys: number[] = [];
+          for (let y = es.yDesde; y < es.yHasta; y += paso) ys.push(y);
+          ys.push(es.yHasta);
+          if (!ida) ys.reverse();
+          ida = !ida;
+          lines.push(`(estria ${k + 1}/${es.cantidad}, pasada ${p}/${n})`);
+          lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+          lines.push(`G0 A${ang.toFixed(3)}`);
+          aActual = ang;
+          lines.push(`G0 Y${yMaq(ys[0]).toFixed(3)}`);
+          lines.push(`G1 Z${(radioEn(ys[0], segmentos) - d).toFixed(3)} F250`);
+          let yPrev = ys[0];
+          for (const y of ys.slice(1)) {
+            lines.push(`G1 Y${yMaq(y).toFixed(3)} Z${(radioEn(y, segmentos) - d).toFixed(3)} F${feedTallado.toFixed(0)}`);
+            minutos += Math.abs(y - yPrev) / feedTallado;
+            yPrev = y;
+          }
+          lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+        }
+        normalizarA();
+      }
+      lines.push("");
+    }
+
+    const sp = tallados.espiral;
+    if (sp?.activo) {
+      const n = pasadasDe(sp.profundidad);
+      lines.push(
+        `(--- ETAPA 5: espiral de ${sp.entradas} hilo(s), paso ${sp.paso}mm, ${sp.sentido}, de ${sp.yDesde} a ${sp.yHasta}mm ---)`
+      );
+      for (let p = 1; p <= n; p++) {
+        const d = (sp.profundidad * p) / n;
+        for (let k = 0; k < sp.entradas; k++) {
+          const ys: number[] = [];
+          for (let y = sp.yDesde; y < sp.yHasta; y += paso / 2) ys.push(y);
+          ys.push(sp.yHasta);
+          lines.push(`(hilo ${k + 1}/${sp.entradas}, pasada ${p}/${n})`);
+          lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+          normalizarA();
+          const a0 = ((anguloEspiral(sp, k, ys[0]) % 360) + 360) % 360;
+          lines.push(`G0 A${a0.toFixed(3)}`);
+          aActual = a0;
+          lines.push(`G0 Y${yMaq(ys[0]).toFixed(3)}`);
+          lines.push(`G1 Z${(radioEn(ys[0], segmentos) - d).toFixed(3)} F250`);
+          lines.push("G93 (avance en tiempo inverso)");
+          let yPrev = ys[0];
+          for (const y of ys.slice(1)) {
+            const dA = anguloEspiral(sp, k, y) - anguloEspiral(sp, k, yPrev);
+            const r = radioEn(y, segmentos) - d;
+            const largoTramo = Math.hypot(y - yPrev, (Math.abs(dA) * Math.PI * Math.max(r, 1)) / 180);
+            const tMin = Math.max(largoTramo / feedTallado, 1e-5);
+            aActual += dA;
+            minutos += tMin;
+            lines.push(`G1 Y${yMaq(y).toFixed(3)} Z${r.toFixed(3)} A${aActual.toFixed(3)} F${(1 / tMin).toFixed(4)}`);
+            yPrev = y;
+          }
+          lines.push("G94");
+          lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+        }
+      }
+      lines.push("");
+    }
+  }
 
   lines.push("G92.1 (quita el desfase de G92)");
   lines.push("M5 (husillo apagado)");

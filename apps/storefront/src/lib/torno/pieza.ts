@@ -132,3 +132,120 @@ export function radioMinEnRango(
   }
   return min === Infinity ? 0 : min;
 }
+
+// ── Tallados (etapa 2): estrías y espiral ─────────────────────────────
+// Se cortan DESPUÉS del acabado, con la misma fresa (se asume punta de bola:
+// el canal sale redondo, del ancho de la fresa).
+
+export interface Estrias {
+  activo: boolean
+  /** cuántos canales alrededor de la pieza */
+  cantidad: number
+  /** tramo de la pieza donde van (mm) */
+  yDesde: number
+  yHasta: number
+  /** qué tan hondo entra la fresa (mm) */
+  profundidad: number
+}
+
+export interface Espiral {
+  activo: boolean
+  /** cuántos hilos arrancan a la vez (1 = espiral sencilla, 2-4 = salomónica) */
+  entradas: number
+  /** cuánto avanza el hilo en una vuelta completa (mm) */
+  paso: number
+  yDesde: number
+  yHasta: number
+  profundidad: number
+  sentido: "derecha" | "izquierda"
+}
+
+export interface Tallados {
+  estrias?: Estrias
+  espiral?: Espiral
+}
+
+export const ESTRIAS_INICIALES: Estrias = { activo: false, cantidad: 8, yDesde: 0, yHasta: 0, profundidad: 3 }
+export const ESPIRAL_INICIAL: Espiral = {
+  activo: false,
+  entradas: 2,
+  paso: 120,
+  yDesde: 0,
+  yHasta: 0,
+  profundidad: 4,
+  sentido: "derecha",
+}
+
+/** Ángulo (grados) del centro del canal k de la espiral a la altura y. */
+export function anguloEspiral(e: Espiral, k: number, y: number): number {
+  const signo = e.sentido === "izquierda" ? -1 : 1
+  return (360 * k) / Math.max(1, e.entradas) + (signo * 360 * (y - e.yDesde)) / e.paso
+}
+
+/** Distancia angular más corta entre dos ángulos en grados (0..180). */
+function difAngulo(a: number, b: number): number {
+  const d = Math.abs((((a - b) % 360) + 540) % 360 - 180)
+  return d
+}
+
+/**
+ * Cuánto se hunde un canal redondo (fresa de bola de diámetro `ancho`) en un
+ * punto que está a `sLado` mm del centro del canal (medido sobre la
+ * superficie) y a `sPunta` mm más allá de donde termina el canal.
+ */
+function hundimiento(profundidad: number, ancho: number, sLado: number, sPunta: number): number {
+  const r = ancho / 2
+  const s = Math.hypot(sLado, sPunta)
+  if (s >= r) return 0
+  // fondo de la bola a `profundidad`; a un lado, la bola sube (r - √(r²-s²))
+  return Math.max(0, profundidad - (r - Math.sqrt(r * r - s * s)))
+}
+
+/**
+ * Radio de la pieza YA TALLADA en (y, ángulo). Lo usa el visor 3D.
+ * Sin tallados es igual a radioEn(y).
+ */
+export function radioTalladoEn(
+  y: number,
+  anguloGrados: number,
+  segmentos: Segmento[],
+  tallados: Tallados,
+  anchoFresa: number
+): number {
+  const r = radioEn(y, segmentos)
+  let hondo = 0
+  const fuera = (desde: number, hasta: number) => (y < desde ? desde - y : y > hasta ? y - hasta : 0)
+
+  const es = tallados.estrias
+  if (es?.activo && es.cantidad > 0 && es.yHasta > es.yDesde) {
+    const sPunta = fuera(es.yDesde, es.yHasta)
+    if (sPunta < anchoFresa / 2) {
+      const rCanal = Math.max(1, r - es.profundidad)
+      for (let k = 0; k < es.cantidad; k++) {
+        const d = difAngulo(anguloGrados, (360 * k) / es.cantidad)
+        const sLado = (d * Math.PI * rCanal) / 180
+        hondo = Math.max(hondo, hundimiento(es.profundidad, anchoFresa, sLado, sPunta))
+      }
+    }
+  }
+
+  const sp = tallados.espiral
+  if (sp?.activo && sp.entradas > 0 && sp.paso > 0 && sp.yHasta > sp.yDesde) {
+    const yC = Math.min(Math.max(y, sp.yDesde), sp.yHasta)
+    const sPunta = fuera(sp.yDesde, sp.yHasta)
+    if (sPunta < anchoFresa / 2) {
+      const rCanal = Math.max(1, r - sp.profundidad)
+      // el canal va inclinado: la distancia perpendicular es la angular por el
+      // coseno del ángulo de la hélice
+      const vueltaMm = 2 * Math.PI * rCanal
+      const cosHelice = sp.paso / Math.hypot(sp.paso, vueltaMm)
+      for (let k = 0; k < sp.entradas; k++) {
+        const d = difAngulo(anguloGrados, anguloEspiral(sp, k, yC))
+        const sLado = ((d * Math.PI * rCanal) / 180) * cosHelice
+        hondo = Math.max(hondo, hundimiento(sp.profundidad, anchoFresa, sLado, sPunta))
+      }
+    }
+  }
+
+  return Math.max(0.5, r - hondo)
+}
