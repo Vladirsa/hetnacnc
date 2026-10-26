@@ -34,6 +34,18 @@ WEBHOOK = "https://n8n.hetnacnc.com/webhook/agente-cnc-nuevo-producto"
 ESPERA = 3.0           # segundos entre altas, para no repetir SKU
 TIEMPO_LIMITE = 180    # el workflow encadena precio e imagen, tarda
 
+# n8n.hetnacnc.com esta detras de Cloudflare, que rechaza el User-Agent que
+# manda urllib por default ("Python-urllib/3.x") con un 403 error code 1010
+# antes de que la peticion llegue a n8n. Con cabeceras de navegador pasa.
+CABECERAS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "es-MX,es;q=0.9",
+}
+
 # Campos de la ficha que el workflow espera tal cual.
 _CAMPOS = (
     "titulo descripcion categoria subcategoria formatos precio_sugerido "
@@ -71,7 +83,7 @@ def armar_payload(ficha: dict) -> dict:
 def subir(ficha: dict) -> dict:
     datos = json.dumps(armar_payload(ficha)).encode()
     peticion = urllib.request.Request(
-        WEBHOOK, data=datos, headers={"Content-Type": "application/json"}
+        WEBHOOK, data=datos, headers={**CABECERAS, "Content-Type": "application/json"}
     )
     with urllib.request.urlopen(peticion, timeout=TIEMPO_LIMITE) as r:
         return json.loads(r.read().decode() or "{}")
