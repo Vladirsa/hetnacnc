@@ -60,9 +60,21 @@ inserta la fila en `digital_factory_productos`, calcula el precio y genera la
 imagen de mockup. La ficha queda en `READY_FOR_REVIEW`: **nada se publica
 solo**, hay que revisarla antes.
 
-Lo ya subido se anota en `subidas.json` y no se vuelve a mandar. Ahorita trae
-tres: plantilla de bisagra, celosía y brida escalonada. Faltan portavasos,
-organizador de brocas y soporte NEMA 23.
+Lo ya subido se anota en `subidas.json` y no se vuelve a mandar. Los seis
+diseños ya están dados de alta, así que una corrida nueva los salta todos.
+
+Ojo: el script **escribe** `subidas.json`, y el repo lo lleva versionado para
+no perder el registro si se reinstala el VPS. Si una corrida lo dejó
+modificado en el servidor, el siguiente `git pull` se queja. Se arregla
+descartando la copia local, que trae lo mismo que viene del repo:
+
+```bash
+git checkout -- infra/digital-factory/disenos/subidas.json
+git pull origin claude/vigilant-tesla-cq06q0
+```
+
+El registro de verdad es la tabla `digital_factory_productos`; este archivo
+nada más evita mandar dos veces lo mismo.
 
 **Córrelo desde el VPS.** El contenedor del agente no alcanza
 `n8n.hetnacnc.com`:
