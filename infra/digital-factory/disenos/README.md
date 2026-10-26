@@ -60,7 +60,9 @@ inserta la fila en `digital_factory_productos`, calcula el precio y genera la
 imagen de mockup. La ficha queda en `READY_FOR_REVIEW`: **nada se publica
 solo**, hay que revisarla antes.
 
-Lo ya subido se anota en `subidas.json` y no se vuelve a mandar.
+Lo ya subido se anota en `subidas.json` y no se vuelve a mandar. Ahorita trae
+tres: plantilla de bisagra, celosía y brida escalonada. Faltan portavasos,
+organizador de brocas y soporte NEMA 23.
 
 **Córrelo desde el VPS.** El contenedor del agente no alcanza
 `n8n.hetnacnc.com`:
