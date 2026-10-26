@@ -152,6 +152,10 @@ module.exports = withMercur({
       resolve: './src/modules/vistas',
     },
     {
+      // Metas de venta que cada taller se pone para el mes, en el tablero.
+      resolve: './src/modules/tablero',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
