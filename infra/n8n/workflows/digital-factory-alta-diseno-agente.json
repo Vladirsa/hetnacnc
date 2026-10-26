@@ -1,0 +1,226 @@
+{
+  "name": "HETNA Digital Factory - Alta de diseno generado por agente",
+  "nodes": [
+    {
+      "id": "47504d85-482a-489b-b2e0-85424e55e596",
+      "name": "Alta de diseno generado por agente",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "cf22a110-ee7a-4b0a-b9d6-6e8760d21252",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-cnc-nuevo-producto",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "4685d4fa-813b-4923-8ed5-0fdb1e4fb5d0",
+      "name": "Normalizar payload del agente",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 0],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            { "id": "titulo", "name": "titulo", "type": "string", "value": "={{ $json.body?.titulo ?? $json.titulo ?? \"\" }}" },
+            { "id": "descripcion", "name": "descripcion", "type": "string", "value": "={{ $json.body?.descripcion ?? $json.descripcion ?? \"\" }}" },
+            { "id": "categoria", "name": "categoria", "type": "string", "value": "={{ $json.body?.categoria ?? $json.categoria ?? \"\" }}" },
+            { "id": "subcategoria", "name": "subcategoria", "type": "string", "value": "={{ $json.body?.subcategoria ?? $json.subcategoria ?? \"\" }}" },
+            { "id": "formatos", "name": "formatos", "type": "string", "value": "={{ $json.body?.formatos ?? $json.formatos ?? \"\" }}" },
+            { "id": "archivo_filename", "name": "archivo_filename", "type": "string", "value": "={{ $json.body?.archivo_filename ?? $json.archivo_filename ?? \"archivo.bin\" }}" },
+            { "id": "archivo_base64", "name": "archivo_base64", "type": "string", "value": "={{ $json.body?.archivo_base64 ?? $json.archivo_base64 ?? \"\" }}" },
+            { "id": "precio_sugerido_vendedor", "name": "precio_sugerido_vendedor", "type": "number", "value": "={{ $json.body?.precio_sugerido ?? $json.precio_sugerido ?? 0 }}" },
+            { "id": "moneda", "name": "moneda", "type": "string", "value": "={{ $json.body?.moneda ?? $json.moneda ?? \"MXN\" }}" },
+            { "id": "titulo_comercial_ia", "name": "titulo_comercial_ia", "type": "string", "value": "={{ $json.body?.titulo_comercial_ia ?? $json.titulo_comercial_ia ?? \"\" }}" },
+            { "id": "slug_ia", "name": "slug_ia", "type": "string", "value": "={{ $json.body?.slug_ia ?? $json.slug_ia ?? \"\" }}" },
+            { "id": "descripcion_corta_ia", "name": "descripcion_corta_ia", "type": "string", "value": "={{ $json.body?.descripcion_corta_ia ?? $json.descripcion_corta_ia ?? \"\" }}" },
+            { "id": "descripcion_larga_ia", "name": "descripcion_larga_ia", "type": "string", "value": "={{ $json.body?.descripcion_larga_ia ?? $json.descripcion_larga_ia ?? \"\" }}" },
+            { "id": "caracteristicas_ia", "name": "caracteristicas_ia", "type": "string", "value": "={{ $json.body?.caracteristicas_ia ?? $json.caracteristicas_ia ?? \"\" }}" },
+            { "id": "tags_ia", "name": "tags_ia", "type": "string", "value": "={{ $json.body?.tags_ia ?? $json.tags_ia ?? \"\" }}" },
+            { "id": "keyword_principal_ia", "name": "keyword_principal_ia", "type": "string", "value": "={{ $json.body?.keyword_principal_ia ?? $json.keyword_principal_ia ?? \"\" }}" },
+            { "id": "keywords_secundarias_ia", "name": "keywords_secundarias_ia", "type": "string", "value": "={{ $json.body?.keywords_secundarias_ia ?? $json.keywords_secundarias_ia ?? \"\" }}" },
+            { "id": "titulo_seo_ia", "name": "titulo_seo_ia", "type": "string", "value": "={{ $json.body?.titulo_seo_ia ?? $json.titulo_seo_ia ?? \"\" }}" },
+            { "id": "meta_description_ia", "name": "meta_description_ia", "type": "string", "value": "={{ $json.body?.meta_description_ia ?? $json.meta_description_ia ?? \"\" }}" },
+            { "id": "faq_ia", "name": "faq_ia", "type": "string", "value": "={{ $json.body?.faq_ia ?? $json.faq_ia ?? \"[]\" }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "df6ef74c-c2d9-44d8-a7d7-874273fe5e14",
+      "name": "Generar SKU",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [448, 0],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            { "id": "sku", "name": "sku", "type": "string", "value": "={{ \"HDF-\" + $now.toFormat(\"yyyyLLdd-HHmmss\") }}" },
+            { "id": "estado", "name": "estado", "type": "string", "value": "READY_FOR_REVIEW" },
+            { "id": "fecha_creacion", "name": "fecha_creacion", "type": "string", "value": "={{ $now.toISO() }}" },
+            { "id": "extension", "name": "extension", "type": "string", "value": "={{ ($json.archivo_filename ?? \"archivo.bin\").split(\".\").pop().toLowerCase() }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "72b63baf-5ef8-49f1-a298-21d7a21f83b0",
+      "name": "Calcular storage key",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 0],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            { "id": "storageKey", "name": "storageKey", "type": "string", "value": "={{ \"originales/\" + $json.sku + \"/archivo-1.\" + $json.extension }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7446ac05-7b5d-49a1-ad35-0e4009c03e91",
+      "name": "Construir item binario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [896, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const item = $input.first().json;\nconst raw = (item.archivo_base64 || '').split(',').pop();\nreturn [{ json: item, binary: { data: { data: raw, mimeType: 'application/octet-stream', fileName: item.archivo_filename } } }];"
+      }
+    },
+    {
+      "id": "e9743e0f-b030-4bf6-8878-8dc4a4f7954c",
+      "name": "Subir archivo generado a B2",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [1120, 0],
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "bucketName": "hetnacnc-archivos-privados",
+        "fileName": "={{ $json.storageKey }}",
+        "binaryData": true,
+        "binaryPropertyName": "data"
+      }
+    },
+    {
+      "id": "74208813-fc8c-4906-a27e-6f20c11c7a5a",
+      "name": "Guardar ficha generada por agente",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1344, 0],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": { "__rl": true, "mode": "id", "value": "yJDDrczHzHuY30uF", "cachedResultName": "digital_factory_productos" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sku": "={{ $('Calcular storage key').item.json.sku }}",
+            "estado": "={{ $('Calcular storage key').item.json.estado }}",
+            "titulo_original": "={{ $('Calcular storage key').item.json.titulo }}",
+            "descripcion_original": "={{ $('Calcular storage key').item.json.descripcion }}",
+            "categoria": "={{ $('Calcular storage key').item.json.categoria }}",
+            "subcategoria": "={{ $('Calcular storage key').item.json.subcategoria }}",
+            "formatos": "={{ $('Calcular storage key').item.json.formatos }}",
+            "cantidad_archivos": 1,
+            "archivos_urls": "(generado por el Agente Generador de Disenos CNC, sin URL externa)",
+            "derechos_confirmados": true,
+            "titular_derechos": "HETNA CNC (Roberto Vladimir Rivera Sanchez)",
+            "declaracion_licencia": "Diseno parametrico original generado por el Agente Generador de Disenos CNC de HETNA Digital Factory (cadgen/build123d). Sin derechos de terceros.",
+            "precio_sugerido_vendedor": "={{ $('Calcular storage key').item.json.precio_sugerido_vendedor }}",
+            "moneda": "={{ $('Calcular storage key').item.json.moneda }}",
+            "vendedor_nombre": "HETNA Agente IA",
+            "vendedor_contacto": "vladirsa@gmail.com",
+            "titulo_comercial_ia": "={{ $('Calcular storage key').item.json.titulo_comercial_ia }}",
+            "slug_ia": "={{ $('Calcular storage key').item.json.slug_ia }}",
+            "descripcion_corta_ia": "={{ $('Calcular storage key').item.json.descripcion_corta_ia }}",
+            "descripcion_larga_ia": "={{ $('Calcular storage key').item.json.descripcion_larga_ia }}",
+            "caracteristicas_ia": "={{ $('Calcular storage key').item.json.caracteristicas_ia }}",
+            "tags_ia": "={{ $('Calcular storage key').item.json.tags_ia }}",
+            "keyword_principal_ia": "={{ $('Calcular storage key').item.json.keyword_principal_ia }}",
+            "keywords_secundarias_ia": "={{ $('Calcular storage key').item.json.keywords_secundarias_ia }}",
+            "titulo_seo_ia": "={{ $('Calcular storage key').item.json.titulo_seo_ia }}",
+            "meta_description_ia": "={{ $('Calcular storage key').item.json.meta_description_ia }}",
+            "faq_ia": "={{ $('Calcular storage key').item.json.faq_ia }}",
+            "archivos_respaldo_ok": true,
+            "archivos_respaldo_detalle": "={{ JSON.stringify([{ url: \"(generado por agente)\", estado: \"respaldado\", storageKey: $('Calcular storage key').item.json.storageKey }]) }}",
+            "nota_respaldo_archivos": "Subido directo por el Agente Generador de Disenos CNC (archivo generado con cadgen/build123d, sin descarga externa)."
+          }
+        }
+      }
+    },
+    {
+      "id": "95b2a34e-e519-44e8-ad9a-accc5b0241ec",
+      "name": "Calcular precio automaticamente",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [1568, 0],
+      "parameters": {
+        "mode": "once",
+        "options": { "waitForSubWorkflow": true },
+        "source": "database",
+        "workflowId": { "__rl": true, "mode": "id", "value": "rWdWmbaojAZWBF5W", "cachedResultName": "HETNA Digital Factory - Calcular precio de producto" },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [{ "id": "sku", "displayName": "sku", "type": "string", "display": true, "required": false, "defaultMatch": false, "canBeUsedToMatch": true }],
+          "value": { "sku": "={{ $('Calcular storage key').item.json.sku }}" }
+        }
+      }
+    },
+    {
+      "id": "f0f7fc3b-b17c-402e-9d3d-5f6f78d156fe",
+      "name": "Generar imagen automaticamente",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [1792, 0],
+      "parameters": {
+        "mode": "once",
+        "options": { "waitForSubWorkflow": true },
+        "source": "database",
+        "workflowId": { "__rl": true, "mode": "id", "value": "QqlzgjFYSX52RnBp", "cachedResultName": "HETNA Digital Factory - Generar imagen de producto" },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [{ "id": "sku", "displayName": "sku", "type": "string", "display": true, "required": false, "defaultMatch": false, "canBeUsedToMatch": true }],
+          "value": { "sku": "={{ $('Calcular storage key').item.json.sku }}" }
+        }
+      }
+    },
+    {
+      "id": "36a8be2c-81bd-46e1-a900-d780931efa29",
+      "name": "Responder al agente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [2016, 0],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"sku\": $('Calcular storage key').item.json.sku } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Alta de diseno generado por agente": { "main": [[{ "node": "Normalizar payload del agente", "type": "main", "index": 0 }]] },
+    "Normalizar payload del agente": { "main": [[{ "node": "Generar SKU", "type": "main", "index": 0 }]] },
+    "Generar SKU": { "main": [[{ "node": "Calcular storage key", "type": "main", "index": 0 }]] },
+    "Calcular storage key": { "main": [[{ "node": "Construir item binario", "type": "main", "index": 0 }]] },
+    "Construir item binario": { "main": [[{ "node": "Subir archivo generado a B2", "type": "main", "index": 0 }]] },
+    "Subir archivo generado a B2": { "main": [[{ "node": "Guardar ficha generada por agente", "type": "main", "index": 0 }]] },
+    "Guardar ficha generada por agente": { "main": [[{ "node": "Calcular precio automaticamente", "type": "main", "index": 0 }]] },
+    "Calcular precio automaticamente": { "main": [[{ "node": "Generar imagen automaticamente", "type": "main", "index": 0 }]] },
+    "Generar imagen automaticamente": { "main": [[{ "node": "Responder al agente", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

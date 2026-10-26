@@ -1,0 +1,4 @@
+# Los ZIP se rearman con armar_paquetes.py a partir de DXF/STEP/STL.
+PAQUETES/
+# Vistas de revision, no son entregables.
+tmp/
