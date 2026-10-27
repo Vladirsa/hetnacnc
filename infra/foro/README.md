@@ -60,7 +60,20 @@ puso. Es idempotente: correrlo otra vez pone 0 y no duplica nada.
 
 **4. Prende el agente de respuestas.** Ya con temas publicados, el workflow
 *HETNA Mantenimiento - Agente de respuestas del foro* tiene de qué agarrarse.
-Hoy está apagado.
+Hoy está apagado, y **antes de prenderlo falta ponerle tu chat de Telegram**:
+el nodo "Pedir aprobacion por Telegram" todavía trae el texto de ejemplo en
+lugar del chat ID. Así como está, no te llega nada que aprobar.
+
+Ese workflow nunca había corrido, y al revisarlo contra este esquema
+aparecieron dos fallas que ya quedaron arregladas en n8n el 27 de octubre:
+
+- *Publicar respuesta en el foro* mandaba los tres parámetros de
+  `foro.responder` como una cadena separada por comas. n8n la parte en cada
+  coma ([issue 16354](https://github.com/n8n-io/n8n/issues/16354)), y una
+  respuesta de 150 palabras en español siempre trae comas: la query habría
+  recibido ocho o diez parámetros en vez de tres. Ahora se pasa un arreglo.
+- Buscaba el perfil `equipo-hetna`, que no existe ni en el esquema ni en la
+  siembra. Se alineó a `hetna`, el mismo que firma los temas.
 
 ## Cambiar o agregar temas
 
