@@ -1,0 +1,162 @@
+[
+  {
+    "seccion": "precios-negocio",
+    "origen": "oficial",
+    "titulo": "¿Cuánto cobran la hora de router CNC aquí en México?",
+    "keyword": "cuanto cobrar hora router cnc mexico",
+    "cuerpo": "Abrimos esta pregunta porque buscando en internet sólo salen tarifas de Estados Unidos en dólares, y aquí ni la máquina, ni la luz, ni el cliente son los mismos.\n\nPara los que ya están cobrando: ¿cuánto manejan la hora de router en madera y MDF, y cuánto en acrílico o aluminio? ¿La cobran parejo o le suben al material duro?\n\nY lo que más interesa: ¿cobran aparte el diseño y la programación, o va incluido en la hora?",
+    "por_que": "Nadie publica tarifas mexicanas. Es la duda que todo taller chico tiene y la que empata directo con el Cotizador."
+  },
+  {
+    "seccion": "precios-negocio",
+    "origen": "cliente",
+    "titulo": "Me pidieron 50 piezas iguales, ¿le bajo el precio por cantidad o no?",
+    "keyword": "descuento por cantidad maquinado cnc",
+    "cuerpo": "Nos llegó esta duda de un taller que apenas empieza: un cliente le pidió cotizar 50 piezas iguales y no sabe si cobrar lo mismo que por una o hacer precio por volumen.\n\nLo que él calcula es que el setup se hace una sola vez, así que algo debería bajar. Pero no sabe cuánto sin quedarse sin margen.\n\n¿Ustedes cómo le hacen? ¿Tienen una regla, o lo sacan a sentimiento según el trabajo?",
+    "por_que": "Pregunta real de cotización. Conecta con los precios por cantidad que ya se pueden capturar en el panel del taller."
+  },
+  {
+    "seccion": "precios-negocio",
+    "origen": "fundador",
+    "titulo": "¿Piden anticipo? ¿De cuánto, y qué hacen si el cliente ya no recoge?",
+    "keyword": "anticipo trabajo cnc cliente no recoge",
+    "cuerpo": "El tema que nadie quiere platicar pero a todos nos pasa: la pieza ya está hecha, el cliente desapareció y el material ya se gastó.\n\n¿Cuánto anticipo piden antes de empezar? ¿Cambia si es cliente nuevo o ya conocido?\n\nY si de plano no vuelven: ¿se come la pérdida, cobra almacenaje, o la revende si se puede?",
+    "por_que": "Dolor real del taller chico. Genera conversación porque todos tienen una historia."
+  },
+  {
+    "seccion": "router-cnc",
+    "origen": "cliente",
+    "titulo": "Se me quema el MDF en los cortes, ¿le subo la velocidad o le bajo las revoluciones?",
+    "keyword": "mdf quemado router cnc velocidad avance",
+    "cuerpo": "Esta pregunta nos llegó por WhatsApp y es de las más repetidas: el corte sale bien de medida pero el canto queda negro y oliendo a quemado, sobre todo en las curvas.\n\nTrae fresa recta de 1/8 en MDF de 15 mm. Dice que al bajarle las revoluciones mejoró tantito pero no se quitó.\n\n¿Es cuestión de avance, de revoluciones, de la fresa, o de que no está sacando la viruta?",
+    "por_que": "El problema número uno de quien empieza en router. Mucho volumen de búsqueda en español."
+  },
+  {
+    "seccion": "router-cnc",
+    "origen": "oficial",
+    "titulo": "Al retomar un trabajo al otro día, el diseño me sale corrido",
+    "keyword": "router cnc pierde el cero al apagar",
+    "cuerpo": "Este problema sale mucho en los foros de España y queremos ver cómo lo resuelven aquí: se deja un tallado a medias, se apaga la máquina, y al día siguiente el trabajo arranca desplazado en X.\n\nSe entiende que el control pierde el origen al apagarse. Lo que no queda claro es cómo lo recuperan ustedes en la práctica.\n\n¿Marcan el cero con algo físico en la mesa? ¿Usan sensor de home? ¿O de plano ya no apagan hasta terminar?",
+    "por_que": "Problema documentado en Foromadera. Pregunta abierta que invita a que cada quien cuente su método."
+  },
+  {
+    "seccion": "router-cnc",
+    "origen": "fundador",
+    "titulo": "¿Con qué sujetan la pieza? Tornillos, cinta de doble cara o vacío",
+    "keyword": "como sujetar pieza router cnc mdf",
+    "cuerpo": "La sujeción es donde se arruinan más trabajos: se mueve la pieza a media pasada y se perdió el material y el tiempo.\n\nUnos usan tornillos en las orillas con material de sobra, otros cinta de doble cara de la gruesa, otros ya se armaron mesa de vacío.\n\n¿Qué usan según el material y el espesor? ¿Y la mesa de vacío casera de verdad aguanta, o es puro cuento?",
+    "por_que": "Tema práctico donde cada taller tiene su maña. Da respuestas largas y útiles."
+  },
+  {
+    "seccion": "router-cnc",
+    "origen": "cliente",
+    "titulo": "Al cortar círculos la máquina vibra feo, ¿es la estructura o la trayectoria?",
+    "keyword": "router cnc vibra al cortar circulos",
+    "cuerpo": "Nos preguntaron esto y nos pareció bueno para el foro: en cortes rectos la máquina va bien, pero al hacer círculos vibra y la vibración se siente hasta en la fresa.\n\nLo curioso es que al reforzar la estructura el problema empeoró en vez de mejorar.\n\n¿Será el avance en las curvas, la aceleración del control, o de plano los patines? ¿A alguien le pasó lo mismo?",
+    "por_que": "Caso real de MetalAficion. El detalle de que reforzar lo empeoró hace la pregunta interesante."
+  },
+  {
+    "seccion": "materiales-herramientas",
+    "origen": "oficial",
+    "titulo": "¿Dónde compran MDF y triplay de buena calidad sin que les salga chueco?",
+    "keyword": "donde comprar mdf triplay calidad cnc mexico",
+    "cuerpo": "Aquí lo que queremos es armar entre todos un mapa de proveedores por estado, porque el mismo MDF de 15 mm varía muchísimo de una maderería a otra.\n\n¿Dónde compran? ¿Qué marca les ha dado hoja pareja y sin alabeo?\n\nY al revés: sin ponerle nombre a nadie, ¿qué les ha tocado que venga húmedo o con el espesor fuera de medida?",
+    "por_que": "Pregunta de comunidad pura: el valor está en las respuestas, no en la pregunta. Buena para SEO local por estado."
+  },
+  {
+    "seccion": "materiales-herramientas",
+    "origen": "fundador",
+    "titulo": "Fresas chinas de Mercado Libre: ¿aguantan o es tirar el dinero?",
+    "keyword": "fresas chinas cnc mercado libre calidad",
+    "cuerpo": "Las de marca cuestan cinco o diez veces más. Las genéricas salen baratas pero nadie sabe cuánto duran de verdad.\n\n¿Les han funcionado? ¿En qué material sí y en cuál mejor ni intentarle?\n\nSi llevan la cuenta: ¿cuántos metros de corte le sacan a una antes de que empiece a quemar?",
+    "por_que": "Pregunta con opiniones encontradas garantizadas. Las discusiones con bando generan respuestas."
+  },
+  {
+    "seccion": "torno-fresadora",
+    "origen": "cliente",
+    "titulo": "En trabajos 3D largos el eje Z se me va hundiendo, ¿qué lo causa?",
+    "keyword": "eje z se hunde cnc perdida de pasos",
+    "cuerpo": "Nos consultaron este caso: en trabajos 3D de varias horas, la herramienta se va metiendo de más en el material poco a poco. Midió y después de un rato llevaba 2.5 mm de diferencia.\n\nNo es de golpe, es acumulado. Eso suena a pasos perdidos, pero también podría ser el acoplamiento o el peso del husillo venciendo.\n\n¿Cómo distinguen si es el driver, el motor, o mecánico?",
+    "por_que": "Caso documentado con número concreto. La pregunta de diagnóstico invita a respuestas técnicas."
+  },
+  {
+    "seccion": "torno-fresadora",
+    "origen": "oficial",
+    "titulo": "¿Qué acero consiguen fácil en México y cuál se les da mejor para maquinar?",
+    "keyword": "acero 1018 4140 mexico donde conseguir maquinado",
+    "cuerpo": "Los manuales y los videos de YouTube hablan de aceros con nombres gringos que aquí no siempre se consiguen igual, o te los venden con otra nomenclatura.\n\n¿Qué aceros tienen a la mano en su zona? ¿1018, 4140, inoxidable 304?\n\n¿Y cuál les ha dado mejor acabado sin pelearse con la herramienta?",
+    "por_que": "Pregunta puente entre lo técnico y lo local. Sirve para posicionar por búsquedas de material."
+  },
+  {
+    "seccion": "controladores-electronica",
+    "origen": "cliente",
+    "titulo": "Configuré los pasos por milímetro y la máquina se mueve otra cosa",
+    "keyword": "calibrar pasos por milimetro grbl mach3",
+    "cuerpo": "Llegó esta duda: le pidió a la máquina moverse 100 mm y se movió como 160. Ya revisó la configuración y no le cuadra.\n\nTrae motores a pasos con driver, y dice que los microsteps los dejó como venían.\n\n¿Cómo sacan el número correcto? ¿Hay una forma de calibrarlo midiendo, en vez de andar adivinando?",
+    "por_que": "Problema de arranque universal. Pregunta de alta intención: quien la busca tiene la máquina parada."
+  },
+  {
+    "seccion": "controladores-electronica",
+    "origen": "fundador",
+    "titulo": "¿Mach3, GRBL o controlador DSP? Para taller que ya trabaja",
+    "keyword": "mach3 vs grbl vs dsp cual es mejor",
+    "cuerpo": "Hay mucha discusión de esto pero casi siempre entre hobbistas. Aquí interesa la opinión del que trabaja con la máquina todos los días.\n\n¿Qué traen? ¿Qué les ha fallado en producción, no en pruebas?\n\nY si volvieran a empezar hoy, con lo que ya saben, ¿le pondrían lo mismo?",
+    "por_que": "Comparativa clásica con mucho volumen, pero enfocada a profesional en vez de aficionado."
+  },
+  {
+    "seccion": "diseno-cam",
+    "origen": "oficial",
+    "titulo": "¿Qué CAM usan y por qué se quedaron con ese?",
+    "keyword": "mejor software cam cnc router 2026",
+    "cuerpo": "Vectric, Aspire, Fusion, ArtCAM, LightBurn, el que viene con la máquina. Todos prometen lo mismo y cuestan muy distinto.\n\n¿Con cuál se quedaron y qué los hizo cambiar del anterior?\n\nLo que más sirve saber: ¿cuánto tardaron en agarrarle el modo? Porque un software barato que nadie entiende sale caro.",
+    "por_que": "Pregunta con respuestas largas asegurada. Genera comparativas que indexan bien."
+  },
+  {
+    "seccion": "diseno-cam",
+    "origen": "cliente",
+    "titulo": "El cliente me manda un PDF y quiere la pieza, ¿cómo lo vuelvo DXF sin volverlo a dibujar?",
+    "keyword": "convertir pdf a dxf para cnc",
+    "cuerpo": "Nos pasa seguido: el cliente manda un PDF o hasta una foto del plano, y espera la pieza.\n\nVolver a dibujar todo cuesta horas que normalmente no se cobran.\n\n¿Qué usan para pasarlo a vectores? ¿Y cómo le hacen para confiar en las medidas de un PDF que no trae escala?",
+    "por_que": "Dolor real y cotidiano. Conecta con el Laboratorio CAM y con el escaneo 3D."
+  },
+  {
+    "seccion": "corte-laser",
+    "origen": "fundador",
+    "titulo": "Láser de diodo o de CO2 para empezar a vender, ¿cuál conviene?",
+    "keyword": "laser diodo o co2 para negocio mexico",
+    "cuerpo": "Los de diodo ya se consiguen baratos y graban bonito. Los de CO2 cuestan mucho más pero cortan de verdad.\n\nPara alguien que quiere empezar a vender y no sólo jugar: ¿con cuál arrancaron y se arrepintieron o no?\n\n¿En cuánto tiempo lo pagaron?",
+    "por_que": "Decisión de compra con intención comercial. Atrae al que está por entrar al gremio."
+  },
+  {
+    "seccion": "corte-laser",
+    "origen": "cliente",
+    "titulo": "¿Qué materiales de plano NO meten al láser?",
+    "keyword": "materiales prohibidos corte laser pvc",
+    "cuerpo": "Esta la preguntamos porque nos tocó ver a alguien meter PVC al láser sin saber lo que estaba haciendo.\n\nMás allá de la lista de internet: ¿qué les ha tocado que huela mal, suelte humo raro o les arruine la óptica?\n\n¿Y qué extracción traen? Porque eso casi nunca lo mencionan los que venden la máquina.",
+    "por_que": "Tema de seguridad real. Genera respuestas con experiencia y posiciona al foro como serio."
+  },
+  {
+    "seccion": "plasma",
+    "origen": "oficial",
+    "titulo": "¿Cada cuánto cambian consumibles de plasma y cómo saben que ya?",
+    "keyword": "cada cuanto cambiar consumibles plasma cnc",
+    "cuerpo": "Los consumibles son el gasto que no se ve hasta que ya se fue el dinero del mes.\n\n¿Llevan cuenta de cortes o de horas? ¿O los cambian cuando el corte empieza a salir feo?\n\n¿Y los genéricos les han servido, o terminan saliendo más caros por lo rápido que se gastan?",
+    "por_que": "Costo operativo que nadie documenta en español. Pregunta de taller que ya produce."
+  },
+  {
+    "seccion": "impresion-3d",
+    "origen": "cliente",
+    "titulo": "¿Imprimir en 3D o maquinar? Cuándo conviene cada uno",
+    "keyword": "impresion 3d o maquinado cnc cual conviene",
+    "cuerpo": "El cliente llega pidiendo una pieza y no sabe ni le importa cómo se hace. El que decide es uno.\n\n¿En qué momento les sale más a cuenta imprimirla que maquinarla? ¿Es por cantidad, por geometría, por material?\n\n¿Y le han entregado al cliente una pieza impresa cuando pidió maquinada? ¿Qué tal salió?",
+    "por_que": "Pregunta que cruza dos secciones y trae tráfico de ambos lados."
+  },
+  {
+    "seccion": "muestra-tu-trabajo",
+    "origen": "oficial",
+    "titulo": "Enseña la pieza más difícil que has sacado y cómo le hiciste",
+    "keyword": "trabajos cnc mexico piezas dificiles",
+    "cuerpo": "Hilo abierto y permanente: suban foto de la pieza que más trabajo les costó.\n\nDigan material, máquina, herramienta y cuánto tardaron. Lo que de verdad sirve es dónde se atoraron y cómo salieron.\n\nNo tiene que ser una pieza bonita. A veces la más difícil es la más fea.",
+    "por_que": "Hilo permanente que acumula contenido con fotos. Es el que hace que el foro se vea vivo."
+  }
+]
