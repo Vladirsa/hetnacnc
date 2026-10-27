@@ -78,7 +78,7 @@ type RespuestaTablero = {
     respuestas: number
     votos_recibidos: number
     mejores_respuestas: number
-    motivo?: "sin_configurar" | "sin_perfil" | "error"
+    motivo?: "sin_configurar" | "sin_abrir" | "sin_perfil" | "error"
   }
   cotizador: {
     vinculado: boolean
@@ -370,12 +370,26 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
   const { ranking } = datos
   const d = ranking.desglose
 
+  // Mientras el foro no exista, esa parte vale 0 para todos. Enseñar la barra
+  // en "0 de 25" le diría al taller que no participa en algo que ni siquiera
+  // abrió, y además ningún taller podría pasar de 75 de 100.
+  const foroCuenta =
+    datos.foro.motivo !== "sin_abrir" && datos.foro.motivo !== "sin_configurar"
+
+  const partes = [
+    { nombre: "Ventas", puntos: d.ventas, tope: 50 },
+    ...(foroCuenta ? [{ nombre: "Foro", puntos: d.foro, tope: 25 }] : []),
+    { nombre: "Reseñas", puntos: d.resenas, tope: 25 },
+  ]
+  const topeTotal = partes.reduce((suma, p) => suma + p.tope, 0)
+
   return (
     <div style={S.card}>
       <h2 style={S.h2}>Tu lugar entre los talleres</h2>
       <p style={S.nota}>
-        Se mezcla lo que vendes, lo que aportas en el foro y cómo te califican. Vender no es lo
-        único que sube.
+        {foroCuenta
+          ? "Se mezcla lo que vendes, lo que aportas en el foro y cómo te califican. Vender no es lo único que sube."
+          : "Se mezcla lo que vendes y cómo te califican. Cuando abra el Foro CNC, lo que aportes ahí también va a contar."}
       </p>
 
       {ranking.posicion ? (
@@ -393,11 +407,7 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
       )}
 
       <div style={{ marginTop: 14 }}>
-        {[
-          { nombre: "Ventas", puntos: d.ventas, tope: 50 },
-          { nombre: "Foro", puntos: d.foro, tope: 25 },
-          { nombre: "Reseñas", puntos: d.resenas, tope: 25 },
-        ].map((parte) => (
+        {partes.map((parte) => (
           <div key={parte.nombre} style={{ marginBottom: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5 }}>
               <span style={{ fontWeight: 600 }}>{parte.nombre}</span>
@@ -416,7 +426,9 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
           </div>
         ))}
       </div>
-      <p style={S.pie}>Puntuación total: {ranking.puntuacion.toFixed(1)} de 100</p>
+      <p style={S.pie}>
+        Puntuación total: {ranking.puntuacion.toFixed(1)} de {topeTotal}
+      </p>
     </div>
   )
 }
@@ -510,6 +522,12 @@ function Foro({ datos }: { datos: RespuestaTablero }) {
 
       {f.motivo === "sin_configurar" && (
         <p style={S.vacio}>El foro no está conectado a este panel todavía.</p>
+      )}
+      {f.motivo === "sin_abrir" && (
+        <p style={S.vacio}>
+          El Foro CNC todavía no abre. Cuando abra, lo que contestes ahí cuenta para tu
+          ranking.
+        </p>
       )}
       {f.motivo === "error" && (
         <p style={S.vacio}>No se pudo leer el foro en este momento. Vuelve a cargar más tarde.</p>

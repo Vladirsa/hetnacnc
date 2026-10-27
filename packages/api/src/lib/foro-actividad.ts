@@ -24,8 +24,11 @@ export type ForoActividad = {
   votos_recibidos: number
   mejores_respuestas: number
   // Razón por la que no hay datos, para poder decirlo en pantalla en vez de
-  // enseñar ceros que parecen reales.
-  motivo?: "sin_configurar" | "sin_perfil" | "error"
+  // enseñar ceros que parecen reales. "sin_abrir" y "error" se separan a
+  // propósito: el foro todavía sin estrenar no es una falla pasajera, y
+  // decirle al taller "vuelve más tarde" sería mandarlo a esperar algo que
+  // no va a cambiar solo.
+  motivo?: "sin_configurar" | "sin_abrir" | "sin_perfil" | "error"
 }
 
 const VACIO: ForoActividad = {
@@ -109,9 +112,20 @@ export async function actividadEnForo(sellerId: string): Promise<ForoActividad> 
       mejores_respuestas: Number(fila.mejores) || 0,
     }
   } catch (e) {
+    if (foroSinEstrenar(e)) {
+      return { ...VACIO, motivo: "sin_abrir" }
+    }
     console.error("[tablero] foro:", e instanceof Error ? e.message : e)
     return { ...VACIO, motivo: "error" }
   }
+}
+
+// El esquema "foro" todavía no se ha creado en la base. Es el mismo caso que
+// el storefront llama "sin_foro" y pinta como "El foro abre muy pronto":
+// 42P01 es tabla inexistente y 3F000 esquema inexistente.
+function foroSinEstrenar(e: unknown): boolean {
+  const codigo = (e as { code?: string })?.code
+  return codigo === "42P01" || codigo === "3F000"
 }
 
 // Reputación de todos los talleres que tienen perfil, para el ranking.
@@ -131,7 +145,11 @@ export async function reputacionDeTalleres(): Promise<Map<string, number>> {
       mapa.set(fila.vendedor_id, Number(fila.reputacion) || 0)
     }
   } catch (e) {
-    console.error("[tablero] reputaciones del foro:", e instanceof Error ? e.message : e)
+    // Mientras el foro no se estrene esto falla en CADA carga del tablero de
+    // CADA taller. Loguearlo llenaría el log de una línea que no es noticia.
+    if (!foroSinEstrenar(e)) {
+      console.error("[tablero] reputaciones del foro:", e instanceof Error ? e.message : e)
+    }
   }
   return mapa
 }
