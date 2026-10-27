@@ -75,7 +75,7 @@ async function AllCategories({
 
   const breadcrumbsItems = [
     {
-      path: "/",
+      path: "/categories",
       label: "Todos los productos",
     },
   ]
