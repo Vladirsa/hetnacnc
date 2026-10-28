@@ -60,9 +60,13 @@ puso. Es idempotente: correrlo otra vez pone 0 y no duplica nada.
 
 **4. Prende el agente de respuestas.** Ya con temas publicados, el workflow
 *HETNA Mantenimiento - Agente de respuestas del foro* tiene de qué agarrarse.
-Hoy está apagado, y **antes de prenderlo falta ponerle tu chat de Telegram**:
-el nodo "Pedir aprobacion por Telegram" todavía trae el texto de ejemplo en
-lugar del chat ID. Así como está, no te llega nada que aprobar.
+Hoy está apagado. Ya trae el chat de Telegram de @hetnacncadmin (28 de
+octubre), así que cada respuesta propuesta te llega ahí para aprobarla antes de
+publicarse.
+
+No contesta los temas que firma `hetna`: esos son la siembra, y están para que
+conteste el gremio. Que la misma cuenta pregunte y se responda se ve armado.
+Sí contesta lo que publique cualquier otro perfil.
 
 Ese workflow nunca había corrido, y al revisarlo contra este esquema
 aparecieron dos fallas que ya quedaron arregladas en n8n el 27 de octubre:
