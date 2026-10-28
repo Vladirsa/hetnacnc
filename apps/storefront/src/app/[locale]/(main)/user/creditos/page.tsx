@@ -17,7 +17,7 @@ export default async function CreditosPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const [res, paquetes] = await Promise.all([obtenerSaldo(), listarPaquetes(locale)])
+  const [res, { paquetes, proveedores }] = await Promise.all([obtenerSaldo(), listarPaquetes()])
 
   if (!res.ok && res.noAutenticado) {
     return (
@@ -85,11 +85,12 @@ export default async function CreditosPage({
           <section>
             <h2 className="text-[18px] font-bold text-[#1B1B18]">Comprar créditos</h2>
             <p className="mt-1 text-[14px] text-[#4A4943]">
-              Se pagan en el mismo carrito que todo lo demás. Al confirmarse el pago, los
-              créditos entran solos a tu cuenta.
+              Eliges el paquete y pagas al momento con Mercado Pago o PayPal. Al confirmarse
+              el pago, los créditos entran solos a tu cuenta.
             </p>
             <ComprarPaquetes
               paquetes={paquetes}
+              proveedores={proveedores}
               locale={locale}
               porEscaneo={porEscaneo}
             />

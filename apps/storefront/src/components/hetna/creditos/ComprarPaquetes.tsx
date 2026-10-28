@@ -2,38 +2,33 @@
 
 import { useState } from "react"
 
-import { useRouter } from "next/navigation"
-
-import { Button } from "@/components/atoms"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { useCartContext } from "@/components/providers"
-import type { Paquete } from "@/lib/creditos/acciones"
+import { iniciarCompraCreditos, type Paquete, type Proveedor } from "@/lib/creditos/acciones"
 import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
 
-// Comprar créditos NO abre una pasarela aparte: el paquete se mete al carrito
-// como cualquier producto y se paga en el checkout de siempre, con Mercado
-// Pago. Cuando el pago se confirma, los subscribers del backend acreditan el
-// monedero.
-//
-// Es a propósito. Una segunda pasarela sería un segundo lugar donde se cobra
-// mal, otra integración que mantener, y la compra se quedaría fuera del
-// historial de pedidos. Así el taller ve su compra de créditos junto a todo lo
-// demás y puede pedir su factura igual.
+// Comprar créditos es directo: el botón abre el pago de Mercado Pago o PayPal
+// en ese momento, sin pasar por el carrito. Al pagar, el proveedor regresa a
+// /user/creditos/pago, que confirma el pago y suma los créditos.
+const NOMBRE: Record<Proveedor, string> = {
+  mercadopago: "Pagar con Mercado Pago",
+  paypal: "Pagar con PayPal",
+}
+
 export const ComprarPaquetes = ({
   paquetes,
+  proveedores,
   locale,
   porEscaneo,
 }: {
   paquetes: Paquete[]
+  proveedores: Proveedor[]
   locale: string
   porEscaneo: number
 }) => {
-  const { addToCart } = useCartContext()
   const [trabajando, setTrabajando] = useState<string | null>(null)
-  const router = useRouter()
 
-  if (!paquetes.length) {
+  if (!paquetes.length || !proveedores.length) {
     return (
       <div className="mt-4 rounded-[12px] border border-dashed border-[#D9D5CC] bg-white px-4 py-6 text-center text-[14px] leading-relaxed text-[#6B6A63]">
         Ahorita no hay paquetes a la venta.{" "}
@@ -45,91 +40,92 @@ export const ComprarPaquetes = ({
     )
   }
 
-  const comprar = async (paquete: Paquete) => {
-    if (!paquete.ofertaId) return
-    setTrabajando(paquete.id)
-    try {
-      await addToCart({ offerId: paquete.ofertaId, quantity: 1, countryCode: locale })
-      router.push(`/${locale}/cart`)
-    } catch (error) {
-      console.error("No se pudo agregar el paquete al carrito", error)
-      toast.error({
-        title: "No se pudo agregar al carrito",
-        description: error instanceof Error ? error.message : "Vuelve a intentarlo.",
-      })
-      setTrabajando(null)
+  const comprar = async (paquete: Paquete, proveedor: Proveedor) => {
+    const clave = `${paquete.handle}:${proveedor}`
+    setTrabajando(clave)
+    const r = await iniciarCompraCreditos(paquete.handle, proveedor, locale)
+    if (r.ok) {
+      window.location.href = r.url
+      return
     }
+    toast.error({ title: "No se pudo abrir el pago", description: r.mensaje })
+    setTrabajando(null)
+    if (r.noAutenticado) window.location.href = `/${locale}/login`
   }
 
   // El paquete con mejor precio por crédito: el que conviene señalar.
-  const mejor = paquetes.reduce<Paquete | null>((mejorHastaAhora, p) => {
-    if (!p.precio) return mejorHastaAhora
-    if (!mejorHastaAhora?.precio) return p
-    return p.precio / p.creditos < mejorHastaAhora.precio / mejorHastaAhora.creditos
-      ? p
-      : mejorHastaAhora
-  }, null)
+  const mejor = paquetes.reduce<Paquete | null>(
+    (m, p) => (!m || p.precio / p.creditos < m.precio / m.creditos ? p : m),
+    null
+  )
 
   return (
-    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {paquetes.map((p) => {
-        const escaneos = Math.floor(p.creditos / Math.max(porEscaneo, 1))
-        const esMejor = mejor?.id === p.id && paquetes.length > 1
+    <>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {paquetes.map((p) => {
+          const escaneos = Math.floor(p.creditos / Math.max(porEscaneo, 1))
+          const esMejor = mejor?.handle === p.handle && paquetes.length > 1
 
-        return (
-          <article
-            key={p.id}
-            className={`flex flex-col rounded-[14px] border bg-white p-5 ${
-              esMejor ? "border-[#C2560A] shadow-[0_6px_20px_rgba(194,86,10,0.12)]" : "border-[#E7E4DC]"
-            }`}
-          >
-            {esMejor && (
-              <span className="mb-2 self-start rounded-full bg-[#FDEEE1] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">
-                Mejor precio por crédito
-              </span>
-            )}
-
-            <p className="text-[28px] font-bold leading-none text-[#1B1B18]">
-              {p.creditos}{" "}
-              <span className="text-[14px] font-semibold text-[#6B6A63]">créditos</span>
-            </p>
-
-            {escaneos > 0 && (
-              <p className="mt-1 text-[13px] text-[#6B6A63]">
-                {escaneos} {escaneos === 1 ? "escaneo 3D" : "escaneos 3D"}
-              </p>
-            )}
-
-            <p className="mt-3 flex-1 text-[13px] leading-relaxed text-[#4A4943]">
-              {p.descripcion}
-            </p>
-
-            <p className="mt-3 text-[22px] font-bold text-[#1B1B18]">
-              {p.precio === null
-                ? "—"
-                : convertToLocale({ amount: p.precio, currency_code: p.moneda })}
-            </p>
-            {p.precio !== null && (
-              <p className="text-[12px] text-[#6B6A63]">
-                {convertToLocale({
-                  amount: p.precio / p.creditos,
-                  currency_code: p.moneda,
-                })}{" "}
-                por crédito
-              </p>
-            )}
-
-            <Button
-              className="mt-4 flex w-full items-center justify-center py-3 font-bold"
-              onClick={() => comprar(p)}
-              disabled={trabajando !== null}
-              loading={trabajando === p.id}
+          return (
+            <article
+              key={p.handle}
+              className={`flex flex-col rounded-[14px] border bg-white p-5 ${
+                esMejor ? "border-[#C2560A] shadow-[0_6px_20px_rgba(194,86,10,0.12)]" : "border-[#E7E4DC]"
+              }`}
             >
-              Comprar
-            </Button>
-          </article>
-        )
-      })}
-    </div>
+              {esMejor && (
+                <span className="mb-2 self-start rounded-full bg-[#FDEEE1] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">
+                  Mejor precio por crédito
+                </span>
+              )}
+
+              <p className="text-[28px] font-bold leading-none text-[#1B1B18]">
+                {p.creditos} <span className="text-[14px] font-semibold text-[#6B6A63]">créditos</span>
+              </p>
+
+              {escaneos > 0 && (
+                <p className="mt-1 text-[13px] text-[#6B6A63]">
+                  {escaneos} {escaneos === 1 ? "escaneo 3D" : "escaneos 3D"}
+                </p>
+              )}
+
+              <p className="mt-3 flex-1 text-[13px] leading-relaxed text-[#4A4943]">{p.descripcion}</p>
+
+              <p className="mt-3 text-[22px] font-bold text-[#1B1B18]">
+                {convertToLocale({ amount: p.precio, currency_code: p.moneda })}
+              </p>
+              <p className="text-[12px] text-[#6B6A63]">
+                {convertToLocale({ amount: p.precio / p.creditos, currency_code: p.moneda })} por crédito
+              </p>
+
+              <div className="mt-4 flex flex-col gap-2">
+                {proveedores.map((prov, i) => {
+                  const clave = `${p.handle}:${prov}`
+                  return (
+                    <button
+                      key={prov}
+                      type="button"
+                      onClick={() => comprar(p, prov)}
+                      disabled={trabajando !== null}
+                      className={`w-full rounded-[10px] px-4 py-3 text-[14px] font-bold transition disabled:opacity-60 ${
+                        i === 0
+                          ? "bg-[#C2560A] text-white hover:bg-[#A84A08]"
+                          : "border border-[#142033] bg-white text-[#142033] hover:bg-[#142033] hover:text-white"
+                      }`}
+                    >
+                      {trabajando === clave ? "Abriendo el pago…" : NOMBRE[prov]}
+                    </button>
+                  )
+                })}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+      <p className="mt-3 text-[12px] leading-relaxed text-[#6B6A63]">
+        Precios en pesos mexicanos. El pago se hace en la página segura de Mercado Pago o PayPal; HETNA
+        no ve ni guarda los datos de tu tarjeta.
+      </p>
+    </>
   )
 }
