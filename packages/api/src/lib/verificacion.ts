@@ -16,6 +16,7 @@ export type Expediente = {
   motivo: string | null
   enviado_en: Date | string | null
   revisado_en: Date | string | null
+  consentimiento_en?: Date | string | null
 }
 
 export const servicio = (c: MedusaContainer) => c.resolve<VerificacionModuleService>(VERIFICACION_MODULE)
