@@ -7,26 +7,20 @@
 // efectivo, y por eso el saldo NUNCA se enseña como "MX$0.00" -- se enseña en
 // créditos y en lo que alcanzan a pagar, que es lo que el taller quiere saber.
 //
-// Comprarlos no necesita una pasarela aparte: los paquetes son productos
-// normales del catálogo, así que pasan por el mismo carrito y el mismo Mercado
-// Pago que todo lo demás. Cuando el pago se confirma, los subscribers
-// order-placed-credit-delivery / payment-captured-credit-delivery del backend
-// acreditan el monedero. Una sola pasarela que ya está probada vale más que
-// una segunda a medias, y así la compra queda en el historial de pedidos.
+// Comprarlos es directo: el cliente elige un paquete y paga en ese momento con
+// Mercado Pago o PayPal, sin pasar por el carrito. Al regresar del pago,
+// /user/creditos/pago confirma con el backend, que pregunta al proveedor y
+// acredita. Ver packages/api/src/lib/creditos-compra.ts.
 
 import { getAuthHeaders } from "@/lib/data/cookies"
-import { listOffers } from "@/lib/data/offers"
-import { listProducts } from "@/lib/data/products"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
-// Los paquetes que creó scripts/seed-creditos-3d.ts. Si se agrega uno nuevo en
-// el panel, su handle va aquí.
-const HANDLES_PAQUETES = [
-  "creditos-3d-basico",
-  "creditos-3d-estandar",
-  "creditos-3d-pro",
-]
+const encabezados = async () => ({
+  "Content-Type": "application/json",
+  "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+  ...((await getAuthHeaders()) as Record<string, string>),
+})
 
 export type Movimiento = {
   id: string
@@ -54,11 +48,7 @@ export async function obtenerSaldo(): Promise<RespuestaSaldo> {
 
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/creditos-3d/saldo`, {
-      headers: {
-        "Content-Type": "application/json",
-        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
-        ...auth,
-      },
+      headers: await encabezados(),
       cache: "no-store",
     })
 
@@ -84,56 +74,83 @@ export async function obtenerSaldo(): Promise<RespuestaSaldo> {
   }
 }
 
+export type Proveedor = "mercadopago" | "paypal"
+
 export type Paquete = {
-  id: string
   handle: string
   titulo: string
   descripcion: string | null
-  thumbnail: string | null
   creditos: number
-  precio: number | null
+  precio: number
   moneda: string
-  // El id de la OFERTA, no el de la variante: en Mercur lo que se agrega al
-  // carrito es la oferta de un vendedor, no el producto.
-  ofertaId: string | null
 }
 
-// Los paquetes con su precio ya calculado para la región del visitante.
-export async function listarPaquetes(countryCode: string): Promise<Paquete[]> {
-  const { response } = await listProducts({
-    countryCode,
-    queryParams: { handle: HANDLES_PAQUETES, limit: HANDLES_PAQUETES.length },
-  })
+export type CatalogoCreditos = { paquetes: Paquete[]; proveedores: Proveedor[] }
 
-  const paquetes = await Promise.all(
-    response.products.map(async (p) => {
-      const metadata = (p.metadata || {}) as Record<string, unknown>
-      const { offers } = await listOffers({ productId: p.id, countryCode, limit: 1 })
-      const oferta = offers[0] as
-        | { id?: string; calculated_price?: { calculated_amount?: number; currency_code?: string } }
-        | undefined
-
-      return {
-        id: p.id,
-        handle: p.handle || "",
-        titulo: p.title,
-        descripcion: p.description ?? null,
-        thumbnail: p.thumbnail ?? null,
-        creditos: Number(metadata.creditos_otorgados) || 0,
-        precio: oferta?.calculated_price?.calculated_amount ?? null,
-        moneda: oferta?.calculated_price?.currency_code || "mxn",
-        ofertaId: oferta?.id ?? null,
-      }
+// Los paquetes a la venta y con qué se pueden pagar
+export async function listarPaquetes(): Promise<CatalogoCreditos> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/creditos-3d/paquetes`, {
+      headers: await encabezados(),
+      cache: "no-store",
     })
-  )
+    if (!res.ok) return { paquetes: [], proveedores: [] }
+    const cuerpo = (await res.json()) as Partial<CatalogoCreditos>
+    return {
+      paquetes: (cuerpo.paquetes ?? []).filter((p) => p.creditos > 0 && p.precio > 0).sort((a, b) => a.creditos - b.creditos),
+      proveedores: cuerpo.proveedores ?? [],
+    }
+  } catch (e) {
+    console.error("[creditos] no se pudieron leer los paquetes", e)
+    return { paquetes: [], proveedores: [] }
+  }
+}
 
-  return (
-    paquetes
-      // Sin créditos no es un paquete, y sin oferta no se puede comprar: si
-      // alguien edita el producto en el panel y borra el metadato, o el
-      // vendedor despublica su oferta, mejor que no aparezca a que se venda y
-      // no acredite nada.
-      .filter((p) => p.creditos > 0 && p.ofertaId)
-      .sort((a, b) => a.creditos - b.creditos)
-  )
+export type RespuestaCompra = { ok: true; url: string } | { ok: false; mensaje: string; noAutenticado?: boolean }
+
+// Crea la compra y devuelve la liga de pago de Mercado Pago o PayPal
+export async function iniciarCompraCreditos(handle: string, proveedor: Proveedor, pais: string): Promise<RespuestaCompra> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/creditos-3d/comprar`, {
+      method: "POST",
+      headers: await encabezados(),
+      body: JSON.stringify({ handle, proveedor, pais }),
+      cache: "no-store",
+    })
+    if (res.status === 401) return { ok: false, mensaje: "Tu sesión expiró. Vuelve a entrar.", noAutenticado: true }
+    const cuerpo = (await res.json().catch(() => ({}))) as { url?: string; message?: string }
+    if (!res.ok || !cuerpo.url) return { ok: false, mensaje: cuerpo.message || "No se pudo preparar el pago." }
+    return { ok: true, url: cuerpo.url }
+  } catch (e) {
+    console.error("[creditos] no se pudo iniciar la compra", e)
+    return { ok: false, mensaje: "No se pudo conectar con el servidor." }
+  }
+}
+
+export type RespuestaConfirmacion =
+  | { ok: true; estado: "pendiente" | "pagado" | "vencido"; creditos: number; titulo: string | null }
+  | { ok: false; mensaje: string; noAutenticado?: boolean }
+
+// Al regresar del pago: el backend pregunta al proveedor y acredita si se pagó
+export async function confirmarCompraCreditos(compra: string): Promise<RespuestaConfirmacion> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/creditos-3d/confirmar`, {
+      method: "POST",
+      headers: await encabezados(),
+      body: JSON.stringify({ compra }),
+      cache: "no-store",
+    })
+    if (res.status === 401) return { ok: false, mensaje: "Tu sesión expiró. Vuelve a entrar.", noAutenticado: true }
+    const cuerpo = (await res.json().catch(() => ({}))) as {
+      estado?: "pendiente" | "pagado" | "vencido"
+      creditos?: number
+      titulo?: string | null
+      message?: string
+    }
+    if (!res.ok || !cuerpo.estado) return { ok: false, mensaje: cuerpo.message || "No pudimos confirmar el pago." }
+    return { ok: true, estado: cuerpo.estado, creditos: cuerpo.creditos ?? 0, titulo: cuerpo.titulo ?? null }
+  } catch (e) {
+    console.error("[creditos] no se pudo confirmar la compra", e)
+    return { ok: false, mensaje: "No se pudo conectar con el servidor." }
+  }
 }
