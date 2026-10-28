@@ -33,7 +33,10 @@ export type FichaDiseno = {
   subcategoria?: string
   tags?: string
   imagen_url?: string
-  precio_mxn: number
+  // Gratis: se descarga con cuenta dentro del cupo semanal (lib/descargas-gratis)
+  // y no lleva oferta ni precio. Si no es gratis, precio_mxn es obligatorio.
+  gratis?: boolean
+  precio_mxn?: number
   precio_usd?: number
   archivo_storage_key: string
   titulo_seo?: string
@@ -134,6 +137,10 @@ export async function publicarDiseno(
     )
   }
 
+  if (!ficha.gratis && !(Number(ficha.precio_mxn) > 0)) {
+    throw new Error(`La ficha ${ficha.sku} no es gratis y no trae precio.`)
+  }
+
   // ---- Precios: MXN de la ficha y USD derivado, si la plataforma lo acepta --
   const { data: stores } = await query.graph({
     entity: "store",
@@ -142,9 +149,13 @@ export async function publicarDiseno(
   const aceptadas = new Set(
     ((stores[0]?.supported_currencies ?? []) as { currency_code?: string }[]).map((c) => c?.currency_code)
   )
-  const precios = [{ currency_code: "mxn", amount: ficha.precio_mxn }]
-  if (aceptadas.has("usd")) {
-    precios.push({ currency_code: "usd", amount: ficha.precio_usd ?? precioEnDolares(ficha.precio_mxn) })
+  const precios: { currency_code: string; amount: number }[] = []
+  if (!ficha.gratis) {
+    const mxn = Number(ficha.precio_mxn)
+    precios.push({ currency_code: "mxn", amount: mxn })
+    if (aceptadas.has("usd")) {
+      precios.push({ currency_code: "usd", amount: ficha.precio_usd ?? precioEnDolares(mxn) })
+    }
   }
 
   // ---- ¿Ya existe? ----------------------------------------------------------
@@ -219,6 +230,7 @@ export async function publicarDiseno(
             sales_channels: canales.map((c) => ({ id: c.id })),
             metadata: {
               producto_digital: true,
+              archivo_gratis: ficha.gratis === true,
               digital_factory_sku: ficha.sku,
               archivo_storage_key: ficha.archivo_storage_key,
               formatos: ficha.formatos || "",
@@ -252,6 +264,12 @@ export async function publicarDiseno(
 
     producto = { id: p.id, handle: p.handle, variants: (p.variants || []).map((v) => ({ id: v.id })) }
     logger.info(`[disenos] producto creado ${p.handle} (${ficha.sku})`)
+  }
+
+  // Un archivo gratis no se vende: sin oferta no aparece el carrito, y la
+  // ficha pinta "Descargar gratis" en su lugar.
+  if (ficha.gratis) {
+    return { creado, product_id: producto.id, handle: producto.handle, offer_id: null, categoria, precios }
   }
 
   // ---- La oferta de la tienda HETNA ----------------------------------------

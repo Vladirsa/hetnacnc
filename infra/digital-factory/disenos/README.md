@@ -114,3 +114,19 @@ categoría, y el aviso de Telegram lo dice para asignarla en el panel.
 
 El precio en dólares (tienda `/us`) sale del de pesos con
 `TIPO_CAMBIO_USD_MXN` (18 si no está), terminado en .99 y nunca menos de 1.99.
+
+## Archivos gratis
+
+Una ficha con la columna `gratis` en verdadero se publica sin precio ni
+oferta: en la tienda dice **Gratis** y en lugar del carrito sale **Descargar
+gratis**. Se baja con cuenta (la misma de la tienda), y el cupo lo lleva el
+módulo `descargas` del API:
+
+- cuenta sin plan: `DESCARGAS_GRATIS_SEMANA` archivos (20) en 7 días corridos;
+- con plan del Cotizador vigente (Taller, Pro o Industrial): sin límite.
+
+Volver a bajar el mismo archivo dentro de la semana no cuenta otra vez. La liga
+es de B2, firmada, y dura una hora. Si B2 falla no se gasta cupo.
+
+Un producto que ya está publicado se vuelve gratis poniéndole
+`archivo_gratis: true` en su metadata desde el panel de administración.

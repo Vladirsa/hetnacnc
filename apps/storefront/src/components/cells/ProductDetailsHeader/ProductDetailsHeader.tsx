@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/atoms"
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
+import { DescargarGratis } from "@/components/hetna/descargas/DescargarGratis"
 import { ProductVariants } from "@/components/molecules"
 import { CompareOffersModal } from "@/components/organisms/CompareOffersModal/CompareOffersModal"
 import { useCartContext } from "@/components/providers"
@@ -64,6 +65,10 @@ export const ProductDetailsHeader = ({
   const router = useRouter()
 
   const { cheapestVariant, cheapestPrice } = getProductPrice({ product })
+
+  // Archivo gratis: no hay precio ni carrito, se baja con cuenta dentro del
+  // cupo semanal. Lo decide el producto, no la oferta.
+  const esGratis = (product.metadata as Record<string, unknown> | null)?.archivo_gratis === true
 
   const hasAnyPrice = cheapestPrice !== null && cheapestVariant !== null
 
@@ -215,6 +220,10 @@ export const ProductDetailsHeader = ({
         {product.title}
       </h1>
 
+      {esGratis ? (
+        <DescargarGratis productId={product.id} />
+      ) : (
+      <>
       <div
         className={`mt-4 rounded-[12px] px-4 py-3 ${
           hayDescuento ? "bg-[#FFF3EC]" : "bg-[#F7F5EF]"
@@ -326,6 +335,8 @@ export const ProductDetailsHeader = ({
           Agregar al carrito
         </button>
       </div>
+      </>
+      )}
 
       {/* Mensaje al taller, dentro de HETNA.
           Aquí había un botón de WhatsApp y se quitó, y no es sólo gusto: el

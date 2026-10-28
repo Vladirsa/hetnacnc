@@ -8,6 +8,7 @@ import { storeCreditos3dMiddlewares } from "./store/creditos-3d/middlewares";
 import { storeCotizadorMiddlewares } from "./store/cotizador/middlewares";
 import { storeEscaneosMiddlewares } from "./store/escaneos/middlewares";
 import { storeResenasMiddlewares } from "./store/resenas/middlewares";
+import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middlewares";
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 import { camMiddlewares } from "./cam-middlewares";
 
@@ -34,6 +35,7 @@ export default defineMiddlewares({
         ...storeCotizadorMiddlewares,
         ...storeEscaneosMiddlewares,
         ...storeResenasMiddlewares,
+        ...storeDescargasGratisMiddlewares,
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
     ],

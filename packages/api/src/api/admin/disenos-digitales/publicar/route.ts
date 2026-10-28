@@ -18,7 +18,8 @@ const Ficha = z.object({
   subcategoria: z.string().optional(),
   tags: z.string().optional(),
   imagen_url: z.string().url().optional(),
-  precio_mxn: z.number().positive(),
+  gratis: z.boolean().optional(),
+  precio_mxn: z.number().positive().optional(),
   precio_usd: z.number().positive().optional(),
   // Sin archivo no hay qué entregar: el correo de descarga sale de aquí.
   archivo_storage_key: z.string().min(1),
@@ -26,6 +27,9 @@ const Ficha = z.object({
   meta_description: z.string().optional(),
   keyword_principal: z.string().optional(),
   faq: z.array(z.object({ p: z.string(), r: z.string() })).optional(),
+}).refine((f) => f.gratis === true || (f.precio_mxn ?? 0) > 0, {
+  message: "Si el archivo no es gratis, precio_mxn es obligatorio.",
+  path: ["precio_mxn"],
 })
 
 /**

@@ -85,7 +85,11 @@ export const ProductCard = ({
           <div className="w-full">
             <h3 className="heading-sm truncate" data-testid="product-card-title">{product.title}</h3>
             <div className="flex items-center gap-2 mt-2" data-testid="product-card-price">
-              <p className="font-medium" data-testid="product-card-current-price">{cheapestPrice?.calculated_price}</p>
+              <p className="font-medium" data-testid="product-card-current-price">
+                {((product as { metadata?: Record<string, unknown> | null }).metadata)?.archivo_gratis === true
+                  ? "Gratis"
+                  : cheapestPrice?.calculated_price}
+              </p>
               {cheapestPrice?.calculated_price !==
                 cheapestPrice?.original_price && (
                 <p className="text-sm text-gray-500 line-through" data-testid="product-card-original-price">

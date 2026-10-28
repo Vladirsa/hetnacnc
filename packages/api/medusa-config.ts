@@ -156,6 +156,10 @@ module.exports = withMercur({
       resolve: './src/modules/tablero',
     },
     {
+      // Archivos gratis que baja cada cliente: de aquí sale el cupo semanal.
+      resolve: './src/modules/descargas',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [

@@ -118,9 +118,12 @@ export default function TarjetaProducto({
   locale?: string
 }) {
   const moneda = vendedor?.moneda || "mxn"
-  const precioOferta = vendedor?.precio ?? null
-  const precio =
-    precioOferta !== null
+  // Los archivos gratis no llevan oferta ni carrito: se bajan desde la ficha.
+  const esGratis = (product.metadata as Record<string, unknown> | null)?.archivo_gratis === true
+  const precioOferta = esGratis ? null : (vendedor?.precio ?? null)
+  const precio = esGratis
+    ? "Gratis"
+    : precioOferta !== null
       ? convertToLocale({ amount: precioOferta, currency_code: moneda })
       : getProductPrice({ product }).cheapestPrice?.calculated_price
 
