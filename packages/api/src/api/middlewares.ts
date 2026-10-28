@@ -11,6 +11,7 @@ import { storeResenasMiddlewares } from "./store/resenas/middlewares";
 import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middlewares";
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 import { camMiddlewares } from "./cam-middlewares";
+import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -38,5 +39,6 @@ export default defineMiddlewares({
         ...storeDescargasGratisMiddlewares,
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
+        ...vendorVerificacionMiddlewares,
     ],
 });

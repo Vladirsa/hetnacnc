@@ -123,7 +123,10 @@ export default function DirectorioTalleres({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3">
-                  <h3 className="truncate text-base font-bold text-[#142033]">{t.nombre}</h3>
+                  <h3 className="truncate text-base font-bold text-[#142033]">
+                  {t.nombre}
+                  {t.verificado && <span className="ml-1 text-[#1E7B3A]" title="Taller verificado por HETNA" aria-label="Taller verificado">✓</span>}
+                </h3>
                   {t.perfil.calificacion !== undefined && (
                     <span className="text-sm font-semibold text-[#C2560A]">★ {t.perfil.calificacion.toFixed(1)}</span>
                   )}

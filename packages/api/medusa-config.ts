@@ -92,7 +92,11 @@ module.exports = withMercur({
     }
   },
   featureFlags: {
-    seller_registration: true
+    seller_registration: true,
+    // Los productos y ediciones de los talleres se publican sin aprobación del
+    // administrador (decisión de HETNA, 28 oct 2026). La confianza se da con la
+    // verificación del taller (INE y fotos), no revisando cada producto.
+    product_request: false,
   },
   modules: [
     {
@@ -158,6 +162,10 @@ module.exports = withMercur({
     {
       // Archivos gratis que baja cada cliente: de aquí sale el cupo semanal.
       resolve: './src/modules/descargas',
+    },
+    {
+      // Verificación de talleres: INE y fotos del taller (archivos privados)
+      resolve: './src/modules/verificacion',
     },
     {
       resolve: '@medusajs/medusa/file',
