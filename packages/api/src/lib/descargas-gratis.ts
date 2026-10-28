@@ -1,6 +1,8 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { COTIZADOR_MODULE } from "../modules/cotizador"
+import type CotizadorModuleService from "../modules/cotizador/service"
 import { DESCARGAS_MODULE } from "../modules/descargas"
 import type DescargasModuleService from "../modules/descargas/service"
 import { getSignedDownloadUrl } from "./backblaze"
@@ -57,15 +59,16 @@ const servicio = (container: MedusaContainer) =>
   container.resolve<DescargasModuleService>(DESCARGAS_MODULE)
 
 async function planDelCliente(container: MedusaContainer, customerId: string): Promise<string> {
-  const query = container.resolve(ContainerRegistrationKeys.QUERY)
   try {
-    const { data } = await query.graph({
-      entity: "cotizador_perfil",
-      fields: ["plan", "plan_hasta", "prueba_hasta"],
-      filters: { customer_id: customerId },
-    })
-    const perfil = data?.[0] as PerfilParaPlan | undefined
-    return perfil ? planEfectivo(perfil) : "gratis"
+    // Al servicio del módulo y no con query.graph("cotizador_perfil"): con
+    // query.graph Medusa busca "listCotizadorPerfils", que no existe (el
+    // modelo se registró como TallerPerfil), y el plan siempre salía vacío.
+    const cotizador = container.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
+    const [perfil] = await cotizador.listTallerPerfils(
+      { customer_id: customerId },
+      { take: 1, select: ["plan", "plan_hasta", "prueba_hasta"] }
+    )
+    return perfil ? planEfectivo(perfil as PerfilParaPlan) : "gratis"
   } catch {
     // Sin Cotizador no hay plan: cuenta gratis, que es lo seguro.
     return "gratis"
