@@ -7,7 +7,7 @@ import { ServicioIcono } from "./ServicioIcono"
 import { SERVICIOS_PRINCIPALES } from "./servicios-datos"
 
 // Barra de navegacion HETNA: "Todas las categorias" (Tienda, Digital y
-// Servicios juntas), Servicios y Herramientas CNC. En computadora los menus
+// Servicios juntas), Fabricación y Herramientas CNC. En computadora los menus
 // se abren al pasar el mouse; en celular la barra cabe completa y cada boton
 // abre un panel a pantalla completa con acordeones (sin JavaScript).
 
@@ -246,8 +246,10 @@ export const BarraNavegacion = ({
   categorias: HttpTypes.StoreProductCategory[]
 }) => {
   const raices = armarRaices(categorias)
-  const hrefServicios =
-    "/categories/" + (raices.find((r) => r.nombre.toLowerCase() === "servicios")?.handle ?? "servicios")
+  // "Fabricación" es la página para quien quiere que le fabriquen algo
+  // (antes este botón decía Servicios y llevaba a la categoría). Las
+  // herramientas digitales siguen en su propio menú.
+  const hrefFabricacion = "/fabricacion"
 
   return (
     <>
@@ -259,8 +261,8 @@ export const BarraNavegacion = ({
         className="relative z-40 hidden lg:flex bg-[#142033] px-4 lg:px-8 xl:px-16 h-[46px] items-center gap-7"
       >
         <MegaCategorias raices={raices} />
-        <LocalizedClientLink href={hrefServicios} className={ENLACE}>
-          Servicios
+        <LocalizedClientLink href={hrefFabricacion} className={ENLACE}>
+          Fabricación
         </LocalizedClientLink>
         <MenuHerramientas />
         <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
@@ -288,8 +290,8 @@ export const BarraNavegacion = ({
             <Hamburguesa size={14} />
             Categorías
           </label>
-          <LocalizedClientLink href={hrefServicios} className="flex items-center justify-center border-x border-white/10 py-3.5 active:bg-white/10">
-            Servicios
+          <LocalizedClientLink href={hrefFabricacion} className="flex items-center justify-center border-x border-white/10 py-3.5 active:bg-white/10">
+            Fabricación
           </LocalizedClientLink>
           <label htmlFor="mm-herr" className="flex cursor-pointer items-center justify-center gap-1 py-3.5 active:bg-white/10">
             Herramientas

@@ -68,8 +68,6 @@ const TITULO_ACORDEON =
   "flex cursor-pointer list-none items-center justify-between border-b border-[#E7E4DC] px-4 py-4 text-[15px] font-bold text-[#142033] [&::-webkit-details-marker]:hidden"
 
 export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
-  const servicios = categorias.find((c) => c.name.toLowerCase() === "servicios")
-  const hrefServicios = "/categories/" + (servicios?.handle ?? "servicios")
 
   return (
     <div className="md:hidden shrink-0">
@@ -112,8 +110,11 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
             </div>
           </details>
 
-          <LocalizedClientLink href={hrefServicios} className={ENLACE_SIMPLE}>
-            Servicios
+          {/* Fabricación: la página para quien quiere que le fabriquen algo
+              (antes la categoría Servicios). Las herramientas digitales van
+              abajo, en su propio acordeón. */}
+          <LocalizedClientLink href="/fabricacion" className={ENLACE_SIMPLE}>
+            Fabricación
           </LocalizedClientLink>
 
           <details>

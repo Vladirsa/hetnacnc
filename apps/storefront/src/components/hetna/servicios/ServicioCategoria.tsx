@@ -55,6 +55,14 @@ const SERVICIOS: Record<string, Info> = {
     texto: "Corte de lámina y placa de acero, inoxidable y aluminio con plasma CNC.",
     servicio: "Corte plasma",
     coincide: ["Corte plasma"],
+    calculadora: "/cotizar/corte-plasma",
+  },
+  "router-cnc": {
+    titulo: "Router CNC",
+    texto: "Corte y tallado de tableros grandes en MDF, triplay, madera sólida y acrílico.",
+    servicio: "Corte CNC",
+    coincide: ["Corte CNC", "Fresado de madera", "Maquinado"],
+    calculadora: "/cotizar/router-cnc",
   },
   "maquinado-cnc": {
     titulo: "Maquinado CNC",
@@ -80,6 +88,7 @@ const SERVICIOS: Record<string, Info> = {
     texto: "Prototipos y piezas funcionales en PLA, PETG, resina y más.",
     servicio: "Impresión 3D",
     coincide: ["Impresión 3D"],
+    calculadora: "/cotizar/impresion-3d",
   },
   prototipado: {
     titulo: "Prototipado",
@@ -103,7 +112,7 @@ const CALCULADORAS = [
 ]
 
 // Lo que de verdad pasa hoy, sin prometer de más: ver lib licitacion del API.
-const PREGUNTAS: { p: string; r: string }[] = [
+export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   {
     p: "¿Cuánto cuesta publicar mi trabajo?",
     r: "Nada. Publicar y recibir propuestas es gratis; sólo pagas si eliges una.",
@@ -161,7 +170,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
       ? [
           {
             titulo: "Es algo sencillo",
-            texto: "Para corte láser y router: sube tu archivo y ve el precio al instante.",
+            texto: "Pon medidas, material y cantidad y ve el precio al instante.",
             cta: "Precio al instante",
             href: info.calculadora || CALCULADORAS[0].href,
             principal: false,
@@ -298,7 +307,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
       {/* 5. Preguntas frecuentes (también para Google) */}
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
         <h3 className="mb-2 text-lg font-extrabold text-[#142033]">Preguntas frecuentes</h3>
-        {PREGUNTAS.map((q) => (
+        {PREGUNTAS_FABRICACION.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
             <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
             <p className="mt-2 text-sm text-[#44433D]">{q.r}</p>
@@ -310,7 +319,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
-              mainEntity: PREGUNTAS.map((q) => ({
+              mainEntity: PREGUNTAS_FABRICACION.map((q) => ({
                 "@type": "Question",
                 name: q.p,
                 acceptedAnswer: { "@type": "Answer", text: q.r },

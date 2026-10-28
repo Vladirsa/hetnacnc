@@ -9,10 +9,13 @@
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 export type CotizarLeadInput = {
-  servicio: "laser_co2" | "router"
+  servicio: "laser_co2" | "router" | "plasma" | "impresion_3d"
   material: string
   ancho: number
   largo: number
+  alto?: number
+  calibre?: string
+  calidad?: string
   cantidad: number
   piezas_mes_estimado?: number
   email: string

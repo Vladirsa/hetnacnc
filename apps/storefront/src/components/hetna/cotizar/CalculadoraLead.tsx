@@ -2,12 +2,21 @@
 
 import { useState } from "react"
 
-import { cotizarLead } from "@/lib/cotizar/acciones"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { cotizarLead, type CotizarLeadInput } from "@/lib/cotizar/acciones"
 
 type Props = {
-  servicio: "laser_co2" | "router"
+  servicio: CotizarLeadInput["servicio"]
   tituloServicio: string
   materiales: string[]
+  // Impresión 3D se cobra por volumen: pide también la altura.
+  pideAlto?: boolean
+  // Una pregunta más que cambia el precio: el calibre en plasma, la calidad
+  // en impresión 3D. `campo` es el nombre que espera el API.
+  opcion?: { campo: "calibre" | "calidad"; etiqueta: string; valores: string[]; inicial?: string }
+  // Servicio con el que se abre el formulario de propuestas de talleres
+  // (/cotizar?servicio=...), para quien quiere precio formal y no estimado.
+  servicioSolicitud?: string
 }
 
 type Estado =
@@ -18,7 +27,7 @@ type Estado =
 
 const formatoMXN = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 })
 
-export const CalculadoraLead = ({ servicio, tituloServicio, materiales }: Props) => {
+export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto, opcion, servicioSolicitud }: Props) => {
   const [estado, setEstado] = useState<Estado>({ paso: "form" })
 
   const enviar = async (formData: FormData) => {
@@ -33,6 +42,8 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales }: Props)
       material: String(formData.get("material") || ""),
       ancho,
       largo,
+      ...(pideAlto ? { alto: Number(formData.get("alto")) } : {}),
+      ...(opcion ? { [opcion.campo]: String(formData.get(opcion.campo) || "") } : {}),
       cantidad,
       piezas_mes_estimado: piezasMes,
       email: String(formData.get("email") || ""),
@@ -72,13 +83,20 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales }: Props)
             </p>
           </div>
         )}
+        {/* El estimado es para decidir; el precio formal lo dan los talleres. */}
+        <LocalizedClientLink
+          href={`/cotizar${servicioSolicitud ? `?servicio=${encodeURIComponent(servicioSolicitud)}` : ""}`}
+          className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
+        >
+          Pedir precio formal a talleres
+        </LocalizedClientLink>
         <a
           href={estado.whatsappUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
+          className="inline-flex items-center justify-center border border-[#E7E4DC] text-[#1B1B18] font-semibold px-5 py-3 rounded-[10px] text-[15px] hover:border-[#C2560A]"
         >
-          Pedir cotización formal por WhatsApp
+          Preguntar por WhatsApp
         </a>
       </div>
     )
@@ -110,6 +128,24 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales }: Props)
           <input name="largo" type="number" min={1} step="0.1" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       </div>
+
+      {pideAlto && (
+        <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
+          Alto (cm)
+          <input name="alto" type="number" min={0.1} step="0.1" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
+        </label>
+      )}
+
+      {opcion && (
+        <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
+          {opcion.etiqueta}
+          <select name={opcion.campo} defaultValue={opcion.inicial} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]">
+            {opcion.valores.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
         Cantidad de piezas

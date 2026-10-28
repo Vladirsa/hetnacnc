@@ -162,23 +162,25 @@ export const ServiciosNav = ({
   >
     {categorias
       .filter((raiz) => hijosDe(raiz).length > 0)
-      .map((raiz) => (
-        <Menu
-          key={raiz.id}
-          etiqueta={raiz.name}
-          href={`/categories/${raiz.handle}`}
-          ancho="w-[560px]"
-          negrita
-        >
-          <PestanasCategoria raiz={raiz} />
-          <LocalizedClientLink
-            href={`/categories/${raiz.handle}`}
-            className="mt-1 block border-t border-[#E7E4DC] px-3 pt-2.5 pb-1.5 text-[13px] font-semibold text-[#B34D07] hover:underline"
-          >
-            Ver todo en {raiz.name}
-          </LocalizedClientLink>
-        </Menu>
-      ))}
+      .map((raiz) => {
+        // La categoría "Servicios" es la de fabricación (láser, plasma,
+        // maquinado...). En el menú se llama Fabricación y lleva a su página:
+        // al lado del menú de Servicios digitales, dos "Servicios" confundían.
+        const fabricacion = raiz.handle === "servicios"
+        const etiqueta = fabricacion ? "Fabricación" : raiz.name
+        const href = fabricacion ? "/fabricacion" : `/categories/${raiz.handle}`
+        return (
+          <Menu key={raiz.id} etiqueta={etiqueta} href={href} ancho="w-[560px]" negrita>
+            <PestanasCategoria raiz={raiz} />
+            <LocalizedClientLink
+              href={href}
+              className="mt-1 block border-t border-[#E7E4DC] px-3 pt-2.5 pb-1.5 text-[13px] font-semibold text-[#B34D07] hover:underline"
+            >
+              {fabricacion ? "Cotizar mi pieza" : `Ver todo en ${raiz.name}`}
+            </LocalizedClientLink>
+          </Menu>
+        )
+      })}
 
     {SERVICIOS_PRINCIPALES.map((s) => {
       const hijos = subServicios(s.slug)

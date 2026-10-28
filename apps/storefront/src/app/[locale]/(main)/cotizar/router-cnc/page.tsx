@@ -35,7 +35,7 @@ export default async function CotizarRouterCnc() {
             Pon material, medidas y cantidad. Te damos un estimado al instante, sin subir archivo ni crear cuenta.
           </p>
         </div>
-        <CalculadoraLead servicio="router" tituloServicio="router CNC" materiales={MATERIALES} />
+        <CalculadoraLead servicio="router" tituloServicio="router CNC" materiales={MATERIALES} servicioSolicitud="Corte CNC" />
       </section>
 
       <div className="px-4 lg:px-16 pb-12">

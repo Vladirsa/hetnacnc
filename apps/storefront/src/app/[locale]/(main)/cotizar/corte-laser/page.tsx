@@ -35,7 +35,7 @@ export default async function CotizarCorteLaser() {
             Pon material, medidas y cantidad. Te damos un estimado al instante, sin subir archivo ni crear cuenta.
           </p>
         </div>
-        <CalculadoraLead servicio="laser_co2" tituloServicio="corte láser" materiales={MATERIALES} />
+        <CalculadoraLead servicio="laser_co2" tituloServicio="corte láser" materiales={MATERIALES} servicioSolicitud="Corte láser" />
       </section>
 
       <div className="px-4 lg:px-16 pb-12">

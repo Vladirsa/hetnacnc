@@ -17,6 +17,11 @@ type QuoteLeadBody = {
   material?: string
   ancho?: number
   largo?: number
+  alto?: number
+  // Plasma: "Lámina delgada (cal. 20 a 12)" o "Placa (cal. 10 o más grueso)"
+  calibre?: string
+  // Impresión 3D: "Prototipo rápido" | "Pieza funcional" | "Alta calidad"
+  calidad?: string
   cantidad?: number
   piezas_mes_estimado?: number
   email?: string
@@ -24,6 +29,26 @@ type QuoteLeadBody = {
   telefono?: string
   ciudad?: string
 }
+
+// Lo que la calculadora pública le pregunta al cliente, en sus palabras, y
+// cómo se traduce a los parámetros del motor. Plasma e impresión 3D usan las
+// mismas tarifas que el Cotizador de los talleres (cotizador-datos.json).
+const PLASMA_MATERIAL: Record<string, string> = {
+  "Acero al carbón": "acero_negro",
+  "Acero inoxidable": "inox",
+  "Aluminio": "aluminio",
+}
+const PLASMA_CALIBRE: Record<string, string> = {
+  "Lámina delgada (cal. 20 a 12)": "Cal 14",
+  "Placa (cal. 10 o más grueso)": "Cal 10",
+}
+const IMPRESION_MATERIAL: Record<string, string> = {
+  PLA: "pla",
+  PETG: "petg",
+  ABS: "abs",
+  "TPU (flexible)": "tpu",
+}
+const IMPRESION_CALIDAD = ["Prototipo rápido", "Pieza funcional", "Alta calidad"]
 
 const SERVICIOS_SOPORTADOS: Record<string, { tipoNombre: string; materialLaserPorMaterial?: Record<string, string> }> = {
   laser_co2: {
@@ -37,6 +62,13 @@ const SERVICIOS_SOPORTADOS: Record<string, { tipoNombre: string; materialLaserPo
   router: {
     tipoNombre: "Corte simple",
   },
+  plasma: {
+    tipoNombre: "Corte por m²",
+  },
+  impresion_3d: {
+    // Se reemplaza por la calidad que elija el cliente.
+    tipoNombre: "Pieza funcional",
+  },
 }
 
 const UMBRAL_VOLUMEN_ALTO = 100
@@ -45,19 +77,25 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
   const logger = req.scope.resolve("logger")
   const body = req.validatedBody || req.body || {}
 
-  const { servicio, material, ancho, largo, cantidad, piezas_mes_estimado, email, nombre, telefono, ciudad } = body
+  const { servicio, material, ancho, largo, alto, calibre, calidad, cantidad, piezas_mes_estimado, email, nombre, telefono, ciudad } = body
 
   const soporte = servicio ? SERVICIOS_SOPORTADOS[servicio] : undefined
   if (!soporte) {
-    return res.status(400).json({ message: "servicio debe ser 'laser_co2' o 'router'" })
+    return res.status(400).json({ message: "servicio debe ser 'laser_co2', 'router', 'plasma' o 'impresion_3d'" })
   }
   if (!ancho || !largo || !cantidad || !email) {
     return res.status(400).json({ message: "Faltan campos requeridos: ancho, largo, cantidad, email" })
   }
+  // La impresión 3D se cobra por volumen: sin la altura no hay precio.
+  if (servicio === "impresion_3d" && !(Number(alto) > 0)) {
+    return res.status(400).json({ message: "Para impresión 3D falta la altura de la pieza." })
+  }
 
   const datos = cotizadorDatos as any
   const servicioCfg = datos.servicios.find((s: any) => s.clave === servicio)
-  const tipo = servicioCfg.tipos.find((t: any) => t.n === soporte.tipoNombre)
+  const nombreTipo =
+    servicio === "impresion_3d" && calidad && IMPRESION_CALIDAD.includes(calidad) ? calidad : soporte.tipoNombre
+  const tipo = servicioCfg.tipos.find((t: any) => t.n === nombreTipo)
 
   const materialLaser =
     servicio === "laser_co2" && material && soporte.materialLaserPorMaterial
@@ -74,6 +112,15 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
     largo,
     cantidad,
     materialLaser,
+    ...(servicio === "plasma"
+      ? {
+          material: PLASMA_MATERIAL[material || ""] || "acero_negro",
+          calibre: PLASMA_CALIBRE[calibre || ""] || "Cal 14",
+        }
+      : {}),
+    ...(servicio === "impresion_3d"
+      ? { alto: Number(alto), materialImpresion: IMPRESION_MATERIAL[material || ""] || "pla" }
+      : {}),
     aplicarIva: true,
   })
 

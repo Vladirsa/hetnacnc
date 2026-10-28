@@ -5,7 +5,7 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms"
 import { SearchProductsListing, ProductListing } from "@/components/sections"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import isBot from "@/lib/helpers/isBot"
@@ -82,6 +82,13 @@ async function Category({
   }>
 }) {
   const { category: categoryHandle, locale } = await params
+
+  // La raíz de Servicios ahora es /fabricacion: ahí está todo lo que necesita
+  // quien quiere que le fabriquen algo. Las subcategorías (corte-laser,
+  // maquinado-cnc...) se quedan aquí.
+  if (categoryHandle === "servicios") {
+    permanentRedirect(`/${locale}/fabricacion`)
+  }
 
   const category = await getCategoryByHandle(categoryHandle)
 
