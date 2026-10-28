@@ -11,12 +11,14 @@ import { COOKIE_IDIOMA } from "@/i18n/idioma"
 // VELOCIDAD: el diccionario se descarga SOLO si el cliente eligio ingles
 // (import dinamico). Los visitantes en espanol ya no lo cargan.
 
+// El idioma elegido (cookie) manda. Sin elección, /us va en inglés y lo demás en español.
 export const leerIdioma = (): "es" | "en" => {
   try {
     const c = document.cookie
       .split("; ")
       .find((x) => x.startsWith(COOKIE_IDIOMA + "="))
-    return c?.split("=")[1] === "en" ? "en" : "es"
+    if (c) return c.split("=")[1] === "en" ? "en" : "es"
+    return /^\/us(\/|$)/.test(window.location.pathname) ? "en" : "es"
   } catch {
     return "es"
   }
@@ -90,7 +92,7 @@ export const Traductor = () => {
       if (r !== null && r !== document.title) document.title = r
     }
     const idiomaHtml = () => {
-      if (document.documentElement.lang !== "en") document.documentElement.lang = "en"
+      if (!document.documentElement.lang.startsWith("en")) document.documentElement.lang = "en-US"
     }
 
     import("@/i18n/en")

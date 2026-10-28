@@ -1,52 +1,131 @@
-// Mapa del sitio para Google: inicio, servicios, herramientas gratis y el Foro CNC México.
-// Se vuelve a generar cada hora para incluir los temas nuevos del foro.
+// Mapa del sitio para Google: tienda (categorías, productos), talleres, servicios,
+// herramientas, páginas de la empresa, artículos y el Foro CNC México.
+// Cada página de la tienda lleva su par en inglés (/us) con hreflang, para que
+// Google sepa que /mx es español de México y /us es inglés de EE. UU.
+// Se vuelve a generar cada hora para incluir productos y temas nuevos.
 import type { MetadataRoute } from "next"
 
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
+import { sdk } from "@/lib/client"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
+import { listarTalleres } from "@/lib/hetna/talleres"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 
 export const revalidate = 3600
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = `${SITIO}/mx`
-  const hoy = new Date()
-  const fijas: MetadataRoute.Sitemap = [
-    { url: base, lastModified: hoy, changeFrequency: "daily", priority: 1 },
-    { url: `${base}/categories`, lastModified: hoy, changeFrequency: "daily", priority: 0.9 },
-    { url: `${base}/servicios`, lastModified: hoy, changeFrequency: "weekly", priority: 0.8 },
-    ...SERVICIOS.map((s) => ({
-      url: `${base}/servicios/${s.slug}`,
-      lastModified: hoy,
-      changeFrequency: "weekly" as const,
-      priority: s.padre ? 0.7 : 0.8,
-    })),
+type Frecuencia = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>
+
+const MX = `${SITIO}/mx`
+const US = `${SITIO}/us`
+
+// Página con versión en español (/mx) y en inglés (/us), una entrada por idioma
+const bilingue = (
+  ruta: string,
+  changeFrequency: Frecuencia,
+  priority: number,
+  lastModified: Date = new Date()
+): MetadataRoute.Sitemap => {
+  const languages = { "es-MX": `${MX}${ruta}`, "en-US": `${US}${ruta}`, "x-default": `${MX}${ruta}` }
+  return [
+    { url: `${MX}${ruta}`, lastModified, changeFrequency, priority, alternates: { languages } },
+    { url: `${US}${ruta}`, lastModified, changeFrequency, priority: Math.max(0.1, priority - 0.1), alternates: { languages } },
   ]
-  const [secs, temas, { learning_articles }] = await Promise.all([
+}
+
+// Rutas fijas que existen y se pueden indexar (las de cuenta, carrito y
+// formularios de "gracias" quedan fuera a propósito)
+const FIJAS: [string, Frecuencia, number][] = [
+  ["", "daily", 1],
+  ["/categories", "daily", 0.9],
+  ["/servicios", "weekly", 0.8],
+  ["/cotizar", "weekly", 0.8],
+  ["/cotizar/router-cnc", "weekly", 0.8],
+  ["/cotizar/corte-laser", "weekly", 0.8],
+  ["/cam", "weekly", 0.7],
+  ["/cam/lab", "weekly", 0.6],
+  ["/cam/torno", "weekly", 0.6],
+  ["/talleres", "daily", 0.8],
+  ["/talleres/fundadores", "weekly", 0.7],
+  ["/servicios/envios-hetna", "monthly", 0.6],
+  ["/anunciate", "monthly", 0.6],
+  ["/quienes-somos", "monthly", 0.5],
+  ["/contacto", "monthly", 0.5],
+  ["/preguntas-frecuentes", "monthly", 0.5],
+  ["/formas-de-pago", "monthly", 0.4],
+  ["/devoluciones", "monthly", 0.3],
+  ["/terminos-y-condiciones", "yearly", 0.2],
+  ["/aviso-de-privacidad", "yearly", 0.2],
+]
+
+const categorias = async (): Promise<string[]> => {
+  try {
+    const r = (await sdk.store.productCategories.query({
+      fields: "handle",
+      limit: 200,
+      fetchOptions: { next: { revalidate: 3600 } },
+    } as never)) as unknown as { product_categories: { handle?: string | null }[] }
+    return (r.product_categories ?? []).map((c) => c.handle).filter(Boolean) as string[]
+  } catch {
+    return []
+  }
+}
+
+const productos = async (): Promise<{ handle: string; fecha: Date }[]> => {
+  try {
+    const r = (await sdk.store.products.query({
+      fields: "handle,updated_at",
+      limit: 500,
+      fetchOptions: { next: { revalidate: 3600 } },
+    } as never)) as unknown as { products: { handle?: string | null; updated_at?: string | null }[] }
+    return (r.products ?? [])
+      .filter((p) => p.handle)
+      .map((p) => ({ handle: p.handle as string, fecha: p.updated_at ? new Date(p.updated_at) : new Date() }))
+  } catch {
+    return []
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const hoy = new Date()
+
+  const [cats, prods, talleres, secs, temas, { learning_articles }] = await Promise.all([
+    categorias(),
+    productos(),
+    listarTalleres().catch(() => []),
     secciones().catch(() => null),
     temasParaMapa().catch(() => []),
     listLearningArticles({ limit: 200 }).catch(() => ({ learning_articles: [] })),
   ])
+
+  const tienda: MetadataRoute.Sitemap = [
+    ...FIJAS.flatMap(([ruta, f, p]) => bilingue(ruta, f, p, hoy)),
+    ...SERVICIOS.flatMap((s) => bilingue(`/servicios/${s.slug}`, "weekly", s.padre ? 0.7 : 0.8, hoy)),
+    ...cats.flatMap((h) => bilingue(`/categories/${h}`, "daily", 0.8, hoy)),
+    ...prods.flatMap((p) => bilingue(`/products/${p.handle}`, "weekly", 0.7, p.fecha)),
+    ...talleres.flatMap((t) => bilingue(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
+  ]
+
+  // Artículos y foro: contenido escrito en español, solo /mx
   const articulos: MetadataRoute.Sitemap = learning_articles.map((a) => ({
-    url: `${base}/aprendizaje-cnc/${a.slug}`,
+    url: `${MX}/aprendizaje-cnc/${a.slug}`,
     lastModified: a.published_at ? new Date(a.published_at) : hoy,
     changeFrequency: "monthly" as const,
     priority: 0.6,
   }))
-  if (!secs) return [...fijas, ...articulos]
+  if (!secs) return [...tienda, ...articulos]
   return [
-    ...fijas,
+    ...tienda,
     ...articulos,
-    { url: `${base}/foro-cnc`, lastModified: hoy, changeFrequency: "hourly", priority: 0.8 },
+    { url: `${MX}/foro-cnc`, lastModified: hoy, changeFrequency: "hourly", priority: 0.8 },
     ...secs.map((s) => ({
-      url: `${base}/foro-cnc/${s.slug}`,
+      url: `${MX}/foro-cnc/${s.slug}`,
       lastModified: s.ultima ? new Date(s.ultima) : hoy,
       changeFrequency: "daily" as const,
       priority: 0.7,
     })),
     ...temas.map((t) => ({
-      url: `${base}${t.url}`,
+      url: `${MX}${t.url}`,
       lastModified: new Date(t.fecha),
       changeFrequency: "weekly" as const,
       priority: 0.6,

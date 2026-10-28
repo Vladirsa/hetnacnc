@@ -11,6 +11,7 @@ import {
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { listRegions } from "@/lib/data/regions"
+import { EMPRESA } from "@/lib/hetna/empresa"
 import {
   buildHreflangAlternates,
   getStorefrontLocales,
@@ -43,10 +44,13 @@ export async function generateMetadata({
     locales,
   })
 
-  const title = "Inicio"
-  const description =
-    "HETNA CNC: marketplace de CNC en México. Diseños DXF, SVG y STL, máquinas, herramientas, materiales y servicios de diseño y maquila."
-  const ogImage = "/B2C_Storefront_Open_Graph.png"
+  // /us sale en inglés: título, descripción e imagen para Google y redes en inglés
+  const enIngles = locale.toLowerCase() === "us"
+  const title = enIngles ? "CNC marketplace, quotes and shop software" : "Inicio"
+  const description = enIngles
+    ? "HETNA CNC: the CNC marketplace. DXF, SVG and STL designs, machines, tooling, materials, CNC quoting software and design and machining services."
+    : "HETNA CNC: marketplace de CNC en México. Diseños DXF, SVG y STL, máquinas, herramientas, materiales y servicios de diseño y maquila."
+  const ogImage = enIngles ? "/og-hetna-en.png" : "/og-hetna.png"
 
   return {
     title,
@@ -77,6 +81,7 @@ export async function generateMetadata({
         process.env.NEXT_PUBLIC_SITE_NAME ||
         "HETNA CNC",
       type: "website",
+      locale: enIngles ? "en_US" : "es_MX",
       images: [
         {
           url: ogImage.startsWith("http") ? ogImage : `${baseUrl}${ogImage}`,
@@ -125,9 +130,30 @@ export default async function Home({
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            name: siteName,
-            url: `${baseUrl}/${locale}`,
-            logo: `${baseUrl}/favicon.ico`,
+            "@id": `${baseUrl}/#organization`,
+            name: "HETNA CNC",
+            alternateName: ["HETNA", "Hetna CNC", "hetnacnc"],
+            url: baseUrl,
+            logo: `${baseUrl}/Logo.png`,
+            image: `${baseUrl}/og-hetna.png`,
+            description:
+              "Marketplace y software para talleres CNC: diseños, máquinas, herramientas, cotizador y maquila.",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: EMPRESA.ciudad,
+              addressRegion: EMPRESA.estado,
+              addressCountry: "MX",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: `+${EMPRESA.whatsapp}`,
+              contactType: "customer service",
+              availableLanguage: ["es", "en"],
+            },
+            // Solo perfiles de la marca (no la cuenta personal ni el grupo)
+            sameAs: EMPRESA.redes
+              .filter((r) => !["LinkedIn", "Grupo Router CNC México"].includes(r.nombre))
+              .map((r) => r.url),
           }).replace(/</g, "\\u003c"),
         }}
       />
@@ -139,8 +165,10 @@ export default async function Home({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: siteName,
+            alternateName: "HETNA",
             url: `${baseUrl}/${locale}`,
             inLanguage: toHreflang(locale),
+            publisher: { "@id": `${baseUrl}/#organization` },
           }).replace(/</g, "\\u003c"),
         }}
       />
