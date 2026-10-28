@@ -1,6 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
+import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { createOffersWorkflow } from "@mercurjs/core/workflows"
 import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
 
@@ -170,6 +170,37 @@ export async function publicarDiseno(
   const creado = !producto
   let categoria: string | null = producto?.categories?.[0]?.name ?? null
 
+  // Categoría: la subcategoría de la ficha si existe en el catálogo, luego la
+  // categoría, y si ninguna existe la general de diseños (DISENOS_CATEGORIA,
+  // "Diseños digitales" si no está). Las categorías de la ficha las propone la
+  // IA y casi nunca coinciden con el catálogo; sin el respaldo el producto
+  // saldría sin categoría y no aparecería en ningún listado.
+  const { data: cats } = await query.graph({
+    entity: "product_category",
+    fields: ["id", "name", "handle"],
+  })
+  const buscar = (nombre?: string) => {
+    if (!nombre) return undefined
+    const n = normalizar(nombre)
+    return (cats as { id: string; name: string; handle: string }[]).find(
+      (c) => normalizar(c.name) === n || normalizar(c.handle) === n
+    )
+  }
+  const cat =
+    buscar(ficha.subcategoria) ||
+    buscar(ficha.categoria) ||
+    buscar(process.env.DISENOS_CATEGORIA || "Diseños digitales")
+
+  // Ya publicado pero sin categoría (los primeros salieron así): se la pone
+  // ahora, sin tocar nada más del producto.
+  if (producto && !categoria && cat) {
+    await updateProductsWorkflow(container).run({
+      input: { selector: { id: producto.id }, update: { category_ids: [cat.id] } },
+    })
+    categoria = cat.name
+    logger.info(`[disenos] categoría "${cat.name}" puesta a ${producto.handle}`)
+  }
+
   if (!producto) {
     const perfil = await obtenerPerfilDigital(container)
 
@@ -190,21 +221,7 @@ export async function publicarDiseno(
       : []
     const tagIds = [...yaHay, ...nuevas].map((t) => t.id)
 
-    // Categoría: la subcategoría de la ficha si existe en el catálogo, si no
-    // la categoría. Si ninguna existe el producto sale igual, sin categoría,
-    // y se avisa en la respuesta para darla de alta en el panel.
-    const { data: cats } = await query.graph({
-      entity: "product_category",
-      fields: ["id", "name", "handle"],
-    })
-    const buscar = (nombre?: string) => {
-      if (!nombre) return undefined
-      const n = normalizar(nombre)
-      return (cats as { id: string; name: string; handle: string }[]).find(
-        (c) => normalizar(c.name) === n || normalizar(c.handle) === n
-      )
-    }
-    const cat = buscar(ficha.subcategoria) || buscar(ficha.categoria)
+
     categoria = cat?.name ?? null
 
     const { data: canales } = await query.graph({ entity: "sales_channel", fields: ["id"] })

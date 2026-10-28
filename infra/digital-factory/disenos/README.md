@@ -108,9 +108,13 @@ En Mercur el precio vive en la oferta, no en la variante. Un producto sin
 oferta sale en el catálogo pero no se puede comprar, que era lo que habría
 hecho la versión vieja del workflow.
 
-La categoría se busca por nombre: primero la `subcategoria` de la ficha y
-luego la `categoria`. Si no existe ninguna en el catálogo el producto sale sin
-categoría, y el aviso de Telegram lo dice para asignarla en el panel.
+La categoría se busca por nombre: primero la `subcategoria` de la ficha, luego
+la `categoria`, y si ninguna existe en el catálogo cae en **Diseños digitales**
+(`DISENOS_CATEGORIA`). Las de la ficha las propone la IA y casi nunca
+coinciden con el catálogo.
+
+Se puede volver a mandar el SKU de una ficha ya `PUBLISHED`: no duplica nada,
+y si el producto había salido sin categoría, se la pone.
 
 El precio en dólares (tienda `/us`) sale del de pesos con
 `TIPO_CAMBIO_USD_MXN` (18 si no está), terminado en .99 y nunca menos de 1.99.
