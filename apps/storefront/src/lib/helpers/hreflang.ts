@@ -1,8 +1,8 @@
 export const toHreflang = (code: string): string => {
   const map: Record<string, string> = {
-    // HETNA: todas las versiones por país hoy se sirven en español. Sin este
-    // mapa Google recibía "mx", "ar", "bo", "co"... (que no son idiomas, o son
-    // árabe, tibetano, corso) y "en-US"/"en-CA" para páginas que están en español.
+    // HETNA: las versiones por país se sirven en español, salvo /us (inglés).
+    // Sin este mapa Google recibía "mx", "ar", "bo", "co"... (que no son
+    // idiomas, o son árabe, tibetano, corso).
     mx: "es-MX",
     ar: "es-AR",
     bo: "es-BO",
@@ -21,7 +21,7 @@ export const toHreflang = (code: string): string => {
     uy: "es-UY",
     ve: "es-VE",
     pr: "es-PR",
-    us: "es-US",
+    us: "en-US", // /us se sirve en inglés a quien no ha elegido idioma
     ca: "es-CA",
     gb: "en-GB",
     au: "en-AU",

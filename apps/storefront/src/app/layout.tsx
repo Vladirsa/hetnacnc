@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { cookies, headers } from 'next/headers';
 
 import './globals.css';
 
@@ -8,7 +9,8 @@ import { Toaster } from '@medusajs/ui';
 import { Analytics } from '@/components/analytics/Analytics';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
 import { Traductor } from '@/components/hetna/Traductor';
-import { SCRIPT_VELO } from '@/i18n/idioma';
+import { COOKIE_IDIOMA, SCRIPT_VELO } from '@/i18n/idioma';
+import { toHreflang } from '@/lib/helpers/hreflang';
 import { retrieveCart } from '@/lib/data/cart';
 
 import { InstallPrompt } from '@/components/mobile/InstallPrompt';
@@ -47,7 +49,23 @@ export const metadata: Metadata = {
   },
   description:
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'HETNA CNC - Marketplace de CNC en México',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+  applicationName: 'HETNA CNC',
+  openGraph: {
+    siteName: 'HETNA CNC',
+    type: 'website',
+    locale: 'es_MX',
+    images: [{ url: '/og-hetna.png', width: 1200, height: 630, alt: 'HETNA CNC' }]
+  },
+  twitter: { card: 'summary_large_image', images: ['/og-hetna.png'] },
+  // Verificación de Search Console / Bing: se pone el código en el .env del VPS
+  // (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION). Sin código no se imprime nada.
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } }
+      : {})
+  }
 };
 
 export const viewport = { themeColor: '#142033', viewportFit: 'cover' as const };
@@ -64,8 +82,18 @@ export default async function RootLayout({
 }>) {
   const cart = await retrieveCart();
 
-  // default lang updated by HtmlLangSetter
-  const htmlLang = 'es-MX';
+  // Idioma de la página desde el servidor (lo que lee Google):
+  // la cookie elegida manda; sin elección, /us es inglés y lo demás español del país.
+  const locale = (await headers()).get('x-hetna-locale') || '';
+  const elegido = (await cookies()).get(COOKIE_IDIOMA)?.value;
+  const enIngles = elegido ? elegido === 'en' : locale === 'us';
+  const htmlLang = enIngles
+    ? 'en-US'
+    : locale === 'us'
+      ? 'es-US'
+      : locale && locale !== 'mx'
+        ? toHreflang(locale)
+        : 'es-MX';
 
   return (
     <html

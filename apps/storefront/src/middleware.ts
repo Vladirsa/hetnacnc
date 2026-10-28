@@ -108,6 +108,21 @@ async function getCountryCode(
   }
 }
 
+// Idioma: /us se sirve en inglés a quien no ha elegido idioma (así Google lo
+// indexa en inglés). Quien navega en otra región sin haber elegido, se queda
+// en español aunque luego cambie la moneda a USD.
+const COOKIE_IDIOMA = 'hetna_lang';
+
+const continuar = (request: NextRequest, locale: string | null) => {
+  const cabeceras = new Headers(request.headers);
+  if (locale) cabeceras.set('x-hetna-locale', locale.toLowerCase());
+  const response = NextResponse.next({ request: { headers: cabeceras } });
+  if (locale && locale.toLowerCase() !== 'us' && !request.cookies.get(COOKIE_IDIOMA)) {
+    response.cookies.set(COOKIE_IDIOMA, 'es', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' });
+  }
+  return response;
+};
+
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.includes('.')) {
     return NextResponse.next();
@@ -140,10 +155,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (looksLikeLocale && cacheIdCookie) {
-    return NextResponse.next();
+    return continuar(request, urlSegment);
   }
 
-  let response = NextResponse.next();
+  let response = continuar(request, looksLikeLocale ? urlSegment : null);
 
   if (!cacheIdCookie) {
     response.cookies.set('_medusa_cache_id', cacheId, {
