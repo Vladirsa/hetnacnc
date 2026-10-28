@@ -161,39 +161,52 @@ export async function publicarDiseno(
   // ---- ¿Ya existe? ----------------------------------------------------------
   const { data: existentes } = await query.graph({
     entity: "product",
-    fields: ["id", "handle", "variants.id", "categories.name"],
+    fields: ["id", "handle", "variants.id", "categories.id", "categories.name"],
     filters: { handle: ficha.handle },
   })
   let producto = existentes[0] as
-    | { id: string; handle: string; variants?: { id: string }[]; categories?: { name: string }[] }
+    | { id: string; handle: string; variants?: { id: string }[]; categories?: { id: string; name: string }[] }
     | undefined
   const creado = !producto
   let categoria: string | null = producto?.categories?.[0]?.name ?? null
 
-  // Categoría: la subcategoría de la ficha si existe en el catálogo, luego la
-  // categoría, y si ninguna existe la general de diseños (DISENOS_CATEGORIA,
-  // "Diseños digitales" si no está). Las categorías de la ficha las propone la
-  // IA y casi nunca coinciden con el catálogo; sin el respaldo el producto
-  // saldría sin categoría y no aparecería en ningún listado.
+  // Categoría: siempre dentro de "Diseños digitales" (DISENOS_CATEGORIA). Si
+  // la ficha nombra una subcategoría que vive DEBAJO de ella, va ahí; si no,
+  // a la general. No se busca en todo el catálogo porque las categorías de la
+  // ficha las propone la IA, y "Impresión 3D" empataba con Servicios › Impresión
+  // 3D: el archivo terminaba listado como servicio de impresión.
   const { data: cats } = await query.graph({
     entity: "product_category",
-    fields: ["id", "name", "handle"],
+    fields: ["id", "name", "handle", "parent_category_id"],
   })
-  const buscar = (nombre?: string) => {
-    if (!nombre) return undefined
-    const n = normalizar(nombre)
-    return (cats as { id: string; name: string; handle: string }[]).find(
-      (c) => normalizar(c.name) === n || normalizar(c.handle) === n
-    )
-  }
-  const cat =
-    buscar(ficha.subcategoria) ||
-    buscar(ficha.categoria) ||
-    buscar(process.env.DISENOS_CATEGORIA || "Diseños digitales")
+  type Cat = { id: string; name: string; handle: string; parent_category_id: string | null }
+  const todas = cats as Cat[]
+  const igual = (c: Cat, nombre: string) =>
+    normalizar(c.name) === normalizar(nombre) || normalizar(c.handle) === normalizar(nombre)
+  const base = todas.find((c) => igual(c, process.env.DISENOS_CATEGORIA || "Diseños digitales"))
 
-  // Ya publicado pero sin categoría (los primeros salieron así): se la pone
-  // ahora, sin tocar nada más del producto.
-  if (producto && !categoria && cat) {
+  const dentro = new Set<string>()
+  if (base) {
+    dentro.add(base.id)
+    // Descendientes de la base, a cualquier profundidad.
+    for (let cambio = true; cambio; ) {
+      cambio = false
+      for (const c of todas) {
+        if (c.parent_category_id && dentro.has(c.parent_category_id) && !dentro.has(c.id)) {
+          dentro.add(c.id)
+          cambio = true
+        }
+      }
+    }
+  }
+  const buscar = (nombre?: string) =>
+    nombre ? todas.find((c) => dentro.has(c.id) && c.id !== base?.id && igual(c, nombre)) : undefined
+  const cat = buscar(ficha.subcategoria) || buscar(ficha.categoria) || base
+
+  // Ya publicado sin categoría, o con una fuera de "Diseños digitales" (los
+  // primeros salieron así): se corrige ahora, sin tocar nada más del producto.
+  const fuera = !producto?.categories?.length || producto.categories.some((c) => !dentro.has(c.id))
+  if (producto && cat && fuera) {
     await updateProductsWorkflow(container).run({
       input: { selector: { id: producto.id }, update: { category_ids: [cat.id] } },
     })

@@ -108,13 +108,18 @@ En Mercur el precio vive en la oferta, no en la variante. Un producto sin
 oferta sale en el catálogo pero no se puede comprar, que era lo que habría
 hecho la versión vieja del workflow.
 
-La categoría se busca por nombre: primero la `subcategoria` de la ficha, luego
-la `categoria`, y si ninguna existe en el catálogo cae en **Diseños digitales**
-(`DISENOS_CATEGORIA`). Las de la ficha las propone la IA y casi nunca
-coinciden con el catálogo.
+La categoría siempre queda dentro de **Diseños digitales**
+(`DISENOS_CATEGORIA`): si la `subcategoria` o la `categoria` de la ficha
+nombran una categoría que vive debajo de ella, va ahí; si no, a la general. No
+se busca en todo el catálogo porque las categorías de la ficha las propone la
+IA, y "Impresión 3D" empataba con *Servicios › Impresión 3D*.
 
 Se puede volver a mandar el SKU de una ficha ya `PUBLISHED`: no duplica nada,
-y si el producto había salido sin categoría, se la pone.
+y si el producto había salido sin categoría o con una fuera de Diseños
+digitales, se la corrige.
+
+El formulario trae **¿Publicar gratis?**: *Sí* o *No* mandan sobre la columna
+`gratis` de la ficha, y al publicar se guarda en la tabla lo que se usó.
 
 El precio en dólares (tienda `/us`) sale del de pesos con
 `TIPO_CAMBIO_USD_MXN` (18 si no está), terminado en .99 y nunca menos de 1.99.
