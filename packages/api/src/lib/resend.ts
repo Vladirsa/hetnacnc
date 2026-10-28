@@ -8,6 +8,9 @@ export type SendEmailInput = {
   to: string
   subject: string
   html: string
+  // Solo correos promocionales: liga para darse de baja (lib/baja.ts). Se agrega
+  // al pie del correo y como encabezado List-Unsubscribe.
+  bajaUrl?: string
 }
 
 export type SendEmailResult = {
@@ -23,6 +26,7 @@ export async function sendEmail({
   to,
   subject,
   html,
+  bajaUrl,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM_EMAIL
@@ -37,7 +41,19 @@ export async function sendEmail({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      html: bajaUrl
+        ? html +
+          `<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888;text-align:center;margin:12px 0 0;">` +
+          `¿No quieres recibir estos correos? <a href="${bajaUrl}" style="color:#888;">Darte de baja</a>.</p>`
+        : html,
+      ...(bajaUrl
+        ? { headers: { "List-Unsubscribe": `<${bajaUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }
+        : {}),
+    }),
   })
 
   if (!res.ok) {

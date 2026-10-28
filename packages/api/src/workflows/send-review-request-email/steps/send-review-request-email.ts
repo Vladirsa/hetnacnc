@@ -1,5 +1,8 @@
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+
+import { estaDeBaja, ligaBaja } from "../../../lib/baja"
 import { sendEmail } from "../../../lib/resend"
 import { reviewRequestEmailHtml, type ProductoAResenar } from "../../../lib/email-templates"
 
@@ -17,8 +20,16 @@ export const sendReviewRequestEmailStep = createStep(
   async (input: SendReviewRequestEmailStepInput, { container }) => {
     const logger = container.resolve("logger")
 
+    // Correo promocional: no se manda a quien se dio de baja
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    if (await estaDeBaja(knex, input.to).catch(() => false)) {
+      logger.info(`[%s] ${input.to} se dio de baja de promociones; no se envía`.replace("%s", "resenas-correo"))
+      return new StepResponse({ sent: false })
+    }
+
     const { sent, reason } = await sendEmail({
       to: input.to,
+      bajaUrl: ligaBaja(input.to),
       subject:
         input.productos.length === 1
           ? "¿Cómo te fue con tu compra?"

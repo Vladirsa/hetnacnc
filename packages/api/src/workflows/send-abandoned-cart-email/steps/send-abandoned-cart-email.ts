@@ -1,5 +1,8 @@
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+
+import { estaDeBaja, ligaBaja } from "../../../lib/baja"
 import { sendEmail } from "../../../lib/resend"
 import { abandonedCartEmailHtml } from "../../../lib/email-templates"
 
@@ -19,8 +22,16 @@ export const sendAbandonedCartEmailStep = createStep(
   async (input: SendAbandonedCartEmailStepInput, { container }) => {
     const logger = container.resolve("logger")
 
+    // Correo promocional: no se manda a quien se dio de baja
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    if (await estaDeBaja(knex, input.to).catch(() => false)) {
+      logger.info(`[%s] ${input.to} se dio de baja de promociones; no se envía`.replace("%s", "abandoned-cart"))
+      return new StepResponse({ sent: false })
+    }
+
     const { sent, reason } = await sendEmail({
       to: input.to,
+      bajaUrl: ligaBaja(input.to),
       subject: "Dejaste algo en tu carrito",
       html: abandonedCartEmailHtml({
         items: input.items,
