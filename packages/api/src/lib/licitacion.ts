@@ -151,6 +151,11 @@ export const trabajoPublico = (s: {
   return {
     folio: folioTexto(s.folio),
     estado: recibePropuestas(s) ? "abierta" : s.estado === "elegida" || s.estado === "pagada" ? "asignada" : "cerrada",
+    necesidad: t.necesidad || "",
+    tiene_archivo: t.tiene_archivo || "",
+    acabado: t.acabado || "",
+    // Sólo cuántos: los archivos los ve el taller registrado, desde su panel.
+    archivos: (t.archivos || []).length,
     servicio: t.servicio || "",
     material: t.material || "",
     cantidad: t.cantidad || "",
@@ -211,8 +216,20 @@ export const marco = (titulo: string, cuerpo: string) => `
   </div>
 </div>`
 
+export type ArchivoSolicitud = { clave: string; nombre: string; tamano: number }
+
 export type Trabajo = {
   descripcion: string
+  // Lo que el cliente quiere lograr (cortar piezas, pieza terminada...), en
+  // sus palabras; el servicio es el proceso, si lo sabe.
+  necesidad?: string
+  // "Tengo archivo profesional" / "Tengo boceto o foto" / "Tengo idea o
+  // referencia" / "No tengo archivo, necesito diseño"
+  tiene_archivo?: string
+  acabado?: string
+  // Archivos subidos al bucket privado de B2. Nunca son públicos: el taller
+  // pide una liga firmada desde su panel.
+  archivos?: ArchivoSolicitud[]
   servicio?: string
   material?: string
   cantidad?: string
@@ -228,16 +245,23 @@ export type Trabajo = {
 
 export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
   `<table style="border-collapse:collapse;font-size:14px">` +
+  fila("Necesita", t.necesidad || "") +
   fila("Servicio", t.servicio || "") +
+  fila("Archivo", t.tiene_archivo || "") +
   fila("Material", t.material || "") +
   fila("Cantidad", t.cantidad || "") +
   fila("Medidas", t.medidas || "") +
+  fila("Acabado", t.acabado || "") +
   fila("Fecha requerida", t.fecha || "") +
   fila("Entrega en", [t.ciudad, t.estado_mx].filter(Boolean).join(", ")) +
   fila("Frecuencia", t.frecuencia || "") +
   fila("Presupuesto aproximado", t.presupuesto || "") +
   fila("Acepta envío por paquetería", t.acepta_envio || "") +
-  (conArchivo ? fila("Archivos", t.archivo || "") : "") +
+  (conArchivo ? fila("Liga a archivos", t.archivo || "") : "") +
+  fila(
+    "Archivos subidos",
+    (t.archivos || []).length ? (t.archivos || []).map((a) => a.nombre).join(", ") : ""
+  ) +
   `</table><p style="margin:14px 0 0;white-space:pre-line;color:#40403A">${esc(t.descripcion)}</p>`
 
 // Quita teléfonos, correos y ligas de un texto que verá la otra parte.
@@ -248,3 +272,43 @@ export const ocultarContacto = (s: string) =>
     .replace(/\+?\d(?:[\s.-]?\d){7,}/g, "[contacto oculto]")
     .replace(/\b(?:https?:\/\/|www\.)\S+/gi, "[liga oculta]")
     .replace(/\b(wa\.me|whats\s?app|watsap|telegram|facebook\.com|instagram)\S*/gi, "[contacto oculto]")
+
+// Extensiones que se aceptan al subir archivos de una solicitud: planos,
+// modelos, vectores, fotos de referencia y comprimidos. Lo demás se rechaza
+// para que el bucket no sirva para guardar cualquier cosa.
+export const EXT_ARCHIVO_SOLICITUD = [
+  "dxf", "dwg", "svg", "ai", "eps", "pdf", "cdr",
+  "stl", "step", "stp", "iges", "igs", "3mf", "obj", "f3d", "skp",
+  "png", "jpg", "jpeg", "webp", "heic",
+  "zip", "rar", "7z",
+]
+export const MAX_MB_ARCHIVO_SOLICITUD = 25
+export const MAX_ARCHIVOS_SOLICITUD = 5
+
+// Una clave válida es una que generó esta API al subir: así un cliente no
+// puede colgarle a su solicitud un archivo ajeno del bucket.
+export const esClaveDeSolicitud = (clave: unknown) =>
+  typeof clave === "string" && /^solicitudes\/\d{4}-\d{2}\/[a-f0-9]{24}\/[^/]{1,120}$/.test(clave)
+
+// Motivos con los que un taller dice que no a una solicitud. "mas_info"
+// no es un no: le pide a HETNA que aclare con el cliente.
+export const MOTIVOS_RESPUESTA: Record<string, string> = {
+  sin_capacidad: "No tengo capacidad ahora",
+  no_material: "No trabajo ese material",
+  no_servicio: "No hago ese proceso",
+  mas_info: "Necesito más información",
+}
+export const T_RESPUESTA = "hetna_respuesta_taller"
+
+export const asegurarTablaRespuestas = async (knex: any) => {
+  if (await knex.schema.hasTable(T_RESPUESTA)) return
+  await knex.schema.createTable(T_RESPUESTA, (t: any) => {
+    t.text("id").primary()
+    t.text("solicitud_id").notNullable().index()
+    t.text("seller_id").notNullable()
+    t.text("motivo").notNullable()
+    t.text("nota").nullable()
+    t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+    t.unique(["solicitud_id", "seller_id"])
+  })
+}

@@ -21,14 +21,24 @@ const CALCULADORAS = [
     titulo: "Router CNC",
     texto: "Precio estimado al instante para corte en router.",
   },
+  {
+    href: "/cotizar/corte-plasma",
+    titulo: "Corte plasma",
+    texto: "Precio estimado al instante para lámina y placa de acero o aluminio.",
+  },
+  {
+    href: "/cotizar/impresion-3d",
+    titulo: "Impresión 3D",
+    texto: "Precio estimado al instante en PLA, PETG, ABS y TPU.",
+  },
 ]
 
 export default async function CotizarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ taller?: string; servicio?: string }>
+  searchParams: Promise<{ taller?: string; servicio?: string; necesidad?: string }>
 }) {
-  const { taller, servicio } = await searchParams
+  const { taller, servicio, necesidad } = await searchParams
   const t = taller ? await tallerPorHandle(taller) : null
 
   return (
@@ -37,17 +47,17 @@ export default async function CotizarPage({
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-            {t ? `Cotiza con ${t.nombre}` : "Solicita tu cotización"}
+            {t ? `Cotiza con ${t.nombre}` : "Solicita tu trabajo CNC"}
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t
               ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
-              : "Describe tu trabajo y los talleres de la red te mandan propuestas durante 7 días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA."}
+              : "Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante 7 días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA."}
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} />
+          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} />
 
           <aside className="grid content-start gap-4">
             <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>

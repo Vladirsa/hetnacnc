@@ -1,14 +1,18 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { getSignedDownloadUrl } from "../../../lib/backblaze"
 import { sendEmail } from "../../../lib/resend"
 import { avisarRedes } from "../../../lib/redes"
 import {
+  type ArchivoSolicitud,
+  MAX_ARCHIVOS_SOLICITUD,
   T_SOLICITUD,
   type Trabajo,
   VENDOR_URL,
   asegurarTablas,
   boton,
+  esClaveDeSolicitud,
   esc,
   fila,
   folioTexto,
@@ -33,8 +37,14 @@ type Body = {
   nombre?: string
   email?: string
   telefono?: string
+  whatsapp?: string
   ciudad?: string
   estado_mx?: string
+  necesidad?: string
+  tiene_archivo?: string
+  acabado?: string
+  // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
+  archivos?: { clave?: string; nombre?: string; tamano?: number }[] | string
   servicio?: string
   material?: string
   cantidad?: string | number
@@ -54,6 +64,38 @@ const DIAS_ABIERTA = 7
 const MAX_AVISOS = 60
 const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+// Sólo se aceptan claves que generó /store/solicitud-archivos: así nadie
+// cuelga a su solicitud un archivo ajeno del bucket.
+function leerArchivos(v: Body["archivos"]): ArchivoSolicitud[] {
+  let lista: unknown = v
+  if (typeof v === "string") {
+    try {
+      lista = JSON.parse(v)
+    } catch {
+      lista = []
+    }
+  }
+  if (!Array.isArray(lista)) return []
+  return lista
+    .filter((a) => a && esClaveDeSolicitud(a.clave))
+    .slice(0, MAX_ARCHIVOS_SOLICITUD)
+    .map((a) => ({
+      clave: String(a.clave),
+      nombre: corto(a.nombre || String(a.clave).split("/").pop(), 120),
+      tamano: Math.max(0, Math.round(Number(a.tamano) || 0)),
+    }))
+}
+
+// Ligas firmadas para el correo de HETNA: duran lo más que deja B2 (7 días).
+async function ligasDeArchivos(archivos: ArchivoSolicitud[]) {
+  const filas: string[] = []
+  for (const a of archivos) {
+    const r = await getSignedDownloadUrl(a.clave)
+    filas.push(r.ok ? `<a href="${esc(r.url)}">${esc(a.nombre)}</a>` : esc(a.nombre))
+  }
+  return filas.join("<br/>")
+}
+
 export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger") as any
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -72,8 +114,13 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     return res.status(400).json({ message: "Describe tu trabajo (mínimo 10 caracteres)." })
   }
 
+  const archivos = leerArchivos(b.archivos)
   const trabajo: Trabajo = {
     descripcion,
+    necesidad: corto(b.necesidad, 80),
+    tiene_archivo: corto(b.tiene_archivo, 80),
+    acabado: corto(b.acabado, 120),
+    archivos,
     servicio: corto(b.servicio, 80),
     material: corto(b.material, 120),
     cantidad: corto(b.cantidad, 40),
@@ -90,6 +137,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     nombre: corto(b.nombre, 120),
     email,
     telefono: corto(b.telefono, 40),
+    whatsapp: corto(b.whatsapp, 40),
   }
 
   // Taller elegido (opcional)
@@ -152,6 +200,11 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
           fila("Nombre", contacto.nombre) +
           fila("Correo", contacto.email) +
           fila("Teléfono", contacto.telefono) +
+          fila("WhatsApp", contacto.whatsapp) +
+          // fila() escapa el valor; las ligas van en HTML ya escapado.
+          (archivos.length
+            ? `<tr><td style="padding:6px 12px 6px 0;color:#6B675C;vertical-align:top">Descargar</td><td style="padding:6px 0">${await ligasDeArchivos(archivos)}</td></tr>`
+            : "") +
           `</table>` +
           boton("Ver propuestas del cliente", liga)
       ),

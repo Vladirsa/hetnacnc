@@ -13,10 +13,12 @@ export const metadata: Metadata = {
 }
 
 const ETIQUETAS: [string, string][] = [
+  ["necesidad", "Necesitas"],
   ["servicio", "Servicio"],
   ["material", "Material"],
   ["cantidad", "Cantidad"],
   ["medidas", "Medidas"],
+  ["acabado", "Acabado"],
   ["fecha", "Fecha requerida"],
   ["frecuencia", "Frecuencia"],
   ["presupuesto", "Presupuesto"],
@@ -28,6 +30,7 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
   if (!s) notFound()
 
   const t = s.trabajo || {}
+  const archivos = s.trabajo?.archivos || []
   const entrega = [t.ciudad, t.estado_mx].filter(Boolean).join(", ")
   const cierra = s.cierra_en ? new Date(s.cierra_en).toLocaleDateString("es-MX", { day: "numeric", month: "long" }) : ""
 
@@ -60,6 +63,11 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
             </div>
           )}
         </dl>
+        {archivos.length > 0 && (
+          <p className="mt-4 text-sm text-[#6B675C]">
+            Archivos que subiste: <span className="font-semibold text-[#142033]">{archivos.map((a) => a.nombre).join(", ")}</span>
+          </p>
+        )}
       </section>
 
       <ComparadorPropuestas token={token} solicitud={s} />

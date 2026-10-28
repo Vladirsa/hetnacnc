@@ -5,18 +5,26 @@
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
+// Lo que devuelve /api/solicitud-archivo por cada archivo subido.
+export type ArchivoSubido = { clave: string; nombre: string; tamano: number }
+
 export type SolicitudTallerInput = {
   taller?: string
   abierta?: boolean
   nombre?: string
   email: string
   telefono?: string
+  whatsapp?: string
   ciudad?: string
   estado_mx?: string
   medidas?: string
   frecuencia?: string
   presupuesto?: string
   acepta_envio?: string
+  necesidad?: string
+  tiene_archivo?: string
+  acabado?: string
+  archivos?: ArchivoSubido[]
   servicio?: string
   material?: string
   cantidad?: string
@@ -73,7 +81,7 @@ export type VistaSolicitud = {
   estado: string
   creada: string
   cierra_en: string | null
-  trabajo: Record<string, string>
+  trabajo: Record<string, string> & { archivos?: ArchivoSubido[] }
   propuesta_elegida: string | null
   pago_url: string | null
   pago_estado: string | null

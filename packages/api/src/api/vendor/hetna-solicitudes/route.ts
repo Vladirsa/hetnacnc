@@ -1,7 +1,16 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto, ocultarContacto } from "../../../lib/licitacion"
+import {
+  MOTIVOS_RESPUESTA,
+  T_PROPUESTA,
+  T_RESPUESTA,
+  T_SOLICITUD,
+  asegurarTablaRespuestas,
+  asegurarTablas,
+  folioTexto,
+  ocultarContacto,
+} from "../../../lib/licitacion"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
 // y las que ya cotizó. Nunca incluye datos de contacto del cliente.
@@ -15,10 +24,17 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const servicio = String(req.query.servicio || "").trim().slice(0, 80)
   const estadoMx = String(req.query.estado_mx || "").trim().slice(0, 60)
 
+  // "Ocultas" = las que este taller marcó como que no puede cotizar.
+  const verOcultas = req.query.ocultas === "1"
+
   await asegurarTablas(knex)
+  await asegurarTablaRespuestas(knex)
   const filas = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
+    })
+    .leftJoin(`${T_RESPUESTA} as r`, function (this: any) {
+      this.on("r.solicitud_id", "=", "s.id").andOn("r.seller_id", "=", knex.raw("?", [sellerId]))
     })
     .where((q: any) =>
       q
@@ -32,6 +48,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
                 .where("s.estado", "abierta")
                 .andWhere((c: any) => c.whereNull("s.cierra_en").orWhere("s.cierra_en", ">", knex.fn.now()))
                 .modify((c: any) => {
+                  // "Necesito más información" no la oculta: sigue pendiente.
+                  if (!verOcultas) c.where((r: any) => r.whereNull("r.id").orWhere("r.motivo", "mas_info"))
                   if (servicio) c.whereRaw("s.trabajo->>'servicio' = ?", [servicio])
                   if (estadoMx) c.whereRaw("s.trabajo->>'estado_mx' = ?", [estadoMx])
                 })
@@ -43,7 +61,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .limit(100)
     .select(
       "s.id", "s.folio", "s.modo", "s.taller_id", "s.estado", "s.trabajo", "s.cierra_en", "s.created_at",
-      "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado"
+      "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado",
+      "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
 
   const conteos = (await knex(T_PROPUESTA)
@@ -60,7 +79,15 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     estado: f.estado,
     cierra_en: f.cierra_en,
     creada: f.created_at,
-    trabajo: { ...f.trabajo, descripcion: ocultarContacto(f.trabajo?.descripcion || "") },
+    // De los archivos sólo nombre y tamaño: la liga se pide aparte, firmada.
+    trabajo: {
+      ...f.trabajo,
+      descripcion: ocultarContacto(f.trabajo?.descripcion || ""),
+      archivos: (f.trabajo?.archivos || []).map((a: any) => ({ nombre: a.nombre, tamano: a.tamano })),
+    },
+    mi_respuesta: f.r_motivo
+      ? { motivo: f.r_motivo, texto: MOTIVOS_RESPUESTA[f.r_motivo] || f.r_motivo, nota: f.r_nota || "" }
+      : null,
     propuestas_recibidas: nPorSol[f.id] || 0,
     mi_propuesta: f.p_id
       ? {

@@ -30,11 +30,125 @@ const S = {
 }
 
 const CAMPOS = [
-  ["servicio", "Servicio"], ["material", "Material"], ["cantidad", "Cantidad"], ["medidas", "Medidas"],
-  ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
+  ["necesidad", "Necesita"], ["tiene_archivo", "Archivo"], ["servicio", "Servicio"], ["material", "Material"], ["cantidad", "Cantidad"], ["medidas", "Medidas"],
+  ["acabado", "Acabado"], ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
 ]
 
 const pesos = (n) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const MOTIVOS = [
+  ["sin_capacidad", "No tengo capacidad ahora"],
+  ["no_material", "No trabajo ese material"],
+  ["no_servicio", "No hago ese proceso"],
+  ["mas_info", "Necesito más información"],
+]
+
+const pesoLegible = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.ceil((b || 0) / 1024)} KB`)
+
+// Los archivos del cliente están en un bucket privado: la liga se pide al
+// momento y dura una hora.
+function ArchivosCliente({ sol }) {
+  const [ligas, setLigas] = useState(null)
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState("")
+  const archivos = sol.trabajo?.archivos || []
+  if (!archivos.length) return null
+
+  const pedir = async () => {
+    setCargando(true)
+    setError("")
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/archivos`, { credentials: "include" })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setLigas(d.archivos || [])
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setCargando(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 10, background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 8, padding: "8px 12px", fontSize: 13 }}>
+      {!ligas ? (
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span>📎 {archivos.length} {archivos.length === 1 ? "archivo del cliente" : "archivos del cliente"}: {archivos.map((a) => a.nombre).join(", ")}</span>
+          <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} disabled={cargando} onClick={pedir}>
+            {cargando ? "Preparando..." : "Descargar"}
+          </button>
+          {error && <span style={{ color: "#B3261E" }}>{error}</span>}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: 4 }}>
+          {ligas.map((a, i) =>
+            a.url ? (
+              <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
+                ⬇ {a.nombre} <span style={{ color: "#6B675C", fontWeight: 400 }}>({pesoLegible(a.tamano)})</span>
+              </a>
+            ) : (
+              <span key={i} style={{ color: "#B3261E" }}>{a.nombre}: no disponible, intenta más tarde</span>
+            )
+          )}
+          <span style={{ color: "#6B675C", fontSize: 12 }}>Las ligas duran una hora.</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FormNoPuedo({ sol, alGuardar, alCancelar }) {
+  const [motivo, setMotivo] = useState(sol.mi_respuesta?.motivo || "")
+  const [nota, setNota] = useState(sol.mi_respuesta?.nota || "")
+  const [msg, setMsg] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+
+  const enviar = async () => {
+    setEnviando(true)
+    setMsg(null)
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/respuesta`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motivo, nota }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      alGuardar()
+    } catch (e) {
+      setMsg(e.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {MOTIVOS.map(([v, l]) => (
+          <button key={v} type="button" style={S.tab(motivo === v)} onClick={() => setMotivo(v)}>{l}</button>
+        ))}
+      </div>
+      {motivo && (
+        <>
+          <label style={{ ...S.label, marginTop: 10 }}>
+            {motivo === "mas_info" ? "¿Qué necesitas saber? (HETNA se lo pregunta al cliente)" : "Nota para HETNA (opcional)"}
+          </label>
+          <textarea style={S.area} value={nota} onChange={(e) => setNota(e.target.value)}
+            placeholder={motivo === "mas_info" ? "Ej. ¿Qué espesor de lámina? ¿El archivo trae cotas?" : "Ej. Tengo la máquina ocupada hasta el día 15."} />
+        </>
+      )}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+        <button type="button" style={{ ...S.btn, background: "#142033", opacity: !motivo || enviando ? 0.6 : 1 }} disabled={!motivo || enviando} onClick={enviar}>
+          {enviando ? "Guardando..." : motivo === "mas_info" ? "Pedir información" : "Guardar respuesta"}
+        </button>
+        <button type="button" style={{ ...S.btn2, border: 0 }} onClick={alCancelar}>Cancelar</button>
+        {msg && <span style={{ fontSize: 14, color: "#B3261E" }}>{msg}</span>}
+      </div>
+    </div>
+  )
+}
 
 function FormPropuesta({ sol, alGuardar }) {
   const p = sol.mi_propuesta
@@ -109,11 +223,13 @@ export default function SolicitudesPage() {
   const [error, setError] = useState("")
   const [vista, setVista] = useState("nuevas")
   const [abierta, setAbierta] = useState(null)
+  const [noPuedo, setNoPuedo] = useState(null)
   const [fServicio, setFServicio] = useState("")
   const [fEstado, setFEstado] = useState("")
 
   const cargar = () =>
-    fetch("/vendor/hetna-solicitudes", { credentials: "include" })
+    // ocultas=1: también las que el taller marcó como "no puedo"; se separan aquí.
+    fetch("/vendor/hetna-solicitudes?ocultas=1", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => setDatos(d.solicitudes || []))
       .catch((e) => setError("No se pudieron cargar las solicitudes (" + e + ")."))
@@ -132,9 +248,17 @@ export default function SolicitudesPage() {
   const pasaFiltros = (s) =>
     (!fServicio || s.trabajo?.servicio === fServicio) && (!fEstado || s.trabajo?.estado_mx === fEstado)
 
-  const nuevas = datos.filter((s) => s.estado === "abierta" && !s.mi_propuesta && pasaFiltros(s))
+  // "Necesito más información" no la descarta: sigue por cotizar.
+  const descartada = (s) => s.mi_respuesta && s.mi_respuesta.motivo !== "mas_info"
+  const nuevas = datos.filter((s) => s.estado === "abierta" && !s.mi_propuesta && !descartada(s) && pasaFiltros(s))
   const enviadas = datos.filter((s) => s.mi_propuesta)
-  const lista = vista === "nuevas" ? nuevas : enviadas
+  const descartadas = datos.filter((s) => !s.mi_propuesta && descartada(s))
+  const lista = vista === "nuevas" ? nuevas : vista === "enviadas" ? enviadas : descartadas
+
+  const deshacer = async (s) => {
+    await fetch(`/vendor/hetna-solicitudes/${s.id}/respuesta`, { method: "DELETE", credentials: "include" }).catch(() => {})
+    cargar()
+  }
 
   return (
     <div style={S.page}>
@@ -146,6 +270,9 @@ export default function SolicitudesPage() {
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}>Por cotizar ({nuevas.length})</button>
         <button type="button" style={S.tab(vista === "enviadas")} onClick={() => setVista("enviadas")}>Mis propuestas ({enviadas.length})</button>
+        {descartadas.length > 0 && (
+          <button type="button" style={S.tab(vista === "descartadas")} onClick={() => setVista("descartadas")}>No puedo ({descartadas.length})</button>
+        )}
       </div>
 
       {vista === "nuevas" && (opciones("servicio").length > 1 || opciones("estado_mx").length > 1) && (
@@ -163,7 +290,11 @@ export default function SolicitudesPage() {
 
       {!lista.length && (
         <div style={{ ...S.card, textAlign: "center", color: "#6B675C" }}>
-          {vista === "nuevas" ? "Por ahora no hay solicitudes nuevas. Te avisamos por correo cuando llegue una." : "Aún no has enviado propuestas."}
+          {vista === "nuevas"
+            ? "Por ahora no hay solicitudes nuevas. Te avisamos por correo cuando llegue una."
+            : vista === "enviadas"
+              ? "Aún no has enviado propuestas."
+              : "No has descartado solicitudes."}
         </div>
       )}
 
@@ -198,19 +329,42 @@ export default function SolicitudesPage() {
               )}
             </div>
 
+            <ArchivosCliente sol={s} />
+
+            {s.mi_respuesta && (
+              <p style={{ marginTop: 10, fontSize: 13, color: "#6B675C" }}>
+                Respondiste: <strong style={{ color: "#142033" }}>{s.mi_respuesta.texto}</strong>
+                {s.mi_respuesta.nota ? ` — ${s.mi_respuesta.nota}` : ""}
+                {descartada(s) && (
+                  <button type="button" style={{ ...S.btn2, border: 0, padding: "0 8px", fontSize: 12, color: "#C2560A" }} onClick={() => deshacer(s)}>
+                    Deshacer
+                  </button>
+                )}
+              </p>
+            )}
+
             {p && (
               <p style={{ marginTop: 10, fontSize: 14 }}>
                 Tu propuesta: <strong>{pesos(p.precio)}</strong> · {p.dias} días {p.incluye_envio ? "· envío incluido" : ""}
               </p>
             )}
 
-            {s.estado === "abierta" && (
+            {s.estado === "abierta" && !descartada(s) && (
               abierta === s.id ? (
                 <FormPropuesta sol={s} alGuardar={() => { cargar(); setAbierta(null) }} />
+              ) : noPuedo === s.id ? (
+                <FormNoPuedo sol={s} alGuardar={() => { cargar(); setNoPuedo(null) }} alCancelar={() => setNoPuedo(null)} />
               ) : (
-                <button type="button" style={{ ...S.btn2, marginTop: 10 }} onClick={() => setAbierta(s.id)}>
-                  {p ? "Cambiar mi propuesta" : "Cotizar"}
-                </button>
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  <button type="button" style={S.btn2} onClick={() => { setNoPuedo(null); setAbierta(s.id) }}>
+                    {p ? "Cambiar mi propuesta" : "Cotizar"}
+                  </button>
+                  {!p && (
+                    <button type="button" style={{ ...S.btn2, borderColor: "#D9D5C9", color: "#6B675C" }} onClick={() => { setAbierta(null); setNoPuedo(s.id) }}>
+                      No puedo / necesito info
+                    </button>
+                  )}
+                </div>
               )
             )}
           </div>

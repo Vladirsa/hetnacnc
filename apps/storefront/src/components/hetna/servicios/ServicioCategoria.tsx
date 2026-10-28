@@ -114,24 +114,44 @@ const CALCULADORAS = [
 // Lo que de verdad pasa hoy, sin prometer de más: ver lib licitacion del API.
 export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   {
-    p: "¿Cuánto cuesta publicar mi trabajo?",
-    r: "Nada. Publicar y recibir propuestas es gratis; sólo pagas si eliges una.",
+    p: "¿Qué archivos aceptan?",
+    r: "Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta 5 archivos de 25 MB, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.",
   },
   {
-    p: "¿Cuánto tiempo recibo propuestas?",
-    r: "Tu solicitud recibe propuestas durante 7 días. Te avisamos por correo cada vez que llega una, y al cerrar puedes elegir entre las que recibiste.",
+    p: "¿Puedo pedir solo una pieza?",
+    r: "Sí. Muchos talleres hacen piezas sueltas y prototipos. En una sola pieza el precio unitario sale más alto que en lote, porque preparar la máquina cuesta lo mismo para una que para cien.",
+  },
+  {
+    p: "¿Qué pasa si no tengo diseño?",
+    r: "Elige \"No tengo archivo, necesito diseño\" y describe la pieza con medidas, para qué sirve y, si puedes, una foto o boceto. Los talleres que también diseñan te cotizan el diseño junto con la fabricación.",
+  },
+  {
+    p: "¿Cuánto tarda la cotización?",
+    r: "En corte láser, router, plasma e impresión 3D ves un precio estimado al instante con la calculadora. Si pides propuestas, los talleres reciben tu solicitud en el momento y tienen 7 días para mandarte precio y tiempo; te avisamos por correo cada vez que llega una.",
+  },
+  {
+    p: "¿Hacen envíos?",
+    r: "Sí, a todo México por paquetería. Cada taller dice en su propuesta si el precio ya incluye el envío. Si prefieres recoger o que te lo entreguen, indícalo en el formulario.",
+  },
+  {
+    p: "¿Puedo pedir producción recurrente?",
+    r: "Sí. En \"¿Cada cuánto lo necesitas?\" elige \"Cada mes\" o \"Producción recurrente\" y pon el volumen aproximado. Así te cotizan los talleres con capacidad para sostener pedidos que se repiten.",
+  },
+  {
+    p: "¿Cómo se calcula el precio?",
+    r: "Depende del material, el tiempo de máquina, la cantidad, el acabado y el envío. La calculadora te da un rango aproximado; el precio formal lo pone cada taller en su propuesta, con IVA y tiempo de entrega, y tú comparas.",
+  },
+  {
+    p: "¿Puedo hablar directamente con el taller?",
+    r: "Puedes elegir un taller del directorio y pedirle la cotización sólo a él. Para cuidar a las dos partes, los datos de contacto no se comparten: las dudas del taller te llegan por HETNA (correo o WhatsApp), y el pago se hace dentro de la plataforma.",
   },
   {
     p: "¿Quién ve mis datos?",
-    r: "Tu nombre, correo y teléfono sólo los ve HETNA. Los talleres ven el trabajo (qué, cuánto, dónde y para cuándo), nunca tus datos de contacto.",
+    r: "Tu nombre, correo y WhatsApp sólo los ve HETNA. Los talleres ven el trabajo (qué, cuánto, dónde y para cuándo) y tus archivos, nunca tus datos de contacto.",
   },
   {
-    p: "¿Qué archivo necesito?",
-    r: "Si lo tienes, un DXF o SVG para corte, o un STL o STEP para maquinado e impresión 3D. Si no tienes archivo, descríbelo con medidas: muchos talleres también diseñan.",
-  },
-  {
-    p: "¿Cómo pago?",
-    r: "Dentro de HETNA, con Mercado Pago, al elegir la propuesta. No tienes que tratar dinero por fuera con nadie.",
+    p: "¿Cuánto cuesta pedir cotización?",
+    r: "Nada. Pedir y recibir propuestas es gratis; sólo pagas si eliges una, dentro de HETNA con Mercado Pago.",
   },
 ]
 
