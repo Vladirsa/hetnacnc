@@ -36,12 +36,13 @@ export type Datos = {
   rfc: string
   correo: string // vacío si aún no hay correo de privacidad
   whatsapp: string
+  telefono: string
 }
 
 const contactoEs = (d: Datos) =>
-  d.correo ? `el correo ${d.correo} o WhatsApp ${d.whatsapp}` : `WhatsApp ${d.whatsapp}`
+  d.correo ? `el correo ${d.correo}, WhatsApp ${d.whatsapp} o el teléfono ${d.telefono}` : `WhatsApp ${d.whatsapp} o el teléfono ${d.telefono}`
 const contactoEn = (d: Datos) =>
-  d.correo ? `email ${d.correo} or WhatsApp ${d.whatsapp}` : `WhatsApp ${d.whatsapp}`
+  d.correo ? `email ${d.correo}, WhatsApp ${d.whatsapp} or phone ${d.telefono}` : `WhatsApp ${d.whatsapp} or phone ${d.telefono}`
 
 // ---------------------------------------------------------------- ESPAÑOL
 
@@ -67,7 +68,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
     titulo: "1. Quién es responsable de tus datos",
     bloques: [
       {
-        p: `${d.responsable}, con domicilio en ${d.domicilio}${d.rfc ? ` y RFC ${d.rfc}` : ""}, opera el sitio hetnacnc.com y es el responsable del tratamiento de tus datos personales.`,
+        p: `${d.responsable}, con domicilio en ${d.domicilio}${d.rfc ? ` y RFC ${d.rfc}` : ""}, es el responsable del tratamiento de tus datos personales en el sitio hetnacnc.com.`,
       },
       {
         p: `Para cualquier tema de datos personales (dudas, solicitudes de derechos, quejas) contacta al área de Datos Personales de HETNA CNC por ${contactoEs(d)}. Esta área cumple la función de encargado de protección de datos (encarregado, en Brasil; oficial de datos, en otros países).`,
@@ -104,7 +105,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
         p: "Datos sensibles: no te pedimos datos sensibles (origen étnico, salud, religión, opiniones políticas, preferencia sexual, datos genéticos). La identificación oficial que sube un taller incluye su fotografía: no hacemos reconocimiento facial ni ningún tratamiento biométrico con ella; solo la revisa una persona para confirmar que el taller es real. Aun así, le damos la protección más alta: viaja cifrada (HTTPS), se guarda en una carpeta privada sin dirección pública, solo puede descargarla con sesión iniciada el propio taller o un administrador de HETNA, y solo se trata con tu consentimiento expreso.",
       },
       {
-        p: "Datos patrimoniales y financieros: los datos bancarios del taller se usan solo para pagarle lo que vende, y le pedimos su consentimiento expreso por escrito antes de usarlos.",
+        p: "Datos patrimoniales y financieros: los datos bancarios del taller se usan solo para pagarle lo que vende. Los pedimos con su consentimiento expreso: el formulario donde los captura incluye la autorización por escrito, y al guardarlos queda registrada la fecha en que la otorgó.",
       },
     ],
   },
@@ -213,7 +214,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
           filas: [
             ["Cuenta de cliente o de taller", "Mientras la cuenta esté activa. Si la cancelas, la borramos o la volvemos anónima en un plazo razonable, que procuramos no exceda de 30 días, salvo lo que la ley nos obligue a conservar"],
             ["Pedidos, pagos y facturas", "El tiempo que exijan las leyes fiscales y mercantiles de México: al menos 5 años y hasta 10 años"],
-            ["Documentos de verificación del taller", "Mientras el taller tenga cuenta activa. Si cierra su cuenta, o si la verificación se rechaza y no se vuelve a enviar, los eliminamos en un plazo que procuramos no exceda de 12 meses. El taller puede pedir que se borren antes"],
+            ["Documentos de verificación del taller", "Mientras el taller tenga cuenta activa. Se borran automáticamente: a los 6 meses sin cambios si la verificación se rechazó o nunca se envió, y a los 90 días si el taller se da de baja. El taller puede pedir que se borren antes"],
             ["Mensajes de soporte y WhatsApp", "El tiempo necesario para atenderte y dar seguimiento, normalmente no más de 2 años"],
             ["Foro, reseñas y contenido publicado", "Mientras esté publicado; puedes borrarlo o pedirnos que lo borremos"],
             ["Datos de estadística (Google Analytics)", "Hasta 14 meses en Google Analytics; la cookie puede durar hasta 2 años en tu navegador y puedes borrarla cuando quieras"],
@@ -370,7 +371,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
     titulo: "1. Who is responsible for your data",
     bloques: [
       {
-        p: `${d.responsable}, located at ${d.domicilio}${d.rfc ? `, tax ID (RFC) ${d.rfc}` : ""}, operates hetnacnc.com and is the controller of your personal data.`,
+        p: `${d.responsable}, located at ${d.domicilio}${d.rfc ? `, tax ID (RFC) ${d.rfc}` : ""}, is the controller of your personal data on hetnacnc.com.`,
       },
       {
         p: `For any personal-data matter (questions, rights requests, complaints) contact HETNA CNC's Personal Data team via ${contactoEn(d)}. This team acts as our data protection officer.`,
@@ -407,7 +408,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
         p: "Sensitive data: we do not ask for sensitive data (ethnic origin, health, religion, political opinions, sexual orientation, genetic data). The government ID a shop uploads includes a photo: we do not run facial recognition or any biometric processing on it; a person only reviews it to confirm the shop is real. Even so, we give it the highest protection: it travels encrypted (HTTPS), is stored in a private folder with no public URL, can only be downloaded by the shop itself or a HETNA administrator while signed in, and is processed only with your express consent.",
       },
       {
-        p: "Financial data: a shop's bank details are used only to pay it for what it sells, and we ask for its express written consent before using them.",
+        p: "Financial data: a shop's bank details are used only to pay it for what it sells. We collect them with its express consent: the form where it enters them includes the written authorization, and the date it was given is recorded when they are saved.",
       },
     ],
   },
@@ -516,7 +517,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
           filas: [
             ["Customer or shop account", "While the account is active. If you close it, we delete or anonymize it within a reasonable time, which we aim to keep under 30 days, except what the law requires us to keep"],
             ["Orders, payments and invoices", "As long as Mexican tax and commercial laws require: at least 5 years and up to 10 years"],
-            ["Shop verification documents", "While the shop's account is active. If it closes its account, or if verification is rejected and not resubmitted, we delete them within a period we aim to keep under 12 months. The shop can ask for earlier deletion"],
+            ["Shop verification documents", "While the shop's account is active. They are deleted automatically: after 6 months without changes if verification was rejected or never submitted, and 90 days after the shop leaves the platform. The shop can ask for earlier deletion"],
             ["Support and WhatsApp messages", "As long as needed to help you and follow up, usually no more than 2 years"],
             ["Forum, reviews and published content", "While published; you can delete it or ask us to delete it"],
             ["Analytics data (Google Analytics)", "Up to 14 months in Google Analytics; the cookie may last up to 2 years in your browser and you can delete it at any time"],
@@ -652,6 +653,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.1",
+    fecha: "2026-10-28",
+    cambio: "Datos del responsable (persona física), correo y teléfono de contacto; borrado automático de documentos de verificación; consentimiento para datos bancarios de talleres; baja de correos promocionales.",
+    cambioEn: "Controller details (individual), contact email and phone; automatic deletion of verification documents; consent for shop bank details; unsubscribe from promotional email.",
+  },
   {
     version: "2.0",
     fecha: "2026-10-28",
