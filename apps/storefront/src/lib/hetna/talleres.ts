@@ -25,6 +25,8 @@ export type Taller = {
   logo?: string | null
   banner?: string | null
   fundador: boolean
+  // Aprobado por HETNA con identificación y fotos del taller (lo marca solo el administrador)
+  verificado: boolean
   perfil: Perfil
 }
 
@@ -86,6 +88,7 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   logo: s.logo,
   banner: s.banner,
   fundador: s.metadata?.fundador === true,
+  verificado: s.metadata?.verificado === true,
   perfil: leerPerfil(s.metadata),
 })
 
