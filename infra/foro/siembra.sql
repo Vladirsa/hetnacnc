@@ -1,6 +1,6 @@
 -- Siembra del Foro CNC. Generado por infra/foro/generar-siembra.mjs
 -- NO se edita a mano: se edita temas-semilla.json y se vuelve a generar.
--- Firma: @hetna  ·  15 temas
+-- Firma: @equipo-hetna  ·  15 temas
 --
 -- Correr DESPUÉS del esquema del foro y de que exista ese perfil.
 -- Es idempotente: un tema que ya está no se duplica.
@@ -10,9 +10,9 @@ declare
   autor uuid;
   puestos integer := 0;
 begin
-  select id into autor from foro.perfiles where usuario = 'hetna';
+  select id into autor from foro.perfiles where usuario = 'equipo-hetna';
   if autor is null then
-    raise exception 'No existe el perfil hetna en foro.perfiles. Créalo antes de sembrar.';
+    raise exception 'No existe el perfil equipo-hetna en foro.perfiles. Créalo antes de sembrar.';
   end if;
 
   -- [precios-negocio] Nadie publica tarifas mexicanas. Es la duda que todo taller chico tiene y la que empata directo con el Cotizador.

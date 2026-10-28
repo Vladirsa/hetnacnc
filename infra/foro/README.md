@@ -45,14 +45,14 @@ apps/storefront/src/lib/foro/esquema.sql
 Eso crea el esquema `foro` con sus 11 secciones. Mientras no exista, el sitio
 muestra "El foro abre muy pronto".
 
-**2. Crea el perfil que va a firmar.** Entra al foro con la cuenta de HETNA y
-date de alta como lo haría cualquiera. Luego súbele el rol, porque
+**2. El perfil que firma.** Es `equipo-hetna`, la cuenta oficial que ya
+existe en producción con rol admin. Tiene que ser admin o moderador porque
 `foro.crear_tema` corta a los 8 temas al día cuando el rol es `usuario` y aquí
-van 15:
+van 15. Para que salga como marca verificada:
 
 ```sql
-update foro.perfiles set rol = 'admin', tipo = 'marca', verificado = true
- where usuario = 'hetna';
+update foro.perfiles set tipo = 'marca', verificado = true
+ where usuario = 'equipo-hetna';
 ```
 
 **3. Siembra.** Corre `siembra.sql` en el mismo editor. Avisa cuántos temas
@@ -64,7 +64,7 @@ Hoy está apagado. Ya trae el chat de Telegram de @hetnacncadmin (28 de
 octubre), así que cada respuesta propuesta te llega ahí para aprobarla antes de
 publicarse.
 
-No contesta los temas que firma `hetna`: esos son la siembra, y están para que
+No contesta los temas que firma `equipo-hetna`: esos son la siembra, y están para que
 conteste el gremio. Que la misma cuenta pregunte y se responda se ve armado.
 Sí contesta lo que publique cualquier otro perfil.
 
@@ -76,8 +76,8 @@ aparecieron dos fallas que ya quedaron arregladas en n8n el 27 de octubre:
   coma ([issue 16354](https://github.com/n8n-io/n8n/issues/16354)), y una
   respuesta de 150 palabras en español siempre trae comas: la query habría
   recibido ocho o diez parámetros en vez de tres. Ahora se pasa un arreglo.
-- Buscaba el perfil `equipo-hetna`, que no existe ni en el esquema ni en la
-  siembra. Se alineó a `hetna`, el mismo que firma los temas.
+- Buscaba un perfil distinto al que firma la siembra. Los dos quedaron en
+  `equipo-hetna`, la cuenta oficial que ya existe en producción.
 
 ## Cambiar o agregar temas
 
@@ -85,7 +85,7 @@ Se edita `temas-semilla.json` y se vuelve a generar. `siembra.sql` no se toca
 a mano:
 
 ```bash
-bun infra/foro/generar-siembra.mjs hetna > infra/foro/siembra.sql
+bun infra/foro/generar-siembra.mjs equipo-hetna > infra/foro/siembra.sql
 ```
 
 El argumento es el `usuario` del perfil que firma.
@@ -97,7 +97,7 @@ Con un postgres cualquiera:
 ```bash
 psql -d unabase -f apps/storefront/src/lib/foro/esquema.sql
 psql -d unabase -c "insert into foro.perfiles (cliente_id, usuario, nombre, tipo, rol)
-                    values ('cus_x','hetna','HETNA CNC','marca','admin')"
+                    values ('cus_x','equipo-hetna','Equipo HETNA','marca','admin')"
 psql -d unabase -f infra/foro/siembra.sql
 ```
 

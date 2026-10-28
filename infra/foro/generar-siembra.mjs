@@ -8,7 +8,7 @@
 // mismo editor de Supabase donde se crea el esquema, se puede leer antes de
 // ejecutarlo, y no necesita credenciales ni dependencias.
 //
-//   bun infra/foro/generar-siembra.mjs hetna > infra/foro/siembra.sql
+//   bun infra/foro/generar-siembra.mjs equipo-hetna > infra/foro/siembra.sql
 //
 // El argumento es el `usuario` del perfil del foro que firma. Ese perfil tiene
 // que existir ya, y conviene que tenga rol admin o moderador: foro.crear_tema
