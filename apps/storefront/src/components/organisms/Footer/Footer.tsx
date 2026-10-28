@@ -1,4 +1,5 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { BotonPreferenciasCookies } from "@/components/hetna/AvisoCookies"
 import { SocialIcon } from "@/components/hetna/SocialIcon"
 import footerLinks from "@/data/footerLinks"
 
@@ -79,8 +80,12 @@ export function Footer() {
         className="pt-5 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center"
         data-testid="footer-copyright"
       >
-        <span className="text-[12px] text-[#9FACC2]">
-          © 2026 HETNA CNC. Hecho en México.
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#9FACC2]">
+          <span>© 2026 HETNA CNC. Hecho en México.</span>
+          <LocalizedClientLink href="/aviso-de-privacidad" className="hover:text-white">
+            Privacidad
+          </LocalizedClientLink>
+          <BotonPreferenciasCookies className="hover:text-white" />
         </span>
         <div className="flex gap-3 items-center">
           {footerLinks.connect.map(({ label, path }) => (

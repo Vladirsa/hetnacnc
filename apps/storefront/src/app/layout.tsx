@@ -8,6 +8,7 @@ import { Toaster } from '@medusajs/ui';
 
 import { Analytics } from '@/components/analytics/Analytics';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
+import { AvisoCookies } from '@/components/hetna/AvisoCookies';
 import { Traductor } from '@/components/hetna/Traductor';
 import { COOKIE_IDIOMA, SCRIPT_VELO } from '@/i18n/idioma';
 import { toHreflang } from '@/lib/helpers/hreflang';
@@ -110,6 +111,7 @@ export default async function RootLayout({
           <MobileBottomNav cartCount={(cart?.items ?? []).reduce((s: number, i: any) => s + (i.quantity ?? 0), 0)} />
           <InstallPrompt />
         </Providers>
+        <AvisoCookies />
         <Toaster position="top-right" />
       </body>
     </html>
