@@ -180,14 +180,27 @@ const PROCESOS = [
 
 const MATERIALES = [
   { nombre: "MDF", ideal: "Letreros, cajas, maquetas, muebles para pintar" },
-  { nombre: "Triplay y madera sólida", ideal: "Muebles, celosías, decoración, piezas a la vista" },
+  { nombre: "Madera y triplay", ideal: "Muebles, celosías, decoración, piezas a la vista" },
   { nombre: "Acrílico", ideal: "Exhibidores, señalética, protecciones, displays con luz" },
   { nombre: "Acero y acero inoxidable", ideal: "Soportes, bases, herrería, piezas que cargan peso" },
   { nombre: "Aluminio", ideal: "Placas, carcasas, piezas ligeras de máquina, letreros de exterior" },
   { nombre: "Plásticos de ingeniería", ideal: "Nylon y delrin: bujes, engranes, piezas que se deslizan" },
   { nombre: "Filamentos 3D", ideal: "PLA para prototipos, PETG y ABS para piezas funcionales, TPU flexible" },
   { nombre: "PVC espumado (Sintra)", ideal: "Señalética interior, letras recortadas, maquetas" },
-  { nombre: "Cuero, tela y foamboard", ideal: "Accesorios, empaques, maquetas y marcos" },
+  { nombre: "Foam y foamboard", ideal: "Maquetas, empaques a la medida, moldes y rellenos" },
+  { nombre: "Cuero y tela", ideal: "Accesorios, llaveros, parches y artículos promocionales" },
+]
+
+// Lo que se le puede hacer a una pieza. Es lo que el cliente busca ("¿me la
+// perforan?", "¿me hacen la ranura?"), no el nombre de la máquina.
+const OPERACIONES = [
+  { que: "Corte", detalle: "Contornos y piezas sueltas en lámina, tablero o placa." },
+  { que: "Grabado", detalle: "Logotipos, textos, números de serie y relieves." },
+  { que: "Perforado", detalle: "Barrenos, avellanados y patrones de agujeros a medida." },
+  { que: "Ranurado y cajeado", detalle: "Ranuras, cajas y rebajes para ensambles y herrajes." },
+  { que: "Prototipado", detalle: "Una o pocas piezas para probar antes de producir." },
+  { que: "Producción por volumen", detalle: "Lotes y pedidos recurrentes con el mismo resultado." },
+  { que: "Acabados básicos", detalle: "Lijado, pintura, barniz y armado de piezas." },
 ]
 
 const TIEMPOS = [
@@ -398,15 +411,20 @@ export default async function FabricacionPage() {
 
       {/* Conexión con talleres */}
       <section className="mt-12 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
-        <h2 className={H2}>Te conectamos con el taller indicado</h2>
-        <p className="mt-1 max-w-3xl text-[#6B675C]">
-          HETNA no es un solo taller: es una red de talleres CNC en México. Tu proyecto lo atienden los que trabajan
-          ese proceso, y los de tu estado reciben el aviso primero para que el envío salga más barato.
+        <h2 className={H2}>Te conectamos con talleres especializados</h2>
+        <p className="mt-1 max-w-3xl text-[#44433D]">
+          HETNA no es un solo taller: es una <strong>red de talleres CNC en México</strong>. Tu proyecto puede ser
+          atendido por cualquier taller de la red HETNA que haga ese trabajo.
+        </p>
+        <p className="mt-2 max-w-3xl text-[#6B675C]">
+          Seleccionamos a los talleres según el tipo de proyecto, tu material y tu ubicación: primero reciben el aviso
+          los que trabajan tu material y los de tu estado, para que el precio y el envío te salgan mejor. Cada uno te
+          cotiza por separado y tú eliges con quién fabricar.
         </p>
         <ol className="mt-5 grid gap-3 md:grid-cols-5">
           {[
             ["Tú", "Llenas el formulario y subes tu archivo."],
-            ["HETNA", "Ordena tu solicitud por proceso, material y ubicación."],
+            ["HETNA", "Selecciona los talleres compatibles por tipo de proyecto, material y ubicación."],
             ["Talleres", "Los compatibles la ven en su panel, descargan tu archivo y cotizan, o dicen si les falta un dato."],
             ["Tú eliges", "Comparas precio, tiempo y condiciones, y pagas dentro de HETNA."],
             ["Seguimiento", "Con tu folio ves el avance hasta que recibes tu pedido y lo calificas."],
@@ -425,9 +443,24 @@ export default async function FabricacionPage() {
 
       {/* Procesos y capacidades */}
       <section id="capacidades" className="mt-12 scroll-mt-24">
-        <h2 className={H2}>Procesos y capacidades</h2>
+        <h2 className={H2}>Capacidades</h2>
+        <p className="mt-1 max-w-2xl text-[#6B675C]">Lo que la red puede hacerle a tu pieza.</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {OPERACIONES.map((o) => (
+            <div key={o.que} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
+              <p className="font-bold text-[#142033]">✓ {o.que}</p>
+              <p className="mt-1 text-sm text-[#6B675C]">{o.detalle}</p>
+            </div>
+          ))}
+          <a href="#solicitar" className="flex flex-col justify-center rounded-2xl bg-[#142033] p-4 text-white">
+            <span className="font-bold">¿Tu pieza necesita algo más?</span>
+            <span className="mt-1 text-sm text-white/75">Descríbelo en la solicitud.</span>
+          </a>
+        </div>
+
+        <h3 className="mt-10 text-xl font-extrabold text-[#142033]">Procesos y máquinas</h3>
         <p className="mt-1 max-w-2xl text-[#6B675C]">
-          Las máquinas de la red. En las que dicen &ldquo;precio al instante&rdquo; ves un estimado con sólo poner las medidas.
+          En los que dicen &ldquo;precio al instante&rdquo; ves un estimado con sólo poner las medidas.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {PROCESOS.map((p) => (
@@ -503,7 +536,10 @@ export default async function FabricacionPage() {
 
       {/* Materiales */}
       <section className="mt-12">
-        <h2 className={H2}>Materiales</h2>
+        <h2 className={H2}>Materiales que trabajamos</h2>
+        <p className="mt-1 max-w-2xl text-[#6B675C]">
+          Los talleres de la red trabajan estos materiales. Si no ves el tuyo, pregúntalo en tu solicitud.
+        </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {MATERIALES.map((m) => (
             <div key={m.nombre} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
@@ -513,6 +549,10 @@ export default async function FabricacionPage() {
               </p>
             </div>
           ))}
+          <a href="#solicitar" className="rounded-2xl border-2 border-dashed border-[#C2560A] bg-[#FDEEE1] p-4 text-[#B34D07]">
+            <span className="block font-bold">Otros materiales</span>
+            <span className="mt-1 block text-sm">Latón, cobre, policarbonato, corcho, hule… pregúntanos por el tuyo.</span>
+          </a>
         </div>
       </section>
 

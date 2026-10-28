@@ -64,6 +64,21 @@ const DIAS_ABIERTA = 7
 const MAX_AVISOS = 60
 const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+// ¿El taller dice trabajar el material que pidió el cliente? El cliente
+// escribe libre ("MDF de 6 mm", "acero negro cal. 14") y el taller pone una
+// lista ("MDF", "Acero"), así que se compara sin acentos ni mayúsculas y
+// basta con que una palabra de la lista del taller aparezca en el pedido.
+const sinAcentos = (t: string) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+function trabajaMaterial(materialesTaller: unknown, pedido?: string) {
+  if (!pedido || !Array.isArray(materialesTaller)) return false
+  const texto = ` ${sinAcentos(pedido)} `
+  return materialesTaller.some((m) => {
+    const clave = sinAcentos(String(m || "")).trim()
+    return clave.length >= 3 && texto.includes(clave)
+  })
+}
+
 // Sólo se aceptan claves que generó /store/solicitud-archivos: así nadie
 // cuelga a su solicitud un archivo ajeno del bucket.
 function leerArchivos(v: Body["archivos"]): ArchivoSolicitud[] {
@@ -263,11 +278,14 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         const servicios: string[] = s.metadata?.perfil?.servicios || []
         return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
       })
-      // Con el tope de avisos, primero los del mismo estado que el cliente:
-      // son los que pueden entregar sin flete caro y los que más contestan.
-      const mismoEstado = (s: { metadata: any }) =>
-        Boolean(trabajo.estado_mx) && s.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1
-      coinciden.sort((x, y) => mismoEstado(x) - mismoEstado(y))
+      // Con el tope de avisos, el orden decide quién se entera. Primero los
+      // que trabajan el material que pide el cliente (si el taller lo puso
+      // en su perfil), luego los de su mismo estado, que entregan sin flete
+      // caro y son los que más contestan.
+      const prioridad = (s: { metadata: any }) =>
+        (trabajaMaterial(s.metadata?.perfil?.materiales, trabajo.material) ? 0 : 2) +
+        (Boolean(trabajo.estado_mx) && s.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
+      coinciden.sort((x, y) => prioridad(x) - prioridad(y))
       for (const s of coinciden) {
         if (destinos.length >= MAX_AVISOS) break
         destinos.push({ email: s.email })

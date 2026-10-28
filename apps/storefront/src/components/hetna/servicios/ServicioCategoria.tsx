@@ -122,6 +122,10 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
     r: "Sí. Muchos talleres hacen piezas sueltas y prototipos. En una sola pieza el precio unitario sale más alto que en lote, porque preparar la máquina cuesta lo mismo para una que para cien.",
   },
   {
+    p: "¿Cuánto tarda la fabricación?",
+    r: "Como referencia: un prototipo simple de 2 a 5 días, un corte por lote de 3 a 7 días y una pieza con acabado de 5 a 10 días. La producción por volumen depende del proyecto. Cada taller pone su tiempo exacto en la propuesta, y ése es el que se compromete a cumplir. A eso súmale el envío por paquetería.",
+  },
+  {
     p: "¿Qué pasa si no tengo diseño?",
     r: "Elige \"No tengo archivo, necesito diseño\" y describe la pieza con medidas, para qué sirve y, si puedes, una foto o boceto. Los talleres que también diseñan te cotizan el diseño junto con la fabricación.",
   },
@@ -130,12 +134,12 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
     r: "En corte láser, router, plasma e impresión 3D ves un precio estimado al instante con la calculadora. Si pides propuestas, los talleres reciben tu solicitud en el momento y tienen 7 días para mandarte precio y tiempo; te avisamos por correo cada vez que llega una.",
   },
   {
-    p: "¿Hacen envíos?",
+    p: "¿Hacen envíos a todo México?",
     r: "Sí, a todo México por paquetería. Cada taller dice en su propuesta si el precio ya incluye el envío. Si prefieres recoger o que te lo entreguen, indícalo en el formulario.",
   },
   {
-    p: "¿Puedo pedir producción recurrente?",
-    r: "Sí. En \"¿Cada cuánto lo necesitas?\" elige \"Cada mes\" o \"Producción recurrente\" y pon el volumen aproximado. Así te cotizan los talleres con capacidad para sostener pedidos que se repiten.",
+    p: "¿Puedo cotizar producción por volumen?",
+    r: "Sí. Elige \"Producción por volumen\", pon la cantidad por pedido y, en \"¿Cada cuánto lo necesitas?\", si es una sola vez, cada mes o recurrente. Así te cotizan precio por volumen los talleres con capacidad para sostenerlo.",
   },
   {
     p: "¿Cómo se calcula el precio?",

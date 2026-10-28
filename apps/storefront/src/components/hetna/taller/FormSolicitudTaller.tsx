@@ -216,7 +216,7 @@ export default function FormSolicitudTaller({
       {/* 1. Qué necesitas */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>1</span> ¿Qué necesitas?
+          <span className={NUM}>1</span> ¿Qué tipo de proyecto es?
         </legend>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {NECESIDADES.map((n) => (
@@ -324,7 +324,7 @@ export default function FormSolicitudTaller({
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={ETIQUETA} htmlFor="descripcion">Describe tu pieza o proyecto *</label>
+            <label className={ETIQUETA} htmlFor="descripcion">Comentarios: describe tu pieza o proyecto *</label>
             <textarea
               id="descripcion"
               name="descripcion"
