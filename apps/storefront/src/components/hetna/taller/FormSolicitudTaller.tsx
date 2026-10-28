@@ -11,6 +11,7 @@ import {
   TIENE_ARCHIVO,
 } from "@/lib/fabricacion/opciones"
 import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
 const SERVICIOS = SERVICIOS_SOLICITUD
@@ -80,6 +81,9 @@ export default function FormSolicitudTaller({
   const [estado, setEstado] = useState<"listo" | "enviando" | "ok" | "error">("listo")
   const [mensaje, setMensaje] = useState("")
   const [folio, setFolio] = useState("")
+  // Resumen para el mensaje de WhatsApp de después: la solicitud ya quedó
+  // registrada con todos sus datos, el WhatsApp sólo la acompaña.
+  const [resumen, setResumen] = useState("")
   const [necesidad, setNecesidad] = useState<string>(
     NECESIDADES.some((n) => n.valor === necesidadInicial) ? necesidadInicial! : ""
   )
@@ -154,6 +158,11 @@ export default function FormSolicitudTaller({
     })
     if (r.ok) {
       setFolio(r.folio || "")
+      setResumen(
+        [necesidad, v("cantidad") && `${v("cantidad")}`, v("material") && `en ${v("material")}`, v("ciudad") || v("estado_mx")]
+          .filter(Boolean)
+          .join(", ")
+      )
       setEstado("ok")
     } else {
       setEstado("error")
@@ -176,6 +185,17 @@ export default function FormSolicitudTaller({
           <li><strong className="text-[#142033]">2.</strong> Si a un taller le falta un dato, te escribimos por correo o WhatsApp.</li>
           <li><strong className="text-[#142033]">3.</strong> Eliges, pagas dentro de HETNA y el taller empieza a producir.</li>
         </ol>
+        <a
+          href={ligaWhatsApp(
+            `Hola HETNA, acabo de enviar la solicitud ${folio || ""}${resumen ? ` (${resumen})` : ""}. Quiero darle seguimiento.`
+          )}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#1FA855] px-5 py-3 text-sm font-semibold text-white hover:brightness-110"
+        >
+          Darle seguimiento por WhatsApp
+        </a>
+        <p className="mt-2 text-xs text-[#6B675C]">Opcional: tu solicitud ya quedó registrada con todos sus datos.</p>
       </div>
     )
   }

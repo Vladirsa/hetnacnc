@@ -3,17 +3,19 @@ import Image from "next/image"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PREGUNTAS_FABRICACION } from "@/components/hetna/servicios/ServicioCategoria"
+import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import { NECESIDADES } from "@/lib/fabricacion/opciones"
+import { EMPRESA, ligaWhatsApp } from "@/lib/hetna/empresa"
 import { listarTalleres, ubicacion } from "@/lib/hetna/talleres"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: "Fabricación CNC en México: solicita tu trabajo y cotiza con talleres",
+  title: "Fabricación CNC en México, de prototipo a producción",
   description:
-    "Corte, grabado, maquila, diseño CAD, prototipos y producción por volumen con talleres CNC de todo México. Sube tu archivo o descríbelo y recibe cotizaciones. Pago seguro y envíos a todo el país.",
+    "Prototipos, piezas únicas y producción por volumen con talleres CNC especializados en México. Corte, grabado, maquinado, impresión 3D y diseño. Sube tu archivo y recibe cotizaciones. Envíos a todo el país.",
 }
 
 // La página para quien quiere que le FABRIQUEN algo. Ordenada como piensa el
@@ -25,8 +27,6 @@ export const metadata: Metadata = {
 // Los tiempos son rangos típicos que HETNA pidió publicar; el plazo real lo
 // pone cada taller en su propuesta, y la página lo dice.
 
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
-const ligaWhatsapp = (texto: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`
 const pedir = (necesidad?: string, servicio?: string) => {
   const q = new URLSearchParams()
   if (necesidad) q.set("necesidad", necesidad)
@@ -129,6 +129,43 @@ const SERVICIOS: Servicio[] = [
   },
 ]
 
+// Lo que se puede pedir, en las palabras con que lo busca el cliente. Cada uno
+// abre el formulario con la necesidad ya elegida.
+const FABRICAMOS = [
+  { que: "Piezas únicas", ej: "Una refacción, un regalo, una pieza que ya no venden", necesidad: "Pieza terminada" },
+  { que: "Prototipos", ej: "Para probar forma y medidas antes de producir", necesidad: "Prototipo" },
+  { que: "Lotes de producción", ej: "De decenas a miles de piezas iguales", necesidad: "Producción por volumen" },
+  { que: "Cortes a medida", ej: "Tableros, láminas y placas cortadas a tu plano", necesidad: "Cortar piezas" },
+  { que: "Grabados", ej: "Logotipos, placas, números de serie", necesidad: "Grabar o marcar" },
+  { que: "Componentes personalizados", ej: "Soportes, carcasas, bridas, adaptadores", necesidad: "Pieza terminada" },
+  { que: "Piezas para maquinaria", ej: "Bujes, ejes, engranes, placas de montaje", necesidad: "Pieza terminada" },
+  { que: "Señalética", ej: "Letreros, letras 3D, placas de exterior", necesidad: "Cortar piezas" },
+  { que: "Mobiliario", ej: "Muebles, celosías, exhibidores, stands", necesidad: "Pieza terminada" },
+  { que: "Utillaje y plantillas", ej: "Escantillones, guías de taladro, jigs, moldes", necesidad: "Pieza terminada" },
+  { que: "Proyectos por diseño", ej: "Tienes la idea, no el plano: te lo diseñan", necesidad: "Diseño" },
+]
+
+// Capacidades por proceso. Son REFERENCIAS típicas de la industria para que el
+// cliente sepa si su pieza cabe; la tabla lo dice, y cada taller confirma las
+// de su máquina en la propuesta. No se presentan como garantía de HETNA.
+const CAPACIDADES = [
+  { proceso: "Corte y grabado láser", tamano: "Hasta 130 × 90 cm", grosor: "MDF y madera hasta 12 mm · acrílico hasta 10 mm", tolerancia: "± 0.1 a 0.2 mm" },
+  { proceso: "Router CNC", tamano: "Tablero completo 122 × 244 cm", grosor: "Hasta 50 mm en madera", tolerancia: "± 0.2 a 0.5 mm" },
+  { proceso: "Corte plasma", tamano: "Hasta 150 × 300 cm", grosor: "Lámina calibre 20 a placa de 1\"", tolerancia: "± 0.5 a 1 mm" },
+  { proceso: "Fresado CNC (metal)", tamano: "Según la máquina del taller", grosor: "Bloque y placa", tolerancia: "± 0.02 a 0.05 mm" },
+  { proceso: "Torno CNC", tamano: "Según la máquina del taller", grosor: "Barra redonda y hexagonal", tolerancia: "± 0.02 mm" },
+  { proceso: "Impresión 3D (FDM)", tamano: "Hasta 25 × 25 × 25 cm por pieza", grosor: "Pared mínima ~1 mm", tolerancia: "± 0.2 a 0.3 mm" },
+]
+
+const ACABADOS_TEXTO = [
+  "Tal como sale de máquina",
+  "Lijado y desbaste",
+  "Pintura y barniz",
+  "Pintura electrostática",
+  "Anodizado y galvanizado",
+  "Ensamble de varias piezas",
+]
+
 // Las máquinas que hay en la red, para quien sí sabe qué proceso quiere.
 const PROCESOS = [
   { titulo: "Corte y grabado láser", detalle: "MDF, madera, acrílico, cuero", calculadora: "/cotizar/corte-laser", servicio: "Corte láser", categoria: "corte-laser" },
@@ -149,6 +186,7 @@ const MATERIALES = [
   { nombre: "Aluminio", ideal: "Placas, carcasas, piezas ligeras de máquina, letreros de exterior" },
   { nombre: "Plásticos de ingeniería", ideal: "Nylon y delrin: bujes, engranes, piezas que se deslizan" },
   { nombre: "Filamentos 3D", ideal: "PLA para prototipos, PETG y ABS para piezas funcionales, TPU flexible" },
+  { nombre: "PVC espumado (Sintra)", ideal: "Señalética interior, letras recortadas, maquetas" },
   { nombre: "Cuero, tela y foamboard", ideal: "Accesorios, empaques, maquetas y marcos" },
 ]
 
@@ -164,15 +202,16 @@ const BTN2 = "inline-flex items-center justify-center rounded-xl border-2 border
 const H2 = "text-2xl font-extrabold text-[#142033] sm:text-3xl"
 
 function Llamado({ titulo, texto }: { titulo: string; texto: string }) {
+  // Todos los llamados llevan al formulario de esta misma página: un clic menos.
   return (
     <section className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[#FDEEE1] p-5 sm:p-6">
       <div className="max-w-xl">
         <p className="text-lg font-extrabold text-[#142033]">{titulo}</p>
         <p className="text-sm text-[#44433D]">{texto}</p>
       </div>
-      <LocalizedClientLink href="/cotizar" className={BTN}>
+      <a href="#solicitar" className={BTN}>
         Sube tu proyecto y cotiza
-      </LocalizedClientLink>
+      </a>
     </section>
   )
 }
@@ -186,6 +225,11 @@ export default async function FabricacionPage() {
   const verificados = talleres.filter((t) => t.verificado).length
   // Ejemplos: sólo fotos reales que subieron los talleres a su perfil, una por
   // taller para que no sea la galería de uno solo.
+  // Máquinas que los talleres registraron en su perfil: capacidad real de la
+  // red, no un texto de marketing.
+  const maquinas = [
+    ...new Set(talleres.flatMap((t) => t.perfil.maquinas.map((m) => m.nombre.trim())).filter(Boolean)),
+  ].slice(0, 16)
   const fotos = talleres
     .filter((t) => t.perfil.galeria.length)
     .slice(0, 8)
@@ -197,17 +241,18 @@ export default async function FabricacionPage() {
       <header className="overflow-hidden rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Fabricación CNC</p>
         <h1 className="mt-1 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
-          Solicita tu trabajo CNC en minutos
+          Fabricación CNC en México, de prototipo a producción
         </h1>
         <p className="mt-3 max-w-2xl text-white/80 sm:text-lg">
-          Cuéntanos qué necesitas, sube tu archivo y recibe cotización de talleres capacitados en México.
+          Prototipos, piezas únicas y producción por volumen con talleres especializados en México.
+          Cuéntanos qué necesitas, sube tu archivo y recibe cotizaciones.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <LocalizedClientLink href="/cotizar" className={BTN}>
+          <a href="#solicitar" className={BTN}>
             Solicitar cotización
-          </LocalizedClientLink>
-          <a href="#como-funciona" className="inline-flex items-center rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
-            Ver cómo funciona
+          </a>
+          <a href="#capacidades" className="inline-flex items-center rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
+            Ver capacidades
           </a>
         </div>
         <p className="mt-6 text-sm font-semibold text-white/90">¿Qué necesitas?</p>
@@ -223,12 +268,38 @@ export default async function FabricacionPage() {
           ))}
         </div>
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/75">
-          <li>✓ Gratis y sin compromiso</li>
+          <li>✓ Cotizar es gratis</li>
           <li>✓ Con archivo o sin archivo</li>
+          <li>✓ Talleres especializados en México</li>
           <li>✓ Pago seguro dentro de HETNA</li>
-          <li>✓ Envíos a todo México</li>
+          <li>✓ Envíos a todo el país</li>
         </ul>
       </header>
+
+      {/* Qué fabricamos */}
+      <section className="mt-12">
+        <h2 className={H2}>¿Qué podemos fabricar?</h2>
+        <p className="mt-1 max-w-2xl text-[#6B675C]">Si está en esta lista, la red lo hace. Toca la que se parece a lo tuyo.</p>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {FABRICAMOS.map((f) => (
+            <LocalizedClientLink
+              key={f.que}
+              href={pedir(f.necesidad)}
+              className="rounded-2xl border border-[#E7E4DC] bg-white p-4 transition hover:-translate-y-0.5 hover:border-[#C2560A] hover:shadow-md"
+            >
+              <span className="block font-bold text-[#142033]">{f.que}</span>
+              <span className="mt-1 block text-[13px] text-[#6B675C]">{f.ej}</span>
+            </LocalizedClientLink>
+          ))}
+          <a
+            href="#solicitar"
+            className="flex flex-col justify-center rounded-2xl border-2 border-dashed border-[#C2560A] bg-[#FDEEE1] p-4 text-[#B34D07]"
+          >
+            <span className="block font-bold">¿Otra cosa?</span>
+            <span className="mt-1 block text-[13px]">Descríbela y te dicen si se puede y cuánto cuesta.</span>
+          </a>
+        </div>
+      </section>
 
       {/* Servicios por necesidad */}
       <section id="servicios" className="mt-12 scroll-mt-24">
@@ -284,13 +355,13 @@ export default async function FabricacionPage() {
 
       {/* Cómo funciona */}
       <section id="como-funciona" className="mt-12 scroll-mt-24">
-        <h2 className={H2}>Cómo funciona</h2>
+        <h2 className={H2}>Así de fácil es pedir tu fabricación</h2>
         <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Cuéntanos qué necesitas", "Elige si quieres cortar, grabar, una pieza terminada, un diseño o producción."],
-            ["Sube tu archivo o describe la pieza", "DXF, STL, STEP, fotos o un boceto. Si no tienes nada, descríbelo con medidas."],
-            ["Recibe cotización de talleres", "Los talleres que hacen ese trabajo te mandan precio y tiempo durante 7 días. Tú comparas."],
-            ["Aprueba, produce y recibe", "Eliges, pagas dentro de HETNA, el taller fabrica y te lo envía o lo recoges."],
+            ["Cuéntanos tu proyecto", "Qué quieres lograr, material, cantidad, medidas y para cuándo. Toma un par de minutos."],
+            ["Sube tu archivo o referencia", "DXF, STL, STEP, fotos o un boceto. Si no tienes nada, descríbelo con medidas."],
+            ["Recibe cotización", "Talleres especializados te mandan precio y tiempo de entrega. Comparas y eliges."],
+            ["Se fabrica y te lo entregamos", "Pagas dentro de HETNA, el taller produce y te lo envía a cualquier parte de México."],
           ].map(([t, d], i) => (
             <li key={t} className="flex gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#FFF1E6] font-extrabold text-[#C2560A]">{i + 1}</span>
@@ -325,9 +396,36 @@ export default async function FabricacionPage() {
         </div>
       </section>
 
-      {/* Qué puedes fabricar */}
-      <section className="mt-12">
-        <h2 className={H2}>Qué puedes fabricar</h2>
+      {/* Conexión con talleres */}
+      <section className="mt-12 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
+        <h2 className={H2}>Te conectamos con el taller indicado</h2>
+        <p className="mt-1 max-w-3xl text-[#6B675C]">
+          HETNA no es un solo taller: es una red de talleres CNC en México. Tu proyecto lo atienden los que trabajan
+          ese proceso, y los de tu estado reciben el aviso primero para que el envío salga más barato.
+        </p>
+        <ol className="mt-5 grid gap-3 md:grid-cols-5">
+          {[
+            ["Tú", "Llenas el formulario y subes tu archivo."],
+            ["HETNA", "Ordena tu solicitud por proceso, material y ubicación."],
+            ["Talleres", "Los compatibles la ven en su panel, descargan tu archivo y cotizan, o dicen si les falta un dato."],
+            ["Tú eliges", "Comparas precio, tiempo y condiciones, y pagas dentro de HETNA."],
+            ["Seguimiento", "Con tu folio ves el avance hasta que recibes tu pedido y lo calificas."],
+          ].map(([t, d], i) => (
+            <li key={t} className="rounded-2xl bg-[#FAF9F6] p-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C2560A]">Paso {i + 1}</span>
+              <span className="mt-1 block font-bold text-[#142033]">{t}</span>
+              <span className="mt-1 block text-sm text-[#6B675C]">{d}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-4 text-sm text-[#44433D]">
+          Tus datos de contacto sólo los ve HETNA. Los talleres ven el trabajo y tus archivos, nunca tu correo ni tu teléfono.
+        </p>
+      </section>
+
+      {/* Procesos y capacidades */}
+      <section id="capacidades" className="mt-12 scroll-mt-24">
+        <h2 className={H2}>Procesos y capacidades</h2>
         <p className="mt-1 max-w-2xl text-[#6B675C]">
           Las máquinas de la red. En las que dicen &ldquo;precio al instante&rdquo; ves un estimado con sólo poner las medidas.
         </p>
@@ -353,6 +451,54 @@ export default async function FabricacionPage() {
             </div>
           ))}
         </div>
+
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-[#E7E4DC] bg-white">
+        <table className="w-full min-w-[640px] text-left text-sm">
+          <thead className="bg-[#F3F1EA] text-[#142033]">
+            <tr>
+              <th className="px-4 py-3 font-bold">Proceso</th>
+              <th className="px-4 py-3 font-bold">Tamaño máximo típico</th>
+              <th className="px-4 py-3 font-bold">Grosor / pieza</th>
+              <th className="px-4 py-3 font-bold">Tolerancia típica</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E7E4DC] text-[#44433D]">
+            {CAPACIDADES.map((c) => (
+              <tr key={c.proceso}>
+                <td className="px-4 py-3 font-semibold text-[#142033]">{c.proceso}</td>
+                <td className="px-4 py-3">{c.tamano}</td>
+                <td className="px-4 py-3">{c.grosor}</td>
+                <td className="px-4 py-3">{c.tolerancia}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-[#6B675C]">
+        Referencias típicas por proceso. La medida máxima y la tolerancia exacta las confirma cada taller con su máquina, en la propuesta.
+        Para piezas más grandes se pueden hacer por secciones.
+      </p>
+      <div className={`mt-6 grid gap-4 ${maquinas.length ? "lg:grid-cols-2" : ""}`}>
+        <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
+          <p className="font-extrabold text-[#142033]">Acabados</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {ACABADOS_TEXTO.map((a) => (
+              <span key={a} className="rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm text-[#2B2A26]">{a}</span>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-[#6B675C]">Producción por volumen: desde una pieza hasta pedidos recurrentes cada mes.</p>
+        </div>
+        {maquinas.length > 0 && (
+          <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
+            <p className="font-extrabold text-[#142033]">Máquinas registradas por talleres de la red</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {maquinas.map((m) => (
+                <span key={m} className="rounded-full border border-[#E7E4DC] px-3 py-1.5 text-sm text-[#2B2A26]">{m}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       </section>
 
       {/* Materiales */}
@@ -455,19 +601,20 @@ export default async function FabricacionPage() {
 
       {/* Confianza */}
       <section className="mt-12">
-        <h2 className={H2}>Por qué cotizar con HETNA</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <h2 className={H2}>Por qué HETNA</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
             [
-              "Talleres verificados",
+              "Red de talleres especializados",
               verificados > 0
-                ? `${verificados} ${verificados === 1 ? "taller verificado" : "talleres verificados"} con identificación y fotos de su taller.`
-                : "HETNA verifica a los talleres con identificación y fotos del taller.",
+                ? `Talleres CNC de distintos estados; ${verificados} ${verificados === 1 ? "ya está verificado" : "ya están verificados"} con identificación y fotos de su taller.`
+                : "Talleres CNC de distintos estados. HETNA verifica a cada uno con identificación y fotos de su taller.",
             ],
-            ["Atención por WhatsApp", "Si a un taller le falta un dato o tienes una duda, te contestamos por WhatsApp."],
-            ["Seguimiento con folio", "Cada solicitud tiene folio y una liga privada para ver propuestas y el estado de tu pedido."],
-            ["Envíos a todo México", "Cada propuesta dice si incluye el envío. También puedes recoger."],
-            ["Revisión de archivos", "El taller revisa tu archivo antes de cotizar; si hay que corregir algo, te avisamos."],
+            ["Atención en México", `Desde ${EMPRESA.ciudad}, ${EMPRESA.estado}, por WhatsApp ${EMPRESA.whatsappVisible}. ${EMPRESA.horario}.`],
+            ["Cotización rápida", "Precio al instante en láser, router, plasma e impresión 3D. En lo demás, las propuestas te llegan por correo conforme los talleres cotizan."],
+            ["Soporte técnico y revisión de archivos", "El taller revisa tu archivo antes de cotizar; si falta una cota o el grosor, te escribimos para aclararlo."],
+            ["Seguimiento del proyecto", "Cada solicitud tiene folio y una liga privada donde ves las propuestas, tu pago y el avance."],
+            ["Envíos a todo el país", "Cada propuesta dice si incluye el envío. También puedes recoger con el taller."],
           ].map(([t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <p className="font-bold text-[#142033]">✓ {t}</p>
@@ -524,25 +671,26 @@ export default async function FabricacionPage() {
         />
       </section>
 
-      {/* CTA final */}
-      <section className="mt-10 rounded-3xl bg-[#142033] p-6 text-center text-white sm:p-10">
-        <h2 className="text-2xl font-extrabold sm:text-3xl">Sube tu proyecto y cotiza</h2>
-        <p className="mx-auto mt-2 max-w-xl text-white/80">
-          Es gratis. Recibes propuestas de talleres, comparas precio y tiempo, y sólo pagas si eliges una.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <LocalizedClientLink href="/cotizar" className={BTN}>
-            Solicitar cotización
-          </LocalizedClientLink>
+      {/* Solicitud, en la misma página */}
+      <section id="solicitar" className="mt-12 scroll-mt-24 rounded-3xl bg-[#142033] p-4 sm:p-8">
+        <div className="mb-5 text-white">
+          <h2 className="text-2xl font-extrabold sm:text-3xl">Solicita tu fabricación ahora</h2>
+          <p className="mt-1 max-w-2xl text-white/80">
+            Es gratis y sin compromiso. Con estos datos los talleres te pueden dar un precio real desde la primera respuesta.
+          </p>
+        </div>
+        <FormSolicitudTaller />
+        <p className="mt-4 text-center text-sm text-white/70">
+          ¿Prefieres hablar primero?{" "}
           <a
-            href={ligaWhatsapp("Hola, quiero cotizar un trabajo de fabricación CNC")}
+            href={ligaWhatsApp("Hola HETNA, quiero cotizar una fabricación CNC. Tipo de pieza: , material: , cantidad: , medidas: , ciudad: ")}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10"
+            className="font-semibold text-[#F2A25F] underline"
           >
-            Preguntar por WhatsApp
+            Escríbenos por WhatsApp
           </a>
-        </div>
+        </p>
       </section>
 
       {/* Para talleres */}
