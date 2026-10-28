@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/atoms"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LabeledInput } from "@/components/cells"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { signup } from "@/lib/data/customer"
 import { useEffect, useState } from "react"
@@ -155,6 +156,15 @@ const Form = () => {
           >
             Crear cuenta
           </Button>
+          {/* Aviso de privacidad simplificado (LFPDPPP art. 16): responsable, finalidades y dónde leer el integral */}
+          <p className="mt-4 text-xs leading-relaxed text-secondary">
+            Al crear tu cuenta aceptas los{" "}
+            <LocalizedClientLink href="/terminos-y-condiciones" className="underline">Términos y condiciones</LocalizedClientLink>.
+            HETNA CNC usa tus datos para administrar tu cuenta, tus compras y cotizaciones, y para darte soporte. Consulta
+            el{" "}
+            <LocalizedClientLink href="/aviso-de-privacidad" className="underline">Aviso de privacidad</LocalizedClientLink>{" "}
+            para conocer tus derechos y cómo negarte a recibir promociones.
+          </p>
         </form>
       </Container>
       <Container className="border max-w-xl mx-auto mt-8 p-4">

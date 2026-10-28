@@ -14,7 +14,13 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const falta = faltantes(exp.archivos)
   if (falta.length) return res.status(400).json({ message: "Falta: " + falta.join(", ") })
 
-  await guardarExpediente(req.scope, exp.id, { estado: "en_revision", enviado_en: new Date(), motivo: null })
+  // Consentimiento expreso para tratar la identificación (LFPDPPP arts. 7-8)
+  if ((req.body as { consentimiento?: unknown } | undefined)?.consentimiento !== true) {
+    return res.status(400).json({ message: "Para enviar necesitas autorizar el uso de tus documentos para la verificación." })
+  }
+
+  const ahora = new Date()
+  await guardarExpediente(req.scope, exp.id, { estado: "en_revision", enviado_en: ahora, consentimiento_en: ahora, motivo: null })
   const logger = req.scope.resolve("logger")
   logger.info(`[verificacion] ${sellerId} envió sus documentos a revisión`)
   res.json(vistaTaller(await leerExpediente(req.scope, sellerId)))

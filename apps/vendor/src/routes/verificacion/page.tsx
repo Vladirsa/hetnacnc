@@ -95,6 +95,7 @@ export default function VerificacionPage() {
   const [msg, setMsg] = useState(null)
   const [subiendo, setSubiendo] = useState("")
   const [enviando, setEnviando] = useState(false)
+  const [autorizo, setAutorizo] = useState(false)
 
   useEffect(() => {
     api("").then(setDatos).catch((e) => setError(e.message))
@@ -131,7 +132,11 @@ export default function VerificacionPage() {
     setMsg(null)
     setEnviando(true)
     try {
-      setDatos(await api("/enviar", { method: "POST" }))
+      setDatos(await api("/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consentimiento: true }),
+      }))
       setMsg({ ok: true, t: "¡Listo! Enviamos tus documentos a revisión." })
     } catch (e) {
       setMsg({ ok: false, t: e.message })
@@ -203,9 +208,20 @@ export default function VerificacionPage() {
       </section>
 
       {editable && (
+        <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, marginBottom: 14, cursor: "pointer" }}>
+          <input type="checkbox" checked={autorizo} onChange={(e) => setAutorizo(e.target.checked)} style={{ marginTop: 3 }} />
+          <span>
+            Autorizo a HETNA CNC a usar mi identificación oficial y las fotos de mi taller únicamente para verificar mi
+            taller, conforme al <a href="https://hetnacnc.com/mx/aviso-de-privacidad" target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>Aviso de privacidad</a>.
+            Puedo retirar esta autorización y pedir que se borren mis documentos en cualquier momento.
+          </span>
+        </label>
+      )}
+
+      {editable && (
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <button type="button" style={{ ...S.btn, opacity: enviando || datos.faltan.length ? 0.6 : 1 }}
-            disabled={enviando || datos.faltan.length > 0} onClick={enviar}>
+          <button type="button" style={{ ...S.btn, opacity: enviando || datos.faltan.length || !autorizo ? 0.6 : 1 }}
+            disabled={enviando || datos.faltan.length > 0 || !autorizo} onClick={enviar}>
             {enviando ? "Enviando..." : "Enviar a revisión"}
           </button>
           {datos.faltan.length > 0 && <span style={{ fontSize: 13, color: "#6B675C" }}>Falta: {datos.faltan.join(" · ")}</span>}

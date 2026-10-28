@@ -1,75 +1,135 @@
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
-import { EMPRESA, medioContacto, responsable, ubicacionEmpresa } from "@/lib/hetna/empresa"
+import { BotonPreferenciasCookies } from "@/components/hetna/AvisoCookies"
+import { contactoPrivacidad, EMPRESA, responsable, ubicacionEmpresa } from "@/lib/hetna/empresa"
+import { avisoEn, avisoEs, HISTORIAL, type Bloque, type Datos } from "@/lib/hetna/legal/aviso-privacidad"
+import { idiomaServidor } from "@/lib/helpers/idioma-servidor"
 
-export const metadata: Metadata = {
-  title: "Aviso de privacidad",
-  description: "Aviso de privacidad integral de HETNA CNC: qué datos personales recabamos, para qué los usamos y cómo ejercer tus derechos ARCO.",
+// El texto vive en src/lib/hetna/legal/aviso-privacidad.ts (español e inglés).
+// Esta página solo elige el idioma y lo dibuja.
+
+export async function generateMetadata(): Promise<Metadata> {
+  const en = (await idiomaServidor()) === "en"
+  return en
+    ? {
+        title: "Privacy Notice",
+        description:
+          "HETNA CNC privacy notice: what personal data we collect, why, who we share it with, cookies, and how to exercise your rights in Mexico, the United States and Latin America.",
+      }
+    : {
+        title: "Aviso de privacidad",
+        description:
+          "Aviso de privacidad integral de HETNA CNC: qué datos recabamos, para qué, con quién los compartimos, cookies y cómo ejercer tus derechos en México, Estados Unidos y Latinoamérica.",
+      }
 }
 
-export default function AvisoDePrivacidad() {
+const datos = (): Datos => ({
+  responsable: responsable(),
+  domicilio: EMPRESA.domicilioCompleto || ubicacionEmpresa(),
+  rfc: EMPRESA.rfc,
+  correo: contactoPrivacidad(),
+  whatsapp: EMPRESA.whatsappVisible,
+})
+
+function Tabla({ cab, filas }: { cab: string[]; filas: string[][] }) {
   return (
-    <PaginaInfo etiqueta="Legal" titulo="Aviso de privacidad" resumen="Cómo tratamos tus datos personales." actualizado>
-      <h2>Responsable</h2>
-      <p>
-        {responsable()}, con domicilio en {EMPRESA.domicilioCompleto || ubicacionEmpresa()}
-        {EMPRESA.rfc ? ` y RFC ${EMPRESA.rfc}` : ""}, es responsable del tratamiento de tus datos personales conforme a la Ley
-        Federal de Protección de Datos Personales en Posesión de los Particulares.
+    <div className="not-prose my-4 overflow-x-auto rounded-xl border border-[#E7E4DC]">
+      <table className="w-full min-w-[560px] text-left text-sm">
+        <thead className="bg-[#F3F1EA] text-[#142033]">
+          <tr>
+            {cab.map((c) => (
+              <th key={c} className="px-3 py-2 font-semibold">{c}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((f) => (
+            <tr key={f[0]} className="border-t border-[#E7E4DC] align-top">
+              {f.map((c, i) => (
+                <td key={i} className={`px-3 py-2 ${i === 0 ? "font-medium text-[#142033]" : "text-[#40403A]"}`}>{c}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function Bloques({ bloques }: { bloques: Bloque[] }) {
+  return (
+    <>
+      {bloques.map((b, i) => {
+        if ("p" in b) return <p key={i}>{b.p}</p>
+        if ("ul" in b)
+          return (
+            <ul key={i}>
+              {b.ul.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          )
+        if ("tabla" in b) return <Tabla key={i} cab={b.tabla.cab} filas={b.tabla.filas} />
+        if ("nota" in b) return <p key={i} className="text-sm italic text-[#6B6A63]">{b.nota}</p>
+        return (
+          <p key={i}>
+            <BotonPreferenciasCookies className="rounded-lg border border-[#142033] px-4 py-2 text-sm font-semibold text-[#142033] hover:bg-[#142033] hover:text-white" />
+          </p>
+        )
+      })}
+    </>
+  )
+}
+
+export default async function AvisoDePrivacidad() {
+  const en = (await idiomaServidor()) === "en"
+  const secciones = en ? avisoEn(datos()) : avisoEs(datos())
+
+  return (
+    <PaginaInfo
+      etiqueta={en ? "Legal" : "Legal"}
+      titulo={en ? "Privacy Notice" : "Aviso de privacidad"}
+      resumen={
+        en
+          ? "How HETNA CNC collects, uses and protects your personal data in Mexico, the United States and Latin America."
+          : "Cómo HETNA CNC recaba, usa y protege tus datos personales en México, Estados Unidos y Latinoamérica."
+      }
+    >
+      <p className="text-sm text-[#6B6A63]">
+        {en
+          ? `Version ${EMPRESA.privacidadVersion} · Effective ${EMPRESA.privacidadVigencia.en}`
+          : `Versión ${EMPRESA.privacidadVersion} · Vigente desde el ${EMPRESA.privacidadVigencia.es}`}
       </p>
 
-      <h2>Datos que recabamos</h2>
+      <nav aria-label={en ? "Contents" : "Contenido"} className="not-prose my-6 rounded-xl border border-[#E7E4DC] bg-white p-4">
+        <p className="mb-2 text-sm font-bold text-[#142033]">{en ? "Contents" : "Contenido"}</p>
+        <ol className="grid gap-1 text-sm sm:grid-cols-2">
+          {secciones.map((s) => (
+            <li key={s.id}>
+              <a href={`#${s.id}`} className="text-[#B34D07] hover:underline">{s.titulo}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {secciones.map((s) => (
+        <section key={s.id} id={s.id} className="scroll-mt-24">
+          <h2>{s.titulo}</h2>
+          <Bloques bloques={s.bloques} />
+        </section>
+      ))}
+
+      <h2>{en ? "Version history" : "Historial de versiones"}</h2>
       <ul>
-        <li>Identificación y contacto: nombre, correo electrónico, teléfono y ciudad.</li>
-        <li>Entrega: dirección de envío y código postal.</li>
-        <li>Compras y cotizaciones: productos comprados, descripción de trabajos solicitados y archivos que compartas.</li>
-        <li>Para talleres y vendedores: datos del negocio, servicios, máquinas y datos para recibir pagos.</li>
-        <li>Datos de navegación necesarios para que el sitio funcione.</li>
+        {HISTORIAL.map((h) => (
+          <li key={h.version}>
+            {h.version} · {h.fecha}
+            {" · "}
+            {en ? h.cambioEn : h.cambio}
+          </li>
+        ))}
       </ul>
-      <p>
-        No recabamos datos personales sensibles. Los datos de tu tarjeta los procesa directamente Mercado Pago; HETNA no los
-        recibe ni los guarda.
-      </p>
-
-      <h2>Para qué los usamos</h2>
-      <p>Finalidades necesarias:</p>
-      <ul>
-        <li>Procesar tus compras, pagos, envíos, devoluciones y facturación.</li>
-        <li>Atender tus solicitudes de cotización y hacerlas llegar a los talleres (sin compartir tus datos de contacto con ellos).</li>
-        <li>Crear y administrar tu cuenta de cliente o de vendedor.</li>
-        <li>Darte atención y soporte, y cumplir obligaciones legales.</li>
-      </ul>
-      <p>Finalidades adicionales (puedes negarte):</p>
-      <ul>
-        <li>Enviarte promociones, novedades y contenido de HETNA CNC.</li>
-        <li>Hacer estadísticas para mejorar el sitio.</li>
-      </ul>
-      <p>Si no quieres que usemos tus datos para las finalidades adicionales, escríbenos por {medioContacto()}.</p>
-
-      <h2>Con quién los compartimos</h2>
-      <ul>
-        <li>Paqueterías, a través de Envíos HETNA, para entregar tus pedidos.</li>
-        <li>Mercado Pago, para procesar los pagos.</li>
-        <li>El taller o vendedor que atiende tu pedido, solo con los datos necesarios para fabricarlo y enviarlo.</li>
-        <li>Proveedores de servicios tecnológicos (alojamiento, correo electrónico) que nos ayudan a operar el sitio.</li>
-        <li>Autoridades, cuando la ley lo requiera.</li>
-      </ul>
-
-      <h2>Derechos ARCO y revocación</h2>
-      <p>
-        Puedes Acceder a tus datos, Rectificarlos, Cancelarlos u Oponerte a su uso, así como revocar tu consentimiento o
-        limitar su uso. Envía tu solicitud por {medioContacto()} con tu nombre, el derecho que quieres ejercer y una
-        identificación. Te responderemos en un plazo máximo de 20 días hábiles.
-      </p>
-
-      <h2>Cookies</h2>
-      <p>
-        Usamos cookies y tecnologías similares para mantener tu sesión, tu carrito y tus preferencias. Puedes desactivarlas
-        en tu navegador, aunque algunas funciones del sitio podrían dejar de funcionar.
-      </p>
-
-      <h2>Cambios a este aviso</h2>
-      <p>Cualquier cambio lo publicaremos en esta misma página, con su fecha de actualización.</p>
     </PaginaInfo>
   )
 }

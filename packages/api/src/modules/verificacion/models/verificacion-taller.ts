@@ -25,6 +25,9 @@ const VerificacionTaller = model
     enviado_en: model.dateTime().nullable(),
     revisado_en: model.dateTime().nullable(),
     revisado_por: model.text().nullable(),
+    // Consentimiento expreso del taller para tratar su identificación y fotos
+    // (LFPDPPP arts. 7-8): fecha en que marcó la casilla al enviar a revisión.
+    consentimiento_en: model.dateTime().nullable(),
   })
   .indexes([
     { on: ["seller_id"], unique: true },

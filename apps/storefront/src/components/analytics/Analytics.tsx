@@ -1,16 +1,30 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
-// Carga GA4 y/o Meta Pixel solo si sus IDs están configurados en el entorno.
-// Sin esas variables este componente no renderiza nada (no pesa ni un byte
-// para los visitantes mientras no se activen).
-// VELOCIDAD: se usa strategy="lazyOnload" para que estos scripts se descarguen
-// cuando la página ya terminó de cargar y el navegador está libre. Así no
-// compiten con la tienda en los primeros segundos (clave en celular).
+import { EVENTO_CONSENTIMIENTO, permiteRastreo } from '@/lib/hetna/consentimiento';
+
+// Carga GA4 y/o Meta Pixel solo si:
+//   1) sus IDs están configurados en el entorno, y
+//   2) la persona aceptó las cookies de estadística y publicidad
+//      (y su navegador no manda Global Privacy Control / Do Not Track).
+// Sin eso no renderiza nada. Ver src/lib/hetna/consentimiento.ts y el aviso
+// de privacidad (sección Cookies).
+// VELOCIDAD: strategy="lazyOnload" para que no compitan con la tienda al cargar.
 export function Analytics() {
   const ga4Id = process.env.NEXT_PUBLIC_GA4_ID;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const [permitido, setPermitido] = useState(false);
 
-  if (!ga4Id && !metaPixelId) return null;
+  useEffect(() => {
+    setPermitido(permiteRastreo());
+    const alCambiar = () => setPermitido(permiteRastreo());
+    window.addEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
+    return () => window.removeEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
+  }, []);
+
+  if (!permitido || (!ga4Id && !metaPixelId)) return null;
 
   return (
     <>
