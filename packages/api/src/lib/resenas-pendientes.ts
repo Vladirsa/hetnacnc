@@ -65,8 +65,9 @@ export async function productosResenadosPor(
     filters: { customer_id: customerId },
   })
 
-  const idsResenas = (suyas || [])
-    .map((e: { review?: { id?: string } }) => e.review?.id)
+  // Con los tipos generados del VPS, `review` puede venir null
+  const idsResenas = ((suyas || []) as unknown as { review?: { id?: string } | null }[])
+    .map((e) => e.review?.id)
     .filter(Boolean) as string[]
 
   if (!idsResenas.length) return new Set()
