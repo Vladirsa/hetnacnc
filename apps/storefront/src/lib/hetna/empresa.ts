@@ -3,20 +3,28 @@
 export const EMPRESA = {
   nombreComercial: "HETNA CNC",
   // Nombre o razón social del responsable (persona física o moral). PENDIENTE de Vlado.
-  razonSocial: "",
+  razonSocial: "Roberto Rivera Sanchez",
+  // Tipo de persona del responsable. Cuando se constituya la persona moral, cambiar
+  // a "moral", poner su razón social arriba y su RFC.
+  tipoPersona: "física" as "física" | "moral",
   // RFC: solo si se quiere publicar. PENDIENTE.
   rfc: "",
   // Correo oficial único. PENDIENTE: mientras esté vacío se usa WhatsApp.
-  correo: "",
+  correo: "contacto@hetnacnc.com",
   // Correo para solicitudes de datos personales (derechos ARCO, privacidad).
   // PENDIENTE de Vlado: crear p. ej. privacidad@hetnacnc.com. Vacío = usa `correo` o WhatsApp.
-  correoPrivacidad: "",
+  correoPrivacidad: "contacto@hetnacnc.com",
   // Domicilio a mostrar. Mínimo ciudad y estado.
   ciudad: "Apizaco",
   estado: "Tlaxcala",
-  domicilioCompleto: "", // PENDIENTE (requerido para el aviso de privacidad definitivo)
+  // Por seguridad no se publica calle ni número de un domicilio particular. Ver
+  // "Paquete legal" (pregunta al abogado: domicilio para oír y recibir notificaciones).
+  domicilioCompleto: "Col. Centro, Apizaco, Tlaxcala, México",
   whatsapp: "522461217072",
   whatsappVisible: "+52 246 121 7072",
+  // Teléfono de atención (llamadas)
+  telefono: "522217076014",
+  telefonoVisible: "+52 221 707 6014",
   horario: "Lunes a viernes de 9:00 a 18:00 h (hora del centro de México)",
   sitio: "https://hetnacnc.com",
   redes: [
@@ -32,7 +40,7 @@ export const EMPRESA = {
   diasDevolucion: 5, // días hábiles desde la entrega, productos físicos sin uso
   actualizado: "7 de octubre de 2026",
   // Aviso de privacidad: versión y fecha en que entra en vigor (cambiar ambas al modificarlo)
-  privacidadVersion: "2.0",
+  privacidadVersion: "2.1",
   privacidadVigencia: { es: "28 de octubre de 2026", en: "October 28, 2026" },
 }
 
@@ -41,9 +49,19 @@ export const ubicacionEmpresa = () => `${EMPRESA.ciudad}, ${EMPRESA.estado}, Mé
 export const responsable = () =>
   EMPRESA.razonSocial ? `${EMPRESA.razonSocial} (${EMPRESA.nombreComercial})` : EMPRESA.nombreComercial
 
+// "Roberto Rivera Sanchez, persona física, quien opera HETNA CNC"
+export const responsableLegal = (idioma: "es" | "en" = "es") =>
+  !EMPRESA.razonSocial
+    ? EMPRESA.nombreComercial
+    : EMPRESA.tipoPersona === "física"
+      ? idioma === "en"
+        ? `${EMPRESA.razonSocial}, an individual doing business as ${EMPRESA.nombreComercial}`
+        : `${EMPRESA.razonSocial}, persona física que opera ${EMPRESA.nombreComercial}`
+      : `${EMPRESA.razonSocial} (${EMPRESA.nombreComercial})`
+
 export const medioContacto = () =>
   EMPRESA.correo
-    ? `el correo ${EMPRESA.correo} o WhatsApp ${EMPRESA.whatsappVisible}`
+    ? `el correo ${EMPRESA.correo}, WhatsApp ${EMPRESA.whatsappVisible} o el teléfono ${EMPRESA.telefonoVisible}`
     : `WhatsApp ${EMPRESA.whatsappVisible}`
 
 // Medio para ejercer derechos sobre datos personales
