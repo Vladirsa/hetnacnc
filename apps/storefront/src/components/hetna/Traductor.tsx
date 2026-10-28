@@ -39,6 +39,12 @@ const traducir = (texto: string): string | null => {
   for (const [re, reemplazo] of REGLAS) {
     if (re.test(limpio)) return texto.replace(limpio, limpio.replace(re, reemplazo))
   }
+  // Títulos tipo "Corte láser | HETNA CNC": se traduce cada parte por separado
+  if (limpio.includes(" | ")) {
+    const partes = limpio.split(" | ")
+    const nuevas = partes.map((p) => (EN as Record<string, string>)[p] ?? p)
+    if (nuevas.some((p, i) => p !== partes[i])) return texto.replace(limpio, nuevas.join(" | "))
+  }
   return null
 }
 

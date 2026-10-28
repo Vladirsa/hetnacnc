@@ -1,9 +1,30 @@
 export const toHreflang = (code: string): string => {
   const map: Record<string, string> = {
-    us: "en-US",
+    // HETNA: todas las versiones por país hoy se sirven en español. Sin este
+    // mapa Google recibía "mx", "ar", "bo", "co"... (que no son idiomas, o son
+    // árabe, tibetano, corso) y "en-US"/"en-CA" para páginas que están en español.
+    mx: "es-MX",
+    ar: "es-AR",
+    bo: "es-BO",
+    cl: "es-CL",
+    co: "es-CO",
+    cr: "es-CR",
+    do: "es-DO",
+    ec: "es-EC",
+    sv: "es-SV",
+    gt: "es-GT",
+    hn: "es-HN",
+    ni: "es-NI",
+    pa: "es-PA",
+    py: "es-PY",
+    pe: "es-PE",
+    uy: "es-UY",
+    ve: "es-VE",
+    pr: "es-PR",
+    us: "es-US",
+    ca: "es-CA",
     gb: "en-GB",
     au: "en-AU",
-    ca: "en-CA",
     ie: "en-IE",
     pl: "pl-PL",
     de: "de-DE",
