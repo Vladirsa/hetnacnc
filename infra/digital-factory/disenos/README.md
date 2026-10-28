@@ -89,3 +89,28 @@ python3 subir_al_pipeline.py
 El SKU lo arma el workflow con la hora al segundo, por eso el script deja
 3 segundos entre altas. Si mandas dos fichas en el mismo segundo, las dos
 terminan con el mismo SKU.
+
+## Publicar en la tienda
+
+Una ficha en `READY_FOR_REVIEW` se publica desde el formulario del workflow
+**HETNA Digital Factory - Publicar producto aprobado** en n8n: se escribe el
+SKU y listo. El workflow:
+
+1. busca la ficha y revisa que traiga el archivo respaldado en B2 y un precio
+   que no pida revisión;
+2. llama `POST /admin/disenos-digitales/publicar` (packages/api), que crea el
+   producto en el catálogo con su imagen, categoría y etiquetas, y la
+   **oferta** de la tienda HETNA con el precio;
+3. marca la ficha `PUBLISHED` con el id del producto;
+4. avisa por Telegram con la liga.
+
+En Mercur el precio vive en la oferta, no en la variante. Un producto sin
+oferta sale en el catálogo pero no se puede comprar, que era lo que habría
+hecho la versión vieja del workflow.
+
+La categoría se busca por nombre: primero la `subcategoria` de la ficha y
+luego la `categoria`. Si no existe ninguna en el catálogo el producto sale sin
+categoría, y el aviso de Telegram lo dice para asignarla en el panel.
+
+El precio en dólares (tienda `/us`) sale del de pesos con
+`TIPO_CAMBIO_USD_MXN` (18 si no está), terminado en .99 y nunca menos de 1.99.

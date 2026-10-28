@@ -510,8 +510,21 @@ export type Routes = {
             };
         };
         abandonedCarts: typeof import("../src/api/admin/abandoned-carts/route");
+        cam: {
+            jobs: typeof import("../src/api/admin/cam/jobs/route") & {
+                $id: typeof import("../src/api/admin/cam/jobs/[id]/route") & {
+                    deliverables: typeof import("../src/api/admin/cam/jobs/[id]/deliverables/route");
+                    files: {
+                        $fileId: typeof import("../src/api/admin/cam/jobs/[id]/files/[file_id]/route");
+                    };
+                };
+            };
+        };
         courses: typeof import("../src/api/admin/courses/route");
         custom: typeof import("../src/api/admin/custom/route");
+        disenosDigitales: {
+            publicar: typeof import("../src/api/admin/disenos-digitales/publicar/route");
+        };
         learningArticles: typeof import("../src/api/admin/learning-articles/route");
     };
     auth: {
@@ -643,6 +656,17 @@ export type Routes = {
                 calculate: typeof import("@medusajs/medusa/api/store/shipping-options/[id]/calculate/route");
             };
         };
+        cam: {
+            convert: typeof import("../src/api/store/cam/convert/route");
+            jobs: typeof import("../src/api/store/cam/jobs/route") & {
+                $id: typeof import("../src/api/store/cam/jobs/[id]/route") & {
+                    cart: typeof import("../src/api/store/cam/jobs/[id]/cart/route");
+                    files: {
+                        $fileId: typeof import("../src/api/store/cam/jobs/[id]/files/[file_id]/route");
+                    };
+                };
+            };
+        };
         cotizador: {
             calcular: typeof import("../src/api/store/cotizador/calcular/route");
             cotizaciones: typeof import("../src/api/store/cotizador/cotizaciones/route") & {
@@ -660,6 +684,7 @@ export type Routes = {
             saldo: typeof import("../src/api/store/creditos-3d/saldo/route");
         };
         custom: typeof import("../src/api/store/custom/route");
+        envioGratis: typeof import("../src/api/store/envio-gratis/route");
         envios: {
             cotizacion: {
                 $id: typeof import("../src/api/store/envios/cotizacion/[id]/route");
@@ -676,12 +701,18 @@ export type Routes = {
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
+        packs: typeof import("../src/api/store/packs/route");
         quoteLeads: typeof import("../src/api/store/quote-leads/route");
+        resenas: typeof import("../src/api/store/resenas/route") & {
+            pendientes: typeof import("../src/api/store/resenas/pendientes/route");
+            promedios: typeof import("../src/api/store/resenas/promedios/route");
+        };
         solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
             $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
                 elegir: typeof import("../src/api/store/solicitudes-taller/[token]/elegir/route");
             };
         };
+        vistas: typeof import("../src/api/store/vistas/route");
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core/api/vendor/campaigns/route") & {
@@ -968,7 +999,6 @@ export type Routes = {
         };
         stores: typeof import("@mercurjs/core/api/vendor/stores/route");
         uploads: typeof import("@mercurjs/core/api/vendor/uploads/route");
-        analytics: typeof import("../src/api/vendor/analytics/route");
         courses: typeof import("../src/api/vendor/courses/route") & {
             $id: typeof import("../src/api/vendor/courses/[id]/route") & {
                 sections: typeof import("../src/api/vendor/courses/[id]/sections/route") & {
@@ -986,10 +1016,20 @@ export type Routes = {
                 propuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/propuesta/route");
             };
         };
+        hetnaVolumen: typeof import("../src/api/vendor/hetna-volumen/route");
+        tablero: typeof import("../src/api/vendor/tablero/route") & {
+            meta: typeof import("../src/api/vendor/tablero/meta/route");
+        };
     };
     api: {
+        cotizadorSuscripcion: typeof import("../src/api/api/cotizador-suscripcion/route") & {
+            cancelar: typeof import("../src/api/api/cotizador-suscripcion/cancelar/route");
+            verificar: typeof import("../src/api/api/cotizador-suscripcion/verificar/route");
+        };
         mpEnvio: typeof import("../src/api/api/mp-envio/route");
         mpLicitacion: typeof import("../src/api/api/mp-licitacion/route");
+        mpSuscripcion: typeof import("../src/api/api/mp-suscripcion/route");
+        paypalSuscripcion: typeof import("../src/api/api/paypal-suscripcion/route");
     };
     cotizacion: {
         $token: typeof import("../src/api/cotizacion/[token]/route");

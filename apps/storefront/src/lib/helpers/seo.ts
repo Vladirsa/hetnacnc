@@ -31,9 +31,20 @@ export const generateProductMetadata = async (
     locales,
   })
 
+  // Las fichas de HETNA Digital Factory traen su propio título SEO y meta
+  // description (metadata.seo_title / metadata.meta_description). Sin ellos se
+  // usa el subtítulo, y al final el título del producto como antes.
+  const meta = (product?.metadata || {}) as Record<string, unknown>
+  const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : "")
+  const titulo = texto(meta.seo_title) || product?.title
+  const descripcion =
+    texto(meta.meta_description) ||
+    texto(product?.subtitle) ||
+    `${product?.title} - ${process.env.NEXT_PUBLIC_SITE_NAME}`
+
   return {
-    title: product?.title,
-    description: `${product?.title} - ${process.env.NEXT_PUBLIC_SITE_NAME}`,
+    title: titulo,
+    description: descripcion,
     robots: "index, follow",
     metadataBase: new URL(baseUrl),
     alternates: {
@@ -42,8 +53,8 @@ export const generateProductMetadata = async (
     },
 
     openGraph: {
-      title: product?.title,
-      description: `${product?.title} - ${process.env.NEXT_PUBLIC_SITE_NAME}`,
+      title: titulo,
+      description: descripcion,
       url: canonical,
       siteName: process.env.NEXT_PUBLIC_SITE_NAME,
       images: [
@@ -60,8 +71,8 @@ export const generateProductMetadata = async (
     },
     twitter: {
       card: "summary_large_image",
-      title: product?.title,
-      description: `${product?.title} - ${process.env.NEXT_PUBLIC_SITE_NAME}`,
+      title: titulo,
+      description: descripcion,
       images: [
         product?.thumbnail || `${protocol}://${host}/images/placeholder.svg`,
       ],
