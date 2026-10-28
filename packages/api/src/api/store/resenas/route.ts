@@ -1,7 +1,6 @@
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createReviewWorkflow } from "@mercurjs/core/workflows"
-import { MercurModules } from "@mercurjs/types"
 
 // Reseñas de producto para la tienda.
 //
