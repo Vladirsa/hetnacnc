@@ -20,8 +20,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
+  // "product_review" es el alias de consulta del vínculo (aliasA_aliasB, como
+  // product_sales_channel), NO el nombre de su tabla en la base. Con el nombre de
+  // la tabla, Medusa contesta "Service with alias ... was not found".
   const { data: enlaces } = await query.graph({
-    entity: "product_product_review_review",
+    entity: "product_review",
     fields: ["product_id", "review.rating", "review.status"],
     filters: { product_id: ids },
   })

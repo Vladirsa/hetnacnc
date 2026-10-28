@@ -43,7 +43,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   // El producto no es una columna de la reseña: se llega por el enlace del
   // módulo. Así es como Mercur une reseña y producto.
   const { data: enlaces } = await query.graph({
-    entity: "product_product_review_review",
+    entity: "product_review",
     fields: [
       "review.id",
       "review.rating",
@@ -55,8 +55,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     filters: { product_id: productId },
   })
 
-  const todas = (enlaces || [])
-    .map((e: { review?: Resena }) => e.review)
+  const todas = ((enlaces || []) as unknown as { review?: Resena }[])
+    .map((e) => e.review)
     .filter((r): r is Resena => !!r && r.status === "published")
     .sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

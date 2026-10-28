@@ -59,7 +59,7 @@ export async function productosResenadosPor(
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
   const { data: suyas } = await query.graph({
-    entity: "customer_customer_review_review",
+    entity: "customer_review",
     fields: ["review.id"],
     filters: { customer_id: customerId },
   })
@@ -71,7 +71,7 @@ export async function productosResenadosPor(
   if (!idsResenas.length) return new Set()
 
   const { data: enlaces } = await query.graph({
-    entity: "product_product_review_review",
+    entity: "product_review",
     fields: ["product_id", "review_id"],
     filters: { review_id: idsResenas },
   })

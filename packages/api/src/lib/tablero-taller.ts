@@ -348,7 +348,7 @@ export async function resenasDelTaller(
 
   try {
     const { data } = await query.graph({
-      entity: "product_product_review_review",
+      entity: "product_review",
       fields: ["product_id", "review.rating", "review.status"],
       filters: { product_id: productoIds },
     })
