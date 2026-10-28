@@ -425,3 +425,30 @@ publicidad (crear/pausar anuncios según ventas), SEO programático
 (landing pages por servicio×ciudad), scraping de precios de competidores,
 generación de videos para YouTube. Cada uno es un workflow nuevo dentro
 del mismo n8n — no hace falta tocar el servidor otra vez.
+
+## Diseños digitales: de la ficha a las redes
+
+Viven en n8n (no exportados aquí, salvo el de alta). Cómo se encadenan:
+
+1. **HETNA Digital Factory - Alta de diseno generado por agente** (webhook):
+   sube el ZIP a B2, crea la fila en la tabla `digital_factory_productos`,
+   calcula precio y genera la imagen. La ficha queda `READY_FOR_REVIEW`.
+2. **HETNA Digital Factory - Publicar producto aprobado** (formulario,
+   **inactivo a propósito**): el formulario no pide contraseña, así que no se
+   deja activo en producción. Se usa desde el editor de n8n con *Test
+   workflow*. Pide el SKU y "¿Publicar gratis?", llama
+   `POST /admin/disenos-digitales/publicar` (packages/api), marca la ficha
+   `PUBLISHED`, avisa por Telegram al administrador y, si el producto es
+   nuevo, lo anuncia en redes y lo anota en `redes_disenos_anunciados`.
+3. **Redes - Contenido nuevo** (webhook `redes-contenido-nuevo`, con la
+   cabecera `x-hetna-token`): publica en el canal de Telegram `@hetna_cnc` y
+   en la página de Facebook. Temas del foro y licitaciones van como texto;
+   los diseños (`tipo: "diseno"`) van con foto.
+4. **Redes - Un diseño al día** (todos los días 11:07, hora de México): toma
+   la ficha `PUBLISHED` más antigua que no esté en `redes_disenos_anunciados`,
+   la anuncia por el mismo webhook y la anota. Así lo publicado antes de que
+   existiera el anuncio, o lo que falló al anunciarse, sale de a uno por día
+   en vez de llenar el canal de golpe.
+
+Para no anunciar algo, basta con meter su SKU en `redes_disenos_anunciados`
+antes de las 11:07.
