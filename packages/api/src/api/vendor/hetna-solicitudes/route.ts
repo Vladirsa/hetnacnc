@@ -10,6 +10,11 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const sellerId = (req as any).seller_context?.seller_id as string | undefined
   if (!sellerId) return res.status(401).json({ message: "Sin taller." })
 
+  // Filtros del panel: por servicio y por estado de entrega. Sólo acotan lo
+  // que está por cotizar; lo que el taller ya cotizó sale siempre.
+  const servicio = String(req.query.servicio || "").trim().slice(0, 80)
+  const estadoMx = String(req.query.estado_mx || "").trim().slice(0, 60)
+
   await asegurarTablas(knex)
   const filas = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
@@ -18,7 +23,21 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .where((q: any) =>
       q
         .where((a: any) => a.where("s.modo", "abierta").orWhere("s.taller_id", sellerId))
-        .andWhere((a: any) => a.where("s.estado", "abierta").orWhereNotNull("p.id"))
+        // Por cotizar = abierta y sin pasar su fecha de cierre (ver
+        // recibePropuestas). Lo ya cotizado se ve siempre, aunque haya cerrado.
+        .andWhere((a: any) =>
+          a
+            .where((x: any) =>
+              x
+                .where("s.estado", "abierta")
+                .andWhere((c: any) => c.whereNull("s.cierra_en").orWhere("s.cierra_en", ">", knex.fn.now()))
+                .modify((c: any) => {
+                  if (servicio) c.whereRaw("s.trabajo->>'servicio' = ?", [servicio])
+                  if (estadoMx) c.whereRaw("s.trabajo->>'estado_mx' = ?", [estadoMx])
+                })
+            )
+            .orWhereNotNull("p.id")
+        )
     )
     .orderBy("s.created_at", "desc")
     .limit(100)

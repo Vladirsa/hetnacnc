@@ -3,19 +3,9 @@
 import { useState } from "react"
 
 import { enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
-const SERVICIOS = [
-  "Corte CNC",
-  "Corte láser",
-  "Corte plasma",
-  "Grabado",
-  "Fresado de madera",
-  "Fresado de metal",
-  "Maquinado",
-  "Impresión 3D",
-  "Diseño CAD/CAM",
-  "Otro",
-]
+const SERVICIOS = SERVICIOS_SOLICITUD
 
 const ESTADOS = [
   "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",

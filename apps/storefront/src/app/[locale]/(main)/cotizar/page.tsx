@@ -7,7 +7,7 @@ import { tallerPorHandle } from "@/lib/hetna/talleres"
 export const metadata: Metadata = {
   title: "Solicitar cotización CNC",
   description:
-    "Cotiza corte láser, router CNC, grabado y maquinado con talleres de México. Describe tu trabajo y recibe tu cotización por correo.",
+    "Cotiza corte láser, router CNC, grabado y maquinado con talleres de México. Describe tu trabajo y recibe propuestas de talleres para comparar y elegir.",
 }
 
 const CALCULADORAS = [
@@ -40,8 +40,9 @@ export default async function CotizarPage({
             {t ? `Cotiza con ${t.nombre}` : "Solicita tu cotización"}
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
-            Describe tu trabajo y te enviamos la cotización por correo. El pago y el envío se hacen
-            dentro de HETNA, con Envíos HETNA.
+            {t
+              ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
+              : "Describe tu trabajo y los talleres de la red te mandan propuestas durante 7 días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA."}
           </p>
         </header>
 

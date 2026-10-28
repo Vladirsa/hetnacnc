@@ -43,9 +43,17 @@ export const asegurarTablas = async (knex: any) => {
     })
   }
   // Columnas de pago (se agregan solas si faltan)
-  for (const [col, tipo] of [["pago_url", "text"], ["pago_estado", "text"], ["pago_id", "text"], ["pago_monto", "decimal"]] as const) {
+  // aviso_cierre: cuándo se le avisó al cliente (o a HETNA) que la solicitud
+  // cerró a propuestas nuevas. Evita mandar el aviso dos veces.
+  for (const [col, tipo] of [["pago_url", "text"], ["pago_estado", "text"], ["pago_id", "text"], ["pago_monto", "decimal"], ["aviso_cierre", "fecha"]] as const) {
     if (!(await knex.schema.hasColumn(T_SOLICITUD, col))) {
-      await knex.schema.alterTable(T_SOLICITUD, (t: any) => (tipo === "decimal" ? t.decimal(col, 12, 2).nullable() : t.text(col).nullable()))
+      await knex.schema.alterTable(T_SOLICITUD, (t: any) =>
+        tipo === "decimal"
+          ? t.decimal(col, 12, 2).nullable()
+          : tipo === "fecha"
+            ? t.timestamp(col, { useTz: true }).nullable()
+            : t.text(col).nullable()
+      )
     }
   }
   listo = true
@@ -111,6 +119,53 @@ export const folioTexto = (n: number | string) => `HET-${String(n).padStart(5, "
 export const STORE_URL = (process.env.STOREFRONT_URL || "https://hetnacnc.com").replace(/\/$/, "")
 export const VENDOR_URL = (process.env.VENDOR_PANEL_URL || "https://hetnacnc.com/seller").replace(/\/$/, "")
 export const ligaPropuestas = (token: string) => `${STORE_URL}/mx/cotizar/propuestas/${token}`
+// Página pública del trabajo (sin datos del cliente): /mx/trabajos/HET-00012
+export const ligaTrabajo = (folio: number | string) => `${STORE_URL}/mx/trabajos/${folioTexto(folio)}`
+
+// "HET-00012", "het-12" o "12" -> 12. null si no es un folio.
+export const numeroDeFolio = (texto: string): number | null => {
+  const m = String(texto || "").trim().match(/^(?:het-?)?0*(\d{1,9})$/i)
+  return m ? Number(m[1]) : null
+}
+
+// Una solicitud recibe propuestas nuevas mientras está abierta y no pasa su
+// fecha de cierre. Pasada la fecha ya no entran propuestas, pero el cliente
+// puede seguir eligiendo entre las que le llegaron: por eso el cierre no
+// cambia el estado a "cerrada" cuando ya hay propuestas.
+export const recibePropuestas = (s: { estado: string; cierra_en?: Date | string | null }) =>
+  s.estado === "abierta" && (!s.cierra_en || new Date(s.cierra_en).getTime() > Date.now())
+
+// Lo que se puede enseñar en público de una solicitud abierta: el trabajo, sin
+// nombre, correo, teléfono, archivo ni presupuesto. El presupuesto se queda
+// entre el cliente y los talleres: publicarlo le pone piso a todas las
+// propuestas.
+export const trabajoPublico = (s: {
+  folio: number
+  estado: string
+  trabajo: Trabajo
+  cierra_en?: Date | string | null
+  created_at: Date | string
+  propuestas?: number
+}) => {
+  const t = s.trabajo || ({} as Trabajo)
+  return {
+    folio: folioTexto(s.folio),
+    estado: recibePropuestas(s) ? "abierta" : s.estado === "elegida" || s.estado === "pagada" ? "asignada" : "cerrada",
+    servicio: t.servicio || "",
+    material: t.material || "",
+    cantidad: t.cantidad || "",
+    medidas: t.medidas || "",
+    fecha: t.fecha || "",
+    frecuencia: t.frecuencia || "",
+    ciudad: t.ciudad || "",
+    estado_mx: t.estado_mx || "",
+    acepta_envio: t.acepta_envio || "",
+    descripcion: ocultarContacto(t.descripcion || "").slice(0, 1200),
+    creada: s.created_at,
+    cierra_en: s.cierra_en ?? null,
+    propuestas: s.propuestas ?? 0,
+  }
+}
 
 // Plan del taller (para ordenar propuestas: los talleres con membresía salen primero).
 const PESO_PLAN: Record<string, number> = { industrial: 3, pro: 2, taller: 1 }
@@ -189,6 +244,7 @@ export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
 export const ocultarContacto = (s: string) =>
   s
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[contacto oculto]")
-    .replace(/(?:\+?\d[\s.-]?){8,}/g, "[contacto oculto]")
+    // Termina en dígito para no comerse el espacio que sigue al número.
+    .replace(/\+?\d(?:[\s.-]?\d){7,}/g, "[contacto oculto]")
     .replace(/\b(?:https?:\/\/|www\.)\S+/gi, "[liga oculta]")
     .replace(/\b(wa\.me|whats\s?app|watsap|telegram|facebook\.com|instagram)\S*/gi, "[contacto oculto]")

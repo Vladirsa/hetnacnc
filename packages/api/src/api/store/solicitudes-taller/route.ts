@@ -13,6 +13,7 @@ import {
   fila,
   folioTexto,
   ligaPropuestas,
+  ligaTrabajo,
   marco,
   nuevoId,
   nuevoToken,
@@ -111,6 +112,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   // Guardar
   const token = nuevoToken()
   let folio = ""
+  let folioNum = 0
   try {
     await asegurarTablas(knex)
     const [fila0] = await knex(T_SOLICITUD)
@@ -124,6 +126,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         cierra_en: new Date(Date.now() + DIAS_ABIERTA * 864e5),
       })
       .returning(["folio"])
+    folioNum = Number(fila0.folio)
     folio = folioTexto(fila0.folio)
   } catch (e) {
     logger.error(`[licitacion] no se pudo guardar la solicitud: ${(e as Error).message}`)
@@ -200,10 +203,21 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         .modify((q: any) => (taller ? q.whereNot({ id: taller.id }) : q))
         .limit(500)
         .select("email", "metadata")) as { email: string; metadata: any }[]
-      for (const s of otros) {
+      // "Otro" no es un servicio que un taller pueda tener en su perfil: si
+      // se compara literal, la solicitud no le llega a nadie.
+      const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
+      const coinciden = otros.filter((s) => {
         const servicios: string[] = s.metadata?.perfil?.servicios || []
-        const coincide = !trabajo.servicio || !servicios.length || servicios.includes(trabajo.servicio)
-        if (coincide && destinos.length < MAX_AVISOS) destinos.push({ email: s.email })
+        return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
+      })
+      // Con el tope de avisos, primero los del mismo estado que el cliente:
+      // son los que pueden entregar sin flete caro y los que más contestan.
+      const mismoEstado = (s: { metadata: any }) =>
+        Boolean(trabajo.estado_mx) && s.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1
+      coinciden.sort((x, y) => mismoEstado(x) - mismoEstado(y))
+      for (const s of coinciden) {
+        if (destinos.length >= MAX_AVISOS) break
+        destinos.push({ email: s.email })
       }
     } catch (e) {
       logger.warn(`[licitacion] no se pudo listar talleres: ${(e as Error).message}`)
@@ -221,7 +235,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
 
   // Aviso a redes: solo solicitudes abiertas y solo datos publicos (sin contacto)
   if (abierta) {
-    await avisarRedes({ tipo: "licitacion", titulo: [trabajo.servicio, trabajo.material].filter(Boolean).join(" - ") || "Trabajo de fabricacion CNC", resumen: [trabajo.cantidad ? "Cantidad: " + trabajo.cantidad : "", trabajo.fecha ? "Para: " + trabajo.fecha : ""].filter(Boolean).join(". "), lugar: [trabajo.ciudad, trabajo.estado_mx].filter(Boolean).join(", "), url: "https://hetnacnc.com/mx/talleres/fundadores" }, logger)
+    await avisarRedes({ tipo: "licitacion", titulo: [trabajo.servicio, trabajo.material].filter(Boolean).join(" - ") || "Trabajo de fabricacion CNC", resumen: [trabajo.cantidad ? "Cantidad: " + trabajo.cantidad : "", trabajo.fecha ? "Para: " + trabajo.fecha : ""].filter(Boolean).join(". "), lugar: [trabajo.ciudad, trabajo.estado_mx].filter(Boolean).join(", "), url: ligaTrabajo(folioNum) }, logger)
   }
 
   // 4) n8n

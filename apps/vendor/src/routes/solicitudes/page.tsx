@@ -109,6 +109,8 @@ export default function SolicitudesPage() {
   const [error, setError] = useState("")
   const [vista, setVista] = useState("nuevas")
   const [abierta, setAbierta] = useState(null)
+  const [fServicio, setFServicio] = useState("")
+  const [fEstado, setFEstado] = useState("")
 
   const cargar = () =>
     fetch("/vendor/hetna-solicitudes", { credentials: "include" })
@@ -123,7 +125,14 @@ export default function SolicitudesPage() {
   if (error) return <div style={S.page}>{error}</div>
   if (!datos) return <div style={S.page}>Cargando...</div>
 
-  const nuevas = datos.filter((s) => s.estado === "abierta" && !s.mi_propuesta)
+  // Las opciones salen de las solicitudes mismas: sólo se ofrece filtrar por
+  // lo que de verdad hay, y no hay otra lista de servicios que mantener.
+  const opciones = (campo) =>
+    [...new Set(datos.map((s) => (s.trabajo || {})[campo]).filter(Boolean))].sort()
+  const pasaFiltros = (s) =>
+    (!fServicio || s.trabajo?.servicio === fServicio) && (!fEstado || s.trabajo?.estado_mx === fEstado)
+
+  const nuevas = datos.filter((s) => s.estado === "abierta" && !s.mi_propuesta && pasaFiltros(s))
   const enviadas = datos.filter((s) => s.mi_propuesta)
   const lista = vista === "nuevas" ? nuevas : enviadas
 
@@ -138,6 +147,19 @@ export default function SolicitudesPage() {
         <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}>Por cotizar ({nuevas.length})</button>
         <button type="button" style={S.tab(vista === "enviadas")} onClick={() => setVista("enviadas")}>Mis propuestas ({enviadas.length})</button>
       </div>
+
+      {vista === "nuevas" && (opciones("servicio").length > 1 || opciones("estado_mx").length > 1) && (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+          <select style={{ ...S.input, width: "auto", minWidth: 180 }} value={fServicio} onChange={(e) => setFServicio(e.target.value)}>
+            <option value="">Todos los servicios</option>
+            {opciones("servicio").map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+          <select style={{ ...S.input, width: "auto", minWidth: 180 }} value={fEstado} onChange={(e) => setFEstado(e.target.value)}>
+            <option value="">Todos los estados</option>
+            {opciones("estado_mx").map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+        </div>
+      )}
 
       {!lista.length && (
         <div style={{ ...S.card, textAlign: "center", color: "#6B675C" }}>

@@ -3,7 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sendEmail } from "../../../../../lib/resend"
 import {
-  T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto,
+  T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
 
 type Body = { precio?: number | string; dias?: number | string; vigencia_dias?: number | string; incluye_envio?: boolean | string; condiciones?: string }
@@ -31,6 +31,11 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   if (s.modo === "directa" && s.taller_id !== sellerId) return res.status(403).json({ message: "Esta solicitud es para otro taller." })
 
   const previa = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first("id")
+  // Pasada la fecha de cierre ya no entran propuestas nuevas; la que el taller
+  // ya mandó sí la puede corregir mientras el cliente no elija.
+  if (!previa && !recibePropuestas(s)) {
+    return res.status(409).json({ message: "Esta solicitud ya cerró a propuestas nuevas." })
+  }
   const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, updated_at: knex.fn.now() }
   if (previa) {
     await knex(T_PROPUESTA).where({ id: previa.id }).update(datos)

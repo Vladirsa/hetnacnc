@@ -11,6 +11,7 @@ import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { listLearningArticles } from "@/lib/data/learning-articles"
+import { trabajosAbiertos } from "@/lib/trabajos/datos"
 
 export const revalidate = 3600
 
@@ -89,13 +90,14 @@ const productos = async (): Promise<{ handle: string; fecha: Date }[]> => {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const hoy = new Date()
 
-  const [cats, prods, talleres, secs, temas, { learning_articles }] = await Promise.all([
+  const [cats, prods, talleres, secs, temas, { learning_articles }, { trabajos }] = await Promise.all([
     categorias(),
     productos(),
     listarTalleres().catch(() => []),
     secciones().catch(() => null),
     temasParaMapa().catch(() => []),
     listLearningArticles({ limit: 200 }).catch(() => ({ learning_articles: [] })),
+    trabajosAbiertos({ limit: 60 }),
   ])
 
   const tienda: MetadataRoute.Sitemap = [
@@ -106,13 +108,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...talleres.flatMap((t) => bilingue(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
   ]
 
-  // Artículos y foro: contenido escrito en español, solo /mx
-  const articulos: MetadataRoute.Sitemap = learning_articles.map((a) => ({
-    url: `${MX}/aprendizaje-cnc/${a.slug}`,
-    lastModified: a.published_at ? new Date(a.published_at) : hoy,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }))
+  // Artículos, trabajos abiertos y foro: contenido escrito en español, solo /mx.
+  // De los trabajos sólo van los abiertos: uno cerrado sale del índice (noindex).
+  const articulos: MetadataRoute.Sitemap = [
+    ...learning_articles.map((a) => ({
+      url: `${MX}/aprendizaje-cnc/${a.slug}`,
+      lastModified: a.published_at ? new Date(a.published_at) : hoy,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+    { url: `${MX}/trabajos`, lastModified: hoy, changeFrequency: "hourly" as const, priority: 0.8 },
+    ...trabajos.map((t) => ({
+      url: `${MX}/trabajos/${t.folio}`,
+      lastModified: new Date(t.creada),
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+    })),
+  ]
   if (!secs) return [...tienda, ...articulos]
   return [
     ...tienda,
