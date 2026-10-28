@@ -52,7 +52,9 @@ chmod 700 "$LOCAL"
 DUMP="$LOCAL/db-$HOY.sql.gz"
 docker exec hetnacnc-postgres sh -c 'pg_dumpall -U "${POSTGRES_USER:-postgres}"' | gzip > "$DUMP.tmp"
 # Un respaldo vacío o cortado no debe reemplazar a uno bueno
-if [ "$(stat -c %s "$DUMP.tmp")" -lt 10000 ] || ! zcat "$DUMP.tmp" | grep -q 'connect.*hetnacnc'; then
+# (zgrep y no "zcat | grep -q": con pipefail, grep -q corta la tubería al
+# encontrar la línea, zcat sale con error y el respaldo bueno se daba por malo)
+if [ "$(stat -c %s "$DUMP.tmp")" -lt 10000 ] || ! zgrep -q 'connect.*hetnacnc' "$DUMP.tmp"; then
   rm -f "$DUMP.tmp"
   echo "✗ El respaldo de la base salió vacío o incompleto"
   exit 1
