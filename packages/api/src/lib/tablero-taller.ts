@@ -1,6 +1,8 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 
+import { COTIZADOR_MODULE } from "../modules/cotizador"
+
 // Todo lo que el taller ve en su tablero y que vive dentro de Medusa: ventas,
 // vistas de ficha, catálogo, reseñas, cotizador y la meta del mes.
 //
@@ -419,19 +421,20 @@ export async function cotizadorDelTaller(
     const customerId = (clientes?.[0] as { id?: string })?.id
     if (!customerId) return COTIZADOR_VACIO
 
-    const { data: perfiles } = await query.graph({
-      entity: "cotizador_perfil",
-      fields: ["id", "plan"],
-      filters: { customer_id: customerId },
-    })
-    const perfil = perfiles?.[0] as { id?: string; plan?: string } | undefined
+    // Directo al servicio del módulo: con query.graph("cotizador_perfil") Medusa
+    // buscaba "listCotizadorPerfils", que no existe (el modelo se registró como
+    // TallerPerfil), y esta parte del tablero siempre salía vacía.
+    const cotizador = container.resolve(COTIZADOR_MODULE) as {
+      listTallerPerfils: (f: Record<string, unknown>, c?: Record<string, unknown>) => Promise<{ id?: string; plan?: string }[]>
+      listCotizacions: (f: Record<string, unknown>, c?: Record<string, unknown>) => Promise<unknown[]>
+    }
+    const [perfil] = await cotizador.listTallerPerfils({ customer_id: customerId }, { take: 1, select: ["id", "plan"] })
     if (!perfil?.id) return COTIZADOR_VACIO
 
-    const { data: cotizaciones } = await query.graph({
-      entity: "cotizador_cotizacion",
-      fields: ["id", "estatus", "total"],
-      filters: { perfil_id: perfil.id },
-    })
+    const cotizaciones = await cotizador.listCotizacions(
+      { perfil_id: perfil.id },
+      { select: ["id", "estatus", "total"], take: 5000 }
+    )
 
     let enviadas = 0
     let aceptadas = 0
