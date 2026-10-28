@@ -2,8 +2,22 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { archivosDe } from "../../../cam-multipart"
 
-type OcctModule = typeof import("occt-import-js")
-type Occt = Awaited<ReturnType<OcctModule["default"]>>
+// Tipos propios en lugar de `typeof import("occt-import-js")`: el paquete es
+// opcional y no siempre está instalado. Con el import de tipos, cualquier
+// compilación que llegue a este archivo (por ejemplo el panel del taller, que
+// revisa los tipos de las rutas) fallaba con "Cannot find module".
+type OcctMalla = {
+  attributes: { position: { array: ArrayLike<number> } }
+  index: { array: ArrayLike<number> & Iterable<number> }
+}
+type OcctResultado = { success: boolean; meshes?: OcctMalla[] }
+type Occt = {
+  ReadStepFile: (contenido: Uint8Array, params: unknown) => OcctResultado
+  ReadIgesFile: (contenido: Uint8Array, params: unknown) => OcctResultado
+}
+type OcctInit = () => Promise<Occt>
+// En una variable para que el compilador no intente resolver el paquete
+const PAQUETE_OCCT = "occt-import-js"
 
 /**
  * OpenCascade (occt-import-js) es opcional: el CAM Lab convierte STEP / IGES
@@ -12,8 +26,8 @@ type Occt = Awaited<ReturnType<OcctModule["default"]>>
  */
 async function cargarOcct(): Promise<Occt | null> {
   try {
-    const mod = (await import("occt-import-js")) as unknown as OcctModule & { default?: OcctModule["default"] }
-    const init = (mod.default ?? (mod as unknown as OcctModule["default"])) as OcctModule["default"]
+    const mod = (await import(PAQUETE_OCCT)) as { default?: OcctInit } | OcctInit
+    const init = (typeof mod === "function" ? mod : mod.default) as OcctInit
     return await init()
   } catch {
     return null
