@@ -82,6 +82,10 @@ const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SEC
 module.exports = withMercur({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    // Sesiones en Redis (contenedor hetnacnc-redis, solo en 127.0.0.1). Sin esto
+    // quedaban en la memoria de la API: cada despliegue cerraba la sesión de
+    // todos y la memoria crecía sin parar. Si REDIS_URL no está, vuelve a memoria.
+    ...(process.env.REDIS_URL ? { redisUrl: process.env.REDIS_URL, redisPrefix: 'hetna:' } : {}),
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
