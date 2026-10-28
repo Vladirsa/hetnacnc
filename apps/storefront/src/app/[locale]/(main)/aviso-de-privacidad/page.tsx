@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import { BotonPreferenciasCookies } from "@/components/hetna/AvisoCookies"
-import { contactoPrivacidad, EMPRESA, responsable, ubicacionEmpresa } from "@/lib/hetna/empresa"
+import { contactoPrivacidad, EMPRESA, responsableLegal, ubicacionEmpresa } from "@/lib/hetna/empresa"
 import { avisoEn, avisoEs, HISTORIAL, type Bloque, type Datos } from "@/lib/hetna/legal/aviso-privacidad"
 import { idiomaServidor } from "@/lib/helpers/idioma-servidor"
 
@@ -24,12 +24,13 @@ export async function generateMetadata(): Promise<Metadata> {
       }
 }
 
-const datos = (): Datos => ({
-  responsable: responsable(),
+const datos = (en: boolean): Datos => ({
+  responsable: responsableLegal(en ? "en" : "es"),
   domicilio: EMPRESA.domicilioCompleto || ubicacionEmpresa(),
   rfc: EMPRESA.rfc,
   correo: contactoPrivacidad(),
   whatsapp: EMPRESA.whatsappVisible,
+  telefono: EMPRESA.telefonoVisible,
 })
 
 function Tabla({ cab, filas }: { cab: string[]; filas: string[][] }) {
@@ -84,7 +85,7 @@ function Bloques({ bloques }: { bloques: Bloque[] }) {
 
 export default async function AvisoDePrivacidad() {
   const en = (await idiomaServidor()) === "en"
-  const secciones = en ? avisoEn(datos()) : avisoEs(datos())
+  const secciones = en ? avisoEn(datos(true)) : avisoEs(datos(false))
 
   return (
     <PaginaInfo

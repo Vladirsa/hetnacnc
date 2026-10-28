@@ -11,6 +11,10 @@
     "wizard": {
       "preview": {
         "title": "Welcome to HETNA CNC"
+      },
+      "payment": {
+        "title": "Payment details. By saving them you authorize HETNA CNC to use them only to pay you for your sales (Privacy Notice)",
+        "subtitle": "By saving your bank details you expressly authorize HETNA CNC to use them only to pay you, under the Privacy Notice (hetnacnc.com/us/aviso-de-privacidad)."
       }
     }
   },
@@ -43,6 +47,16 @@
   "auth": {
     "login": {
       "cloud": "Log in with HETNA CNC"
+    }
+  },
+  "register": {
+    "passwordHint": "Your password must include at least 8 characters, one lowercase letter, one uppercase letter, one number or symbol. By continuing you accept HETNA CNC's Seller Terms (hetnacnc.com/us/terminos-vendedores) and Privacy Notice (hetnacnc.com/us/aviso-de-privacidad)."
+  },
+  "store": {
+    "paymentDetails": {
+      "edit": {
+        "description": "Update your store's payment details. By saving, you expressly authorize HETNA CNC to use these bank details only to pay you for your sales, under the Privacy Notice (hetnacnc.com/us/aviso-de-privacidad)."
+      }
     }
   }
 }

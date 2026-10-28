@@ -84,6 +84,11 @@ export async function borrarArchivo(sellerId: string, a: Archivo) {
   await fs.rm(rutaDe(sellerId, a.archivo), { force: true })
 }
 
+// Borra la carpeta completa de un taller (todos sus documentos)
+export async function borrarCarpeta(sellerId: string) {
+  await fs.rm(carpetaDe(sellerId), { recursive: true, force: true })
+}
+
 // Lista de archivos guardada en la base, ya limpia
 export const listaArchivos = (v: unknown): Archivo[] => {
   const lista = Array.isArray(v) ? v : (v as { lista?: unknown } | null)?.lista

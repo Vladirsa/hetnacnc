@@ -44,6 +44,7 @@ export function Footer() {
     { label: "Cotizador para tu taller", path: "/taller" },
     { label: "Talleres fundadores", path: "/talleres/fundadores" },
     { label: "Anuncia tu taller", path: "/anunciate" },
+    { label: "Términos para vendedores", path: "/terminos-vendedores" },
   ]
 
   return (

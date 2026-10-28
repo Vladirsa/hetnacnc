@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { EMPRESA, medioContacto, responsable } from "@/lib/hetna/empresa"
+import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -14,7 +14,7 @@ export default function Terminos() {
     <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado>
       <h2>1. Quiénes somos</h2>
       <p>
-        {EMPRESA.nombreComercial} ({EMPRESA.sitio}) es una plataforma operada por {responsable()} donde clientes, vendedores y
+        {EMPRESA.nombreComercial} ({EMPRESA.sitio}) es una plataforma operada por {responsableLegal("es")}, con domicilio en {EMPRESA.domicilioCompleto}, donde clientes, vendedores y
         talleres compran, venden y contratan productos y servicios relacionados con CNC. Al usar el sitio aceptas estos
         términos.
       </p>
@@ -45,6 +45,10 @@ export default function Terminos() {
         <li>Las ventas y trabajos obtenidos por HETNA se cobran y gestionan dentro de la plataforma, con la comisión vigente.</li>
         <li>No está permitido compartir datos de contacto para cerrar tratos fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.</li>
         <li>Deben cumplir sus propias obligaciones fiscales.</li>
+        <li>
+          Además de estos términos, a los vendedores les aplican los{" "}
+          <LocalizedClientLink href="/terminos-vendedores">Términos para vendedores</LocalizedClientLink>.
+        </li>
       </ul>
 
       <h2>6. Pagos dentro de la plataforma</h2>
@@ -74,7 +78,8 @@ export default function Terminos() {
       <h2>10. Contacto y cambios</h2>
       <p>
         Para cualquier duda escríbenos por {medioContacto()}. Podemos actualizar estos términos; la versión vigente es la
-        publicada en esta página. Estos términos se rigen por las leyes de los Estados Unidos Mexicanos.
+        publicada en esta página. Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Tus datos personales
+        se tratan como explica el <LocalizedClientLink href="/aviso-de-privacidad">Aviso de privacidad</LocalizedClientLink>.
       </p>
     </PaginaInfo>
   )
