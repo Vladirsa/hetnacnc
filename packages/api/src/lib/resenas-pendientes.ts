@@ -1,3 +1,4 @@
+import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 // Qué significa "pendiente de reseñar", en un solo lugar.
@@ -53,7 +54,7 @@ export const estaPagada = (orden: OrdenLigera): boolean =>
 // Los productos que un cliente ya reseñó. Se va por los enlaces del dominio
 // Review de Mercur: cliente -> reseña -> producto.
 export async function productosResenadosPor(
-  container,
+  container: MedusaContainer,
   customerId: string
 ): Promise<Set<string>> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
