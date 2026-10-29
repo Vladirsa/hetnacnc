@@ -13,6 +13,7 @@ import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares"
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
+import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -42,5 +43,6 @@ export default defineMiddlewares({
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
+        ...storeRastreoMiddlewares,
     ],
 });
