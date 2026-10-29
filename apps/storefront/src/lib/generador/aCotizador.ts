@@ -75,3 +75,45 @@ export function cargarEnCotizador(iframe: HTMLIFrameElement) {
     }, 1200)
   }, 250)
 }
+
+// ---------- Fabrícamelo: el archivo va a la solicitud de fabricación ----------
+// Mismo truco (sessionStorage), pero el destino es /cotizar, donde el
+// formulario lo sube como si el cliente lo hubiera elegido y los talleres lo
+// reciben tal cual. Nada se manda a un servidor hasta que el cliente envía.
+const CLAVE_FABRICAR = "hetna-archivo-para-fabricar"
+
+export function mandarAFabricar(
+  nombre: string,
+  contenido: string | ArrayBuffer,
+  locale: string,
+  datos: { pieza: string; medidas?: string; material?: string; proceso?: string }
+): boolean {
+  try {
+    const binario = typeof contenido !== "string"
+    const d = binario ? aBase64(contenido as ArrayBuffer) : (contenido as string)
+    if (d.length > MAXIMO) return false
+    const p: Pendiente = { nombre, datos: d, binario, t: Date.now() }
+    sessionStorage.setItem(CLAVE_FABRICAR, JSON.stringify(p))
+  } catch {
+    return false
+  }
+  const q = new URLSearchParams({ desde: "generador", pieza: datos.pieza })
+  if (datos.medidas) q.set("medidas", datos.medidas)
+  if (datos.material) q.set("material", datos.material)
+  if (datos.proceso) q.set("proceso", datos.proceso)
+  window.location.href = `/${locale}/cotizar?${q.toString()}`
+  return true
+}
+
+// Lo recoge el formulario de /cotizar (una sola vez) como un File normal
+export function tomarArchivoParaFabricar(): File | null {
+  try {
+    const p = JSON.parse(sessionStorage.getItem(CLAVE_FABRICAR) || "null") as Pendiente | null
+    if (!p || Date.now() - p.t > VIGENCIA) return null
+    sessionStorage.removeItem(CLAVE_FABRICAR)
+    const bytes = p.binario ? Uint8Array.from(atob(p.datos), (c) => c.charCodeAt(0)) : new TextEncoder().encode(p.datos)
+    return new File([bytes], p.nombre, { type: "application/octet-stream" })
+  } catch {
+    return null
+  }
+}
