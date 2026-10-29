@@ -5,6 +5,10 @@ export type Maquina = { nombre: string; area?: string; detalle?: string }
 export type Perfil = {
   ciudad?: string
   estado?: string
+  // Código postal del taller (no se publica; sirve para "cerca de ti")
+  cp?: string
+  // "diseno" | "entrega_local" | "envio": lo que ofrece además de maquinar
+  ofrece: string[]
   lema?: string
   servicios: string[]
   capacidades: string[]
@@ -67,6 +71,8 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
   return {
     ciudad: texto(p.ciudad),
     estado: texto(p.estado),
+    cp: texto(p.cp),
+    ofrece: lista(p.ofrece),
     lema: texto(p.lema),
     servicios: lista(p.servicios),
     capacidades: lista(p.capacidades),

@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { tallerPorHandle } from "@/lib/hetna/talleres"
+import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
+import { listarTalleres, tallerPorHandle } from "@/lib/hetna/talleres"
 
 export const metadata: Metadata = {
   title: "Solicitar cotización CNC",
@@ -49,8 +50,11 @@ export default async function CotizarPage({
     proceso?: string
   }>
 }) {
-  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso } = await searchParams
-  const t = taller ? await tallerPorHandle(taller) : null
+  const sp = await searchParams
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso } = sp
+  const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
+  // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
+  const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
   const prellenado = desde && pieza ? { pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso } : undefined
 
   return (
@@ -72,6 +76,7 @@ export default async function CotizarPage({
           <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
 
           <aside className="grid content-start gap-4">
+            <TalleresCerca talleres={talleres.filter((x) => x.handle !== t?.handle)} proceso={proceso || servicio} query={query} />
             <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
             {CALCULADORAS.map((c) => (
               <LocalizedClientLink
