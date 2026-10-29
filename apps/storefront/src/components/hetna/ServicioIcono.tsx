@@ -101,6 +101,24 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M9 7a3 3 0 0 1 6 0" />
     </>
   ),
+  gcode: (
+    <>
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5M10 12l-2 2 2 2M14 12l2 2-2 2" />
+    </>
+  ),
+  escaneo: (
+    <>
+      <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" />
+      <path d="M12 7l4.5 2.5v5L12 17l-4.5-2.5v-5z" />
+    </>
+  ),
+  ia: (
+    <>
+      <path d="M4 5h16v11H9l-5 4z" />
+      <path d="M9 10h.01M12 10h.01M15 10h.01" />
+    </>
+  ),
 }
 
 export const ServicioIcono = ({
