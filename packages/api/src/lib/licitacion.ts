@@ -237,6 +237,8 @@ export type Trabajo = {
   fecha?: string
   ciudad?: string
   estado_mx?: string
+  // Código postal de entrega: con él se buscan talleres cerca del cliente
+  cp?: string
   frecuencia?: string
   presupuesto?: string
   acepta_envio?: string
@@ -253,7 +255,7 @@ export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
   fila("Medidas", t.medidas || "") +
   fila("Acabado", t.acabado || "") +
   fila("Fecha requerida", t.fecha || "") +
-  fila("Entrega en", [t.ciudad, t.estado_mx].filter(Boolean).join(", ")) +
+  fila("Entrega en", [t.ciudad, t.estado_mx, t.cp && `CP ${t.cp}`].filter(Boolean).join(", ")) +
   fila("Frecuencia", t.frecuencia || "") +
   fila("Presupuesto aproximado", t.presupuesto || "") +
   fila("Acepta envío por paquetería", t.acepta_envio || "") +
