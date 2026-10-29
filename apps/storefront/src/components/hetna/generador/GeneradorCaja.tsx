@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { aDXF, aSVG, acomodar, areaMaterial, generarCaja } from "@/lib/generador/caja"
 import { mandarACotizador } from "@/lib/generador/aCotizador"
 import Caja3D from "./Caja3D"
@@ -146,18 +145,8 @@ export function GeneradorCaja() {
     `- Máquina: ${MAQUINAS[maquina].nombre}`
 
   return (
-    <main className="w-full bg-[#FAF9F6]">
-      <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios/generador-2d-3d" className="hover:text-[#B34D07]">Generador 2D y 3D</LocalizedClientLink>
-        <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Caja con juntas de dedo</span>
-      </div>
-
-      <section className="px-4 lg:px-16 pt-4 pb-3">
+    <div className="w-full bg-[#FAF9F6]">
+      <section className="px-4 lg:px-8 pt-4 pb-3">
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">
           Gratis
         </span>
@@ -169,7 +158,7 @@ export function GeneradorCaja() {
         </p>
       </section>
 
-      <div className="px-4 lg:px-16 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
+      <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         {/* Datos */}
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
@@ -339,6 +328,6 @@ export function GeneradorCaja() {
           )}
         </section>
       </div>
-    </main>
+    </div>
   )
 }
