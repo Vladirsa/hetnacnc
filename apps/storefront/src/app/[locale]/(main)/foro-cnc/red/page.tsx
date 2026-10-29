@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { ChipsSecciones, ColIzquierda, Publicacion } from "@/components/hetna/foro/Feed"
+import { ChipsSecciones, ColIzquierda, Composer, LATERAL_FIJO, Publicacion } from "@/components/hetna/foro/Feed"
 import { ForoCerrado, Paginacion } from "@/components/hetna/foro/Piezas"
 import { CAJA_RED, ProductosRed, TarjetaPersona, TarjetaTallerRed } from "@/components/hetna/foro/Red"
 import { BotonSeguir } from "@/components/hetna/foro/RedCliente"
@@ -130,7 +130,13 @@ export default async function MiRed({ searchParams }: Props) {
             <LocalizedClientLink href={urlPerfil(p.usuario)} className="text-[14px] font-semibold text-[#B34D07] hover:underline">
               Ver mi perfil →
             </LocalizedClientLink>
+            <p className="m-0 basis-full text-[13.5px] text-[#6B6A63]">
+              Aquí ves lo que publican las personas, talleres y comunidades que sigues, y lo tuyo. Lo que publiques sale en el foro y en la red de
+              quienes te siguen.
+            </p>
           </section>
+
+          {!ver && <Composer sesion={sesion} />}
 
           {/* Pendientes: postulaciones a sus vacantes y recomendaciones por aceptar */}
           {(pendientes.vacantes.length > 0 || pendientes.recomendaciones > 0) && (
@@ -182,8 +188,8 @@ export default async function MiRed({ searchParams }: Props) {
                   </strong>
                   <p className="m-0 max-w-md text-[14.5px] text-[#6B6A63]">
                     {nadaQueVer
-                      ? "Sigue talleres, personas y secciones (a la derecha) y aquí verás sus productos nuevos, sus trabajos y sus publicaciones."
-                      : "Cuando las personas y talleres que sigues publiquen, aparece aquí. Mientras, sigue a más gente."}
+                      ? "Publica arriba tu primer trabajo o pregunta, y sigue talleres, personas y comunidades (a la derecha) para ver aquí sus productos nuevos, sus trabajos y sus publicaciones."
+                      : "Cuando las personas y talleres que sigues publiquen, aparece aquí. Mientras, publica tú o sigue a más gente."}
                   </p>
                 </div>
               )}
@@ -240,7 +246,7 @@ export default async function MiRed({ searchParams }: Props) {
           )}
         </div>
 
-        <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:self-start">
+        <aside className={`flex flex-col gap-3 ${LATERAL_FIJO}`}>
           {sugeridos.length > 0 && (
             <section className={`${CAJA_RED} flex flex-col gap-3`}>
               <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Personas que quizá conozcas</h2>

@@ -12,6 +12,11 @@ import { type Autor, type Seccion, type TemaResumen, TIPOS_CUENTA, urlPerfil, ur
 import { AvisoSeguro, Avatar, COLOR_CUENTA, Ico, InsigniaCuenta, InsigniaTaller, InsigniaTema, Palomita, haceCuanto } from "./Piezas"
 
 const TARJETA = "bg-white border border-[#E7E4DC] rounded-[12px]"
+// Columna lateral que se queda a la vista: empieza abajo del encabezado y de
+// la barra del foro (--foro-top, ver BarraForo) y, si no cabe, tiene su
+// propio scroll para que se puedan ver todas las secciones.
+export const LATERAL_FIJO =
+  "lg:sticky lg:top-[var(--foro-top,1rem)] lg:self-start lg:max-h-[calc(100vh_-_var(--foro-top,1rem)_-_0.5rem)] lg:overflow-y-auto lg:overscroll-contain [scrollbar-width:thin]"
 const BTN = "inline-flex items-center justify-center text-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2 rounded-full text-[14px]"
 
 export const Composer = ({ sesion }: { sesion: SesionForo }) => {
@@ -52,7 +57,7 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
   const p = sesion?.perfil
   const color = p ? COLOR_CUENTA[p.tipo] : "#C2560A"
   return (
-    <aside className="hidden lg:flex flex-col gap-3 sticky top-4 self-start">
+    <aside className={`hidden lg:flex flex-col gap-3 ${LATERAL_FIJO}`}>
       <div className={`${TARJETA} overflow-hidden`}>
         <div className="h-[56px]" style={{ background: `linear-gradient(120deg, ${color}, #142033)` }} />
         <div className="px-4 pb-4 -mt-8 flex flex-col gap-1">
@@ -142,12 +147,6 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
     >
       Todo
     </LocalizedClientLink>
-    <LocalizedClientLink href="/foro-cnc/red" className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13.5px] font-semibold border bg-white text-[#142033] border-[#C9D2E0]">
-      Mi red
-    </LocalizedClientLink>
-    <LocalizedClientLink href="/foro-cnc/empleos" className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13.5px] font-semibold border bg-white text-[#3B46A6] border-[#C9CDF2]">
-      Empleos
-    </LocalizedClientLink>
     {secciones.map((s) => (
       <LocalizedClientLink
         key={s.slug}
@@ -163,7 +162,7 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
 )
 
 export const ColDerecha = ({ destacados, semana = [], sesion = null }: { destacados: Autor[]; semana?: Ayudador[]; sesion?: SesionForo }) => (
-  <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:self-start">
+  <aside className={`flex flex-col gap-3 ${LATERAL_FIJO}`}>
     <QuienesAyudan semana={semana} siempre={destacados} />
     <CaptarTaller sesion={sesion} />
     <LocalizedClientLink href="/servicios/copiloto-ia-cnc" className="bg-[#142033] text-white rounded-[12px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">

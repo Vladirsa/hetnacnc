@@ -122,15 +122,17 @@ export async function objetivosSeguidos(perfilId: string): Promise<Set<string>> 
 }
 
 // ---------------------------------------------------------------------
-// Feed de "Mi red": lo nuevo de las personas, talleres y secciones que sigue
+// Feed de "Mi red": lo nuevo de las personas, talleres y secciones que sigue,
+// y lo que publica la misma persona (como en LinkedIn, lo tuyo sale en tu red)
 // ---------------------------------------------------------------------
 
 export const POR_PAGINA_RED = 15
 
 export async function feedRed(perfilId: string, pagina = 1): Promise<{ temas: TemaResumen[]; total: number } | null> {
   return intentar(async () => {
-    const donde = `t.estado = 'publicado' and a.suspendido = false and t.autor_id <> $1 and (
-        t.autor_id in (select substr(objetivo, 3)::uuid from foro.seguimientos where seguidor_id = $1 and objetivo like 'p:%')
+    const donde = `t.estado = 'publicado' and a.suspendido = false and (
+        t.autor_id = $1
+        or t.autor_id in (select substr(objetivo, 3)::uuid from foro.seguimientos where seguidor_id = $1 and objetivo like 'p:%')
         or a.vendedor_id in (select substr(objetivo, 3) from foro.seguimientos where seguidor_id = $1 and objetivo like 't:%')
         or s.slug in (select substr(objetivo, 3) from foro.seguimientos where seguidor_id = $1 and objetivo like 's:%'))`
     const p = Math.max(1, Math.floor(pagina))

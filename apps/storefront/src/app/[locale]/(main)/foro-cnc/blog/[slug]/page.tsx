@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { BotonesServicio, TarjetaArticulo } from "@/components/hetna/foro/Blog"
+import { LATERAL_FIJO } from "@/components/hetna/foro/Feed"
 import { Migas } from "@/components/hetna/foro/Piezas"
 import { VideoLigero } from "@/components/hetna/foro/VideoLigero"
 import CompartirRedes from "@/components/hetna/Compartir"
@@ -113,7 +114,7 @@ export default async function ArticuloBlog({ params }: Props) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
+        <aside className={`flex flex-col gap-4 ${LATERAL_FIJO}`}>
           {talleres && (
             <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
               <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>

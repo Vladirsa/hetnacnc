@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { ChipsSecciones, ColIzquierda, Publicacion } from "@/components/hetna/foro/Feed"
+import { ChipsSecciones, ColIzquierda, LATERAL_FIJO, Publicacion } from "@/components/hetna/foro/Feed"
 import { Avatar, ForoCerrado, Paginacion } from "@/components/hetna/foro/Piezas"
 import { CAJA_RED } from "@/components/hetna/foro/Red"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
@@ -104,7 +104,7 @@ export default async function EmpleosProyectos({ searchParams }: Props) {
           )}
         </div>
 
-        <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:self-start">
+        <aside className={`flex flex-col gap-3 ${LATERAL_FIJO}`}>
           <section className={`${CAJA_RED} flex flex-col gap-3`}>
             <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Abiertos a trabajo</h2>
             {abiertos.length ? (
