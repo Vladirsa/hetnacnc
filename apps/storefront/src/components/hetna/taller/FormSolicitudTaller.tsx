@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   ACABADOS,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/fabricacion/opciones"
 import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
+import { tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
 import { subirArchivo } from "@/lib/subir-archivo"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
@@ -41,6 +42,17 @@ type Pendiente = {
   error?: string
 }
 
+// Datos que llegan ya llenos desde una herramienta de Diseñar (botón
+// "Fabrícamelo"): el archivo generado se sube solo y los campos vienen puestos.
+export type Prellenado = {
+  pieza: string // nombre de la pieza, p. ej. "Caja con bisagras de armario"
+  medidas?: string
+  material?: string
+  archivo?: string // ruta relativa (/mx/disenar/...) de donde bajar el DXF
+  nombreArchivo?: string
+  proceso?: string // "Corte láser", "Router CNC"…
+}
+
 const pesoLegible = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`)
 
 export default function FormSolicitudTaller({
@@ -48,11 +60,13 @@ export default function FormSolicitudTaller({
   nombreTaller,
   servicioInicial,
   necesidadInicial,
+  prellenado,
 }: {
   taller?: string
   nombreTaller?: string
   servicioInicial?: string
   necesidadInicial?: string
+  prellenado?: Prellenado
 }) {
   const [estado, setEstado] = useState<"listo" | "enviando" | "ok" | "error">("listo")
   const [mensaje, setMensaje] = useState("")
@@ -61,16 +75,39 @@ export default function FormSolicitudTaller({
   // registrada con todos sus datos, el WhatsApp sólo la acompaña.
   const [resumen, setResumen] = useState("")
   const [necesidad, setNecesidad] = useState<string>(
-    NECESIDADES.some((n) => n.valor === necesidadInicial) ? necesidadInicial! : ""
+    NECESIDADES.some((n) => n.valor === necesidadInicial) ? necesidadInicial! : prellenado ? "Cortar piezas" : ""
   )
-  const [tieneArchivo, setTieneArchivo] = useState<string>("")
+  const [tieneArchivo, setTieneArchivo] = useState<string>(prellenado ? "Tengo archivo profesional" : "")
   const [archivos, setArchivos] = useState<Pendiente[]>([])
   const entrada = useRef<HTMLInputElement>(null)
+  const archivoPrellenado = useRef(false)
+
+  // El archivo que generó la herramienta se baja y se sube como si el
+  // cliente lo hubiera elegido (sólo rutas de este sitio, nunca externas).
+  useEffect(() => {
+    if (!prellenado || archivoPrellenado.current) return
+    // Generadores que calculan en el navegador: dejan el archivo en sessionStorage
+    const guardado = tomarArchivoParaFabricar()
+    if (guardado) {
+      archivoPrellenado.current = true
+      elegirArchivos([guardado])
+      return
+    }
+    const ruta = prellenado.archivo
+    if (!ruta || !ruta.startsWith("/") || ruta.startsWith("//")) return
+    archivoPrellenado.current = true
+    const nombre = prellenado?.nombreArchivo || `hetna-${(prellenado?.pieza || "pieza").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.dxf`
+    fetch(ruta)
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("no se pudo bajar"))))
+      .then((b) => elegirArchivos([new File([b], nombre, { type: b.type || "application/dxf" })] as unknown as FileList))
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prellenado])
 
   const opcionArchivo = TIENE_ARCHIVO.find((t) => t.valor === tieneArchivo)
   const subiendo = archivos.some((a) => !a.subido && !a.error)
 
-  const elegirArchivos = (lista: FileList | null) => {
+  const elegirArchivos = (lista: FileList | File[] | null) => {
     if (!lista) return
     const libres = MAX_ARCHIVOS - archivos.filter((a) => !a.error).length
     const nuevos = Array.from(lista).slice(0, Math.max(0, libres))
@@ -187,6 +224,13 @@ export default function FormSolicitudTaller({
         <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
           Cotizando con <strong className="text-[#142033]">{nombreTaller}</strong>
         </p>
+      )}
+      {prellenado && (
+        <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
+          <strong className="text-[#0F7A4A]">Tu diseño ya viene cargado:</strong> {prellenado.pieza}
+          {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
+          {prellenado.material ? ` · ${prellenado.material}` : ""}. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual lo generaste.
+        </div>
       )}
 
       {/* 1. Qué necesitas */}
@@ -309,20 +353,25 @@ export default function FormSolicitudTaller({
               maxLength={3000}
               rows={4}
               placeholder="Ej. 50 letreros de MDF de 30 x 20 cm con el logo grabado, para la entrada de una tienda"
+              defaultValue={
+                prellenado
+                  ? `Pieza diseñada con las herramientas de HETNA: ${prellenado.pieza}${prellenado.medidas ? `, ${prellenado.medidas}` : ""}${prellenado.material ? `, en ${prellenado.material}` : ""}. El archivo de corte va adjunto; sólo necesito que la corten.`
+                  : undefined
+              }
               className="w-full rounded-xl border border-[#E7E4DC] bg-white p-3 text-sm text-[#142033] outline-none focus:border-[#C2560A]"
             />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="material">Material</label>
-            <input id="material" name="material" className={CAMPO} placeholder="MDF 6 mm, acrílico, acero, aluminio…" />
+            <input id="material" name="material" className={CAMPO} placeholder="MDF 6 mm, acrílico, acero, aluminio…" defaultValue={prellenado?.material} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="cantidad">Cantidad</label>
-            <input id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" />
+            <input id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? "1 pieza" : undefined} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="medidas">Medidas aproximadas</label>
-            <input id="medidas" name="medidas" className={CAMPO} placeholder="Ej. 30 x 20 cm, espesor 6 mm" />
+            <input id="medidas" name="medidas" className={CAMPO} placeholder="Ej. 30 x 20 cm, espesor 6 mm" defaultValue={prellenado?.medidas} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="acabado">Acabado</label>
@@ -343,7 +392,7 @@ export default function FormSolicitudTaller({
               id="servicio"
               name="servicio"
               className={CAMPO}
-              defaultValue={servicioInicial && SERVICIOS.includes(servicioInicial) ? servicioInicial : ""}
+              defaultValue={servicioInicial && SERVICIOS.includes(servicioInicial) ? servicioInicial : prellenado?.proceso && SERVICIOS.includes(prellenado.proceso) ? prellenado.proceso : ""}
             >
               <option value="">No sé, que me recomienden</option>
               {SERVICIOS.map((s) => (
