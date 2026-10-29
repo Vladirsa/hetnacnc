@@ -82,7 +82,7 @@ export function RetornoPagoCreditos() {
               Ver mis créditos
             </LocalizedClientLink>
             <LocalizedClientLink
-              href="/taller/escaneos/nuevo"
+              href="/disenar/escanear-pieza"
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#142033] px-5 font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
             >
               Hacer un escaneo 3D

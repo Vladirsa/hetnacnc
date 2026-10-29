@@ -132,7 +132,7 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
               {GRUPOS_HERRAMIENTAS.map((g) => (
                 <LocalizedClientLink
                   key={g.id}
-                  href={`/herramientas-cnc#${g.id}`}
+                  href={g.href ?? `/herramientas-cnc#${g.id}`}
                   className="flex items-start gap-3 rounded-[8px] px-3 py-2.5 active:bg-[#FAF6EF]"
                 >
                   <span className="mt-0.5 shrink-0 text-[#C2560A]">

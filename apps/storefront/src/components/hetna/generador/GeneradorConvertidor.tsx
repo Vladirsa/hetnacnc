@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import {
   Dibujo,
   Malla,
@@ -137,18 +136,8 @@ export function GeneradorConvertidor() {
       : ""
 
   return (
-    <main className="w-full bg-[#FAF9F6]">
-      <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios/generador-2d-3d" className="hover:text-[#B34D07]">Generador 2D y 3D</LocalizedClientLink>
-        <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Convertidor y reescalador</span>
-      </div>
-
-      <section className="px-4 lg:px-16 pt-4 pb-3">
+    <div className="w-full bg-[#FAF9F6]">
+      <section className="px-4 lg:px-8 pt-4 pb-3">
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">
           Gratis
         </span>
@@ -160,7 +149,7 @@ export function GeneradorConvertidor() {
         </p>
       </section>
 
-      <div className="px-4 lg:px-16 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
+      <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -338,6 +327,6 @@ export function GeneradorConvertidor() {
           )}
         </section>
       </div>
-    </main>
+    </div>
   )
 }
