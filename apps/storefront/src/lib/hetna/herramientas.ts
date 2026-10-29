@@ -38,13 +38,16 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
     texto: "Generadores y plantillas, o fotos de una pieza que ya existe: sale el archivo listo para cortar, grabar o imprimir. Todo en un solo espacio de trabajo.",
     icono: "generador",
     href: "/disenar",
-    herramientas: HERRAMIENTAS_DISENO.map((h) => ({
-      nombre: h.nombre,
-      texto: h.texto,
-      href: `/disenar/${h.slug}`,
-      icono: h.icono,
-      acceso: h.acceso,
-    })),
+    herramientas: [
+      { nombre: "Cajas para láser y router: 170+ diseños", texto: "Bisagras, cajones, tapas corredizas, organizadores, estantes y mecanismos a tu medida.", href: "/disenar/cajas", icono: "caja", acceso: "gratis" as const },
+      ...HERRAMIENTAS_DISENO.map((h) => ({
+        nombre: h.nombre,
+        texto: h.texto,
+        href: `/disenar/${h.slug}`,
+        icono: h.icono,
+        acceso: h.acceso,
+      })),
+    ],
   },
   {
     id: "laboratorio-cam",

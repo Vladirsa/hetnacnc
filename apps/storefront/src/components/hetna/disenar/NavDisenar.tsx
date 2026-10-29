@@ -25,7 +25,7 @@ const useActiva = () => {
 
 export const MigasDisenar = () => {
   const activa = useActiva()
-  const h = activa ? buscarHerramientaDiseno(activa) : undefined
+  const h = activa === "cajas" ? { nombre: "Cajas de madera y acrílico" } : activa ? buscarHerramientaDiseno(activa) : undefined
   return (
     <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6B6A63]">
       <LocalizedClientLink href="/" className="hover:text-[#B34D07]">
@@ -78,6 +78,7 @@ export const ColumnaDisenar = () => {
       <nav aria-label="Herramientas para diseñar y escanear" className="p-3 pb-8">
         <Opcion slug="" nombre="Todas" icono="generador" activa={activa === ""} />
         <Titulo>Generar un archivo</Titulo>
+        <Opcion slug="cajas" nombre="Cajas: 170+ diseños" icono="caja" activa={activa === "cajas"} />
         {GENERADORES.map((h) => (
           <Opcion key={h.slug} slug={h.slug} nombre={h.nombre} icono={h.icono} activa={activa === h.slug} />
         ))}
@@ -115,7 +116,7 @@ export const FilaDisenar = () => {
     if (c && el) c.scrollLeft = el.offsetLeft - c.clientWidth / 2 + el.clientWidth / 2
   }, [activa])
 
-  const todas = [{ slug: "", nombre: "Todas", icono: "generador" }, ...HERRAMIENTAS_DISENO]
+  const todas = [{ slug: "", nombre: "Todas", icono: "generador" }, { slug: "cajas", nombre: "Cajas: 170+ diseños", icono: "caja" }, ...HERRAMIENTAS_DISENO]
   return (
     <nav aria-label="Herramientas para diseñar y escanear" className="xl:hidden border-b border-[#E7E4DC] bg-white">
       <div ref={fila} className="flex gap-2 overflow-x-auto px-4 lg:px-8 py-2.5 [scrollbar-width:none]">
