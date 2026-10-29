@@ -37,7 +37,11 @@ export default async function LaboratorioCam5Ejes({
           Inicio
         </LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/cam" className="hover:text-[#B34D07]">
+        <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]">
+          Herramientas CNC
+        </LocalizedClientLink>
+        <span>/</span>
+        <LocalizedClientLink href="/herramientas-cnc#laboratorio-cam" className="hover:text-[#B34D07]">
           Laboratorio CAM
         </LocalizedClientLink>
         <span>/</span>

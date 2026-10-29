@@ -140,7 +140,7 @@ export const UserDropdown = ({
                   </p>
                 )}
 
-                <Opcion href="/cam" icono="🛠️">Laboratorio CAM</Opcion>
+                <Opcion href="/herramientas-cnc" icono="🛠️">Herramientas CNC</Opcion>
                 <Opcion href="/user/cam" icono="🧭">Mis trabajos CAM</Opcion>
                 <Opcion href="/cotizar" icono="📐">Cotizar una pieza</Opcion>
               </Grupo>
