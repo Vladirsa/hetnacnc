@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { buscarCP, cotizarEnvio, type InfoCP, type OpcionEnvio } from "@/lib/envios/cotizar"
+import { ligaWhatsApp } from "@/lib/hetna/empresa"
 
 const CAMPO =
   "h-11 w-full rounded-xl border border-[#E7E4DC] bg-white px-3 text-sm text-[#142033] outline-none focus:border-[#C2560A] disabled:bg-[#F3F1EA]"
@@ -218,7 +219,18 @@ export default function CotizadorEnvio() {
         <div className="mt-6">
           {info && <p className="mb-3 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]">{info}</p>}
           {opciones.length === 0 ? (
-            <p className="rounded-xl bg-[#F3F1EA] p-4 text-sm text-[#40403A]">No encontramos paqueterías para esa ruta. Escríbenos y lo resolvemos.</p>
+            <p className="rounded-xl bg-[#F3F1EA] p-4 text-sm text-[#40403A]">
+              No encontramos paqueterías para esa ruta.{" "}
+              <a
+                href={ligaWhatsApp(`Hola, quiero cotizar un envío de ${cpO} a ${cpD}: ${tipo}, ${m.largo}×${m.ancho}×${m.alto} cm, ${m.peso} kg.`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#C2560A] underline"
+              >
+                Escríbenos por WhatsApp
+              </a>{" "}
+              y lo cotizamos contigo.
+            </p>
           ) : (
             <ul className="grid gap-3">
               {opciones.map((o, i) => (
