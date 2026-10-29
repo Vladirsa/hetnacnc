@@ -4,6 +4,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 
 import { ServicioIcono } from "./ServicioIcono"
 import { SERVICIOS_PRINCIPALES, subServicios } from "./servicios-datos"
+import { enlaceServicio } from "@/lib/hetna/disenar"
 
 // Barra azul marino: Tienda, Digital y Servicios (categorias en negritas, con
 // pestañas para ver las subcategorias) y los servicios de HETNA CNC.
@@ -186,18 +187,18 @@ export const ServiciosNav = ({
       const hijos = subServicios(s.slug)
       if (!hijos.length) {
         return (
-          <LocalizedClientLink key={s.slug} href={`/servicios/${s.slug}`} className={ENLACE}>
+          <LocalizedClientLink key={s.slug} href={enlaceServicio(s.slug)} className={ENLACE}>
             {s.nombre}
           </LocalizedClientLink>
         )
       }
       return (
-        <Menu key={s.slug} etiqueta={s.nombre} href={`/servicios/${s.slug}`} ancho="w-[320px]">
-          <OpcionMenu href={`/servicios/${s.slug}`} icono={s.icono} titulo={s.nombre} texto={s.resumen} />
+        <Menu key={s.slug} etiqueta={s.nombre} href={enlaceServicio(s.slug)} ancho="w-[320px]">
+          <OpcionMenu href={enlaceServicio(s.slug)} icono={s.icono} titulo={s.nombre} texto={s.resumen} />
           {hijos.map((h) => (
             <OpcionMenu
               key={h.slug}
-              href={`/servicios/${h.slug}`}
+              href={enlaceServicio(h.slug)}
               icono={h.icono}
               titulo={h.nombre}
               texto={h.resumen}
