@@ -52,6 +52,11 @@ const OFRECE = [
   ["envio", "Envío por paquetería a todo México"],
 ]
 
+// Procesos con tarifa para el estimado rápido de "Fabrícamelo" (mismo nombre
+// que en SERVICIOS). El cliente ve "~$X" junto al taller antes de pedir.
+const PROCESOS_TARIFA = ["Corte láser", "Corte CNC", "Corte plasma"]
+const TARIFA_VACIA = { m2: "", metro: "", minimo: "" }
+
 const ESTADOS = [
   "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",
   "Ciudad de México", "Coahuila", "Colima", "Durango", "Estado de México", "Guanajuato", "Guerrero",
@@ -149,6 +154,7 @@ export default function PerfilTallerPage() {
   const [f, setF] = useState({
     lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
+    tarifas: {},
   })
 
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }))
@@ -180,6 +186,12 @@ export default function PerfilTallerPage() {
           otrosMateriales: mats.filter((m) => !MATERIALES.includes(m)).join(", "),
           capacidades: (Array.isArray(p.capacidades) ? p.capacidades : []).join("\n"),
           maquinas: Array.isArray(p.maquinas) ? p.maquinas : [],
+          tarifas: Object.fromEntries(
+            PROCESOS_TARIFA.map((k) => {
+              const t = (p.tarifas && p.tarifas[k]) || {}
+              return [k, { m2: t.m2 ? String(t.m2) : "", metro: t.metro ? String(t.metro) : "", minimo: t.minimo ? String(t.minimo) : "" }]
+            })
+          ),
         })
       })
       .catch(() => setMsg({ ok: false, t: "No se pudo cargar tu perfil. Recarga la página." }))
@@ -207,6 +219,14 @@ export default function PerfilTallerPage() {
       capacidades: lineas(f.capacidades),
       maquinas: f.maquinas.filter((m) => (m.nombre || "").trim()),
       galeria,
+      tarifas: Object.fromEntries(
+        PROCESOS_TARIFA.flatMap((k) => {
+          const t = f.tarifas[k] || TARIFA_VACIA
+          const n = (v) => Math.max(0, Number(String(v).replace(/[^\d.]/g, "")) || 0)
+          const m2 = n(t.m2), metro = n(t.metro), minimo = n(t.minimo)
+          return m2 > 0 || metro > 0 ? [[k, { m2, metro: metro || undefined, minimo }]] : []
+        })
+      ),
     }
     try {
       const r = await fetch("/vendor/sellers/me", {
@@ -358,6 +378,43 @@ export default function PerfilTallerPage() {
           </div>
         ))}
         <button type="button" style={S.btn2} onClick={() => set("maquinas", [...f.maquinas, { nombre: "", area: "", detalle: "" }])}>+ Agregar máquina</button>
+      </section>
+
+      <section style={S.card}>
+        <h2 style={S.h2}>Tarifas para estimado rápido</h2>
+        <p style={{ ...S.hint, marginTop: 0, marginBottom: 12 }}>
+          Cuando un cliente diseña una pieza en HETNA y pide "Fabrícamelo", ve junto a tu taller un precio estimado calculado con estas
+          tarifas y las medidas de su archivo. Es orientativo: el precio formal lo pones tú en la propuesta. Deja en blanco los procesos que no haces.
+        </p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13 }}>
+            <thead>
+              <tr style={{ color: "#6B675C", textAlign: "left" }}>
+                <th style={{ padding: "4px 8px 4px 0", fontWeight: 600 }}>Proceso</th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}>$ por m² de material</th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}>$ por metro de corte (opcional)</th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}>Pedido mínimo $</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PROCESOS_TARIFA.map((k) => {
+                const t = f.tarifas[k] || TARIFA_VACIA
+                const pon = (campo) => (e) => setF((x) => ({ ...x, tarifas: { ...x.tarifas, [k]: { ...(x.tarifas[k] || TARIFA_VACIA), [campo]: e.target.value } } }))
+                return (
+                  <tr key={k}>
+                    <td style={{ padding: "4px 8px 4px 0", fontWeight: 600, whiteSpace: "nowrap" }}>{k}</td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 650" value={t.m2} onChange={pon("m2")} /></td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 12" value={t.metro} onChange={pon("metro")} /></td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 150" value={t.minimo} onChange={pon("minimo")} /></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p style={S.hint}>
+          Estimado = (área de la pieza × $/m²) + (metros de corte × $/m), por la cantidad; nunca menor al pedido mínimo. Incluye material si lo pones tú.
+        </p>
       </section>
 
       <section style={S.card}>
