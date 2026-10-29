@@ -1,0 +1,10 @@
+# Servicio de cajas (Boxes.py) para HETNA. Sólo escucha en localhost:8012;
+# la tienda lo consume por CAJAS_URL=http://127.0.0.1:8012.
+services:
+  hetna-cajas:
+    build: .
+    container_name: hetna-cajas
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8012:8012"
+    mem_limit: 512m
