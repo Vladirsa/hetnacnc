@@ -287,6 +287,9 @@ export const MAX_ARCHIVOS_SOLICITUD = 5
 
 // Una clave válida es una que generó esta API al subir: así un cliente no
 // puede colgarle a su solicitud un archivo ajeno del bucket.
+export const esClaveDeTaller = (clave: unknown) =>
+  typeof clave === "string" && /^talleres\/\d{4}-\d{2}\/[a-f0-9]{24}\/[^/]{1,120}$/.test(clave)
+
 export const esClaveDeSolicitud = (clave: unknown) =>
   typeof clave === "string" && /^solicitudes\/\d{4}-\d{2}\/[a-f0-9]{24}\/[^/]{1,120}$/.test(clave)
 

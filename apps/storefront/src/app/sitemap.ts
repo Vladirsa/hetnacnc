@@ -50,6 +50,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],
   ["/talleres", "daily", 0.8],
+  ["/talleres/unete", "weekly", 0.8],
   ["/talleres/fundadores", "weekly", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
   ["/anunciate", "monthly", 0.6],

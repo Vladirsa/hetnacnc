@@ -177,12 +177,12 @@ const MenuHerramientas = () => (
 // ---------- Celular ----------
 
 const BotonVender = () => (
-  <a
-    href="/seller"
+  <LocalizedClientLink
+    href="/talleres/unete"
     className="mx-4 my-4 block rounded-full bg-[#C2560A] py-3 text-center text-[14px] font-bold text-white"
   >
     Vende con nosotros
-  </a>
+  </LocalizedClientLink>
 )
 
 const AcordeonCategorias = ({ raices }: { raices: Raiz[] }) => (
@@ -272,12 +272,12 @@ export const BarraNavegacion = ({
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
         <LocalizedClientLink href="/servicios/envios-hetna" className={ENLACE}>Envíos HETNA</LocalizedClientLink>
         <span className="flex-1" />
-        <a
-          href="/seller"
+        <LocalizedClientLink
+          href="/talleres/unete"
           className="shrink-0 bg-[#C2560A] hover:bg-[#A84A08] text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
         >
           Vende con nosotros
-        </a>
+        </LocalizedClientLink>
       </nav>
 
       {/* Celular: barra de 3 botones que cabe completa */}

@@ -154,12 +154,12 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
             Envíos HETNA
           </LocalizedClientLink>
 
-          <a
-            href="/seller"
+          <LocalizedClientLink
+            href="/talleres/unete"
             className="mx-4 my-5 block rounded-full bg-[#C2560A] py-3 text-center text-[14.5px] font-bold text-white"
           >
             Vende con nosotros
-          </a>
+          </LocalizedClientLink>
         </div>
       </div>
     </div>

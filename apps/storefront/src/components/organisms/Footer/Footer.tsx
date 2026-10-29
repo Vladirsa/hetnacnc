@@ -36,7 +36,7 @@ const Columna = ({
 
 export function Footer() {
   const vendedores = [
-    { label: "Vender en HETNA CNC", path: "/seller" },
+    { label: "Vender en HETNA CNC", path: "/talleres/unete" },
     { label: "Panel de vendedor", path: "/seller" },
     // Cotizador y escaneo 3D. Van en esta columna porque quien los busca es
     // un taller, no alguien que viene a comprar.

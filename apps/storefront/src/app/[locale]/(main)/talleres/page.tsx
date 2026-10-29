@@ -41,14 +41,30 @@ export default async function TalleresPage({
           >
             Cotizar mi pieza
           </LocalizedClientLink>
-          <LocalizedClientLink
-            href="/user/register"
+          <a
+            href="#directorio"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
-            Registrar mi taller
-          </LocalizedClientLink>
+            Ver talleres
+          </a>
         </div>
       </header>
+
+      {/* La otra mitad de quien llega aquí: dueños de taller. */}
+      <LocalizedClientLink
+        href="/talleres/unete"
+        className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-5 transition hover:shadow-md sm:p-6"
+      >
+        <span>
+          <span className="block text-lg font-extrabold text-[#142033]">¿Tienes un taller CNC? Lleva tu taller a más clientes</span>
+          <span className="block text-sm text-[#44433D]">
+            Únete gratis a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción de todo México.
+          </span>
+        </span>
+        <span className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white">Registrar mi taller →</span>
+      </LocalizedClientLink>
+
+      <div id="directorio" className="scroll-mt-24" />
 
       <DirectorioTalleres talleres={talleres} locale={locale} />
     </main>
