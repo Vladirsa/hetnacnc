@@ -44,6 +44,14 @@ const MATERIALES = [
   "Vidrio",
 ]
 
+// Lo que el taller ofrece además de maquinar: aparece como "todo incluido"
+// en la lista de talleres cerca del cliente.
+const OFRECE = [
+  ["diseno", "Diseño: ajusto o hago el archivo del cliente"],
+  ["entrega_local", "Entrega local: en mi taller o a domicilio en mi zona"],
+  ["envio", "Envío por paquetería a todo México"],
+]
+
 const ESTADOS = [
   "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",
   "Ciudad de México", "Coahuila", "Colima", "Durango", "Estado de México", "Guanajuato", "Guerrero",
@@ -139,7 +147,7 @@ export default function PerfilTallerPage() {
   const [galeria, setGaleria] = useState([])
   const [subiendoGal, setSubiendoGal] = useState(false)
   const [f, setF] = useState({
-    lema: "", ciudad: "", estado: "", entrega: "", anos: "",
+    lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
   })
 
@@ -163,6 +171,8 @@ export default function PerfilTallerPage() {
           lema: p.lema || "",
           ciudad: p.ciudad || "",
           estado: p.estado || "",
+          cp: p.cp || "",
+          ofrece: Array.isArray(p.ofrece) ? p.ofrece : [],
           entrega: p.entrega || "",
           anos: p.anos ?? "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
@@ -185,6 +195,8 @@ export default function PerfilTallerPage() {
       lema: f.lema.trim(),
       ciudad: f.ciudad.trim(),
       estado: f.estado,
+      cp: /^\d{5}$/.test(f.cp.trim()) ? f.cp.trim() : "",
+      ofrece: f.ofrece,
       lat: undefined,
       lng: undefined,
       entrega: f.entrega.trim(),
@@ -272,6 +284,20 @@ export default function PerfilTallerPage() {
               {ESTADOS.map((x) => <option key={x}>{x}</option>)}
             </select>
           </div>
+          <div>
+            <label style={S.label}>Código postal del taller</label>
+            <input style={S.input} value={f.cp} onChange={(e) => set("cp", e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="5 dígitos" inputMode="numeric" />
+            <p style={{ ...S.hint, marginTop: 6 }}>No se publica. Sirve para que los clientes de tu zona te vean primero como "taller cerca de ti".</p>
+          </div>
+        </div>
+        <div style={{ marginTop: 14 }}>
+          <label style={S.label}>¿Qué más ofreces? (sale como "todo incluido" al cliente)</label>
+          {OFRECE.map(([v, t]) => (
+            <label key={v} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, marginTop: 6 }}>
+              <input type="checkbox" checked={f.ofrece.includes(v)} onChange={() => alternar("ofrece", v)} />
+              {t}
+            </label>
+          ))}
         </div>
         <p style={{ ...S.hint, marginTop: 12 }}>
           En el mapa público solo se muestra cuántos talleres hay por estado y municipio. Tu dirección y teléfono no se publican:

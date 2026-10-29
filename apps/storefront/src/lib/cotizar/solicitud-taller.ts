@@ -17,6 +17,7 @@ export type SolicitudTallerInput = {
   whatsapp?: string
   ciudad?: string
   estado_mx?: string
+  cp?: string
   medidas?: string
   frecuencia?: string
   presupuesto?: string

@@ -37,6 +37,7 @@ type Body = {
   whatsapp?: string
   ciudad?: string
   estado_mx?: string
+  cp?: string
   necesidad?: string
   tiene_archivo?: string
   acabado?: string
@@ -124,6 +125,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     fecha: corto(b.fecha, 40),
     ciudad: corto(b.ciudad, 120),
     estado_mx: corto(b.estado_mx, 60),
+    cp: /^\d{5}$/.test(String(b.cp || "")) ? String(b.cp) : "",
     frecuencia: corto(b.frecuencia, 60),
     presupuesto: corto(b.presupuesto, 60),
     acepta_envio: corto(b.acepta_envio, 10),

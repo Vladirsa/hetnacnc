@@ -11,6 +11,7 @@ import {
   TIENE_ARCHIVO,
 } from "@/lib/fabricacion/opciones"
 import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
 import { subirArchivo } from "@/lib/subir-archivo"
@@ -81,6 +82,28 @@ export default function FormSolicitudTaller({
   const [archivos, setArchivos] = useState<Pendiente[]>([])
   const entrada = useRef<HTMLInputElement>(null)
   const archivoPrellenado = useRef(false)
+  const [cp, setCp] = useState("")
+  const [ciudad, setCiudad] = useState("")
+  const [estadoMx, setEstadoMx] = useState("")
+  const [avisoCp, setAvisoCp] = useState("")
+
+  // Con el código postal se llenan ciudad y estado, y se avisa a la lista de
+  // "talleres cerca de ti" (TalleresCerca) para que se ordene por cercanía.
+  const cambiarCp = async (v: string) => {
+    const limpio = v.replace(/\D/g, "").slice(0, 5)
+    setCp(limpio)
+    setAvisoCp("")
+    if (limpio.length !== 5) return
+    const r = await buscarCP(limpio)
+    if (!r.ok) {
+      setAvisoCp(r.mensaje)
+      return
+    }
+    const municipio = r.info.municipio || r.info.ciudad
+    setCiudad(municipio)
+    setEstadoMx(r.info.estado)
+    window.dispatchEvent(new CustomEvent("hetna:ubicacion", { detail: { cp: limpio, municipio, estado: r.info.estado } }))
+  }
 
   // El archivo que generó la herramienta se baja y se sube como si el
   // cliente lo hubiera elegido (sólo rutas de este sitio, nunca externas).
@@ -156,6 +179,7 @@ export default function FormSolicitudTaller({
       whatsapp: v("whatsapp"),
       ciudad: v("ciudad"),
       estado_mx: v("estado_mx"),
+      cp,
       medidas: v("medidas"),
       acabado: v("acabado"),
       frecuencia: v("frecuencia"),
@@ -433,12 +457,17 @@ export default function FormSolicitudTaller({
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
+            <label className={ETIQUETA} htmlFor="cp">Código postal de entrega</label>
+            <input id="cp" name="cp" className={CAMPO} inputMode="numeric" placeholder="5 dígitos" value={cp} onChange={(e) => cambiarCp(e.target.value)} autoComplete="postal-code" />
+            <span className="mt-1 block text-xs text-[#6B675C]">{avisoCp || "Con él te mostramos los talleres más cercanos."}</span>
+          </div>
+          <div>
             <label className={ETIQUETA} htmlFor="ciudad">Ciudad de entrega</label>
-            <input id="ciudad" name="ciudad" className={CAMPO} autoComplete="address-level2" />
+            <input id="ciudad" name="ciudad" className={CAMPO} autoComplete="address-level2" value={ciudad} onChange={(e) => setCiudad(e.target.value)} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="estado_mx">Estado</label>
-            <select id="estado_mx" name="estado_mx" className={CAMPO} defaultValue="">
+            <select id="estado_mx" name="estado_mx" className={CAMPO} value={estadoMx} onChange={(e) => setEstadoMx(e.target.value)}>
               <option value="">Selecciona</option>
               {ESTADOS.map((x) => (
                 <option key={x}>{x}</option>
