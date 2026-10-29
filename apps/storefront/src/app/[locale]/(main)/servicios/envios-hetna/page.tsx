@@ -23,11 +23,12 @@ const CAJA = "rounded-2xl border border-[#E7E4DC] bg-white p-6 sm:p-8"
 const H2 = "text-2xl font-extrabold text-[#142033] sm:text-3xl"
 const WHATSAPP_VOLUMEN = ligaWhatsApp("Hola, quiero cotizar envíos por volumen con Envíos HETNA. Envío aproximadamente ___ paquetes al mes desde ___.")
 const WHATSAPP_AYUDA = ligaWhatsApp("Hola, tengo una duda con un envío de Envíos HETNA.")
+const WHATSAPP_PROTEGIDO = ligaWhatsApp("Hola, quiero un envío protegido con Envíos HETNA. Voy a enviar ___ (valor aproximado $___) de ___ a ___.")
 
 const DIFERENTE = [
-  "Compara varias paqueterías en una sola cotización",
+  "Tarifas negociadas y varias paqueterías en una sola cotización",
   "Hecho para piezas, materiales y pedidos técnicos",
-  "Precio final, días de entrega y rastreo en México",
+  "Precio final, días de entrega, rastreo y soporte en México",
 ]
 
 const PARA_QUIEN = [
@@ -53,7 +54,7 @@ const QUE_ENVIAR = [
 const PASOS = [
   ["1", "Cotiza", "Código postal de origen y destino, medidas y peso del paquete ya embalado."],
   ["2", "Compara", "Ves cada paquetería con su precio final, días de entrega y si recolecta o lo llevas a sucursal."],
-  ["3", "Paga y envía", "Llenas los datos de quien envía y quien recibe y pagas en línea con Mercado Pago. Te mandamos la guía por correo."],
+  ["3", "Genera tu guía", "Llenas los datos de quien envía y quien recibe y pagas en línea con Mercado Pago. Te mandamos la guía por correo."],
   ["4", "Rastrea", "Con el número de guía sigues tu paquete hasta que llega."],
 ] as const
 
@@ -65,6 +66,12 @@ const TIPOS = [
     href: "#cotizar-envio",
   },
   {
+    titulo: "Envío protegido",
+    texto: "Piezas frágiles o de alto valor: antes de enviar revisamos contigo el embalaje, la paquetería más adecuada y la cobertura disponible.",
+    accion: "Cotizar envío protegido",
+    href: WHATSAPP_PROTEGIDO,
+  },
+  {
     titulo: "Piezas grandes y tarimas",
     texto: "Tableros, láminas, máquinas pequeñas y bultos. Elige “Tarima o bulto” al cotizar; si no sale opción para tu ruta, lo cotizamos contigo.",
     accion: "Cotizar pieza grande",
@@ -72,18 +79,20 @@ const TIPOS = [
   },
   {
     titulo: "Volumen y B2B",
-    texto: "Envías seguido o muchos paquetes al mes. Platícanos tu volumen y rutas para darte una tarifa a la medida.",
+    texto: "Envías seguido o muchos paquetes al mes. Tarifa a la medida para tu volumen y rutas, y consolidamos varios pedidos al mismo destino en un solo envío.",
     accion: "Pedir tarifa por volumen",
     href: WHATSAPP_VOLUMEN,
   },
 ] as const
 
 const VENTAJAS = [
+  ["Tarifas negociadas", "Precios de plataforma con varias paqueterías, sin abrir cuentas ni firmar contratos por tu lado."],
   ["Comparas en un solo lugar", "No hay que cotizar paquetería por paquetería: ves todas las opciones de tu ruta juntas."],
   ["Precio final antes de pagar", "Ya incluye el peso volumétrico: si tu paquete es grande y ligero, te lo decimos antes, no después."],
   ["Direcciones validadas", "El código postal y la colonia salen del catálogo de Correos de México: menos paquetes devueltos."],
   ["Soporte si algo sale mal", "Con tu folio te ayudamos a dar seguimiento con la paquetería por WhatsApp."],
   ["Pensado para piezas técnicas", "Sabemos de piezas maquinadas, tableros y herramientas: te orientamos en cómo embalarlas."],
+  ["Consolidamos pedidos", "¿Varios pedidos al mismo destino o envíos cada semana? Los juntamos para que pagues menos por pieza."],
   ["Integrado a la tienda", "Si vendes en HETNA, el envío se calcula solo en el checkout y la guía sale desde tu panel."],
 ] as const
 
@@ -109,8 +118,8 @@ const PREGUNTAS: [string, string][] = [
     "Comparamos varias paqueterías nacionales en una sola cotización. Las que aparecen dependen de la ruta, el tamaño y el peso del paquete. En cada opción ves el precio final, los días de entrega y si pasan a recolectar o hay que llevarlo a sucursal.",
   ],
   [
-    "¿Puedo enviar piezas grandes o pesadas?",
-    "Sí. Al cotizar elige “Tarima o bulto” y escribe las medidas y el peso ya embalado. Si el paquete es grande y ligero, las paqueterías cobran por peso volumétrico y te lo decimos antes de pagar. Si para tu ruta no sale ninguna opción, escríbenos y lo cotizamos contigo.",
+    "¿Puedo enviar piezas grandes, pesadas o frágiles?",
+    "Sí. Para piezas grandes elige “Tarima o bulto” al cotizar y escribe las medidas y el peso ya embalado; si el paquete es grande y ligero, las paqueterías cobran por peso volumétrico y te lo decimos antes de pagar. Para piezas frágiles o de alto valor usa el Envío protegido: revisamos contigo el embalaje y la paquetería antes de enviar. Si para tu ruta no sale ninguna opción, escríbenos y lo cotizamos contigo.",
   ],
   [
     "¿Hacen envíos a todo México?",
@@ -130,7 +139,7 @@ const PREGUNTAS: [string, string][] = [
   ],
   [
     "¿Puedo asegurar mi envío?",
-    "Por ahora la cotización en línea no incluye seguro. Si vas a enviar una pieza de alto valor, escríbenos antes de pagar y revisamos contigo la mejor opción.",
+    "La cotización en línea no incluye seguro. Para piezas de alto valor pide el Envío protegido: antes de enviar revisamos contigo la cobertura disponible con la paquetería, el embalaje y la mejor opción para tu pieza.",
   ],
   [
     "¿Qué no se puede enviar?",
@@ -237,7 +246,7 @@ export default function EnviosHetnaPage() {
       {/* Tipos de envío */}
       <section className="mt-12">
         <h2 className={H2}>Tipos de envío</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TIPOS.map((t) => (
             <div key={t.titulo} className="flex flex-col rounded-2xl border border-[#E7E4DC] bg-white p-6">
               <h3 className="text-lg font-extrabold text-[#142033]">{t.titulo}</h3>
