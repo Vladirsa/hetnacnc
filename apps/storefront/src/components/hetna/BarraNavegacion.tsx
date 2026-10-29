@@ -160,7 +160,7 @@ const ListaHerramientas = () => (
     {GRUPOS_HERRAMIENTAS.map((g) => (
       <OpcionHerramienta
         key={g.id}
-        href={`/herramientas-cnc#${g.id}`}
+        href={g.href ?? `/herramientas-cnc#${g.id}`}
         icono={g.icono}
         titulo={g.titulo}
         texto={g.herramientas.map((h) => h.nombre).slice(0, 3).join(" · ")}
