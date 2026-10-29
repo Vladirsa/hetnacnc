@@ -13,6 +13,7 @@ import {
 } from "./servicios-datos"
 import type { LearningArticle } from "@/lib/data/learning-articles"
 import type { Course } from "@/lib/data/courses"
+import { enlaceServicio } from "@/lib/hetna/disenar"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
 export const enlaceWhatsApp = (mensaje: string) =>
@@ -54,7 +55,7 @@ export const FranjaAyuda = () => (
 // Tarjeta de servicio (indice y sub-servicios)
 export const TarjetaServicio = ({ s }: { s: Servicio }) => (
   <LocalizedClientLink
-    href={`/servicios/${s.slug}`}
+    href={enlaceServicio(s.slug)}
     className="group bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3 hover:border-[#C2560A] hover:shadow-[0_8px_24px_rgba(27,27,24,0.08)] transition"
   >
     <div className="flex items-center justify-between">
@@ -185,7 +186,7 @@ export const ServicioPagina = ({
         {padre && (
           <>
             <span>/</span>
-            <LocalizedClientLink href={`/servicios/${padre.slug}`} className="hover:text-[#B34D07]">
+            <LocalizedClientLink href={enlaceServicio(padre.slug)} className="hover:text-[#B34D07]">
               {padre.nombre}
             </LocalizedClientLink>
           </>
