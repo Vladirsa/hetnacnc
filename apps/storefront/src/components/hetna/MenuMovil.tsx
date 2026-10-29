@@ -4,7 +4,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 
 import { CerrarMenus } from "./CerrarMenus"
 import { ServicioIcono } from "./ServicioIcono"
-import { SERVICIOS_PRINCIPALES } from "./servicios-datos"
+import { GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 
 // Menú de 3 rayitas para celular: contiene TODO lo de la barra azul
 // (categorías, servicios, herramientas CNC, foro, talleres, envíos).
@@ -123,18 +123,24 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
               <Flecha />
             </summary>
             <div className="border-b border-[#E7E4DC] p-2">
-              {SERVICIOS_PRINCIPALES.map((s) => (
+              <LocalizedClientLink
+                href="/herramientas-cnc"
+                className="block rounded-[8px] px-3 py-2.5 text-[14px] font-bold text-[#B34D07] active:bg-[#FAF6EF]"
+              >
+                Todas las herramientas
+              </LocalizedClientLink>
+              {GRUPOS_HERRAMIENTAS.map((g) => (
                 <LocalizedClientLink
-                  key={s.slug}
-                  href={"/servicios/" + s.slug}
+                  key={g.id}
+                  href={`/herramientas-cnc#${g.id}`}
                   className="flex items-start gap-3 rounded-[8px] px-3 py-2.5 active:bg-[#FAF6EF]"
                 >
                   <span className="mt-0.5 shrink-0 text-[#C2560A]">
-                    <ServicioIcono nombre={s.icono} size={20} />
+                    <ServicioIcono nombre={g.icono} size={20} />
                   </span>
                   <span className="flex flex-col">
-                    <span className="text-[14px] font-semibold text-[#1B1B18]">{s.nombre}</span>
-                    <span className="text-[12px] leading-snug text-[#6B6A63]">{s.resumen}</span>
+                    <span className="text-[14px] font-semibold text-[#1B1B18]">{g.titulo}</span>
+                    <span className="text-[12px] leading-snug text-[#6B6A63]">{g.herramientas.map((h) => h.nombre).slice(0, 3).join(" · ")}</span>
                   </span>
                 </LocalizedClientLink>
               ))}
@@ -143,9 +149,6 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
 
           <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>
             Foro CNC
-          </LocalizedClientLink>
-          <LocalizedClientLink href="/cam" className={ENLACE_SIMPLE}>
-            Laboratorio CAM
           </LocalizedClientLink>
           <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>
             Talleres

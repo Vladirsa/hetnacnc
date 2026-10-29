@@ -1,6 +1,9 @@
 // Diccionario espanol -> ingles de la tienda HETNA CNC
 // Para agregar una traduccion: "Texto en espanol": "English text",
+import { EN_HERRAMIENTAS } from "./en-herramientas"
+
 export const EN: Record<string, string> = {
+ ...EN_HERRAMIENTAS,
  "Generador 2D y 3D": "2D & 3D Generator",
  "Convierte tu idea, foto o boceto en un archivo listo para cortar o maquinar.": "Turn your idea, photo or sketch into a file ready to cut or machine.",
  "Tu idea convertida en archivo CNC": "Your idea turned into a CNC file",

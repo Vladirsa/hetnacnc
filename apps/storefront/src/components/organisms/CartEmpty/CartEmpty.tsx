@@ -22,9 +22,9 @@ export function CartEmpty() {
 
         <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
           <Atajo
-            href="/cam"
-            titulo="Laboratorio CAM"
-            texto="Sube tu DXF y baja el G-code con las pasadas ya calculadas."
+            href="/herramientas-cnc"
+            titulo="Herramientas CNC"
+            texto="DXF a G-code, CAM en 3–5 ejes, generadores y plantillas, gratis."
           />
           <Atajo
             href="/cotizar"
