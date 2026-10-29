@@ -76,6 +76,19 @@ export default function DisenarInicio() {
 
       <h2 className="mt-8 text-[18px] font-bold text-[#1B1B18]">Generar un archivo</h2>
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3">
+        <LocalizedClientLink
+          href="/disenar/cajas"
+          className="group flex gap-3 rounded-[14px] border-2 border-[#FF6A1A] bg-[#FFF3EA] p-4 hover:shadow-[0_6px_20px_rgba(194,86,10,0.14)]"
+        >
+          <span className="mt-0.5 shrink-0 text-[#C2560A]">
+            <ServicioIcono nombre="caja" size={24} />
+          </span>
+          <span className="flex flex-1 flex-col">
+            <span className="text-[15.5px] font-bold text-[#1B1B18] group-hover:text-[#B34D07]">Cajas para láser y router: 170+ diseños</span>
+            <span className="mt-1 flex-1 text-[13.5px] text-[#4A4943] leading-relaxed">Con bisagra, cajones, tapa corrediza, organizadores, estantes, soportes de pared y mecanismos. Pones las medidas y sale el DXF.</span>
+            <span className="mt-3 self-start rounded-full bg-[#E7F5EC] px-2.5 py-0.5 text-[11.5px] font-semibold text-[#1E7B3A]">Gratis, sin cuenta</span>
+          </span>
+        </LocalizedClientLink>
         {GENERADORES.map((h) => (
           <Tarjeta key={h.slug} h={h} />
         ))}
