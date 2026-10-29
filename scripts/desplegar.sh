@@ -151,7 +151,8 @@ ESPERA_MAXIMA="${DESPLIEGUE_ESPERA:-150}"   # segundos
 ESPERA_ENTRE=5
 
 fallas=0
-for ruta in "/" "/mx/taller" "/mx/cam"; do
+# /mx/cam ya no: desde el 28 de octubre redirige (308) a /mx/herramientas-cnc.
+for ruta in "/" "/mx/taller" "/mx/herramientas-cnc"; do
   inicio="$(date +%s)"
   codigo=""
   listo=0
