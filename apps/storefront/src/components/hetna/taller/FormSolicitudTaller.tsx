@@ -14,6 +14,7 @@ import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicit
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
+import { type MedidaPieza, leerCantidad, medirArchivo } from "@/lib/hetna/estimado"
 import { subirArchivo } from "@/lib/subir-archivo"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
@@ -86,6 +87,19 @@ export default function FormSolicitudTaller({
   const [ciudad, setCiudad] = useState("")
   const [estadoMx, setEstadoMx] = useState("")
   const [avisoCp, setAvisoCp] = useState("")
+  // Medidas de la pieza (área y metros de corte) para el estimado por taller
+  // de TalleresCerca; se avisan por el evento "hetna:pieza" junto con la cantidad.
+  const medida = useRef<MedidaPieza | null>(null)
+  const cantidadRef = useRef<HTMLInputElement>(null)
+  const avisarPieza = (cantidadTexto?: string) => {
+    const cantidad = leerCantidad(cantidadTexto ?? cantidadRef.current?.value ?? "1")
+    window.dispatchEvent(new CustomEvent("hetna:pieza", { detail: { medida: medida.current, cantidad } }))
+  }
+  const medir = (f: File) =>
+    medirArchivo(f).then((m) => {
+      medida.current = m
+      avisarPieza()
+    })
 
   // Con el código postal se llenan ciudad y estado, y se avisa a la lista de
   // "talleres cerca de ti" (TalleresCerca) para que se ordene por cercanía.
@@ -114,6 +128,7 @@ export default function FormSolicitudTaller({
     if (guardado) {
       archivoPrellenado.current = true
       elegirArchivos([guardado])
+      medir(guardado)
       return
     }
     const ruta = prellenado.archivo
@@ -122,7 +137,11 @@ export default function FormSolicitudTaller({
     const nombre = prellenado?.nombreArchivo || `hetna-${(prellenado?.pieza || "pieza").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.dxf`
     fetch(ruta)
       .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("no se pudo bajar"))))
-      .then((b) => elegirArchivos([new File([b], nombre, { type: b.type || "application/dxf" })] as unknown as FileList))
+      .then((b) => {
+        const f = new File([b], nombre, { type: b.type || "application/dxf" })
+        elegirArchivos([f])
+        medir(f)
+      })
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prellenado])
@@ -391,7 +410,7 @@ export default function FormSolicitudTaller({
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="cantidad">Cantidad</label>
-            <input id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? "1 pieza" : undefined} />
+            <input ref={cantidadRef} id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? "1 pieza" : undefined} onChange={(e) => avisarPieza(e.target.value)} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="medidas">Medidas aproximadas</label>
