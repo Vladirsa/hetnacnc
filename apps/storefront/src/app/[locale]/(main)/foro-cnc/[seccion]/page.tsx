@@ -8,7 +8,9 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { listarBlog } from "@/lib/foro/blog"
 import { type Orden, POR_PAGINA, destacados, listaTemas, rankingSemanal, secciones, sesionForo } from "@/lib/foro/consultas"
 import { ctasPara, talleresDeSeccion } from "@/lib/foro/cta"
-import { SITIO } from "@/lib/foro/tipos"
+import { BotonSeguir } from "@/components/hetna/foro/RedCliente"
+import { estadoRed } from "@/lib/foro/red"
+import { SITIO, objetivoSeccion } from "@/lib/foro/tipos"
 
 type Props = {
   params: Promise<{ locale: string; seccion: string }>
@@ -50,6 +52,7 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
   const s = secs.find((x) => x.slug === seccion)
   if (!s) notFound()
 
+  const comunidad = await estadoRed([objetivoSeccion(s.slug)], sesion?.perfil?.id)
   const base = `/foro-cnc/${s.slug}`
   const fabricar = ctasPara(s.slug, "")[0]
   const talleres = talleresDeSeccion(s.slug)
@@ -67,7 +70,10 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
               <p className="m-0 mt-2 text-[13px] text-[#9A4A06]">Aquí solo publican talleres, proveedores y marcas. Todos pueden responder.</p>
             )}
           </div>
-          <BotonPublicar seccion={s.slug} className="self-start md:self-auto" />
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            <BotonSeguir objetivo={objetivoSeccion(s.slug)} siguiendo={comunidad.siguiendo} seguidores={comunidad.seguidores} etiqueta="Unirme a la comunidad" />
+            <BotonPublicar seccion={s.slug} />
+          </div>
         </div>
         <div className="max-w-[720px]">
           <Buscador locale={locale} seccion={s.slug} />

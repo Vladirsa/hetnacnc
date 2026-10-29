@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { FormPerfil } from "@/components/hetna/foro/FormPerfil"
+import { FormRed } from "@/components/hetna/foro/RedCliente"
 import { ForoCerrado, Migas } from "@/components/hetna/foro/Piezas"
 import { VincularTaller } from "@/components/hetna/foro/VincularTaller"
 import { buscarMiTaller } from "@/lib/foro/acciones"
@@ -81,6 +82,11 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
               }}
             />
           </div>
+          {p && (
+            <div id="curriculum" className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-7 scroll-mt-4">
+              <FormRed inicial={{ aptitudes: p.aptitudes, trayectoria: p.trayectoria, abierto: p.abierto }} />
+            </div>
+          )}
           </>
         )}
       </div>

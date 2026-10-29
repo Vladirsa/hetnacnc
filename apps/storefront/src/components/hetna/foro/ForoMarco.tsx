@@ -99,6 +99,20 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
         <span>Blog y guías</span>
         <span aria-hidden="true">→</span>
       </LocalizedClientLink>
+      <LocalizedClientLink
+        href="/foro-cnc/red"
+        className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#142033] bg-[#EEF1F6] hover:bg-[#E2E7EF]"
+      >
+        <span>Mi red</span>
+        <span aria-hidden="true">→</span>
+      </LocalizedClientLink>
+      <LocalizedClientLink
+        href="/foro-cnc/empleos"
+        className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
+      >
+        <span>Empleos y proyectos</span>
+        <span aria-hidden="true">→</span>
+      </LocalizedClientLink>
       <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
       <ul className="m-0 p-0 list-none">
         {secciones.map((s) => (

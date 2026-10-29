@@ -5,8 +5,11 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { SocialIcon } from "@/components/hetna/SocialIcon"
 import { AvisoSeguro } from "@/components/hetna/foro/AvisoSeguro"
 import { Avatar, ForoCerrado, InsigniaCuenta, InsigniaTaller, Migas, Paginacion, Palomita, TarjetaTema } from "@/components/hetna/foro/Piezas"
+import { Abierto, CAJA_RED, ListaRecomendaciones, Trayectoria } from "@/components/hetna/foro/Red"
+import { Aptitudes, BotonSeguir, FormRecomendar } from "@/components/hetna/foro/RedCliente"
 import { POR_PAGINA, listaTemas, perfilPorUsuario, sesionForo } from "@/lib/foro/consultas"
-import { REDES, type Red, SITIO, TIPOS_CUENTA, urlPerfil } from "@/lib/foro/tipos"
+import { avalesDe, cuentasRed, estadoRed, miRecomendacion, objetivosDe, recomendacionesDe } from "@/lib/foro/red"
+import { REDES, type Red, SITIO, TIPOS_CUENTA, objetivoPerfil, urlPerfil } from "@/lib/foro/tipos"
 
 type Props = {
   params: Promise<{ locale: string; usuario: string }>
@@ -26,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: (p.bio || `${p.nombre} es ${tipo.toLowerCase()} en la comunidad CNC de HETNA.`).slice(0, 155),
     alternates: { canonical: `${SITIO}/mx${urlPerfil(p.usuario)}` },
     // perfiles vacíos no se indexan hasta que tengan contenido
-    robots: p.temas + p.respuestas === 0 && !p.bio ? { index: false, follow: true } : undefined,
+    robots: p.temas + p.respuestas === 0 && !p.bio && !p.trayectoria.length ? { index: false, follow: true } : undefined,
   }
 }
 
@@ -40,8 +43,16 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
     notFound()
   }
   if (p.suspendido && sesion?.perfil?.id !== p.id) notFound()
-  const temas = await listaTemas({ autorId: p.id, orden: "nuevos", pagina })
   const propio = sesion?.perfil?.id === p.id
+  const yo = sesion?.perfil || null
+  const [temas, cuentas, red, avales, recomendaciones, previa] = await Promise.all([
+    listaTemas({ autorId: p.id, orden: "nuevos", pagina }),
+    cuentasRed(p),
+    estadoRed(objetivosDe(p), yo?.id),
+    avalesDe(p, yo?.id),
+    recomendacionesDe(p.id, propio),
+    yo && !propio ? miRecomendacion(p.id, yo.id) : Promise.resolve(null),
+  ])
   const lugar = [p.ciudad, p.estadoMx].filter(Boolean).join(", ")
   const redes = (Object.keys(REDES) as Red[]).filter((r) => p.redes[r])
 
@@ -56,6 +67,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
       description: p.bio || undefined,
       url: `${SITIO}/mx${urlPerfil(p.usuario)}`,
       sameAs: redes.map((r) => p.redes[r]),
+      ...(p.aptitudes.length ? { knowsAbout: p.aptitudes } : {}),
       ...(p.foto ? { image: `${SITIO}${p.foto}` } : {}),
       interactionStatistic: [
         { "@type": "InteractionCounter", interactionType: "https://schema.org/WriteAction", userInteractionCount: p.temas + p.respuestas },
@@ -85,13 +97,16 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                 <LocalizedClientLink href="/foro-cnc/mi-perfil" className="border border-[#E0DCD2] font-semibold px-4 py-2 rounded-[10px] text-[14px] hover:border-[#C2560A]">
                   Editar perfil
                 </LocalizedClientLink>
-              ) : null}
+              ) : (
+                <BotonSeguir objetivo={objetivoPerfil(p)} siguiendo={red.siguiendo} seguidores={red.seguidores} conCuenta={false} />
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="m-0 font-display text-[26px] font-bold text-[#1B1B18]">{p.nombre}</h1>
                 {p.verificado && <Palomita />}
                 {p.taller ? <InsigniaTaller a={p} /> : <InsigniaCuenta tipo={p.tipo} />}
+                {p.abierto && <Abierto />}
               </div>
               {p.taller && (
                 <LocalizedClientLink
@@ -110,6 +125,12 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             {p.bio && <p className="m-0 text-[15px] text-[#23231F] leading-relaxed whitespace-pre-line max-w-[760px]">{p.bio}</p>}
 
             <div className="flex gap-6 flex-wrap text-[14px]">
+              <span>
+                <strong className="text-[18px] text-[#1B1B18]">{red.seguidores}</strong> <span className="text-[#6B6A63]">seguidores</span>
+              </span>
+              <span>
+                <strong className="text-[18px] text-[#1B1B18]">{cuentas.siguiendo}</strong> <span className="text-[#6B6A63]">siguiendo</span>
+              </span>
               <span>
                 <strong className="text-[18px] text-[#1B1B18]">{p.reputacion}</strong> <span className="text-[#6B6A63]">puntos</span>
               </span>
@@ -170,7 +191,45 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-8">
           <section className="flex flex-col gap-3 min-w-0">
-            <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Publicaciones</h2>
+            {(avales.length > 0 || propio) && (
+              <div className={`${CAJA_RED} flex flex-col gap-3`}>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Aptitudes</h2>
+                {avales.length ? (
+                  <Aptitudes perfilId={p.id} avales={avales} puedeAvalar={Boolean(yo) && !propio} />
+                ) : (
+                  <p className="m-0 text-[14px] text-[#6B6A63]">
+                    Agrega lo que sabes hacer para que la comunidad lo avale.{" "}
+                    <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
+                      Agregar aptitudes
+                    </LocalizedClientLink>
+                  </p>
+                )}
+              </div>
+            )}
+            {(p.trayectoria.length > 0 || propio) && (
+              <div className={`${CAJA_RED} flex flex-col gap-3`}>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Trayectoria</h2>
+                {p.trayectoria.length ? (
+                  <Trayectoria pasos={p.trayectoria} />
+                ) : (
+                  <p className="m-0 text-[14px] text-[#6B6A63]">
+                    Tu experiencia, estudios, certificaciones y proyectos.{" "}
+                    <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
+                      Armar mi currículum
+                    </LocalizedClientLink>
+                  </p>
+                )}
+              </div>
+            )}
+            {(recomendaciones.length > 0 || (!propio && !p.suspendido)) && (
+              <div id="recomendaciones" className={`${CAJA_RED} flex flex-col gap-3 scroll-mt-4`}>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Recomendaciones</h2>
+                <ListaRecomendaciones lista={recomendaciones} propio={propio} />
+                {!recomendaciones.length && <p className="m-0 text-[14px] text-[#6B6A63]">Aún no tiene recomendaciones.</p>}
+                {!propio && <FormRecomendar perfilId={p.id} nombre={p.nombre} previa={previa} />}
+              </div>
+            )}
+            <h2 className="m-0 mt-2 text-[18px] font-bold text-[#1B1B18]">Publicaciones</h2>
             {temas && temas.temas.length ? (
               temas.temas.map((t) => <TarjetaTema key={t.id} t={t} />)
             ) : (

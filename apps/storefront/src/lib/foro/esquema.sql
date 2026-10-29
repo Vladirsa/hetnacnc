@@ -49,7 +49,7 @@ create table if not exists foro.temas (
   id bigint generated always as identity primary key,
   seccion_id smallint not null references foro.secciones (id),
   autor_id uuid not null references foro.perfiles (id) on delete cascade,
-  tipo text not null check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco')),
+  tipo text not null check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco', 'vacante')),
   titulo text not null check (char_length(titulo) between 10 and 150),
   slug text not null,
   cuerpo text not null check (char_length(cuerpo) between 1 and 20000),
@@ -86,11 +86,11 @@ create table if not exists foro.respuestas (
   actualizado timestamptz not null default now()
 );
 
--- 29 oct 2026: tipos "busco" (busco maquinado) y "ofrezco" (capacidad libre).
+-- 29 oct 2026: tipos "busco" (busco maquinado) y "ofrezco" (capacidad libre); 30 oct: "vacante".
 -- En bases creadas antes, la regla vieja no los deja entrar: se reemplaza.
 alter table foro.temas drop constraint if exists temas_tipo_check;
 alter table foro.temas add constraint temas_tipo_check
-  check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco'));
+  check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco', 'vacante'));
 
 do $$ begin
   alter table foro.temas
@@ -150,6 +150,51 @@ create table if not exists foro.fotos (
   creado timestamptz not null default now()
 );
 
+
+-- 30 oct 2026: red profesional. Currículum del perfil (aptitudes, trayectoria
+-- y si está abierto a trabajo), a quién sigue cada quien, avales,
+-- recomendaciones y postulaciones a vacantes. Ver infra/foro/migracion-2026-10-30-red.sql
+alter table foro.perfiles add column if not exists aptitudes text[] not null default '{}';
+alter table foro.perfiles add column if not exists trayectoria jsonb not null default '[]'::jsonb;
+alter table foro.perfiles add column if not exists abierto boolean not null default false;
+
+-- p:<id de perfil>, t:<id de vendedor> (taller del directorio) o s:<slug> (sección)
+create table if not exists foro.seguimientos (
+  seguidor_id uuid not null references foro.perfiles (id) on delete cascade,
+  objetivo text not null check (objetivo ~ '^(p:[0-9a-f-]{36}|t:[A-Za-z0-9_]{3,60}|s:[a-z0-9-]{2,60})$'),
+  creado timestamptz not null default now(),
+  primary key (seguidor_id, objetivo)
+);
+
+create table if not exists foro.avales (
+  perfil_id uuid not null references foro.perfiles (id) on delete cascade,
+  aptitud text not null check (char_length(aptitud) between 2 and 40),
+  autor_id uuid not null references foro.perfiles (id) on delete cascade,
+  creado timestamptz not null default now(),
+  primary key (perfil_id, aptitud, autor_id),
+  check (perfil_id <> autor_id)
+);
+
+create table if not exists foro.recomendaciones (
+  id bigint generated always as identity primary key,
+  perfil_id uuid not null references foro.perfiles (id) on delete cascade,
+  autor_id uuid not null references foro.perfiles (id) on delete cascade,
+  relacion text not null check (relacion in ('cliente', 'proveedor', 'companero', 'jefe', 'alumno', 'otro')),
+  texto text not null check (char_length(texto) between 30 and 1500),
+  estado text not null default 'pendiente' check (estado in ('pendiente', 'publicada', 'oculta')),
+  creado timestamptz not null default now(),
+  unique (perfil_id, autor_id),
+  check (perfil_id <> autor_id)
+);
+
+create table if not exists foro.postulaciones (
+  tema_id bigint not null references foro.temas (id) on delete cascade,
+  perfil_id uuid not null references foro.perfiles (id) on delete cascade,
+  mensaje text not null check (char_length(mensaje) between 10 and 1500),
+  creado timestamptz not null default now(),
+  primary key (tema_id, perfil_id)
+);
+
 create index if not exists temas_lista_idx on foro.temas (seccion_id, estado, fijado desc, ultima_actividad desc);
 create index if not exists temas_recientes_idx on foro.temas (estado, ultima_actividad desc);
 create index if not exists temas_autor_idx on foro.temas (autor_id, creado desc);
@@ -158,6 +203,10 @@ create index if not exists respuestas_tema_idx on foro.respuestas (tema_id, crea
 create index if not exists respuestas_autor_idx on foro.respuestas (autor_id, creado desc);
 create index if not exists reportes_estado_idx on foro.reportes (estado, creado desc);
 create index if not exists fotos_perfil_idx on foro.fotos (perfil_id, creado desc);
+create index if not exists seguimientos_objetivo_idx on foro.seguimientos (objetivo, creado desc);
+create index if not exists avales_autor_idx on foro.avales (autor_id, creado desc);
+create index if not exists recomendaciones_perfil_idx on foro.recomendaciones (perfil_id, estado, creado desc);
+create index if not exists postulaciones_perfil_idx on foro.postulaciones (perfil_id, creado desc);
 
 -- ---------------------------------------------------------------------
 -- Si esta base es de Supabase: cerrado al público (solo el servidor entra)
@@ -172,6 +221,10 @@ alter table foro.encuesta_votos enable row level security;
 alter table foro.reportes enable row level security;
 alter table foro.revisiones enable row level security;
 alter table foro.fotos enable row level security;
+alter table foro.seguimientos enable row level security;
+alter table foro.avales enable row level security;
+alter table foro.recomendaciones enable row level security;
+alter table foro.postulaciones enable row level security;
 
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then
@@ -277,7 +330,7 @@ begin
   if p.suspendido then raise exception 'perfil_suspendido'; end if;
   select * into s from foro.secciones where secciones.slug = p_seccion;
   if s.id is null then raise exception 'seccion_no_existe'; end if;
-  if (s.solo_negocios or p_tipo in ('novedad', 'ofrezco')) and p.tipo not in ('taller', 'proveedor', 'marca') and p.rol = 'usuario' then
+  if (s.solo_negocios or p_tipo in ('novedad', 'ofrezco', 'vacante')) and p.tipo not in ('taller', 'proveedor', 'marca') and p.rol = 'usuario' then
     raise exception 'solo_negocios';
   end if;
   if p.rol = 'usuario' and (select count(*) from foro.temas t where t.autor_id = p_autor and t.creado > now() - interval '1 day') >= 8 then
@@ -404,5 +457,6 @@ insert into foro.secciones (id, slug, nombre, descripcion, orden, solo_negocios)
   (8, 'materiales-herramientas', 'Materiales y herramientas', 'Dónde comprar, qué material conviene y qué herramienta usar para cada trabajo.', 8, false),
   (9, 'precios-negocio', 'Precios y negocio', 'Cuánto cobrar, cómo cotizar, conseguir clientes y hacer crecer tu taller.', 9, false),
   (10, 'muestra-tu-trabajo', 'Muestra tu trabajo', 'Presume tus piezas terminadas: fotos, material, máquina y cómo las hiciste.', 10, false),
-  (11, 'novedades-ofertas', 'Novedades y ofertas', 'Productos, servicios y promociones de talleres, proveedores y marcas.', 11, true)
+  (11, 'novedades-ofertas', 'Novedades y ofertas', 'Productos, servicios y promociones de talleres, proveedores y marcas.', 11, true),
+  (12, 'empleos-proyectos', 'Empleos y proyectos', 'Vacantes de talleres, operadores y programadores que buscan trabajo, y proyectos que buscan quién los haga.', 12, false)
 on conflict (id) do nothing;

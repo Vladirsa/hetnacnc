@@ -12,6 +12,11 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { SellerOffersListing } from "@/components/sections"
 import { tallerPorHandle, ubicacion, type Taller } from "@/lib/hetna/talleres"
+import { TarjetaTema } from "@/components/hetna/foro/Piezas"
+import { BotonSeguir } from "@/components/hetna/foro/RedCliente"
+import { listaTemas, sesionForo } from "@/lib/foro/consultas"
+import { estadoRed, objetivosDeTaller } from "@/lib/foro/red"
+import { type TemaResumen, objetivoTaller } from "@/lib/foro/tipos"
 
 // Mini-sitio del taller (estilo "showroom"): portada, pestañas y cotización dentro de HETNA.
 
@@ -57,6 +62,14 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
   const valida = PESTANAS.some(([id]) => id === sp.tab)
   const tab: Pestana = valida ? (sp.tab as Pestana) : sp.page ? "productos" : "inicio"
   const page = sp.page ? Math.max(1, parseInt(sp.page, 10) || 1) : 1
+
+  // Red del foro: seguidores del taller y lo que publica en la comunidad
+  const [sesion, objetivos] = await Promise.all([sesionForo(), objetivosDeTaller(t.id)])
+  const [red, publicaciones] = await Promise.all([
+    estadoRed(objetivos, sesion?.perfil?.id),
+    tab === "inicio" ? listaTemas({ vendedorId: t.id, orden: "nuevos", limite: 4 }) : Promise.resolve(null),
+  ])
+  const esDueno = Boolean(sesion?.perfil?.vendedor && sesion.perfil.vendedor === t.id)
 
   const p = t.perfil
   const donde = ubicacion(p)
@@ -104,7 +117,10 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {!esDueno && (
+              <BotonSeguir objetivo={objetivoTaller(t.id)} siguiendo={red.siguiendo} seguidores={red.seguidores} etiqueta="Seguir taller" />
+            )}
             <BotonPreguntarTaller tallerHandle={t.handle} tallerNombre={t.nombre} />
             <LocalizedClientLink
               href={`/talleres/${t.handle}?tab=cotizar`}
@@ -136,7 +152,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
       </nav>
 
       <div className="mx-auto mt-6 grid max-w-[1100px] gap-5 px-4 lg:px-6">
-        {tab === "inicio" && <Inicio t={t} datos={datos} />}
+        {tab === "inicio" && <Inicio t={t} datos={datos} publicaciones={publicaciones?.temas || []} />}
 
         {tab === "productos" && (
           <section className={CAJA}>
@@ -165,7 +181,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
   )
 }
 
-function Inicio({ t, datos }: { t: Taller; datos: [string, string][] }) {
+function Inicio({ t, datos, publicaciones }: { t: Taller; datos: [string, string][]; publicaciones: TemaResumen[] }) {
   const p = t.perfil
   return (
     <>
@@ -201,6 +217,17 @@ function Inicio({ t, datos }: { t: Taller; datos: [string, string][] }) {
           Conocer más →
         </LocalizedClientLink>
       </section>
+
+      {publicaciones.length > 0 && (
+        <section className={CAJA}>
+          <h2 className={H2}>Novedades y trabajos en el foro</h2>
+          <div className="flex flex-col gap-3">
+            {publicaciones.map((x) => (
+              <TarjetaTema key={x.id} t={x} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {(p.servicios.length > 0 || p.maquinas.length > 0) && (
         <section className={CAJA}>

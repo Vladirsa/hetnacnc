@@ -9,7 +9,7 @@ import { CaptarTaller } from "@/components/hetna/foro/Feed"
 import { FormRespuesta, ResponderA } from "@/components/hetna/foro/FormRespuesta"
 import { IconoResponder } from "@/components/hetna/foro/IconosCNC"
 import { BotonMejor, BotonNoUtil, BotonVoto, Compartir, EncuestaVotar, MenuMas } from "@/components/hetna/foro/Interaccion"
-import { AutorChip, Cuerpo, ForoCerrado, Fotos, InsigniaTema, Migas, haceCuanto } from "@/components/hetna/foro/Piezas"
+import { AutorChip, Avatar, Cuerpo, ForoCerrado, Fotos, InsigniaTema, Migas, haceCuanto } from "@/components/hetna/foro/Piezas"
 import { VideoLigero } from "@/components/hetna/foro/VideoLigero"
 import CompartirRedes from "@/components/hetna/Compartir"
 import SigueHetna from "@/components/hetna/SigueHetna"
@@ -17,7 +17,9 @@ import { contarVisita, listaTemas, misVotos, respuestas as leerRespuestas, sesio
 import { misNoUtiles } from "@/lib/foro/consultas-no-util"
 import { extracto, leerVideo } from "@/lib/foro/contenido"
 import { ctasPara, talleresDeSeccion } from "@/lib/foro/cta"
-import { type Respuesta, SITIO, urlPerfil, urlTema } from "@/lib/foro/tipos"
+import { estadoRed, postulacionesDe, yaPostulado } from "@/lib/foro/red"
+import { type Respuesta, SITIO, objetivoPerfil, urlPerfil, urlTema } from "@/lib/foro/tipos"
+import { BotonSeguir, Postularme } from "@/components/hetna/foro/RedCliente"
 
 type Props = {
   params: Promise<{ locale: string; seccion: string; slug: string }>
@@ -117,6 +119,13 @@ export default async function ForoTema({ params, searchParams }: Props) {
   if (t.estado === "publicado") await contarVisita(t.id, (await headers()).get("user-agent") || "")
 
   const esAutor = perfil?.id === t.autor.id
+  const esVacante = t.tipo === "vacante"
+  const autorObjetivos = t.autor.taller?.id ? [`p:${t.autor.id}`, `t:${t.autor.taller.id}`] : [`p:${t.autor.id}`]
+  const [redAutor, postulaciones, postulado] = await Promise.all([
+    estadoRed(autorObjetivos, perfil?.id),
+    esVacante && esAutor ? postulacionesDe(t.id) : Promise.resolve([]),
+    esVacante && perfil && !esAutor ? yaPostulado(t.id, perfil.id) : Promise.resolve(false),
+  ])
   const esModerador = perfil?.rol === "moderador" || perfil?.rol === "admin"
   const esPregunta = t.tipo === "pregunta"
 
@@ -136,7 +145,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
   const ligasVideo = t.ligas.map((l) => ({ l, v: leerVideo(l) }))
   const aviso = Array.isArray(q.aviso) ? q.aviso[0] : q.aviso
   // De la duda al servicio: según de qué trata el tema (ver lib/foro/cta)
-  const ctas = t.tipo === "ofrezco" || t.tipo === "novedad" ? [] : ctasPara(t.seccion.slug, `${t.titulo} ${t.cuerpo}`)
+  const ctas = t.tipo === "ofrezco" || t.tipo === "novedad" || esVacante ? [] : ctasPara(t.seccion.slug, `${t.titulo} ${t.cuerpo}`)
   const talleres = talleresDeSeccion(t.seccion.slug)
 
   const tarjetaRespuesta = (r: Respuesta, hija = false) => {
@@ -247,6 +256,43 @@ export default async function ForoTema({ params, searchParams }: Props) {
 
             <BotonesServicio ctas={ctas} />
 
+            {esVacante && t.estado === "publicado" && (
+              <section id="postulaciones" className="flex flex-col gap-3 rounded-[16px] border border-[#C9CDF2] bg-[#F5F6FE] p-5 scroll-mt-24">
+                {esAutor ? (
+                  <>
+                    <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
+                      {postulaciones.length ? `${postulaciones.length} ${postulaciones.length === 1 ? "postulación" : "postulaciones"}` : "Aún no hay postulaciones"}
+                    </h2>
+                    <p className="m-0 text-[13.5px] text-[#6B6A63]">Sólo tú ves esta lista. Revisa el perfil de cada persona: su trayectoria, aptitudes avaladas y recomendaciones.</p>
+                    {postulaciones.map((g) => (
+                      <div key={g.autor.id} className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar a={g.autor} size={40} />
+                          <div className="min-w-0 flex-1">
+                            <LocalizedClientLink href={urlPerfil(g.autor.usuario)} className="block truncate font-semibold text-[#1B1B18] hover:text-[#B34D07]">
+                              {g.autor.nombre}
+                            </LocalizedClientLink>
+                            <span className="text-[12.5px] text-[#6B6A63]">
+                              {[g.autor.ciudad, g.autor.estadoMx].filter(Boolean).join(", ") || "Sin ubicación"} · {haceCuanto(g.creado)}
+                            </span>
+                          </div>
+                          <LocalizedClientLink href={urlPerfil(g.autor.usuario)} className="shrink-0 text-[13.5px] font-semibold text-[#3B46A6] hover:underline">
+                            Ver currículum →
+                          </LocalizedClientLink>
+                        </div>
+                        <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#23231F]">{g.mensaje}</p>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">¿Te interesa esta vacante?</h2>
+                    <Postularme temaId={t.id} yaPostulado={postulado} />
+                  </>
+                )}
+              </section>
+            )}
+
             <section className="flex flex-col gap-3" aria-label="Respuestas">
               <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
                 {nPublicadas ? `${nPublicadas} ${nPublicadas === 1 ? "respuesta" : "respuestas"}` : "Aún no hay respuestas"}
@@ -308,6 +354,9 @@ export default async function ForoTema({ params, searchParams }: Props) {
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex flex-col gap-3">
               <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Publicado por</span>
               <AutorChip a={t.autor} />
+              {!esAutor && (
+                <BotonSeguir objetivo={objetivoPerfil({ id: t.autor.id, vendedor: t.autor.taller?.id })} siguiendo={redAutor.siguiendo} seguidores={redAutor.seguidores} />
+              )}
               <LocalizedClientLink href={urlPerfil(t.autor.usuario)} className="text-center border border-[#E0DCD2] rounded-[10px] py-2 text-[14px] font-semibold hover:border-[#C2560A]">
                 Ver perfil y trabajos
               </LocalizedClientLink>

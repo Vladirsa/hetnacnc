@@ -97,6 +97,20 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
           <span>Blog y guías</span>
           <span aria-hidden="true">→</span>
         </LocalizedClientLink>
+        <LocalizedClientLink
+          href="/foro-cnc/red"
+          className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#142033] bg-[#EEF1F6] hover:bg-[#E2E7EF]"
+        >
+          <span>Mi red</span>
+          <span aria-hidden="true">→</span>
+        </LocalizedClientLink>
+        <LocalizedClientLink
+          href="/foro-cnc/empleos"
+          className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
+        >
+          <span>Empleos y proyectos</span>
+          <span aria-hidden="true">→</span>
+        </LocalizedClientLink>
         <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
         <ul className="m-0 p-0 list-none">
           {secciones.map((s) => (
@@ -127,6 +141,12 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
       }`}
     >
       Todo
+    </LocalizedClientLink>
+    <LocalizedClientLink href="/foro-cnc/red" className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13.5px] font-semibold border bg-white text-[#142033] border-[#C9D2E0]">
+      Mi red
+    </LocalizedClientLink>
+    <LocalizedClientLink href="/foro-cnc/empleos" className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13.5px] font-semibold border bg-white text-[#3B46A6] border-[#C9CDF2]">
+      Empleos
     </LocalizedClientLink>
     {secciones.map((s) => (
       <LocalizedClientLink

@@ -20,7 +20,10 @@ export const TIPOS_TEMA = {
   novedad: { nombre: "Novedad", ayuda: "Producto, servicio o promoción (solo negocios)" },
   busco: { nombre: "Busco maquinado", ayuda: "Necesitas que un taller te haga una pieza o un trabajo" },
   ofrezco: { nombre: "Ofrezco capacidad", ayuda: "Tienes horas libres de máquina (solo talleres)" },
+  vacante: { nombre: "Vacante", ayuda: "Buscas operador, programador CAM, diseñador o ayudante (solo negocios)" },
 } as const
+// Tipos que sólo publican talleres, proveedores y marcas (lo vuelve a revisar la base)
+export const TIPOS_NEGOCIO: TipoTema[] = ["novedad", "ofrezco", "vacante"]
 export type TipoTema = keyof typeof TIPOS_TEMA
 export const esTipoTema = (v: unknown): v is TipoTema => typeof v === "string" && v in TIPOS_TEMA
 
@@ -55,7 +58,7 @@ export type Seccion = {
 
 // Taller del directorio de HETNA al que está ligado un perfil del foro (ver
 // vincularMiTaller). Con él se enseña "Taller verificado" y la liga a su perfil.
-export type TallerLigado = { handle: string; nombre: string; verificado: boolean }
+export type TallerLigado = { id?: string; handle: string; nombre: string; verificado: boolean }
 
 export type Autor = {
   id: string
@@ -112,6 +115,57 @@ export type Respuesta = {
   autor: Autor
 }
 
+// ---------------------------------------------------------------------
+// Red profesional: currículum, seguir, avales y recomendaciones
+// ---------------------------------------------------------------------
+
+export const TIPOS_TRAYECTORIA = {
+  experiencia: "Experiencia",
+  educacion: "Estudios",
+  certificacion: "Certificaciones y cursos",
+  proyecto: "Proyectos",
+} as const
+export type TipoTrayectoria = keyof typeof TIPOS_TRAYECTORIA
+export type Paso = { tipo: TipoTrayectoria; titulo: string; lugar: string; desde: string; hasta: string; detalle: string }
+
+export const RELACIONES = {
+  cliente: "Fue su cliente",
+  proveedor: "Le compra o le vende",
+  companero: "Trabajaron juntos",
+  jefe: "Fue su jefe o encargado",
+  alumno: "Le enseñó o aprendió con él",
+  otro: "Otro",
+} as const
+export type Relacion = keyof typeof RELACIONES
+
+export const MAX_APTITUDES = 15
+export const MAX_PASOS = 15
+
+// Lo que se sigue: una persona (p:), un taller del directorio (t:) o una sección (s:).
+// Un perfil ligado a un taller se sigue como el taller: así seguir a la
+// persona o al mini-sitio es lo mismo y se cuenta una sola vez.
+export const objetivoPerfil = (p: { id: string; vendedor?: string | null }) =>
+  p.vendedor ? `t:${p.vendedor}` : `p:${p.id}`
+export const objetivoTaller = (vendedorId: string) => `t:${vendedorId}`
+export const objetivoSeccion = (slug: string) => `s:${slug}`
+export const esObjetivo = (v: unknown): v is string =>
+  typeof v === "string" && /^(p:[0-9a-f-]{36}|t:[A-Za-z0-9_]{3,60}|s:[a-z0-9-]{2,60})$/.test(v)
+
+export type Aval = { aptitud: string; n: number; yo: boolean }
+export type Recomendacion = {
+  id: number
+  relacion: Relacion
+  texto: string
+  estado: "pendiente" | "publicada" | "oculta"
+  creado: string
+  autor: Autor
+}
+export type Postulacion = { mensaje: string; creado: string; autor: Autor & { ciudad: string; estadoMx: string } }
+
+export const urlRed = "/foro-cnc/red"
+export const urlEmpleos = "/foro-cnc/empleos"
+export const SECCION_EMPLEOS = "empleos-proyectos"
+
 export type Perfil = Autor & {
   bio: string
   ciudad: string
@@ -122,6 +176,9 @@ export type Perfil = Autor & {
   rol: "usuario" | "moderador" | "admin"
   suspendido: boolean
   vendedor: string | null
+  aptitudes: string[]
+  trayectoria: Paso[]
+  abierto: boolean
   creado: string
   temas: number
   respuestas: number
@@ -152,6 +209,11 @@ export const MENSAJES: Record<string, string> = {
   sin_foro: "El foro abre muy pronto.",
   tipo_no_activo: "Este tipo de publicación todavía no está activo. Elige otro.",
   sin_taller: "No encontramos un taller registrado con el correo de tu cuenta.",
+  red_no_activa: "La red todavía no está activa. Intenta más tarde.",
+  a_ti_mismo: "Eso no se puede hacer con tu propio perfil.",
+  no_existe: "Ya no existe.",
+  no_es_vacante: "Sólo te puedes postular a una vacante.",
+  ya_postulado: "Ya te postulaste a esta vacante.",
   error: "Algo salió mal. Intenta de nuevo.",
 }
 

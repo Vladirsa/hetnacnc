@@ -128,3 +128,33 @@ pantalla **Blog**.
 el mismo de su taller (o de un miembro de su panel). Con eso sale la insignia
 "Taller HETNA" (o "✓ Taller verificado") con liga a su página, y recibe por
 correo las preguntas de su especialidad.
+
+## Actualización del 30 de octubre de 2026: red profesional
+
+**Base del foro (Supabase).** Corre una vez `migracion-2026-10-30-red.sql` en
+el editor SQL, sobre la base de `HETNA_FORO_DB` (después de la del 29). Se
+puede correr más de una vez. Agrega:
+
+- **Seguir** (`foro.seguimientos`): a una persona, a un taller del directorio o
+  a una sección. Un perfil ligado a un taller se sigue como el taller, así
+  seguir a la persona o al mini-sitio cuenta una sola vez.
+- **Currículum** en el perfil: aptitudes, trayectoria (experiencia, estudios,
+  certificaciones y proyectos) y "Abierto a trabajo y proyectos".
+- **Avales** de aptitudes (`foro.avales`) y **recomendaciones**
+  (`foro.recomendaciones`): éstas salen en el perfil hasta que el dueño las
+  acepta.
+- Tipo de publicación **Vacante** (sólo talleres, proveedores y marcas),
+  **postulaciones** (`foro.postulaciones`, sólo las ve quien publicó la
+  vacante) y la sección **Empleos y proyectos**.
+
+Mientras no se corra, el foro funciona igual: los botones de la red responden
+"La red todavía no está activa".
+
+Páginas: `/foro-cnc/red` (Mi red: novedades de lo que sigues, productos nuevos
+de los talleres que sigues, seguidores, siguiendo, sugerencias y pendientes) y
+`/foro-cnc/empleos` (vacantes, proyectos esperando precio y profesionales
+abiertos a trabajo). En el mini-sitio de cada taller sale el botón
+**Seguir taller** y sus publicaciones del foro.
+
+Límites contra abuso, por persona y por día: 300 seguimientos, 100 avales,
+5 recomendaciones y 15 postulaciones.

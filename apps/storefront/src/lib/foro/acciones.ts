@@ -9,7 +9,7 @@ import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
 import { getAuthHeaders } from "@/lib/data/cookies"
 import { avisarRedes } from "@/lib/hetna/avisar-redes"
-import { ES_NEGOCIO, type Red, REDES, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
+import { ES_NEGOCIO, type Red, REDES, TIPOS_NEGOCIO, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
 
 type Res<T = {}> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -178,7 +178,7 @@ export async function publicarTema(
 
   const seccion = texto(d.seccion, 60)
   if (!esTipoTema(d.tipo)) return { ok: false, error: "Elige el tipo de publicación." }
-  if ((d.tipo === "novedad" || d.tipo === "ofrezco") && !ES_NEGOCIO.includes(perfil.tipo)) return { ok: false, error: "solo_negocios" }
+  if (TIPOS_NEGOCIO.includes(d.tipo) && !ES_NEGOCIO.includes(perfil.tipo)) return { ok: false, error: "solo_negocios" }
   const t = revisarTexto(texto(d.titulo, 150).replace(/\s+/g, " "))
   if (t.texto.length < 10) return { ok: false, error: "El título debe tener al menos 10 letras. Dilo como lo buscarías en Google." }
   const c = revisarTexto(texto(d.cuerpo, 20000), { cuentaNueva: esCuentaNueva(perfil.creado) })

@@ -30,6 +30,7 @@ const COLOR_TEMA: Record<TipoTema, [string, string]> = {
   novedad: ["#FFF3E0", "#9A4A06"],
   busco: ["#E0F2F1", "#0B6B62"],
   ofrezco: ["#FDEEE1", "#B34D07"],
+  vacante: ["#EDEFFC", "#3B46A6"],
 }
 
 export function haceCuanto(iso: string): string {

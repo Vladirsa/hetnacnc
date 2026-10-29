@@ -20,23 +20,23 @@ import {
   urlFoto,
 } from "./tipos"
 
-type Fila = Record<string, any>
+export type Fila = Record<string, any>
 
-const fecha = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? ""))
+export const fecha = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? ""))
 
-const AUTOR = `a.id as a_id, a.usuario as a_usuario, a.nombre as a_nombre, a.tipo as a_tipo,
+export const AUTOR = `a.id as a_id, a.usuario as a_usuario, a.nombre as a_nombre, a.tipo as a_tipo,
   a.verificado as a_verificado, a.reputacion as a_reputacion, a.foto_url as a_foto, a.vendedor_id as a_vendedor`
 
 // Talleres del directorio por id de vendedor. El foro vive en otra base, así
 // que se cruzan aquí: se cargan una vez cada 5 minutos y cada autor ligado a
 // un taller sale con su insignia y la liga a su perfil.
 let talleres: { mapa: Map<string, TallerLigado>; hasta: number } = { mapa: new Map(), hasta: 0 }
-async function asegurarTalleres() {
+export async function asegurarTalleres() {
   if (Date.now() < talleres.hasta) return
   try {
     const lista = await listarTalleres()
     talleres = {
-      mapa: new Map(lista.map((t) => [t.id, { handle: t.handle, nombre: t.nombre, verificado: t.verificado }])),
+      mapa: new Map(lista.map((t) => [t.id, { id: t.id, handle: t.handle, nombre: t.nombre, verificado: t.verificado }])),
       hasta: Date.now() + 5 * 60_000,
     }
   } catch {
@@ -44,9 +44,9 @@ async function asegurarTalleres() {
     talleres.hasta = Date.now() + 60_000
   }
 }
-const tallerDe = (vendedorId: unknown) => (typeof vendedorId === "string" ? talleres.mapa.get(vendedorId) || null : null)
+export const tallerDe = (vendedorId: unknown) => (typeof vendedorId === "string" ? talleres.mapa.get(vendedorId) || null : null)
 
-const aAutor = (f: Fila): Autor => ({
+export const aAutor = (f: Fila): Autor => ({
   id: f.a_id,
   usuario: f.a_usuario,
   nombre: f.a_nombre,
@@ -59,7 +59,7 @@ const aAutor = (f: Fila): Autor => ({
 
 const ligasDe = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : [])
 
-const aResumen = (f: Fila): TemaResumen => ({
+export const aResumen = (f: Fila): TemaResumen => ({
   id: Number(f.id),
   seccion: { slug: f.s_slug, nombre: f.s_nombre },
   tipo: f.tipo,
@@ -80,15 +80,15 @@ const aResumen = (f: Fila): TemaResumen => ({
   autor: aAutor(f),
 })
 
-const TEMA_CAMPOS = `t.id, t.tipo, t.titulo, t.slug, t.cuerpo, t.ligas, t.fotos[1] as foto, t.votos, t.respuestas,
+export const TEMA_CAMPOS = `t.id, t.tipo, t.titulo, t.slug, t.cuerpo, t.ligas, t.fotos[1] as foto, t.votos, t.respuestas,
   t.vistas, t.fijado, t.patrocinado, t.mejor_respuesta_id is not null as resuelto, t.estado, t.creado,
   t.ultima_actividad, s.slug as s_slug, s.nombre as s_nombre, ${AUTOR}`
 
-const TEMA_DESDE = `from foro.temas t
+export const TEMA_DESDE = `from foro.temas t
   join foro.secciones s on s.id = t.seccion_id
   join foro.perfiles a on a.id = t.autor_id`
 
-async function intentar<T>(f: () => Promise<T>): Promise<T | null> {
+export async function intentar<T>(f: () => Promise<T>): Promise<T | null> {
   if (!foroConfigurado()) return null
   try {
     await asegurarTalleres()
@@ -150,6 +150,7 @@ export async function listaTemas(o: {
   pagina?: number
   buscar?: string
   autorId?: string
+  vendedorId?: string
   tipo?: string
   limite?: number
 }): Promise<{ temas: TemaResumen[]; total: number } | null> {
@@ -162,6 +163,7 @@ export async function listaTemas(o: {
     }
     if (o.seccion) donde.push(`s.slug = ${arg(o.seccion)}`)
     if (o.autorId) donde.push(`t.autor_id = ${arg(o.autorId)}`)
+    if (o.vendedorId) donde.push(`a.vendedor_id = ${arg(o.vendedorId)}`)
     if (o.tipo) donde.push(`t.tipo = ${arg(o.tipo)}`)
     if (o.orden === "sin-respuesta") donde.push(`t.respuestas = 0`)
     const q = (o.buscar || "").trim().slice(0, 120)
@@ -302,6 +304,10 @@ const aPerfil = (f: Fila): Perfil => ({
   rol: f.rol,
   suspendido: f.suspendido,
   vendedor: f.vendedor_id || null,
+  // Columnas de la red (migración del 30 de octubre); antes de correrla no existen.
+  aptitudes: Array.isArray(f.aptitudes) ? f.aptitudes : [],
+  trayectoria: Array.isArray(f.trayectoria) ? f.trayectoria : [],
+  abierto: f.abierto === true,
   creado: fecha(f.creado),
   temas: Number(f.n_temas) || 0,
   respuestas: Number(f.n_respuestas) || 0,
