@@ -11,6 +11,7 @@ import {
   folioTexto,
   ocultarContacto,
 } from "../../../lib/licitacion"
+import { NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
 // y las que ya cotizó. Nunca incluye datos de contacto del cliente.
@@ -29,6 +30,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
 
   await asegurarTablas(knex)
   await asegurarTablaRespuestas(knex)
+  await asegurarSeguimiento(knex)
   const filas = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
@@ -61,6 +63,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .limit(100)
     .select(
       "s.id", "s.folio", "s.modo", "s.taller_id", "s.estado", "s.trabajo", "s.cierra_en", "s.created_at",
+      "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
       "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado",
       "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
@@ -77,6 +80,12 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     folio: folioTexto(f.folio),
     para_mi: f.taller_id === sellerId,
     estado: f.estado,
+    // El seguimiento sólo le importa al taller que ganó; a los demás les
+    // basta saber si sigue abierta.
+    etapa: f.p_estado === "elegida" ? etapaDe(f) : null,
+    etapa_nombre: f.p_estado === "elegida" ? NOMBRE_ETAPA[etapaDe(f)] : null,
+    pagada: f.estado === "pagada" || f.pago_estado === "pagado",
+    envio: f.p_estado === "elegida" ? { paqueteria: f.paqueteria || "", guia: f.guia || "" } : null,
     cierra_en: f.cierra_en,
     creada: f.created_at,
     // De los archivos sólo nombre y tamaño: la liga se pide aparte, firmada.

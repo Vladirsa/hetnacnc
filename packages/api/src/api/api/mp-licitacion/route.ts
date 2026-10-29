@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sendEmail } from "../../../lib/resend"
 import { T_PROPUESTA, T_SOLICITUD, VENDOR_URL, asegurarTablas, boton, consultarPago, fila, folioTexto, marco } from "../../../lib/licitacion"
+import { cambiarEtapa } from "../../../lib/seguimiento"
 
 // Aviso de Mercado Pago para pagos de licitación (https://hetnacnc.com/api/mp-licitacion).
 // No confiamos en el cuerpo: consultamos el pago a Mercado Pago con nuestra llave
@@ -43,6 +44,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     await knex(T_SOLICITUD).where({ id: s.id }).update({ pago_estado: "pagado", pago_id: String(pago.id), estado: "pagada", updated_at: knex.fn.now() })
 
     const p = await knex(`${T_PROPUESTA} as p`).join("seller as v", "v.id", "p.seller_id").where("p.id", s.propuesta_elegida).first("p.*", "v.name as taller", "v.email as taller_email")
+    // Pagado = el taller empieza: pasa a producción. El correo de pago de
+    // abajo ya se lo cuenta al cliente.
+    await cambiarEtapa(knex, s, "en_produccion", {
+      actor: "sistema",
+      nota: `Pago confirmado. ${p?.taller || "El taller"} empieza a fabricar; entrega comprometida en ${p?.dias ?? "—"} días.`,
+      correo: false,
+    }).catch((e: Error) => logger.error(`[seguimiento] ${folio} no se pudo marcar en producción: ${e.message}`))
     const resumen =
       `<table style="border-collapse:collapse;font-size:14px">` +
       fila("Folio", folio) + fila("Taller", p?.taller || "") +

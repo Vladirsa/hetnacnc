@@ -5,6 +5,7 @@ import { sendEmail } from "../../../../../lib/resend"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
+import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 
 type Body = { precio?: number | string; dias?: number | string; vigencia_dias?: number | string; incluye_envio?: boolean | string; condiciones?: string }
 
@@ -43,6 +44,14 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
     await knex(T_PROPUESTA).insert({ id: nuevoId("prop"), solicitud_id: s.id, seller_id: sellerId, ...datos })
   }
   res.json({ ok: true, actualizada: Boolean(previa) })
+
+  // La primera propuesta pasa la solicitud a "cotizada". Sin correo propio:
+  // el aviso de propuesta nueva de abajo ya se lo dice al cliente.
+  if (!previa && etapaDe(s) === "enviada_talleres") {
+    await cambiarEtapa(knex, s, "cotizada", { actor: "taller", correo: false }).catch((e: Error) =>
+      logger.warn(`[seguimiento] no se pudo marcar cotizada: ${e.message}`)
+    )
+  }
 
   // Aviso al cliente (solo la primera vez que este taller propone)
   if (!previa && s.contacto?.email) {

@@ -15,6 +15,7 @@ import {
   ligaPropuestas,
   marco,
 } from "../../../../../lib/licitacion"
+import { cambiarEtapa } from "../../../../../lib/seguimiento"
 
 // El cliente elige una propuesta: se cierra la licitación y se genera su liga de
 // pago de Mercado Pago (si hay llave). El taller empieza cuando el pago se confirma.
@@ -43,6 +44,9 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
 
   const folio = folioTexto(s.folio)
   const monto = Number(p.precio)
+  await cambiarEtapa(knex, s, "aceptada", { actor: "cliente", nota: `Elegiste la propuesta de ${p.taller}.`, correo: false }).catch(
+    (e: Error) => logger.warn(`[seguimiento] no se pudo marcar aceptada: ${e.message}`)
+  )
 
   // Liga de pago
   let pagoUrl: string | null = null

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import ComparadorPropuestas from "@/components/hetna/taller/ComparadorPropuestas"
+import SeguimientoSolicitud from "@/components/hetna/taller/SeguimientoSolicitud"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { verSolicitud } from "@/lib/cotizar/solicitud-taller"
 
@@ -37,14 +38,20 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 pb-16 pt-8 lg:px-6">
       <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]">Folio {s.folio}</p>
-      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]">Propuestas para tu trabajo</h1>
+      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]">Tu solicitud de fabricación</h1>
       <p className="mt-2 text-[#6B675C]">
-        {s.estado === "abierta"
+        {s.estado === "revision"
+          ? "Estamos revisando tu solicitud. En cuanto la aprobemos la enviamos a los talleres y te avisamos por correo."
+          : s.estado === "cerrada"
+            ? s.etapa_explica || "Esta solicitud está cerrada."
+            : s.estado === "abierta"
           ? `Compara precio, tiempo y condiciones. ${s.modo === "abierta" && cierra ? `Los talleres pueden enviar propuestas hasta el ${cierra}.` : ""}`
           : s.pago_estado === "pagado"
-            ? "Pago recibido. El taller está fabricando tu pedido."
+            ? s.etapa_explica || "Pago recibido. El taller está fabricando tu pedido."
             : "Ya elegiste una propuesta. Completa tu pago para que el taller empiece."}
       </p>
+
+      <SeguimientoSolicitud token={token} s={s} />
 
       <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
         <h2 className="text-lg font-extrabold text-[#142033]">Tu solicitud</h2>
@@ -70,7 +77,7 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
         )}
       </section>
 
-      <ComparadorPropuestas token={token} solicitud={s} />
+      {s.estado !== "revision" && <ComparadorPropuestas token={token} solicitud={s} />}
 
       <p className="mt-8 text-center text-sm text-[#6B675C]">
         ¿Dudas? Escríbenos desde <LocalizedClientLink href="/contacto" className="text-[#C2560A] underline">Contacto</LocalizedClientLink> con tu folio {s.folio}.

@@ -86,6 +86,14 @@ export type VistaSolicitud = {
   pago_url: string | null
   pago_estado: string | null
   propuestas: Propuesta[]
+  // Seguimiento (ver lib/seguimiento del API)
+  etapa?: string
+  etapa_nombre?: string
+  etapa_explica?: string
+  linea?: { etapa: string; nombre: string; explica: string; fecha: string | null; estado: "hecha" | "actual" | "pendiente" | "omitida" }[]
+  historial?: { fecha: string; quien: string; nota: string }[]
+  envio?: { paqueteria: string; guia: string } | null
+  puede_confirmar?: boolean
 }
 
 const cabeceras = () => ({
@@ -121,5 +129,19 @@ export async function elegirPropuesta(
     return { ok: true, pago_url: body.pago_url || null }
   } catch {
     return { ok: false, mensaje: "No se pudo elegir la propuesta. Intenta de nuevo." }
+  }
+}
+
+export async function confirmarRecibido(token: string): Promise<{ ok: true } | { ok: false; mensaje: string }> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller/${encodeURIComponent(token)}/recibido`, {
+      method: "POST",
+      headers: cabeceras(),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, mensaje: body.message || "No se pudo confirmar. Intenta de nuevo." }
+    return { ok: true }
+  } catch {
+    return { ok: false, mensaje: "No se pudo confirmar. Intenta de nuevo." }
   }
 }

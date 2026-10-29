@@ -15,6 +15,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const s = await knex(T_SOLICITUD)
     .where({ folio: numero, modo: "abierta" })
+    // En revisión todavía no es pública: HETNA no la ha aprobado.
+    .whereNot({ estado: "revision" })
     .first("id", "folio", "estado", "trabajo", "cierra_en", "created_at")
   if (!s) return res.status(404).json({ message: "Trabajo no encontrado." })
 

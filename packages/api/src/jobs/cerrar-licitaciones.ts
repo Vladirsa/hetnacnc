@@ -24,6 +24,7 @@ import {
   marco,
   tablaTrabajo,
 } from "../lib/licitacion"
+import { cambiarEtapa } from "../lib/seguimiento"
 
 const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -39,7 +40,7 @@ export default async function cerrarLicitaciones(container: MedusaContainer) {
       .where("cierra_en", "<=", knex.fn.now())
       .whereNull("aviso_cierre")
       .limit(50)
-      .select("id", "folio", "token", "modo", "trabajo", "contacto")) as any[]
+      .select("id", "folio", "token", "modo", "trabajo", "contacto", "etapa")) as any[]
     if (!vencidas.length) return
 
     const conteos = (await knex(T_PROPUESTA)
@@ -78,6 +79,11 @@ export default async function cerrarLicitaciones(container: MedusaContainer) {
         await knex(T_SOLICITUD)
           .where({ id: s.id })
           .update({ estado: "cerrada", aviso_cierre: knex.fn.now(), updated_at: knex.fn.now() })
+        await cambiarEtapa(knex, s, "cerrada", {
+          actor: "sistema",
+          nota: "Ningún taller cotizó en los 7 días. HETNA te va a contactar para buscarte taller.",
+          correo: false,
+        }).catch((e: Error) => logger.warn(`[seguimiento] ${folio}: ${e.message}`))
         const destino = process.env.HETNA_LEADS_EMAIL
         if (destino) {
           const r = await sendEmail({

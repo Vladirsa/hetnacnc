@@ -150,6 +150,91 @@ function FormNoPuedo({ sol, alGuardar, alCancelar }) {
   )
 }
 
+// Pedido ganado y pagado: el taller cuenta avances al cliente y marca la
+// entrega con paquetería y guía. El cliente lo ve en su liga y le llega correo.
+function Pedido({ sol, alGuardar }) {
+  const [modo, setModo] = useState(null) // "avance" | "entregada"
+  const [f, setF] = useState({ nota: "", paqueteria: "", guia: "" })
+  const [msg, setMsg] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+  const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
+
+  if (!sol.pagada) {
+    return (
+      <p style={{ marginTop: 10, fontSize: 13, color: "#B34D07", background: "#FFF1E6", borderRadius: 8, padding: "8px 12px" }}>
+        Esperando el pago del cliente. No empieces a fabricar hasta que te avisemos que pagó.
+      </p>
+    )
+  }
+  const yaEntregada = sol.etapa === "entregada" || sol.etapa === "cerrada"
+
+  const enviar = async () => {
+    setEnviando(true)
+    setMsg(null)
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/avance`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: modo, ...f }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setModo(null)
+      setF({ nota: "", paqueteria: "", guia: "" })
+      alGuardar()
+    } catch (e) {
+      setMsg(e.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 12, background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={S.tag("#E6F4EA", "#1E7B3A")}>{sol.etapa_nombre || "En producción"}</span>
+        {sol.envio?.guia && <span style={{ fontSize: 13 }}>Guía {sol.envio.paqueteria} <strong>{sol.envio.guia}</strong></span>}
+        {sol.etapa === "entregada" && <span style={{ fontSize: 13, color: "#6B675C" }}>Esperando que el cliente confirme que lo recibió.</span>}
+      </div>
+      {!modo && (
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+          <button type="button" style={S.btn2} onClick={() => setModo("avance")}>Contar un avance al cliente</button>
+          {!yaEntregada && (
+            <button type="button" style={S.btn} onClick={() => setModo("entregada")}>Marcar como entregado / enviado</button>
+          )}
+        </div>
+      )}
+      {modo && (
+        <div style={{ marginTop: 10 }}>
+          {modo === "entregada" && (
+            <div style={S.grid}>
+              <div>
+                <label style={S.label}>Paquetería</label>
+                <input style={S.input} value={f.paqueteria} onChange={(e) => set("paqueteria", e.target.value)} placeholder="Estafeta, DHL, entrega en persona…" />
+              </div>
+              <div>
+                <label style={S.label}>Número de guía</label>
+                <input style={S.input} value={f.guia} onChange={(e) => set("guia", e.target.value)} />
+              </div>
+            </div>
+          )}
+          <label style={{ ...S.label, marginTop: 10 }}>{modo === "avance" ? "¿Qué avance le cuentas?" : "Nota para el cliente (opcional)"}</label>
+          <textarea style={S.area} value={f.nota} onChange={(e) => set("nota", e.target.value)}
+            placeholder={modo === "avance" ? "Ej. Ya cortamos las piezas; mañana pintamos." : "Ej. Va en 2 cajas."} />
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+            <button type="button" style={{ ...S.btn, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={enviar}>
+              {enviando ? "Enviando..." : modo === "avance" ? "Enviar avance" : "Confirmar entrega"}
+            </button>
+            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setModo(null)}>Cancelar</button>
+            {msg && <span style={{ fontSize: 14, color: "#B3261E" }}>{msg}</span>}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FormPropuesta({ sol, alGuardar }) {
   const p = sol.mi_propuesta
   const [f, setF] = useState({
@@ -348,6 +433,8 @@ export default function SolicitudesPage() {
                 Tu propuesta: <strong>{pesos(p.precio)}</strong> · {p.dias} días {p.incluye_envio ? "· envío incluido" : ""}
               </p>
             )}
+
+            {p?.estado === "elegida" && <Pedido sol={s} alGuardar={cargar} />}
 
             {s.estado === "abierta" && !descartada(s) && (
               abierta === s.id ? (
