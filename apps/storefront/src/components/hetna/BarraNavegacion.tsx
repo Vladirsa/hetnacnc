@@ -4,7 +4,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 
 import { CerrarMenus } from "./CerrarMenus"
 import { ServicioIcono } from "./ServicioIcono"
-import { SERVICIOS_PRINCIPALES } from "./servicios-datos"
+import { GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 
 // Barra de navegacion HETNA: "Todas las categorias" (Tienda, Digital y
 // Servicios juntas), Fabricación y Herramientas CNC. En computadora los menus
@@ -150,13 +150,20 @@ const OpcionHerramienta = ({
 
 const ListaHerramientas = () => (
   <>
-    {SERVICIOS_PRINCIPALES.map((s) => (
+    <LocalizedClientLink
+      href="/herramientas-cnc"
+      className="flex items-center justify-between rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
+    >
+      Todas las herramientas
+      <FlechaDerecha />
+    </LocalizedClientLink>
+    {GRUPOS_HERRAMIENTAS.map((g) => (
       <OpcionHerramienta
-        key={s.slug}
-        href={"/servicios/" + s.slug}
-        icono={s.icono}
-        titulo={s.nombre}
-        texto={s.resumen}
+        key={g.id}
+        href={`/herramientas-cnc#${g.id}`}
+        icono={g.icono}
+        titulo={g.titulo}
+        texto={g.herramientas.map((h) => h.nombre).slice(0, 3).join(" · ")}
       />
     ))}
   </>
@@ -268,7 +275,6 @@ export const BarraNavegacion = ({
         <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
           Foro CNC
         </LocalizedClientLink>
-        <LocalizedClientLink href="/cam" className={ENLACE}>Laboratorio CAM</LocalizedClientLink>
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
         <LocalizedClientLink href="/servicios/envios-hetna" className={ENLACE}>Envíos HETNA</LocalizedClientLink>
         <span className="flex-1" />

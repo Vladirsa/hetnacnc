@@ -141,6 +141,14 @@ const nextConfig: NextConfig = {
   // transfiere el posicionamiento en lugar de indexar dos direcciones.
   async redirects() {
     return [
+      // Herramientas CNC: /cam y la página del Generador se juntaron en
+      // /herramientas-cnc; el servicio de maquinado ahora vive en Fabricación.
+      // Las herramientas sueltas (/cam/subir, /cam/lab, /cam/torno y los
+      // generadores) no cambian de dirección.
+      { source: "/:locale/cam", destination: "/:locale/herramientas-cnc", permanent: true },
+      { source: "/cam", destination: "/mx/herramientas-cnc", permanent: true },
+      { source: "/:locale/servicios/generador-2d-3d", destination: "/:locale/herramientas-cnc", permanent: true },
+      { source: "/:locale/servicios/laboratorio-cam/:resto*", destination: "/:locale/fabricacion", permanent: true },
       {
         source: "/:locale/producto/:handle",
         destination: "/:locale/products/:handle",

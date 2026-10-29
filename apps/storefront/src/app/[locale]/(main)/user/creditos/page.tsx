@@ -132,7 +132,7 @@ export default async function CreditosPage({
                 <span>
                   El{" "}
                   <LocalizedClientLink
-                    href="/cam"
+                    href="/herramientas-cnc#laboratorio-cam"
                     className="font-semibold text-[#B34D07] underline"
                   >
                     Laboratorio CAM

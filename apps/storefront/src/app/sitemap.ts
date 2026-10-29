@@ -46,7 +46,8 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cotizar/corte-plasma", "weekly", 0.8],
   ["/cotizar/impresion-3d", "weekly", 0.8],
   ["/fabricacion", "weekly", 0.9],
-  ["/cam", "weekly", 0.7],
+  ["/herramientas-cnc", "weekly", 0.9],
+  ["/cam/subir", "weekly", 0.6],
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],
   ["/talleres", "daily", 0.8],
@@ -107,7 +108,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const tienda: MetadataRoute.Sitemap = [
     ...FIJAS.flatMap(([ruta, f, p]) => bilingue(ruta, f, p, hoy)),
-    ...SERVICIOS.flatMap((s) => bilingue(`/servicios/${s.slug}`, "weekly", s.padre ? 0.7 : 0.8, hoy)),
+    // generador-2d-3d y laboratorio-cam redirigen (a /herramientas-cnc y /fabricacion): fuera del mapa
+    ...SERVICIOS.filter((s) => s.slug !== "generador-2d-3d" && !s.slug.startsWith("laboratorio-cam")).flatMap((s) =>
+      bilingue(`/servicios/${s.slug}`, "weekly", s.padre ? 0.7 : 0.8, hoy)
+    ),
     ...cats.flatMap((h) => bilingue(`/categories/${h}`, "daily", 0.8, hoy)),
     ...prods.flatMap((p) => bilingue(`/products/${p.handle}`, "weekly", 0.7, p.fecha)),
     ...talleres.flatMap((t) => bilingue(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
