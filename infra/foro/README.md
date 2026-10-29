@@ -129,6 +129,17 @@ el mismo de su taller (o de un miembro de su panel). Con eso sale la insignia
 "Taller HETNA" (o "✓ Taller verificado") con liga a su página, y recibe por
 correo las preguntas de su especialidad.
 
+## Migraciones automáticas
+
+Desde el 31 de octubre de 2026 el deploy (`scripts/desplegar.sh`) corre
+`node scripts/migrar-foro.mjs --suave`: aplica, en orden, cada
+`infra/foro/migracion-*.sql` que falte y la anota en `foro.migraciones` para no
+repetirla. Ya no hace falta pegarlas en Supabase. Para correrlas a mano:
+
+```
+cd /root/hetnacnc && node scripts/migrar-foro.mjs
+```
+
 ## Actualización del 30 de octubre de 2026: red profesional
 
 **Base del foro (Supabase).** Corre una vez `migracion-2026-10-30-red.sql` en

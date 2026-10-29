@@ -126,6 +126,12 @@ bun run build
 paso "Aplicando migraciones"
 (cd packages/api && ./node_modules/.bin/medusa db:migrate)
 
+# La base del foro va aparte (HETNA_FORO_DB, en Supabase). Corre sólo las
+# migraciones de infra/foro que falten. Si la base del foro no responde, avisa
+# y sigue: el sitio no se queda sin publicar por el foro.
+paso "Aplicando migraciones del foro"
+node scripts/migrar-foro.mjs --suave
+
 # --- 5. Reiniciar, ya con todo verificado ---
 
 paso "Reiniciando los procesos"
