@@ -22,6 +22,7 @@ export function tarifaRapida(cot: any, margenPct = 0) {
   ok.sort((a: any, b: any) => Number(a.days) - Number(b.days) || Number(a.total) - Number(b.total))
   const t = ok[0]
   return {
+    rateId: String(t.id || ""),
     paqueteria: t.provider_display_name,
     servicio: t.provider_service_name,
     dias: t.days,
