@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { tallerPorHandle } from "@/lib/hetna/talleres"
+import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
+import { listarTalleres, tallerPorHandle } from "@/lib/hetna/talleres"
 
 export const metadata: Metadata = {
   title: "Solicitar cotización CNC",
@@ -36,10 +37,25 @@ const CALCULADORAS = [
 export default async function CotizarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ taller?: string; servicio?: string; necesidad?: string }>
+  searchParams: Promise<{
+    taller?: string
+    servicio?: string
+    necesidad?: string
+    // Desde "Fabrícamelo" en Diseñar y escanear: la pieza ya viene lista
+    desde?: string
+    pieza?: string
+    medidas?: string
+    material?: string
+    archivo?: string
+    proceso?: string
+  }>
 }) {
-  const { taller, servicio, necesidad } = await searchParams
-  const t = taller ? await tallerPorHandle(taller) : null
+  const sp = await searchParams
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso } = sp
+  const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
+  // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
+  const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
+  const prellenado = desde && pieza ? { pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso } : undefined
 
   return (
     <main className="w-full bg-[#FAF9F6]">
@@ -47,7 +63,7 @@ export default async function CotizarPage({
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-            {t ? `Cotiza con ${t.nombre}` : "Solicita tu trabajo CNC"}
+            {t ? `Cotiza con ${t.nombre}` : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t
@@ -57,9 +73,10 @@ export default async function CotizarPage({
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} />
+          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
 
           <aside className="grid content-start gap-4">
+            <TalleresCerca talleres={talleres.filter((x) => x.handle !== t?.handle)} proceso={proceso || servicio} query={query} />
             <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
             {CALCULADORAS.map((c) => (
               <LocalizedClientLink

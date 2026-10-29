@@ -81,8 +81,12 @@ export async function difundirSolicitud(
       // que trabajan el material que pide el cliente (si el taller lo puso
       // en su perfil), luego los de su mismo estado, que entregan sin flete
       // caro y son los que más contestan.
+      // Mismo municipio que el cliente: antes que nadie (puede entregar en mano).
+      const norm = (v: unknown) => String(v || "").trim().toLowerCase()
+      const mismoMunicipio = (p: any) => Boolean(trabajo.ciudad) && norm(p?.ciudad) === norm(trabajo.ciudad)
       const prioridad = (x: { metadata: any }) =>
         (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ? 0 : 2) +
+        (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
         (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
       coinciden.sort((x, y) => prioridad(x) - prioridad(y))
       for (const x of coinciden) {

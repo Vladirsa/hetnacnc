@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { FORMATOS, type ArgCajas, type EsquemaCajas } from "@/lib/hetna/cajas"
+import { FORMATOS, rutaArchivo, type ArgCajas, type EsquemaCajas } from "@/lib/hetna/cajas"
 import { BloquePublicidad } from "./BloquePublicidad"
 
 // Interfaz HETNA para un generador de Boxes.py: parámetros a la izquierda,
 // vista previa en vivo a la derecha, descargas y "Fabrícamelo".
-// La vista previa es el SVG que devuelve /api/cajas/generar; se vuelve a pedir
+// La vista previa es el SVG que devuelve disenar/cajas/archivo/generar; se vuelve a pedir
 // medio segundo después del último cambio.
 
 type Valores = Record<string, string | number | boolean>
@@ -92,7 +92,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
       setCargando(true)
       setError(null)
       try {
-        const r = await fetch(`/api/cajas/generar/${esquema.id}?formato=svg&${query}`)
+        const r = await fetch(rutaArchivo(locale, "generar", esquema.id, `formato=svg&${query}`))
         if (!r.ok) {
           const j = await r.json().catch(() => ({}))
           throw new Error(j.error || "No se pudo generar con esos valores.")
@@ -108,7 +108,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
     return () => {
       if (temporizador.current) clearTimeout(temporizador.current)
     }
-  }, [esquema.id, query])
+  }, [esquema.id, query, locale])
 
   const cambiar = (nombre: string) => (v: string | number | boolean) => setValores((p) => ({ ...p, [nombre]: v }))
 
@@ -118,7 +118,14 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
   }
 
   const medidas = ["x", "y", "h"].map((k) => valores[k]).filter((v) => v !== undefined && v !== "").join(" × ")
-  const fabricar = `/${locale}/fabricacion?desde=cajas&pieza=${encodeURIComponent(esquema.id)}&medidas=${encodeURIComponent(medidas ? medidas + " mm" : "")}&material=${encodeURIComponent(material || `espesor ${valores.thickness ?? ""} mm`)}&archivo=${encodeURIComponent(`/api/cajas/generar/${esquema.id}?formato=dxf&${query}`)}`
+  const fabricar = `/${locale}/cotizar?${new URLSearchParams({
+    desde: "cajas",
+    pieza: esquema.nombre,
+    medidas: medidas ? `${medidas} mm` : "",
+    material: material || `espesor ${valores.thickness ?? ""} mm`,
+    proceso: "Corte láser",
+    archivo: rutaArchivo(locale, "generar", esquema.id, `formato=dxf&${query}`),
+  }).toString()}`
 
   return (
     <div className="px-4 lg:px-8 pt-4 pb-12">
@@ -183,7 +190,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               {FORMATOS.map((f) => (
                 <a
                   key={f.id}
-                  href={`/api/cajas/generar/${esquema.id}?formato=${f.id}&descargar=1&${query}`}
+                  href={rutaArchivo(locale, "generar", esquema.id, `formato=${f.id}&descargar=1&${query}`)}
                   download
                   title={f.para}
                   className="rounded-[12px] border-2 border-[#142033] bg-white px-4 py-2.5 text-[14px] font-bold text-[#142033] hover:bg-[#142033] hover:text-white"

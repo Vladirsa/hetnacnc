@@ -1,11 +1,15 @@
 // Cajas de madera y acrílico: catálogo y parámetros del servicio de cajas
 // (infra/cajas, motor Boxes.py). Sólo lo usa el servidor; el navegador pide
-// las vistas previas y descargas por /api/cajas/..., que reenvía al servicio.
+// las vistas previas y descargas por /<locale>/disenar/cajas/archivo/..., que reenvía al servicio.
 //
 // Sin CAJAS_URL (o con el servicio caído) todo devuelve vacío y las páginas
 // muestran "próximamente" en vez de fallar.
 
 export const CAJAS_URL = process.env.CAJAS_URL || ""
+
+// Ruta pública (con idioma) por la que el navegador pide archivos y miniaturas
+export const rutaArchivo = (locale: string, accion: "generar" | "miniatura", id: string, query = "") =>
+  `/${locale}/disenar/cajas/archivo/${accion}/${id}${query ? `?${query}` : ""}`
 
 export type GrupoCajas = { id: string; nombre: string }
 export type GeneradorCajas = {

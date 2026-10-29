@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BloquePublicidad } from "@/components/hetna/disenar/BloquePublicidad"
-import { DESTACADOS, TEXTO_GRUPOS, listarCajas } from "@/lib/hetna/cajas"
+import { DESTACADOS, TEXTO_GRUPOS, listarCajas, rutaArchivo } from "@/lib/hetna/cajas"
 
 // Catálogo de cajas de madera y acrílico (motor Boxes.py, ver infra/cajas).
 // Cada tarjeta abre /disenar/cajas/<Id> dentro del espacio Diseñar y escanear.
@@ -20,7 +20,8 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600
 
-export default async function CatalogoCajas() {
+export default async function CatalogoCajas({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const { grupos, generadores } = await listarCajas()
   const porGrupo = new Map(grupos.map((g) => [g.id, generadores.filter((x) => x.grupo === g.id)]))
   const destacados = DESTACADOS.map((id) => generadores.find((g) => g.id === id)).filter(Boolean) as typeof generadores
@@ -32,7 +33,7 @@ export default async function CatalogoCajas() {
     >
       <div className="relative h-[130px] overflow-hidden" style={{ background: color }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/api/cajas/miniatura/${g.id}`} alt="" loading="lazy" className="h-full w-full object-cover mix-blend-luminosity opacity-90 group-hover:mix-blend-normal group-hover:opacity-100" />
+        <img src={rutaArchivo(locale, "miniatura", g.id)} alt="" loading="lazy" className="h-full w-full object-cover mix-blend-luminosity opacity-90 group-hover:mix-blend-normal group-hover:opacity-100" />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3.5">
         <span className="text-[15px] font-bold text-[#141A26] group-hover:text-[#B34D07]">{g.nombre}</span>
