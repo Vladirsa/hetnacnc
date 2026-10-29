@@ -107,7 +107,7 @@ export default async function CreditosPage({
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>
                   <LocalizedClientLink
-                    href="/taller/escaneos/nuevo"
+                    href="/disenar/escanear-pieza"
                     className="font-semibold text-[#B34D07] underline"
                   >
                     Escaneo 3D

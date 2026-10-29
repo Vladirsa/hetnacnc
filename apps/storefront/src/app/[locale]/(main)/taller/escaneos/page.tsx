@@ -35,7 +35,7 @@ export default async function TallerEscaneosPage() {
           </p>
         </div>
         <LocalizedClientLink
-          href="/taller/escaneos/nuevo"
+          href="/disenar/escanear-pieza"
           className="inline-flex bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
         >
           Escanear una pieza

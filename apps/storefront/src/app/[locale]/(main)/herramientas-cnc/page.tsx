@@ -9,8 +9,8 @@ import {
   TOTAL_HERRAMIENTAS,
 } from "@/lib/hetna/herramientas"
 
-// Todas las herramientas CNC de HETNA en una sola página: diseñar, programar
-// (Laboratorio CAM), escanear, cotizar y aprender. Sustituye a /cam y a
+// Todas las herramientas CNC de HETNA en una sola página: diseñar y escanear
+// (espacio de trabajo /disenar), programar (Laboratorio CAM), cotizar y aprender. Sustituye a /cam y a
 // /servicios/generador-2d-3d, que redirigen aquí (next.config).
 //
 // Se llama "Herramientas CNC gratis en línea" y no solo "Herramientas CNC"
@@ -137,6 +137,14 @@ export default function HerramientasCnc() {
               <p className="text-[12px] font-semibold uppercase tracking-wide text-[#B34D07]">{g.pregunta}</p>
               <h2 className="text-[22px] lg:text-[26px] font-bold text-[#1B1B18] leading-tight">{g.titulo}</h2>
               <p className="mt-1 text-[14.5px] text-[#4A4943] leading-relaxed max-w-[720px]">{g.texto}</p>
+              {g.href && (
+                <LocalizedClientLink
+                  href={g.href}
+                  className="mt-3 inline-flex items-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"
+                >
+                  Abrir el espacio de trabajo
+                </LocalizedClientLink>
+              )}
             </div>
           </div>
 

@@ -5,6 +5,9 @@
 // Antes estaban repartidas en dos lados que se llamaban casi igual: el menú
 // "Herramientas CNC" llevaba a páginas de servicio y "Laboratorio CAM" (/cam) a
 // otra lista distinta. Ahora "Laboratorio CAM" es solo el grupo de programación.
+// Los generadores y el escaneo comparten un espacio de trabajo: lib/hetna/disenar.ts.
+
+import { HERRAMIENTAS_DISENO } from "./disenar"
 
 export type Herramienta = {
   nombre: string
@@ -22,27 +25,26 @@ export type GrupoHerramientas = {
   pregunta: string
   texto: string
   icono: string
+  // Página propia del grupo (si no, el enlace baja a su sección de /herramientas-cnc)
+  href?: string
   herramientas: Herramienta[]
 }
 
 export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
   {
     id: "disenar",
-    titulo: "Diseñar",
+    titulo: "Diseñar y escanear",
     pregunta: "No tengo archivo todavía",
-    texto: "Generadores y plantillas: pones las medidas y sale el archivo listo para cortar o grabar.",
+    texto: "Generadores y plantillas, o fotos de una pieza que ya existe: sale el archivo listo para cortar, grabar o imprimir. Todo en un solo espacio de trabajo.",
     icono: "generador",
-    herramientas: [
-      { nombre: "Caja con juntas de dedo", texto: "Medidas y espesor, y descargas la caja en DXF, SVG o PDF.", href: "/servicios/generador-2d-3d/caja-con-juntas", icono: "caja", acceso: "gratis" },
-      { nombre: "Letreros y nombres", texto: "Escribe el texto, elige la letra y descarga el DXF con las letras unidas.", href: "/servicios/generador-2d-3d/letreros", icono: "letrero", acceso: "gratis" },
-      { nombre: "Vectorizador de imágenes", texto: "Un logotipo o dibujo convertido en contornos DXF o SVG.", href: "/servicios/generador-2d-3d/vectorizador", icono: "vector", acceso: "gratis" },
-      { nombre: "Despiece de muebles", texto: "Gabinetes, closets y cocinas: piezas, acomodo en hojas, canto y herraje.", href: "/servicios/generador-2d-3d/despiece-muebles", icono: "mueble", acceso: "gratis" },
-      { nombre: "Plantillas de empaque", texto: "Cajas, pirámides, conos, sobres y bolsas a tu medida.", href: "/servicios/generador-2d-3d/plantillas-empaque", icono: "empaque", acceso: "gratis" },
-      { nombre: "Foto para grabado láser", texto: "Tu foto tramada al tamaño y la resolución de tu láser.", href: "/servicios/generador-2d-3d/grabado-foto", icono: "grabado", acceso: "gratis" },
-      { nombre: "Litofanías y relieves 3D", texto: "Tu foto convertida en STL: litofanía o relieve para tallar.", href: "/servicios/generador-2d-3d/litofania-relieve", icono: "relieve", acceso: "gratis" },
-      { nombre: "Patrones radiales", texto: "Mandalas y arte de pared en capas, listos para cortar.", href: "/servicios/generador-2d-3d/patrones-radiales", icono: "generador", acceso: "gratis" },
-      { nombre: "Convertidor y reescalador", texto: "DXF a SVG y al revés, STL a OBJ, cambio de tamaño y de espesor.", href: "/servicios/generador-2d-3d/convertidor", icono: "convertir", acceso: "gratis" },
-    ],
+    href: "/disenar",
+    herramientas: HERRAMIENTAS_DISENO.map((h) => ({
+      nombre: h.nombre,
+      texto: h.texto,
+      href: `/disenar/${h.slug}`,
+      icono: h.icono,
+      acceso: h.acceso,
+    })),
   },
   {
     id: "laboratorio-cam",
@@ -54,16 +56,6 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
       { nombre: "DXF a G-code", texto: "Sube un DXF, elige material y fresa, y descarga el G-code con las pasadas calculadas.", href: "/cam/subir", icono: "gcode", acceso: "gratis" },
       { nombre: "CAM en 3, 4 y 5 ejes", texto: "STL, OBJ o STEP: trayectoria con anticolisión, remoción de material y programa para tu controlador.", href: "/cam/lab", icono: "ejes", acceso: "gratis" },
       { nombre: "Torno con eje rotativo", texto: "Balaustres, patas y columnas por tramos, con G-code para Mach3 o Mach4.", href: "/cam/torno", icono: "torno", acceso: "gratis" },
-    ],
-  },
-  {
-    id: "escanear",
-    titulo: "Escanear",
-    pregunta: "Tengo la pieza, no el dibujo",
-    texto: "Fotos de una pieza que ya existe y te devolvemos su modelo 3D.",
-    icono: "escaneo",
-    herramientas: [
-      { nombre: "Escaneo 3D de piezas", texto: "Vista previa gratis; el escaneo que mide de verdad se paga con créditos.", href: "/taller/escaneos/nuevo", icono: "escaneo", acceso: "creditos" },
     ],
   },
   {

@@ -6,6 +6,7 @@
 import type { MetadataRoute } from "next"
 
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
+import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { sdk } from "@/lib/client"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
@@ -47,6 +48,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cotizar/impresion-3d", "weekly", 0.8],
   ["/fabricacion", "weekly", 0.9],
   ["/herramientas-cnc", "weekly", 0.9],
+  ["/disenar", "weekly", 0.9],
   ["/cam/subir", "weekly", 0.6],
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],
@@ -109,8 +111,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const tienda: MetadataRoute.Sitemap = [
     ...FIJAS.flatMap(([ruta, f, p]) => bilingue(ruta, f, p, hoy)),
-    // generador-2d-3d y laboratorio-cam redirigen (a /herramientas-cnc y /fabricacion): fuera del mapa
-    ...SERVICIOS.filter((s) => s.slug !== "generador-2d-3d" && !s.slug.startsWith("laboratorio-cam")).flatMap((s) =>
+    ...HERRAMIENTAS_DISENO.flatMap((h) => bilingue(`/disenar/${h.slug}`, "weekly", 0.8, hoy)),
+    // Redirigen y quedan fuera del mapa: generador-2d-3d y sus generadores (a
+    // /disenar) y laboratorio-cam (a /fabricacion)
+    ...SERVICIOS.filter(
+      (s) =>
+        s.slug !== "generador-2d-3d" &&
+        !HERRAMIENTAS_DISENO.some((h) => s.slug === `generador-2d-3d/${h.slug}`) &&
+        !s.slug.startsWith("laboratorio-cam")
+    ).flatMap((s) =>
       bilingue(`/servicios/${s.slug}`, "weekly", s.padre ? 0.7 : 0.8, hoy)
     ),
     ...cats.flatMap((h) => bilingue(`/categories/${h}`, "daily", 0.8, hoy)),

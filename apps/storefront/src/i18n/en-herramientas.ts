@@ -95,4 +95,35 @@ export const EN_HERRAMIENTAS: Record<string, string> = {
   "Vectorización": "Vectorizing",
   "Conversión de formatos": "Format conversion",
   "Preparación para CAM": "CAM preparation",
+  // Espacio "Diseñar y escanear" (/disenar)
+  "Diseñar y escanear": "Design and scan",
+  "Generadores y plantillas, o fotos de una pieza que ya existe: sale el archivo listo para cortar, grabar o imprimir. Todo en un solo espacio de trabajo.":
+    "Generators and templates, or photos of an existing part: you get a file ready to cut, engrave or print. All in one workspace.",
+  "Abrir el espacio de trabajo": "Open the workspace",
+  "Todas las herramientas CNC": "All CNC tools",
+  "Todas": "All",
+  "Generar un archivo": "Make a file",
+  "De una pieza que ya existe": "From an existing part",
+  "¿Ya tienes el archivo?": "Already have the file?",
+  "Pásalo a G-code con el avance y las revoluciones calculados.": "Turn it into G-code with feeds and speeds calculated.",
+  "Talleres CNC de todo México te cotizan la pieza.": "CNC shops across Mexico quote your part.",
+  "Elige una herramienta y trabaja aquí mismo: pones las medidas o subes tu imagen y descargas el archivo listo para láser, router CNC o impresora 3D. Si la pieza ya existe, la escaneas con fotos. Cambias de herramienta desde el menú sin salir de esta página.":
+    "Pick a tool and work right here: enter the dimensions or upload your image and download a file ready for a laser, CNC router or 3D printer. If the part already exists, scan it with photos. Switch tools from the menu without leaving this page.",
+  "Pásalo a G-code con las pasadas, el avance y las revoluciones calculados, o mándalo a fabricar con talleres CNC de todo México.":
+    "Turn it into G-code with passes, feeds and speeds calculated, or send it to be made by CNC shops across Mexico.",
+  "Vista previa gratis · escaneo con créditos": "Free preview · scan with credits",
+  "Sube fotos de una pieza que ya existe y recibe su archivo 3D. El resultado queda guardado en tu perfil: no se manda por correo ni por un link que caduca.":
+    "Upload photos of an existing part and get its 3D file. The result is saved in your profile: it isn't emailed or sent as a link that expires.",
+  "¿Ya escaneaste antes?": "Scanned before?",
+  "Ver mis escaneos": "See my scans",
+  "Toma las fotos": "Take the photos",
+  "Alrededor de la pieza, con buena luz y sin moverla. Para la vista previa basta una.":
+    "All around the part, in good light and without moving it. One is enough for the preview.",
+  "Súbelas aquí": "Upload them here",
+  "Elige vista previa (gratis) o escaneo con medidas reales (con créditos).": "Choose a preview (free) or a scan with real dimensions (with credits).",
+  "Baja tu modelo 3D": "Download your 3D model",
+  "Queda guardado en tu perfil: lo descargas las veces que quieras.": "It's saved in your profile: download it as many times as you like.",
+  "Entra para escanear": "Sign in to scan",
+  "El escaneo se guarda en tu cuenta, por eso necesitas entrar. Si no tienes cuenta, la creas en un minuto.":
+    "The scan is saved to your account, so you need to sign in. If you don't have an account, it takes a minute to create one.",
 }
