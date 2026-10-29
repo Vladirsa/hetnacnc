@@ -1,6 +1,9 @@
 // Reenvía al servicio de cajas (infra/cajas) lo que el navegador necesita:
 // la vista previa SVG, las descargas y las miniaturas. El servicio sólo
 // escucha en localhost; por aquí es como sale a internet.
+//
+// Vive en /<locale>/disenar/cajas/archivo/... y no en /api/... a propósito:
+// en el VPS nginx manda /api/* al backend de Medusa.
 import { NextResponse } from "next/server"
 
 import { CAJAS_URL } from "@/lib/hetna/cajas"
@@ -9,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 const PERMITIDAS = new Set(["generar", "miniatura"])
 
-export async function GET(req: Request, { params }: { params: Promise<{ ruta: string[] }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ ruta: string[]; locale: string }> }) {
   const { ruta } = await params
   const [accion, id] = ruta || []
   if (!CAJAS_URL || !PERMITIDAS.has(accion) || !/^[A-Za-z0-9]+$/.test(id || "")) {
