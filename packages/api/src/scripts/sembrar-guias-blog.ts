@@ -1,6 +1,6 @@
 // Guías fijas del blog del foro, las de las secciones con más dudas.
 //
-//   npx medusa exec ./src/scripts/sembrar-guias-blog.ts
+//   ./node_modules/.bin/medusa exec ./src/scripts/sembrar-guias-blog.ts
 //
 // Idempotente: si el slug ya existe, no lo toca (para no pisar lo que se haya
 // editado después en el dashboard). Las firma "Equipo HETNA": son artículos

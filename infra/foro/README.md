@@ -117,7 +117,7 @@ tres primeras guías (PDF a DXF, MDF quemado o chueco, cuánto cobrar) se
 publican con:
 
 ```
-cd /root/hetnacnc/packages/api && npx medusa exec ./src/scripts/sembrar-guias-blog.ts
+cd /root/hetnacnc/packages/api && ./node_modules/.bin/medusa exec ./src/scripts/sembrar-guias-blog.ts
 ```
 
 No duplica nada si se corre otra vez. Lo demás se escribe en el dashboard,
