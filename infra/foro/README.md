@@ -158,3 +158,41 @@ abiertos a trabajo). En el mini-sitio de cada taller sale el botón
 
 Límites contra abuso, por persona y por día: 300 seguimientos, 100 avales,
 5 recomendaciones y 15 postulaciones.
+
+## Actualización del 31 de octubre de 2026: avisos, mensajes, eventos y lo de Quora
+
+**Base del foro (Supabase).** Corre una vez `migracion-2026-10-31-avisos.sql`
+(después de la del 30). Se puede correr más de una vez. Agrega:
+
+- **Avisos** (`foro.avisos`): la campana del foro. Se crean al responder un
+  tema, elegir la mejor respuesta, seguir a alguien, avalar, recomendar,
+  postularse, pedir una respuesta, mandar un mensaje y un día antes de un
+  evento al que confirmaste.
+- **Mensajes directos** (`foro.conversaciones`, `foro.mensajes`) y
+  **bloqueos** (`foro.bloqueos`). Los teléfonos y correos se ocultan igual que
+  en el foro. Límites: 200 mensajes al día; 30 conversaciones nuevas al día
+  (5 si la cuenta tiene menos de 24 horas).
+- **Seguir un tema** (`foro.temas_seguidos`) y **pedir respuesta**
+  (`foro.solicitudes`, 20 al día), como en Quora.
+- **Eventos**: tipo de publicación con fecha, lugar y "Asistiré"
+  (`foro.asistencias`), sección **Eventos y cursos** y datos de evento para
+  Google.
+- En el perfil: **titular** (sale junto al nombre en cada respuesta) y cómo
+  quiere sus correos (al momento, diario o nunca; resumen semanal sí o no).
+
+Páginas nuevas: `/foro-cnc/avisos`, `/foro-cnc/mensajes`,
+`/foro-cnc/eventos` y `/foro-cnc/responder` (Preguntas para ti). La barra del
+foro trae los números de avisos y mensajes.
+
+**Correos (backend).** Tres trabajos en `packages/api/src/jobs`:
+
+| Trabajo | Cuándo | Qué hace |
+|---|---|---|
+| `foro-avisos` | cada 10 min | Un correo por persona con sus avisos sin leer (de quien eligió "al momento") |
+| `foro-avisos-diario` | 8:07 a.m. (México) | Recordatorio de eventos de mañana + resumen del día (de quien eligió "diario") |
+| `foro-resumen-semanal` | lunes 9:13 a.m. | Lo mejor de su red, preguntas que puede responder, vacantes y eventos |
+
+Usan `HETNA_FORO_DB` en el backend (la misma variable que ya usa el tablero
+del taller para la actividad del foro) y `RESEND_API_KEY` /
+`RESEND_FROM_EMAIL`. Sin alguna de ellas no hacen nada. Respetan la baja de
+correos (`hetna_correo_baja`) y cada correo lleva su liga para darse de baja.

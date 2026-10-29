@@ -9,7 +9,7 @@ import { Abierto, CAJA_RED, ListaRecomendaciones, Trayectoria } from "@/componen
 import { Aptitudes, BotonSeguir, FormRecomendar } from "@/components/hetna/foro/RedCliente"
 import { POR_PAGINA, listaTemas, perfilPorUsuario, sesionForo } from "@/lib/foro/consultas"
 import { avalesDe, cuentasRed, estadoRed, miRecomendacion, objetivosDe, recomendacionesDe } from "@/lib/foro/red"
-import { REDES, type Red, SITIO, TIPOS_CUENTA, objetivoPerfil, urlPerfil } from "@/lib/foro/tipos"
+import { REDES, type Red, SITIO, TIPOS_CUENTA, objetivoPerfil, urlConversacion, urlPerfil } from "@/lib/foro/tipos"
 
 type Props = {
   params: Promise<{ locale: string; usuario: string }>
@@ -98,7 +98,15 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                   Editar perfil
                 </LocalizedClientLink>
               ) : (
-                <BotonSeguir objetivo={objetivoPerfil(p)} siguiendo={red.siguiendo} seguidores={red.seguidores} conCuenta={false} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <BotonSeguir objetivo={objetivoPerfil(p)} siguiendo={red.siguiendo} seguidores={red.seguidores} conCuenta={false} />
+                  <LocalizedClientLink
+                    href={urlConversacion(p.usuario)}
+                    className="inline-flex items-center rounded-full border border-[#C9C4B8] bg-white px-4 py-2 text-[14px] font-semibold text-[#44433D] hover:border-[#C2560A]"
+                  >
+                    ✉ Mensaje
+                  </LocalizedClientLink>
+                </div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -108,6 +116,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                 {p.taller ? <InsigniaTaller a={p} /> : <InsigniaCuenta tipo={p.tipo} />}
                 {p.abierto && <Abierto />}
               </div>
+              {p.titular && <p className="m-0 text-[16px] text-[#23231F]">{p.titular}</p>}
               {p.taller && (
                 <LocalizedClientLink
                   href={`/talleres/${p.taller.handle}`}

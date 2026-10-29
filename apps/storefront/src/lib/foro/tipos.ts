@@ -21,6 +21,7 @@ export const TIPOS_TEMA = {
   busco: { nombre: "Busco maquinado", ayuda: "Necesitas que un taller te haga una pieza o un trabajo" },
   ofrezco: { nombre: "Ofrezco capacidad", ayuda: "Tienes horas libres de máquina (solo talleres)" },
   vacante: { nombre: "Vacante", ayuda: "Buscas operador, programador CAM, diseñador o ayudante (solo negocios)" },
+  evento: { nombre: "Evento", ayuda: "Expo, curso o reunión con fecha y lugar" },
 } as const
 // Tipos que sólo publican talleres, proveedores y marcas (lo vuelve a revisar la base)
 export const TIPOS_NEGOCIO: TipoTema[] = ["novedad", "ofrezco", "vacante"]
@@ -69,6 +70,8 @@ export type Autor = {
   reputacion: number
   foto: string | null
   taller: TallerLigado | null
+  // Titular profesional, como las credenciales de Quora ("Programador CAM · 8 años")
+  titular: string
 }
 
 export type TemaResumen = {
@@ -89,7 +92,17 @@ export type TemaResumen = {
   estado: "publicado" | "revision" | "oculto"
   creado: string
   ultimaActividad: string
+  evento: Evento | null
   autor: Autor
+}
+
+// Datos de un tema de tipo "evento"
+export type Evento = {
+  inicio: string // fecha y hora local de México, "2026-11-20T10:00"
+  fin: string
+  modalidad: "presencial" | "en_linea"
+  lugar: string // dirección o ciudad; en línea, la plataforma
+  liga: string // registro o transmisión
 }
 
 export type Encuesta = { pregunta: string; opciones: string[] }
@@ -162,6 +175,26 @@ export type Recomendacion = {
 }
 export type Postulacion = { mensaje: string; creado: string; autor: Autor & { ciudad: string; estadoMx: string } }
 
+export const CORREO_AVISOS = {
+  al_momento: "Al momento (agrupados cada 10 minutos)",
+  diario: "Un resumen al día",
+  nunca: "No mandarme correos de avisos",
+} as const
+export type CorreoAvisos = keyof typeof CORREO_AVISOS
+
+export type TipoAviso =
+  | "seguidor" | "respuesta" | "mejor" | "aval" | "recomendacion" | "postulacion"
+  | "solicitud" | "mensaje" | "evento" | "tema_seguido"
+export type Aviso = { id: number; tipo: TipoAviso; texto: string; url: string; leido: boolean; creado: string; actor: Autor | null }
+
+export type Contadores = { avisos: number; mensajes: number }
+
+export const urlAvisos = "/foro-cnc/avisos"
+export const urlMensajes = "/foro-cnc/mensajes"
+export const urlConversacion = (usuario: string) => `/foro-cnc/mensajes/${usuario}`
+export const urlEventos = "/foro-cnc/eventos"
+export const urlResponder = "/foro-cnc/responder"
+export const SECCION_EVENTOS = "eventos"
 export const urlRed = "/foro-cnc/red"
 export const urlEmpleos = "/foro-cnc/empleos"
 export const SECCION_EMPLEOS = "empleos-proyectos"
@@ -179,6 +212,8 @@ export type Perfil = Autor & {
   aptitudes: string[]
   trayectoria: Paso[]
   abierto: boolean
+  correoAvisos: CorreoAvisos
+  resumenSemanal: boolean
   creado: string
   temas: number
   respuestas: number
@@ -214,6 +249,10 @@ export const MENSAJES: Record<string, string> = {
   no_existe: "Ya no existe.",
   no_es_vacante: "Sólo te puedes postular a una vacante.",
   ya_postulado: "Ya te postulaste a esta vacante.",
+  bloqueado: "Esta persona no recibe mensajes tuyos.",
+  mensaje_spam: "Tu mensaje parece publicidad o spam. Escríbelo de otra forma.",
+  no_es_evento: "Esto no es un evento.",
+  ya_pedido: "Ya le pediste a esta persona que responda.",
   error: "Algo salió mal. Intenta de nuevo.",
 }
 

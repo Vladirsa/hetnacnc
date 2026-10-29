@@ -234,8 +234,9 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
           {t.autor.verificado && <Palomita />}
           {t.autor.taller ? <InsigniaTaller a={t.autor} /> : <InsigniaCuenta tipo={t.autor.tipo} />}
         </div>
-        <span className="text-[12.5px] text-[#6B6A63]">
-          {t.autor.reputacion} pts · {haceCuanto(t.ultimaActividad)}
+        <span className="block truncate text-[12.5px] text-[#6B6A63]">
+          {t.autor.titular ? `${t.autor.titular} · ` : `${t.autor.reputacion} pts · `}
+          {haceCuanto(t.ultimaActividad)}
         </span>
       </div>
       {t.fijado && (

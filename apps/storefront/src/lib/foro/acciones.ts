@@ -3,13 +3,14 @@
 // Acciones del Foro CNC México. Todo se valida aquí en el servidor con la sesión de la tienda:
 // el navegador nunca decide quién publica, qué se oculta ni cuántos votos hay.
 
+import { avisar } from "./avisos"
 import { ligaValida } from "./contenido"
 import { sesionForo } from "./consultas"
 import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
 import { getAuthHeaders } from "@/lib/data/cookies"
 import { avisarRedes } from "@/lib/hetna/avisar-redes"
-import { ES_NEGOCIO, type Red, REDES, TIPOS_NEGOCIO, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
+import { ES_NEGOCIO, type Evento, type Red, REDES, TIPOS_NEGOCIO, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
 
 type Res<T = {}> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -201,6 +202,13 @@ export async function publicarTema(
     }
   }
 
+  let evento: Evento | null = null
+  if (d.tipo === "evento") {
+    const e = leerEvento(d.evento)
+    if (typeof e === "string") return { ok: false, error: e }
+    evento = e
+  }
+
   const revisar = t.revisar || c.revisar
   const motivos = [...t.motivos, ...c.motivos]
   try {
@@ -211,6 +219,7 @@ export async function publicarTema(
         revisar ? "revision" : "publicado"]
     )
     const nuevo = rows[0]
+    if (evento) await db().query(`update foro.temas set evento = $2::jsonb where id = $1`, [nuevo.id, JSON.stringify(evento)])
     await anotarRevision("tema", Number(nuevo.id), revisar, motivos)
     if (!revisar) void avisarRedes({ tipo: "foro", titulo: t.texto, resumen: c.texto.slice(0, 200), url: "https://hetnacnc.com/mx" + urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }) })
     // Preguntas y "busco maquinado": se les avisa a los talleres que hacen ese trabajo.
@@ -242,10 +251,64 @@ export async function responder(d: Record<string, unknown>): Promise<Res<{ id: n
     ])
     const id = Number(rows[0].id)
     await anotarRevision("respuesta", id, c.revisar, c.motivos)
+    if (!c.revisar) await avisarRespuesta(temaId, id, entero(d.padreId), p.perfil)
     return { ok: true, id, estado: c.revisar ? "revision" : "publicado", ocultos: c.ocultos }
   } catch (e) {
     return fallo(e)
   }
+}
+
+// Avisa de una respuesta nueva: al autor del tema, a quien le respondieron
+// directamente y a quienes siguen el tema (cada quien una sola vez).
+async function avisarRespuesta(temaId: number, respuestaId: number, padreId: number | null, yo: { id: string; nombre: string }) {
+  try {
+    const { rows } = await db().query(
+      `select t.autor_id, t.titulo, t.slug, s.slug as seccion,
+         (select autor_id from foro.respuestas where id = $2 and tema_id = t.id) as padre_autor
+       from foro.temas t join foro.secciones s on s.id = t.seccion_id where t.id = $1`,
+      [temaId, padreId]
+    )
+    const t = rows[0]
+    if (!t) return
+    const url = `${urlTema({ seccion: t.seccion, slug: t.slug })}#r${respuestaId}`
+    const avisados = new Set<string>([yo.id])
+    if (t.padre_autor && !avisados.has(t.padre_autor)) {
+      avisados.add(t.padre_autor)
+      await avisar({ para: t.padre_autor, actor: yo.id, tipo: "respuesta", texto: `${yo.nombre} te respondió en “${t.titulo}”`, url })
+    }
+    if (!avisados.has(t.autor_id)) {
+      avisados.add(t.autor_id)
+      await avisar({ para: t.autor_id, actor: yo.id, tipo: "respuesta", texto: `${yo.nombre} respondió tu tema “${t.titulo}”`, url })
+    }
+    const seguidores = await db()
+      .query(`select perfil_id from foro.temas_seguidos where tema_id = $1 limit 500`, [temaId])
+      .then((r) => r.rows.map((f: { perfil_id: string }) => f.perfil_id))
+      .catch(() => [] as string[])
+    const resto = seguidores.filter((id: string) => !avisados.has(id))
+    if (resto.length)
+      await avisar({ para: resto, actor: yo.id, tipo: "tema_seguido", texto: `Nueva respuesta de ${yo.nombre} en “${t.titulo}”, que sigues`, url })
+  } catch (e) {
+    console.error("[foro] aviso de respuesta", (e as Error).message)
+  }
+}
+
+// Datos de un evento: fecha y hora (de México), modalidad, lugar y liga.
+const FECHA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+function leerEvento(v: unknown): Evento | string {
+  const e = (v && typeof v === "object" ? v : {}) as Record<string, unknown>
+  const inicio = texto(e.inicio, 16)
+  const fin = texto(e.fin, 16)
+  if (!FECHA.test(inicio)) return "Pon la fecha y hora del evento."
+  const ahora = new Date(Date.now() - 6 * 3600 * 1000).toISOString().slice(0, 16) // hora de México (UTC-6)
+  if (inicio < ahora) return "La fecha del evento ya pasó."
+  if (fin && (!FECHA.test(fin) || fin < inicio)) return "La fecha de fin debe ser después del inicio."
+  const modalidad = e.modalidad === "en_linea" ? "en_linea" : "presencial"
+  const lugar = revisarTexto(texto(e.lugar, 150)).texto
+  if (lugar.length < 3) return modalidad === "en_linea" ? "¿Por dónde se transmite? (Zoom, YouTube, Facebook…)" : "¿Dónde es el evento?"
+  const crudo = texto(e.liga, 400)
+  const liga = crudo ? ligaValida(crudo) : null
+  if (crudo && (!liga || /whatsapp|wa\.me|wa\.link|t\.me\/|telegram/i.test(liga))) return "Revisa la liga del evento."
+  return { inicio, fin, modalidad, lugar, liga: liga || "" }
 }
 
 // ---------------------------------------------------------------------
@@ -297,6 +360,22 @@ export async function marcarMejor(temaId: number, respuestaId: number | null): P
   if ("error" in p) return { ok: false, error: p.error as string }
   try {
     await db().query(`select foro.marcar_mejor($1, $2, $3)`, [p.perfil.id, entero(temaId), respuestaId ? entero(respuestaId) : null])
+    if (respuestaId) {
+      const { rows } = await db().query(
+        `select r.autor_id, t.titulo, t.slug, s.slug as seccion from foro.respuestas r
+         join foro.temas t on t.id = r.tema_id join foro.secciones s on s.id = t.seccion_id where r.id = $1`,
+        [entero(respuestaId)]
+      )
+      const f = rows[0]
+      if (f)
+        await avisar({
+          para: f.autor_id,
+          actor: p.perfil.id,
+          tipo: "mejor",
+          texto: `${p.perfil.nombre} eligió tu respuesta como la mejor en “${f.titulo}”`,
+          url: `${urlTema({ seccion: f.seccion, slug: f.slug })}#r${entero(respuestaId)}`,
+        })
+    }
     return { ok: true }
   } catch (e) {
     return fallo(e)

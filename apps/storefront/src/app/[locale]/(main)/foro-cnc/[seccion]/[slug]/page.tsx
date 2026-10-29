@@ -20,6 +20,9 @@ import { ctasPara, talleresDeSeccion } from "@/lib/foro/cta"
 import { estadoRed, postulacionesDe, yaPostulado } from "@/lib/foro/red"
 import { type Respuesta, SITIO, objetivoPerfil, urlPerfil, urlTema } from "@/lib/foro/tipos"
 import { BotonSeguir, Postularme } from "@/components/hetna/foro/RedCliente"
+import { BotonAsistir, BotonSeguirTema, PedirRespuesta } from "@/components/hetna/foro/ComunidadCliente"
+import { FichaEvento } from "@/components/hetna/foro/Eventos"
+import { ahoraMx, asistencia, candidatosRespuesta, sigueTema } from "@/lib/foro/comunidad"
 
 type Props = {
   params: Promise<{ locale: string; seccion: string; slug: string }>
@@ -63,6 +66,28 @@ function datosEstructurados(t: NonNullable<Awaited<ReturnType<typeof leerTema>>>
     url: `${url}#r${r.id}`,
     author: persona(r.autor),
   })
+  if (t.tipo === "evento" && t.evento) {
+    // Event de schema.org: Google lo puede mostrar en la búsqueda de eventos
+    const conZona = (f: string) => `${f}:00-06:00`
+    return {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: t.titulo,
+      description: t.cuerpo.slice(0, 3000),
+      startDate: conZona(t.evento.inicio),
+      ...(t.evento.fin ? { endDate: conZona(t.evento.fin) } : {}),
+      eventAttendanceMode:
+        t.evento.modalidad === "en_linea" ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+      eventStatus: "https://schema.org/EventScheduled",
+      location:
+        t.evento.modalidad === "en_linea"
+          ? { "@type": "VirtualLocation", url: t.evento.liga || url }
+          : { "@type": "Place", name: t.evento.lugar, address: t.evento.lugar },
+      organizer: persona(t.autor),
+      url,
+      ...(t.fotos[0] ? { image: `${SITIO}${t.fotos[0]}` } : {}),
+    }
+  }
   if (t.tipo === "pregunta" && publicadas.length) {
     const mejor = publicadas.find((r) => r.id === t.mejorRespuestaId)
     return {
@@ -121,11 +146,16 @@ export default async function ForoTema({ params, searchParams }: Props) {
   const esAutor = perfil?.id === t.autor.id
   const esVacante = t.tipo === "vacante"
   const autorObjetivos = t.autor.taller?.id ? [`p:${t.autor.id}`, `t:${t.autor.taller.id}`] : [`p:${t.autor.id}`]
-  const [redAutor, postulaciones, postulado] = await Promise.all([
+  const pideAyuda = (t.tipo === "pregunta" || t.tipo === "busco") && !t.resuelto && t.estado === "publicado"
+  const [redAutor, postulaciones, postulado, siguiendoTema, candidatos, asisten] = await Promise.all([
     estadoRed(autorObjetivos, perfil?.id),
     esVacante && esAutor ? postulacionesDe(t.id) : Promise.resolve([]),
     esVacante && perfil && !esAutor ? yaPostulado(t.id, perfil.id) : Promise.resolve(false),
+    perfil ? sigueTema(t.id, perfil.id) : Promise.resolve(false),
+    perfil && pideAyuda ? candidatosRespuesta(t, perfil.id) : Promise.resolve([]),
+    t.tipo === "evento" ? asistencia(t.id, perfil?.id) : Promise.resolve(null),
   ])
+  const eventoPasado = Boolean(t.evento && (t.evento.fin || t.evento.inicio) < ahoraMx())
   const esModerador = perfil?.rol === "moderador" || perfil?.rol === "admin"
   const esPregunta = t.tipo === "pregunta"
 
@@ -145,7 +175,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
   const ligasVideo = t.ligas.map((l) => ({ l, v: leerVideo(l) }))
   const aviso = Array.isArray(q.aviso) ? q.aviso[0] : q.aviso
   // De la duda al servicio: según de qué trata el tema (ver lib/foro/cta)
-  const ctas = t.tipo === "ofrezco" || t.tipo === "novedad" || esVacante ? [] : ctasPara(t.seccion.slug, `${t.titulo} ${t.cuerpo}`)
+  const ctas = t.tipo === "ofrezco" || t.tipo === "novedad" || t.tipo === "evento" || esVacante ? [] : ctasPara(t.seccion.slug, `${t.titulo} ${t.cuerpo}`)
   const talleres = talleresDeSeccion(t.seccion.slug)
 
   const tarjetaRespuesta = (r: Respuesta, hija = false) => {
@@ -223,6 +253,12 @@ export default async function ForoTema({ params, searchParams }: Props) {
                   {t.vistas} vistas · actividad {haceCuanto(t.ultimaActividad)}
                 </span>
               </div>
+              {t.evento && (
+                <div className="flex flex-col gap-3">
+                  <FichaEvento t={t} e={t.evento} />
+                  {asisten && <BotonAsistir temaId={t.id} n={asisten.n} yo={asisten.yo} pasado={eventoPasado} />}
+                </div>
+              )}
               <Cuerpo texto={t.cuerpo} />
               <Fotos fotos={t.fotos} />
               {ligasVideo.length > 0 && (
@@ -246,6 +282,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 <BotonVoto temaId={t.id} votos={t.votos} votado={votos.tema} propio={esAutor} />
                 <BotonNoUtil temaId={t.id} marcado={noUtiles.tema} propio={esAutor} />
                 <Compartir url={`/mx${urlTema(t)}`} titulo={t.titulo} />
+                {!esAutor && t.estado === "publicado" && <BotonSeguirTema temaId={t.id} siguiendo={siguiendoTema} />}
                 <a href="#responder" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A]">
                   <IconoResponder size={18} />
                   Responder
@@ -361,6 +398,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 Ver perfil y trabajos
               </LocalizedClientLink>
             </div>
+            {candidatos.length > 0 && <PedirRespuesta temaId={t.id} candidatos={candidatos} />}
             {talleres && (
               <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
                 <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>

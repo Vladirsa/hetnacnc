@@ -8,15 +8,18 @@
 // así que se mide y se publica en --foro-top para que las columnas laterales
 // del foro empiecen justo debajo de esta barra.
 import { usePathname } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { misContadores } from "@/lib/foro/acciones-comunidad"
 
 // [ruta, nombre, nombre corto para celular]
 const LIGAS = [
   ["/foro-cnc", "Foro", "Foro"],
   ["/foro-cnc/red", "Mi red", "Mi red"],
+  ["/foro-cnc/responder", "Preguntas para ti", "Para ti"],
   ["/foro-cnc/empleos", "Empleos y proyectos", "Empleos"],
+  ["/foro-cnc/eventos", "Eventos", "Eventos"],
   ["/foro-cnc/blog", "Blog y guías", "Blog"],
   ["/foro-cnc/mi-perfil", "Mi perfil", "Perfil"],
 ] as const
@@ -27,6 +30,18 @@ export function BarraForo() {
   // "/mx/foro-cnc/red?x" -> "/foro-cnc/red"
   const actual = ruta.replace(/^\/[a-z]{2}(?=\/)/, "")
   const activa = (href: string) => (href === "/foro-cnc" ? actual === "/foro-cnc" : actual.startsWith(href))
+  const [num, setNum] = useState({ avisos: 0, mensajes: 0 })
+
+  // Números de la campana: al entrar a cada página del foro (sin sesión salen en cero)
+  useEffect(() => {
+    let vivo = true
+    misContadores()
+      .then((r) => vivo && setNum(r))
+      .catch(() => {})
+    return () => {
+      vivo = false
+    }
+  }, [actual])
 
   useEffect(() => {
     const encabezado = document.querySelector<HTMLElement>('header[data-testid="header"]')
@@ -72,13 +87,40 @@ export function BarraForo() {
             </li>
           ))}
         </ul>
+        <Icono href="/foro-cnc/mensajes" etiqueta="Mensajes del foro" n={num.mensajes} activa={actual.startsWith("/foro-cnc/mensajes")}>
+          <path d="M4 5h16v11H8l-4 4V5z" />
+        </Icono>
+        <Icono href="/foro-cnc/avisos" etiqueta="Avisos del foro" n={num.avisos} activa={actual.startsWith("/foro-cnc/avisos")}>
+          <path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4l2-2zM10 20a2 2 0 0 0 4 0" />
+        </Icono>
         <LocalizedClientLink
           href="/foro-cnc/nuevo"
-          className="shrink-0 rounded-full bg-[#C2560A] px-3.5 py-1.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
+          className="shrink-0 rounded-full bg-[#C2560A] px-3 py-1.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] sm:px-3.5"
         >
-          + Publicar
+          <span className="sm:hidden">+</span>
+          <span className="hidden sm:inline">+ Publicar</span>
         </LocalizedClientLink>
       </nav>
     </div>
+  )
+}
+
+function Icono({ href, etiqueta, n, activa, children }: { href: string; etiqueta: string; n: number; activa: boolean; children: React.ReactNode }) {
+  return (
+    <LocalizedClientLink
+      href={href}
+      aria-label={n ? `${etiqueta} (${n} nuevos)` : etiqueta}
+      title={etiqueta}
+      className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-full ${activa ? "bg-[#FDEEE1] text-[#B34D07]" : "text-[#44433D] hover:bg-[#F4F1EA]"}`}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {children}
+      </svg>
+      {n > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full bg-[#C2560A] px-1 text-center text-[11px] font-bold leading-[18px] text-white">
+          {n > 99 ? "99+" : n}
+        </span>
+      )}
+    </LocalizedClientLink>
   )
 }

@@ -16,6 +16,8 @@ import {
   type Seccion,
   type Tema,
   type TallerLigado,
+  type Contadores,
+  type Evento,
   type TemaResumen,
   urlFoto,
 } from "./tipos"
@@ -25,7 +27,10 @@ export type Fila = Record<string, any>
 export const fecha = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? ""))
 
 export const AUTOR = `a.id as a_id, a.usuario as a_usuario, a.nombre as a_nombre, a.tipo as a_tipo,
-  a.verificado as a_verificado, a.reputacion as a_reputacion, a.foto_url as a_foto, a.vendedor_id as a_vendedor`
+  a.verificado as a_verificado, a.reputacion as a_reputacion, a.foto_url as a_foto, a.vendedor_id as a_vendedor,
+  to_jsonb(a) ->> 'titular' as a_titular`
+// (titular se lee con to_jsonb: así la consulta no truena en una base que
+// todavía no corre la migración del 31 de octubre)
 
 // Talleres del directorio por id de vendedor. El foro vive en otra base, así
 // que se cruzan aquí: se cargan una vez cada 5 minutos y cada autor ligado a
@@ -55,7 +60,21 @@ export const aAutor = (f: Fila): Autor => ({
   reputacion: Number(f.a_reputacion) || 0,
   foto: f.a_foto || null,
   taller: tallerDe(f.a_vendedor),
+  titular: f.a_titular || "",
 })
+
+const aEvento = (v: unknown): Evento | null => {
+  if (!v || typeof v !== "object") return null
+  const e = v as Record<string, unknown>
+  if (typeof e.inicio !== "string") return null
+  return {
+    inicio: e.inicio,
+    fin: typeof e.fin === "string" ? e.fin : "",
+    modalidad: e.modalidad === "en_linea" ? "en_linea" : "presencial",
+    lugar: typeof e.lugar === "string" ? e.lugar : "",
+    liga: typeof e.liga === "string" ? e.liga : "",
+  }
+}
 
 const ligasDe = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : [])
 
@@ -77,12 +96,13 @@ export const aResumen = (f: Fila): TemaResumen => ({
   estado: f.estado,
   creado: fecha(f.creado),
   ultimaActividad: fecha(f.ultima_actividad),
+  evento: aEvento(f.evento),
   autor: aAutor(f),
 })
 
 export const TEMA_CAMPOS = `t.id, t.tipo, t.titulo, t.slug, t.cuerpo, t.ligas, t.fotos[1] as foto, t.votos, t.respuestas,
   t.vistas, t.fijado, t.patrocinado, t.mejor_respuesta_id is not null as resuelto, t.estado, t.creado,
-  t.ultima_actividad, s.slug as s_slug, s.nombre as s_nombre, ${AUTOR}`
+  t.ultima_actividad, to_jsonb(t) -> 'evento' as evento, s.slug as s_slug, s.nombre as s_nombre, ${AUTOR}`
 
 export const TEMA_DESDE = `from foro.temas t
   join foro.secciones s on s.id = t.seccion_id
@@ -94,16 +114,28 @@ export async function intentar<T>(f: () => Promise<T>): Promise<T | null> {
     await asegurarTalleres()
     return await f()
   } catch (e) {
-    console.error("[foro] consulta", (e as Error).message)
+    // Tablas o columnas de una migración que aún no se corre: se dice una vez, no en cada página
+    const code = (e as { code?: string }).code
+    const msg = (e as Error).message
+    if ((code === "42P01" || code === "42703") && faltantes.has(msg)) return null
+    if (code === "42P01" || code === "42703") faltantes.add(msg)
+    console.error("[foro] consulta", msg)
     return null
   }
 }
+const faltantes = new Set<string>()
 
 // ---------------------------------------------------------------------
 // Sesión: cliente de la tienda + su perfil del foro
 // ---------------------------------------------------------------------
 
-export type SesionForo = { clienteId: string; nombre: string; correo: string; perfil: Perfil | null } | null
+export type SesionForo = {
+  clienteId: string
+  nombre: string
+  correo: string
+  perfil: Perfil | null
+  pendientes: Contadores
+} | null
 
 export const sesionForo = cache(async (): Promise<SesionForo> => {
   const c = await retrieveCustomer().catch(() => null)
@@ -114,8 +146,26 @@ export const sesionForo = cache(async (): Promise<SesionForo> => {
     nombre: [c.first_name, c.last_name].filter(Boolean).join(" "),
     correo: c.email || "",
     perfil,
+    pendientes: perfil ? await contadores(perfil.id) : { avisos: 0, mensajes: 0 },
   }
 })
+
+// Avisos sin leer y conversaciones con mensajes nuevos (para la campana).
+// Sin la migración del 31 de octubre las tablas no existen: sale en ceros sin
+// llenar el registro de errores en cada página.
+async function contadores(perfilId: string): Promise<Contadores> {
+  try {
+    const { rows } = await db().query(
+      `select (select count(*) from foro.avisos where perfil_id = $1 and not leido) as avisos,
+        (select count(*) from foro.conversaciones c
+          where (c.a_id = $1 and c.ultimo > c.a_leido) or (c.b_id = $1 and c.ultimo > c.b_leido)) as mensajes`,
+      [perfilId]
+    )
+    return { avisos: Number(rows[0]?.avisos) || 0, mensajes: Number(rows[0]?.mensajes) || 0 }
+  } catch {
+    return { avisos: 0, mensajes: 0 }
+  }
+}
 
 // ---------------------------------------------------------------------
 // Secciones y listas de temas
@@ -295,6 +345,7 @@ const aPerfil = (f: Fila): Perfil => ({
   reputacion: Number(f.reputacion) || 0,
   foto: f.foto_url || null,
   taller: tallerDe(f.vendedor_id),
+  titular: f.titular || "",
   bio: f.bio,
   ciudad: f.ciudad,
   estadoMx: f.estado_mx,
@@ -308,6 +359,8 @@ const aPerfil = (f: Fila): Perfil => ({
   aptitudes: Array.isArray(f.aptitudes) ? f.aptitudes : [],
   trayectoria: Array.isArray(f.trayectoria) ? f.trayectoria : [],
   abierto: f.abierto === true,
+  correoAvisos: f.correo_avisos === "diario" || f.correo_avisos === "nunca" ? f.correo_avisos : "al_momento",
+  resumenSemanal: f.resumen_semanal !== false,
   creado: fecha(f.creado),
   temas: Number(f.n_temas) || 0,
   respuestas: Number(f.n_respuestas) || 0,

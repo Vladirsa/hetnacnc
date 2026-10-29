@@ -309,8 +309,9 @@ const SUGERIDAS = [
 
 const pasoVacio = (tipo: TipoTrayectoria = "experiencia"): Paso => ({ tipo, titulo: "", lugar: "", desde: "", hasta: "", detalle: "" })
 
-export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayectoria: Paso[]; abierto: boolean } }) {
+export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayectoria: Paso[]; abierto: boolean; titular: string } }) {
   const router = useRouter()
+  const [titular, setTitular] = useState(inicial.titular)
   const [aptitudes, setAptitudes] = useState(inicial.aptitudes)
   const [nueva, setNueva] = useState("")
   const [pasos, setPasos] = useState<Paso[]>(inicial.trayectoria)
@@ -334,7 +335,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
   const guardar = () => {
     setError("")
     iniciar(async () => {
-      const r = await guardarRed({ aptitudes, trayectoria: pasos.filter((p) => p.titulo.trim()), abierto })
+      const r = await guardarRed({ aptitudes, trayectoria: pasos.filter((p) => p.titulo.trim()), abierto, titular })
       if (r.ok) {
         setGuardado(true)
         router.refresh()
@@ -350,6 +351,21 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
           Lo que sabes hacer y lo que has hecho. Sale en tu perfil público; los demás pueden avalar tus aptitudes y escribirte recomendaciones.
         </p>
       </div>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[15.5px] font-bold text-[#1B1B18]">Tu titular</span>
+        <input
+          value={titular}
+          onChange={(e) => {
+            setTitular(e.target.value)
+            tocar()
+          }}
+          maxLength={100}
+          placeholder="Ej. Programador CAM · 8 años en router y láser"
+          className={CAMPO}
+        />
+        <span className="text-[12.5px] text-[#6B6A63]">Sale junto a tu nombre en cada respuesta: así saben por qué sabes del tema.</span>
+      </label>
 
       <label className="flex cursor-pointer items-start gap-3 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-4">
         <input

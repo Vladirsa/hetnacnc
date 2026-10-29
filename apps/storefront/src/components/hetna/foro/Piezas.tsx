@@ -31,6 +31,7 @@ const COLOR_TEMA: Record<TipoTema, [string, string]> = {
   busco: ["#E0F2F1", "#0B6B62"],
   ofrezco: ["#FDEEE1", "#B34D07"],
   vacante: ["#EDEFFC", "#3B46A6"],
+  evento: ["#E6F4EC", "#0F5C38"],
 }
 
 export function haceCuanto(iso: string): string {
@@ -109,6 +110,7 @@ export const AutorChip = ({ a, cuando, size = 36 }: { a: Autor; cuando?: string;
         {a.verificado && <Palomita />}
         {a.taller ? <InsigniaTaller a={a} /> : <InsigniaCuenta tipo={a.tipo} />}
       </div>
+      {a.titular && <span className="text-[12.5px] text-[#44433D] truncate">{a.titular}</span>}
       <span className="text-[12.5px] text-[#6B6A63]">
         {a.reputacion} pts{cuando ? ` · ${haceCuanto(cuando)}` : ""}
       </span>

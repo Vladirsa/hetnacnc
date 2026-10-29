@@ -6,6 +6,7 @@
 
 import { listarTalleres } from "@/lib/hetna/talleres"
 
+import { avisar, perfilesDeTaller } from "./avisos"
 import { sesionForo } from "./consultas"
 import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
@@ -19,6 +20,8 @@ import {
   type TipoTrayectoria,
   esObjetivo,
   objetivoPerfil,
+  urlPerfil,
+  urlTema,
 } from "./tipos"
 
 type Res<T = {}> = ({ ok: true } & T) | { ok: false; error: string }
@@ -79,10 +82,21 @@ export async function seguir(objetivo: string, quiere: boolean): Promise<Res<Est
     if (quiere) {
       if (!(await objetivoExiste(objetivo))) return { ok: false, error: "no_existe" }
       if ((await hoy("seguimientos", "seguidor_id", perfil.id)) >= 300) return { ok: false, error: "limite_diario" }
-      await db().query(
+      const nuevo = await db().query(
         `insert into foro.seguimientos (seguidor_id, objetivo) values ($1, $2) on conflict do nothing`,
         [perfil.id, objetivo]
       )
+      // Se le avisa a la persona (o al taller) sólo la primera vez
+      if (nuevo.rowCount && !objetivo.startsWith("s:")) {
+        const para = objetivo.startsWith("p:") ? [objetivo.slice(2)] : await perfilesDeTaller(objetivo.slice(2))
+        await avisar({
+          para,
+          actor: perfil.id,
+          tipo: "seguidor",
+          texto: `${perfil.nombre} ${objetivo.startsWith("t:") ? "empezó a seguir a tu taller" : "empezó a seguirte"}`,
+          url: urlPerfil(perfil.usuario),
+        })
+      }
     } else {
       await db().query(`delete from foro.seguimientos where seguidor_id = $1 and objetivo = $2`, [perfil.id, objetivo])
     }
@@ -108,7 +122,7 @@ export async function seguir(objetivo: string, quiere: boolean): Promise<Res<Est
 
 const esTipoPaso = (v: unknown): v is TipoTrayectoria => typeof v === "string" && v in TIPOS_TRAYECTORIA
 
-export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown; abierto?: unknown }): Promise<Res> {
+export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown; abierto?: unknown; titular?: unknown }): Promise<Res> {
   const p = await conPerfil()
   if ("error" in p) return { ok: false, error: p.error as string }
 
@@ -146,6 +160,15 @@ export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown
       JSON.stringify(trayectoria),
       d.abierto === true,
     ])
+    // El titular llegó con la migración del 31 de octubre: si aún no está, lo demás ya quedó guardado.
+    if (typeof d.titular === "string") {
+      const titular = revisarTexto(linea(d.titular, 100)).texto
+      await db()
+        .query(`update foro.perfiles set titular = $2 where id = $1`, [p.perfil.id, titular.includes("[dato") ? "" : titular])
+        .catch((e) => {
+          if ((e as { code?: string }).code !== "42703") throw e
+        })
+    }
     // Los avales de una aptitud que ya quitó se van con ella
     await db().query(`delete from foro.avales where perfil_id = $1 and not (aptitud = any($2))`, [p.perfil.id, aptitudes])
     return { ok: true }
@@ -164,15 +187,23 @@ export async function avalar(perfilId: string, aptitud: string, quiere: boolean)
   if (!/^[0-9a-f-]{36}$/.test(perfilId)) return { ok: false, error: "error" }
   if (perfilId === p.perfil.id) return { ok: false, error: "a_ti_mismo" }
   try {
-    const { rows } = await db().query(`select aptitudes from foro.perfiles where id = $1 and suspendido = false`, [perfilId])
+    const { rows } = await db().query(`select aptitudes, usuario from foro.perfiles where id = $1 and suspendido = false`, [perfilId])
     if (!rows[0] || !(rows[0].aptitudes || []).includes(aptitud)) return { ok: false, error: "no_existe" }
     if (quiere) {
       if ((await hoy("avales", "autor_id", p.perfil.id)) >= 100) return { ok: false, error: "limite_diario" }
-      await db().query(`insert into foro.avales (perfil_id, aptitud, autor_id) values ($1, $2, $3) on conflict do nothing`, [
+      const nuevo = await db().query(`insert into foro.avales (perfil_id, aptitud, autor_id) values ($1, $2, $3) on conflict do nothing`, [
         perfilId,
         aptitud,
         p.perfil.id,
       ])
+      if (nuevo.rowCount)
+        await avisar({
+          para: perfilId,
+          actor: p.perfil.id,
+          tipo: "aval",
+          texto: `${p.perfil.nombre} avaló tu aptitud “${aptitud}”`,
+          url: urlPerfil(rows[0].usuario),
+        })
     } else {
       await db().query(`delete from foro.avales where perfil_id = $1 and aptitud = $2 and autor_id = $3`, [perfilId, aptitud, p.perfil.id])
     }
@@ -196,7 +227,7 @@ export async function recomendar(perfilId: string, relacion: string, cuerpo: str
   const t = revisarTexto(texto(cuerpo, 1500))
   if (t.texto.length < 30) return { ok: false, error: "Cuenta un poco más: qué trabajo hizo, cómo quedó y por qué lo recomiendas." }
   try {
-    const { rows } = await db().query(`select 1 from foro.perfiles where id = $1 and suspendido = false`, [perfilId])
+    const { rows } = await db().query(`select usuario from foro.perfiles where id = $1 and suspendido = false`, [perfilId])
     if (!rows[0]) return { ok: false, error: "no_existe" }
     if ((await hoy("recomendaciones", "autor_id", p.perfil.id)) >= 5) return { ok: false, error: "limite_diario" }
     await db().query(
@@ -205,6 +236,13 @@ export async function recomendar(perfilId: string, relacion: string, cuerpo: str
          estado = 'pendiente', creado = now()`,
       [perfilId, p.perfil.id, relacion, t.texto]
     )
+    await avisar({
+      para: perfilId,
+      actor: p.perfil.id,
+      tipo: "recomendacion",
+      texto: `${p.perfil.nombre} te escribió una recomendación. Decide si sale en tu perfil.`,
+      url: `${urlPerfil(rows[0].usuario)}#recomendaciones`,
+    })
     return { ok: true }
   } catch (e) {
     return fallo(e)
@@ -235,7 +273,11 @@ export async function postularme(temaId: number, mensaje: string): Promise<Res> 
   const m = texto(mensaje, 1500)
   if (m.length < 10) return { ok: false, error: "Cuéntale en dos o tres renglones qué sabes hacer y cómo contactarte." }
   try {
-    const { rows } = await db().query(`select tipo, autor_id, estado from foro.temas where id = $1`, [temaId])
+    const { rows } = await db().query(
+      `select t.tipo, t.autor_id, t.estado, t.titulo, t.slug, s.slug as seccion
+       from foro.temas t join foro.secciones s on s.id = t.seccion_id where t.id = $1`,
+      [temaId]
+    )
     const t = rows[0]
     if (!t || t.estado !== "publicado") return { ok: false, error: "tema_no_existe" }
     if (t.tipo !== "vacante") return { ok: false, error: "no_es_vacante" }
@@ -245,7 +287,15 @@ export async function postularme(temaId: number, mensaje: string): Promise<Res> 
       `insert into foro.postulaciones (tema_id, perfil_id, mensaje) values ($1, $2, $3) on conflict do nothing`,
       [temaId, p.perfil.id, m]
     )
-    return r.rowCount ? { ok: true } : { ok: false, error: "ya_postulado" }
+    if (!r.rowCount) return { ok: false, error: "ya_postulado" }
+    await avisar({
+      para: t.autor_id,
+      actor: p.perfil.id,
+      tipo: "postulacion",
+      texto: `${p.perfil.nombre} se postuló a tu vacante “${t.titulo}”`,
+      url: `${urlTema({ seccion: t.seccion, slug: t.slug })}#postulaciones`,
+    })
+    return { ok: true }
   } catch (e) {
     return fallo(e)
   }
