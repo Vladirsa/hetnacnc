@@ -20,7 +20,11 @@ export default function LaboratorioCamPage() {
           Inicio
         </LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/cam" className="hover:text-[#B34D07]">
+        <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]">
+          Herramientas CNC
+        </LocalizedClientLink>
+        <span>/</span>
+        <LocalizedClientLink href="/herramientas-cnc#laboratorio-cam" className="hover:text-[#B34D07]">
           Laboratorio CAM
         </LocalizedClientLink>
         <span>/</span>
@@ -66,7 +70,7 @@ export default function LaboratorioCamPage() {
           </div>
           <p className="mt-6 text-[14px] text-[#6B6A63] leading-relaxed">
             ¿Tu pieza necesita algo de la segunda columna?{" "}
-            <LocalizedClientLink href="/servicios/laboratorio-cam" className="font-semibold text-[#B34D07] underline">
+            <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#B34D07] underline">
               Lo hacemos nosotros
             </LocalizedClientLink>
             .
