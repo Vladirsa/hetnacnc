@@ -105,12 +105,13 @@ export function mandarAFabricar(
   return true
 }
 
-// Lo recoge el formulario de /cotizar (una sola vez) como un File normal
+// Lo recoge el formulario de /cotizar como un File normal. Se queda guardado
+// mientras dure la vigencia: si el cliente cambia de taller en la misma
+// página, el archivo sigue ahí.
 export function tomarArchivoParaFabricar(): File | null {
   try {
     const p = JSON.parse(sessionStorage.getItem(CLAVE_FABRICAR) || "null") as Pendiente | null
     if (!p || Date.now() - p.t > VIGENCIA) return null
-    sessionStorage.removeItem(CLAVE_FABRICAR)
     const bytes = p.binario ? Uint8Array.from(atob(p.datos), (c) => c.charCodeAt(0)) : new TextEncoder().encode(p.datos)
     return new File([bytes], p.nombre, { type: "application/octet-stream" })
   } catch {
