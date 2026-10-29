@@ -1,4 +1,5 @@
 import { sdk } from "@/lib/client"
+import { type Tarifas, leerTarifas } from "@/lib/hetna/estimado"
 
 export type Maquina = { nombre: string; area?: string; detalle?: string }
 
@@ -9,6 +10,8 @@ export type Perfil = {
   cp?: string
   // "diseno" | "entrega_local" | "envio": lo que ofrece además de maquinar
   ofrece: string[]
+  // Tarifas por proceso para el estimado rápido de "Fabrícamelo"
+  tarifas: Tarifas
   lema?: string
   servicios: string[]
   capacidades: string[]
@@ -73,6 +76,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     estado: texto(p.estado),
     cp: texto(p.cp),
     ofrece: lista(p.ofrece),
+    tarifas: leerTarifas(p.tarifas),
     lema: texto(p.lema),
     servicios: lista(p.servicios),
     capacidades: lista(p.capacidades),
