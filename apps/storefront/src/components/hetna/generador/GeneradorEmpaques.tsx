@@ -13,7 +13,7 @@ import {
   plantillaDXF,
   plantillaSVG,
 } from "@/lib/generador/empaques"
-import { mandarACotizador } from "@/lib/generador/aCotizador"
+import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 
 type Unidad = "mm" | "cm" | "in"
 const FACTOR: Record<Unidad, number> = { mm: 1, cm: 10, in: 25.4 }
@@ -239,6 +239,14 @@ export function GeneradorEmpaques() {
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
                 Ver precio al instante en el Cotizador
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (!mandarAFabricar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas.map((p) => ({ ...p, pliegues: [] }))), locale, { pieza: "Plantilla de empaque", proceso: "Corte láser" })) setAvisoCotizar("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.") }}
+                className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
+                Fabrícamelo: que un taller la corte
               </button>
               {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
