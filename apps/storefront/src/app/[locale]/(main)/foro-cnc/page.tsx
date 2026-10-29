@@ -2,8 +2,19 @@ import type { Metadata } from "next"
 
 import { BotonPublicar, Buscador, Pestanas } from "@/components/hetna/foro/ForoMarco"
 import { ChipsSecciones, ColDerecha, ColIzquierda, Composer, Publicacion } from "@/components/hetna/foro/Feed"
+import { BloqueBlog } from "@/components/hetna/foro/Blog"
 import { ForoCerrado, Paginacion } from "@/components/hetna/foro/Piezas"
-import { type Orden, POR_PAGINA, destacados, listaTemas, secciones, sesionForo } from "@/lib/foro/consultas"
+import { listarBlog } from "@/lib/foro/blog"
+import {
+  type Orden,
+  POR_PAGINA,
+  actividad,
+  destacados,
+  listaTemas,
+  rankingSemanal,
+  secciones,
+  sesionForo,
+} from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
 
 type Props = {
@@ -35,13 +46,29 @@ export default async function ForoInicio({ params, searchParams }: Props) {
   const orden = (ORDENES.includes(uno(q.orden) as Orden) ? uno(q.orden) : "recientes") as Orden
   const pagina = Math.max(1, parseInt(uno(q.pagina)) || 1)
 
-  const [lista, secs, sesion, top] = await Promise.all([
+  const portada = !buscar && pagina === 1
+  const [lista, secs, sesion, top, semana, blog, act, sinResponder] = await Promise.all([
     listaTemas({ orden, pagina, buscar, seccion: seccionBusqueda || undefined }),
     secciones(),
     sesionForo(),
     destacados(),
+    rankingSemanal(),
+    portada ? listarBlog({ limit: 3 }) : Promise.resolve({ articulos: [], total: 0 }),
+    portada ? actividad() : Promise.resolve(null),
+    portada && orden !== "sin-respuesta" ? listaTemas({ orden: "sin-respuesta", limite: 1 }) : Promise.resolve(null),
   ])
   if (!lista || !secs) return <ForoCerrado />
+
+  // Números de actividad: sólo los que ya no están en cero (un "0 resueltos"
+  // dice "aquí no pasa nada" en vez de "aquí se resuelven cosas").
+  const numeros: [number, string][] = act
+    ? ([
+        [act.temas, act.temas === 1 ? "tema" : "temas"],
+        [act.respuestas, act.respuestas === 1 ? "respuesta" : "respuestas"],
+        [act.resueltos, act.resueltos === 1 ? "problema resuelto" : "problemas resueltos"],
+        [act.talleres, act.talleres === 1 ? "taller en el foro" : "talleres en el foro"],
+      ] as [number, string][]).filter(([n]) => n > 0)
+    : []
 
   const base = buscar ? `/foro-cnc?q=${encodeURIComponent(buscar)}${seccionBusqueda ? `&seccion=${seccionBusqueda}` : ""}` : "/foro-cnc"
   const baseOrden = orden === "recientes" ? base : `${base}${base.includes("?") ? "&" : "?"}orden=${orden}`
@@ -55,7 +82,32 @@ export default async function ForoInicio({ params, searchParams }: Props) {
         <div className="flex flex-col gap-3 min-w-0">
           <Buscador locale={locale} valor={buscar} />
           <ChipsSecciones secciones={secs} />
+          {numeros.length >= 2 && (
+            <div className={`grid grid-cols-2 gap-2 ${numeros.length > 2 ? "sm:grid-cols-4" : ""}`}>
+              {numeros.map(([n, t]) => (
+                <div key={String(t)} className="bg-white border border-[#E7E4DC] rounded-[10px] px-3 py-2">
+                  <span className="block text-[18px] font-extrabold text-[#142033]">{n}</span>
+                  <span className="text-[12px] text-[#6B6A63]">{t}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <Composer sesion={sesion} />
+          {sinResponder && sinResponder.total > 0 && (
+            <a
+              href="?orden=sin-respuesta"
+              className="flex items-center justify-between gap-3 rounded-[12px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3 text-[14px] text-[#5A3A12] hover:border-[#C2560A]"
+            >
+              <span>
+                <strong>
+                  {sinResponder.total} {sinResponder.total === 1 ? "pregunta espera" : "preguntas esperan"} su primera respuesta.
+                </strong>{" "}
+                ¿Sabes de esto? Responder suma puntos y lleva gente a tu perfil.
+              </span>
+              <span className="shrink-0 font-semibold text-[#B34D07]">Ver →</span>
+            </a>
+          )}
+          {portada && <BloqueBlog articulos={blog.articulos} />}
           {buscar ? (
             <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]">
               {lista.total} {lista.total === 1 ? "resultado" : "resultados"} para “{buscar}”
@@ -88,7 +140,7 @@ export default async function ForoInicio({ params, searchParams }: Props) {
           <Paginacion pagina={pagina} total={lista.total} porPagina={POR_PAGINA} base={baseOrden} />
         </div>
 
-        <ColDerecha destacados={top} />
+        <ColDerecha destacados={top} semana={semana} sesion={sesion} />
       </div>
     </main>
   )

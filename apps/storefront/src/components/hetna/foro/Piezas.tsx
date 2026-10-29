@@ -28,6 +28,8 @@ const COLOR_TEMA: Record<TipoTema, [string, string]> = {
   trabajo: ["#E6F4EC", "#14683F"],
   video: ["#FDECEC", "#A42A2A"],
   novedad: ["#FFF3E0", "#9A4A06"],
+  busco: ["#E0F2F1", "#0B6B62"],
+  ofrezco: ["#FDEEE1", "#B34D07"],
 }
 
 export function haceCuanto(iso: string): string {
@@ -78,6 +80,21 @@ export const InsigniaTema = ({ tipo }: { tipo: TipoTema }) => {
   )
 }
 
+// Taller del directorio de HETNA: lo distingue de un aficionado y lleva a su
+// perfil, donde se le puede pedir cotización.
+export const InsigniaTaller = ({ a }: { a: Pick<Autor, "taller"> }) =>
+  a.taller ? (
+    <LocalizedClientLink
+      href={`/talleres/${a.taller.handle}`}
+      title={a.taller.verificado ? "Taller verificado por HETNA: ver su perfil" : "Taller registrado en HETNA: ver su perfil"}
+      className={`text-[11px] font-bold px-2 py-[2px] rounded-full whitespace-nowrap inline-flex items-center gap-1 ${
+        a.taller.verificado ? "bg-[#E6F4EC] text-[#14683F] hover:bg-[#D3ECDD]" : "bg-[#EEF1F6] text-[#2D4A73] hover:bg-[#E0E6EF]"
+      }`}
+    >
+      {a.taller.verificado ? "✓ Taller verificado" : "Taller HETNA"} ›
+    </LocalizedClientLink>
+  ) : null
+
 export const AutorChip = ({ a, cuando, size = 36 }: { a: Autor; cuando?: string; size?: number }) => (
   <div className="flex items-center gap-2.5 min-w-0">
     <LocalizedClientLink href={urlPerfil(a.usuario)} className="shrink-0">
@@ -89,7 +106,7 @@ export const AutorChip = ({ a, cuando, size = 36 }: { a: Autor; cuando?: string;
           {a.nombre}
         </LocalizedClientLink>
         {a.verificado && <Palomita />}
-        <InsigniaCuenta tipo={a.tipo} />
+        {a.taller ? <InsigniaTaller a={a} /> : <InsigniaCuenta tipo={a.tipo} />}
       </div>
       <span className="text-[12.5px] text-[#6B6A63]">
         {a.reputacion} pts{cuando ? ` · ${haceCuanto(cuando)}` : ""}

@@ -1,10 +1,11 @@
 // Marco de las páginas del foro: portada, pestañas, lista y barra lateral
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import type { SesionForo } from "@/lib/foro/consultas"
+import type { Ayudador, SesionForo } from "@/lib/foro/consultas"
 import type { Autor, Seccion } from "@/lib/foro/tipos"
 import { urlPerfil } from "@/lib/foro/tipos"
 
 import { AvisoSeguro } from "./AvisoSeguro"
+import { CaptarTaller, QuienesAyudan } from "./Feed"
 import { Avatar, Ico } from "./Piezas"
 
 export const BotonPublicar = ({ seccion, className = "" }: { seccion?: string; className?: string }) => (
@@ -52,7 +53,7 @@ export const Pestanas = ({ base, actual, opciones }: { base: string; actual: str
   </div>
 )
 
-export const Lateral = ({ secciones, actual, sesion, destacados }: { secciones: Seccion[]; actual?: string; sesion: SesionForo; destacados: Autor[] }) => (
+export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: { secciones: Seccion[]; actual?: string; sesion: SesionForo; destacados: Autor[]; semana?: Ayudador[] }) => (
   <aside className="flex flex-col gap-5">
     {!sesion ? (
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
@@ -91,6 +92,13 @@ export const Lateral = ({ secciones, actual, sesion, destacados }: { secciones: 
     )}
 
     <nav className="bg-white border border-[#E7E4DC] rounded-[14px] p-2" aria-label="Secciones del foro">
+      <LocalizedClientLink
+        href="/foro-cnc/blog"
+        className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#14683F] bg-[#EEF6EE] hover:bg-[#E0F0E4]"
+      >
+        <span>Blog y guías</span>
+        <span aria-hidden="true">→</span>
+      </LocalizedClientLink>
       <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
       <ul className="m-0 p-0 list-none">
         {secciones.map((s) => (
@@ -111,18 +119,8 @@ export const Lateral = ({ secciones, actual, sesion, destacados }: { secciones: 
 
     <AvisoSeguro />
 
-    {destacados.length > 0 && (
-      <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex flex-col gap-3">
-        <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Los que más ayudan</span>
-        {destacados.map((a) => (
-          <LocalizedClientLink key={a.id} href={urlPerfil(a.usuario)} className="flex items-center gap-2.5 group">
-            <Avatar a={a} size={30} />
-            <span className="flex-1 min-w-0 text-[14px] font-semibold text-[#1B1B18] truncate group-hover:text-[#B34D07]">{a.nombre}</span>
-            <span className="text-[12.5px] text-[#6B6A63]">{a.reputacion} pts</span>
-          </LocalizedClientLink>
-        ))}
-      </div>
-    )}
+    <QuienesAyudan semana={semana} siempre={destacados} />
+    <CaptarTaller sesion={sesion} />
 
     <LocalizedClientLink
       href="/servicios/copiloto-ia-cnc"

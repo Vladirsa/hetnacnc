@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { SocialIcon } from "@/components/hetna/SocialIcon"
 import { AvisoSeguro } from "@/components/hetna/foro/AvisoSeguro"
-import { Avatar, ForoCerrado, InsigniaCuenta, Migas, Paginacion, Palomita, TarjetaTema } from "@/components/hetna/foro/Piezas"
+import { Avatar, ForoCerrado, InsigniaCuenta, InsigniaTaller, Migas, Paginacion, Palomita, TarjetaTema } from "@/components/hetna/foro/Piezas"
 import { POR_PAGINA, listaTemas, perfilPorUsuario, sesionForo } from "@/lib/foro/consultas"
 import { REDES, type Red, SITIO, TIPOS_CUENTA, urlPerfil } from "@/lib/foro/tipos"
 
@@ -91,8 +91,16 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="m-0 font-display text-[26px] font-bold text-[#1B1B18]">{p.nombre}</h1>
                 {p.verificado && <Palomita />}
-                <InsigniaCuenta tipo={p.tipo} />
+                {p.taller ? <InsigniaTaller a={p} /> : <InsigniaCuenta tipo={p.tipo} />}
               </div>
+              {p.taller && (
+                <LocalizedClientLink
+                  href={`/talleres/${p.taller.handle}`}
+                  className="self-start mt-1 inline-flex items-center gap-1.5 rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
+                >
+                  Ver el taller {p.taller.nombre} y pedir cotización →
+                </LocalizedClientLink>
+              )}
               <span className="text-[14px] text-[#6B6A63]">
                 @{p.usuario}
                 {lugar ? ` · ${lugar}` : ""} · Miembro desde{" "}

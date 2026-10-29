@@ -373,7 +373,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
             {articulosAprendizaje.map((a) => (
               <LocalizedClientLink
                 key={a.id}
-                href={`/aprendizaje-cnc/${a.slug}`}
+                href={`/foro-cnc/blog/${a.slug}`}
                 className="group bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex flex-col hover:border-[#C2560A] hover:shadow-[0_8px_24px_rgba(27,27,24,0.08)] transition"
               >
                 {a.cover_image_url && (

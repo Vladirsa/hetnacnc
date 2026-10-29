@@ -102,3 +102,29 @@ psql -d unabase -f infra/foro/siembra.sql
 ```
 
 Debe decir `Temas sembrados en esta corrida: 15`, y a la segunda, `0`.
+
+## Actualización del 29 de octubre de 2026
+
+**1. Base del foro (Supabase).** Corre una vez `migracion-2026-10-29.sql` en el
+editor SQL, sobre la base de `HETNA_FORO_DB`. Agrega los tipos de publicación
+"Busco maquinado" y "Ofrezco capacidad" (este último sólo para talleres,
+proveedores y marcas). Mientras no se corra, el foro funciona igual; sólo esos
+dos tipos responden "todavía no está activo".
+
+**2. Blog del foro.** Los artículos viven en el backend (módulo `learning`).
+El deploy corre la migración que les agrega sección, guía fija y autor. Las
+tres primeras guías (PDF a DXF, MDF quemado o chueco, cuánto cobrar) se
+publican con:
+
+```
+cd /root/hetnacnc/packages/api && npx medusa exec ./src/scripts/sembrar-guias-blog.ts
+```
+
+No duplica nada si se corre otra vez. Lo demás se escribe en el dashboard,
+pantalla **Blog**.
+
+**3. Talleres en el foro.** Un taller liga su perfil del foro en
+*Mi perfil → Ligar mi taller*: funciona si el correo de su cuenta de cliente es
+el mismo de su taller (o de un miembro de su panel). Con eso sale la insignia
+"Taller HETNA" (o "✓ Taller verificado") con liga a su página, y recibe por
+correo las preguntas de su especialidad.

@@ -13,6 +13,9 @@ export type LearningArticleDTO = {
   seo_description: string | null
   source: string
   published_at: string | null
+  categoria?: string | null
+  guia?: boolean
+  autor?: string | null
   created_at: string
   updated_at: string
 }

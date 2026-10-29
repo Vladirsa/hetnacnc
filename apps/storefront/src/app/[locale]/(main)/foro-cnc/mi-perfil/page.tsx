@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { FormPerfil } from "@/components/hetna/foro/FormPerfil"
 import { ForoCerrado, Migas } from "@/components/hetna/foro/Piezas"
+import { VincularTaller } from "@/components/hetna/foro/VincularTaller"
+import { buscarMiTaller } from "@/lib/foro/acciones"
 import { secciones, sesionForo } from "@/lib/foro/consultas"
 import { urlPerfil } from "@/lib/foro/tipos"
 
@@ -21,6 +23,8 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
   // solo direcciones dentro del foro
   const siguiente = sig && /^\/foro-cnc(\/|\?|#|$)/.test(sig) && !sig.includes("//") ? sig : undefined
   const p = sesion?.perfil
+  // Sólo se pregunta por el taller si ya tiene perfil y no está ligado.
+  const encontrado = p && !p.taller ? await buscarMiTaller() : null
 
   return (
     <main className="w-full bg-[#FAF9F6]">
@@ -52,6 +56,13 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
             </div>
           </div>
         ) : (
+          <>
+          {p && (
+            <VincularTaller
+              ligado={p.taller}
+              encontrado={encontrado ? { handle: encontrado.handle, nombre: encontrado.nombre, verificado: encontrado.verificado } : null}
+            />
+          )}
           <div className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-7">
             <FormPerfil
               nuevo={!p}
@@ -70,6 +81,7 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
               }}
             />
           </div>
+          </>
         )}
       </div>
     </main>

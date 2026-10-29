@@ -4,6 +4,7 @@
 import { cache } from "react"
 
 import { retrieveCustomer } from "@/lib/data/customer"
+import { listarTalleres } from "@/lib/hetna/talleres"
 
 import { extracto, tieneVideo } from "./contenido"
 import { db, foroConfigurado } from "./db"
@@ -14,6 +15,7 @@ import {
   type Respuesta,
   type Seccion,
   type Tema,
+  type TallerLigado,
   type TemaResumen,
   urlFoto,
 } from "./tipos"
@@ -23,7 +25,26 @@ type Fila = Record<string, any>
 const fecha = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? ""))
 
 const AUTOR = `a.id as a_id, a.usuario as a_usuario, a.nombre as a_nombre, a.tipo as a_tipo,
-  a.verificado as a_verificado, a.reputacion as a_reputacion, a.foto_url as a_foto`
+  a.verificado as a_verificado, a.reputacion as a_reputacion, a.foto_url as a_foto, a.vendedor_id as a_vendedor`
+
+// Talleres del directorio por id de vendedor. El foro vive en otra base, así
+// que se cruzan aquí: se cargan una vez cada 5 minutos y cada autor ligado a
+// un taller sale con su insignia y la liga a su perfil.
+let talleres: { mapa: Map<string, TallerLigado>; hasta: number } = { mapa: new Map(), hasta: 0 }
+async function asegurarTalleres() {
+  if (Date.now() < talleres.hasta) return
+  try {
+    const lista = await listarTalleres()
+    talleres = {
+      mapa: new Map(lista.map((t) => [t.id, { handle: t.handle, nombre: t.nombre, verificado: t.verificado }])),
+      hasta: Date.now() + 5 * 60_000,
+    }
+  } catch {
+    // Sin directorio, el foro funciona igual; sólo no salen las insignias.
+    talleres.hasta = Date.now() + 60_000
+  }
+}
+const tallerDe = (vendedorId: unknown) => (typeof vendedorId === "string" ? talleres.mapa.get(vendedorId) || null : null)
 
 const aAutor = (f: Fila): Autor => ({
   id: f.a_id,
@@ -33,6 +54,7 @@ const aAutor = (f: Fila): Autor => ({
   verificado: f.a_verificado,
   reputacion: Number(f.a_reputacion) || 0,
   foto: f.a_foto || null,
+  taller: tallerDe(f.a_vendedor),
 })
 
 const ligasDe = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : [])
@@ -69,6 +91,7 @@ const TEMA_DESDE = `from foro.temas t
 async function intentar<T>(f: () => Promise<T>): Promise<T | null> {
   if (!foroConfigurado()) return null
   try {
+    await asegurarTalleres()
     return await f()
   } catch (e) {
     console.error("[foro] consulta", (e as Error).message)
@@ -269,6 +292,7 @@ const aPerfil = (f: Fila): Perfil => ({
   verificado: f.verificado,
   reputacion: Number(f.reputacion) || 0,
   foto: f.foto_url || null,
+  taller: tallerDe(f.vendedor_id),
   bio: f.bio,
   ciudad: f.ciudad,
   estadoMx: f.estado_mx,
@@ -316,6 +340,56 @@ export async function destacados(limite = 5): Promise<Autor[]> {
     return rows.map(aAutor)
   })
   return r || []
+}
+
+// Los que más ayudaron en los últimos 7 días. Cuenta lo que sirve, no lo que
+// se publica: 1 punto por respuesta publicada y 3 más si la eligieron como la
+// mejor. Contestarse a uno mismo no cuenta.
+export type Ayudador = Autor & { puntos: number; respuestas: number; mejores: number }
+export async function rankingSemanal(limite = 5): Promise<Ayudador[]> {
+  const r = await intentar(async () => {
+    const { rows } = await db().query(
+      `select ${AUTOR}, count(r.id) as n_resp,
+         count(t2.id) as n_mejores
+       from foro.respuestas r
+       join foro.temas t on t.id = r.tema_id and t.autor_id <> r.autor_id
+       join foro.perfiles a on a.id = r.autor_id
+       left join foro.temas t2 on t2.mejor_respuesta_id = r.id
+       where r.estado = 'publicado' and r.creado > now() - interval '7 days' and a.suspendido = false
+       group by a.id
+       order by count(r.id) + 3 * count(t2.id) desc, max(r.creado) desc
+       limit $1`,
+      [limite]
+    )
+    return rows.map((f) => ({
+      ...aAutor(f),
+      respuestas: Number(f.n_resp) || 0,
+      mejores: Number(f.n_mejores) || 0,
+      puntos: (Number(f.n_resp) || 0) + 3 * (Number(f.n_mejores) || 0),
+    }))
+  })
+  return r || []
+}
+
+// Números de actividad para la portada del foro. Sólo lo publicado.
+export type Actividad = { temas: number; respuestas: number; resueltos: number; perfiles: number; talleres: number }
+export async function actividad(): Promise<Actividad | null> {
+  return intentar(async () => {
+    const { rows } = await db().query(`select
+      (select count(*) from foro.temas where estado = 'publicado') as temas,
+      (select count(*) from foro.respuestas where estado = 'publicado') as respuestas,
+      (select count(*) from foro.temas where estado = 'publicado' and mejor_respuesta_id is not null) as resueltos,
+      (select count(*) from foro.perfiles where suspendido = false) as perfiles,
+      (select count(*) from foro.perfiles where suspendido = false and vendedor_id is not null) as talleres`)
+    const f = rows[0] || {}
+    return {
+      temas: Number(f.temas) || 0,
+      respuestas: Number(f.respuestas) || 0,
+      resueltos: Number(f.resueltos) || 0,
+      perfiles: Number(f.perfiles) || 0,
+      talleres: Number(f.talleres) || 0,
+    }
+  })
 }
 
 // ---------------------------------------------------------------------

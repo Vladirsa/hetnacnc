@@ -13,4 +13,9 @@ export const LearningArticle = model.define("learning_article", {
   seo_description: model.text().nullable(),
   source: model.text().default("manual"),
   published_at: model.dateTime().nullable(),
+  // Blog del foro: la sección del foro a la que pertenece (slug de
+  // foro.secciones, p. ej. "diseno-cam") y si es la guía fija de esa sección.
+  categoria: model.text().nullable(),
+  guia: model.boolean().default(false),
+  autor: model.text().nullable(),
 })

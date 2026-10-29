@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { AvisoSeguro } from "@/components/hetna/foro/AvisoSeguro"
+import { BotonesServicio } from "@/components/hetna/foro/Blog"
+import { CaptarTaller } from "@/components/hetna/foro/Feed"
 import { FormRespuesta, ResponderA } from "@/components/hetna/foro/FormRespuesta"
 import { IconoResponder } from "@/components/hetna/foro/IconosCNC"
 import { BotonMejor, BotonNoUtil, BotonVoto, Compartir, EncuestaVotar, MenuMas } from "@/components/hetna/foro/Interaccion"
@@ -14,6 +16,7 @@ import SigueHetna from "@/components/hetna/SigueHetna"
 import { contarVisita, listaTemas, misVotos, respuestas as leerRespuestas, sesionForo, tema as leerTema } from "@/lib/foro/consultas"
 import { misNoUtiles } from "@/lib/foro/consultas-no-util"
 import { extracto, leerVideo } from "@/lib/foro/contenido"
+import { ctasPara, talleresDeSeccion } from "@/lib/foro/cta"
 import { type Respuesta, SITIO, urlPerfil, urlTema } from "@/lib/foro/tipos"
 
 type Props = {
@@ -132,6 +135,9 @@ export default async function ForoTema({ params, searchParams }: Props) {
   const nPublicadas = rs.filter((r) => r.estado === "publicado").length
   const ligasVideo = t.ligas.map((l) => ({ l, v: leerVideo(l) }))
   const aviso = Array.isArray(q.aviso) ? q.aviso[0] : q.aviso
+  // De la duda al servicio: según de qué trata el tema (ver lib/foro/cta)
+  const ctas = t.tipo === "ofrezco" || t.tipo === "novedad" ? [] : ctasPara(t.seccion.slug, `${t.titulo} ${t.cuerpo}`)
+  const talleres = talleresDeSeccion(t.seccion.slug)
 
   const tarjetaRespuesta = (r: Respuesta, hija = false) => {
     const mejor = r.id === t.mejorRespuestaId
@@ -239,10 +245,31 @@ export default async function ForoTema({ params, searchParams }: Props) {
               </div>
             </article>
 
+            <BotonesServicio ctas={ctas} />
+
             <section className="flex flex-col gap-3" aria-label="Respuestas">
               <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
                 {nPublicadas ? `${nPublicadas} ${nPublicadas === 1 ? "respuesta" : "respuestas"}` : "Aún no hay respuestas"}
               </h2>
+              {nPublicadas === 0 && t.estado === "publicado" && !esAutor && (
+                <div className="rounded-[14px] border-2 border-dashed border-[#F2C98F] bg-[#FFF9F0] p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                  <span>
+                    <span className="block text-[16px] font-bold text-[#1B1B18]">Sé el primero en responder</span>
+                    <span className="text-[14px] text-[#5A3A12]">
+                      Si sabes algo de esto, tu respuesta suma puntos, te pone en &ldquo;Los que más ayudan&rdquo; y, si tienes taller, lleva a quien preguntó a tu perfil.
+                    </span>
+                  </span>
+                  <a href="#responder" className="shrink-0 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#A84A08]">
+                    Responder
+                  </a>
+                </div>
+              )}
+              {nPublicadas === 0 && esAutor && t.estado === "publicado" && (
+                <p className="m-0 rounded-[12px] bg-[#EEF4FB] border border-[#C9DBF0] px-4 py-3 text-[14px] text-[#1E3A5F]">
+                  Tu tema ya está publicado{t.tipo === "pregunta" || t.tipo === "busco" ? " y les avisamos a los talleres de esta especialidad" : ""}. Cuando
+                  alguien te dé la respuesta que sirve, márcala como la mejor: así el tema queda como resuelto.
+                </p>
+              )}
               {principales.map((r) => tarjetaRespuesta(r))}
             </section>
 
@@ -285,6 +312,13 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 Ver perfil y trabajos
               </LocalizedClientLink>
             </div>
+            {talleres && (
+              <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
+                <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>
+                <span className="text-[13px] text-[#C9D2E0]">Ve quién hace esto y pídele cotización.</span>
+              </LocalizedClientLink>
+            )}
+            <CaptarTaller sesion={sesion} />
             <AvisoSeguro />
             {relacionados && relacionados.temas.filter((x) => x.id !== t.id).length > 0 && (
               <div className="flex flex-col gap-3">

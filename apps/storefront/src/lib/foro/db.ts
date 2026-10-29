@@ -25,5 +25,7 @@ export const claveError = (e: unknown): string => {
   const pg = e as { code?: string; constraint?: string }
   if (pg.code === "23505" && /usuario/.test(pg.constraint || "")) return "usuario_ocupado"
   if (pg.code === "42P01" || pg.code === "3F000") return "sin_foro" // aún no se crean las tablas
+  // "Busco" y "Ofrezco" necesitan la migración del 29 de octubre (infra/foro)
+  if (pg.code === "23514" && /tipo/.test(pg.constraint || "")) return "tipo_no_activo"
   return "error"
 }

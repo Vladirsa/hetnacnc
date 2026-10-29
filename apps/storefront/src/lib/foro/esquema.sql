@@ -49,7 +49,7 @@ create table if not exists foro.temas (
   id bigint generated always as identity primary key,
   seccion_id smallint not null references foro.secciones (id),
   autor_id uuid not null references foro.perfiles (id) on delete cascade,
-  tipo text not null check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad')),
+  tipo text not null check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco')),
   titulo text not null check (char_length(titulo) between 10 and 150),
   slug text not null,
   cuerpo text not null check (char_length(cuerpo) between 1 and 20000),
@@ -85,6 +85,12 @@ create table if not exists foro.respuestas (
   creado timestamptz not null default now(),
   actualizado timestamptz not null default now()
 );
+
+-- 29 oct 2026: tipos "busco" (busco maquinado) y "ofrezco" (capacidad libre).
+-- En bases creadas antes, la regla vieja no los deja entrar: se reemplaza.
+alter table foro.temas drop constraint if exists temas_tipo_check;
+alter table foro.temas add constraint temas_tipo_check
+  check (tipo in ('pregunta', 'debate', 'trabajo', 'video', 'novedad', 'busco', 'ofrezco'));
 
 do $$ begin
   alter table foro.temas
@@ -271,7 +277,7 @@ begin
   if p.suspendido then raise exception 'perfil_suspendido'; end if;
   select * into s from foro.secciones where secciones.slug = p_seccion;
   if s.id is null then raise exception 'seccion_no_existe'; end if;
-  if (s.solo_negocios or p_tipo = 'novedad') and p.tipo not in ('taller', 'proveedor', 'marca') and p.rol = 'usuario' then
+  if (s.solo_negocios or p_tipo in ('novedad', 'ofrezco')) and p.tipo not in ('taller', 'proveedor', 'marca') and p.rol = 'usuario' then
     raise exception 'solo_negocios';
   end if;
   if p.rol = 'usuario' and (select count(*) from foro.temas t where t.autor_id = p_autor and t.creado > now() - interval '1 day') >= 8 then

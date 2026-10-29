@@ -18,6 +18,8 @@ export const TIPOS_TEMA = {
   trabajo: { nombre: "Trabajo", ayuda: "Muestras una pieza terminada y cómo la hiciste" },
   video: { nombre: "Video", ayuda: "Compartes un video de YouTube, TikTok o Facebook" },
   novedad: { nombre: "Novedad", ayuda: "Producto, servicio o promoción (solo negocios)" },
+  busco: { nombre: "Busco maquinado", ayuda: "Necesitas que un taller te haga una pieza o un trabajo" },
+  ofrezco: { nombre: "Ofrezco capacidad", ayuda: "Tienes horas libres de máquina (solo talleres)" },
 } as const
 export type TipoTema = keyof typeof TIPOS_TEMA
 export const esTipoTema = (v: unknown): v is TipoTema => typeof v === "string" && v in TIPOS_TEMA
@@ -51,6 +53,10 @@ export type Seccion = {
   ultima: string | null
 }
 
+// Taller del directorio de HETNA al que está ligado un perfil del foro (ver
+// vincularMiTaller). Con él se enseña "Taller verificado" y la liga a su perfil.
+export type TallerLigado = { handle: string; nombre: string; verificado: boolean }
+
 export type Autor = {
   id: string
   usuario: string
@@ -59,6 +65,7 @@ export type Autor = {
   verificado: boolean
   reputacion: number
   foto: string | null
+  taller: TallerLigado | null
 }
 
 export type TemaResumen = {
@@ -143,6 +150,8 @@ export const MENSAJES: Record<string, string> = {
   solo_el_autor: "Solo quien publicó el tema puede elegir la mejor respuesta.",
   opcion_invalida: "Elige una opción de la encuesta.",
   sin_foro: "El foro abre muy pronto.",
+  tipo_no_activo: "Este tipo de publicación todavía no está activo. Elige otro.",
+  sin_taller: "No encontramos un taller registrado con el correo de tu cuenta.",
   error: "Algo salió mal. Intenta de nuevo.",
 }
 

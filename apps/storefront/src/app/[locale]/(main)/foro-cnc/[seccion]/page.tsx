@@ -2,8 +2,12 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { BotonPublicar, Buscador, Lateral, Pestanas } from "@/components/hetna/foro/ForoMarco"
+import { GuiasSeccion } from "@/components/hetna/foro/Blog"
 import { ForoCerrado, Migas, Paginacion, TarjetaTema } from "@/components/hetna/foro/Piezas"
-import { type Orden, POR_PAGINA, destacados, listaTemas, secciones, sesionForo } from "@/lib/foro/consultas"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { listarBlog } from "@/lib/foro/blog"
+import { type Orden, POR_PAGINA, destacados, listaTemas, rankingSemanal, secciones, sesionForo } from "@/lib/foro/consultas"
+import { ctasPara, talleresDeSeccion } from "@/lib/foro/cta"
 import { SITIO } from "@/lib/foro/tipos"
 
 type Props = {
@@ -34,17 +38,21 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
   const orden = (ORDENES.includes(uno(q.orden) as Orden) ? uno(q.orden) : "recientes") as Orden
   const pagina = Math.max(1, parseInt(uno(q.pagina)) || 1)
 
-  const [secs, lista, sesion, top] = await Promise.all([
+  const [secs, lista, sesion, top, semana, guias] = await Promise.all([
     secciones(),
     listaTemas({ seccion, orden, pagina }),
     sesionForo(),
     destacados(),
+    rankingSemanal(),
+    listarBlog({ categoria: seccion, guia: true, limit: 2 }),
   ])
   if (!secs || !lista) return <ForoCerrado />
   const s = secs.find((x) => x.slug === seccion)
   if (!s) notFound()
 
   const base = `/foro-cnc/${s.slug}`
+  const fabricar = ctasPara(s.slug, "")[0]
+  const talleres = talleresDeSeccion(s.slug)
   const baseOrden = orden === "recientes" ? base : `${base}?orden=${orden}`
 
   return (
@@ -67,6 +75,24 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-8">
           <div className="flex flex-col gap-4 min-w-0">
+            {pagina === 1 && <GuiasSeccion guias={guias.articulos} />}
+            {fabricar && pagina === 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3">
+                <span className="text-[14px] text-[#44433D]">
+                  <strong className="text-[#1B1B18]">{fabricar.titulo}</strong> {fabricar.texto}
+                </span>
+                <span className="flex gap-3 shrink-0">
+                  {talleres && (
+                    <LocalizedClientLink href={talleres.href} className="text-[13.5px] font-semibold text-[#142033] hover:text-[#B34D07]">
+                      Ver talleres
+                    </LocalizedClientLink>
+                  )}
+                  <LocalizedClientLink href={fabricar.href} className="rounded-full bg-[#C2560A] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[#A84A08]">
+                    {fabricar.boton}
+                  </LocalizedClientLink>
+                </span>
+              </div>
+            )}
             <Pestanas
               base={base}
               actual={orden}
@@ -91,7 +117,7 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
             )}
             <Paginacion pagina={pagina} total={lista.total} porPagina={POR_PAGINA} base={baseOrden} />
           </div>
-          <Lateral secciones={secs} actual={s.slug} sesion={sesion} destacados={top} />
+          <Lateral secciones={secs} actual={s.slug} sesion={sesion} destacados={top} semana={semana} />
         </div>
       </div>
     </main>

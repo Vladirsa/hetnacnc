@@ -13,6 +13,7 @@ import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares"
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
+import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 
 export default defineMiddlewares({
@@ -43,6 +44,7 @@ export default defineMiddlewares({
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
+        ...storeForoMiddlewares,
         ...storeRastreoMiddlewares,
     ],
 });

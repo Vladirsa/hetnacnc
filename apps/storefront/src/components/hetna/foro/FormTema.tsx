@@ -19,12 +19,15 @@ const AYUDA_CUERPO: Record<TipoTema, string> = {
   trabajo: "Qué hiciste, con qué máquina, material, herramienta, tiempo y cómo lo resolviste. Sube tus mejores fotos.",
   video: "Pega la liga del video (YouTube, TikTok, Facebook o Instagram) y cuenta de qué trata.",
   novedad: "Qué ofreces, para quién es y por qué conviene. Recuerda: las ventas se cierran dentro de HETNA.",
+  busco: "Qué pieza o trabajo necesitas: material, medidas, cantidad, ciudad y para cuándo. Los talleres de esa especialidad reciben aviso. Si quieres propuestas formales con precio, pídelas en Cotizar.",
+  ofrezco: "Qué máquina tienes libre, cuántas horas o qué días, en qué ciudad, qué materiales y qué tamaño máximo. Los clientes te contratan dentro de HETNA.",
 }
 
 export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: { secciones: SeccionCorta[]; seccionInicial?: string; tipoInicial?: string; esNegocio: boolean }) {
   const router = useRouter()
   const { locale } = useParams() as { locale?: string }
-  const tipos = (Object.keys(TIPOS_TEMA) as TipoTema[]).filter((t) => t !== "novedad" || esNegocio)
+  // Novedad y Ofrezco capacidad son de negocios: talleres, proveedores y marcas.
+  const tipos = (Object.keys(TIPOS_TEMA) as TipoTema[]).filter((t) => (t !== "novedad" && t !== "ofrezco") || esNegocio)
   const [tipo, setTipo] = useState<TipoTema>(tipos.includes(tipoInicial as TipoTema) ? (tipoInicial as TipoTema) : "pregunta")
   const disponibles = secciones.filter((s) => !s.soloNegocios || esNegocio)
   const [seccion, setSeccion] = useState(disponibles.some((s) => s.slug === seccionInicial) ? (seccionInicial as string) : "")

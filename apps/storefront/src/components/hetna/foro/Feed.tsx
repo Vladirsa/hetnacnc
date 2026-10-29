@@ -6,10 +6,10 @@ import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import type { SesionForo } from "@/lib/foro/consultas"
+import type { Ayudador, SesionForo } from "@/lib/foro/consultas"
 import { type Autor, type Seccion, type TemaResumen, TIPOS_CUENTA, urlPerfil, urlTema } from "@/lib/foro/tipos"
 
-import { AvisoSeguro, Avatar, COLOR_CUENTA, Ico, InsigniaCuenta, InsigniaTema, Palomita, haceCuanto } from "./Piezas"
+import { AvisoSeguro, Avatar, COLOR_CUENTA, Ico, InsigniaCuenta, InsigniaTaller, InsigniaTema, Palomita, haceCuanto } from "./Piezas"
 
 const TARJETA = "bg-white border border-[#E7E4DC] rounded-[12px]"
 const BTN = "inline-flex items-center justify-center text-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2 rounded-full text-[14px]"
@@ -90,6 +90,13 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
       </div>
 
       <nav className={`${TARJETA} p-2`} aria-label="Secciones del foro">
+        <LocalizedClientLink
+          href="/foro-cnc/blog"
+          className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#14683F] bg-[#EEF6EE] hover:bg-[#E0F0E4]"
+        >
+          <span>Blog y guías</span>
+          <span aria-hidden="true">→</span>
+        </LocalizedClientLink>
         <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
         <ul className="m-0 p-0 list-none">
           {secciones.map((s) => (
@@ -135,24 +142,10 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
   </nav>
 )
 
-export const ColDerecha = ({ destacados }: { destacados: Autor[] }) => (
+export const ColDerecha = ({ destacados, semana = [], sesion = null }: { destacados: Autor[]; semana?: Ayudador[]; sesion?: SesionForo }) => (
   <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:self-start">
-    {destacados.length > 0 && (
-      <div className={`${TARJETA} p-4 flex flex-col gap-3`}>
-        <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Los que más ayudan</span>
-        {destacados.map((a) => (
-          <LocalizedClientLink key={a.id} href={urlPerfil(a.usuario)} className="flex items-center gap-2.5 group">
-            <Avatar a={a} size={36} />
-            <span className="flex-1 min-w-0 flex flex-col">
-              <span className="text-[14px] font-semibold text-[#1B1B18] truncate group-hover:text-[#B34D07]">{a.nombre}</span>
-              <span className="text-[12px] text-[#6B6A63]">
-                {TIPOS_CUENTA[a.tipo]?.nombre} · {a.reputacion} pts
-              </span>
-            </span>
-          </LocalizedClientLink>
-        ))}
-      </div>
-    )}
+    <QuienesAyudan semana={semana} siempre={destacados} />
+    <CaptarTaller sesion={sesion} />
     <LocalizedClientLink href="/servicios/copiloto-ia-cnc" className="bg-[#142033] text-white rounded-[12px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
       <strong className="text-[14.5px]">¿Prisa? Pregúntale al Copiloto IA CNC</strong>
       <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances y errores de tu máquina al instante.</span>
@@ -162,6 +155,51 @@ export const ColDerecha = ({ destacados }: { destacados: Autor[] }) => (
     <AvisoSeguro />
   </aside>
 )
+
+// "Los que más ayudan": los de esta semana si hay; si no, los de siempre.
+// Cada uno con la liga a su taller, para que ayudar le traiga clientes.
+export const QuienesAyudan = ({ semana, siempre }: { semana: Ayudador[]; siempre: Autor[] }) => {
+  const lista: (Autor & { detalle: string })[] = semana.length
+    ? semana.map((a) => ({ ...a, detalle: `${a.respuestas} ${a.respuestas === 1 ? "respuesta" : "respuestas"}${a.mejores ? ` · ${a.mejores} mejor` : ""}` }))
+    : siempre.map((a) => ({ ...a, detalle: `${a.reputacion} pts` }))
+  if (!lista.length) return null
+  return (
+    <div className="bg-white border border-[#E7E4DC] rounded-[12px] p-4 flex flex-col gap-3">
+      <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">
+        {semana.length ? "Los que más ayudan esta semana" : "Los que más ayudan"}
+      </span>
+      {lista.map((a, i) => (
+        <div key={a.id} className="flex items-center gap-2.5">
+          <span className="w-4 text-[12px] font-bold text-[#9A978C]">{i + 1}</span>
+          <LocalizedClientLink href={urlPerfil(a.usuario)} className="shrink-0">
+            <Avatar a={a} size={34} />
+          </LocalizedClientLink>
+          <span className="flex-1 min-w-0 flex flex-col">
+            <LocalizedClientLink href={urlPerfil(a.usuario)} className="text-[14px] font-semibold text-[#1B1B18] truncate hover:text-[#B34D07]">
+              {a.nombre}
+            </LocalizedClientLink>
+            <span className="text-[12px] text-[#6B6A63] truncate">{a.detalle}</span>
+          </span>
+          <InsigniaTaller a={a} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Para quien sabe y todavía no tiene su taller en HETNA.
+export const CaptarTaller = ({ sesion }: { sesion: SesionForo }) =>
+  sesion?.perfil?.taller ? null : (
+    <LocalizedClientLink
+      href={sesion?.perfil && ["taller", "proveedor", "profesional"].includes(sesion.perfil.tipo) ? "/foro-cnc/mi-perfil#taller" : "/talleres/unete"}
+      className="bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] p-4 flex flex-col gap-1 hover:border-[#C2560A]"
+    >
+      <strong className="text-[14.5px] text-[#1B1B18]">¿Tienes taller? Que te encuentren</strong>
+      <span className="text-[13px] text-[#5A3A12]">
+        Liga tu taller a tu perfil: tus respuestas llevan a tu página y recibes solicitudes de cotización.
+      </span>
+    </LocalizedClientLink>
+  )
 
 export const Publicacion = ({ t }: { t: TemaResumen }) => (
   <article className={`${TARJETA} overflow-hidden`}>
@@ -175,7 +213,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
             {t.autor.nombre}
           </LocalizedClientLink>
           {t.autor.verificado && <Palomita />}
-          <InsigniaCuenta tipo={t.autor.tipo} />
+          {t.autor.taller ? <InsigniaTaller a={t.autor} /> : <InsigniaCuenta tipo={t.autor.tipo} />}
         </div>
         <span className="text-[12.5px] text-[#6B6A63]">
           {t.autor.reputacion} pts · {haceCuanto(t.ultimaActividad)}

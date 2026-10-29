@@ -7,6 +7,7 @@ import { ligaValida } from "./contenido"
 import { sesionForo } from "./consultas"
 import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
+import { getAuthHeaders } from "@/lib/data/cookies"
 import { avisarRedes } from "@/lib/hetna/avisar-redes"
 import { ES_NEGOCIO, type Red, REDES, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
 
@@ -177,7 +178,7 @@ export async function publicarTema(
 
   const seccion = texto(d.seccion, 60)
   if (!esTipoTema(d.tipo)) return { ok: false, error: "Elige el tipo de publicación." }
-  if (d.tipo === "novedad" && !ES_NEGOCIO.includes(perfil.tipo)) return { ok: false, error: "solo_negocios" }
+  if ((d.tipo === "novedad" || d.tipo === "ofrezco") && !ES_NEGOCIO.includes(perfil.tipo)) return { ok: false, error: "solo_negocios" }
   const t = revisarTexto(texto(d.titulo, 150).replace(/\s+/g, " "))
   if (t.texto.length < 10) return { ok: false, error: "El título debe tener al menos 10 letras. Dilo como lo buscarías en Google." }
   const c = revisarTexto(texto(d.cuerpo, 20000), { cuentaNueva: esCuentaNueva(perfil.creado) })
@@ -212,6 +213,10 @@ export async function publicarTema(
     const nuevo = rows[0]
     await anotarRevision("tema", Number(nuevo.id), revisar, motivos)
     if (!revisar) void avisarRedes({ tipo: "foro", titulo: t.texto, resumen: c.texto.slice(0, 200), url: "https://hetnacnc.com/mx" + urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }) })
+    // Preguntas y "busco maquinado": se les avisa a los talleres que hacen ese trabajo.
+    if (!revisar && (d.tipo === "pregunta" || d.tipo === "busco")) {
+      void avisarTalleres(t.texto, urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }), nuevo.seccion, perfil.estadoMx)
+    }
     return {
       ok: true,
       url: urlTema({ seccion: nuevo.seccion, slug: nuevo.slug }),
@@ -340,6 +345,64 @@ export async function cambiarEstado(tipo: "tema" | "respuesta", id: number, esta
         : null
     if (!r || !r.rowCount) return { ok: false, error: "No tienes permiso para hacer esto." }
     return { ok: true }
+  } catch (e) {
+    return fallo(e)
+  }
+}
+
+// ---------------------------------------------------------------------
+// Puente con el resto de HETNA
+// ---------------------------------------------------------------------
+
+const API = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+const cabecerasApi = async () => ({
+  "Content-Type": "application/json",
+  "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+  ...((await getAuthHeaders()) as Record<string, string>),
+})
+
+// Avisa a los talleres de esa especialidad (ver /store/foro/aviso). Si falla,
+// el tema ya quedó publicado: el aviso es un extra, no se le muestra error a nadie.
+async function avisarTalleres(titulo: string, ruta: string, seccion: string, estadoMx: string) {
+  try {
+    await fetch(`${API}/store/foro/aviso`, {
+      method: "POST",
+      headers: await cabecerasApi(),
+      body: JSON.stringify({ titulo, ruta, seccion, estado_mx: estadoMx }),
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch (e) {
+    console.error("[foro] aviso a talleres", (e as Error).message)
+  }
+}
+
+export type MiTaller = { id: string; handle: string; nombre: string; verificado: boolean } | null
+
+// ¿El correo de esta cuenta es el de un taller registrado? (lo responde la API
+// sólo para quien tiene la sesión)
+export async function buscarMiTaller(): Promise<MiTaller> {
+  try {
+    const r = await fetch(`${API}/store/foro/mi-taller`, { headers: await cabecerasApi(), cache: "no-store" })
+    if (!r.ok) return null
+    return ((await r.json()) as { taller: MiTaller }).taller
+  } catch {
+    return null
+  }
+}
+
+// Liga el perfil del foro al taller del directorio: insignia de taller (y de
+// verificado, si HETNA ya lo verificó) y liga a su perfil en cada publicación.
+export async function vincularMiTaller(): Promise<Res<{ handle: string }>> {
+  const p = await conPerfil()
+  if ("error" in p) return { ok: false, error: p.error as string }
+  const taller = await buscarMiTaller()
+  if (!taller) return { ok: false, error: "sin_taller" }
+  try {
+    await db().query(
+      `update foro.perfiles set vendedor_id = $2, tipo = 'taller', actualizado = now() where id = $1`,
+      [p.perfil.id, taller.id]
+    )
+    return { ok: true, handle: taller.handle }
   } catch (e) {
     return fallo(e)
   }

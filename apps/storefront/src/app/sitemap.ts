@@ -52,6 +52,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/torno", "weekly", 0.6],
   ["/talleres", "daily", 0.8],
   ["/talleres/unete", "weekly", 0.8],
+  ["/foro-cnc/blog", "weekly", 0.7],
   ["/talleres/fundadores", "weekly", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
   ["/anunciate", "monthly", 0.6],
@@ -121,7 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // De los trabajos sólo van los abiertos: uno cerrado sale del índice (noindex).
   const articulos: MetadataRoute.Sitemap = [
     ...learning_articles.map((a) => ({
-      url: `${MX}/aprendizaje-cnc/${a.slug}`,
+      url: `${MX}/foro-cnc/blog/${a.slug}`,
       lastModified: a.published_at ? new Date(a.published_at) : hoy,
       changeFrequency: "monthly" as const,
       priority: 0.6,
