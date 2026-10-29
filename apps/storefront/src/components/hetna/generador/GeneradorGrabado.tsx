@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { type Difusion, type Estilo, type OpcionesGrabado, aGris, cobertura, grabar, pngConDPI } from "@/lib/generador/grabado"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -211,18 +210,8 @@ export function GeneradorGrabado() {
     `- Material: ${material}`
 
   return (
-    <main className="w-full bg-[#FAF9F6]">
-      <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
-        <span>/</span>
-        <LocalizedClientLink href="/servicios/generador-2d-3d" className="hover:text-[#B34D07]">Generador 2D y 3D</LocalizedClientLink>
-        <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Foto para grabado láser</span>
-      </div>
-
-      <section className="px-4 lg:px-16 pt-4 pb-3">
+    <div className="w-full bg-[#FAF9F6]">
+      <section className="px-4 lg:px-8 pt-4 pb-3">
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
         <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Foto para grabado láser</h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
@@ -230,7 +219,7 @@ export function GeneradorGrabado() {
         </p>
       </section>
 
-      <div className="px-4 lg:px-16 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
+      <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           <label
             onDragOver={(e) => e.preventDefault()}
@@ -371,6 +360,6 @@ export function GeneradorGrabado() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   )
 }
