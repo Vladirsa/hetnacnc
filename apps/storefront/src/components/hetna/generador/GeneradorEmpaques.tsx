@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
 import {
@@ -89,6 +89,17 @@ export function GeneradorEmpaques() {
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [valores, setValores] = useState<Record<Forma, Valores>>(INICIO)
   const [conBase, setConBase] = useState(true)
+
+  // /disenar/plantillas-empaque?modelo=pizza abre esa plantilla
+  useEffect(() => {
+    const m = new URLSearchParams(window.location.search).get("modelo")
+    const f = m ? formaPorId(m) : undefined
+    if (f) {
+      setForma(f.id)
+      setGrupoAbierto(f.grupo)
+      setConBase(!!f.inicio.conBase)
+    }
+  }, [])
 
   const k = FACTOR[unidad]
   const v = valores[forma]
