@@ -264,7 +264,7 @@ export function GeneradorLlaveros() {
                 <button type="button" onClick={() => descargar(`${archivo}.stl`, mallaSTL(r!.malla), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                   Descargar STL
                 </button>
-                <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] rounded-[10px] text-[14px] text-center">
+                <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
                   Pedir por WhatsApp
                 </a>
               </div>
