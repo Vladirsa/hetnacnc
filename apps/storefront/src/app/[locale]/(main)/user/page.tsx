@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { IconoCuenta, type NombreIcono } from "@/components/hetna/cuenta/IconoCuenta"
+import { VincularCotizador } from "@/components/hetna/cuenta/VincularCotizador"
 import { UserNavigation } from "@/components/molecules"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
@@ -120,7 +121,7 @@ export default async function MiCuenta() {
     { titulo: "Mis descargas", texto: "Tus diseños digitales comprados: bájalos cuando quieras.", href: "/user/descargas", icono: "descargas" },
     { titulo: "Favoritos", texto: "Productos y piezas que guardaste para después.", href: "/favoritos", icono: "favoritos" },
     { titulo: "Fabricar una pieza", texto: "Pide cotización a talleres con tu plano, foto o idea.", href: "/fabricacion", icono: "taller" },
-    { titulo: "Cotizador para talleres", texto: "La app para cotizar con tus costos, cobrar y controlar tu taller.", href: "/cotizador/", icono: "cotizador", externo: true },
+    { titulo: "Cotizador para talleres", texto: "La app para cotizar con tus costos, cobrar y controlar tu taller.", href: "/api/app/entrar-cotizador", icono: "cotizador", externo: true },
     { titulo: "Mi tienda", texto: "Administra tus productos, pedidos y pagos como vendedor.", href: "/seller", icono: "tienda", externo: true },
     { titulo: "Escaneos 3D", texto: "Tus piezas escaneadas y sus archivos para fabricar.", href: "/user/escaneos", icono: "escaneos" },
     { titulo: "Trabajos CAM", texto: "Tus archivos y trayectorias del laboratorio CAM.", href: "/user/cam", icono: "cam" },
@@ -261,6 +262,9 @@ export default async function MiCuenta() {
               </p>
             )}
           </section>
+
+          {/* Cuenta del Cotizador (la app para talleres) */}
+          <VincularCotizador />
 
           {/* Tarjetas */}
           <section aria-label="Tu cuenta" className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3">
