@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { EvidenciaEnvio } from "@/components/hetna/envios/EvidenciaEnvio"
+import { UserNavigation } from "@/components/molecules"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { misEnvios } from "@/lib/envios/cotizar"
 
@@ -38,7 +39,10 @@ export default async function MisEnvios() {
 
   return (
     <main className="container pb-16">
-      <div className="flex flex-wrap gap-1.5 pt-4 text-[13px] text-[#6B6A63]">
+      <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-8">
+      <UserNavigation />
+      <div className="min-w-0 md:col-span-3">
+      <div className="flex flex-wrap gap-1.5 text-[13px] text-[#6B6A63]">
         <LocalizedClientLink href="/user" className="hover:text-[#B34D07]">
           Mi cuenta
         </LocalizedClientLink>
@@ -146,6 +150,8 @@ export default async function MisEnvios() {
             </section>
           )
         })}
+      </div>
+      </div>
       </div>
     </main>
   )
