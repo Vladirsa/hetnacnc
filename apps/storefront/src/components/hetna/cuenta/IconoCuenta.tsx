@@ -3,6 +3,7 @@ const TRAZOS = {
   resumen: "M3 12l9-8 9 8M5 10v10h14V10",
   pedidos: "M6 7h12l1 13H5L6 7zm3 0a3 3 0 0 1 6 0",
   envios: "M3 7h11v9H3zM14 10h4l3 3v3h-7M7 18.5a1.5 1.5 0 1 0 0 .01M17 18.5a1.5 1.5 0 1 0 0 .01",
+  descargas: "M12 4v11M7 10l5 5 5-5M5 20h14",
   favoritos: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
   devoluciones: "M9 14l-4-4 4-4M5 10h10a4 4 0 0 1 0 8h-3",
   cam: "M4 20h16M6 16l4-10 4 6 2-3 2 7",

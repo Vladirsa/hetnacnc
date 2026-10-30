@@ -117,6 +117,7 @@ export default async function MiCuenta() {
       icono: "envios",
       dato: listaEnvios.length ? `${listaEnvios.length} ${listaEnvios.length === 1 ? "envío" : "envíos"}` : undefined,
     },
+    { titulo: "Mis descargas", texto: "Tus diseños digitales comprados: bájalos cuando quieras.", href: "/user/descargas", icono: "descargas" },
     { titulo: "Favoritos", texto: "Productos y piezas que guardaste para después.", href: "/favoritos", icono: "favoritos" },
     { titulo: "Fabricar una pieza", texto: "Pide cotización a talleres con tu plano, foto o idea.", href: "/fabricacion", icono: "taller" },
     { titulo: "Trabajos CAM", texto: "Tus archivos y trayectorias del laboratorio CAM.", href: "/user/cam", icono: "cam" },

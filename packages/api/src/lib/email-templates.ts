@@ -75,33 +75,48 @@ export function abandonedCartEmailHtml({
 }
 
 export function digitalDownloadEmailHtml({
-  productTitle,
-  downloadUrl,
+  displayId,
+  archivos,
   expiresAt,
+  misDescargasUrl,
 }: {
-  productTitle: string
-  downloadUrl: string
+  displayId: number | string
+  archivos: { titulo: string; url: string }[]
   expiresAt: string
+  // Liga permanente a Mi cuenta > Mis descargas (null si la compra no tiene cuenta)
+  misDescargasUrl: string | null
 }): string {
   const expiraFecha = new Date(expiresAt).toLocaleDateString("es-MX", {
     day: "numeric",
     month: "long",
     year: "numeric",
   })
+  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string)
 
   return layout(
     "Recibiste este correo por comprar un producto digital en " + SITE_NAME,
     `
       <h1 style="font-size:20px;margin:0 0 16px;">¡Gracias por tu compra!</h1>
-      <p>Tu archivo de <strong>${productTitle}</strong> ya está listo para descargar.</p>
-      <p style="margin-top:24px;">
-        <a href="${downloadUrl}"
-           style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">
-          Descargar mi archivo
+      <p>${archivos.length === 1 ? "Tu archivo ya está listo" : "Tus archivos ya están listos"} para descargar (pedido #${esc(String(displayId))}).</p>
+      ${archivos
+        .map(
+          (a) => `
+      <div style="border:1px solid #E7E4DC;border-radius:8px;padding:12px 14px;margin-top:12px;">
+        <p style="margin:0 0 10px;font-weight:bold;">${esc(a.titulo)}</p>
+        <a href="${a.url}"
+           style="background:${BRAND_COLOR};color:#fff;padding:10px 18px;border-radius:4px;text-decoration:none;display:inline-block;">
+          Descargar
         </a>
-      </p>
-      <p style="color:#666;font-size:13px;margin-top:16px;">Este link es válido hasta el ${expiraFecha}.
-      Si expira, contáctanos y te generamos uno nuevo.</p>
+      </div>`
+        )
+        .join("")}
+      <p style="color:#666;font-size:13px;margin-top:16px;">Estos botones funcionan hasta el ${expiraFecha}.
+      ${
+        misDescargasUrl
+          ? `Después, bájalos cuando quieras desde <a href="${misDescargasUrl}" style="color:${BRAND_COLOR};">Mi cuenta &gt; Mis descargas</a>.`
+          : "Si expiran, contáctanos y te generamos una liga nueva."
+      }</p>
+      <p style="color:#666;font-size:13px;">Te adjuntamos el comprobante de entrega en PDF, con la licencia de uso y recomendaciones antes de maquinar.</p>
     `
   )
 }

@@ -11,6 +11,8 @@ export type SendEmailInput = {
   // Solo correos promocionales: liga para darse de baja (lib/baja.ts). Se agrega
   // al pie del correo y como encabezado List-Unsubscribe.
   bajaUrl?: string
+  // Archivos adjuntos (p. ej. el comprobante PDF de una compra digital)
+  adjuntos?: { nombre: string; contenido: Uint8Array | Buffer }[]
 }
 
 export type SendEmailResult = {
@@ -27,6 +29,7 @@ export async function sendEmail({
   subject,
   html,
   bajaUrl,
+  adjuntos,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM_EMAIL
@@ -50,6 +53,9 @@ export async function sendEmail({
           `<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888;text-align:center;margin:12px 0 0;">` +
           `¿No quieres recibir estos correos? <a href="${bajaUrl}" style="color:#888;">Darte de baja</a>.</p>`
         : html,
+      ...(adjuntos?.length
+        ? { attachments: adjuntos.map((a) => ({ filename: a.nombre, content: Buffer.from(a.contenido).toString("base64") })) }
+        : {}),
       ...(bajaUrl
         ? { headers: { "List-Unsubscribe": `<${bajaUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }
         : {}),

@@ -18,6 +18,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
       { label: "Resumen", href: "/user", icono: "resumen" },
       { label: "Mis pedidos", href: "/user/orders", icono: "pedidos" },
       { label: "Mis envíos", href: "/user/envios", icono: "envios" },
+      { label: "Mis descargas", href: "/user/descargas", icono: "descargas" },
       { label: "Favoritos", href: "/favoritos", icono: "favoritos" },
       { label: "Devoluciones", href: "/user/returns", icono: "devoluciones" },
     ],
