@@ -169,7 +169,7 @@ export const calcRouter = (e: Entrada): Resultado => {
     if (rpm2 >= rpmMin) {
       rpm = rpm2
       avance = avMax
-      R.avisos.push(`Tu máquina llega a ${fmt(avMax)} mm/min: bajé las RPM a ${fmt(rpm)} para conservar la carga de viruta y no quemar ni fundir.`)
+      R.avisos.push(`Tu máquina llega a ${fmt(avMax)} mm/min: bajé las RPM a ${fmt(Math.round(rpm / 100) * 100)} para conservar la carga de viruta y no quemar ni fundir.`)
     } else {
       rpm = rpmMin
       avance = avMax
