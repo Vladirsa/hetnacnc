@@ -35,6 +35,7 @@ const SIEMPRE_GRATIS = ["Cotizaciones (10 al mes)", "Clientes y productos", "Ava
 
 const PREGUNTAS = [
   ["¿Es la misma cuenta que en hetnacnc.com?", "La app tiene su propia cuenta de taller (correo y contraseña) y se conecta con la plataforma para pagos, envíos, tienda y trabajos. Si ya vendes en hetnacnc.com, registra tu taller con el mismo correo para que te lo vinculemos."],
+  ["¿Por qué no está en Play Store ni App Store?", "Porque no hace falta: se instala desde el navegador en un toque, se actualiza sola y no depende de las tiendas. Así llega a todos los celulares igual."],
   ["¿Funciona sin internet?", "Necesita conexión para guardar y sincronizar, pero puedes consultar cotizaciones y clientes que ya cargaste."],
   ["¿Puedo cancelar cuando quiera?", "Sí. Se cobra cada mes y conservas el plan hasta el fin del mes pagado. El plan Gratis no vence."],
   ["¿Mis datos están seguros?", "Cada taller ve solo su información. Los pagos los procesan Mercado Pago y PayPal; HETNA no guarda tarjetas."],
@@ -66,7 +67,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 grid lg:grid-cols-[1fr_300px] gap-8 items-center overflow-hidden relative">
           <div className="flex flex-col gap-4">
             <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#FF6A1A] px-3 py-1 rounded-full">
-              App para talleres · Web y Android · iPhone pronto
+              App para talleres · Se instala desde el navegador, sin tiendas
             </span>
             <h1 className="font-display text-[30px] lg:text-[46px] leading-[1.06] font-bold m-0 max-w-[720px]">
               Cotiza, cobra y controla tu taller desde el celular
@@ -81,14 +82,13 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
               <a href={APP_TALLER.web} className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
                 Abrir la app
               </a>
-              <a href={APP_TALLER.android} className="inline-flex items-center gap-2 bg-white text-[#142033] hover:bg-[#F2F0EA] font-semibold px-5 py-3 rounded-[10px] text-[15px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 8.5l1.6-2.8-.9-.5-1.7 2.9A7 7 0 0 0 12 7a7 7 0 0 0-4.5 1.1L5.8 5.2l-.9.5 1.6 2.8A7 7 0 0 0 4 14h16a7 7 0 0 0-2.5-5.5zM9 11.5a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6zm6 0a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6zM4 15h16v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5z" /></svg>
-                Descargar para Android
+              <a href="#instalar" className="inline-flex items-center gap-2 bg-white text-[#142033] hover:bg-[#F2F0EA] font-semibold px-5 py-3 rounded-[10px] text-[15px]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M12 7v7M9 11l3 3 3-3M11 18h2" /></svg>
+                Instalar en mi celular
               </a>
             </div>
             <p className="m-0 text-[13px] text-[#9FB0C8]">
-              14 días con todo abierto · después, plan Gratis para siempre · sin tarjeta.{" "}
-              <a href="#instalar" className="underline underline-offset-2 hover:text-white">¿Tienes iPhone?</a>
+              14 días con todo abierto · después, plan Gratis para siempre · sin tarjeta · Android, iPhone y computadora.
             </p>
           </div>
           <div className="hidden lg:flex flex-col gap-2 bg-[#0F1826] rounded-[14px] p-4 border border-[#2A3A55]">
@@ -146,23 +146,26 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
 
         {/* Instalar */}
         <section id="instalar" className="flex flex-col gap-4 scroll-mt-24">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Llévala en tu celular</h2>
+          <div>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Instálala desde el navegador, sin tiendas</h2>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No hay que buscarla en Play Store ni App Store: se abre en hetnacnc.com/app y se instala en un toque. Las actualizaciones llegan solas.</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Android</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Descarga el instalador (APK). Al abrirlo, Android te pedirá permitir la instalación desde esta fuente: acepta y listo. Cada versión nueva se descarga desde aquí mismo.</p>
-              <a href={APP_TALLER.android} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Descargar APK</a>
-              <span className="text-[12px] text-[#9A978C]">Google Play: en camino</span>
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Android (Chrome, Edge, Samsung)</h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app y toca <strong>Instalar</strong> en el aviso que aparece abajo (o en el menú ⋮ del navegador, <em>Instalar aplicación</em>). Queda con su ícono, abre a pantalla completa y se actualiza sola.</p>
+              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir e instalar</a>
+              <a href={APP_TALLER.android} className="text-[12px] text-[#9A978C] hover:text-[#B34D07] underline underline-offset-2">¿Prefieres el instalador APK? Descárgalo aquí</a>
             </div>
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">iPhone y iPad</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app en Safari, toca <strong>Compartir</strong> y luego <strong>Añadir a pantalla de inicio</strong>. Queda con su ícono como cualquier app y abre a pantalla completa.</p>
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">iPhone y iPad (Safari)</h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app en Safari, toca <strong>Compartir</strong> (el cuadrito con la flecha) y luego <strong>Añadir a pantalla de inicio</strong>. Queda con su ícono como cualquier app y abre a pantalla completa.</p>
               <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en Safari</a>
-              <span className="text-[12px] text-[#9A978C]">App Store: en camino</span>
+              <span className="text-[12px] text-[#9A978C]">También desde Chrome en iPhone: Compartir → Añadir a pantalla de inicio</span>
             </div>
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
               <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Computadora</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Funciona en cualquier navegador, con la misma cuenta y los mismos datos que en el celular. Ideal para armar cotizaciones largas y revisar reportes.</p>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">En Chrome o Edge, el ícono de instalar en la barra de direcciones la deja como programa en Windows o Mac. Misma cuenta y mismos datos que en el celular; ideal para cotizaciones largas y reportes.</p>
               <a href={APP_TALLER.web} className="mt-auto text-center border border-[#142033] text-[#142033] hover:bg-[#F2F0EA] font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en el navegador</a>
               <span className="text-[12px] text-[#9A978C]">hetnacnc.com/cotizador</span>
             </div>
