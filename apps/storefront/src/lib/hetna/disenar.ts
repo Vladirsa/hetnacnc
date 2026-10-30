@@ -66,12 +66,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "plantillas-empaque",
     nombre: "Plantillas de empaque",
-    texto: "Cajas, pirámides, conos, sobres y bolsas a tu medida.",
+    texto: "35 modelos: cajas con tapa, pizza, pastel, bolsas con asas, sobres, tubos y más.",
     icono: "empaque",
     acceso: "gratis",
     titulo: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
     descripcion:
-      "Crea gratis plantillas de caja con solapas, pirámide, cono, sobre, bolsa y caja hexagonal a tu medida. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+      "35 plantillas gratis a tu medida: caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
   },
   {
     slug: "grabado-foto",
