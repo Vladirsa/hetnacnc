@@ -4,6 +4,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { sendEmail } from "../../../lib/resend"
 import { STORE_URL, consultarPago, esc, fila, marco } from "../../../lib/licitacion"
 import { T_ENVIO, asegurarTablasEnvio, folioEnvio } from "../../../lib/envios"
+import { T_SOBREPESO, asegurarTablaSobrepesos, folioSobrepeso } from "../../../lib/sobrepesos"
 
 // Aviso de Mercado Pago para pagos de Envíos HETNA (external_reference "envio:<id>").
 // No confiamos en el cuerpo: consultamos el pago con nuestra llave y validamos monto y moneda.
@@ -25,6 +26,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   try {
     const pago = await consultarPago(pagoId)
     const ref = String(pago.external_reference || "")
+    if (ref.startsWith("sobrepeso:")) return await pagoDeSobrepeso(knex, logger, pago, ref.slice("sobrepeso:".length))
     if (!ref.startsWith("envio:")) return
     await asegurarTablasEnvio(knex)
     const e = await knex(T_ENVIO).where({ id: ref.slice("envio:".length) }).first()
@@ -102,3 +104,26 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 }
 
 export const GET = async (_req: MedusaRequest, res: MedusaResponse) => res.status(200).json({ ok: true })
+
+// Pago de un sobrepeso (external_reference "sobrepeso:<id>"): mismo cuidado que
+// con los envíos, se valida monto y moneda contra lo registrado.
+async function pagoDeSobrepeso(knex: any, logger: any, pago: any, id: string) {
+  await asegurarTablaSobrepesos(knex)
+  const s = await knex(T_SOBREPESO).where({ id }).first()
+  if (!s) return
+  const folio = folioSobrepeso(s.folio)
+  if (pago.status !== "approved" || s.estado === "pagado") return
+  if (pago.currency_id !== "MXN" || Math.abs(Number(pago.transaction_amount || 0) - Number(s.monto)) > 0.01) {
+    logger.error(`[sobrepesos] ${folio} pago ${pago.id} con monto/moneda inesperado (${pago.transaction_amount} ${pago.currency_id})`)
+    return
+  }
+  await knex(T_SOBREPESO).where({ id }).update({ estado: "pagado", pago_id: String(pago.id), updated_at: knex.fn.now() })
+  logger.info(`[sobrepesos] ${folio} PAGADO (pago ${pago.id})`)
+  if (process.env.HETNA_LEADS_EMAIL) {
+    await sendEmail({
+      to: process.env.HETNA_LEADS_EMAIL,
+      subject: `[${folio}] Sobrepeso pagado · ${s.referencia}`,
+      html: marco("Sobrepeso pagado", `<table style="border-collapse:collapse;font-size:14px">${fila("Folio", folio)}${fila("De", s.referencia)}${fila("Responsable", `${s.responsable_nombre || ""} ${s.responsable_email || ""}`)}${fila("Monto", `$${Number(s.monto)} MXN`)}${fila("Pago MP", String(pago.id))}</table>`),
+    })
+  }
+}

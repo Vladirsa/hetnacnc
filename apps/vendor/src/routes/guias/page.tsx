@@ -57,8 +57,90 @@ async function api(ruta, init = {}) {
   return d
 }
 
+// Fotos de evidencia: con la guía pegada y visible. Las 4 primeras son obligatorias.
+const ESPACIOS = [
+  ["alto", "Alto", "Cinta métrica de la base a lo más alto"],
+  ["largo", "Largo", "Cinta métrica de extremo a extremo"],
+  ["ancho", "Ancho", "Cinta métrica del lado corto"],
+  ["bascula", "Báscula", "Que se lean el peso y la guía"],
+]
+
+function Evidencia({ p, alCambiar }) {
+  const g = p.guia
+  const [ev, setEv] = useState(g.evidencia || [])
+  const [subiendo, setSubiendo] = useState("")
+  const [error, setError] = useState("")
+  const [ligas, setLigas] = useState(null)
+  const listas = ESPACIOS.filter(([t]) => ev.some((e) => e.tipo === t)).length
+
+  const subir = async (tipo, archivo) => {
+    if (!archivo) return
+    setError("")
+    setSubiendo(tipo)
+    try {
+      const fd = new FormData()
+      fd.append("tipo", tipo)
+      fd.append("archivo", archivo)
+      const r = await fetch(`/vendor/hetna-guias/${p.id}/evidencia`, { method: "POST", credentials: "include", body: fd })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || "No se pudo subir la foto.")
+      setEv(d.evidencia)
+      setLigas(null)
+      if (d.completa) alCambiar()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSubiendo("")
+    }
+  }
+  const ver = async () => {
+    try {
+      const d = await api(`/${p.id}/evidencia`)
+      setLigas(Object.fromEntries((d.evidencia || []).map((f) => [f.tipo, f.url])))
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  return (
+    <div style={{ ...S.caja, background: listas === 4 ? "#F3FAF5" : "#FFF8EE", border: `1px solid ${listas === 4 ? "#BFE0CC" : "#F2C98F"}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+        <b>Evidencia del paquete ({listas} de 4)</b>
+        {ev.length > 0 && (
+          <button type="button" onClick={ver} style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }}>Ver fotos</button>
+        )}
+      </div>
+      <p style={{ ...S.meta, marginTop: 4 }}>
+        Con la etiqueta ya pegada, toma estas fotos antes de entregar la caja. Si la paquetería reporta sobrepeso, son tu prueba.
+        Sin ellas no podrás generar otra guía después de 24 horas.
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8, marginTop: 10 }}>
+        {ESPACIOS.map(([tipo, titulo, ayuda]) => {
+          const hecho = ev.find((e) => e.tipo === tipo)
+          return (
+            <label key={tipo} style={{ display: "block", cursor: "pointer", background: "#fff", border: `1px ${hecho ? "solid #1E7B3A" : "dashed #C9C5BA"}`, borderRadius: 10, padding: 10, fontSize: 12 }}>
+              <b style={{ fontSize: 13 }}>{hecho ? "✓ " : ""}{titulo}</b>
+              <div style={{ color: "#6B675C" }}>{ayuda}</div>
+              <div style={{ marginTop: 4, fontWeight: 600, color: hecho ? "#1E7B3A" : "#C2560A" }}>
+                {subiendo === tipo ? "Subiendo…" : hecho ? "Cambiar" : "+ Subir foto"}
+                {hecho && ligas?.[tipo] && (
+                  <a href={ligas[tipo]} target="_blank" rel="noreferrer" style={{ marginLeft: 6 }} onClick={(e) => e.stopPropagation()}>abrir</a>
+                )}
+              </div>
+              <input type="file" accept="image/*" capture="environment" style={{ display: "none" }} disabled={!!subiendo}
+                onChange={(e) => subir(tipo, e.target.files?.[0])} />
+            </label>
+          )
+        })}
+      </div>
+      {error && <p style={S.error}>{error}</p>}
+    </div>
+  )
+}
+
 function Pedido({ p, alCambiar }) {
   const [cot, setCot] = useState(null)
+  const [acepta, setAcepta] = useState(false)
   const [trabajando, setTrabajando] = useState("")
   const [error, setError] = useState("")
   const g = p.guia
@@ -81,8 +163,13 @@ function Pedido({ p, alCambiar }) {
     setError("")
     setTrabajando("comprar")
     try {
-      await api(`/${p.id}/comprar`, { method: "POST" })
+      await api(`/${p.id}/comprar`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ acepta }),
+      })
       setCot(null)
+      setAcepta(false)
       await alCambiar()
     } catch (e) {
       setError(e.message)
@@ -142,10 +229,12 @@ function Pedido({ p, alCambiar }) {
             )}
           </div>
           {g.estado === "lista" && (
-            <p style={{ ...S.meta, marginTop: 10 }}>Imprime la etiqueta, pégala en la caja y entrégala a la paquetería (o espera la recolección).</p>
+            <p style={{ ...S.meta, marginTop: 10 }}>Imprime la etiqueta, pégala en la caja, toma las 4 fotos de abajo y entrégala a la paquetería (o espera la recolección).</p>
           )}
         </div>
       )}
+
+      {yaTiene && g.guia && ["lista", "entregada"].includes(g.estado) && <Evidencia p={p} alCambiar={alCambiar} />}
 
       {g?.estado === "generando" && !g.guia && (
         <p style={{ ...S.meta, marginTop: 10 }}>Skydropx está generando la guía. Aparece aquí en unos minutos; no la vuelvas a comprar.</p>
@@ -171,19 +260,29 @@ function Pedido({ p, alCambiar }) {
               </p>
               <p style={{ ...S.meta, marginTop: 4 }}>Costo de la guía {pesos(cot.costo)} · el cliente pagó {pesos(cot.pagado_cliente)}</p>
               {cot.se_puede_comprar ? (
+                <>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 10, fontSize: 13, lineHeight: 1.45 }}>
+                  <input type="checkbox" checked={acepta} onChange={(e) => setAcepta(e.target.checked)} style={{ marginTop: 3 }} />
+                  <span>
+                    Confirmo que la caja ya embalada mide <b>{cot.paquete.largo}×{cot.paquete.ancho}×{cot.paquete.alto} cm</b> y pesa{" "}
+                    <b>{cot.paquete.peso} kg</b> o menos. Si la paquetería reporta más (sobrepeso), lo pago yo o se descuenta de mis pagos.
+                    Subiré las 4 fotos (alto, largo, ancho y báscula) con la guía visible antes de entregarla.
+                  </span>
+                </label>
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                  <button type="button" style={S.btn} onClick={comprar} disabled={!!trabajando}>
+                  <button type="button" style={{ ...S.btn, opacity: acepta ? 1 : 0.5 }} onClick={comprar} disabled={!!trabajando || !acepta}>
                     {trabajando === "comprar" ? "Generando guía…" : "Comprar guía"}
                   </button>
                   <button type="button" style={S.btn2} onClick={() => setCot(null)} disabled={!!trabajando}>Cancelar</button>
                 </div>
+                </>
               ) : (
                 <p style={S.error}>
                   La guía cuesta bastante más de lo que pagó el cliente. Escríbenos y la generamos nosotros.
                 </p>
               )}
               <p style={{ ...S.meta, marginTop: 8, fontSize: 12 }}>
-                Revisa que el peso y las medidas sean correctos: si la paquetería encuentra otros, puede cobrar la diferencia.
+                Las medidas y el peso salen de tus productos. Si no coinciden con la caja real, corrígelos en el producto antes de comprar la guía.
               </p>
             </div>
           )}
@@ -216,7 +315,10 @@ export default function GuiasPage() {
   if (!datos) return <div style={S.page}>Cargando…</div>
 
   const pedidos = datos.pedidos || []
-  const pendientes = pedidos.filter((p) => p.por_enviar || p.guia?.estado === "generando")
+  // Pendientes: por enviar, generando, o con guía pero sin las 4 fotos
+  const pendientes = pedidos.filter(
+    (p) => p.por_enviar || p.guia?.estado === "generando" || (p.guia?.estado === "lista" && !p.guia?.evidencia_completa)
+  )
   const visibles = verTodos ? pedidos : pendientes
 
   return (
@@ -230,6 +332,28 @@ export default function GuiasPage() {
 
       {!datos.activo && (
         <section style={S.card}>Envíos HETNA no está activo por ahora. Envía por tu cuenta y captura la guía en el pedido.</section>
+      )}
+
+      {datos.activo && (datos.bloqueo?.sobrepesos?.length > 0 || datos.bloqueo?.sin_evidencia?.length > 0) && (
+        <section style={{ ...S.card, background: "#FDECEA", borderColor: "#F5B5AE" }}>
+          <b style={{ color: "#8A1C14" }}>No puedes generar nuevas guías por ahora</b>
+          {datos.bloqueo.sobrepesos.length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 14 }}>
+              Tienes sobrepesos por pagar:
+              {datos.bloqueo.sobrepesos.map((s) => (
+                <div key={s.folio} style={{ marginTop: 6, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <span>{s.folio} · {s.referencia} · <b>{pesos(s.monto)}</b></span>
+                  {s.pago_url && <a href={s.pago_url} target="_blank" rel="noreferrer" style={{ ...S.btn, textDecoration: "none", padding: "5px 12px", fontSize: 13 }}>Pagar</a>}
+                </div>
+              ))}
+            </div>
+          )}
+          {datos.bloqueo.sin_evidencia.length > 0 && (
+            <p style={{ margin: "8px 0 0", fontSize: 14 }}>
+              Faltan las fotos de evidencia de: <b>{datos.bloqueo.sin_evidencia.join(", ")}</b>. Súbelas en cada pedido (en “Todos”).
+            </p>
+          )}
+        </section>
       )}
 
       {datos.activo && (
@@ -250,6 +374,26 @@ export default function GuiasPage() {
           {visibles.map((p) => (
             <Pedido key={p.id} p={p} alCambiar={cargar} />
           ))}
+
+          {datos.sobrepesos?.length > 0 && (
+            <>
+              <h2 style={{ fontSize: 17, fontWeight: 700, margin: "24px 0 8px" }}>Sobrepesos</h2>
+              {datos.sobrepesos.map((s) => (
+                <section key={s.folio} style={S.card}>
+                  <div style={S.fila}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700 }}>{s.folio} · {s.referencia}</p>
+                      <p style={S.meta}>
+                        {s.kg_cotizado != null && s.kg_reportado != null ? `Cotizado ${s.kg_cotizado} kg · reportado ${s.kg_reportado} kg · ` : ""}
+                        {pesos(s.monto)} · {s.estado_nombre}
+                      </p>
+                    </div>
+                    {s.pago_url && <a href={s.pago_url} target="_blank" rel="noreferrer" style={{ ...S.btn, textDecoration: "none" }}>Pagar</a>}
+                  </div>
+                </section>
+              ))}
+            </>
+          )}
         </>
       )}
     </div>

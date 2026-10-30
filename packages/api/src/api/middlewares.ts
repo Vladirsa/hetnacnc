@@ -13,6 +13,7 @@ import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares"
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
+import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 
@@ -44,6 +45,12 @@ export default defineMiddlewares({
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
+        // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-guias/:id/evidencia",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 15, forma: "lista" })],
+        },
         ...storeForoMiddlewares,
         ...storeRastreoMiddlewares,
     ],

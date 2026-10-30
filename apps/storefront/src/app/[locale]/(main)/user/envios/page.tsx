@@ -59,6 +59,41 @@ export default async function MisEnvios() {
       </div>
 
       {!r.ok && <p className="mt-6 rounded-xl bg-[#FDECEA] p-4 text-[#B3261E]">No pudimos cargar tus envíos. Intenta de nuevo en un momento.</p>}
+
+      {r.ok && r.sobrepesos.length > 0 && (
+        <section className="mt-6 flex flex-col gap-3">
+          <h2 className="m-0 text-lg font-extrabold text-[#142033]">Cobros por sobrepeso</h2>
+          {r.sobrepesos.map((s) => (
+            <div
+              key={s.folio}
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${
+                s.pago_url ? "border-[#F2C98F] bg-[#FFF8EE]" : "border-[#E7E4DC] bg-white"
+              }`}
+            >
+              <div className="text-sm text-[#40403A]">
+                <strong className="block text-[15px] text-[#142033]">
+                  {s.folio} · {s.referencia}
+                </strong>
+                {s.kg_cotizado != null && s.kg_reportado != null && (
+                  <span>
+                    Cotizado {s.kg_cotizado} kg · la paquetería reportó {s.kg_reportado} kg ·{" "}
+                  </span>
+                )}
+                <strong>{pesos(s.monto)} MXN</strong> · {s.estado_nombre}
+              </div>
+              {s.pago_url && (
+                <a href={s.pago_url} className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110">
+                  Pagar sobrepeso
+                </a>
+              )}
+            </div>
+          ))}
+          <p className="m-0 text-xs text-[#6B675C]">
+            Mientras haya un sobrepeso por pagar no se pueden solicitar envíos nuevos. ¿Crees que es injusto y tienes tus fotos? Escríbenos con el folio y
+            lo disputamos con la paquetería.
+          </p>
+        </section>
+      )}
       {r.ok && envios.length === 0 && (
         <p className="mt-6 rounded-2xl border border-dashed border-[#D9D4C8] bg-white p-8 text-center text-[#6B675C]">
           Aún no tienes envíos.{" "}

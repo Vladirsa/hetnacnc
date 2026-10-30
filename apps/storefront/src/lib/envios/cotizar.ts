@@ -132,9 +132,21 @@ export type MiEnvio = {
   created_at: string
 }
 
+export type Sobrepeso = {
+  folio: string
+  referencia: string
+  kg_cotizado: number | null
+  kg_reportado: number | null
+  monto: number
+  estado: string
+  estado_nombre: string
+  pago_url: string | null
+  created_at: string
+}
+
 const conSesion = async () => (await getAuthHeaders()) as Record<string, string>
 
-export async function misEnvios(): Promise<{ ok: true; envios: MiEnvio[] } | { ok: false; login: boolean }> {
+export async function misEnvios(): Promise<{ ok: true; envios: MiEnvio[]; sobrepesos: Sobrepeso[] } | { ok: false; login: boolean }> {
   try {
     const auth = await conSesion()
     if (!auth.authorization) return { ok: false, login: true }
@@ -144,6 +156,7 @@ export async function misEnvios(): Promise<{ ok: true; envios: MiEnvio[] } | { o
     const j = (v: unknown) => (typeof v === "string" ? JSON.parse(v) : v)
     return {
       ok: true,
+      sobrepesos: body.sobrepesos || [],
       envios: (body.envios || []).map((e: any) => ({ ...e, tarifa: j(e.tarifa), origen: j(e.origen), destino: j(e.destino), paquete: j(e.paquete) })),
     }
   } catch {

@@ -28,7 +28,8 @@ import {
 
 import { SkydropxClient, leerEnvio, mejorTarifa, type Envio } from "../modules/skydropx/client"
 import { armarPaquete, tarifaRapida } from "../modules/skydropx/tarifas"
-import { buscarCP } from "./envios"
+import { EVIDENCIA_OBLIGATORIA, type Evidencia, buscarCP, leerEvidencia } from "./envios"
+import { folioSobrepeso, sobrepesosPendientes } from "./sobrepesos"
 import { sendEmail } from "./resend"
 
 export const T_GUIAS = "hetna_guia"
@@ -88,7 +89,78 @@ export async function asegurarTablaGuias(knex: any) {
       t.timestamp("actualizado", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
+  // Evidencia del paquete (fotos con la guía visible) y cuándo aceptó el taller
+  // las condiciones de sobrepeso al comprar la guía.
+  if (!(await knex.schema.hasColumn(T_GUIAS, "evidencia"))) {
+    await knex.schema.alterTable(T_GUIAS, (t: any) => {
+      t.jsonb("evidencia").notNullable().defaultTo("[]")
+      t.timestamp("acepta_en", { useTz: true }).nullable()
+    })
+  }
   lista = true
+}
+
+// ── Evidencia y bloqueos ─────────────────────────────────────────────────────────────
+// Después de comprar la guía el taller sube 4 fotos con la guía visible (alto,
+// largo, ancho y báscula). Con ellas HETNA pelea un sobrepeso. Si pasan más de
+// HORAS_EVIDENCIA sin subirlas, o si debe un sobrepeso, no puede comprar otra guía.
+const HORAS_EVIDENCIA = () => Number(process.env.GUIA_HORAS_EVIDENCIA ?? 24)
+
+export const evidenciaGuiaCompleta = (f: { evidencia?: unknown }) => {
+  const ev = leerEvidencia(f.evidencia)
+  return EVIDENCIA_OBLIGATORIA.every((t) => ev.some((e) => e.tipo === t))
+}
+
+export type Bloqueo = { sobrepesos: { folio: string; referencia: string; monto: number; pago_url: string | null }[]; sin_evidencia: string[] }
+
+export async function bloqueoDelTaller(c: MedusaContainer, sellerId: string): Promise<Bloqueo> {
+  const knex = knexDe(c)
+  await asegurarTablaGuias(knex)
+  const limite = new Date(Date.now() - HORAS_EVIDENCIA() * 3600_000)
+  const [pendientes, guias] = await Promise.all([
+    sobrepesosPendientes(knex, "taller", sellerId),
+    knex(T_GUIAS)
+      .where({ seller_id: sellerId })
+      .whereIn("estado", ["lista", "entregada"])
+      .whereNotNull("acepta_en")
+      .where("acepta_en", "<", limite)
+      .select("order_id", "evidencia"),
+  ])
+  const faltan = guias.filter((g: any) => !evidenciaGuiaCompleta(g)).map((g: any) => g.order_id)
+  let sinEvidencia: string[] = []
+  if (faltan.length) {
+    const pedidos = await knex("order").whereIn("id", faltan).select("id", "display_id")
+    const folio = new Map(pedidos.map((p: any) => [p.id, `#${p.display_id}`]))
+    // Si no se encuentra el pedido, igual cuenta (con su id): el bloqueo no se pierde
+    sinEvidencia = faltan.map((id: string) => folio.get(id) || id)
+  }
+  return {
+    sobrepesos: pendientes.map((s) => ({ folio: folioSobrepeso(s.folio), referencia: s.referencia, monto: Number(s.monto), pago_url: s.pago_url })),
+    sin_evidencia: sinEvidencia,
+  }
+}
+
+export async function guardarEvidenciaGuia(c: MedusaContainer, sellerId: string, orderId: string, nueva: Evidencia) {
+  const knex = knexDe(c)
+  await asegurarTablaGuias(knex)
+  const f = await leerFila(knex, orderId)
+  if (!f || f.seller_id !== sellerId) throw new ErrorGuia("Pedido no encontrado.", 404)
+  if (!["lista", "entregada"].includes(f.estado)) throw new ErrorGuia("Primero genera la guía: las fotos van con la guía pegada y visible.")
+  let ev = leerEvidencia(f.evidencia)
+  if (nueva.tipo === "extra") {
+    if (ev.filter((x) => x.tipo === "extra").length >= 6) throw new ErrorGuia("Máximo 6 fotos extra.")
+    ev = [...ev, nueva]
+  } else ev = [...ev.filter((x) => x.tipo !== nueva.tipo), nueva]
+  await knex(T_GUIAS).where({ order_id: orderId }).update({ evidencia: JSON.stringify(ev), actualizado: knex.fn.now() })
+  return ev
+}
+
+export async function evidenciaDeGuia(c: MedusaContainer, sellerId: string, orderId: string): Promise<Evidencia[]> {
+  const knex = knexDe(c)
+  await asegurarTablaGuias(knex)
+  const f = await leerFila(knex, orderId)
+  if (!f || f.seller_id !== sellerId) throw new ErrorGuia("Pedido no encontrado.", 404)
+  return leerEvidencia(f.evidencia)
 }
 
 export type FilaGuia = {
@@ -107,6 +179,8 @@ export type FilaGuia = {
   fulfillment_id: string | null
   error: string | null
   aviso_enviado_en: Date | null
+  evidencia?: unknown
+  acepta_en?: Date | null
   creado: Date
   actualizado: Date
 }
@@ -120,6 +194,8 @@ type Cotizacion = {
   costo: number
   cotizado_en: string
   express: boolean
+  // Paquete con el que se cotizó (sale de los productos): contra esto se mide un sobrepeso
+  paquete?: { largo: number; ancho: number; alto: number; peso: number }
 }
 
 const knexDe = (c: MedusaContainer) => c.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -396,6 +472,7 @@ export async function cotizarGuia(c: MedusaContainer, sellerId: string, orderId:
     costo: t.costo,
     cotizado_en: new Date().toISOString(),
     express,
+    paquete,
   }
   await knex(T_GUIAS)
     .insert({
@@ -429,10 +506,25 @@ export async function cotizarGuia(c: MedusaContainer, sellerId: string, orderId:
 }
 
 // ── 2. Comprar ─────────────────────────────────────────────────────────────────────────
-export async function comprarGuia(c: MedusaContainer, sellerId: string, orderId: string) {
+export async function comprarGuia(c: MedusaContainer, sellerId: string, orderId: string, acepta = false) {
   if (!guiasListas()) throw new ErrorGuia("Envíos HETNA no está activo.", 503)
+  if (!acepta)
+    throw new ErrorGuia(
+      "Confirma que el paquete embalado mide y pesa lo cotizado, que aceptas pagar el sobrepeso si no coincide y que subirás las 4 fotos con la guía visible."
+    )
   const knex = knexDe(c)
   await asegurarTablaGuias(knex)
+  const bloqueo = await bloqueoDelTaller(c, sellerId)
+  if (bloqueo.sobrepesos.length)
+    throw new ErrorGuia(
+      `Tienes ${bloqueo.sobrepesos.length === 1 ? "un sobrepeso" : `${bloqueo.sobrepesos.length} sobrepesos`} por pagar (${bloqueo.sobrepesos.map((s) => s.folio).join(", ")}). Págalo para generar nuevas guías.`,
+      402
+    )
+  if (bloqueo.sin_evidencia.length)
+    throw new ErrorGuia(
+      `Sube primero las fotos de evidencia de ${bloqueo.sin_evidencia.length === 1 ? "tu pedido" : "tus pedidos"} ${bloqueo.sin_evidencia.join(", ")} (alto, largo, ancho y báscula con la guía visible).`,
+      409
+    )
   const fila = await leerFila(knex, orderId)
   if (!fila || fila.seller_id !== sellerId) throw new ErrorGuia("Primero cotiza la guía.")
   if (["generando", "lista", "entregada"].includes(fila.estado)) throw new ErrorGuia("Este pedido ya tiene guía.")
@@ -455,7 +547,7 @@ export async function comprarGuia(c: MedusaContainer, sellerId: string, orderId:
   const tomadas = await knex(T_GUIAS)
     .where({ order_id: orderId })
     .whereIn("estado", ["cotizada", "error"])
-    .update({ estado: "generando", error: null, actualizado: knex.fn.now() })
+    .update({ estado: "generando", error: null, acepta_en: knex.fn.now(), actualizado: knex.fn.now() })
   if (!tomadas) throw new ErrorGuia("La guía ya se está generando.")
 
   let envio: Envio | null
@@ -679,6 +771,9 @@ export async function listarParaPanel(c: MedusaContainer, sellerId: string) {
               rastreo_url: f.rastreo_url,
               tiene_etiqueta: Boolean(f.etiqueta_url),
               error: f.error,
+              paquete: f.cotizacion?.paquete || null,
+              evidencia: leerEvidencia(f.evidencia).map(({ tipo, nombre, subido }) => ({ tipo, nombre, subido })),
+              evidencia_completa: evidenciaGuiaCompleta(f),
             }
           : null,
       }

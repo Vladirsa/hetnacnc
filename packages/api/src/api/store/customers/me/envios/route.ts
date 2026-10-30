@@ -16,6 +16,7 @@ import {
   leerEvidencia,
   limpiarContacto,
 } from "../../../../../lib/envios"
+import { folioSobrepeso, sobrepesoPublico, sobrepesosDe, sobrepesosPendientes } from "../../../../../lib/sobrepesos"
 
 // /store/customers/me/* exige cliente con sesión (middleware de Medusa).
 const clienteId = (req: MedusaRequest) => (req as any).auth_context?.actor_id as string | undefined
@@ -27,7 +28,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   await asegurarTablasEnvio(knex)
   const filas = await knex(T_ENVIO).where({ customer_id: id }).orderBy("created_at", "desc").limit(50)
+  const sobrepesos = (await sobrepesosDe(knex, "cliente", id)).map(sobrepesoPublico)
   return res.json({
+    sobrepesos,
     envios: filas.map((e: any) => ({
       folio: folioEnvio(e.folio), estado: e.estado, precio: Number(e.precio), tarifa: e.tarifa,
       origen: e.origen, destino: e.destino, pago_url: e.estado === "pendiente_pago" ? e.pago_url : null,
@@ -48,6 +51,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!id) return res.status(401).json({ message: "Inicia sesión para solicitar tu envío." })
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   await asegurarTablasEnvio(knex)
+
+  // Con un sobrepeso por pagar no se pueden pedir más envíos (condiciones, punto 2)
+  const debe = await sobrepesosPendientes(knex, "cliente", id)
+  if (debe.length)
+    return res.status(402).json({
+      message: `Tienes un cobro por sobrepeso pendiente (${debe.map((s) => folioSobrepeso(s.folio)).join(", ")}). Págalo en Mis envíos para solicitar uno nuevo.`,
+    })
 
   const b = (req.body || {}) as any
   const cot = await knex(T_ENVIO_COT).where({ id: String(b.cotizacion_id || "") }).first()

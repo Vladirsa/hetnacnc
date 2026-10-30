@@ -109,6 +109,16 @@ export default function TerminosVendedores() {
       <ul>
         <li>Debes preparar y entregar cada pedido en el tiempo publicado, bien empacado para que llegue en buen estado.</li>
         <li>Si usas Envíos HETNA, la guía se genera desde tu panel; si entregas por tu cuenta, debes registrar el número de rastreo.</li>
+        <li>
+          Si usas Envíos HETNA, la guía se cotiza con el peso y las medidas de tus productos. Antes de comprarla confirmas que la caja ya
+          embalada mide y pesa eso o menos. Si la paquetería reporta más (sobrepeso), ese cobro es tuyo: puedes pagarlo con la liga que te
+          mandamos o se descuenta de tu siguiente pago de ventas. Mientras tengas un sobrepeso por pagar no podrás generar nuevas guías.
+        </li>
+        <li>
+          Con la etiqueta pegada y antes de entregar la caja, sube en tu panel (Guías) 4 fotos con la guía visible: alto, largo y ancho con
+          cinta métrica y la caja en la báscula. Son la prueba para disputar un sobrepeso. Si pasan 24 horas sin subirlas, no podrás generar
+          otra guía hasta que lo hagas, y sin ellas el sobrepeso se cobra completo.
+        </li>
         <li>Si no puedes cumplir un pedido, avisa al cliente y a HETNA de inmediato; el cliente podrá cancelar y recibir su reembolso.</li>
       </ul>
 
