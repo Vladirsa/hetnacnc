@@ -60,3 +60,4 @@ packages/api/static/
 *.bak
 *.bak[0-9]
 *.save
+__pycache__/
