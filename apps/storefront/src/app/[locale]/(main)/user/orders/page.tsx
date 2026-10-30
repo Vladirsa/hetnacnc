@@ -63,14 +63,19 @@ export default async function UserPage({
           className="space-y-8 md:col-span-3"
           data-testid="orders-container"
         >
-          <h1 className="heading-md uppercase">Mis pedidos</h1>
+          <div>
+            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]">Mis compras</h1>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">
+              Rastrea tus pedidos, revisa su estado y pide factura desde el detalle de cada compra.
+            </p>
+          </div>
           {isEmpty(orders) ? (
             <div
               className="text-center"
               data-testid="orders-empty-state"
             >
               <h3
-                className="heading-lg uppercase text-primary"
+                className="text-[20px] font-bold text-[#142033]"
                 data-testid="no-orders-heading"
               >
                 Aún no tienes pedidos
@@ -79,7 +84,7 @@ export default async function UserPage({
                 className="mt-2 text-lg text-secondary"
                 data-testid="no-orders-description"
               >
-                You haven&apos;t placed any order yet. Once you place an order, it will appear here.
+                Cuando compres algo en HETNA, aquí vas a ver su estado, rastreo y factura.
               </p>
             </div>
           ) : (

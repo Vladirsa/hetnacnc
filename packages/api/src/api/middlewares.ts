@@ -45,6 +45,12 @@ export default defineMiddlewares({
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
+        // Factura del pedido (PDF + XML del CFDI) desde el panel del taller
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-facturas/:id",
+          middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
+        },
         // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
         {
           method: ["POST"],

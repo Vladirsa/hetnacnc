@@ -215,7 +215,10 @@ export default async function MiCuenta() {
                   const primero = o.items?.[0]
                   return (
                     <li key={o.id}>
-                      <LocalizedClientLink href={`/user/orders/${o.id}`} className="flex items-center gap-3 py-3 hover:bg-[#FAF9F6]">
+                      <LocalizedClientLink
+                        href={`/user/orders/${(o as { order_group?: { id: string } }).order_group?.id || o.id}`}
+                        className="flex items-center gap-3 py-3 hover:bg-[#FAF9F6]"
+                      >
                         <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-[#F4F1EA] text-[#9A978C]">
                           {primero?.thumbnail ? (
                             // eslint-disable-next-line @next/next/no-img-element

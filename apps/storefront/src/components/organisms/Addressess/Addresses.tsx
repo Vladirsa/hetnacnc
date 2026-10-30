@@ -65,10 +65,10 @@ export const Addresses = ({
         )}
         data-testid="addresses-container"
       >
-        <h1 className="heading-md uppercase" data-testid="addresses-heading">Direcciones</h1>
+        <h1 className="m-0 text-[26px] font-extrabold text-[#142033]" data-testid="addresses-heading">Direcciones</h1>
         {isEmpty(user.addresses) ? (
           <div className="text-center" data-testid="addresses-empty-state">
-            <h3 className="heading-lg text-primary uppercase" data-testid="addresses-empty-heading">
+            <h3 className="text-[20px] font-bold text-[#142033]" data-testid="addresses-empty-heading">
               No tienes direcciones guardadas
             </h3>
             <p className="text-lg text-secondary mt-2" data-testid="addresses-empty-description">

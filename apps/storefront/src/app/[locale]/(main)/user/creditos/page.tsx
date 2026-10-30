@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { UserNavigation } from "@/components/molecules"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ComprarPaquetes } from "@/components/hetna/creditos/ComprarPaquetes"
 import { Movimientos } from "@/components/hetna/creditos/Movimientos"
@@ -43,8 +44,11 @@ export default async function CreditosPage({
   const alcanzan = Math.floor(saldo / Math.max(porEscaneo, 1))
 
   return (
-    <main className="container">
-      <div className="pt-4 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
+    <main className="container pb-16">
+      <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-8">
+      <UserNavigation />
+      <div className="min-w-0 md:col-span-3">
+      <div className="text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/user" className="hover:text-[#B34D07]">
           Mi cuenta
         </LocalizedClientLink>
@@ -143,6 +147,8 @@ export default async function CreditosPage({
             </ul>
           </div>
         </aside>
+      </div>
+      </div>
       </div>
     </main>
   )
