@@ -54,6 +54,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Haz llaveros, etiquetas, placas de mascota, corazones y adornos con nombre: elige la letra y la forma, y descarga el DXF/SVG con capas de corte y grabado o el STL con las letras en relieve. Con el agujero de la argolla.",
   },
   {
+    slug: "rompecabezas",
+    nombre: "Rompecabezas",
+    texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
+    icono: "rompecabezas",
+    acceso: "gratis",
+    titulo: "Generador de rompecabezas para corte láser gratis (DXF y SVG)",
+    descripcion:
+      "Crea gratis un rompecabezas a tu medida para corte láser en MDF, triplay o acrílico: elige columnas, filas y tamaño del nudo, con marco y base opcionales. Ninguna pieza se repite. Descarga en DXF o SVG.",
+  },
+  {
     slug: "vectorizador",
     nombre: "Vectorizador de imágenes",
     texto: "Un logotipo o dibujo convertido en contornos DXF o SVG.",
