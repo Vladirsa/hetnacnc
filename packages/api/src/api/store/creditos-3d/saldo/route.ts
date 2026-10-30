@@ -10,6 +10,12 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
 
   const [balance] = await creditModuleService.listCreditBalances({ customer_id: customerId })
 
+  // ?resumen=1: sólo el número, para el saldo del encabezado (se pide en cada
+  // página, así que no carga los movimientos).
+  if (req.query.resumen) {
+    return res.json({ saldo: balance?.balance ?? 0 })
+  }
+
   const movimientos = await creditModuleService.listCreditLedgerEntries(
     { customer_id: customerId },
     { order: { created_at: "DESC" }, take: 20 }

@@ -20,6 +20,7 @@ import { OcultarAlBajar } from "./OcultarAlBajar"
 import { IdiomaSelector, MonedaSelector } from "./Selectores"
 import { listRegions } from "@/lib/data/regions"
 import { EnvioA } from "./EnvioA"
+import { SaldoCreditos } from "./SaldoCreditos"
 
 // Encabezado HETNA CNC: barra superior, barra principal con buscador
 // y barra azul marino con las categorias reales de la tienda.
@@ -78,6 +79,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
             </div>
             <IdiomaSelector oscuro />
             <MonedaSelector regions={regions} oscuro />
+            <SaldoCreditos isLoggedIn={isLoggedIn} oscuro />
           </div>
         </div>
       </OcultarAlBajar>
@@ -133,11 +135,15 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
       </div>
       </OcultarAlBajar>
 
-      {/* Buscador en celular (siempre visible) */}
-      <div className="md:hidden bg-white border-b border-[#E7E4DC] px-4 pb-3">
-        <Suspense fallback={null}>
-          <NavbarSearch />
-        </Suspense>
+      {/* Buscador en celular (siempre visible), con el saldo de créditos al
+          lado: en la fila de arriba, junto a la moneda, ya no cabe. */}
+      <div className="md:hidden bg-white border-b border-[#E7E4DC] px-4 pb-3 flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <Suspense fallback={null}>
+            <NavbarSearch />
+          </Suspense>
+        </div>
+        <SaldoCreditos isLoggedIn={isLoggedIn} />
       </div>
 
       {/* Categorias, servicios y herramientas (solo computadora; se esconde al bajar) */}

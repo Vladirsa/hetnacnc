@@ -74,6 +74,24 @@ export async function obtenerSaldo(): Promise<RespuestaSaldo> {
   }
 }
 
+// Sólo el número de créditos, para el encabezado. null = sin sesión o sin
+// respuesta: el encabezado no enseña nada en vez de un saldo equivocado.
+export async function saldoBreve(): Promise<number | null> {
+  const auth = (await getAuthHeaders()) as { authorization?: string }
+  if (!auth.authorization) return null
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/creditos-3d/saldo?resumen=1`, {
+      headers: await encabezados(),
+      cache: "no-store",
+    })
+    if (!res.ok) return null
+    const cuerpo = (await res.json()) as { saldo?: number }
+    return typeof cuerpo.saldo === "number" ? cuerpo.saldo : 0
+  } catch {
+    return null
+  }
+}
+
 export type Proveedor = "mercadopago" | "paypal"
 
 export type Paquete = {

@@ -88,7 +88,7 @@ export const MonedaSelector = ({
 
   if (opciones.length <= 1) {
     const m = (opciones[0]?.moneda || "mxn").toUpperCase()
-    return <span className={oscuro ? "text-[#C9D2E0]" : ""}>{m} $</span>
+    return <span className={`whitespace-nowrap ${oscuro ? "text-[#C9D2E0]" : "text-[13px] font-semibold text-[#1B1B18]"}`}>{m} $</span>
   }
 
   const cambiar = async (regionId: string) => {
