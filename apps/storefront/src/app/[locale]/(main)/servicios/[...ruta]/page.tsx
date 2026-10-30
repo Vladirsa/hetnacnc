@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ServicioRuta({ params, searchParams }: Props) {
   const { ruta, locale } = await params
   const clave = (ruta || []).join("/")
-  // la antigua Calculadora CNC ahora vive dentro del Copiloto IA CNC
-  if (clave === "calculadora-cnc") redirect(`/${locale}/servicios/copiloto-ia-cnc?vista=calculadoras`)
+  // la antigua Calculadora CNC ahora es la Calculadora CNC profesional (/calculadora-cnc)
+  if (clave === "calculadora-cnc") redirect(`/${locale}/calculadora-cnc`)
   const s = buscarServicio(clave)
   if (!s) notFound()
 
