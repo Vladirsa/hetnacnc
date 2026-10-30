@@ -20,6 +20,12 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M5 9l2-5h10l2 5M12 4v5" />
     </>
   ),
+  llavero: (
+    <>
+      <circle cx="7" cy="7" r="3" />
+      <path d="M9.5 9.5L20 20M14 14l-2 2M17 17l-2 2" />
+    </>
+  ),
   extruir: (
     <>
       <path d="M4 15l8-4 8 4-8 4z" />

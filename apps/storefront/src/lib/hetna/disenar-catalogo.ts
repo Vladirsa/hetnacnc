@@ -75,6 +75,7 @@ export const SECCIONES: SeccionDiseno[] = [
     subtitulo: "Letreros, vectorizado, grabado, relieves y escaneo",
     tarjetas: [
       { nombre: "Letreros y nombres", texto: "19 letras, unidas y listas para cortar.", href: "/disenar/letreros", icono: "letrero", color: MORADO, acceso: "gratis", para: ["laser", "router"], claves: "nombre texto tipografía" },
+      { nombre: "Llaveros y placas con nombre", texto: "Láser o impresión 3D, con argolla.", href: "/disenar/llaveros", icono: "llavero", color: "#DB2777", acceso: "gratis", para: ["laser", "3d"], claves: "llavero placa mascota etiqueta corazón adorno" },
       { nombre: "Vectorizar un logo", texto: "De JPG o PNG a DXF/SVG limpio.", href: "/disenar/vectorizador", icono: "vector", color: AZUL, acceso: "gratis", para: ["laser", "router"], claves: "imagen foto" },
       { nombre: "Foto para grabado láser", texto: "Tramada al tamaño y DPI de tu láser.", href: "/disenar/grabado-foto", icono: "grabado", color: AZUL2, acceso: "gratis", para: ["laser"] },
       { nombre: "Foto a relieve o litofanía", texto: "STL para tallar o imprimir.", href: "/disenar/litofania-relieve", icono: "relieve", color: AZUL2, acceso: "gratis", para: ["3d", "router"], claves: "lámpara" },
