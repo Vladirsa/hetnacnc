@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ServicioIcono } from "@/components/hetna/ServicioIcono"
+import { BloquePublicidad } from "./BloquePublicidad"
 import { ESCANEAR, HERRAMIENTAS_DISENO, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
 
 // Menú del espacio "Diseñar y escanear". En pantallas grandes es una columna
@@ -85,6 +86,9 @@ export const ColumnaDisenar = () => {
         <Titulo>De una pieza que ya existe</Titulo>
         <Opcion slug={ESCANEO.slug} nombre={ESCANEO.nombre} icono={ESCANEO.icono} activa={activa === ESCANEO.slug} />
 
+        <div className="mt-5">
+          <BloquePublicidad />
+        </div>
         <div className="mt-5 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-3">
           <p className="text-[13px] font-semibold text-[#1B1B18]">¿Ya tienes el archivo?</p>
           <p className="mt-0.5 text-[12.5px] leading-snug text-[#6B6A63]">Pásalo a G-code con el avance y las revoluciones calculados.</p>
