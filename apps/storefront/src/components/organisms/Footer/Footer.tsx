@@ -41,7 +41,7 @@ export function Footer() {
     // Cotizador y escaneo 3D. Van en esta columna porque quien los busca es
     // un taller, no alguien que viene a comprar.
     { label: "Trabajos buscando taller", path: "/trabajos" },
-    { label: "Cotizador para tu taller", path: "/taller" },
+    { label: "Cotizador para tu taller", path: "/servicios/cotizador-cnc" },
     { label: "Talleres fundadores", path: "/talleres/fundadores" },
     { label: "Anuncia tu taller", path: "/anunciate" },
     { label: "Términos para vendedores", path: "/terminos-vendedores" },

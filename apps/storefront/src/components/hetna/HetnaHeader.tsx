@@ -13,7 +13,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 import { SocialIcon } from "./SocialIcon"
 import { BarraNavegacion } from "./BarraNavegacion"
 import { FavoritosBoton } from "./Favoritos"
-import { TiendaBoton } from "./TiendaBoton"
+import { CotizadorBoton } from "./TiendaBoton"
 import { CampanitaChat } from "./chat/CampanitaChat"
 import { MenuMovil } from "./MenuMovil"
 import { OcultarAlBajar } from "./OcultarAlBajar"
@@ -107,15 +107,16 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           className="ml-auto hidden md:flex items-center gap-4 lg:gap-6"
           data-testid="header-actions"
         >
-          {/* Cinco cosas, en este orden: favoritos, notificaciones, tienda,
-              cuenta y carrito. Salieron dos: "Mis compras", que ya es la
+          {/* Cinco cosas, en este orden: favoritos, notificaciones, cotizador,
+              cuenta y carrito. "Mi tienda" (panel del vendedor) pasó al menú
+              de la cuenta. Salieron dos: "Mis compras", que ya es la
               primera opción del menú de la cuenta, y una campana repetida --
               NotificacionesBoton y CampanitaChat dibujaban EL MISMO icono, uno
               junto al otro, apuntando a dos bandejas distintas. Se quedó
               CampanitaChat porque es la que trae el contador de no leídos. */}
           <FavoritosBoton />
           <CampanitaChat isLoggedIn={isLoggedIn} />
-          <TiendaBoton isLoggedIn={isLoggedIn} />
+          <CotizadorBoton />
           <UserDropdown
             isLoggedIn={isLoggedIn}
             nombre={user?.first_name || user?.company_name || null}

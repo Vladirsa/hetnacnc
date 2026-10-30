@@ -141,6 +141,14 @@ export const UserDropdown = ({
                   </p>
                 )}
 
+                <a
+                  href="/seller"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-[#1B1B18] hover:bg-[#F7F5EF]"
+                >
+                  <span aria-hidden="true" className="w-5 text-center">🏪</span>
+                  <span className="flex-1">Mi tienda</span>
+                </a>
+                <Opcion href="/user/escaneos" icono="📷">Mis escaneos 3D</Opcion>
                 <Opcion href="/herramientas-cnc" icono="🛠️">Herramientas CNC</Opcion>
                 <Opcion href="/user/cam" icono="🧭">Mis trabajos CAM</Opcion>
                 <Opcion href="/cotizar" icono="📐">Cotizar una pieza</Opcion>

@@ -40,7 +40,7 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
           <SubirEscaneo creditosPorEscaneo={creditos} />
           <p className="mt-6 text-[14px] text-[#4A4943]">
             ¿Ya escaneaste antes?{" "}
-            <LocalizedClientLink href="/taller/escaneos" className="font-semibold text-[#B34D07] hover:underline">
+            <LocalizedClientLink href="/user/escaneos" className="font-semibold text-[#B34D07] hover:underline">
               Ver mis escaneos
             </LocalizedClientLink>
           </p>

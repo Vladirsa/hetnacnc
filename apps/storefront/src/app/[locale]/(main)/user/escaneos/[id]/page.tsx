@@ -39,7 +39,7 @@ export default async function TallerEscaneoDetalle({
   return (
     <section className="pt-8 max-w-[860px]">
       <LocalizedClientLink
-        href="/taller/escaneos"
+        href="/user/escaneos"
         className="text-[14px] font-semibold text-[#6B6A63] hover:text-[#B34D07]"
       >
         ← Escaneos

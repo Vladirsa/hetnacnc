@@ -60,7 +60,7 @@ export default async function TallerEscaneosPage() {
           {escaneos.map((e) => (
             <li key={e.id}>
               <LocalizedClientLink
-                href={`/taller/escaneos/${e.id}`}
+                href={`/user/escaneos/${e.id}`}
                 className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3.5 hover:border-[#C2560A] transition-colors"
               >
                 <span className="flex-1 min-w-[180px]">

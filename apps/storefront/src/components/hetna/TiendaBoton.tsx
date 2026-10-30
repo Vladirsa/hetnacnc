@@ -32,3 +32,23 @@ export const TiendaBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
     <span className="hidden lg:inline text-[13px] font-medium">Mi tienda</span>
   </a>
 )
+
+// Botón del encabezado que abre la app de cotizar para talleres
+// (hetnacnc.com/cotizador/). Tomó el lugar de "Mi tienda", que ahora vive en
+// el menú de la cuenta (/user). Es un <a> normal por la misma razón que
+// arriba: /cotizador/ lo sirve nginx, no Next. La app pide su propio inicio
+// de sesión: sin cuenta no se entra.
+export const CotizadorBoton = () => (
+  <a
+    href="/cotizador/"
+    aria-label="Cotizador para talleres"
+    title="Cotizador para talleres"
+    className="flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="6" y="3" width="12" height="18" rx="1.5" />
+      <path d="M9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01" />
+    </svg>
+    <span className="hidden lg:inline text-[13px] font-medium">Cotizador</span>
+  </a>
+)
