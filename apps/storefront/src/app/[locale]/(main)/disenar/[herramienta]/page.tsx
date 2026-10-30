@@ -13,6 +13,7 @@ import { GeneradorLlaveros } from "@/components/hetna/generador/GeneradorLlavero
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
 import { GeneradorPatron } from "@/components/hetna/generador/GeneradorPatron"
 import { GeneradorRelieve } from "@/components/hetna/generador/GeneradorRelieve"
+import { GeneradorRompecabezas } from "@/components/hetna/generador/GeneradorRompecabezas"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { ESCANEAR, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
 
@@ -26,6 +27,7 @@ const GENERADORES: Record<string, () => React.JSX.Element> = {
   "caja-con-juntas": GeneradorCaja,
   letreros: GeneradorLetrero,
   llaveros: GeneradorLlaveros,
+  rompecabezas: GeneradorRompecabezas,
   vectorizador: GeneradorVectorizador,
   "despiece-muebles": GeneradorMueble,
   "plantillas-empaque": GeneradorEmpaques,
