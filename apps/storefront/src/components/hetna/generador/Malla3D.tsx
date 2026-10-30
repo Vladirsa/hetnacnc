@@ -7,7 +7,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 // Vista 3D de una malla de triángulos (9 números por triángulo, en mm, Z hacia
 // arriba). La usan las herramientas que producen STL: extruir, litofanías…
 
-export default function Malla3D({ tris, alto = 420 }: { tris: number[]; alto?: number }) {
+// Sin `alto` llena el contenedor (Visor3D); con `alto` mide eso en px.
+export default function Malla3D({ tris, alto }: { tris: number[]; alto?: number }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,10 +38,15 @@ export default function Malla3D({ tris, alto = 420 }: { tris: number[]; alto?: n
     scene.add(rejilla)
 
     const camera = new THREE.PerspectiveCamera(42, Math.max(1, el.clientWidth) / Math.max(1, el.clientHeight), 0.5, 20000)
-    camera.position.set(tam * 0.8, tam * 0.7, tam * 0.9)
+    // Distancia justa para que la pieza llene la vista sin salirse
+    const vfov = (camera.fov * Math.PI) / 180
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect)
+    const dist = Math.max(tam / 2 / Math.sin(vfov / 2), tam / 2 / Math.sin(hfov / 2)) * 1.05
+    camera.position.copy(new THREE.Vector3(0.8, 0.7, 0.9).normalize().multiplyScalar(dist))
     camera.lookAt(0, 0, 0)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(el.clientWidth || 300, el.clientHeight || 300)
     el.appendChild(renderer.domElement)
 
@@ -85,5 +91,5 @@ export default function Malla3D({ tris, alto = 420 }: { tris: number[]; alto?: n
     }
   }, [tris])
 
-  return <div ref={ref} style={{ height: alto }} className="w-full rounded-[12px] overflow-hidden cursor-grab active:cursor-grabbing" />
+  return <div ref={ref} style={alto ? { height: alto } : undefined} className="w-full h-full min-h-[300px] rounded-[12px] overflow-hidden cursor-grab active:cursor-grabbing" />
 }
