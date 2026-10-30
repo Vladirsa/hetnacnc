@@ -1,7 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_ENVIO_COT, VIGENCIA_HORAS, asegurarTablasEnvio } from "../../../../../lib/envios"
+import { T_ENVIO_COT, VIGENCIA_HORAS, asegurarTablasEnvio, proteccionPublica } from "../../../../../lib/envios"
 
 // Una cotización guardada y la tarifa elegida (?t=<tarifa_id>), sin el costo interno.
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -15,5 +15,5 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!op) return res.status(404).json({ message: "Esa opción de envío ya no está disponible. Vuelve a cotizar." })
   const vencida = Date.now() - new Date(fila.created_at).getTime() > VIGENCIA_HORAS * 3600_000
   const { costo, peso, ...opcion } = op
-  return res.json({ cotizacion_id: fila.id, origen: d.origen, destino: d.destino, paquete: d.paquete, opcion, vencida })
+  return res.json({ cotizacion_id: fila.id, origen: d.origen, destino: d.destino, paquete: d.paquete, opcion, vencida, proteccion: proteccionPublica() })
 }

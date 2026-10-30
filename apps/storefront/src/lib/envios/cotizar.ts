@@ -72,6 +72,8 @@ export type CotizacionGuardada = {
   paquete: { tipo: string; peso: number; largo: number; ancho: number; alto: number; peso_cobrado: number }
   opcion: OpcionEnvio
   vencida: boolean
+  // Protección del envío: costo = max(minimo, valor × tasa), con valor entre valorMinimo y valorMaximo
+  proteccion?: { tasa: number; minimo: number; valorMinimo: number; valorMaximo: number }
 }
 
 export async function verCotizacion(id: string, tarifa: string): Promise<CotizacionGuardada | { error: string }> {
@@ -93,6 +95,7 @@ export async function solicitarEnvio(d: {
   destino: ContactoEnvio
   contenido: string
   acepta: boolean
+  proteccion_valor?: number
 }): Promise<{ ok: true; folio: string; pago_url: string } | { ok: false; mensaje: string; login?: boolean }> {
   try {
     const auth = (await getAuthHeaders()) as Record<string, string>

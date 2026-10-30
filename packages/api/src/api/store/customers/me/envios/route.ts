@@ -8,6 +8,8 @@ import {
   T_ENVIO_COT,
   VIGENCIA_HORAS,
   asegurarTablasEnvio,
+  configProteccion,
+  costoProteccion,
   crearPagoEnvio,
   folioEnvio,
   limpiarContacto,
@@ -28,6 +30,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       folio: folioEnvio(e.folio), estado: e.estado, precio: Number(e.precio), tarifa: e.tarifa,
       origen: e.origen, destino: e.destino, pago_url: e.estado === "pendiente_pago" ? e.pago_url : null,
       guia: e.guia, created_at: e.created_at,
+      proteccion_valor: e.proteccion_valor ? Number(e.proteccion_valor) : null,
     })),
   })
 }
@@ -57,6 +60,21 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (contenido.length < 3) return res.status(400).json({ message: "Describe qué contiene el paquete." })
   if (b.acepta !== true) return res.status(400).json({ message: "Debes aceptar las condiciones del envío." })
 
+  // Protección opcional: valor declarado del contenido -> costo con el margen de HETNA
+  let proteccionValor: number | null = null
+  let proteccionCosto = 0
+  if (b.proteccion_valor !== undefined && b.proteccion_valor !== null && b.proteccion_valor !== "") {
+    const v = Math.round(Number(b.proteccion_valor) * 100) / 100
+    const cfg = configProteccion()
+    if (!Number.isFinite(v) || v < cfg.valorMinimo || v > cfg.valorMaximo)
+      return res.status(400).json({
+        message: `El valor a proteger debe ser entre $${cfg.valorMinimo.toLocaleString("es-MX")} y $${cfg.valorMaximo.toLocaleString("es-MX")} MXN.`,
+      })
+    proteccionValor = v
+    proteccionCosto = costoProteccion(v)
+  }
+  const total = Math.round((Number(op.precio) + proteccionCosto) * 100) / 100
+
   const cliente = await knex("customer").where({ id }).first("email", "first_name", "last_name")
   const envioId = nuevoId("env")
   const [fila0] = await knex(T_ENVIO)
@@ -70,7 +88,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       destino: JSON.stringify({ ...d.destino, ...destinatario }),
       paquete: JSON.stringify(d.paquete),
       contenido,
-      precio: op.precio,
+      precio: total,
+      proteccion_valor: proteccionValor,
+      proteccion_costo: proteccionValor ? proteccionCosto : null,
     })
     .returning(["folio"])
   const folio = folioEnvio(fila0.folio ?? fila0)
@@ -80,8 +100,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const pref = await crearPagoEnvio({
       envioId,
       folio,
-      titulo: `${folio} · Envío ${op.paqueteria} ${op.servicio} · HETNA CNC`,
-      monto: Number(op.precio),
+      titulo: `${folio} · Envío ${op.paqueteria} ${op.servicio}${proteccionValor ? " + protección" : ""} · HETNA CNC`,
+      monto: total,
       email: cliente?.email,
       retorno: `${STORE_URL}/mx/servicios/envios-hetna/listo?folio=${folio}`,
     })
@@ -98,10 +118,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       await sendEmail({
         to: process.env.HETNA_LEADS_EMAIL,
         subject: `[${folio}] Envío sin liga de pago`,
-        html: marco("No se pudo generar la liga de pago", `<table style="border-collapse:collapse;font-size:14px">${fila("Folio", folio)}${fila("Cliente", cliente?.email || "")}${fila("Paquetería", `${op.paqueteria} ${op.servicio}`)}${fila("Precio", `$${op.precio} MXN`)}</table>`),
+        html: marco("No se pudo generar la liga de pago", `<table style="border-collapse:collapse;font-size:14px">${fila("Folio", folio)}${fila("Cliente", cliente?.email || "")}${fila("Paquetería", `${op.paqueteria} ${op.servicio}`)}${fila("Precio", `$${total} MXN`)}${proteccionValor ? fila("Protección", `valor declarado $${proteccionValor} MXN`) : ""}</table>`),
       })
     return res.status(502).json({ message: `Registramos tu envío ${folio}, pero no pudimos generar el pago. Te contactaremos por correo.` })
   }
-  logger.info(`[envios] ${folio} creado (${op.paqueteria} ${op.servicio} $${op.precio})`)
+  logger.info(`[envios] ${folio} creado (${op.paqueteria} ${op.servicio} $${total}${proteccionValor ? `, protegido por $${proteccionValor}` : ""})`)
   return res.json({ ok: true, folio, pago_url: pagoUrl })
 }

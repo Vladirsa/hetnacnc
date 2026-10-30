@@ -49,10 +49,12 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const d = typeof e.destino === "string" ? JSON.parse(e.destino) : e.destino
     const p = typeof e.paquete === "string" ? JSON.parse(e.paquete) : e.paquete
     const precio = `$${esperado.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN`
+    const protegido = e.proteccion_valor ? Number(e.proteccion_valor) : 0
     const resumen =
       `<table style="border-collapse:collapse;font-size:14px">` +
       fila("Folio", folio) + fila("Paquetería", `${t.paqueteria} · ${t.servicio}`) + fila("Entrega estimada", t.dias ? `${t.dias} días hábiles` : "") +
-      fila("Paquete", `${p.tipo} · ${p.largo}×${p.ancho}×${p.alto} cm · ${p.peso} kg`) + fila("Contenido", e.contenido) + fila("Pagado", precio) +
+      fila("Paquete", `${p.tipo} · ${p.largo}×${p.ancho}×${p.alto} cm · ${p.peso} kg`) + fila("Contenido", e.contenido) +
+      (protegido ? fila("Protección", `Valor declarado $${protegido.toLocaleString("es-MX")} MXN`) : "") + fila("Pagado", precio) +
       `</table>`
     const direcciones =
       `<p style="margin:16px 0 4px;color:#6B675C">Remitente</p><p style="margin:0;color:#142033">${dir(o)}</p>` +
@@ -61,15 +63,27 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const avisos = [
       process.env.HETNA_LEADS_EMAIL && {
         to: process.env.HETNA_LEADS_EMAIL,
-        subject: `[${folio}] PAGADO · generar guía ${t.paqueteria}`,
-        html: marco("Envío pagado: generar guía en Skydropx", resumen + direcciones +
+        subject: `[${folio}] PAGADO · generar guía ${t.paqueteria}${protegido ? " · CON PROTECCIÓN SOS" : ""}`,
+        html: marco("Envío pagado: generar guía en Skydropx", resumen +
+          (protegido
+            ? `<p style="margin:16px 0 0;padding:12px;border-radius:8px;background:#FDECEA;color:#8A1C14;font-weight:bold">` +
+              `⚠ Al generar la guía, activa SOS Protección con valor declarado de $${protegido.toLocaleString("es-MX")} MXN ` +
+              `(el cliente pagó $${Number(e.proteccion_costo || 0).toLocaleString("es-MX")} por ella). Debe quedar activa ANTES de la recolección o de entregarlo en sucursal: ` +
+              `después del primer movimiento ya no se puede contratar.</p>`
+            : "") +
+          direcciones +
           `<table style="border-collapse:collapse;font-size:13px;margin-top:16px">${fila("Costo Skydropx", `$${t.costo} MXN`)}${fila("Cotización Skydropx", e.cotizacion_id)}${fila("Tarifa", e.tarifa_id)}${fila("Pago MP", String(pago.id))}</table>`),
       },
       o.email && {
         to: o.email,
         subject: `[${folio}] Recibimos tu pago de envío`,
         html: marco("¡Gracias! Recibimos tu pago", resumen + direcciones +
-          `<p style="color:#40403A;margin-top:16px">Estamos generando tu guía. Te la enviaremos por correo con el número de rastreo.</p>`),
+          `<p style="color:#40403A;margin-top:16px">Estamos generando tu guía. Te la enviaremos por correo con el número de rastreo.</p>` +
+          (protegido
+            ? `<p style="color:#40403A;margin-top:12px"><strong>Tu envío va protegido.</strong> Si llega dañado, incompleto o se extravía: ` +
+              `si el empaque viene abierto o alterado, recházalo con la paquetería; toma fotos y video del paquete con la guía visible y del contenido, ` +
+              `y escríbenos con tu folio y la factura del producto dentro de las 48 horas hábiles después de recibirlo. Nosotros hacemos el reclamo.</p>`
+            : "")),
       },
     ].filter(Boolean) as { to: string; subject: string; html: string }[]
     for (const a of avisos) {

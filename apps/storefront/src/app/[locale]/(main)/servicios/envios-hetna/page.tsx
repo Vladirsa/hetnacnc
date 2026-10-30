@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 // ¿es para mí?, ¿qué puedo enviar?, ¿por qué con HETNA y no directo con la
 // paquetería?, ¿cómo empiezo? Todo lo que dice es lo que el servicio hace hoy
 // (cotizador con Skydropx, pago con Mercado Pago, guía por correo; guías desde
-// el panel del taller). Lo que no existe todavía (seguro) se dice tal cual.
+// el panel del taller, protección SOS de Skydropx, que no es un seguro y así se dice).
 
 const REJILLA =
   "repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 28px)"
@@ -23,7 +23,6 @@ const CAJA = "rounded-2xl border border-[#E7E4DC] bg-white p-6 sm:p-8"
 const H2 = "text-2xl font-extrabold text-[#142033] sm:text-3xl"
 const WHATSAPP_VOLUMEN = ligaWhatsApp("Hola, quiero cotizar envíos por volumen con Envíos HETNA. Envío aproximadamente ___ paquetes al mes desde ___.")
 const WHATSAPP_AYUDA = ligaWhatsApp("Hola, tengo una duda con un envío de Envíos HETNA.")
-const WHATSAPP_PROTEGIDO = ligaWhatsApp("Hola, quiero un envío protegido con Envíos HETNA. Voy a enviar ___ (valor aproximado $___) de ___ a ___.")
 
 const DIFERENTE = [
   "Tarifas negociadas y varias paqueterías en una sola cotización",
@@ -67,9 +66,9 @@ const TIPOS = [
   },
   {
     titulo: "Envío protegido",
-    texto: "Piezas frágiles o de alto valor: antes de enviar revisamos contigo el embalaje, la paquetería más adecuada y la cobertura disponible.",
+    texto: "Piezas nuevas frágiles o de valor: al solicitar tu envío activa “Proteger mi envío” y declara el valor (hasta $100,000). Cubre daño, faltante, extravío o robo según las condiciones de la protección.",
     accion: "Cotizar envío protegido",
-    href: WHATSAPP_PROTEGIDO,
+    href: "#cotizar-envio",
   },
   {
     titulo: "Piezas grandes y tarimas",
@@ -119,7 +118,7 @@ const PREGUNTAS: [string, string][] = [
   ],
   [
     "¿Puedo enviar piezas grandes, pesadas o frágiles?",
-    "Sí. Para piezas grandes elige “Tarima o bulto” al cotizar y escribe las medidas y el peso ya embalado; si el paquete es grande y ligero, las paqueterías cobran por peso volumétrico y te lo decimos antes de pagar. Para piezas frágiles o de alto valor usa el Envío protegido: revisamos contigo el embalaje y la paquetería antes de enviar. Si para tu ruta no sale ninguna opción, escríbenos y lo cotizamos contigo.",
+    "Sí. Para piezas grandes elige “Tarima o bulto” al cotizar y escribe las medidas y el peso ya embalado (con la tarima incluida); si el paquete es grande y ligero, las paqueterías cobran por peso volumétrico y te lo decimos antes de pagar. Para piezas frágiles o de valor activa la protección del envío. Si para tu ruta no sale ninguna opción, escríbenos y lo cotizamos contigo.",
   ],
   [
     "¿Hacen envíos a todo México?",
@@ -130,6 +129,10 @@ const PREGUNTAS: [string, string][] = [
     "Cada opción muestra los días hábiles estimados. Dependen de la paquetería, el servicio (económico o rápido) y el destino.",
   ],
   [
+    "¿Qué pasa si la paquetería dice que mi paquete pesa más?",
+    "La paquetería vuelve a pesar y medir cada paquete. Si encuentra más peso o medidas que las cotizadas, cobra la diferencia (sobrepeso) y esa diferencia la paga quien envía. Para evitarlo: mide y pesa el paquete ya embalado (con la tarima, si va en tarima) y, antes de entregarlo, toma 4 fotos con la guía pegada y visible: alto, largo y ancho con la cinta métrica, y el paquete en la báscula. Con esas fotos se puede pelear un cobro injusto.",
+  ],
+  [
     "¿Cómo pago y cuándo recibo mi guía?",
     "Pagas en línea con Mercado Pago. En cuanto se confirma el pago generamos la guía y te la mandamos por correo con el número de rastreo. La cotización es válida por 12 horas.",
   ],
@@ -138,8 +141,12 @@ const PREGUNTAS: [string, string][] = [
     "Escríbenos con tu folio (ENV-…) y te ayudamos a levantar y dar seguimiento al reporte con la paquetería. Para piezas maquinadas o frágiles usa caja doble, esquineros y relleno: es lo que más evita daños.",
   ],
   [
-    "¿Puedo asegurar mi envío?",
-    "La cotización en línea no incluye seguro. Para piezas de alto valor pide el Envío protegido: antes de enviar revisamos contigo la cobertura disponible con la paquetería, el embalaje y la mejor opción para tu pieza.",
+    "¿Puedo proteger mi envío?",
+    "Sí. Al solicitar tu envío activa “Proteger mi envío” y declara el valor real de lo que mandas (hasta $100,000 MXN, sin IVA, comprobable con factura). No es un seguro: es la SOS Protección de Skydropx, que cubre daño, faltante, extravío o robo durante el traslado. El costo depende del valor declarado y lo ves antes de pagar. No cubre artículos usados, celulares, tablets, laptops ni computadoras, equipo médico o científico, artículos prohibidos ni paquetes mal embalados.",
+  ],
+  [
+    "¿Cómo reclamo si mi envío protegido llega dañado o no llega?",
+    "Si el empaque viene abierto o alterado, recházalo con la paquetería y que quede constancia. Toma fotos y video del paquete con la guía visible y del contenido, y escríbenos con tu folio y la factura del producto dentro de las 48 horas hábiles después de recibirlo (si no llega, cuando el rastreo diga extraviado o pasen 15 días hábiles sin movimiento). Nosotros hacemos el reclamo con Skydropx; el reembolso depende de su resolución (25%, 50% o 100% según el daño, sin IVA ni costo de guía) y te lo regresamos en cuanto lo acreditan.",
   ],
   [
     "¿Qué no se puede enviar?",

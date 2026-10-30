@@ -74,7 +74,50 @@ export const asegurarTablasEnvio = async (knex: any) => {
       t.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
+  // Protección del envío (llegó después): valor declarado y lo que se cobró por ella.
+  // `precio` es siempre el total cobrado (envío + protección).
+  if (!(await knex.schema.hasColumn(T_ENVIO, "proteccion_valor"))) {
+    await knex.schema.alterTable(T_ENVIO, (t: any) => {
+      t.decimal("proteccion_valor", 12, 2).nullable()
+      t.decimal("proteccion_costo", 12, 2).nullable()
+    })
+  }
   listo = true
+}
+
+// ---------- Protección del envío (SOS Protección de Skydropx) ----------
+// NO es un seguro: es el mecanismo de compensación de Skydropx (política del
+// 25 de junio de 2025). Cubre daño, faltante, extravío y robo hasta el valor
+// declarado, con tope de $100,000 MXN; el reembolso llega en créditos a la
+// cuenta de Skydropx de HETNA y HETNA se lo regresa al cliente.
+// Skydropx cobra por tramos según el valor declarado; aquí se aproxima con un
+// porcentaje (en octubre de 2026: $670 por $60,000 = 1.12%) más el margen de
+// HETNA (20% de fábrica). La guía de Envíos HETNA se genera a mano: el aviso de
+// pago le dice a HETNA que active la protección ANTES de la recolección (después
+// del primer movimiento ya no se puede contratar). Todo se ajusta por variables.
+const num = (v: unknown, defecto: number) => {
+  const n = Number(v)
+  return v !== undefined && v !== "" && Number.isFinite(n) && n >= 0 ? n : defecto
+}
+
+export const configProteccion = () => ({
+  tasa: num(process.env.PROTECCION_SOS_TASA, 670 / 60000),
+  minimo: num(process.env.PROTECCION_SOS_MINIMO, 0),
+  margen: num(process.env.PROTECCION_MARGEN, 0.2),
+  valorMinimo: num(process.env.PROTECCION_VALOR_MIN, 500),
+  valorMaximo: num(process.env.PROTECCION_VALOR_MAX, 100000),
+})
+
+// Lo que paga el cliente por proteger `valor` pesos (ya con el margen de HETNA)
+export const costoProteccion = (valor: number) => {
+  const p = configProteccion()
+  return Math.round(Math.max(p.minimo, valor * p.tasa) * (1 + p.margen) * 100) / 100
+}
+
+// Lo que ve la tienda para calcular en vivo (sin separar costo y margen)
+export const proteccionPublica = () => {
+  const p = configProteccion()
+  return { tasa: p.tasa * (1 + p.margen), minimo: p.minimo * (1 + p.margen), valorMinimo: p.valorMinimo, valorMaximo: p.valorMaximo }
 }
 
 // Una cotización se puede solicitar durante estas horas; después hay que volver a cotizar.
