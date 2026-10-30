@@ -14,6 +14,10 @@ const navigationItems = [
     label: "Mis pedidos",
     href: "/user/orders",
   },
+  {
+    label: "Mis envíos",
+    href: "/user/envios",
+  },
   // {
   //   label: "Messages",
   //   href: "/user/messages",

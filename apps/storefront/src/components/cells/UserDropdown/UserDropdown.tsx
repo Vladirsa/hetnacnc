@@ -98,6 +98,7 @@ export const UserDropdown = ({
 
               <Grupo>
                 <Opcion href="/user/orders" icono="📦">Compras</Opcion>
+                <Opcion href="/user/envios" icono="🚚">Mis envíos</Opcion>
                 <Opcion href="/user/messages" icono="💬" insignia={sinLeer}>
                   Mensajes
                 </Opcion>

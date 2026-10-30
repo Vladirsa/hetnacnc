@@ -3,14 +3,14 @@
 // informa el avance de una subida, y con un STEP de 20 MB en datos móviles
 // una barra quieta parece formulario trabado.
 //
-// destino "taller" guarda en la carpeta de portafolios de talleres; sin
-// destino, en la de solicitudes de clientes.
+// destino "taller" guarda en la carpeta de portafolios de talleres; "envio",
+// en la de evidencia de Envíos HETNA; sin destino, en la de solicitudes.
 export type ArchivoGuardado = { clave: string; nombre: string; tamano: number }
 
 export function subirArchivo(
   archivo: File,
   alAvanzar: (n: number) => void,
-  destino?: "taller"
+  destino?: "taller" | "envio"
 ): Promise<ArchivoGuardado> {
   return new Promise((ok, mal) => {
     const fd = new FormData()

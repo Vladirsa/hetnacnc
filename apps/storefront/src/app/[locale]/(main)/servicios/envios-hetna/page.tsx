@@ -130,7 +130,7 @@ const PREGUNTAS: [string, string][] = [
   ],
   [
     "¿Qué pasa si la paquetería dice que mi paquete pesa más?",
-    "La paquetería vuelve a pesar y medir cada paquete. Si encuentra más peso o medidas que las cotizadas, cobra la diferencia (sobrepeso) y esa diferencia la paga quien envía. Para evitarlo: mide y pesa el paquete ya embalado (con la tarima, si va en tarima) y, antes de entregarlo, toma 4 fotos con la guía pegada y visible: alto, largo y ancho con la cinta métrica, y el paquete en la báscula. Con esas fotos se puede pelear un cobro injusto.",
+    "La paquetería vuelve a pesar y medir cada paquete. Si encuentra más peso o medidas que las cotizadas, cobra la diferencia (sobrepeso) y esa diferencia la paga quien envía. Para evitarlo: mide y pesa el paquete ya embalado (con la tarima, si va en tarima) y, antes de entregarlo, sube en Mis envíos 4 fotos con la guía pegada y visible: alto, largo y ancho con la cinta métrica, y el paquete en la báscula. Sin esas fotos no se puede pelear el cobro.",
   ],
   [
     "¿Cómo pago y cuándo recibo mi guía?",
@@ -142,7 +142,7 @@ const PREGUNTAS: [string, string][] = [
   ],
   [
     "¿Puedo proteger mi envío?",
-    "Sí. Al solicitar tu envío activa “Proteger mi envío” y declara el valor real de lo que mandas (hasta $100,000 MXN, sin IVA, comprobable con factura). No es un seguro: es la SOS Protección de Skydropx, que cubre daño, faltante, extravío o robo durante el traslado. El costo depende del valor declarado y lo ves antes de pagar. No cubre artículos usados, celulares, tablets, laptops ni computadoras, equipo médico o científico, artículos prohibidos ni paquetes mal embalados.",
+    "Sí, si lo que envías es nuevo. Al solicitar tu envío activa “Proteger mi envío” y declara el valor real (hasta $100,000 MXN, sin IVA, comprobable con factura); cuesta 1.5% de ese valor. No es un seguro: es la SOS Protección de Skydropx, que cubre daño, faltante, extravío o robo durante el traslado. No cubre artículos usados, celulares, tablets, laptops ni computadoras, equipo médico o científico, artículos prohibidos ni paquetes mal embalados.",
   ],
   [
     "¿Cómo reclamo si mi envío protegido llega dañado o no llega?",
@@ -335,6 +335,14 @@ export default function EnviosHetnaPage() {
           ))}
         </div>
       </section>
+
+      <p className="mt-4 text-center text-sm text-[#6B675C]">
+        Lee las{" "}
+        <LocalizedClientLink href="/servicios/envios-hetna/condiciones" className="font-semibold text-[#C2560A] underline">
+          condiciones de Envíos HETNA
+        </LocalizedClientLink>{" "}
+        (medidas, sobrepeso, evidencia y protección).
+      </p>
 
       {/* CTA final */}
       <section className="mt-12 rounded-3xl bg-[#142033] p-8 text-center text-white sm:p-12" style={{ backgroundImage: REJILLA }}>

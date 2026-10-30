@@ -41,7 +41,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   // destino=taller: fotos del portafolio de un taller que se registra. Van
   // a otra carpeta para no mezclarlas con los planos de los clientes.
   const destino = String((req.body as Record<string, string> | undefined)?.destino || "")
-  const carpeta = destino === "taller" ? "talleres" : "solicitudes"
+  // destino=envio: evidencia de un paquete de Envíos HETNA (medidas y báscula).
+  const carpeta = destino === "taller" ? "talleres" : destino === "envio" ? "envios" : "solicitudes"
   const mes = new Date().toISOString().slice(0, 7)
   const nombre = nombreSeguro(archivo.originalname)
   const clave = `${carpeta}/${mes}/${randomBytes(12).toString("hex")}/${nombre}`

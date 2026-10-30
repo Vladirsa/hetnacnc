@@ -82,6 +82,15 @@ export const asegurarTablasEnvio = async (knex: any) => {
       t.decimal("proteccion_costo", 12, 2).nullable()
     })
   }
+  // Nuevo o usado (la protección no cubre usados), lo que aceptó el cliente y
+  // su evidencia: fotos de las medidas y de la báscula con la guía visible.
+  if (!(await knex.schema.hasColumn(T_ENVIO, "evidencia"))) {
+    await knex.schema.alterTable(T_ENVIO, (t: any) => {
+      t.text("contenido_estado").nullable() // nuevo | usado
+      t.boolean("acepta_evidencia").notNullable().defaultTo(false)
+      t.jsonb("evidencia").notNullable().defaultTo("[]")
+    })
+  }
   listo = true
 }
 
@@ -90,9 +99,9 @@ export const asegurarTablasEnvio = async (knex: any) => {
 // 25 de junio de 2025). Cubre daño, faltante, extravío y robo hasta el valor
 // declarado, con tope de $100,000 MXN; el reembolso llega en créditos a la
 // cuenta de Skydropx de HETNA y HETNA se lo regresa al cliente.
-// Skydropx cobra por tramos según el valor declarado; aquí se aproxima con un
-// porcentaje (en octubre de 2026: $670 por $60,000 = 1.12%) más el margen de
-// HETNA (20% de fábrica). La guía de Envíos HETNA se genera a mano: el aviso de
+// Skydropx cobra por tramos según el valor declarado; aquí se usa un porcentaje
+// parejo: 1.25% de base + 20% de margen de HETNA = 1.5% para el cliente (en
+// octubre de 2026 Skydropx cobró $670 por $60,000, 1.12%). La guía de Envíos HETNA se genera a mano: el aviso de
 // pago le dice a HETNA que active la protección ANTES de la recolección (después
 // del primer movimiento ya no se puede contratar). Todo se ajusta por variables.
 const num = (v: unknown, defecto: number) => {
@@ -101,7 +110,7 @@ const num = (v: unknown, defecto: number) => {
 }
 
 export const configProteccion = () => ({
-  tasa: num(process.env.PROTECCION_SOS_TASA, 670 / 60000),
+  tasa: num(process.env.PROTECCION_SOS_TASA, 0.0125),
   minimo: num(process.env.PROTECCION_SOS_MINIMO, 0),
   margen: num(process.env.PROTECCION_MARGEN, 0.2),
   valorMinimo: num(process.env.PROTECCION_VALOR_MIN, 500),
@@ -170,4 +179,33 @@ export const limpiarContacto = (c: any): Contacto | string => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out.email)) return "Revisa el correo electrónico."
   if (out.calle.length < 5) return "Escribe la calle y el número."
   return out
+}
+
+// ---------- Evidencia del paquete ----------
+// Lo que pide la paquetería para pelear un sobrepeso y Skydropx para un
+// reclamo de SOS Protección: las tres medidas y la báscula, con la guía pegada
+// y visible. Se guardan en el bucket privado (carpeta envios/).
+export const TIPOS_EVIDENCIA = {
+  alto: "Alto con cinta métrica",
+  largo: "Largo con cinta métrica",
+  ancho: "Ancho con cinta métrica",
+  bascula: "Paquete en la báscula",
+  contenido: "Contenido antes de cerrar",
+  extra: "Otra foto",
+} as const
+export type TipoEvidencia = keyof typeof TIPOS_EVIDENCIA
+export const EVIDENCIA_OBLIGATORIA: TipoEvidencia[] = ["alto", "largo", "ancho", "bascula"]
+export const EXT_EVIDENCIA = ["jpg", "jpeg", "png", "webp", "heic"]
+export type Evidencia = { tipo: TipoEvidencia; clave: string; nombre: string; tamano: number; subido: string }
+
+export const leerEvidencia = (v: unknown): Evidencia[] => {
+  const a = typeof v === "string" ? JSON.parse(v) : v
+  return Array.isArray(a) ? a : []
+}
+export const evidenciaCompleta = (ev: Evidencia[]) => EVIDENCIA_OBLIGATORIA.every((t) => ev.some((e) => e.tipo === t))
+
+// "ENV-00012" o "12" -> 12
+export const numeroFolio = (v: string) => {
+  const m = String(v || "").match(/^(?:ENV-)?0*(\d{1,9})$/i)
+  return m ? Number(m[1]) : null
 }

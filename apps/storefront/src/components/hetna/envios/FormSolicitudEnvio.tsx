@@ -54,6 +54,8 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
   const [destino, setDestino] = useState<ContactoEnvio>(vacio)
   const [contenido, setContenido] = useState("")
   const [acepta, setAcepta] = useState(false)
+  const [aceptaEvidencia, setAceptaEvidencia] = useState(false)
+  const [estado, setEstado] = useState<"nuevo" | "usado" | "">("")
   const [proteger, setProteger] = useState(false)
   const [aceptaProteccion, setAceptaProteccion] = useState(false)
   const [valor, setValor] = useState("")
@@ -64,14 +66,16 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
   const p = cot.proteccion
   const valorNum = Number(valor.replace(/[^\d.]/g, "")) || 0
   const valorOk = Boolean(p && valorNum >= p.valorMinimo && valorNum <= p.valorMaximo)
-  const costo = proteger && p && valorOk ? costoProteccion(p, valorNum) : 0
+  const protegido = proteger && estado !== "usado"
+  const costo = protegido && p && valorOk ? costoProteccion(p, valorNum) : 0
   const total = Math.round((cot.opcion.precio + costo) * 100) / 100
 
   const enviar = (e: React.FormEvent) => {
     e.preventDefault()
-    if (proteger && !valorOk && p)
+    if (!estado) return setError("Indica si lo que envías es nuevo o usado.")
+    if (protegido && !valorOk && p)
       return setError(`El valor a proteger debe ser entre ${pesos(p.valorMinimo)} y ${pesos(p.valorMaximo)} MXN.`)
-    if (proteger && !aceptaProteccion) return setError("Acepta las condiciones de la protección o desmárcala.")
+    if (protegido && !aceptaProteccion) return setError("Acepta las condiciones de la protección o desmárcala.")
     iniciar(async () => {
       setError("")
       const r = await solicitarEnvio({
@@ -81,7 +85,9 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
         destino,
         contenido,
         acepta,
-        proteccion_valor: proteger ? valorNum : undefined,
+        acepta_evidencia: aceptaEvidencia,
+        contenido_estado: estado,
+        proteccion_valor: protegido ? valorNum : undefined,
       })
       if (r.ok) {
         window.location.href = r.pago_url
@@ -110,18 +116,64 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
           className={CAMPO}
           placeholder="Ej. Piezas de MDF cortadas, fresas para router…"
         />
-        <label className="mt-4 flex items-start gap-2 text-sm text-[#40403A]">
+        <fieldset className="mt-4">
+          <legend className={ETIQUETA}>Lo que envías es…</legend>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ["nuevo", "Nuevo"],
+                ["usado", "Usado o seminuevo"],
+              ] as const
+            ).map(([v, t]) => (
+              <label
+                key={v}
+                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold ${
+                  estado === v ? "border-[#C2560A] bg-[#FFF1E6] text-[#142033]" : "border-[#E7E4DC] text-[#40403A]"
+                }`}
+              >
+                <input type="radio" name="estado" checked={estado === v} onChange={() => setEstado(v)} required className="accent-[#C2560A]" />
+                {t}
+              </label>
+            ))}
+          </div>
+          {estado === "usado" && (
+            <p className="mt-2 text-xs text-[#6B675C]">Los artículos usados o seminuevos se pueden enviar, pero no se pueden proteger.</p>
+          )}
+        </fieldset>
+        <div className="mt-4 rounded-xl border border-[#F2C98F] bg-[#FFF8EE] p-3 text-sm text-[#5A3A12]">
+          <strong>Aviso de cobros extra:</strong> la paquetería vuelve a pesar y medir el paquete. Si encuentra más peso o medidas que las
+          cotizadas ({cot.paquete.largo}×{cot.paquete.ancho}×{cot.paquete.alto} cm, {cot.paquete.peso} kg), cobra la diferencia y esa diferencia
+          la pagas tú.
+        </div>
+        <label className="mt-3 flex items-start gap-2 text-sm text-[#40403A]">
           <input type="checkbox" checked={acepta} onChange={(e) => setAcepta(e.target.checked)} className="mt-1" required />
           <span>
-            Confirmo que las medidas y el peso son del paquete ya embalado y que no contiene artículos prohibidos por la paquetería.
-            Si la paquetería detecta más peso o medidas, cobra la diferencia (sobrepeso) y esa diferencia la pago yo.
+            Confirmo que las medidas y el peso son los del paquete ya embalado y que no contiene artículos prohibidos por la paquetería. Acepto
+            pagar los cobros extra (sobrepeso) si el paquete no coincide con lo cotizado.
+          </span>
+        </label>
+        <label className="mt-3 flex items-start gap-2 text-sm text-[#40403A]">
+          <input type="checkbox" checked={aceptaEvidencia} onChange={(e) => setAceptaEvidencia(e.target.checked)} className="mt-1" required />
+          <span>
+            Tengo evidencia fotográfica de las medidas (alto, largo y ancho con cinta métrica) y del peso en báscula, y la subiré en{" "}
+            <strong>Mis envíos</strong> con la guía visible antes de entregar el paquete. Sin esa evidencia no se puede disputar un sobrepeso
+            ni reclamar la protección.{" "}
+            <a href="/mx/servicios/envios-hetna/condiciones" target="_blank" className="font-semibold text-[#C2560A] underline">
+              Condiciones de Envíos HETNA
+            </a>
           </span>
         </label>
       </div>
       {p && (
-        <div className={`rounded-2xl border p-4 sm:p-5 ${proteger ? "border-[#1E7B3A] bg-[#F3FAF5]" : "border-[#E7E4DC] bg-white"}`}>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input type="checkbox" checked={proteger} onChange={(e) => setProteger(e.target.checked)} className="mt-1 h-4 w-4 accent-[#1E7B3A]" />
+        <div className={`rounded-2xl border p-4 sm:p-5 ${protegido ? "border-[#1E7B3A] bg-[#F3FAF5]" : "border-[#E7E4DC] bg-white"} ${estado === "usado" ? "opacity-60" : ""}`}>
+          <label className={`flex items-start gap-3 ${estado === "usado" ? "cursor-not-allowed" : "cursor-pointer"}`}>
+            <input
+              type="checkbox"
+              checked={protegido}
+              disabled={estado === "usado"}
+              onChange={(e) => setProteger(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-[#1E7B3A]"
+            />
             <span>
               <strong className="block text-[15px] text-[#142033]">Proteger mi envío</strong>
               <span className="text-sm text-[#40403A]">
@@ -134,7 +186,8 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
               </span>
             </span>
           </label>
-          {proteger && (
+          {estado === "usado" && <p className="mt-2 text-sm font-semibold text-[#8A1C14]">No disponible para artículos usados o seminuevos.</p>}
+          {protegido && (
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <label className={ETIQUETA} htmlFor="valor">Valor de lo que envías (MXN)</label>

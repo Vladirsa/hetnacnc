@@ -11,7 +11,9 @@ import {
   configProteccion,
   costoProteccion,
   crearPagoEnvio,
+  evidenciaCompleta,
   folioEnvio,
+  leerEvidencia,
   limpiarContacto,
 } from "../../../../../lib/envios"
 
@@ -31,6 +33,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       origen: e.origen, destino: e.destino, pago_url: e.estado === "pendiente_pago" ? e.pago_url : null,
       guia: e.guia, created_at: e.created_at,
       proteccion_valor: e.proteccion_valor ? Number(e.proteccion_valor) : null,
+      contenido_estado: e.contenido_estado || null,
+      paquete: e.paquete,
+      evidencia: leerEvidencia(e.evidencia).map(({ tipo, nombre, subido }) => ({ tipo, nombre, subido })),
+      evidencia_completa: evidenciaCompleta(leerEvidencia(e.evidencia)),
     })),
   })
 }
@@ -59,6 +65,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const contenido = String(b.contenido || "").trim().slice(0, 200)
   if (contenido.length < 3) return res.status(400).json({ message: "Describe qué contiene el paquete." })
   if (b.acepta !== true) return res.status(400).json({ message: "Debes aceptar las condiciones del envío." })
+  if (b.acepta_evidencia !== true)
+    return res.status(400).json({ message: "Debes confirmar que tienes la evidencia fotográfica de las medidas y el peso." })
+  const contenidoEstado = b.contenido_estado === "nuevo" || b.contenido_estado === "usado" ? b.contenido_estado : null
+  if (!contenidoEstado) return res.status(400).json({ message: "Indica si lo que envías es nuevo o usado." })
 
   // Protección opcional: valor declarado del contenido -> costo con el margen de HETNA
   let proteccionValor: number | null = null
@@ -70,6 +80,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       return res.status(400).json({
         message: `El valor a proteger debe ser entre $${cfg.valorMinimo.toLocaleString("es-MX")} y $${cfg.valorMaximo.toLocaleString("es-MX")} MXN.`,
       })
+    if (contenidoEstado === "usado")
+      return res.status(400).json({ message: "La protección no cubre artículos usados o seminuevos." })
     proteccionValor = v
     proteccionCosto = costoProteccion(v)
   }
@@ -91,6 +103,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       precio: total,
       proteccion_valor: proteccionValor,
       proteccion_costo: proteccionValor ? proteccionCosto : null,
+      contenido_estado: contenidoEstado,
+      acepta_evidencia: true,
     })
     .returning(["folio"])
   const folio = folioEnvio(fila0.folio ?? fila0)

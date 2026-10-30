@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sendEmail } from "../../../lib/resend"
-import { consultarPago, esc, fila, marco } from "../../../lib/licitacion"
+import { STORE_URL, consultarPago, esc, fila, marco } from "../../../lib/licitacion"
 import { T_ENVIO, asegurarTablasEnvio, folioEnvio } from "../../../lib/envios"
 
 // Aviso de Mercado Pago para pagos de Envíos HETNA (external_reference "envio:<id>").
@@ -79,6 +79,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         subject: `[${folio}] Recibimos tu pago de envío`,
         html: marco("¡Gracias! Recibimos tu pago", resumen + direcciones +
           `<p style="color:#40403A;margin-top:16px">Estamos generando tu guía. Te la enviaremos por correo con el número de rastreo.</p>` +
+          `<p style="color:#40403A;margin-top:12px"><strong>Antes de entregar el paquete:</strong> pega la guía y toma 4 fotos con la guía visible ` +
+          `(alto, largo y ancho con la cinta métrica, y el paquete en la báscula). Súbelas en ` +
+          `<a href="${STORE_URL}/mx/user/envios" style="color:#C2560A">Mis envíos</a>: si la paquetería reporta sobrepeso, ` +
+          `son la prueba para pelearlo.</p>` +
           (protegido
             ? `<p style="color:#40403A;margin-top:12px"><strong>Tu envío va protegido.</strong> Si llega dañado, incompleto o se extravía: ` +
               `si el empaque viene abierto o alterado, recházalo con la paquetería; toma fotos y video del paquete con la guía visible y del contenido, ` +
