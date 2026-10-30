@@ -10,6 +10,8 @@ import type { Fuente } from "@/lib/generador/letreros"
 import { FORMAS_LLAVERO, type FormaLlavero, hacerLlavero } from "@/lib/generador/llaveros"
 import { dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
+import { Visor3D } from "./Visor3D"
+
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -202,11 +204,11 @@ export function GeneradorLlaveros() {
             <Opcion activa={vista === "2d"} onClick={() => setVista("2d")}>Para láser (corte y grabado)</Opcion>
             <Opcion activa={vista === "3d"} onClick={() => setVista("3d")}>Para impresión 3D</Opcion>
           </div>
-          <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[260px]">
+          <div className={`bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden flex items-center justify-center min-h-[260px] ${listo && vista === "3d" ? "" : "p-4"}`}>
             {!listo ? (
               <span className="text-[14px] text-[#6B6A63]">{cargando ? "Cargando tipografía..." : "Escribe un texto"}</span>
             ) : vista === "3d" ? (
-              <div className="w-full"><Malla3D tris={r!.malla.tris} alto={380} /></div>
+              <Visor3D alto="h-[380px] lg:h-[480px]"><Malla3D tris={r!.malla.tris} /></Visor3D>
             ) : (
               <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[380px]" dangerouslySetInnerHTML={{ __html: vista2d }} />
             )}
