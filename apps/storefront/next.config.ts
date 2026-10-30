@@ -12,8 +12,10 @@ import type { NextConfig } from 'next';
 //
 // Lo que se fue agregando según el registro real: TalkJS (mensajería), Google
 // Analytics / Tag Manager, Stripe y Mercado Pago (pagos), Facebook (pixel),
-// jsDelivr (scripts y tipografías del generador de letreros) y 'unsafe-eval',
-// que lo usa alguna librería de estadísticas.
+// jsDelivr (scripts y tipografías del generador de letreros), cdnjs (three.js
+// del Laboratorio CAM, /cam-lab), www.google.com.mx (audiencias de Google Ads
+// para visitantes de México) y 'unsafe-eval', que lo usa alguna librería de
+// estadísticas.
 //
 // CUIDADO con los comodines: en CSP, `https://*.analytics.google.com` NO cubre
 // `https://analytics.google.com`. El comodín exige un subdominio. Por eso GA4 y
@@ -26,11 +28,11 @@ const politicaCSP = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' mientras no usemos nonces. Lo demás son
   // servicios que la tienda de verdad carga.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://js.stripe.com https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://sdk.mercadopago.com https://http2.mlstatic.com https://connect.facebook.net https://cdn.talkjs.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://js.stripe.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
-  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://stats.g.doubleclick.net https://*.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
+  "connect-src 'self' https://hetnacnc.com https://*.hetnacnc.com https://cloudflareinsights.com https://*.mercadopago.com https://*.mercadolibre.com https://www.facebook.com https://connect.facebook.net https://*.talkjs.com wss://*.talkjs.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.google.com.mx https://stats.g.doubleclick.net https://*.doubleclick.net https://api.stripe.com https://*.stripe.com https://*.stripe.network https://cdn.jsdelivr.net",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mercadopago.com https://*.mercadolibre.com https://*.talkjs.com https://www.facebook.com https://js.stripe.com https://*.stripe.com https://*.stripe.network",
   "media-src 'self' blob: https:",
   "object-src 'none'",

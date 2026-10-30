@@ -169,8 +169,11 @@ for ruta in "/" "/mx/taller" "/mx/herramientas-cnc"; do
     # El `|| true` es para que un fallo de curl no aborte el guion (set -e).
     codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITIO$ruta" 2>/dev/null || true)"
     [ -n "$codigo" ] || codigo="000"
-    # 200 y 307 son normales: 307 es el redirect de idioma o el envío al login.
-    if [ "$codigo" = "200" ] || [ "$codigo" = "307" ]; then
+    # Cualquier 2xx o 3xx es un sitio que responde: 307 es el redirect de
+    # idioma o el envío al login, y 308 una dirección que se mudó (el 30 de
+    # octubre /mx/taller empezó a dar 308 y el guion dio por caído un sitio
+    # que estaba bien). Con el API caído, la tienda da 500, no un redirect.
+    if [[ "$codigo" =~ ^[23][0-9][0-9]$ ]]; then
       listo=1
       break
     fi
@@ -190,6 +193,22 @@ for ruta in "/" "/mx/taller" "/mx/herramientas-cnc"; do
     fallas=$((fallas + 1))
   fi
 done
+
+# El API se revisa directo, sin pasar por la tienda: así un 500 de la tienda
+# se puede distinguir de un API que no levantó.
+inicio="$(date +%s)"
+while :; do
+  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:9000/health 2>/dev/null || true)"
+  [ "$codigo" = "200" ] && break
+  [ $(( $(date +%s) - inicio )) -ge "$ESPERA_MAXIMA" ] && break
+  sleep "$ESPERA_ENTRE"
+done
+if [ "$codigo" = "200" ]; then
+  verde "   ✓ API (127.0.0.1:9000/health) → 200"
+else
+  rojo  "   ✗ API (127.0.0.1:9000/health) → ${codigo:-000}"
+  fallas=$((fallas + 1))
+fi
 
 if [ "$fallas" -gt 0 ]; then
   rojo ""
