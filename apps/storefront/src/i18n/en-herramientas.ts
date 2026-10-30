@@ -126,4 +126,10 @@ export const EN_HERRAMIENTAS: Record<string, string> = {
   "Entra para escanear": "Sign in to scan",
   "El escaneo se guarda en tu cuenta, por eso necesitas entrar. Si no tienes cuenta, la creas en un minuto.":
     "The scan is saved to your account, so you need to sign in. If you don't have an account, it takes a minute to create one.",
+  // Planes del Cotizador (app-taller.ts y CotizadorLanding)
+  "5 cotizaciones al mes": "5 quotes per month",
+  "PDF con marca de agua HETNA CNC": "PDF with HETNA CNC watermark",
+  "Cotización profesional en PDF con tu logo, sin marca de agua": "Professional PDF quote with your logo, no watermark",
+  "Sube DXF, SVG, STL u OBJ: plano con medidas en la cotización": "Upload DXF, SVG, STL or OBJ: dimensioned drawing in the quote",
+  "Cotizaciones (5 al mes)": "Quotes (5 per month)",
 }

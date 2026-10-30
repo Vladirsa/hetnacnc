@@ -31,7 +31,7 @@ const VINCULOS = [
   { t: "Foro y comunidad", d: "Pregunta y comparte con otros talleres de México desde la app.", i: "💬" },
 ]
 
-const SIEMPRE_GRATIS = ["Cotizaciones (10 al mes)", "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
+const SIEMPRE_GRATIS = ["Cotizaciones (5 al mes)", "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
 
 const PREGUNTAS = [
   ["¿Es la misma cuenta que en hetnacnc.com?", "La app tiene su propia cuenta de taller (correo y contraseña) y se conecta con la plataforma para pagos, envíos, tienda y trabajos. Si ya vendes en hetnacnc.com, registra tu taller con el mismo correo para que te lo vinculemos."],
