@@ -40,7 +40,7 @@ export const TiendaBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
 // de sesión: sin cuenta no se entra.
 export const CotizadorBoton = () => (
   <a
-    href="/cotizador/"
+    href="/api/app/entrar-cotizador"
     aria-label="Cotizador para talleres"
     title="Cotizador para talleres"
     className="flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"

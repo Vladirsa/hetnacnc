@@ -28,7 +28,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   {
     titulo: "Fabricación y herramientas",
     items: [
-      { label: "Cotizador para talleres", href: "/cotizador/", icono: "cotizador", externo: true },
+      { label: "Cotizador para talleres", href: "/api/app/entrar-cotizador", icono: "cotizador", externo: true },
       { label: "Escaneos 3D", href: "/user/escaneos", icono: "escaneos" },
       { label: "Trabajos CAM", href: "/user/cam", icono: "cam" },
       { label: "Mis créditos", href: "/user/creditos", icono: "creditos" },
