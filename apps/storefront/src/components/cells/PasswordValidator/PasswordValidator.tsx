@@ -66,7 +66,7 @@ export const PasswordValidator = ({
           newPasswordError['8chars'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> At least 8 characters
+        <CheckCircle /> Al menos 8 caracteres
       </p>
       <p
         className={cn(
@@ -74,7 +74,7 @@ export const PasswordValidator = ({
           newPasswordError['lower'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> One lowercase letter
+        <CheckCircle /> Una minúscula
       </p>
       <p
         className={cn(
@@ -82,7 +82,7 @@ export const PasswordValidator = ({
           newPasswordError['upper'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> One uppercase letter
+        <CheckCircle /> Una mayúscula
       </p>
       <p
         className={cn(
@@ -90,7 +90,7 @@ export const PasswordValidator = ({
           newPasswordError['digit'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> One number
+        <CheckCircle /> Un número
       </p>
       <p
         className={cn(
@@ -98,7 +98,7 @@ export const PasswordValidator = ({
           newPasswordError['symbol'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> One special character
+        <CheckCircle /> Un símbolo (por ejemplo _ . ! @ #)
       </p>
     </Card>
   );

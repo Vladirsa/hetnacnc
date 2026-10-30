@@ -25,12 +25,31 @@ const leerVolver = () => {
   return v && v.startsWith("/") && !v.startsWith("//") ? v : null
 }
 
+// Lada por país. México primero (casi todos los clientes); EE. UU. y Canadá
+// comparten +1.
+const LADAS: [string, string][] = [
+  ["+52", "🇲🇽 MX"],
+  ["+1", "🇺🇸 EE. UU."],
+  ["+1", "🇨🇦 Canadá"],
+  ["+502", "🇬🇹 GT"],
+  ["+503", "🇸🇻 SV"],
+  ["+504", "🇭🇳 HN"],
+  ["+506", "🇨🇷 CR"],
+  ["+507", "🇵🇦 PA"],
+  ["+57", "🇨🇴 CO"],
+  ["+51", "🇵🇪 PE"],
+  ["+56", "🇨🇱 CL"],
+  ["+54", "🇦🇷 AR"],
+  ["+34", "🇪🇸 ES"],
+]
+
 export const RegisterForm = () => {
   const methods = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
+      lada: "+52",
       phone: "",
       email: "",
       password: "",
@@ -72,20 +91,27 @@ const Form = () => {
     formData.append("password", data.password)
     formData.append("first_name", data.firstName)
     formData.append("last_name", data.lastName)
-    formData.append("phone", data.phone)
+    // Con la lada del país: "+52 2461217072". Así se distingue México de
+    // EE. UU. (+1) y de otros países al llamar o mandar WhatsApp.
+    formData.append("phone", `${data.lada} ${data.phone}`)
 
-    const res = await signup(formData)
+    let res: Awaited<ReturnType<typeof signup>>
+    try {
+      res = await signup(formData)
+    } catch {
+      // Casi siempre: la página se abrió antes de una actualización del sitio
+      toast.error({ title: "No se pudo crear la cuenta. Recarga la página e intenta de nuevo." })
+      return
+    }
 
-    if (res && res?.id) {
+    if (res && typeof res === "object" && res.id) {
       window.location.href = leerVolver() || "/user"
       return
     }
 
-    if (res && !res?.id) {
+    if (res) {
 
-      // Temporary solution. Check also for status code when it's fixed by backend
-      const errorMessage = res.toLowerCase().includes('error: identity with email already exists') ? 'It seems the email you entered is already associated with another account. Please log in instead.' : res
-      toast.error({ title: errorMessage})
+      toast.error({ title: String(res) })
     }
   }
 
@@ -123,14 +149,35 @@ const Form = () => {
               data-testid="register-email-input"
               {...register("email")}
             />
-            <LabeledInput
-              className="md:w-1/2"
-              label="Teléfono"
-              placeholder="Tu teléfono"
-              error={errors.phone as FieldError}
-              data-testid="register-phone-input"
-              {...register("phone")}
-            />
+            <label className="label-sm block md:w-1/2">
+              <p className={errors.phone || errors.lada ? "text-negative" : undefined}>Teléfono (WhatsApp)</p>
+              <div className="mt-2 flex gap-2">
+                <select
+                  aria-label="Lada del país"
+                  className={`w-[118px] shrink-0 rounded-sm border bg-component-secondary px-2 py-[12px] focus:border-primary focus:outline-none ${errors.lada ? "border-negative" : ""}`}
+                  data-testid="register-lada-select"
+                  {...register("lada")}
+                >
+                  {LADAS.map(([lada, pais]) => (
+                    <option key={pais} value={lada}>
+                      {pais} {lada}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  placeholder="10 dígitos"
+                  className={`w-full min-w-0 rounded-sm border bg-component-secondary px-[16px] py-[12px] focus:border-primary focus:outline-none ${errors.phone ? "border-negative" : ""}`}
+                  data-testid="register-phone-input"
+                  {...register("phone")}
+                />
+              </div>
+              {(errors.phone || errors.lada) && (
+                <p className="label-sm text-negative">{(errors.phone || errors.lada)?.message as string}</p>
+              )}
+            </label>
           </div>
           <div>
             <LabeledInput

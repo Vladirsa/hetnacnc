@@ -54,75 +54,114 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes;
 };
 
+// ── Registro e inicio de sesión ──────────────────────────────────────────────
+// En Medusa la cuenta son dos cosas: la "identidad" (correo + contraseña) y el
+// "cliente" (nombre, teléfono, pedidos). Si el registro se corta entre las dos
+// (se reinició el servidor, se cayó la conexión), queda una identidad sin
+// cliente: el correo "ya existe" para registrarse, pero al entrar la cuenta no
+// sirve y la tienda vuelve a pedir iniciar sesión. Las funciones de abajo
+// reparan ese caso solas: entran con la contraseña y crean el cliente que faltó.
+
+const entrarConCorreo = (email: string, password: string) =>
+  (sdk.auth.$actorType.$authProvider
+    .mutate({ $actorType: 'customer', $authProvider: 'emailpass', email, password } as never) as unknown as Promise<{ token: string }>)
+    .then(({ token }) => token);
+
+const clienteDeLaSesion = async (): Promise<HttpTypes.StoreCustomer | null> => {
+  const headers = { ...(await getAuthHeaders()) };
+  return (sdk.store.customers.me.query({ fetchOptions: { headers, cache: 'no-store' } } as never) as unknown as Promise<{
+    customer: HttpTypes.StoreCustomer;
+  }>)
+    .then(({ customer }) => customer ?? null)
+    .catch(() => null);
+};
+
+/** Con la sesión ya puesta: si no hay cliente, lo crea y vuelve a entrar para que el token lo incluya. */
+async function asegurarCliente(
+  email: string,
+  password: string,
+  datos: { first_name?: string; last_name?: string; phone?: string }
+): Promise<HttpTypes.StoreCustomer | null> {
+  const existente = await clienteDeLaSesion();
+  if (existente) return existente;
+
+  const headers = { ...(await getAuthHeaders()) };
+  const { customer } = await (sdk.store.customers.mutate({
+    email,
+    ...datos,
+    fetchOptions: { headers }
+  } as never) as unknown as Promise<{ customer: HttpTypes.StoreCustomer }>);
+
+  // El token de antes no traía al cliente: uno nuevo que sí
+  await setAuthToken(await entrarConCorreo(email, password));
+  return customer;
+}
+
+const mensajeDeError = (e: unknown) => String((e as Error)?.message || e || '');
+
 export async function signup(formData: FormData) {
   const password = formData.get('password') as string;
-  const customerForm = {
-    email: formData.get('email') as string,
+  const email = String(formData.get('email') || '').trim().toLowerCase();
+  const datos = {
     first_name: formData.get('first_name') as string,
     last_name: formData.get('last_name') as string,
     phone: formData.get('phone') as string
   };
 
   try {
-    const token = await (sdk.auth.$actorType.$authProvider.register
-      .mutate({
-        $actorType: 'customer',
-        $authProvider: 'emailpass',
-        email: customerForm.email,
-        password: password
-      } as never) as unknown as Promise<{ token: string }>)
-      .then(({ token }) => token);
+    let token: string;
+    try {
+      token = await (sdk.auth.$actorType.$authProvider.register
+        .mutate({
+          $actorType: 'customer',
+          $authProvider: 'emailpass',
+          email,
+          password
+        } as never) as unknown as Promise<{ token: string }>)
+        .then(({ token }) => token);
+    } catch (e) {
+      if (!/already exists/i.test(mensajeDeError(e))) throw e;
+      // El correo ya tiene identidad: puede ser un registro que se quedó a
+      // medias. Con la misma contraseña se entra y se termina.
+      try {
+        token = await entrarConCorreo(email, password);
+      } catch {
+        return 'Ese correo ya tiene una cuenta. Inicia sesión o usa "¿Olvidaste tu contraseña?".';
+      }
+    }
 
-    await setAuthToken(token as string);
-
-    const headers = {
-      ...(await getAuthHeaders())
-    };
-
-    const { customer: createdCustomer } = await (sdk.store.customers.mutate({
-      ...customerForm,
-      fetchOptions: { headers }
-    } as never) as unknown as Promise<{ customer: HttpTypes.StoreCustomer }>);
-
-    const loginToken = await (sdk.auth.$actorType.$authProvider
-      .mutate({
-        $actorType: 'customer',
-        $authProvider: 'emailpass',
-        email: customerForm.email,
-        password
-      } as never) as unknown as Promise<{ token: string }>)
-      .then(({ token }) => token);
-
-    await setAuthToken(loginToken as string);
+    await setAuthToken(token);
+    const cliente = await asegurarCliente(email, password, datos);
 
     const customerCacheTag = await getCacheTag('customers');
     revalidateTag(customerCacheTag);
+    await transferCart().catch(() => undefined);
 
-    await transferCart();
-
-    return createdCustomer;
-  } catch (error: any) {
-    return error.toString();
+    return cliente;
+  } catch (error: unknown) {
+    return mensajeDeError(error) || 'No se pudo crear la cuenta. Intenta de nuevo.';
   }
 }
 
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string;
+  const email = String(formData.get('email') || '').trim().toLowerCase();
   const password = formData.get('password') as string;
 
   try {
-    const token = await (sdk.auth.$actorType.$authProvider
-      .mutate({ $actorType: 'customer', $authProvider: 'emailpass', email, password } as never) as unknown as Promise<{ token: string }>)
-      .then(({ token }) => token);
-    await setAuthToken(token as string);
+    await setAuthToken(await entrarConCorreo(email, password));
+    // Cuenta que quedó a medias (identidad sin cliente): se completa aquí
+    await asegurarCliente(email, password, {}).catch(() => null);
     const customerCacheTag = await getCacheTag('customers');
     revalidateTag(customerCacheTag);
 
     return { success: true };
   } catch (error: unknown) {
+    const m = mensajeDeError(error);
     return {
       success: false,
-      message: (error as Error)?.message || 'Unable to log in. Please try again.'
+      message: /invalid email or password|unauthorized/i.test(m)
+        ? 'Correo o contraseña incorrectos.'
+        : m || 'No se pudo iniciar sesión. Intenta de nuevo.'
     };
   }
 }
