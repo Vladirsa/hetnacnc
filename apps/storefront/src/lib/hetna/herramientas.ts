@@ -70,7 +70,7 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
     herramientas: [
       { nombre: "Calculadoras de precio", texto: "Router CNC, corte láser, plasma e impresión 3D: el precio de tu pieza al momento.", href: "/cotizar", icono: "calculadora", acceso: "gratis" },
       { nombre: "App HETNA CNC para talleres", texto: "Cotiza con tus costos, cobra en línea y controla tu taller desde el celular. Se instala desde el navegador.", href: "/servicios/cotizador-cnc", icono: "cotizador", acceso: "plan" },
-      { nombre: "Calculadoras CNC", texto: "Velocidad de corte, avance por diente, revoluciones y más.", href: "/servicios/copiloto-ia-cnc?vista=calculadoras", icono: "calculadora", acceso: "gratis" },
+      { nombre: "Calculadora CNC profesional", texto: "RPM, avance y pasadas para router; potencia y velocidad para láser CO₂, fibra, UV, plasma e impresión 3D, según tu máquina.", href: "/calculadora-cnc", icono: "calculadora", acceso: "gratis" },
     ],
   },
   {
