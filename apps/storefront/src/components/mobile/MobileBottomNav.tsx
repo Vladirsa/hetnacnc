@@ -11,7 +11,7 @@ const USER = { href: '/user', label: 'Cuenta', d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4
 // fuera del enrutado por idioma): por eso es un <a> normal y no un enlace
 // localizado. La app tiene su propio inicio de sesión: sin cuenta no entra.
 // Las notificaciones siguen en la campanita del encabezado.
-const COTIZADOR = { href: '/cotizador/', label: 'Cotizador', d: 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01' };
+const COTIZADOR = { href: '/api/app/entrar-cotizador', label: 'Cotizador', d: 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01' };
 
 const BASE = 'relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium';
 

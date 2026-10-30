@@ -16,6 +16,7 @@ import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/mi
 import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
+import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -59,5 +60,6 @@ export default defineMiddlewares({
         },
         ...storeForoMiddlewares,
         ...storeRastreoMiddlewares,
+        ...storeCotizadorVinculoMiddlewares,
     ],
 });
