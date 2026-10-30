@@ -2,9 +2,11 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { EscanearPieza } from "@/components/hetna/disenar/EscanearPieza"
+import { GeneradorAnidado } from "@/components/hetna/generador/GeneradorAnidado"
 import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
 import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
 import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
+import { GeneradorExtruir } from "@/components/hetna/generador/GeneradorExtruir"
 import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
 import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
@@ -29,6 +31,8 @@ const GENERADORES: Record<string, () => React.JSX.Element> = {
   "litofania-relieve": GeneradorRelieve,
   "patrones-radiales": GeneradorPatron,
   convertidor: GeneradorConvertidor,
+  "svg-a-stl": GeneradorExtruir,
+  "anidado-piezas": GeneradorAnidado,
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

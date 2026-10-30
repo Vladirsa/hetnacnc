@@ -20,6 +20,18 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M5 9l2-5h10l2 5M12 4v5" />
     </>
   ),
+  extruir: (
+    <>
+      <path d="M4 15l8-4 8 4-8 4z" />
+      <path d="M4 15v-4l8-4 8 4v4M12 11V7" />
+    </>
+  ),
+  anidado: (
+    <>
+      <path d="M3 4h18v16H3z" />
+      <path d="M6 7h5v5H6zM13 7h5v3h-5zM6 14h4v3H6zM12 12l3 5h3z" />
+    </>
+  ),
   convertir: (
     <>
       <path d="M4 7h13l-3-3M20 17H7l3 3" />

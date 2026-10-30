@@ -114,6 +114,26 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Convierte gratis archivos DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
   },
   {
+    slug: "svg-a-stl",
+    nombre: "SVG o DXF a STL",
+    texto: "Extruye un logotipo, nombre o silueta en 3D, con placa base para llaveros.",
+    icono: "extruir",
+    acceso: "gratis",
+    titulo: "Convertir SVG o DXF a STL gratis: extruir logotipos y letras en 3D",
+    descripcion:
+      "Sube un SVG o DXF, dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Placa base opcional para llaveros, placas y letreros; modo espejo para sellos. Sin subir tu archivo.",
+  },
+  {
+    slug: "anidado-piezas",
+    nombre: "Anidado de piezas",
+    texto: "Acomoda muchas piezas en tus hojas de material para desperdiciar menos.",
+    icono: "anidado",
+    acceso: "gratis",
+    titulo: "Anidado de piezas gratis: acomodar DXF en hojas para láser, router y plasma",
+    descripcion:
+      "Sube tus piezas en DXF o SVG, di cuántas de cada una y el tamaño de la hoja: te las acomodamos con giro de 90° y separación de kerf, y descargas el DXF con todas las hojas listo para cortar.",
+  },
+  {
     slug: ESCANEAR,
     nombre: "Escaneo 3D de piezas",
     texto: "Vista previa gratis; el escaneo que mide de verdad se paga con créditos.",
