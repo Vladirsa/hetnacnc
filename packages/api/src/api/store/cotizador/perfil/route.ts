@@ -3,6 +3,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { COTIZADOR_MODULE } from "../../../../modules/cotizador"
 import CotizadorModuleService from "../../../../modules/cotizador/service"
 import { resumenPlan } from "../../../../lib/cotizador-plan"
+import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "../../../../lib/cuentas-casa"
 import { costosDeTaller } from "../../../../lib/cotizador-config"
 
 // Campos que el taller puede escribir. Quedan fuera a propósito:
@@ -49,12 +50,16 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const cotizadorModuleService = req.scope.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
 
   const [perfil] = await cotizadorModuleService.listTallerPerfils({ customer_id: customerId })
+  let plan = perfil ? resumenPlan(perfil) : null
+  if (plan && (await esCuentaDeLaCasa(req.scope, customerId))) {
+    plan = { ...plan, plan: PLAN_DE_LA_CASA, limite: null, prueba_dias: 0 }
+  }
 
   res.json({
     perfil: perfil ?? null,
     // Lo que la pantalla necesita para decir "prueba, 8 días" o "3 de 10
     // cotizaciones del mes" sin tener que reimplementar la regla del plan.
-    plan: perfil ? resumenPlan(perfil) : null,
+    plan,
     // Los costos de referencia con los que cotiza quien no capturó los suyos.
     // Van aquí para que la pantalla de captura pueda mostrarlos como
     // sugerencia sin tener una copia propia que se desincronice: la verdad

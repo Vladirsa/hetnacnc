@@ -40,6 +40,7 @@ export default async function CreditosPage({
   }
 
   const saldo = res.ok ? res.datos.saldo : 0
+  const ilimitado = res.ok && res.datos.ilimitado
   const porEscaneo = res.ok ? res.datos.creditos_por_escaneo : 5
   const alcanzan = Math.floor(saldo / Math.max(porEscaneo, 1))
 
@@ -69,13 +70,15 @@ export default async function CreditosPage({
           <section className="rounded-[14px] border border-[#E7E4DC] bg-[#142033] p-6 text-white">
             <p className="text-[12px] uppercase tracking-wide text-[#9FB0C9]">Tu saldo</p>
             <p className="mt-1 text-[40px] font-bold leading-none">
-              {saldo}{" "}
+              {ilimitado ? "∞" : saldo}{" "}
               <span className="text-[18px] font-semibold text-[#9FB0C9]">
-                {saldo === 1 ? "crédito" : "créditos"}
+                {ilimitado ? "créditos ilimitados" : saldo === 1 ? "crédito" : "créditos"}
               </span>
             </p>
             <p className="mt-2 text-[14px] text-[#9FB0C9]">
-              {alcanzan > 0
+              {ilimitado
+                ? "Cuenta de HETNA: el escaneo 3D, el cotizador y las descargas no te descuentan nada."
+                : alcanzan > 0
                 ? `Te alcanza para ${alcanzan} ${alcanzan === 1 ? "escaneo 3D" : "escaneos 3D"} (${porEscaneo} créditos cada uno).`
                 : `Un escaneo 3D cuesta ${porEscaneo} créditos. Todavía no te alcanza.`}
             </p>

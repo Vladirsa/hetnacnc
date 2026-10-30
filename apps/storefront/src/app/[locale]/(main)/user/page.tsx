@@ -58,6 +58,7 @@ export default async function MiCuenta() {
     sesionForo().catch(() => null),
   ])
   const nombre = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email
+  const ilimitado = Boolean(saldo && saldo.ok && saldo.datos.ilimitado)
   const creditos = saldo && saldo.ok ? saldo.datos.saldo : null
   const listaEnvios = envios.ok ? envios.envios : []
   const sobrepesos = envios.ok ? envios.sobrepesos.filter((s) => s.pago_url) : []
@@ -129,7 +130,7 @@ export default async function MiCuenta() {
       texto: "Saldo para el escaneo 3D y el cotizador; recarga cuando quieras.",
       href: "/user/creditos",
       icono: "creditos",
-      dato: creditos != null ? `${creditos} ${creditos === 1 ? "crédito" : "créditos"}` : undefined,
+      dato: ilimitado ? "Ilimitados" : creditos != null ? `${creditos} ${creditos === 1 ? "crédito" : "créditos"}` : undefined,
     },
     { titulo: "Mensajes con talleres", texto: "Tus conversaciones con los talleres sobre productos y pedidos.", href: "/mensajes", icono: "mensajes" },
     { titulo: "Talleres que sigo", texto: "Novedades, productos y trabajos de los talleres que sigues.", href: "/foro-cnc/red?ver=siguiendo", icono: "siguiendo" },
@@ -173,8 +174,8 @@ export default async function MiCuenta() {
             </div>
             {creditos != null && (
               <LocalizedClientLink href="/user/creditos" className="rounded-[12px] bg-[#F4F1EA] px-4 py-2 text-center hover:bg-[#EDE8DC]">
-                <span className="block text-[20px] font-extrabold text-[#142033]">{creditos}</span>
-                <span className="text-[12px] text-[#6B6A63]">créditos</span>
+                <span className="block text-[20px] font-extrabold text-[#142033]">{ilimitado ? "∞" : creditos}</span>
+                <span className="text-[12px] text-[#6B6A63]">{ilimitado ? "ilimitados" : "créditos"}</span>
               </LocalizedClientLink>
             )}
           </section>

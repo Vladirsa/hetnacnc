@@ -3,6 +3,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { COTIZADOR_MODULE } from "../../../modules/cotizador"
 import CotizadorModuleService from "../../../modules/cotizador/service"
 import { resumenPlan, type PlanEfectivo } from "../../../lib/cotizador-plan"
+import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "../../../lib/cuentas-casa"
 
 export type EvaluarCobroStepInput = {
   customer_id: string
@@ -49,6 +50,16 @@ export const evaluarCobroCotizacionStep = createStep(
     }
 
     const resumen = resumenPlan(perfil)
+    if (await esCuentaDeLaCasa(container as any, input.customer_id)) {
+      return new StepResponse<EvaluarCobroStepOutput>({
+        cobrar: false,
+        creditos: 0,
+        plan: PLAN_DE_LA_CASA,
+        limite: null,
+        usadas: resumen.usadas,
+        prueba_dias: 0,
+      })
+    }
 
     return new StepResponse<EvaluarCobroStepOutput>({
       cobrar: resumen.limite !== null && resumen.usadas > resumen.limite,

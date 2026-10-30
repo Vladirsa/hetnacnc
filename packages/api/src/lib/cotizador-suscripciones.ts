@@ -30,6 +30,7 @@
 // dentro de otras funciones, así que el ciclo no causa problemas al cargar.
 import { cancelarSuscripcionPaypal, sincronizarSuscripcionPaypal } from "./cotizador-paypal"
 import { paypal, paypalListo } from "./paypal-api"
+import { correosDeLaCasa, PLAN_DE_LA_CASA } from "./cuentas-casa"
 
 const MP_API = "https://api.mercadopago.com"
 const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
@@ -374,4 +375,38 @@ export async function bajarPlanesVencidos(): Promise<number> {
     await anotarEvento({ negocio_id: n.id, evento: "vencida", plan: "gratis" })
   }
   return vencidos.length
+}
+
+// ── Cuentas de la casa ────────────────────────────────────────────────────
+// Los talleres de las cuentas de HETNA (lib/cuentas-casa.ts) quedan siempre en
+// el plan más alto, sin fecha de vencimiento. Corre cada hora con el job de
+// planes vencidos: si algo lo bajara (un aviso de pago, una cancelación), en la
+// siguiente vuelta regresa solo. Devuelve cuántos talleres tuvo que ajustar.
+export async function asegurarPlanesDeLaCasa(): Promise<number> {
+  const correos = correosDeLaCasa()
+  if (!supaKey() || !correos.length) return 0
+
+  // Usuarios de Supabase con esos correos (la API de administración pagina)
+  const ids: string[] = []
+  for (let pagina = 1; pagina <= 20; pagina++) {
+    const r = await supa<{ users?: { id: string; email?: string }[] }>(`/auth/v1/admin/users?page=${pagina}&per_page=500`)
+    const usuarios = r?.users ?? []
+    for (const u of usuarios) if (u.email && correos.includes(u.email.toLowerCase())) ids.push(u.id)
+    if (usuarios.length < 500) break
+  }
+
+  let ajustados = 0
+  for (const userId of ids) {
+    const filas = await supa<{ negocio_id: string }[]>(
+      `/rest/v1/usuarios_negocio?user_id=eq.${userId}&activo=eq.true&rol=in.(administrador,super_admin)&select=negocio_id`
+    )
+    for (const { negocio_id } of filas) {
+      const n = await leerNegocio(negocio_id)
+      if (!n || (n.plan === PLAN_DE_LA_CASA && n.plan_estado === "activa" && !n.plan_vence)) continue
+      await actualizarNegocio(negocio_id, { plan: PLAN_DE_LA_CASA, plan_estado: "activa", plan_vence: null, plan_renueva: null })
+      await anotarEvento({ negocio_id, evento: "cortesia", plan: PLAN_DE_LA_CASA })
+      ajustados++
+    }
+  }
+  return ajustados
 }

@@ -3,17 +3,20 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { CREDIT_MODULE } from "../../../../modules/credit"
 import CreditModuleService from "../../../../modules/credit/service"
 import { creditosDe } from "../../../../workflows/create-escaneo/steps/create-escaneo"
+import { esCuentaDeLaCasa } from "../../../../lib/cuentas-casa"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const customerId = req.auth_context.actor_id
   const creditModuleService = req.scope.resolve<CreditModuleService>(CREDIT_MODULE)
 
   const [balance] = await creditModuleService.listCreditBalances({ customer_id: customerId })
+  // Cuenta de la casa: créditos ilimitados (lib/cuentas-casa.ts)
+  const ilimitado = await esCuentaDeLaCasa(req.scope, customerId)
 
   // ?resumen=1: sólo el número, para el saldo del encabezado (se pide en cada
   // página, así que no carga los movimientos).
   if (req.query.resumen) {
-    return res.json({ saldo: balance?.balance ?? 0 })
+    return res.json({ saldo: balance?.balance ?? 0, ilimitado })
   }
 
   const movimientos = await creditModuleService.listCreditLedgerEntries(
@@ -23,6 +26,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
 
   res.json({
     saldo: balance?.balance ?? 0,
+    ilimitado,
     // Va aquí para que la pantalla del monedero pueda traducir el saldo a algo
     // que signifique algo ("te alcanza para 3 escaneos") con una sola llamada,
     // en vez de pedir también la lista de escaneos nomás por este número.

@@ -3,6 +3,7 @@ import { MedusaError } from "@medusajs/framework/utils"
 
 import { ESCANEO_MODULE } from "../../../modules/escaneo"
 import EscaneoModuleService from "../../../modules/escaneo/service"
+import { esCuentaDeLaCasa } from "../../../lib/cuentas-casa"
 
 export type CreateEscaneoStepInput = {
   customer_id: string
@@ -77,7 +78,7 @@ export const createEscaneoStep = createStep(
 
     // El precio se congela aquí, en el expediente. Si mañana sube, un
     // reembolso de este trabajo sigue devolviendo lo que de verdad se cobró.
-    const creditos = creditosDe(input.modo)
+    const creditos = (await esCuentaDeLaCasa(container as any, input.customer_id)) ? 0 : creditosDe(input.modo)
 
     const [escaneo] = await escaneoModuleService.createEscaneo3ds([
       {

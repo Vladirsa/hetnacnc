@@ -7,6 +7,7 @@ import { DESCARGAS_MODULE } from "../modules/descargas"
 import type DescargasModuleService from "../modules/descargas/service"
 import { getSignedDownloadUrl } from "./backblaze"
 import { planEfectivo, type PerfilParaPlan } from "./cotizador-plan"
+import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "./cuentas-casa"
 
 // Archivos gratis de HETNA: los que el producto marca con
 // metadata.archivo_gratis = true. No pasan por el carrito: un pedido de $0 no
@@ -59,6 +60,7 @@ const servicio = (container: MedusaContainer) =>
   container.resolve<DescargasModuleService>(DESCARGAS_MODULE)
 
 async function planDelCliente(container: MedusaContainer, customerId: string): Promise<string> {
+  if (await esCuentaDeLaCasa(container, customerId)) return PLAN_DE_LA_CASA
   try {
     // Al servicio del módulo y no con query.graph("cotizador_perfil"): con
     // query.graph Medusa busca "listCotizadorPerfils", que no existe (el

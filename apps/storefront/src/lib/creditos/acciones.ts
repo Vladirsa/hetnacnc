@@ -32,6 +32,8 @@ export type Movimiento = {
 
 export type Saldo = {
   saldo: number
+  // Cuenta de la casa (HETNA): créditos ilimitados, no se descuentan
+  ilimitado: boolean
   creditos_por_escaneo: number
   movimientos: Movimiento[]
 }
@@ -64,6 +66,7 @@ export async function obtenerSaldo(): Promise<RespuestaSaldo> {
       ok: true,
       datos: {
         saldo: cuerpo.saldo ?? 0,
+        ilimitado: cuerpo.ilimitado === true,
         creditos_por_escaneo: cuerpo.creditos_por_escaneo || 5,
         movimientos: cuerpo.movimientos ?? [],
       },
@@ -76,7 +79,7 @@ export async function obtenerSaldo(): Promise<RespuestaSaldo> {
 
 // Sólo el número de créditos, para el encabezado. null = sin sesión o sin
 // respuesta: el encabezado no enseña nada en vez de un saldo equivocado.
-export async function saldoBreve(): Promise<number | null> {
+export async function saldoBreve(): Promise<{ saldo: number; ilimitado: boolean } | null> {
   const auth = (await getAuthHeaders()) as { authorization?: string }
   if (!auth.authorization) return null
   try {
@@ -85,8 +88,8 @@ export async function saldoBreve(): Promise<number | null> {
       cache: "no-store",
     })
     if (!res.ok) return null
-    const cuerpo = (await res.json()) as { saldo?: number }
-    return typeof cuerpo.saldo === "number" ? cuerpo.saldo : 0
+    const cuerpo = (await res.json()) as { saldo?: number; ilimitado?: boolean }
+    return { saldo: typeof cuerpo.saldo === "number" ? cuerpo.saldo : 0, ilimitado: cuerpo.ilimitado === true }
   } catch {
     return null
   }

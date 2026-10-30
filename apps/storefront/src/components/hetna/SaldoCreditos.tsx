@@ -24,14 +24,14 @@ const Moneda = ({ size = 14 }: { size?: number }) => (
 const CADA_MS = 15_000
 
 export function SaldoCreditos({ isLoggedIn, oscuro = false }: { isLoggedIn: boolean; oscuro?: boolean }) {
-  const [saldo, setSaldo] = useState<number | null | undefined>(undefined)
+  const [dato, setDato] = useState<{ saldo: number; ilimitado: boolean } | null | undefined>(undefined)
   const ultima = useRef(0)
   const ruta = usePathname()
 
   const cargar = useCallback(async (forzar = false) => {
     if (!forzar && Date.now() - ultima.current < CADA_MS) return
     ultima.current = Date.now()
-    setSaldo(await saldoBreve())
+    setDato(await saldoBreve())
   }, [])
 
   useEffect(() => {
@@ -47,17 +47,23 @@ export function SaldoCreditos({ isLoggedIn, oscuro = false }: { isLoggedIn: bool
     return () => document.removeEventListener("visibilitychange", alVolver)
   }, [isLoggedIn, cargar])
 
-  if (!isLoggedIn || saldo === null) return null
+  if (!isLoggedIn || dato === null) return null
 
-  const texto = saldo === undefined ? "…" : saldo.toLocaleString("es-MX")
+  const saldo = dato?.saldo
+  const ilimitado = dato?.ilimitado === true
+  const texto = dato === undefined ? "…" : ilimitado ? "∞" : dato.saldo.toLocaleString("es-MX")
   const etiqueta =
-    saldo === undefined ? "Cargando tus créditos" : `${texto} ${saldo === 1 ? "crédito disponible" : "créditos disponibles"}. Ver o recargar`
+    dato === undefined
+      ? "Cargando tus créditos"
+      : ilimitado
+        ? "Créditos ilimitados"
+        : `${texto} ${saldo === 1 ? "crédito disponible" : "créditos disponibles"}. Ver o recargar`
 
   return (
     <LocalizedClientLink
       href="/user/creditos"
       aria-label={etiqueta}
-      title="Tus créditos para el escaneo 3D y el cotizador. Toca para ver movimientos o recargar."
+      title={ilimitado ? "Cuenta de HETNA: créditos ilimitados." : "Tus créditos para el escaneo 3D y el cotizador. Toca para ver movimientos o recargar."}
       className={
         oscuro
           ? "inline-flex items-center gap-1.5 rounded-full border border-[#2C3D58] bg-white/5 px-2.5 py-0.5 font-semibold text-white hover:border-[#F5B47E] hover:text-[#F5B47E]"
@@ -70,8 +76,8 @@ export function SaldoCreditos({ isLoggedIn, oscuro = false }: { isLoggedIn: bool
       <span className="tabular-nums">{texto}</span>
       {oscuro && (
         <span className="font-normal text-[#C9D2E0]">
-          {saldo === 1 ? "crédito" : "créditos"}
-          {saldo === 0 && <span className="text-[#F5B47E]"> · Recargar</span>}
+          {ilimitado ? "créditos ilimitados" : saldo === 1 ? "crédito" : "créditos"}
+          {!ilimitado && saldo === 0 && <span className="text-[#F5B47E]"> · Recargar</span>}
         </span>
       )}
     </LocalizedClientLink>

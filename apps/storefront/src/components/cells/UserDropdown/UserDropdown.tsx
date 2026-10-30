@@ -29,7 +29,7 @@ export const UserDropdown = ({
   correo?: string | null
 }) => {
   const [abierto, setAbierto] = useState(false)
-  const [saldo, setSaldo] = useState<{ creditos: number; porEscaneo: number } | null>(null)
+  const [saldo, setSaldo] = useState<{ creditos: number; porEscaneo: number; ilimitado: boolean } | null>(null)
   const [pedido, setPedido] = useState(false)
 
   const unreads = useUnreads()
@@ -40,7 +40,7 @@ export const UserDropdown = ({
     setPedido(true)
     const res = await obtenerSaldo()
     if (res.ok) {
-      setSaldo({ creditos: res.datos.saldo, porEscaneo: res.datos.creditos_por_escaneo })
+      setSaldo({ creditos: res.datos.saldo, porEscaneo: res.datos.creditos_por_escaneo, ilimitado: res.datos.ilimitado })
     }
   }, [pedido, isLoggedIn])
 
@@ -117,13 +117,15 @@ export const UserDropdown = ({
                   <span className="text-[14px] font-bold text-[#1B1B18]">
                     {saldo === null ? (
                       <span className="text-[13px] font-normal text-[#A5A29A]">…</span>
+                    ) : saldo.ilimitado ? (
+                      "Ilimitados"
                     ) : (
                       `${saldo.creditos} ${saldo.creditos === 1 ? "crédito" : "créditos"}`
                     )}
                   </span>
                 </LocalizedClientLink>
 
-                {saldo !== null && (
+                {saldo !== null && !saldo.ilimitado && (
                   <p className="px-4 pb-2 text-[12px] leading-snug text-[#6B6A63]">
                     {saldo.creditos >= saldo.porEscaneo
                       ? `Te alcanza para ${Math.floor(saldo.creditos / saldo.porEscaneo)} ${
