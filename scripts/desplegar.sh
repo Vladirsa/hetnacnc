@@ -158,7 +158,9 @@ ESPERA_ENTRE=5
 
 fallas=0
 # /mx/cam ya no: desde el 28 de octubre redirige (308) a /mx/herramientas-cnc.
-for ruta in "/" "/mx/taller" "/mx/herramientas-cnc"; do
+# /mx/taller tampoco: desde el 30 de octubre redirige (308) a la página del
+# Cotizador, que es la que se revisa ahora.
+for ruta in "/" "/mx/servicios/cotizador-cnc" "/mx/herramientas-cnc"; do
   inicio="$(date +%s)"
   codigo=""
   listo=0
