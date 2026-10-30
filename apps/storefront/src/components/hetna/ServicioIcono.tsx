@@ -20,6 +20,18 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M5 9l2-5h10l2 5M12 4v5" />
     </>
   ),
+  llavero: (
+    <>
+      <circle cx="7" cy="7" r="3" />
+      <path d="M9.5 9.5L20 20M14 14l-2 2M17 17l-2 2" />
+    </>
+  ),
+  rompecabezas: (
+    <>
+      <path d="M5 8h3.8a2.2 2.2 0 1 1 4.4 0H17v5.3a2.2 2.2 0 1 1 0 4.4V21H5z" />
+      <path d="M5 12.5a2 2 0 1 0 0 4" />
+    </>
+  ),
   extruir: (
     <>
       <path d="M4 15l8-4 8 4-8 4z" />

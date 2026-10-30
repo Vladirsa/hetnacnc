@@ -44,6 +44,26 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Escribe un nombre o un letrero, elige entre 19 tipografías y descarga gratis el DXF con las letras unidas, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
   },
   {
+    slug: "llaveros",
+    nombre: "Llaveros y placas con nombre",
+    texto: "Nombre, letra y forma; DXF para láser o STL con relieve para imprimir.",
+    icono: "llavero",
+    acceso: "gratis",
+    titulo: "Llaveros y placas con nombre gratis: DXF para láser y STL para impresión 3D",
+    descripcion:
+      "Haz llaveros, etiquetas, placas de mascota, corazones y adornos con nombre: elige la letra y la forma, y descarga el DXF/SVG con capas de corte y grabado o el STL con las letras en relieve. Con el agujero de la argolla.",
+  },
+  {
+    slug: "rompecabezas",
+    nombre: "Rompecabezas",
+    texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
+    icono: "rompecabezas",
+    acceso: "gratis",
+    titulo: "Generador de rompecabezas para corte láser gratis (DXF y SVG)",
+    descripcion:
+      "Crea gratis un rompecabezas a tu medida para corte láser en MDF, triplay o acrílico: elige columnas, filas y tamaño del nudo, con marco y base opcionales. Ninguna pieza se repite. Descarga en DXF o SVG.",
+  },
+  {
     slug: "vectorizador",
     nombre: "Vectorizador de imágenes",
     texto: "Un logotipo o dibujo convertido en contornos DXF o SVG.",

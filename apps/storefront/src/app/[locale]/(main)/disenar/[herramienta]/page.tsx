@@ -9,9 +9,11 @@ import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaque
 import { GeneradorExtruir } from "@/components/hetna/generador/GeneradorExtruir"
 import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
 import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
+import { GeneradorLlaveros } from "@/components/hetna/generador/GeneradorLlaveros"
 import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
 import { GeneradorPatron } from "@/components/hetna/generador/GeneradorPatron"
 import { GeneradorRelieve } from "@/components/hetna/generador/GeneradorRelieve"
+import { GeneradorRompecabezas } from "@/components/hetna/generador/GeneradorRompecabezas"
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { ESCANEAR, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
 
@@ -24,6 +26,8 @@ type Props = { params: Promise<{ locale: string; herramienta: string }> }
 const GENERADORES: Record<string, () => React.JSX.Element> = {
   "caja-con-juntas": GeneradorCaja,
   letreros: GeneradorLetrero,
+  llaveros: GeneradorLlaveros,
+  rompecabezas: GeneradorRompecabezas,
   vectorizador: GeneradorVectorizador,
   "despiece-muebles": GeneradorMueble,
   "plantillas-empaque": GeneradorEmpaques,
