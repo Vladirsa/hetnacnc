@@ -4,48 +4,51 @@ import { useCallback, useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { hayArchivoPendiente } from "@/lib/generador/aCotizador"
+import { APP_TALLER, PLANES_APP } from "@/lib/hetna/app-taller"
 
 import { FranjaAyuda } from "../ServicioPagina"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
 
-// Pagina del Cotizador CNC para quien no ha iniciado sesion:
-// explica la herramienta, muestra los planes y deja probarla sin cuenta.
+// Página de la app HETNA CNC para talleres (el Cotizador): explica qué hace,
+// cómo se conecta con la plataforma, cómo instalarla y los planes. Todos los
+// botones llevan a la app real (/cotizador/, Flutter web) o a la descarga.
+// Si un generador manda un archivo (?archivo=generador) se abre el cotizador
+// rápido embebido para dar el precio al instante sin cuenta.
 
 const PASOS = [
-  ["Sube el archivo", "DXF, SVG, STL u OBJ desde WhatsApp, Drive o tu correo."],
-  ["Elige material y cantidad", "El sistema mide la pieza: corte, perforaciones o volumen."],
-  ["Precio al instante", "Tres opciones con tus propias tarifas: Económico, Estándar y Express."],
-  ["Envía por WhatsApp", "Con el mensaje listo y el PDF de la cotización."],
+  ["Registra tu taller", "Nombre, WhatsApp y listo. Sin tarjeta, con 14 días de prueba con todo abierto."],
+  ["Cotiza desde el celular", "Sube el archivo o escribe medidas; el sistema calcula con tus costos y tu margen."],
+  ["Manda y cobra", "PDF por WhatsApp, tu cliente acepta y paga con Mercado Pago o PayPal."],
+  ["Controla el taller", "Avances, clientes, gastos, inventario, equipo y reportes: todo en un lugar."],
 ]
 
-const INCLUYE = [
-  "Lee DXF, SVG, STL y OBJ",
-  "Vista 3D y simulador de corte o impresión",
-  "Tus tarifas y márgenes guardados",
-  "Historial de cotizaciones",
-  "PDF de la cotización",
-  "Funciona desde el celular",
+const VINCULOS = [
+  { t: "Pagos protegidos", d: "Tus clientes pagan en línea con Mercado Pago (tarjeta, OXXO, SPEI, MSI) o PayPal; el dinero se libera al entregar.", i: "💳" },
+  { t: "Envíos HETNA", d: "Genera guías con descuento y envío protegido desde la app, con la paquetería que más te convenga.", i: "📦" },
+  { t: "Trabajos del marketplace", d: "Recibe solicitudes de fabricación de clientes de hetnacnc.com y licitaciones en tu zona.", i: "🏭" },
+  { t: "Tienda y consumibles", d: "Compra fresas, tubos, boquillas y material sin salir de la app, con precio de taller.", i: "🛒" },
+  { t: "Herramientas CNC", d: "Calculadora CNC, Laboratorio CAM y los generadores de diseño, dentro de la misma cuenta.", i: "🛠️" },
+  { t: "Foro y comunidad", d: "Pregunta y comparte con otros talleres de México desde la app.", i: "💬" },
 ]
 
-type Plan = { nombre: string; precio: string; nota: string; destacado?: boolean; puntos: string[]; pronto?: string[] }
-const PLANES: Plan[] = [
-  { nombre: "Gratis", precio: "$0", nota: "para siempre", puntos: ["10 cotizaciones al mes", "Visor 3D y simulador", "PDF con marca HetNa", "Historial de 30 días", "1 usuario"] },
-  { nombre: "Taller", precio: "$299", nota: "al mes", destacado: true, puntos: ["Cotizaciones ilimitadas", "PDF con tu logo, sin marca", "Historial y clientes ilimitados", "2 usuarios"], pronto: ["Liga para que tu cliente acepte en línea", "Precios de materiales automáticos"] },
-  { nombre: "Pro", precio: "$599", nota: "al mes", puntos: ["Todo lo del plan Taller", "5 usuarios"], pronto: ["Órdenes de trabajo: CAM → producción → calidad → entrega", "Inventario, herramientas y máquinas", "Mantenimiento y horas de máquina", "Costos, utilidad y reportes"] },
-  { nombre: "Industrial", precio: "$1,199", nota: "al mes", puntos: ["Todo lo del plan Pro", "Usuarios ilimitados"], pronto: ["Facturación electrónica", "Proyectos y varias sucursales"] },
+const SIEMPRE_GRATIS = ["Cotizaciones (10 al mes)", "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
+
+const PREGUNTAS = [
+  ["¿Es la misma cuenta que en hetnacnc.com?", "La app tiene su propia cuenta de taller (correo y contraseña) y se conecta con la plataforma para pagos, envíos, tienda y trabajos. Si ya vendes en hetnacnc.com, registra tu taller con el mismo correo para que te lo vinculemos."],
+  ["¿Funciona sin internet?", "Necesita conexión para guardar y sincronizar, pero puedes consultar cotizaciones y clientes que ya cargaste."],
+  ["¿Puedo cancelar cuando quiera?", "Sí. Se cobra cada mes y conservas el plan hasta el fin del mes pagado. El plan Gratis no vence."],
+  ["¿Mis datos están seguros?", "Cada taller ve solo su información. Los pagos los procesan Mercado Pago y PayPal; HETNA no guarda tarjetas."],
 ]
 
 export const CotizadorLanding = ({ locale }: { locale: string }) => {
   const [demo, setDemo] = useState(false)
   const cerrar = useCallback(() => setDemo(false), [])
-  const volver = encodeURIComponent(`/${locale}/servicios/cotizador-cnc`)
 
-  // si viene un archivo del Generador 2D y 3D, se abre la prueba sin cuenta con ese archivo
+  // si viene un archivo del espacio Diseñar, se abre el cotizador rápido con ese archivo
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("archivo") === "generador" && hayArchivoPendiente()) setDemo(true)
   }, [])
 
-  // "Probar sin cuenta" abre la app en la misma pagina, debajo del encabezado de la tienda
   if (demo) return <CotizadorEmbebido modo="demo" locale={locale} onCerrar={cerrar} />
 
   return (
@@ -55,38 +58,62 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         <span>/</span>
         <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Cotizador CNC</span>
+        <span className="text-[#1B1B18] font-medium">App HETNA CNC para talleres</span>
       </div>
 
+      {/* Hero */}
       <section className="px-4 lg:px-16 pt-5 pb-8">
-        <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 flex flex-col gap-4">
-          <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#C2560A] px-3 py-1 rounded-full">
-            Herramienta para talleres
-          </span>
-          <h1 className="font-display text-[30px] lg:text-[44px] leading-[1.08] font-bold m-0 max-w-[760px]">
-            Cotiza en segundos, desde tu celular
-          </h1>
-          <p className="m-0 text-[15.5px] lg:text-[17px] text-[#C9D2E0] max-w-[640px] leading-relaxed">
-            Sube el archivo de tu cliente, obtén el precio al momento con tus propias tarifas y mándalo por WhatsApp con su PDF.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <a href={`/${locale}/register?volver=${volver}`} className="inline-flex items-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
-              Crear cuenta gratis
-            </a>
-            <a href={`/${locale}/login?volver=${volver}`} className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
-              Ya tengo cuenta
-            </a>
-            <button type="button" onClick={() => setDemo(true)} className="inline-flex items-center text-[#F2A65A] hover:text-white font-semibold px-2 py-3 text-[15px] underline underline-offset-4">
-              Probar sin cuenta
-            </button>
+        <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 grid lg:grid-cols-[1fr_300px] gap-8 items-center overflow-hidden relative">
+          <div className="flex flex-col gap-4">
+            <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#FF6A1A] px-3 py-1 rounded-full">
+              App para talleres · Web y Android · iPhone pronto
+            </span>
+            <h1 className="font-display text-[30px] lg:text-[46px] leading-[1.06] font-bold m-0 max-w-[720px]">
+              Cotiza, cobra y controla tu taller desde el celular
+            </h1>
+            <p className="m-0 text-[15.5px] lg:text-[17px] text-[#C9D2E0] max-w-[640px] leading-relaxed">
+              HETNA CNC es el sistema de gestión para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos reales, clientes, avances, gastos, inventario y equipo. Gratis para empezar y conectado con todo hetnacnc.com.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <a href={APP_TALLER.registro} className="inline-flex items-center bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold px-5 py-3 rounded-[10px] text-[15px]">
+                Crear mi taller gratis
+              </a>
+              <a href={APP_TALLER.web} className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
+                Abrir la app
+              </a>
+              <a href={APP_TALLER.android} className="inline-flex items-center gap-2 bg-white text-[#142033] hover:bg-[#F2F0EA] font-semibold px-5 py-3 rounded-[10px] text-[15px]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 8.5l1.6-2.8-.9-.5-1.7 2.9A7 7 0 0 0 12 7a7 7 0 0 0-4.5 1.1L5.8 5.2l-.9.5 1.6 2.8A7 7 0 0 0 4 14h16a7 7 0 0 0-2.5-5.5zM9 11.5a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6zm6 0a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6zM4 15h16v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5z" /></svg>
+                Descargar para Android
+              </a>
+            </div>
+            <p className="m-0 text-[13px] text-[#9FB0C8]">
+              14 días con todo abierto · después, plan Gratis para siempre · sin tarjeta.{" "}
+              <a href="#instalar" className="underline underline-offset-2 hover:text-white">¿Tienes iPhone?</a>
+            </p>
           </div>
-          <p className="m-0 text-[13px] text-[#9FB0C8]">14 días con todo abierto · después, 10 cotizaciones gratis cada mes · sin tarjeta</p>
+          <div className="hidden lg:flex flex-col gap-2 bg-[#0F1826] rounded-[14px] p-4 border border-[#2A3A55]">
+            <span className="text-[12px] uppercase tracking-wide font-bold text-[#9FB0C8]">Lo que ve tu cliente</span>
+            <div className="bg-white text-[#1B1B18] rounded-[10px] p-3 text-[12.5px] flex flex-col gap-1.5">
+              <span className="font-bold text-[14px]">Cotización COT-0148</span>
+              <span className="text-[#6B6A63]">Letrero MDF 18 mm · 120 × 60 cm · 2 piezas</span>
+              <div className="grid grid-cols-3 gap-1 pt-1">
+                {[["Económico", "$1,850"], ["Estándar", "$2,300"], ["Express", "$2,950"]].map(([n, p]) => (
+                  <div key={n} className={`rounded-[8px] border p-1.5 text-center ${n === "Estándar" ? "border-[#FF6A1A] bg-[#FFF3EA]" : "border-[#E7E4DC]"}`}>
+                    <div className="text-[10.5px] text-[#6B6A63]">{n}</div>
+                    <div className="font-bold">{p}</div>
+                  </div>
+                ))}
+              </div>
+              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5">Aceptar y pagar anticipo</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="px-4 lg:px-16 pb-12 flex flex-col gap-10">
+      <div className="px-4 lg:px-16 pb-12 flex flex-col gap-12">
+        {/* Cómo funciona */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PASOS.map(([t, d], i) => (
               <li key={t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
@@ -98,26 +125,59 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
           </ol>
         </section>
 
+        {/* Vinculado con la plataforma */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Qué incluye</h2>
+          <div>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Todo conectado con hetnacnc.com</h2>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No es solo un cotizador: es la puerta de tu taller a la plataforma. Lo que cotizas en la app se cobra, se envía y se vende con las herramientas de HETNA.</p>
+          </div>
           <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {INCLUYE.map((x) => (
-              <li key={x} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3.5 flex gap-3 items-center text-[14.5px] text-[#1B1B18]">
-                <span className="text-[#16794F] shrink-0" aria-hidden="true">✓</span>
-                {x}
+            {VINCULOS.map((v) => (
+              <li key={v.t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex gap-3">
+                <span className="text-[26px] leading-none" aria-hidden="true">{v.i}</span>
+                <div>
+                  <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">{v.t}</h3>
+                  <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63] leading-relaxed">{v.d}</p>
+                </div>
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="flex flex-col gap-4" id="planes">
+        {/* Instalar */}
+        <section id="instalar" className="flex flex-col gap-4 scroll-mt-24">
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Llévala en tu celular</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Android</h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Descarga el instalador (APK). Al abrirlo, Android te pedirá permitir la instalación desde esta fuente: acepta y listo. Cada versión nueva se descarga desde aquí mismo.</p>
+              <a href={APP_TALLER.android} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Descargar APK</a>
+              <span className="text-[12px] text-[#9A978C]">Google Play: en camino</span>
+            </div>
+            <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">iPhone y iPad</h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app en Safari, toca <strong>Compartir</strong> y luego <strong>Añadir a pantalla de inicio</strong>. Queda con su ícono como cualquier app y abre a pantalla completa.</p>
+              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en Safari</a>
+              <span className="text-[12px] text-[#9A978C]">App Store: en camino</span>
+            </div>
+            <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Computadora</h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Funciona en cualquier navegador, con la misma cuenta y los mismos datos que en el celular. Ideal para armar cotizaciones largas y revisar reportes.</p>
+              <a href={APP_TALLER.web} className="mt-auto text-center border border-[#142033] text-[#142033] hover:bg-[#F2F0EA] font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en el navegador</a>
+              <span className="text-[12px] text-[#9A978C]">hetnacnc.com/cotizador</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Planes */}
+        <section className="flex flex-col gap-4 scroll-mt-24" id="planes">
           <div>
-            <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Planes</h2>
-            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Precios en pesos mexicanos, IVA incluido. Todos empiezan con 14 días de prueba con todo abierto.</p>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Planes</h2>
+            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Precios en pesos mexicanos al mes, IVA incluido. Todos empiezan con 14 días de prueba con todo abierto; el plan Gratis no vence.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {PLANES.map((p) => (
-              <div key={p.nombre} className={`bg-white rounded-[14px] p-5 flex flex-col gap-3 border ${p.destacado ? "border-[#C2560A] border-2" : "border-[#E7E4DC]"}`}>
+            {PLANES_APP.map((p) => (
+              <div key={p.nombre} className={`bg-white rounded-[14px] p-5 flex flex-col gap-3 border ${p.destacado ? "border-[#FF6A1A] border-2" : "border-[#E7E4DC]"}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">{p.nombre}</h3>
                   {p.destacado && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full">Más elegido</span>}
@@ -126,14 +186,31 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                   <span className="text-[28px] font-bold text-[#1B1B18]">{p.precio}</span>
                   <span className="text-[13px] text-[#6B6A63]">{p.nota}</span>
                 </div>
+                <p className="m-0 text-[13px] text-[#6B6A63]">{p.para}</p>
                 <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[13.5px] text-[#1B1B18]">
                   {p.puntos.map((x) => <li key={x} className="flex gap-2"><span className="text-[#16794F]" aria-hidden="true">✓</span>{x}</li>)}
-                  {(p.pronto || []).map((x) => <li key={x} className="flex gap-2 text-[#6B6A63]"><span aria-hidden="true">○</span><span>{x} <em className="not-italic text-[11.5px] font-semibold text-[#B34D07]">(pronto)</em></span></li>)}
                 </ul>
-                <a href={`/${locale}/register?volver=${volver}`} className={`mt-auto text-center font-semibold px-4 py-2.5 rounded-[10px] text-[14px] ${p.destacado ? "bg-[#C2560A] hover:bg-[#A84A08] text-white" : "border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18]"}`}>
+                <a href={APP_TALLER.registro} className={`mt-auto text-center font-semibold px-4 py-2.5 rounded-[10px] text-[14px] ${p.destacado ? "bg-[#FF6A1A] hover:bg-[#E65C12] text-white" : "border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18]"}`}>
                   {p.nombre === "Gratis" ? "Empezar gratis" : "Probar 14 días gratis"}
                 </a>
               </div>
+            ))}
+          </div>
+          <div className="bg-[#E6F4EC] border border-[#B7E0C8] rounded-[14px] px-5 py-4">
+            <p className="m-0 text-[13.5px] font-bold text-[#16794F]">Siempre gratis, en todos los planes</p>
+            <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]">{SIEMPRE_GRATIS.join(" · ")}</p>
+          </div>
+        </section>
+
+        {/* Preguntas */}
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Preguntas frecuentes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {PREGUNTAS.map(([p, r]) => (
+              <details key={p} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
+                <summary className="cursor-pointer text-[14.5px] font-bold text-[#1B1B18]">{p}</summary>
+                <p className="m-0 mt-2 text-[13.5px] text-[#6B6A63] leading-relaxed">{r}</p>
+              </details>
             ))}
           </div>
         </section>

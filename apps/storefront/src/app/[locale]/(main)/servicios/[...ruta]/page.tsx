@@ -4,9 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
-import { CotizadorEmbebido } from "@/components/hetna/taller/CotizadorEmbebido"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
-import { retrieveCustomer } from "@/lib/data/customer"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
 
@@ -27,8 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   if (s.slug === "cotizador-cnc") {
     return {
-      title: "Cotizador CNC para talleres",
-      description: "Cotiza desde tu celular: sube DXF, SVG, STL u OBJ, obtén el precio con tus tarifas y envíalo por WhatsApp con PDF. Gratis para empezar.",
+      title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
+      description: "La app para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos, inventario y pagos en línea. Web y Android, gratis para empezar.",
     }
   }
   return { title: s.nombre, description: s.resumen }
@@ -49,12 +47,11 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
     return <CopilotoApp locale={locale} vistaInicial={v} />
   }
 
-  // El Cotizador CNC es la herramienta de HetNa Taller:
-  // con sesion abre la app; sin sesion muestra la pagina con planes y prueba sin cuenta.
-  if (s.slug === "cotizador-cnc") {
-    const cliente = await retrieveCustomer().catch(() => null)
-    return cliente ? <CotizadorEmbebido modo="cuenta" locale={locale} /> : <CotizadorLanding locale={locale} />
-  }
+  // La app HETNA CNC para talleres (Flutter, /cotizador/): esta página la
+  // presenta, con instalación y planes; los botones abren la app real. Si un
+  // generador manda un archivo (?archivo=generador) la página abre el
+  // cotizador rápido embebido.
+  if (s.slug === "cotizador-cnc") return <CotizadorLanding locale={locale} />
 
   // Los generadores gratis ya no se abren aquí: /servicios/generador-2d-3d/<herramienta>
   // redirige al espacio "Diseñar y escanear" (/disenar, ver next.config).
