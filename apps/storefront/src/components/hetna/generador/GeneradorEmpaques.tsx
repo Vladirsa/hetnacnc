@@ -8,7 +8,10 @@ import {
   ETIQUETAS,
   FORMAS,
   Forma,
+  GRUPOS,
+  Gen,
   acomodarPlantillas,
+  formaPorId,
   generarEmpaque,
   plantillaDXF,
   plantillaSVG,
@@ -19,24 +22,36 @@ type Unidad = "mm" | "cm" | "in"
 const FACTOR: Record<Unidad, number> = { mm: 1, cm: 10, in: 25.4 }
 type Valores = Record<Exclude<keyof Datos, "conBase">, string>
 
-// medidas de inicio de cada forma (mm)
-const INICIO: Record<Forma, Valores> = {
-  caja: { largo: "80", ancho: "50", alto: "120", pestana: "12", lados: "4", diametroSup: "0" },
-  piramide: { largo: "0", ancho: "60", alto: "80", pestana: "10", lados: "4", diametroSup: "0" },
-  cono: { largo: "0", ancho: "60", alto: "100", pestana: "10", lados: "4", diametroSup: "0" },
-  sobre: { largo: "150", ancho: "100", alto: "0", pestana: "10", lados: "4", diametroSup: "0" },
-  bolsa: { largo: "160", ancho: "80", alto: "220", pestana: "15", lados: "4", diametroSup: "0" },
-  hexagonal: { largo: "0", ancho: "40", alto: "80", pestana: "12", lados: "4", diametroSup: "0" },
-}
+// medidas de inicio de cada plantilla (mm), de FORMAS
+const CAMPOS_NUM = ["largo", "ancho", "alto", "pestana", "lados", "diametroSup", "altoTapa", "holgura", "margen", "filas", "columnas", "diametro"] as const
+const INICIO: Record<Forma, Valores> = Object.fromEntries(
+  FORMAS.map((f) => [f.id, Object.fromEntries(CAMPOS_NUM.map((c) => [c, String(f.inicio[c] ?? 0)]))])
+) as Record<Forma, Valores>
 
-// iconos de cada forma
-const ICONOS: Record<Forma, string> = {
+// iconos por generador
+const ICONOS: Record<Gen, string> = {
   caja: "M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8",
-  piramide: "M12 3L3 19h18zM12 3l3 16",
-  cono: "M12 3L5 18a7 3 0 0 0 14 0zM5 18a7 3 0 0 1 14 0",
-  sobre: "M3 6h18v12H3zM3 6l9 7 9-7",
-  bolsa: "M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2",
+  cajaVentana: "M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8M7 11h4v4",
+  tapaFondo: "M3 10h18v9H3zM2 7h20v3H2z",
+  bandeja: "M3 10h18l-2 9H5zM3 10l2-3h14l2 3",
+  bisagra: "M3 10h18v9H3zM3 10l3-6h12l3 6",
+  pillow: "M4 8c4 3 12 3 16 0v8c-4-3-12-3-16 0z",
+  cajon: "M3 8h18v10H3zM6 11h12v4H6zM10 13h4",
   hexagonal: "M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z",
+  prisma: "M12 3l8 6-3 9H7L4 9z",
+  cilindro: "M5 6a7 2.5 0 0 0 14 0a7 2.5 0 0 0-14 0zM5 6v12a7 2.5 0 0 0 14 0V6",
+  bolsa: "M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2",
+  bolsaAsa: "M5 9h14l-1 12H6zM9 9V7a3 3 0 0 1 6 0v2M9 13h6",
+  bolsaPlana: "M6 4h12v16H6zM6 9h12",
+  sobre: "M3 6h18v12H3zM3 6l9 7 9-7",
+  sobrePuntas: "M3 6h18v12H3zM3 6l9 6 9-6M3 18l9-6 9 6",
+  sobreBolsillo: "M5 4h14v16H5zM5 10h14",
+  piramide: "M12 3L3 19h18zM12 3l3 16",
+  tetra: "M12 2L4 20h16zM12 2v18",
+  cono: "M12 3L5 18a7 3 0 0 0 14 0zM5 18a7 3 0 0 1 14 0",
+  maceta: "M6 5h12l-2 14H8zM6 5a6 2 0 0 0 12 0",
+  tarjeta: "M4 5h16v14H4zM12 5v14",
+  inserto: "M3 5h18v14H3zM8 12a2 2 0 1 0 0-.1M16 12a2 2 0 1 0 0-.1",
 }
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -70,32 +85,45 @@ export function GeneradorEmpaques() {
   const { locale } = useParams<{ locale: string }>()
   const [avisoCotizar, setAvisoCotizar] = useState("")
   const [forma, setForma] = useState<Forma>("caja")
+  const [grupoAbierto, setGrupoAbierto] = useState<string>("Cajas")
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [valores, setValores] = useState<Record<Forma, Valores>>(INICIO)
   const [conBase, setConBase] = useState(true)
 
   const k = FACTOR[unidad]
   const v = valores[forma]
-  const def = FORMAS.find((f) => f.id === forma)!
+  const def = formaPorId(forma)!
   const campos = def.campos.filter((c) => c !== "conBase") as (keyof Valores)[]
+  const elegirForma = (f: typeof FORMAS[number]) => {
+    setForma(f.id)
+    setConBase(!!f.inicio.conBase)
+  }
 
   const r = useMemo(() => {
-    const mm = (c: keyof Valores) => (c === "lados" ? numero(v[c]) : numero(v[c]) * k)
+    const entero = (c: keyof Valores) => numero(v[c])
+    const mm = (c: keyof Valores) => numero(v[c]) * k
     return generarEmpaque(forma, {
       largo: mm("largo"),
       ancho: mm("ancho"),
       alto: mm("alto"),
       pestana: mm("pestana"),
-      lados: mm("lados"),
+      lados: entero("lados"),
       diametroSup: numero(v.diametroSup) * k || 0,
       conBase,
+      altoTapa: mm("altoTapa"),
+      holgura: numero(v.holgura) * k || 0,
+      margen: mm("margen"),
+      filas: entero("filas"),
+      columnas: entero("columnas"),
+      diametro: mm("diametro"),
     })
   }, [forma, v, k, conBase])
 
   const listo = r.piezas.length > 0
   const vista = useMemo(() => (listo ? plantillaSVG(r.piezas, "vista") : ""), [r, listo])
   const hoja = listo ? acomodarPlantillas(r.piezas) : null
-  const nombreArchivo = `${forma}-hetna-${campos.map((c) => (c === "lados" ? v[c] : r1(numero(v[c]) * k))).join("x")}`
+  const SIN_UNIDAD = ["lados", "filas", "columnas"]
+  const nombreArchivo = `${forma}-hetna-${campos.map((c) => (SIN_UNIDAD.includes(c) ? v[c] : r1(numero(v[c]) * k))).join("x")}`
 
   const cambiar = (c: keyof Valores, s: string) => setValores((x) => ({ ...x, [forma]: { ...x[forma], [c]: s } }))
 
@@ -108,7 +136,7 @@ export function GeneradorEmpaques() {
       const y = { ...x }
       for (const f of Object.keys(y) as Forma[]) {
         const w = { ...y[f] }
-        for (const c of Object.keys(w) as (keyof Valores)[]) if (c !== "lados") w[c] = conv(w[c])
+        for (const c of Object.keys(w) as (keyof Valores)[]) if (!["lados", "filas", "columnas"].includes(c)) w[c] = conv(w[c])
         y[f] = w
       }
       return y
@@ -131,7 +159,7 @@ export function GeneradorEmpaques() {
 
   const mensaje =
     `Hola HETNA CNC, quiero cotizar una plantilla de ${def.nombre.toLowerCase()}:\n` +
-    campos.map((c) => `- ${ETIQUETAS[forma][c]}: ${v[c]}${c === "lados" ? "" : ` ${unidad}`}`).join("\n") +
+    campos.map((c) => `- ${ETIQUETAS[forma][c]}: ${v[c]}${SIN_UNIDAD.includes(c) ? "" : ` ${unidad}`}`).join("\n") +
     (hoja ? `\n- Hoja necesaria: ${r1(hoja.ancho)} x ${r1(hoja.alto)} mm` : "")
 
   return (
@@ -144,28 +172,51 @@ export function GeneradorEmpaques() {
           Generador de plantillas de empaque
         </h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[680px]">
-          Cajas, pirámides, conos, sobres y bolsas a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.
+          Más de 30 modelos: cajas con tapa, de regalo, para pizza o pastel, bolsas con asas, sobres, tubos, pirámides y más, a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.
         </p>
       </section>
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-2">
-            {FORMAS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setForma(f.id)}
-                className={`flex flex-col items-center gap-1 rounded-[10px] border px-2 py-2.5 text-[12px] font-semibold ${
-                  forma === f.id ? "border-[#C2560A] bg-[#FDEEE1] text-[#8A3D06]" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#C2560A]"
-                }`}
-              >
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
-                  <path d={ICONOS[f.id]} />
-                </svg>
-                {f.nombre}
-              </button>
-            ))}
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-semibold text-[#1B1B18]">Plantilla <span className="font-normal text-[#6B6A63]">({FORMAS.length} modelos)</span></span>
+            {GRUPOS.map((g) => {
+              const abierto = grupoAbierto === g
+              const lista = FORMAS.filter((f) => f.grupo === g)
+              return (
+                <div key={g} className="rounded-[10px] border border-[#E7E4DC] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setGrupoAbierto(abierto ? "" : g)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold ${abierto ? "bg-[#142033] text-white" : "bg-[#FAF9F6] text-[#1B1B18]"}`}
+                  >
+                    <span>{g} <span className={`font-normal ${abierto ? "text-white/70" : "text-[#6B6A63]"}`}>({lista.length})</span></span>
+                    <span aria-hidden="true">{abierto ? "−" : "+"}</span>
+                  </button>
+                  {abierto && (
+                    <div className="grid grid-cols-3 gap-1.5 p-2">
+                      {lista.map((f) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => elegirForma(f)}
+                          title={f.detalle}
+                          className={`flex flex-col items-center gap-1 rounded-[10px] border px-1.5 py-2 text-[11.5px] leading-tight font-semibold text-center ${
+                            forma === f.id ? "border-[#C2560A] bg-[#FDEEE1] text-[#8A3D06]" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#C2560A]"
+                          }`}
+                        >
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+                            <path d={ICONOS[f.gen]} />
+                          </svg>
+                          {f.nombre}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+            {def.detalle && <p className="m-0 text-[12.5px] text-[#6B6A63]">{def.nombre}: {def.detalle}.</p>}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -191,7 +242,7 @@ export function GeneradorEmpaques() {
                     onChange={(e) => cambiar(c, e.target.value)}
                     className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none"
                   />
-                  {c !== "lados" && <span className="pr-3 text-[13px] text-[#9A978C]">{unidad}</span>}
+                  {!SIN_UNIDAD.includes(c) && <span className="pr-3 text-[13px] text-[#9A978C]">{unidad}</span>}
                 </span>
               </label>
             ))}
@@ -200,7 +251,7 @@ export function GeneradorEmpaques() {
           {def.campos.includes("conBase") && (
             <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
               <input type="checkbox" checked={conBase} onChange={(e) => setConBase(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-              Con base (pestañas y tapa redonda)
+              {ETIQUETAS[forma].conBase || "Con base"} (pestañas y tapa redonda)
             </label>
           )}
         </section>
