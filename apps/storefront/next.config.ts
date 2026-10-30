@@ -141,6 +141,12 @@ const nextConfig: NextConfig = {
   // transfiere el posicionamiento en lugar de indexar dos direcciones.
   async redirects() {
     return [
+      // La app HETNA CNC para talleres: enlaces cortos para QR, volantes y WhatsApp.
+      // /app → la página de la app; /app/android → el APK más reciente (release
+      // de GitHub del repo Vladirsa/Cotizador); /app/ios → cómo instalarla en iPhone.
+      { source: "/app", destination: "/mx/servicios/cotizador-cnc", permanent: false },
+      { source: "/app/android", destination: "https://github.com/Vladirsa/Cotizador/releases/latest/download/HetnaCNC_arm64.apk", permanent: false },
+      { source: "/app/ios", destination: "/mx/servicios/cotizador-cnc#instalar", permanent: false },
       // Herramientas CNC: /cam y la página del Generador se juntaron en
       // /herramientas-cnc; el servicio de maquinado ahora vive en Fabricación.
       // Las herramientas de programación (/cam/subir, /cam/lab, /cam/torno) no
