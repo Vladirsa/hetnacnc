@@ -15,6 +15,9 @@ import { EVENTO_CONSENTIMIENTO, permiteRastreo } from '@/lib/hetna/consentimient
 export function Analytics() {
   const ga4Id = process.env.NEXT_PUBLIC_GA4_ID;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  // Google Ads (AW-...): remarketing dinámico y conversiones. Opcional.
+  const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+  const gtagId = ga4Id || adsId;
   const [permitido, setPermitido] = useState(false);
 
   useEffect(() => {
@@ -24,14 +27,14 @@ export function Analytics() {
     return () => window.removeEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
   }, []);
 
-  if (!permitido || (!ga4Id && !metaPixelId)) return null;
+  if (!permitido || (!gtagId && !metaPixelId)) return null;
 
   return (
     <>
-      {ga4Id && (
+      {gtagId && (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`}
             strategy="lazyOnload"
           />
           <Script id="ga4-init" strategy="lazyOnload">
@@ -39,7 +42,8 @@ export function Analytics() {
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${ga4Id}');
+              ${ga4Id ? `gtag('config', '${ga4Id}');` : ''}
+              ${adsId ? `gtag('config', '${adsId}', { allow_enhanced_conversions: true });` : ''}
             `}
           </Script>
         </>

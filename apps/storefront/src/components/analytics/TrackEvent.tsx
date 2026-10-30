@@ -8,11 +8,20 @@ import {
   trackPurchase,
   trackViewItem
 } from '@/lib/analytics/events';
+import { reportarCompraMeta } from '@/lib/analytics/meta-capi';
+import { permiteRastreo } from '@/lib/hetna/consentimiento';
 
 type Props =
   | { event: 'view_item'; item: AnalyticsItem; currency: string }
   | { event: 'begin_checkout'; items: AnalyticsItem[]; value: number; currency: string }
-  | { event: 'purchase'; orderId: string; items: AnalyticsItem[]; value: number; currency: string };
+  | {
+      event: 'purchase';
+      orderId: string;
+      items: AnalyticsItem[];
+      value: number;
+      currency: string;
+      cliente?: { email?: string | null; telefono?: string | null };
+    };
 
 // Dispara un evento de analytics una sola vez al montar. Se usa dentro de
 // páginas servidor (producto, checkout, orden confirmada) que no pueden
@@ -45,7 +54,10 @@ export function TrackEvent(props: Props) {
       } catch {
         // Si localStorage no está disponible seguimos y disparamos el evento igual.
       }
-      trackPurchase(props.orderId, props.items, props.value, props.currency);
+      trackPurchase(props.orderId, props.items, props.value, props.currency, props.cliente);
+      // La misma compra desde el servidor (API de conversiones de Meta), sólo
+      // con permiso de cookies de publicidad.
+      if (permiteRastreo()) reportarCompraMeta(props.orderId).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

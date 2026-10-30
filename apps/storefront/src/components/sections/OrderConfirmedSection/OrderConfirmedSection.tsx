@@ -18,6 +18,7 @@ export const OrderConfirmedSection = ({
         orderId={order.id}
         currency={order.currency_code}
         value={order.total ?? 0}
+        cliente={{ email: order.email, telefono: order.shipping_address?.phone }}
         items={(order.items ?? []).map((item) => ({
           item_id: item.product_id ?? item.id,
           item_name: item.product_title ?? item.title ?? "",
@@ -40,7 +41,7 @@ export const OrderConfirmedSection = ({
             </Heading>
 
             <Text>
-              We have sent the order confirmation details to{" "}
+              Te enviamos los detalles de tu pedido a{" "}
               <span
                 className="text-ui-fg-medium-plus font-semibold"
                 data-testid="order-email"

@@ -24,15 +24,33 @@ function toGa4Amount(amount: number) {
   return Math.round(amount * 100) / 100;
 }
 
+// Google Ads (remarketing dinámico y conversiones). Opcionales: si no están,
+// sólo se usa GA4.
+const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const ADS_LABEL_COMPRA = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL;
+
+// Cada producto lleva su id también como `id` y el giro "retail": así Google
+// Ads cruza las visitas con el catálogo de Merchant Center (/feeds/google.xml)
+// para el remarketing dinámico. item_id = id del producto, el mismo del catálogo.
+const paraGoogle = (i: AnalyticsItem) => ({
+  ...i,
+  price: toGa4Amount(i.price),
+  id: i.item_id,
+  google_business_vertical: 'retail'
+});
+
 function gtagEvent(name: string, params: Record<string, unknown>) {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', name, params);
   }
 }
 
-function fbqEvent(name: string, params: Record<string, unknown>) {
+function fbqEvent(name: string, params: Record<string, unknown>, eventId?: string) {
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', name, params);
+    // eventID: el mismo que manda el servidor por la API de conversiones, para
+    // que Meta cuente la compra una sola vez (ver lib/analytics/meta-capi.ts).
+    if (eventId) window.fbq('track', name, params, { eventID: eventId });
+    else window.fbq('track', name, params);
   }
 }
 
@@ -40,7 +58,7 @@ export function trackViewItem(item: AnalyticsItem, currency: string) {
   gtagEvent('view_item', {
     currency: currency.toUpperCase(),
     value: toGa4Amount(item.price),
-    items: [{ ...item, price: toGa4Amount(item.price) }]
+    items: [paraGoogle(item)]
   });
   fbqEvent('ViewContent', {
     content_ids: [item.item_id],
@@ -56,7 +74,7 @@ export function trackAddToCart(item: AnalyticsItem, currency: string) {
   gtagEvent('add_to_cart', {
     currency: currency.toUpperCase(),
     value,
-    items: [{ ...item, price: toGa4Amount(item.price) }]
+    items: [paraGoogle(item)]
   });
   fbqEvent('AddToCart', {
     content_ids: [item.item_id],
@@ -71,7 +89,7 @@ export function trackBeginCheckout(items: AnalyticsItem[], value: number, curren
   gtagEvent('begin_checkout', {
     currency: currency.toUpperCase(),
     value: toGa4Amount(value),
-    items: items.map((i) => ({ ...i, price: toGa4Amount(i.price) }))
+    items: items.map(paraGoogle)
   });
   fbqEvent('InitiateCheckout', {
     content_ids: items.map((i) => i.item_id),
@@ -85,7 +103,8 @@ export function trackPurchase(
   orderId: string,
   items: AnalyticsItem[],
   value: number,
-  currency: string
+  currency: string,
+  cliente?: { email?: string | null; telefono?: string | null }
 ) {
   // El id de la orden evita reportar la misma compra dos veces si el usuario
   // recarga la página de confirmación (ver TrackEvent.tsx).
@@ -93,11 +112,34 @@ export function trackPurchase(
     transaction_id: orderId,
     currency: currency.toUpperCase(),
     value: toGa4Amount(value),
-    items: items.map((i) => ({ ...i, price: toGa4Amount(i.price) }))
+    items: items.map(paraGoogle)
   });
-  fbqEvent('Purchase', {
-    content_ids: items.map((i) => i.item_id),
-    currency: currency.toUpperCase(),
-    value: toGa4Amount(value)
-  });
+  // Conversión de Google Ads, con los datos del cliente para las conversiones
+  // mejoradas (gtag los cifra antes de mandarlos).
+  if (ADS_ID && ADS_LABEL_COMPRA && typeof window !== 'undefined' && window.gtag) {
+    if (cliente?.email || cliente?.telefono) {
+      window.gtag('set', 'user_data', {
+        ...(cliente.email ? { email: cliente.email } : {}),
+        ...(cliente.telefono ? { phone_number: cliente.telefono } : {})
+      });
+    }
+    window.gtag('event', 'conversion', {
+      send_to: `${ADS_ID}/${ADS_LABEL_COMPRA}`,
+      value: toGa4Amount(value),
+      currency: currency.toUpperCase(),
+      transaction_id: orderId
+    });
+  }
+  fbqEvent(
+    'Purchase',
+    {
+      content_ids: items.map((i) => i.item_id),
+      contents: items.map((i) => ({ id: i.item_id, quantity: i.quantity || 1, item_price: toGa4Amount(i.price) })),
+      content_type: 'product',
+      num_items: items.reduce((n, i) => n + (i.quantity || 1), 0),
+      currency: currency.toUpperCase(),
+      value: toGa4Amount(value)
+    },
+    orderId
+  );
 }

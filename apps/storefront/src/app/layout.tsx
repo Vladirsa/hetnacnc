@@ -59,12 +59,21 @@ export const metadata: Metadata = {
     images: [{ url: '/og-hetna.png', width: 1200, height: 630, alt: 'HETNA CNC' }]
   },
   twitter: { card: 'summary_large_image', images: ['/og-hetna.png'] },
-  // Verificación de Search Console / Bing: se pone el código en el .env del VPS
-  // (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION). Sin código no se imprime nada.
+  // Verificación de Search Console / Merchant Center, Bing y Meta (dominio del
+  // Business Manager): se pone el código en el .env del VPS
+  // (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION, META_DOMAIN_VERIFICATION).
+  // Sin código no se imprime nada.
   verification: {
     ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
-    ...(process.env.BING_SITE_VERIFICATION
-      ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } }
+    ...(process.env.BING_SITE_VERIFICATION || process.env.META_DOMAIN_VERIFICATION
+      ? {
+          other: {
+            ...(process.env.BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } : {}),
+            ...(process.env.META_DOMAIN_VERIFICATION
+              ? { 'facebook-domain-verification': process.env.META_DOMAIN_VERIFICATION }
+              : {})
+          }
+        }
       : {})
   }
 };
