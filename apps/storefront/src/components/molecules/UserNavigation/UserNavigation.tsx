@@ -9,7 +9,9 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { useUnreads } from "@talkjs/react"
 import { usePathname } from "next/navigation"
 
-type Item = { label: string; href: string; icono: NombreIcono; insignia?: "chat" }
+// externo: rutas que no sirve Next con idioma (/seller del backend, /cotizador/
+// de nginx); van con <a> normal para que no se les ponga /mx delante.
+type Item = { label: string; href: string; icono: NombreIcono; insignia?: "chat"; externo?: boolean }
 
 const GRUPOS: { titulo: string; items: Item[] }[] = [
   {
@@ -26,9 +28,17 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   {
     titulo: "Fabricación y herramientas",
     items: [
+      { label: "Cotizador para talleres", href: "/cotizador/", icono: "cotizador", externo: true },
+      { label: "Escaneos 3D", href: "/user/escaneos", icono: "escaneos" },
       { label: "Trabajos CAM", href: "/user/cam", icono: "cam" },
       { label: "Mis créditos", href: "/user/creditos", icono: "creditos" },
-      { label: "HetNa Taller", href: "/taller", icono: "taller" },
+    ],
+  },
+  {
+    titulo: "Vender",
+    items: [
+      { label: "Mi tienda", href: "/seller", icono: "tienda", externo: true },
+      { label: "Vender en HETNA", href: "/talleres/unete", icono: "taller" },
     ],
   },
   {
@@ -57,7 +67,7 @@ export const UserNavigation = () => {
     const base = href.split("?")[0]
     return base === "/user" ? ruta === "/user" : ruta === base || ruta.startsWith(base + "/")
   }
-  const actual = GRUPOS.flatMap((g) => g.items).find((i) => activo(i.href))
+  const actual = GRUPOS.flatMap((g) => g.items).find((i) => !i.externo && activo(i.href))
 
   const lista = (
     <nav aria-label="Mi cuenta" className="flex flex-col gap-4">
@@ -67,6 +77,15 @@ export const UserNavigation = () => {
           <ul className="m-0 list-none p-0">
             {g.items.map((i) => (
               <li key={i.href}>
+                {i.externo ? (
+                  <a
+                    href={i.href}
+                    className="flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14.5px] text-[#1B1B18] hover:bg-[#F6F4EF]"
+                  >
+                    <IconoCuenta n={i.icono} size={19} />
+                    <span className="flex-1">{i.label}</span>
+                  </a>
+                ) : (
                 <LocalizedClientLink
                   href={i.href}
                   aria-current={activo(i.href) ? "page" : undefined}
@@ -82,6 +101,7 @@ export const UserNavigation = () => {
                     </span>
                   )}
                 </LocalizedClientLink>
+                )}
               </li>
             ))}
           </ul>

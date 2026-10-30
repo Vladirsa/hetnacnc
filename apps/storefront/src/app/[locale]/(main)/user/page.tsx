@@ -120,6 +120,9 @@ export default async function MiCuenta() {
     { titulo: "Mis descargas", texto: "Tus diseños digitales comprados: bájalos cuando quieras.", href: "/user/descargas", icono: "descargas" },
     { titulo: "Favoritos", texto: "Productos y piezas que guardaste para después.", href: "/favoritos", icono: "favoritos" },
     { titulo: "Fabricar una pieza", texto: "Pide cotización a talleres con tu plano, foto o idea.", href: "/fabricacion", icono: "taller" },
+    { titulo: "Cotizador para talleres", texto: "La app para cotizar con tus costos, cobrar y controlar tu taller.", href: "/cotizador/", icono: "cotizador", externo: true },
+    { titulo: "Mi tienda", texto: "Administra tus productos, pedidos y pagos como vendedor.", href: "/seller", icono: "tienda", externo: true },
+    { titulo: "Escaneos 3D", texto: "Tus piezas escaneadas y sus archivos para fabricar.", href: "/user/escaneos", icono: "escaneos" },
     { titulo: "Trabajos CAM", texto: "Tus archivos y trayectorias del laboratorio CAM.", href: "/user/cam", icono: "cam" },
     {
       titulo: "Mis créditos",
@@ -261,22 +264,32 @@ export default async function MiCuenta() {
 
           {/* Tarjetas */}
           <section aria-label="Tu cuenta" className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3">
-            {tarjetas.map((t) => (
-              <LocalizedClientLink
-                key={t.titulo}
-                href={t.href}
-                className="group flex flex-col gap-1.5 rounded-[14px] border border-[#E7E4DC] bg-white p-3.5 transition hover:border-[#C2560A] hover:shadow-[0_2px_10px_rgba(20,32,51,0.06)] sm:gap-2 sm:p-5"
-              >
-                <span className="flex items-center justify-between gap-2 text-[#44433D] group-hover:text-[#C2560A]">
-                  <IconoCuenta n={t.icono} size={26} />
-                  {t.dato && (
-                    <span className="truncate rounded-full bg-[#F4F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#44433D] sm:px-2.5 sm:text-[12px]">{t.dato}</span>
-                  )}
-                </span>
-                <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]">{t.titulo}</span>
-                <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]">{t.texto}</span>
-              </LocalizedClientLink>
-            ))}
+            {tarjetas.map((t) => {
+              const clase =
+                "group flex flex-col gap-1.5 rounded-[14px] border border-[#E7E4DC] bg-white p-3.5 transition hover:border-[#C2560A] hover:shadow-[0_2px_10px_rgba(20,32,51,0.06)] sm:gap-2 sm:p-5"
+              const contenido = (
+                <>
+                  <span className="flex items-center justify-between gap-2 text-[#44433D] group-hover:text-[#C2560A]">
+                    <IconoCuenta n={t.icono} size={26} />
+                    {t.dato && (
+                      <span className="truncate rounded-full bg-[#F4F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#44433D] sm:px-2.5 sm:text-[12px]">{t.dato}</span>
+                    )}
+                  </span>
+                  <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]">{t.titulo}</span>
+                  <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]">{t.texto}</span>
+                </>
+              )
+              // /cotizador/ y /seller no son rutas de Next con idioma
+              return t.externo ? (
+                <a key={t.titulo} href={t.href} className={clase}>
+                  {contenido}
+                </a>
+              ) : (
+                <LocalizedClientLink key={t.titulo} href={t.href} className={clase}>
+                  {contenido}
+                </LocalizedClientLink>
+              )
+            })}
             <a
               href={ligaWhatsApp("Hola, necesito ayuda con mi cuenta de HETNA CNC.")}
               target="_blank"

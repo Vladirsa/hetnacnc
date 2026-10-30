@@ -165,6 +165,13 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       { source: "/:locale/taller/escaneos/nuevo", destination: "/:locale/disenar/escanear-pieza", permanent: true },
+      // /taller (el cotizador web viejo) se quitó: el cotizador es la app
+      // (/cotizador/) y los escaneos pasaron a "Mi cuenta". Direcciones
+      // viejas en correos, favoritos y buscadores siguen funcionando.
+      { source: "/:locale/taller/escaneos", destination: "/:locale/user/escaneos", permanent: true },
+      { source: "/:locale/taller/escaneos/:id", destination: "/:locale/user/escaneos/:id", permanent: true },
+      { source: "/:locale/taller", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
+      { source: "/:locale/taller/:ruta*", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
       { source: "/:locale/servicios/laboratorio-cam/:resto*", destination: "/:locale/fabricacion", permanent: true },
       {
         source: "/:locale/producto/:handle",

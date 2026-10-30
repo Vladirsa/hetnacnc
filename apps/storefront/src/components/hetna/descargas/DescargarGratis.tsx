@@ -103,7 +103,7 @@ export function DescargarGratis({ productId }: { productId: string }) {
         {sinCupo && estado?.proxima_liberacion && (
           <p className="text-[13px] text-[#44433D]">
             La siguiente se libera el {fecha(estado.proxima_liberacion)}. Con un{" "}
-            <LocalizedClientLink href="/taller" className="font-semibold text-[#B34D07] hover:underline">
+            <LocalizedClientLink href="/servicios/cotizador-cnc" className="font-semibold text-[#B34D07] hover:underline">
               plan del Cotizador
             </LocalizedClientLink>{" "}
             no hay límite.

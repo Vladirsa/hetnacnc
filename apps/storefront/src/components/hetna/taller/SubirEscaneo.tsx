@@ -132,7 +132,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
       setError(res.mensaje)
       return
     }
-    router.push(`/${locale}/taller/escaneos/${res.datos.escaneo.id}`)
+    router.push(`/${locale}/user/escaneos/${res.datos.escaneo.id}`)
   }
 
   return (
