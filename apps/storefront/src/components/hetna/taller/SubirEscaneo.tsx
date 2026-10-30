@@ -26,13 +26,16 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
 
   const [modo, setModo] = useState<Modo>("preview")
   const [titulo, setTitulo] = useState("")
+  const [medida, setMedida] = useState("")
   const [fotos, setFotos] = useState<EstadoFoto[]>([])
   const [lote, setLote] = useState<string | undefined>()
   const [trabajando, setTrabajando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const listas = fotos.filter((f) => f.estado === "lista")
-  const suficientes = listas.length >= MINIMO[modo]
+  const medidaMm = Number(medida.replace(",", "."))
+  const medidaValida = Number.isFinite(medidaMm) && medidaMm >= 5 && medidaMm <= 3000
+  const suficientes = listas.length >= MINIMO[modo] && (modo === "preview" || medidaValida)
 
   const cambiarModo = (nuevo: Modo) => {
     setModo(nuevo)
@@ -109,10 +112,20 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
       return
     }
 
+    if (modo === "scan" && !medidaValida) {
+      setError("Escribe la medida real del lado más largo, en milímetros (entre 5 y 3000).")
+      return
+    }
+
     setTrabajando(true)
     setError(null)
 
-    const res = await crearEscaneo({ modo, titulo: titulo.trim() || null, fotos: llaves })
+    const res = await crearEscaneo({
+      modo,
+      titulo: titulo.trim() || null,
+      fotos: llaves,
+      medida_mm: modo === "scan" ? medidaMm : null,
+    })
 
     if (!res.ok) {
       setTrabajando(false)
@@ -151,6 +164,26 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
           junto a la pieza algo de medida conocida (un calibrador, una moneda) para poder
           verificar la escala.
         </div>
+      )}
+
+      {modo === "scan" && (
+        <label className="flex flex-col gap-1.5 max-w-[420px]">
+          <span className="text-[13px] font-semibold text-[#4A4943]">Medida real del lado más largo (mm)</span>
+          <input
+            className="w-full rounded-[10px] border border-[#E7E4DC] bg-white px-3.5 py-2.5 text-[15px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
+            value={medida}
+            onChange={(e) => setMedida(e.target.value.replace(/[^\d.,]/g, ""))}
+            inputMode="decimal"
+            placeholder="Ej. 125.4"
+          />
+          <span className="text-[12.5px] text-[#6B6A63] leading-snug">
+            Mídelo con vernier o flexómetro. Las fotos dan la forma pero no el tamaño: con esta
+            medida escalamos el archivo para que salga en milímetros reales.
+          </span>
+          {medida && !medidaValida && (
+            <span className="text-[12.5px] text-[#9B3225]">Debe estar entre 5 y 3000 mm. ¿La escribiste en centímetros?</span>
+          )}
+        </label>
       )}
 
       <label className="flex flex-col gap-1.5 max-w-[420px]">

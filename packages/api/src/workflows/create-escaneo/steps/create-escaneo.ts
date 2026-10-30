@@ -10,7 +10,14 @@ export type CreateEscaneoStepInput = {
   titulo?: string | null
   // Llaves en el bucket privado de las fotos ya subidas.
   fotos: string[]
+  // Medida real del lado más largo, en mm (ver el modelo).
+  medida_mm?: number | null
 }
+
+// Límites de la medida de referencia: de una rondana a una pieza grande de
+// router. Fuera de eso casi seguro es un error de captura (cm por mm).
+export const MEDIDA_MINIMA_MM = 5
+export const MEDIDA_MAXIMA_MM = 3000
 
 // Cuántas fotos necesita cada camino. El preview usa una sola (TripoSR
 // reconstruye a partir de una imagen); la fotogrametría necesita muchas
@@ -52,6 +59,22 @@ export const createEscaneoStep = createStep(
       )
     }
 
+    // Sólo el escaneo de paga se escala; el preview de IA nunca es a medida.
+    const medida = input.modo === "scan" ? Number(input.medida_mm) : NaN
+    const hayMedida = Number.isFinite(medida) && medida > 0
+    if (input.modo === "scan" && !hayMedida) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Escribe la medida real del lado más largo de la pieza: con ella el STL sale en milímetros."
+      )
+    }
+    if (hayMedida && (medida < MEDIDA_MINIMA_MM || medida > MEDIDA_MAXIMA_MM)) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        `La medida debe estar entre ${MEDIDA_MINIMA_MM} y ${MEDIDA_MAXIMA_MM} mm. Revisa que no esté en centímetros.`
+      )
+    }
+
     // El precio se congela aquí, en el expediente. Si mañana sube, un
     // reembolso de este trabajo sigue devolviendo lo que de verdad se cobró.
     const creditos = creditosDe(input.modo)
@@ -63,6 +86,7 @@ export const createEscaneoStep = createStep(
         titulo: input.titulo || null,
         fotos,
         n_fotos: fotos.length,
+        medida_mm: hayMedida ? Math.round(medida * 100) / 100 : null,
         estatus: "pendiente",
         creditos_cobrados: creditos,
       } as any,

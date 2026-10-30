@@ -9,7 +9,8 @@ Contrato de entrada (event["input"]):
   "mode": "preview" | "scan",
   "job_id": "texto libre, se usa para nombrar los archivos de salida",
   "image_urls": ["https://...", ...],   // 1 url para preview, 15-60 para scan
-  "output_prefix": "escaneos3d/<job_id>/"   // prefijo en el bucket de B2
+  "output_prefix": "escaneos3d/<job_id>/",  // prefijo en el bucket de B2
+  "referencia_mm": 125.4                    // opcional: lado mas largo real, en mm
 }
 """
 from __future__ import annotations
@@ -42,6 +43,13 @@ def handler(event: dict) -> dict:
     job_id = entrada.get("job_id")
     urls = entrada.get("image_urls") or []
     prefijo_salida = entrada.get("output_prefix")
+    referencia_mm = entrada.get("referencia_mm")
+    try:
+        referencia_mm = float(referencia_mm) if referencia_mm is not None else None
+    except (TypeError, ValueError):
+        return {"error": f"referencia_mm debe ser un numero, llego: {referencia_mm!r}"}
+    if referencia_mm is not None and not (0 < referencia_mm <= 10000):
+        return {"error": f"referencia_mm fuera de rango: {referencia_mm}"}
 
     if modo not in ("preview", "scan"):
         return {"error": f"mode debe ser 'preview' o 'scan', llego: {modo!r}"}
@@ -68,7 +76,9 @@ def handler(event: dict) -> dict:
 
         ruta_stl = os.path.join(tmp, f"{job_id}.stl")
         try:
-            info = convertir(ruta_obj, ruta_stl)
+            # El preview de TripoSR es una aproximacion de IA: no se escala
+            # aunque llegue medida, para no venderlo como pieza a medida.
+            info = convertir(ruta_obj, ruta_stl, referencia_mm if modo == "scan" else None)
         except Exception as e:
             return {"error": f"la malla se genero pero no se pudo convertir a STL: {e}"}
 
@@ -81,6 +91,7 @@ def handler(event: dict) -> dict:
             "vertices": info["vertices"],
             "caras": info["caras"],
             "bounding_box_mm": info["bounding_box_mm"],
+            "escala_real": info["escala_real"],
         }
 
         obj_key = f"{prefijo_salida}modelo.obj"

@@ -160,6 +160,9 @@ las descargas.
 
 - El modo `scan` (Meshroom) **nunca se ha ejecutado con fotos reales**. Lo
   único verificado de punta a punta es el preview con TripoSR.
-- `bounding_box_mm` no está en milímetros: es el tamaño crudo de la malla, y
-  TripoSR entrega coordenadas normalizadas. Para el preview da igual; para el
-  escaneo de paga la escala es justo lo que se vende.
+- La escala del escaneo de paga depende de la medida que captura el taller
+  (`referencia_mm`, el lado más largo de la pieza medido con vernier). La
+  fotogrametría reconstruye la forma pero no el tamaño, así que el STL se
+  escala para que su lado mayor mida exactamente eso. La salida trae
+  `escala_real: true` cuando quedó en milímetros. El preview de TripoSR nunca
+  se escala: sus medidas son proporciones, no milímetros.

@@ -63,9 +63,12 @@ export type Escaneo = {
   vertices: number | null
   caras: number | null
   watertight: boolean | null
-  // Ojo: son las dimensiones crudas de la malla. TripoSR entrega coordenadas
-  // normalizadas, no milímetros -- por eso el campo no dice la unidad.
+  // Dimensiones de la malla: milímetros sólo si escala_real es true; si no,
+  // son proporciones (la reconstrucción no sabe el tamaño real).
   bounding_box: number[] | null
+  // Lado más largo medido por el taller, con el que se escala el STL.
+  medida_mm: number | null
+  escala_real: boolean | null
   creditos_cobrados: number
   error: string | null
   iniciado_en: string | null
@@ -93,6 +96,7 @@ export async function crearEscaneo(cuerpo: {
   modo: "preview" | "scan"
   titulo?: string | null
   fotos: string[]
+  medida_mm?: number | null
 }) {
   return pedir<{ escaneo: Escaneo }>("/store/escaneos", { metodo: "POST", cuerpo })
 }

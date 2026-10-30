@@ -74,6 +74,8 @@ export default async function despacharEscaneos(container: MedusaContainer) {
             job_id: escaneo.id,
             image_urls: urls,
             output_prefix: `escaneos3d/${escaneo.customer_id}/${escaneo.id}/`,
+            // Con esto la GPU escala la malla a milímetros reales
+            ...(escaneo.medida_mm ? { referencia_mm: Number(escaneo.medida_mm) } : {}),
           },
         }),
       })
@@ -139,6 +141,7 @@ export default async function despacharEscaneos(container: MedusaContainer) {
           caras: Number.isFinite(Number(salida.caras)) ? Number(salida.caras) : null,
           watertight: typeof salida.watertight === "boolean" ? salida.watertight : null,
           bounding_box: Array.isArray(salida.bounding_box_mm) ? salida.bounding_box_mm : null,
+          escala_real: salida.escala_real === true,
           terminado_en: new Date(),
         } as any)
         logger.info(`[escaneos] ${escaneo.id} terminado`)

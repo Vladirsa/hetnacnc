@@ -122,9 +122,13 @@ export default async function TallerEscaneoDetalle({
             <Dato termino="Caras" valor={miles(e.caras)} />
             <Dato termino="Cierra" valor={e.watertight === null ? "—" : e.watertight ? "Sí" : "No"} />
             <Dato
-              termino="Dimensiones"
-              valor={e.bounding_box?.length ? e.bounding_box.map((n) => Number(n).toFixed(2)).join(" × ") : "—"}
-              nota="Sin unidad: la malla viene en coordenadas relativas."
+              termino={e.escala_real ? "Medidas (mm)" : "Proporciones"}
+              valor={e.bounding_box?.length ? e.bounding_box.map((n) => Number(n).toFixed(e.escala_real ? 1 : 2)).join(" × ") : "—"}
+              nota={
+                e.escala_real
+                  ? `Escalado a ${Number(e.medida_mm).toLocaleString("es-MX")} mm en el lado más largo, la medida que capturaste.`
+                  : "Sin unidad: la malla no está a escala real."
+              }
             />
           </dl>
         </>

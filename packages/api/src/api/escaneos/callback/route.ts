@@ -77,6 +77,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       caras: Number.isFinite(Number(body.caras)) ? Number(body.caras) : null,
       watertight: typeof body.watertight === "boolean" ? body.watertight : null,
       bounding_box: Array.isArray(body.bounding_box) ? body.bounding_box : null,
+      escala_real: body.escala_real === true,
       terminado_en: new Date(),
     } as any)
     return res.json({ escaneo_id: escaneo.id, estatus: "listo" })

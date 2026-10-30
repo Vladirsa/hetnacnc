@@ -57,6 +57,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       modo,
       titulo: typeof body.titulo === "string" ? body.titulo.slice(0, 200) : null,
       fotos: body.fotos,
+      medida_mm: body.medida_mm == null || body.medida_mm === "" ? null : Number(body.medida_mm),
     },
   })
 

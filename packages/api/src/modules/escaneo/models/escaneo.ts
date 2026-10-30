@@ -45,9 +45,18 @@ const Escaneo = model
     vertices: model.number().nullable(),
     caras: model.number().nullable(),
     watertight: model.boolean().nullable(),
-    // Las dimensiones que reporta la malla. Ojo: TripoSR entrega coordenadas
-    // normalizadas, no milímetros -- por eso el campo no dice la unidad.
+    // Las dimensiones que reporta la malla. Sólo están en milímetros cuando
+    // escala_real es true. La fotogrametría (igual que TripoSR) reconstruye la
+    // forma pero no el tamaño: sin una medida de referencia, la malla sale en
+    // unidades arbitrarias y estas cifras son proporciones, no milímetros.
     bounding_box: model.json().nullable(),
+    // La medida real del lado más largo de la pieza, que el taller toma con
+    // vernier o flexómetro al pedir el escaneo. Con ella la GPU escala la
+    // malla para que el STL salga en milímetros reales. Obligatoria en el
+    // escaneo de paga: la escala es justo lo que se vende.
+    medida_mm: model.float().nullable(),
+    // Lo que confirma la GPU: true si el STL quedó escalado a milímetros.
+    escala_real: model.boolean().nullable(),
 
     creditos_cobrados: model.number().default(0),
     error: model.text().nullable(),
