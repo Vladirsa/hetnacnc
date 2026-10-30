@@ -25,6 +25,7 @@ export default function Caja3D({ piezas, espesor, exterior }: Props) {
 
     const camera = new THREE.PerspectiveCamera(45, Math.max(1, el.clientWidth) / Math.max(1, el.clientHeight), 1, 10000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(el.clientWidth || 300, el.clientHeight || 300)
     el.appendChild(renderer.domElement)
 
@@ -35,7 +36,12 @@ export default function Caja3D({ piezas, espesor, exterior }: Props) {
     scene.add(grupo)
 
     const tam = caja.getSize(new THREE.Vector3()).length() || 1
-    camera.position.set(tam * 0.85, tam * 0.65, tam * 0.95)
+    // Distancia justa para que la caja llene la vista sin salirse
+    const r = tam / 2
+    const vfov = (camera.fov * Math.PI) / 180
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect)
+    const dist = Math.max(r / Math.sin(vfov / 2), r / Math.sin(hfov / 2)) * 1.05
+    camera.position.copy(new THREE.Vector3(0.7, 0.5, 0.8).normalize().multiplyScalar(dist))
     camera.lookAt(0, 0, 0)
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.65))
@@ -78,5 +84,6 @@ export default function Caja3D({ piezas, espesor, exterior }: Props) {
     }
   }, [piezas, espesor, exterior])
 
+  // El alto lo pone el contenedor (Visor3D); si va suelto, 420 px
   return <div ref={ref} className="w-full h-[420px] rounded-[12px] overflow-hidden cursor-grab active:cursor-grabbing" />
 }

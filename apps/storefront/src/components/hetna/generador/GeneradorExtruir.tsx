@@ -8,6 +8,8 @@ import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { extruir } from "@/lib/generador/extruir"
 import { type Dibujo, dibujoSVG, escalar, leerDXF, leerSVG, mallaSTL, medidas, unir } from "@/lib/generador/vectores"
 
+import { Visor3D } from "./Visor3D"
+
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
@@ -181,9 +183,9 @@ export function GeneradorExtruir() {
                 <Opcion activa={vista === "3d"} onClick={() => setVista("3d")}>Vista 3D</Opcion>
                 <Opcion activa={vista === "2d"} onClick={() => setVista("2d")}>Contornos</Opcion>
               </div>
-              <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-4">
+              <div className={`bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden ${vista === "3d" && listo ? "" : "p-3 lg:p-4"}`}>
                 {vista === "3d" && listo ? (
-                  <Malla3D tris={r!.malla.tris} />
+                  <Visor3D alto="h-[420px] lg:h-[560px]"><Malla3D tris={r!.malla.tris} /></Visor3D>
                 ) : (
                   <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[420px]" dangerouslySetInnerHTML={{ __html: vista2d }} />
                 )}
