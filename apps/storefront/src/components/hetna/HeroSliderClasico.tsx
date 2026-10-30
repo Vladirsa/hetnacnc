@@ -58,7 +58,7 @@ const SLIDES: Slide[] = [
       "Sube tu proyecto, solicita una cotización y encuentra talleres CNC capaces de fabricarlo.",
     botones: [
       { texto: "Cotizar proyecto", href: "/servicios/cotizador-cnc" },
-      { texto: "Solicitar maquila", href: "/servicios/laboratorio-cam" },
+      { texto: "Solicitar maquila", href: "/fabricacion" },
     ],
     bullets: ["📐 Diseño 2D y 3D", "🛠️ Maquinado CNC", "📦 Piezas terminadas"],
     pasos: [

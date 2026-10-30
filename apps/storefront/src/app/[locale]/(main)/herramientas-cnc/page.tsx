@@ -128,7 +128,7 @@ export default function HerramientasCnc() {
       </section>
 
       {GRUPOS_HERRAMIENTAS.map((g) => (
-        <section key={g.id} id={g.id} className="scroll-mt-24 px-4 lg:px-16 pt-10 max-w-[1280px]">
+        <section key={g.id} id={g.id} className="scroll-mt-36 px-4 lg:px-16 pt-10 max-w-[1280px]">
           <div className="flex items-start gap-3">
             <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#FDEEE1] text-[#B34D07]">
               <ServicioIcono nombre={g.icono} size={22} />
@@ -137,14 +137,37 @@ export default function HerramientasCnc() {
               <p className="text-[12px] font-semibold uppercase tracking-wide text-[#B34D07]">{g.pregunta}</p>
               <h2 className="text-[22px] lg:text-[26px] font-bold text-[#1B1B18] leading-tight">{g.titulo}</h2>
               <p className="mt-1 text-[14.5px] text-[#4A4943] leading-relaxed max-w-[720px]">{g.texto}</p>
-              {g.href && (
-                <LocalizedClientLink
-                  href={g.href}
-                  className="mt-3 inline-flex items-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"
-                >
-                  Abrir el espacio de trabajo
-                </LocalizedClientLink>
+              {!!g.puntos?.length && (
+                <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0">
+                  {g.puntos.map((pt) => (
+                    <li key={pt} className="rounded-full bg-[#FDEEE1] px-3 py-1 text-[12.5px] font-semibold text-[#8A3D06]">
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
               )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {g.accion && (
+                  <LocalizedClientLink
+                    href={g.accion.href}
+                    className="inline-flex items-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"
+                  >
+                    {g.accion.texto}
+                  </LocalizedClientLink>
+                )}
+                {g.href && (
+                  <LocalizedClientLink
+                    href={g.href}
+                    className={
+                      g.accion
+                        ? "inline-flex items-center border border-[#C9C4B8] bg-white hover:border-[#C2560A] hover:text-[#B34D07] text-[#1B1B18] font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"
+                        : "inline-flex items-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"
+                    }
+                  >
+                    {g.boton ?? "Abrir el espacio de trabajo"}
+                  </LocalizedClientLink>
+                )}
+              </div>
             </div>
           </div>
 

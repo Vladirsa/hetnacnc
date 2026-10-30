@@ -27,6 +27,12 @@ export type GrupoHerramientas = {
   icono: string
   // Página propia del grupo (si no, el enlace baja a su sección de /herramientas-cnc)
   href?: string
+  // Texto del botón hacia href en /herramientas-cnc (por omisión "Abrir el espacio de trabajo")
+  boton?: string
+  // Botón principal de la sección cuando no es href (p. ej. entrar directo a la herramienta)
+  accion?: { texto: string; href: string }
+  // Lo que se puede hacer, en pocas palabras (chips bajo el texto)
+  puntos?: string[]
   herramientas: Herramienta[]
 }
 
@@ -53,11 +59,16 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
     id: "laboratorio-cam",
     titulo: "Laboratorio CAM",
     pregunta: "Ya tengo el dibujo o el modelo",
-    texto: "Del archivo al G-code: trayectorias, avances y revoluciones calculados para tu máquina.",
+    texto:
+      "Un simulador CAM en línea: le das tu pieza, eliges material, herramienta y máquina, y te enseña por dónde pasa la fresa, cuánto tarda y si algo choca. Cuando te convence, descargas el G-code. Gratis y sin cuenta.",
     icono: "cam",
+    href: "/laboratorio-cam",
+    boton: "Qué es y cómo funciona",
+    accion: { texto: "Entrar al laboratorio", href: "/cam/lab" },
+    puntos: ["Simular trayectorias", "Detectar colisiones", "Estimar tiempos", "Probar estrategias", "G-code para tu controlador"],
     herramientas: [
       { nombre: "DXF a G-code", texto: "Sube un DXF, elige material y fresa, y descarga el G-code con las pasadas calculadas.", href: "/cam/subir", icono: "gcode", acceso: "gratis" },
-      { nombre: "CAM en 3, 4 y 5 ejes", texto: "STL, OBJ o STEP: trayectoria con anticolisión, remoción de material y programa para tu controlador.", href: "/cam/lab", icono: "ejes", acceso: "gratis" },
+      { nombre: "CAM en 3, 4 y 5 ejes", texto: "STL, OBJ, STEP o IGES: simula la trayectoria con anticolisión, remoción de material y programa para tu controlador.", href: "/cam/lab", icono: "ejes", acceso: "gratis" },
       { nombre: "Torno con eje rotativo", texto: "Balaustres, patas y columnas por tramos, con G-code para Mach3 o Mach4.", href: "/cam/torno", icono: "torno", acceso: "gratis" },
     ],
   },

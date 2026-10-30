@@ -81,7 +81,7 @@ export default async function LaboratorioCam5Ejes({
 
         {servicios.length > 0 && (
           <>
-            <h2 className="mt-10 text-[22px] font-bold text-[#1B1B18]">Precios</h2>
+            <h2 id="precios" className="mt-10 scroll-mt-24 text-[22px] font-bold text-[#1B1B18]">Precios</h2>
             <p className="mt-2 text-[14px] text-[#4A4943] max-w-[680px]">
               El nivel (Básica, Media o Alta) se asigna solo, según el tiempo de mecanizado y los
               puntos de la trayectoria que calculaste. Se entrega en tu cuenta, sin envío.

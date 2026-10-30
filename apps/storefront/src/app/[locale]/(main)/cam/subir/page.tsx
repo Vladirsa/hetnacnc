@@ -64,7 +64,7 @@ export default function LaboratorioCamPage() {
                 <li>Cajeado: vaciar un área completa, no sólo cortar su contorno</li>
                 <li>Archivos SVG (por ahora sólo DXF)</li>
                 <li>Láser: la potencia y las pasadas funcionan distinto</li>
-                <li>3, 4 y 5 ejes, que siguen siendo servicio con nosotros</li>
+                <li>3, 4 y 5 ejes: para eso está el CAM 3D del laboratorio</li>
               </ul>
             </div>
           </div>
