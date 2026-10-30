@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { BloquePublicidad } from "@/components/hetna/disenar/BloquePublicidad"
 import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
 import { listarTalleres, tallerPorHandle } from "@/lib/hetna/talleres"
 
@@ -95,6 +96,7 @@ export default async function CotizarPage({
               <p className="font-bold">Ver directorio de talleres →</p>
               <p className="mt-1 text-sm text-white/70">Elige un taller por servicio, material o estado.</p>
             </LocalizedClientLink>
+            <BloquePublicidad />
           </aside>
         </div>
       </div>
