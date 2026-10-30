@@ -35,7 +35,7 @@ const TarjetaImagen = ({ p }: { p: Pieza }) => (
     className="group relative block overflow-hidden rounded-2xl bg-[#142033] text-white"
   >
     <div className="relative w-full" style={{ aspectRatio: "2 / 1" }}>
-      <ImagenPieza p={p} />
+      <ImagenPieza p={p} sizes="(min-width: 768px) 50vw, 100vw" />
       <TextoPieza p={p} />
     </div>
     {p.es_publicidad && <EtiquetaPublicidad />}

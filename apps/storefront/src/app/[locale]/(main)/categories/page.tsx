@@ -1,8 +1,9 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
 
-import { Breadcrumbs } from "@/components/atoms"
-import { SearchProductsListing, ProductListing } from "@/components/sections"
+import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
+import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
+import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import type { Metadata } from "next"

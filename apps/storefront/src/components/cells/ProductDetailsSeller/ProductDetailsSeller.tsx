@@ -2,7 +2,7 @@
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
-import { SellerInfo } from "@/components/molecules"
+import { SellerInfo } from "@/components/molecules/SellerInfo/SellerInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { tallerPorHandle, ubicacion } from "@/lib/hetna/talleres"
 import { SellerDTO } from "@mercurjs/types"

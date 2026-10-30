@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react"
 
-import { LogoutButton } from "@/components/atoms"
-import { Dropdown } from "@/components/molecules"
+import { LogoutButton } from "@/components/atoms/LogoutButton/LogoutButton"
+import { Dropdown } from "@/components/molecules/Dropdown/Dropdown"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProfileIcon } from "@/icons"
+import { contarSinLeer } from "@/lib/chat/campanita"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
-import { useUnreads } from "@talkjs/react"
 
 // El menú de la cuenta.
 //
@@ -32,8 +32,16 @@ export const UserDropdown = ({
   const [saldo, setSaldo] = useState<{ creditos: number; porEscaneo: number; ilimitado: boolean } | null>(null)
   const [pedido, setPedido] = useState(false)
 
-  const unreads = useUnreads()
-  const sinLeer = unreads?.length ?? 0
+  // Mensajes sin leer: del servidor, igual que la campanita. Antes salía de
+  // useUnreads() de TalkJS, y sólo con importarlo cada visitante (con o sin
+  // sesión) bajaba el SDK del chat en todas las páginas.
+  const [sinLeer, setSinLeer] = useState(0)
+  useEffect(() => {
+    if (!isLoggedIn) return
+    contarSinLeer()
+      .then((r) => r.ok && setSinLeer(r.total))
+      .catch(() => {})
+  }, [isLoggedIn, abierto])
 
   const traerSaldo = useCallback(async () => {
     if (pedido || !isLoggedIn) return

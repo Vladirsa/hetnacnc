@@ -3,9 +3,9 @@
 import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
 
-import { Checkbox } from "@/components/atoms"
+import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import { BotonFavoritoIcono } from "@/components/hetna/Favoritos"
-import { DeleteCartItemButton } from "@/components/molecules"
+import { DeleteCartItemButton } from "@/components/molecules/DeleteCartItemButton/DeleteCartItemButton"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { UpdateCartItemButton } from "@/components/molecules/UpdateCartItemButton/UpdateCartItemButton"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Input } from "@/components/atoms"
+import { Input } from "@/components/atoms/Input/Input"
 import { SearchIcon } from "@/icons"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"

@@ -1,4 +1,4 @@
-import { ProductDetailsPage } from "@/components/sections"
+import { ProductDetailsPage } from "@/components/sections/ProductDetailsPage/ProductDetailsPage"
 import { listProducts } from "@/lib/data/products"
 import { generateProductMetadata } from "@/lib/helpers/seo"
 import type { Metadata } from "next"

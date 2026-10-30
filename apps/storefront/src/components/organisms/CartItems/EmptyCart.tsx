@@ -1,7 +1,7 @@
-import { Button } from '@/components/atoms';
-import { Carousel } from '@/components/cells';
+import { Button } from '@/components/atoms/Button/Button'
+import { CustomCarousel as Carousel } from '@/components/cells/Carousel/Carousel'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
-import { CategoryCard } from '@/components/organisms';
+import { CategoryCard } from '@/components/organisms/CategoryCard/CategoryCard'
 import { listCategories } from '@/lib/data/categories';
 
 export const EmptyCart = async () => {

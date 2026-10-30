@@ -1,10 +1,8 @@
-import {
-  ProductListingActiveFilters,
-  ProductListingHeader,
-  ProductSidebar,
-  ProductsList,
-  ProductsPagination,
-} from "@/components/organisms"
+import { ProductListingActiveFilters } from "@/components/organisms/ProductListingActiveFilters/ProductListingActiveFilters"
+import { ProductListingHeader } from "@/components/organisms/ProductListingHeader/ProductListingHeader"
+import { ProductSidebar } from "@/components/organisms/ProductSidebar/ProductSidebar"
+import { ProductsList } from "@/components/organisms/ProductsList/ProductsList"
+import { ProductsPagination } from "@/components/organisms/ProductsPagination/ProductsPagination"
 import { PRODUCT_LIMIT } from "@/const"
 import { listProductsWithSort } from "@/lib/data/products"
 

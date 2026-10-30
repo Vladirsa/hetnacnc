@@ -1,4 +1,4 @@
-import { Card } from "@/components/atoms"
+import { Card } from "@/components/atoms/Card/Card"
 import { getAuthHeaders } from "@/lib/data/cookies"
 
 // Seguimiento del pedido en Mis pedidos: número de guía, paquetería y liga de

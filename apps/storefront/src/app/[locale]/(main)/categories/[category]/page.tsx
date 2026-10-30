@@ -3,8 +3,9 @@ import { getCategoryByHandle, collectCategorySubtreeIds } from "@/lib/data/categ
 import { Suspense } from "react"
 
 import type { Metadata } from "next"
-import { Breadcrumbs } from "@/components/atoms"
-import { SearchProductsListing, ProductListing } from "@/components/sections"
+import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
+import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
+import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
 import { notFound, permanentRedirect } from "next/navigation"
 import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"

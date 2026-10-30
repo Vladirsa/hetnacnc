@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { FacturaPedido } from "@/components/hetna/cuenta/Facturacion"
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { OrderDetailsSection } from "@/components/sections/OrderDetailsSection/OrderDetailsSection"
 import { leerFiscal, misFacturas } from "@/lib/cuenta/facturas"

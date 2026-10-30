@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { EvidenciaEnvio } from "@/components/hetna/envios/EvidenciaEnvio"
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { misEnvios } from "@/lib/envios/cotizar"
 

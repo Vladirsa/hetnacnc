@@ -4,8 +4,10 @@ import { useEffect, useState } from "react"
 
 import { usePathname } from "next/navigation"
 
-import { Badge, Button } from "@/components/atoms"
-import { CartDropdownItem, Dropdown } from "@/components/molecules"
+import { Badge } from "@/components/atoms/Badge/Badge"
+import { Button } from "@/components/atoms/Button/Button"
+import { CartDropdownItem } from "@/components/molecules/CartDropdownItem/CartDropdownItem"
+import { Dropdown } from "@/components/molecules/Dropdown/Dropdown"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { useCartContext } from "@/components/providers"
 import { usePrevious } from "@/hooks/usePrevious"

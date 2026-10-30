@@ -1,7 +1,8 @@
 import NotFound from "@/app/not-found"
-import { Breadcrumbs } from "@/components/atoms"
+import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { SearchProductsListing, ProductListing } from "@/components/sections"
+import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
+import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
 import { getCollectionByHandle } from "@/lib/data/collections"
 import { listRegions } from "@/lib/data/regions"
 import {

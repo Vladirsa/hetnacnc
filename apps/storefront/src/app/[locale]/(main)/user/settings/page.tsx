@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 
 import { FormFiscal } from "@/components/hetna/cuenta/Facturacion"
-import { LoginForm, ProfileDetails } from "@/components/molecules"
-import { UserNavigation } from "@/components/molecules"
+import { LoginForm } from "@/components/molecules/LoginForm/LoginForm"
+import { ProfileDetails } from "@/components/molecules/ProfileDetails/ProfileDetails"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import { ProfilePassword } from "@/components/molecules/ProfileDetails/ProfilePassword"
 import { leerFiscal } from "@/lib/cuenta/facturas"
 import { retrieveCustomer } from "@/lib/data/customer"

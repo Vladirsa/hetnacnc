@@ -1,7 +1,8 @@
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
-import { Footer, Header } from '@/components/organisms';
+import { Footer } from '@/components/organisms/Footer/Footer'
+import { Header } from '@/components/organisms/Header/Header'
 import { HetnaHeader } from '@/components/hetna/HetnaHeader';
 import { retrieveCustomer } from '@/lib/data/customer';
 import { checkRegion } from '@/lib/helpers/check-region';

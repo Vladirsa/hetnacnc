@@ -1,4 +1,5 @@
-import { Footer, Header } from "@/components/organisms"
+import { Footer } from "@/components/organisms/Footer/Footer"
+import { Header } from "@/components/organisms/Header/Header"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { redirect } from "next/navigation"
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 
 import { IconoCuenta, type NombreIcono } from "@/components/hetna/cuenta/IconoCuenta"
 import { VincularCotizador } from "@/components/hetna/cuenta/VincularCotizador"
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
 import { retrieveCustomer } from "@/lib/data/customer"

@@ -1,16 +1,12 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import {
-  ProductsPagination,
-  ProductSearchSidebar,
-  ProductListingActiveFilters,
-} from "@/components/organisms"
-import {
-  ProductListingLoadingView,
-  ProductListingNoResultsView,
-  ProductListingProductsView,
-} from "@/components/molecules"
+import { ProductsPagination } from "@/components/organisms/ProductsPagination/ProductsPagination"
+import { ProductSearchSidebar } from "@/components/organisms/ProductSearchSidebar/ProductSearchSidebar"
+import { ProductListingActiveFilters } from "@/components/organisms/ProductListingActiveFilters/ProductListingActiveFilters"
+import ProductListingLoadingView from "@/components/molecules/ProductListingLoadingView/ProductListingLoadingView"
+import ProductListingNoResultsView from "@/components/molecules/ProductListingNoResultsView/ProductListingNoResultsView"
+import ProductListingProductsView from "@/components/molecules/ProductListingProductsView/ProductListingProductsView"
 import { useSearchParams } from "next/navigation"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"

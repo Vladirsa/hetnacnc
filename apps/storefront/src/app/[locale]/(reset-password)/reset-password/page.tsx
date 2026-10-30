@@ -1,4 +1,4 @@
-import { Card } from "@/components/atoms"
+import { Card } from "@/components/atoms/Card/Card"
 import { ProfilePasswordForm } from "@/components/molecules/ProfilePasswordForm/ProfilePasswordForm"
 import type { Metadata } from "next"
 

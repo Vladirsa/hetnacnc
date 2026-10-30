@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import { retrieveCustomer } from "@/lib/data/customer"
 
 // Escaneos 3D dentro de "Mi cuenta" (antes vivían en /taller/escaneos, que se

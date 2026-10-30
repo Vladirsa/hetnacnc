@@ -1,4 +1,4 @@
-import { ProductPageAccordion } from '@/components/molecules';
+import { ProductPageAccordion } from '@/components/molecules/ProductPageAccordion/ProductPageAccordion'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import { EMPRESA } from '@/lib/hetna/empresa';
 

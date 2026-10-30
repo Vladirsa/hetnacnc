@@ -1,5 +1,5 @@
-import { SellerTabs } from "@/components/organisms"
-import { SellerPageHeader } from "@/components/sections"
+import { SellerTabs } from "@/components/organisms/SellerTabs/SellerTabs"
+import { SellerPageHeader } from "@/components/sections/SellerPageHeader/SellerPageHeader"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listRegions } from "@/lib/data/regions"
 import { getSellerByHandle } from "@/lib/data/seller"

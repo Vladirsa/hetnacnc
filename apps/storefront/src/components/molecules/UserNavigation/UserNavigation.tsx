@@ -3,7 +3,7 @@
 // Menú de "Mi cuenta": agrupado como en los marketplaces grandes (Compras,
 // Fabricación, Comunidad, Cuenta), en español y con iconos. En celular es un
 // desplegable para no empujar el contenido hacia abajo.
-import { LogoutButton } from "@/components/atoms"
+import { LogoutButton } from "@/components/atoms/LogoutButton/LogoutButton"
 import { IconoCuenta, type NombreIcono } from "@/components/hetna/cuenta/IconoCuenta"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { useUnreads } from "@talkjs/react"

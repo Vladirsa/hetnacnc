@@ -4,11 +4,11 @@ import { useState } from "react"
 
 import { useRouter } from "next/navigation"
 
-import { Button } from "@/components/atoms"
+import { Button } from "@/components/atoms/Button/Button"
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
 import { DescargarGratis } from "@/components/hetna/descargas/DescargarGratis"
-import { ProductVariants } from "@/components/molecules"
+import { ProductVariants } from "@/components/molecules/ProductVariants/ProductVariants"
 import { CompareOffersModal } from "@/components/organisms/CompareOffersModal/CompareOffersModal"
 import { useCartContext } from "@/components/providers"
 import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"

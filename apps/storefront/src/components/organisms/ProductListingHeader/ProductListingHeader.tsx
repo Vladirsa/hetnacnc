@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 
-import { SelectField } from '@/components/molecules';
+import { SelectField } from '@/components/molecules/SelectField/SelectField'
 
 const selectOptions = [
   { label: 'Más recientes', value: 'created_at' },

@@ -1,11 +1,9 @@
-import {
-  ProductAdditionalAttributes,
-  ProductDetailsFooter,
-  ProductDetailsHeader,
-  ProductDetailsSeller,
-  ProductDetailsShipping,
-  ProductPageDetails,
-} from "@/components/cells"
+import { ProductAdditionalAttributes } from "@/components/cells/ProductAdditionalAttributes/ProductAdditionalAttributes"
+import { ProductDetailsFooter } from "@/components/cells/ProductDetailsFooter/ProductDetailsFooter"
+import { ProductDetailsHeader } from "@/components/cells/ProductDetailsHeader/ProductDetailsHeader"
+import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
+import { ProductDetailsShipping } from "@/components/cells/ProductDetailsShipping/ProductDetailsShipping"
+import { ProductPageDetails } from "@/components/cells/ProductPageDetails/ProductPageDetails"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
 import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
 import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"

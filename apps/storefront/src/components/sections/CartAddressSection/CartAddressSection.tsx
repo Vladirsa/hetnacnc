@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-import { Button } from "@/components/atoms"
+import { Button } from "@/components/atoms/Button/Button"
 import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
 import ShippingAddress from "@/components/organisms/ShippingAddress/ShippingAddress"
 import { setAddresses } from "@/lib/data/cart"

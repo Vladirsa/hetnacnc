@@ -70,7 +70,7 @@ export default function HeroConImagenes({ piezas }: { piezas: Pieza[] }) {
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : (
-                  <ImagenPieza p={p} prioridad={i === 0} />
+                  <ImagenPieza p={p} prioridad={i === 0} sizes="100vw" />
                 )}
                 {conTexto && <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />}
                 <div className="relative mx-auto flex h-full max-w-[1280px] items-center px-4 pb-10 lg:px-16">

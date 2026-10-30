@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 
-import { Cart } from '@/components/sections';
+import { Cart } from '@/components/sections/Cart/Cart'
 
 export const metadata: Metadata = {
   title: 'Tu carrito',

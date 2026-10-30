@@ -1,12 +1,10 @@
 import { HetnaHome } from "@/components/hetna/HetnaHome"
-import {
-  BannerSection,
-  BlogSection,
-  Hero,
-  HomeCategories,
-  HomeProductSection,
-  ShopByStyleSection,
-} from "@/components/sections"
+import { BannerSection } from "@/components/sections/BannerSection/BannerSection"
+import { BlogSection } from "@/components/sections/BlogSection/BlogSection"
+import { Hero } from "@/components/sections/Hero/Hero"
+import { HomeCategories } from "@/components/sections/HomeCategories/HomeCategories"
+import { HomeProductSection } from "@/components/sections/HomeProductSection/HomeProductSection"
+import { ShopByStyleSection } from "@/components/sections/ShopByStyle/ShopByStyleSection"
 
 import type { Metadata } from "next"
 import { headers } from "next/headers"

@@ -2,7 +2,8 @@
 
 import { HttpTypes } from "@medusajs/types"
 
-import { CartItemsHeader, CartItemsProducts } from "@/components/cells"
+import { CartItemsHeader } from "@/components/cells/CartItemsHeader/CartItemsHeader"
+import { CartItemsProducts } from "@/components/cells/CartItemsProducts/CartItemsProducts"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 
 // Lo que se está comprando, agrupado por taller, dentro de la pasarela.

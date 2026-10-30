@@ -7,7 +7,7 @@ import { CreditCard } from '@medusajs/icons';
 import { Container, Text } from '@medusajs/ui';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { Button } from '@/components/atoms';
+import { Button } from '@/components/atoms/Button/Button'
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
 import { initiatePaymentSession } from '@/lib/data/cart';
 import { iniciarMercadoPago } from '@/lib/data/mercadopago';

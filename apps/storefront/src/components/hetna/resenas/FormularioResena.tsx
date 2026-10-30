@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { useRouter } from "next/navigation"
 
-import { Button } from "@/components/atoms"
+import { Button } from "@/components/atoms/Button/Button"
 import { enviarResena } from "@/lib/resenas/acciones"
 
 // Escribir la reseña. Sólo aparece para quien compró ESTE producto y todavía no

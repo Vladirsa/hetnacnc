@@ -1,7 +1,7 @@
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { redirect } from "next/navigation"
-import { Addresses } from "@/components/organisms"
+import { Addresses } from "@/components/organisms/Addressess/Addresses"
 import { listRegions } from "@/lib/data/regions"
 
 export default async function Page() {

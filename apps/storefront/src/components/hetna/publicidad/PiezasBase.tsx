@@ -2,7 +2,9 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
-import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
+import { getImageProps } from "next/image"
+
+import { esSrcDeNextImage, ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import type { ReactNode } from "react"
 
@@ -27,28 +29,56 @@ export function EnlacePub({
   )
 }
 
-// Imagen del anuncio (con versión para celular si existe). Usa <img> normal: no requiere configurar dominios.
+// Imagen del anuncio, con versión para celular si existe. Llena su contenedor.
+//
+// VELOCIDAD: las dos versiones pasan por el optimizador de Next (WebP y el
+// ancho justo para cada pantalla, según `sizes`). Antes el celular bajaba la
+// imagen original tal como se subió, y la de computadora salía a 300 px de
+// ancho: en celular era la pieza más pesada de la página y la que marcaba el
+// LCP de PageSpeed. Las direcciones que next/image no acepta (una vista previa
+// "blob:") se siguen dibujando con <img> normal.
 export function ImagenPieza({
   p,
   prioridad = false,
   className = "absolute inset-0 h-full w-full object-cover",
+  sizes = "(min-width: 1400px) 1400px, 100vw",
 }: {
   p: Pieza
   prioridad?: boolean
   className?: string
+  // El ancho que ocupa en pantalla, para que el navegador pida el tamaño justo
+  sizes?: string
 }) {
   if (!p.imagen_url) return null
+  const alt = p.titulo || p.anunciante || "Banner HETNA CNC"
+  const movil = p.imagen_movil_url || null
+
+  if (esSrcDeNextImage(p.imagen_url) && (!movil || esSrcDeNextImage(movil))) {
+    const comunes = { alt, fill: true, sizes, quality: 70, priority: prioridad }
+    const { props: escritorio } = getImageProps({ ...comunes, src: p.imagen_url })
+    const celular = movil ? getImageProps({ ...comunes, src: movil }).props : null
+    return (
+      <picture>
+        {celular && <source media="(max-width: 767px)" srcSet={celular.srcSet} sizes={celular.sizes} />}
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+        <img {...escritorio} style={undefined} className={className} decoding="async" />
+      </picture>
+    )
+  }
+
   return (
     <picture>
-      {p.imagen_movil_url && <source media="(max-width: 767px)" srcSet={p.imagen_movil_url} />}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <Image         src={p.imagen_url}
-        alt={p.titulo || p.anunciante || "Banner HETNA CNC"}
+      {movil && <source media="(max-width: 767px)" srcSet={movil} />}
+      <Image
+        src={p.imagen_url}
+        alt={alt}
         className={className}
         loading={prioridad ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={prioridad ? "high" : "auto"}
-      width={300} height={300} />
+        width={300}
+        height={300}
+      />
     </picture>
   )
 }

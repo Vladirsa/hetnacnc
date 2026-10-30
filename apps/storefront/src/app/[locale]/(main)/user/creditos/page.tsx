@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { UserNavigation } from "@/components/molecules"
+import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ComprarPaquetes } from "@/components/hetna/creditos/ComprarPaquetes"
 import { Movimientos } from "@/components/hetna/creditos/Movimientos"

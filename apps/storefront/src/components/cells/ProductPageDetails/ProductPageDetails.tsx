@@ -1,4 +1,4 @@
-import { ProductPageAccordion } from "@/components/molecules"
+import { ProductPageAccordion } from "@/components/molecules/ProductPageAccordion/ProductPageAccordion"
 
 // Descripción del producto: abierta por defecto (es lo primero que busca quien compra)
 export const ProductPageDetails = ({ details }: { details: string }) => {

@@ -2,11 +2,9 @@
 
 import { HttpTypes } from "@medusajs/types"
 
-import {
-  CartItemsFooter,
-  CartItemsHeader,
-  CartItemsProducts,
-} from "@/components/cells"
+import { CartItemsFooter } from "@/components/cells/CartItemsFooter/CartItemsFooter"
+import { CartItemsHeader } from "@/components/cells/CartItemsHeader/CartItemsHeader"
+import { CartItemsProducts } from "@/components/cells/CartItemsProducts/CartItemsProducts"
 import { BarraEnvioGratis } from "@/components/hetna/envios/BarraEnvioGratis"
 import { useUmbralesEnvio } from "@/components/hetna/envios/useUmbralesEnvio"
 import { AvancePack, piezasQueCuentan } from "@/components/hetna/packs/AvancePack"

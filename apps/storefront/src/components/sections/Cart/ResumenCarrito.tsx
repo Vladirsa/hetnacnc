@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 
-import { Button } from "@/components/atoms"
+import { Button } from "@/components/atoms/Button/Button"
 import { ConfianzaCompra } from "@/components/hetna/ConfianzaCompra"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PromoCode } from "@/components/organisms/PromoCode/PromoCode"

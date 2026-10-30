@@ -1,4 +1,4 @@
-import { Checkbox } from "@/components/atoms"
+import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { SingleProductSeller } from "@/types/product"
 

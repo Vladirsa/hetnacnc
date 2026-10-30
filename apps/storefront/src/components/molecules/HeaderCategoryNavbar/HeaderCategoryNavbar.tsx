@@ -2,7 +2,7 @@
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/atoms"
+import { Button } from "@/components/atoms/Button/Button"
 import { useParams } from "next/navigation"
 import { useMemo } from "react"
 import { getActiveParentHandle } from "@/lib/helpers/category-utils"

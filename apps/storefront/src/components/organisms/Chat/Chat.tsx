@@ -1,12 +1,15 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
 
-import { Button } from '@/components/atoms';
-import { ChatBox } from '@/components/cells/ChatBox/ChatBox';
-import { Modal } from '@/components/molecules';
+import { Button } from '@/components/atoms/Button/Button'
+// La caja del chat (TalkJS) se carga hasta que se abre: así ver la página de
+// un taller o de un pedido no baja el SDK del chat.
+const ChatBox = dynamic(() => import('@/components/cells/ChatBox/ChatBox').then((m) => m.ChatBox), { ssr: false });
+import { Modal } from '@/components/molecules/Modal/Modal'
 import { MessageIcon } from '@/icons';
 import { SellerDTO } from '@mercurjs/types';
 
