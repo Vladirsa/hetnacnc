@@ -10,13 +10,17 @@
 //   - Créditos: spendCreditsStep no descuenta, el escaneo no cobra y el saldo
 //     se muestra como "ilimitado".
 //   - Plan del Cotizador de la tienda y descargas gratis: como "industrial".
-//   - App del Cotizador (Supabase): asegurarPlanesDeLaCasa() en
-//     cotizador-suscripciones.ts, cada hora.
+//   - App del Cotizador (Supabase): plan "master", que asegura
+//     asegurarPlanesDeLaCasa() en cotizador-suscripciones.ts cada hora.
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-// El plan más alto: tiene todo lo de Pro y además CFDI, API y usuarios ilimitados
+// En la tienda, el plan más alto: todo lo de Pro y además CFDI, API y usuarios
+// ilimitados.
 export const PLAN_DE_LA_CASA = "industrial" as const
+// En la app del Cotizador existe uno arriba de todos, reservado para HETNA:
+// "master" (todo abierto, sin vencimiento ni cobro).
+export const PLAN_APP_DE_LA_CASA = "master" as const
 
 export const correosDeLaCasa = (): string[] =>
   (process.env.CUENTAS_DE_LA_CASA ?? "vladirsa@gmail.com")

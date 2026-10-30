@@ -7,6 +7,7 @@ import { DESCARGAS_MODULE } from "../modules/descargas"
 import type DescargasModuleService from "../modules/descargas/service"
 import { getSignedDownloadUrl } from "./backblaze"
 import { planEfectivo, type PerfilParaPlan } from "./cotizador-plan"
+import { planVinculado } from "./cotizador-vinculo"
 import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "./cuentas-casa"
 
 // Archivos gratis de HETNA: los que el producto marca con
@@ -70,11 +71,16 @@ async function planDelCliente(container: MedusaContainer, customerId: string): P
       { customer_id: customerId },
       { take: 1, select: ["plan", "plan_hasta", "prueba_hasta"] }
     )
-    return perfil ? planEfectivo(perfil as PerfilParaPlan) : "gratis"
+    const plan = perfil ? planEfectivo(perfil as PerfilParaPlan) : "gratis"
+    if (PLANES_SIN_LIMITE.includes(plan)) return plan
   } catch {
-    // Sin Cotizador no hay plan: cuenta gratis, que es lo seguro.
-    return "gratis"
+    // Sin Cotizador viejo: se revisa el de la app
   }
+  // El taller del Cotizador (app) vinculado a esta cuenta: en prueba o con un
+  // plan de pago, también baja sin límite. Ver lib/cotizador-vinculo.ts.
+  const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  const app = await planVinculado(knex, customerId)
+  return app === "prueba" ? "taller" : app === "master" ? "industrial" : app
 }
 
 async function descargasEnVentana(container: MedusaContainer, customerId: string) {
