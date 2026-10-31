@@ -194,18 +194,18 @@ export async function saludDelTaller(container: MedusaContainer, sellerId: strin
       })
 
       const alertas: AlertaStock[] = []
-      for (const of of (data || []) as unknown as {
+      for (const oferta of (data || []) as unknown as {
         product?: { id?: string; title?: string; status?: string }
         inventory_item_link?: {
           required_quantity?: number
           inventory_item?: { location_levels?: { stocked_quantity?: number; reserved_quantity?: number }[] }
         }[]
       }[]) {
-        const productoId = of.product?.id
-        const enlaces = of.inventory_item_link || []
+        const productoId = oferta.product?.id
+        const enlaces = oferta.inventory_item_link || []
         // Sin inventario ligado = el taller no lleva existencias (fabrica bajo
         // pedido). No hay nada que avisar.
-        if (!productoId || !enlaces.length || of.product?.status === "draft") continue
+        if (!productoId || !enlaces.length || oferta.product?.status === "draft") continue
 
         // Piezas que se pueden vender = la del artículo más escaso, dividida
         // entre lo que se ocupa de él por pieza.
@@ -230,7 +230,7 @@ export async function saludDelTaller(container: MedusaContainer, sellerId: strin
         else if (disponibles <= STOCK_BAJO) nivel = "bajo"
         if (!nivel) continue
 
-        alertas.push({ producto_id: productoId, titulo: of.product?.title || "Sin nombre", disponibles, dias_restantes, nivel })
+        alertas.push({ producto_id: productoId, titulo: oferta.product?.title || "Sin nombre", disponibles, dias_restantes, nivel })
       }
 
       const orden = { agotado: 0, se_acaba: 1, bajo: 2 }
