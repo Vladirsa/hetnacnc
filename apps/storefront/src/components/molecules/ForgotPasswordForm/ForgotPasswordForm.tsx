@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/lib/helpers/zod-resolver';
 import { ClientError } from '@mercurjs/client';
 import Link from 'next/link';
 import { FieldError, FormProvider, useForm, useFormContext } from 'react-hook-form';

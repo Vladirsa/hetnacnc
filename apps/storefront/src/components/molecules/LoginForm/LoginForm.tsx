@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/lib/helpers/zod-resolver';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FieldError, FieldValues, FormProvider, useForm, useFormContext } from 'react-hook-form';
