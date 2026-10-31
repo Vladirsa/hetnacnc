@@ -7,9 +7,9 @@
 
 export const APP_TALLER = {
   web: "/cotizador/",
-  // ?registro=1: la app abre directo la pantalla "Registrar mi taller" (si no lo
-  // reconoce, muestra el inicio de sesión, que tiene el mismo botón)
-  registro: "/cotizador/?registro=1",
+  // Una sola cuenta: el taller nuevo se registra con la cuenta de la tienda y de
+  // ahí entra al Cotizador (activar con 14 días de prueba), sin otra contraseña.
+  registro: "/mx/register?volver=%2Fapi%2Fapp%2Fentrar-cotizador",
   android: "/app/android",
   androidDirecto: "https://github.com/Vladirsa/Cotizador/releases/latest/download/HetnaCNC_arm64.apk",
 }
