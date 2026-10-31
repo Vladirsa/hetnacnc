@@ -12,11 +12,12 @@ import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { signup } from "@/lib/data/customer"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
 import { PasswordValidator } from "@/components/cells/PasswordValidator/PasswordValidator"
 import { toast } from "@/lib/helpers/toast"
+import { copiarAutollenado } from "@/lib/helpers/autollenado"
 
 // HETNA: a donde regresar despues de crear la cuenta (?volver=/mx/servicios/cotizador-cnc)
 const leerVolver = () => {
@@ -64,7 +65,9 @@ export const RegisterForm = () => {
 }
 
 const Form = () => {
-  const [passwordError, setPasswordError] = useState({
+  // Sólo para pintar la lista de requisitos; la validación real la hace el
+  // esquema (schema.ts) con lo que dice el campo al enviar.
+  const [, setPasswordError] = useState({
     isValid: false,
     lower: false,
     upper: false,
@@ -80,14 +83,23 @@ const Form = () => {
     handleSubmit,
     register,
     watch,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useFormContext<RegisterFormData>()
 
-  const submit = async (data: RegisterFormData) => {
-    if (!passwordError.isValid) {
-      return
-    }
+  // Algo falta o está mal: además del texto en rojo bajo el campo (y el cursor
+  // en el primero), un aviso arriba para que no parezca que el botón no sirve.
+  const faltan = () => {
+    toast.error({ title: "Revisa los campos marcados en rojo." })
+  }
 
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    copiarAutollenado(e.currentTarget, getValues, setValue)
+    return handleSubmit(submit, faltan)(e)
+  }
+
+  const submit = async (data: RegisterFormData) => {
     const formData = new FormData()
     formData.append("email", data.email)
     formData.append("password", data.password)
@@ -150,7 +162,7 @@ const Form = () => {
         <h1 className="heading-md text-primary uppercase mb-8">
           Crear cuenta
         </h1>
-        <form onSubmit={handleSubmit(submit)} data-testid="register-form">
+        <form onSubmit={enviar} noValidate data-testid="register-form">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <LabeledInput
               className="md:w-1/2"
