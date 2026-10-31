@@ -15,7 +15,7 @@ import type {
 
 import { tieneFondoBlanco } from "../../../utils/fondo-blanco"
 
-const LEYENDA =
+export const LEYENDA =
   "Las fotos de los productos deben tener fondo blanco. " +
   "Quita el fondo gratis en https://www.remove.bg/es : sube tu foto, en 'Editar' > 'Fondo' elige el color blanco, " +
   "descarga la imagen y vuelve a subirla aquí."
@@ -38,7 +38,7 @@ function direccionesDeFotos(cuerpo: Record<string, any>): string[] {
 }
 
 // true = fondo blanco, false = NO es blanco, null = no se pudo revisar (se deja pasar)
-async function revisarFoto(direccion: string): Promise<boolean | null> {
+export async function revisarFoto(direccion: string): Promise<boolean | null> {
   try {
     if (direccion.startsWith("data:")) return null
     const url = new URL(direccion, process.env.BACKEND_URL || "http://localhost:9000")
