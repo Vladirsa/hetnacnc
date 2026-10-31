@@ -253,6 +253,10 @@ export function EstudioTorno() {
   const [segmentos, setSegmentos] = useState<Segmento[]>(() => EJEMPLOS[0].segmentos())
   const [material, setMaterial] = useState("pino")
   const [origenPunto, setOrigenPunto] = useState<"mandril" | "contrapunto">("mandril")
+  // X: el eje A va paralelo a X (lo usual en routers). Y: el rotativo va atravesado.
+  const [ejeLargo, setEjeLargo] = useState<"X" | "Y">("X")
+  // G94 es lo que corre Mach3/Mach4 sin problema; G93 (tiempo inverso) es para LinuxCNC.
+  const [avance, setAvance] = useState<"G94" | "G93">("G94")
 
   const [stockWidthMm, setStockWidthMm] = useState(EJEMPLOS[0].bloque)
   const [startOffsetMm, setStartOffsetMm] = useState(20)
@@ -316,6 +320,8 @@ export function EstudioTorno() {
     segmentos: segmentos.map(({ id: _id, ...resto }) => resto),
     material,
     origenPunto,
+    ejeLargo,
+    avance,
     maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
     herramienta: { toolDiameterMm, feed },
     rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
@@ -338,6 +344,8 @@ export function EstudioTorno() {
     )
     if (typeof d.material === "string") setMaterial(d.material)
     setOrigenPunto(d.origenPunto === "contrapunto" ? "contrapunto" : "mandril")
+    setEjeLargo(d.ejeLargo === "Y" ? "Y" : "X")
+    setAvance(d.avance === "G93" ? "G93" : "G94")
     setStockWidthMm(n(d.maquina?.stockWidthMm, 60))
     setStartOffsetMm(n(d.maquina?.startOffsetMm, 20))
     setEndOffsetMm(n(d.maquina?.endOffsetMm, 20))
@@ -458,6 +466,8 @@ export function EstudioTorno() {
           segmentos,
           material,
           origenPunto,
+          ejeLargo,
+          avance,
           maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
           herramienta: { toolDiameterMm, feed },
           rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
@@ -786,6 +796,34 @@ export function EstudioTorno() {
                 <option value="contrapunto">Desde el contrapunto</option>
               </select>
             </label>
+            <label className={etiqueta}>
+              Eje a lo largo de la pieza
+              <select
+                className={campo}
+                value={ejeLargo}
+                onChange={(e) => {
+                  setEjeLargo(e.target.value as "X" | "Y")
+                  limpiarResultado()
+                }}
+              >
+                <option value="X">X: el eje A va paralelo a X (lo usual)</option>
+                <option value="Y">Y: el eje A va paralelo a Y</option>
+              </select>
+            </label>
+            <label className={etiqueta}>
+              Avance
+              <select
+                className={campo}
+                value={avance}
+                onChange={(e) => {
+                  setAvance(e.target.value as "G94" | "G93")
+                  limpiarResultado()
+                }}
+              >
+                <option value="G94">Normal, G94 (Mach3, Mach4, GRBL)</option>
+                <option value="G93">Tiempo inverso, G93 (LinuxCNC)</option>
+              </select>
+            </label>
           </div>
         </section>
 
@@ -815,9 +853,9 @@ export function EstudioTorno() {
         </button>
 
         <p className="rounded-[10px] border border-[#F0D9B5] bg-[#FFF8EC] px-3 py-2.5 text-[12px] leading-relaxed text-[#7A4A06]">
-          Ejes: A gira la pieza, Y recorre el largo y Z es el radio de corte, con Z0 en el centro del eje
-          rotativo. Prueba el programa primero en aire o con material de descarte, y revisa que tu eje A no
-          tenga límites de giro.
+          Ejes: A gira la pieza, {ejeLargo} recorre el largo y Z es el radio de corte, con Z0 en el centro
+          del eje rotativo. En Mach3 revisa que el eje A esté habilitado, sin límites de giro y con
+          &quot;Rot 360 rollover&quot; apagado. Prueba el programa primero en aire o con material de descarte.
         </p>
       </aside>
     </div>
