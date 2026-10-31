@@ -6,6 +6,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 
 import {
+  VERIFICAR_DESDE,
   firmaVerificacionValida,
   mandarCorreoVerificacion,
   requiereVerificacion,
@@ -28,8 +29,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       metadata: { ...(c.metadata || {}), correo_verificado: true, correo_verificado_en: new Date().toISOString() },
     })
     req.scope.resolve("logger").info(`[verificar-correo] ${c.email} confirmó su correo`)
-    // La bienvenida va ahora, ya con el correo confirmado
-    await sendEmail({
+    // La bienvenida va ahora, ya con el correo confirmado. Las cuentas de antes
+    // (que confirman al activar el Cotizador) ya la recibieron al registrarse.
+    const nueva = !c.created_at || new Date(c.created_at).getTime() >= VERIFICAR_DESDE().getTime()
+    if (nueva) await sendEmail({
       to: c.email,
       subject: `¡Bienvenido a ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}!`,
       html: welcomeEmailHtml({ name: c.first_name || "" }),

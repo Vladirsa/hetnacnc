@@ -71,7 +71,9 @@ const Form = () => {
     if (res.success) {
       setIsAuthError(false);
       await transferCart();
-      router.push(destino);
+      // /api/... (p. ej. el botón Cotizador) no es una página: carga completa
+      if (destino.startsWith('/api/')) window.location.href = destino;
+      else router.push(destino);
       return;
     }
     if ('verificar' in res && res.verificar) {

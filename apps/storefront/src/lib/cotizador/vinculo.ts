@@ -44,19 +44,64 @@ export async function quitarVinculoCotizador(): Promise<boolean> {
   return !!(await llamar<{ ok: boolean }>({ accion: "quitar" }))?.ok
 }
 
+const RUTA_ENTRAR = "/api/app/entrar-cotizador"
+const RUTA_ACTIVAR = "/mx/cotizador/activar"
+
+export type Entrada =
+  | { url: string }
+  | { confirmar: string }
+  | { activar: { taller: string; telefono: string } }
+  | { cuenta: string | null }
+
+/** Qué toca para entrar al Cotizador con esta cuenta (backend: entradaCotizador). */
+export async function entradaCotizador(): Promise<Entrada | null> {
+  return llamar<Entrada>({ accion: "entrar" })
+}
+
 /**
- * A dónde manda el botón Cotizador: la liga de acceso de un solo uso si la
- * cuenta está vinculada; si no, la app con ?cuenta=<huella del correo> para que
- * cierre la sesión de otra persona que haya quedado abierta en ese navegador;
- * sin sesión en la tienda, la app normal (pide su propio inicio de sesión); con
- * sesión pero sin respuesta del backend (p. ej. correo sin confirmar), la app
- * con ?salir=1.
+ * A dónde manda el botón Cotizador. Una sola cuenta: con la de la tienda se
+ * entra al Cotizador sin otra contraseña.
+ *   - Sin sesión en la tienda: a iniciar sesión, y de regreso aquí.
+ *   - Vinculada (o con un taller del mismo correo): liga de acceso de un solo uso.
+ *   - Sin taller, o con el correo sin confirmar: /cotizador/activar.
+ *   - Si el backend no responde: la app con ?cuenta=<huella del correo> (o
+ *     ?salir=1), que cierra la sesión de otra persona que haya quedado abierta
+ *     en ese navegador.
  */
 export async function ligaEntradaCotizador(): Promise<string> {
   const auth = (await getAuthHeaders()) as { authorization?: string }
-  if (!auth.authorization) return "/cotizador/"
-  const r = await llamar<{ url: string | null; cuenta?: string | null }>({ accion: "entrar" })
-  if (r?.url) return r.url
-  if (r?.cuenta && /^[0-9a-f]{16}$/.test(r.cuenta)) return `/cotizador/?cuenta=${r.cuenta}`
+  if (!auth.authorization) return `/mx/login?volver=${encodeURIComponent(RUTA_ENTRAR)}`
+  const r = await entradaCotizador()
+  if (r && "url" in r && r.url) return r.url
+  if (r && ("confirmar" in r || "activar" in r)) return RUTA_ACTIVAR
+  if (r && "cuenta" in r && r.cuenta && /^[0-9a-f]{16}$/.test(r.cuenta)) return `/cotizador/?cuenta=${r.cuenta}`
   return "/cotizador/?salir=1"
+}
+
+/** Crea el taller del Cotizador con esta cuenta. Devuelve la liga para entrar o el error. */
+export async function activarCotizador(datos: { taller: string; telefono: string }): Promise<{ url?: string; error?: string }> {
+  const auth = (await getAuthHeaders()) as { authorization?: string }
+  if (!auth.authorization) return { error: "Tu sesión venció. Vuelve a iniciar sesión." }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/cotizador-vinculo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+        authorization: auth.authorization,
+      },
+      body: JSON.stringify({ accion: "activar", taller: datos.taller, telefono: datos.telefono }),
+      cache: "no-store",
+    })
+    const j = (await res.json().catch(() => ({}))) as { url?: string; message?: string }
+    if (res.ok && j.url) return { url: j.url }
+    return { error: j.message || "No se pudo activar. Intenta de nuevo en un momento." }
+  } catch {
+    return { error: "No se pudo activar. Intenta de nuevo en un momento." }
+  }
+}
+
+/** Vuelve a mandar la liga para confirmar el correo. */
+export async function reenviarConfirmacionCotizador(): Promise<boolean> {
+  return !!(await llamar<{ ok: boolean }>({ accion: "confirmar" }))?.ok
 }
