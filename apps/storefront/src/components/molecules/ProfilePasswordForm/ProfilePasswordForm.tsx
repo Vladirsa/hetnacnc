@@ -3,7 +3,7 @@
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/helpers/zod-resolver"
 import {
   FieldError,
   FieldValues,
