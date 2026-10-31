@@ -1,7 +1,8 @@
 // Catálogo para Meta (Facebook e Instagram: catálogo, etiquetas de productos y
 // anuncios de catálogo Advantage+). El Administrador de ventas lo descarga solo
 // cada hora o cada día; también sirve para TikTok y Pinterest, que leen el
-// mismo formato. Ver lib/feeds/catalogo.ts.
+// mismo formato. A diferencia del de Google, lleva los diseños descargables.
+// Ver lib/feeds/catalogo.ts.
 import { armarCatalogo, catalogoXml } from "@/lib/feeds/catalogo"
 
 // Se arma en cada descarga (es barato); los datos de la tienda vienen de la
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const { items } = await armarCatalogo()
+    const { items } = await armarCatalogo({ digitales: process.env.FEED_META_DIGITALES !== "0" })
     return new Response(catalogoXml(items, "HETNA CNC — Meta"), {
       headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },
     })

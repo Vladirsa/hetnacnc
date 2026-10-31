@@ -29,6 +29,7 @@ import {
   CAM_TIER_OPTION,
   CAM_TIERS,
   SEED_PRICES,
+  camImageUrl,
   camSellerHandle,
 } from "../modules/cam/catalog"
 
@@ -222,6 +223,8 @@ export default async function seedCamServices({ container }: ExecArgs) {
             subtitle: s.subtitle,
             description: s.description,
             handle: h,
+            thumbnail: camImageUrl(s.key),
+            images: [{ url: camImageUrl(s.key) }],
             status: "published" as const,
             discountable: true,
             shipping_profile_id: perfil.id,

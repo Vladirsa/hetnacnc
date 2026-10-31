@@ -20,6 +20,14 @@ export const CAM_PRODUCT_HANDLES: Record<CamService | "review", string> = {
   review: "revision-especialista-cam",
 }
 
+/**
+ * Foto de cada servicio: un JPG 1080x1080 que sirve la tienda en
+ * /productos/cam/<handle>.jpg (apps/storefront/public/productos/cam). La URL es
+ * absoluta para que se vea igual en la tienda, el panel y los catálogos.
+ */
+export const camImageUrl = (key: CamService | "review") =>
+  `${(process.env.STOREFRONT_URL || "https://hetnacnc.com").replace(/\/$/, "")}/productos/cam/${CAM_PRODUCT_HANDLES[key]}.jpg`
+
 /** Tienda (seller de Mercur) que vende los servicios CAM. */
 export const camSellerHandle = () => (process.env.CAM_SELLER_HANDLE || "hetna-cnc").trim()
 
