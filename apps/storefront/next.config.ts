@@ -5,10 +5,9 @@ import type { NextConfig } from 'next';
 // puede cargar scripts, imágenes, videos, etc. Frena los ataques que inyectan
 // código ajeno en la página.
 //
-// ETAPA 1 (hoy): modo "sólo reporte". No bloquea nada; cada cosa que incumpla
-// se anota en /api/csp-reporte.
-// ETAPA 2: cuando el registro quede limpio, se cambia la clave de abajo a
-// 'Content-Security-Policy' (sin -Report-Only) y empieza a bloquear.
+// ETAPA 1 (hasta el 31 de octubre): modo "sólo reporte".
+// ETAPA 2 (desde el 31 de octubre): bloquea, y cada cosa bloqueada se sigue
+// anotando en /api/csp-reporte (pm2 logs hetna-web | grep csp).
 //
 // Lo que se fue agregando según el registro real: TalkJS (mensajería), Google
 // Analytics / Tag Manager, Stripe y Mercado Pago (pagos), Facebook (pixel),
@@ -53,9 +52,14 @@ const encabezadosSeguridad = [
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   // Al salir a otro sitio sólo se comparte el dominio, no la URL completa.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Sólo reporte: no bloquea. Para activarla de verdad, cambiar esta clave por
-  // 'Content-Security-Policy'.
-  { key: 'Content-Security-Policy-Report-Only', value: politicaCSP }
+  // ETAPA 2 (31 de octubre): ya bloquea. El registro de /api/csp-reporte sólo
+  // traía audiencias de Google Ads de otros países (google.com.pe, etc.), que no
+  // importan para México. Sigue reportando lo que bloquee.
+  // Para volver a sólo-reporte sin tocar código: CSP_SOLO_REPORTE=1 y desplegar.
+  {
+    key: process.env.CSP_SOLO_REPORTE === '1' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
+    value: politicaCSP
+  }
 ];
 
 const nextConfig: NextConfig = {
