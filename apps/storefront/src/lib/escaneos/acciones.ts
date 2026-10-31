@@ -103,51 +103,39 @@ export async function crearEscaneo(cuerpo: {
 
 // --- Subida de fotos ---
 //
-// El backend entrega un permiso de subida de B2 y este servidor releva los
-// bytes. El permiso NO puede llegar al navegador: autoriza a escribir en el
-// bucket completo, no sólo en la ruta que trae. Por eso la subida ocurre aquí
-// y no en el cliente.
+// La foto se manda al backend y él la sube a B2: el permiso de subida de B2
+// autoriza a escribir en todo el bucket y por eso nunca sale del backend.
 export type SubidaResultado =
   | { ok: true; lote: string; storage_key: string }
   | { ok: false; mensaje: string }
 
 export async function subirFoto(contenido: ArrayBuffer, contentType: string, lote?: string): Promise<SubidaResultado> {
-  const boleto = await pedir<{
-    lote: string
-    storage_key: string
-    upload_url: string
-    token: string
-  }>("/store/escaneos/subida", { metodo: "POST", cuerpo: { content_type: contentType, lote } })
-
-  if (!boleto.ok) {
-    return { ok: false, mensaje: boleto.mensaje }
+  const auth = (await getAuthHeaders()) as { authorization?: string }
+  if (!auth.authorization) {
+    return { ok: false, mensaje: "Necesitas iniciar sesión." }
   }
 
-  const datos = Buffer.from(contenido)
-  const { createHash } = await import("node:crypto")
+  const form = new FormData()
+  form.append("foto", new Blob([contenido], { type: contentType }), "foto")
+  if (lote) form.append("lote", lote)
 
   try {
-    const res = await fetch(boleto.datos.upload_url, {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/escaneos/subida`, {
       method: "POST",
       headers: {
-        Authorization: boleto.datos.token,
-        "X-Bz-File-Name": boleto.datos.storage_key.split("/").map(encodeURIComponent).join("/"),
-        "Content-Type": contentType,
-        "Content-Length": String(datos.length),
-        // B2 verifica el SHA1 del otro lado: si no coincide rechaza el
-        // archivo en vez de guardar algo corrupto en silencio.
-        "X-Bz-Content-Sha1": createHash("sha1").update(datos).digest("hex"),
+        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+        ...auth,
       },
-      body: new Uint8Array(datos),
+      body: form,
+      cache: "no-store",
     })
-    if (!res.ok) {
-      console.error("[escaneos] B2 rechazó la foto:", res.status, await res.text().catch(() => ""))
-      return { ok: false, mensaje: "No se pudo guardar la foto. Intenta de nuevo." }
+    const cuerpo = (await res.json().catch(() => ({}))) as { lote?: string; storage_key?: string; message?: string }
+    if (!res.ok || !cuerpo.lote || !cuerpo.storage_key) {
+      return { ok: false, mensaje: cuerpo.message || "No se pudo guardar la foto. Intenta de nuevo." }
     }
+    return { ok: true, lote: cuerpo.lote, storage_key: cuerpo.storage_key }
   } catch (e) {
-    console.error("[escaneos] falló la subida a B2", e)
+    console.error("[escaneos] falló la subida de la foto", e)
     return { ok: false, mensaje: "No se pudo guardar la foto. Intenta de nuevo." }
   }
-
-  return { ok: true, lote: boleto.datos.lote, storage_key: boleto.datos.storage_key }
 }

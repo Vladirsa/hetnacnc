@@ -18,6 +18,7 @@ import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
+import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 
 export default defineMiddlewares({
     routes: [
@@ -63,5 +64,6 @@ export default defineMiddlewares({
         ...storeRastreoMiddlewares,
         ...storeCotizadorVinculoMiddlewares,
         ...storeVerificacionMiddlewares,
+        ...storeCustomersMiddlewares,
     ],
 });

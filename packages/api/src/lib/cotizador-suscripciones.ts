@@ -389,9 +389,14 @@ export async function asegurarPlanesDeLaCasa(): Promise<number> {
   // Usuarios de Supabase con esos correos (la API de administración pagina)
   const ids: string[] = []
   for (let pagina = 1; pagina <= 20; pagina++) {
-    const r = await supa<{ users?: { id: string; email?: string }[] }>(`/auth/v1/admin/users?page=${pagina}&per_page=500`)
+    const r = await supa<{ users?: { id: string; email?: string; email_confirmed_at?: string | null }[] }>(
+      `/auth/v1/admin/users?page=${pagina}&per_page=500`
+    )
     const usuarios = r?.users ?? []
-    for (const u of usuarios) if (u.email && correos.includes(u.email.toLowerCase())) ids.push(u.id)
+    // Sólo con el correo CONFIRMADO: si no, cualquiera que se registrara en la
+    // app con el correo de la casa (sin poder abrirlo) se llevaba el plan master.
+    for (const u of usuarios)
+      if (u.email && u.email_confirmed_at && correos.includes(u.email.toLowerCase())) ids.push(u.id)
     if (usuarios.length < 500) break
   }
 

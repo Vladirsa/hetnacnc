@@ -1,5 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { MedusaError } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 
 import { CREDIT_MODULE } from "../../../modules/credit"
 import CreditModuleService from "../../../modules/credit/service"
@@ -43,12 +43,30 @@ export const spendCreditsStep = createStep(
       return new StepResponse({ entry_id: entry.id, saldo_restante: saldoActual }, entry.id)
     }
 
-    if (saldoActual < input.amount) {
+    if (!Number.isFinite(input.amount) || input.amount <= 0) {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, "Cantidad de créditos inválida")
+    }
+
+    // Descuento atómico: el UPDATE sólo pasa si el saldo alcanza EN ESE
+    // momento. Antes se leía el saldo, se comparaba y luego se escribía: con
+    // varias peticiones al mismo tiempo todas pasaban la revisión y se
+    // lanzaban N escaneos por el precio de uno.
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+    const descontados = balance
+      ? await knex("credit_balance")
+          .where({ id: balance.id })
+          .whereNull("deleted_at")
+          .where("balance", ">=", input.amount)
+          .update({ balance: knex.raw("balance - ?", [input.amount]), updated_at: knex.fn.now() })
+          .returning("balance")
+      : []
+    if (!descontados.length) {
       throw new MedusaError(
         MedusaError.Types.NOT_ALLOWED,
         `Saldo de créditos insuficiente: tiene ${saldoActual}, necesita ${input.amount}`
       )
     }
+    const saldoRestante = Number((descontados[0] as { balance: number }).balance)
 
     const [entry] = await creditModuleService.createCreditLedgerEntries([
       {
@@ -60,12 +78,7 @@ export const spendCreditsStep = createStep(
       },
     ])
 
-    await creditModuleService.updateCreditBalances({
-      id: balance!.id,
-      balance: saldoActual - input.amount,
-    })
-
-    return new StepResponse({ entry_id: entry.id, saldo_restante: saldoActual - input.amount }, entry.id)
+    return new StepResponse({ entry_id: entry.id, saldo_restante: saldoRestante }, entry.id)
   },
   async (entryId: string | undefined, { container }) => {
     if (!entryId) return
@@ -76,11 +89,11 @@ export const spendCreditsStep = createStep(
     const [balance] = await creditModuleService.listCreditBalances({
       customer_id: entry.customer_id,
     })
-    if (balance) {
-      await creditModuleService.updateCreditBalances({
-        id: balance.id,
-        balance: balance.balance - entry.amount,
-      })
+    if (balance && entry.amount) {
+      const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+      await knex("credit_balance")
+        .where({ id: balance.id })
+        .update({ balance: knex.raw("balance - ?", [entry.amount]), updated_at: knex.fn.now() })
     }
 
     await creditModuleService.deleteCreditLedgerEntries(entryId)

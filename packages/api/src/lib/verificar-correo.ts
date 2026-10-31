@@ -8,9 +8,9 @@
 // VERIFICAR_CORREO_DESDE. Las de antes ya estaban y siguen igual. Las cuentas
 // de la casa (lib/cuentas-casa.ts) nunca piden confirmación.
 //
-// Dónde queda: customer.metadata.correo_verificado = true (lo pone sólo el
+// Dónde queda: customer.metadata.correo_verificado = true. Lo pone sólo el
 // servidor al abrir la liga firmada; el cliente no lo puede escribir porque
-// la regla mira la fecha de creación, no la ausencia del dato).
+// api/store/customers/proteger-metadata.ts lo quita de lo que manda.
 import { createHmac, timingSafeEqual } from "crypto"
 
 import { correosDeLaCasa } from "./cuentas-casa"

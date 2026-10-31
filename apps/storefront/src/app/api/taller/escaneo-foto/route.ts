@@ -1,9 +1,5 @@
-// Recibe una foto del escaneo 3D y la releva a Backblaze.
-//
-// Pasa por aquí y no directo del navegador a B2 porque el permiso de subida
-// que entrega el backend autoriza a escribir en el bucket completo: si llegara
-// al cliente, cualquiera podría sobrescribir archivos de la plataforma. Aquí
-// el permiso se usa y se tira, del lado del servidor.
+// Recibe una foto del escaneo 3D y la pasa al backend, que la sube a
+// Backblaze con la sesión del cliente (lib/escaneos/acciones.ts).
 //
 // Una foto por petición: así una conexión mala sólo pierde esa foto y no las
 // cuarenta.

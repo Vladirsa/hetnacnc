@@ -3,6 +3,7 @@
 // "https://" (una vista previa "blob:", por ejemplo).
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import { HttpTypes } from "@medusajs/types"
+import { htmlSeguro } from "@/lib/seguridad/html-seguro"
 import { SellerDTO } from "@mercurjs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -60,7 +61,7 @@ export const SellerHeading = ({
         </div>
         {seller.description ? (
           <p
-            dangerouslySetInnerHTML={{ __html: seller.description }}
+            dangerouslySetInnerHTML={{ __html: htmlSeguro(seller.description) }}
             className="label-md mt-5 max-w-[760px] text-[#44433D] leading-relaxed"
           />
         ) : null}
