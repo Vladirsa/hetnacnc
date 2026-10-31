@@ -9,8 +9,20 @@ import type { CSSProperties } from "react"
 
 type Nivel = "rojo" | "ambar" | "azul"
 type Aviso = { nivel: Nivel; tipo: string; titulo: string; detalle?: string; url?: string; cuando?: string }
+type Recarga = { id: number; plataforma: string; monto: string | number; origen: string; comprobante_url: string | null; nota: string | null; fecha: string }
+type Saldo = {
+  saldo: number
+  gasto_dia: number
+  dias_restantes: number | null
+  minimo: number
+  tope: number
+  recargar: boolean
+  sugerida: number
+  url_recarga: string
+}
 type Datos = {
   generado: string
+  saldos?: { skydropx: Saldo | null; recargas: Recarga[] } | null
   conteo: Record<Nivel, number>
   avisos: Aviso[]
   ventas: {
@@ -139,6 +151,180 @@ function Grafica({ dias }: { dias: Datos["ventas"]["por_dia"] }) {
         <span>{dias[0] && new Date(dias[0].dia + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</span>
         <span>hoy</span>
       </div>
+    </div>
+  )
+}
+
+// Sube un archivo (foto o PDF de la nota) con el endpoint de Medusa y devuelve su URL
+async function subirArchivo(archivo: File): Promise<string> {
+  const fd = new FormData()
+  fd.append("files", archivo)
+  const r = await fetch("/admin/uploads", { method: "POST", credentials: "include", headers: cabeceras(), body: fd })
+  const d = (await r.json().catch(() => ({}))) as { files?: { url: string }[]; message?: string }
+  if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || "No se pudo subir el archivo.")
+  return d.files[0].url
+}
+async function guardarRecarga(datos: Record<string, unknown>) {
+  const r = await fetch("/admin/hetna-control/recargas", {
+    method: "POST",
+    credentials: "include",
+    headers: { ...cabeceras(), "Content-Type": "application/json" },
+    body: JSON.stringify(datos),
+  })
+  const d = (await r.json().catch(() => ({}))) as { message?: string }
+  if (!r.ok) throw new Error(d.message || "No se pudo guardar.")
+}
+
+function SubirNota({ alListo, texto = "Subir nota" }: { alListo: (url: string) => Promise<void>; texto?: string }) {
+  const [subiendo, setSubiendo] = useState(false)
+  return (
+    <label style={{ color: C.naranja, fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+      {subiendo ? "Subiendo…" : texto}
+      <input
+        type="file"
+        accept="image/*,application/pdf"
+        style={{ display: "none" }}
+        disabled={subiendo}
+        onChange={async (e) => {
+          const a = e.target.files?.[0]
+          e.target.value = ""
+          if (!a) return
+          setSubiendo(true)
+          try {
+            await alListo(await subirArchivo(a))
+          } catch (err) {
+            alert((err as Error).message)
+          } finally {
+            setSubiendo(false)
+          }
+        }}
+      />
+    </label>
+  )
+}
+
+function Saldos({ datos, recargar }: { datos: NonNullable<Datos["saldos"]>; recargar: () => void }) {
+  const s = datos.skydropx
+  const [plataforma, setPlataforma] = useState("")
+  const [monto, setMonto] = useState("")
+  const [error, setError] = useState("")
+  return (
+    <div style={caja}>
+      <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Saldos y recargas</h2>
+      {s ? (
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            flexWrap: "wrap",
+            padding: 12,
+            borderRadius: 10,
+            background: s.recargar ? NIVEL.rojo.fondo : C.suave,
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ flex: "1 1 220px" }}>
+            <div style={{ fontSize: 12, color: C.tenue, fontWeight: 700, textTransform: "uppercase" }}>Saldo Skydropx</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: s.recargar ? C.rojo : C.texto }}>{pesos(s.saldo)}</div>
+            <div style={{ fontSize: 12, color: C.tenue }}>
+              Gastas ≈{pesos(s.gasto_dia)} al día
+              {s.dias_restantes !== null ? ` · alcanza para ≈${s.dias_restantes} días` : ""} · mínimo {pesos(s.minimo)}
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            {s.recargar && (
+              <div style={{ fontSize: 13, marginBottom: 6 }}>
+                Sugerido: <b>{pesos(s.sugerida)}</b> (tope {pesos(s.tope)})
+              </div>
+            )}
+            <a
+              href={s.url_recarga}
+              target="_blank"
+              rel="noreferrer"
+              style={{ background: C.naranja, color: "#fff", borderRadius: 10, padding: "9px 14px", fontWeight: 700, textDecoration: "none", fontSize: 14 }}
+            >
+              Recargar en Skydropx
+            </a>
+          </div>
+        </div>
+      ) : (
+        <p style={{ color: C.tenue, fontSize: 13 }}>No se pudo leer el saldo de Skydropx (revisa las llaves SKYDROPX_CLIENT_ID y SKYDROPX_CLIENT_SECRET).</p>
+      )}
+      <p style={{ fontSize: 13, color: C.tenue, margin: "0 0 8px" }}>
+        Cuando recargas, el sistema detecta solo la recarga. Súbele la nota de compra (foto o PDF) para tener tus comprobantes juntos.
+      </p>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr style={{ textAlign: "left", color: C.tenue }}>
+            <th style={{ padding: "6px 4px" }}>Fecha</th>
+            <th style={{ padding: "6px 4px" }}>Plataforma</th>
+            <th style={{ padding: "6px 4px" }}>Monto</th>
+            <th style={{ padding: "6px 4px" }}>Nota de compra</th>
+          </tr>
+        </thead>
+        <tbody>
+          {datos.recargas.map((r) => (
+            <tr key={r.id} style={{ borderTop: `1px solid ${C.borde}` }}>
+              <td style={{ padding: "6px 4px" }}>{cuando(r.fecha)}</td>
+              <td style={{ padding: "6px 4px", textTransform: "capitalize" }}>
+                {r.plataforma}
+                {r.origen === "detectada" ? <span style={{ color: C.tenue }}> · detectada</span> : null}
+              </td>
+              <td style={{ padding: "6px 4px", fontWeight: 700 }}>{pesos(Number(r.monto))}</td>
+              <td style={{ padding: "6px 4px" }}>
+                {r.comprobante_url ? (
+                  <a href={r.comprobante_url} target="_blank" rel="noreferrer" style={{ color: C.verde, fontWeight: 700 }}>
+                    ✓ Ver nota
+                  </a>
+                ) : (
+                  <SubirNota alListo={async (url) => { await guardarRecarga({ id: r.id, comprobante_url: url }); recargar() }} />
+                )}
+              </td>
+            </tr>
+          ))}
+          {datos.recargas.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ padding: 8, color: C.tenue }}>
+                Todavía no hay recargas anotadas.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <details style={{ marginTop: 10 }}>
+        <summary style={{ cursor: "pointer", fontSize: 13, color: C.tenue }}>Anotar una recarga de otra plataforma</summary>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
+          <input
+            placeholder="Plataforma (ej. Resend, hosting)"
+            value={plataforma}
+            onChange={(e) => setPlataforma(e.target.value)}
+            style={{ height: 34, border: `1px solid ${C.borde}`, borderRadius: 8, padding: "0 10px" }}
+          />
+          <input
+            placeholder="Monto"
+            inputMode="decimal"
+            value={monto}
+            onChange={(e) => setMonto(e.target.value.replace(/[^0-9.]/g, ""))}
+            style={{ height: 34, width: 110, border: `1px solid ${C.borde}`, borderRadius: 8, padding: "0 10px" }}
+          />
+          <SubirNota
+            texto="Subir nota y guardar"
+            alListo={async (url) => {
+              setError("")
+              try {
+                await guardarRecarga({ plataforma: plataforma || "otra", monto: Number(monto), comprobante_url: url })
+                setPlataforma("")
+                setMonto("")
+                recargar()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+          />
+        </div>
+        {error && <p style={{ color: C.rojo, fontSize: 13 }}>{error}</p>}
+      </details>
     </div>
   )
 }
@@ -311,6 +497,8 @@ export default function CentroControl() {
               ))}
             </div>
           </div>
+
+          {datos.saldos && <Saldos datos={datos.saldos} recargar={() => void cargar()} />}
 
           {/* ---- Ventas ---- */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
