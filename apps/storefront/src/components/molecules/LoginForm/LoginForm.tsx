@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/lib/helpers/zod-resolver';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FieldError, FieldValues, FormProvider, useForm, useFormContext } from 'react-hook-form';
+import { copiarAutollenado } from '@/lib/helpers/autollenado';
 
 import { Button } from '@/components/atoms/Button/Button'
 import { Alert } from '@/components/atoms/Alert/Alert';
 import { LabeledInput } from '@/components/cells/LabeledInput/LabeledInput'
-import { login, transferCart } from '@/lib/data/customer';
+import { login, reenviarConfirmacion, transferCart } from '@/lib/data/customer';
 import { toast } from '@/lib/helpers/toast';
 
 import { LoginFormData, loginFormSchema } from './schema';
@@ -36,11 +37,21 @@ export const LoginForm = () => {
 
 const Form = () => {
   const [isAuthError, setIsAuthError] = useState(false);
+  // Cuenta sin confirmar: el aviso se queda en la pantalla con botón de reenviar
+  const [porConfirmar, setPorConfirmar] = useState<{ email: string; texto: string } | null>(null);
+  const [reenviado, setReenviado] = useState(false);
   const {
     handleSubmit,
     register,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting }
   } = useFormContext();
+  // Correo y contraseña que rellenó el navegador sin avisar (ver copiarAutollenado)
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    copiarAutollenado(e.currentTarget, getValues, setValue);
+    return handleSubmit(submit)(e);
+  };
   const router = useRouter();
   const searchParams = useSearchParams();
   const isSessionExpired = searchParams.get('sessionExpired') === 'true';
@@ -53,17 +64,22 @@ const Form = () => {
     formData.append('email', data.email);
     formData.append('password', data.password);
 
+    setPorConfirmar(null);
+    setReenviado(false);
     const res = await login(formData);
 
     if (res.success) {
-      router.push(destino);
+      setIsAuthError(false);
       await transferCart();
-    } else {
-      toast.error({ title: res.message || 'An error occurred. Please try again.' });
+      router.push(destino);
+      return;
     }
-
-    setIsAuthError(false);
-    router.push(destino);
+    if ('verificar' in res && res.verificar) {
+      setPorConfirmar({ email: String(data.email || ''), texto: res.message || '' });
+      return;
+    }
+    setIsAuthError(true);
+    toast.error({ title: res.message || 'No se pudo iniciar sesión. Intenta de nuevo.' });
   };
 
   const clearApiError = () => {
@@ -72,10 +88,10 @@ const Form = () => {
 
   const getAuthMessage = () => {
     if (isSessionExpired) {
-      return 'Your session has expired. Please log in to continue.';
+      return 'Tu sesión venció. Vuelve a iniciar sesión.';
     }
     if (isSessionRequired) {
-      return 'Please log in to continue.';
+      return 'Inicia sesión para continuar.';
     }
     return null;
   };
@@ -101,8 +117,24 @@ const Form = () => {
           data-testid="login-form-container"
         >
           <h1 className="heading-md mb-8 uppercase text-primary">Iniciar sesión</h1>
+          {porConfirmar && (
+            <div className="mb-6 rounded-sm border border-[#F2C98F] bg-[#FFF8EE] p-3 text-md text-[#5A3A12]" role="status">
+              <p className="m-0">{porConfirmar.texto}</p>
+              <button
+                type="button"
+                disabled={reenviado}
+                onClick={async () => {
+                  await reenviarConfirmacion(porConfirmar.email);
+                  setReenviado(true);
+                }}
+                className="mt-2 font-semibold underline disabled:no-underline disabled:opacity-70"
+              >
+                {reenviado ? 'Listo, te la volvimos a mandar.' : 'Volver a mandar la liga'}
+              </button>
+            </div>
+          )}
           <form
-            onSubmit={handleSubmit(submit)}
+            onSubmit={enviar}
             data-testid="login-form"
           >
             <div className="space-y-4">

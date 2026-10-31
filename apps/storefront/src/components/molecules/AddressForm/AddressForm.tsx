@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/lib/helpers/zod-resolver';
 import { HttpTypes } from '@medusajs/types';
 import { FieldError, FieldValues, FormProvider, useForm, useFormContext } from 'react-hook-form';
 
@@ -99,7 +99,7 @@ const Form: FC<Props> = ({ regions, handleClose }) => {
             label="Nombre de la dirección"
             placeholder="Ej. Casa, Taller"
             className="col-span-2"
-            error={errors.firstName as FieldError}
+            error={errors.addressName as FieldError}
             data-testid="address-form-address-name-input"
             {...register('addressName')}
           />
@@ -113,7 +113,7 @@ const Form: FC<Props> = ({ regions, handleClose }) => {
           <LabeledInput
             label="Apellidos"
             placeholder="Tus apellidos"
-            error={errors.firstName as FieldError}
+            error={errors.lastName as FieldError}
             data-testid="address-form-last-name-input"
             {...register('lastName')}
           />

@@ -7,16 +7,17 @@ import {
   useFormContext,
 } from "react-hook-form"
 import { Button } from "@/components/atoms/Button/Button"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/helpers/zod-resolver"
 import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { signup } from "@/lib/data/customer"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
 import { PasswordValidator } from "@/components/cells/PasswordValidator/PasswordValidator"
 import { toast } from "@/lib/helpers/toast"
+import { copiarAutollenado } from "@/lib/helpers/autollenado"
 
 // HETNA: a donde regresar despues de crear la cuenta (?volver=/mx/servicios/cotizador-cnc)
 const leerVolver = () => {
@@ -64,7 +65,9 @@ export const RegisterForm = () => {
 }
 
 const Form = () => {
-  const [passwordError, setPasswordError] = useState({
+  // Sólo para pintar la lista de requisitos; la validación real la hace el
+  // esquema (schema.ts) con lo que dice el campo al enviar.
+  const [, setPasswordError] = useState({
     isValid: false,
     lower: false,
     upper: false,
@@ -73,19 +76,30 @@ const Form = () => {
   })
   const [volver, setVolver] = useState<string | null>(null)
   useEffect(() => setVolver(leerVolver()), [])
+  // Cuenta creada: falta confirmar el correo (no hay sesión hasta entonces)
+  const [revisa, setRevisa] = useState<string | null>(null)
 
   const {
     handleSubmit,
     register,
     watch,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useFormContext<RegisterFormData>()
 
-  const submit = async (data: RegisterFormData) => {
-    if (!passwordError.isValid) {
-      return
-    }
+  // Algo falta o está mal: además del texto en rojo bajo el campo (y el cursor
+  // en el primero), un aviso arriba para que no parezca que el botón no sirve.
+  const faltan = () => {
+    toast.error({ title: "Revisa los campos marcados en rojo." })
+  }
 
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    copiarAutollenado(e.currentTarget, getValues, setValue)
+    return handleSubmit(submit, faltan)(e)
+  }
+
+  const submit = async (data: RegisterFormData) => {
     const formData = new FormData()
     formData.append("email", data.email)
     formData.append("password", data.password)
@@ -104,7 +118,13 @@ const Form = () => {
       return
     }
 
-    if (res && typeof res === "object" && res.id) {
+    if (res && typeof res === "object" && "verificar" in res) {
+      setRevisa(res.verificar)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
+    if (res && typeof res === "object" && "id" in res && res.id) {
       window.location.href = leerVolver() || "/user"
       return
     }
@@ -115,13 +135,34 @@ const Form = () => {
     }
   }
 
+  if (revisa) {
+    return (
+      <main className="container" data-testid="register-page">
+        <Container className="border max-w-xl mx-auto mt-8 p-6 text-center" data-testid="register-revisa-correo">
+          <p className="text-[44px] leading-none m-0" aria-hidden="true">📧</p>
+          <h1 className="heading-md text-primary uppercase mt-4 mb-3">Revisa tu correo</h1>
+          <p className="text-md m-0">
+            Te mandamos una liga a <b>{revisa}</b> para confirmar tu cuenta. Ábrela y después inicia sesión.
+          </p>
+          <p className="text-md text-secondary mt-3 mb-0">
+            Si no llega en unos minutos, revisa spam o promociones. Desde &quot;Iniciar sesión&quot; puedes pedir que te la
+            mandemos otra vez.
+          </p>
+          <Link href={volver ? `/login?volver=${encodeURIComponent(volver)}` : "/login"} className="block mt-6">
+            <Button className="w-full flex justify-center uppercase">Ir a iniciar sesión</Button>
+          </Link>
+        </Container>
+      </main>
+    )
+  }
+
   return (
     <main className="container" data-testid="register-page">
       <Container className="border max-w-xl mx-auto mt-8 p-4" data-testid="register-form-container">
         <h1 className="heading-md text-primary uppercase mb-8">
           Crear cuenta
         </h1>
-        <form onSubmit={handleSubmit(submit)} data-testid="register-form">
+        <form onSubmit={enviar} noValidate data-testid="register-form">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <LabeledInput
               className="md:w-1/2"
