@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FieldError, FieldValues, FormProvider, useForm, useFormContext } from 'react-hook-form';
+import { copiarAutollenado } from '@/lib/helpers/autollenado';
 
 import { Button } from '@/components/atoms/Button/Button'
 import { Alert } from '@/components/atoms/Alert/Alert';
@@ -42,8 +43,15 @@ const Form = () => {
   const {
     handleSubmit,
     register,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting }
   } = useFormContext();
+  // Correo y contraseña que rellenó el navegador sin avisar (ver copiarAutollenado)
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    copiarAutollenado(e.currentTarget, getValues, setValue);
+    return handleSubmit(submit)(e);
+  };
   const router = useRouter();
   const searchParams = useSearchParams();
   const isSessionExpired = searchParams.get('sessionExpired') === 'true';
@@ -126,7 +134,7 @@ const Form = () => {
             </div>
           )}
           <form
-            onSubmit={handleSubmit(submit)}
+            onSubmit={enviar}
             data-testid="login-form"
           >
             <div className="space-y-4">

@@ -18,9 +18,9 @@ export const registerFormSchema = z.object({
     .string()
     .nonempty('Escribe una contraseña')
     .min(8, 'Al menos 8 caracteres')
-    .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`])/, {
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`])/, {
       message:
-        'Debe tener una mayúscula, un número y un símbolo'
+        'Debe tener una minúscula, una mayúscula, un número y un símbolo'
     })
     .max(64, 'Máximo 64 caracteres'),
   // Lada del país (+52 México, +1 EE. UU./Canadá...) y el número, por separado
