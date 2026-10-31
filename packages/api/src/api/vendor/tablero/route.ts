@@ -3,6 +3,7 @@ import { MedusaResponse } from "@medusajs/framework/http"
 import { VendorRequest } from "./vendor-request"
 import { actividadEnForo } from "../../../lib/foro-actividad"
 import { rankingDeTalleres } from "../../../lib/tablero-ranking"
+import { saludDelTaller } from "../../../lib/tablero-salud"
 import {
   candidatosADescuento,
   catalogoDelTaller,
@@ -28,10 +29,11 @@ import type TableroModuleService from "../../../modules/tablero/service"
 export const GET = async (req: VendorRequest, res: MedusaResponse) => {
   const sellerId = req.seller_context!.seller_id
 
-  const [ventas, vistas, catalogo] = await Promise.all([
+  const [ventas, vistas, catalogo, salud] = await Promise.all([
     ventasDelTaller(req.scope, sellerId),
     vistasDelTaller(req.scope, sellerId),
     catalogoDelTaller(req.scope, sellerId),
+    saludDelTaller(req.scope, sellerId),
   ])
 
   // Las reseñas cuelgan de los productos, así que primero hay que saber
@@ -61,7 +63,12 @@ export const GET = async (req: VendorRequest, res: MedusaResponse) => {
       ticket_promedio: ventas.total_pedidos
         ? Math.round(ventas.ingresos_totales / ventas.total_pedidos)
         : 0,
+      ingresos_previos: salud.previos.ingresos,
+      pedidos_previos: salud.previos.pedidos,
     },
+    por_enviar: salud.por_enviar,
+    stock: salud.stock,
+    reputacion: salud.reputacion,
     meta,
     vistas: {
       total: vistas.total,

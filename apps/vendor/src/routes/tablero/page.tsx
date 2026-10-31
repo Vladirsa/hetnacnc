@@ -9,6 +9,7 @@
 // pantallas de envíos y precios por cantidad: son rutas propias de HETNA que
 // no pasan por el codegen de Mercur.
 import { useCallback, useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 const Tablero = (props: { width?: number; height?: number }) => (
@@ -64,6 +65,37 @@ type RespuestaTablero = {
     pedidos_mes: number
     ingresos_mes: number
     ticket_promedio: number
+    ingresos_previos: number
+    pedidos_previos: number
+  }
+  por_enviar: {
+    order_id: string
+    display_id: number | null
+    creado: string
+    horas: number
+    tarde: boolean
+    total: number
+    piezas: string
+  }[]
+  stock: {
+    producto_id: string
+    titulo: string
+    disponibles: number
+    dias_restantes: number | null
+    nivel: "agotado" | "bajo" | "se_acaba"
+  }[]
+  reputacion: {
+    dias: number
+    pedidos: number
+    enviados: number
+    cancelados: number
+    devoluciones: number
+    reclamos: number
+    envio_promedio_horas: number | null
+    enviados_tarde: number
+    pedidos_sin_problema: number | null
+    semaforo: "verde" | "ambar" | "rojo" | "sin_datos"
+    consejos: string[]
   }
   meta: { mes: string; objetivo: number; puesta: boolean }
   vistas: { total: number; productos: ProductoVisto[]; conversion: number | null }
@@ -484,6 +516,160 @@ function Descuentos({ datos }: { datos: RespuestaTablero }) {
   )
 }
 
+// "+18% vs. los 30 días anteriores". Sin ventas antes no hay porcentaje que
+// valga: se dice tal cual.
+function contraAntes(actual: number, previo: number, dias: number) {
+  if (!previo && !actual) return `sin ventas en los ${dias} días anteriores tampoco`
+  if (!previo) return `los ${dias} días anteriores no tuviste ventas`
+  const cambio = (actual - previo) / previo
+  const signo = cambio > 0 ? "▲" : cambio < 0 ? "▼" : "="
+  return `${signo} ${Math.abs(cambio * 100).toFixed(0)}% contra los ${dias} días anteriores`
+}
+
+const horasATexto = (h: number) => (h >= 48 ? `${Math.floor(h / 24)} días` : `${h} h`)
+
+function PorEnviar({ datos }: { datos: RespuestaTablero }) {
+  const lista = datos.por_enviar
+  const tarde = lista.filter((p) => p.tarde).length
+  return (
+    <div style={tarde ? { ...S.card, border: "1px solid #E8B4A8" } : S.card}>
+      <h2 style={S.h2}>
+        Pedidos por enviar{" "}
+        {lista.length > 0 && (
+          <span style={{ ...S.pildora, background: tarde ? "#FDEDE8" : "#EEF4FB", color: tarde ? "#9B3225" : "#2B4C7E" }}>
+            {lista.length}
+          </span>
+        )}
+      </h2>
+      <p style={S.nota}>
+        Pagados y sin guía. Envía antes de 48 h: es lo que más cuida tu calificación.
+      </p>
+      {lista.length === 0 && <p style={S.ok}>Todo enviado. Vas al día.</p>}
+      {lista.slice(0, 8).map((p) => (
+        <div key={p.order_id} style={S.fila}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}>
+              <Link to={`/orders/${p.order_id}`} style={{ color: "inherit" }}>
+                Pedido #{p.display_id ?? "—"}
+              </Link>{" "}
+              · {pesos(p.total, datos.moneda)}
+            </p>
+            <p style={S.pie}>{p.piezas}</p>
+          </div>
+          <span
+            style={{
+              ...S.pildora,
+              whiteSpace: "nowrap",
+              background: p.tarde ? "#FDEDE8" : "#F1EEE7",
+              color: p.tarde ? "#9B3225" : "#6B675C",
+            }}
+          >
+            {p.tarde ? `Tarde · ${horasATexto(p.horas)}` : `hace ${horasATexto(p.horas)}`}
+          </span>
+        </div>
+      ))}
+      {lista.length > 8 && <p style={S.pie}>Y {lista.length - 8} más en Pedidos.</p>}
+    </div>
+  )
+}
+
+const ETIQUETA_STOCK = {
+  agotado: { texto: "Agotado", fondo: "#FDEDE8", color: "#9B3225" },
+  se_acaba: { texto: "Se acaba pronto", fondo: "#FDF6E3", color: "#7A5B14" },
+  bajo: { texto: "Quedan pocas", fondo: "#FDF6E3", color: "#7A5B14" },
+}
+
+function Existencias({ datos }: { datos: RespuestaTablero }) {
+  return (
+    <div style={S.card}>
+      <h2 style={S.h2}>Existencias</h2>
+      <p style={S.nota}>
+        Lo agotado no se puede comprar, y vender lo que no tienes termina en cancelación. Calculado
+        con lo que vendiste en los últimos 30 días.
+      </p>
+      {datos.stock.length === 0 && (
+        <p style={S.ok}>Nada por resurtir. (Los productos que fabricas bajo pedido no aparecen aquí.)</p>
+      )}
+      {datos.stock.map((p) => {
+        const e = ETIQUETA_STOCK[p.nivel]
+        return (
+          <div key={p.producto_id} style={S.fila}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}>
+                <Link to={`/products/${p.producto_id}`} style={{ color: "inherit" }}>
+                  {p.titulo}
+                </Link>
+              </p>
+              <p style={S.pie}>
+                {p.disponibles} disponible{p.disponibles === 1 ? "" : "s"}
+                {p.dias_restantes !== null && p.disponibles > 0
+                  ? ` · te alcanza para unos ${p.dias_restantes} día${p.dias_restantes === 1 ? "" : "s"}`
+                  : ""}
+              </p>
+            </div>
+            <span style={{ ...S.pildora, whiteSpace: "nowrap", background: e.fondo, color: e.color }}>{e.texto}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+const SEMAFORO = {
+  verde: { texto: "Excelente", fondo: "#E8F3EA", color: "#1F5B29" },
+  ambar: { texto: "Cuidado", fondo: "#FDF6E3", color: "#7A5B14" },
+  rojo: { texto: "Atiende esto", fondo: "#FDEDE8", color: "#9B3225" },
+  sin_datos: { texto: "Sin pedidos aún", fondo: "#F1EEE7", color: "#6B675C" },
+}
+
+function Reputacion({ datos }: { datos: RespuestaTablero }) {
+  const r = datos.reputacion
+  const s = SEMAFORO[r.semaforo]
+  const cifra = (etiqueta: string, valor: string, pie?: string) => (
+    <div>
+      <p style={S.etiqueta}>{etiqueta}</p>
+      <p style={S.cifraChica}>{valor}</p>
+      {pie && <p style={S.pie}>{pie}</p>}
+    </div>
+  )
+  return (
+    <div style={S.card}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <h2 style={S.h2}>Tu reputación como vendedor</h2>
+        <span style={{ ...S.pildora, background: s.fondo, color: s.color }}>{s.texto}</span>
+      </div>
+      <p style={S.nota}>
+        Últimos {r.dias} días. Es lo que hace que un cliente vuelva a comprarte, y lo que HETNA revisa
+        para destacar talleres.
+      </p>
+      {r.pedidos > 0 && (
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
+          {cifra(
+            "Pedidos sin problema",
+            porcentaje(r.pedidos_sin_problema, 0),
+            `de ${r.pedidos} pedido${r.pedidos === 1 ? "" : "s"}`
+          )}
+          {cifra(
+            "Envías en",
+            r.envio_promedio_horas !== null ? horasATexto(r.envio_promedio_horas) : "—",
+            "en promedio"
+          )}
+          {cifra("Enviados tarde", String(r.enviados_tarde), "más de 48 h")}
+          {cifra("Cancelados", String(r.cancelados))}
+          {cifra("Devoluciones", String(r.devoluciones))}
+          {cifra("Reclamos", String(r.reclamos))}
+        </div>
+      )}
+      {r.consejos.map((c) => (
+        <p key={c} style={{ ...S.pie, fontSize: 12.5, color: "#4A463D" }}>
+          • {c}
+        </p>
+      ))}
+      {r.pedidos > 0 && r.consejos.length === 0 && <p style={S.ok}>Sin pendientes. Sigue así.</p>}
+    </div>
+  )
+}
+
 function Lista({
   titulo,
   nota,
@@ -694,6 +880,11 @@ export default function TableroPage() {
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 
+      <div style={S.dosColumnas}>
+        <PorEnviar datos={datos} />
+        <Existencias datos={datos} />
+      </div>
+
       <div style={S.rejilla}>
         <Tarjeta
           etiqueta="Vendido este mes"
@@ -701,9 +892,14 @@ export default function TableroPage() {
           pie={`${v.pedidos_mes} pedido${v.pedidos_mes === 1 ? "" : "s"}`}
         />
         <Tarjeta
+          etiqueta={`Vendido (${v.ventana_dias} días)`}
+          valor={pesos(v.ingresos_totales, datos.moneda)}
+          pie={contraAntes(v.ingresos_totales, v.ingresos_previos, v.ventana_dias)}
+        />
+        <Tarjeta
           etiqueta={`Pedidos (${v.ventana_dias} días)`}
           valor={String(v.total_pedidos)}
-          pie={pesos(v.ingresos_totales, datos.moneda)}
+          pie={contraAntes(v.total_pedidos, v.pedidos_previos, v.ventana_dias)}
         />
         <Tarjeta
           etiqueta="Ticket promedio"
@@ -742,6 +938,8 @@ export default function TableroPage() {
         <p style={S.nota}>Pasa el cursor sobre una barra para ver el día.</p>
         <Ventas30 dias={v.por_dia} moneda={datos.moneda} />
       </div>
+
+      <Reputacion datos={datos} />
 
       <Descuentos datos={datos} />
 
