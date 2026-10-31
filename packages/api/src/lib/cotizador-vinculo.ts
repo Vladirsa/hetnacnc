@@ -14,7 +14,7 @@
 //   - El botón "Cotizador" de la tienda entra a la app sin volver a escribir la
 //     contraseña (liga de acceso de un solo uso que genera Supabase).
 //   - El plan del Cotizador cuenta en la tienda (archivos gratis sin límite).
-import { randomInt } from "crypto"
+import { createHash, randomInt } from "crypto"
 
 import { ErrorSuscripcion, RETORNO, adminDesdeToken, supabaseListo } from "./cotizador-suscripciones"
 import { planEfectivo, supa, type PlanEfectivo, type Taller } from "./cotizador-crm"
@@ -146,4 +146,22 @@ export async function ligaEntrada(knex: any, customerId: string, destino?: strin
     body: JSON.stringify({ type: "magiclink", email: v.correo_app, redirect_to: destino || RETORNO }),
   })
   return r?.action_link || r?.properties?.action_link || null
+}
+
+/**
+ * Huella del correo de la cuenta de la tienda (16 letras de su SHA-256) para
+ * cuando la cuenta NO está vinculada: el botón Cotizador abre
+ * /cotizador/?cuenta=<huella> y la app cierra la sesión que haya en ese
+ * navegador si es de OTRO correo. Así una cuenta nueva de la tienda no cae en
+ * el taller de la persona que usó antes ese navegador. Va la huella y no el
+ * correo para no dejar el correo en la barra de direcciones ni en el historial.
+ * La app calcula lo mismo en lib/main.dart (_cerrarSesionAjena).
+ */
+export function huellaCorreo(correo: string): string {
+  return createHash("sha256").update(correo.trim().toLowerCase()).digest("hex").slice(0, 16)
+}
+
+export async function huellaCliente(knex: any, customerId: string): Promise<string | null> {
+  const c = await knex("customer").where({ id: customerId }).whereNull("deleted_at").first("email")
+  return c?.email ? huellaCorreo(c.email) : null
 }

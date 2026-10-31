@@ -1,7 +1,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { crearCodigo, desvincular, estadoVinculo, ligaEntrada } from "../../../lib/cotizador-vinculo"
+import { crearCodigo, desvincular, estadoVinculo, huellaCliente, ligaEntrada } from "../../../lib/cotizador-vinculo"
 
 // Cuenta de hetnacnc.com <-> taller del Cotizador (ver lib/cotizador-vinculo.ts)
 
@@ -18,7 +18,8 @@ export async function GET(req: AuthenticatedMedusaRequest, res: MedusaResponse) 
 /**
  * POST /store/cotizador-vinculo { accion }
  *   "codigo"  -> { codigo, expira }  para escribirlo en la app
- *   "entrar"  -> { url }             liga de acceso a la app (null si no está vinculada)
+ *   "entrar"  -> { url, cuenta }     liga de acceso a la app (url null si no está
+ *                                    vinculada; cuenta = huella del correo, ver huellaCorreo)
  *   "quitar"  -> { ok }
  */
 export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
@@ -27,7 +28,10 @@ export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const accion = String(((req.body || {}) as { accion?: string }).accion || "")
   try {
     if (accion === "codigo") return res.json(await crearCodigo(knex, cliente))
-    if (accion === "entrar") return res.json({ url: await ligaEntrada(knex, cliente) })
+    if (accion === "entrar") {
+      const url = await ligaEntrada(knex, cliente)
+      return res.json({ url, cuenta: url ? null : await huellaCliente(knex, cliente) })
+    }
     if (accion === "quitar") {
       await desvincular(knex, cliente)
       return res.json({ ok: true })
