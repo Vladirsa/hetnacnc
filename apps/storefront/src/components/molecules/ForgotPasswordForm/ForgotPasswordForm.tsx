@@ -36,22 +36,22 @@ const Form = () => {
     formState: { errors, isSubmitting },
     reset
   } = useFormContext<ForgotPasswordFormData>();
+  // Se queda a la vista (un aviso flotante se pierde y parece que no hizo nada)
+  const [enviado, setEnviado] = useState<string | null>(null);
 
   const submit = async (data: ForgotPasswordFormData) => {
     if (!data.email) return;
 
-    const result = await sendResetPasswordEmail(data.email);
+    const correo = data.email.trim().toLowerCase();
+    const result = await sendResetPasswordEmail(correo).catch(() => ({ success: false, error: null }));
 
     if (!result.success) {
-      toast.error({ title: result.error || 'An error occurred. Please try again.' });
+      toast.error({ title: 'No se pudo enviar. Recarga la página e intenta de nuevo.' });
       return;
     }
 
     reset({ email: '' });
-
-    toast.success({
-      title: `Password reset was requested. If an account exists for ${data.email}, you’ll receive an email with a reset link. Check your inbox and spam folder - the link is valid for one hour.`
-    });
+    setEnviado(correo);
   };
 
   return (
@@ -61,8 +61,14 @@ const Form = () => {
     >
       <h1 className="heading-md my-0 mb-2 uppercase text-primary">¿Olvidaste tu contraseña?</h1>
       <p className="text-md">
-        Enter the email you used to sign up and we&#39;ll send you a password reset email. email.
+        Escribe el correo de tu cuenta y te mandamos una liga para elegir una contraseña nueva.
       </p>
+      {enviado && (
+        <div className="rounded-sm border border-[#B7E0C8] bg-[#E6F4EC] p-3 text-md text-[#14683F]" role="status">
+          Listo. Si <b>{enviado}</b> tiene cuenta, te llegará un correo con la liga en unos minutos. Revisa también
+          spam o promociones. La liga dura <b>15 minutos</b>.
+        </div>
+      )}
       <form
         onSubmit={handleSubmit(submit)}
         data-testid="forgot-password-form"
@@ -81,13 +87,14 @@ const Form = () => {
           <Button
             className="w-full uppercase"
             disabled={isSubmitting}
+            loading={isSubmitting}
             data-testid="forgot-password-submit-button"
           >
-            Restablecer contraseña
+            {isSubmitting ? 'Enviando…' : 'Restablecer contraseña'}
           </Button>
 
           <Link
-            href="/user"
+            href="/login"
             className="flex"
             data-testid="forgot-password-back-to-login-link"
           >

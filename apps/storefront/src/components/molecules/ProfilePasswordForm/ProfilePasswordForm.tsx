@@ -63,7 +63,7 @@ const Form = ({
   const updatePassword = async (data: FieldValues) => {
     if (form.getValues("confirmPassword") !== form.getValues("newPassword")) {
       setConfirmPasswordError({
-        message: "Passwords don't match. Please enter correct password.",
+        message: "Las contraseñas no coinciden.",
         type: "custom",
       } as FieldError)
       return
@@ -77,7 +77,7 @@ const Form = ({
         if (res.success) {
           setSuccess(true)
         } else {
-          toast.error(res.error || "Algo salió mal")
+          toast.error(/unauthorized|invalid|expired|jwt/i.test(String(res.error)) ? "La liga ya venció o no es válida. Pide una nueva en ¿Olvidaste tu contraseña?" : "Algo salió mal. Intenta de nuevo.")
         }
       } catch (err) {
         console.log(err)
@@ -118,7 +118,7 @@ const Form = ({
         Crear nueva contraseña
       </Heading>
       <p className="text-secondary label-md">
-        Almost done. Enter your new password, and you&apos;re good to go.
+        Ya casi: escribe tu nueva contraseña dos veces.
       </p>
       <LabeledInput
         label="Contraseña"
