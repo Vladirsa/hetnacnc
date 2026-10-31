@@ -99,6 +99,35 @@ async function asegurarCliente(
 
 const mensajeDeError = (e: unknown) => String((e as Error)?.message || e || '');
 
+// ── Confirmación de correo (packages/api/src/lib/verificar-correo.ts) ─────────
+// Las cuentas nuevas no quedan con sesión hasta confirmar su correo.
+const BACKEND = process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
+const LLAVE = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string;
+
+/** Con la sesión puesta: true si la cuenta todavía no confirma su correo. */
+async function faltaConfirmar(): Promise<boolean> {
+  try {
+    const r = await fetch(`${BACKEND}/store/verificacion`, {
+      headers: { ...(await getAuthHeaders()), 'x-publishable-api-key': LLAVE },
+      cache: 'no-store'
+    });
+    if (!r.ok) return false;
+    return Boolean(((await r.json()) as { requiere?: boolean }).requiere);
+  } catch {
+    return false;
+  }
+}
+
+/** Vuelve a mandar la liga de confirmación (el servidor no dice si el correo existe). */
+export async function reenviarConfirmacion(email: string): Promise<void> {
+  await fetch(`${BACKEND}/hooks/verificar-correo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: String(email || '').trim().toLowerCase() }),
+    cache: 'no-store'
+  }).catch(() => undefined);
+}
+
 export async function signup(formData: FormData) {
   const password = formData.get('password') as string;
   const email = String(formData.get('email') || '').trim().toLowerCase();
@@ -133,6 +162,14 @@ export async function signup(formData: FormData) {
     await setAuthToken(token);
     const cliente = await asegurarCliente(email, password, datos);
 
+    // Cuenta nueva: sin sesión hasta que confirme su correo (la liga ya va en
+    // camino; si es una cuenta que ya existía sin confirmar, se reenvía).
+    if (await faltaConfirmar()) {
+      await removeAuthToken();
+      await reenviarConfirmacion(email);
+      return { verificar: email };
+    }
+
     const customerCacheTag = await getCacheTag('customers');
     revalidateTag(customerCacheTag);
     await transferCart().catch(() => undefined);
@@ -151,6 +188,17 @@ export async function login(formData: FormData) {
     await setAuthToken(await entrarConCorreo(email, password));
     // Cuenta que quedó a medias (identidad sin cliente): se completa aquí
     await asegurarCliente(email, password, {}).catch(() => null);
+
+    if (await faltaConfirmar()) {
+      await removeAuthToken();
+      await reenviarConfirmacion(email);
+      return {
+        success: false,
+        verificar: true,
+        message: `Primero confirma tu correo: te mandamos una liga a ${email}. Revisa también spam o promociones.`
+      };
+    }
+
     const customerCacheTag = await getCacheTag('customers');
     revalidateTag(customerCacheTag);
 
@@ -306,19 +354,18 @@ export const updateCustomerPassword = async (password: string, token: string): P
   return res;
 };
 
+// Con fetch directo: Medusa contesta 201 sin cuerpo y el cliente tipado lo
+// tomaba como error aunque el correo sí se mandaba (por eso no salía el aviso).
 export const sendResetPasswordEmail = async (email: string) => {
-  const res = await (sdk.auth.$actorType.$authProvider.resetPassword
-    .mutate({
-      $actorType: 'customer',
-      $authProvider: 'emailpass',
-      identifier: email
-    } as never) as unknown as Promise<unknown>)
-    .then(() => {
-      return { success: true, error: null };
-    })
-    .catch((err: any) => {
-      return { success: false, error: err.toString() };
+  try {
+    const r = await fetch(`${BACKEND}/auth/customer/emailpass/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: email }),
+      cache: 'no-store'
     });
-
-  return res;
+    return r.ok ? { success: true, error: null } : { success: false, error: `HTTP ${r.status}` };
+  } catch (err: unknown) {
+    return { success: false, error: String(err) };
+  }
 };
