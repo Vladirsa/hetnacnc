@@ -7,7 +7,7 @@ import {
   useFormContext,
 } from "react-hook-form"
 import { Button } from "@/components/atoms/Button/Button"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/helpers/zod-resolver"
 import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
