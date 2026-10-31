@@ -42,7 +42,9 @@ export function requiereVerificacion(c: ClienteParaVerificar | null | undefined)
 
 export function ligaVerificacion(id: string): string {
   const exp = Math.floor(Date.now() / 1000) + VIGENCIA_DIAS * 86400
-  return `${STORE_URL}/api/verificar-correo?c=${encodeURIComponent(id)}&e=${exp}&t=${firmar(id, exp)}`
+  // Va bajo /api/app/: en el servidor, nginx manda todo /api/v... a otro
+  // servicio (Express) y /api/verificar-correo daba "Cannot GET".
+  return `${STORE_URL}/api/app/verificar-correo?c=${encodeURIComponent(id)}&e=${exp}&t=${firmar(id, exp)}`
 }
 
 export function firmaVerificacionValida(id: string, exp: string, firma: string): boolean {

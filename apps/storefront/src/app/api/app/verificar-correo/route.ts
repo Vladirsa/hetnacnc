@@ -1,4 +1,5 @@
 // Liga de "confirma tu correo" (packages/api/src/lib/verificar-correo.ts).
+// Vive en /api/app/ porque nginx manda /api/v... a otro servicio.
 // Reenvía la firma a la API, que es la que valida y marca la cuenta.
 const API = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
@@ -16,7 +17,11 @@ const pagina = (ok: boolean) => `<!doctype html><html lang="es"><head><meta char
     ? "Tu cuenta de HETNA CNC ya está activa. Inicia sesión con tu correo y tu contraseña."
     : "La liga venció o está incompleta. Entra a Iniciar sesión con tu correo y tu contraseña y te mandamos una nueva."
 }</p>
-<a href="/mx/login" style="display:inline-block;background:#C2560A;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700">Iniciar sesión</a></div></body></html>`
+<a href="/mx/login" style="display:inline-block;background:#C2560A;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700">Iniciar sesión</a>${
+  ok
+    ? `<a href="/api/app/entrar-cotizador" style="display:inline-block;margin-left:8px;border:1px solid #E7E4DC;color:#142033;text-decoration:none;padding:11px 18px;border-radius:10px;font-weight:700">Ir al Cotizador</a>`
+    : ""
+}</div></body></html>`
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
