@@ -108,24 +108,24 @@ export function VincularCotizador() {
       ) : (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            ¿Tienes un taller en el Cotizador? Vincúlalo con esta cuenta: entras a la app sin volver a escribir tu contraseña y tu plan
-            cuenta también en la tienda (archivos gratis sin límite).
+            Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con 5
+            cotizaciones al mes. Si ya tienes un taller en el Cotizador con este correo, se une solo.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href="/api/app/entrar-cotizador"
+              className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
+            >
+              Activar mi Cotizador
+            </a>
             <button
               type="button"
               onClick={() => void pedir()}
               disabled={trabajando}
-              className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-60"
+              className="rounded-[10px] border border-[#E7E4DC] px-4 py-2 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A] disabled:opacity-60"
             >
-              {trabajando ? "Generando…" : "Vincular mi taller"}
+              {trabajando ? "Generando…" : "Mi taller usa otro correo"}
             </button>
-            <a
-              href="/cotizador/?registro=1"
-              className="rounded-[10px] border border-[#E7E4DC] px-4 py-2 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]"
-            >
-              Crear mi taller gratis
-            </a>
           </div>
           {error && <p className="m-0 mt-2 text-[13px] font-semibold text-[#9B3225]">{error}</p>}
         </>
