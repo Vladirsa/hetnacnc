@@ -7,17 +7,21 @@
  *
  * CONVENCIÓN DE EJES (la de tu router con 4to eje):
  *   A = eje rotativo (gira la pieza)
- *   Y = longitud a lo largo de la pieza
+ *   X = longitud a lo largo de la pieza (el eje A va montado paralelo a X,
+ *       como en casi todos los routers; se puede elegir Y si el tuyo va
+ *       atravesado)
  *   Z = radio de corte (Z0 calibrado en el CENTRO del eje rotativo)
  *
- * Por qué G93 (avance en tiempo inverso): con radio variable, G94 en
- * movimientos Y+A+Z depende de cómo Mach3/4 interprete el avance del
- * eje rotativo. En G93, F = 1 / (minutos que debe durar ese bloque),
- * así que la velocidad de giro de la pieza es exactamente la que pides.
+ * AVANCE: por defecto G94 (mm/min), que es lo que Mach3 y Mach4 corren sin
+ * problema. Como esos controles suman los grados del eje A como si fueran
+ * milímetros, la F de cada bloque se calcula para que el bloque dure lo que
+ * debe durar según las RPM de la pieza (igual que hacen los posprocesadores
+ * "wrap" de Vectric). Opcionalmente G93 (tiempo inverso, F = 1 / minutos del
+ * bloque), que es exacto en LinuxCNC pero en Mach3 no es confiable.
  *
  * CÓMO SE CORTA: cada pasada es una espiral. Mientras la fresa avanza
- * en Y, la pieza gira; por cada vuelta completa la fresa avanza un
- * "paso" (lead) en Y. El ángulo A se ACUMULA dentro de cada pasada
+ * a lo largo, la pieza gira; por cada vuelta completa la fresa avanza un
+ * "paso" (lead). El ángulo A se ACUMULA dentro de cada pasada
  * (0, 144, 288, 432...). Al empezar la siguiente pasada se pone G92 A0: el
  * contador vuelve a cero SIN mover la pieza. Así no desenrolla cientos de
  * vueltas en vacío (lo que haría un G0 A0) y los números no crecen sin fin.
@@ -57,6 +61,10 @@ export interface ParametrosRpm {
 }
 
 export type OrigenPunto = "mandril" | "contrapunto";
+/** Eje lineal que recorre el largo de la pieza (el eje A gira sobre él). */
+export type EjeLargo = "X" | "Y";
+/** G94 = avance normal en mm/min (Mach3/Mach4). G93 = tiempo inverso (LinuxCNC). */
+export type ModoAvance = "G94" | "G93";
 
 export interface EntradaGCode {
   segmentos: Segmento[];
@@ -65,6 +73,8 @@ export interface EntradaGCode {
   herramienta: ParametrosHerramienta;
   rpm: ParametrosRpm;
   origenPunto: OrigenPunto;
+  ejeLargo?: EjeLargo;
+  avance?: ModoAvance;
   numPasadasDesbaste?: number;
   /** Estrías y espiral, que se cortan después del acabado */
   tallados?: Tallados;
@@ -175,6 +185,8 @@ export function validarEntrada(body: unknown): { ok: true; entrada: EntradaGCode
 
   const material = typeof b.material === "string" && b.material in MATERIAL_PRESETS ? b.material : "generico";
   const origenPunto: OrigenPunto = b.origenPunto === "contrapunto" ? "contrapunto" : "mandril";
+  const ejeLargo: EjeLargo = b.ejeLargo === "Y" ? "Y" : "X";
+  const avance: ModoAvance = b.avance === "G93" ? "G93" : "G94";
   const numPasadasDesbaste = finito(b.numPasadasDesbaste)
     ? Math.min(LIMITES.maxPasadasDesbaste, Math.max(1, Math.round(num(b.numPasadasDesbaste))))
     : undefined;
@@ -222,7 +234,7 @@ export function validarEntrada(body: unknown): { ok: true; entrada: EntradaGCode
 
   return {
     ok: true,
-    entrada: { segmentos, material, maquina, herramienta, rpm, origenPunto, numPasadasDesbaste, tallados },
+    entrada: { segmentos, material, maquina, herramienta, rpm, origenPunto, ejeLargo, avance, numPasadasDesbaste, tallados },
   };
 }
 
@@ -246,6 +258,12 @@ function revisarTramo(
 
 export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   const { segmentos, material, maquina, herramienta, rpm, origenPunto } = entrada;
+  const L = entrada.ejeLargo === "Y" ? "Y" : "X"; // letra del eje que recorre el largo
+  const g93 = entrada.avance === "G93";
+  // F equivalente en G94: Mach3/Mach4 miden el bloque como hipot(mm, grados),
+  // así que para que dure `tMin` minutos la F debe ser esa "distancia" / tMin.
+  const fEquivalente = (dLargo: number, dRadio: number, dAng: number, tMin: number) =>
+    Math.min(99999, Math.max(1, Math.round(Math.hypot(dLargo, dRadio, dAng) / Math.max(tMin, 1e-6))));
 
   const avisos: string[] = [];
   const preset = MATERIAL_PRESETS[material] ?? MATERIAL_PRESETS.generico;
@@ -303,11 +321,12 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   ) {
     lines.push(`(--- ${titulo} ---)`);
     lines.push(`G0 Z${zSeguro.toFixed(3)}`);
-    lines.push(`G0 Y${yIni.toFixed(3)}`);
+    lines.push(`G0 ${L}${yIni.toFixed(3)}`);
     lines.push("G92 A0 (contador del eje A a cero, sin girar)");
     aAcum = 0;
-    lines.push(`G1 Z${radioFn(Math.max(0, yIni)).toFixed(3)} F250 (hundir)`);
-    lines.push("G93 (avance en tiempo inverso)");
+    let zPrev = radioFn(Math.max(0, yIni));
+    lines.push(`G1 Z${zPrev.toFixed(3)} F250 (hundir)`);
+    if (g93) lines.push("G93 (avance en tiempo inverso)");
 
     let yPrev = yIni;
     const puntos: number[] = [];
@@ -322,12 +341,13 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
       // tiempo del bloque (min) = vueltas / rpm  ->  F = 1 / tiempo
       const t = dA / 360 / rpmPieza;
       minutos += t;
-      const f = 1 / t;
       const z = radioFn(Math.min(Math.max(y, 0), largo));
-      lines.push(`G1 Y${y.toFixed(3)} Z${z.toFixed(3)} A${aAcum.toFixed(2)} F${f.toFixed(4)}`);
+      const f = g93 ? (1 / t).toFixed(4) : String(fEquivalente(dy, z - zPrev, dA, t));
+      lines.push(`G1 ${L}${y.toFixed(3)} Z${z.toFixed(3)} A${aAcum.toFixed(2)} F${f}`);
       yPrev = y;
+      zPrev = z;
     }
-    lines.push("G94");
+    if (g93) lines.push("G94");
     lines.push(`G0 Z${zSeguro.toFixed(3)} (retirar)`);
     lines.push("");
   }
@@ -354,10 +374,16 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   lines.push("(HETNA TURN STUDIO - Torneado de perfil)");
   lines.push(`(Pieza: ${largo.toFixed(1)}mm de largo | radio maximo ${rMax.toFixed(2)}mm | Material ${preset.nombre})`);
   lines.push(`(Origen: ${origenPunto} | Fresa ${herramienta.toolDiameterMm}mm)`);
-  lines.push("(*** A = rotativo | Y = longitud | Z = radio de corte ***)");
+  lines.push(`(*** A = rotativo | ${L} = longitud | Z = radio de corte ***)`);
   lines.push("(*** Z0 calibrado en el CENTRO del eje rotativo ***)");
+  lines.push(
+    g93
+      ? "(*** Avance G93 tiempo inverso: para LinuxCNC. En Mach3 usa G94 ***)"
+      : "(*** Avance G94 en mm/min, con los grados de A contados como mm: Mach3 / Mach4 ***)"
+  );
   lines.push("(*** PRUEBA PRIMERO EN AIRE o con material de descarte ***)");
   lines.push("");
+  lines.push("G92.1 (borra cualquier desfase G92 que haya quedado de otro programa)");
   lines.push("G21 G17 G90 G40 G49 G80 (mm, plano XY, absoluto, cancela comp. fresa/longitud/ciclos)");
   lines.push("G94");
   lines.push(`M3 S${preset.spindleRpm} (husillo encendido)`);
@@ -402,7 +428,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   const tallados = entrada.tallados ?? {};
   if (tallados.estrias?.activo || tallados.espiral?.activo) {
     const feedTallado = herramienta.feed > 0 ? herramienta.feed : preset.feed;
-    // Y de la máquina para una Y de la pieza (si se corre desde el contrapunto, al revés)
+    // Coordenada de máquina a lo largo para una Y de la pieza (desde el contrapunto, al revés)
     const yMaq = (yPieza: number) => (origenPunto === "contrapunto" ? largo - yPieza : yPieza);
     let aActual = 0;
     const normalizarA = () => {
@@ -445,11 +471,11 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
           lines.push(`G0 Z${zSeguro.toFixed(3)}`);
           lines.push(`G0 A${ang.toFixed(3)}`);
           aActual = ang;
-          lines.push(`G0 Y${yMaq(ys[0]).toFixed(3)}`);
+          lines.push(`G0 ${L}${yMaq(ys[0]).toFixed(3)}`);
           lines.push(`G1 Z${(radioEn(ys[0], segmentos) - d).toFixed(3)} F250`);
           let yPrev = ys[0];
           for (const y of ys.slice(1)) {
-            lines.push(`G1 Y${yMaq(y).toFixed(3)} Z${(radioEn(y, segmentos) - d).toFixed(3)} F${feedTallado.toFixed(0)}`);
+            lines.push(`G1 ${L}${yMaq(y).toFixed(3)} Z${(radioEn(y, segmentos) - d).toFixed(3)} F${feedTallado.toFixed(0)}`);
             minutos += Math.abs(y - yPrev) / feedTallado;
             yPrev = y;
           }
@@ -478,9 +504,10 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
           const a0 = ((anguloEspiral(sp, k, ys[0]) % 360) + 360) % 360;
           lines.push(`G0 A${a0.toFixed(3)}`);
           aActual = a0;
-          lines.push(`G0 Y${yMaq(ys[0]).toFixed(3)}`);
-          lines.push(`G1 Z${(radioEn(ys[0], segmentos) - d).toFixed(3)} F250`);
-          lines.push("G93 (avance en tiempo inverso)");
+          lines.push(`G0 ${L}${yMaq(ys[0]).toFixed(3)}`);
+          let rPrev = radioEn(ys[0], segmentos) - d;
+          lines.push(`G1 Z${rPrev.toFixed(3)} F250`);
+          if (g93) lines.push("G93 (avance en tiempo inverso)");
           let yPrev = ys[0];
           for (const y of ys.slice(1)) {
             const dA = anguloEspiral(sp, k, y) - anguloEspiral(sp, k, yPrev);
@@ -489,10 +516,12 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
             const tMin = Math.max(largoTramo / feedTallado, 1e-5);
             aActual += dA;
             minutos += tMin;
-            lines.push(`G1 Y${yMaq(y).toFixed(3)} Z${r.toFixed(3)} A${aActual.toFixed(3)} F${(1 / tMin).toFixed(4)}`);
+            const f = g93 ? (1 / tMin).toFixed(4) : String(fEquivalente(y - yPrev, r - rPrev, Math.abs(dA), tMin));
+            lines.push(`G1 ${L}${yMaq(y).toFixed(3)} Z${r.toFixed(3)} A${aActual.toFixed(3)} F${f}`);
             yPrev = y;
+            rPrev = r;
           }
-          lines.push("G94");
+          if (g93) lines.push("G94");
           lines.push(`G0 Z${zSeguro.toFixed(3)}`);
         }
       }
