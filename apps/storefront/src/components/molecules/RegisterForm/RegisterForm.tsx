@@ -73,6 +73,8 @@ const Form = () => {
   })
   const [volver, setVolver] = useState<string | null>(null)
   useEffect(() => setVolver(leerVolver()), [])
+  // Cuenta creada: falta confirmar el correo (no hay sesión hasta entonces)
+  const [revisa, setRevisa] = useState<string | null>(null)
 
   const {
     handleSubmit,
@@ -104,7 +106,13 @@ const Form = () => {
       return
     }
 
-    if (res && typeof res === "object" && res.id) {
+    if (res && typeof res === "object" && "verificar" in res) {
+      setRevisa(res.verificar)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
+    if (res && typeof res === "object" && "id" in res && res.id) {
       window.location.href = leerVolver() || "/user"
       return
     }
@@ -113,6 +121,27 @@ const Form = () => {
 
       toast.error({ title: String(res) })
     }
+  }
+
+  if (revisa) {
+    return (
+      <main className="container" data-testid="register-page">
+        <Container className="border max-w-xl mx-auto mt-8 p-6 text-center" data-testid="register-revisa-correo">
+          <p className="text-[44px] leading-none m-0" aria-hidden="true">📧</p>
+          <h1 className="heading-md text-primary uppercase mt-4 mb-3">Revisa tu correo</h1>
+          <p className="text-md m-0">
+            Te mandamos una liga a <b>{revisa}</b> para confirmar tu cuenta. Ábrela y después inicia sesión.
+          </p>
+          <p className="text-md text-secondary mt-3 mb-0">
+            Si no llega en unos minutos, revisa spam o promociones. Desde &quot;Iniciar sesión&quot; puedes pedir que te la
+            mandemos otra vez.
+          </p>
+          <Link href={volver ? `/login?volver=${encodeURIComponent(volver)}` : "/login"} className="block mt-6">
+            <Button className="w-full flex justify-center uppercase">Ir a iniciar sesión</Button>
+          </Link>
+        </Container>
+      </main>
+    )
   }
 
   return (
