@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/lib/helpers/zod-resolver';
 import { HttpTypes } from '@medusajs/types';
 import { FieldError, FieldValues, FormProvider, useForm, useFormContext } from 'react-hook-form';
 
