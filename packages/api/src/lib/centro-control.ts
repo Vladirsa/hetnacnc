@@ -414,6 +414,44 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
     }
   }, undefined, logger)
 
+  // Saldo de Skydropx (lib/saldos.ts): ¿alcanza?, ¿hay que recargar?, notas de compra
+  let saldos = null
+  await seguro(async () => {
+    const { estadoSaldoSkydropx, cargosExtraSkydropx, listarRecargas } = await import("./saldos")
+    const s = await estadoSaldoSkydropx(container)
+    const recargas = await listarRecargas(container, 20)
+    saldos = { skydropx: s, recargas }
+    if (s?.recargar) {
+      avisos.push({
+        nivel: "rojo",
+        tipo: "saldo_envios",
+        titulo: "Recarga saldo en Skydropx",
+        detalle: `Te quedan ${pesos(s.saldo)}${s.dias_restantes !== null ? ` (alcanza para ≈${s.dias_restantes} días)` : ""}. Te sugerimos recargar ${pesos(s.sugerida)} (tope ${pesos(s.tope)}). Gastas ≈${pesos(s.gasto_dia)} al día en guías.`,
+        url: s.url_recarga,
+      })
+    }
+    const sinNota = recargas.filter((r) => !r.comprobante_url)
+    if (sinNota.length) {
+      avisos.push({
+        nivel: "azul",
+        tipo: "comprobante",
+        titulo: `${sinNota.length} recarga(s) sin nota de compra`,
+        detalle: "Súbela en Centro de control → Saldos y recargas para tener todos tus comprobantes juntos.",
+        url: `${ADMIN}/control`,
+      })
+    }
+    const extras = (await cargosExtraSkydropx().catch(() => [])).filter((c) => c.fecha && en(c.fecha, desde, ahora))
+    if (extras.length) {
+      avisos.push({
+        nivel: "ambar",
+        tipo: "cargo_extra",
+        titulo: `Skydropx cobró ${extras.length} cargo(s) extra por ${pesos(extras.reduce((t, c) => t + c.monto, 0))}`,
+        detalle: `${extras.slice(0, 3).map((c) => `${c.concepto} ${pesos(c.monto)}`).join(" · ")}. Revisa si va como sobrepeso al taller o al cliente.`,
+        url: `${ADMIN}/envios`,
+      })
+    }
+  }, undefined, logger)
+
   // Verificaciones de talleres esperando revisión
   await seguro(async () => {
     const { data } = await query.graph({ entity: "verificacion_taller", fields: ["id", "seller_id", "estado", "enviado_en"] })
@@ -452,6 +490,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   return {
     generado: new Date(ahora).toISOString(),
     ventas,
+    saldos,
     avisos,
     conteo: {
       rojo: avisos.filter((a) => a.nivel === "rojo").length,
