@@ -75,22 +75,24 @@ export const MenuMovil = ({ categorias }: { categorias: Cat[] }) => {
       <input id="mm-menu" type="checkbox" data-menu-movil className="peer sr-only" />
 
       {/* Botón de 3 rayitas junto al logo */}
+      {/* El nombre va como texto oculto: aria-label no está permitido en <label> */}
       <label
         htmlFor="mm-menu"
-        aria-label="Abrir menú"
         className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] text-[#142033] active:bg-[#F4F1EA]"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
+        <span className="sr-only">Abrir menú</span>
       </label>
 
       {/* Panel a pantalla completa */}
       <div className="fixed inset-0 z-[80] hidden flex-col bg-white peer-checked:flex">
         <div className="flex items-center justify-between bg-[#142033] px-4 py-3 text-white">
           <span className="text-[16px] font-bold">Menú</span>
-          <label htmlFor="mm-menu" aria-label="Cerrar menú" className="cursor-pointer p-2 text-[20px] leading-none">
-            ✕
+          <label htmlFor="mm-menu" className="cursor-pointer p-2 text-[20px] leading-none">
+            <span aria-hidden="true">✕</span>
+            <span className="sr-only">Cerrar menú</span>
           </label>
         </div>
 

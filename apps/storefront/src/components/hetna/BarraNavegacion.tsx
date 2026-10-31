@@ -241,8 +241,9 @@ const AcordeonCategorias = ({ raices }: { raices: Raiz[] }) => (
 const EncabezadoPanel = ({ titulo, para }: { titulo: string; para: string }) => (
   <div className="flex items-center justify-between bg-[#142033] px-4 py-3 text-white">
     <span className="text-[15px] font-bold">{titulo}</span>
-    <label htmlFor={para} aria-label="Cerrar" className="cursor-pointer p-2 text-[18px] leading-none">
-      ✕
+    <label htmlFor={para} className="cursor-pointer p-2 text-[18px] leading-none">
+      <span aria-hidden="true">✕</span>
+      <span className="sr-only">Cerrar</span>
     </label>
   </div>
 )
