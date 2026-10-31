@@ -14,10 +14,21 @@
 //   - El botón "Cotizador" de la tienda entra a la app sin volver a escribir la
 //     contraseña (liga de acceso de un solo uso que genera Supabase).
 //   - El plan del Cotizador cuenta en la tienda (archivos gratis sin límite).
-import { createHash, randomInt } from "crypto"
+//
+// UNA SOLA CUENTA (31 oct): desde que la tienda confirma el correo, ya se puede
+// confiar en él. Con el correo confirmado, el botón Cotizador (entradaCotizador):
+//   - si ya hay un taller en el Cotizador con ese mismo correo, lo vincula solo;
+//   - si no, lleva a /cotizador/activar, que crea el usuario del Cotizador (con
+//     el correo ya confirmado, sin contraseña propia) y su taller con la prueba
+//     de 14 días (activarCotizador).
+// En los dos casos entra con la liga de un solo uso: la persona nunca escribe
+// otra contraseña. El código de 6 dígitos queda para talleres con otro correo.
+import { createHash, randomBytes, randomInt } from "crypto"
 
 import { ErrorSuscripcion, RETORNO, adminDesdeToken, supabaseListo } from "./cotizador-suscripciones"
 import { planEfectivo, supa, type PlanEfectivo, type Taller } from "./cotizador-crm"
+import { correosDeLaCasa } from "./cuentas-casa"
+import { mandarCorreoVerificacion } from "./verificar-correo"
 
 export const T_VINCULO = "hetna_cotizador_vinculo"
 export const T_CODIGO = "hetna_cotizador_codigo"
@@ -164,4 +175,215 @@ export function huellaCorreo(correo: string): string {
 export async function huellaCliente(knex: any, customerId: string): Promise<string | null> {
   const c = await knex("customer").where({ id: customerId }).whereNull("deleted_at").first("email")
   return c?.email ? huellaCorreo(c.email) : null
+}
+
+// ---------------------------------------------------------------------------
+// Una sola cuenta
+// ---------------------------------------------------------------------------
+
+type ClienteTienda = {
+  id: string
+  email: string | null
+  first_name: string | null
+  last_name: string | null
+  phone: string | null
+  company_name: string | null
+  metadata: Record<string, unknown> | null
+}
+
+async function clienteTienda(knex: any, customerId: string): Promise<ClienteTienda | null> {
+  return (
+    (await knex("customer")
+      .where({ id: customerId })
+      .whereNull("deleted_at")
+      .first("id", "email", "first_name", "last_name", "phone", "company_name", "metadata")) || null
+  )
+}
+
+/** ¿Está comprobado que el correo es de quien tiene la cuenta? */
+export function correoConfirmado(c: Pick<ClienteTienda, "email" | "metadata"> | null): boolean {
+  if (!c?.email) return false
+  if (correosDeLaCasa().includes(c.email.toLowerCase())) return true
+  return c.metadata?.correo_verificado === true
+}
+
+async function guardarVinculo(knex: any, customerId: string, negocioId: string, correo: string) {
+  await asegurarTablas(knex)
+  await knex(T_VINCULO)
+    .insert({ customer_id: customerId, negocio_id: negocioId, correo_app: correo.toLowerCase(), created_at: new Date() })
+    .onConflict("customer_id")
+    .merge()
+}
+
+async function correoDeUsuarioApp(userId: string): Promise<string | null> {
+  const u = await supa<any>(`/auth/v1/admin/users/${encodeURIComponent(userId)}`).catch(() => null)
+  return u?.email ? String(u.email).toLowerCase() : null
+}
+
+/**
+ * Usuario del Cotizador que nunca confirmó su correo: alguien pudo abrirlo con
+ * ese correo y SU contraseña. Antes de dárselo al dueño real del correo (que sí
+ * lo confirmó en la tienda) se confirma y se le cambia la contraseña por una al
+ * azar, para que esa otra persona ya no pueda entrar.
+ */
+async function asegurarUsuarioConfirmado(userId: string) {
+  const u = await supa<any>(`/auth/v1/admin/users/${encodeURIComponent(userId)}`)
+  if (u?.email_confirmed_at || u?.confirmed_at) return
+  await supa(`/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: "PUT",
+    body: JSON.stringify({ email_confirm: true, password: randomBytes(24).toString("base64url") }),
+  })
+}
+
+/**
+ * Taller del Cotizador de ese correo (el del administrador primero). Se revisa
+ * que el usuario de Supabase tenga ese mismo correo, porque la liga de acceso
+ * se genera por correo y tiene que caer en la cuenta que tiene el taller.
+ */
+async function tallerPorCorreo(correo: string): Promise<{ negocio_id: string; user_id: string } | null> {
+  const filas = await supa<any[]>(
+    `/rest/v1/usuarios_negocio?correo=ilike.${encodeURIComponent(correo)}&activo=eq.true&select=negocio_id,user_id,rol,correo`
+  )
+  const mias = (filas || []).filter((f) => String(f.correo || "").trim().toLowerCase() === correo)
+  mias.sort((a, b) => Number(["administrador", "super_admin"].includes(b.rol)) - Number(["administrador", "super_admin"].includes(a.rol)))
+  for (const f of mias) {
+    if (f.negocio_id && f.user_id && (await correoDeUsuarioApp(f.user_id)) === correo) return f
+  }
+  return null
+}
+
+export type Entrada =
+  | { url: string }
+  | { confirmar: string }
+  | { activar: { taller: string; telefono: string } }
+  | { cuenta: string | null }
+
+/** Qué hace el botón Cotizador para esta cuenta de la tienda. */
+export async function entradaCotizador(knex: any, customerId: string): Promise<Entrada> {
+  const liga = await ligaEntrada(knex, customerId)
+  if (liga) return { url: liga }
+
+  const c = await clienteTienda(knex, customerId)
+  const huella = c?.email ? huellaCorreo(c.email) : null
+  if (!c?.email || !supabaseListo()) return { cuenta: huella }
+
+  if (!correoConfirmado(c)) {
+    // Cuentas de antes del 31 de octubre: nunca confirmaron. Se manda la liga.
+    await mandarCorreoVerificacion({ id: c.id, email: c.email, first_name: c.first_name }).catch(() => null)
+    return { confirmar: c.email }
+  }
+
+  const correo = c.email.trim().toLowerCase()
+  const t = await tallerPorCorreo(correo)
+  if (t) {
+    await asegurarUsuarioConfirmado(t.user_id)
+    await guardarVinculo(knex, customerId, t.negocio_id, correo)
+    const url = await ligaEntrada(knex, customerId)
+    return url ? { url } : { cuenta: huella }
+  }
+  return { activar: { taller: c.company_name || "", telefono: c.phone || "" } }
+}
+
+/** Usuario del Cotizador (Supabase) con ese correo: lo crea ya confirmado si no existe. */
+async function usuarioApp(correo: string, nombre: string): Promise<string> {
+  try {
+    const u = await supa<any>("/auth/v1/admin/users", {
+      method: "POST",
+      // Sin contraseña: entra con la liga de un solo uso desde la tienda (y si
+      // algún día quiere una, la pone con "¿Olvidaste tu contraseña?").
+      body: JSON.stringify({ email: correo, email_confirm: true, user_metadata: { nombre } }),
+    })
+    if (u?.id) return u.id
+  } catch (e) {
+    if (!/already|exists|registered|422/i.test((e as Error).message)) throw e
+  }
+  // Ya existía: la liga de acceso trae su id
+  const r = await supa<any>("/auth/v1/admin/generate_link", {
+    method: "POST",
+    body: JSON.stringify({ type: "magiclink", email: correo }),
+  })
+  const id = r?.id || r?.user?.id
+  if (!id) throw new Error("No se encontró el usuario del Cotizador")
+  return id
+}
+
+/**
+ * Crea el taller del Cotizador para esta cuenta de la tienda (prueba de 14
+ * días, igual que registrar_taller en supabase/prueba_14_dias.sql de la app),
+ * lo vincula y devuelve la liga para entrar.
+ */
+export async function activarCotizador(
+  knex: any,
+  customerId: string,
+  datos: { taller?: string; telefono?: string }
+): Promise<{ url: string }> {
+  if (!supabaseListo()) throw new ErrorSuscripcion("El Cotizador todavía no está listo. Intenta más tarde.", 503)
+  const c = await clienteTienda(knex, customerId)
+  if (!c?.email) throw new ErrorSuscripcion("Vuelve a iniciar sesión.", 401)
+  if (!correoConfirmado(c)) throw new ErrorSuscripcion("Primero confirma tu correo con la liga que te mandamos.", 403)
+
+  const nombreTaller = String(datos.taller || "").replace(/\s+/g, " ").trim().slice(0, 80)
+  if (nombreTaller.length < 2) throw new ErrorSuscripcion("Escribe el nombre de tu taller.")
+
+  // Si ya tiene (vinculado o con el mismo correo), sólo entra
+  const antes = await entradaCotizador(knex, customerId)
+  if ("url" in antes) return antes
+
+  const correo = c.email.trim().toLowerCase()
+  const nombre = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || nombreTaller
+  const telefono = String(datos.telefono ?? c.phone ?? "").trim().slice(0, 30) || null
+  const userId = await usuarioApp(correo, nombre)
+  await asegurarUsuarioConfirmado(userId)
+
+  // ¿Ese usuario ya pertenece a un taller (registrado con otro correo en la ficha)?
+  const propio = await supa<any[]>(
+    `/rest/v1/usuarios_negocio?user_id=eq.${encodeURIComponent(userId)}&activo=eq.true&select=negocio_id&limit=1`
+  )
+  let negocioId: string | null = propio?.[0]?.negocio_id || null
+
+  if (!negocioId) {
+    const slug =
+      (nombreTaller.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") ||
+        "taller") +
+      "-" +
+      randomBytes(3).toString("hex")
+    const [negocio] = await supa<any[]>("/rest/v1/negocios", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({
+        nombre: nombreTaller,
+        slug,
+        telefono,
+        correo,
+        plan: "trial",
+        trial_hasta: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+        activo: true,
+      }),
+    })
+    if (!negocio?.id) throw new Error("Supabase no devolvió el taller nuevo")
+    try {
+      await supa("/rest/v1/usuarios_negocio", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ user_id: userId, negocio_id: negocio.id, rol: "administrador", nombre, correo, activo: true }),
+      })
+    } catch (e) {
+      await supa(`/rest/v1/negocios?id=eq.${encodeURIComponent(negocio.id)}`, { method: "DELETE" }).catch(() => null)
+      throw e
+    }
+    negocioId = negocio.id as string
+  }
+
+  await guardarVinculo(knex, customerId, negocioId, correo)
+  const url = await ligaEntrada(knex, customerId)
+  if (!url) throw new Error("No se pudo generar la liga de acceso")
+  return { url }
+}
+
+/** Vuelve a mandar la liga para confirmar el correo (cuentas de antes del 31 de octubre). */
+export async function reenviarConfirmacionCotizador(knex: any, customerId: string) {
+  const c = await clienteTienda(knex, customerId)
+  if (c?.email && !correoConfirmado(c)) {
+    await mandarCorreoVerificacion({ id: c.id, email: c.email, first_name: c.first_name })
+  }
 }
