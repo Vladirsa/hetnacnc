@@ -160,7 +160,8 @@ export async function publicarRapido(
     fields: ["id", "name", "handle", "address.*", "stock_locations.id"],
     filters: { id: sellerId },
   })
-  const seller = sellers[0] as
+  // query.graph tipa address como SellerAddress; aquí sólo se leen sus textos
+  const seller = sellers[0] as unknown as
     | { id: string; name: string; handle?: string; address?: Record<string, string | null>; stock_locations?: { id: string }[] }
     | undefined
   if (!seller) throw new ErrorPublicar("No encontramos tu tienda. Vuelve a iniciar sesión.")
