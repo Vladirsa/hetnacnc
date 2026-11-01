@@ -40,7 +40,7 @@ export const EMPRESA = {
   diasDevolucion: 5, // días hábiles desde la entrega, productos físicos sin uso
   actualizado: "7 de octubre de 2026",
   // Aviso de privacidad: versión y fecha en que entra en vigor (cambiar ambas al modificarlo)
-  privacidadVersion: "2.2",
+  privacidadVersion: "2.3",
   privacidadVigencia: { es: "1 de noviembre de 2026", en: "November 1, 2026" },
 }
 

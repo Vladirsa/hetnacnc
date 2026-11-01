@@ -35,7 +35,9 @@ export const PromoCode = ({ cart, defaultOpen = false }: { cart: any; defaultOpe
 
     setHasError(false);
     startTransition(async () => {
-      const result = await applyPromotions([promoCode]);
+      // Los cupones de HETNA van en mayúsculas (BIENVENIDA, GRACIAS-XXXXXX)
+      const codigo = /^(bienvenida|gracias-)/i.test(promoCode.trim()) ? promoCode.trim().toUpperCase() : promoCode;
+      const result = await applyPromotions([codigo]);
 
       if (!result.success) {
         toast.info({ title: result.error });
@@ -103,6 +105,7 @@ export const PromoCode = ({ cart, defaultOpen = false }: { cart: any; defaultOpe
           className="px-2 pt-4"
         >
           {!cart?.promotions?.length ? (
+            <>
             <div className="flex w-full items-center gap-3 [&>div]:flex-grow">
               <Input
                 type="text"
@@ -127,6 +130,11 @@ export const PromoCode = ({ cart, defaultOpen = false }: { cart: any; defaultOpe
                 APLICAR
               </Button>
             </div>
+            {/* Cupón de primera compra (packages/api/src/lib/cupones.ts) */}
+            <p className="mt-2 text-sm text-secondary">
+              ¿Primera compra? Usa <b>BIENVENIDA</b>: $100 de descuento en compras de $800 o más (con tu cuenta iniciada).
+            </p>
+            </>
           ) : (
             cart.promotions.map((promo: any) => (
               <div
