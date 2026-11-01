@@ -3,8 +3,8 @@
 export const EN_HERRAMIENTAS: Record<string, string> = {
   // Página
   "Herramientas CNC gratis en línea": "Free online CNC tools",
-  "Diseña, programa y cotiza sin instalar nada: convierte tu DXF a G-code, programa piezas en 3, 4 y 5 ejes, genera cajas, letreros y despieces de muebles, escanea una pieza o pregúntale al Copiloto IA. Casi todas son gratis y sin cuenta.":
-    "Design, program and quote without installing anything: convert your DXF to G-code, program 3, 4 and 5 axis parts, generate boxes, signs and furniture cut lists, scan a part or ask the AI Copilot. Almost all are free, no account needed.",
+  "Diseña, programa y cotiza sin instalar nada: convierte tu DXF a G-code, programa piezas en 3, 4 y 5 ejes, genera cajas, letreros y despieces de muebles o escanea una pieza. Casi todas son gratis y sin cuenta.":
+    "Design, program and quote without installing anything: convert your DXF to G-code, program 3, 4 and 5 axis parts, generate boxes, signs and furniture cut lists or scan a part. Almost all are free, no account needed.",
   "Todas las herramientas": "All tools",
   "¿Prefieres que te hagamos el diseño?": "Would you rather we design it for you?",
   "De tu idea, foto o boceto a un archivo listo para tu máquina, hecho a la medida.":
@@ -44,8 +44,8 @@ export const EN_HERRAMIENTAS: Record<string, string> = {
     "Instant prices for your part, and the professional quoting tool for your shop.",
   "Aprender y preguntar": "Learn and ask",
   "Tengo una duda": "I have a question",
-  "Una IA experta en CNC, guías paso a paso y una comunidad de gente que corta todos los días.":
-    "A CNC expert AI, step-by-step guides and a community of people who cut every day.",
+  "Guías paso a paso y una comunidad de gente que corta todos los días.":
+    "Step-by-step guides and a community of people who cut every day.",
 
   // Herramientas
   "Caja con juntas de dedo": "Finger joint box",

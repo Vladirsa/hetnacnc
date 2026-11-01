@@ -137,11 +137,11 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
     <CaptarTaller sesion={sesion} />
 
     <LocalizedClientLink
-      href="/servicios/copiloto-ia-cnc"
+      href="/calculadora-cnc"
       className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]"
     >
-      <strong className="text-[14.5px]">¿Prisa? Pregúntale al Copiloto IA CNC</strong>
-      <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances y errores de tu máquina al instante.</span>
+      <strong className="text-[14.5px]">¿Prisa? Usa la Calculadora CNC</strong>
+      <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances, tiempos y costos de tu máquina al instante.</span>
     </LocalizedClientLink>
   </aside>
 )
