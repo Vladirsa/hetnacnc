@@ -94,7 +94,8 @@ export default function TerminosVendedores() {
       <ul>
         <li>El cliente paga dentro de la plataforma (PayPal, Mercado Pago u otros medios que indique HETNA). HETNA recibe el pago por tu cuenta.</li>
         <li>HETNA te paga el importe de cada venta menos la comisión vigente y, en su caso, las retenciones de impuestos (cláusula 9) y los costos de envío que correspondan. La comisión y el plan vigentes se muestran en tu panel y en la página para anunciantes antes de que vendas.</li>
-        <li>El pago se libera después de que el pedido se entrega y termina el plazo de devolución. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
+        <li>Cuándo se libera tu pago: los diseños y archivos digitales, en cuanto se confirma el pago del cliente; los productos físicos, 3 días después de que el pedido se entrega (lo marca el rastreo de la guía o el cliente al confirmar que lo recibió). Ves tu saldo pendiente, disponible y pagado en tu panel, en Mi saldo.</li>
+        <li>Si después hay una devolución, un contracargo o un reclamo procedente dentro del plazo que tiene el cliente, el importe se descuenta de tu siguiente pago. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
         <li>Los cambios de comisión o de plan se avisan con al menos 15 días de anticipación y no afectan pedidos ya pagados.</li>
         <li>Está prohibido cerrar fuera de la plataforma ventas o trabajos que llegaron por HETNA, o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>
       </ul>

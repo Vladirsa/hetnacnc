@@ -26,6 +26,11 @@ export const ProductDetailsShipping = () => {
             .
           </li>
           <li>
+            Archivos digitales: no tienen devolución una vez entregados, salvo que el
+            archivo no corresponda a lo anunciado (otro diseño, dañado o que no abre).
+            En ese caso lo revisamos y te lo cambiamos o te devolvemos tu dinero.
+          </li>
+          <li>
             {/* Antes aquí decía "escríbenos por WhatsApp". Se cambió por el chat de
                 la plataforma: es donde queda registro de lo acordado si después hay
                 una aclaración o una devolución. */}

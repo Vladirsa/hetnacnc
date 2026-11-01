@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { FacturaPedido } from "@/components/hetna/cuenta/Facturacion"
+import { YaLoRecibi } from "@/components/hetna/cuenta/YaLoRecibi"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { OrderDetailsSection } from "@/components/sections/OrderDetailsSection/OrderDetailsSection"
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 }
 
 const PAGADO = ["authorized", "captured", "partially_captured", "partially_authorized"]
+// Ya salió del taller pero no hay confirmación de entrega: se le pide al comprador
+const EN_CAMINO = ["shipped", "partially_shipped", "fulfilled", "partially_fulfilled"]
 
 export default async function DetalleCompra({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -59,6 +62,12 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
               ))}
             </section>
           )}
+
+          {pedidos
+            .filter((o) => o.status !== "canceled" && PAGADO.includes(o.payment_status) && EN_CAMINO.includes(o.fulfillment_status))
+            .map((o) => (
+              <YaLoRecibi key={`r-${o.id}`} orderId={o.id} taller={o.seller?.name || "el taller"} />
+            ))}
 
           <OrderDetailsSection orderGroup={orderGroup} />
         </div>

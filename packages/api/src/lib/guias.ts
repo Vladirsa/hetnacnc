@@ -18,6 +18,7 @@
 //     "generando" es un UPDATE condicionado).
 //   - Si la guía cuesta bastante más de lo que pagó el cliente
 //     (GUIA_TOLERANCIA_PCT, 30% por omisión), no se compra: HETNA la revisa.
+import { marcarEntregado } from "./saldos-talleres"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import {
@@ -709,6 +710,10 @@ export async function actualizarGuias(c: MedusaContainer) {
         })
       if (entregada) {
         entregadas++
+        // Arranca la cuenta para pagarle al taller (lib/saldos-talleres.ts)
+        await marcarEntregado(c, f.order_id, "guia").catch((e: Error) =>
+          c.resolve("logger").warn(`[saldos] pedido ${f.order_id}: ${e.message}`)
+        )
         const fila = await leerFila(knex, f.order_id)
         if (fila?.fulfillment_id) {
           await markOrderFulfillmentAsDeliveredWorkflow(c)
