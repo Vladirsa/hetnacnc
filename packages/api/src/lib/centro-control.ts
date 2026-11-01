@@ -31,7 +31,7 @@ const HORAS_SIN_ENVIAR = () => Number(process.env.CONTROL_HORAS_SIN_ENVIAR ?? 48
 export type Nivel = "rojo" | "ambar" | "azul"
 export type Aviso = {
   nivel: Nivel
-  tipo: string // pedido_sin_enviar | guia_error | saldo_envios | resena_mala | reclamo | devolucion | cancelacion | sobrepeso | evidencia | verificacion | cotizador | sin_pagar
+  tipo: string // pedido_sin_enviar | guia_error | saldo_envios | resena_mala | reclamo | devolucion | cancelacion | sobrepeso | evidencia | verificacion | taller_por_aprobar | cotizador | sin_pagar
   titulo: string
   detalle?: string
   url?: string
@@ -448,6 +448,27 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         titulo: `Skydropx cobró ${extras.length} cargo(s) extra por ${pesos(extras.reduce((t, c) => t + c.monto, 0))}`,
         detalle: `${extras.slice(0, 3).map((c) => `${c.concepto} ${pesos(c.monto)}`).join(" · ")}. Revisa si va como sobrepeso al taller o al cliente.`,
         url: `${ADMIN}/envios`,
+      })
+    }
+  }, undefined, logger)
+
+  // Talleres nuevos esperando aprobación (lib/alta-taller.ts). Solo los que ya
+  // confirmaron su correo: los demás todavía no terminan de registrarse.
+  await seguro(async () => {
+    const { correoConfirmado } = await import("./alta-taller")
+    const { data } = await query.graph({
+      entity: "seller",
+      fields: ["id", "name", "email", "status", "created_at", "metadata"],
+      filters: { status: "pending_approval" } as Record<string, unknown>,
+    })
+    const listos = (data || []).filter((t) => correoConfirmado(t))
+    if (listos.length) {
+      avisos.push({
+        nivel: "ambar",
+        tipo: "taller_por_aprobar",
+        titulo: `${listos.length} taller(es) nuevo(s) esperan que los apruebes`,
+        detalle: `${listos.slice(0, 5).map((t) => t.name || t.email).join(", ")}. Mientras no los apruebes no pueden publicar.`,
+        url: `${ADMIN}/sellers`,
       })
     }
   }, undefined, logger)
