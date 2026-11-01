@@ -19,6 +19,7 @@ import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
 import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
+import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -47,6 +48,7 @@ export default defineMiddlewares({
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
+        ...vendorAltaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
         // Factura del pedido (PDF + XML del CFDI) desde el panel del taller
         {
