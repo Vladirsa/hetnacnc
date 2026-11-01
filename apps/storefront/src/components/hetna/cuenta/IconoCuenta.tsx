@@ -22,6 +22,7 @@ const TRAZOS = {
   privacidad: "M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z",
   ayuda: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01",
   salir: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10",
+  regalo: "M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-1-3-5-3-5 0 0 1 2 1 5 0M12 7c1-3 5-3 5 0 0 1-2 1-5 0",
 } as const
 
 export type NombreIcono = keyof typeof TRAZOS
