@@ -30,11 +30,4 @@ else
 fi
 echo "== 4/4 Armando el cotizador"
 python3 hetna/cotizador/build-cotizador.py
-echo "== Copiloto IA"
-if grep -q '^ANTHROPIC_API_KEY=.\+' "$ENV_TIENDA" 2>/dev/null; then
-  echo "llave de IA configurada"
-else
-  echo "FALTA la llave de IA: el chat queda en espera y las calculadoras funcionan."
-  echo "Cuando la tengas corre:  bash hetna/llave-ia.sh"
-fi
 echo "== LISTO"

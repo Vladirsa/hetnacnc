@@ -48,7 +48,7 @@ export default function QuienesSomos() {
       <p>
         Los talleres de la red ofrecen sus servicios en el <LocalizedClientLink href="/talleres">directorio de talleres</LocalizedClientLink>,
         reciben solicitudes de cotización y venden con Envíos HETNA, sin contratar paqueterías por su cuenta. Además tienen
-        herramientas para cotizar desde el celular y un copiloto de IA especializado en CNC.
+        herramientas para cotizar desde el celular.
       </p>
 
       <h2>Comunidad</h2>
