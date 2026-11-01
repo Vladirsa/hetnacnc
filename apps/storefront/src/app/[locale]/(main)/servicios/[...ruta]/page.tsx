@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation"
 
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
-import { CopilotoApp } from "@/components/hetna/copiloto/CopilotoApp"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
@@ -17,12 +16,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ruta } = await params
   const s = buscarServicio((ruta || []).join("/"))
   if (!s) return {}
-  if (s.slug === "copiloto-ia-cnc") {
-    return {
-      title: "Copiloto IA CNC: parámetros, G-code y diagnóstico",
-      description: "Pregúntale a la IA especializada en CNC: velocidades y avances para router, láser, plasma y fibra, revisión de G-code, DXF y STL, errores de Mach3 y GRBL, y costos. Calculadoras gratis.",
-    }
-  }
   if (s.slug === "cotizador-cnc") {
     return {
       title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
@@ -37,15 +30,11 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   const clave = (ruta || []).join("/")
   // la antigua Calculadora CNC ahora es la Calculadora CNC profesional (/calculadora-cnc)
   if (clave === "calculadora-cnc") redirect(`/${locale}/calculadora-cnc`)
+  // El Copiloto IA se retiró (costaba más de lo que aportaba); sus calculadoras
+  // viven en la Calculadora CNC, así que las ligas viejas van para allá.
+  if (clave === "copiloto-ia-cnc") redirect(`/${locale}/calculadora-cnc`)
   const s = buscarServicio(clave)
   if (!s) notFound()
-
-  // Copiloto IA CNC: chat especializado + calculadoras + "Mi maquina"
-  if (s.slug === "copiloto-ia-cnc") {
-    const q = await searchParams
-    const v = q.vista === "calculadoras" || q.vista === "maquina" ? q.vista : "copiloto"
-    return <CopilotoApp locale={locale} vistaInicial={v} />
-  }
 
   // La app HETNA CNC para talleres (Flutter, /cotizador/): esta página la
   // presenta, con instalación y planes; los botones abren la app real. Si un

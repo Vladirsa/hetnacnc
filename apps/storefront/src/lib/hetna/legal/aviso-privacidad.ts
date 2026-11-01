@@ -74,7 +74,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
         p: `Para cualquier tema de datos personales (dudas, solicitudes de derechos, quejas) contacta al área de Datos Personales de HETNA CNC por ${contactoEs(d)}. Esta área cumple la función de encargado de protección de datos (encarregado, en Brasil; oficial de datos, en otros países).`,
       },
       {
-        p: "Este aviso aplica a todo el sitio hetnacnc.com y sus servicios: tienda y marketplace, panel de talleres y vendedores, cotizador, laboratorio CAM, Copiloto IA, foro, envíos y atención por WhatsApp. Si eres cliente, visitante, taller o vendedor, este aviso te aplica.",
+        p: "Este aviso aplica a todo el sitio hetnacnc.com y sus servicios: tienda y marketplace, panel de talleres y vendedores, cotizador, laboratorio CAM, foro, envíos y atención por WhatsApp. Si eres cliente, visitante, taller o vendedor, este aviso te aplica.",
       },
     ],
   },
@@ -96,7 +96,6 @@ export const avisoEs = (d: Datos): Seccion[] => [
             ["Verificación del taller", "Identificación oficial (frente y reverso), fotos de la fachada y del interior del taller, comprobante de domicilio (opcional)", "El taller, de forma voluntaria"],
             ["Contenido que publicas", "Mensajes del foro, reseñas, preguntas, fotos de trabajos", "Tú"],
             ["Comunicaciones", "Mensajes por WhatsApp, correo o chat con talleres y con HETNA", "Tú"],
-            ["Copiloto IA", "Las preguntas y archivos que le envías al asistente", "Tú"],
             ["Datos técnicos", "Dirección IP, tipo de navegador y dispositivo, páginas visitadas, cookies", "Tu navegador, de forma automática"],
           ],
         },
@@ -139,7 +138,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
         p: `Para negarte a las finalidades adicionales: rechaza las cookies no necesarias (botón al final de este aviso), usa el enlace para darte de baja en cada correo, o escríbenos por ${contactoEs(d)}. Negarte no afecta tus compras ni tu cuenta.`,
       },
       {
-        p: "No tomamos decisiones que te afecten de forma importante basadas únicamente en tratamiento automatizado. El Copiloto IA solo te sugiere información; las decisiones las tomas tú.",
+        p: "No tomamos decisiones que te afecten de forma importante basadas únicamente en tratamiento automatizado. Las calculadoras y el laboratorio solo te sugieren información; las decisiones las tomas tú.",
       },
     ],
   },
@@ -182,7 +181,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
         },
       },
       {
-        p: "También usamos proveedores que tratan datos solo por cuenta de HETNA y bajo nuestras instrucciones (encargados): alojamiento del sitio y servidores (Hostinger), seguridad y entrega del sitio (Cloudflare), respaldos cifrados (Backblaze), envío de correos (Resend), base de datos del cotizador y del foro (Supabase), chat entre clientes y talleres (TalkJS), inteligencia artificial del Copiloto (Anthropic) y automatización de mensajes de WhatsApp (servicio de WhatsApp de Meta, operado con herramientas instaladas en nuestro propio servidor). Estos proveedores no pueden usar tus datos para fines propios.",
+        p: "También usamos proveedores que tratan datos solo por cuenta de HETNA y bajo nuestras instrucciones (encargados): alojamiento del sitio y servidores (Hostinger), seguridad y entrega del sitio (Cloudflare), respaldos cifrados (Backblaze), envío de correos (Resend), base de datos del cotizador y del foro (Supabase), chat entre clientes y talleres (TalkJS) y automatización de mensajes de WhatsApp (servicio de WhatsApp de Meta, operado con herramientas instaladas en nuestro propio servidor). Estos proveedores no pueden usar tus datos para fines propios.",
       },
       {
         p: "El taller o vendedor que recibe tus datos para atender tu pedido o cotización es responsable de su propio uso de esos datos y debe cumplir la ley aplicable; solo recibe lo necesario para atenderte.",
@@ -200,7 +199,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
     titulo: "6. Transferencias internacionales",
     bloques: [
       {
-        p: "Algunos de nuestros proveedores guardan o procesan datos fuera de tu país, principalmente en Estados Unidos (por ejemplo, PayPal, Google, Meta, Cloudflare, Backblaze, Anthropic). HETNA opera desde México; nuestros servidores y proveedores pueden estar en México, Estados Unidos u otros países, así que tus datos pueden tratarse fuera de tu país. Elegimos proveedores con compromisos públicos de seguridad y confidencialidad y solo compartimos lo necesario para cada finalidad.",
+        p: "Algunos de nuestros proveedores guardan o procesan datos fuera de tu país, principalmente en Estados Unidos (por ejemplo, PayPal, Google, Meta, Cloudflare, Backblaze). HETNA opera desde México; nuestros servidores y proveedores pueden estar en México, Estados Unidos u otros países, así que tus datos pueden tratarse fuera de tu país. Elegimos proveedores con compromisos públicos de seguridad y confidencialidad y solo compartimos lo necesario para cada finalidad.",
       },
     ],
   },
@@ -377,7 +376,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
         p: `For any personal-data matter (questions, rights requests, complaints) contact HETNA CNC's Personal Data team via ${contactoEn(d)}. This team acts as our data protection officer.`,
       },
       {
-        p: "This notice applies to all of hetnacnc.com and its services: store and marketplace, shop and seller dashboard, quoting tool, CAM lab, AI Copilot, forum, shipping and WhatsApp support. It applies to you whether you are a customer, visitor, shop or seller.",
+        p: "This notice applies to all of hetnacnc.com and its services: store and marketplace, shop and seller dashboard, quoting tool, CAM lab, forum, shipping and WhatsApp support. It applies to you whether you are a customer, visitor, shop or seller.",
       },
     ],
   },
@@ -399,7 +398,6 @@ export const avisoEn = (d: Datos): Seccion[] => [
             ["Shop verification", "Government ID (front and back), photos of the shop's storefront and interior, proof of address (optional)", "The shop, voluntarily"],
             ["Content you post", "Forum posts, reviews, questions, photos of work", "You"],
             ["Communications", "Messages via WhatsApp, email or chat with shops and with HETNA", "You"],
-            ["AI Copilot", "Questions and files you send to the assistant", "You"],
             ["Technical data", "IP address, browser and device type, pages visited, cookies", "Your browser, automatically"],
           ],
         },
@@ -442,7 +440,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
         p: `To opt out of additional purposes: reject non-essential cookies (button at the end of this notice), use the unsubscribe link in any email, or contact us via ${contactoEn(d)}. Opting out does not affect your purchases or your account.`,
       },
       {
-        p: "We do not make decisions that significantly affect you based solely on automated processing. The AI Copilot only suggests information; you make the decisions.",
+        p: "We do not make decisions that significantly affect you based solely on automated processing. The calculators and the CAM lab only suggest information; you make the decisions.",
       },
     ],
   },
@@ -485,7 +483,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
         },
       },
       {
-        p: "We also use service providers that process data only on HETNA's behalf and under our instructions: site hosting and servers (Hostinger), site security and delivery (Cloudflare), encrypted backups (Backblaze), email delivery (Resend), database for the quoting tool and forum (Supabase), customer–shop chat (TalkJS), AI for the Copilot (Anthropic) and WhatsApp message automation (Meta's WhatsApp service, run with tools installed on our own server). These providers may not use your data for their own purposes.",
+        p: "We also use service providers that process data only on HETNA's behalf and under our instructions: site hosting and servers (Hostinger), site security and delivery (Cloudflare), encrypted backups (Backblaze), email delivery (Resend), database for the quoting tool and forum (Supabase), customer–shop chat (TalkJS) and WhatsApp message automation (Meta's WhatsApp service, run with tools installed on our own server). These providers may not use your data for their own purposes.",
       },
       {
         p: "The shop or seller that receives your data to handle your order or quote is responsible for its own use of that data and must comply with applicable law; it only receives what it needs to serve you.",
@@ -503,7 +501,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
     titulo: "6. International transfers",
     bloques: [
       {
-        p: "Some of our providers store or process data outside your country, mainly in the United States (for example PayPal, Google, Meta, Cloudflare, Backblaze, Anthropic). HETNA operates from Mexico; our servers and providers may be in Mexico, the United States or other countries, so your data may be processed outside your country. We choose providers with public security and confidentiality commitments and only share what each purpose needs.",
+        p: "Some of our providers store or process data outside your country, mainly in the United States (for example PayPal, Google, Meta, Cloudflare, Backblaze). HETNA operates from Mexico; our servers and providers may be in Mexico, the United States or other countries, so your data may be processed outside your country. We choose providers with public security and confidentiality commitments and only share what each purpose needs.",
       },
     ],
   },
@@ -653,6 +651,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.2",
+    fecha: "2026-11-01",
+    cambio: "Se retira el Copiloto IA (y su proveedor Anthropic): ya no se recaban preguntas ni archivos para un asistente de IA.",
+    cambioEn: "AI Copilot (and its provider Anthropic) removed: questions and files are no longer collected for an AI assistant.",
+  },
   {
     version: "2.1",
     fecha: "2026-10-28",

@@ -667,51 +667,6 @@ export const SERVICIOS: Servicio[] = [
     "proximo": "Muy pronto: sube tu archivo aquí y obtén el precio al instante.",
     "whatsapp": "Hola HETNA CNC, quiero cotizar una pieza.",
     "boton": "Cotizar ahora"
-  },
-  {
-    "slug": "copiloto-ia-cnc",
-    "padre": null,
-    "numero": "5",
-    "icono": "calculadora",
-    "nombre": "Copiloto IA CNC",
-    "resumen": "Inteligencia artificial experta en CNC: parámetros, errores, G-code y costos.",
-    "titulo": "Copiloto IA CNC",
-    "subtitulo": "Pregunta lo que sea de tu router, láser, plasma, fibra o impresora 3D.",
-    "incluye": [
-      "Parámetros de corte según tu máquina",
-      "Diagnóstico de problemas y errores",
-      "Revisión de G-code, DXF y STL",
-      "Ayuda con Mach3, GRBL, Vectric, Fusion y ArtCAM",
-      "Calculadoras gratis de velocidades, tiempos y costos"
-    ],
-    "pasos": [
-      {
-        "titulo": "Registra tu máquina",
-        "texto": "Spindle, RPM, avance y controlador."
-      },
-      {
-        "titulo": "Pregunta",
-        "texto": "Material, herramienta o el problema que tienes."
-      },
-      {
-        "titulo": "Sube tu archivo o foto",
-        "texto": "G-code, DXF, STL o foto del corte."
-      },
-      {
-        "titulo": "Recibe los valores",
-        "texto": "Punto de partida y qué datos faltan."
-      }
-    ],
-    "formatos": [
-      "Router",
-      "Láser",
-      "Plasma",
-      "Fibra",
-      "3D"
-    ],
-    "proximo": null,
-    "whatsapp": "Hola HETNA CNC, tengo una duda de mi máquina CNC.",
-    "boton": "Abrir el Copiloto"
   }
 ]
 

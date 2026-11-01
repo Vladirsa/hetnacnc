@@ -88,10 +88,9 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
     id: "aprender",
     titulo: "Aprender y preguntar",
     pregunta: "Tengo una duda",
-    texto: "Una IA experta en CNC, guías paso a paso y una comunidad de gente que corta todos los días.",
+    texto: "Guías paso a paso y una comunidad de gente que corta todos los días.",
     icono: "aprender",
     herramientas: [
-      { nombre: "Copiloto IA CNC", texto: "Parámetros de corte, errores, G-code y costos: pregunta como a un experto.", href: "/servicios/copiloto-ia-cnc", icono: "ia", acceso: "cuenta" },
       { nombre: "Aprendizaje CNC", texto: "Guías para diseñar, programar y operar tu máquina.", href: "/servicios/aprendizaje-cnc", icono: "aprender", acceso: "gratis" },
       { nombre: "Foro CNC México", texto: "Pregunta y comparte con otros talleres y operadores.", href: "/foro-cnc", icono: "ia", acceso: "gratis" },
     ],

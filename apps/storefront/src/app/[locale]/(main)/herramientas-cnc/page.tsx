@@ -105,7 +105,7 @@ export default function HerramientasCnc() {
         </h1>
         <p className="mt-3 text-[16px] text-[#4A4943] leading-relaxed max-w-[720px]">
           Diseña, programa y cotiza sin instalar nada: convierte tu DXF a G-code, programa piezas en 3, 4 y 5 ejes,
-          genera cajas, letreros y despieces de muebles, escanea una pieza o pregúntale al Copiloto IA. Casi todas son
+          genera cajas, letreros y despieces de muebles o escanea una pieza. Casi todas son
           gratis y sin cuenta.
         </p>
 

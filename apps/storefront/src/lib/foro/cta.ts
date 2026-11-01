@@ -32,9 +32,9 @@ const REGLAS: Regla[] = [
     re: /\b(quem|chamusc|negr|humo|fresa|broca|rpm|revoluciones|avance|velocidad|par[aá]metro|viruta|vibra|astill)/i,
     cta: {
       titulo: "Parámetros al instante",
-      texto: "El Copiloto IA CNC te sugiere velocidades, avances y fresas para tu máquina y material.",
-      href: "/servicios/copiloto-ia-cnc",
-      boton: "Preguntar al Copiloto",
+      texto: "La Calculadora CNC te da velocidades, avances y tiempos para tu máquina y material.",
+      href: "/calculadora-cnc",
+      boton: "Abrir la calculadora",
     },
   },
   {

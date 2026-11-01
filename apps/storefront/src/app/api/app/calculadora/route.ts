@@ -1,8 +1,8 @@
 // Calculadora CNC para la app del taller.
 // GET  → lista de calculadoras con sus campos (la app arma el formulario con esto).
-// POST → { id, entrada } → resultado, con el mismo motor del Copiloto IA.
-// Una sola fuente de verdad: si se corrige una tabla en motor.ts, la web, el
-// Copiloto y la app dan el mismo número.
+// POST → { id, entrada } → resultado, con el motor de calculadoras (lib/copiloto/motor).
+// Una sola fuente de verdad: si se corrige una tabla en motor.ts, la app de
+// Flutter y la Calculadora CNC de la web dan el mismo número.
 import { CALCULADORAS, buscarCalculadora } from "@/lib/copiloto/motor"
 import { excedido, json, opciones } from "@/lib/app-movil/cors"
 
