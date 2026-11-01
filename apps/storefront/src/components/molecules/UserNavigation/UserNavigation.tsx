@@ -44,6 +44,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   {
     titulo: "Comunidad",
     items: [
+      { label: "Recomienda y gana", href: "/user/recomienda", icono: "regalo" },
       { label: "Mensajes con talleres", href: "/mensajes", icono: "mensajes", insignia: "chat" },
       { label: "Talleres que sigo", href: "/foro-cnc/red?ver=siguiendo", icono: "siguiendo" },
       { label: "Mi perfil del foro", href: "/foro-cnc/mi-perfil", icono: "foro" },
