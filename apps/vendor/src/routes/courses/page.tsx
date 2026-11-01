@@ -129,7 +129,7 @@ const NuevoCursoForm = () => {
             Curso gratis (ganas alumnos y clientes para tu taller)
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle">
-            Si lo cobras, recibes el 70% de cada venta en "Mi saldo" al momento.
+            Si lo cobras, recibes el 90% de cada venta en "Mi saldo" al momento.
           </Text>
         </div>
       </div>

@@ -4,7 +4,7 @@
 //
 //   - Curso de pago: el producto del curso recibe una OFERTA del taller (sin
 //     oferta Mercur no deja comprarlo), la etiqueta "digital" (envío $0) y la
-//     categoría "Cursos" (30% HETNA / 70% taller, scripts/setup-course-commission).
+//     categoría "Cursos" (10% HETNA / 90% taller, scripts/setup-course-commission).
 //     metadata.producto_digital = true: el saldo del taller lo libera al momento
 //     (lib/saldos-talleres.ts). Al pagarse el pedido, el comprador queda inscrito.
 //   - Curso gratis: el producto queda en borrador (no sale en la tienda) y el
@@ -107,7 +107,7 @@ export async function prepararVentaCurso(
   )
   const usd = !gratis && aceptadas.has("usd") ? precioEnDolares(datos.precio) : null
 
-  // Etiqueta "digital" (perfil sin envío) y categoría "Cursos" (comisión 30%)
+  // Etiqueta "digital" (perfil sin envío) y categoría "Cursos" (comisión 10%)
   let [tag] = await productService.listProductTags({ value: "digital" }, { take: 1 })
   if (!tag) [tag] = await productService.createProductTags([{ value: "digital" }])
   const [cat] = await productService.listProductCategories({ name: "Cursos" }, { take: 1 })

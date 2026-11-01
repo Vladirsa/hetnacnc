@@ -294,7 +294,7 @@ export default function CourseDetailPage() {
             Curso gratis
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle">
-            Recibes el 70% de cada venta. Las lecciones de "vista previa" las ve cualquiera; las demás, sólo tus alumnos.
+            Recibes el 90% de cada venta. Las lecciones de "vista previa" las ve cualquiera; las demás, sólo tus alumnos.
           </Text>
         </div>
         <div>

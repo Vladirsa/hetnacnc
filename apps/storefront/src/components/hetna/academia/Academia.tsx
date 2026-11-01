@@ -1,6 +1,6 @@
 // /servicios/aprendizaje-cnc: la Academia HETNA, estilo Udemy/Domestika.
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
-// 30% sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
+// 10% sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Course } from "@/lib/data/courses"
@@ -20,7 +20,7 @@ const PASOS_TALLER = [
   "Graba tus clases y súbelas a tu YouTube (como “oculto”) o a Vimeo.",
   "En tu panel de taller, entra a Cursos: título, temario y pega el enlace de cada lección.",
   "Elige si es gratis o pon tu precio. HETNA lo promociona en la tienda, Facebook e Instagram.",
-  "Cobras el 70% de cada venta en tu saldo, disponible al momento.",
+  "Cobras el 90% de cada venta en tu saldo, disponible al momento.",
 ]
 
 export function Academia({ cursos, articulos }: { cursos: Course[]; articulos?: LearningArticle[] }) {
@@ -128,9 +128,9 @@ export function Academia({ cursos, articulos }: { cursos: Course[]; articulos?: 
         <section id="ensena" className="scroll-mt-24 bg-white border border-[#E7E4DC] rounded-[18px] overflow-hidden grid lg:grid-cols-[1fr_1.2fr]">
           <div className="bg-[#C2560A] text-white p-6 lg:p-10 flex flex-col gap-3 justify-center">
             <span className="text-[12px] font-bold uppercase tracking-wide opacity-90">Para talleres e instructores</span>
-            <h2 className="m-0 font-display text-[28px] lg:text-[34px] leading-tight font-bold">Enseña en HETNA y gana el 70%</h2>
+            <h2 className="m-0 font-display text-[28px] lg:text-[34px] leading-tight font-bold">Enseña en HETNA y gana el 90%</h2>
             <p className="m-0 text-[15px] text-white/90 leading-relaxed">
-              Publicar es gratis. Sólo cobramos 30% cuando vendes un curso; si lo ofreces gratis no pagas nada y ganas
+              Publicar es gratis. Sólo cobramos 10% cuando vendes un curso; si lo ofreces gratis no pagas nada y ganas
               clientes para tu taller.
             </p>
             <LocalizedClientLink href="/talleres/unete" className="self-start mt-2 bg-white text-[#B34D07] hover:bg-[#FDEEE1] font-semibold px-5 py-3 rounded-[10px] text-[14.5px]">

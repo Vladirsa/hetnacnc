@@ -1,14 +1,17 @@
-// Aprovisiona la categoría "Cursos" y su regla de comisión (30% plataforma /
-// 70% instructor) en el motor de comisiones de Mercur. Idempotente: se puede
+// Aprovisiona la categoría "Cursos" y su regla de comisión (10% plataforma /
+// 90% instructor) en el motor de comisiones de Mercur. Idempotente: se puede
 // correr varias veces sin duplicar nada (reusa lo que ya exista).
 //
 // Uso: desde packages/api, con la base de datos accesible:
-//   npx medusa exec ./src/scripts/setup-course-commission.ts
+//   ./node_modules/.bin/medusa exec ./src/scripts/setup-course-commission.ts
 //
-// Ajusta el valor `value: 30` abajo si quieres otro % de comisión.
+// Cambia COMISION abajo si quieres otro %. Si la regla ya existe con otro
+// valor, se actualiza.
 import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { MercurModules } from "@mercurjs/types"
+
+const COMISION = 10
 
 export default async function setupCourseCommission({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -28,7 +31,7 @@ export default async function setupCourseCommission({ container }: ExecArgs) {
     logger.info(`Categoría "Cursos" ya existía: ${categoria.id}`)
   }
 
-  // 2) regla de comisión: 30% para la plataforma, 70% queda para el instructor
+  // 2) regla de comisión: 10% para la plataforma, 90% queda para el instructor
   const existentes = await commissionService.listCommissionRates({ code: "cursos" })
   let rate = existentes[0]
   if (!rate) {
@@ -36,15 +39,18 @@ export default async function setupCourseCommission({ container }: ExecArgs) {
       name: "Comisión de Cursos (Academia)",
       code: "cursos",
       type: "percentage",
-      value: 30,
+      value: COMISION,
       is_enabled: true,
       include_tax: false,
       include_shipping: false,
       rules: [{ reference: "product_category", reference_id: categoria.id }],
     })
-    logger.info(`Regla de comisión "cursos" creada: ${rate.id} (30%)`)
+    logger.info(`Regla de comisión "cursos" creada: ${rate.id} (${COMISION}%)`)
+  } else if (Number(rate.value) !== COMISION) {
+    await commissionService.updateCommissionRates({ id: rate.id, value: COMISION })
+    logger.info(`Regla de comisión "cursos" cambiada de ${rate.value}% a ${COMISION}%: ${rate.id}`)
   } else {
-    logger.info(`Regla de comisión "cursos" ya existía: ${rate.id}`)
+    logger.info(`Regla de comisión "cursos" ya existía: ${rate.id} (${COMISION}%)`)
   }
 
   // 3) verificación real: ¿la calculadora de comisiones de Mercur de verdad
@@ -63,6 +69,11 @@ export default async function setupCourseCommission({ container }: ExecArgs) {
   logger.info(`Resultado del cálculo real de comisión: ${JSON.stringify(resultado, null, 2)}`)
 
   const linea = resultado[0]
-  const ok = linea && linea.rate === 30 && Number(linea.amount) === 300
-  logger.info(ok ? "✔ VERIFICADO: 30% de 1000 MXN = 300 MXN de comisión, calculado por el motor real." : "✘ El cálculo no dio lo esperado, revisar.")
+  const esperado = (1000 * COMISION) / 100
+  const ok = linea && Number(linea.rate) === COMISION && Number(linea.amount) === esperado
+  logger.info(
+    ok
+      ? `✔ VERIFICADO: ${COMISION}% de 1000 MXN = ${esperado} MXN de comisión, calculado por el motor real.`
+      : "✘ El cálculo no dio lo esperado, revisar."
+  )
 }
