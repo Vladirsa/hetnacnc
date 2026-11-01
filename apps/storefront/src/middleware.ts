@@ -112,6 +112,7 @@ async function getCountryCode(
 // indexa en inglés). Quien navega en otra región sin haber elegido, se queda
 // en español aunque luego cambie la moneda a USD.
 const COOKIE_IDIOMA = 'hetna_lang';
+const COOKIE_REF = 'hetna_ref';
 
 const continuar = (request: NextRequest, locale: string | null) => {
   const cabeceras = new Headers(request.headers);
@@ -119,6 +120,13 @@ const continuar = (request: NextRequest, locale: string | null) => {
   const response = NextResponse.next({ request: { headers: cabeceras } });
   if (locale && locale.toLowerCase() !== 'us' && !request.cookies.get(COOKIE_IDIOMA)) {
     response.cookies.set(COOKIE_IDIOMA, 'es', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' });
+  }
+  // Recomienda y gana: la liga de un cliente (?ref=CODIGO) se recuerda 30 días;
+  // al registrarse, la cuenta nueva queda ligada a quien lo recomendó
+  // (lib/data/customer.ts → signup, packages/api/src/lib/cupones.ts).
+  const ref = (request.nextUrl.searchParams.get('ref') || '').trim().toUpperCase();
+  if (/^[A-Z0-9-]{4,20}$/.test(ref)) {
+    response.cookies.set(COOKIE_REF, ref, { path: '/', maxAge: 60 * 60 * 24 * 30, sameSite: 'lax', httpOnly: true });
   }
   return response;
 };

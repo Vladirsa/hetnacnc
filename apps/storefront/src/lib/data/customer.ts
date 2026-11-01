@@ -128,6 +128,32 @@ export async function reenviarConfirmacion(email: string): Promise<void> {
   }).catch(() => undefined);
 }
 
+/**
+ * Recomienda y gana: si llegó con la liga de un amigo (cookie hetna_ref, la
+ * pone middleware.ts), liga la cuenta nueva con él. Nunca detiene el registro.
+ */
+async function vincularRecomendacion(): Promise<void> {
+  try {
+    const { cookies } = await import('next/headers');
+    const tarro = await cookies();
+    const codigo = tarro.get('hetna_ref')?.value;
+    if (!codigo) return;
+    await fetch(`${BACKEND}/store/hetna-recomienda/vincular`, {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'x-publishable-api-key': LLAVE,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ codigo }),
+      cache: 'no-store'
+    });
+    tarro.delete('hetna_ref');
+  } catch {
+    // sin recomendación no pasa nada
+  }
+}
+
 export async function signup(formData: FormData) {
   const password = formData.get('password') as string;
   const email = String(formData.get('email') || '').trim().toLowerCase();
@@ -161,6 +187,7 @@ export async function signup(formData: FormData) {
 
     await setAuthToken(token);
     const cliente = await asegurarCliente(email, password, datos);
+    await vincularRecomendacion();
 
     // Cuenta nueva: sin sesión hasta que confirme su correo (la liga ya va en
     // camino; si es una cuenta que ya existía sin confirmar, se reenvía).
