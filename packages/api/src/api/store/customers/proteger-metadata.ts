@@ -19,7 +19,16 @@ import type {
 } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 
-const PROTEGIDAS = ["correo_verificado", "correo_verificado_en"]
+const PROTEGIDAS = [
+  "correo_verificado",
+  "correo_verificado_en",
+  // Recomienda y gana (lib/cupones.ts): quién lo recomendó y su recompensa
+  "codigo_recomienda",
+  "referido_por",
+  "referido_en",
+  "recompensa_referido_en",
+  "recompensa_referido_cupon",
+]
 
 type Meta = Record<string, unknown>
 const objeto = (v: unknown): Meta => (v && typeof v === "object" && !Array.isArray(v) ? (v as Meta) : {})
