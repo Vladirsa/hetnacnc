@@ -22,6 +22,14 @@
 #   RESTIC_REPOSITORY=b2:<bucket>:hetnacnc
 #   RESTIC_PASSWORD=...      (contraseña de cifrado de restic)
 #
+# Bases en Supabase (opcional, una línea por base; el nombre es libre):
+#   RESPALDO_DB_COTIZADOR=postgresql://...   (cadena "Session pooler" del
+#                                             proyecto: Connect > Session pooler)
+# Cada una se respalda con pg_dump 17 desde un contenedor y queda junto a la
+# base principal (supabase-<nombre>-<fecha>.sql.gz). Si una falla, se avisa y
+# el resto del respaldo sigue: una base externa caída no deja sin respaldo a
+# la tienda.
+#
 # Uso manual:   bash /root/hetnacnc/scripts/respaldar.sh
 # Programado:   /etc/cron.d/hetna-respaldo (todos los días en la madrugada)
 # Ver respaldos en B2:   set -a; . /root/.respaldo.env; set +a; restic snapshots
@@ -62,8 +70,28 @@ fi
 mv "$DUMP.tmp" "$DUMP"
 echo "    base de datos: $(du -h "$DUMP" | cut -f1)"
 
+# --- 1b. Bases en Supabase (RESPALDO_DB_<NOMBRE> en $LLAVES) ---
+# La cadena va por variable de entorno al contenedor, no en la línea de
+# comando: así no aparece en "ps" ni en el historial.
+fallas_externas=0
+for var in $(compgen -v | grep '^RESPALDO_DB_' || true); do
+  nombre="$(echo "${var#RESPALDO_DB_}" | tr 'A-Z' 'a-z')"
+  destino="$LOCAL/supabase-$nombre-$HOY.sql.gz"
+  if docker run --rm -e PGURL="${!var}" postgres:17-alpine \
+       sh -c 'pg_dump --no-owner --no-privileges "$PGURL"' 2>/tmp/respaldo-$nombre.err | gzip > "$destino.tmp" \
+     && [ "$(stat -c %s "$destino.tmp")" -gt 2000 ]; then
+    mv "$destino.tmp" "$destino"
+    echo "    supabase $nombre: $(du -h "$destino" | cut -f1)"
+  else
+    rm -f "$destino.tmp"
+    fallas_externas=$((fallas_externas + 1))
+    echo "⚠ No se pudo respaldar supabase $nombre: $(head -c 300 /tmp/respaldo-$nombre.err 2>/dev/null)"
+  fi
+  rm -f /tmp/respaldo-$nombre.err
+done
+
 # Copias locales viejas
-find "$LOCAL" -name 'db-*.sql.gz' -mtime +"$DIAS_LOCAL" -delete
+find "$LOCAL" \( -name 'db-*.sql.gz' -o -name 'supabase-*.sql.gz' \) -mtime +"$DIAS_LOCAL" -delete
 
 # --- 2. Copia cifrada en Backblaze B2 ---
 RUTAS=("$LOCAL")
@@ -74,4 +102,8 @@ done
 restic backup --tag diario --host srv2007412 "${RUTAS[@]}"
 restic forget --tag diario --host srv2007412 --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
 
+if [ "$fallas_externas" -gt 0 ]; then
+  echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) de Supabase fallaron"
+  exit 2
+fi
 echo "✓ $(date '+%F %T') respaldo completo"
