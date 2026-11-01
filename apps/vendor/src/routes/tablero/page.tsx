@@ -798,6 +798,77 @@ function Cotizador({ datos }: { datos: RespuestaTablero }) {
   )
 }
 
+// ---------------------------------------------------------------- alta del taller
+
+type EstadoAlta = {
+  estado: string
+  correo_confirmado: boolean
+  correo: string
+  puede_publicar: boolean
+  mensaje: string | null
+}
+
+// Aviso arriba del tablero mientras la tienda no esté aprobada: primero que
+// confirme su correo, luego que espere la revisión (lib/alta-taller.ts).
+function AvisoAlta() {
+  const [alta, setAlta] = useState<EstadoAlta | null>(null)
+  const [nota, setNota] = useState("")
+  const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    fetch("/vendor/hetna-alta", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: EstadoAlta | null) => setAlta(d))
+      .catch(() => setAlta(null))
+  }, [])
+
+  if (!alta || alta.puede_publicar || !alta.mensaje) return null
+
+  const reenviar = async () => {
+    setEnviando(true)
+    setNota("")
+    try {
+      const r = await fetch("/vendor/hetna-alta/reenviar", { method: "POST", credentials: "include" })
+      const d = (await r.json().catch(() => null)) as { message?: string; ya?: boolean } | null
+      if (!r.ok) setNota(d?.message || "No se pudo mandar el correo.")
+      else if (d?.ya) setNota("Tu correo ya está confirmado. Recarga la página.")
+      else setNota(`Listo: te mandamos una liga nueva a ${alta.correo}. Revisa también spam.`)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  const sinCorreo = !alta.correo_confirmado && alta.estado === "pending_approval"
+  return (
+    <div
+      role="status"
+      style={{
+        ...S.card,
+        background: sinCorreo ? "#FFF6DB" : "#EEF4FB",
+        borderColor: sinCorreo ? "#F0D58A" : "#C9DBF0",
+      }}
+    >
+      <p style={{ ...S.h2, color: sinCorreo ? "#8A5A00" : "#1F4E79" }}>
+        {sinCorreo ? "Confirma tu correo para continuar" : "Tu tienda está en revisión"}
+      </p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>{alta.mensaje}</p>
+      {sinCorreo && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          <button type="button" style={S.btn} disabled={enviando} onClick={() => void reenviar()}>
+            {enviando ? "Enviando..." : "Reenviar la liga"}
+          </button>
+          {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
+        </div>
+      )}
+      {!sinCorreo && (
+        <p style={{ ...S.nota, margin: "8px 0 0" }}>
+          Mientras tanto puedes completar tu perfil y pedir la insignia de taller verificado.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------- pantalla
 
 export default function TableroPage() {
@@ -877,6 +948,8 @@ export default function TableroPage() {
         Tu taller en {nombreDelMes(datos.mes)}. Las gráficas y los conteos son de los últimos{" "}
         {v.ventana_dias} días.
       </p>
+
+      <AvisoAlta />
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 
