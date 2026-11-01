@@ -66,7 +66,7 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
     max: 3,
     ratio: "6 / 5",
     publicidad: true,
-    ayuda: "Aparece en la columna derecha del foro, debajo del Copiloto IA.",
+    ayuda: "Aparece en la columna derecha del foro, debajo de la Calculadora CNC.",
   },
   categorias_lateral: {
     nombre: "Publicidad: categorías",
