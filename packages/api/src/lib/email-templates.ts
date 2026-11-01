@@ -1,3 +1,5 @@
+import { CUPON_BIENVENIDA, MINIMO, MONTO, pesos } from "./cupones"
+
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"
 const BRAND_COLOR = "#142033"
 
@@ -27,6 +29,11 @@ export function welcomeEmailHtml({ name }: { name: string }): string {
       <h1 style="font-size:20px;margin:0 0 16px;">${greeting}, ¡bienvenido a ${SITE_NAME}!</h1>
       <p>Tu cuenta ya está lista. Aquí puedes cotizar y comprar piezas, máquinas y
       accesorios CNC directo con vendedores verificados en México.</p>
+      <div style="margin:20px 0;padding:16px;border:2px dashed #C2560A;border-radius:10px;text-align:center;">
+        <div style="font-size:14px;color:#40403A;">Tu regalo de bienvenida</div>
+        <div style="font-size:24px;font-weight:bold;letter-spacing:2px;color:#142033;margin:6px 0;">${CUPON_BIENVENIDA()}</div>
+        <div style="font-size:14px;color:#40403A;">${pesos(MONTO())} de descuento en tu primera compra de ${pesos(MINIMO())} o más. Escríbelo en tu carrito.</div>
+      </div>
       <p style="margin-top:24px;">
         <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://hetnacnc.com"}"
            style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">

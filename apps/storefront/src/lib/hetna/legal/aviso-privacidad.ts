@@ -96,6 +96,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
             ["Verificación del taller", "Identificación oficial (frente y reverso), fotos de la fachada y del interior del taller, comprobante de domicilio (opcional)", "El taller, de forma voluntaria"],
             ["Contenido que publicas", "Mensajes del foro, reseñas, preguntas, fotos de trabajos", "Tú"],
             ["Comunicaciones", "Mensajes por WhatsApp, correo o chat con talleres y con HETNA", "Tú"],
+            ["Recomienda y gana", "Tu código para recomendar, quién te recomendó (si llegaste con la liga de otro cliente) y tus cupones", "Tú y la liga con la que llegaste"],
             ["Datos técnicos", "Dirección IP, tipo de navegador y dispositivo, páginas visitadas, cookies", "Tu navegador, de forma automática"],
           ],
         },
@@ -119,6 +120,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
           "Procesar compras, pagos, envíos, devoluciones, garantías y facturación.",
           "Hacer llegar tus solicitudes de cotización a los talleres y gestionar las propuestas.",
           "Pagar a los talleres y vendedores lo que venden, menos las comisiones acordadas.",
+          "Aplicar cupones de descuento y entregar las recompensas de Recomienda y gana. Si llegaste con la liga de otro cliente, a esa persona le avisamos tu nombre y que ya hiciste tu primera compra, nunca qué compraste ni cuánto.",
           "Verificar la identidad y existencia de los talleres que lo solicitan, y mostrar la insignia de taller verificado.",
           "Dar atención, soporte y resolver aclaraciones o quejas.",
           "Prevenir fraudes, abusos y proteger la seguridad del sitio y de los usuarios.",
@@ -398,6 +400,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
             ["Shop verification", "Government ID (front and back), photos of the shop's storefront and interior, proof of address (optional)", "The shop, voluntarily"],
             ["Content you post", "Forum posts, reviews, questions, photos of work", "You"],
             ["Communications", "Messages via WhatsApp, email or chat with shops and with HETNA", "You"],
+            ["Refer a friend", "Your referral code, who referred you (if you arrived through another customer's link) and your coupons", "You and the link you arrived with"],
             ["Technical data", "IP address, browser and device type, pages visited, cookies", "Your browser, automatically"],
           ],
         },
@@ -421,6 +424,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
           "Process purchases, payments, shipping, returns, warranties and invoicing.",
           "Deliver your quote requests to shops and manage their proposals.",
           "Pay shops and sellers for what they sell, minus the agreed fees.",
+          "Apply discount coupons and deliver Refer-a-friend rewards. If you arrived through another customer's link, we tell that person your first name and that you made your first purchase, never what you bought or how much.",
           "Verify the identity and existence of shops that ask to be verified, and show the verified-shop badge.",
           "Provide support and handle questions or complaints.",
           "Prevent fraud and abuse and keep the site and its users safe.",
@@ -651,6 +655,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.3",
+    fecha: "2026-11-01",
+    cambio: "Cupones y Recomienda y gana: qué datos se guardan y qué se le avisa a quien te recomendó.",
+    cambioEn: "Coupons and Refer a friend: what data is kept and what the person who referred you is told.",
+  },
   {
     version: "2.2",
     fecha: "2026-11-01",
