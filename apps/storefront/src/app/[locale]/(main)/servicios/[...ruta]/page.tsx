@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
+import { Academia } from "@/components/hetna/academia/Academia"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { listLearningArticles } from "@/lib/data/learning-articles"
@@ -20,6 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
       description: "La app para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos, inventario y pagos en línea. Web y Android, gratis para empezar.",
+    }
+  }
+  if (s.slug === "aprendizaje-cnc") {
+    return {
+      title: "Academia CNC: cursos de router, láser, plasma y Fusion 360 | HETNA",
+      description: "Cursos prácticos de CNC en español impartidos por talleres de México. Muchos gratis; los de pago con lecciones de muestra.",
     }
   }
   return { title: s.nombre, description: s.resumen }
@@ -48,9 +55,9 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   if (s.slug === "aprendizaje-cnc") {
     const [{ learning_articles }, { courses }] = await Promise.all([
       listLearningArticles({ limit: 9 }),
-      listCourses({ limit: 9 }),
+      listCourses({ limit: 60 }),
     ])
-    return <ServicioPagina s={s} articulos={learning_articles} cursos={courses} />
+    return <Academia cursos={courses} articulos={learning_articles} />
   }
 
   return <ServicioPagina s={s} />

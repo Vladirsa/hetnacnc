@@ -1,5 +1,6 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { MedusaResponse } from "@medusajs/framework/http"
+import { videoDeUrl } from "../../../../../../../lib/cursos"
 
 import { COURSE_MODULE } from "../../../../../../../modules/course"
 import CourseModuleService from "../../../../../../../modules/course/service"
@@ -28,8 +29,14 @@ export const POST = async (
     throw new MedusaError(MedusaError.Types.NOT_FOUND, `Section with id "${req.params.sectionId}" not found`)
   }
 
+  const { video_url, ...datos } = req.validatedBody
+  const video = videoDeUrl(video_url)
+  if (video_url && !video) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Pega un enlace de YouTube o Vimeo")
+  }
   const lesson = await courseModuleService.createLessons({
-    ...req.validatedBody,
+    ...datos,
+    ...(video ? { video_provider: video.provider, video_asset_id: video.asset_id } : {}),
     section_id: req.params.sectionId,
   } as any)
 

@@ -31,6 +31,7 @@ const NuevoCursoForm = () => {
   const [description, setDescription] = useState("")
   const [level, setLevel] = useState<"principiante" | "intermedio" | "avanzado">("principiante")
   const [price, setPrice] = useState("")
+  const [gratis, setGratis] = useState(false)
 
   const crear = useMutation({
     mutationFn: () =>
@@ -39,10 +40,12 @@ const NuevoCursoForm = () => {
         slug,
         description: description || undefined,
         level,
-        price_amount: Number(price),
+        price_amount: gratis ? 0 : Number(price),
       }),
     onSuccess: () => {
-      toast.success("Curso creado", { description: "Ya puedes agregar secciones y lecciones." })
+      toast.success("Curso creado", {
+        description: "Agrega secciones y lecciones con el enlace de YouTube (oculto) o Vimeo y luego publícalo.",
+      })
       queryClient.invalidateQueries({ queryKey: ["vendor-courses"] })
       setAbierto(false)
       setTitle("")
@@ -113,7 +116,21 @@ const NuevoCursoForm = () => {
         </div>
         <div className="flex flex-col gap-1">
           <Label size="small">Precio (MXN)</Label>
-          <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="499" />
+          <Input
+            type="number"
+            min={0}
+            value={gratis ? "" : price}
+            disabled={gratis}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder={gratis ? "Gratis" : "499"}
+          />
+          <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle mt-1">
+            <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} />
+            Curso gratis (ganas alumnos y clientes para tu taller)
+          </label>
+          <Text size="xsmall" className="text-ui-fg-subtle">
+            Si lo cobras, recibes el 70% de cada venta en "Mi saldo" al momento.
+          </Text>
         </div>
       </div>
       <div className="flex gap-2 justify-end">
@@ -122,7 +139,7 @@ const NuevoCursoForm = () => {
         </Button>
         <Button
           size="small"
-          disabled={!title || !slug || !price || crear.isPending}
+          disabled={!title || !slug || (!gratis && !(Number(price) > 0)) || crear.isPending}
           isLoading={crear.isPending}
           onClick={() => crear.mutate()}
         >

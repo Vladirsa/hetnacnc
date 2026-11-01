@@ -3,6 +3,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { StoreGetCourseParamsType } from "../validators"
 import { StoreCourseDTO, StoreCourseResponse } from "../types"
+import { enriquecerCursos } from "../../../../lib/cursos"
 
 export const GET = async (
   req: MedusaRequest<unknown, StoreGetCourseParamsType>,
@@ -29,5 +30,6 @@ export const GET = async (
       .map((s) => ({ ...s, lessons: [...s.lessons].sort((a, b) => a.position - b.position) }))
   }
 
-  res.json({ course: result })
+  const [conDatos] = await enriquecerCursos(req.scope, [result as any])
+  res.json({ course: conDatos as unknown as StoreCourseDTO })
 }

@@ -10,6 +10,7 @@ import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"
 import { AvisoPack } from "@/components/hetna/packs/AvisoPack"
 import { ContarVista } from "@/components/hetna/vistas/ContarVista"
 import { PuntosDestacados } from "@/components/hetna/PuntosDestacados"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { getBuyboxWinner, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { umbralesDeEnvioGratis } from "@/lib/envios/envio-gratis"
 import { escalonesDeOferta } from "@/lib/helpers/volumen"
@@ -77,6 +78,18 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
         offers={offers}
         seller={seller}
       />
+
+      {typeof product.metadata?.curso_slug === "string" && (
+        <div className="bg-[#FDEEE1] border border-[#F2C98F] rounded-[12px] px-4 py-3 text-[14px] text-[#5A3A12]">
+          <strong>Curso de la Academia HETNA.</strong> Al pagar quedas inscrito y lo ves en línea desde tu cuenta.{" "}
+          <LocalizedClientLink
+            href={`/aprendizaje-cnc/cursos/${product.metadata.curso_slug}`}
+            className="font-semibold text-[#B34D07] underline"
+          >
+            Ver temario y lecciones gratis
+          </LocalizedClientLink>
+        </div>
+      )}
 
       <AvisoPack packs={packs} />
 

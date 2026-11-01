@@ -12,6 +12,7 @@ export const vendorCourseListFields = [
   "product.id",
   "product.handle",
   "product.title",
+  "product.metadata",
 ]
 
 export const vendorCourseRetrieveFields = [
@@ -26,6 +27,8 @@ export const vendorCourseRetrieveFields = [
   "sections.lessons.position",
   "sections.lessons.duration_seconds",
   "sections.lessons.is_preview",
+  "sections.lessons.video_provider",
+  "sections.lessons.video_asset_id",
 ]
 
 export const vendorCourseQueryConfig = {

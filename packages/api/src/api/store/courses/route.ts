@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { StoreGetCoursesParamsType } from "./validators"
 import { StoreCourseDTO, StoreCourseListResponse } from "./types"
+import { enriquecerCursos } from "../../../lib/cursos"
 
 export const GET = async (
   req: MedusaRequest<unknown, StoreGetCoursesParamsType>,
@@ -18,7 +19,7 @@ export const GET = async (
   })
 
   res.json({
-    courses: courses as unknown as StoreCourseDTO[],
+    courses: (await enriquecerCursos(req.scope, courses as any[])) as unknown as StoreCourseDTO[],
     count: metadata!.count,
     offset: metadata!.skip,
     limit: metadata!.take,

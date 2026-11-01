@@ -1,5 +1,6 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { MedusaResponse } from "@medusajs/framework/http"
+import { videoDeUrl } from "../../../../../../../../lib/cursos"
 
 import { COURSE_MODULE } from "../../../../../../../../modules/course"
 import CourseModuleService from "../../../../../../../../modules/course/service"
@@ -43,9 +44,19 @@ export const POST = async (
     req.seller_context!.seller_id
   )
 
+  const { video_url, ...datos } = req.validatedBody
+  const video = videoDeUrl(video_url)
+  if (video_url && !video) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Pega un enlace de YouTube o Vimeo")
+  }
   const lesson = await courseModuleService.updateLessons({
     id: req.params.lessonId,
-    ...req.validatedBody,
+    ...datos,
+    ...(video_url === undefined
+      ? {}
+      : video
+        ? { video_provider: video.provider, video_asset_id: video.asset_id }
+        : { video_provider: null, video_asset_id: null }),
   } as any)
 
   res.json({ lesson: lesson as unknown as VendorLessonDTO })

@@ -8,8 +8,8 @@ export const VendorCreateCourse = z.object({
   thumbnail_url: z.string().url().optional(),
   level: z.enum(["principiante", "intermedio", "avanzado"]).optional(),
   language: z.string().optional(),
-  // precio de acceso al curso, en pesos (ej. 499 = $499 MXN)
-  price_amount: z.number().positive(),
+  // precio de acceso al curso, en pesos (ej. 499 = $499 MXN); 0 = gratis
+  price_amount: z.number().nonnegative().default(0),
 })
 export type VendorCreateCourseType = z.infer<typeof VendorCreateCourse>
 
@@ -21,6 +21,8 @@ export const VendorUpdateCourse = z.object({
   level: z.enum(["principiante", "intermedio", "avanzado"]).optional(),
   language: z.string().optional(),
   status: z.enum(["draft", "published"]).optional(),
+  // cambiar el precio (0 = gratis)
+  price_amount: z.number().nonnegative().optional(),
 })
 export type VendorUpdateCourseType = z.infer<typeof VendorUpdateCourse>
 
@@ -48,6 +50,8 @@ export const VendorCreateLesson = z.object({
   position: z.number().int().nonnegative().optional(),
   duration_seconds: z.number().int().positive().optional(),
   is_preview: z.boolean().optional(),
+  // enlace de YouTube (oculto) o Vimeo; se guarda como proveedor + id
+  video_url: z.string().max(500).optional(),
 })
 export type VendorCreateLessonType = z.infer<typeof VendorCreateLesson>
 
@@ -57,5 +61,6 @@ export const VendorUpdateLesson = z.object({
   position: z.number().int().nonnegative().optional(),
   duration_seconds: z.number().int().positive().nullable().optional(),
   is_preview: z.boolean().optional(),
+  video_url: z.string().max(500).nullable().optional(),
 })
 export type VendorUpdateLessonType = z.infer<typeof VendorUpdateLesson>

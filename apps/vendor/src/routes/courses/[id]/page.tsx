@@ -23,6 +23,7 @@ const NuevaLeccionForm = ({ courseId, sectionId }: { courseId: string; sectionId
   const [title, setTitle] = useState("")
   const [duration, setDuration] = useState("")
   const [isPreview, setIsPreview] = useState(false)
+  const [videoUrl, setVideoUrl] = useState("")
 
   const crear = useMutation({
     mutationFn: () =>
@@ -30,15 +31,17 @@ const NuevaLeccionForm = ({ courseId, sectionId }: { courseId: string; sectionId
         $id: courseId,
         $sectionId: sectionId,
         title,
-        duration_seconds: duration ? Number(duration) : undefined,
+        duration_seconds: duration ? Math.round(Number(duration) * 60) : undefined,
         is_preview: isPreview,
-      }),
+        video_url: videoUrl.trim() || undefined,
+      } as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor-course", courseId] })
       setAbierto(false)
       setTitle("")
       setDuration("")
       setIsPreview(false)
+      setVideoUrl("")
     },
     onError: (err: any) => toast.error("No se pudo crear la lección", { description: err?.message }),
   })
@@ -57,12 +60,18 @@ const NuevaLeccionForm = ({ courseId, sectionId }: { courseId: string; sectionId
   return (
     <div className="px-4 py-3 flex flex-col gap-2 border-t">
       <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título de la lección" />
+      <Input
+        value={videoUrl}
+        onChange={(e) => setVideoUrl(e.target.value)}
+        placeholder="Enlace del video: YouTube (oculto) o Vimeo"
+      />
       <div className="flex gap-2 items-center">
         <Input
           type="number"
+          min={0}
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          placeholder="Duración (segundos)"
+          placeholder="Duración (minutos)"
           className="w-48"
         />
         <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle">
@@ -120,6 +129,15 @@ const SectionCard = ({ course, section }: { course: Course; section: Section }) 
                   Vista previa
                 </Badge>
               )}
+              {(lesson as any).video_url ? (
+                <a href={(lesson as any).video_url} target="_blank" rel="noreferrer" className="text-xs text-ui-fg-interactive">
+                  ▶ video
+                </a>
+              ) : (
+                <Badge size="2xsmall" color="red">
+                  Sin video
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Text size="small" className="text-ui-fg-subtle">
@@ -174,15 +192,26 @@ export default function CourseDetailPage() {
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [precio, setPrecio] = useState("")
+  const [gratis, setGratis] = useState(false)
   useEffect(() => {
     if (course) {
       setTitle(course.title)
       setDescription(course.description || "")
+      const p = Number((course as any).price_amount) || 0
+      setGratis(!(p > 0))
+      setPrecio(p > 0 ? String(p) : "")
     }
   }, [course?.id])
 
   const guardar = useMutation({
-    mutationFn: () => client.vendor.courses.$id.mutate({ $id: id!, title, description }),
+    mutationFn: () =>
+      client.vendor.courses.$id.mutate({
+        $id: id!,
+        title,
+        description,
+        price_amount: gratis ? 0 : Number(precio) || 0,
+      } as any),
     onSuccess: () => {
       toast.success("Cambios guardados")
       queryClient.invalidateQueries({ queryKey: ["vendor-course", id] })
@@ -250,8 +279,31 @@ export default function CourseDetailPage() {
           <Label size="small">Descripción</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
+        <div className="flex flex-col gap-1 max-w-xs">
+          <Label size="small">Precio (MXN)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={gratis ? "" : precio}
+            disabled={gratis}
+            onChange={(e) => setPrecio(e.target.value)}
+            placeholder={gratis ? "Gratis" : "499"}
+          />
+          <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle mt-1">
+            <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} />
+            Curso gratis
+          </label>
+          <Text size="xsmall" className="text-ui-fg-subtle">
+            Recibes el 70% de cada venta. Las lecciones de "vista previa" las ve cualquiera; las demás, sólo tus alumnos.
+          </Text>
+        </div>
         <div>
-          <Button size="small" isLoading={guardar.isPending} onClick={() => guardar.mutate()}>
+          <Button
+            size="small"
+            disabled={!gratis && !(Number(precio) > 0)}
+            isLoading={guardar.isPending}
+            onClick={() => guardar.mutate()}
+          >
             Guardar cambios
           </Button>
         </div>
