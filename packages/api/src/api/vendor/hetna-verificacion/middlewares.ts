@@ -29,6 +29,9 @@ const PROTEGIDAS = [
   "terminos_vendedor_en",
   "consentimiento_bancario_en",
   "consentimiento_bancario_fuente",
+  // Confirmación de correo del alta (lib/alta-taller.ts)
+  "correo_confirmado",
+  "correo_confirmado_en",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 
