@@ -173,6 +173,16 @@ const PublicarPage = () => {
   const [error, setError] = useState("")
   const [publicando, setPublicando] = useState(false)
   const [listo, setListo] = useState(null) // { handle }
+  // Tienda todavía sin aprobar (lib/alta-taller.ts): puede llenar el borrador,
+  // pero se le avisa desde el principio que no podrá publicar todavía.
+  const [avisoAlta, setAvisoAlta] = useState("")
+
+  useEffect(() => {
+    fetch("/vendor/hetna-alta", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((a) => setAvisoAlta(a && !a.puede_publicar && a.mensaje ? a.mensaje : ""))
+      .catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     setD(leerBorrador())
@@ -345,6 +355,11 @@ const PublicarPage = () => {
       <p style={S.sub}>
         Paso {paso + 1} de {PASOS.length}: <b>{PASOS[paso]}</b>. Lo que escribas se guarda solo en este navegador.
       </p>
+      {avisoAlta && (
+        <div role="status" style={{ background: "#FFF6DB", border: "1px solid #F0D58A", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 14, lineHeight: 1.5 }}>
+          <b>Todavía no puedes publicar.</b> {avisoAlta} Puedes ir llenando tu producto: se queda guardado en este navegador.
+        </div>
+      )}
 
       <div style={{ height: 6, background: "#EFEBE3", borderRadius: 99, marginBottom: 18, overflow: "hidden" }}>
         <div style={{ width: `${porcentaje}%`, height: "100%", background: "#C2560A", transition: "width .2s" }} />
