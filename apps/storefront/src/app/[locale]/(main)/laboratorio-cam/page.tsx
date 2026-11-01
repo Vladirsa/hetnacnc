@@ -61,7 +61,7 @@ const MODOS = [
   {
     t: "Aprender",
     icono: "aprender" as const,
-    puntos: ["Piezas de muestra listas: álabe de turbina, columna salomónica y relieve", "Cada aviso te dice la causa y cómo corregirlo", "Guías CNC y un copiloto con IA para tus dudas"],
+    puntos: ["Piezas de muestra listas: álabe de turbina, columna salomónica y relieve", "Cada aviso te dice la causa y cómo corregirlo", "Guías CNC y el foro para tus dudas"],
     cta: "Abrir una pieza de muestra",
     href: "/cam/lab",
   },
