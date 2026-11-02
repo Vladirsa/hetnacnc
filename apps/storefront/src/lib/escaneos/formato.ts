@@ -6,14 +6,14 @@ import type { Escaneo } from "./acciones"
 type Estatus = Escaneo["estatus"]
 
 export const ESTATUS_ETIQUETA: Record<Estatus, string> = {
-  pendiente: "En cola",
+  pendiente: "Preparando",
   procesando: "Procesando",
   listo: "Listo",
   fallido: "Falló",
 }
 
 export const ESTATUS_CLASE: Record<Estatus, string> = {
-  pendiente: "bg-[#F1EFEA] text-[#6B6A63]",
+  pendiente: "bg-[#E8EEF7] text-[#2A4A7B]",
   procesando: "bg-[#E8EEF7] text-[#2A4A7B]",
   listo: "bg-[#E4F1E4] text-[#276B2B]",
   fallido: "bg-[#F7E9E7] text-[#9B3225]",

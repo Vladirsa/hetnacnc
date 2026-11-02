@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { ProgresoEscaneo } from "@/components/hetna/escaneos/ProgresoEscaneo"
 import { cargarEscaneo } from "@/lib/escaneos/acciones"
 import {
   ESTATUS_CLASE,
@@ -58,14 +59,7 @@ export default async function TallerEscaneoDetalle({
         {fechaHora(e.created_at)}
       </p>
 
-      {enProceso && (
-        <div className="mt-6 rounded-[12px] border border-[#CBD8EA] bg-[#EEF3FA] px-4 py-3.5 text-[14px] text-[#2A4A7B] leading-relaxed">
-          {e.estatus === "pendiente"
-            ? "En cola. En cuanto haya una GPU libre empieza."
-            : "Procesando. Una vista previa tarda alrededor de un minuto; un escaneo profesional, bastante más."}{" "}
-          Recarga esta página para ver si ya terminó.
-        </div>
-      )}
+      {enProceso && <ProgresoEscaneo modo={e.modo} desde={e.created_at} />}
 
       {e.estatus === "fallido" && (
         <div className="mt-6 rounded-[12px] border border-[#E6C4BE] bg-[#FBF0EE] px-4 py-3.5 text-[14px] text-[#9B3225] leading-relaxed">
