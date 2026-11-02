@@ -43,6 +43,19 @@ export const EN_HERRAMIENTAS: Record<string, string> = {
   "Precios al momento para tu pieza, y el cotizador profesional para tu taller.":
     "Instant prices for your part, and the professional quoting tool for your shop.",
   "Aprender y preguntar": "Learn and ask",
+  "Academia CNC": "CNC Academy",
+  "Quiero aprender": "I want to learn",
+  "Cursos en video impartidos por talleres de México, muchos gratis, más guías paso a paso y un foro para preguntar.":
+    "Video courses taught by CNC shops in Mexico, many free, plus step-by-step guides and a forum to ask questions.",
+  "Ver los cursos": "See the courses",
+  "Cursos gratis y de pago": "Free and paid courses",
+  "Router, láser, plasma, torno y Fusion 360": "Router, laser, plasma, lathe and Fusion 360",
+  "A tu ritmo, en el celular o la computadora": "At your own pace, on your phone or computer",
+  "Cursos en video de router, láser, plasma, torno, Fusion 360 y G-code, con guías paso a paso.":
+    "Video courses on router, laser, plasma, lathe, Fusion 360 and G-code, with step-by-step guides.",
+  "Enseña en HETNA y gana": "Teach on HETNA and earn",
+  "¿Tienes un taller? Publica tus cursos gratis, gana alumnos y clientes, y cobra cada venta en tu saldo.":
+    "Have a shop? Publish your courses for free, gain students and customers, and get every sale in your balance.",
   "Tengo una duda": "I have a question",
   "Guías paso a paso y una comunidad de gente que corta todos los días.":
     "Step-by-step guides and a community of people who cut every day.",
