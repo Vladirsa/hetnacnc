@@ -3,7 +3,11 @@
 import { ActiveFilterElement } from "@/components/cells/ActiveFilterElement/ActiveFilterElement"
 import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"
 
-export const ProductListingActiveFilters = () => {
+export const ProductListingActiveFilters = ({
+  nombres,
+}: {
+  nombres?: Record<string, string>
+} = {}) => {
   const { allSearchParams } = useGetAllSearchParams()
   const filters = Object.entries(allSearchParams).filter(
     (element) =>
@@ -16,7 +20,7 @@ export const ProductListingActiveFilters = () => {
   return (
     <div className="gap-4 overflow-x-scroll no-scrollbar flex">
       {filters.map((filter) => (
-        <ActiveFilterElement key={filter[0]} filter={filter} />
+        <ActiveFilterElement key={filter[0]} filter={filter} nombres={nombres} />
       ))}
     </div>
   )

@@ -123,3 +123,18 @@ export const generateCategoryMetadata = async (
     },
   }
 }
+
+// Imagen para compartir de HETNA. Cuando una página define su propio openGraph
+// sin images, Next no hereda la del layout: hay que ponerla de nuevo.
+export const IMAGEN_OG = { url: "/og-hetna.png", width: 1200, height: 630, alt: "HETNA CNC" }
+
+// Meta description de máximo ~160 caracteres: corta en la última frase completa
+// que quepa y, si no hay, en la última palabra con "…".
+export const descripcionCorta = (texto: string, max = 160): string => {
+  const t = String(texto || "").replace(/\s+/g, " ").trim()
+  if (t.length <= max) return t
+  const corte = t.slice(0, max)
+  const punto = Math.max(corte.lastIndexOf(". "), corte.lastIndexOf("? "), corte.lastIndexOf("! "))
+  if (punto >= 80) return corte.slice(0, punto + 1)
+  return corte.slice(0, corte.lastIndexOf(" ")).replace(/[,;:\s]+$/, "") + "…"
+}

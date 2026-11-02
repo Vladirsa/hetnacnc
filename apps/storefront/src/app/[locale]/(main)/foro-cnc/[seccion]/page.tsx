@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { descripcionCorta } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
 
 import { BotonPublicar, Buscador, Lateral, Pestanas } from "@/components/hetna/foro/ForoMarco"
@@ -28,7 +29,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const pagina = parseInt(uno(q.pagina)) || 1
   return {
     title: { absolute: `${s.nombre}: foro y dudas${pagina > 1 ? ` (página ${pagina})` : ""} | Foro CNC México` },
-    description: `${s.descripcion} Pregunta y comparte con talleres y profesionales de CNC en México.`,
+    description: descripcionCorta(`${s.descripcion} Pregunta y comparte con talleres y profesionales de CNC en México.`),
     alternates: { canonical: `${SITIO}/mx/foro-cnc/${s.slug}${pagina > 1 ? `?pagina=${pagina}` : ""}` },
     robots: uno(q.orden) ? { index: false, follow: true } : undefined,
   }

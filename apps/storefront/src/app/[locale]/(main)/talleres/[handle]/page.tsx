@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { IMAGEN_OG, descripcionCorta } from "@/lib/helpers/seo"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -41,11 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const donde = ubicacion(t.perfil)
   return {
     title: `${t.nombre}${donde ? ` · ${donde}` : ""} | Taller CNC`,
-    description:
+    description: descripcionCorta(
       t.perfil.lema ||
-      t.descripcion?.slice(0, 155) ||
-      `${t.nombre}: taller CNC en HETNA. Capacidades, máquinas, materiales y cotización.`,
-    openGraph: t.banner ? { images: [t.banner] } : undefined,
+        t.descripcion ||
+        `${t.nombre}: taller CNC en HETNA. Capacidades, máquinas, materiales y cotización.`
+    ),
+    alternates: { canonical: `https://hetnacnc.com/mx/talleres/${encodeURIComponent(handle)}` },
+    openGraph: { images: t.banner ? [t.banner] : [IMAGEN_OG] },
   }
 }
 

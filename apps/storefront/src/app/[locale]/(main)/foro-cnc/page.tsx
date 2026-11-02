@@ -32,7 +32,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: { absolute: buscar ? `${buscar} | Foro CNC México` : "Foro CNC México: router, láser, plasma y torno CNC" },
     description:
-      "Comunidad CNC de México: pregunta y resuelve dudas de router CNC, corte láser, plasma, torno e impresión 3D. Comparte tus trabajos y encuentra talleres y proveedores cerca de ti.",
+      "Comunidad CNC de México: resuelve dudas de router, láser, plasma, torno e impresión 3D, comparte tus trabajos y encuentra talleres cerca de ti.",
     alternates: { canonical: `${SITIO}/mx/foro-cnc` },
     robots: indexar ? undefined : { index: false, follow: true },
   }

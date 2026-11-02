@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
 
 import { BotonesServicio, TarjetaArticulo } from "@/components/hetna/foro/Blog"
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       siteName: "HETNA CNC",
       locale: "es_MX",
-      images: a.cover_image_url ? [{ url: a.cover_image_url }] : undefined,
+      images: a.cover_image_url ? [{ url: a.cover_image_url }] : [IMAGEN_OG],
     },
   }
 }

@@ -126,7 +126,7 @@ export const SearchProductsListing = ({
         <div className="my-4 label-md">{`${count} ${count === 1 ? "producto" : "productos"}`}</div>
       </div>
       <div className="hidden md:block">
-        <ProductListingActiveFilters />
+        <ProductListingActiveFilters nombres={facets.nombres} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <aside className="md:col-span-1">

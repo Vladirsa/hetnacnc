@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { descripcionCorta } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
 
 import { EscanearPieza } from "@/components/hetna/disenar/EscanearPieza"
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!h) return {}
   return {
     title: h.titulo,
-    description: h.descripcion,
+    description: descripcionCorta(h.descripcion),
     alternates: {
       canonical: `${SITIO}/mx/disenar/${h.slug}`,
       languages: { "es-MX": `${SITIO}/mx/disenar/${h.slug}`, "en-US": `${SITIO}/us/disenar/${h.slug}` },
