@@ -27,6 +27,7 @@ const RESERVED_PARAMS = new Set([
   "sortBy",
   "min_price",
   "max_price",
+  "disponible",
 ])
 
 export const SearchProductsListing = ({
@@ -48,6 +49,9 @@ export const SearchProductsListing = ({
   const query = searchParams.get("query") || ""
   const page = +(searchParams.get("page") || 1)
   const sortBy = (searchParams.get("sortBy") as SortOptions | null) || undefined
+  const minPrice = searchParams.get("min_price") || ""
+  const maxPrice = searchParams.get("max_price") || ""
+  const disponible = searchParams.get("disponible") === "1"
 
   const [facets, setFacets] = useState<SearchFacets>(EMPTY_FACETS)
   const [products, setProducts] = useState<HttpTypes.StoreProduct[]>([])
@@ -93,6 +97,9 @@ export const SearchProductsListing = ({
           page,
           limit: PRODUCT_LIMIT,
           sortBy,
+          minPrice: minPrice ? Number(minPrice) : undefined,
+          maxPrice: maxPrice ? Number(maxPrice) : undefined,
+          onlyAvailable: disponible,
         })
 
         setProducts(result.products)
@@ -107,7 +114,7 @@ export const SearchProductsListing = ({
 
     fetchProducts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, categoryKey, collection_id, seller_id, query, page, sortBy, attributesKey])
+  }, [locale, categoryKey, collection_id, seller_id, query, page, sortBy, attributesKey, minPrice, maxPrice, disponible])
 
   if (isLoading && products.length === 0) return <ProductListingSkeleton />
 
