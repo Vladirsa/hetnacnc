@@ -11,7 +11,7 @@ const SITIO = "https://hetnacnc.com"
 export const metadata: Metadata = {
   title: "Generador de cajas para láser y router CNC gratis: bisagras, cajones, divisores y más de 170 diseños",
   description:
-    "Más de 170 cajas y objetos paramétricos gratis para corte láser y router CNC: cajas con juntas de dedo, con bisagra, con tapa corrediza, cajoneras, organizadores, estantes, soportes de pared, engranajes y lámparas. Pones las medidas y descargas DXF, SVG, PDF o LightBurn.",
+    "Más de 170 cajas y objetos gratis para láser y router CNC: juntas de dedo, bisagras, cajoneras, organizadores y más. Pon tus medidas y descarga DXF o SVG.",
   alternates: {
     canonical: `${SITIO}/mx/disenar/cajas`,
     languages: { "es-MX": `${SITIO}/mx/disenar/cajas`, "en-US": `${SITIO}/us/disenar/cajas` },

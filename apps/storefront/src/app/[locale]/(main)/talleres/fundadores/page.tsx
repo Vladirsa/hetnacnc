@@ -4,6 +4,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { listarTalleres } from "@/lib/hetna/talleres"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/talleres/fundadores" },
   title: "Talleres fundadores: 6 meses de plan Pro gratis",
   description:
     "Únete a la red de talleres CNC de HETNA. Los primeros 30 talleres reciben la insignia de Taller fundador y 6 meses de plan Pro gratis.",

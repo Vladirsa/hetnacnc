@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { listarServiciosCam } from "@/lib/data/cam"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/cam/lab" },
   title: "CAM 3, 4 y 5 ejes | Laboratorio CAM",
   description:
     "Sube tu STL, OBJ o STEP, configura tu máquina y genera trayectorias de 3, 4 y 5 ejes con anticolisión, simulación y G-code para Mach3, LinuxCNC, GRBL, Fanuc y más.",

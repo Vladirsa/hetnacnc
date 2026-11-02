@@ -18,9 +18,9 @@ const SITIO = "https://hetnacnc.com"
 const URL = `${SITIO}/mx/laboratorio-cam`
 
 export const metadata: Metadata = {
-  title: "Laboratorio CAM en línea gratis: simula trayectorias y genera G-code | HETNA CNC",
+  title: "Laboratorio CAM en línea gratis: simula trayectorias y genera G-code",
   description:
-    "Simula trayectorias CNC en 3, 4 y 5 ejes, revisa colisiones y tiempo de maquinado, y descarga el G-code para Mach3, LinuxCNC, GRBL, Fanuc y más. Gratis, sin cuenta y en el navegador.",
+    "Simula trayectorias CNC de 3 a 5 ejes, revisa colisiones y tiempo, y descarga G-code para Mach3, GRBL, LinuxCNC o Fanuc. Gratis y en el navegador.",
   alternates: { canonical: URL },
   openGraph: {
     title: "Laboratorio CAM: aprende, prueba y prepara tus procesos CNC",

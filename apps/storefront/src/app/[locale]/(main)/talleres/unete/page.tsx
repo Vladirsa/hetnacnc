@@ -15,9 +15,10 @@ import { trabajosAbiertos } from "@/lib/trabajos/datos"
 export const revalidate = 300
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/talleres/unete" },
   title: "Únete a la red de talleres CNC HETNA y recibe proyectos",
   description:
-    "Registra tu taller CNC gratis y recibe solicitudes de fabricación, corte, maquila y producción de clientes de todo México. Cotiza lo que te conviene y cobra dentro de HETNA.",
+    "Registra tu taller CNC gratis y recibe solicitudes de corte, maquila y producción de clientes de todo México. Cotiza lo que te conviene y cobra en HETNA.",
 }
 
 // La página para los TALLERES (la de /talleres es el directorio para los

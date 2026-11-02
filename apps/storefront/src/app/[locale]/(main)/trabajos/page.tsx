@@ -9,9 +9,10 @@ import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 export const revalidate = 120
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/trabajos" },
   title: "Trabajos de fabricación CNC abiertos en México",
   description:
-    "Clientes de todo México buscan taller para corte láser, router, plasma, maquinado e impresión 3D. Revisa los trabajos abiertos y manda tu propuesta, o publica el tuyo gratis.",
+    "Clientes de todo México buscan taller de corte láser, router, plasma, maquinado e impresión 3D. Manda tu propuesta o publica tu trabajo gratis.",
 }
 
 // El tablero de la licitación. Lo leen dos personas distintas, y por eso

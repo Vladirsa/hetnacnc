@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA, ligaWhatsApp, ubicacionEmpresa } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/contacto" },
   title: "Contacto",
   description: "Contacta a HETNA CNC por WhatsApp, teléfono o correo. Atención de lunes a viernes de 9:00 a 18:00 h.",
 }

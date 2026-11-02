@@ -22,7 +22,7 @@ const SITIO = "https://hetnacnc.com"
 export const metadata: Metadata = {
   title: "Herramientas CNC gratis en línea: DXF a G-code, CAM 3–5 ejes y generadores",
   description:
-    "Herramientas CNC gratis en línea: convierte DXF a G-code, programa en 3, 4 y 5 ejes, genera cajas con juntas, letreros, despiece de muebles y litofanías, escanea piezas y cotiza tu corte. Sin instalar nada.",
+    "Herramientas CNC gratis en línea: DXF a G-code, CAM de 3 a 5 ejes, cajas, letreros, despiece de muebles, litofanías y cotizador de corte. Sin instalar nada.",
   alternates: {
     canonical: `${SITIO}/mx/herramientas-cnc`,
     languages: { "es-MX": `${SITIO}/mx/herramientas-cnc`, "en-US": `${SITIO}/us/herramientas-cnc` },

@@ -6,9 +6,10 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { listarTalleres } from "@/lib/hetna/talleres"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/talleres" },
   title: "Talleres CNC en México",
   description:
-    "Encuentra talleres de corte, grabado y maquinado CNC en México y solicita cotización. ¿Tienes un taller? Únete gratis a la red HETNA y recibe solicitudes de fabricación.",
+    "Encuentra talleres de corte, grabado y maquinado CNC en México y pide cotización. ¿Tienes taller? Únete gratis a HETNA y recibe solicitudes de trabajo.",
 }
 
 export default async function TalleresPage({
