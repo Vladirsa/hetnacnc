@@ -125,7 +125,7 @@ export default function ProcesoClienteTaller() {
           titulo="Ofrece tus servicios y recibe cotizaciones"
           pasos={TALLER}
           accion="Registrar mi taller"
-          href="/seller"
+          href="/talleres/unete"
           oscuro
         />
       </div>
