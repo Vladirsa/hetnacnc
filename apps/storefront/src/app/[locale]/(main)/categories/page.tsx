@@ -66,10 +66,13 @@ export async function generateMetadata({
 
 async function AllCategories({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
+  const filtros = await searchParams
 
   const ua = (await headers()).get("user-agent") || ""
   const bot = isBot(ua)
@@ -140,7 +143,7 @@ async function AllCategories({
 
       <Suspense fallback={<div data-testid="all-categories-page-loading"><ProductListingSkeleton /></div>}>
         {bot ? (
-          <ProductListing showSidebar locale={locale} />
+          <ProductListing showSidebar locale={locale} searchParams={filtros} />
         ) : (
           <SearchProductsListing locale={locale} />
         )}

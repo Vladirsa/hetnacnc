@@ -3,6 +3,7 @@
 import { HttpTypes } from '@medusajs/types';
 
 import { sortProducts } from '@/lib/helpers/sort-products';
+import { filtrarYOrdenar } from '@/lib/helpers/filtrar-listado';
 import { SortOptions } from '@/types/product';
 
 import { sdk } from '../client';
@@ -213,6 +214,9 @@ export const searchProducts = async ({
   page = 1,
   limit = 12,
   sortBy,
+  minPrice,
+  maxPrice,
+  onlyAvailable,
 }: {
   query?: string;
   countryCode?: string;
@@ -224,6 +228,10 @@ export const searchProducts = async ({
   page?: number;
   limit?: number;
   sortBy?: SortOptions;
+  /** Precio mínimo / máximo en pesos y sólo con existencia (lib/helpers/filtrar-listado.ts). */
+  minPrice?: number;
+  maxPrice?: number;
+  onlyAvailable?: boolean;
 }): Promise<{
   products: HttpTypes.StoreProduct[];
   count: number;
@@ -241,32 +249,54 @@ export const searchProducts = async ({
   const hasAttributeFilters =
     attributes && Object.keys(attributes).length > 0;
 
-  const { products, count } = await (sdk.store.products.query({
-    q: query || undefined,
-    region_id: region.id,
-    category_id,
-    collection_id,
-    seller_id,
-    attributes: hasAttributeFilters ? attributes : undefined,
-    order,
-    limit,
-    offset,
-    fields: PRODUCT_LIST_FIELDS,
-    fetchOptions: { headers: { ...(await getAuthHeaders()) }, cache: 'no-cache' },
-  } as never) as unknown as Promise<{
-    products: HttpTypes.StoreProduct[];
-    count: number;
-  }>).catch(() => ({
-    products: [] as HttpTypes.StoreProduct[],
-    count: 0,
-  }));
+  const authHeaders = await getAuthHeaders();
+  const pedir = (pagOffset: number, pagLimit: number) =>
+    (sdk.store.products.query({
+      q: query || undefined,
+      region_id: region.id,
+      category_id,
+      collection_id,
+      seller_id,
+      attributes: hasAttributeFilters ? attributes : undefined,
+      order,
+      limit: pagLimit,
+      offset: pagOffset,
+      fields: PRODUCT_LIST_FIELDS,
+      fetchOptions: { headers: { ...authHeaders }, cache: 'no-cache' },
+    } as never) as unknown as Promise<{
+      products: HttpTypes.StoreProduct[];
+      count: number;
+    }>).catch(() => ({
+      products: [] as HttpTypes.StoreProduct[],
+      count: 0,
+    }));
 
-  const ordered =
-    sortBy === 'price_asc' || sortBy === 'price_desc'
-      ? sortProducts(products, sortBy)
-      : products;
+  // Precio, existencia y orden por precio no los resuelve la API: se traen
+  // hasta 300 productos y se filtran, ordenan y paginan aquí.
+  const conFiltros =
+    typeof minPrice === 'number' ||
+    typeof maxPrice === 'number' ||
+    Boolean(onlyAvailable) ||
+    sortBy === 'price_asc' ||
+    sortBy === 'price_desc';
+  if (conFiltros) {
+    const todos: HttpTypes.StoreProduct[] = [];
+    for (let o = 0; o < 300; o += 100) {
+      const r = await pedir(o, 100);
+      todos.push(...r.products);
+      if (r.products.length < 100 || todos.length >= r.count) break;
+    }
+    const lista = filtrarYOrdenar(todos, { min: minPrice, max: maxPrice, disponible: onlyAvailable }, sortBy);
+    return {
+      products: lista.slice(offset, offset + limit),
+      count: lista.length,
+      nextPage: lista.length > offset + limit ? page + 1 : null,
+    };
+  }
+
+  const { products, count } = await pedir(offset, limit);
 
   const nextPage = count > offset + limit ? page + 1 : null;
 
-  return { products: ordered, count, nextPage };
+  return { products, count, nextPage };
 };
