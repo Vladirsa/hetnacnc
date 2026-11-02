@@ -30,6 +30,11 @@ def generar_preview(ruta_foto: str, dir_salida: str) -> str:
         dir_salida,
         "--model-save-format",
         "obj",
+        # Resolución de la malla (marching cubes). TripoSR trae 256 por omisión
+        # y la pieza sale "derretida"; 384 da bastante más detalle por unos
+        # segundos más de GPU. Se puede subir a 512 con TRIPOSR_MC_RES.
+        "--mc-resolution",
+        os.environ.get("TRIPOSR_MC_RES", "384"),
     ]
     # Sin --bake-texture a propósito: ese paso usa moderngl, que pide un
     # contexto OpenGL y por lo tanto una pantalla, y en un contenedor sin

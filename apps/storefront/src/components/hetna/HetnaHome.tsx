@@ -17,6 +17,7 @@ import PorQueHetna from "./PorQueHetna"
 import CarruselColeccion from "./CarruselColeccion"
 import CategoriasVisuales from "./CategoriasVisuales"
 import EstadisticasConfianza from "@/components/hetna/EstadisticasConfianza"
+import { CifrasHetna } from "@/components/hetna/CifrasHetna"
 import { FilasProductos } from "@/components/hetna/FilasProductos"
 import { listCategories } from "@/lib/data/categories"
 import { listLearningArticles } from "@/lib/data/learning-articles"
@@ -398,6 +399,8 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       )}
 
       {/* <EstadisticasConfianza /> oculto: datos de relleno hasta tener cifras reales */}
+      {/* Cifras reales: sólo aparece con 10 talleres o más */}
+      <CifrasHetna />
       {/* Banner proyecto a la medida */}
       <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         <div className="flex flex-col gap-2.5 max-w-[560px]">

@@ -35,7 +35,9 @@ export default async function RootLayout({
   if (!APP_ID || !user || !user.id || !user.email)
     return (
       <>
+        <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]">Saltar al contenido</a>
         <HetnaHeader locale={locale} />
+        <span id="contenido" tabIndex={-1} />
         {children}
         <Footer />
       </>
@@ -50,7 +52,9 @@ export default async function RootLayout({
       userName={userName}
       userEmail={user.email}
     >
-      <HetnaHeader locale={locale} />
+      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]">Saltar al contenido</a>
+        <HetnaHeader locale={locale} />
+        <span id="contenido" tabIndex={-1} />
       {children}
       <Footer />
     </TalkJsProvider>

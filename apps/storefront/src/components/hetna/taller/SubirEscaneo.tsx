@@ -169,6 +169,22 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
         </div>
       </fieldset>
 
+      {modo === "preview" && (
+        <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">
+          <strong>Para que la vista previa salga mejor:</strong>
+          <ul className="m-0 mt-1.5 pl-5 list-disc flex flex-col gap-0.5">
+            <li>Foto real de la pieza (no un dibujo ni una captura de pantalla).</li>
+            <li>Fondo liso y de un color distinto a la pieza: una hoja blanca o una mesa lisa.</li>
+            <li>La pieza completa y centrada, tomada en ángulo (de 3/4), no de frente.</li>
+            <li>Buena luz, sin sombras fuertes ni reflejos.</li>
+          </ul>
+          <span className="block mt-1.5">
+            Es una aproximación hecha por IA con una sola foto: sirve para enseñar la idea. Para un archivo con la forma y
+            medidas reales, usa el escaneo profesional.
+          </span>
+        </div>
+      )}
+
       {modo === "scan" && (
         <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">
           <strong>Cómo salen bien las fotos:</strong> gira alrededor de la pieza sin moverla,
