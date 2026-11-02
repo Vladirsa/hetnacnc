@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/terminos-y-condiciones" },
   title: "Términos y condiciones",
   description: "Términos y condiciones de uso de HETNA CNC para clientes, vendedores y talleres.",
 }
