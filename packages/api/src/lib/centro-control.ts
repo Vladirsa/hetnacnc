@@ -31,7 +31,7 @@ const HORAS_SIN_ENVIAR = () => Number(process.env.CONTROL_HORAS_SIN_ENVIAR ?? 48
 export type Nivel = "rojo" | "ambar" | "azul"
 export type Aviso = {
   nivel: Nivel
-  tipo: string // pedido_sin_enviar | guia_error | saldo_envios | resena_mala | reclamo | devolucion | cancelacion | sobrepeso | evidencia | verificacion | taller_por_aprobar | cotizador | sin_pagar
+  tipo: string // pedido_sin_enviar | guia_error | saldo_envios | saldo_servicio | limite_servicio | vencimiento | servicio_sin_leer | resena_mala | reclamo | devolucion | cancelacion | sobrepeso | evidencia | verificacion | taller_por_aprobar | cotizador | sin_pagar
   titulo: string
   detalle?: string
   url?: string
@@ -450,6 +450,15 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         url: `${ADMIN}/envios`,
       })
     }
+  }, undefined, logger)
+
+  // Agente de recargas y vencimientos (lib/vigilancia.ts): RunPod, Meta y Google
+  // Ads, Resend, disco del servidor, R2, Supabase, dominio, SSL y Hostinger.
+  await seguro(async () => {
+    const { vigilarServicios, avisosDeServicios } = await import("./vigilancia")
+    const servicios = await vigilarServicios(container)
+    saldos = { ...(saldos || { skydropx: null, recargas: [] }), servicios }
+    avisos.push(...avisosDeServicios(servicios, `${ADMIN}/control`))
   }, undefined, logger)
 
   // Talleres nuevos esperando aprobación (lib/alta-taller.ts). Solo los que ya
