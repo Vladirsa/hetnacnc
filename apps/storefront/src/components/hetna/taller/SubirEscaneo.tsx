@@ -81,7 +81,19 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
         if (!res.ok || !cuerpo.ok) {
           setFotos((p) =>
             p.map((f, j) =>
-              j === indice ? { ...f, estado: "error", mensaje: cuerpo.mensaje || "No se pudo subir" } : f
+              j === indice
+                ? {
+                    ...f,
+                    estado: "error",
+                    mensaje:
+                      cuerpo.mensaje ||
+                      (res.status === 413
+                        ? "La foto pesa demasiado"
+                        : res.status === 401 || res.status === 403
+                          ? "Inicia sesión de nuevo"
+                          : `No se pudo subir (error ${res.status})`),
+                  }
+                : f
             )
           )
           continue

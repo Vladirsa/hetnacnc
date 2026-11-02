@@ -46,7 +46,13 @@ export async function POST(req: Request) {
   // El lote agrupa las fotos de un mismo escaneo en una carpeta. Lo valida el
   // backend; aquí sólo se pasa.
   const lote = form.get("lote")
-  const resultado = await subirFoto(contenido, tipo, typeof lote === "string" ? lote : undefined)
+  let resultado: Awaited<ReturnType<typeof subirFoto>>
+  try {
+    resultado = await subirFoto(contenido, tipo, typeof lote === "string" ? lote : undefined)
+  } catch (e) {
+    console.error("[escaneos] la subida tronó", e)
+    return NextResponse.json({ ok: false, mensaje: "Error del servidor al guardar la foto." }, { status: 500 })
+  }
 
   if (!resultado.ok) {
     return NextResponse.json({ ok: false, mensaje: resultado.mensaje }, { status: 502 })
