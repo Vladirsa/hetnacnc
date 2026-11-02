@@ -3,10 +3,8 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/atoms/Button/Button'
-import { ColorFilter } from '@/components/cells/ColorFilter/ColorFilter'
-import { ConditionFilter } from '@/components/cells/ConditionFilter/ConditionFilter'
 import { PriceFilter } from '@/components/cells/PriceFilter/PriceFilter'
-import { SizeFilter } from '@/components/cells/SizeFilter/SizeFilter'
+import { OrdenDisponibilidad } from '@/components/cells/OrdenDisponibilidad/OrdenDisponibilidad'
 import { ProductListingActiveFilters } from '@/components/organisms/ProductListingActiveFilters/ProductListingActiveFilters'
 import useFilters from '@/hooks/useFilters';
 import { CloseIcon } from '@/icons';
@@ -52,10 +50,8 @@ export const ProductSidebar = () => {
           className="no-scrollbar h-[calc(100vh-200px)] overflow-y-scroll px-2 md:h-full md:overflow-y-auto md:px-0"
           data-testid="sidebar-filters"
         >
+          <OrdenDisponibilidad />
           <PriceFilter />
-          <SizeFilter />
-          <ColorFilter />
-          <ConditionFilter />
         </div>
         <div
           className="absolute bottom-0 left-0 flex w-full items-center gap-2 border-y bg-primary px-4 py-4 md:hidden"
