@@ -2,7 +2,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 
 import { COTIZADOR_MODULE } from "../../../../modules/cotizador"
 import CotizadorModuleService from "../../../../modules/cotizador/service"
-import { resumenPlan } from "../../../../lib/cotizador-plan"
+import { resumenPlanUnificado } from "../../../../lib/plan-unificado"
 import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "../../../../lib/cuentas-casa"
 import { costosDeTaller } from "../../../../lib/cotizador-config"
 
@@ -50,7 +50,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const cotizadorModuleService = req.scope.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
 
   const [perfil] = await cotizadorModuleService.listTallerPerfils({ customer_id: customerId })
-  let plan = perfil ? resumenPlan(perfil) : null
+  // El plan de la app (si la cuenta está vinculada) manda: lib/plan-unificado.ts
+  let plan = perfil ? await resumenPlanUnificado(req.scope, customerId, perfil) : null
   if (plan && (await esCuentaDeLaCasa(req.scope, customerId))) {
     plan = { ...plan, plan: PLAN_DE_LA_CASA, limite: null, prueba_dias: 0 }
   }
