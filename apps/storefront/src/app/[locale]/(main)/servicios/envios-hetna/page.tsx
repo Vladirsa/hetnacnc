@@ -5,9 +5,10 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/servicios/envios-hetna" },
   title: "Envíos HETNA | Envíos para piezas, herramientas y materiales CNC en México",
   description:
-    "Cotiza y envía piezas fabricadas, herramientas, materiales y pedidos técnicos a todo México. Compara paqueterías con precio final, días de entrega y recolección, paga en línea y recibe tu guía por correo.",
+    "Envía piezas, herramientas y materiales a todo México. Compara paqueterías con precio final y días de entrega, paga en línea y recibe tu guía por correo.",
 }
 
 // Página del servicio de envíos. Responde en orden lo que pregunta quien llega:
