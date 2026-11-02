@@ -93,13 +93,16 @@ export async function generateMetadata({
 
 async function Category({
   params,
+  searchParams,
 }: {
   params: Promise<{
     category: string
     locale: string
   }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { category: handleCrudo, locale } = await params
+  const filtros = await searchParams
   const categoryHandle = decodificar(handleCrudo)
 
   // La raíz de Servicios ahora es /fabricacion: ahí está todo lo que necesita
@@ -203,7 +206,7 @@ async function Category({
       {esCategoriaServicio(categoryHandle) && jsonLdProducts.length === 0 ? null : (
       <Suspense fallback={<div data-testid="category-page-loading"><ProductListingSkeleton /></div>}>
         {bot || process.env.NEXT_PUBLIC_LISTADO_CLIENTE !== "1" ? (
-          <ProductListing category_id={categoryIds} showSidebar locale={locale} />
+          <ProductListing category_id={categoryIds} showSidebar locale={locale} searchParams={filtros} />
         ) : (
           <SearchProductsListing category_id={categoryIds} locale={locale} />
         )}
