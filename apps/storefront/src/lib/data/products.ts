@@ -23,6 +23,8 @@ export type SearchFacetBucket = { value: string; count: number };
  */
 export type SearchFacets = {
   attributes: Record<string, SearchFacetBucket[]>;
+  /** Nombre visible de cada atributo (handle -> name), p. ej. tipo-de-control -> "Tipo de control". */
+  nombres?: Record<string, string>;
 };
 
 type StoreProductAttribute = {
@@ -45,7 +47,9 @@ export const getSearchFacets = async (): Promise<SearchFacets> => {
   ).catch(() => ({ product_attributes: [] as StoreProductAttribute[] }));
 
   const attributes: Record<string, SearchFacetBucket[]> = {};
+  const nombres: Record<string, string> = {};
   for (const attribute of product_attributes) {
+    if (attribute.name) nombres[attribute.handle] = attribute.name;
     attributes[attribute.handle] = (attribute.values ?? [])
       .slice()
       .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
@@ -55,7 +59,7 @@ export const getSearchFacets = async (): Promise<SearchFacets> => {
       }));
   }
 
-  return { attributes };
+  return { attributes, nombres };
 };
 
 /**

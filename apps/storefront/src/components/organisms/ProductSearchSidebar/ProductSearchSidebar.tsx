@@ -15,6 +15,7 @@ import { ProductListingActiveFilters } from "../ProductListingActiveFilters/Prod
 import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"
 import type { SearchFacets } from "@/lib/data/products"
 import { OrdenDisponibilidad } from "@/components/cells/OrdenDisponibilidad/OrdenDisponibilidad"
+import { nombreLegible } from "@/components/cells/ActiveFilterElement/ActiveFilterElement"
 
 export type FacetModel = {
   value: string
@@ -43,6 +44,7 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
       <AttributeFilter
         key={key}
         attributeKey={key}
+        nombre={facets.nombres?.[key]}
         items={items}
         defaultOpen={Boolean(allSearchParams[key])}
       />
@@ -56,7 +58,7 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
       {isOpen && (
         <Modal heading="Filtros" onClose={() => setIsOpen(false)}>
           <div className="px-4">
-            <ProductListingActiveFilters />
+            <ProductListingActiveFilters nombres={facets.nombres} />
             {/* Precio y existencia se filtran después de la consulta:
                 lib/helpers/filtrar-listado.ts y searchProducts. */}
             <OrdenDisponibilidad />
@@ -83,10 +85,12 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
 
 function AttributeFilter({
   attributeKey,
+  nombre,
   items,
   defaultOpen = true,
 }: {
   attributeKey: string
+  nombre?: string
   items: FacetModel[]
   defaultOpen?: boolean
 }) {
@@ -96,8 +100,8 @@ function AttributeFilter({
     updateFilters(option)
   }
 
-  const heading =
-    attributeKey.charAt(0).toUpperCase() + attributeKey.slice(1)
+  // El nombre que se le puso al atributo en el panel; si no hay, el código legible
+  const heading = nombre || nombreLegible(attributeKey)
 
   if (attributeKey === "size") {
     return (
