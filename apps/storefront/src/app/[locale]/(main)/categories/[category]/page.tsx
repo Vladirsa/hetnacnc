@@ -1,4 +1,6 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
+import { GuiaCategoria, IntroCategoria } from "@/components/hetna/TextoCategoria"
+import { contenidoCategoria } from "@/lib/hetna/contenido-categorias"
 import { getCategoryByHandle, collectCategorySubtreeIds } from "@/lib/data/categories"
 import { Suspense } from "react"
 
@@ -74,9 +76,10 @@ export async function generateMetadata({
     ? `${cat.name} con talleres CNC de todo México. Describe tu pieza, recibe propuestas y paga seguro en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}.`
     : `Compra ${cat.name.toLowerCase()} en ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}: precios en pesos y envío a todo México.`
 
+  const texto = contenidoCategoria(categoryHandle)
   return {
-    title,
-    description,
+    title: texto?.titulo_seo || title,
+    description: texto?.descripcion_seo || description,
     alternates: {
       canonical,
       languages,
@@ -106,6 +109,7 @@ async function Category({
   const { category: handleCrudo, locale } = await params
   const filtros = await searchParams
   const categoryHandle = decodificar(handleCrudo)
+  const texto = contenidoCategoria(categoryHandle)
 
   // La raíz de Servicios ahora es /fabricacion: ahí está todo lo que necesita
   // quien quiere que le fabriquen algo. Las subcategorías (corte-laser,
@@ -199,7 +203,10 @@ async function Category({
           <ServicioCategoria handle={categoryHandle} />
         </>
       ) : (
-        <h1 className="heading-xl uppercase">{category.name}</h1>
+        <>
+          <h1 className="heading-xl uppercase">{category.name}</h1>
+          {texto && <IntroCategoria c={texto} />}
+        </>
       )}
 
       {/* Publicidad de categorías (no dibuja nada si no hay anuncios vigentes) */}
@@ -214,6 +221,8 @@ async function Category({
         )}
       </Suspense>
       )}
+
+      {texto && !esCategoriaServicio(categoryHandle) && <GuiaCategoria c={texto} nombre={category.name} />}
     </main>
   )
 }
