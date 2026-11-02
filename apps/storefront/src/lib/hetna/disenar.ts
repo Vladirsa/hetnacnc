@@ -34,6 +34,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Crea gratis una caja con juntas de dedo para corte láser o router CNC: escribe medidas y espesor de MDF o acrílico y descarga en DXF, SVG o PDF.",
   },
   {
+    slug: "letras-3d",
+    nombre: "Letras 3D en caja",
+    texto: "Letras huecas para anuncios luminosos: MDF y acrílico, por capas, con hojas de corte listas.",
+    icono: "letrero",
+    acceso: "gratis",
+    titulo: "Generador de letras 3D en caja para corte láser gratis (MDF y acrílico)",
+    descripcion:
+      "Escribe tu texto, elige la tipografía, el alto y el fondo, y descarga gratis las hojas de corte en DXF o SVG: frente de acrílico, paredes y fondo de MDF con barreno para el LED. Vista 3D del armado.",
+  },
+  {
     slug: "letreros",
     nombre: "Letreros y nombres",
     texto: "Escribe el texto, elige la letra y descarga el DXF con las letras unidas.",
