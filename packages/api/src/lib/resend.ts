@@ -24,6 +24,21 @@ export type SendEmailResult = {
   configuracion?: boolean
 }
 
+// Uso que Resend reporta en cada envío (encabezados x-resend-*-quota). Lo lee
+// el agente de recargas (lib/vigilancia.ts) cuando la llave es "solo envío" y
+// no puede consultar GET /usage.
+let ultimaCuota: { mes: number | null; dia: number | null; cuando: string } | null = null
+function anotarCuota(h: Headers) {
+  const n = (k: string) => {
+    const v = h.get(k)
+    return v !== null && v !== "" && Number.isFinite(Number(v)) ? Number(v) : null
+  }
+  const mes = n("x-resend-monthly-quota")
+  const dia = n("x-resend-daily-quota")
+  if (mes !== null || dia !== null) ultimaCuota = { mes, dia, cuando: new Date().toISOString() }
+}
+export const cuotaResend = () => ultimaCuota
+
 export async function sendEmail({
   to,
   subject,
@@ -61,6 +76,8 @@ export async function sendEmail({
         : {}),
     }),
   })
+
+  anotarCuota(res.headers)
 
   if (!res.ok) {
     const body = await res.text().catch(() => "")
