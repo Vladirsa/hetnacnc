@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   if (s.slug === "aprendizaje-cnc") {
     return {
-      title: "Academia CNC: cursos de router, láser, plasma y Fusion 360 | HETNA",
+      title: "Academia CNC: cursos de router, láser, plasma y Fusion 360",
       description: "Cursos prácticos de CNC en español impartidos por talleres de México. Muchos gratis; los de pago con lecciones de muestra.",
     }
   }

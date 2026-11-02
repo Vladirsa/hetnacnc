@@ -36,7 +36,7 @@ export default async function FundadoresPage() {
             Registra tu taller gratis, recibe solicitudes de clientes y llévate <strong className="text-white">6 meses de plan Pro sin costo</strong> y la insignia de Taller fundador.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <LocalizedClientLink href="/seller" className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110">
+            <LocalizedClientLink href="/talleres/unete" className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110">
               Registrar mi taller
             </LocalizedClientLink>
             {quedan > 0 ? (

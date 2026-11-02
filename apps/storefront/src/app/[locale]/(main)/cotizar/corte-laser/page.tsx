@@ -6,7 +6,7 @@ import { FranjaAyuda } from "@/components/hetna/ServicioPagina"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Costo de corte láser CNC | Cotiza en línea — HETNA CNC",
+    title: "Costo de corte láser CNC | Cotiza en línea",
     description:
       "Calcula al instante el precio de tu corte láser en MDF, madera, acrílico, cuero o tela. Pon tus medidas y cantidad, y recibe el estimado por correo.",
   }
