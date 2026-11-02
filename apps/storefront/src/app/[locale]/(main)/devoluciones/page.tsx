@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA, medioContacto } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/devoluciones" },
   title: "Devoluciones y reembolsos",
   description: "Política de devoluciones y reembolsos de HETNA CNC para productos físicos, trabajos a la medida y diseños digitales.",
 }

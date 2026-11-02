@@ -6,6 +6,7 @@ import { FranjaAyuda } from "@/components/hetna/ServicioPagina"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
+    alternates: { canonical: "https://hetnacnc.com/mx/cotizar/impresion-3d" },
     title: "Costo de impresión 3D | Cotiza en línea",
     description:
       "Calcula al instante el precio de tu pieza impresa en 3D en PLA, PETG, ABS o TPU. Pon medidas, material y calidad, y recibe el estimado por correo.",

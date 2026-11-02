@@ -6,6 +6,7 @@ import { FranjaAyuda } from "@/components/hetna/ServicioPagina"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
+    alternates: { canonical: "https://hetnacnc.com/mx/cotizar/corte-plasma" },
     title: "Costo de corte plasma CNC | Cotiza en línea",
     description:
       "Calcula al instante el precio de tu corte plasma en acero, inoxidable o aluminio. Pon medidas, calibre y cantidad, y recibe el estimado por correo.",
