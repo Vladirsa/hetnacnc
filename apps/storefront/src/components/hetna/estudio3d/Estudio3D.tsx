@@ -14,10 +14,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js"
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
 
 type Unidad = "mm" | "in"
-type Modo = "solido" | "alambre" | "ambos"
+type Modo = "color" | "blanco" | "gris" | "normales" | "malla"
 type Vista = "iso" | "frente" | "lado" | "arriba"
 
 export type Descarga = { etiqueta: string; href: string; nota?: string }
@@ -88,10 +89,26 @@ function ponerUV(geo: THREE.BufferGeometry, escala: number) {
 
 const fmt = (mm: number, u: Unidad) => (u === "mm" ? `${mm.toFixed(1)} mm` : `${(mm / 25.4).toFixed(2)} in`)
 
+const BotonBarra = ({ activo, onClick, titulo, children }: { activo: boolean; onClick: () => void; titulo: string; children: React.ReactNode }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={titulo}
+    aria-label={titulo}
+    aria-pressed={activo}
+    className={`w-8 h-8 rounded-[8px] flex items-center justify-center ${activo ? "bg-[#2B3648] text-[#F28A3C]" : "text-[#C9D2E0] hover:bg-[#1C2431]"}`}
+  >
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {children}
+    </svg>
+  </button>
+)
+
 export function Estudio3D({
   titulo,
   subtitulo,
   urlStl,
+  urlGlb,
   tris,
   escalaReal = true,
   descargas = [],
@@ -108,6 +125,8 @@ export function Estudio3D({
   titulo: string
   subtitulo?: string
   urlStl?: string
+  // modelo con textura (GLB) en lugar de STL; tiene prioridad sobre urlStl
+  urlGlb?: string
   tris?: number[]
   // false: la malla no está en milímetros reales (vista previa por IA)
   escalaReal?: boolean
@@ -139,6 +158,8 @@ export function Estudio3D({
     material?: THREE.MeshStandardMaterial
     alambre?: THREE.LineSegments
     malla?: THREE.Mesh
+    piezas?: { mesh: THREE.Mesh; original: THREE.Material | THREE.Material[] }[]
+    luces?: { luz: THREE.DirectionalLight; hemi: THREE.HemisphereLight }
     rejilla?: THREE.GridHelper
     cajaAyuda?: THREE.Box3Helper
     distancia?: number
@@ -149,14 +170,18 @@ export function Estudio3D({
   const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(diseno2d ? "diseno" : "vista")
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [material, setMaterial] = useState(materialInicial)
-  const [modo, setModo] = useState<Modo>("solido")
+  const [modo, setModo] = useState<Modo>("color")
+  const [luzFuerte, setLuzFuerte] = useState(true)
+  const [menuDescarga, setMenuDescarga] = useState(false)
+  const gizmoRef = useRef<SVGSVGElement>(null)
+  const [conTextura, setConTextura] = useState(false)
   const [rejilla, setRejilla] = useState(true)
   const [medidas, setMedidas] = useState(!dePie)
   const [girar, setGirar] = useState(false)
   const [completa, setCompleta] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [datos, setDatos] = useState<{ x: number; y: number; z: number; triangulos: number } | null>(null)
+  const [datos, setDatos] = useState<{ x: number; y: number; z: number; triangulos: number; vertices: number } | null>(null)
 
   // ---- Escena: se arma una vez por pieza --------------------------------
   useEffect(() => {
@@ -181,7 +206,8 @@ export function Estudio3D({
     const controles = new OrbitControls(camara, renderer.domElement)
     controles.enableDamping = true
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x223044, 0.35))
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x223044, 0.35)
+    scene.add(hemi)
     const luz = new THREE.DirectionalLight(0xffffff, 1.6)
     luz.position.set(1, 2, 1.5)
     luz.castShadow = true
@@ -203,6 +229,43 @@ export function Estudio3D({
     const obs = new ResizeObserver(ajustar)
     obs.observe(el)
     ajustar()
+
+    // Encuadre común: piso con sombra, luz, rejilla, caja de medidas y cámara
+    const encuadrar = (tam: THREE.Vector3, cajaPieza: THREE.Box3, extra: Partial<typeof estado.current>) => {
+      const lado0 = Math.max(tam.x, tam.y, tam.z) || 1
+      const piso = new THREE.Mesh(new THREE.PlaneGeometry(lado0 * 6, lado0 * 6), new THREE.ShadowMaterial({ opacity: 0.35 }))
+      piso.rotation.x = -Math.PI / 2
+      piso.position.y = -0.01
+      piso.receiveShadow = true
+      scene.add(piso)
+      luz.position.set(lado0 * 0.8, lado0 * 1.8, lado0 * 1.2)
+      luz.target.position.set(0, tam.y / 2, 0)
+      scene.add(luz.target)
+      const sc = luz.shadow.camera
+      sc.left = sc.bottom = -lado0
+      sc.right = sc.top = lado0
+      sc.near = lado0 * 0.1
+      sc.far = lado0 * 5
+      sc.updateProjectionMatrix()
+
+      const grid = new THREE.GridHelper(Math.ceil(lado0 * 3), 30, 0x2e3a4e, 0x1a2230)
+      scene.add(grid)
+      const cajaAyuda = new THREE.Box3Helper(cajaPieza.clone(), new THREE.Color(0xf2a65a))
+      scene.add(cajaAyuda)
+
+      const radio = tam.length() / 2
+      const vfov = (camara.fov * Math.PI) / 180
+      const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camara.aspect)
+      const distancia = Math.max(radio / Math.sin(vfov / 2), radio / Math.sin(hfov / 2)) * 0.82
+      camara.near = lado0 / 1000
+      camara.far = lado0 * 100
+      camara.updateProjectionMatrix()
+      controles.target.set(0, tam.y / 2, 0)
+
+      Object.assign(estado.current, { renderer, camara, controles, rejilla: grid, cajaAyuda, distancia, luces: { luz, hemi }, ...extra })
+      ponerVista("iso")
+      setCargando(false)
+    }
 
     const montar = (geo: THREE.BufferGeometry) => {
       if (!vivo) return
@@ -232,27 +295,6 @@ export function Estudio3D({
         )
         scene.add(orillas)
       }
-      // Sombra en el piso
-      const piso = new THREE.Mesh(new THREE.PlaneGeometry(lado0 * 6, lado0 * 6), new THREE.ShadowMaterial({ opacity: 0.35 }))
-      piso.rotation.x = -Math.PI / 2
-      piso.position.y = -0.01
-      piso.receiveShadow = true
-      scene.add(piso)
-      luz.position.set(lado0 * 0.8, lado0 * 1.8, lado0 * 1.2)
-      luz.target.position.set(0, tam.y / 2, 0)
-      scene.add(luz.target)
-      const sc = luz.shadow.camera
-      sc.left = sc.bottom = -lado0
-      sc.right = sc.top = lado0
-      sc.near = lado0 * 0.1
-      sc.far = lado0 * 5
-      sc.updateProjectionMatrix()
-      const alambre = new THREE.LineSegments(
-        new THREE.WireframeGeometry(geo),
-        new THREE.LineBasicMaterial({ color: 0x9fb3d1, transparent: true, opacity: 0.35 })
-      )
-      alambre.visible = false
-      scene.add(alambre)
 
       if (segunda && segunda.tris.length >= 9) {
         const g2 = new THREE.BufferGeometry()
@@ -260,12 +302,10 @@ export function Estudio3D({
         g2.computeVertexNormals()
         if (!dePie) g2.rotateX(-Math.PI / 2)
         g2.translate(-centro.x, -caja.min.y, -centro.z)
-        // Acrílico: deja pasar la luz, refleja y se ven sus cantos
+        // Acrílico pulido. Sin "transmission": obliga a dibujar la escena dos
+        // veces por cuadro y en un celular barato se nota.
         const m2 = new THREE.MeshPhysicalMaterial({
           color: segunda.color,
-          // Sin "transmission": obliga a dibujar la escena dos veces por
-          // cuadro y en un celular barato se nota. La capa brillante da el
-          // efecto de acrílico pulido por mucho menos.
           clearcoat: 1,
           clearcoatRoughness: 0.05,
           roughness: 0.08,
@@ -284,31 +324,54 @@ export function Estudio3D({
         )
       }
 
-      const lado = Math.max(tam.x, tam.y, tam.z) || 1
-      const grid = new THREE.GridHelper(Math.ceil(lado * 3), 30, 0x2e3a4e, 0x1a2230)
-      scene.add(grid)
-      const cajaAyuda = new THREE.Box3Helper(geo.boundingBox!.clone(), new THREE.Color(0xf2a65a))
-      scene.add(cajaAyuda)
+      const n = geo.getAttribute("position")?.count || 0
+      setDatos({ x: tam.x, y: dePie ? tam.y : tam.z, z: dePie ? tam.z : tam.y, triangulos: n / 3, vertices: n })
+      setConTextura(false)
+      encuadrar(tam, geo.boundingBox!, { material: mat, malla, piezas: [{ mesh: malla, original: mat }] })
+    }
 
-      const radio = tam.length() / 2
-      const vfov = (camara.fov * Math.PI) / 180
-      const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camara.aspect)
-      const distancia = Math.max(radio / Math.sin(vfov / 2), radio / Math.sin(hfov / 2)) * 0.82
-      camara.near = lado / 1000
-      camara.far = lado * 100
-      camara.updateProjectionMatrix()
-      controles.target.set(0, tam.y / 2, 0)
-
-      Object.assign(estado.current, { renderer, camara, controles, material: mat, alambre, malla, rejilla: grid, cajaAyuda, distancia })
-      ponerVista("iso")
-      setDatos({ x: tam.x, y: dePie ? tam.y : tam.z, z: dePie ? tam.z : tam.y, triangulos: (geo.getAttribute("position")?.count || 0) / 3 })
-      setCargando(false)
+    // Modelo GLB con sus materiales y texturas (Y ya es arriba)
+    const montarGlb = (obj: THREE.Object3D) => {
+      if (!vivo) return
+      const caja = new THREE.Box3().setFromObject(obj)
+      const centro = caja.getCenter(new THREE.Vector3())
+      obj.position.sub(new THREE.Vector3(centro.x, caja.min.y, centro.z))
+      scene.add(obj)
+      const cajaFinal = new THREE.Box3().setFromObject(obj)
+      const tam = cajaFinal.getSize(new THREE.Vector3())
+      const piezas: { mesh: THREE.Mesh; original: THREE.Material | THREE.Material[] }[] = []
+      let tri = 0, ver = 0
+      obj.traverse((o) => {
+        const m = o as THREE.Mesh
+        if (!m.isMesh) return
+        m.castShadow = true
+        m.receiveShadow = true
+        piezas.push({ mesh: m, original: m.material })
+        const c = m.geometry.getAttribute("position")?.count || 0
+        ver += c
+        tri += m.geometry.index ? m.geometry.index.count / 3 : c / 3
+      })
+      setDatos({ x: tam.x, y: tam.z, z: tam.y, triangulos: tri, vertices: ver })
+      setConTextura(true)
+      encuadrar(tam, cajaFinal, { piezas })
     }
 
     if (tris && tris.length >= 9) {
       const geo = new THREE.BufferGeometry()
       geo.setAttribute("position", new THREE.Float32BufferAttribute(tris, 3))
       montar(geo)
+    } else if (urlGlb) {
+      new GLTFLoader().load(
+        urlGlb,
+        (g) => montarGlb(g.scene),
+        undefined,
+        () => {
+          if (vivo) {
+            setError("No se pudo cargar el modelo")
+            setCargando(false)
+          }
+        }
+      )
     } else if (urlStl) {
       fetch(urlStl, { credentials: "include" })
         .then(async (r) => {
@@ -325,10 +388,29 @@ export function Estudio3D({
     }
 
     let cuadro = 0
+    const ejes = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)]
+    const inv = new THREE.Quaternion()
+    const v = new THREE.Vector3()
     const animar = () => {
       cuadro = requestAnimationFrame(animar)
       controles.update()
       renderer.render(scene, camara)
+      // Ejes de orientación: dónde quedan X, Y y Z vistos desde la cámara
+      const svg = gizmoRef.current
+      if (svg) {
+        inv.copy(camara.quaternion).invert()
+        ejes.forEach((e, k) => {
+          v.copy(e).applyQuaternion(inv)
+          const x = 32 + v.x * 22
+          const y = 32 - v.y * 22
+          const linea = svg.querySelector<SVGLineElement>(`[data-eje="${k}"]`)
+          const punta = svg.querySelector<SVGCircleElement>(`[data-punta="${k}"]`)
+          linea?.setAttribute("x2", x.toFixed(1))
+          linea?.setAttribute("y2", y.toFixed(1))
+          punta?.setAttribute("cx", x.toFixed(1))
+          punta?.setAttribute("cy", y.toFixed(1))
+        })
+      }
     }
     animar()
 
@@ -350,7 +432,7 @@ export function Estudio3D({
       estado.current = {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlStl, tris, segunda, lineas, dePie])
+  }, [urlStl, urlGlb, tris, segunda, lineas, dePie])
 
   // ---- Ajustes que no rearman la escena --------------------------------
   useEffect(() => {
@@ -364,11 +446,26 @@ export function Estudio3D({
     mat.needsUpdate = true
   }, [material, cargando])
 
+  // Modos de vista: color (material o textura del modelo), blanco, gris
+  // (arcilla), normales (revisar la superficie) y malla (ver los triángulos)
+  const vistas = useRef<Record<string, THREE.Material>>({})
   useEffect(() => {
-    const { malla, alambre } = estado.current
-    if (malla) malla.visible = modo !== "alambre"
-    if (alambre) alambre.visible = modo !== "solido"
+    const piezas = estado.current.piezas
+    if (!piezas) return
+    const cache = vistas.current
+    cache.blanco ||= new THREE.MeshStandardMaterial({ color: 0xf4f2ee, roughness: 0.55, side: THREE.DoubleSide })
+    cache.gris ||= new THREE.MeshStandardMaterial({ color: 0x8b919b, roughness: 0.75, side: THREE.DoubleSide })
+    cache.normales ||= new THREE.MeshNormalMaterial({ side: THREE.DoubleSide })
+    cache.malla ||= new THREE.MeshBasicMaterial({ color: 0x9fb3d1, wireframe: true })
+    for (const p of piezas) p.mesh.material = modo === "color" ? p.original : cache[modo]
   }, [modo, cargando])
+
+  useEffect(() => {
+    const l = estado.current.luces
+    if (!l) return
+    l.luz.intensity = luzFuerte ? 1.6 : 0.7
+    l.hemi.intensity = luzFuerte ? 0.35 : 0.9
+  }, [luzFuerte, cargando])
 
   useEffect(() => {
     const { rejilla: g, cajaAyuda } = estado.current
@@ -479,15 +576,6 @@ export function Estudio3D({
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Modo</h3>
-          <div className="flex gap-1.5">
-            <Chip activo={modo === "solido"} onClick={() => setModo("solido")}>Sólido</Chip>
-            <Chip activo={modo === "alambre"} onClick={() => setModo("alambre")}>Malla</Chip>
-            <Chip activo={modo === "ambos"} onClick={() => setModo("ambos")}>Ambos</Chip>
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-2">
           <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Vista</h3>
           <div className="grid grid-cols-2 gap-1.5">
             <Chip activo={false} onClick={() => ponerVista("iso")}>Isométrica</Chip>
@@ -561,19 +649,111 @@ export function Estudio3D({
           {error && (
             <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-[14px] text-[#F2B8A8]">{error}</div>
           )}
-          <span className="pointer-events-none absolute bottom-3 left-3 rounded-[6px] bg-black/40 px-2 py-1 text-[11.5px] text-[#C9D2E0]">
-            Arrastrar = girar · clic derecho = mover · rueda = acercar
-          </span>
-          <div className="absolute bottom-3 right-3 flex gap-1.5">
-            <button type="button" onClick={() => ponerVista("iso")} className="rounded-[8px] bg-[#1C2431]/90 px-3 py-1.5 text-[12.5px] font-semibold hover:bg-[#243045]">
-              Centrar
-            </button>
-            <button type="button" onClick={guardarImagen} className="rounded-[8px] bg-[#1C2431]/90 px-3 py-1.5 text-[12.5px] font-semibold hover:bg-[#243045]">
-              Guardar imagen
-            </button>
-            <button type="button" onClick={pantallaCompleta} className="rounded-[8px] bg-[#C2560A] px-3 py-1.5 text-[12.5px] font-semibold hover:bg-[#A84A08]">
-              {completa ? "Salir" : "Pantalla completa"}
-            </button>
+          {datos && (
+            <dl className="pointer-events-none absolute top-3 left-3 m-0 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-[12px]">
+              <dt className="text-[#8A97AB]">Caras</dt>
+              <dd className="m-0 font-semibold text-white">{Math.round(datos.triangulos).toLocaleString("es-MX")}</dd>
+              <dt className="text-[#8A97AB]">Vértices</dt>
+              <dd className="m-0 font-semibold text-white">{Math.round(datos.vertices).toLocaleString("es-MX")}</dd>
+              {conTextura && (
+                <>
+                  <dt className="text-[#8A97AB]">Material</dt>
+                  <dd className="m-0 font-semibold text-white">Textura PBR</dd>
+                </>
+              )}
+            </dl>
+          )}
+
+          <svg ref={gizmoRef} viewBox="0 0 64 64" className="pointer-events-none absolute top-3 right-3 w-16 h-16 rounded-full bg-[#1C2431]/80" aria-hidden="true">
+            {[
+              ["#ef4444", "X"],
+              ["#22c55e", "Y"],
+              ["#3b82f6", "Z"],
+            ].map(([c], k) => (
+              <g key={k}>
+                <line data-eje={k} x1="32" y1="32" x2="32" y2="32" stroke={c} strokeWidth="2.5" strokeLinecap="round" />
+                <circle data-punta={k} cx="32" cy="32" r="4.5" fill={c} />
+              </g>
+            ))}
+          </svg>
+
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-[14px] bg-[#0B1017]/90 border border-[#1F2937] px-2 py-1.5 shadow-lg max-w-[calc(100%-24px)] overflow-x-auto">
+            <BotonBarra activo={girar} onClick={() => setGirar((x) => !x)} titulo="Girar sola">
+              <path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" />
+            </BotonBarra>
+            <span className="w-px h-5 bg-[#2B3648] mx-1" />
+            {(
+              [
+                ["color", conTextura ? "Textura" : "Color", "#F28A3C"],
+                ["blanco", "Blanco", "#F4F2EE"],
+                ["gris", "Gris", "#8B919B"],
+                ["normales", "Normales", "url(#arcoiris)"],
+                ["malla", "Malla", "none"],
+              ] as const
+            ).map(([id, txt, color]) => (
+              <button
+                key={id}
+                type="button"
+                title={txt}
+                aria-label={txt}
+                aria-pressed={modo === id}
+                onClick={() => setModo(id)}
+                className={`w-8 h-8 rounded-[8px] flex items-center justify-center ${modo === id ? "bg-[#2B3648]" : "hover:bg-[#1C2431]"}`}
+              >
+                <span
+                  className="w-4 h-4 rounded-full"
+                  style={
+                    id === "normales"
+                      ? { background: "conic-gradient(#f43f5e,#eab308,#22c55e,#3b82f6,#a855f7,#f43f5e)" }
+                      : id === "malla"
+                        ? { border: "1.5px dashed #9FB3D1" }
+                        : { background: color, boxShadow: "inset -2px -2px 3px rgba(0,0,0,.35)" }
+                  }
+                />
+              </button>
+            ))}
+            <span className="w-px h-5 bg-[#2B3648] mx-1" />
+            <BotonBarra activo={false} onClick={() => ponerVista("iso")} titulo="Centrar">
+              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+              <circle cx="12" cy="12" r="2.5" />
+            </BotonBarra>
+            <BotonBarra activo={luzFuerte} onClick={() => setLuzFuerte((x) => !x)} titulo="Luz de estudio">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            </BotonBarra>
+            <BotonBarra activo={completa} onClick={pantallaCompleta} titulo="Pantalla completa">
+              <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6" />
+            </BotonBarra>
+            <span className="w-px h-5 bg-[#2B3648] mx-1" />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuDescarga((x) => !x)}
+                aria-expanded={menuDescarga}
+                className="flex items-center gap-1 rounded-[8px] bg-[#C2560A] hover:bg-[#A84A08] px-3 py-1.5 text-[13px] font-semibold"
+              >
+                Descargar <span aria-hidden="true">{menuDescarga ? "▴" : "▾"}</span>
+              </button>
+              {menuDescarga && (
+                <div className="absolute bottom-full right-0 mb-2 min-w-[150px] rounded-[10px] bg-[#0B1017] border border-[#2B3648] py-1 shadow-xl">
+                  {descargas.map((d) => (
+                    <a key={d.href} href={d.href} onClick={() => setMenuDescarga(false)} className="block px-3.5 py-2 text-[13px] text-white hover:bg-[#1C2431]">
+                      {d.etiqueta.replace(/^Descargar\s*/i, "")}
+                    </a>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      guardarImagen()
+                      setMenuDescarga(false)
+                    }}
+                    className="block w-full text-left px-3.5 py-2 text-[13px] text-white hover:bg-[#1C2431]"
+                  >
+                    Imagen (PNG)
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
