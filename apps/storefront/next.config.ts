@@ -67,6 +67,12 @@ const encabezadosSeguridad = [
 ];
 
 const nextConfig: NextConfig = {
+  // Carpeta del build. desplegar.sh alterna entre .next-a y .next-b: construye
+  // en la que NO está sirviendo el sitio y sólo cambia al reiniciar. Así el
+  // build no borra lo que el sitio en vivo está usando (eso tumbaba páginas
+  // durante el despliegue y a veces rompía el propio build con
+  // "ENOENT pages-manifest.json"). Sin la variable, la de siempre.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   // NO agregar output: "standalone". Ese modo empaqueta un servidor aparte en
   // .next/standalone y rompe `next start`, que es justo con lo que PM2 arranca
   // el storefront en el VPS: truena con ENOENT buscando prerender-manifest.json

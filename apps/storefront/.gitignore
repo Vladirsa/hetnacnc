@@ -15,6 +15,9 @@
 
 # next.js
 /.next/
+/.next-a/
+/.next-b/
+/.dist-actual
 /out/
 
 # motor CAD (WASM) de replicad - se copia en postinstall, no se comete al repo
