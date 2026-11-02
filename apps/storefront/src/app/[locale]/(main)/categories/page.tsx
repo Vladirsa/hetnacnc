@@ -6,6 +6,7 @@ import { SearchProductsListing } from "@/components/sections/ProductListing/Sear
 import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
+import { IMAGEN_OG } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
@@ -60,6 +61,7 @@ export async function generateMetadata({
       url: canonical,
       siteName: process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC",
       type: "website",
+      images: [IMAGEN_OG],
     },
   }
 }

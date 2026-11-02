@@ -17,19 +17,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ruta } = await params
   const s = buscarServicio((ruta || []).join("/"))
   if (!s) return {}
+  // La dirección canónica es la de la ruta pedida (las ligas viejas redirigen antes)
+  const alternates = { canonical: `https://hetnacnc.com/mx/servicios/${(ruta || []).map(encodeURIComponent).join("/")}` }
   if (s.slug === "cotizador-cnc") {
     return {
+      alternates,
       title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
-      description: "La app para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos, inventario y pagos en línea. Web y Android, gratis para empezar.",
+      description: "App para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos e inventario. Web y Android, gratis.",
     }
   }
   if (s.slug === "aprendizaje-cnc") {
     return {
+      alternates,
       title: "Academia CNC: cursos de router, láser, plasma y Fusion 360",
       description: "Cursos prácticos de CNC en español impartidos por talleres de México. Muchos gratis; los de pago con lecciones de muestra.",
     }
   }
-  return { title: s.nombre, description: s.resumen }
+  return { alternates, title: s.nombre, description: s.resumen }
 }
 
 export default async function ServicioRuta({ params, searchParams }: Props) {
