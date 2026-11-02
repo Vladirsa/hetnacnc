@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA, ubicacionEmpresa } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/quienes-somos" },
   title: "Quiénes somos",
   description:
     "HETNA CNC es un marketplace mexicano de CNC: tienda, diseños, servicios de fabricación y una red de talleres en todo México.",

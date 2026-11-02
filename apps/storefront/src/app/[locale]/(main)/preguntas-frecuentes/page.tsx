@@ -5,6 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/preguntas-frecuentes" },
   title: "Preguntas frecuentes",
   description:
     "Respuestas sobre compras, envíos, pagos, cotizaciones de maquila CNC y cómo vender tu taller en HETNA CNC.",

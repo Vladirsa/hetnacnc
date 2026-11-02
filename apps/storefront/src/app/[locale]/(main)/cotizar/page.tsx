@@ -7,6 +7,7 @@ import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
 import { listarTalleres, tallerPorHandle } from "@/lib/hetna/talleres"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/cotizar" },
   title: "Solicitar cotización CNC",
   description:
     "Cotiza corte láser, router CNC, grabado y maquinado con talleres de México. Describe tu trabajo y recibe propuestas de talleres para comparar y elegir.",

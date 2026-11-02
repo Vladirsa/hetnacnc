@@ -13,7 +13,7 @@ const SITIO = "https://hetnacnc.com"
 export const metadata: Metadata = {
   title: "Diseñar y escanear para CNC gratis: cajas, letreros, vectorizar, muebles y escaneo 3D",
   description:
-    "Espacio de trabajo gratis para CNC y láser: 170+ cajas, 35 plantillas de empaque, letreros en DXF, vectorizador, despiece de muebles, grabado de fotos, litofanías, SVG a STL, anidado, convertidor y escaneo 3D de piezas. Sin instalar nada.",
+    "Diseña gratis para CNC y láser: 170+ cajas, empaques, letreros DXF, vectorizador, despiece de muebles, litofanías, anidado y escaneo 3D. Sin instalar nada.",
   alternates: {
     canonical: `${SITIO}/mx/disenar`,
     languages: { "es-MX": `${SITIO}/mx/disenar`, "en-US": `${SITIO}/us/disenar` },
