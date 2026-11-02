@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       siteName: "HETNA CNC",
       locale: "es_MX",
-      images: t.fotos[0] ? [{ url: `${SITIO}${t.fotos[0]}` }] : undefined,
+      images: t.fotos[0] ? [{ url: `${SITIO}${t.fotos[0]}` }] : [IMAGEN_OG],
     },
   }
 }

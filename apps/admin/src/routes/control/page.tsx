@@ -20,9 +20,19 @@ type Saldo = {
   sugerida: number
   url_recarga: string
 }
+type Servicio = {
+  id: string
+  nombre: string
+  grupo: "saldo" | "uso" | "vence"
+  estado: "ok" | "ambar" | "rojo" | "error" | "sin_config"
+  valor?: string
+  detalle?: string
+  url?: string
+  falta?: string
+}
 type Datos = {
   generado: string
-  saldos?: { skydropx: Saldo | null; recargas: Recarga[] } | null
+  saldos?: { skydropx: Saldo | null; recargas: Recarga[]; servicios?: Servicio[] } | null
   conteo: Record<Nivel, number>
   avisos: Aviso[]
   ventas: {
@@ -200,6 +210,98 @@ function SubirNota({ alListo, texto = "Subir nota" }: { alListo: (url: string) =
         }}
       />
     </label>
+  )
+}
+
+// Agente de recargas y vencimientos (packages/api/src/lib/vigilancia.ts)
+const GRUPOS: { id: Servicio["grupo"]; titulo: string; boton: string }[] = [
+  { id: "saldo", titulo: "Saldos", boton: "Recargar" },
+  { id: "uso", titulo: "Uso y límites", boton: "Ver uso" },
+  { id: "vence", titulo: "Vencimientos", boton: "Renovar" },
+]
+const PUNTO: Record<Servicio["estado"], string> = {
+  ok: "#1E7B3A",
+  ambar: "#B54708",
+  rojo: "#B42318",
+  error: "#98A2B3",
+  sin_config: "#D0D5DD",
+}
+function Servicios({ lista }: { lista: Servicio[] }) {
+  const activos = lista.filter((s) => s.estado !== "sin_config")
+  const pendientes = lista.filter((s) => s.estado === "sin_config")
+  return (
+    <div style={caja}>
+      <h2 style={{ margin: "0 0 4px", fontSize: 16 }}>Servicios: saldos, límites y vencimientos</h2>
+      <p style={{ fontSize: 13, color: C.tenue, margin: "0 0 10px" }}>
+        Se revisa cada 10 minutos. Lo que esté en rojo o naranja también te llega en el correo de la mañana.
+      </p>
+      {GRUPOS.map((g) => {
+        const filas = activos.filter((s) => s.grupo === g.id)
+        if (!filas.length) return null
+        return (
+          <div key={g.id} style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: C.tenue, fontWeight: 700, textTransform: "uppercase", margin: "6px 0" }}>{g.titulo}</div>
+            {filas.map((s) => (
+              <div
+                key={s.id}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  marginBottom: 6,
+                  background: s.estado === "rojo" ? NIVEL.rojo.fondo : s.estado === "ambar" ? NIVEL.ambar.fondo : C.suave,
+                }}
+              >
+                <span style={{ width: 10, height: 10, borderRadius: 5, background: PUNTO[s.estado], flex: "0 0 auto" }} />
+                <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>
+                    {s.nombre}
+                    {s.valor ? <span style={{ fontWeight: 800, color: s.estado === "rojo" ? C.rojo : C.texto }}> · {s.valor}</span> : null}
+                  </div>
+                  {s.detalle && <div style={{ fontSize: 12, color: C.tenue }}>{s.detalle}</div>}
+                </div>
+                {s.url && (
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      background: s.estado === "rojo" || s.estado === "ambar" ? C.naranja : "transparent",
+                      color: s.estado === "rojo" || s.estado === "ambar" ? "#fff" : C.naranja,
+                      border: `1px solid ${C.naranja}`,
+                      borderRadius: 8,
+                      padding: "5px 10px",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {g.boton}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      })}
+      {pendientes.length > 0 && (
+        <details style={{ marginTop: 6 }}>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: C.tenue }}>
+            {pendientes.length} servicio(s) sin configurar
+          </summary>
+          <ul style={{ fontSize: 13, color: C.tenue, margin: "8px 0 0", paddingLeft: 18 }}>
+            {pendientes.map((s) => (
+              <li key={s.id}>
+                <b style={{ color: C.texto }}>{s.nombre}</b>: agrega {s.falta} en el archivo .env del servidor.
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   )
 }
 
@@ -499,6 +601,7 @@ export default function CentroControl() {
           </div>
 
           {datos.saldos && <Saldos datos={datos.saldos} recargar={() => void cargar()} />}
+          {datos.saldos?.servicios?.length ? <Servicios lista={datos.saldos.servicios} /> : null}
 
           {/* ---- Ventas ---- */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>

@@ -2,6 +2,7 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { getCategoryByHandle, collectCategorySubtreeIds } from "@/lib/data/categories"
 import { Suspense } from "react"
 
+import { IMAGEN_OG } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
@@ -87,6 +88,7 @@ export async function generateMetadata({
       url: canonical,
       siteName: process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC",
       type: "website",
+      images: [IMAGEN_OG],
     },
   }
 }

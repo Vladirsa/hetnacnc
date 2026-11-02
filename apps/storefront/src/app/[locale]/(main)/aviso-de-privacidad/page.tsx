@@ -13,14 +13,16 @@ export async function generateMetadata(): Promise<Metadata> {
   const en = (await idiomaServidor()) === "en"
   return en
     ? {
+        alternates: { canonical: "https://hetnacnc.com/mx/aviso-de-privacidad" },
         title: "Privacy Notice",
         description:
           "HETNA CNC privacy notice: what personal data we collect, why, who we share it with, cookies, and how to exercise your rights in Mexico, the United States and Latin America.",
       }
     : {
+        alternates: { canonical: "https://hetnacnc.com/mx/aviso-de-privacidad" },
         title: "Aviso de privacidad",
         description:
-          "Aviso de privacidad integral de HETNA CNC: qué datos recabamos, para qué, con quién los compartimos, cookies y cómo ejercer tus derechos en México, Estados Unidos y Latinoamérica.",
+          "Aviso de privacidad de HETNA CNC: qué datos recabamos, para qué, con quién los compartimos, cookies y cómo ejercer tus derechos ARCO.",
       }
 }
 
