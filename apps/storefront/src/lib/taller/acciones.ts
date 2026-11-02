@@ -8,7 +8,8 @@ import { Pool } from "pg"
 
 import { retrieveCustomer } from "@/lib/data/customer"
 
-const LIMITE_GRATIS = 10
+// Igual que el plan Gratis de la app y del API (lib/cotizador-plan.ts): 5 al mes.
+const LIMITE_GRATIS = 5
 const ESTADOS = ["Enviada", "Aceptada", "Perdida"]
 const PLANES_PAGO = ["taller", "pro", "industrial"]
 
