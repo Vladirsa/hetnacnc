@@ -58,7 +58,7 @@ export const POST = async (
 
   const course = await courseModuleService.updateCourses(updateData as any)
 
-  if (price_amount !== undefined || body.status !== undefined) {
+  if (price_amount !== undefined || body.status !== undefined || body.thumbnail_url !== undefined) {
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
     const { data } = await query.graph({
       entity: "course",

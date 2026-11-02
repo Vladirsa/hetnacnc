@@ -155,6 +155,65 @@ const SectionCard = ({ course, section }: { course: Course; section: Section }) 
   )
 }
 
+const subirPortada = async (archivo: File): Promise<string> => {
+  if (!/^image\/(jpeg|png|webp)$/.test(archivo.type)) throw new Error("Usa una imagen JPG, PNG o WEBP.")
+  if (archivo.size > 8 * 1024 * 1024) throw new Error("La imagen pesa más de 8 MB.")
+  const fd = new FormData()
+  fd.append("files", archivo)
+  const r = await fetch("/vendor/uploads", { method: "POST", credentials: "include", body: fd })
+  const d = await r.json().catch(() => ({}))
+  if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || "No se pudo subir la imagen.")
+  return d.files[0].url
+}
+
+const PortadaCurso = ({ courseId, url }: { courseId: string; url?: string | null }) => {
+  const queryClient = useQueryClient()
+  const [subiendo, setSubiendo] = useState(false)
+
+  const elegir = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = e.target.files?.[0]
+    e.target.value = ""
+    if (!archivo) return
+    setSubiendo(true)
+    try {
+      const nueva = await subirPortada(archivo)
+      await client.vendor.courses.$id.mutate({ $id: courseId, thumbnail_url: nueva } as any)
+      toast.success("Portada guardada")
+      queryClient.invalidateQueries({ queryKey: ["vendor-course", courseId] })
+    } catch (err: any) {
+      toast.error("No se pudo guardar la portada", { description: err?.message })
+    } finally {
+      setSubiendo(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label size="small">Portada del curso</Label>
+      <div className="flex items-start gap-4 flex-wrap">
+        {url ? (
+          <img src={url} alt="Portada" className="w-64 aspect-video object-cover rounded-md border" />
+        ) : (
+          <div className="w-64 aspect-video rounded-md border border-dashed flex items-center justify-center text-ui-fg-subtle text-sm">
+            Sin portada
+          </div>
+        )}
+        <div className="flex flex-col gap-1">
+          <label className="inline-flex">
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={elegir} disabled={subiendo} />
+            <span className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-ui-bg-subtle">
+              {subiendo ? "Subiendo…" : url ? "Cambiar portada" : "Subir portada"}
+            </span>
+          </label>
+          <Text size="xsmall" className="text-ui-fg-subtle max-w-xs">
+            Horizontal 16:9, por ejemplo 1280×720 px. Es lo primero que ven los alumnos y la que sale en Facebook e Instagram.
+          </Text>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const NuevaSeccionForm = ({ courseId }: { courseId: string }) => {
   const queryClient = useQueryClient()
   const [title, setTitle] = useState("")
@@ -271,6 +330,7 @@ export default function CourseDetailPage() {
       </div>
 
       <div className="px-6 py-4 flex flex-col gap-4">
+        <PortadaCurso courseId={course.id} url={course.thumbnail_url} />
         <div className="flex flex-col gap-1">
           <Label size="small">Título</Label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
