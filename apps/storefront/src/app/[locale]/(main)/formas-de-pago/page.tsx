@@ -4,6 +4,7 @@ import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/formas-de-pago" },
   title: "Formas de pago",
   description: "Paga tus compras en HETNA CNC con Mercado Pago o transferencia SPEI para pedidos grandes y trabajos cotizados.",
 }
