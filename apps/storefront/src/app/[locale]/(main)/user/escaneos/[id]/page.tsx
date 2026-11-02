@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProgresoEscaneo } from "@/components/hetna/escaneos/ProgresoEscaneo"
+import { Estudio3D } from "@/components/hetna/estudio3d/Estudio3D"
 import { cargarEscaneo } from "@/lib/escaneos/acciones"
 import {
   ESTATUS_CLASE,
@@ -75,66 +76,28 @@ export default async function TallerEscaneoDetalle({
       )}
 
       {e.estatus === "listo" && (
-        <>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {descargas.stl && (
-              <a
-                href={descargas.stl}
-                className="inline-flex bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
-              >
-                Descargar STL
-              </a>
-            )}
-            {descargas.obj && (
-              <a
-                href={descargas.obj}
-                className="inline-flex border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18] font-semibold px-5 py-3 rounded-[10px] text-[15px]"
-              >
-                Descargar OBJ
-              </a>
-            )}
-          </div>
-
-          {e.modo === "preview" && (
-            <p className="mt-4 text-[14px] text-[#6B5A2E] bg-[#FBF5E9] border border-[#E2D3B8] rounded-[12px] px-4 py-3.5 leading-relaxed">
-              Esto es una vista previa: la forma la adivinó una IA a partir de una sola
-              foto, no se midió la pieza. Sirve para enseñarla, no para fabricarla. Para un
-              archivo con medidas reales hace falta el escaneo profesional.
-            </p>
+        <div className="mt-6">
+          <Estudio3D
+            titulo={e.titulo || "Escaneo"}
+            subtitulo={`${MODO_ETIQUETA[e.modo]} · ${e.n_fotos} ${e.n_fotos === 1 ? "foto" : "fotos"}`}
+            urlStl={descargas.stl ? `/api/escaneos/${e.id}/modelo` : undefined}
+            escalaReal={!!e.escala_real}
+            descargas={[
+              ...(descargas.stl ? [{ etiqueta: "Descargar STL", href: descargas.stl, nota: "Impresión 3D y CAM" }] : []),
+              ...(descargas.obj ? [{ etiqueta: "Descargar OBJ", href: descargas.obj, nota: "Diseño y render" }] : []),
+            ]}
+            avisos={[
+              ...(e.modo === "preview"
+                ? ["Vista previa: una IA adivinó la forma con una sola foto, sin medir la pieza. Sirve para enseñarla, no para fabricarla."]
+                : []),
+              ...(e.watertight === false ? ["La malla no cierra por completo: repárala antes de imprimir o maquinar."] : []),
+            ]}
+          />
+          {!descargas.stl && (
+            <p className="mt-3 text-[14px] text-[#6B6A63]">Este escaneo no tiene archivo STL para mostrar en 3D.</p>
           )}
-
-          {e.watertight === false && (
-            <p className="mt-4 text-[14px] text-[#6B5A2E] bg-[#FBF5E9] border border-[#E2D3B8] rounded-[12px] px-4 py-3.5 leading-relaxed">
-              La malla no cierra por completo. Se puede ver y medir, pero necesita
-              reparación antes de mandarla a maquinar o a imprimir.
-            </p>
-          )}
-
-          <h2 className="mt-8 text-[18px] font-bold text-[#1B1B18]">La malla</h2>
-          <dl className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Dato termino="Vértices" valor={miles(e.vertices)} />
-            <Dato termino="Caras" valor={miles(e.caras)} />
-            <Dato termino="Cierra" valor={e.watertight === null ? "—" : e.watertight ? "Sí" : "No"} />
-            <Dato
-              termino={e.escala_real ? "Medidas (mm)" : "Proporciones"}
-              valor={e.bounding_box?.length ? e.bounding_box.map((n) => Number(n).toFixed(e.escala_real ? 1 : 2)).join(" × ") : "—"}
-              nota={
-                e.escala_real
-                  ? `Escalado a ${Number(e.medida_mm).toLocaleString("es-MX")} mm en el lado más largo, la medida que capturaste.`
-                  : "Sin unidad: la malla no está a escala real."
-              }
-            />
-          </dl>
-        </>
+        </div>
       )}
     </section>
   )
 }
-
-const Dato = ({ termino, valor, nota }: { termino: string; valor: string; nota?: string }) => (
-  <div>
-    <dt className="text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]">{termino}</dt>
-    <dd className="mt-0.5 text-[16px] font-bold text-[#1B1B18] tabular-nums">{valor}</dd>
-    {nota && <p className="mt-0.5 text-[11px] text-[#6B6A63] leading-snug">{nota}</p>}
-  </div>
-)
