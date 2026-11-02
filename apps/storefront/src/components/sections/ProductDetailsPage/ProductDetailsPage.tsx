@@ -10,6 +10,7 @@ import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
 import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
+import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
 
 export const ProductDetailsPage = async ({
@@ -30,7 +31,7 @@ export const ProductDetailsPage = async ({
       limit: 1,
       fields:
         "*variants.calculated_price,+variants.inventory_quantity,*variants.options," +
-        "*attribute_values,*attribute_values.attribute,*categories,*tags,*type",
+        "*attribute_values,*attribute_values.attribute,*categories,*tags,*type,+metadata",
     },
   }).then(({ response }) => response.products[0])
 
@@ -176,6 +177,14 @@ export const ProductDetailsPage = async ({
           </div>
         </div>
       </div>
+      {/* Compatibilidad, videos, archivos y preguntas frecuentes del producto
+          (product.metadata; ver lib/helpers/product-metadata.ts). Si no trae
+          nada, no se dibuja. */}
+      <FichaProducto
+        metadata={prod.metadata as Record<string, unknown> | null | undefined}
+        titulo={prod.title}
+      />
+
       {/* Dos listas distintas y con el nombre que les toca. La de abajo decía
           "Productos similares" pero enseñaba los del MISMO taller, que no es
           lo mismo: una sirve para seguir comprándole a quien ya te convenció,
