@@ -22,7 +22,7 @@ export const PLANES_APP: PlanApp[] = [
     precio: "$0",
     nota: "para siempre",
     para: "Para empezar a cotizar hoy.",
-    puntos: ["5 cotizaciones al mes", "PDF con marca de agua HETNA CNC", "1 cotización profesional de muestra", "Clientes, productos y avances", "Alertas y seguimiento por WhatsApp", "Calculadora CNC, envíos, tienda y foro", "1 usuario"],
+    puntos: ["5 cotizaciones al mes", "PDF con marca de agua HETNA CNC", "1 cotización profesional de muestra", "Clientes, productos y avances", "Alertas y seguimiento por WhatsApp", "1 propuesta al mes a solicitudes de clientes", "Calculadora CNC, envíos, tienda y foro", "1 usuario"],
   },
   {
     nombre: "Taller",
@@ -30,14 +30,14 @@ export const PLANES_APP: PlanApp[] = [
     nota: "al mes",
     para: "Para el taller que cotiza todos los días.",
     destacado: true,
-    puntos: ["Cotizaciones ilimitadas", "Cotización profesional en PDF con tu logo, sin marca de agua", "Sube DXF, SVG, STL u OBJ: plano con medidas en la cotización", "Simulador de costos con 3 precios", "Costos del taller: fijos, máquinas y mano de obra", "Gastos y compras", "2 usuarios"],
+    puntos: ["Cotizaciones ilimitadas", "Cotización profesional en PDF con tu logo, sin marca de agua", "Sube DXF, SVG, STL u OBJ: plano con medidas en la cotización", "Simulador de costos con 3 precios", "Costos del taller: fijos, máquinas y mano de obra", "Gastos y compras", "5 propuestas al mes a solicitudes de clientes", "2 usuarios"],
   },
   {
     nombre: "Pro",
     precio: "$599",
     nota: "al mes",
     para: "Para crecer con control y datos.",
-    puntos: ["Todo lo del plan Taller", "Inventario", "Marketing: cupones y plantillas de WhatsApp", "Reportes en Excel", "Dashboard de utilidad, gastos y conversión", "5 usuarios"],
+    puntos: ["Todo lo del plan Taller", "Inventario", "Marketing: cupones y plantillas de WhatsApp", "Reportes en Excel", "Dashboard de utilidad, gastos y conversión", "Propuestas sin límite a solicitudes de clientes", "5 usuarios"],
   },
   {
     nombre: "Industrial",

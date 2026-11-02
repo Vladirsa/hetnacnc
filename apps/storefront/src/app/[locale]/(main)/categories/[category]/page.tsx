@@ -6,7 +6,7 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
 import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
-import { notFound, permanentRedirect } from "next/navigation"
+import { notFound, permanentRedirect, redirect } from "next/navigation"
 import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import isBot from "@/lib/helpers/isBot"
@@ -18,6 +18,22 @@ import {
   getStorefrontLocales,
 } from "@/lib/helpers/hreflang"
 
+// Next entrega el segmento tal como viene en la URL: "diseños-digitales" llega
+// como "dise%C3%B1os-digitales" y no coincide con el handle guardado.
+const decodificar = (h: string) => {
+  try {
+    return decodeURIComponent(h)
+  } catch {
+    return h
+  }
+}
+
+// Categorías que ligan otras páginas (Fabricación, Foro) pero aún no se crean
+// en el admin. Al crearlas con ese handle, el alias deja de usarse solo.
+const ALIAS_CATEGORIA: Record<string, string> = {
+  "router-cnc": "maquinado-cnc",
+}
+
 export const revalidate = 60
 
 export async function generateMetadata({
@@ -25,7 +41,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ category: string; locale: string }>
 }): Promise<Metadata> {
-  const { category: categoryHandle, locale } = await params
+  const { category: handleCrudo, locale } = await params
+  const categoryHandle = decodificar(handleCrudo)
   const headersList = await headers()
   const host = headersList.get("host")
   const protocol = headersList.get("x-forwarded-proto") || "https"
@@ -82,7 +99,8 @@ async function Category({
     locale: string
   }>
 }) {
-  const { category: categoryHandle, locale } = await params
+  const { category: handleCrudo, locale } = await params
+  const categoryHandle = decodificar(handleCrudo)
 
   // La raíz de Servicios ahora es /fabricacion: ahí está todo lo que necesita
   // quien quiere que le fabriquen algo. Las subcategorías (corte-laser,
@@ -94,6 +112,10 @@ async function Category({
   const category = await getCategoryByHandle(categoryHandle)
 
   if (!category) {
+    // Ligas a categorías que todavía no existen en la tienda (p. ej. Servicios ›
+    // Router CNC): mientras se crea, se manda a la más cercana.
+    const alias = ALIAS_CATEGORIA[categoryHandle]
+    if (alias) redirect(`/${locale}/categories/${alias}`)
     return notFound()
   }
 

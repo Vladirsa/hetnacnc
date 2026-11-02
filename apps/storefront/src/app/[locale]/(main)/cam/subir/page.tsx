@@ -4,7 +4,7 @@ import { GeneradorGcode } from "@/components/hetna/cam/GeneradorGcode"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 export const metadata: Metadata = {
-  title: "De tu archivo a G-code en un minuto | Laboratorio CAM — HETNA CNC",
+  title: "De tu archivo a G-code en un minuto | Laboratorio CAM",
   description:
     "Sube tu DXF, elige material y fresa, y descarga el G-code listo para tu router. Gratis y sin cuenta.",
 }

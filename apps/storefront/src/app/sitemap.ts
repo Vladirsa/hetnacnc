@@ -148,8 +148,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     })),
   ]
-  if (!secs) return [...tienda, ...articulos]
-  return [
+  if (!secs) return sinRepetir([...tienda, ...articulos])
+  return sinRepetir([
     ...tienda,
     ...articulos,
     { url: `${MX}/foro-cnc`, lastModified: hoy, changeFrequency: "hourly", priority: 0.8 },
@@ -165,5 +165,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.6,
     })),
-  ]
+  ])
+}
+
+// Una URL una sola vez (p. ej. /foro-cnc/eventos es página fija y también sección)
+function sinRepetir(lista: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  const vistas = new Set<string>()
+  return lista.filter((e) => (vistas.has(e.url) ? false : (vistas.add(e.url), true)))
 }

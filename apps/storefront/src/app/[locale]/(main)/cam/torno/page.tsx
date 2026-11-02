@@ -4,7 +4,7 @@ import { EstudioTorno } from "@/components/hetna/cam/torno/EstudioTorno"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 export const metadata: Metadata = {
-  title: "Torno CNC 4 ejes: balaustres, patas y columnas | Laboratorio CAM — HETNA CNC",
+  title: "Torno CNC 4 ejes: balaustres, patas y columnas | Laboratorio CAM",
   description:
     "Diseña piezas torneadas por segmentos y descarga el G-code para tu router CNC con eje rotativo (Mach3 / Mach4). Gratis y sin cuenta.",
 }

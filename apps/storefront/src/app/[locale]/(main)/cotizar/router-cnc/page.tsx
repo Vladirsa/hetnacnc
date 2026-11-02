@@ -6,7 +6,7 @@ import { FranjaAyuda } from "@/components/hetna/ServicioPagina"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Precio de corte en Router CNC | Cotiza en línea — HETNA CNC",
+    title: "Precio de corte en Router CNC | Cotiza en línea",
     description:
       "Calcula al instante el precio de tu corte en router CNC: MDF, acrílico, pino, cedro y más. Pon tus medidas y cantidad, y recibe el estimado por correo.",
   }

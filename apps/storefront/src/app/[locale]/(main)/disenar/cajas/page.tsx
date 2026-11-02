@@ -33,7 +33,7 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
     >
       <div className="relative h-[130px] overflow-hidden" style={{ background: color }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={rutaArchivo(locale, "miniatura", g.id)} alt="" loading="lazy" className="h-full w-full object-cover mix-blend-luminosity opacity-90 group-hover:mix-blend-normal group-hover:opacity-100" />
+        <img src={rutaArchivo(locale, "miniatura", g.id)} alt={`${g.nombre}: caja para corte láser y router CNC`} loading="lazy" className="h-full w-full object-cover mix-blend-luminosity opacity-90 group-hover:mix-blend-normal group-hover:opacity-100" />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3.5">
         <span className="text-[15px] font-bold text-[#141A26] group-hover:text-[#B34D07]">{g.nombre}</span>
