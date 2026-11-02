@@ -15,8 +15,9 @@ export type Herramienta = {
   href: string
   icono: string
   // "gratis" = sin cuenta ni pago; "cuenta" = gratis con cuenta;
-  // "creditos" = se paga con créditos; "plan" = con plan para talleres
-  acceso: "gratis" | "cuenta" | "creditos" | "plan"
+  // "creditos" = se paga con créditos; "plan" = con plan para talleres;
+  // "taller" = para talleres (gratis, con su cuenta de taller)
+  acceso: "gratis" | "cuenta" | "creditos" | "plan" | "taller"
 }
 
 export type GrupoHerramientas = {
@@ -86,12 +87,17 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
   },
   {
     id: "aprender",
-    titulo: "Aprender y preguntar",
-    pregunta: "Tengo una duda",
-    texto: "Guías paso a paso y una comunidad de gente que corta todos los días.",
+    titulo: "Academia CNC",
+    pregunta: "Quiero aprender",
+    texto: "Cursos en video impartidos por talleres de México, muchos gratis, más guías paso a paso y un foro para preguntar.",
     icono: "aprender",
+    // El menú "Herramientas CNC" lleva directo a la Academia
+    href: "/servicios/aprendizaje-cnc",
+    boton: "Ver los cursos",
+    puntos: ["Cursos gratis y de pago", "Router, láser, plasma, torno y Fusion 360", "A tu ritmo, en el celular o la computadora"],
     herramientas: [
-      { nombre: "Aprendizaje CNC", texto: "Guías para diseñar, programar y operar tu máquina.", href: "/servicios/aprendizaje-cnc", icono: "aprender", acceso: "gratis" },
+      { nombre: "Academia CNC", texto: "Cursos en video de router, láser, plasma, torno, Fusion 360 y G-code, con guías paso a paso.", href: "/servicios/aprendizaje-cnc", icono: "aprender", acceso: "gratis" },
+      { nombre: "Enseña en HETNA y gana", texto: "¿Tienes un taller? Publica tus cursos gratis, gana alumnos y clientes, y cobra cada venta en tu saldo.", href: "/servicios/aprendizaje-cnc#ensena", icono: "cotizador", acceso: "taller" },
       { nombre: "Foro CNC México", texto: "Pregunta y comparte con otros talleres y operadores.", href: "/foro-cnc", icono: "ia", acceso: "gratis" },
     ],
   },
@@ -102,6 +108,7 @@ export const ACCESO: Record<Herramienta["acceso"], string> = {
   cuenta: "Gratis (más con tu cuenta)",
   creditos: "Con créditos",
   plan: "Plan para talleres",
+  taller: "Para talleres",
 }
 
 // Servicios en los que lo hacemos nosotros (diseño a la medida)
