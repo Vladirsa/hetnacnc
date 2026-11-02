@@ -18,15 +18,15 @@ import { CotizadorEmbebido } from "./CotizadorEmbebido"
 const PASOS = [
   ["Registra tu taller", "Nombre, WhatsApp y listo. Sin tarjeta, con 14 días de prueba con todo abierto."],
   ["Cotiza desde el celular", "Sube el archivo o escribe medidas; el sistema calcula con tus costos y tu margen."],
-  ["Manda y cobra", "PDF por WhatsApp, tu cliente acepta y paga con Mercado Pago o PayPal."],
+  ["Manda y da seguimiento", "PDF con tu logo por WhatsApp y alertas para darle seguimiento a cada cliente."],
   ["Controla el taller", "Avances, clientes, gastos, inventario, equipo y reportes: todo en un lugar."],
 ]
 
 const VINCULOS = [
-  { t: "Pagos protegidos", d: "Tus clientes pagan en línea con Mercado Pago (tarjeta, OXXO, SPEI, MSI) o PayPal; el dinero se libera al entregar.", i: "💳" },
+  { t: "Precio desde el archivo", d: "Sube el DXF, SVG, STL u OBJ: la app mide la pieza, el largo de corte y las perforaciones, y calcula con tus costos.", i: "📐" },
   { t: "Envíos HETNA", d: "Genera guías con descuento y envío protegido desde la app, con la paquetería que más te convenga.", i: "📦" },
   { t: "Trabajos del marketplace", d: "Recibe solicitudes de fabricación de clientes de hetnacnc.com y licitaciones en tu zona.", i: "🏭" },
-  { t: "Tienda y consumibles", d: "Compra fresas, tubos, boquillas y material sin salir de la app, con precio de taller.", i: "🛒" },
+  { t: "Tienda y consumibles", d: "Compra fresas, tubos, boquillas y material de los vendedores de hetnacnc.com.", i: "🛒" },
   { t: "Herramientas CNC", d: "Calculadora CNC, Laboratorio CAM y los generadores de diseño, dentro de la misma cuenta.", i: "🛠️" },
   { t: "Foro y comunidad", d: "Pregunta y comparte con otros talleres de México desde la app.", i: "💬" },
 ]
@@ -34,7 +34,7 @@ const VINCULOS = [
 const SIEMPRE_GRATIS = ["Cotizaciones (5 al mes)", "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
 
 const PREGUNTAS = [
-  ["¿Es la misma cuenta que en hetnacnc.com?", "La app tiene su propia cuenta de taller (correo y contraseña) y se conecta con la plataforma para pagos, envíos, tienda y trabajos. Si ya vendes en hetnacnc.com, registra tu taller con el mismo correo para que te lo vinculemos."],
+  ["¿Es la misma cuenta que en hetnacnc.com?", "Sí. Entras a la app con tu cuenta de hetnacnc.com, sin otra contraseña. Si todavía no tienes, la creas al registrarte y ahí mismo se crea tu taller con 14 días de prueba."],
   ["¿Por qué no está en Play Store ni App Store?", "Porque no hace falta: se instala desde el navegador en un toque, se actualiza sola y no depende de las tiendas. Así llega a todos los celulares igual."],
   ["¿Funciona sin internet?", "Necesita conexión para guardar y sincronizar, pero puedes consultar cotizaciones y clientes que ya cargaste."],
   ["¿Puedo cancelar cuando quiera?", "Sí. Se cobra cada mes y conservas el plan hasta el fin del mes pagado. El plan Gratis no vence."],
@@ -104,7 +104,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                   </div>
                 ))}
               </div>
-              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5">Aceptar y pagar anticipo</span>
+              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5">Enviada por WhatsApp · PDF con tu logo</span>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         <section className="flex flex-col gap-4">
           <div>
             <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Todo conectado con hetnacnc.com</h2>
-            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No es solo un cotizador: es la puerta de tu taller a la plataforma. Lo que cotizas en la app se cobra, se envía y se vende con las herramientas de HETNA.</p>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No es solo un cotizador: es la puerta de tu taller a la plataforma. Lo que cotizas en la app se envía, se fabrica y se vende con las herramientas de HETNA.</p>
           </div>
           <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {VINCULOS.map((v) => (

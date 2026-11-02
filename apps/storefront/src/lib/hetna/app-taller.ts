@@ -30,20 +30,20 @@ export const PLANES_APP: PlanApp[] = [
     nota: "al mes",
     para: "Para el taller que cotiza todos los días.",
     destacado: true,
-    puntos: ["Cotizaciones ilimitadas", "Cotización profesional en PDF con tu logo, sin marca de agua", "Sube DXF, SVG, STL u OBJ: plano con medidas en la cotización", "Simulador de costos con 3 precios", "Costos del taller: fijos, máquinas y mano de obra", "Gastos y compras", "5 propuestas al mes a solicitudes de clientes", "2 usuarios"],
+    puntos: ["Cotizaciones ilimitadas", "Cotización profesional en PDF con tu logo, sin marca de agua", "Sube DXF, SVG, STL u OBJ: medidas, plano y precio desde el archivo", "Simulador de costos con 3 precios", "Costos del taller: fijos, máquinas y mano de obra", "Gastos y compras", "5 propuestas al mes a solicitudes de clientes", "2 usuarios"],
   },
   {
     nombre: "Pro",
     precio: "$599",
     nota: "al mes",
     para: "Para crecer con control y datos.",
-    puntos: ["Todo lo del plan Taller", "Inventario", "Marketing: cupones y plantillas de WhatsApp", "Reportes en Excel", "Dashboard de utilidad, gastos y conversión", "Propuestas sin límite a solicitudes de clientes", "5 usuarios"],
+    puntos: ["Todo lo del plan Taller", "Inventario", "Marketing: segmentos de clientes y plantillas de WhatsApp", "Reportes en Excel", "Dashboard de utilidad, gastos y conversión", "Propuestas sin límite a solicitudes de clientes", "5 usuarios"],
   },
   {
     nombre: "Industrial",
     precio: "$1,199",
     nota: "al mes",
     para: "Para empresas con varias máquinas y sistemas.",
-    puntos: ["Todo lo del plan Pro", "Facturación electrónica (CFDI)", "Llave de API para conectar tu sistema", "Usuarios ilimitados"],
+    puntos: ["Todo lo del plan Pro", "Factura electrónica CFDI (próximamente)", "Llave de API para conectar tu sistema (próximamente)", "Usuarios ilimitados"],
   },
 ]
