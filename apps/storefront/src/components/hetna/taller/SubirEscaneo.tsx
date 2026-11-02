@@ -76,7 +76,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
       if (loteActual) form.append("lote", loteActual)
 
       try {
-        const res = await fetch("/api/taller/escaneo-foto", { method: "POST", body: form })
+        const res = await fetch("/api/taller/foto-escaneo", { method: "POST", body: form })
         const cuerpo = await res.json().catch(() => ({}))
         if (!res.ok || !cuerpo.ok) {
           setFotos((p) =>

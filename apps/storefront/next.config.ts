@@ -157,28 +157,28 @@ const nextConfig: NextConfig = {
       // /herramientas-cnc; el servicio de maquinado ahora vive en Fabricación.
       // Las herramientas de programación (/cam/subir, /cam/lab, /cam/torno) no
       // cambian de dirección.
-      { source: "/:locale/cam", destination: "/:locale/herramientas-cnc", permanent: true },
+      { source: "/:locale([a-z]{2})/cam", destination: "/:locale/herramientas-cnc", permanent: true },
       { source: "/cam", destination: "/mx/herramientas-cnc", permanent: true },
       // Diseñar y escanear: los generadores y el escaneo 3D viven juntos en
       // /disenar (un solo espacio de trabajo con el menú de herramientas).
-      { source: "/:locale/servicios/generador-2d-3d", destination: "/:locale/disenar", permanent: true },
+      { source: "/:locale([a-z]{2})/servicios/generador-2d-3d", destination: "/:locale/disenar", permanent: true },
       {
         source:
           "/:locale/servicios/generador-2d-3d/:herramienta(caja-con-juntas|letreros|vectorizador|despiece-muebles|plantillas-empaque|grabado-foto|litofania-relieve|patrones-radiales|convertidor)",
         destination: "/:locale/disenar/:herramienta",
         permanent: true,
       },
-      { source: "/:locale/taller/escaneos/nuevo", destination: "/:locale/disenar/escanear-pieza", permanent: true },
+      { source: "/:locale([a-z]{2})/taller/escaneos/nuevo", destination: "/:locale/disenar/escanear-pieza", permanent: true },
       // /taller (el cotizador web viejo) se quitó: el cotizador es la app
       // (/cotizador/) y los escaneos pasaron a "Mi cuenta". Direcciones
       // viejas en correos, favoritos y buscadores siguen funcionando.
-      { source: "/:locale/taller/escaneos", destination: "/:locale/user/escaneos", permanent: true },
-      { source: "/:locale/taller/escaneos/:id", destination: "/:locale/user/escaneos/:id", permanent: true },
-      { source: "/:locale/taller", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
-      { source: "/:locale/taller/:ruta*", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
-      { source: "/:locale/servicios/laboratorio-cam/:resto*", destination: "/:locale/fabricacion", permanent: true },
+      { source: "/:locale([a-z]{2})/taller/escaneos", destination: "/:locale/user/escaneos", permanent: true },
+      { source: "/:locale([a-z]{2})/taller/escaneos/:id", destination: "/:locale/user/escaneos/:id", permanent: true },
+      { source: "/:locale([a-z]{2})/taller", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
+      { source: "/:locale([a-z]{2})/taller/:ruta*", destination: "/:locale/servicios/cotizador-cnc", permanent: true },
+      { source: "/:locale([a-z]{2})/servicios/laboratorio-cam/:resto*", destination: "/:locale/fabricacion", permanent: true },
       {
-        source: "/:locale/producto/:handle",
+        source: "/:locale([a-z]{2})/producto/:handle",
         destination: "/:locale/products/:handle",
         permanent: true,
       },
