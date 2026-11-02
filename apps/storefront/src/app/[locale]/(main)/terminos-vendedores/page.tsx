@@ -13,6 +13,7 @@ const VERSION = "1.1"
 const VIGENCIA = "1 de noviembre de 2026"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/terminos-vendedores" },
   title: "Términos para vendedores",
   description:
     "Términos y condiciones para vendedores y talleres de HETNA CNC: publicaciones, comisiones, pagos, impuestos, envíos, devoluciones, datos personales y baja.",
