@@ -2,7 +2,8 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 
 import { COTIZADOR_MODULE } from "../../../modules/cotizador"
 import CotizadorModuleService from "../../../modules/cotizador/service"
-import { resumenPlan, type PlanEfectivo } from "../../../lib/cotizador-plan"
+import { type PlanEfectivo } from "../../../lib/cotizador-plan"
+import { resumenPlanUnificado } from "../../../lib/plan-unificado"
 import { esCuentaDeLaCasa, PLAN_DE_LA_CASA } from "../../../lib/cuentas-casa"
 
 export type EvaluarCobroStepInput = {
@@ -49,7 +50,8 @@ export const evaluarCobroCotizacionStep = createStep(
       })
     }
 
-    const resumen = resumenPlan(perfil)
+    // El plan de la app (si la cuenta está vinculada) manda: lib/plan-unificado.ts
+    const resumen = await resumenPlanUnificado(container as any, input.customer_id, perfil)
     if (await esCuentaDeLaCasa(container as any, input.customer_id)) {
       return new StepResponse<EvaluarCobroStepOutput>({
         cobrar: false,

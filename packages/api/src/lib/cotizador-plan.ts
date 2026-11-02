@@ -3,10 +3,11 @@
 // decida el API y no cada cliente (web y celular tienen que coincidir).
 //
 // Modelo de cobro: el plan da un cupo mensual y los créditos sirven para
-// pasarse de él. Hoy el taller gratis que llega a 10 queda bloqueado; con
+// pasarse de él. Hoy el taller gratis que llega a 5 queda bloqueado; con
 // créditos puede seguir cotizando sin tener que subir de plan.
 
-export const LIMITE_GRATIS = 10
+// Igual que el plan Gratis de la app (lib/services/planes.dart): 5 al mes.
+export const LIMITE_GRATIS = 5
 
 const PLANES_PAGO = ["taller", "pro", "industrial"]
 
