@@ -303,6 +303,45 @@ function FormPropuesta({ sol, alGuardar }) {
   )
 }
 
+function Cupo({ cupo }) {
+  const sinLimite = cupo.limite === null || cupo.limite === undefined
+  const agotado = !sinLimite && cupo.quedan === 0
+  const pocas = !sinLimite && !agotado && cupo.quedan <= 1
+  const color = agotado ? "#B3261E" : pocas ? "#B54708" : "#1E7B3A"
+  const fondo = agotado ? "#FEF3F2" : pocas ? "#FFFAEB" : "#F0F7F1"
+  return (
+    <div style={{ ...S.card, background: fondo, borderColor: color + "55", marginBottom: 14, padding: "12px 14px" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 260px" }}>
+          <div style={{ fontWeight: 700, color }}>
+            {sinLimite
+              ? `Plan ${cupo.nombre}: propuestas sin límite`
+              : agotado
+                ? `Plan ${cupo.nombre}: ya usaste tus ${cupo.limite} propuesta${cupo.limite === 1 ? "" : "s"} de este mes`
+                : `Plan ${cupo.nombre}: te ${cupo.quedan === 1 ? "queda" : "quedan"} ${cupo.quedan} de ${cupo.limite} propuesta${cupo.limite === 1 ? "" : "s"} este mes`}
+          </div>
+          <div style={{ fontSize: 13, color: "#6B675C", marginTop: 2 }}>
+            {sinLimite
+              ? "Cotiza todas las solicitudes que quieras."
+              : "El cupo se renueva el día 1. Corregir una propuesta ya enviada y las solicitudes que te mandan directo a ti no cuentan."}
+          </div>
+          {!sinLimite && (
+            <div style={{ height: 6, background: "#E7E4DC", borderRadius: 3, marginTop: 8, overflow: "hidden", maxWidth: 320 }}>
+              <div style={{ width: `${Math.min(100, (cupo.usadas / cupo.limite) * 100)}%`, height: "100%", background: color }} />
+            </div>
+          )}
+        </div>
+        {!sinLimite && (
+          <div style={{ fontSize: 13, color: "#3D3A33", flex: "1 1 220px" }}>
+            {cupo.plan === "gratis" ? "Con el plan Taller mandas 5 al mes y con Pro, sin límite." : "Con el plan Pro mandas propuestas sin límite."}{" "}
+            Cámbialo en la app HETNA CNC para talleres, en <b>Mi plan</b>.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function SolicitudesPage() {
   const [datos, setDatos] = useState(null)
   const [error, setError] = useState("")
@@ -311,12 +350,17 @@ export default function SolicitudesPage() {
   const [noPuedo, setNoPuedo] = useState(null)
   const [fServicio, setFServicio] = useState("")
   const [fEstado, setFEstado] = useState("")
+  // Cupo del mes según el plan (packages/api/src/lib/licitacion-plan.ts). null = sin dato.
+  const [cupo, setCupo] = useState(null)
 
   const cargar = () =>
     // ocultas=1: también las que el taller marcó como "no puedo"; se separan aquí.
     fetch("/vendor/hetna-solicitudes?ocultas=1", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((d) => setDatos(d.solicitudes || []))
+      .then((d) => {
+        setDatos(d.solicitudes || [])
+        setCupo(d.cupo || null)
+      })
       .catch((e) => setError("No se pudieron cargar las solicitudes (" + e + ")."))
 
   useEffect(() => {
@@ -351,6 +395,8 @@ export default function SolicitudesPage() {
       <p style={S.sub}>
         Clientes que buscan taller. Manda tu precio y tiempo; el cliente compara y elige. Los talleres con membresía aparecen primero.
       </p>
+
+      {cupo && <Cupo cupo={cupo} />}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}>Por cotizar ({nuevas.length})</button>
