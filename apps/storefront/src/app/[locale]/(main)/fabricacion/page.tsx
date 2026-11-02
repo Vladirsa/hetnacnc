@@ -13,9 +13,10 @@ import { trabajosAbiertos } from "@/lib/trabajos/datos"
 export const revalidate = 300
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://hetnacnc.com/mx/fabricacion" },
   title: "Fabricación CNC en México, de prototipo a producción",
   description:
-    "Prototipos, piezas únicas y producción por volumen con talleres CNC especializados en México. Corte, grabado, maquinado, impresión 3D y diseño. Sube tu archivo y recibe cotizaciones. Envíos a todo el país.",
+    "Prototipos, piezas únicas y producción con talleres CNC de México: corte, grabado, maquinado e impresión 3D. Sube tu archivo y recibe cotizaciones.",
 }
 
 // La página para quien quiere que le FABRIQUEN algo. Ordenada como piensa el
