@@ -4,18 +4,31 @@ import useFilters from "@/hooks/useFilters"
 import { CloseIcon } from "@/icons"
 
 const filtersLabels = {
-  category: "Category",
+  category: "Categoría",
   brand: "Marca",
-  min_price: "Min Price",
-  max_price: "Max Price",
+  min_price: "Precio mínimo",
+  max_price: "Precio máximo",
+  disponible: "Existencia",
   color: "Color",
   size: "Medida",
-  query: "Search",
+  query: "Búsqueda",
   condition: "Estado",
-  rating: "Rating",
+  rating: "Calificación",
 }
 
-export const ActiveFilterElement = ({ filter }: { filter: string[] }) => {
+// "tipo-de-control" -> "Tipo de control" cuando no hay nombre del atributo
+export const nombreLegible = (clave: string) => {
+  const t = clave.replace(/[-_]+/g, " ").trim()
+  return t.charAt(0).toUpperCase() + t.slice(1)
+}
+
+export const ActiveFilterElement = ({
+  filter,
+  nombres,
+}: {
+  filter: string[]
+  nombres?: Record<string, string>
+}) => {
   const { updateFilters } = useFilters(filter[0])
 
   const activeFilters = filter[1].split(",")
@@ -27,15 +40,16 @@ export const ActiveFilterElement = ({ filter }: { filter: string[] }) => {
   return (
     <div className="flex gap-2 items-center mb-4">
       <span className="label-md hidden md:inline-block">
-        {filtersLabels[filter[0] as keyof typeof filtersLabels] ??
-          filter[0].charAt(0).toUpperCase() + filter[0].slice(1)}
+        {nombres?.[filter[0]] ??
+          filtersLabels[filter[0] as keyof typeof filtersLabels] ??
+          nombreLegible(filter[0])}
         :
       </span>
       {activeFilters.map((element) => {
         const Element = () => {
           return (
             <span className="flex gap-2 items-center cursor-default whitespace-nowrap">
-              {element}{" "}
+              {filter[0] === "disponible" ? "Sólo con existencia" : element}{" "}
               <span onClick={() => removeFilterHandler(element)}>
                 <CloseIcon size={16} className="cursor-pointer" />
               </span>
