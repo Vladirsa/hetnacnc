@@ -129,7 +129,7 @@ const NuevoCursoForm = () => {
             Curso gratis (ganas alumnos y clientes para tu taller)
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle">
-            Si lo cobras, recibes el 90% de cada venta en "Mi saldo" al momento.
+            Si lo cobras, cada venta llega a "Mi saldo" al momento, menos la comisión de HETNA (ver Términos para vendedores).
           </Text>
         </div>
       </div>
