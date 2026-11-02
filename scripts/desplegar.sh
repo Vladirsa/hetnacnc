@@ -119,6 +119,15 @@ paso "Instalando dependencias"
 bun install
 
 paso "Construyendo (si esto falla, el sitio NO se toca)"
+# La tienda se construye en la carpeta que NO está sirviendo (.next-a o
+# .next-b) y se cambia de carpeta al reiniciar. Antes se construía encima de
+# .next mientras el sitio la usaba: se caían páginas durante el build y a veces
+# el build mismo tronaba con "ENOENT pages-manifest.json".
+DIST_ACTUAL="$(cat apps/storefront/.dist-actual 2>/dev/null || echo .next)"
+if [ "$DIST_ACTUAL" = ".next-a" ]; then DIST_NUEVA=".next-b"; else DIST_NUEVA=".next-a"; fi
+rm -rf "apps/storefront/$DIST_NUEVA"
+export NEXT_DIST_DIR="$DIST_NUEVA"
+echo "   tienda: sirviendo desde $DIST_ACTUAL, construyendo en $DIST_NUEVA"
 bun run build
 
 # --- 4. Base de datos ---
@@ -135,7 +144,11 @@ node scripts/migrar-foro.mjs --suave
 # --- 5. Reiniciar, ya con todo verificado ---
 
 paso "Reiniciando los procesos"
+# NEXT_DIST_DIR va en el entorno: hetna-web arranca ya desde la carpeta nueva
 pm2 restart hetna-api hetna-web --update-env
+echo "$DIST_NUEVA" > apps/storefront/.dist-actual
+# Que un reinicio del servidor arranque con la misma carpeta
+pm2 save >/dev/null 2>&1 || true
 
 # --- 6. Comprobar que de verdad quedó arriba ---
 
@@ -222,7 +235,10 @@ if [ "$fallas" -gt 0 ]; then
   echo "  estuviera arrancando. Comprueba a mano antes de revertir:"
   echo "    curl -s -o /dev/null -w '%{http_code}\n' $SITIO/"
   echo "  Volver (sólo si hay un error de verdad):"
-  echo "    git reset --hard $antes && bun run build && pm2 restart hetna-api hetna-web"
+  echo "  La tienda anterior sigue intacta en $DIST_ACTUAL. Volver a ella al instante:"
+  echo "    cd $RAIZ && echo $DIST_ACTUAL > apps/storefront/.dist-actual && NEXT_DIST_DIR=$DIST_ACTUAL pm2 restart hetna-web --update-env && pm2 save"
+  echo "  Volver todo (código y API):"
+  echo "    git reset --hard $antes && bash scripts/desplegar.sh"
   exit 1
 fi
 
