@@ -12,6 +12,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { getSignedDownloadUrl } from "../../../lib/backblaze"
 import { VENDOR_URL, boton, esClaveDeTaller, esc, fila, marco, nuevoId } from "../../../lib/licitacion"
 import { sendEmail } from "../../../lib/resend"
+import { ipCliente } from "../../../lib/ip-cliente"
 
 export const T_PROSPECTO = "hetna_taller_prospecto"
 
@@ -43,7 +44,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
   if (b.sitio_web) return res.status(200).json({ ok: true }) // trampa para bots
 
-  const ip = String(req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim()
+  const ip = ipCliente(req)
   const ahora = Date.now()
   const previas = (visitas.get(ip) || []).filter((t) => ahora - t < 3600_000)
   if (previas.length >= POR_HORA) {

@@ -6,6 +6,7 @@
 // leerlo en memoria, a POST /store/solicitud-archivos, que lo guarda en el
 // bucket privado y devuelve la clave.
 import { NextResponse } from "next/server"
+import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 const MAX_BYTES = 26 * 1024 * 1024
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
         ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length")! } : {}),
         "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
         // El backend limita subidas por IP: que vea la del cliente, no la nuestra.
-        "x-forwarded-for": req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "",
+        "x-forwarded-for": ipDe(req.headers),
       },
       body: req.body,
       duplex: "half",

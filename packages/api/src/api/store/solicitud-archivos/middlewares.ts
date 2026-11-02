@@ -7,6 +7,7 @@ import type {
 
 import { leerMultipart } from "../../cam-multipart"
 import { MAX_MB_ARCHIVO_SOLICITUD } from "../../../lib/licitacion"
+import { ipCliente } from "../../../lib/ip-cliente"
 
 // La subida es pública (el cliente todavía no tiene cuenta ni folio), así que
 // se limita por IP ANTES de leer el cuerpo: así nadie llena el bucket ni
@@ -15,7 +16,7 @@ const POR_HORA = 30
 const visitas = new Map<string, number[]>()
 
 function limitarPorIp(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) {
-  const ip = String(req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim()
+  const ip = ipCliente(req)
   const ahora = Date.now()
   const lista = (visitas.get(ip) || []).filter((t) => ahora - t < 3600_000)
   if (lista.length >= POR_HORA) {

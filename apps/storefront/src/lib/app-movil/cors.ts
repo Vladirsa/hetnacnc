@@ -4,6 +4,7 @@
 // (mismo origen). Estos encabezados sirven para probarla desde localhost o desde
 // un subdominio como app.hetnacnc.com. Orígenes extra: APP_CORS="https://a,https://b".
 import { NextResponse } from "next/server"
+import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 const BASE = ["https://hetnacnc.com", "https://www.hetnacnc.com", "http://localhost:8080", "http://localhost:5000"]
 const permitidos = () => [...BASE, ...(process.env.APP_CORS || "").split(",").map((x) => x.trim()).filter(Boolean)]
@@ -28,7 +29,7 @@ export const json = (req: Request, body: unknown, status = 200, extra: Record<st
 // Límite sencillo por IP (en memoria; se reinicia con el proceso, suficiente para frenar abusos).
 const visitas = new Map<string, number[]>()
 export function excedido(req: Request, clave: string, porMinuto: number) {
-  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "local"
+  const ip = ipDe(req.headers) || "local"
   const k = `${clave}:${ip}`
   const ahora = Date.now()
   const lista = (visitas.get(k) || []).filter((t) => ahora - t < 60_000)

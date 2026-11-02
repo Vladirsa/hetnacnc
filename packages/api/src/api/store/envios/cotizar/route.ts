@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { SkydropxClient } from "../../../../modules/skydropx/client"
 import { EMPAQUES, T_ENVIO_COT, asegurarTablasEnvio, buscarCP, hayCatalogo } from "../../../../lib/envios"
+import { ipCliente } from "../../../../lib/ip-cliente"
 
 // Cotizador público de Envíos HETNA: todas las paqueterías disponibles con el margen de HETNA.
 // La cotización se guarda para que, al solicitar la guía, el precio salga de aquí y no del navegador.
@@ -34,7 +35,7 @@ const direccion = (cp: string, colonia: string, quien: string) => {
 export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger") as any
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
-  const ip = String(req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim()
+  const ip = ipCliente(req)
   const ahora = Date.now()
   const lista = (visitas.get(ip) || []).filter((t) => ahora - t < 60_000)
   if (lista.length >= LIMITE) return res.status(429).json({ message: "Demasiadas cotizaciones. Espera un minuto." })

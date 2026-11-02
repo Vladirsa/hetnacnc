@@ -106,25 +106,72 @@ export async function crearCodigo(knex: any, customerId: string): Promise<{ codi
   throw new Error("No se pudo generar el código")
 }
 
-// Intentos fallidos por taller, para que nadie pruebe códigos a lo loco
-const fallos = new Map<string, { n: number; desde: number }>()
-const MAX_FALLOS = 8
+// Intentos fallidos, guardados en la base (sobreviven a los reinicios). Se
+// cuentan por taller, por IP y en total: crear muchas cuentas de taller no
+// sirve para probar códigos al azar, porque el límite global los frena a todos.
+// Con 100 fallos por cada 15 minutos y códigos que viven 15 minutos, la
+// probabilidad de atinarle a un código vigente es a lo más 1 en 10 000 por
+// cada 15 minutos (100 de un millón de combinaciones).
+export const T_FALLOS = "hetna_cotizador_fallos"
+const LIMITES = {
+  taller: { max: 8, ventanaMs: 60 * 60_000 },
+  ip: { max: 20, ventanaMs: 60 * 60_000 },
+  global: { max: 100, ventanaMs: 15 * 60_000 },
+}
+type Clase = keyof typeof LIMITES
+
+let fallosLista = false
+async function asegurarFallos(knex: any) {
+  if (fallosLista) return
+  if (!(await knex.schema.hasTable(T_FALLOS))) {
+    await knex.schema.createTable(T_FALLOS, (t: any) => {
+      t.text("clave").primary()
+      t.integer("n").notNullable().defaultTo(0)
+      t.timestamp("desde", { useTz: true }).notNullable()
+    })
+  }
+  fallosLista = true
+}
+
+async function bloqueado(knex: any, claves: [Clase, string][]) {
+  const filas = await knex(T_FALLOS).whereIn("clave", claves.map(([c, v]) => `${c}:${v}`))
+  const ahora = Date.now()
+  return claves.some(([c, v]) => {
+    const f = filas.find((x: any) => x.clave === `${c}:${v}`)
+    return f && ahora - new Date(f.desde).getTime() < LIMITES[c].ventanaMs && f.n >= LIMITES[c].max
+  })
+}
+
+async function anotarFallo(knex: any, claves: [Clase, string][]) {
+  const ahora = new Date()
+  for (const [c, v] of claves) {
+    const limite = new Date(ahora.getTime() - LIMITES[c].ventanaMs)
+    // Si la ventana ya pasó, se reinicia en 1; si no, suma 1 (en una sola consulta)
+    await knex.raw(
+      `insert into ${T_FALLOS} (clave, n, desde) values (?, 1, ?)
+       on conflict (clave) do update set
+         n = case when ${T_FALLOS}.desde < ? then 1 else ${T_FALLOS}.n + 1 end,
+         desde = case when ${T_FALLOS}.desde < ? then excluded.desde else ${T_FALLOS}.desde end`,
+      [`${c}:${v}`, ahora, limite, limite]
+    )
+  }
+}
 
 /** La app manda el código (con la sesión del administrador del taller). */
-export async function vincularDesdeApp(knex: any, token: string | undefined, codigoCrudo: string) {
+export async function vincularDesdeApp(knex: any, token: string | undefined, codigoCrudo: string, ip = "desconocida") {
   if (!supabaseListo()) throw new ErrorSuscripcion("La vinculación todavía no está activa.", 503)
   const { correo, negocio } = await adminDesdeToken(token)
   await asegurarTablas(knex)
+  await asegurarFallos(knex)
 
-  const f = fallos.get(negocio.id)
-  if (f && Date.now() - f.desde < 3_600_000 && f.n >= MAX_FALLOS)
-    throw new ErrorSuscripcion("Demasiados intentos. Espera una hora y pide un código nuevo en hetnacnc.com.", 429)
+  const claves: [Clase, string][] = [["taller", negocio.id], ["ip", ip], ["global", "todos"]]
+  if (await bloqueado(knex, claves))
+    throw new ErrorSuscripcion("Demasiados intentos. Espera un rato y pide un código nuevo en hetnacnc.com.", 429)
 
   const codigo = String(codigoCrudo || "").replace(/\D/g, "")
   const fila = codigo.length === 6 ? await knex(T_CODIGO).where({ codigo }).first() : null
   if (!fila || new Date(fila.expira).getTime() < Date.now()) {
-    const actual = f && Date.now() - f.desde < 3_600_000 ? f : { n: 0, desde: Date.now() }
-    fallos.set(negocio.id, { ...actual, n: actual.n + 1 })
+    await anotarFallo(knex, claves)
     throw new ErrorSuscripcion("Ese código no existe o ya venció. Pide uno nuevo en hetnacnc.com → Mi cuenta.")
   }
 
@@ -133,7 +180,7 @@ export async function vincularDesdeApp(knex: any, token: string | undefined, cod
     .insert({ customer_id: fila.customer_id, negocio_id: negocio.id, correo_app: correo.toLowerCase(), created_at: new Date() })
     .onConflict("customer_id")
     .merge()
-  fallos.delete(negocio.id)
+  await knex(T_FALLOS).where({ clave: `taller:${negocio.id}` }).del()
   return { ok: true, taller: negocio.nombre || "Tu taller" }
 }
 

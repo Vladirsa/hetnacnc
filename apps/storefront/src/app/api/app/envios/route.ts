@@ -5,6 +5,7 @@
 // Pasa por aquí para que la app no necesite la llave pública de Medusa ni la
 // dirección interna del backend.
 import { excedido, json, opciones } from "@/lib/app-movil/cors"
+import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 const BACKEND = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 const PK = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     return json(req, { message: "Datos inválidos." }, 400)
   }
   try {
-    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
+    const ip = ipDe(req.headers)
     const { status, body } = await backend("/store/envios/cotizar", { method: "POST", body: JSON.stringify(datos) }, ip)
     return json(req, body, status)
   } catch {

@@ -7,6 +7,7 @@ import { SITIO } from "@/lib/foro/tipos"
 import { crearPedido, guardarPreferencia, lugaresLibres } from "@/lib/publicidad/pedidos"
 import { calcularMonto, DIAS_VALIDOS } from "@/lib/publicidad/precios"
 import { ESPACIOS, esEspacio } from "@/lib/publicidad/tipos"
+import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 export const dynamic = "force-dynamic"
 
@@ -34,7 +35,7 @@ const texto = (v: FormDataEntryValue | null, max: number) => (typeof v === "stri
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-hetna-pub") !== "1") return NextResponse.json({ error: "Petición no permitida." }, { status: 403 })
-  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "desconocida"
+  const ip = ipDe(req.headers) || "desconocida"
   if (demasiados(ip)) return NextResponse.json({ error: "Demasiados intentos. Prueba de nuevo en una hora." }, { status: 429 })
 
   const token = process.env.MP_ACCESS_TOKEN

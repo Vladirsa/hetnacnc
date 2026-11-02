@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { vincularDesdeApp } from "../../../../lib/cotizador-vinculo"
 import { responder, tokenDe } from "../respuesta"
+import { ipCliente } from "../../../../lib/ip-cliente"
 
 // POST https://hetnacnc.com/api/cotizador-suscripcion/vincular  { codigo }
 // La app (con la sesión del administrador del taller) manda el código de 6
@@ -11,5 +12,5 @@ export const POST = (req: MedusaRequest, res: MedusaResponse) =>
   responder(req, res, () => {
     const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
     const codigo = String(((req.body || {}) as { codigo?: string }).codigo || "")
-    return vincularDesdeApp(knex, tokenDe(req), codigo)
+    return vincularDesdeApp(knex, tokenDe(req), codigo, ipCliente(req))
   })

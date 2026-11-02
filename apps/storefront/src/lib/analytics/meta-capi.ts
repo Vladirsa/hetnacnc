@@ -19,7 +19,9 @@
 import { createHash } from "crypto"
 import { cookies, headers } from "next/headers"
 
+import { retrieveCustomer } from "@/lib/data/customer"
 import { retrieveOrder } from "@/lib/data/orders"
+import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 const sha = (v: string) => createHash("sha256").update(v).digest("hex")
 const norm = (v: unknown) => String(v ?? "").trim().toLowerCase()
@@ -32,18 +34,34 @@ const telefono = (v: unknown) => {
   return sha(d.length === 10 ? `52${d}` : d)
 }
 
+// Esta acción la puede llamar cualquiera desde el navegador con cualquier id.
+// Para que nadie mande a Meta compras ajenas (con los datos cifrados de otra
+// persona y su propia IP), sólo se reporta un pedido recién hecho, una vez por
+// proceso, y nunca uno de otra cuenta si hay sesión.
+const RECIENTE_MS = 60 * 60 * 1000
+const yaReportados = new Set<string>()
+
 export async function reportarCompraMeta(orderId: string): Promise<void> {
   const pixel = process.env.NEXT_PUBLIC_META_PIXEL_ID
   const token = process.env.META_CAPI_TOKEN
   if (!pixel || !token || !/^order_[A-Za-z0-9]+$/.test(orderId)) return
 
   try {
+    if (yaReportados.has(orderId)) return
     const order = (await retrieveOrder(orderId)) as any
     if (!order?.id) return
+    const creado = new Date(order.created_at || 0).getTime()
+    if (!creado || Date.now() - creado > RECIENTE_MS) return
+    if (order.customer_id) {
+      const cliente = await retrieveCustomer().catch(() => null)
+      if (cliente?.id && cliente.id !== order.customer_id) return
+    }
+    yaReportados.add(orderId)
+    if (yaReportados.size > 5000) yaReportados.clear()
     const dir = order.shipping_address || order.billing_address || {}
     const cabeceras = await headers()
     const galletas = await cookies()
-    const ip = (cabeceras.get("x-forwarded-for") || "").split(",")[0].trim() || undefined
+    const ip = ipDe(cabeceras) || undefined
     const items = (order.items || []) as any[]
 
     const evento = {
