@@ -282,6 +282,247 @@ export const CONTENIDO_CATEGORIAS: Record<string, ContenidoCategoria> = {
       { texto: "Corte láser: máquinas y guía", href: "/categories/laser-cnc" },
     ],
   },
+  "impresoras-3d": {
+    titulo_seo: "Impresoras 3D en México: FDM y resina, cómo elegir | HETNA CNC",
+    descripcion_seo:
+      "Impresoras 3D de filamento (FDM) y de resina. Qué tecnología elegir, volumen de impresión, materiales y talleres en México que imprimen tu pieza.",
+    intro:
+      "Impresoras 3D de filamento y de resina para prototipos, refacciones y piezas finales. Si sólo necesitas unas piezas, un taller de HETNA te las imprime.",
+    secciones: [
+      {
+        titulo: "Filamento (FDM) o resina",
+        lista: [
+          "FDM (filamento): la más común. Piezas resistentes y baratas en PLA, PETG, ABS, TPU o nylon. Se notan las capas.",
+          "Resina (SLA/MSLA): detalle muy fino y superficie lisa; ideal para joyería, figuras, odontología y moldes. Las piezas son más frágiles y hay que lavarlas y curarlas.",
+        ],
+      },
+      {
+        titulo: "Qué revisar antes de comprar",
+        lista: [
+          "Volumen de impresión: el tamaño máximo de pieza. Para refacciones, 22 × 22 × 25 cm alcanza en la mayoría de los casos.",
+          "Nivelación automática de cama y sensor de filamento: ahorran muchas impresiones fallidas.",
+          "Extrusor directo si vas a imprimir materiales flexibles como TPU.",
+          "Cámara cerrada si vas a imprimir ABS o nylon, que se deforman con las corrientes de aire.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        pregunta: "¿Qué filamento uso para piezas que aguanten?",
+        respuesta: "PETG para uso general y resistencia al agua; ABS o ASA si van al sol o al calor; nylon o filamentos con fibra de carbono para piezas mecánicas.",
+      },
+      {
+        pregunta: "¿Qué archivo necesito para imprimir en 3D?",
+        respuesta: "Un STL, 3MF u OBJ. El programa laminador (Cura, PrusaSlicer, OrcaSlicer) lo convierte en G-code para tu impresora.",
+      },
+      {
+        pregunta: "¿La impresión 3D sirve para piezas finales o sólo prototipos?",
+        respuesta: "Para las dos: con el material y el relleno correctos se hacen refacciones, soportes y herramentales que se usan todos los días.",
+      },
+      {
+        pregunta: "¿Me pueden imprimir una pieza sin comprar impresora?",
+        respuesta: "Sí. Sube tu archivo o una foto con medidas en Cotizar y los talleres te mandan precio y tiempo de entrega.",
+      },
+    ],
+    enlaces: [
+      { texto: "Cotizar impresión 3D", href: "/cotizar/impresion-3d" },
+      { texto: "Filamentos y resinas", href: "/categories/filamentos-y-resinas" },
+      { texto: "Convertir SVG a STL", href: "/disenar/svg-a-stl" },
+    ],
+  },
+
+  "madera-y-mdf": {
+    titulo_seo: "MDF y madera para CNC y láser en México | HETNA CNC",
+    descripcion_seo:
+      "MDF, triplay y madera para router CNC y corte láser. Espesores, cuál conviene para cada trabajo y cómo cortarlos sin quemar ni astillar.",
+    intro:
+      "MDF, triplay y madera para cortar en router CNC y láser. Aquí te decimos qué material conviene para cada trabajo y cómo cortarlo limpio.",
+    secciones: [
+      {
+        titulo: "MDF, triplay o madera sólida",
+        lista: [
+          "MDF: parejo, sin veta y fácil de cortar; ideal para letreros, maquetas, cajas y piezas que se van a pintar. No aguanta la humedad.",
+          "Triplay (contrachapado): más resistente y ligero que el MDF; bueno para muebles y piezas estructurales. Puede tener huecos entre capas.",
+          "Madera sólida: para piezas de vista y relieves; cada pieza es distinta por la veta y puede moverse con la humedad.",
+          "MDF con melamina: acabado listo para muebles; córtalo con fresa de compresión o espiral descendente para que no se astille.",
+        ],
+      },
+      {
+        titulo: "Espesores más usados",
+        parrafos: [
+          "En láser se trabaja sobre todo MDF de 3 y 6 mm. En router, de 9 a 18 mm para muebles y de 3 a 6 mm para letreros y piezas decorativas. Mide el espesor real de tu hoja: puede variar unas décimas y afecta las piezas que ensamblan.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        pregunta: "¿Por qué se quema el MDF al cortarlo con router?",
+        respuesta: "Por avance muy lento o revoluciones muy altas: la fresa roza en vez de cortar. Ajusta con la calculadora de velocidades y avances.",
+      },
+      {
+        pregunta: "¿El MDF es tóxico al cortarlo con láser?",
+        respuesta: "Suelta humo con formaldehído de la resina, por eso la extracción de humo es obligatoria. No lo cortes sin ventilación.",
+      },
+      {
+        pregunta: "¿Qué espesor de MDF uso para cajas con juntas?",
+        respuesta: "El que tengas a la mano, pero mídelo y pon ese espesor exacto en el generador de cajas para que las juntas embonen.",
+      },
+      {
+        pregunta: "¿Pueden cortarme las piezas en MDF?",
+        respuesta: "Sí. Sube tu archivo en Cotizar e indica material y espesor; los talleres te mandan propuestas.",
+      },
+    ],
+    enlaces: [
+      { texto: "Generador de cajas para corte", href: "/disenar/cajas" },
+      { texto: "Calculadora de velocidades y avances", href: "/calculadora-cnc" },
+      { texto: "Cotizar corte en router CNC", href: "/cotizar/router-cnc" },
+    ],
+  },
+
+  "plasticos-y-acrilicos": {
+    titulo_seo: "Acrílico y plásticos para CNC y láser en México | HETNA CNC",
+    descripcion_seo:
+      "Acrílico, PVC espumado, policarbonato, nylon y HDPE para router CNC y láser. Cuál usar, cuál no cortar con láser y cómo evitar que se derrita.",
+    intro:
+      "Acrílico, PVC espumado, policarbonato y plásticos de ingeniería para router CNC y láser. Ojo: no todos se pueden cortar con láser.",
+    secciones: [
+      {
+        titulo: "Cuál plástico para qué trabajo",
+        lista: [
+          "Acrílico (PMMA): transparente y con buen acabado; letreros, exhibidores y protecciones. El acrílico cast se corta y graba mejor con láser que el extruido.",
+          "PVC espumado (Sintra): ligero y fácil de cortar en router; letreros y señalética. No se corta con láser.",
+          "Policarbonato: casi irrompible; protecciones y guardas. Con láser se amarillenta y quema, mejor en router.",
+          "Nylon, HDPE y acetal (Delrin): plásticos de ingeniería para engranes, bujes y piezas que se deslizan; se maquinan en router o fresadora.",
+        ],
+      },
+      {
+        titulo: "Cómo cortar plástico sin que se derrita",
+        parrafos: [
+          "Usa fresa de un solo filo, avance alto y revoluciones moderadas: la idea es sacar viruta, no fricción. Si el plástico se derrite y se pega a la fresa, sube el avance o baja las revoluciones.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        pregunta: "¿Qué plásticos NO se deben cortar con láser?",
+        respuesta: "PVC y vinilo (sueltan cloro, tóxico y corrosivo para la máquina), policarbonato (se quema) y ABS (se derrite y suelta humo tóxico).",
+      },
+      {
+        pregunta: "¿Qué acrílico conviene para láser?",
+        respuesta: "El acrílico cast (colado): corta con borde pulido y graba blanco. El extruido es más barato pero el grabado queda menos contrastado.",
+      },
+      {
+        pregunta: "¿Qué fresa uso para acrílico en router?",
+        respuesta: "De un solo filo (O-flute) con buen avance, para que la viruta salga sin derretir el material.",
+      },
+      {
+        pregunta: "¿Me pueden cortar un letrero en acrílico?",
+        respuesta: "Sí. Sube tu diseño en Cotizar, indica color y espesor, y recibe propuestas de talleres.",
+      },
+    ],
+    enlaces: [
+      { texto: "Cotizar corte láser", href: "/cotizar/corte-laser" },
+      { texto: "Fresas para acrílico y plástico", href: "/categories/fresas-y-brocas" },
+      { texto: "Generador de letreros", href: "/disenar/letreros" },
+    ],
+  },
+
+  "tornos-cnc": {
+    titulo_seo: "Tornos CNC en México: cómo elegir y qué revisar | HETNA CNC",
+    descripcion_seo:
+      "Tornos CNC para piezas cilíndricas en acero, aluminio, bronce y plásticos. Qué revisar, controladores comunes y talleres en México que tornean tu pieza.",
+    intro:
+      "Tornos CNC para piezas redondas: ejes, bujes, coples y roscas en metal o plástico. Si sólo necesitas unas piezas, un taller de torneado te las hace.",
+    secciones: [
+      {
+        titulo: "Qué revisar en un torno CNC",
+        lista: [
+          "Volteo y distancia entre puntos: el diámetro y largo máximos de pieza.",
+          "Paso de barra: si vas a trabajar desde barra larga, el diámetro que cabe por el husillo.",
+          "Torreta o poste de herramientas: cuántas herramientas puede usar sin detenerse.",
+          "Controlador: Fanuc, Siemens, GSK y otros. Confirma que tu CAM tenga postprocesador y que haya quien le dé servicio en México.",
+        ],
+      },
+      {
+        titulo: "Torno CNC o fresadora",
+        parrafos: [
+          "El torno hace piezas de revolución (todo lo redondo alrededor de un eje). Si la pieza tiene caras planas, cajas o barrenos fuera del centro, necesita fresadora o un torno con herramienta motorizada.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        pregunta: "¿Qué materiales se trabajan en torno CNC?",
+        respuesta: "Acero, inoxidable, aluminio, bronce, latón, cobre y plásticos de ingeniería como nylon, acetal y teflón.",
+      },
+      {
+        pregunta: "¿Qué necesito para cotizar una pieza torneada?",
+        respuesta: "Un plano con medidas y tolerancias, o una pieza de muestra con fotos y medidas. Indica material y cantidad.",
+      },
+      {
+        pregunta: "¿Hacen roscas en torno CNC?",
+        respuesta: "Sí: roscas métricas, NPT, UNC/UNF, interiores y exteriores, según la herramienta del taller.",
+      },
+      {
+        pregunta: "¿Pueden fabricar una refacción a partir de una pieza dañada?",
+        respuesta: "Sí, muchos talleres hacen ingeniería inversa: miden la pieza y fabrican la nueva. Pídelo en Cotizar.",
+      },
+    ],
+    enlaces: [
+      { texto: "Cotizar torneado o maquinado", href: "/fabricacion" },
+      { texto: "Laboratorio CAM para torno", href: "/cam/torno" },
+      { texto: "Talleres CNC en México", href: "/talleres" },
+    ],
+  },
+
+  "spindles-y-vfd": {
+    titulo_seo: "Spindles y variadores (VFD) para router CNC en México | HETNA CNC",
+    descripcion_seo:
+      "Spindles enfriados por agua y por aire y variadores de frecuencia para router CNC. Potencia, voltaje, collets y cómo conectarlos.",
+    intro:
+      "Spindles y variadores de frecuencia (VFD) para router CNC: el corazón de la máquina. Aquí te explicamos cómo elegir la pareja correcta.",
+    secciones: [
+      {
+        titulo: "Spindle enfriado por agua o por aire",
+        lista: [
+          "Por agua: más silencioso y aguanta trabajo continuo; necesita bomba y depósito (o chiller) y cuidar que no se congele ni se ensucie el agua.",
+          "Por aire: sin bomba ni mangueras; más ruidoso, pero más simple de instalar y de mantener.",
+        ],
+      },
+      {
+        titulo: "Cómo elegir spindle y VFD",
+        lista: [
+          "Potencia: 1.5 kW para router de escritorio, 2.2 kW es el estándar para madera y acrílico, 3 a 4.5 kW para trabajo pesado.",
+          "El VFD debe ser de la misma potencia o mayor que el spindle y del voltaje que tienes: 110 V, 220 V monofásico o 220 V trifásico.",
+          "Collet: los spindles chinos usan ER11, ER16 o ER20; define el diámetro máximo de zanco de fresa que puedes usar.",
+          "Configura en el VFD la frecuencia y los parámetros del spindle: unos valores mal puestos lo calientan o lo dañan.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        pregunta: "¿Qué potencia de spindle necesito?",
+        respuesta: "Para madera, MDF y acrílico, 2.2 kW es lo más común. Para aluminio importa más la rigidez de la máquina que la potencia.",
+      },
+      {
+        pregunta: "¿Puedo conectar un spindle de 220 V en mi casa?",
+        respuesta: "Sí, con un VFD de entrada monofásica a 220 V. Revisa que tu instalación aguante el consumo y usa cable con tierra física.",
+      },
+      {
+        pregunta: "¿Por qué se calienta mi spindle?",
+        respuesta: "Por falta de agua o bomba apagada (en los enfriados por agua), parámetros mal puestos en el VFD o por trabajar muchas horas a baja velocidad.",
+      },
+      {
+        pregunta: "¿Qué collet necesito para fresas de 1/4\"?",
+        respuesta: "Un collet de 1/4\" (6.35 mm) de la serie de tu spindle (ER11, ER16 o ER20).",
+      },
+    ],
+    enlaces: [
+      { texto: "Routers CNC: guía para elegir", href: "/categories/routers-cnc" },
+      { texto: "Fresas y brocas", href: "/categories/fresas-y-brocas" },
+      { texto: "Pregunta en el Foro CNC", href: "/foro-cnc" },
+    ],
+  },
 }
 
 export const contenidoCategoria = (handle: string): ContenidoCategoria | undefined =>

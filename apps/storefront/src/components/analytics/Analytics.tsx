@@ -18,6 +18,10 @@ export function Analytics() {
   // Google Ads (AW-...): remarketing dinámico y conversiones. Opcional.
   const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
   const gtagId = ga4Id || adsId;
+  // Microsoft Clarity (mapas de calor y grabaciones). Oculta lo que se
+  // escribe en formularios. Sólo letras y números: va dentro del script.
+  const clarityCrudo = process.env.NEXT_PUBLIC_CLARITY_ID || '';
+  const clarityId = /^[a-z0-9]{6,20}$/i.test(clarityCrudo) ? clarityCrudo : '';
   const [permitido, setPermitido] = useState(false);
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export function Analytics() {
     return () => window.removeEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
   }, []);
 
-  if (!permitido || (!gtagId && !metaPixelId)) return null;
+  if (!permitido || (!gtagId && !metaPixelId && !clarityId)) return null;
 
   return (
     <>
@@ -61,6 +65,17 @@ export function Analytics() {
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${metaPixelId}');
             fbq('track', 'PageView');
+          `}
+        </Script>
+      )}
+      {clarityId && (
+        <Script id="clarity-init" strategy="lazyOnload">
+          {`
+            (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${clarityId}");
           `}
         </Script>
       )}

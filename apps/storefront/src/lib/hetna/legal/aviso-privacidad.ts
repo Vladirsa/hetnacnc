@@ -131,7 +131,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
       {
         ul: [
           "Enviarte promociones, novedades y contenido de HETNA CNC por correo o WhatsApp.",
-          "Medir el uso del sitio para mejorarlo (Google Analytics), solo si aceptas las cookies de estadística.",
+          "Medir el uso del sitio para mejorarlo (Google Analytics y Microsoft Clarity, que oculta lo que escribes en los formularios), solo si aceptas las cookies de estadística.",
           "Mostrarte publicidad de HETNA en otras plataformas (Meta Pixel), solo si aceptas las cookies de publicidad.",
           "Invitarte a encuestas de satisfacción.",
         ],
@@ -178,7 +178,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
             ["PayPal y Mercado Pago", "Procesar tus pagos y prevenir fraude", "No: es necesario para la compra"],
             ["Paqueterías (a través de Envíos HETNA / Skydropx)", "Generar la guía y entregar tu pedido", "No: es necesario para la entrega"],
             ["Autoridades competentes", "Cumplir la ley o una orden de autoridad", "No"],
-            ["Plataformas de publicidad y estadística (Meta, Google)", "Medir visitas y mostrar anuncios de HETNA", "Sí: solo si aceptas esas cookies"],
+            ["Plataformas de publicidad y estadística (Meta, Google, Microsoft)", "Medir visitas y mostrar anuncios de HETNA", "Sí: solo si aceptas esas cookies"],
           ],
         },
       },
@@ -297,6 +297,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
           filas: [
             ["Necesarias", "Mantener tu sesión, tu carrito, tu idioma y tu decisión sobre cookies; seguridad del sitio", "No: sin ellas el sitio no funciona"],
             ["Estadística (Google Analytics)", "Saber qué páginas se visitan y cómo mejorar el sitio", "Sí"],
+            ["Estadística (Microsoft Clarity)", "Ver de forma anónima dónde se atoran las visitas (clics y desplazamiento) para mejorar el diseño", "Sí"],
             ["Publicidad (Meta Pixel)", "Medir campañas y mostrar anuncios de HETNA en Facebook e Instagram", "Sí"],
           ],
         },
@@ -435,7 +436,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
       {
         ul: [
           "Send you promotions, news and HETNA CNC content by email or WhatsApp.",
-          "Measure site usage to improve it (Google Analytics), only if you accept analytics cookies.",
+          "Measure site usage to improve it (Google Analytics and Microsoft Clarity, which masks what you type in forms), only if you accept analytics cookies.",
           "Show you HETNA ads on other platforms (Meta Pixel), only if you accept advertising cookies.",
           "Invite you to satisfaction surveys.",
         ],
@@ -482,7 +483,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
             ["PayPal and Mercado Pago", "Process your payments and prevent fraud", "No: it is needed for the purchase"],
             ["Carriers (through HETNA Shipping / Skydropx)", "Create the shipping label and deliver your order", "No: it is needed for delivery"],
             ["Competent authorities", "Comply with the law or a lawful order", "No"],
-            ["Advertising and analytics platforms (Meta, Google)", "Measure visits and show HETNA ads", "Yes: only if you accept those cookies"],
+            ["Advertising and analytics platforms (Meta, Google, Microsoft)", "Measure visits and show HETNA ads", "Yes: only if you accept those cookies"],
           ],
         },
       },
@@ -599,6 +600,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
           filas: [
             ["Necessary", "Keep you signed in, your cart, your language and your cookie choice; site security", "No: the site does not work without them"],
             ["Analytics (Google Analytics)", "Understand which pages are visited and how to improve the site", "Yes"],
+            ["Analytics (Microsoft Clarity)", "See anonymously where visitors get stuck (clicks and scrolling) to improve the design", "Yes"],
             ["Advertising (Meta Pixel)", "Measure campaigns and show HETNA ads on Facebook and Instagram", "Yes"],
           ],
         },

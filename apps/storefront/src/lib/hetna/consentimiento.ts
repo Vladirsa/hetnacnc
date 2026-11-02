@@ -34,8 +34,8 @@ export const leerConsentimiento = (): Consentimiento | null => {
 // ¿Se pueden cargar estadística y publicidad?
 export const permiteRastreo = (): boolean => leerConsentimiento() === "todas" && !senalNoRastrear()
 
-// Cookies que dejan Google Analytics y Meta Pixel
-const COOKIES_RASTREO = /^(_ga|_gid|_gat|_fbp|_fbc)/
+// Cookies que dejan Google Analytics, Meta Pixel y Microsoft Clarity
+const COOKIES_RASTREO = /^(_ga|_gid|_gat|_fbp|_fbc|_clck|_clsk)/
 
 export const guardarConsentimiento = (v: Consentimiento) => {
   try {

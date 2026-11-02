@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { enlacesPorTema } from "@/lib/hetna/enlaces-tema"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
 
@@ -51,6 +52,7 @@ export default async function ArticuloBlog({ params }: Props) {
   // El artículo ya enlaza sus propias soluciones en el texto; aquí sólo la de fabricar.
   const ctas = a.categoria ? ctasPara(a.categoria, a.title).filter((c) => c.href.startsWith("/cotizar?servicio")) : []
   const talleres = a.categoria ? talleresDeSeccion(a.categoria) : null
+  const paraTi = enlacesPorTema(`${a.title} ${a.excerpt || ""}`)
 
   return (
     <main className="w-full bg-[#FAF9F6]">
@@ -121,6 +123,16 @@ export default async function ArticuloBlog({ params }: Props) {
               <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>
               <span className="text-[13px] text-[#C9D2E0]">Ve quién hace esto cerca de ti y pídele cotización.</span>
             </LocalizedClientLink>
+          )}
+          {paraTi.length > 0 && (
+            <div className="bg-[#FDEEE1] rounded-[14px] p-4 flex flex-col gap-2">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[#B34D07]">Herramientas y productos</span>
+              {paraTi.map((e) => (
+                <LocalizedClientLink key={e.href} href={e.href} className="text-[14px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
+                  {e.texto} →
+                </LocalizedClientLink>
+              ))}
+            </div>
           )}
           {relacionados.length > 0 && (
             <div className="flex flex-col gap-2.5">
