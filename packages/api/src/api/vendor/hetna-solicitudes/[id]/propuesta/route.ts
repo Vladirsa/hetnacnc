@@ -1,6 +1,8 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { servicioTalleres } from "../../../../../lib/alta-taller"
+import { cupoLicitacion, mensajeSinCupo } from "../../../../../lib/licitacion-plan"
 import { sendEmail } from "../../../../../lib/resend"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
@@ -36,6 +38,15 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   // ya mandó sí la puede corregir mientras el cliente no elija.
   if (!previa && !recibePropuestas(s)) {
     return res.status(409).json({ message: "Esta solicitud ya cerró a propuestas nuevas." })
+  }
+  // Cupo mensual de propuestas según el plan (lib/licitacion-plan.ts). Corregir
+  // una propuesta y contestar una solicitud dirigida al taller no cuentan.
+  if (!previa && s.modo !== "directa") {
+    const seller = await servicioTalleres(req.scope).retrieveSeller(sellerId).catch(() => null)
+    const cupo = seller ? await cupoLicitacion(knex, sellerId, seller).catch(() => null) : null
+    if (cupo && cupo.quedan === 0) {
+      return res.status(402).json({ message: mensajeSinCupo(cupo), cupo })
+    }
   }
   const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, updated_at: knex.fn.now() }
   if (previa) {

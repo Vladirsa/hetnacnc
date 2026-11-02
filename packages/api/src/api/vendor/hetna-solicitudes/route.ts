@@ -11,6 +11,8 @@ import {
   folioTexto,
   ocultarContacto,
 } from "../../../lib/licitacion"
+import { servicioTalleres } from "../../../lib/alta-taller"
+import { cupoLicitacion } from "../../../lib/licitacion-plan"
 import { NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
@@ -111,5 +113,9 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       : null,
   }))
 
-  return res.json({ solicitudes })
+  // Cupo de propuestas del mes según el plan; null = no se pudo saber (no se limita).
+  const seller = await servicioTalleres(req.scope).retrieveSeller(sellerId).catch(() => null)
+  const cupo = seller ? await cupoLicitacion(knex, sellerId, seller).catch(() => null) : null
+
+  return res.json({ solicitudes, cupo })
 }

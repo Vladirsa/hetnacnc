@@ -4,7 +4,8 @@
 //   recompra       10 a 20 días después de una compra pagada: productos que van
 //                  con lo que compró (misma categoría), sin repetir lo comprado.
 //   primeros_pasos cuenta creada hace 3 a 10 días y sin compras: cómo comprar,
-//                  pedir fabricación y usar las herramientas gratis.
+//                  pedir fabricación y usar las herramientas gratis, con el
+//                  recordatorio del cupón de bienvenida.
 //   reactivacion   su última compra fue hace 60 a 120 días: lo nuevo desde entonces.
 //   novedades      una vez por semana, si hay al menos 3 productos nuevos.
 //
@@ -17,6 +18,7 @@
 //     edición semanal): queda en hetna_correo_promo.
 //   - MARKETING_CORREOS=off lo apaga todo.
 import { asegurarTablaBaja, ligaBaja, T_BAJA } from "./baja"
+import { CUPON_BIENVENIDA, MINIMO, MONTO, pesos } from "./cupones"
 import { STORE_URL, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
 
@@ -112,6 +114,15 @@ function tarjetas(productos: ProductoCorreo[], tipo: TipoPromo) {
 const p = (t: string) => `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">${t}</p>`
 const saludo = (nombre?: string | null) => (nombre ? `Hola ${esc(nombre)}:` : "Hola:")
 
+// Recordatorio del cupón de bienvenida (lib/cupones.ts) para quien aún no compra.
+// Va en "primeros pasos", que sólo reciben cuentas sin pedidos.
+const bloqueBienvenida = () =>
+  `<div style="margin:0 0 16px;padding:14px;border:2px dashed #C2560A;border-radius:10px;text-align:center">` +
+  `<div style="font-size:13px;color:#40403A">Tu regalo de bienvenida sigue activo</div>` +
+  `<div style="font-size:22px;font-weight:bold;letter-spacing:2px;color:#142033;margin:4px 0">${esc(CUPON_BIENVENIDA())}</div>` +
+  `<div style="font-size:13px;color:#40403A">${pesos(MONTO())} de descuento en tu primera compra de ${pesos(MINIMO())} o más. Escríbelo en tu carrito.</div>` +
+  `</div>`
+
 export function correoPromo(
   tipo: TipoPromo,
   d: { nombre?: string | null; productos: ProductoCorreo[]; display_id?: number | null }
@@ -131,10 +142,12 @@ export function correoPromo(
       }
     case "primeros_pasos":
       return {
-        asunto: "Así le sacas provecho a HETNA",
+        asunto: `Tu cupón de ${pesos(MONTO())} te espera: así le sacas provecho a HETNA`,
         html: marco(
           "Tres cosas que puedes hacer en HETNA",
-          p(`${saludo(d.nombre)} gracias por crear tu cuenta. Esto es lo que más usan los talleres y makers:`) +
+          p(`${saludo(d.nombre)} gracias por crear tu cuenta.`) +
+            bloqueBienvenida() +
+            p("Esto es lo que más usan los talleres y makers:") +
             `<ol style="margin:0 0 12px;padding-left:20px;color:#40403A;line-height:1.6">` +
             `<li><b>Comprar</b> piezas, herramientas y diseños listos para cortar, directo de talleres verificados.</li>` +
             `<li><b>Mandar a fabricar</b>: sube tu plano o una foto y recibe cotizaciones de varios talleres. <a href="${esc(utm(`${STORE_URL}/mx/fabricacion`, tipo))}" style="color:#C2560A">Pedir cotización</a></li>` +
