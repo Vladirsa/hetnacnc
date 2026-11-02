@@ -10,6 +10,7 @@ import { AccionCurso } from "@/components/hetna/academia/AccionCurso"
 import { Temario } from "@/components/hetna/academia/Temario"
 import { NIVEL, duracionTexto, precioTexto } from "@/components/hetna/academia/formato"
 import { getAccesoCurso, getCourseBySlug } from "@/lib/data/courses"
+import { JsonLd } from "@/components/hetna/JsonLd"
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>
@@ -20,10 +21,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const curso = await getCourseBySlug(slug)
   if (!curso) return {}
 
+  const url = `https://hetnacnc.com/mx/aprendizaje-cnc/cursos/${curso.slug}`
   return {
-    title: curso.title,
-    description: curso.description || undefined,
+    title: `${curso.title} | Academia HETNA CNC`,
+    description: (curso.description || `Curso de CNC: ${curso.title}`).slice(0, 160),
+    alternates: { canonical: url },
     openGraph: {
+      url,
       title: curso.title,
       description: curso.description || undefined,
       images: curso.thumbnail_url ? [{ url: curso.thumbnail_url }] : undefined,
@@ -42,8 +46,35 @@ export default async function CursoDetalle({ params }: Props) {
   const gratis = !curso.precio || curso.precio.gratis
   const duracion = duracionTexto(curso.duracion_segundos)
 
+  const schemaCurso = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: curso.title,
+    description: curso.description || curso.title,
+    url: `https://hetnacnc.com/mx/aprendizaje-cnc/cursos/${curso.slug}`,
+    inLanguage: "es",
+    ...(curso.thumbnail_url ? { image: curso.thumbnail_url } : {}),
+    provider: {
+      "@type": "Organization",
+      name: curso.taller?.nombre || "HETNA CNC",
+      sameAs: "https://hetnacnc.com",
+    },
+    offers: {
+      "@type": "Offer",
+      category: gratis ? "Free" : "Paid",
+      price: gratis ? 0 : curso.precio?.mxn ?? 0,
+      priceCurrency: "MXN",
+    },
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "online",
+      courseWorkload: duracion ? `PT${Math.max(1, Math.round((curso.duracion_segundos || 0) / 60))}M` : undefined,
+    },
+  }
+
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <JsonLd datos={schemaCurso} />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
         <span>/</span>

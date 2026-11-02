@@ -12,6 +12,7 @@ import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { SITIO } from "@/lib/foro/tipos"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { listLearningArticles } from "@/lib/data/learning-articles"
+import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 
 export const revalidate = 3600
@@ -54,11 +55,11 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/subir", "weekly", 0.6],
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],
-  ["/talleres", "daily", 0.8],
+  ["/talleres", "weekly", 0.8],
   ["/talleres/unete", "weekly", 0.8],
   ["/foro-cnc/blog", "weekly", 0.7],
-  ["/foro-cnc/empleos", "daily", 0.6],
-  ["/foro-cnc/eventos", "daily", 0.6],
+  ["/foro-cnc/empleos", "weekly", 0.6],
+  ["/foro-cnc/eventos", "weekly", 0.6],
   ["/talleres/fundadores", "weekly", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
   ["/anunciate", "monthly", 0.6],
@@ -103,7 +104,7 @@ const productos = async (): Promise<{ handle: string; fecha: Date }[]> => {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const hoy = new Date()
 
-  const [cats, prods, talleres, secs, temas, { learning_articles }, { trabajos }] = await Promise.all([
+  const [cats, prods, talleres, secs, temas, { learning_articles }, { trabajos }, { courses }] = await Promise.all([
     categorias(),
     productos(),
     listarTalleres().catch(() => []),
@@ -111,6 +112,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     temasParaMapa().catch(() => []),
     listLearningArticles({ limit: 200 }).catch(() => ({ learning_articles: [] })),
     trabajosAbiertos({ limit: 60 }),
+    listCourses({ limit: 200 }).catch(() => ({ courses: [] as { slug: string; published_at: string | null }[] })),
   ])
 
   const tienda: MetadataRoute.Sitemap = [
@@ -140,7 +142,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
-    { url: `${MX}/trabajos`, lastModified: hoy, changeFrequency: "hourly" as const, priority: 0.8 },
+    // Cursos de la Academia
+    ...courses.map((c) => ({
+      url: `${MX}/aprendizaje-cnc/cursos/${c.slug}`,
+      lastModified: c.published_at ? new Date(c.published_at) : hoy,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+    { url: `${MX}/trabajos`, lastModified: hoy, changeFrequency: "daily" as const, priority: 0.8 },
     ...trabajos.map((t) => ({
       url: `${MX}/trabajos/${t.folio}`,
       lastModified: new Date(t.creada),
@@ -152,7 +161,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return sinRepetir([
     ...tienda,
     ...articulos,
-    { url: `${MX}/foro-cnc`, lastModified: hoy, changeFrequency: "hourly", priority: 0.8 },
+    { url: `${MX}/foro-cnc`, lastModified: hoy, changeFrequency: "daily", priority: 0.8 },
     ...secs.map((s) => ({
       url: `${MX}/foro-cnc/${s.slug}`,
       lastModified: s.ultima ? new Date(s.ultima) : hoy,

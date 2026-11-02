@@ -52,6 +52,10 @@ const encabezadosSeguridad = [
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   // Al salir a otro sitio sólo se comparte el dominio, no la URL completa.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Apaga funciones del navegador que el sitio no usa (micrófono, USB, etc.).
+  // Cámara, ubicación y pagos se dejan como vienen: los usan el escaneo, el
+  // "Enviar a" y Mercado Pago / PayPal.
+  { key: 'Permissions-Policy', value: 'microphone=(), usb=(), serial=(), bluetooth=(), hid=(), midi=(), browsing-topics=()' },
   // ETAPA 2 (31 de octubre): ya bloquea. El registro de /api/csp-reporte sólo
   // traía audiencias de Google Ads de otros países (google.com.pe, etc.), que no
   // importan para México. Sigue reportando lo que bloquee.

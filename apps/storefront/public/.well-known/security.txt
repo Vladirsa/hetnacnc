@@ -1,0 +1,7 @@
+# Si encontraste una vulnerabilidad en hetnacnc.com, avísanos aquí.
+# Te respondemos en español o inglés. Por favor no publiques el detalle
+# hasta que lo hayamos corregido.
+Contact: mailto:contacto@hetnacnc.com
+Expires: 2027-11-01T00:00:00.000Z
+Preferred-Languages: es, en
+Canonical: https://hetnacnc.com/.well-known/security.txt
