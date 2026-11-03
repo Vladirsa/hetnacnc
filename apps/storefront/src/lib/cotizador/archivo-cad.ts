@@ -23,7 +23,7 @@ export type GeoCad = {
 
 const MAX_TRAZOS_DIBUJO = 4000
 
-// ── utilidades ─────────────────────────────────────────────────────────────────────
+// ── utilidades ──────────────────────────────────────────────────────────
 const dist = (a: [number, number], b: [number, number]) => Math.hypot(b[0] - a[0], b[1] - a[1])
 const largoTrazo = (t: Trazo) => t.reduce((s, p, i) => (i ? s + dist(t[i - 1], p) : 0), 0)
 const cerrado = (t: Trazo) => t.length > 2 && dist(t[0], t[t.length - 1]) < 0.05
@@ -132,7 +132,7 @@ function decimar(trazos: Trazo[]): Trazo[] {
   return trazos.map((t) => (t.length <= 4 ? t : t.filter((_, i) => i % paso === 0 || i === t.length - 1)))
 }
 
-// ── DXF ──────────────────────────────────────────────────────────────────────────
+// ── DXF ─────────────────────────────────────────────────────────────────
 const UNIDADES_DXF: Record<number, number> = { 1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000 }
 
 function arco(cx: number, cy: number, r: number, a0: number, a1: number): Trazo {
@@ -295,7 +295,7 @@ export function leerDxf(texto: string): GeoCad {
   return resumen2d(todos, avisos)
 }
 
-// ── SVG (con el navegador) ───────────────────────────────────────────────────────
+// ── SVG (con el navegador) ──────────────────────────────────────────────
 const MM_POR: Record<string, number> = { mm: 1, cm: 10, in: 25.4, pt: 25.4 / 72, pc: 25.4 / 6, px: 25.4 / 96, "": 25.4 / 96 }
 
 export function leerSvg(texto: string): GeoCad {
@@ -353,7 +353,7 @@ export function leerSvg(texto: string): GeoCad {
   }
 }
 
-// ── STL / OBJ ─────────────────────────────────────────────────────────────────────────────────
+// ── STL / OBJ ───────────────────────────────────────────────────────────────────
 
 function resumen3d(tris: Float64Array, n: number, avisos: string[]): GeoCad {
   if (!n) throw new Error("No encontramos la pieza en el archivo 3D.")
