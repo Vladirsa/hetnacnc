@@ -166,12 +166,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: ESCANEAR,
     nombre: "Escaneo 3D de piezas",
-    texto: "Vista previa gratis; el escaneo que mide de verdad se paga con créditos.",
+    texto: "Modelo con IA con textura desde una foto (3 gratis al mes); el escaneo que mide de verdad se paga con créditos.",
     icono: "escaneo",
     acceso: "creditos",
     titulo: "Escaneo 3D de piezas con fotos: de la pieza al modelo STL",
     descripcion:
-      "Toma fotos de una pieza que ya existe y recibe su modelo 3D. Vista previa gratis; el escaneo con medidas reales se paga con créditos y queda guardado en tu perfil.",
+      "Toma fotos de una pieza que ya existe y recibe su modelo 3D. Con una sola foto, la IA crea el modelo con textura y color en minutos (3 gratis al mes); el escaneo con medidas reales se paga con créditos y queda guardado en tu perfil.",
   },
 ]
 
