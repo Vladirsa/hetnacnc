@@ -37,7 +37,7 @@ type Aviso = {
   boton?: string // texto del botón del correo (por defecto "Ver la cotización")
 }
 
-// ── Firebase Cloud Messaging (HTTP v1) ─────────────────────────────────────────────
+// ── Firebase Cloud Messaging (HTTP v1) ─────────────────────────────────
 let cuentaFirebase: any | null | undefined
 function cuenta() {
   if (cuentaFirebase !== undefined) return cuentaFirebase
