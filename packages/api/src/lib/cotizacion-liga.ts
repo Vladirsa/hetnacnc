@@ -29,6 +29,7 @@
 import { createHmac, timingSafeEqual } from "crypto"
 
 import { avisarTaller } from "./avisos-taller"
+import { paypal, paypalListo } from "./paypal-api"
 import { adminDesdeToken, ErrorSuscripcion, supa } from "./cotizador-suscripciones"
 
 const MP_API = "https://api.mercadopago.com"
@@ -200,10 +201,46 @@ async function negocioDe(id: string) {
 }
 
 async function configDe(negocioId: string) {
-  const filas = await supa<any[]>(
-    `/rest/v1/configuracion_empresa?negocio_id=eq.${negocioId}&select=nombre_comercial,telefono1,correo,logo_url,sitio_web,direccion&limit=1`
-  )
-  return filas[0] || null
+  const base = "nombre_comercial,telefono1,correo,logo_url,sitio_web,direccion"
+  // `moneda` la agrega supabase/moneda_impuesto.sql; si no se corrió, MXN.
+  for (const campos of [`${base},moneda`, base]) {
+    try {
+      const filas = await supa<any[]>(`/rest/v1/configuracion_empresa?negocio_id=eq.${negocioId}&select=${campos}&limit=1`)
+      return filas[0] || null
+    } catch {
+      // intenta sin moneda
+    }
+  }
+  return null
+}
+
+const monedaDe = (config) => (String(config?.moneda || "MXN").toUpperCase() === "USD" ? "USD" : "MXN")
+
+async function paypalDelNegocio(negocioId: string) {
+  try {
+    const filas = await supa<any[]>(`/rest/v1/negocios_paypal?negocio_id=eq.${negocioId}&select=*&limit=1`)
+    return filas[0] || null
+  } catch {
+    return null // la tabla aún no existe (supabase/paypal_y_marketing.sql)
+  }
+}
+
+/** Anota un pago. Si todavía no se corrió paypal_y_marketing.sql (faltan
+ *  proveedor/moneda/comision_cobrada), lo guarda sin esas columnas. */
+async function guardarPago(fila: Record<string, unknown>) {
+  const enviar = (f) =>
+    supa(`/rest/v1/cotizacion_pagos?on_conflict=mp_payment_id`, {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(f),
+    })
+  try {
+    await enviar(fila)
+  } catch (e) {
+    if (!/proveedor|moneda|comision_cobrada|column/i.test((e as Error).message)) throw e
+    const { proveedor, moneda, comision_cobrada, ...resto } = fila as any
+    await enviar(resto)
+  }
 }
 
 async function clienteDe(id: string | null) {
@@ -252,14 +289,16 @@ export function anticipoDe(c): number {
 /** Lo que ve la página pública. Marca la primera vista. */
 export async function paginaPublica(token: string) {
   const c = await cotizacionPorToken(token)
-  const [negocio, config, cliente, items, pagos, mp] = await Promise.all([
+  const [negocio, config, cliente, items, pagos, mp, pp] = await Promise.all([
     negocioDe(c.negocio_id),
     configDe(c.negocio_id),
     clienteDe(c.cliente_id),
     itemsDe(c.id),
     pagosDe(c.id),
     mpDelNegocio(c.negocio_id),
+    paypalDelNegocio(c.negocio_id),
   ])
+  const moneda = monedaDe(config)
   if (!c.liga_vista_en) {
     // Primera vez que el cliente abre la liga: se marca y se avisa al taller
     // (sin esperar, para que la página cargue rápido).
@@ -321,12 +360,22 @@ export async function paginaPublica(token: string) {
     notas: c.notas,
     pdf: c.pdf_url || null,
     aceptada: c.aceptada_en ? { en: c.aceptada_en, por: c.aceptada_por } : null,
-    anticipo: {
-      monto: anticipo,
-      pagado: num(c.anticipo_pagado),
-      estado: anticipo > 0 ? c.anticipo_estado : "sin_anticipo",
-      se_puede_pagar: Boolean(mp) && anticipo > 0 && num(c.anticipo_pagado) < anticipo && !estaVencida && c.estado !== "Rechazada",
-    },
+    moneda,
+    anticipo: (() => {
+      const pendiente = anticipo > 0 && num(c.anticipo_pagado) < anticipo && !estaVencida && c.estado !== "Rechazada"
+      // Mercado Pago cobra sólo en pesos; PayPal en pesos o dólares
+      const metodos = {
+        mercadopago: pendiente && Boolean(mp) && moneda === "MXN",
+        paypal: pendiente && Boolean(pp) && paypalListo(),
+      }
+      return {
+        monto: anticipo,
+        pagado: num(c.anticipo_pagado),
+        estado: anticipo > 0 ? c.anticipo_estado : "sin_anticipo",
+        se_puede_pagar: metodos.mercadopago || metodos.paypal,
+        metodos,
+      }
+    })(),
     pagos: pagos.filter((p) => p.estado === "approved").map((p) => ({ monto: num(p.monto), metodo: p.metodo, fecha: p.creado })),
     pedido: seguimiento,
   }
@@ -445,6 +494,7 @@ export async function pagarAnticipo(token: string) {
   if (anticipo <= 0 || resta <= 0) throw new ErrorSuscripcion("Esta cotización no tiene anticipo pendiente.")
 
   const [negocio, config, mp] = await Promise.all([negocioDe(c.negocio_id), configDe(c.negocio_id), tokenDelTaller(c.negocio_id)])
+  if (monedaDe(config) !== "MXN") throw new ErrorSuscripcion("Esta cotización está en dólares: págala con PayPal.")
   const com = comisionHetna(resta, negocio?.plan, negocio?.trial_hasta)
   const nombreTaller = config?.nombre_comercial || negocio?.nombre || "Taller"
   const liga = `${SITIO}/c/${c.token_publico}`
@@ -475,6 +525,50 @@ export async function pagarAnticipo(token: string) {
   const url = pref.init_point || pref.sandbox_init_point
   if (!url) throw new Error("Mercado Pago no devolvió la liga de pago")
   return { url, monto: resta, comision_hetna: com.monto, comision_pct: com.pct }
+}
+
+/** Después de anotar un pago (Mercado Pago o PayPal): suma lo aprobado, marca
+ *  el anticipo, crea el pedido si se completó y avisa al taller una sola vez. */
+async function trasPago(
+  c,
+  p: { monto: number; recienAprobado: boolean; pagador: string | null; nombre: string | null; dondeLlega: string },
+  logger?: any
+) {
+  const aprobados = await supa<any[]>(`/rest/v1/cotizacion_pagos?cotizacion_id=eq.${c.id}&estado=eq.approved&select=monto`)
+  const pagado = Math.round(aprobados.reduce((s, x) => s + Number(x.monto || 0), 0) * 100) / 100
+  const anticipo = anticipoDe(c)
+  const cambios: Record<string, unknown> = { anticipo_pagado: pagado }
+  if (pagado >= anticipo && anticipo > 0) {
+    cambios.anticipo_estado = "pagado"
+    if (!c.aceptada_en) {
+      cambios.aceptada_en = new Date().toISOString()
+      cambios.aceptada_por = p.pagador || "Pago en línea"
+    }
+    if (c.estado !== "Pedido") cambios.estado = "Aprobada"
+  }
+  await patchCotizacion(c.id, cambios)
+  if (!p.recienAprobado) return
+
+  const completo = cambios.anticipo_estado === "pagado" && c.anticipo_estado !== "pagado"
+  const pedidoId = completo ? await asegurarPedido(c, pagado, logger) : null
+  const cliente = await clienteDe(c.cliente_id).catch(() => null)
+  const quien = cliente?.nombre || p.nombre || "Tu cliente"
+  await avisarTaller(
+    {
+      negocioId: c.negocio_id,
+      tipo: "anticipo_pagado",
+      titulo: `💰 ${quien} pagó ${mxn(p.monto)} de la cotización ${c.folio}`,
+      cuerpo:
+        (completo ? 'Anticipo completo: el pedido ya está en Avances como "Anticipo recibido". ' : `Lleva ${mxn(pagado)} de ${mxn(anticipo)}. `) +
+        p.dondeLlega,
+      cotizacionId: c.id,
+      clienteId: c.cliente_id,
+      pedidoId,
+      mensajeCliente: `¡Gracias, ${quien}! Recibimos tu pago de ${mxn(p.monto)} de la cotización ${c.folio}. Aquí puedes seguir tu pedido: ${ligaDe(c)}`,
+      liga: ligaDe(c),
+    },
+    logger
+  )
 }
 
 /** Aviso de Mercado Pago: consulta el pago con el token del taller y lo anota. */
@@ -522,13 +616,13 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
   // Estado anterior de este pago (Mercado Pago avisa varias veces el mismo pago)
   const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(String(p.id))}&select=estado&limit=1`)
   const recienAprobado = p.status === "approved" && previo[0]?.estado !== "approved"
-  await supa(`/rest/v1/cotizacion_pagos?on_conflict=mp_payment_id`, {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify({
+  await guardarPago({
       cotizacion_id: c.id,
       negocio_id: c.negocio_id,
       mp_payment_id: String(p.id),
+      proveedor: "mercadopago",
+      moneda: "MXN",
+      comision_cobrada: true, // Mercado Pago ya la descontó (marketplace_fee)
       monto,
       comision_hetna: comision,
       estado: String(p.status || ""),
@@ -536,49 +630,246 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
       pagador: p.payer?.email || null,
       detalle: { status_detail: p.status_detail, date_approved: p.date_approved, net_received_amount: p.transaction_details?.net_received_amount },
       actualizado: new Date().toISOString(),
-    }),
   })
 
-  // Suma de aprobados
-  const aprobados = await supa<any[]>(`/rest/v1/cotizacion_pagos?cotizacion_id=eq.${c.id}&estado=eq.approved&select=monto`)
-  const pagado = Math.round(aprobados.reduce((s, x) => s + Number(x.monto || 0), 0) * 100) / 100
-  const anticipo = anticipoDe(c)
-  const cambios: Record<string, unknown> = { anticipo_pagado: pagado }
-  if (pagado >= anticipo && anticipo > 0) {
-    cambios.anticipo_estado = "pagado"
-    if (!c.aceptada_en) {
-      cambios.aceptada_en = new Date().toISOString()
-      cambios.aceptada_por = p.payer?.email || "Pago en línea"
-    }
-    if (c.estado !== "Pedido") cambios.estado = "Aprobada"
-  }
-  await patchCotizacion(c.id, cambios)
+  const neto = Number(p.transaction_details?.net_received_amount || 0)
+  await trasPago(
+    c,
+    {
+      monto,
+      recienAprobado,
+      pagador: p.payer?.email || null,
+      nombre: p.payer?.first_name || null,
+      dondeLlega: neto > 0 ? `Te llegan ${mxn(neto)} a tu Mercado Pago (ya sin comisiones).` : "El dinero entra a tu Mercado Pago.",
+    },
+    logger
+  )
   logger?.info?.(`[cotizador] pago ${p.status} de $${monto} en ${c.folio} (comisión HETNA $${comision})`)
-
-  if (recienAprobado) {
-    const completo = cambios.anticipo_estado === "pagado" && c.anticipo_estado !== "pagado"
-    const pedidoId = completo ? await asegurarPedido(c, pagado, logger) : null
-    const cliente = await clienteDe(c.cliente_id).catch(() => null)
-    const quien = cliente?.nombre || p.payer?.first_name || "Tu cliente"
-    const neto = Number(p.transaction_details?.net_received_amount || 0)
-    await avisarTaller(
-      {
-        negocioId: c.negocio_id,
-        tipo: "anticipo_pagado",
-        titulo: `💰 ${quien} pagó ${mxn(monto)} de la cotización ${c.folio}`,
-        cuerpo:
-          (completo ? "Anticipo completo: el pedido ya está en Avances como \"Anticipo recibido\". " : `Lleva ${mxn(pagado)} de ${mxn(anticipo)}. `) +
-          (neto > 0 ? `Te llegan ${mxn(neto)} a tu Mercado Pago (ya sin comisiones).` : "El dinero entra a tu Mercado Pago."),
-        cotizacionId: c.id,
-        clienteId: c.cliente_id,
-        pedidoId,
-        mensajeCliente: `¡Gracias, ${quien}! Recibimos tu pago de ${mxn(monto)} de la cotización ${c.folio}. Aquí puedes seguir tu pedido: ${ligaDe(c)}`,
-        liga: ligaDe(c),
-      },
-      logger
-    )
-  }
   return { cotizacion: c.folio, estado: p.status, monto }
+}
+
+// ── PayPal: el dinero va directo a la cuenta PayPal del taller ─────────
+// La orden la crea HETNA (PAYPAL_CLIENT_ID) con `payee.merchant_id` = la
+// cuenta del taller, así que el pago llega completo al taller. PayPal sólo
+// descuenta comisiones de plataforma a socios aprobados, por eso la comisión
+// HETNA se anota como pendiente y se cobra una vez al mes
+// (lib/cotizador-comisiones.ts).
+export const COMISION_TOPE_USD = Number(process.env.COTIZADOR_COMISION_TOPE_USD || 8)
+
+export async function pagarConPaypal(token: string) {
+  const c = await cotizacionPorToken(token)
+  if (!paypalListo()) throw new ErrorSuscripcion("PayPal no está disponible por ahora.", 503)
+  if (c.estado === "Rechazada") throw new ErrorSuscripcion("Esta cotización fue rechazada.")
+  if (vencida(c) && !c.aceptada_en) throw new ErrorSuscripcion("Esta cotización ya venció. Pide al taller que la renueve.")
+  const anticipo = anticipoDe(c)
+  const resta = Math.round((anticipo - num(c.anticipo_pagado)) * 100) / 100
+  if (anticipo <= 0 || resta <= 0) throw new ErrorSuscripcion("Esta cotización no tiene anticipo pendiente.")
+
+  const [negocio, config, pp] = await Promise.all([negocioDe(c.negocio_id), configDe(c.negocio_id), paypalDelNegocio(c.negocio_id)])
+  if (!pp) throw new ErrorSuscripcion("El taller todavía no vincula su PayPal.", 409)
+  const moneda = monedaDe(config)
+  const nombreTaller = config?.nombre_comercial || negocio?.nombre || "Taller"
+  const liga = ligaDe(c)
+
+  const orden = await paypal<any>("/v2/checkout/orders", {
+    method: "POST",
+    headers: { "PayPal-Request-Id": `cot-${c.id}-${Math.round(resta * 100)}-${Math.floor(Date.now() / 600_000)}` },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          reference_id: c.id,
+          custom_id: referenciaCot(c.id),
+          description: `Anticipo de la cotización ${c.folio} · ${nombreTaller}`.slice(0, 127),
+          amount: { currency_code: moneda, value: resta.toFixed(2) },
+          payee: { merchant_id: pp.payer_id },
+        },
+      ],
+      payment_source: {
+        paypal: {
+          experience_context: {
+            brand_name: nombreTaller.slice(0, 127),
+            locale: moneda === "USD" ? "en-US" : "es-MX",
+            shipping_preference: "NO_SHIPPING",
+            user_action: "PAY_NOW",
+            return_url: `${API}/cotizacion-liga/${c.token_publico}/paypal`,
+            cancel_url: `${liga}?pago=error`,
+          },
+        },
+      },
+    }),
+  })
+  const url = (orden.links || []).find((l) => l.rel === "payer-action" || l.rel === "approve")?.href
+  if (!url) throw new Error("PayPal no devolvió la liga de pago")
+  return { url, monto: resta, moneda }
+}
+
+/** Regreso de PayPal: se cobra la orden y se anota el pago. Devuelve a dónde mandar al cliente. */
+export async function capturarPaypal(token: string, ordenId: string, logger?: any): Promise<string> {
+  const c = await cotizacionPorToken(token)
+  const liga = ligaDe(c)
+  if (!/^[A-Z0-9]{10,30}$/i.test(ordenId || "")) return `${liga}?pago=error`
+  const pp = await paypalDelNegocio(c.negocio_id)
+  if (!pp) return `${liga}?pago=error`
+
+  let orden = await paypal<any>(`/v2/checkout/orders/${ordenId}`)
+  const unidad = orden.purchase_units?.[0]
+  if (unidad?.custom_id !== referenciaCot(c.id)) {
+    logger?.warn?.(`[cotizador] PayPal ${ordenId}: no es de la cotización ${c.folio}`)
+    return `${liga}?pago=error`
+  }
+  if (orden.status === "APPROVED") {
+    orden = await paypal<any>(`/v2/checkout/orders/${ordenId}/capture`, {
+      method: "POST",
+      headers: { "PayPal-Request-Id": `cap-${ordenId}` },
+      body: "{}",
+    })
+  }
+  const captura = orden.purchase_units?.[0]?.payments?.captures?.[0]
+  if (!captura) return `${liga}?pago=${orden.status === "PAYER_ACTION_REQUIRED" ? "error" : "pendiente"}`
+
+  const destino = orden.purchase_units?.[0]?.payee?.merchant_id
+  if (destino && destino !== pp.payer_id) {
+    logger?.warn?.(`[cotizador] PayPal ${ordenId}: el dinero no fue a la cuenta del taller de ${c.folio}`)
+    return `${liga}?pago=error`
+  }
+
+  const estado = captura.status === "COMPLETED" ? "approved" : captura.status === "PENDING" ? "pending" : String(captura.status || "").toLowerCase()
+  const monto = Number(captura.amount?.value || 0)
+  const moneda = String(captura.amount?.currency_code || "MXN")
+  const negocio = await negocioDe(c.negocio_id)
+  const pct = comisionPct(negocio?.plan, negocio?.trial_hasta)
+  const tope = moneda === "USD" ? COMISION_TOPE_USD : COMISION_TOPE
+  const comision = Math.min(tope, Math.round(monto * pct) / 100)
+  const idPago = `pp:${captura.id}`
+
+  const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(idPago)}&select=estado&limit=1`)
+  const recienAprobado = estado === "approved" && previo[0]?.estado !== "approved"
+  await guardarPago({
+    cotizacion_id: c.id,
+    negocio_id: c.negocio_id,
+    mp_payment_id: idPago,
+    proveedor: "paypal",
+    moneda,
+    comision_cobrada: false, // se cobra en el corte del mes
+    monto,
+    comision_hetna: comision,
+    estado,
+    metodo: "paypal",
+    pagador: orden.payer?.email_address || null,
+    detalle: { orden: ordenId, neto: captura.seller_receivable_breakdown?.net_amount?.value || null },
+    actualizado: new Date().toISOString(),
+  })
+  const neto = Number(captura.seller_receivable_breakdown?.net_amount?.value || 0)
+  await trasPago(
+    c,
+    {
+      monto,
+      recienAprobado,
+      pagador: orden.payer?.email_address || null,
+      nombre: orden.payer?.name?.given_name || null,
+      dondeLlega:
+        (neto > 0 ? `Te llegan ${mxn(neto)} a tu PayPal (ya sin la comisión de PayPal). ` : "El dinero entra a tu PayPal. ") +
+        `La comisión HETNA (${mxn(comision)}) se cobra en el corte del mes.`,
+    },
+    logger
+  )
+  logger?.info?.(`[cotizador] PayPal ${estado} de ${monto} ${moneda} en ${c.folio} (comisión HETNA pendiente ${comision})`)
+  return `${liga}?pago=${estado === "approved" ? "ok" : "pendiente"}`
+}
+
+// "Iniciar sesión con PayPal": confirma que la cuenta es del taller y nos da
+// su id de cuenta (payer_id) para mandarle el dinero. En la app de PayPal de
+// HETNA hay que activar "Log in with PayPal" con la URL de regreso
+// https://hetnacnc.com/api/cotizador-paypal/callback y los datos: correo y
+// "PayPal account ID (payer ID)".
+const PP_WEB = () => (process.env.PAYPAL_SANDBOX === "true" ? "https://www.sandbox.paypal.com" : "https://www.paypal.com")
+const PP_API = () => (process.env.PAYPAL_SANDBOX === "true" ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com")
+export const REDIRECT_PP = `${API}/cotizador-paypal/callback`
+
+export async function ligaParaPaypal(sesion: string | undefined) {
+  if (!paypalListo()) throw new ErrorSuscripcion("Vincular PayPal todavía no está activo. Avísanos por WhatsApp.", 503)
+  const { negocio } = await adminDesdeToken(sesion)
+  const datos = `pp-${negocio.id}.${Date.now()}`
+  const state = `${datos}.${firmar(datos)}`
+  const url =
+    `${PP_WEB()}/signin/authorize?flowEntry=static&client_id=${encodeURIComponent(process.env.PAYPAL_CLIENT_ID || "")}` +
+    `&response_type=code&scope=${encodeURIComponent("openid email https://uri.paypal.com/services/paypalattributes")}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_PP)}&state=${encodeURIComponent(state)}`
+  return { url }
+}
+
+export async function terminarPaypal(code: string, state: string) {
+  const [a, ts, firma] = String(state || "").split(".")
+  let valida = false
+  try {
+    valida = Boolean(a?.startsWith("pp-") && firma) && timingSafeEqual(Buffer.from(firma), Buffer.from(firmar(`${a}.${ts}`)))
+  } catch {
+    valida = false
+  }
+  if (!valida) throw new ErrorSuscripcion("La liga de PayPal no es válida.")
+  if (Date.now() - Number(ts) > 30 * 60_000) throw new ErrorSuscripcion("La liga de PayPal venció. Vuelve a intentarlo desde la app.")
+  const negocioId = a.slice(3)
+  const credencial = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString("base64")
+  const r = await fetch(`${PP_API()}/v1/oauth2/token`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${credencial}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "authorization_code", code }),
+    signal: AbortSignal.timeout(15_000),
+  })
+  const t = (await r.json().catch(() => ({}))) as any
+  if (!r.ok || !t.access_token) throw new Error(`PayPal oauth ${r.status}: ${t.error_description || t.error || ""}`)
+  const u = await fetch(`${PP_API()}/v1/identity/oauth2/userinfo?schema=paypalv1.1`, {
+    headers: { Authorization: `Bearer ${t.access_token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  const info = (await u.json().catch(() => ({}))) as any
+  const payerId = String(info.payer_id || "").trim()
+  if (!u.ok || !payerId) throw new Error(`PayPal userinfo ${u.status}: sin payer_id (¿se activó el dato "PayPal account ID" en Log in with PayPal?)`)
+  const correo = (info.emails || []).find((e) => e.primary)?.value || info.emails?.[0]?.value || info.email || null
+  await supa(`/rest/v1/negocios_paypal?on_conflict=negocio_id`, {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      negocio_id: negocioId,
+      payer_id: payerId,
+      email: correo,
+      nombre: info.name || null,
+      verificada: info.verified_account === true || info.verified_account === "true" ? true : null,
+      actualizado: new Date().toISOString(),
+    }),
+  })
+  return { negocioId, correo }
+}
+
+export async function estadoPaypal(sesion: string | undefined) {
+  const { negocio } = await adminDesdeToken(sesion)
+  const fila = await paypalDelNegocio(negocio.id)
+  let pendiente = 0
+  try {
+    const filas = await supa<any[]>(
+      `/rest/v1/cotizacion_pagos?negocio_id=eq.${negocio.id}&proveedor=eq.paypal&estado=eq.approved&comision_cobrada=eq.false&select=comision_hetna`
+    )
+    pendiente = Math.round(filas.reduce((s, f) => s + Number(f.comision_hetna || 0), 0) * 100) / 100
+  } catch {
+    // aún sin columnas
+  }
+  return {
+    disponible: paypalListo(),
+    conectado: Boolean(fila),
+    email: fila?.email || null,
+    conectado_en: fila?.conectado_en || null,
+    comision_pct: comisionPct(negocio.plan),
+    comision_tope: COMISION_TOPE,
+    comision_tope_usd: COMISION_TOPE_USD,
+    comision_pendiente: pendiente,
+  }
+}
+
+export async function desconectarPaypal(sesion: string | undefined) {
+  const { negocio } = await adminDesdeToken(sesion)
+  await supa(`/rest/v1/negocios_paypal?negocio_id=eq.${negocio.id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } })
+  return { ok: true }
 }
 
 // ── OAuth: conectar la cuenta del taller ───────────────────────────────
