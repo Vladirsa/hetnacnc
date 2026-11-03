@@ -38,10 +38,6 @@ const BENEFICIOS = [
   ["Al momento", "ganas en cuanto ven tus videos o bajan tu libro"],
   ["Gratis", "publicar no cuesta, sin mensualidad"],
   ["Te anunciamos", "en la tienda, Facebook e Instagram"],
-],
-  ["$0", "por publicar, sin mensualidad"],
-  ["24/7", "vendes mientras trabajas"],
-  ["Toda", "la comunidad CNC de México"],
 ]
 
 type Producto = HttpTypes.StoreProduct
