@@ -22,18 +22,19 @@ import { createSign } from "crypto"
 import { supa } from "./cotizador-suscripciones"
 import { sendEmail } from "./resend"
 
-export type TipoAviso = "cotizacion_vista" | "cotizacion_aceptada" | "anticipo_pagado"
+export type TipoAviso = "cotizacion_vista" | "cotizacion_aceptada" | "anticipo_pagado" | "comision_hetna" | "solicitud_en_linea" | "mantenimiento"
 
 type Aviso = {
   negocioId: string
   tipo: TipoAviso
   titulo: string // corto, para la notificación y la alerta
   cuerpo: string // una o dos frases
-  cotizacionId: string
+  cotizacionId?: string | null
   clienteId?: string | null
   pedidoId?: string | null
   mensajeCliente?: string // mensaje de WhatsApp sugerido para el cliente
   correo?: boolean // vista: no se manda correo (sería mucho ruido)
+  boton?: string // texto del botón del correo (por defecto "Ver la cotización")
 }
 
 // ── Firebase Cloud Messaging (HTTP v1) ─────────────────────────────────
@@ -136,11 +137,11 @@ async function correoDelTaller(negocioId: string): Promise<string | null> {
 
 const esc = (s: string) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
 
-function htmlCorreo(titulo: string, cuerpo: string, liga: string) {
+function htmlCorreo(titulo: string, cuerpo: string, liga: string, boton = "Ver la cotización") {
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1B1B18">
   <h2 style="margin:0 0 8px;font-size:20px;color:#142033">${esc(titulo)}</h2>
   <p style="margin:0 0 18px;font-size:15px;line-height:1.5">${esc(cuerpo)}</p>
-  <a href="${esc(liga)}" style="display:inline-block;background:#C2560A;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:bold">Ver la cotización</a>
+  <a href="${esc(liga)}" style="display:inline-block;background:#C2560A;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:bold">${esc(boton)}</a>
   <p style="margin:22px 0 0;font-size:12px;color:#7A776E">Aviso automático del Cotizador HETNA. Lo ves también en la app, en Alertas.</p>
 </div>`
 }
@@ -157,8 +158,8 @@ export async function avisarTaller(a: Aviso & { liga: string }, logger?: any) {
       body: JSON.stringify({
         negocio_id: a.negocioId,
         tipo: a.tipo,
-        referencia_id: a.pedidoId || a.cotizacionId,
-        referencia_tipo: a.pedidoId ? "pedido" : "cotizacion",
+        referencia_id: a.pedidoId || a.cotizacionId || null,
+        referencia_tipo: a.pedidoId ? "pedido" : a.cotizacionId ? "cotizacion" : null,
         cliente_id: a.clienteId || null,
         titulo: a.titulo,
         mensaje_wa: a.mensajeCliente || null,
@@ -171,7 +172,7 @@ export async function avisarTaller(a: Aviso & { liga: string }, logger?: any) {
 
   // 2) Push
   try {
-    await push(a.negocioId, a.titulo, a.cuerpo, { tipo: a.tipo, cotizacion_id: a.cotizacionId, pedido_id: a.pedidoId || "" }, logger)
+    await push(a.negocioId, a.titulo, a.cuerpo, { tipo: a.tipo, cotizacion_id: a.cotizacionId || "", pedido_id: a.pedidoId || "" }, logger)
   } catch (e) {
     logger?.warn?.(`[cotizador] push ${a.tipo}: ${(e as Error).message}`)
   }
@@ -180,7 +181,7 @@ export async function avisarTaller(a: Aviso & { liga: string }, logger?: any) {
   if (a.correo !== false) {
     try {
       const para = await correoDelTaller(a.negocioId)
-      if (para) await sendEmail({ to: para, subject: a.titulo, html: htmlCorreo(a.titulo, a.cuerpo, a.liga) })
+      if (para) await sendEmail({ to: para, subject: a.titulo, html: htmlCorreo(a.titulo, a.cuerpo, a.liga, a.boton) })
     } catch (e) {
       logger?.warn?.(`[cotizador] correo ${a.tipo}: ${(e as Error).message}`)
     }

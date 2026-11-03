@@ -13,6 +13,11 @@ export type SendEmailInput = {
   bajaUrl?: string
   // Archivos adjuntos (p. ej. el comprobante PDF de una compra digital)
   adjuntos?: { nombre: string; contenido: Uint8Array | Buffer }[]
+  // Nombre que ve el destinatario como remitente (la dirección sigue siendo la
+  // de RESEND_FROM_EMAIL) y a quién le llegan las respuestas. Lo usa el
+  // marketing del Cotizador: el correo sale "de" el taller.
+  de?: string
+  responderA?: string
 }
 
 export type SendEmailResult = {
@@ -45,9 +50,15 @@ export async function sendEmail({
   html,
   bajaUrl,
   adjuntos,
+  de,
+  responderA,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL
+  const fromBase = process.env.RESEND_FROM_EMAIL
+  const direccion = fromBase ? (fromBase.match(/<([^>]+)>/)?.[1] || fromBase).trim() : ""
+  const nombreDe = String(de || "").replace(/[<>"\r\n]/g, "").trim().slice(0, 60)
+  const from = fromBase && nombreDe ? `"${nombreDe}" <${direccion}>` : fromBase
+  const replyTo = responderA && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(responderA) ? responderA : undefined
 
   if (!apiKey || !from) {
     return { sent: false, reason: "RESEND_API_KEY o RESEND_FROM_EMAIL no configurados" }
@@ -63,6 +74,7 @@ export async function sendEmail({
       from,
       to,
       subject,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       html: bajaUrl
         ? html +
           `<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888;text-align:center;margin:12px 0 0;">` +
