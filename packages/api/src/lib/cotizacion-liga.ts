@@ -28,6 +28,7 @@
 //   COTIZADOR_SUPABASE_SERVICE_KEY (ya existe)
 import { createHmac, timingSafeEqual } from "crypto"
 
+import { avisarTaller } from "./avisos-taller"
 import { adminDesdeToken, ErrorSuscripcion, supa } from "./cotizador-suscripciones"
 
 const MP_API = "https://api.mercadopago.com"
@@ -80,6 +81,117 @@ async function patchCotizacion(id: string, cambios: Record<string, unknown>) {
     body: JSON.stringify({ ...cambios, updated_at: new Date().toISOString() }),
     headers: { Prefer: "return=minimal" },
   })
+}
+
+/** PATCH sólo si `campo` sigue vacío. true = esta llamada fue la que lo puso
+ *  (así el aviso al taller sale una sola vez aunque lleguen dos peticiones juntas). */
+async function ponerSiVacio(id: string, campo: string, cambios: Record<string, unknown>): Promise<boolean> {
+  const filas = await supa<any[]>(`/rest/v1/cotizaciones?id=eq.${id}&${campo}=is.null&select=id`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...cambios, updated_at: new Date().toISOString() }),
+    headers: { Prefer: "return=representation" },
+  })
+  return Array.isArray(filas) && filas.length > 0
+}
+
+const mxn = (n: number) => `$${Number(n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const ligaDe = (c) => `${SITIO}/c/${c.token_publico}`
+
+// ── Pedido ligado a la cotización (seguimiento en la misma liga) ───────
+async function pedidoDe(cotId: string) {
+  // Con las columnas de la guía (supabase/avisos_y_seguimiento.sql) y, si
+  // todavía no se corrió ese SQL, sin ellas: la página no debe caerse.
+  const base = "id,folio,estado,total,fecha_entrega_estimada,fecha_entregado,created_at"
+  for (const campos of [`${base},paqueteria,guia,rastreo_url`, base]) {
+    try {
+      const filas = await supa<any[]>(`/rest/v1/pedidos?cotizacion_id=eq.${cotId}&select=${campos}&order=created_at.desc&limit=1`)
+      return filas[0] || null
+    } catch {
+      // intenta sin las columnas nuevas
+    }
+  }
+  return null
+}
+
+async function seguimientoDe(pedido) {
+  if (!pedido) return null
+  const [avances, fotos] = await Promise.all([
+    supa<any[]>(`/rest/v1/pedido_avances?pedido_id=eq.${pedido.id}&select=etapa,descripcion,created_at&order=created_at.asc`).catch(() => []),
+    supa<any[]>(`/rest/v1/pedido_fotos?pedido_id=eq.${pedido.id}&select=url,etapa,created_at&order=created_at.asc`).catch(() => []),
+  ])
+  return {
+    folio: pedido.folio,
+    estado: pedido.estado,
+    fecha_estimada: pedido.fecha_entrega_estimada || null,
+    entregado: pedido.fecha_entregado || null,
+    avances: avances.map((a) => ({ etapa: a.etapa, nota: a.descripcion || null, fecha: a.created_at })),
+    fotos: fotos.filter((f) => /^https:\/\//.test(String(f.url || ""))).map((f) => ({ url: f.url, etapa: f.etapa || null, fecha: f.created_at })),
+    envio: pedido.guia ? { paqueteria: pedido.paqueteria || null, guia: pedido.guia, rastreo: rastreoUrl(pedido.paqueteria, pedido.guia, pedido.rastreo_url) } : null,
+  }
+}
+
+/** Liga de rastreo: la que puso el taller o, para las paqueterías conocidas, la de su sitio. */
+export function rastreoUrl(paqueteria: string | null, guia: string, propia?: string | null): string | null {
+  if (propia && /^https:\/\/\S+$/i.test(propia)) return propia
+  const g = encodeURIComponent(String(guia || "").trim())
+  if (!g) return null
+  const p = String(paqueteria || "").toLowerCase()
+  if (p.includes("dhl")) return `https://www.dhl.com/mx-es/home/rastreo.html?tracking-id=${g}`
+  if (p.includes("fedex")) return `https://www.fedex.com/fedextrack/?trknbr=${g}`
+  if (p.includes("ups")) return `https://www.ups.com/track?loc=es_MX&tracknum=${g}`
+  return null
+}
+
+/** Al completarse el anticipo: crea el pedido o lo pasa a "Anticipo recibido". */
+async function asegurarPedido(c, montoPagado: number, logger?: any) {
+  const nota = `Anticipo pagado en línea con Mercado Pago (${mxn(montoPagado)})`
+  try {
+    const existente = await pedidoDe(c.id)
+    let pedidoId = existente?.id
+    if (existente) {
+      if (existente.estado === "Pedido") {
+        await supa(`/rest/v1/pedidos?id=eq.${existente.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ estado: "Pago50", updated_at: new Date().toISOString() }),
+          headers: { Prefer: "return=minimal" },
+        })
+        await supa(`/rest/v1/pedido_avances`, {
+          method: "POST",
+          body: JSON.stringify({ pedido_id: existente.id, etapa: "Pago50", descripcion: nota }),
+          headers: { Prefer: "return=minimal" },
+        })
+      }
+    } else {
+      const ahora = new Date()
+      const folio = `PED-${ahora.getFullYear()}-${String(ahora.getTime()).slice(-6)}`
+      const nuevo = await supa<any[]>(`/rest/v1/pedidos`, {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({
+          folio,
+          negocio_id: c.negocio_id,
+          cotizacion_id: c.id,
+          cliente_id: c.cliente_id,
+          estado: "Pago50",
+          total: num(c.total),
+          fecha_entrega_estimada: c.fecha_entrega || null,
+        }),
+      })
+      pedidoId = nuevo?.[0]?.id
+      if (pedidoId) {
+        await supa(`/rest/v1/pedido_avances`, {
+          method: "POST",
+          body: JSON.stringify({ pedido_id: pedidoId, etapa: "Pago50", descripcion: nota }),
+          headers: { Prefer: "return=minimal" },
+        })
+      }
+    }
+    await patchCotizacion(c.id, { estado: "Pedido" })
+    return pedidoId || null
+  } catch (e) {
+    logger?.warn?.(`[cotizador] no se pudo crear/avanzar el pedido de ${c.folio}: ${(e as Error).message}`)
+    return null
+  }
 }
 
 async function negocioDe(id: string) {
@@ -149,8 +261,26 @@ export async function paginaPublica(token: string) {
     mpDelNegocio(c.negocio_id),
   ])
   if (!c.liga_vista_en) {
-    patchCotizacion(c.id, { liga_vista_en: new Date().toISOString() }).catch(() => {})
+    // Primera vez que el cliente abre la liga: se marca y se avisa al taller
+    // (sin esperar, para que la página cargue rápido).
+    ponerSiVacio(c.id, "liga_vista_en", { liga_vista_en: new Date().toISOString() })
+      .then((primera) => {
+        if (!primera) return
+        const quien = cliente?.nombre || "Tu cliente"
+        return avisarTaller({
+          negocioId: c.negocio_id,
+          tipo: "cotizacion_vista",
+          titulo: `👀 ${quien} abrió la cotización ${c.folio}`,
+          cuerpo: `Buen momento para darle seguimiento. Total ${mxn(num(c.total))}.`,
+          cotizacionId: c.id,
+          clienteId: c.cliente_id,
+          correo: false,
+          liga: ligaDe(c),
+        })
+      })
+      .catch(() => {})
   }
+  const seguimiento = c.estado === "Pedido" || c.anticipo_estado === "pagado" ? await seguimientoDe(await pedidoDe(c.id)) : null
   const anticipo = anticipoDe(c)
   const estaVencida = vencida(c) && !c.aceptada_en && c.estado !== "Aprobada" && c.estado !== "Pedido"
   return {
@@ -198,6 +328,7 @@ export async function paginaPublica(token: string) {
       se_puede_pagar: Boolean(mp) && anticipo > 0 && num(c.anticipo_pagado) < anticipo && !estaVencida && c.estado !== "Rechazada",
     },
     pagos: pagos.filter((p) => p.estado === "approved").map((p) => ({ monto: num(p.monto), metodo: p.metodo, fecha: p.creado })),
+    pedido: seguimiento,
   }
 }
 
@@ -210,11 +341,27 @@ export async function aceptar(token: string, nombre: string) {
   if (c.estado === "Rechazada") throw new ErrorSuscripcion("Esta cotización fue rechazada. Pide una nueva al taller.")
   if (vencida(c)) throw new ErrorSuscripcion("Esta cotización ya venció. Pide al taller que la renueve.")
   const en = new Date().toISOString()
-  await patchCotizacion(c.id, {
+  const primera = await ponerSiVacio(c.id, "aceptada_en", {
     aceptada_en: en,
     aceptada_por: quien,
     estado: c.estado === "Pedido" ? "Pedido" : "Aprobada",
   })
+  if (primera) {
+    const anticipo = anticipoDe(c)
+    await avisarTaller({
+      negocioId: c.negocio_id,
+      tipo: "cotizacion_aceptada",
+      titulo: `✅ ${quien} aceptó la cotización ${c.folio}`,
+      cuerpo:
+        `Total ${mxn(num(c.total))}.` +
+        (anticipo > 0 && c.anticipo_estado !== "pagado" ? ` Falta el anticipo de ${mxn(anticipo)}; puede pagarlo desde la misma liga.` : ""),
+      cotizacionId: c.id,
+      clienteId: c.cliente_id,
+      mensajeCliente: `¡Gracias, ${quien}! Recibimos tu aceptación de la cotización ${c.folio}.` +
+        (anticipo > 0 ? ` En cuanto se acredite el anticipo de ${mxn(anticipo)} arrancamos. Puedes pagarlo aquí: ${ligaDe(c)}` : " Te avisamos cuando empecemos."),
+      liga: ligaDe(c),
+    })
+  }
   return { ok: true, en }
 }
 
@@ -372,6 +519,9 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
 
   const monto = Number(p.transaction_amount || 0)
   const comision = Number(p.marketplace_fee ?? p.fee_details?.find?.((f) => f.type === "application_fee")?.amount ?? 0)
+  // Estado anterior de este pago (Mercado Pago avisa varias veces el mismo pago)
+  const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(String(p.id))}&select=estado&limit=1`)
+  const recienAprobado = p.status === "approved" && previo[0]?.estado !== "approved"
   await supa(`/rest/v1/cotizacion_pagos?on_conflict=mp_payment_id`, {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -404,6 +554,30 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
   }
   await patchCotizacion(c.id, cambios)
   logger?.info?.(`[cotizador] pago ${p.status} de $${monto} en ${c.folio} (comisión HETNA $${comision})`)
+
+  if (recienAprobado) {
+    const completo = cambios.anticipo_estado === "pagado" && c.anticipo_estado !== "pagado"
+    const pedidoId = completo ? await asegurarPedido(c, pagado, logger) : null
+    const cliente = await clienteDe(c.cliente_id).catch(() => null)
+    const quien = cliente?.nombre || p.payer?.first_name || "Tu cliente"
+    const neto = Number(p.transaction_details?.net_received_amount || 0)
+    await avisarTaller(
+      {
+        negocioId: c.negocio_id,
+        tipo: "anticipo_pagado",
+        titulo: `💰 ${quien} pagó ${mxn(monto)} de la cotización ${c.folio}`,
+        cuerpo:
+          (completo ? "Anticipo completo: el pedido ya está en Avances como \"Anticipo recibido\". " : `Lleva ${mxn(pagado)} de ${mxn(anticipo)}. `) +
+          (neto > 0 ? `Te llegan ${mxn(neto)} a tu Mercado Pago (ya sin comisiones).` : "El dinero entra a tu Mercado Pago."),
+        cotizacionId: c.id,
+        clienteId: c.cliente_id,
+        pedidoId,
+        mensajeCliente: `¡Gracias, ${quien}! Recibimos tu pago de ${mxn(monto)} de la cotización ${c.folio}. Aquí puedes seguir tu pedido: ${ligaDe(c)}`,
+        liga: ligaDe(c),
+      },
+      logger
+    )
+  }
   return { cotizacion: c.folio, estado: p.status, monto }
 }
 

@@ -129,6 +129,9 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
       {pago === "pendiente" ? <Aviso tono="info">Tu pago quedó pendiente (por ejemplo, pago en efectivo). Cuando se acredite, aparecerá aquí.</Aviso> : null}
       {pago === "error" ? <Aviso tono="error">El pago no se completó. Puedes intentarlo de nuevo.</Aviso> : null}
 
+      {/* Seguimiento del pedido */}
+      {c.pedido ? <Seguimiento p={c.pedido} /> : null}
+
       {/* Partidas */}
       <section className={caja}>
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Lo cotizado</h2>
@@ -294,4 +297,119 @@ function Dato({ k, v }: { k: string; v: string }) {
 function Aviso({ tono, children }: { tono: "info" | "error"; children: React.ReactNode }) {
   const color = tono === "error" ? "border-[#F5C2C0] bg-[#FDECEC] text-[#B42318]" : "border-[#F3D9C2] bg-[#FFF4EA] text-[#8A3D06]"
   return <p className={`m-0 rounded-[12px] border px-4 py-3 text-[14px] ${color}`}>{children}</p>
+}
+
+// Etapas que usa la app del taller (pantalla Avances)
+const ETAPAS = ["Pedido", "Pago50", "Produccion", "Pruebas", "PagoCompleto", "Entrega", "Entregado"] as const
+const NOMBRE_ETAPA: Record<string, string> = {
+  Pedido: "Pedido recibido",
+  Pago: "Anticipo recibido",
+  Pago50: "Anticipo recibido",
+  Produccion: "En producción",
+  Pruebas: "Control de calidad",
+  PagoCompleto: "Pago completo",
+  Entrega: "Listo para entrega",
+  Entregado: "Entregado",
+  Cancelado: "Cancelado",
+}
+const etapa = (e: string) => NOMBRE_ETAPA[e] || e
+
+function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
+  const cancelado = p.estado === "Cancelado"
+  const actual = Math.max(0, ETAPAS.indexOf((p.estado === "Pago" ? "Pago50" : p.estado) as (typeof ETAPAS)[number]))
+  const [copiada, setCopiada] = useState(false)
+  return (
+    <section className={caja}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="m-0 text-[17px] font-bold text-[#142033]">Tu pedido {p.folio}</h2>
+        {p.entregado ? (
+          <span className="text-[13px] text-[#1E7B3A]">Entregado el {fecha(p.entregado)}</span>
+        ) : p.fecha_estimada && !cancelado ? (
+          <span className="text-[13px] text-[#7A776E]">Entrega estimada: {fecha(p.fecha_estimada)}</span>
+        ) : null}
+      </div>
+
+      {cancelado ? (
+        <p className="m-0 mt-3 text-[15px] text-[#B42318]">Este pedido fue cancelado. Si tienes dudas, escríbele al taller.</p>
+      ) : (
+        <ol className="m-0 mt-4 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-7 sm:gap-1">
+          {ETAPAS.map((e, i) => {
+            const hecho = i < actual || p.estado === "Entregado"
+            const ahora = i === actual && p.estado !== "Entregado"
+            return (
+              <li key={e} className="flex items-center gap-2 sm:flex-col sm:items-center sm:text-center">
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
+                    hecho ? "bg-[#1E7B3A] text-white" : ahora ? "bg-[#C2560A] text-white" : "bg-[#F3F2EE] text-[#7A776E]"
+                  }`}
+                >
+                  {hecho ? "✓" : i + 1}
+                </span>
+                <span className={`text-[13px] leading-tight ${ahora ? "font-semibold text-[#1B1B18]" : "text-[#40403A]"}`}>{etapa(e)}</span>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+
+      {p.envio ? (
+        <div className="mt-5 rounded-[12px] bg-[#FAF9F6] p-4">
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Envío</p>
+          <p className="m-0 mt-1 text-[15px] text-[#1B1B18]">
+            {p.envio.paqueteria ? <b>{p.envio.paqueteria} · </b> : null}
+            Guía <span className="font-mono">{p.envio.guia}</span>
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {p.envio.rastreo ? (
+              <a href={p.envio.rastreo} target="_blank" rel="noopener" className={boton}>
+                Rastrear envío
+              </a>
+            ) : null}
+            <button
+              type="button"
+              className={botonClaro}
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(p.envio!.guia)
+                  setCopiada(true)
+                } catch {
+                  // sin portapapeles: el número ya está a la vista
+                }
+              }}
+            >
+              {copiada ? "Guía copiada" : "Copiar número de guía"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {p.fotos.length ? (
+        <div className="mt-5">
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Fotos del avance</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {p.fotos.map((f, k) => (
+              <a key={k} href={f.url} target="_blank" rel="noopener" className="block overflow-hidden rounded-[10px] border border-[#E7E4DC]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={f.url} alt={f.etapa ? etapa(f.etapa) : "Avance"} loading="lazy" className="aspect-square w-full object-cover" />
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {p.avances.length ? (
+        <div className="mt-5">
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Historial</p>
+          <ul className="m-0 mt-2 list-none space-y-2 p-0">
+            {[...p.avances].reverse().map((a, k) => (
+              <li key={k} className="text-[14px] text-[#40403A]">
+                <b className="text-[#1B1B18]">{etapa(a.etapa)}</b> · {fecha(a.fecha)}
+                {a.nota ? <span className="block text-[13px] text-[#7A776E]">{a.nota}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  )
 }
