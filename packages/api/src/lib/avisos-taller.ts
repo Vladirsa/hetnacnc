@@ -22,7 +22,7 @@ import { createSign } from "crypto"
 import { supa } from "./cotizador-suscripciones"
 import { sendEmail } from "./resend"
 
-export type TipoAviso = "cotizacion_vista" | "cotizacion_aceptada" | "anticipo_pagado" | "comision_hetna" | "solicitud_en_linea"
+export type TipoAviso = "cotizacion_vista" | "cotizacion_aceptada" | "anticipo_pagado" | "comision_hetna" | "solicitud_en_linea" | "mantenimiento"
 
 type Aviso = {
   negocioId: string
