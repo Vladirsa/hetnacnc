@@ -24,7 +24,7 @@ const PASOS_TALLER = [
   "Graba tus clases (YouTube oculto o Vimeo) o prepara tu libro en PDF.",
   "En tu panel de taller entra a Cursos o a Libros y PDF y llena la ficha.",
   "Elige si es gratis o pon tu precio. HETNA lo promociona en la tienda, Facebook e Instagram.",
-  "Cobras cada venta en tu saldo. HETNA sólo se queda con el 10%.",
+  "Cada vez que alguien compra tu curso o tu libro, la venta llega a tu saldo al momento.",
 ]
 
 const QUE_PUBLICAR = [
@@ -34,7 +34,11 @@ const QUE_PUBLICAR = [
 ]
 
 const BENEFICIOS = [
-  ["90%", "de cada venta es para ti"],
+  ["Más alumnos", "llega a talleres y usuarios de todo México"],
+  ["Al momento", "ganas en cuanto ven tus videos o bajan tu libro"],
+  ["Gratis", "publicar no cuesta, sin mensualidad"],
+  ["Te anunciamos", "en la tienda, Facebook e Instagram"],
+],
   ["$0", "por publicar, sin mensualidad"],
   ["24/7", "vendes mientras trabajas"],
   ["Toda", "la comunidad CNC de México"],
@@ -134,17 +138,17 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
               <span className="relative">
                 <span className="text-[12px] font-extrabold uppercase tracking-wide text-white/85">¿Tienes un taller o sabes enseñar?</span>
                 <span className="mt-2 block font-display text-[26px] font-extrabold leading-tight lg:text-[30px]">
-                  Gana dinero con lo que sabes
+                  Llega a más usuarios y gana con lo que sabes
                 </span>
                 <span className="mt-2 block text-[14.5px] leading-relaxed text-white/90">
-                  Publica tus cursos y tus libros en PDF gratis. Te quedas con el 90% de cada venta y te promocionamos en toda la
-                  comunidad CNC.
+                  Publica tus cursos y tus libros en PDF gratis. Te mostramos con toda la comunidad CNC y ganas al momento en que
+                  ven tus videos o compran tu libro.
                 </span>
               </span>
               <span className="relative grid grid-cols-2 gap-2">
                 {BENEFICIOS.slice(0, 2).map(([n, t]) => (
                   <span key={t} className="rounded-[12px] bg-black/15 px-3 py-2">
-                    <span className="block text-[22px] font-extrabold leading-none">{n}</span>
+                    <span className="block text-[18px] font-extrabold leading-tight">{n}</span>
                     <span className="text-[12px] text-white/85">{t}</span>
                   </span>
                 ))}
@@ -239,7 +243,7 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
               <dl className="m-0 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {BENEFICIOS.map(([n, t]) => (
                   <div key={t} className="rounded-[12px] border border-white/10 bg-white/[0.05] px-3 py-2.5">
-                    <dt className="text-[22px] font-extrabold leading-none text-[#FFC53D]">{n}</dt>
+                    <dt className="text-[17px] font-extrabold leading-tight text-[#FFC53D]">{n}</dt>
                     <dd className="m-0 mt-1 text-[12px] leading-snug text-white/70">{t}</dd>
                   </div>
                 ))}
