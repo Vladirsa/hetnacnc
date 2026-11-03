@@ -230,7 +230,7 @@ export async function estimarPublico(slug: string, b: any) {
   return { estimable: true, moneda, minimo: r.minimo, recomendado: r.recomendado, iva_pct: r.ivaPct, horas: r.horas }
 }
 
-// ── Solicitud ────────────────────────────────────────────────────────────
+// ── Solicitud ───────────────────────────────────────────────────────────
 const hashIp = (ip: string) => createHash("sha256").update(`${ip}|${supaKey().slice(-12)}`).digest("hex").slice(0, 32)
 
 async function subirArchivo(negocioId: string, solicitudId: string, archivo) {
@@ -488,7 +488,7 @@ export async function solicitar(slug: string, campos: Record<string, any>, archi
   }
 }
 
-// ── Directorio ────────────────────────────────────────────────────────────
+// ── Directorio ───────────────────────────────────────────────────────────
 export async function directorio() {
   const paginas = await intentar(
     () => supa<any[]>(`/rest/v1/negocios_pagina?activa=eq.true&en_directorio=eq.true&select=negocio_id,titulo,descripcion,ciudad&limit=300`),
