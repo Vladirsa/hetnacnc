@@ -1,4 +1,5 @@
 import { defineMiddlewares } from "@medusajs/medusa";
+import { MAX_MB_LIBRO } from "../lib/publicar-libro";
 import { adminLearningArticlesMiddlewares } from "./admin/learning-articles/middlewares";
 import { storeLearningArticlesMiddlewares } from "./store/learning-articles/middlewares";
 import { adminCoursesMiddlewares } from "./admin/courses/middlewares";
@@ -59,6 +60,12 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/vendor/hetna-facturas/:id",
           middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
+        },
+        // PDF de un libro de la Academia desde el panel del taller
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-libros/archivo",
+          middlewares: [leerMultipart({ campos: { pdf: 1 }, maxMb: MAX_MB_LIBRO })],
         },
         // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
         {

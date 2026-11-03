@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation"
 
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
 import { Academia } from "@/components/hetna/academia/Academia"
+import { getCategoryByHandle } from "@/lib/data/categories"
+import { listProducts } from "@/lib/data/products"
 import { buscarServicio } from "@/components/hetna/servicios-datos"
 import { CotizadorLanding } from "@/components/hetna/taller/CotizadorLanding"
 import { listLearningArticles } from "@/lib/data/learning-articles"
@@ -57,12 +59,30 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   // redirige al espacio "Diseñar y escanear" (/disenar, ver next.config).
 
   if (s.slug === "aprendizaje-cnc") {
-    const [{ learning_articles }, { courses }] = await Promise.all([
+    const [{ learning_articles }, { courses }, libros] = await Promise.all([
       listLearningArticles({ limit: 9 }),
       listCourses({ limit: 60 }),
+      librosAcademia(locale),
     ])
-    return <Academia cursos={courses} articulos={learning_articles} />
+    return <Academia cursos={courses} articulos={learning_articles} libros={libros} />
   }
 
   return <ServicioPagina s={s} />
+}
+
+// Los libros y PDF que publican los talleres (categoría "Libros y PDF", ver
+// packages/api/src/lib/publicar-libro.ts). Si la categoría aún no existe, nada.
+async function librosAcademia(locale: string) {
+  try {
+    const cat = await getCategoryByHandle("libros-y-pdf")
+    if (!cat?.id) return []
+    const { response } = await listProducts({
+      countryCode: locale,
+      category_id: cat.id,
+      queryParams: { limit: 12, fields: "*variants.calculated_price,+metadata,+subtitle,+thumbnail" } as never,
+    })
+    return response.products
+  } catch {
+    return []
+  }
 }

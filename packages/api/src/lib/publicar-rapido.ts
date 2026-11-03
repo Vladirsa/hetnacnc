@@ -146,6 +146,44 @@ export async function categoriasParaPublicar(container: MedusaContainer) {
     .sort((a, b) => a.ruta.localeCompare(b.ruta, "es"))
 }
 
+type SellerConDireccion = {
+  id: string
+  name: string
+  address?: Record<string, string | null>
+  stock_locations?: { id: string }[]
+}
+
+/** El almacén del taller; si no tiene, se le crea uno con su dirección. */
+export async function almacenDelTaller(container: MedusaContainer, seller: SellerConDireccion): Promise<string> {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
+  let locationId = seller.stock_locations?.[0]?.id
+  if (!locationId) {
+    const a = seller.address ?? {}
+    const { result } = await createSellerStockLocationsWorkflow(container).run({
+      input: {
+        seller_id: seller.id,
+        locations: [
+          {
+            name: `${seller.name} — Almacén`,
+            address: {
+              address_1: a.address_1 || seller.name,
+              city: a.city || undefined,
+              province: a.province || undefined,
+              postal_code: a.postal_code || undefined,
+              country_code: String(a.country_code || "mx").toLowerCase(),
+            },
+          },
+        ],
+      },
+    })
+    locationId = (result as { id: string }[])[0]?.id
+    if (!locationId) throw new Error("No se pudo crear el almacén del taller")
+    logger.info(`[publicar] almacén creado para ${seller.name}`)
+  }
+
+  return locationId
+}
+
 export async function publicarRapido(
   container: MedusaContainer,
   sellerId: string,
@@ -174,31 +212,7 @@ export async function publicarRapido(
   const cat = cats[0] as { id: string; is_active?: boolean; is_internal?: boolean } | undefined
   if (!cat || cat.is_active === false || cat.is_internal === true) throw new ErrorPublicar("Esa categoría ya no existe. Elige otra.")
 
-  // Almacén del taller: si no tiene, uno con su dirección
-  let locationId = seller.stock_locations?.[0]?.id
-  if (!locationId) {
-    const a = seller.address ?? {}
-    const { result } = await createSellerStockLocationsWorkflow(container).run({
-      input: {
-        seller_id: seller.id,
-        locations: [
-          {
-            name: `${seller.name} — Almacén`,
-            address: {
-              address_1: a.address_1 || seller.name,
-              city: a.city || undefined,
-              province: a.province || undefined,
-              postal_code: a.postal_code || undefined,
-              country_code: String(a.country_code || "mx").toLowerCase(),
-            },
-          },
-        ],
-      },
-    })
-    locationId = (result as { id: string }[])[0]?.id
-    if (!locationId) throw new Error("No se pudo crear el almacén del taller")
-    logger.info(`[publicar] almacén creado para ${seller.name}`)
-  }
+  const locationId = await almacenDelTaller(container, seller)
 
   // Perfil de envío físico: el mismo que usa envios-automaticos.ts
   const { data: perfiles } = await query.graph({ entity: "shipping_profile", fields: ["id", "name"] })
