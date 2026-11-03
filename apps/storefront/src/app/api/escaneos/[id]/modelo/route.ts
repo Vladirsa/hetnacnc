@@ -8,15 +8,16 @@ import { NextResponse } from "next/server"
 
 import { cargarEscaneo } from "@/lib/escaneos/acciones"
 
-const MAX = 80 * 1024 * 1024
+const MAX = 150 * 1024 * 1024
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!/^esc3d_[A-Za-z0-9]+$/.test(id)) return NextResponse.json({ mensaje: "Escaneo inválido" }, { status: 400 })
 
   const res = await cargarEscaneo(id)
   if (!res.ok) return NextResponse.json({ mensaje: "No encontrado" }, { status: 404 })
-  const url = res.datos.descargas?.stl
+  const glb = new URL(req.url).searchParams.get("formato") === "glb"
+  const url = glb ? res.datos.descargas?.glb : res.datos.descargas?.stl
   if (!url) return NextResponse.json({ mensaje: "El escaneo todavía no tiene archivo" }, { status: 404 })
 
   const archivo = await fetch(url, { cache: "no-store" })
@@ -26,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   return new NextResponse(archivo.body, {
     headers: {
-      "content-type": "model/stl",
+      "content-type": glb ? "model/gltf-binary" : "model/stl",
       "cache-control": "private, max-age=600",
       ...(largo ? { "content-length": String(largo) } : {}),
     },

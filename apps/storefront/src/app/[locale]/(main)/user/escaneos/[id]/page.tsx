@@ -80,20 +80,24 @@ export default async function TallerEscaneoDetalle({
           <Estudio3D
             titulo={e.titulo || "Escaneo"}
             subtitulo={`${MODO_ETIQUETA[e.modo]} · ${e.n_fotos} ${e.n_fotos === 1 ? "foto" : "fotos"}`}
-            urlStl={descargas.stl ? `/api/escaneos/${e.id}/modelo` : undefined}
+            urlGlb={descargas.glb ? `/api/escaneos/${e.id}/modelo?formato=glb` : undefined}
+            urlStl={!descargas.glb && descargas.stl ? `/api/escaneos/${e.id}/modelo` : undefined}
             escalaReal={!!e.escala_real}
             descargas={[
+              ...(descargas.glb ? [{ etiqueta: "Descargar GLB", href: descargas.glb, nota: "Con textura y color" }] : []),
               ...(descargas.stl ? [{ etiqueta: "Descargar STL", href: descargas.stl, nota: "Impresión 3D y CAM" }] : []),
               ...(descargas.obj ? [{ etiqueta: "Descargar OBJ", href: descargas.obj, nota: "Diseño y render" }] : []),
             ]}
             avisos={[
               ...(e.modo === "preview"
-                ? ["Vista previa: una IA adivinó la forma con una sola foto, sin medir la pieza. Sirve para enseñarla, no para fabricarla."]
+                ? [
+                    "Modelo con IA hecho con una sola foto: la forma es una reconstrucción, no una medición. El STL sale a 100 mm por su lado más largo; escálalo a tu medida.",
+                  ]
                 : []),
               ...(e.watertight === false ? ["La malla no cierra por completo: repárala antes de imprimir o maquinar."] : []),
             ]}
           />
-          {!descargas.stl && (
+          {!descargas.stl && !descargas.glb && (
             <p className="mt-3 text-[14px] text-[#6B6A63]">Este escaneo no tiene archivo STL para mostrar en 3D.</p>
           )}
         </div>

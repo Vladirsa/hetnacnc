@@ -20,7 +20,7 @@ export const ESTATUS_CLASE: Record<Estatus, string> = {
 }
 
 export const MODO_ETIQUETA: Record<Escaneo["modo"], string> = {
-  preview: "Vista previa",
+  preview: "Modelo con IA",
   scan: "Escaneo profesional",
 }
 

@@ -18,6 +18,7 @@ import { ESCANEO_MODULE } from "../modules/escaneo"
 import EscaneoModuleService from "../modules/escaneo/service"
 import { getSignedDownloadUrl } from "../lib/backblaze"
 import { grantCreditsWorkflow } from "../workflows/grant-credits"
+import { tencentListo } from "../lib/tencent3d"
 
 // Cuántos atender por vuelta. El tope existe para no disparar cincuenta
 // trabajos de GPU de golpe si algo se acumuló.
@@ -43,8 +44,10 @@ export default async function despacharEscaneos(container: MedusaContainer) {
   const cabeceras = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }
 
   // --- 1. Despachar los que están en cola ---
+  // Con Tencent configurado, las vistas previas las atiende
+  // despachar-escaneos-ia.ts; aquí sólo quedan los escaneos profesionales.
   const enCola = await servicio.listEscaneo3ds(
-    { estatus: "pendiente" },
+    tencentListo() ? { estatus: "pendiente", modo: "scan" } : { estatus: "pendiente" },
     { order: { created_at: "ASC" }, take: POR_VUELTA }
   )
 
@@ -108,6 +111,7 @@ export default async function despacharEscaneos(container: MedusaContainer) {
   )
 
   for (const escaneo of enProceso) {
+    if ((escaneo as any).proveedor === "tencent") continue
     const vencido =
       escaneo.iniciado_en &&
       Date.now() - new Date(escaneo.iniciado_en).getTime() > HORAS_LIMITE * 3600 * 1000
@@ -170,7 +174,7 @@ export default async function despacharEscaneos(container: MedusaContainer) {
 // Marca el escaneo como fallido y devuelve los créditos. El gasto se hace al
 // disparar el trabajo, así que este es el único momento en que se puede saber
 // que no hubo nada a cambio.
-async function cerrarComoFallido(
+export async function cerrarComoFallido(
   container: MedusaContainer,
   servicio: EscaneoModuleService,
   escaneo: { id: string; customer_id: string; creditos_cobrados: number },

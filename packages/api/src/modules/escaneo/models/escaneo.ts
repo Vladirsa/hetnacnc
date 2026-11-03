@@ -38,6 +38,10 @@ const Escaneo = model
 
     obj_storage_key: model.text().nullable(),
     stl_storage_key: model.text().nullable(),
+    // El modelo con textura (GLB) que entrega Tencent HY 3D en la vista previa.
+    glb_storage_key: model.text().nullable(),
+    // Quién hizo el modelo: "tencent" (vista previa con IA) o "runpod".
+    proveedor: model.text().nullable(),
 
     // Lo que reporta trimesh al convertir. watertight false significa que la
     // malla no cierra: se puede ver, pero necesita reparación antes de

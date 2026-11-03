@@ -7,7 +7,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
-const DURACION_S: Record<string, number> = { preview: 120, scan: 20 * 60 }
+const DURACION_S: Record<string, number> = { preview: 240, scan: 20 * 60 }
 
 const ETAPAS = [
   { hasta: 15, texto: "Preparando tus fotos" },
@@ -61,7 +61,7 @@ export function ProgresoEscaneo({ modo, desde }: { modo: string; desde: string }
         {demora
           ? "Está tardando un poco más de lo normal; sigue trabajando. Puedes cerrar esta página: el resultado queda guardado en Mis escaneos."
           : modo === "preview"
-            ? "Una vista previa tarda alrededor de 2 minutos. Esta página se actualiza sola."
+            ? "Un modelo con IA tarda de 3 a 5 minutos. Esta página se actualiza sola y el resultado queda guardado en Mis escaneos."
             : "Un escaneo profesional tarda entre 10 y 30 minutos. Puedes cerrar esta página: el resultado queda guardado en Mis escaneos."}
       </p>
     </div>

@@ -23,6 +23,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   for (const [nombre, llave] of [
     ["stl", escaneo.stl_storage_key],
     ["obj", escaneo.obj_storage_key],
+    ["glb", (escaneo as any).glb_storage_key],
   ] as const) {
     if (!llave) continue
     const firmado = await getSignedDownloadUrl(llave)

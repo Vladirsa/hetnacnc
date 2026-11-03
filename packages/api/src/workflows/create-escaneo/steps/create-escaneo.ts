@@ -31,6 +31,11 @@ const MAXIMO_FOTOS = { preview: 1, scan: 80 } as const
 // gancho que lleva al de paga.
 const CREDITOS_POR_ESCANEO_DEFAULT = 5
 
+export function previewsGratisPorMes(): number {
+  const n = Number(process.env.ESCANEO_PREVIEWS_GRATIS)
+  return Number.isFinite(n) && n >= 0 ? n : 3
+}
+
 export function creditosDe(modo: "preview" | "scan"): number {
   if (modo === "preview") return 0
   return Number(process.env.ESCANEO_CREDITOS_POR_TRABAJO) || CREDITOS_POR_ESCANEO_DEFAULT
@@ -78,7 +83,30 @@ export const createEscaneoStep = createStep(
 
     // El precio se congela aquí, en el expediente. Si mañana sube, un
     // reembolso de este trabajo sigue devolviendo lo que de verdad se cobró.
-    const creditos = (await esCuentaDeLaCasa(container as any, input.customer_id)) ? 0 : creditosDe(input.modo)
+    const deLaCasa = await esCuentaDeLaCasa(container as any, input.customer_id)
+    const creditos = deLaCasa ? 0 : creditosDe(input.modo)
+
+    // La vista previa con IA cuesta dinero de verdad (Tencent cobra cada
+    // modelo), así que la gratis tiene tope por mes. Las que fallan no cuentan.
+    if (input.modo === "preview" && !deLaCasa) {
+      const tope = previewsGratisPorMes()
+      const desde = new Date(Date.now() - 30 * 24 * 3600 * 1000)
+      const recientes = await escaneoModuleService.listEscaneo3ds(
+        {
+          customer_id: input.customer_id,
+          modo: "preview",
+          estatus: ["pendiente", "procesando", "listo"],
+          created_at: { $gte: desde },
+        } as any,
+        { take: tope + 1, select: ["id"] }
+      )
+      if (recientes.length >= tope) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_ALLOWED,
+          `Ya usaste tus ${tope} modelos gratis de los últimos 30 días. Para una pieza a medida pide un escaneo profesional.`
+        )
+      }
+    }
 
     const [escaneo] = await escaneoModuleService.createEscaneo3ds([
       {

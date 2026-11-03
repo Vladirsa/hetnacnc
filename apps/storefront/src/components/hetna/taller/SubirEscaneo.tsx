@@ -155,9 +155,9 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
           <OpcionModo
             activa={modo === "preview"}
             onClick={() => cambiarModo("preview")}
-            titulo="Vista previa"
-            precio="Gratis"
-            descripcion="Una foto. Una IA adivina la forma: sirve para enseñársela a un cliente, no para fabricar."
+            titulo="Modelo con IA"
+            precio="3 gratis al mes"
+            descripcion="Una foto. La IA crea el modelo 3D con textura y color en unos minutos. Ideal para enseñar, decorar o imprimir figuras."
           />
           <OpcionModo
             activa={modo === "scan"}
@@ -171,7 +171,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
 
       {modo === "preview" && (
         <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">
-          <strong>Para que la vista previa salga mejor:</strong>
+          <strong>Para que el modelo salga mejor:</strong>
           <ul className="m-0 mt-1.5 pl-5 list-disc flex flex-col gap-0.5">
             <li>Foto real de la pieza (no un dibujo ni una captura de pantalla).</li>
             <li>Fondo liso y de un color distinto a la pieza: una hoja blanca o una mesa lisa.</li>
@@ -179,8 +179,9 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
             <li>Buena luz, sin sombras fuertes ni reflejos.</li>
           </ul>
           <span className="block mt-1.5">
-            Es una aproximación hecha por IA con una sola foto: sirve para enseñar la idea. Para un archivo con la forma y
-            medidas reales, usa el escaneo profesional.
+            La IA reconstruye la forma con una sola foto, así que no mide la pieza: el STL sale a 100 mm por su lado más
+            largo y lo escalas en tu programa. Para medidas reales de maquinado usa el escaneo profesional. La foto se
+            procesa con Tencent Cloud (ver aviso de privacidad).
           </span>
         </div>
       )}
@@ -294,7 +295,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
           {trabajando
             ? "Trabajando…"
             : modo === "preview"
-              ? "Generar la vista previa"
+              ? "Generar el modelo 3D"
               : `Escanear (${creditosPorEscaneo} ${creditosPorEscaneo === 1 ? "crédito" : "créditos"})`}
         </button>
         {modo === "scan" && (

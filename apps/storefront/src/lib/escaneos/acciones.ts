@@ -60,6 +60,8 @@ export type Escaneo = {
   job_externo: string | null
   obj_storage_key: string | null
   stl_storage_key: string | null
+  glb_storage_key?: string | null
+  proveedor?: string | null
   vertices: number | null
   caras: number | null
   watertight: boolean | null
