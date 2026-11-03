@@ -14,14 +14,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const state = String(q.state || "")
   const logger = req.scope.resolve("logger") as any
   if (!code || !state) {
-    res.redirect(`${SITIO}/cotizador/mercado-pago?resultado=cancelado`)
+    res.redirect(`${SITIO}/mercado-pago-conectado?resultado=cancelado`)
     return
   }
   try {
     await terminarConexion(code, state)
-    res.redirect(`${SITIO}/cotizador/mercado-pago?resultado=ok`)
+    res.redirect(`${SITIO}/mercado-pago-conectado?resultado=ok`)
   } catch (e) {
     logger.error(`[cotizador] conectar Mercado Pago: ${(e as Error).message}`)
-    res.redirect(`${SITIO}/cotizador/mercado-pago?resultado=error`)
+    res.redirect(`${SITIO}/mercado-pago-conectado?resultado=error`)
   }
 }
