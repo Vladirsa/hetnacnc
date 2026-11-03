@@ -2,12 +2,7 @@ import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ServicioIcono } from "@/components/hetna/ServicioIcono"
-import {
-  ACCESO,
-  DISENO_A_LA_MEDIDA,
-  GRUPOS_HERRAMIENTAS,
-  TOTAL_HERRAMIENTAS,
-} from "@/lib/hetna/herramientas"
+import { ACCESO, GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 
 // Todas las herramientas CNC de HETNA en una sola página: diseñar y escanear
 // (espacio de trabajo /disenar), programar (Laboratorio CAM), cotizar y aprender. Sustituye a /cam y a
@@ -19,10 +14,16 @@ import {
 
 const SITIO = "https://hetnacnc.com"
 
+// Esta página sólo enseña el cotizador y las calculadoras. Diseñar vive en
+// /disenar (3D Studio y 2D Studio), el CAM en /laboratorio-cam y la academia
+// en su propia sección; aquí sólo se enlazan al final.
+const GRUPO = GRUPOS_HERRAMIENTAS.find((g) => g.id === "cotizar")!
+const GRUPOS = [GRUPO]
+
 export const metadata: Metadata = {
-  title: "Herramientas CNC gratis en línea: DXF a G-code, CAM 3–5 ejes y generadores",
+  title: "Cotizador CNC y calculadoras gratis: precio de corte láser, router, plasma e impresión 3D",
   description:
-    "Herramientas CNC gratis en línea: DXF a G-code, CAM de 3 a 5 ejes, cajas, letreros, despiece de muebles, litofanías y cotizador de corte. Sin instalar nada.",
+    "Calcula al momento el precio de tu pieza en router CNC, corte láser, plasma o impresión 3D, y las RPM, avance y pasadas para tu máquina. Gratis y sin instalar nada.",
   alternates: {
     canonical: `${SITIO}/mx/herramientas-cnc`,
     languages: { "es-MX": `${SITIO}/mx/herramientas-cnc`, "en-US": `${SITIO}/us/herramientas-cnc` },
@@ -31,20 +32,16 @@ export const metadata: Metadata = {
 
 const PREGUNTAS = [
   {
-    p: "¿Las herramientas son gratis?",
-    r: "Sí. Los generadores, el DXF a G-code, el laboratorio CAM, el torno y las calculadoras se usan gratis y sin cuenta. Solo el escaneo 3D que mide de verdad se paga con créditos, y el cotizador profesional para talleres tiene planes.",
+    p: "¿Cuánto cuesta cortar una pieza en láser o router CNC?",
+    r: "Depende del material, el espesor, los minutos de máquina y el diseño. En las calculadoras de precio pones esos datos y ves el costo al momento; si quieres precios reales de talleres, sube tu archivo a Cotizar.",
   },
   {
-    p: "¿Tengo que instalar algún programa?",
-    r: "No. Todo funciona en el navegador, en la computadora o en el celular. Descargas el archivo (DXF, SVG, PDF, STL o G-code) y lo llevas a tu máquina.",
+    p: "¿Las calculadoras son gratis?",
+    r: "Sí. Las calculadoras de precio y la calculadora CNC profesional se usan gratis y sin cuenta. La App HETNA CNC para talleres, que cotiza con tus propios costos y cobra en línea, tiene planes.",
   },
   {
-    p: "¿El G-code funciona con mi máquina?",
-    r: "El laboratorio CAM genera programas para Mach3, LinuxCNC, GRBL, Fanuc y otros controladores, y el torno para Mach3 y Mach4. Antes de cortar, revisa la simulación y haz una prueba en vacío.",
-  },
-  {
-    p: "¿Y si no sé diseñar o no tengo máquina?",
-    r: "Te hacemos el diseño a la medida o te fabricamos la pieza con talleres CNC de todo México. Abajo están las dos opciones.",
+    p: "¿Cómo calculo las RPM y el avance de mi fresa?",
+    r: "En la calculadora CNC profesional eliges la máquina, el material y la fresa, y te da RPM, avance, profundidad de pasada y paso lateral. Para láser y plasma te da potencia y velocidad.",
   },
 ]
 
@@ -54,14 +51,14 @@ export default function HerramientasCnc() {
     "@graph": [
       {
         "@type": "CollectionPage",
-        name: "Herramientas CNC gratis en línea",
+        name: "Cotizador y calculadoras CNC",
         url: `${SITIO}/mx/herramientas-cnc`,
         inLanguage: "es-MX",
         isPartOf: { "@type": "WebSite", name: "HETNA CNC", url: SITIO },
         mainEntity: {
           "@type": "ItemList",
-          numberOfItems: TOTAL_HERRAMIENTAS,
-          itemListElement: GRUPOS_HERRAMIENTAS.flatMap((g) => g.herramientas).map((h, i) => ({
+          numberOfItems: GRUPO.herramientas.length,
+          itemListElement: GRUPO.herramientas.map((h, i) => ({
             "@type": "ListItem",
             position: i + 1,
             name: h.nombre,
@@ -81,7 +78,7 @@ export default function HerramientasCnc() {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Inicio", item: `${SITIO}/mx` },
-          { "@type": "ListItem", position: 2, name: "Herramientas CNC", item: `${SITIO}/mx/herramientas-cnc` },
+          { "@type": "ListItem", position: 2, name: "Cotizador y calculadoras CNC", item: `${SITIO}/mx/herramientas-cnc` },
         ],
       },
     ],
@@ -96,38 +93,20 @@ export default function HerramientasCnc() {
           Inicio
         </LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Herramientas CNC</span>
+        <span className="text-[#1B1B18] font-medium">Cotizador y calculadoras</span>
       </div>
 
       <section className="px-4 lg:px-16 pt-6 pb-4 max-w-[1280px]">
         <h1 className="text-[30px] lg:text-[42px] font-bold text-[#1B1B18] leading-[1.1] max-w-[820px]">
-          Herramientas CNC gratis en línea
+          Cotizador y calculadoras CNC
         </h1>
         <p className="mt-3 text-[16px] text-[#4A4943] leading-relaxed max-w-[720px]">
-          Diseña, programa y cotiza sin instalar nada: convierte tu DXF a G-code, programa piezas en 3, 4 y 5 ejes,
-          genera cajas, letreros y despieces de muebles o escanea una pieza. Casi todas son
-          gratis y sin cuenta.
+          Saca el precio de tu pieza en router CNC, corte láser, plasma o impresión 3D, y calcula RPM, avance y pasadas para tu
+          máquina. Gratis y sin instalar nada.
         </p>
-
-        {/* Por dónde empezar: cada botón baja a su grupo */}
-        <nav aria-label="Grupos de herramientas" className="mt-6 flex flex-wrap gap-2">
-          {GRUPOS_HERRAMIENTAS.map((g) => (
-            <a
-              key={g.id}
-              href={`#${g.id}`}
-              className="inline-flex items-center gap-2 rounded-full border border-[#E7E4DC] bg-white px-4 py-2 text-[13.5px] font-semibold text-[#1B1B18] hover:border-[#C2560A] hover:text-[#B34D07]"
-            >
-              <span className="text-[#C2560A]">
-                <ServicioIcono nombre={g.icono} size={16} />
-              </span>
-              {g.titulo}
-              <span className="font-normal text-[#6B6A63]">· {g.pregunta}</span>
-            </a>
-          ))}
-        </nav>
       </section>
 
-      {GRUPOS_HERRAMIENTAS.map((g) => (
+      {GRUPOS.map((g) => (
         <section key={g.id} id={g.id} className="scroll-mt-36 px-4 lg:px-16 pt-10 max-w-[1280px]">
           <div className="flex items-start gap-3">
             <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#FDEEE1] text-[#B34D07]">
@@ -198,40 +177,22 @@ export default function HerramientasCnc() {
         </section>
       ))}
 
-      {/* Cuando la herramienta no basta: lo hacemos nosotros */}
-      <section className="px-4 lg:px-16 pt-14 max-w-[1280px]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-[14px] bg-[#142033] p-6 text-white">
-            <h2 className="text-[20px] font-bold">¿Prefieres que te hagamos el diseño?</h2>
-            <p className="mt-2 text-[14px] text-white/75 leading-relaxed">
-              De tu idea, foto o boceto a un archivo listo para tu máquina, hecho a la medida.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {DISENO_A_LA_MEDIDA.map((s) => (
-                <LocalizedClientLink
-                  key={s.href}
-                  href={s.href}
-                  className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] font-semibold hover:bg-white hover:text-[#142033]"
-                >
-                  {s.nombre}
-                </LocalizedClientLink>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-6">
-            <h2 className="text-[20px] font-bold text-[#1B1B18]">¿No tienes máquina?</h2>
-            <p className="mt-2 text-[14px] text-[#4A4943] leading-relaxed">
-              Corte, grabado, maquinado en 3, 4 y 5 ejes, torno e impresión 3D con talleres CNC de todo México. Subes tu
-              archivo y recibes cotizaciones.
-            </p>
-            <LocalizedClientLink
-              href="/fabricacion"
-              className="mt-4 inline-flex justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
-            >
-              Te fabricamos tu pieza
-            </LocalizedClientLink>
-          </div>
-        </div>
+      {/* Lo demás de HETNA, sólo como enlace */}
+      <section className="px-4 lg:px-16 pt-12 max-w-[1280px]">
+        <p className="text-[14px] text-[#4A4943]">
+          ¿Buscas otra cosa?{" "}
+          <LocalizedClientLink href="/disenar" className="font-semibold text-[#B34D07] hover:underline">
+            Diseñar en 3D y 2D
+          </LocalizedClientLink>
+          {" · "}
+          <LocalizedClientLink href="/laboratorio-cam" className="font-semibold text-[#B34D07] hover:underline">
+            DXF a G-code y CAM
+          </LocalizedClientLink>
+          {" · "}
+          <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#B34D07] hover:underline">
+            Que un taller te la fabrique
+          </LocalizedClientLink>
+        </p>
       </section>
 
       <section className="px-4 lg:px-16 pt-14 pb-16 max-w-[920px]">
