@@ -139,8 +139,11 @@ export default function DisenarInicio() {
             Cajas, letreros, plantillas de empaque, vectorizado, relieves y escaneo 3D. Ves la pieza en 3D y bajas el archivo para láser, router o impresora.
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5">
-            <LocalizedClientLink href="/disenar/cajas" className="rounded-xl bg-[#FF6A1A] px-5 py-3 text-[15px] font-extrabold text-white hover:bg-[#E65C12]">
-              Empezar con una caja
+            <LocalizedClientLink href="/disenar/escanear-pieza" className="rounded-xl bg-[#FF6A1A] px-5 py-3 text-[15px] font-extrabold text-white hover:bg-[#E65C12]">
+              Abrir 3D Studio
+            </LocalizedClientLink>
+            <LocalizedClientLink href="/disenar/caja-con-juntas" className="rounded-xl bg-white px-5 py-3 text-[15px] font-extrabold text-[#142033] hover:bg-white/90">
+              Abrir 2D Studio
             </LocalizedClientLink>
             <LocalizedClientLink href="/cotizar" className="rounded-xl border border-white/40 px-5 py-3 text-[15px] font-bold text-white hover:bg-white/10">
               Mejor que me la fabriquen

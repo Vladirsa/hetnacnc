@@ -6,13 +6,12 @@
 //
 // Las fotos se reducen en el navegador (máx. 2048 px) antes de subirlas: la IA
 // no gana nada con 12 MP y en datos móviles la subida baja de 8 MB a ~600 KB.
-// El escaneo profesional NO pasa por aquí (necesita la resolución completa).
+// Se abre a pantalla completa dentro del 3D Studio.
 
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { SubirEscaneo } from "@/components/hetna/taller/SubirEscaneo"
 import { crearEscaneo, type Escaneo } from "@/lib/escaneos/acciones"
 
 type Vista = "front" | "left" | "back" | "right"
@@ -42,7 +41,7 @@ type Foto = {
 export type InfoModeloIa = { gratis_por_mes: number; usados_mes: number; creditos: number }
 
 type Props = {
-  creditosPorEscaneo: number
+  creditosPorEscaneo?: number
   modeloIa: InfoModeloIa
   saldo: { saldo: number; ilimitado: boolean } | null
   recientes: Escaneo[]
@@ -71,12 +70,11 @@ async function reducir(archivo: File): Promise<Blob> {
   }
 }
 
-export function EstudioModeloIA({ creditosPorEscaneo, modeloIa, saldo, recientes }: Props) {
+export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
   const router = useRouter()
   const params = useParams()
   const locale = (params?.locale as string) || "mx"
 
-  const [pestana, setPestana] = useState<"ia" | "scan">("ia")
   const [varias, setVarias] = useState(false)
   const [fotos, setFotos] = useState<Partial<Record<Vista, Foto>>>({})
   const [tipo, setTipo] = useState<Tipo>("Normal")
@@ -260,49 +258,23 @@ export function EstudioModeloIA({ creditosPorEscaneo, modeloIa, saldo, recientes
   const principal = fotos.front
 
   return (
-    <div className="mt-6 overflow-hidden rounded-[18px] border border-white/10 bg-[#0D1015] text-white shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]">
-      {/* Barra superior */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-[#0A0C10] px-4 py-3">
-        <span className="flex items-center gap-2 text-[14px] font-bold tracking-wide">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#F07A1A] shadow-[0_0_12px_#F07A1A]" />
-          HETNA 3D Studio
-        </span>
-        <div className="ml-2 flex rounded-[10px] bg-white/[0.05] p-1">
-          {(
-            [
-              ["ia", "Imagen a 3D"],
-              ["scan", "Escaneo profesional"],
-            ] as const
-          ).map(([id, t]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setPestana(id)}
-              className={`rounded-[8px] px-3 py-1.5 text-[13px] font-semibold transition ${
-                pestana === id ? "bg-white text-[#0D1015]" : "text-white/70 hover:text-white"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <LocalizedClientLink
-          href="/user/creditos"
-          className="ml-auto flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[13px] font-semibold hover:border-[#F07A1A]"
-        >
-          <span className="text-[#F07A1A]">◆</span>
-          {saldo ? (saldo.ilimitado ? "Créditos ilimitados" : `${saldo.saldo} ${saldo.saldo === 1 ? "crédito" : "créditos"}`) : "Créditos"}
-        </LocalizedClientLink>
-      </div>
-
-      {pestana === "scan" ? (
-        <div className="bg-[#F7F6F2] px-4 pb-8 pt-2 text-[#1B1B18] lg:px-8">
-          <SubirEscaneo creditosPorEscaneo={creditosPorEscaneo} soloScan />
-        </div>
-      ) : (
-        <div className="grid lg:grid-cols-[380px_minmax(0,1fr)]">
+    <div className="flex flex-1 flex-col bg-[#0D1015] text-white">
+        <div className="grid flex-1 lg:grid-cols-[380px_minmax(0,1fr)]">
           {/* Panel de control */}
-          <div className="flex flex-col gap-5 border-b border-white/10 bg-[#12161D] p-4 lg:border-b-0 lg:border-r lg:p-5">
+          <div className="flex flex-col gap-5 border-b border-white/10 bg-[#12161D] p-4 [&>*]:shrink-0 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h2 className="m-0 text-[17px] font-bold">Imagen a 3D</h2>
+                <p className="m-0 text-[12.5px] text-white/50">Modelo con IA a partir de una foto</p>
+              </div>
+              <LocalizedClientLink
+                href="/user/creditos"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[12.5px] font-semibold hover:border-[#F07A1A]"
+              >
+                <span className="text-[#F07A1A]">◆</span>
+                {saldo ? (saldo.ilimitado ? "Ilimitados" : `${saldo.saldo} ${saldo.saldo === 1 ? "crédito" : "créditos"}`) : "Créditos"}
+              </LocalizedClientLink>
+            </div>
             <div className="flex rounded-[10px] bg-white/[0.05] p-1">
               {[false, true].map((v) => (
                 <button
@@ -475,7 +447,7 @@ export function EstudioModeloIA({ creditosPorEscaneo, modeloIa, saldo, recientes
                 </LocalizedClientLink>
               </div>
               {recientes.length ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-6">
                   {recientes.slice(0, 8).map((e) => (
                     <LocalizedClientLink
                       key={e.id}
@@ -507,7 +479,6 @@ export function EstudioModeloIA({ creditosPorEscaneo, modeloIa, saldo, recientes
             </div>
           </div>
         </div>
-      )}
     </div>
   )
 }

@@ -188,3 +188,40 @@ export const enlaceServicio = (slug: string) => {
   const h = slug.startsWith("generador-2d-3d/") ? slug.slice("generador-2d-3d/".length) : ""
   return h && SLUGS_GENERADORES.includes(h) ? `/disenar/${h}` : `/servicios/${slug}`
 }
+
+// ── Estudios de pantalla completa ──────────────────────────────────────────
+// Las herramientas se abren dentro de dos estudios: el 3D (modelos para ver,
+// imprimir o maquinar en volumen) y el 2D (vectores para corte láser, router
+// y plasma). Cada estudio enseña sus herramientas como pestañas arriba.
+export type Estudio = "3d" | "2d"
+
+export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: string; corto: string }[] }> = {
+  "3d": {
+    nombre: "3D Studio",
+    herramientas: [
+      { slug: ESCANEAR, corto: "Imagen a 3D" },
+      { slug: "letras-3d", corto: "Letras 3D" },
+      { slug: "llaveros", corto: "Llaveros y placas" },
+      { slug: "litofania-relieve", corto: "Litofanías y relieves" },
+      { slug: "svg-a-stl", corto: "SVG a STL" },
+    ],
+  },
+  "2d": {
+    nombre: "2D Studio",
+    herramientas: [
+      { slug: "caja-con-juntas", corto: "Cajas" },
+      { slug: "vectorizador", corto: "Vectorizador" },
+      { slug: "letreros", corto: "Letreros" },
+      { slug: "rompecabezas", corto: "Rompecabezas" },
+      { slug: "despiece-muebles", corto: "Muebles" },
+      { slug: "plantillas-empaque", corto: "Empaques" },
+      { slug: "grabado-foto", corto: "Foto a grabado" },
+      { slug: "patrones-radiales", corto: "Patrones" },
+      { slug: "convertidor", corto: "Convertidor" },
+      { slug: "anidado-piezas", corto: "Anidado" },
+    ],
+  },
+}
+
+export const estudioDe = (slug: string): Estudio =>
+  ESTUDIOS["3d"].herramientas.some((h) => h.slug === slug) ? "3d" : "2d"

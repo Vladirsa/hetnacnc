@@ -19,8 +19,8 @@ import { GeneradorRompecabezas } from "@/components/hetna/generador/GeneradorRom
 import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
 import { ESCANEAR, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
 
-// Una herramienta abierta dentro del espacio "Diseñar y escanear". El menú y
-// la ruta de arriba los pone el layout; aquí sólo va la herramienta.
+// Una herramienta abierta dentro del estudio 3D o 2D (pantalla completa). La
+// barra con las herramientas la pone el layout de (estudio).
 const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; herramienta: string }> }
@@ -42,6 +42,8 @@ const GENERADORES: Record<string, () => React.JSX.Element> = {
   "anidado-piezas": GeneradorAnidado,
 }
 
+const OSCURAS = new Set(["letras-3d"])
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
   const h = buscarHerramientaDiseno(herramienta)
@@ -61,5 +63,12 @@ export default async function HerramientaDiseno({ params }: Props) {
   if (herramienta === ESCANEAR) return <EscanearPieza locale={locale} />
   const Generador = GENERADORES[herramienta]
   if (!Generador) notFound()
-  return <Generador />
+  // Las herramientas que ya tienen su propio estudio oscuro van a todo lo
+  // ancho; las demás, sobre un fondo claro para que se lean como siempre.
+  if (OSCURAS.has(herramienta)) return <Generador />
+  return (
+    <div className="flex-1 bg-[#F4F3EF] text-[#1B1B18]">
+      <Generador />
+    </div>
+  )
 }
