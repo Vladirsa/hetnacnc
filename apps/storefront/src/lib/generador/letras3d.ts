@@ -15,6 +15,8 @@ import { type Fuente } from "@/lib/generador/letreros"
 import type { Curva, Pt } from "@/lib/generador/trazado"
 import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
 
+import { ShapeUtils, Vector2 } from "three"
+
 const { geom2 } = jscad.geometries
 const { union, subtract } = jscad.booleans
 const { offset } = jscad.expansions
@@ -130,9 +132,26 @@ function dentro(pt: P, poly: P[]) {
   return c
 }
 
+// Quita puntos repetidos o casi iguales (las curvas de la tipografía y los
+// cortes booleanos dejan puntos a micras uno del otro, y jscad los toma como
+// contornos abiertos) y redondea a 0.1 µm para que coincidan exactamente.
+const REJILLA = 1e-4
+function limpiarLazo(l: P[]): P[] {
+  const out: P[] = []
+  for (const [x0, y0] of l) {
+    const x = Math.round(x0 / REJILLA) * REJILLA
+    const y = Math.round(y0 / REJILLA) * REJILLA
+    const u = out[out.length - 1]
+    if (u && Math.hypot(u[0] - x, u[1] - y) < 1e-3) continue
+    out.push([x, y])
+  }
+  while (out.length > 1 && Math.hypot(out[0][0] - out[out.length - 1][0], out[0][1] - out[out.length - 1][1]) < 1e-3) out.pop()
+  return out
+}
+
 // lazos sueltos (en cualquier sentido) → figura jscad con sus huecos
 function aFigura(lazos: P[][]) {
-  const validos = lazos.filter((l) => l.length >= 3 && Math.abs(area(l)) > 0.05)
+  const validos = lazos.map(limpiarLazo).filter((l) => l.length >= 3 && Math.abs(area(l)) > 0.05)
   const prof = validos.map((l, i) => validos.filter((o, j) => j !== i && dentro(l[0], o)).length)
   const ccw = (l: P[]) => (area(l) > 0 ? l : [...l].reverse())
   const exteriores = validos.filter((_, i) => prof[i] % 2 === 0).map((l) => geom2.fromPoints(ccw(l)))
@@ -143,8 +162,49 @@ function aFigura(lazos: P[][]) {
   return f
 }
 
-const contornosDe = (g: ReturnType<typeof geom2.create>): P[][] =>
-  geom2.toOutlines(g).map((o) => o.map((v) => [v[0], v[1]] as P)).filter((o) => o.length >= 3)
+// Contornos de una figura. geom2.toOutlines exige que cada lado empate
+// exacto con el siguiente; después de un offset o una resta a veces quedan a
+// micras y truena. En ese caso se arman a mano, uniendo lados con tolerancia,
+// y se descarta el lazo que no cierre en vez de tirar toda la herramienta.
+function contornosDe(g: ReturnType<typeof geom2.create>): P[][] {
+  try {
+    return geom2
+      .toOutlines(g)
+      .map((o) => limpiarLazo(o.map((v) => [v[0], v[1]] as P)))
+      .filter((o) => o.length >= 3)
+  } catch {
+    return contornosTolerantes(geom2.toSides(g) as unknown as [P, P][])
+  }
+}
+
+function contornosTolerantes(lados: [P, P][]): P[][] {
+  const TOL = 1e-3
+  const clave = (p: P) => `${Math.round(p[0] / TOL)},${Math.round(p[1] / TOL)}`
+  const porInicio = new Map<string, number[]>()
+  lados.forEach(([a], i) => {
+    const k = clave(a)
+    porInicio.set(k, [...(porInicio.get(k) || []), i])
+  })
+  const usado = new Array(lados.length).fill(false)
+  const lazos: P[][] = []
+  for (let i = 0; i < lados.length; i++) {
+    if (usado[i]) continue
+    const lazo: P[] = []
+    let j = i
+    const inicio = clave(lados[i][0])
+    while (j >= 0 && !usado[j]) {
+      usado[j] = true
+      lazo.push(lados[j][0])
+      const fin = clave(lados[j][1])
+      if (fin === inicio) break
+      const sig = (porInicio.get(fin) || []).find((n) => !usado[n])
+      j = sig === undefined ? -1 : sig
+    }
+    const limpio = limpiarLazo(lazo)
+    if (limpio.length >= 3 && Math.abs(area(limpio)) > 0.05) lazos.push(limpio)
+  }
+  return lazos
+}
 
 // Distancia de un punto a un segmento
 function distSeg(p: P, a: P, b: P) {
@@ -298,17 +358,63 @@ export function piezaComoDibujo(p: PiezaLetra): Dibujo {
   return { trazos, avisos: [], unidades: "mm" }
 }
 
-// Triangula una figura plana con huecos y la extruye (para la vista 3D)
-function extruirContornos(contornos: P[][], z0: number, h: number, tris: number[]) {
-  const g = aFigura(contornos)
-  if (!g) return
-  const solido = jscad.extrusions.extrudeLinear({ height: h }, g)
-  for (const pol of jscad.geometries.geom3.toPolygons(solido)) {
-    const v = pol.vertices
-    for (let i = 1; i + 1 < v.length; i++) {
-      for (const q of [v[0], v[i], v[i + 1]]) tris.push(q[0], q[1], q[2] + z0)
-    }
+// Triangula una figura plana con huecos y la extruye (sólo para la vista 3D;
+// los archivos de corte salen de los contornos 2D). Se hace con el
+// triangulador de three.js y no con extrudeLinear de jscad: el de jscad
+// truena con letras como Q, S, a, 3 o & después de las restas.
+const areaFirmada = (p: P[]) => {
+  let s = 0
+  for (let i = 0; i < p.length; i++) {
+    const [x1, y1] = p[i]
+    const [x2, y2] = p[(i + 1) % p.length]
+    s += x1 * y2 - x2 * y1
   }
+  return s / 2
+}
+
+function extruirContornos(contornos: P[][], z0: number, h: number, tris: number[]) {
+  const lazos = contornos.map(limpiarLazo).filter((l) => l.length >= 3 && Math.abs(areaFirmada(l)) > 0.05)
+  if (!lazos.length) return
+  const prof = lazos.map((l, i) => lazos.filter((o, j) => j !== i && dentro(l[0], o)).length)
+  const z1 = z0 + h
+
+  const tri = (a: number[], b: number[], c: number[], nx: number, ny: number, nz: number) => {
+    // Orienta el triángulo hacia afuera del sólido
+    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2]
+    const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2]
+    const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx
+    if (cx * nx + cy * ny + cz * nz < 0) tris.push(...a, ...c, ...b)
+    else tris.push(...a, ...b, ...c)
+  }
+
+  lazos.forEach((ext, i) => {
+    if (prof[i] % 2 !== 0) return
+    // Exterior en sentido antihorario y sus huecos directos en horario
+    const exterior = areaFirmada(ext) > 0 ? ext : [...ext].reverse()
+    const huecos = lazos
+      .filter((l, j) => j !== i && prof[j] === prof[i] + 1 && dentro(l[0], ext))
+      .map((l) => (areaFirmada(l) < 0 ? l : [...l].reverse()))
+
+    const v2 = (l: P[]) => l.map(([x, y]) => new Vector2(x, y))
+    const caras = ShapeUtils.triangulateShape(v2(exterior), huecos.map(v2))
+    const todos = [...exterior, ...huecos.flat()]
+    for (const [a, b, c] of caras) {
+      const A = todos[a], B = todos[b], C = todos[c]
+      tri([A[0], A[1], z1], [B[0], B[1], z1], [C[0], C[1], z1], 0, 0, 1)
+      tri([A[0], A[1], z0], [B[0], B[1], z0], [C[0], C[1], z0], 0, 0, -1)
+    }
+
+    // Paredes: con exterior antihorario y huecos horarios, (dy, -dx) apunta
+    // siempre hacia afuera del material.
+    for (const l of [exterior, ...huecos]) {
+      for (let k = 0; k < l.length; k++) {
+        const p = l[k], q = l[(k + 1) % l.length]
+        const nx = q[1] - p[1], ny = -(q[0] - p[0])
+        tri([p[0], p[1], z0], [q[0], q[1], z0], [q[0], q[1], z1], nx, ny, 0)
+        tri([p[0], p[1], z0], [q[0], q[1], z1], [p[0], p[1], z1], nx, ny, 0)
+      }
+    }
+  })
 }
 
 /** Malla 3D de todas las letras armadas (Z hacia arriba = fondo de la letra). */

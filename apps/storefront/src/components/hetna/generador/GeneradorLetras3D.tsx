@@ -96,6 +96,9 @@ export function GeneradorLetras3D() {
 
   const r = useMemo(() => {
     if (!fuente) return null
+    // Una tipografía con contornos raros no debe tumbar la herramienta: si la
+    // geometría truena, se avisa y se puede probar otra letra o tamaño.
+    try {
     return hacerLetras3D(fuente, {
       texto,
       alto: numero(alto),
@@ -107,6 +110,18 @@ export function GeneradorLetras3D() {
       construccion,
       cable: numero(cable) || 0,
     })
+    } catch (e) {
+      console.error("[letras-3d]", e)
+      return {
+        piezas: [],
+        ancho: 0,
+        alto: 0,
+        capasPared: 0,
+        profundidadReal: 0,
+        avisos: [],
+        errores: ["No se pudo armar ese texto con esta tipografía. Prueba con otra tipografía, otro tamaño o quita los símbolos raros."],
+      }
+    }
   }, [fuente, texto, alto, espaciado, profundidad, espesor, espesorFrente, pared, construccion, cable])
 
   const listo = !!r && !r.errores.length
@@ -133,7 +148,15 @@ export function GeneradorLetras3D() {
   const totalHojas = hojas.length
   const actual = hojas[Math.min(hojaVista, Math.max(0, totalHojas - 1))]
 
-  const malla = useMemo(() => (listo ? mallaLetras(r!, separar) : null), [listo, r, separar])
+  const malla = useMemo(() => {
+    if (!listo) return null
+    try {
+      return mallaLetras(r!, separar)
+    } catch (e) {
+      console.error("[letras-3d] vista 3D", e)
+      return null
+    }
+  }, [listo, r, separar])
   const principal = malla ? (malla.tris.length ? malla.tris : malla.acrilico) : undefined
   const segunda = useMemo(
     () => (malla && malla.tris.length && malla.acrilico.length ? { tris: malla.acrilico, color: 0xcfe2fa, opacidad: 0.38 } : undefined),
