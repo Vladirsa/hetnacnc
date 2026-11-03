@@ -49,7 +49,7 @@ async function ligaMercadoPago(cobro) {
       items: [
         {
           id: cobro.id,
-          title: `Comisión HETNA ${cobro.periodo} (anticipos con PayPal)`,
+          title: `Cargos HETNA ${cobro.periodo} (comisión PayPal y facturas extra)`,
           quantity: 1,
           currency_id: "MXN",
           unit_price: Number(cobro.monto),
@@ -78,7 +78,7 @@ async function ligaPaypal(cobro) {
         {
           reference_id: cobro.id,
           custom_id: `comision:${cobro.id}`,
-          description: `Comisión HETNA ${cobro.periodo} (anticipos con PayPal)`,
+          description: `Cargos HETNA ${cobro.periodo} (comisión PayPal y facturas extra)`,
           amount: { currency_code: "USD", value: Number(cobro.monto).toFixed(2) },
         },
       ],
@@ -106,13 +106,31 @@ export async function corteComisiones(logger?: any) {
     `/rest/v1/cotizacion_pagos?proveedor=eq.paypal&estado=eq.approved&comision_cobrada=eq.false&comision_cobro_id=is.null` +
       `&creado=lt.${encodeURIComponent(hasta)}&select=id,negocio_id,moneda,comision_hetna`
   )
-  const grupos = new Map<string, { negocio: string; moneda: string; ids: string[]; total: number }>()
+  // Facturas electrónicas extra (pasaron las incluidas en su plan). Si la
+  // tabla aún no existe (falta el SQL de la Fase 4) simplemente no hay.
+  const facturas = await supa<any[]>(
+    `/rest/v1/cfdi_emitidos?extra=eq.true&costo_extra=gt.0&comision_cobro_id=is.null&modo=eq.real` +
+      `&creado=lt.${encodeURIComponent(hasta)}&select=id,negocio_id,costo_extra`
+  ).catch(() => [])
+  type Grupo = { negocio: string; moneda: string; ids: string[]; cfdi: string[]; total: number; totalPaypal: number; totalCfdi: number }
+  const grupos = new Map<string, Grupo>()
+  const grupo = (negocio: string, moneda: string) => {
+    const k = `${negocio}|${moneda}`
+    const g = grupos.get(k) || { negocio, moneda, ids: [], cfdi: [], total: 0, totalPaypal: 0, totalCfdi: 0 }
+    grupos.set(k, g)
+    return g
+  }
   for (const p of pagos) {
-    const k = `${p.negocio_id}|${p.moneda || "MXN"}`
-    const g = grupos.get(k) || { negocio: p.negocio_id, moneda: p.moneda || "MXN", ids: [], total: 0 }
+    const g = grupo(p.negocio_id, p.moneda || "MXN")
     g.ids.push(p.id)
     g.total += Number(p.comision_hetna || 0)
-    grupos.set(k, g)
+    g.totalPaypal += Number(p.comision_hetna || 0)
+  }
+  for (const f of facturas) {
+    const g = grupo(f.negocio_id, "MXN")
+    g.cfdi.push(f.id)
+    g.total += Number(f.costo_extra || 0)
+    g.totalCfdi += Number(f.costo_extra || 0)
   }
 
   let creados = 0
@@ -133,19 +151,32 @@ export async function corteComisiones(logger?: any) {
         headers: { Prefer: "return=minimal" },
         body: JSON.stringify({ liga_pago: liga }),
       })
-      await supa(`/rest/v1/cotizacion_pagos?id=in.(${g.ids.join(",")})`, {
-        method: "PATCH",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ comision_cobro_id: cobro.id }),
-      })
+      if (g.ids.length)
+        await supa(`/rest/v1/cotizacion_pagos?id=in.(${g.ids.join(",")})`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ comision_cobro_id: cobro.id }),
+        })
+      if (g.cfdi.length)
+        await supa(`/rest/v1/cfdi_emitidos?id=in.(${g.cfdi.join(",")})`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ comision_cobro_id: cobro.id }),
+        })
       await avisarTaller(
         {
           negocioId: g.negocio,
           tipo: "comision_hetna",
-          titulo: `Comisión HETNA de ${periodo}: ${dinero(monto, g.moneda)}`,
+          titulo: `Cargos HETNA de ${periodo}: ${dinero(monto, g.moneda)}`,
           cuerpo:
-            `Es la comisión de tus anticipos cobrados con PayPal en ${periodo} (con Mercado Pago se descuenta sola). ` +
-            (liga ? `Págala aquí: ${liga}` : "Te mandamos la liga de pago en breve."),
+            [
+              g.totalPaypal > 0
+                ? `Comisión de tus anticipos cobrados con PayPal: ${dinero(g.totalPaypal, g.moneda)} (con Mercado Pago se descuenta sola).`
+                : "",
+              g.totalCfdi > 0 ? `Facturas electrónicas extra (pasaste las incluidas en tu plan): ${g.cfdi.length} × ${dinero(g.totalCfdi / g.cfdi.length, "MXN")}.` : "",
+            ]
+              .filter(Boolean)
+              .join(" ") + (liga ? ` Págalo aquí: ${liga}` : " Te mandamos la liga de pago en breve."),
           correo: true,
           boton: liga ? "Pagar la comisión" : "Abrir el Cotizador",
           liga: liga || `${SITIO}/cotizador/`,
@@ -171,6 +202,7 @@ async function marcarPagado(cobroId: string, referencia: string) {
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({ comision_cobrada: true }),
   })
+  // Las facturas extra quedan ligadas al cobro (comision_cobro_id); su estado lo da el cobro
 }
 
 async function cobroPorId(id: string) {

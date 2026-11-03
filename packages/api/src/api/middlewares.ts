@@ -82,5 +82,11 @@ export default defineMiddlewares({
           matcher: "/api/taller-publico/:slug/solicitar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: Number(process.env.COTIZADOR_SOLICITUD_MAX_MB || 50) })],
         },
+        // CSD del taller (.cer y .key) para la factura electrónica: va directo a Facturapi
+        {
+          method: ["POST"],
+          matcher: "/api/cotizador-cfdi/certificado",
+          middlewares: [leerMultipart({ campos: { cer: 1, key: 1 }, maxMb: 1 })],
+        },
     ],
 });
