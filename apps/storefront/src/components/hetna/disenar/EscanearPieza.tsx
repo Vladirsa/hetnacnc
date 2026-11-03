@@ -1,14 +1,15 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { SubirEscaneo } from "@/components/hetna/taller/SubirEscaneo"
+import { EstudioModeloIA, type InfoModeloIa } from "@/components/hetna/escaneos/EstudioModeloIA"
+import { saldoBreve } from "@/lib/creditos/acciones"
 import { retrieveCustomer } from "@/lib/data/customer"
-import { listarEscaneos } from "@/lib/escaneos/acciones"
+import { type Escaneo, listarEscaneos } from "@/lib/escaneos/acciones"
 
 // Escaneo 3D dentro del espacio "Diseñar y escanear". Antes vivía sólo en
 // /taller/escaneos/nuevo, detrás de la sesión. Aquí quien no ha entrado ve qué
 // es y cómo funciona, y entra sin perder la página (volver=…).
 const PASOS = [
-  { t: "Toma las fotos", d: "Alrededor de la pieza, con buena luz y sin moverla. Para la vista previa basta una." },
-  { t: "Súbelas aquí", d: "Elige vista previa (gratis) o escaneo con medidas reales (con créditos)." },
+  { t: "Toma las fotos", d: "Para el modelo con IA basta una. Para medidas reales, muchas alrededor de la pieza." },
+  { t: "Súbelas aquí", d: "Elige modelo con IA (una foto, con textura) o escaneo con medidas reales (con créditos)." },
   { t: "Baja tu modelo 3D", d: "Queda guardado en tu perfil: lo descargas las veces que quieras." },
 ]
 
@@ -17,27 +18,35 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
   const volver = encodeURIComponent(`/${locale}/disenar/escanear-pieza`)
 
   let creditos = 5
+  let modeloIa: InfoModeloIa = { gratis_por_mes: 1, usados_mes: 0, creditos: 2 }
+  let recientes: Escaneo[] = []
+  let saldo: { saldo: number; ilimitado: boolean } | null = null
   if (cliente) {
-    // El precio viene del listado del backend, para no tener una copia propia
+    // Precios y cupo gratis vienen del backend, para no tener una copia propia
     // que se desincronice.
-    const res = await listarEscaneos({ limite: 1 })
-    if (res.ok) creditos = res.datos.creditos_por_escaneo
+    const [res, s] = await Promise.all([listarEscaneos({ limite: 8 }), saldoBreve()])
+    if (res.ok) {
+      creditos = res.datos.creditos_por_escaneo
+      if (res.datos.modelo_ia) modeloIa = res.datos.modelo_ia
+      recientes = res.datos.escaneos
+    }
+    saldo = s
   }
 
   return (
     <div className="px-4 lg:px-8 pt-4 pb-12">
       <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#F3F1EA] text-[#6B675C] px-3 py-1 rounded-full">
-        Vista previa gratis · escaneo con créditos
+        Imagen a 3D con IA · escaneo profesional
       </span>
-      <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Escanear una pieza</h1>
+      <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Imagen a 3D y escaneo de piezas</h1>
       <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[680px]">
-        Sube fotos de una pieza que ya existe y recibe su archivo 3D. El resultado queda guardado en tu perfil: no se manda
-        por correo ni por un link que caduca.
+        Convierte una foto en un modelo 3D con textura usando IA, o escanea una pieza con medidas reales para maquinarla.
+        Todo queda guardado en tu perfil.
       </p>
 
       {cliente ? (
         <>
-          <SubirEscaneo creditosPorEscaneo={creditos} />
+          <EstudioModeloIA creditosPorEscaneo={creditos} modeloIa={modeloIa} saldo={saldo} recientes={recientes} />
           <p className="mt-6 text-[14px] text-[#4A4943]">
             ¿Ya escaneaste antes?{" "}
             <LocalizedClientLink href="/user/escaneos" className="font-semibold text-[#B34D07] hover:underline">

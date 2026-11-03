@@ -19,12 +19,12 @@ type EstadoFoto = {
   mensaje?: string
 }
 
-export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: number }) => {
+export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { creditosPorEscaneo: number; soloScan?: boolean }) => {
   const router = useRouter()
   const params = useParams()
   const locale = (params?.locale as string) || "mx"
 
-  const [modo, setModo] = useState<Modo>("preview")
+  const [modo, setModo] = useState<Modo>(soloScan ? "scan" : "preview")
   const [titulo, setTitulo] = useState("")
   const [medida, setMedida] = useState("")
   const [fotos, setFotos] = useState<EstadoFoto[]>([])
@@ -149,6 +149,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
 
   return (
     <div className="mt-8 max-w-[760px] flex flex-col gap-8">
+      {!soloScan && (
       <fieldset className="border-0 p-0 m-0">
         <legend className="text-[18px] font-bold text-[#1B1B18] p-0">Qué necesitas</legend>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -168,6 +169,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo }: { creditosPorEscaneo: numbe
           />
         </div>
       </fieldset>
+      )}
 
       {modo === "preview" && (
         <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">

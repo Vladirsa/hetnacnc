@@ -10,7 +10,7 @@ import { ESCANEO_MODULE } from "../modules/escaneo"
 import EscaneoModuleService from "../modules/escaneo/service"
 import { getSignedDownloadUrl, uploadFile } from "../lib/backblaze"
 import { glbAStl } from "../lib/glb-a-stl"
-import { consultarModelo, enviarModelo, ErrorTencent, tencentListo } from "../lib/tencent3d"
+import { consultarModelo, enviarModelo, ErrorTencent, tencentListo, type Vista } from "../lib/tencent3d"
 import { cerrarComoFallido } from "./despachar-escaneos"
 
 // Tencent acepta 3 trabajos al mismo tiempo por cuenta.
@@ -69,19 +69,30 @@ export default async function despacharEscaneosIa(container: MedusaContainer) {
     { order: { created_at: "ASC" }, take: libres }
   )
   for (const escaneo of enCola) {
-    const llave = Array.isArray(escaneo.fotos) ? (escaneo.fotos as string[])[0] : null
+    const llaves = Array.isArray(escaneo.fotos) ? (escaneo.fotos as string[]) : []
+    const op = ((escaneo as any).opciones || {}) as { vistas?: string[]; tipo?: string; caras?: number }
+    const llave = llaves[0]
     if (!llave) {
       await cerrarComoFallido(container, servicio, escaneo as any, "No hay foto para generar el modelo")
       continue
     }
     try {
-      const firmada = await getSignedDownloadUrl(llave, 3600 * 2)
-      if (!firmada.ok) throw new Error(`no se pudo firmar la foto: ${firmada.reason}`)
+      const firmar = async (k: string) => {
+        const f = await getSignedDownloadUrl(k, 3600 * 2)
+        if (!f.ok) throw new Error(`no se pudo firmar la foto: ${f.reason}`)
+        return f.url
+      }
+      const vistas: { vista: Vista; url: string }[] = []
+      for (let i = 1; i < llaves.length; i++) {
+        const v = op.vistas?.[i]
+        if (v && v !== "front") vistas.push({ vista: v as Vista, url: await firmar(llaves[i]) })
+      }
       const job = await enviarModelo({
-        imagenUrl: firmada.url,
+        imagenUrl: await firmar(llave),
+        vistas,
         modelo: "3.1",
-        tipo: "Normal",
-        caras: Number(process.env.ESCANEO_IA_CARAS) || 400000,
+        tipo: op.tipo === "Geometry" ? "Geometry" : "Normal",
+        caras: Number(op.caras) || Number(process.env.ESCANEO_IA_CARAS) || 400000,
       })
       await servicio.updateEscaneo3ds({
         id: escaneo.id,
@@ -108,7 +119,7 @@ async function guardarResultado(
   container: MedusaContainer,
   servicio: EscaneoModuleService,
   escaneo: any,
-  archivos: { tipo: string; url: string }[]
+  archivos: { tipo: string; url: string; vistaPrevia?: string }[]
 ) {
   const logger = container.resolve("logger")
   const glb = archivos.find((a) => a.tipo === "GLB")
@@ -140,9 +151,23 @@ async function guardarResultado(
       logger.error(`[escaneos-ia] no se pudo convertir a STL ${escaneo.id}: ${e}`)
     }
 
+    // La imagen de vista previa, para la galería. Es opcional.
+    let imagenKey: string | null = null
+    const img = archivos.find((a) => a.vistaPrevia)?.vistaPrevia
+    if (img) {
+      try {
+        const r = await fetch(img)
+        if (r.ok) {
+          const sub = await uploadFile(Buffer.from(await r.arrayBuffer()), `${base}vista.png`, "image/png")
+          if (sub.ok) imagenKey = sub.storageKey
+        }
+      } catch {}
+    }
+
     await servicio.updateEscaneo3ds({
       id: escaneo.id,
       estatus: "listo",
+      imagen_storage_key: imagenKey,
       glb_storage_key: subidoGlb.storageKey,
       stl_storage_key: stlKey,
       escala_real: false,

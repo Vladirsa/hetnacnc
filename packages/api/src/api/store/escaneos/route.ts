@@ -3,7 +3,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ESCANEO_MODULE } from "../../../modules/escaneo"
 import EscaneoModuleService from "../../../modules/escaneo/service"
 import { createEscaneoWorkflow } from "../../../workflows/create-escaneo"
-import { creditosDe } from "../../../workflows/create-escaneo/steps/create-escaneo"
+import { creditosDe, creditosModeloIa, modelosIaDelMes, previewsGratisPorMes } from "../../../workflows/create-escaneo/steps/create-escaneo"
 
 // El historial de escaneos del taller. Es la pantalla que vuelve esto un
 // servicio de la plataforma y no un archivo que se manda por WhatsApp: el
@@ -29,6 +29,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     // El precio del escaneo profesional, para que la pantalla lo muestre sin
     // tener una copia propia que se desincronice de la que de verdad se cobra.
     creditos_por_escaneo: creditosDe("scan"),
+    // Para que la pantalla diga si el siguiente modelo con IA es gratis o
+    // cuánto cuesta.
+    modelo_ia: {
+      gratis_por_mes: previewsGratisPorMes(),
+      usados_mes: await modelosIaDelMes(escaneoModuleService, customerId),
+      creditos: creditosModeloIa(),
+    },
   })
 }
 
@@ -58,6 +65,9 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       titulo: typeof body.titulo === "string" ? body.titulo.slice(0, 200) : null,
       fotos: body.fotos,
       medida_mm: body.medida_mm == null || body.medida_mm === "" ? null : Number(body.medida_mm),
+      vistas: Array.isArray(body.vistas) ? body.vistas.slice(0, 4).map(String) : null,
+      tipo: typeof body.tipo === "string" ? body.tipo : null,
+      detalle: typeof body.detalle === "string" ? body.detalle : null,
     },
   })
 

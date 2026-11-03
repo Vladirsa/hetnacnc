@@ -42,6 +42,11 @@ const Escaneo = model
     glb_storage_key: model.text().nullable(),
     // Quién hizo el modelo: "tencent" (vista previa con IA) o "runpod".
     proveedor: model.text().nullable(),
+    // Opciones del modelo con IA: { vistas: ["front","left",...] alineadas con
+    // fotos, tipo: "Normal" | "Geometry", caras }.
+    opciones: model.json().nullable(),
+    // Imagen de vista previa del modelo (miniatura de la galería).
+    imagen_storage_key: model.text().nullable(),
 
     // Lo que reporta trimesh al convertir. watertight false significa que la
     // malla no cierra: se puede ver, pero necesita reparación antes de

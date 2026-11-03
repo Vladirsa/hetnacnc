@@ -83,7 +83,12 @@ export async function listarEscaneos(opciones: { estatus?: string; limite?: numb
   if (opciones.estatus) query.set("estatus", opciones.estatus)
   if (opciones.limite) query.set("limit", String(opciones.limite))
   const sufijo = query.toString() ? `?${query}` : ""
-  return pedir<{ escaneos: Escaneo[]; count: number; creditos_por_escaneo: number }>(
+  return pedir<{
+    escaneos: Escaneo[]
+    count: number
+    creditos_por_escaneo: number
+    modelo_ia?: { gratis_por_mes: number; usados_mes: number; creditos: number }
+  }>(
     `/store/escaneos${sufijo}`
   )
 }
@@ -99,6 +104,9 @@ export async function crearEscaneo(cuerpo: {
   titulo?: string | null
   fotos: string[]
   medida_mm?: number | null
+  vistas?: string[]
+  tipo?: "Normal" | "Geometry"
+  detalle?: "ligero" | "normal" | "alto"
 }) {
   return pedir<{ escaneo: Escaneo }>("/store/escaneos", { metodo: "POST", cuerpo })
 }

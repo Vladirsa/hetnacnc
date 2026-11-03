@@ -24,6 +24,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     ["stl", escaneo.stl_storage_key],
     ["obj", escaneo.obj_storage_key],
     ["glb", (escaneo as any).glb_storage_key],
+    // Miniatura: la imagen del modelo terminado o, mientras, la foto subida.
+    ["miniatura", (escaneo as any).imagen_storage_key || (Array.isArray(escaneo.fotos) ? (escaneo.fotos as string[])[0] : null)],
   ] as const) {
     if (!llave) continue
     const firmado = await getSignedDownloadUrl(llave)
