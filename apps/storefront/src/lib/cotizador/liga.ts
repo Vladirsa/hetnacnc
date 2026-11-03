@@ -26,7 +26,15 @@ export type CotizacionPublica = {
   notas: string | null
   pdf: string | null
   aceptada: { en: string; por: string | null } | null
-  anticipo: { monto: number; pagado: number; estado: "pendiente" | "pagado" | "sin_anticipo"; se_puede_pagar: boolean }
+  moneda?: "MXN" | "USD"
+  anticipo: {
+    monto: number
+    pagado: number
+    estado: "pendiente" | "pagado" | "sin_anticipo"
+    se_puede_pagar: boolean
+    // Con qué se puede pagar (Mercado Pago sólo en pesos; PayPal en pesos o dólares)
+    metodos?: { mercadopago: boolean; paypal: boolean }
+  }
   pagos: { monto: number; metodo: string | null; fecha: string }[]
   // Cuando ya es pedido: etapas, avances, fotos y guía de envío
   pedido: {

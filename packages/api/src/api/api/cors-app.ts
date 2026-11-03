@@ -28,4 +28,7 @@ export const corsAppMiddlewares = [
   { matcher: "/api/cotizador-mp/*", middlewares: [corsApp] },
   { matcher: "/api/cotizador-suscripcion", middlewares: [corsApp] },
   { matcher: "/api/cotizador-suscripcion/*", middlewares: [corsApp] },
+  { matcher: "/api/cotizador-paypal/*", middlewares: [corsApp] },
+  { matcher: "/api/cotizador-marketing", middlewares: [corsApp] },
+  { matcher: "/api/cotizador-marketing/*", middlewares: [corsApp] },
 ]

@@ -16,7 +16,9 @@ const botonClaro =
 const campo =
   "w-full rounded-[10px] border border-[#E7E4DC] bg-[#FAF9F6] px-4 py-3 text-[15px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"
 
-const mxn = (n: number) => `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+let monedaPagina: "MXN" | "USD" = "MXN"
+const mxn = (n: number) =>
+  `$${n.toLocaleString(monedaPagina === "USD" ? "en-US" : "es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const fecha = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : ""
 const vence = (c: CotizacionPublica) => {
@@ -48,7 +50,8 @@ async function recargar(token: string): Promise<CotizacionPublica | null> {
 export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
   const [c, setC] = useState(inicial)
   const [nombre, setNombre] = useState(inicial.cliente?.nombre || "")
-  const [trabajando, setTrabajando] = useState<"" | "aceptar" | "pagar">("")
+  const [trabajando, setTrabajando] = useState<"" | "aceptar" | "pagar" | "paypal">("")
+  monedaPagina = c.moneda === "USD" ? "USD" : "MXN"
   const [error, setError] = useState("")
 
   // Al volver de Mercado Pago, el aviso puede tardar unos segundos: se vuelve a leer.
@@ -78,11 +81,11 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
     }
   }
 
-  const pagar = async () => {
+  const pagar = async (con: "pagar" | "paypal" = "pagar") => {
     setError("")
-    setTrabajando("pagar")
+    setTrabajando(con)
     try {
-      const r = await llamar<{ url: string }>(`/api/cotizacion-liga/${token}/pagar`)
+      const r = await llamar<{ url: string }>(`/api/cotizacion-liga/${token}/${con}`)
       window.location.href = r.url
     } catch (e) {
       setError((e as Error).message)
@@ -90,6 +93,9 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
     }
   }
 
+  // Páginas viejas (sin `metodos`) sólo tenían Mercado Pago
+  const metodos = c.anticipo.metodos || { mercadopago: c.anticipo.se_puede_pagar, paypal: false }
+  const moneda = c.moneda === "USD" ? "USD" : "MXN"
   const resta = Math.max(0, c.anticipo.monto - c.anticipo.pagado)
   const aceptada = Boolean(c.aceptada) || c.estado === "Aprobada" || c.estado === "Pedido"
   const rechazada = c.estado === "Rechazada"
@@ -159,7 +165,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           {c.iva ? <Fila k={`IVA ${c.iva_pct}%`} v={mxn(c.iva)} /> : null}
           <div className="flex justify-between pt-1 text-[18px] font-bold text-[#142033]">
             <dt>Total</dt>
-            <dd className="m-0">{mxn(c.total)} MXN</dd>
+            <dd className="m-0">{mxn(c.total)} {moneda}</dd>
           </div>
         </dl>
       </section>
@@ -210,15 +216,31 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                   <p className="m-0 mt-1 text-[16px] font-semibold text-[#1B1B18]">✅ Anticipo pagado: {mxn(c.anticipo.pagado)}</p>
                 ) : (
                   <>
-                    <p className="m-0 mt-1 text-[22px] font-bold text-[#142033]">{mxn(resta)} MXN</p>
+                    <p className="m-0 mt-1 text-[22px] font-bold text-[#142033]">{mxn(resta)} {moneda}</p>
                     {c.anticipo.pagado > 0 ? <p className="m-0 text-[13px] text-[#7A776E]">Ya pagaste {mxn(c.anticipo.pagado)} de {mxn(c.anticipo.monto)}.</p> : null}
-                    {c.anticipo.se_puede_pagar ? (
+                    {metodos.mercadopago || metodos.paypal ? (
                       <>
-                        <button type="button" className={`${boton} mt-3`} disabled={trabajando !== ""} onClick={pagar}>
-                          {trabajando === "pagar" ? "Abriendo Mercado Pago…" : "Pagar anticipo con Mercado Pago"}
-                        </button>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                          {metodos.mercadopago ? (
+                            <button type="button" className={boton} disabled={trabajando !== ""} onClick={() => pagar("pagar")}>
+                              {trabajando === "pagar" ? "Abriendo Mercado Pago…" : "Pagar con Mercado Pago"}
+                            </button>
+                          ) : null}
+                          {metodos.paypal ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center rounded-[10px] bg-[#FFC439] px-5 py-3 text-[15px] font-semibold text-[#111] hover:bg-[#F2B830] disabled:opacity-60"
+                              disabled={trabajando !== ""}
+                              onClick={() => pagar("paypal")}
+                            >
+                              {trabajando === "paypal" ? "Abriendo PayPal…" : "Pagar con PayPal"}
+                            </button>
+                          ) : null}
+                        </div>
                         <p className="m-0 mt-2 text-[12px] text-[#7A776E]">
-                          Tarjeta, transferencia, efectivo o saldo de Mercado Pago. El pago llega directo a {c.taller.nombre}.
+                          {metodos.mercadopago ? "Mercado Pago: tarjeta, transferencia, efectivo o saldo. " : ""}
+                          {metodos.paypal ? "PayPal: tu cuenta PayPal o tarjeta. " : ""}
+                          El pago llega directo a {c.taller.nombre}.
                           {!aceptada ? " Al pagar, la cotización queda aceptada." : ""}
                         </p>
                       </>
