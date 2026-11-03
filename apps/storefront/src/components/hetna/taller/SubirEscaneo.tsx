@@ -157,7 +157,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
             activa={modo === "preview"}
             onClick={() => cambiarModo("preview")}
             titulo="Modelo con IA"
-            precio="3 gratis al mes"
+            precio="1 gratis al mes"
             descripcion="Una foto. La IA crea el modelo 3D con textura y color en unos minutos. Ideal para enseñar, decorar o imprimir figuras."
           />
           <OpcionModo
