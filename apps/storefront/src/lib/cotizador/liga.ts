@@ -28,6 +28,16 @@ export type CotizacionPublica = {
   aceptada: { en: string; por: string | null } | null
   anticipo: { monto: number; pagado: number; estado: "pendiente" | "pagado" | "sin_anticipo"; se_puede_pagar: boolean }
   pagos: { monto: number; metodo: string | null; fecha: string }[]
+  // Cuando ya es pedido: etapas, avances, fotos y guía de envío
+  pedido: {
+    folio: string
+    estado: string
+    fecha_estimada: string | null
+    entregado: string | null
+    avances: { etapa: string; nota: string | null; fecha: string }[]
+    fotos: { url: string; etapa: string | null; fecha: string }[]
+    envio: { paqueteria: string | null; guia: string; rastreo: string | null } | null
+  } | null
 }
 
 export async function leerCotizacionPublica(token: string): Promise<CotizacionPublica | null> {
