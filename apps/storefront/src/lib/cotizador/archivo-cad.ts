@@ -353,7 +353,7 @@ export function leerSvg(texto: string): GeoCad {
   }
 }
 
-// ── STL / OBJ ───────────────────────────────────────────────────────────────────
+// ── STL / OBJ ───────────────────────────────────────────────────────────
 
 function resumen3d(tris: Float64Array, n: number, avisos: string[]): GeoCad {
   if (!n) throw new Error("No encontramos la pieza en el archivo 3D.")
