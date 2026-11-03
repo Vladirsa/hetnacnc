@@ -14,7 +14,7 @@ const PASOS = [
 
 export const EscanearPieza = async ({ locale }: { locale: string }) => {
   const cliente = await retrieveCustomer().catch(() => null)
-  const volver = encodeURIComponent(`/${locale}/disenar/escanear-pieza`)
+  const volver = encodeURIComponent(`/${locale}/disenar/imagen-a-3d`)
 
   let modeloIa: InfoModeloIa = { gratis_por_mes: 1, usados_mes: 0, creditos: 2 }
   let recientes: Escaneo[] = []

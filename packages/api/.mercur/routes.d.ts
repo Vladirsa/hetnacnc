@@ -774,6 +774,7 @@ export type Routes = {
         hetnaRecomienda: typeof import("../src/api/store/hetna-recomienda/route") & {
             vincular: typeof import("../src/api/store/hetna-recomienda/vincular/route");
         };
+        hetnaTarifas: typeof import("../src/api/store/hetna-tarifas/route");
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
@@ -1129,6 +1130,7 @@ export type Routes = {
                 respuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/respuesta/route");
             };
         };
+        hetnaTarifas: typeof import("../src/api/vendor/hetna-tarifas/route");
         hetnaVerificacion: typeof import("../src/api/vendor/hetna-verificacion/route") & {
             archivos: typeof import("../src/api/vendor/hetna-verificacion/archivos/route") & {
                 $id: typeof import("../src/api/vendor/hetna-verificacion/archivos/[id]/route");
@@ -1145,7 +1147,25 @@ export type Routes = {
             $token: typeof import("../src/api/api/cotizacion-liga/[token]/route") & {
                 aceptar: typeof import("../src/api/api/cotizacion-liga/[token]/aceptar/route");
                 pagar: typeof import("../src/api/api/cotizacion-liga/[token]/pagar/route");
+                paypal: typeof import("../src/api/api/cotizacion-liga/[token]/paypal/route");
             };
+        };
+        cotizadorCfdi: typeof import("../src/api/api/cotizador-cfdi/route") & {
+            $id: {
+                cancelar: typeof import("../src/api/api/cotizador-cfdi/[id]/cancelar/route");
+                enviar: typeof import("../src/api/api/cotizador-cfdi/[id]/enviar/route");
+                pdf: typeof import("../src/api/api/cotizador-cfdi/[id]/pdf/route");
+                xml: typeof import("../src/api/api/cotizador-cfdi/[id]/xml/route");
+            };
+            certificado: typeof import("../src/api/api/cotizador-cfdi/certificado/route");
+            datos: typeof import("../src/api/api/cotizador-cfdi/datos/route");
+            emitir: typeof import("../src/api/api/cotizador-cfdi/emitir/route");
+        };
+        cotizadorComision: {
+            paypal: typeof import("../src/api/api/cotizador-comision/paypal/route");
+        };
+        cotizadorMarketing: typeof import("../src/api/api/cotizador-marketing/route") & {
+            correr: typeof import("../src/api/api/cotizador-marketing/correr/route");
         };
         cotizadorMp: {
             callback: typeof import("../src/api/api/cotizador-mp/callback/route");
@@ -1153,16 +1173,30 @@ export type Routes = {
             desconectar: typeof import("../src/api/api/cotizador-mp/desconectar/route");
             estado: typeof import("../src/api/api/cotizador-mp/estado/route");
         };
+        cotizadorPagina: typeof import("../src/api/api/cotizador-pagina/route");
+        cotizadorPaypal: {
+            callback: typeof import("../src/api/api/cotizador-paypal/callback/route");
+            conectar: typeof import("../src/api/api/cotizador-paypal/conectar/route");
+            desconectar: typeof import("../src/api/api/cotizador-paypal/desconectar/route");
+            estado: typeof import("../src/api/api/cotizador-paypal/estado/route");
+        };
         cotizadorSuscripcion: typeof import("../src/api/api/cotizador-suscripcion/route") & {
             cancelar: typeof import("../src/api/api/cotizador-suscripcion/cancelar/route");
             verificar: typeof import("../src/api/api/cotizador-suscripcion/verificar/route");
             vincular: typeof import("../src/api/api/cotizador-suscripcion/vincular/route");
         };
+        mpComision: typeof import("../src/api/api/mp-comision/route");
         mpCotizacion: typeof import("../src/api/api/mp-cotizacion/route");
         mpEnvio: typeof import("../src/api/api/mp-envio/route");
         mpLicitacion: typeof import("../src/api/api/mp-licitacion/route");
         mpSuscripcion: typeof import("../src/api/api/mp-suscripcion/route");
         paypalSuscripcion: typeof import("../src/api/api/paypal-suscripcion/route");
+        tallerPublico: typeof import("../src/api/api/taller-publico/route") & {
+            $slug: typeof import("../src/api/api/taller-publico/[slug]/route") & {
+                estimar: typeof import("../src/api/api/taller-publico/[slug]/estimar/route");
+                solicitar: typeof import("../src/api/api/taller-publico/[slug]/solicitar/route");
+            };
+        };
     };
     cotizacion: {
         $token: typeof import("../src/api/cotizacion/[token]/route");

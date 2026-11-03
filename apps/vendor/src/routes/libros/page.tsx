@@ -45,10 +45,12 @@ const subirPdf = async (archivo: File, maxMb: number): Promise<{ storage_key: st
 }
 
 const BENEFICIOS = [
-  ["Cobras el 90%", "HETNA sólo cobra su comisión cuando vendes. Publicar es gratis."],
-  ["Entrega automática", "El comprador recibe el enlace por correo y el libro queda en Mis descargas."],
+  ["Llega a todo México", "Tu libro aparece en la Academia HETNA, frente a talleres, operadores y alumnos que buscan aprender CNC."],
+  ["Ganas al momento", "Cada compra llega a tu saldo en cuanto se confirma el pago. Vendes aunque estés trabajando."],
+  ["Te promocionamos", "Lo anunciamos en la tienda, en el boletín y en Facebook e Instagram de HETNA."],
+  ["Gana clientes", "Quien aprende con tu libro te conoce: muchos terminan pidiéndote trabajos o comprando en tu tienda."],
+  ["Entrega automática", "El comprador recibe el enlace por correo y el libro queda en Mis descargas. Tú no haces nada."],
   ["Tu PDF protegido", "El archivo vive en almacenamiento privado; sólo lo baja quien lo compró."],
-  ["Gratis también vale", "Un manual gratis te trae alumnos y clientes para tu taller."],
 ]
 
 export default function LibrosPage() {
@@ -167,7 +169,7 @@ export default function LibrosPage() {
             alumnos de todo México.
           </Text>
         </div>
-        <div className="grid gap-3 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 px-6 py-5 sm:grid-cols-2 lg:grid-cols-3">
           {BENEFICIOS.map(([t, d]) => (
             <div key={t} className="rounded-lg border p-3">
               <Text weight="plus" size="small">

@@ -871,6 +871,48 @@ function AvisoAlta() {
 
 // ---------------------------------------------------------------- pantalla
 
+// Lista de precios y comisiones de HETNA (GET /vendor/hetna-tarifas, la misma
+// de los Términos para vendedores). Plegada para no estorbar el tablero.
+type GrupoTarifas = { id: string; titulo: string; texto?: string; filas: { concepto: string; precio: string; nota?: string }[] }
+
+function Tarifas() {
+  const [grupos, setGrupos] = useState<GrupoTarifas[] | null>(null)
+  useEffect(() => {
+    fetch("/vendor/hetna-tarifas", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setGrupos(d?.grupos || []))
+      .catch(() => setGrupos([]))
+  }, [])
+  if (!grupos?.length) return null
+  return (
+    <div style={S.card}>
+      <h2 style={S.h2}>Precios y comisiones de HETNA</h2>
+      <p style={S.nota}>
+        Lo que cuesta cada servicio. Es la misma lista de los{" "}
+        <a href="https://hetnacnc.com/mx/terminos-vendedores#tarifas" target="_blank" rel="noreferrer" style={{ color: "#B34D07" }}>
+          Términos para vendedores
+        </a>
+        .
+      </p>
+      {grupos.map((g) => (
+        <details key={g.id} style={{ borderTop: "1px solid #F1EEE7", padding: "8px 0" }}>
+          <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 14 }}>{g.titulo}</summary>
+          {g.texto && <p style={{ ...S.nota, margin: "6px 0 4px" }}>{g.texto}</p>}
+          {g.filas.map((f) => (
+            <div key={f.concepto} style={S.fila}>
+              <span style={{ fontSize: 13.5 }}>
+                {f.concepto}
+                {f.nota && <span style={{ display: "block", color: "#8A857A", fontSize: 12 }}>{f.nota}</span>}
+              </span>
+              <strong style={{ fontSize: 13.5, whiteSpace: "nowrap" }}>{f.precio}</strong>
+            </div>
+          ))}
+        </details>
+      ))}
+    </div>
+  )
+}
+
 export default function TableroPage() {
   const [datos, setDatos] = useState<RespuestaTablero | null>(null)
   const [cargando, setCargando] = useState(true)
@@ -1050,6 +1092,8 @@ export default function TableroPage() {
       </div>
 
       <Cotizador datos={datos} />
+
+      <Tarifas />
     </div>
   )
 }

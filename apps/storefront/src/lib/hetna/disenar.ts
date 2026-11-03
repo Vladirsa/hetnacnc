@@ -20,7 +20,8 @@ export type HerramientaDiseno = {
   descripcion: string
 }
 
-export const ESCANEAR = "escanear-pieza"
+// Antes "escanear-pieza": la dirección vieja redirige aquí (next.config).
+export const ESCANEAR = "imagen-a-3d"
 
 export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
@@ -165,13 +166,13 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   },
   {
     slug: ESCANEAR,
-    nombre: "Escaneo 3D de piezas",
-    texto: "Modelo con IA con textura desde una foto (1 gratis al mes); el escaneo que mide de verdad se paga con créditos.",
-    icono: "escaneo",
+    nombre: "Imagen a 3D con IA",
+    texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
+    icono: "ia",
     acceso: "creditos",
-    titulo: "Escaneo 3D de piezas con fotos: de la pieza al modelo STL",
+    titulo: "Imagen a 3D con IA: convierte una foto en modelo 3D (STL y GLB) gratis",
     descripcion:
-      "Toma fotos de una pieza que ya existe y recibe su modelo 3D. Con una sola foto, la IA crea el modelo con textura y color en minutos (1 gratis al mes); el escaneo con medidas reales se paga con créditos y queda guardado en tu perfil.",
+      "Convierte una imagen en un modelo 3D con inteligencia artificial: sube la foto de una figura, pieza o producto y en 3 a 5 minutos descargas el modelo con textura en GLB y en STL para impresión 3D o router CNC. El primero de cada mes es gratis.",
   },
 ]
 

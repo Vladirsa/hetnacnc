@@ -3,14 +3,16 @@ import type { Metadata } from "next"
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
+import { TablaTarifas } from "@/components/hetna/TablaTarifas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.2 · 3 nov 2026 (libros y PDF de la Academia y lista de precios, cláusula 8).
 // Versión 1.1 · 1 nov 2026 (comisión de cursos de la Academia, cláusula 8).
 // Versión 1.0 · 28 oct 2026. BORRADOR para revisión de abogado y contador:
 // ver "Paquete legal HETNA" (preguntas abiertas). Al cambiarlo, sube la versión
 // y avisa a los vendedores con 15 días de anticipación (cláusula 17).
-const VERSION = "1.1"
-const VIGENCIA = "1 de noviembre de 2026"
+const VERSION = "1.2"
+const VIGENCIA = "3 de noviembre de 2026"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/terminos-vendedores" },
@@ -98,10 +100,15 @@ export default function TerminosVendedores() {
         <li>HETNA te paga el importe de cada venta menos la comisión vigente y, en su caso, las retenciones de impuestos (cláusula 9) y los costos de envío que correspondan. La comisión y el plan vigentes se muestran en tu panel y en la página para anunciantes antes de que vendas.</li>
         <li>Cuándo se libera tu pago: los diseños y archivos digitales, en cuanto se confirma el pago del cliente; los productos físicos, 3 días después de que el pedido se entrega (lo marca el rastreo de la guía o el cliente al confirmar que lo recibió). Ves tu saldo pendiente, disponible y pagado en tu panel, en Mi saldo.</li>
         <li>Si después hay una devolución, un contracargo o un reclamo procedente dentro del plazo que tiene el cliente, el importe se descuenta de tu siguiente pago. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
-        <li>Cursos de la Academia HETNA: publicar un curso es gratis. Si lo cobras, HETNA cobra una comisión de 10% sobre el precio de cada curso vendido y el resto se abona a tu saldo en cuanto se confirma el pago. Los cursos gratis no pagan comisión.</li>
+        <li>Cursos, libros y PDF de la Academia HETNA: publicarlos es gratis. Si los cobras, HETNA cobra la comisión que indica la lista de precios (abajo) sobre el precio de cada venta y el resto se abona a tu saldo en cuanto se confirma el pago. Lo que publicas gratis no paga comisión.</li>
+        <li>Al publicar un libro, PDF o curso declaras que el contenido es tuyo o que tienes permiso para venderlo. HETNA puede retirar el que infrinja derechos de terceros (cláusula 7).</li>
         <li>Los cambios de comisión o de plan se avisan con al menos 15 días de anticipación y no afectan pedidos ya pagados.</li>
         <li>Está prohibido cerrar fuera de la plataforma ventas o trabajos que llegaron por HETNA, o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>
       </ul>
+
+      <h3 id="tarifas">Lista de precios y comisiones</h3>
+      <p>Lo que cuesta cada servicio de HETNA. La misma lista aparece en la portada de tu panel de vendedor.</p>
+      <TablaTarifas />
 
       <h2>9. Impuestos</h2>
       <ul>

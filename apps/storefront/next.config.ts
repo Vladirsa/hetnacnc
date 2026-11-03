@@ -178,7 +178,8 @@ const nextConfig: NextConfig = {
         destination: "/:locale/disenar/:herramienta",
         permanent: true,
       },
-      { source: "/:locale([a-z]{2})/taller/escaneos/nuevo", destination: "/:locale/disenar/escanear-pieza", permanent: true },
+      { source: "/:locale([a-z]{2})/taller/escaneos/nuevo", destination: "/:locale/disenar/imagen-a-3d", permanent: true },
+      { source: "/:locale([a-z]{2})/disenar/escanear-pieza", destination: "/:locale/disenar/imagen-a-3d", permanent: true },
       // /taller (el cotizador web viejo) se quitó: el cotizador es la app
       // (/cotizador/) y los escaneos pasaron a "Mi cuenta". Direcciones
       // viejas en correos, favoritos y buscadores siguen funcionando.

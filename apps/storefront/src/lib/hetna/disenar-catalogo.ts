@@ -80,7 +80,7 @@ export const SECCIONES: SeccionDiseno[] = [
       { nombre: "Foto para grabado láser", texto: "Tramada al tamaño y DPI de tu láser.", href: "/disenar/grabado-foto", icono: "grabado", color: AZUL2, acceso: "gratis", para: ["laser"] },
       { nombre: "Foto a relieve o litofanía", texto: "STL para tallar o imprimir.", href: "/disenar/litofania-relieve", icono: "relieve", color: AZUL2, acceso: "gratis", para: ["3d", "router"], claves: "lámpara" },
       { nombre: "SVG o DXF a STL", texto: "Extruye logos y letras; llaveros con placa.", href: "/disenar/svg-a-stl", icono: "extruir", color: MORADO, acceso: "gratis", para: ["3d", "router"], claves: "llavero sello 3d" },
-      { nombre: "Escanear una pieza", texto: "Fotos → modelo 3D con medidas.", href: "/disenar/escanear-pieza", icono: "escaneo", color: AMARILLO, acceso: "creditos", para: ["3d", "router"], claves: "escaneo refacción" },
+      { nombre: "Imagen a 3D con IA", texto: "Una foto → modelo 3D con textura.", href: "/disenar/imagen-a-3d", icono: "ia", color: AMARILLO, acceso: "creditos", para: ["3d", "router"], claves: "escaneo refacción" },
     ],
   },
   {
