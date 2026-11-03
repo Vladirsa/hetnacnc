@@ -76,5 +76,11 @@ export default defineMiddlewares({
         ...storeRecomiendaMiddlewares,
         // CORS de la app del Cotizador en web (localhost:8080) para /api/cotizador-*
         ...corsAppMiddlewares,
+        // Cotizador en línea de cada taller: el cliente sube su archivo (hetnacnc.com/t/<slug>)
+        {
+          method: ["POST"],
+          matcher: "/api/taller-publico/:slug/solicitar",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: Number(process.env.COTIZADOR_SOLICITUD_MAX_MB || 50) })],
+        },
     ],
 });

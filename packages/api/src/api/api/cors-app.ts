@@ -31,4 +31,5 @@ export const corsAppMiddlewares = [
   { matcher: "/api/cotizador-paypal/*", middlewares: [corsApp] },
   { matcher: "/api/cotizador-marketing", middlewares: [corsApp] },
   { matcher: "/api/cotizador-marketing/*", middlewares: [corsApp] },
+  { matcher: "/api/cotizador-pagina", middlewares: [corsApp] },
 ]
