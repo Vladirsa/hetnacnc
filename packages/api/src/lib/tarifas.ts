@@ -47,11 +47,36 @@ async function comisionAcademia(container: MedusaContainer, code: string): Promi
   }
 }
 
+async function comisionGlobal(container: MedusaContainer): Promise<number | null> {
+  try {
+    const svc = container.resolve(MercurModules.COMMISSION) as any
+    const [r] = await svc.listCommissionRates({ is_default: true })
+    return r && r.is_enabled !== false ? Number(r.value) : null
+  } catch {
+    return null
+  }
+}
+
 export async function tarifasHetna(container: MedusaContainer): Promise<{ actualizado: string; grupos: GrupoTarifas[] }> {
-  const [cursos, libros] = await Promise.all([comisionAcademia(container, "cursos"), comisionAcademia(container, "libros")])
+  const [cursos, libros, general, maquinas] = await Promise.all([
+    comisionAcademia(container, "cursos"),
+    comisionAcademia(container, "libros"),
+    comisionGlobal(container),
+    comisionAcademia(container, "maquinas"),
+  ])
   const pct = (n: number | null) => (n === null ? "Según tu panel" : `${n}% por venta`)
 
   const grupos: GrupoTarifas[] = [
+    {
+      id: "ventas",
+      titulo: "Ventas en la tienda HETNA",
+      texto: "Publicar productos es gratis. Sólo se cobra una comisión cuando vendes, sobre el precio del producto (sin envío).",
+      filas: [
+        { concepto: "Publicar productos", precio: "Gratis" },
+        { concepto: "Máquinas CNC", precio: pct(maquinas), nota: "Routers, láser, plasma, tornos e impresoras 3D" },
+        { concepto: "Todo lo demás", precio: pct(general), nota: "Fresas, refacciones, materiales, piezas, servicios y archivos" },
+      ],
+    },
     {
       id: "academia",
       titulo: "Academia HETNA: cursos y libros",
