@@ -80,7 +80,7 @@ export function preciosCotizador() {
 }
 
 // ── Supabase (con la llave de servicio) ───────────────────────────────────
-async function supa<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
+export async function supa<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${supaUrl()}${ruta}`, {
     ...init,
     headers: {

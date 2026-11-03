@@ -22,6 +22,7 @@ import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 import { storeHetnaPedidosMiddlewares } from "./store/hetna-pedidos/middlewares";
 import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
 import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
+import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
 
 export default defineMiddlewares({
@@ -73,5 +74,7 @@ export default defineMiddlewares({
         ...storeHetnaPedidosMiddlewares,
         ...storeCuponesMiddlewares,
         ...storeRecomiendaMiddlewares,
+        // CORS de la app del Cotizador en web (localhost:8080) para /api/cotizador-*
+        ...corsAppMiddlewares,
     ],
 });
