@@ -19,6 +19,7 @@ const LIGAS = [
   ["/foro-cnc/red", "Mi red", "Mi red"],
   ["/foro-cnc/responder", "Preguntas para ti", "Para ti"],
   ["/foro-cnc/empleos", "Empleos y proyectos", "Empleos"],
+  ["/foro-cnc/profesionales", "Profesionales", "Personas"],
   ["/foro-cnc/eventos", "Eventos", "Eventos"],
   ["/foro-cnc/blog", "Blog y guías", "Blog"],
   ["/foro-cnc/mi-perfil", "Mi perfil", "Perfil"],

@@ -5,7 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { SocialIcon } from "@/components/hetna/SocialIcon"
 import { AvisoSeguro } from "@/components/hetna/foro/AvisoSeguro"
 import { Avatar, ForoCerrado, InsigniaCuenta, InsigniaTaller, Migas, Paginacion, Palomita, TarjetaTema } from "@/components/hetna/foro/Piezas"
-import { Abierto, CAJA_RED, ListaRecomendaciones, Trayectoria } from "@/components/hetna/foro/Red"
+import { Abierto, CAJA_RED, ListaRecomendaciones, Portafolio, Trayectoria } from "@/components/hetna/foro/Red"
 import { Aptitudes, BotonSeguir, FormRecomendar } from "@/components/hetna/foro/RedCliente"
 import { POR_PAGINA, listaTemas, perfilPorUsuario, sesionForo } from "@/lib/foro/consultas"
 import { avalesDe, cuentasRed, estadoRed, miRecomendacion, objetivosDe, recomendacionesDe } from "@/lib/foro/red"
@@ -200,6 +200,12 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-8">
           <section className="flex flex-col gap-3 min-w-0">
+            {p.trayectoria.some((x) => x.tipo === "proyecto" && x.fotos?.length) && (
+              <div className={`${CAJA_RED} flex flex-col gap-3`}>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Portafolio</h2>
+                <Portafolio pasos={p.trayectoria} />
+              </div>
+            )}
             {(avales.length > 0 || propio) && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
                 <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Aptitudes</h2>

@@ -14,6 +14,7 @@ import {
   type TipoTrayectoria,
   objetivoPerfil,
   objetivoTaller,
+  urlFoto,
   urlPerfil,
 } from "@/lib/foro/tipos"
 
@@ -27,6 +28,23 @@ export const Abierto = () => (
     ● Abierto a trabajo
   </span>
 )
+
+const fotosDe = (p: Paso) => (Array.isArray(p.fotos) ? p.fotos.filter((id) => /^[0-9a-f-]{36}$/.test(id)).slice(0, 4) : [])
+
+/** Portafolio: las fotos de todos los proyectos, para la cabecera del perfil. */
+export function Portafolio({ pasos }: { pasos: Paso[] }) {
+  const fotos = pasos.filter((p) => p.tipo === "proyecto").flatMap((p) => fotosDe(p).map((id) => ({ id, titulo: p.titulo })))
+  if (!fotos.length) return null
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+      {fotos.slice(0, 8).map((f) => (
+        <a key={f.id} href={urlFoto(f.id)} target="_blank" rel="noopener" title={f.titulo} className="block overflow-hidden rounded-[10px] border border-[#E7E4DC] bg-[#F6F4EF]">
+          <Image src={urlFoto(f.id)} alt={f.titulo} width={240} height={240} className="aspect-square h-full w-full object-cover" />
+        </a>
+      ))}
+    </div>
+  )
+}
 
 export function Trayectoria({ pasos }: { pasos: Paso[] }) {
   const grupos = (Object.keys(TIPOS_TRAYECTORIA) as TipoTrayectoria[])
@@ -51,6 +69,15 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
                   </span>
                 )}
                 {p.detalle && <p className="m-0 mt-1 whitespace-pre-line text-[14px] leading-relaxed text-[#44433D]">{p.detalle}</p>}
+                {p.tipo === "proyecto" && fotosDe(p).length > 0 && (
+                  <div className="mt-2 grid max-w-[520px] grid-cols-2 gap-2 sm:grid-cols-4">
+                    {fotosDe(p).map((id) => (
+                      <a key={id} href={urlFoto(id)} target="_blank" rel="noopener" className="block overflow-hidden rounded-[10px] border border-[#E7E4DC] bg-[#F6F4EF]">
+                        <Image src={urlFoto(id)} alt={`Foto del proyecto ${p.titulo}`} width={240} height={240} className="aspect-square h-full w-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ol>

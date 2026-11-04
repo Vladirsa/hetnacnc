@@ -9,6 +9,7 @@ import { avalar, decidirRecomendacion, guardarRed, postularme, recomendar, segui
 import {
   type Aval,
   MAX_APTITUDES,
+  MAX_FOTOS_PROYECTO,
   MAX_PASOS,
   MENSAJES,
   type Paso,
@@ -16,9 +17,11 @@ import {
   type Relacion,
   TIPOS_TRAYECTORIA,
   type TipoTrayectoria,
+  urlFoto,
 } from "@/lib/foro/tipos"
 
 import { PideCuenta } from "./Interaccion"
+import { SubirFotos } from "./SubirFotos"
 
 const mensaje = (e: string) => MENSAJES[e] || e
 const BTN = "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-semibold transition disabled:opacity-60"
@@ -461,6 +464,20 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
               placeholder="Qué hacías, con qué máquinas, logros"
               className={`${CAMPO} sm:col-span-2`}
             />
+            {p.tipo === "proyecto" && (
+              <div className="sm:col-span-2">
+                <span className="mb-1 block text-[13px] text-[#6B6A63]">Fotos del trabajo terminado (hasta {MAX_FOTOS_PROYECTO}): así se arma tu portafolio.</span>
+                <SubirFotos
+                  fotos={(p.fotos || []).map((id) => ({ id, url: urlFoto(id) }))}
+                  onCambio={(f) => {
+                    setPasos((l) => l.map((x, j) => (j === i ? { ...x, fotos: f.map((y) => y.id) } : x)))
+                    tocar()
+                  }}
+                  max={MAX_FOTOS_PROYECTO}
+                  etiqueta="Agregar fotos del proyecto"
+                />
+              </div>
+            )}
             <button
               type="button"
               onClick={() => {

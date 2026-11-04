@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { CotizadorEnLinea } from "@/components/hetna/cotizacion/CotizadorEnLinea"
 import { IMAGEN_OG, descripcionCorta } from "@/lib/helpers/seo"
 import { leerTallerPublico } from "@/lib/cotizador/taller-publico"
+import { tiendaDeCotizador } from "@/lib/hetna/perfil-unico"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 // Cotizador en línea de un taller: el cliente sube su archivo, ve un precio
 // estimado y manda su solicitud, que le llega al taller en su app.
@@ -31,8 +33,18 @@ export default async function TallerEnLineaPage({ params }: Props) {
   const { slug } = await params
   const taller = await leerTallerPublico(slug)
   if (!taller) notFound()
+  // Un solo perfil: si el taller también tiene perfil en la tienda, se liga.
+  const tienda = await tiendaDeCotizador(slug)
   return (
     <main className="container py-6 md:py-10">
+      {tienda && (
+        <div className="mx-auto mb-4 flex max-w-[860px] flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E7E4DC] bg-[#FAF8F3] px-4 py-3 text-sm text-[#40403A]">
+          <span>Conoce sus máquinas, trabajos, reseñas y productos.</span>
+          <LocalizedClientLink href={`/talleres/${tienda}`} className="font-semibold text-[#C2560A] hover:underline">
+            Ver perfil del taller →
+          </LocalizedClientLink>
+        </div>
+      )}
       <CotizadorEnLinea taller={taller} />
     </main>
   )
