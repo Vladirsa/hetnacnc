@@ -342,3 +342,69 @@ export async function abiertosATrabajo(limite = 12): Promise<Abierto[]> {
   })
   return r || []
 }
+
+// ---------------------------------------------------------------------
+// Directorio de profesionales CNC (/foro-cnc/profesionales)
+// ---------------------------------------------------------------------
+
+export type Profesional = Autor & {
+  ciudad: string
+  estadoMx: string
+  aptitudes: string[]
+  software: string[]
+  maquinas: string[]
+  abierto: boolean
+  avales: number
+  proyectos: number
+}
+export const POR_PAGINA_PROFESIONALES = 24
+
+// Quién sale: personas con algo de currículum (aptitudes, software, máquinas o
+// trayectoria). Los clientes que sólo compran no aparecen salvo que lo pidan.
+export async function buscarProfesionales(f: {
+  q?: string
+  estado?: string
+  tipo?: string
+  abierto?: boolean
+  pagina?: number
+}): Promise<{ perfiles: Profesional[]; total: number } | null> {
+  const pagina = Math.max(1, f.pagina || 1)
+  const q = String(f.q || "").trim().slice(0, 60)
+  const patron = q ? `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : ""
+  return intentar(async () => {
+    const { rows } = await db().query(
+      `select ${AUTOR}, a.ciudad as a_ciudad, a.estado_mx as a_estado, a.aptitudes as a_aptitudes,
+         a.software as a_software, a.maquinas as a_maquinas, a.abierto as a_abierto,
+         (select count(*) from foro.avales v where v.perfil_id = a.id) as n_avales,
+         (select count(*) from jsonb_array_elements(coalesce(a.trayectoria, '[]'::jsonb)) x where x->>'tipo' = 'proyecto') as n_proyectos,
+         count(*) over () as total
+       from foro.perfiles a
+       where a.suspendido = false
+         and ($1 = '' or a.estado_mx = $1)
+         and (case when $2 = '' then a.tipo <> 'cliente' else a.tipo = $2 end)
+         and ($3 = false or a.abierto = true)
+         and ((coalesce(cardinality(a.aptitudes), 0) + coalesce(cardinality(a.software), 0) + coalesce(cardinality(a.maquinas), 0)
+              + coalesce(jsonb_array_length(a.trayectoria), 0)) > 0 or coalesce(a.bio, '') <> '')
+         and ($4 = '' or a.nombre ilike $4 or a.usuario ilike $4 or coalesce(to_jsonb(a) ->> 'titular', '') ilike $4
+              or a.bio ilike $4 or array_to_string(a.aptitudes, ' ') ilike $4 or array_to_string(a.software, ' ') ilike $4
+              or array_to_string(a.maquinas, ' ') ilike $4 or a.ciudad ilike $4)
+       order by a.abierto desc, a.verificado desc, n_avales desc, a.reputacion desc, a.actualizado desc
+       limit $5 offset $6`,
+      [f.estado || "", f.tipo || "", f.abierto === true, patron, POR_PAGINA_PROFESIONALES, (pagina - 1) * POR_PAGINA_PROFESIONALES]
+    )
+    return {
+      total: rows.length ? Number(rows[0].total) : 0,
+      perfiles: rows.map((r: Fila) => ({
+        ...aAutor(r),
+        ciudad: r.a_ciudad || "",
+        estadoMx: r.a_estado || "",
+        aptitudes: Array.isArray(r.a_aptitudes) ? r.a_aptitudes : [],
+        software: Array.isArray(r.a_software) ? r.a_software : [],
+        maquinas: Array.isArray(r.a_maquinas) ? r.a_maquinas : [],
+        abierto: r.a_abierto === true,
+        avales: Number(r.n_avales) || 0,
+        proyectos: Number(r.n_proyectos) || 0,
+      })),
+    }
+  })
+}
