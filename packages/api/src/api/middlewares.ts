@@ -1,5 +1,6 @@
 import { defineMiddlewares } from "@medusajs/medusa";
 import { MAX_MB_LIBRO } from "../lib/publicar-libro";
+import { MAX_MB_ARCHIVO as MAX_MB_ARCHIVO_CLOUD } from "../lib/cloud";
 import { adminLearningArticlesMiddlewares } from "./admin/learning-articles/middlewares";
 import { storeLearningArticlesMiddlewares } from "./store/learning-articles/middlewares";
 import { adminCoursesMiddlewares } from "./admin/courses/middlewares";
@@ -67,6 +68,12 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/vendor/hetna-libros/archivo",
           middlewares: [leerMultipart({ campos: { pdf: 1 }, maxMb: MAX_MB_LIBRO })],
+        },
+        // HetNa Cloud: archivos del taller (diseño, CAM, G-code, fotos; máx. 50 MB)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-cloud/proyectos/:id/archivos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: MAX_MB_ARCHIVO_CLOUD, forma: "lista" })],
         },
         // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
         {

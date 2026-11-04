@@ -97,7 +97,18 @@ type Autorizacion = {
   bucketName: string
 }
 
+// La autorización de la cuenta dura 24 h: se guarda 12 h para no pedirla en
+// cada página (la liga compartida de HetNa Cloud firma en cada visita).
+let guardada: { auth: Autorizacion; hasta: number } | null = null
+
 async function autorizarBucket(): Promise<{ ok: true; auth: Autorizacion } | { ok: false; reason: string }> {
+  if (guardada && guardada.hasta > Date.now()) return { ok: true, auth: guardada.auth }
+  const r = await autorizarBucketNuevo()
+  if (r.ok) guardada = { auth: r.auth, hasta: Date.now() + 12 * 3600_000 }
+  return r
+}
+
+async function autorizarBucketNuevo(): Promise<{ ok: true; auth: Autorizacion } | { ok: false; reason: string }> {
   const keyId = process.env.B2_KEY_ID
   const applicationKey = process.env.B2_APPLICATION_KEY
   const bucketName = process.env.B2_PRIVATE_BUCKET_NAME
@@ -163,6 +174,7 @@ export async function getUploadTicket(storageKey: string): Promise<UploadTicket>
     body: JSON.stringify({ bucketId: autorizacion.auth.bucketId }),
   })
   if (!res.ok) {
+    if (res.status === 401) guardada = null
     return { ok: false, reason: `b2_get_upload_url respondio ${res.status}` }
   }
   const destino = await res.json()
@@ -210,4 +222,68 @@ export async function subirConBoleto(
     return { ok: false, reason: `b2_upload_file respondio ${subida.status}: ${detalle.slice(0, 200)}` }
   }
   return { ok: true, storageKey: boleto.storageKey }
+}
+
+// Oculta un archivo del bucket (b2_hide_file): deja de poder descargarse y la
+// regla de ciclo de vida del bucket lo borra después. Para lo que el taller
+// elimina de su HetNa Cloud.
+export async function hideFile(storageKey: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const autorizacion = await autorizarBucket()
+  if (!autorizacion.ok) return autorizacion
+  const res = await fetch(`${autorizacion.auth.apiUrl}/b2api/v2/b2_hide_file`, {
+    method: "POST",
+    headers: { Authorization: autorizacion.auth.token, "Content-Type": "application/json" },
+    body: JSON.stringify({ bucketId: autorizacion.auth.bucketId, fileName: storageKey }),
+  })
+  if (!res.ok) {
+    if (res.status === 401) guardada = null
+    return { ok: false, reason: `b2_hide_file respondio ${res.status}` }
+  }
+  return { ok: true }
+}
+
+// Varias ligas firmadas con una sola autorización de la cuenta. Las claves
+// que comparten carpeta se firman juntas (un permiso por prefijo), así una
+// página con 100 archivos no hace 300 llamadas a B2.
+export async function getSignedDownloadUrls(
+  claves: string[],
+  validDurationSeconds = 3600,
+  prefijoDe: (clave: string) => string = (c) => c,
+  // "attachment": el navegador siempre descarga, nunca abre el archivo como página
+  disposicion?: "attachment"
+): Promise<Map<string, string>> {
+  const salida = new Map<string, string>()
+  if (!claves.length) return salida
+  const autorizacion = await autorizarBucket()
+  if (!autorizacion.ok) return salida
+  const { auth } = autorizacion
+  const porPrefijo = new Map<string, string[]>()
+  for (const c of claves) {
+    const p = prefijoDe(c)
+    if (!c.startsWith(p)) continue
+    porPrefijo.set(p, [...(porPrefijo.get(p) || []), c])
+  }
+  for (const [prefijo, lista] of porPrefijo) {
+    const r = await fetch(`${auth.apiUrl}/b2api/v2/b2_get_download_authorization`, {
+      method: "POST",
+      headers: { Authorization: auth.token, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bucketId: auth.bucketId,
+        fileNamePrefix: prefijo,
+        validDurationInSeconds: validDurationSeconds,
+        ...(disposicion ? { b2ContentDisposition: disposicion } : {}),
+      }),
+    }).catch(() => null)
+    if (r?.status === 401) guardada = null
+    if (!r?.ok) continue
+    const token = (await r.json()).authorizationToken
+    for (const c of lista) {
+      const ruta = c.split("/").map((s) => encodeURIComponent(s)).join("/")
+      salida.set(
+        c,
+        `${auth.downloadUrl}/file/${auth.bucketName}/${ruta}?Authorization=${token}${disposicion ? `&b2ContentDisposition=${encodeURIComponent(disposicion)}` : ""}`
+      )
+    }
+  }
+  return salida
 }

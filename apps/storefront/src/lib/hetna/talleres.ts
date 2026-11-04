@@ -1,7 +1,34 @@
 import { sdk } from "@/lib/client"
 import { type Tarifas, leerTarifas } from "@/lib/hetna/estimado"
 
-export type Maquina = { nombre: string; area?: string; detalle?: string }
+// Tipos de máquina (mismos valores que apps/vendor/src/routes/perfil-taller)
+export const TIPOS_MAQUINA: [string, string][] = [
+  ["router", "Router CNC"],
+  ["laser_co2", "Láser CO2"],
+  ["laser_fibra", "Láser de fibra"],
+  ["plasma", "Plasma CNC"],
+  ["fresadora", "Fresadora / centro de maquinado"],
+  ["torno", "Torno CNC"],
+  ["impresora_3d", "Impresora 3D"],
+  ["waterjet", "Chorro de agua"],
+  ["dobladora", "Dobladora / plegadora"],
+  ["otra", "Otra"],
+]
+export const nombreTipoMaquina = (t?: string) => TIPOS_MAQUINA.find(([v]) => v === t)?.[1] ?? ""
+
+export type Maquina = {
+  nombre: string
+  tipo?: string
+  marca?: string
+  // Área de trabajo en mm (las fichas de antes sólo traen `area` en texto)
+  x?: number
+  y?: number
+  z?: number
+  area?: string
+  potencia?: string
+  controlador?: string
+  detalle?: string
+}
 
 export type Perfil = {
   ciudad?: string
@@ -66,7 +93,14 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     ? (p.maquinas as Record<string, unknown>[])
         .map((m) => ({
           nombre: texto(m?.nombre) ?? "",
+          tipo: texto(m?.tipo),
+          marca: texto(m?.marca),
+          x: num(m?.x),
+          y: num(m?.y),
+          z: num(m?.z),
           area: texto(m?.area),
+          potencia: texto(m?.potencia),
+          controlador: texto(m?.controlador),
           detalle: texto(m?.detalle),
         }))
         .filter((m) => m.nombre)
@@ -107,18 +141,40 @@ const esPrueba = (s: SellerCrudo) => s.metadata?.prueba === true
 
 const CAMPOS = "id,name,handle,description,logo,banner,metadata"
 
+// Todos los talleres, de 100 en 100 (hasta 2,000), para el directorio.
 export const listarTalleres = async (): Promise<Taller[]> => {
+  const todos: SellerCrudo[] = []
   try {
-    const r = (await sdk.store.sellers.query({
-      fields: CAMPOS,
-      limit: 100,
-      fetchOptions: { next: { revalidate: 300 } },
-    } as never)) as unknown as { sellers: SellerCrudo[] }
-    return (r.sellers ?? []).filter((s) => !esPrueba(s)).map(aTaller)
+    for (let offset = 0; offset < 2000; offset += 100) {
+      const r = (await sdk.store.sellers.query({
+        fields: CAMPOS,
+        limit: 100,
+        offset,
+        fetchOptions: { next: { revalidate: 300 } },
+      } as never)) as unknown as { sellers: SellerCrudo[]; count?: number }
+      const lote = r.sellers ?? []
+      todos.push(...lote)
+      if (lote.length < 100 || (r.count !== undefined && todos.length >= r.count)) break
+    }
   } catch {
-    return []
+    // con lo que se alcanzó a leer
   }
+  return todos.filter((s) => !esPrueba(s)).map(aTaller)
 }
+
+/** ¿Tiene una máquina (de ese tipo, si se pide) con al menos esa área en mm? */
+export const tieneMaquina = (t: Taller, tipo: string, minimo: number) =>
+  t.perfil.maquinas.some((m) => {
+    if (tipo && m.tipo !== tipo) return false
+    if (!minimo) return true
+    const lados = [m.x, m.y].filter((n): n is number => typeof n === "number" && n > 0)
+    if (lados.length < 2) return false
+    return Math.min(...lados) >= minimo
+  })
+
+/** "1500 × 3000 mm" o el texto que capturó el taller. */
+export const areaTexto = (m: Maquina) =>
+  m.x && m.y ? `${m.x.toLocaleString("es-MX")} × ${m.y.toLocaleString("es-MX")}${m.z ? ` × ${m.z.toLocaleString("es-MX")}` : ""} mm` : m.area || ""
 
 export const tallerPorHandle = async (handle: string): Promise<Taller | null> => {
   try {

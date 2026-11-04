@@ -141,6 +141,21 @@ function CampoImagen({ titulo, ayuda, valor, alCambiar, ancho = 160, alto = 160 
   )
 }
 
+// Tipos de máquina (mismos valores que apps/storefront/src/lib/hetna/talleres.ts)
+const TIPOS_MAQUINA = [
+  ["router", "Router CNC"],
+  ["laser_co2", "Láser CO2"],
+  ["laser_fibra", "Láser de fibra"],
+  ["plasma", "Plasma CNC"],
+  ["fresadora", "Fresadora / centro de maquinado"],
+  ["torno", "Torno CNC"],
+  ["impresora_3d", "Impresora 3D"],
+  ["waterjet", "Chorro de agua"],
+  ["dobladora", "Dobladora / plegadora"],
+  ["otra", "Otra"],
+]
+const CONTROLADORES = ["Mach3", "Mach4", "DSP (RichAuto)", "Ruida", "Syntec", "GRBL", "LinuxCNC", "Weihong / NcStudio", "Fanuc", "Haas", "Siemens", "Heidenhain", "Otro"]
+
 export default function PerfilTallerPage() {
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -185,7 +200,13 @@ export default function PerfilTallerPage() {
           materiales: mats.filter((m) => MATERIALES.includes(m)),
           otrosMateriales: mats.filter((m) => !MATERIALES.includes(m)).join(", "),
           capacidades: (Array.isArray(p.capacidades) ? p.capacidades : []).join("\n"),
-          maquinas: Array.isArray(p.maquinas) ? p.maquinas : [],
+          // Las máquinas de antes sólo traían el área en texto ("1500 x 3000 mm")
+          maquinas: (Array.isArray(p.maquinas) ? p.maquinas : []).map((m) => {
+            // Sólo si parecen milímetros (en metros o cm se deja para que lo capture)
+            const a0 = String(m.area || "").match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i)
+            const a = a0 && Number(a0[1]) >= 50 && Number(a0[2]) >= 50 && !/\b(m|cm)\b/i.test(String(m.area)) ? a0 : null
+            return { ...m, x: m.x ?? (a ? Math.round(Number(a[1])) : ""), y: m.y ?? (a ? Math.round(Number(a[2])) : ""), z: m.z ?? "" }
+          }),
           tarifas: Object.fromEntries(
             PROCESOS_TARIFA.map((k) => {
               const t = (p.tarifas && p.tarifas[k]) || {}
@@ -217,7 +238,24 @@ export default function PerfilTallerPage() {
       servicios: f.servicios,
       materiales: [...f.materiales, ...otros],
       capacidades: lineas(f.capacidades),
-      maquinas: f.maquinas.filter((m) => (m.nombre || "").trim()),
+      // Con X e Y se arma el área en texto (la usan las páginas que ya existían)
+      maquinas: f.maquinas
+        .filter((m) => (m.nombre || "").trim() || m.tipo)
+        .map((m) => {
+          const n = (v) => (Number(v) > 0 ? Math.round(Number(v)) : undefined)
+          const x = n(m.x), y = n(m.y), z = n(m.z)
+          const nombre = (m.nombre || "").trim() || (TIPOS_MAQUINA.find(([v]) => v === m.tipo)?.[1] ?? "Máquina")
+          return {
+            tipo: m.tipo || undefined,
+            nombre,
+            marca: (m.marca || "").trim() || undefined,
+            x, y, z,
+            area: x && y ? `${x} x ${y} mm` : (m.area || "").trim() || undefined,
+            potencia: (m.potencia || "").trim() || undefined,
+            controlador: (m.controlador || "").trim() || undefined,
+            detalle: (m.detalle || "").trim() || undefined,
+          }
+        }),
       galeria,
       tarifas: Object.fromEntries(
         PROCESOS_TARIFA.flatMap((k) => {
@@ -358,26 +396,70 @@ export default function PerfilTallerPage() {
 
       <section style={S.card}>
         <h2 style={S.h2}>Máquinas</h2>
-        {f.maquinas.map((m, i) => (
-          <div key={i} style={{ ...S.grid, marginBottom: 10, alignItems: "end" }}>
-            <div>
-              <label style={S.label}>Máquina</label>
-              <input style={S.input} value={m.nombre || ""} onChange={(e) => set("maquinas", f.maquinas.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} placeholder="Router CNC 1530" />
+        <p style={S.hint}>
+          Con el tipo y el área de trabajo, los clientes te encuentran en el directorio y te llegan las solicitudes que sí puedes hacer.
+        </p>
+        {f.maquinas.map((m, i) => {
+          const cambiar = (k, v) => set("maquinas", f.maquinas.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
+          return (
+            <div key={i} style={{ border: "1px solid #E7E4DC", borderRadius: 10, padding: 12, marginBottom: 10 }}>
+              <div style={{ ...S.grid, alignItems: "end" }}>
+                <div>
+                  <label style={S.label}>Tipo</label>
+                  <select style={S.input} value={m.tipo || ""} onChange={(e) => cambiar("tipo", e.target.value)}>
+                    <option value="">Elige el tipo</option>
+                    {TIPOS_MAQUINA.map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Nombre o modelo</label>
+                  <input style={S.input} value={m.nombre || ""} onChange={(e) => cambiar("nombre", e.target.value)} placeholder="Router CNC 1530" />
+                </div>
+                <div>
+                  <label style={S.label}>Marca</label>
+                  <input style={S.input} value={m.marca || ""} onChange={(e) => cambiar("marca", e.target.value)} placeholder="Opcional" />
+                </div>
+              </div>
+              <div style={{ ...S.grid, alignItems: "end", marginTop: 8 }}>
+                <div>
+                  <label style={S.label}>Área X (mm)</label>
+                  <input style={S.input} inputMode="numeric" value={m.x ?? ""} onChange={(e) => cambiar("x", e.target.value.replace(/[^\d]/g, ""))} placeholder="1500" />
+                </div>
+                <div>
+                  <label style={S.label}>Área Y (mm)</label>
+                  <input style={S.input} inputMode="numeric" value={m.y ?? ""} onChange={(e) => cambiar("y", e.target.value.replace(/[^\d]/g, ""))} placeholder="3000" />
+                </div>
+                <div>
+                  <label style={S.label}>Altura Z (mm)</label>
+                  <input style={S.input} inputMode="numeric" value={m.z ?? ""} onChange={(e) => cambiar("z", e.target.value.replace(/[^\d]/g, ""))} placeholder="Opcional" />
+                </div>
+                <div>
+                  <label style={S.label}>Potencia</label>
+                  <input style={S.input} value={m.potencia || ""} onChange={(e) => cambiar("potencia", e.target.value)} placeholder="Spindle 3 kW, tubo 100 W…" />
+                </div>
+                <div>
+                  <label style={S.label}>Controlador</label>
+                  <input style={S.input} list="controladores-cnc" value={m.controlador || ""} onChange={(e) => cambiar("controlador", e.target.value)} placeholder="Mach3, DSP, Ruida…" />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "end", marginTop: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={S.label}>Detalle</label>
+                  <input style={S.input} value={m.detalle || ""} onChange={(e) => cambiar("detalle", e.target.value)} placeholder="4° eje, cambiador de herramienta, mesa de vacío…" />
+                </div>
+                <button type="button" style={S.btn2} onClick={() => set("maquinas", f.maquinas.filter((_, j) => j !== i))}>Quitar</button>
+              </div>
             </div>
-            <div>
-              <label style={S.label}>Área de trabajo</label>
-              <input style={S.input} value={m.area || ""} onChange={(e) => set("maquinas", f.maquinas.map((x, j) => (j === i ? { ...x, area: e.target.value } : x)))} placeholder="1500 x 3000 mm" />
-            </div>
-            <div>
-              <label style={S.label}>Detalle</label>
-              <input style={S.input} value={m.detalle || ""} onChange={(e) => set("maquinas", f.maquinas.map((x, j) => (j === i ? { ...x, detalle: e.target.value } : x)))} placeholder="Spindle 3 kW" />
-            </div>
-            <div>
-              <button type="button" style={S.btn2} onClick={() => set("maquinas", f.maquinas.filter((_, j) => j !== i))}>Quitar</button>
-            </div>
-          </div>
-        ))}
-        <button type="button" style={S.btn2} onClick={() => set("maquinas", [...f.maquinas, { nombre: "", area: "", detalle: "" }])}>+ Agregar máquina</button>
+          )
+        })}
+        <datalist id="controladores-cnc">
+          {CONTROLADORES.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+        <button type="button" style={S.btn2} onClick={() => set("maquinas", [...f.maquinas, { tipo: "", nombre: "", marca: "", x: "", y: "", z: "", potencia: "", controlador: "", detalle: "" }])}>+ Agregar máquina</button>
       </section>
 
       <section style={S.card}>
