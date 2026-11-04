@@ -14,6 +14,8 @@ import {
 import { servicioTalleres } from "../../../lib/alta-taller"
 import { cupoLicitacion } from "../../../lib/licitacion-plan"
 import { NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
+import { PCT_POR_PLAN, asegurarCobro, cuentaTaller, planComision } from "../../../lib/licitacion-cobro"
+import { asegurarExtra, preguntasDe, rangoGanador } from "../../../lib/licitacion-extra"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
 // y las que ya cotizó. Nunca incluye datos de contacto del cliente.
@@ -33,6 +35,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   await asegurarTablas(knex)
   await asegurarTablaRespuestas(knex)
   await asegurarSeguimiento(knex)
+  await asegurarCobro(knex)
+  await asegurarExtra(knex)
   const filas = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
@@ -66,7 +70,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .select(
       "s.id", "s.folio", "s.modo", "s.taller_id", "s.estado", "s.trabajo", "s.cierra_en", "s.created_at",
       "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
-      "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado",
+      "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
+      "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
       "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
 
@@ -76,6 +81,22 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .select("solicitud_id")
     .count("* as n")) as { solicitud_id: string; n: string }[]
   const nPorSol = Object.fromEntries(conteos.map((c) => [c.solicitud_id, Number(c.n)]))
+
+  // Propuesta ganadora de las que este taller perdió: sólo rango y días.
+  const perdidas = filas.filter((f) => f.p_estado === "descartada" && f.propuesta_elegida)
+  const ganadoras = perdidas.length
+    ? ((await knex(T_PROPUESTA).whereIn("id", perdidas.map((f) => f.propuesta_elegida)).select("id", "precio", "dias")) as any[])
+    : []
+  const ganadoraPorId = Object.fromEntries(ganadoras.map((g) => [g.id, g]))
+
+  // Preguntas: las ya contestadas (todas) y las mías sin contestar.
+  const preguntasPorSol: Record<string, any[]> = {}
+  await Promise.all(
+    filas.map(async (f) => {
+      const ps = await preguntasDe(knex, f.id, { sellerId }).catch(() => [])
+      preguntasPorSol[f.id] = ps.filter((p: any) => p.respuesta || p.mia)
+    })
+  )
 
   const solicitudes = filas.map((f) => ({
     id: f.id,
@@ -100,6 +121,17 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       ? { motivo: f.r_motivo, texto: MOTIVOS_RESPUESTA[f.r_motivo] || f.r_motivo, nota: f.r_nota || "" }
       : null,
     propuestas_recibidas: nPorSol[f.id] || 0,
+    preguntas: preguntasPorSol[f.id] || [],
+    // Si perdió: rango del precio elegido y sus días (sin decir quién ganó)
+    eleccion:
+      f.p_estado === "descartada" && ganadoraPorId[f.propuesta_elegida]
+        ? { ...rangoGanador(Number(ganadoraPorId[f.propuesta_elegida].precio)), dias: ganadoraPorId[f.propuesta_elegida].dias }
+        : null,
+    // Si ganó: cómo le pagan y cuánto lleva pagado el cliente
+    cobro:
+      f.p_estado === "elegida"
+        ? { modo: f.cobro || null, comision_pct: f.comision_pct != null ? Number(f.comision_pct) : null, pagado: Number(f.pagado || 0) }
+        : null,
     mi_propuesta: f.p_id
       ? {
           id: f.p_id,
@@ -108,6 +140,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
           vigencia_dias: f.vigencia_dias,
           incluye_envio: f.incluye_envio === "si",
           condiciones: f.condiciones || "",
+          anticipo_pct: f.anticipo_pct ? Number(f.anticipo_pct) : 100,
           estado: f.p_estado,
         }
       : null,
@@ -117,5 +150,14 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const seller = await servicioTalleres(req.scope).retrieveSeller(sellerId).catch(() => null)
   const cupo = seller ? await cupoLicitacion(knex, sellerId, seller).catch(() => null) : null
 
-  return res.json({ solicitudes, cupo })
+  // Cómo cobraría si gana: cuenta conectada en la app y comisión de su plan
+  const cuenta = seller ? await cuentaTaller((seller as any).email).catch(() => null) : null
+  const plan = seller ? await planComision(seller as any).catch(() => "gratis") : "gratis"
+  const cobro_taller = {
+    mercadopago: Boolean(cuenta?.mp),
+    paypal: Boolean(cuenta?.paypal),
+    comision_pct: PCT_POR_PLAN[plan] ?? 5,
+  }
+
+  return res.json({ solicitudes, cupo, cobro_taller })
 }
