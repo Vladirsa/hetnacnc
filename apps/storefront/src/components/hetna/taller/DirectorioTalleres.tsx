@@ -11,6 +11,8 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import type { Taller } from "@/lib/hetna/talleres"
 import { TIPOS_MAQUINA, nombreTipoMaquina, tieneMaquina, ubicacion } from "@/lib/hetna/talleres"
 
+import type { RedPorEstado } from "@/lib/foro/red"
+
 import MapaTalleres from "./MapaTalleres"
 
 const unicos = (xs: (string | undefined)[]) =>
@@ -22,9 +24,11 @@ const SELECT =
 export default function DirectorioTalleres({
   talleres,
   locale,
+  red = {},
 }: {
   talleres: Taller[]
   locale: string
+  red?: RedPorEstado
 }) {
   const [q, setQ] = useState("")
   const [estado, setEstado] = useState("")
@@ -220,7 +224,18 @@ export default function DirectorioTalleres({
         </div>
 
         <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-          <MapaTalleres talleres={filtrados} locale={locale} altura={480} />
+          <MapaTalleres
+            talleres={filtrados}
+            red={red}
+            locale={locale}
+            altura={480}
+            onEstado={(e) => {
+              // El mapa usa el nombre oficial del estado; el filtro, el que escribió cada taller
+              const norm = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
+              setEstado(estados.find((x) => norm(x) === norm(e)) || e)
+              document.getElementById("directorio")?.scrollIntoView({ behavior: "smooth" })
+            }}
+          />
         </div>
       </div>
     </div>
