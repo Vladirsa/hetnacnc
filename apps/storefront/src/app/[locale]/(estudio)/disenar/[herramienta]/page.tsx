@@ -3,21 +3,26 @@ import { descripcionCorta } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
 
 import { EscanearPieza } from "@/components/hetna/disenar/EscanearPieza"
-import { GeneradorAnidado } from "@/components/hetna/generador/GeneradorAnidado"
-import { GeneradorCaja } from "@/components/hetna/generador/GeneradorCaja"
-import { GeneradorConvertidor } from "@/components/hetna/generador/GeneradorConvertidor"
-import { GeneradorEmpaques } from "@/components/hetna/generador/GeneradorEmpaques"
-import { GeneradorExtruir } from "@/components/hetna/generador/GeneradorExtruir"
-import { GeneradorGrabado } from "@/components/hetna/generador/GeneradorGrabado"
-import { GeneradorLetrero } from "@/components/hetna/generador/GeneradorLetrero"
-import { GeneradorLetras3D } from "@/components/hetna/generador/GeneradorLetras3D"
-import { GeneradorLlaveros } from "@/components/hetna/generador/GeneradorLlaveros"
-import { GeneradorMueble } from "@/components/hetna/generador/GeneradorMueble"
-import { GeneradorPatron } from "@/components/hetna/generador/GeneradorPatron"
-import { GeneradorRelieve } from "@/components/hetna/generador/GeneradorRelieve"
-import { GeneradorRompecabezas } from "@/components/hetna/generador/GeneradorRompecabezas"
-import { GeneradorVectorizador } from "@/components/hetna/generador/GeneradorVectorizador"
+import dynamic from "next/dynamic"
+
 import { ESCANEAR, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
+
+// Cada herramienta se carga sola: antes la página traía el código de las 15
+// (506 kB) aunque se abriera una.
+const GeneradorAnidado = dynamic(() => import("@/components/hetna/generador/GeneradorAnidado").then((m) => m.GeneradorAnidado))
+const GeneradorCaja = dynamic(() => import("@/components/hetna/generador/GeneradorCaja").then((m) => m.GeneradorCaja))
+const GeneradorConvertidor = dynamic(() => import("@/components/hetna/generador/GeneradorConvertidor").then((m) => m.GeneradorConvertidor))
+const GeneradorEmpaques = dynamic(() => import("@/components/hetna/generador/GeneradorEmpaques").then((m) => m.GeneradorEmpaques))
+const GeneradorExtruir = dynamic(() => import("@/components/hetna/generador/GeneradorExtruir").then((m) => m.GeneradorExtruir))
+const GeneradorGrabado = dynamic(() => import("@/components/hetna/generador/GeneradorGrabado").then((m) => m.GeneradorGrabado))
+const GeneradorLetrero = dynamic(() => import("@/components/hetna/generador/GeneradorLetrero").then((m) => m.GeneradorLetrero))
+const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
+const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
+const GeneradorMueble = dynamic(() => import("@/components/hetna/generador/GeneradorMueble").then((m) => m.GeneradorMueble))
+const GeneradorPatron = dynamic(() => import("@/components/hetna/generador/GeneradorPatron").then((m) => m.GeneradorPatron))
+const GeneradorRelieve = dynamic(() => import("@/components/hetna/generador/GeneradorRelieve").then((m) => m.GeneradorRelieve))
+const GeneradorRompecabezas = dynamic(() => import("@/components/hetna/generador/GeneradorRompecabezas").then((m) => m.GeneradorRompecabezas))
+const GeneradorVectorizador = dynamic(() => import("@/components/hetna/generador/GeneradorVectorizador").then((m) => m.GeneradorVectorizador))
 
 // Una herramienta abierta dentro del estudio 3D o 2D (pantalla completa). La
 // barra con las herramientas la pone el layout de (estudio).
@@ -25,7 +30,7 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; herramienta: string }> }
 
-const GENERADORES: Record<string, () => React.JSX.Element> = {
+const GENERADORES: Record<string, React.ComponentType> = {
   "caja-con-juntas": GeneradorCaja,
   letreros: GeneradorLetrero,
   "letras-3d": GeneradorLetras3D,
