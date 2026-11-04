@@ -216,7 +216,7 @@ async function configDe(negocioId: string) {
 
 const monedaDe = (config) => (String(config?.moneda || "MXN").toUpperCase() === "USD" ? "USD" : "MXN")
 
-async function paypalDelNegocio(negocioId: string) {
+export async function paypalDelNegocio(negocioId: string) {
   try {
     const filas = await supa<any[]>(`/rest/v1/negocios_paypal?negocio_id=eq.${negocioId}&select=*&limit=1`)
     return filas[0] || null
@@ -261,7 +261,7 @@ async function pagosDe(cotId: string) {
   )
 }
 
-async function mpDelNegocio(negocioId: string) {
+export async function mpDelNegocio(negocioId: string) {
   const filas = await supa<any[]>(`/rest/v1/negocios_mp?negocio_id=eq.${negocioId}&select=*&limit=1`)
   return filas[0] || null
 }
@@ -415,7 +415,7 @@ export async function aceptar(token: string, nombre: string) {
 }
 
 // ── Mercado Pago con el token del taller ───────────────────────────────
-async function mpCon<T = any>(token: string, ruta: string, init: RequestInit = {}): Promise<T> {
+export async function mpCon<T = any>(token: string, ruta: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${MP_API}${ruta}`, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init.headers || {}) },
@@ -432,7 +432,7 @@ async function mpCon<T = any>(token: string, ruta: string, init: RequestInit = {
 }
 
 /** Token del taller; si está por vencer, lo renueva. */
-async function tokenDelTaller(negocioId: string): Promise<{ token: string; mpUserId: string }> {
+export async function tokenDelTaller(negocioId: string): Promise<{ token: string; mpUserId: string }> {
   const fila = await mpDelNegocio(negocioId)
   if (!fila) throw new ErrorSuscripcion("El taller todavía no conecta su Mercado Pago.", 409)
   const vence = fila.expira_en ? new Date(fila.expira_en).getTime() : 0
