@@ -231,7 +231,7 @@ export default function DirectorioTalleres({
             altura={480}
             onEstado={(e) => {
               // El mapa usa el nombre oficial del estado; el filtro, el que escribió cada taller
-              const norm = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
+              const norm = (x: string) => x.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
               setEstado(estados.find((x) => norm(x) === norm(e)) || e)
               document.getElementById("directorio")?.scrollIntoView({ behavior: "smooth" })
             }}
