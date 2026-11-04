@@ -121,6 +121,7 @@ export function Estudio3D({
   diseno2d,
   exportacion,
   barra,
+  llenar = false,
 }: {
   titulo: string
   subtitulo?: string
@@ -148,6 +149,8 @@ export function Estudio3D({
   exportacion?: React.ReactNode
   // texto extra en la barra de datos
   barra?: React.ReactNode
+  // ocupar toda la pantalla de los estudios (debajo de su barra de 3.5rem)
+  llenar?: boolean
 }) {
   const contRef = useRef<HTMLDivElement>(null)
   const marcoRef = useRef<HTMLDivElement>(null)
@@ -535,9 +538,9 @@ export function Estudio3D({
   )
 
   return (
-    <div ref={marcoRef} className={`bg-[#0B1017] text-white rounded-[16px] overflow-hidden grid lg:grid-cols-[280px_1fr] ${completa ? "h-screen rounded-none" : ""}`}>
+    <div ref={marcoRef} className={`bg-[#0B1017] text-white overflow-hidden grid lg:grid-cols-[280px_1fr] ${completa ? "h-screen rounded-none" : llenar ? "flex-1 min-h-[calc(100dvh-3.5rem)] rounded-none" : "rounded-[16px]"}`}>
       {/* ---- Panel de ajustes ---- */}
-      <aside className="bg-[#121923] border-b lg:border-b-0 lg:border-r border-[#1F2937] p-4 flex flex-col gap-5 lg:max-h-[720px] lg:overflow-y-auto">
+      <aside className={`bg-[#121923] border-b lg:border-b-0 lg:border-r border-[#1F2937] p-4 flex flex-col gap-5 lg:overflow-y-auto [&>*]:shrink-0 ${llenar ? "lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)]" : "lg:max-h-[720px]"}`}>
         <div className="flex items-center gap-2.5">
           <span className="w-9 h-9 rounded-[10px] bg-[#C2560A]/15 text-[#F28A3C] flex items-center justify-center" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -641,7 +644,7 @@ export function Estudio3D({
           </div>
         </div>
 
-        <div className={`relative ${pestana === "vista" ? "" : "hidden"} ${completa ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>
+        <div className={`relative ${pestana === "vista" ? "" : "hidden"} ${completa || llenar ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>
           <div ref={contRef} className="absolute inset-0" />
           {cargando && (
             <div className="absolute inset-0 flex items-center justify-center text-[14px] text-[#8A97AB]">Cargando la pieza…</div>
@@ -758,15 +761,15 @@ export function Estudio3D({
         </div>
 
         {pestana === "diseno" && diseno2d && (
-          <div className={`overflow-auto bg-[#0B1017] ${completa ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>{diseno2d}</div>
+          <div className={`overflow-auto bg-[#0B1017] ${completa || llenar ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>{diseno2d}</div>
         )}
 
         {pestana === "exportar" && exportacion && (
-          <div className={`p-5 lg:p-8 ${completa ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>{exportacion}</div>
+          <div className={`p-5 lg:p-8 ${completa || llenar ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>{exportacion}</div>
         )}
 
         {pestana === "exportar" && !exportacion && (
-          <div className={`p-5 lg:p-8 flex flex-col gap-4 ${completa ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>
+          <div className={`p-5 lg:p-8 flex flex-col gap-4 ${completa || llenar ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>
             <h3 className="m-0 text-[18px] font-bold">Descargar la pieza</h3>
             {descargas.length ? (
               <div className="grid sm:grid-cols-2 gap-3 max-w-[640px]">

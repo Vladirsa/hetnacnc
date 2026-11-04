@@ -383,6 +383,7 @@ export function GeneradorLetras3D() {
 
   return (
     <Estudio3D
+      llenar
       titulo={texto || "Letras"}
       subtitulo="Letras 3D en caja"
       materialInicial="mdf"
