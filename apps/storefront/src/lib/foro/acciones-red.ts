@@ -13,6 +13,7 @@ import { revisarTexto } from "./filtro"
 import { type EstadoRed, estadoRed } from "./red"
 import {
   MAX_APTITUDES,
+  MAX_FOTOS_PROYECTO,
   MAX_PASOS,
   type Paso,
   RELACIONES,
@@ -122,6 +123,18 @@ export async function seguir(objetivo: string, quiere: boolean): Promise<Res<Est
 
 const esTipoPaso = (v: unknown): v is TipoTrayectoria => typeof v === "string" && v in TIPOS_TRAYECTORIA
 
+// Portafolio: sólo fotos que subió esta misma persona (no exportada: no es una acción)
+async function fotosDelPerfil(perfilId: string, pasos: unknown[]): Promise<Set<string>> {
+  const ids = new Set<string>()
+  for (const x of pasos) {
+    const f = (x && typeof x === "object" ? (x as Record<string, unknown>).fotos : null) as unknown
+    if (Array.isArray(f)) for (const id of f) if (typeof id === "string" && /^[0-9a-f-]{36}$/.test(id)) ids.add(id)
+  }
+  if (!ids.size) return ids
+  const { rows } = await db().query(`select id from foro.fotos where perfil_id = $1 and id = any($2::uuid[])`, [perfilId, [...ids].slice(0, 80)])
+  return new Set(rows.map((r: { id: string }) => r.id))
+}
+
 export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown; abierto?: unknown; titular?: unknown }): Promise<Res> {
   const p = await conPerfil()
   if ("error" in p) return { ok: false, error: p.error as string }
@@ -135,7 +148,14 @@ export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown
   if (aptitudes.length > MAX_APTITUDES) return { ok: false, error: `Máximo ${MAX_APTITUDES} aptitudes.` }
 
   const trayectoria: Paso[] = []
-  for (const x of Array.isArray(d.trayectoria) ? d.trayectoria : []) {
+  const crudos = Array.isArray(d.trayectoria) ? d.trayectoria : []
+  let propias: Set<string>
+  try {
+    propias = await fotosDelPerfil(p.perfil.id, crudos)
+  } catch (e) {
+    return fallo(e)
+  }
+  for (const x of crudos) {
     if (!x || typeof x !== "object") continue
     const f = x as Record<string, unknown>
     const titulo = revisarTexto(linea(f.titulo, 100)).texto
@@ -149,6 +169,9 @@ export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown
       desde: linea(f.desde, 20),
       hasta: linea(f.hasta, 20),
       detalle: revisarTexto(texto(f.detalle, 500)).texto,
+      ...(f.tipo === "proyecto" && Array.isArray(f.fotos)
+        ? { fotos: [...new Set(f.fotos.filter((id): id is string => typeof id === "string" && propias.has(id)))].slice(0, MAX_FOTOS_PROYECTO) }
+        : {}),
     })
   }
   if (trayectoria.length > MAX_PASOS) return { ok: false, error: `Máximo ${MAX_PASOS} renglones en tu trayectoria.` }
