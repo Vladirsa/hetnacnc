@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 
 import { elegirPropuesta, type Propuesta, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
 
+import PagoSolicitud from "./PagoSolicitud"
+
 const pesos = (n: number) => `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 type Orden = "recomendado" | "precio" | "tiempo"
@@ -84,7 +86,9 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
 
       {error && <p className="mt-3 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}
 
-      {solicitud.pago_estado === "pagado" ? (
+      {solicitud.cobro ? (
+        <PagoSolicitud token={token} s={solicitud} />
+      ) : solicitud.pago_estado === "pagado" ? (
         <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-5 text-[#1E7B3A]">
           <p className="font-extrabold">✓ Pago recibido</p>
           <p className="mt-1 text-sm">El taller ya está trabajando en tu pedido. Te avisaremos cuando salga el envío.</p>
@@ -115,12 +119,15 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-extrabold text-[#142033]">{p.taller.nombre}</h3>
+                    {p.taller.verificado && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
                   </div>
                   <p className="text-sm text-[#6B675C]">
                     {p.taller.estado || "México"}
-                    {p.taller.calificacion ? ` · ★ ${Number(p.taller.calificacion).toFixed(1)}` : ""}
+                    {p.taller.calificacion
+                      ? ` · ★ ${Number(p.taller.calificacion).toFixed(1)}${p.taller.resenas ? ` (${p.taller.resenas} ${p.taller.resenas === 1 ? "reseña" : "reseñas"})` : ""}`
+                      : " · Sin reseñas todavía"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -132,6 +139,9 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
                 <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Entrega en {p.dias} {p.dias === 1 ? "día" : "días"}</span>
                 <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Vigencia {p.vigencia_dias} días</span>
+                {p.anticipo_pct ? (
+                  <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Anticipo {p.anticipo_pct}%</span>
+                ) : null}
                 {p.precio === minPrecio && solicitud.propuestas.length > 1 && (
                   <span className="rounded-full bg-[#E6F4EA] px-3 py-1 font-semibold text-[#1E7B3A]">Mejor precio</span>
                 )}
@@ -166,7 +176,9 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
             <h3 className="text-lg font-extrabold text-[#142033]">¿Elegir a {confirmar.taller.nombre}?</h3>
             <p className="mt-2 text-sm text-[#40403A]">
-              {pesos(confirmar.precio)} MXN · entrega en {confirmar.dias} días. Al confirmar te llevamos a pagar con Mercado Pago y las demás propuestas se cierran.
+              {pesos(confirmar.precio)} MXN · entrega en {confirmar.dias} días.
+              {confirmar.anticipo_pct ? ` El taller pide ${confirmar.anticipo_pct}% de anticipo para empezar.` : ""} Al confirmar te llevamos a pagar y
+              las demás propuestas se cierran (a los otros talleres les avisamos sin dar tus datos).
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmar(null)} className="rounded-xl px-4 py-2 font-semibold text-[#40403A]">
