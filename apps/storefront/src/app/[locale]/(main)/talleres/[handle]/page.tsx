@@ -2,6 +2,7 @@
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
 import { resenasDeTaller, type ResenaTaller } from "@/lib/hetna/resenas-taller"
+import { cotizadorDeTaller } from "@/lib/hetna/perfil-unico"
 import { IMAGEN_OG, descripcionCorta } from "@/lib/helpers/seo"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import type { Metadata } from "next"
@@ -13,7 +14,7 @@ import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { SellerOffersListing } from "@/components/sections/SellerOffersListing/SellerOffersListing"
-import { tallerPorHandle, ubicacion, type Taller } from "@/lib/hetna/talleres"
+import { areaTexto, nombreTipoMaquina, tallerPorHandle, ubicacion, type Taller } from "@/lib/hetna/talleres"
 import { TarjetaTema } from "@/components/hetna/foro/Piezas"
 import { BotonSeguir } from "@/components/hetna/foro/RedCliente"
 import { listaTemas, sesionForo } from "@/lib/foro/consultas"
@@ -69,10 +70,11 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
   // Red del foro: seguidores del taller y lo que publica en la comunidad
   const [sesion, objetivos] = await Promise.all([sesionForo(), objetivosDeTaller(t.id)])
-  const [red, publicaciones, opiniones] = await Promise.all([
+  const [red, publicaciones, opiniones, enLinea] = await Promise.all([
     estadoRed(objetivos, sesion?.perfil?.id),
     tab === "inicio" ? listaTemas({ vendedorId: t.id, orden: "nuevos", limite: 4 }) : Promise.resolve(null),
     tab === "inicio" ? resenasDeTaller(t.handle) : Promise.resolve(null),
+    cotizadorDeTaller(t.handle),
   ])
   const esDueno = Boolean(sesion?.perfil?.vendedor && sesion.perfil.vendedor === t.id)
 
@@ -127,6 +129,15 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
               <BotonSeguir objetivo={objetivoTaller(t.id)} siguiendo={red.siguiendo} seguidores={red.seguidores} etiqueta="Seguir taller" />
             )}
             <BotonPreguntarTaller tallerHandle={t.handle} tallerNombre={t.nombre} />
+            {enLinea && (
+              <LocalizedClientLink
+                href={`/t/${enLinea}`}
+                className="flex h-12 items-center justify-center rounded-xl border-2 border-[#142033] px-5 text-center font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
+                title="Sube tu archivo y ve un precio estimado al momento"
+              >
+                Precio al momento
+              </LocalizedClientLink>
+            )}
             <LocalizedClientLink
               href={`/talleres/${t.handle}?tab=cotizar`}
               className="flex h-12 items-center justify-center rounded-xl bg-[#C2560A] px-5 text-center font-semibold text-white hover:brightness-110"
@@ -380,10 +391,17 @@ function Capacidades({ t }: { t: Taller }) {
         <section className={CAJA}>
           <h2 className={H2}>Máquinas</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {p.maquinas.map((m) => (
-              <div key={m.nombre} className="rounded-xl border border-[#E7E4DC] p-4">
-                <p className="font-bold text-[#142033]">{m.nombre}</p>
-                {m.area && <p className="text-sm text-[#C2560A]">Área: {m.area}</p>}
+            {p.maquinas.map((m, i) => (
+              <div key={`${m.nombre}-${i}`} className="rounded-xl border border-[#E7E4DC] p-4">
+                {m.tipo && <p className="text-xs font-semibold uppercase tracking-wider text-[#6B675C]">{nombreTipoMaquina(m.tipo)}</p>}
+                <p className="font-bold text-[#142033]">
+                  {m.nombre}
+                  {m.marca ? <span className="font-normal text-[#6B675C]"> · {m.marca}</span> : null}
+                </p>
+                {areaTexto(m) && <p className="text-sm text-[#C2560A]">Área: {areaTexto(m)}</p>}
+                {(m.potencia || m.controlador) && (
+                  <p className="mt-1 text-sm text-[#40403A]">{[m.potencia, m.controlador && `Control ${m.controlador}`].filter(Boolean).join(" · ")}</p>
+                )}
                 {m.detalle && <p className="mt-1 text-sm text-[#6B675C]">{m.detalle}</p>}
               </div>
             ))}
