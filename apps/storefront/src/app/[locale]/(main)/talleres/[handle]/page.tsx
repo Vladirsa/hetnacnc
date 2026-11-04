@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { resenasDeTaller, type ResenaTaller } from "@/lib/hetna/resenas-taller"
 import { IMAGEN_OG, descripcionCorta } from "@/lib/helpers/seo"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import type { Metadata } from "next"
@@ -68,9 +69,10 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
   // Red del foro: seguidores del taller y lo que publica en la comunidad
   const [sesion, objetivos] = await Promise.all([sesionForo(), objetivosDeTaller(t.id)])
-  const [red, publicaciones] = await Promise.all([
+  const [red, publicaciones, opiniones] = await Promise.all([
     estadoRed(objetivos, sesion?.perfil?.id),
     tab === "inicio" ? listaTemas({ vendedorId: t.id, orden: "nuevos", limite: 4 }) : Promise.resolve(null),
+    tab === "inicio" ? resenasDeTaller(t.handle) : Promise.resolve(null),
   ])
   const esDueno = Boolean(sesion?.perfil?.vendedor && sesion.perfil.vendedor === t.id)
 
@@ -155,7 +157,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
       </nav>
 
       <div className="mx-auto mt-6 grid max-w-[1100px] gap-5 px-4 lg:px-6">
-        {tab === "inicio" && <Inicio t={t} datos={datos} publicaciones={publicaciones?.temas || []} />}
+        {tab === "inicio" && <Inicio t={t} datos={datos} publicaciones={publicaciones?.temas || []} resenas={opiniones?.resenas || []} />}
 
         {tab === "productos" && (
           <section className={CAJA}>
@@ -184,7 +186,17 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
   )
 }
 
-function Inicio({ t, datos, publicaciones }: { t: Taller; datos: [string, string][]; publicaciones: TemaResumen[] }) {
+function Inicio({
+  t,
+  datos,
+  publicaciones,
+  resenas,
+}: {
+  t: Taller
+  datos: [string, string][]
+  publicaciones: TemaResumen[]
+  resenas: ResenaTaller[]
+}) {
   const p = t.perfil
   return (
     <>
@@ -196,6 +208,35 @@ function Inicio({ t, datos, publicaciones }: { t: Taller; datos: [string, string
           </div>
         ))}
       </dl>
+
+      {resenas.length > 0 && (
+        <section className={CAJA}>
+          <h2 className={H2}>Opiniones de clientes</h2>
+          <p className="-mt-2 mb-3 text-xs text-[#6B675C]">Sólo de trabajos pagados y entregados por HETNA.</p>
+          <ul className="grid gap-3">
+            {resenas.slice(0, 8).map((r, i) => (
+              <li key={i} className="rounded-xl bg-[#FAF9F5] p-4 text-sm">
+                <p className="font-bold text-[#142033]">
+                  <span className="text-[#C2560A]">{"★".repeat(Math.round(r.promedio))}</span>
+                  <span className="text-[#D9D5C9]">{"★".repeat(5 - Math.round(r.promedio))}</span>{" "}
+                  {r.autor || "Cliente"}
+                  {r.trabajo ? <span className="font-normal text-[#6B675C]"> · {r.trabajo}</span> : null}
+                </p>
+                <p className="mt-0.5 text-xs text-[#6B675C]">
+                  Calidad {r.calidad}/5 · Tiempo {r.tiempo}/5 · Trato {r.trato}/5 ·{" "}
+                  {new Date(r.fecha).toLocaleDateString("es-MX", { month: "short", year: "numeric" })}
+                </p>
+                {r.comentario && <p className="mt-2 text-[#40403A]">{r.comentario}</p>}
+                {r.respuesta_taller && (
+                  <p className="mt-2 border-l-2 border-[#E7E4DC] pl-3 text-[#40403A]">
+                    <span className="font-semibold">{t.nombre}:</span> {r.respuesta_taller}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {p.galeria.length > 0 && (
         <section className={CAJA}>
