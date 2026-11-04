@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 // Marco común de las vistas 3D (Caja3D y Malla3D): botón de pantalla completa
 // y pie con la ayuda de uso. La vista de adentro se redibuja sola al cambiar
 // de tamaño (ResizeObserver), así que aquí sólo se cambia el contenedor.
-export function Visor3D({ children, alto = "h-[440px] lg:h-[600px]" }: { children: React.ReactNode; alto?: string }) {
+export function Visor3D({ children, alto = "h-[440px] lg:h-[600px]", oscuro = false }: { children: React.ReactNode; alto?: string; oscuro?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const [completa, setCompleta] = useState(false)
 
@@ -23,7 +23,7 @@ export function Visor3D({ children, alto = "h-[440px] lg:h-[600px]" }: { childre
   }, [])
 
   return (
-    <div ref={ref} className={`relative w-full bg-[#F7F3EE] ${completa ? "h-screen" : alto} [&>div:first-child]:h-full`}>
+    <div ref={ref} className={`relative w-full ${oscuro ? "bg-[#0F151E]" : "bg-[#F7F3EE]"} ${completa ? "h-screen" : alto} [&>div:first-child]:h-full`}>
       {children}
       <button
         type="button"
@@ -36,7 +36,7 @@ export function Visor3D({ children, alto = "h-[440px] lg:h-[600px]" }: { childre
         </svg>
         {completa ? "Salir" : "Pantalla completa"}
       </button>
-      <span className="pointer-events-none absolute bottom-2 left-2 rounded-[6px] bg-white/80 px-2 py-1 text-[11.5px] text-[#4A4943]">Arrastra para girar · rueda para acercar</span>
+      <span className={`pointer-events-none absolute bottom-2 left-2 rounded-[6px] px-2 py-1 text-[11.5px] ${oscuro ? "bg-black/50 text-[#C9D2E0]" : "bg-white/80 text-[#4A4943]"}`}>Arrastra para girar · rueda para acercar</span>
     </div>
   )
 }

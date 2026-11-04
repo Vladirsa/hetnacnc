@@ -185,7 +185,7 @@ export function GeneradorExtruir() {
               </div>
               <div className={`bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden ${vista === "3d" && listo ? "" : "p-3 lg:p-4"}`}>
                 {vista === "3d" && listo ? (
-                  <Visor3D alto="h-[420px] lg:h-[560px]"><Malla3D tris={r!.malla.tris} /></Visor3D>
+                  <Visor3D oscuro alto="h-[420px] lg:h-[560px]"><Malla3D oscuro tris={r!.malla.tris} /></Visor3D>
                 ) : (
                   <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[420px]" dangerouslySetInnerHTML={{ __html: vista2d }} />
                 )}

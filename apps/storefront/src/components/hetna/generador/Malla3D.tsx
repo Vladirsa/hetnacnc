@@ -8,7 +8,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 // arriba). La usan las herramientas que producen STL: extruir, litofanías…
 
 // Sin `alto` llena el contenedor (Visor3D); con `alto` mide eso en px.
-export default function Malla3D({ tris, alto }: { tris: number[]; alto?: number }) {
+export default function Malla3D({ tris, alto, oscuro = false }: { tris: number[]; alto?: number; oscuro?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function Malla3D({ tris, alto }: { tris: number[]; alto?: number 
     if (!el || tris.length < 9) return
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xf7f3ee)
+    scene.background = new THREE.Color(oscuro ? 0x0f151e : 0xf7f3ee)
 
     const geo = new THREE.BufferGeometry()
     geo.setAttribute("position", new THREE.Float32BufferAttribute(tris, 3))

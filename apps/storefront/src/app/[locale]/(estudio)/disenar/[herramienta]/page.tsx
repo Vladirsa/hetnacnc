@@ -42,7 +42,7 @@ const GENERADORES: Record<string, () => React.JSX.Element> = {
   "anidado-piezas": GeneradorAnidado,
 }
 
-const OSCURAS = new Set(["letras-3d"])
+const OSCURAS = new Set(["letras-3d", "caja-con-juntas", "llaveros", "vectorizador"])
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
@@ -63,11 +63,11 @@ export default async function HerramientaDiseno({ params }: Props) {
   if (herramienta === ESCANEAR) return <EscanearPieza locale={locale} />
   const Generador = GENERADORES[herramienta]
   if (!Generador) notFound()
-  // Las herramientas que ya tienen su propio estudio oscuro van a todo lo
-  // ancho; las demás, sobre un fondo claro para que se lean como siempre.
+  // Las herramientas que ya tienen su propio estudio oscuro van tal cual; las
+  // demás se pintan con el tema oscuro común (.tema-estudio, globals.css).
   if (OSCURAS.has(herramienta)) return <Generador />
   return (
-    <div className="flex-1 bg-[#F4F3EF] text-[#1B1B18]">
+    <div className="tema-estudio flex-1">
       <Generador />
     </div>
   )
