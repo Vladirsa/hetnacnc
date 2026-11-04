@@ -37,7 +37,7 @@ export const EXTENSIONES_ARCHIVO = [
   ".png", ".jpg", ".jpeg", ".webp", ".heic",
   ".zip", ".rar", ".7z",
 ]
-export const MAX_MB_ARCHIVO = 25
+export const MAX_MB_ARCHIVO = 50
 export const MAX_ARCHIVOS = 5
 
 // Tolerancia que pide el cliente (Licitaciones 2.0). "Normal" basta para casi

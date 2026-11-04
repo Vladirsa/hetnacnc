@@ -166,3 +166,20 @@ export const getCertificadoCurso = async (slug: string): Promise<CertificadoCurs
     return null;
   }
 };
+
+export type CursoTerminado = { course_id: string; titulo: string; slug: string; terminado_en: string; lecciones: number };
+
+/** Cursos de la Academia que terminó el cliente con sesión (para su perfil profesional). */
+export const misCursosTerminados = async (): Promise<CursoTerminado[]> => {
+  const auth = (await getAuthHeaders().catch(() => ({}))) as { authorization?: string };
+  if (!auth.authorization) return [];
+  try {
+    const r = await fetch(`${API}/store/customers/me/cursos-terminados`, {
+      headers: { 'x-publishable-api-key': PK, ...auth },
+      cache: 'no-store',
+    });
+    return r.ok ? (((await r.json()) as { cursos: CursoTerminado[] }).cursos || []) : [];
+  } catch {
+    return [];
+  }
+};

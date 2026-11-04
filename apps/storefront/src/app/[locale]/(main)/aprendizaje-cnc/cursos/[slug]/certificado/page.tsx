@@ -32,7 +32,15 @@ export default async function Certificado({ params }: { params: Promise<{ locale
         <LocalizedClientLink href={`/aprendizaje-cnc/cursos/${slug}`} className="text-[14px] font-semibold text-[#6B6A63] hover:text-[#B34D07]">
           ← Volver al curso
         </LocalizedClientLink>
-        <BotonImprimir />
+        <div className="flex flex-wrap items-center gap-3">
+          <LocalizedClientLink
+            href="/foro-cnc/mi-perfil#curriculum"
+            className="rounded-[10px] border border-[#1F7A4D] bg-white px-4 py-2 text-[14px] font-semibold text-[#1F7A4D] hover:bg-[#EAF6EF]"
+          >
+            🎓 Agregar a mi perfil profesional
+          </LocalizedClientLink>
+          <BotonImprimir />
+        </div>
       </div>
 
       <article className="relative mx-auto aspect-[1.414] w-full max-w-[1000px] overflow-hidden bg-white shadow-[0_20px_60px_-20px_rgba(20,32,51,0.4)] print:shadow-none">
