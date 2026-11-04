@@ -115,7 +115,7 @@ const CALCULADORAS = [
 export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   {
     p: "¿Qué archivos aceptan?",
-    r: "Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta 5 archivos de 25 MB, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.",
+    r: "Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta 5 archivos de 50 MB, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.",
   },
   {
     p: "¿Puedo pedir solo una pieza?",
@@ -348,7 +348,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
                 name: q.p,
                 acceptedAnswer: { "@type": "Answer", text: q.r },
               })),
-            }).replace(/</g, "\\u003c"),
+            }).replace(/</g, String.fromCharCode(92) + "u003c"),
           }}
         />
       </div>
