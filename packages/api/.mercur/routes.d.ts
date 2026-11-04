@@ -628,6 +628,7 @@ export type Routes = {
                 addresses: typeof import("@medusajs/medusa/api/store/customers/me/addresses/route") & {
                     $addressId: typeof import("@medusajs/medusa/api/store/customers/me/addresses/[address_id]/route");
                 };
+                cursosTerminados: typeof import("../src/api/store/customers/me/cursos-terminados/route");
                 descargas: typeof import("../src/api/store/customers/me/descargas/route") & {
                     $productId: typeof import("../src/api/store/customers/me/descargas/[productId]/route");
                     comprobante: {
