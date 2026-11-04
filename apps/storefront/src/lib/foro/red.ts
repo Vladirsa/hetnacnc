@@ -408,3 +408,33 @@ export async function buscarProfesionales(f: {
     }
   })
 }
+
+// ---------------------------------------------------------------------
+// Mapa de /talleres: cuántos proveedores y profesionales hay por estado
+// (sólo conteos, nunca ubicaciones).
+// ---------------------------------------------------------------------
+
+export type RedPorEstado = Record<string, { proveedores: number; profesionales: number }>
+
+export async function redPorEstado(): Promise<RedPorEstado> {
+  const r = await intentar(async () => {
+    const { rows } = await db().query(
+      `select a.estado_mx as estado,
+         count(*) filter (where a.tipo in ('proveedor', 'marca') and a.vendedor_id is null) as proveedores,
+         count(*) filter (where a.tipo = 'profesional'
+           and (coalesce(cardinality(a.aptitudes), 0) + coalesce(cardinality(a.software), 0) + coalesce(cardinality(a.maquinas), 0)
+                + coalesce(jsonb_array_length(a.trayectoria), 0) > 0 or coalesce(a.bio, '') <> '')) as profesionales
+       from foro.perfiles a
+       where a.suspendido = false and coalesce(a.estado_mx, '') <> ''
+       group by a.estado_mx`
+    )
+    const salida: RedPorEstado = {}
+    for (const f of rows as Fila[]) {
+      const proveedores = Number(f.proveedores) || 0
+      const profesionales = Number(f.profesionales) || 0
+      if (proveedores || profesionales) salida[f.estado] = { proveedores, profesionales }
+    }
+    return salida
+  })
+  return r || {}
+}
