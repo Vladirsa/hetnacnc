@@ -763,11 +763,15 @@ export type Routes = {
             aviso: typeof import("../src/api/store/foro/aviso/route");
             miTaller: typeof import("../src/api/store/foro/mi-taller/route");
         };
+        hetnaCloud: {
+            $token: typeof import("../src/api/store/hetna-cloud/[token]/route");
+        };
         hetnaPedidos: {
             $id: {
                 recibido: typeof import("../src/api/store/hetna-pedidos/[id]/recibido/route");
             };
         };
+        hetnaPerfilUnico: typeof import("../src/api/store/hetna-perfil-unico/route");
         hetnaRastreo: {
             $id: typeof import("../src/api/store/hetna-rastreo/[id]/route");
         };
@@ -1103,6 +1107,24 @@ export type Routes = {
         };
         hetnaAlta: typeof import("../src/api/vendor/hetna-alta/route") & {
             reenviar: typeof import("../src/api/vendor/hetna-alta/reenviar/route");
+        };
+        hetnaCloud: typeof import("../src/api/vendor/hetna-cloud/route") & {
+            archivos: {
+                $id: typeof import("../src/api/vendor/hetna-cloud/archivos/[id]/route") & {
+                    descarga: typeof import("../src/api/vendor/hetna-cloud/archivos/[id]/descarga/route");
+                };
+            };
+            clientes: typeof import("../src/api/vendor/hetna-cloud/clientes/route");
+            ligas: {
+                $token: typeof import("../src/api/vendor/hetna-cloud/ligas/[token]/route");
+            };
+            proyectos: typeof import("../src/api/vendor/hetna-cloud/proyectos/route") & {
+                $id: typeof import("../src/api/vendor/hetna-cloud/proyectos/[id]/route") & {
+                    archivos: typeof import("../src/api/vendor/hetna-cloud/proyectos/[id]/archivos/route");
+                    ligas: typeof import("../src/api/vendor/hetna-cloud/proyectos/[id]/ligas/route");
+                    piezas: typeof import("../src/api/vendor/hetna-cloud/proyectos/[id]/piezas/route");
+                };
+            };
         };
         hetnaEnvios: typeof import("../src/api/vendor/hetna-envios/route");
         hetnaFacturas: typeof import("../src/api/vendor/hetna-facturas/route") & {
