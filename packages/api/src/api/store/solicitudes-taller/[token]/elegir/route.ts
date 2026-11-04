@@ -8,17 +8,19 @@ import {
   VENDOR_URL,
   asegurarTablas,
   boton,
-  crearPreferenciaPago,
   esc,
   fila,
   folioTexto,
   ligaPropuestas,
   marco,
 } from "../../../../../lib/licitacion"
+import { estadoCobro, ligaDePago, pesos, prepararCobro } from "../../../../../lib/licitacion-cobro"
+import { avisarNoElegidos } from "../../../../../lib/licitacion-extra"
 import { cambiarEtapa } from "../../../../../lib/seguimiento"
 
-// El cliente elige una propuesta: se cierra la licitación y se genera su liga de
-// pago de Mercado Pago (si hay llave). El taller empieza cuando el pago se confirma.
+// El cliente elige una propuesta: se cierra la licitación, se decide cómo se
+// cobra (directo al taller si conectó Mercado Pago o PayPal; si no, cobra
+// HETNA) y se genera la liga del primer pago (anticipo o total).
 export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger") as any
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -33,73 +35,99 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
   const p = await knex(`${T_PROPUESTA} as p`)
     .join("seller as v", "v.id", "p.seller_id")
     .where({ "p.id": propuestaId, "p.solicitud_id": s.id })
-    .first("p.*", "v.name as taller", "v.email as taller_email")
+    .first("p.*", "v.name as taller", "v.email as taller_email", "v.metadata as taller_metadata")
   if (!p) return res.status(404).json({ message: "Propuesta no encontrada." })
 
-  await knex.transaction(async (trx: any) => {
-    await trx(T_SOLICITUD).where({ id: s.id }).update({ estado: "elegida", propuesta_elegida: p.id, updated_at: knex.fn.now() })
+  // Sólo una elección: si dos pestañas eligen a la vez, gana la primera.
+  const cambiadas = await knex.transaction(async (trx: any) => {
+    const n = await trx(T_SOLICITUD)
+      .where({ id: s.id, estado: "abierta" })
+      .update({ estado: "elegida", propuesta_elegida: p.id, updated_at: knex.fn.now() })
+    if (!n) return 0
     await trx(T_PROPUESTA).where({ solicitud_id: s.id }).update({ estado: "descartada", updated_at: knex.fn.now() })
     await trx(T_PROPUESTA).where({ id: p.id }).update({ estado: "elegida", updated_at: knex.fn.now() })
+    return n
   })
+  if (!cambiadas) return res.status(409).json({ message: "Esta solicitud ya tiene una propuesta elegida." })
 
   const folio = folioTexto(s.folio)
-  const monto = Number(p.precio)
+  const elegida = { ...s, estado: "elegida", propuesta_elegida: p.id }
   await cambiarEtapa(knex, s, "aceptada", { actor: "cliente", nota: `Elegiste la propuesta de ${p.taller}.`, correo: false }).catch(
     (e: Error) => logger.warn(`[seguimiento] no se pudo marcar aceptada: ${e.message}`)
   )
 
-  // Liga de pago
+  // Cómo se cobra y primera liga de pago
   let pagoUrl: string | null = null
+  let cobro: Awaited<ReturnType<typeof estadoCobro>> = null
   try {
-    const pref = await crearPreferenciaPago({
-      solicitudId: s.id,
-      folio,
-      titulo: `${folio} · Fabricación con ${p.taller} · HETNA CNC`,
-      monto,
-      email: s.contacto?.email,
-      retorno: ligaPropuestas(token),
-    })
-    if (pref) {
-      pagoUrl = pref.url
-      await knex(T_SOLICITUD).where({ id: s.id }).update({ pago_url: pref.url, pago_estado: "pendiente", pago_monto: monto, updated_at: knex.fn.now() })
-    }
+    const { modo, pct, cuenta } = await prepararCobro(knex, elegida, p, logger)
+    const conCobro = { ...elegida, cobro: modo, comision_pct: pct }
+    cobro = await estadoCobro(knex, conCobro, { ...p, taller_email: p.taller_email }, cuenta)
+    const metodo = cobro?.metodos.includes("mercadopago") ? "mercadopago" : cobro?.metodos.includes("paypal") ? "paypal" : null
+    if (metodo) pagoUrl = (await ligaDePago(knex, conCobro, metodo, logger)).url
   } catch (e) {
-    logger.error(`[licitacion] ${folio} no se pudo crear la liga de pago: ${(e as Error).message}`)
+    logger.error(`[licitacion] ${folio} no se pudo preparar el cobro: ${(e as Error).message}`)
   }
 
-  res.json({ ok: true, pago_url: pagoUrl })
+  res.json({ ok: true, pago_url: pagoUrl, cobro })
 
-  const precio = `$${monto.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN`
+  const primerPago = cobro?.siguiente
   const resumen =
     `<table style="border-collapse:collapse;font-size:14px">` +
-    fila("Folio", folio) + fila("Taller", p.taller) + fila("Precio", precio) + fila("Entrega", `${p.dias} días`) +
+    fila("Folio", folio) +
+    fila("Taller", p.taller) +
+    fila("Precio", pesos(Number(p.precio))) +
+    fila("Entrega", `${p.dias} días`) +
+    (primerPago && primerPago.tipo === "anticipo" ? fila("Anticipo", `${pesos(primerPago.monto)} (${cobro?.anticipo_pct}%)`) : "") +
     `</table>`
+  const directo = cobro?.modo === "taller"
 
   const avisos = [
     process.env.HETNA_LEADS_EMAIL && {
       to: process.env.HETNA_LEADS_EMAIL,
       subject: `[${folio}] El cliente eligió a ${p.taller}`,
-      html: marco("Propuesta elegida", resumen +
-        `<table style="border-collapse:collapse;font-size:14px;margin-top:12px">` +
-        fila("Cliente", s.contacto?.nombre || "") + fila("Correo", s.contacto?.email || "") + fila("Teléfono", s.contacto?.telefono || "") +
-        fila("Liga de pago", pagoUrl ? "Generada y enviada al cliente" : "NO se generó: mándala a mano") +
-        `</table>`),
+      html: marco(
+        "Propuesta elegida",
+        resumen +
+          `<table style="border-collapse:collapse;font-size:14px;margin-top:12px">` +
+          fila("Cliente", s.contacto?.nombre || "") +
+          fila("Correo", s.contacto?.email || "") +
+          fila("Teléfono", s.contacto?.telefono || "") +
+          fila("Cobro", directo ? `Directo al taller (${cobro?.metodos.join(" y ")}), comisión ${cobro?.comision_pct}%` : `Cobra HETNA, comisión ${cobro?.comision_pct ?? "—"}% al liquidar`) +
+          fila("Liga de pago", pagoUrl ? "Generada y enviada al cliente" : "NO se generó: mándala a mano") +
+          `</table>`
+      ),
     },
     p.taller_email && {
       to: p.taller_email,
       subject: `[${folio}] ¡El cliente eligió tu propuesta!`,
-      html: marco("¡Ganaste la solicitud!", resumen +
-        `<p style="color:#40403A">Te avisaremos cuando el cliente pague para que empieces a fabricar. <strong>No inicies el trabajo antes de esa confirmación.</strong></p>` +
-        boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)),
+      html: marco(
+        "¡Ganaste la solicitud!",
+        resumen +
+          `<p style="color:#40403A">${
+            directo
+              ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. La comisión HETNA es de ${esc(cobro?.comision_pct)}% según tu plan.`
+              : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, menos la comisión de ${esc(cobro?.comision_pct ?? "")}% de tu plan. Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
+          }</p>` +
+          `<p style="color:#40403A">Te avisaremos cuando el cliente pague. <strong>No inicies el trabajo antes de esa confirmación.</strong></p>` +
+          boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)
+      ),
     },
     s.contacto?.email && {
       to: s.contacto.email,
       subject: `[${folio}] Elegiste la propuesta de ${p.taller}`,
-      html: marco("¡Listo! Elegiste tu propuesta", resumen +
-        (pagoUrl
-          ? `<p style="color:#40403A">Paga de forma segura con Mercado Pago, con tarjeta o los medios que te muestre al pagar. En cuanto se confirme tu pago, ${esc(p.taller)} empieza a fabricar.</p>` +
-            boton("Pagar ahora", pagoUrl)
-          : `<p style="color:#40403A">En breve te enviamos la liga de pago. El pago y el seguimiento de tu pedido se hacen dentro de HETNA.</p>`)),
+      html: marco(
+        "¡Listo! Elegiste tu propuesta",
+        resumen +
+          (pagoUrl
+            ? `<p style="color:#40403A">${
+                primerPago?.tipo === "anticipo"
+                  ? `Paga el anticipo de ${esc(pesos(primerPago.monto))} para que ${esc(p.taller)} empiece. El resto lo pagas desde tu misma liga cuando te lo pida.`
+                  : `Paga de forma segura para que ${esc(p.taller)} empiece a fabricar.`
+              }</p>` + boton("Pagar ahora", pagoUrl)
+            : `<p style="color:#40403A">En breve te enviamos la liga de pago. El pago y el seguimiento de tu pedido se hacen dentro de HETNA.</p>`) +
+          `<p style="color:#6B675C;font-size:13px;margin-top:16px">Tu pedido: <a href="${esc(ligaPropuestas(token))}">${esc(ligaPropuestas(token))}</a></p>`
+      ),
     },
   ].filter(Boolean) as { to: string; subject: string; html: string }[]
 
@@ -108,5 +136,6 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
     if (!r.sent) logger.info(`[licitacion] aviso de elección no enviado: ${r.reason}`)
     await new Promise((r) => setTimeout(r, 600))
   }
-  logger.info(`[licitacion] ${folio} elegida propuesta ${p.id}; liga de pago: ${pagoUrl ? "sí" : "no"}`)
+  await avisarNoElegidos(knex, s, p, logger).catch((e: Error) => logger.warn(`[licitacion] aviso a no elegidos: ${e.message}`))
+  logger.info(`[licitacion] ${folio} elegida propuesta ${p.id}; cobro ${cobro?.modo || "—"}; liga de pago: ${pagoUrl ? "sí" : "no"}`)
 }

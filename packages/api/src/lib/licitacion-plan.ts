@@ -28,11 +28,13 @@ export const NOMBRE_PLAN: Record<PlanLicitacion, string> = { gratis: "Gratis", t
 const MESES_FUNDADOR = 6
 
 /** Plan de la app (Supabase negocios) del taller con ese correo. null = no tiene cuenta en la app. */
-async function leerPlanApp(correo: string): Promise<string | null> {
+export async function leerPlanApp(correo: string): Promise<string | null> {
   const c = correo.trim().toLowerCase()
-  if (!c || !/^[^\s@,()]+@[^\s@,()]+$/.test(c)) return null
+  // Sin comodines: "_" se escapa y "*" o "%" no se aceptan, para no empatar
+  // el correo de otro negocio.
+  if (!c || !/^[^\s@,()*%\\]+@[^\s@,()*%\\]+$/.test(c)) return null
   const filas = await supa<Taller[]>(
-    `/rest/v1/negocios?select=id,plan,plan_vence,trial_hasta&correo=ilike.${encodeURIComponent(c)}&limit=5`
+    `/rest/v1/negocios?select=id,plan,plan_vence,trial_hasta&correo=ilike.${encodeURIComponent(c.replace(/_/g, "\\_"))}&limit=5`
   )
   if (!filas?.length) return null
   // Si el correo está en varios negocios, manda el plan más alto.
