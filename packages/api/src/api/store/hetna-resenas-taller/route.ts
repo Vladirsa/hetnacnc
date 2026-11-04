@@ -11,9 +11,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!/^[a-z0-9-]{2,120}$/i.test(handle)) return res.json({ resenas: [], promedio: null, total: 0 })
   const v = await knex("seller").where({ handle }).first("id")
   if (!v) return res.json({ resenas: [], promedio: null, total: 0 })
-  const resenas = await resenasPublicas(knex, v.id, 30).catch(() => [])
+  const resenas: Awaited<ReturnType<typeof resenasPublicas>> = await resenasPublicas(knex, v.id, 30).catch(() => [])
   const total = resenas.length
-  const promedio = total ? Math.round((resenas.reduce((a, r) => a + r.promedio, 0) / total) * 10) / 10 : null
+  const promedio = total ? Math.round((resenas.reduce((a: number, r: { promedio: number }) => a + Number(r.promedio), 0) / total) * 10) / 10 : null
   res.setHeader("Cache-Control", "public, max-age=300")
   return res.json({ resenas, promedio, total })
 }
