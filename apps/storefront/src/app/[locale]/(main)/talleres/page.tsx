@@ -4,6 +4,7 @@ import DirectorioTalleres from "@/components/hetna/taller/DirectorioTalleres"
 import ParaTalleres from "@/components/hetna/taller/ParaTalleres"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { redPorEstado } from "@/lib/foro/red"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres" },
@@ -18,7 +19,7 @@ export default async function TalleresPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const talleres = await listarTalleres()
+  const [talleres, red] = await Promise.all([listarTalleres(), redPorEstado()])
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 lg:px-8">
@@ -74,7 +75,7 @@ export default async function TalleresPage({
 
       <div id="directorio" className="scroll-mt-24" />
 
-      <DirectorioTalleres talleres={talleres} locale={locale} />
+      <DirectorioTalleres talleres={talleres} locale={locale} red={red} />
 
       {/* Para dueños de taller: cómo funciona, beneficios, perfiles,
           preguntas y registro, aquí mismo (la versión completa vive en
