@@ -39,3 +39,12 @@ export const EXTENSIONES_ARCHIVO = [
 ]
 export const MAX_MB_ARCHIVO = 25
 export const MAX_ARCHIVOS = 5
+
+// Tolerancia que pide el cliente (Licitaciones 2.0). "Normal" basta para casi
+// todo en router, láser y plasma; las finas encarecen y no todos las dan.
+export const TOLERANCIAS = [
+  "Normal (±0.5 mm)",
+  "Fina (±0.1 mm)",
+  "Precisión (±0.05 mm o menos)",
+  "No sé, que me recomienden",
+]

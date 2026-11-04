@@ -25,6 +25,7 @@ import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
 import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
 import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
+import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
 
 export default defineMiddlewares({
     routes: [
@@ -79,6 +80,7 @@ export default defineMiddlewares({
         ...storeVerificacionMiddlewares,
         ...storeCustomersMiddlewares,
         ...storeHetnaPedidosMiddlewares,
+        ...storeSolicitudesTallerMiddlewares,
         ...storeCuponesMiddlewares,
         ...storeRecomiendaMiddlewares,
         // CORS de la app del Cotizador en web (localhost:8080) para /api/cotizador-*

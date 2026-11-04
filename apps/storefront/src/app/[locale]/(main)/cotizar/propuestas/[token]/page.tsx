@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import ComparadorPropuestas from "@/components/hetna/taller/ComparadorPropuestas"
+import PreguntasSolicitud from "@/components/hetna/taller/PreguntasSolicitud"
+import ResenaTaller from "@/components/hetna/taller/ResenaTaller"
 import SeguimientoSolicitud from "@/components/hetna/taller/SeguimientoSolicitud"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { verSolicitud } from "@/lib/cotizar/solicitud-taller"
@@ -20,13 +22,21 @@ const ETIQUETAS: [string, string][] = [
   ["cantidad", "Cantidad"],
   ["medidas", "Medidas"],
   ["acabado", "Acabado"],
+  ["tolerancia", "Tolerancia"],
   ["fecha", "Fecha requerida"],
   ["frecuencia", "Frecuencia"],
   ["presupuesto", "Presupuesto"],
 ]
 
-export default async function PropuestasPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function PropuestasPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ token: string }>
+  searchParams: Promise<{ pago?: string }>
+}) {
   const { token } = await params
+  const { pago } = await searchParams
   const s = await verSolicitud(token)
   if (!s) notFound()
 
@@ -50,6 +60,24 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
             ? s.etapa_explica || "Pago recibido. El taller está fabricando tu pedido."
             : "Ya elegiste una propuesta. Completa tu pago para que el taller empiece."}
       </p>
+
+      {pago === "ok" && (
+        <p className="mt-4 rounded-xl bg-[#E6F4EA] p-3 text-sm font-semibold text-[#1E7B3A]">
+          ¡Gracias! Recibimos tu pago. En unos minutos se refleja aquí.
+        </p>
+      )}
+      {pago === "pendiente" && (
+        <p className="mt-4 rounded-xl bg-[#FFF1E6] p-3 text-sm font-semibold text-[#C2560A]">
+          Tu pago está en proceso. Te avisamos por correo en cuanto se confirme.
+        </p>
+      )}
+      {pago === "error" && (
+        <p className="mt-4 rounded-xl bg-[#FDECEA] p-3 text-sm font-semibold text-[#B3261E]">
+          El pago no se completó. Puedes intentarlo de nuevo abajo.
+        </p>
+      )}
+
+      <ResenaTaller token={token} s={s} />
 
       <SeguimientoSolicitud token={token} s={s} />
 
@@ -76,6 +104,8 @@ export default async function PropuestasPage({ params }: { params: Promise<{ tok
           </p>
         )}
       </section>
+
+      <PreguntasSolicitud token={token} preguntas={s.preguntas || []} abierta={s.estado === "abierta"} />
 
       {s.estado !== "revision" && <ComparadorPropuestas token={token} solicitud={s} />}
 

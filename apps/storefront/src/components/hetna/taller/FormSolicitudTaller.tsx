@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 import {
   ACABADOS,
+  TOLERANCIAS,
   EXTENSIONES_ARCHIVO,
   MAX_ARCHIVOS,
   MAX_MB_ARCHIVO,
@@ -42,6 +43,8 @@ type Pendiente = {
   avance: number
   subido?: ArchivoSubido
   error?: string
+  // Lo que se leyó del archivo en el navegador (DXF, SVG, STL u OBJ)
+  geo?: string
 }
 
 // Datos que llegan ya llenos desde una herramienta de Diseñar (botón
@@ -82,6 +85,7 @@ export default function FormSolicitudTaller({
   const [tieneArchivo, setTieneArchivo] = useState<string>(prellenado ? "Tengo archivo profesional" : "")
   const [archivos, setArchivos] = useState<Pendiente[]>([])
   const entrada = useRef<HTMLInputElement>(null)
+  const medidasRef = useRef<HTMLInputElement>(null)
   const archivoPrellenado = useRef(false)
   const [cp, setCp] = useState("")
   const [ciudad, setCiudad] = useState("")
@@ -171,6 +175,24 @@ export default function FormSolicitudTaller({
       subirArchivo(f, (n) => poner({ avance: n }))
         .then((subido) => poner({ subido, avance: 100 }))
         .catch((e: Error) => poner({ error: e.message }))
+      // Vista previa de medidas: se lee aquí mismo, sin mandar nada.
+      if (/\.(dxf|svg|stl|obj)$/i.test(f.name)) {
+        import("@/lib/cotizador/archivo-cad")
+          .then(({ leerArchivoCad }) => leerArchivoCad(f))
+          .then((g) => {
+            if (!g || !(g.largo > 0)) return
+            const mm = (n: number) => (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("es-MX")
+            const texto =
+              g.tipo === "3d"
+                ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm${g.volumen_cm3 ? ` · ${mm(g.volumen_cm3)} cm³` : ""}`
+                : `${mm(g.largo)} × ${mm(g.ancho)} mm · ${(g.corte_mm / 1000).toLocaleString("es-MX", { maximumFractionDigits: 2 })} m de corte` +
+                  (g.perforaciones ? ` · ${g.perforaciones} perforaciones` : "")
+            poner({ geo: texto })
+            const campo = medidasRef.current
+            if (campo && !campo.value.trim()) campo.value = g.tipo === "3d" ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm` : `${mm(g.largo)} × ${mm(g.ancho)} mm`
+          })
+          .catch(() => {})
+      }
     }
     if (entrada.current) entrada.current.value = ""
   }
@@ -201,6 +223,13 @@ export default function FormSolicitudTaller({
       cp,
       medidas: v("medidas"),
       acabado: v("acabado"),
+      tolerancia: v("tolerancia"),
+      // Medidas leídas de los archivos en el navegador
+      medidas_archivo: archivos
+        .filter((a) => a.geo && a.subido)
+        .map((a) => `${a.nombre}: ${a.geo}`)
+        .join(" | ")
+        .slice(0, 400),
       frecuencia: v("frecuencia"),
       presupuesto: v("presupuesto"),
       acepta_envio: v("acepta_envio"),
@@ -366,6 +395,9 @@ export default function FormSolicitudTaller({
                         </span>
                       )}
                     </span>
+                    {a.geo && !a.error && (
+                      <span className="hidden shrink-0 rounded-lg bg-[#F3F1EA] px-2 py-1 text-xs font-semibold text-[#142033] sm:block">📐 {a.geo}</span>
+                    )}
                     <button type="button" onClick={() => quitar(a.id)} className="text-xs font-semibold text-[#6B675C] hover:text-[#B3261E]">
                       Quitar
                     </button>
@@ -414,7 +446,7 @@ export default function FormSolicitudTaller({
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="medidas">Medidas aproximadas</label>
-            <input id="medidas" name="medidas" className={CAMPO} placeholder="Ej. 30 x 20 cm, espesor 6 mm" defaultValue={prellenado?.medidas} />
+            <input ref={medidasRef} id="medidas" name="medidas" className={CAMPO} placeholder="Ej. 30 x 20 cm, espesor 6 mm" defaultValue={prellenado?.medidas} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="acabado">Acabado</label>
@@ -422,6 +454,15 @@ export default function FormSolicitudTaller({
               <option value="">Selecciona</option>
               {ACABADOS.map((a) => (
                 <option key={a}>{a}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={ETIQUETA} htmlFor="tolerancia">Tolerancia</label>
+            <select id="tolerancia" name="tolerancia" className={CAMPO} defaultValue="">
+              <option value="">Selecciona</option>
+              {TOLERANCIAS.map((t) => (
+                <option key={t}>{t}</option>
               ))}
             </select>
           </div>
