@@ -12,6 +12,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { MercurModules } from "@mercurjs/types"
 
 import { COMISION_TOPE, comisionPct } from "./cotizacion-liga"
+import { CUPO_GB } from "./cloud"
 import { PAQUETES } from "./creditos-compra"
 import { creditosDe, creditosModeloIa, previewsGratisPorMes } from "../workflows/create-escaneo/steps/create-escaneo"
 
@@ -91,11 +92,11 @@ export async function tarifasHetna(container: MedusaContainer): Promise<{ actual
     {
       id: "cotizador",
       titulo: "App HETNA Cotizador para talleres",
-      texto: "Planes mensuales. La comisión aplica sólo a los cobros en línea que hagas con la app, con tope por cobro.",
+      texto: "Planes mensuales. Incluyen HetNa Cloud (tu nube de clientes, proyectos y piezas). La comisión aplica sólo a los cobros en línea que hagas con la app, con tope por cobro.",
       filas: PLANES_APP.map((p) => ({
         concepto: `Plan ${p.nombre}`,
         precio: p.precio ? `${pesos(p.precio)} al mes` : "$0",
-        nota: `Cobro en línea: ${comisionPct(p.plan)}% (tope ${pesos(COMISION_TOPE)} por cobro)`,
+        nota: `HetNa Cloud ${CUPO_GB[p.plan] ?? 1} GB incluido · cobro en línea: ${comisionPct(p.plan)}% (tope ${pesos(COMISION_TOPE)} por cobro)`,
       })),
     },
     {

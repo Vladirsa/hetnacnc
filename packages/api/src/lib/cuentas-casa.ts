@@ -32,7 +32,7 @@ export const correosDeLaCasa = (): string[] =>
 const VIGENCIA_MS = 10 * 60 * 1000
 let cache: { ids: Set<string>; hasta: number } | null = null
 
-async function idsDeLaCasa(container: MedusaContainer): Promise<Set<string>> {
+export async function idsDeLaCasa(container: MedusaContainer): Promise<Set<string>> {
   if (cache && cache.hasta > Date.now()) return cache.ids
   const correos = correosDeLaCasa()
   let ids = new Set<string>()

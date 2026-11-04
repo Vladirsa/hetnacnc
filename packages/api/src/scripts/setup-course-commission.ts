@@ -15,7 +15,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { MercurModules } from "@mercurjs/types"
 
 const COMISION = 10
-const COMISION_GENERAL = 8
+const COMISION_GENERAL = 6
 const COMISION_MAQUINAS = 5
 // Categorías de máquinas (por handle); se incluyen sus subcategorías.
 const MAQUINAS = ["maquinas-cnc", "routers-cnc", "laser-cnc", "plasma-cnc", "tornos-cnc", "impresoras-3d"]

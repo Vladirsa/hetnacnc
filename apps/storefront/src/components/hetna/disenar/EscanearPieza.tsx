@@ -1,4 +1,5 @@
 import { EstudioModeloIA, type InfoModeloIa } from "@/components/hetna/escaneos/EstudioModeloIA"
+import { PromoImagen3D } from "@/components/hetna/escaneos/PromoImagen3D"
 import { saldoBreve } from "@/lib/creditos/acciones"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { type Escaneo, listarEscaneos } from "@/lib/escaneos/acciones"
@@ -35,11 +36,13 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
       <>
         <h1 className="sr-only">Imagen a 3D con IA</h1>
         <EstudioModeloIA modeloIa={modeloIa} saldo={saldo} recientes={recientes} />
+        <PromoImagen3D />
       </>
     )
   }
 
   return (
+    <>
     <div className="flex flex-1 items-center bg-[#0D1015] px-4 py-10 text-white lg:px-10">
       <div className="mx-auto grid w-full max-w-[1100px] items-center gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div>
@@ -85,5 +88,7 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
         </div>
       </div>
     </div>
+      <PromoImagen3D />
+    </>
   )
 }

@@ -766,6 +766,7 @@ export type Routes = {
         hetnaCloud: {
             $token: typeof import("../src/api/store/hetna-cloud/[token]/route");
         };
+        hetnaMuestras3d: typeof import("../src/api/store/hetna-muestras-3d/route");
         hetnaPedidos: {
             $id: {
                 recibido: typeof import("../src/api/store/hetna-pedidos/[id]/recibido/route");
