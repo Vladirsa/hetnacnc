@@ -5,6 +5,7 @@
 // tienda decide quién hace qué; el navegador sólo manda lo que pidió.
 
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { misCursosTerminados } from "@/lib/data/courses"
 
 import { avisar, perfilesDeTaller } from "./avisos"
 import { sesionForo } from "./consultas"
@@ -155,7 +156,26 @@ export async function guardarRed(d: { aptitudes?: unknown; trayectoria?: unknown
   } catch (e) {
     return fallo(e)
   }
+  // Cursos de la Academia: sólo se marcan como verificados los que de verdad terminó
+  const pideHetna = crudos.some((x) => x && typeof x === "object" && typeof (x as Record<string, unknown>).hetna === "string")
+  const terminados = pideHetna ? new Map((await misCursosTerminados()).map((c) => [c.course_id, c])) : new Map()
   for (const x of crudos) {
+    const h = x && typeof x === "object" ? (x as Record<string, unknown>).hetna : null
+    const curso = typeof h === "string" ? terminados.get(h) : undefined
+    if (curso) {
+      if (!trayectoria.some((p) => p.hetna === curso.course_id)) {
+        trayectoria.push({
+          tipo: "certificacion",
+          titulo: curso.titulo.slice(0, 100),
+          lugar: "Academia HETNA",
+          desde: "",
+          hasta: curso.terminado_en.slice(0, 4),
+          detalle: `Curso en línea de ${curso.lecciones} lecciones, terminado en HETNA.`,
+          hetna: curso.course_id,
+        })
+      }
+      continue
+    }
     if (!x || typeof x !== "object") continue
     const f = x as Record<string, unknown>
     const titulo = revisarTexto(linea(f.titulo, 100)).texto

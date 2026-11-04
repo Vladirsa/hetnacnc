@@ -7,9 +7,11 @@
 // bucket privado y devuelve la clave.
 import { NextResponse } from "next/server"
 import { ipDe } from "@/lib/seguridad/ip-cliente"
+import { MAX_MB_ARCHIVO } from "@/lib/fabricacion/opciones"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
-const MAX_BYTES = 26 * 1024 * 1024
+// El tope del archivo más 1 MB de los demás campos del formulario
+const MAX_BYTES = (MAX_MB_ARCHIVO + 1) * 1024 * 1024
 
 export async function POST(req: Request) {
   const tipo = req.headers.get("content-type") || ""
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Se esperaba un archivo." }, { status: 400 })
   }
   if (Number(req.headers.get("content-length") || 0) > MAX_BYTES) {
-    return NextResponse.json({ message: "El archivo pesa más de 25 MB." }, { status: 413 })
+    return NextResponse.json({ message: `El archivo pesa más de ${MAX_MB_ARCHIVO} MB.` }, { status: 413 })
   }
 
   try {

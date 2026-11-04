@@ -1,6 +1,6 @@
 // /servicios/aprendizaje-cnc: la Academia HETNA, estilo Udemy/Domestika.
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
-// una comisión (10%, ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
+// una comisión (5%, ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
 import Image from "next/image"
 import type { HttpTypes } from "@medusajs/types"

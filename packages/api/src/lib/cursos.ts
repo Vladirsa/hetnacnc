@@ -4,7 +4,7 @@
 //
 //   - Curso de pago: el producto del curso recibe una OFERTA del taller (sin
 //     oferta Mercur no deja comprarlo), la etiqueta "digital" (envío $0) y la
-//     categoría "Cursos" (10% HETNA / 90% taller, scripts/setup-course-commission).
+//     categoría "Cursos" (5% HETNA / 95% taller, scripts/setup-course-commission).
 //     metadata.producto_digital = true: el saldo del taller lo libera al momento
 //     (lib/saldos-talleres.ts). Al pagarse el pedido, el comprador queda inscrito.
 //   - Curso gratis: el producto queda en borrador (no sale en la tienda) y el
@@ -108,7 +108,7 @@ export async function prepararVentaCurso(
   )
   const usd = !gratis && aceptadas.has("usd") ? precioEnDolares(datos.precio) : null
 
-  // Etiqueta "digital" (perfil sin envío) y categoría "Cursos" (comisión 10%)
+  // Etiqueta "digital" (perfil sin envío) y categoría "Cursos" (comisión 5%)
   let [tag] = await productService.listProductTags({ value: "digital" }, { take: 1 })
   if (!tag) [tag] = await productService.createProductTags([{ value: "digital" }])
   const [cat] = await productService.listProductCategories({ name: "Cursos" }, { take: 1 })
@@ -438,4 +438,43 @@ export async function certificadoCurso(c: MedusaContainer, slug: string, custome
     lecciones: acceso.avance.total,
     fecha: new Date(ultima || Date.now()).toISOString(),
   }
+}
+
+// ---- Cursos terminados (perfil profesional) -------------------------------
+
+export type CursoTerminado = { course_id: string; titulo: string; slug: string; terminado_en: string; lecciones: number }
+
+/**
+ * Cursos que el alumno terminó: todas las lecciones vigentes marcadas como
+ * vistas. El perfil profesional del foro los muestra como certificación
+ * "verificada por HETNA" (sólo si el alumno los agrega).
+ */
+export async function cursosTerminados(c: MedusaContainer, customerId: string): Promise<CursoTerminado[]> {
+  const knex = c.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+  const filas = (
+    await knex.raw(
+      `select c.id as course_id, c.title as titulo, c.slug,
+         count(distinct l.id) as total,
+         count(distinct lp.lesson_id) filter (where lp.completed_at is not null) as hechas,
+         max(lp.completed_at) as terminado_en
+       from enrollment e
+       join course c on c.id = e.course_id and c.deleted_at is null and c.status = 'published'
+       join course_section s on s.course_id = c.id and s.deleted_at is null
+       join lesson l on l.section_id = s.id and l.deleted_at is null
+       left join lesson_progress lp on lp.enrollment_id = e.id and lp.lesson_id = l.id and lp.deleted_at is null
+       where e.customer_id = ? and e.deleted_at is null
+       group by c.id, c.title, c.slug`,
+      [customerId]
+    )
+  ).rows as any[]
+  return filas
+    .filter((f) => Number(f.total) > 0 && Number(f.hechas) >= Number(f.total))
+    .map((f) => ({
+      course_id: f.course_id,
+      titulo: f.titulo,
+      slug: f.slug,
+      terminado_en: new Date(f.terminado_en || Date.now()).toISOString(),
+      lecciones: Number(f.total),
+    }))
+    .sort((a, b) => b.terminado_en.localeCompare(a.terminado_en))
 }

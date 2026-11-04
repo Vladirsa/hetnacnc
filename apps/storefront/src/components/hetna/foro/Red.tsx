@@ -60,7 +60,14 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
             {g.pasos.map((p, i) => (
               <li key={i} className="relative">
                 <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#C2560A]" aria-hidden="true" />
-                <strong className="block text-[15px] text-[#1B1B18]">{p.titulo}</strong>
+                <strong className="block text-[15px] text-[#1B1B18]">
+                  {p.titulo}
+                  {p.hetna && (
+                    <span className="ml-2 inline-block rounded-full bg-[#EAF6EF] px-2 py-0.5 align-middle text-[11.5px] font-bold text-[#14683F]" title="HETNA confirmó que terminó todas las lecciones">
+                      ✓ Verificado por HETNA
+                    </span>
+                  )}
+                </strong>
                 {(p.lugar || p.desde || p.hasta) && (
                   <span className="block text-[13.5px] text-[#6B6A63]">
                     {p.lugar}

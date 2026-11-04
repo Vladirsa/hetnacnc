@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
 import { avalar, decidirRecomendacion, guardarRed, postularme, recomendar, seguir } from "@/lib/foro/acciones-red"
+import { misCursosTerminados } from "@/lib/data/courses"
 import {
   type Aval,
   MAX_APTITUDES,
@@ -490,6 +491,33 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
             </button>
           </div>
         ))}
+        <button
+          type="button"
+          onClick={() =>
+            iniciar(async () => {
+              const cursos = await misCursosTerminados()
+              const nuevos = cursos.filter((c) => !pasos.some((p) => p.hetna === c.course_id))
+              if (!cursos.length) return setError("Todavía no terminas un curso de la Academia HETNA. Marca las lecciones como vistas al tomarlo.")
+              if (!nuevos.length) return setError("Tus cursos terminados ya están en tu trayectoria.")
+              setPasos([
+                ...pasos,
+                ...nuevos.slice(0, Math.max(0, MAX_PASOS - pasos.length)).map((c) => ({
+                  tipo: "certificacion" as TipoTrayectoria,
+                  titulo: c.titulo,
+                  lugar: "Academia HETNA",
+                  desde: "",
+                  hasta: c.terminado_en.slice(0, 4),
+                  detalle: `Curso en línea de ${c.lecciones} lecciones, terminado en HETNA.`,
+                  hetna: c.course_id,
+                })),
+              ])
+              tocar()
+            })
+          }
+          className={`${BTN} self-start border border-[#1F7A4D] bg-white px-4 py-2 text-[14px] text-[#1F7A4D] hover:bg-[#EAF6EF]`}
+        >
+          🎓 Agregar mis cursos HETNA terminados
+        </button>
         {pasos.length < MAX_PASOS && (
           <button
             type="button"
