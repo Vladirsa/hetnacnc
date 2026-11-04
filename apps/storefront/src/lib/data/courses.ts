@@ -42,7 +42,19 @@ export type Course = {
 export type AccesoCurso = {
   course_id: string;
   inscrito: boolean;
-  lecciones: { id: string; abierta: boolean; embed_url: string | null }[];
+  lecciones: { id: string; abierta: boolean; embed_url: string | null; completada?: boolean }[];
+  avance?: { hechas: number; total: number };
+  certificado?: boolean;
+};
+
+export type CertificadoCurso = {
+  folio: string;
+  alumno: string;
+  curso: string;
+  nivel: string;
+  taller: string;
+  lecciones: number;
+  fecha: string;
 };
 
 const API = process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
@@ -114,4 +126,43 @@ export const getCourseBySlug = async (slug: string): Promise<Course | undefined>
   )
     .then(({ course }) => course)
     .catch(() => undefined);
+};
+
+/** El alumno marca una lección como vista (o la desmarca). */
+export const marcarLeccionVista = async (
+  slug: string,
+  lessonId: string,
+  completada: boolean
+): Promise<{ ok: boolean; mensaje?: string }> => {
+  if (!SLUG.test(slug)) return { ok: false, mensaje: 'Curso inválido.' };
+  const auth = (await getAuthHeaders().catch(() => ({}))) as { authorization?: string };
+  if (!auth.authorization) return { ok: false, mensaje: 'Inicia sesión para guardar tu avance.' };
+  try {
+    const r = await fetch(`${API}/store/courses/${slug}/avance`, {
+      method: 'POST',
+      headers: { 'x-publishable-api-key': PK, 'content-type': 'application/json', ...auth },
+      body: JSON.stringify({ lesson_id: lessonId, completada }),
+      cache: 'no-store',
+    });
+    const j = (await r.json().catch(() => ({}))) as { message?: string };
+    return r.ok ? { ok: true } : { ok: false, mensaje: j.message || 'No se pudo guardar tu avance.' };
+  } catch {
+    return { ok: false, mensaje: 'No se pudo guardar tu avance.' };
+  }
+};
+
+/** Datos del certificado (sólo si terminó el curso). */
+export const getCertificadoCurso = async (slug: string): Promise<CertificadoCurso | null> => {
+  if (!SLUG.test(slug)) return null;
+  const auth = (await getAuthHeaders().catch(() => ({}))) as { authorization?: string };
+  if (!auth.authorization) return null;
+  try {
+    const r = await fetch(`${API}/store/courses/${slug}/certificado`, {
+      headers: { 'x-publishable-api-key': PK, ...auth },
+      cache: 'no-store',
+    });
+    return r.ok ? ((await r.json()) as CertificadoCurso) : null;
+  } catch {
+    return null;
+  }
 };

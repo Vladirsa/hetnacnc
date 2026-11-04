@@ -116,7 +116,7 @@ export default async function CursoDetalle({ params }: Props) {
           </div>
 
           {secciones.length > 0 ? (
-            <Temario secciones={secciones} acceso={acceso} />
+            <Temario secciones={secciones} acceso={acceso} slug={slug} />
           ) : (
             <p className="m-0 text-[14.5px] text-[#6B6A63]">El taller está preparando el temario.</p>
           )}

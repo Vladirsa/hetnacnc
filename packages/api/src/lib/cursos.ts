@@ -19,6 +19,7 @@ import type { CreateOfferDTO } from "@mercurjs/types"
 
 import { COURSE_MODULE } from "../modules/course"
 import { ENROLLMENT_MODULE } from "../modules/enrollment"
+import type EnrollmentModuleService from "../modules/enrollment/service"
 import { enrollCustomerInCourseWorkflow } from "../workflows/enroll-customer-in-course"
 import { aprovisionarEnvios, obtenerPerfilDigital } from "./envios-automaticos"
 import { precioEnDolares } from "./publicar-diseno"
@@ -347,6 +348,7 @@ export async function accesoCurso(c: MedusaContainer, slug: string, customerId: 
   const [curso] = await svc.listCourses({ slug, status: "published" }, { relations: ["sections", "sections.lessons"] })
   if (!curso) return null
   const inscrito = customerId ? await estaInscrito(c, customerId, curso.id) : false
+  const hechas = inscrito && customerId ? await leccionesHechas(c, customerId, curso.id) : new Set<string>()
   const lecciones = ((curso.sections || []) as any[])
     .sort((a, b) => a.position - b.position)
     .flatMap((s) => [...(s.lessons || [])].sort((a: any, b: any) => a.position - b.position))
@@ -356,7 +358,84 @@ export async function accesoCurso(c: MedusaContainer, slug: string, customerId: 
         id: l.id,
         abierta,
         embed_url: abierta ? embedDe(l.video_provider, l.video_asset_id) : null,
+        completada: hechas.has(l.id),
       }
     })
-  return { course_id: curso.id, inscrito, lecciones }
+  const total = lecciones.length
+  const listas = lecciones.filter((l) => l.completada).length
+  return {
+    course_id: curso.id,
+    inscrito,
+    lecciones,
+    avance: { hechas: listas, total },
+    // El certificado se gana viendo todas las lecciones
+    certificado: inscrito && total > 0 && listas === total,
+  }
+}
+
+// ---- Avance y certificado -------------------------------------------------
+
+async function inscripcion(c: MedusaContainer, customerId: string, courseId: string) {
+  const svc = c.resolve(ENROLLMENT_MODULE) as any
+  const [e] = await svc.listEnrollments({ customer_id: customerId, course_id: courseId }, { take: 1, relations: ["progress_items"] })
+  return e || null
+}
+
+async function leccionesHechas(c: MedusaContainer, customerId: string, courseId: string): Promise<Set<string>> {
+  const e = await inscripcion(c, customerId, courseId)
+  return new Set(((e?.progress_items || []) as any[]).filter((p) => p.completed_at).map((p) => p.lesson_id))
+}
+
+/** El alumno marca una lección como vista (o la desmarca). */
+export async function marcarLeccion(
+  c: MedusaContainer,
+  slug: string,
+  customerId: string,
+  lessonId: string,
+  completada: boolean
+): Promise<{ ok: true } | { ok: false; status: number; mensaje: string }> {
+  const svc = c.resolve(COURSE_MODULE) as any
+  const [curso] = await svc.listCourses({ slug, status: "published" }, { relations: ["sections", "sections.lessons"] })
+  if (!curso) return { ok: false, status: 404, mensaje: "Ese curso no existe" }
+  const delCurso = ((curso.sections || []) as any[]).some((s) => (s.lessons || []).some((l: any) => l.id === lessonId))
+  if (!delCurso) return { ok: false, status: 400, mensaje: "Esa lección no es de este curso" }
+  const e = await inscripcion(c, customerId, curso.id)
+  if (!e) return { ok: false, status: 403, mensaje: "Inscríbete al curso para guardar tu avance" }
+
+  const enr = c.resolve<EnrollmentModuleService>(ENROLLMENT_MODULE)
+  const ya = ((e.progress_items || []) as any[]).find((p) => p.lesson_id === lessonId)
+  const cuando = completada ? new Date() : null
+  if (ya) await enr.updateLessonProgresses({ id: ya.id, completed_at: cuando })
+  else await enr.createLessonProgresses({ enrollment_id: e.id, lesson_id: lessonId, completed_at: cuando })
+  return { ok: true }
+}
+
+/** Datos del certificado, sólo si terminó todas las lecciones. */
+export async function certificadoCurso(c: MedusaContainer, slug: string, customerId: string) {
+  const acceso = await accesoCurso(c, slug, customerId)
+  if (!acceso?.certificado) return null
+  const query = c.resolve(ContainerRegistrationKeys.QUERY)
+  const svc = c.resolve(COURSE_MODULE) as any
+  const [curso] = await svc.listCourses({ slug, status: "published" })
+  const e = await inscripcion(c, customerId, acceso.course_id)
+  const ultima = ((e?.progress_items || []) as any[])
+    .map((p) => (p.completed_at ? new Date(p.completed_at).getTime() : 0))
+    .reduce((a, b) => Math.max(a, b), 0)
+  const [{ data: clientes }, { data: talleres }] = await Promise.all([
+    query.graph({ entity: "customer", fields: ["first_name", "last_name", "email"], filters: { id: customerId } }),
+    curso?.seller_id
+      ? query.graph({ entity: "seller", fields: ["name"], filters: { id: curso.seller_id } })
+      : Promise.resolve({ data: [] as any[] }),
+  ])
+  const cl = (clientes[0] || {}) as any
+  const alumno = [cl.first_name, cl.last_name].filter(Boolean).join(" ").trim() || String(cl.email || "").split("@")[0]
+  return {
+    folio: String(e?.id || "").replace(/^enr_/, "").slice(-10).toUpperCase(),
+    alumno,
+    curso: curso?.title || "",
+    nivel: curso?.level || "",
+    taller: (talleres[0] as any)?.name || "HETNA CNC",
+    lecciones: acceso.avance.total,
+    fecha: new Date(ultima || Date.now()).toISOString(),
+  }
 }

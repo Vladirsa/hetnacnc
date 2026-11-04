@@ -20,6 +20,16 @@ export const storeCoursesMiddlewares: MiddlewareRoute[] = [
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
   {
+    method: ["POST"],
+    matcher: "/store/courses/:slug/avance",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  {
+    method: ["GET"],
+    matcher: "/store/courses/:slug/certificado",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  {
     method: ["GET"],
     matcher: "/store/courses/:slug/acceso",
     middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],

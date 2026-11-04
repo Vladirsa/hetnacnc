@@ -734,6 +734,8 @@ export type Routes = {
         courses: typeof import("../src/api/store/courses/route") & {
             $slug: typeof import("../src/api/store/courses/[slug]/route") & {
                 acceso: typeof import("../src/api/store/courses/[slug]/acceso/route");
+                avance: typeof import("../src/api/store/courses/[slug]/avance/route");
+                certificado: typeof import("../src/api/store/courses/[slug]/certificado/route");
                 inscribir: typeof import("../src/api/store/courses/[slug]/inscribir/route");
             };
         };
