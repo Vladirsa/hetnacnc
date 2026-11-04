@@ -535,7 +535,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
       <div className="flex items-center gap-3">
         <button type="button" onClick={guardar} disabled={pendiente} className={`${BTN} rounded-[10px] bg-[#C2560A] px-5 py-3 text-[14.5px] text-white hover:bg-[#A84A08]`}>
-          {pendiente ? "Guardando…" : "Guardar currículo"}
+          {pendiente ? "Guardando…" : "Guardar currículum"}
         </button>
         {guardado && <span className="text-[14px] font-semibold text-[#16794F]">✓ Guardado</span>}
       </div>
