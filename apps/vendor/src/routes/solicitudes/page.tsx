@@ -31,7 +31,7 @@ const S = {
 
 const CAMPOS = [
   ["necesidad", "Necesita"], ["tiene_archivo", "Archivo"], ["servicio", "Servicio"], ["material", "Material"], ["cantidad", "Cantidad"], ["medidas", "Medidas"],
-  ["acabado", "Acabado"], ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
+  ["acabado", "Acabado"], ["tolerancia", "Tolerancia"], ["medidas_archivo", "Leído del archivo"], ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
 ]
 
 const pesos = (n) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -167,6 +167,9 @@ function Pedido({ sol, alGuardar }) {
     )
   }
   const yaEntregada = sol.etapa === "entregada" || sol.etapa === "cerrada"
+  const precio = Number(sol.mi_propuesta?.precio || 0)
+  const pagado = Number(sol.cobro?.pagado || 0)
+  const falta = Math.max(0, Math.round((precio - pagado) * 100) / 100)
 
   const enviar = async () => {
     setEnviando(true)
@@ -197,6 +200,13 @@ function Pedido({ sol, alGuardar }) {
         {sol.envio?.guia && <span style={{ fontSize: 13 }}>Guía {sol.envio.paqueteria} <strong>{sol.envio.guia}</strong></span>}
         {sol.etapa === "entregada" && <span style={{ fontSize: 13, color: "#6B675C" }}>Esperando que el cliente confirme que lo recibió.</span>}
       </div>
+      {sol.cobro && (
+        <p style={{ fontSize: 13, color: "#40403A", margin: "8px 0 0" }}>
+          {sol.cobro.modo === "taller"
+            ? `Cobro directo a tu cuenta · pagado ${pesos(pagado)} de ${pesos(precio)}${falta > 0 ? ` · falta ${pesos(falta)}: el cliente lo paga desde su liga; avísale con un avance cuando esté listo.` : " · liquidado."}`
+            : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos al confirmar la entrega, menos ${sol.cobro.comision_pct ?? ""}% de comisión.`}
+        </p>
+      )}
       {!modo && (
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button type="button" style={S.btn2} onClick={() => setModo("avance")}>Contar un avance al cliente</button>
@@ -235,12 +245,85 @@ function Pedido({ sol, alGuardar }) {
   )
 }
 
-function FormPropuesta({ sol, alGuardar }) {
+// Preguntas al cliente antes de proponer. Las respuestas las ven todos los
+// talleres; aquí salen las ya contestadas y las mías pendientes.
+function Preguntas({ sol, alGuardar }) {
+  const [texto, setTexto] = useState("")
+  const [msg, setMsg] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+  const [abierto, setAbierto] = useState(false)
+  const lista = sol.preguntas || []
+  const mias = lista.filter((q) => q.mia).length
+  const puede = sol.estado === "abierta" && mias < 3
+
+  const enviar = async () => {
+    setEnviando(true)
+    setMsg(null)
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/pregunta`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setTexto("")
+      setAbierto(false)
+      setMsg({ ok: true, t: "Pregunta enviada. Te avisamos por correo cuando el cliente conteste." })
+      alGuardar()
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  if (!lista.length && !puede) return null
+  return (
+    <div style={{ marginTop: 10, fontSize: 13 }}>
+      {lista.length > 0 && (
+        <div style={{ background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 8, padding: "8px 12px", display: "grid", gap: 6 }}>
+          {lista.map((q) => (
+            <div key={q.id}>
+              <div><span style={{ color: "#6B675C" }}>{q.mia ? "Tú preguntaste:" : "Otro taller preguntó:"}</span> {q.pregunta}</div>
+              <div style={{ color: q.respuesta ? "#1E7B3A" : "#9B978C" }}>
+                <strong>Cliente:</strong> {q.respuesta || "todavía no contesta"}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {puede && !abierto && (
+        <button type="button" style={{ ...S.btn2, border: 0, padding: "6px 0", color: "#C2560A" }} onClick={() => setAbierto(true)}>
+          ¿Te falta un dato? Pregúntale al cliente
+        </button>
+      )}
+      {abierto && (
+        <div style={{ marginTop: 6 }}>
+          <textarea style={S.area} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Ej. ¿Qué espesor de acrílico? ¿Las piezas llevan barreno?" />
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+            <button type="button" style={{ ...S.btn, background: "#142033", opacity: enviando || texto.trim().length < 8 ? 0.6 : 1 }} disabled={enviando || texto.trim().length < 8} onClick={enviar}>
+              {enviando ? "Enviando..." : "Enviar pregunta"}
+            </button>
+            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setAbierto(false)}>Cancelar</button>
+            <span style={{ color: "#6B675C", fontSize: 12 }}>La respuesta la verán todos los talleres. Hasta 3 preguntas.</span>
+          </div>
+        </div>
+      )}
+      {msg && <div style={{ marginTop: 6, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</div>}
+    </div>
+  )
+}
+
+function FormPropuesta({ sol, alGuardar, cobroTaller }) {
   const p = sol.mi_propuesta
   const [f, setF] = useState({
     precio: p?.precio ?? "", dias: p?.dias ?? "", vigencia_dias: p?.vigencia_dias ?? 15,
     incluye_envio: p?.incluye_envio ?? false, condiciones: p?.condiciones ?? "",
+    anticipo_pct: p?.anticipo_pct ?? 50,
   })
+  const directo = cobroTaller && (cobroTaller.mercadopago || cobroTaller.paypal)
   const [msg, setMsg] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
@@ -253,7 +336,8 @@ function FormPropuesta({ sol, alGuardar }) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(f),
+        // Sin cuenta conectada cobra HETNA el 100 %: no se ofrece anticipo
+        body: JSON.stringify({ ...f, anticipo_pct: directo ? f.anticipo_pct : 100 }),
       })
       const d = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(d.message || String(r.status))
@@ -281,6 +365,15 @@ function FormPropuesta({ sol, alGuardar }) {
           <label style={S.label}>Vigencia (días)</label>
           <input style={S.input} type="number" min="1" value={f.vigencia_dias} onChange={(e) => set("vigencia_dias", e.target.value)} />
         </div>
+        <div>
+          <label style={S.label}>Anticipo para empezar</label>
+          <select style={S.input} value={f.anticipo_pct} onChange={(e) => set("anticipo_pct", Number(e.target.value))} disabled={!directo}>
+            <option value={100}>Pago completo al elegir</option>
+            <option value={70}>70% y el resto antes de entregar</option>
+            <option value={50}>50% y el resto antes de entregar</option>
+            <option value={30}>30% y el resto antes de entregar</option>
+          </select>
+        </div>
         <div style={{ display: "flex", alignItems: "end" }}>
           <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14 }}>
             <input type="checkbox" checked={f.incluye_envio} onChange={(e) => set("incluye_envio", e.target.checked)} />
@@ -288,8 +381,13 @@ function FormPropuesta({ sol, alGuardar }) {
           </label>
         </div>
       </div>
-      <label style={{ ...S.label, marginTop: 10 }}>Condiciones (anticipo, material incluido, acabado…)</label>
-      <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder="Ej. 50% de anticipo. Incluye material MDF 6 mm y lijado." />
+      <p style={{ color: "#6B675C", fontSize: 12, margin: "6px 0 0" }}>
+        {directo
+          ? `Si ganas, el cliente te paga directo a tu ${cobroTaller.mercadopago ? "Mercado Pago" : "PayPal"}. Comisión HETNA de tu plan: ${cobroTaller.comision_pct}% de cada pago.`
+          : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos al confirmar la entrega, menos la comisión de tu plan (${cobroTaller?.comision_pct ?? 5}%). Conéctalos en la app para pedir anticipo y cobrar directo.`}
+      </p>
+      <label style={{ ...S.label, marginTop: 10 }}>Condiciones (material incluido, acabado, tolerancias…)</label>
+      <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder="Ej. Incluye material MDF 6 mm y lijado." />
       <p style={{ color: "#6B675C", fontSize: 12, margin: "4px 0 10px" }}>
         No escribas teléfonos, correos ni ligas: se ocultan automáticamente. Todo el trato va por HETNA.
       </p>
@@ -352,6 +450,8 @@ export default function SolicitudesPage() {
   const [fEstado, setFEstado] = useState("")
   // Cupo del mes según el plan (packages/api/src/lib/licitacion-plan.ts). null = sin dato.
   const [cupo, setCupo] = useState(null)
+  // Cómo cobra si gana: cuenta conectada en la app y comisión de su plan
+  const [cobroTaller, setCobroTaller] = useState(null)
 
   const cargar = () =>
     // ocultas=1: también las que el taller marcó como "no puedo"; se separan aquí.
@@ -360,6 +460,7 @@ export default function SolicitudesPage() {
       .then((d) => {
         setDatos(d.solicitudes || [])
         setCupo(d.cupo || null)
+        setCobroTaller(d.cobro_taller || null)
       })
       .catch((e) => setError("No se pudieron cargar las solicitudes (" + e + ")."))
 
@@ -397,6 +498,22 @@ export default function SolicitudesPage() {
       </p>
 
       {cupo && <Cupo cupo={cupo} />}
+
+      {cobroTaller && (
+        <div style={{ ...S.card, padding: "10px 14px", fontSize: 13, background: cobroTaller.mercadopago || cobroTaller.paypal ? "#F0F7F1" : "#FFFAEB" }}>
+          {cobroTaller.mercadopago || cobroTaller.paypal ? (
+            <>
+              ✓ Cobras directo a tu {[cobroTaller.mercadopago && "Mercado Pago", cobroTaller.paypal && "PayPal"].filter(Boolean).join(" y ")}. Puedes pedir anticipo.
+              Comisión HETNA de tu plan: <strong>{cobroTaller.comision_pct}%</strong> de cada pago.
+            </>
+          ) : (
+            <>
+              Conecta tu <strong>Mercado Pago o PayPal</strong> en la app HETNA CNC para talleres (Configuración → Cobros en línea) y cobra directo,
+              con anticipo. Mientras, el cliente paga a HETNA y te transferimos al entregar. Comisión de tu plan: <strong>{cobroTaller.comision_pct}%</strong>.
+            </>
+          )}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}>Por cotizar ({nuevas.length})</button>
@@ -477,14 +594,29 @@ export default function SolicitudesPage() {
             {p && (
               <p style={{ marginTop: 10, fontSize: 14 }}>
                 Tu propuesta: <strong>{pesos(p.precio)}</strong> · {p.dias} días {p.incluye_envio ? "· envío incluido" : ""}
+                {p.anticipo_pct && p.anticipo_pct < 100 ? ` · anticipo ${p.anticipo_pct}%` : ""}
+              </p>
+            )}
+
+            {p?.estado === "descartada" && s.eleccion && (
+              <p style={{ marginTop: 8, fontSize: 13, color: "#40403A", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px" }}>
+                El cliente eligió un precio entre <strong>{pesos(s.eleccion.desde)}</strong> y <strong>{pesos(s.eleccion.hasta)}</strong> con entrega en{" "}
+                <strong>{s.eleccion.dias} días</strong>.{" "}
+                {p.precio > s.eleccion.hasta
+                  ? "Tu precio quedó arriba."
+                  : p.precio < s.eleccion.desde
+                    ? "Tu precio quedó abajo: pesó más otra cosa (tiempo, calificación o condiciones)."
+                    : "Tu precio estuvo muy cerca."}
               </p>
             )}
 
             {p?.estado === "elegida" && <Pedido sol={s} alGuardar={cargar} />}
 
+            {s.estado === "abierta" && !descartada(s) && <Preguntas sol={s} alGuardar={cargar} />}
+
             {s.estado === "abierta" && !descartada(s) && (
               abierta === s.id ? (
-                <FormPropuesta sol={s} alGuardar={() => { cargar(); setAbierta(null) }} />
+                <FormPropuesta sol={s} cobroTaller={cobroTaller} alGuardar={() => { cargar(); setAbierta(null) }} />
               ) : noPuedo === s.id ? (
                 <FormNoPuedo sol={s} alGuardar={() => { cargar(); setNoPuedo(null) }} alCancelar={() => setNoPuedo(null)} />
               ) : (
