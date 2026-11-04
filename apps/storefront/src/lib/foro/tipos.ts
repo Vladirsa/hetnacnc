@@ -139,7 +139,17 @@ export const TIPOS_TRAYECTORIA = {
   proyecto: "Proyectos",
 } as const
 export type TipoTrayectoria = keyof typeof TIPOS_TRAYECTORIA
-export type Paso = { tipo: TipoTrayectoria; titulo: string; lugar: string; desde: string; hasta: string; detalle: string }
+export type Paso = {
+  tipo: TipoTrayectoria
+  titulo: string
+  lugar: string
+  desde: string
+  hasta: string
+  detalle: string
+  /** Portafolio: fotos (ids de foro.fotos) de un paso tipo "proyecto". */
+  fotos?: string[]
+}
+export const MAX_FOTOS_PROYECTO = 4
 
 export const RELACIONES = {
   cliente: "Fue su cliente",
