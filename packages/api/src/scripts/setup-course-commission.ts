@@ -14,7 +14,7 @@ import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { MercurModules } from "@mercurjs/types"
 
-const COMISION = 10
+const COMISION = 5
 const COMISION_GENERAL = 6
 const COMISION_MAQUINAS = 5
 // Categorías de máquinas (por handle); se incluyen sus subcategorías.

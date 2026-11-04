@@ -148,6 +148,8 @@ export type Paso = {
   detalle: string
   /** Portafolio: fotos (ids de foro.fotos) de un paso tipo "proyecto". */
   fotos?: string[]
+  /** Curso de la Academia HETNA terminado (id del curso): HETNA lo verificó. */
+  hetna?: string
 }
 export const MAX_FOTOS_PROYECTO = 4
 
