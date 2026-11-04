@@ -73,6 +73,8 @@ export const crearPreferenciaPago = async (p: {
   monto: number
   email?: string
   retorno: string
+  // Licitaciones 2.0: "licitacion:<id>:<anticipo|resto|total>" (lib/licitacion-cobro.ts)
+  referencia?: string
 }): Promise<{ id: string; url: string } | null> => {
   if (!mpDisponible()) return null
   // nginx manda /api/* a la API: el aviso llega a src/api/api/mp-licitacion
@@ -87,7 +89,7 @@ export const crearPreferenciaPago = async (p: {
     body: JSON.stringify({
       items: [{ id: p.folio, title: p.titulo.slice(0, 250), quantity: 1, unit_price: Math.round(p.monto * 100) / 100, currency_id: "MXN" }],
       payer: p.email ? { email: p.email } : undefined,
-      external_reference: `licitacion:${p.solicitudId}`,
+      external_reference: p.referencia || `licitacion:${p.solicitudId}`,
       back_urls: { success: p.retorno, failure: p.retorno, pending: p.retorno },
       auto_return: "approved",
       statement_descriptor: "HETNA CNC",
@@ -154,6 +156,8 @@ export const trabajoPublico = (s: {
     necesidad: t.necesidad || "",
     tiene_archivo: t.tiene_archivo || "",
     acabado: t.acabado || "",
+    tolerancia: ocultarContacto(t.tolerancia || ""),
+    medidas_archivo: ocultarContacto(t.medidas_archivo || ""),
     // Sólo cuántos: los archivos los ve el taller registrado, desde su panel.
     archivos: (t.archivos || []).length,
     servicio: t.servicio || "",
@@ -227,6 +231,10 @@ export type Trabajo = {
   // referencia" / "No tengo archivo, necesito diseño"
   tiene_archivo?: string
   acabado?: string
+  // Licitaciones 2.0: tolerancia que pide el cliente y lo que se leyó de sus
+  // archivos DXF/SVG/STL/OBJ en el navegador (medidas, metros de corte...)
+  tolerancia?: string
+  medidas_archivo?: string
   // Archivos subidos al bucket privado de B2. Nunca son públicos: el taller
   // pide una liga firmada desde su panel.
   archivos?: ArchivoSolicitud[]
@@ -254,6 +262,8 @@ export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
   fila("Cantidad", t.cantidad || "") +
   fila("Medidas", t.medidas || "") +
   fila("Acabado", t.acabado || "") +
+  fila("Tolerancia", t.tolerancia || "") +
+  fila("Medidas del archivo", t.medidas_archivo || "") +
   fila("Fecha requerida", t.fecha || "") +
   fila("Entrega en", [t.ciudad, t.estado_mx, t.cp && `CP ${t.cp}`].filter(Boolean).join(", ")) +
   fila("Frecuencia", t.frecuencia || "") +
