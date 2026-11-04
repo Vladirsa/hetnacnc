@@ -14,6 +14,7 @@
 //
 // Si un taller no paga, la app lo sigue mostrando en Configuración; HETNA
 // decide qué hacer (no se bloquea nada automáticamente).
+import { T_PAGO as T_PAGO_LIC, comisionesPaypalPendientes } from "./licitacion-cobro"
 import { avisarTaller } from "./avisos-taller"
 import { supa } from "./cotizador-suscripciones"
 import { paypal, paypalListo } from "./paypal-api"
@@ -99,7 +100,7 @@ async function ligaPaypal(cobro) {
 }
 
 /** Corre el corte. Devuelve cuántos cobros creó. */
-export async function corteComisiones(logger?: any) {
+export async function corteComisiones(logger?: any, knex?: any) {
   const periodo = periodoAnterior()
   const hasta = inicioMesActual()
   const pagos = await supa<any[]>(
@@ -112,11 +113,13 @@ export async function corteComisiones(logger?: any) {
     `/rest/v1/cfdi_emitidos?extra=eq.true&costo_extra=gt.0&comision_cobro_id=is.null&modo=eq.real` +
       `&creado=lt.${encodeURIComponent(hasta)}&select=id,negocio_id,costo_extra`
   ).catch(() => [])
-  type Grupo = { negocio: string; moneda: string; ids: string[]; cfdi: string[]; total: number; totalPaypal: number; totalCfdi: number }
+  // Licitaciones que el cliente pagó con PayPal directo al taller (Medusa DB)
+  const licitaciones = knex ? await comisionesPaypalPendientes(knex, hasta).catch(() => []) : []
+  type Grupo = { negocio: string; moneda: string; ids: string[]; cfdi: string[]; lic: string[]; total: number; totalPaypal: number; totalCfdi: number; totalLic: number }
   const grupos = new Map<string, Grupo>()
   const grupo = (negocio: string, moneda: string) => {
     const k = `${negocio}|${moneda}`
-    const g = grupos.get(k) || { negocio, moneda, ids: [], cfdi: [], total: 0, totalPaypal: 0, totalCfdi: 0 }
+    const g = grupos.get(k) || { negocio, moneda, ids: [], cfdi: [], lic: [], total: 0, totalPaypal: 0, totalCfdi: 0, totalLic: 0 }
     grupos.set(k, g)
     return g
   }
@@ -125,6 +128,12 @@ export async function corteComisiones(logger?: any) {
     g.ids.push(p.id)
     g.total += Number(p.comision_hetna || 0)
     g.totalPaypal += Number(p.comision_hetna || 0)
+  }
+  for (const l of licitaciones) {
+    const g = grupo(l.negocio_id, "MXN")
+    g.lic.push(l.id)
+    g.total += Number(l.comision || 0)
+    g.totalLic += Number(l.comision || 0)
   }
   for (const f of facturas) {
     const g = grupo(f.negocio_id, "MXN")
@@ -157,6 +166,8 @@ export async function corteComisiones(logger?: any) {
           headers: { Prefer: "return=minimal" },
           body: JSON.stringify({ comision_cobro_id: cobro.id }),
         })
+      if (g.lic.length && knex)
+        await knex(T_PAGO_LIC).whereIn("id", g.lic).update({ comision_cobro_id: cobro.id, updated_at: knex.fn.now() })
       if (g.cfdi.length)
         await supa(`/rest/v1/cfdi_emitidos?id=in.(${g.cfdi.join(",")})`, {
           method: "PATCH",
@@ -173,6 +184,7 @@ export async function corteComisiones(logger?: any) {
               g.totalPaypal > 0
                 ? `Comisión de tus anticipos cobrados con PayPal: ${dinero(g.totalPaypal, g.moneda)} (con Mercado Pago se descuenta sola).`
                 : "",
+              g.totalLic > 0 ? `Comisión de licitaciones cobradas con PayPal: ${dinero(g.totalLic, "MXN")}.` : "",
               g.totalCfdi > 0 ? `Facturas electrónicas extra (pasaste las incluidas en tu plan): ${g.cfdi.length} × ${dinero(g.totalCfdi / g.cfdi.length, "MXN")}.` : "",
             ]
               .filter(Boolean)

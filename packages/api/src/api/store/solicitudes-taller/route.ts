@@ -5,6 +5,7 @@ import { getSignedDownloadUrl } from "../../../lib/backblaze"
 import { sendEmail } from "../../../lib/resend"
 import { difundirSolicitud } from "../../../lib/difusion"
 import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionActiva } from "../../../lib/seguimiento"
+import { ligarCliente } from "../../../lib/licitacion-extra"
 import {
   type ArchivoSolicitud,
   MAX_ARCHIVOS_SOLICITUD,
@@ -41,6 +42,8 @@ type Body = {
   necesidad?: string
   tiene_archivo?: string
   acabado?: string
+  tolerancia?: string
+  medidas_archivo?: string
   // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
   archivos?: { clave?: string; nombre?: string; tamano?: number }[] | string
   servicio?: string
@@ -117,6 +120,8 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     necesidad: corto(b.necesidad, 80),
     tiene_archivo: corto(b.tiene_archivo, 80),
     acabado: corto(b.acabado, 120),
+    tolerancia: corto(b.tolerancia, 80),
+    medidas_archivo: corto(b.medidas_archivo, 400),
     archivos,
     servicio: corto(b.servicio, 80),
     material: corto(b.material, 120),
@@ -178,6 +183,9 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto"])
     sol = fila0
     folio = folioTexto(fila0.folio)
+    // Con sesión iniciada queda en "Mis solicitudes" del cliente.
+    const clienteId = (req as any).auth_context?.actor_id
+    if (clienteId) await ligarCliente(knex, fila0.id, clienteId).catch(() => {})
     await cambiarEtapa(knex, sol, "nueva", { actor: "cliente", correo: false })
     await cambiarEtapa(knex, sol, revision ? "en_revision" : "enviada_talleres", { actor: "sistema", correo: false })
   } catch (e) {

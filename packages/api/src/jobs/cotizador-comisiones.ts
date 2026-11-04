@@ -1,4 +1,5 @@
 import { MedusaContainer } from "@medusajs/framework/types"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { corteComisiones } from "../lib/cotizador-comisiones"
 
@@ -10,7 +11,8 @@ export default async function cotizadorComisiones(container: MedusaContainer) {
   if (!process.env.COTIZADOR_SUPABASE_SERVICE_KEY) return
   const logger = container.resolve("logger")
   try {
-    const n = await corteComisiones(logger)
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    const n = await corteComisiones(logger, knex)
     if (n) logger.info(`[comisiones] ${n} cobro(s) de comisión PayPal creados`)
   } catch (e) {
     logger.error(`[comisiones] falló el corte: ${(e as Error).message}`)

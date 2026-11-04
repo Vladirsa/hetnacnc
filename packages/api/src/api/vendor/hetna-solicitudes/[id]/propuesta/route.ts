@@ -8,8 +8,18 @@ import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
+import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
 
-type Body = { precio?: number | string; dias?: number | string; vigencia_dias?: number | string; incluye_envio?: boolean | string; condiciones?: string }
+type Body = {
+  precio?: number | string
+  dias?: number | string
+  vigencia_dias?: number | string
+  incluye_envio?: boolean | string
+  condiciones?: string
+  // Anticipo que pide el taller (10 a 100 %). Sólo aplica si el cliente le paga
+  // directo (Mercado Pago o PayPal conectados); si cobra HETNA, se paga el 100 %.
+  anticipo_pct?: number | string
+}
 
 // El taller manda (o actualiza) su propuesta a una solicitud.
 export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaResponse) => {
@@ -26,8 +36,11 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   if (!(dias >= 1 && dias <= 365)) return res.status(400).json({ message: "Escribe los días de entrega (1 a 365)." })
   const condiciones = ocultarContacto(String(b.condiciones ?? "").trim().slice(0, 1500))
   const incluye = b.incluye_envio === true || b.incluye_envio === "true" || b.incluye_envio === "si" ? "si" : "no"
+  const anticipoRaw = Math.round(Number(b.anticipo_pct ?? 100) / 5) * 5
+  const anticipo = anticipoRaw >= 10 && anticipoRaw <= 100 ? anticipoRaw : 100
 
   await asegurarTablas(knex)
+  await asegurarCobro(knex)
   const s = await knex(T_SOLICITUD).where({ id: String(req.params.id) }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (s.estado !== "abierta") return res.status(409).json({ message: "Esta solicitud ya cerró." })
@@ -48,7 +61,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       return res.status(402).json({ message: mensajeSinCupo(cupo), cupo })
     }
   }
-  const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, updated_at: knex.fn.now() }
+  const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, anticipo_pct: anticipo, updated_at: knex.fn.now() }
   if (previa) {
     await knex(T_PROPUESTA).where({ id: previa.id }).update(datos)
   } else {

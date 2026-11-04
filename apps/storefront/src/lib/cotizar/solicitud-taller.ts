@@ -3,6 +3,8 @@
 // Solicitud de cotización general (opcionalmente para un taller).
 // Llama a POST /store/solicitudes-taller desde el servidor.
 
+import { getAuthHeaders } from "@/lib/data/cookies"
+
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 // Lo que devuelve /api/solicitud-archivo por cada archivo subido.
@@ -25,6 +27,8 @@ export type SolicitudTallerInput = {
   necesidad?: string
   tiene_archivo?: string
   acabado?: string
+  tolerancia?: string
+  medidas_archivo?: string
   archivos?: ArchivoSubido[]
   servicio?: string
   material?: string
@@ -46,6 +50,8 @@ export async function enviarSolicitudTaller(
       headers: {
         "Content-Type": "application/json",
         "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+        // Con sesión, la solicitud queda en "Mis solicitudes"
+        ...(await getAuthHeaders()),
       },
       body: JSON.stringify(input),
     })
@@ -73,8 +79,23 @@ export type Propuesta = {
   estado: string
   fecha: string
   destacado: boolean
-  taller: { nombre: string; handle: string; estado: string; calificacion: number | null }
+  // Anticipo que pide el taller si le pagas directo (null = pago completo)
+  anticipo_pct?: number | null
+  taller: { nombre: string; handle: string; estado: string; calificacion: number | null; resenas?: number; verificado?: boolean }
 }
+
+export type CobroSolicitud = {
+  modo: "taller" | "hetna"
+  metodos: ("mercadopago" | "paypal")[]
+  total: number
+  pagado: number
+  saldo: number
+  anticipo_pct: number
+  siguiente: { tipo: "anticipo" | "resto" | "total"; monto: number } | null
+  comision_pct: number
+}
+
+export type PreguntaSolicitud = { id: string; pregunta: string; respuesta: string | null; respondida_en: string | null; fecha: string }
 
 export type VistaSolicitud = {
   folio: string
@@ -95,6 +116,11 @@ export type VistaSolicitud = {
   historial?: { fecha: string; quien: string; nota: string }[]
   envio?: { paqueteria: string; guia: string } | null
   puede_confirmar?: boolean
+  // Licitaciones 2.0
+  cobro?: CobroSolicitud | null
+  preguntas?: PreguntaSolicitud[]
+  resena?: { calidad: number; tiempo: number; trato: number; comentario: string } | null
+  puede_resenar?: boolean
 }
 
 const cabeceras = () => ({
@@ -105,7 +131,8 @@ const cabeceras = () => ({
 export async function verSolicitud(token: string): Promise<VistaSolicitud | null> {
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller/${encodeURIComponent(token)}`, {
-      headers: cabeceras(),
+      // Con sesión iniciada, la solicitud se guarda en "Mis solicitudes"
+      headers: { ...cabeceras(), ...(await getAuthHeaders()) },
       cache: "no-store",
     })
     if (!res.ok) return null
@@ -144,5 +171,70 @@ export async function confirmarRecibido(token: string): Promise<{ ok: true } | {
     return { ok: true }
   } catch {
     return { ok: false, mensaje: "No se pudo confirmar. Intenta de nuevo." }
+  }
+}
+
+// ---- Licitaciones 2.0 ----
+
+async function postar(ruta: string, cuerpo: unknown, porDefecto: string): Promise<{ ok: true; body: any } | { ok: false; mensaje: string }> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}${ruta}`, { method: "POST", headers: cabeceras(), body: JSON.stringify(cuerpo ?? {}) })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, mensaje: body.message || porDefecto }
+    return { ok: true, body }
+  } catch {
+    return { ok: false, mensaje: porDefecto }
+  }
+}
+
+/** Liga del siguiente pago (anticipo, resto o total) con Mercado Pago o PayPal. */
+export async function pagarSolicitud(
+  token: string,
+  proveedor: "mercadopago" | "paypal"
+): Promise<{ ok: true; url: string } | { ok: false; mensaje: string }> {
+  const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/pagar`, { proveedor }, "No se pudo crear la liga de pago. Intenta de nuevo.")
+  return r.ok ? { ok: true, url: r.body.url } : r
+}
+
+export async function responderPregunta(token: string, preguntaId: string, respuesta: string): Promise<{ ok: true } | { ok: false; mensaje: string }> {
+  const r = await postar(
+    `/store/solicitudes-taller/${encodeURIComponent(token)}/preguntas/${encodeURIComponent(preguntaId)}`,
+    { respuesta },
+    "No se pudo guardar tu respuesta."
+  )
+  return r.ok ? { ok: true } : r
+}
+
+export async function enviarResena(
+  token: string,
+  datos: { calidad: number; tiempo: number; trato: number; comentario: string }
+): Promise<{ ok: true } | { ok: false; mensaje: string }> {
+  const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/resena`, datos, "No se pudo guardar tu calificación.")
+  return r.ok ? { ok: true } : r
+}
+
+export type MiSolicitud = {
+  folio: string
+  liga: string
+  etapa: string
+  etapa_nombre: string
+  resumen: string
+  propuestas: number
+  taller: { nombre: string; precio: number } | null
+  falta_pago: boolean
+  creada: string
+}
+
+/** Solicitudes del cliente con sesión. `sesion: false` si no ha entrado. */
+export async function misSolicitudes(): Promise<{ sesion: boolean; solicitudes: MiSolicitud[] }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { sesion: false, solicitudes: [] }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mis-solicitudes`, { headers: { ...cabeceras(), ...auth }, cache: "no-store" })
+    if (res.status === 401) return { sesion: false, solicitudes: [] }
+    const body = await res.json().catch(() => ({}))
+    return { sesion: true, solicitudes: (body.solicitudes || []) as MiSolicitud[] }
+  } catch {
+    return { sesion: true, solicitudes: [] }
   }
 }

@@ -173,8 +173,8 @@ const CORREO: Partial<Record<Etapa, { asunto: string; titulo: string; texto: str
   cerrada: {
     asunto: "Proyecto terminado",
     titulo: "¡Gracias por fabricar con HETNA!",
-    texto: "Cerramos tu proyecto. Si necesitas otra pieza o más del mismo lote, puedes pedirla desde la misma página.",
-    boton: "Ver mi solicitud",
+    texto: "Cerramos tu proyecto. Califica al taller en un minuto: tu opinión ayuda a otros clientes y a los buenos talleres. Si necesitas otra pieza o más del mismo lote, pídela desde la misma página.",
+    boton: "Calificar al taller",
   },
   cancelada: {
     asunto: "Tu solicitud se canceló",
@@ -210,7 +210,11 @@ export const cambiarEtapa = async (
     visible_cliente: opciones.visibleCliente !== false,
   })
 
-  const c = CORREO[etapa]
+  let c = CORREO[etapa]
+  // Cerrada sin taller elegido (sin propuestas o cancelada): no hay a quién calificar.
+  if (etapa === "cerrada" && c && !(s as any).propuesta_elegida) {
+    c = { ...c, texto: "Cerramos tu solicitud. Si todavía necesitas fabricarlo, puedes mandar una nueva en hetnacnc.com/cotizar.", boton: "Ver mi solicitud" }
+  }
   const email = s.contacto?.email
   if (opciones.correo === false || !c || !email) return
   const folio = folioTexto(s.folio)

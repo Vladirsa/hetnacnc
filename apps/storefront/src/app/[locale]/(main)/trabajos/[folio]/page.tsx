@@ -77,6 +77,23 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
             </div>
           ))}
         </dl>
+        {(t.preguntas || []).length > 0 && (
+          <section className="mt-6 border-t border-[#E7E4DC] pt-5">
+            <h2 className="text-base font-extrabold text-[#142033]">Preguntas de talleres y respuestas del cliente</h2>
+            <ul className="mt-3 grid gap-3">
+              {(t.preguntas || []).map((q, i) => (
+                <li key={i} className="rounded-xl bg-[#FAF9F5] p-3 text-sm">
+                  <p className="text-[#142033]">
+                    <span className="font-bold">Pregunta:</span> {q.pregunta}
+                  </p>
+                  <p className="mt-1 text-[#40403A]">
+                    <span className="font-bold text-[#1E7B3A]">Cliente:</span> {q.respuesta}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <p className="mt-5 text-xs text-[#6B675C]">
           Los datos del cliente y sus archivos sólo los ven los talleres registrados, desde su panel.
         </p>
@@ -87,7 +104,7 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
           <h2 className="text-lg font-extrabold">¿Eres taller?</h2>
           <p className="mt-1 text-sm text-white/75">
             {abierta
-              ? "Manda tu precio y tiempo de entrega. Si el cliente te elige, el pago llega por HETNA."
+              ? "Manda tu precio y tiempo de entrega. Si el cliente te elige, te paga directo a tu Mercado Pago o PayPal (o por HETNA si no los conectas)."
               : "Este ya cerró, pero cada semana llegan trabajos nuevos. Regístrate gratis y te avisamos."}
           </p>
           <a

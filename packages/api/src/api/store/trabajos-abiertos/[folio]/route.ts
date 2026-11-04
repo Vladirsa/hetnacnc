@@ -1,4 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { preguntasDe } from "../../../../lib/licitacion-extra"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, numeroDeFolio, trabajoPublico } from "../../../../lib/licitacion"
@@ -21,5 +22,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!s) return res.status(404).json({ message: "Trabajo no encontrado." })
 
   const [{ n }] = (await knex(T_PROPUESTA).where({ solicitud_id: s.id }).count("* as n")) as { n: string }[]
-  res.json({ trabajo: trabajoPublico({ ...s, propuestas: Number(n) || 0 }) })
+  // Preguntas ya contestadas por el cliente: las ve cualquier taller interesado.
+  const preguntas = (await preguntasDe(knex, s.id, { soloRespondidas: true }).catch(() => [])).map((p: any) => ({
+    pregunta: p.pregunta,
+    respuesta: p.respuesta,
+    fecha: p.respondida_en,
+  }))
+  res.json({ trabajo: { ...trabajoPublico({ ...s, propuestas: Number(n) || 0 }), preguntas } })
 }

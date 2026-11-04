@@ -26,6 +26,8 @@ export type TrabajoPublico = {
   creada: string
   cierra_en: string | null
   propuestas: number
+  // Preguntas de talleres que el cliente ya contestó (sólo en la ficha)
+  preguntas?: { pregunta: string; respuesta: string; fecha: string | null }[]
 }
 
 export async function trabajosAbiertos(filtros: {

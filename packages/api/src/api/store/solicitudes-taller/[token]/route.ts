@@ -1,7 +1,9 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto, ocultarContacto, pesoPlan } from "../../../../lib/licitacion"
+import { asegurarCobro, estadoCobro } from "../../../../lib/licitacion-cobro"
+import { ligarCliente, preguntasDe, resenaDe } from "../../../../lib/licitacion-extra"
 import {
   EXPLICA_ETAPA,
   NOMBRE_ETAPA,
@@ -24,14 +26,19 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   await asegurarTablas(knex)
   await asegurarSeguimiento(knex)
+  await asegurarCobro(knex) // columnas nuevas (anticipo_pct) antes de leerlas
   const s = await knex(T_SOLICITUD).where({ token }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
+  // Con sesión iniciada, la solicitud queda en "Mis solicitudes" del cliente
+  // (la liga secreta prueba que es suya).
+  const clienteId = (req as unknown as AuthenticatedMedusaRequest).auth_context?.actor_id
+  if (clienteId) await ligarCliente(knex, s.id, clienteId).catch(() => {})
 
   const props = (await knex(`${T_PROPUESTA} as p`)
     .join("seller as v", "v.id", "p.seller_id")
     .where("p.solicitud_id", s.id)
     .select(
-      "p.id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado", "p.created_at",
+      "p.id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado", "p.created_at", "p.anticipo_pct",
       "v.name as taller", "v.handle", "v.metadata"
     )) as any[]
 
@@ -47,7 +54,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         condiciones: p.condiciones ? ocultarContacto(p.condiciones) : "",
         estado: p.estado,
         fecha: p.created_at,
-        taller: { nombre: p.taller, handle: p.handle, estado: perfil.estado || "", calificacion: perfil.calificacion ?? null },
+        anticipo_pct: p.anticipo_pct && p.anticipo_pct < 100 ? Number(p.anticipo_pct) : null,
+        taller: {
+          nombre: p.taller,
+          handle: p.handle,
+          estado: perfil.estado || "",
+          calificacion: perfil.calificacion ?? null,
+          resenas: Number(perfil.resenas || 0),
+          verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",
+        },
         destacado: pesoPlan(p.metadata) > 0,
         _peso: pesoPlan(p.metadata),
       }
@@ -89,8 +104,18 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
               : "pendiente",
     }))
 
+  const [cobro, preguntas, resena] = await Promise.all([
+    s.propuesta_elegida ? estadoCobro(knex, s).catch(() => null) : null,
+    preguntasDe(knex, s.id).catch(() => []),
+    s.propuesta_elegida ? resenaDe(knex, s.id).catch(() => null) : null,
+  ])
+
   return res.json({
     folio: folioTexto(s.folio),
+    cobro,
+    preguntas,
+    resena: resena ? { calidad: resena.calidad, tiempo: resena.tiempo, trato: resena.trato, comentario: resena.comentario || "" } : null,
+    puede_resenar: Boolean(s.propuesta_elegida) && ["entregada", "cerrada"].includes(etapa) && Boolean(cobro && cobro.pagado > 0),
     etapa,
     etapa_nombre: NOMBRE_ETAPA[etapa],
     etapa_explica: EXPLICA_ETAPA[etapa],
@@ -106,7 +131,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     cierra_en: s.cierra_en,
     trabajo: s.trabajo,
     propuesta_elegida: s.propuesta_elegida,
-    pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" ? s.pago_url || null : null,
+    pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" && s.pago_estado !== "anticipo" ? s.pago_url || null : null,
     pago_estado: s.pago_estado || null,
     propuestas,
   })
