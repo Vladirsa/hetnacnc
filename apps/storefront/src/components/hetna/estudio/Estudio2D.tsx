@@ -3,7 +3,7 @@
 // Pantalla común de los generadores nuevos del 2D Studio (celosías, bisagra
 // viva, QR, rebanado y los que sigan):
 //
-//   ┌ panel ─────────────┐┌ vista: ajustar · acercar · alejar ───────────────┐
+//   ┌ panel ─────────┐┌ vista: ajustar · acercar · alejar ───────────────┐
 //   │ título         ││                                                   │
 //   │ controles      ││        dibujo en mm (rueda = zoom, arrastra)      │
 //   │ descargar      ││                                                   │

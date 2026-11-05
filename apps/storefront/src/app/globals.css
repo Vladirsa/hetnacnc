@@ -173,7 +173,7 @@ body { background: #FAF9F6; }
 .prose-blog img { border-radius: 12px; max-width: 100%; height: auto; }
 .prose-blog code { background: #F3F1EA; padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.92em; }
 
-/* ── Tema oscuro de los estudios (3D Studio y 2D Studio) ──────────────────
+/* ── Tema oscuro de los estudios (3D Studio y 2D Studio) ─────────────────
    Las herramientas 2D se escribieron en el tema claro de la tienda. Dentro
    de .tema-estudio sus mismos colores se vuelven los del estudio oscuro, así
    todas se ven iguales sin tocar su lógica. Ver app/[locale]/(estudio). */
