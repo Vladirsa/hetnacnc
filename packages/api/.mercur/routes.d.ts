@@ -1120,6 +1120,7 @@ export type Routes = {
                 };
             };
             clientes: typeof import("../src/api/vendor/hetna-cloud/clientes/route");
+            importarPedidos: typeof import("../src/api/vendor/hetna-cloud/importar-pedidos/route");
             ligas: {
                 $token: typeof import("../src/api/vendor/hetna-cloud/ligas/[token]/route");
             };
@@ -1156,6 +1157,10 @@ export type Routes = {
             revisarFoto: typeof import("../src/api/vendor/hetna-publicar/revisar-foto/route");
         };
         hetnaPush: typeof import("../src/api/vendor/hetna-push/route");
+        hetnaRequisitos: typeof import("../src/api/vendor/hetna-requisitos/route") & {
+            tarjeta: typeof import("../src/api/vendor/hetna-requisitos/tarjeta/route");
+            terminos: typeof import("../src/api/vendor/hetna-requisitos/terminos/route");
+        };
         hetnaSaldo: typeof import("../src/api/vendor/hetna-saldo/route");
         hetnaSolicitudes: typeof import("../src/api/vendor/hetna-solicitudes/route") & {
             $id: {
@@ -1221,6 +1226,7 @@ export type Routes = {
             verificar: typeof import("../src/api/api/cotizador-suscripcion/verificar/route");
             vincular: typeof import("../src/api/api/cotizador-suscripcion/vincular/route");
         };
+        hetnaPlanes: typeof import("../src/api/api/hetna-planes/route");
         licitacionPaypal: {
             $token: typeof import("../src/api/api/licitacion-paypal/[token]/route");
         };
@@ -1229,6 +1235,7 @@ export type Routes = {
         mpEnvio: typeof import("../src/api/api/mp-envio/route");
         mpLicitacion: typeof import("../src/api/api/mp-licitacion/route");
         mpSuscripcion: typeof import("../src/api/api/mp-suscripcion/route");
+        mpTarjeta: typeof import("../src/api/api/mp-tarjeta/route");
         paypalSuscripcion: typeof import("../src/api/api/paypal-suscripcion/route");
         tallerPublico: typeof import("../src/api/api/taller-publico/route") & {
             $slug: typeof import("../src/api/api/taller-publico/[slug]/route") & {
@@ -1236,6 +1243,7 @@ export type Routes = {
                 solicitar: typeof import("../src/api/api/taller-publico/[slug]/solicitar/route");
             };
         };
+        tarjetaPaypal: typeof import("../src/api/api/tarjeta-paypal/route");
     };
     cotizacion: {
         $token: typeof import("../src/api/cotizacion/[token]/route");
