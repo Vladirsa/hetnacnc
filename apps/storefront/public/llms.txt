@@ -1,23 +1,59 @@
 # HETNA CNC
 
-> Marketplace especializado en CNC en México. Reúne máquinas, herramientas, refacciones, materiales y diseños DXF, SVG y STL, además de servicios de diseño y maquila ofrecidos por talleres y vendedores de todo el país. Envíos a toda la República Mexicana.
+> HETNA CNC (hetnacnc.com) es el marketplace mexicano de CNC: reúne talleres de corte láser, router CNC, plasma, torno e impresión 3D de todo México con clientes que necesitan fabricar piezas. Vende máquinas CNC, fresas, refacciones, materiales y diseños DXF, SVG y STL de varios vendedores, en pesos mexicanos y con envío a toda la República. Además ofrece herramientas gratis en línea (calculadora CNC, cotizador, diseño 2D y 3D, imagen a 3D con IA), licitaciones de fabricación donde varios talleres cotizan un mismo trabajo, una academia con cursos y libros, y un foro de la comunidad CNC.
+
+Datos clave:
+- País: México. Idioma: español. Moneda: MXN.
+- Para clientes: comprar productos CNC, pedir cotizaciones de fabricación a varios talleres, encontrar talleres cercanos.
+- Para talleres y vendedores: publicar productos gratis (sólo pagan comisión al vender), recibir solicitudes de fabricación, app de cotización y nube de proyectos (HetNa Cloud).
+- Contacto: https://hetnacnc.com/mx/contacto
 
 ## Tienda
 
-- [Inicio y catálogo](https://hetnacnc.com/mx): productos CNC de varios vendedores con precios en pesos mexicanos.
-- [Crear cuenta](https://hetnacnc.com/mx/register): registro gratuito para comprar, guardar favoritos y dar seguimiento a pedidos.
+- [Catálogo y portada](https://hetnacnc.com/mx): productos CNC de varios talleres y vendedores, precios en pesos mexicanos.
+- [Categorías](https://hetnacnc.com/mx/categories): máquinas CNC (router, láser, plasma, torno, impresoras 3D), fresas y herramientas de corte, refacciones, materiales, piezas fabricadas y archivos de diseño.
+- [Talleres CNC de México](https://hetnacnc.com/mx/talleres): directorio y mapa de talleres por ciudad y servicio, con calificaciones de clientes.
+- [Envíos HETNA](https://hetnacnc.com/mx/servicios/envios-hetna): envíos con guía a toda la República Mexicana.
+- [Formas de pago](https://hetnacnc.com/mx/formas-de-pago): Mercado Pago, PayPal, tarjeta y transferencia.
+- [Devoluciones](https://hetnacnc.com/mx/devoluciones)
+- [Preguntas frecuentes](https://hetnacnc.com/mx/preguntas-frecuentes)
 
-## Servicios
+## Fabricación a la medida
 
-- [Servicios CNC](https://hetnacnc.com/mx/servicios): herramientas y servicios para talleres y fabricantes.
-- [Cotizador CNC](https://hetnacnc.com/mx/servicios/cotizador-cnc): cotización de corte y maquila a partir de un archivo y un material.
-- [Copiloto IA CNC](https://hetnacnc.com/mx/servicios/copiloto-ia-cnc): asistente de IA para parámetros de corte, selección de herramienta, G-code y diagnóstico de errores.
-- [Aprendizaje CNC](https://hetnacnc.com/mx/servicios/aprendizaje-cnc): guías y cursos de router, láser, plasma y torno CNC.
+- [Cotizar un trabajo de fabricación](https://hetnacnc.com/mx/cotizar): el cliente describe la pieza (corte láser, router, plasma, torno o impresión 3D), varios talleres mandan su propuesta con precio y tiempo de entrega, y el cliente elige y paga dentro de HETNA.
+- [Fabricación CNC](https://hetnacnc.com/mx/fabricacion): qué se puede fabricar y cómo funciona.
+- [Trabajos de fabricación abiertos](https://hetnacnc.com/mx/trabajos): solicitudes publicadas para que los talleres coticen.
 
-## Comunidad
+## Herramientas gratis en línea
 
-- [Foro CNC México](https://hetnacnc.com/mx/foro-cnc): preguntas, trabajos terminados y perfiles de talleres, proveedores y profesionales.
+- [Calculadora CNC](https://hetnacnc.com/mx/calculadora-cnc): RPM, avance y profundidad por pasada para router CNC, y velocidad y potencia para láser CO2, según material y herramienta.
+- [Herramientas CNC](https://hetnacnc.com/mx/herramientas-cnc): calculadora y cotizador de precio de corte a partir de un archivo DXF o SVG.
+- [Laboratorio CAM](https://hetnacnc.com/mx/laboratorio-cam): convertir DXF a G-code en el navegador.
+- [Diseñar 2D y 3D](https://hetnacnc.com/mx/disenar): estudios gratis para diseñar cajas con juntas para láser, letreros, llaveros, letras 3D, litofanías, vectorizar imágenes y extruir dibujos a 3D. Descarga en DXF, SVG y STL.
+- [Imagen a 3D con IA](https://hetnacnc.com/mx/disenar/imagen-a-3d): sube una foto y la inteligencia artificial crea un modelo 3D con textura en minutos; descarga GLB y STL para impresión 3D o router. El primer modelo de cada mes es gratis.
+- [Cajas para corte láser](https://hetnacnc.com/mx/disenar/cajas): generador de cajas con uniones finger joint a la medida.
+- [Copiloto IA CNC](https://hetnacnc.com/mx/servicios/copiloto-ia-cnc): asistente de IA para parámetros de corte, selección de herramienta, G-code y diagnóstico de fallas.
 
-## Vendedores
+## Aprender
 
-- [Vender en HETNA CNC](https://hetnacnc.com/seller): panel para que talleres y proveedores publiquen productos y atiendan pedidos.
+- [Academia HETNA](https://hetnacnc.com/mx/servicios/aprendizaje-cnc): cursos en video y libros en PDF de router, láser, plasma, torno, impresión 3D, diseño y CAM, impartidos por talleres y expertos. Certificado al terminar.
+- [Foro CNC México](https://hetnacnc.com/mx/foro-cnc): preguntas, parámetros de corte, trabajos terminados, precios y negocio, con encuestas de la comunidad.
+- [Blog del foro](https://hetnacnc.com/mx/foro-cnc/blog): guías y artículos sobre CNC.
+
+## Para talleres y vendedores
+
+- [Vender en HETNA](https://hetnacnc.com/mx/talleres/unete): publicar productos es gratis; sólo se cobra comisión al vender.
+- [Panel del taller](https://hetnacnc.com/seller): publicar productos, cursos y libros, atender pedidos, generar guías y responder solicitudes de fabricación.
+- [Tarifas y comisiones](https://hetnacnc.com/mx/terminos-vendedores#tarifas): comisiones por venta, planes de la app Cotizador (incluyen HetNa Cloud), créditos y publicidad.
+- [Publicidad en HETNA](https://hetnacnc.com/mx/anunciate): espacios para anunciar marcas y talleres.
+
+## Empresa
+
+- [Quiénes somos](https://hetnacnc.com/mx/quienes-somos)
+- [Términos y condiciones](https://hetnacnc.com/mx/terminos-y-condiciones)
+- [Aviso de privacidad](https://hetnacnc.com/mx/aviso-de-privacidad)
+
+## Datos para máquinas
+
+- [Mapa del sitio](https://hetnacnc.com/sitemap.xml)
+- [Catálogo de productos (feed)](https://hetnacnc.com/feeds/google.xml)
