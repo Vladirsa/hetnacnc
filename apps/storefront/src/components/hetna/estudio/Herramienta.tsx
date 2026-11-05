@@ -17,6 +17,16 @@ const GeneradorMueble = dynamic(() => import("@/components/hetna/generador/Gener
 const GeneradorPatron = dynamic(() => import("@/components/hetna/generador/GeneradorPatron").then((m) => m.GeneradorPatron))
 const GeneradorRelieve = dynamic(() => import("@/components/hetna/generador/GeneradorRelieve").then((m) => m.GeneradorRelieve))
 const GeneradorRompecabezas = dynamic(() => import("@/components/hetna/generador/GeneradorRompecabezas").then((m) => m.GeneradorRompecabezas))
+const GeneradorCelosias = dynamic(() => import("@/components/hetna/generador/GeneradorCelosias").then((m) => m.GeneradorCelosias))
+const GeneradorBisagra = dynamic(() => import("@/components/hetna/generador/GeneradorBisagra").then((m) => m.GeneradorBisagra))
+const GeneradorQR = dynamic(() => import("@/components/hetna/generador/GeneradorQR").then((m) => m.GeneradorQR))
+const GeneradorRebanado = dynamic(() => import("@/components/hetna/generador/GeneradorRebanado").then((m) => m.GeneradorRebanado))
+const GeneradorEngranes = dynamic(() => import("@/components/hetna/generador/GeneradorEngranes").then((m) => m.GeneradorEngranes))
+const GeneradorRelojes = dynamic(() => import("@/components/hetna/generador/GeneradorRelojes").then((m) => m.GeneradorRelojes))
+const GeneradorOrganizador = dynamic(() => import("@/components/hetna/generador/GeneradorOrganizador").then((m) => m.GeneradorOrganizador))
+const GeneradorLamparas = dynamic(() => import("@/components/hetna/generador/GeneradorLamparas").then((m) => m.GeneradorLamparas))
+const GeneradorEstencil = dynamic(() => import("@/components/hetna/generador/GeneradorEstencil").then((m) => m.GeneradorEstencil))
+const GeneradorMarcos = dynamic(() => import("@/components/hetna/generador/GeneradorMarcos").then((m) => m.GeneradorMarcos))
 const GeneradorVectorizador = dynamic(() => import("@/components/hetna/generador/GeneradorVectorizador").then((m) => m.GeneradorVectorizador))
 
 const GENERADORES: Record<string, React.ComponentType> = {
@@ -34,6 +44,16 @@ const GENERADORES: Record<string, React.ComponentType> = {
   convertidor: GeneradorConvertidor,
   "svg-a-stl": GeneradorExtruir,
   "anidado-piezas": GeneradorAnidado,
+  celosias: GeneradorCelosias,
+  "bisagra-viva": GeneradorBisagra,
+  "codigo-qr": GeneradorQR,
+  "rebanado-capas": GeneradorRebanado,
+  engranes: GeneradorEngranes,
+  relojes: GeneradorRelojes,
+  "organizador-cajon": GeneradorOrganizador,
+  "lamparas-capas": GeneradorLamparas,
+  "estencil-letras": GeneradorEstencil,
+  "marcos-portarretratos": GeneradorMarcos,
 }
 
 export const HAY_HERRAMIENTA = new Set(Object.keys(GENERADORES))

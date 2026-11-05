@@ -9,9 +9,9 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 // se usa. Las herramientas viven en /cam/lab (3, 4 y 5 ejes), /cam/subir
 // (DXF a G-code) y /cam/torno; esta página las explica y lleva a ellas.
 //
-// Todo lo que promete aquí existe hoy. Lo que todavía no (cajeado, SVG, láser)
-// se dice tal cual en "Hoy y lo que sigue": es más fácil confiar en una
-// herramienta técnica que te dice qué NO hace.
+// Todo lo que promete aquí existe hoy. Lo que todavía no se dice tal cual en
+// "Hoy y lo que sigue": es más fácil confiar en una herramienta técnica que te
+// dice qué NO hace.
 // Las imágenes son capturas reales del laboratorio con sus piezas de muestra.
 
 const SITIO = "https://hetnacnc.com"
@@ -91,11 +91,11 @@ const HERRAMIENTAS = [
     href: "/cam/lab",
   },
   {
-    t: "DXF a G-code (2.5D)",
-    acepta: "DXF con contornos cerrados",
-    hace: "Contorno por fuera y barrenos por dentro, pasadas según el espesor y pestañas",
-    entrega: "G-code (.nc) y tiempo estimado; el archivo no se guarda",
-    cta: "Subir un DXF",
+    t: "CAM 2D: router y láser",
+    acepta: "DXF o SVG, con una capa por operación",
+    hace: "Corte con pestañas, cajeado, grabado en V, barrenado y láser, en el orden que tú elijas",
+    entrega: "G-code para Mach3, GRBL o LinuxCNC, tiempo y costo de máquina; el archivo no se guarda",
+    cta: "Abrir el CAM 2D",
     href: "/cam/subir",
   },
   {
@@ -119,7 +119,7 @@ const PREGUNTAS = [
   },
   {
     p: "¿Qué archivos acepta?",
-    r: "El CAM 3D acepta STL, OBJ, STEP e IGES (hasta 80 MB). El DXF a G-code acepta DXF de hasta 4 MB con contornos cerrados. El torno no necesita archivo: la pieza se arma ahí mismo.",
+    r: "El CAM 3D acepta STL, OBJ, STEP e IGES (hasta 80 MB). El CAM 2D acepta DXF o SVG de hasta 4 MB. El torno no necesita archivo: la pieza se arma ahí mismo.",
   },
   {
     p: "¿Puedo usarlo para producción real?",
@@ -127,11 +127,11 @@ const PREGUNTAS = [
   },
   {
     p: "¿Se guardan mis archivos?",
-    r: "No. El DXF se procesa y no se guarda. En el CAM 3D la pieza se procesa en tu navegador. Solo cuando pides un servicio con un especialista se guarda tu trabajo en tu cuenta.",
+    r: "No. El DXF o SVG se procesa y no se guarda (tus máquinas y fresas sí, si las guardas en tu cuenta). En el CAM 3D la pieza se procesa en tu navegador. Solo cuando pides un servicio con un especialista se guarda tu trabajo en tu cuenta.",
   },
   {
     p: "¿Qué funciones vienen después?",
-    r: "Estamos trabajando en cajeado (vaciar áreas completas), archivos SVG y corte láser en el convertidor 2.5D. Mientras tanto, para piezas con cajas usa el CAM 3D o pide el servicio con un especialista.",
+    r: "Ya están el cajeado, el grabado en V, el barrenado, el láser y los archivos SVG en el CAM 2D. Lo siguiente: rampas de entrada, acabado de paredes y anidar varias piezas en la hoja antes de cortar.",
   },
 ]
 
@@ -396,7 +396,8 @@ export default function LaboratorioCam() {
                 "Simulación 3D con remoción de material y colisiones",
                 "Estrategias de 3, 4 y 5 ejes con desbaste previo",
                 "Tiempo estimado, metros de corte y líneas de G-code",
-                "DXF a G-code: contornos, barrenos, compensación y pestañas",
+                "CAM 2D: contornos, cajeado, grabado en V, barrenado y láser, desde DXF o SVG",
+                "Tus máquinas y fresas guardadas en tu cuenta",
                 "Torno con eje rotativo: balaustres, patas y columnas",
                 `G-code para ${CONTROLADORES.join(", ")}`,
               ].map((x) => (
@@ -407,7 +408,7 @@ export default function LaboratorioCam() {
           <div className="rounded-[16px] border border-[#E7E4DC] bg-white p-6">
             <p className="m-0 text-[16px] font-bold text-[#6B5A2E]">En desarrollo</p>
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] text-[#4A4943]">
-              {["Cajeado: vaciar áreas completas en el convertidor 2.5D", "Archivos SVG (hoy el 2.5D acepta DXF)", "Corte y grabado láser, con su potencia y pasadas"].map((x) => (
+              {["Rampas de entrada y acabado de paredes en el 2D", "Anidar varias piezas en la hoja dentro del CAM", "Simulación con remoción de material en el 2D"].map((x) => (
                 <li key={x} className="flex gap-2"><span className="text-[#B38A2E]">○</span>{x}</li>
               ))}
             </ul>

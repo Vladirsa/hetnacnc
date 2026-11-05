@@ -190,9 +190,9 @@ export function circulo(cx: number, cy: number, r: number): Curva {
 // Rejilla: rellenar curvas (regla distinto de cero) y operaciones con la fresa
 // ---------------------------------------------------------------------
 
-type Rejilla = { m: Uint8Array; w: number; h: number; x0: number; y0: number; pxmm: number }
+export type Rejilla = { m: Uint8Array; w: number; h: number; x0: number; y0: number; pxmm: number }
 
-function rellenar(curvas: Curva[], g: Rejilla) {
+export function rellenar(curvas: Curva[], g: Rejilla) {
   const filas: number[][] = Array.from({ length: g.h }, () => [])
   const X = (x: number) => (x - g.x0) * g.pxmm
   const Y = (y: number) => (y - g.y0) * g.pxmm

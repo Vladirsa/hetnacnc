@@ -14,9 +14,9 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; herramienta: string }> }
 
-const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas"])
+const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas", "celosias", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos"])
 
-const OSCURAS = new Set(["letras-3d", "caja-con-juntas", "llaveros", "vectorizador"])
+const OSCURAS = new Set(["letras-3d", "caja-con-juntas", "llaveros", "vectorizador", "celosias", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos"])
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
