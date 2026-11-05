@@ -32,6 +32,14 @@ const PROTEGIDAS = [
   // Confirmación de correo del alta (lib/alta-taller.ts)
   "correo_confirmado",
   "correo_confirmado_en",
+  // Requisitos para publicar (lib/requisitos-vendedor.ts)
+  "terminos_version",
+  "terminos_ip",
+  "terminos_agente",
+  "terminos_quien",
+  "tarjeta",
+  "tarjeta_verificada_en",
+  "requisitos_exento",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 

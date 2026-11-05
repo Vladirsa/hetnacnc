@@ -12,6 +12,8 @@ import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
+import { AvisoRequisitos } from "../../lib/requisitos"
+
 const Tablero = (props: { width?: number; height?: number }) => (
   <svg
     width="15"
@@ -1150,6 +1152,7 @@ export default function TableroPage() {
       </p>
 
       <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
+      <AvisoRequisitos />
 
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 

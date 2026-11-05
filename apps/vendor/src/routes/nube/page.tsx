@@ -11,6 +11,8 @@ import { Badge, Button, Container, Heading, Input, Label, Text, Textarea, toast 
 import { CloudArrowUp } from "@medusajs/icons"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
+import { svgQR } from "../../lib/qr"
+
 export const config: RouteConfig = {
   label: "HetNa Cloud",
   icon: CloudArrowUp,
@@ -73,6 +75,7 @@ export default function NubePage() {
   const [buscar, setBuscar] = useState("")
   const [filtroEstado, setFiltroEstado] = useState("vigentes")
   const [nuevo, setNuevo] = useState(false)
+  const [trayendo, setTrayendo] = useState(false)
 
   const cargar = async (sel?: string) => {
     try {
@@ -138,10 +141,30 @@ export default function NubePage() {
             <Heading>HetNa Cloud</Heading>
             <Text className="mt-1 text-ui-fg-subtle">
               Tus planos, modelos, proyectos CAM y G-code ordenados por cliente, proyecto y pieza, con revisiones y estado (borrador → probado → liberado).
-              Las licitaciones que ganas se agregan solas.
+              Las licitaciones que ganas y tus trabajos del servicio CAM de HETNA se agregan solos.
             </Text>
           </div>
-          <Button onClick={() => setNuevo(!nuevo)}>{nuevo ? "Cancelar" : "Nuevo proyecto"}</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              isLoading={trayendo}
+              onClick={async () => {
+                setTrayendo(true)
+                try {
+                  const r = await api("/importar-pedidos", { method: "POST" })
+                  toast.success(r.importados ? `Se agregaron ${r.importados} pedidos como proyectos.` : "No hay pedidos pagados nuevos (últimos 90 días).")
+                  cargar()
+                } catch (e) {
+                  toast.error(e.message)
+                } finally {
+                  setTrayendo(false)
+                }
+              }}
+            >
+              Traer mis pedidos
+            </Button>
+            <Button onClick={() => setNuevo(!nuevo)}>{nuevo ? "Cancelar" : "Nuevo proyecto"}</Button>
+          </div>
         </div>
         <Uso uso={datos.uso} />
         {nuevo && (
@@ -188,6 +211,8 @@ export default function NubePage() {
                 </div>
                 <div className="flex gap-2">
                   {p.origen_tipo === "licitacion" && <Badge size="2xsmall">Licitación</Badge>}
+                  {p.origen_tipo === "cam" && <Badge size="2xsmall" color="purple">CAM</Badge>}
+                  {p.origen_tipo === "pedido" && <Badge size="2xsmall" color="blue">Pedido</Badge>}
                   <Badge size="2xsmall" color={p.estado === "entregado" ? "green" : p.estado === "produccion" ? "orange" : "grey"}>
                     {ESTADOS_PROYECTO[p.estado] || p.estado}
                   </Badge>
@@ -481,7 +506,28 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
             </Text>
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" size="small" onClick={() => hojaDeTaller(d)}>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={async () => {
+                // La ventana se abre en el clic (si no, el navegador la bloquea) y se llena después
+                const w = window.open("", "_blank")
+                if (!w) return toast.error("Permite las ventanas emergentes para imprimir la hoja.")
+                w.document.write("<p style='font:14px system-ui;margin:24px'>Preparando la hoja…</p>")
+                // El QR lleva a una liga de sólo archivos liberados; si no hay, se crea una de 90 días
+                let liga = d.ligas.find((l) => l.solo_liberados) || null
+                if (!liga) {
+                  try {
+                    const r = await api(`/proyectos/${id}/ligas`, { method: "POST", body: JSON.stringify({ dias: 90, solo_liberados: true }) })
+                    liga = { url: r.url, vence: new Date(Date.now() + 90 * 86400_000).toISOString() }
+                    cargar()
+                  } catch {
+                    liga = null
+                  }
+                }
+                hojaDeTaller(d, w, liga)
+              }}
+            >
               Hoja de taller
             </Button>
             <Button variant="secondary" size="small" onClick={() => setEditar(!editar)}>
@@ -642,7 +688,7 @@ function Fila({ a, actual = false, onCambiar, onBorrar, onDescargar }) {
           {a.nombre} <span className="text-ui-fg-subtle">· rev. {a.revision}</span>
         </Text>
         <Text size="small" className="text-ui-fg-subtle">
-          {[CATEGORIAS[a.categoria] || a.categoria, a.tamano ? tamano(Number(a.tamano)) : "", fecha(a.created_at), !a.cuenta_cupo && "del cliente", a.notas]
+          {[CATEGORIAS[a.categoria] || a.categoria, a.tamano ? tamano(Number(a.tamano)) : "", fecha(a.created_at), a.notas]
             .filter(Boolean)
             .join(" · ")}
         </Text>
@@ -671,7 +717,7 @@ function Fila({ a, actual = false, onCambiar, onBorrar, onDescargar }) {
 
 // Hoja de taller para imprimir y pegar junto a la máquina: piezas, material,
 // cantidad y la revisión vigente de cada archivo.
-function hojaDeTaller(d) {
+function hojaDeTaller(d, w, liga) {
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
   const p = d.proyecto
   const ultimos = new Map()
@@ -694,13 +740,21 @@ function hojaDeTaller(d) {
         <p class="firma">Operador: ____________________ &nbsp; Fecha: __________ &nbsp; Piezas buenas: ______</p>`
     })
     .join("")
-  const w = window.open("", "_blank")
-  if (!w) return toast.error("Permite las ventanas emergentes para imprimir la hoja.")
+  let qr = ""
+  try {
+    if (liga?.url)
+      qr = `<div class="qr">${svgQR(liga.url, 132)}<div>Escanea para bajar los archivos liberados<br/>(vence ${esc(fecha(liga.vence))})</div></div>`
+  } catch {
+    qr = ""
+  }
+  w.document.open()
   w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de taller · ${esc(p.nombre)}</title>
     <style>body{font:14px/1.4 system-ui,sans-serif;color:#111;margin:24px}h1{font-size:22px;margin:0}h2{font-size:16px;margin:22px 0 6px;border-bottom:2px solid #C2560A;padding-bottom:4px}
     table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#f3f1ea}.sub{color:#555}.firma{margin-top:10px;color:#333}
-    pre{white-space:pre-wrap;font:inherit;background:#f7f7f5;padding:8px;border-radius:6px}@media print{button{display:none}}</style></head><body>
-    <button onclick="print()" style="float:right;padding:8px 14px">Imprimir</button>
+    pre{white-space:pre-wrap;font:inherit;background:#f7f7f5;padding:8px;border-radius:6px}@media print{button{display:none}}
+    .qr{float:right;margin:0 0 8px 16px;text-align:center;font-size:11px;color:#444;max-width:150px}.qr svg{display:block;margin:0 auto 4px}</style></head><body>
+    <button onclick="print()" style="float:right;padding:8px 14px;margin-left:12px">Imprimir</button>
+    ${qr}
     <h1>${esc(p.nombre)}</h1>
     <p class="sub">${[d.cliente?.nombre, ESTADOS_PROYECTO[p.estado], new Date().toLocaleDateString("es-MX")].filter(Boolean).map(esc).join(" · ")}</p>
     ${p.notas ? `<pre>${esc(p.notas)}</pre>` : ""}
