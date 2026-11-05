@@ -23,6 +23,10 @@ import { NextResponse } from "next/server"
 const PYTHON = process.env.CAM_PYTHON || "python3"
 const BRIDGE =
   process.env.CAM_BRIDGE_DXF || path.join(process.cwd(), "..", "..", "infra", "cam", "bridges", "dxf_gcode.py")
+// CAM Studio 2D (fase B): el mismo motor, pero por operaciones (cajeado,
+// grabado en V, barrenado, láser...). Vive junto al primero.
+const BRIDGE_OPS = path.join(path.dirname(BRIDGE), "cam2d.py")
+const MAX_CONFIG = 20_000
 
 // Un DXF de corte rara vez pasa de unos cientos de KB. 4 MB deja margen de
 // sobra y corta de tajo el archivo equivocado.
@@ -65,6 +69,26 @@ export async function POST(req: Request) {
     return fallo("entrada_invalida", "Material no reconocido.", "Elige uno de la lista.")
   }
 
+  // Con "config" (JSON con máquina y operaciones) se usa el motor por
+  // operaciones; sin él, el flujo de siempre (corte de contorno).
+  const textoConfig = form.get("config")
+  if (typeof textoConfig === "string" && textoConfig.trim()) {
+    if (textoConfig.length > MAX_CONFIG) {
+      return fallo("fuera_de_rango", "Son demasiadas operaciones.", "Usa 20 o menos.")
+    }
+    let config: Record<string, unknown>
+    try {
+      config = JSON.parse(textoConfig)
+    } catch {
+      return fallo("entrada_invalida", "No se pudieron leer las operaciones.", "Recarga la página e intenta de nuevo.")
+    }
+    const espesorOps = Number(form.get("espesor"))
+    if (!Number.isFinite(espesorOps) || espesorOps <= 0 || espesorOps > 200) {
+      return fallo("entrada_invalida", "El espesor del material no es válido.", "Captúralo en milímetros, entre 0.5 y 200.")
+    }
+    return conOperaciones(archivo, { ...config, material, espesor: espesorOps })
+  }
+
   const diametro = Number(form.get("diametro"))
   const espesor = Number(form.get("espesor"))
   if (!Number.isFinite(diametro) || diametro <= 0 || diametro > 25) {
@@ -104,9 +128,34 @@ export async function POST(req: Request) {
   }
 }
 
-function correrBridge(args: string[]): Promise<Respuesta> {
+async function conOperaciones(archivo: Blob, config: Record<string, unknown>) {
+  const carpeta = await mkdtemp(path.join(tmpdir(), "hetna-cam-"))
+  const entrada = path.join(carpeta, "pieza.dxf")
+  const salida = path.join(carpeta, "pieza.nc")
+  const rutaConfig = path.join(carpeta, "config.json")
+  try {
+    await writeFile(entrada, Buffer.from(await archivo.arrayBuffer()))
+    await writeFile(rutaConfig, JSON.stringify(config))
+    const resultado = await correrBridge([entrada, salida, rutaConfig], BRIDGE_OPS)
+    if (!resultado.ok) return NextResponse.json(resultado, { status: 422 })
+    const gcode = await readFile(salida, "utf-8")
+    return NextResponse.json({ ok: true, plan: (resultado as any).plan, gcode })
+  } catch (e) {
+    console.error("[cam] falló la generación por operaciones", e)
+    return fallo(
+      "fallo_de_ejecucion",
+      "No se pudo generar el G-code.",
+      "Vuelve a intentarlo. Si sigue fallando, escríbenos y revisamos tu archivo.",
+      500
+    )
+  } finally {
+    await rm(carpeta, { recursive: true, force: true }).catch(() => {})
+  }
+}
+
+function correrBridge(args: string[], bridge = BRIDGE): Promise<Respuesta> {
   return new Promise((resolve) => {
-    const proceso = spawn(PYTHON, [BRIDGE, ...args], { timeout: TIMEOUT_MS })
+    const proceso = spawn(PYTHON, [bridge, ...args], { timeout: TIMEOUT_MS })
     let salida = ""
     let errores = ""
 

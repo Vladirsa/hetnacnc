@@ -84,7 +84,8 @@ export default function Visor3DTorno({ segmentos, tallados, anchoFresa, bloque, 
     const el = ref.current
     if (!el) return
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xf7f5ef)
+    // Dentro del CAM Studio (tema oscuro) el fondo también va oscuro
+    scene.background = new THREE.Color(el.closest(".tema-estudio") ? 0x0f151e : 0xf7f5ef)
     const camera = new THREE.PerspectiveCamera(35, Math.max(1, el.clientWidth) / Math.max(1, el.clientHeight), 1, 20000)
     let renderer: THREE.WebGLRenderer
     try {
