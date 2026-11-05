@@ -56,6 +56,7 @@ type Candidato = ProductoVisto & {
 
 type RespuestaTablero = {
   moneda: string
+  total_productos?: number
   mes: string
   ventas: {
     ventana_dias: number
@@ -810,7 +811,7 @@ type EstadoAlta = {
 
 // Aviso arriba del tablero mientras la tienda no esté aprobada: primero que
 // confirme su correo, luego que espere la revisión (lib/alta-taller.ts).
-function AvisoAlta() {
+function AvisoAlta({ onEstado }: { onEstado?: (a: EstadoAlta | null) => void }) {
   const [alta, setAlta] = useState<EstadoAlta | null>(null)
   const [nota, setNota] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -818,8 +819,15 @@ function AvisoAlta() {
   useEffect(() => {
     fetch("/vendor/hetna-alta", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: EstadoAlta | null) => setAlta(d))
-      .catch(() => setAlta(null))
+      .then((d: EstadoAlta | null) => {
+        setAlta(d)
+        onEstado?.(d)
+      })
+      .catch(() => {
+        setAlta(null)
+        onEstado?.(null)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!alta || alta.puede_publicar || !alta.mensaje) return null
@@ -871,6 +879,32 @@ function AvisoAlta() {
 
 // ---------------------------------------------------------------- pantalla
 
+// Taller aprobado y sin un solo producto: la invitación más importante del
+// tablero. Sin productos no hay ventas, así que va arriba de todo.
+function PrimerProducto() {
+  return (
+    <div role="status" style={{ ...S.card, background: "#FFF3E8", borderColor: "#F5C8A0" }}>
+      <p style={{ ...S.h2, color: "#A84A08" }}>Publica tu primer producto en 2 minutos</p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+        Tu tienda ya está lista, pero los clientes todavía no encuentran nada tuyo. Sube una foto, ponle precio y
+        listo: HETNA lo anuncia en Google, en el catálogo y en los correos de novedades, sin costo. Sólo pagas comisión
+        cuando vendes.
+      </p>
+      <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
+        <li>Piezas, refacciones, fresas, materiales o trabajos que ya fabricas.</li>
+        <li>Archivos (DXF, STL, G-code), cursos y libros en PDF también cuentan.</li>
+        <li>Con 3 productos o más, tu tienda sale mejor posicionada.</li>
+      </ul>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+        <Link to="/publicar" style={{ ...S.btn, textDecoration: "none", display: "inline-block" }}>
+          Publicar mi primer producto
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+
 // Lista de precios y comisiones de HETNA (GET /vendor/hetna-tarifas, la misma
 // de los Términos para vendedores). Plegada para no estorbar el tablero.
 type GrupoTarifas = { id: string; titulo: string; texto?: string; filas: { concepto: string; precio: string; nota?: string }[] }
@@ -917,6 +951,7 @@ export default function TableroPage() {
   const [datos, setDatos] = useState<RespuestaTablero | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState("")
+  const [puedePublicar, setPuedePublicar] = useState(false)
 
   // Sin setCargando(true) aquí: el estado ya arranca cargando, y ponerlo
   // desde el efecto dispara un render en cascada. Quien recarga a mano lo
@@ -991,7 +1026,9 @@ export default function TableroPage() {
         {v.ventana_dias} días.
       </p>
 
-      <AvisoAlta />
+      <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
+
+      {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 

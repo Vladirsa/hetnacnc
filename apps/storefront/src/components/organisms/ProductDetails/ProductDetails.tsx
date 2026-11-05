@@ -42,7 +42,11 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
   // El umbral de envío gratis del taller que gana el buybox -- el mismo que va
   // a cobrar. Va junto al precio porque es parte del precio de la decisión, no
   // un adorno de confianza.
-  const umbrales = seller?.id ? await umbralesDeEnvioGratis([seller.id]) : {}
+  // Umbral y packs del taller se piden al mismo tiempo: la ficha no espera
+  // una consulta detrás de la otra.
+  const [umbrales, todosLosPacks] = seller?.id
+    ? await Promise.all([umbralesDeEnvioGratis([seller.id]), packsDeTalleres([seller.id])])
+    : [{} as Awaited<ReturnType<typeof umbralesDeEnvioGratis>>, [] as Awaited<ReturnType<typeof packsDeTalleres>>]
   const envioGratisDesde = seller?.id ? umbrales[seller.id]?.gratis_desde : null
   const moneda = ganadora?.calculated_price?.currency_code || "mxn"
 
@@ -60,7 +64,6 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
       .map((c) => c?.id)
       .filter((id): id is string => !!id)
   )
-  const todosLosPacks = seller?.id ? await packsDeTalleres([seller.id]) : []
   const packs = todosLosPacks.filter((pack) =>
     pack.categorias.some((c) => categoriasDelProducto.has(c.id))
   )

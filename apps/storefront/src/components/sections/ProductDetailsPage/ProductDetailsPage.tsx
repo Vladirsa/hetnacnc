@@ -53,10 +53,19 @@ export const ProductDetailsPage = async ({
     notFound()
   }
 
-  const { offers } = await listOffers({
-    productId: prod.id,
-    countryCode: locale,
-  })
+  // Ofertas, reseñas y relacionados no dependen entre sí: se piden a la vez.
+  // Antes iban uno tras otro y cada uno sumaba su espera a la de la ficha.
+  const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
+  const [{ offers }, resenas, pendientes, relacionados] = await Promise.all([
+    listOffers({ productId: prod.id, countryCode: locale }),
+    resenasDeProducto(prod.id),
+    resenasPendientes(),
+    categoriaId
+      ? listProducts({ countryCode: locale, category_id: categoriaId, queryParams: { limit: 8 } })
+          .then(({ response }) => response.products.filter((p) => p.id !== prod.id))
+          .catch(() => [])
+      : Promise.resolve([]),
+  ])
 
   const { cheapestPrice } = getProductPrice({ product: prod })
   const eventPrice = cheapestPrice?.calculated_price_number ?? 0
@@ -72,27 +81,7 @@ export const ProductDetailsPage = async ({
   const inStock = winnerOffer ? getOfferStock(winnerOffer) > 0 : false
   const vendedor = winnerOffer?.seller || prod.seller
 
-  // Las reseñas y, si el visitante compró esto y no lo ha reseñado, el pendiente
-  // que abre el formulario. Lo segundo devuelve vacío sin sesión, así que no
-  // hace falta preguntar antes si hay cliente.
-  const [resenas, pendientes] = await Promise.all([
-    resenasDeProducto(prod.id),
-    resenasPendientes(),
-  ])
   const pendienteDeEste = pendientes.find((p) => p.product_id === prod.id)
-
-  // Productos de la misma categoría, para "también te puede interesar". Se
-  // piden unos de más porque hay que sacar el que ya se está viendo.
-  const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
-  const relacionados = categoriaId
-    ? await listProducts({
-        countryCode: locale,
-        category_id: categoriaId,
-        queryParams: { limit: 8 },
-      })
-        .then(({ response }) => response.products.filter((p) => p.id !== prod.id))
-        .catch(() => [])
-    : []
 
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto
   const base = baseSitio()

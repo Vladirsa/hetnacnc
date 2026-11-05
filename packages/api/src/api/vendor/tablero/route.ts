@@ -52,6 +52,8 @@ export const GET = async (req: VendorRequest, res: MedusaResponse) => {
 
   res.json({
     moneda,
+    // Para el aviso "publica tu primer producto" del tablero
+    total_productos: catalogo.size,
     mes: mesDeMexico(),
     ventas: {
       ventana_dias: ventas.ventana_dias,

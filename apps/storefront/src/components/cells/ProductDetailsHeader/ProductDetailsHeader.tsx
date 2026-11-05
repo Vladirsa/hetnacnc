@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { useRouter } from "next/navigation"
 
@@ -62,6 +62,18 @@ export const ProductDetailsHeader = ({
   const [isCompareOpen, setIsCompareOpen] = useState(false)
   const [cantidad, setCantidad] = useState(1)
   const [comprando, setComprando] = useState(false)
+  // Barra fija de compra en el celular: aparece cuando los botones de compra
+  // salen de la pantalla (la persona bajó a leer la ficha), para que comprar
+  // quede siempre a un toque.
+  const botonesRef = useRef<HTMLDivElement>(null)
+  const [botonesFuera, setBotonesFuera] = useState(false)
+  useEffect(() => {
+    const el = botonesRef.current
+    if (!el || typeof IntersectionObserver === "undefined") return
+    const o = new IntersectionObserver(([e]) => setBotonesFuera(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0 })
+    o.observe(el)
+    return () => o.disconnect()
+  }, [])
   const router = useRouter()
 
   const { cheapestVariant, cheapestPrice } = getProductPrice({ product })
@@ -314,7 +326,7 @@ export const ProductDetailsHeader = ({
         </div>
       )}
 
-      <div className="mt-4 flex flex-col gap-2.5">
+      <div ref={botonesRef} className="mt-4 flex flex-col gap-2.5">
         <Button
           onClick={comprarAhora}
           disabled={noSePuedeComprar || isAddingItem}
@@ -335,6 +347,19 @@ export const ProductDetailsHeader = ({
           Agregar al carrito
         </button>
       </div>
+      {botonesFuera && !noSePuedeComprar && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-[#E7E4DC] bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(20,32,51,0.35)] backdrop-blur lg:hidden">
+          <div className="min-w-0 flex-1">
+            <p className="m-0 truncate text-[12.5px] text-[#6B6A63]">{product.title}</p>
+            {typeof offerAmount === "number" && (
+              <p className="m-0 text-[18px] font-bold leading-tight text-[#1B1B18]">{precioTexto(offerAmount)}</p>
+            )}
+          </div>
+          <Button onClick={comprarAhora} disabled={isAddingItem} loading={comprando} className="shrink-0 px-5 py-3 text-[15px] font-bold">
+            Comprar ahora
+          </Button>
+        </div>
+      )}
       </>
       )}
 
