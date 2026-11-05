@@ -121,3 +121,26 @@ cd ~/hetnacnc/infra/cam
 ```
 
 Debe imprimir un JSON con `"ok": true` y el plan.
+
+### `cam2d.py` — CAM 2D por operaciones (CAM Studio)
+
+El que usa la pestaña 2D del CAM Studio (`/cam/subir`). Recibe el DXF y un
+`config.json` con la máquina y la lista de operaciones, cada una con su capa,
+su herramienta y su profundidad:
+
+- **Router:** corte de pieza (barrenos por dentro, borde por fuera, pestañas),
+  contorno por fuera o por dentro, sobre la línea (trazos abiertos), cajeado,
+  grabado en V (por desfases: la punta va a la distancia `d` de la orilla y a
+  `d / tan(ángulo/2)` de profundidad) y barrenado con picoteo.
+- **Láser:** corte, línea y relleno (líneas en zigzag recortadas al área).
+- **Postprocesadores:** Mach3, GRBL, LinuxCNC y láser GRBL (M4 dinámico).
+- Lee líneas, arcos, splines, polilíneas con bulge y bloques; une trazos
+  sueltos punta con punta y convierte pulgadas a mm.
+
+```
+python3 cam2d.py pieza.dxf pieza.nc config.json
+```
+
+Mismas dependencias que `dxf_gcode.py` (ezdxf y shapely). La ruta
+`/api/cam/gcode` lo usa cuando recibe el campo `config`; sin él sigue usando
+`dxf_gcode.py`.
