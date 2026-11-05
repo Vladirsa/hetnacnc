@@ -6,7 +6,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { getSignedDownloadUrls } from "../../../../lib/backblaze"
-import { CATEGORIAS, ESTADOS, ORDEN_REVISIONES, T_ARCHIVO, T_LIGA, T_PIEZA, T_PROYECTO, asegurarCloud, vigentes } from "../../../../lib/cloud"
+import { CATEGORIAS, ESTADOS, ORDEN_REVISIONES, T_ARCHIVO, T_LIGA, T_PIEZA, T_PROYECTO, asegurarCloud, esDeMedusa, ligaMedusa, vigentes } from "../../../../lib/cloud"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -41,11 +41,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   // Los del taller se firman por carpeta del proyecto; los del cliente, uno por uno.
   const carpeta = `cloud/${l.seller_id}/${p.id}/`
   const ligas = await getSignedDownloadUrls(
-    ultimos.map((a) => a.clave),
+    ultimos.map((a) => a.clave).filter((c) => !esDeMedusa(c)),
     15 * 60,
     (c) => (c.startsWith(carpeta) ? carpeta : c),
     "attachment"
   ).catch(() => new Map<string, string>())
+  for (const a of ultimos.filter((x) => esDeMedusa(x.clave))) {
+    const url = await ligaMedusa(req.scope, a.clave)
+    if (url) ligas.set(a.clave, url)
+  }
   const archivos = ultimos.map((a) => ({
     id: a.id,
     pieza_id: a.pieza_id,

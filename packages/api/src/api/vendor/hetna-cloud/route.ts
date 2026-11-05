@@ -3,7 +3,7 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_ARCHIVO, T_CLIENTE, T_PROYECTO, asegurarCloud, importarLicitaciones, usoCloud, vigentes } from "../../../lib/cloud"
+import { T_ARCHIVO, T_CLIENTE, T_PROYECTO, asegurarCloud, importarCam, importarLicitaciones, usoCloud, vigentes } from "../../../lib/cloud"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -12,10 +12,15 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   if (!sellerId) return res.status(401).json({ message: "Sin taller." })
   await asegurarCloud(knex)
 
-  const importadas = await importarLicitaciones(knex, sellerId).catch((e: Error) => {
-    logger.warn(`[cloud] no se importaron licitaciones de ${sellerId}: ${e.message}`)
-    return 0
-  })
+  const importadas =
+    (await importarLicitaciones(knex, sellerId).catch((e: Error) => {
+      logger.warn(`[cloud] no se importaron licitaciones de ${sellerId}: ${e.message}`)
+      return 0
+    })) +
+    (await importarCam(knex, sellerId).catch((e: Error) => {
+      logger.warn(`[cloud] no se importaron trabajos CAM de ${sellerId}: ${e.message}`)
+      return 0
+    }))
 
   const [uso, clientes, proyectos, conteos] = await Promise.all([
     usoCloud(knex, sellerId, logger),
