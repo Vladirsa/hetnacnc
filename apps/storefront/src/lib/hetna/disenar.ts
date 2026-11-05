@@ -1,4 +1,3 @@
-
 // "Diseñar y escanear": los generadores y el escaneo 3D en un solo espacio de
 // trabajo (/disenar). Entras una vez y cambias de herramienta desde el menú de
 // la izquierda (o la fila de arriba en el celular) sin salir de la página.
@@ -291,7 +290,7 @@ export const enlaceServicio = (slug: string) => {
   return h && SLUGS_GENERADORES.includes(h) ? `/disenar/${h}` : `/servicios/${slug}`
 }
 
-// ── Estudios de pantalla completa ─────────────────────────────────────────────────────────────────
+// ── Estudios de pantalla completa ──────────────────────────────────────────
 // Las herramientas se abren dentro de dos estudios: el 3D (modelos para ver,
 // imprimir o maquinar en volumen) y el 2D (vectores para corte láser, router
 // y plasma). Cada estudio enseña sus herramientas como pestañas arriba.
