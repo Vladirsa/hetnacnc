@@ -22,9 +22,12 @@ type TrabajoCreado = {
 export function MarcoLaboratorio({
   locale,
   publishableKey,
+  pantallaCompleta = false,
 }: {
   locale: string
   publishableKey: string
+  // En el CAM Studio el marco llena la pantalla debajo de su barra (3.5rem)
+  pantallaCompleta?: boolean
 }) {
   const marco = useRef<HTMLIFrameElement>(null)
   const router = useRouter()
@@ -86,11 +89,11 @@ export function MarcoLaboratorio({
           ref={marco}
           src={src}
           title="Laboratorio CAM 3, 4 y 5 ejes"
-          className="block h-[calc(100vh-64px)] min-h-[720px] w-full border-0 bg-[#0F1115]"
+          className={`block w-full border-0 bg-[#0F1115] ${pantallaCompleta ? "h-[calc(100dvh-3.5rem)] min-h-[560px]" : "h-[calc(100vh-64px)] min-h-[720px]"}`}
           allow="fullscreen; clipboard-write"
         />
       ) : (
-        <div className="flex h-[720px] w-full items-center justify-center bg-[#0F1115] text-[14px] text-[#A5A29A]">
+        <div className={`flex w-full items-center ${pantallaCompleta ? "h-[calc(100dvh-3.5rem)]" : "h-[720px]"} justify-center bg-[#0F1115] text-[14px] text-[#A5A29A]`}>
           Cargando el laboratorio…
         </div>
       )}
