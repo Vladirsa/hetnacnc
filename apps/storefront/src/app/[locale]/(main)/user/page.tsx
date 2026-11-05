@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 
 import { IconoCuenta, type NombreIcono } from "@/components/hetna/cuenta/IconoCuenta"
 import { VincularCotizador } from "@/components/hetna/cuenta/VincularCotizador"
+import { ActivarAvisos } from "@/components/hetna/push/ActivarAvisos"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
@@ -263,6 +264,9 @@ export default async function MiCuenta() {
               </p>
             )}
           </section>
+
+          {/* Avisos al celular (pedidos, propuestas, ofertas) */}
+          <ActivarAvisos />
 
           {/* Cuenta del Cotizador (la app para talleres) */}
           <VincularCotizador />

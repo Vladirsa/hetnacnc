@@ -879,6 +879,129 @@ function AvisoAlta({ onEstado }: { onEstado?: (a: EstadoAlta | null) => void }) 
 
 // ---------------------------------------------------------------- pantalla
 
+// Avisos al celular del taller (packages/api/src/lib/push.ts): pedidos nuevos,
+// solicitudes de fabricación, respuestas de clientes. Usa el service worker de
+// la tienda (/sw.js), que vive en el mismo dominio que este panel.
+const aBytes = (b64: string) => {
+  const relleno = "=".repeat((4 - (b64.length % 4)) % 4)
+  const crudo = atob((b64 + relleno).replace(/-/g, "+").replace(/_/g, "/"))
+  return Uint8Array.from(crudo, (c) => c.charCodeAt(0))
+}
+const dispositivo = () => {
+  const ua = navigator.userAgent
+  return /iphone|ipad/i.test(ua) ? "iPhone/iPad" : /android/i.test(ua) ? "Android" : /windows/i.test(ua) ? "Windows" : /mac/i.test(ua) ? "Mac" : "Navegador"
+}
+
+function AvisosCelular() {
+  const [estado, setEstado] = useState<"cargando" | "nada" | "ios" | "bloqueado" | "inactivo" | "activo" | "activando">("cargando")
+  const [nota, setNota] = useState("")
+
+  useEffect(() => {
+    let vivo = true
+    ;(async () => {
+      const soporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window
+      const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+      if (!soporta) return vivo && setEstado(ios ? "ios" : "nada")
+      if (Notification.permission === "denied") return vivo && setEstado("bloqueado")
+      try {
+        const reg = await navigator.serviceWorker.getRegistration("/")
+        const sub = reg ? await reg.pushManager.getSubscription() : null
+        if (sub && Notification.permission === "granted") {
+          const r = await fetch(`/vendor/hetna-push?endpoint=${encodeURIComponent(sub.endpoint)}`, { credentials: "include" })
+          const d = (await r.json().catch(() => null)) as { activo?: boolean } | null
+          if (d?.activo) return vivo && setEstado("activo")
+        }
+      } catch {
+        /* inactivo */
+      }
+      if (vivo) setEstado("inactivo")
+    })()
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  const activar = async () => {
+    setNota("")
+    setEstado("activando")
+    try {
+      const permiso = await Notification.requestPermission()
+      if (permiso !== "granted") return setEstado(permiso === "denied" ? "bloqueado" : "inactivo")
+      const r0 = await fetch("/vendor/hetna-push", { credentials: "include" })
+      const { llave } = ((await r0.json().catch(() => ({}))) || {}) as { llave?: string | null }
+      if (!llave) {
+        setNota("Los avisos todavía no están disponibles. Intenta más tarde.")
+        return setEstado("inactivo")
+      }
+      const reg = (await navigator.serviceWorker.getRegistration("/")) || (await navigator.serviceWorker.register("/sw.js", { scope: "/" }))
+      await navigator.serviceWorker.ready
+      const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(llave) }))
+      const r = await fetch("/vendor/hetna-push", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suscripcion: sub.toJSON(), dispositivo: dispositivo() }),
+      })
+      if (!r.ok) {
+        const d = (await r.json().catch(() => null)) as { message?: string } | null
+        setNota(d?.message || "No se pudieron activar.")
+        return setEstado("inactivo")
+      }
+      setNota("Listo: te mandamos un aviso de prueba.")
+      setEstado("activo")
+    } catch {
+      setNota("No se pudieron activar los avisos en este navegador.")
+      setEstado("inactivo")
+    }
+  }
+
+  const desactivar = async () => {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration("/")
+      const sub = reg ? await reg.pushManager.getSubscription() : null
+      if (sub)
+        await fetch("/vendor/hetna-push", {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        })
+    } catch {
+      /* nada */
+    }
+    setNota("")
+    setEstado("inactivo")
+  }
+
+  if (estado === "cargando" || estado === "nada") return null
+  const activo = estado === "activo"
+  return (
+    <div style={{ ...S.card, background: activo ? "#EEF8F2" : "#FFF8EE", borderColor: activo ? "#BFE3CF" : "#F2C98F" }}>
+      <p style={S.h2}>{activo ? "🔔 Avisos activados en este dispositivo" : "🔔 Recibe tus pedidos en el celular"}</p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+        {estado === "ios"
+          ? "En iPhone, abre hetnacnc.com/seller en Safari, toca Compartir y luego \"Agregar a inicio\". Entra desde ese icono y activa los avisos."
+          : estado === "bloqueado"
+            ? "Bloqueaste los avisos en este navegador. Actívalos en los ajustes del sitio (el candado junto a la dirección)."
+            : "Te avisamos al momento de pedidos nuevos, solicitudes de fabricación, cuando ganas una y cuando un cliente te responde. Responder rápido te da más ventas."}
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+        {(estado === "inactivo" || estado === "activando") && (
+          <button type="button" style={S.btn} disabled={estado === "activando"} onClick={() => void activar()}>
+            {estado === "activando" ? "Activando..." : "Activar avisos"}
+          </button>
+        )}
+        {activo && (
+          <button type="button" style={{ background: "none", border: "none", textDecoration: "underline", cursor: "pointer", fontSize: 13 }} onClick={() => void desactivar()}>
+            Desactivar
+          </button>
+        )}
+        {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
+      </div>
+    </div>
+  )
+}
+
 // Taller aprobado y sin un solo producto: la invitación más importante del
 // tablero. Sin productos no hay ventas, así que va arriba de todo.
 function PrimerProducto() {
@@ -1029,6 +1152,8 @@ export default function TableroPage() {
       <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
 
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
+
+      <AvisosCelular />
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 

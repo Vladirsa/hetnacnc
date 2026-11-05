@@ -776,6 +776,7 @@ export type Routes = {
             };
         };
         hetnaPerfilUnico: typeof import("../src/api/store/hetna-perfil-unico/route");
+        hetnaPush: typeof import("../src/api/store/hetna-push/route");
         hetnaRastreo: {
             $id: typeof import("../src/api/store/hetna-rastreo/[id]/route");
         };
@@ -1154,6 +1155,7 @@ export type Routes = {
         hetnaPublicar: typeof import("../src/api/vendor/hetna-publicar/route") & {
             revisarFoto: typeof import("../src/api/vendor/hetna-publicar/revisar-foto/route");
         };
+        hetnaPush: typeof import("../src/api/vendor/hetna-push/route");
         hetnaSaldo: typeof import("../src/api/vendor/hetna-saldo/route");
         hetnaSolicitudes: typeof import("../src/api/vendor/hetna-solicitudes/route") & {
             $id: {

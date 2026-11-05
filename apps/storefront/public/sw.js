@@ -21,3 +21,34 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
+
+// ── Notificaciones al celular (packages/api/src/lib/push.ts) ──────────────
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { cuerpo: e.data ? e.data.text() : '' }; }
+  const titulo = d.titulo || 'HETNA CNC';
+  e.waitUntil(
+    self.registration.showNotification(titulo, {
+      body: d.cuerpo || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: d.etiqueta || undefined,
+      renotify: !!d.etiqueta,
+      data: { url: d.url || '/' },
+      lang: 'es-MX',
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
+      for (const v of ventanas) {
+        if (v.url === url && 'focus' in v) return v.focus();
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});

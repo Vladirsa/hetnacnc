@@ -4,6 +4,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { servicioTalleres } from "../../../../../lib/alta-taller"
 import { cupoLicitacion, mensajeSinCupo } from "../../../../../lib/licitacion-plan"
 import { sendEmail } from "../../../../../lib/resend"
+import { pushACliente } from "../../../../../lib/push"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
@@ -78,6 +79,19 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   }
 
   // Aviso al cliente (solo la primera vez que este taller propone)
+  if (!previa) {
+    await pushACliente(
+      knex,
+      { customerId: s.cliente_id, email: s.contacto?.email },
+      {
+        titulo: "Tienes una nueva propuesta",
+        cuerpo: `${folioTexto(s.folio)}: $${precio.toLocaleString("es-MX")} MXN, entrega en ${dias} días. Compárala con las demás.`,
+        url: ligaPropuestas(s.token),
+        etiqueta: `sol-${s.id}`,
+      },
+      logger
+    )
+  }
   if (!previa && s.contacto?.email) {
     const folio = folioTexto(s.folio)
     const r = await sendEmail({

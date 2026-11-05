@@ -1,4 +1,5 @@
 import { defineMiddlewares } from "@medusajs/medusa";
+import { authenticate } from "@medusajs/framework/http";
 import { MAX_MB_LIBRO } from "../lib/publicar-libro";
 import { MAX_MB_ARCHIVO as MAX_MB_ARCHIVO_CLOUD } from "../lib/cloud";
 import { adminLearningArticlesMiddlewares } from "./admin/learning-articles/middlewares";
@@ -46,6 +47,11 @@ export default defineMiddlewares({
         ...storeLearningArticlesMiddlewares,
         ...adminCoursesMiddlewares,
         ...storeCoursesMiddlewares,
+        {
+            method: ["POST", "DELETE"],
+            matcher: "/store/hetna-push",
+            middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
         ...vendorCoursesMiddlewares,
         ...storeCreditos3dMiddlewares,
         ...storeCotizadorMiddlewares,

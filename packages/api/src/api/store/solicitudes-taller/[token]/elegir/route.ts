@@ -16,6 +16,7 @@ import {
 } from "../../../../../lib/licitacion"
 import { estadoCobro, ligaDePago, pesos, prepararCobro } from "../../../../../lib/licitacion-cobro"
 import { avisarNoElegidos } from "../../../../../lib/licitacion-extra"
+import { pushATalleres } from "../../../../../lib/push"
 import { cambiarEtapa } from "../../../../../lib/seguimiento"
 
 // El cliente elige una propuesta: se cierra la licitación, se decide cómo se
@@ -131,6 +132,12 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
     },
   ].filter(Boolean) as { to: string; subject: string; html: string }[]
 
+  await pushATalleres(
+    knex,
+    [p.seller_id],
+    { titulo: "¡Ganaste una solicitud!", cuerpo: `${folio}: el cliente eligió tu propuesta. No inicies hasta que confirme el pago.`, url: "/seller/solicitudes", etiqueta: `sol-${s.id}` },
+    logger
+  )
   for (const a of avisos) {
     const r = await sendEmail(a)
     if (!r.sent) logger.info(`[licitacion] aviso de elección no enviado: ${r.reason}`)

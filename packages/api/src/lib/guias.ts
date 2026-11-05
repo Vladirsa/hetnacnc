@@ -32,6 +32,7 @@ import { armarPaquete, tarifaRapida } from "../modules/skydropx/tarifas"
 import { EVIDENCIA_OBLIGATORIA, type Evidencia, buscarCP, leerEvidencia } from "./envios"
 import { folioSobrepeso, sobrepesosPendientes } from "./sobrepesos"
 import { sendEmail } from "./resend"
+import { pushACliente } from "./push"
 
 export const T_GUIAS = "hetna_guia"
 
@@ -654,6 +655,17 @@ async function registrarEnPedido(c: MedusaContainer, orderId: string) {
   }
 
   if (!fila.aviso_enviado_en && pedido.email) {
+    await pushACliente(
+      knex,
+      { email: pedido.email },
+      {
+        titulo: `Tu pedido #${pedido.display_id} va en camino`,
+        cuerpo: `${fila.paqueteria || "Paquetería"} · guía ${fila.guia}. Toca para rastrearlo.`,
+        url: fila.rastreo_url || "/mx/user/orders",
+        etiqueta: `pedido-${orderId}`,
+      },
+      logger
+    )
     const rastreo = fila.rastreo_url
       ? `<p style="margin-top:20px;"><a href="${fila.rastreo_url}" style="background:#C2560A;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Rastrear mi paquete</a></p>`
       : ""

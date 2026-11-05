@@ -12,6 +12,7 @@
 //   · Cuenta del cliente: la solicitud se liga al cliente (cliente_id) cuando
 //     la manda con sesión o cuando abre su liga con sesión iniciada.
 import { sendEmail } from "./resend"
+import { pushACliente, pushATalleres } from "./push"
 import {
   T_PROPUESTA,
   T_SOLICITUD,
@@ -105,6 +106,12 @@ export async function preguntar(knex: any, s: any, sellerId: string, texto: stri
   const id = nuevoId("prg")
   await knex(T_PREGUNTA).insert({ id, solicitud_id: s.id, seller_id: sellerId, pregunta })
   const folio = folioTexto(s.folio)
+  await pushACliente(
+    knex,
+    { customerId: s.cliente_id, email: s.contacto?.email },
+    { titulo: "Un taller te hizo una pregunta", cuerpo: `${folio}: ${pregunta}`, url: `${ligaPropuestas(s.token)}#preguntas`, etiqueta: `sol-${s.id}` },
+    logger
+  )
   if (s.contacto?.email) {
     const r = await sendEmail({
       to: s.contacto.email,
@@ -135,6 +142,12 @@ export async function responder(knex: any, s: any, preguntaId: string, texto: st
   const ids = new Set<string>([p.seller_id])
   for (const x of await knex(T_PROPUESTA).where({ solicitud_id: s.id }).select("seller_id")) ids.add(x.seller_id)
   const talleres = await knex("seller").whereIn("id", [...ids]).select("id", "email")
+  await pushATalleres(
+    knex,
+    [...ids],
+    { titulo: "El cliente respondió", cuerpo: `${folio}: ${respuesta}`, url: "/seller/solicitudes", etiqueta: `sol-${s.id}` },
+    logger
+  )
   for (const t of talleres) {
     if (!t.email) continue
     const r = await sendEmail({

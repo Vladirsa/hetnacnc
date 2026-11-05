@@ -3,6 +3,7 @@
 // revisión, o cuando HETNA la aprueba (dashboard o job de revisión vencida).
 import { avisarRedes } from "./redes"
 import { sendEmail } from "./resend"
+import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
 import {
   T_SOLICITUD,
@@ -60,8 +61,8 @@ export async function difundirSolicitud(
         boton("Enviar mi propuesta", `${VENDOR_URL}/solicitudes`)
     )
 
-  const destinos: { email: string; nombre?: string }[] = []
-  if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name })
+  const destinos: { email: string; nombre?: string; id?: string }[] = []
+  if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name, id: taller.id })
   if (abierta) {
     try {
       const otros = (await knex("seller")
@@ -69,7 +70,7 @@ export async function difundirSolicitud(
         .whereNotNull("email")
         .modify((q: any) => (taller ? q.whereNot({ id: taller.id }) : q))
         .limit(500)
-        .select("email", "metadata")) as { email: string; metadata: any }[]
+        .select("id", "email", "metadata")) as { id: string; email: string; metadata: any }[]
       // "Otro" no es un servicio que un taller pueda tener en su perfil: si
       // se compara literal, la solicitud no le llega a nadie.
       const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
@@ -91,12 +92,23 @@ export async function difundirSolicitud(
       coinciden.sort((x, y) => prioridad(x) - prioridad(y))
       for (const x of coinciden) {
         if (destinos.length >= MAX_AVISOS) break
-        destinos.push({ email: x.email })
+        destinos.push({ email: x.email, id: x.id })
       }
     } catch (e) {
       logger.warn(`[licitacion] no se pudo listar talleres: ${(e as Error).message}`)
     }
   }
+  await pushATalleres(
+    knex,
+    destinos.map((d) => d.id),
+    {
+      titulo: taller && !abierta ? "Un cliente quiere tu cotización" : "Nueva solicitud de fabricación",
+      cuerpo: `${folio}: ${[trabajo.servicio, trabajo.material, trabajo.ciudad].filter(Boolean).join(" · ") || "manda tu precio"}`,
+      url: "/seller/solicitudes",
+      etiqueta: `sol-${s.id}`,
+    },
+    logger
+  )
   for (const d of destinos) {
     const r = await sendEmail({
       to: d.email,
