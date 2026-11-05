@@ -6,13 +6,16 @@ import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
 import { TablaTarifas } from "@/components/hetna/TablaTarifas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.3 · 4 nov 2026 (aceptación expresa en el panel y verificación de tarjeta, cláusulas 2 y 3).
 // Versión 1.2 · 3 nov 2026 (libros y PDF de la Academia y lista de precios, cláusula 8).
 // Versión 1.1 · 1 nov 2026 (comisión de cursos de la Academia, cláusula 8).
 // Versión 1.0 · 28 oct 2026. BORRADOR para revisión de abogado y contador:
 // ver "Paquete legal HETNA" (preguntas abiertas). Al cambiarlo, sube la versión
 // y avisa a los vendedores con 15 días de anticipación (cláusula 17).
-const VERSION = "1.2"
-const VIGENCIA = "3 de noviembre de 2026"
+// La misma versión va en TERMINOS_VERSION de packages/api/src/lib/requisitos-vendedor.ts:
+// al cambiarla, cada vendedor la vuelve a aceptar en su panel.
+const VERSION = "1.3"
+const VIGENCIA = "4 de noviembre de 2026"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/terminos-vendedores" },
@@ -51,8 +54,9 @@ export default function TerminosVendedores() {
 
       <h2>2. Aceptación</h2>
       <p>
-        Al crear tu cuenta de vendedor y pulsar «Continuar», aceptas estos términos. HETNA guarda la fecha en que los
-        aceptaste. Si no estás de acuerdo, no crees la cuenta.
+        Aceptas estos términos al marcar la casilla «He leído y acepto» en la entrada de tu panel de vendedor o en «Activa tu
+        cuenta». HETNA guarda la versión que aceptaste, la fecha y la dirección IP. Cuando publiquemos una versión nueva te la
+        pediremos de nuevo antes de publicar o cotizar. Si no estás de acuerdo, no uses la cuenta.
       </p>
 
       <h2>3. Quién puede vender</h2>
@@ -60,6 +64,7 @@ export default function TerminosVendedores() {
         <li>Personas mayores de edad con capacidad legal para contratar, o empresas legalmente constituidas, representadas por alguien con facultades.</li>
         <li>Debes dar datos verdaderos y mantenerlos al día: nombre o razón social, contacto, domicilio del taller y, para recibir pagos y aplicar retenciones, tu RFC y tus datos bancarios.</li>
         <li>Eres responsable de lo que se haga con tu cuenta y de mantener segura tu contraseña. Si invitas a otras personas a tu cuenta, respondes por ellas.</li>
+        <li>Para publicar productos, cursos o libros y para cotizar solicitudes debes tener sesión iniciada y verificar una tarjeta de débito o crédito a tu nombre o de tu negocio, con Mercado Pago o PayPal. Se hace un cargo de $10 MXN que se devuelve al momento; sólo sirve para comprobar que la cuenta es real. HETNA no ve ni guarda el número de la tarjeta y no la usa para otros cobros.</li>
       </ul>
 
       <h2>4. Verificación del taller</h2>
