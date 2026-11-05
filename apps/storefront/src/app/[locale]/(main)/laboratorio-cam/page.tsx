@@ -376,7 +376,7 @@ export default function LaboratorioCam() {
           </Ejemplo>
           <div className="flex flex-col justify-center rounded-[16px] bg-[#FDEEE1] p-6">
             <h3 className="text-[19px] font-bold text-[#1B1B18]">¿Tu pieza es otra?</h3>
-            <p className="mt-1 text-[14px] leading-relaxed text-[#4A4943]">Súbela y simúla. Si prefieres no hacerlo tú, un especialista te prepara el programa.</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[#4A4943]">Súbela y simúlala. Si prefieres no hacerlo tú, un especialista te prepara el programa.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Simular mi pieza</LocalizedClientLink>
               <LocalizedClientLink href="/cam/lab#precios" className={SECUNDARIO}>Ver servicio</LocalizedClientLink>
