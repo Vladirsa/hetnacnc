@@ -297,3 +297,187 @@ export async function importarLicitaciones(knex: any, sellerId: string): Promise
 export function tokenLiga() {
   return randomBytes(18).toString("base64url")
 }
+
+// ---------------------------------------------------------------------
+// Archivos que viven en el módulo de archivos de Medusa (servicio CAM):
+// la clave se guarda como "medusa:<file_id>" y se descargan con la liga que
+// da el módulo, sin copiarlos a B2 (no ocupan cupo).
+// ---------------------------------------------------------------------
+
+export const PREFIJO_MEDUSA = "medusa:"
+export const esDeMedusa = (clave: string) => String(clave || "").startsWith(PREFIJO_MEDUSA)
+
+/** Liga de descarga de un archivo guardado en el módulo de archivos de Medusa. */
+export async function ligaMedusa(scope: { resolve: (k: string) => any }, clave: string): Promise<string | null> {
+  if (!esDeMedusa(clave)) return null
+  try {
+    const archivo = await scope.resolve("file").retrieveFile(clave.slice(PREFIJO_MEDUSA.length))
+    return archivo?.url || null
+  } catch {
+    return null
+  }
+}
+
+const ESTADOS_CAM_LISTOS = ["paid", "in_review", "delivered"]
+
+/**
+ * Importa los trabajos del servicio CAM de HETNA que pidió el taller (con
+ * el correo de su cuenta de vendedor) como proyectos con su modelo, su G-code
+ * y los entregables. Idempotente, como las licitaciones.
+ */
+export async function importarCam(knex: any, sellerId: string): Promise<number> {
+  if (!(await knex.schema.hasTable("cam_job"))) return 0
+  const seller = await knex("seller").where({ id: sellerId }).first("email")
+  const correo = String(seller?.email || "").trim().toLowerCase()
+  if (!correo) return 0
+  const clientes = (await knex("customer").whereRaw("lower(email) = ?", [correo]).whereNull("deleted_at").pluck("id")) as string[]
+
+  const trabajos = (await knex("cam_job as j")
+    .whereIn("j.status", ESTADOS_CAM_LISTOS)
+    .whereNull("j.deleted_at")
+    .where((q: any) => {
+      q.whereRaw("lower(j.email) = ?", [correo])
+      if (clientes.length) q.orWhereIn("j.customer_id", clientes)
+    })
+    .whereNotExists(function (this: any) {
+      this.select(knex.raw("1"))
+        .from(T_PROYECTO)
+        .where({ seller_id: sellerId, origen_tipo: "cam" })
+        .whereRaw(`origen_ref = j.id`)
+    })
+    .orderBy("j.created_at", "desc")
+    .limit(50)
+    .select("j.id", "j.model_name", "j.model_file_id", "j.gcode_file_id", "j.deliverables", "j.service", "j.controller", "j.stats")) as any[]
+
+  let n = 0
+  for (const j of trabajos) {
+    const archivos: { nombre: string; id: string }[] = []
+    if (j.model_file_id) archivos.push({ nombre: j.model_name || "modelo", id: j.model_file_id })
+    if (j.gcode_file_id) archivos.push({ nombre: `${String(j.model_name || "pieza").replace(/\.[^.]+$/, "")}.nc`, id: j.gcode_file_id })
+    for (const d of Array.isArray(j.deliverables) ? j.deliverables : []) {
+      if (d?.id) archivos.push({ nombre: String(d.name || d.id), id: String(d.id) })
+    }
+    try {
+      await knex.transaction(async (trx: any) => {
+        const proyectoId = nuevoId("cpr")
+        const nombre = texto(j.model_name, 90) || "Pieza"
+        await trx(T_PROYECTO).insert({
+          id: proyectoId,
+          seller_id: sellerId,
+          nombre: `CAM · ${nombre}`,
+          estado: "activo",
+          notas: [`Servicio CAM de HETNA (${j.service})`, j.controller && `Controlador: ${j.controller}`].filter(Boolean).join("\n"),
+          origen_tipo: "cam",
+          origen_ref: j.id,
+        })
+        const piezaId = nuevoId("cpz")
+        await trx(T_PIEZA).insert({ id: piezaId, seller_id: sellerId, proyecto_id: proyectoId, nombre })
+        for (const a of archivos.slice(0, 30)) {
+          const ext = (a.nombre.split(".").pop() || "").toLowerCase().slice(0, 10)
+          await trx(T_ARCHIVO).insert({
+            id: nuevoId("car"),
+            seller_id: sellerId,
+            proyecto_id: proyectoId,
+            pieza_id: piezaId,
+            nombre: texto(a.nombre, 120) || "archivo",
+            ext,
+            clave: `${PREFIJO_MEDUSA}${a.id}`,
+            tamano: 0,
+            cuenta_cupo: false,
+            categoria: categoriaDe(ext),
+            revision: 1,
+            estado: "borrador",
+            notas: "Del servicio CAM de HETNA",
+          })
+        }
+      })
+      n++
+    } catch (e) {
+      if (!/duplicate key|unique/i.test(String((e as Error).message))) throw e
+    }
+  }
+  return n
+}
+
+/**
+ * Importa los pedidos pagados de la tienda del taller (últimos 90 días) como
+ * proyectos: el cliente con su nombre y una pieza por producto. Lo pide el
+ * taller con un botón (no es automático: hay talleres con muchos pedidos).
+ */
+export async function importarPedidos(scope: { resolve: (k: string) => any }, knex: any, sellerId: string): Promise<number> {
+  const query = scope.resolve("query")
+  const { data: vinculos } = await query.graph({
+    entity: "order_seller",
+    fields: ["order_id"],
+    filters: { seller_id: sellerId } as any,
+  })
+  const ids = (vinculos as any[]).map((v) => v.order_id).filter(Boolean)
+  if (!ids.length) return 0
+  const ya = new Set(
+    (await knex(T_PROYECTO).where({ seller_id: sellerId, origen_tipo: "pedido" }).whereIn("origen_ref", ids).pluck("origen_ref")) as string[]
+  )
+  const faltan = ids.filter((id) => !ya.has(id))
+  if (!faltan.length) return 0
+
+  const desde = Date.now() - 90 * 86400_000
+  const { data: pedidos } = await query.graph({
+    entity: "order",
+    fields: [
+      "id", "display_id", "status", "payment_status", "created_at",
+      "shipping_address.first_name", "shipping_address.last_name", "shipping_address.company", "shipping_address.phone",
+      "email", "items.title", "items.product_title", "items.variant_title", "items.quantity",
+    ],
+    filters: { id: faltan.slice(0, 200) } as any,
+  })
+  const PAGADO = new Set(["captured", "partially_captured", "authorized", "partially_authorized"])
+  let n = 0
+  for (const o of (pedidos as any[])
+    .filter((o) => o.status !== "canceled" && PAGADO.has(String(o.payment_status)) && new Date(o.created_at).getTime() >= desde)
+    .slice(0, 50)) {
+    const dir = o.shipping_address || {}
+    const nombreCliente = [dir.first_name, dir.last_name].filter(Boolean).join(" ").trim() || String(o.email || "").split("@")[0] || "Cliente"
+    try {
+      await knex.transaction(async (trx: any) => {
+        // Un cliente por correo: si ya existe, se reusa
+        let cliente = o.email
+          ? await trx(T_CLIENTE).where({ seller_id: sellerId }).whereRaw("lower(correo) = ?", [String(o.email).toLowerCase()]).first("id")
+          : null
+        if (!cliente) {
+          cliente = { id: nuevoId("ccl") }
+          await trx(T_CLIENTE).insert({
+            id: cliente.id,
+            seller_id: sellerId,
+            nombre: texto(nombreCliente, 120),
+            empresa: texto(dir.company, 120) || null,
+            correo: texto(o.email, 160) || null,
+            telefono: texto(dir.phone, 40) || null,
+            notas: "Cliente de la tienda HETNA",
+          })
+        }
+        const proyectoId = nuevoId("cpr")
+        await trx(T_PROYECTO).insert({
+          id: proyectoId,
+          seller_id: sellerId,
+          cliente_id: cliente.id,
+          nombre: `Pedido #${o.display_id}`,
+          estado: "activo",
+          origen_tipo: "pedido",
+          origen_ref: o.id,
+        })
+        for (const it of (o.items || []).slice(0, 50)) {
+          await trx(T_PIEZA).insert({
+            id: nuevoId("cpz"),
+            seller_id: sellerId,
+            proyecto_id: proyectoId,
+            nombre: texto([it.product_title || it.title, it.variant_title].filter(Boolean).join(" · "), 120) || "Producto",
+            cantidad: Number(it.quantity) || null,
+          })
+        }
+      })
+      n++
+    } catch (e) {
+      if (!/duplicate key|unique/i.test(String((e as Error).message))) throw e
+    }
+  }
+  return n
+}
