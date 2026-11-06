@@ -34,6 +34,12 @@ function limitarPorIp(req: MedusaRequest, res: MedusaResponse, next: MedusaNextF
 
 export const storeSolicitudArchivosMiddlewares: MiddlewareRoute[] = [
   {
+    // El boleto de subida directa cuenta igual que una subida
+    method: ["POST"],
+    matcher: "/store/solicitud-archivos/boleto",
+    middlewares: [limitarPorIp],
+  },
+  {
     method: ["POST"],
     matcher: "/store/solicitud-archivos",
     middlewares: [
