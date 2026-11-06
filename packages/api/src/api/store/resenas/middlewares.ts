@@ -10,6 +10,13 @@ export const storeResenasMiddlewares: MiddlewareRoute[] = [
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
   {
+    method: ["POST"],
+    matcher: "/store/resenas/fotos",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+    // Una foto ya reducida en el navegador pesa ~200-500 KB; en base64 un poco más
+    bodyParser: { sizeLimit: "3mb" },
+  },
+  {
     method: ["GET"],
     matcher: "/store/resenas/pendientes",
     middlewares: [authenticate("customer", ["session", "bearer"])],

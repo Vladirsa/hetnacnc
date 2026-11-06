@@ -792,10 +792,15 @@ export type Routes = {
         packs: typeof import("../src/api/store/packs/route");
         quoteLeads: typeof import("../src/api/store/quote-leads/route");
         resenas: typeof import("../src/api/store/resenas/route") & {
+            fotos: typeof import("../src/api/store/resenas/fotos/route") & {
+                $id: typeof import("../src/api/store/resenas/fotos/[id]/route");
+            };
             pendientes: typeof import("../src/api/store/resenas/pendientes/route");
             promedios: typeof import("../src/api/store/resenas/promedios/route");
         };
-        solicitudArchivos: typeof import("../src/api/store/solicitud-archivos/route");
+        solicitudArchivos: typeof import("../src/api/store/solicitud-archivos/route") & {
+            boleto: typeof import("../src/api/store/solicitud-archivos/boleto/route");
+        };
         solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
             $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
                 elegir: typeof import("../src/api/store/solicitudes-taller/[token]/elegir/route");

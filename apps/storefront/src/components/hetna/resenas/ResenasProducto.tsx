@@ -53,6 +53,7 @@ export const ResenasProducto = ({
             </p>
             <p className="mt-1 text-[13px] text-[#6B6A63]">
               {total} {total === 1 ? "reseña" : "reseñas"}
+              {datos.con_fotos ? ` · ${datos.con_fotos} con fotos 📷` : ""}
             </p>
           </div>
 
@@ -107,6 +108,22 @@ export const ResenasProducto = ({
                 <p className="mt-1.5 text-[14px] leading-relaxed text-[#1B1B18]">
                   {r.comentario}
                 </p>
+              )}
+
+              {r.fotos && r.fotos.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {r.fotos.map((id) => (
+                    <a key={id} href={`/api/resena-foto/${id}`} target="_blank" rel="noopener noreferrer" aria-label="Ver foto del cliente">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/api/resena-foto/${id}`}
+                        alt="Foto del cliente"
+                        loading="lazy"
+                        className="h-20 w-20 rounded-[8px] border border-[#E7E4DC] object-cover hover:opacity-90"
+                      />
+                    </a>
+                  ))}
+                </div>
               )}
 
               {r.respuesta_taller && (

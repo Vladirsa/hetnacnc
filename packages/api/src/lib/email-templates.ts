@@ -46,6 +46,40 @@ export function welcomeEmailHtml({ name }: { name: string }): string {
 
 export type AbandonedCartItem = { title: string; quantity: number }
 
+// Segundo recordatorio del carrito (un día después del primero): más corto, con
+// ayuda directa por WhatsApp y, si se configuró, un cupón.
+export function abandonedCartSegundoEmailHtml({
+  items,
+  cartUrl,
+  whatsappUrl,
+  cupon,
+}: {
+  items: AbandonedCartItem[]
+  cartUrl: string
+  whatsappUrl: string
+  cupon?: string | null
+}): string {
+  const lista = items
+    .slice(0, 3)
+    .map((i) => `<li>${i.title}${i.quantity > 1 ? ` (x${i.quantity})` : ""}</li>`)
+    .join("")
+  return layout(
+    "Tu carrito en " + SITE_NAME + " sigue guardado",
+    `
+      <h1 style="font-size:20px;margin:0 0 16px;">¿Te ayudamos a terminar tu compra?</h1>
+      <p>Tu carrito sigue guardado:</p>
+      <ul style="margin:8px 0 16px;padding-left:18px;">${lista}</ul>
+      ${cupon ? `<p style="background:#FFF3E8;border-radius:6px;padding:10px 12px;">Usa el cupón <b>${cupon}</b> al pagar.</p>` : ""}
+      <p>Si tienes dudas de medidas, material, envío o forma de pago, escríbenos y te ayudamos en minutos.</p>
+      <p style="margin-top:20px;">
+        <a href="${cartUrl}" style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">Ver mi carrito</a>
+        &nbsp;
+        <a href="${whatsappUrl}" style="background:#25D366;color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">Preguntar por WhatsApp</a>
+      </p>
+    `
+  )
+}
+
 export function abandonedCartEmailHtml({
   items,
   total,
@@ -197,6 +231,10 @@ export function reviewRequestEmailHtml({
       <p>
         Tu opinión le sirve a quien está decidiendo si le compra al mismo taller.
         Son dos minutos y ayuda más de lo que parece.
+      </p>
+      <p>
+        <b>📷 Si puedes, agrega una foto</b> de lo que recibiste: es lo que más
+        le ayuda a los demás a decidir.
       </p>
       <table style="width:100%;border-collapse:collapse;margin:16px 0;">${filas}</table>
       <p style="color:#666;font-size:13px;margin-top:20px;">

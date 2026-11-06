@@ -25,6 +25,7 @@ export type Resena = {
   comentario: string | null
   respuesta_taller: string | null
   creado: string
+  fotos?: string[]
 }
 
 export type ResenasDeProducto = {
@@ -32,6 +33,7 @@ export type ResenasDeProducto = {
   total: number
   desglose: { estrellas: number; total: number }[]
   resenas: Resena[]
+  con_fotos?: number
 }
 
 const VACIO: ResenasDeProducto = {
@@ -114,6 +116,7 @@ export async function enviarResena(datos: {
   order_id: string
   calificacion: number
   comentario?: string
+  fotos?: string[]
 }): Promise<RespuestaEnvio> {
   const auth = (await getAuthHeaders()) as { authorization?: string }
   if (!auth.authorization) {
@@ -141,5 +144,24 @@ export async function enviarResena(datos: {
     return { ok: true, moderacion: Boolean(cuerpo.moderacion) }
   } catch {
     return { ok: false, mensaje: "No se pudo conectar con el servidor." }
+  }
+}
+
+/** Sube una foto (ya reducida en el navegador) para la reseña. Devuelve su id. */
+export async function subirFotoResena(imagen: string): Promise<{ ok: true; id: string } | { ok: false; mensaje: string }> {
+  const auth = (await getAuthHeaders()) as { authorization?: string }
+  if (!auth.authorization) return { ok: false, mensaje: "Necesitas iniciar sesión." }
+  if (typeof imagen !== "string" || imagen.length > 2_100_000) return { ok: false, mensaje: "La foto es muy pesada." }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/resenas/fotos`, {
+      method: "POST",
+      headers: cabeceras(auth as Record<string, string>),
+      body: JSON.stringify({ imagen }),
+      cache: "no-store",
+    })
+    const cuerpo = (await res.json().catch(() => ({}))) as { id?: string; message?: string }
+    return res.ok && cuerpo.id ? { ok: true, id: cuerpo.id } : { ok: false, mensaje: cuerpo.message || "No se pudo subir la foto." }
+  } catch {
+    return { ok: false, mensaje: "No se pudo subir la foto." }
   }
 }

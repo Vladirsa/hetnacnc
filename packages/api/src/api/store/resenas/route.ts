@@ -2,6 +2,8 @@ import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medu
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createReviewWorkflow } from "@mercurjs/core/workflows"
 
+import { fotosDeResenas, ligarFotos } from "../../../lib/resena-fotos"
+
 // Reseñas de producto para la tienda.
 //
 // El dominio Review ya viene con Mercur: un solo modelo que sirve para producto
@@ -61,6 +63,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
 
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  const fotos = await fotosDeResenas(knex, todas.map((r) => r.id))
   const total = todas.length
   const suma = todas.reduce((s, r) => s + (r.rating || 0), 0)
 
@@ -80,7 +84,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       comentario: r.customer_note,
       respuesta_taller: r.seller_note,
       creado: r.created_at,
+      // La tienda las sirve en /api/resena-foto/<id>
+      fotos: fotos.get(r.id) || [],
     })),
+    con_fotos: todas.filter((r) => fotos.has(r.id)).length,
   })
 }
 
@@ -95,6 +102,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     order_id?: string
     calificacion?: number
     comentario?: string
+    fotos?: string[]
   }
 
   const calificacion = Number(cuerpo.calificacion)
@@ -116,6 +124,12 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
         customer_id: customerId,
       },
     })
+
+    const reviewId = (result as { id?: string })?.id
+    if (reviewId && cuerpo.fotos?.length) {
+      const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+      await ligarFotos(knex, customerId, reviewId, cuerpo.fotos).catch(() => 0)
+    }
 
     // Nace como `pending`: no se enseña hasta que se modera. Se le dice al
     // cliente para que no crea que su reseña se perdió al no verla.
