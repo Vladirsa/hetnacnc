@@ -294,7 +294,10 @@ export const EXT_ARCHIVO_SOLICITUD = [
   "png", "jpg", "jpeg", "webp", "heic",
   "zip", "rar", "7z",
 ]
+// Subiendo por el servidor (multipart) el tope es 50 MB; con boleto de subida
+// directa a Backblaze (ruta /boleto), 500 MB.
 export const MAX_MB_ARCHIVO_SOLICITUD = 50
+export const MAX_MB_ARCHIVO_DIRECTO = 500
 export const MAX_ARCHIVOS_SOLICITUD = 5
 
 // Una clave válida es una que generó esta API al subir: así un cliente no

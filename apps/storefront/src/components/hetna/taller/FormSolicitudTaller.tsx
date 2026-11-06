@@ -1,6 +1,9 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
+
+import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
 import {
   ACABADOS,
@@ -36,6 +39,9 @@ const PASO = "flex items-center gap-2 text-[15px] font-extrabold text-[#142033]"
 const NUM = "grid h-6 w-6 place-items-center rounded-full bg-[#142033] text-[12px] font-bold text-white"
 
 // Un archivo en la lista: subiendo (con avance), listo (con su clave) o con error.
+// El visor carga three.js sólo cuando hay un modelo 3D que mostrar
+const VisorCad = dynamic(() => import("@/components/hetna/visor/VisorCad").then((m) => m.VisorCad), { ssr: false })
+
 type Pendiente = {
   id: string
   nombre: string
@@ -45,6 +51,9 @@ type Pendiente = {
   error?: string
   // Lo que se leyó del archivo en el navegador (DXF, SVG, STL u OBJ)
   geo?: string
+  // Plano o modelo leído en el navegador, para el visor
+  cad?: GeoCad
+  verCad?: boolean
 }
 
 // Datos que llegan ya llenos desde una herramienta de Diseñar (botón
@@ -187,7 +196,7 @@ export default function FormSolicitudTaller({
                 ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm${g.volumen_cm3 ? ` · ${mm(g.volumen_cm3)} cm³` : ""}`
                 : `${mm(g.largo)} × ${mm(g.ancho)} mm · ${(g.corte_mm / 1000).toLocaleString("es-MX", { maximumFractionDigits: 2 })} m de corte` +
                   (g.perforaciones ? ` · ${g.perforaciones} perforaciones` : "")
-            poner({ geo: texto })
+            poner({ geo: texto, cad: g, verCad: true })
             const campo = medidasRef.current
             if (campo && !campo.value.trim()) campo.value = g.tipo === "3d" ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm` : `${mm(g.largo)} × ${mm(g.ancho)} mm`
           })
@@ -382,7 +391,8 @@ export default function FormSolicitudTaller({
             {archivos.length > 0 && (
               <ul className="grid gap-2">
                 {archivos.map((a) => (
-                  <li key={a.id} className="flex items-center gap-3 rounded-xl border border-[#E7E4DC] px-3 py-2 text-sm">
+                  <li key={a.id} className="rounded-xl border border-[#E7E4DC] text-sm">
+                    <div className="flex items-center gap-3 px-3 py-2">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold text-[#142033]">{a.nombre}</span>
                       {a.error ? (
@@ -398,9 +408,25 @@ export default function FormSolicitudTaller({
                     {a.geo && !a.error && (
                       <span className="hidden shrink-0 rounded-lg bg-[#F3F1EA] px-2 py-1 text-xs font-semibold text-[#142033] sm:block">📐 {a.geo}</span>
                     )}
+                    {a.cad && !a.error && (
+                      <button
+                        type="button"
+                        onClick={() => setArchivos((xs) => xs.map((x) => (x.id === a.id ? { ...x, verCad: !x.verCad } : x)))}
+                        className="text-xs font-semibold text-[#C2560A] hover:underline"
+                      >
+                        {a.verCad ? "Ocultar" : "Ver pieza"}
+                      </button>
+                    )}
                     <button type="button" onClick={() => quitar(a.id)} className="text-xs font-semibold text-[#6B675C] hover:text-[#B3261E]">
                       Quitar
                     </button>
+                    </div>
+                    {a.cad && a.verCad && !a.error && (
+                      <div className="px-3 pb-3">
+                        <VisorCad geo={a.cad} alto={240} />
+                        <p className="mt-1 text-xs text-[#6B675C]">Revisa que sea la pieza correcta: así la verá el taller al cotizar.</p>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -7,7 +7,7 @@
 // bucket privado y devuelve la clave.
 import { NextResponse } from "next/server"
 import { ipDe } from "@/lib/seguridad/ip-cliente"
-import { MAX_MB_ARCHIVO } from "@/lib/fabricacion/opciones"
+import { MAX_MB_ARCHIVO_SERVIDOR as MAX_MB_ARCHIVO } from "@/lib/fabricacion/opciones"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 // El tope del archivo más 1 MB de los demás campos del formulario

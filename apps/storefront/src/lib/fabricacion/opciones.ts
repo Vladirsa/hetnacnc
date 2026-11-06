@@ -37,7 +37,10 @@ export const EXTENSIONES_ARCHIVO = [
   ".png", ".jpg", ".jpeg", ".webp", ".heic",
   ".zip", ".rar", ".7z",
 ]
-export const MAX_MB_ARCHIVO = 50
+// Subida directa a Backblaze desde el navegador (lib/subir-archivo): 500 MB.
+// Si la directa falla, se sube por el servidor, que admite hasta 50 MB.
+export const MAX_MB_ARCHIVO = 500
+export const MAX_MB_ARCHIVO_SERVIDOR = 50
 export const MAX_ARCHIVOS = 5
 
 // Tolerancia que pide el cliente (Licitaciones 2.0). "Normal" basta para casi
