@@ -43,6 +43,9 @@ const MOTIVOS = [
   ["mas_info", "Necesito más información"],
 ]
 
+// El visor de planos vive en la tienda (lee el archivo en el navegador con la liga firmada)
+const SITIO = (typeof window !== "undefined" && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? "http://localhost:8000" : "https://hetnacnc.com"
+
 const pesoLegible = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.ceil((b || 0) / 1024)} KB`)
 
 // Los archivos del cliente están en un bucket privado: la liga se pide al
@@ -83,9 +86,21 @@ function ArchivosCliente({ sol }) {
         <div style={{ display: "grid", gap: 4 }}>
           {ligas.map((a, i) =>
             a.url ? (
-              <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
-                ⬇ {a.nombre} <span style={{ color: "#6B675C", fontWeight: 400 }}>({pesoLegible(a.tamano)})</span>
-              </a>
+              <span key={i} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
+                  ⬇ {a.nombre} <span style={{ color: "#6B675C", fontWeight: 400 }}>({pesoLegible(a.tamano)})</span>
+                </a>
+                {/\.(dxf|svg|stl|obj)$/i.test(a.nombre) && (
+                  <a
+                    href={`${SITIO}/mx/visor?u=${encodeURIComponent(a.url)}&n=${encodeURIComponent(a.nombre)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#1a3a5c", fontWeight: 600, fontSize: 12 }}
+                  >
+                    👁 Ver la pieza
+                  </a>
+                )}
+              </span>
             ) : (
               <span key={i} style={{ color: "#B3261E" }}>{a.nombre}: no disponible, intenta más tarde</span>
             )

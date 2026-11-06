@@ -91,6 +91,7 @@ export async function getSignedDownloadUrl(
 
 type Autorizacion = {
   apiUrl: string
+  accountId: string
   token: string
   downloadUrl: string
   bucketId: string
@@ -145,6 +146,7 @@ async function autorizarBucketNuevo(): Promise<{ ok: true; auth: Autorizacion } 
     ok: true,
     auth: {
       apiUrl: auth.apiUrl,
+      accountId: auth.accountId,
       token: auth.authorizationToken,
       downloadUrl: auth.downloadUrl,
       bucketId: bucket.bucketId,
@@ -286,4 +288,38 @@ export async function getSignedDownloadUrls(
     }
   }
   return salida
+}
+
+// Reglas CORS del bucket: para que el navegador suba directo a B2 (sin pasar
+// por este servidor) y para que el visor de planos lea un archivo con liga
+// firmada. Se corre una vez con el script cors-backblaze.ts.
+export const ORIGENES_CORS = ["https://hetnacnc.com", "https://www.hetnacnc.com", "http://localhost:3000", "http://localhost:8000"]
+
+export async function ponerCorsBucket(origenes = ORIGENES_CORS): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const autorizacion = await autorizarBucket()
+  if (!autorizacion.ok) return autorizacion
+  const { auth } = autorizacion
+  const res = await fetch(`${auth.apiUrl}/b2api/v2/b2_update_bucket`, {
+    method: "POST",
+    headers: { Authorization: auth.token, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      accountId: auth.accountId,
+      bucketId: auth.bucketId,
+      corsRules: [
+        {
+          corsRuleName: "hetna-subida-directa",
+          allowedOrigins: origenes,
+          allowedOperations: ["b2_upload_file", "b2_download_file_by_name", "b2_download_file_by_id"],
+          allowedHeaders: ["authorization", "content-type", "content-length", "x-bz-file-name", "x-bz-content-sha1", "x-bz-info-*", "range"],
+          exposeHeaders: ["x-bz-file-id", "x-bz-content-sha1", "content-length", "content-type"],
+          maxAgeSeconds: 3600,
+        },
+      ],
+    }),
+  })
+  if (!res.ok) {
+    const detalle = await res.text().catch(() => "")
+    return { ok: false, reason: `b2_update_bucket respondio ${res.status}: ${detalle.slice(0, 200)}` }
+  }
+  return { ok: true }
 }

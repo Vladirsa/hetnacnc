@@ -19,6 +19,18 @@ export type GeoCad = {
   volumen_cm3: number
   trazos: Trazo[] // 2D: contornos; 3D: silueta vista de arriba (aristas del contorno)
   avisos: string[]
+  // 3D: los triángulos (x,y,z × 3) para el visor. Si la malla es enorme se
+  // guarda una muestra (hasta MAX_TRIS_VISOR), suficiente para verla.
+  malla?: Float32Array
+}
+
+const MAX_TRIS_VISOR = 600_000
+function muestraMalla(tris: Float64Array, n: number): Float32Array {
+  const paso = Math.max(1, Math.ceil(n / MAX_TRIS_VISOR))
+  const m = Math.floor(n / paso)
+  const out = new Float32Array(m * 9)
+  for (let k = 0; k < m; k++) for (let j = 0; j < 9; j++) out[k * 9 + j] = tris[k * paso * 9 + j]
+  return out
 }
 
 const MAX_TRAZOS_DIBUJO = 4000
@@ -401,7 +413,7 @@ function resumen3d(tris: Float64Array, n: number, avisos: string[]): GeoCad {
     }
   const volumen = Math.abs(vol) / 1000
   if (!(volumen > 0)) avisos.push("No pudimos calcular el volumen (la malla no está cerrada); usamos las medidas de la caja.")
-  return { tipo: "3d", largo, ancho, alto, corte_mm: 0, contornos: 0, perforaciones: 0, volumen_cm3: volumen, trazos: decimar(trazos), avisos }
+  return { tipo: "3d", largo, ancho, alto, corte_mm: 0, contornos: 0, perforaciones: 0, volumen_cm3: volumen, trazos: decimar(trazos), avisos, malla: muestraMalla(tris, n) }
 }
 
 export function leerStl(buffer: ArrayBuffer): GeoCad {
