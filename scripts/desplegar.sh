@@ -65,6 +65,9 @@ fi
 # el segundo. No son trabajo de nadie: se regeneran solos.
 GENERADOS=(
   "packages/api/.mercur/routes.d.ts"
+  # `bun install` reescribe el lockfile en el servidor (los parches de Mercur
+  # le cambian entradas): se descarta antes de instalar, nunca es trabajo.
+  "bun.lock"
 )
 
 sucios="$(git status --porcelain --untracked-files=no)"
@@ -116,6 +119,9 @@ paso "Revisando que no falte ningún import de componente"
 node scripts/revisar-jsx.mjs
 
 paso "Instalando dependencias"
+# El lockfile bueno es el de GitHub: si la corrida anterior lo tocó, se vuelve
+# a dejar como viene del repositorio antes de instalar.
+git checkout -- bun.lock 2>/dev/null || true
 bun install
 
 paso "Construyendo (si esto falla, el sitio NO se toca)"
