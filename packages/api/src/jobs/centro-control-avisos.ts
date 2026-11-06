@@ -7,6 +7,13 @@
 //     sin enviar, reclamo, reseña mala, guía sin saldo). Cada aviso sale una vez:
 //     se anota en hetna_control_aviso para no repetirlo.
 //
+// UN SOLO CORREO AL DÍA: el de la mañana junta el centro de control y el
+// resumen de ayer (antes eran dos correos más las alertas sueltas). Lo urgente
+// que aparece durante el día llega como notificación al celular de la cuenta
+// de la casa (lib/push.ts), no por correo; si no hay celular con avisos
+// activados, se espera al informe del día siguiente. Para volver a recibir las
+// alertas por correo: CONTROL_URGENTES_CORREO=on.
+//
 // A quién: CONTROL_AVISOS_PARA (o RESUMEN_DIARIO_PARA, o la cuenta de la casa).
 // Se puede poner más de un correo separado por comas (por ejemplo, el tuyo y el
 // de tu esposa). Para apagarlo: CONTROL_AVISOS=off.
@@ -15,7 +22,34 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ADMIN, calcularCentroControl, correoCentroControl } from "../lib/centro-control"
 import { correosDeLaCasa } from "../lib/cuentas-casa"
+import { pushACliente } from "../lib/push"
 import { sendEmail } from "../lib/resend"
+import { calcularResumenDiario } from "../lib/resumen-diario"
+
+const pesos = (n) => Number(n || 0).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 })
+const fila = (k, v) => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee;color:#555;font-size:13px">${k}</td><td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;font-weight:700;font-size:14px">${v}</td></tr>`
+
+// Los datos del antiguo "resumen de ayer" (lib/resumen-diario.ts), como una
+// sección más del informe de la mañana.
+async function seccionResumen(container) {
+  try {
+    const r = await calcularResumenDiario(container)
+    const cambio = r.pedidos - r.pedidos_antier
+    const talleres = (r.talleres || []).slice(0, 5)
+    return `<h3 style="margin:18px 0 6px">Más datos de ayer</h3>
+<table style="width:100%;border-collapse:collapse">
+${fila("Pedidos contra antier", `${r.pedidos} (${cambio >= 0 ? "+" : ""}${cambio})`)}
+${fila("Pedidos sin pagar", r.pedidos_sin_pagar)}
+${fila("Clientes nuevos", r.clientes_nuevos)}
+${fila("Carritos abandonados", `${r.carritos_abandonados} · ${pesos(r.valor_abandonado)}`)}
+${fila("Reseñas nuevas", r.resenas_nuevas)}
+${fila("Totales históricos", `${r.total_pedidos} pedidos · ${r.total_clientes} clientes`)}
+</table>
+${talleres.length ? `<p style="margin:10px 0 4px;font-size:13px;color:#555">Talleres que vendieron ayer:</p><ul style="margin:0;padding-left:18px;font-size:13px">${talleres.map((t) => `<li>${t.nombre}: ${t.pedidos} pedido(s), ${pesos(t.ingresos)}</li>`).join("")}</ul>` : ""}`
+  } catch {
+    return ""
+  }
+}
 
 const T = "hetna_control_aviso"
 
@@ -53,7 +87,25 @@ export default async function centroControlAvisos(container) {
 
     if (manana) {
       const { asunto, html } = correoCentroControl(d)
-      for (const to of para) await sendEmail({ to, subject: asunto, html })
+      const extra = await seccionResumen(container)
+      const completo = extra ? html.replace(/<p style="margin-top:20px">/, `${extra}<p style="margin-top:20px">`) : html
+      for (const to of para) await sendEmail({ to, subject: `Informe diario · ${asunto.replace(/^HETNA: /, "")}`, html: completo })
+    } else if (nuevos.length && (process.env.CONTROL_URGENTES_CORREO || "").toLowerCase() !== "on") {
+      // Sin correo: aviso al celular del dueño
+      const knexPush = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+      for (const correo of para) {
+        await pushACliente(
+          knexPush,
+          { email: correo },
+          {
+            titulo: `⚠ ${nuevos[0].titulo}`,
+            cuerpo: nuevos.length > 1 ? `y ${nuevos.length - 1} aviso(s) más. Toca para abrir el centro de control.` : nuevos[0].detalle || "Toca para abrir el centro de control.",
+            url: `${ADMIN}/control`,
+            etiqueta: "control-urgente",
+          },
+          logger
+        )
+      }
     } else if (nuevos.length) {
       const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:620px;margin:0 auto;color:#142033">
 <h2 style="margin:0 0 10px;color:#B42318">Atiende esto hoy</h2>

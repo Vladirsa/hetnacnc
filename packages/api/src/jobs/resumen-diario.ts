@@ -15,6 +15,11 @@ import { sendEmail } from "../lib/resend"
 export default async function resumenDiario(container: MedusaContainer) {
   const logger = container.resolve("logger")
 
+  // Este resumen ya va DENTRO del informe de la mañana del centro de control
+  // (jobs/centro-control-avisos.ts): sólo se manda aparte si ese está apagado,
+  // para que llegue un solo correo al día.
+  if ((process.env.CONTROL_AVISOS || "").toLowerCase() !== "off") return
+
   const para = process.env.RESUMEN_DIARIO_PARA
   if (!para || !process.env.RESEND_API_KEY) {
     // Se queda callado a propósito: esto corre todos los días y un aviso diario
