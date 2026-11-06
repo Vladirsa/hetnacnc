@@ -73,6 +73,19 @@ const RESERVADOS = new Set([
   "foro-cnc", "nuevo", "perfil", "mi-perfil", "buscar", "api", "tienda", "vendedor", "oficial",
 ])
 
+// Los nombres de HETNA ("hetna", "hetnacnc", "hetna-cnc") están apartados para
+// que nadie se haga pasar por la marca, pero la cuenta oficial sí puede usarlos.
+// Se reconoce por el correo de su cuenta de cliente: CUENTAS_DE_LA_CASA, la
+// misma lista que usa la API (packages/api/src/lib/cuentas-casa.ts).
+const DE_LA_MARCA = new Set(["hetna", "hetnacnc", "hetna-cnc"])
+const correosDeLaCasa = () =>
+  (process.env.CUENTAS_DE_LA_CASA ?? "vladirsa@gmail.com")
+    .split(",")
+    .map((c) => c.trim().toLowerCase())
+    .filter(Boolean)
+const apartado = (usuario: string, correo?: string | null) =>
+  RESERVADOS.has(usuario) && !(DE_LA_MARCA.has(usuario) && !!correo && correosDeLaCasa().includes(correo.toLowerCase()))
+
 // Acepta la liga completa o solo el @usuario de la red
 function redValida(red: Red, v: string): string | null {
   const s = v.trim()
@@ -101,8 +114,8 @@ function redValida(red: Red, v: string): string | null {
 
 export async function usuarioDisponible(usuario: string): Promise<{ disponible: boolean }> {
   const u = texto(usuario, 30).toLowerCase()
-  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(u) || RESERVADOS.has(u)) return { disponible: false }
   const s = await sesionForo()
+  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(u) || apartado(u, s?.correo)) return { disponible: false }
   try {
     const { rows } = await db().query(`select cliente_id from foro.perfiles where usuario = $1`, [u])
     return { disponible: !rows[0] || rows[0].cliente_id === s?.clienteId }
@@ -119,7 +132,7 @@ export async function guardarPerfil(d: Record<string, unknown>): Promise<Res<{ u
   const usuario = texto(d.usuario, 30).toLowerCase()
   if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(usuario))
     return { ok: false, error: "El usuario lleva de 3 a 30 letras minúsculas, números o guiones, sin espacios." }
-  if (RESERVADOS.has(usuario)) return { ok: false, error: "usuario_ocupado" }
+  if (apartado(usuario, s.correo)) return { ok: false, error: "usuario_ocupado" }
   const nombre = revisarTexto(texto(d.nombre, 80)).texto
   if (nombre.length < 2) return { ok: false, error: "Escribe tu nombre o el de tu taller." }
   if (!esTipoCuenta(d.tipo)) return { ok: false, error: "Elige qué tipo de cuenta eres." }
