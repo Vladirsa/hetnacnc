@@ -156,7 +156,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const cobro_taller = {
     mercadopago: Boolean(cuenta?.mp),
     paypal: Boolean(cuenta?.paypal),
-    comision_pct: PCT_POR_PLAN[plan] ?? 5,
+    comision_pct: PCT_POR_PLAN[plan] ?? 0,
   }
 
   return res.json({ solicitudes, cupo, cobro_taller })

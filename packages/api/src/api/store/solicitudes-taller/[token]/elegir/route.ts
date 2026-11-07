@@ -94,7 +94,7 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
           fila("Cliente", s.contacto?.nombre || "") +
           fila("Correo", s.contacto?.email || "") +
           fila("Teléfono", s.contacto?.telefono || "") +
-          fila("Cobro", directo ? `Directo al taller (${cobro?.metodos.join(" y ")}), comisión ${cobro?.comision_pct}%` : `Cobra HETNA, comisión ${cobro?.comision_pct ?? "—"}% al liquidar`) +
+          fila("Cobro", directo ? `Directo al taller (${cobro?.metodos.join(" y ")}), sin comisión` : `Cobra HETNA y se transfiere completo al taller al confirmar la entrega`) +
           fila("Liga de pago", pagoUrl ? "Generada y enviada al cliente" : "NO se generó: mándala a mano") +
           `</table>`
       ),
@@ -107,8 +107,8 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
         resumen +
           `<p style="color:#40403A">${
             directo
-              ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. La comisión HETNA es de ${esc(cobro?.comision_pct)}% según tu plan.`
-              : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, menos la comisión de ${esc(cobro?.comision_pct ?? "")}% de tu plan. Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
+              ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. HETNA no cobra comisión: el pago es completo para ti.`
+              : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, completo (HETNA no cobra comisión). Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
           }</p>` +
           `<p style="color:#40403A">Te avisaremos cuando el cliente pague. <strong>No inicies el trabajo antes de esa confirmación.</strong></p>` +
           boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)

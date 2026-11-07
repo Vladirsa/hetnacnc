@@ -76,6 +76,7 @@ export async function tarifasHetna(container: MedusaContainer): Promise<{ actual
         { concepto: "Publicar productos", precio: "Gratis" },
         { concepto: "Máquinas CNC", precio: pct(maquinas), nota: "Routers, láser, plasma, tornos e impresoras 3D" },
         { concepto: "Todo lo demás", precio: pct(general), nota: "Fresas, refacciones, materiales, piezas, servicios y archivos" },
+        { concepto: "Licitaciones de fabricación", precio: "Sin comisión", nota: "Lo que el cliente te paga es completo para ti; sólo pagas tu plan" },
       ],
     },
     {

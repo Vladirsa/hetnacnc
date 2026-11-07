@@ -428,13 +428,14 @@ Recomendación: comenzar con **firma electrónica simple** y **verificación ref
 
 ---
 
-## 12. Decisiones que cambian reglas vigentes (requieren confirmación del dueño)
+## 12. Decisiones del dueño (confirmadas el 7 nov 2026)
 
-1. **Comisiones:** "Sin comisión por la transacción comercial" elimina la comisión de 2–5 % de las licitaciones y el cobro dentro de HETNA. Si se confirma, el ingreso de licitaciones vendría de **membresías** (talleres y clientes), verificaciones, certificaciones y publicidad.
-2. **Contratación directa e intercambio de contactos:** hoy el contacto se oculta para proteger la comisión. Con contratación directa ya no hay comisión que proteger; el contacto se libera **después** del acuerdo SafeDeal (o, si SafeDeal es opcional y no se usa, definir en qué momento se libera).
-3. **SafeDeal opcional:** definir qué pasa si las partes no lo usan (¿se liberan contactos al elegir la propuesta?).
-4. **Difusión automática en redes:** se apaga por defecto; sólo con la casilla de autorización del cliente.
-5. **Pago dentro de HETNA:** ¿se conserva como opción voluntaria (escrow/anticipo protegido) o se retira?
+1. **Sin comisiones en licitaciones.** HETNA cobra sólo **planes**, **verificación** y **certificaciones**. Aplicado en el código el 7 nov 2026: la comisión por plan quedó en 0 % y los textos dicen "sin comisión". (La comisión de ventas de la tienda, 6 %, no cambia.)
+2. **Posicionamiento.** Un taller con plan, verificación y certificaciones **aparece mejor posicionado** ante los clientes (orden y visibilidad en búsquedas, directorio y emparejamiento). Esto **no altera su puntuación de reputación**: la calificación sólo sale de operaciones reales (regla 8.D-5).
+3. **Ranking de clientes.** Si un cliente quiere acceder a los mejores talleres, **debe tener ranking** (buena reputación como cliente). Los talleres podrán ver y filtrar por la reputación del cliente.
+4. **SafeDeal opcional, con alerta.** No es obligatorio, pero al elegir propuesta se muestra una **alerta destacada** a ambas partes explicando que el acuerdo es para el bienestar de los dos (protege pagos, entregas, calidad y propiedad intelectual) e invitándolos a formalizarlo.
+5. **Redes sociales.** Se mantiene la difusión de oportunidades en redes **para atraer más talleres** a la plataforma, siempre con el **resumen anonimizado** y respetando la privacidad que elija el cliente (nunca planos, presupuesto confidencial ni contacto).
+6. **Pendiente de confirmar:** en qué momento se comparten los contactos cuando las partes **no** usan SafeDeal. Propuesta por defecto (según 1.1): "compartidos por autorización" — el cliente decide si los libera al elegir la propuesta.
 
 ## 13. Criterios de aceptación por fase
 

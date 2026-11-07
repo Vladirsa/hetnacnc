@@ -219,7 +219,7 @@ function Pedido({ sol, alGuardar }) {
         <p style={{ fontSize: 13, color: "#40403A", margin: "8px 0 0" }}>
           {sol.cobro.modo === "taller"
             ? `Cobro directo a tu cuenta · pagado ${pesos(pagado)} de ${pesos(precio)}${falta > 0 ? ` · falta ${pesos(falta)}: el cliente lo paga desde su liga; avísale con un avance cuando esté listo.` : " · liquidado."}`
-            : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos al confirmar la entrega, menos ${sol.cobro.comision_pct ?? ""}% de comisión.`}
+            : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos el pago completo al confirmar la entrega.`}
         </p>
       )}
       {!modo && (
@@ -398,8 +398,8 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
       </div>
       <p style={{ color: "#6B675C", fontSize: 12, margin: "6px 0 0" }}>
         {directo
-          ? `Si ganas, el cliente te paga directo a tu ${cobroTaller.mercadopago ? "Mercado Pago" : "PayPal"}. Comisión HETNA de tu plan: ${cobroTaller.comision_pct}% de cada pago.`
-          : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos al confirmar la entrega, menos la comisión de tu plan (${cobroTaller?.comision_pct ?? 5}%). Conéctalos en la app para pedir anticipo y cobrar directo.`}
+          ? `Si ganas, el cliente te paga directo a tu ${cobroTaller.mercadopago ? "Mercado Pago" : "PayPal"}. HETNA no cobra comisión.`
+          : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos completo al confirmar la entrega. Conéctalos en la app para pedir anticipo y cobrar directo.`}
       </p>
       <label style={{ ...S.label, marginTop: 10 }}>Condiciones (material incluido, acabado, tolerancias…)</label>
       <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder="Ej. Incluye material MDF 6 mm y lijado." />
@@ -519,12 +519,12 @@ export default function SolicitudesPage() {
           {cobroTaller.mercadopago || cobroTaller.paypal ? (
             <>
               ✓ Cobras directo a tu {[cobroTaller.mercadopago && "Mercado Pago", cobroTaller.paypal && "PayPal"].filter(Boolean).join(" y ")}. Puedes pedir anticipo.
-              Comisión HETNA de tu plan: <strong>{cobroTaller.comision_pct}%</strong> de cada pago.
+              <strong>Sin comisión de HETNA</strong>: el pago es completo para ti.
             </>
           ) : (
             <>
               Conecta tu <strong>Mercado Pago o PayPal</strong> en la app HETNA CNC para talleres (Configuración → Cobros en línea) y cobra directo,
-              con anticipo. Mientras, el cliente paga a HETNA y te transferimos al entregar. Comisión de tu plan: <strong>{cobroTaller.comision_pct}%</strong>.
+              con anticipo. Mientras, el cliente paga a HETNA y te transferimos el pago completo al entregar. <strong>Sin comisión.</strong>
             </>
           )}
         </div>

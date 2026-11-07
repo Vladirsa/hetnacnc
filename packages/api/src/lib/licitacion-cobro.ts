@@ -104,7 +104,10 @@ export const asegurarCobro = async (knex: any) => {
 }
 
 // ── Comisión por plan ─────────────────────────────────────────────────
-export const PCT_POR_PLAN: Record<string, number> = { gratis: 5, taller: 4, pro: 3, industrial: 2 }
+// Decisión del dueño (7 nov 2026): las licitaciones NO cobran comisión; HETNA
+// cobra sólo planes, verificaciones y certificaciones. Se deja la tabla en 0 por
+// plan (y no se borra) por si algún día se decide otra cosa.
+export const PCT_POR_PLAN: Record<string, number> = { gratis: 0, taller: 0, pro: 0, industrial: 0 }
 
 /** Plan del taller para la comisión: gratis | taller | pro | industrial. */
 export async function planComision(seller: { email?: string | null; metadata?: any }, logger?: any): Promise<string> {
@@ -140,7 +143,7 @@ export async function planComision(seller: { email?: string | null; metadata?: a
 
 export const comisionDe = (monto: number, pct: number) => r2((Number(monto) * Number(pct)) / 100)
 /** % de comisión de la solicitud. Las de antes de Licitaciones 2.0 no llevan. */
-export const pctDe = (s: any) => (s?.comision_pct != null ? Number(s.comision_pct) : s?.cobro ? 5 : 0)
+export const pctDe = (s: any) => (s?.comision_pct != null ? Number(s.comision_pct) : 0)
 
 // ── Cuenta de cobro del taller (app del Cotizador) ─────────────────────
 export type CuentaTaller = { negocioId: string | null; mp: boolean; paypal: { payer_id: string; email?: string } | null }
@@ -250,7 +253,7 @@ export async function estadoCobro(knex: any, s: any, p?: any, cuenta?: CuentaTal
 export async function prepararCobro(knex: any, s: any, p: any, logger?: any) {
   await asegurarCobro(knex)
   const plan = await planComision({ email: p.taller_email, metadata: p.taller_metadata }, logger)
-  const pct = PCT_POR_PLAN[plan] ?? 5
+  const pct = PCT_POR_PLAN[plan] ?? 0
   await knex(T_SOLICITUD).where({ id: s.id }).update({ comision_pct: pct, updated_at: knex.fn.now() })
   const cuenta = await cuentaTaller(p.taller_email, true)
   const modo = cuenta.mp || (cuenta.paypal && paypalListo()) ? "taller" : "hetna"
@@ -493,9 +496,9 @@ export async function registrarPagoLicitacion(knex: any, solicitudId: string, da
   const dondeLlega =
     datos.cobra === "taller"
       ? datos.proveedor === "mercadopago"
-        ? `El dinero entra a tu Mercado Pago, ya sin la comisión HETNA (${pesos(datos.comision)}).`
-        : `El dinero entra a tu PayPal. La comisión HETNA (${pesos(datos.comision)}) se cobra en el corte del día 1.`
-      : `HETNA guarda el pago y te lo transfiere cuando el cliente confirme que recibió, menos la comisión (${pesos(datos.comision)}).`
+        ? `El dinero entra a tu Mercado Pago, completo: HETNA no cobra comisión.`
+        : `El dinero entra a tu PayPal, completo: HETNA no cobra comisión.`
+      : `HETNA guarda el pago y te lo transfiere completo cuando el cliente confirme que recibió.`
   const resumen =
     `<table style="border-collapse:collapse;font-size:14px">` +
     fila("Folio", folio) +
