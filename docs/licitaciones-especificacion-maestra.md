@@ -643,7 +643,12 @@ Además de **clientes** y **talleres**, entran los **proveedores**: empresas que
 9. **Membresías de proveedores:** prioridad en búsquedas y en sugerencias, cotizaciones de suministro por mes, analítica, y **publicidad** (los proveedores son los anunciantes naturales: banners, destacados en la calculadora y en categorías, patrocinio de cursos).
 10. **Verificación:** identidad y empresa; "distribuidor autorizado" con carta de la marca.
 
-### 17.3 Decisiones pendientes del dueño
+### 17.3 Decisiones del dueño (7 nov 2026)
+1. **Venta de productos en la tienda (de proveedores y de cualquier vendedor): comisión de 6 %** por cada transacción dentro de la plataforma, y además pueden contratar un plan si quieren sus beneficios.
+2. **Licitaciones de suministro: sin comisión, sólo plan** (igual que las de fabricación).
+3. **Fases aprobadas:** tipo de cuenta e insignia en la Fase 1; licitaciones de suministro en la Fase 2; sugerencias de materiales y conexión con la app en la Fase 7.
+
+### 17.4 Preguntas que había antes de la decisión
 1. **Productos de proveedores en la tienda:** ¿cobran la comisión de ventas de la tienda (6 % hoy) o, como las licitaciones, sólo plan sin comisión?
 2. **Licitaciones de suministro:** ¿sin comisión (sólo plan), igual que las de fabricación?
 3. **¿En qué fase entra?** Propuesta: tipo de cuenta e insignia junto con la Fase 1; licitaciones de suministro en la Fase 2 (reutilizan el panel de propuestas); sugerencias de materiales y conexión con la app en la Fase 7 (IA de emparejamiento).
