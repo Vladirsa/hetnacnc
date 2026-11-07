@@ -573,3 +573,49 @@ Las listadas como "Falta" en las secciones 1, 2, 3, 4, 7 y 8, más: moneda y cam
 
 ### 15.8 Criterios de aceptación
 Ver sección 13; cada fase se da por terminada sólo cuando funciona de extremo a extremo y pasa sus pruebas en el entorno de producción.
+
+---
+
+## 16. Estrategia de monetización y retención (investigación del 7 nov 2026)
+
+### 16.1 Hallazgos
+- **Cobrar comisión aumenta la fuga.** Un estudio empírico encontró que introducir comisiones elevó las transacciones fuera de la plataforma ~4 puntos porcentuales (casi el doble). Sin comisión, el incentivo a irse por fuera baja mucho.
+- **Los grandes B2B industriales sin comisión cobran suscripción al proveedor:** IndiaMART (95 % de su negocio son suscripciones de proveedores; el comprador es gratis; los planes dan **prioridad en búsquedas** y **créditos de oportunidades**). MFG.com: el proveedor paga membresía anual (≈ USD 5,000 históricamente) y filtra los RFQ que quiere; el comprador es gratis.
+- **Pago por propuesta (modelo Upwork "Connects"):** el proveedor gasta créditos para mandar cada propuesta; los planes incluyen créditos al mes.
+- **Retención por valor, no por castigo:** lo que más retiene es lo que sólo existe dentro de la plataforma: reputación, protección de pago, contrato, facturación, historial, seguimiento y resolución de disputas. Ocultar el contacto antes de cerrar trato (BlaBlaCar, Airbnb) también ayuda.
+
+### 16.2 Modelo propuesto (sin comisión por transacción)
+**Talleres (pagan por oportunidades y visibilidad):**
+| Beneficio | Gratis | Taller | Pro | Industrial |
+|---|---|---|---|---|
+| Propuestas a licitaciones abiertas/mes | 1 | 5 | Ilimitadas | Ilimitadas |
+| Ver la licitación al publicarse | +24 h | +12 h | Al momento | Al momento |
+| Ver presupuesto (si el cliente lo hizo visible a planes) | No | Sí | Sí | Sí |
+| Ver ranking del cliente | Sí | Sí | Sí | Sí |
+| Prioridad en búsquedas, directorio y emparejamiento | Base | + | ++ | +++ |
+| Invitaciones a licitaciones privadas | No | Sí | Sí | Sí |
+| Analítica (vistas, tasa de ganadas) | No | Básica | Completa | Completa + equipo |
+| SafeDeal reforzado (OTP) | — | Por contrato | Incluido | Incluido |
+- **Créditos de propuesta extra** (paquetes) para quien no quiere subir de plan.
+- La prioridad del plan afecta **orden y visibilidad**, nunca la **calificación** (regla 8.D-5).
+
+**Clientes:** cuenta gratuita (licitación pública, comparación básica). **Membresía empresarial:** licitaciones privadas y restringidas ilimitadas, varios usuarios, comparador con IA, SafeDeal reforzado, acceso a proveedores verificados/certificados y **búsqueda asistida por HETNA** (sección 7).
+
+**Servicios con cobro único o anual:** verificación de identidad y empresa, certificaciones documentales, búsqueda asistida de proveedores (por proyecto), publicidad y destacados.
+
+### 16.3 Retención (que se queden)
+1. **El contacto sólo se libera al elegir propuesta** (con casilla de autorización del cliente). Antes, todo es por chat dentro de HETNA con contacto oculto.
+2. **La reputación sólo crece con trabajos registrados en HETNA**: cada trabajo cerrado dentro suma al ranking de ambos; lo que se haga por fuera no cuenta.
+3. **Botón "Volver a contratar"**: la segunda compra con el mismo taller se hace en un clic dentro de HETNA y también suma al ranking.
+4. **Valor que sólo existe dentro:** SafeDeal y HETNA Sign, expediente del proyecto, seguimiento, garantía y reclamaciones, factura (CFDI en la app), pago protegido opcional.
+5. **Sin castigos agresivos:** como no hay comisión, no se banea a nadie por tratar directo; el ingreso viene de que el taller renueve su plan porque HETNA le sigue trayendo clientes nuevos.
+6. **Medir la fuga:** propuestas elegidas que nunca registran entrega; si sube, se ajusta.
+
+### 16.4 Fuentes
+- Hagiu y Wright, "Marketplace Leakage", Management Science 2024 — https://econpapers.repec.org/RePEc:inm:ormnsc:v:70:y:2024:i:3:p:1529-1553
+- Sharetribe, cómo desalentar pagos por fuera — https://www.sharetribe.com/academy/how-to-discourage-people-from-going-around-your-payment-system/
+- Hokodo, desintermediación en B2B — https://hokodo.co/resources/how-to-prevent-disintermediation-on-your-b2b-marketplace
+- Applico, prevenir la fuga en marketplaces — https://applicoinc.com/?p=8851
+- IndiaMART, modelo de suscripción de proveedores — https://www.markhub24.com/post/indiamart-s-supplier-subscription-business-model
+- MFG.com, membresía de proveedores — https://www.controleng.com/online-solution-unites-buyers-suppliers-in-sourcing-marketplace/
+- Upwork, Connects y política de circunvención — https://support.upwork.com/hc/en-us/articles/360048105134
