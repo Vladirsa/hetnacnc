@@ -619,3 +619,31 @@ Ver sección 13; cada fase se da por terminada sólo cuando funciona de extremo 
 - IndiaMART, modelo de suscripción de proveedores — https://www.markhub24.com/post/indiamart-s-supplier-subscription-business-model
 - MFG.com, membresía de proveedores — https://www.controleng.com/online-solution-unites-buyers-suppliers-in-sourcing-marketplace/
 - Upwork, Connects y política de circunvención — https://support.upwork.com/hc/en-us/articles/360048105134
+
+---
+
+## 17. Nuevo participante: Proveedores (7 nov 2026)
+
+Además de **clientes** y **talleres**, entran los **proveedores**: empresas que venden **productos e insumos** a los talleres y a la industria (materiales como MDF, acrílico, aluminio y acero; fresas y herramientas de corte; máquinas CNC; refacciones; consumibles; software).
+
+### 17.1 Qué existe hoy
+- Cualquier vendedor (taller) puede publicar productos en la tienda; no hay un **tipo de vendedor "proveedor"**.
+- El foro y el mapa de talleres ya distinguen perfiles tipo "proveedor" y "marca" (`/foro-cnc/profesionales?tipo=proveedor`).
+- Precios por volumen (escalones), packs por categoría, envíos con guía y publicidad pagada ya funcionan para cualquier vendedor.
+
+### 17.2 Propuesta funcional
+1. **Tipo de cuenta al registrarse en /seller:** Taller (fabrica) / Proveedor (vende productos) / Ambos. Insignia visible "Proveedor" o "Distribuidor autorizado de [marca]" (verificable con documento).
+2. **Tienda del proveedor** con catálogo B2B: precios por volumen, pedido mínimo, **cotización por mayoreo** (el comprador pide precio por cantidad grande), disponibilidad y tiempos de surtido.
+3. **Licitaciones de suministro:** además de fabricación, un taller o empresa publica "necesito 50 hojas de MDF de 18 mm en Puebla" y los **proveedores** cotizan. Mismo motor de licitaciones (privacidad, modalidades, ranking, SafeDeal), tipo "suministro".
+4. **Conexión con las licitaciones de fabricación:** cuando un taller gana un proyecto que usa un material, HETNA le sugiere **proveedores de ese material cerca de él** ("Materiales para este trabajo").
+5. **Conexión con las herramientas:** la Calculadora CNC y el Copiloto recomiendan fresas o materiales → enlazan a productos de proveedores (sin inventar disponibilidad ni precios).
+6. **Conexión con la app Cotizador:** cuando al taller se le acaba un material en su inventario, la app le ofrece reordenar con proveedores de HETNA.
+7. **Directorio y mapa de proveedores** por estado, material y marca.
+8. **Ranking de proveedores** (sección 8.E "proveedores con mayor cumplimiento"): calidad del producto, surtido completo, tiempo de entrega, precio vs. cotización, atención y garantía. Mismas reglas anti-manipulación.
+9. **Membresías de proveedores:** prioridad en búsquedas y en sugerencias, cotizaciones de suministro por mes, analítica, y **publicidad** (los proveedores son los anunciantes naturales: banners, destacados en la calculadora y en categorías, patrocinio de cursos).
+10. **Verificación:** identidad y empresa; "distribuidor autorizado" con carta de la marca.
+
+### 17.3 Decisiones pendientes del dueño
+1. **Productos de proveedores en la tienda:** ¿cobran la comisión de ventas de la tienda (6 % hoy) o, como las licitaciones, sólo plan sin comisión?
+2. **Licitaciones de suministro:** ¿sin comisión (sólo plan), igual que las de fabricación?
+3. **¿En qué fase entra?** Propuesta: tipo de cuenta e insignia junto con la Fase 1; licitaciones de suministro en la Fase 2 (reutilizan el panel de propuestas); sugerencias de materiales y conexión con la app en la Fase 7 (IA de emparejamiento).
