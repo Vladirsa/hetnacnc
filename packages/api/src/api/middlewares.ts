@@ -69,6 +69,12 @@ export default defineMiddlewares({
           matcher: "/vendor/hetna-facturas/:id",
           middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
         },
+        // Licitaciones 3.0: archivos adjuntos de la propuesta del taller
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-solicitudes/:id/adjunto",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 25 })],
+        },
         // PDF de un libro de la Academia desde el panel del taller
         {
           method: ["POST"],

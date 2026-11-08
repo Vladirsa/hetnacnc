@@ -5,6 +5,8 @@ import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto, ocultarContacto, 
 import { asegurarCobro, estadoCobro } from "../../../../lib/licitacion-cobro"
 import { T_ACCESO, T_INVITADO, asegurarPrivacidad, modalidadDe, privacidadDe } from "../../../../lib/licitacion-privacidad"
 import { ligarCliente, preguntasDe, resenaDe } from "../../../../lib/licitacion-extra"
+import { asegurarPropuestaFormal, compararPropuestas } from "../../../../lib/licitacion-propuesta"
+import { getSignedDownloadUrls } from "../../../../lib/backblaze"
 import {
   EXPLICA_ETAPA,
   NOMBRE_ETAPA,
@@ -28,6 +30,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   await asegurarTablas(knex)
   await asegurarSeguimiento(knex)
   await asegurarCobro(knex) // columnas nuevas (anticipo_pct) antes de leerlas
+  await asegurarPropuestaFormal(knex)
   const s = await knex(T_SOLICITUD).where({ token }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   // Con sesión iniciada, la solicitud queda en "Mis solicitudes" del cliente
@@ -40,8 +43,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .where("p.solicitud_id", s.id)
     .select(
       "p.id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado", "p.created_at", "p.anticipo_pct",
+      "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos",
       "v.name as taller", "v.handle", "v.metadata"
     )) as any[]
+
+  // Ligas firmadas (1 hora) a los archivos adjuntos de las propuestas
+  const clavesAdj = props.flatMap((p) => (Array.isArray(p.adjuntos) ? p.adjuntos : []).map((a: any) => a.clave))
+  const ligasAdj = clavesAdj.length ? await getSignedDownloadUrls(clavesAdj, 3600).catch(() => new Map<string, string>()) : new Map<string, string>()
 
   const propuestas = props
     .map((p) => {
@@ -56,6 +64,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         estado: p.estado,
         fecha: p.created_at,
         anticipo_pct: p.anticipo_pct && p.anticipo_pct < 100 ? Number(p.anticipo_pct) : null,
+        // Licitaciones 3.0 (Fase 2): propuesta formal
+        moneda: p.moneda || "MXN",
+        materiales: p.materiales || "",
+        operaciones: p.operaciones || "",
+        fecha_entrega: p.fecha_entrega ? new Date(p.fecha_entrega).toISOString().slice(0, 10) : null,
+        condiciones_pago: p.condiciones_pago || "",
+        garantia: p.garantia || "",
+        observaciones: p.observaciones || "",
+        adjuntos: (Array.isArray(p.adjuntos) ? p.adjuntos : []).map((a: any) => ({ nombre: a.nombre, tamano: a.tamano, url: ligasAdj.get(a.clave) || null })),
         taller: {
           nombre: p.taller,
           handle: p.handle,
@@ -151,6 +168,16 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" && s.pago_estado !== "anticipo" ? s.pago_url || null : null,
     pago_estado: s.pago_estado || null,
     propuestas,
+    // Comparación con reglas (diferencias y omisiones). El resumen con IA se
+    // pide aparte: POST /store/solicitudes-taller/:token/analisis
+    comparacion: compararPropuestas(
+      propuestas.map((p) => ({
+        id: p.id, taller: p.taller.nombre, precio: p.precio, moneda: p.moneda, dias: p.dias, incluye_envio: p.incluye_envio,
+        anticipo_pct: p.anticipo_pct, materiales: p.materiales, operaciones: p.operaciones, fecha_entrega: p.fecha_entrega,
+        condiciones_pago: p.condiciones_pago, garantia: p.garantia, observaciones: p.observaciones,
+        calificacion: p.taller.calificacion, verificado: p.taller.verificado, adjuntos: p.adjuntos.length,
+      }))
+    ),
     modalidad: modalidadDe(s),
     privacidad: privacidadDe(s),
     difundir_redes: !!s.difundir_redes,

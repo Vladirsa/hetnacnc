@@ -13,6 +13,7 @@ import {
 import { servicioTalleres } from "../../../lib/alta-taller"
 import { cupoLicitacion } from "../../../lib/licitacion-plan"
 import { NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
+import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
 import { T_INVITADO, asegurarPrivacidad, modalidadDe, relacionesTaller, tallerPuedeVer, trabajoParaTaller } from "../../../lib/licitacion-privacidad"
 import { PCT_POR_PLAN, asegurarCobro, cuentaTaller, planComision } from "../../../lib/licitacion-cobro"
 import { asegurarExtra, preguntasDe, rangoGanador } from "../../../lib/licitacion-extra"
@@ -38,6 +39,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   await asegurarCobro(knex)
   await asegurarExtra(knex)
   await asegurarPrivacidad(knex)
+  await asegurarPropuestaFormal(knex)
   const filas0 = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
@@ -87,12 +89,24 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
       "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
       "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
+      "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos",
+      "s.tipo",
       "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
 
   // Relación de este taller con cada una (invitado, acceso, propuso, ganó)
   const relaciones = await relacionesTaller(knex, filas0, sellerId)
-  const filas = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!))
+  // Fase 2: el proveedor ve suministro; el taller, fabricación; "ambos", todo.
+  // Lo que ya cotizó o lo dirigido a él se ve siempre.
+  const yo = await knex("seller").where({ id: sellerId }).first("metadata").catch(() => null)
+  const miTipo = String(yo?.metadata?.perfil?.tipo_cuenta || "taller")
+  const meToca = (f: any) => {
+    const r = relaciones.get(f.id)!
+    if (r.propuso || r.invitado) return true
+    const suministro = f.tipo === "suministro"
+    return miTipo === "ambos" || (suministro ? miTipo === "proveedor" : miTipo !== "proveedor")
+  }
+  const filas = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!) && meToca(f))
 
   const conteos = (await knex(T_PROPUESTA)
     .whereIn("solicitud_id", filas.map((f) => f.id))
@@ -134,6 +148,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     // Lo que el cliente permite ver (privacidad por elemento). Nunca el contacto.
     trabajo: trabajoParaTaller(f, relaciones.get(f.id)!),
     modalidad: modalidadDe(f),
+    tipo: f.tipo === "suministro" ? "suministro" : "fabricacion",
     acceso: relaciones.get(f.id)!.acceso,
     invitado: relaciones.get(f.id)!.invitado,
     mi_respuesta: f.r_motivo
@@ -161,6 +176,14 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
           condiciones: f.condiciones || "",
           anticipo_pct: f.anticipo_pct ? Number(f.anticipo_pct) : 100,
           estado: f.p_estado,
+          moneda: f.moneda || "MXN",
+          materiales: f.materiales || "",
+          operaciones: f.operaciones || "",
+          fecha_entrega: f.fecha_entrega ? new Date(f.fecha_entrega).toISOString().slice(0, 10) : "",
+          condiciones_pago: f.condiciones_pago || "",
+          garantia: f.garantia || "",
+          observaciones: f.observaciones || "",
+          adjuntos: (Array.isArray(f.adjuntos) ? f.adjuntos : []).map((a: any) => ({ clave: a.clave, nombre: a.nombre, tamano: a.tamano })),
         }
       : null,
   }))

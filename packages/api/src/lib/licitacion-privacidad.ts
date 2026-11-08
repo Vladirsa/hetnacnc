@@ -227,6 +227,7 @@ export function trabajoPublicoPrivado(s: any) {
     descripcion_restringida: p.descripcion !== "publica",
     presupuesto: p.presupuesto === "visible" ? t.presupuesto || "" : "",
     modalidad: modalidadDe(s),
+    tipo: s?.tipo === "suministro" ? "suministro" : "fabricacion",
     cliente: clienteVisible(s),
   }
 }

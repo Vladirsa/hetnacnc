@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, trabajoPublico } from "../../../lib/licitacion"
 import { asegurarPrivacidad, trabajoPublicoPrivado } from "../../../lib/licitacion-privacidad"
+import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
 
 // Tablero público de trabajos abiertos: las solicitudes de licitación que
 // todavía reciben propuestas, sin datos del cliente.
@@ -19,6 +20,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   await asegurarTablas(knex)
   await asegurarPrivacidad(knex)
+  await asegurarPropuestaFormal(knex)
 
   const servicio = String(req.query.servicio || "").trim().slice(0, 80)
   const estadoMx = String(req.query.estado_mx || "").trim().slice(0, 60)
@@ -41,7 +43,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .orderBy("created_at", "desc")
     .limit(limit)
     .offset(offset)
-    .select("id", "folio", "estado", "trabajo", "cierra_en", "created_at", "modalidad", "privacidad", "contacto")) as any[]
+    .select("id", "folio", "estado", "trabajo", "cierra_en", "created_at", "modalidad", "privacidad", "contacto", "tipo")) as any[]
 
   const conteos = filas.length
     ? ((await knex(T_PROPUESTA)

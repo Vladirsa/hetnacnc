@@ -804,6 +804,7 @@ export type Routes = {
         solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
             $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
                 acceso: typeof import("../src/api/store/solicitudes-taller/[token]/acceso/route");
+                analisis: typeof import("../src/api/store/solicitudes-taller/[token]/analisis/route");
                 elegir: typeof import("../src/api/store/solicitudes-taller/[token]/elegir/route");
                 invitar: typeof import("../src/api/store/solicitudes-taller/[token]/invitar/route");
                 pagar: typeof import("../src/api/store/solicitudes-taller/[token]/pagar/route");
@@ -1172,6 +1173,7 @@ export type Routes = {
         hetnaSolicitudes: typeof import("../src/api/vendor/hetna-solicitudes/route") & {
             $id: {
                 acceso: typeof import("../src/api/vendor/hetna-solicitudes/[id]/acceso/route");
+                adjunto: typeof import("../src/api/vendor/hetna-solicitudes/[id]/adjunto/route");
                 archivos: typeof import("../src/api/vendor/hetna-solicitudes/[id]/archivos/route");
                 avance: typeof import("../src/api/vendor/hetna-solicitudes/[id]/avance/route");
                 pregunta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/pregunta/route");

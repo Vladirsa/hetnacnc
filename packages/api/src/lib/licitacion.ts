@@ -224,6 +224,9 @@ export type ArchivoSolicitud = { clave: string; nombre: string; tamano: number }
 
 export type Trabajo = {
   descripcion: string
+  // Licitaciones 3.0 (Fase 2): en suministro, marca preferida y unidad
+  marca?: string
+  unidad?: string
   // Lo que el cliente quiere lograr (cortar piezas, pieza terminada...), en
   // sus palabras; el servicio es el proceso, si lo sabe.
   necesidad?: string

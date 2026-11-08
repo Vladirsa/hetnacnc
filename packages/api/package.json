@@ -29,6 +29,7 @@
     "cloud:prebuild": "mercurjs codegen"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
     "@medusajs/admin-sdk": "2.21.0",
     "@medusajs/admin-shared": "2.21.0",
     "@medusajs/cli": "2.21.0",

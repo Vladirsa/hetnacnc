@@ -8,6 +8,7 @@ import { pushACliente } from "../../../../../lib/push"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
+import { asegurarPropuestaFormal, leerPropuestaFormal } from "../../../../../lib/licitacion-propuesta"
 import { relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
@@ -21,6 +22,14 @@ type Body = {
   // Anticipo que pide el taller (10 a 100 %). Sólo aplica si el cliente le paga
   // directo (Mercado Pago o PayPal conectados); si cobra HETNA, se paga el 100 %.
   anticipo_pct?: number | string
+  // Licitaciones 3.0 (Fase 2): propuesta formal
+  moneda?: string
+  materiales?: string
+  operaciones?: string
+  fecha_entrega?: string
+  condiciones_pago?: string
+  garantia?: string
+  observaciones?: string
 }
 
 // El taller manda (o actualiza) su propuesta a una solicitud.
@@ -43,6 +52,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
 
   await asegurarTablas(knex)
   await asegurarCobro(knex)
+  await asegurarPropuestaFormal(knex)
+  const formal = leerPropuestaFormal(b as Record<string, unknown>, ocultarContacto)
   const s = await knex(T_SOLICITUD).where({ id: String(req.params.id) }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (s.estado !== "abierta") return res.status(409).json({ message: "Esta solicitud ya cerró." })
@@ -65,7 +76,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       return res.status(402).json({ message: mensajeSinCupo(cupo), cupo })
     }
   }
-  const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, anticipo_pct: anticipo, updated_at: knex.fn.now() }
+  const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, anticipo_pct: anticipo, ...formal, updated_at: knex.fn.now() }
   if (previa) {
     await knex(T_PROPUESTA).where({ id: previa.id }).update(datos)
   } else {
@@ -88,7 +99,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       { customerId: s.cliente_id, email: s.contacto?.email },
       {
         titulo: "Tienes una nueva propuesta",
-        cuerpo: `${folioTexto(s.folio)}: $${precio.toLocaleString("es-MX")} MXN, entrega en ${dias} días. Compárala con las demás.`,
+        cuerpo: `${folioTexto(s.folio)}: $${precio.toLocaleString("es-MX")} ${formal.moneda}, entrega en ${dias} días. Compárala con las demás.`,
         url: ligaPropuestas(s.token),
         etiqueta: `sol-${s.id}`,
       },
@@ -104,7 +115,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
         "Tienes una nueva propuesta",
         `<table style="border-collapse:collapse;font-size:14px">` +
           fila("Folio", folio) +
-          fila("Precio", `$${precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN`) +
+          fila("Precio", `$${precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${formal.moneda}`) +
           fila("Entrega", `${dias} días`) +
           `</table>` +
           boton("Comparar propuestas", ligaPropuestas(s.token))

@@ -7,6 +7,7 @@ import { difundirSolicitud } from "../../../lib/difusion"
 import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionActiva } from "../../../lib/seguimiento"
 import { ligarCliente } from "../../../lib/licitacion-extra"
 import { asegurarPrivacidad, invitarTalleres, leerModalidad, leerPrivacidad } from "../../../lib/licitacion-privacidad"
+import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
 import {
   type ArchivoSolicitud,
   MAX_ARCHIVOS_SOLICITUD,
@@ -63,6 +64,10 @@ type Body = {
   privacidad?: Record<string, string> | string
   difundir_redes?: boolean | string
   invitados?: string[] | string
+  // Fase 2: "fabricacion" (piezas a la medida) o "suministro" (material/insumos)
+  tipo?: string
+  marca?: string
+  unidad?: string
   sitio_web?: string // trampa para bots: debe llegar vacío
 }
 
@@ -142,7 +147,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     presupuesto: corto(b.presupuesto, 60),
     acepta_envio: corto(b.acepta_envio, 10),
     archivo: corto(b.archivo_url, 500),
+    marca: corto(b.marca, 120),
+    unidad: corto(b.unidad, 40),
   }
+  const tipo = b.tipo === "suministro" ? "suministro" : "fabricacion"
   const contacto = {
     nombre: corto(b.nombre, 120),
     email,
@@ -192,6 +200,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   try {
     await asegurarSeguimiento(knex)
     await asegurarPrivacidad(knex)
+    await asegurarPropuestaFormal(knex)
     const [fila0] = await knex(T_SOLICITUD)
       .insert({
         id: nuevoId("sol"),
@@ -204,9 +213,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         modalidad,
         privacidad,
         difundir_redes: difundirRedes,
+        tipo,
         cierra_en: revision ? null : new Date(Date.now() + DIAS_ABIERTA * 864e5),
       })
-      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes"])
+      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes", "tipo"])
     sol = fila0
     folio = folioTexto(fila0.folio)
     if (modalidad === "privada" && b.invitados) await invitarTalleres(knex, fila0.id, b.invitados)

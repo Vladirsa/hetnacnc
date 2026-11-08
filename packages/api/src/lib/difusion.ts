@@ -46,6 +46,7 @@ export async function difundirSolicitud(
   const modalidad = modalidadDe(s)
   // Privada: sólo los invitados (y el taller directo). No se difunde a nadie más.
   const abierta = s.modo === "abierta" && modalidad !== "privada"
+  const suministro = s.tipo === "suministro"
   // Lo que ve un taller que todavía no participa (Licitaciones 3.0, Fase 1)
   const vista = trabajoParaTaller(s, { invitado: modalidad === "privada", acceso: "ninguno", propuso: false, elegido: false })
   const trabajoTaller: Trabajo = {
@@ -64,7 +65,7 @@ export async function difundirSolicitud(
 
   const avisoTaller = (nombreTaller?: string) =>
     marco(
-      nombreTaller ? `${nombreTaller}: un cliente quiere tu cotización` : "Nueva solicitud de fabricación",
+      nombreTaller ? `${nombreTaller}: un cliente quiere tu cotización` : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
       `<p style="margin:0 0 12px;color:#40403A">Folio <strong>${esc(folio)}</strong>. ` +
         `Manda tu precio y tiempo de entrega desde tu panel de HETNA. El cliente compara propuestas y elige; ` +
         `el pago y el envío se hacen dentro de la plataforma.</p>` +
@@ -92,7 +93,13 @@ export async function difundirSolicitud(
       // "Otro" no es un servicio que un taller pueda tener en su perfil: si
       // se compara literal, la solicitud no le llega a nadie.
       const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
+      // Licitaciones 3.0 (Fase 2): el suministro va a proveedores; la
+      // fabricación, a talleres. "Ambos" recibe las dos.
+      const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
       const coinciden = otros.filter((x) => {
+        const t = tipoCuenta(x)
+        if (suministro) return t === "proveedor" || t === "ambos"
+        if (t === "proveedor") return false
         const servicios: string[] = x.metadata?.perfil?.servicios || []
         return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
       })
@@ -104,7 +111,10 @@ export async function difundirSolicitud(
       const norm = (v: unknown) => String(v || "").trim().toLowerCase()
       const mismoMunicipio = (p: any) => Boolean(trabajo.ciudad) && norm(p?.ciudad) === norm(trabajo.ciudad)
       const prioridad = (x: { metadata: any }) =>
-        (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ? 0 : 2) +
+        (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ||
+        (suministro && trabajaMaterial(x.metadata?.perfil?.marcas, `${trabajo.marca || ""} ${trabajo.material || ""}`))
+          ? 0
+          : 2) +
         (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
         (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
       coinciden.sort((x, y) => prioridad(x) - prioridad(y))
@@ -120,7 +130,7 @@ export async function difundirSolicitud(
     knex,
     destinos.map((d) => d.id),
     {
-      titulo: taller && !abierta ? "Un cliente quiere tu cotización" : "Nueva solicitud de fabricación",
+      titulo: taller && !abierta ? "Un cliente quiere tu cotización" : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
       cuerpo: `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}`,
       url: "/seller/solicitudes",
       etiqueta: `sol-${s.id}`,
@@ -130,7 +140,7 @@ export async function difundirSolicitud(
   for (const d of destinos) {
     const r = await sendEmail({
       to: d.email,
-      subject: `[${folio}] Nueva solicitud de fabricación en ${SITIO}`,
+      subject: `[${folio}] Nueva solicitud de ${suministro ? "suministro" : "fabricación"} en ${SITIO}`,
       html: avisoTaller(d.nombre),
     })
     if (!r.sent) logger.info(`[licitacion] aviso a taller no enviado: ${r.reason}`)
