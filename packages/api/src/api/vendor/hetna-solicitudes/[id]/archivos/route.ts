@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { getSignedDownloadUrl } from "../../../../../lib/backblaze"
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, recibePropuestas, type Trabajo } from "../../../../../lib/licitacion"
+import { puedeDescargar, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 
 // GET /vendor/hetna-solicitudes/:id/archivos
 //
@@ -26,9 +27,18 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     return res.status(403).json({ message: "Esta solicitud ya no está disponible." })
   }
 
+  // Licitaciones 3.0: privada sólo para invitados; cada archivo según lo que
+  // eligió el cliente (públicos, privados o bajo autorización).
+  const rel = await relacionTaller(knex, s, sellerId)
+  if (!tallerPuedeVer(s, rel)) return res.status(404).json({ message: "Solicitud no encontrada." })
+
   const archivos = ((s.trabajo as Trabajo)?.archivos || [])
-  const ligas: { nombre: string; tamano: number; url: string | null }[] = []
+  const ligas: { nombre: string; tamano: number; url: string | null; bloqueado?: boolean }[] = []
   for (const a of archivos) {
+    if (!puedeDescargar(s, rel, a.nombre)) {
+      ligas.push({ nombre: a.nombre, tamano: a.tamano, url: null, bloqueado: true })
+      continue
+    }
     const r = await getSignedDownloadUrl(a.clave, DURACION_S)
     ligas.push({ nombre: a.nombre, tamano: a.tamano, url: r.ok ? r.url : null })
   }

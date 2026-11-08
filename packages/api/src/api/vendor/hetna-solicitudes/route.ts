@@ -14,6 +14,7 @@ import {
 import { servicioTalleres } from "../../../lib/alta-taller"
 import { cupoLicitacion } from "../../../lib/licitacion-plan"
 import { NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
+import { T_INVITADO, asegurarPrivacidad, modalidadDe, relacionesTaller, tallerPuedeVer, trabajoParaTaller } from "../../../lib/licitacion-privacidad"
 import { PCT_POR_PLAN, asegurarCobro, cuentaTaller, planComision } from "../../../lib/licitacion-cobro"
 import { asegurarExtra, preguntasDe, rangoGanador } from "../../../lib/licitacion-extra"
 
@@ -37,7 +38,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   await asegurarSeguimiento(knex)
   await asegurarCobro(knex)
   await asegurarExtra(knex)
-  const filas = (await knex(`${T_SOLICITUD} as s`)
+  await asegurarPrivacidad(knex)
+  const filas0 = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
     })
@@ -46,7 +48,20 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     })
     .where((q: any) =>
       q
-        .where((a: any) => a.where("s.modo", "abierta").orWhere("s.taller_id", sellerId))
+        .where((a: any) =>
+          a
+            // Abiertas no privadas, o privadas a las que lo invitaron (Licitaciones 3.0)
+            .where((b: any) =>
+              b.where("s.modo", "abierta").andWhere((c: any) =>
+                c
+                  .whereNot("s.modalidad", "privada")
+                  .orWhereExists(
+                    knex(T_INVITADO).whereRaw(`${T_INVITADO}.solicitud_id = s.id`).where(`${T_INVITADO}.seller_id`, sellerId)
+                  )
+              )
+            )
+            .orWhere("s.taller_id", sellerId)
+        )
         // Por cotizar = abierta y sin pasar su fecha de cierre (ver
         // recibePropuestas). Lo ya cotizado se ve siempre, aunque haya cerrado.
         .andWhere((a: any) =>
@@ -69,11 +84,16 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .limit(100)
     .select(
       "s.id", "s.folio", "s.modo", "s.taller_id", "s.estado", "s.trabajo", "s.cierra_en", "s.created_at",
+      "s.modalidad", "s.privacidad", "s.contacto",
       "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
       "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
       "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
       "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
+
+  // Relación de este taller con cada una (invitado, acceso, propuso, ganó)
+  const relaciones = await relacionesTaller(knex, filas0, sellerId)
+  const filas = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!))
 
   const conteos = (await knex(T_PROPUESTA)
     .whereIn("solicitud_id", filas.map((f) => f.id))
@@ -112,11 +132,11 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     cierra_en: f.cierra_en,
     creada: f.created_at,
     // De los archivos sólo nombre y tamaño: la liga se pide aparte, firmada.
-    trabajo: {
-      ...f.trabajo,
-      descripcion: ocultarContacto(f.trabajo?.descripcion || ""),
-      archivos: (f.trabajo?.archivos || []).map((a: any) => ({ nombre: a.nombre, tamano: a.tamano })),
-    },
+    // Lo que el cliente permite ver (privacidad por elemento). Nunca el contacto.
+    trabajo: trabajoParaTaller(f, relaciones.get(f.id)!),
+    modalidad: modalidadDe(f),
+    acceso: relaciones.get(f.id)!.acceso,
+    invitado: relaciones.get(f.id)!.invitado,
     mi_respuesta: f.r_motivo
       ? { motivo: f.r_motivo, texto: MOTIVOS_RESPUESTA[f.r_motivo] || f.r_motivo, nota: f.r_nota || "" }
       : null,

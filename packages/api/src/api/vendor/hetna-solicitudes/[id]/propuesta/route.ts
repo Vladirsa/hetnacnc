@@ -8,6 +8,7 @@ import { pushACliente } from "../../../../../lib/push"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
+import { relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
 
@@ -46,6 +47,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (s.estado !== "abierta") return res.status(409).json({ message: "Esta solicitud ya cerró." })
   if (s.modo === "directa" && s.taller_id !== sellerId) return res.status(403).json({ message: "Esta solicitud es para otro taller." })
+  // Licitación privada: sólo los talleres invitados
+  if (!tallerPuedeVer(s, await relacionTaller(knex, s, sellerId))) return res.status(403).json({ message: "Esta licitación es privada: sólo participan los talleres invitados." })
 
   const previa = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first("id")
   // Pasada la fecha de cierre ya no entran propuestas nuevas; la que el taller

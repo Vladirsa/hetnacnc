@@ -2,6 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, trabajoPublico } from "../../../lib/licitacion"
+import { asegurarPrivacidad, trabajoPublicoPrivado } from "../../../lib/licitacion-privacidad"
 
 // Tablero público de trabajos abiertos: las solicitudes de licitación que
 // todavía reciben propuestas, sin datos del cliente.
@@ -17,6 +18,7 @@ import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, trabajoPublico } from "../../
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   await asegurarTablas(knex)
+  await asegurarPrivacidad(knex)
 
   const servicio = String(req.query.servicio || "").trim().slice(0, 80)
   const estadoMx = String(req.query.estado_mx || "").trim().slice(0, 60)
@@ -26,6 +28,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const base = () =>
     knex(T_SOLICITUD)
       .where({ modo: "abierta", estado: "abierta" })
+      // Licitaciones 3.0: las privadas no salen en el tablero público
+      .whereNot({ modalidad: "privada" })
       .where((q: any) => q.whereNull("cierra_en").orWhere("cierra_en", ">", knex.fn.now()))
       .modify((q: any) => {
         if (servicio) q.whereRaw("trabajo->>'servicio' = ?", [servicio])
@@ -37,7 +41,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .orderBy("created_at", "desc")
     .limit(limit)
     .offset(offset)
-    .select("id", "folio", "estado", "trabajo", "cierra_en", "created_at")) as any[]
+    .select("id", "folio", "estado", "trabajo", "cierra_en", "created_at", "modalidad", "privacidad", "contacto")) as any[]
 
   const conteos = filas.length
     ? ((await knex(T_PROPUESTA)
@@ -49,7 +53,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const nPorSol = Object.fromEntries(conteos.map((c) => [c.solicitud_id, Number(c.n)]))
 
   res.json({
-    trabajos: filas.map((f) => trabajoPublico({ ...f, propuestas: nPorSol[f.id] || 0 })),
+    trabajos: filas.map((f) => ({ ...trabajoPublico({ ...f, propuestas: nPorSol[f.id] || 0 }), ...trabajoPublicoPrivado(f) })),
     total: Number(n) || 0,
     limit,
     offset,

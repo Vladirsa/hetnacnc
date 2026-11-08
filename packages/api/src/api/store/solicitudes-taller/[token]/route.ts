@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto, ocultarContacto, pesoPlan } from "../../../../lib/licitacion"
 import { asegurarCobro, estadoCobro } from "../../../../lib/licitacion-cobro"
+import { T_ACCESO, T_INVITADO, asegurarPrivacidad, modalidadDe, privacidadDe } from "../../../../lib/licitacion-privacidad"
 import { ligarCliente, preguntasDe, resenaDe } from "../../../../lib/licitacion-extra"
 import {
   EXPLICA_ETAPA,
@@ -104,6 +105,22 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
               : "pendiente",
     }))
 
+  // Licitaciones 3.0: privacidad, invitados y quién pidió ver los planos
+  await asegurarPrivacidad(knex)
+  const [accesos, invitados] = await Promise.all([
+    knex(`${T_ACCESO} as a`)
+      .join("seller as v", "v.id", "a.seller_id")
+      .where("a.solicitud_id", s.id)
+      .orderBy("a.created_at", "desc")
+      .select("a.seller_id", "a.estado", "a.mensaje", "a.created_at", "v.name as taller", "v.handle")
+      .catch(() => []),
+    knex(`${T_INVITADO} as i`)
+      .join("seller as v", "v.id", "i.seller_id")
+      .where("i.solicitud_id", s.id)
+      .select("v.id as seller_id", "v.name as taller", "v.handle")
+      .catch(() => []),
+  ])
+
   const [cobro, preguntas, resena] = await Promise.all([
     s.propuesta_elegida ? estadoCobro(knex, s).catch(() => null) : null,
     preguntasDe(knex, s.id).catch(() => []),
@@ -134,5 +151,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" && s.pago_estado !== "anticipo" ? s.pago_url || null : null,
     pago_estado: s.pago_estado || null,
     propuestas,
+    modalidad: modalidadDe(s),
+    privacidad: privacidadDe(s),
+    difundir_redes: !!s.difundir_redes,
+    accesos,
+    invitados,
   })
 }

@@ -5,6 +5,7 @@ import { avisarRedes } from "./redes"
 import { sendEmail } from "./resend"
 import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
+import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import {
   T_SOLICITUD,
   type Trabajo,
@@ -39,12 +40,23 @@ export function trabajaMaterial(materialesTaller: unknown, pedido?: string) {
 export async function difundirSolicitud(
   knex: any,
   logger: { info: (m: string) => void; warn: (m: string) => void },
-  s: { id: string; folio: number | string; modo: string; taller_id?: string | null; trabajo: Trabajo }
+  s: { id: string; folio: number | string; modo: string; taller_id?: string | null; trabajo: Trabajo; [k: string]: any }
 ): Promise<number> {
   const folio = folioTexto(s.folio)
   const trabajo = s.trabajo || ({ descripcion: "" } as Trabajo)
-  const abierta = s.modo === "abierta"
-  const trabajoTaller: Trabajo = { ...trabajo, descripcion: ocultarContacto(trabajo.descripcion || "") }
+  const modalidad = modalidadDe(s)
+  // Privada: sólo los invitados (y el taller directo). No se difunde a nadie más.
+  const abierta = s.modo === "abierta" && modalidad !== "privada"
+  // Lo que ve un taller que todavía no participa (Licitaciones 3.0, Fase 1)
+  const vista = trabajoParaTaller(s, { invitado: modalidad === "privada", acceso: "ninguno", propuso: false, elegido: false })
+  const trabajoTaller: Trabajo = {
+    ...trabajo,
+    ...vista,
+    archivos: trabajo.archivos,
+    descripcion: vista.descripcion_restringida
+      ? "La descripción completa la ven los talleres que el cliente autoriza. Pide acceso desde tu panel."
+      : vista.descripcion,
+  } as Trabajo
 
   let taller: { id: string; name: string; email: string | null } | null = null
   if (s.taller_id) {
@@ -63,6 +75,13 @@ export async function difundirSolicitud(
 
   const destinos: { email: string; nombre?: string; id?: string }[] = []
   if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name, id: taller.id })
+  if (modalidad === "privada") {
+    const ids = (await invitadosDe(knex, s).catch(() => [] as string[])).filter((x) => x !== taller?.id)
+    if (ids.length) {
+      const inv = (await knex("seller").whereIn("id", ids).whereNull("deleted_at").whereNotNull("email").select("id", "name", "email")) as any[]
+      for (const t of inv) destinos.push({ email: t.email, nombre: t.name, id: t.id })
+    }
+  }
   if (abierta) {
     try {
       const otros = (await knex("seller")
@@ -103,7 +122,7 @@ export async function difundirSolicitud(
     destinos.map((d) => d.id),
     {
       titulo: taller && !abierta ? "Un cliente quiere tu cotización" : "Nueva solicitud de fabricación",
-      cuerpo: `${folio}: ${[trabajo.servicio, trabajo.material, trabajo.ciudad].filter(Boolean).join(" · ") || "manda tu precio"}`,
+      cuerpo: `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}`,
       url: "/seller/solicitudes",
       etiqueta: `sol-${s.id}`,
     },
@@ -119,16 +138,16 @@ export async function difundirSolicitud(
     await pausa(600)
   }
 
-  // Redes: sólo solicitudes abiertas y sólo datos públicos (sin contacto)
-  if (abierta) {
+  // Redes: sólo con autorización expresa del cliente (difundir_redes), nunca
+  // una privada, y con el resumen sin datos sensibles (Licitaciones 3.0 §1.3):
+  // sin planos, sin presupuesto confidencial, sin contacto.
+  if (abierta && s.difundir_redes) {
     await avisarRedes(
       {
         tipo: "licitacion",
-        titulo: [trabajo.servicio, trabajo.material].filter(Boolean).join(" - ") || "Trabajo de fabricacion CNC",
-        resumen: [trabajo.cantidad ? "Cantidad: " + trabajo.cantidad : "", trabajo.fecha ? "Para: " + trabajo.fecha : ""]
-          .filter(Boolean)
-          .join(". "),
-        lugar: [trabajo.ciudad, trabajo.estado_mx].filter(Boolean).join(", "),
+        titulo: [trabajoTaller.servicio, trabajoTaller.material].filter(Boolean).join(" - ") || "Trabajo de fabricacion CNC",
+        resumen: resumenRedes(s),
+        lugar: [trabajoTaller.ciudad, trabajoTaller.estado_mx].filter(Boolean).join(", "),
         url: ligaTrabajo(s.folio),
       },
       logger as any

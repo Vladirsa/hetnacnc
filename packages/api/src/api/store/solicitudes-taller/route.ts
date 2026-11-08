@@ -6,6 +6,7 @@ import { sendEmail } from "../../../lib/resend"
 import { difundirSolicitud } from "../../../lib/difusion"
 import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionActiva } from "../../../lib/seguimiento"
 import { ligarCliente } from "../../../lib/licitacion-extra"
+import { asegurarPrivacidad, invitarTalleres, leerModalidad, leerPrivacidad } from "../../../lib/licitacion-privacidad"
 import {
   type ArchivoSolicitud,
   MAX_ARCHIVOS_SOLICITUD,
@@ -56,6 +57,12 @@ type Body = {
   acepta_envio?: string
   descripcion?: string
   archivo_url?: string
+  // Licitaciones 3.0 (Fase 1): privacidad por elemento y modalidad
+  empresa?: string
+  modalidad?: string
+  privacidad?: Record<string, string> | string
+  difundir_redes?: boolean | string
+  invitados?: string[] | string
   sitio_web?: string // trampa para bots: debe llegar vacío
 }
 
@@ -141,7 +148,18 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     email,
     telefono: corto(b.telefono, 40),
     whatsapp: corto(b.whatsapp, 40),
+    empresa: corto(b.empresa, 120),
   }
+  let privacidadCruda: unknown = b.privacidad
+  if (typeof privacidadCruda === "string") {
+    try {
+      privacidadCruda = JSON.parse(privacidadCruda)
+    } catch {
+      privacidadCruda = {}
+    }
+  }
+  const privacidad = leerPrivacidad(privacidadCruda)
+  const si = (v: unknown) => v === true || v === "1" || v === "true" || v === "si"
 
   // Taller elegido (opcional)
   let taller: { id: string; name: string; email: string | null; handle: string } | null = null
@@ -159,6 +177,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   }
   const abierta = !taller || b.abierta === true || b.abierta === "1" || b.abierta === "true"
   const modo = abierta ? "abierta" : "directa"
+  // Una solicitud directa (a un solo taller) es privada por naturaleza
+  const modalidad = modo === "directa" ? "privada" : leerModalidad(b.modalidad)
+  // La difusión en redes sólo con autorización expresa, y nunca de una privada
+  const difundirRedes = modalidad !== "privada" && si(b.difundir_redes)
 
   // Guardar. Con revisión, la solicitud nace en "revision": no la ve ningún
   // taller ni sale en el tablero hasta que HETNA la aprueba, y sus 7 días
@@ -169,6 +191,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   let sol: any = null
   try {
     await asegurarSeguimiento(knex)
+    await asegurarPrivacidad(knex)
     const [fila0] = await knex(T_SOLICITUD)
       .insert({
         id: nuevoId("sol"),
@@ -178,11 +201,15 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         estado: revision ? "revision" : "abierta",
         trabajo,
         contacto,
+        modalidad,
+        privacidad,
+        difundir_redes: difundirRedes,
         cierra_en: revision ? null : new Date(Date.now() + DIAS_ABIERTA * 864e5),
       })
-      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto"])
+      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes"])
     sol = fila0
     folio = folioTexto(fila0.folio)
+    if (modalidad === "privada" && b.invitados) await invitarTalleres(knex, fila0.id, b.invitados)
     // Con sesión iniciada queda en "Mis solicitudes" del cliente.
     const clienteId = (req as any).auth_context?.actor_id
     if (clienteId) await ligarCliente(knex, fila0.id, clienteId).catch(() => {})

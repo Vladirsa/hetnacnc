@@ -15,6 +15,7 @@ import {
   marco,
 } from "../../../../../lib/licitacion"
 import { estadoCobro, ligaDePago, pesos, prepararCobro } from "../../../../../lib/licitacion-cobro"
+import { asegurarPrivacidad, privacidadDe } from "../../../../../lib/licitacion-privacidad"
 import { avisarNoElegidos } from "../../../../../lib/licitacion-extra"
 import { pushATalleres } from "../../../../../lib/push"
 import { cambiarEtapa } from "../../../../../lib/seguimiento"
@@ -27,6 +28,9 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const token = String(req.params.token || "")
   const propuestaId = String((req.body as any)?.propuesta_id || "")
+  // Licitaciones 3.0: si el cliente eligió "contacto por autorización" y marca
+  // la casilla al elegir, el taller ganador recibe su contacto.
+  const quiereCompartir = [true, "true", "1", "si"].includes((req.body as any)?.compartir_contacto)
 
   await asegurarTablas(knex)
   const s = await knex(T_SOLICITUD).where({ token }).first()
@@ -73,6 +77,17 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
   res.json({ ok: true, pago_url: pagoUrl, cobro })
 
   const primerPago = cobro?.siguiente
+  await asegurarPrivacidad(knex)
+  const compartirContacto = quiereCompartir && privacidadDe(s).contacto === "autorizacion"
+  if (compartirContacto) await knex(T_SOLICITUD).where({ id: s.id }).update({ compartir_contacto: true }).catch(() => undefined)
+  const bloqueContacto = compartirContacto
+    ? `<p style="color:#40403A;background:#EEF6F0;padding:10px 12px;border-radius:8px"><strong>El cliente compartió su contacto contigo:</strong><br>` +
+      [s.contacto?.nombre, s.contacto?.empresa, s.contacto?.email, s.contacto?.telefono && `Tel. ${s.contacto.telefono}`, s.contacto?.whatsapp && `WhatsApp ${s.contacto.whatsapp}`]
+        .filter(Boolean)
+        .map((x: string) => esc(x))
+        .join("<br>") +
+      `</p>`
+    : ""
   const resumen =
     `<table style="border-collapse:collapse;font-size:14px">` +
     fila("Folio", folio) +
@@ -110,6 +125,7 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
               ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. HETNA no cobra comisión: el pago es completo para ti.`
               : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, completo (HETNA no cobra comisión). Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
           }</p>` +
+          bloqueContacto +
           `<p style="color:#40403A">Te avisaremos cuando el cliente pague. <strong>No inicies el trabajo antes de esa confirmación.</strong></p>` +
           boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)
       ),
