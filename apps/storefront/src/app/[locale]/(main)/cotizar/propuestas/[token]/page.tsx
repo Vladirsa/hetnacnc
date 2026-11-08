@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import AccesosSolicitud from "@/components/hetna/taller/AccesosSolicitud"
 import ComparadorPropuestas from "@/components/hetna/taller/ComparadorPropuestas"
 import PreguntasSolicitud from "@/components/hetna/taller/PreguntasSolicitud"
 import ResenaTaller from "@/components/hetna/taller/ResenaTaller"
@@ -104,6 +105,8 @@ export default async function PropuestasPage({
           </p>
         )}
       </section>
+
+      <AccesosSolicitud token={token} s={s} />
 
       <PreguntasSolicitud token={token} preguntas={s.preguntas || []} abierta={s.estado === "abierta"} />
 

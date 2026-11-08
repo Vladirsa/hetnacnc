@@ -169,7 +169,7 @@ export default function PerfilTallerPage() {
   const [f, setF] = useState({
     lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
-    tarifas: {},
+    tarifas: {}, tipo_cuenta: "taller", marcas: "",
   })
 
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }))
@@ -197,6 +197,9 @@ export default function PerfilTallerPage() {
           entrega: p.entrega || "",
           anos: p.anos ?? "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
+          // Licitaciones 3.0: taller (fabrica), proveedor (vende productos) o ambos
+          tipo_cuenta: ["taller", "proveedor", "ambos"].includes(p.tipo_cuenta) ? p.tipo_cuenta : "taller",
+          marcas: (Array.isArray(p.marcas) ? p.marcas : []).join(", "),
           materiales: mats.filter((m) => MATERIALES.includes(m)),
           otrosMateriales: mats.filter((m) => !MATERIALES.includes(m)).join(", "),
           capacidades: (Array.isArray(p.capacidades) ? p.capacidades : []).join("\n"),
@@ -236,6 +239,8 @@ export default function PerfilTallerPage() {
       anos: f.anos === "" ? undefined : Number(f.anos),
       whatsapp: undefined,
       servicios: f.servicios,
+      tipo_cuenta: f.tipo_cuenta,
+      marcas: f.marcas.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 20),
       materiales: [...f.materiales, ...otros],
       capacidades: lineas(f.capacidades),
       // Con X e Y se arma el área en texto (la usan las páginas que ya existían)
@@ -377,6 +382,27 @@ export default function PerfilTallerPage() {
             <input style={S.input} type="number" min="0" value={f.anos} onChange={(e) => set("anos", e.target.value)} />
           </div>
         </div>
+      </section>
+
+      <section style={S.card}>
+        <h2 style={S.h2}>Tipo de cuenta</h2>
+        <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6B675C" }}>
+          Taller: fabricas piezas y recibes licitaciones. Proveedor: vendes productos e insumos (materiales, herramientas, máquinas) y recibirás licitaciones de suministro. Ambos: las dos cosas.
+        </p>
+        <div style={S.chips}>
+          {[["taller", "🏭 Taller"], ["proveedor", "📦 Proveedor"], ["ambos", "🏭📦 Ambos"]].map(([v, l]) => (
+            <button type="button" key={v} style={chip(f.tipo_cuenta === v)} onClick={() => set("tipo_cuenta", v)}>{l}</button>
+          ))}
+        </div>
+        {f.tipo_cuenta !== "taller" && (
+          <>
+            <label style={{ ...S.label, marginTop: 12 }}>Marcas que distribuyes (separadas por coma)</label>
+            <input style={S.input} value={f.marcas} onChange={(e) => set("marcas", e.target.value)} placeholder="Ej. Onsrud, Amana Tool, Ruida" />
+            <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6B675C" }}>
+              Para mostrar "Distribuidor autorizado" pide la verificación con la carta de la marca en Verificación.
+            </p>
+          </>
+        )}
       </section>
 
       <section style={S.card}>

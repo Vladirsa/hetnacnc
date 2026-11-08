@@ -17,7 +17,7 @@ export async function generateMetadata({
   const lugar = lugarTrabajo(t)
   return {
     title: `${tituloTrabajo(t)}${lugar ? ` en ${lugar}` : ""} · ${t.folio}`,
-    description: t.descripcion.slice(0, 155),
+    description: (t.descripcion || [t.servicio, t.material, t.ciudad || t.estado_mx].filter(Boolean).join(" · ")).slice(0, 155),
     // Un trabajo cerrado ya no le sirve a nadie que llegue de Google: se
     // sigue viendo (para no romper ligas compartidas) pero sale del índice.
     robots: t.estado === "abierta" ? { index: true, follow: true } : { index: false, follow: true },
@@ -67,7 +67,17 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
         <h1 className="mt-2 text-2xl font-extrabold leading-snug text-[#142033] sm:text-3xl">{tituloTrabajo(t)}</h1>
         {lugar && <p className="mt-1 text-[#6B675C]">📍 Entrega en {lugar}</p>}
 
-        <p className="mt-5 whitespace-pre-line text-[#2B2A26]">{t.descripcion}</p>
+        {t.descripcion ? (
+          <p className="mt-5 whitespace-pre-line text-[#2B2A26]">{t.descripcion}</p>
+        ) : (
+          <p className="mt-5 rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
+            🔒 El cliente reservó la descripción completa para los talleres que autorice. Regístrate como taller y pide acceso desde tu panel.
+          </p>
+        )}
+        {t.presupuesto && <p className="mt-3 text-sm text-[#40403A]"><b>Presupuesto del cliente:</b> {t.presupuesto}</p>}
+        {t.modalidad === "restringida" && (
+          <p className="mt-3 text-sm text-[#40403A]">🔐 Licitación restringida: los planos se comparten sólo con los talleres que el cliente autoriza.</p>
+        )}
 
         <dl className="mt-6 grid gap-x-6 gap-y-3 border-t border-[#E7E4DC] pt-5 sm:grid-cols-2">
           {DETALLES.filter(([k]) => t[k]).map(([k, etiqueta]) => (

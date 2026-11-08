@@ -37,6 +37,12 @@ export type SolicitudTallerInput = {
   descripcion: string
   archivo_url?: string
   sitio_web?: string
+  // Licitaciones 3.0 (Fase 1)
+  empresa?: string
+  modalidad?: string
+  privacidad?: string
+  difundir_redes?: boolean
+  invitados?: string
 }
 
 export type SolicitudTallerResultado = { ok: true; folio?: string } | { ok: false; mensaje: string }
@@ -121,6 +127,12 @@ export type VistaSolicitud = {
   preguntas?: PreguntaSolicitud[]
   resena?: { calidad: number; tiempo: number; trato: number; comentario: string } | null
   puede_resenar?: boolean
+  // Licitaciones 3.0 (Fase 1)
+  modalidad?: "publica" | "privada" | "restringida"
+  privacidad?: Record<string, string>
+  difundir_redes?: boolean
+  accesos?: { seller_id: string; estado: "pendiente" | "aprobado" | "rechazado"; mensaje: string | null; created_at: string; taller: string; handle: string }[]
+  invitados?: { seller_id: string; taller: string; handle: string }[]
 }
 
 const cabeceras = () => ({
@@ -144,13 +156,14 @@ export async function verSolicitud(token: string): Promise<VistaSolicitud | null
 
 export async function elegirPropuesta(
   token: string,
-  propuestaId: string
+  propuestaId: string,
+  compartirContacto = false
 ): Promise<{ ok: true; pago_url: string | null } | { ok: false; mensaje: string }> {
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller/${encodeURIComponent(token)}/elegir`, {
       method: "POST",
       headers: cabeceras(),
-      body: JSON.stringify({ propuesta_id: propuestaId }),
+      body: JSON.stringify({ propuesta_id: propuestaId, compartir_contacto: compartirContacto }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { ok: false, mensaje: body.message || "No se pudo elegir la propuesta." }
@@ -237,4 +250,16 @@ export async function misSolicitudes(): Promise<{ sesion: boolean; solicitudes: 
   } catch {
     return { sesion: true, solicitudes: [] }
   }
+}
+
+// ---- Licitaciones 3.0 (Fase 1) ----
+
+/** El cliente aprueba o rechaza que un taller vea sus planos. */
+export async function decidirAcceso(token: string, sellerId: string, decision: "aprobar" | "rechazar") {
+  return postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/acceso`, { seller_id: sellerId, decision }, "No se pudo guardar tu decisión.")
+}
+
+/** El cliente invita talleres por el nombre de su tienda. */
+export async function invitarTalleresSolicitud(token: string, talleres: string) {
+  return postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/invitar`, { talleres }, "No se pudo invitar a esos talleres.")
 }

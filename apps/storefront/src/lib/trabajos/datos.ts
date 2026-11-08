@@ -23,6 +23,10 @@ export type TrabajoPublico = {
   estado_mx: string
   acepta_envio: string
   descripcion: string
+  // Licitaciones 3.0: lo que el cliente decidió mostrar
+  descripcion_restringida?: boolean
+  modalidad?: "publica" | "restringida"
+  presupuesto?: string
   creada: string
   cierra_en: string | null
   propuestas: number

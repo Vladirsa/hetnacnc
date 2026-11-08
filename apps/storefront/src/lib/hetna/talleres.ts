@@ -31,6 +31,9 @@ export type Maquina = {
 }
 
 export type Perfil = {
+  // Licitaciones 3.0: taller (fabrica), proveedor (vende productos) o ambos
+  tipo_cuenta?: "taller" | "proveedor" | "ambos"
+  marcas?: string[]
   ciudad?: string
   estado?: string
   // Código postal del taller (no se publica; sirve para "cerca de ti")
@@ -106,6 +109,8 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
         .filter((m) => m.nombre)
     : []
   return {
+    tipo_cuenta: p.tipo_cuenta === "proveedor" || p.tipo_cuenta === "ambos" ? p.tipo_cuenta : "taller",
+    marcas: lista(p.marcas).slice(0, 20),
     ciudad: texto(p.ciudad),
     estado: texto(p.estado),
     cp: texto(p.cp),

@@ -185,7 +185,7 @@ export function clienteVisible(s: any): string {
   return "Cliente HETNA"
 }
 
-function ubicacion(t: Trabajo, p: Privacidad): Partial<Trabajo> {
+function ubicacion(p: Privacidad): Partial<Trabajo> {
   if (p.ubicacion === "confidencial") return { ciudad: "", estado_mx: "", cp: "" }
   if (p.ubicacion === "estado") return { ciudad: "", cp: "" }
   return {}
@@ -204,7 +204,7 @@ export function trabajoParaTaller(s: any, r: RelacionTaller) {
   const verDescripcion = p.descripcion === "publica" || participante
   return {
     ...t,
-    ...ubicacion(t, p),
+    ...ubicacion(p),
     descripcion: verDescripcion ? ocultarContacto(t.descripcion || "") : "",
     descripcion_restringida: !verDescripcion,
     presupuesto: p.presupuesto === "visible" ? t.presupuesto || "" : "",
@@ -219,7 +219,7 @@ export function trabajoParaTaller(s: any, r: RelacionTaller) {
 export function trabajoPublicoPrivado(s: any) {
   const t = (s?.trabajo || {}) as Trabajo
   const p = privacidadDe(s)
-  const u = ubicacion(t, p)
+  const u = ubicacion(p)
   return {
     ciudad: u.ciudad ?? t.ciudad ?? "",
     estado_mx: u.estado_mx ?? t.estado_mx ?? "",

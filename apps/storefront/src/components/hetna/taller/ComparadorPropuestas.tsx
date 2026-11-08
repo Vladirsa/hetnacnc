@@ -14,6 +14,9 @@ type Orden = "recomendado" | "precio" | "tiempo"
 export default function ComparadorPropuestas({ token, solicitud }: { token: string; solicitud: VistaSolicitud }) {
   const router = useRouter()
   const [orden, setOrden] = useState<Orden>("recomendado")
+  // Licitaciones 3.0: contacto "por autorización" → casilla al elegir
+  const [compartir, setCompartir] = useState(false)
+  const contactoPorAutorizacion = solicitud.privacidad?.contacto === "autorizacion"
   const [soloEnvio, setSoloEnvio] = useState(false)
   const [confirmar, setConfirmar] = useState<Propuesta | null>(null)
   const [error, setError] = useState("")
@@ -34,7 +37,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
   const elegir = (p: Propuesta) =>
     iniciar(async () => {
       setError("")
-      const r = await elegirPropuesta(token, p.id)
+      const r = await elegirPropuesta(token, p.id, compartir)
       if (!r.ok) {
         setError(r.mensaje)
         setConfirmar(null)
@@ -180,6 +183,12 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
               {confirmar.anticipo_pct ? ` El taller pide ${confirmar.anticipo_pct}% de anticipo para empezar.` : ""} Al confirmar te llevamos a pagar y
               las demás propuestas se cierran (a los otros talleres les avisamos sin dar tus datos).
             </p>
+            {contactoPorAutorizacion && (
+              <label className="mt-3 flex items-start gap-2 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]">
+                <input type="checkbox" checked={compartir} onChange={(e) => setCompartir(e.target.checked)} className="mt-1 accent-[#C2560A]" />
+                <span>Compartir mi nombre, correo, teléfono y WhatsApp con <b>{confirmar.taller.nombre}</b> para coordinar directamente.</span>
+              </label>
+            )}
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmar(null)} className="rounded-xl px-4 py-2 font-semibold text-[#40403A]">
                 Cancelar

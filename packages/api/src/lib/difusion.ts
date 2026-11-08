@@ -15,7 +15,6 @@ import {
   ligaTrabajo,
   marco,
   boton,
-  ocultarContacto,
   tablaTrabajo,
 } from "./licitacion"
 

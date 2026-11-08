@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
+import { PrivacidadSolicitud } from "./PrivacidadSolicitud"
+
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
 import {
@@ -100,6 +102,8 @@ export default function FormSolicitudTaller({
   const [ciudad, setCiudad] = useState("")
   const [estadoMx, setEstadoMx] = useState("")
   const [avisoCp, setAvisoCp] = useState("")
+  // Con taller elegido: ¿también quiere propuestas de otros? (si no, es privada)
+  const [abiertaOtros, setAbiertaOtros] = useState(false)
   // Medidas de la pieza (área y metros de corte) para el estimado por taller
   // de TalleresCerca; se avisan por el evento "hetna:pieza" junto con la cantidad.
   const medida = useRef<MedidaPieza | null>(null)
@@ -220,7 +224,7 @@ export default function FormSolicitudTaller({
     setEstado("enviando")
     const r = await enviarSolicitudTaller({
       taller,
-      abierta: !taller || fd.get("abierta") === "1",
+      abierta: !taller || abiertaOtros,
       necesidad,
       tiene_archivo: tieneArchivo,
       archivos: archivos.flatMap((a) => (a.subido ? [a.subido] : [])),
@@ -249,6 +253,12 @@ export default function FormSolicitudTaller({
       descripcion: v("descripcion"),
       archivo_url: v("archivo_url"),
       sitio_web: v("sitio_web"),
+      // Licitaciones 3.0: privacidad y modalidad (PrivacidadSolicitud)
+      empresa: v("empresa"),
+      modalidad: v("modalidad"),
+      privacidad: v("privacidad"),
+      difundir_redes: v("difundir_redes") === "1",
+      invitados: v("invitados"),
     })
     if (r.ok) {
       setFolio(r.folio || "")
@@ -572,6 +582,10 @@ export default function FormSolicitudTaller({
             <input id="nombre" name="nombre" className={CAMPO} autoComplete="name" />
           </div>
           <div>
+            <label className={ETIQUETA} htmlFor="empresa">Empresa (opcional)</label>
+            <input id="empresa" name="empresa" className={CAMPO} autoComplete="organization" />
+          </div>
+          <div>
             <label className={ETIQUETA} htmlFor="email">Correo *</label>
             <input id="email" name="email" type="email" required className={CAMPO} autoComplete="email" />
             <span className="mt-1 block text-xs text-[#6B675C]">Ahí te llega la liga para ver y comparar propuestas.</span>
@@ -583,11 +597,21 @@ export default function FormSolicitudTaller({
           </div>
           {taller && (
             <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
-              <input type="checkbox" name="abierta" value="1" className="mt-1 accent-[#C2560A]" />
+              <input type="checkbox" name="abierta" value="1" checked={abiertaOtros} onChange={(e) => setAbiertaOtros(e.target.checked)} className="mt-1 accent-[#C2560A]" />
               También quiero recibir propuestas de otros talleres de la red para comparar.
             </label>
           )}
           <input type="text" name="sitio_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+        </div>
+      </fieldset>
+
+      {/* 5. Privacidad (Licitaciones 3.0) */}
+      <fieldset className="grid gap-3">
+        <legend className={PASO}>
+          <span className={NUM}>5</span> Privacidad: tú decides qué se ve
+        </legend>
+        <div className="mt-3">
+          <PrivacidadSolicitud dirigida={!!taller && !abiertaOtros} estado={estadoMx} />
         </div>
       </fieldset>
 
@@ -606,7 +630,7 @@ export default function FormSolicitudTaller({
                 : "Enviar y recibir propuestas"}
         </button>
         <span className="text-xs text-[#6B675C]">
-          Es gratis y sin compromiso. Tu correo y WhatsApp sólo los ve HETNA: los talleres reciben la descripción del trabajo, no tus datos.
+          Es gratis y sin compromiso. Tu correo y WhatsApp sólo los ve HETNA: los talleres reciben lo que tú permitas en el paso 5, nunca tus datos sin tu autorización.
         </span>
       </div>
       {estado === "error" && <p className="text-sm text-[#B3261E]">{mensaje}</p>}

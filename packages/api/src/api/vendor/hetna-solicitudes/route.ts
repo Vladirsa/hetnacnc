@@ -9,7 +9,6 @@ import {
   asegurarTablaRespuestas,
   asegurarTablas,
   folioTexto,
-  ocultarContacto,
 } from "../../../lib/licitacion"
 import { servicioTalleres } from "../../../lib/alta-taller"
 import { cupoLicitacion } from "../../../lib/licitacion-plan"

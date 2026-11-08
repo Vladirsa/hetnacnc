@@ -48,6 +48,47 @@ const SITIO = (typeof window !== "undefined" && /localhost|127\.0\.0\.1/.test(wi
 
 const pesoLegible = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.ceil((b || 0) / 1024)} KB`)
 
+// Licitaciones 3.0: pedir al cliente acceso a planos y descripción completa
+function PedirAcceso({ sol }) {
+  const [estado, setEstado] = useState(sol.acceso || "ninguno")
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState("")
+  if (estado === "aprobado") return null
+  const pedir = async () => {
+    const mensaje = window.prompt("Mensaje opcional para el cliente (por qué necesitas ver los planos):", "") ?? null
+    if (mensaje === null) return
+    setEnviando(true)
+    setError("")
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/acceso`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensaje }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setEstado(d.acceso || "pendiente")
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+  return (
+    <span style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      {estado === "ninguno" && (
+        <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} disabled={enviando} onClick={pedir}>
+          {enviando ? "Enviando..." : "🔑 Pedir acceso al cliente"}
+        </button>
+      )}
+      {estado === "pendiente" && <span style={{ color: "#8A5A00", fontSize: 12 }}>⏳ Pediste acceso: esperando al cliente</span>}
+      {estado === "rechazado" && <span style={{ color: "#6B675C", fontSize: 12 }}>El cliente no autorizó el acceso. Cotiza con lo visible o hazle una pregunta.</span>}
+      {error && <span style={{ color: "#B3261E", fontSize: 12 }}>{error}</span>}
+    </span>
+  )
+}
+
 // Los archivos del cliente están en un bucket privado: la liga se pide al
 // momento y dura una hora.
 function ArchivosCliente({ sol }) {
@@ -101,10 +142,13 @@ function ArchivosCliente({ sol }) {
                   </a>
                 )}
               </span>
+            ) : a.bloqueado ? (
+              <span key={i} style={{ color: "#6B675C" }}>🔒 {a.nombre}: el cliente lo comparte sólo con talleres autorizados</span>
             ) : (
               <span key={i} style={{ color: "#B3261E" }}>{a.nombre}: no disponible, intenta más tarde</span>
             )
           )}
+          {ligas.some((a) => a.bloqueado) && <PedirAcceso sol={sol} />}
           <span style={{ color: "#6B675C", fontSize: 12 }}>Las ligas duran una hora.</span>
         </div>
       )}
@@ -570,6 +614,8 @@ export default function SolicitudesPage() {
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <strong>{s.folio}</strong>
                 {s.para_mi && <span style={S.tag("#FFF1E6", "#C2560A")}>Te eligieron a ti</span>}
+                {s.modalidad === "privada" && !s.para_mi && <span style={S.tag("#EEF2FB", "#1a3a5c")}>Privada · te invitaron</span>}
+                {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}>Restringida</span>}
                 {p?.estado === "elegida" && <span style={S.tag("#E6F4EA", "#1E7B3A")}>¡Ganaste!</span>}
                 {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}>No elegida</span>}
                 <span style={{ color: "#6B675C", fontSize: 12 }}>
@@ -582,7 +628,16 @@ export default function SolicitudesPage() {
               )}
             </div>
 
-            <p style={{ whiteSpace: "pre-line", margin: "10px 0", color: "#40403A" }}>{t.descripcion}</p>
+            {t.cliente && t.cliente !== "Cliente HETNA" && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#40403A" }}>👤 {t.cliente}</p>}
+            {t.descripcion_restringida ? (
+              <div style={{ margin: "10px 0", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px", fontSize: 13, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <span>🔒 El cliente reservó la descripción completa para los talleres que autorice.</span>
+                <PedirAcceso sol={s} />
+              </div>
+            ) : (
+              <p style={{ whiteSpace: "pre-line", margin: "10px 0", color: "#40403A" }}>{t.descripcion}</p>
+            )}
+            {t.presupuesto_confidencial && <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6B675C" }}>Presupuesto: confidencial</p>}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 13 }}>
               {CAMPOS.filter(([k]) => t[k]).map(([k, l]) => (
                 <span key={k}><span style={{ color: "#6B675C" }}>{l}:</span> <strong>{t[k]}</strong></span>

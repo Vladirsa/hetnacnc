@@ -25,7 +25,7 @@ export function TarjetaTrabajo({ trabajo: t }: { trabajo: TrabajoPublico }) {
         )}
       </div>
       <h3 className="font-extrabold leading-snug text-[#142033]">{tituloTrabajo(t)}</h3>
-      <p className="line-clamp-3 text-sm text-[#44433D]">{t.descripcion}</p>
+      <p className="line-clamp-3 text-sm text-[#44433D]">{t.descripcion || "🔒 Descripción reservada para talleres autorizados."}</p>
       <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-2 text-xs text-[#6B675C]">
         {t.cantidad && <span>📦 {/^\d+$/.test(t.cantidad) ? `${t.cantidad} pzas` : t.cantidad}</span>}
         {lugar && <span>📍 {lugar}</span>}
