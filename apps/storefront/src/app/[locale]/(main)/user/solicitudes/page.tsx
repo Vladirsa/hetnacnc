@@ -44,7 +44,7 @@ export default async function MisSolicitudesPage() {
             <h1 className="text-[26px] font-bold text-[#1B1B18]">Mis solicitudes de fabricación</h1>
             <p className="mt-1 text-[15px] text-[#4A4943]">Propuestas de talleres, pago y seguimiento de cada trabajo.</p>
           </div>
-          <LocalizedClientLink href="/cotizar" className="rounded-[10px] bg-[#C2560A] px-4 py-2.5 text-[14px] font-semibold text-white">
+          <LocalizedClientLink href="/user/cotizar" className="rounded-[10px] bg-[#C2560A] px-4 py-2.5 text-[14px] font-semibold text-white">
             Nueva solicitud
           </LocalizedClientLink>
         </div>
