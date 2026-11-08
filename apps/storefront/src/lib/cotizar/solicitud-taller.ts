@@ -43,6 +43,10 @@ export type SolicitudTallerInput = {
   privacidad?: string
   difundir_redes?: boolean
   invitados?: string
+  // Fase 2: suministro de material e insumos (lo cotizan proveedores)
+  tipo?: "fabricacion" | "suministro"
+  marca?: string
+  unidad?: string
 }
 
 export type SolicitudTallerResultado = { ok: true; folio?: string } | { ok: false; mensaje: string }
@@ -88,6 +92,15 @@ export type Propuesta = {
   // Anticipo que pide el taller si le pagas directo (null = pago completo)
   anticipo_pct?: number | null
   taller: { nombre: string; handle: string; estado: string; calificacion: number | null; resenas?: number; verificado?: boolean }
+  // Licitaciones 3.0 (Fase 2): propuesta formal
+  moneda?: string
+  materiales?: string
+  operaciones?: string
+  fecha_entrega?: string | null
+  condiciones_pago?: string
+  garantia?: string
+  observaciones?: string
+  adjuntos?: { nombre: string; tamano: number; url: string | null }[]
 }
 
 export type CobroSolicitud = {
@@ -133,6 +146,7 @@ export type VistaSolicitud = {
   difundir_redes?: boolean
   accesos?: { seller_id: string; estado: "pendiente" | "aprobado" | "rechazado"; mensaje: string | null; created_at: string; taller: string; handle: string }[]
   invitados?: { seller_id: string; taller: string; handle: string }[]
+  comparacion?: { mediana: number | null; notas: { id: string; notas: string[]; faltan: string[] }[] }
 }
 
 const cabeceras = () => ({
@@ -262,4 +276,11 @@ export async function decidirAcceso(token: string, sellerId: string, decision: "
 /** El cliente invita talleres por el nombre de su tienda. */
 export async function invitarTalleresSolicitud(token: string, talleres: string) {
   return postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/invitar`, { talleres }, "No se pudo invitar a esos talleres.")
+}
+
+/** Resumen de las propuestas escrito por IA (no elige ganador). */
+export async function analizarPropuestas(token: string): Promise<{ disponible: boolean; resumen: string | null; motivo?: string }> {
+  const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/analisis`, {}, "No se pudo preparar el resumen.")
+  if (!r.ok) return { disponible: true, resumen: null, motivo: r.mensaje }
+  return { disponible: !!r.body.disponible, resumen: r.body.resumen || null, motivo: r.body.motivo }
 }

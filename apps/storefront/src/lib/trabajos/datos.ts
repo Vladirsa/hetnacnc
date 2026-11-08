@@ -26,6 +26,7 @@ export type TrabajoPublico = {
   // Licitaciones 3.0: lo que el cliente decidió mostrar
   descripcion_restringida?: boolean
   modalidad?: "publica" | "restringida"
+  tipo?: "fabricacion" | "suministro"
   presupuesto?: string
   creada: string
   cierra_en: string | null

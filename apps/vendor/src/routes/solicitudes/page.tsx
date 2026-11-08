@@ -31,7 +31,7 @@ const S = {
 
 const CAMPOS = [
   ["necesidad", "Necesita"], ["tiene_archivo", "Archivo"], ["servicio", "Servicio"], ["material", "Material"], ["cantidad", "Cantidad"], ["medidas", "Medidas"],
-  ["acabado", "Acabado"], ["tolerancia", "Tolerancia"], ["medidas_archivo", "Leído del archivo"], ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
+  ["marca", "Marca preferida"], ["unidad", "Unidad"], ["acabado", "Acabado"], ["tolerancia", "Tolerancia"], ["medidas_archivo", "Leído del archivo"], ["fecha", "Para cuándo"], ["frecuencia", "Frecuencia"], ["presupuesto", "Presupuesto"], ["acepta_envio", "Acepta envío"],
 ]
 
 const pesos = (n) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -381,7 +381,40 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
     precio: p?.precio ?? "", dias: p?.dias ?? "", vigencia_dias: p?.vigencia_dias ?? 15,
     incluye_envio: p?.incluye_envio ?? false, condiciones: p?.condiciones ?? "",
     anticipo_pct: p?.anticipo_pct ?? 50,
+    // Licitaciones 3.0 (Fase 2): propuesta formal
+    moneda: p?.moneda ?? "MXN", materiales: p?.materiales ?? "", operaciones: p?.operaciones ?? "",
+    fecha_entrega: p?.fecha_entrega ?? "", condiciones_pago: p?.condiciones_pago ?? "", garantia: p?.garantia ?? "",
+    observaciones: p?.observaciones ?? "",
   })
+  const [adjuntos, setAdjuntos] = useState(p?.adjuntos || [])
+  const [subiendo, setSubiendo] = useState(false)
+  const subir = async (archivo) => {
+    if (!archivo) return
+    setSubiendo(true)
+    setMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append("archivo", archivo)
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/adjunto`, { method: "POST", credentials: "include", body: fd })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setAdjuntos(d.adjuntos || [])
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setSubiendo(false)
+    }
+  }
+  const quitar = async (clave) => {
+    const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/adjunto`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clave }),
+    })
+    const d = await r.json().catch(() => ({}))
+    if (r.ok) setAdjuntos(d.adjuntos || [])
+  }
   const directo = cobroTaller && (cobroTaller.mercadopago || cobroTaller.paypal)
   const [msg, setMsg] = useState(null)
   const [enviando, setEnviando] = useState(false)
@@ -413,12 +446,23 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
     <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
       <div style={S.grid}>
         <div>
-          <label style={S.label}>Precio total (MXN, con IVA)</label>
+          <label style={S.label}>Precio total ({f.moneda}, con IVA)</label>
           <input style={S.input} inputMode="decimal" value={f.precio} onChange={(e) => set("precio", e.target.value)} placeholder="3500" />
+        </div>
+        <div>
+          <label style={S.label}>Moneda</label>
+          <select style={S.input} value={f.moneda} onChange={(e) => set("moneda", e.target.value)}>
+            <option value="MXN">Pesos (MXN)</option>
+            <option value="USD">Dólares (USD)</option>
+          </select>
         </div>
         <div>
           <label style={S.label}>Días de entrega</label>
           <input style={S.input} type="number" min="1" value={f.dias} onChange={(e) => set("dias", e.target.value)} placeholder="5" />
+        </div>
+        <div>
+          <label style={S.label}>Fecha estimada de entrega</label>
+          <input style={S.input} type="date" value={f.fecha_entrega} onChange={(e) => set("fecha_entrega", e.target.value)} />
         </div>
         <div>
           <label style={S.label}>Vigencia (días)</label>
@@ -445,8 +489,51 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
           ? `Si ganas, el cliente te paga directo a tu ${cobroTaller.mercadopago ? "Mercado Pago" : "PayPal"}. HETNA no cobra comisión.`
           : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos completo al confirmar la entrega. Conéctalos en la app para pedir anticipo y cobrar directo.`}
       </p>
+      <p style={{ margin: "14px 0 4px", fontSize: 13, fontWeight: 700, color: "#142033" }}>
+        Propuesta formal <span style={{ fontWeight: 400, color: "#6B675C" }}>— mientras más completa, más confianza le da al cliente</span>
+      </p>
+      <div style={S.grid}>
+        <div>
+          <label style={S.label}>Materiales que usarás</label>
+          <textarea style={S.area} value={f.materiales} onChange={(e) => set("materiales", e.target.value)} placeholder="Ej. Acero A36 cal. 14, pintura electrostática negra" />
+        </div>
+        <div>
+          <label style={S.label}>Operaciones / procesos</label>
+          <textarea style={S.area} value={f.operaciones} onChange={(e) => set("operaciones", e.target.value)} placeholder="Ej. Corte plasma, doblez, soldadura MIG, pintura" />
+        </div>
+        <div>
+          <label style={S.label}>Condiciones de pago</label>
+          <textarea style={S.area} value={f.condiciones_pago} onChange={(e) => set("condiciones_pago", e.target.value)} placeholder="Ej. 50% para empezar y 50% contra entrega; factura CFDI" />
+        </div>
+        <div>
+          <label style={S.label}>Garantía</label>
+          <textarea style={S.area} value={f.garantia} onChange={(e) => set("garantia", e.target.value)} placeholder="Ej. Reposición sin costo por defecto de fabricación en 30 días" />
+        </div>
+      </div>
+      <label style={{ ...S.label, marginTop: 10 }}>Observaciones técnicas</label>
+      <textarea style={S.area} value={f.observaciones} onChange={(e) => set("observaciones", e.target.value)} placeholder="Ej. Tolerancia ±0.2 mm; recomendamos radio de 1 mm en esquinas" />
       <label style={{ ...S.label, marginTop: 10 }}>Condiciones (material incluido, acabado, tolerancias…)</label>
       <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder="Ej. Incluye material MDF 6 mm y lijado." />
+      <div style={{ marginTop: 10, fontSize: 13 }}>
+        <strong>Archivos adjuntos</strong> <span style={{ color: "#6B675C" }}>(tu cotización en PDF, planos o fotos de trabajos parecidos; máx. 5)</span>
+        {!p && <div style={{ color: "#6B675C", marginTop: 4 }}>Primero envía tu propuesta; después podrás adjuntar archivos.</div>}
+        {p && (
+          <div style={{ display: "grid", gap: 4, marginTop: 6 }}>
+            {adjuntos.map((a) => (
+              <span key={a.clave} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                📎 {a.nombre}
+                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(a.clave)}>Quitar</button>
+              </span>
+            ))}
+            {adjuntos.length < 5 && (
+              <label style={{ ...S.btn2, padding: "4px 10px", fontSize: 12, display: "inline-block", width: "fit-content", cursor: "pointer" }}>
+                {subiendo ? "Subiendo..." : "+ Adjuntar archivo"}
+                <input type="file" hidden disabled={subiendo} accept=".pdf,.dxf,.dwg,.step,.stp,.stl,.svg,.png,.jpg,.jpeg,.webp,.xls,.xlsx,.doc,.docx" onChange={(e) => { subir(e.target.files?.[0]); e.target.value = "" }} />
+              </label>
+            )}
+          </div>
+        )}
+      </div>
       <p style={{ color: "#6B675C", fontSize: 12, margin: "4px 0 10px" }}>
         No escribas teléfonos, correos ni ligas: se ocultan automáticamente. Todo el trato va por HETNA.
       </p>
@@ -616,6 +703,7 @@ export default function SolicitudesPage() {
                 {s.para_mi && <span style={S.tag("#FFF1E6", "#C2560A")}>Te eligieron a ti</span>}
                 {s.modalidad === "privada" && !s.para_mi && <span style={S.tag("#EEF2FB", "#1a3a5c")}>Privada · te invitaron</span>}
                 {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}>Restringida</span>}
+                {s.tipo === "suministro" && <span style={S.tag("#EEF6F0", "#1E7B3A")}>📦 Suministro</span>}
                 {p?.estado === "elegida" && <span style={S.tag("#E6F4EA", "#1E7B3A")}>¡Ganaste!</span>}
                 {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}>No elegida</span>}
                 <span style={{ color: "#6B675C", fontSize: 12 }}>

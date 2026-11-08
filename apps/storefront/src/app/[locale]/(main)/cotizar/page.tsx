@@ -79,6 +79,13 @@ export default async function CotizarPage({
 
           <aside className="grid content-start gap-4">
             <TalleresCerca talleres={talleres.filter((x) => x.handle !== t?.handle)} proceso={proceso || servicio} query={query} />
+            <LocalizedClientLink
+              href="/cotizar/suministro"
+              className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <p className="font-bold text-[#142033]">📦 ¿Necesitas material o insumos? →</p>
+              <p className="mt-1 text-sm text-[#40403A]">Lámina, MDF, acrílico, fresas o consumibles: los proveedores te cotizan.</p>
+            </LocalizedClientLink>
             <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
             {CALCULADORAS.map((c) => (
               <LocalizedClientLink

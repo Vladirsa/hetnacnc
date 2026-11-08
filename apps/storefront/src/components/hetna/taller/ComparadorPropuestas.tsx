@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-import { elegirPropuesta, type Propuesta, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
+import { analizarPropuestas, elegirPropuesta, type Propuesta, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
 
 import PagoSolicitud from "./PagoSolicitud"
 
@@ -17,6 +17,14 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
   // Licitaciones 3.0: contacto "por autorización" → casilla al elegir
   const [compartir, setCompartir] = useState(false)
   const contactoPorAutorizacion = solicitud.privacidad?.contacto === "autorizacion"
+  // Fase 2: notas de la comparación y resumen con IA
+  const notasDe = new Map((solicitud.comparacion?.notas || []).map((n) => [n.id, n]))
+  const [ia, setIa] = useState<{ cargando: boolean; resumen: string | null; motivo?: string } | null>(null)
+  const pedirIa = async () => {
+    setIa({ cargando: true, resumen: null })
+    const r = await analizarPropuestas(token)
+    setIa({ cargando: false, resumen: r.resumen, motivo: r.disponible ? r.motivo || (r.resumen ? undefined : "No se pudo preparar el resumen ahora.") : "El resumen con IA todavía no está disponible." })
+  }
   const [soloEnvio, setSoloEnvio] = useState(false)
   const [confirmar, setConfirmar] = useState<Propuesta | null>(null)
   const [error, setError] = useState("")
@@ -110,6 +118,22 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         )
       )}
 
+      {solicitud.propuestas.length >= 2 && (
+        <div className="mt-4 rounded-2xl border border-[#E7E4DC] bg-[#FAF9F6] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-bold text-[#142033]">🤖 Resumen de las propuestas con IA</p>
+            {!ia?.resumen && (
+              <button type="button" onClick={pedirIa} disabled={ia?.cargando} className="rounded-xl bg-[#142033] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                {ia?.cargando ? "Analizando…" : "Explícame las diferencias"}
+              </button>
+            )}
+          </div>
+          {ia?.resumen && <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40403A]">{ia.resumen}</div>}
+          {ia && !ia.cargando && !ia.resumen && ia.motivo && <p className="mt-2 text-sm text-[#6B675C]">{ia.motivo}</p>}
+          <p className="mt-2 text-xs text-[#8A867B]">La IA sólo explica lo que escribieron los talleres; no elige por ti. La decisión es tuya.</p>
+        </div>
+      )}
+
       <div className="mt-4 grid gap-4">
         {lista.map((p) => {
           const elegida = solicitud.propuesta_elegida === p.id
@@ -134,7 +158,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-extrabold text-[#142033]">{pesos(p.precio)} <span className="text-sm font-semibold text-[#6B675C]">MXN</span></p>
+                  <p className="text-2xl font-extrabold text-[#142033]">{pesos(p.precio)} <span className="text-sm font-semibold text-[#6B675C]">{p.moneda || "MXN"}</span></p>
                   <p className="text-sm text-[#6B675C]">{p.incluye_envio ? "Envío incluido" : "Envío aparte"}</p>
                 </div>
               </div>
@@ -154,6 +178,52 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
               </div>
 
               {p.condiciones && <p className="mt-3 whitespace-pre-line text-sm text-[#40403A]">{p.condiciones}</p>}
+
+              {/* Propuesta formal (Fase 2) */}
+              {(p.materiales || p.operaciones || p.fecha_entrega || p.condiciones_pago || p.garantia || p.observaciones) && (
+                <dl className="mt-3 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+                  {(
+                    [
+                      ["Materiales", p.materiales],
+                      ["Procesos", p.operaciones],
+                      ["Entrega estimada", p.fecha_entrega ? new Date(`${p.fecha_entrega}T12:00:00`).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : ""],
+                      ["Forma de pago", p.condiciones_pago],
+                      ["Garantía", p.garantia],
+                      ["Observaciones técnicas", p.observaciones],
+                    ] as [string, string | null | undefined][]
+                  )
+                    .filter(([, v]) => v)
+                    .map(([k, v]) => (
+                      <div key={k}>
+                        <dt className="font-semibold text-[#142033]">{k}</dt>
+                        <dd className="whitespace-pre-line text-[#40403A]">{v}</dd>
+                      </div>
+                    ))}
+                </dl>
+              )}
+              {p.adjuntos && p.adjuntos.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                  {p.adjuntos.map((a) =>
+                    a.url ? (
+                      <a key={a.nombre} href={a.url} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#E7E4DC] px-2.5 py-1 font-semibold text-[#C2560A] hover:border-[#C2560A]">
+                        📎 {a.nombre}
+                      </a>
+                    ) : (
+                      <span key={a.nombre} className="rounded-lg border border-[#E7E4DC] px-2.5 py-1 text-[#6B675C]">📎 {a.nombre}</span>
+                    )
+                  )}
+                </div>
+              )}
+              {(notasDe.get(p.id)?.notas.length || notasDe.get(p.id)?.faltan.length) ? (
+                <div className="mt-3 rounded-xl bg-[#FAF9F6] px-3 py-2 text-[13px] text-[#40403A]">
+                  {notasDe.get(p.id)!.notas.map((n) => (
+                    <p key={n}>• {n}</p>
+                  ))}
+                  {notasDe.get(p.id)!.faltan.length > 0 && (
+                    <p className="mt-1 text-[#8A5A00]">Antes de elegir, pregúntale: {notasDe.get(p.id)!.faltan.join(" · ")}.</p>
+                  )}
+                </div>
+              ) : null}
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {abierta && (

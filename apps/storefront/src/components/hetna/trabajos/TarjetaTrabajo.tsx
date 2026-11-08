@@ -13,7 +13,10 @@ export function TarjetaTrabajo({ trabajo: t }: { trabajo: TrabajoPublico }) {
       className="flex h-full flex-col gap-2 rounded-2xl border border-[#E7E4DC] bg-white p-4 transition hover:border-[#C2560A] hover:shadow-md"
     >
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="font-bold text-[#6B675C]">{t.folio}</span>
+        <span className="font-bold text-[#6B675C]">
+          {t.folio}
+          {t.tipo === "suministro" && <span className="ml-1.5 rounded-full bg-[#EEF6F0] px-2 py-0.5 text-[#1E7B3A]">Suministro</span>}
+        </span>
         {t.estado === "abierta" ? (
           <span className="rounded-full bg-[#EEF6EE] px-2 py-0.5 font-bold text-[#1F5A2B]">
             {dias === 0 ? "Cierra hoy" : dias === 1 ? "Cierra mañana" : `${dias} días para cotizar`}
