@@ -20,7 +20,8 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, nuevoId } from "../licitacion"
 import { MERCADOS, T_POST, asegurarSocial, crearPublicacion, iaSocial, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { GUIAS, instanteEn, lunesDe } from "../estrategia"
-import { TEMAS, cuadroVideo, lamina, miniatura, tarjeta } from "./render"
+import { TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta } from "./render"
+import { PROMPTS_TEMA, VOZ, bajarB2, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 
 export const T_TRABAJO = "hetna_fabrica_trabajo"
@@ -138,7 +139,7 @@ const ESQUEMA = {
       properties: {
         titulo: S(), descripcion: S(),
         capitulos: { type: "array", items: { type: "object", additionalProperties: false, required: ["tiempo", "titulo"], properties: { tiempo: S("mm:ss"), titulo: S() } } },
-        escenas: { type: "array", items: { type: "object", additionalProperties: false, required: ["narracion", "visual"], properties: { narracion: S(), visual: S("qué se ve en pantalla") } } },
+        escenas: { type: "array", items: { type: "object", additionalProperties: false, required: ["narracion", "visual", "imagen_en", "capitulo"], properties: { narracion: S("lo que dice la voz en esta escena (2 a 4 oraciones)"), visual: S("qué se ve en pantalla"), imagen_en: S("descripción en inglés de una foto realista para esta escena, sin texto ni logotipos"), capitulo: S("título del capítulo si esta escena lo abre; si no, cadena vacía") } } },
       },
     },
     articulo: {
@@ -205,6 +206,16 @@ export async function producir(scope: any, id: string, logger?: any) {
   const e = tr.entrada || {}
   const mercado = e.mercado && MERCADOS[e.mercado] ? e.mercado : "mx"
   const piezas: any = { cortos: [], carrusel: [], posts: [] }
+  if (e.tipo === "video") {
+    try {
+      const pz = await producirVideo(scope, tr, logger)
+      await knex(T_TRABAJO).where({ id }).update({ estado: "listo", piezas: JSON.stringify(pz), error: null, updated_at: knex.fn.now() })
+    } catch (er) {
+      const msg = (er as Error).message
+      await knex(T_TRABAJO).where({ id }).update({ estado: tr.intentos + 1 >= 2 ? "error" : "pendiente", error: msg.slice(0, 500), updated_at: knex.fn.now() })
+    }
+    return
+  }
   try {
     const p = tr.paquete || (await generarPaquete(e, await contexto(knex)))
     await knex(T_TRABAJO).where({ id }).update({ paquete: JSON.stringify(p) })
@@ -241,7 +252,23 @@ export async function producir(scope: any, id: string, logger?: any) {
     await knex(T_POST).where({ id: pt }).update({ medios: JSON.stringify([{ url: tarj, tipo: "imagen" }]) })
     piezas.posts.push(pt)
 
-    // 3) Cortos (si hay FFmpeg)
+    // 3) Cortos (si hay FFmpeg). Con RunPod llevan voz; si falla, salen sin voz.
+    const idioma = idiomaDe(mercado)
+    const cierreTxt = e.publico === "talleres" ? "¿Tienes taller? Recibe trabajos sin comisión" : "¿Necesitas algo así? Cotízalo en HETNA"
+    let voces: any[] = []
+    if (ffmpegDisponible() && runpodListo() && e.voz !== "ninguna") {
+      try {
+        const out = await correr({
+          tarea: "voz", voz: VOZ(idioma, e.voz), idioma,
+          lotes: p.cortos.map((c: any, i: number) => ({ frases: [c.gancho, ...(c.frases || []).slice(0, 3), cierreTxt], clave: `fabrica/${id}/voz-${i + 1}.wav` })),
+        }, { logger, topeMin: 15 })
+        voces = out.lotes || []
+        const urls = await ligasB2(voces.map((v: any) => v.clave), 7200)
+        voces = voces.map((v: any, k: number) => ({ ...v, url: urls[k] }))
+      } catch (er) {
+        piezas.aviso_voz = `La voz no se pudo generar (${(er as Error).message}); los cortos salieron sin voz.`
+      }
+    }
     if (ffmpegDisponible()) {
       for (let i = 0; i < p.cortos.length; i++) {
         const c = p.cortos[i]
@@ -250,10 +277,13 @@ export async function producir(scope: any, id: string, logger?: any) {
           textos: c.textos, estado: "borrador", programada_para: fechaPara(mercado, i, "tiktok"), mercado,
         }, logger)
         const liga = urlCorta(await ligaPara(knex, pid, "instagram", destino))
-        const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: c.gancho, tema, foto_url: await foto(), semilla: i * 7 + 1 }), segundos: 2.2 }]
-        for (const [k, f] of (c.frases || []).slice(0, 3).entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema, foto_url: await foto(), semilla: i * 7 + k + 2 }), segundos: segundosPara(f) })
-        escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: e.publico === "talleres" ? "¿Tienes taller? Recibe trabajos sin comisión" : "¿Necesitas algo así? Cotízalo en HETNA", tema, liga }), segundos: 2.5 })
-        const v = await corto(escenas, { musica })
+        const voz = voces[i]
+        const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
+        const frases = (c.frases || []).slice(0, 3)
+        const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: c.gancho, tema, foto_url: await foto(), semilla: i * 7 + 1 }), segundos: dur(0, 2.2) }]
+        for (const [k, f] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema, foto_url: await foto(), semilla: i * 7 + k + 2 }), segundos: dur(k + 1, segundosPara(f)) })
+        escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: cierreTxt, tema, liga }), segundos: dur(frases.length + 1, 2.5) })
+        const v = await corto(escenas, { musica, voz: voz?.url || null })
         const url = await subir(scope, `fabrica-${id}-corto${i + 1}.mp4`, "video/mp4", v.buf)
         await knex(T_POST).where({ id: pid }).update({ medios: JSON.stringify([{ url, tipo: "video" }]) })
         piezas.cortos.push({ post: pid, url, segundos: Math.round(v.segundos) })
@@ -269,10 +299,35 @@ export async function producir(scope: any, id: string, logger?: any) {
       origen: "manual", titulo: `Fábrica · YouTube · ${p.youtube.titulo}`, texto_base: `${p.youtube.descripcion}\n\n${capitulos}`, url: destino, redes: ["youtube"],
       textos: { youtube: `${p.youtube.titulo}\n\n${p.youtube.descripcion}\n\n${capitulos}` }, medios: [{ url: mini, tipo: "imagen" }],
       estado: "borrador", programada_para: fechaPara(mercado, 0, "youtube"), mercado,
-      notas: `Video largo (se produce en la Fase B). Guion por escenas:\n${(p.youtube.escenas || []).map((s: any, k: number) => `${k + 1}. ${s.narracion}\n   [En pantalla: ${s.visual}]`).join("\n")}`,
+      notas: `Guion del video largo por escenas:\n${(p.youtube.escenas || []).map((s: any, k: number) => `${k + 1}. ${s.narracion}\n   [En pantalla: ${s.visual}]`).join("\n")}`,
     }, logger)
     piezas.posts.push(py)
     piezas.miniatura = mini
+
+    // 4b) Video largo en RunPod: imagen por escena (IA), voz, subtítulos y música
+    if (runpodListo() && (p.youtube.escenas || []).length) {
+      try {
+        const escenas = p.youtube.escenas.slice(0, 16)
+        let fotos: string[] = []
+        if (e.ia_escenas !== false) {
+          const img = await correr({ tarea: "imagen", prompts: escenas.map((x: any) => `${x.imagen_en}, photorealistic, cinematic light, no text, no logos`), ancho: 1344, alto: 768, prefijo: `fabrica/${id}/escenas/` }, { logger, topeMin: 25 })
+          fotos = await ligasB2(img.claves || [], 7200)
+        }
+        const urls: string[] = []
+        for (let k = 0; k < escenas.length; k++) {
+          const png = await escenaLarga({ foto_url: fotos[k] || (await foto()), tema, capitulo: escenas[k].capitulo || null, semilla: k + 3 })
+          urls.push(await subir(scope, `fabrica-${id}-escena${k + 1}.png`, "image/png", png))
+        }
+        const largo = await correr({
+          tarea: "video_largo", escenas: escenas.map((x: any, k: number) => ({ imagen_url: urls[k], narracion: x.narracion })),
+          voz: VOZ(idioma, e.voz === "ninguna" ? "hombre" : e.voz), idioma, musica_url: musica, clave: `fabrica/${id}/video-largo.mp4`, subtitulos: true,
+        }, { logger, topeMin: 40 })
+        piezas.largo = { clave: largo.clave, segundos: largo.segundos }
+        await knex(T_POST).where({ id: py }).update({ notas: knex.raw(`'✅ Video largo listo (${Math.round(largo.segundos / 60)} min): descárgalo en la Fábrica y súbelo a YouTube con este texto.' || chr(10) || coalesce(notas, '')`) })
+      } catch (er) {
+        piezas.aviso_largo = `El video largo no se pudo producir: ${(er as Error).message}`
+      }
+    }
 
     // 5) Artículo (borrador en Aprendizaje CNC)
     try {
@@ -298,12 +353,16 @@ export async function crearTrabajo(scope: any, entrada: any, logger?: any) {
   await asegurarFabrica(knex)
   const guion = String(entrada.guion || "").trim().slice(0, 30000)
   const tema = String(entrada.tema || "").trim().slice(0, 300)
-  if (!guion && !tema) throw Object.assign(new Error("Escribe un guion o un tema."), { status: 400 })
+  const video_url = /^https:\/\//.test(String(entrada.video_url || "")) ? String(entrada.video_url) : ""
+  const video_clave = /^fabrica\/videos\//.test(String(entrada.video_clave || "")) ? String(entrada.video_clave) : ""
+  if ((video_url || video_clave) && !runpodListo()) throw Object.assign(new Error("Para trabajar tu video hace falta RunPod (RUNPOD_FABRICA_ENDPOINT_ID)."), { status: 400 })
+  if (!guion && !tema && !video_url && !video_clave) throw Object.assign(new Error("Escribe un guion o un tema, o sube tu video."), { status: 400 })
   const id = nuevoId("fab")
   await knex(T_TRABAJO).insert({
     id,
     entrada: JSON.stringify({
-      guion, tema, mercado: MERCADOS[entrada.mercado] ? entrada.mercado : "mx",
+      guion, tema, video_url, video_clave, tipo: video_url || video_clave ? "video" : "guion", mercado: MERCADOS[entrada.mercado] ? entrada.mercado : "mx",
+      voz: ["hombre", "mujer", "ninguna"].includes(entrada.voz) ? entrada.voz : "hombre", ia_escenas: entrada.ia_escenas !== false,
       publico: ["clientes", "talleres", "proveedores", "empresas"].includes(entrada.publico) ? entrada.publico : "clientes",
       tema_visual: (TEMAS as readonly string[]).includes(entrada.tema_visual) ? entrada.tema_visual : null,
     }),
@@ -462,4 +521,103 @@ export async function piezasSemanales(scope: any, logger?: any) {
     logger?.warn?.(`[fabrica] índice: ${(e as Error).message}`)
   }
   return creadas
+}
+
+// ---------------------------------------------------------------------
+// Fase B: biblioteca de fondos con IA
+// ---------------------------------------------------------------------
+
+export async function fondosConIa(scope: any, tema: string, cantidad = 4, logger?: any) {
+  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  await asegurarFabrica(knex)
+  const base = PROMPTS_TEMA[tema] || PROMPTS_TEMA.general
+  const prompts = Array.from({ length: Math.max(1, Math.min(8, cantidad)) }, (_, i) => base[i % base.length])
+  const lote = nuevoId("ia")
+  const out = await correr({ tarea: "imagen", prompts, ancho: 1024, alto: 1536, prefijo: `fabrica/fondos/${tema}/${lote}/`, semilla: Date.now() % 100000 }, { logger, topeMin: 20 })
+  const urls: string[] = []
+  for (const [i, clave] of (out.claves || []).entries()) {
+    const url = await subir(scope, `fondo-${tema}-${lote}-${i}.jpg`, "image/jpeg", await bajarB2(clave))
+    await knex(T_FONDO).insert({ id: nuevoId("fon"), tema, url, fuente: "IA · FLUX.1 schnell", licencia: "Apache 2.0 (FLUX.1 schnell)" })
+    urls.push(url)
+  }
+  return urls
+}
+
+// ---------------------------------------------------------------------
+// Fase B: "sube tu video" -> subtítulos y 5 cortos de tu propio video
+// ---------------------------------------------------------------------
+
+const ESQUEMA_CORTES = {
+  type: "object", additionalProperties: false, required: ["titulo", "descripcion", "cortes"],
+  properties: {
+    titulo: S("título del video completo"),
+    descripcion: S("descripción para YouTube y Facebook, con {{liga}}"),
+    cortes: {
+      type: "array",
+      items: {
+        type: "object", additionalProperties: false, required: ["inicio", "fin", "gancho", "textos"],
+        properties: {
+          inicio: { type: "number" }, fin: { type: "number" },
+          gancho: S("máximo 6 palabras para el primer segundo"),
+          textos: { type: "object", additionalProperties: false, required: ["tiktok", "instagram", "facebook", "youtube"], properties: { tiktok: S(), instagram: S(), facebook: S(), youtube: S() } },
+        },
+      },
+    },
+  },
+}
+
+async function elegirCortes(segmentos: any[], e: any) {
+  ia ??= new Anthropic()
+  const m = MERCADOS[e.mercado || "mx"] || MERCADOS.mx
+  const transcripcion = segmentos.map((s) => `[${s.inicio.toFixed(1)}-${s.fin.toFixed(1)}] ${s.texto}`).join("\n").slice(0, 60000)
+  const resp = await ia.beta.messages.create({
+    model: "claude-opus-5-5", max_tokens: 6000,
+    output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA_CORTES } },
+    betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
+    system:
+      `Eres el editor de video de HETNA CNC. Escribe para ${m.nombre} (${m.nota}). De la transcripción con tiempos, elige los 5 mejores momentos para cortos verticales ` +
+      "de 15 a 45 segundos: que se entiendan solos, que empiecen con algo que atrape y terminen en una idea completa. Usa los tiempos exactos de la transcripción (inicio de una línea y fin de otra). " +
+      "Escribe el texto de cada red con su estilo (Instagram y TikTok sin URL: 'liga en el perfil'; Facebook y YouTube con {{liga}}). No inventes datos que no estén en el video.",
+    messages: [{ role: "user", content: `Público: ${e.publico}.\nTranscripción:\n${transcripcion}` }],
+  } as any)
+  if (resp.stop_reason === "refusal") throw new Error("La IA no quiso trabajar este video.")
+  return JSON.parse(resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
+}
+
+export async function producirVideo(scope: any, tr: any, logger?: any) {
+  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  const e = tr.entrada || {}
+  const id = tr.id
+  const mercado = e.mercado && MERCADOS[e.mercado] ? e.mercado : "mx"
+  const destino = `${STORE_URL}${mercado === "us" ? "/us" : "/mx"}${e.publico === "talleres" ? "/talleres/unete" : "/cotizar"}`
+  const piezas: any = { cortos: [], posts: [] }
+  // El video vive en el B2 privado: liga firmada de 3 horas para el trabajador
+  const videoUrl = e.video_url || (await ligasB2([e.video_clave], 3 * 3600))[0]
+  if (!videoUrl) throw new Error("No se pudo leer el video subido.")
+  const tx = await correr({ tarea: "transcribir", media_url: videoUrl, idioma: idiomaDe(mercado) }, { logger, topeMin: 30 })
+  const segs = tx.segmentos || []
+  if (!segs.length) throw new Error("No se entendió voz en el video (¿tiene audio?).")
+  const plan = await elegirCortes(segs, e)
+  await knex(T_TRABAJO).where({ id }).update({ paquete: JSON.stringify({ titulo: plan.titulo, ...plan, transcripcion: segs }) })
+  const cortes = (plan.cortes || []).slice(0, 5).map((c: any, i: number) => ({ inicio: c.inicio, fin: Math.min(c.fin, c.inicio + 60), gancho: c.gancho, clave: `fabrica/${id}/corte-${i + 1}.mp4` }))
+  const out = await correr({ tarea: "cortes", video_url: videoUrl, segmentos: cortes, subtitulos: segs, completo: `fabrica/${id}/subtitulado.mp4` }, { logger, topeMin: 40 })
+  for (const [i, c] of (out.cortes || []).entries()) {
+    const url = await subir(scope, `fabrica-${id}-corte${i + 1}.mp4`, "video/mp4", await bajarB2(c.clave))
+    const info = plan.cortes[i]
+    const pid = await crearPublicacion(knex, {
+      origen: "manual", titulo: `Fábrica · Tu video · Corte ${i + 1} · ${info.gancho}`, texto_base: info.textos.facebook, url: destino, redes: ["tiktok", "instagram", "facebook", "youtube"],
+      textos: info.textos, medios: [{ url, tipo: "video" }], estado: "borrador", programada_para: fechaPara(mercado, i, "tiktok"), mercado,
+    }, logger)
+    piezas.cortos.push({ post: pid, url, segundos: c.segundos })
+  }
+  if (out.completo) {
+    piezas.completo = out.completo
+    const pid = await crearPublicacion(knex, {
+      origen: "manual", titulo: `Fábrica · Tu video subtitulado · ${plan.titulo}`, texto_base: plan.descripcion, url: destino, redes: ["youtube", "facebook"],
+      textos: { youtube: `${plan.titulo}\n\n${plan.descripcion}`, facebook: plan.descripcion }, estado: "borrador", programada_para: fechaPara(mercado, 0, "youtube"), mercado,
+      notas: "Video completo con subtítulos: descárgalo en la Fábrica (botón Descargar) para subirlo.",
+    }, logger)
+    piezas.posts.push(pid)
+  }
+  return piezas
 }

@@ -1028,8 +1028,9 @@ async function apiFab<T>(cuerpo?: unknown): Promise<T> {
 }
 
 function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
-  const [d, setD] = useState<{ trabajos: Trabajo[]; fondos: FondoB[]; musica: MusicaB[]; temas: string[]; ffmpeg: boolean } | null>(null)
-  const [f, setF] = useState({ guion: "", tema: "", mercado: "mx", publico: "clientes", tema_visual: "" })
+  const [d, setD] = useState<{ trabajos: Trabajo[]; fondos: FondoB[]; musica: MusicaB[]; temas: string[]; ffmpeg: boolean; runpod?: { configurado: boolean; ok?: boolean; workers?: any } } | null>(null)
+  const [f, setF] = useState({ guion: "", tema: "", mercado: "mx", publico: "clientes", tema_visual: "", voz: "hombre", ia_escenas: true })
+  const [subiendo, setSubiendo] = useState<number | null>(null)
   const [nota, setNota] = useState("")
   const [verBib, setVerBib] = useState(false)
   const [fondo, setFondo] = useState({ tema: "laser", fuente: "", licencia: "" })
@@ -1066,6 +1067,13 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
   return (
     <div>
       {!d?.ffmpeg && d && <p style={{ ...caja, color: C.rojo, fontSize: 13 }}>Falta FFmpeg en el servidor: los cortos de video no se pueden producir. En el VPS corre: apt-get install -y ffmpeg</p>}
+      {d && (
+        <p style={{ fontSize: 12, color: d.runpod?.configurado ? (d.runpod.ok ? C.verde : "#8A5A00") : C.tenue, margin: "0 0 10px" }}>
+          {d.runpod?.configurado
+            ? d.runpod.ok ? "✓ RunPod conectado: voz, imágenes con IA, video largo y tus videos están activos (la GPU se prende sólo cuando hay trabajo)." : "RunPod configurado pero no respondió; revisa el endpoint."
+            : "RunPod sin configurar: la Fábrica funciona sin voz, sin imágenes con IA y sin video largo. Ver infra/fabrica-ia/README.md."}
+        </p>
+      )}
       <section style={caja}>
         <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Del guion a todas las redes</h3>
         <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
@@ -1097,10 +1105,60 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
                 {(d?.temas || []).map((t) => <option key={t} value={t}>{NOMBRE_TEMA[t] || t}</option>)}
               </select>
             </label>
+            <label>Voz{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.voz} onChange={(e) => setF({ ...f, voz: e.target.value })}>
+                <option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="ninguna">Sin voz</option>
+              </select>
+            </label>
+            <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input type="checkbox" checked={f.ia_escenas} onChange={(e) => setF({ ...f, ia_escenas: e.target.checked })} /> Imágenes con IA en el video largo
+            </label>
             <button type="button" style={boton("primario")} disabled={!f.guion.trim() && !f.tema.trim()} onClick={() => void crear()}>Producir paquete</button>
           </div>
           {nota && <p style={{ fontSize: 13, margin: 0 }}>{nota}</p>}
         </div>
+      </section>
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🎥 Sube tu video grabado</h3>
+        <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+          Hasta 95 MB (MP4, MOV o WebM). La IA lo transcribe, te devuelve el video completo con subtítulos y saca los 5 mejores momentos como cortos verticales con gancho y subtítulos, cada uno con su texto por red. Usa el público, mercado y voz de arriba.
+        </p>
+        <label style={{ ...boton("normal"), fontWeight: 600, display: "inline-block" }}>
+          {subiendo !== null ? `Subiendo… ${subiendo}%` : "+ Elegir video"}
+          <input
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm"
+            style={{ display: "none" }}
+            disabled={subiendo !== null}
+            onChange={(e) => {
+              const a = e.target.files?.[0]
+              if (!a) return
+              if (a.size > 95 * 1024 * 1024) return setNota("El video pesa más de 95 MB: recórtalo o bájale la calidad.")
+              const fd = new FormData()
+              fd.append("archivo", a)
+              fd.append("mercado", f.mercado)
+              fd.append("publico", f.publico)
+              fd.append("voz", f.voz)
+              const xhr = new XMLHttpRequest()
+              xhr.open("POST", "/admin/hetna-fabrica/video")
+              xhr.withCredentials = true
+              const h = cabeceras()
+              if (h.authorization) xhr.setRequestHeader("authorization", h.authorization)
+              xhr.upload.onprogress = (ev) => ev.lengthComputable && setSubiendo(Math.round((ev.loaded / ev.total) * 100))
+              xhr.onload = () => {
+                setSubiendo(null)
+                let j: any = {}
+                try { j = JSON.parse(xhr.responseText) } catch {}
+                setNota(xhr.status < 300 ? "Video recibido: la Fábrica lo está transcribiendo y cortando. Tarda unos minutos." : j.message || `Error ${xhr.status}`)
+                void cargar()
+              }
+              xhr.onerror = () => { setSubiendo(null); setNota("Se cortó la conexión al subir el video.") }
+              setSubiendo(0)
+              xhr.send(fd)
+            }}
+          />
+        </label>
       </section>
 
       <section style={caja}>
@@ -1132,6 +1190,16 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
                 </div>
               ) : null}
               {pz.articulo && <span style={{ fontSize: 12, color: C.tenue }}>Artículo guardado como borrador en Aprendizaje CNC.</span>}
+              {(pz.aviso_voz || pz.aviso_largo) && <span style={{ color: "#8A5A00", fontSize: 12 }}>{[pz.aviso_voz, pz.aviso_largo].filter(Boolean).join(" ")}</span>}
+              {(pz.largo?.clave || pz.completo) && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[pz.largo?.clave && ["Descargar video largo", pz.largo.clave], pz.completo && ["Descargar tu video con subtítulos", pz.completo]].filter(Boolean).map(([t2, clave]: any) => (
+                    <button key={clave} type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={async () => { try { const x = await apiFab<any>({ accion: "descargar", clave }); window.open(x.url, "_blank") } catch (er) { setNota((er as Error).message) } }}>
+                      ⬇ {t2}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}
@@ -1149,6 +1217,11 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
             </select>
             <input style={{ ...campo, width: 180, padding: 5 }} placeholder="Fuente (ej. Pexels, taller X)" value={fondo.fuente} onChange={(e) => setFondo({ ...fondo, fuente: e.target.value })} />
             <input style={{ ...campo, width: 220, padding: 5 }} placeholder="Liga de la licencia (opcional)" value={fondo.licencia} onChange={(e) => setFondo({ ...fondo, licencia: e.target.value })} />
+            {d.runpod?.configurado && (
+              <button type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "fondos_ia", tema: fondo.tema, cantidad: 4 }); setNota(`Generando 4 fondos de "${NOMBRE_TEMA[fondo.tema] || fondo.tema}" con IA. Aparecen aquí en unos minutos (recarga la pestaña).`) } catch (er) { setNota((er as Error).message) } }}>
+                ✨ Generar 4 con IA
+              </button>
+            )}
             <label style={{ ...boton("normal"), fontWeight: 600 }}>
               + Subir foto
               <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; try { const url = await subirArchivo(a); await apiFab({ accion: "fondo", ...fondo, url }); void cargar() } catch (er) { setNota((er as Error).message) } }} />

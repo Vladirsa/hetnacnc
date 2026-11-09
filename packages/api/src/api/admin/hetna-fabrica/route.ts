@@ -8,7 +8,8 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_FONDO, T_MUSICA, T_TRABAJO, asegurarFabrica, crearTrabajo, piezasSemanales, producir } from "../../../lib/fabrica"
+import { T_FONDO, T_MUSICA, T_TRABAJO, asegurarFabrica, crearTrabajo, fondosConIa, piezasSemanales, producir } from "../../../lib/fabrica"
+import { ligasB2, runpodListo, salud } from "../../../lib/fabrica/runpod"
 import { TEMAS } from "../../../lib/fabrica/render"
 import { ffmpegDisponible } from "../../../lib/fabrica/video"
 import { nuevoId } from "../../../lib/licitacion"
@@ -21,7 +22,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     knex(T_FONDO).orderBy("created_at", "desc").limit(200),
     knex(T_MUSICA).orderBy("created_at", "desc").limit(100),
   ])
-  res.json({ trabajos, fondos, musica, temas: TEMAS, ffmpeg: ffmpegDisponible() })
+  res.json({ trabajos, fondos, musica, temas: TEMAS, ffmpeg: ffmpegDisponible(), runpod: await salud() })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -54,6 +55,20 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       case "borrar_musica":
         await knex(T_MUSICA).where({ id: String(b.id) }).del()
         return res.json({ ok: true })
+      case "fondos_ia": {
+        if (!runpodListo()) return res.status(400).json({ message: "Falta configurar RunPod (RUNPOD_FABRICA_ENDPOINT_ID)." })
+        if (!(TEMAS as readonly string[]).includes(b.tema)) return res.status(400).json({ message: "Elige un tema." })
+        // Puede tardar minutos (la GPU arranca en frío): se hace en segundo plano
+        const tema = b.tema, cantidad = Number(b.cantidad) || 4
+        setImmediate(() => fondosConIa(req.scope, tema, cantidad, logger).catch((e) => logger.warn(`[fabrica] fondos IA: ${(e as Error).message}`)))
+        return res.json({ ok: true, en_proceso: true })
+      }
+      case "descargar": {
+        const clave = String(b.clave || "")
+        if (!/^fabrica\//.test(clave)) return res.status(400).json({ message: "Archivo no válido." })
+        const [url] = await ligasB2([clave], 3600)
+        return res.json({ ok: true, url })
+      }
       case "semanales":
         return res.json({ ok: true, creadas: await piezasSemanales(req.scope, logger) })
       default:

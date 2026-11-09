@@ -172,7 +172,7 @@ type Capa = { input: Buffer; left: number; top: number }
 async function marca(tam: number) {
   const a = await texto("HETNA", { tam, peso: 900, color: NARANJA, ancho: tam * 6 })
   const b = await texto("CNC", { tam, peso: 500, color: "#ffffff", ancho: tam * 4 })
-  return { a, b, w: a.w + tam * 0.3 + b.w, h: Math.max(a.h, b.h) }
+  return { a, b, w: Math.round(a.w + tam * 0.3 + b.w), h: Math.max(a.h, b.h) }
 }
 
 async function cinta(t: string, color: string, tam: number, colorTexto = "#ffffff", ancho = 900) {
@@ -375,4 +375,27 @@ export async function miniatura(m: { titulo: string; tema?: string; foto_url?: s
     ])
     .png()
     .toBuffer()
+}
+
+/** Escena 16:9 del video largo: imagen del tema con velo suave, marca y, si toca, el título del capítulo. */
+export async function escenaLarga(e: { foto_url?: string | null; tema?: string; capitulo?: string | null; semilla?: number }) {
+  const [W, H] = FORMATOS["16:9"]
+  const u = W / 100, M = Math.round(W * 0.04)
+  const capas: Capa[] = []
+  const mk = await marca(Math.round(u * 2.2))
+  capas.push({ input: mk.a.buf, left: Math.round(W - M - mk.w), top: M }, { input: mk.b.buf, left: Math.round(W - M - mk.w + mk.a.w + u * 0.6), top: M })
+  if (e.capitulo) {
+    const ci = await cinta(e.capitulo, NARANJA, Math.round(u * 1.9), "#ffffff", Math.round(W * 0.6))
+    capas.push({ input: ci.buf, left: M, top: M })
+  }
+  // Velo más ligero que en las tarjetas: aquí manda la imagen; abajo se oscurece para los subtítulos
+  let base: Buffer
+  try {
+    base = e.foto_url ? await sharp(await bajarImagen(e.foto_url)).resize(W, H, { fit: "cover", position: "attention" }).png().toBuffer() : null
+  } catch {
+    base = null
+  }
+  if (!base) base = await sharp(Buffer.from(escenaSvg(e.tema || "taller", W, H, e.semilla || 5))).png().toBuffer()
+  const velo = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs><linearGradient id="v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${AZUL}" stop-opacity=".35"/><stop offset=".55" stop-color="${AZUL}" stop-opacity=".05"/><stop offset="1" stop-color="${AZUL}" stop-opacity=".7"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#v)"/></svg>`)
+  return sharp(base).composite([{ input: velo }, ...capas]).png().toBuffer()
 }

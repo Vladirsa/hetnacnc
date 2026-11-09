@@ -538,7 +538,9 @@ export type Routes = {
         hetnaEnvios: typeof import("../src/api/admin/hetna-envios/route") & {
             $folio: typeof import("../src/api/admin/hetna-envios/[folio]/route");
         };
-        hetnaFabrica: typeof import("../src/api/admin/hetna-fabrica/route");
+        hetnaFabrica: typeof import("../src/api/admin/hetna-fabrica/route") & {
+            video: typeof import("../src/api/admin/hetna-fabrica/video/route");
+        };
         hetnaMembresias: typeof import("../src/api/admin/hetna-membresias/route");
         hetnaRadar: typeof import("../src/api/admin/hetna-radar/route");
         hetnaReclamos: typeof import("../src/api/admin/hetna-reclamos/route");
