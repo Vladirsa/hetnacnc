@@ -11,7 +11,8 @@ export default async function PanelEquipo({ params }: { params: Promise<{ locale
   const yo = await exigirPagina(locale, "equipo")
   let usuarios: U[] = [], error = ""
   try { usuarios = (await adminFetch<{ users: U[] }>("/admin/users?limit=50&order=created_at")).users || [] } catch (e) { error = (e as Error).message }
-  const lista = usuarios.map((u, i) => ({ id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" "), rol: rolDe(u.metadata, i === 0), esYo: u.id === yo.id }))
+  const arranque = !usuarios.some((u) => u.metadata?.panel_rol)
+  const lista = usuarios.map((u) => ({ id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" "), rol: rolDe(u.metadata, arranque), esYo: u.id === yo.id }))
   return (
     <div className="grid gap-4">
       <Tarjeta>
