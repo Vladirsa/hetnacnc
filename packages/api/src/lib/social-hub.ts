@@ -335,7 +335,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
   const prog = d.programada_para ? new Date(d.programada_para) : null
   await knex(T_POST).insert({
     id, origen: d.origen, origen_id: d.origen_id || null, titulo: corta(d.titulo, 160), texto_base: base,
-    textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 4)),
+    textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 10)),
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
   })
   return id

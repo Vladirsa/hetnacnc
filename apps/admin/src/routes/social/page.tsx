@@ -1011,7 +1011,192 @@ function Radar({ alCambiar }: { alCambiar: () => void }) {
   )
 }
 
+type Trabajo = { id: string; entrada: any; estado: string; error: string | null; piezas: any; created_at: string; titulo: string | null }
+type FondoB = { id: string; tema: string; url: string; fuente: string | null; licencia: string | null }
+type MusicaB = { id: string; titulo: string; url: string; estilo: string | null; licencia: string | null }
+const NOMBRE_TEMA: Record<string, string> = { laser: "Corte láser", plasma: "Plasma", router: "Router", torno: "Torno y fresado", taller: "Taller", lamina: "Láminas y materiales", impresion3d: "Impresión 3D", general: "General" }
+const ESTADO_TRABAJO: Record<string, [string, string]> = { pendiente: ["En cola", "#8A5A00"], produciendo: ["Produciendo…", "#1a3a5c"], listo: ["Listo", C.verde], error: ["Error", C.rojo] }
+
+async function apiFab<T>(cuerpo?: unknown): Promise<T> {
+  const r = await fetch("/admin/hetna-fabrica", {
+    credentials: "include",
+    ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }),
+  })
+  const d = (await r.json().catch(() => ({}))) as T & { message?: string }
+  if (!r.ok) throw new Error((d as any)?.message || `Error ${r.status}`)
+  return d
+}
+
+function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
+  const [d, setD] = useState<{ trabajos: Trabajo[]; fondos: FondoB[]; musica: MusicaB[]; temas: string[]; ffmpeg: boolean } | null>(null)
+  const [f, setF] = useState({ guion: "", tema: "", mercado: "mx", publico: "clientes", tema_visual: "" })
+  const [nota, setNota] = useState("")
+  const [verBib, setVerBib] = useState(false)
+  const [fondo, setFondo] = useState({ tema: "laser", fuente: "", licencia: "" })
+  const [mus, setMus] = useState({ titulo: "", estilo: "", licencia: "" })
+  const cargar = useCallback(async () => {
+    try {
+      setD(await apiFab())
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  // Mientras algo se produce, se actualiza solo
+  useEffect(() => {
+    if (!d?.trabajos.some((t) => ["pendiente", "produciendo"].includes(t.estado))) return
+    const t = setInterval(() => void cargar(), 8000)
+    return () => clearInterval(t)
+  }, [d, cargar])
+  const crear = async () => {
+    setNota("")
+    try {
+      await apiFab({ accion: "crear", ...f, tema_visual: f.tema_visual || undefined })
+      setNota("Listo: la Fábrica está escribiendo y produciendo tu paquete. Tarda unos minutos; aquí abajo verás el avance.")
+      setF({ ...f, guion: "", tema: "" })
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const palabras = f.guion.trim() ? f.guion.trim().split(/\s+/).length : 0
+  const subirArchivo = async (archivo: File) => subirImagen(archivo)
+  return (
+    <div>
+      {!d?.ffmpeg && d && <p style={{ ...caja, color: C.rojo, fontSize: 13 }}>Falta FFmpeg en el servidor: los cortos de video no se pueden producir. En el VPS corre: apt-get install -y ffmpeg</p>}
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Del guion a todas las redes</h3>
+        <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+          Pega tu guion (o escribe sólo el tema) y la Fábrica hace: 5 cortos verticales con música, un carrusel, la publicación de cada red con su tarjeta, el título, descripción, capítulos, guion y miniatura del video largo de YouTube, y un artículo para Aprendizaje CNC. Todo queda como borrador en la semana para que lo revises.
+        </p>
+        <div style={{ display: "grid", gap: 8 }}>
+          <textarea style={{ ...campo, minHeight: 160 }} placeholder="Guion: lo que quieres explicar o contar. Ej. 5 errores al pedir corte láser y cómo evitarlos…" value={f.guion} onChange={(e) => setF({ ...f, guion: e.target.value })} />
+          <span style={{ fontSize: 12, color: C.tenue }}>
+            {palabras} palabras{palabras ? ` · el video largo duraría unos ${Math.max(1, Math.round(palabras / 145))} min` : ""} (un video de 8 min necesita unas 1,150 palabras)
+          </span>
+          <input style={campo} placeholder="…o sólo el tema (si no tienes guion)" value={f.tema} onChange={(e) => setF({ ...f, tema: e.target.value })} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
+            <label>Público{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.publico} onChange={(e) => setF({ ...f, publico: e.target.value })}>
+                <option value="clientes">Clientes y makers</option>
+                <option value="empresas">Empresas</option>
+                <option value="talleres">Talleres</option>
+                <option value="proveedores">Proveedores</option>
+              </select>
+            </label>
+            <label>Mercado{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.mercado} onChange={(e) => setF({ ...f, mercado: e.target.value })}>
+                <option value="mx">México</option><option value="us">Estados Unidos</option><option value="co">Colombia</option><option value="cl">Chile</option><option value="pe">Perú</option><option value="ar">Argentina</option><option value="br">Brasil</option>
+              </select>
+            </label>
+            <label>Fondo{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.tema_visual} onChange={(e) => setF({ ...f, tema_visual: e.target.value })}>
+                <option value="">Que lo elija la IA</option>
+                {(d?.temas || []).map((t) => <option key={t} value={t}>{NOMBRE_TEMA[t] || t}</option>)}
+              </select>
+            </label>
+            <button type="button" style={boton("primario")} disabled={!f.guion.trim() && !f.tema.trim()} onClick={() => void crear()}>Producir paquete</button>
+          </div>
+          {nota && <p style={{ fontSize: 13, margin: 0 }}>{nota}</p>}
+        </div>
+      </section>
+
+      <section style={caja}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>Paquetes</h3>
+          <button type="button" style={boton("normal")} onClick={async () => { try { const x = await apiFab<any>({ accion: "semanales" }); setNota(x.creadas?.length ? `Creadas: ${x.creadas.join(", ")}.` : "No hubo piezas semanales nuevas (faltan evaluaciones, reseñas o cotizaciones suficientes)."); alCambiar() } catch (e) { setNota((e as Error).message) } }}>Generar piezas semanales ahora</button>
+          <button type="button" style={boton("normal")} onClick={() => setVerBib(!verBib)}>{verBib ? "Cerrar biblioteca" : "🎵 Biblioteca de fondos y música"}</button>
+        </div>
+        {(d?.trabajos || []).length === 0 && <p style={{ color: C.tenue, fontSize: 13 }}>Todavía no hay paquetes.</p>}
+        {(d?.trabajos || []).map((t) => {
+          const [txt, col] = ESTADO_TRABAJO[t.estado] || [t.estado, C.tenue]
+          const pz = t.piezas || {}
+          return (
+            <div key={t.id} style={{ borderTop: `1px solid ${C.borde}`, padding: "10px 0", display: "grid", gap: 6 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <b style={{ color: col, fontSize: 12 }}>{txt}</b>
+                <b style={{ flex: 1 }}>{t.titulo || t.entrada?.tema || (t.entrada?.guion || "").slice(0, 80)}</b>
+                <span style={{ fontSize: 12, color: C.tenue }}>{fecha(t.created_at)}</span>
+                {t.estado === "listo" && <button type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={() => irA("pendientes")}>Revisar borradores →</button>}
+                {["error", "listo"].includes(t.estado) && <button type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={async () => { await apiFab({ accion: "reintentar", id: t.id }); void cargar() }}>{t.estado === "error" ? "Reintentar" : "Producir de nuevo"}</button>}
+              </div>
+              {t.error && <span style={{ color: C.rojo, fontSize: 12 }}>{t.error}</span>}
+              {pz.aviso && <span style={{ color: "#8A5A00", fontSize: 12 }}>{pz.aviso}</span>}
+              {(pz.cortos?.length || pz.carrusel?.length) ? (
+                <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+                  {(pz.cortos || []).map((c: any) => <video key={c.url} src={c.url} controls preload="metadata" style={{ height: 180, borderRadius: 6, background: "#000" }} />)}
+                  {(pz.carrusel || []).map((u: string) => <img key={u} src={u} alt="" style={{ height: 180, borderRadius: 6 }} />)}
+                  {pz.miniatura && <img src={pz.miniatura} alt="" style={{ height: 120, borderRadius: 6, alignSelf: "center" }} />}
+                </div>
+              ) : null}
+              {pz.articulo && <span style={{ fontSize: 12, color: C.tenue }}>Artículo guardado como borrador en Aprendizaje CNC.</span>}
+            </div>
+          )
+        })}
+      </section>
+
+      {verBib && d && (
+        <section style={caja}>
+          <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Fondos por tema</h3>
+          <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
+            Fotos reales (tuyas, de talleres con permiso, o de bancos gratuitos con licencia comercial como Pexels o Pixabay) o imágenes de IA. Si un tema no tiene fotos, se usa una escena dibujada. Anota de dónde salió y su licencia.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <select style={{ ...campo, width: "auto", padding: 5 }} value={fondo.tema} onChange={(e) => setFondo({ ...fondo, tema: e.target.value })}>
+              {d.temas.map((t) => <option key={t} value={t}>{NOMBRE_TEMA[t] || t}</option>)}
+            </select>
+            <input style={{ ...campo, width: 180, padding: 5 }} placeholder="Fuente (ej. Pexels, taller X)" value={fondo.fuente} onChange={(e) => setFondo({ ...fondo, fuente: e.target.value })} />
+            <input style={{ ...campo, width: 220, padding: 5 }} placeholder="Liga de la licencia (opcional)" value={fondo.licencia} onChange={(e) => setFondo({ ...fondo, licencia: e.target.value })} />
+            <label style={{ ...boton("normal"), fontWeight: 600 }}>
+              + Subir foto
+              <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; try { const url = await subirArchivo(a); await apiFab({ accion: "fondo", ...fondo, url }); void cargar() } catch (er) { setNota((er as Error).message) } }} />
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+            {d.fondos.map((x) => (
+              <div key={x.id} style={{ position: "relative" }}>
+                <img src={x.url} alt="" title={`${NOMBRE_TEMA[x.tema] || x.tema}${x.fuente ? ` · ${x.fuente}` : ""}`} style={{ width: 110, height: 80, objectFit: "cover", borderRadius: 6 }} />
+                <span style={{ position: "absolute", left: 4, bottom: 4, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 10, padding: "1px 5px", borderRadius: 4 }}>{NOMBRE_TEMA[x.tema] || x.tema}</span>
+                <button type="button" title="Quitar" onClick={async () => { await apiFab({ accion: "borrar_fondo", id: x.id }); void cargar() }} style={{ position: "absolute", top: 2, right: 2, border: 0, borderRadius: 99, cursor: "pointer", fontSize: 11 }}>✕</button>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>Música</h3>
+          <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
+            Sólo pistas con licencia para uso comercial en redes (por ejemplo, Pixabay Music). Pon la liga de la licencia: es tu comprobante si alguien reclama.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input style={{ ...campo, width: 180, padding: 5 }} placeholder="Título de la pista" value={mus.titulo} onChange={(e) => setMus({ ...mus, titulo: e.target.value })} />
+            <input style={{ ...campo, width: 140, padding: 5 }} placeholder="Estilo (ej. energética)" value={mus.estilo} onChange={(e) => setMus({ ...mus, estilo: e.target.value })} />
+            <input style={{ ...campo, width: 240, padding: 5 }} placeholder="Liga de la licencia" value={mus.licencia} onChange={(e) => setMus({ ...mus, licencia: e.target.value })} />
+            <label style={{ ...boton("normal"), fontWeight: 600 }}>
+              + Subir audio (MP3)
+              <input type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/aac,audio/mp4" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; try { const url = await subirArchivo(a); await apiFab({ accion: "musica", ...mus, url }); setMus({ titulo: "", estilo: "", licencia: "" }); void cargar() } catch (er) { setNota((er as Error).message) } }} />
+            </label>
+          </div>
+          <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
+            {d.musica.map((m) => (
+              <div key={m.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, flexWrap: "wrap" }}>
+                <b>{m.titulo}</b>
+                <span style={{ color: C.tenue }}>{m.estilo}</span>
+                <audio src={m.url} controls preload="none" style={{ height: 30 }} />
+                {m.licencia && <a href={m.licencia} target="_blank" rel="noreferrer" style={{ color: C.naranja, fontSize: 12 }}>licencia ↗</a>}
+                <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={async () => { await apiFab({ accion: "borrar_musica", id: m.id }); void cargar() }}>Quitar</button>
+              </div>
+            ))}
+            {d.musica.length === 0 && <span style={{ color: C.tenue, fontSize: 12 }}>Sin música todavía: los cortos saldrán sin música hasta que subas pistas.</span>}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
 const VISTAS = [
+  ["fabrica", "Fábrica"],
   ["estrategia", "Estrategia"],
   ["radar", "Radar"],
   ["pendientes", "Pendientes"],
@@ -1079,6 +1264,8 @@ export default function SocialHubPage() {
       </div>
       {!datos ? (
         !error && <p>Cargando…</p>
+      ) : vista === "fabrica" ? (
+        <Fabrica alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "radar" ? (
         <Radar alCambiar={() => void cargar()} />
       ) : vista === "estrategia" ? (
