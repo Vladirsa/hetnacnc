@@ -99,28 +99,49 @@ def _ruta(archivo) -> str | None:
 # --------------------------------------------------------------------------
 # 1. Referencia: transcribir para tomar notas
 # --------------------------------------------------------------------------
-def transcribir(video, modelo: str, idioma: str, progreso=gr.Progress()):
+def _whisper(ruta: str, modelo: str, idioma: str | None, progreso):
+    """Transcribe con faster-whisper. Usa la GPU si se puede; si falla
+    (p. ej. faltan librerías CUDA/cuDNN en Windows), reintenta en CPU."""
     global _modelo_whisper
+    try:
+        from faster_whisper import WhisperModel
+    except Exception as e:
+        raise gr.Error("No se pudo cargar faster-whisper (la transcripción). "
+                       "Con Python 3.14 puede no estar disponible: instala "
+                       f"Python 3.12. Detalle: {e}")
+
+    ultimo_error = None
+    for dispositivo in ("auto", "cpu"):
+        try:
+            clave = (modelo, dispositivo)
+            if _modelo_whisper is None or _modelo_whisper[0] != clave:
+                progreso(0.05, desc=f"Cargando modelo '{modelo}' "
+                                    "(la primera vez se descarga)...")
+                _modelo_whisper = (clave, WhisperModel(
+                    modelo, device=dispositivo, compute_type="int8"))
+            progreso(0.2, desc="Transcribiendo... (puede tardar varios minutos)")
+            segs, info = _modelo_whisper[1].transcribe(
+                ruta, language=idioma, vad_filter=True)
+            return list(segs), info  # list(): los errores de GPU salen aquí
+        except gr.Error:
+            raise
+        except Exception as e:
+            ultimo_error = e
+            _modelo_whisper = None
+            print(f"[whisper] fallo con device={dispositivo}: {e!r}")
+    raise gr.Error(f"No se pudo transcribir: {ultimo_error}")
+
+
+def transcribir(video, modelo: str, idioma: str, progreso=gr.Progress()):
     ruta = _ruta(video)
     if not ruta:
         raise gr.Error("Sube un video o audio primero.")
-    try:
-        from faster_whisper import WhisperModel
-    except ImportError:
-        raise gr.Error("Falta instalar faster-whisper: pip install faster-whisper")
-
-    progreso(0.05, desc="Cargando modelo (la primera vez se descarga)...")
-    if _modelo_whisper is None or _modelo_whisper[0] != modelo:
-        _modelo_whisper = (modelo, WhisperModel(modelo, device="auto",
-                                                compute_type="int8"))
     lang = None if idioma == "Detectar" else idioma
-    progreso(0.2, desc="Transcribiendo...")
-    segmentos, info = _modelo_whisper[1].transcribe(ruta, language=lang,
-                                                    vad_filter=True)
-    lineas = []
-    for s in segmentos:
-        lineas.append(f"[{_ts(s.start)[:8]}] {s.text.strip()}")
-    texto = "\n".join(lineas)
+    segmentos, info = _whisper(ruta, modelo, lang, progreso)
+    texto = "\n".join(f"[{_ts(s.start)[:8]}] {s.text.strip()}"
+                      for s in segmentos)
+    if not texto:
+        raise gr.Error("No se detectó voz en el video.")
     return texto, f"Idioma detectado: {info.language}"
 
 
@@ -255,19 +276,10 @@ def generar_voz(texto: str, voz_nombre: str, velocidad: int):
 
 def subtitulos_de_grabacion(audio, idioma: str, progreso=gr.Progress()):
     """Para cuando grabas tu propia voz: genera el .srt con Whisper."""
-    global _modelo_whisper
     ruta = _ruta(audio)
     if not ruta:
         raise gr.Error("Sube o graba tu audio primero.")
-    from faster_whisper import WhisperModel
-
-    progreso(0.1, desc="Cargando modelo...")
-    if _modelo_whisper is None:
-        _modelo_whisper = ("small", WhisperModel("small", device="auto",
-                                                 compute_type="int8"))
-    progreso(0.3, desc="Generando subtítulos...")
-    segs, _ = _modelo_whisper[1].transcribe(ruta, language=idioma,
-                                            vad_filter=True)
+    segs, _ = _whisper(ruta, "small", idioma, progreso)
     partes = [f"{i}\n{_ts(s.start)} --> {_ts(s.end)}\n{s.text.strip()}\n"
               for i, s in enumerate(segs, 1)]
     srt = SALIDA / f"grabacion_{uuid.uuid4().hex[:8]}.srt"
