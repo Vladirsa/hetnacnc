@@ -529,4 +529,4 @@ with gr.Blocks(title="Estudio de Video HETNA") as app:
 
 
 if __name__ == "__main__":
-    app.queue().launch(inbrowser=True, theme=gr.themes.Soft())
+    app.queue().launch(inbrowser=True, show_error=True, theme=gr.themes.Soft())
