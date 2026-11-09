@@ -46,9 +46,9 @@ TIPOS_LASER = {"laser_corte", "laser_linea", "laser_relleno"}
 
 NOMBRES = {
     "corte": "Corte de pieza",
-    "fuera": "Contorno por fuera",
-    "dentro": "Contorno por dentro",
-    "linea": "Sobre la línea",
+    "fuera": "Perfilado por fuera",
+    "dentro": "Perfilado por dentro",
+    "linea": "Perfilado sobre la línea",
     "cajeado": "Cajeado",
     "grabado_v": "Grabado en V",
     "barrenado": "Barrenado",
@@ -310,7 +310,7 @@ def _profundidades(total: float, pasada: float) -> list[float]:
 # --- Operaciones -----------------------------------------------------------
 
 
-def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre):
+def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre, sobre=0.0):
     figuras = 0
     if modo == "corte":
         # barrenos por dentro primero, luego el borde por fuera
@@ -322,18 +322,45 @@ def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, aviso
         trabajos = [(p, r if modo == "fuera" else -r, modo == "fuera") for p in polys]
     chicos = 0
     for p, desfase, con_pestanas in trabajos:
-        anillos = _anillos(p.buffer(desfase, join_style=2 if desfase > 0 else 1, quad_segs=8)) if abs(desfase) > 1e-6 else _anillos(p)
+        def anillos_a(d, p=p):
+            return _anillos(p.buffer(d, join_style=2 if d > 0 else 1, quad_segs=8)) if abs(d) > 1e-6 else _anillos(p)
+
+        anillos = anillos_a(desfase)
         if not anillos:
             chicos += 1
             continue
         figuras += 1
+        lleva_pestanas = bool(con_pestanas and pestanas)
+        z_pest = -(prof - altura_pestana)
+        desbaste = anillos_a(desfase + math.copysign(sobre, desfase)) if sobre > 0 and abs(desfase) > 1e-6 else []
+        if desbaste:
+            # Desbaste separado de la línea y una pasada de acabado sobre ella.
+            # La zona de pestañas la corta sólo el acabado: así las pestañas
+            # quedan donde deben y con todo su ancho.
+            hasta = prof - altura_pestana if lleva_pestanas else prof
+            for anillo in desbaste:
+                if len(anillo) < 3:
+                    continue
+                for z in _profundidades(hasta, receta["profundidad_pasada"]):
+                    _recorrer(g, anillo, z, receta["avance"], receta["penetracion"])
+                g.subir()
+            for anillo in anillos:
+                if len(anillo) < 3:
+                    continue
+                _recorrer(g, anillo, -hasta, receta["avance"], receta["penetracion"])
+                if lleva_pestanas:
+                    tramos = _pestanas(anillo, pestanas, 6.0, 2 * r)
+                    for z in _profundidades(altura_pestana, receta["profundidad_pasada"]):
+                        _recorrer(g, anillo, -hasta + z, receta["avance"], receta["penetracion"], tramos, z_pest)
+            g.subir()
+            continue
         for anillo in anillos:
             if len(anillo) < 3:
                 continue
             zs = _profundidades(prof, receta["profundidad_pasada"])
             for z in zs:
-                tramos = _pestanas(anillo, pestanas, 6.0, 2 * r) if (con_pestanas and pestanas and z < -(prof - altura_pestana)) else []
-                _recorrer(g, anillo, z, receta["avance"], receta["penetracion"], tramos, -(prof - altura_pestana))
+                tramos = _pestanas(anillo, pestanas, 6.0, 2 * r) if (lleva_pestanas and z < z_pest) else []
+                _recorrer(g, anillo, z, receta["avance"], receta["penetracion"], tramos, z_pest)
         g.subir()
     if chicos:
         avisos.append(f"{nombre}: {chicos} figura(s) más chicas que la fresa se saltaron. Usa una fresa más delgada.")
@@ -356,7 +383,7 @@ def op_linea(g, trazos, prof, receta):
     return n
 
 
-def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
+def op_cajeado(g, polys, r, prof, receta, traslape, avisos, sobre=0.0):
     region = _region(polys)
     if region.is_empty:
         return 0
@@ -366,7 +393,7 @@ def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
     for parte in partes:
         anillos_por_nivel = []
         desfases = []
-        d = r
+        d = r + max(0.0, sobre)
         while True:
             g_ = parte.buffer(-d, join_style=1, quad_segs=8)
             if g_.is_empty:
@@ -402,6 +429,12 @@ def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
                 for anillo in nivel:
                     if len(anillo) >= 2:
                         _recorrer(g, anillo, z, receta["avance"], receta["penetracion"] * 0.5)
+            g.subir()
+        if sobre > 0:
+            # pasada de acabado: la pared, a toda la profundidad, quitando sólo el sobrematerial
+            for anillo in _anillos(parte.buffer(-r, join_style=1, quad_segs=8)):
+                if len(anillo) >= 2:
+                    _recorrer(g, anillo, -prof, receta["avance"], receta["penetracion"] * 0.5)
             g.subir()
     return hechas
 
@@ -554,6 +587,7 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
             # cero con la fresa tocando el material.
             g.emitir(f"G0 Z{seguridad:.3f}")
         herramienta_actual = None
+        rpm_actual = None
         resumen = []
         for i, op in enumerate(ops, 1):
             tipo = str(op.get("tipo", ""))
@@ -576,8 +610,21 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 receta = parametros_de_corte(material, diam if tipo != "grabado_v" else max(3, diam))
                 if not receta:
                     return error("entrada_invalida", f"No conozco el material '{material}'.", "Elige uno de la lista.")
-                if op.get("pasada"):
-                    receta["profundidad_pasada"] = max(0.1, float(op["pasada"]))
+                # Parámetros propios de la herramienta (base de herramientas del
+                # cliente). Lo que no venga se queda con la receta del material.
+                for campo, llave, lo, hi in (("pasada", "profundidad_pasada", 0.05, 50), ("avance", "avance", 10, 30000),
+                                             ("penetracion", "penetracion", 5, 10000), ("rpm", "rpm", 500, 60000)):
+                    if op.get(campo) not in (None, "", 0):
+                        v = float(op[campo])
+                        if not (math.isfinite(v) and lo <= v <= hi):
+                            return error("entrada_invalida", f"Operación {i}: el valor de {campo} no es válido.", f"Captúralo entre {lo} y {hi}.")
+                        receta[llave] = int(round(v)) if campo == "rpm" else v
+                sobre = float(op.get("sobrematerial") or 0)
+                if not (math.isfinite(sobre) and 0 <= sobre <= 5):
+                    return error("entrada_invalida", f"Operación {i}: el sobrematerial no es válido.", "Captúralo en mm, entre 0 y 5.")
+                traslape = float(op.get("traslape", 0.4))
+                if not (math.isfinite(traslape) and 0 <= traslape <= 0.95):
+                    return error("entrada_invalida", f"Operación {i}: el traslape no es válido.", "Captúralo entre 0 y 95 %.")
                 prof = float(op.get("profundidad") or espesor)
                 prof = max(0.05, min(prof, espesor + 2))
                 # La herramienta es el diámetro y si es recta o en V (no las
@@ -593,14 +640,18 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                         g.emitir("M0")
                     g.emitir(f"M3 S{receta['rpm']}")
                     herramienta_actual = herramienta
+                    rpm_actual = receta["rpm"]
+                elif rpm_actual != receta["rpm"]:
+                    g.emitir(f"S{receta['rpm']}")
+                    rpm_actual = receta["rpm"]
                 if tipo in ("corte", "fuera", "dentro"):
                     figuras = op_contorno(g, polys, tipo, diam / 2, prof, receta,
                                           int(op.get("pestanas", 4 if tipo != "dentro" else 0)) if op.get("con_pestanas", True) else 0,
-                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre)
+                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre, sobre)
                 elif tipo == "linea":
                     figuras = op_linea(g, sel, prof, receta)
                 elif tipo == "cajeado":
-                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, float(op.get("traslape", 0.4)), avisos)
+                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, traslape, avisos, sobre)
                 elif tipo == "grabado_v":
                     figuras = op_grabado_v(g, polys, float(op.get("angulo", 90)), prof, receta, avisos)
                 else:

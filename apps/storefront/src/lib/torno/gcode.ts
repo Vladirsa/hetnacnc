@@ -48,9 +48,14 @@ export interface ParametrosMaquina {
   safeZClearanceMm: number;
 }
 
+/** Forma de la punta: de ella depende cuánto se separa la fresa de un escalón. */
+export type TipoFresa = "plana" | "bola";
+
 export interface ParametrosHerramienta {
   toolDiameterMm: number;
   feed: number;
+  /** Si falta se trata como plana, que es la que más se separa: nunca corta de más. */
+  tipo?: TipoFresa;
 }
 
 export interface ParametrosRpm {
@@ -169,6 +174,7 @@ export function validarEntrada(body: unknown): { ok: true; entrada: EntradaGCode
   const herramienta: ParametrosHerramienta = {
     toolDiameterMm: num(h.toolDiameterMm),
     feed: finito(h.feed) ? num(h.feed) : 0,
+    tipo: h.tipo === "bola" ? "bola" : "plana",
   };
   const [dMin, dMax] = LIMITES.herramientaMm;
   if (herramienta.toolDiameterMm < dMin || herramienta.toolDiameterMm > dMax)
@@ -302,8 +308,68 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   const radioEnOrigen = (y: number): number =>
     radioEn(origenPunto === "contrapunto" ? largo - y : y, segmentos);
 
+  // La fresa tiene ancho: junto a un escalón su orilla toca antes que su
+  // centro. Aquí se calcula a qué radio puede bajar la PUNTA en cada posición
+  // para que ningún punto de la fresa se meta en el perfil.
+  const rFresa = herramienta.toolDiameterMm / 2;
+  const esBola = herramienta.tipo === "bola";
+  const hRej = 0.05; // resolución con la que se lee el perfil (mm)
+  const nRej = Math.round(largo / hRej);
+  const perfil = new Float64Array(nRej + 1);
+  for (let i = 0; i <= nRej; i++) perfil[i] = radioEnOrigen(Math.min(largo, i * hRej));
+  const kFresa = Math.ceil(rFresa / hRej);
+  const alturaFresa = new Float64Array(2 * kFresa + 1); // cuánto sube el filo a `d` del centro
+  for (let k = -kFresa; k <= kFresa; k++) {
+    const d = Math.min(rFresa, Math.abs(k) * hRej);
+    alturaFresa[k + kFresa] = esBola ? rFresa - Math.sqrt(rFresa * rFresa - d * d) : 0;
+  }
+  const punta = new Float64Array(nRej + 1);
+  let sobrante = 0; // lo más que se queda sin cortar junto a escalones y cinturas
+  for (let i = 0; i <= nRej; i++) {
+    let z = perfil[i];
+    for (let k = -kFresa; k <= kFresa; k++) {
+      const j = Math.min(nRej, Math.max(0, i + k));
+      const v = perfil[j] - alturaFresa[k + kFresa];
+      if (v > z) z = v;
+    }
+    punta[i] = z;
+    if (z - perfil[i] > sobrante) sobrante = z - perfil[i];
+  }
+  // Entre dos puntos la máquina va en línea recta. Para que esa recta nunca
+  // pase por debajo de lo permitido (en una pared bajaría en rampa a través de
+  // ella), cada punto toma el mayor de sus vecinos.
+  const seguro = new Float64Array(nRej + 1);
+  for (let i = 0; i <= nRej; i++) seguro[i] = Math.max(punta[Math.max(0, i - 1)], punta[i], punta[Math.min(nRej, i + 1)]);
+  const radioPunta = (y: number): number => {
+    const f = Math.min(nRej, Math.max(0, y / hRej));
+    const i = Math.min(nRej - 1, Math.floor(f));
+    return nRej === 0 ? seguro[0] : seguro[i] + (seguro[i + 1] - seguro[i]) * (f - i);
+  };
+  // Puntos del perfil que hacen falta: se quitan los que caen sobre la recta
+  // entre sus vecinos (tramos rectos y conos), se conservan curvas y paredes.
+  const nodos: number[] = [0];
+  let ancla = 0;
+  for (let i = 1; i < nRej; i++) {
+    let recto = i + 1 - ancla <= 80; // nunca más de 4 mm sin punto
+    for (let k = ancla + 1; recto && k <= i; k++) {
+      const enRecta = seguro[ancla] + ((seguro[i + 1] - seguro[ancla]) * (k - ancla)) / (i + 1 - ancla);
+      if (Math.abs(seguro[k] - enRecta) > 0.004) recto = false;
+    }
+    if (!recto) {
+      nodos.push(i * hRej);
+      ancla = i;
+    }
+  }
+  nodos.push(largo);
+  if (sobrante > 0.3) {
+    avisos.push(
+      `Junto a los escalones y en las cinturas angostas la fresa de ${herramienta.toolDiameterMm}mm no llega al fondo: deja material en una franja de hasta ${rFresa.toFixed(1)}mm de ancho, para no cortar la pared de al lado. Una fresa más delgada${esBola ? "" : " o de bola"} deja menos.`
+    );
+  }
+
+  const avanceRadial = herramienta.feed > 0 ? herramienta.feed : preset.feed;
   const lines: string[] = [];
-  const paso = 2; // cada cuántos mm de Y se calcula un punto del perfil
+  const PASO_RECTO = 2; // pasadas a radio fijo: la hélice es exacta con cualquier paso
   let aAcum = 0; // ángulo A acumulado dentro de la pasada
   let minutos = 0;
 
@@ -317,7 +383,8 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
     lead: number,
     radioFn: (y: number) => number,
     yIni: number,
-    yFin: number
+    yFin: number,
+    paso: number | null = null
   ) {
     lines.push(`(--- ${titulo} ---)`);
     lines.push(`G0 Z${zSeguro.toFixed(3)}`);
@@ -329,19 +396,24 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
     if (g93) lines.push("G93 (avance en tiempo inverso)");
 
     let yPrev = yIni;
+    // con `paso`, puntos parejos; sin él, los nodos del perfil
     const puntos: number[] = [];
-    for (let y = yIni + paso; y < yFin; y += paso) puntos.push(y);
+    if (paso) for (let y = yIni + paso; y < yFin; y += paso) puntos.push(y);
+    else for (const y of nodos) if (y > yIni + 1e-6 && y < yFin - 1e-6) puntos.push(y);
     puntos.push(yFin);
 
     for (const y of puntos) {
       const dy = y - yPrev;
       if (dy <= 0) continue;
-      const dA = (dy / lead) * 360; // grados que gira la pieza en este tramo
-      aAcum += dA;
-      // tiempo del bloque (min) = vueltas / rpm  ->  F = 1 / tiempo
-      const t = dA / 360 / rpmPieza;
-      minutos += t;
       const z = radioFn(Math.min(Math.max(y, 0), largo));
+      // tiempo del bloque (min) = vueltas / rpm  ->  F = 1 / tiempo. En una
+      // pared la fresa sube o baja casi sin avanzar: se le da el tiempo que
+      // necesita para no moverse en radio más rápido que su avance, y la pieza
+      // sigue girando a sus rpm mientras tanto.
+      const t = Math.max(dy / lead / rpmPieza, Math.abs(z - zPrev) / avanceRadial);
+      const dA = t * rpmPieza * 360; // grados que gira la pieza en este tramo
+      aAcum += dA;
+      minutos += t;
       const f = g93 ? (1 / t).toFixed(4) : String(fEquivalente(dy, z - zPrev, dA, t));
       lines.push(`G1 ${L}${y.toFixed(3)} Z${z.toFixed(3)} A${aAcum.toFixed(2)} F${f}`);
       yPrev = y;
@@ -373,7 +445,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
 
   lines.push("(HETNA TURN STUDIO - Torneado de perfil)");
   lines.push(`(Pieza: ${largo.toFixed(1)}mm de largo | radio maximo ${rMax.toFixed(2)}mm | Material ${preset.nombre})`);
-  lines.push(`(Origen: ${origenPunto} | Fresa ${herramienta.toolDiameterMm}mm)`);
+  lines.push(`(Origen: ${origenPunto} | Fresa ${esBola ? "de bola" : "plana"} ${herramienta.toolDiameterMm}mm)`);
   lines.push(`(*** A = rotativo | ${L} = longitud | Z = radio de corte ***)`);
   lines.push("(*** Z0 calibrado en el CENTRO del eje rotativo ***)");
   lines.push(
@@ -395,7 +467,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   while (zActual > rMax) {
     zActual = Math.max(rMax, zActual - profCorte);
     const zFijo = zActual;
-    pasadaEspiral(`ETAPA 1: Escuadrado pasada ${n}`, rpm.rpmCilindrado, leadDesbaste, () => zFijo, yIni, yFin);
+    pasadaEspiral(`ETAPA 1: Escuadrado pasada ${n}`, rpm.rpmCilindrado, leadDesbaste, () => zFijo, yIni, yFin, PASO_RECTO);
     n++;
     if (n > 200) {
       avisos.push("Escuadrado cortado a 200 pasadas: revisa el diámetro de fresa.");
@@ -411,7 +483,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
       rpm.rpmDesbaste,
       leadDesbaste,
       (y) => {
-        const rPerfil = radioEnOrigen(y);
+        const rPerfil = radioPunta(y);
         return rMax - (rMax - rPerfil) * factor;
       },
       yIni,
@@ -420,7 +492,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   }
 
   // ETAPA 3: acabado, sigue el perfil exacto
-  pasadaEspiral("ETAPA 3: Acabado, perfil exacto", rpm.rpmAcabado, leadAcabado, radioEnOrigen, yIni, yFin);
+  pasadaEspiral("ETAPA 3: Acabado, perfil exacto", rpm.rpmAcabado, leadAcabado, radioPunta, yIni, yFin);
 
   // ETAPA 4 y 5: tallados (estrías y espiral), con la pieza ya en su perfil.
   // El ángulo de cada canal se toma desde donde quedó la pieza al terminar el
@@ -463,7 +535,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
         for (let k = 0; k < es.cantidad; k++) {
           const ang = (360 * k) / es.cantidad;
           const ys: number[] = [];
-          for (let y = es.yDesde; y < es.yHasta; y += paso) ys.push(y);
+          for (let y = es.yDesde; y < es.yHasta; y += PASO_RECTO) ys.push(y);
           ys.push(es.yHasta);
           if (!ida) ys.reverse();
           ida = !ida;
@@ -496,7 +568,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
         const d = (sp.profundidad * p) / n;
         for (let k = 0; k < sp.entradas; k++) {
           const ys: number[] = [];
-          for (let y = sp.yDesde; y < sp.yHasta; y += paso / 2) ys.push(y);
+          for (let y = sp.yDesde; y < sp.yHasta; y += PASO_RECTO / 2) ys.push(y);
           ys.push(sp.yHasta);
           lines.push(`(hilo ${k + 1}/${sp.entradas}, pasada ${p}/${n})`);
           lines.push(`G0 Z${zSeguro.toFixed(3)}`);

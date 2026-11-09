@@ -23,6 +23,12 @@ export type FresaCam = {
   tipo: "recta" | "v" | "compresion" | "bola"
   diametro: number
   angulo: number // sólo fresa en V
+  // Parámetros de corte propios de la fresa; 0 o ausente = los del material
+  pasada?: number // profundidad por pasada (mm)
+  traslape?: number // % del diámetro que se encima en el cajeado
+  rpm?: number
+  avance?: number // mm/min
+  penetracion?: number // mm/min
 }
 
 export type DatosCam = { maquinas: MaquinaCam[]; fresas: FresaCam[] }
@@ -53,6 +59,11 @@ function limpiar(d: unknown): DatosCam {
     tipo: (TIPOS_FRESA.includes(f?.tipo) ? f.tipo : "recta") as FresaCam["tipo"],
     diametro: num(f?.diametro, 0.1, 30, 6),
     angulo: num(f?.angulo, 10, 150, 90),
+    pasada: num(f?.pasada, 0, 50, 0),
+    traslape: num(f?.traslape, 0, 95, 0),
+    rpm: num(f?.rpm, 0, 60000, 0),
+    avance: num(f?.avance, 0, 30000, 0),
+    penetracion: num(f?.penetracion, 0, 10000, 0),
   }))
   return { maquinas, fresas }
 }

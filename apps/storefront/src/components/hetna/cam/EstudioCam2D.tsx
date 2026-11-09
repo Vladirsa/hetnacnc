@@ -53,10 +53,10 @@ const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
 type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "laser_corte" | "laser_linea" | "laser_relleno"
 const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "corte", nombre: "Corte de pieza", nota: "Barrenos por dentro y borde por fuera, con pestañas" },
-  { id: "fuera", nombre: "Contorno por fuera", nota: "La fresa va por fuera de la línea" },
-  { id: "dentro", nombre: "Contorno por dentro", nota: "La fresa va por dentro de la línea" },
-  { id: "linea", nombre: "Sobre la línea", nota: "Sigue la línea; sirve con trazos abiertos" },
-  { id: "cajeado", nombre: "Cajeado", nota: "Vacía el área a una profundidad" },
+  { id: "fuera", nombre: "Perfilado por fuera", nota: "La fresa va por fuera de la línea" },
+  { id: "dentro", nombre: "Perfilado por dentro", nota: "La fresa va por dentro de la línea" },
+  { id: "linea", nombre: "Perfilado sobre la línea", nota: "Sigue la línea; sirve con trazos abiertos" },
+  { id: "cajeado", nombre: "Cajeado (desbaste de área)", nota: "Vacía el área a una profundidad" },
   { id: "grabado_v", nombre: "Grabado en V", nota: "Letras y figuras con fresa en V" },
   { id: "barrenado", nombre: "Barrenado", nota: "Barrenos en el centro de cada círculo" },
 ]
@@ -79,7 +79,18 @@ type Op = {
   velocidad: string
   pasadas: string
   separacion: string
+  // desbaste separado de la línea + una pasada de acabado sobre ella
+  acabado: boolean
+  sobre: string
+  // parámetros de corte de la herramienta; vacío = los del material
+  pasada: string
+  traslape: string
+  rpm: string
+  avance: string
+  penetracion: string
 }
+const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado"]
+const sinCero = (v?: number) => (v && v > 0 ? String(v) : "")
 
 let contador = 0
 const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
@@ -94,6 +105,13 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   velocidad: tipo === "laser_corte" ? "600" : "2500",
   pasadas: "1",
   separacion: "0.15",
+  acabado: false,
+  sobre: "0.3",
+  pasada: "",
+  traslape: "",
+  rpm: "",
+  avance: "",
+  penetracion: "",
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -295,6 +313,12 @@ export function EstudioCam2D() {
         velocidad: numero(o.velocidad) || 1000,
         pasadas: Math.max(1, Math.round(numero(o.pasadas) || 1)),
         separacion: numero(o.separacion) || 0.15,
+        sobrematerial: o.acabado && CON_ACABADO.includes(o.tipo) ? Math.min(5, Math.max(0, numero(o.sobre) || 0)) : 0,
+        ...(numero(o.pasada) > 0 ? { pasada: numero(o.pasada) } : {}),
+        ...(numero(o.traslape) > 0 ? { traslape: Math.min(95, numero(o.traslape)) / 100 } : {}),
+        ...(numero(o.rpm) > 0 ? { rpm: numero(o.rpm) } : {}),
+        ...(numero(o.avance) > 0 ? { avance: numero(o.avance) } : {}),
+        ...(numero(o.penetracion) > 0 ? { penetracion: numero(o.penetracion) } : {}),
       })),
     }
     const form = new FormData()
@@ -507,7 +531,16 @@ export function EstudioCam2D() {
                       valor=""
                       cambiar={(v) => {
                         const fr = fresas.find((x) => x.id === v)
-                        if (fr) cambiarOp(i, { diametro: String(fr.diametro), angulo: String(fr.angulo) })
+                        if (fr)
+                          cambiarOp(i, {
+                            diametro: String(fr.diametro),
+                            angulo: String(fr.angulo),
+                            pasada: sinCero(fr.pasada),
+                            traslape: sinCero(fr.traslape),
+                            rpm: sinCero(fr.rpm),
+                            avance: sinCero(fr.avance),
+                            penetracion: sinCero(fr.penetracion),
+                          })
                       }}
                     >
                       <option value="">{o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : `Ø${o.diametro} mm`} (cambiar…)</option>
@@ -525,6 +558,25 @@ export function EstudioCam2D() {
                       {o.tipo === "grabado_v" && <CampoNum etiqueta="Ángulo" valor={o.angulo} cambiar={(v) => cambiarOp(i, { angulo: v })} sufijo="°" />}
                     </div>
                     {(o.tipo === "corte" || o.tipo === "fuera") && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
+                    {CON_ACABADO.includes(o.tipo) && (
+                      <>
+                        <Interruptor etiqueta="Desbaste + pasada de acabado" activo={o.acabado} cambiar={(v) => cambiarOp(i, { acabado: v })} />
+                        {o.acabado && <CampoNum etiqueta="Material que deja el desbaste" valor={o.sobre} cambiar={(v) => cambiarOp(i, { sobre: v })} />}
+                      </>
+                    )}
+                    <details className="rounded-[8px] bg-[#151C27] px-2.5 py-2">
+                      <summary className="cursor-pointer text-[12px] text-[#C9D2E0]">
+                        Parámetros de corte{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}
+                      </summary>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <CampoNum etiqueta="Prof. por pasada" valor={o.pasada} cambiar={(v) => cambiarOp(i, { pasada: v })} />
+                        {o.tipo === "cajeado" && <CampoNum etiqueta="Traslape" valor={o.traslape} cambiar={(v) => cambiarOp(i, { traslape: v })} sufijo="%" />}
+                        <CampoNum etiqueta="Husillo" valor={o.rpm} cambiar={(v) => cambiarOp(i, { rpm: v })} sufijo="rpm" />
+                        <CampoNum etiqueta="Avance" valor={o.avance} cambiar={(v) => cambiarOp(i, { avance: v })} sufijo="mm/min" />
+                        <CampoNum etiqueta="Bajada" valor={o.penetracion} cambiar={(v) => cambiarOp(i, { penetracion: v })} sufijo="mm/min" />
+                      </div>
+                      <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#8A97AB]">Deja un campo vacío para usar el valor recomendado para el material.</p>
+                    </details>
                   </>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -752,6 +804,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
   const [tarifa, setTarifa] = useState("300")
   const [diam, setDiam] = useState("6")
   const [ang, setAng] = useState("90")
+  const [corte, setCorte] = useState({ pasada: "", traslape: "", rpm: "", avance: "", penetracion: "" })
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-[#2B3648] bg-[#151C27] p-3">
       <span className="text-[12px] text-[#8A97AB]">{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</span>
@@ -787,7 +840,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
       {datos.fresas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
           {datos.fresas.map((x) => (
-            <Fila key={x.id} texto={`${x.nombre} · Ø${x.diametro}${x.tipo === "v" ? ` · ${x.angulo}°` : ""}`} quitar={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} />
+            <Fila key={x.id} texto={`${x.nombre} · Ø${x.diametro}${x.tipo === "v" ? ` · ${x.angulo}°` : ""}${x.rpm ? ` · ${x.rpm} rpm` : ""}${x.avance ? ` · ${x.avance} mm/min` : ""}`} quitar={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} />
           ))}
         </ul>
       )}
@@ -802,11 +855,21 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
         <CampoNum etiqueta="" valor={diam} cambiar={setDiam} sufijo="mm" />
         {fr.tipo === "v" && <CampoNum etiqueta="" valor={ang} cambiar={setAng} sufijo="°" />}
       </div>
+      <span className="text-[12px] text-[#8A97AB]">Parámetros de corte de esta fresa (opcional; vacío = los del material):</span>
+      <div className="grid grid-cols-2 gap-2">
+        <CampoNum etiqueta="Prof. por pasada" valor={corte.pasada} cambiar={(v) => setCorte({ ...corte, pasada: v })} />
+        <CampoNum etiqueta="Traslape" valor={corte.traslape} cambiar={(v) => setCorte({ ...corte, traslape: v })} sufijo="%" />
+        <CampoNum etiqueta="Husillo" valor={corte.rpm} cambiar={(v) => setCorte({ ...corte, rpm: v })} sufijo="rpm" />
+        <CampoNum etiqueta="Avance" valor={corte.avance} cambiar={(v) => setCorte({ ...corte, avance: v })} sufijo="mm/min" />
+        <CampoNum etiqueta="Bajada" valor={corte.penetracion} cambiar={(v) => setCorte({ ...corte, penetracion: v })} sufijo="mm/min" />
+      </div>
       <Boton
         onClick={() => {
           const d = numero(diam)
           if (!fr.nombre.trim() || !(d > 0)) return
-          guardar({ ...datos, fresas: [...datos.fresas, { ...fr, diametro: d, angulo: numero(ang) || 90, id: nuevoId() }] })
+          const pos = (v: string) => Math.max(0, numero(v) || 0)
+          const propios = { pasada: pos(corte.pasada), traslape: pos(corte.traslape), rpm: pos(corte.rpm), avance: pos(corte.avance), penetracion: pos(corte.penetracion) }
+          guardar({ ...datos, fresas: [...datos.fresas, { ...fr, ...propios, diametro: d, angulo: numero(ang) || 90, id: nuevoId() }] })
           setFr({ ...fr, nombre: "" })
         }}
       >
