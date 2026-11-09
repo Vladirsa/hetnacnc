@@ -1,0 +1,43 @@
+# Pendientes y agencia de marketing interna de HETNA
+
+Lista viva de ideas pendientes del dueño. La agencia es **de uso interno** (sólo las cuentas de HETNA); no se ofrece a terceros.
+
+## Agencia de marketing interna (hoja de ruta)
+
+| Etapa | Qué incluye | Estado |
+|---|---|---|
+| 5A | Social Hub: publicaciones automáticas y manuales, calendario, textos por red con IA, ligas medidas y resultados (Facebook y Telegram vía n8n) | ✅ Hecho (9 nov 2026) |
+| 5B | Videos (subir al Social Hub lo del Estudio de Video), imágenes con IA, Instagram, LinkedIn, Discord, Pinterest; YouTube y TikTok (manual o servicio aprobado) | Siguiente; faltan 3 respuestas del dueño |
+| 5C | Respuestas automáticas a comentarios y mensajes (Facebook, Instagram, WhatsApp, Telegram) con IA: aprobación o automáticas en preguntas comunes | Pendiente |
+| 5D | Publicidad pagada (Meta Ads) desde el panel | Pendiente |
+
+Relacionado: el **Estudio de Video** se está haciendo en otra rama (`claude/cool-wozniak-d73qms`, `tools/estudio-video`): app local que crea videos originales ES/EN. El Social Hub los publica y mide.
+
+## Ideas nuevas (9 nov 2026)
+
+### 8. Página de producto con más datos
+La página de producto no le gusta al dueño: hay que poner más información. Propuesta para revisar con él antes de hacerla:
+- Ficha técnica en tabla: material, medidas, espesor, tolerancia, acabado, peso, formato de archivo (diseños), máquinas compatibles.
+- Qué incluye, tiempos de entrega y envío calculado, devoluciones y garantía.
+- Datos del taller o vendedor (verificado, calificación, ubicación) y botón de cotizar a la medida.
+- Preguntas frecuentes del producto, reseñas con foto (ya existen) y productos relacionados.
+- Datos estructurados para Google (precio, disponibilidad, reseñas).
+
+### 9. Publicidad automática en todas las páginas, slides y bloques
+Un agente que llene y rote solo los espacios de publicidad del sitio (banners, slides del inicio y bloques) usando el módulo "Publicidad" que ya existe: elige qué promover (productos que más venden, talleres, licitaciones, cursos), genera la pieza con IA, la programa, mide vistas y clics y cambia lo que no funciona.
+
+### 13. Agente que controle y mejore las campañas de Ads
+Parte de la etapa 5D. Revisa a diario las campañas de Meta Ads (y Google Ads después): gasto, costo por resultado, frecuencia y anuncios agotados; propone o aplica cambios (pausar lo que quema dinero, subir presupuesto a lo que funciona, probar textos e imágenes nuevos) dentro de límites de gasto que fije el dueño, y le manda un resumen.
+
+### 14. Generador de contenido para redes con RunPod
+Un programa que corre en GPU de RunPod con modelos abiertos para generar imágenes y videos de promoción de las páginas de HETNA (más barato por pieza que los servicios de pago por imagen) y entregarlos al Social Hub. Revisar junto con la etapa 5B (imágenes y videos) y con el Estudio de Video.
+
+## Pendientes anteriores (en manos del dueño)
+
+- Vitrina de imagen a 3D.
+- Google Merchant Center (cuando haya productos físicos).
+- Pruebas del sitio (las está haciendo el dueño).
+- Reunión con abogado y contador (revisar el contrato SafeDeal, términos y aviso de privacidad).
+- Estudio de Publicidad (#7): ahora forma parte de la agencia interna (5B a 5D).
+- Cursos con Bunny (después de las primeras ventas).
+- Campaña para atraer talleres.
