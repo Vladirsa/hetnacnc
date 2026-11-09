@@ -39,13 +39,23 @@ function postProcess(){
     if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAORI');}
   }
   const lineOf=new Int32Array(moves.length);let last={};let lastG=null,lastF=null,g93=false;
-  for(let i=0;i<moves.length;i++){
-    const mv=moves[i];const pm=mv.pm;const words=[];const W={X:pm[0],Y:pm[1],Z:pm[2]};axes.forEach((a,q)=>W[a]=mv.ang[q]*dirs[q]);
+  // Sin TCP el control interpola los ejes lineales y los rotativos cada uno por su lado, así que en un
+  // bloque con giro la punta se sale de la recta. Se parte el bloque hasta que el desvío sea menor a 0.01 mm.
+  const subdiv=(pv,mv)=>{
+    if(Math.max(...axes.map((a,q)=>Math.abs(mv.ang[q]-pv.ang[q])))<0.05)return null;
+    const at=u=>{const ang=axes.map((a,q)=>pv.ang[q]+(mv.ang[q]-pv.ang[q])*u);const k=kinMats(m.kin,ang);return{ang,pm:linearOut({p:V.lerp(pv.p,mv.p,u),R:k.R,ha:k.ha},m,tl,false)};};
+    let n=1;
+    for(;n<512;n*=2){let worst=0;for(let q=0;q<n&&worst<=0.01;q++){const d=V.dist(at((q+0.5)/n).pm,V.lerp(at(q/n).pm,at((q+1)/n).pm,0.5));if(d>worst)worst=d;}if(worst<=0.01)break;}
+    if(n===1)return null;
+    const st=[];for(let q=1;q<n;q++)st.push(at(q/n));st.push({pm:mv.pm,ang:mv.ang});return st;
+  };
+  const block=(i,mv,sp,pv,len)=>{
+    const pm=sp.pm;const words=[];const W={X:pm[0],Y:pm[1],Z:pm[2]};axes.forEach((a,q)=>W[a]=sp.ang[q]*dirs[q]);
     const rapid=mv.t==='R';
     if(heid){
       const parts=['X','Y','Z',...axes].map(k=>`${k}${fmt(W[k])}`);const f=rapid?'FMAX':`F${mv.t==='P'?fd.plunge:fd.feed}`;
       let extra='';if(i===0)extra=' M3'+(cool?(cool==='M8'?' M8':' M7'):'');
-      out(`L ${parts.join(' ')} R0 ${f}${extra}`);lineOf[i]=L.length-1;continue;
+      out(`L ${parts.join(' ')} R0 ${f}${extra}`);return;
     }
     for(const k of ['X','Y','Z',...axes]){const s=fmt(W[k]);if(last[k]!==s){words.push(k+s);last[k]=s;}}
     const g=rapid?'G0':'G1';
@@ -54,23 +64,31 @@ function postProcess(){
       if(c.ctrl!=='siemens'&&g43)out(g43);}
     let feedWord='';
     if(!rapid){
-      const f=mv.t==='P'?fd.plunge:fd.feed;const pv=i>0?moves[i-1]:null;
-      const dAng=pv?Math.hypot(...axes.map((a,q)=>mv.ang[q]-pv.ang[q])):0;const multi=pv&&dAng>1e-4;
-      if(multi&&inv){const len=Math.max(mv.len,1e-3);const Fi=Math.min(f/len,99999);if(!g93){pre+='G93 ';g93=true;}feedWord=' F'+Fi.toFixed(3);lastF=null;}
+      const f=mv.t==='P'?fd.plunge:fd.feed;
+      const dAng=pv?Math.hypot(...axes.map((a,q)=>sp.ang[q]-pv.ang[q])):0;const multi=pv&&dAng>1e-4;
+      if(multi&&inv){const Fi=Math.min(f/Math.max(len,1e-3),99999);if(!g93){pre+='G93 ';g93=true;}feedWord=' F'+Fi.toFixed(3);lastF=null;}
       else if(multi){
         // G94 con eje rotativo: Mach3/Mach4/GRBL miden el bloque como hipot(mm, grados).
         // Para que dure lo que dura el corte real (len / f), la F del bloque es esa
         // "distancia" entre ese tiempo. Es lo mismo que hacen los posts "wrap" de Vectric.
         if(g93){pre+='G94 ';g93=false;}
-        const dLin=Math.hypot(mv.pm[0]-pv.pm[0],mv.pm[1]-pv.pm[1],mv.pm[2]-pv.pm[2]);const t=Math.max(mv.len,1e-3)/f;
+        const dLin=Math.hypot(pm[0]-pv.pm[0],pm[1]-pv.pm[1],pm[2]-pv.pm[2]);const t=Math.max(len,1e-3)/f;
         const Fe=Math.round(Math.min(99999,Math.max(1,Math.hypot(dLin,dAng)/t)));
         if(lastF!==Fe){feedWord=' F'+Fe;lastF=Fe;}
       }
       else{if(g93){pre+='G94 ';g93=false;lastF=null;}if(lastF!==f){feedWord=' F'+f;lastF=f;}}
     }
-    if(!words.length&&!feedWord&&!pre){lineOf[i]=L.length-1;continue;}
+    if(!words.length&&!feedWord&&!pre)return;
     const gw=(g!==lastG||pre)?g+' ':'';lastG=g;
-    out(`${pre}${gw}${words.join(' ')}${feedWord}`.trim());lineOf[i]=L.length-1;
+    out(`${pre}${gw}${words.join(' ')}${feedWord}`.trim());
+  };
+  const linearize=axes.length>0&&!tcp;
+  for(let i=0;i<moves.length;i++){
+    const mv=moves[i];let pv=i>0?moves[i-1]:null;
+    const steps=(linearize&&pv&&mv.t!=='R'&&!mv.kfail&&!pv.kfail&&subdiv(pv,mv))||[mv];
+    const len=mv.len/steps.length;
+    for(const sp of steps){block(i,mv,sp,pv,len);pv=sp;}
+    lineOf[i]=L.length-1;
   }
   // pie
   if(heid){if(tcp&&axes.length)out('M129');out('M5');if(cool)out('M9');out('M30');out(`END PGM ${name} MM`);}

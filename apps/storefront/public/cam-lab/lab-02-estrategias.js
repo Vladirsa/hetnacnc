@@ -90,8 +90,13 @@ async function genTop3(tl,st){
   const ker=[];for(let dj=-kr;dj<=kr;dj++)for(let di=-kr;di<=kr;di++){const d=Math.hypot(di,dj)*res;if(d<=R+1e-9)ker.push(di,dj,toolH(tl,d));}
   const T=new Float32Array(nx*ny);let unreached=0,cells=0;
   for(let j=0;j<ny;j++){for(let i=0;i<nx;i++){let best=-1e9;for(let k=0;k<ker.length;k+=3){const ii=i+ker[k],jj=j+ker[k+1];if(ii<0||jj<0||ii>=nx||jj>=ny)continue;const v=H[jj*nx+ii]-ker[k+2];if(v>best)best=v;}
-      const v=Math.max(best+st.allow,floor);T[j*nx+i]=v;const hx=H[j*nx+i];if(hx>floor+0.01){cells++;if(v-hx-st.allow>0.05)unreached++;}}
-    await progressYield(ps,0.4+0.4*j/ny,'Calculando contacto de la herramienta…');}
+      const v=Math.max(best+st.allow,floor);T[j*nx+i]=v;}
+    await progressYield(ps,0.4+0.3*j/ny,'Calculando contacto de la herramienta…');}
+  // una celda se alcanza si el filo la toca desde ALGUNA posición vecina, no solo con la punta encima
+  for(let j=0;j<ny;j++){for(let i=0;i<nx;i++){const hx=H[j*nx+i];if(hx<=floor+0.01)continue;cells++;const lim=hx+st.allow+0.05;if(T[j*nx+i]<=lim)continue;let hit=false;
+      for(let k=0;k<ker.length;k+=3){const ii=i+ker[k],jj=j+ker[k+1];if(ii<0||jj<0||ii>=nx||jj>=ny)continue;if(T[jj*nx+ii]+ker[k+2]<=lim){hit=true;break;}}
+      if(!hit)unreached++;}
+    await progressYield(ps,0.7+0.1*j/ny,'Revisando zonas sin alcanzar…');}
   const Tat=(x,y)=>{const fx=clamp((x-gx0)/res,0,nx-1.001),fy=clamp((y-gy0)/res,0,ny-1.001);const i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j;
     return T[j*nx+i]*(1-u)*(1-v)+T[j*nx+i+1]*u*(1-v)+T[(j+1)*nx+i]*(1-u)*v+T[(j+1)*nx+i+1]*u*v;};
   const chk=checker(tl,st);const passes=[];const alongX=st.dir==='x';
@@ -138,8 +143,14 @@ async function genRot4(tl,st){
   for(let ix=0;ix<nx;ix++){for(let it=0;it<nt;it++){let best=0;
       for(let dx=-krx;dx<=krx;dx++){const jx=ix+dx;if(jx<0||jx>=nx)continue;const dxm=dx*resx;if(Math.abs(dxm)>R)continue;const row=jx*nt;
         for(let dt=-w;dt<=w;dt++){let jt=it+dt;if(jt<0)jt+=nt;else if(jt>=nt)jt-=nt;const r=Rm[row+jt];if(r<=0)continue;const y=r*sinT[dt+w];if(y>R||y<-R)continue;const d=Math.hypot(dxm,y);if(d>R)continue;const v=r*cosT[dt+w]-hOf(d);if(v>best)best=v;}}
-      const v=best+st.allow;Tm[ix*nt+it]=v;const r0=Rm[ix*nt+it];if(r0>0){cells++;if(v-r0-st.allow>0.05)unreached++;}}
-    await progressYield(ps,0.4+0.4*ix/nx,'Calculando contacto en 4 ejes…');}
+      Tm[ix*nt+it]=best+st.allow;}
+    await progressYield(ps,0.4+0.3*ix/nx,'Calculando contacto en 4 ejes…');}
+  for(let ix=0;ix<nx;ix++){for(let it=0;it<nt;it++){const r0=Rm[ix*nt+it];if(r0<=0)continue;cells++;const lim=r0+st.allow+0.05;if(Tm[ix*nt+it]<=lim)continue;let hit=false;
+      for(let dx=-krx;dx<=krx&&!hit;dx++){const jx=ix+dx;if(jx<0||jx>=nx)continue;const dxm=dx*resx;if(Math.abs(dxm)>R)continue;const row=jx*nt;
+        for(let dt=-w;dt<=w;dt++){let jt=it-dt;if(jt<0)jt+=nt;else if(jt>=nt)jt-=nt;const y=r0*sinT[dt+w];if(y>R||y<-R)continue;const d=Math.hypot(dxm,y);if(d>R)continue;
+          if(Tm[row+jt]-st.allow+hOf(d)<=r0*cosT[dt+w]+0.05){hit=true;break;}}}
+      if(!hit)unreached++;}
+    await progressYield(ps,0.7+0.1*ix/nx,'Revisando zonas sin alcanzar…');}
   const Tat=(x,th)=>{let fx=clamp((x-gx0)/resx,0,nx-1.001);th=((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI);const ft=th/dT;const i=Math.floor(fx),j=Math.floor(ft)%nt,j2=(j+1)%nt,u=fx-i,v=ft-Math.floor(ft);
     return Tm[i*nt+j]*(1-u)*(1-v)+Tm[i*nt+j2]*(1-u)*v+Tm[(i+1)*nt+j]*u*(1-v)+Tm[(i+1)*nt+j2]*u*v;};
   const pt=(x,th,r)=>{const s=Math.sin(th),c=Math.cos(th);return{p:[x,r*s,r*c],a:[0,s,c],st:0};};
@@ -231,8 +242,12 @@ async function gen5(tl,st){
   if(reB>0)for(const p of passes){const src=p.pts,out=[src[0]];
     for(let i=1;i<src.length;i++){const A=src[i-1],B=src[i];const w=angBetween(A.a,B.a);
       if(w>maxStep&&A.st<2&&B.st<2&&A.P&&B.P){const n=Math.ceil(w/maxStep);
-        for(let k=1;k<n;k++){const u=k/n;const a=slerpDir(A.a,B.a,u);const nk=slerpDir(A.n,B.n,u);const C=V.madd(V.lerp(A.P,B.P,u),nk,reB+st.allow);const T=V.madd(C,a,-reB);
-          if(V.dot(a,nk)<minDotN||chk(T,a,false))continue;out.push({p:T,a,st:(A.st||B.st)?1:0});}}
+        for(let k=1;k<n;k++){const u=k/n;const a=slerpDir(A.a,B.a,u);const nk=slerpDir(A.n,B.n,u);if(V.dot(a,nk)<minDotN)continue;
+          // el centro de la bola va de un lado al otro de la arista; si roza, se separa por la normal hasta librar
+          let C=V.lerp(V.madd(A.P,A.n,reB+st.allow),V.madd(B.P,B.n,reB+st.allow),u),T=V.madd(C,a,-reB),bad=chk(T,a,false);
+          const ds=Math.max(0.04,reB*0.04),eMax=Math.ceil((V.dist(A.P,B.P)+2*reB)/ds);
+          for(let e=0;bad==='cutter'&&e<eMax;e++){C=V.madd(C,nk,ds);T=V.madd(C,a,-reB);bad=chk(T,a,false);}
+          if(bad)continue;out.push({p:T,a,st:(A.st||B.st)?1:0});}}
       out.push(B);}
     p.pts=out;}
   for(const p of passes)for(const q of p.pts){if(q.st===1)stats.adjusted++;else if(q.st===2)stats.coll++;else if(q.st===3)stats.lim++;delete q.P;delete q.n;delete q.ref;}

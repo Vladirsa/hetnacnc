@@ -199,7 +199,7 @@ async function loadFile(file){
   setBusy(`Leyendo ${file.name}…`,0.02);
   try{
     let pos;
-    if(ext==='stl'){const buf=await file.arrayBuffer();const g=new THREE.STLLoader().parse(buf);pos=new Float32Array((g.index?g.toNonIndexed():g).attributes.position.array);}
+    if(ext==='stl'){const buf=await file.arrayBuffer();let g;try{g=new THREE.STLLoader().parse(buf);}catch(e){throw new Error('El STL está dañado o incompleto. Expórtalo de nuevo desde tu programa de diseño.');}pos=new Float32Array((g.index?g.toNonIndexed():g).attributes.position.array);}
     else if(ext==='obj'){const txt=await file.text();const grp=new THREE.OBJLoader().parse(txt);grp.updateMatrixWorld(true);const parts=[];let n=0;grp.traverse(o=>{if(o.isMesh){const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);const a=g.attributes.position.array;parts.push(a);n+=a.length;}});pos=new Float32Array(n);let off=0;for(const a of parts){pos.set(a,off);off+=a.length;}}
     else if(['step','stp','iges','igs'].includes(ext)){setBusy('Convirtiendo '+ext.toUpperCase()+' a malla (OpenCascade)…',0.05);
       try{pos=await parseSTEP(await file.arrayBuffer(),ext);}
