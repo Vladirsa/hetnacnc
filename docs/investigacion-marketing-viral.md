@@ -116,3 +116,43 @@ Advertencia: casi todo viene de blogs de herramientas de redes; las redes no pub
 - [OutlierKit – Shorts algorithm in YouTube's words](https://outlierkit.com/resources/youtube-shorts-algorithm/)
 - [Buffer – Best time to post 2026](https://buffer.com/best-time-to-post)
 - [Digital Applied – LinkedIn algorithm 2026](https://www.digitalapplied.com/blog/linkedin-algorithm-2026-engagement-strategy-guide)
+
+---
+
+# Expansión: México, Estados Unidos y Sudamérica (9 nov 2026)
+
+## Posición en cada mercado
+- **México (base):** dominar primero la oferta (talleres y proveedores) y la demanda local. Sin talleres suficientes no hay qué ofrecer afuera.
+- **Estados Unidos:** no competir de frente con Xometry, Protolabs o Fictiv; ofrecer **talleres mexicanos verificados** para compradores de EE.UU. (nearshoring): mejor precio que fabricar en EE.UU., mucho más cerca que Asia y dentro del T-MEC. Las certificaciones (ISO, AS9100) pesan mucho para ellos.
+- **Sudamérica:** repetir el modelo de México **país por país** (talleres locales para clientes locales; mandar piezas desde México casi nunca conviene). Primero los países de habla hispana con mucho uso de redes (Colombia, Chile, Perú, Argentina); Brasil después, con portugués y cuentas propias.
+
+## Cómo lo maneja el sistema: la dimensión "mercado"
+- Cada pieza lleva **mercado + idioma + público + red**.
+- **Localización con IA**, no traducción literal: unidades (mm o pulgadas), moneda, modismos de cada país y ejemplos locales.
+- **Guía por red y por mercado**: la prioridad de redes cambia (EE.UU.: LinkedIn, YouTube, Reddit, buscadores e IA; México y LATAM: WhatsApp, Facebook, Instagram y TikTok; Brasil: Instagram, WhatsApp y YouTube en portugués).
+- **Horario por zona**: centro de México; EE.UU. este, centro y pacífico; Colombia y Perú; Chile y Argentina.
+- **Cuentas**: separar por idioma (los algoritmos agrupan por idioma y mezclar idiomas en una cuenta frena el alcance): cuentas en español para México y LATAM y cuentas en inglés para EE.UU. En YouTube, un solo canal con audio doblado ES/EN (encaja con el Estudio de Video).
+- **Resultados y anuncios por país**: las ligas medidas registran el país; el agente de anuncios reparte presupuesto según el costo por registro o cotización de cada país, dentro de los límites del dueño.
+- **Reparto del esfuerzo configurable** (por ejemplo, al inicio 60% México, 25% EE.UU. y 15% LATAM).
+
+## Fases propuestas
+1. **México:** dominar la oferta de talleres (kit de difusión, reels de pedidos, ranking).
+2. **Piloto EE.UU.:** contenido en inglés, LinkedIn, YouTube y Reddit (aportando, sin spam), página de nearshoring en /us, grupo inicial de talleres "listos para exportar" (verificados, certificados, cobran en USD y envían a EE.UU.) y una prueba pequeña de anuncios.
+3. **LATAM:** un país primero (propuesta: Colombia), con talleres fundadores por país, grupos de Facebook y WhatsApp para talleres e Instagram y TikTok para clientes; después Chile, Perú y Argentina; Brasil al final, en portugués.
+
+## Lo que la plataforma necesita antes de cada mercado (no es marketing)
+Monedas y regiones en la tienda, envío internacional y aduanas, impuestos y facturación por país, pagos locales (Mercado Pago opera en varios países de LATAM; PayPal y tarjeta para EE.UU.) y revisión legal por país. Corresponde a la fase internacional de la especificación de licitaciones.
+
+## Fuentes
+- [NAPS – Nearshoring in Mexico](https://napsintl.com/manufacturing-in-mexico/nearshoring-in-mexico/)
+- [NAPS – Future of manufacturing in Mexico 2026](https://napsintl.com/mexico-manufacturing-news/the-future-of-manufacturing-in-mexico-key-trends-and-challenges-for-2026-and-beyond/)
+- [IMARC – Mexico machine tools market](https://www.imarcgroup.com/mexico-machine-tools-market)
+- [SourceReady – Nearshoring de autopartes 2025](https://www.sourceready.com/blog/nearshoring-mexico-auto-parts-2025-risks-guide)
+- [MFG Hub – Expo Manufactura 2026](https://mfg-hub-website.pages.dev/blog/expo-manufactura-2026-takeaways/)
+- [Navigator – Advanced manufacturing in Mexico](https://navigator.global/us/library/demand-signals-advanced-manufacturing-and-metalworking-in-mexico)
+- [Unionfab – Xometry competitors 2026](https://www.unionfab.com/blog/2025/09/xometry-competitors)
+- [Frigate – Xometry alternatives](https://frigate.ai/business-model/top-xometry-alternatives-in-2025-a-detailed-comparison-for-b2b-manufacturing-sourcing/)
+- [Diario Las Américas – Redes sociales en LATAM](https://www.diariolasamericas.com/economia/las-11-redes-sociales-que-marcan-pauta-n4130029)
+- [Forbes Colombia – Tiempo en redes](https://forbes.co/2024/11/03/actualidad/colombia-es-el-sexto-pais-del-mundo-en-donde-mas-tiempo-se-pasa-en-redes-sociales)
+- [Andina – Redes en Perú](https://andina.pe/agencia/noticia-facebook-e-instagram-son-las-redes-sociales-donde-mas-interactuan-los-usuarios-peruanos-943338.aspx)
+- [Manufacturing Lead Generation – Marketing 2026](https://manufacturingleadgeneration.com/manufacturing-marketing-trends-2026/)
