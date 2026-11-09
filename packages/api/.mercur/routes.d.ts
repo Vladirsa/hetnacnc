@@ -549,7 +549,9 @@ export type Routes = {
         hetnaSocial: typeof import("../src/api/admin/hetna-social/route") & {
             $id: typeof import("../src/api/admin/hetna-social/[id]/route");
             config: typeof import("../src/api/admin/hetna-social/config/route");
+            estrategia: typeof import("../src/api/admin/hetna-social/estrategia/route");
             metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
+            plan: typeof import("../src/api/admin/hetna-social/plan/route");
             videos: typeof import("../src/api/admin/hetna-social/videos/route") & {
                 $id: typeof import("../src/api/admin/hetna-social/videos/[id]/route");
             };

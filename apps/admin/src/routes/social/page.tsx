@@ -23,9 +23,12 @@ type Pub = {
   adaptada_ia: boolean
   created_at: string
   ligas: Liga[]
+  mercado?: string | null
+  notas?: string | null
+  puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
 type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number }
-type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean }
+type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
   borde: "var(--border-base, #e5e5e5)",
@@ -121,8 +124,8 @@ function Chips({ redes, todas, alCambiar }: { redes: string[]; todas: RedInfo[];
   )
 }
 
-function Nueva({ redes, config, alCrear }: { redes: RedInfo[]; config: Config; alCrear: () => void }) {
-  const [f, setF] = useState({ titulo: "", texto_base: "", url: "https://hetnacnc.com/mx", programada_para: "" })
+function Nueva({ redes, config, alCrear, mercados }: { redes: RedInfo[]; config: Config; alCrear: () => void; mercados?: { clave: string; nombre: string }[] }) {
+  const [f, setF] = useState({ titulo: "", texto_base: "", url: "https://hetnacnc.com/mx", programada_para: "", mercado: "mx" })
   const [sel, setSel] = useState<string[]>(config.redes)
   const [img, setImg] = useState("")
   const [nota, setNota] = useState("")
@@ -132,7 +135,7 @@ function Nueva({ redes, config, alCrear }: { redes: RedInfo[]; config: Config; a
     setNota("")
     try {
       await api("", { ...f, redes: sel, medios: img ? [{ url: img }] : [], programada_para: f.programada_para ? new Date(f.programada_para).toISOString() : null })
-      setF({ titulo: "", texto_base: "", url: "https://hetnacnc.com/mx", programada_para: "" })
+      setF({ titulo: "", texto_base: "", url: "https://hetnacnc.com/mx", programada_para: "", mercado: "mx" })
       setImg("")
       setNota("Lista. Revisa abajo el texto de cada red.")
       alCrear()
@@ -150,6 +153,17 @@ function Nueva({ redes, config, alCrear }: { redes: RedInfo[]; config: Config; a
         <textarea style={{ ...campo, minHeight: 90 }} placeholder="¿Qué quieres decir? La IA lo adapta a cada red. La liga medida se agrega sola." value={f.texto_base} onChange={(e) => setF({ ...f, texto_base: e.target.value })} />
         <input style={campo} placeholder="Liga de destino en hetnacnc.com" value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} />
         <Chips redes={sel} todas={redes} alCambiar={setSel} />
+        {mercados && mercados.length > 1 && (
+          <label style={{ fontSize: 13 }}>
+            Mercado{" "}
+            <select style={{ ...campo, width: "auto", padding: 5 }} value={f.mercado} onChange={(e) => setF({ ...f, mercado: e.target.value })}>
+              {mercados.map((m) => (
+                <option key={m.clave} value={m.clave}>{m.nombre}</option>
+              ))}
+            </select>{" "}
+            <span style={{ color: C.tenue, fontSize: 12 }}>La IA lo escribe en el idioma y modismos de ese país.</span>
+          </label>
+        )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <label style={{ ...boton("normal"), fontWeight: 600 }}>
             {img ? "✓ Imagen lista" : "+ Imagen"}
@@ -234,6 +248,27 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             ) : (
               <img src={p.medios[0].url} alt="" style={{ maxWidth: 220, borderRadius: 8 }} />
             ))}
+          {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (las cuentas de este mercado se manejan a mano)</span>}
+          {p.notas && <div style={{ fontSize: 12, background: "#FFF8EE", borderRadius: 8, padding: 8, whiteSpace: "pre-wrap" }}>🎬 {p.notas}</div>}
+          <label style={{ ...boton("normal"), fontWeight: 600, justifySelf: "start" }}>
+            {p.medios?.length ? "Cambiar imagen o video" : "+ Agregar imagen o video"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+              style={{ display: "none" }}
+              onChange={async (e) => {
+                const a = e.target.files?.[0]
+                if (!a) return
+                setNota("Subiendo…")
+                try {
+                  const url = await subirImagen(a)
+                  await hacer({ accion: "guardar", textos, redes: sel, medios: [{ url, tipo: a.type.startsWith("video") ? "video" : "imagen" }] }, "Listo, quedó agregado.")
+                } catch (er) {
+                  setNota((er as Error).message)
+                }
+              }}
+            />
+          </label>
           <Chips redes={sel} todas={redes} alCambiar={setSel} />
           {sel.map((red) => {
             const r = p.resultado?.[red]
@@ -242,6 +277,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
               <div key={red} style={{ background: C.suave, borderRadius: 10, padding: 10 }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
                   <b style={{ fontSize: 13 }}>{nombre(red)}</b>
+                  {p.puntajes?.[red] && <Puntaje p={p.puntajes[red]} />}
                   {!auto(red) && <span style={{ fontSize: 12, color: C.tenue }}>✋ copiar y pegar</span>}
                   {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
                   {r?.url && (
@@ -548,7 +584,273 @@ function VideosTalleres({ redes, config, alCambiar }: { redes: RedInfo[]; config
   )
 }
 
+function Puntaje({ p }: { p: { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] } }) {
+  const [abierto, setAbierto] = useState(false)
+  const col = p.puntaje >= 80 ? C.verde : p.puntaje >= 55 ? "#8A5A00" : C.rojo
+  const fallas = p.revisiones.filter((x) => !x.ok)
+  return (
+    <span style={{ position: "relative" }}>
+      <button type="button" onClick={() => setAbierto(!abierto)} title="Puntaje de algoritmo" style={{ border: `1px solid ${col}`, color: col, background: "transparent", borderRadius: 999, padding: "0 8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+        Algoritmo {p.puntaje}
+      </button>
+      {abierto && (
+        <span style={{ position: "absolute", zIndex: 5, top: 22, left: 0, width: 300, background: C.fondo, border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, fontSize: 12, boxShadow: "0 6px 20px rgba(0,0,0,.12)" }}>
+          {p.revisiones.map((x, i) => (
+            <span key={i} style={{ display: "block", margin: "2px 0", color: x.ok ? C.verde : C.texto }}>
+              {x.ok ? "✓" : "✗"} {x.texto}
+              {!x.ok && x.consejo && <span style={{ display: "block", color: C.tenue, marginLeft: 14 }}>{x.consejo}</span>}
+            </span>
+          ))}
+          {!fallas.length && <span style={{ color: C.verde }}>Cumple la guía de esta red.</span>}
+        </span>
+      )}
+    </span>
+  )
+}
+
+type Hueco = { id: string; fecha: string; red: string; mercado: string; publico: string; pilar: string; formato: string; estado: string; post_id: string | null; titulo?: string }
+type GuiaVista = { red: string; nombre: string; auto: boolean; formatos: string[]; frecuencia: number; horas: number[]; dias: number[]; publicos: string[]; liga: string; hashtags: [number, number]; media: string; claves: string }
+type Estrat = {
+  config: { mercados: Record<string, number> }
+  guias: GuiaVista[]
+  publicos: { clave: string; nombre: string; objetivo: string; destino: string; pilares: string[] }[]
+  mercados: { clave: string; nombre: string; zona: string; nota: string; pct: number; redes: string[] }[]
+}
+const NOMBRE_PUBLICO: Record<string, string> = { clientes_empresa: "Empresas", clientes_particulares: "Particulares", talleres: "Talleres", proveedores: "Proveedores" }
+const ESTADO_HUECO: Record<string, [string, string]> = {
+  vacio: ["Sin contenido", C.tenue],
+  borrador: ["Borrador por revisar", "#8A5A00"],
+  falta_material: ["Falta video", C.rojo],
+  programada: ["Programada", "#1a3a5c"],
+  publicada: ["Publicada", C.verde],
+  parcial: ["Parcial", "#8A5A00"],
+  descartada: ["Descartada", C.tenue],
+}
+const DIAS = ["", "lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
+const lunes = (d = new Date()) => {
+  const x = new Date(d)
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7))
+  return x.toISOString().slice(0, 10)
+}
+
+function Plan({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
+  const [semana, setSemana] = useState(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    return lunes(d)
+  })
+  const [huecos, setHuecos] = useState<Hueco[] | null>(null)
+  const [nota, setNota] = useState("")
+  const [ocupado, setOcupado] = useState(false)
+  const cargar = useCallback(async () => {
+    try {
+      const d = await api<{ semana: string; huecos: Hueco[] }>(`/plan?semana=${semana}`)
+      setHuecos(d.huecos)
+    } catch (e) {
+      setNota((e as Error).message)
+      setHuecos([])
+    }
+  }, [semana])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const hacer = async (accion: "generar" | "llenar") => {
+    setOcupado(true)
+    setNota(accion === "llenar" ? "El agente está escribiendo los borradores… puede tardar un par de minutos." : "")
+    try {
+      const d = await api<any>("/plan", { accion, semana })
+      setNota(accion === "generar" ? (d.ya ? "Esa semana ya tenía plan." : `Plan armado: ${d.creados} publicaciones.`) : `Listo: ${d.llenados} borradores para revisar en Pendientes.`)
+      void cargar()
+      alCambiar()
+    } catch (e) {
+      setNota((e as Error).message)
+    } finally {
+      setOcupado(false)
+    }
+  }
+  const mover = (dias: number) => {
+    const d = new Date(`${semana}T12:00:00`)
+    d.setDate(d.getDate() + dias)
+    setSemana(lunes(d))
+  }
+  const porDia = useMemo(() => {
+    const m: Record<string, Hueco[]> = {}
+    for (const h of huecos || []) {
+      const k = new Date(h.fecha).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" })
+      ;(m[k] ||= []).push(h)
+    }
+    return Object.entries(m)
+  }, [huecos])
+  const conteo = (est: string) => (huecos || []).filter((h) => h.estado === est).length
+  return (
+    <section style={caja}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <h3 style={{ margin: 0, fontSize: 15 }}>Plan de la semana del {new Date(`${semana}T12:00:00`).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}</h3>
+        <button type="button" style={{ ...boton("normal"), padding: "4px 10px" }} onClick={() => mover(-7)}>◀</button>
+        <button type="button" style={{ ...boton("normal"), padding: "4px 10px" }} onClick={() => mover(7)}>▶</button>
+        <span style={{ flex: 1 }} />
+        <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer("generar")}>1. Armar plan</button>
+        <button type="button" style={boton("primario")} disabled={ocupado || !conteo("vacio")} onClick={() => void hacer("llenar")}>2. Escribir borradores ({conteo("vacio")})</button>
+      </div>
+      <p style={{ color: C.tenue, fontSize: 12, margin: "6px 0" }}>
+        Cada domingo se arma solo el plan de la semana siguiente y el agente escribe los borradores. Los que piden video quedan en "Falta video": usa un video de taller o súbelo.
+      </p>
+      {nota && <p style={{ fontSize: 13 }}>{nota}</p>}
+      {huecos && huecos.length > 0 && (
+        <p style={{ fontSize: 12, color: C.tenue }}>
+          {huecos.length} publicaciones · {conteo("publicada")} publicadas · {conteo("programada")} programadas · {conteo("borrador")} por revisar · {conteo("falta_material")} sin video
+        </p>
+      )}
+      {huecos === null ? (
+        <p>Cargando…</p>
+      ) : huecos.length === 0 ? (
+        <p style={{ color: C.tenue }}>Esta semana todavía no tiene plan. Dale "Armar plan".</p>
+      ) : (
+        porDia.map(([dia, hs]) => (
+          <div key={dia} style={{ marginTop: 10 }}>
+            <b style={{ fontSize: 13, textTransform: "capitalize" }}>{dia}</b>
+            <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", marginTop: 4 }}>
+              <tbody>
+                {hs.map((h) => {
+                  const [txt, col] = ESTADO_HUECO[h.estado] || [h.estado, C.tenue]
+                  return (
+                    <tr key={h.id} style={{ borderTop: `1px solid ${C.borde}` }}>
+                      <td style={{ padding: 4, width: 50 }}>{new Date(h.fecha).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</td>
+                      <td style={{ padding: 4, width: 110 }}><b>{h.red}</b>{h.mercado !== "mx" ? ` · ${h.mercado.toUpperCase()}` : ""}</td>
+                      <td style={{ padding: 4, width: 70 }}>{h.formato}</td>
+                      <td style={{ padding: 4, width: 90, color: C.tenue }}>{NOMBRE_PUBLICO[h.publico] || h.publico}</td>
+                      <td style={{ padding: 4 }}>{h.pilar}</td>
+                      <td style={{ padding: 4, width: 140, color: col, fontWeight: 700 }}>
+                        {h.post_id ? (
+                          <button type="button" onClick={() => irA(h.estado === "programada" ? "calendario" : "pendientes")} style={{ background: "none", border: 0, color: col, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: 12 }}>{txt} →</button>
+                        ) : txt}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ))
+      )}
+    </section>
+  )
+}
+
+function Estrategia({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
+  const [e, setE] = useState<Estrat | null>(null)
+  const [mercados, setMercados] = useState<Record<string, number>>({})
+  const [guias, setGuias] = useState<Record<string, { frecuencia: number; horas: string }>>({})
+  const [pilares, setPilares] = useState<Record<string, string>>({})
+  const [nota, setNota] = useState("")
+  const aplicar = (d: Estrat) => {
+    setE(d)
+    setMercados(Object.fromEntries(d.mercados.map((m) => [m.clave, m.pct])))
+    setGuias(Object.fromEntries(d.guias.map((g) => [g.red, { frecuencia: g.frecuencia, horas: g.horas.join(", ") }])))
+    setPilares(Object.fromEntries(d.publicos.map((p) => [p.clave, p.pilares.join("\n")])))
+  }
+  useEffect(() => {
+    api<Estrat>("/estrategia").then(aplicar).catch((er) => setNota((er as Error).message))
+  }, [])
+  const guardar = async () => {
+    try {
+      const d = await api<Estrat>("/estrategia", {
+        mercados,
+        guias: Object.fromEntries(Object.entries(guias).map(([red, g]) => [red, { frecuencia: g.frecuencia, horas: g.horas.split(/[,\s]+/).filter(Boolean).map(Number) }])),
+        pilares: Object.fromEntries(Object.entries(pilares).map(([k, v]) => [k, v.split("\n")])),
+      })
+      aplicar(d)
+      setNota("Guardado. Se aplica al próximo plan.")
+    } catch (er) {
+      setNota((er as Error).message)
+    }
+  }
+  if (!e) return <p>{nota || "Cargando…"}</p>
+  const th: CSSProperties = { textAlign: "left", padding: 6, fontSize: 12, color: C.tenue }
+  const td: CSSProperties = { padding: 6, borderTop: `1px solid ${C.borde}`, fontSize: 12, verticalAlign: "top" }
+  return (
+    <div>
+      <Plan alCambiar={alCambiar} irA={irA} />
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Mercados</h3>
+        <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
+          Reparto del esfuerzo (0 = apagado). Cada mercado publica a su hora local y en su idioma. Hoy las cuentas conectadas son las de México: lo de otros mercados queda para copiar y pegar hasta abrir sus cuentas.
+        </p>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            {e.mercados.map((m) => (
+              <tr key={m.clave}>
+                <td style={td}><b>{m.nombre}</b><div style={{ color: C.tenue }}>{m.nota}</div></td>
+                <td style={{ ...td, width: 90 }}>
+                  <input type="number" min={0} max={100} style={{ ...campo, width: 70, padding: 4 }} value={mercados[m.clave] ?? 0} onChange={(ev) => setMercados({ ...mercados, [m.clave]: Number(ev.target.value) })} /> %
+                </td>
+                <td style={{ ...td, color: C.tenue }}>{m.redes.join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Guía por red (lo que premia cada algoritmo)</h3>
+        <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>Punto de partida basado en estudios; ajusta la frecuencia y las horas con tus resultados. Las redes cambian sus algoritmos: esta guía se revisa cada mes.</p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+            <thead>
+              <tr>
+                <th style={th}>Red</th>
+                <th style={th}>Qué premia</th>
+                <th style={th}>Formatos</th>
+                <th style={th}>Liga / hashtags</th>
+                <th style={th}>Por semana</th>
+                <th style={th}>Horas (local)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {e.guias.map((g) => (
+                <tr key={g.red}>
+                  <td style={td}><b>{g.nombre}</b>{!g.auto && <div style={{ color: C.tenue }}>✋ a mano</div>}</td>
+                  <td style={{ ...td, maxWidth: 280 }}>{g.claves}</td>
+                  <td style={td}>{[...new Set(g.formatos)].join(", ")}<div style={{ color: C.tenue }}>{g.dias.map((d) => DIAS[d]).join(" ")}</div></td>
+                  <td style={td}>{g.liga === "perfil" ? "Liga en el perfil" : g.liga === "primer_comentario" ? "Liga en 1er comentario" : "Liga en el texto"}<div style={{ color: C.tenue }}>#{g.hashtags[0]}–{g.hashtags[1]}</div></td>
+                  <td style={td}>
+                    <input type="number" min={0} max={21} style={{ ...campo, width: 60, padding: 4 }} value={guias[g.red]?.frecuencia ?? 0} onChange={(ev) => setGuias({ ...guias, [g.red]: { ...guias[g.red], frecuencia: Number(ev.target.value) } })} />
+                  </td>
+                  <td style={td}>
+                    <input style={{ ...campo, width: 90, padding: 4 }} value={guias[g.red]?.horas ?? ""} onChange={(ev) => setGuias({ ...guias, [g.red]: { ...guias[g.red], horas: ev.target.value } })} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Públicos y temas</h3>
+        <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>Un tema por línea. El plan los rota en cada red según a quién le habla.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+          {e.publicos.map((p) => (
+            <label key={p.clave} style={{ fontSize: 13 }}>
+              <b>{p.nombre}</b>
+              <span style={{ display: "block", color: C.tenue, fontSize: 12 }}>Meta: {p.objetivo} · {p.destino}</span>
+              <textarea style={{ ...campo, minHeight: 120, fontSize: 12, marginTop: 4 }} value={pilares[p.clave] || ""} onChange={(ev) => setPilares({ ...pilares, [p.clave]: ev.target.value })} />
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button type="button" style={boton("primario")} onClick={() => void guardar()}>Guardar estrategia</button>
+        {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
+      </div>
+    </div>
+  )
+}
+
 const VISTAS = [
+  ["estrategia", "Estrategia"],
   ["pendientes", "Pendientes"],
   ["videos", "Videos de talleres"],
   ["calendario", "Calendario"],
@@ -614,6 +916,8 @@ export default function SocialHubPage() {
       </div>
       {!datos ? (
         !error && <p>Cargando…</p>
+      ) : vista === "estrategia" ? (
+        <Estrategia alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "videos" ? (
         <VideosTalleres redes={datos.redes} config={datos.config} alCambiar={() => void cargar()} />
       ) : vista === "resultados" ? (
@@ -622,7 +926,7 @@ export default function SocialHubPage() {
         <Configuracion datos={datos} alGuardar={() => void cargar()} />
       ) : (
         <>
-          {vista === "pendientes" && <Nueva redes={datos.redes} config={datos.config} alCrear={() => void cargar()} />}
+          {vista === "pendientes" && <Nueva redes={datos.redes} config={datos.config} mercados={datos.mercados} alCrear={() => void cargar()} />}
           {vista === "calendario" ? (
             calendario.length === 0 ? (
               <p style={{ color: C.tenue }}>No hay publicaciones programadas.</p>

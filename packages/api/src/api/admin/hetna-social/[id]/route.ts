@@ -9,7 +9,7 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { REDES, T_POST, adaptar, asegurarSocial, dentroDeHorario, leerConfig, ligaPara, publicar, urlCorta, vistaPublicacion } from "../../../../lib/social-hub"
+import { REDES, T_POST, adaptar, zonaDe, asegurarSocial, dentroDeHorario, leerConfig, ligaPara, publicar, urlCorta, vistaPublicacion } from "../../../../lib/social-hub"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -44,13 +44,13 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     case "adaptar": {
       const redes = redesValidas(b.redes)
       const base = String(b.texto_base || p.texto_base)
-      const { textos, ia } = await adaptar(base.includes("{{liga}}") ? base : `${base}\n\n{{liga}}`, redes, logger)
+      const { textos, ia } = await adaptar(base.includes("{{liga}}") ? base : `${base}\n\n{{liga}}`, redes, logger, p.mercado || "mx")
       await knex(T_POST).where({ id: p.id }).update({ texto_base: base, textos: JSON.stringify(textos), redes: JSON.stringify(redes), adaptada_ia: ia, updated_at: knex.fn.now() })
       break
     }
     case "programar": {
       const cfg = await leerConfig(knex)
-      const cuando = b.programada_para ? new Date(b.programada_para) : dentroDeHorario(new Date(Date.now() + 2 * 60_000), cfg.horario)
+      const cuando = b.programada_para ? new Date(b.programada_para) : dentroDeHorario(new Date(Date.now() + 2 * 60_000), cfg.horario, zonaDe(p.mercado))
       if (Number.isNaN(cuando.getTime())) return res.status(400).json({ message: "Fecha no válida." })
       await knex(T_POST).where({ id: p.id }).whereNotIn("estado", ["publicando"]).update({ estado: "programada", programada_para: cuando, updated_at: knex.fn.now() })
       break

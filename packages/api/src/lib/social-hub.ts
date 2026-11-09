@@ -28,7 +28,7 @@ export const T_LIGA = "hetna_social_liga"
 export const T_EVENTO_S = "hetna_social_evento"
 export const T_CONFIG_S = "hetna_social_config"
 
-export type Red = "facebook" | "instagram" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest"
+export type Red = "facebook" | "instagram" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
   instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 5-10 hashtags en español al final (#CNC #Mexico #CorteLaser...). La liga no es clicable: di 'liga en la bio'" },
@@ -39,6 +39,9 @@ export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; im
   whatsapp: { nombre: "WhatsApp (compartir)", auto: false, max: 700, estilo: "muy breve, para reenviar a contactos o estados" },
   reddit: { nombre: "Reddit", auto: false, max: 1500, estilo: "técnico y honesto, sin tono de anuncio; aporta valor primero" },
   pinterest: { nombre: "Pinterest", auto: false, max: 450, imagen: "requerida", estilo: "descriptivo con palabras clave" },
+  // Video: por ahora se suben a mano (servicio aprobado en la etapa 5B)
+  tiktok: { nombre: "TikTok", auto: false, max: 2200, imagen: "requerida", estilo: "muy corto y directo; palabras clave del tema dichas en el texto (TikTok funciona como buscador); 3 a 5 hashtags; la liga va en el perfil" },
+  youtube: { nombre: "YouTube (Shorts)", auto: false, max: 3000, imagen: "requerida", estilo: "título con la palabra clave al inicio; descripción con la liga en la primera línea; 2 o 3 hashtags" },
 }
 export const ORIGENES = ["manual", "licitacion", "taller", "producto", "foro", "taller_video"] as const
 export type Origen = (typeof ORIGENES)[number]
@@ -80,6 +83,8 @@ export async function asegurarSocial(knex: any) {
     t.timestamps(true, true)
     t.unique(["origen", "origen_id"])
   })
+  await knex.raw(`alter table ?? add column if not exists mercado text`, [T_POST]).catch(() => {})
+  await knex.raw(`alter table ?? add column if not exists notas text`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -142,13 +147,27 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
 // ---------------------------------------------------------------------
 
 const ZONA = "America/Mexico_City"
-const horaMx = (d: Date) => Number(new Intl.DateTimeFormat("en-US", { timeZone: ZONA, hour: "numeric", hourCycle: "h23" }).format(d))
+export const horaEn = (d: Date, zona = ZONA) => Number(new Intl.DateTimeFormat("en-US", { timeZone: zona, hour: "numeric", hourCycle: "h23" }).format(d))
 
-/** Si `d` cae fuera del horario, la recorre a la siguiente apertura (+15 min). */
-export function dentroDeHorario(d: Date, h: { desde: number; hasta: number }): Date {
+// Mercados (Marketing HETNA): zona horaria, idioma y cómo escribirle a cada país.
+// Las cuentas conectadas hoy son las de México; en otros mercados lo que se
+// genera queda para copiar y pegar hasta que tengan sus propias cuentas.
+export const MERCADOS: Record<string, { nombre: string; zona: string; idioma: string; nota: string }> = {
+  mx: { nombre: "México", zona: "America/Mexico_City", idioma: "es-MX", nota: "español de México, pesos (MXN), milímetros" },
+  us: { nombre: "Estados Unidos", zona: "America/Chicago", idioma: "en-US", nota: "inglés de EE.UU., dólares (USD), pulgadas; enfoque en talleres mexicanos verificados (nearshoring, T-MEC)" },
+  co: { nombre: "Colombia", zona: "America/Bogota", idioma: "es-CO", nota: "español de Colombia, pesos colombianos (COP), milímetros" },
+  cl: { nombre: "Chile", zona: "America/Santiago", idioma: "es-CL", nota: "español de Chile, pesos chilenos (CLP), milímetros" },
+  pe: { nombre: "Perú", zona: "America/Lima", idioma: "es-PE", nota: "español de Perú, soles (PEN), milímetros" },
+  ar: { nombre: "Argentina", zona: "America/Argentina/Buenos_Aires", idioma: "es-AR", nota: "español rioplatense (voseo), pesos argentinos (ARS), milímetros" },
+  br: { nombre: "Brasil", zona: "America/Sao_Paulo", idioma: "pt-BR", nota: "portugués de Brasil, reales (BRL), milímetros" },
+}
+export const zonaDe = (mercado?: string | null) => MERCADOS[mercado || "mx"]?.zona || ZONA
+
+/** Si `d` cae fuera del horario (en la zona del mercado), la recorre a la siguiente apertura (+15 min). */
+export function dentroDeHorario(d: Date, h: { desde: number; hasta: number }, zona = ZONA): Date {
   let x = new Date(d)
   for (let i = 0; i < 48; i++) {
-    const hh = horaMx(x)
+    const hh = horaEn(x, zona)
     if (hh >= h.desde && hh < h.hasta) return x
     // Avanza a la siguiente hora en punto y vuelve a probar
     x = new Date(Math.floor(x.getTime() / 3_600_000 + 1) * 3_600_000 + 15 * 60_000)
@@ -189,7 +208,7 @@ const MODELO = "claude-opus-5-5"
 export const iaSocial = () => !!process.env.ANTHROPIC_API_KEY && (process.env.SOCIAL_IA || "").toLowerCase() !== "off"
 
 /** Pide a Claude un texto por red. Devuelve null si no hay IA o falla. */
-export async function adaptarConIa(base: string, redes: Red[], logger?: any): Promise<Record<string, string> | null> {
+export async function adaptarConIa(base: string, redes: Red[], logger?: any, mercado = "mx"): Promise<Record<string, string> | null> {
   if (!iaSocial() || !redes.length) return null
   try {
     ia ??= new Anthropic()
@@ -202,7 +221,7 @@ export async function adaptarConIa(base: string, redes: Red[], logger?: any): Pr
       fallbacks: "default",
       system:
         "Eres el community manager de HETNA CNC, marketplace mexicano de fabricación CNC (talleres, clientes industriales y proveedores). " +
-        "Adapta la publicación a cada red en español de México. Reglas: usa SOLO los datos del texto original; no inventes precios, capacidades, " +
+        `Adapta la publicación a cada red para el mercado ${MERCADOS[mercado]?.nombre || "México"}: escribe en ${MERCADOS[mercado]?.nota || "español de México"}. Si el texto original está en otro idioma, tradúcelo y adáptalo (no traduzcas literal). Reglas: usa SOLO los datos del texto original; no inventes precios, capacidades, ` +
         "clientes, cifras ni promociones. Conserva exactamente la marca {{liga}} donde va la liga (en Instagram reemplázala por 'liga en la bio'). " +
         "Nunca incluyas teléfonos, correos ni nombres de clientes.",
       messages: [{ role: "user", content: `Texto original:\n${base}\n\nRedes:\n${guia}` }],
@@ -219,8 +238,8 @@ export async function adaptarConIa(base: string, redes: Red[], logger?: any): Pr
   }
 }
 
-export async function adaptar(base: string, redes: Red[], logger?: any) {
-  const conIa = await adaptarConIa(base, redes, logger)
+export async function adaptar(base: string, redes: Red[], logger?: any, mercado = "mx") {
+  const conIa = await adaptarConIa(base, redes, logger, mercado)
   const textos: Record<string, string> = {}
   for (const r of redes) textos[r] = conIa?.[r] || adaptarSinIa(base, r)
   return { textos, ia: !!conIa }
@@ -296,6 +315,9 @@ type NuevaPub = {
   redes?: Red[]
   programada_para?: Date | string | null
   estado?: "borrador" | "programada"
+  mercado?: string
+  textos?: Record<string, string> // textos ya escritos por red (no se vuelve a llamar a la IA)
+  notas?: string // p. ej. el guion del video (no se publica)
 }
 
 /** Crea una publicación con sus textos por red (IA o plantillas). */
@@ -304,13 +326,17 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
   const cfg = await leerConfig(knex)
   const redes = (d.redes?.length ? d.redes : cfg.redes).filter((r) => r in REDES) as Red[]
   const base = d.texto_base?.trim() || textoBase(d.origen, d)
-  const { textos, ia: conIa } = await adaptar(base.includes(LIGA_MARCA) ? base : `${base}\n\n${LIGA_MARCA}`, redes, logger)
+  const mercado = d.mercado && MERCADOS[d.mercado] ? d.mercado : "mx"
+  const conLiga = base.includes(LIGA_MARCA) ? base : `${base}\n\n${LIGA_MARCA}`
+  const { textos, ia: conIa } = d.textos
+    ? { textos: Object.fromEntries(redes.map((r) => [r, d.textos![r] || adaptarSinIa(conLiga, r)])), ia: true }
+    : await adaptar(conLiga, redes, logger, mercado)
   const id = nuevoId("spost")
   const prog = d.programada_para ? new Date(d.programada_para) : null
   await knex(T_POST).insert({
     id, origen: d.origen, origen_id: d.origen_id || null, titulo: corta(d.titulo, 160), texto_base: base,
     textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 4)),
-    url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa,
+    url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
   })
   return id
 }
@@ -375,7 +401,8 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
     const liga = urlCorta(codigo)
     const texto = String(p.textos?.[red] || adaptarSinIa(p.texto_base, red)).replace(LIGA_MARCA, liga)
-    if (!REDES[red]?.auto) {
+    // Las cuentas conectadas son las de México: en otros mercados se copia y pega
+    if (!REDES[red]?.auto || (p.mercado && p.mercado !== "mx")) {
       resultado[red] = { ok: true, manual: true, en: new Date().toISOString() }
       continue
     }
@@ -387,7 +414,7 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
   }
-  const autos = (p.redes as Red[]).filter((r) => REDES[r]?.auto)
+  const autos = (p.redes as Red[]).filter((r) => REDES[r]?.auto && (!p.mercado || p.mercado === "mx"))
   const oks = autos.filter((r) => resultado[r]?.ok).length
   const estado = !autos.length || oks === autos.length ? "publicada" : oks ? "parcial" : "error"
   await knex(T_POST).where({ id: p.id }).update({ estado, resultado: JSON.stringify(resultado), publicada_en: oks || !autos.length ? knex.fn.now() : null, updated_at: knex.fn.now() })
@@ -398,13 +425,22 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
 export async function publicarPendientes(knex: any, logger?: any) {
   await asegurarSocial(knex)
   const cfg = await leerConfig(knex)
-  const hh = horaMx(new Date())
-  if (hh < cfg.horario.desde || hh >= cfg.horario.hasta) return 0
   // Las que se quedaron "publicando" más de 30 min (reinicio del servidor) vuelven a la cola
   await knex(T_POST).where({ estado: "publicando" }).where("updated_at", "<", knex.raw("now() - interval '30 minutes'")).update({ estado: "programada" })
-  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(5).select("id")
-  for (const { id } of listas) await publicar(knex, id, logger)
-  return listas.length
+  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(10).select("id", "mercado")
+  let n = 0
+  for (const { id, mercado } of listas) {
+    // Cada mercado publica dentro de su propio horario
+    const zona = zonaDe(mercado)
+    const hh = horaEn(new Date(), zona)
+    if (hh < cfg.horario.desde || hh >= cfg.horario.hasta) {
+      await knex(T_POST).where({ id }).update({ programada_para: dentroDeHorario(new Date(), cfg.horario, zona) })
+      continue
+    }
+    await publicar(knex, id, logger)
+    if (++n >= 5) break
+  }
+  return n
 }
 
 /** Vista de una publicación para el panel (con textos ya con su liga). */
