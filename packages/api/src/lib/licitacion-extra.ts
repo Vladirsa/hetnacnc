@@ -218,63 +218,7 @@ export async function resenaDe(knex: any, solicitudId: string) {
   return knex(T_RESENA).where({ solicitud_id: solicitudId }).first()
 }
 
-export async function guardarResena(knex: any, s: any, b: Record<string, unknown>, logger?: any) {
-  await asegurarExtra(knex)
-  if (!s.propuesta_elegida) throw Object.assign(new Error("Esta solicitud no tiene taller elegido."), { status: 409 })
-  if (!(s.pago_estado === "pagado" || s.pago_estado === "anticipo" || s.estado === "pagada" || s.estado === "cerrada"))
-    throw Object.assign(new Error("Sólo se califican trabajos pagados en HETNA."), { status: 409 })
-  if (!["entregada", "cerrada"].includes(String(s.etapa || "")))
-    throw Object.assign(new Error("Podrás calificar al taller cuando te entregue tu pedido."), { status: 409 })
-  const calidad = nota(b.calidad)
-  const tiempo = nota(b.tiempo)
-  const trato = nota(b.trato)
-  if (!calidad || !tiempo || !trato) throw Object.assign(new Error("Califica calidad, tiempo y trato de 1 a 5 estrellas."), { status: 400 })
-  const comentario = ocultarContacto(String(b.comentario || "").trim()).slice(0, 1000) || null
-  const p = await knex(T_PROPUESTA).where({ id: s.propuesta_elegida }).first("seller_id")
-  if (!p) throw Object.assign(new Error("Propuesta no encontrada."), { status: 404 })
-  const promedio = Math.round(((calidad + tiempo + trato) / 3) * 100) / 100
-  const autor = String(s.contacto?.nombre || "").trim().split(/\s+/)[0]?.slice(0, 40) || null
-  const previa = await knex(T_RESENA).where({ solicitud_id: s.id }).first("id")
-  const datos = { seller_id: p.seller_id, calidad, tiempo, trato, promedio, comentario, autor }
-  if (previa) await knex(T_RESENA).where({ id: previa.id }).update(datos)
-  else await knex(T_RESENA).insert({ id: nuevoId("res"), solicitud_id: s.id, ...datos })
-  await recalcularCalificacion(knex, p.seller_id)
-
-  if (!previa) {
-    const t = await knex("seller").where({ id: p.seller_id }).first("email")
-    if (t?.email) {
-      const r = await sendEmail({
-        to: t.email,
-        subject: `[${folioTexto(s.folio)}] Te calificaron: ${"★".repeat(Math.round(promedio))}`,
-        html: marco(
-          "Tu cliente te calificó",
-          `<table style="border-collapse:collapse;font-size:14px">` +
-            fila("Calidad", `${calidad} de 5`) + fila("Tiempo", `${tiempo} de 5`) + fila("Trato", `${trato} de 5`) +
-            (comentario ? fila("Comentario", comentario) : "") +
-            `</table><p style="color:#40403A">La calificación sale en tu perfil y en tus próximas propuestas.</p>` +
-            boton("Ver mi panel", `${VENDOR_URL}/solicitudes`)
-        ),
-      })
-      if (!r.sent) logger?.info?.(`[licitacion] aviso de reseña no enviado: ${r.reason}`)
-    }
-  }
-  return { promedio }
-}
-
-/** Promedio y número de reseñas del taller → seller.metadata.perfil. */
-export async function recalcularCalificacion(knex: any, sellerId: string) {
-  await asegurarExtra(knex)
-  const r = await knex(T_RESENA).where({ seller_id: sellerId, visible: true }).avg({ prom: "promedio" }).count({ n: "*" }).first()
-  const n = Number(r?.n || 0)
-  const prom = n ? Math.round(Number(r.prom) * 10) / 10 : null
-  await knex.raw(
-    `update seller set metadata = coalesce(metadata, '{}'::jsonb) || jsonb_build_object(
-       'perfil', coalesce(metadata->'perfil', '{}'::jsonb) || jsonb_build_object('calificacion', ?::numeric, 'resenas', ?::int, 'resenas_hetna', true)
-     ) where id = ?`,
-    [prom, n, sellerId]
-  )
-  return { calificacion: prom, resenas: n }
-}
+// guardarResena y recalcularCalificacion se movieron a lib/trust.ts (Fase 4: 7 indicadores y publicación simultánea).
 
 /** Reseñas públicas de un taller (para su perfil). */
 export async function resenasPublicas(knex: any, sellerId: string, limite = 20) {
@@ -282,13 +226,20 @@ export async function resenasPublicas(knex: any, sellerId: string, limite = 20) 
   const filas = await knex(`${T_RESENA} as r`)
     .join(`${T_SOLICITUD} as s`, "s.id", "r.solicitud_id")
     .where({ "r.seller_id": sellerId, "r.visible": true })
+    // Fase 4: las simultáneas sólo cuando ya se publicaron (ambos evaluaron o pasaron 14 días)
+    .andWhere((w: any) => w.whereNot("r.simultanea", true).orWhereNull("r.simultanea").orWhereNotNull("r.publicada_en"))
     .orderBy("r.created_at", "desc")
     .limit(limite)
-    .select("r.calidad", "r.tiempo", "r.trato", "r.promedio", "r.comentario", "r.autor", "r.respuesta_taller", "r.created_at", "s.trabajo")
+    .select("r.calidad", "r.tiempo", "r.trato", "r.comunicacion", "r.precio", "r.capacidad", "r.profesionalismo", "r.posventa", "r.promedio", "r.comentario", "r.autor", "r.respuesta_taller", "r.created_at", "s.trabajo")
   return filas.map((x: any) => ({
     calidad: x.calidad,
     tiempo: x.tiempo,
     trato: x.trato,
+    comunicacion: x.comunicacion ?? null,
+    precio: x.precio ?? null,
+    capacidad: x.capacidad ?? null,
+    profesionalismo: x.profesionalismo ?? null,
+    posventa: x.posventa ?? null,
     promedio: Number(x.promedio),
     comentario: x.comentario,
     autor: x.autor,

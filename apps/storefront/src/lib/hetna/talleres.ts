@@ -51,6 +51,11 @@ export type Perfil = {
   anos?: number
   calificacion?: number
   resenas?: number
+  // Fase 4 (Trust & Ranking): promedios por indicador y dimensiones separadas
+  indicadores?: Record<string, number | null>
+  reputacion_comercial?: number
+  capacidad_tecnica?: number
+  historial_suficiente?: boolean
   galeria: string[]
 }
 
@@ -128,6 +133,10 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     anos: num(p.anos),
     calificacion: num(p.calificacion),
     resenas: num(p.resenas),
+    indicadores: p.indicadores && typeof p.indicadores === "object" ? (p.indicadores as Record<string, number | null>) : undefined,
+    reputacion_comercial: num(p.reputacion_comercial),
+    capacidad_tecnica: num(p.capacidad_tecnica),
+    historial_suficiente: p.historial_suficiente === true,
     galeria: lista(p.galeria).filter((u) => /^https?:\/\//.test(u)).slice(0, 12),
   }
 }

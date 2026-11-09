@@ -140,7 +140,13 @@ export type VistaSolicitud = {
   // Licitaciones 2.0
   cobro?: CobroSolicitud | null
   preguntas?: PreguntaSolicitud[]
-  resena?: { calidad: number; tiempo: number; trato: number; comentario: string } | null
+  resena?: ({ calidad: number; tiempo: number; trato: number; comentario: string } & Partial<Record<"comunicacion" | "precio" | "capacidad" | "profesionalismo" | "posventa", number | null>>) | null
+  // Fase 4 (Trust & Ranking)
+  evaluaciones?: {
+    recibida: ({ id: string; promedio: number; comentario: string | null; respuesta: string | null; fecha: string } & Record<string, unknown>) | null
+    recibida_pendiente: boolean
+    dias_publicacion: number
+  } | null
   puede_resenar?: boolean
   // Licitaciones 3.0 (Fase 1)
   modalidad?: "publica" | "privada" | "restringida"
@@ -236,7 +242,7 @@ export async function responderPregunta(token: string, preguntaId: string, respu
 
 export async function enviarResena(
   token: string,
-  datos: { calidad: number; tiempo: number; trato: number; comentario: string }
+  datos: Record<string, number | string>
 ): Promise<{ ok: true } | { ok: false; mensaje: string }> {
   const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/resena`, datos, "No se pudo guardar tu calificación.")
   return r.ok ? { ok: true } : r
@@ -300,4 +306,41 @@ export async function miMembresia(): Promise<{ miembro: boolean; sesion: boolean
   } catch {
     return { miembro: false, sesion: true }
   }
+}
+
+// ---- Licitaciones 3.0 (Fase 4): conversación privada y SafeDeal ----
+
+const rutaSol = (token: string, resto: string) => `/store/solicitudes-taller/${encodeURIComponent(token)}/${resto}`
+
+async function leer(ruta: string): Promise<any | null> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}${ruta}`, { headers: cabeceras(), cache: "no-store" })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+export type MensajeSol = { id: string; autor: string; texto: string; fecha: string; mio: boolean }
+
+export async function verMensajes(token: string): Promise<MensajeSol[]> {
+  return ((await leer(rutaSol(token, "mensajes")))?.mensajes || []) as MensajeSol[]
+}
+
+export async function mandarMensaje(token: string, texto: string) {
+  return postar(rutaSol(token, "mensajes"), { texto }, "No se pudo enviar tu mensaje.")
+}
+
+export async function verAcuerdo(token: string): Promise<any | null> {
+  return leer(rutaSol(token, "acuerdo"))
+}
+
+export async function accionAcuerdo(token: string, cuerpo: Record<string, unknown>) {
+  return postar(rutaSol(token, "acuerdo"), cuerpo, "No se pudo completar la acción.")
+}
+
+/** El cliente responde o reclama la evaluación que el taller hizo de él (Fase 4). */
+export async function accionEvaluacion(token: string, accion: "responder" | "reclamar", texto: string) {
+  return postar(rutaSol(token, "evaluacion"), { accion, texto }, "No se pudo guardar.")
 }

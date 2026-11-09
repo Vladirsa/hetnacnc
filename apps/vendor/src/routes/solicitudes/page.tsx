@@ -211,6 +211,278 @@ function FormNoPuedo({ sol, alGuardar, alCancelar }) {
 
 // Pedido ganado y pagado: el taller cuenta avances al cliente y marca la
 // entrega con paquetería y guía. El cliente lo ve en su liga y le llega correo.
+
+// Licitaciones 3.0 — Fase 4: conversación privada y acuerdo HETNA SafeDeal
+const fechaCorta = (v) => (v ? new Date(v).toLocaleString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "")
+
+function Conversacion({ sol }) {
+  const [lista, setLista] = useState([])
+  const [texto, setTexto] = useState("")
+  const [error, setError] = useState("")
+  const cargar = () => fetch(`/vendor/hetna-solicitudes/${sol.id}/mensajes`, { credentials: "include" }).then((r) => r.json()).then((d) => setLista(d.mensajes || [])).catch(() => {})
+  useEffect(() => {
+    cargar()
+    const t = setInterval(() => document.visibilityState === "visible" && cargar(), 20000)
+    return () => clearInterval(t)
+  }, [sol.id])
+  const enviar = async () => {
+    if (!texto.trim()) return
+    setError("")
+    const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/mensajes`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ texto }) })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) return setError(d.message || "No se pudo enviar.")
+    setTexto("")
+    cargar()
+  }
+  return (
+    <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
+      <b style={{ fontSize: 14 }}>💬 Conversación con el cliente</b>
+      <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>Mientras el cliente no comparta su contacto o no firmen el acuerdo, correos, teléfonos y ligas se ocultan.</p>
+      <div style={{ maxHeight: 260, overflowY: "auto", background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 8, display: "grid", gap: 6 }}>
+        {lista.length === 0 && <span style={{ fontSize: 13, color: "#8A867B" }}>Sin mensajes todavía. Confirma con el cliente los detalles del trabajo.</span>}
+        {lista.map((m) => (
+          <div key={m.id} style={{ justifySelf: m.mio ? "end" : "start", maxWidth: "85%", background: m.mio ? "#142033" : "#fff", color: m.mio ? "#fff" : "#142033", border: m.mio ? 0 : "1px solid #E7E4DC", borderRadius: 12, padding: "6px 10px", fontSize: 13 }}>
+            <div style={{ whiteSpace: "pre-wrap" }}>{m.texto}</div>
+            <div style={{ fontSize: 11, opacity: 0.6 }}>{fechaCorta(m.fecha)}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <textarea style={{ ...S.area, minHeight: 44 }} value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)} placeholder="Escribe tu mensaje…" />
+        <button type="button" style={S.btn} onClick={enviar} disabled={!texto.trim()}>Enviar</button>
+      </div>
+      {error && <p style={{ color: "#B3261E", fontSize: 13 }}>{error}</p>}
+    </div>
+  )
+}
+
+function AcuerdoSafeDeal({ sol }) {
+  const [a, setA] = useState(null)
+  const [cond, setCond] = useState({})
+  const [editando, setEditando] = useState(false)
+  const [nota, setNota] = useState(null)
+  const [ocupado, setOcupado] = useState(false)
+  const [firma, setFirma] = useState({ nombre: "", representacion: "", codigo: "", acepto: false })
+  const [enviado, setEnviado] = useState("")
+  const base = `/vendor/hetna-solicitudes/${sol.id}/acuerdo`
+  const cargar = async () => {
+    const d = await fetch(base, { credentials: "include" }).then((r) => r.json()).catch(() => null)
+    setA(d)
+    if (d?.contrato) setCond(d.contrato.condiciones || {})
+    else if (d?.sugerencia) setCond(d.sugerencia)
+  }
+  useEffect(() => { cargar() }, [sol.id])
+  if (!a?.disponible) return null
+  const k = a.contrato
+  const firmado = k?.estado === "firmado"
+  const hacer = async (cuerpo, ok) => {
+    setOcupado(true)
+    setNota(null)
+    const r = await fetch(base, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) })
+    const d = await r.json().catch(() => ({}))
+    setOcupado(false)
+    if (!r.ok) {
+      setNota({ ok: false, t: d.message || "No se pudo." })
+      cargar()
+      return null
+    }
+    if (ok) setNota({ ok: true, t: ok })
+    await cargar()
+    return d
+  }
+  const bajar = async (tipo, version) => {
+    const r = await fetch(`${base}/documento?tipo=${tipo}${version ? `&version=${version}` : ""}`, { credentials: "include" })
+    if (!r.ok) return setNota({ ok: false, t: "No se pudo descargar." })
+    const url = URL.createObjectURL(await r.blob())
+    const el = document.createElement("a")
+    el.href = url
+    el.download = `${tipo}-${sol.folio || sol.id}-v${version || k?.version}.pdf`
+    el.click()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+  const campos = () => (
+    <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+      {a.apartados.map((ap, i) => (
+        <label key={ap.clave} style={{ fontSize: 13 }}>
+          <b>{i + 1}. {ap.titulo}</b>
+          <textarea style={S.area} value={cond[ap.clave] || ""} maxLength={3000} onChange={(e) => setCond({ ...cond, [ap.clave]: e.target.value })} />
+        </label>
+      ))}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" style={S.btn} disabled={ocupado} onClick={async () => { if (await hacer({ accion: "guardar", condiciones: cond }, "Guardado. El cliente debe revisar y aprobar.")) setEditando(false) }}>{k ? "Guardar cambios" : "Proponer al cliente"}</button>
+        <button type="button" style={S.btn2} onClick={() => { setEditando(false); setCond(k?.condiciones || a.sugerencia || {}) }}>Cancelar</button>
+      </div>
+    </div>
+  )
+  return (
+    <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b style={{ fontSize: 14 }}>🤝 Acuerdo HETNA SafeDeal</b>
+        <span style={S.tag("#F3F1EA", "#6B675C")}>Opcional</span>
+        {firmado && <span style={S.tag("#E6F4EA", "#1E7B3A")}>Firmado por ambos</span>}
+      </div>
+      {!firmado && (
+        <p style={{ fontSize: 13, background: "#FFF8EE", border: "1px solid #F2C98F", borderRadius: 8, padding: "8px 10px", margin: "8px 0 0" }}>
+          <b>⚠️ Recomendado para el bienestar de los dos.</b> Deja por escrito qué entregas, cuándo, a qué precio y cómo te pagan. Te protege de cambios de alcance y pagos atrasados, y al cliente le da certeza sobre calidad y confidencialidad.
+        </p>
+      )}
+      {a.leyenda && <p style={{ fontSize: 12, color: "#C2560A", fontWeight: 600, margin: "6px 0 0" }}>{a.leyenda}</p>}
+      {a.contactos_liberados && a.contacto_otro && (
+        <p style={{ fontSize: 13, background: "#EEF6F0", borderRadius: 8, padding: "8px 10px" }}>
+          <b>Contacto del cliente:</b> {[a.contacto_otro.nombre, a.contacto_otro.empresa, a.contacto_otro.email, a.contacto_otro.telefono && `Tel. ${a.contacto_otro.telefono}`, a.contacto_otro.whatsapp && `WhatsApp ${a.contacto_otro.whatsapp}`].filter(Boolean).join(" · ")}
+        </p>
+      )}
+      {!k && !editando && <button type="button" style={{ ...S.btn, marginTop: 8 }} onClick={() => setEditando(true)}>Preparar el acuerdo</button>}
+      {((!k && editando) || (k?.estado === "borrador" && editando)) && campos()}
+      {k?.estado === "borrador" && !editando && (
+        <div style={{ marginTop: 8, fontSize: 13 }}>
+          <p style={{ margin: 0 }}>Versión {k.version} · Cliente: {k.aprobo_cliente ? "✓ aprobó" : "pendiente"} · Taller: {k.aprobo_taller ? "✓ aprobó" : "pendiente"}</p>
+          <div style={{ background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 6 }}>
+            {a.apartados.map((ap, i) => (
+              <div key={ap.clave} style={{ marginBottom: 6 }}><b>{i + 1}. {ap.titulo}</b><div style={{ whiteSpace: "pre-wrap", color: "#40403A" }}>{k.condiciones?.[ap.clave] || "—"}</div></div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            {!k.yo_aprobe && <button type="button" style={S.btn} disabled={ocupado} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}>✓ Apruebo estas condiciones</button>}
+            <button type="button" style={S.btn2} onClick={() => setEditando(true)}>Proponer cambios</button>
+          </div>
+        </div>
+      )}
+      {k?.estado === "listo" && (
+        <div style={{ marginTop: 8, fontSize: 13, display: "grid", gap: 8 }}>
+          <p style={{ margin: 0 }}>Ambos aprobaron la versión {k.version}. <a href="#" style={{ color: "#C2560A" }} onClick={(e) => { e.preventDefault(); bajar("contrato") }}>Descarga y revisa el PDF</a>.</p>
+          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}>SHA-256: {k.sha256}</span>
+          {!k.yo_firme ? (
+            <div style={S.grid}>
+              <input style={S.input} placeholder="Tu nombre completo" value={firma.nombre} onChange={(e) => setFirma({ ...firma, nombre: e.target.value })} />
+              <input style={S.input} placeholder="Taller o empresa que representas" value={firma.representacion} onChange={(e) => setFirma({ ...firma, representacion: e.target.value })} />
+              <label style={{ gridColumn: "1 / -1" }}><input type="checkbox" checked={firma.acepto} onChange={(e) => setFirma({ ...firma, acepto: e.target.checked })} /> Leí el contrato (versión {k.version}) y acepto firmarlo electrónicamente.</label>
+              {!enviado ? (
+                <button type="button" style={S.btn} disabled={ocupado || !firma.acepto || firma.nombre.trim().length < 5} onClick={async () => { const d = await hacer({ accion: "codigo" }); if (d) setEnviado(d.correo || "tu correo") }}>Enviarme el código</button>
+              ) : (
+                <>
+                  <input style={S.input} inputMode="numeric" maxLength={6} placeholder={`Código enviado a ${enviado}`} value={firma.codigo} onChange={(e) => setFirma({ ...firma, codigo: e.target.value.replace(/\D/g, "") })} />
+                  <button type="button" style={S.btn} disabled={ocupado || firma.codigo.length !== 6} onClick={() => hacer({ accion: "firmar", ...firma, sha256: k.sha256 }, "¡Firmaste!")}>Firmar contrato</button>
+                </>
+              )}
+            </div>
+          ) : (
+            <b style={{ color: "#1E7B3A" }}>✓ Ya firmaste. Falta la firma del cliente.</b>
+          )}
+          <button type="button" style={{ ...S.btn2, justifySelf: "start" }} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada: haz tus cambios.")}>Cambiar condiciones (versión nueva)</button>
+        </div>
+      )}
+      {firmado && (
+        <div style={{ marginTop: 8, fontSize: 13, display: "grid", gap: 6 }}>
+          <span>Firmado el {fechaCorta(k.firmado_en)} por {k.firmas.map((f) => f.nombre).join(" y ")}. Nadie puede modificar esta versión.</span>
+          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}>SHA-256: {k.sha256}</span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" style={S.btn} onClick={() => bajar("contrato", k.version)}>Descargar contrato</button>
+            <button type="button" style={S.btn2} onClick={() => bajar("constancia", k.version)}>Constancia de firmas</button>
+            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada.")}>Modificar (versión nueva)</button>
+          </div>
+        </div>
+      )}
+      {nota && <p style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</p>}
+    </div>
+  )
+}
+
+
+// Licitaciones 3.0 — Fase 4: Trust & Ranking. El taller evalúa al cliente
+// (7 indicadores) y ve, ya publicada, la evaluación que el cliente le dio.
+function RepCliente({ rep }) {
+  if (!rep) return null
+  if (!rep.evaluaciones) return <span style={S.tag("#F3F1EA", "#6B675C")} title="Todavía no tiene evaluaciones de otros talleres">Cliente nuevo</span>
+  const buena = rep.promedio >= 4
+  return (
+    <span style={S.tag(buena ? "#E6F4EA" : "#FFF8EE", buena ? "#1E7B3A" : "#8A5A00")} title={rep.suficiente ? "Evaluado por talleres en trabajos pagados" : "Historial todavía insuficiente"}>
+      Cliente ★ {rep.promedio} · {rep.evaluaciones} {rep.evaluaciones === 1 ? "trabajo" : "trabajos"}{!rep.suficiente ? " (poco historial)" : ""}
+    </span>
+  )
+}
+
+function EvaluarCliente({ sol }) {
+  const [d, setD] = useState(null)
+  const [notas, setNotas] = useState({})
+  const [comentario, setComentario] = useState("")
+  const [editando, setEditando] = useState(false)
+  const [modo, setModo] = useState("")
+  const [texto, setTexto] = useState("")
+  const [nota, setNota] = useState(null)
+  const base = `/vendor/hetna-solicitudes/${sol.id}/evaluacion`
+  const cargar = () =>
+    fetch(base, { credentials: "include" }).then((r) => r.json()).then((x) => {
+      setD(x)
+      if (x?.dada) {
+        setNotas(Object.fromEntries((x.indicadores || []).map((i) => [i.clave, x.dada[i.clave] || 0])))
+        setComentario(x.dada.comentario || "")
+      }
+    }).catch(() => {})
+  useEffect(() => { cargar() }, [sol.id])
+  if (!d || !d.indicadores) return null
+  const post = async (cuerpo, ok) => {
+    setNota(null)
+    const r = await fetch(base, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) })
+    const x = await r.json().catch(() => ({}))
+    if (!r.ok) return setNota({ ok: false, t: x.message || "No se pudo." })
+    setNota({ ok: true, t: ok })
+    setEditando(false)
+    setModo("")
+    cargar()
+  }
+  const completo = d.indicadores.every((i) => notas[i.clave])
+  const r = d.recibida
+  return (
+    <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12, fontSize: 13 }}>
+      <b style={{ fontSize: 14 }}>⭐ Evaluación mutua</b>
+      {!d.puede_evaluar && !d.dada && <p style={{ margin: "4px 0 0", color: "#6B675C" }}>Cuando entregues y el cliente haya pagado, podrás evaluarlo. Su reputación ayuda a otros talleres a elegir con quién trabajar.</p>}
+      {d.puede_evaluar && (!d.dada || editando) && (
+        <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
+          <span style={{ color: "#6B675C" }}>Evalúa al cliente. Se publica cuando los dos evalúen (o en {d.dias_publicacion} días); antes nadie ve la evaluación del otro.</span>
+          {d.indicadores.map((i) => (
+            <div key={i.clave} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span>{i.nombre}</span>
+              <span>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" aria-label={`${i.nombre} ${n} de 5`} onClick={() => setNotas({ ...notas, [i.clave]: n })} style={{ background: "none", border: 0, fontSize: 20, cursor: "pointer", color: n <= (notas[i.clave] || 0) ? "#C2560A" : "#D9D5C9", padding: "0 1px" }}>★</button>
+                ))}
+              </span>
+            </div>
+          ))}
+          <textarea style={S.area} maxLength={1000} placeholder="Comentario (opcional)" value={comentario} onChange={(e) => setComentario(e.target.value)} />
+          <button type="button" style={{ ...S.btn, justifySelf: "start" }} disabled={!completo} onClick={() => post({ accion: "evaluar", ...notas, comentario }, "Evaluación guardada.")}>Enviar evaluación</button>
+        </div>
+      )}
+      {d.dada && !editando && (
+        <p style={{ margin: "6px 0 0" }}>
+          Evaluaste al cliente: <b>{Number(d.dada.promedio).toFixed(1)} / 5</b>{d.dada.retenida ? " (en revisión de HETNA)" : d.dada.publicada ? " · publicada" : " · se publica cuando el cliente evalúe"}{" "}
+          {!d.dada.publicada && <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setEditando(true)}>Cambiar</button>}
+        </p>
+      )}
+      {d.recibida_pendiente && <p style={{ margin: "6px 0 0", color: "#6B675C" }}>El cliente ya te evaluó. La verás cuando tú lo evalúes (o en {d.dias_publicacion} días).</p>}
+      {r && (
+        <div style={{ background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 8 }}>
+          <b>El cliente te evaluó: {Number(r.promedio).toFixed(1)} / 5</b>
+          {r.comentario && <div style={{ marginTop: 4 }}>“{r.comentario}”</div>}
+          {r.respuesta && <div style={{ marginTop: 4, color: "#40403A" }}>Tu respuesta: {r.respuesta}</div>}
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setModo("responder")}>Responder</button>
+            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12, color: "#B3261E", borderColor: "#B3261E" }} onClick={() => setModo("reclamar")}>Pedir revisión</button>
+          </div>
+          {modo && (
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <textarea style={{ ...S.area, minHeight: 44 }} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={modo === "reclamar" ? "¿Por qué no es correcta?" : "Respuesta pública"} />
+              <button type="button" style={S.btn} onClick={() => post({ accion: modo, texto }, modo === "reclamar" ? "Reclamación enviada a HETNA." : "Respuesta publicada.")}>Enviar</button>
+            </div>
+          )}
+        </div>
+      )}
+      {nota && <p style={{ color: nota.ok ? "#1E7B3A" : "#B3261E", margin: "6px 0 0" }}>{nota.t}</p>}
+    </div>
+  )
+}
+
 function Pedido({ sol, alGuardar }) {
   const [modo, setModo] = useState(null) // "avance" | "entregada"
   const [f, setF] = useState({ nota: "", paqueteria: "", guia: "" })
@@ -700,6 +972,7 @@ export default function SolicitudesPage() {
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <strong>{s.folio}</strong>
+                <RepCliente rep={s.reputacion_cliente} />
                 {s.para_mi && <span style={S.tag("#FFF1E6", "#C2560A")}>Te eligieron a ti</span>}
                 {s.modalidad === "privada" && !s.para_mi && <span style={S.tag("#EEF2FB", "#1a3a5c")}>Privada · te invitaron</span>}
                 {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}>Restringida</span>}
@@ -769,6 +1042,9 @@ export default function SolicitudesPage() {
             )}
 
             {p?.estado === "elegida" && <Pedido sol={s} alGuardar={cargar} />}
+            {p?.estado === "elegida" && <Conversacion sol={s} />}
+            {p?.estado === "elegida" && <AcuerdoSafeDeal sol={s} />}
+            {p?.estado === "elegida" && <EvaluarCliente sol={s} />}
 
             {s.estado === "abierta" && !descartada(s) && <Preguntas sol={s} alGuardar={cargar} />}
 

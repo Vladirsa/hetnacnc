@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import AccesosSolicitud from "@/components/hetna/taller/AccesosSolicitud"
+import AcuerdoSafeDeal from "@/components/hetna/taller/AcuerdoSafeDeal"
 import ComparadorPropuestas from "@/components/hetna/taller/ComparadorPropuestas"
 import PreguntasSolicitud from "@/components/hetna/taller/PreguntasSolicitud"
 import ResenaTaller from "@/components/hetna/taller/ResenaTaller"
@@ -81,6 +82,8 @@ export default async function PropuestasPage({
       <ResenaTaller token={token} s={s} />
 
       <SeguimientoSolicitud token={token} s={s} />
+
+      {s.propuesta_elegida && <AcuerdoSafeDeal token={token} />}
 
       <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
         <h2 className="text-lg font-extrabold text-[#142033]">Tu solicitud</h2>

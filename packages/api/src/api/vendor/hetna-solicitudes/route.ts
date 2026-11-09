@@ -17,6 +17,7 @@ import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
 import { T_INVITADO, asegurarPrivacidad, modalidadDe, relacionesTaller, tallerPuedeVer, trabajoParaTaller } from "../../../lib/licitacion-privacidad"
 import { PCT_POR_PLAN, asegurarCobro, cuentaTaller, planComision } from "../../../lib/licitacion-cobro"
 import { asegurarExtra, preguntasDe, rangoGanador } from "../../../lib/licitacion-extra"
+import { reputacionesClientes } from "../../../lib/trust"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
 // y las que ya cotizó. Nunca incluye datos de contacto del cliente.
@@ -85,7 +86,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .limit(100)
     .select(
       "s.id", "s.folio", "s.modo", "s.taller_id", "s.estado", "s.trabajo", "s.cierra_en", "s.created_at",
-      "s.modalidad", "s.privacidad", "s.contacto",
+      "s.modalidad", "s.privacidad", "s.contacto", "s.cliente_id",
       "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
       "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
       "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
@@ -133,6 +134,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     })
   )
 
+  // Fase 4 (Trust & Ranking): reputación del cliente como comprador (sin su contacto)
+  const reputaciones = await reputacionesClientes(knex, filas.map((f) => ({ id: f.id, cliente_id: f.cliente_id, email: f.contacto?.email }))).catch(() => new Map())
   const solicitudes = filas.map((f) => ({
     id: f.id,
     folio: folioTexto(f.folio),
@@ -150,6 +153,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     // Lo que el cliente permite ver (privacidad por elemento). Nunca el contacto.
     trabajo: trabajoParaTaller(f, relaciones.get(f.id)!),
     modalidad: modalidadDe(f),
+    reputacion_cliente: reputaciones.get(f.id) || { promedio: null, evaluaciones: 0, suficiente: false },
     tipo: f.tipo === "suministro" ? "suministro" : "fabricacion",
     acceso: relaciones.get(f.id)!.acceso,
     invitado: relaciones.get(f.id)!.invitado,

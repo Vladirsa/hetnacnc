@@ -375,6 +375,66 @@ function Membresias() {
   )
 }
 
+type Reclamo = { id: string; folio: string; tipo: string; parte: string; motivo: string; creada: string; evaluacion: { promedio: number; comentario: string | null; visible: boolean } | null }
+
+function Reclamos() {
+  const [lista, setLista] = useState<Reclamo[] | null>(null)
+  const [error, setError] = useState("")
+  const cargar = useCallback(async () => {
+    try {
+      const d = await apiAdmin<{ reclamos: Reclamo[] }>("/hetna-reclamos")
+      setLista(d.reclamos)
+    } catch (e) {
+      setError((e as Error).message)
+      setLista([])
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const resolver = async (id: string, accion: "ocultar" | "mantener") => {
+    setError("")
+    try {
+      await apiAdmin("/hetna-reclamos", { id, accion })
+      void cargar()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  return (
+    <section style={{ marginTop: 32 }}>
+      <h2 style={{ fontSize: 18, margin: 0 }}>Reclamaciones de evaluaciones</h2>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "4px 0 12px" }}>
+        Evaluaciones que un cliente o taller pidió revisar, o que HETNA retuvo por parecer autoevaluación. Ocultar la quita del perfil y recalcula la calificación.
+      </p>
+      {error && <p style={{ color: C.rojo }}>{error}</p>}
+      {lista === null ? (
+        <p>Cargando...</p>
+      ) : lista.length === 0 ? (
+        <p style={{ color: C.tenue }}>No hay reclamaciones abiertas.</p>
+      ) : (
+        lista.map((r) => (
+          <article key={r.id} style={caja}>
+            <p style={{ margin: 0, fontWeight: 700 }}>
+              {r.folio} · {r.tipo === "resena_taller" ? "Evaluación al taller" : "Evaluación al cliente"} · reclama: {r.parte}
+            </p>
+            <p style={{ margin: "4px 0", fontSize: 13 }}>{r.motivo}</p>
+            {r.evaluacion && (
+              <p style={{ margin: "4px 0", fontSize: 13, color: C.tenue }}>
+                {r.evaluacion.promedio.toFixed(1)} / 5 {r.evaluacion.comentario ? `· “${r.evaluacion.comentario}”` : ""} {r.evaluacion.visible ? "" : "· (oculta ahora)"}
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button style={boton("peligro")} onClick={() => void resolver(r.id, "ocultar")}>Ocultar evaluación</button>
+              <button style={boton("primario")} onClick={() => void resolver(r.id, "mantener")}>Mantener (es válida)</button>
+            </div>
+          </article>
+        ))
+      )}
+    </section>
+  )
+}
+
 export default function VerificacionesPage() {
   const [estado, setEstado] = useState("en_revision")
   const [lista, setLista] = useState<Expediente[] | null>(null)
@@ -421,6 +481,7 @@ export default function VerificacionesPage() {
       )}
       <Certificaciones />
       <Membresias />
+      <Reclamos />
     </div>
   )
 }

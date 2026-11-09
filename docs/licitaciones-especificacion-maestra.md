@@ -435,7 +435,7 @@ Recomendación: comenzar con **firma electrónica simple** y **verificación ref
 3. **Ranking de clientes.** Si un cliente quiere acceder a los mejores talleres, **debe tener ranking** (buena reputación como cliente). Los talleres podrán ver y filtrar por la reputación del cliente.
 4. **SafeDeal opcional, con alerta.** No es obligatorio, pero al elegir propuesta se muestra una **alerta destacada** a ambas partes explicando que el acuerdo es para el bienestar de los dos (protege pagos, entregas, calidad y propiedad intelectual) e invitándolos a formalizarlo.
 5. **Redes sociales.** Se mantiene la difusión de oportunidades en redes **para atraer más talleres** a la plataforma, siempre con el **resumen anonimizado** y respetando la privacidad que elija el cliente (nunca planos, presupuesto confidencial ni contacto).
-6. **Pendiente de confirmar:** en qué momento se comparten los contactos cuando las partes **no** usan SafeDeal. Propuesta por defecto (según 1.1): "compartidos por autorización" — el cliente decide si los libera al elegir la propuesta.
+6. **Contactos sin SafeDeal (confirmado 9 nov 2026):** se comparten cuando el cliente lo autoriza al elegir ("compartir mi contacto"). Con SafeDeal firmado se comparten solos.
 
 ## 13. Criterios de aceptación por fase
 
@@ -665,3 +665,26 @@ Qué quedó:
 - **Certificaciones separadas** de la verificación y de la reputación: el taller las sube con documento; HETNA aprueba o rechaza; las vigentes salen en su perfil público y suben su posicionamiento, nunca su calificación.
 - **Posicionamiento:** se usa para ordenar propuestas ante el cliente y el orden de difusión a talleres.
 - **Puertas de membresía:** crear licitación privada/restringida o "sólo verificados" sin membresía responde 403 con mensaje claro; el resumen con IA pide membresía. Con "sólo verificados", los talleres no verificados no la ven ni pueden proponer.
+
+## 19. Fase 4 implementada (9 nov 2026)
+
+Decisiones del dueño: contrato **prendido como borrador** (cada página del PDF dice "Modelo de contrato pendiente de revisión legal" hasta poner `SAFEDEAL_REVISADO=1`); firma reforzada con **código por correo**; contactos sin SafeDeal **por autorización del cliente**; evaluaciones publicadas **cuando ambos evalúan o a los 14 días**.
+
+**Conversación privada** (`hetna_solicitud_mensaje`): se abre al elegir propuesta; correos, teléfonos y ligas se ocultan hasta que se liberan los contactos. Aviso por correo y celular (sin repetir en 30 min).
+
+**HETNA SafeDeal + HETNA Sign** (`lib/safedeal.ts`):
+- Opcional, con alerta "recomendado para el bienestar de los dos" en la página del cliente, en el panel del taller y en los correos al elegir.
+- 12 apartados prellenados con la propuesta; cualquiera edita y cada cambio borra las aprobaciones. Aprobar exige la huella de las condiciones que se vieron.
+- Con las dos aprobaciones: PDF (cláusula fija del papel de HETNA y de firma electrónica), SHA-256, guardado en B2 y versión bloqueada.
+- Firma: nombre, representación, aceptación expresa y código de 6 dígitos por correo (10 min, 5 intentos). Se guardan IP, navegador, fecha y la huella firmada.
+- Con dos firmas: expediente cerrado, contactos liberados, correos con datos de contacto. Constancia de firmas en PDF con historial.
+- Cambiar condiciones crea versión nueva; la firmada nunca se modifica.
+
+**HETNA Trust & Ranking** (`lib/trust.ts`):
+- Cliente → taller: 7 indicadores (posventa puede ser "no aplica"). Taller → cliente: 7 indicadores (`hetna_resena_cliente`).
+- Sólo trabajos pagados y entregados. Publicación simultánea o a los 14 días (job `publicar-evaluaciones`). Las reseñas anteriores siguen públicas.
+- Perfil del taller: reputación comercial y capacidad técnica por separado, desglose por indicador y aviso de "historial insuficiente" con menos de 3.
+- El taller ve la reputación del cliente en cada solicitud ("Cliente nuevo" o ★ promedio).
+- Respuestas de ambos lados, reclamaciones con revisión en Admin → Verificaciones, y retención automática de autoevaluaciones (mismo correo o dominio corporativo).
+
+Pendiente: revisión del abogado (texto del contrato, términos y aviso de privacidad); clasificaciones públicas por especialidad y región (8.E) y filtro de talleres por reputación del cliente.

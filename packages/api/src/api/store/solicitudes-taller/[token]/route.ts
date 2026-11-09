@@ -8,6 +8,7 @@ import { ligarCliente, preguntasDe, resenaDe } from "../../../../lib/licitacion-
 import { asegurarPropuestaFormal, compararPropuestas } from "../../../../lib/licitacion-propuesta"
 import { getSignedDownloadUrls } from "../../../../lib/backblaze"
 import { puntajePosicion } from "../../../../lib/confianza"
+import { evaluacionesDe } from "../../../../lib/trust"
 import {
   EXPLICA_ETAPA,
   NOMBRE_ETAPA,
@@ -139,17 +140,25 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       .catch(() => []),
   ])
 
-  const [cobro, preguntas, resena] = await Promise.all([
+  const [cobro, preguntas, resena, evaluaciones] = await Promise.all([
     s.propuesta_elegida ? estadoCobro(knex, s).catch(() => null) : null,
     preguntasDe(knex, s.id).catch(() => []),
     s.propuesta_elegida ? resenaDe(knex, s.id).catch(() => null) : null,
+    s.propuesta_elegida ? evaluacionesDe(knex, s, "cliente").catch(() => null) : null,
   ])
 
   return res.json({
     folio: folioTexto(s.folio),
     cobro,
     preguntas,
-    resena: resena ? { calidad: resena.calidad, tiempo: resena.tiempo, trato: resena.trato, comentario: resena.comentario || "" } : null,
+    resena: resena
+      ? {
+          calidad: resena.calidad, tiempo: resena.tiempo, trato: resena.trato, comunicacion: resena.comunicacion ?? null, precio: resena.precio ?? null,
+          capacidad: resena.capacidad ?? null, profesionalismo: resena.profesionalismo ?? null, posventa: resena.posventa ?? null, comentario: resena.comentario || "",
+        }
+      : null,
+    // Fase 4 (Trust & Ranking): la evaluación que el taller hizo del cliente, sólo ya publicada
+    evaluaciones,
     puede_resenar: Boolean(s.propuesta_elegida) && ["entregada", "cerrada"].includes(etapa) && Boolean(cobro && cobro.pagado > 0),
     etapa,
     etapa_nombre: NOMBRE_ETAPA[etapa],

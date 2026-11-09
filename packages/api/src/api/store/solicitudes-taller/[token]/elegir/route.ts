@@ -126,6 +126,7 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
               : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, completo (HETNA no cobra comisión). Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
           }</p>` +
           bloqueContacto +
+          `<p style="color:#40403A;background:#FFF8EE;padding:10px 12px;border-radius:8px"><strong>Recomendado: formalicen su acuerdo con HETNA SafeDeal.</strong> Es opcional, pero protege a los dos (pagos, entregas, calidad y planos). Se prepara y se firma desde HETNA con un código por correo.</p>` +
           `<p style="color:#40403A">Te avisaremos cuando el cliente pague. <strong>No inicies el trabajo antes de esa confirmación.</strong></p>` +
           boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)
       ),
@@ -143,6 +144,7 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
                   : `Paga de forma segura para que ${esc(p.taller)} empiece a fabricar.`
               }</p>` + boton("Pagar ahora", pagoUrl)
             : `<p style="color:#40403A">En breve te enviamos la liga de pago. El pago y el seguimiento de tu pedido se hacen dentro de HETNA.</p>`) +
+          `<p style="color:#40403A;background:#FFF8EE;padding:10px 12px;border-radius:8px"><strong>Recomendado: formalicen su acuerdo con HETNA SafeDeal.</strong> Es opcional, pero protege a los dos (pagos, entregas, calidad y planos). Se prepara y se firma desde HETNA con un código por correo.</p>` +
           `<p style="color:#6B675C;font-size:13px;margin-top:16px">Tu pedido: <a href="${esc(ligaPropuestas(token))}">${esc(ligaPropuestas(token))}</a></p>`
       ),
     },

@@ -230,6 +230,45 @@ function Inicio({
         ))}
       </dl>
 
+      {p.resenas ? (
+        <section className={CAJA}>
+          <h2 className={H2}>Reputación en HETNA</h2>
+          {!p.historial_suficiente && (
+            <p className="-mt-2 mb-3 rounded-lg bg-[#FFF8EE] px-3 py-2 text-xs text-[#8A5A00]">
+              Perfil nuevo: todavía no tiene suficiente historial ({p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}). Toma la calificación con cautela.
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl bg-[#FAF9F5] p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Reputación comercial</p>
+              <p className="text-2xl font-extrabold text-[#142033]">{p.reputacion_comercial ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
+              <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
+                {[["tiempo", "Cumplimiento de entregas"], ["comunicacion", "Comunicación"], ["precio", "Precio"], ["profesionalismo", "Profesionalismo"], ["posventa", "Servicio posventa"]]
+                  .filter(([k]) => p.indicadores?.[k] != null)
+                  .map(([k, n]) => (
+                    <li key={k} className="flex justify-between"><span>{n}</span><b>{p.indicadores?.[k]}</b></li>
+                  ))}
+              </ul>
+            </div>
+            <div className="rounded-xl bg-[#FAF9F5] p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Capacidad técnica</p>
+              <p className="text-2xl font-extrabold text-[#142033]">{p.capacidad_tecnica ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
+              <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
+                {[["calidad", "Calidad de fabricación"], ["capacidad", "Cumple especificaciones"]]
+                  .filter(([k]) => p.indicadores?.[k] != null)
+                  .map(([k, n]) => (
+                    <li key={k} className="flex justify-between"><span>{n}</span><b>{p.indicadores?.[k]}</b></li>
+                  ))}
+              </ul>
+              {t.certificaciones.length > 0 && <p className="mt-2 text-xs text-[#1E7B3A]">+ {t.certificaciones.length} certificación(es) acreditada(s)</p>}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-[#6B675C]">
+            Calculada sólo con evaluaciones de trabajos pagados y entregados en HETNA. Los planes y membresías no cambian esta calificación.
+          </p>
+        </section>
+      ) : null}
+
       {resenas.length > 0 && (
         <section className={CAJA}>
           <h2 className={H2}>Opiniones de clientes</h2>
