@@ -32,6 +32,8 @@ Parte de la etapa 5D. Revisa a diario las campañas de Meta Ads (y Google Ads de
 ### 14. Generador de contenido para redes con RunPod
 Un programa que corre en GPU de RunPod con modelos abiertos para generar imágenes y videos de promoción de las páginas de HETNA (más barato por pieza que los servicios de pago por imagen) y entregarlos al Social Hub. Revisar junto con la etapa 5B (imágenes y videos) y con el Estudio de Video.
 
+Ideas de la investigación para hacer viral a HETNA (A a O): ver `docs/investigacion-marketing-viral.md`.
+
 ## Pendientes anteriores (en manos del dueño)
 
 - Vitrina de imagen a 3D.
