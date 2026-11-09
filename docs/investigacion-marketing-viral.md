@@ -70,3 +70,49 @@ Investigación web para la agencia de marketing interna de HETNA. Las cifras vie
 - [arXiv 2606.20065 – AI search visibility](https://arxiv.org/html/2606.20065)
 - [Lengreo – UGC strategies](https://lengreo.com/user-generated-content-strategies)
 - [JoinBrands – UGC examples](https://joinbrands.com/blog/user-generated-content-examples-2/)
+
+---
+
+# Dominar el algoritmo de cada red (9 nov 2026)
+
+Requisito del dueño: publicar en cada red el formato que su algoritmo premia, para cada público (clientes, talleres y proveedores). Se agrega al sistema "Marketing HETNA" como la pestaña **Estrategia**.
+
+## Qué premia cada algoritmo (lo mejor documentado)
+
+| Red | Lo que más pesa | Consecuencias para HETNA |
+|---|---|---|
+| **Instagram** | Tiempo de visualización, "me gusta" por alcance y **envíos por mensaje** por alcance (Mosseri, enero 2025). Los envíos pesan más para llegar a gente que no te sigue. Cada parte de la app (reels, feed, historias, explorar) tiene su propio ranking | Reels que la gente quiera mandarle a alguien ("mándaselo a tu socio del taller"); carruseles para guardar; la liga no es clicable: "comenta COTIZA" |
+| **TikTok** | Tiempo visto, % de video completado, volver a verlo, compartidos y guardados; reparte por etapas (un grupo pequeño primero y, si funciona, uno más grande). También funciona como buscador | Videos cortos que se vean completos y en bucle; palabras clave dichas, escritas en pantalla y en el texto (búsqueda) |
+| **Facebook** | Tiempo visto en reels; más de una quinta parte del feed son recomendaciones de cuentas que no sigues; premia contenido **original** y castiga lo reciclado o con marca de agua de otra red | Reels propios sin logo de TikTok; publicaciones en grupos (a mano); video subido nativo |
+| **YouTube Shorts** | Primer filtro: **visto contra deslizado** (los primeros segundos); después, % visto y satisfacción. Sistema distinto al de videos largos (allí pesan clic en miniatura y tiempo de vista) | Gancho en el primer segundo; Shorts que lleven a tutoriales largos; Gemini cita YouTube |
+| **LinkedIn** | Las páginas de empresa llegan a 2–5% de sus seguidores; premia perfiles personales, conversación y que la gente se quede en LinkedIn; las publicaciones con liga se castigan | Publicar desde el perfil del fundador; la liga en el primer comentario; documentos y carruseles B2B |
+| **WhatsApp** | Red más usada en México; sin algoritmo: llega a quien se suscribe | Canal y estados con oportunidades por región y promociones; listas de difusión con permiso |
+
+Horarios de arranque (estudios de Buffer y otros, a ajustar con datos propios): Facebook entre semana en la mañana; Instagram entre semana a las 9 y a las 18 h; TikTok y YouTube en la tarde-noche y los sábados; LinkedIn martes a jueves, media mañana a media tarde.
+
+Advertencia: casi todo viene de blogs de herramientas de redes; las redes no publican sus fórmulas y los algoritmos cambian. Por eso el sistema mide y se ajusta solo, y un agente revisa estas reglas cada mes.
+
+## Cómo funciona la pestaña Estrategia
+
+1. **Guía por red** (editable): formatos, duración, proporción vertical, gancho, subtítulos, palabras clave, dónde va la liga, horarios y frecuencia. La revisa un agente cada mes.
+2. **Públicos**: clientes empresa, clientes particulares o makers, talleres y proveedores. Cada uno con sus temas (pilares) y su objetivo (cotizar, registrarse, publicar productos).
+3. **Matriz red × público × formato**: qué publicar, en qué red y para quién.
+4. **Plan semanal automático**: el agente de contenido llena el calendario cumpliendo la mezcla de cada red (por ejemplo, Instagram: reels, carruseles e historias; TikTok: un video diario; YouTube: Shorts y un video largo; LinkedIn: publicaciones del fundador; WhatsApp: canal). Las cantidades son un punto de partida y se ajustan con resultados.
+5. **Puntaje de algoritmo antes de publicar**: cada pieza se revisa contra la guía de su red (gancho en el primer segundo, duración, vertical, subtítulos, original sin marcas de otras redes, llamada a compartir o guardar, liga en el lugar correcto, palabras clave) y el sistema sugiere cómo corregirla.
+6. **Medir las señales del algoritmo**: retención, % completado, compartidos, envíos y guardados de cada red (con sus estadísticas oficiales) más los registros, solicitudes y ventas de las ligas medidas.
+7. **Aprender**: el analista detecta qué ganchos, formatos, temas y horarios funcionan por red y público, y el plan de la siguiente semana usa más de eso (pruebas A/B de ganchos).
+
+## Fuentes del algoritmo
+- [Buffer – Instagram algorithm 2026](https://buffer.com/library/instagram-algorithm/)
+- [Later – How the Instagram algorithm works](https://later.com/blog/how-instagram-algorithm-works/amp/)
+- [Hootsuite – Instagram algorithm](https://blog.hootsuite.com/instagram-algorithm/)
+- [Hootsuite – TikTok algorithm](https://blog.hootsuite.com/tikTok-algorithm/)
+- [Darkroom – TikTok algorithm guide 2026](https://www.darkroomagency.com/observatory/tiktok-algorithm-guide-2026-everything-we-know-about-how-videos-are-ranked)
+- [Sendible – TikTok algorithm myths](https://www.sendible.com/insights/how-does-tiktok-algorithm-work)
+- [Social Media Examiner – Facebook 2026 rules for reach](https://www.socialmediaexaminer.com/facebooks-2026-rules-for-reach-relevance/)
+- [Fanpage Karma – Facebook algorithm 2026](https://www.fanpagekarma.com/insights/the-facebook-algorithm-2026-explained-what-marketers-need-to-know/)
+- [Metricool – Facebook algorithm](https://metricool.com/facebook-algorithm/)
+- [vidIQ – YouTube Shorts algorithm 2026](https://vidiq.com/blog/post/youtube-shorts-algorithm/)
+- [OutlierKit – Shorts algorithm in YouTube's words](https://outlierkit.com/resources/youtube-shorts-algorithm/)
+- [Buffer – Best time to post 2026](https://buffer.com/best-time-to-post)
+- [Digital Applied – LinkedIn algorithm 2026](https://www.digitalapplied.com/blog/linkedin-algorithm-2026-engagement-strategy-guide)
