@@ -20,6 +20,11 @@ import { MAX_MB } from "../../../lib/verificacion-archivos"
 
 const PROTEGIDAS = [
   "verificado",
+  // Fase 3: empresa verificada, pago de verificación y certificaciones aprobadas
+  "empresa_verificada",
+  "empresa_verificada_desde",
+  "verificacion_pagada",
+  "certificaciones",
   "verificado_desde",
   "fundador",
   "fundador_desde",

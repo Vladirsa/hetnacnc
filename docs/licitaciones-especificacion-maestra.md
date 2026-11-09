@@ -652,3 +652,16 @@ Además de **clientes** y **talleres**, entran los **proveedores**: empresas que
 1. **Productos de proveedores en la tienda:** ¿cobran la comisión de ventas de la tienda (6 % hoy) o, como las licitaciones, sólo plan sin comisión?
 2. **Licitaciones de suministro:** ¿sin comisión (sólo plan), igual que las de fabricación?
 3. **¿En qué fase entra?** Propuesta: tipo de cuenta e insignia junto con la Fase 1; licitaciones de suministro en la Fase 2 (reutilizan el panel de propuestas); sugerencias de materiales y conexión con la app en la Fase 7 (IA de emparejamiento).
+
+## 18. Fase 3 implementada (9 nov 2026)
+
+Decisiones del dueño:
+- **Membresía Empresarial de clientes:** gratis por ahora; HETNA la activa a mano desde el panel de administración (Verificaciones → Membresía Empresarial). Incluye sólo para miembros: licitaciones privadas y restringidas, resumen con IA, "HETNA te busca proveedor" y "sólo talleres verificados".
+- **Verificación y certificaciones:** incluidas en los planes Taller, Pro e Industrial. En el plan Gratis cuestan $299 (pago único con Mercado Pago, variable `PRECIO_VERIFICACION`).
+
+Qué quedó:
+- `lib/confianza.ts`: pago de verificación, certificaciones (`hetna_certificacion`), posicionamiento (`puntajePosicion` = plan×3 + verificado 2 + empresa verificada 1 + hasta 3 certificaciones vigentes) y membresías (`customer.metadata.membresia_empresarial`).
+- **Empresa verificada:** nuevos documentos (constancia de situación fiscal y acta constitutiva). El admin marca "Empresa verificada" al aprobar si revisó la constancia.
+- **Certificaciones separadas** de la verificación y de la reputación: el taller las sube con documento; HETNA aprueba o rechaza; las vigentes salen en su perfil público y suben su posicionamiento, nunca su calificación.
+- **Posicionamiento:** se usa para ordenar propuestas ante el cliente y el orden de difusión a talleres.
+- **Puertas de membresía:** crear licitación privada/restringida o "sólo verificados" sin membresía responde 403 con mensaje claro; el resumen con IA pide membresía. Con "sólo verificados", los talleres no verificados no la ven ni pueden proponer.

@@ -43,6 +43,8 @@ export type SolicitudTallerInput = {
   privacidad?: string
   difundir_redes?: boolean
   invitados?: string
+  // Fase 3: sólo talleres verificados (Membresía Empresarial)
+  solo_verificados?: boolean
   // Fase 2: suministro de material e insumos (lo cotizan proveedores)
   tipo?: "fabricacion" | "suministro"
   marca?: string
@@ -283,4 +285,19 @@ export async function analizarPropuestas(token: string): Promise<{ disponible: b
   const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/analisis`, {}, "No se pudo preparar el resumen.")
   if (!r.ok) return { disponible: true, resumen: null, motivo: r.mensaje }
   return { disponible: !!r.body.disponible, resumen: r.body.resumen || null, motivo: r.body.motivo }
+}
+
+// ---- Licitaciones 3.0 (Fase 3) ----
+
+/** ¿El cliente con sesión tiene Membresía Empresarial? */
+export async function miMembresia(): Promise<{ miembro: boolean; sesion: boolean }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { miembro: false, sesion: false }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mi-membresia`, { headers: { ...cabeceras(), ...auth }, cache: "no-store" })
+    const body = await res.json().catch(() => ({}))
+    return { miembro: !!body.miembro, sesion: !!body.sesion }
+  } catch {
+    return { miembro: false, sesion: true }
+  }
 }

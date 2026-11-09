@@ -8,6 +8,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, ocultarContacto } from "../../../../../lib/licitacion"
 import { iaDisponible, resumirPropuestas } from "../../../../../lib/licitacion-ia"
+import { esMiembroEmpresarial } from "../../../../../lib/confianza"
 import { type PropuestaComparable, asegurarPropuestaFormal, huellaPropuestas } from "../../../../../lib/licitacion-propuesta"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -18,6 +19,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const s = await knex(T_SOLICITUD).where({ token: String(req.params.token || "") }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (!iaDisponible()) return res.json({ disponible: false, resumen: null })
+  // Fase 3: el resumen con IA es de la Membresía Empresarial
+  if (!(await esMiembroEmpresarial(knex, { customerId: s.cliente_id, email: s.contacto?.email }))) {
+    return res.json({ disponible: true, resumen: null, empresarial: true, motivo: "El resumen con IA es parte de la Membresía Empresarial (gratis por ahora). Escríbenos y te la activamos." })
+  }
 
   const filas = (await knex(`${T_PROPUESTA} as p`)
     .join("seller as v", "v.id", "p.seller_id")

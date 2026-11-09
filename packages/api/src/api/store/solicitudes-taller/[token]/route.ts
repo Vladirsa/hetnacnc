@@ -7,6 +7,7 @@ import { T_ACCESO, T_INVITADO, asegurarPrivacidad, modalidadDe, privacidadDe } f
 import { ligarCliente, preguntasDe, resenaDe } from "../../../../lib/licitacion-extra"
 import { asegurarPropuestaFormal, compararPropuestas } from "../../../../lib/licitacion-propuesta"
 import { getSignedDownloadUrls } from "../../../../lib/backblaze"
+import { puntajePosicion } from "../../../../lib/confianza"
 import {
   EXPLICA_ETAPA,
   NOMBRE_ETAPA,
@@ -82,7 +83,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",
         },
         destacado: pesoPlan(p.metadata) > 0,
-        _peso: pesoPlan(p.metadata),
+        _peso: puntajePosicion(p.metadata),
       }
     })
     // Talleres con membresía primero; luego el más barato.

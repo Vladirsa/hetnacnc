@@ -53,6 +53,7 @@ export default function FormSuministro() {
       email: v("email"),
       whatsapp: v("whatsapp"),
       modalidad: v("modalidad"),
+      solo_verificados: v("solo_verificados") === "1",
       privacidad: v("privacidad"),
       difundir_redes: v("difundir_redes") === "1",
       invitados: v("invitados"),

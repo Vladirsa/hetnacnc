@@ -48,6 +48,11 @@ export default defineMiddlewares({
         ...adminCoursesMiddlewares,
         ...storeCoursesMiddlewares,
         {
+            method: ["GET"],
+            matcher: "/store/mi-membresia",
+            middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+        },
+        {
             method: ["POST", "DELETE"],
             matcher: "/store/hetna-push",
             middlewares: [authenticate("customer", ["session", "bearer"])],
@@ -68,6 +73,12 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/vendor/hetna-facturas/:id",
           middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
+        },
+        // Licitaciones 3.0 (Fase 3): certificado del taller (PDF o foto)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-certificaciones",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 15 })],
         },
         // Licitaciones 3.0: archivos adjuntos de la propuesta del taller
         {

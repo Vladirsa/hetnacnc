@@ -3,7 +3,8 @@
 // Paso "Privacidad" del formulario de solicitud (Licitaciones 3.0, Fase 1).
 // El cliente decide modalidad y, elemento por elemento, qué ven los talleres.
 // Manda sus valores en campos ocultos que lee FormSolicitudTaller.
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { miMembresia } from "@/lib/cotizar/solicitud-taller"
 
 type Opcion = [valor: string, texto: string]
 type Control = { clave: string; titulo: string; ayuda: string; opciones: Opcion[] }
@@ -41,6 +42,12 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
   const [p, setP] = useState<Record<string, string>>(INICIAL)
   const [redes, setRedes] = useState(false)
   const [abierto, setAbierto] = useState(false)
+  // Fase 3: privada, restringida y "sólo verificados" son de la Membresía Empresarial
+  const [miembro, setMiembro] = useState(false)
+  const [soloVerif, setSoloVerif] = useState(false)
+  useEffect(() => {
+    miMembresia().then((m) => setMiembro(m.miembro)).catch(() => {})
+  }, [])
 
   const privada = dirigida || modalidad === "privada"
   const resumen = useMemo(() => {
@@ -53,21 +60,44 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
     <div className="grid gap-4">
       <input type="hidden" name="modalidad" value={dirigida ? "privada" : modalidad} />
       <input type="hidden" name="privacidad" value={JSON.stringify(p)} />
+      <input type="hidden" name="solo_verificados" value={miembro && soloVerif ? "1" : ""} />
       <input type="hidden" name="difundir_redes" value={redes && !privada ? "1" : ""} />
 
       {!dirigida && (
         <div className="grid gap-2 sm:grid-cols-3">
-          {MODALIDADES.map((m) => (
+          {MODALIDADES.map((m) => {
+            const bloqueada = m.valor !== "publica" && !miembro
+            return (
             <label
               key={m.valor}
-              className={`cursor-pointer rounded-xl border p-3 text-sm ${modalidad === m.valor ? "border-[#C2560A] bg-[#FFF6EE]" : "border-[#E7E4DC] bg-white hover:border-[#C2560A]"}`}
+              className={`rounded-xl border p-3 text-sm ${bloqueada ? "cursor-not-allowed border-[#E7E4DC] bg-[#F7F6F2] opacity-70" : "cursor-pointer"} ${modalidad === m.valor ? "border-[#C2560A] bg-[#FFF6EE]" : bloqueada ? "" : "border-[#E7E4DC] bg-white hover:border-[#C2560A]"}`}
             >
-              <input type="radio" name="_modalidad" value={m.valor} checked={modalidad === m.valor} onChange={() => setModalidad(m.valor)} className="sr-only" />
-              <span className="block font-bold text-[#142033]">{m.titulo}</span>
+              <input type="radio" name="_modalidad" value={m.valor} checked={modalidad === m.valor} disabled={bloqueada} onChange={() => setModalidad(m.valor)} className="sr-only" />
+              <span className="block font-bold text-[#142033]">{m.titulo}{bloqueada && " 🔒"}</span>
               <span className="mt-0.5 block text-[12.5px] leading-snug text-[#6B675C]">{m.texto}</span>
+              {bloqueada && <span className="mt-1 block text-[11.5px] font-semibold text-[#C2560A]">Membresía Empresarial</span>}
             </label>
-          ))}
+            )
+          })}
         </div>
+      )}
+      {!dirigida && !miembro && (
+        <p className="text-[12.5px] text-[#6B675C]">
+          Las licitaciones privadas y restringidas, el resumen con IA y “sólo talleres verificados” son de la <b>Membresía Empresarial</b>, gratis por
+          ahora. Entra con tu cuenta y escríbenos por{" "}
+          <a className="font-semibold text-[#C2560A] underline" href="https://wa.me/522461217072?text=Quiero%20la%20Membres%C3%ADa%20Empresarial%20de%20HETNA" target="_blank" rel="noreferrer">
+            WhatsApp
+          </a>{" "}
+          para activarla.
+        </p>
+      )}
+      {!dirigida && miembro && (
+        <label className="flex items-start gap-2 rounded-xl border border-[#E7E4DC] p-3 text-sm text-[#40403A]">
+          <input type="checkbox" checked={soloVerif} onChange={(e) => setSoloVerif(e.target.checked)} className="mt-1 accent-[#C2560A]" />
+          <span>
+            <b>Sólo talleres verificados por HETNA</b> (identidad y domicilio revisados). Recibirás menos propuestas, pero de talleres comprobados.
+          </span>
+        </label>
       )}
       {dirigida && <p className="text-sm text-[#40403A]">Tu solicitud va sólo al taller que elegiste (privada).</p>}
 

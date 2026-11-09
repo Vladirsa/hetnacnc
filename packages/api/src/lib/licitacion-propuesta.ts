@@ -34,6 +34,8 @@ export async function asegurarPropuestaFormal(knex: any) {
     [T_SOLICITUD, "tipo", "text"],
     // Resumen de la IA ya calculado, con la "huella" de las propuestas que vio
     [T_SOLICITUD, "analisis", "jsonb"],
+    // Fase 3 (Membresía Empresarial): sólo propuestas de talleres verificados
+    [T_SOLICITUD, "solo_verificados", "boolean"],
   ]
   for (const [tabla, col, tipo] of cols) {
     await knex.raw(`alter table ?? add column if not exists ?? ${tipo}`, [tabla, col])

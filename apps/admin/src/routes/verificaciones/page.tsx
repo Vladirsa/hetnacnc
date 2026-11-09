@@ -29,6 +29,8 @@ const NOMBRES: Record<string, string> = {
   fachada: "Fachada",
   taller: "Interior / máquinas",
   comprobante_domicilio: "Comprobante de domicilio",
+  constancia_fiscal: "Constancia de situación fiscal",
+  acta_constitutiva: "Acta constitutiva / poder",
 }
 
 const ESTADOS: { v: string; t: string }[] = [
@@ -57,6 +59,24 @@ async function api<T>(ruta: string, cuerpo?: unknown): Promise<T> {
   let r: Response
   try {
     r = await fetch(`/admin/hetna-verificacion${ruta}`, {
+      credentials: "include",
+      ...(cuerpo === undefined
+        ? { headers: cabeceras() }
+        : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }),
+    })
+  } catch {
+    throw new Error("No se pudo conectar con el servidor. Revisa tu internet e intenta de nuevo.")
+  }
+  const d = (await r.json().catch(() => ({}))) as T & { message?: string }
+  if (r.status === 401) throw new Error(MSG_SESION)
+  if (!r.ok) throw new Error(d?.message || `Error ${r.status}`)
+  return d
+}
+
+async function apiAdmin<T>(ruta: string, cuerpo?: unknown): Promise<T> {
+  let r: Response
+  try {
+    r = await fetch(`/admin${ruta}`, {
       credentials: "include",
       ...(cuerpo === undefined
         ? { headers: cabeceras() }
@@ -136,6 +156,8 @@ function Tarjeta({ e, alCambiar }: { e: Expediente; alCambiar: () => void }) {
   const [motivo, setMotivo] = useState("")
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState("")
+  const tieneConstancia = e.archivos.some((a) => a.tipo === "constancia_fiscal")
+  const [empresa, setEmpresa] = useState(tieneConstancia)
 
   const decidir = async (accion: "aprobar" | "rechazar" | "revocar") => {
     setError("")
@@ -145,7 +167,7 @@ function Tarjeta({ e, alCambiar }: { e: Expediente; alCambiar: () => void }) {
     }
     setOcupado(true)
     try {
-      await api(`/${e.seller_id}`, { accion, motivo })
+      await api(`/${e.seller_id}`, { accion, motivo, empresa: accion === "aprobar" && empresa })
       alCambiar()
     } catch (err) {
       setError((err as Error).message)
@@ -199,6 +221,12 @@ function Tarjeta({ e, alCambiar }: { e: Expediente; alCambiar: () => void }) {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {e.estado === "en_revision" ? (
               <>
+                {tieneConstancia && (
+                  <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13 }}>
+                    <input type="checkbox" checked={empresa} onChange={(ev) => setEmpresa(ev.target.checked)} />
+                    También “Empresa verificada” (revisé la constancia fiscal)
+                  </label>
+                )}
                 <button style={boton("primario")} disabled={ocupado} onClick={() => void decidir("aprobar")}>✓ Aprobar y verificar</button>
                 <button style={boton("peligro")} disabled={ocupado} onClick={() => void decidir("rechazar")}>Rechazar</button>
               </>
@@ -210,6 +238,140 @@ function Tarjeta({ e, alCambiar }: { e: Expediente; alCambiar: () => void }) {
         </div>
       )}
     </article>
+  )
+}
+
+type Cert = { id: string; taller: string; handle: string; tipo: string; nombre: string | null; emisor: string | null; numero: string | null; vigencia: string | null; archivo: string | null; url: string | null; estado: string; motivo: string | null }
+
+function Certificaciones() {
+  const [lista, setLista] = useState<Cert[] | null>(null)
+  const [error, setError] = useState("")
+  const [motivos, setMotivos] = useState<Record<string, string>>({})
+  const cargar = useCallback(async () => {
+    try {
+      const d = await apiAdmin<{ certificaciones: Cert[] }>("/hetna-certificaciones?estado=pendiente")
+      setLista(d.certificaciones)
+    } catch (e) {
+      setError((e as Error).message)
+      setLista([])
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const decidir = async (id: string, accion: "aprobar" | "rechazar") => {
+    setError("")
+    try {
+      await apiAdmin(`/hetna-certificaciones/${id}`, { accion, motivo: motivos[id] || "" })
+      void cargar()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  return (
+    <section style={{ marginTop: 32 }}>
+      <h2 style={{ fontSize: 18, margin: 0 }}>Certificaciones por revisar</h2>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "4px 0 12px" }}>
+        Revisa que el documento sea legible, que el nombre coincida con el taller y que esté vigente. Al aprobar aparece en su perfil y sube su posicionamiento (no su calificación).
+      </p>
+      {error && <p style={{ color: C.rojo }}>{error}</p>}
+      {lista === null ? (
+        <p>Cargando...</p>
+      ) : lista.length === 0 ? (
+        <p style={{ color: C.tenue }}>No hay certificaciones pendientes.</p>
+      ) : (
+        lista.map((c) => (
+          <article key={c.id} style={caja}>
+            <p style={{ margin: 0, fontWeight: 700 }}>
+              {c.taller} · {c.nombre || c.tipo}
+            </p>
+            <p style={{ margin: "4px 0", fontSize: 13, color: C.tenue }}>
+              {[c.tipo, c.emisor && `Emisor: ${c.emisor}`, c.numero && `No. ${c.numero}`, c.vigencia && `Vigente hasta ${c.vigencia}`].filter(Boolean).join(" · ")}
+            </p>
+            {c.url && (
+              <a href={c.url} target="_blank" rel="noreferrer" style={{ color: C.naranja, fontSize: 13 }}>
+                Ver documento ({c.archivo}) ↗
+              </a>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+              <input
+                placeholder="Motivo (sólo si la rechazas)"
+                value={motivos[c.id] || ""}
+                onChange={(ev) => setMotivos({ ...motivos, [c.id]: ev.target.value })}
+                style={{ flex: 1, minWidth: 200, borderRadius: 8, border: `1px solid ${C.borde}`, padding: 6 }}
+              />
+              <button style={boton("primario")} onClick={() => void decidir(c.id, "aprobar")}>✓ Aprobar</button>
+              <button style={boton("peligro")} onClick={() => void decidir(c.id, "rechazar")}>Rechazar</button>
+            </div>
+          </article>
+        ))
+      )}
+    </section>
+  )
+}
+
+type Miembro = { id: string; email: string; nombre: string; empresa: string; desde: string | null; hasta: string | null }
+
+function Membresias() {
+  const [lista, setLista] = useState<Miembro[] | null>(null)
+  const [email, setEmail] = useState("")
+  const [hasta, setHasta] = useState("")
+  const [nota, setNota] = useState("")
+  const cargar = useCallback(async () => {
+    try {
+      const d = await apiAdmin<{ miembros: Miembro[] }>("/hetna-membresias")
+      setLista(d.miembros)
+    } catch (e) {
+      setNota((e as Error).message)
+      setLista([])
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const cambiar = async (correo: string, activa: boolean) => {
+    setNota("")
+    try {
+      await apiAdmin("/hetna-membresias", { email: correo, activa, hasta: hasta || undefined })
+      setNota(activa ? `Membresía activada para ${correo}. Le mandamos un correo.` : `Membresía quitada a ${correo}.`)
+      setEmail("")
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  return (
+    <section style={{ marginTop: 32 }}>
+      <h2 style={{ fontSize: 18, margin: 0 }}>Membresía Empresarial de clientes</h2>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "4px 0 12px" }}>
+        Gratis por ahora. Incluye licitaciones privadas y restringidas, resumen con IA, “sólo talleres verificados” y que HETNA le busque proveedor. El cliente debe tener cuenta en la tienda con ese correo.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <input value={email} onChange={(ev) => setEmail(ev.target.value)} placeholder="correo@empresa.com" style={{ minWidth: 240, borderRadius: 8, border: `1px solid ${C.borde}`, padding: 6 }} />
+        <label style={{ fontSize: 13 }}>
+          Hasta (opcional){" "}
+          <input type="date" value={hasta} onChange={(ev) => setHasta(ev.target.value)} style={{ borderRadius: 8, border: `1px solid ${C.borde}`, padding: 5 }} />
+        </label>
+        <button style={boton("primario")} disabled={!email.trim()} onClick={() => void cambiar(email.trim(), true)}>Activar membresía</button>
+      </div>
+      {nota && <p style={{ fontSize: 13 }}>{nota}</p>}
+      {lista && lista.length > 0 && (
+        <table style={{ width: "100%", marginTop: 12, fontSize: 13, borderCollapse: "collapse" }}>
+          <tbody>
+            {lista.map((m) => (
+              <tr key={m.id} style={{ borderTop: `1px solid ${C.borde}` }}>
+                <td style={{ padding: 6 }}>{m.email}</td>
+                <td style={{ padding: 6 }}>{[m.nombre, m.empresa].filter(Boolean).join(" · ")}</td>
+                <td style={{ padding: 6, color: C.tenue }}>desde {fecha(m.desde)}{m.hasta ? ` · hasta ${m.hasta.slice(0, 10)}` : ""}</td>
+                <td style={{ padding: 6, textAlign: "right" }}>
+                  <button style={boton("peligro")} onClick={() => void cambiar(m.email, false)}>Quitar</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
   )
 }
 
@@ -257,6 +419,8 @@ export default function VerificacionesPage() {
       ) : (
         lista.map((e) => <Tarjeta key={e.seller_id} e={e} alCambiar={() => void cargar()} />)
       )}
+      <Certificaciones />
+      <Membresias />
     </div>
   )
 }

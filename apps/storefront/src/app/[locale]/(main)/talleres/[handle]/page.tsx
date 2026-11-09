@@ -115,7 +115,16 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
             )}
           </div>
           <div className="min-w-0 flex-1 pt-2">
-            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}{t.verificado && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Taller verificado</span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]">★ Taller fundador</span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}</h1>
+            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}{t.verificado && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Taller verificado</span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal">🏢 Empresa verificada</span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]">★ Taller fundador</span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}</h1>
+            {t.certificaciones.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Certificaciones acreditadas">
+                {t.certificaciones.map((c) => (
+                  <li key={c.tipo + c.nombre} className="rounded-full border border-[#CFE3D6] bg-white px-3 py-1 text-xs font-semibold text-[#1E7B3A]" title={[c.emisor && `Emitida por ${c.emisor}`, c.vigencia && `vigente hasta ${c.vigencia}`, "Documento revisado por HETNA"].filter(Boolean).join(" · ")}>
+                    🎖 {c.nombre}
+                  </li>
+                ))}
+              </ul>
+            )}
             {p.lema && <p className="mt-0.5 text-[#40403A]">{p.lema}</p>}
             {p.marcas && p.marcas.length > 0 && <p className="mt-1 text-sm text-[#40403A]"><b>Marcas que distribuye:</b> {p.marcas.join(", ")}</p>}
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6B675C]">

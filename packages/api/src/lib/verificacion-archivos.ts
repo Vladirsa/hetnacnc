@@ -19,6 +19,9 @@ export type TipoDocumento =
   | "fachada"
   | "taller"
   | "comprobante_domicilio"
+  // Fase 3: empresa verificada (opcionales)
+  | "constancia_fiscal"
+  | "acta_constitutiva"
 
 export const TIPOS: Record<TipoDocumento, { nombre: string; max: number; pdf: boolean; obligatorio: number }> = {
   identificacion_frente: { nombre: "Identificación oficial (frente)", max: 1, pdf: true, obligatorio: 1 },
@@ -26,6 +29,8 @@ export const TIPOS: Record<TipoDocumento, { nombre: string; max: number; pdf: bo
   fachada: { nombre: "Fachada del taller", max: 2, pdf: false, obligatorio: 1 },
   taller: { nombre: "Interior del taller y máquinas", max: 6, pdf: false, obligatorio: 2 },
   comprobante_domicilio: { nombre: "Comprobante de domicilio (opcional)", max: 1, pdf: true, obligatorio: 0 },
+  constancia_fiscal: { nombre: "Constancia de situación fiscal del SAT (opcional, para 'Empresa verificada')", max: 1, pdf: true, obligatorio: 0 },
+  acta_constitutiva: { nombre: "Acta constitutiva o poder del representante (opcional, personas morales)", max: 1, pdf: true, obligatorio: 0 },
 }
 
 export const esTipo = (t: unknown): t is TipoDocumento => typeof t === "string" && t in TIPOS

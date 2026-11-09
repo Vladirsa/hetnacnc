@@ -6,6 +6,7 @@ import { sendEmail } from "./resend"
 import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
 import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
+import { puntajePosicion, tallerVerificado } from "./confianza"
 import {
   T_SOLICITUD,
   type Trabajo,
@@ -98,6 +99,7 @@ export async function difundirSolicitud(
       const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
       const coinciden = otros.filter((x) => {
         const t = tipoCuenta(x)
+        if (s.solo_verificados && !tallerVerificado(x.metadata)) return false
         if (suministro) return t === "proveedor" || t === "ambos"
         if (t === "proveedor") return false
         const servicios: string[] = x.metadata?.perfil?.servicios || []
@@ -117,7 +119,9 @@ export async function difundirSolicitud(
           : 2) +
         (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
         (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
-      coinciden.sort((x, y) => prioridad(x) - prioridad(y))
+      // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
+      // verificación y certificaciones). No cambia su calificación.
+      coinciden.sort((x, y) => prioridad(x) - prioridad(y) || puntajePosicion(y.metadata) - puntajePosicion(x.metadata))
       for (const x of coinciden) {
         if (destinos.length >= MAX_AVISOS) break
         destinos.push({ email: x.email, id: x.id })

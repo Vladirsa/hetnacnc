@@ -64,6 +64,9 @@ export type Taller = {
   fundador: boolean
   // Aprobado por HETNA con identificación y fotos del taller (lo marca solo el administrador)
   verificado: boolean
+  // Fase 3: constancia fiscal revisada por HETNA y certificaciones acreditadas vigentes
+  empresaVerificada: boolean
+  certificaciones: { tipo: string; nombre: string; emisor: string | null; vigencia: string | null }[]
   perfil: Perfil
 }
 
@@ -138,6 +141,10 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   banner: s.banner,
   fundador: s.metadata?.fundador === true,
   verificado: s.metadata?.verificado === true,
+  empresaVerificada: s.metadata?.empresa_verificada === true,
+  certificaciones: (Array.isArray(s.metadata?.certificaciones) ? s.metadata.certificaciones : []).filter(
+    (c: any) => c && c.nombre && (!c.vigencia || new Date(c.vigencia).getTime() >= Date.now() - 86_400_000)
+  ),
   perfil: leerPerfil(s.metadata),
 })
 

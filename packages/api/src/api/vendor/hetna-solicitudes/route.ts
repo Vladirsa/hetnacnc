@@ -90,7 +90,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
       "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
       "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos",
-      "s.tipo",
+      "s.tipo", "s.solo_verificados",
       "r.motivo as r_motivo", "r.nota as r_nota"
     )) as any[]
 
@@ -103,6 +103,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const meToca = (f: any) => {
     const r = relaciones.get(f.id)!
     if (r.propuso || r.invitado) return true
+    // Fase 3: si el cliente pidió sólo talleres verificados
+    if (f.solo_verificados && !(yo?.metadata?.verificado === true || yo?.metadata?.verificado === "true")) return false
     const suministro = f.tipo === "suministro"
     return miTipo === "ambos" || (suministro ? miTipo === "proveedor" : miTipo !== "proveedor")
   }

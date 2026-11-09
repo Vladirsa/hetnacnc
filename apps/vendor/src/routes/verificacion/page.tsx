@@ -19,7 +19,7 @@ export const config: RouteConfig = {
   icon: Escudo,
 }
 
-const ORDEN = ["identificacion_frente", "identificacion_reverso", "fachada", "taller", "comprobante_domicilio"]
+const ORDEN = ["identificacion_frente", "identificacion_reverso", "fachada", "taller", "comprobante_domicilio", "constancia_fiscal", "acta_constitutiva"]
 
 const AYUDA = {
   identificacion_frente: "INE, pasaporte o cédula profesional del responsable del taller. Que se lean bien los datos.",
@@ -27,6 +27,8 @@ const AYUDA = {
   fachada: "Foto de la entrada del taller desde la calle, donde se vea el número o el letrero.",
   taller: "Al menos 2 fotos del interior: tus máquinas trabajando, el área de trabajo.",
   comprobante_domicilio: "Recibo de luz, agua o teléfono a nombre del taller o del responsable (no mayor a 3 meses).",
+  constancia_fiscal: "Constancia de situación fiscal del SAT (con RFC). Con ella puedes obtener la insignia \"Empresa verificada\".",
+  acta_constitutiva: "Si eres persona moral: acta constitutiva o poder del representante legal.",
 }
 
 const ESTADO = {
@@ -86,6 +88,147 @@ function Miniatura({ archivo, puedeQuitar, alQuitar }) {
           style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: 0, background: "rgba(0,0,0,.65)", color: "#fff", cursor: "pointer" }}>×</button>
       )}
     </div>
+  )
+}
+
+// Fase 3: pago único de la verificación para el plan Gratis ($299). En los
+// planes Taller, Pro e Industrial va incluida.
+function PagoVerificacion({ alPagar }) {
+  const [info, setInfo] = useState(null)
+  const [cargando, setCargando] = useState(false)
+  const [nota, setNota] = useState("")
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search)
+    const pagoId = qs.get("payment_id") || qs.get("collection_id")
+    const cargar = () => fetch("/vendor/hetna-verificacion/pago", { credentials: "include" }).then((r) => r.json()).then(setInfo).catch(() => setInfo(null))
+    if (pagoId) {
+      fetch("/vendor/hetna-verificacion/pago", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payment_id: pagoId }) })
+        .then((r) => r.json())
+        .then((d) => { setNota(d.ok ? "¡Pago recibido! Ya puedes enviar tus documentos y certificaciones." : d.motivo || ""); if (d.ok) alPagar?.() })
+        .finally(cargar)
+    } else cargar()
+  }, [])
+  if (!info || !info.debe_pagar) return nota ? <p style={{ fontSize: 14, color: "#1E7B3A" }}>{nota}</p> : null
+  const pagar = async () => {
+    setCargando(true)
+    setNota("")
+    try {
+      const r = await fetch("/vendor/hetna-verificacion/pago", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      if (d.url) window.location.href = d.url
+    } catch (e) {
+      setNota(e.message)
+    } finally {
+      setCargando(false)
+    }
+  }
+  return (
+    <section style={{ ...S.card, background: "#FFF8EE", borderColor: "#F2C98F" }}>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>Tu plan es Gratis: la verificación cuesta ${info.precio} (una sola vez)</p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>
+        Incluye la revisión de tu identidad, de tu empresa y de tus certificaciones. En los planes Taller, Pro e Industrial va incluida.
+        Los talleres verificados y certificados aparecen mejor posicionados ante los clientes.
+      </p>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+        <button type="button" style={S.btn} disabled={cargando} onClick={pagar}>{cargando ? "Abriendo Mercado Pago..." : `Pagar $${info.precio} con Mercado Pago`}</button>
+        {nota && <span style={{ fontSize: 13, color: "#B3261E" }}>{nota}</span>}
+      </div>
+    </section>
+  )
+}
+
+// Fase 3: certificaciones acreditadas (ISO, AS9100, distribuidor autorizado…),
+// separadas de la verificación y de la reputación.
+function Certificaciones() {
+  const [datos, setDatos] = useState(null)
+  const [f, setF] = useState({ tipo: "iso9001", nombre: "", emisor: "", numero: "", vigencia: "" })
+  const [archivo, setArchivo] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+  const [nota, setNota] = useState(null)
+  const cargar = () => fetch("/vendor/hetna-certificaciones", { credentials: "include" }).then((r) => r.json()).then(setDatos).catch(() => setDatos({ tipos: {}, certificaciones: [] }))
+  useEffect(() => { cargar() }, [])
+  if (!datos) return null
+  const enviar = async () => {
+    if (!archivo) return setNota({ ok: false, t: "Sube el certificado (PDF o foto)." })
+    setEnviando(true)
+    setNota(null)
+    try {
+      const fd = new FormData()
+      Object.entries(f).forEach(([k, v]) => fd.append(k, v))
+      fd.append("archivo", archivo)
+      const r = await fetch("/vendor/hetna-certificaciones", { method: "POST", credentials: "include", body: fd })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setNota({ ok: true, t: "Enviada a revisión. Te avisamos cuando HETNA la apruebe." })
+      setArchivo(null)
+      setF({ tipo: "iso9001", nombre: "", emisor: "", numero: "", vigencia: "" })
+      cargar()
+    } catch (e) {
+      setNota({ ok: false, t: e.message })
+    } finally {
+      setEnviando(false)
+    }
+  }
+  const quitar = async (id) => {
+    await fetch(`/vendor/hetna-certificaciones/${id}`, { method: "DELETE", credentials: "include" })
+    cargar()
+  }
+  const COLOR = { pendiente: ["#FFF8EE", "#8A5A00", "En revisión"], aprobada: ["#E6F4EA", "#1E7B3A", "Aprobada"], rechazada: ["#FDECEA", "#B3261E", "No aprobada"] }
+  return (
+    <section style={S.card}>
+      <h2 style={S.h2}>Certificaciones</h2>
+      <p style={S.hint}>
+        ISO 9001, AS9100, IATF 16949, carta de distribuidor autorizado, certificación de soldadura… HETNA revisa el documento y, al aprobarlo,
+        aparece en tu perfil como <b>certificación acreditada</b>. Sube tu posicionamiento, no tu calificación (esa sólo sale de trabajos reales).
+      </p>
+      {datos.certificaciones.length > 0 && (
+        <div style={{ display: "grid", gap: 6, margin: "8px 0 12px" }}>
+          {datos.certificaciones.map((c) => {
+            const [bg, col, txt] = COLOR[c.estado] || COLOR.pendiente
+            return (
+              <div key={c.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", fontSize: 14 }}>
+                <b>{c.tipo === "otra" || c.tipo === "distribuidor" ? c.nombre || datos.tipos[c.tipo] : datos.tipos[c.tipo]}</b>
+                {c.emisor && <span style={{ color: "#6B675C" }}>· {c.emisor}</span>}
+                {c.vigencia && <span style={{ color: "#6B675C" }}>· vence {c.vigencia}</span>}
+                <span style={{ background: bg, color: col, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{txt}</span>
+                {c.motivo && <span style={{ color: "#B3261E", fontSize: 13 }}>{c.motivo}</span>}
+                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(c.id)}>Quitar</button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+        <label style={{ fontSize: 13 }}>Tipo
+          <select style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })}>
+            {Object.entries(datos.tipos).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </label>
+        {(f.tipo === "otra" || f.tipo === "distribuidor") && (
+          <label style={{ fontSize: 13 }}>{f.tipo === "distribuidor" ? "Marca" : "Nombre"}
+            <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} />
+          </label>
+        )}
+        <label style={{ fontSize: 13 }}>Organismo que la emitió
+          <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.emisor} onChange={(e) => setF({ ...f, emisor: e.target.value })} placeholder="Ej. Bureau Veritas" />
+        </label>
+        <label style={{ fontSize: 13 }}>Número de certificado
+          <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.numero} onChange={(e) => setF({ ...f, numero: e.target.value })} />
+        </label>
+        <label style={{ fontSize: 13 }}>Vigente hasta
+          <input type="date" style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.vigencia} onChange={(e) => setF({ ...f, vigencia: e.target.value })} />
+        </label>
+      </div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+        <label style={S.btn2}>
+          {archivo ? `📎 ${archivo.name}` : "+ Certificado (PDF o foto)"}
+          <input type="file" accept="application/pdf,image/jpeg,image/png" style={{ display: "none" }} onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
+        </label>
+        <button type="button" style={S.btn} disabled={enviando} onClick={enviar}>{enviando ? "Enviando..." : "Enviar a revisión"}</button>
+        {nota && <span style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</span>}
+      </div>
+    </section>
   )
 }
 
@@ -159,6 +302,8 @@ export default function VerificacionPage() {
         Así los clientes saben que eres un taller real.
       </p>
 
+      <PagoVerificacion />
+
       <section style={{ ...S.card, background: est.bg, borderColor: est.bg }}>
         <p style={{ margin: 0, fontWeight: 700, color: est.c, fontSize: 16 }}>{est.t}</p>
         <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>{est.d}</p>
@@ -228,6 +373,8 @@ export default function VerificacionPage() {
         </div>
       )}
       {msg && <p style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+
+      <Certificaciones />
     </div>
   )
 }

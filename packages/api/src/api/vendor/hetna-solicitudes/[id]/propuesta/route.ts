@@ -58,6 +58,12 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (s.estado !== "abierta") return res.status(409).json({ message: "Esta solicitud ya cerró." })
   if (s.modo === "directa" && s.taller_id !== sellerId) return res.status(403).json({ message: "Esta solicitud es para otro taller." })
+  // Fase 3: el cliente pidió propuestas sólo de talleres verificados
+  if (s.solo_verificados) {
+    const yo = await knex("seller").where({ id: sellerId }).first("metadata")
+    if (!(yo?.metadata?.verificado === true || yo?.metadata?.verificado === "true"))
+      return res.status(403).json({ message: "El cliente pidió propuestas sólo de talleres verificados. Verifica tu taller desde Verificación." })
+  }
   // Licitación privada: sólo los talleres invitados
   if (!tallerPuedeVer(s, await relacionTaller(knex, s, sellerId))) return res.status(403).json({ message: "Esta licitación es privada: sólo participan los talleres invitados." })
 

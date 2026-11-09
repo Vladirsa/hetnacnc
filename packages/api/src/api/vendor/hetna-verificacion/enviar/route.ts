@@ -3,6 +3,9 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 
 import { guardarExpediente, leerExpediente, vistaTaller } from "../../../../lib/verificacion"
 import { faltantes } from "../../../../lib/verificacion-archivos"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { PRECIO_VERIFICACION_GRATIS, debePagarVerificacion } from "../../../../lib/confianza"
+import { planComision } from "../../../../lib/licitacion-cobro"
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const sellerId = (req as any).seller_context?.seller_id as string | undefined
@@ -13,6 +16,15 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   if (exp.estado === "verificado") return res.status(409).json({ message: "Tu taller ya está verificado." })
   const falta = faltantes(exp.archivos)
   if (falta.length) return res.status(400).json({ message: "Falta: " + falta.join(", ") })
+
+  // Fase 3: con plan Gratis la verificación cuesta $299 (una sola vez); en los
+  // planes de pago va incluida.
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+  const vendedor = await knex("seller").where({ id: sellerId }).first("id", "email", "metadata")
+  const plan = await planComision(vendedor || {}).catch(() => "gratis")
+  if (vendedor && debePagarVerificacion(plan, vendedor)) {
+    return res.status(402).json({ message: `Con el plan Gratis la verificación cuesta $${PRECIO_VERIFICACION_GRATIS} (una sola vez). En los planes Taller, Pro e Industrial va incluida.`, pagar: true })
+  }
 
   // Consentimiento expreso para tratar la identificación (LFPDPPP arts. 7-8)
   if ((req.body as { consentimiento?: unknown } | undefined)?.consentimiento !== true) {

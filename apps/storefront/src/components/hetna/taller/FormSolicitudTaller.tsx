@@ -256,6 +256,7 @@ export default function FormSolicitudTaller({
       // Licitaciones 3.0: privacidad y modalidad (PrivacidadSolicitud)
       empresa: v("empresa"),
       modalidad: v("modalidad"),
+      solo_verificados: v("solo_verificados") === "1",
       privacidad: v("privacidad"),
       difundir_redes: v("difundir_redes") === "1",
       invitados: v("invitados"),

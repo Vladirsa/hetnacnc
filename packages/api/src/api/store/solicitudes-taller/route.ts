@@ -8,6 +8,7 @@ import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionAc
 import { ligarCliente } from "../../../lib/licitacion-extra"
 import { asegurarPrivacidad, invitarTalleres, leerModalidad, leerPrivacidad } from "../../../lib/licitacion-privacidad"
 import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
+import { esMiembroEmpresarial } from "../../../lib/confianza"
 import {
   type ArchivoSolicitud,
   MAX_ARCHIVOS_SOLICITUD,
@@ -64,6 +65,7 @@ type Body = {
   privacidad?: Record<string, string> | string
   difundir_redes?: boolean | string
   invitados?: string[] | string
+  solo_verificados?: boolean | string
   // Fase 2: "fabricacion" (piezas a la medida) o "suministro" (material/insumos)
   tipo?: string
   marca?: string
@@ -189,6 +191,19 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const modalidad = modo === "directa" ? "privada" : leerModalidad(b.modalidad)
   // La difusión en redes sólo con autorización expresa, y nunca de una privada
   const difundirRedes = modalidad !== "privada" && si(b.difundir_redes)
+  // Fase 3: licitación privada o restringida (abierta, no dirigida a un taller)
+  // y "sólo talleres verificados" son de la Membresía Empresarial.
+  const pideEmpresarial = (modo === "abierta" && modalidad !== "publica") || si(b.solo_verificados)
+  const miembro = pideEmpresarial
+    ? await esMiembroEmpresarial(knex, { customerId: (req as any).auth_context?.actor_id, email })
+    : false
+  if (pideEmpresarial && !miembro) {
+    return res.status(403).json({
+      message: "Las licitaciones privadas, restringidas y \"sólo talleres verificados\" son de la Membresía Empresarial. Por ahora es gratis: escríbenos y te la activamos. También puedes mandar tu solicitud como pública.",
+      empresarial: true,
+    })
+  }
+  const soloVerificados = miembro && si(b.solo_verificados)
 
   // Guardar. Con revisión, la solicitud nace en "revision": no la ve ningún
   // taller ni sale en el tablero hasta que HETNA la aprueba, y sus 7 días
@@ -214,9 +229,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         privacidad,
         difundir_redes: difundirRedes,
         tipo,
+        solo_verificados: soloVerificados,
         cierra_en: revision ? null : new Date(Date.now() + DIAS_ABIERTA * 864e5),
       })
-      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes", "tipo"])
+      .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes", "tipo", "solo_verificados"])
     sol = fila0
     folio = folioTexto(fila0.folio)
     if (modalidad === "privada" && b.invitados) await invitarTalleres(knex, fila0.id, b.invitados)
