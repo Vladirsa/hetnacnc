@@ -67,6 +67,12 @@ export type Prellenado = {
   archivo?: string // ruta relativa (/mx/disenar/...) de donde bajar el DXF
   nombreArchivo?: string
   proceso?: string // "Corte láser", "Router CNC"…
+  // Desde el estimador del cliente (/user/cotizar): el archivo ya está en el
+  // bucket (no se vuelve a subir), la cantidad y la descripción vienen puestas
+  // y el archivo no se baja de ninguna ruta.
+  archivos?: (ArchivoSubido & { geo?: string })[]
+  cantidad?: string
+  descripcion?: string
 }
 
 const pesoLegible = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`)
@@ -94,7 +100,9 @@ export default function FormSolicitudTaller({
     NECESIDADES.some((n) => n.valor === necesidadInicial) ? necesidadInicial! : prellenado ? "Cortar piezas" : ""
   )
   const [tieneArchivo, setTieneArchivo] = useState<string>(prellenado ? "Tengo archivo profesional" : "")
-  const [archivos, setArchivos] = useState<Pendiente[]>([])
+  const [archivos, setArchivos] = useState<Pendiente[]>(() =>
+    (prellenado?.archivos || []).map((a, i) => ({ id: `ini-${i}`, nombre: a.nombre, tamano: a.tamano, avance: 100, subido: a, geo: a.geo }))
+  )
   const entrada = useRef<HTMLInputElement>(null)
   const medidasRef = useRef<HTMLInputElement>(null)
   const archivoPrellenado = useRef(false)
@@ -139,7 +147,7 @@ export default function FormSolicitudTaller({
   // El archivo que generó la herramienta se baja y se sube como si el
   // cliente lo hubiera elegido (sólo rutas de este sitio, nunca externas).
   useEffect(() => {
-    if (!prellenado || archivoPrellenado.current) return
+    if (!prellenado || archivoPrellenado.current || prellenado.archivos?.length) return
     // Generadores que calculan en el navegador: dejan el archivo en sessionStorage
     const guardado = tomarArchivoParaFabricar()
     if (guardado) {
@@ -318,9 +326,9 @@ export default function FormSolicitudTaller({
       )}
       {prellenado && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
-          <strong className="text-[#0F7A4A]">Tu diseño ya viene cargado:</strong> {prellenado.pieza}
+          <strong className="text-[#0F7A4A]">{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</strong> {prellenado.pieza}
           {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
-          {prellenado.material ? ` · ${prellenado.material}` : ""}. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual lo generaste.
+          {prellenado.material ? ` · ${prellenado.material}` : ""}. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual {prellenado.archivos?.length ? "lo subiste" : "lo generaste"}.
         </div>
       )}
 
@@ -465,7 +473,9 @@ export default function FormSolicitudTaller({
               rows={4}
               placeholder="Ej. 50 letreros de MDF de 30 x 20 cm con el logo grabado, para la entrada de una tienda"
               defaultValue={
-                prellenado
+                prellenado?.descripcion
+                  ? prellenado.descripcion
+                  : prellenado
                   ? `Pieza diseñada con las herramientas de HETNA: ${prellenado.pieza}${prellenado.medidas ? `, ${prellenado.medidas}` : ""}${prellenado.material ? `, en ${prellenado.material}` : ""}. El archivo de corte va adjunto; sólo necesito que la corten.`
                   : undefined
               }
@@ -478,7 +488,7 @@ export default function FormSolicitudTaller({
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="cantidad">Cantidad</label>
-            <input ref={cantidadRef} id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? "1 pieza" : undefined} onChange={(e) => avisarPieza(e.target.value)} />
+            <input ref={cantidadRef} id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? prellenado.cantidad || "1 pieza" : undefined} onChange={(e) => avisarPieza(e.target.value)} />
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="medidas">Medidas aproximadas</label>
