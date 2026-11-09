@@ -692,3 +692,17 @@ Decisiones del dueño: contrato **prendido como borrador** (cada página del PDF
 - **Clasificaciones públicas** (8.E/8.F) en `/mx/talleres/ranking`: por especialidad (láser, plasma, fresado y torno, router, 3D, moldes), por estado, proveedores por cumplimiento de entregas, y orden general, comercial o técnico. Usa promedio bayesiano (pocas reseñas pesan menos) e ignora planes y membresías. El ranking de clientes no es público: sólo lo ven los talleres, para proteger su privacidad.
 
 Pendiente: revisión del abogado (texto del contrato, términos y aviso de privacidad).
+
+## 20. Fase 5A implementada: HETNA Social Hub (9 nov 2026)
+
+Decisión del dueño: publica **n8n** (ahí viven las conexiones) y todo lo más automático posible; cada tipo de publicación automática puede cambiarse a "revisar antes" desde el panel.
+
+- **Admin → Social Hub** (`apps/admin/src/routes/social`): pendientes, calendario, publicadas, resultados y configuración.
+- **Automáticas** (`lib/social-hub.ts` → `publicacionAutomatica`): licitación autorizada por el cliente (resumen sin datos sensibles), taller aprobado (sale 24 h después para que llene su perfil), producto nuevo con foto y tema del foro. No se repiten.
+- **Manuales**: título, texto, liga, imagen (subida por el Admin) y redes; la IA adapta el texto a cada red (si no hay IA, plantillas). Cada texto se puede editar, reescribir, programar o publicar ya.
+- **Horario** configurable (por omisión de 9 a 20 h, centro de México) y espera antes de lo automático (10 min). Job `social-hub-publicar` cada 5 min.
+- **n8n** flujo "Social Hub - Publicar" (`/webhook/social-hub-publicar`, mismo token): Telegram @hetna_cnc y página de Facebook, con foto o sin ella. Instagram, LinkedIn y Discord responden "no conectado" hasta configurarlos (Fase 5B). Grupos de Facebook, WhatsApp, Reddit y Pinterest: copiar y pegar con liga medida.
+- **Medición**: liga corta `hetnacnc.com/r/<código>` por publicación y red (y por grupo, para lo que se pega a mano). Cuenta clics y, durante 30 días (cookie `hetna_social`), registros de clientes, registros de talleres (al confirmar su correo), solicitudes y ventas. Resultados por red, comunidad y publicación.
+- **Revisión semanal** de integraciones (job `social-hub-revision`, lunes): correo si n8n no responde o alguna red falló.
+
+Pendiente 5B: conectar Instagram (cuenta de empresa vinculada a la página), LinkedIn (aprobación de la página de empresa), Discord (webhook) y Pinterest; generación de imágenes y video con el Estudio de Publicidad.

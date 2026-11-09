@@ -7,6 +7,9 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import * as flujos from "@mercurjs/core/workflows"
 
 import { avisarAprobado, correoConfirmado, firmaValida, servicioTalleres } from "../../../../lib/alta-taller"
+import { publicacionAutomatica } from "../../../../lib/social-hub"
+import { STORE_URL } from "../../../../lib/licitacion"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 const leer = async (req: MedusaRequest, d: Record<string, unknown>) => {
   const id = String(d.s || "")
@@ -40,5 +43,22 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   await (flujos as any).approveSellerWorkflow(req.scope).run({ input: { seller_id: t.id } })
   req.scope.resolve("logger").info(`[alta-taller] aprobado ${t.name} (${t.email})`)
   await avisarAprobado(t)
+  // Fase 5A: anuncio del taller nuevo en redes, un día después para que
+  // alcance a llenar su perfil. Las cuentas de prueba no se anuncian.
+  if (!(t.metadata as any)?.prueba && t.handle) {
+    await publicacionAutomatica(
+      req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION),
+      {
+        origen: "taller",
+        origen_id: t.id,
+        titulo: t.name || "Taller nuevo",
+        lugar: [(t.metadata as any)?.perfil?.ciudad, (t.metadata as any)?.perfil?.estado].filter(Boolean).join(", "),
+        url: `${STORE_URL}/mx/talleres/${t.handle}`,
+        medios: (t as any).photo ? [{ url: (t as any).photo, tipo: "imagen" }] : [],
+        programada_para: new Date(Date.now() + 24 * 3_600_000),
+      },
+      req.scope.resolve("logger")
+    )
+  }
   res.json({ ok: true, ...datos({ ...t, status: "open" }) })
 }

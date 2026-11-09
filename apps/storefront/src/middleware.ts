@@ -200,5 +200,5 @@ export const config = {
   // excluían cualquier ruta que EMPEZARA con esas letras: /svg-a-dxf,
   // /pngs-de-prueba o /assets-de-marca se habrían quedado sin el redirect de
   // idioma y, peor, sin la revisión de sesión de PROTECTED_ROUTES.
-  matcher: ['/((?!api|_next/static|_next/image|.*\\.).*)']
+  matcher: ['/((?!api|r/|_next/static|_next/image|.*\\.).*)']
 };

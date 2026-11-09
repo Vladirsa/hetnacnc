@@ -1,6 +1,8 @@
 // Liga "confirma tu correo" del taller (packages/api/src/lib/alta-taller.ts).
 // Vive en /api/app/ porque nginx manda /api/v... a otro servicio. La API valida
 // la firma y marca el correo; aquí solo se pinta la página.
+import { eventoSocial } from "@/lib/hetna/social-evento"
+
 const API = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 const PANEL = (process.env.NEXT_PUBLIC_VENDOR_URL || "/seller").replace(/\/$/, "")
 
@@ -31,6 +33,8 @@ export async function GET(req: Request) {
     const r = await fetch(`${API}/hooks/alta-taller/confirmar${url.search}`, { cache: "no-store" })
     ok = r.ok
     if (ok) aprobado = Boolean(((await r.json().catch(() => ({}))) as { aprobado?: boolean }).aprobado)
+    // Social Hub: taller que llegó por una publicación de redes (cookie hetna_social)
+    if (ok) await eventoSocial("registro_taller", url.searchParams.get("s") || undefined)
   } catch {
     ok = false
   }

@@ -14,6 +14,7 @@ import {
   removeCartId,
   setAuthToken
 } from './cookies';
+import { eventoSocial } from '@/lib/hetna/social-evento';
 
 export const retrieveCustomer = async (): Promise<HttpTypes.StoreCustomer | null> => {
   const authHeaders = await getAuthHeaders();
@@ -188,6 +189,7 @@ export async function signup(formData: FormData) {
     await setAuthToken(token);
     const cliente = await asegurarCliente(email, password, datos);
     await vincularRecomendacion();
+    await eventoSocial('registro_cliente', email);
 
     // Cuenta nueva: sin sesión hasta que confirme su correo (la liga ya va en
     // camino; si es una cuenta que ya existía sin confirmar, se reenvía).

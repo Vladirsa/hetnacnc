@@ -17,6 +17,7 @@ import {
   setCartId
 } from './cookies';
 import { getRegion } from './regions';
+import { eventoSocial } from '@/lib/hetna/social-evento';
 
 // Lo que el carrito necesita siempre. Si algo de aquí falta, la página no se
 // puede dibujar.
@@ -469,6 +470,9 @@ export async function placeOrder(cartId?: string) {
     revalidatePath('/user/reviews');
     revalidatePath('/user/orders');
     removeCartId();
+    // Social Hub: venta atribuida a una publicación de redes (si llegó por una liga /r/)
+    const og: any = res.data.order_group;
+    await eventoSocial('venta', String(og.id), Number(og.total ?? og.summary?.current_order_total ?? 0) || undefined);
     // The completed cart splits into one order group (many per-seller orders).
     // Send the shopper to the order-group detail page, which renders every
     // child order + aggregated totals. `order_group.id` is always present;

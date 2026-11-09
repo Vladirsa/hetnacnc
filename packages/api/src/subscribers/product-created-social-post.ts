@@ -1,20 +1,16 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { publicacionAutomatica } from "../lib/social-hub"
+
 export default async function productCreatedSocialPost({
   event,
   container,
 }: SubscriberArgs<{ id: string }>) {
   const logger = container.resolve("logger")
 
-  const webhookUrl = process.env.N8N_PRODUCT_CREATED_WEBHOOK_URL
-  if (!webhookUrl) {
-    // Sin webhook configurado no hay nada que avisar; evitamos spamear el
-    // log en cada producto nuevo.
-    return
-  }
-
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const webhookUrl = process.env.N8N_PRODUCT_CREATED_WEBHOOK_URL
 
   try {
     const {
@@ -31,6 +27,22 @@ export default async function productCreatedSocialPost({
     }
 
     const storefrontUrl = process.env.STOREFRONT_URL || "https://hetnacnc.com"
+
+    // Fase 5A: publicación en el Social Hub (sale sola o espera visto bueno,
+    // según la configuración del Admin)
+    await publicacionAutomatica(
+      container.resolve(ContainerRegistrationKeys.PG_CONNECTION),
+      {
+        origen: "producto",
+        origen_id: product.id,
+        titulo: product.title,
+        resumen: String(product.description || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200),
+        url: `${storefrontUrl}/mx/products/${product.handle}`,
+        medios: [{ url: product.thumbnail || product.images?.[0]?.url, tipo: "imagen" }],
+      },
+      logger
+    )
+    if (!webhookUrl) return
 
     const res = await fetch(webhookUrl, {
       method: "POST",

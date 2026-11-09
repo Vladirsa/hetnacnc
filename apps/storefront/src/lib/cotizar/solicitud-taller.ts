@@ -4,6 +4,7 @@
 // Llama a POST /store/solicitudes-taller desde el servidor.
 
 import { getAuthHeaders } from "@/lib/data/cookies"
+import { eventoSocial } from "@/lib/hetna/social-evento"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
@@ -72,6 +73,7 @@ export async function enviarSolicitudTaller(
       return { ok: false, mensaje: body.message || "No se pudo enviar tu solicitud. Intenta de nuevo." }
     }
     const body = await res.json().catch(() => ({}))
+    await eventoSocial("solicitud", String(body.folio || ""))
     return { ok: true, folio: body.folio }
   } catch (e) {
     console.error("[cotizar] fallo llamando a solicitudes-taller", e)

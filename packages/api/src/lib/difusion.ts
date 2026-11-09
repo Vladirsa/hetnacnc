@@ -1,13 +1,13 @@
 // Difusión de una solicitud: avisar a los talleres que pueden hacerla y, si es
 // abierta, publicarla en redes. Se llama al crear la solicitud cuando no hay
 // revisión, o cuando HETNA la aprueba (dashboard o job de revisión vencida).
-import { avisarRedes } from "./redes"
 import { sendEmail } from "./resend"
 import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
 import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import { puntajePosicion, tallerVerificado } from "./confianza"
 import { aceptaCliente, reputacionCliente } from "./trust"
+import { publicacionAutomatica } from "./social-hub"
 import {
   T_SOLICITUD,
   type Trabajo,
@@ -159,15 +159,18 @@ export async function difundirSolicitud(
   // una privada, y con el resumen sin datos sensibles (Licitaciones 3.0 §1.3):
   // sin planos, sin presupuesto confidencial, sin contacto.
   if (abierta && s.difundir_redes) {
-    await avisarRedes(
+    // Fase 5A: pasa por el Social Hub (textos por red, horario y medición)
+    await publicacionAutomatica(
+      knex,
       {
-        tipo: "licitacion",
-        titulo: [trabajoTaller.servicio, trabajoTaller.material].filter(Boolean).join(" - ") || "Trabajo de fabricacion CNC",
+        origen: "licitacion",
+        origen_id: s.id,
+        titulo: [trabajoTaller.servicio, trabajoTaller.material].filter(Boolean).join(" - ") || "Trabajo de fabricación CNC",
         resumen: resumenRedes(s),
         lugar: [trabajoTaller.ciudad, trabajoTaller.estado_mx].filter(Boolean).join(", "),
         url: ligaTrabajo(s.folio),
       },
-      logger as any
+      logger
     )
   }
   logger.info(`[licitacion] ${folio} difundida a ${destinos.length} talleres`)

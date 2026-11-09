@@ -546,6 +546,11 @@ export type Routes = {
         hetnaSobrepesos: typeof import("../src/api/admin/hetna-sobrepesos/route") & {
             $id: typeof import("../src/api/admin/hetna-sobrepesos/[id]/route");
         };
+        hetnaSocial: typeof import("../src/api/admin/hetna-social/route") & {
+            $id: typeof import("../src/api/admin/hetna-social/[id]/route");
+            config: typeof import("../src/api/admin/hetna-social/config/route");
+            metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
+        };
         hetnaSolicitudes: typeof import("../src/api/admin/hetna-solicitudes/route") & {
             $id: typeof import("../src/api/admin/hetna-solicitudes/[id]/route") & {
                 accion: typeof import("../src/api/admin/hetna-solicitudes/[id]/accion/route");
@@ -607,6 +612,11 @@ export type Routes = {
         };
         baja: typeof import("../src/api/hooks/baja/route");
         mpLicitacion: typeof import("../src/api/hooks/mp-licitacion/route");
+        socialHub: {
+            aviso: typeof import("../src/api/hooks/social-hub/aviso/route");
+            clic: typeof import("../src/api/hooks/social-hub/clic/route");
+            evento: typeof import("../src/api/hooks/social-hub/evento/route");
+        };
         verificarCorreo: typeof import("../src/api/hooks/verificar-correo/route");
     };
     store: {
