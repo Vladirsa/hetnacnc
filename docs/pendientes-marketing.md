@@ -7,6 +7,7 @@ Lista viva de ideas pendientes del dueño. La agencia es **de uso interno** (só
 | Etapa | Qué incluye | Estado |
 |---|---|---|
 | 5A | Social Hub: publicaciones automáticas y manuales, calendario, textos por red con IA, ligas medidas y resultados (Facebook y Telegram vía n8n) | ✅ Hecho (9 nov 2026) |
+| Talleres promotores | Kit de difusión en el panel del taller ("Promociona tu taller": insignias con QR en cuadrado y vertical, textos listos, resultados de su liga medida) y videos de trabajos con autorización (texto versionado, fecha e IP; cláusula en términos de vendedores); revisión en Admin → Social Hub → Videos de talleres y publicación con crédito vía n8n (Telegram y Facebook con video) | ✅ Hecho (9 nov 2026) |
 | 5B | Videos (subir al Social Hub lo del Estudio de Video), imágenes con IA, Instagram, LinkedIn, Discord, Pinterest; YouTube y TikTok (manual o servicio aprobado) | Siguiente; faltan 3 respuestas del dueño |
 | 5C | Respuestas automáticas a comentarios y mensajes (Facebook, Instagram, WhatsApp, Telegram) con IA: aprobación o automáticas en preguntas comunes | Pendiente |
 | 5D | Publicidad pagada (Meta Ads) desde el panel | Pendiente |

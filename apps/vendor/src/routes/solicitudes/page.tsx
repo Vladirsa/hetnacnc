@@ -1091,6 +1091,14 @@ export default function SolicitudesPage() {
             {p?.estado === "elegida" && <Conversacion sol={s} />}
             {p?.estado === "elegida" && <AcuerdoSafeDeal sol={s} />}
             {p?.estado === "elegida" && <EvaluarCliente sol={s} />}
+            {p?.estado === "elegida" && ["entregada", "cerrada"].includes(s.etapa) && (
+              <a
+                href={`${window.location.pathname.replace(/\/solicitudes.*$/, "")}/promocion?solicitud=${s.id}`}
+                style={{ display: "inline-block", marginTop: 10, fontSize: 13, fontWeight: 600, color: "#C2560A" }}
+              >
+                📹 Sube un video de este trabajo y lo publicamos en las redes de HETNA con tu nombre
+              </a>
+            )}
 
             {s.estado === "abierta" && !descartada(s) && <Preguntas sol={s} alGuardar={cargar} />}
 

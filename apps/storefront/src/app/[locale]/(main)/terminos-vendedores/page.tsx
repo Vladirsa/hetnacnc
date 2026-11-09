@@ -96,6 +96,13 @@ export default function TerminosVendedores() {
       <ul>
         <li>Declaras que tienes derecho a vender lo que publicas y a usar las fotos, textos, marcas y diseños de tus publicaciones.</li>
         <li>Das a HETNA permiso gratuito, no exclusivo y mientras dure tu cuenta, para mostrar ese contenido en el sitio, en sus redes sociales y en su publicidad, con el fin de promover tus productos y la plataforma.</li>
+        <li>
+          Videos y fotos de tus trabajos: si los subes en &quot;Promociona tu taller&quot; y marcas la casilla de autorización, das a HETNA permiso gratuito y no
+          exclusivo para publicarlos en el sitio, en sus redes sociales y en su publicidad, siempre con el nombre de tu taller y la liga a tu perfil. Puedes
+          retirarlos cuando quieras desde tu panel: HETNA deja de usarlos y quita en un plazo razonable lo que ya haya publicado. Al subirlos declaras que
+          son tuyos, que no incluyen música, marcas ni imágenes de terceros sin permiso y que tienes permiso de tu cliente para mostrar la pieza, o que en
+          ellos no se reconoce su diseño ni información confidencial.
+        </li>
         <li>Si alguien reclama que una publicación infringe sus derechos, HETNA puede retirarla mientras se aclara, y te pedirá tu respuesta. Los reclamos se envían por {medioContacto()}.</li>
       </ul>
 

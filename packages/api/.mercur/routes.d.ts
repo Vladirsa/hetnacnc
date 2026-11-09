@@ -550,6 +550,9 @@ export type Routes = {
             $id: typeof import("../src/api/admin/hetna-social/[id]/route");
             config: typeof import("../src/api/admin/hetna-social/config/route");
             metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
+            videos: typeof import("../src/api/admin/hetna-social/videos/route") & {
+                $id: typeof import("../src/api/admin/hetna-social/videos/[id]/route");
+            };
         };
         hetnaSolicitudes: typeof import("../src/api/admin/hetna-solicitudes/route") & {
             $id: typeof import("../src/api/admin/hetna-solicitudes/[id]/route") & {
@@ -1185,6 +1188,11 @@ export type Routes = {
         };
         hetnaLibros: typeof import("../src/api/vendor/hetna-libros/route") & {
             archivo: typeof import("../src/api/vendor/hetna-libros/archivo/route");
+        };
+        hetnaPromocion: typeof import("../src/api/vendor/hetna-promocion/route") & {
+            videos: typeof import("../src/api/vendor/hetna-promocion/videos/route") & {
+                $id: typeof import("../src/api/vendor/hetna-promocion/videos/[id]/route");
+            };
         };
         hetnaPublicar: typeof import("../src/api/vendor/hetna-publicar/route") & {
             revisarFoto: typeof import("../src/api/vendor/hetna-publicar/revisar-foto/route");

@@ -40,12 +40,12 @@ export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; im
   reddit: { nombre: "Reddit", auto: false, max: 1500, estilo: "técnico y honesto, sin tono de anuncio; aporta valor primero" },
   pinterest: { nombre: "Pinterest", auto: false, max: 450, imagen: "requerida", estilo: "descriptivo con palabras clave" },
 }
-export const ORIGENES = ["manual", "licitacion", "taller", "producto", "foro"] as const
+export const ORIGENES = ["manual", "licitacion", "taller", "producto", "foro", "taller_video"] as const
 export type Origen = (typeof ORIGENES)[number]
 
 export type ConfigSocial = {
   redes: Red[] // redes activas para los automáticos
-  automatico: Record<Exclude<Origen, "manual">, boolean>
+  automatico: Record<Exclude<Origen, "manual" | "taller_video">, boolean>
   horario: { desde: number; hasta: number } // horas, hora del centro de México
   retraso_min: number
 }
@@ -70,7 +70,7 @@ export async function asegurarSocial(knex: any) {
     t.text("texto_base").notNullable()
     t.jsonb("textos").notNullable() // { red: texto }
     t.jsonb("redes").notNullable() // [red]
-    t.jsonb("medios") // [{ url, tipo }]
+    t.jsonb("medios") // [{ url, tipo: "imagen" | "video" }]
     t.text("url_destino")
     t.text("estado").notNullable() // borrador | programada | publicando | publicada | parcial | error | descartada
     t.timestamp("programada_para", { useTz: true })
@@ -170,6 +170,7 @@ export function textoBase(origen: Origen, d: { titulo: string; resumen?: string;
   if (origen === "licitacion") return `🔧 Nueva solicitud de cotización en HETNA CNC\n\n${d.titulo}${l}${r}\n\n¿Tienes taller? Envía tu propuesta sin comisión: ${LIGA_MARCA}`
   if (origen === "taller") return `🏭 Nuevo taller en HETNA CNC: ${d.titulo}${l}${r}\n\nConoce sus trabajos y pídele cotización: ${LIGA_MARCA}`
   if (origen === "producto") return `🛒 Nuevo en la tienda HETNA: ${d.titulo}${d.precio ? ` — ${d.precio}` : ""}${r}\n\nVelo aquí: ${LIGA_MARCA}`
+  if (origen === "taller_video") return `🔧 ${d.titulo}${r}\n\nCotiza con este taller: ${LIGA_MARCA}`
   if (origen === "foro") return `💬 Nuevo en el Foro CNC México: ${d.titulo}${r}\n\nParticipa: ${LIGA_MARCA}`
   return `${d.titulo}${r}\n\n${LIGA_MARCA}`
 }
@@ -319,7 +320,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
  * Según la configuración sale sola (programada dentro del horario) o queda
  * como borrador esperando visto bueno.
  */
-export async function publicacionAutomatica(knex: any, d: NuevaPub & { origen: Exclude<Origen, "manual">; origen_id: string }, logger?: any) {
+export async function publicacionAutomatica(knex: any, d: NuevaPub & { origen: Exclude<Origen, "manual" | "taller_video">; origen_id: string }, logger?: any) {
   try {
     await asegurarSocial(knex)
     if (await knex(T_POST).where({ origen: d.origen, origen_id: d.origen_id }).first("id")) return null
@@ -365,7 +366,10 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   if (!n) return null
   const p = await knex(T_POST).where({ id: postId }).first()
   const resultado = { ...(p.resultado || {}) }
-  const imagen = (p.medios || [])[0]?.url || ""
+  const medio = (p.medios || [])[0] || null
+  const esVideo = medio?.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(String(medio?.url || ""))
+  const imagen = medio && !esVideo ? medio.url : ""
+  const video = medio && esVideo ? medio.url : ""
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
@@ -375,11 +379,11 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       resultado[red] = { ok: true, manual: true, en: new Date().toISOString() }
       continue
     }
-    if (REDES[red].imagen === "requerida" && !imagen) {
+    if (REDES[red].imagen === "requerida" && !imagen && !video) {
       resultado[red] = { ok: false, error: "Esta red necesita una imagen.", en: new Date().toISOString() }
       continue
     }
-    const r = await enviarAN8n({ red, texto, imagen, url: liga, titulo: p.titulo, post_id: p.id })
+    const r = await enviarAN8n({ red, texto, imagen, video, url: liga, titulo: p.titulo, post_id: p.id })
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
   }
@@ -435,7 +439,7 @@ export async function metricas(knex: any, dias = 30) {
     .sum({ valor: "e.valor" })
   const clics = await knex(`${T_EVENTO_S} as e`).join(`${T_LIGA} as l`, "l.codigo", "e.codigo").where("e.tipo", "clic").where("e.created_at", ">=", desde).groupBy("l.red").select("l.red").count({ n: "*" })
   const porRed: Record<string, any> = {}
-  for (const r of Object.keys(REDES)) porRed[r] = { red: r, nombre: REDES[r as Red].nombre, clics: 0, registro_cliente: 0, registro_taller: 0, solicitud: 0, venta: 0, ventas_mxn: 0 }
+  for (const r of [...Object.keys(REDES), "talleres"]) porRed[r] = { red: r, nombre: REDES[r as Red]?.nombre || "Difusión de los talleres", clics: 0, registro_cliente: 0, registro_taller: 0, solicitud: 0, venta: 0, ventas_mxn: 0 }
   for (const c of clics) if (porRed[c.red]) porRed[c.red].clics = Number(c.n)
   for (const e of ev) {
     if (!porRed[e.red] || e.tipo === "clic") continue

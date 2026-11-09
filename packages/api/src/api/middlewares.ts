@@ -75,6 +75,12 @@ export default defineMiddlewares({
           middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
         },
         // Licitaciones 3.0 (Fase 3): certificado del taller (PDF o foto)
+        // Marketing HETNA: videos de trabajos que suben los talleres (con autorización)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-promocion/videos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 60 })],
+        },
         {
           method: ["POST"],
           matcher: "/vendor/hetna-certificaciones",

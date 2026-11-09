@@ -49,7 +49,7 @@ const boton = (tipo: "primario" | "normal" | "peligro"): CSSProperties => ({
   color: tipo === "normal" ? C.texto : "#fff",
 })
 const campo: CSSProperties = { width: "100%", boxSizing: "border-box", borderRadius: 8, border: `1px solid ${C.borde}`, padding: 8, fontSize: 14, background: C.fondo, color: C.texto }
-const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro" }
+const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller" }
 const ESTADO: Record<string, [string, string]> = {
   borrador: ["Borrador", "#8A5A00"],
   programada: ["Programada", "#1a3a5c"],
@@ -228,7 +228,12 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
       </div>
       {abierta && (
         <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-          {p.medios?.[0]?.url && <img src={p.medios[0].url} alt="" style={{ maxWidth: 220, borderRadius: 8 }} />}
+          {p.medios?.[0]?.url &&
+            (/\.(mp4|mov|webm)(\?|$)/i.test(p.medios[0].url) ? (
+              <video src={p.medios[0].url} controls preload="metadata" style={{ maxWidth: 220, borderRadius: 8 }} />
+            ) : (
+              <img src={p.medios[0].url} alt="" style={{ maxWidth: 220, borderRadius: 8 }} />
+            ))}
           <Chips redes={sel} todas={redes} alCambiar={setSel} />
           {sel.map((red) => {
             const r = p.resultado?.[red]
@@ -475,8 +480,77 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
   )
 }
 
+type VideoTaller = { id: string; url: string; taller: string; handle: string; descripcion: string | null; estado: string; tamano: number; autorizo_en: string; autorizo_version: string; fecha: string }
+
+function VideosTalleres({ redes, config, alCambiar }: { redes: RedInfo[]; config: Config; alCambiar: () => void }) {
+  const [lista, setLista] = useState<VideoTaller[] | null>(null)
+  const [error, setError] = useState("")
+  const [sel, setSel] = useState<Record<string, string[]>>({})
+  const [motivo, setMotivo] = useState<Record<string, string>>({})
+  const cargar = useCallback(async () => {
+    try {
+      const d = await api<{ videos: VideoTaller[] }>("/videos?estado=pendiente")
+      setLista(d.videos)
+    } catch (e) {
+      setError((e as Error).message)
+      setLista([])
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const decidir = async (id: string, accion: "aprobar" | "rechazar") => {
+    setError("")
+    try {
+      await api(`/videos/${id}`, accion === "aprobar" ? { accion, redes: sel[id] || config.redes } : { accion, motivo: motivo[id] || "" })
+      void cargar()
+      alCambiar()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  return (
+    <div>
+      <p style={{ color: C.tenue, fontSize: 13 }}>
+        Videos que suben los talleres desde "Promociona tu taller", con su autorización registrada. Al aprobar se programa la publicación con crédito y liga al perfil del taller.
+        Revisa que no salga información confidencial del cliente ni música con derechos.
+      </p>
+      {error && <p style={{ color: C.rojo }}>{error}</p>}
+      {lista === null ? (
+        <p>Cargando…</p>
+      ) : lista.length === 0 ? (
+        <p style={{ color: C.tenue }}>No hay videos por revisar.</p>
+      ) : (
+        lista.map((v) => (
+          <article key={v.id} style={{ ...caja, display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <video src={v.url} controls preload="metadata" style={{ width: 220, maxHeight: 390, borderRadius: 8, background: "#000" }} />
+            <div style={{ flex: 1, minWidth: 260, display: "grid", gap: 8, alignContent: "start" }}>
+              <b>{v.taller}</b>
+              <span style={{ fontSize: 13 }}>{v.descripcion || "Sin descripción"}</span>
+              <span style={{ fontSize: 12, color: C.tenue }}>
+                {(v.tamano / 1048576).toFixed(1)} MB · autorizó el {fecha(v.autorizo_en)} (texto {v.autorizo_version})
+              </span>
+              <Chips redes={sel[v.id] || config.redes} todas={redes} alCambiar={(r) => setSel({ ...sel, [v.id]: r })} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" style={boton("primario")} onClick={() => void decidir(v.id, "aprobar")}>
+                  ✓ Aprobar y programar
+                </button>
+                <input style={{ ...campo, width: 220, padding: 6 }} placeholder="Motivo (si lo rechazas)" value={motivo[v.id] || ""} onChange={(e) => setMotivo({ ...motivo, [v.id]: e.target.value })} />
+                <button type="button" style={boton("peligro")} onClick={() => void decidir(v.id, "rechazar")}>
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  )
+}
+
 const VISTAS = [
   ["pendientes", "Pendientes"],
+  ["videos", "Videos de talleres"],
   ["calendario", "Calendario"],
   ["publicada", "Publicadas"],
   ["resultados", "Resultados"],
@@ -540,6 +614,8 @@ export default function SocialHubPage() {
       </div>
       {!datos ? (
         !error && <p>Cargando…</p>
+      ) : vista === "videos" ? (
+        <VideosTalleres redes={datos.redes} config={datos.config} alCambiar={() => void cargar()} />
       ) : vista === "resultados" ? (
         <Resultados />
       ) : vista === "config" ? (
