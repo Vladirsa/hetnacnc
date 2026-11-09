@@ -22,11 +22,11 @@ export const ROLES: Record<Rol, { nombre: string; paginas: string[]; que: string
   sin_acceso: { nombre: "Sin acceso", paginas: [], que: "No entra al panel" },
 }
 
-export function rolDe(metadata: Record<string, unknown> | null | undefined, esPrimero = false): Rol {
+export function rolDe(metadata: Record<string, unknown> | null | undefined, arranque = false): Rol {
   const r = String(metadata?.panel_rol || "")
   if (r in ROLES) return r as Rol
-  // El primer administrador que existe es el dueño aunque no tenga rol puesto
-  return esPrimero ? "dueno" : "sin_acceso"
+  // Sin rol asignado: dueño sólo durante el arranque (nadie tiene rol todavía)
+  return arranque ? "dueno" : "sin_acceso"
 }
 
 export const puede = (rol: Rol, pagina: string) => ROLES[rol]?.paginas.includes(pagina) ?? false

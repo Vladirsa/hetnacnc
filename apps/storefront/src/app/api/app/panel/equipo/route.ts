@@ -16,9 +16,16 @@ export async function POST(req: Request) {
   try { b = await req.json() } catch {}
   const rol = (b.rol && b.rol in ROLES ? b.rol : "sin_acceso") as Rol
   try {
+    // Al asignar el primer rol, el dueño que lo hace queda guardado como dueño
+    // (si no, al terminar el arranque se quedaría sin acceso)
+    const yoRaw = await adminFetch<{ user: { metadata?: Record<string, unknown> } }>("/admin/users/me")
+    if (!yoRaw.user.metadata?.panel_rol) {
+      await adminFetch(`/admin/users/${yo.id}`, { method: "POST", body: JSON.stringify({ metadata: { ...(yoRaw.user.metadata || {}), panel_rol: "dueno" } }) })
+    }
     if (b.accion === "rol" && b.user_id) {
       if (b.user_id === yo.id && rol !== "dueno") return NextResponse.json({ message: "No te puedes quitar el rol de dueño a ti mismo." }, { status: 400 })
-      await adminFetch(`/admin/users/${b.user_id}`, { method: "POST", body: JSON.stringify({ metadata: { panel_rol: rol } }) })
+      const otro = await adminFetch<{ user: { metadata?: Record<string, unknown> } }>(`/admin/users/${b.user_id}`)
+      await adminFetch(`/admin/users/${b.user_id}`, { method: "POST", body: JSON.stringify({ metadata: { ...(otro.user.metadata || {}), panel_rol: rol } }) })
       return NextResponse.json({ ok: true })
     }
     if (b.accion === "invitar" && b.email) {

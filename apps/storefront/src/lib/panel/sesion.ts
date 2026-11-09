@@ -48,15 +48,19 @@ export async function usuarioPanel(): Promise<UsuarioPanel | null> {
   try {
     const me = await adminFetch<{ user: { id: string; email: string; first_name?: string; last_name?: string; metadata?: Record<string, unknown>; created_at?: string } }>("/admin/users/me")
     const u = me.user
-    let esPrimero = false
+    let arranque = false
     if (!u.metadata?.panel_rol) {
-      // Sin rol asignado: sólo el administrador más antiguo entra como dueño
+      // Arranque: mientras NINGÚN administrador tenga rol del panel, todos los
+      // administradores entran como dueño (sólo el dueño crea administradores).
+      // En cuanto se asigna el primer rol en Equipo, manda lo asignado.
       try {
-        const lista = await adminFetch<{ users: { id: string; created_at: string }[] }>("/admin/users?limit=50&order=created_at")
-        esPrimero = lista.users[0]?.id === u.id
+        const lista = await adminFetch<{ users: { id: string; metadata?: Record<string, unknown> }[] }>("/admin/users?limit=100")
+        arranque = !lista.users.some((x) => x.metadata?.panel_rol)
       } catch {}
+      const duenos = (process.env.PANEL_DUENOS || "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean)
+      if (duenos.includes(u.email.toLowerCase())) arranque = true
     }
-    return { id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, rol: rolDe(u.metadata, esPrimero) }
+    return { id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, rol: rolDe(u.metadata, arranque) }
   } catch {
     return null
   }
