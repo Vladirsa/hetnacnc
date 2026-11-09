@@ -41,3 +41,22 @@ describe("Trust & Ranking (Fase 4)", () => {
     expect(pareceAutoevaluacion("", "x@y.mx")).toBe(false)
   })
 })
+
+import { aceptaCliente, filtroClientes } from "../trust"
+
+describe("Filtro del taller por reputación del cliente", () => {
+  it("por omisión recibe a todos", () => {
+    expect(filtroClientes({})).toEqual({ minimo: 0, nuevos: true })
+    expect(aceptaCliente({}, { promedio: 2, evaluaciones: 5 })).toBe(true)
+  })
+  it("con mínimo 4.5 filtra y respeta 'clientes nuevos'", () => {
+    const m = { filtro_clientes: { minimo: 4.5, nuevos: false } }
+    expect(aceptaCliente(m, { promedio: 4.6, evaluaciones: 3 })).toBe(true)
+    expect(aceptaCliente(m, { promedio: 4.2, evaluaciones: 3 })).toBe(false)
+    expect(aceptaCliente(m, { promedio: null, evaluaciones: 0 })).toBe(false)
+    expect(aceptaCliente({ filtro_clientes: { minimo: 4 } }, { promedio: null, evaluaciones: 0 })).toBe(true)
+  })
+  it("ignora valores inválidos", () => {
+    expect(filtroClientes({ filtro_clientes: { minimo: 3 } }).minimo).toBe(0)
+  })
+})

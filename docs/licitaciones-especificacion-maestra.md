@@ -687,4 +687,8 @@ Decisiones del dueño: contrato **prendido como borrador** (cada página del PDF
 - El taller ve la reputación del cliente en cada solicitud ("Cliente nuevo" o ★ promedio).
 - Respuestas de ambos lados, reclamaciones con revisión en Admin → Verificaciones, y retención automática de autoevaluaciones (mismo correo o dominio corporativo).
 
-Pendiente: revisión del abogado (texto del contrato, términos y aviso de privacidad); clasificaciones públicas por especialidad y región (8.E) y filtro de talleres por reputación del cliente.
+**Completado el 9 nov 2026 (lo que había quedado fuera):**
+- **Filtro por reputación del cliente** (decisión 3): cada taller elige en Solicitudes de qué clientes recibe trabajo (todos, ★ 4+ o ★ 4.5+, y si acepta clientes nuevos). Aplica a la lista del panel y a los avisos de difusión; lo dirigido a él, invitaciones y lo ya cotizado se ven siempre. El panel dice cuántas quedaron ocultas.
+- **Clasificaciones públicas** (8.E/8.F) en `/mx/talleres/ranking`: por especialidad (láser, plasma, fresado y torno, router, 3D, moldes), por estado, proveedores por cumplimiento de entregas, y orden general, comercial o técnico. Usa promedio bayesiano (pocas reseñas pesan menos) e ignora planes y membresías. El ranking de clientes no es público: sólo lo ven los talleres, para proteger su privacidad.
+
+Pendiente: revisión del abogado (texto del contrato, términos y aviso de privacidad).

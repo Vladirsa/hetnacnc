@@ -7,6 +7,7 @@ import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
 import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import { puntajePosicion, tallerVerificado } from "./confianza"
+import { aceptaCliente, reputacionCliente } from "./trust"
 import {
   T_SOLICITUD,
   type Trabajo,
@@ -97,7 +98,10 @@ export async function difundirSolicitud(
       // Licitaciones 3.0 (Fase 2): el suministro va a proveedores; la
       // fabricación, a talleres. "Ambos" recibe las dos.
       const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
+      // Fase 4: talleres que sólo reciben clientes con buena reputación
+      const repCliente = await reputacionCliente(knex, { clienteId: s.cliente_id, email: s.contacto?.email }).catch(() => null)
       const coinciden = otros.filter((x) => {
+        if (!aceptaCliente(x.metadata, repCliente)) return false
         const t = tipoCuenta(x)
         if (s.solo_verificados && !tallerVerificado(x.metadata)) return false
         if (suministro) return t === "proveedor" || t === "ambos"

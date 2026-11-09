@@ -62,6 +62,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/foro-cnc/profesionales", "weekly", 0.6],
   ["/foro-cnc/eventos", "weekly", 0.6],
   ["/talleres/fundadores", "weekly", 0.7],
+  ["/talleres/ranking", "daily", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
   ["/anunciate", "monthly", 0.6],
   ["/quienes-somos", "monthly", 0.5],

@@ -50,6 +50,12 @@ export default async function TalleresPage({
           >
             Ver talleres
           </a>
+          <LocalizedClientLink
+            href="/talleres/ranking"
+            className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
+          >
+            🏆 Ranking
+          </LocalizedClientLink>
           <a
             href="#para-talleres"
             className="rounded-xl border border-[#F2A25F] px-5 py-3 font-semibold text-[#F2A25F] hover:bg-white/10"

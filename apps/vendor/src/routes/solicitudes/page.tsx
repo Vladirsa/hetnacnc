@@ -858,6 +858,48 @@ function Cupo({ cupo }) {
   )
 }
 
+// Fase 4: de qué clientes recibe solicitudes este taller (según su reputación)
+function FiltroClientes({ filtro, alCambiar }) {
+  const [abierto, setAbierto] = useState(false)
+  const [f, setF] = useState(filtro || { minimo: 0, nuevos: true })
+  const [nota, setNota] = useState("")
+  useEffect(() => { if (filtro) setF(filtro) }, [filtro?.minimo, filtro?.nuevos])
+  const guardar = async () => {
+    setNota("")
+    const r = await fetch("/vendor/hetna-filtro-clientes", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ minimo: f.minimo, nuevos: f.nuevos }) })
+    if (!r.ok) return setNota("No se pudo guardar.")
+    setNota("Guardado.")
+    setAbierto(false)
+    alCambiar?.()
+  }
+  const texto = !f.minimo ? "Recibes solicitudes de todos los clientes." : `Sólo clientes con ★ ${f.minimo} o más${f.nuevos ? " y clientes nuevos" : ""}.`
+  return (
+    <div style={{ ...S.card, padding: "10px 14px", fontSize: 13 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <span>👥 {texto}{filtro?.ocultas ? ` (${filtro.ocultas} oculta${filtro.ocultas === 1 ? "" : "s"} por tu filtro)` : ""}</span>
+        <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} onClick={() => setAbierto(!abierto)}>{abierto ? "Cerrar" : "Elegir clientes"}</button>
+      </div>
+      {abierto && (
+        <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+          <span style={{ color: "#6B675C" }}>Los talleres evalúan a cada cliente al terminar un trabajo. Si eliges un mínimo, no te llegarán solicitudes de clientes por debajo de él. Lo que te piden directo a ti y las invitaciones te llegan siempre.</span>
+          <label>Recibir solicitudes de{" "}
+            <select style={{ ...S.input, width: "auto", height: 32 }} value={f.minimo} onChange={(e) => setF({ ...f, minimo: Number(e.target.value) })}>
+              <option value={0}>todos los clientes</option>
+              <option value={4}>clientes con ★ 4 o más</option>
+              <option value={4.5}>clientes con ★ 4.5 o más</option>
+            </select>
+          </label>
+          {f.minimo > 0 && (
+            <label><input type="checkbox" checked={f.nuevos} onChange={(e) => setF({ ...f, nuevos: e.target.checked })} /> También clientes nuevos (todavía sin evaluaciones)</label>
+          )}
+          <button type="button" style={{ ...S.btn, justifySelf: "start" }} onClick={guardar}>Guardar</button>
+        </div>
+      )}
+      {nota && <span style={{ color: "#1E7B3A" }}>{nota}</span>}
+    </div>
+  )
+}
+
 export default function SolicitudesPage() {
   const [datos, setDatos] = useState(null)
   const [error, setError] = useState("")
@@ -870,6 +912,7 @@ export default function SolicitudesPage() {
   const [cupo, setCupo] = useState(null)
   // Cómo cobra si gana: cuenta conectada en la app y comisión de su plan
   const [cobroTaller, setCobroTaller] = useState(null)
+  const [filtroCli, setFiltroCli] = useState(null)
 
   const cargar = () =>
     // ocultas=1: también las que el taller marcó como "no puedo"; se separan aquí.
@@ -879,6 +922,7 @@ export default function SolicitudesPage() {
         setDatos(d.solicitudes || [])
         setCupo(d.cupo || null)
         setCobroTaller(d.cobro_taller || null)
+        setFiltroCli(d.filtro_clientes || null)
       })
       .catch((e) => setError("No se pudieron cargar las solicitudes (" + e + ")."))
 
@@ -916,6 +960,8 @@ export default function SolicitudesPage() {
       </p>
 
       {cupo && <Cupo cupo={cupo} />}
+
+      <FiltroClientes filtro={filtroCli} alCambiar={cargar} />
 
       {cobroTaller && (
         <div style={{ ...S.card, padding: "10px 14px", fontSize: 13, background: cobroTaller.mercadopago || cobroTaller.paypal ? "#F0F7F1" : "#FFFAEB" }}>

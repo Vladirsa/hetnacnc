@@ -1164,6 +1164,7 @@ export type Routes = {
         hetnaFicha: typeof import("../src/api/vendor/hetna-ficha/route") & {
             $id: typeof import("../src/api/vendor/hetna-ficha/[id]/route");
         };
+        hetnaFiltroClientes: typeof import("../src/api/vendor/hetna-filtro-clientes/route");
         hetnaGuias: typeof import("../src/api/vendor/hetna-guias/route") & {
             $id: {
                 comprar: typeof import("../src/api/vendor/hetna-guias/[id]/comprar/route");

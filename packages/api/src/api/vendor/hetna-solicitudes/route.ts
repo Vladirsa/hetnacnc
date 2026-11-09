@@ -17,7 +17,7 @@ import { asegurarPropuestaFormal } from "../../../lib/licitacion-propuesta"
 import { T_INVITADO, asegurarPrivacidad, modalidadDe, relacionesTaller, tallerPuedeVer, trabajoParaTaller } from "../../../lib/licitacion-privacidad"
 import { PCT_POR_PLAN, asegurarCobro, cuentaTaller, planComision } from "../../../lib/licitacion-cobro"
 import { asegurarExtra, preguntasDe, rangoGanador } from "../../../lib/licitacion-extra"
-import { reputacionesClientes } from "../../../lib/trust"
+import { aceptaCliente, filtroClientes, reputacionesClientes } from "../../../lib/trust"
 
 // Panel del taller: solicitudes que puede cotizar (abiertas + las dirigidas a él)
 // y las que ya cotizó. Nunca incluye datos de contacto del cliente.
@@ -109,7 +109,17 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     const suministro = f.tipo === "suministro"
     return miTipo === "ambos" || (suministro ? miTipo === "proveedor" : miTipo !== "proveedor")
   }
-  const filas = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!) && meToca(f))
+  // Fase 4 (Trust & Ranking): reputación del cliente como comprador (sin su contacto)
+  const reputaciones = await reputacionesClientes(knex, filas0.map((f) => ({ id: f.id, cliente_id: f.cliente_id, email: f.contacto?.email }))).catch(() => new Map())
+  // Filtro del taller: sólo clientes con cierta reputación (lo ya cotizado, lo
+  // dirigido a él y las invitaciones se ven siempre).
+  const pasaFiltroCliente = (f: any) => {
+    const r = relaciones.get(f.id)!
+    if (r.propuso || r.invitado || f.taller_id === sellerId) return true
+    return aceptaCliente(yo?.metadata, reputaciones.get(f.id))
+  }
+  const ocultasPorFiltro = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!) && meToca(f) && !pasaFiltroCliente(f)).length
+  const filas = filas0.filter((f) => tallerPuedeVer(f, relaciones.get(f.id)!) && meToca(f) && pasaFiltroCliente(f))
 
   const conteos = (await knex(T_PROPUESTA)
     .whereIn("solicitud_id", filas.map((f) => f.id))
@@ -134,8 +144,6 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     })
   )
 
-  // Fase 4 (Trust & Ranking): reputación del cliente como comprador (sin su contacto)
-  const reputaciones = await reputacionesClientes(knex, filas.map((f) => ({ id: f.id, cliente_id: f.cliente_id, email: f.contacto?.email }))).catch(() => new Map())
   const solicitudes = filas.map((f) => ({
     id: f.id,
     folio: folioTexto(f.folio),
@@ -207,5 +215,5 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     comision_pct: PCT_POR_PLAN[plan] ?? 0,
   }
 
-  return res.json({ solicitudes, cupo, cobro_taller })
+  return res.json({ solicitudes, cupo, cobro_taller, filtro_clientes: { ...filtroClientes(yo?.metadata), ocultas: ocultasPorFiltro } })
 }

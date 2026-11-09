@@ -419,3 +419,26 @@ export async function reputacionesClientes(knex: any, filas: { id: string; clien
   }
   return out
 }
+
+// ---------------------------------------------------------------------
+// Filtro del taller por reputación del cliente (decisión 3 del dueño:
+// "si el cliente quiere los mejores talleres, debe tener ranking")
+// ---------------------------------------------------------------------
+
+export type FiltroClientes = { minimo: 0 | 4 | 4.5; nuevos: boolean }
+export const MINIMOS_CLIENTE = [0, 4, 4.5] as const
+
+/** Lo que el taller configuró (por omisión: recibe a todos). */
+export function filtroClientes(metadata: any): FiltroClientes {
+  const f = metadata?.filtro_clientes || {}
+  const m = Number(f.minimo)
+  return { minimo: (MINIMOS_CLIENTE as readonly number[]).includes(m) ? (m as 0 | 4 | 4.5) : 0, nuevos: f.nuevos !== false }
+}
+
+/** ¿El taller quiere recibir solicitudes de este cliente? */
+export function aceptaCliente(metadata: any, rep: { promedio: number | null; evaluaciones: number } | null | undefined) {
+  const f = filtroClientes(metadata)
+  if (!f.minimo) return true
+  if (!rep || !rep.evaluaciones) return f.nuevos
+  return Number(rep.promedio) >= f.minimo
+}
