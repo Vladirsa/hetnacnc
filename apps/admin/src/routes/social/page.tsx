@@ -849,8 +849,171 @@ function Estrategia({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string
   )
 }
 
+type Hallazgo = { id: string; tipo: string; mercado: string; titulo: string; resumen: string | null; url: string; lugar: string | null; relevancia: number; accion: string | null; datos: Record<string, string> | null; estado: string; mensaje: string; created_at: string }
+type BusquedaR = { id: string; tipo: string; mercado: string; consulta: string; activa: boolean }
+const TIPO_RADAR: Record<string, string> = { cliente: "🎯 Clientes", taller: "🏭 Talleres", contenido: "💡 Contenido", competencia: "👀 Competencia", evento: "📅 Eventos", mencion: "🔔 Menciones" }
+
+function Radar({ alCambiar }: { alCambiar: () => void }) {
+  const [d, setD] = useState<{ hallazgos: Hallazgo[]; conteo: Record<string, number>; busquedas: BusquedaR[]; tipos: string[]; mercados: { clave: string; nombre: string }[]; tope_dia: number } | null>(null)
+  const [estado, setEstado] = useState("nuevo")
+  const [tipo, setTipo] = useState("")
+  const [nota, setNota] = useState("")
+  const [verBusq, setVerBusq] = useState(false)
+  const [busq, setBusq] = useState<BusquedaR[]>([])
+  const [ocupado, setOcupado] = useState("")
+  const cargar = useCallback(async () => {
+    try {
+      const x = await fetch(`/admin/hetna-radar?estado=${estado}${tipo ? `&tipo=${tipo}` : ""}`, { credentials: "include", headers: cabeceras() }).then(async (r) => {
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(j.message || `Error ${r.status}`)
+        return j
+      })
+      setD(x)
+      setBusq(x.busquedas)
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }, [estado, tipo])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const post = async (cuerpo: Record<string, unknown>) => {
+    const r = await fetch("/admin/hetna-radar", { method: "POST", credentials: "include", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(j.message || `Error ${r.status}`)
+    return j
+  }
+  const marcar = async (id: string, est: string) => {
+    try {
+      await post({ accion: "estado", id, estado: est })
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const publicar = async (id: string) => {
+    try {
+      await post({ accion: "publicar", id })
+      setNota("Borrador creado: revísalo en Pendientes.")
+      alCambiar()
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const buscarYa = async (id: string) => {
+    setOcupado(id)
+    setNota("Buscando en la web… tarda alrededor de un minuto.")
+    try {
+      const x = await post({ accion: "buscar", id })
+      setNota(`Listo: ${x.encontrados} encontrados, ${x.nuevos} nuevos.`)
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    } finally {
+      setOcupado("")
+    }
+  }
+  const guardarBusq = async () => {
+    try {
+      const x = await post({ accion: "busquedas", lista: busq })
+      setBusq(x.busquedas)
+      setNota("Búsquedas guardadas.")
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  if (!d) return <p>{nota || "Cargando…"}</p>
+  return (
+    <div>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 10px" }}>
+        Cada mañana el Radar busca en la web (hasta {d.tope_dia} búsquedas al día, rotando) clientes que necesitan fabricar, talleres para invitar, temas para contenido, competencia, ferias y menciones de HETNA.
+        Sólo información pública. Las invitaciones las mandas tú, una por una.
+      </p>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        {[["", "Todos"], ...d.tipos.map((t) => [t, TIPO_RADAR[t] || t])].map(([k, t]) => (
+          <button key={k} type="button" onClick={() => setTipo(k)} style={{ ...boton("normal"), padding: "4px 10px", background: tipo === k ? "#142033" : C.fondo, color: tipo === k ? "#fff" : C.texto }}>
+            {t}
+            {k && d.conteo[k] ? ` (${d.conteo[k]})` : ""}
+          </button>
+        ))}
+        <span style={{ flex: 1 }} />
+        <select style={{ ...campo, width: "auto", padding: 5 }} value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <option value="nuevo">Nuevos</option>
+          <option value="util">Guardados</option>
+          <option value="convertido">Convertidos en publicación</option>
+          <option value="descartado">Descartados</option>
+        </select>
+        <button type="button" style={boton("normal")} onClick={() => setVerBusq(!verBusq)}>{verBusq ? "Cerrar búsquedas" : "⚙ Búsquedas"}</button>
+      </div>
+      {nota && <p style={{ fontSize: 13 }}>{nota}</p>}
+
+      {verBusq && (
+        <section style={caja}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 15 }}>Qué busca el Radar</h3>
+          {busq.map((b, i) => (
+            <div key={b.id} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
+              <input type="checkbox" checked={b.activa} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, activa: e.target.checked } : x)))} title="Activa" />
+              <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={b.tipo} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, tipo: e.target.value } : x)))}>
+                {d.tipos.map((t) => <option key={t} value={t}>{TIPO_RADAR[t] || t}</option>)}
+              </select>
+              <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={b.mercado} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, mercado: e.target.value } : x)))}>
+                {d.mercados.map((m) => <option key={m.clave} value={m.clave}>{m.nombre}</option>)}
+              </select>
+              <input style={{ ...campo, flex: 1, minWidth: 260, padding: 5, fontSize: 12 }} value={b.consulta} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, consulta: e.target.value } : x)))} />
+              <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} disabled={!!ocupado} onClick={() => void buscarYa(b.id)}>{ocupado === b.id ? "Buscando…" : "Buscar ahora"}</button>
+              <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} onClick={() => setBusq(busq.filter((_, j) => j !== i))}>✕</button>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" style={boton("normal")} onClick={() => setBusq([...busq, { id: `rb_${Date.now()}`, tipo: "contenido", mercado: "mx", consulta: "", activa: true }])}>+ Agregar búsqueda</button>
+            <button type="button" style={boton("primario")} onClick={() => void guardarBusq()}>Guardar búsquedas</button>
+          </div>
+          <p style={{ color: C.tenue, fontSize: 12, marginBottom: 0 }}>"Buscar ahora" usa la búsqueda web de Claude: cada búsqueda tiene un costo pequeño en tu cuenta de Claude.</p>
+        </section>
+      )}
+
+      {d.hallazgos.length === 0 ? (
+        <p style={{ color: C.tenue }}>Nada por aquí todavía. El Radar busca cada mañana; también puedes abrir "⚙ Búsquedas" y darle "Buscar ahora".</p>
+      ) : (
+        d.hallazgos.map((h) => (
+          <article key={h.id} style={caja}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12 }}>{TIPO_RADAR[h.tipo] || h.tipo}</span>
+              <span style={{ fontSize: 12, color: C.naranja }}>{"★".repeat(h.relevancia)}</span>
+              {h.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>{h.mercado.toUpperCase()}</span>}
+              <b style={{ flex: 1, minWidth: 200 }}>{h.titulo}</b>
+              <a href={h.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.naranja }}>Fuente ↗</a>
+            </div>
+            {h.resumen && <p style={{ fontSize: 13, margin: "6px 0" }}>{h.resumen}</p>}
+            <p style={{ fontSize: 12, color: C.tenue, margin: "2px 0" }}>
+              {[h.lugar, h.datos?.empresa, h.datos?.sitio, h.datos?.fecha].filter(Boolean).join(" · ")}
+            </p>
+            {h.accion && <p style={{ fontSize: 13, margin: "6px 0" }}>👉 {h.accion}</p>}
+            {h.mensaje && (
+              <details style={{ fontSize: 12, margin: "4px 0" }}>
+                <summary style={{ cursor: "pointer" }}>Mensaje sugerido para escribirles</summary>
+                <p style={{ whiteSpace: "pre-wrap", background: C.suave, borderRadius: 8, padding: 8 }}>{h.mensaje}</p>
+                <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} onClick={() => copiar(h.mensaje)}>Copiar mensaje</button>
+              </details>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              {["contenido", "evento", "competencia", "mencion"].includes(h.tipo) && h.estado !== "convertido" && (
+                <button type="button" style={boton("primario")} onClick={() => void publicar(h.id)}>Crear publicación</button>
+              )}
+              {h.estado !== "util" && <button type="button" style={boton("normal")} onClick={() => void marcar(h.id, "util")}>Guardar</button>}
+              {h.estado !== "descartado" && <button type="button" style={boton("normal")} onClick={() => void marcar(h.id, "descartado")}>Descartar</button>}
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  )
+}
+
 const VISTAS = [
   ["estrategia", "Estrategia"],
+  ["radar", "Radar"],
   ["pendientes", "Pendientes"],
   ["videos", "Videos de talleres"],
   ["calendario", "Calendario"],
@@ -916,6 +1079,8 @@ export default function SocialHubPage() {
       </div>
       {!datos ? (
         !error && <p>Cargando…</p>
+      ) : vista === "radar" ? (
+        <Radar alCambiar={() => void cargar()} />
       ) : vista === "estrategia" ? (
         <Estrategia alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "videos" ? (

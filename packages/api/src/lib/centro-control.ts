@@ -414,6 +414,29 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
     }
   }, undefined, logger)
 
+  // Marketing HETNA: oportunidades del Radar y pendientes del Social Hub
+  await seguro(async () => {
+    if (await knex.schema.hasTable("hetna_radar_hallazgo")) {
+      const buenas = await knex("hetna_radar_hallazgo").where({ estado: "nuevo" }).where("relevancia", ">=", 4).orderBy("created_at", "desc").limit(20).select("titulo", "tipo")
+      if (buenas.length)
+        avisos.push({
+          nivel: "azul",
+          tipo: "radar",
+          titulo: `Radar: ${buenas.length} oportunidad(es) CNC para revisar`,
+          detalle: buenas.slice(0, 3).map((b) => `[${b.tipo}] ${b.titulo}`).join(" · "),
+          url: `${ADMIN}/social`,
+        })
+    }
+    if (await knex.schema.hasTable("hetna_social_post")) {
+      const errores = await knex("hetna_social_post").whereIn("estado", ["error", "parcial"]).where("updated_at", ">", new Date(ahora - 3 * DIA)).count({ n: "*" }).first()
+      if (Number(errores?.n || 0))
+        avisos.push({ nivel: "ambar", tipo: "social", titulo: `${errores.n} publicación(es) en redes con error`, detalle: "Suele ser un permiso vencido en n8n. Revísalas en el Social Hub.", url: `${ADMIN}/social` })
+      const borradores = await knex("hetna_social_post").where({ estado: "borrador" }).where("programada_para", "<", new Date(ahora + 2 * DIA)).count({ n: "*" }).first()
+      if (Number(borradores?.n || 0))
+        avisos.push({ nivel: "azul", tipo: "social", titulo: `${borradores.n} borrador(es) del plan salen en menos de 2 días`, detalle: "Revísalos y prográmalos en el Social Hub (Pendientes).", url: `${ADMIN}/social` })
+    }
+  }, undefined, logger)
+
   // Saldo de Skydropx (lib/saldos.ts): ¿alcanza?, ¿hay que recargar?, notas de compra
   let saldos = null
   await seguro(async () => {
