@@ -627,6 +627,12 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                     return error("entrada_invalida", f"Operación {i}: el traslape no es válido.", "Captúralo entre 0 y 95 %.")
                 prof = float(op.get("profundidad") or espesor)
                 prof = max(0.05, min(prof, espesor + 2))
+                try:
+                    largo_filo = float(op.get("largo_corte") or 0)
+                except (TypeError, ValueError):
+                    largo_filo = 0
+                if tipo != "grabado_v" and math.isfinite(largo_filo) and 0 < largo_filo < prof - 0.01:
+                    avisos.append(f"{nombre}: la profundidad ({prof:g} mm) es mayor que el largo de corte de la fresa ({largo_filo:g} mm): el zanco rozaría el material. Usa una fresa de filo más largo.")
                 # La herramienta es el diámetro y si es recta o en V (no las
                 # rpm: una recta de 8 y una V de 12 giran igual en la tabla).
                 en_v = tipo == "grabado_v"

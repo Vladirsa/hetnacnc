@@ -20,9 +20,18 @@ export type MaquinaCam = {
 export type FresaCam = {
   id: string
   nombre: string
-  tipo: "recta" | "v" | "compresion" | "bola"
-  diametro: number
+  tipo: "recta" | "upcut" | "downcut" | "compresion" | "un_filo" | "bola" | "v" | "planeadora" | "desbaste"
+  diametro: number // diámetro de corte
   angulo: number // sólo fresa en V
+  // Ficha técnica; 0 o ausente = sin capturar
+  zanco?: number // diámetro del zanco, el que entra al collet
+  largoCorte?: number // largo de los filos
+  largoTotal?: number
+  voladizo?: number // cuánto sale del collet ya montada
+  filos?: number
+  materialFresa?: "carburo" | "carburo_rec" | "hss"
+  numero?: number // posición T en la máquina
+  notas?: string
   // Parámetros de corte propios de la fresa; 0 o ausente = los del material
   pasada?: number // profundidad por pasada (mm)
   traslape?: number // % del diámetro que se encima en el cajeado
@@ -35,7 +44,8 @@ export type DatosCam = { maquinas: MaquinaCam[]; fresas: FresaCam[] }
 
 const LLAVE = "cam_estudio"
 const POSTS = ["mach3", "grbl", "linuxcnc", "laser_grbl"]
-const TIPOS_FRESA = ["recta", "v", "compresion", "bola"]
+const TIPOS_FRESA = ["recta", "upcut", "downcut", "compresion", "un_filo", "bola", "v", "planeadora", "desbaste"]
+const MATERIALES_FRESA = ["carburo", "carburo_rec", "hss"]
 
 const texto = (v: unknown, max = 40) => String(v ?? "").replace(/[<>]/g, "").trim().slice(0, max)
 const num = (v: unknown, min: number, max: number, def: number) => {
@@ -59,6 +69,14 @@ function limpiar(d: unknown): DatosCam {
     tipo: (TIPOS_FRESA.includes(f?.tipo) ? f.tipo : "recta") as FresaCam["tipo"],
     diametro: num(f?.diametro, 0.1, 30, 6),
     angulo: num(f?.angulo, 10, 150, 90),
+    zanco: num(f?.zanco, 0, 50, 0),
+    largoCorte: num(f?.largoCorte, 0, 300, 0),
+    largoTotal: num(f?.largoTotal, 0, 500, 0),
+    voladizo: num(f?.voladizo, 0, 500, 0),
+    filos: Math.round(num(f?.filos, 0, 12, 0)),
+    materialFresa: (MATERIALES_FRESA.includes(f?.materialFresa) ? f.materialFresa : "carburo") as FresaCam["materialFresa"],
+    numero: Math.round(num(f?.numero, 0, 999, 0)),
+    notas: texto(f?.notas, 200),
     pasada: num(f?.pasada, 0, 50, 0),
     traslape: num(f?.traslape, 0, 95, 0),
     rpm: num(f?.rpm, 0, 60000, 0),

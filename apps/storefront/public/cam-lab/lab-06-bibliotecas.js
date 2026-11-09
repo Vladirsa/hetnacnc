@@ -6,6 +6,7 @@
 const LIBKEY='hetna-cam-lab-v1';
 const LIB={posts:{},mode:'guided'};
 const TOOL_TYPES=['ball','flat','bull','taperball','vbit','drill'];
+const TOOL_MATS=['carburo','carburo_rec','hss'];
 const POST_KEYS=['ctrl','cool','dec','prog','lines','inv','pre','end'];
 const num=(v,d,lo=-1e6,hi=1e6)=>{v=+v;return Number.isFinite(v)?clamp(v,lo,hi):d;};
 const txt=(v,d,n=60)=>(typeof v==='string'&&v.trim()?v.trim().slice(0,n):d);
@@ -14,7 +15,8 @@ const txt=(v,d,n=60)=>(typeof v==='string'&&v.trim()?v.trim().slice(0,n):d);
 function cleanTool(t,id){
   if(!t||typeof t!=='object'||!TOOL_TYPES.includes(t.type))return null;const D=num(t.D,0,0.05,200);if(!D)return null;const b=DEFAULT_TOOLS[0];
   return{id,num:Math.round(num(t.num,id,1,999)),name:txt(t.name,'Herramienta'),type:t.type,D,r:t.type==='ball'?D/2:num(t.r,0,0,D/2),angle:num(t.angle,90,1,179),tipD:num(t.tipD,1,0,D),taper:num(t.taper,3,0.1,45),
-    flutes:Math.round(num(t.flutes,2,1,12)),fluteLen:num(t.fluteLen,b.fluteLen,0.5,400),stickout:num(t.stickout,b.stickout,1,600),shankD:num(t.shankD,D,0.5,200),holderD:num(t.holderD,b.holderD,1,400),holderLen:num(t.holderLen,b.holderLen,1,400)};
+    flutes:Math.round(num(t.flutes,2,1,12)),fluteLen:num(t.fluteLen,b.fluteLen,0.5,400),stickout:num(t.stickout,b.stickout,1,600),shankD:num(t.shankD,D,0.5,200),holderD:num(t.holderD,b.holderD,1,400),holderLen:num(t.holderLen,b.holderLen,1,400),
+    totalLen:num(t.totalLen,0,0,800),mat:TOOL_MATS.includes(t.mat)?t.mat:'carburo',notes:txt(t.notes,'',120)};
 }
 function cleanMachine(m){
   if(!m||typeof m!=='object'||!KIN_AXES[m.kin]||!CTRL[m.ctrl])return null;const b=MACHINES.r3;
@@ -45,7 +47,42 @@ function libMerge(d,replaceTools){
 function libInit(){
   let d={};try{d=JSON.parse(localStorage.getItem(LIBKEY)||'{}')||{};}catch(e){d={};}
   libMerge(d,true);if(!S.tools.length)S.tools=JSON.parse(JSON.stringify(DEFAULT_TOOLS));
+  S.tools.forEach(toolFill);
   if(d.mode==='adv'||d.mode==='guided')LIB.mode=d.mode;
+}
+// ficha técnica: lo que no venga capturado se propone a partir de lo demás
+function toolFill(t){if(!(t.totalLen>0))t.totalLen=Math.round(t.stickout+Math.max(15,t.shankD*2.5));if(!TOOL_MATS.includes(t.mat))t.mat='carburo';if(typeof t.notes!=='string')t.notes='';return t;}
+function toolWarnings(t){
+  const a=[];const inside=t.totalLen-t.stickout,need=Math.max(12,t.shankD*2);
+  if(t.fluteLen>t.totalLen)a.push('El largo de corte no puede ser mayor que el largo total.');
+  if(t.stickout>t.totalLen)a.push('El voladizo no puede ser mayor que el largo total.');
+  else if(inside<need)a.push(`Solo quedan ${nf(inside,0)} mm de zanco dentro del collet: lo sano es al menos ${nf(need,0)} mm.`);
+  if(t.stickout<t.fluteLen)a.push('El voladizo es menor que el largo de corte: parte del filo quedaría dentro del collet.');
+  if(t.stickout>t.D*8)a.push(`Voladizo largo para Ø${t.D} (más de 8 diámetros): la fresa se flexiona y vibra.`);
+  return a;
+}
+function syncToolExtras(){
+  const t=toolFill(tool());$('#t_total').value=t.totalLen;$('#t_mat').value=t.mat;$('#t_notes').value=t.notes;
+  const w=toolWarnings(t);$('#o_toolwarn').hidden=!w.length;$('#o_toolwarn').textContent=w.join(' ');
+}
+/* La Calculadora CNC del sitio vive en la página que envuelve al laboratorio: se le pide el cálculo por mensaje. */
+const CALC_MAT={mdf:'mdf',pino:'madera_blanda',dura:'madera_dura',acrilico:'acrilico',hdpe:'hdpe',aluminio:'aluminio',laton:'laton',acero:'acero_dulce',cera:'cera'};
+const CALC_TIPO={ball:'bola',taperball:'bola',flat:'upcut',bull:'upcut',vbit:'v',drill:'recta'};
+let calcId=0;
+function askCalc(){
+  const t=tool(),m=S.machine,D=t.type==='taperball'?t.tipD:t.D;
+  window.parent.postMessage({type:'hetna-cam:calc',id:++calcId,entrada:{maquina:'taller',rpm_max:m.maxRPM,avance_max:m.maxFeed,material:CALC_MAT[S.feeds.mat]||'mdf',diametro:D,filos:t.flutes,tipo_fresa:CALC_TIPO[t.type]||'upcut',material_fresa:t.mat,voladizo:t.stickout,
+    operacion:t.type==='vbit'?'grabado_v':'acabado',paso_pct:clamp(S.strat.stepover/D*100,1,100)}},location.origin);
+  $('#o_calc').hidden=false;$('#o_calc').className='note';$('#o_calc').textContent='Calculando…';
+}
+function onCalcResult(d){
+  if(d.id!==calcId)return;const el=$('#o_calc');const r=d.datos||{};
+  if(!d.ok||!(r.rpm>0)||!(r.avance>0)){el.className='note warn';el.textContent='La calculadora no pudo dar un resultado con estos datos.';return;}
+  const t=tool(),D=t.type==='taperball'?t.tipD:t.D;
+  S.feeds.deff=false;S.feeds.vc=Math.round(Math.PI*D*r.rpm/1000);S.feeds.fz=+(r.avance/(r.rpm*t.flutes)).toFixed(4);S.feeds.plungePct=clamp(Math.round(r.entrada/r.avance*100),5,100);
+  updateFeedsUI();refreshPostIfAny();
+  const av=(d.avisos||[]).slice(0,3).map(x=>String(x).slice(0,300));
+  el.className='note'+(av.length?' warn':'');el.textContent=`Calculadora CNC: ${r.rpm} RPM, ${r.avance} mm/min, carga de viruta ${r.carga_viruta} mm por filo; la fresa se flexiona ≈ ${r.deflexion_mm} mm con ${t.stickout} mm de voladizo.`+(av.length?' '+av.join(' '):'');
 }
 function libExport(){
   const blob=new Blob([JSON.stringify({hetnaCamLibrary:1,tools:S.tools,machines:userMachines(),posts:LIB.posts},null,2)],{type:'application/json'});
@@ -120,6 +157,14 @@ function initExtrasUI(){
   ['pre','end'].forEach(k=>$('#p_'+k).addEventListener('change',e=>{S.post[k]=cleanLines(e.target.value);e.target.value=S.post[k];refreshPostIfAny();refreshOutputs();}));
   $$('[data-lib=export]').forEach(b=>b.addEventListener('click',libExport));$$('[data-lib=import]').forEach(b=>b.addEventListener('click',()=>$('#libIn').click()));
   $('#libIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)libImport(f);});
+  // ficha técnica y calculadora
+  syncToolForm=(fn=>function(){const r=fn.apply(this,arguments);syncToolExtras();return r;})(syncToolForm);
+  $('#t_total').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v)&&v>0)tool().totalLen=v;syncToolForm();});
+  $('#t_mat').addEventListener('change',e=>{tool().mat=e.target.value;syncToolForm();});
+  $('#t_notes').addEventListener('change',e=>{tool().notes=txt(e.target.value,'',120);syncToolForm();});
+  if(HETNA.embedded){$('#w_calc').hidden=false;$('#t_calc').addEventListener('click',askCalc);
+    window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===window.parent&&e.data&&e.data.type==='hetna-cam:calc-result')onCalcResult(e.data);});}
+  syncToolExtras();
   refreshLibUI();syncPostExtras();initGuide();syncExtrasUI();
 }
 function syncPostExtras(){$('#p_pre').value=S.post.pre;$('#p_end').value=S.post.end;}

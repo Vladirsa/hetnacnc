@@ -432,10 +432,16 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
             <label class="f">Filos<input id="t_flutes" type="number" step="1" min="1"></label>
           </div>
           <div class="row3">
-            <label class="f">Long. corte<input id="t_fl" type="number" step="0.5" min="0.5"></label>
-            <label class="f">Voladizo<input id="t_so" type="number" step="0.5" min="1"></label>
-            <label class="f">Ø zanco<input id="t_shank" type="number" step="0.1" min="0.5"></label>
+            <label class="f">Largo de corte (filo)<input id="t_fl" type="number" step="0.5" min="0.5"></label>
+            <label class="f">Voladizo (fuera del collet)<input id="t_so" type="number" step="0.5" min="1"></label>
+            <label class="f">Ø zanco (collet)<input id="t_shank" type="number" step="0.1" min="0.5"></label>
           </div>
+          <div class="row">
+            <label class="f">Largo total<input id="t_total" type="number" step="0.5" min="1"></label>
+            <label class="f">Material de la fresa<select id="t_mat"><option value="carburo">Carburo</option><option value="carburo_rec">Carburo recubierto</option><option value="hss">HSS (acero rápido)</option></select></label>
+          </div>
+          <label class="f adv">Notas<input id="t_notes" type="text" maxlength="120" placeholder="Marca, proveedor, para qué la usas…" style="font-family:var(--f-ui)"></label>
+          <p class="note warn" id="o_toolwarn" hidden></p>
           <div class="row adv">
             <label class="f">Ø portaherramienta<input id="t_hd" type="number" step="0.5" min="1"></label>
             <label class="f">Largo portaherramienta<input id="t_hl" type="number" step="0.5" min="1"></label>
@@ -444,6 +450,8 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
         <div class="calc">
           <h2>Datos de corte</h2>
           <label class="f">Material<select id="f_mat"></select></label>
+          <div class="codebar" id="w_calc" hidden><button class="btn sm primary" id="t_calc">Calcular con la Calculadora CNC</button><a class="hint" href="/mx/calculadora-cnc" target="_blank" rel="noopener">Abrir la calculadora completa</a></div>
+          <p class="note" id="o_calc" hidden></p>
           <div class="row3 adv">
             <label class="f">Vc (m/min)<input id="f_vc" type="number" step="5" min="1"></label>
             <label class="f">Avance por diente (mm)<input id="f_fz" type="number" step="0.005" min="0.001"></label>

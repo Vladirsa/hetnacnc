@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+import { calcRouter } from "@/lib/calculadora/router"
 import { addCamJobToCart } from "@/lib/data/cam"
 
 type TrabajoCreado = {
@@ -44,6 +45,17 @@ export function MarcoLaboratorio({
   useEffect(() => {
     const alRecibir = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== marco.current?.contentWindow) {
+        return
+      }
+      // El laboratorio pide avances y velocidades a la Calculadora CNC del sitio
+      const pedido = event.data as { type?: string; id?: number; entrada?: Record<string, unknown> }
+      if (pedido?.type === "hetna-cam:calc" && pedido.entrada && typeof pedido.entrada === "object") {
+        let respuesta: Record<string, unknown> = { ok: false }
+        try {
+          const r = calcRouter(pedido.entrada)
+          respuesta = { ok: r.faltan.length === 0, datos: r.datos, avisos: r.avisos }
+        } catch {}
+        marco.current?.contentWindow?.postMessage({ type: "hetna-cam:calc-result", id: pedido.id, ...respuesta }, window.location.origin)
         return
       }
       const datos = event.data as TrabajoCreado

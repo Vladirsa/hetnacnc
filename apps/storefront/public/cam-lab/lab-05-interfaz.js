@@ -74,7 +74,7 @@ function initToolUI(){
   map.forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{const v=parseFloat(e.target.value);if(!Number.isFinite(v)||v<0){e.target.value=t()[k];return;}t()[k]=v;if(k==='D'&&t().type==='ball')t().r=v/2;renderToolList();syncToolForm();buildToolMesh();markStale();}));
   $('#t_name').addEventListener('change',e=>{t().name=e.target.value||'Herramienta';renderToolList();});
   $('#t_type').addEventListener('change',e=>{t().type=e.target.value;if(t().type==='ball')t().r=t().D/2;syncToolForm();buildToolMesh();markStale();});
-  $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta'});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
+  $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta',totalLen:0,notes:''});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
   $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)'});S.toolId=id;renderToolList();syncToolForm();});
   $('#t_del').addEventListener('click',()=>{if(S.tools.length<2){toast('Debe quedar al menos una herramienta');return;}S.tools=S.tools.filter(x=>x.id!==S.toolId);S.toolId=S.tools[0].id;renderToolList();syncToolForm();buildToolMesh();markStale();});
   fillSelect($('#f_mat'),MATERIALS,S.feeds.mat);

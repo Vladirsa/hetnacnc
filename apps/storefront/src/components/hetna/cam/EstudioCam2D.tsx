@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { type DatosCam, type FresaCam, type MaquinaCam, guardarMaquinasCam, leerMaquinasCam } from "@/lib/data/cam-maquinas"
+import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
 
 const MATERIALES = [
@@ -35,12 +36,14 @@ const MAQUINAS_BASE: MaquinaCam[] = [
   { id: "base-laser", nombre: "Láser · GRBL", tipo: "laser", post: "laser_grbl", tarifa: 200, smax: 1000 },
 ]
 const FRESAS_BASE: FresaCam[] = [
-  { id: "base-r3", nombre: "Recta Ø3", tipo: "recta", diametro: 3, angulo: 90 },
-  { id: "base-r6", nombre: "Recta Ø6", tipo: "recta", diametro: 6, angulo: 90 },
-  { id: "base-c6", nombre: "Compresión Ø6", tipo: "compresion", diametro: 6, angulo: 90 },
-  { id: "base-r8", nombre: "Recta Ø8", tipo: "recta", diametro: 8, angulo: 90 },
-  { id: "base-v90", nombre: "V 90°", tipo: "v", diametro: 12, angulo: 90 },
-  { id: "base-v60", nombre: "V 60°", tipo: "v", diametro: 12, angulo: 60 },
+  { id: "base-r3", nombre: "Recta Ø3", tipo: "recta", diametro: 3, angulo: 90, zanco: 3.175, largoCorte: 12, largoTotal: 38, voladizo: 20, filos: 2, materialFresa: "carburo" },
+  { id: "base-r6", nombre: "Recta Ø6", tipo: "recta", diametro: 6, angulo: 90, zanco: 6, largoCorte: 22, largoTotal: 50, voladizo: 30, filos: 2, materialFresa: "carburo" },
+  { id: "base-u6", nombre: "Espiral ascendente Ø6", tipo: "upcut", diametro: 6, angulo: 90, zanco: 6, largoCorte: 22, largoTotal: 50, voladizo: 30, filos: 2, materialFresa: "carburo" },
+  { id: "base-c6", nombre: "Compresión Ø6", tipo: "compresion", diametro: 6, angulo: 90, zanco: 6, largoCorte: 22, largoTotal: 50, voladizo: 30, filos: 2, materialFresa: "carburo" },
+  { id: "base-o6", nombre: "Un filo Ø6 (acrílico, aluminio)", tipo: "un_filo", diametro: 6, angulo: 90, zanco: 6, largoCorte: 22, largoTotal: 50, voladizo: 30, filos: 1, materialFresa: "carburo" },
+  { id: "base-r8", nombre: "Recta Ø8", tipo: "recta", diametro: 8, angulo: 90, zanco: 8, largoCorte: 25, largoTotal: 60, voladizo: 35, filos: 2, materialFresa: "carburo" },
+  { id: "base-v90", nombre: "V 90°", tipo: "v", diametro: 12, angulo: 90, zanco: 6, largoCorte: 6, largoTotal: 45, voladizo: 25, filos: 2, materialFresa: "carburo" },
+  { id: "base-v60", nombre: "V 60°", tipo: "v", diametro: 12, angulo: 60, zanco: 6, largoCorte: 10, largoTotal: 45, voladizo: 25, filos: 2, materialFresa: "carburo" },
 ]
 const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc" }
 const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
@@ -88,6 +91,9 @@ type Op = {
   rpm: string
   avance: string
   penetracion: string
+  // de la ficha de la fresa elegida
+  fresa: string
+  largoCorte: number
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado"]
 const sinCero = (v?: number) => (v && v > 0 ? String(v) : "")
@@ -112,6 +118,8 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   rpm: "",
   avance: "",
   penetracion: "",
+  fresa: "",
+  largoCorte: 0,
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -319,6 +327,7 @@ export function EstudioCam2D() {
         ...(numero(o.rpm) > 0 ? { rpm: numero(o.rpm) } : {}),
         ...(numero(o.avance) > 0 ? { avance: numero(o.avance) } : {}),
         ...(numero(o.penetracion) > 0 ? { penetracion: numero(o.penetracion) } : {}),
+        ...(o.fresa ? { herramienta: o.fresa, largo_corte: o.largoCorte } : {}),
       })),
     }
     const form = new FormData()
@@ -540,10 +549,12 @@ export function EstudioCam2D() {
                             rpm: sinCero(fr.rpm),
                             avance: sinCero(fr.avance),
                             penetracion: sinCero(fr.penetracion),
+                            fresa: fr.nombre,
+                            largoCorte: fr.largoCorte || 0,
                           })
                       }}
                     >
-                      <option value="">{o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : `Ø${o.diametro} mm`} (cambiar…)</option>
+                      <option value="">{o.fresa ? o.fresa : o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : `Ø${o.diametro} mm`} (cambiar…)</option>
                       {fresas
                         .filter((x) => (o.tipo === "grabado_v" ? x.tipo === "v" : x.tipo !== "v"))
                         .map((x) => (
@@ -553,10 +564,15 @@ export function EstudioCam2D() {
                         ))}
                     </Select>
                     <div className="grid grid-cols-2 gap-2">
-                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v })} />
+                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v, fresa: "", largoCorte: 0 })} />
                       <CampoNum etiqueta={o.tipo === "grabado_v" ? "Prof. máxima" : "Profundidad"} valor={o.profundidad} cambiar={(v) => cambiarOp(i, { profundidad: v })} />
                       {o.tipo === "grabado_v" && <CampoNum etiqueta="Ángulo" valor={o.angulo} cambiar={(v) => cambiarOp(i, { angulo: v })} sufijo="°" />}
                     </div>
+                    {o.tipo !== "grabado_v" && o.largoCorte > 0 && numero(o.profundidad) > o.largoCorte && (
+                      <span className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">
+                        La profundidad es mayor que el largo de corte de esta fresa ({o.largoCorte} mm): el zanco rozaría el material.
+                      </span>
+                    )}
                     {(o.tipo === "corte" || o.tipo === "fuera") && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
                     {CON_ACABADO.includes(o.tipo) && (
                       <>
@@ -800,11 +816,9 @@ function Fila({ texto, quitar }: { texto: string; quitar: () => void }) {
 // Editor de "Mis máquinas y fresas" (fase C)
 function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guardar: (d: DatosCam) => void; sesion: boolean; aviso: string }) {
   const [m, setM] = useState<MaquinaCam>({ id: "", nombre: "", tipo: "router", post: "mach3", tarifa: 300, smax: 1000 })
-  const [fr, setFr] = useState<FresaCam>({ id: "", nombre: "", tipo: "recta", diametro: 6, angulo: 90 })
   const [tarifa, setTarifa] = useState("300")
-  const [diam, setDiam] = useState("6")
-  const [ang, setAng] = useState("90")
-  const [corte, setCorte] = useState({ pasada: "", traslape: "", rpm: "", avance: "", penetracion: "" })
+  // null = cerrada, "" = alta nueva, id = edición de esa fresa
+  const [ficha, setFicha] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-[#2B3648] bg-[#151C27] p-3">
       <span className="text-[12px] text-[#8A97AB]">{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</span>
@@ -836,45 +850,47 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
       >
         Agregar máquina
       </Boton>
-      <b className="text-[12.5px]">Fresas</b>
+      <b className="text-[12.5px]">Base de herramientas</b>
       {datos.fresas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
           {datos.fresas.map((x) => (
-            <Fila key={x.id} texto={`${x.nombre} · Ø${x.diametro}${x.tipo === "v" ? ` · ${x.angulo}°` : ""}${x.rpm ? ` · ${x.rpm} rpm` : ""}${x.avance ? ` · ${x.avance} mm/min` : ""}`} quitar={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} />
+            <li key={x.id} className="flex list-none items-center justify-between gap-2 rounded-[6px] bg-[#1C2431] px-2 py-1.5 text-[12.5px]">
+              <button type="button" onClick={() => setFicha(x.id)} className="min-w-0 flex-1 text-left hover:text-[#F28A3C]" title="Editar">
+                <span className="block truncate font-semibold">
+                  {x.numero ? `T${x.numero} · ` : ""}
+                  {x.nombre}
+                </span>
+                <span className="block truncate text-[11.5px] text-[#8A97AB]">
+                  Ø{x.diametro}
+                  {x.tipo === "v" ? ` · ${x.angulo}°` : ""}
+                  {x.zanco ? ` · zanco Ø${x.zanco}` : ""}
+                  {x.largoCorte ? ` · filo ${x.largoCorte}` : ""}
+                  {x.filos ? ` · ${x.filos} ${x.filos === 1 ? "filo" : "filos"}` : ""}
+                  {x.rpm ? ` · ${x.rpm} rpm` : ""}
+                  {x.avance ? ` · ${x.avance} mm/min` : ""}
+                </span>
+              </button>
+              <button type="button" onClick={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} className="text-[#F6B8AE] hover:text-white" aria-label="Quitar">
+                ✕
+              </button>
+            </li>
           ))}
         </ul>
       )}
-      <input value={fr.nombre} onChange={(e) => setFr({ ...fr, nombre: e.target.value })} placeholder="Nombre (ej. Compresión 1/4)" maxLength={40} className="rounded-[8px] bg-[#1C2431] px-2.5 py-2 text-[13px] text-white outline-none placeholder:text-[#5B6880]" />
-      <div className="grid grid-cols-3 gap-2">
-        <Select valor={fr.tipo} cambiar={(v) => setFr({ ...fr, tipo: v as FresaCam["tipo"] })}>
-          <option value="recta">Recta</option>
-          <option value="compresion">Compresión</option>
-          <option value="bola">Bola</option>
-          <option value="v">En V</option>
-        </Select>
-        <CampoNum etiqueta="" valor={diam} cambiar={setDiam} sufijo="mm" />
-        {fr.tipo === "v" && <CampoNum etiqueta="" valor={ang} cambiar={setAng} sufijo="°" />}
-      </div>
-      <span className="text-[12px] text-[#8A97AB]">Parámetros de corte de esta fresa (opcional; vacío = los del material):</span>
-      <div className="grid grid-cols-2 gap-2">
-        <CampoNum etiqueta="Prof. por pasada" valor={corte.pasada} cambiar={(v) => setCorte({ ...corte, pasada: v })} />
-        <CampoNum etiqueta="Traslape" valor={corte.traslape} cambiar={(v) => setCorte({ ...corte, traslape: v })} sufijo="%" />
-        <CampoNum etiqueta="Husillo" valor={corte.rpm} cambiar={(v) => setCorte({ ...corte, rpm: v })} sufijo="rpm" />
-        <CampoNum etiqueta="Avance" valor={corte.avance} cambiar={(v) => setCorte({ ...corte, avance: v })} sufijo="mm/min" />
-        <CampoNum etiqueta="Bajada" valor={corte.penetracion} cambiar={(v) => setCorte({ ...corte, penetracion: v })} sufijo="mm/min" />
-      </div>
-      <Boton
-        onClick={() => {
-          const d = numero(diam)
-          if (!fr.nombre.trim() || !(d > 0)) return
-          const pos = (v: string) => Math.max(0, numero(v) || 0)
-          const propios = { pasada: pos(corte.pasada), traslape: pos(corte.traslape), rpm: pos(corte.rpm), avance: pos(corte.avance), penetracion: pos(corte.penetracion) }
-          guardar({ ...datos, fresas: [...datos.fresas, { ...fr, ...propios, diametro: d, angulo: numero(ang) || 90, id: nuevoId() }] })
-          setFr({ ...fr, nombre: "" })
-        }}
-      >
-        Agregar fresa
-      </Boton>
+      {ficha === null ? (
+        <Boton onClick={() => setFicha("")}>Dar de alta una herramienta</Boton>
+      ) : (
+        <FichaFresa
+          key={ficha || "nueva"}
+          inicial={datos.fresas.find((x) => x.id === ficha)}
+          cancelar={() => setFicha(null)}
+          guardar={(f) => {
+            const fresas = f.id ? datos.fresas.map((x) => (x.id === f.id ? f : x)) : [...datos.fresas, { ...f, id: nuevoId() }]
+            guardar({ ...datos, fresas })
+            setFicha(null)
+          }}
+        />
+      )}
       {aviso && <span className="text-[12px] text-[#9BE3B8]">{aviso}</span>}
     </div>
   )
