@@ -1,5 +1,9 @@
 // Pide al backend un boleto de subida directa a Backblaze (ver
 // lib/subir-archivo.ts). Pasa el JSON tal cual a POST /store/solicitud-archivos/boleto.
+//
+// Nginx: esta ruta cuelga de /api/solicitud-archivo, así que el bloque de
+// nginx debe ser `location ^~ /api/solicitud-archivo` (prefijo), no `=`:
+// con `=` sólo la subida llega a la tienda y /boleto cae al API de Medusa.
 import { NextResponse } from "next/server"
 import { ipDe } from "@/lib/seguridad/ip-cliente"
 

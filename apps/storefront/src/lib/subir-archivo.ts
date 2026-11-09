@@ -41,7 +41,7 @@ function xhrSubir(
     abrir(xhr)
     xhr.upload.onprogress = (e) => e.lengthComputable && alAvanzar(Math.round((e.loaded / e.total) * 100))
     xhr.onload = () => ok({ status: xhr.status, texto: xhr.responseText })
-    xhr.onerror = () => mal(new Error("Se cortó la conexión. Intenta de nuevo."))
+    xhr.onerror = () => mal(new Error(xhr.status ? `error ${xhr.status}` : "el navegador bloqueó la petición (CORS) o se cortó la conexión"))
     xhr.send(cuerpo)
   })
 }
@@ -69,13 +69,21 @@ async function subirDirecto(archivo: File, alAvanzar: (n: number) => void, desti
     archivo,
     alAvanzar
   )
-  if (res.status < 200 || res.status >= 300) throw new Error(`Backblaze respondió ${res.status}`)
+  if (res.status < 200 || res.status >= 300) {
+    let detalle = ""
+    try {
+      detalle = JSON.parse(res.texto)?.message || JSON.parse(res.texto)?.code || ""
+    } catch {}
+    throw new Error(`Backblaze respondió ${res.status || "sin conexión (¿CORS?)"}${detalle ? `: ${detalle}` : ""}`)
+  }
   return { clave: b.clave, nombre: b.nombre || archivo.name, tamano: b.tamano || archivo.size }
 }
 
-async function subirPorServidor(archivo: File, alAvanzar: (n: number) => void, destino: Destino): Promise<ArchivoGuardado> {
+async function subirPorServidor(archivo: File, alAvanzar: (n: number) => void, destino: Destino, motivo?: string): Promise<ArchivoGuardado> {
   if (archivo.size > MAX_MB_ARCHIVO_SERVIDOR * 1024 * 1024) {
-    throw new Error(`No se pudo subir directo y por el servidor el tope es ${MAX_MB_ARCHIVO_SERVIDOR} MB. Intenta de nuevo o comprímelo en ZIP.`)
+    throw new Error(
+      `No se pudo subir directo (${motivo || "sin detalle"}) y por el servidor el tope es ${MAX_MB_ARCHIVO_SERVIDOR} MB. Intenta de nuevo o comprímelo en ZIP.`
+    )
   }
   const fd = new FormData()
   if (destino) fd.append("destino", destino)
@@ -98,6 +106,6 @@ export async function subirArchivo(archivo: File, alAvanzar: (n: number) => void
     if ((e as { definitivo?: boolean }).definitivo) throw e
     console.warn("[subir-archivo] directa falló, se intenta por el servidor:", (e as Error).message)
     alAvanzar(0)
-    return subirPorServidor(archivo, alAvanzar, destino)
+    return subirPorServidor(archivo, alAvanzar, destino, (e as Error).message)
   }
 }
