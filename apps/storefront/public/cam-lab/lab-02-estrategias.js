@@ -7,32 +7,59 @@ function orientedPositions(){
   const src=S.rawPos;const out=new Float32Array(src.length);const sc=S.units*S.scale;
   for(let i=0;i<src.length;i+=3){let x=src[i]*sc,y=src[i+1]*sc,z=src[i+2]*sc;
     for(const r of S.rotSeq){if(r==='x'){const t=y;y=-z;z=t;}else if(r==='y'){const t=z;z=-x;x=t;}else{const t=x;x=-y;y=t;}}
-    out[i]=x;out[i+1]=y;out[i+2]=z;}
+    out[i]=x*S.scl[0];out[i+1]=y*S.scl[1];out[i+2]=z*S.scl[2];}
   return out;
 }
 async function preparePart(){
   if(!S.rawPos)return;
   setBusy('Analizando la malla…',0.05);await tick();
   const frame=frameOf(S.strat.kind);
-  const pos=orientedPositions();
+  let pos=orientedPositions();
   let bmin=[Infinity,Infinity,Infinity],bmax=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<pos.length;i+=3)for(let c=0;c<3;c++){const v=pos[i+c];if(v<bmin[c])bmin[c]=v;if(v>bmax[c])bmax[c]=v;}
   const mg=+$('#stk_margin').value||0,tm=+$('#stk_top').value||0;
+  const k=S.stk,man=k.mode==='manual',sup=S.sup;S.stockWarn=null;
   let off;
-  if(frame==='top')off=[-(bmin[0]+bmax[0])/2,-(bmin[1]+bmax[1])/2,-bmax[2]-tm];
+  if(frame==='top')off=[-(bmin[0]+bmax[0])/2+k.ox,-(bmin[1]+bmax[1])/2+k.oy,-bmax[2]-tm];
   else{ // eje de giro por el centroide de superficie (queda dentro de la pieza en piezas torcidas)
     let cy=0,cz=0,aw=0;for(let i=0;i<pos.length;i+=9){const ux=pos[i+3]-pos[i],uy=pos[i+4]-pos[i+1],uz=pos[i+5]-pos[i+2],wx=pos[i+6]-pos[i],wy=pos[i+7]-pos[i+1],wz=pos[i+8]-pos[i+2];
       const ar=Math.hypot(uy*wz-uz*wy,uz*wx-ux*wz,ux*wy-uy*wx);cy+=ar*(pos[i+1]+pos[i+4]+pos[i+7])/3;cz+=ar*(pos[i+2]+pos[i+5]+pos[i+8])/3;aw+=ar;}
-    off=[-(bmin[0]+bmax[0])/2,-(aw?cy/aw:(bmin[1]+bmax[1])/2),-(aw?cz/aw:(bmin[2]+bmax[2])/2)];}
+    off=[-(bmin[0]+bmax[0])/2+k.ox,-(aw?cy/aw:(bmin[1]+bmax[1])/2)+k.oy,-(aw?cz/aw:(bmin[2]+bmax[2])/2)+k.oz];}
   for(let i=0;i<pos.length;i+=3){pos[i]+=off[0];pos[i+1]+=off[1];pos[i+2]+=off[2];}
-  const M=buildMesh(pos);S.M=M;S.frame=frame;
-  setBusy('Preparando detección de colisiones…',0.3);await tick();
+  const pb0=bmin.map((v,c)=>v+off[c]),pb1=bmax.map((v,c)=>v+off[c]); // caja de la pieza ya colocada
+  let rPart=0;if(frame==='rot')for(let i=0;i<pos.length;i+=3){const r=Math.hypot(pos[i+1],pos[i+2]);if(r>rPart)rPart=r;}
   // bruto
-  if(frame==='top'){S.stock={type:'box',min:[M.bmin[0]-mg,M.bmin[1]-mg,M.bmin[2]],max:[M.bmax[0]+mg,M.bmax[1]+mg,0]};}
-  else{let rmax=0;for(let i=0;i<pos.length;i+=3){const r=Math.hypot(pos[i+1],pos[i+2]);if(r>rmax)rmax=r;}
-    S.stock={type:'cyl',x0:M.bmin[0]-mg,x1:M.bmax[0]+mg,r:rmax+tm+0.5,rPart:rmax};}
+  let stock;
+  if(frame==='top'){
+    const hx=man&&k.sx>0?k.sx/2:null,hy=man&&k.sy>0?k.sy/2:null;
+    stock={type:'box',min:[hx?-hx:pb0[0]-mg,hy?-hy:pb0[1]-mg,Math.min(pb0[2],man&&k.sz>0?-k.sz:pb0[2])],max:[hx?hx:pb1[0]+mg,hy?hy:pb1[1]+mg,0]};
+    if(pb0[0]<stock.min[0]-0.01||pb1[0]>stock.max[0]+0.01||pb0[1]<stock.min[1]-0.01||pb1[1]>stock.max[1]+0.01||(man&&k.sz>0&&pb1[2]-pb0[2]+tm>k.sz+0.01))S.stockWarn='La pieza no cabe en el material: revisa las medidas del bloque o mueve la pieza.';
+  }else{
+    const need=rPart+tm+0.5;let r=man&&k.sd>0?k.sd/2:need;const sq=k.bar==='square';
+    if(r<rPart-0.01)S.stockWarn=`La pieza no cabe en la barra: necesita al menos ${sq?'un lado':'un diámetro'} de ${nf(rPart*2,1)} mm sobre el eje de giro elegido.`;
+    stock={type:'cyl',r:sq?r*Math.SQRT2:r,sq:sq?r:0,rPart};
+  }
+  // soportes: se suman a la pieza para que la trayectoria los respete
+  const extra=[];
+  if(frame==='rot'){
+    if(sup.l.on&&sup.l.len>0&&sup.l.d>0)extra.push(cylTris(pb0[0]-sup.l.len,pb0[0]+0.5,sup.l.d/2));
+    if(sup.r.on&&sup.r.len>0&&sup.r.d>0)extra.push(cylTris(pb1[0]-0.5,pb1[0]+sup.r.len,sup.r.d/2));
+  }else if(sup.tabs.on&&sup.tabs.w>0&&sup.tabs.t>0){
+    const w=sup.tabs.w/2,z0=pb0[2],z1=Math.min(pb0[2]+sup.tabs.t,pb1[2]),cx=(pb0[0]+pb1[0])/2,cy=(pb0[1]+pb1[1])/2;
+    if(pb0[0]-stock.min[0]>0.5)extra.push(boxTris([stock.min[0],cy-w,z0],[pb0[0]+0.5,cy+w,z1]));
+    if(stock.max[0]-pb1[0]>0.5)extra.push(boxTris([pb1[0]-0.5,cy-w,z0],[stock.max[0],cy+w,z1]));
+    if(pb0[1]-stock.min[1]>0.5)extra.push(boxTris([cx-w,stock.min[1],z0],[cx+w,pb0[1]+0.5,z1]));
+    if(stock.max[1]-pb1[1]>0.5)extra.push(boxTris([cx-w,pb1[1]-0.5,z0],[cx+w,stock.max[1],z1]));
+  }
+  S.supportN=extra.length;
+  let all=pos;if(extra.length){const n=extra.reduce((a,e)=>a+e.length,pos.length);all=new Float32Array(n);all.set(pos);let o=pos.length;for(const e of extra){all.set(e,o);o+=e.length;}}
+  const M=buildMesh(all);S.M=M;S.frame=frame;
+  if(frame==='rot'){const hl=man&&k.sl>0?k.sl/2:null;stock.x0=hl?-hl:M.bmin[0]-mg;stock.x1=hl?hl:M.bmax[0]+mg;
+    if(M.bmin[0]<stock.x0-0.01||M.bmax[0]>stock.x1+0.01)S.stockWarn='La pieza (con sus soportes) es más larga que el material.';}
+  S.stock=stock;
+  setBusy('Preparando detección de colisiones…',0.3);await tick();
   // nube de puntos de colisión: pieza + sujeción
-  const sp=surfacePoints(M);const pts=sp.pts;S.fixtures=[];
+  const sp=surfacePoints(M);const pts=sp.pts;S.fixtures=[];pos=all;
   if(frame==='rot'){
     const st=S.stock,cr=st.r+12,cx0=st.x0-34,cx1=st.x0-2;S.fixtures.push({type:'chuck',x0:cx0,x1:cx1,r:cr});
     const step=Math.max(1,sp.spacing*2);
@@ -53,7 +80,8 @@ function updateMeshInfo(){
   const sz=[0,1,2].map(c=>M.bmax[c]-M.bmin[c]);
   const rows=[['Archivo',S.partName],['Triángulos',M.nT.toLocaleString('es-MX')],['Tamaño X×Y×Z',`${nf(sz[0])} × ${nf(sz[1])} × ${nf(sz[2])} mm`],['Volumen',M.closed?`${nf(M.vol/1000,1)} cm³`:'— (malla abierta)'],
     ['Malla cerrada',M.closed?'Sí':`No · ${M.open} bordes abiertos`],['Puntos de colisión',S.cloudN.toLocaleString('es-MX')],
-    ['Bruto',S.stock.type==='box'?`${nf(S.stock.max[0]-S.stock.min[0])} × ${nf(S.stock.max[1]-S.stock.min[1])} × ${nf(S.stock.max[2]-S.stock.min[2])} mm`:`Ø${nf(S.stock.r*2)} × ${nf(S.stock.x1-S.stock.x0)} mm`]];
+    ['Bruto',S.stock.type==='box'?`${nf(S.stock.max[0]-S.stock.min[0])} × ${nf(S.stock.max[1]-S.stock.min[1])} × ${nf(S.stock.max[2]-S.stock.min[2])} mm`:S.stock.sq?`Barra cuadrada ${nf(S.stock.sq*2)} × ${nf(S.stock.x1-S.stock.x0)} mm`:`Ø${nf(S.stock.r*2)} × ${nf(S.stock.x1-S.stock.x0)} mm`]];
+  if(S.supportN)rows.push(['Soportes',`${S.supportN} agregados a la pieza`]);
   $('#meshInfo').innerHTML=rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
 }
 
@@ -77,13 +105,41 @@ function checker(tl,st){
 }
 async function progressYield(state,frac,label){if(now()-state.t>40){state.t=now();setBusy(label,frac);await tick();}}
 
+// ---- patrones en planta (XY) recortados a un rectángulo [x0,x1,y0,y1]
+function clipSeg(c,d,rc){let t0=-1e9,t1=1e9;
+  for(let k=0;k<2;k++){const lo=rc[k*2],hi=rc[k*2+1];if(Math.abs(d[k])<1e-12){if(c[k]<lo-1e-9||c[k]>hi+1e-9)return null;}
+    else{let a=(lo-c[k])/d[k],b=(hi-c[k])/d[k];if(a>b){const s=a;a=b;b=s;}if(a>t0)t0=a;if(b<t1)t1=b;}}
+  return t1-t0>1e-6?[t0,t1]:null;}
+function rasterXY(rc,so,angDeg,res){
+  const th=angDeg*DEG,d=[Math.cos(th),Math.sin(th)],n=[-d[1],d[0]];
+  const cs=[[rc[0],rc[2]],[rc[1],rc[2]],[rc[0],rc[3]],[rc[1],rc[3]]].map(p=>p[0]*n[0]+p[1]*n[1]);const b0=Math.min(...cs),b1=Math.max(...cs);
+  const nL=Math.max(1,Math.ceil((b1-b0)/so-1e-9));const out=[];
+  for(let l=0;l<=nL;l++){const b=Math.min(b0+l*so,b1),c=[n[0]*b,n[1]*b];const t=clipSeg(c,d,rc);if(!t)continue;
+    const m=Math.max(2,Math.ceil((t[1]-t[0])/res));const pl=[];for(let q=0;q<=m;q++){const u=t[0]+(t[1]-t[0])*q/m;pl.push([c[0]+d[0]*u,c[1]+d[1]*u]);}out.push(pl);}
+  return out;}
+function circXY(rc,so,res){
+  const cx=(rc[0]+rc[1])/2,cy=(rc[2]+rc[3])/2,Rm=Math.hypot(rc[1]-cx,rc[3]-cy);const out=[];
+  for(let r=so/2;r<Rm+so;r+=so){const m=Math.max(12,Math.ceil(2*Math.PI*r/res));let pl=[];
+    for(let q=0;q<=m;q++){const a=2*Math.PI*q/m,x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+      if(x<rc[0]-1e-9||x>rc[1]+1e-9||y<rc[2]-1e-9||y>rc[3]+1e-9){if(pl.length>1)out.push(pl);pl=[];}else pl.push([x,y]);}
+    if(pl.length>1)out.push(pl);}
+  return out;}
+function radXY(rc,so,res){
+  const cx=(rc[0]+rc[1])/2,cy=(rc[2]+rc[3])/2,Rm=Math.hypot(rc[1]-cx,rc[3]-cy);const n=Math.max(8,Math.ceil(2*Math.PI*Rm/so));const out=[];
+  for(let l=0;l<n;l++){const a=2*Math.PI*l/n,d=[Math.cos(a),Math.sin(a)];const t=clipSeg([cx,cy],d,rc);if(!t||t[1]<=0)continue;
+    const m=Math.max(2,Math.ceil(t[1]/res));const pl=[];for(let q=0;q<=m;q++)pl.push([cx+d[0]*t[1]*q/m,cy+d[1]*t[1]*q/m]);out.push(pl);}
+  return out;}
+function workRect(st){const k=S.stock;let rc=[k.min[0],k.max[0],k.min[1],k.max[1]];const a=st.area;
+  if(a&&a.on){rc=[Math.max(rc[0],a.x0),Math.min(rc[1],a.x1),Math.max(rc[2],a.y0),Math.min(rc[3],a.y1)];if(rc[1]-rc[0]<0.1||rc[3]-rc[2]<0.1)throw new Error('El área de trabajo no toca el material. Revisa sus límites en Estrategia.');}
+  return rc;}
+function workX(st,x0,x1){const a=st.area;if(a&&a.on){x0=Math.max(x0,a.x0);x1=Math.min(x1,a.x1);if(x1-x0<0.1)throw new Error('El área de trabajo no toca la pieza. Revisa sus límites en Estrategia.');}return[x0,x1];}
 // ---- 3 ejes: mapa de alturas + dilatación con el perfil de la herramienta
-async function genTop3(tl,st){
+async function genTop3(tl,st,opt={}){
   const M=S.M,stock=S.stock,R=tl.D/2;const x0=stock.min[0],x1=stock.max[0],y0=stock.min[1],y1=stock.max[1];
   let res=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.08,3);
   let nx,ny,kr;
   for(let it=0;it<60;it++){nx=Math.ceil((x1-x0+2*R)/res)+1;ny=Math.ceil((y1-y0+2*R)/res)+1;kr=Math.ceil(R/res);if(nx*ny<=420000&&nx*ny*Math.PI*kr*kr<=6e7)break;res*=1.12;}
-  const gx0=x0-R,gy0=y0-R;const H=new Float32Array(nx*ny);const zTop=M.bmax[2]+5,floor=stock.min[2];
+  const gx0=x0-R,gy0=y0-R;const H=new Float32Array(nx*ny);const zTop=M.bmax[2]+5,floor=Math.max(stock.min[2],M.bmin[2]); // nunca por debajo de la pieza: un bloque más grueso no se corta hasta la mesa
   const ps={t:now()};
   for(let j=0;j<ny;j++){const y=gy0+j*res;for(let i=0;i<nx;i++){const x=gx0+i*res;H[j*nx+i]=raycast(M,x,y,zTop,0,0,-1,1e6)?zTop-HIT.t:floor;}
     await progressYield(ps,0.05+0.35*j/ny,'Leyendo la superficie…');}
@@ -99,17 +155,24 @@ async function genTop3(tl,st){
     await progressYield(ps,0.7+0.1*j/ny,'Revisando zonas sin alcanzar…');}
   const Tat=(x,y)=>{const fx=clamp((x-gx0)/res,0,nx-1.001),fy=clamp((y-gy0)/res,0,ny-1.001);const i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j;
     return T[j*nx+i]*(1-u)*(1-v)+T[j*nx+i+1]*u*(1-v)+T[(j+1)*nx+i]*(1-u)*v+T[(j+1)*nx+i+1]*u*v;};
-  const chk=checker(tl,st);const passes=[];const alongX=st.dir==='x';
-  const lineSet=(so,zfn,rough)=>{
-    const [a0,a1,b0,b1]=alongX?[x0,x1,y0,y1]:[y0,y1,x0,x1];const nL=Math.max(1,Math.ceil((b1-b0)/so));let rev=false;
-    for(let l=0;l<=nL;l++){const b=Math.min(b0+l*so,b1);const pts=[];const n=Math.max(2,Math.ceil((a1-a0)/res));
-      for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n;const x=alongX?a:b,y=alongX?b:a;const z=zfn(x,y);if(z===null){if(pts.length>1)passes.push({pts:pts.splice(0),rough});else pts.length=0;continue;}pts.push({p:[x,y,z],a:[0,0,1],st:0});}
-      if(pts.length>1){if(rev)pts.reverse();passes.push({pts,rough});}rev=!rev;}
+  const chk=checker(tl,st);const passes=[];const rc=workRect(st);
+  const lineSet=(paths,zfn,rough)=>{let rev=st.cutdir==='rev';
+    for(const pl of paths){const parts=[];let pts=[];
+      for(const [x,y] of pl){const z=zfn(x,y);if(z===null){if(pts.length>1)parts.push(pts);pts=[];continue;}pts.push({p:[x,y,z],a:[0,0,1],st:0});}
+      if(pts.length>1)parts.push(pts);
+      if(rev){parts.reverse();parts.forEach(q=>q.reverse());}
+      for(const q of parts)passes.push({pts:q,rough});
+      if(st.cutdir==='zig')rev=!rev;}
   };
   let minTall=Infinity;for(let i=0;i<T.length;i++)if(T[i]<minTall)minTall=T[i];
-  if(st.rough){const minT=minTall;const dA=st.rallow-st.allow;let prev=stock.max[2];
-    for(let L=stock.max[2]-st.rsd;L>minT+dA-st.rsd;L-=st.rsd){const lv=Math.max(L,minT+dA);const pv=prev;lineSet(st.rso,(x,y)=>{const z=Math.max(lv,Tat(x,y)+dA);return z<pv-0.01?z:null;},true);prev=lv;if(lv<=minT+dA)break;}}
-  lineSet(st.stepover,(x,y)=>Tat(x,y),false);
+  if(st.rough){const minT=minTall;const dA=st.rallow-st.allow;let prev=stock.max[2],lvN=0;
+    for(let L=stock.max[2]-st.rsd;L>minT+dA-st.rsd;L-=st.rsd){const lv=Math.max(L,minT+dA);const pv=prev;
+      lineSet(rasterXY(rc,st.rso,st.ang+(st.rpat==='alt'&&lvN%2?90:0),res),(x,y)=>{const z=Math.max(lv,Tat(x,y)+dA);return z<pv-0.01?z:null;},true);prev=lv;lvN++;if(lv<=minT+dA)break;}}
+  if(!opt.roughOnly){const fin=(x,y)=>Tat(x,y);
+    if(st.pat3==='circ')lineSet(circXY(rc,st.stepover,res),fin,false);
+    else if(st.pat3==='rad')lineSet(radXY(rc,st.stepover,res),fin,false);
+    else{lineSet(rasterXY(rc,st.stepover,st.ang,res),fin,false);if(st.pat3==='cross')lineSet(rasterXY(rc,st.stepover,st.ang+90,res),fin,false);}}
+  if(!passes.length)throw new Error(opt.roughOnly?'El desbaste no generó pasadas.':'No hay nada que maquinar con estos parámetros.');
   // verificación de zanco y porta (herramienta vertical)
   let n=0;const tot=passes.reduce((s,p)=>s+p.pts.length,0);
   for(const ps2 of passes){for(let i=0;i<ps2.pts.length;i+=3){const pt=ps2.pts[i];const c=chk(pt.p,pt.a,true);if(c){for(let k=Math.max(0,i-2);k<=Math.min(ps2.pts.length-1,i+2);k++)ps2.pts[k].st=2;}}
@@ -120,8 +183,8 @@ async function genTop3(tl,st){
   return {passes,linkOK,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.max[2]-minTall};
 }
 // ---- 4 ejes: mapa radial + dilatación en coordenadas cilíndricas
-async function genRot4(tl,st){
-  const M=S.M,stock=S.stock,R=tl.D/2;const px0=M.bmin[0],px1=M.bmax[0];
+async function genRot4(tl,st,opt={}){
+  const M=S.M,stock=S.stock,R=tl.D/2;const [px0,px1]=workX(st,M.bmin[0],M.bmax[0]);
   let resx=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.1,3);const Rf=stock.r+5;
   let nx,nt,dT,krx,w,rminG;
   const build=async()=>{
@@ -157,11 +220,12 @@ async function genRot4(tl,st){
   const passes=[];const rT=Math.max(stock.rPart,1);
   const spiral=(so,step,rfn,rough)=>{const turns=(px1-px0)/so;const dth=step/rT;const n=Math.min(400000,Math.ceil(turns*2*Math.PI/dth));const pts=[];
     for(let k=0;k<=n;k++){const th=k*dth;const x=px0+th/(2*Math.PI)*so;if(x>px1)break;pts.push(pt(x,th,rfn(x,th)));}passes.push({pts,rough});};
-  const lines=(so,rfn,rough)=>{const nL=Math.max(8,Math.round(2*Math.PI*rT/so));let rev=false;const n=Math.ceil((px1-px0)/resx);
-    for(let l=0;l<nL;l++){const th=2*Math.PI*l/nL;const pts=[];for(let k=0;k<=n;k++){const x=px0+(px1-px0)*k/n;pts.push(pt(x,th,rfn(x,th)));}if(rev)pts.reverse();rev=!rev;passes.push({pts,rough});}};
+  const lines=(so,rfn,rough)=>{const nL=Math.max(8,Math.round(2*Math.PI*rT/so));let rev=st.cutdir==='rev';const n=Math.ceil((px1-px0)/resx);
+    for(let l=0;l<nL;l++){const th=2*Math.PI*l/nL;const pts=[];for(let k=0;k<=n;k++){const x=px0+(px1-px0)*k/n;pts.push(pt(x,th,rfn(x,th)));}if(rev)pts.reverse();if(st.cutdir==='zig')rev=!rev;passes.push({pts,rough});}};
   if(st.rough){let minT=Infinity;for(let i=0;i<Tm.length;i+=5)if(Tm[i]<minT)minT=Tm[i];const dA=st.rallow-st.allow;
-    for(let L=stock.r-st.rsd;;L-=st.rsd){const lv=Math.max(L,minT+dA);spiral(st.rso,Math.max(resx*3,1.2),(x,th)=>Math.max(lv,Tat(x,th)+dA),true);if(lv<=minT+dA)break;}}
-  if(st.pattern==='lines')lines(st.stepover,Tat,false);else spiral(st.stepover,Math.max(resx,0.2),Tat,false);
+    for(let L=stock.r-st.rsd;;L-=st.rsd){const lv=Math.max(L,minT+dA);const rf=(x,th)=>Math.max(lv,Tat(x,th)+dA);if(st.rrot==='lines')lines(st.rso,rf,true);else spiral(st.rso,Math.max(resx*3,1.2),rf,true);if(lv<=minT+dA)break;}}
+  if(!opt.roughOnly){if(st.pattern==='lines')lines(st.stepover,Tat,false);else spiral(st.stepover,Math.max(resx,0.2),Tat,false);}
+  if(!passes.length)throw new Error('El desbaste no generó pasadas.');
   const chk=checker(tl,st);let n=0;const tot=passes.reduce((s,p)=>s+p.pts.length,0);
   for(const p2 of passes){for(let i=0;i<p2.pts.length;i+=3){const q=p2.pts[i];if(chk(q.p,q.a,true)){for(let k=Math.max(0,i-2);k<=Math.min(p2.pts.length-1,i+2);k++)p2.pts[k].st=2;}}
     n+=p2.pts.length;await progressYield(ps,0.8+0.2*n/tot,'Verificando zanco, porta y sujeción…');}
@@ -179,6 +243,7 @@ const DEVS=[5,10,15,20,26,32,40,50].map(d=>d*DEG),AZS=[0,45,-45,90,-90,135,-135,
 async function gen5(tl,st){
   const M=S.M,stock=S.stock,m=S.machine;const chk=checker(tl,st);const lead=st.lead*DEG,tilt=st.tilt*DEG,maxT=st.maxTilt*DEG;
   const minDotN=(tl.type==='flat'||tl.type==='bull')?0.5:0.08;const stats={adjusted:0,coll:0,lim:0,devSum:0,why:{}};
+  let roughRes=null;if(st.rough)roughRes=await(S.frame==='top'?genTop3:genRot4)(tl,st,{roughOnly:true});
   const passes=[];const ps={t:now()};
   const evalPoint=(P,n,f,ref,prevAng)=>{
     const a0=clampCone(axisFromNormal(n,f,lead,tilt),ref,maxT);
@@ -202,17 +267,18 @@ async function gen5(tl,st){
     if(!state&&S0.pts.length>1)passes.push({pts:S0.pts,rough});
   };
   if(S.frame==='top'){
-    const zTop=M.bmax[2]+5;const alongX=st.dir==='x';const x0=stock.min[0],x1=stock.max[0],y0=stock.min[1],y1=stock.max[1];
-    const [a0,a1,b0,b1]=alongX?[x0,x1,y0,y1]:[y0,y1,x0,x1];const nL=Math.ceil((b1-b0)/st.stepover);let rev=false;
-    for(let l=0;l<=nL;l++){const b=Math.min(b0+l*st.stepover,b1);const n=Math.ceil((a1-a0)/st.step);const sm=[];
-      for(let k=0;k<=n;k++){const a=a0+(a1-a0)*(rev?n-k:k)/n;const x=alongX?a:b,y=alongX?b:a;const f=alongX?[1,0,0]:[0,1,0];sm.push({o:[x,y,zTop],d:[0,0,-1],f,ref:[0,0,1]});}
-      runPass(sm,false);rev=!rev;await progressYield(ps,0.05+0.8*l/nL,'5 ejes: orientando la herramienta y evitando colisiones…');}
+    const zTop=M.bmax[2]+5;const rc=workRect(st);let rev=st.cutdir==='rev';
+    const sets=[rasterXY(rc,st.stepover,st.ang,st.step)];if(st.pat3==='cross')sets.push(rasterXY(rc,st.stepover,st.ang+90,st.step));
+    const nAll=sets.reduce((a,q)=>a+q.length,0);let done=0;
+    for(const set of sets)for(const pl0 of set){const pl=rev?pl0.slice().reverse():pl0;const A=pl[0],B=pl[pl.length-1];const f=V.norm([B[0]-A[0],B[1]-A[1],0]);
+      runPass(pl.map(([x,y])=>({o:[x,y,zTop],d:[0,0,-1],f,ref:[0,0,1]})),false);if(st.cutdir==='zig')rev=!rev;
+      await progressYield(ps,0.05+0.8*(++done)/nAll,'5 ejes: orientando la herramienta y evitando colisiones…');}
   }else{
-    const eR=cutterRadii(tl).R*0.9;const Rf=stock.r+5,px0=M.bmin[0]+eR,px1=M.bmax[0]-eR;const rT=Math.max(stock.rPart,1);
-    if(st.pattern==='lines'){const nL=Math.max(8,Math.round(2*Math.PI*rT/st.stepover));let rev=false;const n=Math.ceil((px1-px0)/st.step);
+    const eR=cutterRadii(tl).R*0.9;const Rf=stock.r+5;const [px0,px1]=workX(st,M.bmin[0]+eR,M.bmax[0]-eR);const rT=Math.max(stock.rPart,1);
+    if(st.pattern==='lines'){const nL=Math.max(8,Math.round(2*Math.PI*rT/st.stepover));let rev=st.cutdir==='rev';const n=Math.ceil((px1-px0)/st.step);
       for(let l=0;l<nL;l++){const th=2*Math.PI*l/nL,s=Math.sin(th),c=Math.cos(th);const sm=[];
         for(let k=0;k<=n;k++){const x=px0+(px1-px0)*(rev?n-k:k)/n;sm.push({o:[x,Rf*s,Rf*c],d:[0,-s,-c],f:[rev?-1:1,0,0],ref:[0,s,c]});}
-        runPass(sm,false);rev=!rev;await progressYield(ps,0.05+0.8*l/nL,'5 ejes: orientando la herramienta y evitando colisiones…');}
+        runPass(sm,false);if(st.cutdir==='zig')rev=!rev;await progressYield(ps,0.05+0.8*l/nL,'5 ejes: orientando la herramienta y evitando colisiones…');}
     }else{
       const dth=st.step/rT;const turns=(px1-px0)/st.stepover;const n=Math.ceil(turns*2*Math.PI/dth);const chunk=Math.ceil(2*Math.PI/dth);let sm=[];const spS={pts:[],prevAng:null};
       for(let k=0;k<=n;k++){const th=k*dth,x=px0+th/(2*Math.PI)*st.stepover;if(x>px1)break;const s=Math.sin(th),c=Math.cos(th);
@@ -251,6 +317,8 @@ async function gen5(tl,st){
       out.push(B);}
     p.pts=out;}
   for(const p of passes)for(const q of p.pts){if(q.st===1)stats.adjusted++;else if(q.st===2)stats.coll++;else if(q.st===3)stats.lim++;delete q.P;delete q.n;delete q.ref;}
+  if(!passes.length)throw new Error('No hay nada que maquinar con estos parámetros.');
+  if(roughRes){for(const p of roughRes.passes)for(const q of p.pts)if(q.st>=2){stats.coll++;stats.why.rough=(stats.why.rough||0)+1;}return {passes:roughRes.passes.concat(passes),stats5:stats,unreachedPct:0,maxDepth:roughRes.maxDepth};}
   return {passes,stats5:stats,unreachedPct:0,maxDepth:0};
 }
 function simplify(pts,tol=0.004){

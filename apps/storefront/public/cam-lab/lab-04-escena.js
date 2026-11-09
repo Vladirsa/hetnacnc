@@ -41,7 +41,7 @@ function buildGrid(){
   const size=Math.ceil((S.M?.diag||200)*2.2/10)*10;const g=new THREE.GridHelper(size,Math.round(size/10),new THREE.Color(cssVar('--vp-grid')),new THREE.Color(cssVar('--vp-grid')));
   g.rotation.x=Math.PI/2;g.material.transparent=true;g.material.opacity=0.55;
   const z=S.stock?(S.stock.type==='box'?S.stock.min[2]-0.2:-S.stock.r-25):0;g.position.z=z;gridHelper=g;scene.add(g);
-  if(axesHelper)scene.remove(axesHelper);axesHelper=new THREE.AxesHelper(Math.max(12,(S.M?.diag||100)*0.12));scene.add(axesHelper);
+  if(axesHelper)scene.remove(axesHelper);axesHelper=new THREE.AxesHelper(Math.max(12,(S.M?.diag||100)*0.12));axesHelper.position.set(...zeroOff());scene.add(axesHelper);
 }
 function buildPartScene(){
   const M=S.M;
@@ -72,7 +72,7 @@ function buildStock(){
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setIndex(nTop+nR>65535?new THREE.Uint32BufferAttribute(idx,1):new THREE.Uint16BufferAttribute(idx,1));sg.geo=geo;
   }else{
     const L=st.x1-st.x0;const res=Math.max(L/260,0.25);const nx=Math.ceil(L/res)+1,nt=clamp(Math.round(2*Math.PI*st.r/res),96,420);
-    Object.assign(sg,{type:'rot',nx,nt,x0:st.x0,rx:L/(nx-1),dT:2*Math.PI/nt});sg.Rg=new Float32Array(nx*nt).fill(st.r);
+    Object.assign(sg,{type:'rot',nx,nt,x0:st.x0,rx:L/(nx-1),dT:2*Math.PI/nt});sg.Rg=new Float32Array(nx*nt);fillStockR(sg);
     const pos=new Float32Array((nx*nt+2)*3);const idx=[];
     for(let i=0;i<nx-1;i++)for(let j=0;j<nt;j++){const a=i*nt+j,b=i*nt+(j+1)%nt,c=(i+1)*nt+(j+1)%nt,d=(i+1)*nt+j;idx.push(a,d,c,a,c,b);}
     const cA=nx*nt,cB=nx*nt+1;for(let j=0;j<nt;j++){idx.push(cA,(j+1)%nt,j);idx.push(cB,(nx-1)*nt+j,(nx-1)*nt+(j+1)%nt);}
@@ -81,6 +81,7 @@ function buildStock(){
   syncStockGeo(true);
   stockMesh=new THREE.Mesh(sg.geo,MAT.stock);stockMesh.renderOrder=2;workGroup.add(stockMesh);
 }
+function fillStockR(sg){const st=S.stock;for(let j=0;j<sg.nt;j++){const th=j*sg.dT;const r=st.sq?st.sq/Math.max(Math.abs(Math.sin(th)),Math.abs(Math.cos(th))):st.r;for(let i=0;i<sg.nx;i++)sg.Rg[i*sg.nt+j]=r;}}
 function syncStockGeo(full){
   const sg=S.sg;const pos=sg.geo.attributes.position.array;
   if(sg.type==='top'){const {nx,ny}=sg;for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const k=j*nx+i;pos[k*3]=sg.x0+i*sg.rx;pos[k*3+1]=sg.y0+j*sg.ry;pos[k*3+2]=sg.H[k];}
@@ -183,7 +184,7 @@ function advanceCut(ti,tf,budget){
   }
   if(dirty)syncStockGeo(false);return true;
 }
-function resetStockCut(){S.sg.H?.fill(S.stock.max?.[2]??0);if(S.sg.Rg)S.sg.Rg.fill(S.stock.r);syncStockGeo(false);SIM.cutIdx=1;SIM.cutFrac=0;}
+function resetStockCut(){S.sg.H?.fill(S.stock.max?.[2]??0);if(S.sg.Rg)fillStockR(S.sg);syncStockGeo(false);SIM.cutIdx=1;SIM.cutFrac=0;}
 let lastFrame=now();
 let lastBusyRender=0;
 function frame(){
@@ -270,8 +271,9 @@ function renderReport(){
   axes.forEach((a,q)=>{const r=js.rng[q];k.push({l:`Rango ${a}`,v:Number.isFinite(r[0])?`${r[0].toFixed(0)}…${r[1].toFixed(0)}°`:'—'});});
   $('#kpis').innerHTML=k.map(x=>`<div class="kpi ${x.c||''}"><small>${x.l}</small><strong>${x.v}</strong></div>`).join('');
   const I=[];
-  if(!S.M.closed)I.push({sev:'warn',title:'La malla tiene bordes abiertos',cause:`${S.M.open} aristas sin cerrar${S.M.nonman?` y ${S.M.nonman} no-manifold`:''}. Los rayos pueden atravesar huecos.`,fix:'Repara la malla o expórtala otra vez como sólido cerrado.'});
-  const WHY={cutter:'el cortador (desbaste de la pieza)',flute:'la zona de filos',shank:'el zanco',holder:'el portaherramienta o la sujeción'};
+  if(S.stockWarn)I.push({sev:'err',title:'La pieza no cabe en el material',cause:S.stockWarn,fix:'En Material agranda el bloque, cambia la posición de la pieza o vuelve a medidas automáticas.'});
+  if(!S.M.closed&&!S.supportN)I.push({sev:'warn',title:'La malla tiene bordes abiertos',cause:`${S.M.open} aristas sin cerrar${S.M.nonman?` y ${S.M.nonman} no-manifold`:''}. Los rayos pueden atravesar huecos.`,fix:'Repara la malla o expórtala otra vez como sólido cerrado.'});
+  const WHY={cutter:'el cortador (desbaste de la pieza)',flute:'la zona de filos',shank:'el zanco',holder:'el portaherramienta o la sujeción',rough:'el zanco o el porta durante el desbaste con la herramienta recta'};
   if(s5&&s5.coll)I.push({sev:'err',title:`${s5.coll} puntos con colisión sin resolver`,cause:`Toca ${Object.entries(s5.why||{}).map(([k,v])=>`${WHY[k]||k} (${v})`).join(', ')} aun inclinando hasta ${st.maxTilt}°.`,fix:`${st.skip?'Se omitieron del G-code. ':''}Aumenta el voladizo, usa un porta más delgado, sube la inclinación máxima o usa herramienta de cuello largo.`});
   if(s5&&s5.adjusted)I.push({sev:'info',title:`${s5.adjusted} puntos reorientados automáticamente`,cause:`Desvío promedio ${nf(s5.devSum/Math.max(1,s5.adjusted),1)}° respecto a la normal para librar la pieza.`,fix:'Revisa la zona en amarillo durante la simulación.'});
   if(s5&&s5.lim)I.push({sev:'err',title:`${s5.lim} puntos fuera de los límites rotativos`,cause:`La orientación requerida excede ${axes.map((a,q)=>`${a} ${m.rot[q][0]}…${m.rot[q][1]}°`).join(', ')}.`,fix:'Reduce la inclinación máxima, cambia la cinemática o reposiciona la pieza.'});

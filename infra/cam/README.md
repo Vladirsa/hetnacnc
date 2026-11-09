@@ -86,11 +86,12 @@ fresa y la pieza.
   diseña como opcional desde el día uno: sin agente, el producto funciona
   completo.
 
-## Lo que este laboratorio NO hace
+## 3, 4 y 5 ejes
 
-3, 4 y 5 ejes siguen siendo un servicio manual, el que describe la página de
-`laboratorio-cam` en el storefront. No es una limitación temporal: es la
-decisión de dominar 2.5D antes de tocar lo demás.
+No vive en esta carpeta: es un motor aparte que corre en el navegador
+(`apps/storefront/public/cam-lab/`, la pantalla `/cam/lab`). Calcula y simula
+las trayectorias y entrega el G-code sin pasar por el servidor. Aquí sólo están
+los motores de 2D.
 
 ## Instalación en el servidor
 

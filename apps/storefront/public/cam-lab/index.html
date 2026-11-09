@@ -66,7 +66,7 @@ button{cursor:pointer}
 .side,.report{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column}
 .side{grid-area:side}
 .report{grid-area:report;overflow:auto;padding:14px 16px}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--line);padding:6px 6px 0}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--line);padding:6px 6px 0}
 .steps button{background:none;border:0;padding:8px 2px 9px;font:600 12px/1.1 var(--f-label);letter-spacing:.04em;color:var(--ink-2);border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:4px}
 .steps button i{font:600 11px/1 var(--f-mono);font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--ink-3)}
 .steps button.on{color:var(--ink);border-bottom-color:var(--accent)}
@@ -195,6 +195,15 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
   .legend{display:none}
   .viewtools .vt:last-child{display:none}
 }
+.guide{border:1px solid var(--accent);background:var(--accent-2);border-radius:10px;padding:10px 12px;display:none;flex-direction:column;gap:6px}
+.guide b{font:700 14px/1.2 var(--f-label);letter-spacing:.02em;color:var(--accent)}
+.guide p{margin:0;font-size:13.5px;line-height:1.4;color:var(--ink)}
+.guide .btn{align-self:flex-start}
+body.guided .guide{display:flex}
+body.guided .adv{display:none!important}
+.libbar{display:flex;gap:6px;flex-wrap:wrap;align-items:end}
+.libbar label.f{flex:1;min-width:120px}
+label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -204,6 +213,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
       <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="11" y="2" width="10" height="9" rx="1.5"/><path d="M13 11v6l3 3 3-3v-6"/><path d="M16 20v5"/><path d="M4 29h24"/><path d="M13.5 13.5l5 2M13.5 16.5l5 2" stroke-width="1.4"/></svg>
       <div><b>HETNA</b><span>CAM Lab · 3, 4 y 5 ejes</span></div>
     </div>
+    <div class="seg" id="modeSeg" role="group" aria-label="Modo de uso"><button data-v="guided">Guiado</button><button data-v="adv">Avanzado</button></div>
     <div class="jobinfo"><span id="jobName">—</span><span class="pill" id="jobState">Sin calcular</span></div>
     <div class="topactions">
       <button class="btn primary" id="btnCompute">Calcular trayectoria</button>
@@ -215,14 +225,16 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
   <aside class="side">
     <nav class="steps" role="tablist" aria-label="Pasos del trabajo">
       <button data-tab="part" class="on" role="tab"><i>1</i>Pieza</button>
-      <button data-tab="machine" role="tab"><i>2</i>Máquina</button>
-      <button data-tab="tool" role="tab"><i>3</i>Herramienta</button>
-      <button data-tab="strat" role="tab"><i>4</i>Estrategia</button>
-      <button data-tab="post" role="tab"><i>5</i>Post</button>
+      <button data-tab="stock" role="tab"><i>2</i>Material</button>
+      <button data-tab="machine" role="tab"><i>3</i>Máquina</button>
+      <button data-tab="tool" role="tab"><i>4</i>Herramienta</button>
+      <button data-tab="strat" role="tab"><i>5</i>Estrategia</button>
+      <button data-tab="post" role="tab"><i>6</i>G-code</button>
     </nav>
     <div class="panes">
       <!-- PIEZA -->
       <section class="pane" data-pane="part">
+        <div class="guide" data-guide="part"></div>
         <label class="drop" id="drop">
           <input type="file" id="fileIn" accept=".stl,.obj,.step,.stp,.iges,.igs">
           <b>Sube tu modelo 3D</b>
@@ -248,27 +260,99 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
             <button class="chip" data-rot="z">Girar 90° en Z</button>
             <button class="chip" data-rot="reset">Original</button>
           </div>
+          <div class="row3 adv">
+            <label class="f">Escala en X<input id="p_sx" type="number" step="0.05" min="0.01" value="1"></label>
+            <label class="f">Escala en Y<input id="p_sy" type="number" step="0.05" min="0.01" value="1"></label>
+            <label class="f">Escala en Z<input id="p_sz" type="number" step="0.05" min="0.01" value="1"></label>
+          </div>
           <p class="hint">En trabajos rotativos el eje de giro es X: orienta el largo de la pieza sobre X.</p>
         </div>
         <div class="group">
           <h2>Diagnóstico de malla</h2>
           <dl class="kv" id="meshInfo"></dl>
         </div>
+      </section>
+
+      <!-- MATERIAL -->
+      <section class="pane" data-pane="stock" hidden>
+        <div class="guide" data-guide="stock"></div>
         <div class="group">
           <h2>Material en bruto</h2>
-          <div class="row">
+          <p class="note" id="stk_frameNote"></p>
+          <div class="seg" id="stk_mode"><button data-v="auto">Ajustado a la pieza</button><button data-v="manual">Mis medidas</button></div>
+          <div class="row" id="w_stk_auto">
             <label class="f">Margen lateral (mm)<input id="stk_margin" type="number" step="0.5" min="0" value="3"></label>
             <label class="f">Margen superior / radial (mm)<input id="stk_top" type="number" step="0.5" min="0" value="1"></label>
           </div>
-          <p class="hint">El cero de pieza queda en el centro superior del bruto (3 ejes) o sobre el eje de giro al centro del largo (4 y 5 ejes rotativos).</p>
+          <div class="row3" id="w_stk_box">
+            <label class="f">Largo X (mm)<input id="stk_sx" type="number" step="1" min="0"></label>
+            <label class="f">Ancho Y (mm)<input id="stk_sy" type="number" step="1" min="0"></label>
+            <label class="f">Espesor Z (mm)<input id="stk_sz" type="number" step="0.5" min="0"></label>
+          </div>
+          <div id="w_stk_bar" class="group">
+            <div class="seg" id="stk_bar"><button data-v="round">Barra redonda (cilindro)</button><button data-v="square">Barra cuadrada</button></div>
+            <div class="row" id="w_stk_barDims">
+              <label class="f"><span id="stk_dlbl">Diámetro</span> (mm)<input id="stk_sd" type="number" step="0.5" min="0"></label>
+              <label class="f">Largo (mm)<input id="stk_sl" type="number" step="1" min="0"></label>
+            </div>
+          </div>
+          <p class="hint">Un bloque cuadrado o rectangular se usa en 3 ejes y en 5 ejes desde arriba; una barra redonda o cuadrada, en los trabajos con eje rotativo. Con "Mis medidas", un valor en 0 se ajusta solo.</p>
+        </div>
+        <div class="group adv">
+          <h2>Posición de la pieza en el material</h2>
+          <div class="row3">
+            <label class="f">Mover en X<input id="stk_ox" type="number" step="0.5" value="0"></label>
+            <label class="f">Mover en Y<input id="stk_oy" type="number" step="0.5" value="0"></label>
+            <label class="f" id="w_stk_oz">Mover en Z<input id="stk_oz" type="number" step="0.5" value="0"></label>
+          </div>
+          <p class="hint" id="stk_posHint"></p>
+        </div>
+        <div class="group">
+          <h2>Soportes</h2>
+          <div id="w_sup_rot" class="group">
+            <label class="c"><input type="checkbox" id="sup_l">Soporte del lado del plato (chuck)</label>
+            <div class="row"><label class="f">Largo (mm)<input id="sup_llen" type="number" step="1" min="1"></label><label class="f">Diámetro (mm)<input id="sup_ld" type="number" step="0.5" min="1"></label></div>
+            <label class="c"><input type="checkbox" id="sup_r">Soporte del lado del contrapunto</label>
+            <div class="row"><label class="f">Largo (mm)<input id="sup_rlen" type="number" step="1" min="1"></label><label class="f">Diámetro (mm)<input id="sup_rd" type="number" step="0.5" min="1"></label></div>
+            <p class="hint">Son cilindros que se dejan sin cortar entre la pieza y la sujeción: la herramienta gana espacio para no tocar el plato ni el contrapunto. Se cortan a mano al terminar.</p>
+          </div>
+          <div id="w_sup_top" class="group">
+            <label class="c"><input type="checkbox" id="sup_tabs">Cuatro puentes hacia el material</label>
+            <div class="row"><label class="f">Ancho (mm)<input id="sup_tw" type="number" step="0.5" min="1"></label><label class="f">Espesor (mm)<input id="sup_tt" type="number" step="0.5" min="0.5"></label></div>
+            <p class="hint">Puentes rectos al centro de cada lado, desde la caja que envuelve la pieza hasta la orilla del material. Necesitan margen lateral.</p>
+          </div>
+        </div>
+        <div class="group">
+          <h2>Punto cero de la pieza</h2>
+          <label class="f" id="w_ztop">Dónde pones el cero en la máquina<select id="z_top">
+            <option value="tc">Centro, arriba del material</option>
+            <option value="tfl">Esquina frontal izquierda, arriba del material</option>
+            <option value="bc">Centro, sobre la mesa (abajo del material)</option>
+            <option value="bfl">Esquina frontal izquierda, sobre la mesa</option>
+          </select></label>
+          <label class="f" id="w_zrot">Dónde pones el cero en la máquina<select id="z_rot">
+            <option value="c">Sobre el eje de giro, al centro de la pieza</option>
+            <option value="l">Sobre el eje de giro, en el extremo del material junto al plato</option>
+            <option value="r">Sobre el eje de giro, en el extremo junto al contrapunto</option>
+          </select></label>
+          <p class="hint">Los ejes de colores en la vista 3D marcan ese punto. El G-code mide todo desde ahí.</p>
         </div>
       </section>
 
       <!-- MAQUINA -->
       <section class="pane" data-pane="machine" hidden>
-        <label class="f">Máquina predefinida<select id="m_preset"></select></label>
+        <div class="guide" data-guide="machine"></div>
+        <div class="group">
+          <h2>Biblioteca de máquinas</h2>
+          <label class="f">Máquina<select id="m_preset"></select></label>
+          <div class="libbar adv">
+            <label class="f">Guardar la configuración actual como<input id="m_name" type="text" maxlength="60" placeholder="Mi router" style="font-family:var(--f-ui)"></label>
+            <button class="btn sm" id="m_save">Guardar</button><button class="btn sm" id="m_del">Eliminar</button>
+          </div>
+          <div class="codebar adv"><button class="btn sm" data-lib="export">Exportar biblioteca</button><button class="btn sm" data-lib="import">Importar</button></div>
+        </div>
         <div class="row">
-          <label class="f">Cinemática<select id="m_kin">
+          <label class="f adv">Cinemática<select id="m_kin">
             <option value="xyz">3 ejes XYZ</option>
             <option value="xyza">4 ejes · rotativo A (sobre X)</option>
             <option value="ab_mixed">5 ejes · rotativo A + cabezal B</option>
@@ -278,7 +362,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
           </select></label>
           <label class="f">Controlador<select id="m_ctrl"></select></label>
         </div>
-        <div class="group">
+        <div class="group adv">
           <h2>Recorridos (mm)</h2>
           <div class="row3">
             <label class="f">X mín<input id="m_xmin" type="number"></label><label class="f">X máx<input id="m_xmax" type="number"></label><span></span>
@@ -286,7 +370,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
             <label class="f">Z mín<input id="m_zmin" type="number"></label><label class="f">Z máx<input id="m_zmax" type="number"></label><span></span>
           </div>
         </div>
-        <div class="group" id="rotGroup">
+        <div class="adv"><div class="group" id="rotGroup">
           <h2>Ejes rotativos (grados)</h2>
           <div class="row3">
             <label class="f"><span id="r1lbl">A</span> mín<input id="m_r1min" type="number"></label><label class="f"><span id="r1lbl2">A</span> máx<input id="m_r1max" type="number"></label>
@@ -305,8 +389,8 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
             <label class="f">Centro giro Z<input id="m_cz" type="number" step="0.1"></label>
           </div>
           <p class="hint">Sin TCP, el posprocesador convierte cada punto a coordenadas de máquina con el pivote y el centro de giro. Mide esos valores en tu máquina: un error aquí se traslada directo a la pieza.</p>
-        </div>
-        <div class="group">
+        </div></div>
+        <div class="group adv">
           <h2>Husillo y avances</h2>
           <div class="row3">
             <label class="f">RPM máx<input id="m_rpm" type="number" step="500"></label>
@@ -318,9 +402,12 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
 
       <!-- HERRAMIENTA -->
       <section class="pane" data-pane="tool" hidden>
+        <div class="guide" data-guide="tool"></div>
         <div class="group">
-          <div class="codebar"><h2>Biblioteca</h2><span class="sp"></span><button class="btn sm" id="t_add">Nueva</button><button class="btn sm" id="t_dup">Duplicar</button><button class="btn sm" id="t_del">Eliminar</button></div>
+          <div class="codebar"><h2>Biblioteca de herramientas</h2><span class="sp"></span><button class="btn sm" id="t_add">Nueva</button><button class="btn sm" id="t_dup">Duplicar</button><button class="btn sm" id="t_del">Eliminar</button></div>
           <div class="toollist" id="toolList"></div>
+          <div class="codebar adv"><button class="btn sm" data-lib="export">Exportar biblioteca</button><button class="btn sm" data-lib="import">Importar</button><button class="btn sm" id="t_reset">Restaurar las de fábrica</button></div>
+          <p class="hint">Tus herramientas se guardan en este navegador.</p>
         </div>
         <div class="toolfig"><svg id="toolSvg" viewBox="0 0 260 190" aria-label="Perfil de la herramienta"></svg></div>
         <div class="group">
@@ -349,7 +436,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
             <label class="f">Voladizo<input id="t_so" type="number" step="0.5" min="1"></label>
             <label class="f">Ø zanco<input id="t_shank" type="number" step="0.1" min="0.5"></label>
           </div>
-          <div class="row">
+          <div class="row adv">
             <label class="f">Ø portaherramienta<input id="t_hd" type="number" step="0.5" min="1"></label>
             <label class="f">Largo portaherramienta<input id="t_hl" type="number" step="0.5" min="1"></label>
           </div>
@@ -357,9 +444,10 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
         <div class="calc">
           <h2>Datos de corte</h2>
           <label class="f">Material<select id="f_mat"></select></label>
-          <div class="row">
+          <div class="row3 adv">
             <label class="f">Vc (m/min)<input id="f_vc" type="number" step="5" min="1"></label>
             <label class="f">Avance por diente (mm)<input id="f_fz" type="number" step="0.005" min="0.001"></label>
+            <label class="f">Penetración (% del avance)<input id="f_plunge" type="number" step="5" min="5" max="100"></label>
           </div>
           <div class="big3">
             <div><small>Husillo</small><strong id="o_rpm">—</strong><em>RPM</em></div>
@@ -367,13 +455,14 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
             <div><small>Penetración</small><strong id="o_plunge">—</strong><em>mm/min</em></div>
           </div>
           <p class="hint" id="o_matnote"></p>
-          <label class="c"><input type="checkbox" id="f_deff">Compensar RPM por diámetro efectivo (bola)</label>
+          <label class="c adv"><input type="checkbox" id="f_deff">Compensar RPM por diámetro efectivo (bola)</label>
           <p class="hint" id="o_deff"></p>
         </div>
       </section>
 
       <!-- ESTRATEGIA -->
       <section class="pane" data-pane="strat" hidden>
+        <div class="guide" data-guide="strat"></div>
         <div class="cards" id="stratCards">
           <button class="card" data-kind="top3"><b>3 ejes · paralelo</b><span>Relieves y superficies vistas desde arriba</span></button>
           <button class="card" data-kind="rot4"><b>4 ejes · rotativo</b><span>Columnas, patas, piezas torneadas</span></button>
@@ -382,18 +471,25 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
         </div>
         <div class="group">
           <div id="w_pattern" class="group"><h2>Patrón</h2><div class="seg" id="s_pattern"><button data-v="spiral">Espiral continua</button><button data-v="lines">Líneas en X</button></div></div>
-          <div id="w_dir" class="group"><h2>Dirección</h2><div class="seg" id="s_dir"><button data-v="x">A lo largo de X</button><button data-v="y">A lo largo de Y</button></div></div>
+          <div id="w_dir" class="group"><h2>Patrón de las pasadas</h2>
+            <div class="seg" id="s_pat3"><button data-v="par">Paralelo</button><button data-v="cross">Cruzado</button><button data-v="circ">Circular</button><button data-v="rad">Radial</button></div>
+            <div class="row" id="w_sang">
+              <label class="f">Ángulo con el eje X (°)<input id="s_ang" type="number" step="5" min="-180" max="180"></label>
+              <div class="seg" id="s_angq" style="align-self:end"><button data-v="0">A lo largo de X</button><button data-v="90">A lo largo de Y</button></div>
+            </div>
+            <p class="hint" id="o_pat3"></p>
+          </div>
         </div>
         <div class="group">
           <h2>Acabado</h2>
           <div class="row3">
             <label class="f">Paso lateral<input id="s_stepover" type="number" step="0.05" min="0.05"></label>
-            <label class="f">Paso de muestreo<input id="s_step" type="number" step="0.05" min="0.05"></label>
-            <label class="f">Sobrematerial<input id="s_allow" type="number" step="0.05"></label>
+            <label class="f adv">Paso de muestreo<input id="s_step" type="number" step="0.05" min="0.05"></label>
+            <label class="f adv">Sobrematerial<input id="s_allow" type="number" step="0.05"></label>
           </div>
           <p class="hint" id="o_scallop"></p>
         </div>
-        <div class="group" id="w_5ax">
+        <div class="adv"><div class="group" id="w_5ax">
           <h2>Orientación 5 ejes y anticolisión</h2>
           <div class="row3">
             <label class="f">Avance (lead) °<input id="s_lead" type="number" step="1"></label>
@@ -404,16 +500,33 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
           <label class="c"><input type="checkbox" id="s_smooth">Suavizar el eje de herramienta</label>
           <label class="c"><input type="checkbox" id="s_skip">Omitir del G-code los puntos que siguen en colisión</label>
           <label class="f">Holgura de seguridad del portaherramienta (mm)<input id="s_clear" type="number" step="0.5" min="0"></label>
-        </div>
+        </div></div>
         <div class="group" id="w_rough">
-          <label class="c"><input type="checkbox" id="s_rough">Incluir desbaste previo</label>
+          <h2>Desbaste</h2>
+          <label class="c"><input type="checkbox" id="s_rough">Incluir desbaste previo por niveles</label>
+          <label class="f" id="w_rpat">Tipo de desbaste<select id="s_rpat"><option value="same">Paralelo, misma dirección en cada nivel</option><option value="alt">Cruzado: alterna 90° en cada nivel</option></select></label>
+          <label class="f" id="w_rrot">Tipo de desbaste<select id="s_rrot"><option value="spiral">Espiral continua alrededor de la pieza</option><option value="lines">Líneas a lo largo del eje, girando entre pasadas</option></select></label>
+          <p class="hint" id="o_rough5"></p>
           <div class="row3">
             <label class="f">Prof. por pasada<input id="s_rsd" type="number" step="0.5" min="0.1"></label>
             <label class="f">Paso lateral<input id="s_rso" type="number" step="0.5" min="0.1"></label>
             <label class="f">Sobrematerial<input id="s_rallow" type="number" step="0.1" min="0"></label>
           </div>
         </div>
-        <label class="f">Distancia de seguridad (mm)<input id="s_safe" type="number" step="1" min="1"></label>
+        <div class="group">
+          <h2>Movimientos</h2>
+          <div class="seg" id="s_cutdir"><button data-v="zig">Meandro (ida y vuelta)</button><button data-v="one">Un solo sentido</button><button data-v="rev">Un sentido, invertido</button></div>
+          <p class="hint">El meandro es más rápido. En un solo sentido la fresa siempre corta del mismo lado (convencional o trepado según el giro del husillo) y regresa por arriba: mejor acabado, más tiempo.</p>
+          <label class="f">Altura de movimiento libre sobre el material (mm)<input id="s_safe" type="number" step="1" min="1"></label>
+        </div>
+        <div class="group adv">
+          <h2>Área de trabajo</h2>
+          <label class="c"><input type="checkbox" id="s_area">Maquinar solo una zona</label>
+          <div class="row" id="w_areax"><label class="f">X desde<input id="s_ax0" type="number" step="1"></label><label class="f">X hasta<input id="s_ax1" type="number" step="1"></label></div>
+          <div class="row" id="w_areay"><label class="f">Y desde<input id="s_ay0" type="number" step="1"></label><label class="f">Y hasta<input id="s_ay1" type="number" step="1"></label></div>
+          <div class="codebar"><button class="btn sm" id="s_areaFit">Tomar las medidas de la pieza</button></div>
+          <p class="hint">Coordenadas medidas desde el centro del material, como en la vista 3D. En trabajos rotativos solo cuenta el tramo en X.</p>
+        </div>
         <button class="btn primary" id="btnCompute2">Calcular trayectoria</button>
       </section>
 
@@ -429,16 +542,30 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
           <button class="btn primary" id="btnOrderSend">Agregar al carrito</button>
           <p class="note" id="o_status" hidden></p>
         </div>
+        <div class="guide" data-guide="post"></div>
+        <div class="group">
+          <h2>Biblioteca de posprocesadores</h2>
+          <label class="f adv">Perfil guardado<select id="p_profile"></select></label>
+          <div class="libbar adv">
+            <label class="f">Guardar estos ajustes como<input id="p_name" type="text" maxlength="60" placeholder="Mach3 de mi taller" style="font-family:var(--f-ui)"></label>
+            <button class="btn sm" id="p_save">Guardar</button><button class="btn sm" id="p_del">Eliminar</button>
+          </div>
+          <div class="codebar adv"><button class="btn sm" data-lib="export">Exportar biblioteca</button><button class="btn sm" data-lib="import">Importar</button></div>
+        </div>
         <div class="row">
           <label class="f">Controlador<select id="p_ctrl"></select></label>
           <label class="f">Refrigerante<select id="p_cool"><option value="M8">Inundación M8</option><option value="M7">Niebla M7</option><option value="none">Sin refrigerante</option></select></label>
         </div>
-        <div class="row3">
+        <div class="row3 adv">
           <label class="f">Decimales<input id="p_dec" type="number" min="1" max="5" step="1"></label>
           <label class="f">Programa<input id="p_prog" type="number" min="1" step="1"></label>
           <label class="c" style="align-self:end;padding-bottom:6px"><input type="checkbox" id="p_lines">Numerar N</label>
         </div>
-        <label class="c"><input type="checkbox" id="p_inv">Avance en tiempo inverso (G93) para movimientos multieje — sólo LinuxCNC / Fanuc; en Mach3 y Mach4 déjalo apagado</label>
+        <label class="c adv"><input type="checkbox" id="p_inv">Avance en tiempo inverso (G93) para movimientos multieje — sólo LinuxCNC / Fanuc; en Mach3 y Mach4 déjalo apagado</label>
+        <div class="row adv">
+          <label class="f">Comandos extra al inicio<textarea id="p_pre" class="mono" rows="2" maxlength="600" spellcheck="false" placeholder="Uno por línea, p. ej. M10"></textarea></label>
+          <label class="f">Comandos extra al final<textarea id="p_end" class="mono" rows="2" maxlength="600" spellcheck="false" placeholder="Uno por línea, p. ej. G53 G0 Z0"></textarea></label>
+        </div>
         <p class="note" id="postNote"></p>
         <div class="group">
           <div class="seg" id="outTabs"><button data-v="gcode" class="on">G-code</button><button data-v="cps">Fusion .cps</button><button data-v="pp">Vectric .pp</button><button data-v="json">Hetna .json</button></div>
@@ -496,6 +623,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
   </section>
 </div>
 
+<input type="file" id="libIn" accept=".json,application/json" hidden>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
@@ -505,6 +633,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
 <script src="lab-03-posprocesadores.js"></script>
 <script src="lab-04-escena.js"></script>
 <script src="lab-05-interfaz.js"></script>
+<script src="lab-06-bibliotecas.js"></script>
 
 </body>
 </html>

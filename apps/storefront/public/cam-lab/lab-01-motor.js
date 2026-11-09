@@ -64,6 +64,10 @@ const MACHINES={
   ab:{name:'5 ejes: rotativo A + cabezal B',kin:'ab_mixed',ctrl:'mach3',lim:{x:[-300,300],y:[-150,150],z:[-60,200]},rot:[[-INF,INF],[-95,95]],inv:[false,false],pivot:95,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:6000,rapid:6000},
   ac:{name:'5 ejes: mesa basculante AC',kin:'ac_table',ctrl:'linuxcnc',lim:{x:[-250,250],y:[-200,200],z:[-150,150]},rot:[[-30,120],[-INF,INF]],inv:[false,false],pivot:0,tcp:true,rc:[0,0,0],maxRPM:24000,maxFeed:6000,rapid:8000},
   bc:{name:'5 ejes: mesa basculante BC',kin:'bc_table',ctrl:'fanuc',lim:{x:[-250,250],y:[-200,200],z:[-150,150]},rot:[[-110,110],[-INF,INF]],inv:[false,false],pivot:0,tcp:true,rc:[0,0,0],maxRPM:18000,maxFeed:8000,rapid:15000},
+  r3g:{name:'Router 3 ejes de escritorio (GRBL)',kin:'xyz',ctrl:'grbl',lim:{x:[-150,150],y:[-150,150],z:[-60,40]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:12000,maxFeed:2500,rapid:3000},
+  r3l:{name:'Router 3 ejes 1300×2500 (LinuxCNC)',kin:'xyz',ctrl:'linuxcnc',lim:{x:[-1250,1250],y:[-650,650],z:[-200,80]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:15000,rapid:20000},
+  vmc:{name:'Centro de maquinado 3 ejes (Fanuc)',kin:'xyz',ctrl:'fanuc',lim:{x:[-380,380],y:[-200,200],z:[-400,100]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:10000,maxFeed:10000,rapid:24000},
+  vmc4:{name:'Centro de maquinado con 4º eje A (Haas)',kin:'xyza',ctrl:'haas',lim:{x:[-380,380],y:[-200,200],z:[-150,300]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:8000,maxFeed:10000,rapid:20000},
   hh:{name:'5 ejes: cabezal horquilla BC',kin:'bc_head',ctrl:'siemens',lim:{x:[-1000,1000],y:[-600,600],z:[-200,400]},rot:[[-100,100],[-INF,INF]],inv:[false,false],pivot:120,tcp:true,rc:[0,0,0],maxRPM:24000,maxFeed:12000,rapid:20000},
 };
 const KIN_AXES={xyz:[],xyza:['A'],ab_mixed:['A','B'],ac_table:['A','C'],bc_table:['B','C'],bc_head:['B','C']};
@@ -76,6 +80,12 @@ const DEFAULT_TOOLS=[
   {id:5,num:5,name:'V 90° · 12 mm',type:'vbit',D:12,r:0,angle:90,tipD:0,taper:3,flutes:2,fluteLen:8,stickout:30,shankD:6.35,holderD:30,holderLen:36},
   {id:6,num:6,name:'Broca 5 mm 118°',type:'drill',D:5,r:0,angle:118,tipD:0,taper:3,flutes:2,fluteLen:40,stickout:55,shankD:5,holderD:30,holderLen:36},
   {id:7,num:7,name:'Bola 3 mm cuello largo',type:'ball',D:3,r:1.5,angle:90,tipD:1,taper:3,flutes:2,fluteLen:9,stickout:32,shankD:3,holderD:22,holderLen:30},
+  {id:8,num:8,name:'Plana 3.175 mm (1/8") 2F',type:'flat',D:3.175,r:0,angle:90,tipD:1,taper:3,flutes:2,fluteLen:12,stickout:22,shankD:3.175,holderD:22,holderLen:30},
+  {id:9,num:9,name:'Plana 12 mm 3F desbaste',type:'flat',D:12,r:0,angle:90,tipD:1,taper:3,flutes:3,fluteLen:30,stickout:50,shankD:12,holderD:40,holderLen:42},
+  {id:10,num:10,name:'Bola 10 mm 2F',type:'ball',D:10,r:5,angle:90,tipD:1,taper:3,flutes:2,fluteLen:30,stickout:50,shankD:10,holderD:34,holderLen:40},
+  {id:11,num:11,name:'Bola 1.5 mm detalle',type:'ball',D:1.5,r:0.75,angle:90,tipD:1,taper:3,flutes:2,fluteLen:5,stickout:20,shankD:3.175,holderD:22,holderLen:30},
+  {id:12,num:12,name:'Cónica de bola R0.5 · 5°',type:'taperball',D:6,r:0.5,angle:90,tipD:1,taper:5,flutes:2,fluteLen:20,stickout:35,shankD:6,holderD:30,holderLen:36},
+  {id:13,num:13,name:'V 60° · 6 mm',type:'vbit',D:6,r:0,angle:60,tipD:0,taper:3,flutes:2,fluteLen:5,stickout:25,shankD:6,holderD:30,holderLen:36},
 ];
 
 /* ---------------- Estado ---------------- */
@@ -84,12 +94,26 @@ const S={
   M:null, frame:null, stock:null, cloudF:null, cloudC:null, fixtures:[],
   machine:JSON.parse(JSON.stringify(MACHINES.ab)), presetKey:'ab',
   tools:JSON.parse(JSON.stringify(DEFAULT_TOOLS)), toolId:1,
-  feeds:{mat:'mdf',vc:450,fz:0.15,deff:false},
-  strat:{kind:'rot5',pattern:'spiral',dir:'x',stepover:1.0,step:0.8,allow:0,lead:8,tilt:0,maxTilt:70,avoid:true,smooth:true,skip:true,clear:2,rough:false,rsd:3,rso:3,rallow:0.4,safe:8},
-  post:{ctrl:'mach3',cool:'M8',dec:3,prog:1000,lines:false,inv:false,out:'gcode'},
+  feeds:{mat:'mdf',vc:450,fz:0.15,deff:false,plungePct:30},
+  scl:[1,1,1], stk:null, sup:null, zero:{top:'tc',rot:'c'},
+  strat:{kind:'rot5',pattern:'spiral',dir:'x',stepover:1.0,step:0.8,allow:0,lead:8,tilt:0,maxTilt:70,avoid:true,smooth:true,skip:true,clear:2,rough:false,rsd:3,rso:3,rallow:0.4,safe:8,
+    pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',area:{on:false,x0:-50,x1:50,y0:-50,y1:50}},
+  post:{ctrl:'mach3',cool:'M8',dec:3,prog:1000,lines:false,inv:false,out:'gcode',pre:'',end:''},
   job:null, moves:null, gcode:null, gcodeLines:null, stale:true, busy:false,
 };
 const tool=()=>S.tools.find(t=>t.id===S.toolId)||S.tools[0];
+const STK_DEF=()=>({mode:'auto',sx:0,sy:0,sz:0,sd:0,sl:0,bar:'round',ox:0,oy:0,oz:0});
+const SUP_DEF=()=>({l:{on:false,len:20,d:12},r:{on:false,len:20,d:12},tabs:{on:false,w:8,t:3}});
+S.stk=STK_DEF();S.sup=SUP_DEF();
+const ZERO_NAME={tc:'CENTRO ARRIBA DEL MATERIAL',tfl:'ESQUINA FRONTAL IZQUIERDA ARRIBA',bc:'CENTRO SOBRE LA MESA',bfl:'ESQUINA FRONTAL IZQUIERDA SOBRE LA MESA',c:'EJE DE GIRO AL CENTRO DE LA PIEZA',l:'EJE DE GIRO EN EL EXTREMO DEL PLATO',r:'EJE DE GIRO EN EL EXTREMO DEL CONTRAPUNTO'};
+const zeroKey=()=>S.stock&&S.stock.type==='cyl'?S.zero.rot:S.zero.top;
+// punto de la pieza que el operador pone como cero de trabajo (G54); las coordenadas del programa se miden desde ahí
+function zeroOff(){
+  const st=S.stock;if(!st)return[0,0,0];
+  if(st.type==='cyl'){const k=S.zero.rot;return[k==='l'?st.x0:k==='r'?st.x1:0,0,0];}
+  const k=S.zero.top,cor=k[1]==='f';
+  return[cor?st.min[0]:(st.min[0]+st.max[0])/2,cor?st.min[1]:(st.min[1]+st.max[1])/2,k[0]==='b'?st.min[2]:st.max[2]];
+}
 
 /* =========================================================
    GEOMETRÍA: malla, rejilla de rayos, nube de puntos
@@ -286,7 +310,7 @@ function feedsCalc(){
   }
   let rpm=f.vc*1000/(Math.PI*Dc);let clampedRPM=false;if(rpm>m.maxRPM){rpm=m.maxRPM;clampedRPM=true;}
   let feed=rpm*tl.flutes*f.fz;let clampedFeed=false;if(feed>m.maxFeed){feed=m.maxFeed;clampedFeed=true;}
-  const plunge=feed*0.3;
+  const plunge=feed*clamp(f.plungePct||30,5,100)/100;
   return {rpm:Math.round(rpm),feed:Math.round(feed),plunge:Math.round(plunge),clampedRPM,clampedFeed,deffInfo,vcReal:Math.PI*Dc*rpm/1000};
 }
 
@@ -337,10 +361,11 @@ function kinSolve(m,a,prev){
 const isHeadKin=k=>k==='ab_mixed'||k==='bc_head';
 function useTCP(){const m=S.machine;return m.kin!=='xyz'&&m.tcp&&CTRL[S.post.ctrl].tcp;}
 function linearOut(mv,m,tl,tcp){
-  if(tcp||m.kin==='xyz')return mv.p;
+  const z=zeroOff();
+  if(tcp||m.kin==='xyz')return V.sub(mv.p,z);
   const c=m.rc;let q=V.add(m3v(mv.R,V.sub(mv.p,c)),c);
   if(isHeadKin(m.kin)){const Lp=m.pivot+tl.stickout+tl.holderLen;q=[q[0]+(mv.ha[0])*Lp,q[1]+(mv.ha[1])*Lp,q[2]+(mv.ha[2]-1)*Lp];}
-  return q;
+  return V.sub(q,z);
 }
 
 /* =========================================================
@@ -353,6 +378,11 @@ function ringsToTris(rings,capA=true,capB=true){
   const cap=(ring,flip)=>{const c=[0,0,0];ring.forEach(p=>{c[0]+=p[0]/n;c[1]+=p[1]/n;c[2]+=p[2]/n;});for(let i=0;i<n;i++){const i2=(i+1)%n;flip?push(c,ring[i2],ring[i]):push(c,ring[i],ring[i2]);}};
   if(capA)cap(rings[0],false);if(capB)cap(rings[rings.length-1],true);
   return new Float32Array(out);
+}
+function cylTris(x0,x1,r,n=40){return ringsToTris([x0,x1].map(x=>Array.from({length:n},(_,k)=>{const t=2*Math.PI*k/n;return[x,r*Math.sin(t),r*Math.cos(t)];})));}
+function boxTris(a,b){
+  const v=[[a[0],a[1],a[2]],[b[0],a[1],a[2]],[b[0],b[1],a[2]],[a[0],b[1],a[2]],[a[0],a[1],b[2]],[b[0],a[1],b[2]],[b[0],b[1],b[2]],[a[0],b[1],b[2]]];
+  const f=[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7];const o=[];for(const i of f)o.push(...v[i]);return new Float32Array(o);
 }
 function sampleBlade(){
   const N=46,st=44,rings=[];const m=0.03,p=0.4;

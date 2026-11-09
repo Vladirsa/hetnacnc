@@ -32,6 +32,7 @@ import ezdxf
 from ezdxf import disassemble
 from ezdxf import path as dxfpath
 from shapely.geometry import LineString, MultiPolygon, Polygon
+from shapely.ops import unary_union
 
 sys.path.insert(0, os.path.dirname(__file__))
 from dxf_gcode import error, parametros_de_corte  # noqa: E402
@@ -199,6 +200,9 @@ class Gcode:
         self.x = 0.0
         self.y = 0.0
         self.z = seguridad
+        # Al arrancar no se sabe dónde está la máquina: el primer traslado se
+        # escribe siempre, aunque la figura empiece justo en X0 Y0.
+        self.ubicado = False
         self.corte = 0.0
         self.rapido = 0.0
         self.minutos = 0.0
@@ -218,10 +222,11 @@ class Gcode:
 
     def ir(self, x: float, y: float):
         d = math.hypot(x - self.x, y - self.y)
-        if d < 1e-4:
+        if d < 1e-4 and self.ubicado:
             return
         self.subir()
         self.emitir(f"G0 X{x:.3f} Y{y:.3f}")
+        self.ubicado = True
         self.rapido += d
         self.minutos += d / 5000
         self.x, self.y = x, y
@@ -282,8 +287,15 @@ def _recorrer(g: Gcode, anillo, z: float, f: float, fz: float, tramos=(), z_pest
         rec += L
 
 
-def _pestanas(anillo, cuantas: int, largo: float):
+def _pestanas(anillo, cuantas: int, largo: float, diametro: float = 0.0):
+    """Tramos donde la fresa sube. `largo` es el material que debe quedar: la
+    fresa se come un radio por cada lado, así que el tramo levantado mide el
+    largo más el diámetro."""
+    largo += diametro
     per = _largo(anillo)
+    # en una pieza chica caben menos: mejor dos pestañas que ninguna
+    while cuantas > 2 and per < largo * cuantas * 3:
+        cuantas -= 1
     if cuantas <= 0 or per < largo * cuantas * 3:
         return []
     paso = per / cuantas
@@ -320,7 +332,7 @@ def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, aviso
                 continue
             zs = _profundidades(prof, receta["profundidad_pasada"])
             for z in zs:
-                tramos = _pestanas(anillo, pestanas, 6.0) if (con_pestanas and pestanas and z < -(prof - altura_pestana)) else []
+                tramos = _pestanas(anillo, pestanas, 6.0, 2 * r) if (con_pestanas and pestanas and z < -(prof - altura_pestana)) else []
                 _recorrer(g, anillo, z, receta["avance"], receta["penetracion"], tramos, -(prof - altura_pestana))
         g.subir()
     if chicos:
@@ -348,23 +360,41 @@ def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
     region = _region(polys)
     if region.is_empty:
         return 0
-    paso = max(0.1, 2 * r * (1 - traslape))
+    paso = min(2 * r, max(0.1, 2 * r * (1 - traslape)))
     partes = list(region.geoms) if isinstance(region, MultiPolygon) else [region]
     hechas = 0
     for parte in partes:
         anillos_por_nivel = []
+        desfases = []
         d = r
         while True:
             g_ = parte.buffer(-d, join_style=1, quad_segs=8)
             if g_.is_empty:
                 break
             anillos_por_nivel.append(_anillos(g_))
+            desfases.append(d)
             d += paso
             if len(anillos_por_nivel) > 2000:
                 break
         if not anillos_por_nivel:
             avisos.append("Cajeado: una zona es más angosta que la fresa y no se vació.")
             continue
+        if paso > r + 1e-9:
+            # Cada anillo sólo asegura un radio hacia adentro. Con un paso
+            # mayor, donde el anillo siguiente ya no cabe (el centro de una
+            # franja, las esquinas) queda material: se repasa sólo ahí, con el
+            # tramo del anillo que va un radio más adentro.
+            barrido = unary_union([LineString(a) for nivel in anillos_por_nivel for a in nivel if len(a) >= 2])
+            resto = parte.buffer(-r, join_style=1, quad_segs=8).buffer(r, quad_segs=8).difference(barrido.buffer(r, quad_segs=8))
+            islas = [p for p in getattr(resto, "geoms", [resto]) if isinstance(p, Polygon) and p.area > 0.05]
+            if islas:
+                cerca = unary_union(islas).buffer(r)
+                repaso = []
+                for dd in desfases:
+                    borde = parte.buffer(-(dd + r), join_style=1, quad_segs=8).boundary
+                    repaso.extend(a for a in _anillos(borde.intersection(cerca)) if _largo(a) > 0.01)
+                if repaso:
+                    anillos_por_nivel.append(repaso)
         hechas += 1
         for z in _profundidades(prof, receta["profundidad_pasada"]):
             # de adentro hacia afuera: la orilla queda al final, más limpia
@@ -494,6 +524,8 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         if tipo_maquina == "laser" and post not in ("laser_grbl", "grbl"):
             post = "laser_grbl"
         seguridad = float(maquina.get("seguridad", 5))
+        if not (math.isfinite(seguridad) and 1 <= seguridad <= 100):
+            return error("entrada_invalida", "La altura de seguridad no es válida.", "Captúrala en mm, entre 1 y 100.")
         smax = float(maquina.get("smax", 1000))
         ops = config.get("operaciones") or []
         if not ops:
@@ -517,7 +549,11 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         g = Gcode(post, seguridad, tipo_maquina == "laser", smax)
         g.c(f"HETNA CAM Studio 2D - {material} {espesor:g} mm - post {post}")
         g.emitir("G21 G90 G17 G94")
-        rpm_actual = None
+        if tipo_maquina != "laser":
+            # Antes de cualquier traslado: la máquina puede venir de poner el
+            # cero con la fresa tocando el material.
+            g.emitir(f"G0 Z{seguridad:.3f}")
+        herramienta_actual = None
         resumen = []
         for i, op in enumerate(ops, 1):
             tipo = str(op.get("tipo", ""))
@@ -544,14 +580,19 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                     receta["profundidad_pasada"] = max(0.1, float(op["pasada"]))
                 prof = float(op.get("profundidad") or espesor)
                 prof = max(0.05, min(prof, espesor + 2))
-                if rpm_actual != receta["rpm"]:
-                    if rpm_actual is not None:
+                # La herramienta es el diámetro y si es recta o en V (no las
+                # rpm: una recta de 8 y una V de 12 giran igual en la tabla).
+                en_v = tipo == "grabado_v"
+                herramienta = (round(diam, 3), "v", float(op.get("angulo", 90))) if en_v else (round(diam, 3), "recta")
+                if herramienta_actual != herramienta:
+                    if herramienta_actual is not None:
                         g.subir()
                         g.emitir("M5")
-                        g.c(f"Cambia la herramienta: {op.get('herramienta') or f'fresa {diam:g} mm'}")
+                        de_fabrica = f"fresa en V de {herramienta[2]:g} grados" if en_v else f"fresa {diam:g} mm"
+                        g.c(f"Cambia la herramienta: {op.get('herramienta') or de_fabrica}")
                         g.emitir("M0")
                     g.emitir(f"M3 S{receta['rpm']}")
-                    rpm_actual = receta["rpm"]
+                    herramienta_actual = herramienta
                 if tipo in ("corte", "fuera", "dentro"):
                     figuras = op_contorno(g, polys, tipo, diam / 2, prof, receta,
                                           int(op.get("pestanas", 4 if tipo != "dentro" else 0)) if op.get("con_pestanas", True) else 0,

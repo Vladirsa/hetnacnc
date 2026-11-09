@@ -349,7 +349,7 @@ export default function LaboratorioCam() {
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Ejemplo
             titulo="Relieve en madera · 3 ejes"
-            texto="Desbaste y acabado de un relieve: aquí va a la mitad, con el material ya retirado. 4:32 min estimados."
+            texto="Desbaste y acabado de un relieve: aquí va a la mitad, con el material ya retirado. 3:57 min estimados."
             href="/cam/lab"
             cta="Abrir esta pieza"
             real

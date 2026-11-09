@@ -420,7 +420,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   }
 
   // ETAPA 3: acabado, sigue el perfil exacto
-  pasadaEspiral("ETAPA 3: Acabado (perfil exacto)", rpm.rpmAcabado, leadAcabado, radioEnOrigen, yIni, yFin);
+  pasadaEspiral("ETAPA 3: Acabado, perfil exacto", rpm.rpmAcabado, leadAcabado, radioEnOrigen, yIni, yFin);
 
   // ETAPA 4 y 5: tallados (estrías y espiral), con la pieza ya en su perfil.
   // El ángulo de cada canal se toma desde donde quedó la pieza al terminar el
@@ -490,7 +490,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
     if (sp?.activo) {
       const n = pasadasDe(sp.profundidad);
       lines.push(
-        `(--- ETAPA 5: espiral de ${sp.entradas} hilo(s), paso ${sp.paso}mm, ${sp.sentido}, de ${sp.yDesde} a ${sp.yHasta}mm ---)`
+        `(--- ETAPA 5: espiral de ${sp.entradas} hilos, paso ${sp.paso}mm, ${sp.sentido}, de ${sp.yDesde} a ${sp.yHasta}mm ---)`
       );
       for (let p = 1; p <= n; p++) {
         const d = (sp.profundidad * p) / n;
