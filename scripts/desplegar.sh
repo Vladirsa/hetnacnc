@@ -124,6 +124,16 @@ paso "Instalando dependencias"
 git checkout -- bun.lock 2>/dev/null || true
 bun install
 
+# La Fábrica de contenido (Marketing HETNA) arma los videos con FFmpeg. Si el
+# servidor no lo tiene, se instala una sola vez. Si no se puede, sólo avisa:
+# el resto del sitio no depende de esto.
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  paso "Instalando FFmpeg (videos de la Fábrica de contenido)"
+  (apt-get install -y ffmpeg >/dev/null 2>&1 || (apt-get update >/dev/null 2>&1 && apt-get install -y ffmpeg >/dev/null 2>&1)) \
+    && verde "✓ FFmpeg instalado" \
+    || printf '\033[33m%s\033[0m\n' "No se pudo instalar FFmpeg; los cortos de video no se producirán hasta instalarlo (apt-get install -y ffmpeg)."
+fi
+
 paso "Construyendo (si esto falla, el sitio NO se toca)"
 # La tienda se construye en la carpeta que NO está sirviendo (.next-a o
 # .next-b) y se cambia de carpeta al reiniciar. Antes se construía encima de

@@ -31,7 +31,7 @@ export const T_CONFIG_S = "hetna_social_config"
 export type Red = "facebook" | "instagram" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
-  instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 5-10 hashtags en español al final (#CNC #Mexico #CorteLaser...). La liga no es clicable: di 'liga en la bio'" },
+  instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 3-5 hashtags específicos al final en el idioma del mercado (#CNC #CorteLaser y el país). La liga no es clicable: di 'liga en la bio'" },
   telegram: { nombre: "Telegram (canal)", auto: true, max: 900, imagen: "opcional", estilo: "directo, informativo, con la liga" },
   linkedin: { nombre: "LinkedIn (empresa)", auto: true, max: 2500, imagen: "opcional", estilo: "profesional B2B, enfocado en compradores industriales y empresas; sin muchos emojis" },
   discord: { nombre: "Discord", auto: true, max: 1500, imagen: "opcional", estilo: "comunidad técnica, breve" },
@@ -85,6 +85,8 @@ export async function asegurarSocial(knex: any) {
   })
   await knex.raw(`alter table ?? add column if not exists mercado text`, [T_POST]).catch(() => {})
   await knex.raw(`alter table ?? add column if not exists notas text`, [T_POST]).catch(() => {})
+  // Estadísticas de cada red (alcance, me gusta, comentarios, compartidos, guardados, vistas)
+  await knex.raw(`alter table ?? add column if not exists estadisticas jsonb`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -150,8 +152,8 @@ const ZONA = "America/Mexico_City"
 export const horaEn = (d: Date, zona = ZONA) => Number(new Intl.DateTimeFormat("en-US", { timeZone: zona, hour: "numeric", hourCycle: "h23" }).format(d))
 
 // Mercados (Marketing HETNA): zona horaria, idioma y cómo escribirle a cada país.
-// Las cuentas conectadas hoy son las de México; en otros mercados lo que se
-// genera queda para copiar y pegar hasta que tengan sus propias cuentas.
+// Todos los mercados publican desde las mismas cuentas de HETNA (decisión del
+// dueño): cada publicación sale en el idioma de su mercado y a sus horas.
 export const MERCADOS: Record<string, { nombre: string; zona: string; idioma: string; nota: string }> = {
   mx: { nombre: "México", zona: "America/Mexico_City", idioma: "es-MX", nota: "español de México, pesos (MXN), milímetros" },
   us: { nombre: "Estados Unidos", zona: "America/Chicago", idioma: "en-US", nota: "inglés de EE.UU., dólares (USD), pulgadas; enfoque en talleres mexicanos verificados (nearshoring, T-MEC)" },
@@ -335,7 +337,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
   const prog = d.programada_para ? new Date(d.programada_para) : null
   await knex(T_POST).insert({
     id, origen: d.origen, origen_id: d.origen_id || null, titulo: corta(d.titulo, 160), texto_base: base,
-    textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 4)),
+    textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 10)),
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
   })
   return id
@@ -367,7 +369,7 @@ export function urlN8nSocial() {
   return u ? u.replace(/redes-contenido-nuevo\/?$/, "social-hub-publicar") : null
 }
 
-async function enviarAN8n(cuerpo: any) {
+export async function enviarAN8n(cuerpo: any) {
   const url = urlN8nSocial()
   if (!url) return { ok: false, error: "Falta N8N_REDES_URL o N8N_SOCIAL_URL en el servidor." }
   try {
@@ -379,7 +381,8 @@ async function enviarAN8n(cuerpo: any) {
     })
     const d = await r.json().catch(() => ({}))
     if (!r.ok) return { ok: false, error: d?.error || d?.message || `n8n respondió ${r.status}` }
-    return { ok: d?.ok !== false, url: d?.url || null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
+    if (d?.pendiente) return { ok: false, pendiente: true, contenedor: String(d.contenedor || ""), error: null }
+    return { ok: d?.ok !== false, url: d?.url || null, id: d?.id ? String(d.id) : null, datos: d?.datos || null, usuario: d?.usuario || null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
   } catch (e) {
     return { ok: false, error: (e as Error).message }
   }
@@ -396,13 +399,14 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   const esVideo = medio?.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(String(medio?.url || ""))
   const imagen = medio && !esVideo ? medio.url : ""
   const video = medio && esVideo ? medio.url : ""
+  // Varias imágenes: carrusel en Instagram (hasta 10)
+  const imagenes = esVideo ? [] : (p.medios || []).filter((m: any) => m?.url && m.tipo !== "video" && !/\.(mp4|mov|webm)(\?|$)/i.test(String(m.url))).map((m: any) => m.url).slice(0, 10)
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
     const liga = urlCorta(codigo)
     const texto = String(p.textos?.[red] || adaptarSinIa(p.texto_base, red)).replace(LIGA_MARCA, liga)
-    // Las cuentas conectadas son las de México: en otros mercados se copia y pega
-    if (!REDES[red]?.auto || (p.mercado && p.mercado !== "mx")) {
+    if (!REDES[red]?.auto) {
       resultado[red] = { ok: true, manual: true, en: new Date().toISOString() }
       continue
     }
@@ -410,15 +414,55 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       resultado[red] = { ok: false, error: "Esta red necesita una imagen.", en: new Date().toISOString() }
       continue
     }
-    const r = await enviarAN8n({ red, texto, imagen, video, url: liga, titulo: p.titulo, post_id: p.id })
+    // Instagram: si ya hay contenedor en proceso, sólo se intenta terminarlo
+    if (red === "instagram" && resultado.instagram?.pendiente && resultado.instagram?.contenedor) {
+      resultado.instagram = { ...(await terminarContenedorIg(resultado.instagram.contenedor, resultado.instagram.creado)), en: new Date().toISOString() }
+      continue
+    }
+    let r: any = await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
+    if (red === "instagram" && r.pendiente && r.contenedor) {
+      // Instagram procesa el archivo: fotos en segundos, reels hasta unos minutos.
+      // Se espera un poco aquí; si no termina, el job lo publica después.
+      const creado = new Date().toISOString()
+      r = { ...r, creado }
+      for (let i = 0; i < (video ? 4 : 3); i++) {
+        await new Promise((ok) => setTimeout(ok, video ? 15_000 : 5_000))
+        const t = await terminarContenedorIg(r.contenedor, creado)
+        r = t
+        if (!t.pendiente) break
+      }
+    }
     resultado[red] = { ...r, en: new Date().toISOString() }
-    if (!r.ok) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
+    if (!r.ok && !r.pendiente) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
   }
-  const autos = (p.redes as Red[]).filter((r) => REDES[r]?.auto && (!p.mercado || p.mercado === "mx"))
+  const autos = (p.redes as Red[]).filter((r) => REDES[r]?.auto)
   const oks = autos.filter((r) => resultado[r]?.ok).length
-  const estado = !autos.length || oks === autos.length ? "publicada" : oks ? "parcial" : "error"
+  const enProceso = autos.some((r) => resultado[r]?.pendiente)
+  const estado = !autos.length || oks === autos.length ? "publicada" : oks || enProceso ? "parcial" : "error"
   await knex(T_POST).where({ id: p.id }).update({ estado, resultado: JSON.stringify(resultado), publicada_en: oks || !autos.length ? knex.fn.now() : null, updated_at: knex.fn.now() })
   return { estado, resultado }
+}
+
+/** Pregunta a Instagram si ya procesó el contenedor y, si sí, lo publica. Caduca a las 24 h. */
+export async function terminarContenedorIg(contenedor: string, creado?: string) {
+  const r: any = await enviarAN8n({ red: "instagram_publicar", contenedor, texto: "" })
+  if (r.pendiente) {
+    const viejo = creado && Date.now() - new Date(creado).getTime() > 23 * 3600_000
+    if (viejo) return { ok: false, error: "Instagram no terminó de procesar el archivo en 24 horas." }
+    return { ok: false, pendiente: true, contenedor, creado: creado || new Date().toISOString(), error: null }
+  }
+  return r
+}
+
+/** Termina las publicaciones de Instagram que quedaron procesándose. */
+export async function terminarPendientesIg(knex: any, logger?: any) {
+  const filas = await knex(T_POST).whereIn("estado", ["parcial", "error"]).whereRaw(`resultado->'instagram'->>'pendiente' = 'true'`).where("updated_at", ">=", knex.raw("now() - interval '2 days'")).limit(10).select("id")
+  let n = 0
+  for (const { id } of filas) {
+    const r = await publicar(knex, id, logger, ["instagram"])
+    if (r?.resultado?.instagram?.ok) n++
+  }
+  return n
 }
 
 /** Job: publica las programadas que ya tocan. */
@@ -440,6 +484,7 @@ export async function publicarPendientes(knex: any, logger?: any) {
     await publicar(knex, id, logger)
     if (++n >= 5) break
   }
+  await terminarPendientesIg(knex, logger).catch((e: Error) => logger?.warn?.(`[social] Instagram pendientes: ${e.message}`))
   return n
 }
 

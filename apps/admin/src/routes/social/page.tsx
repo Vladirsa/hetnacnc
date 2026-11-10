@@ -19,7 +19,7 @@ type Pub = {
   estado: string
   programada_para: string | null
   publicada_en: string | null
-  resultado: Record<string, { ok: boolean; manual?: boolean; error?: string; url?: string }> | null
+  resultado: Record<string, { ok: boolean; manual?: boolean; pendiente?: boolean; error?: string; url?: string }> | null
   adaptada_ia: boolean
   created_at: string
   ligas: Liga[]
@@ -248,7 +248,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             ) : (
               <img src={p.medios[0].url} alt="" style={{ maxWidth: 220, borderRadius: 8 }} />
             ))}
-          {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (las cuentas de este mercado se manejan a mano)</span>}
+          {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (sale en las mismas cuentas, en su idioma y a su hora)</span>}
           {p.notas && <div style={{ fontSize: 12, background: "#FFF8EE", borderRadius: 8, padding: 8, whiteSpace: "pre-wrap" }}>🎬 {p.notas}</div>}
           <label style={{ ...boton("normal"), fontWeight: 600, justifySelf: "start" }}>
             {p.medios?.length ? "Cambiar imagen o video" : "+ Agregar imagen o video"}
@@ -279,7 +279,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
                   <b style={{ fontSize: 13 }}>{nombre(red)}</b>
                   {p.puntajes?.[red] && <Puntaje p={p.puntajes[red]} />}
                   {!auto(red) && <span style={{ fontSize: 12, color: C.tenue }}>✋ copiar y pegar</span>}
-                  {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
+                  {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : r.pendiente ? <span style={{ fontSize: 12, color: C.tenue }}>⏳ Instagram la está procesando; se publica sola en unos minutos</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
                   {r?.url && (
                     <a href={r.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.naranja }}>
                       ver ↗
@@ -381,10 +381,36 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   )
 }
 
+function PruebaInstagram() {
+  const [r, setR] = useState<{ ok: boolean; usuario?: string; error?: string } | null>(null)
+  const [cargando, setCargando] = useState(false)
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 10px" }}>
+      <button
+        type="button"
+        style={boton("normal")}
+        disabled={cargando}
+        onClick={async () => {
+          setCargando(true)
+          setR(await api<any>("/config", { probar: "instagram" }).catch((e) => ({ ok: false, error: (e as Error).message })))
+          setCargando(false)
+        }}
+      >
+        {cargando ? "Probando…" : "Probar Instagram"}
+      </button>
+      {r && (r.ok ? <span style={{ fontSize: 13, color: C.verde }}>✓ Instagram conectado{r.usuario ? ` (@${r.usuario})` : ""}. Ya puedes activarlo abajo.</span> : <span style={{ fontSize: 13, color: C.rojo }}>✗ {r.error}</span>)}
+    </div>
+  )
+}
+
+const nombreRed = (r: string) => ({ facebook: "Facebook", instagram: "Instagram" } as Record<string, string>)[r] || r
+
 function Resultados() {
   const [dias, setDias] = useState(30)
   const [m, setM] = useState<any>(null)
   const [error, setError] = useState("")
+  const [leyendo, setLeyendo] = useState(false)
+  const [aviso, setAviso] = useState("")
   useEffect(() => {
     api<any>(`/metricas?dias=${dias}`).then(setM).catch((e) => setError((e as Error).message))
   }, [dias])
@@ -392,8 +418,73 @@ function Resultados() {
   if (!m) return <p>Cargando…</p>
   const th: CSSProperties = { textAlign: "left", padding: 6, fontSize: 12, color: C.tenue }
   const td: CSSProperties = { padding: 6, borderTop: `1px solid ${C.borde}` }
+  const ap = m.aprendizaje
+  const leerAhora = async () => {
+    setLeyendo(true)
+    try {
+      const r = await api<{ leidas: number }>("/metricas", {})
+      setAviso(`Se leyeron ${r.leidas} estadísticas.`)
+      setM(await api<any>(`/metricas?dias=${dias}`))
+    } catch (e) {
+      setAviso((e as Error).message)
+    }
+    setLeyendo(false)
+  }
   return (
     <div>
+      <section style={caja}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>🧠 Lo que estamos aprendiendo (Facebook e Instagram)</h3>
+          <span style={{ flex: 1 }} />
+          <button type="button" style={boton("normal")} disabled={leyendo} onClick={leerAhora}>{leyendo ? "Leyendo…" : "Leer estadísticas ahora"}</button>
+        </div>
+        {aviso && <p style={{ fontSize: 12, color: C.tenue }}>{aviso}</p>}
+        <p style={{ color: C.tenue, fontSize: 12, margin: "6px 0" }}>
+          Cada 6 horas se leen alcance, me gusta, comentarios, compartidos, guardados y vistas. Puntos de interacción = me gusta + comentarios×2 + compartidos×3 + guardados×3 (compartir y guardar es lo que más premian los algoritmos). El agente usa esto al llenar el plan de cada semana.
+        </p>
+        {!ap || !ap.publicaciones ? (
+          <p style={{ color: C.tenue, fontSize: 13 }}>Todavía no hay estadísticas. Aparecen unas horas después de publicar en Facebook o Instagram.</p>
+        ) : (
+          <>
+            {ap.resumen.length > 0 ? (
+              <ul style={{ fontSize: 13, margin: "6px 0 10px", paddingLeft: 18 }}>{ap.resumen.map((r: string, i: number) => <li key={i}>{r}</li>)}</ul>
+            ) : (
+              <p style={{ color: C.tenue, fontSize: 13 }}>Con {ap.publicaciones} publicaciones medidas aún no hay conclusiones (se necesitan al menos 3 por grupo).</p>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
+              {[["Por formato", ap.por_formato, (g: any) => g.formato], ["Por mercado", ap.por_mercado, (g: any) => String(g.mercado).toUpperCase()], ["Por hora (local)", ap.por_hora.slice(0, 8), (g: any) => `${g.hora}:00`]].map(([t, lista, et]: any) => (
+                <div key={t}>
+                  <b style={{ fontSize: 13 }}>{t}</b>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead><tr><th style={th}>Red</th><th style={th}></th><th style={th}>Pub.</th><th style={th}>Interacción media</th><th style={th}>Alcance medio</th></tr></thead>
+                    <tbody>
+                      {lista.map((g: any, i: number) => (
+                        <tr key={i}><td style={td}>{nombreRed(g.red)}</td><td style={td}>{et(g)}</td><td style={td}>{g.n}</td><td style={td}>{g.interaccion_media}</td><td style={td}>{g.alcance_medio || "—"}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+            {ap.mejores.length > 0 && (
+              <>
+                <b style={{ fontSize: 13, display: "block", marginTop: 10 }}>Publicaciones con más interacción</b>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <tbody>
+                    {ap.mejores.map((x: any, i: number) => (
+                      <tr key={i}>
+                        <td style={td}>{x.titulo}</td><td style={td}>{nombreRed(x.red)} · {x.formato} · {String(x.mercado).toUpperCase()}</td>
+                        <td style={td}>❤ {x.me_gusta} · 💬 {x.comentarios} · ↗ {x.compartidos} · 🔖 {x.guardados}{x.alcance ? ` · 👁 ${x.alcance}` : ""}</td>
+                        <td style={td}>{x.url && <a href={x.url} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>ver ↗</a>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </>
+        )}
+      </section>
       <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
         {[7, 30, 90].map((d) => (
           <button key={d} type="button" style={{ ...boton("normal"), background: dias === d ? "#142033" : C.fondo, color: dias === d ? "#fff" : C.texto }} onClick={() => setDias(d)}>
@@ -487,7 +578,8 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
   return (
     <section style={caja}>
       <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Redes para las publicaciones automáticas</h3>
-      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>Activa sólo las que ya estén conectadas en n8n (Facebook y Telegram ya lo están). ✋ = copiar y pegar.</p>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>Activa sólo las que ya estén conectadas en n8n (Facebook y Telegram ya lo están; Instagram en cuanto la prueba salga bien). ✋ = copiar y pegar.</p>
+      <PruebaInstagram />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (
@@ -775,7 +867,7 @@ function Estrategia({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string
       <section style={caja}>
         <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Mercados</h3>
         <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
-          Reparto del esfuerzo (0 = apagado). Cada mercado publica a su hora local y en su idioma. Hoy las cuentas conectadas son las de México: lo de otros mercados queda para copiar y pegar hasta abrir sus cuentas.
+          Reparto del esfuerzo (0 = apagado). Todos los mercados salen en las mismas cuentas de HETNA, cada publicación en su idioma y a la hora local del país. Empezamos con Colombia en Sudamérica.
         </p>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
@@ -849,8 +941,429 @@ function Estrategia({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string
   )
 }
 
+type Hallazgo = { id: string; tipo: string; mercado: string; titulo: string; resumen: string | null; url: string; lugar: string | null; relevancia: number; accion: string | null; datos: Record<string, string> | null; estado: string; mensaje: string; created_at: string }
+type BusquedaR = { id: string; tipo: string; mercado: string; consulta: string; activa: boolean }
+const TIPO_RADAR: Record<string, string> = { cliente: "🎯 Clientes", taller: "🏭 Talleres", contenido: "💡 Contenido", competencia: "👀 Competencia", evento: "📅 Eventos", mencion: "🔔 Menciones" }
+
+function Radar({ alCambiar }: { alCambiar: () => void }) {
+  const [d, setD] = useState<{ hallazgos: Hallazgo[]; conteo: Record<string, number>; busquedas: BusquedaR[]; tipos: string[]; mercados: { clave: string; nombre: string }[]; tope_dia: number } | null>(null)
+  const [estado, setEstado] = useState("nuevo")
+  const [tipo, setTipo] = useState("")
+  const [nota, setNota] = useState("")
+  const [verBusq, setVerBusq] = useState(false)
+  const [busq, setBusq] = useState<BusquedaR[]>([])
+  const [ocupado, setOcupado] = useState("")
+  const cargar = useCallback(async () => {
+    try {
+      const x = await fetch(`/admin/hetna-radar?estado=${estado}${tipo ? `&tipo=${tipo}` : ""}`, { credentials: "include", headers: cabeceras() }).then(async (r) => {
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(j.message || `Error ${r.status}`)
+        return j
+      })
+      setD(x)
+      setBusq(x.busquedas)
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }, [estado, tipo])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const post = async (cuerpo: Record<string, unknown>) => {
+    const r = await fetch("/admin/hetna-radar", { method: "POST", credentials: "include", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(j.message || `Error ${r.status}`)
+    return j
+  }
+  const marcar = async (id: string, est: string) => {
+    try {
+      await post({ accion: "estado", id, estado: est })
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const publicar = async (id: string) => {
+    try {
+      await post({ accion: "publicar", id })
+      setNota("Borrador creado: revísalo en Pendientes.")
+      alCambiar()
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const buscarYa = async (id: string) => {
+    setOcupado(id)
+    setNota("Buscando en la web… tarda alrededor de un minuto.")
+    try {
+      const x = await post({ accion: "buscar", id })
+      setNota(`Listo: ${x.encontrados} encontrados, ${x.nuevos} nuevos.`)
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    } finally {
+      setOcupado("")
+    }
+  }
+  const guardarBusq = async () => {
+    try {
+      const x = await post({ accion: "busquedas", lista: busq })
+      setBusq(x.busquedas)
+      setNota("Búsquedas guardadas.")
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  if (!d) return <p>{nota || "Cargando…"}</p>
+  return (
+    <div>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 10px" }}>
+        Cada mañana el Radar busca en la web (hasta {d.tope_dia} búsquedas al día, rotando) clientes que necesitan fabricar, talleres para invitar, temas para contenido, competencia, ferias y menciones de HETNA.
+        Sólo información pública. Las invitaciones las mandas tú, una por una.
+      </p>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        {[["", "Todos"], ...d.tipos.map((t) => [t, TIPO_RADAR[t] || t])].map(([k, t]) => (
+          <button key={k} type="button" onClick={() => setTipo(k)} style={{ ...boton("normal"), padding: "4px 10px", background: tipo === k ? "#142033" : C.fondo, color: tipo === k ? "#fff" : C.texto }}>
+            {t}
+            {k && d.conteo[k] ? ` (${d.conteo[k]})` : ""}
+          </button>
+        ))}
+        <span style={{ flex: 1 }} />
+        <select style={{ ...campo, width: "auto", padding: 5 }} value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <option value="nuevo">Nuevos</option>
+          <option value="util">Guardados</option>
+          <option value="convertido">Convertidos en publicación</option>
+          <option value="descartado">Descartados</option>
+        </select>
+        <button type="button" style={boton("normal")} onClick={() => setVerBusq(!verBusq)}>{verBusq ? "Cerrar búsquedas" : "⚙ Búsquedas"}</button>
+      </div>
+      {nota && <p style={{ fontSize: 13 }}>{nota}</p>}
+
+      {verBusq && (
+        <section style={caja}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 15 }}>Qué busca el Radar</h3>
+          {busq.map((b, i) => (
+            <div key={b.id} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
+              <input type="checkbox" checked={b.activa} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, activa: e.target.checked } : x)))} title="Activa" />
+              <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={b.tipo} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, tipo: e.target.value } : x)))}>
+                {d.tipos.map((t) => <option key={t} value={t}>{TIPO_RADAR[t] || t}</option>)}
+              </select>
+              <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={b.mercado} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, mercado: e.target.value } : x)))}>
+                {d.mercados.map((m) => <option key={m.clave} value={m.clave}>{m.nombre}</option>)}
+              </select>
+              <input style={{ ...campo, flex: 1, minWidth: 260, padding: 5, fontSize: 12 }} value={b.consulta} onChange={(e) => setBusq(busq.map((x, j) => (j === i ? { ...x, consulta: e.target.value } : x)))} />
+              <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} disabled={!!ocupado} onClick={() => void buscarYa(b.id)}>{ocupado === b.id ? "Buscando…" : "Buscar ahora"}</button>
+              <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} onClick={() => setBusq(busq.filter((_, j) => j !== i))}>✕</button>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" style={boton("normal")} onClick={() => setBusq([...busq, { id: `rb_${Date.now()}`, tipo: "contenido", mercado: "mx", consulta: "", activa: true }])}>+ Agregar búsqueda</button>
+            <button type="button" style={boton("primario")} onClick={() => void guardarBusq()}>Guardar búsquedas</button>
+          </div>
+          <p style={{ color: C.tenue, fontSize: 12, marginBottom: 0 }}>"Buscar ahora" usa la búsqueda web de Claude: cada búsqueda tiene un costo pequeño en tu cuenta de Claude.</p>
+        </section>
+      )}
+
+      {d.hallazgos.length === 0 ? (
+        <p style={{ color: C.tenue }}>Nada por aquí todavía. El Radar busca cada mañana; también puedes abrir "⚙ Búsquedas" y darle "Buscar ahora".</p>
+      ) : (
+        d.hallazgos.map((h) => (
+          <article key={h.id} style={caja}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12 }}>{TIPO_RADAR[h.tipo] || h.tipo}</span>
+              <span style={{ fontSize: 12, color: C.naranja }}>{"★".repeat(h.relevancia)}</span>
+              {h.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>{h.mercado.toUpperCase()}</span>}
+              <b style={{ flex: 1, minWidth: 200 }}>{h.titulo}</b>
+              <a href={h.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.naranja }}>Fuente ↗</a>
+            </div>
+            {h.resumen && <p style={{ fontSize: 13, margin: "6px 0" }}>{h.resumen}</p>}
+            <p style={{ fontSize: 12, color: C.tenue, margin: "2px 0" }}>
+              {[h.lugar, h.datos?.empresa, h.datos?.sitio, h.datos?.fecha].filter(Boolean).join(" · ")}
+            </p>
+            {h.accion && <p style={{ fontSize: 13, margin: "6px 0" }}>👉 {h.accion}</p>}
+            {h.mensaje && (
+              <details style={{ fontSize: 12, margin: "4px 0" }}>
+                <summary style={{ cursor: "pointer" }}>Mensaje sugerido para escribirles</summary>
+                <p style={{ whiteSpace: "pre-wrap", background: C.suave, borderRadius: 8, padding: 8 }}>{h.mensaje}</p>
+                <button type="button" style={{ ...boton("normal"), padding: "3px 8px", fontSize: 12 }} onClick={() => copiar(h.mensaje)}>Copiar mensaje</button>
+              </details>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              {["contenido", "evento", "competencia", "mencion"].includes(h.tipo) && h.estado !== "convertido" && (
+                <button type="button" style={boton("primario")} onClick={() => void publicar(h.id)}>Crear publicación</button>
+              )}
+              {h.estado !== "util" && <button type="button" style={boton("normal")} onClick={() => void marcar(h.id, "util")}>Guardar</button>}
+              {h.estado !== "descartado" && <button type="button" style={boton("normal")} onClick={() => void marcar(h.id, "descartado")}>Descartar</button>}
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  )
+}
+
+type Trabajo = { id: string; entrada: any; estado: string; error: string | null; piezas: any; created_at: string; titulo: string | null }
+type FondoB = { id: string; tema: string; url: string; fuente: string | null; licencia: string | null }
+type MusicaB = { id: string; titulo: string; url: string; estilo: string | null; licencia: string | null }
+const NOMBRE_TEMA: Record<string, string> = { laser: "Corte láser", plasma: "Plasma", router: "Router", torno: "Torno y fresado", taller: "Taller", lamina: "Láminas y materiales", impresion3d: "Impresión 3D", general: "General" }
+const ESTADO_TRABAJO: Record<string, [string, string]> = { pendiente: ["En cola", "#8A5A00"], produciendo: ["Produciendo…", "#1a3a5c"], listo: ["Listo", C.verde], error: ["Error", C.rojo] }
+
+async function apiFab<T>(cuerpo?: unknown): Promise<T> {
+  const r = await fetch("/admin/hetna-fabrica", {
+    credentials: "include",
+    ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }),
+  })
+  const d = (await r.json().catch(() => ({}))) as T & { message?: string }
+  if (!r.ok) throw new Error((d as any)?.message || `Error ${r.status}`)
+  return d
+}
+
+function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
+  const [d, setD] = useState<{ trabajos: Trabajo[]; fondos: FondoB[]; musica: MusicaB[]; temas: string[]; ffmpeg: boolean; runpod?: { configurado: boolean; ok?: boolean; workers?: any } } | null>(null)
+  const [f, setF] = useState({ guion: "", tema: "", mercado: "mx", publico: "clientes", tema_visual: "", voz: "hombre", ia_escenas: true })
+  const [subiendo, setSubiendo] = useState<number | null>(null)
+  const [nota, setNota] = useState("")
+  const [verBib, setVerBib] = useState(false)
+  const [fondo, setFondo] = useState({ tema: "laser", fuente: "", licencia: "" })
+  const [mus, setMus] = useState({ titulo: "", estilo: "", licencia: "" })
+  const cargar = useCallback(async () => {
+    try {
+      setD(await apiFab())
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  // Mientras algo se produce, se actualiza solo
+  useEffect(() => {
+    if (!d?.trabajos.some((t) => ["pendiente", "produciendo"].includes(t.estado))) return
+    const t = setInterval(() => void cargar(), 8000)
+    return () => clearInterval(t)
+  }, [d, cargar])
+  const crear = async () => {
+    setNota("")
+    try {
+      await apiFab({ accion: "crear", ...f, tema_visual: f.tema_visual || undefined })
+      setNota("Listo: la Fábrica está escribiendo y produciendo tu paquete. Tarda unos minutos; aquí abajo verás el avance.")
+      setF({ ...f, guion: "", tema: "" })
+      void cargar()
+    } catch (e) {
+      setNota((e as Error).message)
+    }
+  }
+  const palabras = f.guion.trim() ? f.guion.trim().split(/\s+/).length : 0
+  const subirArchivo = async (archivo: File) => subirImagen(archivo)
+  return (
+    <div>
+      {!d?.ffmpeg && d && <p style={{ ...caja, color: C.rojo, fontSize: 13 }}>Falta FFmpeg en el servidor: los cortos de video no se pueden producir. En el VPS corre: apt-get install -y ffmpeg</p>}
+      {d && (
+        <p style={{ fontSize: 12, color: d.runpod?.configurado ? (d.runpod.ok ? C.verde : "#8A5A00") : C.tenue, margin: "0 0 10px" }}>
+          {d.runpod?.configurado
+            ? d.runpod.ok ? "✓ RunPod conectado: voz, imágenes con IA, video largo y tus videos están activos (la GPU se prende sólo cuando hay trabajo)." : "RunPod configurado pero no respondió; revisa el endpoint."
+            : "RunPod sin configurar: la Fábrica funciona sin voz, sin imágenes con IA y sin video largo. Ver infra/fabrica-ia/README.md."}
+        </p>
+      )}
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Del guion a todas las redes</h3>
+        <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+          Pega tu guion (o escribe sólo el tema) y la Fábrica hace: 5 cortos verticales con música, un carrusel, la publicación de cada red con su tarjeta, el título, descripción, capítulos, guion y miniatura del video largo de YouTube, y un artículo para Aprendizaje CNC. Todo queda como borrador en la semana para que lo revises.
+        </p>
+        <div style={{ display: "grid", gap: 8 }}>
+          <textarea style={{ ...campo, minHeight: 160 }} placeholder="Guion: lo que quieres explicar o contar. Ej. 5 errores al pedir corte láser y cómo evitarlos…" value={f.guion} onChange={(e) => setF({ ...f, guion: e.target.value })} />
+          <span style={{ fontSize: 12, color: C.tenue }}>
+            {palabras} palabras{palabras ? ` · el video largo duraría unos ${Math.max(1, Math.round(palabras / 145))} min` : ""} (un video de 8 min necesita unas 1,150 palabras)
+          </span>
+          <input style={campo} placeholder="…o sólo el tema (si no tienes guion)" value={f.tema} onChange={(e) => setF({ ...f, tema: e.target.value })} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
+            <label>Público{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.publico} onChange={(e) => setF({ ...f, publico: e.target.value })}>
+                <option value="clientes">Clientes y makers</option>
+                <option value="empresas">Empresas</option>
+                <option value="talleres">Talleres</option>
+                <option value="proveedores">Proveedores</option>
+              </select>
+            </label>
+            <label>Mercado{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.mercado} onChange={(e) => setF({ ...f, mercado: e.target.value })}>
+                <option value="mx">México</option><option value="us">Estados Unidos</option><option value="co">Colombia</option><option value="cl">Chile</option><option value="pe">Perú</option><option value="ar">Argentina</option><option value="br">Brasil</option>
+              </select>
+            </label>
+            <label>Fondo{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.tema_visual} onChange={(e) => setF({ ...f, tema_visual: e.target.value })}>
+                <option value="">Que lo elija la IA</option>
+                {(d?.temas || []).map((t) => <option key={t} value={t}>{NOMBRE_TEMA[t] || t}</option>)}
+              </select>
+            </label>
+            <label>Voz{" "}
+              <select style={{ ...campo, width: "auto", padding: 5 }} value={f.voz} onChange={(e) => setF({ ...f, voz: e.target.value })}>
+                <option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="ninguna">Sin voz</option>
+              </select>
+            </label>
+            <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input type="checkbox" checked={f.ia_escenas} onChange={(e) => setF({ ...f, ia_escenas: e.target.checked })} /> Imágenes con IA en el video largo
+            </label>
+            <button type="button" style={boton("primario")} disabled={!f.guion.trim() && !f.tema.trim()} onClick={() => void crear()}>Producir paquete</button>
+          </div>
+          {nota && <p style={{ fontSize: 13, margin: 0 }}>{nota}</p>}
+        </div>
+      </section>
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🎥 Sube tu video grabado</h3>
+        <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+          Hasta 95 MB (MP4, MOV o WebM). La IA lo transcribe, te devuelve el video completo con subtítulos y saca los 5 mejores momentos como cortos verticales con gancho y subtítulos, cada uno con su texto por red. Usa el público, mercado y voz de arriba.
+        </p>
+        <label style={{ ...boton("normal"), fontWeight: 600, display: "inline-block" }}>
+          {subiendo !== null ? `Subiendo… ${subiendo}%` : "+ Elegir video"}
+          <input
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm"
+            style={{ display: "none" }}
+            disabled={subiendo !== null}
+            onChange={(e) => {
+              const a = e.target.files?.[0]
+              if (!a) return
+              if (a.size > 95 * 1024 * 1024) return setNota("El video pesa más de 95 MB: recórtalo o bájale la calidad.")
+              const fd = new FormData()
+              fd.append("archivo", a)
+              fd.append("mercado", f.mercado)
+              fd.append("publico", f.publico)
+              fd.append("voz", f.voz)
+              const xhr = new XMLHttpRequest()
+              xhr.open("POST", "/admin/hetna-fabrica/video")
+              xhr.withCredentials = true
+              const h = cabeceras()
+              if (h.authorization) xhr.setRequestHeader("authorization", h.authorization)
+              xhr.upload.onprogress = (ev) => ev.lengthComputable && setSubiendo(Math.round((ev.loaded / ev.total) * 100))
+              xhr.onload = () => {
+                setSubiendo(null)
+                let j: any = {}
+                try { j = JSON.parse(xhr.responseText) } catch {}
+                setNota(xhr.status < 300 ? "Video recibido: la Fábrica lo está transcribiendo y cortando. Tarda unos minutos." : j.message || `Error ${xhr.status}`)
+                void cargar()
+              }
+              xhr.onerror = () => { setSubiendo(null); setNota("Se cortó la conexión al subir el video.") }
+              setSubiendo(0)
+              xhr.send(fd)
+            }}
+          />
+        </label>
+      </section>
+
+      <section style={caja}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>Paquetes</h3>
+          <button type="button" style={boton("normal")} onClick={async () => { try { const x = await apiFab<any>({ accion: "semanales" }); setNota(x.creadas?.length ? `Creadas: ${x.creadas.join(", ")}.` : "No hubo piezas semanales nuevas (faltan evaluaciones, reseñas o cotizaciones suficientes)."); alCambiar() } catch (e) { setNota((e as Error).message) } }}>Generar piezas semanales ahora</button>
+          <button type="button" style={boton("normal")} onClick={() => setVerBib(!verBib)}>{verBib ? "Cerrar biblioteca" : "🎵 Biblioteca de fondos y música"}</button>
+        </div>
+        {(d?.trabajos || []).length === 0 && <p style={{ color: C.tenue, fontSize: 13 }}>Todavía no hay paquetes.</p>}
+        {(d?.trabajos || []).map((t) => {
+          const [txt, col] = ESTADO_TRABAJO[t.estado] || [t.estado, C.tenue]
+          const pz = t.piezas || {}
+          return (
+            <div key={t.id} style={{ borderTop: `1px solid ${C.borde}`, padding: "10px 0", display: "grid", gap: 6 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <b style={{ color: col, fontSize: 12 }}>{txt}</b>
+                <b style={{ flex: 1 }}>{t.titulo || t.entrada?.tema || (t.entrada?.guion || "").slice(0, 80)}</b>
+                <span style={{ fontSize: 12, color: C.tenue }}>{fecha(t.created_at)}</span>
+                {t.estado === "listo" && <button type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={() => irA("pendientes")}>Revisar borradores →</button>}
+                {["error", "listo"].includes(t.estado) && <button type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={async () => { await apiFab({ accion: "reintentar", id: t.id }); void cargar() }}>{t.estado === "error" ? "Reintentar" : "Producir de nuevo"}</button>}
+              </div>
+              {t.error && <span style={{ color: C.rojo, fontSize: 12 }}>{t.error}</span>}
+              {pz.aviso && <span style={{ color: "#8A5A00", fontSize: 12 }}>{pz.aviso}</span>}
+              {(pz.cortos?.length || pz.carrusel?.length) ? (
+                <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+                  {(pz.cortos || []).map((c: any) => <video key={c.url} src={c.url} controls preload="metadata" style={{ height: 180, borderRadius: 6, background: "#000" }} />)}
+                  {(pz.carrusel || []).map((u: string) => <img key={u} src={u} alt="" style={{ height: 180, borderRadius: 6 }} />)}
+                  {pz.miniatura && <img src={pz.miniatura} alt="" style={{ height: 120, borderRadius: 6, alignSelf: "center" }} />}
+                </div>
+              ) : null}
+              {pz.articulo && <span style={{ fontSize: 12, color: C.tenue }}>Artículo guardado como borrador en Aprendizaje CNC.</span>}
+              {(pz.aviso_voz || pz.aviso_largo) && <span style={{ color: "#8A5A00", fontSize: 12 }}>{[pz.aviso_voz, pz.aviso_largo].filter(Boolean).join(" ")}</span>}
+              {(pz.largo?.clave || pz.completo) && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[pz.largo?.clave && ["Descargar video largo", pz.largo.clave], pz.completo && ["Descargar tu video con subtítulos", pz.completo]].filter(Boolean).map(([t2, clave]: any) => (
+                    <button key={clave} type="button" style={{ ...boton("normal"), padding: "3px 10px" }} onClick={async () => { try { const x = await apiFab<any>({ accion: "descargar", clave }); window.open(x.url, "_blank") } catch (er) { setNota((er as Error).message) } }}>
+                      ⬇ {t2}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </section>
+
+      {verBib && d && (
+        <section style={caja}>
+          <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Fondos por tema</h3>
+          <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
+            Fotos reales (tuyas, de talleres con permiso, o de bancos gratuitos con licencia comercial como Pexels o Pixabay) o imágenes de IA. Si un tema no tiene fotos, se usa una escena dibujada. Anota de dónde salió y su licencia.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <select style={{ ...campo, width: "auto", padding: 5 }} value={fondo.tema} onChange={(e) => setFondo({ ...fondo, tema: e.target.value })}>
+              {d.temas.map((t) => <option key={t} value={t}>{NOMBRE_TEMA[t] || t}</option>)}
+            </select>
+            <input style={{ ...campo, width: 180, padding: 5 }} placeholder="Fuente (ej. Pexels, taller X)" value={fondo.fuente} onChange={(e) => setFondo({ ...fondo, fuente: e.target.value })} />
+            <input style={{ ...campo, width: 220, padding: 5 }} placeholder="Liga de la licencia (opcional)" value={fondo.licencia} onChange={(e) => setFondo({ ...fondo, licencia: e.target.value })} />
+            {d.runpod?.configurado && (
+              <button type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "fondos_ia", tema: fondo.tema, cantidad: 4 }); setNota(`Generando 4 fondos de "${NOMBRE_TEMA[fondo.tema] || fondo.tema}" con IA. Aparecen aquí en unos minutos (recarga la pestaña).`) } catch (er) { setNota((er as Error).message) } }}>
+                ✨ Generar 4 con IA
+              </button>
+            )}
+            <label style={{ ...boton("normal"), fontWeight: 600 }}>
+              + Subir foto
+              <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; try { const url = await subirArchivo(a); await apiFab({ accion: "fondo", ...fondo, url }); void cargar() } catch (er) { setNota((er as Error).message) } }} />
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+            {d.fondos.map((x) => (
+              <div key={x.id} style={{ position: "relative" }}>
+                <img src={x.url} alt="" title={`${NOMBRE_TEMA[x.tema] || x.tema}${x.fuente ? ` · ${x.fuente}` : ""}`} style={{ width: 110, height: 80, objectFit: "cover", borderRadius: 6 }} />
+                <span style={{ position: "absolute", left: 4, bottom: 4, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 10, padding: "1px 5px", borderRadius: 4 }}>{NOMBRE_TEMA[x.tema] || x.tema}</span>
+                <button type="button" title="Quitar" onClick={async () => { await apiFab({ accion: "borrar_fondo", id: x.id }); void cargar() }} style={{ position: "absolute", top: 2, right: 2, border: 0, borderRadius: 99, cursor: "pointer", fontSize: 11 }}>✕</button>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>Música</h3>
+          <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
+            Sólo pistas con licencia para uso comercial en redes (por ejemplo, Pixabay Music). Pon la liga de la licencia: es tu comprobante si alguien reclama.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input style={{ ...campo, width: 180, padding: 5 }} placeholder="Título de la pista" value={mus.titulo} onChange={(e) => setMus({ ...mus, titulo: e.target.value })} />
+            <input style={{ ...campo, width: 140, padding: 5 }} placeholder="Estilo (ej. energética)" value={mus.estilo} onChange={(e) => setMus({ ...mus, estilo: e.target.value })} />
+            <input style={{ ...campo, width: 240, padding: 5 }} placeholder="Liga de la licencia" value={mus.licencia} onChange={(e) => setMus({ ...mus, licencia: e.target.value })} />
+            <label style={{ ...boton("normal"), fontWeight: 600 }}>
+              + Subir audio (MP3)
+              <input type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/aac,audio/mp4" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; try { const url = await subirArchivo(a); await apiFab({ accion: "musica", ...mus, url }); setMus({ titulo: "", estilo: "", licencia: "" }); void cargar() } catch (er) { setNota((er as Error).message) } }} />
+            </label>
+          </div>
+          <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
+            {d.musica.map((m) => (
+              <div key={m.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, flexWrap: "wrap" }}>
+                <b>{m.titulo}</b>
+                <span style={{ color: C.tenue }}>{m.estilo}</span>
+                <audio src={m.url} controls preload="none" style={{ height: 30 }} />
+                {m.licencia && <a href={m.licencia} target="_blank" rel="noreferrer" style={{ color: C.naranja, fontSize: 12 }}>licencia ↗</a>}
+                <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={async () => { await apiFab({ accion: "borrar_musica", id: m.id }); void cargar() }}>Quitar</button>
+              </div>
+            ))}
+            {d.musica.length === 0 && <span style={{ color: C.tenue, fontSize: 12 }}>Sin música todavía: los cortos saldrán sin música hasta que subas pistas.</span>}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
 const VISTAS = [
+  ["fabrica", "Fábrica"],
   ["estrategia", "Estrategia"],
+  ["radar", "Radar"],
   ["pendientes", "Pendientes"],
   ["videos", "Videos de talleres"],
   ["calendario", "Calendario"],
@@ -916,6 +1429,10 @@ export default function SocialHubPage() {
       </div>
       {!datos ? (
         !error && <p>Cargando…</p>
+      ) : vista === "fabrica" ? (
+        <Fabrica alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
+      ) : vista === "radar" ? (
+        <Radar alCambiar={() => void cargar()} />
       ) : vista === "estrategia" ? (
         <Estrategia alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "videos" ? (

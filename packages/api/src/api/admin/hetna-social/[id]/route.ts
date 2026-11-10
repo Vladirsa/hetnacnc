@@ -35,7 +35,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
         titulo: String(b.titulo || p.titulo).slice(0, 160),
         textos: JSON.stringify(textos),
         redes: JSON.stringify(redesValidas(b.redes)),
-        medios: JSON.stringify(Array.isArray(b.medios) ? b.medios.filter((m: any) => /^https:\/\//.test(m?.url)).slice(0, 4) : p.medios || []),
+        medios: JSON.stringify(Array.isArray(b.medios) ? b.medios.filter((m: any) => /^https:\/\//.test(m?.url)).slice(0, 10) : p.medios || []),
         url_destino: /^https:\/\//.test(String(b.url_destino || "")) ? b.url_destino : p.url_destino,
         updated_at: knex.fn.now(),
       })

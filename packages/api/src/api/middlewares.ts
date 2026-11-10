@@ -75,6 +75,12 @@ export default defineMiddlewares({
           middlewares: [leerMultipart({ campos: { pdf: 1, xml: 1 }, maxMb: 10 })],
         },
         // Licitaciones 3.0 (Fase 3): certificado del taller (PDF o foto)
+        // Marketing HETNA: tu video grabado para la Fábrica (hasta 95 MB, límite de Nginx 100 MB)
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-fabrica/video",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 95 })],
+        },
         // Marketing HETNA: videos de trabajos que suben los talleres (con autorización)
         {
           method: ["POST"],
