@@ -75,7 +75,13 @@ export async function metricasCrecimiento(scope: any) {
   for (const c of cots) if (c.negocio_id) { const t = new Date(c.created_at).getTime(); if (!primeraCot.has(c.negocio_id) || t < primeraCot.get(c.negocio_id)!) primeraCot.set(c.negocio_id, t) }
   const mismoDia = nuevos30.filter((t) => { const r = registrado(t)!.getTime(); const p = primeraCot.get(t.id); return p != null && p - r < DIA }).length
   const licit30 = solicitudes.filter((x) => ["aceptada", "en_produccion", "entregada", "cerrada"].includes(x.etapa || "") && new Date(x.etapa_desde || x.updated_at).getTime() >= hace(30)).length
-  const referidos30 = talleres.filter((t: any) => t.referido_por && registrado(t) && registrado(t)!.getTime() >= hace(30)).length
+  // Referidos (supabase/referidos.sql del Cotizador): talleres que llegaron con
+  // el código de otro taller en 30 días. Si el SQL aún no se corre, da 0.
+  type Ref = { id: string; created_at: string | null }
+  const refs: Ref[] = await supa<Ref[]>(
+    `/rest/v1/negocios?select=id,created_at&referido_por=not.is.null&limit=5000`
+  ).catch(() => [] as Ref[])
+  const referidos30 = refs.filter((r) => r.created_at && new Date(r.created_at).getTime() >= hace(30)).length
 
   return {
     resumen: {
