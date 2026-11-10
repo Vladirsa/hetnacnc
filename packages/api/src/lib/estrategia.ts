@@ -307,7 +307,10 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
         "Eres el estratega de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
         "Escribe UNA publicación lista para usar. Reglas: usa sólo datos reales del contexto, no inventes precios, cifras, clientes ni promociones; " +
         "si el formato es video o reel, escribe el texto de la publicación y al final una línea 'GUION:' con el guion de 15 a 30 segundos (gancho en el primer segundo). " +
-        "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos.",
+        "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos. " +
+        "Diseño que funciona (docs/investigacion-disenos-virales.md): primera línea de máximo 8 palabras que se entienda sola y, si hay un dato real en el contexto, con número; " +
+        "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
+        "a talleres muéstrales la necesidad del cliente (trabajo disponible, sin comisión) y a clientes que ya hay talleres listos para cotizar.",
       messages: [{
         role: "user",
         content:
@@ -357,7 +360,7 @@ export async function llenarPlan(knex: any, semana: string, logger?: any, limite
     const postId = await crearPublicacion(
       knex,
       {
-        origen: "manual", titulo: `${REDES[h.red]?.nombre} · ${h.pilar}`, texto_base: conLiga, url: destino, redes: [h.red], estado: "borrador",
+        origen: "manual", fuente: "plan", titulo: `${REDES[h.red]?.nombre} · ${h.pilar}`, texto_base: conLiga, url: destino, redes: [h.red], estado: "borrador",
         programada_para: h.fecha, mercado: h.mercado, textos: idea.ia ? { [h.red]: conLiga } : undefined, notas: guion ? `Guion: ${guion.trim()}` : undefined,
       },
       logger

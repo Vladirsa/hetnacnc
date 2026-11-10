@@ -625,6 +625,7 @@ export type Routes = {
             aviso: typeof import("../src/api/hooks/social-hub/aviso/route");
             clic: typeof import("../src/api/hooks/social-hub/clic/route");
             evento: typeof import("../src/api/hooks/social-hub/evento/route");
+            telegram: typeof import("../src/api/hooks/social-hub/telegram/route");
         };
         verificarCorreo: typeof import("../src/api/hooks/verificar-correo/route");
     };

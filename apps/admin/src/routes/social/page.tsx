@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -381,6 +381,42 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   )
 }
 
+function TelegramAprobacion() {
+  const [vinculado, setVinculado] = useState<boolean | null>(null)
+  const [codigo, setCodigo] = useState("")
+  const [nota, setNota] = useState("")
+  const ver = useCallback(() => api<any>("/config").then((d) => setVinculado(!!d.telegram?.vinculado)).catch(() => setVinculado(false)), [])
+  useEffect(() => {
+    void ver()
+  }, [ver])
+  if (vinculado === null) return <p style={{ fontSize: 13, color: C.tenue }}>Revisando…</p>
+  return (
+    <div style={{ fontSize: 13, display: "grid", gap: 6 }}>
+      {vinculado ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ color: C.verde }}>✓ Tu Telegram está vinculado.</span>
+          <button type="button" style={boton("normal")} onClick={async () => { const r = await api<any>("/config", { telegram: "probar" }).catch((e) => ({ error: (e as Error).message })); setNota(r.error || `Te mandé ${r.enviados ?? 0} borradores a Telegram.`) }}>Mandarme los borradores ahora</button>
+          <button type="button" style={boton("normal")} onClick={async () => { await api("/config", { telegram: "desvincular" }).catch(() => {}); void ver() }}>Desvincular</button>
+        </div>
+      ) : (
+        <>
+          <span style={{ color: C.tenue }}>Cada mañana el bot te manda los borradores con botones ✅ Aprobar, 🚀 Publicar ya, ✏️ Cambiar y 🗑 Descartar. Vincúlalo una sola vez:</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" style={boton("normal")} onClick={async () => { const r = await api<any>("/config", { telegram: "codigo" }).catch(() => null); setCodigo(r?.codigo || ""); setNota(r?.codigo ? "" : "No se pudo generar el código.") }}>Generar código</button>
+            {codigo && (
+              <span>
+                Abre en Telegram el bot de HETNA (el que publica en tu canal) y mándale: <b style={{ fontFamily: "monospace", fontSize: 15 }}>/vincular {codigo}</b> (dura 15 minutos).{" "}
+                <button type="button" style={{ ...boton("normal"), padding: "2px 8px" }} onClick={() => void ver()}>Ya lo mandé</button>
+              </span>
+            )}
+          </div>
+        </>
+      )}
+      {nota && <span style={{ color: C.tenue }}>{nota}</span>}
+    </div>
+  )
+}
+
 function PruebaInstagram() {
   const [r, setR] = useState<{ ok: boolean; usuario?: string; error?: string } | null>(null)
   const [cargando, setCargando] = useState(false)
@@ -594,6 +630,21 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         de <input type="number" min={0} max={23} style={{ ...campo, width: 70 }} value={c.horario.desde} onChange={(e) => setC({ ...c, horario: { ...c.horario, desde: Number(e.target.value) } })} />
         a <input type="number" min={1} max={24} style={{ ...campo, width: 70 }} value={c.horario.hasta} onChange={(e) => setC({ ...c, horario: { ...c.horario, hasta: Number(e.target.value) } })} /> h · esperar
         <input type="number" min={0} max={1440} style={{ ...campo, width: 80 }} value={c.retraso_min} onChange={(e) => setC({ ...c, retraso_min: Number(e.target.value) })} /> min antes de publicar lo automático
+      </div>
+      <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>🤖 Piloto automático</h3>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+        Los borradores que genera el sistema (plan semanal, promociones y Fábrica) se programan solos cuando ya tienen imagen o video y su puntaje llega al mínimo. Lo demás te llega por Telegram para aprobar.
+      </p>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center" }}>
+        <input type="checkbox" checked={!!c.piloto?.activo} onChange={(e) => setC({ ...c, piloto: { minimo: 75, redes: [], ...(c.piloto || {}), activo: e.target.checked } })} />
+        Activar piloto automático · puntaje mínimo
+        <input type="number" min={40} max={100} style={{ ...campo, width: 70 }} value={c.piloto?.minimo ?? 75} onChange={(e) => setC({ ...c, piloto: { activo: false, redes: [], ...(c.piloto || {}), minimo: Number(e.target.value) } })} />
+      </label>
+      <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>📲 Aprobar desde Telegram</h3>
+      <TelegramAprobacion />
+      <div style={{ fontSize: 14, marginTop: 6 }}>
+        Mándame los borradores del día a las{" "}
+        <input type="number" min={0} max={23} style={{ ...campo, width: 60 }} value={c.aviso_hora ?? 8} onChange={(e) => setC({ ...c, aviso_hora: Number(e.target.value) })} /> h (centro de México)
       </div>
       <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center" }}>
         <button type="button" style={boton("primario")} onClick={guardar}>

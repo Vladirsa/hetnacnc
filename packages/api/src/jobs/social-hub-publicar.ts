@@ -3,10 +3,12 @@ import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { publicarPendientes } from "../lib/social-hub"
+import { pilotoAutomatico } from "../lib/social-telegram"
 
 export default async function socialHubPublicar(container: MedusaContainer) {
   const logger = container.resolve("logger")
   try {
+    await pilotoAutomatico(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger).catch((e: Error) => logger.warn(`[social] piloto: ${e.message}`))
     await publicarPendientes(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger)
   } catch (e) {
     logger.error(`[social] fallo al publicar pendientes: ${(e as Error).message}`)

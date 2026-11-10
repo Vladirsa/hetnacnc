@@ -51,6 +51,10 @@ export type ConfigSocial = {
   automatico: Record<Exclude<Origen, "manual" | "taller_video">, boolean>
   horario: { desde: number; hasta: number } // horas, hora del centro de México
   retraso_min: number
+  // Piloto automático: los borradores generados (plan, promociones, Fábrica) con
+  // material y buen puntaje se programan solos
+  piloto: { activo: boolean; minimo: number; redes: Red[] }
+  aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
@@ -58,6 +62,8 @@ const CONFIG_INICIAL: ConfigSocial = {
   automatico: { licitacion: true, taller: true, producto: true, foro: true, promociones: false },
   horario: { desde: 9, hasta: 20 },
   retraso_min: 10,
+  piloto: { activo: false, minimo: 75, redes: [] },
+  aviso_hora: 8,
 }
 
 let listo = false
@@ -88,6 +94,9 @@ export async function asegurarSocial(knex: any) {
   await knex.raw(`alter table ?? add column if not exists notas text`, [T_POST]).catch(() => {})
   // Estadísticas de cada red (alcance, me gusta, comentarios, compartidos, guardados, vistas)
   await knex.raw(`alter table ?? add column if not exists estadisticas jsonb`, [T_POST]).catch(() => {})
+  // De dónde salió el borrador (plan | promo | fabrica) y si lo programó el piloto automático
+  await knex.raw(`alter table ?? add column if not exists fuente text`, [T_POST]).catch(() => {})
+  await knex.raw(`alter table ?? add column if not exists piloto boolean`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -126,6 +135,12 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     automatico: { ...CONFIG_INICIAL.automatico, ...(v.automatico || {}) },
     horario: { ...CONFIG_INICIAL.horario, ...(v.horario || {}) },
     retraso_min: Number.isFinite(Number(v.retraso_min)) ? Math.max(0, Math.min(1440, Number(v.retraso_min))) : CONFIG_INICIAL.retraso_min,
+    piloto: {
+      activo: !!v.piloto?.activo,
+      minimo: Number.isFinite(Number(v.piloto?.minimo)) ? Math.max(40, Math.min(100, Number(v.piloto.minimo))) : CONFIG_INICIAL.piloto.minimo,
+      redes: Array.isArray(v.piloto?.redes) ? v.piloto.redes.filter((x: string) => x in REDES) : [],
+    },
+    aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
   }
 }
 
@@ -139,6 +154,14 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
       hasta: Math.max(1, Math.min(24, Math.round(Number(c.horario?.hasta ?? actual.horario.hasta)))),
     },
     retraso_min: c.retraso_min != null ? Math.max(0, Math.min(1440, Math.round(Number(c.retraso_min)))) : actual.retraso_min,
+    piloto: c.piloto
+      ? {
+          activo: !!c.piloto.activo,
+          minimo: Math.max(40, Math.min(100, Math.round(Number(c.piloto.minimo ?? actual.piloto.minimo)) || actual.piloto.minimo)),
+          redes: Array.isArray(c.piloto.redes) ? (c.piloto.redes.filter((x) => x in REDES) as Red[]) : actual.piloto.redes,
+        }
+      : actual.piloto,
+    aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
   }
   if (nueva.horario.hasta <= nueva.horario.desde) nueva.horario = actual.horario
   await knex.raw(`insert into ?? (clave, valor) values ('general', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
@@ -340,6 +363,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
     id, origen: d.origen, origen_id: d.origen_id || null, titulo: corta(d.titulo, 160), texto_base: base,
     textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 10)),
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
+    fuente: (d as any).fuente || null,
   })
   return id
 }

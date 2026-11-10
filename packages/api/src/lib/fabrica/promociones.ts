@@ -117,7 +117,7 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
   const c1 = await cuando(knex, 2)
   const posts: string[] = []
   // 1) Imagen (tarjeta) o carrusel
-  const p1 = await crearPublicacion(knex, { origen: "manual", titulo: `Promo · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: d.carrusel ? ["instagram", "facebook", "linkedin"] : ["facebook", "instagram", "telegram"], estado: c1.estado, programada_para: c1.fecha, mercado: "mx" }, logger)
+  const p1 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: d.carrusel ? ["instagram", "facebook", "linkedin"] : ["facebook", "instagram", "telegram"], estado: c1.estado, programada_para: c1.fecha, mercado: "mx" }, logger)
   const liga1 = urlCorta(await ligaPara(knex, p1, "facebook", d.url))
   let medios: any[]
   if (d.carrusel) {
@@ -135,7 +135,7 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
   // 2) Video vertical (Reels, TikTok, Shorts) al día siguiente
   if (ffmpegDisponible()) {
     const c2 = await cuando(knex, 26)
-    const p2 = await crearPublicacion(knex, { origen: "manual", titulo: `Promo video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
+    const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
     const liga2 = urlCorta(await ligaPara(knex, p2, "instagram", d.url))
     const v = await videoCon(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, tema: d.tema, liga: liga2, mercado: "mx" }, logger)
     if (v) await knex(T_POST).where({ id: p2 }).update({ medios: JSON.stringify([{ url: v, tipo: "video" }]) })
