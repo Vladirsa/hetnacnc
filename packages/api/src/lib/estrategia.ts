@@ -229,6 +229,25 @@ const sumarDias = (fecha: string, n: number) => {
   return x.toISOString().slice(0, 10)
 }
 
+// Tope de publicaciones por red y por día: todos los países comparten las mismas
+// cuentas y publicar de más baja el alcance de cada publicación.
+export const TOPE_DIA: Record<string, number> = { facebook: 2, instagram: 2, tiktok: 2, youtube: 1, linkedin: 1, telegram: 2, whatsapp: 1, grupos_facebook: 2, reddit: 1, pinterest: 2 }
+
+/** Deja como mucho TOPE_DIA[red] huecos por red y día; gana el mercado con más reparto. */
+export function recortarPorDia<T extends { red: string; mercado: string; fecha: Date }>(filas: T[], mercados: Record<string, number>) {
+  const orden = [...filas].sort((a, b) => (mercados[b.mercado] || 0) - (mercados[a.mercado] || 0))
+  const cuenta: Record<string, number> = {}
+  const quedan = new Set<T>()
+  for (const f of orden) {
+    const dia = new Date(f.fecha).toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+    const k = `${f.red}|${dia}`
+    if ((cuenta[k] || 0) >= (TOPE_DIA[f.red] ?? 2)) continue
+    cuenta[k] = (cuenta[k] || 0) + 1
+    quedan.add(f)
+  }
+  return filas.filter((f) => quedan.has(f))
+}
+
 /** Arma los huecos de la semana según guías, mercados y reparto. No duplica. */
 export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now() + 7 * 86_400_000))) {
   await asegurarPlan(knex)
@@ -259,8 +278,9 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
       giro++
     }
   }
-  if (filas.length) await knex.batchInsert(T_PLAN, filas, 100)
-  return { semana, creados: filas.length }
+  const finales = recortarPorDia(filas, cfg.mercados)
+  if (finales.length) await knex.batchInsert(T_PLAN, finales, 100)
+  return { semana, creados: finales.length, recortados: filas.length - finales.length }
 }
 
 // ---------------------------------------------------------------------
@@ -287,7 +307,10 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
         "Eres el estratega de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
         "Escribe UNA publicación lista para usar. Reglas: usa sólo datos reales del contexto, no inventes precios, cifras, clientes ni promociones; " +
         "si el formato es video o reel, escribe el texto de la publicación y al final una línea 'GUION:' con el guion de 15 a 30 segundos (gancho en el primer segundo). " +
-        "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos.",
+        "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos. " +
+        "Diseño que funciona (docs/investigacion-disenos-virales.md): primera línea de máximo 8 palabras que se entienda sola y, si hay un dato real en el contexto, con número; " +
+        "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
+        "a talleres muéstrales la necesidad del cliente (trabajo disponible, sin comisión) y a clientes que ya hay talleres listos para cotizar.",
       messages: [{
         role: "user",
         content:
@@ -337,7 +360,7 @@ export async function llenarPlan(knex: any, semana: string, logger?: any, limite
     const postId = await crearPublicacion(
       knex,
       {
-        origen: "manual", titulo: `${REDES[h.red]?.nombre} · ${h.pilar}`, texto_base: conLiga, url: destino, redes: [h.red], estado: "borrador",
+        origen: "manual", fuente: "plan", titulo: `${REDES[h.red]?.nombre} · ${h.pilar}`, texto_base: conLiga, url: destino, redes: [h.red], estado: "borrador",
         programada_para: h.fecha, mercado: h.mercado, textos: idea.ia ? { [h.red]: conLiga } : undefined, notas: guion ? `Guion: ${guion.trim()}` : undefined,
       },
       logger

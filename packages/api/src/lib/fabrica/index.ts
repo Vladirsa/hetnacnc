@@ -235,7 +235,7 @@ export async function producir(scope: any, id: string, logger?: any) {
     lams.push(await subir(scope, `fabrica-${id}-l${total}.png`, "image/png", await lamina({ num: total, total, titulo: p.titulo, cierre: { cta: p.carrusel.cierre, liga_texto: "liga en el perfil" }, tema, foto_url: await foto() })))
     piezas.carrusel = lams
     const pc = await crearPublicacion(knex, {
-      origen: "manual", titulo: `Fábrica · Carrusel · ${p.titulo}`, texto_base: p.publicaciones.instagram_carrusel, url: destino, redes: ["instagram", "linkedin"],
+      origen: "manual", fuente: "fabrica", titulo: `Fábrica · Carrusel · ${p.titulo}`, texto_base: p.publicaciones.instagram_carrusel, url: destino, redes: ["instagram", "linkedin"],
       textos: { instagram: p.publicaciones.instagram_carrusel, linkedin: p.publicaciones.linkedin_carrusel }, medios: lams.map((url) => ({ url, tipo: "imagen" })),
       estado: "borrador", programada_para: fechaPara(mercado, 2, "instagram"), mercado, notas: "Carrusel: las redes conectadas publican la primera lámina; descarga todas para subir el carrusel completo.",
     }, logger)
@@ -243,7 +243,7 @@ export async function producir(scope: any, id: string, logger?: any) {
 
     // 2) Publicación de texto por red, con tarjeta
     const pt = await crearPublicacion(knex, {
-      origen: "manual", titulo: `Fábrica · ${p.titulo}`, texto_base: p.publicaciones.facebook, url: destino, redes: ["facebook", "linkedin", "telegram", "grupos_facebook", "whatsapp"],
+      origen: "manual", fuente: "fabrica", titulo: `Fábrica · ${p.titulo}`, texto_base: p.publicaciones.facebook, url: destino, redes: ["facebook", "linkedin", "telegram", "grupos_facebook", "whatsapp"],
       textos: { facebook: p.publicaciones.facebook, linkedin: p.publicaciones.linkedin, telegram: p.publicaciones.telegram, grupos_facebook: p.publicaciones.grupos_facebook, whatsapp: p.publicaciones.whatsapp },
       estado: "borrador", programada_para: fechaPara(mercado, 3, "facebook"), mercado,
     }, logger)
@@ -273,7 +273,7 @@ export async function producir(scope: any, id: string, logger?: any) {
       for (let i = 0; i < p.cortos.length; i++) {
         const c = p.cortos[i]
         const pid = await crearPublicacion(knex, {
-          origen: "manual", titulo: `Fábrica · Corto ${i + 1} · ${c.gancho}`, texto_base: c.textos.facebook, url: destino, redes: ["tiktok", "instagram", "facebook", "youtube"],
+          origen: "manual", fuente: "fabrica", titulo: `Fábrica · Corto ${i + 1} · ${c.gancho}`, texto_base: c.textos.facebook, url: destino, redes: ["tiktok", "instagram", "facebook", "youtube"],
           textos: c.textos, estado: "borrador", programada_para: fechaPara(mercado, i, "tiktok"), mercado,
         }, logger)
         const liga = urlCorta(await ligaPara(knex, pid, "instagram", destino))
@@ -296,7 +296,7 @@ export async function producir(scope: any, id: string, logger?: any) {
     const mini = await subir(scope, `fabrica-${id}-miniatura.png`, "image/png", await miniatura({ titulo: p.youtube.titulo, tema, foto_url: await foto() }))
     const capitulos = (p.youtube.capitulos || []).map((c: any) => `${c.tiempo} ${c.titulo}`).join("\n")
     const py = await crearPublicacion(knex, {
-      origen: "manual", titulo: `Fábrica · YouTube · ${p.youtube.titulo}`, texto_base: `${p.youtube.descripcion}\n\n${capitulos}`, url: destino, redes: ["youtube"],
+      origen: "manual", fuente: "fabrica", titulo: `Fábrica · YouTube · ${p.youtube.titulo}`, texto_base: `${p.youtube.descripcion}\n\n${capitulos}`, url: destino, redes: ["youtube"],
       textos: { youtube: `${p.youtube.titulo}\n\n${p.youtube.descripcion}\n\n${capitulos}` }, medios: [{ url: mini, tipo: "imagen" }],
       estado: "borrador", programada_para: fechaPara(mercado, 0, "youtube"), mercado,
       notas: `Guion del video largo por escenas:\n${(p.youtube.escenas || []).map((s: any, k: number) => `${k + 1}. ${s.narracion}\n   [En pantalla: ${s.visual}]`).join("\n")}`,
@@ -409,8 +409,13 @@ export async function tarjetasAutomaticas(scope: any, logger?: any) {
       const liga = urlCorta(await ligaPara(knex, p.id, red, p.url_destino))
       const tema = temaDe(`${p.titulo} ${p.texto_base}`)
       const foto = await fondoDe(knex, tema)
+      // Licitación: ficha "Se busca taller" con los datos reales de la solicitud
+      const { fichaSolicitud } = await import("./oportunidades")
+      const ficha = p.origen === "licitacion" && p.origen_id ? await fichaSolicitud(knex, p.origen_id).catch(() => null) : null
       const spec =
-        p.origen === "licitacion"
+        ficha
+          ? { cinta: ficha.cinta, titulo: ficha.titulo, datos: ficha.datos, sub: ficha.sub, cta: ficha.cta }
+          : p.origen === "licitacion"
           ? { cinta: { texto: "Se busca taller" }, titulo: p.titulo, sub: lineaDe(p.texto_base, "📍") || undefined, cta: "Envía tu propuesta sin comisión" }
           : p.origen === "taller"
             ? { cinta: { texto: "Nuevo taller en HETNA", tono: "oro" }, titulo: p.titulo, sub: lineaDe(p.texto_base, "📍") || undefined, cta: "Conoce sus trabajos y cotiza" }
@@ -605,7 +610,7 @@ export async function producirVideo(scope: any, tr: any, logger?: any) {
     const url = await subir(scope, `fabrica-${id}-corte${i + 1}.mp4`, "video/mp4", await bajarB2(c.clave))
     const info = plan.cortes[i]
     const pid = await crearPublicacion(knex, {
-      origen: "manual", titulo: `Fábrica · Tu video · Corte ${i + 1} · ${info.gancho}`, texto_base: info.textos.facebook, url: destino, redes: ["tiktok", "instagram", "facebook", "youtube"],
+      origen: "manual", fuente: "fabrica", titulo: `Fábrica · Tu video · Corte ${i + 1} · ${info.gancho}`, texto_base: info.textos.facebook, url: destino, redes: ["tiktok", "instagram", "facebook", "youtube"],
       textos: info.textos, medios: [{ url, tipo: "video" }], estado: "borrador", programada_para: fechaPara(mercado, i, "tiktok"), mercado,
     }, logger)
     piezas.cortos.push({ post: pid, url, segundos: c.segundos })
@@ -613,7 +618,7 @@ export async function producirVideo(scope: any, tr: any, logger?: any) {
   if (out.completo) {
     piezas.completo = out.completo
     const pid = await crearPublicacion(knex, {
-      origen: "manual", titulo: `Fábrica · Tu video subtitulado · ${plan.titulo}`, texto_base: plan.descripcion, url: destino, redes: ["youtube", "facebook"],
+      origen: "manual", fuente: "fabrica", titulo: `Fábrica · Tu video subtitulado · ${plan.titulo}`, texto_base: plan.descripcion, url: destino, redes: ["youtube", "facebook"],
       textos: { youtube: `${plan.titulo}\n\n${plan.descripcion}`, facebook: plan.descripcion }, estado: "borrador", programada_para: fechaPara(mercado, 0, "youtube"), mercado,
       notas: "Video completo con subtítulos: descárgalo en la Fábrica (botón Descargar) para subirlo.",
     }, logger)

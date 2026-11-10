@@ -11,7 +11,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   await asegurarSocial(knex)
   const estado = String((req.query as any)?.estado || "")
-  const q = knex(T_POST).orderByRaw("coalesce(programada_para, created_at) desc").limit(150)
+  const q = knex(T_POST).orderByRaw("coalesce(programada_para, created_at) desc").limit(400)
   if (estado === "pendientes") q.whereIn("estado", ["borrador", "programada", "error", "parcial"])
   else if (estado) q.where({ estado })
   const filas = await q

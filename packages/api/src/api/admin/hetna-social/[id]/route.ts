@@ -5,10 +5,13 @@
 //   publicar  { redes? }            -> ahora mismo
 //   descartar
 //   liga      { red, grupo }        -> liga medida para pegar a mano (p. ej. un grupo de Facebook)
+//   revisar                         -> el revisor con IA mejora los textos (guarda la versión anterior)
+//   deshacer                        -> vuelve a los textos de antes de la revisión
 // Social Hub (Licitaciones 3.0, Fase 5A).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { deshacerRevision, revisarPublicacion } from "../../../../lib/social-revisor"
 import { REDES, T_POST, adaptar, zonaDe, asegurarSocial, dentroDeHorario, leerConfig, ligaPara, publicar, urlCorta, vistaPublicacion } from "../../../../lib/social-hub"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -26,6 +29,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const p = await knex(T_POST).where({ id: String(req.params.id) }).first()
   if (!p) return res.status(404).json({ message: "Publicación no encontrada." })
   const b: any = req.body || {}
+  let extra: Record<string, unknown> = {}
   const redesValidas = (x: any) => (Array.isArray(x) ? x.filter((r: string) => r in REDES) : p.redes)
 
   switch (b.accion) {
@@ -64,6 +68,15 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     case "descartar":
       await knex(T_POST).where({ id: p.id }).whereNot({ estado: "publicando" }).update({ estado: "descartada", updated_at: knex.fn.now() })
       break
+    case "revisar": {
+      const r = await revisarPublicacion(knex, p.id, logger, { forzar: true })
+      if (!r.cambiadas?.length) return res.status(400).json({ message: r.motivo === "sin IA configurada" ? "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." : r.motivo === "no editable" ? "Esta publicación ya no se puede cambiar." : "La IA no mejoró el texto; quedó como estaba." })
+      extra = { cambiadas: r.cambiadas }
+      break
+    }
+    case "deshacer":
+      if (!(await deshacerRevision(knex, p.id))) return res.status(400).json({ message: "No hay versión anterior." })
+      break
     case "liga": {
       const red = String(b.red || "grupos_facebook")
       if (!(red in REDES)) return res.status(400).json({ message: "Red no válida." })
@@ -74,5 +87,5 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       return res.status(400).json({ message: "Acción no válida." })
   }
   const nueva = await knex(T_POST).where({ id: p.id }).first()
-  res.json({ ok: true, publicacion: await vistaPublicacion(knex, nueva) })
+  res.json({ ok: true, ...extra, publicacion: await vistaPublicacion(knex, nueva) })
 }

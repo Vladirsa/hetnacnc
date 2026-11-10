@@ -251,9 +251,9 @@ export async function tarjeta(t: Tarjeta) {
     y += su.h + Math.round(u * 2.4)
   }
   for (const [k, v] of t.datos || []) {
-    const kk = await texto(k, { tam: Math.round(u * 4), peso: 800, color: NARANJA2, ancho: Math.round(ancho * 0.3) })
-    const vv = await texto(v, { tam: Math.round(u * 4), peso: 500, ancho: Math.round(ancho * 0.68) })
-    capas.push({ input: kk.buf, left: M, top: y }, { input: vv.buf, left: Math.round(M + ancho * 0.32), top: y })
+    const kk = await texto(k, { tam: Math.round(u * 4), peso: 800, color: NARANJA2, ancho: Math.round(ancho * 0.36) })
+    const vv = await texto(v, { tam: Math.round(u * 4), peso: 500, ancho: Math.round(ancho * 0.6) })
+    capas.push({ input: kk.buf, left: M, top: y }, { input: vv.buf, left: Math.round(M + ancho * 0.39), top: y })
     y += Math.max(kk.h, vv.h) + Math.round(u * 1.2)
   }
   if (t.barras?.length) {
@@ -319,6 +319,41 @@ export async function lamina(l: { num: number; total: number; titulo: string; te
   return sharp(base).composite(capas).png({ compressionLevel: 8 }).toBuffer()
 }
 
+/** Cuadro de video 9:16 con un dato grande (número + etiqueta) y, opcional, una lista de filas con su valor. */
+export async function cuadroDato(c: { cinta?: string; numero?: string; etiqueta: string; filas?: [string, string][]; nota?: string; tema?: string; foto_url?: string | null; semilla?: number }) {
+  const [W, H] = FORMATOS["9:16"]
+  const M = Math.round(W * 0.08), u = W / 100, ancho = W - M * 2
+  const capas: Capa[] = []
+  let y = Math.round(H * 0.2)
+  if (c.cinta) {
+    const ci = await cinta(c.cinta, NARANJA, Math.round(u * 4.2), "#ffffff", ancho)
+    capas.push({ input: ci.buf, left: M, top: y })
+    y += ci.h + Math.round(u * 4)
+  }
+  if (c.numero) {
+    const n = await texto(c.numero, { tam: Math.round(u * (c.numero.length > 3 ? 24 : 32)), peso: 900, color: NARANJA2, ancho })
+    capas.push({ input: n.buf, left: M, top: y })
+    y += n.h + Math.round(u * 1)
+  }
+  const et = await texto(c.etiqueta, { tam: Math.round(u * (c.numero ? 7.6 : 9.4)), peso: 900, ancho: Math.round(W * 0.8), interlineado: -Math.round(u * 1.2) })
+  capas.push({ input: et.buf, left: M, top: y })
+  y += et.h + Math.round(u * 5)
+  for (const [k, v] of (c.filas || []).slice(0, 5)) {
+    const alto = Math.round(u * 10.5)
+    const caja = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}"><rect width="${ancho}" height="${alto}" rx="${Math.round(u * 2)}" fill="#000" fill-opacity=".55"/></svg>`)
+    const kk = await texto(k, { tam: Math.round(u * 5), peso: 800, ancho: Math.round(ancho * 0.66) })
+    const vv = await texto(v, { tam: Math.round(u * 5.6), peso: 900, color: NARANJA2, ancho: Math.round(ancho * 0.24), alinear: "centre" })
+    capas.push({ input: caja, left: M, top: y }, { input: kk.buf, left: Math.round(M + u * 3), top: y + Math.round((alto - kk.h) / 2) }, { input: vv.buf, left: Math.round(M + ancho * 0.72), top: y + Math.round((alto - vv.h) / 2) })
+    y += alto + Math.round(u * 1.8)
+  }
+  if (c.nota) {
+    const nt = await texto(c.nota, { tam: Math.round(u * 3.4), peso: 500, color: "#dfe5ee", ancho })
+    capas.push({ input: nt.buf, left: M, top: Math.round(H * 0.8) })
+  }
+  const base = await fondo(W, H, { tema: c.tema || "taller", foto_url: c.foto_url, velo: "fuerte", semilla: c.semilla })
+  return sharp(base).composite(capas).png().toBuffer()
+}
+
 /** Cuadro de video vertical 9:16: gancho, frase con subtítulo o cierre con QR. */
 export async function cuadroVideo(c: { tipo: "gancho" | "frase" | "cierre"; texto: string; tema?: string; foto_url?: string | null; liga?: string; credito?: string; semilla?: number }) {
   const [W, H] = FORMATOS["9:16"]
@@ -336,7 +371,7 @@ export async function cuadroVideo(c: { tipo: "gancho" | "frase" | "cierre"; text
       const marco = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}"><rect width="${lado}" height="${lado}" rx="${Math.round(u * 2)}" fill="#fff"/></svg>`)
       capas.push({ input: await sharp(marco).composite([{ input: q, left: Math.round(u * 2), top: Math.round(u * 2) }]).png().toBuffer(), left: Math.round((W - lado) / 2), top: Math.round(H * 0.36 + t.h + u * 6) })
     }
-    const pie = await texto("liga en el perfil · comenta COTIZA", { tam: Math.round(u * 4.4), peso: 500, color: NARANJA2, ancho: W - M * 2, alinear: "centre" })
+    const pie = await texto("liga en el perfil · mándaselo a quien lo necesite", { tam: Math.round(u * 4.4), peso: 500, color: NARANJA2, ancho: W - M * 2, alinear: "centre" })
     capas.push({ input: pie.buf, left: Math.round((W - pie.w) / 2), top: Math.round(H * 0.74) })
     const base = await fondo(W, H, { tema: c.tema || "laser", foto_url: c.foto_url, velo: "fuerte", semilla: c.semilla })
     return sharp(base).composite(capas).png().toBuffer()

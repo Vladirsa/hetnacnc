@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -52,7 +52,7 @@ const boton = (tipo: "primario" | "normal" | "peligro"): CSSProperties => ({
   color: tipo === "normal" ? C.texto : "#fff",
 })
 const campo: CSSProperties = { width: "100%", boxSizing: "border-box", borderRadius: 8, border: `1px solid ${C.borde}`, padding: 8, fontSize: 14, background: C.fondo, color: C.texto }
-const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller" }
+const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller", promociones: "Promociones diarias (producto, blog y herramientas con imagen y video)" }
 const ESTADO: Record<string, [string, string]> = {
   borrador: ["Borrador", "#8A5A00"],
   programada: ["Programada", "#1a3a5c"],
@@ -203,7 +203,10 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   const [cuando, setCuando] = useState(aLocal(p.programada_para))
   const [grupo, setGrupo] = useState("")
   const [nota, setNota] = useState("")
+  const [notaOk, setNotaOk] = useState(true)
   const [ocupado, setOcupado] = useState(false)
+  const [haciendo, setHaciendo] = useState("") // qué acción está corriendo (para mostrarlo en su botón)
+  const [cambiadas, setCambiadas] = useState<string[]>([]) // redes que acaba de mejorar la IA (se resaltan)
   useEffect(() => {
     setTextos(p.textos || {})
     setSel(p.redes)
@@ -213,15 +216,24 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   const ligaDe = (red: string) => p.ligas.find((l) => l.red === red && !l.grupo)?.url
   const hacer = async (cuerpo: Record<string, unknown>, ok: string) => {
     setOcupado(true)
+    setHaciendo(String(cuerpo.accion || ""))
     setNota("")
+    setCambiadas([])
     try {
-      await api(`/${p.id}`, cuerpo)
-      setNota(ok)
+      const r = await api<{ cambiadas?: string[]; publicacion?: Pub }>(`/${p.id}`, cuerpo)
+      // Muestra los textos nuevos de inmediato, sin esperar a recargar la lista
+      if (r.publicacion?.textos) setTextos(r.publicacion.textos)
+      const cs = r.cambiadas || []
+      setCambiadas(cs)
+      setNotaOk(true)
+      setNota(cs.length ? `${ok} Se mejoró: ${cs.map((c) => nombre(c)).join(", ")}.` : ok)
       alCambiar()
     } catch (e) {
+      setNotaOk(false)
       setNota((e as Error).message)
     } finally {
       setOcupado(false)
+      setHaciendo("")
     }
   }
   const [et, col] = ESTADO[p.estado] || [p.estado, C.tenue]
@@ -274,9 +286,10 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             const r = p.resultado?.[red]
             const final = (textos[red] || "").replace("{{liga}}", ligaDe(red) || "{{liga}}")
             return (
-              <div key={red} style={{ background: C.suave, borderRadius: 10, padding: 10 }}>
+              <div key={red} style={{ background: cambiadas.includes(red) ? "#e8f7ee" : C.suave, border: cambiadas.includes(red) ? `2px solid ${C.verde}` : "2px solid transparent", borderRadius: 10, padding: 10, transition: "background .4s" }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
                   <b style={{ fontSize: 13 }}>{nombre(red)}</b>
+                  {cambiadas.includes(red) && <span style={{ fontSize: 12, color: C.verde, fontWeight: 700 }}>🧠 mejorado por la IA</span>}
                   {p.puntajes?.[red] && <Puntaje p={p.puntajes[red]} />}
                   {!auto(red) && <span style={{ fontSize: 12, color: C.tenue }}>✋ copiar y pegar</span>}
                   {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : r.pendiente ? <span style={{ fontSize: 12, color: C.tenue }}>⏳ Instagram la está procesando; se publica sola en unos minutos</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
@@ -304,6 +317,14 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "adaptar", redes: sel }, "Textos reescritos.")}>
               ✨ Reescribir textos
             </button>
+            <button type="button" style={{ ...boton("normal"), ...(haciendo === "revisar" ? { background: "#142033", color: "#fff", cursor: "wait" } : {}), opacity: ocupado && haciendo !== "revisar" ? 0.5 : 1 }} disabled={ocupado} title="El revisor corrige gancho, llamada a la acción, largo y hashtags de cada red sin inventar datos" onClick={() => hacer({ accion: "revisar" }, "✓ Listo: mejorada con IA (si no te gusta, dale Deshacer).")}>
+              {haciendo === "revisar" ? "⏳ Mejorando con IA… (10 a 30 s)" : "🧠 Mejorar con IA"}
+            </button>
+            {((p as any).version_anterior || cambiadas.length > 0) && (
+              <button type="button" style={{ ...boton("normal"), opacity: ocupado && haciendo !== "deshacer" ? 0.5 : 1 }} disabled={ocupado} onClick={() => hacer({ accion: "deshacer" }, "✓ Volvió a la versión anterior.")}>
+                {haciendo === "deshacer" ? "⏳ Regresando…" : "↩ Deshacer mejora"}
+              </button>
+            )}
             <input type="datetime-local" style={{ ...campo, width: "auto", padding: 5 }} value={cuando} onChange={(e) => setCuando(e.target.value)} />
             <button
               type="button"
@@ -374,10 +395,48 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
               </tbody>
             </table>
           )}
-          {nota && <p style={{ fontSize: 13, margin: 0 }}>{nota}</p>}
+          {nota && (
+            <p style={{ fontSize: 14, margin: 0, padding: "8px 12px", borderRadius: 8, fontWeight: 600, background: notaOk ? "#e8f7ee" : "#fdecec", color: notaOk ? C.verde : C.rojo }}>{nota}</p>
+          )}
         </div>
       )}
     </article>
+  )
+}
+
+function TelegramAprobacion() {
+  const [vinculado, setVinculado] = useState<boolean | null>(null)
+  const [codigo, setCodigo] = useState("")
+  const [nota, setNota] = useState("")
+  const ver = useCallback(() => api<any>("/config").then((d) => setVinculado(!!d.telegram?.vinculado)).catch(() => setVinculado(false)), [])
+  useEffect(() => {
+    void ver()
+  }, [ver])
+  if (vinculado === null) return <p style={{ fontSize: 13, color: C.tenue }}>Revisando…</p>
+  return (
+    <div style={{ fontSize: 13, display: "grid", gap: 6 }}>
+      {vinculado ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ color: C.verde }}>✓ Tu Telegram está vinculado.</span>
+          <button type="button" style={boton("normal")} onClick={async () => { const r = await api<any>("/config", { telegram: "probar" }).catch((e) => ({ error: (e as Error).message })); setNota(r.error || `Te mandé ${r.enviados ?? 0} borradores a Telegram.`) }}>Mandarme los borradores ahora</button>
+          <button type="button" style={boton("normal")} onClick={async () => { await api("/config", { telegram: "desvincular" }).catch(() => {}); void ver() }}>Desvincular</button>
+        </div>
+      ) : (
+        <>
+          <span style={{ color: C.tenue }}>Cada mañana el bot te manda los borradores con botones ✅ Aprobar, 🚀 Publicar ya, ✏️ Cambiar y 🗑 Descartar. Vincúlalo una sola vez:</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" style={boton("normal")} onClick={async () => { const r = await api<any>("/config", { telegram: "codigo" }).catch(() => null); setCodigo(r?.codigo || ""); setNota(r?.codigo ? "" : "No se pudo generar el código.") }}>Generar código</button>
+            {codigo && (
+              <span>
+                Abre en Telegram el bot de HETNA (el que publica en tu canal) y mándale: <b style={{ fontFamily: "monospace", fontSize: 15 }}>/vincular {codigo}</b> (dura 15 minutos).{" "}
+                <button type="button" style={{ ...boton("normal"), padding: "2px 8px" }} onClick={() => void ver()}>Ya lo mandé</button>
+              </span>
+            )}
+          </div>
+        </>
+      )}
+      {nota && <span style={{ color: C.tenue }}>{nota}</span>}
+    </div>
   )
 }
 
@@ -594,6 +653,28 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         de <input type="number" min={0} max={23} style={{ ...campo, width: 70 }} value={c.horario.desde} onChange={(e) => setC({ ...c, horario: { ...c.horario, desde: Number(e.target.value) } })} />
         a <input type="number" min={1} max={24} style={{ ...campo, width: 70 }} value={c.horario.hasta} onChange={(e) => setC({ ...c, horario: { ...c.horario, hasta: Number(e.target.value) } })} /> h · esperar
         <input type="number" min={0} max={1440} style={{ ...campo, width: 80 }} value={c.retraso_min} onChange={(e) => setC({ ...c, retraso_min: Number(e.target.value) })} /> min antes de publicar lo automático
+      </div>
+      <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>🤖 Piloto automático</h3>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+        Los borradores que genera el sistema (plan semanal, promociones y Fábrica) se programan solos cuando ya tienen imagen o video y su puntaje llega al mínimo. Lo demás te llega por Telegram para aprobar.
+      </p>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center" }}>
+        <input type="checkbox" checked={!!c.piloto?.activo} onChange={(e) => setC({ ...c, piloto: { minimo: 75, redes: [], ...(c.piloto || {}), activo: e.target.checked } })} />
+        Activar piloto automático · puntaje mínimo
+        <input type="number" min={40} max={100} style={{ ...campo, width: 70 }} value={c.piloto?.minimo ?? 75} onChange={(e) => setC({ ...c, piloto: { activo: false, redes: [], ...(c.piloto || {}), minimo: Number(e.target.value) } })} />
+      </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 10 }}>
+        <input type="checkbox" checked={c.primer_comentario !== false} onChange={(e) => setC({ ...c, primer_comentario: e.target.checked })} />
+        Primer comentario automático con la liga en Facebook (necesita el permiso pages_manage_engagement)
+      </label>
+      <p style={{ color: C.tenue, fontSize: 12, margin: "4px 0 0" }}>
+        🧠 El revisor con IA mejora solo los borradores del plan, promociones y Fábrica antes de que salgan, y el piloto le da una segunda oportunidad a lo que no llega al puntaje. En cada publicación tienes "Mejorar con IA" y "Deshacer".
+      </p>
+      <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>📲 Aprobar desde Telegram</h3>
+      <TelegramAprobacion />
+      <div style={{ fontSize: 14, marginTop: 6 }}>
+        Mándame los borradores del día a las{" "}
+        <input type="number" min={0} max={23} style={{ ...campo, width: 60 }} value={c.aviso_hora ?? 8} onChange={(e) => setC({ ...c, aviso_hora: Number(e.target.value) })} /> h (centro de México)
       </div>
       <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center" }}>
         <button type="button" style={boton("primario")} onClick={guardar}>
@@ -1256,6 +1337,9 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>Paquetes</h3>
+          {[["producto", "🛒 Promover un producto"], ["blog", "📚 Promover un artículo"], ["herramienta", "🧰 Promover una herramienta"], ["radar", "📡 Radar por estado (para talleres)"], ["talleres", "🏭 Talleres listos (para clientes)"]].map(([tipo, t2]) => (
+            <button key={tipo} type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "promo", tipo }); setNota("Haciendo la imagen y el video. En 1 a 10 minutos aparecen en Pendientes (filtra por \"Con video\"). Si no aparece nada, todavía no hay datos suficientes (mínimo 3 solicitudes o talleres) o ya se promovió hace poco."); } catch (e) { setNota((e as Error).message) } }}>{t2}</button>
+          ))}
           <button type="button" style={boton("normal")} onClick={async () => { try { const x = await apiFab<any>({ accion: "semanales" }); setNota(x.creadas?.length ? `Creadas: ${x.creadas.join(", ")}.` : "No hubo piezas semanales nuevas (faltan evaluaciones, reseñas o cotizaciones suficientes)."); alCambiar() } catch (e) { setNota((e as Error).message) } }}>Generar piezas semanales ahora</button>
           <button type="button" style={boton("normal")} onClick={() => setVerBib(!verBib)}>{verBib ? "Cerrar biblioteca" : "🎵 Biblioteca de fondos y música"}</button>
         </div>
@@ -1376,6 +1460,24 @@ export default function SocialHubPage() {
   const [vista, setVista] = useState<(typeof VISTAS)[number][0]>("pendientes")
   const [datos, setDatos] = useState<Datos | null>(null)
   const [error, setError] = useState("")
+  // Filtros de las listas: red social, mercado y material (imagen/video)
+  const [fRed, setFRed] = useState("")
+  const [fMercado, setFMercado] = useState("")
+  const [fMaterial, setFMaterial] = useState("")
+  const pasa = useCallback(
+    (p: Pub) => {
+      if (fRed && !(p.redes || []).includes(fRed)) return false
+      if (fMercado && (p.mercado || "mx") !== fMercado) return false
+      if (fMaterial) {
+        const m = ((p as any).medios || []) as { url: string; tipo?: string }[]
+        const video = m.some((x) => x.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(x.url))
+        const tipo = video ? "video" : m.length > 1 ? "carrusel" : m.length ? "imagen" : "sin"
+        if (tipo !== fMaterial) return false
+      }
+      return true
+    },
+    [fRed, fMercado, fMaterial]
+  )
   const cargar = useCallback(async () => {
     try {
       setDatos(await api<Datos>(""))
@@ -1389,20 +1491,20 @@ export default function SocialHubPage() {
   }, [cargar])
 
   const lista = useMemo(() => {
-    const ps = datos?.publicaciones || []
+    const ps = (datos?.publicaciones || []).filter(pasa)
     if (vista === "pendientes") return ps.filter((p) => ["borrador", "error", "parcial"].includes(p.estado))
     if (vista === "publicada") return ps.filter((p) => p.estado === "publicada")
     return []
-  }, [datos, vista])
+  }, [datos, vista, pasa])
   const calendario = useMemo(() => {
-    const ps = (datos?.publicaciones || []).filter((p) => p.estado === "programada").sort((a, b) => String(a.programada_para).localeCompare(String(b.programada_para)))
+    const ps = (datos?.publicaciones || []).filter((p) => p.estado === "programada" && pasa(p)).sort((a, b) => String(a.programada_para).localeCompare(String(b.programada_para)))
     const dias: Record<string, Pub[]> = {}
     for (const p of ps) {
       const d = p.programada_para ? new Date(p.programada_para).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" }) : "Sin fecha"
       ;(dias[d] ||= []).push(p)
     }
     return Object.entries(dias)
-  }, [datos])
+  }, [datos, pasa])
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: "0 auto", color: C.texto }}>
@@ -1444,6 +1546,28 @@ export default function SocialHubPage() {
       ) : (
         <>
           {vista === "pendientes" && <Nueva redes={datos.redes} config={datos.config} mercados={datos.mercados} alCrear={() => void cargar()} />}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", margin: "10px 0" }}>
+            <b style={{ fontSize: 13 }}>Filtrar:</b>
+            {[["", "Todas"], ...datos.redes.filter((r) => (datos.publicaciones || []).some((p) => (p.redes || []).includes(r.clave))).map((r) => [r.clave, r.nombre])].map(([clave, nom]) => {
+              const n = clave ? (datos.publicaciones || []).filter((p) => (p.redes || []).includes(clave) && (vista === "calendario" ? p.estado === "programada" : vista === "publicada" ? p.estado === "publicada" : ["borrador", "error", "parcial"].includes(p.estado))).length : 0
+              return (
+                <button key={clave || "todas"} type="button" onClick={() => setFRed(clave)} style={{ ...boton("normal"), padding: "3px 10px", fontSize: 12, background: fRed === clave ? "#142033" : C.fondo, color: fRed === clave ? "#fff" : C.texto }}>
+                  {nom}{clave ? ` (${n})` : ""}
+                </button>
+              )
+            })}
+            <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={fMercado} onChange={(e) => setFMercado(e.target.value)}>
+              <option value="">Todos los países</option>
+              {(datos.mercados || []).map((m) => <option key={m.clave} value={m.clave}>{m.nombre}</option>)}
+            </select>
+            <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={fMaterial} onChange={(e) => setFMaterial(e.target.value)}>
+              <option value="">Con o sin material</option>
+              <option value="video">🎬 Con video</option>
+              <option value="carrusel">🖼️ Carrusel</option>
+              <option value="imagen">🖼 Con imagen</option>
+              <option value="sin">⚠ Sin imagen ni video</option>
+            </select>
+          </div>
           {vista === "calendario" ? (
             calendario.length === 0 ? (
               <p style={{ color: C.tenue }}>No hay publicaciones programadas.</p>

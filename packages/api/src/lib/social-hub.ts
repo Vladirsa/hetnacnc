@@ -28,10 +28,12 @@ export const T_LIGA = "hetna_social_liga"
 export const T_EVENTO_S = "hetna_social_evento"
 export const T_CONFIG_S = "hetna_social_config"
 
-export type Red = "facebook" | "instagram" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
+export type Red = "facebook" | "instagram" | "instagram_historia" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
   instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 3-5 hashtags específicos al final en el idioma del mercado (#CNC #CorteLaser y el país). La liga no es clicable: di 'liga en la bio'" },
+  // Historia: sólo la imagen o el video (vertical de preferencia); el texto no se publica
+  instagram_historia: { nombre: "Instagram (historia)", auto: true, max: 2200, imagen: "requerida", estilo: "la historia no lleva texto publicado: sólo la imagen o el video" },
   telegram: { nombre: "Telegram (canal)", auto: true, max: 900, imagen: "opcional", estilo: "directo, informativo, con la liga" },
   linkedin: { nombre: "LinkedIn (empresa)", auto: true, max: 2500, imagen: "opcional", estilo: "profesional B2B, enfocado en compradores industriales y empresas; sin muchos emojis" },
   discord: { nombre: "Discord", auto: true, max: 1500, imagen: "opcional", estilo: "comunidad técnica, breve" },
@@ -51,12 +53,21 @@ export type ConfigSocial = {
   automatico: Record<Exclude<Origen, "manual" | "taller_video">, boolean>
   horario: { desde: number; hasta: number } // horas, hora del centro de México
   retraso_min: number
+  // Piloto automático: los borradores generados (plan, promociones, Fábrica) con
+  // material y buen puntaje se programan solos
+  piloto: { activo: boolean; minimo: number; redes: Red[] }
+  aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
+  primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
-  automatico: { licitacion: true, taller: true, producto: true, foro: true },
+  // promociones: imagen y video diarios de productos, blog y herramientas (lib/fabrica/promociones)
+  automatico: { licitacion: true, taller: true, producto: true, foro: true, promociones: false },
   horario: { desde: 9, hasta: 20 },
   retraso_min: 10,
+  piloto: { activo: false, minimo: 75, redes: [] },
+  aviso_hora: 8,
+  primer_comentario: true,
 }
 
 let listo = false
@@ -87,6 +98,12 @@ export async function asegurarSocial(knex: any) {
   await knex.raw(`alter table ?? add column if not exists notas text`, [T_POST]).catch(() => {})
   // Estadísticas de cada red (alcance, me gusta, comentarios, compartidos, guardados, vistas)
   await knex.raw(`alter table ?? add column if not exists estadisticas jsonb`, [T_POST]).catch(() => {})
+  // De dónde salió el borrador (plan | promo | fabrica) y si lo programó el piloto automático
+  await knex.raw(`alter table ?? add column if not exists fuente text`, [T_POST]).catch(() => {})
+  await knex.raw(`alter table ?? add column if not exists piloto boolean`, [T_POST]).catch(() => {})
+  // Revisor con IA: si ya se revisó y la versión anterior de los textos (para deshacer)
+  await knex.raw(`alter table ?? add column if not exists revisada_ia boolean`, [T_POST]).catch(() => {})
+  await knex.raw(`alter table ?? add column if not exists version_anterior jsonb`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -125,6 +142,13 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     automatico: { ...CONFIG_INICIAL.automatico, ...(v.automatico || {}) },
     horario: { ...CONFIG_INICIAL.horario, ...(v.horario || {}) },
     retraso_min: Number.isFinite(Number(v.retraso_min)) ? Math.max(0, Math.min(1440, Number(v.retraso_min))) : CONFIG_INICIAL.retraso_min,
+    piloto: {
+      activo: !!v.piloto?.activo,
+      minimo: Number.isFinite(Number(v.piloto?.minimo)) ? Math.max(40, Math.min(100, Number(v.piloto.minimo))) : CONFIG_INICIAL.piloto.minimo,
+      redes: Array.isArray(v.piloto?.redes) ? v.piloto.redes.filter((x: string) => x in REDES) : [],
+    },
+    aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
+    primer_comentario: v.primer_comentario !== false,
   }
 }
 
@@ -138,6 +162,15 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
       hasta: Math.max(1, Math.min(24, Math.round(Number(c.horario?.hasta ?? actual.horario.hasta)))),
     },
     retraso_min: c.retraso_min != null ? Math.max(0, Math.min(1440, Math.round(Number(c.retraso_min)))) : actual.retraso_min,
+    piloto: c.piloto
+      ? {
+          activo: !!c.piloto.activo,
+          minimo: Math.max(40, Math.min(100, Math.round(Number(c.piloto.minimo ?? actual.piloto.minimo)) || actual.piloto.minimo)),
+          redes: Array.isArray(c.piloto.redes) ? (c.piloto.redes.filter((x) => x in REDES) as Red[]) : actual.piloto.redes,
+        }
+      : actual.piloto,
+    aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
+    primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
   }
   if (nueva.horario.hasta <= nueva.horario.desde) nueva.horario = actual.horario
   await knex.raw(`insert into ?? (clave, valor) values ('general', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
@@ -241,7 +274,8 @@ export async function adaptarConIa(base: string, redes: Red[], logger?: any, mer
 }
 
 export async function adaptar(base: string, redes: Red[], logger?: any, mercado = "mx") {
-  const conIa = await adaptarConIa(base, redes, logger, mercado)
+  // La historia no publica texto: no se gasta IA en ella
+  const conIa = await adaptarConIa(base, redes.filter((r) => r !== "instagram_historia"), logger, mercado)
   const textos: Record<string, string> = {}
   for (const r of redes) textos[r] = conIa?.[r] || adaptarSinIa(base, r)
   return { textos, ia: !!conIa }
@@ -339,6 +373,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
     id, origen: d.origen, origen_id: d.origen_id || null, titulo: corta(d.titulo, 160), texto_base: base,
     textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 10)),
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
+    fuente: (d as any).fuente || null,
   })
   return id
 }
@@ -382,6 +417,8 @@ export async function enviarAN8n(cuerpo: any) {
     const d = await r.json().catch(() => ({}))
     if (!r.ok) return { ok: false, error: d?.error || d?.message || `n8n respondió ${r.status}` }
     if (d?.pendiente) return { ok: false, pendiente: true, contenedor: String(d.contenedor || ""), error: null }
+    // "Bad request" de Meta casi siempre es el token vencido o sin permiso
+    if (d?.ok === false && /bad request/i.test(String(d?.error || ""))) d.error = `${d.error}. Suele ser el token de Facebook vencido: pon uno nuevo en n8n (credencial "Facebook Graph account 2").`
     return { ok: d?.ok !== false, url: d?.url || null, id: d?.id ? String(d.id) : null, datos: d?.datos || null, usuario: d?.usuario || null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
   } catch (e) {
     return { ok: false, error: (e as Error).message }
@@ -414,13 +451,17 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       resultado[red] = { ok: false, error: "Esta red necesita una imagen.", en: new Date().toISOString() }
       continue
     }
+    const esIg = red === "instagram" || red === "instagram_historia"
     // Instagram: si ya hay contenedor en proceso, sólo se intenta terminarlo
-    if (red === "instagram" && resultado.instagram?.pendiente && resultado.instagram?.contenedor) {
-      resultado.instagram = { ...(await terminarContenedorIg(resultado.instagram.contenedor, resultado.instagram.creado)), en: new Date().toISOString() }
+    if (esIg && resultado[red]?.pendiente && resultado[red]?.contenedor) {
+      resultado[red] = { ...(await terminarContenedorIg(resultado[red].contenedor, resultado[red].creado)), en: new Date().toISOString() }
       continue
     }
-    let r: any = await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
-    if (red === "instagram" && r.pendiente && r.contenedor) {
+    let r: any =
+      red === "instagram_historia"
+        ? await enviarAN8n({ red: "instagram", historia: true, texto: texto || p.titulo, imagen: video ? "" : imagen || imagenes[0] || "", video, url: liga, post_id: p.id })
+        : await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
+    if (esIg && r.pendiente && r.contenedor) {
       // Instagram procesa el archivo: fotos en segundos, reels hasta unos minutos.
       // Se espera un poco aquí; si no termina, el job lo publica después.
       const creado = new Date().toISOString()
@@ -431,6 +472,11 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
         r = t
         if (!t.pendiente) break
       }
+    }
+    // Primer comentario con la liga medida (Facebook la deja tocar en comentarios)
+    if (red === "facebook" && r.ok && r.id && (await leerConfig(knex)).primer_comentario) {
+      const c: any = await enviarAN8n({ red: "comentar", objeto: r.id, texto: p.mercado === "us" ? `👉 Get a quote or join here: ${liga}` : `👉 Cotiza o regístrate aquí: ${liga}` })
+      r = { ...r, comentario: c.ok ? "ok" : String(c.error || "no se pudo").slice(0, 200) }
     }
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok && !r.pendiente) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
@@ -456,11 +502,11 @@ export async function terminarContenedorIg(contenedor: string, creado?: string) 
 
 /** Termina las publicaciones de Instagram que quedaron procesándose. */
 export async function terminarPendientesIg(knex: any, logger?: any) {
-  const filas = await knex(T_POST).whereIn("estado", ["parcial", "error"]).whereRaw(`resultado->'instagram'->>'pendiente' = 'true'`).where("updated_at", ">=", knex.raw("now() - interval '2 days'")).limit(10).select("id")
+  const filas = await knex(T_POST).whereIn("estado", ["parcial", "error"]).whereRaw(`(resultado->'instagram'->>'pendiente' = 'true' or resultado->'instagram_historia'->>'pendiente' = 'true')`).where("updated_at", ">=", knex.raw("now() - interval '2 days'")).limit(10).select("id")
   let n = 0
   for (const { id } of filas) {
-    const r = await publicar(knex, id, logger, ["instagram"])
-    if (r?.resultado?.instagram?.ok) n++
+    const r = await publicar(knex, id, logger, ["instagram", "instagram_historia"])
+    if (r?.resultado?.instagram?.ok || r?.resultado?.instagram_historia?.ok) n++
   }
   return n
 }
