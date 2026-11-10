@@ -286,7 +286,7 @@ function renderReport(){
   if(js.limFail)I.push({sev:'err',title:`${js.limFail} movimientos sin solución cinemática`,cause:'La orientación pedida no existe en esta máquina.',fix:'Cambia de cinemática o reduce la inclinación.'});
   if(fd.clampedRPM)I.push({sev:'warn',title:`RPM limitadas a ${m.maxRPM}`,cause:`La Vc pedida requiere más velocidad que la del husillo.`,fix:'El avance se recalculó con las RPM reales para mantener la carga por diente.'});
   if(fd.clampedFeed)I.push({sev:'warn',title:`Avance limitado a ${m.maxFeed} mm/min`,cause:'El avance calculado excede el máximo de la máquina.',fix:'La carga por diente real será menor que la indicada.'});
-  if(axes.length>=1&&S.post.ctrl==='grbl')I.push({sev:'err',title:'GRBL estándar solo controla 3 ejes',cause:`Este trabajo usa ${axes.join(' y ')}.`,fix:'Usa grblHAL o FluidNC con eje A, o elige Mach3 / LinuxCNC.'});
+  if(axes.length>CTRL[S.post.ctrl].maxAxes-3)I.push({sev:'err',title:`${CTRL[S.post.ctrl].name} no controla tantos ejes`,cause:`Este trabajo usa ${axes.join(' y ')}.`,fix:'Elige un control que maneje ejes rotativos: FluidNC / grblHAL, Mach3 o LinuxCNC.'});
   if(axes.length&&!useTCP())I.push({sev:'info',title:'Coordenadas de máquina calculadas por el post',cause:`${CTRL[S.post.ctrl].name}${m.tcp?' no ofrece TCP en este post':' sin TCP'}: X, Y, Z ya incluyen ${isHeadKin(m.kin)?`el pivote (${m.pivot+tl.stickout+tl.holderLen} mm)`:'el centro de giro'}.`,fix:'Si cambias de herramienta o voladizo, vuelve a generar el G-code.'});
   if(!I.some(x=>x.sev==='err'||x.sev==='warn'))I.unshift({sev:'ok',title:'Sin problemas detectados',cause:`Calculado en ${nf(S.job.ms/1000,1)} s con ${S.cloudN.toLocaleString('es-MX')} puntos de verificación.`,fix:''});
   renderIssues(I);

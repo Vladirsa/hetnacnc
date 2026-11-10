@@ -21,7 +21,7 @@ function initMachineUI(){
   fillSelect($('#m_preset'),MACHINES,S.presetKey);fillSelect($('#m_ctrl'),CTRL,S.post.ctrl);fillSelect($('#p_ctrl'),CTRL,S.post.ctrl);
   $('#m_preset').addEventListener('change',e=>{applyPreset(e.target.value);markStale();refreshPostIfAny();});
   $('#m_kin').addEventListener('change',e=>{S.machine.kin=e.target.value;syncMachineUI();markStale();refreshPostIfAny();});
-  const ctrlChange=v=>{S.post.ctrl=v;if(['mach3','mach4','grbl'].includes(v))S.post.inv=false;syncMachineUI();refreshPostIfAny();syncPostUI();};
+  const ctrlChange=v=>{S.post.ctrl=v;if(g94Rot(v))S.post.inv=false;syncMachineUI();refreshPostIfAny();syncPostUI();};
   $('#m_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));$('#p_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));
   const m=()=>S.machine;
   ['x','y','z'].forEach(a=>{[0,1].forEach(q=>{const el=$(`#m_${a}${q?'max':'min'}`);el.addEventListener('change',()=>{const v=parseFloat(el.value);if(Number.isFinite(v)){m().lim[a][q]=v;refreshPostIfAny();}});});});
@@ -34,7 +34,7 @@ function initMachineUI(){
   $('#m_rapid').addEventListener('change',e=>{m().rapid=+e.target.value||5000;refreshPostIfAny();});
   syncMachineUI();
 }
-function applyPreset(k){S.presetKey=k;S.machine=JSON.parse(JSON.stringify(MACHINES[k]));S.post.ctrl=MACHINES[k].ctrl;S.post.inv=KIN_AXES[S.machine.kin].length>0&&!['mach3','mach4','grbl'].includes(S.post.ctrl);$('#m_preset').value=k;syncMachineUI();syncPostUI();updateFeedsUI();}
+function applyPreset(k){S.presetKey=k;S.machine=JSON.parse(JSON.stringify(MACHINES[k]));S.post.ctrl=MACHINES[k].ctrl;S.post.inv=KIN_AXES[S.machine.kin].length>0&&!g94Rot(S.post.ctrl);$('#m_preset').value=k;syncMachineUI();syncPostUI();updateFeedsUI();}
 function refreshPostIfAny(){if(S.moves&&!S.busy){refreshPost();}}
 /* herramientas */
 function renderToolList(){
@@ -126,7 +126,7 @@ function initStratUI(){
 }
 /* post */
 const OUT_DESC={gcode:'Programa listo para tu controlador con la trayectoria calculada.',cps:'Posprocesador para Autodesk Fusion con tu cinemática. Cópialo a la biblioteca de posts de Fusion.',pp:'Posprocesador para Vectric Aspire / VCarve (3 ejes). Guárdalo en la carpeta PostP de Vectric.',json:'Definición completa de máquina, herramienta y post para el motor Hetna en el servidor.'};
-function currentOut(){switch(S.post.out){case 'cps':return{text:genCPS(),ext:'cps'};case 'pp':return{text:genPP(),ext:'pp'};case 'json':return{text:genJSON(),ext:'json'};default:{const ext={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[S.post.ctrl];return{text:S.gcode?.text||'(Calcula una trayectoria para generar el G-code)',ext};}}}
+function currentOut(){switch(S.post.out){case 'cps':return{text:genCPS(),ext:'cps'};case 'pp':return{text:genPP(),ext:'pp'};case 'json':return{text:genJSON(),ext:'json'};default:{const ext=extOf(S.post.ctrl);return{text:S.gcode?.text||'(Calcula una trayectoria para generar el G-code)',ext};}}}
 function refreshOutputs(){
   const o=currentOut();const ta=$('#outText');const MAXV=400000;ta.value=o.text.length>MAXV?o.text.slice(0,MAXV)+'\n… (vista recortada; Copiar y Descargar incluyen el archivo completo)':o.text;
   $('#outSize').textContent=`${(o.text.length/1024).toFixed(1)} KB · ${o.text.split('\n').length.toLocaleString('es-MX')} líneas`;$('#outDesc').textContent=OUT_DESC[S.post.out];
@@ -136,9 +136,11 @@ function syncPostUI(){
   const c=S.post,m=S.machine,ctrl=CTRL[c.ctrl];$('#p_cool').value=c.cool;$('#p_dec').value=c.dec;$('#p_prog').value=c.prog;$('#p_lines').checked=c.lines;$('#p_inv').checked=c.inv;
   const axes=KIN_AXES[m.kin];let note='';
   if(!axes.length)note='Trabajo de 3 ejes: salida XYZ estándar.';
-  else if(useTCP())note=`${ctrl.name} con TCP: el programa lleva coordenadas de pieza y el control compensa la rotación (${{fanuc:'G43.4',haas:'G234',siemens:'TRAORI',heidenhain:'M128',linuxcnc:'cinemática TCP de LinuxCNC, p. ej. xyzac-trt-kins'}[c.ctrl]||'TCP'}).`;
+  else if(useTCP())note=`${ctrl.name} con TCP: el programa lleva coordenadas de pieza y el control compensa la rotación (${{fanuc:'G43.4',haas:'G234',siemens:'TRAORI',heidenhain:'M128',linuxcnc:'cinemática TCP de LinuxCNC, p. ej. xyzac-trt-kins'}[dialOf(c.ctrl)]||'TCP'}).`;
   else note=`${ctrl.name} sin TCP: el post calcula las coordenadas de máquina con ${isHeadKin(m.kin)?'la longitud de pivote':'el centro de giro'}. El G-code vale solo para esta herramienta y voladizo.`;
   if(axes.length>ctrl.maxAxes-3)note+=' Este controlador no maneja ese número de ejes en su versión estándar.';
+  if(ctrl.note)note+=' '+ctrl.note;
+  if(ctrl.base)note+=' Perfil inicial para este control: córrelo en vacío y dinos cómo te fue con "Probé este programa".';
   $('#postNote').textContent=note;$('#postNote').className='note'+(axes.length>ctrl.maxAxes-3?' warn':'');
 }
 function initPostUI(){
@@ -262,7 +264,7 @@ async function sendOrder(){
     else{orderStatus('Pieza recibida. Folio '+job.id+'. Guarda este número para dar seguimiento.');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
   }catch(e){orderStatus('No se pudo enviar: '+e.message,'warn');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
 }
-function currentOutExt(){return {mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[S.post.ctrl]||'nc';}
+function currentOutExt(){return extOf(S.post.ctrl);}
 function initOrderUI(){
   if(!HETNA_ON)return;
   $('#orderBox').hidden=false;$('#btnOrder').hidden=false;

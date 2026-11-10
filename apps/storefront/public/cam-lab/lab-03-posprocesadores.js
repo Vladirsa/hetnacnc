@@ -4,17 +4,17 @@
    ========================================================= */
 function postProcess(){
   const moves=S.moves;if(!moves||!moves.length)return{text:'',lines:[]};
-  const m=S.machine,tl=tool(),fd=feedsCalc(),c=S.post,ctrl=CTRL[c.ctrl];const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  const m=S.machine,tl=tool(),fd=feedsCalc(),ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)};const axes=KIN_AXES[m.kin];const tcp=useTCP(); // c.ctrl es el dialecto; ctrl, el perfil elegido con sus excepciones
   const dec=clamp(c.dec|0,1,5);const heid=ctrl.style==='heid';
   const fmt=v=>{let s=(Math.abs(v)<0.5*10**-dec?0:v).toFixed(dec);if(heid&&!s.startsWith('-'))s='+'+s;return s;};
-  const cm=s=>ctrl.comment==='paren'?`(${String(s).replace(/[()]/g,'')})`:`; ${s}`;
+  const cm=s=>ctrl.noComments?null:ctrl.comment==='paren'?`(${String(s).replace(/[()]/g,'')})`:`; ${s}`;
   const L=[];let N=10;
-  const out=(s,num=true)=>{if(heid){L.push(`${L.length} ${s}`);return;}if(c.lines&&num&&!/^[(%;]/.test(s)){s=`N${N} ${s}`;N+=10;}L.push(s);};
+  const out=(s,num=true)=>{if(s===null||s==='')return;if(heid){L.push(`${L.length} ${s}`);return;}if(c.lines&&num&&!/^[(%;]/.test(s)){s=`N${N} ${s}`;N+=10;}L.push(s);};
   const inv=c.inv&&axes.length>0&&!tcp&&c.ctrl!=='heidenhain';
   const dirs=[m.inv[0]?-1:1,m.inv[1]?-1:1];
   const name=(S.partName||'PIEZA').replace(/\.[^.]+$/,'').toUpperCase().replace(/[^A-Z0-9_-]/g,'_').slice(0,20)||'PIEZA';
   const dt=new Date().toISOString().slice(0,10);
-  const tn=tl.num|0||1;const cool=c.cool==='none'?null:c.cool;
+  const tn=tl.num|0||1;const cool=c.cool==='none'||ctrl.noCool?null:c.cool;
   const z0=zeroOff();const zs=S.stock;const stk=zs.type==='box'?{type:'box',min:V.sub(zs.min,z0),max:V.sub(zs.max,z0)}:{type:'cyl',x0:zs.x0-z0[0],x1:zs.x1-z0[0],r:zs.r};
   const extra=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>out(x,!heid));
   // encabezado
@@ -25,7 +25,7 @@ function postProcess(){
     out(`TOOL CALL ${tn} Z S${fd.rpm}`);if(tcp&&axes.length)out('M128');
   }else{
     if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
-    if(c.ctrl==='fanuc'||c.ctrl==='haas')L.push(`O${String(c.prog|0).padStart(4,'0')} ${cm(name)}`);
+    if(c.ctrl==='fanuc'||c.ctrl==='haas')L.push(`O${String(c.prog|0).padStart(4,'0')} ${cm(name)||''}`.trim());
     out(cm(`HETNA CAM LAB - ${name} - ${dt}`),false);
     out(cm(`MAQUINA ${KIN_NAME[m.kin]} - CONTROL ${ctrl.name}${tcp?' - TCP ACTIVO':' - SIN TCP (COORD. MAQUINA CALCULADAS)'}`),false);
     out(cm(`T${tn} ${tl.name} D${tl.D} VOLADIZO ${tl.stickout}`),false);
@@ -34,7 +34,7 @@ function postProcess(){
     out(cm('CERO DE PIEZA: '+ZERO_NAME[zeroKey()]),false);
     out(cm('VERIFICAR EN VACIO CON AVANCE REDUCIDO ANTES DE CORTAR'),false);
     if(c.ctrl==='siemens'){out('G17 G90 G71 G94');out('G54');out(`T${tn} D1`);out('M6');}
-    else if(c.ctrl==='grbl'){out('G21 G90 G94 G17');out('G54');out(cm(`CAMBIO MANUAL DE HERRAMIENTA T${tn}`),false);}
+    else if(c.ctrl==='grbl'||ctrl.manualTC){out(ctrl.header||(c.ctrl==='grbl'?'G21 G90 G94 G17':'G21 G90 G94 G17 G40 G49 G80'));if(!ctrl.noG54)out('G54');out(cm(`CAMBIO MANUAL DE HERRAMIENTA T${tn}`),false);}
     else{out('G21 G90 G94 G17 G40 G49 G80');out('G54');out(`T${tn} M6`);}
     if(c.ctrl==='linuxcnc')out('G64 P0.02');
     out(`S${fd.rpm} M3`);if(cool)out(cool);
@@ -63,7 +63,7 @@ function postProcess(){
     for(const k of ['X','Y','Z',...axes]){const s=fmt(W[k]);if(last[k]!==s){words.push(k+s);last[k]=s;}}
     const g=rapid?'G0':'G1';
     let pre='';
-    if(i===0){let g43='';if(tcp&&axes.length){if(c.ctrl==='fanuc')g43='G43.4 H'+tn;else if(c.ctrl==='haas')g43='G234 H'+tn;else if(c.ctrl==='linuxcnc')g43='G43 H'+tn;}else if(c.ctrl!=='grbl')g43='G43 H'+tn;
+    if(i===0){let g43='';if(tcp&&axes.length){if(c.ctrl==='fanuc')g43='G43.4 H'+tn;else if(c.ctrl==='haas')g43='G234 H'+tn;else if(c.ctrl==='linuxcnc')g43='G43 H'+tn;}else if(c.ctrl!=='grbl'&&!ctrl.noG43)g43='G43 H'+tn;
       if(c.ctrl!=='siemens'&&g43)out(g43);}
     let feedWord='';
     if(!rapid){
@@ -101,20 +101,20 @@ function postProcess(){
     if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAFOOF');else out('G49');}
     if(cool)out('M9');out('M5');
     if(c.ctrl==='fanuc'||c.ctrl==='haas'){out('G91 G28 Z0.');out('G90');}
-    out(c.ctrl==='linuxcnc'?'M2':'M30');
+    out(ctrl.end!==undefined?ctrl.end:c.ctrl==='linuxcnc'?'M2':'M30');
     if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
   }
   return{text:L.join('\n')+'\n',lines:L,lineOf};
 }
 function genCPS(){
-  const m=S.machine,c=S.post,ctrl=CTRL[c.ctrl],axes=KIN_AXES[m.kin],tcp=useTCP();
+  const m=S.machine,ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)},axes=KIN_AXES[m.kin],tcp=useTCP();
   const ax=(letter,q)=>{const L=m.rot[q];const cyc=L[1]-L[0]>=720;const vec={A:[1,0,0],B:[0,1,0],C:[0,0,1]}[letter].map(v=>m.inv[q]&&v?-v:v);const coord={A:0,B:1,C:2}[letter];
     const table=!(m.kin==='bc_head'||(m.kin==='ab_mixed'&&letter==='B'));
     return `  var ${letter.toLowerCase()}Axis = createAxis({coordinate:${coord}, table:${table}, axis:[${vec.join(', ')}], offset:[${m.rc.join(', ')}], ${cyc?'cyclic:true':`range:[${L[0]}, ${L[1]}]`}, preference:0});`;};
   let mc='';
   if(axes.length){mc=axes.map((a,q)=>ax(a,q)).join('\n')+`\n  machineConfiguration = new MachineConfiguration(${axes.map(a=>a.toLowerCase()+'Axis').join(', ')});\n  setMachineConfiguration(machineConfiguration);\n  optimizeMachineAngles2(${tcp?0:1}); // 0 = TCP en el control, 1 = mapear punta a coordenadas de máquina`;}
   const tcpOn=tcp?({fanuc:'"G43.4", "H" + toolFormat.format(tool.lengthOffset)',haas:'"G234", "H" + toolFormat.format(tool.lengthOffset)',linuxcnc:'"G43", "H" + toolFormat.format(tool.lengthOffset)',siemens:'"TRAORI"',heidenhain:'"M128"'}[c.ctrl]||null):null;
-  const ext={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[c.ctrl];
+  const ext=extOf(S.post.ctrl);
   return `/**
   Postprocesador Fusion 360 generado por HETNA CAM LAB (hetnacnc.com)
   Controlador: ${ctrl.name} · Cinemática: ${KIN_NAME[m.kin]} · TCP: ${tcp?'sí':'no'}
@@ -267,7 +267,7 @@ ${['linuxcnc','fanuc','haas'].includes(c.ctrl)?'  writeln("%");\n':''}}
 `;
 }
 function genPP(){
-  const c=S.post,ctrl=CTRL[c.ctrl],m=S.machine;const grbl=c.ctrl==='grbl';
+  const ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)},m=S.machine;const grbl=c.ctrl==='grbl';
   const iso=['mach3','mach4','linuxcnc','grbl'].includes(c.ctrl);
   const tc=grbl?['"( CAMBIO MANUAL T[T] )"']:['"T[T] M6"','"G43 H[T]"'];
   const cool=c.cool==='none'?[]:[`"${c.cool}"`];
@@ -344,7 +344,7 @@ ${c.ctrl==='linuxcnc'?'"%"\n':''}`;
 function genJSON(){
   const m=S.machine,c=S.post,tl=tool(),fd=feedsCalc();
   return JSON.stringify({generator:'Hetna CAM Lab',version:1,date:new Date().toISOString(),
-    controller:{id:c.ctrl,name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
+    controller:{id:c.ctrl,dialect:dialOf(c.ctrl),name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
     machine:{kinematics:m.kin,axes:['X','Y','Z',...KIN_AXES[m.kin]],travel:m.lim,rotary:KIN_AXES[m.kin].map((a,q)=>({axis:a,range:m.rot[q],continuous:m.rot[q][1]-m.rot[q][0]>=720,inverted:m.inv[q]})),
       pivotToSpindleNose:m.pivot,rotationCenter:m.rc,maxRPM:m.maxRPM,maxFeed:m.maxFeed,rapid:m.rapid},
     tool:{number:tl.num,name:tl.name,type:tl.type,diameter:tl.D,cornerRadius:tl.r,flutes:tl.flutes,fluteLength:tl.fluteLen,stickout:tl.stickout,shankDiameter:tl.shankD,holder:{diameter:tl.holderD,length:tl.holderLen}},
