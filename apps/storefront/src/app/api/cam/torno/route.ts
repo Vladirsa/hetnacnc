@@ -17,7 +17,8 @@ import { generarGCode, validarEntrada } from "@/lib/torno/gcode"
 
 export const dynamic = "force-dynamic"
 
-const MAX_BYTES = 200_000
+// El dibujo de un grabado o la cuadrícula de un relieve van dentro del diseño
+const MAX_BYTES = 1_200_000
 // Lo que se enseña al calcular: encabezado y arranque, suficiente para revisar el formato
 const LINEAS_DE_VISTA = 60
 
@@ -50,7 +51,9 @@ export async function POST(req: Request) {
       const lineas = gcode.split("\n")
       return NextResponse.json({ ...datos, vista: lineas.slice(0, LINEAS_DE_VISTA).join("\n"), lineasOcultas: Math.max(0, lineas.length - LINEAS_DE_VISTA) })
     }
-    const no = await autorizarDescarga("torno", huella(gcode))
+    // Con grabado o relieve sobre la pieza se necesita el plan que los incluye
+    const t = revisado.entrada.tallados
+    const no = await autorizarDescarga(t?.grabado?.activo || t?.relieve?.activo ? "torno_grabado" : "torno", huella(gcode))
     if (no) return NextResponse.json(no.negado, { status: no.status })
     return NextResponse.json({ ...datos, gcode })
   } catch (err) {

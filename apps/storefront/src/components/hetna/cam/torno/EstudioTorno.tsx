@@ -17,14 +17,19 @@ import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/
 import type { FresaCam } from "@/lib/data/cam-maquinas"
 import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 
+import { GrabadoTorno } from "./GrabadoTorno"
 import {
   ESPIRAL_INICIAL,
   ESTRIAS_INICIALES,
+  GRABADO_INICIAL,
+  RELIEVE_INICIAL,
   longitudTotal,
   radioEn,
   radioMaximo,
   type Espiral,
   type Estrias,
+  type Grabado,
+  type Relieve,
   type Segmento,
   type TipoSegmento,
 } from "@/lib/torno/pieza"
@@ -294,6 +299,9 @@ export function EstudioTorno() {
 
   const [estrias, setEstrias] = useState<Estrias>(ESTRIAS_INICIALES)
   const [espiral, setEspiral] = useState<Espiral>(ESPIRAL_INICIAL)
+  // Grabado 2D y relieve 3D sobre la pieza terminada (no se dibujan en la vista 3D)
+  const [grabado, setGrabado] = useState<Grabado>(GRABADO_INICIAL)
+  const [relieve, setRelieve] = useState<Relieve>(RELIEVE_INICIAL)
   const [vista, setVista] = useState<"3d" | "perfil">("3d")
   const [encuadre, setEncuadre] = useState(0)
 
@@ -327,6 +335,18 @@ export function EstudioTorno() {
       if (c.activo && nuevo.yHasta <= nuevo.yDesde) Object.assign(nuevo, tramoInicial())
       return nuevo
     })
+    limpiarResultado()
+  }
+
+  // Al encender un grabado o relieve sin zona, se propone al centro de la pieza
+  const zonaInicial = (v: { yDesde: number; largo: number }) =>
+    v.yDesde === 0 && largoPieza > 0 ? { yDesde: Math.round(largoPieza * 0.35), largo: Math.max(10, Math.round(largoPieza * 0.3)) } : {}
+  const cambiarGrabado = (c: Partial<Grabado>) => {
+    setGrabado((g) => ({ ...g, ...c, ...(c.activo ? zonaInicial(g) : {}) }))
+    limpiarResultado()
+  }
+  const cambiarRelieve = (c: Partial<Relieve>) => {
+    setRelieve((r) => ({ ...r, ...c, ...(c.activo ? zonaInicial(r) : {}) }))
     limpiarResultado()
   }
 
@@ -448,6 +468,8 @@ export function EstudioTorno() {
     setStockWidthMm(e.bloque)
     setEstrias({ ...ESTRIAS_INICIALES, ...(e.estrias ?? {}) })
     setEspiral({ ...ESPIRAL_INICIAL, ...(e.espiral ?? {}) })
+    setGrabado(GRABADO_INICIAL)
+    setRelieve(RELIEVE_INICIAL)
     setNombreDiseno(e.nombre)
     setEncuadre((n) => n + 1)
     limpiarResultado()
@@ -480,7 +502,7 @@ export function EstudioTorno() {
     maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
     herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
     rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
-    tallados,
+    tallados: { ...tallados, ...(grabado.activo ? { grabado } : {}), ...(relieve.activo ? { relieve } : {}) },
   })
 
   async function generar() {
@@ -710,6 +732,15 @@ export function EstudioTorno() {
               </div>
             )}
           </div>
+
+          <GrabadoTorno
+            grabado={grabado}
+            relieve={relieve}
+            cambiarGrabado={cambiarGrabado}
+            cambiarRelieve={cambiarRelieve}
+            largoPieza={largoPieza}
+            radioEnY={(y) => radioEn(y, segmentos.filter((x) => Number.isFinite(x.finY) && Number.isFinite(x.radioInicio) && Number.isFinite(x.radioFin)))}
+          />
         </section>
 
         {(gcode !== null || error || avisos.length > 0) && (
