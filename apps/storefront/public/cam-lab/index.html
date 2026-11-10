@@ -586,7 +586,20 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
           <div class="seg" id="outTabs"><button data-v="gcode" class="on">G-code</button><button data-v="cps">Fusion .cps</button><button data-v="pp">Vectric .pp</button><button data-v="json">Hetna .json</button></div>
           <p class="hint" id="outDesc"></p>
           <div class="codebox"><textarea id="outText" spellcheck="false" readonly aria-label="Salida"></textarea></div>
-          <div class="codebar"><button class="btn sm" id="btnCopy">Copiar</button><button class="btn sm" id="btnDl">Descargar</button><span class="sp"></span><span class="hint" id="outSize"></span></div>
+          <div class="codebar"><button class="btn sm" id="btnCopy">Copiar</button><button class="btn sm primary" id="btnDl">Descargar</button><span class="sp"></span><span class="hint" id="outSize"></span></div>
+          <p class="hint" id="o_cupo"></p>
+          <div class="note warn" id="o_gate" hidden></div>
+        </div>
+        <div class="group">
+          <h2>Programas probados en máquina</h2>
+          <p class="note" id="o_proven"></p>
+          <div class="group" id="verifyBox" hidden>
+            <p class="hint">¿Ya corriste este programa en tu máquina? Tu reporte le dice a otros talleres si este posprocesador sirve en su control.</p>
+            <div class="seg" id="v_result"><button data-v="bien">Salió bien</button><button data-v="ajustes">Tuve que ajustar algo</button><button data-v="mal">No sirvió</button></div>
+            <label class="f">¿Qué máquina y qué pasó? (opcional)<input id="v_notes" type="text" maxlength="300" placeholder="Router 1325 con Mach3; el avance salió alto…" style="font-family:var(--f-ui)"></label>
+            <div class="codebar"><button class="btn sm primary" id="v_send">Mandar mi reporte</button><span class="hint" id="v_status"></span></div>
+          </div>
+          <div class="codebar" id="verifyOpen"><button class="btn sm" id="v_open">Probé este programa</button></div>
         </div>
       </section>
     </div>
@@ -645,7 +658,6 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 <script src="lab-01-motor.js"></script>
 <script src="lab-02-estrategias.js"></script>
-<script src="lab-03-posprocesadores.js"></script>
 <script src="lab-04-escena.js"></script>
 <script src="lab-05-interfaz.js"></script>
 <script src="lab-06-bibliotecas.js"></script>

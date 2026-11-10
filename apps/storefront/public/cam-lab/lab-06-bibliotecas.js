@@ -195,6 +195,8 @@ function initExtrasUI(){
   $$('[data-lib=export]').forEach(b=>b.addEventListener('click',libExport));$$('[data-lib=import]').forEach(b=>b.addEventListener('click',()=>$('#libIn').click()));
   $('#libIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)libImport(f);});
   $('#p_repair').addEventListener('click',repairPart);
+  $('#v_open').addEventListener('click',askVerify);$('#v_send').addEventListener('click',sendVerify);
+  $('#v_result').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;VERIFY.result=b.dataset.v;$$('#v_result button').forEach(x=>x.classList.toggle('on',x===b));});
   // ficha técnica y calculadora
   syncToolForm=(fn=>function(){const r=fn.apply(this,arguments);syncToolExtras();return r;})(syncToolForm);
   $('#t_total').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v)&&v>0)tool().totalLen=v;syncToolForm();});
@@ -217,6 +219,26 @@ async function repairPart(){
   S.rawPos=r.pos;S.rawFile=null; // lo que se manda al pedir el servicio es la malla reparada
   S.partDirty=true;setBusy(null);await reprep();
   renderIssues([{sev:p.open?'warn':'ok',title:p.open?'Malla reparada en parte':'Malla reparada',cause:did.join(', ')+'.'+(p.open?` Quedan ${p.open} aristas abiertas que no forman un hueco simple.`:' Quedó cerrada.'),fix:(p.holes?'Los huecos se taparon con una cara plana: revisa en la vista 3D que el tapón sea el que esperabas. ':'')+'Pulsa Calcular trayectoria.'}]);
+}
+/* ---------------- Programas probados en máquina ---------------- */
+let PROVEN=null;const VERIFY={result:''};
+async function refreshProven(){
+  const el=$('#o_proven');
+  if(!PROVEN){try{PROVEN=(await(await fetch('/api/cam/pruebas')).json()).pruebas||[];}catch(e){PROVEN=[];}}
+  const c=S.post.ctrl,name=CTRL[c].name,r=PROVEN.find(x=>x.controlador===c&&x.herramienta==='3d');
+  if(!r){el.className='note';el.textContent=`Todavía ningún taller ha reportado cómo le fue con ${name}. Si lo pruebas, sé el primero en decirlo: corre siempre en vacío antes de cortar.`;return;}
+  const n=r.bien+r.ajustes+r.mal;el.className='note'+(r.mal>r.bien?' warn':'');
+  el.textContent=`${name}: ${n} ${n===1?'reporte':'reportes'} de ${r.talleres} ${r.talleres===1?'taller':'talleres'}. ${r.bien} salieron bien, ${r.ajustes} con ajustes y ${r.mal} no sirvieron.`;
+}
+function askVerify(){$('#verifyBox').hidden=false;$('#verifyOpen').hidden=true;$('#v_status').textContent='';}
+async function sendVerify(){
+  if(!VERIFY.result){$('#v_status').textContent='Elige cómo te fue.';return;}
+  $('#v_send').disabled=true;$('#v_status').textContent='Enviando…';
+  const body={herramienta:'3d',controlador:S.post.ctrl,resultado:VERIFY.result,maquina:MACHINES[S.presetKey]?.name,material:MATERIALS[S.feeds.mat]?.name,ejes:3+KIN_AXES[S.machine.kin].length,notas:$('#v_notes').value.trim()||undefined};
+  let d;try{d=await(await fetch('/api/cam/pruebas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();}catch(e){d={mensaje:'No se pudo conectar.'};}
+  $('#v_send').disabled=false;
+  if(d.ok){$('#v_status').textContent='Gracias: tu reporte ya cuenta.';PROVEN=null;refreshProven();$('#v_notes').value='';}
+  else $('#v_status').textContent=d.mensaje||'No se pudo guardar tu reporte.';
 }
 function syncPostExtras(){$('#p_pre').value=S.post.pre;$('#p_end').value=S.post.end;}
 

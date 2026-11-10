@@ -52,6 +52,23 @@ export const camMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/cam/jobs",
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
+  // Cupo del plan: consultarlo se puede sin sesión (ve las reglas del plan Gratis); gastarlo no.
+  {
+    method: ["GET"],
+    matcher: "/store/cam/cupo",
+    middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+  },
+  {
+    method: ["POST"],
+    matcher: "/store/cam/cupo",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  // "Programas probados": el resumen es público; reportar pide cuenta.
+  {
+    method: ["POST"],
+    matcher: "/store/cam/pruebas",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
   {
     method: ["GET"],
     matcher: "/store/cam/jobs/:id/files/:file_id",

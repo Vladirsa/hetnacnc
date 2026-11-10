@@ -60,7 +60,7 @@ export class DescargaError extends Error {
 const servicio = (container: MedusaContainer) =>
   container.resolve<DescargasModuleService>(DESCARGAS_MODULE)
 
-async function planDelCliente(container: MedusaContainer, customerId: string): Promise<string> {
+export async function planDelCliente(container: MedusaContainer, customerId: string): Promise<string> {
   if (await esCuentaDeLaCasa(container, customerId)) return PLAN_DE_LA_CASA
   try {
     // Al servicio del módulo y no con query.graph("cotizador_perfil"): con

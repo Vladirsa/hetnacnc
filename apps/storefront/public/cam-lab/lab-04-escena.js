@@ -223,7 +223,7 @@ function updateDRO(pose){
   rows.push(['F',F],['S',fd.rpm]);
   $('#droTable').innerHTML=rows.map(([k,v])=>`<tr><td class="ax">${k}</td><td class="v">${typeof v==='number'?(k==='F'||k==='S'?v:v.toFixed(3)):v}</td></tr>`).join('');
   $('#droMode').textContent=`T${tl.num} · ${tcp?'TCP':'MÁQ'}`;
-  const ln=S.gcode?.lineOf?S.gcode.lines[S.gcode.lineOf[pose.i]]:null;$('#droLine').textContent=ln||'—';
+  $('#droLine').textContent=mv?(mv.t==='R'?'G0 · traslado rápido':mv.t==='P'?'G1 · entrada':'G1 · corte'):'—';
 }
 function setPlaying(on){SIM.playing=on;$('#playIco').innerHTML=on?'<path d="M3 2h4v12H3zM9 2h4v12H9z"/>':'<path d="M4 2l10 6-10 6z"/>';
   if(on&&S.stock&&VIS.stock){MAT.stock.opacity=1;MAT.stock.transparent=false;MAT.stock.depthWrite=true;MAT.stock.needsUpdate=true;}}
@@ -250,13 +250,13 @@ async function compute(){
     setBusy('Enlazando pasadas y resolviendo ejes de máquina…',0.97);await tick();
     const moves=buildMoves(res,st);S.moves=moves;S.job={res,kind:st.kind,ms:now()-t0,toolId:tl.id};
     S.jobStats=annotateMoves(moves);
-    S.gcode=postProcess();
+    S.gcode=null;S.outs={};
     buildPathObjects();buildToolMesh();resetStockCut();stockSolid(false);SIM.t=0;
-    S.stale=false;refreshOutputs();renderReport();
+    S.stale=false;refreshOutputs();renderReport();askPreview();
   }catch(e){console.error(e);renderIssues([{sev:'err',title:'Error al calcular',cause:String(e.message||e),fix:'Revisa la malla y los parámetros. Si el archivo es muy grande, simplifícalo.'}]);}
   finally{setBusy(null);S.busy=false;$$('#btnCompute,#btnCompute2').forEach(b=>b.disabled=false);updateStale();}
 }
-function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=postProcess();refreshOutputs();renderReport();}
+function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=null;S.outs={};refreshOutputs();renderReport();askPreview();}
 function renderReport(){
   const js=S.jobStats,res=S.job?.res,m=S.machine,tl=tool(),fd=feedsCalc(),st=S.strat;if(!js||!res)return;
   const s5=res.stats5;const axes=KIN_AXES[m.kin];const feedPts=S.moves.filter(x=>x.t==='F').length;
@@ -265,7 +265,7 @@ function renderReport(){
   k.push({l:'Tiempo estimado',v:fmtTime(js.total)});
   k.push({l:'Corte',v:`${nf(js.lenCut/1000,1)} m`});
   k.push({l:'Puntos de corte',v:feedPts.toLocaleString('es-MX')});
-  k.push({l:'Líneas G-code',v:(S.gcode?.lines.length||0).toLocaleString('es-MX')});
+  k.push({l:'Líneas G-code',v:S.gcode?S.gcode.total.toLocaleString('es-MX'):'…'});
   if(s5){k.push({l:'Reorientados',v:s5.adjusted.toLocaleString('es-MX'),c:s5.adjusted?'warn':'ok'});k.push({l:'Colisión sin resolver',v:(s5.coll).toLocaleString('es-MX'),c:s5.coll?'bad':'ok'});}
   else{const cc=S.job.res.passes.reduce((s,p)=>s+p.pts.filter(q=>q.st>=2).length,0);k.push({l:'Zanco / porta',v:cc?`${cc} pts`:'Libre',c:cc?'bad':'ok'});k.push({l:'Sin alcanzar',v:`${nf(res.unreachedPct,1)} %`,c:res.unreachedPct>2?'warn':'ok'});}
   axes.forEach((a,q)=>{const r=js.rng[q];k.push({l:`Rango ${a}`,v:Number.isFinite(r[0])?`${r[0].toFixed(0)}…${r[1].toFixed(0)}°`:'—'});});

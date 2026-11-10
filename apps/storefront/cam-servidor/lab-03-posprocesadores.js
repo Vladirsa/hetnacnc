@@ -1,6 +1,10 @@
 'use strict';
 /* =========================================================
    POSPROCESADORES
+   Este archivo NO se sirve al navegador: corre en el servidor
+   (src/app/api/cam/post/route.ts), que es quien revisa el plan
+   antes de entregar el programa. Usa lo que define
+   public/cam-lab/lab-01-motor.js.
    ========================================================= */
 function postProcess(){
   const moves=S.moves;if(!moves||!moves.length)return{text:'',lines:[]};
@@ -340,14 +344,4 @@ ${c.cool==='none'?'':'"M9"\n'}"M5"
 "G0 [XH] [YH]"
 "${c.ctrl==='linuxcnc'?'M2':'M30'}"
 ${c.ctrl==='linuxcnc'?'"%"\n':''}`;
-}
-function genJSON(){
-  const m=S.machine,c=S.post,tl=tool(),fd=feedsCalc();
-  return JSON.stringify({generator:'Hetna CAM Lab',version:1,date:new Date().toISOString(),
-    controller:{id:c.ctrl,dialect:dialOf(c.ctrl),name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
-    machine:{kinematics:m.kin,axes:['X','Y','Z',...KIN_AXES[m.kin]],travel:m.lim,rotary:KIN_AXES[m.kin].map((a,q)=>({axis:a,range:m.rot[q],continuous:m.rot[q][1]-m.rot[q][0]>=720,inverted:m.inv[q]})),
-      pivotToSpindleNose:m.pivot,rotationCenter:m.rc,maxRPM:m.maxRPM,maxFeed:m.maxFeed,rapid:m.rapid},
-    tool:{number:tl.num,name:tl.name,type:tl.type,diameter:tl.D,cornerRadius:tl.r,flutes:tl.flutes,fluteLength:tl.fluteLen,stickout:tl.stickout,shankDiameter:tl.shankD,holder:{diameter:tl.holderD,length:tl.holderLen}},
-    cutting:{material:MATERIALS[S.feeds.mat].name,vc:S.feeds.vc,fz:S.feeds.fz,rpm:fd.rpm,feed:fd.feed,plunge:fd.plunge},
-    strategy:S.strat},null,2);
 }

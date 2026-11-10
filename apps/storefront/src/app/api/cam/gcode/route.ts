@@ -1,10 +1,10 @@
-// Laboratorio CAM, flujo 1: subir un DXF y bajar el G-code, sin cuenta.
+// CAM Studio 2D: subir un DXF, ver la trayectoria y bajar el G-code.
 //
-// Vive en el storefront y no en el backend de Medusa a propósito: este es el
-// camino anónimo. Todo lo demás de la plataforma (cotizador, escaneos) exige
-// sesión porque guarda cosas en el perfil del taller; aquí no se guarda nada,
-// y pedir cuenta antes de que alguien compruebe que el producto sirve es la
-// forma más barata de perderlo.
+// Calcular es libre y sin cuenta: quien llega tiene que poder comprobar que el
+// producto sirve antes de que se le pida nada. Lo que tiene candado es el
+// programa: al calcular se devuelve el dibujo de la trayectoria (para simular),
+// no el G-code. El G-code sale sólo con `descargar=1`, después de que el API
+// confirma el plan y el cupo del mes (lib/cam/cupo-servidor.ts).
 //
 // El motor es Python (infra/cam/bridges/dxf_gcode.py, ver su README). Se
 // lanza como subproceso en vez de reimplementarlo en TypeScript: está
@@ -15,6 +15,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { NextResponse } from "next/server"
+
+import { autorizarDescarga, huella } from "@/lib/cam/cupo-servidor"
+import { leerGcode } from "@/lib/cam/leer-gcode"
 
 // CAM_PYTHON apunta al intérprete que tiene ezdxf y shapely instalados (ver
 // infra/cam/requirements.txt). Sin él, esta ruta responde que el motor no
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
     )
   }
 
+  const descargar = form.get("descargar") === "1"
   const material = String(form.get("material") || "")
   if (!MATERIALES.includes(material)) {
     return fallo("entrada_invalida", "Material no reconocido.", "Elige uno de la lista.")
@@ -86,7 +90,7 @@ export async function POST(req: Request) {
     if (!Number.isFinite(espesorOps) || espesorOps <= 0 || espesorOps > 200) {
       return fallo("entrada_invalida", "El espesor del material no es válido.", "Captúralo en milímetros, entre 0.5 y 200.")
     }
-    return conOperaciones(archivo, { ...config, material, espesor: espesorOps })
+    return conOperaciones(archivo, { ...config, material, espesor: espesorOps }, descargar)
   }
 
   const diametro = Number(form.get("diametro"))
@@ -113,8 +117,7 @@ export async function POST(req: Request) {
       return NextResponse.json(resultado, { status: 422 })
     }
 
-    const gcode = await readFile(salida, "utf-8")
-    return NextResponse.json({ ok: true, plan: (resultado as any).plan, gcode })
+    return entregar(await readFile(salida, "utf-8"), (resultado as any).plan, descargar)
   } catch (e) {
     console.error("[cam] falló la generación de G-code", e)
     return fallo(
@@ -128,7 +131,15 @@ export async function POST(req: Request) {
   }
 }
 
-async function conOperaciones(archivo: Blob, config: Record<string, unknown>) {
+/** Al calcular: el dibujo de la trayectoria. Al descargar: el programa, si el plan lo permite. */
+async function entregar(gcode: string, plan: unknown, descargar: boolean) {
+  if (!descargar) return NextResponse.json({ ok: true, plan, trayectoria: leerGcode(gcode) })
+  const no = await autorizarDescarga("2d", huella(gcode))
+  if (no) return NextResponse.json(no.negado, { status: no.status })
+  return NextResponse.json({ ok: true, plan, gcode })
+}
+
+async function conOperaciones(archivo: Blob, config: Record<string, unknown>, descargar: boolean) {
   const carpeta = await mkdtemp(path.join(tmpdir(), "hetna-cam-"))
   const entrada = path.join(carpeta, "pieza.dxf")
   const salida = path.join(carpeta, "pieza.nc")
@@ -138,8 +149,7 @@ async function conOperaciones(archivo: Blob, config: Record<string, unknown>) {
     await writeFile(rutaConfig, JSON.stringify(config))
     const resultado = await correrBridge([entrada, salida, rutaConfig], BRIDGE_OPS)
     if (!resultado.ok) return NextResponse.json(resultado, { status: 422 })
-    const gcode = await readFile(salida, "utf-8")
-    return NextResponse.json({ ok: true, plan: (resultado as any).plan, gcode })
+    return entregar(await readFile(salida, "utf-8"), (resultado as any).plan, descargar)
   } catch (e) {
     console.error("[cam] falló la generación por operaciones", e)
     return fallo(

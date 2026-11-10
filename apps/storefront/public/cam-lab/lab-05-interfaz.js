@@ -21,7 +21,7 @@ function initMachineUI(){
   fillSelect($('#m_preset'),MACHINES,S.presetKey);fillSelect($('#m_ctrl'),CTRL,S.post.ctrl);fillSelect($('#p_ctrl'),CTRL,S.post.ctrl);
   $('#m_preset').addEventListener('change',e=>{applyPreset(e.target.value);markStale();refreshPostIfAny();});
   $('#m_kin').addEventListener('change',e=>{S.machine.kin=e.target.value;syncMachineUI();markStale();refreshPostIfAny();});
-  const ctrlChange=v=>{S.post.ctrl=v;if(g94Rot(v))S.post.inv=false;syncMachineUI();refreshPostIfAny();syncPostUI();};
+  const ctrlChange=v=>{S.post.ctrl=v;if(g94Rot(v))S.post.inv=false;syncMachineUI();refreshPostIfAny();syncPostUI();refreshProven();};
   $('#m_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));$('#p_ctrl').addEventListener('change',e=>ctrlChange(e.target.value));
   const m=()=>S.machine;
   ['x','y','z'].forEach(a=>{[0,1].forEach(q=>{const el=$(`#m_${a}${q?'max':'min'}`);el.addEventListener('change',()=>{const v=parseFloat(el.value);if(Number.isFinite(v)){m().lim[a][q]=v;refreshPostIfAny();}});});});
@@ -126,11 +126,88 @@ function initStratUI(){
 }
 /* post */
 const OUT_DESC={gcode:'Programa listo para tu controlador con la trayectoria calculada.',cps:'Posprocesador para Autodesk Fusion con tu cinemática. Cópialo a la biblioteca de posts de Fusion.',pp:'Posprocesador para Vectric Aspire / VCarve (3 ejes). Guárdalo en la carpeta PostP de Vectric.',json:'Definición completa de máquina, herramienta y post para el motor Hetna en el servidor.'};
-function currentOut(){switch(S.post.out){case 'cps':return{text:genCPS(),ext:'cps'};case 'pp':return{text:genPP(),ext:'pp'};case 'json':return{text:genJSON(),ext:'json'};default:{const ext=extOf(S.post.ctrl);return{text:S.gcode?.text||'(Calcula una trayectoria para generar el G-code)',ext};}}}
+/* El programa se arma en el servidor (/api/cam/post), que revisa el plan antes de entregarlo.
+   Aquí solo se guarda la vista previa: el arranque del programa y cuántas líneas tiene. */
+function genJSON(){
+  const m=S.machine,c=S.post,tl=tool(),fd=feedsCalc();
+  return JSON.stringify({generator:'Hetna CAM Lab',version:1,date:new Date().toISOString(),
+    controller:{id:c.ctrl,dialect:dialOf(c.ctrl),name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
+    machine:{kinematics:m.kin,axes:['X','Y','Z',...KIN_AXES[m.kin]],travel:m.lim,rotary:KIN_AXES[m.kin].map((a,q)=>({axis:a,range:m.rot[q],continuous:m.rot[q][1]-m.rot[q][0]>=720,inverted:m.inv[q]})),
+      pivotToSpindleNose:m.pivot,rotationCenter:m.rc,maxRPM:m.maxRPM,maxFeed:m.maxFeed,rapid:m.rapid},
+    tool:{number:tl.num,name:tl.name,type:tl.type,diameter:tl.D,cornerRadius:tl.r,flutes:tl.flutes,fluteLength:tl.fluteLen,stickout:tl.stickout,shankDiameter:tl.shankD,holder:{diameter:tl.holderD,length:tl.holderLen}},
+    cutting:{material:MATERIALS[S.feeds.mat].name,vc:S.feeds.vc,fz:S.feeds.fz,rpm:fd.rpm,feed:fd.feed,plunge:fd.plunge},
+    strategy:S.strat},null,2);
+}
+const outKind=()=>S.post.out==='cps'||S.post.out==='pp'?S.post.out:'gcode';
+const outExt=()=>S.post.out==='cps'?'cps':S.post.out==='pp'?'pp':S.post.out==='json'?'json':extOf(S.post.ctrl);
+async function packJob(clase,descargar){
+  const m=S.machine,rot=KIN_AXES[m.kin].length,mv=clase==='gcode'?S.moves:[],n=mv.length;
+  const head=new TextEncoder().encode(JSON.stringify({clase,descargar,n,rot,estado:{machine:m,tool:tool(),feeds:S.feeds,strat:{kind:S.strat.kind,stepover:S.strat.stepover,lead:S.strat.lead},post:S.post,stock:S.stock,zero:S.zero,partName:S.partName}}));
+  const P=new Float32Array(n*3),A=new Float64Array(n*rot),T=new Uint8Array(n);
+  for(let i=0;i<n;i++){const q=mv[i];P[i*3]=q.p[0];P[i*3+1]=q.p[1];P[i*3+2]=q.p[2];for(let k=0;k<rot;k++)A[i*rot+k]=q.ang[k];T[i]=(q.t==='R'?0:q.t==='P'?1:2)|(q.kfail?4:0);}
+  const raw=new Blob([new Uint32Array([head.length]),head,P,A,T]);
+  return new Response(raw.stream().pipeThrough(new CompressionStream('gzip'))).blob();
+}
+async function askPost(clase,descargar){
+  const r=await fetch('/api/cam/post',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:await packJob(clase,descargar)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok&&!d.candado&&!d.mensaje)d.mensaje=r.status===413?'El trabajo es demasiado grande para posprocesarlo. Sube el paso lateral o simplifica la pieza.':'No se pudo armar el programa (error '+r.status+').';
+  return d;
+}
+let previewSeq=0,previewTimer=0;
+function askPreview(){
+  clearTimeout(previewTimer);const clase=outKind();if(S.post.out==='json'||(clase==='gcode'&&(!S.moves||S.stale)))return;
+  const seq=++previewSeq;
+  previewTimer=setTimeout(async()=>{
+    let d;try{d=await askPost(clase,false);}catch(e){d={mensaje:'No se pudo conectar para armar el programa. Revisa tu conexión.'};}
+    if(seq!==previewSeq)return;
+    const o=d.ok?{vista:d.vista,total:d.total,kb:d.kb}:{error:d.mensaje||'No se pudo armar el programa.',vista:'',total:0,kb:0};
+    if(clase==='gcode')S.gcode=o;else S.outs[clase]=o;
+    refreshOutputs();if(clase==='gcode'&&S.moves&&!S.stale)renderReport();
+  },350);
+}
 function refreshOutputs(){
-  const o=currentOut();const ta=$('#outText');const MAXV=400000;ta.value=o.text.length>MAXV?o.text.slice(0,MAXV)+'\n… (vista recortada; Copiar y Descargar incluyen el archivo completo)':o.text;
-  $('#outSize').textContent=`${(o.text.length/1024).toFixed(1)} KB · ${o.text.split('\n').length.toLocaleString('es-MX')} líneas`;$('#outDesc').textContent=OUT_DESC[S.post.out];
-  $$('#outTabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.post.out));
+  const ta=$('#outText'),k=S.post.out;$('#outDesc').textContent=OUT_DESC[k];$$('#outTabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===k));
+  if(k==='json'){const t=genJSON();ta.value=t;$('#outSize').textContent=`${(t.length/1024).toFixed(1)} KB`;return;}
+  const o=k==='gcode'?S.gcode:(S.outs||{})[k];
+  if(k==='gcode'&&(!S.moves||S.stale)){ta.value='(Calcula una trayectoria para generar el G-code)';$('#outSize').textContent='';return;}
+  if(!o){ta.value='Armando el programa…';$('#outSize').textContent='';return;}
+  if(o.error){ta.value=o.error;$('#outSize').textContent='';return;}
+  const rest=o.total-o.vista.split('\n').length;
+  ta.value=o.vista+(rest>0?`\n… y ${rest.toLocaleString('es-MX')} líneas más. El programa completo se entrega al descargar.`:'');
+  $('#outSize').textContent=`${o.kb.toLocaleString('es-MX')} KB · ${o.total.toLocaleString('es-MX')} líneas`;
+}
+/* Descargar o copiar: el servidor entrega el programa completo si el plan lo incluye. */
+const PLANES_URL='/mx/servicios/cotizador-cnc#planes';
+function showGate(d){
+  const el=$('#o_gate');if(!d){el.hidden=true;el.innerHTML='';return;}
+  el.hidden=false;el.textContent=d.mensaje||'No se pudo entregar el programa.';
+  const link=d.codigo==='sesion'?['/mx/login?volver='+encodeURIComponent('/mx/cam/lab'),'Entrar o crear mi cuenta']:(d.codigo==='plan'||d.codigo==='cupo')?[PLANES_URL,'Ver los planes']:null;
+  if(link){const a=document.createElement('a');a.href=link[0];a.target='_top';a.className='btn sm primary';a.style.marginLeft='8px';a.textContent=link[1];el.appendChild(a);}
+}
+async function refreshCupo(){
+  const el=$('#o_cupo');let d;try{d=await(await fetch('/api/cam/cupo',{cache:'no-store'})).json();}catch(e){el.textContent='';return;}
+  const st=d&&d.estado;if(!st){el.textContent='';return;}
+  const multi=KIN_AXES[S.machine.kin].length>0,c=st.basico;
+  if(multi&&!st.multieje)el.textContent=`Calcular y simular es libre. Los programas de 4 y 5 ejes se descargan con el plan Industrial${d.sesion?` (tu plan es ${st.plan_nombre})`:''}.`;
+  else if(!d.sesion)el.textContent=`Calcular y simular es libre. Para descargar entra a tu cuenta: tienes ${c.limite} programas gratis al mes en 2D y 3D.`;
+  else if(multi||c.restantes===null)el.textContent=`Plan ${st.plan_nombre}: descargas sin límite.`;
+  else el.textContent=`Plan ${st.plan_nombre}: te quedan ${c.restantes} de ${c.limite} programas este mes.`;
+}
+async function deliverOutput(copy){
+  const k=S.post.out,name=(S.partName||'hetna').replace(/\.[^.]+$/,'')+'.'+outExt();showGate(null);let text;
+  if(k==='json')text=genJSON();
+  else{
+    if(k==='gcode'&&(!S.moves||S.stale)){toast('Calcula la trayectoria primero');return;}
+    if(S.busy)return;$$('#btnCopy,#btnDl').forEach(b=>b.disabled=true);
+    let d;try{d=await askPost(outKind(),true);}catch(e){d={mensaje:'No se pudo conectar. Revisa tu conexión e intenta de nuevo.'};}
+    $$('#btnCopy,#btnDl').forEach(b=>b.disabled=false);refreshCupo();
+    if(!d.ok||!d.texto){showGate(d);return;}
+    text=d.texto;
+  }
+  if(copy){try{await navigator.clipboard.writeText(text);toast('Copiado al portapapeles');}catch(err){toast('Tu navegador no dejó copiar: usa Descargar');}return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  if(k==='gcode')askVerify();
 }
 function syncPostUI(){
   const c=S.post,m=S.machine,ctrl=CTRL[c.ctrl];$('#p_cool').value=c.cool;$('#p_dec').value=c.dec;$('#p_prog').value=c.prog;$('#p_lines').checked=c.lines;$('#p_inv').checked=c.inv;
@@ -145,21 +222,20 @@ function syncPostUI(){
 }
 function initPostUI(){
   syncPostUI();
-  if(/claude/i.test(location.hostname))$('#btnDl').hidden=true; // en el visor de Claude las descargas están bloqueadas; en el servidor sí funcionan
   $('#p_cool').addEventListener('change',e=>{S.post.cool=e.target.value;refreshPostIfAny();refreshOutputs();});
   $('#p_dec').addEventListener('change',e=>{S.post.dec=clamp(parseInt(e.target.value)||3,1,5);e.target.value=S.post.dec;refreshPostIfAny();refreshOutputs();});
   $('#p_prog').addEventListener('change',e=>{S.post.prog=parseInt(e.target.value)||1000;refreshPostIfAny();refreshOutputs();});
   $('#p_lines').addEventListener('change',e=>{S.post.lines=e.target.checked;refreshPostIfAny();refreshOutputs();});
   $('#p_inv').addEventListener('change',e=>{S.post.inv=e.target.checked;refreshPostIfAny();refreshOutputs();});
-  $('#outTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.post.out=b.dataset.v;refreshOutputs();});
-  $('#btnCopy').addEventListener('click',async()=>{const t=currentOut().text;try{await navigator.clipboard.writeText(t);toast('Copiado al portapapeles');}catch(err){const ta=$('#outText');ta.focus();ta.select();toast('Selecciona y copia con Ctrl+C');}});
-  $('#btnDl').addEventListener('click',()=>{const o=currentOut();const name=(S.partName||'hetna').replace(/\.[^.]+$/,'')+'.'+o.ext;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([o.text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);toast('Si la descarga no inicia, usa Copiar');});
+  $('#outTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.post.out=b.dataset.v;showGate(null);refreshOutputs();askPreview();});
+  $('#btnCopy').addEventListener('click',()=>deliverOutput(true));$('#btnDl').addEventListener('click',()=>deliverOutput(false));
+  refreshCupo();
 }
 /* pestañas y vista */
-function showTab(k){$$('.steps button').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==k);if(k==='post')refreshOutputs();}
+function showTab(k){$$('.steps button').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==k);if(k==='post'){refreshOutputs();askPreview();refreshCupo();refreshProven();}}
 function initChrome(){
   $$('.steps button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-  $('#btnGoPost').addEventListener('click',()=>{showTab('post');S.post.out='gcode';refreshOutputs();});
+  $('#btnGoPost').addEventListener('click',()=>{showTab('post');S.post.out='gcode';refreshOutputs();askPreview();});
   $('#btnCompute').addEventListener('click',compute);$('#btnCompute2').addEventListener('click',compute);
   $('#viewToggles').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.v;VIS[k]=!VIS[k];b.classList.toggle('on',VIS[k]);applyVisibility();});
   $$('[data-cam]').forEach(b=>b.addEventListener('click',()=>fitView(b.dataset.cam)));
@@ -248,11 +324,10 @@ async function sendOrder(){
     const modelBlob=S.rawFile||new Blob([stlFromPositions(S.rawPos)],{type:'model/stl'});
     const modelName=S.rawFile?S.rawFile.name:base+'.stl';
     const fd=new FormData();fd.append('model',modelBlob,modelName);
-    if(service==='cam'&&S.gcode?.text){const ext=currentOutExt();fd.append('gcode',new Blob([S.gcode.text],{type:'text/plain'}),base+'.'+ext);}
     const res=S.job?.res,s5=res?.stats5;
     const coll=s5?s5.coll:(res?res.passes.reduce((a,p)=>a+p.pts.filter(q=>q.st>=2).length,0):0);
     const stats={minutes:+(S.jobStats?.total||0).toFixed(2),points:S.moves?S.moves.filter(m=>m.t==='F').length:0,triangles:S.M?.nT||0,
-      collisions:coll|0,adjusted:(s5?s5.adjusted:0)|0,cut_length_m:+((S.jobStats?.lenCut||0)/1000).toFixed(3),gcode_lines:S.gcode?.lines?.length||0};
+      collisions:coll|0,adjusted:(s5?s5.adjusted:0)|0,cut_length_m:+((S.jobStats?.lenCut||0)/1000).toFixed(3),gcode_lines:S.gcode?.total||0};
     const payload={service,review:$('#o_review').checked,email:email||null,notes:$('#o_notes').value.trim()||null,model_name:modelName,
       controller:S.post.ctrl,kinematics:S.machine.kin,strategy_kind:S.strat.kind,config:JSON.parse(genJSON()),stats};
     fd.append('payload',JSON.stringify(payload));
@@ -264,7 +339,6 @@ async function sendOrder(){
     else{orderStatus('Pieza recibida. Folio '+job.id+'. Guarda este número para dar seguimiento.');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
   }catch(e){orderStatus('No se pudo enviar: '+e.message,'warn');ORDER.busy=false;$('#btnOrderSend').disabled=false;}
 }
-function currentOutExt(){return extOf(S.post.ctrl);}
 function initOrderUI(){
   if(!HETNA_ON)return;
   $('#orderBox').hidden=false;$('#btnOrder').hidden=false;

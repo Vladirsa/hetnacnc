@@ -13,6 +13,7 @@
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
+import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
 import type { FresaCam } from "@/lib/data/cam-maquinas"
 import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 
@@ -279,7 +280,13 @@ export function EstudioTorno() {
   const [rpmDesbaste, setRpmDesbaste] = useState(40)
   const [rpmAcabado, setRpmAcabado] = useState(65)
 
+  // Al calcular llegan los datos y las primeras líneas; el programa completo se pide al descargar
   const [gcode, setGcode] = useState<string | null>(null)
+  const [lineasOcultas, setLineasOcultas] = useState(0)
+  const [negado, setNegado] = useState<NegadoCam | null>(null)
+  const [bajando, setBajando] = useState(false)
+  const [versionCupo, setVersionCupo] = useState(0)
+  const cupo = useCupoCam(versionCupo)
   const [info, setInfo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [generando, setGenerando] = useState(false)
@@ -464,32 +471,36 @@ export function EstudioTorno() {
     limpiarResultado()
   }
 
+  const pedidoTorno = () => ({
+    segmentos,
+    material,
+    origenPunto,
+    ejeLargo,
+    avance,
+    maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
+    herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
+    rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
+    tallados,
+  })
+
   async function generar() {
     setError(null)
+    setNegado(null)
     limpiarResultado()
     setGenerando(true)
     try {
       const resp = await fetch("/api/cam/torno", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          segmentos,
-          material,
-          origenPunto,
-          ejeLargo,
-          avance,
-          maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
-          herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
-          rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
-          tallados,
-        }),
+        body: JSON.stringify(pedidoTorno()),
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
         setError(data.error ?? "No se pudo generar el G-code.")
         return
       }
-      setGcode(data.gcode)
+      setGcode(data.vista ?? "")
+      setLineasOcultas(data.lineasOcultas ?? 0)
       setAvisos(data.avisos ?? [])
       setInfo(
         `${data.longitudTotalMm.toFixed(0)} mm de largo · Ø máximo ${(data.radioMaximoMm * 2).toFixed(1)} mm · ` +
@@ -502,9 +513,28 @@ export function EstudioTorno() {
     }
   }
 
-  function descargar() {
-    if (!gcode) return
-    const blob = new Blob([gcode], { type: "text/plain" })
+  async function descargar() {
+    if (gcode === null || bajando) return
+    setBajando(true)
+    setNegado(null)
+    let texto = ""
+    try {
+      const resp = await fetch("/api/cam/torno", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pedidoTorno(), descargar: true }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (data.candado) setNegado(data)
+      else if (!resp.ok || !data.gcode) setError(data.error ?? "No se pudo preparar la descarga.")
+      else texto = data.gcode
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.")
+    }
+    setBajando(false)
+    setVersionCupo((v) => v + 1)
+    if (!texto) return
+    const blob = new Blob([texto], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -515,11 +545,8 @@ export function EstudioTorno() {
 
   const vistaPrevia = useMemo(() => {
     if (!gcode) return ""
-    const lineas = gcode.split("\n")
-    return lineas.length > 200
-      ? `${lineas.slice(0, 200).join("\n")}\n(… ${lineas.length - 200} líneas más en el archivo …)`
-      : gcode
-  }, [gcode])
+    return lineasOcultas > 0 ? `${gcode}\n(… ${lineasOcultas.toLocaleString("es-MX")} líneas más en el archivo …)` : gcode
+  }, [gcode, lineasOcultas])
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px]">
@@ -685,7 +712,7 @@ export function EstudioTorno() {
           </div>
         </section>
 
-        {(gcode || error || avisos.length > 0) && (
+        {(gcode !== null || error || avisos.length > 0) && (
           <section className={caja}>
             <h2 className="text-[17px] font-bold text-[#1B1B18]">Resultado</h2>
             {error && (
@@ -697,15 +724,22 @@ export function EstudioTorno() {
                 ⚠ {a}
               </p>
             ))}
-            {gcode && (
+            {gcode !== null && (
               <>
                 <button
                   type="button"
                   onClick={descargar}
                   className="mt-4 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
                 >
-                  ⬇ Descargar archivo .nc
+                  {bajando ? "Preparando…" : "⬇ Descargar archivo .nc"}
                 </button>
+                <div className="mt-2">
+                  {negado ? (
+                    <CandadoCam negado={negado} regreso="/mx/cam/torno" />
+                  ) : (
+                    cupo?.estado && <p className="text-[12.5px] text-[#6B6A63]">{textoCupo(cupo.sesion, cupo.estado.torno, cupo.estado.plan_nombre, "El torno CNC")}</p>
+                  )}
+                </div>
                 <pre className="mt-3 max-h-[320px] overflow-auto rounded-[10px] bg-[#1B1B18] p-3 text-[12px] leading-relaxed text-[#E7E4DC]">
                   {vistaPrevia}
                 </pre>
