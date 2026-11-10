@@ -203,7 +203,10 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   const [cuando, setCuando] = useState(aLocal(p.programada_para))
   const [grupo, setGrupo] = useState("")
   const [nota, setNota] = useState("")
+  const [notaOk, setNotaOk] = useState(true)
   const [ocupado, setOcupado] = useState(false)
+  const [haciendo, setHaciendo] = useState("") // qué acción está corriendo (para mostrarlo en su botón)
+  const [cambiadas, setCambiadas] = useState<string[]>([]) // redes que acaba de mejorar la IA (se resaltan)
   useEffect(() => {
     setTextos(p.textos || {})
     setSel(p.redes)
@@ -213,15 +216,24 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   const ligaDe = (red: string) => p.ligas.find((l) => l.red === red && !l.grupo)?.url
   const hacer = async (cuerpo: Record<string, unknown>, ok: string) => {
     setOcupado(true)
+    setHaciendo(String(cuerpo.accion || ""))
     setNota("")
+    setCambiadas([])
     try {
-      await api(`/${p.id}`, cuerpo)
-      setNota(ok)
+      const r = await api<{ cambiadas?: string[]; publicacion?: Pub }>(`/${p.id}`, cuerpo)
+      // Muestra los textos nuevos de inmediato, sin esperar a recargar la lista
+      if (r.publicacion?.textos) setTextos(r.publicacion.textos)
+      const cs = r.cambiadas || []
+      setCambiadas(cs)
+      setNotaOk(true)
+      setNota(cs.length ? `${ok} Se mejoró: ${cs.map((c) => nombre(c)).join(", ")}.` : ok)
       alCambiar()
     } catch (e) {
+      setNotaOk(false)
       setNota((e as Error).message)
     } finally {
       setOcupado(false)
+      setHaciendo("")
     }
   }
   const [et, col] = ESTADO[p.estado] || [p.estado, C.tenue]
@@ -274,9 +286,10 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             const r = p.resultado?.[red]
             const final = (textos[red] || "").replace("{{liga}}", ligaDe(red) || "{{liga}}")
             return (
-              <div key={red} style={{ background: C.suave, borderRadius: 10, padding: 10 }}>
+              <div key={red} style={{ background: cambiadas.includes(red) ? "#e8f7ee" : C.suave, border: cambiadas.includes(red) ? `2px solid ${C.verde}` : "2px solid transparent", borderRadius: 10, padding: 10, transition: "background .4s" }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
                   <b style={{ fontSize: 13 }}>{nombre(red)}</b>
+                  {cambiadas.includes(red) && <span style={{ fontSize: 12, color: C.verde, fontWeight: 700 }}>🧠 mejorado por la IA</span>}
                   {p.puntajes?.[red] && <Puntaje p={p.puntajes[red]} />}
                   {!auto(red) && <span style={{ fontSize: 12, color: C.tenue }}>✋ copiar y pegar</span>}
                   {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : r.pendiente ? <span style={{ fontSize: 12, color: C.tenue }}>⏳ Instagram la está procesando; se publica sola en unos minutos</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
@@ -304,12 +317,12 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "adaptar", redes: sel }, "Textos reescritos.")}>
               ✨ Reescribir textos
             </button>
-            <button type="button" style={boton("normal")} disabled={ocupado} title="El revisor corrige gancho, llamada a la acción, largo y hashtags de cada red sin inventar datos" onClick={() => hacer({ accion: "revisar" }, "Mejorada con IA. Si no te gusta, dale Deshacer.")}>
-              🧠 Mejorar con IA
+            <button type="button" style={{ ...boton("normal"), ...(haciendo === "revisar" ? { background: "#142033", color: "#fff", cursor: "wait" } : {}), opacity: ocupado && haciendo !== "revisar" ? 0.5 : 1 }} disabled={ocupado} title="El revisor corrige gancho, llamada a la acción, largo y hashtags de cada red sin inventar datos" onClick={() => hacer({ accion: "revisar" }, "✓ Listo: mejorada con IA (si no te gusta, dale Deshacer).")}>
+              {haciendo === "revisar" ? "⏳ Mejorando con IA… (10 a 30 s)" : "🧠 Mejorar con IA"}
             </button>
-            {(p as any).version_anterior && (
-              <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "deshacer" }, "Volvió a la versión anterior.")}>
-                ↩ Deshacer mejora
+            {((p as any).version_anterior || cambiadas.length > 0) && (
+              <button type="button" style={{ ...boton("normal"), opacity: ocupado && haciendo !== "deshacer" ? 0.5 : 1 }} disabled={ocupado} onClick={() => hacer({ accion: "deshacer" }, "✓ Volvió a la versión anterior.")}>
+                {haciendo === "deshacer" ? "⏳ Regresando…" : "↩ Deshacer mejora"}
               </button>
             )}
             <input type="datetime-local" style={{ ...campo, width: "auto", padding: 5 }} value={cuando} onChange={(e) => setCuando(e.target.value)} />
@@ -382,7 +395,9 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
               </tbody>
             </table>
           )}
-          {nota && <p style={{ fontSize: 13, margin: 0 }}>{nota}</p>}
+          {nota && (
+            <p style={{ fontSize: 14, margin: 0, padding: "8px 12px", borderRadius: 8, fontWeight: 600, background: notaOk ? "#e8f7ee" : "#fdecec", color: notaOk ? C.verde : C.rojo }}>{nota}</p>
+          )}
         </div>
       )}
     </article>

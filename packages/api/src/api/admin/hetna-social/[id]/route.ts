@@ -29,6 +29,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const p = await knex(T_POST).where({ id: String(req.params.id) }).first()
   if (!p) return res.status(404).json({ message: "Publicación no encontrada." })
   const b: any = req.body || {}
+  let extra: Record<string, unknown> = {}
   const redesValidas = (x: any) => (Array.isArray(x) ? x.filter((r: string) => r in REDES) : p.redes)
 
   switch (b.accion) {
@@ -70,6 +71,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     case "revisar": {
       const r = await revisarPublicacion(knex, p.id, logger, { forzar: true })
       if (!r.cambiadas?.length) return res.status(400).json({ message: r.motivo === "sin IA configurada" ? "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." : r.motivo === "no editable" ? "Esta publicación ya no se puede cambiar." : "La IA no mejoró el texto; quedó como estaba." })
+      extra = { cambiadas: r.cambiadas }
       break
     }
     case "deshacer":
@@ -85,5 +87,5 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       return res.status(400).json({ message: "Acción no válida." })
   }
   const nueva = await knex(T_POST).where({ id: p.id }).first()
-  res.json({ ok: true, publicacion: await vistaPublicacion(knex, nueva) })
+  res.json({ ok: true, ...extra, publicacion: await vistaPublicacion(knex, nueva) })
 }
