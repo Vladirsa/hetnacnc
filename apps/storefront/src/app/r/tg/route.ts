@@ -1,6 +1,7 @@
-// Puente para n8n: lo que el dueño le escribe al bot de Telegram (o los botones
-// que toca) llega aquí y se pasa al backend, que es quien valida el token
-// (x-hetna-token) y decide. El backend no está publicado en internet.
+// Puente para n8n (https://hetnacnc.com/r/tg): lo que el dueño le escribe al bot
+// de Telegram (o los botones que toca) llega aquí y se pasa al backend, que es
+// quien valida el token (x-hetna-token) y decide. Vive bajo /r/ porque en el
+// servidor /api/* no llega a la tienda y el backend no está publicado.
 import { NextRequest, NextResponse } from "next/server"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
