@@ -144,3 +144,33 @@ export async function aprendizaje(knex: any, dias = 60) {
     resumen,
   }
 }
+
+/**
+ * Prueba A/B: 36 horas después de publicar la A, si rindió al menos la mediana
+ * de su red (últimos 30 días) la B se descarta; si no, la B sale en su fecha.
+ * La decisión queda guardada para aprender qué tipo de gancho funciona.
+ */
+export async function decidirAB(knex: any, logger?: any) {
+  await asegurarSocial(knex)
+  const listas = await knex(T_POST)
+    .whereRaw(`ab->>'variante' = 'A' and ab->>'decision' is null`)
+    .where("estado", "publicada")
+    .where("publicada_en", "<=", knex.raw("now() - interval '36 hours'"))
+    .limit(20)
+    .select("id", "redes", "estadisticas", "ab")
+  let n = 0
+  for (const a of listas) {
+    const red = (a.redes || [])[0]
+    const ia = a.estadisticas?.[red]?.interaccion
+    if (ia == null) continue // todavía sin estadísticas
+    const otros = await knex(T_POST).where("estado", "publicada").where("publicada_en", ">=", knex.raw("now() - interval '30 days'")).whereRaw(`estadisticas->?->>'interaccion' is not null`, [red]).pluck(knex.raw(`(estadisticas->?->>'interaccion')::numeric`, [red]))
+    const orden = otros.map(Number).sort((x: number, y: number) => x - y)
+    const mediana = orden.length ? orden[Math.floor(orden.length / 2)] : 0
+    const funciono = ia >= mediana
+    await knex(T_POST).where({ id: a.id }).update({ ab: JSON.stringify({ ...a.ab, decision: funciono ? "A funcionó" : "A bajo la mediana", mediana, interaccion: ia }) })
+    if (funciono) await knex(T_POST).where({ id: a.ab.pareja }).whereIn("estado", ["borrador", "programada"]).update({ estado: "descartada", notas: knex.raw(`coalesce(notas, '') || ?`, [`\n(A/B: el gancho A funcionó; esta variante no se publica)`]) })
+    n++
+  }
+  if (n) logger?.info?.(`[social] A/B decididas: ${n}`)
+  return n
+}

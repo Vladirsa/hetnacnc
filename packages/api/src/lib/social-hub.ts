@@ -104,6 +104,8 @@ export async function asegurarSocial(knex: any) {
   // Revisor con IA: si ya se revisó y la versión anterior de los textos (para deshacer)
   await knex.raw(`alter table ?? add column if not exists revisada_ia boolean`, [T_POST]).catch(() => {})
   await knex.raw(`alter table ?? add column if not exists version_anterior jsonb`, [T_POST]).catch(() => {})
+  // Prueba A/B de ganchos: { variante: "A" | "B", pareja, gancho, decision? }
+  await knex.raw(`alter table ?? add column if not exists ab jsonb`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()

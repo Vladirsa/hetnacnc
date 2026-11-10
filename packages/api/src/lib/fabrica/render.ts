@@ -52,6 +52,8 @@ const fuente = (peso: 500 | 800 | 900) => {
   return (cacheFuente[peso] = FUENTES[peso])
 }
 const FAMILIA = { 500: "Archivo Medium", 800: "Archivo ExtraBold", 900: "Archivo Black" }
+/** Carpeta de las fuentes (para los subtítulos animados de FFmpeg/libass). */
+export const carpetaFuentes = () => path.dirname(fuente(800))
 
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
@@ -355,7 +357,7 @@ export async function cuadroDato(c: { cinta?: string; numero?: string; etiqueta:
 }
 
 /** Cuadro de video vertical 9:16: gancho, frase con subtítulo o cierre con QR. */
-export async function cuadroVideo(c: { tipo: "gancho" | "frase" | "cierre"; texto: string; tema?: string; foto_url?: string | null; liga?: string; credito?: string; semilla?: number }) {
+export async function cuadroVideo(c: { tipo: "gancho" | "frase" | "cierre"; texto: string; tema?: string; foto_url?: string | null; liga?: string; credito?: string; semilla?: number; sinTexto?: boolean }) {
   const [W, H] = FORMATOS["9:16"]
   const M = Math.round(W * 0.08), u = W / 100, ancho = Math.round(W * 0.78)
   const capas: Capa[] = []
@@ -379,7 +381,7 @@ export async function cuadroVideo(c: { tipo: "gancho" | "frase" | "cierre"; text
   if (c.tipo === "gancho") {
     const t = await texto(c.texto, { tam: Math.round(u * 9.4), peso: 900, ancho, interlineado: -Math.round(u * 1.6) })
     capas.push({ input: t.buf, left: M, top: Math.round(H * 0.16) })
-  } else {
+  } else if (!c.sinTexto) {
     // Subtítulo: cuadro oscuro detrás del texto, arriba de la zona de botones de la app
     const t = await texto(c.texto, { tam: Math.round(u * 6), peso: 800, ancho: Math.round(W * 0.7), alinear: "centre" })
     const pad = Math.round(u * 2.4)

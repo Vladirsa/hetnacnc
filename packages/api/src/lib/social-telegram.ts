@@ -130,7 +130,7 @@ async function aplicarCambio(p: any, instruccion: string, logger?: any) {
   }
 }
 
-const AYUDA = "Comandos:\n/pendientes — te mando los borradores de las próximas 24 h\n/semana — los de los próximos 7 días\n/cancelar — salir de ✏️ Cambiar\n\nEn cada borrador: ✅ Aprobar (sale a su hora), 🚀 Publicar ya, ✏️ Cambiar y 🗑 Descartar."
+const AYUDA = "Comandos:\n/pendientes — te mando los borradores de las próximas 24 h\n/semana — los de los próximos 7 días\n/resumen — cómo nos fue en los últimos 7 días\n/cancelar — salir de ✏️ Cambiar\n\nEn cada borrador: ✅ Aprobar (sale a su hora), 🚀 Publicar ya, ✏️ Cambiar y 🗑 Descartar."
 
 /** Atiende un mensaje o botón que llega de Telegram (vía n8n). Regresa el texto de respuesta. */
 export async function atender(knex: any, b: { tipo: string; chat_id: string; texto?: string; data?: string }, logger?: any): Promise<string> {
@@ -194,6 +194,10 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
     setImmediate(() => mandarBorradores(knex, { horas: semana ? 168 : 24, max: semana ? 25 : 12 }).catch((e) => logger?.warn?.(`[social] /pendientes: ${e.message}`)))
     return "Va, te los mando…"
   }
+  if (/^\/resumen/i.test(texto)) {
+    const { resumenSemanal } = await import("./social-semanal")
+    return resumenSemanal(knex)
+  }
   if (/^\/(start|ayuda|help)/i.test(texto)) return AYUDA
 
   if (tg.editando && texto) {
@@ -220,7 +224,7 @@ export async function pilotoAutomatico(knex: any, logger?: any) {
   await knex.raw(`update ?? set fuente = case when titulo like 'Promo%' then 'promo' else 'fabrica' end where fuente is null and estado = 'borrador' and (titulo like 'Promo%' or titulo like 'Fábrica ·%')`, [T_POST]).catch(() => {})
   const lista = await knex(T_POST)
     .where({ estado: "borrador" })
-    .whereIn("fuente", ["plan", "promo", "fabrica"])
+    .whereIn("fuente", ["plan", "promo", "fabrica", "reciclaje"])
     .whereNotNull("programada_para")
     .where("programada_para", "<=", knex.raw("now() + interval '36 hours'"))
     .whereRaw(`coalesce(jsonb_array_length(medios), 0) > 0`)

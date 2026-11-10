@@ -3,13 +3,14 @@
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { actualizarEstadisticas } from "../lib/social-estadisticas"
+import { actualizarEstadisticas, decidirAB } from "../lib/social-estadisticas"
 
 export default async function socialHubEstadisticas(container: MedusaContainer) {
   const logger = container.resolve("logger")
   try {
     const r = await actualizarEstadisticas(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger)
     if (r.leidas) logger.info(`[social] estadísticas leídas: ${r.leidas}`)
+    await decidirAB(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger)
   } catch (e) {
     logger.error(`[social] fallo al leer estadísticas: ${(e as Error).message}`)
   }

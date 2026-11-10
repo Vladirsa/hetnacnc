@@ -244,6 +244,11 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", cursor: "pointer" }} onClick={() => setAbierta(!abierta)}>
         <b style={{ color: col, fontSize: 12, textTransform: "uppercase" }}>{et}</b>
         <span style={{ fontSize: 12, color: C.tenue }}>{ORIGEN[p.origen] || p.origen}</span>
+        {(p as any).ab && (
+          <span style={{ fontSize: 12, background: "#EEF2FF", color: "#3730A3", borderRadius: 99, padding: "1px 8px" }} title="Mismo video con dos ganchos distintos: si el A rinde bien, el B no se publica">
+            {(p as any).ab.variante === "A" ? "🅰 Prueba A/B" : "🅱 Prueba A/B (otro gancho)"}{(p as any).ab.decision ? ` · ${(p as any).ab.decision}` : ""}
+          </span>
+        )}
         <b style={{ flex: 1, minWidth: 200 }}>{p.titulo}</b>
         <span style={{ fontSize: 12, color: C.tenue }}>
           {p.estado === "programada" ? `⏰ ${fecha(p.programada_para)}` : p.publicada_en ? `✓ ${fecha(p.publicada_en)}` : fecha(p.created_at)}

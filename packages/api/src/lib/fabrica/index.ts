@@ -20,7 +20,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, nuevoId } from "../licitacion"
 import { MERCADOS, T_POST, asegurarSocial, crearPublicacion, iaSocial, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { GUIAS, instanteEn, lunesDe } from "../estrategia"
-import { TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta } from "./render"
+import { TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { PROMPTS_TEMA, VOZ, bajarB2, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 
@@ -281,9 +281,9 @@ export async function producir(scope: any, id: string, logger?: any) {
         const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
         const frases = (c.frases || []).slice(0, 3)
         const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: c.gancho, tema, foto_url: await foto(), semilla: i * 7 + 1 }), segundos: dur(0, 2.2) }]
-        for (const [k, f] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema, foto_url: await foto(), semilla: i * 7 + k + 2 }), segundos: dur(k + 1, segundosPara(f)) })
+        for (const [k, f] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema, foto_url: await foto(), semilla: i * 7 + k + 2, sinTexto: true }), segundos: dur(k + 1, segundosPara(f)), subtitulo: f })
         escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: cierreTxt, tema, liga }), segundos: dur(frases.length + 1, 2.5) })
-        const v = await corto(escenas, { musica, voz: voz?.url || null })
+        const v = await corto(escenas, { fuentes: carpetaFuentes(), musica, voz: voz?.url || null })
         const url = await subir(scope, `fabrica-${id}-corto${i + 1}.mp4`, "video/mp4", v.buf)
         await knex(T_POST).where({ id: pid }).update({ medios: JSON.stringify([{ url, tipo: "video" }]) })
         piezas.cortos.push({ post: pid, url, segundos: Math.round(v.segundos) })

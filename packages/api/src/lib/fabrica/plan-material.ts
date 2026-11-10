@@ -10,10 +10,13 @@
 // Todo sale del texto real del borrador: no se inventan datos.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_POST, ligaPara, urlCorta } from "../social-hub"
+import Anthropic from "@anthropic-ai/sdk"
+
+import { nuevoId } from "../licitacion"
+import { MERCADOS, T_POST, crearPublicacion, dentroDeHorario, iaSocial, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { T_PLAN, asegurarPlan } from "../estrategia"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
-import { cuadroVideo, lamina, miniatura, tarjeta } from "./render"
+import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 
@@ -74,6 +77,63 @@ export const textosDe = (publico: string, mercado: string) => {
   return { cinta: (ETIQUETA[publico] || ETIQUETA.clientes_particulares)[en], cta: (LLAMADA[publico] || LLAMADA.clientes_particulares)[en], perfil: en ? "link in bio" : "liga en el perfil" }
 }
 
+// ---------------------------------------------------------------------
+// Prueba A/B de ganchos
+// ---------------------------------------------------------------------
+
+let ia: Anthropic | null = null
+/** Gancho alterno con otro enfoque (pregunta, dato, problema). Sin IA, usa la primera frase. */
+export async function ganchoAlterno(gancho: string, frases: string[], mercado: string, logger?: any) {
+  const respaldo = frases.find((f) => f && f !== gancho) || ""
+  if (!iaSocial()) return respaldo
+  try {
+    ia ??= new Anthropic()
+    const resp = await ia.beta.messages.create({
+      model: "claude-opus-5-5",
+      max_tokens: 200,
+      output_config: { effort: "low" },
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      system:
+        "Escribe UN gancho alterno para el primer segundo de un video corto de HETNA CNC. Máximo 8 palabras, con otro enfoque que el original " +
+        "(si el original es pregunta, usa un problema o un resultado; si es afirmación, usa una pregunta). No inventes cifras, precios ni datos. Devuelve sólo el gancho, sin comillas.",
+      messages: [{ role: "user", content: `Mercado: ${MERCADOS[mercado]?.nota || "español de México"}
+Gancho original: ${gancho}
+Lo que dice el video: ${frases.join(" / ")}` }],
+    } as any)
+    if (resp.stop_reason === "refusal") return respaldo
+    const t = resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim().replace(/^["“']|["”']$/g, "")
+    return t && t.length <= 80 ? t : respaldo
+  } catch (e) {
+    logger?.warn?.(`[fabrica] gancho alterno: ${(e as Error).message}`)
+    return respaldo
+  }
+}
+
+/** Crea la variante B (mismo contenido, otro gancho) 4 días después; su video lo hace la siguiente vuelta. */
+async function crearVarianteB(knex: any, f: any, g: { gancho: string; frases: string[] }, logger?: any) {
+  const ganchoB = await ganchoAlterno(g.gancho, g.frases, f.mercado, logger)
+  if (!ganchoB || ganchoB === g.gancho) return null
+  const cambiaGancho = (t: string) => {
+    const lineas = String(t || "").split("\n")
+    const i = lineas.findIndex((l) => l.trim())
+    if (i >= 0) lineas[i] = ganchoB
+    return lineas.join("\n")
+  }
+  const cfg = await leerConfig(knex)
+  const base = f.programada_para ? new Date(f.programada_para) : new Date(f.fecha)
+  const cuando = dentroDeHorario(new Date(base.getTime() + 4 * 86_400_000), cfg.horario, zonaDe(f.mercado))
+  const textos = Object.fromEntries(Object.entries(f.textos || {}).map(([r, t]) => [r, cambiaGancho(String(t))]))
+  const idB = await crearPublicacion(knex, {
+    origen: "manual", fuente: "plan", titulo: `${f.titulo} · gancho B`, texto_base: cambiaGancho(f.texto_base), textos, url: f.url_destino,
+    redes: [f.red], estado: "borrador", programada_para: cuando, mercado: f.mercado, notas: f.notas || undefined,
+  } as any, logger)
+  await knex(T_POST).where({ id: f.id }).update({ ab: JSON.stringify({ variante: "A", pareja: idB, gancho: g.gancho }) })
+  await knex(T_POST).where({ id: idB }).update({ ab: JSON.stringify({ variante: "B", pareja: f.id, gancho: ganchoB }) })
+  await knex(T_PLAN).insert({ id: nuevoId("plan"), semana: f.semana, fecha: cuando, red: f.red, mercado: f.mercado, publico: f.publico, pilar: f.pilar, formato: f.formato, estado: "falta_material", post_id: idB })
+  return idB
+}
+
 let ocupado = false
 
 /** Hace el material de los borradores del plan que todavía no tienen. */
@@ -99,7 +159,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
     .whereRaw(`coalesce(jsonb_array_length(p.medios), 0) = 0`)
     .orderBy("h.fecha")
     .limit(limite)
-    .select("h.id as plan_id", "h.formato", "h.publico", "h.red", "h.pilar", "h.mercado", "p.id", "p.texto_base", "p.textos", "p.notas", "p.url_destino", "p.titulo")
+    .select("h.id as plan_id", "h.semana", "h.fecha", "h.formato", "h.publico", "h.red", "h.pilar", "h.mercado", "p.id", "p.texto_base", "p.textos", "p.notas", "p.url_destino", "p.titulo", "p.ab", "p.programada_para")
   if (!filas.length) return { hechos: 0 }
   const hayVideo = ffmpegDisponible()
   const musica = hayVideo ? await musicaAlAzar(knex) : null
@@ -145,10 +205,12 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         const voz = voces[f.id]
         const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
         const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: g.gancho, tema, foto_url: await foto(), semilla: 1 }), segundos: dur(0, 2.4) }]
-        for (const [k, fr] of g.frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: fr, tema, foto_url: await foto(), semilla: k + 2 }), segundos: dur(k + 1, segundosPara(fr)) })
+        for (const [k, fr] of g.frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: fr, tema, foto_url: await foto(), semilla: k + 2, sinTexto: true }), segundos: dur(k + 1, segundosPara(fr)), subtitulo: fr })
         escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: g.cierre, tema, liga }), segundos: dur(g.frases.length + 1, 2.6) })
-        const v = await corto(escenas, { musica, voz: voz?.url || null })
+        const v = await corto(escenas, { fuentes: carpetaFuentes(), musica, voz: voz?.url || null })
         medios = [{ url: await subir(scope, `plan-${f.id}.mp4`, "video/mp4", v.buf), tipo: "video" }]
+        // Prueba A/B: otro día sale el mismo video con un gancho distinto (si A no funciona)
+        if (!f.ab) await crearVarianteB(knex, f, g, logger).catch((e) => logger?.warn?.(`[fabrica] variante B ${f.id}: ${e.message}`))
       } else if (["carrusel", "documento"].includes(f.formato)) {
         const { gancho, frases } = piezasDeTexto(texto, f.notas)
         const puntos = frases.slice(0, 4)

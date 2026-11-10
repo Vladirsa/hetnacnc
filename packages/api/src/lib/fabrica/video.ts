@@ -34,13 +34,45 @@ function correr(args: string[], tope = 10 * 60_000) {
   })
 }
 
-export type Escena = { png: Buffer; segundos: number }
+// subtitulo: texto que se dice en la escena; sale palabra por palabra (karaoke)
+export type Escena = { png: Buffer; segundos: number; subtitulo?: string }
+
+const assTiempo = (t: number) => {
+  const cs = Math.max(0, Math.round(t * 100))
+  const h = Math.floor(cs / 360000), m = Math.floor((cs % 360000) / 6000), s = Math.floor((cs % 6000) / 100), c = cs % 100
+  return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(c).padStart(2, "0")}`
+}
+const assEsc = (t: string) => String(t || "").replace(/[{}\\]/g, "").replace(/\n/g, " ")
+
+/**
+ * Subtítulos ASS con resaltado palabra por palabra: cada palabra se ilumina en
+ * naranja cuando "se dice". El tiempo de cada palabra es proporcional a su
+ * largo dentro de la duración de la escena (o de la voz, si la hay).
+ */
+export function assKaraoke(items: { texto: string; inicio: number; fin: number }[]) {
+  const cab = [
+    "[Script Info]", "ScriptType: v4.00+", "PlayResX: 1080", "PlayResY: 1920", "WrapStyle: 0", "",
+    "[V4+ Styles]",
+    "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+    // Primario = palabra ya dicha (naranja HETNA), secundario = por decir (blanco)
+    "Style: Sub,Archivo ExtraBold,96,&H005FA2F2,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,7,3,2,80,80,600,1",
+    "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
+  ]
+  const lineas = items.filter((x) => x.texto?.trim() && x.fin > x.inicio).map((x) => {
+    const palabras = assEsc(x.texto).trim().split(/\s+/)
+    const dur = Math.max(0.3, (x.fin - x.inicio) * 0.92) // termina un poco antes del cambio de escena
+    const peso = palabras.reduce((a, w) => a + w.length + 2, 0)
+    const k = palabras.map((w) => `{\\kf${Math.max(8, Math.round(((w.length + 2) / peso) * dur * 100))}}${w}`).join(" ")
+    return `Dialogue: 0,${assTiempo(x.inicio)},${assTiempo(x.fin)},Sub,,0,0,0,,{\\fad(80,80)}${k}`
+  })
+  return [...cab, ...lineas].join("\n") + "\n"
+}
 
 /**
  * Corto vertical: cada escena es un cuadro 1080x1920 que se acerca despacio;
  * entre escenas, transición de 0.4 s. `musica` y `voz` son rutas o URLs.
  */
-export async function corto(escenas: Escena[], o: { musica?: string | null; voz?: string | null; fps?: number } = {}) {
+export async function corto(escenas: Escena[], o: { musica?: string | null; voz?: string | null; fps?: number; fuentes?: string | null } = {}) {
   if (!escenas.length) throw new Error("Sin escenas")
   const fps = o.fps || 30
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hetna-video-"))
@@ -66,6 +98,21 @@ export async function corto(escenas: Escena[], o: { musica?: string | null; voz?
     }
     if (escenas.length === 1) filtros.push(`[v0]null[vout]`)
     const total = t + T
+    // Subtítulos animados (palabra por palabra) sobre el video ya armado
+    let inicio = 0
+    const subs: { texto: string; inicio: number; fin: number }[] = []
+    escenas.forEach((e) => {
+      if (e.subtitulo) subs.push({ texto: e.subtitulo, inicio: inicio + 0.15, fin: inicio + e.segundos })
+      inicio += e.segundos
+    })
+    if (subs.length) {
+      const ass = path.join(dir, "subs.ass")
+      fs.writeFileSync(ass, assKaraoke(subs))
+      const esc = (x: string) => x.replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "\\'")
+      const ult = filtros.pop() as string
+      const nuevo = ult.replace(/\[vout\]$/, "[vbase]")
+      filtros.push(nuevo, `[vbase]ass='${esc(ass)}'${o.fuentes ? `:fontsdir='${esc(o.fuentes)}'` : ""}[vout]`)
+    }
     let idx = escenas.length
     const audio: string[] = []
     if (o.musica) {

@@ -13,7 +13,7 @@ import { STORE_URL, nuevoId } from "../licitacion"
 import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
 import { limpiar, oraciones, palabras } from "./plan-material"
-import { cuadroVideo, lamina, tarjeta } from "./render"
+import { cuadroVideo, lamina, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 
@@ -118,9 +118,9 @@ async function videoCon(scope: any, nombre: string, d: { gancho: string; frases:
   const foto = async (k: number) => d.fotos[k % Math.max(1, d.fotos.length)] || (await fondoDe(knex, d.tema))
   const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
   const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: d.gancho, tema: d.tema, foto_url: await foto(0), semilla: 1 }), segundos: dur(0, 2.4) }]
-  for (const [k, f] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema: d.tema, foto_url: await foto(k + 1), semilla: k + 2 }), segundos: dur(k + 1, segundosPara(f)) })
+  for (const [k, f] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: f, tema: d.tema, foto_url: await foto(k + 1), semilla: k + 2, sinTexto: true }), segundos: dur(k + 1, segundosPara(f)), subtitulo: f })
   escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: d.cierre, tema: d.tema, liga: d.liga }), segundos: dur(frases.length + 1, 2.6) })
-  const v = await corto(escenas, { musica: await musicaAlAzar(knex), voz: voz?.url || null })
+  const v = await corto(escenas, { fuentes: carpetaFuentes(), musica: await musicaAlAzar(knex), voz: voz?.url || null })
   return subir(scope, `${nombre}.mp4`, "video/mp4", v.buf)
 }
 
