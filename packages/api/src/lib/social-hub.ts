@@ -54,7 +54,8 @@ export type ConfigSocial = {
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
-  automatico: { licitacion: true, taller: true, producto: true, foro: true },
+  // promociones: imagen y video diarios de productos, blog y herramientas (lib/fabrica/promociones)
+  automatico: { licitacion: true, taller: true, producto: true, foro: true, promociones: false },
   horario: { desde: 9, hasta: 20 },
   retraso_min: 10,
 }

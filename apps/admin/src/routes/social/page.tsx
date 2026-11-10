@@ -52,7 +52,7 @@ const boton = (tipo: "primario" | "normal" | "peligro"): CSSProperties => ({
   color: tipo === "normal" ? C.texto : "#fff",
 })
 const campo: CSSProperties = { width: "100%", boxSizing: "border-box", borderRadius: 8, border: `1px solid ${C.borde}`, padding: 8, fontSize: 14, background: C.fondo, color: C.texto }
-const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller" }
+const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller", promociones: "Promociones diarias (producto, blog y herramientas con imagen y video)" }
 const ESTADO: Record<string, [string, string]> = {
   borrador: ["Borrador", "#8A5A00"],
   programada: ["Programada", "#1a3a5c"],
@@ -1256,6 +1256,9 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>Paquetes</h3>
+          {[["producto", "🛒 Promover un producto"], ["blog", "📚 Promover un artículo"], ["herramienta", "🧰 Promover una herramienta"]].map(([tipo, t2]) => (
+            <button key={tipo} type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "promo", tipo }); setNota("Haciendo la imagen y el video. En 1 a 10 minutos aparecen en Pendientes (filtra por \"Con video\")."); } catch (e) { setNota((e as Error).message) } }}>{t2}</button>
+          ))}
           <button type="button" style={boton("normal")} onClick={async () => { try { const x = await apiFab<any>({ accion: "semanales" }); setNota(x.creadas?.length ? `Creadas: ${x.creadas.join(", ")}.` : "No hubo piezas semanales nuevas (faltan evaluaciones, reseñas o cotizaciones suficientes)."); alCambiar() } catch (e) { setNota((e as Error).message) } }}>Generar piezas semanales ahora</button>
           <button type="button" style={boton("normal")} onClick={() => setVerBib(!verBib)}>{verBib ? "Cerrar biblioteca" : "🎵 Biblioteca de fondos y música"}</button>
         </div>
@@ -1376,6 +1379,24 @@ export default function SocialHubPage() {
   const [vista, setVista] = useState<(typeof VISTAS)[number][0]>("pendientes")
   const [datos, setDatos] = useState<Datos | null>(null)
   const [error, setError] = useState("")
+  // Filtros de las listas: red social, mercado y material (imagen/video)
+  const [fRed, setFRed] = useState("")
+  const [fMercado, setFMercado] = useState("")
+  const [fMaterial, setFMaterial] = useState("")
+  const pasa = useCallback(
+    (p: Pub) => {
+      if (fRed && !(p.redes || []).includes(fRed)) return false
+      if (fMercado && (p.mercado || "mx") !== fMercado) return false
+      if (fMaterial) {
+        const m = ((p as any).medios || []) as { url: string; tipo?: string }[]
+        const video = m.some((x) => x.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(x.url))
+        const tipo = video ? "video" : m.length > 1 ? "carrusel" : m.length ? "imagen" : "sin"
+        if (tipo !== fMaterial) return false
+      }
+      return true
+    },
+    [fRed, fMercado, fMaterial]
+  )
   const cargar = useCallback(async () => {
     try {
       setDatos(await api<Datos>(""))
@@ -1389,20 +1410,20 @@ export default function SocialHubPage() {
   }, [cargar])
 
   const lista = useMemo(() => {
-    const ps = datos?.publicaciones || []
+    const ps = (datos?.publicaciones || []).filter(pasa)
     if (vista === "pendientes") return ps.filter((p) => ["borrador", "error", "parcial"].includes(p.estado))
     if (vista === "publicada") return ps.filter((p) => p.estado === "publicada")
     return []
-  }, [datos, vista])
+  }, [datos, vista, pasa])
   const calendario = useMemo(() => {
-    const ps = (datos?.publicaciones || []).filter((p) => p.estado === "programada").sort((a, b) => String(a.programada_para).localeCompare(String(b.programada_para)))
+    const ps = (datos?.publicaciones || []).filter((p) => p.estado === "programada" && pasa(p)).sort((a, b) => String(a.programada_para).localeCompare(String(b.programada_para)))
     const dias: Record<string, Pub[]> = {}
     for (const p of ps) {
       const d = p.programada_para ? new Date(p.programada_para).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" }) : "Sin fecha"
       ;(dias[d] ||= []).push(p)
     }
     return Object.entries(dias)
-  }, [datos])
+  }, [datos, pasa])
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: "0 auto", color: C.texto }}>
@@ -1444,6 +1465,28 @@ export default function SocialHubPage() {
       ) : (
         <>
           {vista === "pendientes" && <Nueva redes={datos.redes} config={datos.config} mercados={datos.mercados} alCrear={() => void cargar()} />}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", margin: "10px 0" }}>
+            <b style={{ fontSize: 13 }}>Filtrar:</b>
+            {[["", "Todas"], ...datos.redes.filter((r) => (datos.publicaciones || []).some((p) => (p.redes || []).includes(r.clave))).map((r) => [r.clave, r.nombre])].map(([clave, nom]) => {
+              const n = clave ? (datos.publicaciones || []).filter((p) => (p.redes || []).includes(clave) && (vista === "calendario" ? p.estado === "programada" : vista === "publicada" ? p.estado === "publicada" : ["borrador", "error", "parcial"].includes(p.estado))).length : 0
+              return (
+                <button key={clave || "todas"} type="button" onClick={() => setFRed(clave)} style={{ ...boton("normal"), padding: "3px 10px", fontSize: 12, background: fRed === clave ? "#142033" : C.fondo, color: fRed === clave ? "#fff" : C.texto }}>
+                  {nom}{clave ? ` (${n})` : ""}
+                </button>
+              )
+            })}
+            <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={fMercado} onChange={(e) => setFMercado(e.target.value)}>
+              <option value="">Todos los países</option>
+              {(datos.mercados || []).map((m) => <option key={m.clave} value={m.clave}>{m.nombre}</option>)}
+            </select>
+            <select style={{ ...campo, width: "auto", padding: 4, fontSize: 12 }} value={fMaterial} onChange={(e) => setFMaterial(e.target.value)}>
+              <option value="">Con o sin material</option>
+              <option value="video">🎬 Con video</option>
+              <option value="carrusel">🖼️ Carrusel</option>
+              <option value="imagen">🖼 Con imagen</option>
+              <option value="sin">⚠ Sin imagen ni video</option>
+            </select>
+          </div>
           {vista === "calendario" ? (
             calendario.length === 0 ? (
               <p style={{ color: C.tenue }}>No hay publicaciones programadas.</p>

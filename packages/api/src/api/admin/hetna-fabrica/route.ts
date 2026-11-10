@@ -4,6 +4,7 @@
 //                          | { accion: "fondo", tema, url, fuente, licencia } | { accion: "musica", titulo, url, estilo, licencia }
 //                          | { accion: "borrar_fondo" | "borrar_musica", id }
 //                          | { accion: "semanales" }  (genera ahora taller destacado, opinión e índice)
+//                          | { accion: "promo", tipo: "producto" | "blog" | "herramienta", clave? }  (imagen y video ahora)
 // Marketing HETNA — Fábrica de contenido (Fase A).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
@@ -12,6 +13,7 @@ import { T_FONDO, T_MUSICA, T_TRABAJO, asegurarFabrica, crearTrabajo, fondosConI
 import { ligasB2, runpodListo, salud } from "../../../lib/fabrica/runpod"
 import { TEMAS } from "../../../lib/fabrica/render"
 import { ffmpegDisponible } from "../../../lib/fabrica/video"
+import { HERRAMIENTAS, promoBlog, promoHerramienta, promoProducto } from "../../../lib/fabrica/promociones"
 import { nuevoId } from "../../../lib/licitacion"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -69,6 +71,14 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
         const [url] = await ligasB2([clave], 3600)
         return res.json({ ok: true, url })
       }
+      case "promo": {
+        // Video + imagen tardan (y la voz en frío más): se hace en segundo plano
+        const fn = b.tipo === "blog" ? () => promoBlog(req.scope, logger) : b.tipo === "herramienta" ? () => promoHerramienta(req.scope, logger, b.clave ? String(b.clave) : undefined) : () => promoProducto(req.scope, logger)
+        setImmediate(() => fn().then((r) => { if (!r) logger.info(`[promo] ${b.tipo}: no hay nada nuevo que promover`) }).catch((e) => logger.warn(`[promo] ${(e as Error).message}`)))
+        return res.json({ ok: true, en_proceso: true })
+      }
+      case "herramientas":
+        return res.json({ ok: true, herramientas: HERRAMIENTAS.map((h) => ({ clave: h.clave, nombre: h.nombre })) })
       case "semanales":
         return res.json({ ok: true, creadas: await piezasSemanales(req.scope, logger) })
       default:

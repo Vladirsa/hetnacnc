@@ -229,6 +229,25 @@ const sumarDias = (fecha: string, n: number) => {
   return x.toISOString().slice(0, 10)
 }
 
+// Tope de publicaciones por red y por día: todos los países comparten las mismas
+// cuentas y publicar de más baja el alcance de cada publicación.
+export const TOPE_DIA: Record<string, number> = { facebook: 2, instagram: 2, tiktok: 2, youtube: 1, linkedin: 1, telegram: 2, whatsapp: 1, grupos_facebook: 2, reddit: 1, pinterest: 2 }
+
+/** Deja como mucho TOPE_DIA[red] huecos por red y día; gana el mercado con más reparto. */
+export function recortarPorDia<T extends { red: string; mercado: string; fecha: Date }>(filas: T[], mercados: Record<string, number>) {
+  const orden = [...filas].sort((a, b) => (mercados[b.mercado] || 0) - (mercados[a.mercado] || 0))
+  const cuenta: Record<string, number> = {}
+  const quedan = new Set<T>()
+  for (const f of orden) {
+    const dia = new Date(f.fecha).toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+    const k = `${f.red}|${dia}`
+    if ((cuenta[k] || 0) >= (TOPE_DIA[f.red] ?? 2)) continue
+    cuenta[k] = (cuenta[k] || 0) + 1
+    quedan.add(f)
+  }
+  return filas.filter((f) => quedan.has(f))
+}
+
 /** Arma los huecos de la semana según guías, mercados y reparto. No duplica. */
 export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now() + 7 * 86_400_000))) {
   await asegurarPlan(knex)
@@ -259,8 +278,9 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
       giro++
     }
   }
-  if (filas.length) await knex.batchInsert(T_PLAN, filas, 100)
-  return { semana, creados: filas.length }
+  const finales = recortarPorDia(filas, cfg.mercados)
+  if (finales.length) await knex.batchInsert(T_PLAN, finales, 100)
+  return { semana, creados: finales.length, recortados: filas.length - finales.length }
 }
 
 // ---------------------------------------------------------------------
