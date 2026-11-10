@@ -69,18 +69,21 @@ export async function actualizarEstadisticas(knex: any, logger?: any, limite = 4
       if (!id) continue
       // Cada publicación se lee como mucho cada 6 horas
       if (est[red]?.en && Date.now() - new Date(est[red].en).getTime() < 6 * 3600_000) continue
+      // Si falta un permiso (p. ej. instagram_manage_insights) o una métrica ya no
+      // existe, se prueba con menos campos; sólo se avisa si fallan todos
+      let ultimo = ""
       for (const campos of camposPara(red, id)) {
         const r: any = await enviarAN8n({ red: "metricas", objeto: id, campos, texto: "" })
         if (r.ok && r.datos) {
           est[red] = { ...normalizar(red, r.datos), en: new Date().toISOString() }
           cambio = true
+          ultimo = ""
           break
         }
-        if (!/metric|field|campo|nonexisting|valid/i.test(String(r.error || ""))) {
-          logger?.warn?.(`[social] estadísticas ${p.id} ${red}: ${r.error}`)
-          break
-        }
+        ultimo = String(r.error || "sin respuesta")
+        if (/fetch failed|timeout|abort|N8N_/i.test(ultimo)) break
       }
+      if (ultimo) logger?.warn?.(`[social] estadísticas ${p.id} ${red}: ${ultimo}`)
       leidas++
     }
     if (cambio) await knex(T_POST).where({ id: p.id }).update({ estadisticas: JSON.stringify(est) })
