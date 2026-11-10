@@ -19,6 +19,7 @@ import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero }
 import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
 import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
+import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
 import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import { acomodarCopias } from "@/lib/cam/acomodar"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
@@ -48,7 +49,7 @@ const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "laser_grbl", nombre: "Láser GRBL" },
 ]
 
-type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "acanalado" | "textura" | "incrustacion_hembra" | "incrustacion_macho" | "laser_corte" | "laser_linea" | "laser_relleno"
+type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "roscado" | "acanalado" | "textura" | "incrustacion_hembra" | "incrustacion_macho" | "laser_corte" | "laser_linea" | "laser_relleno"
 const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "corte", nombre: "Corte de pieza", nota: "Barrenos por dentro y borde por fuera, con pestañas" },
   { id: "fuera", nombre: "Perfilado por fuera", nota: "La fresa va por fuera de la línea" },
@@ -57,6 +58,7 @@ const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "cajeado", nombre: "Cajeado (desbaste de área)", nota: "Vacía el área a una profundidad" },
   { id: "grabado_v", nombre: "Grabado en V", nota: "Letras y figuras con fresa en V" },
   { id: "barrenado", nombre: "Barrenado", nota: "Barrenos en el centro de cada círculo" },
+  { id: "roscado", nombre: "Roscado (fresado de rosca)", nota: "Rosca interior en cada círculo, con fresa de roscar" },
   { id: "acanalado", nombre: "Acanalado", nota: "Canal sobre la línea que entra y sale en rampa" },
   { id: "textura", nombre: "Textura", nota: "Surcos en ondas, como tallado a mano; mejor con fresa de bola" },
   { id: "incrustacion_hembra", nombre: "Incrustación: caja", nota: "Vacía la figura donde va a embonar la pieza" },
@@ -99,6 +101,9 @@ type Op = {
   onda: string
   anguloTextura: string
   holgura: string
+  // roscado
+  paso: string
+  roscaIzq: boolean
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
@@ -131,6 +136,8 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   onda: "30",
   anguloTextura: "0",
   holgura: "0.1",
+  paso: "1.5",
+  roscaIzq: false,
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -189,6 +196,7 @@ export function EstudioCam2D() {
   const pedido = useRef<FormData | null>(null)
   const [negado, setNegado] = useState<NegadoCam | null>(null)
   const [bajando, setBajando] = useState(false)
+  const [bajado, setBajado] = useState(false)
   const [versionCupo, setVersionCupo] = useState(0)
   const cupo = useCupoCam(versionCupo)
   const [error, setError] = useState<{ mensaje: string; remedio: string } | null>(null)
@@ -337,6 +345,7 @@ export function EstudioCam2D() {
         ...(o.fresa ? { herramienta: o.fresa, largo_corte: o.largoCorte } : {}),
         ...(o.tipo === "acanalado" ? { rampa: Math.max(0, numero(o.rampa) || 0) } : {}),
         ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
+        ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq } : {}),
         ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
       })),
     }
@@ -390,6 +399,7 @@ export function EstudioCam2D() {
     a.download = nombre
     document.body.appendChild(a)
     a.click()
+    setBajado(true)
     a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -524,7 +534,7 @@ export function EstudioCam2D() {
           <CampoNum etiqueta="Espesor" valor={espesor} cambiar={setEspesor} />
         </Seccion>
 
-        <Seccion titulo="Copias en la hoja" nota="Acomoda varias copias de la pieza en filas y columnas, derecha o girada, para cortarlas en un solo programa.">
+        <Seccion titulo="Copias en la hoja" nota="Acomoda varias copias de la pieza para cortarlas en un solo programa. Si la figura lo permite, las encaja volteadas unas en otras para que quepan más.">
           <div className="grid grid-cols-2 gap-2">
             <CampoNum etiqueta="Copias" valor={hoja.copias} cambiar={(v) => { setHoja({ ...hoja, copias: v }); setPlan(null); setGcode(null) }} sufijo="" />
             <CampoNum etiqueta="Separación" valor={hoja.separacion} cambiar={(v) => { setHoja({ ...hoja, separacion: v }); setPlan(null); setGcode(null) }} />
@@ -534,6 +544,7 @@ export function EstudioCam2D() {
           {acomodo && (numero(hoja.copias) || 1) > 1 && (
             <span className="text-[12px] leading-snug text-[#C9D2E0]">
               {acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
+              {variasCopias && acomodo.encajadas && "Van encajadas: una derecha y la siguiente volteada 180°. "}
               {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
             </span>
           )}
@@ -628,6 +639,13 @@ export function EstudioCam2D() {
                         <CampoNum etiqueta="Largo de cada onda" valor={o.onda} cambiar={(v) => cambiarOp(i, { onda: v })} />
                         <CampoNum etiqueta="Ángulo de los surcos" valor={o.anguloTextura} cambiar={(v) => cambiarOp(i, { anguloTextura: v })} sufijo="°" />
                       </div>
+                    )}
+                    {o.tipo === "roscado" && (
+                      <>
+                        <CampoNum etiqueta="Paso de la rosca (M6 = 1, M8 = 1.25, M10 = 1.5)" valor={o.paso} cambiar={(v) => cambiarOp(i, { paso: v })} />
+                        <Interruptor etiqueta="Rosca izquierda" activo={o.roscaIzq} cambiar={(v) => cambiarOp(i, { roscaIzq: v })} />
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso). En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.</span>
+                      </>
                     )}
                     {o.tipo === "incrustacion_macho" && <CampoNum etiqueta="Holgura para que embone" valor={o.holgura} cambiar={(v) => cambiarOp(i, { holgura: v })} />}
                     {(o.tipo === "incrustacion_hembra" || o.tipo === "incrustacion_macho") && (
@@ -852,6 +870,7 @@ export function EstudioCam2D() {
             ) : (
               cupo?.estado && <span className="text-[12px] leading-snug text-[#8A97AB]">{textoCupo(cupo.sesion, cupo.estado.basico, cupo.estado.plan_nombre, "El CAM 2D")}</span>
             )}
+            <ProbadoCam herramienta="2d" controlador={maquina.post} nombreControl={POSTS.find((p) => p.id === maquina.post)?.nombre || maquina.post} maquina={maquina.nombre} material={material} bajado={bajado} oscuro />
           </Seccion>
         )}
         <Seccion titulo="¿Necesitas más?" nota="3D, 4 o 5 ejes, o que un taller te lo corte.">

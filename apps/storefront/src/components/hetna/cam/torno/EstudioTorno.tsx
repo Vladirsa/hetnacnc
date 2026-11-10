@@ -14,6 +14,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
+import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
 import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import type { FresaCam } from "@/lib/data/cam-maquinas"
 import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
@@ -291,6 +292,7 @@ export function EstudioTorno() {
   const [lineasOcultas, setLineasOcultas] = useState(0)
   const [negado, setNegado] = useState<NegadoCam | null>(null)
   const [bajando, setBajando] = useState(false)
+  const [bajado, setBajado] = useState(false)
   const [versionCupo, setVersionCupo] = useState(0)
   const cupo = useCupoCam(versionCupo)
   const [info, setInfo] = useState<string | null>(null)
@@ -568,6 +570,7 @@ export function EstudioTorno() {
     a.href = url
     a.download = "pieza_torno_hetna.nc"
     a.click()
+    setBajado(true)
     URL.revokeObjectURL(url)
   }
 
@@ -776,6 +779,9 @@ export function EstudioTorno() {
                   ) : (
                     cupo?.estado && <p className="text-[12.5px] text-[#6B6A63]">{textoCupo(cupo.sesion, cupo.estado.torno, cupo.estado.plan_nombre, "El torno CNC")}</p>
                   )}
+                </div>
+                <div className="mt-3">
+                  <ProbadoCam herramienta="torno" controlador={avance === "G93" ? "linuxcnc" : "mach3"} nombreControl={avance === "G93" ? "LinuxCNC (G93)" : "Mach3 / Mach4 (G94)"} maquina="Torno CNC con eje A" bajado={bajado} />
                 </div>
                 <pre className="mt-3 max-h-[320px] overflow-auto rounded-[10px] bg-[#1B1B18] p-3 text-[12px] leading-relaxed text-[#E7E4DC]">
                   {vistaPrevia}

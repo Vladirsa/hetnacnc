@@ -226,7 +226,7 @@ async function repairPart(){
   if(p.degenerate)did.push(`${p.degenerate.toLocaleString('es-MX')} caras sin área quitadas`);if(p.duplicate)did.push(`${p.duplicate.toLocaleString('es-MX')} caras repetidas quitadas`);
   if(p.flipped)did.push(`${p.flipped.toLocaleString('es-MX')} caras volteadas hacia afuera`);if(p.holes)did.push(`${p.holes} ${p.holes===1?'hueco tapado':'huecos tapados'} con ${p.holeTris.toLocaleString('es-MX')} caras nuevas`);
   if(!p.changed){setBusy(null);renderIssues([{sev:p.open?'warn':'ok',title:p.open?'No encontré nada que pueda reparar solo':'La malla está bien',cause:p.open?`Quedan ${p.open} aristas abiertas que no forman un hueco simple (caras que se cruzan o piezas sueltas).`:'Está cerrada, sin caras repetidas ni volteadas.',fix:p.open?'Repárala en tu programa de diseño y expórtala otra vez como sólido.':''}]);return;}
-  S.rawPos=r.pos;S.rawFile=null; // lo que se manda al pedir el servicio es la malla reparada
+  S.rawPos=r.pos;S.rawFile=null;S.sampleKey=null; // lo que se manda al pedir el servicio es la malla reparada
   S.partDirty=true;setBusy(null);await reprep();
   renderIssues([{sev:p.open?'warn':'ok',title:p.open?'Malla reparada en parte':'Malla reparada',cause:did.join(', ')+'.'+(p.open?` Quedan ${p.open} aristas abiertas que no forman un hueco simple.`:' Quedó cerrada.'),fix:(p.holes?'Los huecos se taparon con una cara plana: revisa en la vista 3D que el tapón sea el que esperabas. ':'')+'Pulsa Calcular trayectoria.'}]);
 }

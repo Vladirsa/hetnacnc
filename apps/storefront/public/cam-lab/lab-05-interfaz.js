@@ -291,7 +291,7 @@ async function loadFile(file){
     }
     else throw new Error('Formato no soportado. Usa STL, OBJ o STEP.');
     if(!pos||pos.length<9)throw new Error('El archivo no contiene triángulos.');
-    S.rawPos=pos;S.rawFile=file;S.partName=file.name;S.rotSeq=[];S.scale=1;S.scl=[1,1,1];$('#p_scale').value=1;$('#jobName').textContent=file.name;
+    S.rawPos=pos;S.rawFile=file;S.sampleKey=null;S.partName=file.name;S.rotSeq=[];S.scale=1;S.scl=[1,1,1];$('#p_scale').value=1;$('#jobName').textContent=file.name;
     const sz=[0,1,2].map(c=>{let a=Infinity,b=-Infinity;for(let i=c;i<pos.length;i+=3){if(pos[i]<a)a=pos[i];if(pos[i]>b)b=pos[i];}return b-a;});
     if(Math.max(...sz)<12){S.units=25.4;$('#p_units').value='25.4';toast('La pieza es muy pequeña: se interpretó en pulgadas');}else{S.units=1;$('#p_units').value='1';}
     S.busy=true;await preparePart();S.busy=false;S.partDirty=false;S.moves=null;S.gcode=null;buildPathObjects();
@@ -299,7 +299,7 @@ async function loadFile(file){
   }catch(e){console.error(e);setBusy(null);S.busy=false;renderIssues([{sev:'err',title:'No se pudo abrir el archivo',cause:e.message,fix:''}]);toast('No se pudo abrir el archivo');}
 }
 async function loadSample(k){
-  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;S.scl=[1,1,1];S.stk=STK_DEF();S.sup=SUP_DEF();Object.assign(S.strat,{pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0});S.strat.area.on=false;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
+  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.sampleKey=k;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;S.scl=[1,1,1];S.stk=STK_DEF();S.sup=SUP_DEF();Object.assign(S.strat,{pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0});S.strat.area.on=false;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
   $('#stk_margin').value=sm.margin??3;
   applyPreset(sm.preset);S.toolId=sm.tool;Object.assign(S.strat,sm.strat);renderToolList();syncToolForm();syncStratUI();buildToolMesh();
   $$('#samples .chip').forEach(c=>c.classList.toggle('on',c.dataset.sample===k));
