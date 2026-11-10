@@ -407,6 +407,8 @@ export async function enviarAN8n(cuerpo: any) {
     const d = await r.json().catch(() => ({}))
     if (!r.ok) return { ok: false, error: d?.error || d?.message || `n8n respondió ${r.status}` }
     if (d?.pendiente) return { ok: false, pendiente: true, contenedor: String(d.contenedor || ""), error: null }
+    // "Bad request" de Meta casi siempre es el token vencido o sin permiso
+    if (d?.ok === false && /bad request/i.test(String(d?.error || ""))) d.error = `${d.error}. Suele ser el token de Facebook vencido: pon uno nuevo en n8n (credencial "Facebook Graph account 2").`
     return { ok: d?.ok !== false, url: d?.url || null, id: d?.id ? String(d.id) : null, datos: d?.datos || null, usuario: d?.usuario || null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
   } catch (e) {
     return { ok: false, error: (e as Error).message }

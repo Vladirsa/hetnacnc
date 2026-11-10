@@ -13,6 +13,7 @@ import { T_FONDO, T_MUSICA, T_TRABAJO, asegurarFabrica, crearTrabajo, fondosConI
 import { ligasB2, runpodListo, salud } from "../../../lib/fabrica/runpod"
 import { TEMAS } from "../../../lib/fabrica/render"
 import { ffmpegDisponible } from "../../../lib/fabrica/video"
+import * as op from "../../../lib/fabrica/oportunidades"
 import { HERRAMIENTAS, promoBlog, promoHerramienta, promoProducto } from "../../../lib/fabrica/promociones"
 import { nuevoId } from "../../../lib/licitacion"
 
@@ -73,7 +74,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       }
       case "promo": {
         // Video + imagen tardan (y la voz en frío más): se hace en segundo plano
-        const fn = b.tipo === "blog" ? () => promoBlog(req.scope, logger) : b.tipo === "herramienta" ? () => promoHerramienta(req.scope, logger, b.clave ? String(b.clave) : undefined) : () => promoProducto(req.scope, logger)
+        const fn = b.tipo === "radar" ? () => op.radarEstado(req.scope, logger) : b.tipo === "talleres" ? () => op.talleresListos(req.scope, logger) : b.tipo === "blog" ? () => promoBlog(req.scope, logger) : b.tipo === "herramienta" ? () => promoHerramienta(req.scope, logger, b.clave ? String(b.clave) : undefined) : () => promoProducto(req.scope, logger)
         setImmediate(() => fn().then((r) => { if (!r) logger.info(`[promo] ${b.tipo}: no hay nada nuevo que promover`) }).catch((e) => logger.warn(`[promo] ${(e as Error).message}`)))
         return res.json({ ok: true, en_proceso: true })
       }

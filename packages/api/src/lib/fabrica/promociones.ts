@@ -81,6 +81,24 @@ async function asegurarPromo(knex: any) {
   listo = true
 }
 
+/** Voz de RunPod para una lista de frases (null si no hay RunPod o falla: el video sale sin voz). */
+export async function vozPara(nombre: string, frases: string[], mercado: string, logger?: any) {
+  if (!runpodListo()) return null
+  try {
+    const idioma = idiomaDe(mercado)
+    const out = await correr({ tarea: "voz", voz: VOZ(idioma, "hombre"), idioma, lotes: [{ frases, clave: `fabrica/promo/${nombre}-voz.wav` }] }, { logger, topeMin: 15 })
+    const l = out.lotes?.[0]
+    return l ? { ...l, url: (await ligasB2([l.clave], 7200))[0] } : null
+  } catch (e) {
+    logger?.warn?.(`[promo] voz: ${(e as Error).message}`)
+    return null
+  }
+}
+
+export async function cuandoPromo(knex: any, horas: number, mercado = "mx") {
+  return cuando(knex, horas, mercado)
+}
+
 /** Corto 9:16 con fotos propias (producto, portada o captura) y voz si se puede. */
 async function videoCon(scope: any, nombre: string, d: { gancho: string; frases: string[]; cierre: string; fotos: (string | null)[]; tema: string; liga: string; mercado: string }, logger?: any) {
   if (!ffmpegDisponible()) return null
@@ -212,6 +230,10 @@ export async function promocionesDelDia(scope: any, logger?: any) {
   await intenta("producto", () => promoProducto(scope, logger))
   if (dia === 2 || dia === 5) await intenta("blog", () => promoBlog(scope, logger))
   if (dia === 1 || dia === 4) await intenta("herramienta", () => promoHerramienta(scope, logger))
+  // Plantillas de dos lados (lib/fabrica/oportunidades): radar para talleres y talleres listos para clientes
+  const op = await import("./oportunidades")
+  if (dia === 3 || dia === 6) await intenta("radar por estado", () => op.radarEstado(scope, logger))
+  if (dia === 0 || dia === 2) await intenta("talleres listos", () => op.talleresListos(scope, logger))
   if (hechos.length) logger?.info?.(`[promo] hechas: ${hechos.join(", ")}`)
   return hechos
 }

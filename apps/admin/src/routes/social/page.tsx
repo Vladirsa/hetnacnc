@@ -1307,8 +1307,8 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>Paquetes</h3>
-          {[["producto", "🛒 Promover un producto"], ["blog", "📚 Promover un artículo"], ["herramienta", "🧰 Promover una herramienta"]].map(([tipo, t2]) => (
-            <button key={tipo} type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "promo", tipo }); setNota("Haciendo la imagen y el video. En 1 a 10 minutos aparecen en Pendientes (filtra por \"Con video\")."); } catch (e) { setNota((e as Error).message) } }}>{t2}</button>
+          {[["producto", "🛒 Promover un producto"], ["blog", "📚 Promover un artículo"], ["herramienta", "🧰 Promover una herramienta"], ["radar", "📡 Radar por estado (para talleres)"], ["talleres", "🏭 Talleres listos (para clientes)"]].map(([tipo, t2]) => (
+            <button key={tipo} type="button" style={boton("normal")} onClick={async () => { try { await apiFab({ accion: "promo", tipo }); setNota("Haciendo la imagen y el video. En 1 a 10 minutos aparecen en Pendientes (filtra por \"Con video\"). Si no aparece nada, todavía no hay datos suficientes (mínimo 3 solicitudes o talleres) o ya se promovió hace poco."); } catch (e) { setNota((e as Error).message) } }}>{t2}</button>
           ))}
           <button type="button" style={boton("normal")} onClick={async () => { try { const x = await apiFab<any>({ accion: "semanales" }); setNota(x.creadas?.length ? `Creadas: ${x.creadas.join(", ")}.` : "No hubo piezas semanales nuevas (faltan evaluaciones, reseñas o cotizaciones suficientes)."); alCambiar() } catch (e) { setNota((e as Error).message) } }}>Generar piezas semanales ahora</button>
           <button type="button" style={boton("normal")} onClick={() => setVerBib(!verBib)}>{verBib ? "Cerrar biblioteca" : "🎵 Biblioteca de fondos y música"}</button>

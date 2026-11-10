@@ -409,8 +409,13 @@ export async function tarjetasAutomaticas(scope: any, logger?: any) {
       const liga = urlCorta(await ligaPara(knex, p.id, red, p.url_destino))
       const tema = temaDe(`${p.titulo} ${p.texto_base}`)
       const foto = await fondoDe(knex, tema)
+      // Licitación: ficha "Se busca taller" con los datos reales de la solicitud
+      const { fichaSolicitud } = await import("./oportunidades")
+      const ficha = p.origen === "licitacion" && p.origen_id ? await fichaSolicitud(knex, p.origen_id).catch(() => null) : null
       const spec =
-        p.origen === "licitacion"
+        ficha
+          ? { cinta: ficha.cinta, titulo: ficha.titulo, datos: ficha.datos, sub: ficha.sub, cta: ficha.cta }
+          : p.origen === "licitacion"
           ? { cinta: { texto: "Se busca taller" }, titulo: p.titulo, sub: lineaDe(p.texto_base, "📍") || undefined, cta: "Envía tu propuesta sin comisión" }
           : p.origen === "taller"
             ? { cinta: { texto: "Nuevo taller en HETNA", tono: "oro" }, titulo: p.titulo, sub: lineaDe(p.texto_base, "📍") || undefined, cta: "Conoce sus trabajos y cotiza" }
