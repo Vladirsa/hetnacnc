@@ -9,7 +9,7 @@ import { type Rol, rolDe } from "./roles"
 const BACKEND = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 export const COOKIE_PANEL = "hetna_panel"
 
-export type UsuarioPanel = { id: string; email: string; nombre: string; rol: Rol }
+export type UsuarioPanel = { id: string; email: string; nombre: string; rol: Rol; diagnostico?: string }
 
 export async function tokenPanel(): Promise<string | null> {
   const c = await cookies()
@@ -49,18 +49,26 @@ export async function usuarioPanel(): Promise<UsuarioPanel | null> {
     const me = await adminFetch<{ user: { id: string; email: string; first_name?: string; last_name?: string; metadata?: Record<string, unknown>; created_at?: string } }>("/admin/users/me")
     const u = me.user
     let arranque = false
+    let diagnostico = ""
     if (!u.metadata?.panel_rol) {
       // Arranque: mientras NINGÚN administrador tenga rol del panel, todos los
       // administradores entran como dueño (sólo el dueño crea administradores).
       // En cuanto se asigna el primer rol en Equipo, manda lo asignado.
       try {
-        const lista = await adminFetch<{ users: { id: string; metadata?: Record<string, unknown> }[] }>("/admin/users?limit=100")
-        arranque = !lista.users.some((x) => x.metadata?.panel_rol)
-      } catch {}
+        const lista = await adminFetch<{ users: { id: string; email: string; metadata?: Record<string, unknown> }[] }>("/admin/users?limit=100")
+        const conRol = lista.users.filter((x) => x.metadata?.panel_rol)
+        arranque = conRol.length === 0
+        if (!arranque) diagnostico = `Ya hay administradores con rol (${conRol.map((x) => x.email).join(", ")}); pide a uno de ellos que te asigne el tuyo en Equipo.`
+      } catch (e) {
+        // Si no se puede leer la lista, los administradores siguen siendo de
+        // confianza (sólo el dueño los crea): entra como dueño
+        arranque = true
+        diagnostico = `No pude leer la lista de administradores (${(e as Error).message}).`
+      }
       const duenos = (process.env.PANEL_DUENOS || "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean)
       if (duenos.includes(u.email.toLowerCase())) arranque = true
     }
-    return { id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, rol: rolDe(u.metadata, arranque) }
+    return { id: u.id, email: u.email, nombre: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, rol: rolDe(u.metadata, arranque), diagnostico }
   } catch {
     return null
   }
