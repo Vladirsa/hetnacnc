@@ -48,20 +48,24 @@ function cargarMotor() {
 const CORRER = new vm.Script(`(function (e) {
   const s = e.estado;
   if (!s || !s.post || !s.machine || !s.tool || !CTRL[s.post.ctrl] || !KIN_AXES[s.machine.kin]) throw new Error("entrada");
-  S.machine = s.machine; S.tools = [s.tool]; S.toolId = s.tool.id;
+  // fresas del trabajo: la principal va primero; cada movimiento trae el índice de la suya
+  const tls = Array.isArray(s.tools) && s.tools.length && s.tools.length <= 8 && s.tools.every(function (t) { return t && typeof t === "object"; }) ? s.tools : [s.tool];
+  if (tls[0].id !== s.tool.id) throw new Error("entrada");
+  S.machine = s.machine; S.tools = tls; S.toolId = s.tool.id;
   Object.assign(S.feeds, s.feeds); Object.assign(S.strat, s.strat); Object.assign(S.post, s.post);
   S.stock = s.stock; S.zero = s.zero; S.partName = String(s.partName || "pieza").slice(0, 80);
   if (e.clase === "cps") return genCPS();
   if (e.clase === "pp") return genPP();
   if (!S.stock) throw new Error("entrada");
-  const m = S.machine, tl = tool(), tcp = useTCP(), rot = KIN_AXES[m.kin].length, n = e.n, moves = new Array(n);
+  const m = S.machine, tcp = useTCP(), rot = KIN_AXES[m.kin].length, n = e.n, moves = new Array(n);
   if (rot !== e.rot) throw new Error("entrada");
   let prev = null;
   for (let i = 0; i < n; i++) {
     const p = [e.P[i * 3], e.P[i * 3 + 1], e.P[i * 3 + 2]], ang = [];
     for (let q = 0; q < rot; q++) ang.push(e.A[i * rot + q]);
     const k = kinMats(m.kin, ang), f = e.T[i];
-    const mv = { p, ang, R: k.R, ha: k.ha, t: "RPF"[f & 3] || "F", kfail: !!(f & 4), len: prev ? V.dist(prev, p) : 0 };
+    const tl = tls[f >> 3] || tls[0];
+    const mv = { p, ang, R: k.R, ha: k.ha, t: "RPF"[f & 3] || "F", kfail: !!(f & 4), len: prev ? V.dist(prev, p) : 0, tid: tl.id };
     mv.pm = linearOut(mv, m, tl, tcp); moves[i] = mv; prev = p;
   }
   S.moves = moves;

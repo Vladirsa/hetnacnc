@@ -142,9 +142,12 @@ const outKind=()=>S.post.out==='cps'||S.post.out==='pp'?S.post.out:'gcode';
 const outExt=()=>S.post.out==='cps'?'cps':S.post.out==='pp'?'pp':S.post.out==='json'?'json':extOf(S.post.ctrl);
 async function packJob(clase,descargar){
   const m=S.machine,rot=KIN_AXES[m.kin].length,mv=clase==='gcode'?S.moves:[],n=mv.length;
-  const head=new TextEncoder().encode(JSON.stringify({clase,descargar,n,rot,estado:{machine:m,tool:tool(),feeds:S.feeds,strat:{kind:S.strat.kind,stepover:S.strat.stepover,lead:S.strat.lead},post:S.post,stock:S.stock,zero:S.zero,partName:S.partName}}));
+  // fresas que usa el trabajo: la del acabado primero; cada movimiento lleva el índice de la suya
+  const tls=[tool()],ix=new Map([[tool().id,0]]);
+  for(const q of mv)if(q.tid!==undefined&&!ix.has(q.tid)&&tls.length<8){ix.set(q.tid,tls.length);tls.push(toolById(q.tid));}
+  const head=new TextEncoder().encode(JSON.stringify({clase,descargar,n,rot,estado:{machine:m,tool:tool(),tools:tls,feeds:S.feeds,strat:{kind:S.strat.kind,stepover:S.strat.stepover,lead:S.strat.lead},post:S.post,stock:S.stock,zero:S.zero,partName:S.partName}}));
   const P=new Float32Array(n*3),A=new Float64Array(n*rot),T=new Uint8Array(n);
-  for(let i=0;i<n;i++){const q=mv[i];P[i*3]=q.p[0];P[i*3+1]=q.p[1];P[i*3+2]=q.p[2];for(let k=0;k<rot;k++)A[i*rot+k]=q.ang[k];T[i]=(q.t==='R'?0:q.t==='P'?1:2)|(q.kfail?4:0);}
+  for(let i=0;i<n;i++){const q=mv[i];P[i*3]=q.p[0];P[i*3+1]=q.p[1];P[i*3+2]=q.p[2];for(let k=0;k<rot;k++)A[i*rot+k]=q.ang[k];T[i]=(q.t==='R'?0:q.t==='P'?1:2)|(q.kfail?4:0)|((ix.get(q.tid)||0)<<3);}
   const raw=new Blob([new Uint32Array([head.length]),head,P,A,T]);
   return new Response(raw.stream().pipeThrough(new CompressionStream('gzip'))).blob();
 }
@@ -296,7 +299,7 @@ async function loadFile(file){
   }catch(e){console.error(e);setBusy(null);S.busy=false;renderIssues([{sev:'err',title:'No se pudo abrir el archivo',cause:e.message,fix:''}]);toast('No se pudo abrir el archivo');}
 }
 async function loadSample(k){
-  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;S.scl=[1,1,1];S.stk=STK_DEF();S.sup=SUP_DEF();Object.assign(S.strat,{pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral'});S.strat.area.on=false;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
+  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;S.scl=[1,1,1];S.stk=STK_DEF();S.sup=SUP_DEF();Object.assign(S.strat,{pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0});S.strat.area.on=false;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
   $('#stk_margin').value=sm.margin??3;
   applyPreset(sm.preset);S.toolId=sm.tool;Object.assign(S.strat,sm.strat);renderToolList();syncToolForm();syncStratUI();buildToolMesh();
   $$('#samples .chip').forEach(c=>c.classList.toggle('on',c.dataset.sample===k));

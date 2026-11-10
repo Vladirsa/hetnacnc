@@ -90,8 +90,8 @@ function syncStockGeo(full){
     const cA=nx*nt;pos[cA*3]=sg.x0;pos[cA*3+1]=0;pos[cA*3+2]=0;pos[cA*3+3]=sg.x0+(nx-1)*sg.rx;pos[cA*3+4]=0;pos[cA*3+5]=0;}
   sg.geo.attributes.position.needsUpdate=true;if(full)sg.geo.computeBoundingSphere();
 }
-function cutAt(T,a){
-  const sg=S.sg,tl=tool();const R=tl.D/2;const {R:Re}=cutterRadii(tl);let dirty=false;
+function cutAt(T,a,tl=tool()){
+  const sg=S.sg;const R=tl.D/2;const {R:Re}=cutterRadii(tl);let dirty=false;
   if(sg.type==='top'){
     if(a[2]>0.9995){const i0=Math.max(0,Math.floor((T[0]-R-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((T[0]+R-sg.x0)/sg.rx)),j0=Math.max(0,Math.floor((T[1]-R-sg.y0)/sg.ry)),j1=Math.min(sg.ny-1,Math.ceil((T[1]+R-sg.y0)/sg.ry));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=sg.x0+i*sg.rx,y=sg.y0+j*sg.ry;const d=Math.hypot(x-T[0],y-T[1]);if(d>R)continue;const z=T[2]+toolH(tl,d);const k=j*sg.nx+i;if(z<sg.H[k]){sg.H[k]=Math.max(z,sg.zb);dirty=true;}}}
@@ -136,9 +136,9 @@ function buildPathObjects(){
   needleObj=new THREE.LineSegments(g3,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.7}));workGroup.add(needleObj);
   applyVisibility();
 }
-function buildToolMesh(){
+function buildToolMesh(tl=tool()){
   while(toolGroup.children.length){const c=toolGroup.children.pop();c.geometry.dispose();}
-  const tl=tool();const R=tl.D/2;const pts=[];const n=24;
+  SIM.shown=tl.id;const R=tl.D/2;const pts=[];const n=24;
   for(let i=0;i<=n;i++){const d=R*i/n;const h=toolH(tl,d);pts.push(new THREE.Vector2(Math.max(d,0.001),h));}
   pts.push(new THREE.Vector2(R,tl.fluteLen));pts.push(new THREE.Vector2(0.001,tl.fluteLen));
   const cut=new THREE.Mesh(new THREE.LatheGeometry(pts,40),MAT.cutter);cutterMesh=cut;toolGroup.add(cut);
@@ -172,14 +172,15 @@ function poseAt(t){
 }
 function advanceCut(ti,tf,budget){
   // aplica remoción desde (cutIdx,cutFrac) hasta (ti,tf)
-  const mv=S.moves,tl=tool();const step=Math.max(cutterRadii(tl).R*0.45,tl.D*0.15,0.2);let used=0,dirty=false;
+  const mv=S.moves;let used=0,dirty=false;
   while(SIM.cutIdx<ti||(SIM.cutIdx===ti&&SIM.cutFrac<tf-1e-9)){
     const i=SIM.cutIdx;if(i<=0||i>=mv.length){SIM.cutIdx=Math.max(1,i+1);SIM.cutFrac=0;if(i>=mv.length)break;continue;}
     const B=mv[i],A=mv[i-1];const end=i<ti?1:tf;
     if(B.t==='R'){SIM.cutIdx++;SIM.cutFrac=0;continue;}
+    const tl=toolById(B.tid),step=Math.max(cutterRadii(tl).R*0.45,tl.D*0.15,0.2); // cada tramo quita material con su propia fresa
     const L=Math.max(B.len,V.dist(A.p,B.p));const n=Math.max(1,Math.ceil(L/step));
     let k=Math.floor(SIM.cutFrac*n);const kEnd=Math.ceil(end*n);
-    for(;k<=kEnd&&k<=n;k++){const f=k/n;if(cutAt(V.lerp(A.p,B.p,f),V.norm(V.lerp(A.a,B.a,f))))dirty=true;used++;if(used>=budget){SIM.cutFrac=Math.min(1,(k+1)/n);if(dirty)syncStockGeo(false);return false;}}
+    for(;k<=kEnd&&k<=n;k++){const f=k/n;if(cutAt(V.lerp(A.p,B.p,f),V.norm(V.lerp(A.a,B.a,f)),tl))dirty=true;used++;if(used>=budget){SIM.cutFrac=Math.min(1,(k+1)/n);if(dirty)syncStockGeo(false);return false;}}
     if(end>=1){SIM.cutIdx++;SIM.cutFrac=0;}else{SIM.cutFrac=end;break;}
   }
   if(dirty)syncStockGeo(false);return true;
@@ -213,10 +214,11 @@ function placeTool(pose){
   workGroup.matrixWorldNeedsUpdate=true;
   toolGroup.position.set(p[0],p[1],p[2]);toolGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(a[0],a[1],a[2]));
   const mv=S.moves[pose.i];const hot=mv&&(mv.st>=2||mv.kfail)&&mv.t!=='R';
+  if(mv&&mv.tid!==undefined&&SIM.shown!==mv.tid)buildToolMesh(toolById(mv.tid)); // la fresa que se ve es la del tramo
   if(cutterMesh)cutterMesh.material=hot?MAT.hot:MAT.cutter;if(holderMesh)holderMesh.material=hot?MAT.hot:MAT.holder;
 }
 function updateDRO(pose){
-  const m=S.machine,tl=tool(),fd=feedsCalc();const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  const m=S.machine,tl=toolById(S.moves[pose.i]?.tid),fd=feedsCalc(tl);const axes=KIN_AXES[m.kin];const tcp=useTCP();
   const mm=kinMats(m.kin,pose.ang||[]);const pm=linearOut({p:pose.p,R:mm.R,ha:mm.ha},m,tl,tcp);
   const rows=[['X',pm[0]],['Y',pm[1]],['Z',pm[2]],...axes.map((a,q)=>[a,(pose.ang?.[q]||0)*(m.inv[q]?-1:1)])];
   const mv=S.moves[pose.i];const F=mv?.t==='R'?'RÁPIDO':(mv?.t==='P'?fd.plunge:fd.feed);
@@ -246,7 +248,13 @@ async function compute(){
   try{
     if(!S.M||S.frame!==frameOf(S.strat.kind)||S.partDirty){await preparePart();S.partDirty=false;}
     const tl=tool(),st=S.strat;let res;const t0=now();
-    if(st.kind==='top3')res=await genTop3(tl,st);else if(st.kind==='rot4')res=await genRot4(tl,st);else res=await gen5(tl,st);
+    // desbaste con otra fresa: cada una calcula su trayectoria con su propia forma
+    const rt=st.rough&&st.roughTool&&st.roughTool!==tl.id?S.tools.find(t=>t.id===st.roughTool):null;S.rtool=rt||null;
+    if(st.kind==='top5'||st.kind==='rot5')res=await gen5(tl,st);
+    else{const gen=st.kind==='top3'?genTop3:genRot4;
+      if(rt){const rr=await gen(rt,st,{roughOnly:true}),rf=await gen(tl,{...st,rough:false});rr.passes.forEach(p=>{p.tid=rt.id;p.lk=rr.linkOK;});
+        res={...rf,passes:rr.passes.concat(rf.passes),maxDepth:Math.max(rr.maxDepth,rf.maxDepth)};}
+      else res=await gen(tl,st);}
     setBusy('Enlazando pasadas y resolviendo ejes de máquina…',0.97);await tick();
     const moves=buildMoves(res,st);S.moves=moves;S.job={res,kind:st.kind,ms:now()-t0,toolId:tl.id};
     S.jobStats=annotateMoves(moves);
@@ -263,6 +271,7 @@ function renderReport(){
   const collPts=S.moves.filter(x=>x.t!=='R'&&x.st>=2).length+ (st.skip&&s5?s5.coll:0);
   const k=[];
   k.push({l:'Tiempo estimado',v:fmtTime(js.total)});
+  if(js.changes)k.push({l:'Cambios de fresa',v:String(js.changes)});
   k.push({l:'Corte',v:`${nf(js.lenCut/1000,1)} m`});
   k.push({l:'Puntos de corte',v:feedPts.toLocaleString('es-MX')});
   k.push({l:'Líneas G-code',v:S.gcode?S.gcode.total.toLocaleString('es-MX'):'…'});

@@ -156,6 +156,12 @@ function syncExtrasUI(){
   $('#o_pat3').textContent={par:'Pasadas rectas, una junto a otra.',cross:'Dos juegos de pasadas a 90°: borra las crestas, tarda el doble.',circ:'Círculos concéntricos desde el centro del área: buen acabado en platos y medallones.',rad:'Rayos desde el centro hacia afuera: útil en piezas con forma de domo.'}[st.pat3];
   $$('#s_cutdir button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.cutdir));
   $('#w_rpat').hidden=rot;$('#w_rrot').hidden=!rot;$('#s_rpat').value=st.rpat;$('#s_rrot').value=st.rrot;
+  // fresa de desbaste: la del acabado u otra de la biblioteca (las de grabado y las brocas no desbastan)
+  if(st.roughTool&&!S.tools.some(t=>t.id===st.roughTool))st.roughTool=0;
+  $('#s_rtool').innerHTML='<option value="0">La misma del acabado</option>'+S.tools.filter(t=>t.id!==S.toolId&&t.type!=='vbit'&&t.type!=='drill').map(t=>`<option value="${t.id}">T${+t.num||0} · ${esc(t.name)} · Ø${+t.D||0}</option>`).join('');
+  $('#s_rtool').value=String(st.roughTool||0);$('#w_rtool').hidden=!st.rough;
+  const rtl=st.rough&&st.roughTool?S.tools.find(t=>t.id===st.roughTool):null;
+  $('#o_rtool').textContent=rtl?`El programa desbasta con T${rtl.num}, se retira, pide el cambio a T${tool().num} y hace el acabado. Avance de desbaste: ${feedsCalc(rtl).feed.toLocaleString('es-MX')} mm/min a ${feedsCalc(rtl).rpm.toLocaleString('es-MX')} RPM. Mide el largo de las dos fresas en tu máquina antes de correrlo.`:'';
   $('#o_rough5').textContent=five?'En 5 ejes el desbaste se hace con la herramienta recta (como en 3 o 4 ejes) y después entra el acabado inclinado.':'';
   const a=st.area;$('#s_area').checked=a.on;$('#w_areay').hidden=rot;['x0','x1','y0','y1'].forEach(q=>{$('#s_a'+q).value=a[q];$('#s_a'+q).disabled=!a.on;});
 }
@@ -175,6 +181,7 @@ function initExtrasUI(){
   $('#z_top').addEventListener('change',e=>{S.zero.top=e.target.value;zero();});$('#z_rot').addEventListener('change',e=>{S.zero.rot=e.target.value;zero();});
   seg('s_pat3',v=>{S.strat.pat3=v;stale();});seg('s_cutdir',v=>{S.strat.cutdir=v;stale();});seg('s_angq',v=>{S.strat.ang=+v;stale();});
   numIn('s_ang',v=>S.strat.ang=v,stale,-180,180);
+  $('#s_rtool').addEventListener('change',e=>{S.strat.roughTool=+e.target.value||0;stale();});
   $('#s_rpat').addEventListener('change',e=>{S.strat.rpat=e.target.value;stale();});$('#s_rrot').addEventListener('change',e=>{S.strat.rrot=e.target.value;stale();});
   const fit=()=>{const M=S.M;if(!M)return;Object.assign(S.strat.area,{x0:Math.floor(M.bmin[0]),x1:Math.ceil(M.bmax[0]),y0:Math.floor(M.bmin[1]),y1:Math.ceil(M.bmax[1])});};
   $('#s_area').addEventListener('change',e=>{S.strat.area.on=e.target.checked;if(e.target.checked&&!S.strat.area.set){fit();S.strat.area.set=true;}stale();});

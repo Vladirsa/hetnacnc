@@ -243,7 +243,7 @@ const DEVS=[5,10,15,20,26,32,40,50].map(d=>d*DEG),AZS=[0,45,-45,90,-90,135,-135,
 async function gen5(tl,st){
   const M=S.M,stock=S.stock,m=S.machine;const chk=checker(tl,st);const lead=st.lead*DEG,tilt=st.tilt*DEG,maxT=st.maxTilt*DEG;
   const minDotN=(tl.type==='flat'||tl.type==='bull')?0.5:0.08;const stats={adjusted:0,coll:0,lim:0,devSum:0,why:{}};
-  let roughRes=null;if(st.rough)roughRes=await(S.frame==='top'?genTop3:genRot4)(tl,st,{roughOnly:true});
+  let roughRes=null;if(st.rough){const rt=S.rtool||tl;roughRes=await(S.frame==='top'?genTop3:genRot4)(rt,st,{roughOnly:true});roughRes.passes.forEach(p=>{p.tid=rt.id;p.lk=roughRes.linkOK;});}
   const passes=[];const ps={t:now()};
   const evalPoint=(P,n,f,ref,prevAng)=>{
     const a0=clampCone(axisFromNormal(n,f,lead,tilt),ref,maxT);
@@ -334,11 +334,12 @@ function simplify(pts,tol=0.004){
    ENLACES Y DATOS DE MÁQUINA
    ========================================================= */
 function buildMoves(res,st){
-  const moves=[];const frame=S.frame,stock=S.stock;const push=(p,a,t,s=0,rough=false)=>moves.push({p,a,t,st:s,rough});
+  const moves=[];const frame=S.frame,stock=S.stock;let tid=tool().id; // cada movimiento lleva la herramienta con la que se hace
+  const push=(p,a,t,s=0,rough=false)=>moves.push({p,a,t,st:s,rough,tid});
   const safeTop=stock.type==='box'?stock.max[2]+st.safe:0;const safeR=stock.type==='cyl'?Math.max(stock.r+st.safe,(S.fixtures[0]?.r||0)+4):0;
   const clr=Math.max(1,Math.min(st.safe,4));
   // separar tramos en colisión si se pide omitir
-  let passes=[];for(const p of res.passes){if(!st.skip){passes.push(p);continue;}let cur=[];for(const q of p.pts){if(q.st>=2){if(cur.length>1)passes.push({pts:cur,rough:p.rough});cur=[];}else cur.push(q);}if(cur.length>1)passes.push({pts:cur,rough:p.rough});}
+  let passes=[];for(const p of res.passes){if(!st.skip){passes.push(p);continue;}let cur=[];for(const q of p.pts){if(q.st>=2){if(cur.length>1)passes.push({...p,pts:cur});cur=[];}else cur.push(q);}if(cur.length>1)passes.push({...p,pts:cur});}
   const toSafe=(p,a)=>{ // punto de retracción seguro
     if(frame==='top'){const l=V.madd(p,a,clr);return[l,[l[0],l[1],Math.max(safeTop,l[2])]];}
     const l=V.madd(p,a,clr);const r=Math.hypot(l[1],l[2])||1;const th=Math.atan2(l[1],l[2]);return[l,[l[0],safeR*Math.sin(th),safeR*Math.cos(th)]];
@@ -351,14 +352,17 @@ function buildMoves(res,st){
   };
   const f0=passes[0]?.pts[0];if(!f0)return moves;
   const [,s0]=toSafe(f0.p,f0.a);
+  tid=passes[0].tid||tid;
   const home=frame==='top'?[s0[0],s0[1],safeTop]:s0;push(home,f0.a,'R');
   let last=null;
   for(let pi=0;pi<passes.length;pi++){
-    const pts=passes[pi].pts,rough=passes[pi].rough;const first=pts[0];
-    const direct=last&&res.linkOK&&V.dist(last.p,first.p)<=(rough?st.rso:st.stepover)*1.6&&res.linkOK(last.p,first.p,rough);
+    const pts=passes[pi].pts,rough=passes[pi].rough;const first=pts[0];const ptid=passes[pi].tid||tool().id,lk=passes[pi].lk||res.linkOK;
+    // el enlace directo solo vale dentro de la misma herramienta: su mapa de alturas es el que dice si el tramo libra
+    const direct=last&&ptid===tid&&lk&&V.dist(last.p,first.p)<=(rough?st.rso:st.stepover)*1.6&&lk(last.p,first.p,rough);
     if(direct){push(first.p,first.a,'F',first.st,rough);}
     else{
-      if(last){const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P',0,rough);push(l2,last.a,'R');const [a1,a2]=toSafe(first.p,first.a);travel(l2,last.a,a2,first.a);push(a1,first.a,'R');}
+      if(last){const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P',0,rough);push(l2,last.a,'R');tid=ptid; // el cambio de herramienta ocurre ya retirado, en la zona segura
+        const [a1,a2]=toSafe(first.p,first.a);travel(l2,last.a,a2,first.a);push(a1,first.a,'R');}
       else{const [a1,a2]=toSafe(first.p,first.a);travel(home,f0.a,a2,first.a);push(a1,first.a,'R');}
       push(first.p,first.a,'P',first.st,rough);
     }
@@ -369,7 +373,8 @@ function buildMoves(res,st){
   return moves;
 }
 function annotateMoves(moves){
-  const m=S.machine,tl=tool(),fd=feedsCalc();let prev=null,jumps=0,cum=0,lenCut=0,limFail=0;const tcp=useTCP();
+  const m=S.machine;let prev=null,jumps=0,cum=0,lenCut=0,limFail=0,changes=0;const tcp=useTCP();
+  const fds={};const fdOf=id=>fds[id]||(fds[id]=feedsCalc(toolById(id)));const TOOL_CHANGE_MIN=0.5;
   const rot=KIN_AXES[m.kin].length;const rng=[[Infinity,-Infinity],[Infinity,-Infinity]];const lin=[[Infinity,-Infinity],[Infinity,-Infinity],[Infinity,-Infinity]];
   for(let i=0;i<moves.length;i++){
     const mv=moves[i];let k=kinSolve(m,mv.a,prev);
@@ -378,13 +383,15 @@ function annotateMoves(moves){
     if(prev&&mv.t==='F'&&rot){for(let q=0;q<rot;q++)if(Math.abs(mv.ang[q]-prev[q])>30){jumps++;mv.jump=true;break;}}
     prev=k.ang;
     for(let q=0;q<rot;q++){rng[q][0]=Math.min(rng[q][0],mv.ang[q]);rng[q][1]=Math.max(rng[q][1],mv.ang[q]);}
+    const tl=toolById(mv.tid),fd=fdOf(tl.id);
     mv.pm=linearOut(mv,m,tl,tcp);for(let c=0;c<3;c++){lin[c][0]=Math.min(lin[c][0],mv.pm[c]);lin[c][1]=Math.max(lin[c][1],mv.pm[c]);}
     let dur=0;if(i>0){const pv=moves[i-1];const d=V.dist(pv.p,mv.p);mv.len=d;
       const dAng=rot?Math.max(...mv.ang.map((v,q)=>Math.abs(v-pv.ang[q]))):0;
-      if(mv.t==='R')dur=Math.max(V.dist(pv.pm,mv.pm)/m.rapid,dAng/5400);
+      if(pv.tid!==mv.tid){changes++;dur=TOOL_CHANGE_MIN;} // el cambio de fresa también es tiempo de máquina
+      else if(mv.t==='R')dur=Math.max(V.dist(pv.pm,mv.pm)/m.rapid,dAng/5400);
       else{const f=mv.t==='P'?fd.plunge:fd.feed;dur=Math.max(d/f,dAng/5400);if(mv.t==='F')lenCut+=d;}}
     else mv.len=0;
     cum+=dur;mv.cum=cum;
   }
-  return {jumps,total:cum,lenCut,limFail,rng,lin,rot};
+  return {jumps,total:cum,lenCut,limFail,rng,lin,rot,changes};
 }
