@@ -31,7 +31,7 @@ const regionMapCache = {
   regionMapUpdated: Date.now()
 };
 
-async function getRegionMap(cacheId: string) {
+async function getRegionMap(cacheId: string): Promise<Map<string, HttpTypes.StoreRegion> | null> {
   const { regionMap, regionMapUpdated } = regionMapCache;
 
   if (!BACKEND_URL) {
@@ -42,36 +42,49 @@ async function getRegionMap(cacheId: string) {
 
   if (!regionMap.keys().next().value || regionMapUpdated < Date.now() - 3600 * 1000) {
     // We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: {
-        'x-publishable-api-key': PUBLISHABLE_API_KEY!
-      },
-      next: {
-        revalidate: 3600,
-        tags: [`regions-${cacheId}`]
-      },
-      cache: 'force-cache'
-    }).then(async response => {
-      const json = await response.json();
+    //
+    // Si la API no contesta (se está reiniciando en un despliegue, por ejemplo),
+    // NO tiramos la página: seguimos con el mapa que ya teníamos y, si no hay
+    // ninguno, devolvemos null y el middleware deja pasar la petición tal cual.
+    // Antes cada visita durante esos segundos terminaba en un error 500.
+    try {
+      const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
+        headers: {
+          'x-publishable-api-key': PUBLISHABLE_API_KEY!
+        },
+        next: {
+          revalidate: 3600,
+          tags: [`regions-${cacheId}`]
+        },
+        cache: 'force-cache'
+      }).then(async response => {
+        const json = await response.json();
 
-      if (!response.ok) {
-        throw new Error(json.message);
+        if (!response.ok) {
+          throw new Error(json.message);
+        }
+
+        return json;
+      });
+
+      if (!regions?.length) {
+        throw new Error('No regions found. Please set up regions in your Medusa Admin.');
       }
 
-      return json;
-    });
-
-    if (!regions?.length) {
-      throw new Error('No regions found. Please set up regions in your Medusa Admin.');
-    }
-
-    regions.forEach((region: HttpTypes.StoreRegion) => {
-      region.countries?.forEach(c => {
-        regionMapCache.regionMap.set(c.iso_2 ?? '', region);
+      regions.forEach((region: HttpTypes.StoreRegion) => {
+        region.countries?.forEach(c => {
+          regionMapCache.regionMap.set(c.iso_2 ?? '', region);
+        });
       });
-    });
 
-    regionMapCache.regionMapUpdated = Date.now();
+      regionMapCache.regionMapUpdated = Date.now();
+    } catch (error) {
+      if (!regionMap.keys().next().value) {
+        console.warn('Middleware.ts: la API no contestó al pedir las regiones; se deja pasar la petición sin región.', (error as Error)?.message);
+        return null;
+      }
+      // Hay mapa viejo: se usa y se reintenta en la siguiente visita.
+    }
   }
 
   return regionMapCache.regionMap;
@@ -175,7 +188,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const regionMap = await getRegionMap(cacheId);
-  const countryCode = regionMap && (await getCountryCode(request, regionMap));
+  if (!regionMap) return response;
+  const countryCode = await getCountryCode(request, regionMap);
   const urlHasCountryCode = countryCode && pathname.split('/')[1].includes(countryCode);
 
   if (!urlHasCountryCode && countryCode) {
