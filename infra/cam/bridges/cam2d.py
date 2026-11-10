@@ -28,10 +28,13 @@ import sys
 from dataclasses import dataclass
 from functools import reduce
 
+import random
+
 import ezdxf
 from ezdxf import disassemble
 from ezdxf import path as dxfpath
 from shapely.geometry import LineString, MultiPolygon, Polygon
+from shapely.ops import unary_union
 
 sys.path.insert(0, os.path.dirname(__file__))
 from dxf_gcode import error, parametros_de_corte  # noqa: E402
@@ -40,17 +43,21 @@ TOL = 0.05  # mm al pasar curvas a rectas
 UNIR = 0.02  # mm para unir trazos sueltos punta con punta
 MAX_LINEAS = 400_000  # G-code demasiado grande = algo salió mal (relleno o V muy finos)
 
-TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado"}
+TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado", "acanalado", "textura", "incrustacion_hembra", "incrustacion_macho"}
 TIPOS_LASER = {"laser_corte", "laser_linea", "laser_relleno"}
 
 NOMBRES = {
     "corte": "Corte de pieza",
-    "fuera": "Contorno por fuera",
-    "dentro": "Contorno por dentro",
-    "linea": "Sobre la línea",
+    "fuera": "Perfilado por fuera",
+    "dentro": "Perfilado por dentro",
+    "linea": "Perfilado sobre la línea",
     "cajeado": "Cajeado",
     "grabado_v": "Grabado en V",
     "barrenado": "Barrenado",
+    "acanalado": "Acanalado",
+    "textura": "Textura",
+    "incrustacion_hembra": "Incrustación: caja",
+    "incrustacion_macho": "Incrustación: pieza",
     "laser_corte": "Láser: corte",
     "laser_linea": "Láser: línea",
     "laser_relleno": "Láser: relleno",
@@ -199,6 +206,9 @@ class Gcode:
         self.x = 0.0
         self.y = 0.0
         self.z = seguridad
+        # Al arrancar no se sabe dónde está la máquina: el primer traslado se
+        # escribe siempre, aunque la figura empiece justo en X0 Y0.
+        self.ubicado = False
         self.corte = 0.0
         self.rapido = 0.0
         self.minutos = 0.0
@@ -218,10 +228,11 @@ class Gcode:
 
     def ir(self, x: float, y: float):
         d = math.hypot(x - self.x, y - self.y)
-        if d < 1e-4:
+        if d < 1e-4 and self.ubicado:
             return
         self.subir()
         self.emitir(f"G0 X{x:.3f} Y{y:.3f}")
+        self.ubicado = True
         self.rapido += d
         self.minutos += d / 5000
         self.x, self.y = x, y
@@ -282,8 +293,15 @@ def _recorrer(g: Gcode, anillo, z: float, f: float, fz: float, tramos=(), z_pest
         rec += L
 
 
-def _pestanas(anillo, cuantas: int, largo: float):
+def _pestanas(anillo, cuantas: int, largo: float, diametro: float = 0.0):
+    """Tramos donde la fresa sube. `largo` es el material que debe quedar: la
+    fresa se come un radio por cada lado, así que el tramo levantado mide el
+    largo más el diámetro."""
+    largo += diametro
     per = _largo(anillo)
+    # en una pieza chica caben menos: mejor dos pestañas que ninguna
+    while cuantas > 2 and per < largo * cuantas * 3:
+        cuantas -= 1
     if cuantas <= 0 or per < largo * cuantas * 3:
         return []
     paso = per / cuantas
@@ -298,7 +316,7 @@ def _profundidades(total: float, pasada: float) -> list[float]:
 # --- Operaciones -----------------------------------------------------------
 
 
-def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre):
+def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre, sobre=0.0):
     figuras = 0
     if modo == "corte":
         # barrenos por dentro primero, luego el borde por fuera
@@ -310,18 +328,45 @@ def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, aviso
         trabajos = [(p, r if modo == "fuera" else -r, modo == "fuera") for p in polys]
     chicos = 0
     for p, desfase, con_pestanas in trabajos:
-        anillos = _anillos(p.buffer(desfase, join_style=2 if desfase > 0 else 1, quad_segs=8)) if abs(desfase) > 1e-6 else _anillos(p)
+        def anillos_a(d, p=p):
+            return _anillos(p.buffer(d, join_style=2 if d > 0 else 1, quad_segs=8)) if abs(d) > 1e-6 else _anillos(p)
+
+        anillos = anillos_a(desfase)
         if not anillos:
             chicos += 1
             continue
         figuras += 1
+        lleva_pestanas = bool(con_pestanas and pestanas)
+        z_pest = -(prof - altura_pestana)
+        desbaste = anillos_a(desfase + math.copysign(sobre, desfase)) if sobre > 0 and abs(desfase) > 1e-6 else []
+        if desbaste:
+            # Desbaste separado de la línea y una pasada de acabado sobre ella.
+            # La zona de pestañas la corta sólo el acabado: así las pestañas
+            # quedan donde deben y con todo su ancho.
+            hasta = prof - altura_pestana if lleva_pestanas else prof
+            for anillo in desbaste:
+                if len(anillo) < 3:
+                    continue
+                for z in _profundidades(hasta, receta["profundidad_pasada"]):
+                    _recorrer(g, anillo, z, receta["avance"], receta["penetracion"])
+                g.subir()
+            for anillo in anillos:
+                if len(anillo) < 3:
+                    continue
+                _recorrer(g, anillo, -hasta, receta["avance"], receta["penetracion"])
+                if lleva_pestanas:
+                    tramos = _pestanas(anillo, pestanas, 6.0, 2 * r)
+                    for z in _profundidades(altura_pestana, receta["profundidad_pasada"]):
+                        _recorrer(g, anillo, -hasta + z, receta["avance"], receta["penetracion"], tramos, z_pest)
+            g.subir()
+            continue
         for anillo in anillos:
             if len(anillo) < 3:
                 continue
             zs = _profundidades(prof, receta["profundidad_pasada"])
             for z in zs:
-                tramos = _pestanas(anillo, pestanas, 6.0) if (con_pestanas and pestanas and z < -(prof - altura_pestana)) else []
-                _recorrer(g, anillo, z, receta["avance"], receta["penetracion"], tramos, -(prof - altura_pestana))
+                tramos = _pestanas(anillo, pestanas, 6.0, 2 * r) if (lleva_pestanas and z < z_pest) else []
+                _recorrer(g, anillo, z, receta["avance"], receta["penetracion"], tramos, z_pest)
         g.subir()
     if chicos:
         avisos.append(f"{nombre}: {chicos} figura(s) más chicas que la fresa se saltaron. Usa una fresa más delgada.")
@@ -344,27 +389,139 @@ def op_linea(g, trazos, prof, receta):
     return n
 
 
-def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
+def _muestrear(pts, paso: float, marcas=()):
+    """Puntos (x, y, s) a lo largo de un trazo, cada `paso` mm como máximo y
+    con un punto exacto en cada distancia de `marcas`."""
+    salida = [(pts[0][0], pts[0][1], 0.0)]
+    rec = 0.0
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+        L = math.hypot(x2 - x1, y2 - y1)
+        if L < 1e-9:
+            continue
+        cortes = sorted({L, *[m - rec for m in marcas if rec < m < rec + L]})
+        a = 0.0
+        for b in cortes:
+            n = max(1, math.ceil((b - a) / paso))
+            for i in range(1, n + 1):
+                u = (a + (b - a) * i / n) / L
+                salida.append((x1 + (x2 - x1) * u, y1 + (y2 - y1) * u, rec + u * L))
+            a = b
+        rec += L
+    return salida
+
+
+def op_acanalado(g, trazos, prof, receta, rampa):
+    """Canal que sigue la línea y entra y sale del material en rampa: en las
+    puntas la fresa está a ras y baja a toda la profundidad a `rampa` mm."""
+    n = 0
+    for t in trazos:
+        pts = list(t.pts) + ([t.pts[0]] if t.cerrado else [])
+        L = _largo(pts)
+        if len(pts) < 2 or L < 0.5:
+            continue
+        n += 1
+        r = 0.0 if t.cerrado else min(rampa, L / 2)
+        puntos = _muestrear(pts, 2.0 if r else 1e9, (r, L - r) if r else ())
+        factor = (lambda s_: min(1.0, s_ / r, (L - s_) / r)) if r else (lambda s_: 1.0)
+        ida = True
+        for z in _profundidades(prof, receta["profundidad_pasada"]):
+            camino = puntos if ida else puntos[::-1]
+            g.ir(camino[0][0], camino[0][1])
+            g.bajar(z * factor(camino[0][2]), receta["penetracion"])
+            for x, y, s_ in camino[1:]:
+                g.mover(x, y, receta["avance"], z * factor(s_))
+            if not t.cerrado:
+                ida = not ida
+        g.subir()
+    return n
+
+
+def op_textura(g, polys, prof, receta, separacion, angulo, onda, avisos):
+    """Surcos paralelos cuya profundidad sube y baja en ondas, con el arranque
+    de cada surco desfasado: el aspecto de tallado a mano."""
     region = _region(polys)
     if region.is_empty:
         return 0
-    paso = max(0.1, 2 * r * (1 - traslape))
+    azar = random.Random(20240607)  # siempre el mismo dibujo para el mismo archivo
+    a = math.radians(angulo)
+    d, nrm = (math.cos(a), math.sin(a)), (-math.sin(a), math.cos(a))
+    x0, y0, x1, y1 = region.bounds
+    esquinas = [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]
+    bs = [px * nrm[0] + py * nrm[1] for px, py in esquinas]
+    ts = [px * d[0] + py * d[1] for px, py in esquinas]
+    hechos, ida = 0, True
+    b = min(bs) + separacion / 2
+    while b < max(bs):
+        linea = LineString([(nrm[0] * b + d[0] * (min(ts) - 1), nrm[1] * b + d[1] * (min(ts) - 1)),
+                            (nrm[0] * b + d[0] * (max(ts) + 1), nrm[1] * b + d[1] * (max(ts) + 1))])
+        tramos = [t for t in _anillos(linea.intersection(region)) if _largo(t) > 1.0]
+        fase = azar.uniform(0, onda)
+        estira = azar.uniform(0.8, 1.25)
+        for tramo in (tramos if ida else [t[::-1] for t in tramos[::-1]]):
+            puntos = _muestrear(tramo, max(0.5, onda / 24))
+            L = puntos[-1][2]
+            # a ras en las dos puntas y en cada valle de la onda
+            hondo = lambda s_: -prof * (0.5 - 0.5 * math.cos(2 * math.pi * (s_ + fase) / (onda * estira))) * min(1.0, s_ / 3.0, (L - s_) / 3.0)
+            g.ir(puntos[0][0], puntos[0][1])
+            g.bajar(0.0, receta["penetracion"])
+            for x, y, s_ in puntos[1:]:
+                g.mover(x, y, receta["avance"], hondo(s_))
+            g.subir()
+            hechos += 1
+        ida = not ida
+        b += separacion
+    return 1 if hechos else 0
+
+
+def forma_incrustable(polys, r: float, holgura: float):
+    """La figura tal como la deja una fresa de radio r al vaciarla (esquinas
+    interiores redondeadas), reducida por la holgura: es la pieza que embona."""
+    region = _region(polys)
+    if region.is_empty:
+        return []
+    forma = region.buffer(-r, join_style=1, quad_segs=8).buffer(r, join_style=1, quad_segs=8).buffer(-holgura, join_style=1, quad_segs=8)
+    return [p for p in getattr(forma, "geoms", [forma]) if isinstance(p, Polygon) and p.area > 0.5]
+
+
+def op_cajeado(g, polys, r, prof, receta, traslape, avisos, sobre=0.0):
+    region = _region(polys)
+    if region.is_empty:
+        return 0
+    paso = min(2 * r, max(0.1, 2 * r * (1 - traslape)))
     partes = list(region.geoms) if isinstance(region, MultiPolygon) else [region]
     hechas = 0
     for parte in partes:
         anillos_por_nivel = []
-        d = r
+        desfases = []
+        d = r + max(0.0, sobre)
         while True:
             g_ = parte.buffer(-d, join_style=1, quad_segs=8)
             if g_.is_empty:
                 break
             anillos_por_nivel.append(_anillos(g_))
+            desfases.append(d)
             d += paso
             if len(anillos_por_nivel) > 2000:
                 break
         if not anillos_por_nivel:
             avisos.append("Cajeado: una zona es más angosta que la fresa y no se vació.")
             continue
+        if paso > r + 1e-9:
+            # Cada anillo sólo asegura un radio hacia adentro. Con un paso
+            # mayor, donde el anillo siguiente ya no cabe (el centro de una
+            # franja, las esquinas) queda material: se repasa sólo ahí, con el
+            # tramo del anillo que va un radio más adentro.
+            barrido = unary_union([LineString(a) for nivel in anillos_por_nivel for a in nivel if len(a) >= 2])
+            resto = parte.buffer(-r, join_style=1, quad_segs=8).buffer(r, quad_segs=8).difference(barrido.buffer(r, quad_segs=8))
+            islas = [p for p in getattr(resto, "geoms", [resto]) if isinstance(p, Polygon) and p.area > 0.05]
+            if islas:
+                cerca = unary_union(islas).buffer(r)
+                repaso = []
+                for dd in desfases:
+                    borde = parte.buffer(-(dd + r), join_style=1, quad_segs=8).boundary
+                    repaso.extend(a for a in _anillos(borde.intersection(cerca)) if _largo(a) > 0.01)
+                if repaso:
+                    anillos_por_nivel.append(repaso)
         hechas += 1
         for z in _profundidades(prof, receta["profundidad_pasada"]):
             # de adentro hacia afuera: la orilla queda al final, más limpia
@@ -372,6 +529,12 @@ def op_cajeado(g, polys, r, prof, receta, traslape, avisos):
                 for anillo in nivel:
                     if len(anillo) >= 2:
                         _recorrer(g, anillo, z, receta["avance"], receta["penetracion"] * 0.5)
+            g.subir()
+        if sobre > 0:
+            # pasada de acabado: la pared, a toda la profundidad, quitando sólo el sobrematerial
+            for anillo in _anillos(parte.buffer(-r, join_style=1, quad_segs=8)):
+                if len(anillo) >= 2:
+                    _recorrer(g, anillo, -prof, receta["avance"], receta["penetracion"] * 0.5)
             g.subir()
     return hechas
 
@@ -494,6 +657,8 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         if tipo_maquina == "laser" and post not in ("laser_grbl", "grbl"):
             post = "laser_grbl"
         seguridad = float(maquina.get("seguridad", 5))
+        if not (math.isfinite(seguridad) and 1 <= seguridad <= 100):
+            return error("entrada_invalida", "La altura de seguridad no es válida.", "Captúrala en mm, entre 1 y 100.")
         smax = float(maquina.get("smax", 1000))
         ops = config.get("operaciones") or []
         if not ops:
@@ -517,6 +682,11 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         g = Gcode(post, seguridad, tipo_maquina == "laser", smax)
         g.c(f"HETNA CAM Studio 2D - {material} {espesor:g} mm - post {post}")
         g.emitir("G21 G90 G17 G94")
+        if tipo_maquina != "laser":
+            # Antes de cualquier traslado: la máquina puede venir de poner el
+            # cero con la fresa tocando el material.
+            g.emitir(f"G0 Z{seguridad:.3f}")
+        herramienta_actual = None
         rpm_actual = None
         resumen = []
         for i, op in enumerate(ops, 1):
@@ -540,26 +710,73 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 receta = parametros_de_corte(material, diam if tipo != "grabado_v" else max(3, diam))
                 if not receta:
                     return error("entrada_invalida", f"No conozco el material '{material}'.", "Elige uno de la lista.")
-                if op.get("pasada"):
-                    receta["profundidad_pasada"] = max(0.1, float(op["pasada"]))
+                # Parámetros propios de la herramienta (base de herramientas del
+                # cliente). Lo que no venga se queda con la receta del material.
+                for campo, llave, lo, hi in (("pasada", "profundidad_pasada", 0.05, 50), ("avance", "avance", 10, 30000),
+                                             ("penetracion", "penetracion", 5, 10000), ("rpm", "rpm", 500, 60000)):
+                    if op.get(campo) not in (None, "", 0):
+                        v = float(op[campo])
+                        if not (math.isfinite(v) and lo <= v <= hi):
+                            return error("entrada_invalida", f"Operación {i}: el valor de {campo} no es válido.", f"Captúralo entre {lo} y {hi}.")
+                        receta[llave] = int(round(v)) if campo == "rpm" else v
+                sobre = float(op.get("sobrematerial") or 0)
+                if not (math.isfinite(sobre) and 0 <= sobre <= 5):
+                    return error("entrada_invalida", f"Operación {i}: el sobrematerial no es válido.", "Captúralo en mm, entre 0 y 5.")
+                traslape = float(op.get("traslape", 0.4))
+                if not (math.isfinite(traslape) and 0 <= traslape <= 0.95):
+                    return error("entrada_invalida", f"Operación {i}: el traslape no es válido.", "Captúralo entre 0 y 95 %.")
                 prof = float(op.get("profundidad") or espesor)
                 prof = max(0.05, min(prof, espesor + 2))
-                if rpm_actual != receta["rpm"]:
-                    if rpm_actual is not None:
+                try:
+                    largo_filo = float(op.get("largo_corte") or 0)
+                except (TypeError, ValueError):
+                    largo_filo = 0
+                if tipo != "grabado_v" and math.isfinite(largo_filo) and 0 < largo_filo < prof - 0.01:
+                    avisos.append(f"{nombre}: la profundidad ({prof:g} mm) es mayor que el largo de corte de la fresa ({largo_filo:g} mm): el zanco rozaría el material. Usa una fresa de filo más largo.")
+                # La herramienta es el diámetro y si es recta o en V (no las
+                # rpm: una recta de 8 y una V de 12 giran igual en la tabla).
+                en_v = tipo == "grabado_v"
+                herramienta = (round(diam, 3), "v", float(op.get("angulo", 90))) if en_v else (round(diam, 3), "recta")
+                if herramienta_actual != herramienta:
+                    if herramienta_actual is not None:
                         g.subir()
                         g.emitir("M5")
-                        g.c(f"Cambia la herramienta: {op.get('herramienta') or f'fresa {diam:g} mm'}")
+                        de_fabrica = f"fresa en V de {herramienta[2]:g} grados" if en_v else f"fresa {diam:g} mm"
+                        g.c(f"Cambia la herramienta: {op.get('herramienta') or de_fabrica}")
                         g.emitir("M0")
                     g.emitir(f"M3 S{receta['rpm']}")
+                    herramienta_actual = herramienta
+                    rpm_actual = receta["rpm"]
+                elif rpm_actual != receta["rpm"]:
+                    g.emitir(f"S{receta['rpm']}")
                     rpm_actual = receta["rpm"]
                 if tipo in ("corte", "fuera", "dentro"):
                     figuras = op_contorno(g, polys, tipo, diam / 2, prof, receta,
                                           int(op.get("pestanas", 4 if tipo != "dentro" else 0)) if op.get("con_pestanas", True) else 0,
-                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre)
+                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre, sobre)
                 elif tipo == "linea":
                     figuras = op_linea(g, sel, prof, receta)
-                elif tipo == "cajeado":
-                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, float(op.get("traslape", 0.4)), avisos)
+                elif tipo in ("cajeado", "incrustacion_hembra"):
+                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, traslape, avisos, sobre)
+                elif tipo == "incrustacion_macho":
+                    holgura = float(op.get("holgura", 0.1))
+                    if not (math.isfinite(holgura) and 0 <= holgura <= 2):
+                        return error("entrada_invalida", f"Operación {i}: la holgura no es válida.", "Captúrala en mm, entre 0 y 2.")
+                    piezas = forma_incrustable(polys, diam / 2, holgura)
+                    figuras = op_contorno(g, piezas, "fuera", diam / 2, prof, receta,
+                                          4 if op.get("con_pestanas", True) else 0, min(prof * 0.5, 1.5), avisos, nombre, sobre)
+                elif tipo == "acanalado":
+                    rampa = float(op.get("rampa", 10))
+                    if not (math.isfinite(rampa) and 0 <= rampa <= 500):
+                        return error("entrada_invalida", f"Operación {i}: el largo de rampa no es válido.", "Captúralo en mm, entre 0 y 500.")
+                    figuras = op_acanalado(g, sel, prof, receta, rampa)
+                elif tipo == "textura":
+                    sep = float(op.get("separacion_textura") or diam * 0.8)
+                    onda = float(op.get("onda", 30))
+                    ang = float(op.get("angulo_textura", 0))
+                    if not (math.isfinite(sep) and 0.5 <= sep <= 100 and math.isfinite(onda) and 5 <= onda <= 500 and math.isfinite(ang)):
+                        return error("entrada_invalida", f"Operación {i}: los datos de la textura no son válidos.", "Separación entre 0.5 y 100 mm, largo de onda entre 5 y 500 mm.")
+                    figuras = op_textura(g, polys, prof, receta, sep, ang, onda, avisos)
                 elif tipo == "grabado_v":
                     figuras = op_grabado_v(g, polys, float(op.get("angulo", 90)), prof, receta, avisos)
                 else:

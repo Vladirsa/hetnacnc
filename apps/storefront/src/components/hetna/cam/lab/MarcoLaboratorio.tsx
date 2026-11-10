@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+import { calcRouter } from "@/lib/calculadora/router"
 import { addCamJobToCart } from "@/lib/data/cam"
+import type { FresaCam } from "@/lib/data/cam-maquinas"
+import { guardarBase, leerBase } from "@/lib/hetna/base-herramientas"
 
 type TrabajoCreado = {
   type: "hetna-cam:job-created"
@@ -44,6 +47,31 @@ export function MarcoLaboratorio({
   useEffect(() => {
     const alRecibir = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== marco.current?.contentWindow) {
+        return
+      }
+      // El laboratorio pide avances y velocidades a la Calculadora CNC del sitio
+      const pedido = event.data as { type?: string; id?: number; entrada?: Record<string, unknown> }
+      if (pedido?.type === "hetna-cam:calc" && pedido.entrada && typeof pedido.entrada === "object") {
+        let respuesta: Record<string, unknown> = { ok: false }
+        try {
+          const r = calcRouter(pedido.entrada)
+          respuesta = { ok: r.faltan.length === 0, datos: r.datos, avisos: r.avisos }
+        } catch {}
+        marco.current?.contentWindow?.postMessage({ type: "hetna-cam:calc-result", id: pedido.id, ...respuesta }, window.location.origin)
+        return
+      }
+      // La base de herramientas es la misma del CAM 2D: el laboratorio la pide y la guarda por aquí
+      const base = event.data as { type?: string; fresas?: unknown }
+      if (base?.type === "hetna-cam:tools-get") {
+        const r = await leerBase()
+        marco.current?.contentWindow?.postMessage({ type: "hetna-cam:tools", fresas: r.datos.fresas, sesion: r.sesion }, window.location.origin)
+        return
+      }
+      if (base?.type === "hetna-cam:tools-save" && Array.isArray(base.fresas)) {
+        const r = await leerBase()
+        const fresas = (base.fresas as FresaCam[]).filter((f) => f && typeof f === "object" && typeof f.nombre === "string" && Number(f.diametro) > 0).slice(0, 80)
+        const aviso = await guardarBase({ ...r.datos, fresas }, r.sesion)
+        marco.current?.contentWindow?.postMessage({ type: "hetna-cam:tools-saved", aviso }, window.location.origin)
         return
       }
       const datos = event.data as TrabajoCreado

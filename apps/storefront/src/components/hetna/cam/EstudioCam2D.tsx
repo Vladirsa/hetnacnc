@@ -16,7 +16,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
-import { type DatosCam, type FresaCam, type MaquinaCam, guardarMaquinasCam, leerMaquinasCam } from "@/lib/data/cam-maquinas"
+import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
+import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
+import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
 
 const MATERIALES = [
@@ -34,14 +36,6 @@ const MAQUINAS_BASE: MaquinaCam[] = [
   { id: "base-linuxcnc", nombre: "Router · LinuxCNC", tipo: "router", post: "linuxcnc", tarifa: 300, smax: 1000 },
   { id: "base-laser", nombre: "Láser · GRBL", tipo: "laser", post: "laser_grbl", tarifa: 200, smax: 1000 },
 ]
-const FRESAS_BASE: FresaCam[] = [
-  { id: "base-r3", nombre: "Recta Ø3", tipo: "recta", diametro: 3, angulo: 90 },
-  { id: "base-r6", nombre: "Recta Ø6", tipo: "recta", diametro: 6, angulo: 90 },
-  { id: "base-c6", nombre: "Compresión Ø6", tipo: "compresion", diametro: 6, angulo: 90 },
-  { id: "base-r8", nombre: "Recta Ø8", tipo: "recta", diametro: 8, angulo: 90 },
-  { id: "base-v90", nombre: "V 90°", tipo: "v", diametro: 12, angulo: 90 },
-  { id: "base-v60", nombre: "V 60°", tipo: "v", diametro: 12, angulo: 60 },
-]
 const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc" }
 const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "mach3", nombre: "Mach3" },
@@ -50,15 +44,19 @@ const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "laser_grbl", nombre: "Láser GRBL" },
 ]
 
-type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "laser_corte" | "laser_linea" | "laser_relleno"
+type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "acanalado" | "textura" | "incrustacion_hembra" | "incrustacion_macho" | "laser_corte" | "laser_linea" | "laser_relleno"
 const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "corte", nombre: "Corte de pieza", nota: "Barrenos por dentro y borde por fuera, con pestañas" },
-  { id: "fuera", nombre: "Contorno por fuera", nota: "La fresa va por fuera de la línea" },
-  { id: "dentro", nombre: "Contorno por dentro", nota: "La fresa va por dentro de la línea" },
-  { id: "linea", nombre: "Sobre la línea", nota: "Sigue la línea; sirve con trazos abiertos" },
-  { id: "cajeado", nombre: "Cajeado", nota: "Vacía el área a una profundidad" },
+  { id: "fuera", nombre: "Perfilado por fuera", nota: "La fresa va por fuera de la línea" },
+  { id: "dentro", nombre: "Perfilado por dentro", nota: "La fresa va por dentro de la línea" },
+  { id: "linea", nombre: "Perfilado sobre la línea", nota: "Sigue la línea; sirve con trazos abiertos" },
+  { id: "cajeado", nombre: "Cajeado (desbaste de área)", nota: "Vacía el área a una profundidad" },
   { id: "grabado_v", nombre: "Grabado en V", nota: "Letras y figuras con fresa en V" },
   { id: "barrenado", nombre: "Barrenado", nota: "Barrenos en el centro de cada círculo" },
+  { id: "acanalado", nombre: "Acanalado", nota: "Canal sobre la línea que entra y sale en rampa" },
+  { id: "textura", nombre: "Textura", nota: "Surcos en ondas, como tallado a mano; mejor con fresa de bola" },
+  { id: "incrustacion_hembra", nombre: "Incrustación: caja", nota: "Vacía la figura donde va a embonar la pieza" },
+  { id: "incrustacion_macho", nombre: "Incrustación: pieza", nota: "Corta la pieza que embona en la caja, con holgura" },
 ]
 const OPS_LASER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "laser_corte", nombre: "Corte", nota: "Corta los contornos cerrados" },
@@ -79,7 +77,28 @@ type Op = {
   velocidad: string
   pasadas: string
   separacion: string
+  // desbaste separado de la línea + una pasada de acabado sobre ella
+  acabado: boolean
+  sobre: string
+  // parámetros de corte de la herramienta; vacío = los del material
+  pasada: string
+  traslape: string
+  rpm: string
+  avance: string
+  penetracion: string
+  // de la ficha de la fresa elegida
+  fresa: string
+  largoCorte: number
+  // acanalado, textura e incrustación
+  rampa: string
+  sepTextura: string
+  onda: string
+  anguloTextura: string
+  holgura: string
 }
+const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
+const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
+const sinCero = (v?: number) => (v && v > 0 ? String(v) : "")
 
 let contador = 0
 const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
@@ -88,12 +107,26 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   capa: "",
   diametro: tipo === "grabado_v" ? "12" : "6",
   angulo: "90",
-  profundidad: tipo === "cajeado" ? "3" : tipo === "grabado_v" ? "4" : tipo === "linea" ? "1" : espesor,
-  pestanas: tipo === "corte" || tipo === "fuera",
+  profundidad: tipo === "cajeado" || tipo === "acanalado" || tipo === "incrustacion_hembra" ? "3" : tipo === "grabado_v" ? "4" : tipo === "linea" ? "1" : tipo === "textura" ? "2" : espesor,
+  pestanas: CON_PESTANAS.includes(tipo),
   potencia: tipo === "laser_corte" ? "90" : tipo === "laser_linea" ? "25" : "40",
   velocidad: tipo === "laser_corte" ? "600" : "2500",
   pasadas: "1",
   separacion: "0.15",
+  acabado: false,
+  sobre: "0.3",
+  pasada: "",
+  traslape: "",
+  rpm: "",
+  avance: "",
+  penetracion: "",
+  fresa: "",
+  largoCorte: 0,
+  rampa: "10",
+  sepTextura: "5",
+  onda: "30",
+  anguloTextura: "0",
+  holgura: "0.1",
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -157,7 +190,6 @@ function leerGcode(texto: string): Movimiento[] {
 
 const f2 = (x: number) => String(Math.round(x * 100) / 100)
 const COLORES_CAPA = ["#5FA8F5", "#9BE3B8", "#F2D29B", "#C79BF2", "#F6B8AE", "#7FD6E0", "#E6EBF2"]
-const ALMACEN = "hetna-cam-estudio"
 const nuevoId = () => Math.random().toString(36).slice(2, 9)
 
 function Select({ valor, cambiar, children, etiqueta }: { valor: string; cambiar: (v: string) => void; children: React.ReactNode; etiqueta?: string }) {
@@ -200,36 +232,17 @@ export function EstudioCam2D() {
 
   // Máquinas y fresas guardadas: de la cuenta o, sin sesión, del navegador
   useEffect(() => {
-    leerMaquinasCam()
-      .then((r) => {
-        setSesion(r.sesion)
-        let datos = r.datos
-        if (!r.sesion) {
-          try {
-            const local = JSON.parse(localStorage.getItem(ALMACEN) || "null")
-            if (local?.maquinas) datos = local
-          } catch {}
-        }
-        setMias(datos)
-        if (datos.maquinas[0]) setMaquinaId(datos.maquinas[0].id)
-      })
-      .catch(() => {})
+    leerBase().then((r) => {
+      setSesion(r.sesion)
+      setMias(r.datos)
+      if (r.datos.maquinas[0]) setMaquinaId(r.datos.maquinas[0].id)
+    })
   }, [])
 
   const guardarMias = async (d: DatosCam) => {
     setMias(d)
     setGuardado("")
-    if (sesion) {
-      const r = await guardarMaquinasCam(d)
-      setGuardado(r.ok ? "Guardado en tu cuenta." : r.error || "No se pudo guardar.")
-    } else {
-      try {
-        localStorage.setItem(ALMACEN, JSON.stringify(d))
-        setGuardado("Guardado en este navegador. Inicia sesión para tenerlo en tu cuenta.")
-      } catch {
-        setGuardado("Este navegador no deja guardar.")
-      }
-    }
+    setGuardado(await guardarBase(d, sesion))
   }
 
   // Al cambiar entre router y láser, las operaciones cambian de tipo
@@ -295,6 +308,16 @@ export function EstudioCam2D() {
         velocidad: numero(o.velocidad) || 1000,
         pasadas: Math.max(1, Math.round(numero(o.pasadas) || 1)),
         separacion: numero(o.separacion) || 0.15,
+        sobrematerial: o.acabado && CON_ACABADO.includes(o.tipo) ? Math.min(5, Math.max(0, numero(o.sobre) || 0)) : 0,
+        ...(numero(o.pasada) > 0 ? { pasada: numero(o.pasada) } : {}),
+        ...(numero(o.traslape) > 0 ? { traslape: Math.min(95, numero(o.traslape)) / 100 } : {}),
+        ...(numero(o.rpm) > 0 ? { rpm: numero(o.rpm) } : {}),
+        ...(numero(o.avance) > 0 ? { avance: numero(o.avance) } : {}),
+        ...(numero(o.penetracion) > 0 ? { penetracion: numero(o.penetracion) } : {}),
+        ...(o.fresa ? { herramienta: o.fresa, largo_corte: o.largoCorte } : {}),
+        ...(o.tipo === "acanalado" ? { rampa: Math.max(0, numero(o.rampa) || 0) } : {}),
+        ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
+        ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
       })),
     }
     const form = new FormData()
@@ -507,24 +530,73 @@ export function EstudioCam2D() {
                       valor=""
                       cambiar={(v) => {
                         const fr = fresas.find((x) => x.id === v)
-                        if (fr) cambiarOp(i, { diametro: String(fr.diametro), angulo: String(fr.angulo) })
+                        if (fr)
+                          cambiarOp(i, {
+                            diametro: String(fr.diametro),
+                            angulo: String(fr.angulo),
+                            pasada: sinCero(fr.pasada),
+                            traslape: sinCero(fr.traslape),
+                            rpm: sinCero(fr.rpm),
+                            avance: sinCero(fr.avance),
+                            penetracion: sinCero(fr.penetracion),
+                            fresa: fr.nombre,
+                            largoCorte: fr.largoCorte || 0,
+                          })
                       }}
                     >
-                      <option value="">{o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : `Ø${o.diametro} mm`} (cambiar…)</option>
-                      {fresas
-                        .filter((x) => (o.tipo === "grabado_v" ? x.tipo === "v" : x.tipo !== "v"))
-                        .map((x) => (
-                          <option key={x.id} value={x.id}>
-                            {x.nombre}
-                          </option>
-                        ))}
+                      <option value="">{o.fresa ? o.fresa : o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : `Ø${o.diametro} mm`} (cambiar…)</option>
+                      {porGrupo(fresas.filter((x) => (o.tipo === "grabado_v" ? x.tipo === "v" : x.tipo !== "v" && x.tipo !== "broca"))).map(([g, lista]) => (
+                        <optgroup key={g} label={g || "Sin grupo"}>
+                          {lista.map((x) => (
+                            <option key={x.id} value={x.id}>
+                              {x.nombre}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </Select>
                     <div className="grid grid-cols-2 gap-2">
-                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v })} />
+                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v, fresa: "", largoCorte: 0 })} />
                       <CampoNum etiqueta={o.tipo === "grabado_v" ? "Prof. máxima" : "Profundidad"} valor={o.profundidad} cambiar={(v) => cambiarOp(i, { profundidad: v })} />
                       {o.tipo === "grabado_v" && <CampoNum etiqueta="Ángulo" valor={o.angulo} cambiar={(v) => cambiarOp(i, { angulo: v })} sufijo="°" />}
                     </div>
-                    {(o.tipo === "corte" || o.tipo === "fuera") && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
+                    {o.tipo !== "grabado_v" && o.largoCorte > 0 && numero(o.profundidad) > o.largoCorte && (
+                      <span className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">
+                        La profundidad es mayor que el largo de corte de esta fresa ({o.largoCorte} mm): el zanco rozaría el material.
+                      </span>
+                    )}
+                    {o.tipo === "acanalado" && <CampoNum etiqueta="Largo de la rampa en cada punta" valor={o.rampa} cambiar={(v) => cambiarOp(i, { rampa: v })} />}
+                    {o.tipo === "textura" && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <CampoNum etiqueta="Separación entre surcos" valor={o.sepTextura} cambiar={(v) => cambiarOp(i, { sepTextura: v })} />
+                        <CampoNum etiqueta="Largo de cada onda" valor={o.onda} cambiar={(v) => cambiarOp(i, { onda: v })} />
+                        <CampoNum etiqueta="Ángulo de los surcos" valor={o.anguloTextura} cambiar={(v) => cambiarOp(i, { anguloTextura: v })} sufijo="°" />
+                      </div>
+                    )}
+                    {o.tipo === "incrustacion_macho" && <CampoNum etiqueta="Holgura para que embone" valor={o.holgura} cambiar={(v) => cambiarOp(i, { holgura: v })} />}
+                    {(o.tipo === "incrustacion_hembra" || o.tipo === "incrustacion_macho") && (
+                      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Usa la misma figura y el mismo diámetro de fresa en la caja y en la pieza: las esquinas de la pieza salen redondeadas igual que las de la caja.</span>
+                    )}
+                    {CON_PESTANAS.includes(o.tipo) && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
+                    {CON_ACABADO.includes(o.tipo) && (
+                      <>
+                        <Interruptor etiqueta="Desbaste + pasada de acabado" activo={o.acabado} cambiar={(v) => cambiarOp(i, { acabado: v })} />
+                        {o.acabado && <CampoNum etiqueta="Material que deja el desbaste" valor={o.sobre} cambiar={(v) => cambiarOp(i, { sobre: v })} />}
+                      </>
+                    )}
+                    <details className="rounded-[8px] bg-[#151C27] px-2.5 py-2">
+                      <summary className="cursor-pointer text-[12px] text-[#C9D2E0]">
+                        Parámetros de corte{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}
+                      </summary>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <CampoNum etiqueta="Prof. por pasada" valor={o.pasada} cambiar={(v) => cambiarOp(i, { pasada: v })} />
+                        {o.tipo === "cajeado" && <CampoNum etiqueta="Traslape" valor={o.traslape} cambiar={(v) => cambiarOp(i, { traslape: v })} sufijo="%" />}
+                        <CampoNum etiqueta="Husillo" valor={o.rpm} cambiar={(v) => cambiarOp(i, { rpm: v })} sufijo="rpm" />
+                        <CampoNum etiqueta="Avance" valor={o.avance} cambiar={(v) => cambiarOp(i, { avance: v })} sufijo="mm/min" />
+                        <CampoNum etiqueta="Bajada" valor={o.penetracion} cambiar={(v) => cambiarOp(i, { penetracion: v })} sufijo="mm/min" />
+                      </div>
+                      <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#8A97AB]">Deja un campo vacío para usar el valor recomendado para el material.</p>
+                    </details>
                   </>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -748,10 +820,9 @@ function Fila({ texto, quitar }: { texto: string; quitar: () => void }) {
 // Editor de "Mis máquinas y fresas" (fase C)
 function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guardar: (d: DatosCam) => void; sesion: boolean; aviso: string }) {
   const [m, setM] = useState<MaquinaCam>({ id: "", nombre: "", tipo: "router", post: "mach3", tarifa: 300, smax: 1000 })
-  const [fr, setFr] = useState<FresaCam>({ id: "", nombre: "", tipo: "recta", diametro: 6, angulo: 90 })
   const [tarifa, setTarifa] = useState("300")
-  const [diam, setDiam] = useState("6")
-  const [ang, setAng] = useState("90")
+  // null = cerrada, "" = alta nueva, id = edición de esa fresa
+  const [ficha, setFicha] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-[#2B3648] bg-[#151C27] p-3">
       <span className="text-[12px] text-[#8A97AB]">{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</span>
@@ -783,35 +854,51 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
       >
         Agregar máquina
       </Boton>
-      <b className="text-[12.5px]">Fresas</b>
+      <b className="text-[12.5px]">Base de herramientas</b>
       {datos.fresas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
-          {datos.fresas.map((x) => (
-            <Fila key={x.id} texto={`${x.nombre} · Ø${x.diametro}${x.tipo === "v" ? ` · ${x.angulo}°` : ""}`} quitar={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} />
-          ))}
+          {porGrupo(datos.fresas).flatMap(([g, lista]) => [
+            ...(g || porGrupo(datos.fresas).length > 1 ? [<li key={`g-${g}`} className="list-none pt-1 text-[11px] font-bold uppercase tracking-wide text-[#8A97AB]">{g || "Sin grupo"}</li>] : []),
+            ...lista.map((x) => (
+            <li key={x.id} className="flex list-none items-center justify-between gap-2 rounded-[6px] bg-[#1C2431] px-2 py-1.5 text-[12.5px]">
+              <button type="button" onClick={() => setFicha(x.id)} className="min-w-0 flex-1 text-left hover:text-[#F28A3C]" title="Editar">
+                <span className="block truncate font-semibold">
+                  {x.numero ? `T${x.numero} · ` : ""}
+                  {x.nombre}
+                </span>
+                <span className="block truncate text-[11.5px] text-[#8A97AB]">
+                  Ø{x.diametro}
+                  {x.tipo === "v" ? ` · ${x.angulo}°` : ""}
+                  {x.zanco ? ` · zanco Ø${x.zanco}` : ""}
+                  {x.largoCorte ? ` · filo ${x.largoCorte}` : ""}
+                  {x.filos ? ` · ${x.filos} ${x.filos === 1 ? "filo" : "filos"}` : ""}
+                  {x.rpm ? ` · ${x.rpm} rpm` : ""}
+                  {x.avance ? ` · ${x.avance} mm/min` : ""}
+                </span>
+              </button>
+              <button type="button" onClick={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} className="text-[#F6B8AE] hover:text-white" aria-label="Quitar">
+                ✕
+              </button>
+            </li>
+            )),
+          ])}
         </ul>
       )}
-      <input value={fr.nombre} onChange={(e) => setFr({ ...fr, nombre: e.target.value })} placeholder="Nombre (ej. Compresión 1/4)" maxLength={40} className="rounded-[8px] bg-[#1C2431] px-2.5 py-2 text-[13px] text-white outline-none placeholder:text-[#5B6880]" />
-      <div className="grid grid-cols-3 gap-2">
-        <Select valor={fr.tipo} cambiar={(v) => setFr({ ...fr, tipo: v as FresaCam["tipo"] })}>
-          <option value="recta">Recta</option>
-          <option value="compresion">Compresión</option>
-          <option value="bola">Bola</option>
-          <option value="v">En V</option>
-        </Select>
-        <CampoNum etiqueta="" valor={diam} cambiar={setDiam} sufijo="mm" />
-        {fr.tipo === "v" && <CampoNum etiqueta="" valor={ang} cambiar={setAng} sufijo="°" />}
-      </div>
-      <Boton
-        onClick={() => {
-          const d = numero(diam)
-          if (!fr.nombre.trim() || !(d > 0)) return
-          guardar({ ...datos, fresas: [...datos.fresas, { ...fr, diametro: d, angulo: numero(ang) || 90, id: nuevoId() }] })
-          setFr({ ...fr, nombre: "" })
-        }}
-      >
-        Agregar fresa
-      </Boton>
+      {ficha === null ? (
+        <Boton onClick={() => setFicha("")}>Dar de alta una herramienta</Boton>
+      ) : (
+        <FichaFresa
+          key={ficha || "nueva"}
+          inicial={datos.fresas.find((x) => x.id === ficha)}
+          grupos={[...new Set(datos.fresas.map((x) => x.grupo || "").filter(Boolean))]}
+          cancelar={() => setFicha(null)}
+          guardar={(f) => {
+            const fresas = f.id ? datos.fresas.map((x) => (x.id === f.id ? f : x)) : [...datos.fresas, { ...f, id: nuevoId() }]
+            guardar({ ...datos, fresas })
+            setFicha(null)
+          }}
+        />
+      )}
       {aviso && <span className="text-[12px] text-[#9BE3B8]">{aviso}</span>}
     </div>
   )

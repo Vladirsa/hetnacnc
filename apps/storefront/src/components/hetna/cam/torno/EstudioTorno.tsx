@@ -13,6 +13,9 @@
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
+import type { FresaCam } from "@/lib/data/cam-maquinas"
+import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
+
 import {
   ESPIRAL_INICIAL,
   ESTRIAS_INICIALES,
@@ -264,6 +267,12 @@ export function EstudioTorno() {
   const [safeZClearanceMm, setSafeZClearanceMm] = useState(10)
 
   const [toolDiameterMm, setToolDiameterMm] = useState(6)
+  const [tipoFresa, setTipoFresa] = useState<"plana" | "bola">("plana")
+  // la misma base de herramientas del CAM 2D y 3D (sin fresas en V ni brocas: aquí no sirven)
+  const [fresasBase, setFresasBase] = useState<FresaCam[]>([])
+  useEffect(() => {
+    leerBase().then((r) => setFresasBase([...r.datos.fresas, ...FRESAS_BASE].filter((f) => f.tipo !== "v" && f.tipo !== "broca")))
+  }, [])
   const [feed, setFeed] = useState(1200)
 
   const [rpmCilindrado, setRpmCilindrado] = useState(30)
@@ -323,7 +332,7 @@ export function EstudioTorno() {
     ejeLargo,
     avance,
     maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
-    herramienta: { toolDiameterMm, feed },
+    herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
     rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
     tallados: { estrias, espiral },
   })
@@ -351,6 +360,7 @@ export function EstudioTorno() {
     setEndOffsetMm(n(d.maquina?.endOffsetMm, 20))
     setSafeZClearanceMm(n(d.maquina?.safeZClearanceMm, 10))
     setToolDiameterMm(n(d.herramienta?.toolDiameterMm, 6))
+    setTipoFresa(d.herramienta?.tipo === "bola" ? "bola" : "plana")
     setFeed(n(d.herramienta?.feed, 1200))
     setRpmCilindrado(n(d.rpm?.rpmCilindrado, 30))
     setRpmDesbaste(n(d.rpm?.rpmDesbaste, 40))
@@ -469,7 +479,7 @@ export function EstudioTorno() {
           ejeLargo,
           avance,
           maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
-          herramienta: { toolDiameterMm, feed },
+          herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
           rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
           tallados,
         }),
@@ -830,7 +840,45 @@ export function EstudioTorno() {
         <section className={caja}>
           <h2 className="text-[17px] font-bold text-[#1B1B18]">Fresa y RPM</h2>
           <div className="mt-3 flex flex-col gap-3">
+            {fresasBase.length > 0 && (
+              <label className={etiqueta}>
+                Tomar de mi base de herramientas
+                <select
+                  className={campo}
+                  value=""
+                  onChange={(e) => {
+                    const f = fresasBase.find((x) => x.id === e.target.value)
+                    if (!f) return
+                    setToolDiameterMm(f.diametro)
+                    setTipoFresa(f.tipo === "bola" || f.tipo === "conica_bola" ? "bola" : "plana")
+                    if (f.avance && f.avance > 0) setFeed(f.avance)
+                    limpiarResultado()
+                  }}
+                >
+                  <option value="">Elegir una fresa…</option>
+                  {porGrupo(fresasBase).map(([g, lista]) => (
+                    <optgroup key={g} label={g || "Sin grupo"}>
+                      {lista.map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {x.nombre} · Ø{x.diametro}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+            )}
             <Numero texto="Diámetro de la fresa (mm)" valor={toolDiameterMm} min={1} onChange={setToolDiameterMm} />
+            <label className={etiqueta}>
+              Punta de la fresa
+              <select className={campo} value={tipoFresa} onChange={(e) => setTipoFresa(e.target.value === "bola" ? "bola" : "plana")}>
+                <option value="plana">Plana (recta)</option>
+                <option value="bola">De bola (punta redonda)</option>
+              </select>
+            </label>
+            <p className="text-[12px] leading-snug text-[#6B6A63]">
+              El programa separa la fresa de los escalones según su ancho y su punta, para no cortar de más.
+            </p>
             <Numero texto="Avance de referencia (mm/min)" valor={feed} min={0} onChange={setFeed} />
             <p className="text-[12px] leading-snug text-[#6B6A63]">
               RPM de la <strong>pieza</strong> (el eje A), no de la fresa:

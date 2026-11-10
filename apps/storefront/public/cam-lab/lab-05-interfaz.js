@@ -2,7 +2,8 @@
 /* =========================================================
    INTERFAZ
    ========================================================= */
-function fillSelect(sel,obj,val){sel.innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');if(val)sel.value=val;}
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fillSelect(sel,obj,val){sel.innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${esc(k)}">${esc(v.name)}</option>`).join('');if(val)sel.value=val;}
 function bindNum(id,get,set,onChange){const el=$('#'+id);el.value=get();el.addEventListener('change',()=>{const v=parseFloat(el.value);if(!Number.isFinite(v)){el.value=get();return;}set(v);onChange&&onChange();});return el;}
 function bindChk(id,get,set,onChange){const el=$('#'+id);el.checked=get();el.addEventListener('change',()=>{set(el.checked);onChange&&onChange();});return el;}
 function syncMachineUI(){
@@ -37,7 +38,9 @@ function applyPreset(k){S.presetKey=k;S.machine=JSON.parse(JSON.stringify(MACHIN
 function refreshPostIfAny(){if(S.moves&&!S.busy){refreshPost();}}
 /* herramientas */
 function renderToolList(){
-  $('#toolList').innerHTML=S.tools.map(t=>`<button data-id="${t.id}" class="${t.id===S.toolId?'on':''}"><span class="t">T${t.num}</span><span>${t.name}</span><span class="d">Ø${t.D}</span></button>`).join('');
+  // por grupo, en orden alfabético; las que no tienen grupo al final
+  const gs=[...new Set(S.tools.map(t=>t.group||''))].sort((a,b)=>a===''?1:b===''?-1:a.localeCompare(b,'es'));
+  $('#toolList').innerHTML=gs.map(g=>(gs.length>1?`<div class="grp">${esc(g||'Sin grupo')}</div>`:'')+S.tools.filter(t=>(t.group||'')===g).map(t=>`<button data-id="${t.id}" class="${t.id===S.toolId?'on':''}"><span class="t">T${+t.num||0}</span><span>${esc(t.name)}</span><span class="d">Ø${+t.D||0}</span></button>`).join('')).join('');
 }
 function syncToolForm(){
   const t=tool();$('#t_name').value=t.name;$('#t_type').value=t.type;$('#t_num').value=t.num;$('#t_D').value=t.D;$('#t_r').value=t.r;$('#t_angle').value=t.angle;$('#t_tipD').value=t.tipD;$('#t_taper').value=t.taper;
@@ -73,8 +76,8 @@ function initToolUI(){
   map.forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{const v=parseFloat(e.target.value);if(!Number.isFinite(v)||v<0){e.target.value=t()[k];return;}t()[k]=v;if(k==='D'&&t().type==='ball')t().r=v/2;renderToolList();syncToolForm();buildToolMesh();markStale();}));
   $('#t_name').addEventListener('change',e=>{t().name=e.target.value||'Herramienta';renderToolList();});
   $('#t_type').addEventListener('change',e=>{t().type=e.target.value;if(t().type==='ball')t().r=t().D/2;syncToolForm();buildToolMesh();markStale();});
-  $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta'});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
-  $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)'});S.toolId=id;renderToolList();syncToolForm();});
+  $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta',totalLen:0,notes:''});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
+  $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)',bid:undefined,src:undefined,fab:undefined});S.toolId=id;renderToolList();syncToolForm();});
   $('#t_del').addEventListener('click',()=>{if(S.tools.length<2){toast('Debe quedar al menos una herramienta');return;}S.tools=S.tools.filter(x=>x.id!==S.toolId);S.toolId=S.tools[0].id;renderToolList();syncToolForm();buildToolMesh();markStale();});
   fillSelect($('#f_mat'),MATERIALS,S.feeds.mat);
   $('#f_mat').addEventListener('change',e=>{S.feeds.mat=e.target.value;const M=MATERIALS[e.target.value];S.feeds.vc=Math.round((M.vc[0]+M.vc[1])/2);S.feeds.fz=+(((M.fz6[0]+M.fz6[1])/2)*clamp(tool().D/6,0.3,2)).toFixed(3);updateFeedsUI();refreshPostIfAny();});
@@ -83,7 +86,7 @@ function initToolUI(){
   $('#f_deff').addEventListener('change',e=>{S.feeds.deff=e.target.checked;updateFeedsUI();refreshPostIfAny();});
 }
 function updateFeedsUI(){
-  const f=S.feeds,M=MATERIALS[f.mat],fd=feedsCalc(),t=tool();$('#f_vc').value=f.vc;$('#f_fz').value=f.fz;$('#f_mat').value=f.mat;$('#f_deff').checked=f.deff;
+  const f=S.feeds,M=MATERIALS[f.mat],fd=feedsCalc(),t=tool();$('#f_vc').value=f.vc;$('#f_fz').value=f.fz;$('#f_mat').value=f.mat;$('#f_deff').checked=f.deff;$('#f_plunge').value=f.plungePct;
   $('#o_rpm').textContent=fd.rpm.toLocaleString('es-MX');$('#o_feed').textContent=fd.feed.toLocaleString('es-MX');$('#o_plunge').textContent=fd.plunge.toLocaleString('es-MX');
   const s=clamp(t.D/6,0.3,2);
   $('#o_matnote').textContent=`Referencia orientativa para ${M.name} con carburo: Vc ${M.vc[0]}–${M.vc[1]} m/min, fz ${(M.fz6[0]*s).toFixed(3)}–${(M.fz6[1]*s).toFixed(3)} mm para Ø${t.D}. Confirma con el fabricante de tu herramienta.${fd.clampedRPM?` RPM limitadas por el husillo (${S.machine.maxRPM}).`:''}`;
@@ -100,8 +103,8 @@ function updateScallop(){
 function syncStratUI(){
   const st=S.strat;$$('#stratCards .card').forEach(c=>c.classList.toggle('on',c.dataset.kind===st.kind));
   const rot=frameOf(st.kind)==='rot',five=st.kind==='top5'||st.kind==='rot5';
-  $('#w_pattern').hidden=!rot;$('#w_dir').hidden=rot;$('#w_5ax').hidden=!five;$('#w_rough').hidden=five;
-  $$('#s_pattern button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.pattern));$$('#s_dir button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.dir));
+  $('#w_pattern').hidden=!rot;$('#w_dir').hidden=rot;$('#w_5ax').hidden=!five;
+  $$('#s_pattern button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.pattern));syncExtrasUI();
   const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};
   for(const [id,k] of Object.entries(ids))$('#'+id).value=st[k];
   $('#s_avoid').checked=st.avoid;$('#s_smooth').checked=st.smooth;$('#s_skip').checked=st.skip;$('#s_rough').checked=st.rough;
@@ -113,9 +116,8 @@ function initStratUI(){
     if(S.strat.kind==='rot4'&&!['xyza','ab_mixed'].includes(kin))applyPreset('r4');
     if((S.strat.kind==='rot5')&&!['ab_mixed','bc_head'].includes(kin))applyPreset('ab');
     if(S.strat.kind==='top5'&&(kin==='xyz'||kin==='xyza'))applyPreset('ac');
-    syncStratUI();markStale();updateFeedsUI();});
+    syncStratUI();markStale();updateFeedsUI();if(S.rawPos&&S.partDirty)reprep();});
   $('#s_pattern').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.strat.pattern=b.dataset.v;syncStratUI();markStale();});
-  $('#s_dir').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.strat.dir=b.dataset.v;syncStratUI();markStale();});
   const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};
   const mins={stepover:0.05,step:0.05,rsd:0.1,rso:0.1,safe:1,maxTilt:0,clear:0};
   for(const [id,k] of Object.entries(ids))$('#'+id).addEventListener('change',e=>{let v=parseFloat(e.target.value);if(!Number.isFinite(v)){e.target.value=S.strat[k];return;}if(k in mins)v=Math.max(mins[k],v);S.strat[k]=v;e.target.value=v;markStale();updateFeedsUI();});
@@ -173,7 +175,6 @@ function initChrome(){
   $$('[data-rot]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.rot==='reset')S.rotSeq=[];else S.rotSeq.push(b.dataset.rot);S.partDirty=true;reprep();}));
   $('#p_units').addEventListener('change',e=>{S.units=+e.target.value;S.partDirty=true;reprep();});
   $('#p_scale').addEventListener('change',e=>{S.scale=Math.max(0.01,+e.target.value||1);S.partDirty=true;reprep();});
-  ['stk_margin','stk_top'].forEach(id=>$('#'+id).addEventListener('change',()=>{S.partDirty=true;reprep();}));
 }
 async function reprep(){if(S.busy)return;S.busy=true;try{await preparePart();S.partDirty=false;S.moves=null;S.gcode=null;buildPathObjects();markStale();$('#kpis').innerHTML='';renderIssues([{sev:'info',title:'Pieza actualizada',cause:'Pulsa Calcular trayectoria para generar el programa.',fix:''}]);}finally{setBusy(null);S.busy=false;}}
 
@@ -199,7 +200,7 @@ async function loadFile(file){
   setBusy(`Leyendo ${file.name}…`,0.02);
   try{
     let pos;
-    if(ext==='stl'){const buf=await file.arrayBuffer();const g=new THREE.STLLoader().parse(buf);pos=new Float32Array((g.index?g.toNonIndexed():g).attributes.position.array);}
+    if(ext==='stl'){const buf=await file.arrayBuffer();let g;try{g=new THREE.STLLoader().parse(buf);}catch(e){throw new Error('El STL está dañado o incompleto. Expórtalo de nuevo desde tu programa de diseño.');}pos=new Float32Array((g.index?g.toNonIndexed():g).attributes.position.array);}
     else if(ext==='obj'){const txt=await file.text();const grp=new THREE.OBJLoader().parse(txt);grp.updateMatrixWorld(true);const parts=[];let n=0;grp.traverse(o=>{if(o.isMesh){const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);const a=g.attributes.position.array;parts.push(a);n+=a.length;}});pos=new Float32Array(n);let off=0;for(const a of parts){pos.set(a,off);off+=a.length;}}
     else if(['step','stp','iges','igs'].includes(ext)){setBusy('Convirtiendo '+ext.toUpperCase()+' a malla (OpenCascade)…',0.05);
       try{pos=await parseSTEP(await file.arrayBuffer(),ext);}
@@ -209,7 +210,7 @@ async function loadFile(file){
     }
     else throw new Error('Formato no soportado. Usa STL, OBJ o STEP.');
     if(!pos||pos.length<9)throw new Error('El archivo no contiene triángulos.');
-    S.rawPos=pos;S.rawFile=file;S.partName=file.name;S.rotSeq=[];S.scale=1;$('#p_scale').value=1;$('#jobName').textContent=file.name;
+    S.rawPos=pos;S.rawFile=file;S.partName=file.name;S.rotSeq=[];S.scale=1;S.scl=[1,1,1];$('#p_scale').value=1;$('#jobName').textContent=file.name;
     const sz=[0,1,2].map(c=>{let a=Infinity,b=-Infinity;for(let i=c;i<pos.length;i+=3){if(pos[i]<a)a=pos[i];if(pos[i]>b)b=pos[i];}return b-a;});
     if(Math.max(...sz)<12){S.units=25.4;$('#p_units').value='25.4';toast('La pieza es muy pequeña: se interpretó en pulgadas');}else{S.units=1;$('#p_units').value='1';}
     S.busy=true;await preparePart();S.busy=false;S.partDirty=false;S.moves=null;S.gcode=null;buildPathObjects();
@@ -217,7 +218,7 @@ async function loadFile(file){
   }catch(e){console.error(e);setBusy(null);S.busy=false;renderIssues([{sev:'err',title:'No se pudo abrir el archivo',cause:e.message,fix:''}]);toast('No se pudo abrir el archivo');}
 }
 async function loadSample(k){
-  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
+  if(S.busy)return;const sm=SAMPLES[k];S.rawPos=sm.fn();S.rawFile=null;S.partName=sm.name;S.rotSeq=[];S.units=1;S.scale=1;S.scl=[1,1,1];S.stk=STK_DEF();S.sup=SUP_DEF();Object.assign(S.strat,{pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral'});S.strat.area.on=false;$('#p_units').value='1';$('#p_scale').value=1;$('#jobName').textContent=sm.name;
   $('#stk_margin').value=sm.margin??3;
   applyPreset(sm.preset);S.toolId=sm.tool;Object.assign(S.strat,sm.strat);renderToolList();syncToolForm();syncStratUI();buildToolMesh();
   $$('#samples .chip').forEach(c=>c.classList.toggle('on',c.dataset.sample===k));
@@ -278,7 +279,6 @@ function initOrderUI(){
 /* ---------------- Arranque ---------------- */
 function boot(){
   if(!window.THREE||!THREE.OrbitControls){document.body.insertAdjacentHTML('afterbegin','<p style="padding:16px">No se pudo cargar el motor 3D. Revisa tu conexión.</p>');return;}
-  init3D();initChrome();initMachineUI();initToolUI();initStratUI();initPostUI();initOrderUI();buildToolMesh();
+  libInit();init3D();initChrome();initMachineUI();initToolUI();initStratUI();initPostUI();initOrderUI();initExtrasUI();buildToolMesh();
   loadSample('blade');
 }
-boot();
