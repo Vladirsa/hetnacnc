@@ -58,6 +58,8 @@ export type ConfigSocial = {
   piloto: { activo: boolean; minimo: number; redes: Red[] }
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
   primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
+  youtube_auto: boolean // YouTube conectado en n8n: los videos verticales salen solos como Shorts
+  auto_respuestas: boolean // la IA contesta sola las preguntas frecuentes y los elogios en comentarios
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
@@ -68,6 +70,8 @@ const CONFIG_INICIAL: ConfigSocial = {
   piloto: { activo: false, minimo: 75, redes: [] },
   aviso_hora: 8,
   primer_comentario: true,
+  youtube_auto: false,
+  auto_respuestas: false,
 }
 
 let listo = false
@@ -151,6 +155,8 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     },
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
     primer_comentario: v.primer_comentario !== false,
+    youtube_auto: !!v.youtube_auto,
+    auto_respuestas: !!v.auto_respuestas,
   }
 }
 
@@ -173,6 +179,8 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
       : actual.piloto,
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
     primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
+    youtube_auto: c.youtube_auto != null ? !!c.youtube_auto : actual.youtube_auto,
+    auto_respuestas: c.auto_respuestas != null ? !!c.auto_respuestas : actual.auto_respuestas,
   }
   if (nueva.horario.hasta <= nueva.horario.desde) nueva.horario = actual.horario
   await knex.raw(`insert into ?? (clave, valor) values ('general', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
@@ -440,12 +448,14 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   const video = medio && esVideo ? medio.url : ""
   // Varias imágenes: carrusel en Instagram (hasta 10)
   const imagenes = esVideo ? [] : (p.medios || []).filter((m: any) => m?.url && m.tipo !== "video" && !/\.(mp4|mov|webm)(\?|$)/i.test(String(m.url))).map((m: any) => m.url).slice(0, 10)
+  const cfgPub = await leerConfig(knex)
+  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : !!REDES[r]?.auto)
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
     const liga = urlCorta(codigo)
     const texto = String(p.textos?.[red] || adaptarSinIa(p.texto_base, red)).replace(LIGA_MARCA, liga)
-    if (!REDES[red]?.auto) {
+    if (!esAuto(red)) {
       resultado[red] = { ok: true, manual: true, en: new Date().toISOString() }
       continue
     }
@@ -460,7 +470,9 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       continue
     }
     let r: any =
-      red === "instagram_historia"
+      red === "youtube"
+        ? await enviarAN8n(youtubeDe(texto, p.titulo, video))
+        : red === "instagram_historia"
         ? await enviarAN8n({ red: "instagram", historia: true, texto: texto || p.titulo, imagen: video ? "" : imagen || imagenes[0] || "", video, url: liga, post_id: p.id })
         : await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
     if (esIg && r.pendiente && r.contenedor) {
@@ -483,12 +495,22 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok && !r.pendiente) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
   }
-  const autos = (p.redes as Red[]).filter((r) => REDES[r]?.auto)
+  const autos = (p.redes as Red[]).filter((r) => esAuto(r))
   const oks = autos.filter((r) => resultado[r]?.ok).length
   const enProceso = autos.some((r) => resultado[r]?.pendiente)
   const estado = !autos.length || oks === autos.length ? "publicada" : oks || enProceso ? "parcial" : "error"
   await knex(T_POST).where({ id: p.id }).update({ estado, resultado: JSON.stringify(resultado), publicada_en: oks || !autos.length ? knex.fn.now() : null, updated_at: knex.fn.now() })
   return { estado, resultado }
+}
+
+/** YouTube: primera línea = título (con #Shorts si cabe), el resto = descripción con la liga. */
+export function youtubeDe(texto: string, tituloPub: string, video: string) {
+  const lineas = String(texto || "").split("\n")
+  const i = lineas.findIndex((l) => l.trim())
+  const base = (i >= 0 ? lineas[i] : tituloPub).replace(/[<>]/g, "").trim()
+  const titulo = base.length <= 90 ? `${base} #Shorts` : base.slice(0, 100)
+  const descripcion = (i >= 0 ? lineas.slice(i + 1) : lineas).join("\n").trim() || base
+  return { red: "youtube", titulo, texto: descripcion.slice(0, 4900), video }
 }
 
 /** Pregunta a Instagram si ya procesó el contenedor y, si sí, lo publica. Caduca a las 24 h. */

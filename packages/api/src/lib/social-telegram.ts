@@ -39,10 +39,10 @@ export async function desvincular(knex: any) {
 }
 
 /** Mensaje privado al dueño (con botones si lleva `post`). Si la foto o el video fallan, va sólo el texto. */
-export async function mandarPrivado(knex: any, m: { texto: string; imagen?: string; video?: string; post?: string }) {
+export async function mandarPrivado(knex: any, m: { texto: string; imagen?: string; video?: string; post?: string; comentario?: string }) {
   const { chat_id } = await leerTg(knex)
   if (!chat_id) return { ok: false, error: "Telegram no está vinculado." }
-  const base = { red: "telegram_privado", chat: chat_id, texto: m.texto.slice(0, 3800), post: m.post || "" }
+  const base = { red: "telegram_privado", chat: chat_id, texto: m.texto.slice(0, 3800), post: m.post || "", ...(m.comentario ? { botones: "comentario", ref: m.comentario } : {}) }
   let r: any = await enviarAN8n({ ...base, imagen: m.imagen || "", video: m.video || "" })
   if (!r.ok && (m.imagen || m.video)) r = await enviarAN8n({ ...base, texto: `${base.texto}\n\n${m.video ? "🎬" : "🖼"} ${m.video || m.imagen}`.slice(0, 4000) })
   return r
@@ -150,6 +150,20 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
 
   if (b.tipo === "boton") {
     const [accion, id] = String(b.data || "").split(":")
+    // Comentarios: r = enviar respuesta, rc = cambiarla, ri = ignorar
+    if (["r", "rc", "ri"].includes(accion)) {
+      const com = await import("./social-comentarios")
+      if (accion === "ri") {
+        await com.ignorar(knex, id)
+        return "🗑 Comentario ignorado."
+      }
+      if (accion === "rc") {
+        await guardarTg(knex, { editando: `com:${id}` })
+        return "✏️ Escríbeme la respuesta como quieres que salga (o una instrucción como \"más corta\"). /cancelar para salir."
+      }
+      const r: any = await com.enviarRespuesta(knex, id)
+      return r.ok ? "✅ Respuesta enviada." : `✗ No se pudo enviar: ${r.error}`
+    }
     const p = id ? await knex(T_POST).where({ id }).first() : null
     if (!p) return "No encontré esa publicación."
     if (["publicada", "publicando"].includes(p.estado)) return `Ya ${p.estado === "publicada" ? "está publicada" : "se está publicando"}: ${p.titulo}`
@@ -200,6 +214,21 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
   }
   if (/^\/(start|ayuda|help)/i.test(texto)) return AYUDA
 
+  if (tg.editando?.startsWith("com:") && texto) {
+    const id = tg.editando.slice(4)
+    await guardarTg(knex, { editando: null })
+    const com = await import("./social-comentarios")
+    // Si parece instrucción corta ("más corta", "más amable"), la IA la aplica; si no, se usa tal cual
+    let nueva = texto.slice(0, 1500)
+    const actual = await knex(com.T_COMENTARIO).where({ id }).first()
+    if (actual && /^(m[aá]s|menos|hazla|ponle|quita|agrega|cambia)\b/i.test(texto) && texto.length < 80) {
+      const ai = await aplicarCambio({ texto_base: actual.respuesta || "", mercado: "mx" }, texto, logger)
+      if (ai) nueva = ai.replace(/\n*\{\{liga\}\}\s*$/, "").trim()
+    }
+    await com.cambiarRespuesta(knex, id, nueva)
+    await mandarPrivado(knex, { texto: `✏️ Así quedó la respuesta:\n${nueva}`, comentario: id })
+    return ""
+  }
   if (tg.editando && texto) {
     const p = await knex(T_POST).where({ id: tg.editando }).first()
     await guardarTg(knex, { editando: null })

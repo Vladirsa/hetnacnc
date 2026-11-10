@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -467,6 +467,68 @@ function PruebaInstagram() {
   )
 }
 
+type Comentario = { id: string; red: string; autor: string | null; texto: string; estado: string; categoria: string | null; respuesta: string | null; error: string | null; post_titulo: string | null; created_at: string }
+function Conversaciones() {
+  const [lista, setLista] = useState<Comentario[] | null>(null)
+  const [filtro, setFiltro] = useState("propuesta")
+  const [edit, setEdit] = useState<Record<string, string>>({})
+  const [ocupado, setOcupado] = useState("")
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const cargar = useCallback(async () => {
+    const r = await fetch(`/admin/hetna-social/comentarios${filtro ? `?estado=${filtro}` : ""}`, { credentials: "include", headers: cabeceras() }).then((x) => x.json()).catch(() => ({ comentarios: [] }))
+    setLista(r.comentarios || [])
+  }, [filtro])
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+  const accion = async (id: string, cuerpo: Record<string, unknown>, ok: string) => {
+    setOcupado(id + String(cuerpo.accion))
+    setNota(null)
+    try {
+      await api("/comentarios", { id, ...cuerpo })
+      setNota({ ok: true, t: ok })
+      void cargar()
+    } catch (e) {
+      setNota({ ok: false, t: (e as Error).message })
+    }
+    setOcupado("")
+  }
+  const CAT: Record<string, string> = { pregunta_frecuente: "❓ pregunta frecuente", pregunta: "❓ pregunta", elogio: "👏 elogio", queja: "⚠️ queja", spam: "🚫 spam", otro: "💬 otro" }
+  return (
+    <section style={caja}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+        {[["propuesta", "Por responder"], ["respondido", "Respondidos"], ["ignorado", "Ignorados"], ["error", "Con error"], ["", "Todos"]].map(([v, t]) => (
+          <button key={v || "todos"} type="button" onClick={() => setFiltro(v)} style={{ ...boton("normal"), padding: "3px 10px", fontSize: 12, background: filtro === v ? "#142033" : C.fondo, color: filtro === v ? "#fff" : C.texto }}>{t}</button>
+        ))}
+        <span style={{ flex: 1 }} />
+        <button type="button" style={boton("normal")} disabled={ocupado === "leer"} onClick={async () => { setOcupado("leer"); const r = await api<any>("/comentarios", { accion: "revisar" }).catch((e) => ({ error: (e as Error).message })); setNota(r.error ? { ok: false, t: r.error } : { ok: true, t: `Comentarios nuevos: ${r.nuevos ?? 0}.` }); setOcupado(""); void cargar() }}>
+          {ocupado === "leer" ? "⏳ Leyendo…" : "Leer comentarios ahora"}
+        </button>
+      </div>
+      <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>Cada 15 minutos se leen los comentarios de Instagram y Facebook. La IA propone la respuesta con datos reales de HETNA; también te llegan a Telegram con botones.</p>
+      {nota && <p style={{ fontSize: 14, padding: "8px 12px", borderRadius: 8, fontWeight: 600, background: nota.ok ? "#e8f7ee" : "#fdecec", color: nota.ok ? C.verde : C.rojo }}>{nota.t}</p>}
+      {!lista ? <p>Cargando…</p> : lista.length === 0 ? <p style={{ color: C.tenue, fontSize: 13 }}>No hay comentarios aquí.</p> : lista.map((c) => (
+        <div key={c.id} style={{ borderTop: `1px solid ${C.borde}`, padding: "10px 0", display: "grid", gap: 6 }}>
+          <div style={{ fontSize: 12, color: C.tenue }}>{c.red === "instagram" ? "📸 Instagram" : "📘 Facebook"} · <b>{c.autor || "alguien"}</b> · {c.categoria ? CAT[c.categoria] || c.categoria : ""} · en "{c.post_titulo || "publicación"}"</div>
+          <div style={{ fontSize: 14 }}>"{c.texto}"</div>
+          {c.estado === "respondido" ? (
+            <div style={{ fontSize: 13, color: C.verde }}>✓ Respondido: {c.respuesta}</div>
+          ) : (
+            <>
+              <textarea style={{ ...campo, minHeight: 60, fontSize: 13 }} value={edit[c.id] ?? c.respuesta ?? ""} onChange={(e) => setEdit({ ...edit, [c.id]: e.target.value })} placeholder="Escribe la respuesta" />
+              {c.error && <span style={{ fontSize: 12, color: C.rojo }}>✗ {c.error}</span>}
+              <div style={{ display: "flex", gap: 6 }}>
+                <button type="button" style={boton("primario")} disabled={!!ocupado} onClick={() => accion(c.id, { accion: "enviar", texto: edit[c.id] ?? c.respuesta ?? "" }, "✓ Respuesta enviada.")}>{ocupado === c.id + "enviar" ? "⏳ Enviando…" : "✅ Enviar respuesta"}</button>
+                <button type="button" style={boton("normal")} disabled={!!ocupado} onClick={() => accion(c.id, { accion: "ignorar" }, "Ignorado.")}>🗑 Ignorar</button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+    </section>
+  )
+}
+
 const nombreRed = (r: string) => ({ facebook: "Facebook", instagram: "Instagram" } as Record<string, string>)[r] || r
 
 function Resultados() {
@@ -671,6 +733,14 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 10 }}>
         <input type="checkbox" checked={c.primer_comentario !== false} onChange={(e) => setC({ ...c, primer_comentario: e.target.checked })} />
         Primer comentario automático con la liga en Facebook (necesita el permiso pages_manage_engagement)
+      </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
+        <input type="checkbox" checked={!!c.youtube_auto} onChange={(e) => setC({ ...c, youtube_auto: e.target.checked })} />
+        YouTube conectado en n8n: los videos verticales salen solos como Shorts (sin esto, YouTube queda para copiar y pegar)
+      </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
+        <input type="checkbox" checked={!!c.auto_respuestas} onChange={(e) => setC({ ...c, auto_respuestas: e.target.checked })} />
+        Respuestas automáticas: la IA contesta sola las preguntas frecuentes y los elogios (lo demás te llega a Telegram para aprobar)
       </label>
       <p style={{ color: C.tenue, fontSize: 12, margin: "4px 0 0" }}>
         🧠 El revisor con IA mejora solo los borradores del plan, promociones y Fábrica antes de que salgan, y el piloto le da una segunda oportunidad a lo que no llega al puntaje. En cada publicación tienes "Mejorar con IA" y "Deshacer".
@@ -1457,6 +1527,7 @@ const VISTAS = [
   ["videos", "Videos de talleres"],
   ["calendario", "Calendario"],
   ["publicada", "Publicadas"],
+  ["conversaciones", "Conversaciones"],
   ["resultados", "Resultados"],
   ["config", "Configuración"],
 ] as const
@@ -1544,6 +1615,8 @@ export default function SocialHubPage() {
         <Estrategia alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "videos" ? (
         <VideosTalleres redes={datos.redes} config={datos.config} alCambiar={() => void cargar()} />
+      ) : vista === "conversaciones" ? (
+        <Conversaciones />
       ) : vista === "resultados" ? (
         <Resultados />
       ) : vista === "config" ? (

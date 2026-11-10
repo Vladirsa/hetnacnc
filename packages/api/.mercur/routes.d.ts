@@ -553,6 +553,7 @@ export type Routes = {
         };
         hetnaSocial: typeof import("../src/api/admin/hetna-social/route") & {
             $id: typeof import("../src/api/admin/hetna-social/[id]/route");
+            comentarios: typeof import("../src/api/admin/hetna-social/comentarios/route");
             config: typeof import("../src/api/admin/hetna-social/config/route");
             estrategia: typeof import("../src/api/admin/hetna-social/estrategia/route");
             metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
@@ -738,6 +739,7 @@ export type Routes = {
         };
         cam: {
             convert: typeof import("../src/api/store/cam/convert/route");
+            cupo: typeof import("../src/api/store/cam/cupo/route");
             jobs: typeof import("../src/api/store/cam/jobs/route") & {
                 $id: typeof import("../src/api/store/cam/jobs/[id]/route") & {
                     cart: typeof import("../src/api/store/cam/jobs/[id]/cart/route");
@@ -746,6 +748,10 @@ export type Routes = {
                     };
                 };
             };
+            proyectos: typeof import("../src/api/store/cam/proyectos/route") & {
+                $id: typeof import("../src/api/store/cam/proyectos/[id]/route");
+            };
+            pruebas: typeof import("../src/api/store/cam/pruebas/route");
         };
         cotizadorVinculo: typeof import("../src/api/store/cotizador-vinculo/route");
         cotizador: {
