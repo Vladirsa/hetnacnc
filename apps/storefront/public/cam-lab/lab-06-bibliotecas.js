@@ -194,6 +194,7 @@ function initExtrasUI(){
   ['pre','end'].forEach(k=>$('#p_'+k).addEventListener('change',e=>{S.post[k]=cleanLines(e.target.value);e.target.value=S.post[k];refreshPostIfAny();refreshOutputs();}));
   $$('[data-lib=export]').forEach(b=>b.addEventListener('click',libExport));$$('[data-lib=import]').forEach(b=>b.addEventListener('click',()=>$('#libIn').click()));
   $('#libIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)libImport(f);});
+  $('#p_repair').addEventListener('click',repairPart);
   // ficha técnica y calculadora
   syncToolForm=(fn=>function(){const r=fn.apply(this,arguments);syncToolExtras();return r;})(syncToolForm);
   $('#t_total').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v)&&v>0)tool().totalLen=v;syncToolForm();});
@@ -205,6 +206,17 @@ function initExtrasUI(){
   syncToolExtras();
   if(HETNA.embedded)baseInit();
   refreshLibUI();syncPostExtras();initGuide();syncExtrasUI();
+}
+async function repairPart(){
+  if(S.busy||!S.rawPos)return;setBusy('Revisando la malla…',0.2);await tick();
+  let r;try{r=repairMesh(S.rawPos);}catch(e){console.error(e);setBusy(null);toast('No se pudo revisar la malla');return;}
+  const p=r.rep,did=[];
+  if(p.degenerate)did.push(`${p.degenerate.toLocaleString('es-MX')} caras sin área quitadas`);if(p.duplicate)did.push(`${p.duplicate.toLocaleString('es-MX')} caras repetidas quitadas`);
+  if(p.flipped)did.push(`${p.flipped.toLocaleString('es-MX')} caras volteadas hacia afuera`);if(p.holes)did.push(`${p.holes} ${p.holes===1?'hueco tapado':'huecos tapados'} con ${p.holeTris.toLocaleString('es-MX')} caras nuevas`);
+  if(!p.changed){setBusy(null);renderIssues([{sev:p.open?'warn':'ok',title:p.open?'No encontré nada que pueda reparar solo':'La malla está bien',cause:p.open?`Quedan ${p.open} aristas abiertas que no forman un hueco simple (caras que se cruzan o piezas sueltas).`:'Está cerrada, sin caras repetidas ni volteadas.',fix:p.open?'Repárala en tu programa de diseño y expórtala otra vez como sólido.':''}]);return;}
+  S.rawPos=r.pos;S.rawFile=null; // lo que se manda al pedir el servicio es la malla reparada
+  S.partDirty=true;setBusy(null);await reprep();
+  renderIssues([{sev:p.open?'warn':'ok',title:p.open?'Malla reparada en parte':'Malla reparada',cause:did.join(', ')+'.'+(p.open?` Quedan ${p.open} aristas abiertas que no forman un hueco simple.`:' Quedó cerrada.'),fix:(p.holes?'Los huecos se taparon con una cara plana: revisa en la vista 3D que el tapón sea el que esperabas. ':'')+'Pulsa Calcular trayectoria.'}]);
 }
 function syncPostExtras(){$('#p_pre').value=S.post.pre;$('#p_end').value=S.post.end;}
 

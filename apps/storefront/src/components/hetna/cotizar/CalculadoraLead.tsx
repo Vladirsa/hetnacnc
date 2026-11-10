@@ -1,6 +1,9 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState } from "react"
+
+import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cotizarLead, type CotizarLeadInput } from "@/lib/cotizar/acciones"
@@ -19,6 +22,10 @@ type Props = {
   servicioSolicitud?: string
 }
 
+// El visor (y three.js) se cargan sólo cuando alguien sube su archivo
+const VisorCad = dynamic(() => import("@/components/hetna/visor/VisorCad").then((m) => m.VisorCad), { ssr: false })
+const cm = (mm: number, min = 1) => String(Math.max(min, Math.round(mm) / 10))
+
 type Estado =
   | { paso: "form" }
   | { paso: "cargando" }
@@ -29,6 +36,30 @@ const formatoMXN = (n: number) => n.toLocaleString("es-MX", { style: "currency",
 
 export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto, opcion, servicioSolicitud }: Props) => {
   const [estado, setEstado] = useState<Estado>({ paso: "form" })
+  const [medidas, setMedidas] = useState({ ancho: "", largo: "", alto: "" })
+  const [pieza, setPieza] = useState<{ nombre: string; geo: GeoCad } | null>(null)
+  const [avisoArchivo, setAvisoArchivo] = useState("")
+
+  // Lee el archivo en el navegador (no se sube): lo muestra y toma sus medidas
+  const elegirArchivo = async (f: File | undefined) => {
+    setAvisoArchivo("")
+    if (!f) return
+    if (f.size > 40 * 1024 * 1024) return setAvisoArchivo("El archivo pasa de 40 MB. Captura las medidas a mano.")
+    try {
+      const { leerArchivoCad } = await import("@/lib/cotizador/archivo-cad")
+      const geo = await leerArchivoCad(f)
+      if (!geo || !(geo.largo > 0) || !(geo.ancho > 0)) {
+        setPieza(null)
+        return setAvisoArchivo("No pude leer ese archivo. Sirven DXF, SVG, STL y OBJ; o captura las medidas a mano.")
+      }
+      setPieza({ nombre: f.name, geo })
+      setMedidas({ ancho: cm(geo.ancho), largo: cm(geo.largo), alto: geo.tipo === "3d" ? cm(geo.alto, 0.1) : "" })
+      if (pideAlto && geo.tipo !== "3d") setAvisoArchivo("Es un plano 2D: captura la altura de la pieza.")
+    } catch {
+      setPieza(null)
+      setAvisoArchivo("No pude leer ese archivo. Captura las medidas a mano.")
+    }
+  }
 
   const enviar = async (formData: FormData) => {
     setEstado({ paso: "cargando" })
@@ -109,6 +140,31 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
     >
       <p className="m-0 text-[15px] font-bold text-[#1B1B18]">Calcula tu precio de {tituloServicio}</p>
 
+      <div className="flex flex-col gap-2 rounded-[10px] border border-dashed border-[#C9C4B8] bg-[#FAF9F6] p-3">
+        <label className="flex cursor-pointer flex-col gap-1 text-[13.5px] font-medium text-[#1B1B18]">
+          ¿Tienes el archivo de tu pieza? Súbelo para verla y tomar sus medidas (opcional)
+          <input
+            type="file"
+            accept=".dxf,.svg,.stl,.obj"
+            onChange={(e) => elegirArchivo(e.target.files?.[0])}
+            className="text-[13px] font-normal text-[#4A4943] file:mr-3 file:rounded-[8px] file:border-0 file:bg-[#142033] file:px-3 file:py-2 file:text-[13px] file:font-semibold file:text-white"
+          />
+        </label>
+        <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL u OBJ. Se lee en tu navegador: no se sube ni se guarda.</span>
+        {pieza && (
+          <>
+            <VisorCad geo={pieza.geo} alto={260} />
+            <span className="text-[12px] text-[#6B6A63]">
+              {pieza.nombre}: llené las medidas con las de tu pieza. Revísalas y cámbialas si hace falta.
+            </span>
+          </>
+        )}
+        {pieza?.geo.avisos.slice(0, 2).map((a) => (
+          <span key={a} className="text-[12px] text-[#B34D07]">{a}</span>
+        ))}
+        {avisoArchivo && <span className="text-[12.5px] text-[#B34D07]">{avisoArchivo}</span>}
+      </div>
+
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
         Material
         <select name="material" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]">
@@ -121,18 +177,18 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
           Ancho (cm)
-          <input name="ancho" type="number" min={1} step="0.1" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
+          <input name="ancho" type="number" min={1} step="0.1" required value={medidas.ancho} onChange={(e) => setMedidas({ ...medidas, ancho: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
           Largo (cm)
-          <input name="largo" type="number" min={1} step="0.1" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
+          <input name="largo" type="number" min={1} step="0.1" required value={medidas.largo} onChange={(e) => setMedidas({ ...medidas, largo: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       </div>
 
       {pideAlto && (
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
           Alto (cm)
-          <input name="alto" type="number" min={0.1} step="0.1" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
+          <input name="alto" type="number" min={0.1} step="0.1" required value={medidas.alto} onChange={(e) => setMedidas({ ...medidas, alto: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       )}
 

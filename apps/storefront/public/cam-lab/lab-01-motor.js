@@ -154,6 +154,66 @@ function buildMesh(pos){
   buildTriGrid(M);
   return M;
 }
+/* Reparación de malla: suelda vértices, quita triángulos degenerados y repetidos,
+   deja todas las caras mirando hacia afuera y tapa los huecos. Devuelve la malla
+   nueva y qué se hizo; lo que no se pudo cerrar se dice. */
+function repairMesh(pos){
+  const nT=pos.length/9|0;const rep={welded:0,degenerate:0,duplicate:0,flipped:0,holes:0,holeTris:0,skipped:0};let par=null; // par[t]=1 si la cara t quedó al revés de como venía
+  let mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<nT*9;i+=3)for(let c=0;c<3;c++){const v=pos[i+c];if(v<mn[c])mn[c]=v;if(v>mx[c])mx[c]=v;}
+  const diag=Math.hypot(mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2])||1;const q=Math.max(diag*2e-5,1e-6);
+  // 1) soldar vértices casi iguales
+  const map=new Map();const V3=[];const idOf=(x,y,z)=>{const k=Math.round(x/q)+'|'+Math.round(y/q)+'|'+Math.round(z/q);let id=map.get(k);if(id===undefined){id=V3.length/3;map.set(k,id);V3.push(x,y,z);}return id;};
+  let tris=[];const seen=new Set();
+  for(let t=0;t<nT;t++){const o=t*9;const a=idOf(pos[o],pos[o+1],pos[o+2]),b=idOf(pos[o+3],pos[o+4],pos[o+5]),c=idOf(pos[o+6],pos[o+7],pos[o+8]);
+    if(a===b||b===c||a===c){rep.degenerate++;continue;}
+    const ux=V3[b*3]-V3[a*3],uy=V3[b*3+1]-V3[a*3+1],uz=V3[b*3+2]-V3[a*3+2],wx=V3[c*3]-V3[a*3],wy=V3[c*3+1]-V3[a*3+1],wz=V3[c*3+2]-V3[a*3+2];
+    if(Math.hypot(uy*wz-uz*wy,uz*wx-ux*wz,ux*wy-uy*wx)<q*q*1e-3){rep.degenerate++;continue;}
+    const key=[a,b,c].sort((x,y)=>x-y).join('|');if(seen.has(key)){rep.duplicate++;continue;}seen.add(key);tris.push(a,b,c);}
+  rep.welded=nT*3-V3.length/3;
+  const nV=()=>V3.length/3;
+  const edgeKey=(a,b)=>a<b?a*4294967296+b:b*4294967296+a;
+  // 2) orientación coherente: dos caras vecinas recorren su arista común en sentidos opuestos
+  const orient=()=>{const n=tris.length/3;const adj=new Map();
+    for(let t=0;t<n;t++)for(let k=0;k<3;k++){const key=edgeKey(tris[t*3+k],tris[t*3+(k+1)%3]);let l=adj.get(key);if(!l)adj.set(key,l=[]);l.push(t);}
+    const done=new Uint8Array(n);const has=(t,a,b)=>{for(let k=0;k<3;k++)if(tris[t*3+k]===a&&tris[t*3+(k+1)%3]===b)return true;return false;};
+    for(let s=0;s<n;s++){if(done[s])continue;const comp=[s];done[s]=1;
+      for(let h=0;h<comp.length;h++){const t=comp[h];for(let k=0;k<3;k++){const a=tris[t*3+k],b=tris[t*3+(k+1)%3];const l=adj.get(edgeKey(a,b));if(l.length!==2)continue;const u=l[0]===t?l[1]:l[0];if(done[u])continue;
+          if(has(u,a,b)){const x=tris[u*3+1];tris[u*3+1]=tris[u*3+2];tris[u*3+2]=x;if(par)par[u]^=1;}done[u]=1;comp.push(u);}}
+      // la pieza entera hacia afuera: volumen con signo positivo
+      let vol=0;for(const t of comp){const a=tris[t*3]*3,b=tris[t*3+1]*3,c=tris[t*3+2]*3;vol+=V3[a]*(V3[b+1]*V3[c+2]-V3[b+2]*V3[c+1])-V3[a+1]*(V3[b]*V3[c+2]-V3[b+2]*V3[c])+V3[a+2]*(V3[b]*V3[c+1]-V3[b+1]*V3[c]);}
+      if(vol<0){for(const t of comp){const x=tris[t*3+1];tris[t*3+1]=tris[t*3+2];tris[t*3+2]=x;if(par)par[t]^=1;}}}
+    return adj;};
+  par=new Uint8Array(tris.length/3);let adj=orient();for(let i=0;i<par.length;i++)rep.flipped+=par[i];par=null;
+  // 3) tapar huecos: cada hueco es un lazo de aristas con una sola cara
+  const next=new Map();for(const [key,l] of adj){if(l.length!==1)continue;const t=l[0];for(let k=0;k<3;k++){const a=tris[t*3+k],b=tris[t*3+(k+1)%3];if(edgeKey(a,b)===key){let m=next.get(b);if(!m)next.set(b,m=[]);m.push(a);}}} // el tapón recorre la arista al revés: b→a
+  const used=new Set();const loops=[];
+  for(const [start,outs] of next){for(const first of outs){if(used.has(start+'>'+first))continue;let loop=[start],cur=first,ok=true;used.add(start+'>'+first);
+      for(let guard=0;cur!==start;guard++){
+        const k=loop.indexOf(cur);if(k>0)loops.push(loop.splice(k)); // el hueco se toca a sí mismo en este vértice: son dos huecos
+        loop.push(cur);const o=next.get(cur);const nx=o&&o.find(v=>!used.has(cur+'>'+v));if(nx===undefined||guard>20000){ok=false;break;}used.add(cur+'>'+nx);cur=nx;}
+      if(ok)loops.push(loop);else rep.skipped++;}}
+  for(const loop of loops){{
+      if(loop.length<3){rep.skipped++;continue;}
+      rep.holes++;
+      // se cierra cortando "orejas": el vértice de ángulo más cerrado se une con sus dos vecinos, sin vértices nuevos
+      const P3=v=>[V3[v*3],V3[v*3+1],V3[v*3+2]];let N=[0,0,0];
+      for(let i=0;i<loop.length;i++){const A=P3(loop[i]),B=P3(loop[(i+1)%loop.length]);N[0]+=(A[1]-B[1])*(A[2]+B[2]);N[1]+=(A[2]-B[2])*(A[0]+B[0]);N[2]+=(A[0]-B[0])*(A[1]+B[1]);}
+      const L=loop.slice();
+      while(L.length>3){let best=-1,bs=Infinity;const m=L.length;
+        for(let i=0;i<m;i++){const A=P3(L[(i+m-1)%m]),B=P3(L[i]),C=P3(L[(i+1)%m]);const u=V.sub(A,B),w=V.sub(C,B);const lu=V.len(u),lw=V.len(w);if(lu<1e-12||lw<1e-12){best=i;break;}
+          let sc=Math.acos(clamp(V.dot(u,w)/(lu*lw),-1,1));
+          if(V.dot(V.cross(V.sub(B,A),V.sub(C,B)),N)<=0)sc+=10;         // oreja hacia adentro del hueco: solo si no hay otra
+          if(adj.has(edgeKey(L[(i+m-1)%m],L[(i+1)%m])))sc+=100;           // esa arista ya existe: se evitaría una cara encimada
+          if(sc<bs){bs=sc;best=i;}}
+        const a0=L[(best+m-1)%m],b0=L[best],c0=L[(best+1)%m];tris.push(a0,b0,c0);rep.holeTris++;adj.set(edgeKey(a0,c0),[]);L.splice(best,1);}
+      tris.push(L[0],L[1],L[2]);rep.holeTris++;}}
+  if(rep.holes)adj=orient();
+  let open=0;for(const l of adj.values())if(l.length===1)open++;rep.open=open;
+  const out=new Float32Array(tris.length*3);for(let i=0;i<tris.length;i++){const v=tris[i]*3;out[i*3]=V3[v];out[i*3+1]=V3[v+1];out[i*3+2]=V3[v+2];}
+  rep.changed=rep.degenerate+rep.duplicate+rep.flipped+rep.holes>0;rep.tris=tris.length/3;
+  return{pos:out,rep};
+}
 function buildTriGrid(M){
   const pad=M.diag*1e-3+1e-3;
   const min=[M.bmin[0]-pad,M.bmin[1]-pad,M.bmin[2]-pad];
@@ -374,9 +434,12 @@ function linearOut(mv,m,tl,tcp){
 function ringsToTris(rings,capA=true,capB=true){
   const out=[];const n=rings[0].length;
   const push=(a,b,c)=>out.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);
-  for(let s=0;s<rings.length-1;s++){const A=rings[s],B=rings[s+1];for(let i=0;i<n;i++){const i2=(i+1)%n;push(A[i],B[i],B[i2]);push(A[i],B[i2],A[i2]);}}
-  const cap=(ring,flip)=>{const c=[0,0,0];ring.forEach(p=>{c[0]+=p[0]/n;c[1]+=p[1]/n;c[2]+=p[2]/n;});for(let i=0;i<n;i++){const i2=(i+1)%n;flip?push(c,ring[i2],ring[i]):push(c,ring[i],ring[i2]);}};
+  for(let s=0;s<rings.length-1;s++){const A=rings[s],B=rings[s+1];for(let i=0;i<n;i++){const i2=(i+1)%n;push(A[i],B[i2],B[i]);push(A[i],A[i2],B[i2]);}}
+  const cap=(ring,flip)=>{const c=[0,0,0];ring.forEach(p=>{c[0]+=p[0]/n;c[1]+=p[1]/n;c[2]+=p[2]/n;});for(let i=0;i<n;i++){const i2=(i+1)%n;flip?push(c,ring[i],ring[i2]):push(c,ring[i2],ring[i]);}};
   if(capA)cap(rings[0],false);if(capB)cap(rings[rings.length-1],true);
+  // caras hacia afuera sin importar en qué sentido venían los anillos
+  let vol=0;for(let i=0;i<out.length;i+=9)vol+=out[i]*(out[i+4]*out[i+8]-out[i+5]*out[i+7])-out[i+1]*(out[i+3]*out[i+8]-out[i+5]*out[i+6])+out[i+2]*(out[i+3]*out[i+7]-out[i+4]*out[i+6]);
+  if(vol<0)for(let i=0;i<out.length;i+=9)for(let c=0;c<3;c++){const x=out[i+3+c];out[i+3+c]=out[i+6+c];out[i+6+c]=x;}
   return new Float32Array(out);
 }
 function cylTris(x0,x1,r,n=40){return ringsToTris([x0,x1].map(x=>Array.from({length:n},(_,k)=>{const t=2*Math.PI*k/n;return[x,r*Math.sin(t),r*Math.cos(t)];})));}
