@@ -30,6 +30,8 @@ export default async function PanelLayout({ children, params }: { children: Reac
       <div className="min-h-screen bg-[#142033] p-6 text-white">
         <h1 className="text-xl font-bold">HETNA Panel</h1>
         <p className="mt-3 text-sm text-white/80">Tu cuenta ({u.email}) todavía no tiene acceso al panel. Pide al dueño que te asigne un rol en Equipo.</p>
+        {u.diagnostico && <p className="mt-2 text-xs text-white/50">{u.diagnostico}</p>}
+        <p className="mt-2 text-xs text-white/40">Versión del panel: 3</p>
         <form action="/api/app/panel/salir" method="post" className="mt-6"><button className="rounded-lg bg-white/10 px-4 py-2 text-sm">Salir</button></form>
       </div>
     )

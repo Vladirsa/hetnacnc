@@ -30,3 +30,14 @@ export function rolDe(metadata: Record<string, unknown> | null | undefined, arra
 }
 
 export const puede = (rol: Rol, pagina: string) => ROLES[rol]?.paginas.includes(pagina) ?? false
+
+// Qué puede HACER cada rol (además de ver). Finanzas sólo lee.
+export const ACCIONES: Record<Rol, string[]> = {
+  dueno: ["licitaciones", "talleres", "pedidos"],
+  operaciones: ["licitaciones", "talleres", "pedidos"],
+  ventas: ["licitaciones"],
+  finanzas: [],
+  soporte: ["talleres", "pedidos"],
+  sin_acceso: [],
+}
+export const puedeActuar = (rol: Rol, area: string) => ACCIONES[rol]?.includes(area) ?? false
