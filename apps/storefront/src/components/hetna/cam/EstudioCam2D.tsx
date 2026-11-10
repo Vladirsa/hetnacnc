@@ -20,6 +20,7 @@ import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
 import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
 import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
+import { acomodarCopias } from "@/lib/cam/acomodar"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
@@ -163,7 +164,15 @@ function Select({ valor, cambiar, children, etiqueta }: { valor: string; cambiar
 
 export function EstudioCam2D() {
   const [archivo, setArchivo] = useState<File | null>(null)
-  const [dibujo, setDibujo] = useState<Dibujo | null>(null)
+  // La pieza tal como viene en el archivo, y lo que se corta: sus copias acomodadas en la hoja
+  const [pieza, setDibujo] = useState<Dibujo | null>(null)
+  const [hoja, setHoja] = useState({ copias: "1", ancho: "1220", largo: "2440", separacion: "8" })
+  const acomodo = useMemo(
+    () => (pieza ? acomodarCopias(pieza, { copias: numero(hoja.copias) || 1, ancho: numero(hoja.ancho) || 1220, largo: numero(hoja.largo) || 2440, separacion: numero(hoja.separacion) || 0 }) : null),
+    [pieza, hoja]
+  )
+  const dibujo = acomodo?.dibujo ?? null
+  const variasCopias = (acomodo?.puestas ?? 1) > 1
   const [origen, setOrigen] = useState(true)
   const [material, setMaterial] = useState<Material>("mdf")
   const [espesor, setEspesor] = useState("18")
@@ -244,8 +253,8 @@ export function EstudioCam2D() {
 
   // Proyecto guardado en la cuenta: el dibujo (como DXF) y cómo se va a cortar
   const proyectoActual = () => {
-    if (!dibujo) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
-    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(dibujo), material, espesor, maquinaId, origen, ops }
+    if (!pieza) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
+    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja }
   }
   const aplicarProyecto = (d: any): boolean => {
     if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
@@ -263,6 +272,9 @@ export function EstudioCam2D() {
     if (typeof d.espesor === "string" && numero(d.espesor) > 0) setEspesor(d.espesor)
     if (typeof d.maquinaId === "string" && maquinas.some((m) => m.id === d.maquinaId)) setMaquinaId(d.maquinaId)
     setOrigen(d.origen !== false)
+    const hj = d.hoja && typeof d.hoja === "object" ? d.hoja : {}
+    const txt = (v: unknown, def: string) => (typeof v === "string" && numero(v) >= 0 ? v.slice(0, 8) : def)
+    setHoja({ copias: txt(hj.copias, "1"), ancho: txt(hj.ancho, "1220"), largo: txt(hj.largo, "2440"), separacion: txt(hj.separacion, "8") })
     // cada operación parte de la de fábrica de su tipo: lo que falte o venga raro no rompe la pantalla
     const tipos = [...OPS_ROUTER, ...OPS_LASER].map((o) => o.id)
     setOps(
@@ -300,7 +312,8 @@ export function EstudioCam2D() {
     setError(null)
     setPlan(null)
     setGcode(null)
-    const cuerpo = esSVG || origen ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
+    // con varias copias siempre se manda el dibujo ya acomodado, no el archivo original
+    const cuerpo = esSVG || origen || variasCopias ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
     const config = {
       maquina: { tipo: maquina.tipo, post: maquina.post, smax: maquina.smax },
       operaciones: ops.map((o) => ({
@@ -509,6 +522,22 @@ export function EstudioCam2D() {
         <Seccion titulo="Material">
           <Opciones opciones={MATERIALES.map((m) => ({ id: m.id, nombre: m.nombre }))} valor={material} cambiar={setMaterial} columnas={3} />
           <CampoNum etiqueta="Espesor" valor={espesor} cambiar={setEspesor} />
+        </Seccion>
+
+        <Seccion titulo="Copias en la hoja" nota="Acomoda varias copias de la pieza en filas y columnas, derecha o girada, para cortarlas en un solo programa.">
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Copias" valor={hoja.copias} cambiar={(v) => { setHoja({ ...hoja, copias: v }); setPlan(null); setGcode(null) }} sufijo="" />
+            <CampoNum etiqueta="Separación" valor={hoja.separacion} cambiar={(v) => { setHoja({ ...hoja, separacion: v }); setPlan(null); setGcode(null) }} />
+            <CampoNum etiqueta="Hoja: ancho (X)" valor={hoja.ancho} cambiar={(v) => { setHoja({ ...hoja, ancho: v }); setPlan(null); setGcode(null) }} />
+            <CampoNum etiqueta="Hoja: largo (Y)" valor={hoja.largo} cambiar={(v) => { setHoja({ ...hoja, largo: v }); setPlan(null); setGcode(null) }} />
+          </div>
+          {acomodo && (numero(hoja.copias) || 1) > 1 && (
+            <span className="text-[12px] leading-snug text-[#C9D2E0]">
+              {acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
+              {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
+            </span>
+          )}
+          {acomodo?.aviso && <Aviso>{acomodo.aviso}</Aviso>}
         </Seccion>
 
         <Seccion titulo="Operaciones" nota="Se hacen en este orden. Elige la capa del dibujo que usa cada una.">

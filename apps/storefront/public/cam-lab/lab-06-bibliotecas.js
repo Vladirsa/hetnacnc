@@ -65,6 +65,9 @@ function toolWarnings(t){
 function syncToolExtras(){
   const t=toolFill(tool());$('#t_group').value=t.group||'';$('#t_groups').innerHTML=[...new Set(S.tools.map(x=>x.group||'').filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');$('#t_total').value=t.totalLen;$('#t_mat').value=t.mat;$('#t_notes').value=t.notes;
   const w=toolWarnings(t);$('#o_toolwarn').hidden=!w.length;$('#o_toolwarn').textContent=w.join(' ');
+  // la misma fresa, buscada en la tienda
+  const shop={ball:'fresa punta bola',flat:'fresa recta',bull:'fresa toroidal',taperball:'fresa conica bola',vbit:'fresa V',drill:'broca'}[t.type]||'fresa';
+  $('#t_shop').href='/mx/categories?query='+encodeURIComponent(shop+' '+(t.type==='vbit'?t.angle+' grados':t.D+' mm'));
 }
 /* La Calculadora CNC del sitio vive en la página que envuelve al laboratorio: se le pide el cálculo por mensaje. */
 const CALC_MAT={mdf:'mdf',pino:'madera_blanda',dura:'madera_dura',acrilico:'acrilico',hdpe:'hdpe',aluminio:'aluminio',laton:'laton',acero:'acero_dulce',cera:'cera'};
