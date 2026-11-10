@@ -126,6 +126,10 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
 .seg button.on{background:var(--accent);color:var(--on-accent)}
 .codebox{position:relative;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel-2)}
 .codebox textarea{width:100%;height:300px;border:0;background:transparent;resize:vertical;padding:10px 12px;font:12px/1.55 var(--f-mono);white-space:pre;overflow:auto;color:var(--ink)}
+.pjrow{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:5px 8px;border-radius:6px;background:var(--panel-2);margin-top:4px}
+.pjrow button{background:none;border:0;padding:0;color:var(--accent,#C2560A);font-size:12.5px;cursor:pointer}
+.pjrow .pjopen{flex:1;min-width:0;text-align:left;color:inherit;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pjrow .pjopen span{font-weight:400;opacity:.7}
 .codebar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .codebar .sp{flex:1}
 .note{font-size:12.5px;border-radius:8px;padding:8px 10px;background:var(--info-bg);color:var(--ink-2);margin:0}
@@ -248,6 +252,16 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
             <button class="chip" data-sample="column">Columna salomónica · 4 ejes</button>
             <button class="chip" data-sample="relief">Relieve · 3 ejes / 5 ejes</button>
           </div>
+        </div>
+        <div class="group">
+          <h2>Mis proyectos</h2>
+          <p class="hint" id="pj_login" hidden><a id="pj_loginLink" href="/mx/login">Entra a tu cuenta</a> para guardar tu trabajo, retomarlo después y compartirlo con una liga.</p>
+          <div id="pj_body">
+            <label class="f">Nombre del proyecto<input id="pj_name" maxlength="80" placeholder="Ej. Relieve puerta principal"></label>
+            <div class="codebar"><button class="btn sm" id="pj_save">Guardar en mi cuenta</button><button class="btn sm" id="pj_saveNew" hidden>Guardar como nuevo</button></div>
+            <div id="pj_list"></div>
+          </div>
+          <p class="hint" id="pj_status" role="status"></p>
         </div>
         <div class="group">
           <h2>Unidades y orientación</h2>
@@ -458,6 +472,7 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
           <h2>Datos de corte</h2>
           <label class="f">Material<select id="f_mat"></select></label>
           <div class="codebar" id="w_calc" hidden><button class="btn sm primary" id="t_calc">Calcular con la Calculadora CNC</button><a class="hint" href="/mx/calculadora-cnc" target="_blank" rel="noopener">Abrir la calculadora completa</a></div>
+          <div class="codebar"><a class="btn sm" id="t_shop" href="/mx/categories" target="_blank" rel="noopener">¿No la tienes? Búscala en la tienda HETNA</a></div>
           <p class="note" id="o_calc" hidden></p>
           <div class="row3 adv">
             <label class="f">Vc (m/min)<input id="f_vc" type="number" step="5" min="1"></label>
@@ -521,6 +536,8 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
           <label class="c"><input type="checkbox" id="s_rough">Incluir desbaste previo por niveles</label>
           <label class="f" id="w_rpat">Tipo de desbaste<select id="s_rpat"><option value="same">Paralelo, misma dirección en cada nivel</option><option value="alt">Cruzado: alterna 90° en cada nivel</option></select></label>
           <label class="f" id="w_rrot">Tipo de desbaste<select id="s_rrot"><option value="spiral">Espiral continua alrededor de la pieza</option><option value="lines">Líneas a lo largo del eje, girando entre pasadas</option></select></label>
+          <label class="f" id="w_rtool">Fresa de desbaste<select id="s_rtool"></select></label>
+          <p class="hint" id="o_rtool"></p>
           <p class="hint" id="o_rough5"></p>
           <div class="row3">
             <label class="f">Prof. por pasada<input id="s_rsd" type="number" step="0.5" min="0.1"></label>
@@ -586,7 +603,20 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
           <div class="seg" id="outTabs"><button data-v="gcode" class="on">G-code</button><button data-v="cps">Fusion .cps</button><button data-v="pp">Vectric .pp</button><button data-v="json">Hetna .json</button></div>
           <p class="hint" id="outDesc"></p>
           <div class="codebox"><textarea id="outText" spellcheck="false" readonly aria-label="Salida"></textarea></div>
-          <div class="codebar"><button class="btn sm" id="btnCopy">Copiar</button><button class="btn sm" id="btnDl">Descargar</button><span class="sp"></span><span class="hint" id="outSize"></span></div>
+          <div class="codebar"><button class="btn sm" id="btnCopy">Copiar</button><button class="btn sm primary" id="btnDl">Descargar</button><span class="sp"></span><span class="hint" id="outSize"></span></div>
+          <p class="hint" id="o_cupo"></p>
+          <div class="note warn" id="o_gate" hidden></div>
+        </div>
+        <div class="group">
+          <h2>Programas probados en máquina</h2>
+          <p class="note" id="o_proven"></p>
+          <div class="group" id="verifyBox" hidden>
+            <p class="hint">¿Ya corriste este programa en tu máquina? Tu reporte le dice a otros talleres si este posprocesador sirve en su control.</p>
+            <div class="seg" id="v_result"><button data-v="bien">Salió bien</button><button data-v="ajustes">Tuve que ajustar algo</button><button data-v="mal">No sirvió</button></div>
+            <label class="f">¿Qué máquina y qué pasó? (opcional)<input id="v_notes" type="text" maxlength="300" placeholder="Router 1325 con Mach3; el avance salió alto…" style="font-family:var(--f-ui)"></label>
+            <div class="codebar"><button class="btn sm primary" id="v_send">Mandar mi reporte</button><span class="hint" id="v_status"></span></div>
+          </div>
+          <div class="codebar" id="verifyOpen"><button class="btn sm" id="v_open">Probé este programa</button></div>
         </div>
       </section>
     </div>
@@ -645,10 +675,10 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 <script src="lab-01-motor.js"></script>
 <script src="lab-02-estrategias.js"></script>
-<script src="lab-03-posprocesadores.js"></script>
 <script src="lab-04-escena.js"></script>
 <script src="lab-05-interfaz.js"></script>
 <script src="lab-06-bibliotecas.js"></script>
+<script src="lab-07-proyectos.js"></script>
 
 </body>
 </html>

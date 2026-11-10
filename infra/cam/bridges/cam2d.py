@@ -43,7 +43,7 @@ TOL = 0.05  # mm al pasar curvas a rectas
 UNIR = 0.02  # mm para unir trazos sueltos punta con punta
 MAX_LINEAS = 400_000  # G-code demasiado grande = algo salió mal (relleno o V muy finos)
 
-TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado", "acanalado", "textura", "incrustacion_hembra", "incrustacion_macho"}
+TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado", "roscado", "acanalado", "textura", "incrustacion_hembra", "incrustacion_macho"}
 TIPOS_LASER = {"laser_corte", "laser_linea", "laser_relleno"}
 
 NOMBRES = {
@@ -54,6 +54,7 @@ NOMBRES = {
     "cajeado": "Cajeado",
     "grabado_v": "Grabado en V",
     "barrenado": "Barrenado",
+    "roscado": "Roscado",
     "acanalado": "Acanalado",
     "textura": "Textura",
     "incrustacion_hembra": "Incrustación: caja",
@@ -598,6 +599,55 @@ def op_barrenado(g, polys, diam, prof, receta, avisos):
     return hechos
 
 
+def op_roscado(g, polys, diam, prof, receta, paso, izquierda, avisos):
+    """Rosca interior fresada en cada círculo, con fresa de roscar de un solo
+    perfil. El círculo dibujado es el diámetro nominal (M10 = círculo de 10) y
+    el barreno previo ya debe estar hecho. La fresa baja por el centro, entra
+    en arco y recorre una hélice de un paso por vuelta; todo va en tramos
+    rectos cortos para que cualquier controlador lo corra."""
+    hechos = 0
+    for p in polys:
+        circ = 4 * math.pi * p.area / max(1e-9, p.length**2)
+        if circ < 0.9:
+            continue
+        x0, y0, x1, y1 = p.bounds
+        D = ((x1 - x0) + (y1 - y0)) / 2  # por la caja: el área de un círculo hecho de rectas sale un poco chica
+        menor = D - 1.0825 * paso  # diámetro del barreno previo
+        if diam >= menor - 0.2:
+            avisos.append(f"Roscado: la fresa de Ø{diam:g} mm no entra en el barreno de una rosca de Ø{D:.1f} × {paso:g} (Ø{menor:.1f} mm). Usa una fresa de roscar más delgada.")
+            continue
+        c = p.centroid
+        R = (D - diam) / 2
+        vueltas = max(1, math.ceil(prof / paso))
+        alto = -prof + vueltas * paso  # punto alto de la hélice (a ras o un poco arriba del material)
+        # derecha: sube en contra del reloj (corte en concordancia); izquierda: baja en el mismo giro
+        z0, z1 = (alto, -prof) if izquierda else (-prof, alto)
+        f = max(20.0, receta["avance"] * (D - diam) / D)  # avance del centro de la fresa
+        dth = 2 * math.acos(max(-1.0, 1 - 0.01 / max(R, 0.02)))
+        dth = min(math.radians(15), max(math.radians(2), dth))
+        g.ir(c.x, c.y)
+        g.bajar(z0, receta["penetracion"])
+        # entrada: medio círculo del centro a la pared, llega tangente
+        n = max(6, math.ceil(math.pi / dth))
+        for k in range(1, n + 1):
+            a = math.pi + math.pi * k / n
+            g.mover(c.x + R / 2 + R / 2 * math.cos(a), c.y + R / 2 * math.sin(a), f * 0.5)
+        n = max(12, math.ceil(2 * math.pi / dth)) * vueltas
+        for k in range(1, n + 1):
+            a = 2 * math.pi * vueltas * k / n
+            g.mover(c.x + R * math.cos(a), c.y + R * math.sin(a), f, z0 + (z1 - z0) * k / n)
+        # salida: medio círculo de regreso al centro
+        n = max(6, math.ceil(math.pi / dth))
+        for k in range(1, n + 1):
+            a = math.pi * k / n
+            g.mover(c.x + R / 2 + R / 2 * math.cos(a), c.y + R / 2 * math.sin(a), f * 0.5)
+        g.subir()
+        hechos += 1
+    if hechos:
+        g.c("Roscado: el barreno previo debe estar hecho; prueba con el tornillo y ajusta el diametro de la fresa si queda apretado")
+    return hechos
+
+
 def op_laser(g, trazos, polys, modo, potencia, velocidad, pasadas, separacion, avisos):
     n = 0
     if modo in ("corte", "linea"):
@@ -777,6 +827,11 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                     if not (math.isfinite(sep) and 0.5 <= sep <= 100 and math.isfinite(onda) and 5 <= onda <= 500 and math.isfinite(ang)):
                         return error("entrada_invalida", f"Operación {i}: los datos de la textura no son válidos.", "Separación entre 0.5 y 100 mm, largo de onda entre 5 y 500 mm.")
                     figuras = op_textura(g, polys, prof, receta, sep, ang, onda, avisos)
+                elif tipo == "roscado":
+                    paso = float(op.get("paso") or 0)
+                    if not (math.isfinite(paso) and 0.2 <= paso <= 10):
+                        return error("entrada_invalida", f"Operación {i}: el paso de la rosca no es válido.", "Captúralo en mm, entre 0.2 y 10 (M6 = 1, M8 = 1.25, M10 = 1.5).")
+                    figuras = op_roscado(g, polys, diam, prof, receta, paso, bool(op.get("rosca_izquierda")), avisos)
                 elif tipo == "grabado_v":
                     figuras = op_grabado_v(g, polys, float(op.get("angulo", 90)), prof, receta, avisos)
                 else:

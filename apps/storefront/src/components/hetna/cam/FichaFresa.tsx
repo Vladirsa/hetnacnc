@@ -23,6 +23,16 @@ const campoTexto = "w-full rounded-[8px] bg-[#1C2431] px-2.5 py-2 text-[13px] te
 
 export const FRESA_NUEVA: FresaCam = { id: "", nombre: "", tipo: "upcut", diametro: 6, angulo: 90, zanco: 6, largoCorte: 22, largoTotal: 50, voladizo: 30, filos: 2, materialFresa: "carburo", numero: 1, notas: "" }
 
+const NOMBRE_TIENDA: Partial<Record<FresaCam["tipo"], string>> = {
+  recta: "fresa recta", upcut: "fresa espiral", downcut: "fresa downcut", compresion: "fresa compresion", un_filo: "fresa un filo",
+  bola: "fresa punta bola", v: "fresa V", planeadora: "fresa planeadora", desbaste: "fresa desbaste", toroidal: "fresa toroidal", conica_bola: "fresa conica bola", broca: "broca",
+}
+/** Liga a la búsqueda de la tienda con la fresa de esta ficha, para comprarla. */
+export function ligaTienda(f: Pick<FresaCam, "tipo" | "diametro" | "angulo">): string {
+  const medida = f.tipo === "v" ? `${f.angulo} grados` : `${f.diametro} mm`
+  return `/mx/categories?query=${encodeURIComponent(`${NOMBRE_TIENDA[f.tipo] ?? "fresa"} ${medida}`)}`
+}
+
 /** Revisa que las medidas de la ficha cuadren entre sí. */
 export function avisosDeFicha(f: FresaCam): string[] {
   const a: string[] = []
@@ -172,6 +182,11 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
       </div>
       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Un campo vacío usa el valor recomendado para el material al generar el G-code.</span>
       <textarea value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (marca, proveedor, para qué la usas…)" maxLength={200} rows={2} className={campoTexto} />
+      {n("diametro") > 0 && (
+        <a href={ligaTienda({ tipo, diametro: n("diametro"), angulo: n("angulo") || 90 })} target="_blank" rel="noreferrer" className="rounded-[8px] border border-[#2B3648] px-3 py-2 text-center text-[13px] font-semibold text-[#F28A3C] hover:border-[#F28A3C]">
+          ¿No la tienes? Búscala en la tienda HETNA
+        </a>
+      )}
       {error && <span className="text-[12px] text-[#F6B8AE]">{error}</span>}
       <div className="flex gap-2">
         <Boton

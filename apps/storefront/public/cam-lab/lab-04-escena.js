@@ -90,8 +90,8 @@ function syncStockGeo(full){
     const cA=nx*nt;pos[cA*3]=sg.x0;pos[cA*3+1]=0;pos[cA*3+2]=0;pos[cA*3+3]=sg.x0+(nx-1)*sg.rx;pos[cA*3+4]=0;pos[cA*3+5]=0;}
   sg.geo.attributes.position.needsUpdate=true;if(full)sg.geo.computeBoundingSphere();
 }
-function cutAt(T,a){
-  const sg=S.sg,tl=tool();const R=tl.D/2;const {R:Re}=cutterRadii(tl);let dirty=false;
+function cutAt(T,a,tl=tool()){
+  const sg=S.sg;const R=tl.D/2;const {R:Re}=cutterRadii(tl);let dirty=false;
   if(sg.type==='top'){
     if(a[2]>0.9995){const i0=Math.max(0,Math.floor((T[0]-R-sg.x0)/sg.rx)),i1=Math.min(sg.nx-1,Math.ceil((T[0]+R-sg.x0)/sg.rx)),j0=Math.max(0,Math.floor((T[1]-R-sg.y0)/sg.ry)),j1=Math.min(sg.ny-1,Math.ceil((T[1]+R-sg.y0)/sg.ry));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=sg.x0+i*sg.rx,y=sg.y0+j*sg.ry;const d=Math.hypot(x-T[0],y-T[1]);if(d>R)continue;const z=T[2]+toolH(tl,d);const k=j*sg.nx+i;if(z<sg.H[k]){sg.H[k]=Math.max(z,sg.zb);dirty=true;}}}
@@ -136,9 +136,9 @@ function buildPathObjects(){
   needleObj=new THREE.LineSegments(g3,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.7}));workGroup.add(needleObj);
   applyVisibility();
 }
-function buildToolMesh(){
+function buildToolMesh(tl=tool()){
   while(toolGroup.children.length){const c=toolGroup.children.pop();c.geometry.dispose();}
-  const tl=tool();const R=tl.D/2;const pts=[];const n=24;
+  SIM.shown=tl.id;const R=tl.D/2;const pts=[];const n=24;
   for(let i=0;i<=n;i++){const d=R*i/n;const h=toolH(tl,d);pts.push(new THREE.Vector2(Math.max(d,0.001),h));}
   pts.push(new THREE.Vector2(R,tl.fluteLen));pts.push(new THREE.Vector2(0.001,tl.fluteLen));
   const cut=new THREE.Mesh(new THREE.LatheGeometry(pts,40),MAT.cutter);cutterMesh=cut;toolGroup.add(cut);
@@ -172,14 +172,15 @@ function poseAt(t){
 }
 function advanceCut(ti,tf,budget){
   // aplica remoción desde (cutIdx,cutFrac) hasta (ti,tf)
-  const mv=S.moves,tl=tool();const step=Math.max(cutterRadii(tl).R*0.45,tl.D*0.15,0.2);let used=0,dirty=false;
+  const mv=S.moves;let used=0,dirty=false;
   while(SIM.cutIdx<ti||(SIM.cutIdx===ti&&SIM.cutFrac<tf-1e-9)){
     const i=SIM.cutIdx;if(i<=0||i>=mv.length){SIM.cutIdx=Math.max(1,i+1);SIM.cutFrac=0;if(i>=mv.length)break;continue;}
     const B=mv[i],A=mv[i-1];const end=i<ti?1:tf;
     if(B.t==='R'){SIM.cutIdx++;SIM.cutFrac=0;continue;}
+    const tl=toolById(B.tid),step=Math.max(cutterRadii(tl).R*0.45,tl.D*0.15,0.2); // cada tramo quita material con su propia fresa
     const L=Math.max(B.len,V.dist(A.p,B.p));const n=Math.max(1,Math.ceil(L/step));
     let k=Math.floor(SIM.cutFrac*n);const kEnd=Math.ceil(end*n);
-    for(;k<=kEnd&&k<=n;k++){const f=k/n;if(cutAt(V.lerp(A.p,B.p,f),V.norm(V.lerp(A.a,B.a,f))))dirty=true;used++;if(used>=budget){SIM.cutFrac=Math.min(1,(k+1)/n);if(dirty)syncStockGeo(false);return false;}}
+    for(;k<=kEnd&&k<=n;k++){const f=k/n;if(cutAt(V.lerp(A.p,B.p,f),V.norm(V.lerp(A.a,B.a,f)),tl))dirty=true;used++;if(used>=budget){SIM.cutFrac=Math.min(1,(k+1)/n);if(dirty)syncStockGeo(false);return false;}}
     if(end>=1){SIM.cutIdx++;SIM.cutFrac=0;}else{SIM.cutFrac=end;break;}
   }
   if(dirty)syncStockGeo(false);return true;
@@ -213,17 +214,18 @@ function placeTool(pose){
   workGroup.matrixWorldNeedsUpdate=true;
   toolGroup.position.set(p[0],p[1],p[2]);toolGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(a[0],a[1],a[2]));
   const mv=S.moves[pose.i];const hot=mv&&(mv.st>=2||mv.kfail)&&mv.t!=='R';
+  if(mv&&mv.tid!==undefined&&SIM.shown!==mv.tid)buildToolMesh(toolById(mv.tid)); // la fresa que se ve es la del tramo
   if(cutterMesh)cutterMesh.material=hot?MAT.hot:MAT.cutter;if(holderMesh)holderMesh.material=hot?MAT.hot:MAT.holder;
 }
 function updateDRO(pose){
-  const m=S.machine,tl=tool(),fd=feedsCalc();const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  const m=S.machine,tl=toolById(S.moves[pose.i]?.tid),fd=feedsCalc(tl);const axes=KIN_AXES[m.kin];const tcp=useTCP();
   const mm=kinMats(m.kin,pose.ang||[]);const pm=linearOut({p:pose.p,R:mm.R,ha:mm.ha},m,tl,tcp);
   const rows=[['X',pm[0]],['Y',pm[1]],['Z',pm[2]],...axes.map((a,q)=>[a,(pose.ang?.[q]||0)*(m.inv[q]?-1:1)])];
   const mv=S.moves[pose.i];const F=mv?.t==='R'?'RÁPIDO':(mv?.t==='P'?fd.plunge:fd.feed);
   rows.push(['F',F],['S',fd.rpm]);
   $('#droTable').innerHTML=rows.map(([k,v])=>`<tr><td class="ax">${k}</td><td class="v">${typeof v==='number'?(k==='F'||k==='S'?v:v.toFixed(3)):v}</td></tr>`).join('');
   $('#droMode').textContent=`T${tl.num} · ${tcp?'TCP':'MÁQ'}`;
-  const ln=S.gcode?.lineOf?S.gcode.lines[S.gcode.lineOf[pose.i]]:null;$('#droLine').textContent=ln||'—';
+  $('#droLine').textContent=mv?(mv.t==='R'?'G0 · traslado rápido':mv.t==='P'?'G1 · entrada':'G1 · corte'):'—';
 }
 function setPlaying(on){SIM.playing=on;$('#playIco').innerHTML=on?'<path d="M3 2h4v12H3zM9 2h4v12H9z"/>':'<path d="M4 2l10 6-10 6z"/>';
   if(on&&S.stock&&VIS.stock){MAT.stock.opacity=1;MAT.stock.transparent=false;MAT.stock.depthWrite=true;MAT.stock.needsUpdate=true;}}
@@ -246,26 +248,33 @@ async function compute(){
   try{
     if(!S.M||S.frame!==frameOf(S.strat.kind)||S.partDirty){await preparePart();S.partDirty=false;}
     const tl=tool(),st=S.strat;let res;const t0=now();
-    if(st.kind==='top3')res=await genTop3(tl,st);else if(st.kind==='rot4')res=await genRot4(tl,st);else res=await gen5(tl,st);
+    // desbaste con otra fresa: cada una calcula su trayectoria con su propia forma
+    const rt=st.rough&&st.roughTool&&st.roughTool!==tl.id?S.tools.find(t=>t.id===st.roughTool):null;S.rtool=rt||null;
+    if(st.kind==='top5'||st.kind==='rot5')res=await gen5(tl,st);
+    else{const gen=st.kind==='top3'?genTop3:genRot4;
+      if(rt){const rr=await gen(rt,st,{roughOnly:true}),rf=await gen(tl,{...st,rough:false});rr.passes.forEach(p=>{p.tid=rt.id;p.lk=rr.linkOK;});
+        res={...rf,passes:rr.passes.concat(rf.passes),maxDepth:Math.max(rr.maxDepth,rf.maxDepth)};}
+      else res=await gen(tl,st);}
     setBusy('Enlazando pasadas y resolviendo ejes de máquina…',0.97);await tick();
     const moves=buildMoves(res,st);S.moves=moves;S.job={res,kind:st.kind,ms:now()-t0,toolId:tl.id};
     S.jobStats=annotateMoves(moves);
-    S.gcode=postProcess();
+    S.gcode=null;S.outs={};
     buildPathObjects();buildToolMesh();resetStockCut();stockSolid(false);SIM.t=0;
-    S.stale=false;refreshOutputs();renderReport();
+    S.stale=false;refreshOutputs();renderReport();askPreview();
   }catch(e){console.error(e);renderIssues([{sev:'err',title:'Error al calcular',cause:String(e.message||e),fix:'Revisa la malla y los parámetros. Si el archivo es muy grande, simplifícalo.'}]);}
   finally{setBusy(null);S.busy=false;$$('#btnCompute,#btnCompute2').forEach(b=>b.disabled=false);updateStale();}
 }
-function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=postProcess();refreshOutputs();renderReport();}
+function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=null;S.outs={};refreshOutputs();renderReport();askPreview();}
 function renderReport(){
   const js=S.jobStats,res=S.job?.res,m=S.machine,tl=tool(),fd=feedsCalc(),st=S.strat;if(!js||!res)return;
   const s5=res.stats5;const axes=KIN_AXES[m.kin];const feedPts=S.moves.filter(x=>x.t==='F').length;
   const collPts=S.moves.filter(x=>x.t!=='R'&&x.st>=2).length+ (st.skip&&s5?s5.coll:0);
   const k=[];
   k.push({l:'Tiempo estimado',v:fmtTime(js.total)});
+  if(js.changes)k.push({l:'Cambios de fresa',v:String(js.changes)});
   k.push({l:'Corte',v:`${nf(js.lenCut/1000,1)} m`});
   k.push({l:'Puntos de corte',v:feedPts.toLocaleString('es-MX')});
-  k.push({l:'Líneas G-code',v:(S.gcode?.lines.length||0).toLocaleString('es-MX')});
+  k.push({l:'Líneas G-code',v:S.gcode?S.gcode.total.toLocaleString('es-MX'):'…'});
   if(s5){k.push({l:'Reorientados',v:s5.adjusted.toLocaleString('es-MX'),c:s5.adjusted?'warn':'ok'});k.push({l:'Colisión sin resolver',v:(s5.coll).toLocaleString('es-MX'),c:s5.coll?'bad':'ok'});}
   else{const cc=S.job.res.passes.reduce((s,p)=>s+p.pts.filter(q=>q.st>=2).length,0);k.push({l:'Zanco / porta',v:cc?`${cc} pts`:'Libre',c:cc?'bad':'ok'});k.push({l:'Sin alcanzar',v:`${nf(res.unreachedPct,1)} %`,c:res.unreachedPct>2?'warn':'ok'});}
   axes.forEach((a,q)=>{const r=js.rng[q];k.push({l:`Rango ${a}`,v:Number.isFinite(r[0])?`${r[0].toFixed(0)}…${r[1].toFixed(0)}°`:'—'});});
@@ -286,7 +295,7 @@ function renderReport(){
   if(js.limFail)I.push({sev:'err',title:`${js.limFail} movimientos sin solución cinemática`,cause:'La orientación pedida no existe en esta máquina.',fix:'Cambia de cinemática o reduce la inclinación.'});
   if(fd.clampedRPM)I.push({sev:'warn',title:`RPM limitadas a ${m.maxRPM}`,cause:`La Vc pedida requiere más velocidad que la del husillo.`,fix:'El avance se recalculó con las RPM reales para mantener la carga por diente.'});
   if(fd.clampedFeed)I.push({sev:'warn',title:`Avance limitado a ${m.maxFeed} mm/min`,cause:'El avance calculado excede el máximo de la máquina.',fix:'La carga por diente real será menor que la indicada.'});
-  if(axes.length>=1&&S.post.ctrl==='grbl')I.push({sev:'err',title:'GRBL estándar solo controla 3 ejes',cause:`Este trabajo usa ${axes.join(' y ')}.`,fix:'Usa grblHAL o FluidNC con eje A, o elige Mach3 / LinuxCNC.'});
+  if(axes.length>CTRL[S.post.ctrl].maxAxes-3)I.push({sev:'err',title:`${CTRL[S.post.ctrl].name} no controla tantos ejes`,cause:`Este trabajo usa ${axes.join(' y ')}.`,fix:'Elige un control que maneje ejes rotativos: FluidNC / grblHAL, Mach3 o LinuxCNC.'});
   if(axes.length&&!useTCP())I.push({sev:'info',title:'Coordenadas de máquina calculadas por el post',cause:`${CTRL[S.post.ctrl].name}${m.tcp?' no ofrece TCP en este post':' sin TCP'}: X, Y, Z ya incluyen ${isHeadKin(m.kin)?`el pivote (${m.pivot+tl.stickout+tl.holderLen} mm)`:'el centro de giro'}.`,fix:'Si cambias de herramienta o voladizo, vuelve a generar el G-code.'});
   if(!I.some(x=>x.sev==='err'||x.sev==='warn'))I.unshift({sev:'ok',title:'Sin problemas detectados',cause:`Calculado en ${nf(S.job.ms/1000,1)} s con ${S.cloudN.toLocaleString('es-MX')} puntos de verificación.`,fix:''});
   renderIssues(I);

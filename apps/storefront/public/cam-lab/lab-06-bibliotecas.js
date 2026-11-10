@@ -65,6 +65,9 @@ function toolWarnings(t){
 function syncToolExtras(){
   const t=toolFill(tool());$('#t_group').value=t.group||'';$('#t_groups').innerHTML=[...new Set(S.tools.map(x=>x.group||'').filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');$('#t_total').value=t.totalLen;$('#t_mat').value=t.mat;$('#t_notes').value=t.notes;
   const w=toolWarnings(t);$('#o_toolwarn').hidden=!w.length;$('#o_toolwarn').textContent=w.join(' ');
+  // la misma fresa, buscada en la tienda
+  const shop={ball:'fresa punta bola',flat:'fresa recta',bull:'fresa toroidal',taperball:'fresa conica bola',vbit:'fresa V',drill:'broca'}[t.type]||'fresa';
+  $('#t_shop').href='/mx/categories?query='+encodeURIComponent(shop+' '+(t.type==='vbit'?t.angle+' grados':t.D+' mm'));
 }
 /* La Calculadora CNC del sitio vive en la página que envuelve al laboratorio: se le pide el cálculo por mensaje. */
 const CALC_MAT={mdf:'mdf',pino:'madera_blanda',dura:'madera_dura',acrilico:'acrilico',hdpe:'hdpe',aluminio:'aluminio',laton:'laton',acero:'acero_dulce',cera:'cera'};
@@ -153,6 +156,12 @@ function syncExtrasUI(){
   $('#o_pat3').textContent={par:'Pasadas rectas, una junto a otra.',cross:'Dos juegos de pasadas a 90°: borra las crestas, tarda el doble.',circ:'Círculos concéntricos desde el centro del área: buen acabado en platos y medallones.',rad:'Rayos desde el centro hacia afuera: útil en piezas con forma de domo.'}[st.pat3];
   $$('#s_cutdir button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.cutdir));
   $('#w_rpat').hidden=rot;$('#w_rrot').hidden=!rot;$('#s_rpat').value=st.rpat;$('#s_rrot').value=st.rrot;
+  // fresa de desbaste: la del acabado u otra de la biblioteca (las de grabado y las brocas no desbastan)
+  if(st.roughTool&&!S.tools.some(t=>t.id===st.roughTool))st.roughTool=0;
+  $('#s_rtool').innerHTML='<option value="0">La misma del acabado</option>'+S.tools.filter(t=>t.id!==S.toolId&&t.type!=='vbit'&&t.type!=='drill').map(t=>`<option value="${t.id}">T${+t.num||0} · ${esc(t.name)} · Ø${+t.D||0}</option>`).join('');
+  $('#s_rtool').value=String(st.roughTool||0);$('#w_rtool').hidden=!st.rough;
+  const rtl=st.rough&&st.roughTool?S.tools.find(t=>t.id===st.roughTool):null;
+  $('#o_rtool').textContent=rtl?`El programa desbasta con T${rtl.num}, se retira, pide el cambio a T${tool().num} y hace el acabado. Avance de desbaste: ${feedsCalc(rtl).feed.toLocaleString('es-MX')} mm/min a ${feedsCalc(rtl).rpm.toLocaleString('es-MX')} RPM. Mide el largo de las dos fresas en tu máquina antes de correrlo.`:'';
   $('#o_rough5').textContent=five?'En 5 ejes el desbaste se hace con la herramienta recta (como en 3 o 4 ejes) y después entra el acabado inclinado.':'';
   const a=st.area;$('#s_area').checked=a.on;$('#w_areay').hidden=rot;['x0','x1','y0','y1'].forEach(q=>{$('#s_a'+q).value=a[q];$('#s_a'+q).disabled=!a.on;});
 }
@@ -172,6 +181,7 @@ function initExtrasUI(){
   $('#z_top').addEventListener('change',e=>{S.zero.top=e.target.value;zero();});$('#z_rot').addEventListener('change',e=>{S.zero.rot=e.target.value;zero();});
   seg('s_pat3',v=>{S.strat.pat3=v;stale();});seg('s_cutdir',v=>{S.strat.cutdir=v;stale();});seg('s_angq',v=>{S.strat.ang=+v;stale();});
   numIn('s_ang',v=>S.strat.ang=v,stale,-180,180);
+  $('#s_rtool').addEventListener('change',e=>{S.strat.roughTool=+e.target.value||0;stale();});
   $('#s_rpat').addEventListener('change',e=>{S.strat.rpat=e.target.value;stale();});$('#s_rrot').addEventListener('change',e=>{S.strat.rrot=e.target.value;stale();});
   const fit=()=>{const M=S.M;if(!M)return;Object.assign(S.strat.area,{x0:Math.floor(M.bmin[0]),x1:Math.ceil(M.bmax[0]),y0:Math.floor(M.bmin[1]),y1:Math.ceil(M.bmax[1])});};
   $('#s_area').addEventListener('change',e=>{S.strat.area.on=e.target.checked;if(e.target.checked&&!S.strat.area.set){fit();S.strat.area.set=true;}stale();});
@@ -195,6 +205,8 @@ function initExtrasUI(){
   $$('[data-lib=export]').forEach(b=>b.addEventListener('click',libExport));$$('[data-lib=import]').forEach(b=>b.addEventListener('click',()=>$('#libIn').click()));
   $('#libIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)libImport(f);});
   $('#p_repair').addEventListener('click',repairPart);
+  $('#v_open').addEventListener('click',askVerify);$('#v_send').addEventListener('click',sendVerify);
+  $('#v_result').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;VERIFY.result=b.dataset.v;$$('#v_result button').forEach(x=>x.classList.toggle('on',x===b));});
   // ficha técnica y calculadora
   syncToolForm=(fn=>function(){const r=fn.apply(this,arguments);syncToolExtras();return r;})(syncToolForm);
   $('#t_total').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v)&&v>0)tool().totalLen=v;syncToolForm();});
@@ -214,9 +226,29 @@ async function repairPart(){
   if(p.degenerate)did.push(`${p.degenerate.toLocaleString('es-MX')} caras sin área quitadas`);if(p.duplicate)did.push(`${p.duplicate.toLocaleString('es-MX')} caras repetidas quitadas`);
   if(p.flipped)did.push(`${p.flipped.toLocaleString('es-MX')} caras volteadas hacia afuera`);if(p.holes)did.push(`${p.holes} ${p.holes===1?'hueco tapado':'huecos tapados'} con ${p.holeTris.toLocaleString('es-MX')} caras nuevas`);
   if(!p.changed){setBusy(null);renderIssues([{sev:p.open?'warn':'ok',title:p.open?'No encontré nada que pueda reparar solo':'La malla está bien',cause:p.open?`Quedan ${p.open} aristas abiertas que no forman un hueco simple (caras que se cruzan o piezas sueltas).`:'Está cerrada, sin caras repetidas ni volteadas.',fix:p.open?'Repárala en tu programa de diseño y expórtala otra vez como sólido.':''}]);return;}
-  S.rawPos=r.pos;S.rawFile=null; // lo que se manda al pedir el servicio es la malla reparada
+  S.rawPos=r.pos;S.rawFile=null;S.sampleKey=null; // lo que se manda al pedir el servicio es la malla reparada
   S.partDirty=true;setBusy(null);await reprep();
   renderIssues([{sev:p.open?'warn':'ok',title:p.open?'Malla reparada en parte':'Malla reparada',cause:did.join(', ')+'.'+(p.open?` Quedan ${p.open} aristas abiertas que no forman un hueco simple.`:' Quedó cerrada.'),fix:(p.holes?'Los huecos se taparon con una cara plana: revisa en la vista 3D que el tapón sea el que esperabas. ':'')+'Pulsa Calcular trayectoria.'}]);
+}
+/* ---------------- Programas probados en máquina ---------------- */
+let PROVEN=null;const VERIFY={result:''};
+async function refreshProven(){
+  const el=$('#o_proven');
+  if(!PROVEN){try{PROVEN=(await(await fetch('/api/cam/pruebas')).json()).pruebas||[];}catch(e){PROVEN=[];}}
+  const c=S.post.ctrl,name=CTRL[c].name,r=PROVEN.find(x=>x.controlador===c&&x.herramienta==='3d');
+  if(!r){el.className='note';el.textContent=`Todavía ningún taller ha reportado cómo le fue con ${name}. Si lo pruebas, sé el primero en decirlo: corre siempre en vacío antes de cortar.`;return;}
+  const n=r.bien+r.ajustes+r.mal;el.className='note'+(r.mal>r.bien?' warn':'');
+  el.textContent=`${name}: ${n} ${n===1?'reporte':'reportes'} de ${r.talleres} ${r.talleres===1?'taller':'talleres'}. ${r.bien} salieron bien, ${r.ajustes} con ajustes y ${r.mal} no sirvieron.`;
+}
+function askVerify(){$('#verifyBox').hidden=false;$('#verifyOpen').hidden=true;$('#v_status').textContent='';}
+async function sendVerify(){
+  if(!VERIFY.result){$('#v_status').textContent='Elige cómo te fue.';return;}
+  $('#v_send').disabled=true;$('#v_status').textContent='Enviando…';
+  const body={herramienta:'3d',controlador:S.post.ctrl,resultado:VERIFY.result,maquina:MACHINES[S.presetKey]?.name,material:MATERIALS[S.feeds.mat]?.name,ejes:3+KIN_AXES[S.machine.kin].length,notas:$('#v_notes').value.trim()||undefined};
+  let d;try{d=await(await fetch('/api/cam/pruebas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();}catch(e){d={mensaje:'No se pudo conectar.'};}
+  $('#v_send').disabled=false;
+  if(d.ok){$('#v_status').textContent='Gracias: tu reporte ya cuenta.';PROVEN=null;refreshProven();$('#v_notes').value='';}
+  else $('#v_status').textContent=d.mensaje||'No se pudo guardar tu reporte.';
 }
 function syncPostExtras(){$('#p_pre').value=S.post.pre;$('#p_end').value=S.post.end;}
 

@@ -13,17 +13,25 @@
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
+import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
+import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
+import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import type { FresaCam } from "@/lib/data/cam-maquinas"
 import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 
+import { GrabadoTorno } from "./GrabadoTorno"
 import {
   ESPIRAL_INICIAL,
   ESTRIAS_INICIALES,
+  GRABADO_INICIAL,
+  RELIEVE_INICIAL,
   longitudTotal,
   radioEn,
   radioMaximo,
   type Espiral,
   type Estrias,
+  type Grabado,
+  type Relieve,
   type Segmento,
   type TipoSegmento,
 } from "@/lib/torno/pieza"
@@ -279,7 +287,14 @@ export function EstudioTorno() {
   const [rpmDesbaste, setRpmDesbaste] = useState(40)
   const [rpmAcabado, setRpmAcabado] = useState(65)
 
+  // Al calcular llegan los datos y las primeras líneas; el programa completo se pide al descargar
   const [gcode, setGcode] = useState<string | null>(null)
+  const [lineasOcultas, setLineasOcultas] = useState(0)
+  const [negado, setNegado] = useState<NegadoCam | null>(null)
+  const [bajando, setBajando] = useState(false)
+  const [bajado, setBajado] = useState(false)
+  const [versionCupo, setVersionCupo] = useState(0)
+  const cupo = useCupoCam(versionCupo)
   const [info, setInfo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [generando, setGenerando] = useState(false)
@@ -287,6 +302,9 @@ export function EstudioTorno() {
 
   const [estrias, setEstrias] = useState<Estrias>(ESTRIAS_INICIALES)
   const [espiral, setEspiral] = useState<Espiral>(ESPIRAL_INICIAL)
+  // Grabado 2D y relieve 3D sobre la pieza terminada (no se dibujan en la vista 3D)
+  const [grabado, setGrabado] = useState<Grabado>(GRABADO_INICIAL)
+  const [relieve, setRelieve] = useState<Relieve>(RELIEVE_INICIAL)
   const [vista, setVista] = useState<"3d" | "perfil">("3d")
   const [encuadre, setEncuadre] = useState(0)
 
@@ -320,6 +338,18 @@ export function EstudioTorno() {
       if (c.activo && nuevo.yHasta <= nuevo.yDesde) Object.assign(nuevo, tramoInicial())
       return nuevo
     })
+    limpiarResultado()
+  }
+
+  // Al encender un grabado o relieve sin zona, se propone al centro de la pieza
+  const zonaInicial = (v: { yDesde: number; largo: number }) =>
+    v.yDesde === 0 && largoPieza > 0 ? { yDesde: Math.round(largoPieza * 0.35), largo: Math.max(10, Math.round(largoPieza * 0.3)) } : {}
+  const cambiarGrabado = (c: Partial<Grabado>) => {
+    setGrabado((g) => ({ ...g, ...c, ...(c.activo ? zonaInicial(g) : {}) }))
+    limpiarResultado()
+  }
+  const cambiarRelieve = (c: Partial<Relieve>) => {
+    setRelieve((r) => ({ ...r, ...c, ...(c.activo ? zonaInicial(r) : {}) }))
     limpiarResultado()
   }
 
@@ -367,6 +397,11 @@ export function EstudioTorno() {
     setRpmAcabado(n(d.rpm?.rpmAcabado, 65))
     setEstrias({ ...ESTRIAS_INICIALES, ...(d.tallados?.estrias ?? {}) })
     setEspiral({ ...ESPIRAL_INICIAL, ...(d.tallados?.espiral ?? {}) })
+    // grabado y relieve sólo vienen en los proyectos guardados en la cuenta; el servidor los vuelve a revisar al generar
+    const g = d.tallados?.grabado
+    setGrabado(g && Array.isArray(g.trazos) ? { ...GRABADO_INICIAL, ...g } : GRABADO_INICIAL)
+    const rl = d.tallados?.relieve
+    setRelieve(rl && Array.isArray(rl.alturas) ? { ...RELIEVE_INICIAL, ...rl } : RELIEVE_INICIAL)
     setEncuadre((n) => n + 1)
     limpiarResultado()
     return true
@@ -441,6 +476,8 @@ export function EstudioTorno() {
     setStockWidthMm(e.bloque)
     setEstrias({ ...ESTRIAS_INICIALES, ...(e.estrias ?? {}) })
     setEspiral({ ...ESPIRAL_INICIAL, ...(e.espiral ?? {}) })
+    setGrabado(GRABADO_INICIAL)
+    setRelieve(RELIEVE_INICIAL)
     setNombreDiseno(e.nombre)
     setEncuadre((n) => n + 1)
     limpiarResultado()
@@ -464,32 +501,36 @@ export function EstudioTorno() {
     limpiarResultado()
   }
 
+  const pedidoTorno = () => ({
+    segmentos,
+    material,
+    origenPunto,
+    ejeLargo,
+    avance,
+    maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
+    herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
+    rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
+    tallados: { ...tallados, ...(grabado.activo ? { grabado } : {}), ...(relieve.activo ? { relieve } : {}) },
+  })
+
   async function generar() {
     setError(null)
+    setNegado(null)
     limpiarResultado()
     setGenerando(true)
     try {
       const resp = await fetch("/api/cam/torno", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          segmentos,
-          material,
-          origenPunto,
-          ejeLargo,
-          avance,
-          maquina: { stockWidthMm, startOffsetMm, endOffsetMm, safeZClearanceMm },
-          herramienta: { toolDiameterMm, feed, tipo: tipoFresa },
-          rpm: { rpmCilindrado, rpmDesbaste, rpmAcabado },
-          tallados,
-        }),
+        body: JSON.stringify(pedidoTorno()),
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
         setError(data.error ?? "No se pudo generar el G-code.")
         return
       }
-      setGcode(data.gcode)
+      setGcode(data.vista ?? "")
+      setLineasOcultas(data.lineasOcultas ?? 0)
       setAvisos(data.avisos ?? [])
       setInfo(
         `${data.longitudTotalMm.toFixed(0)} mm de largo · Ø máximo ${(data.radioMaximoMm * 2).toFixed(1)} mm · ` +
@@ -502,24 +543,41 @@ export function EstudioTorno() {
     }
   }
 
-  function descargar() {
-    if (!gcode) return
-    const blob = new Blob([gcode], { type: "text/plain" })
+  async function descargar() {
+    if (gcode === null || bajando) return
+    setBajando(true)
+    setNegado(null)
+    let texto = ""
+    try {
+      const resp = await fetch("/api/cam/torno", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pedidoTorno(), descargar: true }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (data.candado) setNegado(data)
+      else if (!resp.ok || !data.gcode) setError(data.error ?? "No se pudo preparar la descarga.")
+      else texto = data.gcode
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.")
+    }
+    setBajando(false)
+    setVersionCupo((v) => v + 1)
+    if (!texto) return
+    const blob = new Blob([texto], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
     a.download = "pieza_torno_hetna.nc"
     a.click()
+    setBajado(true)
     URL.revokeObjectURL(url)
   }
 
   const vistaPrevia = useMemo(() => {
     if (!gcode) return ""
-    const lineas = gcode.split("\n")
-    return lineas.length > 200
-      ? `${lineas.slice(0, 200).join("\n")}\n(… ${lineas.length - 200} líneas más en el archivo …)`
-      : gcode
-  }, [gcode])
+    return lineasOcultas > 0 ? `${gcode}\n(… ${lineasOcultas.toLocaleString("es-MX")} líneas más en el archivo …)` : gcode
+  }, [gcode, lineasOcultas])
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px]">
@@ -683,9 +741,18 @@ export function EstudioTorno() {
               </div>
             )}
           </div>
+
+          <GrabadoTorno
+            grabado={grabado}
+            relieve={relieve}
+            cambiarGrabado={cambiarGrabado}
+            cambiarRelieve={cambiarRelieve}
+            largoPieza={largoPieza}
+            radioEnY={(y) => radioEn(y, segmentos.filter((x) => Number.isFinite(x.finY) && Number.isFinite(x.radioInicio) && Number.isFinite(x.radioFin)))}
+          />
         </section>
 
-        {(gcode || error || avisos.length > 0) && (
+        {(gcode !== null || error || avisos.length > 0) && (
           <section className={caja}>
             <h2 className="text-[17px] font-bold text-[#1B1B18]">Resultado</h2>
             {error && (
@@ -697,15 +764,25 @@ export function EstudioTorno() {
                 ⚠ {a}
               </p>
             ))}
-            {gcode && (
+            {gcode !== null && (
               <>
                 <button
                   type="button"
                   onClick={descargar}
                   className="mt-4 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
                 >
-                  ⬇ Descargar archivo .nc
+                  {bajando ? "Preparando…" : "⬇ Descargar archivo .nc"}
                 </button>
+                <div className="mt-2">
+                  {negado ? (
+                    <CandadoCam negado={negado} regreso="/mx/cam/torno" />
+                  ) : (
+                    cupo?.estado && <p className="text-[12.5px] text-[#6B6A63]">{textoCupo(cupo.sesion, cupo.estado.torno, cupo.estado.plan_nombre, "El torno CNC")}</p>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <ProbadoCam herramienta="torno" controlador={avance === "G93" ? "linuxcnc" : "mach3"} nombreControl={avance === "G93" ? "LinuxCNC (G93)" : "Mach3 / Mach4 (G94)"} maquina="Torno CNC con eje A" bajado={bajado} />
+                </div>
                 <pre className="mt-3 max-h-[320px] overflow-auto rounded-[10px] bg-[#1B1B18] p-3 text-[12px] leading-relaxed text-[#E7E4DC]">
                   {vistaPrevia}
                 </pre>
@@ -716,8 +793,14 @@ export function EstudioTorno() {
       </div>
 
       <aside className="flex flex-col gap-5">
+        {/* En la cuenta: se retoman en cualquier equipo y se comparten con una liga */}
+        <ProyectosCam
+          herramienta="torno"
+          obtener={() => ({ ...disenoActual(), tallados: { estrias, espiral, ...(grabado.activo ? { grabado } : {}), ...(relieve.activo ? { relieve } : {}) } })}
+          aplicar={aplicarDiseno}
+        />
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños en este navegador</h2>
           <div className="mt-3 flex gap-2">
             <input
               className="w-full rounded-[8px] border border-[#E7E4DC] bg-white px-2.5 py-2 text-[14px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"

@@ -17,7 +17,12 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
+import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
 import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
+import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
+import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
+import { acomodarCopias } from "@/lib/cam/acomodar"
+import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
 
@@ -44,7 +49,7 @@ const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "laser_grbl", nombre: "Láser GRBL" },
 ]
 
-type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "acanalado" | "textura" | "incrustacion_hembra" | "incrustacion_macho" | "laser_corte" | "laser_linea" | "laser_relleno"
+type TipoOp = "corte" | "fuera" | "dentro" | "linea" | "cajeado" | "grabado_v" | "barrenado" | "roscado" | "acanalado" | "textura" | "incrustacion_hembra" | "incrustacion_macho" | "laser_corte" | "laser_linea" | "laser_relleno"
 const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "corte", nombre: "Corte de pieza", nota: "Barrenos por dentro y borde por fuera, con pestañas" },
   { id: "fuera", nombre: "Perfilado por fuera", nota: "La fresa va por fuera de la línea" },
@@ -53,6 +58,7 @@ const OPS_ROUTER: { id: TipoOp; nombre: string; nota: string }[] = [
   { id: "cajeado", nombre: "Cajeado (desbaste de área)", nota: "Vacía el área a una profundidad" },
   { id: "grabado_v", nombre: "Grabado en V", nota: "Letras y figuras con fresa en V" },
   { id: "barrenado", nombre: "Barrenado", nota: "Barrenos en el centro de cada círculo" },
+  { id: "roscado", nombre: "Roscado (fresado de rosca)", nota: "Rosca interior en cada círculo, con fresa de roscar" },
   { id: "acanalado", nombre: "Acanalado", nota: "Canal sobre la línea que entra y sale en rampa" },
   { id: "textura", nombre: "Textura", nota: "Surcos en ondas, como tallado a mano; mejor con fresa de bola" },
   { id: "incrustacion_hembra", nombre: "Incrustación: caja", nota: "Vacía la figura donde va a embonar la pieza" },
@@ -95,6 +101,9 @@ type Op = {
   onda: string
   anguloTextura: string
   holgura: string
+  // roscado
+  paso: string
+  roscaIzq: boolean
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
@@ -127,6 +136,8 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   onda: "30",
   anguloTextura: "0",
   holgura: "0.1",
+  paso: "1.5",
+  roscaIzq: false,
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -142,51 +153,6 @@ type Plan = {
   advertencias: string[]
 }
 
-type Movimiento = { corte: boolean; pts: [number, number][]; z: number }
-
-// Lee los movimientos X/Y del G-code (G0, G1, G2 y G3; modal)
-function leerGcode(texto: string): Movimiento[] {
-  const movs: Movimiento[] = []
-  let x = 0, y = 0, z = 5
-  let g = 0
-  for (const crudo of texto.split(/\r?\n/)) {
-    const l = crudo.replace(/\(.*?\)|;.*$/g, "").toUpperCase()
-    if (!l.trim()) continue
-    const val = (c: string) => {
-      const m = new RegExp(`${c}\\s*(-?\\d*\\.?\\d+)`).exec(l)
-      return m ? parseFloat(m[1]) : null
-    }
-    const gm = /G0?([0-3])(?!\d)/.exec(l)
-    if (gm) g = parseInt(gm[1], 10)
-    const nx = val("X") ?? x
-    const ny = val("Y") ?? y
-    const nz = val("Z") ?? z
-    if (nx === x && ny === y) {
-      z = nz
-      continue
-    }
-    if (g === 2 || g === 3) {
-      const cx = x + (val("I") ?? 0)
-      const cy = y + (val("J") ?? 0)
-      const r = Math.hypot(x - cx, y - cy)
-      const a0 = Math.atan2(y - cy, x - cx)
-      let a1 = Math.atan2(ny - cy, nx - cx)
-      if (g === 2 && a1 >= a0) a1 -= Math.PI * 2
-      if (g === 3 && a1 <= a0) a1 += Math.PI * 2
-      const n = Math.max(4, Math.ceil((Math.abs(a1 - a0) * r) / 1.5))
-      const pts: [number, number][] = []
-      for (let i = 0; i <= n; i++) {
-        const a = a0 + ((a1 - a0) * i) / n
-        pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
-      }
-      movs.push({ corte: true, pts, z: nz })
-    } else movs.push({ corte: g !== 0 && nz <= 0.01, pts: [[x, y], [nx, ny]], z: nz })
-    x = nx
-    y = ny
-    z = nz
-  }
-  return movs
-}
 
 const f2 = (x: number) => String(Math.round(x * 100) / 100)
 const COLORES_CAPA = ["#5FA8F5", "#9BE3B8", "#F2D29B", "#C79BF2", "#F6B8AE", "#7FD6E0", "#E6EBF2"]
@@ -205,7 +171,15 @@ function Select({ valor, cambiar, children, etiqueta }: { valor: string; cambiar
 
 export function EstudioCam2D() {
   const [archivo, setArchivo] = useState<File | null>(null)
-  const [dibujo, setDibujo] = useState<Dibujo | null>(null)
+  // La pieza tal como viene en el archivo, y lo que se corta: sus copias acomodadas en la hoja
+  const [pieza, setDibujo] = useState<Dibujo | null>(null)
+  const [hoja, setHoja] = useState({ copias: "1", ancho: "1220", largo: "2440", separacion: "8" })
+  const acomodo = useMemo(
+    () => (pieza ? acomodarCopias(pieza, { copias: numero(hoja.copias) || 1, ancho: numero(hoja.ancho) || 1220, largo: numero(hoja.largo) || 2440, separacion: numero(hoja.separacion) || 0 }) : null),
+    [pieza, hoja]
+  )
+  const dibujo = acomodo?.dibujo ?? null
+  const variasCopias = (acomodo?.puestas ?? 1) > 1
   const [origen, setOrigen] = useState(true)
   const [material, setMaterial] = useState<Material>("mdf")
   const [espesor, setEspesor] = useState("18")
@@ -215,7 +189,16 @@ export function EstudioCam2D() {
   const [ops, setOps] = useState<Op[]>(() => [nuevaOp("corte", "18")])
   const [trabajando, setTrabajando] = useState(false)
   const [plan, setPlan] = useState<Plan | null>(null)
-  const [gcode, setGcode] = useState<string | null>(null)
+  // Al calcular llega el dibujo de la trayectoria; el programa se pide al descargar
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([])
+  const gcode = movimientos.length > 0 // "ya hay un programa calculado"
+  const setGcode = (_: null) => setMovimientos([])
+  const pedido = useRef<FormData | null>(null)
+  const [negado, setNegado] = useState<NegadoCam | null>(null)
+  const [bajando, setBajando] = useState(false)
+  const [bajado, setBajado] = useState(false)
+  const [versionCupo, setVersionCupo] = useState(0)
+  const cupo = useCupoCam(versionCupo)
   const [error, setError] = useState<{ mensaje: string; remedio: string } | null>(null)
   const [vista, setVista] = useState<"pieza" | "trayectoria">("pieza")
   const [avance, setAvance] = useState(1)
@@ -276,6 +259,50 @@ export function EstudioCam2D() {
     }
   }
 
+  // Proyecto guardado en la cuenta: el dibujo (como DXF) y cómo se va a cortar
+  const proyectoActual = () => {
+    if (!pieza) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
+    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja }
+  }
+  const aplicarProyecto = (d: any): boolean => {
+    if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
+    let leido: Dibujo
+    try {
+      leido = leerDXF(d.dxf)
+    } catch {
+      return false
+    }
+    if (!leido.trazos.length) return false
+    const nombre = typeof d.archivo === "string" ? d.archivo.replace(/[^\w.\- ]/g, "").slice(0, 80) || "pieza.dxf" : "pieza.dxf"
+    setArchivo(new File([d.dxf], nombre, { type: "application/dxf" }))
+    setDibujo(leido)
+    if (MATERIALES.some((m) => m.id === d.material)) setMaterial(d.material)
+    if (typeof d.espesor === "string" && numero(d.espesor) > 0) setEspesor(d.espesor)
+    if (typeof d.maquinaId === "string" && maquinas.some((m) => m.id === d.maquinaId)) setMaquinaId(d.maquinaId)
+    setOrigen(d.origen !== false)
+    const hj = d.hoja && typeof d.hoja === "object" ? d.hoja : {}
+    const txt = (v: unknown, def: string) => (typeof v === "string" && numero(v) >= 0 ? v.slice(0, 8) : def)
+    setHoja({ copias: txt(hj.copias, "1"), ancho: txt(hj.ancho, "1220"), largo: txt(hj.largo, "2440"), separacion: txt(hj.separacion, "8") })
+    // cada operación parte de la de fábrica de su tipo: lo que falte o venga raro no rompe la pantalla
+    const tipos = [...OPS_ROUTER, ...OPS_LASER].map((o) => o.id)
+    setOps(
+      d.ops
+        .filter((o: any) => o && tipos.includes(o.tipo))
+        .slice(0, 12)
+        .map((o: any) => {
+          const base = nuevaOp(o.tipo, typeof d.espesor === "string" ? d.espesor : espesor)
+          const limpia: Record<string, unknown> = {}
+          for (const k of Object.keys(base) as (keyof Op)[]) if (k !== "id" && typeof o[k] === typeof base[k]) limpia[k] = o[k]
+          return { ...base, ...limpia } as Op
+        })
+    )
+    setPlan(null)
+    setGcode(null)
+    setError(null)
+    setVista("pieza")
+    return true
+  }
+
   const cambiarOp = (i: number, cambio: Partial<Op>) => setOps((l) => l.map((o, j) => (j === i ? { ...o, ...cambio } : o)))
   const moverOp = (i: number, d: number) =>
     setOps((l) => {
@@ -293,7 +320,8 @@ export function EstudioCam2D() {
     setError(null)
     setPlan(null)
     setGcode(null)
-    const cuerpo = esSVG || origen ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
+    // con varias copias siempre se manda el dibujo ya acomodado, no el archivo original
+    const cuerpo = esSVG || origen || variasCopias ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
     const config = {
       maquina: { tipo: maquina.tipo, post: maquina.post, smax: maquina.smax },
       operaciones: ops.map((o) => ({
@@ -317,6 +345,7 @@ export function EstudioCam2D() {
         ...(o.fresa ? { herramienta: o.fresa, largo_corte: o.largoCorte } : {}),
         ...(o.tipo === "acanalado" ? { rampa: Math.max(0, numero(o.rampa) || 0) } : {}),
         ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
+        ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq } : {}),
         ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
       })),
     }
@@ -325,13 +354,15 @@ export function EstudioCam2D() {
     form.append("material", material)
     form.append("espesor", espesor)
     form.append("config", JSON.stringify(config))
+    pedido.current = form
+    setNegado(null)
     try {
       const res = await fetch("/api/cam/gcode", { method: "POST", body: form })
       const r = await res.json()
       if (!r.ok) setError({ mensaje: r.mensaje || "No se pudo generar el G-code.", remedio: r.remedio || "" })
       else {
         setPlan(r.plan)
-        setGcode(r.gcode)
+        setMovimientos(r.trayectoria || [])
         setVista("trayectoria")
         setAvance(1)
       }
@@ -341,20 +372,38 @@ export function EstudioCam2D() {
     setTrabajando(false)
   }
 
-  const descargar = () => {
-    if (!gcode) return
+  const descargar = async () => {
+    if (!pedido.current || bajando) return
+    setBajando(true)
+    setNegado(null)
+    let texto = ""
+    try {
+      const form = new FormData()
+      pedido.current.forEach((v, k) => form.append(k, v))
+      form.append("descargar", "1")
+      const res = await fetch("/api/cam/gcode", { method: "POST", body: form })
+      const r = await res.json()
+      if (r.candado) setNegado(r)
+      else if (!r.ok || !r.gcode) setError({ mensaje: r.mensaje || "No se pudo preparar la descarga.", remedio: r.remedio || "Vuelve a calcular." })
+      else texto = r.gcode
+    } catch {
+      setError({ mensaje: "Se cortó la conexión.", remedio: "Vuelve a intentarlo." })
+    }
+    setBajando(false)
+    setVersionCupo((v) => v + 1)
+    if (!texto) return
     const nombre = (archivo?.name || "pieza").replace(/\.(dxf|svg)$/i, "") + "." + EXTENSION[maquina.post]
-    const url = URL.createObjectURL(new Blob([gcode], { type: "text/plain" }))
+    const url = URL.createObjectURL(new Blob([texto], { type: "text/plain" }))
     const a = document.createElement("a")
     a.href = url
     a.download = nombre
     document.body.appendChild(a)
     a.click()
+    setBajado(true)
     a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
-  const movimientos = useMemo(() => (gcode ? leerGcode(gcode) : []), [gcode])
   const zMin = useMemo(() => Math.min(-0.1, ...movimientos.filter((m) => m.corte).map((m) => m.z)), [movimientos])
 
   // Simulación: recorre los movimientos en ~10 segundos
@@ -453,6 +502,7 @@ export function EstudioCam2D() {
           <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {archivo && !esSVG && <Interruptor etiqueta="Mover el dibujo al origen (0,0)" activo={origen} cambiar={setOrigen} />}
+        <ProyectosCam herramienta="2d" obtener={proyectoActual} aplicar={aplicarProyecto} oscuro />
 
         <Seccion titulo="Máquina">
           <Select valor={maquinaId} cambiar={setMaquinaId}>
@@ -482,6 +532,23 @@ export function EstudioCam2D() {
         <Seccion titulo="Material">
           <Opciones opciones={MATERIALES.map((m) => ({ id: m.id, nombre: m.nombre }))} valor={material} cambiar={setMaterial} columnas={3} />
           <CampoNum etiqueta="Espesor" valor={espesor} cambiar={setEspesor} />
+        </Seccion>
+
+        <Seccion titulo="Copias en la hoja" nota="Acomoda varias copias de la pieza para cortarlas en un solo programa. Si la figura lo permite, las encaja volteadas unas en otras para que quepan más.">
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Copias" valor={hoja.copias} cambiar={(v) => { setHoja({ ...hoja, copias: v }); setPlan(null); setGcode(null) }} sufijo="" />
+            <CampoNum etiqueta="Separación" valor={hoja.separacion} cambiar={(v) => { setHoja({ ...hoja, separacion: v }); setPlan(null); setGcode(null) }} />
+            <CampoNum etiqueta="Hoja: ancho (X)" valor={hoja.ancho} cambiar={(v) => { setHoja({ ...hoja, ancho: v }); setPlan(null); setGcode(null) }} />
+            <CampoNum etiqueta="Hoja: largo (Y)" valor={hoja.largo} cambiar={(v) => { setHoja({ ...hoja, largo: v }); setPlan(null); setGcode(null) }} />
+          </div>
+          {acomodo && (numero(hoja.copias) || 1) > 1 && (
+            <span className="text-[12px] leading-snug text-[#C9D2E0]">
+              {acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
+              {variasCopias && acomodo.encajadas && "Van encajadas: una derecha y la siguiente volteada 180°. "}
+              {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
+            </span>
+          )}
+          {acomodo?.aviso && <Aviso>{acomodo.aviso}</Aviso>}
         </Seccion>
 
         <Seccion titulo="Operaciones" nota="Se hacen en este orden. Elige la capa del dibujo que usa cada una.">
@@ -572,6 +639,13 @@ export function EstudioCam2D() {
                         <CampoNum etiqueta="Largo de cada onda" valor={o.onda} cambiar={(v) => cambiarOp(i, { onda: v })} />
                         <CampoNum etiqueta="Ángulo de los surcos" valor={o.anguloTextura} cambiar={(v) => cambiarOp(i, { anguloTextura: v })} sufijo="°" />
                       </div>
+                    )}
+                    {o.tipo === "roscado" && (
+                      <>
+                        <CampoNum etiqueta="Paso de la rosca (M6 = 1, M8 = 1.25, M10 = 1.5)" valor={o.paso} cambiar={(v) => cambiarOp(i, { paso: v })} />
+                        <Interruptor etiqueta="Rosca izquierda" activo={o.roscaIzq} cambiar={(v) => cambiarOp(i, { roscaIzq: v })} />
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso). En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.</span>
+                      </>
                     )}
                     {o.tipo === "incrustacion_macho" && <CampoNum etiqueta="Holgura para que embone" valor={o.holgura} cambiar={(v) => cambiarOp(i, { holgura: v })} />}
                     {(o.tipo === "incrustacion_hembra" || o.tipo === "incrustacion_macho") && (
@@ -789,8 +863,14 @@ export function EstudioCam2D() {
         {gcode && (
           <Seccion titulo="G-code" nota="Pruébalo primero en vacío y con avance reducido: los parámetros dependen de tu máquina.">
             <Boton tipo="primario" onClick={descargar}>
-              Descargar .{EXTENSION[maquina.post]}
+              {bajando ? "Preparando…" : `Descargar .${EXTENSION[maquina.post]}`}
             </Boton>
+            {negado ? (
+              <CandadoCam negado={negado} oscuro regreso="/mx/cam/subir" />
+            ) : (
+              cupo?.estado && <span className="text-[12px] leading-snug text-[#8A97AB]">{textoCupo(cupo.sesion, cupo.estado.basico, cupo.estado.plan_nombre, "El CAM 2D")}</span>
+            )}
+            <ProbadoCam herramienta="2d" controlador={maquina.post} nombreControl={POSTS.find((p) => p.id === maquina.post)?.nombre || maquina.post} maquina={maquina.nombre} material={material} bajado={bajado} oscuro />
           </Seccion>
         )}
         <Seccion titulo="¿Necesitas más?" nota="3D, 4 o 5 ejes, o que un taller te lo corte.">

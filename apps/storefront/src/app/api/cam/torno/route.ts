@@ -7,14 +7,20 @@
 // Va bajo /api/cam/ a propósito: Nginx manda /api/(app|cam|foro|mp|...) a la
 // tienda y todo lo demás de /api/ a Medusa. Un /api/gcode suelto se perdería.
 //
-// Sin cuenta, como el flujo del DXF: no se guarda nada.
+// Calcular es libre. El programa completo sólo se entrega con `descargar: true`,
+// si el plan incluye el torno y queda cupo en el mes (lib/cam/cupo-servidor.ts);
+// al calcular se devuelven los datos y las primeras líneas, para revisar.
 import { NextResponse } from "next/server"
 
+import { autorizarDescarga, huella } from "@/lib/cam/cupo-servidor"
 import { generarGCode, validarEntrada } from "@/lib/torno/gcode"
 
 export const dynamic = "force-dynamic"
 
-const MAX_BYTES = 200_000
+// El dibujo de un grabado o la cuadrícula de un relieve van dentro del diseño
+const MAX_BYTES = 1_200_000
+// Lo que se enseña al calcular: encabezado y arranque, suficiente para revisar el formato
+const LINEAS_DE_VISTA = 60
 
 export async function POST(req: Request) {
   const largo = Number(req.headers.get("content-length") || 0)
@@ -38,8 +44,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: revisado.error }, { status: 400 })
   }
 
+  const descargar = (body as { descargar?: unknown })?.descargar === true
   try {
-    return NextResponse.json(generarGCode(revisado.entrada))
+    const { gcode, ...datos } = generarGCode(revisado.entrada)
+    if (!descargar) {
+      const lineas = gcode.split("\n")
+      return NextResponse.json({ ...datos, vista: lineas.slice(0, LINEAS_DE_VISTA).join("\n"), lineasOcultas: Math.max(0, lineas.length - LINEAS_DE_VISTA) })
+    }
+    // Con grabado o relieve sobre la pieza se necesita el plan que los incluye
+    const t = revisado.entrada.tallados
+    const no = await autorizarDescarga(t?.grabado?.activo || t?.relieve?.activo ? "torno_grabado" : "torno", huella(gcode))
+    if (no) return NextResponse.json(no.negado, { status: no.status })
+    return NextResponse.json({ ...datos, gcode })
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : "Error desconocido"
     return NextResponse.json({ error: `No se pudo generar el G-code: ${mensaje}` }, { status: 400 })

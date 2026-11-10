@@ -68,7 +68,7 @@ export const GRUPOS_HERRAMIENTAS: GrupoHerramientas[] = [
     accion: { texto: "Entrar al laboratorio", href: "/cam/lab" },
     puntos: ["Simular trayectorias", "Detectar colisiones", "Estimar tiempos", "Probar estrategias", "G-code para tu controlador"],
     herramientas: [
-      { nombre: "DXF a G-code", texto: "Sube un DXF, elige material y fresa, y descarga el G-code con las pasadas calculadas.", href: "/cam/subir", icono: "gcode", acceso: "gratis" },
+      { nombre: "DXF a G-code", texto: "Sube un DXF o SVG, arma las operaciones y simula el corte. Con tu cuenta gratis descargas 5 programas al mes.", href: "/cam/subir", icono: "gcode", acceso: "gratis" },
       { nombre: "CAM en 3, 4 y 5 ejes", texto: "STL, OBJ, STEP o IGES: simula la trayectoria con anticolisión, remoción de material y programa para tu controlador.", href: "/cam/lab", icono: "ejes", acceso: "gratis" },
       { nombre: "Torno con eje rotativo", texto: "Balaustres, patas y columnas por tramos, con G-code para Mach3 o Mach4.", href: "/cam/torno", icono: "torno", acceso: "gratis" },
     ],

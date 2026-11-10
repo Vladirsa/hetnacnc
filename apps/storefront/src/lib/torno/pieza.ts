@@ -160,10 +160,48 @@ export interface Espiral {
   sentido: "derecha" | "izquierda"
 }
 
+/**
+ * Un dibujo 2D (DXF o SVG) envuelto sobre la pieza ya torneada. Los trazos
+ * vienen normalizados: x de 0 a 1 a lo largo de la pieza, y de 0 a 1 alrededor.
+ */
+export interface Grabado {
+  activo: boolean
+  trazos: [number, number][][]
+  yDesde: number // dónde empieza a lo largo (mm)
+  largo: number // cuánto mide a lo largo (mm)
+  arco: number // cuántos grados de la vuelta abarca
+  anguloInicio: number
+  profundidad: number
+  espejo: boolean // voltea el dibujo alrededor, por si en tu máquina sale al revés
+}
+
+/**
+ * Un relieve 3D (de un STL) envuelto sobre la pieza. `alturas` es una cuadrícula
+ * de nx columnas (a lo largo) por ny filas (alrededor), de 0 (fondo) a 255 (lo
+ * más alto, que queda a ras de la superficie).
+ */
+export interface Relieve {
+  activo: boolean
+  nx: number
+  ny: number
+  alturas: number[]
+  yDesde: number
+  largo: number
+  arco: number
+  anguloInicio: number
+  profundidad: number // del fondo del relieve
+  paso: number // separación entre pasadas (mm)
+}
+
 export interface Tallados {
   estrias?: Estrias
   espiral?: Espiral
+  grabado?: Grabado
+  relieve?: Relieve
 }
+
+export const GRABADO_INICIAL: Grabado = { activo: false, trazos: [], yDesde: 0, largo: 60, arco: 90, anguloInicio: 0, profundidad: 1, espejo: false }
+export const RELIEVE_INICIAL: Relieve = { activo: false, nx: 0, ny: 0, alturas: [], yDesde: 0, largo: 60, arco: 90, anguloInicio: 0, profundidad: 3, paso: 0.8 }
 
 export const ESTRIAS_INICIALES: Estrias = { activo: false, cantidad: 8, yDesde: 0, yHasta: 0, profundidad: 3 }
 export const ESPIRAL_INICIAL: Espiral = {

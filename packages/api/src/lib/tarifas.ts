@@ -101,6 +101,17 @@ export async function tarifasHetna(container: MedusaContainer): Promise<{ actual
       })),
     },
     {
+      id: "cam",
+      titulo: "CAM Studio: 2D, 3D y torno CNC",
+      texto: "Subir la pieza, calcular y simular es gratis. El plan cuenta los programas (G-code) que descargas en el mes; volver a bajar el mismo no cuenta otra vez.",
+      filas: [
+        { concepto: "Plan Gratis", precio: "5 programas al mes", nota: "CAM 2D y 3D de 3 ejes" },
+        { concepto: "Plan Taller", precio: "2D y 3D sin límite", nota: "Más torno CNC: 30 programas al mes" },
+        { concepto: "Plan Pro", precio: "Torno sin límite", nota: "Con grabado 2D y 3D sobre la pieza torneada" },
+        { concepto: "Plan Industrial", precio: "Todo sin límite", nota: "Incluye los programas de 4 y 5 ejes" },
+      ],
+    },
+    {
       id: "creditos",
       titulo: "Créditos HETNA",
       texto: "Para las herramientas de paga (modelo con IA y escaneo 3D). No caducan.",

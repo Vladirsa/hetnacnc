@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { hayArchivoPendiente } from "@/lib/generador/aCotizador"
-import { APP_TALLER, PLANES_APP } from "@/lib/hetna/app-taller"
+import { APP_TALLER, NOTA_PLANES, PLANES_APP } from "@/lib/hetna/app-taller"
 
 import { FranjaAyuda } from "../ServicioPagina"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
@@ -199,6 +199,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
               </div>
             ))}
           </div>
+          <p className="m-0 text-[13px] leading-relaxed text-[#6B6A63]">{NOTA_PLANES}</p>
           <div className="bg-[#E6F4EC] border border-[#B7E0C8] rounded-[14px] px-5 py-4">
             <p className="m-0 text-[13.5px] font-bold text-[#16794F]">Siempre gratis, en todos los planes</p>
             <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]">{SIEMPRE_GRATIS.join(" · ")}</p>

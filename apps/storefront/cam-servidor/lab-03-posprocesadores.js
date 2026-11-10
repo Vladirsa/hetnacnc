@@ -1,47 +1,70 @@
 'use strict';
 /* =========================================================
    POSPROCESADORES
+   Este archivo NO se sirve al navegador: corre en el servidor
+   (src/app/api/cam/post/route.ts), que es quien revisa el plan
+   antes de entregar el programa. Usa lo que define
+   public/cam-lab/lab-01-motor.js.
    ========================================================= */
 function postProcess(){
   const moves=S.moves;if(!moves||!moves.length)return{text:'',lines:[]};
-  const m=S.machine,tl=tool(),fd=feedsCalc(),c=S.post,ctrl=CTRL[c.ctrl];const axes=KIN_AXES[m.kin];const tcp=useTCP();
+  let tl=toolById(moves[0].tid),fd=feedsCalc(tl);const used=[...new Set(moves.map(q=>q.tid))].map(toolById); // fresas del trabajo, en el orden en que entran
+  const m=S.machine,ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)};const axes=KIN_AXES[m.kin];const tcp=useTCP(); // c.ctrl es el dialecto; ctrl, el perfil elegido con sus excepciones
   const dec=clamp(c.dec|0,1,5);const heid=ctrl.style==='heid';
   const fmt=v=>{let s=(Math.abs(v)<0.5*10**-dec?0:v).toFixed(dec);if(heid&&!s.startsWith('-'))s='+'+s;return s;};
-  const cm=s=>ctrl.comment==='paren'?`(${String(s).replace(/[()]/g,'')})`:`; ${s}`;
+  const cm=s=>ctrl.noComments?null:ctrl.comment==='paren'?`(${String(s).replace(/[()]/g,'')})`:`; ${s}`;
   const L=[];let N=10;
-  const out=(s,num=true)=>{if(heid){L.push(`${L.length} ${s}`);return;}if(c.lines&&num&&!/^[(%;]/.test(s)){s=`N${N} ${s}`;N+=10;}L.push(s);};
+  const out=(s,num=true)=>{if(s===null||s==='')return;if(heid){L.push(`${L.length} ${s}`);return;}if(c.lines&&num&&!/^[(%;]/.test(s)){s=`N${N} ${s}`;N+=10;}L.push(s);};
   const inv=c.inv&&axes.length>0&&!tcp&&c.ctrl!=='heidenhain';
   const dirs=[m.inv[0]?-1:1,m.inv[1]?-1:1];
   const name=(S.partName||'PIEZA').replace(/\.[^.]+$/,'').toUpperCase().replace(/[^A-Z0-9_-]/g,'_').slice(0,20)||'PIEZA';
   const dt=new Date().toISOString().slice(0,10);
-  const tn=tl.num|0||1;const cool=c.cool==='none'?null:c.cool;
+  let tn=tl.num|0||1;const cool=c.cool==='none'||ctrl.noCool?null:c.cool;
   const z0=zeroOff();const zs=S.stock;const stk=zs.type==='box'?{type:'box',min:V.sub(zs.min,z0),max:V.sub(zs.max,z0)}:{type:'cyl',x0:zs.x0-z0[0],x1:zs.x1-z0[0],r:zs.r};
   const extra=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>out(x,!heid));
   // encabezado
   if(heid){
-    out(`BEGIN PGM ${name} MM`);out(`; HETNA CAM LAB ${dt} - ${KIN_NAME[m.kin]}`);out(`; T${tn} ${tl.name}`);out('; CERO DE PIEZA: '+ZERO_NAME[zeroKey()]);out('; VERIFICAR EN VACIO ANTES DE CORTAR');
+    out(`BEGIN PGM ${name} MM`);out(`; HETNA CAM LAB ${dt} - ${KIN_NAME[m.kin]}`);used.forEach(u=>out(`; T${u.num|0||1} ${u.name}`));out('; CERO DE PIEZA: '+ZERO_NAME[zeroKey()]);out('; VERIFICAR EN VACIO ANTES DE CORTAR');
     if(stk.type==='box'){out(`BLK FORM 0.1 Z X${fmt(stk.min[0])} Y${fmt(stk.min[1])} Z${fmt(stk.min[2])}`);out(`BLK FORM 0.2 X${fmt(stk.max[0])} Y${fmt(stk.max[1])} Z${fmt(stk.max[2])}`);}
     else{out(`BLK FORM 0.1 X X${fmt(stk.x0)} Y${fmt(-stk.r)} Z${fmt(-stk.r)}`);out(`BLK FORM 0.2 X${fmt(stk.x1)} Y${fmt(stk.r)} Z${fmt(stk.r)}`);}
     out(`TOOL CALL ${tn} Z S${fd.rpm}`);if(tcp&&axes.length)out('M128');
   }else{
     if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
-    if(c.ctrl==='fanuc'||c.ctrl==='haas')L.push(`O${String(c.prog|0).padStart(4,'0')} ${cm(name)}`);
+    if(c.ctrl==='fanuc'||c.ctrl==='haas')L.push(`O${String(c.prog|0).padStart(4,'0')} ${cm(name)||''}`.trim());
     out(cm(`HETNA CAM LAB - ${name} - ${dt}`),false);
     out(cm(`MAQUINA ${KIN_NAME[m.kin]} - CONTROL ${ctrl.name}${tcp?' - TCP ACTIVO':' - SIN TCP (COORD. MAQUINA CALCULADAS)'}`),false);
-    out(cm(`T${tn} ${tl.name} D${tl.D} VOLADIZO ${tl.stickout}`),false);
-    if(!tcp&&isHeadKin(m.kin))out(cm(`PIVOTE ${m.pivot}+${tl.stickout}+${tl.holderLen} = ${m.pivot+tl.stickout+tl.holderLen} MM`),false);
+    used.forEach(u=>{out(cm(`T${u.num|0||1} ${u.name} D${u.D} VOLADIZO ${u.stickout}`),false);
+      if(!tcp&&isHeadKin(m.kin))out(cm(`PIVOTE T${u.num|0||1} ${m.pivot}+${u.stickout}+${u.holderLen} = ${m.pivot+u.stickout+u.holderLen} MM`),false);});
+    if(used.length>1)out(cm(`${used.length} HERRAMIENTAS: MIDE EL LARGO DE CADA UNA ANTES DE CORRER`),false);
     if(tcp&&axes.length&&c.ctrl==='linuxcnc')out(cm('TCP: ACTIVA LA CINEMATICA TCP DE TU CONFIGURACION LINUXCNC ANTES DE EJECUTAR'),false);
     out(cm('CERO DE PIEZA: '+ZERO_NAME[zeroKey()]),false);
     out(cm('VERIFICAR EN VACIO CON AVANCE REDUCIDO ANTES DE CORTAR'),false);
     if(c.ctrl==='siemens'){out('G17 G90 G71 G94');out('G54');out(`T${tn} D1`);out('M6');}
-    else if(c.ctrl==='grbl'){out('G21 G90 G94 G17');out('G54');out(cm(`CAMBIO MANUAL DE HERRAMIENTA T${tn}`),false);}
+    else if(c.ctrl==='grbl'||ctrl.manualTC){out(ctrl.header||(c.ctrl==='grbl'?'G21 G90 G94 G17':'G21 G90 G94 G17 G40 G49 G80'));if(!ctrl.noG54)out('G54');out(cm(`CAMBIO MANUAL DE HERRAMIENTA T${tn}`),false);}
     else{out('G21 G90 G94 G17 G40 G49 G80');out('G54');out(`T${tn} M6`);}
     if(c.ctrl==='linuxcnc')out('G64 P0.02');
     out(`S${fd.rpm} M3`);if(cool)out(cool);
     if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAORI');}
   }
   extra(c.pre);
-  const lineOf=new Int32Array(moves.length);let last={};let lastG=null,lastF=null,g93=false;
+  const lineOf=new Int32Array(moves.length);let last={};let lastG=null,lastF=null,g93=false,needM3=true,split=false;
+  // Cambio de fresa a media corrida: para el husillo, llama la herramienta, compensa su largo y vuelve a
+  // escribir todas las coordenadas. La trayectoria ya dejó la fresa anterior retirada a la altura segura.
+  const toolChange=nt=>{
+    tl=nt;fd=feedsCalc(tl);tn=tl.num|0||1;
+    if(heid){if(tcp&&axes.length)out('M129');out('M5');out(`; CAMBIO A T${tn} ${tl.name}`);out(`TOOL CALL ${tn} Z S${fd.rpm}`);if(tcp&&axes.length)out('M128');needM3=true;return;}
+    if(g93){out('G94');g93=false;}
+    if(tcp&&axes.length&&c.ctrl==='siemens')out('TRAFOOF');
+    if(cool)out('M9');out('M5');
+    out(cm(`CAMBIO A T${tn} ${tl.name} D${tl.D} VOLADIZO ${tl.stickout}`),false);
+    if(c.ctrl==='siemens'){out(`T${tn} D1`);out('M6');}
+    else if(c.ctrl==='grbl'||ctrl.manualTC){out(cm(`CAMBIO MANUAL: MONTA T${tn}, VUELVE A MEDIR EL CERO EN Z Y CONTINUA`),false);out('M0');}
+    else{if(!ctrl.noG43)out('G49');out(`T${tn} M6`);}
+    out(`S${fd.rpm} M3`);if(cool)out(cool);
+    if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAORI');else if(c.ctrl==='fanuc')out('G43.4 H'+tn);else if(c.ctrl==='haas')out('G234 H'+tn);else if(c.ctrl==='linuxcnc')out('G43 H'+tn);}
+    else if(c.ctrl!=='siemens'&&c.ctrl!=='grbl'&&!ctrl.noG43&&!ctrl.manualTC)out('G43 H'+tn);
+    last={};lastG=null;lastF=null;split=true;
+  };
   // Sin TCP el control interpola los ejes lineales y los rotativos cada uno por su lado, así que en un
   // bloque con giro la punta se sale de la recta. Se parte el bloque hasta que el desvío sea menor a 0.01 mm.
   const subdiv=(pv,mv)=>{
@@ -57,13 +80,15 @@ function postProcess(){
     const rapid=mv.t==='R';
     if(heid){
       const parts=['X','Y','Z',...axes].map(k=>`${k}${fmt(W[k])}`);const f=rapid?'FMAX':`F${mv.t==='P'?fd.plunge:fd.feed}`;
-      let extra='';if(i===0)extra=' M3'+(cool?(cool==='M8'?' M8':' M7'):'');
+      let extra='';if(needM3){needM3=false;extra=' M3'+(cool?(cool==='M8'?' M8':' M7'):'');}
       out(`L ${parts.join(' ')} R0 ${f}${extra}`);return;
     }
     for(const k of ['X','Y','Z',...axes]){const s=fmt(W[k]);if(last[k]!==s){words.push(k+s);last[k]=s;}}
     const g=rapid?'G0':'G1';
+    // tras un cambio de fresa: primero se coloca en XY (y giros) y luego baja a la altura segura
+    if(split){split=false;const zw=words.filter(w=>w[0]==='Z'),ow=words.filter(w=>w[0]!=='Z');if(rapid&&zw.length&&ow.length){out('G0 '+ow.join(' '));out('G0 '+zw.join(' '));lastG='G0';return;}}
     let pre='';
-    if(i===0){let g43='';if(tcp&&axes.length){if(c.ctrl==='fanuc')g43='G43.4 H'+tn;else if(c.ctrl==='haas')g43='G234 H'+tn;else if(c.ctrl==='linuxcnc')g43='G43 H'+tn;}else if(c.ctrl!=='grbl')g43='G43 H'+tn;
+    if(i===0){let g43='';if(tcp&&axes.length){if(c.ctrl==='fanuc')g43='G43.4 H'+tn;else if(c.ctrl==='haas')g43='G234 H'+tn;else if(c.ctrl==='linuxcnc')g43='G43 H'+tn;}else if(c.ctrl!=='grbl'&&!ctrl.noG43)g43='G43 H'+tn;
       if(c.ctrl!=='siemens'&&g43)out(g43);}
     let feedWord='';
     if(!rapid){
@@ -88,6 +113,7 @@ function postProcess(){
   const linearize=axes.length>0&&!tcp;
   for(let i=0;i<moves.length;i++){
     const mv=moves[i];let pv=i>0?moves[i-1]:null;
+    if(pv&&mv.tid!==pv.tid)toolChange(toolById(mv.tid));
     const steps=(linearize&&pv&&mv.t!=='R'&&!mv.kfail&&!pv.kfail&&subdiv(pv,mv))||[mv];
     const len=mv.len/steps.length;
     for(const sp of steps){block(i,mv,sp,pv,len);pv=sp;}
@@ -101,20 +127,20 @@ function postProcess(){
     if(tcp&&axes.length){if(c.ctrl==='siemens')out('TRAFOOF');else out('G49');}
     if(cool)out('M9');out('M5');
     if(c.ctrl==='fanuc'||c.ctrl==='haas'){out('G91 G28 Z0.');out('G90');}
-    out(c.ctrl==='linuxcnc'?'M2':'M30');
+    out(ctrl.end!==undefined?ctrl.end:c.ctrl==='linuxcnc'?'M2':'M30');
     if(['linuxcnc','fanuc','haas'].includes(c.ctrl))L.push('%');
   }
   return{text:L.join('\n')+'\n',lines:L,lineOf};
 }
 function genCPS(){
-  const m=S.machine,c=S.post,ctrl=CTRL[c.ctrl],axes=KIN_AXES[m.kin],tcp=useTCP();
+  const m=S.machine,ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)},axes=KIN_AXES[m.kin],tcp=useTCP();
   const ax=(letter,q)=>{const L=m.rot[q];const cyc=L[1]-L[0]>=720;const vec={A:[1,0,0],B:[0,1,0],C:[0,0,1]}[letter].map(v=>m.inv[q]&&v?-v:v);const coord={A:0,B:1,C:2}[letter];
     const table=!(m.kin==='bc_head'||(m.kin==='ab_mixed'&&letter==='B'));
     return `  var ${letter.toLowerCase()}Axis = createAxis({coordinate:${coord}, table:${table}, axis:[${vec.join(', ')}], offset:[${m.rc.join(', ')}], ${cyc?'cyclic:true':`range:[${L[0]}, ${L[1]}]`}, preference:0});`;};
   let mc='';
   if(axes.length){mc=axes.map((a,q)=>ax(a,q)).join('\n')+`\n  machineConfiguration = new MachineConfiguration(${axes.map(a=>a.toLowerCase()+'Axis').join(', ')});\n  setMachineConfiguration(machineConfiguration);\n  optimizeMachineAngles2(${tcp?0:1}); // 0 = TCP en el control, 1 = mapear punta a coordenadas de máquina`;}
   const tcpOn=tcp?({fanuc:'"G43.4", "H" + toolFormat.format(tool.lengthOffset)',haas:'"G234", "H" + toolFormat.format(tool.lengthOffset)',linuxcnc:'"G43", "H" + toolFormat.format(tool.lengthOffset)',siemens:'"TRAORI"',heidenhain:'"M128"'}[c.ctrl]||null):null;
-  const ext={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'}[c.ctrl];
+  const ext=extOf(S.post.ctrl);
   return `/**
   Postprocesador Fusion 360 generado por HETNA CAM LAB (hetnacnc.com)
   Controlador: ${ctrl.name} · Cinemática: ${KIN_NAME[m.kin]} · TCP: ${tcp?'sí':'no'}
@@ -267,7 +293,7 @@ ${['linuxcnc','fanuc','haas'].includes(c.ctrl)?'  writeln("%");\n':''}}
 `;
 }
 function genPP(){
-  const c=S.post,ctrl=CTRL[c.ctrl],m=S.machine;const grbl=c.ctrl==='grbl';
+  const ctrl=CTRL[S.post.ctrl],c={...S.post,ctrl:dialOf(S.post.ctrl)},m=S.machine;const grbl=c.ctrl==='grbl';
   const iso=['mach3','mach4','linuxcnc','grbl'].includes(c.ctrl);
   const tc=grbl?['"( CAMBIO MANUAL T[T] )"']:['"T[T] M6"','"G43 H[T]"'];
   const cool=c.cool==='none'?[]:[`"${c.cool}"`];
@@ -340,14 +366,4 @@ ${c.cool==='none'?'':'"M9"\n'}"M5"
 "G0 [XH] [YH]"
 "${c.ctrl==='linuxcnc'?'M2':'M30'}"
 ${c.ctrl==='linuxcnc'?'"%"\n':''}`;
-}
-function genJSON(){
-  const m=S.machine,c=S.post,tl=tool(),fd=feedsCalc();
-  return JSON.stringify({generator:'Hetna CAM Lab',version:1,date:new Date().toISOString(),
-    controller:{id:c.ctrl,name:CTRL[c.ctrl].name,tcp:useTCP(),inverseTime:c.inv,decimals:c.dec,lineNumbers:c.lines,coolant:c.cool,program:c.prog},
-    machine:{kinematics:m.kin,axes:['X','Y','Z',...KIN_AXES[m.kin]],travel:m.lim,rotary:KIN_AXES[m.kin].map((a,q)=>({axis:a,range:m.rot[q],continuous:m.rot[q][1]-m.rot[q][0]>=720,inverted:m.inv[q]})),
-      pivotToSpindleNose:m.pivot,rotationCenter:m.rc,maxRPM:m.maxRPM,maxFeed:m.maxFeed,rapid:m.rapid},
-    tool:{number:tl.num,name:tl.name,type:tl.type,diameter:tl.D,cornerRadius:tl.r,flutes:tl.flutes,fluteLength:tl.fluteLen,stickout:tl.stickout,shankDiameter:tl.shankD,holder:{diameter:tl.holderD,length:tl.holderLen}},
-    cutting:{material:MATERIALS[S.feeds.mat].name,vc:S.feeds.vc,fz:S.feeds.fz,rpm:fd.rpm,feed:fd.feed,plunge:fd.plunge},
-    strategy:S.strat},null,2);
 }

@@ -52,6 +52,46 @@ export const camMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/cam/jobs",
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
+  // Cupo del plan: consultarlo se puede sin sesión (ve las reglas del plan Gratis); gastarlo no.
+  {
+    method: ["GET"],
+    matcher: "/store/cam/cupo",
+    middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+  },
+  {
+    method: ["POST"],
+    matcher: "/store/cam/cupo",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  // Proyectos guardados: son de la cuenta; abrir uno por su liga se puede sin sesión si está compartido.
+  {
+    method: ["GET"],
+    matcher: "/store/cam/proyectos",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  {
+    method: ["POST"],
+    matcher: "/store/cam/proyectos",
+    // un proyecto lleva el dibujo o el relieve: pasa del límite normal de un JSON
+    bodyParser: { sizeLimit: "2mb" },
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  {
+    method: ["GET"],
+    matcher: "/store/cam/proyectos/:id",
+    middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+  },
+  {
+    method: ["POST", "DELETE"],
+    matcher: "/store/cam/proyectos/:id",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  // "Programas probados": el resumen es público; reportar pide cuenta.
+  {
+    method: ["POST"],
+    matcher: "/store/cam/pruebas",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
   {
     method: ["GET"],
     matcher: "/store/cam/jobs/:id/files/:file_id",

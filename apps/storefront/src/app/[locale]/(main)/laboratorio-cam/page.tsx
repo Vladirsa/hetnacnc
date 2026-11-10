@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   alternates: { canonical: URL },
   openGraph: {
     title: "Laboratorio CAM: aprende, prueba y prepara tus procesos CNC",
-    description: "Simula trayectorias, revisa estrategias de corte y valida tu pieza antes de fabricarla. Gratis y sin cuenta.",
+    description: "Simula trayectorias, revisa estrategias de corte y valida tu pieza antes de fabricarla. Simular es gratis y sin cuenta.",
     url: URL,
     images: [{ url: `${SITIO}/laboratorio-cam/laboratorio-alabe-5-ejes.webp`, width: 1400, height: 860 }],
   },
@@ -111,7 +111,7 @@ const HERRAMIENTAS = [
 const PREGUNTAS = [
   {
     p: "¿Es gratis?",
-    r: "Sí. El laboratorio CAM, el DXF a G-code y el torno se usan gratis y sin crear cuenta, y el G-code se descarga sin costo. Solo pagas si pides que un especialista te haga el programa, un posprocesador a la medida o la revisión de tu archivo.",
+    r: "Subir tu pieza, calcular y simular es gratis y sin cuenta. Para descargar el programa necesitas tu cuenta: con el plan Gratis bajas 5 programas al mes de 2D y 3D de 3 ejes. El plan Taller quita ese límite y agrega el torno; el Pro agrega el grabado en el torno; el Industrial, los programas de 4 y 5 ejes. Aparte, puedes pedir que un especialista te haga el programa.",
   },
   {
     p: "¿Necesito experiencia previa?",
@@ -198,7 +198,7 @@ export default function LaboratorioCam() {
       {/* Hero */}
       <section className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-8 px-4 pt-6 lg:grid-cols-[1fr_1.15fr] lg:px-16">
         <div>
-          <p className="text-[13px] font-semibold uppercase tracking-wide text-[#B34D07]">Laboratorio CAM · gratis y sin cuenta</p>
+          <p className="text-[13px] font-semibold uppercase tracking-wide text-[#B34D07]">Laboratorio CAM · simula gratis y sin cuenta</p>
           <h1 className="mt-2 text-[32px] lg:text-[44px] font-bold leading-[1.08] text-[#1B1B18]">
             Aprende, prueba y prepara tus procesos CNC
           </h1>
@@ -213,7 +213,7 @@ export default function LaboratorioCam() {
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             <Chip>Gratis</Chip>
-            <Chip>Sin crear cuenta</Chip>
+            <Chip>Simula sin crear cuenta</Chip>
             <Chip>Nada que instalar</Chip>
             <Chip>3, 4 y 5 ejes</Chip>
           </div>
@@ -438,7 +438,7 @@ export default function LaboratorioCam() {
         <div className="flex flex-col items-start gap-4 rounded-[18px] bg-[#142033] p-7 text-white lg:flex-row lg:items-center lg:justify-between lg:p-9">
           <div>
             <h2 className="text-[24px] font-bold">Valida tu pieza antes de cortarla</h2>
-            <p className="mt-1 text-[15px] text-white/75">Gratis, sin cuenta y en tu navegador. Y si no tienes máquina, te la fabricamos.</p>
+            <p className="mt-1 text-[15px] text-white/75">Simula gratis en tu navegador; con tu cuenta descargas 5 programas al mes. Y si no tienes máquina, te la fabricamos.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Entrar al laboratorio</LocalizedClientLink>

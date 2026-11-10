@@ -33,6 +33,8 @@ import {
   Tallados,
   Estrias,
   Espiral,
+  Grabado,
+  Relieve,
   anguloEspiral,
   radioEn,
   longitudTotal,
@@ -107,6 +109,9 @@ export const LIMITES = {
   herramientaMm: [1, 50] as const,
   rpmPieza: [1, 600] as const,
   maxPasadasDesbaste: 40,
+  maxTrazosGrabado: 3000,
+  maxPuntosGrabado: 40_000,
+  maxLadoRelieve: 320,
   maxLineas: 250_000,
 };
 
@@ -236,6 +241,60 @@ export function validarEntrada(body: unknown): { ok: true; entrada: EntradaGCode
     const err = revisarTramo("la espiral", esp.yDesde, esp.yHasta, esp.profundidad, segmentos, largoPieza);
     if (err) return { ok: false, error: err };
     tallados.espiral = esp;
+  }
+
+  // Grabado y relieve: ocupan un tramo a lo largo y un arco de la vuelta
+  const zona = (que: string, e: Record<string, any>): string | null => {
+    if (![e.yDesde, e.largo, e.arco, e.anguloInicio, e.profundidad].every(finito)) return `Faltan datos de ${que}.`;
+    if (num(e.arco) < 5 || num(e.arco) > 360) return `El arco de ${que} debe estar entre 5 y 360 grados.`;
+    if (Math.abs(num(e.anguloInicio)) > 3600) return `El ángulo de inicio de ${que} no es válido.`;
+    const err = revisarTramo(que, num(e.yDesde), num(e.yDesde) + num(e.largo), num(e.profundidad), segmentos, largoPieza);
+    return err ? err.replace(/ de el /g, " del ") : null;
+  };
+
+  if (t.grabado?.activo) {
+    const e = t.grabado;
+    const err = zona("el grabado", e);
+    if (err) return { ok: false, error: err };
+    const crudos = Array.isArray(e.trazos) ? e.trazos : [];
+    if (!crudos.length) return { ok: false, error: "Sube el dibujo (DXF o SVG) que quieres grabar." };
+    if (crudos.length > LIMITES.maxTrazosGrabado) return { ok: false, error: "El dibujo tiene demasiados trazos. Simplifícalo." };
+    const trazos: [number, number][][] = [];
+    let puntos = 0;
+    for (const tr of crudos) {
+      if (!Array.isArray(tr) || tr.length < 2) continue;
+      const limpio: [number, number][] = [];
+      for (const p of tr) {
+        if (!Array.isArray(p) || !finito(p[0]) || !finito(p[1])) return { ok: false, error: "El dibujo trae puntos que no se pueden leer." };
+        limpio.push([Math.min(1, Math.max(0, num(p[0]))), Math.min(1, Math.max(0, num(p[1])))]);
+      }
+      puntos += limpio.length;
+      if (puntos > LIMITES.maxPuntosGrabado) return { ok: false, error: "El dibujo tiene demasiado detalle para grabarlo. Simplifícalo." };
+      trazos.push(limpio);
+    }
+    if (!trazos.length) return { ok: false, error: "El dibujo no trae líneas que se puedan grabar." };
+    tallados.grabado = {
+      activo: true, trazos, yDesde: num(e.yDesde), largo: num(e.largo), arco: num(e.arco), anguloInicio: num(e.anguloInicio), profundidad: num(e.profundidad), espejo: e.espejo === true,
+    };
+  }
+
+  if (t.relieve?.activo) {
+    const e = t.relieve;
+    const err = zona("el relieve", e);
+    if (err) return { ok: false, error: err };
+    const nx = Math.round(num(e.nx)), ny = Math.round(num(e.ny));
+    const max = LIMITES.maxLadoRelieve;
+    if (!(nx >= 2 && ny >= 2 && nx <= max && ny <= max) || !Array.isArray(e.alturas) || e.alturas.length !== nx * ny)
+      return { ok: false, error: "Sube el modelo (STL) del relieve." };
+    const alturas: number[] = new Array(nx * ny);
+    for (let i = 0; i < alturas.length; i++) {
+      const v = num(e.alturas[i]);
+      if (!Number.isFinite(v)) return { ok: false, error: "El relieve trae datos que no se pueden leer." };
+      alturas[i] = Math.min(255, Math.max(0, v));
+    }
+    const paso = finito(e.paso) ? num(e.paso) : 0.8;
+    if (paso < 0.2 || paso > 10) return { ok: false, error: "La separación entre pasadas del relieve debe estar entre 0.2 y 10 mm." };
+    tallados.relieve = { activo: true, nx, ny, alturas, yDesde: num(e.yDesde), largo: num(e.largo), arco: num(e.arco), anguloInicio: num(e.anguloInicio), profundidad: num(e.profundidad), paso };
   }
 
   return {
@@ -498,7 +557,7 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
   // El ángulo de cada canal se toma desde donde quedó la pieza al terminar el
   // acabado; lo que importa es que los canales queden repartidos entre sí.
   const tallados = entrada.tallados ?? {};
-  if (tallados.estrias?.activo || tallados.espiral?.activo) {
+  if (tallados.estrias?.activo || tallados.espiral?.activo || tallados.grabado?.activo || tallados.relieve?.activo) {
     const feedTallado = herramienta.feed > 0 ? herramienta.feed : preset.feed;
     // Coordenada de máquina a lo largo para una Y de la pieza (desde el contrapunto, al revés)
     const yMaq = (yPieza: number) => (origenPunto === "contrapunto" ? largo - yPieza : yPieza);
@@ -514,6 +573,17 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
     const anchoCanal = (prof: number) => {
       const r = herramienta.toolDiameterMm / 2;
       return prof >= r ? 2 * r : 2 * Math.sqrt(r * r - (r - prof) ** 2);
+    };
+
+    // Un dibujo envuelto se estira donde la pieza es más gruesa y se encoge donde es más delgada
+    const avisarRadio = (que: string, yDesde: number, largoZona: number) => {
+      let lo = Infinity, hi = 0;
+      for (let y = yDesde; y <= yDesde + largoZona; y += 1) {
+        const r = radioEn(y, segmentos);
+        if (r < lo) lo = r;
+        if (r > hi) hi = r;
+      }
+      if (hi > lo * 1.25) avisos.push(`${que} cubre una zona donde el radio va de ${lo.toFixed(1)} a ${hi.toFixed(1)}mm: el dibujo sale más ancho donde la pieza es más gruesa. Para que no se deforme, ponlo en un tramo cilíndrico.`);
     };
 
     lines.push("(--- TALLADOS: la pieza ya tiene su perfil ---)");
@@ -596,6 +666,99 @@ export function generarGCode(entrada: EntradaGCode): ResultadoGCode {
           if (g93) lines.push("G94");
           lines.push(`G0 Z${zSeguro.toFixed(3)}`);
         }
+      }
+      lines.push("");
+    }
+
+    // Un recorrido sobre la superficie: cada punto es (y a lo largo, ángulo, radio de la punta).
+    // Baja al primero desde la altura segura, recorre el resto y se retira.
+    type Pt = { y: number; a: number; z: number };
+    const recorrer = (pts: Pt[]) => {
+      if (pts.length < 2) return;
+      lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+      normalizarA();
+      // se llega al primer ángulo por el camino corto y el resto se mide desde ahí
+      const a0 = ((pts[0].a % 360) + 360) % 360;
+      const base = a0 - pts[0].a;
+      lines.push(`G0 A${a0.toFixed(3)}`);
+      aActual = a0;
+      lines.push(`G0 ${L}${yMaq(pts[0].y).toFixed(3)}`);
+      lines.push(`G1 Z${pts[0].z.toFixed(3)} F250`);
+      if (g93) lines.push("G93 (avance en tiempo inverso)");
+      for (let i = 1; i < pts.length; i++) {
+        const p = pts[i], q = pts[i - 1];
+        const dA = p.a - q.a;
+        const arco = (Math.abs(dA) * Math.PI * Math.max((p.z + q.z) / 2, 1)) / 180;
+        const tMin = Math.max(Math.hypot(p.y - q.y, p.z - q.z, arco) / feedTallado, 1e-5);
+        minutos += tMin;
+        aActual = p.a + base;
+        const f = g93 ? (1 / tMin).toFixed(4) : String(fEquivalente(p.y - q.y, p.z - q.z, Math.abs(dA), tMin));
+        lines.push(`G1 ${L}${yMaq(p.y).toFixed(3)} Z${p.z.toFixed(3)} A${aActual.toFixed(3)} F${f}`);
+      }
+      if (g93) lines.push("G94");
+      lines.push(`G0 Z${zSeguro.toFixed(3)}`);
+    };
+
+    const gr = tallados.grabado;
+    if (gr?.activo) {
+      const n = pasadasDe(gr.profundidad);
+      const rMedio = (radioMinEnRango(segmentos, gr.yDesde, gr.yDesde + gr.largo, 0.5) + rMax) / 2;
+      lines.push(`(--- ETAPA 6: grabado de ${gr.trazos.length} trazos, ${gr.profundidad}mm de hondo, de ${gr.yDesde} a ${gr.yDesde + gr.largo}mm, ${gr.arco} grados ---)`);
+      avisarRadio("El grabado", gr.yDesde, gr.largo);
+      for (let p = 1; p <= n; p++) {
+        const d = (gr.profundidad * p) / n;
+        for (const tr of gr.trazos) {
+          const pts: Pt[] = [];
+          for (let i = 0; i < tr.length; i++) {
+            const y1 = gr.yDesde + tr[i][0] * gr.largo;
+            const a1 = gr.anguloInicio + (gr.espejo ? 1 - tr[i][1] : tr[i][1]) * gr.arco;
+            if (i === 0) {
+              pts.push({ y: y1, a: a1, z: radioEn(y1, segmentos) - d });
+              continue;
+            }
+            // tramos cortos: el radio de la pieza cambia a lo largo y el eje A gira
+            const y0 = pts[pts.length - 1].y, a0 = pts[pts.length - 1].a;
+            const partes = Math.max(1, Math.ceil(Math.max(Math.abs(y1 - y0) / 1, (Math.abs(a1 - a0) * Math.PI * rMedio) / 180 / 1)));
+            for (let k = 1; k <= partes; k++) {
+              const y = y0 + ((y1 - y0) * k) / partes;
+              pts.push({ y, a: a0 + ((a1 - a0) * k) / partes, z: radioEn(y, segmentos) - d });
+            }
+          }
+          recorrer(pts);
+        }
+      }
+      lines.push("");
+    }
+
+    const rl = tallados.relieve;
+    if (rl?.activo) {
+      const rRef = rMax;
+      const filas = Math.max(2, Math.ceil(((rl.arco * Math.PI) / 180) * rRef / rl.paso));
+      const cols = Math.max(2, Math.ceil(rl.largo / Math.min(1, rl.paso)));
+      const n = pasadasDe(rl.profundidad);
+      // altura del relieve (0..1) en un punto de la zona, interpolada de la cuadrícula
+      const alto = (u: number, v: number) => {
+        const fx = u * (rl.nx - 1), fy = v * (rl.ny - 1);
+        const i = Math.min(rl.nx - 2, Math.floor(fx)), j = Math.min(rl.ny - 2, Math.floor(fy));
+        const a = fx - i, b = fy - j, h = rl.alturas;
+        return (h[j * rl.nx + i] * (1 - a) * (1 - b) + h[j * rl.nx + i + 1] * a * (1 - b) + h[(j + 1) * rl.nx + i] * (1 - a) * b + h[(j + 1) * rl.nx + i + 1] * a * b) / 255;
+      };
+      lines.push(`(--- ETAPA 7: relieve de ${rl.profundidad}mm, de ${rl.yDesde} a ${rl.yDesde + rl.largo}mm, ${rl.arco} grados, ${filas} pasadas cada ${rl.paso}mm ---)`);
+      avisarRadio("El relieve", rl.yDesde, rl.largo);
+      if (herramienta.tipo !== "bola") avisos.push("El relieve se calcula para fresa de bola: con una plana los detalles salen escalonados.");
+      for (let p = 1; p <= n; p++) {
+        const tope = (rl.profundidad * p) / n; // en cada nivel no se baja más que esto
+        const pts: Pt[] = [];
+        for (let j = 0; j <= filas; j++) {
+          const v = j / filas, a = rl.anguloInicio + v * rl.arco;
+          for (let c = 0; c <= cols; c++) {
+            const u = (j % 2 ? cols - c : c) / cols; // ida y vuelta
+            const y = rl.yDesde + u * rl.largo;
+            pts.push({ y, a, z: radioEn(y, segmentos) - Math.min(tope, rl.profundidad * (1 - alto(u, v))) });
+          }
+        }
+        lines.push(`(relieve, nivel ${p}/${n})`);
+        recorrer(pts);
       }
       lines.push("");
     }

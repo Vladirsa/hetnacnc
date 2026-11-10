@@ -51,12 +51,36 @@ const CTRL={
   mach3:{name:'Mach3',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
   mach4:{name:'Mach4',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
   linuxcnc:{name:'LinuxCNC',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
-  grbl:{name:'GRBL / grblHAL',tcp:false,maxAxes:3,style:'iso',comment:'paren'},
+  grbl:{name:'GRBL (3 ejes)',tcp:false,maxAxes:3,style:'iso',comment:'paren'},
   fanuc:{name:'Fanuc (G43.4)',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
   haas:{name:'Haas (G234)',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
   siemens:{name:'Siemens 840D (TRAORI)',tcp:true,maxAxes:9,style:'iso',comment:'semi'},
   heidenhain:{name:'Heidenhain TNC (M128)',tcp:true,maxAxes:9,style:'heid',comment:'semi'},
+  // Perfiles que parten de uno de los dialectos de arriba (base) y cambian lo que su control no acepta.
+  // Son puntos de partida: cada uno se confirma en máquina con el registro de "programas probados".
+  uccnc:{name:'UCCNC',base:'mach3',ext:'nc',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  planetcnc:{name:'PlanetCNC',base:'mach3',ext:'nc',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  eding:{name:'EdingCNC',base:'mach3',ext:'nc',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  masso:{name:'MASSO G3',base:'mach3',ext:'nc',tcp:false,maxAxes:5,style:'iso',comment:'paren'},
+  acorn:{name:'Centroid Acorn / CNC12',base:'mach3',ext:'nc',tcp:false,maxAxes:4,style:'iso',comment:'paren'},
+  ddcs:{name:'DDCS V3 / V4 / Expert (autónomo)',base:'mach3',ext:'nc',tcp:false,maxAxes:5,style:'iso',comment:'paren',noG43:true},
+  ncstudio:{name:'Weihong NcStudio',base:'mach3',ext:'nc',tcp:false,maxAxes:4,style:'iso',comment:'paren',noG43:true,manualTC:true},
+  dsp:{name:'DSP de mano: RichAuto A11 / B11 / A18, Weihong NK105',base:'grbl',ext:'nc',tcp:false,maxAxes:4,style:'iso',comment:'paren',noComments:true,noCool:true,header:'G21 G90 G17',noG54:true,
+    note:'Formato mínimo: sin comentarios, sin cambio de herramienta, sin G43 ni refrigerante. Estos controles fijan la velocidad de los rápidos en el mando, y algunos ignoran la F del programa: revisa el avance en el mando.'},
+  fluidnc:{name:'FluidNC / grblHAL (4 ejes o más)',base:'grbl',ext:'nc',tcp:false,maxAxes:6,style:'iso',comment:'paren'},
+  marlin:{name:'Marlin (MPCNC, LowRider, impresora convertida)',base:'grbl',ext:'gcode',tcp:false,maxAxes:3,style:'iso',comment:'semi',noCool:true,header:'G21 G90',noG54:true,end:'',
+    note:'Marlin no conoce M6 ni M30: el programa termina apagando el husillo. Si tu husillo no se controla desde la tarjeta, enciéndelo a mano.'},
+  rrf:{name:'Duet / RepRapFirmware (modo CNC)',base:'grbl',ext:'gcode',tcp:false,maxAxes:4,style:'iso',comment:'semi',header:'G21 G90 G17',end:'',
+    note:'Requiere el modo CNC (M453) en la configuración de la tarjeta.'},
+  syntec:{name:'Syntec',base:'fanuc',ext:'nc',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  mitsubishi:{name:'Mitsubishi M70 / M80',base:'fanuc',ext:'nc',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  mazak:{name:'Mazak (modo EIA / ISO)',base:'fanuc',ext:'eia',tcp:true,maxAxes:9,style:'iso',comment:'paren'},
+  gsk:{name:'GSK 980 / 218 / 25i',base:'fanuc',ext:'nc',tcp:false,maxAxes:5,style:'iso',comment:'paren'},
 };
+const CTRL_EXT={mach3:'tap',mach4:'tap',linuxcnc:'ngc',grbl:'nc',fanuc:'nc',haas:'nc',siemens:'mpf',heidenhain:'h'};
+const dialOf=k=>(CTRL[k]&&CTRL[k].base)||k;           // dialecto del que parte un perfil
+const extOf=k=>(CTRL[k]&&CTRL[k].ext)||CTRL_EXT[dialOf(k)]||'nc';
+const g94Rot=k=>['mach3','mach4','grbl'].includes(dialOf(k)); // miden el bloque con eje rotativo como hipot(mm, grados)
 const INF=100000;
 const MACHINES={
   r3:{name:'Router 3 ejes',kin:'xyz',ctrl:'mach3',lim:{x:[-400,400],y:[-300,300],z:[-150,60]},rot:[[-INF,INF],[-INF,INF]],inv:[false,false],pivot:0,tcp:false,rc:[0,0,0],maxRPM:24000,maxFeed:10000,rapid:8000},
@@ -97,7 +121,7 @@ const S={
   feeds:{mat:'mdf',vc:450,fz:0.15,deff:false,plungePct:30},
   scl:[1,1,1], stk:null, sup:null, zero:{top:'tc',rot:'c'},
   strat:{kind:'rot5',pattern:'spiral',dir:'x',stepover:1.0,step:0.8,allow:0,lead:8,tilt:0,maxTilt:70,avoid:true,smooth:true,skip:true,clear:2,rough:false,rsd:3,rso:3,rallow:0.4,safe:8,
-    pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',area:{on:false,x0:-50,x1:50,y0:-50,y1:50}},
+    pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0,area:{on:false,x0:-50,x1:50,y0:-50,y1:50}},
   post:{ctrl:'mach3',cool:'M8',dec:3,prog:1000,lines:false,inv:false,out:'gcode',pre:'',end:''},
   job:null, moves:null, gcode:null, gcodeLines:null, stale:true, busy:false,
 };
@@ -356,8 +380,11 @@ function tipFromContact(P,n,a,tl){
   const {R,r}=cutterRadii(tl);let u=V.sub(n,V.mul(a,V.dot(n,a)));const ul=V.len(u);u=ul>1e-6?V.mul(u,1/ul):[0,0,0];
   return [P[0]+n[0]*r-a[0]*r+u[0]*(R-r),P[1]+n[1]*r-a[1]*r+u[1]*(R-r),P[2]+n[2]*r-a[2]*r+u[2]*(R-r)];
 }
-function feedsCalc(){
-  const tl=tool(),m=S.machine,f=S.feeds;
+const toolById=id=>S.tools.find(t=>t.id===id)||tool();
+// Con otra fresa (la de desbaste) se conserva la velocidad de corte y la carga de viruta
+// se escala con el diámetro: una fresa más gruesa admite más avance por filo.
+function feedsCalc(tl=tool()){
+  const m=S.machine,main=tool(),fzK=tl.id===main.id?1:clamp(tl.D/Math.max(main.D,0.1),0.3,3),f={...S.feeds,fz:S.feeds.fz*fzK};
   let D=tl.D;if(tl.type==='taperball')D=tl.tipD;
   let Dc=D, note='';
   const {R}=cutterRadii(tl);
