@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -304,6 +304,14 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "adaptar", redes: sel }, "Textos reescritos.")}>
               ✨ Reescribir textos
             </button>
+            <button type="button" style={boton("normal")} disabled={ocupado} title="El revisor corrige gancho, llamada a la acción, largo y hashtags de cada red sin inventar datos" onClick={() => hacer({ accion: "revisar" }, "Mejorada con IA. Si no te gusta, dale Deshacer.")}>
+              🧠 Mejorar con IA
+            </button>
+            {(p as any).version_anterior && (
+              <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "deshacer" }, "Volvió a la versión anterior.")}>
+                ↩ Deshacer mejora
+              </button>
+            )}
             <input type="datetime-local" style={{ ...campo, width: "auto", padding: 5 }} value={cuando} onChange={(e) => setCuando(e.target.value)} />
             <button
               type="button"
@@ -640,6 +648,13 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         Activar piloto automático · puntaje mínimo
         <input type="number" min={40} max={100} style={{ ...campo, width: 70 }} value={c.piloto?.minimo ?? 75} onChange={(e) => setC({ ...c, piloto: { activo: false, redes: [], ...(c.piloto || {}), minimo: Number(e.target.value) } })} />
       </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 10 }}>
+        <input type="checkbox" checked={c.primer_comentario !== false} onChange={(e) => setC({ ...c, primer_comentario: e.target.checked })} />
+        Primer comentario automático con la liga en Facebook (necesita el permiso pages_manage_engagement)
+      </label>
+      <p style={{ color: C.tenue, fontSize: 12, margin: "4px 0 0" }}>
+        🧠 El revisor con IA mejora solo los borradores del plan, promociones y Fábrica antes de que salgan, y el piloto le da una segunda oportunidad a lo que no llega al puntaje. En cada publicación tienes "Mejorar con IA" y "Deshacer".
+      </p>
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>📲 Aprobar desde Telegram</h3>
       <TelegramAprobacion />
       <div style={{ fontSize: 14, marginTop: 6 }}>

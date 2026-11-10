@@ -14,6 +14,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, adaptar, asegurarSocial, dentroDeHorario, enviarAN8n, horaEn, iaSocial, leerConfig, publicar, zonaDe } from "./social-hub"
 import { puntuar } from "./estrategia"
+import { revisarPublicacion } from "./social-revisor"
 
 type EstadoTg = { chat_id?: string; codigo?: string; codigo_expira?: string; editando?: string | null; ultimo_aviso?: string }
 
@@ -51,7 +52,7 @@ const esVideo = (m: any) => m && (m.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/
 const fechaLocal = (d: any, mercado?: string) => (d ? new Date(d).toLocaleString("es-MX", { timeZone: zonaDe(mercado), weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "sin fecha")
 
 export function puntajeDe(p: any) {
-  const ps = (p.redes || []).map((red: string) => puntuar(p.textos?.[red] || "", red, { medios: p.medios, programada_para: p.programada_para, mercado: p.mercado }).puntaje)
+  const ps = (p.redes || []).filter((r: string) => r !== "instagram_historia").map((red: string) => puntuar(p.textos?.[red] || "", red, { medios: p.medios, programada_para: p.programada_para, mercado: p.mercado }).puntaje)
   return ps.length ? Math.min(...ps) : 0
 }
 
@@ -229,7 +230,13 @@ export async function pilotoAutomatico(knex: any, logger?: any) {
   for (const p of lista) {
     const redes = p.redes || []
     if (cfg.piloto.redes.length && !redes.every((r: string) => cfg.piloto.redes.includes(r))) continue
-    if (puntajeDe(p) < cfg.piloto.minimo) continue
+    if (puntajeDe(p) < cfg.piloto.minimo) {
+      // Una oportunidad: el revisor con IA corrige lo que falta y se vuelve a medir
+      if (p.revisada_ia) continue
+      await revisarPublicacion(knex, p.id, logger)
+      const otra = await knex(T_POST).where({ id: p.id }).first()
+      if (!otra || otra.estado !== "borrador" || puntajeDe(otra) < cfg.piloto.minimo) continue
+    }
     const min = new Date(Date.now() + 10 * 60_000)
     const cuando = dentroDeHorario(new Date(p.programada_para) > min ? new Date(p.programada_para) : min, cfg.horario, zonaDe(p.mercado))
     await knex(T_POST).where({ id: p.id, estado: "borrador" }).update({ estado: "programada", programada_para: cuando, piloto: true, updated_at: knex.fn.now() })

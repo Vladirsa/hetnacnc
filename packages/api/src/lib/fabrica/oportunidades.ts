@@ -107,7 +107,7 @@ async function publicarDato(scope: any, d: {
   posts.push(p1)
   if (ffmpegDisponible()) {
     const c2 = await cuandoPromo(knex, 5)
-    const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Oportunidad video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
+    const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Oportunidad video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "instagram_historia", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
     const liga2 = urlCorta(await ligaPara(knex, p2, "instagram", d.url))
     const voz = await vozPara(`oportunidad-${p2}`, [...d.frases, d.cierre], "mx", logger)
     const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.6, voz.duraciones[k] + 0.25) : porOmision)

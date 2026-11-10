@@ -28,10 +28,12 @@ export const T_LIGA = "hetna_social_liga"
 export const T_EVENTO_S = "hetna_social_evento"
 export const T_CONFIG_S = "hetna_social_config"
 
-export type Red = "facebook" | "instagram" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
+export type Red = "facebook" | "instagram" | "instagram_historia" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
   instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 3-5 hashtags específicos al final en el idioma del mercado (#CNC #CorteLaser y el país). La liga no es clicable: di 'liga en la bio'" },
+  // Historia: sólo la imagen o el video (vertical de preferencia); el texto no se publica
+  instagram_historia: { nombre: "Instagram (historia)", auto: true, max: 2200, imagen: "requerida", estilo: "la historia no lleva texto publicado: sólo la imagen o el video" },
   telegram: { nombre: "Telegram (canal)", auto: true, max: 900, imagen: "opcional", estilo: "directo, informativo, con la liga" },
   linkedin: { nombre: "LinkedIn (empresa)", auto: true, max: 2500, imagen: "opcional", estilo: "profesional B2B, enfocado en compradores industriales y empresas; sin muchos emojis" },
   discord: { nombre: "Discord", auto: true, max: 1500, imagen: "opcional", estilo: "comunidad técnica, breve" },
@@ -55,6 +57,7 @@ export type ConfigSocial = {
   // material y buen puntaje se programan solos
   piloto: { activo: boolean; minimo: number; redes: Red[] }
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
+  primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
@@ -64,6 +67,7 @@ const CONFIG_INICIAL: ConfigSocial = {
   retraso_min: 10,
   piloto: { activo: false, minimo: 75, redes: [] },
   aviso_hora: 8,
+  primer_comentario: true,
 }
 
 let listo = false
@@ -97,6 +101,9 @@ export async function asegurarSocial(knex: any) {
   // De dónde salió el borrador (plan | promo | fabrica) y si lo programó el piloto automático
   await knex.raw(`alter table ?? add column if not exists fuente text`, [T_POST]).catch(() => {})
   await knex.raw(`alter table ?? add column if not exists piloto boolean`, [T_POST]).catch(() => {})
+  // Revisor con IA: si ya se revisó y la versión anterior de los textos (para deshacer)
+  await knex.raw(`alter table ?? add column if not exists revisada_ia boolean`, [T_POST]).catch(() => {})
+  await knex.raw(`alter table ?? add column if not exists version_anterior jsonb`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -141,6 +148,7 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
       redes: Array.isArray(v.piloto?.redes) ? v.piloto.redes.filter((x: string) => x in REDES) : [],
     },
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
+    primer_comentario: v.primer_comentario !== false,
   }
 }
 
@@ -162,6 +170,7 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
         }
       : actual.piloto,
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
+    primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
   }
   if (nueva.horario.hasta <= nueva.horario.desde) nueva.horario = actual.horario
   await knex.raw(`insert into ?? (clave, valor) values ('general', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
@@ -265,7 +274,8 @@ export async function adaptarConIa(base: string, redes: Red[], logger?: any, mer
 }
 
 export async function adaptar(base: string, redes: Red[], logger?: any, mercado = "mx") {
-  const conIa = await adaptarConIa(base, redes, logger, mercado)
+  // La historia no publica texto: no se gasta IA en ella
+  const conIa = await adaptarConIa(base, redes.filter((r) => r !== "instagram_historia"), logger, mercado)
   const textos: Record<string, string> = {}
   for (const r of redes) textos[r] = conIa?.[r] || adaptarSinIa(base, r)
   return { textos, ia: !!conIa }
@@ -441,13 +451,17 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       resultado[red] = { ok: false, error: "Esta red necesita una imagen.", en: new Date().toISOString() }
       continue
     }
+    const esIg = red === "instagram" || red === "instagram_historia"
     // Instagram: si ya hay contenedor en proceso, sólo se intenta terminarlo
-    if (red === "instagram" && resultado.instagram?.pendiente && resultado.instagram?.contenedor) {
-      resultado.instagram = { ...(await terminarContenedorIg(resultado.instagram.contenedor, resultado.instagram.creado)), en: new Date().toISOString() }
+    if (esIg && resultado[red]?.pendiente && resultado[red]?.contenedor) {
+      resultado[red] = { ...(await terminarContenedorIg(resultado[red].contenedor, resultado[red].creado)), en: new Date().toISOString() }
       continue
     }
-    let r: any = await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
-    if (red === "instagram" && r.pendiente && r.contenedor) {
+    let r: any =
+      red === "instagram_historia"
+        ? await enviarAN8n({ red: "instagram", historia: true, texto: texto || p.titulo, imagen: video ? "" : imagen || imagenes[0] || "", video, url: liga, post_id: p.id })
+        : await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
+    if (esIg && r.pendiente && r.contenedor) {
       // Instagram procesa el archivo: fotos en segundos, reels hasta unos minutos.
       // Se espera un poco aquí; si no termina, el job lo publica después.
       const creado = new Date().toISOString()
@@ -458,6 +472,11 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
         r = t
         if (!t.pendiente) break
       }
+    }
+    // Primer comentario con la liga medida (Facebook la deja tocar en comentarios)
+    if (red === "facebook" && r.ok && r.id && (await leerConfig(knex)).primer_comentario) {
+      const c: any = await enviarAN8n({ red: "comentar", objeto: r.id, texto: p.mercado === "us" ? `👉 Get a quote or join here: ${liga}` : `👉 Cotiza o regístrate aquí: ${liga}` })
+      r = { ...r, comentario: c.ok ? "ok" : String(c.error || "no se pudo").slice(0, 200) }
     }
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok && !r.pendiente) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
@@ -483,11 +502,11 @@ export async function terminarContenedorIg(contenedor: string, creado?: string) 
 
 /** Termina las publicaciones de Instagram que quedaron procesándose. */
 export async function terminarPendientesIg(knex: any, logger?: any) {
-  const filas = await knex(T_POST).whereIn("estado", ["parcial", "error"]).whereRaw(`resultado->'instagram'->>'pendiente' = 'true'`).where("updated_at", ">=", knex.raw("now() - interval '2 days'")).limit(10).select("id")
+  const filas = await knex(T_POST).whereIn("estado", ["parcial", "error"]).whereRaw(`(resultado->'instagram'->>'pendiente' = 'true' or resultado->'instagram_historia'->>'pendiente' = 'true')`).where("updated_at", ">=", knex.raw("now() - interval '2 days'")).limit(10).select("id")
   let n = 0
   for (const { id } of filas) {
-    const r = await publicar(knex, id, logger, ["instagram"])
-    if (r?.resultado?.instagram?.ok) n++
+    const r = await publicar(knex, id, logger, ["instagram", "instagram_historia"])
+    if (r?.resultado?.instagram?.ok || r?.resultado?.instagram_historia?.ok) n++
   }
   return n
 }
