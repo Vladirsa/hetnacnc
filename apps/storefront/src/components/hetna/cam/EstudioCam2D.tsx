@@ -19,6 +19,7 @@ import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero }
 import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
 import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
+import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
@@ -241,6 +242,47 @@ export function EstudioCam2D() {
     }
   }
 
+  // Proyecto guardado en la cuenta: el dibujo (como DXF) y cómo se va a cortar
+  const proyectoActual = () => {
+    if (!dibujo) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
+    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(dibujo), material, espesor, maquinaId, origen, ops }
+  }
+  const aplicarProyecto = (d: any): boolean => {
+    if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
+    let leido: Dibujo
+    try {
+      leido = leerDXF(d.dxf)
+    } catch {
+      return false
+    }
+    if (!leido.trazos.length) return false
+    const nombre = typeof d.archivo === "string" ? d.archivo.replace(/[^\w.\- ]/g, "").slice(0, 80) || "pieza.dxf" : "pieza.dxf"
+    setArchivo(new File([d.dxf], nombre, { type: "application/dxf" }))
+    setDibujo(leido)
+    if (MATERIALES.some((m) => m.id === d.material)) setMaterial(d.material)
+    if (typeof d.espesor === "string" && numero(d.espesor) > 0) setEspesor(d.espesor)
+    if (typeof d.maquinaId === "string" && maquinas.some((m) => m.id === d.maquinaId)) setMaquinaId(d.maquinaId)
+    setOrigen(d.origen !== false)
+    // cada operación parte de la de fábrica de su tipo: lo que falte o venga raro no rompe la pantalla
+    const tipos = [...OPS_ROUTER, ...OPS_LASER].map((o) => o.id)
+    setOps(
+      d.ops
+        .filter((o: any) => o && tipos.includes(o.tipo))
+        .slice(0, 12)
+        .map((o: any) => {
+          const base = nuevaOp(o.tipo, typeof d.espesor === "string" ? d.espesor : espesor)
+          const limpia: Record<string, unknown> = {}
+          for (const k of Object.keys(base) as (keyof Op)[]) if (k !== "id" && typeof o[k] === typeof base[k]) limpia[k] = o[k]
+          return { ...base, ...limpia } as Op
+        })
+    )
+    setPlan(null)
+    setGcode(null)
+    setError(null)
+    setVista("pieza")
+    return true
+  }
+
   const cambiarOp = (i: number, cambio: Partial<Op>) => setOps((l) => l.map((o, j) => (j === i ? { ...o, ...cambio } : o)))
   const moverOp = (i: number, d: number) =>
     setOps((l) => {
@@ -437,6 +479,7 @@ export function EstudioCam2D() {
           <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {archivo && !esSVG && <Interruptor etiqueta="Mover el dibujo al origen (0,0)" activo={origen} cambiar={setOrigen} />}
+        <ProyectosCam herramienta="2d" obtener={proyectoActual} aplicar={aplicarProyecto} oscuro />
 
         <Seccion titulo="Máquina">
           <Select valor={maquinaId} cambiar={setMaquinaId}>

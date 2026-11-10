@@ -14,6 +14,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
+import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import type { FresaCam } from "@/lib/data/cam-maquinas"
 import { FRESAS_BASE, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 
@@ -394,6 +395,11 @@ export function EstudioTorno() {
     setRpmAcabado(n(d.rpm?.rpmAcabado, 65))
     setEstrias({ ...ESTRIAS_INICIALES, ...(d.tallados?.estrias ?? {}) })
     setEspiral({ ...ESPIRAL_INICIAL, ...(d.tallados?.espiral ?? {}) })
+    // grabado y relieve sólo vienen en los proyectos guardados en la cuenta; el servidor los vuelve a revisar al generar
+    const g = d.tallados?.grabado
+    setGrabado(g && Array.isArray(g.trazos) ? { ...GRABADO_INICIAL, ...g } : GRABADO_INICIAL)
+    const rl = d.tallados?.relieve
+    setRelieve(rl && Array.isArray(rl.alturas) ? { ...RELIEVE_INICIAL, ...rl } : RELIEVE_INICIAL)
     setEncuadre((n) => n + 1)
     limpiarResultado()
     return true
@@ -781,8 +787,14 @@ export function EstudioTorno() {
       </div>
 
       <aside className="flex flex-col gap-5">
+        {/* En la cuenta: se retoman en cualquier equipo y se comparten con una liga */}
+        <ProyectosCam
+          herramienta="torno"
+          obtener={() => ({ ...disenoActual(), tallados: { estrias, espiral, ...(grabado.activo ? { grabado } : {}), ...(relieve.activo ? { relieve } : {}) } })}
+          aplicar={aplicarDiseno}
+        />
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños en este navegador</h2>
           <div className="mt-3 flex gap-2">
             <input
               className="w-full rounded-[8px] border border-[#E7E4DC] bg-white px-2.5 py-2 text-[14px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"
