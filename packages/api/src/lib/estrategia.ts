@@ -17,6 +17,7 @@
 // el sistema mide y el dueño las ajusta. Las redes no publican sus fórmulas.
 import Anthropic from "@anthropic-ai/sdk"
 
+import { aprendizaje } from "./social-estadisticas"
 import { STORE_URL, nuevoId } from "./licitacion"
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, asegurarSocial, crearPublicacion, horaEn, iaSocial, zonaDe } from "./social-hub"
 
@@ -75,11 +76,12 @@ export const GUIAS: Record<string, Guia> = {
   reddit: { red: "reddit", formatos: ["texto"], frecuencia: 1, horas: [10], dias: [3], publicos: ["clientes_empresa", "talleres"], liga: "en_texto", hashtags: [0, 0], media: "opcional", claves: "Aportar ayuda técnica real; nada de anuncios (las comunidades lo castigan)." },
 }
 
-// Redes por mercado (en otros mercados se publica a mano hasta tener cuentas propias)
+// Redes por mercado. Todos usan las mismas cuentas de HETNA (cada publicación
+// en el idioma de su mercado); las redes manuales quedan para copiar y pegar.
 export const REDES_MERCADO: Record<string, string[]> = {
   mx: ["facebook", "instagram", "tiktok", "youtube", "linkedin", "telegram", "whatsapp", "grupos_facebook"],
   us: ["linkedin", "youtube", "instagram", "facebook", "reddit", "tiktok"],
-  co: ["facebook", "instagram", "tiktok", "whatsapp", "grupos_facebook"],
+  co: ["facebook", "instagram", "tiktok", "telegram", "whatsapp", "grupos_facebook"],
   cl: ["facebook", "instagram", "tiktok", "whatsapp", "grupos_facebook"],
   pe: ["facebook", "instagram", "tiktok", "whatsapp", "grupos_facebook"],
   ar: ["facebook", "instagram", "tiktok", "whatsapp", "grupos_facebook"],
@@ -91,14 +93,16 @@ export type ConfigEstrategia = {
   guias: Record<string, Partial<Pick<Guia, "frecuencia" | "horas">>>
   pilares: Record<string, string[]>
 }
-const CONFIG_INICIAL: ConfigEstrategia = { mercados: { mx: 100 }, guias: {}, pilares: {} }
+// Primer país de Sudamérica: Colombia (decisión del 10 nov 2026); EE.UU. en inglés desde las mismas cuentas
+const CONFIG_INICIAL: ConfigEstrategia = { mercados: { mx: 100, co: 35, us: 25 }, guias: {}, pilares: {} }
 
 export async function leerEstrategia(knex: any): Promise<ConfigEstrategia> {
   await asegurarSocial(knex)
   const r = await knex(T_CONFIG_S).where({ clave: "estrategia" }).first()
   const v = r?.valor || {}
   return {
-    mercados: v.mercados && typeof v.mercados === "object" ? v.mercados : CONFIG_INICIAL.mercados,
+    // Mercados que el dueño nunca ha tocado toman el valor inicial (así entran Colombia y EE.UU.)
+    mercados: v.mercados && typeof v.mercados === "object" ? { ...CONFIG_INICIAL.mercados, ...v.mercados } : CONFIG_INICIAL.mercados,
     guias: v.guias || {},
     pilares: v.pilares || {},
   }
@@ -309,6 +313,8 @@ async function contextoReal(knex: any) {
   if (lic) partes.push(`Solicitudes de fabricación en los últimos 30 días: ${lic.n}.`)
   const prods = await knex("product").whereNull("deleted_at").where({ status: "published" }).orderBy("created_at", "desc").limit(5).select("title").catch(() => [])
   if (prods.length) partes.push(`Productos recientes en la tienda: ${prods.map((p: any) => p.title).join("; ")}.`)
+  const ap = await aprendizaje(knex).catch(() => null)
+  if (ap?.resumen?.length) partes.push(`Lo que mejor ha funcionado en nuestras redes (estadísticas reales): ${ap.resumen.join(" ")}`)
   partes.push("HETNA no cobra comisión en licitaciones; los talleres pueden estar verificados y tener certificaciones; hay ranking público por evaluaciones reales; contratos SafeDeal opcionales.")
   return partes.join("\n")
 }

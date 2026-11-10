@@ -19,7 +19,7 @@ type Pub = {
   estado: string
   programada_para: string | null
   publicada_en: string | null
-  resultado: Record<string, { ok: boolean; manual?: boolean; error?: string; url?: string }> | null
+  resultado: Record<string, { ok: boolean; manual?: boolean; pendiente?: boolean; error?: string; url?: string }> | null
   adaptada_ia: boolean
   created_at: string
   ligas: Liga[]
@@ -248,7 +248,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             ) : (
               <img src={p.medios[0].url} alt="" style={{ maxWidth: 220, borderRadius: 8 }} />
             ))}
-          {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (las cuentas de este mercado se manejan a mano)</span>}
+          {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (sale en las mismas cuentas, en su idioma y a su hora)</span>}
           {p.notas && <div style={{ fontSize: 12, background: "#FFF8EE", borderRadius: 8, padding: 8, whiteSpace: "pre-wrap" }}>🎬 {p.notas}</div>}
           <label style={{ ...boton("normal"), fontWeight: 600, justifySelf: "start" }}>
             {p.medios?.length ? "Cambiar imagen o video" : "+ Agregar imagen o video"}
@@ -279,7 +279,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
                   <b style={{ fontSize: 13 }}>{nombre(red)}</b>
                   {p.puntajes?.[red] && <Puntaje p={p.puntajes[red]} />}
                   {!auto(red) && <span style={{ fontSize: 12, color: C.tenue }}>✋ copiar y pegar</span>}
-                  {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
+                  {r && (r.ok ? <span style={{ fontSize: 12, color: C.verde }}>✓ {r.manual ? "lista para pegar" : "publicada"}</span> : r.pendiente ? <span style={{ fontSize: 12, color: C.tenue }}>⏳ Instagram la está procesando; se publica sola en unos minutos</span> : <span style={{ fontSize: 12, color: C.rojo }}>✗ {r.error}</span>)}
                   {r?.url && (
                     <a href={r.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.naranja }}>
                       ver ↗
@@ -381,10 +381,36 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   )
 }
 
+function PruebaInstagram() {
+  const [r, setR] = useState<{ ok: boolean; usuario?: string; error?: string } | null>(null)
+  const [cargando, setCargando] = useState(false)
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 10px" }}>
+      <button
+        type="button"
+        style={boton("normal")}
+        disabled={cargando}
+        onClick={async () => {
+          setCargando(true)
+          setR(await api<any>("/config", { probar: "instagram" }).catch((e) => ({ ok: false, error: (e as Error).message })))
+          setCargando(false)
+        }}
+      >
+        {cargando ? "Probando…" : "Probar Instagram"}
+      </button>
+      {r && (r.ok ? <span style={{ fontSize: 13, color: C.verde }}>✓ Instagram conectado{r.usuario ? ` (@${r.usuario})` : ""}. Ya puedes activarlo abajo.</span> : <span style={{ fontSize: 13, color: C.rojo }}>✗ {r.error}</span>)}
+    </div>
+  )
+}
+
+const nombreRed = (r: string) => ({ facebook: "Facebook", instagram: "Instagram" } as Record<string, string>)[r] || r
+
 function Resultados() {
   const [dias, setDias] = useState(30)
   const [m, setM] = useState<any>(null)
   const [error, setError] = useState("")
+  const [leyendo, setLeyendo] = useState(false)
+  const [aviso, setAviso] = useState("")
   useEffect(() => {
     api<any>(`/metricas?dias=${dias}`).then(setM).catch((e) => setError((e as Error).message))
   }, [dias])
@@ -392,8 +418,73 @@ function Resultados() {
   if (!m) return <p>Cargando…</p>
   const th: CSSProperties = { textAlign: "left", padding: 6, fontSize: 12, color: C.tenue }
   const td: CSSProperties = { padding: 6, borderTop: `1px solid ${C.borde}` }
+  const ap = m.aprendizaje
+  const leerAhora = async () => {
+    setLeyendo(true)
+    try {
+      const r = await api<{ leidas: number }>("/metricas", {})
+      setAviso(`Se leyeron ${r.leidas} estadísticas.`)
+      setM(await api<any>(`/metricas?dias=${dias}`))
+    } catch (e) {
+      setAviso((e as Error).message)
+    }
+    setLeyendo(false)
+  }
   return (
     <div>
+      <section style={caja}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>🧠 Lo que estamos aprendiendo (Facebook e Instagram)</h3>
+          <span style={{ flex: 1 }} />
+          <button type="button" style={boton("normal")} disabled={leyendo} onClick={leerAhora}>{leyendo ? "Leyendo…" : "Leer estadísticas ahora"}</button>
+        </div>
+        {aviso && <p style={{ fontSize: 12, color: C.tenue }}>{aviso}</p>}
+        <p style={{ color: C.tenue, fontSize: 12, margin: "6px 0" }}>
+          Cada 6 horas se leen alcance, me gusta, comentarios, compartidos, guardados y vistas. Puntos de interacción = me gusta + comentarios×2 + compartidos×3 + guardados×3 (compartir y guardar es lo que más premian los algoritmos). El agente usa esto al llenar el plan de cada semana.
+        </p>
+        {!ap || !ap.publicaciones ? (
+          <p style={{ color: C.tenue, fontSize: 13 }}>Todavía no hay estadísticas. Aparecen unas horas después de publicar en Facebook o Instagram.</p>
+        ) : (
+          <>
+            {ap.resumen.length > 0 ? (
+              <ul style={{ fontSize: 13, margin: "6px 0 10px", paddingLeft: 18 }}>{ap.resumen.map((r: string, i: number) => <li key={i}>{r}</li>)}</ul>
+            ) : (
+              <p style={{ color: C.tenue, fontSize: 13 }}>Con {ap.publicaciones} publicaciones medidas aún no hay conclusiones (se necesitan al menos 3 por grupo).</p>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
+              {[["Por formato", ap.por_formato, (g: any) => g.formato], ["Por mercado", ap.por_mercado, (g: any) => String(g.mercado).toUpperCase()], ["Por hora (local)", ap.por_hora.slice(0, 8), (g: any) => `${g.hora}:00`]].map(([t, lista, et]: any) => (
+                <div key={t}>
+                  <b style={{ fontSize: 13 }}>{t}</b>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead><tr><th style={th}>Red</th><th style={th}></th><th style={th}>Pub.</th><th style={th}>Interacción media</th><th style={th}>Alcance medio</th></tr></thead>
+                    <tbody>
+                      {lista.map((g: any, i: number) => (
+                        <tr key={i}><td style={td}>{nombreRed(g.red)}</td><td style={td}>{et(g)}</td><td style={td}>{g.n}</td><td style={td}>{g.interaccion_media}</td><td style={td}>{g.alcance_medio || "—"}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+            {ap.mejores.length > 0 && (
+              <>
+                <b style={{ fontSize: 13, display: "block", marginTop: 10 }}>Publicaciones con más interacción</b>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <tbody>
+                    {ap.mejores.map((x: any, i: number) => (
+                      <tr key={i}>
+                        <td style={td}>{x.titulo}</td><td style={td}>{nombreRed(x.red)} · {x.formato} · {String(x.mercado).toUpperCase()}</td>
+                        <td style={td}>❤ {x.me_gusta} · 💬 {x.comentarios} · ↗ {x.compartidos} · 🔖 {x.guardados}{x.alcance ? ` · 👁 ${x.alcance}` : ""}</td>
+                        <td style={td}>{x.url && <a href={x.url} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>ver ↗</a>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </>
+        )}
+      </section>
       <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
         {[7, 30, 90].map((d) => (
           <button key={d} type="button" style={{ ...boton("normal"), background: dias === d ? "#142033" : C.fondo, color: dias === d ? "#fff" : C.texto }} onClick={() => setDias(d)}>
@@ -487,7 +578,8 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
   return (
     <section style={caja}>
       <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Redes para las publicaciones automáticas</h3>
-      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>Activa sólo las que ya estén conectadas en n8n (Facebook y Telegram ya lo están). ✋ = copiar y pegar.</p>
+      <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>Activa sólo las que ya estén conectadas en n8n (Facebook y Telegram ya lo están; Instagram en cuanto la prueba salga bien). ✋ = copiar y pegar.</p>
+      <PruebaInstagram />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (
@@ -775,7 +867,7 @@ function Estrategia({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string
       <section style={caja}>
         <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Mercados</h3>
         <p style={{ color: C.tenue, fontSize: 12, margin: "0 0 8px" }}>
-          Reparto del esfuerzo (0 = apagado). Cada mercado publica a su hora local y en su idioma. Hoy las cuentas conectadas son las de México: lo de otros mercados queda para copiar y pegar hasta abrir sus cuentas.
+          Reparto del esfuerzo (0 = apagado). Todos los mercados salen en las mismas cuentas de HETNA, cada publicación en su idioma y a la hora local del país. Empezamos con Colombia en Sudamérica.
         </p>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
