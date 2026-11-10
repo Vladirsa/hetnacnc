@@ -28,6 +28,8 @@ import sys
 from dataclasses import dataclass
 from functools import reduce
 
+import random
+
 import ezdxf
 from ezdxf import disassemble
 from ezdxf import path as dxfpath
@@ -41,7 +43,7 @@ TOL = 0.05  # mm al pasar curvas a rectas
 UNIR = 0.02  # mm para unir trazos sueltos punta con punta
 MAX_LINEAS = 400_000  # G-code demasiado grande = algo salió mal (relleno o V muy finos)
 
-TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado"}
+TIPOS_ROUTER = {"corte", "fuera", "dentro", "linea", "cajeado", "grabado_v", "barrenado", "acanalado", "textura", "incrustacion_hembra", "incrustacion_macho"}
 TIPOS_LASER = {"laser_corte", "laser_linea", "laser_relleno"}
 
 NOMBRES = {
@@ -52,6 +54,10 @@ NOMBRES = {
     "cajeado": "Cajeado",
     "grabado_v": "Grabado en V",
     "barrenado": "Barrenado",
+    "acanalado": "Acanalado",
+    "textura": "Textura",
+    "incrustacion_hembra": "Incrustación: caja",
+    "incrustacion_macho": "Incrustación: pieza",
     "laser_corte": "Láser: corte",
     "laser_linea": "Láser: línea",
     "laser_relleno": "Láser: relleno",
@@ -383,6 +389,100 @@ def op_linea(g, trazos, prof, receta):
     return n
 
 
+def _muestrear(pts, paso: float, marcas=()):
+    """Puntos (x, y, s) a lo largo de un trazo, cada `paso` mm como máximo y
+    con un punto exacto en cada distancia de `marcas`."""
+    salida = [(pts[0][0], pts[0][1], 0.0)]
+    rec = 0.0
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+        L = math.hypot(x2 - x1, y2 - y1)
+        if L < 1e-9:
+            continue
+        cortes = sorted({L, *[m - rec for m in marcas if rec < m < rec + L]})
+        a = 0.0
+        for b in cortes:
+            n = max(1, math.ceil((b - a) / paso))
+            for i in range(1, n + 1):
+                u = (a + (b - a) * i / n) / L
+                salida.append((x1 + (x2 - x1) * u, y1 + (y2 - y1) * u, rec + u * L))
+            a = b
+        rec += L
+    return salida
+
+
+def op_acanalado(g, trazos, prof, receta, rampa):
+    """Canal que sigue la línea y entra y sale del material en rampa: en las
+    puntas la fresa está a ras y baja a toda la profundidad a `rampa` mm."""
+    n = 0
+    for t in trazos:
+        pts = list(t.pts) + ([t.pts[0]] if t.cerrado else [])
+        L = _largo(pts)
+        if len(pts) < 2 or L < 0.5:
+            continue
+        n += 1
+        r = 0.0 if t.cerrado else min(rampa, L / 2)
+        puntos = _muestrear(pts, 2.0 if r else 1e9, (r, L - r) if r else ())
+        factor = (lambda s_: min(1.0, s_ / r, (L - s_) / r)) if r else (lambda s_: 1.0)
+        ida = True
+        for z in _profundidades(prof, receta["profundidad_pasada"]):
+            camino = puntos if ida else puntos[::-1]
+            g.ir(camino[0][0], camino[0][1])
+            g.bajar(z * factor(camino[0][2]), receta["penetracion"])
+            for x, y, s_ in camino[1:]:
+                g.mover(x, y, receta["avance"], z * factor(s_))
+            if not t.cerrado:
+                ida = not ida
+        g.subir()
+    return n
+
+
+def op_textura(g, polys, prof, receta, separacion, angulo, onda, avisos):
+    """Surcos paralelos cuya profundidad sube y baja en ondas, con el arranque
+    de cada surco desfasado: el aspecto de tallado a mano."""
+    region = _region(polys)
+    if region.is_empty:
+        return 0
+    azar = random.Random(20240607)  # siempre el mismo dibujo para el mismo archivo
+    a = math.radians(angulo)
+    d, nrm = (math.cos(a), math.sin(a)), (-math.sin(a), math.cos(a))
+    x0, y0, x1, y1 = region.bounds
+    esquinas = [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]
+    bs = [px * nrm[0] + py * nrm[1] for px, py in esquinas]
+    ts = [px * d[0] + py * d[1] for px, py in esquinas]
+    hechos, ida = 0, True
+    b = min(bs) + separacion / 2
+    while b < max(bs):
+        linea = LineString([(nrm[0] * b + d[0] * (min(ts) - 1), nrm[1] * b + d[1] * (min(ts) - 1)),
+                            (nrm[0] * b + d[0] * (max(ts) + 1), nrm[1] * b + d[1] * (max(ts) + 1))])
+        tramos = [t for t in _anillos(linea.intersection(region)) if _largo(t) > 1.0]
+        fase = azar.uniform(0, onda)
+        estira = azar.uniform(0.8, 1.25)
+        for tramo in (tramos if ida else [t[::-1] for t in tramos[::-1]]):
+            puntos = _muestrear(tramo, max(0.5, onda / 24))
+            L = puntos[-1][2]
+            # a ras en las dos puntas y en cada valle de la onda
+            hondo = lambda s_: -prof * (0.5 - 0.5 * math.cos(2 * math.pi * (s_ + fase) / (onda * estira))) * min(1.0, s_ / 3.0, (L - s_) / 3.0)
+            g.ir(puntos[0][0], puntos[0][1])
+            g.bajar(0.0, receta["penetracion"])
+            for x, y, s_ in puntos[1:]:
+                g.mover(x, y, receta["avance"], hondo(s_))
+            g.subir()
+            hechos += 1
+        ida = not ida
+        b += separacion
+    return 1 if hechos else 0
+
+
+def forma_incrustable(polys, r: float, holgura: float):
+    """La figura tal como la deja una fresa de radio r al vaciarla (esquinas
+    interiores redondeadas), reducida por la holgura: es la pieza que embona."""
+    region = _region(polys)
+    if region.is_empty:
+        return []
+    forma = region.buffer(-r, join_style=1, quad_segs=8).buffer(r, join_style=1, quad_segs=8).buffer(-holgura, join_style=1, quad_segs=8)
+    return [p for p in getattr(forma, "geoms", [forma]) if isinstance(p, Polygon) and p.area > 0.5]
+
+
 def op_cajeado(g, polys, r, prof, receta, traslape, avisos, sobre=0.0):
     region = _region(polys)
     if region.is_empty:
@@ -656,8 +756,27 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                                           min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre, sobre)
                 elif tipo == "linea":
                     figuras = op_linea(g, sel, prof, receta)
-                elif tipo == "cajeado":
+                elif tipo in ("cajeado", "incrustacion_hembra"):
                     figuras = op_cajeado(g, polys, diam / 2, prof, receta, traslape, avisos, sobre)
+                elif tipo == "incrustacion_macho":
+                    holgura = float(op.get("holgura", 0.1))
+                    if not (math.isfinite(holgura) and 0 <= holgura <= 2):
+                        return error("entrada_invalida", f"Operación {i}: la holgura no es válida.", "Captúrala en mm, entre 0 y 2.")
+                    piezas = forma_incrustable(polys, diam / 2, holgura)
+                    figuras = op_contorno(g, piezas, "fuera", diam / 2, prof, receta,
+                                          4 if op.get("con_pestanas", True) else 0, min(prof * 0.5, 1.5), avisos, nombre, sobre)
+                elif tipo == "acanalado":
+                    rampa = float(op.get("rampa", 10))
+                    if not (math.isfinite(rampa) and 0 <= rampa <= 500):
+                        return error("entrada_invalida", f"Operación {i}: el largo de rampa no es válido.", "Captúralo en mm, entre 0 y 500.")
+                    figuras = op_acanalado(g, sel, prof, receta, rampa)
+                elif tipo == "textura":
+                    sep = float(op.get("separacion_textura") or diam * 0.8)
+                    onda = float(op.get("onda", 30))
+                    ang = float(op.get("angulo_textura", 0))
+                    if not (math.isfinite(sep) and 0.5 <= sep <= 100 and math.isfinite(onda) and 5 <= onda <= 500 and math.isfinite(ang)):
+                        return error("entrada_invalida", f"Operación {i}: los datos de la textura no son válidos.", "Separación entre 0.5 y 100 mm, largo de onda entre 5 y 500 mm.")
+                    figuras = op_textura(g, polys, prof, receta, sep, ang, onda, avisos)
                 elif tipo == "grabado_v":
                     figuras = op_grabado_v(g, polys, float(op.get("angulo", 90)), prof, receta, avisos)
                 else:

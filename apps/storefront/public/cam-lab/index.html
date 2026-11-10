@@ -107,6 +107,7 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
 .toollist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .toollist button{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 10px;background:var(--panel);border:0;border-bottom:1px solid var(--line);text-align:left;font-size:13.5px}
 .toollist button:last-child{border-bottom:0}
+.toollist .grp{padding:5px 10px;background:var(--panel-2);border-bottom:1px solid var(--line);font:600 11px/1.2 var(--f-label);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .toollist button .t{font:600 12px/1 var(--f-mono);color:var(--ink-3)}
 .toollist button .d{font:500 12px/1 var(--f-mono);color:var(--ink-3)}
 .toollist button.on{background:var(--accent-2)}
@@ -407,11 +408,15 @@ label.f textarea.mono{font:12.5px/1.4 var(--f-mono)}
           <div class="codebar"><h2>Biblioteca de herramientas</h2><span class="sp"></span><button class="btn sm" id="t_add">Nueva</button><button class="btn sm" id="t_dup">Duplicar</button><button class="btn sm" id="t_del">Eliminar</button></div>
           <div class="toollist" id="toolList"></div>
           <div class="codebar adv"><button class="btn sm" data-lib="export">Exportar biblioteca</button><button class="btn sm" data-lib="import">Importar</button><button class="btn sm" id="t_reset">Restaurar las de fábrica</button></div>
-          <p class="hint">Tus herramientas se guardan en este navegador.</p>
+          <p class="hint" id="o_toolstore">Tus herramientas se guardan en este navegador.</p>
         </div>
         <div class="toolfig"><svg id="toolSvg" viewBox="0 0 260 190" aria-label="Perfil de la herramienta"></svg></div>
         <div class="group">
-          <label class="f">Nombre<input id="t_name" type="text" style="font-family:var(--f-ui)"></label>
+          <div class="row">
+            <label class="f">Nombre<input id="t_name" type="text" maxlength="40" style="font-family:var(--f-ui)"></label>
+            <label class="f">Grupo<input id="t_group" type="text" maxlength="30" placeholder="Madera, Aluminio…" list="t_groups" style="font-family:var(--f-ui)"></label>
+          </div>
+          <datalist id="t_groups"></datalist>
           <div class="row">
             <label class="f">Tipo<select id="t_type">
               <option value="ball">Bola (ball nose)</option>

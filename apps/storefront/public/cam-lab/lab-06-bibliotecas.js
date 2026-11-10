@@ -16,7 +16,7 @@ function cleanTool(t,id){
   if(!t||typeof t!=='object'||!TOOL_TYPES.includes(t.type))return null;const D=num(t.D,0,0.05,200);if(!D)return null;const b=DEFAULT_TOOLS[0];
   return{id,num:Math.round(num(t.num,id,1,999)),name:txt(t.name,'Herramienta'),type:t.type,D,r:t.type==='ball'?D/2:num(t.r,0,0,D/2),angle:num(t.angle,90,1,179),tipD:num(t.tipD,1,0,D),taper:num(t.taper,3,0.1,45),
     flutes:Math.round(num(t.flutes,2,1,12)),fluteLen:num(t.fluteLen,b.fluteLen,0.5,400),stickout:num(t.stickout,b.stickout,1,600),shankD:num(t.shankD,D,0.5,200),holderD:num(t.holderD,b.holderD,1,400),holderLen:num(t.holderLen,b.holderLen,1,400),
-    totalLen:num(t.totalLen,0,0,800),mat:TOOL_MATS.includes(t.mat)?t.mat:'carburo',notes:txt(t.notes,'',120)};
+    totalLen:num(t.totalLen,0,0,800),mat:TOOL_MATS.includes(t.mat)?t.mat:'carburo',notes:txt(t.notes,'',120),group:txt(t.group,'',30)};
 }
 function cleanMachine(m){
   if(!m||typeof m!=='object'||!KIN_AXES[m.kin]||!CTRL[m.ctrl])return null;const b=MACHINES.r3;
@@ -33,7 +33,7 @@ function cleanPost(p){
 // Los comandos extra van tal cual al programa: solo caracteres de G-code, sin saltos raros.
 function cleanLines(t){return String(t||'').split(/\r?\n/).map(l=>l.replace(/[^\x20-\x7E]/g,'').trim().slice(0,80)).filter(Boolean).slice(0,12).join('\n');}
 const userMachines=()=>Object.fromEntries(Object.entries(MACHINES).filter(([,m])=>m.user));
-function libSave(){try{localStorage.setItem(LIBKEY,JSON.stringify({tools:S.tools,machines:userMachines(),posts:LIB.posts,mode:LIB.mode}));}catch(e){/* sin almacenamiento: la sesión sigue funcionando */}}
+function libSave(){basePush();try{localStorage.setItem(LIBKEY,JSON.stringify({tools:S.tools,machines:userMachines(),posts:LIB.posts,mode:LIB.mode}));}catch(e){/* sin almacenamiento: la sesión sigue funcionando */}}
 function libMerge(d,replaceTools){
   let n=0;
   if(Array.isArray(d.tools)){const base=replaceTools?[]:S.tools;let id=base.reduce((a,t)=>Math.max(a,t.id),0);
@@ -47,6 +47,7 @@ function libMerge(d,replaceTools){
 function libInit(){
   let d={};try{d=JSON.parse(localStorage.getItem(LIBKEY)||'{}')||{};}catch(e){d={};}
   libMerge(d,true);if(!S.tools.length)S.tools=JSON.parse(JSON.stringify(DEFAULT_TOOLS));
+  if(HETNA.embedded)S.tools=JSON.parse(JSON.stringify(DEFAULT_TOOLS)); // dentro del sitio manda la base compartida, no la copia local
   S.tools.forEach(toolFill);
   if(d.mode==='adv'||d.mode==='guided')LIB.mode=d.mode;
 }
@@ -62,7 +63,7 @@ function toolWarnings(t){
   return a;
 }
 function syncToolExtras(){
-  const t=toolFill(tool());$('#t_total').value=t.totalLen;$('#t_mat').value=t.mat;$('#t_notes').value=t.notes;
+  const t=toolFill(tool());$('#t_group').value=t.group||'';$('#t_groups').innerHTML=[...new Set(S.tools.map(x=>x.group||'').filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');$('#t_total').value=t.totalLen;$('#t_mat').value=t.mat;$('#t_notes').value=t.notes;
   const w=toolWarnings(t);$('#o_toolwarn').hidden=!w.length;$('#o_toolwarn').textContent=w.join(' ');
 }
 /* La Calculadora CNC del sitio vive en la página que envuelve al laboratorio: se le pide el cálculo por mensaje. */
@@ -83,6 +84,42 @@ function onCalcResult(d){
   updateFeedsUI();refreshPostIfAny();
   const av=(d.avisos||[]).slice(0,3).map(x=>String(x).slice(0,300));
   el.className='note'+(av.length?' warn':'');el.textContent=`Calculadora CNC: ${r.rpm} RPM, ${r.avance} mm/min, carga de viruta ${r.carga_viruta} mm por filo; la fresa se flexiona ≈ ${r.deflexion_mm} mm con ${t.stickout} mm de voladizo.`+(av.length?' '+av.join(' '):'');
+}
+/* ---------------- Base de herramientas compartida con el CAM 2D y el torno ----------------
+   Dentro del sitio, las herramientas del cliente viven en su cuenta (o en su navegador sin sesión).
+   El laboratorio las pide a la página que lo envuelve y le devuelve la lista cada vez que cambia.
+   Las de fábrica no se guardan mientras nadie las edite. */
+const BASE={ready:false,timer:0};
+const T2L={bola:'ball',v:'vbit',toroidal:'bull',conica_bola:'taperball',broca:'drill'},L2T={ball:'bola',vbit:'v',bull:'toroidal',taperball:'conica_bola',drill:'broca'};
+const FLAT_2D=['recta','upcut','downcut','compresion','un_filo','planeadora','desbaste'];
+const fprint=t=>JSON.stringify([t.name,t.type,t.D,t.r,t.angle,t.tipD,t.taper,t.flutes,t.fluteLen,t.stickout,t.shankD,t.holderD,t.holderLen,t.totalLen,t.mat,t.notes||'',t.group||'',t.num]);
+function fromBase(f,id){
+  if(!f||typeof f!=='object')return null;const D=+f.diametro,fl=+f.largoCorte||Math.max(10,D*3);
+  const t=cleanTool({type:T2L[f.tipo]||'flat',D,name:f.nombre,num:f.numero||id,r:f.radio,angle:f.angulo,tipD:f.puntaD||1,taper:f.conicidad||3,flutes:f.filos||2,fluteLen:fl,stickout:+f.voladizo||fl+10,shankD:+f.zanco||D,
+    holderD:+f.portaD||30,holderLen:+f.portaLargo||36,totalLen:f.largoTotal,mat:f.materialFresa,notes:f.notas,group:f.grupo},id);
+  if(!t)return null;t.bid=String(f.id||'');t.src=f;return toolFill(t);
+}
+function toBase(t){
+  const src=t.src||{};if(!t.bid)t.bid='l'+t.id+Date.now().toString(36);
+  return{...src,id:t.bid,nombre:t.name,tipo:L2T[t.type]||(FLAT_2D.includes(src.tipo)?src.tipo:'upcut'),diametro:t.D,angulo:t.angle,radio:t.type==='bull'?t.r:0,puntaD:t.tipD,conicidad:t.taper,filos:t.flutes,
+    largoCorte:t.fluteLen,voladizo:t.stickout,zanco:t.shankD,portaD:t.holderD,portaLargo:t.holderLen,largoTotal:t.totalLen,materialFresa:t.mat,numero:t.num,notas:t.notes||'',grupo:t.group||''};
+}
+function basePush(){
+  if(!BASE.ready)return;clearTimeout(BASE.timer);
+  BASE.timer=setTimeout(()=>{const fresas=S.tools.filter(t=>!(t.fab&&t.fab===fprint(t))).map(toBase);const sig=JSON.stringify(fresas);if(sig===BASE.sig)return;BASE.sig=sig;
+    window.parent.postMessage({type:'hetna-cam:tools-save',fresas},location.origin);},700);
+}
+function baseInit(){
+  S.tools.forEach(t=>t.fab=fprint(t));
+  window.addEventListener('message',e=>{
+    if(e.origin!==location.origin||e.source!==window.parent||!e.data)return;const d=e.data;
+    if(d.type==='hetna-cam:tools'&&!BASE.ready){
+      let id=S.tools.reduce((a,t)=>Math.max(a,t.id),0);const mine=(Array.isArray(d.fresas)?d.fresas:[]).slice(0,80).map(f=>fromBase(f,++id)).filter(Boolean);
+      S.tools=S.tools.concat(mine);BASE.sig=JSON.stringify(mine.map(toBase));BASE.ready=true;renderToolList();
+      $('#o_toolstore').textContent=d.sesion?'Tu base de herramientas se guarda en tu cuenta y es la misma del CAM 2D y el torno.':'Tu base de herramientas es la misma del CAM 2D y el torno. Sin sesión se guarda en este navegador.';
+    }else if(d.type==='hetna-cam:tools-saved'&&d.aviso)$('#o_toolstore').textContent=String(d.aviso).slice(0,160)+' Es la misma base del CAM 2D y el torno.';
+  });
+  window.parent.postMessage({type:'hetna-cam:tools-get'},location.origin);
 }
 function libExport(){
   const blob=new Blob([JSON.stringify({hetnaCamLibrary:1,tools:S.tools,machines:userMachines(),posts:LIB.posts},null,2)],{type:'application/json'});
@@ -144,7 +181,7 @@ function initExtrasUI(){
   // bibliotecas
   const save=fn=>function(){const r=fn.apply(this,arguments);libSave();return r;};
   renderToolList=save(renderToolList);syncToolForm=save(syncToolForm);
-  $('#t_reset').addEventListener('click',()=>{S.tools=JSON.parse(JSON.stringify(DEFAULT_TOOLS));S.toolId=1;renderToolList();syncToolForm();buildToolMesh();markStale();toast('Herramientas de fábrica restauradas');});
+  $('#t_reset').addEventListener('click',()=>{const mine=HETNA.embedded?S.tools.filter(t=>!(t.fab&&t.fab===fprint(t))):[];S.tools=JSON.parse(JSON.stringify(DEFAULT_TOOLS)).map(toolFill);if(HETNA.embedded){S.tools.forEach(t=>t.fab=fprint(t));let id=S.tools.length;mine.forEach(t=>{t.id=++id;t.fab=undefined;});S.tools=S.tools.concat(mine);}S.toolId=1;renderToolList();syncToolForm();buildToolMesh();markStale();toast('Herramientas de fábrica restauradas');});
   $('#m_preset').addEventListener('change',()=>{$('#m_del').disabled=!MACHINES[S.presetKey]?.user;});
   $('#m_save').addEventListener('click',()=>{const name=txt($('#m_name').value,'');if(!name){toast('Escribe un nombre para la máquina');return;}
     const c=cleanMachine({...S.machine,name,ctrl:S.post.ctrl});const k=Object.keys(MACHINES).find(q=>MACHINES[q].user&&MACHINES[q].name===name)||('u'+Date.now().toString(36));
@@ -161,10 +198,12 @@ function initExtrasUI(){
   syncToolForm=(fn=>function(){const r=fn.apply(this,arguments);syncToolExtras();return r;})(syncToolForm);
   $('#t_total').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v)&&v>0)tool().totalLen=v;syncToolForm();});
   $('#t_mat').addEventListener('change',e=>{tool().mat=e.target.value;syncToolForm();});
+  $('#t_group').addEventListener('change',e=>{tool().group=txt(e.target.value,'',30);renderToolList();syncToolForm();});
   $('#t_notes').addEventListener('change',e=>{tool().notes=txt(e.target.value,'',120);syncToolForm();});
   if(HETNA.embedded){$('#w_calc').hidden=false;$('#t_calc').addEventListener('click',askCalc);
     window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===window.parent&&e.data&&e.data.type==='hetna-cam:calc-result')onCalcResult(e.data);});}
   syncToolExtras();
+  if(HETNA.embedded)baseInit();
   refreshLibUI();syncPostExtras();initGuide();syncExtrasUI();
 }
 function syncPostExtras(){$('#p_pre').value=S.post.pre;$('#p_end').value=S.post.end;}

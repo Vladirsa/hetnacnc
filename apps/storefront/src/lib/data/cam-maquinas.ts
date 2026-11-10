@@ -20,7 +20,7 @@ export type MaquinaCam = {
 export type FresaCam = {
   id: string
   nombre: string
-  tipo: "recta" | "upcut" | "downcut" | "compresion" | "un_filo" | "bola" | "v" | "planeadora" | "desbaste"
+  tipo: "recta" | "upcut" | "downcut" | "compresion" | "un_filo" | "bola" | "v" | "planeadora" | "desbaste" | "toroidal" | "conica_bola" | "broca"
   diametro: number // diámetro de corte
   angulo: number // sólo fresa en V
   // Ficha técnica; 0 o ausente = sin capturar
@@ -32,6 +32,13 @@ export type FresaCam = {
   materialFresa?: "carburo" | "carburo_rec" | "hss"
   numero?: number // posición T en la máquina
   notas?: string
+  grupo?: string // carpeta de la base: "Madera", "Aluminio", "Grabado"…
+  // Sólo las usa el CAM de 3, 4 y 5 ejes
+  radio?: number // radio de esquina (toroidal)
+  puntaD?: number // diámetro de la punta (cónica de bola)
+  conicidad?: number // grados por lado (cónica de bola)
+  portaD?: number // portaherramienta: diámetro y largo, para colisiones
+  portaLargo?: number
   // Parámetros de corte propios de la fresa; 0 o ausente = los del material
   pasada?: number // profundidad por pasada (mm)
   traslape?: number // % del diámetro que se encima en el cajeado
@@ -44,7 +51,7 @@ export type DatosCam = { maquinas: MaquinaCam[]; fresas: FresaCam[] }
 
 const LLAVE = "cam_estudio"
 const POSTS = ["mach3", "grbl", "linuxcnc", "laser_grbl"]
-const TIPOS_FRESA = ["recta", "upcut", "downcut", "compresion", "un_filo", "bola", "v", "planeadora", "desbaste"]
+const TIPOS_FRESA = ["recta", "upcut", "downcut", "compresion", "un_filo", "bola", "v", "planeadora", "desbaste", "toroidal", "conica_bola", "broca"]
 const MATERIALES_FRESA = ["carburo", "carburo_rec", "hss"]
 
 const texto = (v: unknown, max = 40) => String(v ?? "").replace(/[<>]/g, "").trim().slice(0, max)
@@ -63,7 +70,7 @@ function limpiar(d: unknown): DatosCam {
     tarifa: num(m?.tarifa, 0, 100000, 0),
     smax: num(m?.smax, 1, 100000, 1000),
   }))
-  const fresas = (Array.isArray(o.fresas) ? o.fresas : []).slice(0, 30).map((f: any, i: number) => ({
+  const fresas = (Array.isArray(o.fresas) ? o.fresas : []).slice(0, 80).map((f: any, i: number) => ({
     id: texto(f?.id, 24) || `f${i}`,
     nombre: texto(f?.nombre) || `Fresa ${i + 1}`,
     tipo: (TIPOS_FRESA.includes(f?.tipo) ? f.tipo : "recta") as FresaCam["tipo"],
@@ -77,6 +84,12 @@ function limpiar(d: unknown): DatosCam {
     materialFresa: (MATERIALES_FRESA.includes(f?.materialFresa) ? f.materialFresa : "carburo") as FresaCam["materialFresa"],
     numero: Math.round(num(f?.numero, 0, 999, 0)),
     notas: texto(f?.notas, 200),
+    grupo: texto(f?.grupo, 30),
+    radio: num(f?.radio, 0, 100, 0),
+    puntaD: num(f?.puntaD, 0, 100, 0),
+    conicidad: num(f?.conicidad, 0, 45, 0),
+    portaD: num(f?.portaD, 0, 400, 0),
+    portaLargo: num(f?.portaLargo, 0, 400, 0),
     pasada: num(f?.pasada, 0, 50, 0),
     traslape: num(f?.traslape, 0, 95, 0),
     rpm: num(f?.rpm, 0, 60000, 0),

@@ -38,7 +38,9 @@ function applyPreset(k){S.presetKey=k;S.machine=JSON.parse(JSON.stringify(MACHIN
 function refreshPostIfAny(){if(S.moves&&!S.busy){refreshPost();}}
 /* herramientas */
 function renderToolList(){
-  $('#toolList').innerHTML=S.tools.map(t=>`<button data-id="${t.id}" class="${t.id===S.toolId?'on':''}"><span class="t">T${+t.num||0}</span><span>${esc(t.name)}</span><span class="d">Ø${+t.D||0}</span></button>`).join('');
+  // por grupo, en orden alfabético; las que no tienen grupo al final
+  const gs=[...new Set(S.tools.map(t=>t.group||''))].sort((a,b)=>a===''?1:b===''?-1:a.localeCompare(b,'es'));
+  $('#toolList').innerHTML=gs.map(g=>(gs.length>1?`<div class="grp">${esc(g||'Sin grupo')}</div>`:'')+S.tools.filter(t=>(t.group||'')===g).map(t=>`<button data-id="${t.id}" class="${t.id===S.toolId?'on':''}"><span class="t">T${+t.num||0}</span><span>${esc(t.name)}</span><span class="d">Ø${+t.D||0}</span></button>`).join('')).join('');
 }
 function syncToolForm(){
   const t=tool();$('#t_name').value=t.name;$('#t_type').value=t.type;$('#t_num').value=t.num;$('#t_D').value=t.D;$('#t_r').value=t.r;$('#t_angle').value=t.angle;$('#t_tipD').value=t.tipD;$('#t_taper').value=t.taper;
@@ -75,7 +77,7 @@ function initToolUI(){
   $('#t_name').addEventListener('change',e=>{t().name=e.target.value||'Herramienta';renderToolList();});
   $('#t_type').addEventListener('change',e=>{t().type=e.target.value;if(t().type==='ball')t().r=t().D/2;syncToolForm();buildToolMesh();markStale();});
   $('#t_add').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...DEFAULT_TOOLS[0],id,num:id,name:'Nueva herramienta',totalLen:0,notes:''});S.toolId=id;renderToolList();syncToolForm();buildToolMesh();markStale();});
-  $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)'});S.toolId=id;renderToolList();syncToolForm();});
+  $('#t_dup').addEventListener('click',()=>{const id=Math.max(...S.tools.map(x=>x.id))+1;S.tools.push({...tool(),id,num:id,name:tool().name+' (copia)',bid:undefined,src:undefined,fab:undefined});S.toolId=id;renderToolList();syncToolForm();});
   $('#t_del').addEventListener('click',()=>{if(S.tools.length<2){toast('Debe quedar al menos una herramienta');return;}S.tools=S.tools.filter(x=>x.id!==S.toolId);S.toolId=S.tools[0].id;renderToolList();syncToolForm();buildToolMesh();markStale();});
   fillSelect($('#f_mat'),MATERIALS,S.feeds.mat);
   $('#f_mat').addEventListener('change',e=>{S.feeds.mat=e.target.value;const M=MATERIALS[e.target.value];S.feeds.vc=Math.round((M.vc[0]+M.vc[1])/2);S.feeds.fz=+(((M.fz6[0]+M.fz6[1])/2)*clamp(tool().D/6,0.3,2)).toFixed(3);updateFeedsUI();refreshPostIfAny();});

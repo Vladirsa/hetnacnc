@@ -12,6 +12,12 @@ import type { FresaCam } from "@/lib/data/cam-maquinas"
 type Texto = Record<"diametro" | "zanco" | "largoCorte" | "largoTotal" | "voladizo" | "filos" | "angulo" | "numero" | "pasada" | "traslape" | "rpm" | "avance" | "penetracion", string>
 type Calculo = { carga: number; deflexion: number; avisos: string[] }
 
+// Tipos que sólo usa el CAM de 3, 4 y 5 ejes, con el tipo de la calculadora que más se les parece
+const TIPOS_3D: Record<string, { nombre: string; como: string }> = {
+  toroidal: { nombre: "Toroidal (radio de esquina)", como: "upcut" },
+  conica_bola: { nombre: "Cónica de bola", como: "bola" },
+  broca: { nombre: "Broca", como: "recta" },
+}
 const s = (v?: number) => (v && v > 0 ? String(v) : "")
 const campoTexto = "w-full rounded-[8px] bg-[#1C2431] px-2.5 py-2 text-[13px] text-white outline-none placeholder:text-[#8A97AB] focus:ring-1 focus:ring-[#C2560A]"
 
@@ -30,12 +36,13 @@ export function avisosDeFicha(f: FresaCam): string[] {
   return a
 }
 
-export function FichaFresa({ inicial, guardar, cancelar }: { inicial?: FresaCam; guardar: (f: FresaCam) => void; cancelar?: () => void }) {
+export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicial?: FresaCam; guardar: (f: FresaCam) => void; cancelar?: () => void; grupos?: string[] }) {
   const base = inicial ?? FRESA_NUEVA
   const [nombre, setNombre] = useState(base.nombre)
   const [tipo, setTipo] = useState<FresaCam["tipo"]>(base.tipo)
   const [matFresa, setMatFresa] = useState<NonNullable<FresaCam["materialFresa"]>>(base.materialFresa ?? "carburo")
   const [notas, setNotas] = useState(base.notas ?? "")
+  const [grupo, setGrupo] = useState(base.grupo ?? "")
   const [t, setT] = useState<Texto>({
     diametro: s(base.diametro), zanco: s(base.zanco), largoCorte: s(base.largoCorte), largoTotal: s(base.largoTotal), voladizo: s(base.voladizo), filos: s(base.filos), angulo: s(base.angulo), numero: s(base.numero),
     pasada: s(base.pasada), traslape: s(base.traslape), rpm: s(base.rpm), avance: s(base.avance), penetracion: s(base.penetracion),
@@ -49,7 +56,8 @@ export function FichaFresa({ inicial, guardar, cancelar }: { inicial?: FresaCam;
   const n = (k: keyof Texto) => Math.max(0, numero(t[k]) || 0)
 
   const ficha = (): FresaCam => ({
-    id: base.id, nombre: nombre.trim(), tipo, materialFresa: matFresa, notas: notas.trim(),
+    ...base, // conserva lo que esta ficha no edita (radio de esquina, portaherramienta…)
+    id: base.id, nombre: nombre.trim(), tipo, materialFresa: matFresa, notas: notas.trim(), grupo: grupo.trim(),
     diametro: n("diametro"), angulo: n("angulo") || 90, zanco: n("zanco"), largoCorte: n("largoCorte"), largoTotal: n("largoTotal"), voladizo: n("voladizo"), filos: Math.round(n("filos")), numero: Math.round(n("numero")),
     pasada: n("pasada"), traslape: n("traslape"), rpm: n("rpm"), avance: n("avance"), penetracion: n("penetracion"),
   })
@@ -63,7 +71,7 @@ export function FichaFresa({ inicial, guardar, cancelar }: { inicial?: FresaCam;
     const mq = MAQUINAS_ROUTER[maquina]
     const R = calcRouter({
       maquina, potencia_kw: mq.potencia_kw, rpm_min: mq.rpm_min, rpm_max: mq.rpm_max, avance_max: mq.avance_max, material,
-      diametro: f.diametro, filos: f.filos || undefined, tipo_fresa: tipo, material_fresa: matFresa, voladizo: f.voladizo || f.largoCorte || 25,
+      diametro: f.diametro, filos: f.filos || undefined, tipo_fresa: TIPOS_3D[tipo]?.como ?? tipo, material_fresa: matFresa, voladizo: f.voladizo || f.largoCorte || 25,
       operacion: tipo === "v" ? "grabado_v" : operacion,
     })
     const d = R.datos as Record<string, number>
@@ -78,11 +86,20 @@ export function FichaFresa({ inicial, guardar, cancelar }: { inicial?: FresaCam;
     <div className="flex flex-col gap-2.5 rounded-[10px] border border-[#2B3648] bg-[#111722] p-3">
       <b className="text-[13px]">{inicial ? "Editar herramienta" : "Alta de herramienta"}</b>
       <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre (ej. Compresión 1/4 2 filos)" maxLength={40} className={campoTexto} />
+      <input value={grupo} onChange={(e) => setGrupo(e.target.value)} placeholder="Grupo (ej. Madera, Aluminio, Grabado)" maxLength={30} list="grupos-fresa" className={campoTexto} />
+      <datalist id="grupos-fresa">
+        {grupos.map((g) => (
+          <option key={g} value={g} />
+        ))}
+      </datalist>
       <div className="grid grid-cols-2 gap-2">
         <label className="flex min-w-0 flex-col gap-1">
           <span className="text-[12.5px] text-[#C9D2E0]">Tipo</span>
           <select value={tipo} onChange={(e) => setTipo(e.target.value as FresaCam["tipo"])} className={campoTexto}>
             {Object.entries(TIPOS_FRESA).map(([k, v]) => (
+              <option key={k} value={k}>{v.nombre}</option>
+            ))}
+            {Object.entries(TIPOS_3D).map(([k, v]) => (
               <option key={k} value={k}>{v.nombre}</option>
             ))}
           </select>
