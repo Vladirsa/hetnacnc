@@ -18,6 +18,7 @@ export default async function PanelInicio({ params, searchParams }: { params: Pr
   await exigirPagina(locale, "inicio")
   const { d } = await searchParams
   const dias = [1, 7, 30, 90].includes(Number(d)) ? Number(d) : 7
+  const SITIO = (process.env.NEXT_PUBLIC_BASE_URL || "https://hetnacnc.com").replace(/\/$/, "")
   let c: Control | null = null, error = ""
   try { c = await adminFetch<Control>(`/admin/hetna-control?dias=${dias}`) } catch (e) { error = (e as Error).message }
 
@@ -28,6 +29,22 @@ export default async function PanelInicio({ params, searchParams }: { params: Pr
           <a key={n} href={`/${locale}/panel?d=${n}`} className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${dias === n ? "border-[#142033] bg-[#142033] text-white" : "border-[#E7E4DC] bg-white text-[#40403A]"}`}>{n === 1 ? "Hoy" : `${n} días`}</a>
         ))}
       </div>
+      <Tarjeta>
+        <Titulo>Administrar</Titulo>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            ["📦", "Productos", "/dashboard/products"], ["🧾", "Pedidos", "/dashboard/orders"], ["🏭", "Talleres", "/dashboard/sellers"],
+            ["📋", "Solicitudes", "/dashboard/solicitudes"], ["🚚", "Envíos", "/dashboard/envios"], ["💳", "Saldos", "/dashboard/saldos"],
+            ["🏷️", "Cupones", "/dashboard/promotions"], ["📰", "Blog", "/dashboard/blog"], ["📱", "App Cotizador", "/dashboard/cotizador"],
+            ["🎛️", "Centro de control", "/dashboard/control"], ["👤", "Clientes", "/dashboard/customers"], ["⚙️", "Ajustes", "/dashboard/settings"],
+          ].map(([ic, n, ruta]) => (
+            <a key={ruta} href={`${SITIO}${ruta}`} target="_blank" rel="noreferrer" className="rounded-xl bg-[#F8F7F2] px-2 py-3 text-[12px] font-semibold text-[#142033] hover:bg-[#EFEDE6]">
+              <span className="block text-xl">{ic}</span>{n}
+            </a>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-[#9A968B]">Abre el dashboard completo (mejor en tablet o computadora). Las acciones del día a día están en las pestañas de abajo.</p>
+      </Tarjeta>
       {error && <Vacio>No pude leer el centro de control: {error}</Vacio>}
       {c && (
         <>

@@ -1,14 +1,17 @@
 // HETNA Panel → Licitaciones: solicitudes de fabricación por etapa.
 import { Etiqueta, Pestanas, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace, pesos } from "@/lib/panel/sesion"
+import { puedeActuar } from "@/lib/panel/roles"
+import { AccionesLicitacion } from "@/components/hetna/panel/Acciones"
 
 type Sol = { id: string; folio: string; modo: string; estado: string; etapa: string; etapa_nombre: string; creada: string; cierra_en?: string; trabajo: { servicio?: string; material?: string; cantidad?: string; ciudad?: string; descripcion?: string; archivos?: { nombre: string }[] }; contacto: { nombre?: string; empresa?: string; telefono?: string; correo?: string; ciudad?: string }; propuestas: number; pago_estado?: string; pago_monto?: number | null; liga_cliente?: string }
 
-const ETAPAS = [["en_revision", "Por revisar"], ["publicada", "Publicadas"], ["con_propuestas", "Con propuestas"], ["adjudicada", "Adjudicadas"], ["en_fabricacion", "En fabricación"], ["entregada", "Entregadas"], ["todas", "Todas"]] as const
+const ETAPAS = [["en_revision", "Por revisar"], ["nueva", "Nuevas"], ["enviada_talleres", "Con talleres"], ["cotizada", "Cotizadas"], ["aceptada", "Aceptadas"], ["en_produccion", "En producción"], ["entregada", "Entregadas"], ["cerrada", "Cerradas"], ["cancelada", "Canceladas"], ["todas", "Todas"]] as const
+const ETAPAS_MOVER = ETAPAS.filter(([k]) => k !== "todas").map(([clave, nombre]) => ({ clave, nombre }))
 
 export default async function PanelLicitaciones({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ f?: string }> }) {
   const { locale } = await params
-  await exigirPagina(locale, "licitaciones")
+  const yo = await exigirPagina(locale, "licitaciones")
   const { f } = await searchParams
   const etapa = f || "en_revision"
   let data: { totales: Record<string, number>; solicitudes: Sol[] } = { totales: {}, solicitudes: [] }, error = ""
@@ -33,9 +36,11 @@ export default async function PanelLicitaciones({ params, searchParams }: { para
               <p className="mt-1 text-[11px] text-[#9A968B]">{hace(s.creada)} · {s.propuestas} propuesta(s){s.pago_monto ? ` · pago ${pesos(s.pago_monto)} ${s.pago_estado || ""}` : ""}{s.trabajo?.archivos?.length ? ` · ${s.trabajo.archivos.length} archivo(s)` : ""}</p>
               <div className="mt-1.5 flex gap-3 text-[12px] font-semibold">
                 {s.contacto?.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(s.contacto.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer">WhatsApp</a>}
-                <a className="text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer">Revisar</a>
+                {s.contacto?.correo && <a className="text-[#40403A]" href={`mailto:${s.contacto.correo}`}>Correo</a>}
                 {s.liga_cliente && <a className="text-[#1D4F8C]" href={s.liga_cliente} target="_blank" rel="noreferrer">Ver como cliente</a>}
+                <a className="text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer">Dashboard</a>
               </div>
+              {puedeActuar(yo.rol, "licitaciones") && <AccionesLicitacion id={s.id} etapa={s.etapa} etapas={ETAPAS_MOVER} />}
             </li>
           ))}
         </ul>

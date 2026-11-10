@@ -1,14 +1,16 @@
 // HETNA Panel → Talleres: verificaciones (expedientes) por estado.
 import { Etiqueta, Pestanas, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace } from "@/lib/panel/sesion"
+import { puedeActuar } from "@/lib/panel/roles"
+import { AccionesVerificacion } from "@/components/hetna/panel/Acciones"
 
-type Exp = { seller_id: string; nombre: string; handle: string; email: string; telefono: string; estado: string; motivo?: string; enviado_en?: string; revisado_en?: string; archivos: { tipo: string }[]; faltan: string[] }
+type Exp = { seller_id: string; nombre: string; handle: string; email: string; telefono: string; estado: string; motivo?: string; enviado_en?: string; revisado_en?: string; archivos: { id: string; tipo: string; mime?: string }[]; faltan: string[] }
 const ESTADOS = [["en_revision", "Por revisar"], ["verificado", "Verificados"], ["rechazado", "Rechazados"], ["borrador", "Sin enviar"], ["todos", "Todos"]] as const
 const COLOR: Record<string, "ambar" | "verde" | "rojo" | "gris"> = { en_revision: "ambar", verificado: "verde", rechazado: "rojo", borrador: "gris" }
 
 export default async function PanelTalleres({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ f?: string }> }) {
   const { locale } = await params
-  await exigirPagina(locale, "talleres")
+  const yo = await exigirPagina(locale, "talleres")
   const { f } = await searchParams
   const estado = f || "en_revision"
   let lista: Exp[] = [], error = ""
@@ -30,10 +32,19 @@ export default async function PanelTalleres({ params, searchParams }: { params: 
               </div>
               <p className="mt-0.5 text-[12px] text-[#6B675C]">{t.email}{t.telefono ? ` · ${t.telefono}` : ""} · {t.archivos.length} documento(s){t.faltan?.length ? ` · faltan: ${t.faltan.join(", ")}` : ""}</p>
               <p className="text-[11px] text-[#9A968B]">{t.enviado_en ? `enviado ${hace(t.enviado_en)}` : ""}{t.motivo ? ` · ${t.motivo}` : ""}</p>
+              {t.archivos.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {t.archivos.map((a) => (
+                    <a key={a.id} href={`/api/app/panel/archivo?seller=${t.seller_id}&id=${a.id}`} target="_blank" rel="noreferrer" className="rounded-md bg-[#E8F0FB] px-2 py-1 text-[11px] font-semibold text-[#1D4F8C]">📄 {a.tipo}</a>
+                  ))}
+                </div>
+              )}
               <div className="mt-1.5 flex gap-3 text-[12px] font-semibold">
                 {t.handle && <a className="text-[#1D4F8C]" href={`${SITIO}/${locale}/talleres/${t.handle}`} target="_blank" rel="noreferrer">Ver perfil</a>}
-                <a className="text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer">Revisar expediente</a>
+                {t.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(t.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer">WhatsApp</a>}
+                <a className="text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer">Dashboard</a>
               </div>
+              {puedeActuar(yo.rol, "talleres") && <AccionesVerificacion sellerId={t.seller_id} estado={t.estado} />}
             </li>
           ))}
         </ul>
