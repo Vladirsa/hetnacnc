@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+Busca prospectos del nicho CNC con ScrapeGraphAI y los agrega (sin duplicar)
+a datos/nuevos.jsonl, con las mismas columnas que la hoja de prospectos.
+
+    pip install -r requirements.txt && playwright install chromium
+    export LLM_MODEL="openai/gpt-4o-mini"   # o "anthropic/claude-haiku-...", "groq/llama-3.3-70b-versatile", "ollama/llama3.1"
+    export LLM_API_KEY="..."                # no hace falta con ollama
+    python buscar_prospectos.py --max-por-consulta 15
+
+Reglas: sólo datos de contacto de negocio publicados en el sitio de la
+empresa. El modelo tiene prohibido inventar correos y además cada correo se
+valida contra el texto de la página: si no aparece literal, se descarta.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+import urllib.request
+from datetime import date
+from pathlib import Path
+from urllib.parse import urlparse
+
+AQUI = Path(__file__).resolve().parent
+DATOS = AQUI / "datos"
+SALIDA = DATOS / "nuevos.jsonl"
+CAMPOS = [
+    "empresa", "tipo", "segmento", "tamano", "pais", "estado", "ciudad", "web", "dominio",
+    "email", "telefono", "whatsapp", "facebook", "instagram", "linkedin", "youtube", "tiktok",
+    "productos_servicios", "idioma", "fuente_url",
+]
+EMAIL_RE = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$", re.I)
+NO_EMPRESA = ("facebook.com", "instagram.com", "linkedin.com", "youtube.com", "mercadolibre.", "amazon.",
+              "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas")
+
+
+def config_llm() -> dict:
+    modelo = os.environ.get("LLM_MODEL", "openai/gpt-4o-mini")
+    llm = {"model": modelo, "temperature": 0}
+    if not modelo.startswith("ollama/"):
+        clave = os.environ.get("LLM_API_KEY")
+        if not clave:
+            sys.exit("Falta LLM_API_KEY (o usa LLM_MODEL=ollama/...)")
+        llm["api_key"] = clave
+    else:
+        llm["base_url"] = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+        llm["format"] = "json"
+    return {"llm": llm, "headless": True, "verbose": False}
+
+
+def dominio_de(url: str) -> str:
+    try:
+        host = urlparse(url if "://" in url else f"https://{url}").netloc.lower()
+    except ValueError:
+        return ""
+    return host[4:] if host.startswith("www.") else host
+
+
+def ya_vistos() -> set[str]:
+    """Dominios y correos que ya están en cualquier archivo de datos/ (no se repiten)."""
+    vistos: set[str] = set()
+    for f in DATOS.glob("*.jsonl"):
+        for linea in f.read_text(encoding="utf-8").splitlines():
+            try:
+                d = json.loads(linea)
+            except json.JSONDecodeError:
+                continue
+            for k in ("dominio", "email"):
+                if d.get(k):
+                    vistos.add(d[k].strip().lower())
+    return vistos
+
+
+def texto_pagina(url: str) -> str:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (prospectos HETNA)"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.read(2_000_000).decode("utf-8", "ignore").lower()
+    except Exception:
+        return ""
+
+
+def buscar_sitios(consulta: str, maximo: int, cfg: dict) -> list[str]:
+    from scrapegraphai.graphs import SearchGraph
+
+    g = SearchGraph(
+        prompt=(f"{consulta}. Devuelve JSON {{\"sitios\": [url, ...]}} con hasta {maximo} URLs de los sitios web "
+                "oficiales de empresas distintas (no directorios, no marketplaces, no redes sociales)."),
+        config={**cfg, "max_results": maximo},
+    )
+    r = g.run() or {}
+    urls = r.get("sitios") or r.get("content", {}).get("sitios") or []
+    urls += g.get_considered_urls() if hasattr(g, "get_considered_urls") else []
+    limpias, vistos = [], set()
+    for u in urls:
+        if not isinstance(u, str) or not u.startswith("http"):
+            continue
+        d = dominio_de(u)
+        if d and d not in vistos and not any(x in d for x in NO_EMPRESA):
+            vistos.add(d)
+            limpias.append(f"https://{d}")
+    return limpias[:maximo]
+
+
+PROMPT_CONTACTO = """Extrae los datos de contacto de NEGOCIO publicados en este sitio.
+Devuelve JSON con: empresa, tamano ("Pequeña"|"Mediana"|"Grande", estimado), estado, ciudad,
+email (correo de la empresa tal cual aparece en la página; si no aparece literal deja ""),
+telefono, whatsapp, facebook, instagram, linkedin, youtube, tiktok (URLs completas),
+productos_servicios (frase corta), es_cnc (true si la empresa trabaja con CNC, maquinado,
+router, láser, plasma, herramientas o cursos de CNC).
+NUNCA inventes ni deduzcas correos. No incluyas datos personales privados."""
+
+
+def extraer_contacto(url: str, cfg: dict) -> dict:
+    from scrapegraphai.graphs import SmartScraperGraph
+
+    for ruta in ("", "/contacto", "/contact"):
+        try:
+            r = SmartScraperGraph(prompt=PROMPT_CONTACTO, source=url + ruta, config=cfg).run() or {}
+        except Exception:
+            continue
+        r = r.get("content", r) if isinstance(r, dict) else {}
+        if r.get("email") or r.get("telefono") or r.get("whatsapp"):
+            r["fuente_url"] = url + ruta
+            return r
+    return {}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--consultas", default=str(AQUI / "consultas.txt"))
+    ap.add_argument("--max-por-consulta", type=int, default=10)
+    ap.add_argument("--enviar", metavar="URL", help="webhook 'Importar prospectos' de n8n: manda lo nuevo a la hoja (n8n quita duplicados)")
+    args = ap.parse_args()
+
+    cfg = config_llm()
+    DATOS.mkdir(exist_ok=True)
+    vistos = ya_vistos()
+    nuevos = 0
+
+    for linea in Path(args.consultas).read_text(encoding="utf-8").splitlines():
+        if not linea.strip() or linea.startswith("#"):
+            continue
+        pais, tipo, idioma, consulta = [p.strip() for p in linea.split("|", 3)]
+        print(f"\n🔎 {consulta}")
+        for url in buscar_sitios(consulta, args.max_por_consulta, cfg):
+            dom = dominio_de(url)
+            if dom in vistos:
+                continue
+            c = extraer_contacto(url, cfg)
+            if not c or c.get("es_cnc") is False:
+                continue
+            email = (c.get("email") or "").strip().lower()
+            if email and (not EMAIL_RE.match(email) or email not in texto_pagina(c["fuente_url"])):
+                email = ""  # no aparece literal en la página: se descarta
+            if email in vistos:
+                continue
+            fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
+            fila.update(tipo=tipo, pais=pais, idioma=idioma, web=url, dominio=dom, email=email,
+                        segmento=consulta, fuente_url=c["fuente_url"])
+            with SALIDA.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(fila, ensure_ascii=False) + "\n")
+            vistos.update({dom, email} - {""})
+            nuevos += 1
+            print(f"  ✔ {fila['empresa'] or dom}  {email or fila['telefono']}")
+
+    print(f"\n{nuevos} prospectos nuevos → {SALIDA}  ({date.today()})")
+    if args.enviar and SALIDA.exists():
+        lista = [json.loads(l) for l in SALIDA.read_text(encoding="utf-8").splitlines() if l.strip()]
+        for p in lista:
+            p["id"] = p.get("dominio", "")
+            p["region"] = p.pop("estado", "")
+        req = urllib.request.Request(args.enviar, data=json.dumps({"prospectos": lista}).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=60) as r:
+            print(f"Enviados {len(lista)} a n8n ({r.status}); n8n agrega sólo los que no estén en la hoja.")
+
+
+if __name__ == "__main__":
+    main()
