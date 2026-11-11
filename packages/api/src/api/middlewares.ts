@@ -123,6 +123,12 @@ export default defineMiddlewares({
           matcher: "/vendor/hetna-cloud/proyectos/:id/archivos",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: MAX_MB_ARCHIVO_CLOUD, forma: "lista" })],
         },
+        // CAM Studio 2D → "Guardar en HetNa Cloud" (dibujo + G-code, máx. 10 MB c/u)
+        {
+          method: ["POST"],
+          matcher: "/store/hetna-cloud/cam",
+          middlewares: [authenticate("customer", ["session", "bearer"]), leerMultipart({ campos: { dxf: 1, gcode: 1 }, maxMb: 10 })],
+        },
         // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
         {
           method: ["POST"],
