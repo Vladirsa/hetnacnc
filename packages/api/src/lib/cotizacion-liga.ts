@@ -41,7 +41,7 @@ export const REDIRECT_MP = `${API}/cotizador-mp/callback`
 
 export const mpConexionLista = () => Boolean(appId() && clientSecret())
 
-// ── Comisión HETNA por plan ────────────────────────────────────────────
+// ── Comisión HETNA por plan ──────────────────────────────────────────────
 export const COMISION_TOPE = Number(process.env.COTIZADOR_COMISION_TOPE || 150)
 export function comisionPct(plan: string | null | undefined, trialHasta?: string | null) {
   const p = String(plan || "").toLowerCase()
@@ -57,7 +57,7 @@ export function comisionHetna(monto: number, plan: string | null | undefined, tr
   return { pct, monto: Math.min(COMISION_TOPE, Math.max(0, c)) }
 }
 
-// ── Lectura de la cotización por token ─────────────────────────────────
+// ── Lectura de la cotización por token ─────────────────────────────────────
 const CAMPOS_COT =
   "id,folio,negocio_id,cliente_id,estado,subtotal,descuento_pct,descuento_fijo,iva_pct,iva_monto,costo_envio,total,metodo_pago,condicion_entrega,fecha_entrega,dias_habiles,vigencia_dias,notas,pdf_url,token_publico,liga_vista_en,aceptada_en,aceptada_por,anticipo_monto,anticipo_pagado,anticipo_estado,created_at"
 
@@ -196,8 +196,15 @@ async function asegurarPedido(c, montoPagado: number, logger?: any) {
 }
 
 async function negocioDe(id: string) {
-  const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta&limit=1`)
-  return filas[0] || null
+  // codigo_referido viene de supabase/referidos.sql del Cotizador; si ese SQL
+  // aún no se corre, se lee sin él.
+  try {
+    const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta,codigo_referido&limit=1`)
+    return filas[0] || null
+  } catch {
+    const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta&limit=1`)
+    return filas[0] || null
+  }
 }
 
 async function configDe(negocioId: string) {
@@ -335,6 +342,9 @@ export async function paginaPublica(token: string) {
       logo: config?.logo_url || null,
       sitio: config?.sitio_web || null,
       direccion: config?.direccion || null,
+      // Para la invitación "¿Tienes un taller?" al pie de la liga: si otro taller
+      // la abre y se registra, cuenta como invitado de este.
+      ref: negocio?.codigo_referido || null,
     },
     cliente: cliente ? { nombre: cliente.nombre, empresa: cliente.empresa } : null,
     items: items.map((i) => ({
@@ -414,7 +424,7 @@ export async function aceptar(token: string, nombre: string) {
   return { ok: true, en }
 }
 
-// ── Mercado Pago con el token del taller ───────────────────────────────
+// ── Mercado Pago con el token del taller ────────────────────────────────────────
 export async function mpCon<T = any>(token: string, ruta: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${MP_API}${ruta}`, {
     ...init,
@@ -872,7 +882,7 @@ export async function desconectarPaypal(sesion: string | undefined) {
   return { ok: true }
 }
 
-// ── OAuth: conectar la cuenta del taller ───────────────────────────────
+// ── OAuth: conectar la cuenta del taller ─────────────────────────────────────────
 const firmar = (datos: string) => createHmac("sha256", clientSecret() || "sin-secreto").update(datos).digest("base64url")
 
 export async function ligaParaConectar(sesion: string | undefined) {
