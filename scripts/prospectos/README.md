@@ -9,7 +9,7 @@ HETNA** o **se dan de baja**.
 
 | Pieza | Dónde |
 |---|---|
-| Hoja de prospectos | Google Sheets «HETNA · Prospectos CNC» (id `1KlM-qhS-AMcciyXTMmpZAXKz8STHshJpsY5Icbxcqts`) |
+| Hoja de prospectos | Google Sheets «HETNA · Prospectos CNC» (id `1ZgZPQ4ZqsbneZpZCueNY4c1iBy0MnQJQ7Y8qb2v3KQo`) |
 | Flujo de n8n | «Prospectos HETNA - Campaña de correo CNC» (`https://n8n.hetnacnc.com/workflow/KsYUdRyd9fcbmYys`) |
 | Aviso de registro | `packages/api/src/subscribers/prospecto-registrado-n8n.ts` |
 | Raspador (ScrapeGraphAI) | `buscar_prospectos.py` + `consultas.txt` |
