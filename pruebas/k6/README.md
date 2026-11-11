@@ -1,0 +1,52 @@
+# Pruebas de rendimiento con k6
+
+Miden si hetnacnc.com aguanta y responde rápido. **Sólo hacen lecturas (GET)**:
+no crean carritos, no inician sesión, no mandan cotizaciones ni suman vistas.
+
+| Script | Qué mide |
+|---|---|
+| `tienda.js` | Recorrido de un comprador: inicio → categorías → producto → talleres → feed de catálogo. Tiempos por página, TTFB, errores y peso del HTML. |
+| `api.js` | API `/store` de Medusa (productos, producto por handle, categorías). Necesita la llave publicable. |
+| `navegador.js` | Core Web Vitals (LCP, FCP, CLS, TTFB) en Chromium con pantalla de celular. |
+
+## Instalar k6
+
+Con Go instalado (así se probó aquí, k6 v1.8.2):
+
+```bash
+go install go.k6.io/k6@latest
+```
+
+Otras opciones (apt, brew, binario): https://grafana.com/docs/k6/latest/set-up/install-k6/
+
+## Correr
+
+```bash
+# Humo: 1 usuario, 30 s. Seguro en producción a cualquier hora.
+k6 run pruebas/k6/tienda.js
+
+# Carga: 10 usuarios simultáneos ~4.5 min. Sólo en horario de poco tráfico.
+PERFIL=carga k6 run pruebas/k6/tienda.js
+
+# Estrés: hasta 60 usuarios. Puede tumbar el VPS: avisar antes y vigilar pm2.
+PERFIL=estres k6 run pruebas/k6/tienda.js
+
+# API (la llave es NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY; nunca la subas al repo)
+PUBLISHABLE_KEY=pk_xxx k6 run pruebas/k6/api.js
+
+# Web Vitals con navegador real
+K6_BROWSER_ARGS=no-sandbox k6 run pruebas/k6/navegador.js
+```
+
+Variables: `BASE_URL` (por omisión `https://hetnacnc.com`; usa `http://localhost:3000`
+para local), `PAIS` (`mx`), `PERFIL` (`humo` | `carga` | `estres`), `API_URL`, `ITERACIONES`.
+
+Si un umbral (`thresholds`) no se cumple, k6 termina con código ≠ 0. Sirve para CI
+o para un cron que avise por n8n.
+
+## Umbrales
+
+- Errores < 1 %, checks > 99 %.
+- Páginas p95 < 1.5 s; TTFB p95 < 1.2 s; API p95 < 0.8 s.
+- Web Vitals con los umbrales "buenos" de Google: LCP < 2.5 s, FCP < 1.8 s, CLS < 0.1, TTFB < 0.8 s.
+- `feed: con productos` falla si el catálogo de Google sale vacío: sin eso no hay anuncios de Shopping.
