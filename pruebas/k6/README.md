@@ -49,4 +49,7 @@ o para un cron que avise por n8n.
 - Errores < 1 %, checks > 99 %.
 - Páginas p95 < 1.5 s; TTFB p95 < 1.2 s; API p95 < 0.8 s.
 - Web Vitals con los umbrales "buenos" de Google: LCP < 2.5 s, FCP < 1.8 s, CLS < 0.1, TTFB < 0.8 s.
-- `feed: con productos` falla si el catálogo de Google sale vacío: sin eso no hay anuncios de Shopping.
+- `feed Meta: con productos` falla si el catálogo de Meta sale vacío (sin él no hay anuncios dinámicos).
+  El de Google sólo se reporta en consola: excluye servicios, créditos y descargables a propósito.
+- Cada respuesta ≠ 200 se imprime como `FALLO <hora> <código> <ruta>` para cruzarla con
+  `pm2 logs hetna-web` y el `error.log` de nginx.

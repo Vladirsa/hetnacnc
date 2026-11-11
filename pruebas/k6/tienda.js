@@ -31,6 +31,13 @@ export function setup() {
 function pagina(nombre, ruta, marcador) {
   const r = http.get(`${BASE_URL}${ruta}`, { tags: { pagina: nombre } })
   pesoHtml.add(r.body ? r.body.length / 1024 : 0, { pagina: nombre })
+  if (r.status !== 200) {
+    // Deja rastro para cruzarlo con `pm2 logs hetna-web` y el error.log de nginx.
+    console.error(
+      `FALLO ${new Date().toISOString()} ${r.status} ${ruta} ${r.timings.duration.toFixed(0)}ms ` +
+        String(r.body || "").slice(0, 200).replace(/\s+/g, " "),
+    )
+  }
   check(r, {
     [`${nombre}: 200`]: (x) => x.status === 200,
     [`${nombre}: contenido`]: (x) => !marcador || (x.body || "").includes(marcador),
@@ -39,28 +46,34 @@ function pagina(nombre, ruta, marcador) {
 }
 
 export default function (datos) {
-  group("inicio", () => pagina("inicio", `/${PAIS}`, "</html>"))
+  group("inicio", () => pagina("inicio", `/${PAIS}`, "Inicio | HETNA CNC"))
   sleep(1 + Math.random() * 2)
 
-  group("categorias", () => pagina("categorias", `/${PAIS}/categories`, "</html>"))
+  group("categorias", () => pagina("categorias", `/${PAIS}/categories`, "Todos los productos | HETNA CNC"))
   sleep(1 + Math.random() * 2)
 
   if (datos.productos.length) {
-    group("producto", () => pagina("producto", elegir(datos.productos), "</html>"))
+    group("producto", () => pagina("producto", elegir(datos.productos), "| HETNA CNC</title>"))
     sleep(2 + Math.random() * 3)
   }
 
-  group("talleres", () => pagina("talleres", `/${PAIS}/talleres`, "</html>"))
+  group("talleres", () => pagina("talleres", `/${PAIS}/talleres`, "Talleres CNC en México | HETNA CNC"))
   sleep(1)
 
   // Los feeds los leen Google y Meta para los anuncios automáticos.
+  // Meta debe traer productos; Google puede salir vacío a propósito (excluye
+  // servicios, créditos y descargables), así que sólo se reporta.
   if (__ITER % 5 === 0) {
     group("feed", () => {
-      const r = http.get(`${BASE_URL}/feeds/resumen.json`, { tags: { pagina: "feed" } })
+      const r = http.get(`${BASE_URL}/feeds/resumen.json?catalogo=meta`, { tags: { pagina: "feed" } })
       check(r, {
         "feed: 200": (x) => x.status === 200,
-        "feed: con productos": (x) => (x.json("en_catalogo") || 0) > 0,
+        "feed Meta: con productos": (x) => (x.json("en_catalogo") || 0) > 0,
       })
+      if (__ITER === 0) {
+        const g = http.get(`${BASE_URL}/feeds/resumen.json`, { tags: { pagina: "feed" } })
+        if (g.status === 200) console.log(`Catálogo Google: ${g.json("en_catalogo")} productos elegibles`)
+      }
     })
   }
 }

@@ -31,7 +31,12 @@ export function setup() {
 
 async function visitar(page, ruta) {
   const r = await page.goto(`${BASE_URL}${ruta}`, { waitUntil: "load" })
-  check(r, { [`${ruta}: 200`]: (x) => x && x.status() === 200 })
+  // goto devuelve null cuando la navegación la atiende el service worker del
+  // sitio; en ese caso no hay código HTTP y se valida por el título.
+  const titulo = await page.title()
+  const ok = (!r || r.status() === 200) && titulo.includes("HETNA CNC")
+  if (!ok) console.warn(`FALLO ${ruta}: ${r ? r.status() : "sin respuesta"} "${titulo}"`)
+  check(ok, { [`${ruta}: carga con título`]: (x) => x })
   await page.waitForTimeout(1500) // deja que se reporten LCP y CLS
 }
 
