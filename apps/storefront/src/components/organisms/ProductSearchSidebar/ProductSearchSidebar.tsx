@@ -23,19 +23,9 @@ export type FacetModel = {
 }
 
 export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
-  const [isMobile, setIsMobile] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
   const { allSearchParams } = useGetAllSearchParams()
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
 
   const attributeEntries = Object.entries(facets.attributes || {})
 
@@ -50,9 +40,11 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
       />
     ))
 
-  return isMobile ? (
+  // Celular y escritorio salen desde el HTML y CSS elige cuál se ve: antes el servidor pintaba
+  // los filtros de escritorio en el celular y al cargar se cambiaban por el botón, y el listado brincaba.
+  return (
     <>
-      <Button onClick={() => setIsOpen(true)} className="w-full uppercase mb-4">
+      <Button onClick={() => setIsOpen(true)} className="w-full uppercase mb-4 md:hidden">
         Filtros
       </Button>
       {isOpen && (
@@ -71,15 +63,14 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
           </div>
         </Modal>
       )}
+      <div className="hidden md:block">
+        {/* Precio y existencia se filtran después de la consulta:
+            lib/helpers/filtrar-listado.ts y searchProducts. */}
+        <OrdenDisponibilidad />
+        <PriceFilter />
+        {renderAttributeFilters()}
+      </div>
     </>
-  ) : (
-    <div>
-      {/* Precio y existencia se filtran después de la consulta:
-          lib/helpers/filtrar-listado.ts y searchProducts. */}
-      <OrdenDisponibilidad />
-      <PriceFilter />
-      {renderAttributeFilters()}
-    </div>
   )
 }
 
