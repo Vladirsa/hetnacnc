@@ -5,29 +5,30 @@
 
 import { type Calculadora, type Campo, type Entrada, type Preset, type Resultado, bloque, clamp, fmt, interp, masCercana, minutos, nuevo, num, opciones, r, txt } from "./comun"
 
-// [espesor mm, velocidad mm/min] acero al carbón, velocidad de PRODUCCIÓN (70–80% de la máxima
-// que publican los fabricantes; a la máxima el corte sale con más bisel y escoria)
+// [espesor mm, velocidad mm/min] acero al carbón, velocidad de PRODUCCIÓN (columna "Production" de las
+// tablas de corte Hypertherm Powermax 45 XP/65/85/105, por debajo de la máxima: a la máxima el corte sale
+// con más bisel y escoria). 30 y 125 A son estimadas a partir de las vecinas.
 const TABLA: Record<string, number[][]> = {
   "30": [[1, 6500], [1.5, 5000], [3, 2000], [6, 600], [8, 350]],
   "45": [[1.5, 8000], [3, 5500], [6, 2200], [10, 900], [12, 600], [16, 350]],
   "65": [[3, 6400], [6, 2900], [10, 1500], [12, 1120], [16, 720], [20, 480], [25, 240]],
-  "85": [[3, 7200], [6, 4000], [10, 2250], [12, 1680], [16, 1120], [20, 800], [25, 480], [32, 200]],
-  "105": [[6, 4800], [10, 2800], [12, 2240], [16, 1520], [20, 1120], [25, 720], [32, 440], [38, 200]],
+  "85": [[3, 7200], [6, 4000], [10, 2250], [12, 1680], [16, 930], [20, 800], [25, 480], [32, 200]],
+  "105": [[6, 4800], [10, 2800], [12, 2240], [16, 1310], [20, 1120], [25, 720], [32, 440], [38, 200]],
   "125": [[6, 5600], [10, 3450], [12, 2720], [16, 1920], [20, 1440], [25, 960], [32, 600], [38, 420], [44, 280]],
 }
 // alturas (mm) y voltaje de arco típico por amperaje
 const AJUSTES: Record<string, { corte: number; perforacion: number; voltaje: [number, number]; kerf: number; aire: string; boquilla: string }> = {
   "30": { corte: 1.5, perforacion: 3.5, voltaje: [95, 115], kerf: 1.1, aire: "5.5 bar, 110 l/min", boquilla: "boquilla 30 A, electrodo estándar" },
-  "45": { corte: 1.5, perforacion: 3.8, voltaje: [110, 130], kerf: 1.3, aire: "5.9 bar, 190 l/min", boquilla: "boquilla 45 A + escudo" },
+  "45": { corte: 1.5, perforacion: 3.8, voltaje: [125, 141], kerf: 1.3, aire: "5.9 bar, 190 l/min", boquilla: "boquilla 45 A + escudo" },
   "65": { corte: 1.5, perforacion: 3.8, voltaje: [120, 140], kerf: 1.7, aire: "5.9 bar, 190–210 l/min", boquilla: "boquilla 65 A + escudo" },
-  "85": { corte: 1.5, perforacion: 3.8, voltaje: [125, 150], kerf: 2.0, aire: "5.9 bar, 190–210 l/min", boquilla: "boquilla 85 A + escudo" },
-  "105": { corte: 2.0, perforacion: 4.0, voltaje: [135, 160], kerf: 2.4, aire: "5.9–6.2 bar, 220–260 l/min", boquilla: "boquilla 105 A + escudo" },
-  "125": { corte: 2.0, perforacion: 4.5, voltaje: [140, 170], kerf: 2.8, aire: "5.9 bar, 280 l/min", boquilla: "boquilla 125 A + escudo" },
+  "85": { corte: 1.5, perforacion: 3.8, voltaje: [120, 133], kerf: 1.7, aire: "5.9 bar, 190–210 l/min", boquilla: "boquilla 85 A + escudo" },
+  "105": { corte: 3.2, perforacion: 6.4, voltaje: [135, 160], kerf: 1.9, aire: "5.9–6.2 bar, 220–260 l/min", boquilla: "boquilla 105 A + escudo" },
+  "125": { corte: 3.2, perforacion: 6.4, voltaje: [140, 170], kerf: 2.8, aire: "5.9 bar, 280 l/min", boquilla: "boquilla 125 A + escudo" },
 }
-export const MAT_PLASMA: Record<string, { nombre: string; vel: number; esp: number; gas?: string; nota?: string }> = {
+export const MAT_PLASMA: Record<string, { nombre: string; vel: number; velGrueso?: number; esp: number; gas?: string; nota?: string }> = {
   acero_dulce: { nombre: "Acero al carbón", vel: 1, esp: 1 },
   inoxidable: { nombre: "Acero inoxidable", vel: 0.8, esp: 1, gas: "aire (canto oscuro) o N₂ (más limpio)", nota: "Con aire el canto queda negro y oxidado; para soldar después, límpialo con disco." },
-  aluminio: { nombre: "Aluminio", vel: 1.45, esp: 1, nota: "Se corta más rápido que el acero; si vas lento deja mucha escoria. Altura exacta. Peligro: nunca cortes aluminio sobre una mesa de agua cerrada (hidrógeno)." },
+  aluminio: { nombre: "Aluminio", vel: 1.4, velGrueso: 1.15, esp: 1, nota: "Se corta más rápido que el acero; si vas lento deja mucha escoria. Altura exacta. Peligro: nunca cortes aluminio sobre una mesa de agua cerrada (hidrógeno)." },
   galvanizado: { nombre: "Lámina galvanizada", vel: 0.95, esp: 1, nota: "El zinc suelta humo tóxico: extracción obligatoria." },
 }
 export const FUENTES_PLASMA: Record<string, { nombre: string; vel: number; kerf: number; nota: string }> = {
@@ -62,24 +63,28 @@ export const calcPlasma = (e: Entrada): Resultado => {
   const aj = AJUSTES[clave]
   const espEq = esp / M.esp
   const maxCalidad = tabla[tabla.length - 1][0] * M.esp
-  let v = interp(tabla, espEq, 1, true) * M.vel * F.vel
+  // el aluminio corre ~1.4× el acero en lámina de 6 mm pero sólo ~1.15× de 12 mm para arriba (tablas Hypertherm)
+  const velM = M.velGrueso === undefined ? M.vel : M.vel + (M.velGrueso - M.vel) * clamp((esp - 6) / 6, 0, 1)
+  let v = interp(tabla, espEq, 1, true) * velM * F.vel
   if (espEq > tabla[tabla.length - 1][0]) {
     const u = tabla[tabla.length - 1]
-    v = u[1] * Math.pow(u[0] / espEq, 1.5) * M.vel * F.vel
+    v = u[1] * Math.pow(u[0] / espEq, 1.5) * velM * F.vel
   }
   // amperaje de más para lámina muy delgada: escala la velocidad al mínimo útil
   if (espEq < tabla[0][0]) {
-    v = tabla[0][1] * Math.min(2, tabla[0][0] / espEq) * M.vel * F.vel
+    v = tabla[0][1] * Math.min(2, tabla[0][0] / espEq) * velM * F.vel
     R.avisos.push(`${fmt(esp, 1)} mm es delgado para ${clave} A: va a derretir la orilla. Baja el amperaje (30–45 A con boquilla fina) o sube la velocidad al máximo de tu máquina.`)
     R.confianza -= 15
   }
   const retardo = esp <= 3 ? 0.1 : esp <= 6 ? 0.3 : esp <= 10 ? 0.5 : esp <= 16 ? 0.8 : esp <= 25 ? 1.2 : 2
   const kerf = aj.kerf * F.kerf + esp * 0.03
+  // las tablas de 65 y 85 A suben la perforación a 4.5 mm desde 12 mm de espesor
+  const perforacion = (clave === "65" || clave === "85") && esp >= 12 ? 4.5 : aj.perforacion
 
   const b = bloque(R, "Corte")
   b.filas.push({ etiqueta: "Velocidad de corte", valor: `${fmt(v)} mm/min`, nota: "ajusta ±15% según la escoria", destacado: true })
   b.filas.push({ etiqueta: "Altura de corte", valor: `${fmt(aj.corte, 1)} mm`, destacado: true })
-  b.filas.push({ etiqueta: "Altura de perforación", valor: `${fmt(aj.perforacion, 1)} mm`, nota: "≈ 2.5 veces la de corte" })
+  b.filas.push({ etiqueta: "Altura de perforación", valor: `${fmt(perforacion, 1)} mm`, nota: "2 a 3 veces la de corte" })
   b.filas.push({ etiqueta: "Retardo de perforación", valor: `${fmt(retardo, 1)} s` })
   if (txt(e.thc) !== "no") b.filas.push({ etiqueta: "Voltaje de arco (THC)", valor: `${aj.voltaje[0]}–${aj.voltaje[1]} V`, nota: "mide el real a la altura de corte y fija ese; sube 1–2 V por cada 0.1 mm más de altura" })
   b.filas.push({ etiqueta: "Ancho de corte (kerf)", valor: `${fmt(kerf, 1)} mm`, nota: "compénsalo en el CAM" })
@@ -108,7 +113,7 @@ export const calcPlasma = (e: Entrada): Resultado => {
   R.consejos.push(F.nota)
   R.consejos.push("La tabla del fabricante de TU antorcha y consumibles manda; esto sirve para cotizar y arrancar.")
   R.consejos.push("Protección: careta o lentes para corte por plasma (sombra 5 a 8 según el amperaje; revisa el manual de tu fuente), guantes y ropa de algodón o cuero. El arco quema la vista aunque sólo lo veas de reojo.")
-  R.datos = { ...R.datos, velocidad_mm_min: r(v), altura_corte: aj.corte, altura_perforacion: aj.perforacion, retardo_s: retardo, kerf_mm: r(kerf, 1), voltaje: `${aj.voltaje[0]}-${aj.voltaje[1]}`, tabla_amperes: clave }
+  R.datos = { ...R.datos, velocidad_mm_min: r(v), altura_corte: aj.corte, altura_perforacion: perforacion, retardo_s: retardo, kerf_mm: r(kerf, 1), voltaje: `${aj.voltaje[0]}-${aj.voltaje[1]}`, tabla_amperes: clave }
   R.confianza = clamp(R.confianza, 20, 100)
   return R
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   addToCart as apiAddToCart,
@@ -23,9 +24,38 @@ export function CartProvider({ cart, children }: CartProviderProps) {
   const [isUpdatingItem, setIsUpdatingItem] = useState(false);
   const [isRemovingItem, setIsRemovingItem] = useState(false);
 
+  // Sólo si el servidor manda un carrito (/cart, /checkout). Fuera de ahí el
+  // layout manda null siempre, también al refrescarse tras una acción, y eso
+  // no debe borrar el carrito que ya pidió el navegador.
   useEffect(() => {
-    setCartState(cart);
+    if (cart) setCartState(cart);
   }, [cart]);
+
+  // El HTML ya no trae el carrito (salvo en /cart y /checkout): lo pide el
+  // navegador si la cookie hetna_carrito dice que hay uno. Corre al cargar y en
+  // cada cambio de página: así también lo encuentran los carritos anteriores a
+  // la cookie, a los que el middleware se la pone en la primera navegación.
+  //   - Sin bandera no se pide nada (no suma una llamada por visita) y, si
+  //     quedaba un carrito en pantalla, se quita: el servidor borra la bandera
+  //     al terminar la compra o cerrar sesión (removeCartId).
+  //   - Si retrieveCart devuelve null NO se borra la bandera: también devuelve
+  //     null cuando el API no contesta (p. ej. 10 s de un despliegue).
+  const ruta = usePathname();
+  const carritoActual = useRef(cartState);
+  carritoActual.current = cartState;
+  useEffect(() => {
+    const hayCarrito = document.cookie.split('; ').some(c => c === 'hetna_carrito=1');
+    if (!hayCarrito) {
+      setCartState(prev => (prev ? null : prev));
+      return;
+    }
+    if (carritoActual.current) return;
+    retrieveCart()
+      .then(c => {
+        if (c) setCartState(c);
+      })
+      .catch(() => {});
+  }, [ruta]);
 
   const refreshCart = useCallback(async () => {
     try {
