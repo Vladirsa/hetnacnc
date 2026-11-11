@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { WHATSAPP_HETNA } from "@/lib/hetna/distribuidor"
+import { FormDistribuidor } from "@/components/hetna/distribuidor/FormDistribuidor"
 
 // Página para distribuidores de máquinas CNC (router, láser, plasma, fibra):
 // les ofrecemos un código propio para regalar meses de HETNA Taller con cada
@@ -20,14 +20,13 @@ const POR_QUE = [
 ]
 
 const PASOS = [
-  "Nos escribes por WhatsApp con el nombre de tu empresa y qué máquinas vendes.",
-  "Te damos tu código (por ejemplo TUEMPRESA90) y tu página propia en hetnacnc.com/distribuidores/TUCODIGO.",
+  "Llenas el formulario de abajo con tu empresa y qué máquinas vendes.",
+  "Te mandamos por correo tu código (por ejemplo TUEMPRESA90) y tu página propia en hetnacnc.com/distribuidores/TUCODIGO.",
   "Entregas el código o un QR con la página junto con cada máquina.",
   "Tu cliente entra, se registra y recibe los días de HETNA Taller al instante.",
 ]
 
 export default function DistribuidoresPage() {
-  const wa = `https://wa.me/${WHATSAPP_HETNA}?text=${encodeURIComponent("Hola, vendo máquinas CNC y quiero mi código de distribuidor HETNA.")}`
   return (
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
@@ -40,7 +39,7 @@ export default function DistribuidoresPage() {
             Router, láser CO₂, plasma o fibra: tu cliente recibe <strong className="text-white">hasta 3 meses del Cotizador HETNA</strong> para cotizar, controlar su taller y empezar a cobrar desde la primera semana.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a href={wa} target="_blank" rel="noopener" className="rounded-xl bg-[#1FA855] px-7 py-3.5 text-lg font-semibold text-white no-underline hover:brightness-110">
+            <a href="#solicitud" className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white no-underline hover:brightness-110">
               Quiero mi código de distribuidor
             </a>
             <a href="/cotizador/" className="text-white/80 underline">Ver el Cotizador</a>
@@ -82,6 +81,13 @@ export default function DistribuidoresPage() {
             </ul>
             <p className="mt-3 text-[12px] text-[#6B675C]">El código vale para talleres nuevos, en sus primeros 30 días. Al terminar los días de regalo, el taller decide si sigue con un plan de pago o con el plan gratis.</p>
           </div>
+        </div>
+      </section>
+      <section id="solicitud" className="mx-auto max-w-[760px] scroll-mt-20 px-4 pb-16 lg:px-6">
+        <h2 className="text-center text-2xl font-extrabold text-[#142033]">Pide tu código de distribuidor</h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-[#6B675C]">Sin costo. Revisamos tu solicitud y te llega tu código por correo.</p>
+        <div className="mt-6 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
+          <FormDistribuidor />
         </div>
       </section>
     </main>
