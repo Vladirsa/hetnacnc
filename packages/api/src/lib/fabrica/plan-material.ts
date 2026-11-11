@@ -19,6 +19,7 @@ import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
 import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
+import { vozLocal } from "./voz-local"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
 
@@ -189,6 +190,14 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         logger?.warn?.(`[fabrica] voz del plan (${idioma}): ${(e as Error).message}; los videos salen sin voz`)
       }
     }
+  }
+
+  // Sin RunPod (o si falló): voz local de respaldo para que no salgan mudos
+  for (const f of videos) {
+    if (voces[f.id]) continue
+    const g = guiones[f.id]
+    const v = await vozLocal([g.gancho, ...g.frases, g.cierre], idiomaDe(f.mercado), logger)
+    if (v) voces[f.id] = v
   }
 
   let hechos = 0

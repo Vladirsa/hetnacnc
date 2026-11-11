@@ -16,6 +16,7 @@ import { limpiar, oraciones, palabras } from "./plan-material"
 import { cuadroVideo, lamina, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
+import { vozLocal } from "./voz-local"
 
 export const T_PROMO = "hetna_promo"
 const IMG = (f: string) => `${STORE_URL}/img/herramientas/${f}`
@@ -83,15 +84,16 @@ async function asegurarPromo(knex: any) {
 
 /** Voz de RunPod para una lista de frases (null si no hay RunPod o falla: el video sale sin voz). */
 export async function vozPara(nombre: string, frases: string[], mercado: string, logger?: any) {
-  if (!runpodListo()) return null
+  const respaldo = () => vozLocal(frases, idiomaDe(mercado), logger)
+  if (!runpodListo()) return respaldo()
   try {
     const idioma = idiomaDe(mercado)
     const out = await correr({ tarea: "voz", voz: VOZ(idioma, "hombre"), idioma, lotes: [{ frases, clave: `fabrica/promo/${nombre}-voz.wav` }] }, { logger, topeMin: 15 })
     const l = out.lotes?.[0]
-    return l ? { ...l, url: (await ligasB2([l.clave], 7200))[0] } : null
+    return l ? { ...l, url: (await ligasB2([l.clave], 7200))[0] } : respaldo()
   } catch (e) {
-    logger?.warn?.(`[promo] voz: ${(e as Error).message}`)
-    return null
+    logger?.warn?.(`[promo] voz de RunPod: ${(e as Error).message}; uso la voz local`)
+    return respaldo()
   }
 }
 
@@ -104,17 +106,7 @@ async function videoCon(scope: any, nombre: string, d: { gancho: string; frases:
   if (!ffmpegDisponible()) return null
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   const frases = d.frases.slice(0, 3)
-  let voz: any = null
-  if (runpodListo()) {
-    try {
-      const idioma = idiomaDe(d.mercado)
-      const out = await correr({ tarea: "voz", voz: VOZ(idioma, "hombre"), idioma, lotes: [{ frases: [d.gancho, ...frases, d.cierre], clave: `fabrica/promo/${nombre}-voz.wav` }] }, { logger, topeMin: 15 })
-      const l = out.lotes?.[0]
-      if (l) voz = { ...l, url: (await ligasB2([l.clave], 7200))[0] }
-    } catch (e) {
-      logger?.warn?.(`[promo] voz: ${(e as Error).message}`)
-    }
-  }
+  const voz: any = await vozPara(nombre, [d.gancho, ...frases, d.cierre], d.mercado, logger)
   const foto = async (k: number) => d.fotos[k % Math.max(1, d.fotos.length)] || (await fondoDe(knex, d.tema))
   const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
   const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: d.gancho, tema: d.tema, foto_url: await foto(0), semilla: 1 }), segundos: dur(0, 2.4) }]

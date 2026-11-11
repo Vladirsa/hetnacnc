@@ -134,6 +134,28 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     || printf '\033[33m%s\033[0m\n' "No se pudo instalar FFmpeg; los cortos de video no se producirán hasta instalarlo (apt-get install -y ffmpeg)."
 fi
 
+# Voz de respaldo para los videos (Piper, licencia MIT, corre en CPU): si
+# RunPod no responde, la voz se hace aquí. Voces es_MX y en_US. Si no se puede
+# descargar, sólo avisa. (Autorizado por el dueño el 11 nov 2026.)
+PIPER_DIR=/opt/piper
+if [ ! -x "$PIPER_DIR/piper/piper" ]; then
+  paso "Instalando la voz de respaldo (Piper)"
+  mkdir -p "$PIPER_DIR/voces" \
+    && curl -fsSL https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz | tar -xz -C "$PIPER_DIR" \
+    && verde "✓ Piper instalado" \
+    || printf '\033[33m%s\033[0m\n' "No se pudo instalar Piper; los videos usarán sólo la voz de RunPod."
+fi
+if [ -x "$PIPER_DIR/piper/piper" ]; then
+  for v in es/es_MX/claude/high/es_MX-claude-high en/en_US/lessac/medium/en_US-lessac-medium; do
+    f="$PIPER_DIR/voces/$(basename "$v").onnx"
+    if [ ! -s "$f" ]; then
+      curl -fsSL -o "$f" "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/$v.onnx" \
+        && curl -fsSL -o "$f.json" "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/$v.onnx.json" \
+        && verde "✓ Voz $(basename "$v")" || { rm -f "$f"; printf '\033[33m%s\033[0m\n' "No se pudo bajar la voz $(basename "$v")."; }
+    fi
+  done
+fi
+
 paso "Construyendo (si esto falla, el sitio NO se toca)"
 # La tienda se construye en la carpeta que NO está sirviendo (.next-a o
 # .next-b) y se cambia de carpeta al reiniciar. Antes se construía encima de

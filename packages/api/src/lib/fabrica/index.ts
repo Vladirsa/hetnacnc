@@ -23,6 +23,7 @@ import { GUIAS, instanteEn, lunesDe } from "../estrategia"
 import { TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { PROMPTS_TEMA, VOZ, bajarB2, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
+import { vozLocal } from "./voz-local"
 
 export const T_TRABAJO = "hetna_fabrica_trabajo"
 export const T_FONDO = "hetna_fabrica_fondo"
@@ -267,6 +268,15 @@ export async function producir(scope: any, id: string, logger?: any) {
         voces = voces.map((v: any, k: number) => ({ ...v, url: urls[k] }))
       } catch (er) {
         piezas.aviso_voz = `La voz no se pudo generar (${(er as Error).message}); los cortos salieron sin voz.`
+      }
+    }
+    // Sin voz de RunPod: voz local de respaldo (Piper) para que los cortos no salgan mudos
+    if (ffmpegDisponible() && e.voz !== "ninguna") {
+      for (let i = 0; i < p.cortos.length; i++) {
+        if (voces[i]?.url) continue
+        const c = p.cortos[i]
+        const v = await vozLocal([c.gancho, ...(c.frases || []).slice(0, 3), cierreTxt], idioma, logger)
+        if (v) voces[i] = v
       }
     }
     if (ffmpegDisponible()) {

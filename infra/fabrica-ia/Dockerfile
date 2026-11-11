@@ -3,7 +3,7 @@
 # contexto de build es la RAÍZ del repositorio (por eso los COPY usan la ruta
 # completa). Los modelos NO van dentro de la imagen: se descargan la primera
 # vez y, con un volumen de red montado en /runpod-volume, se guardan ahí.
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 FUENTES_DIR=/app/fonts
 WORKDIR /app
