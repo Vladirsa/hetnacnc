@@ -115,9 +115,13 @@ export const listProducts = async ({
     return { response: { products: [], count: 0 }, nextPage: null, fallo: true };
   }
 
-  const llaveFicha = queryParams?.handle?.length
-    ? JSON.stringify([region.id, queryParams, category_id, collection_id, offset])
-    : null;
+  const auth = await getAuthHeaders();
+  // Sólo visitantes sin sesión: la respuesta de un cliente con sesión puede
+  // traer precios suyos y no debe servírsele a nadie más.
+  const llaveFicha =
+    queryParams?.handle?.length && !('authorization' in auth)
+      ? JSON.stringify([region.id, queryParams, category_id, collection_id, offset])
+      : null;
 
   return (
     sdk.store.products.query({
@@ -129,7 +133,7 @@ export const listProducts = async ({
       fields: PRODUCT_LIST_FIELDS,
       ...queryParams,
       fetchOptions: {
-        headers: { ...(await getAuthHeaders()) },
+        headers: { ...auth },
         cache: 'force-cache',
         next: getGlobalCacheOptions(CACHE_TAGS.products),
       },
@@ -138,6 +142,8 @@ export const listProducts = async ({
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null;
 
+      // El API contestó que ya no existe (borrado o suspendido): se olvida la copia.
+      if (llaveFicha && !products?.length) ultimasFichas.delete(llaveFicha);
       if (llaveFicha && products?.length) {
         if (ultimasFichas.size >= ULTIMAS_FICHAS_MAX && !ultimasFichas.has(llaveFicha)) {
           ultimasFichas.delete(ultimasFichas.keys().next().value as string);
