@@ -9,23 +9,23 @@ import { type Calculadora, type Campo, type Entrada, type Preset, type Resultado
 export const IMPRESORAS: Record<string, { nombre: string; vel: number; flujo: number; acel: number; cerrada: boolean; nota: string }> = {
   basica: { nombre: "Básica (Ender 3, Anet, Creality clásica)", vel: 60, flujo: 10, acel: 500, cerrada: false, nota: "Hotend de PTFE: máximo 240–250 °C; no imprimas nylon ni policarbonato sin cambiarlo a all-metal." },
   directa: { nombre: "Mejorada / extrusor directo (Ender 3 S1, Sovol, Prusa MK3)", vel: 80, flujo: 15, acel: 1500, cerrada: false, nota: "Buena con TPU y PETG; ABS sólo con cerramiento improvisado." },
-  rapida: { nombre: "Rápida CoreXY (Bambu P1/X1, Creality K1, Voron, Prusa MK4)", vel: 200, flujo: 25, acel: 10000, cerrada: true, nota: "El límite ya no es la velocidad del eje sino el flujo del hotend: capas gruesas van a menos mm/s." },
+  rapida: { nombre: "Rápida CoreXY (Bambu P1/X1, Creality K1, Voron, Prusa MK4)", vel: 200, flujo: 22, acel: 10000, cerrada: true, nota: "El límite ya no es la velocidad del eje sino el flujo del hotend: capas gruesas van a menos mm/s." },
   industrial: { nombre: "Industrial cerrada (Ultimaker, Raise3D, Fortus)", vel: 100, flujo: 20, acel: 3000, cerrada: true, nota: "Cámara caliente: ABS, ASA, PC y nylon sin deformación." },
   resina_mono: { nombre: "Resina LCD mono 2K–4K (Mars, Photon Mono, Saturn)", vel: 0, flujo: 0, acel: 0, cerrada: true, nota: "Exposición corta (1.5–3 s) y capas de 0.05 mm." },
   resina_8k: { nombre: "Resina LCD 8K–12K (Saturn 3, Photon M5, Sonic Mighty)", vel: 0, flujo: 0, acel: 0, cerrada: true, nota: "Píxel de 18–24 µm: detalle de joyería y miniaturas; necesita resinas 8K de baja viscosidad." },
 }
 export const PRESETS_3D: Preset[] = Object.entries(IMPRESORAS).map(([id, p]) => ({ id, nombre: p.nombre, valores: { impresora: id } }))
 
-type Mat3D = { nombre: string; grupo: "fdm" | "resina"; dens: number; temp?: [number, number]; cama?: [number, number]; vel?: number; velFactor?: number; ventilador?: string; retraccion?: string; secar?: string; nota: string; precioKg: number }
+type Mat3D = { nombre: string; grupo: "fdm" | "resina"; dens: number; temp?: [number, number]; cama?: [number, number]; vel?: number; velFactor?: number; flujoFactor?: number; ventilador?: string; retraccion?: string; secar?: string; nota: string; precioKg: number }
 export const MAT_3D: Record<string, Mat3D> = {
   pla: { nombre: "PLA", grupo: "fdm", dens: 1.24, temp: [200, 215], cama: [55, 60], velFactor: 1, ventilador: "100% desde la capa 2", retraccion: "bowden 5–6 mm / directo 0.8–1.5 mm a 40 mm/s", nota: "El más fácil. Se ablanda a 55 °C: no para piezas al sol o en el coche.", precioKg: 380 },
   pla_plus: { nombre: "PLA+ / PLA Pro", grupo: "fdm", dens: 1.24, temp: [210, 225], cama: [55, 65], velFactor: 1, ventilador: "100%", retraccion: "igual que PLA", nota: "Más tenaz que el PLA normal; mismo manejo.", precioKg: 420 },
-  petg: { nombre: "PETG", grupo: "fdm", dens: 1.27, temp: [230, 245], cama: [70, 85], velFactor: 0.8, ventilador: "30–50%", retraccion: "bowden 4–5 mm / directo 0.8–1.2 mm, más lenta (30 mm/s)", secar: "sí, 65 °C 4–6 h si lleva semanas abierto", nota: "Resistente y algo flexible; hila (stringing) si va caliente o con poca retracción. No lo imprimas sobre PEI liso sin pegamento: se pega de más y arranca la cama.", precioKg: 420 },
-  abs: { nombre: "ABS", grupo: "fdm", dens: 1.04, temp: [235, 250], cama: [95, 110], velFactor: 0.8, ventilador: "0–20%", retraccion: "bowden 5 mm / directo 1 mm", secar: "sí, 70 °C 4 h", nota: "Necesita cerramiento: sin él se despega y agrieta. Huele y suelta estireno: ventila.", precioKg: 400 },
-  asa: { nombre: "ASA", grupo: "fdm", dens: 1.07, temp: [240, 255], cama: [95, 105], velFactor: 0.8, ventilador: "0–20%", retraccion: "como ABS", secar: "sí, 70 °C 4 h", nota: "Como ABS pero resiste sol e intemperie: para piezas de exterior.", precioKg: 520 },
-  tpu: { nombre: "TPU 95A (flexible)", grupo: "fdm", dens: 1.21, temp: [220, 235], cama: [40, 60], velFactor: 0.35, ventilador: "50–100%", retraccion: "mínima o cero en bowden; directo 0.5–1 mm", secar: "sí, 60 °C 4 h", nota: "Lento (20–35 mm/s) y mejor con extrusor directo. En bowden, desactiva retracción y baja la velocidad a 15–20.", precioKg: 650 },
-  nylon: { nombre: "Nylon / PA (incl. PA-CF)", grupo: "fdm", dens: 1.14, temp: [245, 270], cama: [70, 100], velFactor: 0.7, ventilador: "0–30%", retraccion: "directo 1–2 mm", secar: "OBLIGATORIO, 80 °C 8–12 h y caja seca al imprimir", nota: "Absorbe humedad en horas: si burbujea o sale con pelos, está húmedo. Hotend all-metal y cama con pegamento (PVA) o garolite.", precioKg: 900 },
-  pc: { nombre: "Policarbonato / PC-CF", grupo: "fdm", dens: 1.2, temp: [260, 290], cama: [100, 120], velFactor: 0.6, ventilador: "0–20%", retraccion: "directo 1–1.5 mm", secar: "sí, 80 °C 6 h", nota: "Pieza de ingeniería (resiste calor y golpes): cerramiento, hotend all-metal y cama a 110 °C.", precioKg: 1100 },
+  petg: { nombre: "PETG", grupo: "fdm", dens: 1.27, temp: [230, 245], cama: [70, 85], velFactor: 0.8, flujoFactor: 0.6, ventilador: "30–50%", retraccion: "bowden 4–5 mm / directo 0.8–1.2 mm, más lenta (30 mm/s)", secar: "sí, 65 °C 4–6 h si lleva semanas abierto", nota: "Resistente y algo flexible; hila (stringing) si va caliente o con poca retracción. No lo imprimas sobre PEI liso sin pegamento: se pega de más y arranca la cama.", precioKg: 420 },
+  abs: { nombre: "ABS", grupo: "fdm", dens: 1.04, temp: [235, 250], cama: [95, 110], velFactor: 0.8, flujoFactor: 0.7, ventilador: "0–20%", retraccion: "bowden 5 mm / directo 1 mm", secar: "sí, 70 °C 4 h", nota: "Necesita cerramiento: sin él se despega y agrieta. Huele y suelta estireno: ventila.", precioKg: 400 },
+  asa: { nombre: "ASA", grupo: "fdm", dens: 1.07, temp: [240, 255], cama: [95, 105], velFactor: 0.8, flujoFactor: 0.7, ventilador: "0–20%", retraccion: "como ABS", secar: "sí, 70 °C 4 h", nota: "Como ABS pero resiste sol e intemperie: para piezas de exterior.", precioKg: 520 },
+  tpu: { nombre: "TPU 95A (flexible)", grupo: "fdm", dens: 1.21, temp: [220, 235], cama: [40, 60], velFactor: 0.35, flujoFactor: 0.18, ventilador: "50–100%", retraccion: "mínima o cero en bowden; directo 0.5–1 mm", secar: "sí, 60 °C 4 h", nota: "Lento (20–35 mm/s) y mejor con extrusor directo. En bowden, desactiva retracción y baja la velocidad a 15–20.", precioKg: 650 },
+  nylon: { nombre: "Nylon / PA (incl. PA-CF)", grupo: "fdm", dens: 1.14, temp: [245, 270], cama: [70, 100], velFactor: 0.7, flujoFactor: 0.35, ventilador: "0–30%", retraccion: "directo 1–2 mm", secar: "OBLIGATORIO, 80 °C 8–12 h y caja seca al imprimir", nota: "Absorbe humedad en horas: si burbujea o sale con pelos, está húmedo. Hotend all-metal y cama con pegamento (PVA) o garolite.", precioKg: 900 },
+  pc: { nombre: "Policarbonato / PC-CF", grupo: "fdm", dens: 1.2, temp: [260, 290], cama: [100, 120], velFactor: 0.6, flujoFactor: 0.4, ventilador: "0–20%", retraccion: "directo 1–1.5 mm", secar: "sí, 80 °C 6 h", nota: "Pieza de ingeniería (resiste calor y golpes): cerramiento, hotend all-metal y cama a 110 °C.", precioKg: 1100 },
   resina_estandar: { nombre: "Resina estándar", grupo: "resina", dens: 1.12, nota: "Frágil pero muy detallada; para piezas decorativas y moldes maestros.", precioKg: 600 },
   resina_abs: { nombre: "Resina tipo ABS / tenaz", grupo: "resina", dens: 1.1, nota: "Aguanta golpes y roscas; exposición un poco más larga.", precioKg: 750 },
   resina_lavable: { nombre: "Resina lavable con agua", grupo: "resina", dens: 1.13, nota: "Sin alcohol: más fácil de limpiar, un poco más frágil.", precioKg: 650 },
@@ -94,12 +94,14 @@ export const calc3D = (e: Entrada): Resultado => {
     const velBase = Pz.vel * (M.velFactor ?? 1)
     // límite por flujo del hotend: mm³/s = capa × ancho × velocidad
     const ancho = boq * 1.1
-    const velFlujo = (Pz.flujo * (M.velFactor ?? 1)) / (capa * ancho)
+    // cada material tiene su propio tope de flujo: el PETG, el TPU y el nylon funden más lento que el PLA
+    const flujoMax = Pz.flujo * (M.flujoFactor ?? M.velFactor ?? 1)
+    const velFlujo = flujoMax / (capa * ancho)
     const vel = Math.round(Math.min(velBase, velFlujo) / 5) * 5
     const b = bloque(R, "Parámetros")
     b.filas.push({ etiqueta: "Temperatura de boquilla", valor: `${M.temp![0]}–${M.temp![1]} °C`, nota: vel > 120 ? "sube 5–10 °C a velocidad alta" : undefined, destacado: true })
     b.filas.push({ etiqueta: "Cama", valor: `${M.cama![0]}–${M.cama![1]} °C`, destacado: true })
-    b.filas.push({ etiqueta: "Velocidad de impresión", valor: `${fmt(vel)} mm/s`, nota: velFlujo < velBase ? `limitada por el flujo del hotend (${fmt(Pz.flujo * (M.velFactor ?? 1))} mm³/s)` : "paredes exteriores a la mitad", destacado: true })
+    b.filas.push({ etiqueta: "Velocidad de impresión", valor: `${fmt(vel)} mm/s`, nota: velFlujo < velBase ? `limitada por el flujo del hotend (${fmt(flujoMax, 1)} mm³/s con este material)` : "paredes exteriores a la mitad", destacado: true })
     b.filas.push({ etiqueta: "Primera capa", valor: `${fmt(Math.min(25, vel / 2))} mm/s, ${fmt(capa * 1.2, 2)} mm, ${M.temp![0] + 5} °C` })
     b.filas.push({ etiqueta: "Ventilador de capa", valor: M.ventilador || "100%" })
     b.filas.push({ etiqueta: "Retracción", valor: M.retraccion || "estándar" })

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import type { Calculadora, Campo, Entrada, Resultado } from "@/lib/calculadora/comun"
+import type { Calculadora, Campo, Entrada, Medidor, Resultado } from "@/lib/calculadora/comun"
 import { PROCESOS, procesoPorId } from "@/lib/calculadora"
 
 // Calculadora CNC profesional: la interfaz se arma a partir de la descripción
@@ -40,12 +40,12 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
   }, [f])
   return (
     <label className="flex flex-col gap-1 min-w-0">
-      <span className="text-[13px] font-semibold text-[#1B1B18]">
+      <span className="text-[12.5px] font-semibold text-[#40403A]">
         {f.etiqueta}
         {f.req && <span className="text-[#C2560A]"> *</span>}
       </span>
       {f.tipo === "opcion" ? (
-        <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
+        <span className="flex items-center rounded-[10px] border border-[#DEDACF] bg-[#FBFAF7] transition focus-within:border-[#C2560A] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(194,86,10,0.14)]">
           <select value={String(valor ?? "")} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[15px] text-[#1B1B18] bg-transparent outline-none">
             {grupos
               ? grupos.map(([g, os]) => (
@@ -61,14 +61,14 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
           </select>
         </span>
       ) : (
-        <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
+        <span className="flex items-center rounded-[10px] border border-[#DEDACF] bg-[#FBFAF7] transition focus-within:border-[#C2560A] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(194,86,10,0.14)]">
           <input
             type="text"
             inputMode={f.tipo === "numero" ? "decimal" : "text"}
             value={valor === undefined || valor === null ? "" : String(valor)}
             onChange={(e) => cambiar(e.target.value)}
             placeholder={f.req ? "necesario" : "opcional"}
-            className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none placeholder:text-[#C5C2B8]"
+            className="w-full min-w-0 bg-transparent px-3 py-2.5 font-mono text-[16px] text-[#142033] outline-none placeholder:font-sans placeholder:text-[#C5C2B8]"
           />
           {f.unidad && <span className="pr-3 text-[13px] text-[#9A978C] whitespace-nowrap">{f.unidad}</span>}
         </span>
@@ -79,16 +79,49 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
 }
 
 const Confianza = ({ v }: { v: number }) => {
-  const color = v >= 80 ? "#19B374" : v >= 50 ? "#E09A1A" : "#C8322B"
+  const color = v >= 80 ? "#3FD08A" : v >= 50 ? "#F5B13D" : "#FF7A70"
   const texto = v >= 80 ? "Punto de partida confiable" : v >= 50 ? "Revisa los avisos antes de cortar" : "Caso fuera de lo normal: prueba con cuidado"
   return (
     <div className="flex items-center gap-3">
-      <div className="h-2 flex-1 rounded-full bg-[#EEECE5] overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${v}%`, background: color }} />
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/15" role="img" aria-label={`Confianza ${v} de 100`}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, background: color }} />
       </div>
-      <span className="text-[12px] font-semibold whitespace-nowrap" style={{ color }}>{texto}</span>
+      <span className="whitespace-nowrap text-[12px] font-semibold" style={{ color }}>{texto}</span>
     </div>
   )
+}
+
+// Barra que muestra dónde cae un valor respecto a su rango sano (la zona verde).
+const MedidorBarra = ({ m }: { m: Medidor }) => {
+  const ancho = Math.max(1e-9, m.escalaMax - m.escalaMin)
+  const pct = (x: number) => Math.min(100, Math.max(0, ((x - m.escalaMin) / ancho) * 100))
+  const dentro = m.valor >= m.okMin - 1e-9 && m.valor <= m.okMax + 1e-9
+  const lejos = m.valor > m.okMax * 1.5 || (m.okMin > 0 && m.valor < m.okMin * 0.6)
+  const color = dentro ? "#16794F" : lejos ? "#C8322B" : "#C77A0A"
+  return (
+    <div className="relative h-2 rounded-full bg-[#EEECE5]" role="img" aria-label={dentro ? "Dentro del rango recomendado" : "Fuera del rango recomendado"}>
+      <div className="absolute inset-y-0 rounded-full bg-[#BFE5CF]" style={{ left: `${pct(m.okMin)}%`, width: `${Math.max(2, pct(m.okMax) - pct(m.okMin))}%` }} />
+      <div className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow" style={{ left: `${pct(m.valor)}%`, background: color }} />
+    </div>
+  )
+}
+
+const IconoProceso = ({ id }: { id: string }) => {
+  const c = { viewBox: "0 0 24 24", className: "h-5 w-5", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true }
+  switch (id) {
+    case "router":
+      return <svg {...c}><rect x="8" y="2.5" width="8" height="7" rx="1.2" /><path d="M10 9.5v4l2 2.5 2-2.5v-4M12 16v3M4 21h16" /></svg>
+    case "laser":
+      return <svg {...c}><path d="M12 3v9" /><path d="M9 3h6" /><path d="M12 12l-5 7M12 12l5 7M12 12v8" strokeDasharray="1.5 2.5" /><path d="M4 21h16" /></svg>
+    case "fibra":
+      return <svg {...c}><circle cx="12" cy="12" r="2.2" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" /></svg>
+    case "plasma":
+      return <svg {...c}><path d="M13 2L6 13h5l-1 9 8-12h-5l1-8z" /></svg>
+    case "impresora":
+      return <svg {...c}><path d="M4 4h16M12 4v5M9.5 9h5l-1 3h-3l-1-3zM12 12v2" /><path d="M7 20h10M8.5 17h7" /></svg>
+    default:
+      return <svg {...c}><circle cx="12" cy="12" r="8" /></svg>
+  }
 }
 
 const textoResultado = (c: Calculadora, e: Entrada, R: Resultado) => {
@@ -207,10 +240,13 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
   }
   const whatsapp = R ? `https://wa.me/?text=${encodeURIComponent(textoResultado(calc, e, R))}` : "#"
 
+  const principal = R?.bloques[0]
+  const grandes = principal ? principal.filas.filter((f) => f.destacado) : []
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* procesos */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5" role="tablist" aria-label="Proceso">
+      <div className="grid grid-cols-3 gap-2 lg:grid-cols-6" role="tablist" aria-label="Proceso">
         {PROCESOS.map((p) => {
           const activo = p.id === proceso.id
           return (
@@ -220,22 +256,30 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               role="tab"
               aria-selected={activo}
               onClick={() => elegirProceso(p.id)}
-              className={`rounded-[12px] border px-2 py-2.5 text-[12.5px] sm:text-[13px] font-semibold leading-tight text-center transition ${activo ? "bg-[#142033] border-[#142033] text-white" : "bg-white border-[#E7E4DC] text-[#1B1B18] hover:border-[#C2560A]"}`}
+              className={`group flex flex-col items-start gap-2 rounded-[14px] border px-3 py-3 text-left transition ${
+                activo ? "border-[#C2560A] bg-white shadow-[0_6px_20px_rgba(194,86,10,0.18)]" : "border-white/10 bg-white/[0.06] hover:bg-white/[0.12]"
+              }`}
             >
-              {p.corto}
+              <span className={`grid h-9 w-9 place-items-center rounded-[10px] ${activo ? "bg-[#C2560A] text-white" : "bg-white/10 text-white"}`}>
+                <IconoProceso id={p.icono} />
+              </span>
+              <span className={`text-[13px] font-bold leading-tight ${activo ? "text-[#142033]" : "text-white"}`}>{p.corto}</span>
             </button>
           )
         })}
       </div>
-      <p className="m-0 text-[14px] text-[#6B6A63]">{proceso.texto}</p>
 
-      <div className="grid lg:grid-cols-[400px_1fr] gap-5 items-start">
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,410px)_minmax(0,1fr)]">
         {/* formulario */}
-        <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+        <section className="flex flex-col gap-4 rounded-[16px] border border-[#E7E4DC] bg-white p-4 shadow-[0_1px_2px_rgba(20,32,51,0.04)] lg:p-5">
+          <div>
+            <h2 className="m-0 font-display text-[18px] font-bold text-[#142033]">{proceso.nombre}</h2>
+            <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#6B6A63]">{proceso.texto}</p>
+          </div>
           {proceso.modos.length > 1 && (
-            <div className="grid grid-cols-2 gap-1.5 bg-[#F3F1EA] rounded-[12px] p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-[12px] bg-[#F1EFE8] p-1">
               {proceso.modos.map((m) => (
-                <button key={m.id} type="button" onClick={() => setModoId(m.id)} className={`rounded-[10px] px-2 py-2 text-[13px] font-semibold ${m.id === calc.id ? "bg-white text-[#1B1B18] shadow-sm" : "text-[#6B6A63]"}`}>
+                <button key={m.id} type="button" onClick={() => setModoId(m.id)} className={`rounded-[9px] px-2 py-2 text-[13px] font-semibold transition ${m.id === calc.id ? "bg-[#142033] text-white shadow-sm" : "text-[#6B6A63] hover:text-[#142033]"}`}>
                   {m.nombre}
                 </button>
               ))}
@@ -244,21 +288,33 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
 
           {tieneMaquina && proceso.presets.length > 0 && (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">{proceso.presetEtiqueta}: empieza con una típica</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{proceso.presetEtiqueta}: empieza con una típica</span>
               <div className="flex flex-wrap gap-1.5">
-                {proceso.presets.map((p) => (
-                  <button key={p.id} type="button" onClick={() => aplicarPreset(p.valores)} className="rounded-full border border-[#E7E4DC] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
-                    {p.nombre.length > 34 ? p.nombre.slice(0, 32) + "…" : p.nombre}
-                  </button>
-                ))}
+                {proceso.presets.map((p) => {
+                  const puesto = Object.entries(p.valores).every(([k, v]) => String(e[k] ?? "") === String(v))
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => aplicarPreset(p.valores)}
+                      title={p.nombre}
+                      className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ${puesto ? "border-[#C2560A] bg-[#FFF3EA] text-[#A84A08]" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#C2560A]"}`}
+                    >
+                      {p.nombre.length > 34 ? p.nombre.slice(0, 32) + "…" : p.nombre}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {secciones.map(([titulo, campos]) => (
-            <div key={titulo} className="flex flex-col gap-2 border-t border-[#E7E4DC] pt-3 first:border-0 first:pt-0">
+          {secciones.map(([titulo, campos], n) => (
+            <div key={titulo} className="flex flex-col gap-2.5 border-t border-[#EEECE5] pt-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[12px] font-bold tracking-wide uppercase text-[#9A978C]">{titulo}</span>
+                <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#142033]">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-[#142033] text-[10px] text-white">{n + 1}</span>
+                  {titulo}
+                </span>
                 {titulo === "Máquina" && tieneMaquina && (
                   <span className="flex items-center gap-2">
                     {perfilGuardado && (
@@ -266,13 +322,13 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                         olvidar
                       </button>
                     )}
-                    <button type="button" onClick={guardarMaquina} className="text-[12px] font-semibold rounded-full px-2.5 py-1 border" style={{ borderColor: NARANJA, color: NARANJA }}>
+                    <button type="button" onClick={guardarMaquina} className="rounded-full border px-2.5 py-1 text-[12px] font-semibold" style={{ borderColor: NARANJA, color: NARANJA }}>
                       {perfilGuardado ? "Mi máquina ✓ guardada" : "Guardar como mi máquina"}
                     </button>
                   </span>
                 )}
               </div>
-              <div className={`grid gap-2 ${campos.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+              <div className={`grid gap-2.5 ${campos.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
                 {campos.map((f) => (
                   <div key={f.k} className={f.tipo === "opcion" || campos.length === 1 ? "col-span-2" : ""}>
                     <CampoInput f={f} valor={e[f.k]} cambiar={(v) => poner(f.k, v)} />
@@ -281,97 +337,112 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               </div>
             </div>
           ))}
-          <p className="m-0 text-[12px] text-[#6B6A63]">Los resultados son puntos de partida de tablas de fabricantes. Siempre prueba primero en un retazo del mismo material.</p>
         </section>
 
         {/* resultados */}
-        <section className="flex flex-col gap-3 min-w-0">
+        <section className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-4">
           {!R ? (
-            <div className="bg-[#FDECEC] border border-[#F2B8B5] text-[#8A1C1C] rounded-[12px] px-4 py-3 text-[14px]">Revisa los datos: hay un valor que no se puede calcular.</div>
+            <div className="rounded-[12px] border border-[#F2B8B5] bg-[#FDECEC] px-4 py-3 text-[14px] text-[#8A1C1C]">Revisa los datos: hay un valor que no se puede calcular.</div>
           ) : (
             <>
               {R.faltan.length > 0 && (
-                <div className="bg-[#FFF6E8] border border-[#F2C98F] text-[#5A3A12] rounded-[12px] px-4 py-3 text-[14px]">
+                <div className="rounded-[12px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3 text-[14px] text-[#5A3A12]">
                   <strong>Falta:</strong> {R.faltan.join(", ")}.
                 </div>
               )}
-              {R.bloques.length > 0 && (
-                <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex flex-col gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">{R.titulo}</h2>
+              {principal && (
+                <div className="overflow-hidden rounded-[18px] bg-[#142033] text-white shadow-[0_18px_40px_rgba(20,32,51,0.22)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#FFB27A]">{principal.titulo}</span>
+                      <h2 className="m-0 font-display text-[19px] font-bold leading-tight">{R.titulo}</h2>
+                    </div>
                     <div className="flex gap-2">
-                      <button type="button" onClick={copiar} className="rounded-[10px] border border-[#E7E4DC] bg-white px-3 py-2 text-[13px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
+                      <button type="button" onClick={copiar} className="rounded-[10px] border border-white/20 bg-white/10 px-3 py-2 text-[13px] font-semibold text-white hover:bg-white/20">
                         {copiado ? "Copiado ✓" : "Copiar"}
                       </button>
-                      <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline">
+                      <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#15A067]">
                         WhatsApp
                       </a>
                     </div>
                   </div>
-                  <Confianza v={R.confianza} />
-                  {R.bloques.map((b) => {
-                    const destacadas = b.filas.filter((f) => f.destacado)
-                    const resto = b.filas.filter((f) => !f.destacado)
-                    return (
-                      <div key={b.titulo} className="flex flex-col gap-2">
-                        <span className="text-[12px] font-bold tracking-wide uppercase text-[#9A978C]">{b.titulo}</span>
-                        {destacadas.length > 0 && (
-                          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 m-0">
-                            {destacadas.map((f) => (
-                              <div key={f.etiqueta} className="bg-[#FFF3EA] border border-[#F6CDB0] rounded-[12px] px-3 py-2.5 min-w-0">
-                                <dt className="text-[12px] text-[#6B6A63]">{f.etiqueta}</dt>
-                                <dd className="m-0 text-[18px] font-bold text-[#1B1B18] leading-tight break-words">{f.valor}</dd>
-                                {f.nota && <dd className="m-0 mt-0.5 text-[11.5px] text-[#6B6A63]">{f.nota}</dd>}
-                              </div>
-                            ))}
-                          </dl>
-                        )}
-                        {resto.length > 0 && (
-                          <dl className="m-0 divide-y divide-[#F0EEE7] border border-[#E7E4DC] rounded-[12px] overflow-hidden">
-                            {resto.map((f) => (
-                              <div key={f.etiqueta} className="grid grid-cols-[1fr_auto] gap-x-3 px-3 py-2 bg-white">
-                                <dt className="text-[13px] text-[#6B6A63]">{f.etiqueta}</dt>
-                                <dd className="m-0 text-[14px] font-semibold text-[#1B1B18] text-right">{f.valor}</dd>
-                                {f.nota && <dd className="m-0 col-span-2 text-[11.5px] text-[#9A978C]">{f.nota}</dd>}
-                              </div>
-                            ))}
-                          </dl>
-                        )}
-                      </div>
-                    )
-                  })}
+                  {grandes.length > 0 && (
+                    <dl className={`m-0 grid gap-px bg-white/10 mt-4 ${grandes.length >= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
+                      {grandes.map((f) => (
+                        <div key={f.etiqueta} className="min-w-0 bg-[#142033] px-5 py-4">
+                          <dt className="text-[12px] font-semibold text-white/60">{f.etiqueta}</dt>
+                          <dd className={`m-0 mt-1 break-words font-bold leading-none tracking-tight text-white ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono text-[26px] sm:text-[30px]" : "text-[19px] leading-tight sm:text-[21px]"}`}>{f.valor}</dd>
+                          {f.nota && <dd className="m-0 mt-1.5 text-[11.5px] leading-snug text-white/55">{f.nota}</dd>}
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <div className="border-t border-white/10 px-5 py-3.5">
+                    <Confianza v={R.confianza} />
+                  </div>
                 </div>
               )}
+              {R.bloques.map((b, n) => {
+                const filas = n === 0 ? b.filas.filter((f) => !f.destacado) : b.filas
+                if (!filas.length) return null
+                return (
+                  <div key={b.titulo} className="rounded-[16px] border border-[#E7E4DC] bg-white p-4">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{n === 0 ? "Detalle del corte" : b.titulo}</span>
+                    <dl className="m-0 mt-2 grid gap-x-6 sm:grid-cols-2">
+                      {filas.map((f) => (
+                        <div key={f.etiqueta} className={`flex flex-col gap-1 border-t border-[#F0EEE7] py-2.5 ${f.destacado ? "sm:col-span-2" : ""}`}>
+                          <div className="flex items-baseline justify-between gap-3">
+                            <dt className="text-[13px] text-[#6B6A63]">{f.etiqueta}</dt>
+                            <dd className={`m-0 text-right font-bold text-[#142033] ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono" : ""} ${f.destacado ? "text-[20px]" : "text-[15px]"}`}>{f.valor}</dd>
+                          </div>
+                          {f.medidor && <MedidorBarra m={f.medidor} />}
+                          {f.nota && <dd className="m-0 text-[11.5px] leading-snug text-[#9A978C]">{f.nota}</dd>}
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )
+              })}
               {R.avisos.length > 0 && (
-                <ul className="m-0 pl-5 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] py-3 pr-4 flex flex-col gap-1">
-                  {R.avisos.map((a) => (
-                    <li key={a}>{a}</li>
-                  ))}
-                </ul>
+                <div className="rounded-[16px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3">
+                  <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A5A12]">
+                    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M10 3l8 14H2L10 3z" strokeLinejoin="round" /><path d="M10 8.5v4M10 14.8v.2" strokeLinecap="round" /></svg>
+                    Revisa antes de cortar
+                  </span>
+                  <ul className="m-0 mt-1.5 flex flex-col gap-1.5 pl-5 text-[13.5px] leading-snug text-[#5A3A12]">
+                    {R.avisos.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
               {R.consejos.length > 0 && (
-                <div className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
-                  <span className="text-[12px] font-bold tracking-wide uppercase text-[#9A978C]">Consejos para este caso</span>
-                  <ul className="m-0 mt-1.5 pl-5 text-[13.5px] text-[#1B1B18] flex flex-col gap-1">
+                <div className="rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">Consejos para este caso</span>
+                  <ul className="m-0 mt-1.5 flex list-none flex-col gap-1.5 p-0 text-[13.5px] leading-snug text-[#1B1B18]">
                     {R.consejos.map((c) => (
-                      <li key={c}>{c}</li>
+                      <li key={c} className="flex gap-2">
+                        <span className="mt-[3px] h-4 w-4 flex-none rounded-full bg-[#E6F4EC] text-center text-[11px] font-bold leading-4 text-[#16794F]">✓</span>
+                        <span>{c}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
               {R.supuestos.length > 0 && (
-                <p className="m-0 text-[12px] text-[#6B6A63]">
-                  <strong>Supuestos:</strong> {R.supuestos.join(" ")}
+                <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">
+                  <strong>Cómo se calculó:</strong> {R.supuestos.join(" ")}
                 </p>
               )}
+              <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">Son puntos de partida calculados con rangos de fabricantes y los límites de tu máquina. Prueba siempre primero en un retazo del mismo material.</p>
             </>
           )}
-          <div className="bg-[#142033] text-white rounded-[14px] px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="m-0 text-[15px] font-bold">¿Quieres cotizar con estos tiempos?</p>
-              <p className="m-0 text-[13px] text-white/75">La app HETNA CNC convierte el tiempo de máquina en precio con tus costos, y controla tu taller.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3.5">
+            <div className="min-w-0">
+              <p className="m-0 text-[14.5px] font-bold text-[#142033]">¿Quieres cotizar con estos tiempos?</p>
+              <p className="m-0 text-[13px] text-[#6B6A63]">La app HETNA CNC convierte el tiempo de máquina en precio con tus costos.</p>
             </div>
-            <LocalizedClientLink href="/servicios/cotizador-cnc" className="rounded-[10px] px-4 py-2 text-[14px] font-bold text-[#142033] no-underline" style={{ background: "#FFC53D" }}>
+            <LocalizedClientLink href="/servicios/cotizador-cnc" className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-bold text-white no-underline hover:bg-[#A84A08]">
               Conocer la app
             </LocalizedClientLink>
           </div>

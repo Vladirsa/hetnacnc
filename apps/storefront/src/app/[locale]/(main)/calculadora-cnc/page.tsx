@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const PREGUNTAS = [
   {
     p: "¿De dónde salen los números?",
-    r: "De rangos típicos publicados por fabricantes de fresas, tubos, fuentes láser, antorchas e impresoras, ajustados por la rigidez y potencia de tu máquina. Son puntos de partida: la prueba en un retazo manda.",
+    r: "De rangos publicados por fabricantes de fresas, antorchas de plasma, fuentes de fibra, máquinas láser CO₂ e impresoras, ajustados por la rigidez y la potencia de tu máquina. Las tablas se revisaron contra esas referencias en noviembre de 2026 y se dejaron del lado conservador. Son puntos de partida: la tabla de tu equipo y la prueba en un retazo mandan.",
   },
   {
     p: "¿Qué tiene de distinto a otras calculadoras?",
@@ -41,6 +41,13 @@ const PREGUNTAS = [
     p: "¿Puedo cotizar con esto?",
     r: "Aquí obtienes el tiempo de máquina. Para convertirlo en precio con tus costos de material, mano de obra y utilidad, usa las calculadoras de precio o la app HETNA CNC para talleres.",
   },
+]
+
+const COMO = [
+  { n: "01", t: "Rango del fabricante", d: "Carga de viruta por material y diámetro de fresa, velocidad de producción del plasma por amperaje, velocidad de la fibra por potencia y gas, flujo máximo del hotend por filamento." },
+  { n: "02", t: "Límites de tu máquina", d: "RPM y avance máximos, potencia real del spindle a esas RPM, vatios reales del tubo, amperaje de la fuente. Si algo no alcanza, el resultado baja y te dice por qué." },
+  { n: "03", t: "Física del corte", d: "Potencia por volumen de material removido, flexión de la fresa según lo que sobresale del collet, adelgazamiento de viruta con poco paso lateral, altura de cresta en punta bola." },
+  { n: "04", t: "Avisos y medidores", d: "Cada valor se muestra contra su rango sano. Lo que queda fuera se marca, con la causa y qué cambiar. La prueba en un retazo siempre es el último paso." },
 ]
 
 export default async function CalculadoraCncPage({ searchParams }: { searchParams: Promise<{ proceso?: string }> }) {
@@ -67,17 +74,43 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
   return (
     <div className="w-full bg-[#FAF9F6]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis · sin cuenta</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Calculadora CNC profesional</h1>
-        <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[760px]">
-          Velocidades y avances para router CNC y fresadora, potencia y velocidad para láser CO₂ de cualquier tubo, marcado con fibra y UV, corte de lámina por fibra, plasma e impresión 3D. Dile qué máquina tienes y te dice con qué empezar, qué revisar y qué puede salir mal.
-        </p>
+      <section className="relative overflow-hidden bg-[#142033] px-4 pb-28 pt-7 text-white lg:px-8 lg:pt-9">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#C2560A] opacity-30 blur-3xl" />
+        <div className="relative mx-auto max-w-[1280px]">
+          <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.08em] text-[#FFB27A]">Gratis · sin cuenta</span>
+          <h1 className="m-0 mt-3 font-display text-[28px] font-bold leading-tight lg:text-[40px]">Calculadora CNC profesional</h1>
+          <p className="m-0 mt-2 max-w-[720px] text-[15px] leading-relaxed text-white/75">
+            Dile qué máquina tienes y qué vas a cortar. Te da los parámetros para empezar y revisa que tu máquina pueda con ellos: potencia, flexión de la fresa, alcance del láser, perforación del plasma.
+          </p>
+          <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-[13px] text-white/70">
+            {["6 procesos en una sola herramienta", "Se ajusta a los límites de tu máquina", "Te avisa lo que puede salir mal"].map((t) => (
+              <li key={t} className="flex items-center gap-1.5">
+                <span className="text-[#3FD08A]">✓</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
-      <div className="px-4 lg:px-8 pb-10">
+      <div className="relative mx-auto -mt-24 max-w-[1280px] px-4 pb-10 lg:px-8">
         <CalculadoraCNC procesoInicial={proceso} />
       </div>
-      <section className="px-4 lg:px-8 pb-12 max-w-[860px]">
+      <section className="mx-auto max-w-[1280px] px-4 pb-10 lg:px-8">
+        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]">Cómo se calcula</h2>
+        <p className="m-0 mb-4 max-w-[760px] text-[14px] leading-relaxed text-[#6B6A63]">No es una tabla fija: cada resultado sale de un rango de fabricante y después se ajusta a lo que tu máquina puede hacer.</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {COMO.map((c) => (
+            <div key={c.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
+              <span className="font-mono text-[12px] font-bold text-[#C2560A]">{c.n}</span>
+              <h3 className="m-0 mt-1 text-[15px] font-bold text-[#142033]">{c.t}</h3>
+              <p className="m-0 mt-1.5 text-[13px] leading-relaxed text-[#6B6A63]">{c.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mx-auto max-w-[1280px] px-4 pb-12 lg:px-8">
+        <div className="max-w-[860px]">
         <h2 className="font-display text-[22px] font-bold m-0 mb-3 text-[#1B1B18]">Preguntas frecuentes</h2>
         <div className="flex flex-col gap-2">
           {PREGUNTAS.map((q) => (
@@ -97,6 +130,7 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
             Todas las herramientas CNC
           </LocalizedClientLink>
         </p>
+        </div>
       </section>
     </div>
   )

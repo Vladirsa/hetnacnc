@@ -13,9 +13,9 @@ export const TUBOS: Record<string, TuboCO2> = {
   "60": { nombre: "Tubo 60 W", w: 60, real: 55, ma: 22 },
   "80": { nombre: "Tubo 80 W", w: 80, real: 75, ma: 26 },
   "100": { nombre: "Tubo 100 W", w: 100, real: 95, ma: 28 },
-  "130": { nombre: "Tubo 130 W", w: 130, real: 125, ma: 30 },
-  "150": { nombre: "Tubo 150 W", w: 150, real: 145, ma: 30 },
-  "180": { nombre: "Tubo 180 W", w: 180, real: 175, ma: 32 },
+  "130": { nombre: "Tubo 130 W", w: 130, real: 125, ma: 28 },
+  "150": { nombre: "Tubo 150 W", w: 150, real: 145, ma: 28 },
+  "180": { nombre: "Tubo 180 W", w: 180, real: 175, ma: 30 },
   "300": { nombre: "Tubo 300 W (metal y acrílico grueso)", w: 300, real: 290, ma: 36, nota: "A 300 W ya corta lámina delgada de acero con oxígeno; necesita cabezal con gas." },
   rf30: { nombre: "RF 30 W (Epilog, Trotec, Universal)", w: 30, real: 30, rf: true, nota: "Los tubos RF tienen punto más fino y responden al instante: graban mejor que un tubo de vidrio del doble de potencia." },
   rf60: { nombre: "RF 60 W", w: 60, real: 60, rf: true },
@@ -23,11 +23,12 @@ export const TUBOS: Record<string, TuboCO2> = {
 }
 export const PRESETS_CO2: Preset[] = Object.entries(TUBOS).map(([id, t]) => ({ id, nombre: t.nombre, valores: { tubo: id } }))
 
+// espMax: hasta qué espesor (mm) da canto recto esta lente, por su profundidad de foco
 export const LENTES: Record<string, { nombre: string; kerf: number; espMax: number; puntoUm: number; nota: string }> = {
-  "1.5": { nombre: '1.5" (38 mm): grabado fino', kerf: 0.1, espMax: 0.5, puntoUm: 100, nota: "Punto muy fino para fotos y detalle; sólo corta hasta ~3 mm." },
-  "2": { nombre: '2" (50.8 mm): uso general', kerf: 0.15, espMax: 1, puntoUm: 150, nota: "La lente de todos los días: graba bien y corta hasta 8–10 mm." },
-  "2.5": { nombre: '2.5" (63.5 mm): corte medio', kerf: 0.2, espMax: 1.25, puntoUm: 200, nota: "Más profundidad de foco: cantos más rectos en 10–15 mm." },
-  "4": { nombre: '4" (101 mm): acrílico grueso', kerf: 0.3, espMax: 1.6, puntoUm: 300, nota: "Para acrílico de 15–25 mm con tubo grande; graba grueso." },
+  "1.5": { nombre: '1.5" (38 mm): grabado fino', kerf: 0.1, espMax: 3, puntoUm: 100, nota: "Punto muy fino para fotos y detalle; sólo corta hasta ~3 mm." },
+  "2": { nombre: '2" (50.8 mm): uso general', kerf: 0.15, espMax: 10, puntoUm: 150, nota: "La lente de todos los días: graba bien y corta hasta 8–10 mm." },
+  "2.5": { nombre: '2.5" (63.5 mm): corte medio', kerf: 0.2, espMax: 15, puntoUm: 200, nota: "Más profundidad de foco: cantos más rectos en 10–15 mm." },
+  "4": { nombre: '4" (101 mm): acrílico grueso', kerf: 0.3, espMax: 25, puntoUm: 300, nota: "Para acrílico de 15–25 mm con tubo grande; graba grueso." },
 }
 
 type MatCO2 = {
@@ -113,9 +114,14 @@ export const calcCO2 = (e: Entrada): Resultado => {
     }
     const escala = (Wreal / 100) * fRF
     const ultimo = M.corte[M.corte.length - 1]
-    // espesor máximo que atraviesa en una pasada con este tubo y lente
-    const espMax = ultimo[0] * Math.pow(escala, 0.8) * Lz.espMax
-    let v = esp <= ultimo[0] ? interp(M.corte, esp, 1, true) * escala : ultimo[1] * Math.pow(ultimo[0] / esp, 2) * escala
+    const tablaCorte = M.corte
+    const velA = (x: number) => (x <= ultimo[0] ? interp(tablaCorte, x, 1, true) * escala : ultimo[1] * Math.pow(ultimo[0] / x, 2) * escala)
+    // Espesor máximo de una pasada limpia: hasta donde la velocidad no baja de 4 mm/s (más lento el
+    // canto se quema o se derrite) y hasta donde la lente mantiene el foco.
+    let espMax = tablaCorte[0][0]
+    for (let x = tablaCorte[0][0]; x <= Math.max(ultimo[0], 30) && velA(x) >= 4; x += 0.25) espMax = x
+    espMax = Math.min(espMax, Lz.espMax)
+    let v = velA(esp)
     let pasadas = 1
     if (esp > espMax) {
       pasadas = Math.min(4, Math.ceil(esp / espMax))
@@ -192,10 +198,11 @@ export const calcCO2 = (e: Entrada): Resultado => {
 
   const b2 = bloque(R, "Tu máquina")
   b2.filas.push({ etiqueta: "Potencia real estimada", valor: `${fmt(Wreal)} W`, nota: T.rf ? "RF, punto fino" : "tubo de vidrio DC" })
-  if (T.ma) b2.filas.push({ etiqueta: "Corriente máxima recomendada", valor: `${T.ma} mA`, nota: "más corriente = menos vida del tubo, no más corte" })
+  if (T.ma) b2.filas.push({ etiqueta: "Corriente máxima recomendada", valor: `${T.ma} mA`, nota: "más corriente = menos vida del tubo, no más corte; confirma el límite en la hoja de tu tubo" })
   b2.filas.push({ etiqueta: "Lente", valor: Lz.nombre, nota: Lz.nota })
   if (M.aviso) R.avisos.push(M.aviso)
   if (T.nota) R.consejos.push(T.nota)
+  R.consejos.push("Nunca dejes la máquina sola mientras corta: el acrílico y la madera se encienden. Tapa cerrada con el láser activo; si tu máquina es abierta, lentes para 10.6 µm.")
   R.consejos.push("Prueba en un retazo: la potencia real cambia con la edad del tubo, el enfoque y la limpieza de espejos y lente. Limpia la lente cada semana si cortas MDF.")
   R.confianza = clamp(R.confianza, 20, 100)
   return R
