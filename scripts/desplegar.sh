@@ -301,5 +301,26 @@ if [ "$fallas" -gt 0 ]; then
   exit 1
 fi
 
+# --- 7. Calentar la caché de productos y categorías ---
+#
+# Cada despliegue arranca la tienda con la caché de fetch vacía (vive dentro de
+# .next-a / .next-b). Visitar una vez cada ficha y categoría la llena, y la
+# tienda guarda además la última copia buena de cada ficha en memoria
+# (lib/data/products.ts). Así, la próxima vez que el API se reinicie, esas
+# páginas se sirven igual en vez de dar error. Una por una, sin prisa: es
+# tráfico real al VPS. DESPLIEGUE_CALENTAR=0 lo salta.
+if [ "${DESPLIEGUE_CALENTAR:-1}" != "0" ]; then
+  paso "Calentando la caché de productos y categorías"
+  rutas="$(curl -s --max-time 20 "$SITIO/sitemap.xml" \
+    | grep -oE '<loc>[^<]+/(products|categories)(/[^<]*)?</loc>' \
+    | sed -E 's#</?loc>##g' | sort -u || true)"
+  ok=0; mal=0
+  for url in $rutas; do
+    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" 2>/dev/null || true)"
+    if [ "$codigo" = "200" ]; then ok=$((ok + 1)); else mal=$((mal + 1)); echo "   ✗ $codigo $url"; fi
+  done
+  if [ "$mal" -gt 0 ]; then verde "   ✓ $ok páginas en caché ($mal con error)"; else verde "   ✓ $ok páginas en caché"; fi
+fi
+
 paso "Listo"
 verde "$(git log --oneline -1)"

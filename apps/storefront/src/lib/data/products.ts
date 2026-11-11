@@ -62,6 +62,16 @@ export const getSearchFacets = async (): Promise<SearchFacets> => {
   return { attributes, nombres };
 };
 
+// Última respuesta buena de cada ficha de producto (consultas por handle). Si
+// el API no contesta (un despliegue lo reinicia ~10 s) se sirve esta copia en
+// vez de una lista vacía, que la ficha convertía en 404. Se acota para que no
+// crezca sin límite con handles inventados.
+const ULTIMAS_FICHAS_MAX = 500;
+const ultimasFichas = new Map<
+  string,
+  { products: HttpTypes.StoreProduct[]; count: number }
+>();
+
 /**
  * Products in Mercur are master products from a single shared catalog — they are
  * not owned by a seller. Seller-scoped listings and per-seller price/inventory
@@ -86,6 +96,8 @@ export const listProducts = async ({
   response: { products: HttpTypes.StoreProduct[]; count: number };
   nextPage: number | null;
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams;
+  /** true si el API no contestó (no es lo mismo que "no hay productos"). */
+  fallo?: boolean;
 }> => {
   if (!countryCode && !regionId) {
     throw new Error('Country code or region ID is required');
@@ -100,8 +112,16 @@ export const listProducts = async ({
     : await retrieveRegion(regionId!);
 
   if (!region) {
-    return { response: { products: [], count: 0 }, nextPage: null };
+    return { response: { products: [], count: 0 }, nextPage: null, fallo: true };
   }
+
+  const auth = await getAuthHeaders();
+  // Sólo visitantes sin sesión: la respuesta de un cliente con sesión puede
+  // traer precios suyos y no debe servírsele a nadie más.
+  const llaveFicha =
+    queryParams?.handle?.length && !('authorization' in auth)
+      ? JSON.stringify([region.id, queryParams, category_id, collection_id, offset])
+      : null;
 
   return (
     sdk.store.products.query({
@@ -113,7 +133,7 @@ export const listProducts = async ({
       fields: PRODUCT_LIST_FIELDS,
       ...queryParams,
       fetchOptions: {
-        headers: { ...(await getAuthHeaders()) },
+        headers: { ...auth },
         cache: 'force-cache',
         next: getGlobalCacheOptions(CACHE_TAGS.products),
       },
@@ -122,17 +142,31 @@ export const listProducts = async ({
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null;
 
+      // El API contestó que ya no existe (borrado o suspendido): se olvida la copia.
+      if (llaveFicha && !products?.length) ultimasFichas.delete(llaveFicha);
+      if (llaveFicha && products?.length) {
+        if (ultimasFichas.size >= ULTIMAS_FICHAS_MAX && !ultimasFichas.has(llaveFicha)) {
+          ultimasFichas.delete(ultimasFichas.keys().next().value as string);
+        }
+        ultimasFichas.set(llaveFicha, { products, count });
+      }
+
       return {
         response: { products, count },
         nextPage,
         queryParams,
       };
     })
-    .catch(() => ({
-      response: { products: [], count: 0 },
-      nextPage: null,
-      queryParams,
-    }));
+    .catch(() => {
+      const copia = llaveFicha ? ultimasFichas.get(llaveFicha) : undefined;
+      if (copia) return { response: copia, nextPage: null, queryParams };
+      return {
+        response: { products: [], count: 0 },
+        nextPage: null,
+        queryParams,
+        fallo: true,
+      };
+    });
 };
 
 export const listProductsWithSort = async ({
