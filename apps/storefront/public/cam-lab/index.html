@@ -638,10 +638,15 @@ label.c input{width:17px;height:17px}
         <div class="cards" id="stratCards">
           <button class="card" data-kind="top3"><b>3 ejes · paralelo</b><span>Relieves y superficies vistas desde arriba</span></button>
           <button class="card" data-kind="rot4"><b>4 ejes · rotativo</b><span>Columnas, patas, piezas torneadas</span></button>
+          <button class="card" data-kind="idx4"><b>4 ejes · indexado por caras</b><span>Gira a un ángulo fijo y maquina cada cara en 3 ejes</span></button>
           <button class="card" data-kind="top5"><b>5 ejes · normal a superficie</b><span>Inclinación continua sobre superficies superiores</span></button>
           <button class="card" data-kind="rot5"><b>5 ejes · envolvente</b><span>Álabes, impulsores, esculturas completas</span></button>
         </div>
         <div class="group">
+          <div id="w_faces" class="group" hidden><h2>Caras</h2>
+            <label class="f">Número de caras<select id="s_faces"><option value="1">1 cara (solo arriba)</option><option value="2">2 caras (0° y 180°)</option><option value="3">3 caras (cada 120°)</option><option value="4">4 caras (cada 90°)</option><option value="6">6 caras (cada 60°)</option><option value="8">8 caras (cada 45°)</option></select></label>
+            <p class="hint" id="o_faces"></p>
+          </div>
           <div id="w_pattern" class="group"><h2>Patrón</h2><div class="seg" id="s_pattern"><button data-v="spiral">Espiral continua</button><button data-v="lines">Líneas en X</button></div></div>
           <div id="w_dir" class="group"><h2>Patrón de las pasadas</h2>
             <div class="seg" id="s_pat3"><button data-v="par">Paralelo</button><button data-v="cross">Cruzado</button><button data-v="circ">Circular</button><button data-v="rad">Radial</button></div>

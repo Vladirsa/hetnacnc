@@ -21,7 +21,7 @@ import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/
 import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
 import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
 import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
-import { acomodarCopias } from "@/lib/cam/acomodar"
+import { acomodarPiezas } from "@/lib/cam/acomodar"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
@@ -104,6 +104,7 @@ type Op = {
   // roscado
   paso: string
   roscaIzq: boolean
+  roscaExt: boolean
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
@@ -138,6 +139,7 @@ const nuevaOp = (tipo: TipoOp, espesor: string): Op => ({
   holgura: "0.1",
   paso: "1.5",
   roscaIzq: false,
+  roscaExt: false,
 })
 
 type OpPlan = { tipo: TipoOp; nombre: string; capa: string | null; figuras: number; largo_mm: number; minutos: number }
@@ -173,10 +175,18 @@ export function EstudioCam2D() {
   const [archivo, setArchivo] = useState<File | null>(null)
   // La pieza tal como viene en el archivo, y lo que se corta: sus copias acomodadas en la hoja
   const [pieza, setDibujo] = useState<Dibujo | null>(null)
+  // Otras piezas distintas que se cortan en la misma hoja
+  const [extras, setExtras] = useState<{ id: string; nombre: string; dibujo: Dibujo; copias: string }[]>([])
   const [hoja, setHoja] = useState({ copias: "1", ancho: "1220", largo: "2440", separacion: "8" })
   const acomodo = useMemo(
-    () => (pieza ? acomodarCopias(pieza, { copias: numero(hoja.copias) || 1, ancho: numero(hoja.ancho) || 1220, largo: numero(hoja.largo) || 2440, separacion: numero(hoja.separacion) || 0 }) : null),
-    [pieza, hoja]
+    () =>
+      pieza
+        ? acomodarPiezas(
+            [{ dibujo: pieza, copias: numero(hoja.copias) || 1 }, ...extras.map((x) => ({ dibujo: x.dibujo, copias: numero(x.copias) || 1 }))],
+            { copias: 1, ancho: numero(hoja.ancho) || 1220, largo: numero(hoja.largo) || 2440, separacion: numero(hoja.separacion) || 0 }
+          )
+        : null,
+    [pieza, hoja, extras]
   )
   const dibujo = acomodo?.dibujo ?? null
   const variasCopias = (acomodo?.puestas ?? 1) > 1
@@ -259,10 +269,24 @@ export function EstudioCam2D() {
     }
   }
 
+  const agregarPieza = async (f?: File | null) => {
+    if (!f) return
+    try {
+      const texto = await f.text()
+      const d = f.name.toLowerCase().endsWith(".svg") ? leerSVG(texto) : leerDXF(texto)
+      if (!d.trazos.length) return setError({ mensaje: `No encontré líneas en ${f.name}.`, remedio: "Revisa que tenga contornos y no sólo texto o imágenes." })
+      setExtras((l) => [...l, { id: `px${Date.now()}`, nombre: f.name.slice(0, 60), dibujo: d, copias: "1" }].slice(0, 12))
+      setPlan(null)
+      setGcode(null)
+    } catch {
+      setError({ mensaje: `No pude leer ${f.name}.`, remedio: "Sube un DXF o un SVG." })
+    }
+  }
+
   // Proyecto guardado en la cuenta: el dibujo (como DXF) y cómo se va a cortar
   const proyectoActual = () => {
     if (!pieza) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
-    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja }
+    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja, extras: extras.map((x) => ({ nombre: x.nombre, dxf: dibujoDXF(x.dibujo), copias: x.copias })) }
   }
   const aplicarProyecto = (d: any): boolean => {
     if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
@@ -283,6 +307,16 @@ export function EstudioCam2D() {
     const hj = d.hoja && typeof d.hoja === "object" ? d.hoja : {}
     const txt = (v: unknown, def: string) => (typeof v === "string" && numero(v) >= 0 ? v.slice(0, 8) : def)
     setHoja({ copias: txt(hj.copias, "1"), ancho: txt(hj.ancho, "1220"), largo: txt(hj.largo, "2440"), separacion: txt(hj.separacion, "8") })
+    const otras: typeof extras = []
+    for (const x of Array.isArray(d.extras) ? d.extras.slice(0, 12) : []) {
+      try {
+        const dib = leerDXF(String(x?.dxf ?? ""))
+        if (dib.trazos.length) otras.push({ id: `px${otras.length}`, nombre: String(x?.nombre ?? "pieza").replace(/[^\w.\- ]/g, "").slice(0, 60) || "pieza", dibujo: dib, copias: txt(x?.copias, "1") })
+      } catch {
+        // una pieza que no se puede leer se salta; el resto del proyecto abre igual
+      }
+    }
+    setExtras(otras)
     // cada operación parte de la de fábrica de su tipo: lo que falte o venga raro no rompe la pantalla
     const tipos = [...OPS_ROUTER, ...OPS_LASER].map((o) => o.id)
     setOps(
@@ -345,7 +379,7 @@ export function EstudioCam2D() {
         ...(o.fresa ? { herramienta: o.fresa, largo_corte: o.largoCorte } : {}),
         ...(o.tipo === "acanalado" ? { rampa: Math.max(0, numero(o.rampa) || 0) } : {}),
         ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
-        ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq } : {}),
+        ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq, rosca_exterior: o.roscaExt } : {}),
         ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
       })),
     }
@@ -541,10 +575,39 @@ export function EstudioCam2D() {
             <CampoNum etiqueta="Hoja: ancho (X)" valor={hoja.ancho} cambiar={(v) => { setHoja({ ...hoja, ancho: v }); setPlan(null); setGcode(null) }} />
             <CampoNum etiqueta="Hoja: largo (Y)" valor={hoja.largo} cambiar={(v) => { setHoja({ ...hoja, largo: v }); setPlan(null); setGcode(null) }} />
           </div>
-          {acomodo && (numero(hoja.copias) || 1) > 1 && (
+          <div className="flex flex-col gap-1.5">
+            {extras.map((x, k) => (
+              <div key={x.id} className="flex items-end gap-2 rounded-[8px] bg-[#1C2431] px-2.5 py-2">
+                <span className="min-w-0 flex-1 truncate text-[12.5px] text-white" title={x.nombre}>
+                  {x.nombre}
+                </span>
+                <label className="flex items-center gap-1.5 text-[12px] text-[#8A97AB]">
+                  Copias
+                  <input
+                    inputMode="numeric"
+                    value={x.copias}
+                    onChange={(e) => { setExtras((l) => l.map((y, j) => (j === k ? { ...y, copias: e.target.value.replace(/\D/g, "").slice(0, 3) } : y))); setPlan(null); setGcode(null) }}
+                    className="w-14 rounded-[6px] bg-[#151C27] px-2 py-1 text-[13px] text-white outline-none"
+                    aria-label={`Copias de ${x.nombre}`}
+                  />
+                </label>
+                <button type="button" onClick={() => { setExtras((l) => l.filter((_, j) => j !== k)); setPlan(null); setGcode(null) }} className="text-[#8A97AB] hover:text-[#F6C79B]" aria-label={`Quitar ${x.nombre}`}>
+                  ✕
+                </button>
+              </div>
+            ))}
+            {pieza && extras.length < 12 && (
+              <label className="cursor-pointer self-start rounded-[8px] bg-[#2B3648] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#3A475C]">
+                + Agregar otra pieza a la hoja
+                <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => { agregarPieza(e.target.files?.[0]); e.target.value = "" }} />
+              </label>
+            )}
+            {extras.length > 0 && <span className="text-[11.5px] leading-snug text-[#8A97AB]">Las operaciones se aplican a todas las piezas: usa los mismos nombres de capa en todos tus dibujos.</span>}
+          </div>
+          {acomodo && ((numero(hoja.copias) || 1) > 1 || extras.length > 0) && (
             <span className="text-[12px] leading-snug text-[#C9D2E0]">
-              {acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
-              {variasCopias && acomodo.encajadas && "Van encajadas: una derecha y la siguiente volteada 180°. "}
+              {extras.length === 0 && acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
+              {variasCopias && acomodo.encajadas && "Las copias que lo permiten van encajadas: una derecha y la siguiente volteada 180°. "}
               {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
             </span>
           )}
@@ -643,8 +706,14 @@ export function EstudioCam2D() {
                     {o.tipo === "roscado" && (
                       <>
                         <CampoNum etiqueta="Paso de la rosca (M6 = 1, M8 = 1.25, M10 = 1.5)" valor={o.paso} cambiar={(v) => cambiarOp(i, { paso: v })} />
+                        <Interruptor etiqueta="Rosca exterior (sobre un perno)" activo={o.roscaExt} cambiar={(v) => cambiarOp(i, { roscaExt: v })} />
                         <Interruptor etiqueta="Rosca izquierda" activo={o.roscaIzq} cambiar={(v) => cambiarOp(i, { roscaIzq: v })} />
-                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso). En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.</span>
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">
+                          {o.roscaExt
+                            ? "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm). El perno ya debe estar cilindrado a ese diámetro y con el material de alrededor retirado: la fresa baja por fuera, a un lado del perno."
+                            : "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso)."}{" "}
+                          En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.
+                        </span>
                       </>
                     )}
                     {o.tipo === "incrustacion_macho" && <CampoNum etiqueta="Holgura para que embone" valor={o.holgura} cambiar={(v) => cambiarOp(i, { holgura: v })} />}
