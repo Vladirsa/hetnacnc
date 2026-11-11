@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const PREGUNTAS = [
   {
     p: "¿De dónde salen los números?",
-    r: "De rangos publicados por fabricantes de fresas, antorchas de plasma, fuentes de fibra, máquinas láser CO₂ e impresoras, ajustados por la rigidez y la potencia de tu máquina. Las tablas se revisaron contra esas referencias en noviembre de 2026 y se dejaron del lado conservador. Son puntos de partida: la tabla de tu equipo y la prueba en un retazo mandan.",
+    r: "De rangos publicados por fabricantes de fresas, antorchas de plasma, fuentes de fibra, máquinas láser CO₂ e impresoras, ajustados por la rigidez y la potencia de tu máquina. En noviembre de 2026 se compararon contra rangos publicados por fabricantes y se corrigieron los valores que salían de ellos. Son puntos de partida: la tabla de tu equipo y la prueba en un retazo mandan.",
   },
   {
     p: "¿Qué tiene de distinto a otras calculadoras?",

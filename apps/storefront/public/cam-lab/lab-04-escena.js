@@ -238,7 +238,7 @@ function setBusy(txt,f){const b=$('#busy');if(txt===null){b.hidden=true;return;}
 function compatError(){
   const k=S.strat.kind,kin=S.machine.kin;
   if((k==='rot4'||k==='idx4')&&!['xyza','ab_mixed'].includes(kin))return'La estrategia de 4 ejes necesita un eje rotativo A sobre X. Elige "4 ejes · rotativo A" o "5 ejes · rotativo A + cabezal B" en Máquina.';
-  if((k==='top5'||k==='rot5')&&(kin==='xyz'||kin==='xyza'))return'Las estrategias de 5 ejes necesitan una máquina de 5 ejes. Cambia la cinemática en Máquina.';
+  if(esCincoEjes(k)&&(kin==='xyz'||kin==='xyza'))return'Las estrategias de 5 ejes necesitan una máquina de 5 ejes. Cambia la cinemática en Máquina.';
   if((k==='top5'||k==='rot5')&&(tool().type==='vbit'||tool().type==='drill'))return'Para 5 ejes simultáneos usa una herramienta de bola, plana, toroidal o cónica de bola.';
   return null;
 }
@@ -251,7 +251,7 @@ async function compute(){
     // desbaste con otra fresa: cada una calcula su trayectoria con su propia forma
     const rt=st.rough&&st.roughTool&&st.roughTool!==tl.id?S.tools.find(t=>t.id===st.roughTool):null;S.rtool=rt||null;
     if(st.kind==='top5'||st.kind==='rot5')res=await gen5(tl,st);
-    else{const gen=st.kind==='top3'?genTop3:st.kind==='idx4'?genIdx4:genRot4;
+    else{const gen=st.kind==='top3'?genTop3:st.kind==='idx4'?genIdx4:st.kind==='pos5'?genPos5:genRot4;
       if(rt){const rr=await gen(rt,st,{roughOnly:true}),rf=await gen(tl,{...st,rough:false});rr.passes.forEach(p=>{p.tid=rt.id;p.lk=p.lk||rr.linkOK;});
         res={...rf,passes:rr.passes.concat(rf.passes),maxDepth:Math.max(rr.maxDepth,rf.maxDepth)};}
       else res=await gen(tl,st);}

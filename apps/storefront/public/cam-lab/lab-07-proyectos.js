@@ -82,7 +82,7 @@ async function projApply(d){
   if(d.sample&&SAMPLES[d.sample])pos=SAMPLES[d.sample].fn();
   else{try{pos=await meshUnpack(d.mesh);}catch(e){return false;}}
   const mach=cleanMachine(d.machine),post=cleanPost(d.post);if(!mach||!post)return false;
-  const KINDS=['top3','rot4','idx4','top5','rot5'];if(!d.strat||!KINDS.includes(d.strat.kind))return false;
+  const KINDS=['top3','rot4','idx4','top5','rot5','pos5'];if(!d.strat||!KINDS.includes(d.strat.kind))return false;
   S.rawPos=pos;S.rawFile=null;S.sampleKey=d.sample&&SAMPLES[d.sample]?d.sample:null;S.partName=txt(d.partName,'Pieza',80).replace(/[<>]/g,'');
   S.units=d.units===25.4?25.4:1;S.scale=num(d.scale,1,0.001,1000);S.scl=[0,1,2].map(q=>num(d.scl?.[q],1,0.001,1000));
   S.rotSeq=Array.isArray(d.rotSeq)?d.rotSeq.filter(r=>r==='x'||r==='y'||r==='z').slice(0,40):[];

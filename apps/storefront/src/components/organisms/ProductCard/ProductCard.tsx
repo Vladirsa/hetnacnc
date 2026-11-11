@@ -11,9 +11,12 @@ import { Product } from "@/types/product"
 export const ProductCard = ({
   product,
   className,
+  prioridad = false,
 }: {
   product: HttpTypes.StoreProduct | Product,
   className?: string
+  /** Sólo las tarjetas visibles al abrir la página: las demás esperan a que se acerquen */
+  prioridad?: boolean
 }) => {
   if (!product) {
     return null
@@ -42,8 +45,8 @@ export const ProductCard = ({
           <div className="overflow-hidden rounded-sm w-full h-full flex justify-center align-center ">
             {product.thumbnail ? (
               <Image
-                priority
-                fetchPriority="high"
+                priority={prioridad}
+                fetchPriority={prioridad ? "high" : "auto"}
                 src={decodeURIComponent(product.thumbnail)}
                 alt={`${productName} image`}
                 width={100}
@@ -54,8 +57,8 @@ export const ProductCard = ({
               />
             ) : (
               <Image
-                priority
-                fetchPriority="high"
+                priority={prioridad}
+                fetchPriority={prioridad ? "high" : "auto"}
                 src="/images/placeholder.svg"
                 alt={`${productName} image placeholder`}
                 width={100}

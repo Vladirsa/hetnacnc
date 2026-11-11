@@ -2,14 +2,15 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { Suspense } from "react"
 
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
-import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
+import { argsDeListado, claveListado, paramsDe } from "@/lib/helpers/busqueda-listado"
+import { SearchProductsListing, type ListadoInicial } from "@/components/sections/ProductListing/SearchProductsListing"
 import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 import { listRegions } from "@/lib/data/regions"
-import { listProducts } from "@/lib/data/products"
+import { listProducts, searchProducts } from "@/lib/data/products"
 import {
   buildHreflangAlternates,
   getStorefrontLocales,
@@ -64,6 +65,23 @@ export async function generateMetadata({
       images: [IMAGEN_OG],
     },
   }
+}
+
+// La primera página del listado se trae en el servidor: así las fotos salen en el
+// HTML y no esperan a que el navegador cargue la página y vuelva a pedirlas.
+async function primeraPagina(locale: string, filtros: Record<string, string | string[] | undefined>): Promise<ListadoInicial | undefined> {
+  const args = argsDeListado(paramsDe(filtros))
+  try {
+    const r = await searchProducts({ ...args, countryCode: locale })
+    return { clave: claveListado(args, `${locale}|||`), products: r.products, count: r.count }
+  } catch {
+    return undefined // el navegador la pide como antes
+  }
+}
+
+// Dentro del Suspense: el encabezado sale de inmediato y el listado llega en cuanto está
+async function ListadoTienda({ locale, filtros }: { locale: string; filtros: Record<string, string | string[] | undefined> }) {
+  return <SearchProductsListing locale={locale} inicial={await primeraPagina(locale, filtros)} />
 }
 
 async function AllCategories({
@@ -147,7 +165,7 @@ async function AllCategories({
         {bot ? (
           <ProductListing showSidebar locale={locale} searchParams={filtros} />
         ) : (
-          <SearchProductsListing locale={locale} />
+          <ListadoTienda locale={locale} filtros={filtros} />
         )}
       </Suspense>
     </main>

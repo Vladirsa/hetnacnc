@@ -10,53 +10,53 @@ import ProductListingProductsView from "@/components/molecules/ProductListingPro
 import { useSearchParams } from "next/navigation"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { argsDeListado, claveListado } from "@/lib/helpers/busqueda-listado"
 import {
   getSearchFacets,
   searchProducts,
   type SearchFacets,
 } from "@/lib/data/products"
-import type { SortOptions } from "@/types/product"
 
 const EMPTY_FACETS: SearchFacets = { attributes: {} }
 
-// URL params that drive the listing itself rather than attribute filters.
-const RESERVED_PARAMS = new Set([
-  "query",
-  "page",
-  "sortBy",
-  "min_price",
-  "max_price",
-  "disponible",
-])
+/** Primera página que ya trajo el servidor, para que las fotos no esperen a que cargue la página entera. */
+export type ListadoInicial = { clave: string; products: HttpTypes.StoreProduct[]; count: number }
 
 export const SearchProductsListing = ({
   category_id,
   collection_id,
   seller_id,
   locale = process.env.NEXT_PUBLIC_DEFAULT_REGION,
+  inicial,
 }: {
   category_id?: string | string[]
   collection_id?: string
   seller_id?: string
   locale?: string
+  inicial?: ListadoInicial
 }) => {
   const searchParams = useSearchParams()
   const categoryKey = Array.isArray(category_id)
     ? category_id.join(",")
     : category_id
 
-  const query = searchParams.get("query") || ""
-  const page = +(searchParams.get("page") || 1)
-  const sortBy = (searchParams.get("sortBy") as SortOptions | null) || undefined
-  const minPrice = searchParams.get("min_price") || ""
-  const maxPrice = searchParams.get("max_price") || ""
-  const disponible = searchParams.get("disponible") === "1"
+  const searchParamsKey = searchParams.toString()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const args = useMemo(() => argsDeListado(new URLSearchParams(searchParamsKey)), [searchParamsKey])
+  const { query = "", page, sortBy } = args
+  const minPrice = args.minPrice === undefined ? "" : String(args.minPrice)
+  const maxPrice = args.maxPrice === undefined ? "" : String(args.maxPrice)
+  const disponible = args.onlyAvailable
+  const clave = claveListado(args, `${locale}|${categoryKey ?? ""}|${collection_id ?? ""}|${seller_id ?? ""}`)
+  const sirveInicial = !!inicial && inicial.clave === clave
 
   const [facets, setFacets] = useState<SearchFacets>(EMPTY_FACETS)
-  const [products, setProducts] = useState<HttpTypes.StoreProduct[]>([])
-  const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const [products, setProducts] = useState<HttpTypes.StoreProduct[]>(sirveInicial ? inicial!.products : [])
+  const [count, setCount] = useState(sirveInicial ? inicial!.count : 0)
+  const [isLoading, setIsLoading] = useState(!sirveInicial)
+  // Con la primera página del servidor no se vuelve a pedir lo mismo al abrir
+  const yaTraida = useRef(sirveInicial)
 
   useEffect(() => {
     getSearchFacets()
@@ -64,18 +64,7 @@ export const SearchProductsListing = ({
       .catch(() => setFacets(EMPTY_FACETS))
   }, [])
 
-  const searchParamsKey = searchParams.toString()
-  const attributesKey = useMemo(() => {
-    const selected: Record<string, string[]> = {}
-    searchParams.forEach((raw, key) => {
-      if (RESERVED_PARAMS.has(key) || !raw) {
-        return
-      }
-      selected[key] = raw.split(",").filter(Boolean)
-    })
-    return JSON.stringify(selected)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParamsKey])
+  const attributesKey = JSON.stringify(args.attributes)
   const attributes = useMemo(
     () => JSON.parse(attributesKey) as Record<string, string[]>,
     [attributesKey]
@@ -84,6 +73,10 @@ export const SearchProductsListing = ({
   useEffect(() => {
     async function fetchProducts() {
       if (!locale) return
+      if (yaTraida.current) {
+        yaTraida.current = false
+        return
+      }
 
       try {
         setIsLoading(true)
