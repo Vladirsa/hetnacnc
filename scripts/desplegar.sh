@@ -229,11 +229,22 @@ fi
 # NEXT_DIST_DIR va en el entorno: hetna-web arranca ya desde la carpeta nueva
 pm2 restart hetna-web --update-env
 # Microcaché de nginx (infra/nginx/CACHE-PAGINAS.md): las copias guardadas
-# apuntan a los archivos /_next/static del build anterior; se tiran ya. Si la
-# microcaché no está instalada, la carpeta no existe y esto no hace nada.
+# apuntan a los archivos /_next/static del build anterior y hay que tirarlas,
+# pero SÓLO cuando la tienda nueva ya contesta. Mientras Next arranca, esas
+# copias son lo único que nginx puede servir; vaciarlas antes dejó 14 s con
+# 502/500 en la medición k6 del 11 de noviembre. Si la microcaché no está
+# instalada, la carpeta no existe y esto no hace nada.
 if [ -d /var/cache/nginx/hetna-paginas ]; then
+  inicio_web="$(date +%s)"
+  while :; do
+    codigo_web="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+      -H 'Cookie: _medusa_cache_id=despliegue; hetna_lang=es' http://127.0.0.1:3000/mx 2>/dev/null || true)"
+    [ "$codigo_web" = "200" ] && break
+    [ $(( $(date +%s) - inicio_web )) -ge 90 ] && break
+    sleep 1
+  done
   find /var/cache/nginx/hetna-paginas -type f -delete 2>/dev/null || true
-  echo "   microcaché de nginx vaciada"
+  echo "   microcaché de nginx vaciada (tienda nueva: ${codigo_web:-000} en $(( $(date +%s) - inicio_web ))s)"
 fi
 echo "$DIST_NUEVA" > apps/storefront/.dist-actual
 # Que un reinicio del servidor arranque con la misma carpeta
