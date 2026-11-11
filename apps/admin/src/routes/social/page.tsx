@@ -1106,6 +1106,7 @@ function Plan({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => v
         <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer("generar")}>1. Armar plan</button>
         <button type="button" style={boton("primario")} disabled={ocupado || !conteo("vacio")} onClick={() => void hacer("llenar")}>2. Escribir borradores ({conteo("vacio")})</button>
       </div>
+      <Temario alCambiar={alCambiar} />
       <p style={{ color: C.tenue, fontSize: 12, margin: "6px 0" }}>
         Cada domingo se arma solo el plan de la semana siguiente y el agente escribe los borradores. Los que piden video quedan en "Falta video": usa un video de taller o súbelo.
       </p>
@@ -1442,6 +1443,48 @@ async function apiFab<T>(cuerpo?: unknown): Promise<T> {
 }
 
 type FechaE = { clave: string; nombre: string; fecha: string; faltan: number; anticipacion: number; en_temporada: boolean; tema: string; activa: boolean; etiquetas: string[]; sugeridas: string[]; productos: { id: string; titulo: string; foto: string | null }[]; ultima: string | null }
+
+/** Botón "Generar todo el temario ahora": un borrador con imagen por cada tema pendiente. */
+function Temario({ alCambiar }: { alCambiar: () => void }) {
+  const [pub, setPub] = useState<{ clave: string; nombre: string; total: number; pendientes: number }[] | null>(null)
+  const [elegidos, setElegidos] = useState<string[]>([])
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  useEffect(() => {
+    api<any>("/plan", { accion: "temas" }).then((d) => { setPub(d.publicos); setElegidos(d.publicos.filter((p: any) => p.pendientes).map((p: any) => p.clave)) }).catch(() => setPub([]))
+  }, [])
+  if (!pub?.length) return null
+  const total = pub.filter((p) => elegidos.includes(p.clave)).reduce((s, p) => s + p.pendientes, 0)
+  return (
+    <div style={{ border: `1px dashed ${C.borde}`, borderRadius: 10, padding: 10, margin: "8px 0" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", fontSize: 13 }}>
+        <b>📚 Todo el temario</b>
+        {pub.map((p) => (
+          <label key={p.clave} style={{ display: "flex", gap: 4, alignItems: "center", opacity: p.pendientes ? 1 : 0.5 }}>
+            <input type="checkbox" disabled={!p.pendientes} checked={elegidos.includes(p.clave)} onChange={(e) => setElegidos(e.target.checked ? [...elegidos, p.clave] : elegidos.filter((x) => x !== p.clave))} />
+            {p.nombre.split(" (")[0]} ({p.pendientes} de {p.total})
+          </label>
+        ))}
+        <span style={{ flex: 1 }} />
+        <button type="button" style={{ ...boton("primario"), opacity: ocupado || !total ? 0.6 : 1 }} disabled={ocupado || !total}
+          onClick={async () => {
+            setOcupado(true)
+            try {
+              const d = await api<any>("/plan", { accion: "temario", publicos: elegidos })
+              setNota({ ok: true, t: `✓ Escribiendo ${d.temas} borradores (uno por día desde mañana, 7 pm). Tarda unos minutos; aparecen en Pendientes con su imagen.` })
+              alCambiar()
+            } catch (e) {
+              setNota({ ok: false, t: `✗ ${(e as Error).message}` })
+            } finally {
+              setOcupado(false)
+            }
+          }}>{ocupado ? "Generando…" : `Generar todo el temario ahora (${total})`}</button>
+      </div>
+      <div style={{ fontSize: 12, color: C.tenue, marginTop: 4 }}>Un borrador por cada tema que no ha salido en 30 días. No se aprueban solos: los revisas tú en Pendientes.</div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
+    </div>
+  )
+}
 
 /** Fechas especiales: videos de productos con la etiqueta de cada fecha (Día de las Madres, Muertos, Navidad…). */
 function FechasEspeciales() {

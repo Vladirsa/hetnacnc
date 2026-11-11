@@ -457,6 +457,78 @@ export async function llenarPlan(knex: any, semana: string, logger?: any, limite
   return { llenados: n }
 }
 
+/**
+ * Todo el temario de una vez: un borrador (con su imagen o carrusel) por cada
+ * tema que no se ha usado en 30 días ni está ya programado. Uno por día a las
+ * 19:00 (México), alternando públicos, para no saturar las cuentas. Quedan con
+ * fuente "temario": el piloto automático NO los aprueba; los revisa el dueño.
+ */
+export async function temarioCompleto(knex: any, logger?: any, o: { publicos?: string[]; desde?: Date } = {}) {
+  await asegurarPlan(knex)
+  const cfg = await leerEstrategia(knex)
+  const claves = (o.publicos?.length ? o.publicos : ["comunidad", "talleres", "clientes_particulares", "proveedores", "clientes_empresa"]).filter((c) => PUBLICOS.some((p) => p.clave === c))
+  const usados = new Set(
+    (await knex(T_PLAN).where("fecha", ">=", knex.raw("now() - interval '30 days'")).select("publico", "pilar")).map((r: any) => `${r.publico}|${r.pilar}`),
+  )
+  // Intercala los públicos: comunidad, talleres, clientes, … y otra vez
+  const colas = claves.map((c) => publicoDe(cfg, c).pilares.filter((x) => !usados.has(`${c}|${x}`)).map((pilar) => ({ publico: c, pilar })))
+  const temas: { publico: string; pilar: string }[] = []
+  for (let i = 0; colas.some((q) => q.length); i++) {
+    const q = colas[i % colas.length]
+    if (q.length) temas.push(q.shift()!)
+  }
+  if (!temas.length) return { creados: 0, temas: 0 }
+  const inicio = lunesDe(o.desde || new Date()) // se cuenta desde mañana
+  const hoy = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" }))
+  const manana = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`
+  const filas = temas.map((t, i) => {
+    const dia = sumarDias(manana, i + 1)
+    const fecha = instanteEn(dia, 19, "America/Mexico_City")
+    const emos = emocionesDe(t.publico)
+    return {
+      id: nuevoId("plan"), semana: lunesDe(fecha), fecha, red: t.publico === "comunidad" ? "facebook" : "instagram", mercado: "mx",
+      publico: t.publico, pilar: t.pilar, formato: i % 3 === 2 ? "carrusel" : "imagen", estado: "vacio",
+      emocion: t.publico === "comunidad" ? null : (emos[i % Math.max(1, emos.length)] || EMOCIONES[0]).clave,
+    }
+  })
+  await knex(T_PLAN).insert(filas)
+  logger?.info?.(`[temario] ${filas.length} temas desde ${inicio}; escribiendo los textos…`)
+  // Textos con IA, uno por uno (en segundo plano; la Fábrica luego les hace la imagen)
+  const contexto = await contextoReal(knex)
+  let n = 0
+  for (const h of filas) {
+    try {
+      const publico = publicoDe(cfg, h.publico)
+      const idea = await ideaPara(h, cfg, contexto, logger)
+      const [texto] = idea.texto.split(/\n\s*GUION:\s*/i)
+      const conLiga = texto.includes("{{liga}}") ? texto.trim() : `${texto.trim()}\n\n{{liga}}`
+      const postId = await crearPublicacion(
+        knex,
+        { origen: "manual", fuente: "temario", titulo: `Temario · ${h.pilar}`, texto_base: conLiga, url: `${STORE_URL}${publico.destino}`, redes: [h.red], estado: "borrador", programada_para: h.fecha, mercado: "mx", textos: idea.ia ? { [h.red]: conLiga } : undefined } as any,
+        logger,
+      )
+      await knex(T_PLAN).where({ id: h.id }).update({ post_id: postId, estado: "borrador" })
+      if (h.emocion) await knex(T_POST).where({ id: postId }).update({ emocion: h.emocion })
+      n++
+    } catch (e) {
+      logger?.warn?.(`[temario] ${h.pilar}: ${(e as Error).message}`)
+    }
+  }
+  logger?.info?.(`[temario] listos ${n} de ${filas.length}`)
+  return { creados: n, temas: filas.length }
+}
+
+/** Temas pendientes por público (para el botón del panel). */
+export async function temasPendientes(knex: any) {
+  await asegurarPlan(knex)
+  const cfg = await leerEstrategia(knex)
+  const usados = new Set((await knex(T_PLAN).where("fecha", ">=", knex.raw("now() - interval '30 days'")).select("publico", "pilar")).map((r: any) => `${r.publico}|${r.pilar}`))
+  return PUBLICOS.map((p) => {
+    const pil = publicoDe(cfg, p.clave).pilares
+    return { clave: p.clave, nombre: p.nombre, total: pil.length, pendientes: pil.filter((x) => !usados.has(`${p.clave}|${x}`)).length }
+  })
+}
+
 /** Plan de una semana con el estado real de cada publicación. */
 export async function verPlan(knex: any, semana: string) {
   await asegurarPlan(knex)
