@@ -14,19 +14,62 @@ export const config: RouteConfig = {
   icon: Icono,
 }
 
+const VIDRIO = {
+  background: "rgba(255,255,255,0.78)",
+  WebkitBackdropFilter: "blur(14px) saturate(1.2)",
+  backdropFilter: "blur(14px) saturate(1.2)",
+  border: "1px solid rgba(20,32,51,0.06)",
+  boxShadow: "0 8px 24px -12px rgba(20,32,51,0.18)",
+}
 const S = {
-  page: { maxWidth: 900, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "inherit" },
-  h1: { fontSize: 22, fontWeight: 700, margin: 0 },
+  page: { maxWidth: 980, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "inherit" },
+  h1: { fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" },
   sub: { color: "#6B675C", fontSize: 14, margin: "4px 0 16px" },
-  card: { background: "#fff", border: "1px solid #E7E4DC", borderRadius: 12, padding: 18, marginBottom: 14 },
+  card: { ...VIDRIO, borderRadius: 16, padding: 18, marginBottom: 14 },
   tag: (bg, color) => ({ background: bg, color, borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 700 }),
   label: { display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 },
-  input: { width: "100%", height: 38, border: "1px solid #D9D5C9", borderRadius: 8, padding: "0 10px", fontSize: 14, boxSizing: "border-box", background: "#fff" },
-  area: { width: "100%", minHeight: 70, border: "1px solid #D9D5C9", borderRadius: 8, padding: 10, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" },
+  input: { width: "100%", height: 40, border: "1px solid #D9D5C9", borderRadius: 10, padding: "0 10px", fontSize: 14, boxSizing: "border-box", background: "#fff" },
+  area: { width: "100%", minHeight: 70, border: "1px solid #D9D5C9", borderRadius: 10, padding: 10, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 },
-  btn: { background: "#C2560A", color: "#fff", border: 0, borderRadius: 8, padding: "9px 16px", fontWeight: 600, fontSize: 14, cursor: "pointer" },
-  btn2: { background: "#fff", color: "#142033", border: "1px solid #142033", borderRadius: 8, padding: "8px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer" },
-  tab: (on) => ({ background: on ? "#142033" : "#F3F1EA", color: on ? "#fff" : "#40403A", border: 0, borderRadius: 999, padding: "6px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer" }),
+  btn: { background: "linear-gradient(180deg,#D9600B,#C2560A)", color: "#fff", border: 0, borderRadius: 10, padding: "10px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 6px 16px -8px rgba(217,96,11,0.7)" },
+  btn2: { background: "transparent", color: "#C2560A", border: "1px solid rgba(217,96,11,0.5)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" },
+  tab: (on) => ({ background: on ? "#142033" : "rgba(255,255,255,0.78)", color: on ? "#fff" : "#40403A", border: on ? "1px solid #142033" : "1px solid rgba(20,32,51,0.08)", borderRadius: 999, padding: "7px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer" }),
+}
+
+// Cuánto falta para que cierre una solicitud, con color de urgencia
+function Plazo({ cierra }) {
+  if (!cierra) return null
+  const h = (new Date(cierra).getTime() - Date.now()) / 3600000
+  if (h <= 0) return <span style={S.tag("#F3F1EA", "#6B675C")}>Cerrada</span>
+  const texto = h < 1 ? "Cierra en menos de 1 h" : h < 48 ? `Cierra en ${Math.round(h)} h` : `Cierra en ${Math.round(h / 24)} días`
+  return h < 24 ? <span style={S.tag("#FDECEA", "#B3261E")}>⏱ {texto}</span> : <span style={S.tag("#F3F1EA", "#55544D")}>{texto}</span>
+}
+
+// Panel lateral para responder una solicitud sin perder la lista (rediseño nov 2026)
+function PanelLateral({ titulo, sub, alCerrar, children }) {
+  useEffect(() => {
+    const esc = (e) => { if (e.key === "Escape") alCerrar() }
+    window.addEventListener("keydown", esc)
+    const antes = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { window.removeEventListener("keydown", esc); document.body.style.overflow = antes }
+  }, [alCerrar])
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={alCerrar} style={{ position: "absolute", inset: 0, background: "rgba(20,32,51,0.35)" }} />
+      <div role="dialog" aria-label={titulo} style={{ position: "relative", width: "min(520px, 100%)", height: "100%", overflowY: "auto", background: "#FFFFFF", boxShadow: "-12px 0 32px -12px rgba(20,32,51,0.35)", padding: "22px 22px 40px", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C2560A" }}>Responder solicitud</p>
+            <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: "#142033" }}>{titulo}</p>
+            {sub && <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6B675C" }}>{sub}</p>}
+          </div>
+          <button type="button" onClick={alCerrar} aria-label="Cerrar" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E4DC", background: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
 }
 
 const CAMPOS = [
@@ -946,6 +989,9 @@ export default function SolicitudesPage() {
   const enviadas = datos.filter((s) => s.mi_propuesta)
   const descartadas = datos.filter((s) => !s.mi_propuesta && descartada(s))
   const lista = vista === "nuevas" ? nuevas : vista === "enviadas" ? enviadas : descartadas
+  const ganadas = enviadas.filter((s) => s.mi_propuesta?.estado === "elegida").length
+  const urgentes = nuevas.filter((s) => s.cierra_en && (new Date(s.cierra_en).getTime() - Date.now()) / 3600000 < 24).length
+  const solAbierta = abierta ? datos.find((s) => s.id === abierta) : null
 
   const deshacer = async (s) => {
     await fetch(`/vendor/hetna-solicitudes/${s.id}/respuesta`, { method: "DELETE", credentials: "include" }).catch(() => {})
@@ -954,10 +1000,24 @@ export default function SolicitudesPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Solicitudes de fabricación</h1>
+      <h1 style={S.h1}>Bolsa de proyectos</h1>
       <p style={S.sub}>
         Clientes que buscan taller. Manda tu precio y tiempo; el cliente compara y elige. Los talleres con membresía aparecen primero.
       </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 14 }}>
+        {[
+          ["Por cotizar", nuevas.length, urgentes ? `${urgentes} cierra${urgentes === 1 ? "" : "n"} en menos de 24 h` : "abiertas para ti", urgentes ? "#B3261E" : "#6B675C"],
+          ["Mis propuestas", enviadas.filter((s) => s.mi_propuesta?.estado !== "elegida" && s.mi_propuesta?.estado !== "descartada").length, "esperando al cliente", "#6B675C"],
+          ["Ganadas", ganadas, ganadas ? "¡a producir!" : "todavía ninguna", ganadas ? "#1E7B3A" : "#6B675C"],
+        ].map(([t, n, pie, color]) => (
+          <div key={t} style={{ ...S.card, marginBottom: 0, padding: 16 }}>
+            <p style={{ margin: 0, fontSize: 13, color: "#55544D", fontWeight: 600 }}>{t}</p>
+            <p style={{ margin: "6px 0 2px", fontSize: 28, fontWeight: 800, color: "#142033" }}>{n}</p>
+            <p style={{ margin: 0, fontSize: 12, color }}>{pie}</p>
+          </div>
+        ))}
+      </div>
 
       {cupo && <Cupo cupo={cupo} />}
 
@@ -1027,8 +1087,8 @@ export default function SolicitudesPage() {
                 {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}>No elegida</span>}
                 <span style={{ color: "#6B675C", fontSize: 12 }}>
                   {s.propuestas_recibidas} {s.propuestas_recibidas === 1 ? "propuesta" : "propuestas"}
-                  {s.cierra_en && s.estado === "abierta" ? ` · cierra ${new Date(s.cierra_en).toLocaleDateString("es-MX")}` : ""}
                 </span>
+                {s.estado === "abierta" && <Plazo cierra={s.cierra_en} />}
               </div>
               {[t.ciudad, t.estado_mx].filter(Boolean).length > 0 && (
                 <span style={{ color: "#6B675C", fontSize: 13 }}>📍 {[t.ciudad, t.estado_mx].filter(Boolean).join(", ")}</span>
@@ -1103,13 +1163,11 @@ export default function SolicitudesPage() {
             {s.estado === "abierta" && !descartada(s) && <Preguntas sol={s} alGuardar={cargar} />}
 
             {s.estado === "abierta" && !descartada(s) && (
-              abierta === s.id ? (
-                <FormPropuesta sol={s} cobroTaller={cobroTaller} alGuardar={() => { cargar(); setAbierta(null) }} />
-              ) : noPuedo === s.id ? (
+              noPuedo === s.id ? (
                 <FormNoPuedo sol={s} alGuardar={() => { cargar(); setNoPuedo(null) }} alCancelar={() => setNoPuedo(null)} />
               ) : (
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                  <button type="button" style={S.btn2} onClick={() => { setNoPuedo(null); setAbierta(s.id) }}>
+                  <button type="button" style={p ? S.btn2 : S.btn} onClick={() => { setNoPuedo(null); setAbierta(s.id) }}>
                     {p ? "Cambiar mi propuesta" : "Cotizar"}
                   </button>
                   {!p && (
@@ -1123,6 +1181,21 @@ export default function SolicitudesPage() {
           </div>
         )
       })}
+
+      {solAbierta && (
+        <PanelLateral
+          titulo={solAbierta.folio || "Solicitud"}
+          sub={[solAbierta.trabajo?.servicio, solAbierta.trabajo?.material, [solAbierta.trabajo?.ciudad, solAbierta.trabajo?.estado_mx].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+          alCerrar={() => setAbierta(null)}
+        >
+          {solAbierta.trabajo?.descripcion && !solAbierta.trabajo?.descripcion_restringida && (
+            <p style={{ whiteSpace: "pre-line", margin: "0 0 12px", color: "#40403A", fontSize: 13.5, background: "#F8F7F3", borderRadius: 10, padding: "10px 12px" }}>
+              {solAbierta.trabajo.descripcion}
+            </p>
+          )}
+          <FormPropuesta sol={solAbierta} cobroTaller={cobroTaller} alGuardar={() => { cargar(); setAbierta(null) }} />
+        </PanelLateral>
+      )}
     </div>
   )
 }
