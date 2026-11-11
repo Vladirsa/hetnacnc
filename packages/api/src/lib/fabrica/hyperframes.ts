@@ -377,16 +377,56 @@ export const TEMAS: Record<string, Tema> = {
   naranja: { nombre: "naranja", fondo: ACC, patron: "background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.07) 0 26px, transparent 26px 52px);", texto: "#ffffff", acento: INK, trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(20,32,51,.92)", capTexto: "#ffffff", sombra: "rgba(20,32,51,.25)" },
   // Acero: gris metálico con líneas finas
   acero: { nombre: "acero", fondo: "#D9DEE4", patron: "background-image:repeating-linear-gradient(0deg, rgba(20,32,51,.06) 0 2px, transparent 2px 14px), linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);", texto: INK, acento: ACC, trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(20,32,51,.92)", capTexto: "#ffffff", sombra: "rgba(20,32,51,.18)" },
+  // Plano técnico: azul rey con líneas blancas, como plano de ingeniería
+  tecnico: { nombre: "tecnico", fondo: "#1F4E8C", patron: `background-image:${rejilla("rgba(255,255,255,.12)")}, ${rejilla("rgba(255,255,255,.05)")};background-size:120px 120px, 30px 30px;`, texto: "#ffffff", acento: "#FFC27A", trazo: "#ffffff", relleno: "#2A5FA3", tarjeta: "#2A5FA3", tarjetaTexto: "#ffffff", capFondo: "rgba(255,255,255,.95)", capTexto: "#1F4E8C", sombra: "rgba(0,0,0,.3)", oscuro: true },
+  // Pizarrón verde con gis
+  pizarron: { nombre: "pizarron", fondo: "#1F3A32", patron: "background-image:radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.08), transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(255,255,255,.05), transparent 55%);", texto: "#F3F1E7", acento: "#F2B36B", trazo: "#F3F1E7", relleno: "#2A4B41", tarjeta: "#2A4B41", tarjetaTexto: "#F3F1E7", capFondo: "rgba(243,241,231,.95)", capTexto: "#1F3A32", sombra: "rgba(0,0,0,.3)", oscuro: true },
+  // Carbón: casi negro con brillo naranja
+  carbon: { nombre: "carbon", fondo: "#17181B", patron: "background-image:radial-gradient(circle at 50% 38%, rgba(194,86,10,.28), transparent 55%), repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 2px, transparent 2px 40px);", texto: "#F5F5F2", acento: "#FF8A3D", trazo: "#F5F5F2", relleno: "#26282D", tarjeta: "#26282D", tarjetaTexto: "#F5F5F2", capFondo: "rgba(245,245,242,.95)", capTexto: "#17181B", sombra: "rgba(0,0,0,.45)", oscuro: true },
+  // Cartón kraft, como caja de envío
+  kraft: { nombre: "kraft", fondo: "#D2B48C", patron: "background-image:repeating-linear-gradient(90deg, rgba(90,60,30,.06) 0 3px, transparent 3px 9px), linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.05));", texto: "#2E2013", acento: "#9E3F00", trazo: "#2E2013", relleno: "#F6EBDD", tarjeta: "#F6EBDD", tarjetaTexto: "#2E2013", capFondo: "rgba(46,32,19,.92)", capTexto: "#ffffff", sombra: "rgba(46,32,19,.2)" },
+  // Salvia: verde suave y tranquilo (sobre todo para Comunidad)
+  salvia: { nombre: "salvia", fondo: "#E2EBE3", patron: "background-image:radial-gradient(circle at 15% 85%, rgba(61,99,77,.12), transparent 45%), radial-gradient(circle at 90% 10%, rgba(194,86,10,.08), transparent 40%);", texto: "#24382C", acento: "#B4500A", trazo: "#24382C", relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: "#24382C", capFondo: "rgba(36,56,44,.92)", capTexto: "#ffffff", sombra: "rgba(36,56,44,.15)" },
+  // --- De temporada (sólo en sus fechas) ---
+  // Fiestas patrias (1 al 16 de septiembre): verde, blanco y rojo discretos
+  patrio: { nombre: "patrio", fondo: "#F7F5EF", patron: "background-image:linear-gradient(90deg, #0B6B3A 0 36px, transparent 36px), linear-gradient(270deg, #B3202A 0 36px, transparent 36px);", texto: "#14301F", acento: "#B3202A", trazo: "#14301F", relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: "#14301F", capFondo: "rgba(20,48,31,.92)", capTexto: "#ffffff", sombra: "rgba(20,48,31,.15)" },
+  // Día de Muertos (20 oct al 2 nov): morado con cempasúchil
+  muertos: { nombre: "muertos", fondo: "#2D1B45", patron: "background-image:radial-gradient(circle, rgba(255,166,0,.22) 4px, transparent 5px);background-size:70px 70px;", texto: "#FFF4E0", acento: "#FFA600", trazo: "#FFF4E0", relleno: "#3E2860", tarjeta: "#3E2860", tarjetaTexto: "#FFF4E0", capFondo: "rgba(255,244,224,.95)", capTexto: "#2D1B45", sombra: "rgba(0,0,0,.35)", oscuro: true },
+  // Navidad y Reyes (1 dic al 6 ene): rojo profundo con dorado
+  navidad: { nombre: "navidad", fondo: "#7E1A1F", patron: "background-image:radial-gradient(circle, rgba(255,215,140,.18) 3px, transparent 4px);background-size:56px 56px;", texto: "#FFF6E8", acento: "#FFD27A", trazo: "#FFF6E8", relleno: "#962A30", tarjeta: "#962A30", tarjetaTexto: "#FFF6E8", capFondo: "rgba(255,246,232,.95)", capTexto: "#7E1A1F", sombra: "rgba(0,0,0,.3)", oscuro: true },
   // Foto real de la Biblioteca (del tema del texto), desenfocada y con velo azul
   foto: { nombre: "foto", fondo: INK, patron: "", texto: "#ffffff", acento: "#F2A25F", trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(244,241,234,.95)", capTexto: INK, sombra: "rgba(0,0,0,.35)", oscuro: true },
 }
 
-/** Tema para una pieza: cambia de un video a otro (según su id) y usa foto sólo si hay. */
-export function temaPara(semilla: string, hayFoto = false) {
-  const lista = Object.keys(TEMAS).filter((t) => t !== "foto" || hayFoto)
+const TEMPORADA: Record<string, [number, number, number, number]> = {
+  // [mes inicio, día inicio, mes fin, día fin] (mes 1-12)
+  patrio: [9, 1, 9, 16],
+  muertos: [10, 20, 11, 2],
+  navidad: [12, 1, 1, 6],
+}
+const COMUNIDAD = ["papel", "salvia", "noche", "pizarron", "foto"]
+const NEGOCIO_FUERA = ["salvia"] // la salvia es para Comunidad
+
+/** Temas de temporada activos en una fecha (hora de México). */
+export function temporadaDe(d = new Date()) {
+  const [m, dia] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City", month: "numeric", day: "numeric" }).formatToParts(d).filter((p) => p.type !== "literal").map((p) => Number(p.value))
+  const v = m * 100 + dia
+  return Object.entries(TEMPORADA).filter(([, [m1, d1, m2, d2]]) => (m1 * 100 + d1 <= m2 * 100 + d2 ? v >= m1 * 100 + d1 && v <= m2 * 100 + d2 : v >= m1 * 100 + d1 || v <= m2 * 100 + d2)).map(([t]) => t)
+}
+
+/**
+ * Tema para una pieza: cambia de un video a otro (según su id), usa foto sólo
+ * si hay, Comunidad va con fondos tranquilos y en temporada (fiestas patrias,
+ * Día de Muertos, Navidad) 1 de cada 3 videos sale con el tema de la fecha.
+ */
+export function temaPara(semilla: string, hayFoto = false, o: { publico?: string; fecha?: Date } = {}) {
   let h = 0
   for (const c of String(semilla || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return lista[h % lista.length]
+  const temporada = temporadaDe(o.fecha)
+  if (temporada.length && o.publico !== "comunidad" && h % 3 === 0) return temporada[h % temporada.length]
+  const base = o.publico === "comunidad" ? COMUNIDAD : Object.keys(TEMAS).filter((t) => !(t in TEMPORADA) && !NEGOCIO_FUERA.includes(t))
+  const lista = base.filter((t) => t !== "foto" || hayFoto)
+  return lista[Math.floor(h / 3) % lista.length]
 }
 
 type Opciones = { duraciones: number[]; voz?: string | null; musica?: string | null; liga?: string; comunidad?: boolean; idioma?: string; tema?: string; foto?: string | null }
@@ -504,7 +544,7 @@ export function componer(bloques: Bloque[], o: Opciones) {
 @font-face { font-family: "Archivo Black"; src: url("assets/Archivo-900.ttf"); font-weight: 400; }
 @font-face { font-family: "Archivo XB"; src: url("assets/Archivo-800.ttf"); font-weight: 800; }
 * { margin:0; padding:0; box-sizing:border-box; }
-:root { --fondo:${T.fondo}; --texto:${T.texto}; --acento:${T.acento}; --trazo:${T.trazo}; --relleno:${T.relleno}; --tarjeta:${T.tarjeta}; --tarjeta-texto:${T.tarjetaTexto}; --cap-fondo:${T.capFondo}; --cap-texto:${T.capTexto}; --sombra:${T.sombra}; }
+:root { --fondo:${T.fondo}; --texto:${T.texto}; --acento:${T.acento}; --trazo:${T.trazo}; --relleno:${T.relleno}; --tarjeta:${T.tarjeta}; --tarjeta-texto:${T.tarjetaTexto}; --cap-fondo:${T.capFondo}; --cap-texto:${T.capTexto}; --sombra:${T.sombra}; --sobre-acento:${T.oscuro ? INK : "#ffffff"}; }
 html, body { width:1080px; height:1920px; overflow:hidden; background:var(--fondo); }
 #root { position:relative; width:100%; height:100%; overflow:hidden; font-family:"Archivo Black", sans-serif; color:var(--texto); }
 .escena { position:absolute; inset:0; overflow:hidden; }
@@ -516,16 +556,16 @@ html, body { width:1080px; height:1920px; overflow:hidden; background:var(--fond
 .acento { color:var(--acento); }
 .cifra { position:absolute; left:0; width:1080px; top:620px; text-align:center; font-size:240px; line-height:1; color:var(--acento); white-space:nowrap; }
 .tarj { position:absolute; left:120px; width:840px; height:170px; background:var(--tarjeta); color:var(--tarjeta-texto); border:6px solid var(--trazo); border-radius:24px; display:flex; align-items:center; gap:30px; padding:0 34px; box-shadow:0 14px 0 var(--sombra); }
-.tarj .ico { width:100px; height:100px; border-radius:20px; background:var(--acento); color:#fff; font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
+.tarj .ico { width:100px; height:100px; border-radius:20px; background:var(--acento); color:var(--sobre-acento); font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
 .l2 { font-size:58px; line-height:1; }
 .lado { position:absolute; top:660px; width:440px; height:500px; border:6px solid var(--trazo); border-radius:28px; background:var(--tarjeta); color:var(--tarjeta-texto); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; padding:30px; text-align:center; box-shadow:0 14px 0 var(--sombra); }
 .lado .l2 { font-size:56px; }
 .marca-lado { width:120px; height:120px; border-radius:60px; display:flex; align-items:center; justify-content:center; font-size:72px; color:#fff; font-family:"Archivo XB"; }
-.mal .marca-lado { background:#5b6b80; } .bien .marca-lado { background:var(--acento); } .bien { border-color:var(--acento); }
+.mal .marca-lado { background:#5b6b80; } .bien .marca-lado { background:var(--acento); color:var(--sobre-acento); } .bien { border-color:var(--acento); }
 .marca { position:absolute; left:0; width:1080px; top:540px; text-align:center; font-size:132px; line-height:1; white-space:nowrap; }
 .marca-chica { position:absolute; left:0; width:1080px; top:1560px; text-align:center; font-size:54px; white-space:nowrap; }
 .web { position:absolute; left:0; width:1080px; top:720px; text-align:center; font-family:"Archivo XB"; font-size:68px; }
-.cta { position:absolute; left:140px; width:800px; top:880px; height:150px; border-radius:30px; background:var(--acento); color:${T.nombre === "naranja" ? "#ffffff" : T.oscuro ? INK : "#ffffff"}; display:flex; align-items:center; justify-content:center; white-space:nowrap; }
+.cta { position:absolute; left:140px; width:800px; top:880px; height:150px; border-radius:30px; background:var(--acento); color:var(--sobre-acento); display:flex; align-items:center; justify-content:center; white-space:nowrap; }
 .cap { position:absolute; left:60px; width:960px; top:1300px; text-align:center; }
 .cap span { display:inline-block; font-family:"Archivo XB"; font-size:50px; line-height:1.1; color:var(--cap-texto); background:var(--cap-fondo); padding:12px 24px; border-radius:16px; white-space:nowrap; }
 /* Los dibujos toman los colores del tema */

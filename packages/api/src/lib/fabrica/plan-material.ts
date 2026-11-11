@@ -250,7 +250,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         const fotoFondo = bloques ? await foto().catch(() => null) : null
         let v: any = bloques
           ? await videoHF(bloques, {
-              tema: temaPara(f.id, !!fotoFondo), foto: fotoFondo,
+              tema: temaPara(f.id, !!fotoFondo, { publico: f.publico, fecha: f.programada_para ? new Date(f.programada_para) : new Date(f.fecha) }), foto: fotoFondo,
               duraciones: voz?.duraciones?.length === bloques.length ? voz.duraciones : bloques.map((b: any) => segundosPara(b.narracion, 1.8, 4.5)),
               voz: voz?.url || null, musica, liga, comunidad: f.publico === "comunidad", idioma: idiomaDe(f.mercado), logger,
             })

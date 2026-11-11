@@ -1,4 +1,4 @@
-import { TEMAS, temaPara, acomodarTitulo, bloquesBasicos, componer, cuatroPalabras, gruposSubtitulo, iconoPara, paraVoz, revisar, sanearBloques } from "../fabrica/hyperframes"
+import { TEMAS, temaPara, temporadaDe, acomodarTitulo, bloquesBasicos, componer, cuatroPalabras, gruposSubtitulo, iconoPara, paraVoz, revisar, sanearBloques } from "../fabrica/hyperframes"
 
 describe("videos HyperFrames", () => {
   it("deja máximo 4 palabras en pantalla y conserva la pregunta", () => {
@@ -70,5 +70,20 @@ describe("videos HyperFrames", () => {
     const sinFoto = componer(bloquesBasicos({ gancho: "x", frases: [], cierre: "y" }), { duraciones: [2, 2], tema: "foto" }).html
     expect(sinFoto).not.toContain('class="foto"')
     expect(sinFoto).toContain(`--fondo:${TEMAS.plano.fondo}`)
+  })
+
+  it("fondos de temporada sólo en sus fechas y Comunidad con fondos tranquilos", () => {
+    expect(temporadaDe(new Date("2026-09-10T18:00:00Z"))).toEqual(["patrio"])
+    expect(temporadaDe(new Date("2026-11-01T18:00:00Z"))).toEqual(["muertos"])
+    expect(temporadaDe(new Date("2026-12-24T18:00:00Z"))).toEqual(["navidad"])
+    expect(temporadaDe(new Date("2027-01-05T18:00:00Z"))).toEqual(["navidad"])
+    expect(temporadaDe(new Date("2026-11-11T18:00:00Z"))).toEqual([])
+    const nov = new Date("2026-11-11T18:00:00Z")
+    const negocio = new Set(Array.from({ length: 60 }, (_, i) => temaPara(`p${i}`, false, { fecha: nov })))
+    expect(negocio.has("navidad") || negocio.has("muertos") || negocio.has("patrio") || negocio.has("salvia")).toBe(false)
+    const dic = Array.from({ length: 60 }, (_, i) => temaPara(`p${i}`, false, { fecha: new Date("2026-12-15T18:00:00Z") }))
+    expect(dic.filter((t) => t === "navidad").length).toBeGreaterThan(5)
+    const com = new Set(Array.from({ length: 60 }, (_, i) => temaPara(`p${i}`, false, { publico: "comunidad", fecha: new Date("2026-12-15T18:00:00Z") })))
+    expect([...com].every((t) => ["papel", "salvia", "noche", "pizarron"].includes(t))).toBe(true)
   })
 })
