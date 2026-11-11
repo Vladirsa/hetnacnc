@@ -117,6 +117,8 @@ export const ICONOS: Record<string, string> = {
   pregunta: `<circle class="late" cx="100" cy="100" r="82" fill="${ACC}"/><text x="100" y="138" font-size="120" text-anchor="middle" fill="#fff" font-family="Archivo Black">?</text>`,
   alerta: `<path d="M100 20 L184 172 H16 Z" fill="#fff" ${L}/><rect x="91" y="70" width="18" height="58" rx="6" fill="${ACC}"/><circle cx="100" cy="148" r="11" fill="${ACC}"/>`,
   check: `<circle cx="100" cy="100" r="82" fill="${ACC}"/><path d="M60 102 L88 130 L142 72" stroke="#fff" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  vela: `<rect x="72" y="88" width="56" height="96" rx="8" fill="#fff" ${L}/><path d="M100 88 V74" ${L}/><path class="flama" d="M100 14 C118 38 122 52 112 64 C106 72 94 72 88 64 C78 52 84 36 100 14 Z" fill="${ACC}"/><path d="M60 184 H140" ${L}/>`,
+  flor: `<g fill="${ACC}">${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<ellipse cx="100" cy="52" rx="20" ry="38" transform="rotate(${i * 45} 100 90)"/>`).join("")}</g><circle cx="100" cy="90" r="24" fill="#fff" ${L}/><path d="M100 128 V190" ${L}/>`,
   maquina: "", // se dibuja aparte (es la máquina del video aprobado)
 }
 export const NOMBRES_ICONO = Object.keys(ICONOS)
@@ -148,6 +150,8 @@ const CLAVES: [RegExp, string][] = [
   [/sueñ|crec|emprend|meta|futuro|lanza/i, "cohete"],
   [/idea|aprend|capacit|tutorial|ense[ñn]/i, "foco"],
   [/trist|ansied|depres|nervio|preocup|soled|dolor|culpa|frustr|resent|odio|abuso|miedo/i, "nube"],
+  [/altar|ofrenda|vela|muertos/i, "vela"],
+  [/flor|cempas/i, "flor"],
   [/famil|casa|hogar|tranquil|calma|paz/i, "casa"],
   [/venta|vend|resultado|aument|m[aá]s clientes|creci/i, "grafica"],
   [/tienda|compr|producto|carrito/i, "carrito"],
@@ -617,6 +621,8 @@ function accionDe(nombre: string, sel: string, t: number, resto: number) {
       return `tl.fromTo("${sel} .rayos", {opacity:0, scale:.7}, {opacity:1, scale:1, duration:.4, ease:"back.out(2)", svgOrigin:"100 90"}, ${t});`
     case "nube":
       return `tl.fromTo("${sel} .gotas", {y:-10, opacity:0}, {y:14, opacity:1, duration:.35, yoyo:true, repeat:3, ease:"sine.inOut"}, ${t});`
+    case "vela":
+      return `tl.fromTo("${sel} .flama", {scaleY:.85, scaleX:1}, {scaleY:1.12, scaleX:.92, duration:.18, yoyo:true, repeat:9, ease:"sine.inOut", svgOrigin:"100 70"}, ${t});`
     case "corazon":
     case "pregunta":
       return `tl.fromTo("${sel} .late", {scale:1}, {scale:1.12, duration:.2, yoyo:true, repeat:3, ease:"sine.inOut", svgOrigin:"100 100"}, ${t});`
