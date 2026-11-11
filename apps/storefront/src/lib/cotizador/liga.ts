@@ -9,7 +9,7 @@ export type CotizacionPublica = {
   vencida: boolean
   creada: string
   vigencia_dias: number | null
-  taller: { nombre: string; telefono: string | null; correo: string | null; logo: string | null; sitio: string | null; direccion: string | null }
+  taller: { nombre: string; telefono: string | null; correo: string | null; logo: string | null; sitio: string | null; direccion: string | null; ref?: string | null }
   cliente: { nombre: string; empresa: string | null } | null
   items: { nombre: string; sku: string | null; cantidad: number; precio: number; descuento_pct: number; subtotal: number; notas: string | null }[]
   subtotal: number
