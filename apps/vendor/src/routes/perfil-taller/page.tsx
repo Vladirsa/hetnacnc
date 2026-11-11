@@ -67,18 +67,18 @@ const ESTADOS = [
 
 const S = {
   page: { maxWidth: 820, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "inherit" },
-  h1: { fontSize: 22, fontWeight: 700, margin: 0 },
+  h1: { fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" },
   sub: { color: "#6B675C", fontSize: 14, margin: "4px 0 20px" },
-  card: { background: "#fff", border: "1px solid #E7E4DC", borderRadius: 12, padding: 20, marginBottom: 16 },
-  h2: { fontSize: 16, fontWeight: 700, margin: "0 0 12px" },
+  card: { background: "rgba(255,255,255,0.78)", WebkitBackdropFilter: "blur(14px) saturate(1.2)", backdropFilter: "blur(14px) saturate(1.2)", border: "1px solid rgba(20,32,51,0.06)", boxShadow: "0 8px 24px -12px rgba(20,32,51,0.18)", borderRadius: 16, padding: 20, marginBottom: 16 },
+  h2: { fontSize: 16, fontWeight: 800, margin: "0 0 12px", color: "#142033" },
   label: { display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 },
-  input: { width: "100%", height: 38, border: "1px solid #D9D5C9", borderRadius: 8, padding: "0 10px", fontSize: 14, boxSizing: "border-box", background: "#fff" },
-  area: { width: "100%", minHeight: 96, border: "1px solid #D9D5C9", borderRadius: 8, padding: 10, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" },
+  input: { width: "100%", height: 40, border: "1px solid #D9D5C9", borderRadius: 10, padding: "0 10px", fontSize: 14, boxSizing: "border-box", background: "#fff" },
+  area: { width: "100%", minHeight: 96, border: "1px solid #D9D5C9", borderRadius: 10, padding: 10, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 },
   chips: { display: "flex", flexWrap: "wrap", gap: 8 },
   hint: { color: "#6B675C", fontSize: 12, marginTop: 4 },
-  btn: { background: "#C2560A", color: "#fff", border: 0, borderRadius: 8, padding: "10px 18px", fontWeight: 600, fontSize: 14, cursor: "pointer" },
-  btn2: { background: "#fff", color: "#142033", border: "1px solid #142033", borderRadius: 8, padding: "8px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer" },
+  btn: { background: "linear-gradient(180deg,#D9600B,#C2560A)", color: "#fff", border: 0, borderRadius: 10, padding: "10px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 6px 16px -8px rgba(217,96,11,0.7)" },
+  btn2: { background: "transparent", color: "#C2560A", border: "1px solid rgba(217,96,11,0.5)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" },
 }
 
 const chip = (on) => ({
@@ -162,6 +162,7 @@ export default function PerfilTallerPage() {
   const [msg, setMsg] = useState(null)
   const [metaBase, setMetaBase] = useState({})
   const [nombre, setNombre] = useState("")
+  const [handle, setHandle] = useState("")
   const [logo, setLogo] = useState("")
   const [banner, setBanner] = useState("")
   const [galeria, setGaleria] = useState([])
@@ -177,12 +178,13 @@ export default function PerfilTallerPage() {
     setF((p) => ({ ...p, [k]: p[k].includes(v) ? p[k].filter((x) => x !== v) : [...p[k], v] }))
 
   useEffect(() => {
-    fetch("/vendor/sellers/me?fields=id,name,metadata,logo,banner", { credentials: "include" })
+    fetch("/vendor/sellers/me?fields=id,name,handle,metadata,logo,banner", { credentials: "include" })
       .then((r) => r.json())
       .then(({ seller }) => {
         const meta = parseMeta(seller?.metadata)
         const p = meta.perfil || {}
         setNombre(seller?.name || "")
+        setHandle(seller?.handle || "")
         setLogo(seller?.logo || "")
         setBanner(seller?.banner || "")
         setGaleria(Array.isArray(p.galeria) ? p.galeria : [])
@@ -296,6 +298,8 @@ export default function PerfilTallerPage() {
       <p style={S.sub}>
         Esto es lo que ven los clientes en tu página de taller{nombre ? ` (${nombre})` : ""} y en el mapa de HETNA.
       </p>
+
+      <VistaPrevia nombre={nombre} handle={handle} logo={logo} banner={banner} f={f} galeria={galeria} />
 
       <section style={S.card}>
         <h2 style={S.h2}>Imagen de tu taller</h2>
@@ -543,5 +547,62 @@ export default function PerfilTallerPage() {
         {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</span>}
       </div>
     </div>
+  )
+}
+
+// Vista previa de cómo te ven los clientes y qué tan completo está tu perfil
+// (rediseño nov 2026). Se actualiza mientras llenas el formulario.
+function VistaPrevia({ nombre, handle, logo, banner, f, galeria }) {
+  const pasos = [
+    ["Logo", !!logo],
+    ["Portada", !!banner],
+    ["Lema", !!(f.lema || "").trim()],
+    ["Ubicación", !!(f.ciudad && f.estado)],
+    ["Servicios", (f.servicios || []).length > 0],
+    ["Materiales", (f.materiales || []).length > 0],
+    ["Máquinas", (f.maquinas || []).length > 0],
+    ["Galería", (galeria || []).length >= 3],
+  ]
+  const hechos = pasos.filter(([, ok]) => ok).length
+  const pct = Math.round((hechos / pasos.length) * 100)
+  const faltan = pasos.filter(([, ok]) => !ok).map(([n]) => n)
+  return (
+    <section style={{ ...S.card, padding: 0, overflow: "hidden" }}>
+      <div style={{ height: 120, background: banner ? `center/cover no-repeat url(${banner})` : "linear-gradient(120deg,#142033,#22334F 60%,#C2560A)" }} />
+      <div style={{ padding: "0 20px 18px", marginTop: -34, display: "flex", gap: 14, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ width: 72, height: 72, borderRadius: 18, background: logo ? `center/cover no-repeat url(${logo})` : "#C2560A", border: "3px solid #fff", boxShadow: "0 6px 16px -8px rgba(20,32,51,0.4)", display: "grid", placeItems: "center", color: "#fff", fontSize: 28, fontWeight: 800 }}>
+          {!logo && (nombre || "T").charAt(0).toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 200, paddingTop: 40, paddingBottom: 4 }}>
+          <p style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "#142033" }}>{nombre || "Tu taller"}</p>
+          <p style={{ margin: "2px 0 0", fontSize: 13, color: "#55544D" }}>
+            {f.lema || "Escribe un lema corto que diga qué haces mejor"}
+            {f.ciudad ? ` · 📍 ${[f.ciudad, f.estado].filter(Boolean).join(", ")}` : ""}
+          </p>
+        </div>
+        {handle && (
+          <a href={`https://hetnacnc.com/mx/talleres/${handle}`} target="_blank" rel="noreferrer" style={{ ...S.btn2, textDecoration: "none", marginBottom: 4 }}>
+            Ver mi página ↗
+          </a>
+        )}
+      </div>
+      {(f.servicios || []).length > 0 && (
+        <div style={{ padding: "0 20px 14px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {f.servicios.slice(0, 8).map((x) => (
+            <span key={x} style={{ background: "#F3F1EA", color: "#40403A", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>{x}</span>
+          ))}
+        </div>
+      )}
+      <div style={{ borderTop: "1px solid rgba(20,32,51,0.06)", padding: "12px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, color: "#142033" }}>
+          <span>Tu perfil está {pct}% completo</span>
+          <span style={{ color: pct === 100 ? "#1E7B3A" : "#C2560A" }}>{hechos} de {pasos.length}</span>
+        </div>
+        <div style={{ height: 8, background: "#EFECE4", borderRadius: 99, marginTop: 6, overflow: "hidden" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? "#1E7B3A" : "linear-gradient(90deg,#D9600B,#C2560A)" }} />
+        </div>
+        {faltan.length > 0 && <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6B675C" }}>Te falta: {faltan.join(", ")}. Los perfiles completos reciben más solicitudes.</p>}
+      </div>
+    </section>
   )
 }
