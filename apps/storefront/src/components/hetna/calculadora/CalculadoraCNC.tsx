@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Calculadora, Campo, Entrada, Medidor, Resultado } from "@/lib/calculadora/comun"
@@ -124,22 +124,77 @@ const IconoProceso = ({ id }: { id: string }) => {
   }
 }
 
-const textoResultado = (c: Calculadora, e: Entrada, R: Resultado) => {
-  const entradas = c.campos
-    .filter((f) => visible(f, e) && e[f.k] !== undefined && e[f.k] !== "")
-    .map((f) => {
-      const v = f.tipo === "opcion" ? f.opciones?.find((o) => o.v === String(e[f.k]))?.t ?? e[f.k] : `${e[f.k]}${f.unidad ? " " + f.unidad : ""}`
-      return `${f.etiqueta}: ${v}`
-    })
-  const lineas = [`${R.titulo} — HETNA CNC`, "", ...entradas, ""]
-  for (const b of R.bloques) {
-    lineas.push(`${b.titulo.toUpperCase()}`)
-    for (const f of b.filas) lineas.push(`• ${f.etiqueta}: ${f.valor}${f.nota ? ` (${f.nota})` : ""}`)
+const SITIO = "https://hetnacnc.com"
+
+// Liga que vuelve a abrir la calculadora con los mismos datos (para quien recibe el mensaje).
+const ligaCalculo = (procesoId: string, c: Calculadora, e: Entrada, origen: string) => {
+  const datos: Record<string, string> = {}
+  for (const f of c.campos) if (visible(f, e) && e[f.k] !== undefined && e[f.k] !== "" && String(e[f.k]) !== String(f.inicial ?? "")) datos[f.k] = String(e[f.k]).slice(0, 40)
+  const codigo = btoa(unescape(encodeURIComponent(JSON.stringify(datos)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+  return `${SITIO}/mx/calculadora-cnc?proceso=${procesoId}&modo=${c.id}&c=${codigo}&utm_source=${origen}&utm_medium=compartido&utm_campaign=calculadora`
+}
+
+// Qué buscar en la tienda según lo que se calculó
+const busquedaTienda = (procesoId: string, c: Calculadora, e: Entrada): { texto: string; query: string } | null => {
+  const op = (k: string) => c.campos.find((f) => f.k === k)?.opciones?.find((o) => o.v === String(e[k] ?? ""))?.t ?? ""
+  if (procesoId === "router") {
+    const d = String(e.diametro ?? "").trim()
+    if (!d) return null
+    const tipo = op("tipo_fresa").replace(/\s*\(.*\)$/, "").toLowerCase()
+    return { texto: `¿Te falta la fresa? Fresas de ${d} mm en la tienda HETNA, con envío a todo México`, query: `fresa ${tipo.split(" ")[0] === "espiral" ? "" : tipo} ${d} mm`.replace(/\s+/g, " ").trim() }
+  }
+  if (procesoId === "laser_co2") return { texto: "Lentes, espejos y tubos para láser CO₂ en la tienda HETNA", query: "laser co2" }
+  if (procesoId === "fibra" || procesoId === "fibra_corte") return { texto: "Refacciones y consumibles para láser de fibra en la tienda HETNA", query: "laser fibra" }
+  if (procesoId === "plasma") return { texto: "Consumibles para plasma (boquillas, electrodos, escudos) en la tienda HETNA", query: "plasma" }
+  if (procesoId === "impresion3d") {
+    const m = op("material").split(" ")[0]
+    return { texto: `Filamento ${m || ""} y refacciones de impresión 3D en la tienda HETNA`.replace(/\s+/g, " "), query: `filamento ${m}`.trim() }
+  }
+  return null
+}
+
+const textoResultado = (procesoId: string, c: Calculadora, e: Entrada, R: Resultado, origen: "whatsapp" | "copiado") => {
+  const utm = `utm_source=${origen}&utm_medium=compartido&utm_campaign=calculadora`
+  const L = origen === "whatsapp" ? (t: string) => `*${t}*` : (t: string) => t
+  const lineas = [L(`${R.titulo}`), ""]
+  // lo principal primero: es lo que el operador necesita en la máquina
+  for (const b of origen === "whatsapp" ? R.bloques.slice(0, 1) : R.bloques) {
+    lineas.push(L(b.titulo))
+    for (const f of b.filas) lineas.push(`• ${f.etiqueta}: ${f.destacado ? L(f.valor) : f.valor}${f.nota ? ` (${f.nota})` : ""}`)
     lineas.push("")
   }
-  if (R.avisos.length) lineas.push("AVISOS", ...R.avisos.map((a) => `⚠ ${a}`), "")
-  lineas.push("Calculado en hetnacnc.com/calculadora-cnc")
+  if (R.avisos.length) lineas.push(L("Revisa antes de cortar"), ...R.avisos.slice(0, origen === "whatsapp" ? 3 : 99).map((a) => `⚠️ ${a}`), "")
+  const entradas = c.campos
+    .filter((f) => visible(f, e) && e[f.k] !== undefined && e[f.k] !== "")
+    .map((f) => (f.tipo === "opcion" ? f.opciones?.find((o) => o.v === String(e[f.k]))?.t ?? String(e[f.k]) : `${f.etiqueta} ${e[f.k]}${f.unidad ? " " + f.unidad : ""}`))
+  lineas.push(L("Datos usados"), entradas.join(" · "), "")
+  // lo que hace que el mensaje traiga gente a la tienda
+  lineas.push(`🔗 Abre este cálculo con los mismos datos y ajústalo a tu máquina: ${ligaCalculo(procesoId, c, e, origen)}`)
+  const t = busquedaTienda(procesoId, c, e)
+  if (t) lineas.push(`🛒 ${t.texto}: ${SITIO}/mx/categories?query=${encodeURIComponent(t.query)}&${utm}`)
+  lineas.push(`🧾 Convierte el tiempo de máquina en precio con la app HETNA CNC para talleres (14 días gratis): ${SITIO}/mx/servicios/cotizador-cnc?${utm}`)
+  lineas.push("", "Calculadora CNC gratis de HETNA: router, láser, fibra, plasma e impresión 3D.")
   return lineas.join("\n")
+}
+
+// Lee un cálculo compartido (?c=…): sólo campos que existen en esa calculadora, como texto corto.
+const leerCompartido = (c: Calculadora, codigo: string): Entrada | null => {
+  try {
+    const b = codigo.replace(/-/g, "+").replace(/_/g, "/")
+    const crudo = JSON.parse(decodeURIComponent(escape(atob(b + "===".slice((b.length + 3) % 4)))))
+    if (!crudo || typeof crudo !== "object") return null
+    const e: Entrada = {}
+    for (const f of c.campos) {
+      const v = crudo[f.k]
+      if (typeof v !== "string" || v.length > 40) continue
+      if (f.tipo === "opcion" && !f.opciones?.some((o) => o.v === v)) continue
+      if (f.tipo === "numero" && !/^-?\d+([.,]\d+)?$/.test(v)) continue
+      e[f.k] = v
+    }
+    return Object.keys(e).length ? e : null
+  } catch {
+    return null
+  }
 }
 
 export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) => {
@@ -150,7 +205,24 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
   const [entradas, setEntradas] = useState<Record<string, Entrada>>({})
   const [perfilGuardado, setPerfilGuardado] = useState(false)
   const [copiado, setCopiado] = useState(false)
+  const [compartido, setCompartido] = useState(false)
+  const abiertoDeLiga = useRef(false)
   const e = entradas[calc.id] || valoresIniciales(calc)
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const codigo = q.get("c")
+    if (!codigo) return
+    const p = procesoPorId(q.get("proceso") || undefined)
+    const m = p.modos.find((x) => x.id === q.get("modo")) || p.modos[0]
+    const datos = leerCompartido(m, codigo)
+    if (!datos && codigo !== "e30") return
+    abiertoDeLiga.current = true
+    setProcesoId(p.id)
+    setModoId(m.id)
+    setEntradas((prev) => ({ ...prev, [m.id]: { ...valoresIniciales(m), ...(datos || {}) } }))
+    setCompartido(true)
+  }, [])
 
   // perfil "Mi máquina" guardado en el navegador
   useEffect(() => {
@@ -162,6 +234,8 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
       }
       const perfil = JSON.parse(raw) as Entrada
       setPerfilGuardado(true)
+      // un cálculo que llegó por liga se respeta tal cual; el perfil se aplica en los demás modos
+      if (abiertoDeLiga.current) return
       setEntradas((prev) => {
         const sig = { ...prev }
         for (const m of proceso.modos) sig[m.id] = { ...(prev[m.id] || valoresIniciales(m)), ...perfil }
@@ -231,14 +305,14 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
   const copiar = async () => {
     if (!R) return
     try {
-      await navigator.clipboard.writeText(textoResultado(calc, e, R))
+      await navigator.clipboard.writeText(textoResultado(proceso.id, calc, e, R, "copiado"))
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2000)
     } catch {
       /* sin portapapeles */
     }
   }
-  const whatsapp = R ? `https://wa.me/?text=${encodeURIComponent(textoResultado(calc, e, R))}` : "#"
+  const whatsapp = R ? `https://wa.me/?text=${encodeURIComponent(textoResultado(proceso.id, calc, e, R, "whatsapp"))}` : "#"
 
   const principal = R?.bloques[0]
   const grandes = principal ? principal.filas.filter((f) => f.destacado) : []
@@ -345,6 +419,12 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
             <div className="rounded-[12px] border border-[#F2B8B5] bg-[#FDECEC] px-4 py-3 text-[14px] text-[#8A1C1C]">Revisa los datos: hay un valor que no se puede calcular.</div>
           ) : (
             <>
+              {compartido && (
+                <div className="flex items-center justify-between gap-3 rounded-[12px] border border-[#BFE5CF] bg-[#EEF8F2] px-4 py-2.5 text-[13.5px] text-[#14532D]">
+                  <span>Te compartieron este cálculo. Cambia los datos de la máquina por los tuyos y guárdala para la próxima.</span>
+                  <button type="button" onClick={() => setCompartido(false)} className="text-[#14532D]/70 hover:text-[#14532D]" aria-label="Cerrar aviso">✕</button>
+                </div>
+              )}
               {R.faltan.length > 0 && (
                 <div className="rounded-[12px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3 text-[14px] text-[#5A3A12]">
                   <strong>Falta:</strong> {R.faltan.join(", ")}.
@@ -361,8 +441,9 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       <button type="button" onClick={copiar} className="rounded-[10px] border border-white/20 bg-white/10 px-3 py-2 text-[13px] font-semibold text-white hover:bg-white/20">
                         {copiado ? "Copiado ✓" : "Copiar"}
                       </button>
-                      <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#15A067]">
-                        WhatsApp
+                      <a href={whatsapp} target="_blank" rel="noopener noreferrer" title="Manda estos parámetros a tu operador, a un compañero o a un cliente" className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#15A067]">
+                        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 3L8.5 11.5M17 3l-5 14-3.5-5.5L3 8l14-5z" /></svg>
+                        Enviar por WhatsApp
                       </a>
                     </div>
                   </div>
