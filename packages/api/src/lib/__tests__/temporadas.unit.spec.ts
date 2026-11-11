@@ -1,6 +1,6 @@
 import { FECHAS, fechasActivas, finDelDia, proxima, temporadaDe } from "../fabrica/calendario"
 import { coincide, fotoAbsoluta, nombreCorto, normalizar } from "../fabrica/temporadas"
-import { DEL_COTIZADOR, HERRAMIENTAS, tocaCotizador } from "../fabrica/promociones"
+import { DEL_3D, DEL_COTIZADOR, HERRAMIENTAS, grupoDelDia, grupoUsDelDia, tocaCotizador } from "../fabrica/promociones"
 
 const mx = (s: string) => new Date(`${s}T18:00:00Z`) // mediodía en México
 
@@ -54,8 +54,16 @@ describe("fechas especiales y productos", () => {
 })
 
 describe("campaña del Cotizador", () => {
-  it("sale 4 de cada 7 días y todas sus piezas existen", () => {
-    expect([0, 1, 2, 3, 4, 5, 6].filter(tocaCotizador)).toHaveLength(4)
-    for (const c of DEL_COTIZADOR) expect(HERRAMIENTAS.some((h) => h.clave === c)).toBe(true)
+  it("Cotizador 3 días y 3D Studio 3 días en México; en EE.UU. uno de cada uno, en inglés", () => {
+    const dias = [0, 1, 2, 3, 4, 5, 6]
+    expect(dias.filter(tocaCotizador)).toHaveLength(3)
+    expect(dias.filter((d) => grupoDelDia(d) === "3d")).toHaveLength(3)
+    expect(dias.filter((d) => grupoDelDia(d) === "otras")).toHaveLength(1)
+    expect(dias.map(grupoUsDelDia).filter(Boolean)).toEqual(["cotizador", "3d"])
+    for (const c of [...DEL_COTIZADOR, ...DEL_3D]) {
+      const h = HERRAMIENTAS.find((x) => x.clave === c)
+      expect(h).toBeDefined()
+      if (c !== "disenar") expect(h!.en?.texto).toBeTruthy() // todas las que salen en EE.UU. tienen inglés
+    }
   })
 })

@@ -4,7 +4,7 @@
 //                          | { accion: "fondo", tema, url, fuente, licencia } | { accion: "musica", titulo, url, estilo, licencia }
 //                          | { accion: "borrar_fondo" | "borrar_musica", id }
 //                          | { accion: "semanales" }  (genera ahora taller destacado, opinión e índice)
-//                          | { accion: "promo", tipo: "producto" | "blog" | "herramienta" | "cotizador", clave? }  (imagen y video ahora)
+//                          | { accion: "promo", tipo: "producto" | "blog" | "herramienta" | "cotizador" | "3d", clave?, mercado?: "us" }  (imagen y video ahora)
 // Marketing HETNA — Fábrica de contenido (Fase A).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
@@ -74,7 +74,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       }
       case "promo": {
         // Video + imagen tardan (y la voz en frío más): se hace en segundo plano
-        const fn = b.tipo === "radar" ? () => op.radarEstado(req.scope, logger) : b.tipo === "talleres" ? () => op.talleresListos(req.scope, logger) : b.tipo === "blog" ? () => promoBlog(req.scope, logger) : b.tipo === "herramienta" ? () => promoHerramienta(req.scope, logger, b.clave ? String(b.clave) : undefined) : b.tipo === "cotizador" ? () => promoHerramienta(req.scope, logger, undefined, { soloCotizador: true }) : () => promoProducto(req.scope, logger)
+        const fn = b.tipo === "radar" ? () => op.radarEstado(req.scope, logger) : b.tipo === "talleres" ? () => op.talleresListos(req.scope, logger) : b.tipo === "blog" ? () => promoBlog(req.scope, logger) : b.tipo === "herramienta" ? () => promoHerramienta(req.scope, logger, b.clave ? String(b.clave) : undefined) : b.tipo === "cotizador" ? () => promoHerramienta(req.scope, logger, undefined, { grupo: "cotizador", mercado: b.mercado === "us" ? "us" : "mx" }) : b.tipo === "3d" ? () => promoHerramienta(req.scope, logger, undefined, { grupo: "3d", mercado: b.mercado === "us" ? "us" : "mx" }) : () => promoProducto(req.scope, logger)
         setImmediate(() => fn().then((r) => { if (!r) logger.info(`[promo] ${b.tipo}: no hay nada nuevo que promover`) }).catch((e) => logger.warn(`[promo] ${(e as Error).message}`)))
         return res.json({ ok: true, en_proceso: true })
       }

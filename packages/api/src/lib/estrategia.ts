@@ -36,7 +36,9 @@ export const PUBLICOS: Publico[] = [
   },
   {
     clave: "clientes_particulares", nombre: "Clientes particulares y makers", objetivo: "que coticen o compren", destino: "/mx",
-    pilares: ["Corte satisfactorio de máquina CNC", "Antes y después de una pieza", "¿Cuánto cuesta cortar o maquinar…?", "Ideas para tu proyecto o negocio", "Diseños listos para cortar"],
+    pilares: ["Corte satisfactorio de máquina CNC", "Antes y después de una pieza", "¿Cuánto cuesta cortar o maquinar…?", "Ideas para tu proyecto o negocio", "Diseños listos para cortar",
+      // HETNA 3D Studio: de foto, texto o logotipo a STL
+      "Convierte una foto en modelo 3D con IA (el primero del mes es gratis)", "Tu foto en una litofanía 3D para imprimir", "Tu logotipo en 3D: de SVG o DXF a STL", "Llaveros y placas con nombre en minutos"],
   },
   {
     clave: "talleres", nombre: "Talleres", objetivo: "que se registren", destino: "/mx/talleres/unete",
@@ -49,6 +51,8 @@ export const PUBLICOS: Publico[] = [
       // HETNA Cotizador (lo que se cobra): plan gratis de 5 al mes, prueba de 14 días, planes Taller/Pro/Industrial
       "HETNA Cotizador: sube tu DXF y el precio sale con tus costos", "Deja de cotizar a mano: empieza gratis con 5 cotizaciones al mes",
       "Cotización por WhatsApp en PDF con tu marca", "Seguimiento automático de cotizaciones (que no se te enfríe el cliente)",
+      // HETNA 3D Studio (imagen a 3D con IA con créditos; lo demás gratis)
+      "De una foto a un modelo 3D con IA (STL para imprimir o maquinar)", "Letras 3D para anuncios: hojas de corte listas en DXF",
     ],
   },
   {

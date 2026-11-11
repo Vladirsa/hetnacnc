@@ -22,7 +22,8 @@ import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, para
 export const T_PROMO = "hetna_promo"
 const IMG = (f: string) => `${STORE_URL}/img/herramientas/${f}`
 
-export type Herramienta = { clave: string; nombre: string; ruta: string; imagen: string | null; tema: string; publico: string; gancho: string; frases: string[]; cta: string; texto: string }
+type TextosHerramienta = { nombre: string; gancho: string; frases: string[]; cta: string; texto: string }
+export type Herramienta = TextosHerramienta & { clave: string; ruta: string; imagen: string | null; tema: string; publico: string; en?: TextosHerramienta }
 export const HERRAMIENTAS: Herramienta[] = [
   {
     clave: "calculadora", nombre: "Calculadora CNC", ruta: "/mx/calculadora-cnc", imagen: IMG("calculadora-router.jpg"), tema: "router", publico: "talleres",
@@ -38,32 +39,69 @@ export const HERRAMIENTAS: Herramienta[] = [
     clave: "cotizador", nombre: "HETNA Cotizador", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-precio.jpg"), tema: "laser", publico: "talleres",
     gancho: "Cotiza en segundos con tu DXF", frases: ["Lee el largo de corte y las perforaciones", "Tres precios con tus costos", "Lo mandas por WhatsApp y PDF"], cta: "Pruébalo en HETNA",
     texto: "Sube el DXF y la app HETNA Cotizador mide el corte, calcula tres precios con tus costos y se lo manda a tu cliente por WhatsApp y PDF.",
+    en: { nombre: "HETNA Quoter", gancho: "Quote in seconds with your DXF", frases: ["It reads the cut length and pierces", "Three prices with your own costs", "Send it by WhatsApp and PDF"], cta: "Try it on HETNA", texto: "Upload a DXF and the HETNA Quoter app measures the cut, calculates three prices with your costs and sends them to your customer by WhatsApp and PDF." }
   },
   {
     clave: "cotizador_whatsapp", nombre: "Cotización por WhatsApp", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-whatsapp.jpg"), tema: "taller", publico: "talleres",
     gancho: "Tu cliente pide precio por WhatsApp", frases: ["Respóndele con una cotización en PDF", "Con tu marca y tus tarifas", "Y todo queda en tu historial"], cta: "Conoce el cotizador",
     texto: "Cuando el cliente pide precio por WhatsApp, respóndele con una cotización en PDF con tu marca y tus tarifas. Todo queda guardado en tu historial.",
+    en: { nombre: "WhatsApp quotes", gancho: "Customer asks for a price on WhatsApp?", frases: ["Reply with a PDF quote", "With your logo and your rates", "Everything saved in your history"], cta: "See the quoter", texto: "When a customer asks for a price on WhatsApp, reply with a PDF quote with your logo and your rates. Everything stays saved in your history." }
   },
   // --- Campaña del Cotizador (es lo que se cobra): sólo datos reales de cotizador-plan / suscripciones ---
   {
     clave: "cotizador_gratis", nombre: "HETNA Cotizador gratis", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-precio.jpg"), tema: "laser", publico: "talleres",
     gancho: "¿Sigues cotizando a mano?", frases: ["Empieza gratis con 5 cotizaciones al mes", "Sube tu DXF y el precio sale solo", "Tu cliente lo recibe por WhatsApp"], cta: "Empieza gratis",
     texto: "¿Sigues cotizando a mano en una hoja? Con HETNA Cotizador subes tu DXF, sale el precio con tus costos y se lo mandas a tu cliente por WhatsApp. Empieza gratis: 5 cotizaciones al mes.",
+    en: { nombre: "HETNA Quoter free", gancho: "Still quoting by hand?", frases: ["Start free with 5 quotes a month", "Upload your DXF and get the price", "Your customer gets it on WhatsApp"], cta: "Start free", texto: "Still quoting by hand on a spreadsheet? With the HETNA Quoter you upload your DXF, get the price with your costs and send it to your customer on WhatsApp. Start free: 5 quotes a month." }
   },
   {
     clave: "cotizador_prueba", nombre: "Prueba de 14 días", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-whatsapp.jpg"), tema: "taller", publico: "talleres",
     gancho: "Prueba el cotizador 14 días", frases: ["Cotizaciones sin límite durante la prueba", "PDF con tu marca y tus tarifas", "Todo queda en tu historial"], cta: "Pruébalo 14 días",
     texto: "Prueba HETNA Cotizador 14 días: cotiza sin límite, manda PDF con tu marca y tus tarifas y lleva el historial de tus clientes en un solo lugar.",
+    en: { nombre: "14-day trial", gancho: "Try the quoter for 14 days", frases: ["Unlimited quotes during the trial", "PDF with your logo and rates", "Your customer history in one place"], cta: "Try it for 14 days", texto: "Try the HETNA Quoter for 14 days: unlimited quotes, PDFs with your logo and rates, and your customer history in one place." }
   },
   {
     clave: "cotizador_factura", nombre: "Cotiza, cobra y factura", ruta: "/mx/herramientas-cnc", imagen: null, tema: "taller", publico: "talleres",
     gancho: "Cotiza, cobra y factura", frases: ["La cotización se vuelve pedido", "Factura electrónica desde el plan Taller", "Sin pasar datos a otro sistema"], cta: "Conoce los planes",
     texto: "En HETNA Cotizador la cotización aceptada se vuelve pedido y, desde el plan Taller, la facturas ahí mismo con factura electrónica. Sin pasar datos de un sistema a otro.",
+    en: { nombre: "Quote, get paid, invoice", gancho: "Quote, get paid, invoice", frases: ["An accepted quote becomes an order", "Mexican e-invoicing from the Taller plan", "No retyping into another system"], cta: "See the plans", texto: "In the HETNA Quoter an accepted quote becomes an order and, from the Taller plan, you invoice it right there with Mexican e-invoicing (CFDI). No retyping into another system." }
   },
   {
     clave: "cotizador_seguimiento", nombre: "Seguimiento automático", ruta: "/mx/herramientas-cnc", imagen: null, tema: "taller", publico: "talleres",
     gancho: "¿Mandaste la cotización y nada?", frases: ["El cotizador le da seguimiento por ti", "Recordatorio antes de que venza", "Y gracias con liga para reseña"], cta: "Conoce el plan Pro",
     texto: "¿Mandas cotizaciones y el cliente ya no contesta? Con el Marketing automático de HETNA Cotizador (plan Pro) le das seguimiento, le recuerdas antes de que venza y le pides reseña al entregar.",
+    en: { nombre: "Automatic follow-up", gancho: "Sent the quote and heard nothing?", frases: ["The quoter follows up for you", "A reminder before it expires", "And a thank-you with a review link"], cta: "See the Pro plan", texto: "Sending quotes and customers go quiet? With HETNA Quoter automated marketing (Pro plan) you follow up, remind them before the quote expires and ask for a review on delivery." }
+  },
+  // --- HETNA 3D Studio: de foto, texto o logotipo a STL (imagen a 3D con IA usa créditos; 1 gratis al mes) ---
+  {
+    clave: "imagen_3d", nombre: "Imagen a 3D con IA", ruta: "/mx/disenar/imagen-a-3d", imagen: null, tema: "impresion3d", publico: "clientes_particulares",
+    gancho: "De una foto a un modelo 3D", frases: ["Sube la foto y la IA hace el modelo", "Listo en 3 a 5 minutos", "Descarga el STL para imprimir o maquinar"], cta: "Pruébalo: 1 gratis al mes",
+    texto: "Sube la foto de una figura, pieza o producto y la IA de HETNA 3D Studio crea el modelo 3D con textura en 3 a 5 minutos. Descárgalo en STL para impresión 3D o router CNC, o en GLB con color. El primero de cada mes es gratis.",
+    en: { nombre: "Image to 3D with AI", gancho: "From a photo to a 3D model", frases: ["Upload a photo and AI builds the model", "Ready in 3 to 5 minutes", "Download the STL to print or machine"], cta: "Try it: 1 free a month", texto: "Upload a photo of a figure, part or product and the AI in HETNA 3D Studio builds a textured 3D model in 3 to 5 minutes. Download it as STL for 3D printing or CNC routing, or as GLB with color. Your first one each month is free." },
+  },
+  {
+    clave: "litofania", nombre: "Litofanías y relieves 3D", ruta: "/mx/disenar/litofania-relieve", imagen: null, tema: "impresion3d", publico: "clientes_particulares",
+    gancho: "Tu foto en una litofanía 3D", frases: ["Plana, curva o en cilindro para lámpara", "O relieve para tallar en router", "Descarga el STL gratis"], cta: "Hazla gratis",
+    texto: "Convierte gratis una foto en STL: litofanía plana, curva o en cilindro para lámpara lista para imprimir, o relieve 3D para tallar en router CNC. En HETNA 3D Studio.",
+    en: { nombre: "Lithophanes and 3D reliefs", gancho: "Turn your photo into a lithophane", frases: ["Flat, curved or a cylinder lamp", "Or a relief to carve on a router", "Download the STL for free"], cta: "Make it free", texto: "Turn a photo into an STL for free: a flat, curved or cylinder lithophane ready to print, or a 3D relief to carve on a CNC router. In HETNA 3D Studio." },
+  },
+  {
+    clave: "svg_stl", nombre: "SVG o DXF a STL", ruta: "/mx/disenar/svg-a-stl", imagen: null, tema: "impresion3d", publico: "clientes_particulares",
+    gancho: "Tu logotipo en 3D", frases: ["Sube tu SVG o DXF", "Dale altura y descarga el STL", "Para llaveros, placas y sellos"], cta: "Conviértelo gratis",
+    texto: "Sube un SVG o DXF, dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Con placa base para llaveros y placas, y modo espejo para sellos. Gratis en HETNA 3D Studio.",
+    en: { nombre: "SVG or DXF to STL", gancho: "Your logo in 3D", frases: ["Upload your SVG or DXF", "Set the height and get the STL", "For keychains, plates and stamps"], cta: "Convert it free", texto: "Upload an SVG or DXF, set the height and download the STL to 3D print or carve in relief. With a base plate for keychains and plates, and mirror mode for stamps. Free in HETNA 3D Studio." },
+  },
+  {
+    clave: "letras_3d", nombre: "Letras 3D en caja", ruta: "/mx/disenar/letras-3d", imagen: null, tema: "laser", publico: "talleres",
+    gancho: "Letras 3D para tu anuncio", frases: ["Frente de acrílico y paredes de MDF", "Hojas de corte en DXF o SVG", "Con barreno para el LED"], cta: "Diséñalas gratis",
+    texto: "Escribe tu texto, elige la letra y el alto y descarga gratis las hojas de corte en DXF o SVG: frente de acrílico, paredes y fondo de MDF con barreno para el LED. Vista 3D del armado en HETNA 3D Studio.",
+    en: { nombre: "3D channel letters", gancho: "3D letters for your sign", frases: ["Acrylic face and MDF sides", "Cut sheets in DXF or SVG", "With a hole for the LED"], cta: "Design them free", texto: "Type your text, pick the font and height, and download free cut sheets in DXF or SVG: acrylic face, MDF sides and back with a hole for the LED. 3D preview in HETNA 3D Studio." },
+  },
+  {
+    clave: "llaveros", nombre: "Llaveros y placas con nombre", ruta: "/mx/disenar/llaveros", imagen: null, tema: "laser", publico: "clientes_particulares",
+    gancho: "Llaveros con nombre en minutos", frases: ["Elige la letra y la forma", "DXF para láser o STL en relieve", "Con el agujero de la argolla"], cta: "Hazlos gratis",
+    texto: "Haz llaveros, placas de mascota y adornos con nombre: elige la letra y la forma y descarga el DXF o SVG para láser o el STL con las letras en relieve. Gratis en HETNA 3D Studio.",
+    en: { nombre: "Name keychains and tags", gancho: "Name keychains in minutes", frases: ["Pick the font and the shape", "DXF for laser or raised-letter STL", "With the key ring hole"], cta: "Make them free", texto: "Make keychains, pet tags and ornaments with names: pick the font and shape and download the DXF or SVG for laser or the STL with raised letters. Free in HETNA 3D Studio." },
   },
   {
     clave: "disenar", nombre: "Estudio de diseño", ruta: "/mx/disenar", imagen: null, tema: "router", publico: "clientes_particulares",
@@ -143,7 +181,8 @@ async function videoCon(scope: any, nombre: string, d: { gancho: string; frases:
  * la herramienta o la foto (si hay), las frases y el cierre. null si los videos
  * animados están apagados o falla (entonces sale el de FFmpeg).
  */
-async function videoAnimado(scope: any, nombre: string, d: { gancho: string; frases: string[]; cierre: string; fotos: (string | null)[]; liga: string; titulo: string }, logger?: any) {
+async function videoAnimado(scope: any, nombre: string, d: { gancho: string; frases: string[]; cierre: string; fotos: (string | null)[]; liga: string; titulo: string; mercado?: string }, logger?: any) {
+  const idioma = d.mercado === "us" ? "en" : "es"
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   const cfg = await leerConfig(knex)
   // Sólo de madrugada (2-6 am): de día no se le quita procesador a la tienda
@@ -155,9 +194,9 @@ async function videoAnimado(scope: any, nombre: string, d: { gancho: string; fra
     usados.push(x)
     return x
   }
-  const cierre = { texto: d.cierre, narracion: `${d.cierre} en hetnacnc.com` }
+  const cierre = { texto: d.cierre, narracion: idioma === "en" ? `${d.cierre} at hetnacnc.com` : `${d.cierre} en hetnacnc.com` }
   // El guionista (IA) escribe las escenas con textos naturales de máx. 4 palabras; sin IA, se arman con las frases
-  let bloques: any[] | null = await guionista({ texto: [d.titulo, d.gancho, ...d.frases].join(". "), publico: "talleres", cierre }, logger)
+  let bloques: any[] | null = await guionista({ texto: [d.titulo, d.gancho, ...d.frases].join(". "), publico: "talleres", cierre, idioma }, logger)
   if (!bloques) {
     bloques = [{ tipo: "gancho", texto: cuatroPalabras(d.gancho), narracion: d.gancho, icono: ic(`${d.titulo} ${d.gancho}`) }]
     for (const f of d.frases.slice(0, 3)) bloques.push({ tipo: "accion", texto: cuatroPalabras(f), narracion: f, icono: ic(f) })
@@ -165,10 +204,10 @@ async function videoAnimado(scope: any, nombre: string, d: { gancho: string; fra
   }
   // La captura real de la herramienta (o la foto) va después del gancho
   if (foto) bloques.splice(1, 0, { tipo: "producto", texto: cuatroPalabras(d.titulo), narracion: `${d.titulo}.`, foto })
-  const voz: any = await vozPara(nombre, bloques.map((b) => paraVoz(b.narracion)), "mx", logger)
+  const voz: any = await vozPara(nombre, bloques.map((b) => paraVoz(b.narracion, idioma)), d.mercado || "mx", logger)
   const v = await videoHF(bloques, {
     duraciones: voz?.duraciones?.length === bloques.length ? voz.duraciones : bloques.map((b) => segundosPara(b.narracion, 1.8, 4.5)),
-    voz: voz?.url || null, musica: await musicaAlAzar(knex), liga: d.liga, tema: temaPara(nombre), logger,
+    voz: voz?.url || null, musica: await musicaAlAzar(knex), liga: d.liga, tema: temaPara(nombre), idioma, logger,
   })
   return v ? subir(scope, `${nombre}.mp4`, "video/mp4", v.buf) : null
 }
@@ -179,19 +218,21 @@ async function cuando(knex: any, horas: number, mercado = "mx") {
 }
 
 /** Arma imagen + video de un tema y deja dos publicaciones. */
-async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: string; texto: string; url: string; tema: string; cinta: string; cta: string; producto_url?: string | null; fotos: (string | null)[]; gancho: string; frases: string[]; carrusel?: { titulo: string; puntos: string[]; portada?: string | null } }, logger?: any) {
+async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: string; texto: string; url: string; tema: string; cinta: string; cta: string; producto_url?: string | null; fotos: (string | null)[]; gancho: string; frases: string[]; carrusel?: { titulo: string; puntos: string[]; portada?: string | null }; mercado?: string }, logger?: any) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  const c1 = await cuando(knex, 2)
+  const mercado = d.mercado || "mx"
+  const en = mercado === "us"
+  const c1 = await cuando(knex, 2, mercado)
   const posts: string[] = []
   // 1) Imagen (tarjeta) o carrusel
-  const p1 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: d.carrusel ? ["instagram", "facebook", "linkedin"] : ["facebook", "instagram", "telegram"], estado: c1.estado, programada_para: c1.fecha, mercado: "mx" }, logger)
+  const p1 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: d.carrusel ? ["instagram", "facebook", "linkedin"] : ["facebook", "instagram", "telegram"], estado: c1.estado, programada_para: c1.fecha, mercado }, logger)
   const liga1 = urlCorta(await ligaPara(knex, p1, "facebook", d.url))
   let medios: any[]
   if (d.carrusel) {
     const total = d.carrusel.puntos.length + 2
     const urls = [await subir(scope, `promo-${p1}-1.png`, "image/png", await lamina({ num: 1, total, titulo: d.carrusel.titulo, portada: true, tema: d.tema, foto_url: d.carrusel.portada || (await fondoDe(knex, d.tema)) }))]
     for (const [k, pt] of d.carrusel.puntos.entries()) urls.push(await subir(scope, `promo-${p1}-${k + 2}.png`, "image/png", await lamina({ num: k + 2, total, titulo: pt, tema: d.tema })))
-    urls.push(await subir(scope, `promo-${p1}-${total}.png`, "image/png", await lamina({ num: total, total, titulo: d.cta, cierre: { cta: d.cta, liga_texto: "liga en el perfil" }, tema: d.tema, foto_url: await fondoDe(knex, d.tema) })))
+    urls.push(await subir(scope, `promo-${p1}-${total}.png`, "image/png", await lamina({ num: total, total, titulo: d.cta, cierre: { cta: d.cta, liga_texto: en ? "link in bio" : "liga en el perfil" }, tema: d.tema, foto_url: await fondoDe(knex, d.tema) })))
     medios = urls.map((url) => ({ url, tipo: "imagen" }))
   } else {
     const png = await tarjeta({ tema: d.tema, foto_url: d.producto_url ? await fondoDe(knex, d.tema) : d.fotos[0] || (await fondoDe(knex, d.tema)), producto_url: d.producto_url || null, cinta: { texto: d.cinta, tono: d.tipo === "producto" ? "verde" : "naranja" }, titulo: palabras(d.titulo, 10), cta: d.cta, liga: liga1 })
@@ -201,12 +242,12 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
   posts.push(p1)
   // 2) Video vertical (Reels, TikTok, Shorts) al día siguiente
   if (ffmpegDisponible()) {
-    const c2 = await cuando(knex, 26)
-    const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "instagram_historia", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
+    const c2 = await cuando(knex, 26, mercado)
+    const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "instagram_historia", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado }, logger)
     const liga2 = urlCorta(await ligaPara(knex, p2, "instagram", d.url))
     const v =
-      (await videoAnimado(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, liga: liga2, titulo: d.titulo }, logger).catch(() => null)) ||
-      (await videoCon(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, tema: d.tema, liga: liga2, mercado: "mx" }, logger))
+      (await videoAnimado(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, liga: liga2, titulo: d.titulo, mercado }, logger).catch(() => null)) ||
+      (await videoCon(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, tema: d.tema, liga: liga2, mercado }, logger))
     if (v) await knex(T_POST).where({ id: p2 }).update({ medios: JSON.stringify([{ url: v, tipo: "video" }]) })
     posts.push(p2)
   }
@@ -254,10 +295,22 @@ export async function promoBlog(scope: any, logger?: any) {
 /** Herramientas del Cotizador (lo que se monetiza): salen 4 de cada 7 días. */
 export const DEL_COTIZADOR = ["cotizador", "cotizador_whatsapp", "cotizador_gratis", "cotizador_prueba", "cotizador_factura", "cotizador_seguimiento"]
 
-/** ¿Hoy toca Cotizador? Lunes, miércoles, viernes y domingo. */
-export const tocaCotizador = (dia: number) => [0, 1, 3, 5].includes(dia)
+/** HETNA 3D Studio (imagen a 3D con IA se cobra con créditos). */
+export const DEL_3D = ["imagen_3d", "litofania", "svg_stl", "letras_3d", "llaveros", "disenar"]
 
-export async function promoHerramienta(scope: any, logger?: any, clave?: string, o: { soloCotizador?: boolean; sinCotizador?: boolean } = {}) {
+/**
+ * Qué herramienta sale cada día (0 = domingo):
+ *   México: Cotizador lunes, miércoles y viernes; 3D Studio martes, jueves y domingo; las demás el sábado.
+ *   EE.UU. (en inglés): Cotizador el martes y 3D Studio el sábado.
+ */
+export const grupoDelDia = (dia: number): "cotizador" | "3d" | "otras" => ([1, 3, 5].includes(dia) ? "cotizador" : [2, 4, 0].includes(dia) ? "3d" : "otras")
+export const grupoUsDelDia = (dia: number): "cotizador" | "3d" | null => (dia === 2 ? "cotizador" : dia === 6 ? "3d" : null)
+/** Compatibilidad: ¿hoy toca Cotizador en México? */
+export const tocaCotizador = (dia: number) => grupoDelDia(dia) === "cotizador"
+
+export async function promoHerramienta(scope: any, logger?: any, clave?: string, o: { soloCotizador?: boolean; sinCotizador?: boolean; grupo?: "cotizador" | "3d" | "otras"; mercado?: "mx" | "us" } = {}) {
+  const us = o.mercado === "us"
+  const grupo = o.grupo || (o.soloCotizador ? "cotizador" : undefined)
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarPromo(knex)
   let h = clave ? HERRAMIENTAS.find((x) => x.clave === clave) : null
@@ -265,21 +318,31 @@ export async function promoHerramienta(scope: any, logger?: any, clave?: string,
     // La que tiene más tiempo sin promoverse
     const ult = await knex(T_PROMO).where({ tipo: "herramienta" }).groupBy("ref").select("ref").max({ en: "created_at" })
     const fecha = Object.fromEntries(ult.map((u: any) => [u.ref, new Date(u.en).getTime()]))
-    const grupo = HERRAMIENTAS.filter((x) => (o.soloCotizador ? DEL_COTIZADOR.includes(x.clave) : o.sinCotizador ? !DEL_COTIZADOR.includes(x.clave) : true))
-    h = [...grupo].sort((a, b) => (fecha[a.clave] || 0) - (fecha[b.clave] || 0))[0]
+    const ref = (c: string) => (us ? `${c}:us` : c)
+    const lista = HERRAMIENTAS.filter((x) =>
+      (!us || x.en) &&
+      (grupo === "cotizador" ? DEL_COTIZADOR.includes(x.clave) : grupo === "3d" ? DEL_3D.includes(x.clave) : grupo === "otras" ? !DEL_COTIZADOR.includes(x.clave) && !DEL_3D.includes(x.clave) : o.sinCotizador ? !DEL_COTIZADOR.includes(x.clave) : true),
+    )
+    h = [...lista].sort((a, b) => (fecha[ref(a.clave)] || 0) - (fecha[ref(b.clave)] || 0))[0]
   }
+  if (!h) return null
+  if (us && !h.en) return null
+  const t = us ? { ...h, ...h.en! } : h
   // Precio real de los planes (de cotizador-suscripciones) sólo en el texto, nunca inventado
   let planes = ""
   if (DEL_COTIZADOR.includes(h.clave)) {
     try {
       const { PLANES_COTIZADOR } = await import("../cotizador-suscripciones")
-      const t = PLANES_COTIZADOR.taller?.precio
-      if (t) planes = `\n\nPlan gratis: 5 cotizaciones al mes. Planes de pago desde ${"$"}${Number(t).toLocaleString("es-MX")} MXN al mes.`
+      const precio = us ? PLANES_COTIZADOR.taller?.precioUsd : PLANES_COTIZADOR.taller?.precio
+      if (precio)
+        planes = us
+          ? `\n\nFree plan: 5 quotes a month. Paid plans from ${"$"}${precio} USD a month.`
+          : `\n\nPlan gratis: 5 cotizaciones al mes. Planes de pago desde ${"$"}${Number(precio).toLocaleString("es-MX")} MXN al mes.`
     } catch {}
   }
   return publicarPar(scope, {
-    tipo: "herramienta", ref: h.clave, titulo: h.nombre, url: `${STORE_URL}${h.ruta}`, tema: h.tema, texto: `${h.texto}${planes}\n\n${h.cta}: {{liga}}`,
-    cinta: h.nombre, cta: h.cta, producto_url: h.imagen, fotos: h.imagen ? [h.imagen] : [], gancho: h.gancho, frases: h.frases,
+    tipo: "herramienta", ref: us ? `${h.clave}:us` : h.clave, titulo: t.nombre, url: `${STORE_URL}${us ? h.ruta.replace(/^\/mx/, "/us") : h.ruta}`, tema: h.tema, texto: `${t.texto}${planes}\n\n${t.cta}: {{liga}}`, mercado: us ? "us" : "mx",
+    cinta: t.nombre, cta: t.cta, producto_url: h.imagen, fotos: h.imagen ? [h.imagen] : [], gancho: t.gancho, frases: t.frases,
   }, logger)
 }
 
