@@ -93,7 +93,7 @@ export const UserNavigation = () => {
                   href={i.href}
                   aria-current={activo(i.href) ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14.5px] ${
-                    activo(i.href) ? "bg-[#FDEEE1] font-semibold text-[#B34D07]" : "text-[#1B1B18] hover:bg-[#F6F4EF]"
+                    activo(i.href) ? "bg-gradient-to-b from-[#D9600B] to-[#C2560A] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(217,96,11,0.7)]" : "text-[#1B1B18] hover:bg-[#F6F4EF]"
                   }`}
                 >
                   <IconoCuenta n={i.icono} size={19} />
@@ -122,7 +122,7 @@ export const UserNavigation = () => {
   return (
     <>
       {/* Celular: desplegable */}
-      <details className="group rounded-[14px] border border-[#E7E4DC] bg-white md:hidden">
+      <details className="group rounded-[14px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md md:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[15px] font-semibold text-[#1B1B18]">
           <span className="flex items-center gap-2">
             {actual && <IconoCuenta n={actual.icono} size={19} />}
@@ -135,7 +135,7 @@ export const UserNavigation = () => {
         <div className="border-t border-[#E7E4DC] p-2">{lista}</div>
       </details>
       {/* Escritorio: columna fija */}
-      <aside className="hidden h-min rounded-[14px] border border-[#E7E4DC] bg-white p-3 md:block">{lista}</aside>
+      <aside className="hidden h-min rounded-[16px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-3 md:sticky md:top-24 md:block">{lista}</aside>
     </>
   )
 }
