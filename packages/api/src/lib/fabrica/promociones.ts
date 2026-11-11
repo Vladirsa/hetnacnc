@@ -119,6 +119,12 @@ export const HERRAMIENTAS: Herramienta[] = [
     gancho: "¿Qué taller CNC es confiable?", frases: ["Ranking con evaluaciones reales", "Por especialidad y estado", "Talleres verificados y certificados"], cta: "Ve el ranking",
     texto: "El ranking de talleres CNC de HETNA se arma con evaluaciones reales de clientes. Filtra por especialidad y estado y encuentra talleres verificados.",
   },
+  // --- Publicidad en hetnacnc.com (apps/storefront/src/lib/publicidad): espacios de 30 o 90 días con Mercado Pago ---
+  {
+    clave: "anunciate", nombre: "Anúnciate en HETNA", ruta: "/mx/anunciate", imagen: null, tema: "taller", publico: "proveedores",
+    gancho: "Pon tu taller frente a clientes CNC", frases: ["Carrusel del inicio, banners y foro", "Por 1 o 3 meses", "Pagas con Mercado Pago y listo"], cta: "Elige tu espacio",
+    texto: "Anuncia tu taller, tus herramientas o tus servicios en hetnacnc.com: carrusel del inicio, banners, la sección de herramientas, el foro o las categorías. Por 1 o 3 meses (el de 3 meses con 10% menos). Eliges tu espacio, pagas con Mercado Pago y listo.",
+  },
   {
     clave: "licitaciones", nombre: "Licitaciones sin comisión", ruta: "/mx/cotizar", imagen: null, tema: "lamina", publico: "clientes_empresa",
     gancho: "Varios talleres cotizan tu pieza", frases: ["Publica tu solicitud gratis", "Compara propuestas", "Sin comisión"], cta: "Pide cotización",

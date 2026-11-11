@@ -57,7 +57,9 @@ export const PUBLICOS: Publico[] = [
   },
   {
     clave: "proveedores", nombre: "Proveedores", objetivo: "que publiquen sus productos", destino: "/mx/talleres/unete",
-    pilares: ["Lo más pedido del mes", "Demanda de materiales por región", "Cómo vender insumos y herramientas en HETNA", "Sube tus productos en minutos", "Lo básico que necesita un proveedor para vender en línea"],
+    pilares: ["Lo más pedido del mes", "Demanda de materiales por región", "Cómo vender insumos y herramientas en HETNA", "Sube tus productos en minutos", "Lo básico que necesita un proveedor para vender en línea",
+      // Publicidad en el sitio (espacios de 30 o 90 días, se pagan con Mercado Pago)
+      "Anúnciate en HETNA: tu marca en el carrusel del inicio, banners y el foro"],
   },
   {
     // Comunidad: el lado humano de emprender un taller o negocio (humor, empatía, pregunta a la audiencia).
