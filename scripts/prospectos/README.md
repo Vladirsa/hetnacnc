@@ -37,7 +37,10 @@ tiktok · productos_servicios · idioma (es/en/pt) · segmento · fuente_url ·
 | `SIN_EMAIL` | Sólo tiene teléfono/redes: queda para WhatsApp o contacto manual |
 | `REBOTE` / `ERROR` | Correo inválido o falló el envío |
 
-## Secuencia (L-V 9:00, hora de México, máx. 40 correos/día, 25 s entre cada uno)
+## Secuencia (L-V 9:00, hora de México, 25 s entre cada correo)
+
+**Calentamiento del remitente:** 20 correos al día hasta el 25 de noviembre de 2026;
+desde el 26 de noviembre el nodo «Límite del día» sube solo a 40.
 
 1. Presentación según el tipo:
    - **Talleres y proveedores** → vender en HETNA: publicar gratis y 6% de comisión
@@ -64,8 +67,7 @@ publicados por la propia empresa; no se recolectan datos personales.
    N8N_PROSPECTOS_REGISTRO_URL=https://n8n.hetnacnc.com/webhook/hetna-prospecto-registrado
    ```
    y vuelve a desplegar.
-4. En n8n abre el flujo, ejecuta «Leer prospectos → Preparar correos del día» a
-   mano para revisar los correos y luego **Publish**.
+4. ✅ Probado de punta a punta (importar, envío, baja y registro) y publicado.
 
 ## Más prospectos con ScrapeGraphAI
 
