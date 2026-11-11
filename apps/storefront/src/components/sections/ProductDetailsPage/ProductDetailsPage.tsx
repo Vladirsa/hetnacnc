@@ -24,7 +24,7 @@ export const ProductDetailsPage = async ({
   // productos "que te pueden interesar". La cadena repite los campos que usa
   // la lista porque `fields` REEMPLAZA, no agrega: dejarlo sólo en
   // "*categories" tiraría los precios calculados.
-  const prod = await listProducts({
+  const resultado = await listProducts({
     countryCode: locale,
     queryParams: {
       handle: [handle],
@@ -33,7 +33,15 @@ export const ProductDetailsPage = async ({
         "*variants.calculated_price,+variants.inventory_quantity,*variants.options," +
         "*attribute_values,*attribute_values.attribute,*categories,*tags,*type,+metadata",
     },
-  }).then(({ response }) => response.products[0])
+  })
+  const prod = resultado.response.products[0]
+
+  // Si el API no contestó y no hay copia guardada, NO es un 404: es una falla
+  // temporal. Un 404 le dice a Google que la ficha ya no existe; un error
+  // (500) le dice que vuelva luego.
+  if (!prod && resultado.fallo) {
+    throw new Error(`Ficha ${handle}: el API no contestó`)
+  }
 
   // `notFound()` y no `return null`: devolver null dibujaba encabezado, una
   // franja en blanco y pie, con estado 200. Para el cliente es una página rota
