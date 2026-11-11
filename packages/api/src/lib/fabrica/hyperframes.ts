@@ -23,6 +23,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import sharp from "sharp"
 
 import { carpetaFuentes, PRINCIPIOS_VIDEO } from "./render"
+import { temporadaDe } from "./calendario"
 import { ffmpegBin } from "./video"
 
 const DIR = () => process.env.HYPERFRAMES_DIR || "/opt/hyperframes"
@@ -59,13 +60,14 @@ export function horaTranquila(d = new Date()) {
 
 export const TIPOS = ["gancho", "dato", "lista", "comparar", "accion", "pregunta"] as const
 export type Bloque = {
-  tipo: (typeof TIPOS)[number] | "cierre"
+  tipo: (typeof TIPOS)[number] | "cierre" | "producto"
   texto: string // lo que se VE (máx. 4 palabras)
   acento?: string // palabra de `texto` que va en naranja
   narracion: string // lo que se DICE
   icono?: string
   cifra?: string // sólo "dato": número real del texto (nunca inventado)
   items?: string[] // sólo "lista": 2 o 3, máx. 3 palabras
+  foto?: string // sólo "producto": foto del producto (URL; se baja a assets/)
   mal?: string // sólo "comparar"
   bien?: string
 }
@@ -394,25 +396,23 @@ export const TEMAS: Record<string, Tema> = {
   muertos: { nombre: "muertos", fondo: "#2D1B45", patron: "background-image:radial-gradient(circle, rgba(255,166,0,.22) 4px, transparent 5px);background-size:70px 70px;", texto: "#FFF4E0", acento: "#FFA600", trazo: "#FFF4E0", relleno: "#3E2860", tarjeta: "#3E2860", tarjetaTexto: "#FFF4E0", capFondo: "rgba(255,244,224,.95)", capTexto: "#2D1B45", sombra: "rgba(0,0,0,.35)", oscuro: true },
   // Navidad y Reyes (1 dic al 6 ene): rojo profundo con dorado
   navidad: { nombre: "navidad", fondo: "#7E1A1F", patron: "background-image:radial-gradient(circle, rgba(255,215,140,.18) 3px, transparent 4px);background-size:56px 56px;", texto: "#FFF6E8", acento: "#FFD27A", trazo: "#FFF6E8", relleno: "#962A30", tarjeta: "#962A30", tarjetaTexto: "#FFF6E8", capFondo: "rgba(255,246,232,.95)", capTexto: "#7E1A1F", sombra: "rgba(0,0,0,.3)", oscuro: true },
+  // Día de las Madres: rosa suave con flores
+  madre: { nombre: "madre", fondo: "#FBE9EC", patron: "background-image:radial-gradient(circle at 12% 18%, rgba(214,92,122,.22) 0 46px, transparent 47px), radial-gradient(circle at 88% 80%, rgba(214,92,122,.18) 0 64px, transparent 65px), radial-gradient(rgba(214,92,122,.16) 3px, transparent 4px);background-size:auto, auto, 48px 48px;", texto: "#4A1D2B", acento: "#C2185B", trazo: "#4A1D2B", relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: "#4A1D2B", capFondo: "rgba(74,29,43,.92)", capTexto: "#ffffff", sombra: "rgba(74,29,43,.15)" },
+  // Día del Padre: azul marino con detalle cobre
+  padre: { nombre: "padre", fondo: "#16263D", patron: "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 18px, transparent 18px 36px);", texto: "#F1ECE2", acento: "#E0A15A", trazo: "#F1ECE2", relleno: "#22385A", tarjeta: "#22385A", tarjetaTexto: "#F1ECE2", capFondo: "rgba(241,236,226,.95)", capTexto: "#16263D", sombra: "rgba(0,0,0,.35)", oscuro: true },
+  // Amor y amistad: rojo coral con corazones de puntos
+  amor: { nombre: "amor", fondo: "#FDECEA", patron: "background-image:radial-gradient(rgba(200,40,60,.16) 4px, transparent 5px);background-size:52px 52px;", texto: "#4B1418", acento: "#C8283C", trazo: "#4B1418", relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: "#4B1418", capFondo: "rgba(75,20,24,.92)", capTexto: "#ffffff", sombra: "rgba(75,20,24,.15)" },
+  // Día del Niño: amarillo alegre con confeti
+  ninos: { nombre: "ninos", fondo: "#FFF3C4", patron: "background-image:radial-gradient(circle, rgba(31,111,235,.35) 5px, transparent 6px), radial-gradient(circle, rgba(232,73,73,.35) 5px, transparent 6px);background-size:90px 90px, 70px 70px;background-position:0 0, 35px 45px;", texto: "#1E2A44", acento: "#D9480F", trazo: "#1E2A44", relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: "#1E2A44", capFondo: "rgba(30,42,68,.92)", capTexto: "#ffffff", sombra: "rgba(30,42,68,.15)" },
   // Foto real de la Biblioteca (del tema del texto), desenfocada y con velo azul
   foto: { nombre: "foto", fondo: INK, patron: "", texto: "#ffffff", acento: "#F2A25F", trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(244,241,234,.95)", capTexto: INK, sombra: "rgba(0,0,0,.35)", oscuro: true },
 }
 
-const TEMPORADA: Record<string, [number, number, number, number]> = {
-  // [mes inicio, día inicio, mes fin, día fin] (mes 1-12)
-  patrio: [9, 1, 9, 16],
-  muertos: [10, 20, 11, 2],
-  navidad: [12, 1, 1, 6],
-}
 const COMUNIDAD = ["papel", "salvia", "noche", "pizarron", "foto"]
 const NEGOCIO_FUERA = ["salvia"] // la salvia es para Comunidad
-
-/** Temas de temporada activos en una fecha (hora de México). */
-export function temporadaDe(d = new Date()) {
-  const [m, dia] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City", month: "numeric", day: "numeric" }).formatToParts(d).filter((p) => p.type !== "literal").map((p) => Number(p.value))
-  const v = m * 100 + dia
-  return Object.entries(TEMPORADA).filter(([, [m1, d1, m2, d2]]) => (m1 * 100 + d1 <= m2 * 100 + d2 ? v >= m1 * 100 + d1 && v <= m2 * 100 + d2 : v >= m1 * 100 + d1 || v <= m2 * 100 + d2)).map(([t]) => t)
-}
+/** Fondos que sólo salen en su fecha (calendario.ts). */
+export const SOLO_FECHA = ["patrio", "muertos", "navidad", "madre", "padre", "amor", "ninos"]
+export { temporadaDe }
 
 /**
  * Tema para una pieza: cambia de un video a otro (según su id), usa foto sólo
@@ -424,7 +424,7 @@ export function temaPara(semilla: string, hayFoto = false, o: { publico?: string
   for (const c of String(semilla || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0
   const temporada = temporadaDe(o.fecha)
   if (temporada.length && o.publico !== "comunidad" && h % 3 === 0) return temporada[h % temporada.length]
-  const base = o.publico === "comunidad" ? COMUNIDAD : Object.keys(TEMAS).filter((t) => !(t in TEMPORADA) && !NEGOCIO_FUERA.includes(t))
+  const base = o.publico === "comunidad" ? COMUNIDAD : Object.keys(TEMAS).filter((t) => !SOLO_FECHA.includes(t) && !NEGOCIO_FUERA.includes(t))
   const lista = base.filter((t) => t !== "foto" || hayFoto)
   return lista[Math.floor(h / 3) % lista.length]
 }
@@ -482,7 +482,11 @@ export function componer(bloques: Bloque[], o: Opciones) {
       // El cuadro 0 es la miniatura en las redes: la primera escena ya se ve completa
       if (i > 0) A(`tl.fromTo("#${id}-t", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.05)});`)
       A(`tl.fromTo("#${id}-t .acento", {color:"${T.texto}"}, {color:"${T.acento}", duration:.25}, ${b.tipo === "gancho" ? f(Math.min(clave, t + 0.6)) : clave});`)
-      if (b.tipo === "dato" && b.cifra) {
+      if (b.tipo === "producto" && b.foto) {
+        // Foto del producto en su tarjeta (sin desenfoque ni zoom: rápido de hacer)
+        html += `<div id="${id}-p" class="prod"><img src="${esc(b.foto)}" alt=""></div>`
+        A(`tl.fromTo("#${id}-p", {y:80, opacity:0, rotation:-3}, {y:0, opacity:1, rotation:0, duration:.55, ease:"back.out(1.4)"}, ${f(t + 0.15)});`)
+      } else if (b.tipo === "dato" && b.cifra) {
         html += `<div id="${id}-cifra" class="cifra" style="font-size:${Math.max(90, Math.min(240, Math.floor(980 / (b.cifra.length * 0.62))))}px">${esc(b.cifra)}</div>` + icono(ic === "maquina" ? "engrane" : ic, `${id}-ic`, 260, 410, 920)
         A(`tl.fromTo("#${id}-cifra", {scale:.2, opacity:0}, {scale:1, opacity:1, duration:.7, ease:"expo.out"}, ${clave});`)
         A(`tl.fromTo("#${id}-ic", {y:60, opacity:0}, {y:0, opacity:1, duration:.5, ease:"expo.out"}, ${f(t + 0.3)});`)
@@ -554,6 +558,8 @@ html, body { width:1080px; height:1920px; overflow:hidden; background:var(--fond
 .titulo { position:absolute; left:80px; width:920px; top:250px; line-height:.95; letter-spacing:-.02em; white-space:nowrap; }
 .titulo.centro { text-align:center; top:760px; white-space:normal; }
 .acento { color:var(--acento); }
+.prod { position:absolute; left:170px; top:600px; width:740px; height:640px; background:#ffffff; border:6px solid var(--trazo); border-radius:36px; box-shadow:0 18px 0 var(--sombra); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.prod img { width:100%; height:100%; object-fit:contain; display:block; }
 .cifra { position:absolute; left:0; width:1080px; top:620px; text-align:center; font-size:240px; line-height:1; color:var(--acento); white-space:nowrap; }
 .tarj { position:absolute; left:120px; width:840px; height:170px; background:var(--tarjeta); color:var(--tarjeta-texto); border:6px solid var(--trazo); border-radius:24px; display:flex; align-items:center; gap:30px; padding:0 34px; box-shadow:0 14px 0 var(--sombra); }
 .tarj .ico { width:100px; height:100px; border-radius:20px; background:var(--acento); color:var(--sobre-acento); font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
@@ -730,6 +736,22 @@ async function hacer(bloques: Bloque[], o: Opciones & { logger?: any }) {
         foto = null
       }
     }
+    // Fotos de producto: se bajan y se normalizan (cualquier tamaño o formato del vendedor)
+    bloques = await Promise.all(
+      bloques.map(async (b, i) => {
+        if (b.tipo !== "producto" || !b.foto) return b
+        const crudo = path.join(dir, "assets", `p${i}-original`)
+        try {
+          await traer(b.foto, crudo)
+          await sharp(crudo).rotate().resize(900, 780, { fit: "contain", background: "#ffffff" }).flatten({ background: "#ffffff" }).jpeg({ quality: 86 }).toFile(path.join(dir, "assets", `p${i}.jpg`))
+          return { ...b, foto: `assets/p${i}.jpg` }
+        } catch {
+          return { ...b, tipo: "accion", foto: undefined, icono: "caja" }
+        } finally {
+          fs.rmSync(crudo, { force: true })
+        }
+      }),
+    )
     const { html, total } = componer(bloques, { ...o, voz, musica, foto, tema: o.tema === "foto" && !foto ? temaPara(String(bloques[0]?.texto)) : o.tema })
     fs.writeFileSync(path.join(dir, "index.html"), html)
     fs.writeFileSync(path.join(dir, "hyperframes.json"), JSON.stringify({ name: "hetna" }))

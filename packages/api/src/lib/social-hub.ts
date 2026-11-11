@@ -119,6 +119,8 @@ export async function asegurarSocial(knex: any) {
   await knex.raw(`alter table ?? add column if not exists ab jsonb`, [T_POST]).catch(() => {})
   // Emoción que vende la pieza (mapa emocional de lib/estrategia)
   await knex.raw(`alter table ?? add column if not exists emocion text`, [T_POST]).catch(() => {})
+  // Fecha especial (Día de las Madres, Muertos…): después de esta fecha ya no se publica ni se recicla
+  await knex.raw(`alter table ?? add column if not exists vence timestamptz`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -395,6 +397,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
     textos: JSON.stringify(textos), redes: JSON.stringify(redes), medios: JSON.stringify((d.medios || []).filter((m) => /^https:\/\//.test(m.url)).slice(0, 10)),
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
     fuente: (d as any).fuente || null,
+    vence: (d as any).vence || null,
   })
   return id
 }
@@ -449,7 +452,7 @@ export async function enviarAN8n(cuerpo: any) {
 /** Publica en las redes automáticas; las manuales quedan listas para copiar. */
 export async function publicar(knex: any, postId: string, logger?: any, soloRedes?: Red[]) {
   await asegurarSocial(knex)
-  const n = await knex(T_POST).where({ id: postId }).whereIn("estado", ["programada", "borrador", "error", "parcial"]).update({ estado: "publicando", updated_at: knex.fn.now() })
+  const n = await knex(T_POST).where({ id: postId }).whereIn("estado", ["programada", "borrador", "error", "parcial"]).whereRaw("(vence is null or vence > now())").update({ estado: "publicando", updated_at: knex.fn.now() })
   if (!n) return null
   const p = await knex(T_POST).where({ id: postId }).first()
   const resultado = { ...(p.resultado || {}) }
@@ -548,12 +551,25 @@ export async function terminarPendientesIg(knex: any, logger?: any) {
   return n
 }
 
+/** Las de fecha especial que ya pasó su día no salen tarde: se descartan con nota. */
+export async function descartarVencidas(knex: any, logger?: any) {
+  const n = await knex(T_POST)
+    .whereIn("estado", ["borrador", "programada", "error"])
+    .whereNotNull("vence")
+    .where("vence", "<", knex.fn.now())
+    .update({ estado: "descartada", notas: knex.raw(`trim(coalesce(notas, '') || ' · Se venció la fecha especial')`), updated_at: knex.fn.now() })
+    .catch(() => 0)
+  if (n) logger?.info?.(`[social] ${n} publicaciones de fecha especial vencidas (descartadas)`)
+  return n
+}
+
 /** Job: publica las programadas que ya tocan. */
 export async function publicarPendientes(knex: any, logger?: any) {
   await asegurarSocial(knex)
   const cfg = await leerConfig(knex)
   // Las que se quedaron "publicando" más de 30 min (reinicio del servidor) vuelven a la cola
   await knex(T_POST).where({ estado: "publicando" }).where("updated_at", "<", knex.raw("now() - interval '30 minutes'")).update({ estado: "programada" })
+  await descartarVencidas(knex, logger)
   const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(10).select("id", "mercado")
   let n = 0
   for (const { id, mercado } of listas) {

@@ -1396,6 +1396,73 @@ async function apiFab<T>(cuerpo?: unknown): Promise<T> {
   return d
 }
 
+type FechaE = { clave: string; nombre: string; fecha: string; faltan: number; anticipacion: number; en_temporada: boolean; tema: string; activa: boolean; etiquetas: string[]; sugeridas: string[]; productos: { id: string; titulo: string; foto: string | null }[]; ultima: string | null }
+
+/** Fechas especiales: videos de productos con la etiqueta de cada fecha (Día de las Madres, Muertos, Navidad…). */
+function FechasEspeciales() {
+  const [fechas, setFechas] = useState<FechaE[] | null>(null)
+  const [edit, setEdit] = useState<Record<string, string>>({})
+  const [nota, setNota] = useState<Record<string, { ok: boolean; t: string }>>({})
+  const [haciendo, setHaciendo] = useState<string | null>(null)
+  const api = async (cuerpo?: unknown) => {
+    const r = await fetch("/admin/hetna-fabrica/temporadas", { credentials: "include", ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }) })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(d?.message || `Error ${r.status}`)
+    return d
+  }
+  const cargar = async () => setFechas((await api().catch(() => ({ fechas: [] }))).fechas || [])
+  useEffect(() => { void cargar() }, [])
+  const avisar = (clave: string, ok: boolean, t: string) => setNota((n) => ({ ...n, [clave]: { ok, t } }))
+  return (
+    <section style={caja}>
+      <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>📅 Fechas especiales: videos de productos</h3>
+      <p style={{ margin: "0 0 10px", color: C.tenue, fontSize: 13 }}>
+        En la temporada de cada fecha se hacen solos (de madrugada) una imagen y un video con hasta 3 productos que tengan su <b>etiqueta</b> o <b>categoría</b>, con el fondo de la fecha.
+        Diario la última semana; antes, cada 3 días. Nada sale después del día de la fecha. Si ningún producto tiene la etiqueta, no se hace video: ponle la etiqueta al producto en Productos.
+      </p>
+      {!fechas && <p style={{ fontSize: 13, color: C.tenue }}>Cargando…</p>}
+      {(fechas || []).map((f) => (
+        <div key={f.clave} style={{ borderTop: `1px solid ${C.borde}`, padding: "10px 0", display: "grid", gap: 6, opacity: f.activa ? 1 : 0.55 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <b style={{ flex: 1, minWidth: 180 }}>{f.nombre}</b>
+            <span style={{ fontSize: 12, color: C.tenue }}>{f.fecha} · {f.faltan === 0 ? "hoy" : `faltan ${f.faltan} días`}</span>
+            {f.en_temporada && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: C.verde, borderRadius: 999, padding: "2px 8px" }}>En temporada</span>}
+            <span style={{ fontSize: 12, fontWeight: 700, color: f.productos.length ? C.verde : C.rojo }}>{f.productos.length ? `${f.productos.length}${f.productos.length >= 6 ? "+" : ""} productos` : "Sin productos"}</span>
+            <label style={{ fontSize: 12, display: "flex", gap: 4, alignItems: "center" }}>
+              <input type="checkbox" checked={f.activa} onChange={async (e) => { try { const d = await api({ clave: f.clave, activa: e.target.checked }); setFechas(d.fechas) } catch (er) { avisar(f.clave, false, (er as Error).message) } }} /> Activa
+            </label>
+            <button type="button" disabled={haciendo === f.clave || !f.productos.length} style={{ ...boton("normal"), opacity: haciendo === f.clave || !f.productos.length ? 0.6 : 1 }}
+              onClick={async () => {
+                setHaciendo(f.clave)
+                try { const d = await api({ clave: f.clave, hacer: true }); avisar(f.clave, true, `✓ Haciendo la imagen y el video con: ${d.productos.join(", ")}. En unos minutos aparecen en Pendientes.`) } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) } finally { setHaciendo(null) }
+              }}>{haciendo === f.clave ? "Haciendo…" : "🎬 Hacer video ahora"}</button>
+          </div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", fontSize: 12 }}>
+            <span style={{ color: C.tenue }}>Etiquetas o categorías:</span>
+            <input value={edit[f.clave] ?? f.etiquetas.join(", ")} onChange={(e) => setEdit({ ...edit, [f.clave]: e.target.value })} style={{ flex: 1, minWidth: 220, padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 12 }} />
+            {edit[f.clave] !== undefined && (
+              <button type="button" style={boton("primario")} onClick={async () => {
+                try { const d = await api({ clave: f.clave, etiquetas: edit[f.clave].split(",").map((x) => x.trim()).filter(Boolean) }); setFechas(d.fechas); setEdit(({ [f.clave]: _, ...r }) => r); avisar(f.clave, true, "✓ Guardado") } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) }
+              }}>Guardar</button>
+            )}
+          </div>
+          {f.productos.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {f.productos.map((p) => (
+                <span key={p.id} title={p.titulo} style={{ display: "flex", gap: 4, alignItems: "center", fontSize: 11, border: `1px solid ${C.borde}`, borderRadius: 6, padding: "2px 6px", maxWidth: 220 }}>
+                  {p.foto && <img src={p.foto} alt="" style={{ width: 22, height: 22, objectFit: "cover", borderRadius: 4 }} />}
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.titulo}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          {nota[f.clave] && <div style={{ fontSize: 12, fontWeight: 600, color: nota[f.clave].ok ? C.verde : C.rojo }}>{nota[f.clave].t}</div>}
+        </div>
+      ))}
+    </section>
+  )
+}
+
 function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) => void }) {
   const [d, setD] = useState<{ trabajos: Trabajo[]; fondos: FondoB[]; musica: MusicaB[]; temas: string[]; ffmpeg: boolean; runpod?: { configurado: boolean; ok?: boolean; workers?: any } } | null>(null)
   const [f, setF] = useState({ guion: "", tema: "", mercado: "mx", publico: "clientes", tema_visual: "", voz: "hombre", ia_escenas: true })
@@ -1529,6 +1596,8 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
           />
         </label>
       </section>
+
+      <FechasEspeciales />
 
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

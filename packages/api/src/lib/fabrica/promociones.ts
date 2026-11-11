@@ -66,7 +66,7 @@ export const HERRAMIENTAS: Herramienta[] = [
 ]
 
 let listo = false
-async function asegurarPromo(knex: any) {
+export async function asegurarPromo(knex: any) {
   if (listo) return
   await asegurarSocial(knex)
   if (!(await knex.schema.hasTable(T_PROMO))) {

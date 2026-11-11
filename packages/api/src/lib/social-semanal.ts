@@ -17,6 +17,7 @@ export async function reciclar(knex: any, logger?: any, maximo = 2) {
   const candidatas = await knex(T_POST)
     .where("estado", "publicada")
     .whereNull("reciclada_de")
+    .whereNull("vence") // lo de fecha especial (Día de las Madres…) no se recicla fuera de temporada
     .whereNotNull("estadisticas")
     .whereBetween("publicada_en", [knex.raw("now() - interval '120 days'"), knex.raw("now() - interval '45 days'")])
     .whereRaw(`coalesce(jsonb_array_length(medios), 0) > 0`)
