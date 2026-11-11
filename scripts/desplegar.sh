@@ -244,12 +244,24 @@ paso "Reiniciando los procesos"
 # detectó la prueba k6 del 11 de noviembre: 11 de 14 productos con 500/502.
 # Así la tienda vieja sigue sirviendo (con lo que tenga en caché) y la nueva
 # arranca con el API ya arriba.
-pm2 restart hetna-api --update-env
+#
+# --kill-timeout: pm2 esperaba sólo 1.6 s (su valor por omisión) antes de
+# matar el proceso a la fuerza. Next y Medusa, al recibir SIGINT, dejan de
+# aceptar conexiones y terminan las peticiones en curso; si pm2 los mata antes,
+# esa página llega cortada (el "sin respuesta" de la medición k6 del 11 nov a
+# las 20:30:55). Con 15 s terminan y salen solos; sólo tardan más si hay
+# peticiones pendientes. pm2 guarda el valor en el proceso.
+pm2 restart hetna-api --update-env --kill-timeout 15000
 echo "   esperando a que el API conteste antes de reiniciar la tienda…"
 inicio_api="$(date +%s)"
 while :; do
   codigo_api="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:9000/health 2>/dev/null || true)"
-  [ "$codigo_api" = "200" ] && break
+  # /health puede contestar antes de que carguen las rutas de la tienda. Sin
+  # llave publicable /store/regions responde 400: eso ya prueba que cargaron.
+  if [ "$codigo_api" = "200" ]; then
+    codigo_rutas="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:9000/store/regions 2>/dev/null || true)"
+    case "$codigo_rutas" in 200|400|401) break ;; *) codigo_api="rutas:${codigo_rutas:-000}" ;; esac
+  fi
   [ $(( $(date +%s) - inicio_api )) -ge "${DESPLIEGUE_ESPERA:-150}" ] && break
   sleep 2
 done
@@ -259,7 +271,7 @@ else
   rojo "   ✗ El API no contestó (${codigo_api:-000}); se reinicia la tienda de todos modos"
 fi
 # NEXT_DIST_DIR va en el entorno: hetna-web arranca ya desde la carpeta nueva
-pm2 restart hetna-web --update-env
+pm2 restart hetna-web --update-env --kill-timeout 15000
 # Microcaché de nginx (infra/nginx/CACHE-PAGINAS.md): las copias guardadas
 # apuntan a los archivos /_next/static del build anterior y hay que tirarlas,
 # pero SÓLO cuando la tienda nueva ya contesta. Mientras Next arranca, esas

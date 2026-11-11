@@ -64,6 +64,8 @@ export const removeAuthToken = async () => {
   });
 };
 
+const COOKIE_HAY_CARRITO = 'hetna_carrito';
+
 export const getCartId = async () => {
   const cookies = await nextCookies();
   return cookies.get('_medusa_cart_id')?.value;
@@ -77,6 +79,15 @@ export const setCartId = async (cartId: string) => {
     sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
   });
+  // Bandera visible para el navegador (sin el id): le dice a CartProvider que
+  // hay un carrito que pedir. El HTML ya no trae el carrito, así la misma
+  // página sirve a todos y la microcaché de nginx funciona también para
+  // quien tiene algo en el carrito.
+  cookies.set(COOKIE_HAY_CARRITO, '1', {
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
 };
 
 export const removeCartId = async () => {
@@ -84,4 +95,5 @@ export const removeCartId = async () => {
   cookies.set('_medusa_cart_id', '', {
     maxAge: -1,
   });
+  cookies.set(COOKIE_HAY_CARRITO, '', { maxAge: -1 });
 };

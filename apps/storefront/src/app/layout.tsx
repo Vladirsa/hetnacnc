@@ -90,7 +90,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cart = await retrieveCart();
+  // El carrito sólo se arma en el servidor para /cart y /checkout (ahí no debe
+  // verse "carrito vacío" ni un instante). En el resto lo pide el navegador
+  // (CartProvider, cookie hetna_carrito): así el HTML es igual para todos y
+  // la microcaché de nginx también sirve a quien tiene algo en el carrito.
+  const ruta = (await headers()).get('x-hetna-ruta') || '';
+  const cart = /^\/[a-z]{2}\/(cart|checkout)(\/|$)/.test(ruta) ? await retrieveCart() : null;
 
   // Idioma de la página desde el servidor (lo que lee Google):
   // la cookie elegida manda; sin elección, /us es inglés y lo demás español del país.
@@ -117,7 +122,7 @@ export default async function RootLayout({
         <Traductor />
         <Providers cart={cart}>
           {children}
-          <MobileBottomNav cartCount={(cart?.items ?? []).reduce((s: number, i: any) => s + (i.quantity ?? 0), 0)} />
+          <MobileBottomNav />
           <InstallPrompt />
         </Providers>
         <AvisoCookies />
