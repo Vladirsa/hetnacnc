@@ -445,6 +445,19 @@ function TelegramAprobacion() {
   )
 }
 
+function PruebaRed({ red, nombre }: { red: string; nombre: string }) {
+  const [r, setR] = useState<any>(null)
+  const [cargando, setCargando] = useState(false)
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 10px" }}>
+      <button type="button" style={boton("normal")} disabled={cargando} onClick={async () => { setCargando(true); setR(await api<any>("/config", { probar: red }).catch((e) => ({ ok: false, error: (e as Error).message }))); setCargando(false) }}>
+        {cargando ? "Probando…" : `Probar ${nombre}`}
+      </button>
+      {r && (r.ok ? <span style={{ fontSize: 13, color: C.verde }}>✓ {nombre} conectado{r.usuario ? ` (@${r.usuario})` : r.canal ? ` (${r.canal}${r.suscriptores != null ? `, ${r.suscriptores} suscriptores` : ""})` : ""}</span> : <span style={{ fontSize: 13, color: C.rojo }}>✗ {r.error}</span>)}
+    </div>
+  )
+}
+
 function PruebaInstagram() {
   const [r, setR] = useState<{ ok: boolean; usuario?: string; error?: string } | null>(null)
   const [cargando, setCargando] = useState(false)
@@ -706,6 +719,8 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>Redes para las publicaciones automáticas</h3>
       <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>Activa sólo las que ya estén conectadas en n8n (Facebook y Telegram ya lo están; Instagram en cuanto la prueba salga bien). ✋ = copiar y pegar.</p>
       <PruebaInstagram />
+      <PruebaRed red="threads" nombre="Threads" />
+      <PruebaRed red="youtube" nombre="YouTube" />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (

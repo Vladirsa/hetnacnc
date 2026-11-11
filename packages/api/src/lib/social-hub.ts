@@ -21,6 +21,7 @@ import { randomBytes } from "crypto"
 import Anthropic from "@anthropic-ai/sdk"
 
 import { STORE_URL, nuevoId } from "./licitacion"
+import { publicarThreads, threadsListo } from "./threads"
 import { sendEmail } from "./resend"
 
 export const T_POST = "hetna_social_post"
@@ -28,12 +29,14 @@ export const T_LIGA = "hetna_social_liga"
 export const T_EVENTO_S = "hetna_social_evento"
 export const T_CONFIG_S = "hetna_social_config"
 
-export type Red = "facebook" | "instagram" | "instagram_historia" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
+export type Red = "facebook" | "instagram" | "instagram_historia" | "threads" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
   instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 3-5 hashtags específicos al final en el idioma del mercado (#CNC #CorteLaser y el país). La liga no es clicable: di 'liga en la bio'" },
   // Historia: sólo la imagen o el video (vertical de preferencia); el texto no se publica
   instagram_historia: { nombre: "Instagram (historia)", auto: true, max: 2200, imagen: "requerida", estilo: "la historia no lleva texto publicado: sólo la imagen o el video" },
+  // Threads: se activa solo cuando hay THREADS_TOKEN en el servidor (lib/threads)
+  threads: { nombre: "Threads", auto: false, max: 500, imagen: "opcional", estilo: "conversacional, como si platicaras con colegas; una idea o pregunta que invite a responder; máximo 1 etiqueta de tema; la liga sí se puede tocar" },
   telegram: { nombre: "Telegram (canal)", auto: true, max: 900, imagen: "opcional", estilo: "directo, informativo, con la liga" },
   linkedin: { nombre: "LinkedIn (empresa)", auto: true, max: 2500, imagen: "opcional", estilo: "profesional B2B, enfocado en compradores industriales y empresas; sin muchos emojis" },
   discord: { nombre: "Discord", auto: true, max: 1500, imagen: "opcional", estilo: "comunidad técnica, breve" },
@@ -429,7 +432,7 @@ export async function enviarAN8n(cuerpo: any) {
     if (d?.pendiente) return { ok: false, pendiente: true, contenedor: String(d.contenedor || ""), error: null }
     // "Bad request" de Meta casi siempre es el token vencido o sin permiso
     if (d?.ok === false && /bad request/i.test(String(d?.error || ""))) d.error = `${d.error}. Suele ser el token de Facebook vencido: pon uno nuevo en n8n (credencial "Facebook Graph account 2").`
-    return { ok: d?.ok !== false, url: d?.url || null, id: d?.id ? String(d.id) : null, datos: d?.datos || null, usuario: d?.usuario || null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
+    return { ok: d?.ok !== false, url: d?.url || null, id: d?.id ? String(d.id) : null, datos: d?.datos || null, usuario: d?.usuario || null, canal: d?.canal || null, suscriptores: d?.suscriptores ?? null, error: d?.ok === false ? d?.error || "La red rechazó la publicación" : null }
   } catch (e) {
     return { ok: false, error: (e as Error).message }
   }
@@ -449,7 +452,7 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   // Varias imágenes: carrusel en Instagram (hasta 10)
   const imagenes = esVideo ? [] : (p.medios || []).filter((m: any) => m?.url && m.tipo !== "video" && !/\.(mp4|mov|webm)(\?|$)/i.test(String(m.url))).map((m: any) => m.url).slice(0, 10)
   const cfgPub = await leerConfig(knex)
-  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : !!REDES[r]?.auto)
+  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : r === "threads" ? threadsListo() : !!REDES[r]?.auto)
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
@@ -470,7 +473,9 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
       continue
     }
     let r: any =
-      red === "youtube"
+      red === "threads"
+        ? await publicarThreads(knex, { texto, imagen, video, imagenes })
+        : red === "youtube"
         ? await enviarAN8n(youtubeDe(texto, p.titulo, video))
         : red === "instagram_historia"
         ? await enviarAN8n({ red: "instagram", historia: true, texto: texto || p.titulo, imagen: video ? "" : imagen || imagenes[0] || "", video, url: liga, post_id: p.id })

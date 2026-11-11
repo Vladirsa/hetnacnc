@@ -4,10 +4,12 @@ import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { lunesSocial } from "../lib/social-semanal"
+import { renovarThreads } from "../lib/threads"
 
 export default async function socialHubLunes(container: MedusaContainer) {
   const logger = container.resolve("logger")
   try {
+    await renovarThreads(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger)
     await lunesSocial(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), logger)
   } catch (e) {
     logger.error(`[social] lunes: ${(e as Error).message}`)
