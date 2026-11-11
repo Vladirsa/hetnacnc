@@ -12,7 +12,13 @@ python3 -m venv --help >/dev/null 2>&1 || apt-get install -y python3-venv
 [ -d .venv ] || python3 -m venv .venv
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -r requirements.txt
-.venv/bin/playwright install --with-deps chromium
+# Chromium de Playwright. Sin --with-deps: las librerías del sistema ya están
+# (Google Chrome está instalado) y así no depende de que `apt-get update`
+# funcione con todos los repositorios del servidor.
+if ! .venv/bin/playwright install chromium; then
+  echo "!! No se pudo bajar Chromium de Playwright; se intentará con las dependencias del sistema"
+  .venv/bin/playwright install-deps chromium || echo "!! Faltan dependencias del sistema (revisa 'apt-get update')"
+fi
 
 if [ ! -f .env ]; then
   cat > .env <<'ENV'
