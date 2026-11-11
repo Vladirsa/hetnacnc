@@ -117,8 +117,16 @@ def leer_trazos(ruta: str) -> tuple[list[Trazo], list[str], float]:
     doc = ezdxf.readfile(ruta)
     msp = doc.modelspace()
     avisos: list[str] = []
-    # $INSUNITS: 1 pulgadas, 4 mm, 5 cm, 6 m
-    escala = {1: 25.4, 5: 10.0, 6: 1000.0}.get(int(doc.header.get("$INSUNITS", 4) or 4), 1.0)
+    # $INSUNITS: 1 pulgadas, 4 mm, 5 cm, 6 m. Sólo se respeta si el archivo
+    # de verdad lo trae: cuando falta, ezdxf rellena el encabezado con su
+    # plantilla (metros) y una pieza de 80 mm saldría de 80 m.
+    try:
+        with open(ruta, "rb") as f:
+            trae_unidades = b"$INSUNITS" in f.read()
+    except OSError:
+        trae_unidades = False
+    unidades = int(doc.header.get("$INSUNITS", 4) or 4) if trae_unidades else 4
+    escala = {1: 25.4, 5: 10.0, 6: 1000.0}.get(unidades, 1.0)
     if escala != 1.0:
         avisos.append(f"El DXF viene en otras unidades: se convirtió a milímetros (×{escala:g}).")
     trazos: list[Trazo] = []
