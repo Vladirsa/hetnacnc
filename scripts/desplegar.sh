@@ -156,6 +156,27 @@ if [ -x "$PIPER_DIR/piper/piper" ]; then
   done
 fi
 
+# Videos animados de la Fábrica (HyperFrames, Apache-2.0) + Chrome sin pantalla
+# para hacerlos. Todo queda en /opt/hyperframes, fuera del sitio. Los videos se
+# hacen uno a la vez con prioridad mínima; si esto no se instala, la Fábrica
+# sigue con los videos de FFmpeg. (Chrome autorizado por el dueño el 11 nov 2026.)
+HF_DIR=/opt/hyperframes
+HF_VERSION=0.8.217
+if [ "$(cat "$HF_DIR/.version" 2>/dev/null)" != "$HF_VERSION" ]; then
+  paso "Instalando HyperFrames $HF_VERSION y Chrome (videos animados)"
+  # Librerías que necesita Chrome sin pantalla (Ubuntu 22/24)
+  apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 >/dev/null 2>&1 \
+    || (apt-get update >/dev/null 2>&1 && apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 >/dev/null 2>&1)
+  apt-get install -y libasound2t64 >/dev/null 2>&1 || apt-get install -y libasound2 >/dev/null 2>&1
+  mkdir -p "$HF_DIR" \
+    && (cd "$HF_DIR" && [ -f package.json ] || echo '{"name":"hetna-hyperframes","private":true}' > package.json) \
+    && (cd "$HF_DIR" && npm install --no-audit --no-fund --omit=dev "hyperframes@$HF_VERSION" gsap@3.15.0 >/dev/null 2>&1) \
+    && (cd "$HF_DIR" && HYPERFRAMES_CACHE_DIR="$HF_DIR/cache" HF_CLI_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 node_modules/.bin/hyperframes browser ensure >/dev/null 2>&1) \
+    && echo "$HF_VERSION" > "$HF_DIR/.version" \
+    && verde "✓ HyperFrames y Chrome listos" \
+    || printf '\033[33m%s\033[0m\n' "No se pudo instalar HyperFrames/Chrome; los videos seguirán con FFmpeg."
+fi
+
 paso "Construyendo (si esto falla, el sitio NO se toca)"
 # La tienda se construye en la carpeta que NO está sirviendo (.next-a o
 # .next-b) y se cambia de carpeta al reiniciar. Antes se construía encima de

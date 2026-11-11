@@ -20,6 +20,8 @@ import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./rende
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
+import { bloquesBasicos, guionista, hfListo, horaTranquila, paraVoz, videoHF } from "./hyperframes"
+import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
 
@@ -160,9 +162,15 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
     .whereNull("h.material")
     .whereIn("p.estado", ["borrador", "programada"])
     .whereRaw(`coalesce(jsonb_array_length(p.medios), 0) = 0`)
+    // Con HyperFrames, los videos que salen en más de 24 h esperan a la madrugada (2-6 am)
+    // para no quitarle procesador a la tienda en horas de visitas
+    .modify((q: any) => {
+      if (hfListo() && !horaTranquila())
+        q.whereNot((w: any) => w.whereIn("h.formato", FORMATOS_VIDEO).whereRaw(`coalesce(p.programada_para, h.fecha) > now() + interval '24 hours'`))
+    })
     .orderBy("h.fecha")
     .limit(limite)
-    .select("h.id as plan_id", "h.semana", "h.fecha", "h.formato", "h.publico", "h.red", "h.pilar", "h.mercado", "p.id", "p.texto_base", "p.textos", "p.notas", "p.url_destino", "p.titulo", "p.ab", "p.programada_para")
+    .select("h.id as plan_id", "h.semana", "h.fecha", "h.formato", "h.publico", "h.red", "h.pilar", "h.mercado", "p.id", "p.texto_base", "p.textos", "p.notas", "p.url_destino", "p.titulo", "p.ab", "p.programada_para", "p.emocion")
   if (!filas.length) return { hechos: 0 }
   const hayVideo = ffmpegDisponible()
   const musica = hayVideo ? await musicaAlAzar(knex) : null
@@ -176,6 +184,27 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
     const t = textosDe(f.publico, f.mercado)
     guiones[f.id] = { gancho: gancho || palabras(f.pilar, 9), frases: frases.slice(0, 3), cierre: t.cta }
   }
+  // Guion por escenas para HyperFrames (IA; sin IA, a partir del gancho y las frases)
+  const bloquesDe: Record<string, any[]> = {}
+  if (hfListo()) {
+    for (const f of videos) {
+      const g = guiones[f.id]
+      const comunidad = f.publico === "comunidad"
+      const idioma = idiomaDe(f.mercado)
+      const emo = EMOCIONES.find((e) => e.clave === f.emocion)
+      const cierre = { texto: g.cierre, narracion: comunidad ? g.cierre : idioma === "en" ? `${g.cierre} at hetnacnc.com` : `${g.cierre} en hetnacnc.com` }
+      bloquesDe[f.id] =
+        (await guionista({ texto: f.textos?.[f.red] || f.texto_base, publico: f.publico, emocion: emo?.nombre, idioma, cierre, reglasEmocion: emo ? `${REGLAS_EMOCION} Aquí: ${emo.como}.` : undefined }, logger)) ||
+        bloquesBasicos(g, { comunidad })
+    }
+  }
+  /** Lo que dice la voz: la narración de cada escena (o gancho, frases y cierre). */
+  const frasesVoz = (f: any) => {
+    const b = bloquesDe[f.id]
+    if (b) return b.map((x: any) => paraVoz(x.narracion, idiomaDe(f.mercado)))
+    const g = guiones[f.id]
+    return [g.gancho, ...g.frases, g.cierre]
+  }
   if (videos.length && runpodListo()) {
     // Agrupadas por idioma (cada lote usa la voz de su idioma)
     for (const idioma of [...new Set(videos.map((f: any) => idiomaDe(f.mercado)))]) {
@@ -183,7 +212,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
       try {
         const out = await correr({
           tarea: "voz", voz: VOZ(idioma, "hombre"), idioma,
-          lotes: grupo.map((f: any) => ({ frases: [guiones[f.id].gancho, ...guiones[f.id].frases, guiones[f.id].cierre], clave: `fabrica/plan/${f.id}-voz.wav` })),
+          lotes: grupo.map((f: any) => ({ frases: frasesVoz(f), clave: `fabrica/plan/${f.id}-voz.wav` })),
         }, { logger, topeMin: 15 })
         const lotes = out.lotes || []
         const urls = await ligasB2(lotes.map((v: any) => v.clave), 7200)
@@ -197,8 +226,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   // Sin RunPod (o si falló): voz local de respaldo para que no salgan mudos
   for (const f of videos) {
     if (voces[f.id]) continue
-    const g = guiones[f.id]
-    const v = await vozLocal([g.gancho, ...g.frases, g.cierre], idiomaDe(f.mercado), logger)
+    const v = await vozLocal(frasesVoz(f), idiomaDe(f.mercado), logger)
     if (v) voces[f.id] = v
   }
 
@@ -214,11 +242,25 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
       if (hayVideo && FORMATOS_VIDEO.includes(f.formato)) {
         const g = guiones[f.id]
         const voz = voces[f.id]
-        const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
-        const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: g.gancho, tema, foto_url: await foto(), semilla: 1 }), segundos: dur(0, 2.4) }]
-        for (const [k, fr] of g.frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: fr, tema, foto_url: await foto(), semilla: k + 2, sinTexto: true }), segundos: dur(k + 1, segundosPara(fr)), subtitulo: fr })
-        escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: g.cierre, tema, liga }), segundos: dur(g.frases.length + 1, 2.6) })
-        const v = await corto(escenas, { fuentes: carpetaFuentes(), musica, voz: voz?.url || null })
+        const bloques = bloquesDe[f.id]
+        // 1) Video animado (HyperFrames); 2) si no se puede, el de FFmpeg con la misma voz
+        let v: any = bloques
+          ? await videoHF(bloques, {
+              duraciones: voz?.duraciones?.length === bloques.length ? voz.duraciones : bloques.map((b: any) => segundosPara(b.narracion, 1.8, 4.5)),
+              voz: voz?.url || null, musica, liga, comunidad: f.publico === "comunidad", idioma: idiomaDe(f.mercado), logger,
+            })
+          : null
+        if (!v) {
+          const dur = (k: number, porOmision: number) => (voz?.duraciones?.[k] ? Math.max(1.2, voz.duraciones[k] + 0.15) : porOmision)
+          // Mismas escenas que la voz: con guion por bloques, gancho = 1.º bloque, frases = los de en medio, cierre = el último
+          const gancho = bloques ? palabras(bloques[0].narracion, 12) : g.gancho
+          const frases = bloques ? bloques.slice(1, -1).map((b: any) => b.narracion) : g.frases
+          const cierre = bloques ? bloques[bloques.length - 1].texto : g.cierre
+          const escenas = [{ png: await cuadroVideo({ tipo: "gancho", texto: gancho, tema, foto_url: await foto(), semilla: 1 }), segundos: dur(0, 2.4) }]
+          for (const [k, fr] of frases.entries()) escenas.push({ png: await cuadroVideo({ tipo: "frase", texto: fr, tema, foto_url: await foto(), semilla: k + 2, sinTexto: true }), segundos: dur(k + 1, segundosPara(fr)), subtitulo: fr })
+          escenas.push({ png: await cuadroVideo({ tipo: "cierre", texto: cierre, tema, liga }), segundos: dur(frases.length + 1, 2.6) })
+          v = await corto(escenas, { fuentes: carpetaFuentes(), musica, voz: voz?.url || null })
+        }
         medios = [{ url: await subir(scope, `plan-${f.id}.mp4`, "video/mp4", v.buf), tipo: "video" }]
         // Prueba A/B: otro día sale el mismo video con un gancho distinto (si A no funciona)
         if (!f.ab) await crearVarianteB(knex, f, g, logger).catch((e) => logger?.warn?.(`[fabrica] variante B ${f.id}: ${e.message}`))
