@@ -66,12 +66,14 @@ const ETIQUETA: Record<string, [string, string]> = {
   proveedores: ["Para proveedores", "For suppliers"],
   clientes_empresa: ["Para empresas", "For manufacturers"],
   clientes_particulares: ["HETNA CNC", "HETNA CNC"],
+  comunidad: ["Comunidad HETNA", "HETNA community"],
 }
 const LLAMADA: Record<string, [string, string]> = {
   talleres: ["Recibe trabajos sin comisión", "Get CNC jobs, no commission"],
   proveedores: ["Publica tus productos", "List your products"],
   clientes_empresa: ["Cotiza tu pieza", "Get a quote"],
   clientes_particulares: ["Cotiza o compra en HETNA", "Get a quote on HETNA"],
+  comunidad: ["Cuéntanos en comentarios", "Tell us in the comments"],
 }
 export const textosDe = (publico: string, mercado: string) => {
   const en = mercado === "us" ? 1 : 0

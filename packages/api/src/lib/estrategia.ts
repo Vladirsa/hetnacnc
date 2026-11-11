@@ -81,11 +81,11 @@ export const PUBLICOS: Publico[] = [
 export type Emocion = { clave: string; nombre: string; publicos: string[]; como: string; prueba: string }
 export const EMOCIONES: Emocion[] = [
   { clave: "deseo", nombre: "Deseo", publicos: ["talleres", "proveedores"], como: "el taller con trabajos que dan orgullo, la máquina que no para, clientes que regresan", prueba: "solicitudes reales de clientes y cotizar sin comisión" },
-  { clave: "belleza", nombre: "Belleza", publicos: ["clientes_particulares", "comunidad"], como: "piezas y diseños bonitos: decoración, regalos personalizados, acabados que lucen", prueba: "trabajos reales de talleres y diseños de la tienda" },
+  { clave: "belleza", nombre: "Belleza", publicos: ["clientes_particulares"], como: "piezas y diseños bonitos: decoración, regalos personalizados, acabados que lucen", prueba: "trabajos reales de talleres y diseños de la tienda" },
   { clave: "tranquilidad", nombre: "Tranquilidad", publicos: ["clientes_particulares", "clientes_empresa"], como: "encargar sin miedo: taller verificado, condiciones claras, todo por escrito", prueba: "talleres verificados, reseñas reales y contrato SafeDeal opcional" },
-  { clave: "suenos", nombre: "Sueños", publicos: ["comunidad", "talleres", "clientes_particulares"], como: "emprender con una máquina, convertir una idea en negocio, el primer cliente", prueba: "registro gratis, calculadora y diseños para empezar" },
+  { clave: "suenos", nombre: "Sueños", publicos: ["talleres", "clientes_particulares"], como: "emprender con una máquina, convertir una idea en negocio, el primer cliente", prueba: "registro gratis, calculadora y diseños para empezar" },
   { clave: "seguridad", nombre: "Seguridad", publicos: ["clientes_empresa", "proveedores"], como: "proveedores confiables para producir sin sorpresas: calidad, plazos y respaldo", prueba: "ranking por evaluaciones reales, certificaciones y SafeDeal" },
-  { clave: "esperanza", nombre: "Esperanza", publicos: ["talleres", "comunidad", "proveedores"], como: "empezar con poco y crecer: oportunidades cerca, sin pagar por entrar", prueba: "registro gratis, sin comisión y solicitudes abiertas en su estado" },
+  { clave: "esperanza", nombre: "Esperanza", publicos: ["talleres", "proveedores"], como: "empezar con poco y crecer: oportunidades cerca, sin pagar por entrar", prueba: "registro gratis, sin comisión y solicitudes abiertas en su estado" },
 ]
 export const REGLAS_EMOCION =
   "Cada pieza transmite UNA emoción del mapa emocional de HETNA y la muestra con una escena o historia (no la nombra). " +
@@ -325,7 +325,8 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
           id: nuevoId("plan"), semana, fecha: instanteEn(sumarDias(semana, dia - 1), hora, zona), red, mercado,
           publico: publico.clave, pilar, formato: g.formatos[i % g.formatos.length], estado: "vacio",
           // Emoción que vende esta pieza (rota entre las del público)
-          emocion: (emocionesDe(publico.clave)[(i + giro) % Math.max(1, emocionesDe(publico.clave).length)] || EMOCIONES[0]).clave,
+          // Comunidad no vende: es conversación humana (y trae temas de salud mental), así que no lleva emoción de venta
+          emocion: publico.clave === "comunidad" ? null : (emocionesDe(publico.clave)[(i + giro) % Math.max(1, emocionesDe(publico.clave).length)] || EMOCIONES[0]).clave,
         })
       }
       giro++
