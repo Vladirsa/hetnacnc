@@ -1,7 +1,7 @@
 /* Tema HETNA CNC para el panel de Mercur.
    Sobrescribe los tokens de diseño de Medusa UI (se cargan después de @mercurjs/admin/index.css).
    Paleta tomada de apps/storefront/src/app/colors.css. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Fondos */
@@ -47,20 +47,44 @@
   --contrast-border-base: #2A3A57;
 }
 
-body {
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+/* Tipografía del rediseño (nov 2026): Plus Jakarta Sans en todo el panel */
+body,
+.txt-compact-small,
+.txt-compact-small-plus,
+.txt-small,
+.txt-small-plus,
+.txt-compact-medium,
+.txt-compact-medium-plus,
+.txt-medium,
+.txt-medium-plus,
+.txt-large,
+.txt-large-plus,
+.txt-compact-large,
+.txt-compact-large-plus,
+.txt-xsmall,
+.txt-xsmall-plus,
+.txt-compact-xsmall,
+.txt-compact-xsmall-plus,
+.h1-core,
+.h2-core,
+.h3-core {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 h1,
 h2,
-h3 {
-  font-family: 'Space Grotesk', 'Inter', ui-sans-serif, sans-serif;
-  letter-spacing: -0.01em;
+h3,
+.h1-core,
+.h2-core {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.015em;
 }
 
-/* Menú lateral (escritorio) en azul marino, como la barra del sitio.
+/* Menú lateral en azul marino (escritorio y el menú que se abre en celular).
    Se redefinen los tokens solo dentro del menú para que todo su contenido se adapte. */
-[class*='group/sidebar'] {
+[class*='group/sidebar'],
+[role='dialog']:has([data-testid^='sidebar-nav-item']) {
   --bg-base: #22334F;
   --bg-base-hover: #1B2A42;
   --bg-base-pressed: #2A3A57;
@@ -82,4 +106,143 @@ h3 {
   --border-strong: #2A3A57;
   background-color: #142033;
   border-color: #22334F !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Rediseño del panel de administrador (nov 2026), mismo estilo que el
+   panel de vendedor (apps/vendor/src/hetna-theme.css).
+   Las pantallas de Mercur (Pedidos, Productos, Tiendas…) vienen del
+   paquete; aquí sólo se cambia su aspecto, no su acomodo.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Fondo general: claro con un toque cálido, para que el vidrio se note ── */
+main {
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(217, 96, 11, 0.07), transparent 60%),
+    radial-gradient(700px 500px at -10% 110%, rgba(20, 32, 51, 0.06), transparent 60%),
+    #F6F4EF;
+}
+
+/* ── Tarjetas tipo vidrio (Container de Medusa UI) fuera del menú ── */
+main .shadow-elevation-card-rest {
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(20, 32, 51, 0.06),
+    0 8px 24px -12px rgba(20, 32, 51, 0.18);
+}
+main .shadow-elevation-card-rest:hover {
+  box-shadow:
+    0 0 0 1px rgba(20, 32, 51, 0.08),
+    0 12px 28px -14px rgba(20, 32, 51, 0.22);
+}
+/* Tablas y encabezados dentro de la tarjeta: transparentes para conservar el vidrio */
+main .shadow-elevation-card-rest table,
+main .shadow-elevation-card-rest thead tr,
+main .shadow-elevation-card-rest tbody tr {
+  background-color: transparent;
+}
+main .shadow-elevation-card-rest tbody tr:hover {
+  background-color: rgba(217, 96, 11, 0.04);
+}
+
+/* Botones y campos un poco más redondeados */
+main button.rounded-md,
+main input.rounded-md,
+main .rounded-md[role='combobox'] {
+  border-radius: 10px;
+}
+
+/* ── Menú lateral ── */
+/* Nombre del taller arriba, legible sobre el azul */
+[class*='group/sidebar'] [aria-haspopup='menu'],
+[role='dialog']:has([data-testid^='sidebar-nav-item']) [aria-haspopup='menu'] {
+  color: #FFFFFF;
+}
+
+/* Opción activa: pastilla naranja, como en la maqueta */
+:is([class*='group/sidebar'], [role='dialog']:has([data-testid^='sidebar-nav-item'])) nav a.shadow-elevation-card-rest {
+  background: linear-gradient(180deg, #D9600B, #C2560A);
+  color: #FFFFFF;
+  box-shadow: 0 6px 16px -8px rgba(217, 96, 11, 0.7);
+}
+:is([class*='group/sidebar'], [role='dialog']:has([data-testid^='sidebar-nav-item'])) nav a.shadow-elevation-card-rest svg {
+  color: #FFFFFF;
+}
+:is([class*='group/sidebar'], [role='dialog']:has([data-testid^='sidebar-nav-item'])) nav a {
+  border-radius: 10px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+/* Agrupado del menú en secciones (Principal, Marketplace, Clientes y
+   promoción, Dinero y envíos, Apps HETNA). Mercur arma el menú plano: aquí se
+   reordena con `order` (el menú es una columna flex) y se pone el título de
+   cada sección antes de su primera opción. Cada opción se reconoce por su
+   data-testid (sidebar-nav-item-<ruta>). Si se agrega una página nueva y no
+   está en esta lista, aparece al final. */
+/* :where() deja estas dos reglas sin peso, para que las de abajo ganen */
+:where(nav:has(> [data-testid^='sidebar-nav-item'])) > :where(*) { order: 90; }
+:where(nav:has(> [data-testid^='sidebar-nav-item'])) > :where(:first-child) { order: 0; } /* Buscar */
+
+/* Principal */
+[data-testid='sidebar-nav-item-control']        { order: 1; }
+[data-testid='sidebar-nav-item-orders']         { order: 2; }
+[data-testid='sidebar-nav-item-solicitudes']    { order: 3; }
+/* Marketplace */
+[data-testid='sidebar-nav-item-stores']         { order: 10; }
+[data-testid='sidebar-nav-item-verificaciones'] { order: 11; }
+[data-testid='sidebar-nav-item-fundadores']     { order: 12; }
+[data-testid='sidebar-nav-item-products']       { order: 13; }
+[data-testid='sidebar-nav-item-inventory']      { order: 14; }
+[data-testid='sidebar-nav-item-price-lists']    { order: 15; }
+/* Clientes y promoción */
+[data-testid='sidebar-nav-item-customers']      { order: 20; }
+[data-testid='sidebar-nav-item-promotions']     { order: 21; }
+[data-testid='sidebar-nav-item-publicidad']     { order: 22; }
+[data-testid='sidebar-nav-item-social']         { order: 23; }
+[data-testid='sidebar-nav-item-blog']           { order: 24; }
+/* Dinero y envíos */
+[data-testid='sidebar-nav-item-payouts']        { order: 30; }
+[data-testid='sidebar-nav-item-pagos-talleres'] { order: 31; }
+[data-testid='sidebar-nav-item-envios']         { order: 32; }
+/* Apps HETNA */
+[data-testid='sidebar-nav-item-cotizador']      { order: 40; }
+[data-testid='sidebar-nav-item-trabajos-cam']   { order: 41; }
+
+/* Títulos de sección */
+:is(
+  [data-testid='sidebar-nav-item-control'],
+  [data-testid='sidebar-nav-item-stores'],
+  [data-testid='sidebar-nav-item-customers'],
+  [data-testid='sidebar-nav-item-payouts'],
+  [data-testid='sidebar-nav-item-cotizador']
+)::before {
+  display: block;
+  padding: 14px 8px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6F82A3;
+  white-space: nowrap;
+}
+[data-testid='sidebar-nav-item-control']::before   { content: 'Principal'; padding-top: 6px; }
+[data-testid='sidebar-nav-item-stores']::before    { content: 'Marketplace'; }
+[data-testid='sidebar-nav-item-customers']::before { content: 'Clientes y promoción'; }
+[data-testid='sidebar-nav-item-payouts']::before   { content: 'Dinero y envíos'; }
+[data-testid='sidebar-nav-item-cotizador']::before { content: 'Apps HETNA'; }
+
+/* Con el menú contraído (sólo íconos) los títulos estorban: se ocultan */
+[class*='group/sidebar'][data-state='collapsed'] [data-testid^='sidebar-nav-item']::before {
+  display: none;
+}
+
+/* Botón de cerrar del menú en celular: sin el cuadro blanco */
+[role='dialog']:has([data-testid^='sidebar-nav-item']) > .p-3 button {
+  background: transparent;
+  color: #C9D2E0;
+  box-shadow: none;
 }
