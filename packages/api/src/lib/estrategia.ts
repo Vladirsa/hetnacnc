@@ -69,6 +69,7 @@ export const GUIAS: Record<string, Guia> = {
   instagram: { red: "instagram", formatos: ["reel", "carrusel", "reel", "reel", "carrusel"], frecuencia: 5, horas: [9, 18], dias: [1, 2, 3, 4, 5], publicos: ["clientes_particulares", "clientes_empresa", "talleres"], liga: "perfil", hashtags: [3, 10], media: "imagen", claves: "Tiempo de visualización, me gusta por alcance y envíos por mensaje (lo que más ayuda a llegar a quien no te sigue)." },
   tiktok: { red: "tiktok", formatos: ["video"], frecuencia: 7, horas: [19, 13, 20], dias: [1, 2, 3, 4, 5, 6, 7], publicos: ["clientes_particulares", "talleres"], liga: "perfil", hashtags: [3, 5], media: "video", claves: "Que lo vean completo, que lo repitan, compartidos y guardados; reparte por etapas; también es buscador." },
   youtube: { red: "youtube", formatos: ["short", "short", "largo"], frecuencia: 3, horas: [18, 19], dias: [2, 4, 6], publicos: ["clientes_empresa", "clientes_particulares", "talleres"], liga: "en_texto", hashtags: [2, 3], media: "video", claves: "Primer filtro: visto contra deslizado (el primer segundo); después, cuánto del video ven." },
+  google_business: { red: "google_business", formatos: ["imagen"], frecuencia: 2, horas: [10], dias: [2, 5], publicos: ["clientes_empresa", "clientes_particulares"], liga: "en_texto", hashtags: [0, 0], media: "imagen", claves: "Publicaciones en tu ficha de Google: ayudan a aparecer en búsquedas locales ('corte láser cerca de mí'); constancia semanal, foto real y palabras de servicio + ciudad." },
   threads: { red: "threads", formatos: ["texto", "imagen", "texto"], frecuencia: 4, horas: [9, 13, 19], dias: [1, 2, 3, 4, 5], publicos: ["talleres", "clientes_particulares", "proveedores"], liga: "en_texto", hashtags: [0, 1], media: "opcional", claves: "Premia conversaciones: respuestas y citas; textos cortos con opinión o pregunta; publica seguido (varias veces por semana)." },
   linkedin: { red: "linkedin", formatos: ["texto", "documento", "imagen"], frecuencia: 3, horas: [10, 13, 15], dias: [2, 3, 4], publicos: ["clientes_empresa", "proveedores"], liga: "primer_comentario", hashtags: [0, 3], media: "opcional", claves: "Perfiles personales llegan más que páginas; premia conversación y que la gente se quede; castiga ligas en el texto." },
   telegram: { red: "telegram", formatos: ["texto", "imagen"], frecuencia: 5, horas: [10], dias: [1, 2, 3, 4, 5], publicos: ["talleres", "proveedores"], liga: "en_texto", hashtags: [0, 2], media: "opcional", claves: "Sin algoritmo: llega a los suscriptores del canal; directo e informativo." },
@@ -80,7 +81,7 @@ export const GUIAS: Record<string, Guia> = {
 // Redes por mercado. Todos usan las mismas cuentas de HETNA (cada publicación
 // en el idioma de su mercado); las redes manuales quedan para copiar y pegar.
 export const REDES_MERCADO: Record<string, string[]> = {
-  mx: ["facebook", "instagram", "threads", "tiktok", "youtube", "linkedin", "telegram", "whatsapp", "grupos_facebook"],
+  mx: ["facebook", "instagram", "threads", "google_business", "tiktok", "youtube", "linkedin", "telegram", "whatsapp", "grupos_facebook"],
   us: ["linkedin", "youtube", "instagram", "threads", "facebook", "reddit", "tiktok"],
   co: ["facebook", "instagram", "threads", "tiktok", "telegram", "whatsapp", "grupos_facebook"],
   cl: ["facebook", "instagram", "tiktok", "whatsapp", "grupos_facebook"],

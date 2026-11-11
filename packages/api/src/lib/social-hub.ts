@@ -29,7 +29,7 @@ export const T_LIGA = "hetna_social_liga"
 export const T_EVENTO_S = "hetna_social_evento"
 export const T_CONFIG_S = "hetna_social_config"
 
-export type Red = "facebook" | "instagram" | "instagram_historia" | "threads" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
+export type Red = "facebook" | "instagram" | "instagram_historia" | "threads" | "google_business" | "telegram" | "linkedin" | "discord" | "grupos_facebook" | "whatsapp" | "reddit" | "pinterest" | "tiktok" | "youtube"
 export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; imagen?: "requerida" | "opcional"; estilo: string }> = {
   facebook: { nombre: "Facebook (página)", auto: true, max: 1500, imagen: "opcional", estilo: "cercano, 2-4 líneas, 1-2 emojis, pregunta o llamada a la acción" },
   instagram: { nombre: "Instagram", auto: true, max: 2000, imagen: "requerida", estilo: "visual, emojis, 3-5 hashtags específicos al final en el idioma del mercado (#CNC #CorteLaser y el país). La liga no es clicable: di 'liga en la bio'" },
@@ -37,6 +37,8 @@ export const REDES: Record<Red, { nombre: string; auto: boolean; max: number; im
   instagram_historia: { nombre: "Instagram (historia)", auto: true, max: 2200, imagen: "requerida", estilo: "la historia no lleva texto publicado: sólo la imagen o el video" },
   // Threads: se activa solo cuando hay THREADS_TOKEN en el servidor (lib/threads)
   threads: { nombre: "Threads", auto: false, max: 500, imagen: "opcional", estilo: "conversacional, como si platicaras con colegas; una idea o pregunta que invite a responder; máximo 1 etiqueta de tema; la liga sí se puede tocar" },
+  // Ficha de Google (Maps): a mano hasta que Google apruebe el acceso a su API
+  google_business: { nombre: "Google (ficha de Maps)", auto: false, max: 1500, imagen: "requerida", estilo: "novedad u oferta del negocio, clara y local (menciona la ciudad o el servicio que la gente busca en Google); sin hashtags ni emojis de más; termina con la acción (cotizar, ver más)" },
   telegram: { nombre: "Telegram (canal)", auto: true, max: 900, imagen: "opcional", estilo: "directo, informativo, con la liga" },
   linkedin: { nombre: "LinkedIn (empresa)", auto: true, max: 2500, imagen: "opcional", estilo: "profesional B2B, enfocado en compradores industriales y empresas; sin muchos emojis" },
   discord: { nombre: "Discord", auto: true, max: 1500, imagen: "opcional", estilo: "comunidad técnica, breve" },
