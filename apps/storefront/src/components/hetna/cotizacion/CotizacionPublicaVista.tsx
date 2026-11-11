@@ -274,13 +274,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
         </div>
       </section>
 
-      <p className="m-0 text-center text-[12px] text-[#7A776E]">
-        Cotización hecha con el Cotizador de{" "}
-        <a href="/cotizador" className="underline">
-          HETNA CNC
-        </a>
-        .
-      </p>
+      <InvitacionTaller refCodigo={c.taller.ref || null} />
     </div>
   )
 }
@@ -432,6 +426,32 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
           </ul>
         </div>
       ) : null}
+    </section>
+  )
+}
+
+// Al pie de cada liga: si quien la abre también tiene taller, se le invita al
+// Cotizador con el código del taller que mandó la cotización (los dos ganan
+// 1 mes cuando el nuevo completa su arranque). Ver supabase/referidos.sql.
+function InvitacionTaller({ refCodigo }: { refCodigo: string | null }) {
+  const href = `/cotizador/${refCodigo ? `?ref=${encodeURIComponent(refCodigo)}` : ""}`
+  return (
+    <section className="rounded-[16px] border border-[#E7E4DC] bg-[#F7F6F2] p-5 text-center">
+      <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">¿Tienes un taller CNC?</p>
+      <p className="m-0 mt-1 text-[18px] font-bold text-[#142033]">Cotiza así de rápido con HETNA Cotizador</p>
+      <p className="m-0 mx-auto mt-2 max-w-[460px] text-[14px] text-[#40403A]">
+        Subes tu DXF o STL y te da tiempo de máquina, costo y precio con tu margen. Mandas la cotización por WhatsApp con liga como esta, y cobras el anticipo en línea.
+      </p>
+      <a
+        href={href}
+        className="mt-4 inline-flex items-center justify-center rounded-[10px] bg-[#142033] px-5 py-3 text-[15px] font-semibold text-white no-underline hover:bg-[#1f3150]"
+      >
+        {refCodigo ? "Pruébalo gratis · 1 mes extra con esta invitación" : "Pruébalo gratis"}
+      </a>
+      <p className="m-0 mt-3 text-[12px] text-[#7A776E]">
+        Cotización hecha con el Cotizador de{" "}
+        <a href="/cotizador" className="underline">HETNA CNC</a>.
+      </p>
     </section>
   )
 }
