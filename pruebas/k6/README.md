@@ -42,6 +42,13 @@ k6 run pruebas/k6/tienda.js
 # Carga: 10 usuarios simultáneos ~4.5 min. Sólo en horario de poco tráfico.
 PERFIL=carga k6 run pruebas/k6/tienda.js
 
+# Techo: 40→100 usuarios con el mismo corte automático (requiere la microcaché).
+PERFIL=techo k6 run pruebas/k6/tienda.js
+
+# Despliegue: 3 usuarios 12 min sin corte; arrancarlo justo antes de desplegar
+# y contar las líneas FALLO (hora, código y ruta de cada error).
+PERFIL=despliegue k6 run pruebas/k6/tienda.js
+
 # Estrés: hasta 60 usuarios. Puede tumbar el VPS: avisar antes y vigilar pm2.
 PERFIL=estres k6 run pruebas/k6/tienda.js
 

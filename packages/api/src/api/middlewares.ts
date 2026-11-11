@@ -28,6 +28,15 @@ import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
 import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
 import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
+import { sinContacto } from "../lib/clientes-taller";
+
+// Escudo de privacidad: el taller no ve correo ni teléfono de sus clientes en
+// las pantallas de Mercur (Clientes, Pedidos). Los tratos van por el chat.
+const escudoContacto = (req: any, res: any, next: any) => {
+    const original = res.json.bind(res);
+    res.json = (cuerpo: unknown) => original(sinContacto(cuerpo));
+    next();
+};
 
 export default defineMiddlewares({
     routes: [
@@ -35,6 +44,10 @@ export default defineMiddlewares({
             matcher: "/api/auth/*",
             middlewares: [],
         },
+        { method: ["GET"], matcher: "/vendor/customers*", middlewares: [escudoContacto] },
+        { method: ["GET"], matcher: "/vendor/customer-groups*", middlewares: [escudoContacto] },
+        { method: ["GET"], matcher: "/vendor/orders*", middlewares: [escudoContacto] },
+        { method: ["GET"], matcher: "/vendor/order-groups*", middlewares: [escudoContacto] },
         {
             matcher: "/api/admin/*",
             middlewares: [],

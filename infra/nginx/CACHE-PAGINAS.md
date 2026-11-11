@@ -25,19 +25,22 @@ API fallan, sirve la última copia buena (hasta 24 h) en vez del error.
 nginx -T 2>/dev/null | grep -n -B3 -A15 "proxy_pass http://\(127.0.0.1\|localhost\):3000"
 ```
 
-1. Respaldo y copia de los archivos (copias, no enlaces al repo: así un
-   `git pull` nunca deja a nginx sin un archivo que espera):
+1. Respaldo, carpeta de la caché (nginx no la crea) y copia de los archivos
+   (copias, no enlaces al repo: así un `git pull` nunca deja a nginx sin un
+   archivo que espera). El respaldo sólo se hace si no existe ya el de hoy:
 
 ```bash
-cp -a /etc/nginx /root/nginx-respaldo-$(date +%F) && cp /root/hetnacnc/infra/nginx/hetna-cache-paginas.conf /etc/nginx/conf.d/ && cp /root/hetnacnc/infra/nginx/hetna-cache-paginas-location.conf /etc/nginx/
+[ -d /root/nginx-respaldo-$(date +%F) ] || cp -a /etc/nginx /root/nginx-respaldo-$(date +%F); U=$(awk '/^user/{gsub(";","",$2);print $2}' /etc/nginx/nginx.conf); mkdir -p /var/cache/nginx/hetna-paginas && chown -R ${U:-www-data} /var/cache/nginx && cp /root/hetnacnc/infra/nginx/hetna-cache-paginas.conf /etc/nginx/conf.d/ && cp /root/hetnacnc/infra/nginx/hetna-cache-paginas-location.conf /etc/nginx/
 ```
 
-2. Dentro del `location { ... }` de la tienda (el del `proxy_pass` al 3000),
-   debajo del `proxy_pass`, agrega una línea. Nunca en el del API (9000):
+2. Agregar el `include` dentro de `location / {` (debajo de su `proxy_pass` al
+   3000, nunca en el del API). Se puede correr dos veces sin duplicar:
 
-```nginx
-include /etc/nginx/hetna-cache-paginas-location.conf;
+```bash
+F=/etc/nginx/sites-enabled/hetnacnc.com; grep -q hetna-cache-paginas-location "$F" || sed -i --follow-symlinks '/^\s*location \/ {/,/^\s*}/ s|^\(\s*\)proxy_pass http://127.0.0.1:3000;|&\n\1include /etc/nginx/hetna-cache-paginas-location.conf;|' "$F"; grep -c hetna-cache-paginas-location "$F"
 ```
+
+   Debe imprimir `1`.
 
 3. Revisar y aplicar (si `nginx -t` falla, no recargues):
 
@@ -59,8 +62,10 @@ find /var/cache/nginx/hetna-paginas -type f | wc -l
 
 ## Quitar
 
-Borra la línea `include` del paso 2 y `/etc/nginx/conf.d/hetna-cache-paginas.conf`, luego
-`nginx -t && systemctl reload nginx`. Vaciar a mano: `find /var/cache/nginx/hetna-paginas -type f -delete`.
+```bash
+sed -i --follow-symlinks '/hetna-cache-paginas-location/d' /etc/nginx/sites-enabled/hetnacnc.com && rm -f /etc/nginx/conf.d/hetna-cache-paginas.conf && nginx -t && systemctl reload nginx
+```
+ Vaciar a mano: `find /var/cache/nginx/hetna-paginas -type f -delete`.
 
 ## Si cambias estos archivos en el repo
 
