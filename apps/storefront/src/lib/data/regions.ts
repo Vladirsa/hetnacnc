@@ -7,6 +7,11 @@ import medusaError from '@/lib/helpers/medusa-error';
 import { sdk } from '../client';
 import { getCacheOptions } from './cookies';
 
+// Última respuesta buena de regiones. El layout de toda la tienda las pide en
+// cada página (checkRegion); si el API se está reiniciando y la caché de fetch
+// está fría, sin esta copia TODAS las páginas daban 500.
+let ultimasRegiones: HttpTypes.StoreRegion[] | null = null;
+
 export const listRegions = async () => {
   const next = {
     ...(await getCacheOptions('regions')),
@@ -15,8 +20,14 @@ export const listRegions = async () => {
 
   return sdk.store.regions
     .query({ fetchOptions: { next, cache: 'force-cache' } })
-    .then(({ regions }) => regions)
-    .catch(medusaError);
+    .then(({ regions }: { regions: HttpTypes.StoreRegion[] }) => {
+      if (regions?.length) ultimasRegiones = regions;
+      return regions;
+    })
+    .catch((e) => {
+      if (ultimasRegiones) return ultimasRegiones;
+      return medusaError(e);
+    });
 };
 
 export const retrieveRegion = async (id: string) => {
