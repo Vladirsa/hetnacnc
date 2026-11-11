@@ -1,13 +1,18 @@
 // Lee los movimientos X/Y de un G-code (G0, G1, G2 y G3; modal) para dibujar
 // la trayectoria. Corre en el servidor: al navegador le llega este dibujo, no
 // el programa, que sólo se entrega al descargar.
-export type Movimiento = { corte: boolean; pts: [number, number][]; z: number }
+// d: diámetro de la herramienta (del comentario "(HETNA D=6.000)" que escribe
+// el motor antes de cada operación), para simular el material quitado.
+export type Movimiento = { corte: boolean; pts: [number, number][]; z: number; d?: number }
 
 export function leerGcode(texto: string): Movimiento[] {
   const movs: Movimiento[] = []
   let x = 0, y = 0, z = 5
   let g = 0
+  let d: number | undefined
   for (const crudo of texto.split(/\r?\n/)) {
+    const md = /\(HETNA D=(\d+(?:\.\d+)?)\)/.exec(crudo)
+    if (md) d = parseFloat(md[1])
     const l = crudo.replace(/\(.*?\)|;.*$/g, "").toUpperCase()
     if (!l.trim()) continue
     const val = (c: string) => {
@@ -37,8 +42,8 @@ export function leerGcode(texto: string): Movimiento[] {
         const a = a0 + ((a1 - a0) * i) / n
         pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
       }
-      movs.push({ corte: true, pts, z: nz })
-    } else movs.push({ corte: g !== 0 && nz <= 0.01, pts: [[x, y], [nx, ny]], z: nz })
+      movs.push({ corte: true, pts, z: nz, d })
+    } else movs.push({ corte: g !== 0 && nz <= 0.01, pts: [[x, y], [nx, ny]], z: nz, d })
     x = nx
     y = ny
     z = nz
