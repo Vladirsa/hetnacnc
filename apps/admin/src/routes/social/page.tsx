@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -850,6 +850,10 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 10 }}>
         <input type="checkbox" checked={c.primer_comentario !== false} onChange={(e) => setC({ ...c, primer_comentario: e.target.checked })} />
         Primer comentario automático con la liga en Facebook (necesita el permiso pages_manage_engagement)
+      </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
+        <input type="checkbox" checked={!!c.video_animado} onChange={(e) => setC({ ...c, video_animado: e.target.checked })} />
+        Videos animados (estilo «¿Máquina parada?») para los reels y shorts del plan. Se hacen de 2 a 6 am los que salen en más de 24 h; si uno falla, sale el video de siempre
       </label>
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={!!c.youtube_auto} onChange={(e) => setC({ ...c, youtube_auto: e.target.checked })} />

@@ -5,12 +5,13 @@ describe("videos HyperFrames", () => {
     expect(cuatroPalabras("¿Cuánto cobrar por un corte láser en tu taller?")).toBe("¿Cuánto cobrar corte láser?")
     expect(cuatroPalabras("tu taller pierde trabajos").split(" ").length).toBeLessThanOrEqual(4)
     expect(cuatroPalabras("recibe trabajos")).toBe("Recibe trabajos")
+    expect(cuatroPalabras("Cotiza gratis y sin comisión.")).toContain("sin comisión")
   })
 
   it("el título cabe en 920 px", () => {
     const { lineas, tam } = acomodarTitulo("¿Cuánto cobrar por láser?")
     expect(lineas.length).toBe(2)
-    expect(Math.max(...lineas.map((l) => l.length)) * tam * 0.52).toBeLessThan(920)
+    expect(Math.max(...lineas.map((l) => l.length)) * tam * 0.6).toBeLessThan(920)
   })
 
   it("los subtítulos son de una línea y cubren el tiempo de la frase", () => {
@@ -54,6 +55,8 @@ describe("videos HyperFrames", () => {
   it("la voz dice la marca bien y los avisos no detienen el video", () => {
     expect(paraVoz("Únete en hetnacnc.com")).toContain("hetna ce ene ce, punto com")
     expect(revisar('{"ok":true,"warnings":[{"message":"x"}]}')).toEqual([])
-    expect(revisar('{"ok":false,"errors":[{"message":"falta"}]}')).toEqual(["falta"])
+    const r = revisar(JSON.stringify({ ok: false, layout: { ok: false, findings: [{ severity: "error", code: "text_box_overflow", selector: "#e0-t", message: "Text extends" }, { severity: "warning", code: "canvas_overflow" }] } }))
+    expect(r).toHaveLength(1)
+    expect(r[0]).toContain("text_box_overflow")
   })
 })

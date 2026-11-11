@@ -157,7 +157,7 @@ if [ -x "$PIPER_DIR/piper/piper" ]; then
 fi
 
 # Videos animados de la Fábrica (HyperFrames, Apache-2.0) + Chrome sin pantalla
-# para hacerlos. Todo queda en /opt/hyperframes, fuera del sitio. Los videos se
+# para hacerlos. HyperFrames queda en /opt/hyperframes y Chrome en ~/.cache/hyperframes, fuera del sitio. Los videos se
 # hacen uno a la vez con prioridad mínima; si esto no se instala, la Fábrica
 # sigue con los videos de FFmpeg. (Chrome autorizado por el dueño el 11 nov 2026.)
 HF_DIR=/opt/hyperframes
@@ -171,10 +171,12 @@ if [ "$(cat "$HF_DIR/.version" 2>/dev/null)" != "$HF_VERSION" ]; then
   mkdir -p "$HF_DIR" \
     && (cd "$HF_DIR" && [ -f package.json ] || echo '{"name":"hetna-hyperframes","private":true}' > package.json) \
     && (cd "$HF_DIR" && npm install --no-audit --no-fund --omit=dev "hyperframes@$HF_VERSION" gsap@3.15.0 >/dev/null 2>&1) \
-    && (cd "$HF_DIR" && HYPERFRAMES_CACHE_DIR="$HF_DIR/cache" HF_CLI_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 node_modules/.bin/hyperframes browser ensure >/dev/null 2>&1) \
+    && (cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 node_modules/.bin/hyperframes browser ensure >/dev/null 2>&1) \
+    && HF_CHROME="$(cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 node_modules/.bin/hyperframes browser path 2>/dev/null | tail -1)" \
+    && "$HF_CHROME" --version >/dev/null 2>&1 \
     && echo "$HF_VERSION" > "$HF_DIR/.version" \
     && verde "✓ HyperFrames y Chrome listos" \
-    || printf '\033[33m%s\033[0m\n' "No se pudo instalar HyperFrames/Chrome; los videos seguirán con FFmpeg."
+    || printf '\033[33m%s\033[0m\n' "✗ No se pudo instalar HyperFrames/Chrome (faltan librerías o no hubo descarga); los videos seguirán con FFmpeg."
 fi
 
 paso "Construyendo (si esto falla, el sitio NO se toca)"

@@ -13,7 +13,7 @@
 //   - un solo video a la vez en todo el proceso (cola)
 //   - prioridad mínima (nice 19) y 1 solo Chrome
 //   - tope de tiempo: se mata el grupo completo (Chrome incluido) y se borra la carpeta
-// Instalación: scripts/desplegar.sh deja HyperFrames y Chrome en /opt/hyperframes.
+// Instalación: scripts/desplegar.sh deja HyperFrames en /opt/hyperframes (Chrome en ~/.cache/hyperframes).
 import { spawn, spawnSync } from "child_process"
 import fs from "fs"
 import os from "os"
@@ -31,6 +31,20 @@ const TOPE_MS = () => Number(process.env.HYPERFRAMES_TOPE_MS || 240_000)
 
 /** ¿Está instalado HyperFrames (y no se apagó con HF_DESACTIVAR=1)? */
 export const hfListo = () => process.env.HF_DESACTIVAR !== "1" && fs.existsSync(BIN()) && fs.existsSync(GSAP())
+
+// Si falla dos veces seguidas (p. ej. se pasa del tope en este servidor), se deja
+// de intentar 3 horas para no gastar procesador en balde; mientras, FFmpeg.
+let fallosSeguidos = 0
+let pausaHasta = 0
+export const hfDisponible = () => hfListo() && Date.now() >= pausaHasta
+function anotar(ok: boolean, logger?: any) {
+  if (ok) return void (fallosSeguidos = 0)
+  if (++fallosSeguidos >= 2) {
+    pausaHasta = Date.now() + 3 * 3600_000
+    fallosSeguidos = 0
+    logger?.warn?.("[fabrica] hyperframes: 2 fallas seguidas; pausa de 3 horas (se usa FFmpeg)")
+  }
+}
 
 /** Horas de poco tráfico (2 a 6 am, hora de México) para los videos que pueden esperar. */
 export function horaTranquila(d = new Date()) {
@@ -110,7 +124,7 @@ const MAQUINA = (id: string) => `<svg id="${id}" viewBox="0 0 800 520" width="68
 <line x1="70" y1="330" x2="730" y2="330" stroke="${INK}" stroke-width="3" stroke-dasharray="10 12"/>
 <rect x="20" y="120" width="40" height="190" fill="${INK}"/><rect x="740" y="120" width="40" height="190" fill="${INK}"/>
 <rect x="20" y="100" width="760" height="44" rx="8" fill="${INK}"/>
-<path class="corte" d="M150 300 H650" stroke="${ACC}" stroke-width="10" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+<path class="corte" d="M150 300 H650" stroke="${ACC}" stroke-width="10" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/>
 <g class="cabezal"><rect x="350" y="80" width="100" height="120" rx="10" fill="#fff" stroke="${INK}" stroke-width="8"/><polygon points="382,200 418,200 406,240 394,240" fill="${INK}"/></g>
 <g class="chispas" fill="${ACC}" opacity="0"><circle cx="380" cy="290" r="8"/><circle cx="420" cy="282" r="6"/><circle cx="440" cy="300" r="7"/><circle cx="360" cy="304" r="5"/></g>
 </svg>`
@@ -147,19 +161,21 @@ export function iconoPara(texto: string, sugerido?: string, evitar: string[] = [
   return todos.find((ic) => !evitar.includes(ic)) || ["check", "engrane", "foco"].find((ic) => !evitar.includes(ic)) || todos[0] || "engrane"
 }
 
-const VACIAS = new Set("el la los las un una unos unas de del al a en y o que se su sus tu tus mi mis es son lo le les por para con sin como pero más muy ya si no hay este esta estos estas ese esa eso the a an of to in and for your you is are it on with".split(" "))
+// Ojo: "sin", "no" y "más" NO se quitan (cambiarían el sentido: "sin comisión")
+const VACIAS = new Set("el la los las un una unos unas de del al a en y o que se su sus tu tus mi mis es son lo le les por para con como pero muy ya si hay este esta estos estas ese esa eso the a an of to in and for your you is are it on with".split(" "))
 
 /** Máximo n palabras para pantalla: quita relleno y conserva signos de pregunta. */
 export function cuatroPalabras(t: string, n = 4) {
   const limpio = String(t || "").replace(/https?:\/\/\S+|#\S+/g, "").replace(/[“”"«»]/g, "").replace(/\s+/g, " ").trim()
   const pregunta = /[¿?]/.test(limpio)
+  const abre = limpio.includes("¿") // en inglés no se abre la pregunta
   const ws = limpio.replace(/[¿?¡!.,;:…]/g, "").split(" ").filter(Boolean)
   let elegidas = ws.length <= n ? ws : ws.filter((w) => !VACIAS.has(w.toLowerCase()))
   if (elegidas.length > n) elegidas = elegidas.slice(0, n)
   if (!elegidas.length) elegidas = ws.slice(0, n)
   let x = elegidas.join(" ")
   x = x.charAt(0).toLocaleUpperCase("es") + x.slice(1)
-  return pregunta ? `¿${x}?` : x
+  return pregunta ? `${abre ? "¿" : ""}${x}?` : x
 }
 
 const cifraDe = (t: string) => String(t || "").match(/(\$\s?\d[\d,.]*|\d[\d,.]*\s?%|\d+\s?(?:ejes|horas|días|min|mm|años|talleres|piezas))/i)?.[0] || ""
@@ -189,7 +205,7 @@ export function sanearBloques(bs: any[], cierre: { texto: string; narracion: str
     if (b.tipo === "dato") {
       const c = String(b.cifra || "").trim()
       // Nada de cifras inventadas: la cifra tiene que decirse en la narración
-      if (c && x.narracion.replace(/\s/g, "").includes(c.replace(/\s/g, ""))) x.cifra = c.slice(0, 10)
+      if (c && c.length <= 14 && x.narracion.replace(/\s/g, "").includes(c.replace(/\s/g, ""))) x.cifra = c
       else x.tipo = "accion"
     }
     if (b.tipo === "lista") {
@@ -301,8 +317,8 @@ export function acomodarTitulo(t: string, ancho = 920, max = 140, min = 64) {
     lineas = mejor
   }
   const largo = Math.max(...lineas.map((l) => l.length), 1)
-  // Archivo Black medida en render: ~0.52 em por letra; 0.58 deja margen
-  const tam = Math.max(min, Math.min(max, Math.floor(ancho / (largo * 0.58))))
+  // Archivo Black medida en render: 0.52 a 0.6 em por letra; 0.64 deja margen (y nowrap: nunca un 3.er renglón)
+  const tam = Math.max(min, Math.min(max, Math.floor(ancho / (largo * 0.64))))
   return { lineas, tam }
 }
 
@@ -364,7 +380,8 @@ export function componer(bloques: Bloque[], o: Opciones) {
     // Momento de la palabra clave dentro de la narración (aprox. por posición)
     const pal = b.narracion.split(/\s+/)
     const k = Math.max(0, pal.findIndex((w) => b.acento && w.toLowerCase().includes(b.acento.toLowerCase())))
-    const clave = f(t + Math.min(dur - 0.6, Math.max(0.5, (k / Math.max(1, pal.length)) * dur)))
+    // (a más tardar a la mitad de la escena, para que la acción se alcance a ver)
+    const clave = f(t + Math.min(Math.max(0.6, dur * 0.5), Math.max(0.5, (k / Math.max(1, pal.length)) * dur)))
     let html = ""
     const A = (s: string) => anim.push(s)
     if (b.tipo === "cierre") {
@@ -390,10 +407,11 @@ export function componer(bloques: Bloque[], o: Opciones) {
       }
     } else {
       html += tituloHtml(`${id}-t`, b.texto, b.acento)
-      A(`tl.fromTo("#${id}-t", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.05)});`)
+      // El cuadro 0 es la miniatura en las redes: la primera escena ya se ve completa
+      if (i > 0) A(`tl.fromTo("#${id}-t", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.05)});`)
       A(`tl.fromTo("#${id}-t .acento", {color:"${INK}"}, {color:"${ACC}", duration:.25}, ${b.tipo === "gancho" ? f(Math.min(clave, t + 0.6)) : clave});`)
       if (b.tipo === "dato" && b.cifra) {
-        html += `<div id="${id}-cifra" class="cifra">${esc(b.cifra)}</div>` + icono(ic === "maquina" ? "engrane" : ic, `${id}-ic`, 260, 410, 920)
+        html += `<div id="${id}-cifra" class="cifra" style="font-size:${Math.max(90, Math.min(240, Math.floor(980 / (b.cifra.length * 0.62))))}px">${esc(b.cifra)}</div>` + icono(ic === "maquina" ? "engrane" : ic, `${id}-ic`, 260, 410, 920)
         A(`tl.fromTo("#${id}-cifra", {scale:.2, opacity:0}, {scale:1, opacity:1, duration:.7, ease:"expo.out"}, ${clave});`)
         A(`tl.fromTo("#${id}-ic", {y:60, opacity:0}, {y:0, opacity:1, duration:.5, ease:"expo.out"}, ${f(t + 0.3)});`)
       } else if (b.tipo === "lista" && b.items?.length) {
@@ -414,16 +432,16 @@ export function componer(bloques: Bloque[], o: Opciones) {
         const nombre = b.tipo === "pregunta" ? "pregunta" : ic
         if (nombre === "maquina") {
           html += MAQUINA(`${id}-ic`)
-          A(`tl.fromTo("#${id}-ic", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.1)});`)
+          if (i > 0) A(`tl.fromTo("#${id}-ic", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.1)});`)
           if (b.tipo === "gancho") A(`tl.fromTo("#${id}-ic", {rotation:0}, {rotation:-1.2, duration:.08, yoyo:true, repeat:5, ease:"sine.inOut", transformOrigin:"50% 100%"}, ${clave});`)
           else {
             A(`tl.fromTo("#${id}-ic .cabezal", {y:0}, {y:58, duration:.3, ease:"power2.in"}, ${f(clave - 0.3)});`)
-            A(`tl.fromTo("#${id}-ic .corte", {strokeDashoffset:1}, {strokeDashoffset:0, duration:${f(Math.max(0.6, dur - (clave - t) - 0.4))}, ease:"none"}, ${clave});`)
+            A(`tl.fromTo("#${id}-ic .corte", {strokeDashoffset:1.1}, {strokeDashoffset:0, duration:${f(Math.max(0.6, dur - (clave - t) - 0.4))}, ease:"none"}, ${clave});`)
             A(`tl.fromTo("#${id}-ic .chispas", {opacity:0, scale:.6}, {opacity:1, scale:1.2, duration:.15, yoyo:true, repeat:5, ease:"sine.inOut", transformOrigin:"50% 50%"}, ${clave});`)
           }
         } else {
           html += icono(nombre, `${id}-ic`, 560, 260, 650)
-          A(`tl.fromTo("#${id}-ic", {scale:.6, opacity:0}, {scale:1, opacity:1, duration:.5, ease:"back.out(1.6)", transformOrigin:"50% 50%"}, ${f(t + 0.15)});`)
+          if (i > 0) A(`tl.fromTo("#${id}-ic", {scale:.6, opacity:0}, {scale:1, opacity:1, duration:.5, ease:"back.out(1.6)", transformOrigin:"50% 50%"}, ${f(t + 0.15)});`)
           A(accionDe(nombre, `#${id}-ic`, clave, dur - (clave - t)))
         }
       }
@@ -457,10 +475,10 @@ html, body { width:1080px; height:1920px; overflow:hidden; background:${FONDO}; 
 #root { position:relative; width:100%; height:100%; overflow:hidden; font-family:"Archivo Black", sans-serif; color:${INK}; }
 .escena { position:absolute; inset:0; overflow:hidden; }
 .fondo { position:absolute; inset:0; background-color:${FONDO}; background-image: linear-gradient(rgba(20,32,51,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(20,32,51,.07) 2px, transparent 2px); background-size:60px 60px; }
-.titulo { position:absolute; left:80px; width:920px; top:250px; line-height:.95; letter-spacing:-.02em; }
-.titulo.centro { text-align:center; top:760px; }
+.titulo { position:absolute; left:80px; width:920px; top:250px; line-height:.95; letter-spacing:-.02em; white-space:nowrap; }
+.titulo.centro { text-align:center; top:760px; white-space:normal; }
 .acento { color:${ACC}; }
-.cifra { position:absolute; left:0; width:1080px; top:600px; text-align:center; font-size:240px; line-height:1; color:${ACC}; white-space:nowrap; }
+.cifra { position:absolute; left:0; width:1080px; top:620px; text-align:center; font-size:240px; line-height:1; color:${ACC}; white-space:nowrap; }
 .tarj { position:absolute; left:120px; width:840px; height:170px; background:#fff; border:6px solid ${INK}; border-radius:24px; display:flex; align-items:center; gap:30px; padding:0 34px; box-shadow:0 14px 0 rgba(20,32,51,.15); }
 .tarj .ico { width:100px; height:100px; border-radius:20px; background:${ACC}; color:#fff; font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
 .l2 { font-size:58px; line-height:1; }
@@ -530,7 +548,6 @@ function accionDe(nombre: string, sel: string, t: number, resto: number) {
 
 const ENV = () => ({
   ...process.env,
-  HYPERFRAMES_CACHE_DIR: process.env.HYPERFRAMES_CACHE_DIR || path.join(DIR(), "cache"),
   HF_CLI_TELEMETRY_DISABLED: "1",
   DO_NOT_TRACK: "1",
   PRODUCER_BROWSER_GPU_MODE: "software",
@@ -584,13 +601,13 @@ let enCola = 0
  * HyperFrames no está, la revisión encuentra errores o se pasa del tope.
  */
 export async function videoHF(bloques: Bloque[], o: Opciones & { logger?: any }) {
-  if (!hfListo() || !bloques?.length) return null
+  if (!hfDisponible() || !bloques?.length) return null
   if (enCola >= 3) {
     o.logger?.warn?.("[fabrica] hyperframes: cola llena, se usa el video de FFmpeg")
     return null
   }
   enCola++
-  const turno = cola.then(() => hacer(bloques, o))
+  const turno = cola.then(() => hacer(bloques, o)).then((r) => (anotar(!!r, o.logger), r))
   cola = turno.catch(() => null)
   try {
     return await turno
@@ -649,12 +666,17 @@ async function hacer(bloques: Bloque[], o: Opciones & { logger?: any }) {
   }
 }
 
-/** Errores de `check --json` (los avisos no detienen el video). */
+/** Errores de `check --json` (lint, runtime, layout…; los avisos no detienen el video). */
 export function revisar(out: string) {
   try {
     const j = JSON.parse(out.slice(out.indexOf("{")))
-    const lista = [...(j.errors || []), ...(j.lint?.errors || []), ...(j.layout?.errors || []), ...(j.validate?.errors || [])]
-    if (lista.length) return lista.map((e: any) => e.message || e.code || JSON.stringify(e).slice(0, 160))
+    const lista: string[] = []
+    for (const [k, v] of Object.entries<any>(j)) {
+      if (!v || typeof v !== "object") continue
+      for (const f of v.findings || []) if (f?.severity === "error") lista.push(`${k}: ${f.code || ""} ${f.selector || ""} ${String(f.message || "").slice(0, 80)}`.trim())
+      for (const e of v.errors || []) lista.push(`${k}: ${e?.message || e?.code || String(e).slice(0, 80)}`)
+    }
+    if (lista.length) return lista
     return j.ok === false ? ["check: ok=false"] : []
   } catch {
     return /error/i.test(out) ? [out.slice(-200)] : []

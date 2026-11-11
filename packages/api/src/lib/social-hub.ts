@@ -63,6 +63,7 @@ export type ConfigSocial = {
   piloto: { activo: boolean; minimo: number; redes: Red[] }
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
   primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
+  video_animado: boolean // videos del plan con HyperFrames (estilo «¿Máquina parada?»); apagado hasta que el dueño lo apruebe
   youtube_auto: boolean // YouTube conectado en n8n: los videos verticales salen solos como Shorts
   auto_respuestas: boolean // la IA contesta sola las preguntas frecuentes y los elogios en comentarios
 }
@@ -75,6 +76,7 @@ const CONFIG_INICIAL: ConfigSocial = {
   piloto: { activo: false, minimo: 75, redes: [] },
   aviso_hora: 8,
   primer_comentario: true,
+  video_animado: false,
   youtube_auto: false,
   auto_respuestas: false,
 }
@@ -162,6 +164,7 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     },
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
     primer_comentario: v.primer_comentario !== false,
+    video_animado: !!v.video_animado,
     youtube_auto: !!v.youtube_auto,
     auto_respuestas: !!v.auto_respuestas,
   }
@@ -186,6 +189,7 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
       : actual.piloto,
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
     primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
+    video_animado: c.video_animado != null ? !!c.video_animado : actual.video_animado,
     youtube_auto: c.youtube_auto != null ? !!c.youtube_auto : actual.youtube_auto,
     auto_respuestas: c.auto_respuestas != null ? !!c.auto_respuestas : actual.auto_respuestas,
   }

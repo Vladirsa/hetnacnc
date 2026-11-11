@@ -20,7 +20,7 @@ import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./rende
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
-import { bloquesBasicos, guionista, hfListo, horaTranquila, paraVoz, videoHF } from "./hyperframes"
+import { bloquesBasicos, guionista, hfDisponible, horaTranquila, paraVoz, videoHF } from "./hyperframes"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
@@ -157,6 +157,8 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarPlan(knex)
   await knex.raw(`alter table ?? add column if not exists material text`, [T_PLAN]).catch(() => {})
+  // Videos animados: sólo si el dueño los activó en Configuración y HyperFrames está instalado
+  const animado = !!(await leerConfig(knex)).video_animado && hfDisponible()
   const filas = await knex(`${T_PLAN} as h`)
     .join(`${T_POST} as p`, "p.id", "h.post_id")
     .whereNull("h.material")
@@ -165,8 +167,8 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
     // Con HyperFrames, los videos que salen en más de 24 h esperan a la madrugada (2-6 am)
     // para no quitarle procesador a la tienda en horas de visitas
     .modify((q: any) => {
-      if (hfListo() && !horaTranquila())
-        q.whereNot((w: any) => w.whereIn("h.formato", FORMATOS_VIDEO).whereRaw(`coalesce(p.programada_para, h.fecha) > now() + interval '24 hours'`))
+      if (animado && !horaTranquila())
+        q.whereNot((w: any) => w.whereRaw(`coalesce(h.formato, '') = any(?)`, [FORMATOS_VIDEO]).whereRaw(`coalesce(p.programada_para, h.fecha) > now() + interval '24 hours'`))
     })
     .orderBy("h.fecha")
     .limit(limite)
@@ -186,7 +188,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   }
   // Guion por escenas para HyperFrames (IA; sin IA, a partir del gancho y las frases)
   const bloquesDe: Record<string, any[]> = {}
-  if (hfListo()) {
+  if (animado) {
     for (const f of videos) {
       const g = guiones[f.id]
       const comunidad = f.publico === "comunidad"
