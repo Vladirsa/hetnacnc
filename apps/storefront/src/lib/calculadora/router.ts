@@ -8,13 +8,13 @@
 import { type Calculadora, type Campo, type Entrada, type Preset, type Resultado, bloque, clamp, fmt, interp, minutos, nuevo, num, opciones, r, txt } from "./comun"
 
 // ---------- máquinas ----------
-export type ClaseMaquina = { nombre: string; potencia_kw: number; rpm_min: number; rpm_max: number; avance_max: number; rigidez: number; nota: string }
+export type ClaseMaquina = { nombre: string; potencia_kw: number; rpm_min: number; rpm_max: number; avance_max: number; rigidez: number; nota: string; rpm_base?: number }
 export const MAQUINAS_ROUTER: Record<string, ClaseMaquina> = {
   desktop: { nombre: "Desktop / 3018 (motor 775 o spindle 300–500 W)", potencia_kw: 0.3, rpm_min: 3000, rpm_max: 10000, avance_max: 1200, rigidez: 0.3, nota: "Máquina ligera: cortes poco profundos y fresas de 1 filo. Lo que la limita es la rigidez, no el spindle." },
   hobby: { nombre: "Hobby 6040 / 6090 con spindle 1.5 kW", potencia_kw: 1.5, rpm_min: 6000, rpm_max: 24000, avance_max: 3000, rigidez: 0.6, nota: "Rígida para madera y plásticos; aluminio sí, pero con pasadas de 0.3–0.5 mm y lubricación." },
   taller: { nombre: "Router 1325 / 1530 de taller (3–4.5 kW)", potencia_kw: 3.5, rpm_min: 6000, rpm_max: 24000, avance_max: 8000, rigidez: 1, nota: "La máquina típica de taller en México: MDF, melamina, acrílico y ACM a buen ritmo." },
   industrial: { nombre: "Industrial con ATC (9–12 kW, HSD/Hiteco)", potencia_kw: 9, rpm_min: 6000, rpm_max: 24000, avance_max: 20000, rigidez: 1.3, nota: "Puedes cortar melamina de 18 mm de una pasada con fresa de compresión de 10–12 mm." },
-  fresadora: { nombre: "Fresadora / VMC para metal (7.5 kW, 8,000 RPM)", potencia_kw: 7.5, rpm_min: 100, rpm_max: 8000, avance_max: 10000, rigidez: 2, nota: "Para acero e inoxidable: refrigerante, fresas de 4 filos y desbaste adaptativo." },
+  fresadora: { nombre: "Fresadora / VMC para metal (7.5 kW, 8,000 RPM)", potencia_kw: 7.5, rpm_min: 100, rpm_max: 8000, avance_max: 10000, rigidez: 2, rpm_base: 1500, nota: "Para acero e inoxidable: refrigerante, fresas de 4 filos y desbaste adaptativo." },
 }
 export const PRESETS_ROUTER: Preset[] = Object.entries(MAQUINAS_ROUTER).map(([id, m]) => ({
   id,
@@ -28,7 +28,8 @@ type MatRouter = {
   grupo: string
   cl: number[][] // [diámetro mm, carga mín, carga máx] mm por filo, carburo, máquina rígida
   vc: [number, number] // velocidad de corte m/min (carburo)
-  doc: number // profundidad por pasada en perfil, en veces el diámetro
+  doc: number // profundidad por pasada en perfil, en veces el diámetro, en un router
+  docFresadora?: number // lo mismo en una fresadora rígida (metales): un router no aguanta esa pasada
   u: number // energía específica J/mm³ (≈ Kc / 1000)
   filos: number // filos recomendados
   entrada: number // avance de entrada como fracción del avance
@@ -36,15 +37,15 @@ type MatRouter = {
   nota: string
 }
 export const MAT_ROUTER: Record<string, MatRouter> = {
-  mdf: { nombre: "MDF", grupo: "Madera y tableros", cl: [[3, 0.1, 0.15], [6, 0.25, 0.3], [10, 0.35, 0.45], [12, 0.45, 0.55]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "Extracción de polvo obligatoria: el polvo de MDF es dañino. La fresa de compresión deja limpias las dos caras." },
-  melamina: { nombre: "Melamina / aglomerado", grupo: "Madera y tableros", cl: [[3, 0.08, 0.13], [6, 0.2, 0.28], [10, 0.3, 0.4], [12, 0.4, 0.5]], vc: [300, 900], doc: 1, u: 0.07, filos: 2, entrada: 0.35, nota: "Para que no se astille la cara de arriba usa fresa de compresión; la primera pasada más profunda que la zona ascendente." },
+  mdf: { nombre: "MDF", grupo: "Madera y tableros", cl: [[3, 0.1, 0.18], [6, 0.3, 0.4], [10, 0.45, 0.55], [12, 0.55, 0.68]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "Extracción de polvo obligatoria: el polvo de MDF es dañino. La fresa de compresión deja limpias las dos caras." },
+  melamina: { nombre: "Melamina / aglomerado", grupo: "Madera y tableros", cl: [[3, 0.1, 0.15], [6, 0.28, 0.38], [10, 0.42, 0.52], [12, 0.52, 0.62]], vc: [300, 900], doc: 1, u: 0.07, filos: 2, entrada: 0.35, nota: "Para que no se astille la cara de arriba usa fresa de compresión; la primera pasada más profunda que la zona ascendente." },
   triplay: { nombre: "Triplay / contrachapado", grupo: "Madera y tableros", cl: [[3, 0.08, 0.13], [6, 0.23, 0.28], [10, 0.33, 0.42], [12, 0.43, 0.5]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "El pegamento desafila rápido las fresas HSS: mejor carburo. Compresión o downcut para que no se astille." },
   madera_blanda: { nombre: "Madera blanda (pino, cedro, caobilla)", grupo: "Madera y tableros", cl: [[3, 0.1, 0.15], [6, 0.25, 0.3], [10, 0.35, 0.45], [12, 0.45, 0.53]], vc: [300, 900], doc: 1, u: 0.04, filos: 2, entrada: 0.35, nota: "Corta a favor de la veta cuando puedas. Si se 'pela', usa downcut en la última pasada." },
   madera_dura: { nombre: "Madera dura (encino, parota, nogal, maple)", grupo: "Madera y tableros", cl: [[3, 0.08, 0.13], [6, 0.2, 0.25], [10, 0.3, 0.38], [12, 0.4, 0.48]], vc: [300, 800], doc: 0.75, u: 0.09, filos: 2, entrada: 0.3, nota: "Se quema si el avance es bajo: no bajes el avance, baja las RPM." },
   bambu: { nombre: "Bambú laminado", grupo: "Madera y tableros", cl: [[3, 0.07, 0.11], [6, 0.18, 0.23], [10, 0.25, 0.33], [12, 0.33, 0.42]], vc: [300, 800], doc: 0.7, u: 0.1, filos: 2, entrada: 0.3, nota: "Muy abrasivo por la sílice: fresas de carburo y espera menos vida de filo." },
-  acrilico: { nombre: "Acrílico fundido (cast)", grupo: "Plásticos", cl: [[3, 0.08, 0.1], [6, 0.15, 0.2], [10, 0.22, 0.28], [12, 0.25, 0.3]], vc: [150, 350], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Fresa de 1 filo (O-flute) pulida. Si ves plástico fundido pegado, sube el avance o baja RPM. Para canto cristal: fresa O-flute nueva y una pasada de acabado de 0.2 mm." },
+  acrilico: { nombre: "Acrílico fundido (cast)", grupo: "Plásticos", cl: [[3, 0.08, 0.12], [6, 0.18, 0.25], [10, 0.25, 0.3], [12, 0.3, 0.38]], vc: [150, 350], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Fresa de 1 filo (O-flute) pulida. Si ves plástico fundido pegado, sube el avance o baja RPM. Para canto cristal: fresa O-flute nueva y una pasada de acabado de 0.2 mm." },
   acrilico_extruido: { nombre: "Acrílico extruido", grupo: "Plásticos", cl: [[3, 0.08, 0.1], [6, 0.15, 0.2], [10, 0.22, 0.28], [12, 0.25, 0.3]], vc: [120, 300], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Se funde más fácil que el fundido: viruta grande, RPM moderadas y aire. Sujeta bien, tiende a vibrar." },
-  policarbonato: { nombre: "Policarbonato", grupo: "Plásticos", cl: [[3, 0.08, 0.12], [6, 0.18, 0.25], [10, 0.25, 0.32], [12, 0.3, 0.38]], vc: [150, 400], doc: 0.6, u: 0.11, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Corta muy bien con router (mal con láser). Fresa de 1 filo; no dejes que la viruta se reenrolle en la fresa." },
+  policarbonato: { nombre: "Policarbonato", grupo: "Plásticos", cl: [[3, 0.08, 0.12], [6, 0.18, 0.25], [10, 0.22, 0.28], [12, 0.25, 0.32]], vc: [150, 400], doc: 0.6, u: 0.11, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Corta muy bien con router (mal con láser). Fresa de 1 filo; no dejes que la viruta se reenrolle en la fresa." },
   pvc_espumado: { nombre: "PVC espumado (Sintra, Trovicel)", grupo: "Plásticos", cl: [[3, 0.08, 0.13], [6, 0.18, 0.25], [10, 0.25, 0.33], [12, 0.3, 0.38]], vc: [150, 400], doc: 1, u: 0.05, filos: 1, entrada: 0.35, nota: "Fresa de 1 filo para que la viruta salga y no se funda. Cuidado con el polvo: ventilación." },
   pvc_rigido: { nombre: "PVC rígido", grupo: "Plásticos", cl: [[3, 0.07, 0.11], [6, 0.15, 0.22], [10, 0.2, 0.28], [12, 0.25, 0.33]], vc: [120, 300], doc: 0.6, u: 0.09, filos: 1, entrada: 0.3, nota: "Frágil en frío: no fuerces la entrada. 1 filo, RPM moderadas." },
   hdpe: { nombre: "HDPE / Nylon / UHMW / POM", grupo: "Plásticos", cl: [[3, 0.08, 0.13], [6, 0.18, 0.25], [10, 0.25, 0.33], [12, 0.3, 0.38]], vc: [150, 400], doc: 0.75, u: 0.05, filos: 1, entrada: 0.3, nota: "Plásticos que se funden: carga de viruta alta, RPM moderadas y buena evacuación. Nylon absorbe humedad y cambia de medida." },
@@ -53,11 +54,11 @@ export const MAT_ROUTER: Record<string, MatRouter> = {
   g10: { nombre: "Fibra de vidrio (G10 / FR4 / PCB)", grupo: "Compuestos", cl: [[3, 0.04, 0.06], [6, 0.08, 0.12], [10, 0.1, 0.15], [12, 0.12, 0.18]], vc: [150, 300], doc: 0.5, u: 0.2, filos: 2, entrada: 0.25, nota: "El polvo de vidrio destruye los rodamientos y los pulmones: extracción y mascarilla. Fresas de diamante o carburo; cuenta con que duran poco." },
   carbono: { nombre: "Fibra de carbono", grupo: "Compuestos", cl: [[3, 0.03, 0.05], [6, 0.06, 0.1], [10, 0.08, 0.12], [12, 0.1, 0.15]], vc: [120, 250], doc: 0.4, u: 0.2, filos: 2, entrada: 0.25, nota: "Polvo conductor y peligroso: corta en húmedo o con extracción sellada. Fresas de diamante (PCD) o carburo recubierto; compresión para que no delamine." },
   acm: { nombre: "ACM (aluminio compuesto, Alucobond)", grupo: "Metales", cl: [[3, 0.05, 0.08], [6, 0.1, 0.15], [10, 0.13, 0.18], [12, 0.15, 0.2]], vc: [200, 500], doc: 1, u: 0.12, filos: 1, entrada: 0.3, nota: "Para doblar ACM usa fresa en V de 90° o 135° dejando 0.3–0.5 mm de material (la piel de abajo)." },
-  aluminio: { nombre: "Aluminio (6061, 5052)", grupo: "Metales", cl: [[3, 0.025, 0.04], [6, 0.05, 0.08], [10, 0.07, 0.1], [12, 0.08, 0.12]], vc: [150, 400], doc: 0.2, u: 0.7, filos: 1, entrada: 0.2, lub: "alcohol, niebla o WD-40 + aire", nota: "Fresa de 1 filo pulida (2–3 filos en fresadora rígida). Entrada siempre en rampa o hélice, nunca vertical. Si la viruta se pega a la fresa (built-up edge): más lubricación y más avance." },
-  laton: { nombre: "Latón", grupo: "Metales", cl: [[3, 0.02, 0.03], [6, 0.04, 0.06], [10, 0.05, 0.08], [12, 0.06, 0.09]], vc: [100, 250], doc: 0.15, u: 1.2, filos: 2, entrada: 0.2, nota: "Corta limpio y seco; fresa de 2 filos sin ángulo de desprendimiento agresivo para que no 'jale'." },
-  cobre: { nombre: "Cobre", grupo: "Metales", cl: [[3, 0.015, 0.025], [6, 0.03, 0.05], [10, 0.04, 0.06], [12, 0.05, 0.07]], vc: [80, 200], doc: 0.12, u: 1.4, filos: 2, entrada: 0.2, lub: "aceite de corte", nota: "Pegajoso y blando: fresa afilada, lubricación y avance constante para que no se embarre." },
-  acero_dulce: { nombre: "Acero dulce (1018, A36)", grupo: "Metales", cl: [[3, 0.01, 0.02], [6, 0.02, 0.04], [10, 0.03, 0.05], [12, 0.04, 0.06]], vc: [60, 120], doc: 0.05, u: 2.5, filos: 4, entrada: 0.15, lub: "refrigerante soluble", nota: "Un router de madera normalmente NO tiene rigidez para acero. Es para fresadora con refrigerante y fresa de 4 filos." },
-  inoxidable: { nombre: "Acero inoxidable (304, 316)", grupo: "Metales", cl: [[3, 0.01, 0.015], [6, 0.02, 0.03], [10, 0.025, 0.04], [12, 0.03, 0.05]], vc: [40, 90], doc: 0.04, u: 3.2, filos: 4, entrada: 0.12, lub: "refrigerante soluble abundante", nota: "Se endurece si la fresa roza: nunca bajes la carga de viruta. Fresa recubierta (AlTiN), 4 filos, refrigerante." },
+  aluminio: { nombre: "Aluminio (6061, 5052)", grupo: "Metales", cl: [[3, 0.025, 0.04], [6, 0.05, 0.08], [10, 0.07, 0.1], [12, 0.08, 0.12]], vc: [150, 400], doc: 0.2, docFresadora: 1, u: 0.7, filos: 1, entrada: 0.2, lub: "alcohol, niebla o WD-40 + aire", nota: "Fresa de 1 filo pulida (2–3 filos en fresadora rígida). Entrada siempre en rampa o hélice, nunca vertical. Si la viruta se pega a la fresa (built-up edge): más lubricación y más avance." },
+  laton: { nombre: "Latón", grupo: "Metales", cl: [[3, 0.02, 0.03], [6, 0.04, 0.06], [10, 0.05, 0.08], [12, 0.06, 0.09]], vc: [100, 250], doc: 0.15, docFresadora: 0.75, u: 1.2, filos: 2, entrada: 0.2, nota: "Corta limpio y seco; fresa de 2 filos sin ángulo de desprendimiento agresivo para que no 'jale'." },
+  cobre: { nombre: "Cobre", grupo: "Metales", cl: [[3, 0.015, 0.025], [6, 0.03, 0.05], [10, 0.04, 0.06], [12, 0.05, 0.07]], vc: [80, 200], doc: 0.12, docFresadora: 0.5, u: 2, filos: 2, entrada: 0.2, lub: "aceite de corte", nota: "Pegajoso y blando: fresa afilada, lubricación y avance constante para que no se embarre." },
+  acero_dulce: { nombre: "Acero dulce (1018, A36)", grupo: "Metales", cl: [[3, 0.01, 0.02], [6, 0.02, 0.04], [10, 0.03, 0.05], [12, 0.04, 0.06]], vc: [75, 150], doc: 0.05, docFresadora: 0.5, u: 3, filos: 4, entrada: 0.15, lub: "refrigerante soluble", nota: "Un router de madera normalmente NO tiene rigidez para acero. Es para fresadora con refrigerante y fresa de 4 filos." },
+  inoxidable: { nombre: "Acero inoxidable (304, 316)", grupo: "Metales", cl: [[3, 0.01, 0.015], [6, 0.02, 0.03], [10, 0.025, 0.04], [12, 0.03, 0.05]], vc: [40, 90], doc: 0.04, docFresadora: 0.4, u: 4, filos: 4, entrada: 0.12, lub: "refrigerante soluble abundante", nota: "Se endurece si la fresa roza: nunca bajes la carga de viruta. Fresa recubierta (AlTiN), 4 filos, refrigerante." },
   espuma: { nombre: "Espuma XPS / PU / foam de modelado", grupo: "Espumas y otros", cl: [[3, 0.15, 0.25], [6, 0.3, 0.5], [10, 0.45, 0.7], [12, 0.5, 0.8]], vc: [300, 1000], doc: 2, u: 0.005, filos: 2, entrada: 0.5, nota: "Puedes cortar profundo y rápido; el límite suele ser el avance máximo de la máquina. Fresas largas de 2 filos." },
   cera: { nombre: "Cera de modelado / mecanizado", grupo: "Espumas y otros", cl: [[3, 0.1, 0.18], [6, 0.2, 0.35], [10, 0.3, 0.5], [12, 0.35, 0.55]], vc: [200, 600], doc: 1.5, u: 0.02, filos: 2, entrada: 0.5, nota: "Ideal para probar programas 3D antes de cortar el material bueno." },
   yeso_mdf_pintado: { nombre: "MDF pintado / laqueado", grupo: "Espumas y otros", cl: [[3, 0.08, 0.12], [6, 0.2, 0.26], [10, 0.3, 0.38], [12, 0.38, 0.48]], vc: [300, 800], doc: 0.8, u: 0.07, filos: 2, entrada: 0.3, nota: "Downcut o compresión para que la pintura no se descascare en la orilla." },
@@ -146,7 +147,10 @@ export const calcRouter = (e: Entrada): Resultado => {
   const pasoPct = num(e.paso_pct)
   let ae = pasoPct ? D * clamp(pasoPct, 1, 100) / 100 : D * OP.ae
   if (txt(e.operacion) === "perfil") ae = D
-  let doc = D * M.doc * T.doc * OP.doc * clamp(rig, 0.3, 1.5)
+  // En fresadora rígida los metales llevan su propia profundidad (0.4–1×D en ranura, 2×D en adaptativo);
+  // en router se parte de la del material y se escala con la rigidez.
+  const enFresadora = rig >= 1.5 && M.docFresadora !== undefined
+  let doc = enFresadora ? D * (txt(e.operacion) === "adaptativo" ? 2 : (M.docFresadora as number) * OP.doc) * T.doc : D * M.doc * T.doc * OP.doc * clamp(rig, 0.3, 1.5)
   if (txt(e.operacion) === "grabado_v") doc = prof || D * 0.3
   if (txt(e.operacion) === "planeado") doc = Math.min(1.5, D * 0.05)
   if (txt(e.operacion) === "acabado_pared") doc = prof ? Math.min(prof, D * 3) : D * 3
@@ -183,7 +187,9 @@ export const calcRouter = (e: Entrada): Resultado => {
   if (vcReal < M.vc[0] * MF.vc * 0.6) R.avisos.push(`Velocidad de corte baja (${fmt(vcReal)} m/min): el spindle no sube más RPM; está bien, pero baja el avance en proporción si vibra.`)
 
   // --- potencia y par ---
-  const potDisp = P * 1000 * clamp(rpm / rpmMax, 0.25, 1) // spindles VFD: potencia proporcional a RPM bajo la nominal
+  // Spindle de router con variador: la potencia baja en proporción a las RPM. El motor de una
+  // fresadora da toda su potencia arriba de su velocidad base y sólo baja por debajo de ella.
+  const potDisp = P * 1000 * (mq.rpm_base ? clamp(rpm / mq.rpm_base, 0.1, 1) : clamp(rpm / rpmMax, 0.1, 1))
   let potW = ((ae * doc * avance) / 60) * M.u
   if (potW > potDisp * 0.8) {
     const f = (potDisp * 0.8) / potW
@@ -196,8 +202,11 @@ export const calcRouter = (e: Entrada): Resultado => {
   // --- deflexión de la fresa (viga en voladizo) ---
   const Ft = potW / (vcReal / 60) // fuerza tangencial media, N (P = F·v)
   const dCore = D * (T.nombre.startsWith("Un filo") ? 0.6 : 0.75)
+  // Viga en dos tramos: la parte con filos (hasta 3 diámetros) es más delgada que el zanco macizo.
   const I = (Math.PI * Math.pow(dCore, 4)) / 64
-  const defl = (Ft * Math.pow(L, 3)) / (3 * MF.E * I) // mm
+  const Izanco = (Math.PI * Math.pow(D, 4)) / 64
+  const Lfilos = Math.min(L, 3 * D)
+  const defl = (Ft / (3 * MF.E)) * (Math.pow(Lfilos, 3) / I + (Math.pow(L, 3) - Math.pow(Lfilos, 3)) / Izanco) // mm
   if (defl > 0.05) {
     R.avisos.push(`La fresa se flexiona ≈ ${fmt(defl, 3)} mm con ${fmt(L)} mm fuera del collet: riesgo de vibración, paredes cónicas o rotura. Acorta el voladizo, baja la profundidad o usa fresa de mayor diámetro.`)
     R.confianza -= 15
@@ -217,7 +226,7 @@ export const calcRouter = (e: Entrada): Resultado => {
   b1.filas.push({ etiqueta: "RPM", valor: fmt(rpm), destacado: true })
   b1.filas.push({ etiqueta: "Avance", valor: `${fmt(avance)} mm/min`, nota: `rango sano ${fmt(rpm * Z * clMin)}–${fmt(rpm * Z * clMax)}`, destacado: true })
   b1.filas.push({ etiqueta: "Avance de entrada (plunge)", valor: `${fmt(entrada)} mm/min`, nota: `mejor en rampa de ${anguloRampa}°` })
-  b1.filas.push({ etiqueta: "Carga de viruta por filo", valor: `${fmt(clProg, 3)} mm`, nota: ae < D / 2 ? `viruta real ${fmt(cl, 3)} mm` : `recomendado ${fmt(clMin, 3)}–${fmt(clMax, 3)}` })
+  b1.filas.push({ etiqueta: "Carga de viruta por filo", valor: `${fmt(clProg, 3)} mm`, nota: ae < D / 2 ? `viruta real ${fmt(cl, 3)} mm (recomendado ${fmt(clMin, 3)}–${fmt(clMax, 3)})` : `recomendado ${fmt(clMin, 3)}–${fmt(clMax, 3)}`, medidor: { valor: avance / (rpm * Z) / (clProg / cl), escalaMin: 0, escalaMax: clMax * 1.6, okMin: clMin, okMax: clMax } })
   if (pasadas) {
     b1.filas.push({ etiqueta: "Profundidad por pasada", valor: `${fmt(docReal, 2)} mm`, destacado: true })
     b1.filas.push({ etiqueta: "Pasadas", valor: String(pasadas), nota: `para ${fmt(prof as number, 1)} mm` })
@@ -225,12 +234,12 @@ export const calcRouter = (e: Entrada): Resultado => {
   if (txt(e.operacion) !== "perfil") b1.filas.push({ etiqueta: "Paso lateral (stepover)", valor: `${fmt(ae, 2)} mm`, nota: `${fmt((ae / D) * 100)}% del diámetro` })
 
   const b2 = bloque(R, "Revisión de la máquina")
-  b2.filas.push({ etiqueta: "Velocidad de corte", valor: `${fmt(vcReal)} m/min`, nota: `típico ${fmt(M.vc[0] * MF.vc)}–${fmt(M.vc[1] * MF.vc)}` })
+  b2.filas.push({ etiqueta: "Velocidad de corte", valor: `${fmt(vcReal)} m/min`, nota: `típico ${fmt(M.vc[0] * MF.vc)}–${fmt(M.vc[1] * MF.vc)}`, medidor: { valor: vcReal, escalaMin: 0, escalaMax: M.vc[1] * MF.vc * 1.3, okMin: M.vc[0] * MF.vc * 0.6, okMax: M.vc[1] * MF.vc } })
   b2.filas.push({ etiqueta: "Material removido", valor: `${fmt(mrr, 1)} cm³/min` })
-  b2.filas.push({ etiqueta: "Potencia de corte", valor: `${fmt(potW / 1000, 2)} kW`, nota: `${fmt((potW / potDisp) * 100)}% de los ${fmt(potDisp / 1000, 1)} kW disponibles a ${fmt(rpm)} RPM` })
+  b2.filas.push({ etiqueta: "Potencia de corte", valor: `${fmt(potW / 1000, 2)} kW`, nota: `${fmt((potW / potDisp) * 100)}% de los ${fmt(potDisp / 1000, 1)} kW disponibles a ${fmt(rpm)} RPM`, medidor: { valor: (potW / potDisp) * 100, escalaMin: 0, escalaMax: 100, okMin: 0, okMax: 80 } })
   b2.filas.push({ etiqueta: "Par en el spindle", valor: `${fmt(par, 2)} N·m` })
   b2.filas.push({ etiqueta: "Fuerza de corte", valor: `${fmt(Ft)} N`, nota: "media tangencial" })
-  b2.filas.push({ etiqueta: "Deflexión de la fresa", valor: `${fmt(defl, 3)} mm`, nota: `${fmt(L)} mm de voladizo, núcleo ≈ ${fmt(dCore, 1)} mm` })
+  b2.filas.push({ etiqueta: "Deflexión de la fresa", valor: `${fmt(defl, 3)} mm`, nota: `${fmt(L)} mm de voladizo, núcleo ≈ ${fmt(dCore, 1)} mm`, medidor: { valor: defl, escalaMin: 0, escalaMax: 0.08, okMin: 0, okMax: 0.02 } })
 
   if (T.nombre.startsWith("Punta bola")) {
     const Rb = D / 2

@@ -5,14 +5,15 @@
 
 import { type Calculadora, type Campo, type Entrada, type Preset, type Resultado, bloque, clamp, fmt, interp, masCercana, minutos, nuevo, num, opciones, r, txt } from "./comun"
 
-// [espesor mm, velocidad mm/min] acero al carbón, corte de calidad
+// [espesor mm, velocidad mm/min] acero al carbón, velocidad de PRODUCCIÓN (70–80% de la máxima
+// que publican los fabricantes; a la máxima el corte sale con más bisel y escoria)
 const TABLA: Record<string, number[][]> = {
   "30": [[1, 6500], [1.5, 5000], [3, 2000], [6, 600], [8, 350]],
   "45": [[1.5, 8000], [3, 5500], [6, 2200], [10, 900], [12, 600], [16, 350]],
-  "65": [[3, 8000], [6, 3600], [10, 1900], [12, 1400], [16, 900], [20, 600], [25, 300]],
-  "85": [[3, 9000], [6, 5000], [10, 2800], [12, 2100], [16, 1400], [20, 1000], [25, 600], [32, 380]],
-  "105": [[6, 6000], [10, 3500], [12, 2800], [16, 1900], [20, 1400], [25, 900], [32, 550], [38, 380]],
-  "125": [[6, 7000], [10, 4300], [12, 3400], [16, 2400], [20, 1800], [25, 1200], [32, 750], [38, 520], [44, 350]],
+  "65": [[3, 6400], [6, 2900], [10, 1500], [12, 1120], [16, 720], [20, 480], [25, 240]],
+  "85": [[3, 7200], [6, 4000], [10, 2250], [12, 1680], [16, 1120], [20, 800], [25, 480], [32, 300]],
+  "105": [[6, 4800], [10, 2800], [12, 2240], [16, 1520], [20, 1120], [25, 720], [32, 440], [38, 300]],
+  "125": [[6, 5600], [10, 3450], [12, 2720], [16, 1920], [20, 1440], [25, 960], [32, 600], [38, 420], [44, 280]],
 }
 // alturas (mm) y voltaje de arco típico por amperaje
 const AJUSTES: Record<string, { corte: number; perforacion: number; voltaje: [number, number]; kerf: number; aire: string; boquilla: string }> = {
@@ -25,12 +26,12 @@ const AJUSTES: Record<string, { corte: number; perforacion: number; voltaje: [nu
 }
 export const MAT_PLASMA: Record<string, { nombre: string; vel: number; esp: number; gas?: string; nota?: string }> = {
   acero_dulce: { nombre: "Acero al carbón", vel: 1, esp: 1 },
-  inoxidable: { nombre: "Acero inoxidable", vel: 0.75, esp: 0.8, gas: "aire (canto oscuro) o N₂ (más limpio)", nota: "Con aire el canto queda negro y oxidado; para soldar después, límpialo con disco." },
-  aluminio: { nombre: "Aluminio", vel: 1.1, esp: 0.8, nota: "Más escoria que el acero: velocidad alta y altura exacta. Peligro: nunca cortes aluminio sobre una mesa de agua cerrada (hidrógeno)." },
+  inoxidable: { nombre: "Acero inoxidable", vel: 0.8, esp: 1, gas: "aire (canto oscuro) o N₂ (más limpio)", nota: "Con aire el canto queda negro y oxidado; para soldar después, límpialo con disco." },
+  aluminio: { nombre: "Aluminio", vel: 1.45, esp: 1, nota: "Se corta más rápido que el acero; si vas lento deja mucha escoria. Altura exacta. Peligro: nunca cortes aluminio sobre una mesa de agua cerrada (hidrógeno)." },
   galvanizado: { nombre: "Lámina galvanizada", vel: 0.95, esp: 1, nota: "El zinc suelta humo tóxico: extracción obligatoria." },
 }
 export const FUENTES_PLASMA: Record<string, { nombre: string; vel: number; kerf: number; nota: string }> = {
-  aire_calidad: { nombre: "Fuente de aire de marca (Hypertherm, Thermal Dynamics, Lincoln)", vel: 1, kerf: 1, nota: "Las tablas de abajo son de este tipo de antorcha." },
+  aire_calidad: { nombre: "Fuente de aire de marca (Hypertherm, Thermal Dynamics, Lincoln)", vel: 1, kerf: 1, nota: "Las velocidades de esta calculadora son las de producción de este tipo de antorcha." },
   aire_economica: { nombre: "Fuente económica (CUT-60/80, LGK, Jasic, Lotos)", vel: 0.75, kerf: 1.2, nota: "Rinden 70–80% de la tabla: baja la velocidad y espera más bisel y escoria. Usa consumibles originales de la antorcha (P80, SG-55, A141)." },
   alta_definicion: { nombre: "Alta definición (HPR, XPR, oxígeno)", vel: 1.2, kerf: 0.8, nota: "Corte casi sin bisel y canto apto para soldar; sigue la tabla de tu fuente." },
 }
@@ -106,6 +107,7 @@ export const calcPlasma = (e: Entrada): Resultado => {
   if (M.nota) R.consejos.push(M.nota)
   R.consejos.push(F.nota)
   R.consejos.push("La tabla del fabricante de TU antorcha y consumibles manda; esto sirve para cotizar y arrancar.")
+  R.consejos.push("Protección: careta o lentes para corte por plasma (sombra 5 a 8 según el amperaje; revisa el manual de tu fuente), guantes y ropa de algodón o cuero. El arco quema la vista aunque sólo lo veas de reojo.")
   R.datos = { ...R.datos, velocidad_mm_min: r(v), altura_corte: aj.corte, altura_perforacion: aj.perforacion, retardo_s: retardo, kerf_mm: r(kerf, 1), voltaje: `${aj.voltaje[0]}-${aj.voltaje[1]}`, tabla_amperes: clave }
   R.confianza = clamp(R.confianza, 20, 100)
   return R

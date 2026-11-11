@@ -47,7 +47,7 @@ export const MAT_FIBRA: Record<string, MatFibra> = {
   inox: {
     nombre: "Acero inoxidable", grupo: "Metales",
     marcado: { v: 1000, p: 70, f: 40, hatch: 0.04 },
-    negro: { v: 150, p: 60, f: 200, pulso: 200, hatch: 0.02, desenfoque: 0, nota: "Negro profundo por oxidación (recocido): no quita material y queda liso." },
+    negro: { v: 150, p: 60, f: 50, pulso: 250, hatch: 0.01, desenfoque: 0, nota: "Negro profundo por oxidación (recocido): no quita material y queda liso." },
     color: { v: 100, p: 40, f: 300, pulso: 300, hatch: 0.01, nota: "El color sale de una capa de óxido muy fina: varía 5% de potencia o 20 mm/s y cambia de tono. Haz matriz." },
     profundo: { v: 400, p: 100, f: 30, hatch: 0.03, mmPorPasada: 0.004 },
     uv: { v: 300, p: 60, f: 40, hatch: 0.02 },
@@ -200,6 +200,7 @@ export const calcFibraMarcado = (e: Entrada): Resultado => {
   if (P.nota) R.consejos.push(P.nota)
   if (M.aviso) R.consejos.push(M.aviso)
   if (F.nota) R.consejos.push(F.nota)
+  R.consejos.push(F.tipo === "uv" ? "Protección de ojos: lentes certificados para 355 nm (UV). Los de fibra (1064 nm) NO protegen del UV." : "Protección de ojos: lentes certificados para 1064 nm con OD 5 o más. Una marcadora de galvo abierta es láser clase 4: el reflejo en el metal daña la retina sin que lo sientas.")
   R.consejos.push("Haz una matriz de prueba (velocidad × potencia, 5 × 5 cuadros de 5 mm) en un retazo del mismo lote: cada fuente, lente y acabado del metal cambia el resultado.")
   if (M.grupo === "Metales" && efecto !== "profundo") R.consejos.push("Extracción de humos siempre: el marcado de metal genera partículas finas de óxido.")
   R.datos = { ...R.datos, velocidad_mm_s: r(v), potencia_pct: r(p), frecuencia_khz: P.f, hatch_mm: P.hatch, pasadas: total }
@@ -223,10 +224,10 @@ const CORTE: Record<string, { nombre: string; gas: string; tablas: Record<string
     nombre: "Acero al carbón (A36, 1018)", gas: "oxígeno (0.5–0.8 bar); en ≤ 3 mm nitrógeno o aire a 10–14 bar va más rápido y sin óxido",
     tablas: {
       "1": [[1, 10], [2, 5], [3, 3.5], [4, 2.6], [6, 1.5], [8, 1]],
-      "1.5": [[1, 14], [2, 6.5], [3, 4.2], [5, 2.2], [6, 1.9], [8, 1.3], [10, 0.9]],
+      "1.5": [[1, 14], [2, 6.5], [3, 3.8], [5, 2], [6, 1.6], [8, 1.1], [10, 0.8]],
       "2": [[1, 20], [2, 8], [3, 5], [6, 2.2], [8, 1.5], [10, 1.1], [12, 0.9]],
       "3": [[1, 30], [3, 5.5], [6, 2.6], [10, 1.4], [12, 1.1], [16, 0.8], [20, 0.6]],
-      "6": [[3, 6], [6, 3], [10, 2], [16, 1.2], [20, 0.9], [25, 0.6]],
+      "6": [[3, 6], [6, 3], [10, 2], [16, 0.85], [20, 0.7], [25, 0.5]],
       "12": [[3, 7], [6, 3.5], [10, 2.5], [16, 1.6], [20, 1.2], [25, 0.9], [30, 0.6]],
     },
   },
@@ -237,7 +238,7 @@ const CORTE: Record<string, { nombre: string; gas: string; tablas: Record<string
       "1.5": [[1, 22], [2, 9], [3, 4], [5, 1.8]],
       "2": [[1, 25], [2, 12], [3, 6], [5, 2.5], [6, 1.5]],
       "3": [[1, 35], [3, 10], [5, 4], [8, 1.5], [10, 1]],
-      "6": [[3, 25], [6, 8], [10, 3], [12, 2], [16, 1]],
+      "6": [[3, 18], [6, 6], [10, 3], [12, 2], [16, 1]],
       "12": [[3, 40], [6, 15], [10, 6], [16, 2.5], [20, 1.5], [25, 0.8]],
     },
   },
@@ -319,6 +320,9 @@ export const calcFibraCorte = (e: Entrada): Resultado => {
     b.filas.push({ etiqueta: "Tiempo de corte", valor: minutos(tm), nota: n ? `${n} perforaciones incluidas` : "sin perforaciones" })
     R.datos.tiempo_min = r(tm, 2)
   }
+  if (txt(e.material) === "acero_dulce" && esp <= 2) R.consejos.push("En lámina de 2 mm o menos esta velocidad es con nitrógeno o aire a alta presión; con oxígeno va bastante más lento.")
+  if (txt(e.material) === "galvanizado" || txt(e.material) === "laton") R.consejos.push("El zinc del galvanizado y del latón suelta humo tóxico al cortarse: extracción encendida y cabina cerrada.")
+  R.consejos.push("Corta siempre con la cabina cerrada; si tu máquina es abierta, lentes certificados para 1064 nm (OD 5 o más) para todos los que estén cerca.")
   R.consejos.push("Las tablas de proceso de tu máquina (cabezal, boquilla, gas) mandan: usa esto para cotizar y como punto de partida.")
   if (txt(e.material) === "acero_dulce" && esp >= 10) R.consejos.push("En grueso con oxígeno, lámina sin óxido ni cascarilla; si la placa es de laminado en caliente, baja la velocidad 10–15%.")
   if (txt(e.material) === "aluminio" || txt(e.material) === "laton") R.consejos.push("Metales reflejantes: revisa que tu fuente tenga protección anti-reflejo; nunca cortes espejo pulido.")

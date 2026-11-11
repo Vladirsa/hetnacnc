@@ -29,7 +29,9 @@ export type Campo = {
   // es parte del perfil de máquina (se guarda con "Mi máquina")
   maquina?: boolean
 }
-export type Fila = { etiqueta: string; valor: string; nota?: string; destacado?: boolean }
+// Medidor: dónde cae un valor respecto a su rango sano (okMin–okMax) dentro de una escala.
+export type Medidor = { valor: number; escalaMin: number; escalaMax: number; okMin: number; okMax: number }
+export type Fila = { etiqueta: string; valor: string; nota?: string; destacado?: boolean; medidor?: Medidor }
 export type Bloque = { titulo: string; filas: Fila[] }
 export type Resultado = {
   titulo: string
