@@ -5,6 +5,7 @@ import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/Pr
 import { ProductDetailsShipping } from "@/components/cells/ProductDetailsShipping/ProductDetailsShipping"
 import { ProductPageDetails } from "@/components/cells/ProductPageDetails/ProductPageDetails"
 import ConfianzaProducto from "@/components/hetna/ConfianzaProducto"
+import { VenderMas } from "@/components/hetna/VenderMas"
 import { DistintivoEnvioGratis } from "@/components/hetna/envios/DistintivoEnvioGratis"
 import { EscalonesVolumen } from "@/components/hetna/precios/EscalonesVolumen"
 import { AvisoPack } from "@/components/hetna/packs/AvisoPack"
@@ -24,6 +25,7 @@ type Props = {
   }
   locale: string
   offers?: StoreOffer[]
+  vistas?: number // aperturas de la ficha en 7 días (para "N visitas esta semana")
 }
 
 // La columna de la derecha: sólo lo que hace falta para decidir la compra.
@@ -33,7 +35,7 @@ type Props = {
 // scroll mientras se lee la ficha, y un bloque pegajoso más alto que la
 // pantalla nunca se ve pegado. Con la descripción adentro medía el doble de la
 // ventana.
-export const ProductDetails = async ({ product, locale, offers = [] }: Props) => {
+export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 }: Props) => {
   // Los productos maestros no tienen vendedor: el que se enseña sale de la
   // oferta que gana el buybox.
   const ganadora = getBuyboxWinner(rankOffers(offers))
@@ -103,6 +105,8 @@ export const ProductDetails = async ({ product, locale, offers = [] }: Props) =>
       <DistintivoEnvioGratis desde={envioGratisDesde} currency_code={moneda} />
 
       <ConfianzaProducto />
+
+      <VenderMas titulo={product.title} handle={product.handle} locale={locale} vistas={vistas} />
 
       <ProductDetailsSeller seller={seller} />
     </div>

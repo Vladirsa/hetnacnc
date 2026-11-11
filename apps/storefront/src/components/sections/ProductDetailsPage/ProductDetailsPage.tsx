@@ -12,6 +12,8 @@ import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
+import { productoExtra } from "@/lib/hetna/producto-extra"
+import { VideoProducto } from "@/components/hetna/VenderMas"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -64,7 +66,7 @@ export const ProductDetailsPage = async ({
   // Ofertas, reseñas y relacionados no dependen entre sí: se piden a la vez.
   // Antes iban uno tras otro y cada uno sumaba su espera a la de la ficha.
   const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
-  const [{ offers }, resenas, pendientes, relacionados] = await Promise.all([
+  const [{ offers }, resenas, pendientes, relacionados, extra] = await Promise.all([
     listOffers({ productId: prod.id, countryCode: locale }),
     resenasDeProducto(prod.id),
     resenasPendientes(),
@@ -73,6 +75,8 @@ export const ProductDetailsPage = async ({
           .then(({ response }) => response.products.filter((p) => p.id !== prod.id))
           .catch(() => [])
       : Promise.resolve([]),
+    // Visitas de la semana y el video de redes del producto (no frena la ficha: 2.5 s máximo y caché)
+    productoExtra(prod.id),
   ])
 
   const { cheapestPrice } = getProductPrice({ product: prod })
@@ -153,6 +157,7 @@ export const ProductDetailsPage = async ({
               product={prod}
               locale={locale}
               offers={offers as StoreOffer[]}
+              vistas={extra.vistas_7d}
             />
           </div>
         </div>
@@ -181,6 +186,7 @@ export const ProductDetailsPage = async ({
         metadata={prod.metadata as Record<string, unknown> | null | undefined}
         titulo={prod.title}
       />
+      {extra.video && <VideoProducto url={extra.video} titulo={prod.title} />}
 
       {/* Dos listas distintas y con el nombre que les toca. La de abajo decía
           "Productos similares" pero enseñaba los del MISMO taller, que no es
