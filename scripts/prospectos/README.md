@@ -55,11 +55,10 @@ publicados por la propia empresa; no se recolectan datos personales.
 
 ## Puesta en marcha (una vez)
 
-1. **n8n → Credentials → Google Sheets OAuth2**: conecta tu cuenta de Google y
-   asígnala a los 7 nodos de Google Sheets del flujo (vienen marcados como
-   «Google Sheets HETNA»).
-2. Revisa que la credencial **SMTP account** pueda enviar como
-   `contacto@hetnacnc.com` (y que el dominio tenga SPF, DKIM y DMARC).
+1. ✅ Credencial «Google Sheets account» asignada a los 8 nodos de Google Sheets.
+2. ✅ Envío con la credencial **SMTP account** (Hostinger). Esa cuenta sólo permite
+   enviar como `avisos@hetnacnc.com`; las respuestas llegan a `contacto@hetnacnc.com`
+   (Reply-To). Para enviar como `contacto@` crea otra credencial SMTP con ese usuario.
 3. En el backend (`packages/api`, variables de entorno):
    ```
    N8N_PROSPECTOS_REGISTRO_URL=https://n8n.hetnacnc.com/webhook/hetna-prospecto-registrado

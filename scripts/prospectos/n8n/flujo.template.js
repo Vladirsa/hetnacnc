@@ -4,8 +4,8 @@ import { workflow, node, trigger, sticky, newCredential, ifElse, splitInBatches,
 // cambia los .js de esta carpeta y vuelve a generar.
 
 const HOJA = { __rl: true, mode: 'id', value: '__SHEET_ID__', cachedResultName: 'HETNA · Prospectos CNC' };
-const PESTANA = { __rl: true, mode: 'list', value: 'gid=0', cachedResultName: 'Prospectos' };
-const GSHEETS = { googleSheetsOAuth2Api: newCredential('Google Sheets HETNA') };
+const PESTANA = { __rl: true, mode: 'list', value: 480734981, cachedResultName: 'Untitled' };
+const GSHEETS = { googleSheetsOAuth2Api: { id: 'NVIJb4C1M9pp6Pp5', name: 'Google Sheets account' } };
 
 const C_id = { id: 'id', displayName: 'id', required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true };
 const C_estatus = { id: 'estatus', displayName: 'estatus', required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true };
@@ -55,7 +55,7 @@ const enviar = node({
     onError: 'continueRegularOutput',
     parameters: {
       operation: 'send',
-      fromEmail: 'HETNA CNC <contacto@hetnacnc.com>',
+      fromEmail: 'HETNA CNC <avisos@hetnacnc.com>',
       toEmail: expr('{{ $json.email }}'),
       subject: expr('{{ $json.asunto }}'),
       emailFormat: 'html',
