@@ -21,7 +21,7 @@ import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
 import { bloquesBasicos, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
-import { poster } from "./poster"
+import { laminaEstilo, miniaturaEstilo, poster } from "./poster"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
@@ -273,15 +273,17 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         // Prueba A/B: otro día sale el mismo video con un gancho distinto (si A no funciona)
         if (!f.ab) await crearVarianteB(knex, f, g, logger).catch((e) => logger?.warn?.(`[fabrica] variante B ${f.id}: ${e.message}`))
       } else if (["carrusel", "documento"].includes(f.formato)) {
+        const est = { activo: imagenNueva, tema: temaPara(f.id, false, { publico: f.publico, fecha: f.programada_para ? new Date(f.programada_para) : new Date(f.fecha) }), icono: iconoPara(`${texto} ${f.pilar}`), cinta: t.cinta, liga, logger }
         const { gancho, frases } = piezasDeTexto(texto, f.notas)
         const puntos = frases.slice(0, 4)
         const total = puntos.length + 2
-        const urls = [await subir(scope, `plan-${f.id}-1.png`, "image/png", await lamina({ num: 1, total, titulo: gancho || palabras(f.pilar, 9), portada: true, tema, foto_url: await foto() }))]
-        for (const [k, pt] of puntos.entries()) urls.push(await subir(scope, `plan-${f.id}-${k + 2}.png`, "image/png", await lamina({ num: k + 2, total, titulo: pt, tema })))
-        urls.push(await subir(scope, `plan-${f.id}-${total}.png`, "image/png", await lamina({ num: total, total, titulo: t.cta, cierre: { cta: t.cta, liga_texto: f.red === "instagram" ? t.perfil : liga.replace(/^https?:\/\//, "") }, tema, foto_url: await foto() })))
+        const urls = [await subir(scope, `plan-${f.id}-1.png`, "image/png", await laminaEstilo({ num: 1, total, titulo: gancho || palabras(f.pilar, 9), portada: true, tema, foto_url: await foto() }, est))]
+        for (const [k, pt] of puntos.entries()) urls.push(await subir(scope, `plan-${f.id}-${k + 2}.png`, "image/png", await laminaEstilo({ num: k + 2, total, titulo: pt, tema }, est)))
+        urls.push(await subir(scope, `plan-${f.id}-${total}.png`, "image/png", await laminaEstilo({ num: total, total, titulo: t.cta, cierre: { cta: t.cta, liga_texto: f.red === "instagram" ? t.perfil : liga.replace(/^https?:\/\//, "") }, tema, foto_url: await foto() }, est)))
         medios = urls.map((url) => ({ url, tipo: "imagen" }))
       } else if (f.formato === "largo") {
-        medios = [{ url: await subir(scope, `plan-${f.id}-mini.png`, "image/png", await miniatura({ titulo: palabras(f.pilar, 8), tema, foto_url: await foto() })), tipo: "imagen" }]
+        const est = { activo: imagenNueva, tema: temaPara(f.id, false), icono: iconoPara(`${f.pilar}`), logger }
+        medios = [{ url: await subir(scope, `plan-${f.id}-mini.png`, "image/png", await miniaturaEstilo({ titulo: palabras(f.pilar, 8), tema, foto_url: await foto() }, est)), tipo: "imagen" }]
       } else {
         const { gancho } = piezasDeTexto(texto, f.notas)
         const titulo = gancho || palabras(f.pilar, 9)

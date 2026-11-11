@@ -13,7 +13,7 @@ import path from "path"
 import QRCode from "qrcode"
 import sharp from "sharp"
 
-import { carpetaFuentes } from "./render"
+import { carpetaFuentes, lamina, miniatura } from "./render"
 import { ICONOS, TEMAS, acomodarTitulo, iconoPara } from "./hyperframes"
 
 const DIR = () => process.env.HYPERFRAMES_DIR || "/opt/hyperframes"
@@ -38,6 +38,9 @@ export function chromeBin(): string | null {
 }
 export const posterListo = () => process.env.POSTER_DESACTIVAR !== "1" && !!chromeBin()
 
+// Palabras que nunca se resaltan
+const RELLENO = new Set("para como cómo pero porque desde hasta sobre entre este esta estos estas tiene tienen with that this your from what".split(" "))
+
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 export type Poster = {
@@ -51,6 +54,104 @@ export type Poster = {
   cta?: string
   liga?: string // QR + texto
   liga_texto?: string // en lugar de la URL (p. ej. "liga en el perfil")
+  /** tarjeta (una imagen) | lámina de carrusel: portada, punto o cierre | miniatura de YouTube 16:9 */
+  modo?: "tarjeta" | "portada" | "punto" | "cierre" | "miniatura"
+  num?: number
+  total?: number
+}
+
+/** Tamaño en px según el modo y el formato. */
+export const medidas = (p: Poster): [number, number] => (p.modo === "miniatura" ? [1280, 720] : [1080, p.formato === "9:16" ? 1920 : 1350])
+
+const CSS_BASE = (T: any, ancho: number, alto: number) => `
+@font-face { font-family: "Archivo Black"; src: url("Archivo-900.ttf"); }
+@font-face { font-family: "Archivo XB"; src: url("Archivo-800.ttf"); }
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:${ancho}px; height:${alto}px; overflow:hidden; background:${T.fondo}; }
+body { position:relative; font-family:"Archivo Black", sans-serif; color:${T.texto}; }
+.fondo { position:absolute; inset:0; background-color:${T.fondo}; ${T.patron} }
+.foto-fondo { position:absolute; inset:0; background:url("fondo.jpg") center/cover; }
+.velo { position:absolute; inset:0; background:linear-gradient(180deg, rgba(20,32,51,.9) 0%, rgba(20,32,51,.6) 45%, rgba(20,32,51,.92) 100%); }
+.acento { color:${T.acento}; }
+.dibujo svg { overflow:visible; }
+.dibujo svg [stroke="${INK}"] { stroke:${T.trazo}; } .dibujo svg [fill="${INK}"] { fill:${T.trazo}; } .dibujo svg [fill="#fff"][stroke] { fill:${T.relleno}; }
+.dibujo svg [fill="${ACC}"] { fill:${T.acento}; } .dibujo svg [stroke="${ACC}"] { stroke:${T.acento}; }
+.tarjeta { background:#fff; border:6px solid ${T.trazo}; border-radius:36px; box-shadow:0 18px 0 ${T.sombra}; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.tarjeta img { width:100%; height:100%; object-fit:contain; }
+`
+
+/** Reparte un texto en renglones parejos (máx. n) y da el tamaño de letra para que quepa en `ancho`. */
+function renglones(t: string, ancho: number, max: number, min: number, n = 3) {
+  const palabras = String(t || "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean)
+  const lineas: string[] = []
+  let act = ""
+  const maxCar = Math.max(10, Math.ceil(String(t || "").length / n))
+  for (const w of palabras) {
+    if (act && (act + " " + w).length > maxCar && lineas.length < n - 1) lineas.push(act), (act = w)
+    else act = act ? `${act} ${w}` : w
+  }
+  if (act) lineas.push(act)
+  const tam = Math.max(min, Math.min(max, Math.floor(ancho / (Math.max(1, ...lineas.map((l) => l.length)) * 0.6))))
+  const ac = palabras.filter((w) => w.replace(/[¿?¡!.,:]/g, "").length > 3 && !RELLENO.has(w.toLowerCase().replace(/[¿?¡!.,:]/g, ""))).pop() || ""
+  const html = lineas.map((l) => l.split(" ").map((w) => (w === ac ? `<span class="acento">${esc(w)}</span>` : esc(w))).join(" ")).join("<br>")
+  return { html, tam, n: lineas.length }
+}
+
+/** Lámina de carrusel (4:5): portada con foto o dibujo, puntos numerados y cierre con botón y QR. */
+export function htmlLamina(p: Poster, o: { foto?: boolean; fondo?: boolean; qr?: string } = {}) {
+  const [W, H] = medidas(p)
+  const T = TEMAS[p.tema === "foto" && !o.fondo ? "plano" : p.tema || "plano"] || TEMAS.plano
+  const sobre = T.oscuro ? INK : "#ffffff"
+  const ic = ICONOS[p.icono && p.icono !== "maquina" ? p.icono : iconoPara(p.titulo)] || ICONOS.engrane
+  const pagina = p.total ? `<div class="pag">${p.num || 1}/${p.total}</div>` : ""
+  let cuerpo = ""
+  if (p.modo === "punto") {
+    const r = renglones(p.titulo, 900, 92, 48, 4)
+    cuerpo = `<div class="num">${Math.max(1, (p.num || 2) - 1)}</div><div class="texto" style="font-size:${r.tam}px">${r.html}</div><div class="dibujo chico"><svg viewBox="-10 -20 220 230" width="260" height="260">${ic}</svg></div>`
+  } else if (p.modo === "cierre") {
+    const r = renglones(p.titulo || p.cta || "", 900, 96, 56, 3)
+    const liga = (p.liga_texto || p.liga || "hetnacnc.com").replace(/^https?:\/\//, "")
+    cuerpo = `<div class="texto cierre-t" style="font-size:${r.tam}px">${r.html}</div><div class="cta">${esc(p.cta || "")}</div><div class="liga">${esc(liga)}</div>${o.qr ? `<div class="qr">${o.qr}</div>` : ""}`
+  } else {
+    const r = renglones(p.titulo, 920, 104, 56, 3)
+    cuerpo = `<div class="texto portada-t" style="font-size:${r.tam}px">${r.html}</div><div class="medio" style="top:${300 + r.n * r.tam}px">${o.foto ? `<div class="tarjeta" style="width:100%;height:100%"><img src="foto.jpg" alt=""></div>` : `<div class="dibujo"><svg viewBox="-10 -20 220 230" width="440" height="440">${ic}</svg></div>`}</div><div class="desliza">Desliza →</div>`
+  }
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${CSS_BASE(T, W, H)}
+.marca { position:absolute; left:80px; top:70px; font-size:44px; white-space:nowrap; }
+.pag { position:absolute; right:80px; top:70px; font-family:"Archivo XB"; font-size:34px; color:${sobre}; background:${T.acento}; border-radius:999px; padding:8px 24px; }
+.cinta { position:absolute; left:80px; top:150px; font-family:"Archivo XB"; font-size:30px; color:${T.acento}; }
+.texto { position:absolute; left:80px; width:920px; line-height:1; letter-spacing:-.02em; }
+.portada-t { top:220px; }
+.medio { position:absolute; left:80px; width:920px; bottom:170px; display:flex; align-items:center; justify-content:center; }
+.desliza { position:absolute; right:80px; bottom:80px; font-family:"Archivo XB"; font-size:36px; color:${T.acento}; }
+.num { position:absolute; left:80px; top:240px; width:170px; height:170px; border-radius:40px; background:${T.acento}; color:${sobre}; font-size:110px; display:flex; align-items:center; justify-content:center; }
+.texto:not(.portada-t):not(.cierre-t) { top:470px; }
+.chico { position:absolute; right:80px; bottom:90px; }
+.cierre-t { top:230px; }
+.cta { position:absolute; left:80px; top:760px; font-size:56px; color:${sobre}; background:${T.acento}; border-radius:28px; padding:26px 44px; white-space:nowrap; max-width:920px; overflow:hidden; text-overflow:ellipsis; }
+.liga { position:absolute; left:80px; top:930px; font-family:"Archivo XB"; font-size:40px; }
+.qr { position:absolute; right:80px; bottom:80px; width:240px; height:240px; background:#fff; border-radius:24px; padding:14px; }
+.qr svg { width:100%; height:100%; display:block; }
+</style></head><body><div class="fondo"></div>${o.fondo ? `<div class="foto-fondo"></div><div class="velo"></div>` : ""}
+<div class="marca"><span class="acento">HETNA</span> CNC</div>${pagina}${p.cinta ? `<div class="cinta">${esc(p.cinta)}</div>` : ""}
+${cuerpo}</body></html>`
+}
+
+/** Miniatura de YouTube (1280x720): título enorme a la izquierda, foto o dibujo a la derecha. */
+export function htmlMiniatura(p: Poster, o: { foto?: boolean; fondo?: boolean } = {}) {
+  const T = TEMAS[p.tema === "foto" && !o.fondo ? "plano" : p.tema || "plano"] || TEMAS.plano
+  const ic = ICONOS[p.icono && p.icono !== "maquina" ? p.icono : iconoPara(p.titulo)] || ICONOS.engrane
+  const r = renglones(p.titulo, 700, 110, 54, 3)
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${CSS_BASE(T, 1280, 720)}
+.marca { position:absolute; left:60px; top:44px; font-size:38px; white-space:nowrap; }
+.texto { position:absolute; left:60px; width:720px; top:${360 - (r.n * r.tam) / 2 + 20}px; font-size:${r.tam}px; line-height:.98; letter-spacing:-.02em; }
+.der { position:absolute; right:50px; top:110px; width:430px; height:500px; display:flex; align-items:center; justify-content:center; }
+.barra { position:absolute; left:0; right:0; bottom:0; height:16px; background:${T.acento}; }
+</style></head><body><div class="fondo"></div>${o.fondo ? `<div class="foto-fondo"></div><div class="velo"></div>` : ""}
+<div class="marca"><span class="acento">HETNA</span> CNC</div>
+<div class="texto">${r.html}</div>
+<div class="der">${o.foto ? `<div class="tarjeta" style="width:100%;height:100%"><img src="foto.jpg" alt=""></div>` : `<div class="dibujo"><svg viewBox="-10 -20 220 230" width="430" height="430">${ic}</svg></div>`}</div>
+<div class="barra"></div></body></html>`
 }
 
 async function traer(src: string, destino: string) {
@@ -63,6 +164,8 @@ async function traer(src: string, destino: string) {
 
 /** HTML del póster (se puede probar sin Chrome). */
 export function htmlPoster(p: Poster, o: { foto?: boolean; fondo?: boolean; qr?: string } = {}) {
+  if (p.modo === "miniatura") return htmlMiniatura(p, o)
+  if (p.modo === "portada" || p.modo === "punto" || p.modo === "cierre") return htmlLamina(p, o)
   const alto = p.formato === "9:16" ? 1920 : 1350
   const largo = p.formato === "9:16"
   const T = TEMAS[p.tema === "foto" && !o.fondo ? "plano" : p.tema || "plano"] || TEMAS.plano
@@ -78,7 +181,7 @@ export function htmlPoster(p: Poster, o: { foto?: boolean; fondo?: boolean; qr?:
   }
   if (act) lineas.push(act)
   const tam = Math.max(56, Math.min(largo ? 112 : 100, Math.floor(920 / (Math.max(...lineas.map((l) => l.length)) * 0.6))))
-  const ac = palabras.filter((w) => w.replace(/[¿?¡!.,:]/g, "").length > 3).pop() || ""
+  const ac = palabras.filter((w) => w.replace(/[¿?¡!.,:]/g, "").length > 3 && !RELLENO.has(w.toLowerCase().replace(/[¿?¡!.,:]/g, ""))).pop() || ""
   const titulo = lineas.map((l) => l.split(" ").map((w) => (w === ac ? `<span class="acento">${esc(w)}</span>` : esc(w))).join(" ")).join("<br>")
   const ic = ICONOS[p.icono && p.icono !== "maquina" ? p.icono : iconoPara(p.titulo)] || ICONOS.engrane
   const yTit = largo ? 300 : 210
@@ -154,16 +257,16 @@ async function hacerPoster(p: Poster, logger?: any) {
       try {
         const crudo = path.join(dir, "fondo-original")
         await traer(p.fondo, crudo)
-        await sharp(crudo).rotate().resize(1080, p.formato === "9:16" ? 1920 : 1350, { fit: "cover" }).blur(7).modulate({ saturation: 0.85 }).jpeg({ quality: 80 }).toFile(path.join(dir, "fondo.jpg"))
+        await sharp(crudo).rotate().resize(medidas(p)[0], medidas(p)[1], { fit: "cover" }).blur(7).modulate({ saturation: 0.85 }).jpeg({ quality: 80 }).toFile(path.join(dir, "fondo.jpg"))
         fondo = true
       } catch {}
     }
     const qr = p.liga ? await QRCode.toString(p.liga, { type: "svg", margin: 0, color: { dark: INK, light: "#ffffff" }, errorCorrectionLevel: "M" }) : ""
     fs.writeFileSync(path.join(dir, "index.html"), htmlPoster(p, { foto, fondo, qr }))
-    const alto = p.formato === "9:16" ? 1920 : 1350
+    const [ancho, alto] = medidas(p)
     const salida = path.join(dir, "poster.png")
     const ok = await new Promise<boolean>((res) => {
-      const args = ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", `--window-size=1080,${alto}`, "--virtual-time-budget=4000", `--screenshot=${salida}`, `file://${path.join(dir, "index.html")}`]
+      const args = ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", `--window-size=${ancho},${alto}`, "--virtual-time-budget=4000", `--screenshot=${salida}`, `file://${path.join(dir, "index.html")}`]
       const usaNice = process.platform === "linux" && fs.existsSync("/usr/bin/nice")
       const c = spawn(usaNice ? "/usr/bin/nice" : chromeBin()!, usaNice ? ["-n", "10", chromeBin()!, ...args] : args, { stdio: "ignore", detached: true })
       const t = setTimeout(() => {
@@ -183,11 +286,39 @@ async function hacerPoster(p: Poster, logger?: any) {
     })
     if (!ok) throw new Error("Chrome no tomó la imagen")
     // Chrome a veces deja la ventana unos px distinta: se fija al tamaño exacto
-    return await sharp(salida).resize(1080, alto, { fit: "cover", position: "top" }).png().toBuffer()
+    return await sharp(salida).resize(ancho, alto, { fit: "cover", position: "top" }).png().toBuffer()
   } catch (e) {
     logger?.warn?.(`[poster] ${(e as Error).message}; se usa la tarjeta de siempre`)
     return null
   } finally {
     fs.rmSync(dir, { recursive: true, force: true })
   }
+}
+
+/** Opciones del estilo nuevo para carruseles y miniaturas (un tema por carrusel). */
+export type Estilo = { activo: boolean; tema: string; icono?: string; cinta?: string; liga?: string; logger?: any }
+
+/** Lámina de carrusel con el estilo nuevo; si está apagado o falla, la de siempre. */
+export async function laminaEstilo(l: { num: number; total: number; titulo: string; texto?: string; portada?: boolean; cierre?: { cta: string; liga_texto: string }; tema?: string; foto_url?: string | null }, e?: Estilo) {
+  if (e?.activo) {
+    const b = await poster(
+      {
+        modo: l.portada ? "portada" : l.cierre ? "cierre" : "punto",
+        num: l.num, total: l.total, titulo: l.titulo, tema: e.tema, icono: e.icono, cinta: l.portada ? e.cinta : undefined,
+        cta: l.cierre?.cta, liga_texto: l.cierre?.liga_texto, liga: l.cierre ? e.liga : undefined,
+      },
+      e.logger,
+    )
+    if (b) return b
+  }
+  return lamina(l)
+}
+
+/** Miniatura de YouTube con el estilo nuevo; si está apagado o falla, la de siempre. */
+export async function miniaturaEstilo(m: { titulo: string; tema?: string; foto_url?: string | null }, e?: Estilo) {
+  if (e?.activo) {
+    const b = await poster({ modo: "miniatura", titulo: m.titulo, tema: e.tema, icono: e.icono }, e.logger)
+    if (b) return b
+  }
+  return miniatura(m)
 }

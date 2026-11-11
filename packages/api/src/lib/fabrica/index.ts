@@ -18,12 +18,14 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, nuevoId } from "../licitacion"
-import { MERCADOS, T_POST, asegurarSocial, crearPublicacion, iaSocial, ligaPara, urlCorta, zonaDe } from "../social-hub"
+import { MERCADOS, T_POST, asegurarSocial, crearPublicacion, iaSocial, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { GUIAS, REGLAS_EMOCION, instanteEn, lunesDe } from "../estrategia"
 import { PRINCIPIOS_VIDEO, TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { PROMPTS_TEMA, VOZ, bajarB2, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
+import { iconoPara, temaPara } from "./hyperframes"
+import { laminaEstilo, miniaturaEstilo } from "./poster"
 
 export const T_TRABAJO = "hetna_fabrica_trabajo"
 export const T_FONDO = "hetna_fabrica_fondo"
@@ -231,15 +233,16 @@ export async function producir(scope: any, id: string, logger?: any) {
     const musica = await musicaAlAzar(knex)
     const destino = `${STORE_URL}${mercado === "us" ? "/us" : "/mx"}${e.publico === "talleres" ? "/talleres/unete" : "/cotizar"}`
 
-    // 1) Carrusel
+    // 1) Carrusel (estilo nuevo si está encendido; si falla, el de siempre)
+    const est = { activo: (await leerConfig(knex)).imagen_nueva !== false, tema: temaPara(id, false, { publico: e.publico }), icono: iconoPara(`${p.titulo} ${e.tema || ""}`), liga: destino, logger }
     const lams: string[] = []
     const total = p.carrusel.laminas.length + 2
-    lams.push(await subir(scope, `fabrica-${id}-l1.png`, "image/png", await lamina({ num: 1, total, titulo: p.carrusel.portada, portada: true, tema, foto_url: await foto() })))
+    lams.push(await subir(scope, `fabrica-${id}-l1.png`, "image/png", await laminaEstilo({ num: 1, total, titulo: p.carrusel.portada, portada: true, tema, foto_url: await foto() }, est)))
     for (let i = 0; i < p.carrusel.laminas.length; i++) {
       const l = p.carrusel.laminas[i]
-      lams.push(await subir(scope, `fabrica-${id}-l${i + 2}.png`, "image/png", await lamina({ num: i + 2, total, titulo: l.titulo, texto: l.texto, tema })))
+      lams.push(await subir(scope, `fabrica-${id}-l${i + 2}.png`, "image/png", await laminaEstilo({ num: i + 2, total, titulo: l.titulo, texto: l.texto, tema }, est)))
     }
-    lams.push(await subir(scope, `fabrica-${id}-l${total}.png`, "image/png", await lamina({ num: total, total, titulo: p.titulo, cierre: { cta: p.carrusel.cierre, liga_texto: "liga en el perfil" }, tema, foto_url: await foto() })))
+    lams.push(await subir(scope, `fabrica-${id}-l${total}.png`, "image/png", await laminaEstilo({ num: total, total, titulo: p.titulo, cierre: { cta: p.carrusel.cierre, liga_texto: "liga en el perfil" }, tema, foto_url: await foto() }, est)))
     piezas.carrusel = lams
     const pc = await crearPublicacion(knex, {
       origen: "manual", fuente: "fabrica", titulo: `Fábrica · Carrusel · ${p.titulo}`, texto_base: p.publicaciones.instagram_carrusel, url: destino, redes: ["instagram", "linkedin"],
@@ -309,7 +312,7 @@ export async function producir(scope: any, id: string, logger?: any) {
     }
 
     // 4) YouTube: miniatura y guion del video largo (el video se produce en la Fase B)
-    const mini = await subir(scope, `fabrica-${id}-miniatura.png`, "image/png", await miniatura({ titulo: p.youtube.titulo, tema, foto_url: await foto() }))
+    const mini = await subir(scope, `fabrica-${id}-miniatura.png`, "image/png", await miniaturaEstilo({ titulo: p.youtube.titulo, tema, foto_url: await foto() }, est))
     const capitulos = (p.youtube.capitulos || []).map((c: any) => `${c.tiempo} ${c.titulo}`).join("\n")
     const py = await crearPublicacion(knex, {
       origen: "manual", fuente: "fabrica", titulo: `Fábrica · YouTube · ${p.youtube.titulo}`, texto_base: `${p.youtube.descripcion}\n\n${capitulos}`, url: destino, redes: ["youtube"],

@@ -17,7 +17,7 @@ import { cuadroVideo, lamina, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
-import { poster } from "./poster"
+import { laminaEstilo, poster } from "./poster"
 import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 
 export const T_PROMO = "hetna_promo"
@@ -230,10 +230,12 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
   const liga1 = urlCorta(await ligaPara(knex, p1, "facebook", d.url))
   let medios: any[]
   if (d.carrusel) {
+    const cfgLam = await leerConfig(knex)
+    const est = { activo: cfgLam.imagen_nueva !== false, tema: temaPara(p1), icono: iconoPara(`${d.titulo} ${d.gancho}`), cinta: d.cinta, liga: liga1, logger }
     const total = d.carrusel.puntos.length + 2
-    const urls = [await subir(scope, `promo-${p1}-1.png`, "image/png", await lamina({ num: 1, total, titulo: d.carrusel.titulo, portada: true, tema: d.tema, foto_url: d.carrusel.portada || (await fondoDe(knex, d.tema)) }))]
-    for (const [k, pt] of d.carrusel.puntos.entries()) urls.push(await subir(scope, `promo-${p1}-${k + 2}.png`, "image/png", await lamina({ num: k + 2, total, titulo: pt, tema: d.tema })))
-    urls.push(await subir(scope, `promo-${p1}-${total}.png`, "image/png", await lamina({ num: total, total, titulo: d.cta, cierre: { cta: d.cta, liga_texto: en ? "link in bio" : "liga en el perfil" }, tema: d.tema, foto_url: await fondoDe(knex, d.tema) })))
+    const urls = [await subir(scope, `promo-${p1}-1.png`, "image/png", await laminaEstilo({ num: 1, total, titulo: d.carrusel.titulo, portada: true, tema: d.tema, foto_url: d.carrusel.portada || (await fondoDe(knex, d.tema)) }, est))]
+    for (const [k, pt] of d.carrusel.puntos.entries()) urls.push(await subir(scope, `promo-${p1}-${k + 2}.png`, "image/png", await laminaEstilo({ num: k + 2, total, titulo: pt, tema: d.tema }, est)))
+    urls.push(await subir(scope, `promo-${p1}-${total}.png`, "image/png", await laminaEstilo({ num: total, total, titulo: d.cta, cierre: { cta: d.cta, liga_texto: en ? "link in bio" : "liga en el perfil" }, tema: d.tema, foto_url: await fondoDe(knex, d.tema) }, est)))
     medios = urls.map((url) => ({ url, tipo: "imagen" }))
   } else {
     // Estilo nuevo (fondos de tema, como los videos); si no se puede, la tarjeta de siempre
