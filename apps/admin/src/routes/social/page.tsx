@@ -542,6 +542,107 @@ function Conversaciones() {
   )
 }
 
+type Referencia = { id: string; tipo: string; url: string; nota: string | null; analisis: Record<string, string> | null; estado: string; error: string | null }
+function Referencias() {
+  const [d, setD] = useState<{ referencias: Referencia[]; guia: { texto: string; actualizada?: string } } | null>(null)
+  const [nota, setNota] = useState("")
+  const [liga, setLiga] = useState("")
+  const [guia, setGuia] = useState("")
+  const [aviso, setAviso] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState("")
+  const llamar = async (cuerpo: unknown) => {
+    const r = await fetch("/admin/hetna-referencias", { method: "POST", credentials: "include", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(j.message || "No se pudo.")
+    return j
+  }
+  const cargar = useCallback(async () => {
+    const r = await fetch("/admin/hetna-referencias", { credentials: "include", headers: cabeceras() }).then((x) => x.json()).catch(() => null)
+    if (r) {
+      setD(r)
+      setGuia((g) => g || r.guia?.texto || "")
+    }
+  }, [])
+  useEffect(() => {
+    void cargar()
+    const t = setInterval(() => void cargar(), 15000) // los análisis tardan unos segundos
+    return () => clearInterval(t)
+  }, [cargar])
+  const agregar = async (tipo: string, url: string) => {
+    setOcupado("agregar")
+    setAviso(null)
+    try {
+      await llamar({ accion: "agregar", tipo, url, nota })
+      setNota("")
+      setLiga("")
+      setAviso({ ok: true, t: "✓ Agregada. El agente la analiza en unos segundos." })
+      void cargar()
+    } catch (e) {
+      setAviso({ ok: false, t: (e as Error).message })
+    }
+    setOcupado("")
+  }
+  const ET: Record<string, string> = { formato: "Formato", gancho: "Gancho", estructura: "Estructura", estilo_visual: "Estilo visual", texto_en_pantalla: "Texto en pantalla", colores: "Colores", por_que_funciona: "Por qué funciona", como_usarlo_en_hetna: "Cómo usarlo en HETNA" }
+  return (
+    <div>
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🎯 Enséñale al equipo de agentes lo que te gusta</h3>
+        <p style={{ color: C.tenue, fontSize: 13, margin: "0 0 8px" }}>
+          Sube imágenes o videos cortos que te gusten (de cualquier marca) y escribe qué te gusta. El agente analiza el formato, el gancho, la estructura y el estilo, y con todo arma la Guía de estilo HETNA que siguen el guionista, el diseñador y el revisor. Se copia el formato, nunca el contenido ajeno.
+        </p>
+        <textarea style={{ ...campo, minHeight: 50, fontSize: 13 }} placeholder="¿Qué te gusta de esta pieza? (ej. el humor del personaje, la infografía clara, el ritmo del video)" value={nota} onChange={(e) => setNota(e.target.value)} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
+          <label style={{ ...boton("primario"), opacity: ocupado ? 0.6 : 1 }}>
+            {ocupado === "agregar" ? "⏳ Subiendo…" : "+ Subir imagen o video"}
+            <input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" style={{ display: "none" }} onChange={async (e) => { const a = e.target.files?.[0]; if (!a) return; setOcupado("agregar"); try { const url = await subirImagen(a); await agregar(a.type.startsWith("video") ? "video" : "imagen", url) } catch (er) { setAviso({ ok: false, t: (er as Error).message + (a.type.startsWith("video") ? " (prueba con un video más corto, menos de 25 MB)" : "") }); setOcupado("") } }} />
+          </label>
+          <input style={{ ...campo, width: 280, padding: 6 }} placeholder="…o pega una liga (TikTok, YouTube, Instagram)" value={liga} onChange={(e) => setLiga(e.target.value)} />
+          <button type="button" style={boton("normal")} disabled={!liga.trim() || !!ocupado} onClick={() => agregar("liga", liga.trim())}>Agregar liga</button>
+        </div>
+        <p style={{ color: C.tenue, fontSize: 12, margin: "6px 0 0" }}>De las ligas el agente no puede ver el video: descríbelo bien en la nota. Para videos, mejor súbelos (descárgalos desde la app).</p>
+        {aviso && <p style={{ fontSize: 14, padding: "8px 12px", borderRadius: 8, fontWeight: 600, background: aviso.ok ? "#e8f7ee" : "#fdecec", color: aviso.ok ? C.verde : C.rojo }}>{aviso.t}</p>}
+      </section>
+
+      <section style={caja}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>📘 Guía de estilo HETNA</h3>
+          <button type="button" style={boton("primario")} disabled={!!ocupado} onClick={async () => { setOcupado("guia"); setAviso(null); try { const r = await llamar({ accion: "generar_guia" }); setGuia(r.guia.texto); setAviso({ ok: true, t: "✓ Guía actualizada con tus referencias." }) } catch (e) { setAviso({ ok: false, t: (e as Error).message }) } setOcupado("") }}>
+            {ocupado === "guia" ? "⏳ Escribiendo la guía…" : "🧠 Armar guía con mis referencias"}
+          </button>
+          <button type="button" style={boton("normal")} disabled={!!ocupado} onClick={async () => { setOcupado("guardar"); try { await llamar({ accion: "guardar_guia", texto: guia }); setAviso({ ok: true, t: "✓ Guía guardada." }) } catch (e) { setAviso({ ok: false, t: (e as Error).message }) } setOcupado("") }}>Guardar cambios</button>
+        </div>
+        <p style={{ color: C.tenue, fontSize: 12 }}>{d?.guia?.actualizada ? `Actualizada: ${fecha(d.guia.actualizada)}. ` : ""}Puedes editarla a mano. Todos los agentes la leen antes de escribir o diseñar.</p>
+        <textarea style={{ ...campo, minHeight: 220, fontSize: 13 }} value={guia} onChange={(e) => setGuia(e.target.value)} placeholder="Aquí aparecerá la guía cuando tengas referencias analizadas." />
+      </section>
+
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Tus referencias ({d?.referencias.length ?? 0})</h3>
+        {!d ? <p>Cargando…</p> : d.referencias.length === 0 ? <p style={{ color: C.tenue, fontSize: 13 }}>Todavía no hay referencias. Sube 5 a 10 piezas que te gusten para empezar.</p> : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {d.referencias.map((r) => (
+              <div key={r.id} style={{ display: "flex", gap: 10, borderTop: `1px solid ${C.borde}`, paddingTop: 10 }}>
+                <div style={{ width: 120, flexShrink: 0 }}>
+                  {r.tipo === "imagen" ? <img src={r.url} alt="" style={{ width: 120, borderRadius: 8 }} /> : r.tipo === "video" ? <video src={r.url} controls preload="metadata" style={{ width: 120, borderRadius: 8 }} /> : <a href={r.url} target="_blank" rel="noreferrer" style={{ color: C.naranja, fontSize: 12, wordBreak: "break-all" }}>{r.url}</a>}
+                </div>
+                <div style={{ flex: 1, fontSize: 12 }}>
+                  {r.nota && <div style={{ fontSize: 13, marginBottom: 4 }}>💬 {r.nota}</div>}
+                  {r.estado === "pendiente" && <div style={{ color: C.tenue }}>⏳ Analizando…</div>}
+                  {r.estado === "error" && <div style={{ color: C.rojo }}>✗ {r.error}</div>}
+                  {r.analisis && Object.entries(r.analisis).map(([k, v]) => <div key={k}><b>{ET[k] || k}:</b> {v}</div>)}
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={async () => { await llamar({ accion: "reanalizar", id: r.id }).catch(() => {}); void cargar() }}>Volver a analizar</button>
+                    <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={async () => { await llamar({ accion: "borrar", id: r.id }).catch(() => {}); void cargar() }}>Quitar</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
 const nombreRed = (r: string) => ({ facebook: "Facebook", instagram: "Instagram" } as Record<string, string>)[r] || r
 
 function Resultados() {
@@ -1535,6 +1636,7 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
 }
 
 const VISTAS = [
+  ["referencias", "Referencias"],
   ["fabrica", "Fábrica"],
   ["estrategia", "Estrategia"],
   ["radar", "Radar"],
@@ -1630,6 +1732,8 @@ export default function SocialHubPage() {
         <Estrategia alCambiar={() => void cargar()} irA={(v) => setVista(v as any)} />
       ) : vista === "videos" ? (
         <VideosTalleres redes={datos.redes} config={datos.config} alCambiar={() => void cargar()} />
+      ) : vista === "referencias" ? (
+        <Referencias />
       ) : vista === "conversaciones" ? (
         <Conversaciones />
       ) : vista === "resultados" ? (

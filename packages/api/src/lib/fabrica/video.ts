@@ -85,8 +85,10 @@ export async function corto(escenas: Escena[], o: { musica?: string | null; voz?
       fs.writeFileSync(f, e.png)
       entradas.push("-loop", "1", "-t", String(e.segundos + T), "-i", f)
       const n = Math.round((e.segundos + T) * fps)
-      // Zoom lento hacia el centro (efecto Ken Burns), sin bordes negros
-      filtros.push(`[${i}:v]scale=1188:2112,zoompan=z='min(zoom+0.0007,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${n}:s=1080x1920:fps=${fps},setsar=1,format=yuv420p[v${i}]`)
+      // Zoom lento hacia el centro (efecto Ken Burns). Se trabaja al doble de
+      // resolución (lanczos) para que el zoom no tiemble ni pixele el texto, y
+      // se baja a 1080x1920 al final.
+      filtros.push(`[${i}:v]scale=2160:3840:flags=lanczos,zoompan=z='min(zoom+0.0006,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${n}:s=1080x1920:fps=${fps},setsar=1,format=yuv420p[v${i}]`)
     })
     let prev = "v0"
     let t = escenas[0].segundos
@@ -137,8 +139,9 @@ export async function corto(escenas: Escena[], o: { musica?: string | null; voz?
       ...entradas,
       "-filter_complex", [...filtros, ...audio].join(";"),
       "-map", "[vout]", ...mapaAudio,
-      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-r", String(fps),
-      ...(mapaAudio.length ? ["-c:a", "aac", "-b:a", "128k"] : []),
+      // Calidad alta: las redes vuelven a comprimir, así que hay que subir nítido
+      "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-r", String(fps), "-maxrate", "12M", "-bufsize", "24M",
+      ...(mapaAudio.length ? ["-c:a", "aac", "-b:a", "192k", "-ar", "48000"] : []),
       "-movflags", "+faststart", "-t", total.toFixed(2),
       salida,
     ])

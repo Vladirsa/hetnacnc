@@ -39,11 +39,33 @@ export const PUBLICOS: Publico[] = [
   },
   {
     clave: "talleres", nombre: "Talleres", objetivo: "que se registren", destino: "/mx/talleres/unete",
-    pilares: ["Oportunidades de trabajo en tu estado", "Cómo ganar licitaciones sin comisión", "Talleres destacados del ranking", "Tips de máquinas, materiales y procesos", "Cuánto cobrar por tu trabajo"],
+    pilares: [
+      "Oportunidades de trabajo en tu estado", "Cómo ganar licitaciones sin comisión", "Talleres destacados del ranking", "Tips de máquinas, materiales y procesos", "Cuánto cobrar por tu trabajo",
+      // Novedades de HETNA (temas que el dueño quiere desarrollar con talleres, proveedores y clientes)
+      "Mejoras nuevas de HETNA y cómo te ayudan", "La calculadora CNC: qué calcula y cómo usarla en tu taller", "Vende diseños y productos digitales en HETNA (subirlos es fácil)",
+      "Envíos más baratos y rápidos desde HETNA", "Facturación y verificación: por qué un taller verificado vende más", "Lo básico que necesita un taller para recibir trabajo por internet",
+      "Tutorial: trabajar con 3, 4 y 5 ejes (diferencias y cuándo conviene cada uno)",
+    ],
   },
   {
     clave: "proveedores", nombre: "Proveedores", objetivo: "que publiquen sus productos", destino: "/mx/talleres/unete",
-    pilares: ["Lo más pedido del mes", "Demanda de materiales por región", "Cómo vender insumos y herramientas en HETNA"],
+    pilares: ["Lo más pedido del mes", "Demanda de materiales por región", "Cómo vender insumos y herramientas en HETNA", "Sube tus productos en minutos", "Lo básico que necesita un proveedor para vender en línea"],
+  },
+  {
+    // Comunidad: el lado humano de emprender un taller o negocio (humor, empatía, pregunta a la audiencia).
+    // Lo que más se comenta y comparte; formato tipo caricatura o cómic con una pregunta al final.
+    clave: "comunidad", nombre: "Comunidad (dueños de taller y emprendedores)", objetivo: "que comenten y compartan", destino: "/mx/foro-cnc",
+    pilares: [
+      "El tacaño: cobrar barato no es ahorrar", "Los nervios antes de entregar un trabajo grande", "Ansiedad cuando no entra trabajo al taller",
+      "Cuando el taller pesa: salud mental del emprendedor", "El dolor de perder un cliente", "Codependencia: el taller que vive de un solo cliente",
+      "Inseguridad al cotizar: ¿y si cobro mucho?", "La soledad de emprender", "Resentimiento con el cliente que no pagó", "La culpa de no estar en casa por el taller",
+      "Dependencia de una sola máquina", "¿Qué pasa con tu taller si te enfermas?", "El daño de una mala pieza (y cómo reponerse)", "Tristeza por cerrar un proyecto",
+      "Del odio al aprendizaje: el cliente difícil", "Abuso: clientes que regatean y cambian todo sin pagar", "Frustración cuando la máquina falla en el peor momento",
+      "Necesidad: aceptar cualquier trabajo o elegir", "Quejarse vs. resolver", "Toma de decisiones en el taller", "El que mucho abarca poco aprieta",
+      "El riesgo de dar servicio a empresas grandes (pagos a 90 días)", "Confianza en tu negocio", "Egoísmo vs. colaborar con otros talleres",
+      "Un loco entiende a otro loco: la comunidad de talleres", "¿La economía es un límite para triunfar?", "Capacitación constante", "Decisiones y malas decisiones",
+      "Resistencia al cambio en el taller",
+    ],
   },
 ]
 
@@ -65,12 +87,12 @@ export type Guia = {
 }
 
 export const GUIAS: Record<string, Guia> = {
-  facebook: { red: "facebook", formatos: ["reel", "imagen", "reel", "texto"], frecuencia: 5, horas: [9, 12], dias: [1, 2, 3, 4, 5], publicos: ["clientes_particulares", "talleres", "clientes_empresa"], liga: "en_texto", hashtags: [0, 3], media: "opcional", claves: "Tiempo viendo reels; contenido original (sin marca de TikTok); más de una quinta parte del feed son recomendaciones." },
-  instagram: { red: "instagram", formatos: ["reel", "carrusel", "reel", "reel", "carrusel"], frecuencia: 5, horas: [9, 18], dias: [1, 2, 3, 4, 5], publicos: ["clientes_particulares", "clientes_empresa", "talleres"], liga: "perfil", hashtags: [3, 10], media: "imagen", claves: "Tiempo de visualización, me gusta por alcance y envíos por mensaje (lo que más ayuda a llegar a quien no te sigue)." },
-  tiktok: { red: "tiktok", formatos: ["video"], frecuencia: 7, horas: [19, 13, 20], dias: [1, 2, 3, 4, 5, 6, 7], publicos: ["clientes_particulares", "talleres"], liga: "perfil", hashtags: [3, 5], media: "video", claves: "Que lo vean completo, que lo repitan, compartidos y guardados; reparte por etapas; también es buscador." },
+  facebook: { red: "facebook", formatos: ["reel", "imagen", "reel", "texto"], frecuencia: 5, horas: [9, 12], dias: [1, 2, 3, 4, 5], publicos: ["clientes_particulares", "talleres", "clientes_empresa", "comunidad"], liga: "en_texto", hashtags: [0, 3], media: "opcional", claves: "Tiempo viendo reels; contenido original (sin marca de TikTok); más de una quinta parte del feed son recomendaciones." },
+  instagram: { red: "instagram", formatos: ["reel", "carrusel", "reel", "reel", "carrusel"], frecuencia: 5, horas: [9, 18], dias: [1, 2, 3, 4, 5], publicos: ["clientes_particulares", "clientes_empresa", "talleres", "comunidad"], liga: "perfil", hashtags: [3, 10], media: "imagen", claves: "Tiempo de visualización, me gusta por alcance y envíos por mensaje (lo que más ayuda a llegar a quien no te sigue)." },
+  tiktok: { red: "tiktok", formatos: ["video"], frecuencia: 7, horas: [19, 13, 20], dias: [1, 2, 3, 4, 5, 6, 7], publicos: ["clientes_particulares", "talleres", "comunidad"], liga: "perfil", hashtags: [3, 5], media: "video", claves: "Que lo vean completo, que lo repitan, compartidos y guardados; reparte por etapas; también es buscador." },
   youtube: { red: "youtube", formatos: ["short", "short", "largo"], frecuencia: 3, horas: [18, 19], dias: [2, 4, 6], publicos: ["clientes_empresa", "clientes_particulares", "talleres"], liga: "en_texto", hashtags: [2, 3], media: "video", claves: "Primer filtro: visto contra deslizado (el primer segundo); después, cuánto del video ven." },
   google_business: { red: "google_business", formatos: ["imagen"], frecuencia: 2, horas: [10], dias: [2, 5], publicos: ["clientes_empresa", "clientes_particulares"], liga: "en_texto", hashtags: [0, 0], media: "imagen", claves: "Publicaciones en tu ficha de Google: ayudan a aparecer en búsquedas locales ('corte láser cerca de mí'); constancia semanal, foto real y palabras de servicio + ciudad." },
-  threads: { red: "threads", formatos: ["texto", "imagen", "texto"], frecuencia: 4, horas: [9, 13, 19], dias: [1, 2, 3, 4, 5], publicos: ["talleres", "clientes_particulares", "proveedores"], liga: "en_texto", hashtags: [0, 1], media: "opcional", claves: "Premia conversaciones: respuestas y citas; textos cortos con opinión o pregunta; publica seguido (varias veces por semana)." },
+  threads: { red: "threads", formatos: ["texto", "imagen", "texto"], frecuencia: 4, horas: [9, 13, 19], dias: [1, 2, 3, 4, 5], publicos: ["talleres", "clientes_particulares", "proveedores", "comunidad"], liga: "en_texto", hashtags: [0, 1], media: "opcional", claves: "Premia conversaciones: respuestas y citas; textos cortos con opinión o pregunta; publica seguido (varias veces por semana)." },
   linkedin: { red: "linkedin", formatos: ["texto", "documento", "imagen"], frecuencia: 3, horas: [10, 13, 15], dias: [2, 3, 4], publicos: ["clientes_empresa", "proveedores"], liga: "primer_comentario", hashtags: [0, 3], media: "opcional", claves: "Perfiles personales llegan más que páginas; premia conversación y que la gente se quede; castiga ligas en el texto." },
   telegram: { red: "telegram", formatos: ["texto", "imagen"], frecuencia: 5, horas: [10], dias: [1, 2, 3, 4, 5], publicos: ["talleres", "proveedores"], liga: "en_texto", hashtags: [0, 2], media: "opcional", claves: "Sin algoritmo: llega a los suscriptores del canal; directo e informativo." },
   whatsapp: { red: "whatsapp", formatos: ["estado"], frecuencia: 3, horas: [11], dias: [1, 3, 5], publicos: ["talleres", "clientes_particulares"], liga: "en_texto", hashtags: [0, 0], media: "imagen", claves: "Red más usada en México; sin algoritmo: canal, estados y listas con permiso." },
@@ -312,7 +334,9 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
         "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos. " +
         "Diseño que funciona (docs/investigacion-disenos-virales.md): primera línea de máximo 8 palabras que se entienda sola y, si hay un dato real en el contexto, con número; " +
         "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
-        "a talleres muéstrales la necesidad del cliente (trabajo disponible, sin comisión) y a clientes que ya hay talleres listos para cotizar.",
+        "a talleres muéstrales la necesidad del cliente (trabajo disponible, sin comisión) y a clientes que ya hay talleres listos para cotizar. " +
+        "Público Comunidad: habla del lado humano de emprender un taller con empatía o humor (personifica el problema, situaciones que todos reconocen) y termina con una pregunta para que comenten; nada de vender. " +
+        "Temas de salud mental (depresión, ansiedad, abuso): con respeto, sin diagnósticos ni consejos médicos, sin burla; invita a buscar apoyo y, en México, menciona la Línea de la Vida 800 911 2000.",
       messages: [{
         role: "user",
         content:
@@ -340,6 +364,10 @@ async function contextoReal(knex: any) {
   if (prods.length) partes.push(`Productos recientes en la tienda: ${prods.map((p: any) => p.title).join("; ")}.`)
   const ap = await aprendizaje(knex).catch(() => null)
   if (ap?.resumen?.length) partes.push(`Lo que mejor ha funcionado en nuestras redes (estadísticas reales): ${ap.resumen.join(" ")}`)
+  // Guía de estilo del dueño (biblioteca de referencias)
+  const { guiaParaPrompt } = await import("./referencias")
+  const guia = await guiaParaPrompt(knex)
+  if (guia) partes.push(guia.trim())
   partes.push("HETNA no cobra comisión en licitaciones; los talleres pueden estar verificados y tener certificaciones; hay ranking público por evaluaciones reales; contratos SafeDeal opcionales.")
   return partes.join("\n")
 }

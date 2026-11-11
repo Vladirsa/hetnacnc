@@ -182,6 +182,9 @@ async function contexto(knex: any) {
   const partes = ["HETNA no cobra comisión en licitaciones; talleres verificados y con certificaciones; ranking público por evaluaciones reales; contratos SafeDeal opcionales; ligas en hetnacnc.com."]
   const n = await knex("seller").whereNull("deleted_at").count({ n: "*" }).first().catch(() => null)
   if (n) partes.push(`Talleres registrados: ${n.n}.`)
+  const { guiaParaPrompt } = await import("../referencias")
+  const guia = await guiaParaPrompt(knex)
+  if (guia) partes.push(guia.trim())
   return partes.join("\n")
 }
 
@@ -548,7 +551,7 @@ export async function fondosConIa(scope: any, tema: string, cantidad = 4, logger
   const base = PROMPTS_TEMA[tema] || PROMPTS_TEMA.general
   const prompts = Array.from({ length: Math.max(1, Math.min(8, cantidad)) }, (_, i) => base[i % base.length])
   const lote = nuevoId("ia")
-  const out = await correr({ tarea: "imagen", prompts, ancho: 1024, alto: 1536, prefijo: `fabrica/fondos/${tema}/${lote}/`, semilla: Date.now() % 100000 }, { logger, topeMin: 20 })
+  const out = await correr({ tarea: "imagen", prompts, ancho: 1088, alto: 1920, prefijo: `fabrica/fondos/${tema}/${lote}/`, semilla: Date.now() % 100000 }, { logger, topeMin: 20 })
   const urls: string[] = []
   for (const [i, clave] of (out.claves || []).entries()) {
     const url = await subir(scope, `fondo-${tema}-${lote}-${i}.jpg`, "image/jpeg", await bajarB2(clave))
