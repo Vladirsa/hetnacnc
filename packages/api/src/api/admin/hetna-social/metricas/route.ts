@@ -5,13 +5,13 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { metricas } from "../../../../lib/social-hub"
-import { actualizarEstadisticas, aprendizaje } from "../../../../lib/social-estadisticas"
+import { actualizarEstadisticas, aprendizaje, ventasPorPublicacion } from "../../../../lib/social-estadisticas"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const dias = Number((req.query as any)?.dias) || 30
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  const [m, a] = await Promise.all([metricas(knex, dias), aprendizaje(knex, Math.max(dias, 60)).catch(() => null)])
-  res.json({ ...m, aprendizaje: a })
+  const [m, a, v] = await Promise.all([metricas(knex, dias), aprendizaje(knex, Math.max(dias, 60)).catch(() => null), ventasPorPublicacion(knex, Math.max(dias, 90)).catch(() => null)])
+  res.json({ ...m, aprendizaje: a, ventas: v })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {

@@ -347,7 +347,40 @@ export async function registrarClic(knex: any, codigo: string) {
   return { destino: u.toString(), red: l.red }
 }
 
-export const TIPOS_EVENTO = ["registro_cliente", "registro_taller", "solicitud", "venta"] as const
+export const TIPOS_EVENTO = ["registro_cliente", "registro_taller", "solicitud", "venta", "prueba_cotizador", "pago_cotizador", "compra_creditos"] as const
+
+/**
+ * Conversión que pasa en el servidor (pago confirmado por Mercado Pago, alta en
+ * el Cotizador): se atribuye a la publicación por la que esa persona se
+ * registró (registro_cliente guarda su correo), si fue en los últimos 120 días.
+ */
+export async function eventoPorCorreo(knex: any, correo: string | null | undefined, tipo: string, valor?: number | null, ref?: string | null) {
+  try {
+    const c = String(correo || "").trim().toLowerCase()
+    if (!c.includes("@")) return false
+    await asegurarSocial(knex)
+    const r = await knex(T_EVENTO_S)
+      .where({ tipo: "registro_cliente" })
+      .whereRaw("lower(ref) = ?", [c])
+      .where("created_at", ">=", knex.raw("now() - interval '120 days'"))
+      .orderBy("created_at", "desc")
+      .first("codigo")
+    return r?.codigo ? await registrarEvento(knex, r.codigo, tipo, valor, ref) : false
+  } catch {
+    return false // medir nunca rompe un pago
+  }
+}
+
+/** Igual, a partir del cliente de la tienda. */
+export async function eventoPorCliente(knex: any, customerId: string | null | undefined, tipo: string, valor?: number | null, ref?: string | null) {
+  try {
+    if (!customerId) return false
+    const c = await knex("customer").where({ id: customerId }).first("email")
+    return eventoPorCorreo(knex, c?.email, tipo, valor, ref)
+  } catch {
+    return false
+  }
+}
 
 /** Conversión atribuida a una liga (desde la tienda, con la cookie hetna_ref). */
 export async function registrarEvento(knex: any, codigo: string, tipo: string, valor?: number | null, ref?: string | null) {

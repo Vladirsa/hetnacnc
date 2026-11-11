@@ -5,7 +5,7 @@
 // publicado en los últimos 30 días. Con eso se calcula qué formato, mercado y
 // hora funcionan mejor en cada red; el agente de estrategia lo usa al llenar
 // el plan semanal y el panel lo muestra en Resultados.
-import { REDES, T_POST, asegurarSocial, enviarAN8n, horaEn, zonaDe } from "./social-hub"
+import { REDES, T_EVENTO_S, T_LIGA, T_POST, asegurarSocial, enviarAN8n, horaEn, zonaDe } from "./social-hub"
 
 const n = (x: any) => (Number.isFinite(Number(x)) ? Number(x) : 0)
 
@@ -136,6 +136,12 @@ export async function aprendizaje(knex: any, dias = 60) {
     const m = de("mercado").filter((g) => g.red === red && g.n >= 3)
     if (m.length >= 2) resumen.push(`En ${REDES[red].nombre}, el mercado que más responde es ${m[0].mercado.toUpperCase()}.`)
   }
+  // Lo que más importa: qué trajo pagos y registros (no sólo "me gusta"); el plan semanal lo lee
+  const v = await ventasPorPublicacion(knex, Math.max(dias, 90)).catch(() => null)
+  for (const f of (v?.publicaciones || []).filter((x: any) => x.pagos || x.pruebas || x.registros).slice(0, 3)) {
+    const partes = [f.pagos ? `${f.pagos} pagos ($${Math.round(f.ingresos)})` : "", f.pruebas ? `${f.pruebas} pruebas del Cotizador` : "", f.registros ? `${f.registros} registros` : ""].filter(Boolean).join(", ")
+    resumen.push(`Lo que más vende: "${String(f.titulo || "").slice(0, 70)}" trajo ${partes}. Haz más publicaciones con ese tema y ese enfoque.`)
+  }
   return {
     dias,
     publicaciones: posts.length,
@@ -147,6 +153,50 @@ export async function aprendizaje(knex: any, dias = 60) {
     mejores: mejores.sort((a, b) => b.interaccion - a.interaccion).slice(0, 8),
     resumen,
   }
+}
+
+/** Lo que deja dinero (o registros) cada publicación: clics de su liga y lo que pasó después. */
+export const TIPOS_VENTA = ["venta", "pago_cotizador", "compra_creditos"]
+export async function ventasPorPublicacion(knex: any, dias = 90) {
+  await asegurarSocial(knex)
+  const d = String(Math.max(7, Math.min(365, dias)))
+  const clics = await knex(`${T_LIGA} as l`)
+    .join(`${T_POST} as p`, "p.id", "l.post_id")
+    .where("p.created_at", ">=", knex.raw(`now() - (? || ' days')::interval`, [d]))
+    .groupBy("l.post_id")
+    .select("l.post_id")
+    .sum({ clics: "l.clics" })
+  const ev = await knex(`${T_EVENTO_S} as e`)
+    .join(`${T_LIGA} as l`, "l.codigo", "e.codigo")
+    .where("e.created_at", ">=", knex.raw(`now() - (? || ' days')::interval`, [d]))
+    .whereNot("e.tipo", "clic")
+    .groupBy("l.post_id", "e.tipo")
+    .select("l.post_id", "e.tipo")
+    .count({ n: "*" })
+    .sum({ valor: "e.valor" })
+  const ids = [...new Set([...clics.map((c: any) => c.post_id), ...ev.map((e: any) => e.post_id)])].filter(Boolean)
+  if (!ids.length) return { dias: Number(d), publicaciones: [], totales: { clics: 0, registros: 0, pruebas: 0, pagos: 0, ingresos: 0 } }
+  const posts = await knex(T_POST).whereIn("id", ids).select("id", "titulo", "fuente", "mercado", "publicada_en", "redes")
+  const filas = posts.map((p: any) => {
+    const e = ev.filter((x: any) => x.post_id === p.id)
+    const n = (t: string) => Number(e.find((x: any) => x.tipo === t)?.n || 0)
+    const ingresos = e.filter((x: any) => TIPOS_VENTA.includes(x.tipo)).reduce((s: number, x: any) => s + (Number(x.valor) || 0), 0)
+    return {
+      id: p.id, titulo: p.titulo, fuente: p.fuente, mercado: p.mercado, publicada_en: p.publicada_en,
+      clics: Number(clics.find((c: any) => c.post_id === p.id)?.clics || 0),
+      registros: n("registro_cliente") + n("registro_taller"),
+      solicitudes: n("solicitud"),
+      pruebas: n("prueba_cotizador"),
+      pagos: n("venta") + n("pago_cotizador") + n("compra_creditos"),
+      pagos_cotizador: n("pago_cotizador"),
+      compras_creditos: n("compra_creditos"),
+      ventas_tienda: n("venta"),
+      ingresos: Math.round(ingresos * 100) / 100,
+    }
+  })
+  filas.sort((a: any, b: any) => b.ingresos - a.ingresos || b.pagos - a.pagos || b.pruebas + b.registros - (a.pruebas + a.registros) || b.clics - a.clics)
+  const suma = (k: string) => filas.reduce((s: number, f: any) => s + (f[k] || 0), 0)
+  return { dias: Number(d), publicaciones: filas.slice(0, 50), totales: { clics: suma("clics"), registros: suma("registros"), pruebas: suma("pruebas"), pagos: suma("pagos"), ingresos: Math.round(suma("ingresos") * 100) / 100 } }
 }
 
 /**

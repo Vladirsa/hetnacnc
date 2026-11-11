@@ -25,6 +25,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { grantCreditsWorkflow } from "../workflows/grant-credits"
 import { STORE_URL } from "./licitacion"
 import { paypal, paypalListo } from "./paypal-api"
+import { eventoPorCliente } from "./social-hub"
 
 export const T_COMPRAS = "hetna_compra_creditos"
 
@@ -390,6 +391,8 @@ export async function confirmarCompra(
   container
     .resolve("logger")
     .info(`[creditos] compra ${id}: ${compra.creditos} créditos a ${compra.customer_id} (${compra.proveedor} ${pagoId})`)
+  // Social Hub: ¿llegó por una publicación? (nunca falla la compra)
+  await eventoPorCliente(knex, compra.customer_id, "compra_creditos", Number(compra.monto) || null, compra.id)
   return resultado("pagado")
 }
 

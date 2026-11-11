@@ -671,8 +671,49 @@ function Resultados() {
     }
     setLeyendo(false)
   }
+  const ve = m.ventas
+  const pesos = (n: number) => "$" + Math.round(n || 0).toLocaleString("es-MX")
   return (
     <div>
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>💰 Qué publicación vende (últimos {ve?.dias || 90} días)</h3>
+        <p style={{ margin: "0 0 10px", color: C.tenue, fontSize: 13 }}>
+          De cada publicación: cuántos dieron clic en su liga y qué hicieron después (registros, pruebas del Cotizador y pagos del Cotizador, créditos 3D o compras de la tienda).
+          Los pagos que llegan después se cuentan a la publicación por la que esa persona se registró. El plan semanal usa esto para repetir lo que vende.
+        </p>
+        {ve && (
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+            {[["Clics", ve.totales.clics], ["Registros", ve.totales.registros], ["Pruebas Cotizador", ve.totales.pruebas], ["Pagos", ve.totales.pagos], ["Ingresos", pesos(ve.totales.ingresos)]].map(([t, v]) => (
+              <div key={String(t)} style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: "8px 14px", minWidth: 110 }}>
+                <div style={{ fontSize: 11, color: C.tenue }}>{t}</div>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!ve?.publicaciones?.length ? (
+          <p style={{ fontSize: 13, color: C.tenue }}>Todavía no hay clics medidos. Las ligas hetnacnc.com/r/… de cada publicación empiezan a contar en cuanto se publican.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead><tr>{["Publicación", "Clics", "Registros", "Pruebas", "Pagos", "Ingresos"].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
+              <tbody>
+                {ve.publicaciones.slice(0, 20).map((f: any) => (
+                  <tr key={f.id}>
+                    <td style={{ ...td, maxWidth: 380 }}><div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.titulo}>{f.titulo}</div><div style={{ fontSize: 11, color: C.tenue }}>{[f.fuente, f.mercado?.toUpperCase()].filter(Boolean).join(" · ")}</div></td>
+                    <td style={td}>{f.clics}</td>
+                    <td style={td}>{f.registros}</td>
+                    <td style={td}>{f.pruebas}</td>
+                    <td style={{ ...td, fontWeight: f.pagos ? 800 : 400, color: f.pagos ? C.verde : undefined }}>{f.pagos}</td>
+                    <td style={{ ...td, fontWeight: 800 }}>{f.ingresos ? pesos(f.ingresos) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0, fontSize: 15 }}>🧠 Lo que estamos aprendiendo (Facebook e Instagram)</h3>

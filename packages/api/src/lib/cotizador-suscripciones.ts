@@ -31,6 +31,9 @@
 import { cancelarSuscripcionPaypal, sincronizarSuscripcionPaypal } from "./cotizador-paypal"
 import { paypal, paypalListo } from "./paypal-api"
 import { correosDeLaCasa, PLAN_APP_DE_LA_CASA } from "./cuentas-casa"
+import { container } from "@medusajs/framework"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { eventoPorCliente } from "./social-hub"
 
 const MP_API = "https://api.mercadopago.com"
 const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
@@ -303,6 +306,7 @@ export async function sincronizarSuscripcion(preapprovalId: string, logger?: Bit
     })
     if (negocio.plan !== ref.plan || negocio.plan_estado !== "activa" || negocio.mp_suscripcion_id !== pre.id) {
       await anotarEvento({ negocio_id: negocio.id, preapproval_id: pre.id, evento: "activada", plan: ref.plan, estado: pre.status, monto })
+      await atribuirPago(negocio.id, monto, pre.id)
       logger?.info(`[cotizador] taller ${negocio.id} con plan ${ref.plan} (suscripción ${pre.id})`)
     }
     return { plan: ref.plan, estado: "activa" }
@@ -325,6 +329,18 @@ export async function sincronizarSuscripcion(preapprovalId: string, logger?: Bit
   }
 
   return { plan: negocio.plan, estado: pre.status }
+}
+
+/** Social Hub: el plan pagado se atribuye a la publicación por la que llegó el dueño del taller (si llegó por una). */
+export async function atribuirPago(negocioId: string, monto: number, ref: string) {
+  try {
+    const knex: any = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    // hetna_cotizador_vinculo (cotizador-vinculo.ts): taller de la app <-> cliente de la tienda
+    const v = await knex("hetna_cotizador_vinculo").where({ negocio_id: negocioId }).first("customer_id")
+    if (v?.customer_id) await eventoPorCliente(knex, v.customer_id, "pago_cotizador", monto || null, ref)
+  } catch {
+    // medir nunca rompe un pago
+  }
 }
 
 /** Para "Ya pagué": revisa las suscripciones pendientes (o la activa) del taller, de los dos proveedores. */

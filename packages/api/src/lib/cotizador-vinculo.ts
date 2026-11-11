@@ -29,6 +29,7 @@ import { ErrorSuscripcion, RETORNO, adminDesdeToken, supabaseListo } from "./cot
 import { planEfectivo, supa, type PlanEfectivo, type Taller } from "./cotizador-crm"
 import { correosDeLaCasa } from "./cuentas-casa"
 import { mandarCorreoVerificacion } from "./verificar-correo"
+import { eventoPorCliente } from "./social-hub"
 
 export const T_VINCULO = "hetna_cotizador_vinculo"
 export const T_CODIGO = "hetna_cotizador_codigo"
@@ -419,6 +420,8 @@ export async function activarCotizador(
       throw e
     }
     negocioId = negocio.id as string
+    // Social Hub: taller nuevo en el Cotizador (prueba de 14 días) que llegó por una publicación
+    await eventoPorCliente(knex, customerId, "prueba_cotizador", null, negocioId)
   }
 
   await guardarVinculo(knex, customerId, negocioId, correo)
