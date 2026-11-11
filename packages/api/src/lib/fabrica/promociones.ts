@@ -17,6 +17,7 @@ import { cuadroVideo, lamina, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
+import { poster } from "./poster"
 import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 
 export const T_PROMO = "hetna_promo"
@@ -235,7 +236,12 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
     urls.push(await subir(scope, `promo-${p1}-${total}.png`, "image/png", await lamina({ num: total, total, titulo: d.cta, cierre: { cta: d.cta, liga_texto: en ? "link in bio" : "liga en el perfil" }, tema: d.tema, foto_url: await fondoDe(knex, d.tema) })))
     medios = urls.map((url) => ({ url, tipo: "imagen" }))
   } else {
-    const png = await tarjeta({ tema: d.tema, foto_url: d.producto_url ? await fondoDe(knex, d.tema) : d.fotos[0] || (await fondoDe(knex, d.tema)), producto_url: d.producto_url || null, cinta: { texto: d.cinta, tono: d.tipo === "producto" ? "verde" : "naranja" }, titulo: palabras(d.titulo, 10), cta: d.cta, liga: liga1 })
+    // Estilo nuevo (fondos de tema, como los videos); si no se puede, la tarjeta de siempre
+    const cfgImg = await leerConfig(knex)
+    const png =
+      (cfgImg.imagen_nueva !== false &&
+        (await poster({ tema: temaPara(p1), cinta: d.cinta, titulo: palabras(d.titulo, 10), foto: d.producto_url || d.fotos.find((u) => u) || null, icono: iconoPara(`${d.titulo} ${d.gancho}`), cta: d.cta, liga: liga1 }, logger))) ||
+      (await tarjeta({ tema: d.tema, foto_url: d.producto_url ? await fondoDe(knex, d.tema) : d.fotos[0] || (await fondoDe(knex, d.tema)), producto_url: d.producto_url || null, cinta: { texto: d.cinta, tono: d.tipo === "producto" ? "verde" : "naranja" }, titulo: palabras(d.titulo, 10), cta: d.cta, liga: liga1 }))
     medios = [{ url: await subir(scope, `promo-${p1}.png`, "image/png", png), tipo: "imagen" }]
   }
   await knex(T_POST).where({ id: p1 }).update({ medios: JSON.stringify(medios) })

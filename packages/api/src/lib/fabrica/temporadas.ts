@@ -20,6 +20,7 @@ import { limpiar, oraciones, palabras } from "./plan-material"
 import { T_PROMO, asegurarPromo, vozPara } from "./promociones"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { cuadroVideo, carpetaFuentes, tarjeta } from "./render"
+import { poster } from "./poster"
 
 export type AjusteFecha = { activa: boolean; etiquetas: string[] }
 
@@ -187,7 +188,11 @@ async function piezaDeFecha(scope: any, f: FechaEspecial, p: { anio: number; mes
   if (c1) {
     const p1 = await crearPublicacion(knex, { origen: "manual", fuente: "temporada", vence, titulo: `${f.nombre} · ${nombres[0]}`, texto_base: texto, url, redes: ["facebook", "instagram", "telegram"], estado: c1.estado, programada_para: c1.fecha, mercado: "mx" } as any, logger)
     const liga = urlCorta(await ligaPara(knex, p1, "facebook", url))
-    const png = await tarjeta({ tema: "taller", foto_url: await fondoDe(knex, "taller"), producto_url: fotos[0] || null, cinta: { texto: f.nombre, tono: "naranja" }, titulo: palabras(nombres.length > 1 ? `${f.gancho}: ${nombres[0]} y más` : `${f.gancho}: ${nombres[0]}`, 10), cta: f.cta, liga })
+    const titulo = palabras(nombres.length > 1 ? `${f.gancho}: ${nombres[0]} y más` : `${f.gancho}: ${nombres[0]}`, 10)
+    const cfgImg = await leerConfig(knex)
+    const png =
+      (cfgImg.imagen_nueva !== false && (await poster({ tema: f.tema, cinta: f.nombre, titulo, foto: fotos[0] || null, icono: f.icono, cta: f.cta, liga }, logger))) ||
+      (await tarjeta({ tema: "taller", foto_url: await fondoDe(knex, "taller"), producto_url: fotos[0] || null, cinta: { texto: f.nombre, tono: "naranja" }, titulo, cta: f.cta, liga }))
     await knex(T_POST).where({ id: p1 }).update({ medios: JSON.stringify([{ url: await subir(scope, `temporada-${p1}.png`, "image/png", png), tipo: "imagen" }]) })
     posts.push(p1)
   }

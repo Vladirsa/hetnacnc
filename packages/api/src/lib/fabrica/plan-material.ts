@@ -20,7 +20,8 @@ import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./rende
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
-import { bloquesBasicos, guionista, hfDisponible, horaTranquila, paraVoz, temaPara, videoHF } from "./hyperframes"
+import { bloquesBasicos, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
+import { poster } from "./poster"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
@@ -158,7 +159,9 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   await asegurarPlan(knex)
   await knex.raw(`alter table ?? add column if not exists material text`, [T_PLAN]).catch(() => {})
   // Videos animados: sólo si el dueño los activó en Configuración y HyperFrames está instalado
-  const animado = !!(await leerConfig(knex)).video_animado && hfDisponible()
+  const cfgFab = await leerConfig(knex)
+  const animado = !!cfgFab.video_animado && hfDisponible()
+  const imagenNueva = cfgFab.imagen_nueva !== false
   const filas = await knex(`${T_PLAN} as h`)
     .join(`${T_POST} as p`, "p.id", "h.post_id")
     .whereNull("h.material")
@@ -281,7 +284,12 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         medios = [{ url: await subir(scope, `plan-${f.id}-mini.png`, "image/png", await miniatura({ titulo: palabras(f.pilar, 8), tema, foto_url: await foto() })), tipo: "imagen" }]
       } else {
         const { gancho } = piezasDeTexto(texto, f.notas)
-        const png = await tarjeta({ tema, foto_url: await foto(), cinta: { texto: t.cinta }, titulo: gancho || palabras(f.pilar, 9), cta: t.cta, liga, ...(f.red === "instagram" ? { liga_texto: t.perfil } : {}) })
+        const titulo = gancho || palabras(f.pilar, 9)
+        const fondoFoto = await foto()
+        const png =
+          (imagenNueva &&
+            (await poster({ tema: temaPara(f.id, !!fondoFoto, { publico: f.publico, fecha: f.programada_para ? new Date(f.programada_para) : new Date(f.fecha) }), fondo: fondoFoto, cinta: t.cinta, titulo, icono: iconoPara(`${titulo} ${f.pilar}`), cta: t.cta, liga, ...(f.red === "instagram" ? { liga_texto: t.perfil } : {}) }, logger))) ||
+          (await tarjeta({ tema, foto_url: fondoFoto, cinta: { texto: t.cinta }, titulo, cta: t.cta, liga, ...(f.red === "instagram" ? { liga_texto: t.perfil } : {}) }))
         medios = [{ url: await subir(scope, `plan-${f.id}.png`, "image/png", png), tipo: "imagen" }]
       }
       await knex(T_POST).where({ id: f.id }).update({ medios: JSON.stringify(medios), updated_at: knex.fn.now() })
