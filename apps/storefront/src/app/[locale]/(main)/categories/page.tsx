@@ -11,6 +11,7 @@ import { IMAGEN_OG } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts, searchProducts } from "@/lib/data/products"
+import { paraTarjeta } from "@/lib/helpers/tarjeta-producto"
 import {
   buildHreflangAlternates,
   getStorefrontLocales,
@@ -73,7 +74,7 @@ async function primeraPagina(locale: string, filtros: Record<string, string | st
   const args = argsDeListado(paramsDe(filtros))
   try {
     const r = await searchProducts({ ...args, countryCode: locale })
-    return { clave: claveListado(args, `${locale}|||`), products: r.products, count: r.count }
+    return { clave: claveListado(args, `${locale}|||`), products: r.products.map(paraTarjeta), count: r.count }
   } catch {
     return undefined // el navegador la pide como antes
   }
