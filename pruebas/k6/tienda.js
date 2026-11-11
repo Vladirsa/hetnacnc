@@ -12,7 +12,7 @@ const pesoHtml = new Trend("peso_html_kb")
 export const options = {
   ...perfil(),
   thresholds:
-    __ENV.PERFIL === "capacidad"
+    ["capacidad", "techo"].includes(__ENV.PERFIL)
       ? {
           // Se corta en cuanto la tienda se degrada, tras 30 s para no reaccionar a un pico.
           http_req_failed: [{ threshold: "rate<0.02", abortOnFail: true, delayAbortEval: "30s" }],
