@@ -3,6 +3,7 @@
    PREPARACIÓN DE PIEZA, BRUTO Y SUJECIÓN
    ========================================================= */
 const frameOf=k=>(k==='rot4'||k==='rot5'||k==='idx4')?'rot':'top';
+const esCincoEjes=k=>k==='top5'||k==='rot5'||k==='pos5';
 function orientedPositions(){
   const src=S.rawPos;const out=new Float32Array(src.length);const sc=S.units*S.scale;
   for(let i=0;i<src.length;i+=3){let x=src[i]*sc,y=src[i+1]*sc,z=src[i+2]*sc;
@@ -291,6 +292,80 @@ async function genIdx4(tl,st,opt={}){
   passes.forEach(p=>p.pts=simplify(p.pts));
   return {passes,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.r-minZ};
 }
+// ---- 5 ejes posicional (3+2): los ejes giratorios se fijan en una orientación por cara y cada cara se corta en 3 ejes ----
+// Cada orientación es una dirección fija de la herramienta (a). En el plano que la cruza se barren líneas; la
+// altura a lo largo de a sale de un mapa de alturas visto desde esa dirección (9 rayos por celda, como el indexado)
+// y el piso es la mesa: la punta nunca baja de la base del material.
+function orientacionesPos5(st){
+  const n=Math.round(st.posCaras)||0,t=clamp(+st.posTilt||45,10,80)*DEG,out=[{a:[0,0,1],nombre:'arriba'}];
+  for(let k=0;k<n;k++){const f=2*Math.PI*k/n;out.push({a:V.norm([Math.sin(t)*Math.cos(f),Math.sin(t)*Math.sin(f),Math.cos(t)]),nombre:`lado ${k+1} (${Math.round(st.posTilt)}°, giro ${Math.round(f*RAD)}°)`});}
+  return out;
+}
+async function genPos5(tl,st,opt={}){
+  const M=S.M,stock=S.stock,m=S.machine,R=tl.D/2,dirs=orientacionesPos5(st);
+  // primero se revisa que la máquina llegue a cada orientación: si no, se dice cuál y por qué
+  for(const d of dirs)if(!kinSolve(m,d.a,null))throw new Error(`La orientación ${d.nombre} queda fuera del recorrido de los ejes giratorios de tu máquina (${KIN_NAME[m.kin]}). Baja la inclinación o elige menos lados.`);
+  const bmin=stock.min,bmax=stock.max,c=V.mul(V.add(bmin,bmax),0.5),far=V.dist(bmin,bmax)+20,floorZ=Math.max(bmin[2],M.bmin[2]);
+  const dA=st.rallow-st.allow,ps={t:now()},passes=[];let unreached=0,cells=0,minZ=Infinity,maxDepth=0;
+  // dónde entra un rayo a la caja del material (método de losas); -1e9 si no la toca
+  const entradaCaja=(o,d)=>{let t0=-1e9,t1=1e9;for(let q=0;q<3;q++){if(Math.abs(d[q])<1e-12){if(o[q]<bmin[q]||o[q]>bmax[q])return null;continue;}let a=(bmin[q]-o[q])/d[q],b=(bmax[q]-o[q])/d[q];if(a>b){const x=a;a=b;b=x;}t0=Math.max(t0,a);t1=Math.min(t1,b);}return t1>=t0&&t1>0?Math.max(t0,0):null;};
+  for(let f=0;f<dirs.length;f++){
+    const a=dirs[f].a,ref=Math.abs(a[0])<0.9?[1,0,0]:[0,1,0],U=V.norm(V.cross(ref,a)),W=V.cross(a,U),frac=q=>(f+q)/dirs.length;
+    // extensión del material proyectada en el plano de la cara
+    let u0=Infinity,u1=-Infinity,v0=Infinity,v1=-Infinity;
+    for(let q=0;q<8;q++){const p=[q&1?bmax[0]:bmin[0],q&2?bmax[1]:bmin[1],q&4?bmax[2]:bmin[2]],r=V.sub(p,c),u=V.dot(r,U),v=V.dot(r,W);u0=Math.min(u0,u);u1=Math.max(u1,u);v0=Math.min(v0,v);v1=Math.max(v1,v);}
+    u0-=R;u1+=R;v0-=R;v1+=R;
+    let res=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.1,3),nu,nv,ker;
+    const build=()=>{nu=Math.ceil((u1-u0)/res)+1;nv=Math.ceil((v1-v0)/res)+1;ker=[];const k=Math.ceil(R/res);for(let i=-k;i<=k;i++)for(let j=-k;j<=k;j++){const dd=Math.hypot(i,j)*res;if(dd<=R)ker.push(i,j,toolH(tl,dd));}};
+    build();for(let it=0;it<40&&(nu*nv*dirs.length>400000||nu*nv*dirs.length*(ker.length/3)>2.4e8);it++){res*=1.12;build();}
+    const base=(u,v)=>V.add(c,V.add(V.mul(U,u),V.mul(W,v))),neg=V.mul(a,-1),sub=res/3;
+    // Inclinada, la fresa baja más que su punta (el costado de la bola o el canto de la plana):
+    // el piso se sube eso para que ninguna parte del cortador pase de la mesa.
+    const cr=cutterRadii(tl),baja=cr.r*(1-a[2])+(cr.R-cr.r)*Math.sqrt(Math.max(0,1-a[2]*a[2]));
+    const H=new Float32Array(nu*nv),Fl=new Float32Array(nu*nv),Top=new Float32Array(nu*nv);
+    for(let iu=0;iu<nu;iu++){const u=u0+iu*res;
+      for(let iv=0;iv<nv;iv++){const v=v0+iv*res;let h=-1e9;
+        for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++){const o=V.madd(base(u+x*sub,v+y*sub),a,far);if(raycast(M,o[0],o[1],o[2],neg[0],neg[1],neg[2],2*far)){const t=far-HIT.t;if(t>h)h=t;}}
+        const b=base(u,v),ent=entradaCaja(V.madd(b,a,far),neg);
+        H[iu*nv+iv]=h;Fl[iu*nv+iv]=(floorZ+baja-b[2])/a[2];Top[iu*nv+iv]=ent===null?-1e9:far-ent;}
+      await progressYield(ps,0.02+0.9*frac(0.35*iu/nu),`Leyendo la cara ${f+1} de ${dirs.length}…`);}
+    // En las orillas y en las paredes casi paralelas a la herramienta la altura brinca entre una celda y la
+    // siguiente: cada celda toma la más alta de sus vecinas para que el costado de la fresa no muerda el borde.
+    {const H0=H.slice();for(let iu=0;iu<nu;iu++)for(let iv=0;iv<nv;iv++){let h=H0[iu*nv+iv];for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++){const ju=iu+x,jv=iv+y;if(ju>=0&&ju<nu&&jv>=0&&jv<nv&&H0[ju*nv+jv]>h)h=H0[ju*nv+jv];}H[iu*nv+iv]=h;}}
+    // hasta dónde baja la punta sin morder la pieza ni bajar de la mesa
+    const Z=new Float32Array(nu*nv);
+    for(let iu=0;iu<nu;iu++){for(let iv=0;iv<nv;iv++){let best=Fl[iu*nv+iv];
+        for(let q=0;q<ker.length;q+=3){const ju=iu+ker[q],jv=iv+ker[q+1];if(ju<0||ju>=nu||jv<0||jv>=nv)continue;const z=H[ju*nv+jv]-ker[q+2];if(z>best)best=z;}
+        const z=best+st.allow;Z[iu*nv+iv]=z;if(z<minZ)minZ=z;}
+      await progressYield(ps,0.02+0.9*frac(0.35+0.4*iu/nu),`Calculando contacto en la cara ${f+1} de ${dirs.length}…`);}
+    for(let iu=0;iu<nu;iu+=2){for(let iv=0;iv<nv;iv+=2){const h0=H[iu*nv+iv];if(h0<Fl[iu*nv+iv]+0.01)continue;cells++;if(Z[iu*nv+iv]-st.allow<=h0+0.05)continue;let hit=false;
+        for(let q=0;q<ker.length&&!hit;q+=3){const ju=iu-ker[q],jv=iv-ker[q+1];if(ju<0||ju>=nu||jv<0||jv>=nv)continue;if(Z[ju*nv+jv]-st.allow+ker[q+2]<=h0+0.05)hit=true;}
+        if(!hit)unreached++;}
+      await progressYield(ps,0.02+0.9*frac(0.75+0.2*iu/nu),`Revisando la cara ${f+1} de ${dirs.length}…`);}
+    const at=(A,u,v)=>{const fu=clamp((u-u0)/res,0,nu-1.001),fv=clamp((v-v0)/res,0,nv-1.001),i=Math.floor(fu),j=Math.floor(fv),x=fu-i,y=fv-j;return A[i*nv+j]*(1-x)*(1-y)+A[i*nv+j+1]*(1-x)*y+A[(i+1)*nv+j]*x*(1-y)+A[(i+1)*nv+j+1]*x*y;};
+    const Zat=(u,v)=>at(Z,u,v);
+    const pt=(u,v,h)=>({p:V.madd(base(u,v),a,h),a:a.slice(),st:0});
+    const loc=p=>{const r=V.sub(p,c);return[V.dot(r,U),V.dot(r,W),V.dot(r,a)];};
+    const lk=(A,B,rough)=>{for(let q=1;q<6;q++){const [u,v,h]=loc(V.lerp(A,B,q/6));if(h<Zat(u,v)+(rough?dA:0)-0.02)return false;}return true;};
+    let topMax=-1e9;for(let i=0;i<Top.length;i++)if(Top[i]>topMax)topMax=Top[i];
+    const n=Math.max(2,Math.ceil((u1-u0)/res));let rev=st.cutdir==='rev';
+    const lines=(so,zfn,rough)=>{const nL=Math.max(1,Math.ceil((v1-v0)/so));
+      for(let l=0;l<=nL;l++){const v=v0+(v1-v0)*l/nL;const pts=[];let cuts=false;
+        for(let k=0;k<=n;k++){const u=u0+(u1-u0)*k/n,h=zfn(u,v);if(h<at(Top,u,v)-0.01)cuts=true;pts.push(pt(u,v,h));}
+        if(!cuts)continue; // la línea va toda por el aire
+        if(rev)pts.reverse();if(st.cutdir==='zig')rev=!rev;passes.push({pts,rough,lk});}};
+    let zmin=Infinity;for(let i=0;i<Z.length;i+=3)if(Z[i]<zmin)zmin=Z[i];
+    maxDepth=Math.max(maxDepth,topMax-zmin);
+    if(st.rough){for(let L=topMax-st.rsd;;L-=st.rsd){const lv=Math.max(L,zmin+dA);lines(st.rso,(u,v)=>Math.max(lv,Zat(u,v)+dA),true);if(lv<=zmin+dA)break;}}
+    if(!opt.roughOnly)lines(st.stepover,Zat,false);
+  }
+  if(!passes.length)throw new Error('No hay nada que cortar: revisa el material y las orientaciones.');
+  const chk=checker(tl,st);let done=0;const tot=passes.reduce((s,p)=>s+p.pts.length,0);
+  for(const p2 of passes){for(let i=0;i<p2.pts.length;i+=3){const q=p2.pts[i];if(chk(q.p,q.a,true)){for(let k=Math.max(0,i-2);k<=Math.min(p2.pts.length-1,i+2);k++)p2.pts[k].st=2;}}
+    done+=p2.pts.length;await progressYield(ps,0.92+0.08*done/tot,'Verificando zanco, porta y sujeción…');}
+  passes.forEach(p=>p.pts=simplify(p.pts));
+  return {passes,unreachedPct:cells?unreached/cells*100:0,maxDepth,salidaEje:true};
+}
 // ---- 5 ejes simultáneos: normal a superficie + búsqueda anticolisión
 function axisFromNormal(n,f,lead,tilt){
   let fp=V.sub(f,V.mul(n,V.dot(f,n)));if(V.len(fp)<1e-6)fp=perpOf(n);fp=V.norm(fp);const side=V.cross(n,fp);
@@ -398,7 +473,11 @@ function buildMoves(res,st){
   const clr=Math.max(1,Math.min(st.safe,4));
   // separar tramos en colisión si se pide omitir
   let passes=[];for(const p of res.passes){if(!st.skip){passes.push(p);continue;}let cur=[];for(const q of p.pts){if(q.st>=2){if(cur.length>1)passes.push({...p,pts:cur});cur=[];}else cur.push(q);}if(cur.length>1)passes.push({...p,pts:cur});}
+  // Con la herramienta inclinada fija (3+2) primero se sale a lo largo de su eje hasta librar el material y
+  // luego se sube: subir en vertical desde la pieza haría pasar el zanco por dentro del bloque.
+  const salidaEje=(p,a)=>{let t=0;const bmin=stock.min,bmax=stock.max;for(let q=0;q<3;q++){if(Math.abs(a[q])<1e-9)continue;const tq=((a[q]>0?bmax[q]:bmin[q])-p[q])/a[q];if(tq>t)t=tq;}return V.madd(p,a,t+st.safe);};
   const toSafe=(p,a)=>{ // punto de retracción seguro
+    if(frame==='top'&&res.salidaEje&&a[2]<0.999){const l=V.madd(p,a,clr),s=salidaEje(p,a);return[l,[s[0],s[1],Math.max(safeTop,s[2])],s];}
     if(frame==='top'){const l=V.madd(p,a,clr);return[l,[l[0],l[1],Math.max(safeTop,l[2])]];}
     const l=V.madd(p,a,clr);const r=Math.hypot(l[1],l[2])||1;const th=Math.atan2(l[1],l[2]);return[l,[l[0],safeR*Math.sin(th),safeR*Math.cos(th)]];
   };
@@ -419,15 +498,15 @@ function buildMoves(res,st){
     const direct=last&&ptid===tid&&lk&&V.dist(last.p,first.p)<=(rough?st.rso:st.stepover)*1.6&&lk(last.p,first.p,rough);
     if(direct){push(first.p,first.a,'F',first.st,rough);}
     else{
-      if(last){const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P',0,rough);push(l2,last.a,'R');tid=ptid; // el cambio de herramienta ocurre ya retirado, en la zona segura
-        const [a1,a2]=toSafe(first.p,first.a);travel(l2,last.a,a2,first.a);push(a1,first.a,'R');}
-      else{const [a1,a2]=toSafe(first.p,first.a);travel(home,f0.a,a2,first.a);push(a1,first.a,'R');}
+      if(last){const [l1,l2,m1]=toSafe(last.p,last.a);push(l1,last.a,'P',0,rough);if(m1)push(m1,last.a,'R');push(l2,last.a,'R');tid=ptid; // el cambio de herramienta ocurre ya retirado, en la zona segura
+        const [a1,a2,m2]=toSafe(first.p,first.a);travel(l2,last.a,a2,first.a);if(m2)push(m2,first.a,'R');push(a1,first.a,'R');}
+      else{const [a1,a2,m2]=toSafe(first.p,first.a);travel(home,f0.a,a2,first.a);if(m2)push(m2,first.a,'R');push(a1,first.a,'R');}
       push(first.p,first.a,'P',first.st,rough);
     }
     for(let i=1;i<pts.length;i++)push(pts[i].p,pts[i].a,'F',pts[i].st,rough);
     last=pts[pts.length-1];
   }
-  const [l1,l2]=toSafe(last.p,last.a);push(l1,last.a,'P');push(l2,last.a,'R');
+  const [l1,l2,m1]=toSafe(last.p,last.a);push(l1,last.a,'P');if(m1)push(m1,last.a,'R');push(l2,last.a,'R');
   return moves;
 }
 function annotateMoves(moves){

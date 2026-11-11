@@ -103,7 +103,8 @@ function updateScallop(){
 function syncStratUI(){
   const st=S.strat;$$('#stratCards .card').forEach(c=>c.classList.toggle('on',c.dataset.kind===st.kind));
   const rot=frameOf(st.kind)==='rot',five=st.kind==='top5'||st.kind==='rot5';
-  const idx=st.kind==='idx4';$('#w_pattern').hidden=!rot||idx;$('#w_dir').hidden=rot;$('#w_5ax').hidden=!five;$('#w_faces').hidden=!idx;$('#s_faces').value=String(st.faces||4);
+  const idx=st.kind==='idx4';$('#w_pattern').hidden=!rot||idx;$('#w_dir').hidden=rot;$('#w_5ax').hidden=!five;$('#w_faces').hidden=!idx;$('#s_faces').value=String(st.faces||4);const pos=st.kind==='pos5';$('#w_pos5').hidden=!pos;$('#s_posCaras').value=String(st.posCaras??4);$('#s_posTilt').value=st.posTilt??45;$('#w_dir').hidden=rot||pos;
+  $('#o_pos5').textContent=pos?`Los ejes giratorios se fijan en ${(st.posCaras??4)+1} orientaciones (arriba${st.posCaras?` y ${st.posCaras} lados inclinados ${st.posTilt}°`:''}) y cada una se maquina en 3 ejes: los giros sólo se mueven entre caras, con la herramienta retirada.`:'';
   $('#o_faces').textContent=idx?`La pieza gira ${st.faces>1?'cada '+(360/st.faces).toFixed(st.faces===7||st.faces===9||st.faces===11?1:0)+'°':'una sola vez'} y se queda fija mientras se maquina cada cara en 3 ejes; el eje A no se mueve durante el corte. Cada cara baja hasta el centro de la barra.`:'';
   $$('#s_pattern button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.pattern));syncExtrasUI();
   const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};
@@ -116,8 +117,10 @@ function initStratUI(){
     const kin=S.machine.kin;
     if((S.strat.kind==='rot4'||S.strat.kind==='idx4')&&!['xyza','ab_mixed'].includes(kin))applyPreset('r4');
     if((S.strat.kind==='rot5')&&!['ab_mixed','bc_head'].includes(kin))applyPreset('ab');
-    if(S.strat.kind==='top5'&&(kin==='xyz'||kin==='xyza'))applyPreset('ac');
+    if((S.strat.kind==='top5'||S.strat.kind==='pos5')&&(kin==='xyz'||kin==='xyza'))applyPreset('ac');
     syncStratUI();markStale();updateFeedsUI();if(S.rawPos&&S.partDirty)reprep();});
+  $('#s_posCaras').addEventListener('change',e=>{S.strat.posCaras=clamp(Math.round(+e.target.value)||0,0,8);syncStratUI();markStale();});
+  $('#s_posTilt').addEventListener('change',e=>{S.strat.posTilt=clamp(+e.target.value||45,10,80);e.target.value=S.strat.posTilt;syncStratUI();markStale();});
   $('#s_faces').addEventListener('change',e=>{S.strat.faces=clamp(+e.target.value||4,1,12);syncStratUI();markStale();});
   $('#s_pattern').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.strat.pattern=b.dataset.v;syncStratUI();markStale();});
   const ids={s_stepover:'stepover',s_step:'step',s_allow:'allow',s_lead:'lead',s_tilt:'tilt',s_maxtilt:'maxTilt',s_clear:'clear',s_rsd:'rsd',s_rso:'rso',s_rallow:'rallow',s_safe:'safe'};

@@ -197,16 +197,29 @@ export const calcRouter = (e: Entrada): Resultado => {
     potW *= f
     R.avisos.push(`Con la profundidad normal el spindle pasaría del 80% de su potencia a ${fmt(rpm)} RPM; la bajé a ${fmt(doc, 2)} mm por pasada.`)
   }
-  const par = potW / ((2 * Math.PI * rpm) / 60) // N·m
+  let par = potW / ((2 * Math.PI * rpm) / 60) // N·m
 
   // --- deflexión de la fresa (viga en voladizo) ---
-  const Ft = potW / (vcReal / 60) // fuerza tangencial media, N (P = F·v)
+  let Ft = potW / (vcReal / 60) // fuerza tangencial media, N (P = F·v)
   const dCore = D * (T.nombre.startsWith("Un filo") ? 0.6 : 0.75)
   // Viga en dos tramos: la parte con filos (hasta 3 diámetros) es más delgada que el zanco macizo.
   const I = (Math.PI * Math.pow(dCore, 4)) / 64
   const Izanco = (Math.PI * Math.pow(D, 4)) / 64
   const Lfilos = Math.min(L, 3 * D)
-  const defl = (Ft / (3 * MF.E)) * (Math.pow(Lfilos, 3) / I + (Math.pow(L, 3) - Math.pow(Lfilos, 3)) / Izanco) // mm
+  let defl = (Ft / (3 * MF.E)) * (Math.pow(Lfilos, 3) / I + (Math.pow(L, 3) - Math.pow(Lfilos, 3)) / Izanco) // mm
+  // La fuerza crece con la profundidad: si la fresa se flexionaría de más, se recomienda una pasada
+  // más somera en lugar de dar una profundidad y al mismo tiempo avisar que puede romper la fresa.
+  const opFija = ["grabado_v", "planeado", "acabado", "acabado_pared"].includes(txt(e.operacion))
+  if (defl > 0.05 && !opFija) {
+    const f = 0.04 / defl
+    const docAntes = doc
+    doc *= f
+    potW *= f
+    Ft *= f
+    defl *= f
+    par *= f
+    R.avisos.push(`Con ${fmt(docAntes, 2)} mm por pasada la fresa se flexionaría de más con ${fmt(L)} mm fuera del collet; bajé la profundidad a ${fmt(doc, 2)} mm. Si acortas el voladizo puedes subirla.`)
+  }
   if (defl > 0.05) {
     R.avisos.push(`La fresa se flexiona ≈ ${fmt(defl, 3)} mm con ${fmt(L)} mm fuera del collet: riesgo de vibración, paredes cónicas o rotura. Acorta el voladizo, baja la profundidad o usa fresa de mayor diámetro.`)
     R.confianza -= 15

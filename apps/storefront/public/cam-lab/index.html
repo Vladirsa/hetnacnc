@@ -640,9 +640,17 @@ label.c input{width:17px;height:17px}
           <button class="card" data-kind="rot4"><b>4 ejes · rotativo</b><span>Columnas, patas, piezas torneadas</span></button>
           <button class="card" data-kind="idx4"><b>4 ejes · indexado por caras</b><span>Gira a un ángulo fijo y maquina cada cara en 3 ejes</span></button>
           <button class="card" data-kind="top5"><b>5 ejes · normal a superficie</b><span>Inclinación continua sobre superficies superiores</span></button>
+          <button class="card" data-kind="pos5"><b>5 ejes · posicional 3+2</b><span>Fija la inclinación por cara y corta en 3 ejes</span></button>
           <button class="card" data-kind="rot5"><b>5 ejes · envolvente</b><span>Álabes, impulsores, esculturas completas</span></button>
         </div>
         <div class="group">
+          <div id="w_pos5" class="group" hidden><h2>Orientaciones</h2>
+            <div class="row">
+              <label class="f">Lados además de arriba<select id="s_posCaras"><option value="0">Sólo arriba</option><option value="2">2 lados</option><option value="3">3 lados</option><option value="4">4 lados</option><option value="6">6 lados</option><option value="8">8 lados</option></select></label>
+              <label class="f">Inclinación de los lados (°)<input id="s_posTilt" type="number" min="10" max="80" step="5"></label>
+            </div>
+            <p class="hint" id="o_pos5"></p>
+          </div>
           <div id="w_faces" class="group" hidden><h2>Caras</h2>
             <label class="f">Número de caras<select id="s_faces"><option value="1">1 cara (solo arriba)</option><option value="2">2 caras (0° y 180°)</option><option value="3">3 caras (cada 120°)</option><option value="4">4 caras (cada 90°)</option><option value="6">6 caras (cada 60°)</option><option value="8">8 caras (cada 45°)</option></select></label>
             <p class="hint" id="o_faces"></p>
