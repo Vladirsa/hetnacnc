@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic"
 const BACKEND = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 const PK = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string
 
-// nginx agrega la IP de quien se conectó al final de X-Forwarded-For: lo de antes lo pudo escribir el cliente
+// El sitio pasa por Cloudflare: la IP del visitante viene en CF-Connecting-IP (el último salto de
+// X-Forwarded-For sería un servidor de Cloudflare, compartido por muchos visitantes).
 const ipDe = (req: Request) => {
+  const cf = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip")
+  if (cf) return cf.trim().slice(0, 64)
   const partes = (req.headers.get("x-forwarded-for") || "").split(",").map((s) => s.trim()).filter(Boolean)
-  return partes[partes.length - 1] || req.headers.get("x-real-ip") || "desconocida"
+  return partes[partes.length - 1] || "desconocida"
 }
 
 export async function POST(req: Request) {

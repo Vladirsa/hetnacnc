@@ -26,7 +26,7 @@ export const PRESETS_ROUTER: Preset[] = Object.entries(MAQUINAS_ROUTER).map(([id
 type MatRouter = {
   nombre: string
   grupo: string
-  cl: number[][] // [diámetro mm, carga mín, carga máx] mm por filo, carburo, máquina rígida
+  cl: number[][] // [diámetro mm, carga mín, carga máx] mm por filo, carburo, máquina rígida (en tableros: fresa de compresión, tablas de Onsrud)
   vc: [number, number] // velocidad de corte m/min (carburo)
   doc: number // profundidad por pasada en perfil, en veces el diámetro, en un router
   docFresadora?: number // lo mismo en una fresadora rígida (metales): un router no aguanta esa pasada
@@ -37,13 +37,13 @@ type MatRouter = {
   nota: string
 }
 export const MAT_ROUTER: Record<string, MatRouter> = {
-  mdf: { nombre: "MDF", grupo: "Madera y tableros", cl: [[3, 0.1, 0.18], [6, 0.3, 0.4], [10, 0.45, 0.55], [12, 0.55, 0.68]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "Extracción de polvo obligatoria: el polvo de MDF es dañino. La fresa de compresión deja limpias las dos caras." },
+  mdf: { nombre: "MDF", grupo: "Madera y tableros", cl: [[3, 0.2, 0.28], [6, 0.3, 0.38], [10, 0.36, 0.43], [12, 0.42, 0.5]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "Extracción de polvo obligatoria: el polvo de MDF es dañino. La fresa de compresión deja limpias las dos caras." },
   melamina: { nombre: "Melamina / aglomerado", grupo: "Madera y tableros", cl: [[3, 0.1, 0.15], [6, 0.28, 0.38], [10, 0.42, 0.52], [12, 0.52, 0.62]], vc: [300, 900], doc: 1, u: 0.07, filos: 2, entrada: 0.35, nota: "Para que no se astille la cara de arriba usa fresa de compresión; la primera pasada más profunda que la zona ascendente." },
   triplay: { nombre: "Triplay / contrachapado", grupo: "Madera y tableros", cl: [[3, 0.08, 0.13], [6, 0.23, 0.28], [10, 0.33, 0.42], [12, 0.43, 0.5]], vc: [300, 900], doc: 1, u: 0.06, filos: 2, entrada: 0.35, nota: "El pegamento desafila rápido las fresas HSS: mejor carburo. Compresión o downcut para que no se astille." },
   madera_blanda: { nombre: "Madera blanda (pino, cedro, caobilla)", grupo: "Madera y tableros", cl: [[3, 0.1, 0.15], [6, 0.25, 0.3], [10, 0.35, 0.45], [12, 0.45, 0.53]], vc: [300, 900], doc: 1, u: 0.04, filos: 2, entrada: 0.35, nota: "Corta a favor de la veta cuando puedas. Si se 'pela', usa downcut en la última pasada." },
   madera_dura: { nombre: "Madera dura (encino, parota, nogal, maple)", grupo: "Madera y tableros", cl: [[3, 0.08, 0.13], [6, 0.2, 0.25], [10, 0.3, 0.38], [12, 0.4, 0.48]], vc: [300, 800], doc: 0.75, u: 0.09, filos: 2, entrada: 0.3, nota: "Se quema si el avance es bajo: no bajes el avance, baja las RPM." },
   bambu: { nombre: "Bambú laminado", grupo: "Madera y tableros", cl: [[3, 0.07, 0.11], [6, 0.18, 0.23], [10, 0.25, 0.33], [12, 0.33, 0.42]], vc: [300, 800], doc: 0.7, u: 0.1, filos: 2, entrada: 0.3, nota: "Muy abrasivo por la sílice: fresas de carburo y espera menos vida de filo." },
-  acrilico: { nombre: "Acrílico fundido (cast)", grupo: "Plásticos", cl: [[3, 0.08, 0.12], [6, 0.18, 0.25], [10, 0.25, 0.3], [12, 0.3, 0.38]], vc: [150, 350], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Fresa de 1 filo (O-flute) pulida. Si ves plástico fundido pegado, sube el avance o baja RPM. Para canto cristal: fresa O-flute nueva y una pasada de acabado de 0.2 mm." },
+  acrilico: { nombre: "Acrílico fundido (cast)", grupo: "Plásticos", cl: [[3, 0.12, 0.18], [6, 0.2, 0.27], [10, 0.25, 0.3], [12, 0.3, 0.38]], vc: [150, 350], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Fresa de 1 filo (O-flute) pulida. Si ves plástico fundido pegado, sube el avance o baja RPM. Para canto cristal: fresa O-flute nueva y una pasada de acabado de 0.2 mm." },
   acrilico_extruido: { nombre: "Acrílico extruido", grupo: "Plásticos", cl: [[3, 0.08, 0.1], [6, 0.15, 0.2], [10, 0.22, 0.28], [12, 0.25, 0.3]], vc: [120, 300], doc: 0.5, u: 0.1, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Se funde más fácil que el fundido: viruta grande, RPM moderadas y aire. Sujeta bien, tiende a vibrar." },
   policarbonato: { nombre: "Policarbonato", grupo: "Plásticos", cl: [[3, 0.08, 0.12], [6, 0.18, 0.25], [10, 0.22, 0.28], [12, 0.25, 0.32]], vc: [150, 400], doc: 0.6, u: 0.11, filos: 1, entrada: 0.3, lub: "aire a presión", nota: "Corta muy bien con router (mal con láser). Fresa de 1 filo; no dejes que la viruta se reenrolle en la fresa." },
   pvc_espumado: { nombre: "PVC espumado (Sintra, Trovicel)", grupo: "Plásticos", cl: [[3, 0.08, 0.13], [6, 0.18, 0.25], [10, 0.25, 0.33], [12, 0.3, 0.38]], vc: [150, 400], doc: 1, u: 0.05, filos: 1, entrada: 0.35, nota: "Fresa de 1 filo para que la viruta salga y no se funda. Cuidado con el polvo: ventilación." },
@@ -138,7 +138,10 @@ export const calcRouter = (e: Entrada): Resultado => {
     clMax = (M.cl[0][2] * D) / M.cl[0][0]
   }
   const fRig = clamp(0.5 + 0.5 * rig, 0.5, 1.25)
-  const factor = fRig * T.cl * MF.cl * OP.cl * (Z >= 3 && M.u < 0.5 ? 0.85 : 1)
+  // En tableros la tabla es de fresa de compresión; Onsrud da para espirales simples (upcut, downcut, recta)
+  // más o menos la mitad de carga por filo en el mismo diámetro.
+  const fTablero = M.grupo === "Madera y tableros" && ["upcut", "downcut", "recta", "un_filo"].includes(txt(e.tipo_fresa) || "upcut") && M !== MAT_ROUTER.madera_blanda && M !== MAT_ROUTER.madera_dura ? 0.55 : 1
+  const factor = fRig * T.cl * MF.cl * OP.cl * fTablero * (Z >= 3 && M.u < 0.5 ? 0.85 : 1)
   clMin *= factor
   clMax *= factor
   let cl = (clMin + clMax) / 2
