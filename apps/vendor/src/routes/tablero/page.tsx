@@ -34,7 +34,7 @@ const Tablero = (props: { width?: number; height?: number }) => (
 )
 
 export const config: RouteConfig = {
-  label: "Mi tablero",
+  label: "Inicio",
   icon: Tablero,
   rank: 1,
 }
