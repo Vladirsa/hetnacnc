@@ -11,7 +11,14 @@ const pesoHtml = new Trend("peso_html_kb")
 
 export const options = {
   ...perfil(),
-  thresholds: {
+  thresholds:
+    __ENV.PERFIL === "capacidad"
+      ? {
+          // Se corta en cuanto la tienda se degrada, tras 30 s para no reaccionar a un pico.
+          http_req_failed: [{ threshold: "rate<0.02", abortOnFail: true, delayAbortEval: "30s" }],
+          http_req_waiting: [{ threshold: "p(95)<2000", abortOnFail: true, delayAbortEval: "30s" }],
+        }
+      : {
     http_req_failed: ["rate<0.01"], // menos de 1 % de errores
     checks: ["rate>0.99"],
     "http_req_duration{pagina:inicio}": ["p(95)<1500"],
@@ -19,7 +26,7 @@ export const options = {
     "http_req_duration{pagina:categorias}": ["p(95)<1500"],
     "http_req_duration{pagina:feed}": ["p(95)<3000"],
     "http_req_waiting": ["p(95)<1200"], // TTFB: tiempo que tarda el servidor en contestar
-  },
+        },
 }
 
 export function setup() {

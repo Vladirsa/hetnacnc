@@ -15,6 +15,18 @@ export const PERFILES = {
       { duration: "30s", target: 0 },
     ],
   },
+  // Capacidad: sube por escalones y se DETIENE sola en cuanto la tienda se
+  // degrada (ver abortOnFail en tienda.js). El escalón donde se detuvo es el límite.
+  capacidad: {
+    stages: [
+      { duration: "1m", target: 5 },
+      { duration: "1m", target: 10 },
+      { duration: "1m", target: 20 },
+      { duration: "1m", target: 30 },
+      { duration: "1m", target: 40 },
+      { duration: "30s", target: 0 },
+    ],
+  },
   estres: {
     stages: [
       { duration: "1m", target: 20 },

@@ -228,6 +228,13 @@ else
 fi
 # NEXT_DIST_DIR va en el entorno: hetna-web arranca ya desde la carpeta nueva
 pm2 restart hetna-web --update-env
+# Microcaché de nginx (infra/nginx/CACHE-PAGINAS.md): las copias guardadas
+# apuntan a los archivos /_next/static del build anterior; se tiran ya. Si la
+# microcaché no está instalada, la carpeta no existe y esto no hace nada.
+if [ -d /var/cache/nginx/hetna-paginas ]; then
+  find /var/cache/nginx/hetna-paginas -type f -delete 2>/dev/null || true
+  echo "   microcaché de nginx vaciada"
+fi
 echo "$DIST_NUEVA" > apps/storefront/.dist-actual
 # Que un reinicio del servidor arranque con la misma carpeta
 pm2 save >/dev/null 2>&1 || true
@@ -337,9 +344,15 @@ if [ "${DESPLIEGUE_CALENTAR:-1}" != "0" ]; then
   rutas="$(curl -s --max-time 20 "$SITIO/sitemap.xml" \
     | grep -oE '<loc>[^<]+/(products|categories)(/[^<]*)?</loc>' \
     | sed -E 's#</?loc>##g' | sort -u || true)"
+  rutas="$SITIO/mx $SITIO/us $rutas"
   ok=0; mal=0
   for url in $rutas; do
-    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" 2>/dev/null || true)"
+    # Con las cookies de un visitante que ya volvió: así la tienda no responde
+    # con Set-Cookie y la microcaché de nginx (si está) también guarda la copia.
+    # En /us sin hetna_lang, que es como llega un visitante nuevo de EE. UU.
+    galleta="_medusa_cache_id=calentar-cache"
+    case "$url" in */us|*/us/*) ;; *) galleta="$galleta; hetna_lang=es" ;; esac
+    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -A 'Mozilla/5.0 (hetna-calentar)' -H "Cookie: $galleta" "$url" 2>/dev/null || true)"
     if [ "$codigo" = "200" ]; then ok=$((ok + 1)); else mal=$((mal + 1)); echo "   ✗ $codigo $url"; fi
   done
   if [ "$mal" -gt 0 ]; then verde "   ✓ $ok páginas en caché ($mal con error)"; else verde "   ✓ $ok páginas en caché"; fi
