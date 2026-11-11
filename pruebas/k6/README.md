@@ -11,13 +11,27 @@ no crean carritos, no inician sesión, no mandan cotizaciones ni suman vistas.
 
 ## Instalar k6
 
-Con Go instalado (así se probó aquí, k6 v1.8.2):
+En Ubuntu/Debian (VPS), con el repositorio oficial de Grafana:
 
 ```bash
-go install go.k6.io/k6@latest
+gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" > /etc/apt/sources.list.d/k6.list
+apt-get update && apt-get install -y k6
 ```
 
-Otras opciones (apt, brew, binario): https://grafana.com/docs/k6/latest/set-up/install-k6/
+Con Go ya instalado (así se probó en desarrollo, k6 v1.8.2): `go install go.k6.io/k6@latest`.
+No compiles k6 en el VPS de producción: tarda y se come la RAM del sitio.
+
+Otras opciones (brew, Windows, binario): https://grafana.com/docs/k6/latest/set-up/install-k6/
+
+**En el VPS** las pruebas viven en otra rama; sácalas fuera del repo para no ensuciar `main`:
+
+```bash
+mkdir -p /root/k6-pruebas && cd /root/hetnacnc && git fetch origin claude/fervent-dirac-2n43to && git archive FETCH_HEAD pruebas/k6 | tar -x -C /root/k6-pruebas
+```
+
+Correr desde el VPS mide el servidor sin la red de por medio y compite por CPU con la
+tienda: para humo está bien; carga y estrés mejor desde otra máquina.
 
 ## Correr
 
