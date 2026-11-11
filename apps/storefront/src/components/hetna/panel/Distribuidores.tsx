@@ -105,3 +105,51 @@ export function MesAplicado({ id, nombre }: { id: string; nombre: string }) {
     </button>
   )
 }
+
+// Solicitud que llegó del formulario de /distribuidores: crear su código (se le
+// manda por correo con su página) o descartarla.
+export function AtenderSolicitud({ id, empresa }: { id: number; empresa: string }) {
+  const sugerido = empresa.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10) + "90"
+  const [abierto, setAbierto] = useState(false)
+  const [codigo, setCodigo] = useState(sugerido.length >= 4 ? sugerido : "")
+  const [dias, setDias] = useState("90")
+  const [msg, setMsg] = useState("")
+  const [ocupado, setOcupado] = useState(false)
+  const enviar = async (cuerpo: Record<string, unknown>) => {
+    setOcupado(true); setMsg("")
+    const e = await accion({ solicitud_id: id, ...cuerpo })
+    setOcupado(false)
+    if (e) return setMsg(e)
+    window.location.reload()
+  }
+  if (!abierto) {
+    return (
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#0F7A4A] px-3 py-1.5 text-[12px] font-bold text-white">Crear su código</button>
+        <button
+          disabled={ocupado}
+          onClick={() => { if (confirm(`¿Descartar la solicitud de ${empresa}?`)) enviar({ accion: "descartar" }) }}
+          className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A] disabled:opacity-50"
+        >
+          Descartar
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="mt-2 grid gap-2 rounded-xl bg-[#F8F7F2] p-3">
+      <div className="grid grid-cols-2 gap-2">
+        <input className={input} placeholder="Código" value={codigo} maxLength={24} onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
+        <input className={input} type="number" min={1} max={365} placeholder="Días" value={dias} onChange={(e) => setDias(e.target.value)} />
+      </div>
+      <p className="text-[11px] text-[#6B675C]">Se crea el código y le llega por correo con su página.</p>
+      {msg && <p className="text-[12px] font-semibold text-[#B3261E]">{msg}</p>}
+      <div className="flex gap-2">
+        <button disabled={ocupado} onClick={() => enviar({ accion: "crear_para_solicitud", codigo, dias, nombre: empresa })} className="rounded-lg bg-[#0F7A4A] px-3 py-2 text-[13px] font-bold text-white disabled:opacity-50">
+          Crear y mandárselo
+        </button>
+        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]">Cancelar</button>
+      </div>
+    </div>
+  )
+}
