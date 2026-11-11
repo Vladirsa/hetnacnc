@@ -27,6 +27,18 @@ export const PERFILES = {
       { duration: "30s", target: 0 },
     ],
   },
+  // Techo: sigue desde donde termina "capacidad" (40) hasta 100, con el mismo
+  // corte automático. Sólo tiene sentido con la microcaché de nginx activa.
+  techo: {
+    stages: [
+      { duration: "1m", target: 40 },
+      { duration: "1m", target: 60 },
+      { duration: "1m", target: 80 },
+      { duration: "1m", target: 100 },
+      { duration: "1m", target: 100 },
+      { duration: "30s", target: 0 },
+    ],
+  },
   estres: {
     stages: [
       { duration: "1m", target: 20 },

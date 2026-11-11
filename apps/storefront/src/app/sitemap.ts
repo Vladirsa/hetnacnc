@@ -75,6 +75,11 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/aviso-de-privacidad", "yearly", 0.2],
 ]
 
+// Categorías cuya página redirige a otra (categories/[category]/page.tsx).
+// Google marca como error una URL del sitemap que redirige; la página de
+// destino ya está en la lista estática de arriba.
+const CATEGORIAS_QUE_REDIRIGEN = new Set(["servicios"]) // → /fabricacion
+
 const categorias = async (): Promise<string[]> => {
   try {
     const r = (await sdk.store.productCategories.query({
@@ -82,7 +87,9 @@ const categorias = async (): Promise<string[]> => {
       limit: 200,
       fetchOptions: { next: { revalidate: 3600 } },
     } as never)) as unknown as { product_categories: { handle?: string | null }[] }
-    return (r.product_categories ?? []).map((c) => c.handle).filter(Boolean) as string[]
+    return (r.product_categories ?? [])
+      .map((c) => c.handle)
+      .filter((h): h is string => !!h && !CATEGORIAS_QUE_REDIRIGEN.has(h))
   } catch {
     return []
   }
