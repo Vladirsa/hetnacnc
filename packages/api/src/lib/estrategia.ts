@@ -171,7 +171,7 @@ export async function guardarEstrategia(knex: any, c: Partial<ConfigEstrategia>)
   const pilares = { ...a.pilares }
   for (const [p, lista] of Object.entries(c.pilares || {})) {
     if (!PUBLICOS.some((x) => x.clave === p) || !Array.isArray(lista)) continue
-    pilares[p] = lista.map((x) => String(x).trim().slice(0, 120)).filter(Boolean).slice(0, 12)
+    pilares[p] = lista.map((x) => String(x).trim().slice(0, 120)).filter(Boolean).slice(0, 40)
   }
   const nueva = { mercados, guias, pilares }
   await knex.raw(`insert into ?? (clave, valor) values ('estrategia', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
@@ -308,6 +308,16 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
   const maxPct = Math.max(1, ...activos.map(([, p]) => p))
   const filas: any[] = []
   let giro = 0
+  // Temas: se escoge el que menos se ha usado en las últimas 12 semanas (así sale todo el temario, no siempre los primeros)
+  const usos: Record<string, number> = {}
+  for (const r of await knex(T_PLAN).where("fecha", ">=", knex.raw("now() - interval '84 days'")).groupBy("publico", "pilar").select("publico", "pilar").count({ n: "*" }).catch(() => []))
+    usos[`${r.publico}|${r.pilar}`] = Number(r.n) || 0
+  const elegirPilar = (publico: Publico) => {
+    let mejor = publico.pilares[0]
+    for (const x of publico.pilares) if ((usos[`${publico.clave}|${x}`] || 0) < (usos[`${publico.clave}|${mejor}`] || 0)) mejor = x
+    usos[`${publico.clave}|${mejor}`] = (usos[`${publico.clave}|${mejor}`] || 0) + 1
+    return mejor
+  }
   for (const [mercado, pct] of activos) {
     const zona = zonaDe(mercado)
     for (const red of REDES_MERCADO[mercado] || []) {
@@ -320,7 +330,7 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
         const dia = dias[Math.floor((i * dias.length) / Math.max(n, 1)) % dias.length]
         const hora = g.horas[i % g.horas.length]
         const publico = publicoDe(cfg, g.publicos[(i + giro) % g.publicos.length])
-        const pilar = publico.pilares[(i + giro) % publico.pilares.length]
+        const pilar = elegirPilar(publico)
         filas.push({
           id: nuevoId("plan"), semana, fecha: instanteEn(sumarDias(semana, dia - 1), hora, zona), red, mercado,
           publico: publico.clave, pilar, formato: g.formatos[i % g.formatos.length], estado: "vacio",

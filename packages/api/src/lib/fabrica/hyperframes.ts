@@ -749,6 +749,9 @@ async function hacer(bloques: Bloque[], o: Opciones & { logger?: any }) {
         const crudo = path.join(dir, "assets", `p${i}-original`)
         try {
           await traer(b.foto, crudo)
+          // Foto muy chica (menos de 300 px) se vería borrosa: mejor el dibujo
+          const m = await sharp(crudo).metadata()
+          if (Math.min(m.width || 0, m.height || 0) < 300) throw new Error("foto muy chica")
           await sharp(crudo).rotate().resize(900, 780, { fit: "contain", background: "#ffffff" }).flatten({ background: "#ffffff" }).jpeg({ quality: 86 }).toFile(path.join(dir, "assets", `p${i}.jpg`))
           return { ...b, foto: `assets/p${i}.jpg` }
         } catch {

@@ -159,11 +159,24 @@ async function cuandoAntesDe(knex: any, horas: number, vence: Date) {
   return { estado: cfg.automatico.promociones ? "programada" : "borrador", fecha }
 }
 
+/** Liga completa de una foto de producto (las que guarda el servidor pueden venir como /static/…). */
+export function fotoAbsoluta(u: string | null | undefined) {
+  const x = String(u || "").trim()
+  if (/^https?:\/\//.test(x)) return x
+  if (x.startsWith("/")) {
+    const base = (process.env.FILE_BACKEND_URL || "http://localhost:9000/static").replace(/\/static\/?$/, "").replace(/\/$/, "")
+    return `${base}${x}`
+  }
+  return null
+}
+
 async function piezaDeFecha(scope: any, f: FechaEspecial, p: { anio: number; mes: number; dia: number }, prods: any[], logger?: any) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  prods = prods.map((x) => ({ ...x, thumbnail: fotoAbsoluta(x.thumbnail) })).filter((x) => x.thumbnail)
+  if (!prods.length) return []
   const vence = finDelDia(p)
   const nombres = prods.map((x) => nombreCorto(x.title))
-  const fotos = prods.map((x) => x.thumbnail).filter((u) => /^https:\/\//.test(String(u)))
+  const fotos = prods.map((x) => x.thumbnail)
   const url = `${STORE_URL}/mx/products/${prods[0].handle}`
   const lista = nombres.map((n) => `• ${n}`).join("\n")
   const texto = `${f.narracion}\n\n${lista}\n\nHechos por talleres y vendedores de HETNA CNC. ${f.cta}: {{liga}}`

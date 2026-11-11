@@ -1,5 +1,5 @@
 import { FECHAS, fechasActivas, finDelDia, proxima, temporadaDe } from "../fabrica/calendario"
-import { coincide, nombreCorto, normalizar } from "../fabrica/temporadas"
+import { coincide, fotoAbsoluta, nombreCorto, normalizar } from "../fabrica/temporadas"
 
 const mx = (s: string) => new Date(`${s}T18:00:00Z`) // mediodía en México
 
@@ -43,5 +43,11 @@ describe("fechas especiales y productos", () => {
   it("nombre corto sin códigos para pantalla y voz", () => {
     expect(nombreCorto("Calavera decorativa MDF-3MM-X (30 cm) para altar")).toBe("Calavera decorativa para altar")
     expect(nombreCorto("Portarretratos AB1234 grabado láser con nombre de mamá")).toBe("Portarretratos grabado láser con nombre")
+  })
+
+  it("usa las fotos guardadas en el servidor aunque vengan como /static/…", () => {
+    expect(fotoAbsoluta("https://x.com/a.jpg")).toBe("https://x.com/a.jpg")
+    expect(fotoAbsoluta("/static/123-foto.webp")).toMatch(/^https?:\/\/[^/]+\/static\/123-foto\.webp$/)
+    expect(fotoAbsoluta("")).toBeNull()
   })
 })
