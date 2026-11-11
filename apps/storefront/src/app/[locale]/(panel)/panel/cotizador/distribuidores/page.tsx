@@ -2,16 +2,20 @@
 //   · Códigos de distribuidor (codigos_promo): crear, pausar, ver usos y su página.
 //   · Meses a favor: talleres que pagan y ganaron meses por invitar; se aplican
 //     a mano en su cobro y aquí se marcan.
+//   · Solicitudes de distribuidor (formulario de /distribuidores): crear su
+//     código y mandárselo por correo, o descartarla.
 //   · Referidos: quién invita más y los últimos que llegaron.
-import { BotonCodigo, MesAplicado, NuevoCodigo } from "@/components/hetna/panel/Distribuidores"
+import { AtenderSolicitud, BotonCodigo, MesAplicado, NuevoCodigo } from "@/components/hetna/panel/Distribuidores"
 import { SubApp } from "@/components/hetna/panel/SubApp"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { puedeActuar } from "@/lib/panel/roles"
 import { adminFetch, exigirPagina, fechaCorta, hace } from "@/lib/panel/sesion"
 
 type Codigo = { codigo: string; nombre: string; dias_regalo: number; activo: boolean; usos: number; max_usos: number | null; vence: string | null; created_at: string | null }
+type Solicitud = { id: number; empresa: string; contacto: string; correo: string; telefono: string | null; ciudad: string | null; maquinas: string | null; ventas_mes: string | null; mensaje: string | null; estado: string; codigo: string | null; created_at: string }
 type Datos = {
   instalado: boolean
+  solicitudes?: Solicitud[]
   codigos: Codigo[]
   meses_a_favor: { id: string; nombre: string; correo: string | null; telefono: string | null; plan: string; meses: number }[]
   referidos: {
@@ -38,6 +42,26 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
       {error && <Vacio>No pude leer los referidos: {error}</Vacio>}
       {d && !d.instalado && (
         <Vacio>Falta correr <b>supabase/referidos.sql</b> en el Supabase del Cotizador. Mientras, aquí no hay datos.</Vacio>
+      )}
+      {d && (d.solicitudes || []).length > 0 && (
+        <Tarjeta>
+          <Titulo extra={<span className="text-[11px] text-[#6B675C]">del formulario de /distribuidores</span>}>Solicitudes de distribuidor</Titulo>
+          <ul className="divide-y divide-[#EFEDE6]">
+            {(d.solicitudes || []).map((s) => (
+              <li key={s.id} className="py-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-[14px] font-extrabold">{s.empresa}</p>
+                  <Etiqueta color={s.estado === "nueva" ? "ambar" : s.estado === "atendida" ? "verde" : "gris"}>{s.estado === "atendida" && s.codigo ? s.codigo : s.estado}</Etiqueta>
+                </div>
+                <p className="text-[12px] text-[#40403A]">{s.contacto} · {s.correo}{s.telefono ? ` · ${s.telefono}` : ""}</p>
+                <p className="text-[12px] text-[#6B675C]">{[s.maquinas, s.ventas_mes ? `${s.ventas_mes} al mes` : "", s.ciudad].filter(Boolean).join(" · ")}</p>
+                {s.mensaje && <p className="mt-1 text-[12px] italic text-[#6B675C]">“{s.mensaje}”</p>}
+                <p className="text-[11px] text-[#9A968B]">{hace(s.created_at)}</p>
+                {actuar && s.estado === "nueva" && <AtenderSolicitud id={s.id} empresa={s.empresa} />}
+              </li>
+            ))}
+          </ul>
+        </Tarjeta>
       )}
       {d && (
         <>
