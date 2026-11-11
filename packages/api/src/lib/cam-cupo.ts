@@ -14,6 +14,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { mesActual } from "./cotizador-plan"
+import { anotarIntentoCam } from "./cam-correos"
 import { planDelCliente } from "./descargas-gratis"
 
 export const TIPOS_CAM = ["2d", "3d", "torno", "torno_grabado", "multieje"] as const
@@ -131,6 +132,7 @@ export async function consumirCam(
   const minimo = PLAN_MINIMO[tipo]
 
   if ((tipo === "multieje" && !estado.multieje) || (tipo === "torno_grabado" && !estado.grabado) || (cubetaDe(tipo) === "torno" && !estado.torno.incluido)) {
+    await anotarIntentoCam(knex, customerId, tipo, "plan", minimo) // para el correo "te falta el plan X"
     const que = tipo === "multieje" ? "Los programas de 4 y 5 ejes vienen" : tipo === "torno_grabado" ? "El grabado en el torno viene" : "El torno CNC viene"
     throw new CamCupoError("plan", `${que} desde el plan ${NOMBRE_PLAN[minimo]}. Tu plan es ${estado.plan_nombre}.`, minimo)
   }
@@ -144,6 +146,7 @@ export async function consumirCam(
   const c = estado[cubetaDe(tipo)]
   if (c.restantes !== null && c.restantes <= 0) {
     const siguiente: PlanCam = cubetaDe(tipo) === "torno" ? "pro" : "taller"
+    await anotarIntentoCam(knex, customerId, tipo, "cupo", siguiente)
     throw new CamCupoError(
       "cupo",
       `Ya bajaste los ${c.limite} programas de este mes de tu plan ${estado.plan_nombre}. Con el plan ${NOMBRE_PLAN[siguiente]} no tienen límite.`,

@@ -2,7 +2,7 @@
 /* =========================================================
    PREPARACIÓN DE PIEZA, BRUTO Y SUJECIÓN
    ========================================================= */
-const frameOf=k=>(k==='rot4'||k==='rot5')?'rot':'top';
+const frameOf=k=>(k==='rot4'||k==='rot5'||k==='idx4')?'rot':'top';
 function orientedPositions(){
   const src=S.rawPos;const out=new Float32Array(src.length);const sc=S.units*S.scale;
   for(let i=0;i<src.length;i+=3){let x=src[i]*sc,y=src[i+1]*sc,z=src[i+2]*sc;
@@ -233,6 +233,64 @@ async function genRot4(tl,st,opt={}){
   let minT=Infinity;for(let i=0;i<Tm.length;i+=3)if(Tm[i]<minT)minT=Tm[i];
   return {passes,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.r-minT};
 }
+// ---- 4º eje indexado: la pieza gira a un ángulo fijo por cara y cada cara se maquina en 3 ejes ----
+// En cada cara la herramienta apunta al eje de giro (dirección d) y barre líneas a lo largo de X,
+// corriéndose de lado (dirección e). Cada cara baja hasta el plano del eje; entre todas liberan la pieza.
+async function genIdx4(tl,st,opt={}){
+  const M=S.M,stock=S.stock,R=tl.D/2;const [px0,px1]=workX(st,M.bmin[0],M.bmax[0]);
+  const N=clamp(Math.round(st.faces)||4,1,12),Rf=stock.r+5,floor=0;
+  const half=(N<=2?stock.r:stock.r*Math.sin(Math.PI/N))+R+Math.max(st.stepover,0.2);
+  let res=clamp(Math.min(st.step,st.stepover/2,tl.D/8),0.1,3),nx,nv,ker;
+  const build=()=>{nx=Math.ceil((px1-px0+2*R)/res)+1;nv=Math.ceil(2*half/res)+1;
+    ker=[];const k=Math.ceil(R/res);for(let i=-k;i<=k;i++)for(let j=-k;j<=k;j++){const dd=Math.hypot(i,j)*res;if(dd<=R)ker.push(i,j,toolH(tl,dd));}};
+  build();for(let it=0;it<40&&(nx*nv*N>400000||nx*nv*N*(ker.length/3)>2.4e8);it++){res*=1.12;build();}
+  const gx0=px0-R,nk=ker.length/3,ps={t:now()},passes=[];let unreached=0,cells=0,minZ=Infinity;
+  const dA=st.rallow-st.allow;
+  for(let f=0;f<N;f++){
+    const th=2*Math.PI*f/N,s=Math.sin(th),c=Math.cos(th),frac=q=>(f+q)/N;
+    // alturas vistas desde esta cara
+    const H=new Float32Array(nx*nv),sub=res/3;
+    for(let ix=0;ix<nx;ix++){const x=gx0+ix*res;
+      // 9 rayos por celda y se guarda el más alto: una pared que cae entre dos celdas cuenta en las dos y la fresa no la muerde
+      for(let iv=0;iv<nv;iv++){const v0=-half+iv*res;let h=-1e9;
+        for(let a=-1;a<=1;a++)for(let b2=-1;b2<=1;b2++){const xx=x+a*sub,v=v0+b2*sub;if(raycast(M,xx,v*c+Rf*s,-v*s+Rf*c,0,-s,-c,2*Rf)){const t=Rf-HIT.t;if(t>h)h=t;}}
+        H[ix*nv+iv]=h;}
+      await progressYield(ps,0.02+0.9*frac(0.35*ix/nx),`Leyendo la cara ${f+1} de ${N}…`);}
+    // hasta dónde baja la punta sin morder la pieza
+    const Z=new Float32Array(nx*nv);
+    for(let ix=0;ix<nx;ix++){for(let iv=0;iv<nv;iv++){let best=floor;
+        for(let q=0;q<ker.length;q+=3){const jx=ix+ker[q],jv=iv+ker[q+1];if(jx<0||jx>=nx||jv<0||jv>=nv)continue;const z=H[jx*nv+jv]-ker[q+2];if(z>best)best=z;}
+        const z=best+st.allow;Z[ix*nv+iv]=z;if(z<minZ)minZ=z;}
+      await progressYield(ps,0.02+0.9*frac(0.35+0.4*ix/nx),`Calculando contacto en la cara ${f+1} de ${N}…`);}
+    // superficie que ve esta cara y que la fresa no alcanza a tocar
+    for(let ix=0;ix<nx;ix+=2){for(let iv=0;iv<nv;iv+=2){const h0=H[ix*nv+iv];if(h0<floor)continue;cells++;if(Z[ix*nv+iv]-st.allow<=h0+0.05)continue;let hit=false;
+        for(let q=0;q<ker.length&&!hit;q+=3){const jx=ix-ker[q],jv=iv-ker[q+1];if(jx<0||jx>=nx||jv<0||jv>=nv)continue;if(Z[jx*nv+jv]-st.allow+ker[q+2]<=h0+0.05)hit=true;}
+        if(!hit)unreached++;}
+      await progressYield(ps,0.02+0.9*frac(0.75+0.2*ix/nx),`Revisando la cara ${f+1} de ${N}…`);}
+    const Zat=(x,v)=>{const fx=clamp((x-gx0)/res,0,nx-1.001),fv=clamp((v+half)/res,0,nv-1.001),i=Math.floor(fx),j=Math.floor(fv),u=fx-i,w=fv-j;
+      return Z[i*nv+j]*(1-u)*(1-w)+Z[i*nv+j+1]*(1-u)*w+Z[(i+1)*nv+j]*u*(1-w)+Z[(i+1)*nv+j+1]*u*w;};
+    const pt=(x,v,z)=>({p:[x,v*c+z*s,-v*s+z*c],a:[0,s,c],st:0});
+    // enlace directo entre líneas vecinas de la misma cara: vale si el tramo no baja de lo permitido
+    const lk=(A,B,rough)=>{for(let q=1;q<6;q++){const p=V.lerp(A,B,q/6),v=p[1]*c-p[2]*s,z=p[1]*s+p[2]*c;if(z<Zat(p[0],v)+(rough?dA:0)-0.02)return false;}return true;};
+    const top=v=>Math.abs(v)<stock.r?Math.sqrt(stock.r*stock.r-v*v):-1e9; // superficie del material a esa distancia del centro
+    const n=Math.max(2,Math.ceil((px1-px0)/res));let rev=st.cutdir==='rev';
+    const lines=(so,zfn,rough)=>{const nL=Math.max(1,Math.ceil(2*half/so));
+      for(let l=0;l<=nL;l++){const v=-half+2*half*l/nL;if(Math.abs(v)>stock.r+R)continue; // fuera del material
+        const pts=[];let cuts=false;const lim=Math.max(top(Math.max(0,Math.abs(v)-R)),floor);
+        for(let k=0;k<=n;k++){const x=px0+(px1-px0)*k/n,z=zfn(x,v);if(z<lim-0.01)cuts=true;pts.push(pt(x,v,z));}
+        if(!cuts)continue; // toda la línea va por el aire
+        if(rev)pts.reverse();if(st.cutdir==='zig')rev=!rev;passes.push({pts,rough,lk});}};
+    if(st.rough){let zmin=Infinity;for(let i=0;i<Z.length;i+=3)if(Z[i]<zmin)zmin=Z[i];
+      for(let L=stock.r-st.rsd;;L-=st.rsd){const lv=Math.max(L,zmin+dA);lines(st.rso,(x,v)=>Math.max(lv,Zat(x,v)+dA),true);if(lv<=zmin+dA)break;}}
+    if(!opt.roughOnly)lines(st.stepover,Zat,false);
+  }
+  if(!passes.length)throw new Error('No hay nada que cortar: revisa el tamaño del material y el número de caras.');
+  const chk=checker(tl,st);let done=0;const tot=passes.reduce((a,p)=>a+p.pts.length,0);
+  for(const p2 of passes){for(let i=0;i<p2.pts.length;i+=3){const q=p2.pts[i];if(chk(q.p,q.a,true)){for(let k=Math.max(0,i-2);k<=Math.min(p2.pts.length-1,i+2);k++)p2.pts[k].st=2;}}
+    done+=p2.pts.length;await progressYield(ps,0.92+0.08*done/tot,'Verificando zanco, porta y sujeción…');}
+  passes.forEach(p=>p.pts=simplify(p.pts));
+  return {passes,unreachedPct:cells?unreached/cells*100:0,maxDepth:stock.r-minZ};
+}
 // ---- 5 ejes simultáneos: normal a superficie + búsqueda anticolisión
 function axisFromNormal(n,f,lead,tilt){
   let fp=V.sub(f,V.mul(n,V.dot(f,n)));if(V.len(fp)<1e-6)fp=perpOf(n);fp=V.norm(fp);const side=V.cross(n,fp);
@@ -243,7 +301,7 @@ const DEVS=[5,10,15,20,26,32,40,50].map(d=>d*DEG),AZS=[0,45,-45,90,-90,135,-135,
 async function gen5(tl,st){
   const M=S.M,stock=S.stock,m=S.machine;const chk=checker(tl,st);const lead=st.lead*DEG,tilt=st.tilt*DEG,maxT=st.maxTilt*DEG;
   const minDotN=(tl.type==='flat'||tl.type==='bull')?0.5:0.08;const stats={adjusted:0,coll:0,lim:0,devSum:0,why:{}};
-  let roughRes=null;if(st.rough){const rt=S.rtool||tl;roughRes=await(S.frame==='top'?genTop3:genRot4)(rt,st,{roughOnly:true});roughRes.passes.forEach(p=>{p.tid=rt.id;p.lk=roughRes.linkOK;});}
+  let roughRes=null;if(st.rough){const rt=S.rtool||tl;roughRes=await(S.frame==='top'?genTop3:genRot4)(rt,st,{roughOnly:true});roughRes.passes.forEach(p=>{p.tid=rt.id;p.lk=p.lk||roughRes.linkOK;});}
   const passes=[];const ps={t:now()};
   const evalPoint=(P,n,f,ref,prevAng)=>{
     const a0=clampCone(axisFromNormal(n,f,lead,tilt),ref,maxT);
