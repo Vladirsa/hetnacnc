@@ -397,6 +397,7 @@ def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, aviso
     for p, desfase, con_pestanas in trabajos:
         def anillos_a(d, p=p):
             return _anillos(p.buffer(d, join_style=2 if d > 0 else 1, quad_segs=8)) if abs(d) > 1e-6 else _anillos(p)
+
         anillos = anillos_a(desfase)
         if not anillos:
             chicos += 1
