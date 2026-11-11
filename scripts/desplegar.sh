@@ -164,19 +164,32 @@ HF_DIR=/opt/hyperframes
 HF_VERSION=0.8.217
 if [ "$(cat "$HF_DIR/.version" 2>/dev/null)" != "$HF_VERSION" ]; then
   paso "Instalando HyperFrames $HF_VERSION y Chrome (videos animados)"
-  # Librerías que necesita Chrome sin pantalla (Ubuntu 22/24)
-  apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 >/dev/null 2>&1 \
-    || (apt-get update >/dev/null 2>&1 && apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 >/dev/null 2>&1)
-  apt-get install -y libasound2t64 >/dev/null 2>&1 || apt-get install -y libasound2 >/dev/null 2>&1
-  mkdir -p "$HF_DIR" \
-    && (cd "$HF_DIR" && [ -f package.json ] || echo '{"name":"hetna-hyperframes","private":true}' > package.json) \
-    && (cd "$HF_DIR" && npm install --no-audit --no-fund --omit=dev "hyperframes@$HF_VERSION" gsap@3.15.0 >/dev/null 2>&1) \
-    && (cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 node_modules/.bin/hyperframes browser ensure >/dev/null 2>&1) \
-    && HF_CHROME="$(cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 node_modules/.bin/hyperframes browser path 2>/dev/null | tail -1)" \
-    && "$HF_CHROME" --version >/dev/null 2>&1 \
+  mkdir -p "$HF_DIR"
+  HF_LOG="$HF_DIR/instalacion.log"
+  : > "$HF_LOG"
+  # Librerías de Chrome sin pantalla. Una por una: en Ubuntu 24 varias se llaman
+  # con "t64" al final (libatk1.0-0t64…) y si se piden juntas y una no existe,
+  # no se instala ninguna.
+  apt-get update >>"$HF_LOG" 2>&1 || true
+  for pkg in libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 libxshmfence1 fonts-liberation; do
+    apt-get install -y "$pkg" >>"$HF_LOG" 2>&1 || apt-get install -y "${pkg}t64" >>"$HF_LOG" 2>&1 || echo "falta librería: $pkg" >>"$HF_LOG"
+  done
+  HF_PASO="npm"
+  (cd "$HF_DIR" && { [ -f package.json ] || echo '{"name":"hetna-hyperframes","private":true}' > package.json; } \
+    && npm install --no-audit --no-fund --omit=dev "hyperframes@$HF_VERSION" gsap@3.15.0 >>"$HF_LOG" 2>&1) \
+    && HF_PASO="descargar Chrome" \
+    && (cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 node_modules/.bin/hyperframes browser ensure >>"$HF_LOG" 2>&1) \
+    && HF_PASO="arrancar Chrome" \
+    && HF_CHROME="$(cd "$HF_DIR" && HF_CLI_TELEMETRY_DISABLED=1 node_modules/.bin/hyperframes browser path 2>>"$HF_LOG" | tail -1)" \
+    && "$HF_CHROME" --version >>"$HF_LOG" 2>&1 \
     && echo "$HF_VERSION" > "$HF_DIR/.version" \
     && verde "✓ HyperFrames y Chrome listos" \
-    || printf '\033[33m%s\033[0m\n' "✗ No se pudo instalar HyperFrames/Chrome (faltan librerías o no hubo descarga); los videos seguirán con FFmpeg."
+    || {
+      printf '\033[33m%s\033[0m\n' "✗ No se pudo instalar HyperFrames/Chrome (paso: $HF_PASO); los videos seguirán con FFmpeg. Detalle: $HF_LOG"
+      # Qué librerías le faltan a Chrome (si ya se descargó)
+      [ -n "$HF_CHROME" ] && [ -x "$HF_CHROME" ] && ldd "$HF_CHROME" 2>/dev/null | grep "not found" | sed 's/^/✗ Chrome necesita: /' | head -8
+      grep -aE "falta librería|npm ERR|Error|error" "$HF_LOG" | tail -6 | sed 's/^/✗ /'
+    }
 fi
 
 paso "Construyendo (si esto falla, el sitio NO se toca)"
