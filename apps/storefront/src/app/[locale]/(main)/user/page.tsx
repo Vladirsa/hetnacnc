@@ -6,6 +6,8 @@ import { VincularCotizador } from "@/components/hetna/cuenta/VincularCotizador"
 import { ActivarAvisos } from "@/components/hetna/push/ActivarAvisos"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { contarSinLeer } from "@/lib/chat/campanita"
+import { misSolicitudes } from "@/lib/cotizar/solicitud-taller"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listOrders } from "@/lib/data/orders"
@@ -53,12 +55,21 @@ export default async function MiCuenta() {
   const user = await retrieveCustomer()
   if (!user) redirect("/login")
 
-  const [pedidos, envios, saldo, foro] = await Promise.all([
-    listOrders(3).catch(() => []),
+  const [todosPedidos, envios, saldo, foro, solicitudes, chat] = await Promise.all([
+    listOrders(20).catch(() => []),
     misEnvios().catch(() => ({ ok: false as const, login: false })),
     obtenerSaldo().catch(() => null),
     sesionForo().catch(() => null),
+    misSolicitudes().catch(() => ({ sesion: false, solicitudes: [] })),
+    contarSinLeer().catch(() => ({ ok: false as const })),
   ])
+  const pedidos = todosPedidos.slice(0, 3)
+  const enCamino = todosPedidos.filter((o) => ["shipped", "partially_shipped"].includes(String((o as { fulfillment_status?: string }).fulfillment_status || ""))).length
+  const porPreparar = todosPedidos.filter((o) => estadoPedido(o as never)[0] === "Preparando").length
+  const abiertas = solicitudes.solicitudes.filter((x) => !["cerrada", "cancelada", "entregada"].includes(x.etapa))
+  const propuestas = abiertas.reduce((n, x) => n + (x.taller ? 0 : x.propuestas || 0), 0)
+  const sinLeerChat = chat.ok ? chat.total : 0
+  const giro = String((user.metadata as Record<string, unknown> | null)?.giro || "")
   const nombre = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email
   const ilimitado = Boolean(saldo && saldo.ok && saldo.datos.ilimitado)
   const creditos = saldo && saldo.ok ? saldo.datos.saldo : null
@@ -107,7 +118,10 @@ export default async function MiCuenta() {
         ]
       : []),
     ...(!user.phone
-      ? [{ tono: "azul" as const, texto: "Agrega tu teléfono para que la paquetería y los talleres puedan contactarte.", href: "/user/settings", accion: "Completar" }]
+      ? [{ tono: "azul" as const, texto: "Agrega tu teléfono para que la paquetería pueda contactarte en tu entrega.", href: "/user/settings", accion: "Completar" }]
+      : []),
+    ...(!giro
+      ? [{ tono: "azul" as const, texto: "Dinos a qué se dedica tu negocio: los talleres te atienden mejor cuando saben qué necesitas.", href: "/user/settings#negocio", accion: "Completar" }]
       : []),
   ]
 
@@ -163,7 +177,7 @@ export default async function MiCuenta() {
         <UserNavigation />
         <div className="flex min-w-0 flex-col gap-6 md:col-span-3">
           {/* Encabezado */}
-          <section className="flex flex-wrap items-center gap-4 rounded-[18px] border border-[#E7E4DC] bg-white p-5 sm:p-6">
+          <section className="flex flex-wrap items-center gap-4 rounded-[18px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5 sm:p-6">
             <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#C2560A] text-2xl font-bold text-white">
               {(user.first_name || user.email || "?").slice(0, 1).toUpperCase()}
             </span>
@@ -180,6 +194,21 @@ export default async function MiCuenta() {
                 <span className="text-[12px] text-[#6B6A63]">{ilimitado ? "ilimitados" : "créditos"}</span>
               </LocalizedClientLink>
             )}
+          </section>
+
+          {/* Tres números: lo que se mueve en tu cuenta */}
+          <section aria-label="Resumen" className="grid grid-cols-3 gap-2 sm:gap-3">
+            {[
+              { t: "Pedidos en camino", n: enCamino, pie: porPreparar ? `${porPreparar} preparándose` : "nada pendiente", href: "/user/orders" },
+              { t: "Propuestas de talleres", n: propuestas, pie: abiertas.length ? `en ${abiertas.length} solicitud${abiertas.length === 1 ? "" : "es"} abierta${abiertas.length === 1 ? "" : "s"}` : "pide una cotización", href: abiertas.length ? "/user/solicitudes" : "/fabricacion" },
+              { t: "Mensajes sin leer", n: sinLeerChat, pie: sinLeerChat ? "te respondieron" : "todo leído", href: "/mensajes" },
+            ].map((k) => (
+              <LocalizedClientLink key={k.t} href={k.href} className="bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md rounded-[16px] p-3 transition hover:ring-[#C2560A]/40 sm:p-5">
+                <span className="block text-[12px] font-semibold text-[#55544D] sm:text-[13px]">{k.t}</span>
+                <span className="mt-1 block text-[26px] font-extrabold leading-none text-[#142033] sm:text-[30px]">{k.n}</span>
+                <span className="mt-1 block truncate text-[11.5px] text-[#6B6A63] sm:text-[12.5px]">{k.pie}</span>
+              </LocalizedClientLink>
+            ))}
           </section>
 
           {/* Lo que necesita atención */}
@@ -206,7 +235,7 @@ export default async function MiCuenta() {
           )}
 
           {/* Últimos pedidos */}
-          <section className="rounded-[18px] border border-[#E7E4DC] bg-white p-5">
+          <section className="rounded-[18px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="m-0 text-[17px] font-bold text-[#142033]">Tus últimas compras</h2>
               {pedidos.length > 0 && (
@@ -275,7 +304,7 @@ export default async function MiCuenta() {
           <section aria-label="Tu cuenta" className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3">
             {tarjetas.map((t) => {
               const clase =
-                "group flex flex-col gap-1.5 rounded-[14px] border border-[#E7E4DC] bg-white p-3.5 transition hover:border-[#C2560A] hover:shadow-[0_2px_10px_rgba(20,32,51,0.06)] sm:gap-2 sm:p-5"
+                "group flex flex-col gap-1.5 rounded-[16px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-3.5 transition hover:ring-[#C2560A]/40 sm:gap-2 sm:p-5"
               const contenido = (
                 <>
                   <span className="flex items-center justify-between gap-2 text-[#44433D] group-hover:text-[#C2560A]">
@@ -303,7 +332,7 @@ export default async function MiCuenta() {
               href={ligaWhatsApp("Hola, necesito ayuda con mi cuenta de HETNA CNC.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col gap-1.5 rounded-[14px] border border-[#E7E4DC] bg-white p-3.5 transition hover:border-[#C2560A] sm:gap-2 sm:p-5"
+              className="group flex flex-col gap-1.5 rounded-[16px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-3.5 transition hover:ring-[#C2560A]/40 sm:gap-2 sm:p-5"
             >
               <span className="text-[#44433D] group-hover:text-[#C2560A]">
                 <IconoCuenta n="ayuda" size={26} />
