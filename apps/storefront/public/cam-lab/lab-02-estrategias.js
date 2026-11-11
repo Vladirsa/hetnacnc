@@ -297,7 +297,7 @@ async function genIdx4(tl,st,opt={}){
 // altura a lo largo de a sale de un mapa de alturas visto desde esa dirección (9 rayos por celda, como el indexado)
 // y el piso es la mesa: la punta nunca baja de la base del material.
 function orientacionesPos5(st){
-  const n=Math.round(st.posCaras)||0,t=clamp(+st.posTilt||45,10,80)*DEG,out=[{a:[0,0,1],nombre:'arriba'}];
+  const n=clamp(Math.round(+st.posCaras)||0,0,8),t=clamp(+st.posTilt||45,10,80)*DEG,out=[{a:[0,0,1],nombre:'arriba'}];
   for(let k=0;k<n;k++){const f=2*Math.PI*k/n;out.push({a:V.norm([Math.sin(t)*Math.cos(f),Math.sin(t)*Math.sin(f),Math.cos(t)]),nombre:`lado ${k+1} (${Math.round(st.posTilt)}°, giro ${Math.round(f*RAD)}°)`});}
   return out;
 }

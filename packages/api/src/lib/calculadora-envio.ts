@@ -6,8 +6,8 @@
 //     y esa liga se arma aquí con valores ya validados (nada de texto libre);
 //   - una vez por dirección y cálculo, y a lo más 3 por dirección al día;
 //   - a lo más 10 por IP en una hora;
-//   - cuenta contra el mismo tope diario que el resto de los correos de
-//     marketing (MARKETING_MAX_DIA), que comparte la cuota de Resend;
+//   - a lo más 25 al día en total (CALC_CORREOS_DIA), y además cuenta contra el
+//     tope diario del resto del marketing (MARKETING_MAX_DIA);
 //   - respeta la lista de bajas y lleva su liga para darse de baja.
 // El permiso para recibir novedades se guarda aparte y sólo si la persona
 // marcó la casilla.
@@ -29,6 +29,9 @@ const NOMBRE: Record<string, string> = {
   impresion3d: "impresión 3D",
 }
 const maxDia = () => Math.max(0, Number(process.env.MARKETING_MAX_DIA) || 80)
+// Tope propio: estos correos los pide cualquiera desde la página, así que no pueden acabarse el
+// presupuesto diario que comparten los del CAM, el Cotizador y los avisos de cuenta.
+const maxCalcDia = () => Math.max(0, Number(process.env.CALC_CORREOS_DIA) || 25)
 
 let lista = false
 async function asegurarTabla(knex: any) {
@@ -112,7 +115,8 @@ export async function enviarCalculo(
   const hoy = new Date()
   hoy.setUTCHours(0, 0, 0, 0)
   const [{ n: hoyN }] = await knex(T_PROMO).where("created_at", ">=", hoy).count("* as n")
-  if (Number(hoyN) >= maxDia()) throw new EnvioCalcError(503, "Por hoy ya no podemos mandar más correos. Usa Copiar o WhatsApp.")
+  const [{ n: hoyCalc }] = await knex(T_PROMO).where({ tipo: "calc_envio" }).where("created_at", ">=", hoy).count("* as n")
+  if (Number(hoyN) >= maxDia() || Number(hoyCalc) >= maxCalcDia()) throw new EnvioCalcError(503, "Por hoy ya no podemos mandar más correos. Usa Copiar o WhatsApp.")
 
   const enlace = `${STORE_URL}/mx/calculadora-cnc?proceso=${p.proceso}&modo=${p.modo}&c=${p.c}&utm_source=correo&utm_medium=calculadora&utm_campaign=parametros`
   const { asunto, html } = correoCalculo(p.proceso, enlace)
