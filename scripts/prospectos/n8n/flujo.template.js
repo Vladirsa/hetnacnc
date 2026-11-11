@@ -59,7 +59,8 @@ const enviar = node({
       toEmail: expr('{{ $json.email }}'),
       subject: expr('{{ $json.asunto }}'),
       emailFormat: 'html',
-      html: expr('{{ $json.html }}'),
+      // Agrega las redes de HETNA arriba del pie (antes del <hr>) de cada correo.
+      html: expr('{{ $json.html.replace(\'<hr \', \'<p style="font-size:14px">👉 <a href="https://www.facebook.com/hetna.cnc">Facebook</a> · <a href="https://www.instagram.com/hetna_cnc/">Instagram</a> · <a href="https://www.tiktok.com/@hetna_cnc">TikTok</a> · <a href="https://www.youtube.com/channel/UCw3eWFopDZAzKa4mRIM8YoQ">YouTube</a> · <a href="https://x.com/CncHetna">X</a></p><hr \') }}'),
       options: { appendAttribution: false, replyTo: 'contacto@hetnacnc.com' },
     },
     credentials: { smtp: { id: '6IssBAMil5xjjgPf', name: 'SMTP account' } },
