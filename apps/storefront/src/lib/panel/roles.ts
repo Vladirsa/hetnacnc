@@ -33,9 +33,9 @@ export const puede = (rol: Rol, pagina: string) => ROLES[rol]?.paginas.includes(
 
 // Qué puede HACER cada rol (además de ver). Finanzas sólo lee.
 export const ACCIONES: Record<Rol, string[]> = {
-  dueno: ["licitaciones", "talleres", "pedidos"],
+  dueno: ["licitaciones", "talleres", "pedidos", "distribuidores"],
   operaciones: ["licitaciones", "talleres", "pedidos"],
-  ventas: ["licitaciones"],
+  ventas: ["licitaciones", "distribuidores"],
   finanzas: [],
   soporte: ["talleres", "pedidos"],
   sin_acceso: [],

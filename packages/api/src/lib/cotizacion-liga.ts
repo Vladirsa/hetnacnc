@@ -196,8 +196,15 @@ async function asegurarPedido(c, montoPagado: number, logger?: any) {
 }
 
 async function negocioDe(id: string) {
-  const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta&limit=1`)
-  return filas[0] || null
+  // codigo_referido viene de supabase/referidos.sql del Cotizador; si ese SQL
+  // aún no se corre, se lee sin él.
+  try {
+    const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta,codigo_referido&limit=1`)
+    return filas[0] || null
+  } catch {
+    const filas = await supa<any[]>(`/rest/v1/negocios?id=eq.${id}&select=id,nombre,telefono,plan,trial_hasta&limit=1`)
+    return filas[0] || null
+  }
 }
 
 async function configDe(negocioId: string) {
@@ -335,6 +342,9 @@ export async function paginaPublica(token: string) {
       logo: config?.logo_url || null,
       sitio: config?.sitio_web || null,
       direccion: config?.direccion || null,
+      // Para la invitación "¿Tienes un taller?" al pie de la liga: si otro taller
+      // la abre y se registra, cuenta como invitado de este.
+      ref: negocio?.codigo_referido || null,
     },
     cliente: cliente ? { nombre: cliente.nombre, empresa: cliente.empresa } : null,
     items: items.map((i) => ({

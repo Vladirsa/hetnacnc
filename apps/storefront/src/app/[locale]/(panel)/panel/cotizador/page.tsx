@@ -1,5 +1,6 @@
 // HETNA Panel → App (Cotizador): talleres registrados, en prueba, gratis y
 // pagando; a quién hablarle esta semana.
+import { SubApp } from "@/components/hetna/panel/SubApp"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, fechaCorta, pesos } from "@/lib/panel/sesion"
 
@@ -17,6 +18,7 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
   const wa = (t: string) => `https://wa.me/${String(t || "").replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`
   return (
     <div className="grid gap-4">
+      <SubApp locale={locale} actual="talleres" />
       {error && <Vacio>No pude leer la app: {error}</Vacio>}
       {c && (
         <Tarjeta>
