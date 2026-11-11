@@ -22,7 +22,7 @@ export const config: RouteConfig = {
 
 const S = {
   page: { maxWidth: 960, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "inherit" },
-  card: { background: "#fff", border: "1px solid #E7E4DC", borderRadius: 12, padding: 16, marginBottom: 12 },
+  card: { background: "rgba(255,255,255,0.78)", WebkitBackdropFilter: "blur(14px) saturate(1.2)", backdropFilter: "blur(14px) saturate(1.2)", border: "1px solid rgba(20,32,51,0.06)", boxShadow: "0 8px 24px -12px rgba(20,32,51,0.18)", borderRadius: 16, padding: 18, marginBottom: 14 },
   meta: { color: "#6B675C", fontSize: 13, margin: "2px 0 0" },
 }
 const COLOR = {
@@ -52,7 +52,7 @@ export default function SaldoPage() {
   const monedas = Object.keys(datos.resumen || {})
   return (
     <div style={S.page}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px" }}>Mi saldo</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}>Mi saldo</h1>
       <p style={S.meta}>
         Diseños digitales: disponibles al momento. Productos físicos: disponibles {datos.dias_liberacion} días después de
         entregados. HETNA te transfiere lo disponible a la cuenta que guardaste en tu perfil.
@@ -67,11 +67,14 @@ export default function SaldoPage() {
         monedas.map((m) => (
           <div key={m} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, margin: "16px 0" }}>
             {["pendiente", "disponible", "pagado"].map((e) => (
-              <div key={e} style={{ ...S.card, marginBottom: 0, background: COLOR[e].bg, borderColor: "transparent" }}>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: COLOR[e].c }}>
+              <div key={e} style={{ ...S.card, marginBottom: 0, ...(e === "disponible" ? { background: "linear-gradient(135deg,#142033,#22334F)", color: "#fff" } : {}) }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: e === "disponible" ? "#F2A65E" : COLOR[e].c }}>
                   {e === "pendiente" ? "Pendiente de entrega" : e === "disponible" ? "Disponible" : "Ya pagado"}
                 </p>
-                <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 700, color: "#142033" }}>{dinero(datos.resumen[m][e], m)}</p>
+                <p style={{ margin: "8px 0 0", fontSize: 26, fontWeight: 800, color: e === "disponible" ? "#fff" : "#142033", letterSpacing: "-0.02em" }}>{dinero(datos.resumen[m][e], m)}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: e === "disponible" ? "rgba(255,255,255,0.7)" : "#6B675C" }}>
+                  {e === "pendiente" ? `se libera ${datos.dias_liberacion} días después de entregar` : e === "disponible" ? "listo para transferirte" : "ya está en tu cuenta"}
+                </p>
               </div>
             ))}
           </div>
@@ -80,7 +83,7 @@ export default function SaldoPage() {
 
       {datos.movimientos.length > 0 && (
         <div style={S.card}>
-          <p style={{ margin: "0 0 8px", fontWeight: 700 }}>Tus ventas</p>
+          <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#142033" }}>Tus ventas</p>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
