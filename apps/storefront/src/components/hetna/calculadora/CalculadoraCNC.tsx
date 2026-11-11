@@ -5,6 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Calculadora, Campo, Entrada, Medidor, Resultado } from "@/lib/calculadora/comun"
 import { PROCESOS, procesoPorId } from "@/lib/calculadora"
+import type { HttpTypes } from "@medusajs/types"
+import { ProductCard } from "@/components/organisms/ProductCard/ProductCard"
+import { searchProducts } from "@/lib/data/products"
+import { getProductPrice } from "@/lib/helpers/get-product-price"
 
 // Calculadora CNC profesional: la interfaz se arma a partir de la descripción
 // de cada calculadora (campos + función). Lo único que vive aquí es el
@@ -127,11 +131,33 @@ const IconoProceso = ({ id }: { id: string }) => {
 const SITIO = "https://hetnacnc.com"
 
 // Liga que vuelve a abrir la calculadora con los mismos datos (para quien recibe el mensaje).
-const ligaCalculo = (procesoId: string, c: Calculadora, e: Entrada, origen: string) => {
+const codigoCalculo = (c: Calculadora, e: Entrada) => {
   const datos: Record<string, string> = {}
   for (const f of c.campos) if (visible(f, e) && e[f.k] !== undefined && e[f.k] !== "" && String(e[f.k]) !== String(f.inicial ?? "")) datos[f.k] = String(e[f.k]).slice(0, 40)
-  const codigo = btoa(unescape(encodeURIComponent(JSON.stringify(datos)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
-  return `${SITIO}/mx/calculadora-cnc?proceso=${procesoId}&modo=${c.id}&c=${codigo}&utm_source=${origen}&utm_medium=compartido&utm_campaign=calculadora`
+  return btoa(unescape(encodeURIComponent(JSON.stringify(datos)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+}
+const ligaCalculo = (procesoId: string, c: Calculadora, e: Entrada, origen: string) =>
+  `${SITIO}/mx/calculadora-cnc?proceso=${procesoId}&modo=${c.id}&c=${codigoCalculo(c, e)}&utm_source=${origen}&utm_medium=compartido&utm_campaign=calculadora`
+
+// Con qué debe empezar el nombre de un producto para recomendarlo en cada proceso: la búsqueda
+// de la tienda es aproximada y sin esto saldrían archivos o servicios ("Organizador de fresas STL").
+// Una tarjeta con datos de precio incompletos rompería la pantalla: esa no se recomienda
+const precioLegible = (x: HttpTypes.StoreProduct) => {
+  try {
+    getProductPrice({ product: x })
+    return true
+  } catch {
+    return false
+  }
+}
+
+const PALABRA_TIENDA: Record<string, RegExp> = {
+  router: /^\s*(fresa|broca|cortador|end ?mill)\b/i,
+  laser_co2: /^\s*(lente|espejo|tubo)\b/i,
+  fibra: /^\s*(lente|protector|ventana)\b/i,
+  fibra_corte: /^\s*(boquilla|lente|ventana|cer[aá]mic)/i,
+  plasma: /^\s*(electrodo|boquilla|escudo|antorcha|consumible)/i,
+  impresion3d: /^\s*(filamento|resina|boquilla|nozzle)\b/i,
 }
 
 // Qué buscar en la tienda según lo que se calculó
@@ -153,7 +179,7 @@ const busquedaTienda = (procesoId: string, c: Calculadora, e: Entrada): { texto:
   return null
 }
 
-const textoResultado = (procesoId: string, c: Calculadora, e: Entrada, R: Resultado, origen: "whatsapp" | "copiado") => {
+const textoResultado = (procesoId: string, c: Calculadora, e: Entrada, R: Resultado, origen: "whatsapp" | "copiado", recomendado?: HttpTypes.StoreProduct) => {
   const utm = `utm_source=${origen}&utm_medium=compartido&utm_campaign=calculadora`
   const L = origen === "whatsapp" ? (t: string) => `*${t}*` : (t: string) => t
   const lineas = [L(`${R.titulo}`), ""]
@@ -171,7 +197,7 @@ const textoResultado = (procesoId: string, c: Calculadora, e: Entrada, R: Result
   // lo que hace que el mensaje traiga gente a la tienda
   lineas.push(`🔗 Abre este cálculo con los mismos datos y ajústalo a tu máquina: ${ligaCalculo(procesoId, c, e, origen)}`)
   const t = busquedaTienda(procesoId, c, e)
-  if (t) lineas.push(`🛒 ${t.texto}: ${SITIO}/mx/categories?query=${encodeURIComponent(t.query)}&${utm}`)
+  if (t && recomendado?.handle) lineas.push(`🛒 ${t.texto}: ${SITIO}/mx/products/${recomendado.handle}?${utm}`)
   lineas.push(`🧾 Convierte el tiempo de máquina en precio con la app HETNA CNC para talleres (14 días gratis): ${SITIO}/mx/servicios/cotizador-cnc?${utm}`)
   lineas.push("", "Calculadora CNC gratis de HETNA: router, láser, fibra, plasma e impresión 3D.")
   return lineas.join("\n")
@@ -206,6 +232,10 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
   const [perfilGuardado, setPerfilGuardado] = useState(false)
   const [copiado, setCopiado] = useState(false)
   const [compartido, setCompartido] = useState(false)
+  const [recomendados, setRecomendados] = useState<HttpTypes.StoreProduct[]>([])
+  const [correo, setCorreo] = useState("")
+  const [aceptaNovedades, setAceptaNovedades] = useState(false)
+  const [envio, setEnvio] = useState<{ estado: "" | "enviando" | "ok" | "error"; texto?: string }>({ estado: "" })
   const abiertoDeLiga = useRef(false)
   const e = entradas[calc.id] || valoresIniciales(calc)
 
@@ -302,17 +332,59 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
   }, [calc, e])
   const tieneMaquina = calc.campos.some((f) => f.maquina)
 
+  // Productos de la tienda para este trabajo: sólo los que de verdad coinciden; si no hay, no se muestra nada
+  const busqueda = busquedaTienda(proceso.id, calc, e)
+  const consulta = busqueda?.query || ""
+  useEffect(() => {
+    if (!consulta) {
+      setRecomendados([])
+      return
+    }
+    let vivo = true
+    const t = setTimeout(() => {
+      searchProducts({ query: consulta, countryCode: "mx", limit: 6 })
+        .then((r) => {
+          if (!vivo) return
+          const palabra = PALABRA_TIENDA[proceso.id]
+          // en router, además, el nombre debe traer el diámetro calculado ("6 mm", "6mm")
+          const d = proceso.id === "router" ? String(e.diametro ?? "").trim().replace(",", ".") : ""
+          const medida = d ? new RegExp(`(^|[^\\d.])${d.replace(".", "\\.")}\\s?mm\\b`, "i") : null
+          setRecomendados((r.products || []).filter((x) => palabra && palabra.test(String(x.title || "")) && (!medida || medida.test(String(x.title || ""))) && precioLegible(x)).slice(0, 3))
+        })
+        .catch(() => vivo && setRecomendados([]))
+    }, 700)
+    return () => {
+      vivo = false
+      clearTimeout(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consulta, proceso.id])
+
+  const mandarCorreo = async (ev: React.FormEvent) => {
+    ev.preventDefault()
+    if (!R || envio.estado === "enviando") return
+    setEnvio({ estado: "enviando" })
+    const r = await fetch("/api/calculadora/envio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo: correo.trim(), proceso: proceso.id, modo: calc.id, c: codigoCalculo(calc, e), acepta_marketing: aceptaNovedades }),
+    })
+      .then((x) => x.json().then((d) => ({ ok: x.ok, d })))
+      .catch(() => ({ ok: false, d: { message: "No se pudo conectar. Intenta de nuevo." } }))
+    setEnvio(r.ok ? { estado: "ok", texto: "Listo: revisa tu correo (y la carpeta de promociones)." } : { estado: "error", texto: r.d?.message || "No se pudo mandar." })
+  }
+
   const copiar = async () => {
     if (!R) return
     try {
-      await navigator.clipboard.writeText(textoResultado(proceso.id, calc, e, R, "copiado"))
+      await navigator.clipboard.writeText(textoResultado(proceso.id, calc, e, R, "copiado", recomendados[0]))
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2000)
     } catch {
       /* sin portapapeles */
     }
   }
-  const whatsapp = R ? `https://wa.me/?text=${encodeURIComponent(textoResultado(proceso.id, calc, e, R, "whatsapp"))}` : "#"
+  const whatsapp = R ? `https://wa.me/?text=${encodeURIComponent(textoResultado(proceso.id, calc, e, R, "whatsapp", recomendados[0]))}` : "#"
 
   const principal = R?.bloques[0]
   const grandes = principal ? principal.filas.filter((f) => f.destacado) : []
@@ -496,6 +568,47 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                     ))}
                   </ul>
                 </div>
+              )}
+              {recomendados.length > 0 && busqueda && (
+                <div className="rounded-[16px] border border-[#E7E4DC] bg-white p-4">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">Para este trabajo, en la tienda HETNA</span>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    {recomendados.map((x) => (
+                      <ProductCard key={x.id} product={x} className="w-full min-w-0 lg:w-full" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {R.bloques.length > 0 && (
+                <form onSubmit={mandarCorreo} className="flex flex-col gap-2 rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3.5">
+                  <label htmlFor="calc-correo" className="text-[14px] font-bold text-[#142033]">Mándame estos parámetros por correo</label>
+                  <span className="text-[12.5px] text-[#6B6A63]">Te llega la liga para abrir este mismo cálculo cuando estés en la máquina.</span>
+                  <div className="flex flex-wrap gap-2">
+                    <input
+                      id="calc-correo"
+                      type="email"
+                      required
+                      maxLength={120}
+                      value={correo}
+                      onChange={(x) => setCorreo(x.target.value)}
+                      placeholder="tu@correo.com"
+                      autoComplete="email"
+                      className="min-w-0 flex-1 rounded-[10px] border border-[#DEDACF] bg-[#FBFAF7] px-3 py-2.5 text-[15px] text-[#142033] outline-none focus:border-[#C2560A] focus:bg-white"
+                    />
+                    <button type="submit" disabled={envio.estado === "enviando"} className="rounded-[10px] bg-[#142033] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#1E2E47] disabled:opacity-60">
+                      {envio.estado === "enviando" ? "Enviando…" : "Enviar"}
+                    </button>
+                  </div>
+                  <label className="flex items-start gap-2 text-[12.5px] text-[#6B6A63]">
+                    <input type="checkbox" checked={aceptaNovedades} onChange={(x) => setAceptaNovedades(x.target.checked)} className="mt-0.5 h-4 w-4 accent-[#C2560A]" />
+                    Quiero recibir consejos y ofertas de HETNA CNC (puedes darte de baja cuando quieras).
+                  </label>
+                  {envio.texto && (
+                    <span role="status" className={`text-[12.5px] ${envio.estado === "ok" ? "text-[#16794F]" : "text-[#B3261E]"}`}>
+                      {envio.texto}
+                    </span>
+                  )}
+                </form>
               )}
               {R.consejos.length > 0 && (
                 <div className="rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3">
