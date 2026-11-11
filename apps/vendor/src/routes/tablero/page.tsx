@@ -1,4 +1,5 @@
-// Tablero del taller: lo primero que ve al entrar a /seller.
+// Inicio del taller (antes "Mi tablero"): lo primero que ve al entrar a /seller.
+// Arriba: resumen-inicio.tsx (saludo, siguiente paso, 3 números, solicitudes).
 //
 // Responde en una pantalla las preguntas que un taller se hace de verdad:
 // cuánto llevo del mes, qué me están viendo, qué me ven y no me compran,
@@ -13,6 +14,7 @@ import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 import { AvisoRequisitos } from "../../lib/requisitos"
+import { ResumenInicio } from "./resumen-inicio"
 
 const Tablero = (props: { width?: number; height?: number }) => (
   <svg
@@ -141,9 +143,12 @@ const S: Record<string, React.CSSProperties> = {
   h1: { fontSize: 22, fontWeight: 700, margin: 0 },
   sub: { color: "#6B675C", fontSize: 14, margin: "4px 0 20px" },
   card: {
-    background: "#fff",
-    border: "1px solid #E7E4DC",
-    borderRadius: 12,
+    background: "rgba(255,255,255,0.78)",
+    WebkitBackdropFilter: "blur(14px) saturate(1.2)",
+    backdropFilter: "blur(14px) saturate(1.2)",
+    border: "1px solid rgba(20,32,51,0.06)",
+    boxShadow: "0 8px 24px -12px rgba(20,32,51,0.18)",
+    borderRadius: 16,
     padding: 18,
     marginBottom: 14,
   },
@@ -1145,11 +1150,7 @@ export default function TableroPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Mi tablero</h1>
-      <p style={S.sub}>
-        Tu taller en {nombreDelMes(datos.mes)}. Las gráficas y los conteos son de los últimos{" "}
-        {v.ventana_dias} días.
-      </p>
+      <ResumenInicio datos={datos} />
 
       <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
       <AvisoRequisitos />
@@ -1157,6 +1158,9 @@ export default function TableroPage() {
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 
       <AvisosCelular />
+
+      <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>
+      <p style={S.sub}>Las gráficas y los conteos son de los últimos {v.ventana_dias} días.</p>
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 
