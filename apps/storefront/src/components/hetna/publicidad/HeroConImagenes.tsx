@@ -12,6 +12,15 @@ import { EnlacePub, EtiquetaPublicidad, ImagenPieza } from "./PiezasBase"
 export default function HeroConImagenes({ piezas }: { piezas: Pieza[] }) {
   const [actual, setActual] = useState(0)
   const [pausado, setPausado] = useState(false)
+  // Las demás diapositivas están encimadas a la primera (invisibles) y el navegador las bajaría junto con
+  // ella, quitándole ancho de banda: se piden hasta que la página terminó de cargar.
+  const [cargarResto, setCargarResto] = useState(false)
+  useEffect(() => {
+    const listo = () => setCargarResto(true)
+    if (document.readyState === "complete") listo()
+    else window.addEventListener("load", listo, { once: true })
+    return () => window.removeEventListener("load", listo)
+  }, [])
   const total = piezas.length
 
   const ir = useCallback((i: number) => setActual((i + total) % total), [total])
@@ -70,7 +79,7 @@ export default function HeroConImagenes({ piezas }: { piezas: Pieza[] }) {
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : (
-                  <ImagenPieza p={p} prioridad={i === 0} sizes="100vw" />
+                  (i === 0 || visible || cargarResto) && <ImagenPieza p={p} prioridad={i === 0} sizes="100vw" />
                 )}
                 {conTexto && <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />}
                 <div className="relative mx-auto flex h-full max-w-[1280px] items-center px-4 pb-10 lg:px-16">

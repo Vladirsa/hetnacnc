@@ -14,7 +14,7 @@ const ProductListingProductsView = ({ products }: Props) => (
             <li key={product.id} className="w-full lg:w-[calc(25%-1rem)] min-w-[250px]">
               <ProductCard
                 product={product}
-                prioridad={i < 4}
+                prioridad={i === 0}
                 className="w-full h-full lg:w-full min-w-0"
               />
             </li>
