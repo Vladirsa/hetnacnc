@@ -20,7 +20,7 @@ import { cuadroVideo, lamina, miniatura, tarjeta, carpetaFuentes } from "./rende
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
-import { bloquesBasicos, guionista, hfDisponible, horaTranquila, paraVoz, videoHF } from "./hyperframes"
+import { bloquesBasicos, guionista, hfDisponible, horaTranquila, paraVoz, temaPara, videoHF } from "./hyperframes"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
@@ -246,8 +246,11 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         const voz = voces[f.id]
         const bloques = bloquesDe[f.id]
         // 1) Video animado (HyperFrames); 2) si no se puede, el de FFmpeg con la misma voz
+        // Fondo distinto en cada video (y foto real de la Biblioteca cuando la hay)
+        const fotoFondo = bloques ? await foto().catch(() => null) : null
         let v: any = bloques
           ? await videoHF(bloques, {
+              tema: temaPara(f.id, !!fotoFondo), foto: fotoFondo,
               duraciones: voz?.duraciones?.length === bloques.length ? voz.duraciones : bloques.map((b: any) => segundosPara(b.narracion, 1.8, 4.5)),
               voz: voz?.url || null, musica, liga, comunidad: f.publico === "comunidad", idioma: idiomaDe(f.mercado), logger,
             })

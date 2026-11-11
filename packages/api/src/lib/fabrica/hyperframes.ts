@@ -20,6 +20,7 @@ import os from "os"
 import path from "path"
 
 import Anthropic from "@anthropic-ai/sdk"
+import sharp from "sharp"
 
 import { carpetaFuentes, PRINCIPIOS_VIDEO } from "./render"
 import { ffmpegBin } from "./video"
@@ -358,7 +359,37 @@ export function gruposSubtitulo(texto: string, inicio: number, dur: number, max 
   })
 }
 
-type Opciones = { duraciones: number[]; voz?: string | null; musica?: string | null; liga?: string; comunidad?: boolean; idioma?: string }
+
+// ---------------------------------------------------------------------
+// Fondos: cada video sale con un tema distinto (mismo estilo de marca)
+// ---------------------------------------------------------------------
+
+export type Tema = { nombre: string; fondo: string; patron: string; texto: string; acento: string; trazo: string; relleno: string; tarjeta: string; tarjetaTexto: string; capFondo: string; capTexto: string; sombra: string; oscuro?: boolean }
+const rejilla = (c: string) => `linear-gradient(${c} 2px, transparent 2px), linear-gradient(90deg, ${c} 2px, transparent 2px)`
+export const TEMAS: Record<string, Tema> = {
+  // El del video aprobado: plano azul claro con cuadrícula
+  plano: { nombre: "plano", fondo: FONDO, patron: `background-image:${rejilla("rgba(20,32,51,.07)")};background-size:60px 60px;`, texto: INK, acento: ACC, trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(20,32,51,.92)", capTexto: "#ffffff", sombra: "rgba(20,32,51,.15)" },
+  // Noche: azul HETNA con cuadrícula clara
+  noche: { nombre: "noche", fondo: INK, patron: `background-image:${rejilla("rgba(255,255,255,.06)")};background-size:60px 60px;`, texto: "#F4F1EA", acento: "#F2A25F", trazo: "#F4F1EA", relleno: "#22345A", tarjeta: "#22345A", tarjetaTexto: "#F4F1EA", capFondo: "rgba(244,241,234,.95)", capTexto: INK, sombra: "rgba(0,0,0,.35)", oscuro: true },
+  // Papel de taller: cálido con puntos
+  papel: { nombre: "papel", fondo: "#F5EFE4", patron: "background-image:radial-gradient(rgba(43,33,24,.14) 3px, transparent 3.5px);background-size:44px 44px;", texto: "#2B2118", acento: ACC, trazo: "#2B2118", relleno: "#FFFDF8", tarjeta: "#FFFDF8", tarjetaTexto: "#2B2118", capFondo: "rgba(43,33,24,.92)", capTexto: "#ffffff", sombra: "rgba(43,33,24,.15)" },
+  // Naranja HETNA con rayas diagonales
+  naranja: { nombre: "naranja", fondo: ACC, patron: "background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.07) 0 26px, transparent 26px 52px);", texto: "#ffffff", acento: INK, trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(20,32,51,.92)", capTexto: "#ffffff", sombra: "rgba(20,32,51,.25)" },
+  // Acero: gris metálico con líneas finas
+  acero: { nombre: "acero", fondo: "#D9DEE4", patron: "background-image:repeating-linear-gradient(0deg, rgba(20,32,51,.06) 0 2px, transparent 2px 14px), linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);", texto: INK, acento: ACC, trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(20,32,51,.92)", capTexto: "#ffffff", sombra: "rgba(20,32,51,.18)" },
+  // Foto real de la Biblioteca (del tema del texto), desenfocada y con velo azul
+  foto: { nombre: "foto", fondo: INK, patron: "", texto: "#ffffff", acento: "#F2A25F", trazo: INK, relleno: "#ffffff", tarjeta: "#ffffff", tarjetaTexto: INK, capFondo: "rgba(244,241,234,.95)", capTexto: INK, sombra: "rgba(0,0,0,.35)", oscuro: true },
+}
+
+/** Tema para una pieza: cambia de un video a otro (según su id) y usa foto sólo si hay. */
+export function temaPara(semilla: string, hayFoto = false) {
+  const lista = Object.keys(TEMAS).filter((t) => t !== "foto" || hayFoto)
+  let h = 0
+  for (const c of String(semilla || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return lista[h % lista.length]
+}
+
+type Opciones = { duraciones: number[]; voz?: string | null; musica?: string | null; liga?: string; comunidad?: boolean; idioma?: string; tema?: string; foto?: string | null }
 
 /**
  * index.html completo. `duraciones[i]` es lo que dura la voz del bloque i (con su
@@ -366,6 +397,7 @@ type Opciones = { duraciones: number[]; voz?: string | null; musica?: string | n
  */
 export function componer(bloques: Bloque[], o: Opciones) {
   const en = o.idioma === "en"
+  const T = TEMAS[o.tema === "foto" && !o.foto ? "plano" : o.tema || "plano"] || TEMAS.plano
   const liga = (o.liga || "hetnacnc.com").replace(/^https?:\/\//, "").replace(/\/$/, "")
   const escenas: string[] = []
   const anim: string[] = []
@@ -409,7 +441,7 @@ export function componer(bloques: Bloque[], o: Opciones) {
       html += tituloHtml(`${id}-t`, b.texto, b.acento)
       // El cuadro 0 es la miniatura en las redes: la primera escena ya se ve completa
       if (i > 0) A(`tl.fromTo("#${id}-t", {y:40, opacity:0}, {y:0, opacity:1, duration:.4, ease:"expo.out"}, ${f(t + 0.05)});`)
-      A(`tl.fromTo("#${id}-t .acento", {color:"${INK}"}, {color:"${ACC}", duration:.25}, ${b.tipo === "gancho" ? f(Math.min(clave, t + 0.6)) : clave});`)
+      A(`tl.fromTo("#${id}-t .acento", {color:"${T.texto}"}, {color:"${T.acento}", duration:.25}, ${b.tipo === "gancho" ? f(Math.min(clave, t + 0.6)) : clave});`)
       if (b.tipo === "dato" && b.cifra) {
         html += `<div id="${id}-cifra" class="cifra" style="font-size:${Math.max(90, Math.min(240, Math.floor(980 / (b.cifra.length * 0.62))))}px">${esc(b.cifra)}</div>` + icono(ic === "maquina" ? "engrane" : ic, `${id}-ic`, 260, 410, 920)
         A(`tl.fromTo("#${id}-cifra", {scale:.2, opacity:0}, {scale:1, opacity:1, duration:.7, ease:"expo.out"}, ${clave});`)
@@ -446,7 +478,8 @@ export function componer(bloques: Bloque[], o: Opciones) {
         }
       }
     }
-    escenas.push(`<div id="${id}" class="clip escena" data-start="${f(t)}" data-duration="${dur}" data-track-index="1"><div class="fondo"></div>${html}</div>`)
+    escenas.push(`<div id="${id}" class="clip escena" data-start="${f(t)}" data-duration="${dur}" data-track-index="1"><div class="fondo"></div>${T.nombre === "foto" ? `<div id="${id}-foto" class="foto"></div><div class="velo"></div>` : ""}${html}</div>`)
+    if (T.nombre === "foto") anim.push(`tl.fromTo("#${id}-foto", {scale:1.04}, {scale:1.12, duration:${dur}, ease:"none"}, ${f(t)});`)
     for (const g of gruposSubtitulo(b.narracion, t + 0.05, Math.max(0.6, (o.duraciones[i] || dur) - 0.15))) {
       const sid = `c${subs.length}`
       subs.push(`<div id="${sid}" class="cap clip" data-start="${g.inicio}" data-duration="${g.dur}" data-track-index="2"><span>${esc(g.texto)}</span></div>`)
@@ -471,27 +504,33 @@ export function componer(bloques: Bloque[], o: Opciones) {
 @font-face { font-family: "Archivo Black"; src: url("assets/Archivo-900.ttf"); font-weight: 400; }
 @font-face { font-family: "Archivo XB"; src: url("assets/Archivo-800.ttf"); font-weight: 800; }
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:1080px; height:1920px; overflow:hidden; background:${FONDO}; }
-#root { position:relative; width:100%; height:100%; overflow:hidden; font-family:"Archivo Black", sans-serif; color:${INK}; }
+:root { --fondo:${T.fondo}; --texto:${T.texto}; --acento:${T.acento}; --trazo:${T.trazo}; --relleno:${T.relleno}; --tarjeta:${T.tarjeta}; --tarjeta-texto:${T.tarjetaTexto}; --cap-fondo:${T.capFondo}; --cap-texto:${T.capTexto}; --sombra:${T.sombra}; }
+html, body { width:1080px; height:1920px; overflow:hidden; background:var(--fondo); }
+#root { position:relative; width:100%; height:100%; overflow:hidden; font-family:"Archivo Black", sans-serif; color:var(--texto); }
 .escena { position:absolute; inset:0; overflow:hidden; }
-.fondo { position:absolute; inset:0; background-color:${FONDO}; background-image: linear-gradient(rgba(20,32,51,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(20,32,51,.07) 2px, transparent 2px); background-size:60px 60px; }
+.fondo { position:absolute; inset:0; background-color:var(--fondo); ${T.patron} }
+.foto { position:absolute; inset:-40px; background:url("assets/fondo.jpg") center/cover; }
+.velo { position:absolute; inset:0; background:linear-gradient(180deg, rgba(20,32,51,.88) 0%, rgba(20,32,51,.62) 45%, rgba(20,32,51,.9) 100%); }
 .titulo { position:absolute; left:80px; width:920px; top:250px; line-height:.95; letter-spacing:-.02em; white-space:nowrap; }
 .titulo.centro { text-align:center; top:760px; white-space:normal; }
-.acento { color:${ACC}; }
-.cifra { position:absolute; left:0; width:1080px; top:620px; text-align:center; font-size:240px; line-height:1; color:${ACC}; white-space:nowrap; }
-.tarj { position:absolute; left:120px; width:840px; height:170px; background:#fff; border:6px solid ${INK}; border-radius:24px; display:flex; align-items:center; gap:30px; padding:0 34px; box-shadow:0 14px 0 rgba(20,32,51,.15); }
-.tarj .ico { width:100px; height:100px; border-radius:20px; background:${ACC}; color:#fff; font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
+.acento { color:var(--acento); }
+.cifra { position:absolute; left:0; width:1080px; top:620px; text-align:center; font-size:240px; line-height:1; color:var(--acento); white-space:nowrap; }
+.tarj { position:absolute; left:120px; width:840px; height:170px; background:var(--tarjeta); color:var(--tarjeta-texto); border:6px solid var(--trazo); border-radius:24px; display:flex; align-items:center; gap:30px; padding:0 34px; box-shadow:0 14px 0 var(--sombra); }
+.tarj .ico { width:100px; height:100px; border-radius:20px; background:var(--acento); color:#fff; font-size:60px; display:flex; align-items:center; justify-content:center; flex:none; }
 .l2 { font-size:58px; line-height:1; }
-.lado { position:absolute; top:660px; width:440px; height:500px; border:6px solid ${INK}; border-radius:28px; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; padding:30px; text-align:center; box-shadow:0 14px 0 rgba(20,32,51,.15); }
+.lado { position:absolute; top:660px; width:440px; height:500px; border:6px solid var(--trazo); border-radius:28px; background:var(--tarjeta); color:var(--tarjeta-texto); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; padding:30px; text-align:center; box-shadow:0 14px 0 var(--sombra); }
 .lado .l2 { font-size:56px; }
 .marca-lado { width:120px; height:120px; border-radius:60px; display:flex; align-items:center; justify-content:center; font-size:72px; color:#fff; font-family:"Archivo XB"; }
-.mal .marca-lado { background:#5b6b80; } .bien .marca-lado { background:${ACC}; } .bien { border-color:${ACC}; }
+.mal .marca-lado { background:#5b6b80; } .bien .marca-lado { background:var(--acento); } .bien { border-color:var(--acento); }
 .marca { position:absolute; left:0; width:1080px; top:540px; text-align:center; font-size:132px; line-height:1; white-space:nowrap; }
 .marca-chica { position:absolute; left:0; width:1080px; top:1560px; text-align:center; font-size:54px; white-space:nowrap; }
 .web { position:absolute; left:0; width:1080px; top:720px; text-align:center; font-family:"Archivo XB"; font-size:68px; }
-.cta { position:absolute; left:140px; width:800px; top:880px; height:150px; border-radius:30px; background:${ACC}; color:#fff; display:flex; align-items:center; justify-content:center; white-space:nowrap; }
+.cta { position:absolute; left:140px; width:800px; top:880px; height:150px; border-radius:30px; background:var(--acento); color:${T.nombre === "naranja" ? "#ffffff" : T.oscuro ? INK : "#ffffff"}; display:flex; align-items:center; justify-content:center; white-space:nowrap; }
 .cap { position:absolute; left:60px; width:960px; top:1300px; text-align:center; }
-.cap span { display:inline-block; font-family:"Archivo XB"; font-size:50px; line-height:1.1; color:#fff; background:rgba(20,32,51,.92); padding:12px 24px; border-radius:16px; white-space:nowrap; }
+.cap span { display:inline-block; font-family:"Archivo XB"; font-size:50px; line-height:1.1; color:var(--cap-texto); background:var(--cap-fondo); padding:12px 24px; border-radius:16px; white-space:nowrap; }
+/* Los dibujos toman los colores del tema */
+svg [stroke="${INK}"] { stroke:var(--trazo); } svg [fill="${INK}"] { fill:var(--trazo); }
+svg [fill="#fff"][stroke] { fill:var(--relleno); } svg [fill="${ACC}"] { fill:var(--acento); } svg [stroke="${ACC}"] { stroke:var(--acento); }
 </style>
 </head>
 <body>
@@ -639,7 +678,19 @@ async function hacer(bloques: Bloque[], o: Opciones & { logger?: any }) {
         musica = null
       }
     }
-    const { html, total } = componer(bloques, { ...o, voz, musica })
+    let foto = o.tema === "foto" ? o.foto : null
+    if (foto) {
+      try {
+        const crudo = path.join(dir, "assets", "fondo-original")
+        await traer(foto, crudo)
+        // Desenfoque y tamaño una sola vez aquí (en Chrome costaría en cada cuadro)
+        await sharp(crudo).rotate().resize(1160, 2000, { fit: "cover" }).blur(7).modulate({ saturation: 0.85 }).jpeg({ quality: 82 }).toFile(path.join(dir, "assets", "fondo.jpg"))
+        fs.rmSync(crudo, { force: true })
+      } catch {
+        foto = null
+      }
+    }
+    const { html, total } = componer(bloques, { ...o, voz, musica, foto, tema: o.tema === "foto" && !foto ? temaPara(String(bloques[0]?.texto)) : o.tema })
     fs.writeFileSync(path.join(dir, "index.html"), html)
     fs.writeFileSync(path.join(dir, "hyperframes.json"), JSON.stringify({ name: "hetna" }))
     const inicio = Date.now()

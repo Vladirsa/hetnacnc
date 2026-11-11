@@ -1,4 +1,4 @@
-import { acomodarTitulo, bloquesBasicos, componer, cuatroPalabras, gruposSubtitulo, iconoPara, paraVoz, revisar, sanearBloques } from "../fabrica/hyperframes"
+import { TEMAS, temaPara, acomodarTitulo, bloquesBasicos, componer, cuatroPalabras, gruposSubtitulo, iconoPara, paraVoz, revisar, sanearBloques } from "../fabrica/hyperframes"
 
 describe("videos HyperFrames", () => {
   it("deja máximo 4 palabras en pantalla y conserva la pregunta", () => {
@@ -58,5 +58,17 @@ describe("videos HyperFrames", () => {
     const r = revisar(JSON.stringify({ ok: false, layout: { ok: false, findings: [{ severity: "error", code: "text_box_overflow", selector: "#e0-t", message: "Text extends" }, { severity: "warning", code: "canvas_overflow" }] } }))
     expect(r).toHaveLength(1)
     expect(r[0]).toContain("text_box_overflow")
+  })
+
+  it("cada video puede salir con otro fondo; foto sólo si hay", () => {
+    const vistos = new Set(Array.from({ length: 40 }, (_, i) => temaPara(`post_${i}`)))
+    expect(vistos.size).toBeGreaterThanOrEqual(4)
+    expect(vistos.has("foto")).toBe(false)
+    expect(temaPara("post_1")).toBe(temaPara("post_1"))
+    const { html } = componer(bloquesBasicos({ gancho: "¿Máquina parada?", frases: [], cierre: "Únete" }), { duraciones: [2, 2], tema: "noche" })
+    expect(html).toContain(`--fondo:${TEMAS.noche.fondo}`)
+    const sinFoto = componer(bloquesBasicos({ gancho: "x", frases: [], cierre: "y" }), { duraciones: [2, 2], tema: "foto" }).html
+    expect(sinFoto).not.toContain('class="foto"')
+    expect(sinFoto).toContain(`--fondo:${TEMAS.plano.fondo}`)
   })
 })
