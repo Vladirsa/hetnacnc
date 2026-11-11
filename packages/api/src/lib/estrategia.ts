@@ -346,7 +346,10 @@ let ia: Anthropic | null = null
 /** Texto base para un hueco: con IA (usando datos reales del sitio) o plantilla. */
 async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logger?: any) {
   const publico = publicoDe(cfg, slot.publico)
-  const plantilla = `${slot.pilar}\n\n${publico.objetivo === "que se registren" ? "¿Tienes taller CNC? Recibe solicitudes de trabajo sin comisión:" : "Cotiza tu pieza en HETNA CNC:"} {{liga}}`
+  const plantilla =
+    publico.clave === "comunidad"
+      ? `${slot.pilar}\n\n¿A ti te ha pasado? Cuéntanos en comentarios. 👇`
+      : `${slot.pilar}\n\n${publico.objetivo === "que se registren" ? "¿Tienes taller CNC? Recibe solicitudes de trabajo sin comisión:" : "Cotiza tu pieza en HETNA CNC:"} {{liga}}`
   if (!iaSocial()) return { texto: plantilla, ia: false }
   try {
     ia ??= new Anthropic()
