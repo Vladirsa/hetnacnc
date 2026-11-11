@@ -182,8 +182,29 @@ node scripts/migrar-foro.mjs --suave
 # --- 5. Reiniciar, ya con todo verificado ---
 
 paso "Reiniciando los procesos"
+# Primero el API y, sólo cuando ya contesta, la tienda. Antes se reiniciaban
+# juntos: la tienda queda lista en ~1 s pero Medusa tarda decenas de segundos,
+# y en ese hueco cada página que pide datos daba 500 ("fetch failed" y
+# "la API no contestó al pedir las regiones" en pm2 logs hetna-web). Lo
+# detectó la prueba k6 del 11 de noviembre: 11 de 14 productos con 500/502.
+# Así la tienda vieja sigue sirviendo (con lo que tenga en caché) y la nueva
+# arranca con el API ya arriba.
+pm2 restart hetna-api --update-env
+echo "   esperando a que el API conteste antes de reiniciar la tienda…"
+inicio_api="$(date +%s)"
+while :; do
+  codigo_api="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:9000/health 2>/dev/null || true)"
+  [ "$codigo_api" = "200" ] && break
+  [ $(( $(date +%s) - inicio_api )) -ge "${DESPLIEGUE_ESPERA:-150}" ] && break
+  sleep 2
+done
+if [ "$codigo_api" = "200" ]; then
+  verde "   ✓ API arriba en $(( $(date +%s) - inicio_api ))s"
+else
+  rojo "   ✗ El API no contestó (${codigo_api:-000}); se reinicia la tienda de todos modos"
+fi
 # NEXT_DIST_DIR va en el entorno: hetna-web arranca ya desde la carpeta nueva
-pm2 restart hetna-api hetna-web --update-env
+pm2 restart hetna-web --update-env
 echo "$DIST_NUEVA" > apps/storefront/.dist-actual
 # Que un reinicio del servidor arranque con la misma carpeta
 pm2 save >/dev/null 2>&1 || true
