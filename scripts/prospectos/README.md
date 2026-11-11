@@ -37,7 +37,10 @@ tiktok · productos_servicios · idioma (es/en/pt) · segmento · fuente_url ·
 | `SIN_EMAIL` | Sólo tiene teléfono/redes: queda para WhatsApp o contacto manual |
 | `REBOTE` / `ERROR` | Correo inválido o falló el envío |
 
-## Secuencia (L-V 9:00, hora de México, máx. 40 correos/día, 25 s entre cada uno)
+## Secuencia (L-V 9:00, hora de México, 25 s entre cada correo)
+
+**Calentamiento del remitente:** 20 correos al día hasta el 25 de noviembre de 2026;
+desde el 26 de noviembre el nodo «Límite del día» sube solo a 40.
 
 1. Presentación según el tipo:
    - **Talleres y proveedores** → vender en HETNA: publicar gratis y 6% de comisión
@@ -64,8 +67,7 @@ publicados por la propia empresa; no se recolectan datos personales.
    N8N_PROSPECTOS_REGISTRO_URL=https://n8n.hetnacnc.com/webhook/hetna-prospecto-registrado
    ```
    y vuelve a desplegar.
-4. En n8n abre el flujo, ejecuta «Leer prospectos → Preparar correos del día» a
-   mano para revisar los correos y luego **Publish**.
+4. ✅ Probado de punta a punta (importar, envío, baja y registro) y publicado.
 
 ## Más prospectos con ScrapeGraphAI
 
@@ -87,3 +89,40 @@ duplicados (por dominio y por correo) antes de agregarlos a la hoja.
 Edita `n8n/preparar_correos.js` y pega su contenido en el nodo
 «Preparar correos del día». `n8n/generar_flujo.py` arma el flujo completo
 (`n8n/flujo.sdk.js`) para el Workflow SDK de n8n si hay que recrearlo.
+
+## Respuestas automáticas (flujo «Prospectos HETNA - Respuestas del correo»)
+
+n8n revisa el buzón de la credencial **IMAP account** (`contacto@hetnacnc.com`,
+Hostinger) cada vez que llega un correo, sin marcarlo como leído:
+
+| Llega… | En la hoja queda | Aviso |
+|---|---|---|
+| Respuesta de un prospecto (mismo correo o dominio) | `RESPONDIO` | Telegram |
+| Respuesta que pide no recibir más («no me interesa», «baja», «unsubscribe»…) | `BAJA` | Telegram |
+| Rebote del servidor (mailer-daemon) con un correo de la hoja | `REBOTE` | Telegram |
+
+Tú sólo supervisas en Telegram y contestas desde `contacto@hetnacnc.com`.
+Código: `n8n/clasificar_respuesta.js`.
+
+## Búsqueda automática de prospectos (ScrapeGraphAI + Groq, todas las noches)
+
+`plan_busqueda.json` tiene 572 búsquedas (segmentos × ciudades de México, EE.UU.,
+Sudamérica y Brasil). Cada noche se corren las siguientes `TANDA` (15 por defecto);
+al terminar todas, empieza otra vuelta y los sitios ya vistos se saltan. Lo nuevo
+se manda al webhook «Importar prospectos», que sólo agrega lo que no esté en la hoja.
+
+Instalación en el servidor (una sola vez):
+
+```bash
+cd ~/hetnacnc && bash scripts/prospectos/instalar_servidor.sh
+nano scripts/prospectos/.env        # pega tu llave de Groq en LLM_API_KEY
+scripts/prospectos/correr_diario.sh && tail -n 40 scripts/prospectos/datos/busqueda.log
+```
+
+`.env`, `.venv/` y `datos/` no se suben a git (el despliegue sigue limpio).
+
+## WhatsApp (pendiente)
+
+Número que se usará: **+52 221 707 6014**. Las empresas con estatus `SIN_EMAIL`
+(sólo teléfono/WhatsApp) quedan para esa campaña cuando se conecte el sistema de
+WhatsApp.
