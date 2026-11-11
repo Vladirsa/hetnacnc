@@ -192,6 +192,7 @@ main .rounded-md[role='combobox'] {
 [data-testid='sidebar-nav-item-requisitos']   { order: 2; }
 [data-testid='sidebar-nav-item-orders']       { order: 3; }
 [data-testid='sidebar-nav-item-solicitudes']  { order: 4; }
+[data-testid='sidebar-nav-item-mensajes']     { order: 5; }
 /* Catálogo */
 [data-testid='sidebar-nav-item-products']     { order: 10; }
 [data-testid='sidebar-nav-item-publicar']     { order: 11; }
@@ -200,6 +201,7 @@ main .rounded-md[role='combobox'] {
 [data-testid='sidebar-nav-item-price-lists']  { order: 14; }
 [data-testid='sidebar-nav-item-inventory']    { order: 15; }
 /* Clientes y ventas */
+[data-testid='sidebar-nav-item-mis-clientes'] { order: 20; }
 [data-testid='sidebar-nav-item-customers']    { order: 20; }
 [data-testid='sidebar-nav-item-promotions']   { order: 21; }
 [data-testid='sidebar-nav-item-reviews']      { order: 22; }
@@ -222,7 +224,7 @@ main .rounded-md[role='combobox'] {
 :is(
   [data-testid='sidebar-nav-item-tablero'],
   [data-testid='sidebar-nav-item-products'],
-  [data-testid='sidebar-nav-item-customers'],
+  [data-testid='sidebar-nav-item-mis-clientes'],
   [data-testid='sidebar-nav-item-perfil-taller'],
   [data-testid='sidebar-nav-item-payouts'],
   [data-testid='sidebar-nav-item-courses']
@@ -238,7 +240,7 @@ main .rounded-md[role='combobox'] {
 }
 [data-testid='sidebar-nav-item-tablero']::before       { content: 'Principal'; padding-top: 6px; }
 [data-testid='sidebar-nav-item-products']::before      { content: 'Catálogo'; }
-[data-testid='sidebar-nav-item-customers']::before     { content: 'Clientes y ventas'; }
+[data-testid='sidebar-nav-item-mis-clientes']::before  { content: 'Clientes y ventas'; }
 [data-testid='sidebar-nav-item-perfil-taller']::before { content: 'Mi taller'; }
 [data-testid='sidebar-nav-item-payouts']::before       { content: 'Finanzas y envíos'; }
 [data-testid='sidebar-nav-item-courses']::before       { content: 'Recursos'; }
