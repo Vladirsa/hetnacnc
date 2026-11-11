@@ -17,6 +17,7 @@ import { cuadroVideo, lamina, tarjeta, carpetaFuentes } from "./render"
 import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
+import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 
 export const T_PROMO = "hetna_promo"
 const IMG = (f: string) => `${STORE_URL}/img/herramientas/${f}`
@@ -42,6 +43,27 @@ export const HERRAMIENTAS: Herramienta[] = [
     clave: "cotizador_whatsapp", nombre: "Cotización por WhatsApp", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-whatsapp.jpg"), tema: "taller", publico: "talleres",
     gancho: "Tu cliente pide precio por WhatsApp", frases: ["Respóndele con una cotización en PDF", "Con tu marca y tus tarifas", "Y todo queda en tu historial"], cta: "Conoce el cotizador",
     texto: "Cuando el cliente pide precio por WhatsApp, respóndele con una cotización en PDF con tu marca y tus tarifas. Todo queda guardado en tu historial.",
+  },
+  // --- Campaña del Cotizador (es lo que se cobra): sólo datos reales de cotizador-plan / suscripciones ---
+  {
+    clave: "cotizador_gratis", nombre: "HETNA Cotizador gratis", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-precio.jpg"), tema: "laser", publico: "talleres",
+    gancho: "¿Sigues cotizando a mano?", frases: ["Empieza gratis con 5 cotizaciones al mes", "Sube tu DXF y el precio sale solo", "Tu cliente lo recibe por WhatsApp"], cta: "Empieza gratis",
+    texto: "¿Sigues cotizando a mano en una hoja? Con HETNA Cotizador subes tu DXF, sale el precio con tus costos y se lo mandas a tu cliente por WhatsApp. Empieza gratis: 5 cotizaciones al mes.",
+  },
+  {
+    clave: "cotizador_prueba", nombre: "Prueba de 14 días", ruta: "/mx/herramientas-cnc", imagen: IMG("cotizador-whatsapp.jpg"), tema: "taller", publico: "talleres",
+    gancho: "Prueba el cotizador 14 días", frases: ["Cotizaciones sin límite durante la prueba", "PDF con tu marca y tus tarifas", "Todo queda en tu historial"], cta: "Pruébalo 14 días",
+    texto: "Prueba HETNA Cotizador 14 días: cotiza sin límite, manda PDF con tu marca y tus tarifas y lleva el historial de tus clientes en un solo lugar.",
+  },
+  {
+    clave: "cotizador_factura", nombre: "Cotiza, cobra y factura", ruta: "/mx/herramientas-cnc", imagen: null, tema: "taller", publico: "talleres",
+    gancho: "Cotiza, cobra y factura", frases: ["La cotización se vuelve pedido", "Factura electrónica desde el plan Taller", "Sin pasar datos a otro sistema"], cta: "Conoce los planes",
+    texto: "En HETNA Cotizador la cotización aceptada se vuelve pedido y, desde el plan Taller, la facturas ahí mismo con factura electrónica. Sin pasar datos de un sistema a otro.",
+  },
+  {
+    clave: "cotizador_seguimiento", nombre: "Seguimiento automático", ruta: "/mx/herramientas-cnc", imagen: null, tema: "taller", publico: "talleres",
+    gancho: "¿Mandaste la cotización y nada?", frases: ["El cotizador le da seguimiento por ti", "Recordatorio antes de que venza", "Y gracias con liga para reseña"], cta: "Conoce el plan Pro",
+    texto: "¿Mandas cotizaciones y el cliente ya no contesta? Con el Marketing automático de HETNA Cotizador (plan Pro) le das seguimiento, le recuerdas antes de que venza y le pides reseña al entregar.",
   },
   {
     clave: "disenar", nombre: "Estudio de diseño", ruta: "/mx/disenar", imagen: null, tema: "router", publico: "clientes_particulares",
@@ -116,6 +138,41 @@ async function videoCon(scope: any, nombre: string, d: { gancho: string; frases:
   return subir(scope, `${nombre}.mp4`, "video/mp4", v.buf)
 }
 
+/**
+ * Video animado (estilo «¿Máquina parada?») de una promo: gancho, la captura de
+ * la herramienta o la foto (si hay), las frases y el cierre. null si los videos
+ * animados están apagados o falla (entonces sale el de FFmpeg).
+ */
+async function videoAnimado(scope: any, nombre: string, d: { gancho: string; frases: string[]; cierre: string; fotos: (string | null)[]; liga: string; titulo: string }, logger?: any) {
+  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  const cfg = await leerConfig(knex)
+  // Sólo de madrugada (2-6 am): de día no se le quita procesador a la tienda
+  if (!cfg.video_animado || !hfDisponible() || !horaTranquila()) return null
+  const foto = d.fotos.find((u) => /^https?:\/\//.test(String(u || "")))
+  const usados: string[] = []
+  const ic = (t: string) => {
+    const x = iconoPara(t, undefined, usados)
+    usados.push(x)
+    return x
+  }
+  const cierre = { texto: d.cierre, narracion: `${d.cierre} en hetnacnc.com` }
+  // El guionista (IA) escribe las escenas con textos naturales de máx. 4 palabras; sin IA, se arman con las frases
+  let bloques: any[] | null = await guionista({ texto: [d.titulo, d.gancho, ...d.frases].join(". "), publico: "talleres", cierre }, logger)
+  if (!bloques) {
+    bloques = [{ tipo: "gancho", texto: cuatroPalabras(d.gancho), narracion: d.gancho, icono: ic(`${d.titulo} ${d.gancho}`) }]
+    for (const f of d.frases.slice(0, 3)) bloques.push({ tipo: "accion", texto: cuatroPalabras(f), narracion: f, icono: ic(f) })
+    bloques.push({ tipo: "cierre", ...cierre })
+  }
+  // La captura real de la herramienta (o la foto) va después del gancho
+  if (foto) bloques.splice(1, 0, { tipo: "producto", texto: cuatroPalabras(d.titulo), narracion: `${d.titulo}.`, foto })
+  const voz: any = await vozPara(nombre, bloques.map((b) => paraVoz(b.narracion)), "mx", logger)
+  const v = await videoHF(bloques, {
+    duraciones: voz?.duraciones?.length === bloques.length ? voz.duraciones : bloques.map((b) => segundosPara(b.narracion, 1.8, 4.5)),
+    voz: voz?.url || null, musica: await musicaAlAzar(knex), liga: d.liga, tema: temaPara(nombre), logger,
+  })
+  return v ? subir(scope, `${nombre}.mp4`, "video/mp4", v.buf) : null
+}
+
 async function cuando(knex: any, horas: number, mercado = "mx") {
   const cfg = await leerConfig(knex)
   return { estado: cfg.automatico.promociones ? "programada" : "borrador", fecha: dentroDeHorario(new Date(Date.now() + horas * 3600_000), cfg.horario, zonaDe(mercado)) }
@@ -147,7 +204,9 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
     const c2 = await cuando(knex, 26)
     const p2 = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Promo video · ${d.titulo}`, texto_base: d.texto, url: d.url, redes: ["instagram", "instagram_historia", "facebook", "tiktok", "youtube"], estado: c2.estado, programada_para: c2.fecha, mercado: "mx" }, logger)
     const liga2 = urlCorta(await ligaPara(knex, p2, "instagram", d.url))
-    const v = await videoCon(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, tema: d.tema, liga: liga2, mercado: "mx" }, logger)
+    const v =
+      (await videoAnimado(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, liga: liga2, titulo: d.titulo }, logger).catch(() => null)) ||
+      (await videoCon(scope, `promo-${p2}`, { gancho: d.gancho, frases: d.frases, cierre: d.cta, fotos: d.fotos, tema: d.tema, liga: liga2, mercado: "mx" }, logger))
     if (v) await knex(T_POST).where({ id: p2 }).update({ medios: JSON.stringify([{ url: v, tipo: "video" }]) })
     posts.push(p2)
   }
@@ -192,7 +251,13 @@ export async function promoBlog(scope: any, logger?: any) {
   }, logger)
 }
 
-export async function promoHerramienta(scope: any, logger?: any, clave?: string) {
+/** Herramientas del Cotizador (lo que se monetiza): salen 4 de cada 7 días. */
+export const DEL_COTIZADOR = ["cotizador", "cotizador_whatsapp", "cotizador_gratis", "cotizador_prueba", "cotizador_factura", "cotizador_seguimiento"]
+
+/** ¿Hoy toca Cotizador? Lunes, miércoles, viernes y domingo. */
+export const tocaCotizador = (dia: number) => [0, 1, 3, 5].includes(dia)
+
+export async function promoHerramienta(scope: any, logger?: any, clave?: string, o: { soloCotizador?: boolean; sinCotizador?: boolean } = {}) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarPromo(knex)
   let h = clave ? HERRAMIENTAS.find((x) => x.clave === clave) : null
@@ -200,10 +265,20 @@ export async function promoHerramienta(scope: any, logger?: any, clave?: string)
     // La que tiene más tiempo sin promoverse
     const ult = await knex(T_PROMO).where({ tipo: "herramienta" }).groupBy("ref").select("ref").max({ en: "created_at" })
     const fecha = Object.fromEntries(ult.map((u: any) => [u.ref, new Date(u.en).getTime()]))
-    h = [...HERRAMIENTAS].sort((a, b) => (fecha[a.clave] || 0) - (fecha[b.clave] || 0))[0]
+    const grupo = HERRAMIENTAS.filter((x) => (o.soloCotizador ? DEL_COTIZADOR.includes(x.clave) : o.sinCotizador ? !DEL_COTIZADOR.includes(x.clave) : true))
+    h = [...grupo].sort((a, b) => (fecha[a.clave] || 0) - (fecha[b.clave] || 0))[0]
+  }
+  // Precio real de los planes (de cotizador-suscripciones) sólo en el texto, nunca inventado
+  let planes = ""
+  if (DEL_COTIZADOR.includes(h.clave)) {
+    try {
+      const { PLANES_COTIZADOR } = await import("../cotizador-suscripciones")
+      const t = PLANES_COTIZADOR.taller?.precio
+      if (t) planes = `\n\nPlan gratis: 5 cotizaciones al mes. Planes de pago desde ${"$"}${Number(t).toLocaleString("es-MX")} MXN al mes.`
+    } catch {}
   }
   return publicarPar(scope, {
-    tipo: "herramienta", ref: h.clave, titulo: h.nombre, url: `${STORE_URL}${h.ruta}`, tema: h.tema, texto: `${h.texto}\n\n${h.cta}: {{liga}}`,
+    tipo: "herramienta", ref: h.clave, titulo: h.nombre, url: `${STORE_URL}${h.ruta}`, tema: h.tema, texto: `${h.texto}${planes}\n\n${h.cta}: {{liga}}`,
     cinta: h.nombre, cta: h.cta, producto_url: h.imagen, fotos: h.imagen ? [h.imagen] : [], gancho: h.gancho, frases: h.frases,
   }, logger)
 }
@@ -221,7 +296,7 @@ export async function promocionesDelDia(scope: any, logger?: any) {
   }
   await intenta("producto", () => promoProducto(scope, logger))
   if (dia === 2 || dia === 5) await intenta("blog", () => promoBlog(scope, logger))
-  if (dia === 1 || dia === 4) await intenta("herramienta", () => promoHerramienta(scope, logger))
+  // Herramientas y Cotizador: todos los días en el job de madrugada (jobs/promo-herramientas.ts)
   // Plantillas de dos lados (lib/fabrica/oportunidades): radar para talleres y talleres listos para clientes
   const op = await import("./oportunidades")
   if (dia === 3 || dia === 6) await intenta("radar por estado", () => op.radarEstado(scope, logger))

@@ -46,6 +46,9 @@ export const PUBLICOS: Publico[] = [
       "Mejoras nuevas de HETNA y cómo te ayudan", "La calculadora CNC: qué calcula y cómo usarla en tu taller", "Vende diseños y productos digitales en HETNA (subirlos es fácil)",
       "Envíos más baratos y rápidos desde HETNA", "Facturación y verificación: por qué un taller verificado vende más", "Lo básico que necesita un taller para recibir trabajo por internet",
       "Tutorial: trabajar con 3, 4 y 5 ejes (diferencias y cuándo conviene cada uno)",
+      // HETNA Cotizador (lo que se cobra): plan gratis de 5 al mes, prueba de 14 días, planes Taller/Pro/Industrial
+      "HETNA Cotizador: sube tu DXF y el precio sale con tus costos", "Deja de cotizar a mano: empieza gratis con 5 cotizaciones al mes",
+      "Cotización por WhatsApp en PDF con tu marca", "Seguimiento automático de cotizaciones (que no se te enfríe el cliente)",
     ],
   },
   {

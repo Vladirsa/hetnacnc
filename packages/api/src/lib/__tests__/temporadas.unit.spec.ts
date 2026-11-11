@@ -1,5 +1,6 @@
 import { FECHAS, fechasActivas, finDelDia, proxima, temporadaDe } from "../fabrica/calendario"
 import { coincide, fotoAbsoluta, nombreCorto, normalizar } from "../fabrica/temporadas"
+import { DEL_COTIZADOR, HERRAMIENTAS, tocaCotizador } from "../fabrica/promociones"
 
 const mx = (s: string) => new Date(`${s}T18:00:00Z`) // mediodía en México
 
@@ -49,5 +50,12 @@ describe("fechas especiales y productos", () => {
     expect(fotoAbsoluta("https://x.com/a.jpg")).toBe("https://x.com/a.jpg")
     expect(fotoAbsoluta("/static/123-foto.webp")).toMatch(/^https?:\/\/[^/]+\/static\/123-foto\.webp$/)
     expect(fotoAbsoluta("")).toBeNull()
+  })
+})
+
+describe("campaña del Cotizador", () => {
+  it("sale 4 de cada 7 días y todas sus piezas existen", () => {
+    expect([0, 1, 2, 3, 4, 5, 6].filter(tocaCotizador)).toHaveLength(4)
+    for (const c of DEL_COTIZADOR) expect(HERRAMIENTAS.some((h) => h.clave === c)).toBe(true)
   })
 })

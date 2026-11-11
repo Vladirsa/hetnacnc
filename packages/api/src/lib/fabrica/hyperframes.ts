@@ -161,6 +161,27 @@ const CLAVES: [RegExp, string][] = [
   [/cliente|persona|qui[eé]n|t[uú]\b/i, "persona"],
   [/pieza|parte|molde/i, "pieza"],
   [/corazón|amor|cari[ñn]o|quer/i, "corazon"],
+  // Mercado de EE.UU. (videos en inglés)
+  [/\blaser\b/i, "laser"],
+  [/machine|\bcut(ting)?\b|milling|lathe/i, "maquina"],
+  [/invoice|tax|verif/i, "factura"],
+  [/calculat/i, "calculadora"],
+  [/ship|deliver|package/i, "camion"],
+  [/price|cost|money|pay|commission|quote/i, "dinero"],
+  [/time|fast|hour|minute|wait/i, "reloj"],
+  [/\bshops?\b|workshop/i, "taller"],
+  [/near|state|city|local|area/i, "pin"],
+  [/community|team|together/i, "grupo"],
+  [/safe|trust|guarantee|risk/i, "escudo"],
+  [/dream|grow|start(ing)?\b|launch/i, "cohete"],
+  [/idea|learn|tutorial|tip/i, "foco"],
+  [/sales|results|more customers/i, "grafica"],
+  [/store|buy|product/i, "carrito"],
+  [/tool|repair|maintenance/i, "llave"],
+  [/file|design|dxf|stl|cad\b/i, "archivo"],
+  [/mistake|problem|avoid|fail/i, "alerta"],
+  [/customer|client|\byou\b/i, "persona"],
+  [/\bparts?\b|mold/i, "pieza"],
 ]
 export function iconoPara(texto: string, sugerido?: string, evitar: string[] = []) {
   if (sugerido && sugerido in ICONOS) return sugerido
@@ -752,7 +773,9 @@ async function hacer(bloques: Bloque[], o: Opciones & { logger?: any }) {
           // Foto muy chica (menos de 300 px) se vería borrosa: mejor el dibujo
           const m = await sharp(crudo).metadata()
           if (Math.min(m.width || 0, m.height || 0) < 300) throw new Error("foto muy chica")
-          await sharp(crudo).rotate().resize(900, 780, { fit: "contain", background: "#ffffff" }).flatten({ background: "#ffffff" }).jpeg({ quality: 86 }).toFile(path.join(dir, "assets", `p${i}.jpg`))
+          // Capturas de pantalla muy altas (celular): se muestra la parte de arriba a buen tamaño, no toda chiquita
+          const alta = (m.height || 0) / Math.max(1, m.width || 1) > 1.4
+          await sharp(crudo).rotate().resize(900, 780, alta ? { fit: "cover", position: "top" } : { fit: "contain", background: "#ffffff" }).flatten({ background: "#ffffff" }).jpeg({ quality: 86 }).toFile(path.join(dir, "assets", `p${i}.jpg`))
           return { ...b, foto: `assets/p${i}.jpg` }
         } catch {
           return { ...b, tipo: "accion", foto: undefined, icono: "caja" }
