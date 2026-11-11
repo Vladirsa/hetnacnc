@@ -39,6 +39,9 @@ export const PERFILES = {
       { duration: "30s", target: 0 },
     ],
   },
+  // Despliegue: 3 usuarios constantes 12 min mientras corre desplegar.sh.
+  // No se corta: el punto es registrar cada FALLO con su hora.
+  despliegue: { vus: 3, duration: "12m" },
   estres: {
     stages: [
       { duration: "1m", target: 20 },
