@@ -29,7 +29,8 @@ infografía OOE vs OEE, la bomba con "contrato indefinido", el cómic del plan m
    novedades de HETNA (mejoras, calculadora, productos digitales, envíos, facturación y verificación, lo básico
    de talleres/proveedores, tutorial 3-4-5 ejes) y público "Comunidad" con los temas humanos del dueño
    (con cuidado en salud mental: sin diagnósticos y con la Línea de la Vida 800 911 2000).
-2. **Plantillas de diseño nuevas:** infografía comparativa, caricatura con globos y pregunta, cómic de situación
+2. **Principios de video del dueño (ya integrados):** una acción visual por bloque; máximo 4 palabras en pantalla por escena además de subtítulos; ideas convertidas en acciones y analogías dibujadas literal; magnitudes con escala y elementos que se conservan entre escenas; cada acción sincronizada con su palabra y una imagen final clara por escena.
+3. **Plantillas de diseño nuevas:** infografía comparativa, caricatura con globos y pregunta, cómic de situación
    con pie de marca, antes/después, dato grande; ilustraciones sin texto en RunPod.
 3. **Pipeline de agentes para video:** guionista → director de arte → ilustrador → diseñador → voz → editor →
    revisor; videos que explican con lógica y venden. Clips de movimiento con Wan (abierto) en RunPod.

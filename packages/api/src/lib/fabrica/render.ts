@@ -52,6 +52,18 @@ const fuente = (peso: 500 | 800 | 900) => {
   return (cacheFuente[peso] = FUENTES[peso])
 }
 const FAMILIA = { 500: "Archivo Medium", 800: "Archivo ExtraBold", 900: "Archivo Black" }
+/**
+ * Principios de animación del dueño (11 nov 2026): los siguen el guionista y el
+ * director de arte en todos los videos.
+ */
+export const PRINCIPIOS_VIDEO = [
+  "Propón una acción visual por bloque del guion y después construye la animación.",
+  "Máximo cuatro palabras en pantalla por escena, aparte de los subtítulos.",
+  "Convierte las ideas en acciones y dibuja literalmente las analogías del guion.",
+  "Muestra las magnitudes con escala, enfoca lo importante y conserva elementos entre escenas para que se vea cómo se transforman.",
+  "Sincroniza cada acción clave con la palabra que la dice y deja una imagen final clara en cada escena.",
+].join(" ")
+
 /** Carpeta de las fuentes (para los subtítulos animados de FFmpeg/libass). */
 export const carpetaFuentes = () => path.dirname(fuente(800))
 

@@ -19,6 +19,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { aprendizaje } from "./social-estadisticas"
 import { STORE_URL, nuevoId } from "./licitacion"
+import { PRINCIPIOS_VIDEO } from "./fabrica/render"
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, asegurarSocial, crearPublicacion, horaEn, iaSocial, zonaDe } from "./social-hub"
 
 export const T_PLAN = "hetna_social_plan"
@@ -330,7 +331,8 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
       system:
         "Eres el estratega de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
         "Escribe UNA publicación lista para usar. Reglas: usa sólo datos reales del contexto, no inventes precios, cifras, clientes ni promociones; " +
-        "si el formato es video o reel, escribe el texto de la publicación y al final una línea 'GUION:' con el guion de 15 a 30 segundos (gancho en el primer segundo). " +
+        "si el formato es video o reel, escribe el texto de la publicación y al final una línea 'GUION:' con el guion de 15 a 30 segundos (gancho en el primer segundo), " +
+        "escrito como bloques donde cada bloque dice la acción visual concreta y el texto en pantalla de máximo 4 palabras. Principios de video: " + PRINCIPIOS_VIDEO + " " +
         "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos. " +
         "Diseño que funciona (docs/investigacion-disenos-virales.md): primera línea de máximo 8 palabras que se entienda sola y, si hay un dato real en el contexto, con número; " +
         "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
