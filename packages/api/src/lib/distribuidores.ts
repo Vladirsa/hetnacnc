@@ -146,7 +146,7 @@ export async function accionDistribuidores(b: any) {
   throw new ErrorDistribuidor("Acción desconocida.")
 }
 
-// ── Solicitudes de distribuidor (formulario público) ────────────────────────────────────────
+// ── Solicitudes de distribuidor (formulario público) ──────────────────────
 export const T_SOL_DIST = "hetna_distribuidor_solicitud"
 let tablaLista = false
 async function asegurarTabla(knex: any) {
