@@ -207,10 +207,16 @@ export function EstudioCam2D() {
   const [negado, setNegado] = useState<NegadoCam | null>(null)
   const [bajando, setBajando] = useState(false)
   const [bajado, setBajado] = useState(false)
+  // Último programa descargado (para "Guardar en HetNa Cloud" sin volver a gastar cupo)
+  const ultimoGcode = useRef<{ texto: string; nombre: string } | null>(null)
+  const [nube, setNube] = useState<{ estado: "" | "guardando" | "ok" | "error"; texto: string; sinTaller?: boolean }>({ estado: "", texto: "" })
   const [versionCupo, setVersionCupo] = useState(0)
   const cupo = useCupoCam(versionCupo)
   const [error, setError] = useState<{ mensaje: string; remedio: string } | null>(null)
-  const [vista, setVista] = useState<"pieza" | "trayectoria">("pieza")
+  const [vista, setVista] = useState<"pieza" | "trayectoria" | "material">("pieza")
+  // Entrada en rampa: la fresa baja avanzando por el contorno (o en hélice) en
+  // vez de entrar de punta. El motor usa 3 × el diámetro (rampa_entrada: -1).
+  const [rampa, setRampa] = useState(true)
   const [avance, setAvance] = useState(1)
   const [corriendo, setCorriendo] = useState(false)
   const [editar, setEditar] = useState(false)
@@ -358,6 +364,7 @@ export function EstudioCam2D() {
     const cuerpo = esSVG || origen || variasCopias ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
     const config = {
       maquina: { tipo: maquina.tipo, post: maquina.post, smax: maquina.smax },
+      rampa_entrada: maquina.tipo !== "laser" && rampa ? -1 : 0,
       operaciones: ops.map((o) => ({
         tipo: o.tipo,
         capa: o.capa || null,
@@ -427,6 +434,8 @@ export function EstudioCam2D() {
     setVersionCupo((v) => v + 1)
     if (!texto) return
     const nombre = (archivo?.name || "pieza").replace(/\.(dxf|svg)$/i, "") + "." + EXTENSION[maquina.post]
+    ultimoGcode.current = { texto, nombre }
+    setNube({ estado: "", texto: "" })
     const url = URL.createObjectURL(new Blob([texto], { type: "text/plain" }))
     const a = document.createElement("a")
     a.href = url
@@ -436,6 +445,26 @@ export function EstudioCam2D() {
     setBajado(true)
     a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  // Guarda el dibujo y el programa en la HetNa Cloud del taller (si el cliente tiene taller)
+  const guardarEnNube = async () => {
+    const g = ultimoGcode.current
+    if (!g || !dibujo || nube.estado === "guardando") return
+    setNube({ estado: "guardando", texto: "" })
+    try {
+      const form = new FormData()
+      const base = g.nombre.replace(/\.[^.]+$/, "")
+      form.append("gcode", new Blob([g.texto], { type: "text/plain" }), g.nombre)
+      form.append("dxf", new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }), `${base}.dxf`)
+      form.append("nombre", base)
+      const r = await fetch("/api/app/cam-nube", { method: "POST", body: form })
+      const d = await r.json().catch(() => ({}))
+      if (r.ok) setNube({ estado: "ok", texto: `Guardado en tu HetNa Cloud como "${d.proyecto?.nombre || base}".` })
+      else setNube({ estado: "error", texto: d.message || "No se pudo guardar.", sinTaller: !!d.sin_taller })
+    } catch {
+      setNube({ estado: "error", texto: "Se cortó la conexión. Vuelve a intentarlo." })
+    }
   }
 
   const zMin = useMemo(() => Math.min(-0.1, ...movimientos.filter((m) => m.corte).map((m) => m.z)), [movimientos])
@@ -458,7 +487,8 @@ export function EstudioCam2D() {
 
   // Lo que se dibuja: la pieza por capas, o la trayectoria sobre la pieza
   const lienzo = useMemo(() => {
-    type Linea = { pts: [number, number][]; color: string; ancho: number; dash?: string }
+    // real: el ancho va en mm (el de la fresa), no en píxeles; relleno: polígono
+    type Linea = { pts: [number, number][]; color: string; ancho: number; dash?: string; real?: boolean; relleno?: string }
     const lineas: Linea[] = []
     if (dibujo) {
       // con "mover al origen" el G-code empieza en (0,0): la pieza se dibuja igual
@@ -478,6 +508,25 @@ export function EstudioCam2D() {
         const pts = (t.cerrado ? [...t.pts, t.pts[0]] : t.pts).map(([x, y]) => [x + dx, y + dy] as [number, number])
         lineas.push({ pts, color: vista === "pieza" ? COLORES_CAPA[i % COLORES_CAPA.length] : "#2C4A6E", ancho: vista === "pieza" ? 1.3 : 1 })
       }
+    }
+    if (vista === "material" && lineas.length) {
+      // La hoja (el rectángulo de la pieza con margen de una fresa) y, encima,
+      // lo que la fresa ya quitó hasta este punto de la simulación: más oscuro
+      // mientras más hondo; lo que atraviesa la hoja se ve como hueco.
+      const hasta = Math.floor(movimientos.length * avance)
+      const dMax = Math.max(6, ...movimientos.map((m) => m.d || 0))
+      let a0 = Infinity, b0 = Infinity, a1 = -Infinity, b1 = -Infinity
+      for (const c of lineas) for (const [x, y] of c.pts) { if (x < a0) a0 = x; if (x > a1) a1 = x; if (y < b0) b0 = y; if (y > b1) b1 = y }
+      const m = dMax
+      lineas.length = 0
+      lineas.push({ pts: [[a0 - m, b0 - m], [a1 + m, b0 - m], [a1 + m, b1 + m], [a0 - m, b1 + m], [a0 - m, b0 - m]], color: "#8C6A3F", ancho: 1, relleno: "#C9A06A" })
+      const esp = numero(espesor) || 18
+      movimientos.forEach((mv, i) => {
+        if (i >= hasta || !mv.corte || mv.z > -0.01) return
+        const pasa = -mv.z >= esp - 0.01
+        const k = Math.max(0.25, Math.min(0.85, -mv.z / esp))
+        lineas.push({ pts: mv.pts, color: pasa ? "#0B0F15" : `rgba(70,42,18,${k.toFixed(2)})`, ancho: mv.d || 6, real: true })
+      })
     }
     if (vista === "trayectoria") {
       const hasta = Math.floor(movimientos.length * avance)
@@ -502,9 +551,9 @@ export function EstudioCam2D() {
     const mar = Math.max(x1 - x0, y1 - y0) * 0.06 + 2
     const W = x1 - x0 + 2 * mar
     const H = y1 - y0 + 2 * mar
-    const ult = vista === "trayectoria" && movimientos.length ? movimientos[Math.max(0, Math.min(movimientos.length - 1, Math.floor(movimientos.length * avance) - 1))] : null
+    const ult = vista !== "pieza" && movimientos.length ? movimientos[Math.max(0, Math.min(movimientos.length - 1, Math.floor(movimientos.length * avance) - 1))] : null
     return { lineas, x0, y0, W, H, mar, ancho: x1 - x0, alto: y1 - y0, punta: ult ? ult.pts[ult.pts.length - 1] : null }
-  }, [vista, dibujo, movimientos, avance, capas, origen, esSVG, zMin])
+  }, [vista, dibujo, movimientos, avance, capas, origen, esSVG, zMin, espesor])
 
   const X = (x: number) => f2(x - (lienzo?.x0 || 0) + (lienzo?.mar || 0))
   const Y = (y: number) => f2((lienzo?.H || 0) - (lienzo?.mar || 0) - (y - (lienzo?.y0 || 0)))
@@ -536,6 +585,17 @@ export function EstudioCam2D() {
           <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {archivo && !esSVG && <Interruptor etiqueta="Mover el dibujo al origen (0,0)" activo={origen} cambiar={setOrigen} />}
+        {!laser && (
+          <Interruptor
+            etiqueta="Entrar en rampa (cuida la fresa)"
+            activo={rampa}
+            cambiar={(v) => {
+              setRampa(v)
+              setPlan(null)
+              setGcode(null)
+            }}
+          />
+        )}
         <ProyectosCam herramienta="2d" obtener={proyectoActual} aplicar={aplicarProyecto} oscuro />
 
         <Seccion titulo="Máquina">
@@ -781,16 +841,16 @@ export function EstudioCam2D() {
       {/* Vista */}
       <section className="relative flex min-h-[60vh] flex-1 flex-col">
         <div className="flex items-center gap-2 border-b border-[#1F2937] bg-[#0F141C] px-3 py-2 text-[12.5px]">
-          {(["pieza", "trayectoria"] as const).map((v) => (
+          {(["pieza", "trayectoria", ...(laser ? [] : (["material"] as const))] as const).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => setVista(v)}
-              disabled={v === "trayectoria" && !gcode}
+              disabled={v !== "pieza" && !gcode}
               aria-pressed={vista === v}
               className={`rounded-[7px] px-3 py-1 font-semibold disabled:opacity-40 ${vista === v ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "text-[#8A97AB] hover:text-white"}`}
             >
-              {v === "pieza" ? "Pieza" : "Trayectoria"}
+              {v === "pieza" ? "Pieza" : v === "trayectoria" ? "Trayectoria" : "Material quitado"}
             </button>
           ))}
           {vista === "pieza" && capas.length > 1 && (
@@ -830,12 +890,13 @@ export function EstudioCam2D() {
                 <polyline
                   key={i}
                   points={c.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}
-                  fill="none"
+                  fill={c.relleno || "none"}
                   stroke={c.color}
                   strokeWidth={c.ancho}
                   strokeDasharray={c.dash}
-                  vectorEffect="non-scaling-stroke"
+                  vectorEffect={c.real ? undefined : "non-scaling-stroke"}
                   strokeLinejoin="round"
+                  strokeLinecap={c.real ? "round" : undefined}
                 />
               ))}
               {lienzo.punta && <circle cx={X(lienzo.punta[0])} cy={Y(lienzo.punta[1])} r={Math.max(lienzo.W, lienzo.H) / 120} fill="#FFFFFF" />}
@@ -845,7 +906,7 @@ export function EstudioCam2D() {
               Sube un DXF o SVG para ver tu pieza. Luego arma las operaciones, calcula y simula el corte.
             </div>
           )}
-          {vista === "trayectoria" && gcode && (
+          {vista !== "pieza" && gcode && (
             <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-[10px] border border-[#2B3648] bg-[#111722]/95 px-3 py-2 text-[12px] text-[#8A97AB]">
               <button
                 type="button"
@@ -938,6 +999,18 @@ export function EstudioCam2D() {
               <CandadoCam negado={negado} oscuro regreso="/mx/cam/subir" />
             ) : (
               cupo?.estado && <span className="text-[12px] leading-snug text-[#8A97AB]">{textoCupo(cupo.sesion, cupo.estado.basico, cupo.estado.plan_nombre, "El CAM 2D")}</span>
+            )}
+            {bajado && sesion && ultimoGcode.current && (
+              <div className="flex flex-col gap-1.5">
+                <Boton onClick={guardarEnNube}>{nube.estado === "guardando" ? "Guardando…" : nube.estado === "ok" ? "✓ En tu HetNa Cloud" : "☁️ Guardar en HetNa Cloud"}</Boton>
+                {nube.texto && (
+                  <span className={`text-[12px] leading-snug ${nube.estado === "ok" ? "text-[#9BE3B8]" : "text-[#F28A3C]"}`}>
+                    {nube.texto}{" "}
+                    {nube.estado === "ok" && <a href="/seller/nube" className="underline">Abrir mi nube</a>}
+                    {nube.sinTaller && <a href="/mx/talleres/unete" className="underline">Abrir mi taller</a>}
+                  </span>
+                )}
+              </div>
             )}
             <ProbadoCam herramienta="2d" controlador={maquina.post} nombreControl={POSTS.find((p) => p.id === maquina.post)?.nombre || maquina.post} maquina={maquina.nombre} material={material} bajado={bajado} oscuro />
           </Seccion>
