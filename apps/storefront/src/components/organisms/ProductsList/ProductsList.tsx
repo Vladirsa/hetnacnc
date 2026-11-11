@@ -8,8 +8,8 @@ export const ProductsList = ({
 }) => {
   return (
     <>
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, i) => (
+        <ProductCard key={product.id} product={product} prioridad={i < 4} />
       ))}
     </>
   )

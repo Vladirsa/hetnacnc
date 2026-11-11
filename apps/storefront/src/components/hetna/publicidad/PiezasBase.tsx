@@ -3,6 +3,7 @@
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
 import { getImageProps } from "next/image"
+import { preload } from "react-dom"
 
 import { esSrcDeNextImage, ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
@@ -57,11 +58,17 @@ export function ImagenPieza({
     const comunes = { alt, fill: true, sizes, quality: 70, priority: prioridad }
     const { props: escritorio } = getImageProps({ ...comunes, src: p.imagen_url })
     const celular = movil ? getImageProps({ ...comunes, src: movil }).props : null
+    // La imagen principal es lo que más tarda en verse (LCP): getImageProps no la marca
+    // como prioritaria ni la precarga, así que se pide aquí, cada tamaño para su pantalla.
+    if (prioridad) {
+      if (celular?.srcSet) preload(celular.src, { as: "image", imageSrcSet: celular.srcSet, imageSizes: celular.sizes, fetchPriority: "high", media: "(max-width: 767px)" })
+      if (escritorio.srcSet) preload(escritorio.src, { as: "image", imageSrcSet: escritorio.srcSet, imageSizes: escritorio.sizes, fetchPriority: "high", ...(celular ? { media: "(min-width: 768px)" } : {}) })
+    }
     return (
       <picture>
         {celular && <source media="(max-width: 767px)" srcSet={celular.srcSet} sizes={celular.sizes} />}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-        <img {...escritorio} style={undefined} className={className} decoding="async" />
+        <img {...escritorio} style={undefined} className={className} decoding="async" fetchPriority={prioridad ? "high" : undefined} />
       </picture>
     )
   }
