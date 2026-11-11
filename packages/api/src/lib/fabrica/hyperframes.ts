@@ -658,8 +658,19 @@ function accionDe(nombre: string, sel: string, t: number, resto: number) {
 // Render (uno a la vez, prioridad baja, con tope)
 // ---------------------------------------------------------------------
 
+/** Chrome que dejó el despliegue (plan B: Google Chrome estable) si no se usa el de HyperFrames. */
+function chromeInstalado() {
+  try {
+    const r = fs.readFileSync(path.join(DIR(), "chrome-path"), "utf8").trim()
+    return r && fs.existsSync(r) ? r : null
+  } catch {
+    return null
+  }
+}
+
 const ENV = () => ({
   ...process.env,
+  ...(process.env.HYPERFRAMES_BROWSER_PATH ? {} : chromeInstalado() ? { HYPERFRAMES_BROWSER_PATH: chromeInstalado()! } : {}),
   HF_CLI_TELEMETRY_DISABLED: "1",
   DO_NOT_TRACK: "1",
   PRODUCER_BROWSER_GPU_MODE: "software",
