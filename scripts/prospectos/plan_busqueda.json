@@ -1,0 +1,42 @@
+{
+  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan).",
+  "segmentos": {
+    "es": [
+      ["Taller (cliente y vendedor)", "taller de maquinados CNC en {ciudad}"],
+      ["Taller (cliente y vendedor)", "router CNC corte madera MDF acrílico {ciudad}"],
+      ["Servicios CNC", "corte láser y plasma CNC servicio {ciudad}"],
+      ["Proveedor", "venta de máquinas CNC router láser {ciudad}"],
+      ["Proveedor", "herramientas de corte fresas insertos CNC distribuidor {ciudad}"],
+      ["Cliente comprador", "fabricante de moldes y troqueles {ciudad}"],
+      ["Instructor/Capacitación", "curso de programación CNC torno fresadora {ciudad}"]
+    ],
+    "en": [
+      ["Taller (cliente y vendedor)", "CNC machine shop {ciudad}"],
+      ["Servicios CNC", "CNC laser plasma cutting service {ciudad}"],
+      ["Taller (cliente y vendedor)", "CNC router sign shop {ciudad}"],
+      ["Proveedor", "CNC tooling distributor {ciudad}"],
+      ["Instructor/Capacitación", "CNC machining training school {ciudad}"]
+    ],
+    "pt": [
+      ["Taller (cliente y vendedor)", "usinagem CNC {ciudad}"],
+      ["Servicios CNC", "corte a laser e plasma CNC {ciudad}"],
+      ["Proveedor", "ferramentas de corte CNC distribuidor {ciudad}"],
+      ["Instructor/Capacitación", "curso de CNC torno fresadora {ciudad}"]
+    ]
+  },
+  "ciudades": {
+    "México": {"idioma": "es", "lista": ["Ciudad de México", "Monterrey", "Guadalajara", "Puebla", "Tlaxcala", "Apizaco", "Querétaro", "León", "Celaya", "Irapuato", "Aguascalientes", "San Luis Potosí", "Saltillo", "Torreón", "Chihuahua", "Ciudad Juárez", "Hermosillo", "Tijuana", "Mexicali", "Toluca", "Naucalpan", "Tlalnepantla", "Pachuca", "Morelia", "Veracruz", "Xalapa", "Mérida", "Cancún", "Culiacán", "Reynosa", "Matamoros", "Tampico", "Durango", "Zacatecas", "Oaxaca", "Cuernavaca", "Villahermosa"]},
+    "Estados Unidos": {"idioma": "en", "lista": ["Houston TX", "San Antonio TX", "Dallas TX", "El Paso TX", "Laredo TX", "McAllen TX", "Austin TX", "Los Angeles CA", "San Diego CA", "Riverside CA", "Phoenix AZ", "Tucson AZ", "Albuquerque NM", "Miami FL", "Orlando FL", "Chicago IL", "Atlanta GA", "Denver CO", "Las Vegas NV"]},
+    "Colombia": {"idioma": "es", "lista": ["Bogotá", "Medellín", "Cali", "Barranquilla", "Bucaramanga", "Pereira"]},
+    "Perú": {"idioma": "es", "lista": ["Lima", "Arequipa", "Trujillo"]},
+    "Chile": {"idioma": "es", "lista": ["Santiago", "Concepción", "Valparaíso", "Antofagasta"]},
+    "Argentina": {"idioma": "es", "lista": ["Buenos Aires", "Córdoba", "Rosario", "Mendoza"]},
+    "Ecuador": {"idioma": "es", "lista": ["Quito", "Guayaquil", "Cuenca"]},
+    "Uruguay": {"idioma": "es", "lista": ["Montevideo"]},
+    "Paraguay": {"idioma": "es", "lista": ["Asunción"]},
+    "Bolivia": {"idioma": "es", "lista": ["Santa Cruz de la Sierra", "La Paz"]},
+    "Guatemala": {"idioma": "es", "lista": ["Ciudad de Guatemala"]},
+    "Costa Rica": {"idioma": "es", "lista": ["San José Costa Rica"]},
+    "Brasil": {"idioma": "pt", "lista": ["São Paulo", "Campinas", "Joinville", "Curitiba", "Caxias do Sul", "Porto Alegre", "Belo Horizonte", "Sorocaba", "Ribeirão Preto"]}
+  }
+}

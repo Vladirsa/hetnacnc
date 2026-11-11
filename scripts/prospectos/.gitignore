@@ -1,3 +1,5 @@
 datos/
 __pycache__/
 n8n/flujo.sdk.js
+.venv/
+.env

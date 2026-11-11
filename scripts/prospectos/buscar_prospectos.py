@@ -129,22 +129,56 @@ def extraer_contacto(url: str, cfg: dict) -> dict:
     return {}
 
 
+HECHAS = DATOS / "consultas_hechas.txt"
+
+
+def leer_consultas(archivo: Path) -> list[tuple[str, str, str, str]]:
+    out = []
+    for linea in archivo.read_text(encoding="utf-8").splitlines():
+        if linea.strip() and not linea.startswith("#"):
+            out.append(tuple(p.strip() for p in linea.split("|", 3)))
+    return out
+
+
+def plan_auto(n: int) -> list[tuple[str, str, str, str]]:
+    """Siguientes N búsquedas del plan que aún no se hacen en esta vuelta."""
+    plan = json.loads((AQUI / "plan_busqueda.json").read_text(encoding="utf-8"))
+    todas = []
+    for pais, info in plan["ciudades"].items():
+        for ciudad in info["lista"]:
+            for tipo, plantilla in plan["segmentos"][info["idioma"]]:
+                todas.append((pais, tipo, info["idioma"], plantilla.format(ciudad=ciudad)))
+    hechas = set(HECHAS.read_text(encoding="utf-8").splitlines()) if HECHAS.exists() else set()
+    pendientes = [c for c in todas if c[3] not in hechas]
+    if not pendientes:  # vuelta completa: empieza otra (los sitios ya vistos se saltan)
+        print(f"Vuelta completa de {len(todas)} búsquedas; empieza una nueva.")
+        HECHAS.unlink(missing_ok=True)
+        pendientes = todas
+    print(f"Plan: {len(todas)} búsquedas, faltan {len(pendientes)} en esta vuelta; hoy {min(n, len(pendientes))}.")
+    return pendientes[:n]
+
+
+def marcar_hecha(consulta: str) -> None:
+    with HECHAS.open("a", encoding="utf-8") as f:
+        f.write(consulta + "\n")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--consultas", default=str(AQUI / "consultas.txt"))
     ap.add_argument("--max-por-consulta", type=int, default=10)
     ap.add_argument("--enviar", metavar="URL", help="webhook 'Importar prospectos' de n8n: manda lo nuevo a la hoja (n8n quita duplicados)")
+    ap.add_argument("--auto", type=int, metavar="N", help="toma las siguientes N búsquedas de plan_busqueda.json (rota sola; al terminar todas vuelve a empezar)")
     args = ap.parse_args()
 
     cfg = config_llm()
     DATOS.mkdir(exist_ok=True)
     vistos = ya_vistos()
     nuevos = 0
+    lote: list[dict] = []
 
-    for linea in Path(args.consultas).read_text(encoding="utf-8").splitlines():
-        if not linea.strip() or linea.startswith("#"):
-            continue
-        pais, tipo, idioma, consulta = [p.strip() for p in linea.split("|", 3)]
+    consultas = plan_auto(args.auto) if args.auto else leer_consultas(Path(args.consultas))
+    for pais, tipo, idioma, consulta in consultas:
         print(f"\n🔎 {consulta}")
         for url in buscar_sitios(consulta, args.max_por_consulta, cfg):
             dom = dominio_de(url)
@@ -165,11 +199,14 @@ def main() -> None:
                 f.write(json.dumps(fila, ensure_ascii=False) + "\n")
             vistos.update({dom, email} - {""})
             nuevos += 1
+            lote.append(fila)
             print(f"  ✔ {fila['empresa'] or dom}  {email or fila['telefono']}")
+        if args.auto:
+            marcar_hecha(consulta)
 
     print(f"\n{nuevos} prospectos nuevos → {SALIDA}  ({date.today()})")
-    if args.enviar and SALIDA.exists():
-        lista = [json.loads(l) for l in SALIDA.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if args.enviar and lote:
+        lista = [dict(p) for p in lote]
         for p in lista:
             p["id"] = p.get("dominio", "")
             p["region"] = p.pop("estado", "")
