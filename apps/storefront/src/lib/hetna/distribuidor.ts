@@ -16,5 +16,4 @@ export async function leerDistribuidor(codigo: string): Promise<Distribuidor | n
   }
 }
 
-export const WHATSAPP_HETNA = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
 export const ligaCotizador = (codigo?: string) => `https://hetnacnc.com/cotizador/${codigo ? `?ref=${encodeURIComponent(codigo)}` : ""}`
