@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import { PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   addToCart as apiAddToCart,
@@ -31,31 +31,31 @@ export function CartProvider({ cart, children }: CartProviderProps) {
     if (cart) setCartState(cart);
   }, [cart]);
 
-  // Al terminar una compra o cerrar sesión, el servidor borra el carrito y la
-  // cookie hetna_carrito (removeCartId). Antes el layout lo limpiaba al
-  // volver a mandarlo; ahora se revisa la cookie en cada cambio de página.
+  // El HTML ya no trae el carrito (salvo en /cart y /checkout): lo pide el
+  // navegador si la cookie hetna_carrito dice que hay uno. Corre al cargar y en
+  // cada cambio de página: así también lo encuentran los carritos anteriores a
+  // la cookie, a los que el middleware se la pone en la primera navegación.
+  //   - Sin bandera no se pide nada (no suma una llamada por visita) y, si
+  //     quedaba un carrito en pantalla, se quita: el servidor borra la bandera
+  //     al terminar la compra o cerrar sesión (removeCartId).
+  //   - Si retrieveCart devuelve null NO se borra la bandera: también devuelve
+  //     null cuando el API no contesta (p. ej. 10 s de un despliegue).
   const ruta = usePathname();
+  const carritoActual = useRef(cartState);
+  carritoActual.current = cartState;
   useEffect(() => {
-    if (!document.cookie.split('; ').some(c => c === 'hetna_carrito=1')) {
+    const hayCarrito = document.cookie.split('; ').some(c => c === 'hetna_carrito=1');
+    if (!hayCarrito) {
       setCartState(prev => (prev ? null : prev));
+      return;
     }
-  }, [ruta]);
-
-  // El HTML ya no trae el carrito (salvo en /cart y /checkout): si la cookie
-  // hetna_carrito dice que hay uno, se pide al cargar. Sin bandera no se pide
-  // nada, para no sumar una llamada al servidor por cada visita.
-  useEffect(() => {
-    if (cart) return;
-    if (!document.cookie.split('; ').some(c => c === 'hetna_carrito=1')) return;
+    if (carritoActual.current) return;
     retrieveCart()
       .then(c => {
         if (c) setCartState(c);
-        else document.cookie = 'hetna_carrito=; Max-Age=0; Path=/';
       })
       .catch(() => {});
-    // Sólo al montar: después el carrito lo actualizan las propias acciones.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ruta]);
 
   const refreshCart = useCallback(async () => {
     try {
