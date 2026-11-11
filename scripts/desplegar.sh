@@ -49,6 +49,13 @@ abortar() {
   exit 1
 }
 
+# Un solo despliegue a la vez. El 11 de noviembre dos despliegues se pisaron:
+# uno construía en la carpeta que el otro ya estaba sirviendo y el sitio quedó
+# sin sus archivos JavaScript. El candado se suelta solo al terminar el guion.
+exec 9>/tmp/hetna-desplegar.lock
+flock -n 9 || abortar "Ya hay otro despliegue corriendo." \
+  "Espera a que termine; para verlo: ps aux | grep desplegar | grep -v grep"
+
 # --- 1. ¿Estamos donde debemos? ---
 
 paso "Revisando el estado del repositorio"
@@ -217,6 +224,15 @@ paso "Construyendo (si esto falla, el sitio NO se toca)"
 # .next mientras el sitio la usaba: se caían páginas durante el build y a veces
 # el build mismo tronaba con "ENOENT pages-manifest.json".
 DIST_ACTUAL="$(cat apps/storefront/.dist-actual 2>/dev/null || echo .next)"
+# La carpeta que de verdad sirve la tienda es la del proceso de pm2, no la del
+# archivo (un reinicio a mano puede cambiar una sin la otra). Si no coinciden
+# manda pm2: construir encima de la carpeta en uso borra los archivos que el
+# sitio está sirviendo.
+DIST_PM2="$(pm2 jlist 2>/dev/null | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const p=JSON.parse(d).find(x=>x.name==="hetna-web");const e=(p&&p.pm2_env)||{};process.stdout.write(e.NEXT_DIST_DIR||(e.env&&e.env.NEXT_DIST_DIR)||"")}catch{}})' || true)"
+if [ -n "$DIST_PM2" ] && [ "$DIST_PM2" != "$DIST_ACTUAL" ]; then
+  rojo "   ! .dist-actual decía $DIST_ACTUAL pero la tienda sirve desde $DIST_PM2: se usa $DIST_PM2"
+  DIST_ACTUAL="$DIST_PM2"
+fi
 if [ "$DIST_ACTUAL" = ".next-a" ]; then DIST_NUEVA=".next-b"; else DIST_NUEVA=".next-a"; fi
 rm -rf "apps/storefront/$DIST_NUEVA"
 export NEXT_DIST_DIR="$DIST_NUEVA"
@@ -369,6 +385,29 @@ else
   fallas=$((fallas + 1))
 fi
 
+# Los archivos JavaScript de la página, pedidos como los pide un navegador
+# (paréntesis codificados, %28/%29). El 11 de noviembre las páginas daban 200
+# pero sus archivos 404: este guion dijo "Listo" con el sitio sin JavaScript.
+# Requiere infra/nginx/hetna-next-static.conf.
+archivos="$(curl -s --max-time 20 -H 'Cookie: _medusa_cache_id=despliegue; hetna_lang=es' "$SITIO/mx" \
+  | grep -oE '/_next/static/chunks/[^"\\]+\.js' | sort -u | head -12 || true)"
+if [ -z "$archivos" ]; then
+  rojo  "   ✗ No se encontraron archivos JavaScript en $SITIO/mx"
+  fallas=$((fallas + 1))
+else
+  malos=0
+  for a in $archivos; do
+    a="$(printf '%s' "$a" | sed 's/(/%28/g; s/)/%29/g')"
+    c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITIO$a" 2>/dev/null || true)"
+    [ "$c" = "200" ] || { malos=$((malos + 1)); rojo "   ✗ $c $a"; }
+  done
+  if [ "$malos" -eq 0 ]; then
+    verde "   ✓ archivos JavaScript de la página → 200 ($(echo "$archivos" | wc -l) revisados)"
+  else
+    fallas=$((fallas + 1))
+  fi
+fi
+
 if [ "$fallas" -gt 0 ]; then
   rojo ""
   rojo "El sitio no responde bien después de reiniciar."
@@ -379,8 +418,14 @@ if [ "$fallas" -gt 0 ]; then
   echo "  estuviera arrancando. Comprueba a mano antes de revertir:"
   echo "    curl -s -o /dev/null -w '%{http_code}\n' $SITIO/"
   echo "  Volver (sólo si hay un error de verdad):"
-  echo "  La tienda anterior sigue intacta en $DIST_ACTUAL. Volver a ella al instante:"
-  echo "    cd $RAIZ && echo $DIST_ACTUAL > apps/storefront/.dist-actual && NEXT_DIST_DIR=$DIST_ACTUAL pm2 restart hetna-web --update-env && pm2 save"
+  # Sólo se ofrece volver a una carpeta con un build completo (BUILD_ID):
+  # volver a una incompleta deja el sitio peor que como está.
+  if [ -f "apps/storefront/$DIST_ACTUAL/BUILD_ID" ]; then
+    echo "  La tienda anterior sigue intacta en $DIST_ACTUAL. Volver a ella al instante:"
+    echo "    cd $RAIZ && echo $DIST_ACTUAL > apps/storefront/.dist-actual && NEXT_DIST_DIR=$DIST_ACTUAL pm2 restart hetna-web --update-env && pm2 save"
+  else
+    echo "  No hay una tienda anterior completa en $DIST_ACTUAL (falta BUILD_ID): no vuelvas a ella."
+  fi
   echo "  Volver todo (código y API):"
   echo "    git reset --hard $antes && bash scripts/desplegar.sh"
   exit 1
