@@ -130,7 +130,13 @@ const COOKIE_REF = 'hetna_ref';
 const continuar = (request: NextRequest, locale: string | null) => {
   const cabeceras = new Headers(request.headers);
   if (locale) cabeceras.set('x-hetna-locale', locale.toLowerCase());
+  cabeceras.set('x-hetna-ruta', request.nextUrl.pathname);
   const response = NextResponse.next({ request: { headers: cabeceras } });
+  // Carritos creados antes de la cookie hetna_carrito (lib/data/cookies.ts):
+  // se les pone la bandera una vez para que el navegador sepa pedirlos.
+  if (request.cookies.get('_medusa_cart_id')?.value && !request.cookies.get('hetna_carrito')) {
+    response.cookies.set('hetna_carrito', '1', { path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' });
+  }
   if (locale && locale.toLowerCase() !== 'us' && !request.cookies.get(COOKIE_IDIOMA)) {
     response.cookies.set(COOKIE_IDIOMA, 'es', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' });
   }

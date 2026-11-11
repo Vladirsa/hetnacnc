@@ -1,6 +1,8 @@
 'use client';
 import { usePathname } from 'next/navigation';
 
+import { useCartContext } from '@/components/providers/Cart/context';
+
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 
 const HOME = { href: '/', label: 'Inicio', d: 'M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V11z' };
@@ -19,7 +21,10 @@ const Icon = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 );
 
-export function MobileBottomNav({ cartCount = 0 }: { cartCount?: number }) {
+export function MobileBottomNav() {
+  // El conteo sale del contexto: el carrito lo pide el navegador (CartProvider).
+  const { cart } = useCartContext();
+  const cartCount = (cart?.items ?? []).reduce((s: number, i: { quantity?: number }) => s + (i.quantity ?? 0), 0);
   const pathname = usePathname() || '/';
   // La primera parte de la ruta es el idioma/región: /mx/cart -> /cart
   const rest = '/' + pathname.split('/').filter(Boolean).slice(1).join('/');

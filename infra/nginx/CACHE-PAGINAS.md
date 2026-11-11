@@ -1,7 +1,7 @@
 # Microcaché de páginas (nginx)
 
 Guarda 60 s las páginas públicas de la tienda (inicio, catálogo, fichas y
-páginas informativas) para visitantes sin sesión ni carrito. Si la tienda o el
+páginas informativas) para visitantes sin sesión. Si la tienda o el
 API fallan, sirve la última copia buena (hasta 24 h) en vez del error.
 
 - `hetna-cache-paginas.conf` → nivel http (`/etc/nginx/conf.d/`)
@@ -9,7 +9,7 @@ API fallan, sirve la última copia buena (hasta 24 h) en vez del error.
 
 ## Qué se probó (nginx 1.24, tienda falsa)
 
-- Siempre van a la tienda: sesión (`_medusa_jwt`), carrito (`_medusa_cart_id`), panel, POST,
+- Siempre van a la tienda: sesión (`_medusa_jwt`), panel, POST,
   navegación interna de Next (cabecera `RSC`), `?ref=` y toda ruta fuera de la lista permitida.
 - Un visitante nuevo recibe la copia; `gclid` / `fbclid` / `utm_*` no rompen la copia.
 - Idioma (`hetna_lang` / `/us`) y robots (`isBot`) tienen su propia copia.

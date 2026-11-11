@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import {
@@ -23,9 +24,38 @@ export function CartProvider({ cart, children }: CartProviderProps) {
   const [isUpdatingItem, setIsUpdatingItem] = useState(false);
   const [isRemovingItem, setIsRemovingItem] = useState(false);
 
+  // Sólo si el servidor manda un carrito (/cart, /checkout). Fuera de ahí el
+  // layout manda null siempre, también al refrescarse tras una acción, y eso
+  // no debe borrar el carrito que ya pidió el navegador.
   useEffect(() => {
-    setCartState(cart);
+    if (cart) setCartState(cart);
   }, [cart]);
+
+  // Al terminar una compra o cerrar sesión, el servidor borra el carrito y la
+  // cookie hetna_carrito (removeCartId). Antes el layout lo limpiaba al
+  // volver a mandarlo; ahora se revisa la cookie en cada cambio de página.
+  const ruta = usePathname();
+  useEffect(() => {
+    if (!document.cookie.split('; ').some(c => c === 'hetna_carrito=1')) {
+      setCartState(prev => (prev ? null : prev));
+    }
+  }, [ruta]);
+
+  // El HTML ya no trae el carrito (salvo en /cart y /checkout): si la cookie
+  // hetna_carrito dice que hay uno, se pide al cargar. Sin bandera no se pide
+  // nada, para no sumar una llamada al servidor por cada visita.
+  useEffect(() => {
+    if (cart) return;
+    if (!document.cookie.split('; ').some(c => c === 'hetna_carrito=1')) return;
+    retrieveCart()
+      .then(c => {
+        if (c) setCartState(c);
+        else document.cookie = 'hetna_carrito=; Max-Age=0; Path=/';
+      })
+      .catch(() => {});
+    // Sólo al montar: después el carrito lo actualizan las propias acciones.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const refreshCart = useCallback(async () => {
     try {
