@@ -556,6 +556,7 @@ export type Routes = {
         };
         hetnaSocial: typeof import("../src/api/admin/hetna-social/route") & {
             $id: typeof import("../src/api/admin/hetna-social/[id]/route");
+            anuncios: typeof import("../src/api/admin/hetna-social/anuncios/route");
             comentarios: typeof import("../src/api/admin/hetna-social/comentarios/route");
             config: typeof import("../src/api/admin/hetna-social/config/route");
             estrategia: typeof import("../src/api/admin/hetna-social/estrategia/route");

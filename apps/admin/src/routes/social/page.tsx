@@ -714,6 +714,8 @@ function Resultados() {
         )}
       </section>
 
+      <Anuncios />
+
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0, fontSize: 15 }}>🧠 Lo que estamos aprendiendo (Facebook e Instagram)</h3>
@@ -1443,6 +1445,85 @@ async function apiFab<T>(cuerpo?: unknown): Promise<T> {
 }
 
 type FechaE = { clave: string; nombre: string; fecha: string; faltan: number; anticipacion: number; en_temporada: boolean; tema: string; activa: boolean; etiquetas: string[]; sugeridas: string[]; productos: { id: string; titulo: string; foto: string | null }[]; ultima: string | null }
+
+/** Agente de anuncios de Meta: impulsa con dinero lo que ya funcionó solo. Nada sale sin aprobar. */
+function Anuncios() {
+  const [d, setD] = useState<any>(null)
+  const [c, setC] = useState<any>(null)
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState<string | null>(null)
+  const cargar = async () => {
+    const x = await api<any>("/anuncios").catch(() => null)
+    setD(x)
+    if (x) setC(x.config)
+  }
+  useEffect(() => { void cargar() }, [])
+  const hacer = async (cuerpo: any, msj: string) => {
+    setOcupado(cuerpo.accion + (cuerpo.id || ""))
+    try {
+      const x = await api<any>("/anuncios", cuerpo)
+      setD(x)
+      setC(x.config)
+      setNota({ ok: true, t: msj })
+    } catch (e) {
+      setNota({ ok: false, t: `✗ ${(e as Error).message}` })
+    } finally {
+      setOcupado(null)
+    }
+  }
+  if (!d || !c) return null
+  const pesos = (n: number) => "$" + Math.round(Number(n) || 0).toLocaleString("es-MX")
+  const ESTADO: Record<string, [string, string]> = { propuesta: ["Propuesta: falta tu aprobación", "#8A5A00"], lanzando: ["Lanzando…", "#1a3a5c"], activo: ["Activo", C.verde], terminado: ["Terminado", C.tenue], rechazado: ["Rechazado", C.tenue], error: ["Error (quedó en pausa, no gasta)", C.rojo] }
+  return (
+    <section style={caja}>
+      <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>📣 Anuncios en Meta (impulsar lo que ya funcionó)</h3>
+      <p style={{ margin: "0 0 10px", color: C.tenue, fontSize: 13 }}>
+        Cada martes el agente busca la publicación de Facebook de las últimas 2 semanas que más pagos, pruebas o registros trajo sin anuncio y te la <b>propone</b>.
+        Sólo se lanza si apruebas. Cada anuncio tiene fecha de fin y un tope por semana; si gastara más de lo aprobado, se pausa solo. Esto sí cuesta dinero.
+      </p>
+      {!d.listo && <p style={{ fontSize: 13, color: C.rojo, fontWeight: 600 }}>Falta el token de anuncios en el servidor (META_ADS_TOKEN). Mientras no esté, no se propone ni se lanza nada.</p>}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input type="checkbox" checked={!!c.activo} onChange={(e) => setC({ ...c, activo: e.target.checked })} /> Prendido
+        </label>
+        <label>Cuenta publicitaria <input value={c.cuenta} onChange={(e) => setC({ ...c, cuenta: e.target.value })} placeholder="734227081734669" style={{ width: 170, padding: "4px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} /></label>
+        <label>Presupuesto por semana (MXN) <input type="number" min={0} max={d.tope_semanal} value={c.presupuesto_semanal} onChange={(e) => setC({ ...c, presupuesto_semanal: Number(e.target.value) })} style={{ width: 90, padding: "4px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} /></label>
+        <label>Días por anuncio <input type="number" min={3} max={14} value={c.dias} onChange={(e) => setC({ ...c, dias: Number(e.target.value) })} style={{ width: 60, padding: "4px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} /></label>
+        <button type="button" style={boton("primario")} disabled={!!ocupado} onClick={() => void hacer({ accion: "config", ...c }, "✓ Guardado")}>Guardar</button>
+        <button type="button" style={boton("normal")} disabled={!!ocupado || !d.config.activo} onClick={() => void hacer({ accion: "proponer" }, "✓ Hay una propuesta nueva abajo")}>Buscar propuesta ahora</button>
+      </div>
+      <div style={{ fontSize: 12, color: C.tenue, marginTop: 4 }}>
+        Mínimo de Meta: {pesos(d.minimo_diario)} al día ({pesos(d.minimo_diario * 7)} por semana). Tope del sistema: {pesos(d.tope_semanal)} por semana.
+        {c.presupuesto_semanal > 0 && c.presupuesto_semanal < d.minimo_diario * 7 && <b style={{ color: C.rojo }}> Con menos de {pesos(d.minimo_diario * 7)} por semana no se puede prender.</b>}
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 6 }}>{nota.t}</div>}
+      {(d.anuncios || []).map((a: any) => {
+        const [txt, col] = ESTADO[a.estado] || [a.estado, C.tenue]
+        const r = a.resultados || {}
+        return (
+          <div key={a.id} style={{ borderTop: `1px solid ${C.borde}`, padding: "10px 0", display: "grid", gap: 4, fontSize: 13 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <b style={{ color: col, fontSize: 12 }}>{txt}</b>
+              <b style={{ flex: 1 }}>{a.titulo || a.post_id}</b>
+              <span style={{ color: C.tenue }}>{pesos(a.diario)} al día · {a.dias} días · máx. {pesos(Number(a.diario) * Number(a.dias))}</span>
+            </div>
+            <div style={{ color: C.tenue }}>{a.motivo}{a.fin ? ` · termina ${new Date(a.fin).toLocaleDateString("es-MX")}` : ""}{a.error ? ` · ${a.error}` : ""}</div>
+            {a.resultados && <div>Gastado {pesos(r.gasto)} · alcance {Number(r.alcance || 0).toLocaleString("es-MX")} · clics {r.clics || 0}</div>}
+            {a.estado === "propuesta" && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" style={boton("primario")} disabled={!!ocupado} onClick={() => { if (confirm(`¿Lanzar este anuncio por hasta ${pesos(Number(a.diario) * Number(a.dias))}?`)) void hacer({ accion: "aprobar", id: a.id }, "✓ Anuncio lanzado en Meta") }}>{ocupado === "aprobar" + a.id ? "Lanzando…" : "Aprobar y lanzar"}</button>
+                <button type="button" style={boton("normal")} disabled={!!ocupado} onClick={() => void hacer({ accion: "rechazar", id: a.id }, "Propuesta rechazada")}>Rechazar</button>
+              </div>
+            )}
+            {a.estado === "activo" && (
+              <div><button type="button" style={boton("peligro")} disabled={!!ocupado} onClick={() => void hacer({ accion: "pausar", id: a.id }, "Anuncio pausado")}>Pausar ya</button></div>
+            )}
+          </div>
+        )
+      })}
+    </section>
+  )
+}
 
 /** Botón "Generar todo el temario ahora": un borrador con imagen por cada tema pendiente. */
 function Temario({ alCambiar }: { alCambiar: () => void }) {
