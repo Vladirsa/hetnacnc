@@ -237,7 +237,7 @@ function stockSolid(on){MAT.stock.opacity=on?1:0.22;MAT.stock.transparent=!on;MA
 function setBusy(txt,f){const b=$('#busy');if(txt===null){b.hidden=true;return;}b.hidden=false;$('#busyText').textContent=txt;$('#busyBar').style.width=Math.round(clamp(f,0,1)*100)+'%';}
 function compatError(){
   const k=S.strat.kind,kin=S.machine.kin;
-  if(k==='rot4'&&!['xyza','ab_mixed'].includes(kin))return'La estrategia de 4 ejes necesita un eje rotativo A sobre X. Elige "4 ejes · rotativo A" o "5 ejes · rotativo A + cabezal B" en Máquina.';
+  if((k==='rot4'||k==='idx4')&&!['xyza','ab_mixed'].includes(kin))return'La estrategia de 4 ejes necesita un eje rotativo A sobre X. Elige "4 ejes · rotativo A" o "5 ejes · rotativo A + cabezal B" en Máquina.';
   if((k==='top5'||k==='rot5')&&(kin==='xyz'||kin==='xyza'))return'Las estrategias de 5 ejes necesitan una máquina de 5 ejes. Cambia la cinemática en Máquina.';
   if((k==='top5'||k==='rot5')&&(tool().type==='vbit'||tool().type==='drill'))return'Para 5 ejes simultáneos usa una herramienta de bola, plana, toroidal o cónica de bola.';
   return null;
@@ -251,8 +251,8 @@ async function compute(){
     // desbaste con otra fresa: cada una calcula su trayectoria con su propia forma
     const rt=st.rough&&st.roughTool&&st.roughTool!==tl.id?S.tools.find(t=>t.id===st.roughTool):null;S.rtool=rt||null;
     if(st.kind==='top5'||st.kind==='rot5')res=await gen5(tl,st);
-    else{const gen=st.kind==='top3'?genTop3:genRot4;
-      if(rt){const rr=await gen(rt,st,{roughOnly:true}),rf=await gen(tl,{...st,rough:false});rr.passes.forEach(p=>{p.tid=rt.id;p.lk=rr.linkOK;});
+    else{const gen=st.kind==='top3'?genTop3:st.kind==='idx4'?genIdx4:genRot4;
+      if(rt){const rr=await gen(rt,st,{roughOnly:true}),rf=await gen(tl,{...st,rough:false});rr.passes.forEach(p=>{p.tid=rt.id;p.lk=p.lk||rr.linkOK;});
         res={...rf,passes:rr.passes.concat(rf.passes),maxDepth:Math.max(rr.maxDepth,rf.maxDepth)};}
       else res=await gen(tl,st);}
     setBusy('Enlazando pasadas y resolviendo ejes de máquina…',0.97);await tick();
@@ -266,6 +266,7 @@ async function compute(){
 }
 function refreshPost(){if(!S.moves)return;S.jobStats=annotateMoves(S.moves);S.gcode=null;S.outs={};refreshOutputs();renderReport();askPreview();}
 function renderReport(){
+  if(!S.M||!S.moves)return; // llegó una vista previa vieja mientras se cargaba otra pieza
   const js=S.jobStats,res=S.job?.res,m=S.machine,tl=tool(),fd=feedsCalc(),st=S.strat;if(!js||!res)return;
   const s5=res.stats5;const axes=KIN_AXES[m.kin];const feedPts=S.moves.filter(x=>x.t==='F').length;
   const collPts=S.moves.filter(x=>x.t!=='R'&&x.st>=2).length+ (st.skip&&s5?s5.coll:0);

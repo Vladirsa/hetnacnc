@@ -121,7 +121,7 @@ const S={
   feeds:{mat:'mdf',vc:450,fz:0.15,deff:false,plungePct:30},
   scl:[1,1,1], stk:null, sup:null, zero:{top:'tc',rot:'c'},
   strat:{kind:'rot5',pattern:'spiral',dir:'x',stepover:1.0,step:0.8,allow:0,lead:8,tilt:0,maxTilt:70,avoid:true,smooth:true,skip:true,clear:2,rough:false,rsd:3,rso:3,rallow:0.4,safe:8,
-    pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0,area:{on:false,x0:-50,x1:50,y0:-50,y1:50}},
+    pat3:'par',ang:0,cutdir:'zig',rpat:'same',rrot:'spiral',roughTool:0,faces:4,area:{on:false,x0:-50,x1:50,y0:-50,y1:50}},
   post:{ctrl:'mach3',cool:'M8',dec:3,prog:1000,lines:false,inv:false,out:'gcode',pre:'',end:''},
   job:null, moves:null, gcode:null, gcodeLines:null, stale:true, busy:false,
 };

@@ -164,3 +164,105 @@ export function acomodarCopias(d: Dibujo, h: Hoja): Acomodo {
     aviso: puestas < pedidas ? `En la hoja caben ${caben} copias; se acomodaron ${puestas} de las ${pedidas} que pediste. Las demás van en otra hoja.` : null,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Varias piezas DISTINTAS en la misma hoja.
+//
+// Cada pieza se convierte en "bloques": si dos copias volteadas 180° encajan
+// y ahorran hoja, el bloque es ese par; si no, la pieza sola. Los bloques se
+// ordenan del más alto al más bajo y se acomodan por renglones de izquierda a
+// derecha. Entre piezas distintas se acomoda por la caja de cada bloque.
+// ---------------------------------------------------------------------------
+export type PiezaHoja = { dibujo: Dibujo; copias: number }
+type Bloque = { pieza: number; girada: boolean; w: number; h: number; W: number; H: number; sitios: Sitio[] }
+
+/** El par (derecha + volteada 180°) que ocupa la caja más chica, o null si no ahorra nada. */
+function mejorPar(trazos: P[][], w: number, h: number, sep: number): { W: number; H: number; sitios: Sitio[] } | null {
+  const pf = perfil(trazos, w, h, sep), { m, I, D, s } = pf
+  let mejor: { W: number; H: number; sitios: Sitio[] } | null = null
+  const paso = Math.max(1, Math.round((pf.n - 1) / 40))
+  for (let r = -(pf.n - 1); r <= pf.n - 1; r += paso) {
+    let d1 = -Infinity
+    for (let a = Math.max(0, r); a < Math.min(m, m + r); a++) {
+      const v = D[a] - (w - D[m - 1 - (a - r)])
+      if (v > d1) d1 = v
+    }
+    if (!isFinite(d1) || d1 < 0) continue
+    const W = Math.max(w, d1 + w), H = h + Math.abs(r) * s
+    if (!mejor || W * H < mejor.W * mejor.H - 1e-6) {
+      const yA = r < 0 ? -r * s : 0
+      mejor = { W, H, sitios: [{ x: 0, y: yA, vuelta: false }, { x: d1, y: yA + r * s, vuelta: true }] }
+    }
+  }
+  // el par vale la pena si ocupa menos que dos piezas lado a lado con su separación
+  return mejor && mejor.W * mejor.H < (2 * w + sep) * h * 0.93 ? mejor : null
+}
+
+export function acomodarPiezas(piezas: PiezaHoja[], h: Hoja): Acomodo {
+  if (piezas.length === 1) return acomodarCopias(piezas[0].dibujo, { ...h, copias: piezas[0].copias })
+  const sep = Math.max(0, h.separacion || 0)
+  const bases: { derecha: P[][]; girada: P[][]; w: number; al: number }[] = []
+  const bloques: Bloque[] = []
+  let pedidas = 0
+  const noCaben: number[] = []
+  piezas.forEach((pz, k) => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (const t of pz.dibujo.trazos)
+      for (const [x, y] of t.pts) {
+        if (x < x0) x0 = x
+        if (y < y0) y0 = y
+        if (x > x1) x1 = x
+        if (y > y1) y1 = y
+      }
+    const w = x1 - x0, al = y1 - y0
+    bases.push({
+      derecha: pz.dibujo.trazos.map((t) => t.pts.map((p): P => [p[0] - x0, p[1] - y0])),
+      girada: pz.dibujo.trazos.map((t) => t.pts.map((p): P => [y1 - p[1], p[0] - x0])),
+      w, al,
+    })
+    let n = Math.max(1, Math.min(500, Math.round(pz.copias) || 1))
+    if (!(w > 0) || !(al > 0)) return
+    if (pedidas + n > 500) n = Math.max(0, 500 - pedidas)
+    pedidas += n
+    // acostada: el lado largo a lo ancho, salvo que así no quepa en la hoja
+    let girada = al > w
+    if ((girada ? al : w) > h.ancho + 1e-6) girada = !girada
+    const bw = girada ? al : w, bh = girada ? w : al
+    if (bw > h.ancho + 1e-6 || bh > h.largo + 1e-6) { noCaben.push(k + 1); return }
+    const par = n >= 2 ? mejorPar(girada ? bases[k].girada : bases[k].derecha, bw, bh, sep) : null
+    const sirve = par && par.W <= h.ancho + 1e-6 && par.H <= h.largo + 1e-6
+    let faltan = n
+    if (sirve) for (; faltan >= 2; faltan -= 2) bloques.push({ pieza: k, girada, w: bw, h: bh, W: par!.W, H: par!.H, sitios: par!.sitios })
+    for (; faltan >= 1; faltan--) bloques.push({ pieza: k, girada, w: bw, h: bh, W: bw, H: bh, sitios: [{ x: 0, y: 0, vuelta: false }] })
+  })
+  bloques.sort((a, b) => b.H - a.H || b.W - a.W)
+  // renglones: cada bloque va en el primer renglón donde cabe; si en ninguno, abre uno nuevo
+  const renglones: { y: number; alto: number; x: number }[] = []
+  const trazos: Dibujo["trazos"] = []
+  let puestas = 0, fuera = 0, ocX = 0, ocY = 0, encajadas = false
+  for (const b of bloques) {
+    let rg = renglones.find((r) => b.H <= r.alto + 1e-6 && r.x + b.W <= h.ancho + 1e-6)
+    if (!rg) {
+      const ult = renglones[renglones.length - 1]
+      const y = ult ? ult.y + ult.alto + sep : 0
+      if (y + b.H > h.largo + 1e-6) { fuera += b.sitios.length; continue }
+      rg = { y, alto: b.H, x: 0 }
+      renglones.push(rg)
+    }
+    const base = b.girada ? bases[b.pieza].girada : bases[b.pieza].derecha
+    for (const q of b.sitios) {
+      const ox = rg.x + q.x, oy = rg.y + q.y
+      piezas[b.pieza].dibujo.trazos.forEach((t, i) => trazos.push({ ...t, pts: base[i].map((p): P => (q.vuelta ? [ox + b.w - p[0], oy + b.h - p[1]] : [ox + p[0], oy + p[1]])) }))
+      puestas++
+    }
+    if (b.sitios.length > 1) encajadas = true
+    ocX = Math.max(ocX, rg.x + b.W)
+    ocY = Math.max(ocY, rg.y + b.H)
+    rg.x += b.W + sep
+  }
+  const avisos: string[] = []
+  if (noCaben.length) avisos.push(`La pieza ${noCaben.join(", ")} no cabe en una hoja de ${h.ancho} × ${h.largo} mm.`)
+  if (fuera) avisos.push(`Se acomodaron ${puestas} de ${pedidas} piezas; las otras ${fuera} van en otra hoja.`)
+  if (!puestas) return { dibujo: piezas[0].dibujo, puestas: 1, caben: 0, girada: false, encajadas: false, ocupa: [0, 0], aviso: avisos.join(" ") || "Ninguna pieza cabe en la hoja." }
+  return { dibujo: { ...piezas[0].dibujo, trazos }, puestas, caben: puestas, girada: false, encajadas, ocupa: [ocX, ocY], aviso: avisos.join(" ") || null }
+}

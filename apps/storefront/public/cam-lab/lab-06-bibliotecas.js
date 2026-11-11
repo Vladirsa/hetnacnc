@@ -155,7 +155,7 @@ function syncExtrasUI(){
   const lin=st.pat3==='par'||st.pat3==='cross';$('#w_sang').hidden=!lin;$('#s_ang').value=st.ang;$$('#s_angq button').forEach(b=>b.classList.toggle('on',+b.dataset.v===st.ang));
   $('#o_pat3').textContent={par:'Pasadas rectas, una junto a otra.',cross:'Dos juegos de pasadas a 90°: borra las crestas, tarda el doble.',circ:'Círculos concéntricos desde el centro del área: buen acabado en platos y medallones.',rad:'Rayos desde el centro hacia afuera: útil en piezas con forma de domo.'}[st.pat3];
   $$('#s_cutdir button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.cutdir));
-  $('#w_rpat').hidden=rot;$('#w_rrot').hidden=!rot;$('#s_rpat').value=st.rpat;$('#s_rrot').value=st.rrot;
+  $('#w_rpat').hidden=rot;$('#w_rrot').hidden=!rot||st.kind==='idx4';$('#s_rpat').value=st.rpat;$('#s_rrot').value=st.rrot;
   // fresa de desbaste: la del acabado u otra de la biblioteca (las de grabado y las brocas no desbastan)
   if(st.roughTool&&!S.tools.some(t=>t.id===st.roughTool))st.roughTool=0;
   $('#s_rtool').innerHTML='<option value="0">La misma del acabado</option>'+S.tools.filter(t=>t.id!==S.toolId&&t.type!=='vbit'&&t.type!=='drill').map(t=>`<option value="${t.id}">T${+t.num||0} · ${esc(t.name)} · Ø${+t.D||0}</option>`).join('');

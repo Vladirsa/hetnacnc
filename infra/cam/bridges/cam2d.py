@@ -599,13 +599,15 @@ def op_barrenado(g, polys, diam, prof, receta, avisos):
     return hechos
 
 
-def op_roscado(g, polys, diam, prof, receta, paso, izquierda, avisos):
+def op_roscado(g, polys, diam, prof, receta, paso, izquierda, avisos, exterior=False):
     """Rosca interior fresada en cada círculo, con fresa de roscar de un solo
     perfil. El círculo dibujado es el diámetro nominal (M10 = círculo de 10) y
     el barreno previo ya debe estar hecho. La fresa baja por el centro, entra
     en arco y recorre una hélice de un paso por vuelta; todo va en tramos
     rectos cortos para que cualquier controlador lo corra."""
     hechos = 0
+    if exterior:
+        return _rosca_exterior(g, polys, diam, prof, receta, paso, izquierda, avisos)
     for p in polys:
         circ = 4 * math.pi * p.area / max(1e-9, p.length**2)
         if circ < 0.9:
@@ -645,6 +647,50 @@ def op_roscado(g, polys, diam, prof, receta, paso, izquierda, avisos):
         hechos += 1
     if hechos:
         g.c("Roscado: el barreno previo debe estar hecho; prueba con el tornillo y ajusta el diametro de la fresa si queda apretado")
+    return hechos
+
+
+def _rosca_exterior(g, polys, diam, prof, receta, paso, izquierda, avisos):
+    """Rosca exterior sobre un perno ya cilindrado al diámetro nominal. La fresa
+    baja por fuera, entra en arco y rodea el perno a favor del reloj (corte en
+    concordancia): bajando para rosca derecha, subiendo para izquierda."""
+    hechos = 0
+    for p in polys:
+        circ = 4 * math.pi * p.area / max(1e-9, p.length**2)
+        if circ < 0.9:
+            continue
+        x0, y0, x1, y1 = p.bounds
+        D = ((x1 - x0) + (y1 - y0)) / 2
+        fondo = D - 1.2269 * paso  # diámetro al fondo del filete
+        if fondo < 1.0:
+            avisos.append(f"Roscado: un perno de Ø{D:.1f} mm es demasiado delgado para un paso de {paso:g} mm.")
+            continue
+        c = p.centroid
+        R = fondo / 2 + diam / 2  # centro de la fresa
+        L = max(diam / 2, 2.0)  # ancho del arco de entrada
+        vueltas = max(1, math.ceil(prof / paso))
+        alto = -prof + vueltas * paso
+        z0, z1 = (-prof, alto) if izquierda else (alto, -prof)
+        f = float(receta["avance"])
+        dth = min(math.radians(15), max(math.radians(2), 2 * math.acos(max(-1.0, 1 - 0.01 / max(R, 0.02)))))
+        g.ir(c.x + R + L, c.y)
+        g.bajar(z0, receta["penetracion"])
+        n = max(6, math.ceil(math.pi / dth))
+        for k in range(1, n + 1):  # entrada: medio círculo que llega tangente al perno
+            a = math.pi * k / n
+            g.mover(c.x + R + L / 2 + L / 2 * math.cos(a), c.y + L / 2 * math.sin(a), f * 0.5)
+        n = max(12, math.ceil(2 * math.pi / dth)) * vueltas
+        for k in range(1, n + 1):
+            a = -2 * math.pi * vueltas * k / n
+            g.mover(c.x + R * math.cos(a), c.y + R * math.sin(a), f, z0 + (z1 - z0) * k / n)
+        n = max(6, math.ceil(math.pi / dth))
+        for k in range(1, n + 1):  # salida: medio círculo hacia afuera
+            a = math.pi + math.pi * k / n
+            g.mover(c.x + R + L / 2 + L / 2 * math.cos(a), c.y + L / 2 * math.sin(a), f * 0.5)
+        g.subir()
+        hechos += 1
+    if hechos:
+        g.c("Rosca exterior: el perno debe estar cilindrado al diametro nominal y libre alrededor; prueba con la tuerca")
     return hechos
 
 
@@ -831,7 +877,7 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                     paso = float(op.get("paso") or 0)
                     if not (math.isfinite(paso) and 0.2 <= paso <= 10):
                         return error("entrada_invalida", f"Operación {i}: el paso de la rosca no es válido.", "Captúralo en mm, entre 0.2 y 10 (M6 = 1, M8 = 1.25, M10 = 1.5).")
-                    figuras = op_roscado(g, polys, diam, prof, receta, paso, bool(op.get("rosca_izquierda")), avisos)
+                    figuras = op_roscado(g, polys, diam, prof, receta, paso, bool(op.get("rosca_izquierda")), avisos, bool(op.get("rosca_exterior")))
                 elif tipo == "grabado_v":
                     figuras = op_grabado_v(g, polys, float(op.get("angulo", 90)), prof, receta, avisos)
                 else:
