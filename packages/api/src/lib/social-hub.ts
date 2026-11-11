@@ -115,6 +115,8 @@ export async function asegurarSocial(knex: any) {
   await knex.raw(`alter table ?? add column if not exists version_anterior jsonb`, [T_POST]).catch(() => {})
   // Prueba A/B de ganchos: { variante: "A" | "B", pareja, gancho, decision? }
   await knex.raw(`alter table ?? add column if not exists ab jsonb`, [T_POST]).catch(() => {})
+  // Emoción que vende la pieza (mapa emocional de lib/estrategia)
+  await knex.raw(`alter table ?? add column if not exists emocion text`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()

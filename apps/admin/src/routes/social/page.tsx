@@ -244,6 +244,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", cursor: "pointer" }} onClick={() => setAbierta(!abierta)}>
         <b style={{ color: col, fontSize: 12, textTransform: "uppercase" }}>{et}</b>
         <span style={{ fontSize: 12, color: C.tenue }}>{ORIGEN[p.origen] || p.origen}</span>
+        {(p as any).emocion && <span style={{ fontSize: 12, background: "#FFF1E6", color: "#9A3D00", borderRadius: 99, padding: "1px 8px" }} title="Emoción que vende esta pieza (mapa emocional)">❤ {String((p as any).emocion).replace("suenos", "sueños")}</span>}
         {(p as any).ab && (
           <span style={{ fontSize: 12, background: "#EEF2FF", color: "#3730A3", borderRadius: 99, padding: "1px 8px" }} title="Mismo video con dos ganchos distintos: si el A rinde bien, el B no se publica">
             {(p as any).ab.variante === "A" ? "🅰 Prueba A/B" : "🅱 Prueba A/B (otro gancho)"}{(p as any).ab.decision ? ` · ${(p as any).ab.decision}` : ""}
@@ -692,7 +693,7 @@ function Resultados() {
               <p style={{ color: C.tenue, fontSize: 13 }}>Con {ap.publicaciones} publicaciones medidas aún no hay conclusiones (se necesitan al menos 3 por grupo).</p>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
-              {[["Por formato", ap.por_formato, (g: any) => g.formato], ["Por mercado", ap.por_mercado, (g: any) => String(g.mercado).toUpperCase()], ["Por hora (local)", ap.por_hora.slice(0, 8), (g: any) => `${g.hora}:00`]].map(([t, lista, et]: any) => (
+              {[["Por formato", ap.por_formato, (g: any) => g.formato], ["Por mercado", ap.por_mercado, (g: any) => String(g.mercado).toUpperCase()], ["Por hora (local)", ap.por_hora.slice(0, 8), (g: any) => `${g.hora}:00`], ["Por emoción", ap.por_emocion || [], (g: any) => g.emocion]].map(([t, lista, et]: any) => (
                 <div key={t}>
                   <b style={{ fontSize: 13 }}>{t}</b>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>

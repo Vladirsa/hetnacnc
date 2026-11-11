@@ -19,7 +19,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, nuevoId } from "../licitacion"
 import { MERCADOS, T_POST, asegurarSocial, crearPublicacion, iaSocial, ligaPara, urlCorta, zonaDe } from "../social-hub"
-import { GUIAS, instanteEn, lunesDe } from "../estrategia"
+import { GUIAS, REGLAS_EMOCION, instanteEn, lunesDe } from "../estrategia"
 import { PRINCIPIOS_VIDEO, TEMAS, cuadroVideo, escenaLarga, lamina, miniatura, tarjeta, carpetaFuentes } from "./render"
 import { PROMPTS_TEMA, VOZ, bajarB2, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
@@ -168,6 +168,7 @@ export async function generarPaquete(entrada: { guion?: string; tema?: string; m
       "A partir del guion o tema, crea un paquete para redes. Reglas: usa sólo hechos del guion y del contexto; no inventes precios, cifras, clientes ni promociones; " +
       "nada de teléfonos ni correos. Exactamente 5 cortos (cada uno con un gancho distinto y 2 o 3 frases), carrusel de 4 a 6 láminas, capítulos y escenas del video largo que sigan el guion, " +
       "y un artículo útil. Cada texto respeta la guía de su red:\n" + reglas +
+      "\nMapa emocional: cada corto vende UNA emoción distinta (deseo, belleza, tranquilidad, sueños, seguridad o esperanza) según el público. " + REGLAS_EMOCION +
       "\nPrincipios de video (cortos y escenas del video largo): " + PRINCIPIOS_VIDEO +
       " En los cortos, el gancho y cada frase en pantalla son de máximo 4 palabras (la narración completa va en la voz y los subtítulos); en 'visual' e 'imagen_en' describe la acción visual concreta de la escena.",
     messages: [{ role: "user", content: `Público: ${entrada.publico || "clientes y talleres"}.\n${entrada.guion ? `Guion:\n${entrada.guion}` : `Tema: ${entrada.tema}`}\n\nContexto real de HETNA:\n${contexto}` }],

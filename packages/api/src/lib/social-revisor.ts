@@ -48,6 +48,7 @@ async function corregir(p: any, faltas: Record<string, { consejos: string[] }>, 
         `Mercado: ${MERCADOS[p.mercado || "mx"]?.nota || "español de México"}. Corrige cada texto aplicando SÓLO lo que se pide, sin cambiar el sentido. ` +
         "Reglas: no inventes precios, cifras, clientes, plazos ni promociones (usa sólo los datos que ya están); primera línea corta (máx. 8 palabras) que se entienda sola; " +
         "una sola llamada a la acción; pide que lo manden a quien lo necesita, nunca 'comenta SÍ' ni 'etiqueta a'; conserva exactamente la marca {{liga}} si estaba " +
+        "si el texto promete riqueza, ingresos o ganancias, cámbialo por lo verificable (trabajo disponible, sin comisión, cotizar gratis); " +
         "(en Instagram no pongas ligas: di 'liga en el perfil'); sin teléfonos ni correos.",
       messages: [{ role: "user", content: detalle }],
     } as any)

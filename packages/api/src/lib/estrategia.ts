@@ -71,6 +71,30 @@ export const PUBLICOS: Publico[] = [
 ]
 
 // ---------------------------------------------------------------------
+// Mapa emocional (fórmula del dueño, 11 nov 2026): cada publicación vende una
+// emoción. Se escribe a la aspiración, no a la condición de quien la ve; sólo
+// se promete lo verificable (trabajo disponible, sin comisión, talleres
+// verificados, cotizar gratis): nada de "hazte rico" ni cifras de ganancias, y
+// nada dirigido a menores ("sueños" = jóvenes emprendedores y padres).
+// ---------------------------------------------------------------------
+
+export type Emocion = { clave: string; nombre: string; publicos: string[]; como: string; prueba: string }
+export const EMOCIONES: Emocion[] = [
+  { clave: "deseo", nombre: "Deseo", publicos: ["talleres", "proveedores"], como: "el taller con trabajos que dan orgullo, la máquina que no para, clientes que regresan", prueba: "solicitudes reales de clientes y cotizar sin comisión" },
+  { clave: "belleza", nombre: "Belleza", publicos: ["clientes_particulares", "comunidad"], como: "piezas y diseños bonitos: decoración, regalos personalizados, acabados que lucen", prueba: "trabajos reales de talleres y diseños de la tienda" },
+  { clave: "tranquilidad", nombre: "Tranquilidad", publicos: ["clientes_particulares", "clientes_empresa"], como: "encargar sin miedo: taller verificado, condiciones claras, todo por escrito", prueba: "talleres verificados, reseñas reales y contrato SafeDeal opcional" },
+  { clave: "suenos", nombre: "Sueños", publicos: ["comunidad", "talleres", "clientes_particulares"], como: "emprender con una máquina, convertir una idea en negocio, el primer cliente", prueba: "registro gratis, calculadora y diseños para empezar" },
+  { clave: "seguridad", nombre: "Seguridad", publicos: ["clientes_empresa", "proveedores"], como: "proveedores confiables para producir sin sorpresas: calidad, plazos y respaldo", prueba: "ranking por evaluaciones reales, certificaciones y SafeDeal" },
+  { clave: "esperanza", nombre: "Esperanza", publicos: ["talleres", "comunidad", "proveedores"], como: "empezar con poco y crecer: oportunidades cerca, sin pagar por entrar", prueba: "registro gratis, sin comisión y solicitudes abiertas en su estado" },
+]
+export const REGLAS_EMOCION =
+  "Cada pieza transmite UNA emoción del mapa emocional de HETNA y la muestra con una escena o historia (no la nombra). " +
+  "Se escribe a la aspiración, nunca a la condición de quien la ve (no 'si eres pobre', no 'para mujeres'). " +
+  "Sólo se promete lo verificable: trabajo disponible, cotizar gratis, sin comisión, talleres verificados; prohibido prometer riqueza, ingresos o cifras de ganancias. " +
+  "Nada dirigido a menores de edad: 'sueños' es para jóvenes emprendedores y para padres que apoyan a sus hijos."
+export const emocionesDe = (publico: string) => EMOCIONES.filter((e) => e.publicos.includes(publico))
+
+// ---------------------------------------------------------------------
 // Guía por red (lo que premia cada algoritmo)
 // ---------------------------------------------------------------------
 
@@ -210,6 +234,7 @@ let listo = false
 export async function asegurarPlan(knex: any) {
   if (listo) return
   await asegurarSocial(knex)
+  await knex.raw(`alter table if exists ?? add column if not exists emocion text`, [T_PLAN]).catch(() => {})
   if (!(await knex.schema.hasTable(T_PLAN))) {
     await knex.schema.createTable(T_PLAN, (t: any) => {
       t.text("id").primary()
@@ -220,6 +245,7 @@ export async function asegurarPlan(knex: any) {
       t.text("publico").notNullable()
       t.text("pilar").notNullable()
       t.text("formato").notNullable()
+      t.text("emocion")
       t.text("estado").notNullable().defaultTo("vacio") // vacio | borrador | falta_material | programada | publicada | descartada
       t.text("post_id")
       t.timestamp("created_at", { useTz: true }).defaultTo(knex.fn.now())
@@ -298,6 +324,8 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
         filas.push({
           id: nuevoId("plan"), semana, fecha: instanteEn(sumarDias(semana, dia - 1), hora, zona), red, mercado,
           publico: publico.clave, pilar, formato: g.formatos[i % g.formatos.length], estado: "vacio",
+          // Emoción que vende esta pieza (rota entre las del público)
+          emocion: (emocionesDe(publico.clave)[(i + giro) % Math.max(1, emocionesDe(publico.clave).length)] || EMOCIONES[0]).clave,
         })
       }
       giro++
@@ -338,12 +366,15 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
         "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
         "a talleres muéstrales la necesidad del cliente (trabajo disponible, sin comisión) y a clientes que ya hay talleres listos para cotizar. " +
         "Público Comunidad: habla del lado humano de emprender un taller con empatía o humor (personifica el problema, situaciones que todos reconocen) y termina con una pregunta para que comenten; nada de vender. " +
+        REGLAS_EMOCION + " " +
         "Temas de salud mental (depresión, ansiedad, abuso): con respeto, sin diagnósticos ni consejos médicos, sin burla; invita a buscar apoyo y, en México, menciona la Línea de la Vida 800 911 2000.",
       messages: [{
         role: "user",
         content:
           `Mercado: ${MERCADOS[slot.mercado]?.nombre} (${MERCADOS[slot.mercado]?.nota}).\nRed: ${REDES[slot.red]?.nombre}. Lo que premia: ${g?.claves}\n` +
-          `Formato: ${slot.formato}. Público: ${publico.nombre} (objetivo: ${publico.objetivo}). Tema: ${slot.pilar}.\n\nContexto real de HETNA:\n${contexto}`,
+          `Formato: ${slot.formato}. Público: ${publico.nombre} (objetivo: ${publico.objetivo}). Tema: ${slot.pilar}.\n` +
+          (() => { const e = EMOCIONES.find((x) => x.clave === slot.emocion); return e ? `Emoción que vende: ${e.nombre} — ${e.como}. Prueba verificable: ${e.prueba}.\n` : "" })() +
+          `\nContexto real de HETNA:\n${contexto}`,
       }],
     } as any)
     if (resp.stop_reason === "refusal") return { texto: plantilla, ia: false }
@@ -399,6 +430,7 @@ export async function llenarPlan(knex: any, semana: string, logger?: any, limite
     )
     const necesitaVideo = ["reel", "video", "short", "largo"].includes(h.formato)
     await knex(T_PLAN).where({ id: h.id }).update({ post_id: postId, estado: necesitaVideo ? "falta_material" : "borrador" })
+    if (h.emocion) await knex(T_POST).where({ id: postId }).update({ emocion: h.emocion })
     n++
   }
   return { llenados: n }

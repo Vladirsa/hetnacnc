@@ -1,0 +1,35 @@
+<template>
+<style>
+  @font-face { font-family: "Archivo XB"; src: url("assets/fonts/Archivo-800.ttf"); font-weight: 800; }
+  #root { position:absolute; inset:0; overflow:hidden; font-family:"Archivo Black", sans-serif; color:#142033; }
+  .fondo { position:absolute; inset:0; background-color:#E8EEF4;
+    background-image: linear-gradient(rgba(20,32,51,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(20,32,51,.07) 2px, transparent 2px);
+    background-size:60px 60px; }
+  .titulo { position:absolute; left:80px; width:920px; top:250px; font-size:132px; line-height:.95; letter-spacing:-.02em; }
+  .acento { color:#C2560A; }
+.tarj { position:absolute; width:520px; height:160px; background:#fff; border:6px solid #142033; border-radius:24px; display:flex; align-items:center; gap:26px; padding:0 34px; box-shadow:0 14px 0 rgba(20,32,51,.15); }
+  .tarj .ico { width:90px; height:90px; border-radius:20px; background:#FFF1E6; display:flex; align-items:center; justify-content:center; }
+  .tarj .l1 { font-family:"Archivo XB"; font-size:32px; color:#5b6b80; } .tarj .l2 { font-size:50px; }</style>
+<div id="root" data-composition-id="s3" data-width="1080" data-height="1920">
+<div class="fondo"></div>
+<svg class="maq" viewBox="0 0 800 520" width="680" height="442" style="position:absolute;left:200px;top:760px">
+  <rect x="40" y="300" width="720" height="150" rx="10" fill="#fff" stroke="#142033" stroke-width="8"/>
+  <rect x="60" y="450" width="40" height="60" fill="#142033"/><rect x="700" y="450" width="40" height="60" fill="#142033"/>
+  <line x1="70" y1="330" x2="730" y2="330" stroke="#142033" stroke-width="3" stroke-dasharray="10 12"/>
+  <rect x="20" y="120" width="40" height="190" fill="#142033"/><rect x="740" y="120" width="40" height="190" fill="#142033"/>
+  <rect x="20" y="100" width="760" height="44" rx="8" fill="#142033"/>
+  
+  <g id="s3-cabezal"><rect x="350" y="80" width="100" height="120" rx="10" fill="#fff" stroke="#142033" stroke-width="8"/>
+  <polygon points="382,200 418,200 406,240 394,240" fill="#142033"/></g>
+</svg><div id="s3-tarj" class="tarj" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow style="left:120px;top:560px"><div class="ico"><svg viewBox="0 0 60 60" width="56" height="56"><path d="M10 15h40v30H10z M22 22h16v16H22z" fill="none" stroke="#C2560A" stroke-width="5"/></svg></div><div><div class="l2">Pieza CNC</div></div></div>
+<div id="s3-cero" style="position:absolute;left:0;width:1080px;top:520px;text-align:center;font-size:240px;line-height:1;color:#C2560A">0%</div>
+<div id="s3-t" class="titulo clip" data-start="0" data-duration="5.2">Sin<br><span class="acento">comisión</span></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#s3-tarj", {x:0, y:0, scale:1, opacity:1}, {x:160, y:330, scale:.25, opacity:0, duration:.7, ease:"power3.in"}, 1.4);
+tl.fromTo("#s3-cabezal", {y:0}, {y:18, duration:.15, yoyo:true, repeat:1, ease:"power2.inOut"}, 2.1);
+tl.fromTo("#s3-cero", {scale:.2, opacity:0}, {scale:1, opacity:1, duration:.7, ease:"expo.out"}, 3.1);
+window.__timelines["s3"] = tl;
+</script>
+</template>

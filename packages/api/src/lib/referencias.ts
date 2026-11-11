@@ -165,6 +165,7 @@ export async function generarGuia(knex: any, logger?: any) {
       "formatos preferidos y cuándo usar cada uno, estructura de guion (gancho, problema, explicación, prueba, llamado), ritmo y duración de videos, estilo de ilustración, " +
       "cómo poner el texto en pantalla (jerarquía, globos de diálogo, tamaño), colores (la marca usa azul marino #142033 y naranja #C2560A), tono y humor, y lo que NO se hace. " +
       "Incluye siempre estos principios de video del dueño: Propón una acción visual por bloque; máximo 4 palabras en pantalla por escena aparte de subtítulos; convierte ideas en acciones y dibuja literal las analogías; muestra magnitudes con escala, enfoca lo importante y conserva elementos entre escenas; sincroniza cada acción con su palabra y deja una imagen final clara por escena. " +
+      "Incluye el mapa emocional del dueño: vender Deseo (taller con trabajos que dan orgullo), Belleza (piezas y diseños bonitos), Tranquilidad (encargar sin miedo), Sueños (emprender; para jóvenes emprendedores y padres, nunca dirigido a menores), Seguridad (proveedores confiables para empresas) y Esperanza (empezar con poco, sin pagar por entrar); siempre a la aspiración, sin prometer riqueza ni cifras. " +
       "Escríbela en viñetas claras en español de México, máximo 700 palabras. Es para que la sigan agentes de IA (guionista, diseñador y revisor).",
     messages: [{ role: "user", content: resumen }],
   } as any)

@@ -1,0 +1,25 @@
+<template>
+<style>
+  @font-face { font-family: "Archivo XB"; src: url("assets/fonts/Archivo-800.ttf"); font-weight: 800; }
+  #root { position:absolute; inset:0; overflow:hidden; font-family:"Archivo Black", sans-serif; color:#142033; }
+  .fondo { position:absolute; inset:0; background-color:#E8EEF4;
+    background-image: linear-gradient(rgba(20,32,51,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(20,32,51,.07) 2px, transparent 2px);
+    background-size:60px 60px; }
+  .titulo { position:absolute; left:80px; width:920px; top:250px; font-size:132px; line-height:.95; letter-spacing:-.02em; }
+  .acento { color:#C2560A; }
+</style>
+<div id="root" data-composition-id="s6" data-width="1080" data-height="1920">
+<div class="fondo"></div>
+
+<div id="s6-marca" style="position:absolute;left:0;width:1080px;top:560px;text-align:center;font-size:132px;line-height:1;white-space:nowrap"><span class="acento">HETNA</span> CNC</div>
+<div id="s6-web" style="position:absolute;left:0;width:1080px;top:740px;text-align:center;font-family:'Archivo XB';font-size:68px">hetnacnc.com</div>
+<div id="s6-cta" style="position:absolute;left:190px;width:700px;top:900px;height:150px;border-radius:30px;background:#C2560A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:80px">Únete gratis</div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#s6-marca", {opacity:0, filter:"blur(10px)"}, {opacity:1, filter:"blur(0px)", duration:.5, ease:"expo.out"}, 0.1);
+tl.fromTo("#s6-web", {opacity:0, y:30}, {opacity:1, y:0, duration:.5, ease:"expo.out"}, 0.5);
+tl.fromTo("#s6-cta", {scale:.6, opacity:0}, {scale:1, opacity:1, duration:.45, ease:"back.out(1.6)"}, 1.0);
+window.__timelines["s6"] = tl;
+</script>
+</template>

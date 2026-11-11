@@ -1,0 +1,34 @@
+<template>
+<style>
+  @font-face { font-family: "Archivo XB"; src: url("assets/fonts/Archivo-800.ttf"); font-weight: 800; }
+  #root { position:absolute; inset:0; overflow:hidden; font-family:"Archivo Black", sans-serif; color:#142033; }
+  .fondo { position:absolute; inset:0; background-color:#E8EEF4;
+    background-image: linear-gradient(rgba(20,32,51,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(20,32,51,.07) 2px, transparent 2px);
+    background-size:60px 60px; }
+  .titulo { position:absolute; left:80px; width:920px; top:250px; font-size:132px; line-height:.95; letter-spacing:-.02em; }
+  .acento { color:#C2560A; }
+</style>
+<div id="root" data-composition-id="s5" data-width="1080" data-height="1920">
+<div class="fondo"></div>
+<svg class="maq" viewBox="0 0 800 520" width="680" height="442" style="position:absolute;left:200px;top:760px">
+  <rect x="40" y="300" width="720" height="150" rx="10" fill="#fff" stroke="#142033" stroke-width="8"/>
+  <rect x="60" y="450" width="40" height="60" fill="#142033"/><rect x="700" y="450" width="40" height="60" fill="#142033"/>
+  <line x1="70" y1="330" x2="730" y2="330" stroke="#142033" stroke-width="3" stroke-dasharray="10 12"/>
+  <rect x="20" y="120" width="40" height="190" fill="#142033"/><rect x="740" y="120" width="40" height="190" fill="#142033"/>
+  <rect x="20" y="100" width="760" height="44" rx="8" fill="#142033"/>
+  <path id="s5-corte" d="M220 420 L220 350 Q400 280 580 350 L580 420 Z" fill="none" stroke="#C2560A" stroke-width="10" stroke-linejoin="round" stroke-dasharray="900" stroke-dashoffset="900"/>
+  <g id="s5-cabezal"><rect x="350" y="80" width="100" height="120" rx="10" fill="#fff" stroke="#142033" stroke-width="8"/>
+  <polygon points="382,200 418,200 406,240 394,240" fill="#142033"/></g>
+</svg>
+<svg id="s5-chispas" viewBox="0 0 120 80" width="120" height="80" style="position:absolute;left:480px;top:924px"><g stroke="#C2560A" stroke-width="5" stroke-linecap="round"><path d="M60 40 L20 10 M60 40 L100 8 M60 40 L10 50 M60 40 L110 55 M60 40 L40 78 M60 40 L85 78"/></g></svg>
+<div id="s5-t" class="titulo clip" data-start="0" data-duration="2.6">¡A <span class="acento">cortar!</span></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#s5-cabezal", {x:-170}, {x:170, duration:1.6, ease:"power2.inOut"}, 0.2);
+tl.fromTo("#s5-corte", {strokeDashoffset:900}, {strokeDashoffset:0, duration:1.6, ease:"power2.inOut"}, 0.2);
+tl.fromTo("#s5-chispas", {x:-144, opacity:0}, {x:144, opacity:1, duration:1.6, ease:"power2.inOut"}, 0.2);
+tl.to("#s5-chispas", {opacity:0, duration:.2}, 1.8);
+window.__timelines["s5"] = tl;
+</script>
+</template>

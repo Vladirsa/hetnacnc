@@ -97,7 +97,7 @@ export async function aprendizaje(knex: any, dias = 60) {
   const posts = await knex(T_POST)
     .whereNotNull("estadisticas")
     .where("publicada_en", ">=", knex.raw(`now() - (? || ' days')::interval`, [String(Math.max(7, Math.min(365, dias)))]))
-    .select("id", "titulo", "medios", "mercado", "origen", "publicada_en", "estadisticas", "resultado")
+    .select("id", "titulo", "medios", "mercado", "origen", "publicada_en", "estadisticas", "resultado", "emocion")
   const grupos: Record<string, any> = {}
   const sumar = (clave: string, base: any, e: any) => {
     const g = (grupos[clave] ??= { ...base, n: 0, interaccion: 0, alcance: 0 })
@@ -115,6 +115,7 @@ export async function aprendizaje(knex: any, dias = 60) {
       sumar(`m|${red}|${p.mercado || "mx"}`, { tipo: "mercado", red, mercado: p.mercado || "mx" }, e)
       sumar(`h|${red}|${hora}`, { tipo: "hora", red, hora }, e)
       sumar(`o|${red}|${p.origen}`, { tipo: "origen", red, origen: p.origen }, e)
+      if (p.emocion) sumar(`e|${red}|${p.emocion}`, { tipo: "emocion", red, emocion: p.emocion }, e)
       mejores.push({ id: p.id, titulo: p.titulo, red, formato, mercado: p.mercado || "mx", url: p.resultado?.[red]?.url || null, ...e })
     }
   }
@@ -130,6 +131,8 @@ export async function aprendizaje(knex: any, dias = 60) {
     }
     const h = de("hora").filter((g) => g.red === red && g.n >= 3)
     if (h.length >= 2) resumen.push(`En ${REDES[red].nombre}, la mejor hora ha sido las ${h[0].hora}:00 (hora local del mercado).`)
+    const em = de("emocion").filter((g) => g.red === red && g.n >= 3)
+    if (em.length >= 2) resumen.push(`En ${REDES[red].nombre}, la emoción que más conecta es "${em[0].emocion}".`)
     const m = de("mercado").filter((g) => g.red === red && g.n >= 3)
     if (m.length >= 2) resumen.push(`En ${REDES[red].nombre}, el mercado que más responde es ${m[0].mercado.toUpperCase()}.`)
   }
@@ -140,6 +143,7 @@ export async function aprendizaje(knex: any, dias = 60) {
     por_mercado: de("mercado"),
     por_hora: de("hora"),
     por_origen: de("origen"),
+    por_emocion: de("emocion"),
     mejores: mejores.sort((a, b) => b.interaccion - a.interaccion).slice(0, 8),
     resumen,
   }
