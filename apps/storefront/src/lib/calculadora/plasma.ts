@@ -11,17 +11,17 @@ const TABLA: Record<string, number[][]> = {
   "30": [[1, 6500], [1.5, 5000], [3, 2000], [6, 600], [8, 350]],
   "45": [[1.5, 8000], [3, 5500], [6, 2200], [10, 900], [12, 600], [16, 350]],
   "65": [[3, 6400], [6, 2900], [10, 1500], [12, 1120], [16, 720], [20, 480], [25, 240]],
-  "85": [[3, 7200], [6, 4000], [10, 2250], [12, 1680], [16, 1120], [20, 800], [25, 480], [32, 300]],
-  "105": [[6, 4800], [10, 2800], [12, 2240], [16, 1520], [20, 1120], [25, 720], [32, 440], [38, 300]],
+  "85": [[3, 7200], [6, 4000], [10, 2250], [12, 1680], [16, 1120], [20, 800], [25, 480], [32, 200]],
+  "105": [[6, 4800], [10, 2800], [12, 2240], [16, 1520], [20, 1120], [25, 720], [32, 440], [38, 200]],
   "125": [[6, 5600], [10, 3450], [12, 2720], [16, 1920], [20, 1440], [25, 960], [32, 600], [38, 420], [44, 280]],
 }
 // alturas (mm) y voltaje de arco típico por amperaje
 const AJUSTES: Record<string, { corte: number; perforacion: number; voltaje: [number, number]; kerf: number; aire: string; boquilla: string }> = {
   "30": { corte: 1.5, perforacion: 3.5, voltaje: [95, 115], kerf: 1.1, aire: "5.5 bar, 110 l/min", boquilla: "boquilla 30 A, electrodo estándar" },
-  "45": { corte: 1.5, perforacion: 3.8, voltaje: [110, 130], kerf: 1.3, aire: "5.5 bar, 170 l/min", boquilla: "boquilla 45 A + escudo" },
-  "65": { corte: 1.5, perforacion: 3.8, voltaje: [120, 140], kerf: 1.7, aire: "5.9 bar, 220 l/min", boquilla: "boquilla 65 A + escudo" },
-  "85": { corte: 1.5, perforacion: 3.8, voltaje: [125, 150], kerf: 2.0, aire: "5.9 bar, 220 l/min", boquilla: "boquilla 85 A + escudo" },
-  "105": { corte: 2.0, perforacion: 4.0, voltaje: [135, 160], kerf: 2.4, aire: "5.9 bar, 250 l/min", boquilla: "boquilla 105 A + escudo" },
+  "45": { corte: 1.5, perforacion: 3.8, voltaje: [110, 130], kerf: 1.3, aire: "5.9 bar, 190 l/min", boquilla: "boquilla 45 A + escudo" },
+  "65": { corte: 1.5, perforacion: 3.8, voltaje: [120, 140], kerf: 1.7, aire: "5.9 bar, 190–210 l/min", boquilla: "boquilla 65 A + escudo" },
+  "85": { corte: 1.5, perforacion: 3.8, voltaje: [125, 150], kerf: 2.0, aire: "5.9 bar, 190–210 l/min", boquilla: "boquilla 85 A + escudo" },
+  "105": { corte: 2.0, perforacion: 4.0, voltaje: [135, 160], kerf: 2.4, aire: "5.9–6.2 bar, 220–260 l/min", boquilla: "boquilla 105 A + escudo" },
   "125": { corte: 2.0, perforacion: 4.5, voltaje: [140, 170], kerf: 2.8, aire: "5.9 bar, 280 l/min", boquilla: "boquilla 125 A + escudo" },
 }
 export const MAT_PLASMA: Record<string, { nombre: string; vel: number; esp: number; gas?: string; nota?: string }> = {
