@@ -16,9 +16,13 @@ const botonClaro =
 const campo =
   "w-full rounded-[10px] border border-[#E7E4DC] bg-[#FAF9F6] px-4 py-3 text-[15px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"
 
-let monedaPagina: "MXN" | "USD" = "MXN"
-const mxn = (n: number) =>
-  `$${n.toLocaleString(monedaPagina === "USD" ? "en-US" : "es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+// Moneda del taller: MXN, USD, COP, PEN o CLP (pesos colombianos y chilenos sin centavos)
+let monedaPagina = "MXN"
+const mxn = (n: number) => {
+  const dec = monedaPagina === "COP" || monedaPagina === "CLP" ? 0 : 2
+  const t = Number(n || 0).toLocaleString(monedaPagina === "USD" ? "en-US" : "es-MX", { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return monedaPagina === "PEN" ? `S/ ${t}` : `$${t}`
+}
 const fecha = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : ""
 const vence = (c: CotizacionPublica) => {
@@ -51,7 +55,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
   const [c, setC] = useState(inicial)
   const [nombre, setNombre] = useState(inicial.cliente?.nombre || "")
   const [trabajando, setTrabajando] = useState<"" | "aceptar" | "pagar" | "paypal">("")
-  monedaPagina = c.moneda === "USD" ? "USD" : "MXN"
+  monedaPagina = c.moneda || "MXN"
   const [error, setError] = useState("")
 
   // Al volver de Mercado Pago, el aviso puede tardar unos segundos: se vuelve a leer.
@@ -95,7 +99,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
 
   // Páginas viejas (sin `metodos`) sólo tenían Mercado Pago
   const metodos = c.anticipo.metodos || { mercadopago: c.anticipo.se_puede_pagar, paypal: false }
-  const moneda = c.moneda === "USD" ? "USD" : "MXN"
+  const moneda = c.moneda || "MXN"
   const resta = Math.max(0, c.anticipo.monto - c.anticipo.pagado)
   const aceptada = Boolean(c.aceptada) || c.estado === "Aprobada" || c.estado === "Pedido"
   const rechazada = c.estado === "Rechazada"
@@ -162,7 +166,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           {c.descuento_pct ? <Fila k={`Descuento ${c.descuento_pct}%`} v={`− ${mxn((c.subtotal * c.descuento_pct) / 100)}`} /> : null}
           {c.descuento_fijo ? <Fila k="Descuento" v={`− ${mxn(c.descuento_fijo)}`} /> : null}
           {c.envio ? <Fila k="Envío" v={mxn(c.envio)} /> : null}
-          {c.iva ? <Fila k={`IVA ${c.iva_pct}%`} v={mxn(c.iva)} /> : null}
+          {c.iva ? <Fila k={`${moneda === "PEN" ? "IGV" : moneda === "USD" ? "Impuesto" : "IVA"} ${c.iva_pct}%`} v={mxn(c.iva)} /> : null}
           <div className="flex justify-between pt-1 text-[18px] font-bold text-[#142033]">
             <dt>Total</dt>
             <dd className="m-0">{mxn(c.total)} {moneda}</dd>
@@ -240,6 +244,9 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                         <p className="m-0 mt-2 text-[12px] text-[#7A776E]">
                           {metodos.mercadopago ? "Mercado Pago: tarjeta, transferencia, efectivo o saldo. " : ""}
                           {metodos.paypal ? "PayPal: tu cuenta PayPal o tarjeta. " : ""}
+                          {metodos.paypal && c.anticipo.paypal_en_dolares
+                            ? "PayPal cobra en dólares estadounidenses al tipo de cambio del día; verás el monto exacto antes de pagar. "
+                            : ""}
                           El pago llega directo a {c.taller.nombre}.
                           {!aceptada ? " Al pagar, la cotización queda aceptada." : ""}
                         </p>
