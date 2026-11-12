@@ -807,6 +807,7 @@ export type Routes = {
         };
         hetnaCloud: {
             $token: typeof import("../src/api/store/hetna-cloud/[token]/route");
+            cam: typeof import("../src/api/store/hetna-cloud/cam/route");
         };
         hetnaMuestras3d: typeof import("../src/api/store/hetna-muestras-3d/route");
         hetnaPedidos: {
