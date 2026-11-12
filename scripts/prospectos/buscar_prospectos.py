@@ -38,16 +38,29 @@ NO_EMPRESA = ("facebook.com", "instagram.com", "linkedin.com", "youtube.com", "m
 
 
 def config_llm() -> dict:
-    modelo = os.environ.get("LLM_MODEL", "openai/gpt-4o-mini")
-    llm = {"model": modelo, "temperature": 0}
-    if not modelo.startswith("ollama/"):
-        clave = os.environ.get("LLM_API_KEY")
-        if not clave:
-            sys.exit("Falta LLM_API_KEY (o usa LLM_MODEL=ollama/...)")
-        llm["api_key"] = clave
+    """Configura el modelo. Groq se pasa como instancia de LangChain (ChatGroq):
+    algunas versiones de ScrapeGraphAI mandan "groq/..." por el cliente de
+    OpenAI y la llave de Groq (gsk_...) termina rechazada por api.openai.com."""
+    clave = os.environ.get("LLM_API_KEY", "").strip()
+    modelo = os.environ.get("LLM_MODEL", "").strip()
+    if not modelo:
+        modelo = "groq/llama-3.1-8b-instant" if clave.startswith("gsk_") else "openai/gpt-4o-mini"
+    proveedor, _, nombre = modelo.partition("/")
+
+    if proveedor == "ollama":
+        llm = {"model": modelo, "temperature": 0, "format": "json",
+               "base_url": os.environ.get("OLLAMA_URL", "http://localhost:11434")}
     else:
-        llm["base_url"] = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-        llm["format"] = "json"
+        if not clave or clave.startswith("PEGA_AQUI"):
+            sys.exit("Falta LLM_API_KEY en .env (o usa LLM_MODEL=ollama/...)")
+        if proveedor == "groq" or clave.startswith("gsk_"):
+            from langchain_groq import ChatGroq
+            nombre = nombre if proveedor == "groq" else "llama-3.1-8b-instant"
+            llm = {"model_instance": ChatGroq(model=nombre, api_key=clave, temperature=0, max_retries=3),
+                   "model_tokens": 128000}
+        else:
+            llm = {"model": modelo, "api_key": clave, "temperature": 0}
+    print(f"Modelo: {modelo}")
     return {"llm": llm, "headless": True, "verbose": False}
 
 
@@ -180,11 +193,22 @@ def main() -> None:
     consultas = plan_auto(args.auto) if args.auto else leer_consultas(Path(args.consultas))
     for pais, tipo, idioma, consulta in consultas:
         print(f"\n🔎 {consulta}")
-        for url in buscar_sitios(consulta, args.max_por_consulta, cfg):
+        try:
+            sitios = buscar_sitios(consulta, args.max_por_consulta, cfg)
+        except Exception as e:  # noqa: BLE001
+            print(f"  ✖ la búsqueda falló: {type(e).__name__}: {str(e)[:200]}")
+            if "401" in str(e) or "Authentication" in type(e).__name__:
+                sys.exit("La llave de la IA fue rechazada (401): revisa LLM_API_KEY en .env")
+            continue
+        for url in sitios:
             dom = dominio_de(url)
             if dom in vistos:
                 continue
-            c = extraer_contacto(url, cfg)
+            try:
+                c = extraer_contacto(url, cfg)
+            except Exception as e:  # noqa: BLE001
+                print(f"  ✖ {dom}: {type(e).__name__}")
+                continue
             if not c or c.get("es_cnc") is False:
                 continue
             email = (c.get("email") or "").strip().lower()
