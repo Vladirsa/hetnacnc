@@ -19,6 +19,7 @@ import json
 import os
 import re
 import sys
+import html as html_mod
 import time
 import urllib.request
 from datetime import date
@@ -33,8 +34,12 @@ CAMPOS = [
     "email", "telefono", "whatsapp", "facebook", "instagram", "linkedin", "youtube", "tiktok",
     "productos_servicios", "idioma", "fuente_url",
 ]
+UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 EMAIL_RE = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$", re.I)
-NO_EMPRESA = ("facebook.com", "instagram.com", "linkedin.com", "youtube.com", "mercadolibre.", "amazon.",
+NO_EMPRESA = ("probados.", "plastico.com", "metalmecanica.com", "industriamart", "dirind.com", "seccionamarilla",
+              "cylex", "infoisinfo", "guiamexico", "paginasamarillas", "directorio", "maquinadosenmexico", "agalmasourcing",
+              "alibaba.", "made-in-china", "indiamart", "kompass", "europages", "thomasnet", "blogspot.", "wordpress.com",
+              "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "mercadolibre.", "amazon.",
               "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas")
 
 
@@ -121,7 +126,7 @@ def ya_vistos() -> set[str]:
 
 def texto_pagina(url: str) -> str:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (prospectos HETNA)"})
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=15) as r:
             return r.read(2_000_000).decode("utf-8", "ignore").lower()
     except Exception:
@@ -162,12 +167,13 @@ REDES = {"facebook": "facebook.com/", "instagram": "instagram.com/", "linkedin":
          "youtube": "youtube.com/", "tiktok": "tiktok.com/@"}
 CNC_PALABRAS = ("cnc", "maquinad", "mecanizad", "usinagem", "router", "láser", "laser", "plasma", "torno",
                 "fresad", "fresas", "insertos", "machining", "machine shop", "troquel", "moldes", "mastercam", "g-code")
-BASURA_MAIL = ("example.", "sentry", "wixpress", "domain.com", "email.com", ".png", ".jpg", ".webp", "@2x", "u003e")
+BASURA_MAIL = ("@empresa.com", "@dominio.com", "tudominio", "ejemplo", "@correo.com", "@email.com", "@mail.com", "yourdomain",
+               "example.", "sentry", "wixpress", "domain.com", "email.com", ".png", ".jpg", ".webp", "@2x", "u003e")
 
 
 def html_de(url: str) -> str:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (prospectos HETNA)"})
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=15) as r:
             if r.status >= 400:
                 return ""
@@ -185,7 +191,8 @@ def extraer_rapido(url: str) -> dict:
         return {}
     todo = " ".join(h for _, h in paginas)
     bajo = todo.lower()
-    out: dict = {"es_cnc": any(p in bajo for p in CNC_PALABRAS)}
+    fuertes = sum(1 for p in CNC_PALABRAS if p in bajo)
+    out: dict = {"es_cnc": " cnc" in bajo or "cnc " in bajo or fuertes >= 3}
     dom = dominio_de(url)
     correos = [m.lower() for m in EMAIL_EN_TEXTO.findall(todo) if not any(b in m.lower() for b in BASURA_MAIL)]
     # Prefiere correos del propio dominio y genéricos (ventas@, contacto@, info@…)
@@ -206,10 +213,10 @@ def extraer_rapido(url: str) -> dict:
             out[red] = m.group(0)
     t = re.search(r"<title[^>]*>(.*?)</title>", todo, re.I | re.S)
     if t:
-        out["empresa"] = re.split(r"\s[|\-–—]\s", re.sub(r"\s+", " ", t.group(1)).strip())[0][:80]
+        out["empresa"] = html_mod.unescape(re.split(r"\s[|\-–—]\s", re.sub(r"\s+", " ", t.group(1)).strip())[0][:80])
     d = re.search(r'<meta[^>]+name="description"[^>]+content="([^"]{10,300})"', todo, re.I)
     if d:
-        out["productos_servicios"] = d.group(1).strip()[:160]
+        out["productos_servicios"] = html_mod.unescape(d.group(1).strip()[:160])
     out.setdefault("fuente_url", paginas[0][0])
     return out
 
@@ -280,19 +287,21 @@ def main() -> None:
     ap.add_argument("--consultas", default=str(AQUI / "consultas.txt"))
     ap.add_argument("--max-por-consulta", type=int, default=10)
     ap.add_argument("--enviar", metavar="URL", help="webhook 'Importar prospectos' de n8n: manda lo nuevo a la hoja (n8n quita duplicados)")
+    ap.add_argument("--solo-enviar", action="store_true", help="no busca; reenvía todo datos/nuevos.jsonl a n8n (n8n quita duplicados)")
     ap.add_argument("--auto", type=int, metavar="N", help="toma las siguientes N búsquedas de plan_busqueda.json (rota sola; al terminar todas vuelve a empezar)")
     args = ap.parse_args()
 
-    cfg = config_llm()
+    cfg = {} if args.solo_enviar else config_llm()
     DATOS.mkdir(exist_ok=True)
     vistos = ya_vistos()
     nuevos = 0
     lote: list[dict] = []
     usos_ia = 0
 
-    consultas = plan_auto(args.auto) if args.auto else leer_consultas(Path(args.consultas))
+    consultas = [] if args.solo_enviar else (plan_auto(args.auto) if args.auto else leer_consultas(Path(args.consultas)))
     for pais, tipo, idioma, consulta in consultas:
         print(f"\n🔎 {consulta}")
+        time.sleep(float(os.environ.get("PAUSA_BUSQUEDA_S", "15")))
         try:
             sitios = buscar_sitios(consulta, args.max_por_consulta, cfg)
         except Exception as e:  # noqa: BLE001
@@ -309,12 +318,13 @@ def main() -> None:
                 usos_ia += 1
                 try:
                     ia = extraer_contacto(url, cfg)
+                    ia = ia if isinstance(ia, dict) else {}
                     c = {**ia, **{k: v for k, v in c.items() if v}} if ia else c
                     if ia.get("email"):
                         c["email"], c["fuente_url"] = ia["email"], ia.get("fuente_url", c.get("fuente_url"))
                 except Exception as e:  # noqa: BLE001
                     print(f"  ✖ IA en {dom}: {type(e).__name__}")
-            if not c or c.get("es_cnc") is False:
+            if not c or not c.get("es_cnc"):
                 continue
             email = (c.get("email") or "").strip().lower()
             if email and (not EMAIL_RE.match(email) or email not in texto_pagina(c["fuente_url"])):
@@ -334,13 +344,25 @@ def main() -> None:
             marcar_hecha(consulta)
 
     print(f"\n{nuevos} prospectos nuevos → {SALIDA}  ({date.today()})")
+    if args.solo_enviar and SALIDA.exists():
+        lote = [json.loads(l) for l in SALIDA.read_text(encoding="utf-8").splitlines() if l.strip()]
     if args.enviar and lote:
-        lista = [dict(p) for p in lote]
+        lista = []
+        for p in lote:  # última limpieza (también para lo guardado por versiones anteriores)
+            p = dict(p)
+            dom = (p.get("dominio") or "").lower()
+            if not dom or any(x in dom for x in NO_EMPRESA):
+                continue
+            em = (p.get("email") or "").lower()
+            if em and (not EMAIL_RE.match(em) or any(b in em for b in BASURA_MAIL)):
+                p["email"] = ""
+            p["empresa"] = html_mod.unescape(p.get("empresa") or "").strip() or dom
+            lista.append(p)
         for p in lista:
             p["id"] = p.get("dominio", "")
             p["region"] = p.pop("estado", "")
         req = urllib.request.Request(args.enviar, data=json.dumps({"prospectos": lista}).encode(),
-                                     headers={"Content-Type": "application/json"}, method="POST")
+                                     headers={"Content-Type": "application/json", "User-Agent": UA}, method="POST")
         with urllib.request.urlopen(req, timeout=60) as r:
             print(f"Enviados {len(lista)} a n8n ({r.status}); n8n agrega sólo los que no estén en la hoja.")
 
