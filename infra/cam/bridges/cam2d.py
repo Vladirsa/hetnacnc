@@ -117,8 +117,16 @@ def leer_trazos(ruta: str) -> tuple[list[Trazo], list[str], float]:
     doc = ezdxf.readfile(ruta)
     msp = doc.modelspace()
     avisos: list[str] = []
-    # $INSUNITS: 1 pulgadas, 4 mm, 5 cm, 6 m
-    escala = {1: 25.4, 5: 10.0, 6: 1000.0}.get(int(doc.header.get("$INSUNITS", 4) or 4), 1.0)
+    # $INSUNITS: 1 pulgadas, 4 mm, 5 cm, 6 m. Sólo se respeta si el archivo
+    # de verdad lo trae: cuando falta, ezdxf rellena el encabezado con su
+    # plantilla (metros) y una pieza de 80 mm saldría de 80 m.
+    try:
+        with open(ruta, "rb") as f:
+            trae_unidades = b"$INSUNITS" in f.read()
+    except OSError:
+        trae_unidades = False
+    unidades = int(doc.header.get("$INSUNITS", 4) or 4) if trae_unidades else 4
+    escala = {1: 25.4, 5: 10.0, 6: 1000.0}.get(unidades, 1.0)
     if escala != 1.0:
         avisos.append(f"El DXF viene en otras unidades: se convirtió a milímetros (×{escala:g}).")
     trazos: list[Trazo] = []
@@ -213,6 +221,9 @@ class Gcode:
         self.corte = 0.0
         self.rapido = 0.0
         self.minutos = 0.0
+        # Entrada en rampa (mm de recorrido para bajar cada pasada). 0 = la
+        # fresa baja en vertical, como antes.
+        self.rampa = 0.0
 
     def c(self, texto: str):
         self.lineas.append(f"({texto.replace('(', '[').replace(')', ']')})")
@@ -266,9 +277,72 @@ class Gcode:
         self.emitir("M5")
 
 
+def _punto_a(anillo, dist: float):
+    """Punto a `dist` mm desde el inicio del anillo, y el índice del vértice
+    que sigue a ese punto."""
+    rec = 0.0
+    for i in range(1, len(anillo)):
+        (x1, y1), (x2, y2) = anillo[i - 1], anillo[i]
+        L = math.hypot(x2 - x1, y2 - y1)
+        if rec + L >= dist and L > 1e-9:
+            u = (dist - rec) / L
+            return (x1 + (x2 - x1) * u, y1 + (y2 - y1) * u), i
+        rec += L
+    return anillo[-1], len(anillo) - 1
+
+
+def _recorrer_en_rampa(g: Gcode, anillo, z: float, f: float, fz: float) -> bool:
+    """Anillo cerrado entrando en rampa: baja de la cara del material (o de la
+    pasada anterior) a `z` mientras avanza `g.rampa` mm siguiendo el contorno
+    — si el contorno es más corto, da varias vueltas bajando, en hélice —, y
+    luego da una vuelta completa a `z`. Cuida la fresa (no entra de punta) y
+    deja menos marca. Con g.rampa = 0 no hace nada y se baja en vertical."""
+    if g.laser or g.rampa <= 0 or len(anillo) < 3:
+        return False
+    if math.hypot(anillo[0][0] - anillo[-1][0], anillo[0][1] - anillo[-1][1]) > 1e-3:
+        return False  # sólo contornos cerrados
+    per = _largo(anillo)
+    if per < 0.5:
+        return False
+    g.ir(anillo[0][0], anillo[0][1])
+    z0 = min(g.z, 0.0)
+    if z >= z0 - 1e-4:
+        return False
+    if g.z > z0 + 1e-4:
+        g.bajar(z0, fz)  # del aire a la cara del material (o a la pasada anterior)
+    # Nunca más empinada que ~25° aunque la rampa pedida sea corta
+    D = max(g.rampa, (z0 - z) / math.tan(math.radians(25)))
+    D = min(D, per * 20)
+    f_rampa = min(f, fz * 2)
+    total = D + per  # bajando D mm y luego una vuelta completa a la profundidad
+    rec = 0.0
+    while rec < total - 1e-6:
+        for i in range(1, len(anillo)):
+            (x1, y1), (x2, y2) = anillo[i - 1], anillo[i]
+            Lseg = math.hypot(x2 - x1, y2 - y1)
+            if Lseg < 1e-9:
+                continue
+            a_, b_ = rec, rec + Lseg
+            # partir el segmento donde termina la rampa y donde termina la vuelta
+            cortes = sorted({a_, b_, *[c for c in (D, total) if a_ < c < b_]})
+            for c in cortes[1:]:
+                u = (c - a_) / Lseg
+                x, y = x1 + (x2 - x1) * u, y1 + (y2 - y1) * u
+                if c <= D + 1e-9:
+                    g.mover(x, y, f_rampa, z0 + (z - z0) * (c / D))
+                else:
+                    g.mover(x, y, f)
+                if c >= total - 1e-9:
+                    return True
+            rec = b_
+    return True
+
+
 def _recorrer(g: Gcode, anillo, z: float, f: float, fz: float, tramos=(), z_pestana: float | None = None):
     """Un anillo (o trazo) a la profundidad z, subiendo a z_pestana dentro de
     los tramos de pestaña (distancias acumuladas desde el inicio)."""
+    if not tramos and _recorrer_en_rampa(g, anillo, z, f, fz):
+        return
     g.ir(anillo[0][0], anillo[0][1])
     g.bajar(z, fz)
     if not tramos:
@@ -776,6 +850,13 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 avisos.append("Conviene dejar el corte de la pieza al final: si la pieza se suelta antes, las demás operaciones se mueven.")
                 break
         g = Gcode(post, seguridad, tipo_maquina == "laser", smax)
+        rampa_cfg = config.get("rampa_entrada", 0)
+        try:
+            rampa_cfg = float(rampa_cfg or 0)
+        except (TypeError, ValueError):
+            rampa_cfg = 0.0
+        if not (math.isfinite(rampa_cfg) and (rampa_cfg == -1 or 0 <= rampa_cfg <= 200)):
+            return error("entrada_invalida", "El largo de la rampa de entrada no es válido.", "Captúralo en mm, entre 0 y 200 (0 = bajar en vertical).")
         g.c(f"HETNA CAM Studio 2D - {material} {espesor:g} mm - post {post}")
         g.emitir("G21 G90 G17 G94")
         if tipo_maquina != "laser":
@@ -803,6 +884,12 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 diam = float(op.get("diametro", 6))
                 if not (0.1 <= diam <= 30):
                     return error("entrada_invalida", f"Operación {i}: diámetro de fresa no válido.", "Captúralo en mm, entre 0.1 y 30.")
+                # Para la simulación del material quitado (leer-gcode.ts)
+                g.c(f"HETNA D={diam:.3f}")
+                # Rampa de entrada: en perfilados y cajeados (el grabado en V,
+                # los barrenos y las roscas entran como siempre). Si se pide en
+                # automático (-1), 3 veces el diámetro.
+                g.rampa = (diam * 3 if rampa_cfg < 0 else rampa_cfg) if tipo in ("corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho") else 0.0
                 receta = parametros_de_corte(material, diam if tipo != "grabado_v" else max(3, diam))
                 if not receta:
                     return error("entrada_invalida", f"No conozco el material '{material}'.", "Elige uno de la lista.")

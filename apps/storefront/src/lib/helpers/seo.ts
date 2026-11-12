@@ -45,7 +45,9 @@ export const generateProductMetadata = async (
   return {
     title: titulo,
     description: descripcion,
-    robots: "index, follow",
+    // Paquetes de créditos 3D: su ficha sólo manda a /user/creditos, no es una
+    // página para buscadores (tampoco va en el sitemap ni en los catálogos).
+    robots: meta.producto_creditos_3d === true ? "noindex, follow" : "index, follow",
     metadataBase: new URL(baseUrl),
     alternates: {
       canonical,

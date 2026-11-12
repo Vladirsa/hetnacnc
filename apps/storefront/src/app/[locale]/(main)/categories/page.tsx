@@ -11,6 +11,7 @@ import { IMAGEN_OG } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 import { listRegions } from "@/lib/data/regions"
 import { listProducts, searchProducts } from "@/lib/data/products"
+import { paraTarjeta } from "@/lib/helpers/tarjeta-producto"
 import {
   buildHreflangAlternates,
   getStorefrontLocales,
@@ -73,15 +74,10 @@ async function primeraPagina(locale: string, filtros: Record<string, string | st
   const args = argsDeListado(paramsDe(filtros))
   try {
     const r = await searchProducts({ ...args, countryCode: locale })
-    return { clave: claveListado(args, `${locale}|||`), products: r.products, count: r.count }
+    return { clave: claveListado(args, `${locale}|||`), products: r.products.map(paraTarjeta), count: r.count }
   } catch {
     return undefined // el navegador la pide como antes
   }
-}
-
-// Dentro del Suspense: el encabezado sale de inmediato y el listado llega en cuanto está
-async function ListadoTienda({ locale, filtros }: { locale: string; filtros: Record<string, string | string[] | undefined> }) {
-  return <SearchProductsListing locale={locale} inicial={await primeraPagina(locale, filtros)} />
 }
 
 async function AllCategories({
@@ -96,6 +92,10 @@ async function AllCategories({
 
   const ua = (await headers()).get("user-agent") || ""
   const bot = isBot(ua)
+  // La primera página se pide junto con la lista para buscadores y entra al HTML principal:
+  // dentro de un Suspense llegaba al final del documento, detrás de ~150 KB del resto de la página,
+  // y la primera foto tardaba en pintarse aunque ya estuviera descargada.
+  const inicialP = bot ? Promise.resolve(undefined) : primeraPagina(locale, filtros)
 
   const breadcrumbsItems = [
     {
@@ -108,12 +108,18 @@ async function AllCategories({
   const host = headersList.get("host")
   const protocol = headersList.get("x-forwarded-proto") || "https"
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
-  const {
-    response: { products: jsonLdProducts },
-  } = await listProducts({
-    countryCode: locale,
-    queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
-  })
+  const [
+    {
+      response: { products: jsonLdProducts },
+    },
+    inicial,
+  ] = await Promise.all([
+    listProducts({
+      countryCode: locale,
+      queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
+    }),
+    inicialP,
+  ])
 
   const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
     "@type": "ListItem",
@@ -165,7 +171,7 @@ async function AllCategories({
         {bot ? (
           <ProductListing showSidebar locale={locale} searchParams={filtros} />
         ) : (
-          <ListadoTienda locale={locale} filtros={filtros} />
+          <SearchProductsListing locale={locale} inicial={inicial} />
         )}
       </Suspense>
     </main>

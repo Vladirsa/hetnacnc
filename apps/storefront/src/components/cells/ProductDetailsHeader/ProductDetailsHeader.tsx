@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/atoms/Button/Button"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
 import { DescargarGratis } from "@/components/hetna/descargas/DescargarGratis"
@@ -81,6 +82,12 @@ export const ProductDetailsHeader = ({
   // Archivo gratis: no hay precio ni carrito, se baja con cuenta dentro del
   // cupo semanal. Lo decide el producto, no la oferta.
   const esGratis = (product.metadata as Record<string, unknown> | null)?.archivo_gratis === true
+  // Los paquetes de créditos 3D no se venden por carrito (no tienen oferta de
+  // taller): se pagan directo en /user/creditos (lib/creditos/acciones.ts).
+  // Sin esto la ficha decía "No disponible" a quien llegaba desde Google.
+  const metaProducto = (product.metadata as Record<string, unknown> | null) ?? {}
+  const esCreditos = metaProducto.producto_creditos_3d === true
+  const creditosDelPaquete = Number(metaProducto.creditos_otorgados) || null
 
   const hasAnyPrice = cheapestPrice !== null && cheapestVariant !== null
 
@@ -234,6 +241,22 @@ export const ProductDetailsHeader = ({
 
       {esGratis ? (
         <DescargarGratis productId={product.id} />
+      ) : esCreditos ? (
+        <div className="mt-4 rounded-[12px] bg-[#F7F5EF] px-4 py-4" data-testid="product-creditos-cta">
+          <p className="m-0 text-[14px] text-[#4A4943]">
+            {creditosDelPaquete
+              ? `${creditosDelPaquete} créditos para el escaneo 3D y el cotizador. `
+              : "Créditos para el escaneo 3D y el cotizador. "}
+            Se pagan con Mercado Pago o PayPal y se acreditan en tu cuenta.
+          </p>
+          <LocalizedClientLink
+            href="/user/creditos"
+            className="mt-3 flex w-full items-center justify-center rounded-sm bg-[#C2560A] py-3.5 text-[16px] font-bold text-white hover:bg-[#A9480A]"
+            data-testid="product-comprar-creditos"
+          >
+            Comprar créditos
+          </LocalizedClientLink>
+        </div>
       ) : (
       <>
       <div

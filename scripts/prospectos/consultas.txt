@@ -1,0 +1,15 @@
+# Una búsqueda por línea:  país | tipo | idioma | consulta
+México | Taller (cliente y vendedor) | es | talleres de maquinado CNC en Monterrey contacto
+México | Taller (cliente y vendedor) | es | router CNC corte madera MDF taller Guadalajara
+México | Taller (cliente y vendedor) | es | corte láser y plasma CNC Puebla Tlaxcala
+México | Proveedor | es | distribuidor de herramientas de corte CNC fresas insertos México
+México | Proveedor | es | venta de máquinas router CNC láser México distribuidor
+México | Instructor/Capacitación | es | curso CNC Mastercam Fusion 360 presencial México
+Estados Unidos | Taller (cliente y vendedor) | en | CNC machine shop Houston Texas small business
+Estados Unidos | Proveedor | en | CNC tooling distributor Texas
+Colombia | Taller (cliente y vendedor) | es | taller CNC router láser Bogotá Medellín
+Perú | Proveedor | es | venta de maquinas CNC Lima
+Chile | Taller (cliente y vendedor) | es | maestranza CNC Santiago
+Argentina | Taller (cliente y vendedor) | es | mecanizado CNC Buenos Aires Córdoba
+Brasil | Taller (cliente y vendedor) | pt | usinagem CNC São Paulo empresa
+Brasil | Instructor/Capacitación | pt | curso CNC torno fresadora programação
