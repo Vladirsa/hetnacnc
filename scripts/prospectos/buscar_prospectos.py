@@ -19,6 +19,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -86,8 +87,9 @@ def config_llm() -> dict:
             from langchain_groq import ChatGroq
             nombre = modelo_groq(clave, nombre if proveedor == "groq" else "")
             modelo = "groq/" + nombre
-            llm = {"model_instance": ChatGroq(model=nombre, api_key=clave, temperature=0, max_retries=3),
-                   "model_tokens": 128000}
+            llm = {"model_instance": ChatGroq(model=nombre, api_key=clave, temperature=0, max_retries=10),
+                   # Trozos chicos: el plan gratis de Groq deja ~8,000 tokens por minuto.
+                   "model_tokens": int(os.environ.get("MODEL_TOKENS", "4000"))}
         else:
             llm = {"model": modelo, "api_key": clave, "temperature": 0}
     print(f"Modelo: {modelo}")
@@ -173,6 +175,7 @@ def extraer_contacto(url: str, cfg: dict) -> dict:
 
 
 HECHAS = DATOS / "consultas_hechas.txt"
+PAUSA_S = float(os.environ.get("PAUSA_S", "20"))  # segundos entre sitios
 
 
 def leer_consultas(archivo: Path) -> list[tuple[str, str, str, str]]:
@@ -231,6 +234,7 @@ def main() -> None:
                 sys.exit("La llave de la IA fue rechazada (401): revisa LLM_API_KEY en .env")
             continue
         for url in sitios:
+            time.sleep(PAUSA_S)  # respeta el límite por minuto de la IA
             dom = dominio_de(url)
             if dom in vistos:
                 continue

@@ -25,8 +25,11 @@ if [ ! -f .env ]; then
 # Groq (plan gratuito): crea la llave en https://console.groq.com/keys
 LLM_MODEL=groq/llama-3.3-70b-versatile
 LLM_API_KEY=PEGA_AQUI_TU_LLAVE_DE_GROQ
-# Búsquedas por noche (cada una revisa hasta 10 sitios)
-TANDA=15
+# Búsquedas por noche (cada una revisa hasta 10 sitios). Con el plan gratis de
+# Groq (8,000 tokens/minuto) conviene pausar entre sitios y usar trozos chicos.
+TANDA=8
+PAUSA_S=20
+MODEL_TOKENS=4000
 N8N_IMPORTAR_URL=https://n8n.hetnacnc.com/webhook/hetna-prospectos-importar
 ENV
   chmod 600 .env
