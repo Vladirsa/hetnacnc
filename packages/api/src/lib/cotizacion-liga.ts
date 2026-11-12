@@ -96,6 +96,46 @@ async function ponerSiVacio(id: string, campo: string, cambios: Record<string, u
 }
 
 const mxn = (n: number) => `$${Number(n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+// ── Monedas de los talleres (México, EE. UU., Colombia, Perú, Chile) ───
+export const MONEDAS = ["MXN", "USD", "COP", "PEN", "CLP"] as const
+const SIN_CENTAVOS = new Set(["COP", "CLP"])
+/** Dinero con el símbolo y los decimales de la moneda: $1,250.00 · S/ 85.50 · $1,250,000 COP */
+export function dinero(n: number, moneda = "MXN") {
+  const dec = SIN_CENTAVOS.has(moneda) ? 0 : 2
+  const t = Number(n || 0).toLocaleString(moneda === "USD" ? "en-US" : "es-MX", { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  if (moneda === "PEN") return `S/ ${t}`
+  return moneda === "MXN" ? `$${t}` : `$${t} ${moneda}`
+}
+
+// PayPal no maneja pesos colombianos, soles ni pesos chilenos: esas
+// cotizaciones se cobran en dólares al tipo de cambio del día.
+const PAYPAL_DIRECTO = new Set(["MXN", "USD"])
+// Respaldo si no se puede consultar el tipo de cambio (6 nov 2026)
+const CAMBIO_RESPALDO: Record<string, number> = { MXN: 18.63, COP: 3246, PEN: 3.43, CLP: 977 }
+let cambioCache: { en: number; tasas: Record<string, number> } | null = null
+/** Unidades de `moneda` por 1 dólar. Se consulta cada 6 horas. */
+export async function tipoCambioUSD(moneda: string): Promise<number> {
+  if (moneda === "USD") return 1
+  if (!cambioCache || Date.now() - cambioCache.en > 6 * 3600_000) {
+    try {
+      const r = await fetch("https://open.er-api.com/v6/latest/USD", { signal: AbortSignal.timeout(5000) })
+      const j: any = await r.json()
+      if (j?.result === "success" && j.rates) cambioCache = { en: Date.now(), tasas: j.rates }
+    } catch {
+      // se usa el respaldo
+    }
+  }
+  const t = Number(cambioCache?.tasas?.[moneda] || CAMBIO_RESPALDO[moneda] || 0)
+  if (!(t > 0)) throw new ErrorSuscripcion("No pudimos calcular el tipo de cambio. Intenta en unos minutos.", 503)
+  return t
+}
+/** Cuánto se cobra en PayPal: la misma moneda si PayPal la maneja; si no, dólares. */
+async function cobroPaypal(monto: number, moneda: string) {
+  if (PAYPAL_DIRECTO.has(moneda)) return { monto: Math.round(monto * 100) / 100, moneda, tipo_cambio: null as number | null }
+  const tc = await tipoCambioUSD(moneda)
+  return { monto: Math.ceil((monto / tc) * 100) / 100, moneda: "USD", tipo_cambio: tc }
+}
 const ligaDe = (c) => `${SITIO}/c/${c.token_publico}`
 
 // ── Pedido ligado a la cotización (seguimiento en la misma liga) ───────
@@ -221,7 +261,10 @@ async function configDe(negocioId: string) {
   return null
 }
 
-const monedaDe = (config) => (String(config?.moneda || "MXN").toUpperCase() === "USD" ? "USD" : "MXN")
+const monedaDe = (config): string => {
+  const m = String(config?.moneda || "MXN").toUpperCase()
+  return (MONEDAS as readonly string[]).includes(m) ? m : "MXN"
+}
 
 export async function paypalDelNegocio(negocioId: string) {
   try {
@@ -264,7 +307,7 @@ async function itemsDe(cotId: string) {
 
 async function pagosDe(cotId: string) {
   return supa<any[]>(
-    `/rest/v1/cotizacion_pagos?cotizacion_id=eq.${cotId}&select=mp_payment_id,monto,estado,metodo,creado&order=creado.desc`
+    `/rest/v1/cotizacion_pagos?cotizacion_id=eq.${cotId}&select=mp_payment_id,monto,estado,metodo,creado,detalle&order=creado.desc`
   )
 }
 
@@ -317,7 +360,7 @@ export async function paginaPublica(token: string) {
           negocioId: c.negocio_id,
           tipo: "cotizacion_vista",
           titulo: `👀 ${quien} abrió la cotización ${c.folio}`,
-          cuerpo: `Buen momento para darle seguimiento. Total ${mxn(num(c.total))}.`,
+          cuerpo: `Buen momento para darle seguimiento. Total ${dinero(num(c.total), moneda)}.`,
           cotizacionId: c.id,
           clienteId: c.cliente_id,
           correo: false,
@@ -373,7 +416,8 @@ export async function paginaPublica(token: string) {
     moneda,
     anticipo: (() => {
       const pendiente = anticipo > 0 && num(c.anticipo_pagado) < anticipo && !estaVencida && c.estado !== "Rechazada"
-      // Mercado Pago cobra sólo en pesos; PayPal en pesos o dólares
+      // Mercado Pago cobra sólo en pesos mexicanos; PayPal en pesos o dólares
+      // (COP, PEN y CLP se cobran en dólares al tipo de cambio del día)
       const metodos = {
         mercadopago: pendiente && Boolean(mp) && moneda === "MXN",
         paypal: pendiente && Boolean(pp) && paypalListo(),
@@ -383,10 +427,11 @@ export async function paginaPublica(token: string) {
         pagado: num(c.anticipo_pagado),
         estado: anticipo > 0 ? c.anticipo_estado : "sin_anticipo",
         se_puede_pagar: metodos.mercadopago || metodos.paypal,
+        paypal_en_dolares: !PAYPAL_DIRECTO.has(moneda),
         metodos,
       }
     })(),
-    pagos: pagos.filter((p) => p.estado === "approved").map((p) => ({ monto: num(p.monto), metodo: p.metodo, fecha: p.creado })),
+    pagos: pagos.filter((p) => p.estado === "approved").map((p) => ({ monto: num(p.detalle?.monto_cotizacion ?? p.monto), metodo: p.metodo, fecha: p.creado })),
     pedido: seguimiento,
   }
 }
@@ -407,17 +452,18 @@ export async function aceptar(token: string, nombre: string) {
   })
   if (primera) {
     const anticipo = anticipoDe(c)
+    const moneda = monedaDe(await configDe(c.negocio_id).catch(() => null))
     await avisarTaller({
       negocioId: c.negocio_id,
       tipo: "cotizacion_aceptada",
       titulo: `✅ ${quien} aceptó la cotización ${c.folio}`,
       cuerpo:
-        `Total ${mxn(num(c.total))}.` +
-        (anticipo > 0 && c.anticipo_estado !== "pagado" ? ` Falta el anticipo de ${mxn(anticipo)}; puede pagarlo desde la misma liga.` : ""),
+        `Total ${dinero(num(c.total), moneda)}.` +
+        (anticipo > 0 && c.anticipo_estado !== "pagado" ? ` Falta el anticipo de ${dinero(anticipo, moneda)}; puede pagarlo desde la misma liga.` : ""),
       cotizacionId: c.id,
       clienteId: c.cliente_id,
       mensajeCliente: `¡Gracias, ${quien}! Recibimos tu aceptación de la cotización ${c.folio}.` +
-        (anticipo > 0 ? ` En cuanto se acredite el anticipo de ${mxn(anticipo)} arrancamos. Puedes pagarlo aquí: ${ligaDe(c)}` : " Te avisamos cuando empecemos."),
+        (anticipo > 0 ? ` En cuanto se acredite el anticipo de ${dinero(anticipo, moneda)} arrancamos. Puedes pagarlo aquí: ${ligaDe(c)}` : " Te avisamos cuando empecemos."),
       liga: ligaDe(c),
     })
   }
@@ -504,7 +550,7 @@ export async function pagarAnticipo(token: string) {
   if (anticipo <= 0 || resta <= 0) throw new ErrorSuscripcion("Esta cotización no tiene anticipo pendiente.")
 
   const [negocio, config, mp] = await Promise.all([negocioDe(c.negocio_id), configDe(c.negocio_id), tokenDelTaller(c.negocio_id)])
-  if (monedaDe(config) !== "MXN") throw new ErrorSuscripcion("Esta cotización está en dólares: págala con PayPal.")
+  if (monedaDe(config) !== "MXN") throw new ErrorSuscripcion("Mercado Pago cobra sólo en pesos mexicanos: paga esta cotización con PayPal.")
   const com = comisionHetna(resta, negocio?.plan, negocio?.trial_hasta)
   const nombreTaller = config?.nombre_comercial || negocio?.nombre || "Taller"
   const liga = `${SITIO}/c/${c.token_publico}`
@@ -544,8 +590,11 @@ async function trasPago(
   p: { monto: number; recienAprobado: boolean; pagador: string | null; nombre: string | null; dondeLlega: string },
   logger?: any
 ) {
-  const aprobados = await supa<any[]>(`/rest/v1/cotizacion_pagos?cotizacion_id=eq.${c.id}&estado=eq.approved&select=monto`)
-  const pagado = Math.round(aprobados.reduce((s, x) => s + Number(x.monto || 0), 0) * 100) / 100
+  const aprobados = await supa<any[]>(`/rest/v1/cotizacion_pagos?cotizacion_id=eq.${c.id}&estado=eq.approved&select=monto,detalle`)
+  // Un pago en dólares de una cotización en COP/PEN/CLP guarda en `detalle`
+  // cuánto cubrió en la moneda de la cotización.
+  const pagado = Math.round(aprobados.reduce((s, x) => s + Number(x.detalle?.monto_cotizacion ?? x.monto ?? 0), 0) * 100) / 100
+  const moneda = monedaDe(await configDe(c.negocio_id).catch(() => null))
   const anticipo = anticipoDe(c)
   const cambios: Record<string, unknown> = { anticipo_pagado: pagado }
   if (pagado >= anticipo && anticipo > 0) {
@@ -567,14 +616,14 @@ async function trasPago(
     {
       negocioId: c.negocio_id,
       tipo: "anticipo_pagado",
-      titulo: `💰 ${quien} pagó ${mxn(p.monto)} de la cotización ${c.folio}`,
+      titulo: `💰 ${quien} pagó ${dinero(p.monto, moneda)} de la cotización ${c.folio}`,
       cuerpo:
-        (completo ? 'Anticipo completo: el pedido ya está en Avances como "Anticipo recibido". ' : `Lleva ${mxn(pagado)} de ${mxn(anticipo)}. `) +
+        (completo ? 'Anticipo completo: el pedido ya está en Avances como "Anticipo recibido". ' : `Lleva ${dinero(pagado, moneda)} de ${dinero(anticipo, moneda)}. `) +
         p.dondeLlega,
       cotizacionId: c.id,
       clienteId: c.cliente_id,
       pedidoId,
-      mensajeCliente: `¡Gracias, ${quien}! Recibimos tu pago de ${mxn(p.monto)} de la cotización ${c.folio}. Aquí puedes seguir tu pedido: ${ligaDe(c)}`,
+      mensajeCliente: `¡Gracias, ${quien}! Recibimos tu pago de ${dinero(p.monto, moneda)} de la cotización ${c.folio}. Aquí puedes seguir tu pedido: ${ligaDe(c)}`,
       liga: ligaDe(c),
     },
     logger
@@ -678,6 +727,7 @@ export async function pagarConPaypal(token: string) {
   const [negocio, config, pp] = await Promise.all([negocioDe(c.negocio_id), configDe(c.negocio_id), paypalDelNegocio(c.negocio_id)])
   if (!pp) throw new ErrorSuscripcion("El taller todavía no vincula su PayPal.", 409)
   const moneda = monedaDe(config)
+  const cobro = await cobroPaypal(resta, moneda)
   const nombreTaller = config?.nombre_comercial || negocio?.nombre || "Taller"
   const liga = ligaDe(c)
 
@@ -690,8 +740,9 @@ export async function pagarConPaypal(token: string) {
         {
           reference_id: c.id,
           custom_id: referenciaCot(c.id),
-          description: `Anticipo de la cotización ${c.folio} · ${nombreTaller}`.slice(0, 127),
-          amount: { currency_code: moneda, value: resta.toFixed(2) },
+          description: (`Anticipo de la cotización ${c.folio} · ${nombreTaller}` +
+            (cobro.tipo_cambio ? ` · ${dinero(resta, moneda)}` : "")).slice(0, 127),
+          amount: { currency_code: cobro.moneda, value: cobro.monto.toFixed(2) },
           payee: { merchant_id: pp.payer_id },
         },
       ],
@@ -699,7 +750,7 @@ export async function pagarConPaypal(token: string) {
         paypal: {
           experience_context: {
             brand_name: nombreTaller.slice(0, 127),
-            locale: moneda === "USD" ? "en-US" : "es-MX",
+            locale: moneda === "USD" ? "en-US" : "es-MX",  // (COP/PEN/CLP: en español)
             shipping_preference: "NO_SHIPPING",
             user_action: "PAY_NOW",
             return_url: `${API}/cotizacion-liga/${c.token_publico}/paypal`,
@@ -711,7 +762,7 @@ export async function pagarConPaypal(token: string) {
   })
   const url = (orden.links || []).find((l) => l.rel === "payer-action" || l.rel === "approve")?.href
   if (!url) throw new Error("PayPal no devolvió la liga de pago")
-  return { url, monto: resta, moneda }
+  return { url, monto: resta, moneda, cobro }
 }
 
 /** Regreso de PayPal: se cobra la orden y se anota el pago. Devuelve a dónde mandar al cliente. */
@@ -747,7 +798,11 @@ export async function capturarPaypal(token: string, ordenId: string, logger?: an
   const estado = captura.status === "COMPLETED" ? "approved" : captura.status === "PENDING" ? "pending" : String(captura.status || "").toLowerCase()
   const monto = Number(captura.amount?.value || 0)
   const moneda = String(captura.amount?.currency_code || "MXN")
-  const negocio = await negocioDe(c.negocio_id)
+  const [negocio, config] = await Promise.all([negocioDe(c.negocio_id), configDe(c.negocio_id)])
+  // Cotización en COP/PEN/CLP cobrada en dólares: la orden fue por todo lo que
+  // faltaba del anticipo, así que cubre eso en la moneda de la cotización.
+  const monedaCot = monedaDe(config)
+  const montoCot = monedaCot === moneda ? monto : Math.round((anticipoDe(c) - num(c.anticipo_pagado)) * 100) / 100
   const pct = comisionPct(negocio?.plan, negocio?.trial_hasta)
   const tope = moneda === "USD" ? COMISION_TOPE_USD : COMISION_TOPE
   const comision = Math.min(tope, Math.round(monto * pct) / 100)
@@ -767,20 +822,25 @@ export async function capturarPaypal(token: string, ordenId: string, logger?: an
     estado,
     metodo: "paypal",
     pagador: orden.payer?.email_address || null,
-    detalle: { orden: ordenId, neto: captura.seller_receivable_breakdown?.net_amount?.value || null },
+    detalle: {
+      orden: ordenId,
+      neto: captura.seller_receivable_breakdown?.net_amount?.value || null,
+      ...(monedaCot !== moneda ? { monto_cotizacion: montoCot, moneda_cotizacion: monedaCot } : {}),
+    },
     actualizado: new Date().toISOString(),
   })
   const neto = Number(captura.seller_receivable_breakdown?.net_amount?.value || 0)
   await trasPago(
     c,
     {
-      monto,
+      monto: montoCot,
       recienAprobado,
       pagador: orden.payer?.email_address || null,
       nombre: orden.payer?.name?.given_name || null,
       dondeLlega:
-        (neto > 0 ? `Te llegan ${mxn(neto)} a tu PayPal (ya sin la comisión de PayPal). ` : "El dinero entra a tu PayPal. ") +
-        `La comisión HETNA (${mxn(comision)}) se cobra en el corte del mes.`,
+        (monedaCot !== moneda ? `Se cobró en dólares: ${dinero(monto, moneda)}. ` : "") +
+        (neto > 0 ? `Te llegan ${dinero(neto, moneda)} a tu PayPal (ya sin la comisión de PayPal). ` : "El dinero entra a tu PayPal. ") +
+        `La comisión HETNA (${dinero(comision, moneda)}) se cobra en el corte del mes.`,
     },
     logger
   )
