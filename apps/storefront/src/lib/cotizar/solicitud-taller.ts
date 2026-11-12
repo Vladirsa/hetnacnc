@@ -143,6 +143,14 @@ export type VistaSolicitud = {
   // HETNA retiene lo cobrado, media y decide.
   puede_reportar?: boolean
   cobro_directo?: boolean
+  // Problema 4: quién bajó los archivos del cliente y su conservación
+  archivos_protegidos?: {
+    descargas: { fecha: string; archivo: string; quien: string; accion: string }[]
+    borrados_en: string | null
+    borrados: string[]
+    puede_borrar: boolean
+    dias_conservacion: number
+  }
   disputa?: { tipo: string; nombre: string; desde: string | null } | null
   // Licitaciones 2.0
   cobro?: CobroSolicitud | null
@@ -227,6 +235,11 @@ async function postar(ruta: string, cuerpo: unknown, porDefecto: string): Promis
   } catch {
     return { ok: false, mensaje: porDefecto }
   }
+}
+
+/** Borra para siempre los archivos de una solicitud cerrada o cancelada. */
+export async function borrarArchivosSolicitud(token: string) {
+  return postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/borrar-archivos`, {}, "No se pudieron borrar. Intenta de nuevo.")
 }
 
 export type TipoProblema = "cancelar" | "retraso" | "defecto" | "otro"

@@ -244,6 +244,38 @@ export async function hideFile(storageKey: string): Promise<{ ok: true } | { ok:
   return { ok: true }
 }
 
+// Borra un archivo DE VERDAD: todas sus versiones (b2_delete_file_version).
+// hideFile sólo lo oculta y, sin una regla de ciclo de vida en el bucket, el
+// contenido se queda guardado. Ésta es la que usa la política de conservación
+// de archivos de solicitudes (lib/conservacion-archivos).
+export async function borrarArchivoDefinitivo(storageKey: string): Promise<{ ok: true; versiones: number } | { ok: false; reason: string }> {
+  const autorizacion = await autorizarBucket()
+  if (!autorizacion.ok) return autorizacion
+  const { auth } = autorizacion
+  let versiones = 0
+  for (let vuelta = 0; vuelta < 10; vuelta++) {
+    const r = await fetch(`${auth.apiUrl}/b2api/v2/b2_list_file_versions`, {
+      method: "POST",
+      headers: { Authorization: auth.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ bucketId: auth.bucketId, startFileName: storageKey, prefix: storageKey, maxFileCount: 100 }),
+    }).catch(() => null)
+    if (r?.status === 401) guardada = null
+    if (!r?.ok) return { ok: false, reason: `b2_list_file_versions respondio ${r?.status ?? "sin conexión"}` }
+    const lista = ((await r.json()).files || []).filter((f: any) => f.fileName === storageKey)
+    if (!lista.length) return { ok: true, versiones }
+    for (const f of lista) {
+      const d = await fetch(`${auth.apiUrl}/b2api/v2/b2_delete_file_version`, {
+        method: "POST",
+        headers: { Authorization: auth.token, "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: f.fileName, fileId: f.fileId }),
+      }).catch(() => null)
+      if (!d?.ok) return { ok: false, reason: `b2_delete_file_version respondio ${d?.status ?? "sin conexión"}` }
+      versiones++
+    }
+  }
+  return { ok: false, reason: "demasiadas versiones" }
+}
+
 // Varias ligas firmadas con una sola autorización de la cuenta. Las claves
 // que comparten carpeta se firman juntas (un permiso por prefijo), así una
 // página con 100 archivos no hace 300 llamadas a B2.

@@ -22,7 +22,10 @@ export function VisorDeLiga() {
         if (!/^https:\/\//.test(u)) throw new Error("Falta la liga del archivo.")
         const ext = nombre.split(".").pop()?.toLowerCase() || ""
         if (!["dxf", "svg", "stl", "obj"].includes(ext)) throw new Error("El visor abre DXF, SVG, STL y OBJ. Este archivo descárgalo para verlo.")
-        const r = await fetch(u)
+        // Las ligas de HETNA (/api/hetna-archivo/...) se piden en el mismo
+        // dominio en el que está abierto el visor (con o sin www), sin CORS.
+        const destino = new URL(u)
+        const r = await fetch(/^\/api\/hetna-archivo\//.test(destino.pathname) && /(^|\.)hetnacnc\.com$/.test(destino.hostname) ? destino.pathname + destino.search : u)
         if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "La liga ya venció. Vuelve a pedirla desde tu panel." : `No se pudo descargar (${r.status}).`)
         const lib = await import("@/lib/cotizador/archivo-cad")
         let g: GeoCad

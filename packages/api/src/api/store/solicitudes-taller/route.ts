@@ -1,7 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { getSignedDownloadUrl } from "../../../lib/backblaze"
+import { T_SUBIDA, asegurarSubidas } from "../../../lib/archivo-seguro"
 import { sendEmail } from "../../../lib/resend"
 import { difundirSolicitud } from "../../../lib/difusion"
 import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionActiva } from "../../../lib/seguimiento"
@@ -100,15 +100,11 @@ function leerArchivos(v: Body["archivos"]): ArchivoSolicitud[] {
     }))
 }
 
-// Ligas firmadas para el correo de HETNA: duran lo más que deja B2 (7 días).
-async function ligasDeArchivos(archivos: ArchivoSolicitud[]) {
-  const filas: string[] = []
-  for (const a of archivos) {
-    const r = await getSignedDownloadUrl(a.clave)
-    filas.push(r.ok ? `<a href="${esc(r.url)}">${esc(a.nombre)}</a>` : esc(a.nombre))
-  }
-  return filas.join("<br/>")
-}
+// Correo de HETNA: sólo los nombres. Antes llevaba ligas firmadas de 7 días
+// que cualquiera con el correo podía abrir sin quedar registrado; ahora se
+// descargan desde el dashboard, con permiso y registro (lib/archivo-acceso).
+const listaDeArchivos = (archivos: ArchivoSolicitud[]) =>
+  archivos.map((a) => esc(a.nombre)).join("<br/>") + `<br/><span style="color:#6B675C">Descárgalos desde el dashboard.</span>`
 
 export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger") as any
@@ -129,6 +125,21 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   }
 
   const archivos = leerArchivos(b.archivos)
+  // Sólo claves que pasaron la revisión de contenido y antivirus de
+  // /store/solicitud-archivos y que no usa ya otra solicitud.
+  if (archivos.length) {
+    await asegurarSubidas(knex)
+    const filas = (await knex(T_SUBIDA)
+      .whereIn("clave", archivos.map((a) => a.clave))
+      .whereNull("usado_en")
+      .whereNull("borrado_en")
+      .select("clave")) as { clave: string }[]
+    const validas = new Set(filas.map((f) => f.clave))
+    const falta = archivos.find((a) => !validas.has(a.clave))
+    if (falta) {
+      return res.status(400).json({ message: `Vuelve a subir "${falta.nombre}": no lo encontramos o ya se usó en otra solicitud.` })
+    }
+  }
   const trabajo: Trabajo = {
     descripcion,
     necesidad: corto(b.necesidad, 80),
@@ -235,6 +246,9 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes", "tipo", "solo_verificados"])
     sol = fila0
     folio = folioTexto(fila0.folio)
+    if (archivos.length) {
+      await knex(T_SUBIDA).whereIn("clave", archivos.map((a) => a.clave)).update({ usado_en: fila0.id })
+    }
     if (modalidad === "privada" && b.invitados) await invitarTalleres(knex, fila0.id, b.invitados)
     // Con sesión iniciada queda en "Mis solicitudes" del cliente.
     const clienteId = (req as any).auth_context?.actor_id
@@ -270,7 +284,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
           fila("WhatsApp", contacto.whatsapp) +
           // fila() escapa el valor; las ligas van en HTML ya escapado.
           (archivos.length
-            ? `<tr><td style="padding:6px 12px 6px 0;color:#6B675C;vertical-align:top">Descargar</td><td style="padding:6px 0">${await ligasDeArchivos(archivos)}</td></tr>`
+            ? `<tr><td style="padding:6px 12px 6px 0;color:#6B675C;vertical-align:top">Archivos</td><td style="padding:6px 0">${listaDeArchivos(archivos)}</td></tr>`
             : "") +
           `</table>` +
           (revision ? boton("Revisar en el dashboard", `${ADMIN_URL}/solicitudes`) : boton("Ver la solicitud del cliente", liga))

@@ -1,16 +1,16 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { getSignedDownloadUrl } from "../../../../../lib/backblaze"
-import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, recibePropuestas, type Trabajo } from "../../../../../lib/licitacion"
-import { puedeDescargar, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
+import { ligaArchivo } from "../../../../../lib/archivo-acceso"
+import { T_SOLICITUD, asegurarTablas, recibePropuestas, type Trabajo } from "../../../../../lib/licitacion"
+import { puedeDescargarAhora, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 
 // GET /vendor/hetna-solicitudes/:id/archivos
 //
-// Ligas firmadas (1 hora) a los archivos que subió el cliente. Las pide el
-// taller desde su panel, sólo para solicitudes que puede cotizar o que ya
-// cotizó: igual que la lista de solicitudes, nunca una ajena.
-const DURACION_S = 60 * 60
+// Ligas (1 hora) a los archivos que subió el cliente. Las pide el taller desde
+// su panel, sólo para solicitudes que puede cotizar mientras recibe propuestas,
+// o si es el taller elegido. Las ligas son de HETNA (lib/archivo-acceso): al
+// abrirlas se revisa otra vez el permiso y queda registrada la descarga.
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -22,25 +22,26 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
 
   const esSuya = s.modo === "abierta" || s.taller_id === sellerId
-  const yaCotizo = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first("id")
-  if (!esSuya || (!recibePropuestas(s) && !yaCotizo)) {
+  const rel = await relacionTaller(knex, s, sellerId)
+  // Cotizar y no ganar ya no da acceso: en cuanto el cliente elige o la
+  // solicitud cierra, sólo el taller elegido sigue bajando los planos.
+  if (!esSuya || (!recibePropuestas(s) && !rel.elegido)) {
     return res.status(403).json({ message: "Esta solicitud ya no está disponible." })
   }
 
   // Licitaciones 3.0: privada sólo para invitados; cada archivo según lo que
   // eligió el cliente (públicos, privados o bajo autorización).
-  const rel = await relacionTaller(knex, s, sellerId)
   if (!tallerPuedeVer(s, rel)) return res.status(404).json({ message: "Solicitud no encontrada." })
 
   const archivos = ((s.trabajo as Trabajo)?.archivos || [])
-  const ligas: { nombre: string; tamano: number; url: string | null; bloqueado?: boolean }[] = []
+  const ligas: { nombre: string; tamano: number; url: string | null; ver_url?: string | null; bloqueado?: boolean }[] = []
   for (const a of archivos) {
-    if (!puedeDescargar(s, rel, a.nombre)) {
+    if (!puedeDescargarAhora(s, rel, a.nombre)) {
       ligas.push({ nombre: a.nombre, tamano: a.tamano, url: null, bloqueado: true })
       continue
     }
-    const r = await getSignedDownloadUrl(a.clave, DURACION_S)
-    ligas.push({ nombre: a.nombre, tamano: a.tamano, url: r.ok ? r.url : null })
+    const permiso = { s: s.id, k: a.clave, a: "taller" as const, i: sellerId }
+    ligas.push({ nombre: a.nombre, tamano: a.tamano, url: ligaArchivo(permiso), ver_url: ligaArchivo(permiso, true) })
   }
   return res.json({ archivos: ligas })
 }

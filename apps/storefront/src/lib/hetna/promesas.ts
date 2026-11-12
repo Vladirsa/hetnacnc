@@ -43,3 +43,9 @@ export const DIAS_CIERRE_AUTOMATICO = 10
 export const DIAS_RETRASO_CANCELACION = 7
 // Plazo máximo en que HETNA decide una disputa (días hábiles).
 export const DIAS_HABILES_DECISION_DISPUTA = 5
+
+// Archivos de solicitudes de fabricación (backend: lib/conservacion-archivos.ts
+// y lib/archivo-acceso.ts). Se borran estos días después del cierre o la
+// cancelación; cada liga de descarga dura estos minutos y queda registrada.
+export const DIAS_CONSERVACION_ARCHIVOS = 180
+export const MINUTOS_LIGA_ARCHIVO = 60

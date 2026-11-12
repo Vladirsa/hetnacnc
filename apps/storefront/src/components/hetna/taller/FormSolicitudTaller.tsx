@@ -22,6 +22,7 @@ import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
 import { type MedidaPieza, leerCantidad, medirArchivo } from "@/lib/hetna/estimado"
 import { subirArchivo } from "@/lib/subir-archivo"
+import { DIAS_CONSERVACION_ARCHIVOS } from "@/lib/hetna/promesas"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
 const SERVICIOS = SERVICIOS_SOLICITUD
@@ -451,7 +452,9 @@ export default function FormSolicitudTaller({
               </ul>
             )}
             <p className="text-xs text-[#6B675C]">
-              Tus archivos se guardan privados: sólo los ven los talleres registrados que cotizan tu trabajo.
+              Tus archivos se guardan en un almacenamiento privado: los descargan sólo los talleres que pueden cotizar tu trabajo,
+              según los permisos que elijas, y en tu solicitud ves quién los descargó. Se borran {DIAS_CONSERVACION_ARCHIVOS} días
+              después de que se cierra.
             </p>
           </div>
         )}
