@@ -56,6 +56,9 @@ async function getRegionMap(cacheId: string): Promise<Map<string, HttpTypes.Stor
           revalidate: 3600,
           tags: [`regions-${cacheId}`]
         },
+        // Corre en cada visita: si el API tarda, mejor seguir sin región
+        // (el catch de abajo ya lo hace) que dejar la página esperando.
+        signal: AbortSignal.timeout(3000),
         cache: 'force-cache'
       }).then(async response => {
         const json = await response.json();
