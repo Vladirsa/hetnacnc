@@ -37,6 +37,35 @@ NO_EMPRESA = ("facebook.com", "instagram.com", "linkedin.com", "youtube.com", "m
               "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas")
 
 
+# Preferencia de modelos de Groq (se usa el primero que la cuenta tenga activo).
+PREFERIDOS_GROQ = ["llama-3.3-70b-versatile", "openai/gpt-oss-20b", "openai/gpt-oss-120b",
+                   "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "llama-3.1-8b-instant"]
+
+
+def modelo_groq(clave: str, pedido: str) -> str:
+    """Groq retira modelos seguido: pregunta cuáles hay y elige uno que exista."""
+    try:
+        req = urllib.request.Request("https://api.groq.com/openai/v1/models",
+                                     headers={"Authorization": f"Bearer {clave}", "User-Agent": "prospectos-hetna"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            hay = [m["id"] for m in json.load(r).get("data", []) if m.get("active", True)]
+    except Exception as e:  # noqa: BLE001
+        print(f"No se pudo consultar la lista de modelos de Groq ({e}); se usa {pedido or PREFERIDOS_GROQ[0]}")
+        return pedido or PREFERIDOS_GROQ[0]
+    if pedido in hay:
+        return pedido
+    for m in PREFERIDOS_GROQ:
+        if m in hay:
+            if pedido:
+                print(f"El modelo {pedido} ya no está en Groq; se usa {m}")
+            return m
+    texto = [m for m in hay if not any(x in m for x in ("whisper", "guard", "tts", "playai", "distil", "compound"))]
+    if not texto:
+        sys.exit(f"Groq no ofrece modelos de texto para esta llave: {hay}")
+    print(f"Se usa {texto[0]} (modelos disponibles: {', '.join(hay)})")
+    return texto[0]
+
+
 def config_llm() -> dict:
     """Configura el modelo. Groq se pasa como instancia de LangChain (ChatGroq):
     algunas versiones de ScrapeGraphAI mandan "groq/..." por el cliente de
@@ -55,7 +84,8 @@ def config_llm() -> dict:
             sys.exit("Falta LLM_API_KEY en .env (o usa LLM_MODEL=ollama/...)")
         if proveedor == "groq" or clave.startswith("gsk_"):
             from langchain_groq import ChatGroq
-            nombre = nombre if proveedor == "groq" else "llama-3.1-8b-instant"
+            nombre = modelo_groq(clave, nombre if proveedor == "groq" else "")
+            modelo = "groq/" + nombre
             llm = {"model_instance": ChatGroq(model=nombre, api_key=clave, temperature=0, max_retries=3),
                    "model_tokens": 128000}
         else:
