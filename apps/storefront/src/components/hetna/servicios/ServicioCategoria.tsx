@@ -130,7 +130,7 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   },
   {
     p: "¿Cómo protegen mis planos?",
-    r: `Revisamos que cada archivo sea del tipo que dice ser y no traiga programas ocultos antes de guardarlo. Tú eliges quién puede descargarlos (cualquier taller que cotiza, sólo los que autorices o sólo el que elijas) y, en cuanto eliges una propuesta, sólo el taller elegido conserva el acceso. Cada liga dura ${MINUTOS_LIGA_ARCHIVO} minutos, cada descarga queda registrada y en tu solicitud ves quién descargó qué. Los archivos se borran ${DIAS_CONSERVACION_ARCHIVOS} días después de que la solicitud se cierra, o antes si tú los borras.`,
+    r: `Antes de guardar cada archivo rechazamos programas y scripts disfrazados de plano, páginas web, SVG con código y ZIP que traen programas o tienen contraseña. Tú eliges quién puede descargarlos (cualquier taller que cotiza, sólo los que autorices o sólo el que elijas) y, en cuanto eliges una propuesta, sólo el taller elegido conserva el acceso. Cada liga dura ${MINUTOS_LIGA_ARCHIVO} minutos, cada descarga queda registrada y en tu solicitud ves quién descargó qué. Los archivos se borran ${DIAS_CONSERVACION_ARCHIVOS} días después de que la solicitud se cierra, o antes si tú los borras.`,
   },
   {
     p: "¿Puedo pedir solo una pieza?",

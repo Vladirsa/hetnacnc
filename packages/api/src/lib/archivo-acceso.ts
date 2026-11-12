@@ -68,9 +68,16 @@ export function leerTokenArchivo(token: string): PermisoArchivo | null {
 export function ligaArchivo(p: Omit<PermisoArchivo, "e">, ver = false): string | null {
   try {
     return `${STORE_URL}/api/hetna-archivo/${tokenArchivo(p)}${ver ? "?ver=1" : ""}`
-  } catch {
+  } catch (e) {
+    // Sin secreto no hay descargas: que se note en el log del API.
+    console.error(`[archivo-acceso] NO SE PUEDEN DAR LIGAS DE ARCHIVOS: ${(e as Error).message}`)
     return null
   }
+}
+
+/** Solicitud a la que pertenece un archivo del cliente (claves solicitudes/...). */
+export async function solicitudDeClave(knex: any, clave: string) {
+  return knex("hetna_solicitud").whereRaw(`trabajo->'archivos' @> ?::jsonb`, [JSON.stringify([{ clave }])]).first("id")
 }
 
 let tablaLista = false

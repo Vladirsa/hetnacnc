@@ -29,10 +29,11 @@ const empieza = (b: Buffer, ...bytes: number[]) => bytes.every((x, i) => b[i] ==
 const textoInicio = (b: Buffer, n = 4096) => DE(b, 0, n).toString("latin1")
 
 // Extensiones que nunca deben venir dentro de un comprimido de planos.
+// Sólo programas y scripts: lo demás (hojas con macros, accesos directos,
+// páginas) suele venir en carpetas de proyecto comprimidas y lo revisa ClamAV.
 const PELIGROSAS = new Set([
-  "exe", "dll", "com", "bat", "cmd", "scr", "pif", "msi", "msp", "vbs", "vbe", "js", "jse", "mjs", "wsf", "wsh",
-  "ps1", "psm1", "hta", "cpl", "jar", "apk", "app", "sh", "lnk", "reg", "iso", "img", "vhd", "vhdx", "docm",
-  "xlsm", "pptm", "dotm", "xlam", "dmg", "pkg", "scf", "url", "inf", "gadget", "html", "htm", "svgz", "chm",
+  "exe", "dll", "com", "bat", "cmd", "scr", "pif", "msi", "msp", "vbs", "vbe", "js", "jse", "wsf", "wsh",
+  "ps1", "psm1", "hta", "cpl", "jar", "apk", "sh", "reg", "scf", "gadget", "dmg", "pkg",
 ])
 
 /** Ejecutables, scripts y páginas web: se rechazan sea cual sea la extensión. */

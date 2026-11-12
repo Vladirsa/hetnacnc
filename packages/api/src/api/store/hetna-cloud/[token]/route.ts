@@ -40,8 +40,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   }).slice(0, 200)
   // Los del taller se firman por carpeta del proyecto; los del cliente, uno por uno.
   const carpeta = `cloud/${l.seller_id}/${p.id}/`
+  // Los archivos de clientes (solicitudes/...) NUNCA salen por una liga
+  // compartida: son confidenciales y sólo los baja el taller elegido, con
+  // registro (lib/archivo-acceso).
   const ligas = await getSignedDownloadUrls(
-    ultimos.map((a) => a.clave).filter((c) => !esDeMedusa(c)),
+    ultimos.map((a) => a.clave).filter((c) => !esDeMedusa(c) && !String(c).startsWith("solicitudes/")),
     15 * 60,
     (c) => (c.startsWith(carpeta) ? carpeta : c),
     "attachment"

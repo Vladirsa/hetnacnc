@@ -4,6 +4,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { getSignedDownloadUrl } from "../../../../../../lib/backblaze"
 import { T_ARCHIVO, asegurarCloud, esDeMedusa, ligaMedusa, vigentes } from "../../../../../../lib/cloud"
+import { ligaArchivo, solicitudDeClave } from "../../../../../../lib/archivo-acceso"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -15,6 +16,14 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   if (esDeMedusa(a.clave)) {
     const url = await ligaMedusa(req.scope, a.clave)
     if (!url) return res.status(503).json({ message: "No se pudo generar la liga. Intenta en un momento." })
+    return res.json({ url, nombre: a.nombre })
+  }
+  // Archivo de un cliente (importado de una solicitud que ganó): pasa por la
+  // descarga registrada, que revisa que siga siendo el taller elegido.
+  if (String(a.clave).startsWith("solicitudes/")) {
+    const s = await solicitudDeClave(knex, a.clave)
+    const url = s ? ligaArchivo({ s: s.id, k: a.clave, a: "taller", i: sellerId }) : null
+    if (!url) return res.status(404).json({ message: "Este archivo del cliente ya no está disponible." })
     return res.json({ url, nombre: a.nombre })
   }
   const r = await getSignedDownloadUrl(a.clave, 3600)

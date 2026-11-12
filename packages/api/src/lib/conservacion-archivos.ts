@@ -34,6 +34,17 @@ export async function borrarArchivosSolicitud(
   const archivos = (s.trabajo?.archivos || []) as { clave: string; nombre: string; tamano: number }[]
   if (!archivos.length) return { ok: true, borrados: 0 }
   for (const a of archivos) {
+    // Si otra solicitud usa la misma clave (no debería: cada subida sirve una
+    // sola vez, pero las anteriores a esa regla no lo garantizaban), no se
+    // toca el archivo en Backblaze; sólo se quita de esta solicitud.
+    const otra = await knex(T_SOLICITUD)
+      .whereNot({ id: s.id })
+      .whereRaw(`trabajo->'archivos' @> ?::jsonb`, [JSON.stringify([{ clave: a.clave }])])
+      .first("id")
+    if (otra) {
+      logger?.warn?.(`[conservacion] ${a.clave} también está en ${otra.id}: no se borra de B2`)
+      continue
+    }
     const r = await borrarArchivoDefinitivo(a.clave)
     if (!r.ok) {
       logger?.error?.(`[conservacion] ${s.id}: no se pudo borrar ${a.clave}: ${r.reason}`)
