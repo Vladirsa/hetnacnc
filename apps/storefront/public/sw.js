@@ -1,4 +1,5 @@
 const CACHE = 'hetna-static-v1';
+// v2: vibración y número de avisos sin abrir en el ícono
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {
   e.waitUntil(
@@ -23,6 +24,14 @@ self.addEventListener('fetch', (e) => {
 });
 
 // ── Notificaciones al celular (packages/api/src/lib/push.ts) ──────────────
+// Número en el ícono de HETNA (celular o computadora) = avisos sin abrir.
+// Donde el sistema no lo permite (algunos Android), no pasa nada.
+const contarSinAbrir = () =>
+  self.registration.getNotifications().then((n) => {
+    if (!self.navigator || !('setAppBadge' in self.navigator)) return;
+    return n.length ? self.navigator.setAppBadge(n.length) : self.navigator.clearAppBadge();
+  }).catch(() => undefined);
+
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { cuerpo: e.data ? e.data.text() : '' }; }
@@ -36,19 +45,24 @@ self.addEventListener('push', (e) => {
       renotify: !!d.etiqueta,
       data: { url: d.url || '/' },
       lang: 'es-MX',
-    })
+      // Vibra al llegar (donde el celular lo permite)
+      vibrate: [200, 100, 200],
+    }).then(contarSinAbrir)
   );
 });
+
+// Si la persona descarta el aviso, también baja el número
+self.addEventListener('notificationclose', (e) => e.waitUntil(contarSinAbrir()));
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
+    contarSinAbrir().then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
       for (const v of ventanas) {
         if (v.url === url && 'focus' in v) return v.focus();
       }
       return self.clients.openWindow(url);
-    })
+    }))
   );
 });

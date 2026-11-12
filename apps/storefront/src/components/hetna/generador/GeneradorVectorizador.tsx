@@ -38,7 +38,7 @@ import {
   vistaSVG,
 } from "@/lib/generador/trazado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const RESOLUCION = { normal: 900, alta: 1600 }
 const DETALLE = { alto: 0.6, medio: 1, bajo: 2 }

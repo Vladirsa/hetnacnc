@@ -16,7 +16,7 @@ import { sendAbandonedCartEmailWorkflow } from "../workflows/send-abandoned-cart
 //      con ayuda por WhatsApp y el cupón de CARRITO_CUPON si existe, + aviso.
 const SEGUNDO_HORAS = Number(process.env.ABANDONED_CART_SECOND_HOURS || 24)
 const SEGUNDO_MAX_DIAS = 7
-const WHATSAPP = (process.env.HETNA_WHATSAPP || "522461217072").replace(/\D/g, "")
+const WHATSAPP = (process.env.HETNA_WHATSAPP || "522217076014").replace(/\D/g, "")
 
 const MIN_HOURS = Number(process.env.ABANDONED_CART_MIN_HOURS || 3)
 const MAX_HOURS = Number(process.env.ABANDONED_CART_MAX_HOURS || 72)

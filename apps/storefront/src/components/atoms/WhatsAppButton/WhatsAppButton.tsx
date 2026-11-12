@@ -2,7 +2,7 @@
 
 // Numero por defecto (negocio HETNA CNC) cuando el vendedor no tiene uno registrado
 const DEFAULT_WHATSAPP =
-  process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+  process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 // Se arma por partes para que el copiar/pegar no la convierta en enlace
 const WA_BASE = "https:" + "//" + "wa" + ".me/"

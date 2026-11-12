@@ -21,6 +21,8 @@
 //   VAPID_SUBJECT      mailto: de contacto (por defecto mailto:hola@hetnacnc.com)
 import webpush from "web-push"
 
+import { avisarWhatsapp } from "./whatsapp"
+
 export const T_PUSH = "hetna_push"
 
 export type AvisoPush = {
@@ -155,6 +157,8 @@ async function mandar(knex: any, filas: { endpoint: string; p256dh: string; auth
 export async function pushATalleres(knex: any, sellerIds: (string | null | undefined)[], aviso: AvisoPush, logger?: any) {
   try {
     const ids = [...new Set(sellerIds.filter(Boolean))] as string[]
+    // También por WhatsApp a los talleres con número verificado (en segundo plano: no frena a quien avisa)
+    if (ids.length) void avisarWhatsapp(knex, { sellerIds: ids }, aviso, logger)
     if (!ids.length || !listo()) return 0
     await asegurarTablaPush(knex)
     const filas = await knex(T_PUSH).whereIn("seller_id", ids).select("endpoint", "p256dh", "auth")
@@ -173,8 +177,6 @@ export async function pushACliente(
   logger?: any
 ) {
   try {
-    if (!listo()) return 0
-    await asegurarTablaPush(knex)
     const ids = new Set<string>()
     if (cliente.customerId) ids.add(cliente.customerId)
     if (cliente.email) {
@@ -184,6 +186,10 @@ export async function pushACliente(
         .select("id")
       for (const f of filas) ids.add(f.id)
     }
+    // También por WhatsApp si el cliente verificó su número (en segundo plano)
+    if (ids.size) void avisarWhatsapp(knex, { customerIds: [...ids] }, aviso, logger)
+    if (!listo()) return 0
+    await asegurarTablaPush(knex)
     if (!ids.size) return 0
     const filas = await knex(T_PUSH).whereIn("customer_id", [...ids]).select("endpoint", "p256dh", "auth")
     return await mandar(knex, filas, aviso, logger)

@@ -528,6 +528,7 @@ export type Routes = {
         hetnaBlog: typeof import("../src/api/admin/hetna-blog/route") & {
             $id: typeof import("../src/api/admin/hetna-blog/[id]/route");
         };
+        hetnaCampanas: typeof import("../src/api/admin/hetna-campanas/route");
         hetnaCertificaciones: typeof import("../src/api/admin/hetna-certificaciones/route") & {
             $id: typeof import("../src/api/admin/hetna-certificaciones/[id]/route");
         };
@@ -566,6 +567,7 @@ export type Routes = {
             videos: typeof import("../src/api/admin/hetna-social/videos/route") & {
                 $id: typeof import("../src/api/admin/hetna-social/videos/[id]/route");
             };
+            whatsapp: typeof import("../src/api/admin/hetna-social/whatsapp/route");
         };
         hetnaSolicitudes: typeof import("../src/api/admin/hetna-solicitudes/route") & {
             $id: typeof import("../src/api/admin/hetna-solicitudes/[id]/route") & {
@@ -636,6 +638,7 @@ export type Routes = {
             tiktok: typeof import("../src/api/hooks/social-hub/tiktok/route");
         };
         verificarCorreo: typeof import("../src/api/hooks/verificar-correo/route");
+        whatsapp: typeof import("../src/api/hooks/whatsapp/route");
     };
     store: {
         carts: typeof import("@medusajs/medusa/api/store/carts/route") & {
@@ -679,6 +682,7 @@ export type Routes = {
                     };
                 };
                 fiscal: typeof import("../src/api/store/customers/me/fiscal/route");
+                whatsapp: typeof import("../src/api/store/customers/me/whatsapp/route");
             };
         };
         locales: typeof import("@medusajs/medusa/api/store/locales/route");
@@ -1259,6 +1263,7 @@ export type Routes = {
             pago: typeof import("../src/api/vendor/hetna-verificacion/pago/route");
         };
         hetnaVolumen: typeof import("../src/api/vendor/hetna-volumen/route");
+        hetnaWhatsapp: typeof import("../src/api/vendor/hetna-whatsapp/route");
         tablero: typeof import("../src/api/vendor/tablero/route") & {
             meta: typeof import("../src/api/vendor/tablero/meta/route");
         };

@@ -16,7 +16,7 @@ import {
   hojaSVG,
 } from "@/lib/generador/muebles"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const HOJAS = [
   { etiqueta: "Melamina 1.83 × 2.44", ancho: 1830, alto: 2440 },
   { etiqueta: "MDF 1.22 × 2.44", ancho: 1220, alto: 2440 },

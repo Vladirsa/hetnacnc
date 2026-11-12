@@ -59,7 +59,7 @@ function tablaComision(idioma) {
 const T = {
   es: {
     hola: (e) => 'Hola, equipo de ' + e + ':',
-    firma: 'Saludos,<br>Equipo HETNA CNC<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 246 121 7072',
+    firma: 'Saludos,<br>Equipo HETNA CNC<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 221 707 6014',
     pie: (u) => 'Te escribimos porque tu empresa publica este correo como contacto comercial. Si no quieres recibir más mensajes, <a href="' + u + '">date de baja aquí</a> y no volveremos a escribirte. No compartimos ni vendemos tus datos.',
     vendedor: {
       1: (r) => ({
@@ -141,7 +141,7 @@ const T = {
   },
   en: {
     hola: (e) => 'Hi ' + e + ' team,',
-    firma: 'Best regards,<br>HETNA CNC team<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 246 121 7072',
+    firma: 'Best regards,<br>HETNA CNC team<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 221 707 6014',
     pie: (u) => 'We are contacting you because your company lists this address as a business contact. If you do not want more emails, <a href="' + u + '">unsubscribe here</a> and we will not write again. We never share or sell your data.',
     vendedor: {
       1: (r) => ({
@@ -170,7 +170,7 @@ const T = {
   },
   pt: {
     hola: (e) => 'Olá, equipe ' + e + ',',
-    firma: 'Abraços,<br>Equipe HETNA CNC<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 246 121 7072',
+    firma: 'Abraços,<br>Equipe HETNA CNC<br><a href="' + SITIO + '">hetnacnc.com</a> · WhatsApp +52 221 707 6014',
     pie: (u) => 'Escrevemos porque sua empresa publica este e-mail como contato comercial. Se não quiser receber mais mensagens, <a href="' + u + '">descadastre-se aqui</a> e não voltaremos a escrever. Não compartilhamos nem vendemos seus dados.',
     vendedor: {
       1: (r) => ({ asunto: r.empresa + ': venda produtos CNC na América Latina com 6% de comissão', cuerpo: '<p>Conhecemos o trabalho da ' + esc(r.empresa) + ' e achamos que combina com a <b>HETNA CNC</b>, marketplace 100% focado em CNC: máquinas, ferramentas, peças, usinagem, serviços e cursos, com compradores no México e na América Latina.</p><p>Anunciar é <b>grátis</b> e você só paga quando vende:</p>' + tablaComision('pt') + '<p>Cada vendedor vende com o próprio nome e emite a nota fiscal diretamente ao seu cliente.</p>' + boton(liga('/talleres/unete', r, 1), 'Abrir minha loja grátis') }),

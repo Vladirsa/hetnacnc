@@ -118,7 +118,7 @@ export const FormPerfilTaller = ({
           <input {...entrada} value={campos.telefono || ""} onChange={set("telefono")} />
         </Campo>
         <Campo etiqueta="WhatsApp" nota="Con lada, sin espacios.">
-          <input {...entrada} value={campos.whatsapp || ""} onChange={set("whatsapp")} placeholder="522461217072" />
+          <input {...entrada} value={campos.whatsapp || ""} onChange={set("whatsapp")} placeholder="522217076014" />
         </Campo>
         <Campo etiqueta="Sitio web">
           <input {...entrada} value={campos.sitio_web || ""} onChange={set("sitio_web")} />

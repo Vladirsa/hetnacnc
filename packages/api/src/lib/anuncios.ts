@@ -83,7 +83,7 @@ export function diarioDe(c: ConfigAnuncios) {
 const token = () => process.env.META_ADS_TOKEN || ""
 export const anunciosListos = () => !!token()
 
-async function graph(ruta: string, cuerpo?: Record<string, any>) {
+export async function graph(ruta: string, cuerpo?: Record<string, any>) {
   const url = new URL(`${GRAPH()}/${ruta}`)
   const init: RequestInit = { signal: AbortSignal.timeout(30_000) }
   if (cuerpo) {

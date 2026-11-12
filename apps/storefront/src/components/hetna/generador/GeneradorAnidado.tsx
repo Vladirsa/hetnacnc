@@ -7,7 +7,7 @@ import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { type PiezaAnidar, anidar, hojaAnidadaSVG, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
 import { dibujoDXF, dibujoSVG, leerDXF, leerSVG, medidas, unir } from "@/lib/generador/vectores"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const HOJAS = [
   { etiqueta: "Láser 600 × 400", ancho: 600, alto: 400 },
