@@ -32,3 +32,14 @@ export const COMISION_FABRICACION_PCT = 0
 // Revisión de un anuncio antes de publicarlo (sin plazo en el código: es la
 // meta del equipo, por eso se dice "normalmente").
 export const HORAS_REVISION_ANUNCIO = 24
+
+// Protección en trabajos de fabricación (política del 12 nov 2026; backend:
+// packages/api/src/lib/disputa.ts y lib/seguimiento.ts DIAS_PARA_CERRAR).
+// Si el cliente no confirma ni reporta nada, la solicitud se cierra sola estos
+// días después de la entrega y se le paga al taller.
+export const DIAS_CIERRE_AUTOMATICO = 10
+// Días después de la fecha prometida sin entrega para poder cancelar con
+// reembolso de lo que HETNA tenga retenido.
+export const DIAS_RETRASO_CANCELACION = 7
+// Plazo máximo en que HETNA decide una disputa (días hábiles).
+export const DIAS_HABILES_DECISION_DISPUTA = 5

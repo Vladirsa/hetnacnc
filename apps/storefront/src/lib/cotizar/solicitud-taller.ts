@@ -139,6 +139,10 @@ export type VistaSolicitud = {
   historial?: { fecha: string; quien: string; nota: string }[]
   envio?: { paqueteria: string; guia: string } | null
   puede_confirmar?: boolean
+  // Problema reportado por el cliente (cancelar | retraso | defecto | otro):
+  // HETNA retiene lo cobrado, media y decide.
+  puede_reportar?: boolean
+  disputa?: { tipo: string; nombre: string; desde: string | null } | null
   // Licitaciones 2.0
   cobro?: CobroSolicitud | null
   preguntas?: PreguntaSolicitud[]
@@ -222,6 +226,13 @@ async function postar(ruta: string, cuerpo: unknown, porDefecto: string): Promis
   } catch {
     return { ok: false, mensaje: porDefecto }
   }
+}
+
+export type TipoProblema = "cancelar" | "retraso" | "defecto" | "otro"
+
+/** Reporta un problema con el trabajo: abre una disputa que HETNA media. */
+export async function reportarProblema(token: string, tipo: TipoProblema, detalle: string) {
+  return postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/problema`, { tipo, detalle }, "No se pudo enviar. Intenta de nuevo o escríbenos.")
 }
 
 /** Liga del siguiente pago (anticipo, resto o total) con Mercado Pago o PayPal. */

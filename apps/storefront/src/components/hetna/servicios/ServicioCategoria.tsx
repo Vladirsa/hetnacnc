@@ -1,7 +1,15 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
-import { DIAS_SOLICITUD_ABIERTA, HORAS_REVISION_SOLICITUD, MAX_ARCHIVOS, MAX_MB_ARCHIVO } from "@/lib/hetna/promesas"
+import {
+  DIAS_CIERRE_AUTOMATICO,
+  DIAS_HABILES_DECISION_DISPUTA,
+  DIAS_RETRASO_CANCELACION,
+  DIAS_SOLICITUD_ABIERTA,
+  HORAS_REVISION_SOLICITUD,
+  MAX_ARCHIVOS,
+  MAX_MB_ARCHIVO,
+} from "@/lib/hetna/promesas"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
@@ -155,8 +163,24 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
     r: "Tu nombre, correo y WhatsApp sólo los ve HETNA. Los talleres ven el trabajo (qué, cuánto, dónde y para cuándo) y tus archivos, nunca tus datos de contacto.",
   },
   {
+    p: "¿Tengo que pagar un anticipo?",
+    r: "Depende del taller: cada propuesta dice si pide anticipo y de qué porcentaje, y lo ves antes de elegir. Si le pagas a HETNA, HETNA retiene el anticipo y los pagos siguientes hasta que recibes tu pedido; si le pagas directo al taller por la plataforma, el dinero le llega en el momento.",
+  },
+  {
+    p: "¿Y si quiero cancelar o el taller se retrasa?",
+    r: `Si cancelas antes de que el taller empiece a fabricar, te devolvemos el 100 % de lo que le pagaste a HETNA. Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha de entrega que prometió el taller y no te ha entregado, puedes cancelar y te devolvemos lo que HETNA tenga retenido. Lo pides desde la liga de tu solicitud, en "Reportar un problema o cancelar".`,
+  },
+  {
+    p: "¿Qué pasa si la pieza llega defectuosa?",
+    r: `Repórtalo desde la liga de tu solicitud antes de confirmar que la recibiste. HETNA retiene el pago al taller, pide evidencia a los dos (fotos, guía, mensajes, acuerdo SafeDeal) y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o total.`,
+  },
+  {
+    p: "¿Cuándo recibe el taller su pago?",
+    r: `Si pagaste a HETNA, se lo liberamos cuando confirmas que recibiste tu pedido o, si no confirmas ni reportas un problema, ${DIAS_CIERRE_AUTOMATICO} días después de que lo marca como entregado. Con un problema abierto no se libera nada hasta que HETNA decide.`,
+  },
+  {
     p: "¿Cuánto cuesta pedir cotización?",
-    r: "Nada. Pedir y recibir propuestas es gratis; sólo pagas si eliges una, dentro de HETNA con Mercado Pago.",
+    r: "Nada. Pedir y recibir propuestas es gratis; sólo pagas si eliges una, dentro de HETNA con Mercado Pago o PayPal.",
   },
 ]
 
