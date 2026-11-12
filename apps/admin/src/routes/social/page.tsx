@@ -451,9 +451,16 @@ function TikTokConexion() {
   const [e, setE] = useState<any>(null)
   const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
   const [ocupado, setOcupado] = useState(false)
-  const cargar = () => api<any>("/tiktok").then(setE).catch(() => setE(null))
+  const [falla, setFalla] = useState<string | null>(null)
+  const cargar = () => api<any>("/tiktok").then((x) => { setE(x); setFalla(null) }).catch((er) => setFalla((er as Error).message))
   useEffect(() => { void cargar() }, [])
-  if (!e) return null
+  // Siempre se muestra: si el servidor no contesta, se dice por qué (antes se escondía y no se sabía qué pasaba)
+  if (!e)
+    return (
+      <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+        <b>🎵 TikTok</b> <span style={{ color: falla ? C.rojo : C.tenue }}>{falla ? `No se pudo leer el estado: ${falla}. ¿Ya se desplegó la versión con TikTok?` : "Cargando…"}</span>
+      </div>
+    )
   const hacer = async (accion: string) => {
     setOcupado(true)
     try {
