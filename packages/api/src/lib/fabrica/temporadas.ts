@@ -171,7 +171,7 @@ export function fotoAbsoluta(u: string | null | undefined) {
   return null
 }
 
-async function piezaDeFecha(scope: any, f: FechaEspecial, p: { anio: number; mes: number; dia: number }, prods: any[], logger?: any) {
+export async function piezaDeFecha(scope: any, f: FechaEspecial, p: { anio: number; mes: number; dia: number }, prods: any[], logger?: any) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   prods = prods.map((x) => ({ ...x, thumbnail: fotoAbsoluta(x.thumbnail) })).filter((x) => x.thumbnail)
   if (!prods.length) return []

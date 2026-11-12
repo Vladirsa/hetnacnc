@@ -1,5 +1,6 @@
 import { OrderConfirmedSection } from "@/components/sections/OrderConfirmedSection/OrderConfirmedSection"
 import { ActivarAvisos } from "@/components/hetna/push/ActivarAvisos"
+import { WhatsappCuenta } from "@/components/hetna/cuenta/WhatsappCuenta"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { retrieveOrder } from "@/lib/data/orders"
 import { Metadata } from "next"
@@ -30,6 +31,10 @@ export default async function OrderConfirmedPage(props: Props) {
       {cliente && (
         <div className="mx-auto mt-6 max-w-[760px]">
           <ActivarAvisos compacto />
+          {/* Y por WhatsApp: "tu pedido va en camino" llega donde sí lo ven */}
+          <div className="mt-3">
+            <WhatsappCuenta telefono={(order as any).shipping_address?.phone || cliente.phone} />
+          </div>
         </div>
       )}
       <OrderConfirmedSection order={order} />

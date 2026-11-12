@@ -84,8 +84,19 @@ async function llamar(ruta: string, cuerpo: any) {
   })
   const d = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(`WhatsApp: ${d?.response?.message || d?.message || r.status}`.slice(0, 200))
+  if (d?.key?.id) recordarPropio(String(d.key.id))
   return d
 }
+
+// Mensajes que mandó el sistema (avisos, verificación, respondedor). Cuando
+// Evolution los regresa como "enviados por HETNA" no cuentan como que una
+// persona del equipo tomó el chat.
+const propios = new Map<string, number>()
+function recordarPropio(id: string) {
+  propios.set(id, Date.now())
+  if (propios.size > 500) for (const [k, t] of propios) if (Date.now() - t > 3_600_000) propios.delete(k)
+}
+export const esPropio = (id?: string | null) => !!id && propios.has(id)
 
 function enCola<T>(fn: () => Promise<T>): Promise<T> {
   const turno = cola.then(async () => {
@@ -279,6 +290,8 @@ async function bajarMedia(mensajeId: string) {
 export async function avisarWhatsapp(knex: any, a: { sellerIds?: string[]; customerIds?: string[] }, aviso: { titulo: string; cuerpo: string; url?: string }, logger?: any) {
   try {
     if (!whatsappListo()) return 0
+    // Sin destinatarios no se manda nada (nunca "a todos")
+    if (!a.sellerIds?.filter(Boolean).length && !a.customerIds?.filter(Boolean).length) return 0
     await asegurarWhatsapp(knex)
     const filas = await knex(T_WA)
       .whereNotNull("verificado_en")

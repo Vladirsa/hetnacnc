@@ -465,6 +465,7 @@ function WhatsappConexion() {
         else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
       } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
       else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
+      else if (cuerpo.accion === "bot") setNota({ ok: true, t: cuerpo.activo ? "✓ Respondedor encendido" : "Respondedor apagado" })
       void cargar()
     } catch (er) {
       setNota({ ok: false, t: `✗ ${(er as Error).message}` })
@@ -494,6 +495,16 @@ function WhatsappConexion() {
           <button type="button" style={boton("normal")} disabled={ocupado || !num} onClick={() => void hacer({ accion: "prueba", numero: num })}>Mandar prueba</button>
           {e.numero_hetna ? <span style={{ color: C.tenue, fontSize: 12 }}>Número de HETNA para verificar: +{e.numero_hetna}</span> : <span style={{ color: C.rojo, fontSize: 12 }}>Falta WHATSAPP_HETNA (número de HETNA) en el .env del backend</span>}
         </div>
+      )}
+      {e?.bot && (
+        <label style={{ display: "flex", gap: 6, alignItems: "flex-start", marginTop: 6, fontSize: 13 }}>
+          <input type="checkbox" checked={!!e.bot.activo} disabled={ocupado || !e.bot.ia} onChange={(x) => void hacer({ accion: "bot", activo: x.target.checked })} />
+          <span>
+            <b>Respondedor automático</b>: contesta las dudas de quien escribe al WhatsApp (cómo cotizar, si hay tal producto, registrarse) sólo con datos reales y ligas de la tienda; lo que no sabe te lo pasa por Telegram. Si contestas tú desde el celular, se calla 12 h en ese chat.
+            {!e.bot.ia && <span style={{ color: C.rojo }}> (Falta la llave de IA en el servidor)</span>}
+            <span style={{ color: C.tenue }}> · Hoy: {e.bot.respuestas_hoy} respuestas en {e.bot.chats_hoy} chats · {e.bot.pasados} pasados a ti</span>
+          </span>
+        </label>
       )}
       <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
         Sólo reciben avisos por WhatsApp los talleres y clientes que verificaron su número (ellos escriben primero). Se mandan uno a la vez, con pausa y tope de {e?.tope_dia || 250} al día para cuidar el número. BAJA = dejar de recibir.
@@ -1677,6 +1688,62 @@ function Temario({ alCambiar }: { alCambiar: () => void }) {
 }
 
 /** Fechas especiales: videos de productos con la etiqueta de cada fecha (Día de las Madres, Muertos, Navidad…). */
+/** Buen Fin: fechas, descuento y cupón los pone el dueño; sin eso no se publica nada. */
+function BuenFin() {
+  const [d, setD] = useState<any>(null)
+  const [f, setF] = useState<any>(null)
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const api = async (cuerpo?: unknown) => {
+    const r = await fetch("/admin/hetna-fabrica/buen-fin", { credentials: "include", ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }) })
+    const x = await r.json().catch(() => ({}))
+    if (r.status === 401) throw new Error(MSG_SESION)
+    if (!r.ok) throw new Error(x?.message || `Error ${r.status}`)
+    return x
+  }
+  const tomar = (x: any) => { setD(x); setF({ activo: x.activo, desde: x.desde, hasta: x.hasta, descuento: x.descuento, cupon: x.cupon, etiquetas: (x.etiquetas || []).join(", ") }) }
+  useEffect(() => { api().then(tomar).catch((e) => setNota({ ok: false, t: (e as Error).message })) }, [])
+  if (!f) return null
+  const campo = { padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 13 }
+  const guardar = async () => {
+    setOcupado(true)
+    try { tomar(await api({ ...f, etiquetas: String(f.etiquetas).split(",").map((x: string) => x.trim()).filter(Boolean) })); setNota({ ok: true, t: "✓ Guardado" }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) }
+  }
+  return (
+    <section style={caja}>
+      <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🛍️ Buen Fin</h3>
+      <p style={{ margin: "0 0 10px", color: C.tenue, fontSize: 13 }}>
+        Pon las fechas y el descuento <b>tal como lo vas a dar</b>. 5 días antes sale un aviso cada 2 días y durante el Buen Fin una imagen y un video diarios con los productos que tengan la etiqueta. Nada sale después del último día. Sin estos datos no se publica nada.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
+        <label style={{ display: "flex", gap: 4, alignItems: "center" }}><input type="checkbox" checked={!!f.activo} onChange={(e) => setF({ ...f, activo: e.target.checked })} /> Activo</label>
+        <span>Del</span><input type="date" value={f.desde} onChange={(e) => setF({ ...f, desde: e.target.value })} style={campo} />
+        <span>al</span><input type="date" value={f.hasta} onChange={(e) => setF({ ...f, hasta: e.target.value })} style={campo} />
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13, marginTop: 6 }}>
+        <input value={f.descuento} onChange={(e) => setF({ ...f, descuento: e.target.value })} placeholder="Descuento (ej. 10% en productos seleccionados)" style={{ ...campo, flex: 2, minWidth: 240 }} />
+        <input value={f.cupon} onChange={(e) => setF({ ...f, cupon: e.target.value })} placeholder="Cupón (opcional, debe existir en Promociones)" style={{ ...campo, flex: 1, minWidth: 180 }} />
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13, marginTop: 6 }}>
+        <span style={{ color: C.tenue }}>Etiqueta de los productos con descuento:</span>
+        <input value={f.etiquetas} onChange={(e) => setF({ ...f, etiquetas: e.target.value })} style={{ ...campo, flex: 1, minWidth: 160 }} />
+        <button type="button" style={boton("primario")} disabled={ocupado} onClick={() => void guardar()}>Guardar</button>
+        <button type="button" style={boton("normal")} disabled={ocupado || !d?.etapa || !d?.productos?.length} onClick={async () => {
+          setOcupado(true)
+          try { const x = await api({ hacer: true }); setNota({ ok: true, t: `✓ Haciendo la imagen y el video con: ${x.productos.join(", ")}. En unos minutos aparecen en Pendientes.` }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) }
+        }}>🎬 Hacer ahora</button>
+      </div>
+      <div style={{ fontSize: 12, marginTop: 6, color: C.tenue }}>
+        {d.etapa === "durante" ? "🟢 En curso" : d.etapa === "antes" ? "🟡 En días de aviso" : "⚪ Fuera de fechas"}
+        {" · "}
+        <span style={{ color: d.productos.length ? C.verde : C.rojo, fontWeight: 600 }}>{d.productos.length ? `${d.productos.length}${d.productos.length >= 6 ? "+" : ""} productos con la etiqueta` : "Ningún producto con la etiqueta"}</span>
+        {d.cupon && <> · Cupón {d.cupon}: <span style={{ color: d.cupon_ok === false ? C.rojo : C.verde, fontWeight: 600 }}>{d.cupon_ok === false ? "no existe o no está activo" : d.cupon_ok ? "activo" : "sin revisar"}</span></>}
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
+    </section>
+  )
+}
+
 function FechasEspeciales() {
   const [fechas, setFechas] = useState<FechaE[] | null>(null)
   const [edit, setEdit] = useState<Record<string, string>>({})
@@ -1876,6 +1943,7 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
       </section>
 
       <FechasEspeciales />
+      <BuenFin />
 
       <section style={caja}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

@@ -31,7 +31,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const candidatos = [key.remoteJid, key.remoteJidAlt, key.senderPn, data?.senderPn, key.participantPn].map((x) => String(x || ""))
   const jid = candidatos.find((x) => x.endsWith("@s.whatsapp.net")) || ""
   // Sólo mensajes de personas (no grupos, no estados) y que no mandamos nosotros
-  if (key.fromMe || !jid || String(key.remoteJid || "").endsWith("@g.us")) return ok()
+  if (!jid || String(key.remoteJid || "").endsWith("@g.us")) return ok()
+  // Lo mandó HETNA: sólo se avisa al backend (si fue una persona del equipo, el respondedor se calla)
+  if (key.fromMe) {
+    await fetch(`${MEDUSA_BACKEND_URL}/hooks/whatsapp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-hetna-token": esperado },
+      body: JSON.stringify({ desde_mi: true, numero: jid.replace("@s.whatsapp.net", "").replace(/\D/g, ""), mensaje_id: key.id || null }),
+      signal: AbortSignal.timeout(15_000),
+    }).catch(() => null)
+    return ok()
+  }
   const msg = data?.message || {}
   const imagen = msg.imageMessage
   const texto = msg.conversation || msg.extendedTextMessage?.text || imagen?.caption || ""
