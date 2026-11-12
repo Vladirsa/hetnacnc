@@ -1,3 +1,4 @@
+import { DIAS_SOLICITUD_ABIERTA } from "@/lib/hetna/promesas"
 import type { Metadata } from "next"
 
 import FormSuministro from "@/components/hetna/taller/FormSuministro"
@@ -18,7 +19,7 @@ export default function SuministroPage() {
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#1E7B3A]">Suministro</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">Cotiza material e insumos con proveedores</h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
-            Dinos qué necesitas y cuánto. Los proveedores de HETNA te mandan su precio, tiempo de entrega y condiciones durante 7 días. Te llega
+            Dinos qué necesitas y cuánto. Los proveedores de HETNA te mandan su precio, tiempo de entrega y condiciones durante {DIAS_SOLICITUD_ABIERTA} días. Te llega
             una liga por correo para compararlas y elegir.
           </p>
         </header>

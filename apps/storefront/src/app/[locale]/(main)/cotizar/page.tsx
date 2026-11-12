@@ -1,3 +1,4 @@
+import { DIAS_SOLICITUD_ABIERTA } from "@/lib/hetna/promesas"
 import type { Metadata } from "next"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
@@ -70,7 +71,7 @@ export default async function CotizarPage({
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t
               ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
-              : "Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante 7 días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA."}
+              : `Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA.`}
           </p>
         </header>
 
