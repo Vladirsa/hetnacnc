@@ -12,5 +12,5 @@ echo "===== $(date '+%F %T') ====="
 set -a; source "$AQUI/.env"; set +a          # LLM_MODEL, LLM_API_KEY, TANDA, N8N_IMPORTAR_URL
 case "${LLM_API_KEY:-}" in ""|PEGA_AQUI*) echo "Pega tu llave de Groq en $AQUI/.env (LLM_API_KEY)"; exit 1;; esac
 "$AQUI/.venv/bin/python" buscar_prospectos.py \
-  --auto "${TANDA:-8}" --max-por-consulta 10 \
+  --auto "${TANDA:-20}" --max-por-consulta 10 \
   --enviar "${N8N_IMPORTAR_URL:-https://n8n.hetnacnc.com/webhook/hetna-prospectos-importar}"
