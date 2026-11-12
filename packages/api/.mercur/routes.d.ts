@@ -562,6 +562,7 @@ export type Routes = {
             estrategia: typeof import("../src/api/admin/hetna-social/estrategia/route");
             metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
             plan: typeof import("../src/api/admin/hetna-social/plan/route");
+            tiktok: typeof import("../src/api/admin/hetna-social/tiktok/route");
             videos: typeof import("../src/api/admin/hetna-social/videos/route") & {
                 $id: typeof import("../src/api/admin/hetna-social/videos/[id]/route");
             };
@@ -632,6 +633,7 @@ export type Routes = {
             clic: typeof import("../src/api/hooks/social-hub/clic/route");
             evento: typeof import("../src/api/hooks/social-hub/evento/route");
             telegram: typeof import("../src/api/hooks/social-hub/telegram/route");
+            tiktok: typeof import("../src/api/hooks/social-hub/tiktok/route");
         };
         verificarCorreo: typeof import("../src/api/hooks/verificar-correo/route");
     };

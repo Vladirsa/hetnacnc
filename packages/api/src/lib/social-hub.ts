@@ -22,6 +22,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { STORE_URL, nuevoId } from "./licitacion"
 import { publicarThreads, threadsListo } from "./threads"
+import { borradorTikTok, tiktokConectado } from "./tiktok"
 import { sendEmail } from "./resend"
 
 export const T_POST = "hetna_social_post"
@@ -500,7 +501,9 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   // Varias imágenes: carrusel en Instagram (hasta 10)
   const imagenes = esVideo ? [] : (p.medios || []).filter((m: any) => m?.url && m.tipo !== "video" && !/\.(mp4|mov|webm)(\?|$)/i.test(String(m.url))).map((m: any) => m.url).slice(0, 10)
   const cfgPub = await leerConfig(knex)
-  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : r === "threads" ? threadsListo() : !!REDES[r]?.auto)
+  // TikTok: si está conectado y hay video, se manda como borrador a la app (el dueño lo publica con un toque)
+  const tiktok = (p.redes as Red[]).includes("tiktok") && !!video && (await tiktokConectado(knex))
+  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : r === "threads" ? threadsListo() : r === "tiktok" ? tiktok : !!REDES[r]?.auto)
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
@@ -523,6 +526,8 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     let r: any =
       red === "threads"
         ? await publicarThreads(knex, { texto, imagen, video, imagenes })
+        : red === "tiktok"
+        ? await borradorTikTok(knex, video)
         : red === "youtube"
         ? await enviarAN8n(youtubeDe(texto, p.titulo, video))
         : red === "instagram_historia"
@@ -544,6 +549,13 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     if (red === "facebook" && r.ok && r.id && (await leerConfig(knex)).primer_comentario) {
       const c: any = await enviarAN8n({ red: "comentar", objeto: r.id, texto: p.mercado === "us" ? `👉 Get a quote or join here: ${liga}` : `👉 Cotiza o regístrate aquí: ${liga}` })
       r = { ...r, comentario: c.ok ? "ok" : String(c.error || "no se pudo").slice(0, 200) }
+    }
+    // TikTok en borrador: el texto no viaja con el video; se manda por Telegram para pegarlo
+    if (red === "tiktok" && r.ok && r.borrador) {
+      try {
+        const { mandarPrivado } = await import("./social-telegram")
+        await mandarPrivado(knex, { texto: `🎵 Video en tu bandeja de TikTok ("${String(p.titulo || "").slice(0, 60)}"). Ábrelo, pon un sonido de moda y pega este texto:\n\n${texto}` })
+      } catch {}
     }
     resultado[red] = { ...r, en: new Date().toISOString() }
     if (!r.ok && !r.pendiente) logger?.warn?.(`[social] ${p.id} ${red}: ${r.error}`)
