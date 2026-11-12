@@ -446,6 +446,56 @@ function TelegramAprobacion() {
   )
 }
 
+/** TikTok: conectar la cuenta de HETNA; los videos llegan como borrador a la app de TikTok. */
+function TikTokConexion() {
+  const [e, setE] = useState<any>(null)
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const [falla, setFalla] = useState<string | null>(null)
+  const cargar = () => api<any>("/tiktok").then((x) => { setE(x); setFalla(null) }).catch((er) => setFalla((er as Error).message))
+  useEffect(() => { void cargar() }, [])
+  // Siempre se muestra: si el servidor no contesta, se dice por qué (antes se escondía y no se sabía qué pasaba)
+  if (!e)
+    return (
+      <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+        <b>🎵 TikTok</b> <span style={{ color: falla ? C.rojo : C.tenue }}>{falla ? `No se pudo leer el estado: ${falla}. ¿Ya se desplegó la versión con TikTok?` : "Cargando…"}</span>
+      </div>
+    )
+  const hacer = async (accion: string) => {
+    setOcupado(true)
+    try {
+      const d = await api<any>("/tiktok", { accion })
+      if (accion === "conectar" && d.url) {
+        window.open(d.url, "_blank", "noopener")
+        setNota({ ok: true, t: "Se abrió TikTok en otra pestaña: entra con la cuenta de HETNA y acepta. Cuando diga \"TikTok conectado\", regresa aquí y aprieta \"Probar\"." })
+      } else if (accion === "probar") setNota(d.ok ? { ok: true, t: `✓ Conectado como ${d.usuario || "tu cuenta"}` } : { ok: false, t: `✗ ${d.error}` })
+      else setNota({ ok: true, t: "TikTok desconectado" })
+      void cargar()
+    } catch (er) {
+      setNota({ ok: false, t: `✗ ${(er as Error).message}` })
+    } finally {
+      setOcupado(false)
+    }
+  }
+  return (
+    <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>🎵 TikTok</b>
+        <span style={{ color: e.conectado ? C.verde : C.tenue, fontWeight: 600 }}>{!e.configurado ? "Faltan las llaves en el servidor" : e.conectado ? `Conectado${e.usuario ? ` (${e.usuario})` : ""}` : "Sin conectar"}</span>
+        <span style={{ flex: 1 }} />
+        {e.configurado && <button type="button" style={boton(e.conectado ? "normal" : "primario")} disabled={ocupado} onClick={() => void hacer("conectar")}>{e.conectado ? "Volver a conectar" : "Conectar TikTok"}</button>}
+        {e.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer("probar")}>Probar</button>}
+        {e.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer("desconectar")}>Desconectar</button>}
+      </div>
+      <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
+        Con TikTok conectado, los videos aprobados para TikTok llegan como <b>borrador</b> a la app de TikTok: ábrela, pon un sonido de moda y publícalo. El texto para pegar te llega por Telegram.
+        {!e.configurado && " Guarda TIKTOK_CLIENT_KEY y TIKTOK_CLIENT_SECRET en el .env del backend."}
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
+    </div>
+  )
+}
+
 function PruebaRed({ red, nombre }: { red: string; nombre: string }) {
   const [r, setR] = useState<any>(null)
   const [cargando, setCargando] = useState(false)
@@ -866,6 +916,7 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <PruebaInstagram />
       <PruebaRed red="threads" nombre="Threads" />
       <PruebaRed red="youtube" nombre="YouTube" />
+      <TikTokConexion />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (
