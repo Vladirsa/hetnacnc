@@ -399,6 +399,8 @@ export default function LaboratorioCam() {
                 "CAM 2D: contornos, cajeado, grabado en V, barrenado y láser, desde DXF o SVG",
                 "Tus máquinas y fresas guardadas en tu cuenta",
                 "Torno con eje rotativo: balaustres, patas y columnas",
+                "Rampas de entrada y pasada de acabado en el 2D",
+                "Acomodar copias de una pieza en la hoja",
                 `G-code para ${CONTROLADORES.join(", ")}`,
               ].map((x) => (
                 <li key={x} className="flex gap-2"><span className="text-[#1E7B3A]">✓</span>{x}</li>
@@ -408,7 +410,7 @@ export default function LaboratorioCam() {
           <div className="rounded-[16px] border border-[#E7E4DC] bg-white p-6">
             <p className="m-0 text-[16px] font-bold text-[#6B5A2E]">En desarrollo</p>
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] text-[#4A4943]">
-              {["Rampas de entrada y acabado de paredes en el 2D", "Anidar varias piezas en la hoja dentro del CAM", "Simulación con remoción de material en el 2D"].map((x) => (
+              {["Anidar piezas distintas en la misma hoja", "Simulación con remoción de material en el 2D"].map((x) => (
                 <li key={x} className="flex gap-2"><span className="text-[#B38A2E]">○</span>{x}</li>
               ))}
             </ul>

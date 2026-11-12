@@ -29,7 +29,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   {
     p: "¿Tiene costo registrarse?",
     corta: true,
-    r: "No. Registrarte, tener tu perfil y recibir solicitudes es gratis. HETNA sólo cobra una comisión cuando vendes o ganas un trabajo que el cliente paga dentro de la plataforma; la comisión vigente la ves en tu panel antes de vender. Hay planes opcionales que ponen tus propuestas primero.",
+    r: "No. Registrarte, tener tu perfil y recibir solicitudes es gratis. Los trabajos de fabricación que ganas no pagan comisión a HETNA; en la tienda sólo se cobra una comisión cuando vendes, y la ves en tu panel antes de vender. Hay planes opcionales que ponen tus propuestas primero.",
   },
   {
     p: "¿Cómo recibo proyectos?",
@@ -61,7 +61,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   },
   {
     p: "¿Cómo me pagan?",
-    r: "El cliente paga dentro de HETNA (Mercado Pago) y tú empiezas cuando el pago está confirmado: nunca fabricas sin que esté pagado. HETNA te entrega el importe menos la comisión y las retenciones que marque la ley cuando el pedido se entrega.",
+    r: "El cliente paga dentro de HETNA (Mercado Pago) y tú empiezas cuando el pago está confirmado: nunca fabricas sin que esté pagado. HETNA no cobra comisión por los trabajos de fabricación: recibes el importe menos la tarifa de Mercado Pago y las retenciones que marque la ley.",
   },
   {
     p: "¿Qué pasa después de registrarme?",

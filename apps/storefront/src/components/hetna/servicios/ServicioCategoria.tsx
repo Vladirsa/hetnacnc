@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { DIAS_SOLICITUD_ABIERTA, HORAS_REVISION_SOLICITUD, MAX_ARCHIVOS, MAX_MB_ARCHIVO } from "@/lib/hetna/promesas"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
@@ -115,7 +116,7 @@ const CALCULADORAS = [
 export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   {
     p: "¿Qué archivos aceptan?",
-    r: "Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta 5 archivos de 50 MB, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.",
+    r: `Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta ${MAX_ARCHIVOS} archivos de hasta ${MAX_MB_ARCHIVO} MB cada uno, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.`,
   },
   {
     p: "¿Puedo pedir solo una pieza?",
@@ -131,7 +132,7 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   },
   {
     p: "¿Cuánto tarda la cotización?",
-    r: "En corte láser, router, plasma e impresión 3D ves un precio estimado al instante con la calculadora. Si pides propuestas, los talleres reciben tu solicitud en el momento y tienen 7 días para mandarte precio y tiempo; te avisamos por correo cada vez que llega una.",
+    r: `En corte láser, router, plasma e impresión 3D ves un precio estimado al instante con la calculadora. Si pides propuestas, HETNA revisa tu solicitud (normalmente en menos de ${HORAS_REVISION_SOLICITUD} horas) y la publica a los talleres, que tienen ${DIAS_SOLICITUD_ABIERTA} días para mandarte precio y tiempo; te avisamos por correo cada vez que llega una.`,
   },
   {
     p: "¿Hacen envíos a todo México?",

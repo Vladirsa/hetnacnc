@@ -1,3 +1,4 @@
+import { HORAS_REVISION_ANUNCIO } from "@/lib/hetna/promesas"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -13,7 +14,7 @@ export default function Gracias() {
       <div className="max-w-[640px] mx-auto px-4 py-16 flex flex-col gap-4 text-center items-center">
         <h1 className="m-0 font-display text-[30px] font-bold text-[#1B1B18]">¡Gracias!</h1>
         <p className="m-0 text-[16px] leading-relaxed text-[#44433D]">
-          Si tu pago fue aprobado, ya recibimos tu pedido. Revisamos tu anuncio y lo activamos en máximo 24 horas.
+          Si tu pago fue aprobado, ya recibimos tu pedido. Revisamos tu anuncio y lo activamos, normalmente en {HORAS_REVISION_ANUNCIO} horas.
           Te escribiremos al correo que dejaste si necesitamos algo.
         </p>
         <p className="m-0 text-[14px] text-[#6B6A63]">Si pagaste en OXXO o por transferencia, el anuncio se activa cuando Mercado Pago confirme el pago.</p>
