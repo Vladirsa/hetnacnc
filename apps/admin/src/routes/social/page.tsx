@@ -446,6 +446,63 @@ function TelegramAprobacion() {
   )
 }
 
+/** WhatsApp de HETNA (Evolution API): reconectar con QR, recibir mensajes y probar. Sólo números verificados reciben avisos. */
+function WhatsappConexion() {
+  const [e, setE] = useState<any>(null)
+  const [falla, setFalla] = useState<string | null>(null)
+  const [qr, setQr] = useState<string | null>(null)
+  const [num, setNum] = useState("")
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const cargar = () => api<any>("/whatsapp").then((x) => { setE(x); setFalla(null) }).catch((er) => setFalla((er as Error).message))
+  useEffect(() => { void cargar() }, [])
+  const hacer = async (cuerpo: any) => {
+    setOcupado(true)
+    try {
+      const d = await api<any>("/whatsapp", cuerpo)
+      if (cuerpo.accion === "qr") {
+        if (d.conectado) { setQr(null); setNota({ ok: true, t: "✓ El WhatsApp ya está conectado" }) }
+        else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
+      } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
+      else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
+      void cargar()
+    } catch (er) {
+      setNota({ ok: false, t: `✗ ${(er as Error).message}` })
+    } finally {
+      setOcupado(false)
+    }
+  }
+  const conectado = e?.conexion === "open"
+  return (
+    <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>💬 WhatsApp</b>
+        {falla ? <span style={{ color: C.rojo }}>No se pudo leer el estado: {falla}</span> : !e ? <span style={{ color: C.tenue }}>Cargando…</span> : (
+          <span style={{ color: !e.configurado ? C.rojo : conectado ? C.verde : C.rojo, fontWeight: 600 }}>
+            {!e.configurado ? "Faltan las llaves en el servidor" : conectado ? "Conectado" : `Desconectado (${e.conexion || "sin datos"})`}
+          </span>
+        )}
+        {e && <span style={{ color: C.tenue }}>· {e.verificados} números verificados ({e.talleres} talleres, {e.clientes} clientes) · {e.bajas} bajas</span>}
+        <span style={{ flex: 1 }} />
+        {e?.configurado && <button type="button" style={boton(conectado ? "normal" : "primario")} disabled={ocupado} onClick={() => void hacer({ accion: "qr" })}>{conectado ? "Ver estado" : "Reconectar (QR)"}</button>}
+        {e?.configurado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer({ accion: "webhook" })}>Recibir mensajes</button>}
+      </div>
+      {qr && <img src={qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`} alt="QR de WhatsApp" style={{ width: 240, height: 240, marginTop: 8, border: `1px solid ${C.borde}`, borderRadius: 8 }} />}
+      {e?.configurado && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+          <input value={num} onChange={(x) => setNum(x.target.value)} placeholder="Tu celular a 10 dígitos" style={{ padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 12 }} />
+          <button type="button" style={boton("normal")} disabled={ocupado || !num} onClick={() => void hacer({ accion: "prueba", numero: num })}>Mandar prueba</button>
+          {e.numero_hetna ? <span style={{ color: C.tenue, fontSize: 12 }}>Número de HETNA para verificar: +{e.numero_hetna}</span> : <span style={{ color: C.rojo, fontSize: 12 }}>Falta WHATSAPP_HETNA (número de HETNA) en el .env del backend</span>}
+        </div>
+      )}
+      <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
+        Sólo reciben avisos por WhatsApp los talleres y clientes que verificaron su número (ellos escriben primero). Se mandan uno a la vez, con pausa y tope de {e?.tope_dia || 250} al día para cuidar el número. BAJA = dejar de recibir.
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
+    </div>
+  )
+}
+
 /** TikTok: conectar la cuenta de HETNA; los videos llegan como borrador a la app de TikTok. */
 function TikTokConexion() {
   const [e, setE] = useState<any>(null)
@@ -917,6 +974,7 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <PruebaRed red="threads" nombre="Threads" />
       <PruebaRed red="youtube" nombre="YouTube" />
       <TikTokConexion />
+      <WhatsappConexion />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (
