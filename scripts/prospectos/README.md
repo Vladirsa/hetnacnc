@@ -52,7 +52,7 @@ desde el 26 de noviembre el nodo «Límite del día» sube solo a 40.
 3. +6 días (día 10): último aviso (talleres fundadores) → `PAUSA`.
 4. +60 días: un recordatorio final → `FINALIZADO`.
 
-Todos los correos llevan **enlace de baja** y el domicilio de HETNA
+Todos los correos llevan **enlace de baja** (abre una página con el botón «Confirmar baja»; sólo al presionarlo se marca `BAJA`, así los antivirus que abren enlaces no dan de baja a nadie) y el domicilio de HETNA
 (Col. Centro, Apizaco, Tlaxcala, México). Sólo se usan correos de empresa
 publicados por la propia empresa; no se recolectan datos personales.
 
