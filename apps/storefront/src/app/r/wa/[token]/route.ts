@@ -26,6 +26,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   }
   const data = body?.data || body
   const key = data?.key || {}
+  // Rastro mínimo (sin texto ni números completos) para revisar con pm2 logs hetna-web
+  console.log(`[wa] evento=${body?.event || "?"} propio=${!!key.fromMe} jid=${String(key.remoteJid || "").replace(/^\d+(?=\d{4}@)/, "…")} alt=${key.remoteJidAlt || key.senderPn ? "sí" : "no"}`)
   // WhatsApp ya manda muchos chats con un id anónimo (@lid) en vez del número;
   // en ese caso el número real viene aparte (remoteJidAlt / senderPn).
   const candidatos = [key.remoteJid, key.remoteJidAlt, key.senderPn, data?.senderPn, key.participantPn].map((x) => String(x || ""))
@@ -60,7 +62,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
       body: JSON.stringify(mensaje),
       signal: AbortSignal.timeout(60_000),
     })
-    manejado = !!(await r.json().catch(() => ({})))?.manejado
+    const res = await r.json().catch(() => ({}))
+    manejado = !!res?.manejado
+    console.log(`[wa] backend=${r.status} manejado=${manejado} accion=${res?.accion || "-"}`)
   } catch {
     // si el backend no contesta, se intenta con n8n
   }
