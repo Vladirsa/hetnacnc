@@ -43,8 +43,8 @@ export default function Terminos() {
       <h2>5. Vendedores y talleres</h2>
       <ul>
         <li>Deben publicar información real de sus productos, servicios, capacidades y tiempos de entrega.</li>
-        <li>Las ventas y trabajos obtenidos por HETNA se cobran y gestionan dentro de la plataforma, con la comisión vigente.</li>
-        <li>No está permitido compartir datos de contacto para cerrar tratos fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.</li>
+        <li>Las ventas de la tienda y de la Academia (productos, diseños, cursos y libros) se cobran y gestionan dentro de la plataforma, con la comisión vigente de la lista de precios para vendedores. En ellas no está permitido compartir datos de contacto para cerrar la venta fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.</li>
+        <li>Las solicitudes de fabricación (licitaciones) son una conexión entre cliente y taller y no pagan comisión a HETNA: HETNA cobra a los talleres sus planes de suscripción. Antes de que el cliente elija una propuesta, la comunicación va por HETNA y los datos de contacto se ocultan; al elegir, el cliente decide si comparte su contacto con el taller elegido y pueden acordar el pago dentro o fuera de la plataforma.</li>
         <li>Deben cumplir sus propias obligaciones fiscales.</li>
         <li>
           Además de estos términos, a los vendedores les aplican los{" "}
@@ -52,11 +52,11 @@ export default function Terminos() {
         </li>
       </ul>
 
-      <h2>6. Pagos dentro de la plataforma</h2>
-      <p>
-        Los pagos se hacen por los medios que indica HETNA. HETNA no se hace responsable de pagos, tratos o entregas
-        acordados fuera de la plataforma.
-      </p>
+      <h2>6. Pagos y protección</h2>
+      <ul>
+        <li>Los pagos dentro de HETNA se hacen por los medios que indica la plataforma. Sólo esos pagos tienen la protección de HETNA: el pago queda registrado, se puede pagar a HETNA como respaldo para que lo libere al taller cuando el cliente confirma que recibió, aplica la Política de devoluciones y, si cliente y taller lo firman, el acuerdo HETNA SafeDeal.</li>
+        <li>Si en una solicitud de fabricación cliente y taller acuerdan el pago o la entrega fuera de la plataforma, el trato es directamente entre ellos: HETNA no retiene ese pago ni responde por pagos, entregas o calidad acordados por fuera. Sí recibe reportes de fraude o mala conducta, que pueden causar la suspensión de la cuenta y quedar en la reputación del taller.</li>
+      </ul>
 
       <h2>7. Envíos</h2>
       <p>
