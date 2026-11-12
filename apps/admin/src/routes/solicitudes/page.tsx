@@ -225,8 +225,11 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
           </p>
           <p style={{ whiteSpace: "pre-line", margin: "0 0 8px", fontSize: 13, color: C.texto }}>{s.disputa.detalle}</p>
           <p style={{ margin: "0 0 8px", fontSize: 12, color: C.tenue }}>
-            No liberes nada al taller hasta decidir. Pide evidencia a los dos (fotos, guía, mensajes, SafeDeal) y decide en máximo 5 días hábiles.
-            Antes de "en producción", una cancelación es reembolso total. El reembolso y la transferencia se hacen a mano.
+            {s.cobro === "taller"
+              ? "Cobro directo: el dinero está con el taller; si hay reembolso, lo hace él (si no, se suspende). "
+              : "No liberes nada al taller hasta decidir. "}
+            Pide evidencia a los dos (fotos, guía, mensajes, SafeDeal) y decide en máximo 5 días hábiles. Si el taller no ha reportado avance
+            en el historial, una cancelación es reembolso total. El reembolso y la transferencia se hacen a mano.
           </p>
           <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)}
             placeholder="Decisión y motivo (con montos si es parcial). El cliente y el taller la leen." />

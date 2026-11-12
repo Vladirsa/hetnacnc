@@ -15,6 +15,7 @@ import {
   fechaPrometida,
   queSigue,
   retrasoCancelable,
+  tallerEmpezo,
 } from "../../../../../lib/disputa"
 import { T_SOLICITUD, folioTexto } from "../../../../../lib/licitacion"
 import { propuestaElegida } from "../../../../../lib/licitacion-cobro"
@@ -54,7 +55,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const p = await propuestaElegida(knex, s).catch(() => null)
   const prometida = await fechaPrometida(knex, s, p).catch(() => null)
-  const sigue = queSigue(tipo, etapa, retrasoCancelable(prometida))
+  const cobroTaller = s.cobro === "taller"
+  const empezo = await tallerEmpezo(knex, s)
+  const sigue = queSigue(tipo, { empezo, cancelablePorRetraso: retrasoCancelable(prometida), cobroTaller })
 
   // Marca la disputa sólo si nadie se adelantó (doble clic, dos pestañas).
   const n = await knex(T_SOLICITUD)
@@ -79,7 +82,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
           `<p>${escaparHtml(detalle).replace(/\n/g, "<br>")}</p>` +
           (prometida ? `<p>Fecha prometida: ${prometida.toISOString().slice(0, 10)}</p>` : "") +
           `<p>Lo que se le dijo al cliente: ${escaparHtml(sigue)}</p>` +
-          `<p>No liberes pagos al taller hasta resolver. Plazo para decidir: ${DIAS_HABILES_DECISION_DISPUTA} días hábiles.</p>` +
+          `<p>${cobroTaller ? "Cobro directo: el dinero está con el taller; si procede, él reembolsa." : "No liberes pagos al taller hasta resolver."} Taller ${empezo ? "ya reportó" : "no ha reportado"} avance. Plazo para decidir: ${DIAS_HABILES_DECISION_DISPUTA} días hábiles.</p>` +
           `<p><a href="${ADMIN_URL}">Abrir el dashboard</a></p>`,
       })
     )
@@ -92,7 +95,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         html:
           `<p>El cliente de la solicitud ${folio} reportó: <strong>${NOMBRE_PROBLEMA[tipo]}</strong>.</p>` +
           `<p>HETNA va a mediar. Responde a este correo con tu versión y tu evidencia (fotos, guía de envío, mensajes, acuerdo SafeDeal). ` +
-          `Decidimos en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles; mientras tanto el pago que cobró HETNA queda retenido.</p>`,
+          `Decidimos en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles${cobroTaller ? "; si procede un reembolso, lo haces tú desde tu cuenta" : "; mientras tanto el pago que cobró HETNA queda retenido"}.</p>`,
         ...(hetna ? { responderA: hetna } : {}),
       })
     )

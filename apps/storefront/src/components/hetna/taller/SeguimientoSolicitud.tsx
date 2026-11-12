@@ -11,8 +11,8 @@ import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CAN
 const QUIEN: Record<string, string> = { hetna: "HETNA", taller: "Taller", cliente: "Tú", sistema: "HETNA" }
 const TIPOS: { v: TipoProblema; t: string; ayuda: string }[] = [
   { v: "defecto", t: "La pieza llegó mal o distinta a lo acordado", ayuda: "Describe qué está mal. Ten a la mano fotos: te las pediremos." },
-  { v: "retraso", t: "No ha llegado y ya pasó la fecha", ayuda: `Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha prometida sin entrega, puedes cancelar y te devolvemos lo que HETNA tenga retenido.` },
-  { v: "cancelar", t: "Quiero cancelar", ayuda: "Si el taller todavía no empieza a fabricar, te devolvemos el 100 % de lo que le pagaste a HETNA." },
+  { v: "retraso", t: "No ha llegado y ya pasó la fecha", ayuda: `Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha prometida sin entrega, puedes cancelar con reembolso.` },
+  { v: "cancelar", t: "Quiero cancelar", ayuda: "Si el taller todavía no reporta avance de fabricación, recuperas el 100 % de lo que pagaste." },
   { v: "otro", t: "Otro problema", ayuda: "Cuéntanos qué pasa." },
 ]
 const fecha = (s: string | null) =>
@@ -112,7 +112,8 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-[#1E7B3A] bg-[#EEF6EE] p-4">
           <p className="min-w-0 flex-1 text-sm text-[#1F5A2B]">
             ¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, repórtalo abajo antes de confirmar. Si no
-            confirmas ni reportas nada, el proyecto se cierra solo a los {DIAS_CIERRE_AUTOMATICO} días de la entrega y se le paga al taller.
+            confirmas ni reportas nada, el proyecto se cierra solo a los {DIAS_CIERRE_AUTOMATICO} días de la entrega
+            {s.cobro_directo ? "." : " y HETNA le libera el pago al taller."}
           </p>
           <button
             type="button"
@@ -131,7 +132,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           <p className="font-bold">Reportaste un problema: {s.disputa.nombre}</p>
           <p className="mt-1">
             {queSigue ||
-              `HETNA retiene el pago al taller mientras se resuelve, pide evidencia a los dos y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o reembolso total.`}{" "}
+              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
             Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.
           </p>
         </div>
@@ -162,8 +163,10 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             className="w-full rounded-xl border border-[#E7E4DC] bg-white p-3 text-sm"
           />
           <p className="text-xs text-[#6B675C]">
-            Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo. Decidimos en un máximo de{" "}
-            {DIAS_HABILES_DECISION_DISPUTA} días hábiles.
+            {s.cobro_directo
+              ? "Mientras lo revisamos el proyecto no se cierra solo. Como le pagaste directo al taller, si procede un reembolso lo hace él y HETNA se lo exige."
+              : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}{" "}
+            Decidimos en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles.
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={enviarProblema} disabled={pendiente}

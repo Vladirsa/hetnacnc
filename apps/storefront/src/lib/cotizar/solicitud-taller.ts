@@ -142,6 +142,7 @@ export type VistaSolicitud = {
   // Problema reportado por el cliente (cancelar | retraso | defecto | otro):
   // HETNA retiene lo cobrado, media y decide.
   puede_reportar?: boolean
+  cobro_directo?: boolean
   disputa?: { tipo: string; nombre: string; desde: string | null } | null
   // Licitaciones 2.0
   cobro?: CobroSolicitud | null

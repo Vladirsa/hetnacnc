@@ -168,11 +168,11 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   },
   {
     p: "¿Y si quiero cancelar o el taller se retrasa?",
-    r: `Si cancelas antes de que el taller empiece a fabricar, te devolvemos el 100 % de lo que le pagaste a HETNA. Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha de entrega que prometió el taller y no te ha entregado, puedes cancelar y te devolvemos lo que HETNA tenga retenido. Lo pides desde la liga de tu solicitud, en "Reportar un problema o cancelar".`,
+    r: `Si cancelas antes de que el taller reporte avance de fabricación, recuperas el 100 % de lo que pagaste. Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha de entrega que prometió el taller y no te ha entregado, puedes cancelar con reembolso. Si le pagaste directo al taller, el reembolso lo hace él y HETNA se lo exige. Lo pides desde la liga de tu solicitud, en "Reportar un problema o cancelar".`,
   },
   {
     p: "¿Qué pasa si la pieza llega defectuosa?",
-    r: `Repórtalo desde la liga de tu solicitud antes de confirmar que la recibiste. HETNA retiene el pago al taller, pide evidencia a los dos (fotos, guía, mensajes, acuerdo SafeDeal) y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o total.`,
+    r: `Repórtalo desde la liga de tu solicitud antes de confirmar que la recibiste. Si le pagaste a HETNA, retenemos el pago al taller; en todo caso pedimos evidencia a los dos (fotos, guía, mensajes, acuerdo SafeDeal) y decidimos en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o total.`,
   },
   {
     p: "¿Cuándo recibe el taller su pago?",

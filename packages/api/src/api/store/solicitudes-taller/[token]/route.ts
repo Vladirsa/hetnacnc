@@ -172,6 +172,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     // Con una disputa abierta no se confirma: primero HETNA resuelve.
     puede_confirmar: etapa === "entregada" && !s.disputa,
     puede_reportar: (ETAPAS_REPORTABLES as readonly string[]).includes(etapa) && !s.disputa,
+    // true = el cliente le paga directo a la cuenta del taller: HETNA no retiene nada.
+    cobro_directo: s.cobro === "taller",
     disputa: s.disputa
       ? { tipo: s.disputa, nombre: NOMBRE_PROBLEMA[s.disputa as TipoProblema] || "Problema", desde: s.disputa_desde }
       : null,

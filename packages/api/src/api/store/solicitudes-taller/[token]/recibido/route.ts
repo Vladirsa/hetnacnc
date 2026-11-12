@@ -19,6 +19,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (etapaDe(s) !== "entregada") {
     return res.status(409).json({ message: "Tu pedido todavía no está marcado como entregado." })
   }
+  if (s.disputa) {
+    return res.status(409).json({ message: "Tienes un problema reportado: HETNA lo resuelve y cierra el proyecto." })
+  }
 
   await cambiarEtapa(knex, s, "cerrada", {
     actor: "cliente",

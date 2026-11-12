@@ -66,7 +66,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
     }
     case "cancelar": {
       if (nota.length < 5) return res.status(400).json({ message: "Escribe el motivo: el cliente lo va a leer." })
-      await cambiarEtapa(knex, s, "cancelada", { actor: "hetna", nota, extra: { estado: "cerrada" }, logger })
+      await cambiarEtapa(knex, s, "cancelada", { actor: "hetna", nota, extra: { estado: "cerrada", disputa: null, disputa_detalle: null }, logger })
       return res.json({ ok: true })
     }
     case "etapa": {
@@ -75,7 +75,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       // Mover a mano no cambia el estado de la licitación (abierta/elegida/
       // pagada): eso lo deciden la elección y el pago. Sólo cerrar y cancelar
       // la sacan de la lista de los talleres.
-      const extra = etapa === "cerrada" || etapa === "cancelada" ? { estado: "cerrada" } : undefined
+      // Cerrar o cancelar a mano también da por terminado un problema abierto.
+      const extra = etapa === "cerrada" || etapa === "cancelada" ? { estado: "cerrada", disputa: null, disputa_detalle: null } : undefined
       await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: nota || undefined, extra, logger })
       return res.json({ ok: true })
     }
