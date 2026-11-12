@@ -98,12 +98,16 @@ const categorias = async (): Promise<string[]> => {
 const productos = async (): Promise<{ handle: string; fecha: Date }[]> => {
   try {
     const r = (await sdk.store.products.query({
-      fields: "handle,updated_at",
+      fields: "handle,updated_at,metadata",
       limit: 500,
       fetchOptions: { next: { revalidate: 3600 } },
-    } as never)) as unknown as { products: { handle?: string | null; updated_at?: string | null }[] }
+    } as never)) as unknown as {
+      products: { handle?: string | null; updated_at?: string | null; metadata?: Record<string, unknown> | null }[]
+    }
     return (r.products ?? [])
-      .filter((p) => p.handle)
+      // Los paquetes de créditos 3D no se compran desde su ficha (se pagan en
+      // /user/creditos) y llevan noindex (lib/helpers/seo.ts): fuera del mapa.
+      .filter((p) => p.handle && p.metadata?.producto_creditos_3d !== true)
       .map((p) => ({ handle: p.handle as string, fecha: p.updated_at ? new Date(p.updated_at) : new Date() }))
   } catch {
     return []
