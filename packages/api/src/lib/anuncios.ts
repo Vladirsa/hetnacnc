@@ -18,7 +18,10 @@ import { REDES, T_CONFIG_S, T_POST, asegurarSocial } from "./social-hub"
 import { idDe, ventasPorPublicacion } from "./social-estadisticas"
 
 export const T_ANUNCIO = "hetna_social_anuncio"
-const GRAPH = "https://graph.facebook.com/v21.0"
+// v26.0 es la versión vigente (julio 2026); se puede cambiar sin tocar código con META_GRAPH_VERSION
+const GRAPH = () => `https://graph.facebook.com/${process.env.META_GRAPH_VERSION || "v26.0"}`
+// Página de Facebook de HETNA: para armar el id de la publicación cuando Graph sólo regresó el de la foto o video
+const PAGINA = () => process.env.META_PAGE_ID || "109722907076187"
 /** Tope duro por semana, pase lo que pase en la configuración (MXN). */
 export const TOPE_SEMANAL = 5000
 /** Mínimo diario de Meta para cuentas en pesos (redondeado hacia arriba). */
@@ -81,7 +84,7 @@ const token = () => process.env.META_ADS_TOKEN || ""
 export const anunciosListos = () => !!token()
 
 async function graph(ruta: string, cuerpo?: Record<string, any>) {
-  const url = new URL(`${GRAPH}/${ruta}`)
+  const url = new URL(`${GRAPH()}/${ruta}`)
   const init: RequestInit = { signal: AbortSignal.timeout(30_000) }
   if (cuerpo) {
     const f = new URLSearchParams()
@@ -98,6 +101,18 @@ async function graph(ruta: string, cuerpo?: Record<string, any>) {
   return d
 }
 
+/**
+ * Id de la publicación (pagina_post) que Meta necesita para anunciarla. Las fotos
+ * y videos a veces sólo regresan el id del archivo: entonces se arma con la página.
+ */
+export function objetoFacebook(r: any) {
+  const post = String(r?.datos?.post_id || "")
+  if (/^\d+_\d+$/.test(post)) return post
+  const id = idDe("facebook", r)
+  if (!id) return null
+  return /^\d+_\d+$/.test(id) ? id : /^\d+$/.test(id) ? `${PAGINA()}_${id}` : null
+}
+
 /** La mejor publicación de Facebook de las últimas 2 semanas que todavía no se impulsó. */
 export async function mejorCandidata(knex: any) {
   await asegurarAnuncios(knex)
@@ -108,7 +123,7 @@ export async function mejorCandidata(knex: any) {
     .whereRaw("(vence is null or vence > now() + interval '3 days')") // nada de fechas que ya pasan
     .select("id", "titulo", "resultado", "estadisticas")
   const conId = posts
-    .map((p: any) => ({ ...p, objeto: idDe("facebook", p.resultado?.facebook) }))
+    .map((p: any) => ({ ...p, objeto: objetoFacebook(p.resultado?.facebook) }))
     .filter((p: any) => p.objeto && /^\d+_\d+$/.test(p.objeto) && !ya.has(p.id))
   if (!conId.length) return null
   const ventas = await ventasPorPublicacion(knex, 14).catch(() => null)
@@ -189,7 +204,8 @@ export async function lanzarAnuncio(knex: any, id: string, logger?: any) {
     logger?.info?.(`[anuncios] ${id} activo hasta ${fin.toISOString()} ($${diario}/día)`)
     return { ok: true, fin }
   } catch (e) {
-    // Lo que se alcanzó a crear se queda en pausa: no gasta
+    // Lo que se alcanzó a crear se pone en pausa (por si ya se había prendido): no gasta
+    if (meta.campana) await graph(meta.campana, { status: "PAUSED" }).catch(() => null)
     await knex(T_ANUNCIO).where({ id }).update({ estado: "error", meta: JSON.stringify(meta), error: (e as Error).message, updated_at: knex.fn.now() })
     throw e
   }

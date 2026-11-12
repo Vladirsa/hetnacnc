@@ -226,7 +226,7 @@ export async function sincronizarSuscripcionPaypal(id: string, logger?: Bitacora
     })
     if (negocio.plan !== ref.plan || negocio.plan_estado !== "activa" || negocio.pp_suscripcion_id !== sub.id) {
       await anotarEvento({ negocio_id: negocio.id, preapproval_id: sub.id, evento: "activada", plan: ref.plan, estado: "paypal", monto: valido.monto })
-      await atribuirPago(negocio.id, valido.monto, sub.id)
+      await atribuirPago(negocio.id, 0, sub.id) // en USD: cuenta el pago, no se suma a los ingresos en pesos
       logger?.info(`[cotizador] taller ${negocio.id} con plan ${ref.plan} (PayPal ${sub.id})`)
     }
     return { plan: ref.plan, estado: "activa" }

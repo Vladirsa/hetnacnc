@@ -27,7 +27,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       .then(async (filas: any[]) => {
         const ids = filas.flatMap((f) => (Array.isArray(f.posts) ? f.posts : [])).filter(Boolean)
         if (!ids.length) return null
-        const posts = await knex("hetna_social_post").whereIn("id", ids).whereNotIn("estado", ["descartada"]).select("medios")
+        // Sólo lo ya publicado en redes (nada de borradores) y que no sea de una fecha que ya pasó
+        const posts = await knex("hetna_social_post")
+          .whereIn("id", ids)
+          .whereIn("estado", ["publicada", "parcial"])
+          .whereRaw("(vence is null or vence > now())")
+          .orderBy("publicada_en", "desc")
+          .select("medios")
         for (const p of posts) {
           const v = (Array.isArray(p.medios) ? p.medios : []).find((m: any) => m?.tipo === "video" && /^https:\/\//.test(String(m.url)))
           if (v) return v.url

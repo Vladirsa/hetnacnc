@@ -392,7 +392,7 @@ export async function confirmarCompra(
     .resolve("logger")
     .info(`[creditos] compra ${id}: ${compra.creditos} créditos a ${compra.customer_id} (${compra.proveedor} ${pagoId})`)
   // Social Hub: ¿llegó por una publicación? (nunca falla la compra)
-  await eventoPorCliente(knex, compra.customer_id, "compra_creditos", Number(compra.monto) || null, compra.id)
+  await eventoPorCliente(knex, compra.customer_id, "compra_creditos", String(compra.moneda || "").toUpperCase() === "MXN" ? Number(compra.monto) || null : null, compra.id)
   return resultado("pagado")
 }
 

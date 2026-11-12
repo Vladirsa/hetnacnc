@@ -244,6 +244,8 @@ export async function asegurarPlan(knex: any) {
   if (listo) return
   await asegurarSocial(knex)
   await knex.raw(`alter table if exists ?? add column if not exists emocion text`, [T_PLAN]).catch(() => {})
+  // "temario": huecos del botón "Generar todo el temario" (no cuentan como plan semanal)
+  await knex.raw(`alter table if exists ?? add column if not exists origen text`, [T_PLAN]).catch(() => {})
   if (!(await knex.schema.hasTable(T_PLAN))) {
     await knex.schema.createTable(T_PLAN, (t: any) => {
       t.text("id").primary()
@@ -312,7 +314,8 @@ export function recortarPorDia<T extends { red: string; mercado: string; fecha: 
 export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now() + 7 * 86_400_000))) {
   await asegurarPlan(knex)
   const cfg = await leerEstrategia(knex)
-  if (await knex(T_PLAN).where({ semana }).first("id")) return { semana, creados: 0, ya: true }
+  // Los del temario no cuentan: esa semana igual necesita su plan
+  if (await knex(T_PLAN).where({ semana }).whereRaw("coalesce(origen, '') <> 'temario'").first("id")) return { semana, creados: 0, ya: true }
   const activos = Object.entries(cfg.mercados).filter(([, pct]) => pct > 0)
   const maxPct = Math.max(1, ...activos.map(([, p]) => p))
   const filas: any[] = []
@@ -432,7 +435,7 @@ async function contextoReal(knex: any) {
 export async function llenarPlan(knex: any, semana: string, logger?: any, limite = 60) {
   await asegurarPlan(knex)
   const cfg = await leerEstrategia(knex)
-  const huecos = await knex(T_PLAN).where({ semana, estado: "vacio" }).orderBy("fecha").limit(limite)
+  const huecos = await knex(T_PLAN).where({ semana, estado: "vacio" }).whereRaw("coalesce(origen, '') <> 'temario'").orderBy("fecha").limit(limite)
   if (!huecos.length) return { llenados: 0 }
   const contexto = await contextoReal(knex)
   let n = 0
@@ -489,7 +492,7 @@ export async function temarioCompleto(knex: any, logger?: any, o: { publicos?: s
     const emos = emocionesDe(t.publico)
     return {
       id: nuevoId("plan"), semana: lunesDe(fecha), fecha, red: t.publico === "comunidad" ? "facebook" : "instagram", mercado: "mx",
-      publico: t.publico, pilar: t.pilar, formato: i % 3 === 2 ? "carrusel" : "imagen", estado: "vacio",
+      publico: t.publico, pilar: t.pilar, formato: i % 3 === 2 ? "carrusel" : "imagen", estado: "vacio", origen: "temario",
       emocion: t.publico === "comunidad" ? null : (emos[i % Math.max(1, emos.length)] || EMOCIONES[0]).clave,
     }
   })

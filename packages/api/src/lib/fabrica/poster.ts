@@ -56,6 +56,7 @@ export type Poster = {
   liga_texto?: string // en lugar de la URL (p. ej. "liga en el perfil")
   /** tarjeta (una imagen) | lámina de carrusel: portada, punto o cierre | miniatura de YouTube 16:9 */
   modo?: "tarjeta" | "portada" | "punto" | "cierre" | "miniatura"
+  sub?: string // texto de apoyo de una lámina (debajo del punto)
   num?: number
   total?: number
 }
@@ -106,8 +107,9 @@ export function htmlLamina(p: Poster, o: { foto?: boolean; fondo?: boolean; qr?:
   const pagina = p.total ? `<div class="pag">${p.num || 1}/${p.total}</div>` : ""
   let cuerpo = ""
   if (p.modo === "punto") {
-    const r = renglones(p.titulo, 900, 92, 48, 4)
-    cuerpo = `<div class="num">${Math.max(1, (p.num || 2) - 1)}</div><div class="texto" style="font-size:${r.tam}px">${r.html}</div><div class="dibujo chico"><svg viewBox="-10 -20 220 230" width="260" height="260">${ic}</svg></div>`
+    const r = renglones(p.titulo, 900, p.sub ? 76 : 92, 46, 4)
+    const sub = p.sub ? `<div class="sub">${esc(String(p.sub).slice(0, 260))}</div>` : ""
+    cuerpo = `<div class="num">${Math.max(1, (p.num || 2) - 1)}</div><div class="col"><div class="texto-p" style="font-size:${r.tam}px">${r.html}</div>${sub}</div><div class="dibujo chico"><svg viewBox="-10 -20 220 230" width="${p.sub ? 200 : 260}" height="${p.sub ? 200 : 260}">${ic}</svg></div>`
   } else if (p.modo === "cierre") {
     const r = renglones(p.titulo || p.cta || "", 900, 96, 56, 3)
     const liga = (p.liga_texto || p.liga || "hetnacnc.com").replace(/^https?:\/\//, "")
@@ -127,6 +129,9 @@ export function htmlLamina(p: Poster, o: { foto?: boolean; fondo?: boolean; qr?:
 .num { position:absolute; left:80px; top:240px; width:170px; height:170px; border-radius:40px; background:${T.acento}; color:${sobre}; font-size:110px; display:flex; align-items:center; justify-content:center; }
 .texto:not(.portada-t):not(.cierre-t) { top:470px; }
 .chico { position:absolute; right:80px; bottom:90px; }
+.col { position:absolute; left:80px; width:920px; top:460px; display:flex; flex-direction:column; gap:28px; }
+.texto-p { line-height:1; letter-spacing:-.02em; }
+.sub { font-family:"Archivo XB"; font-size:38px; line-height:1.25; opacity:.85; max-width:780px; }
 .cierre-t { top:230px; }
 .cta { position:absolute; left:80px; top:760px; font-size:56px; color:${sobre}; background:${T.acento}; border-radius:28px; padding:26px 44px; white-space:nowrap; max-width:920px; overflow:hidden; text-overflow:ellipsis; }
 .liga { position:absolute; left:80px; top:930px; font-family:"Archivo XB"; font-size:40px; }
@@ -304,7 +309,7 @@ export async function laminaEstilo(l: { num: number; total: number; titulo: stri
     const b = await poster(
       {
         modo: l.portada ? "portada" : l.cierre ? "cierre" : "punto",
-        num: l.num, total: l.total, titulo: l.titulo, tema: e.tema, icono: e.icono, cinta: l.portada ? e.cinta : undefined,
+        num: l.num, total: l.total, titulo: l.titulo, sub: l.portada || l.cierre ? undefined : l.texto, tema: e.tema, icono: e.icono, cinta: l.portada ? e.cinta : undefined,
         cta: l.cierre?.cta, liga_texto: l.cierre?.liga_texto, liga: l.cierre ? e.liga : undefined,
       },
       e.logger,
