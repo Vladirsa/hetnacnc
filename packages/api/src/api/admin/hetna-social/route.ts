@@ -6,6 +6,8 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { MERCADOS, ORIGENES, REDES, T_POST, asegurarSocial, crearPublicacion, leerConfig, urlN8nSocial, vistaPublicacion } from "../../../lib/social-hub"
 import { puntuar } from "../../../lib/estrategia"
+import { threadsListo } from "../../../lib/threads"
+import { tiktokConectado } from "../../../lib/tiktok"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -22,12 +24,19 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     v.puntajes = Object.fromEntries((p.redes || []).map((red: string) => [red, puntuar(p.textos?.[red] || "", red, { medios: p.medios, programada_para: p.programada_para, mercado: p.mercado })]))
     publicaciones.push(v)
   }
+  // Las redes que se conectan después (YouTube, Threads, TikTok) dejan de ser
+  // "a mano" en cuanto están conectadas: lo mismo que decide publicar()
+  const config = await leerConfig(knex)
+  const tiktok = await tiktokConectado(knex).catch(() => false)
+  const autoDe = (clave: string, r: any) =>
+    clave === "youtube" ? !!config.youtube_auto : clave === "threads" ? threadsListo() : clave === "tiktok" ? !!tiktok : !!r.auto
+  const notas: Record<string, string> = { tiktok: "Con video llega como borrador a la app de TikTok: tú le das Publicar" }
   res.json({
     publicaciones,
-    redes: Object.entries(REDES).map(([clave, r]) => ({ clave, ...r })),
+    redes: Object.entries(REDES).map(([clave, r]) => ({ clave, ...r, auto: autoDe(clave, r), nota: autoDe(clave, r) ? notas[clave] : undefined })),
     origenes: ORIGENES,
     mercados: Object.entries(MERCADOS).map(([clave, m]) => ({ clave, nombre: m.nombre })),
-    config: await leerConfig(knex),
+    config,
     n8n: !!urlN8nSocial(),
   })
 }

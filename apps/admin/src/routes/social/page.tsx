@@ -112,7 +112,7 @@ function Chips({ redes, todas, alCambiar }: { redes: string[]; todas: RedInfo[];
             key={r.clave}
             type="button"
             onClick={() => alCambiar(on ? redes.filter((x) => x !== r.clave) : [...redes, r.clave])}
-            title={r.auto ? "Se publica sola" : "Copiar y pegar (la red no permite automatizar)"}
+            title={(r as any).nota || (r.auto ? "Se publica sola" : "Copiar y pegar (la red no permite automatizar)")}
             style={{ ...boton("normal"), padding: "4px 10px", fontWeight: 600, background: on ? "#142033" : C.fondo, color: on ? "#fff" : C.texto }}
           >
             {r.nombre}
