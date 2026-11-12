@@ -37,10 +37,15 @@ export const EXTENSIONES_ARCHIVO = [
   ".png", ".jpg", ".jpeg", ".webp", ".heic",
   ".zip", ".rar", ".7z",
 ]
-// Subida directa a Backblaze desde el navegador (lib/subir-archivo): 500 MB.
-// Si la directa falla, se sube por el servidor, que admite hasta 50 MB.
-export const MAX_MB_ARCHIVO = 500
-export const MAX_MB_ARCHIVO_SERVIDOR = 50
+// 100 MB por archivo en los dos caminos (decisión del 12 nov 2026: cubre casi
+// todos los DXF/STL/STEP; antes se prometían 500 por la directa y 50 por el
+// servidor, y el cliente veía límites distintos según cuál le tocara).
+//  · Directa a Backblaze desde el navegador (lib/subir-archivo).
+//  · Por el servidor si la directa falla (app/api/solicitud-archivo); nginx de
+//    esa ruta debe admitir un poco más (client_max_body_size 110m).
+// Debe coincidir con packages/api/src/lib/licitacion.ts MAX_MB_ARCHIVO_*.
+export const MAX_MB_ARCHIVO = 100
+export const MAX_MB_ARCHIVO_SERVIDOR = 100
 export const MAX_ARCHIVOS = 5
 
 // Tolerancia que pide el cliente (Licitaciones 2.0). "Normal" basta para casi
