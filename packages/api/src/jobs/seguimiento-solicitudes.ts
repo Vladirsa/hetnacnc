@@ -6,12 +6,15 @@
 //   2. Entrega sin confirmar: si el cliente no confirma que recibió su pedido
 //      en DIAS_PARA_CERRAR días desde que el taller lo marcó entregado, se
 //      cierra. Si hubo un problema, el cliente tuvo todo ese tiempo para
-//      decirlo.
+//      decirlo. Las que tienen una disputa abierta (lib/disputa) NO se
+//      cierran: HETNA media y decide. Al cerrar se avisa a HETNA para
+//      liquidarle al taller, igual que cuando el cliente confirma.
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { aprobarSolicitud } from "../lib/difusion"
 import { T_SOLICITUD, folioTexto } from "../lib/licitacion"
+import { avisarLiquidacion } from "../lib/liquidacion-aviso"
 import { DIAS_PARA_CERRAR, asegurarSeguimiento, cambiarEtapa, horasRevision } from "../lib/seguimiento"
 
 export default async function seguimientoSolicitudes(container: MedusaContainer) {
@@ -32,6 +35,7 @@ export default async function seguimientoSolicitudes(container: MedusaContainer)
 
     const entregadas = (await knex(T_SOLICITUD)
       .where({ etapa: "entregada" })
+      .whereNull("disputa")
       .where("etapa_desde", "<=", new Date(Date.now() - DIAS_PARA_CERRAR * 864e5))
       .limit(50)
       .select("*")) as any[]
@@ -42,6 +46,9 @@ export default async function seguimientoSolicitudes(container: MedusaContainer)
         extra: { estado: "cerrada" },
         logger,
       })
+      await avisarLiquidacion(knex, s, `Se cerró sola (${DIAS_PARA_CERRAR} días sin que el cliente reportara un problema)`).catch((e) =>
+        logger.error(`[seguimiento] ${folioTexto(s.folio)}: no se pudo avisar la liquidación: ${(e as Error).message}`)
+      )
     }
     if (vencidas.length || entregadas.length) {
       logger.info(`[seguimiento] aprobadas solas: ${vencidas.length}, cerradas tras entrega: ${entregadas.length}`)

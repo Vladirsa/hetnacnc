@@ -3,11 +3,18 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-import { confirmarRecibido, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
+import { confirmarRecibido, reportarProblema, type TipoProblema, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
+import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CANCELACION } from "@/lib/hetna/promesas"
 
 // Línea de tiempo de la solicitud en la liga privada del cliente: en qué va,
 // qué ya pasó y qué sigue, más lo que escribieron HETNA y el taller.
 const QUIEN: Record<string, string> = { hetna: "HETNA", taller: "Taller", cliente: "Tú", sistema: "HETNA" }
+const TIPOS: { v: TipoProblema; t: string; ayuda: string }[] = [
+  { v: "defecto", t: "La pieza llegó mal o distinta a lo acordado", ayuda: "Describe qué está mal. Ten a la mano fotos: te las pediremos." },
+  { v: "retraso", t: "No ha llegado y ya pasó la fecha", ayuda: `Si pasan ${DIAS_RETRASO_CANCELACION} días de la fecha prometida sin entrega, puedes cancelar con reembolso.` },
+  { v: "cancelar", t: "Quiero cancelar", ayuda: "Si el taller todavía no reporta avance de fabricación, recuperas el 100 % de lo que pagaste." },
+  { v: "otro", t: "Otro problema", ayuda: "Cuéntanos qué pasa." },
+]
 const fecha = (s: string | null) =>
   s ? new Date(s).toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""
 
@@ -15,6 +22,11 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
   const router = useRouter()
   const [pendiente, iniciar] = useTransition()
   const [error, setError] = useState("")
+  const [reportando, setReportando] = useState(false)
+  const [tipo, setTipo] = useState<TipoProblema | "">("")
+  const [detalle, setDetalle] = useState("")
+  const [errorProblema, setErrorProblema] = useState("")
+  const [queSigue, setQueSigue] = useState("")
   const linea = s.linea || []
   if (!linea.length) return null
 
@@ -25,6 +37,19 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
       if (!r.ok) setError(r.mensaje)
       else router.refresh()
     })
+
+  const enviarProblema = () =>
+    iniciar(async () => {
+      setErrorProblema("")
+      if (!tipo) return setErrorProblema("Elige qué pasó.")
+      if (detalle.trim().length < 10) return setErrorProblema("Cuéntanos qué pasó (al menos una frase).")
+      const r = await reportarProblema(token, tipo, detalle.trim())
+      if (!r.ok) return setErrorProblema(r.mensaje)
+      setQueSigue(r.body?.que_sigue || "")
+      setReportando(false)
+      router.refresh()
+    })
+  const ayuda = TIPOS.find((t) => t.v === tipo)?.ayuda
 
   return (
     <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
@@ -86,7 +111,9 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
       {s.puede_confirmar && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-[#1E7B3A] bg-[#EEF6EE] p-4">
           <p className="min-w-0 flex-1 text-sm text-[#1F5A2B]">
-            ¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, escríbenos antes de confirmar.
+            ¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, repórtalo abajo antes de confirmar. Si no
+            confirmas ni reportas nada, el proyecto se cierra solo a los {DIAS_CIERRE_AUTOMATICO} días de la entrega
+            {s.cobro_directo ? "." : " y HETNA le libera el pago al taller."}
           </p>
           <button
             type="button"
@@ -97,6 +124,60 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             {pendiente ? "Confirmando…" : "Ya lo recibí"}
           </button>
           {error && <p className="w-full text-sm text-[#B3261E]">{error}</p>}
+        </div>
+      )}
+
+      {s.disputa && (
+        <div className="mt-4 rounded-xl border-2 border-[#C2560A] bg-[#FFF6EE] p-4 text-sm text-[#5A2E0A]">
+          <p className="font-bold">Reportaste un problema: {s.disputa.nombre}</p>
+          <p className="mt-1">
+            {queSigue ||
+              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
+            Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.
+          </p>
+        </div>
+      )}
+
+      {s.puede_reportar && !reportando && (
+        <button type="button" onClick={() => setReportando(true)} className="mt-4 text-sm font-semibold text-[#B3261E] underline">
+          Reportar un problema o cancelar
+        </button>
+      )}
+      {s.puede_reportar && reportando && (
+        <div className="mt-4 grid gap-3 rounded-xl border border-[#E7E4DC] bg-[#FAF9F5] p-4">
+          <p className="text-sm font-bold text-[#142033]">¿Qué pasó?</p>
+          <div className="grid gap-2">
+            {TIPOS.map((t) => (
+              <label key={t.v} className="flex items-center gap-2 text-sm text-[#2B2A26]">
+                <input type="radio" name="tipo-problema" checked={tipo === t.v} onChange={() => setTipo(t.v)} /> {t.t}
+              </label>
+            ))}
+          </div>
+          {ayuda && <p className="text-xs text-[#6B675C]">{ayuda}</p>}
+          <textarea
+            value={detalle}
+            onChange={(e) => setDetalle(e.target.value)}
+            rows={4}
+            maxLength={2000}
+            placeholder="Cuéntanos qué pasó"
+            className="w-full rounded-xl border border-[#E7E4DC] bg-white p-3 text-sm"
+          />
+          <p className="text-xs text-[#6B675C]">
+            {s.cobro_directo
+              ? "Mientras lo revisamos el proyecto no se cierra solo. Como le pagaste directo al taller, si procede un reembolso lo hace él y HETNA se lo exige."
+              : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}{" "}
+            Decidimos en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={enviarProblema} disabled={pendiente}
+              className="rounded-xl bg-[#B3261E] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
+              {pendiente ? "Enviando…" : "Enviar a HETNA"}
+            </button>
+            <button type="button" onClick={() => setReportando(false)} className="rounded-xl border border-[#E7E4DC] px-5 py-2.5 text-sm">
+              Cancelar
+            </button>
+          </div>
+          {errorProblema && <p className="text-sm text-[#B3261E]">{errorProblema}</p>}
         </div>
       )}
 

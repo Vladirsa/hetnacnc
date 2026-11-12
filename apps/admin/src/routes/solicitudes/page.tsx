@@ -25,6 +25,8 @@ type Solicitud = {
   pago_monto: number | null
   paqueteria: string | null
   guia: string | null
+  cobro: string | null
+  disputa: { tipo: string; nombre: string; desde: string; detalle: string } | null
   liga_cliente: string
 }
 type Detalle = {
@@ -34,6 +36,7 @@ type Detalle = {
 }
 
 const ETAPAS: { v: string; t: string }[] = [
+  { v: "disputa", t: "⚠ Disputas" },
   { v: "en_revision", t: "Por revisar" },
   { v: "enviada_talleres", t: "Con talleres" },
   { v: "cotizada", t: "Cotizadas" },
@@ -121,6 +124,7 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
   const [nota, setNota] = useState("")
   const [etapa, setEtapa] = useState(s.etapa)
   const [interna, setInterna] = useState(false)
+  const [decision, setDecision] = useState("")
   const [ocupado, setOcupado] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
   const t = s.trabajo || {}
@@ -209,6 +213,38 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
             <button type="button" style={boton("peligro")} disabled={ocupado}
               onClick={() => window.confirm("¿Cancelar esta solicitud? El cliente recibe tu motivo por correo.") && accion({ accion: "cancelar", nota }, "Cancelada.")}>
               Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {s.disputa && (
+        <div style={{ marginTop: 12, background: "#FDECEA", borderRadius: 10, padding: 12 }}>
+          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: C.rojo }}>
+            ⚠ {s.disputa.nombre} · reportado {fecha(s.disputa.desde)} · cobro {s.cobro === "taller" ? "directo al taller" : "por HETNA"}
+          </p>
+          <p style={{ whiteSpace: "pre-line", margin: "0 0 8px", fontSize: 13, color: C.texto }}>{s.disputa.detalle}</p>
+          <p style={{ margin: "0 0 8px", fontSize: 12, color: C.tenue }}>
+            {s.cobro === "taller"
+              ? "Cobro directo: el dinero está con el taller; si hay reembolso, lo hace él (si no, se suspende). "
+              : "No liberes nada al taller hasta decidir. "}
+            Pide evidencia a los dos (fotos, guía, mensajes, SafeDeal) y decide en máximo 5 días hábiles. Si el taller no ha reportado avance
+            en el historial, una cancelación es reembolso total. El reembolso y la transferencia se hacen a mano.
+          </p>
+          <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)}
+            placeholder="Decisión y motivo (con montos si es parcial). El cliente y el taller la leen." />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
+            <select value={decision} onChange={(e) => setDecision(e.target.value)}
+              style={{ borderRadius: 8, border: `1px solid ${C.borde}`, padding: "7px 8px", fontSize: 13, background: C.fondo, color: C.texto }}>
+              <option value="">¿Cómo se resuelve?</option>
+              <option value="liberar">Liberar el pago al taller</option>
+              <option value="reembolso_parcial">Reembolso parcial y cerrar</option>
+              <option value="reembolso_total">Reembolso total y cancelar</option>
+            </select>
+            <button type="button" style={boton("primario")} disabled={ocupado || !decision || nota.trim().length < 10}
+              onClick={() => window.confirm("¿Guardar la resolución? Se avisa al cliente y al taller.") &&
+                accion({ accion: "resolver_disputa", decision, nota }, "Disputa resuelta. Recuerda hacer el reembolso o la transferencia.")}>
+              Resolver
             </button>
           </div>
         </div>

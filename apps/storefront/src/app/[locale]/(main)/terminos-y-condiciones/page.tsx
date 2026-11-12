@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
+import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CANCELACION } from "@/lib/hetna/promesas"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/terminos-y-condiciones" },
@@ -55,6 +56,37 @@ export default function Terminos() {
       <h2>6. Pagos y protección</h2>
       <ul>
         <li>Los pagos dentro de HETNA se hacen por los medios que indica la plataforma. Sólo esos pagos tienen la protección de HETNA: el pago queda registrado, se puede pagar a HETNA como respaldo para que lo libere al taller cuando el cliente confirma que recibió, aplica la Política de devoluciones y, si cliente y taller lo firman, el acuerdo HETNA SafeDeal.</li>
+        <li>
+          <strong>Anticipos y pagos parciales.</strong> Cada propuesta indica si pide anticipo y de qué porcentaje. Si el
+          cliente paga a HETNA, HETNA retiene el anticipo y los pagos siguientes hasta que el trabajo termina; si paga directo
+          a la cuenta del taller conectada a HETNA, el dinero llega al taller en el momento y aplican las reglas de esta
+          cláusula para reportar problemas.
+        </li>
+        <li>
+          <strong>Cancelación.</strong> Si el cliente cancela antes de que el taller reporte avance de fabricación, recupera
+          el 100 % de lo que pagó. Después, aplica lo que diga su acuerdo SafeDeal o, si no lo hay, lo que decida HETNA según
+          el avance y los materiales comprados.
+        </li>
+        <li>
+          <strong>Retrasos.</strong> Si pasan {DIAS_RETRASO_CANCELACION} días de la fecha de entrega prometida en la
+          propuesta sin que el pedido se entregue, el cliente puede cancelar con reembolso.
+        </li>
+        <li>
+          <strong>Piezas defectuosas y desacuerdos.</strong> El cliente reporta el problema desde la liga de su solicitud,
+          antes de confirmar que recibió. Si pagó a HETNA, HETNA retiene el pago; en todo caso pide evidencia a las dos partes (fotos, guía de envío,
+          mensajes, acuerdo SafeDeal) y decide en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago al
+          taller, reembolso parcial o reembolso total. La decisión de HETNA no impide a las partes acudir a las autoridades.
+        </li>
+        <li>
+          <strong>Liberación del pago al taller.</strong> HETNA le paga al taller lo retenido cuando el cliente confirma que
+          recibió o, si el cliente no confirma ni reporta un problema, {DIAS_CIERRE_AUTOMATICO} días después de que el
+          taller marca el pedido como entregado. Con un problema abierto no se libera nada hasta que HETNA decide.
+        </li>
+        <li>
+          <strong>Pago directo al taller.</strong> Si el cliente pagó directo a la cuenta del taller conectada a HETNA,
+          HETNA no retiene ese dinero: el reembolso que corresponda según esta cláusula lo hace el taller, y HETNA puede
+          suspender la cuenta del taller que no lo haga.
+        </li>
         <li>Si en una solicitud de fabricación cliente y taller acuerdan el pago o la entrega fuera de la plataforma, el trato es directamente entre ellos: HETNA no retiene ese pago ni responde por pagos, entregas o calidad acordados por fuera. Sí recibe reportes de fraude o mala conducta, que pueden causar la suspensión de la cuenta y quedar en la reputación del taller.</li>
       </ul>
 
