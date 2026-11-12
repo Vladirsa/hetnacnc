@@ -7,6 +7,7 @@ import {
   PreguntasTaller,
   RegistroTaller,
 } from "@/components/hetna/taller/ParaTalleres"
+import { ComparativaComisiones } from "@/components/hetna/taller/ComparativaComisiones"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres } from "@/lib/hetna/talleres"
@@ -79,6 +80,11 @@ export default async function UneteTallerPage() {
           </div>
           <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
             <li>✓ Registro gratis</li>
+            <li>
+              <a href="#comisiones" className="underline decoration-white/40 underline-offset-2 hover:text-white">
+                ✓ Comisión más baja que Mercado Libre y Amazon
+              </a>
+            </li>
             <li>✓ Tú eliges qué cotizar</li>
             <li>✓ Cobro seguro antes de fabricar</li>
             {abiertos.total > 0 && (
@@ -103,6 +109,8 @@ export default async function UneteTallerPage() {
             ))}
           </div>
         </section>
+
+        <ComparativaComisiones />
 
         <PasosTaller />
         <BeneficiosTaller />

@@ -126,3 +126,16 @@ scripts/prospectos/correr_diario.sh && tail -n 40 scripts/prospectos/datos/busqu
 Número que se usará: **+52 221 707 6014**. Las empresas con estatus `SIN_EMAIL`
 (sólo teléfono/WhatsApp) quedan para esa campaña cuando se conecte el sistema de
 WhatsApp.
+
+## Resumen semanal (flujo «Prospectos HETNA - Resumen semanal»)
+
+Cada lunes a las 8:30 (hora de México) llega a Telegram: correos enviados, leads
+nuevos, quién respondió, quién se registró, bajas, rebotes y cuántas empresas
+faltan por contactar. Código: `n8n/resumen_semanal.js`. Para pedirlo en cualquier
+momento: `POST https://n8n.hetnacnc.com/webhook/hetna-prospectos-resumen`.
+
+## Lista de llamadas
+
+Las empresas con estatus `SIN_EMAIL` (sólo teléfono) están en la hoja de Google
+«HETNA · Lista de llamadas (prospectos sin correo)», ordenadas por país y estado,
+con un guion corto por tipo de empresa y columnas para anotar el resultado.
