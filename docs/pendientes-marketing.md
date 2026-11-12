@@ -59,3 +59,14 @@ Ideas de la investigación para hacer viral a HETNA (A a O): ver `docs/investiga
 - Estudio de Publicidad (#7): ahora forma parte de la agencia interna (5B a 5D).
 - Cursos con Bunny (después de las primeras ventas).
 - Campaña para atraer talleres.
+
+## Pruebas del sitio pendientes (12 nov 2026)
+
+Herramienta para revisar cada cuenta en el servidor (sólo lee; sin correo lista las últimas cuentas):
+`cd /root/hetnacnc/packages/api && NODE_ENV=production ./node_modules/.bin/medusa exec ./src/scripts/ver-plan-cam.ts correo@cuenta.com`
+
+- [x] **Candado C — Industrial:** vladirsa@gmail.com es cuenta de la casa: plan Industrial, todo sin límite, 4 y 5 ejes abiertos (verificado 12 nov).
+- [ ] **Candado A — Gratis** con `prueba2@hetnacnc.com` (hoy en 0 de 5): bajar 5 programas distintos de 2D/3D estando dentro de esa cuenta; el 6.º debe bloquearse; volver a bajar uno de los 5 no gasta otro; torno pide Taller y 4/5 ejes pide Industrial; al día siguiente llega el correo de "se acabaron tus programas". Si el script sigue en 0 después de bajar, es falla: mandar captura y desde qué parte del CAM se bajó.
+- [ ] **Candado B — prueba de 14 días:** crear el taller en la app HETNA CNC con esa cuenta y vincularla con el código de 6 dígitos; el CAM debe pasar a Taller (2D/3D sin límite, torno 30 al mes). Ojo: sólo cuenta la prueba de la app vinculada, no la del Cotizador viejo de la tienda.
+- [ ] **CAM en la máquina:** DXF de 100 × 50 mm con agujero de 20 mm; revisar G21, fresa, RPM y altura segura; correr en vacío con Z +50 mm; luego en retazo y medir con calibrador.
+- [ ] **Productos en la tienda:** publicar fresas, consumibles de láser y plasma y filamentos para que la calculadora los recomiende.
