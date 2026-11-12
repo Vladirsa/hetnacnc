@@ -93,6 +93,12 @@ export const asegurarSeguimiento = async (knex: any) => {
     ["etapa_desde", "fecha"],
     ["paqueteria", "text"],
     ["guia", "text"],
+    // Problema reportado por el cliente (cancelar | retraso | defecto | otro).
+    // Mientras haya uno, la solicitud NO se cierra sola y HETNA retiene lo que
+    // haya cobrado: media y decide (política del 12 nov 2026).
+    ["disputa", "text"],
+    ["disputa_desde", "fecha"],
+    ["disputa_detalle", "text"],
   ] as const) {
     if (!(await knex.schema.hasColumn(T_SOLICITUD, col))) {
       await knex.schema.alterTable(T_SOLICITUD, (t: any) =>

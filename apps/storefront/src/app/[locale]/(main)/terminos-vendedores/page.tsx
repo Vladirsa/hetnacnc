@@ -4,8 +4,10 @@ import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
 import { TablaTarifas } from "@/components/hetna/TablaTarifas"
+import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CANCELACION } from "@/lib/hetna/promesas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.5 · 12 nov 2026 (cancelaciones, retrasos, disputas y liberación de pagos en solicitudes de fabricación, cláusula 8).
 // Versión 1.4 · 12 nov 2026 (licitaciones como conexión sin comisión y protección sólo en pagos dentro, cláusula 8).
 // Versión 1.3 · 4 nov 2026 (aceptación expresa en el panel y verificación de tarjeta, cláusulas 2 y 3).
 // Versión 1.2 · 3 nov 2026 (libros y PDF de la Academia y lista de precios, cláusula 8).
@@ -118,6 +120,16 @@ export default function TerminosVendedores() {
         <li>Los cambios de comisión o de plan se avisan con al menos 15 días de anticipación y no afectan pedidos ya pagados.</li>
         <li>Ventas de la tienda y de la Academia: está prohibido cerrarlas fuera de la plataforma o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>
         <li>Solicitudes de fabricación (licitaciones): son una conexión con el cliente y no pagan comisión a HETNA; lo que pagas son tus planes de suscripción (lista de precios, abajo). Antes de que el cliente te elija, la comunicación va por HETNA y no puedes pedir ni dar datos de contacto. Si te elige y comparte su contacto, pueden acordar el pago dentro o fuera de la plataforma. Sólo el pago hecho dentro de HETNA (directo a tu Mercado Pago o PayPal conectado, o a HETNA como respaldo, que te lo libera cuando el cliente confirma que recibió) queda registrado y protegido; lo acordado por fuera es directamente entre tú y el cliente.</li>
+        <li>
+          Protección en solicitudes de fabricación pagadas dentro de HETNA: si el cliente cancela antes de que reportes avance
+          de fabricación en tu panel, se le devuelve el 100 % de lo que pagó. Si pasan {DIAS_RETRASO_CANCELACION} días de la
+          fecha de entrega que prometiste sin entregar, el cliente puede cancelar con reembolso. Si el cliente
+          reporta un problema (pieza defectuosa, distinta a lo acordado u otro), HETNA retiene lo que haya cobrado, te pide tu versión y tu
+          evidencia, y decide en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberarte el pago, reembolso parcial
+          o total. Lo que retiene HETNA se te libera cuando el cliente confirma que recibió o {DIAS_CIERRE_AUTOMATICO} días
+          después de que marcas el pedido como entregado, si no hay un problema abierto. Si te pagó directo a tu cuenta
+          conectada, respondes tú del reembolso que decida HETNA; no hacerlo puede causar la suspensión de la cuenta.
+        </li>
       </ul>
 
       <h3 id="tarifas">Lista de precios y comisiones</h3>

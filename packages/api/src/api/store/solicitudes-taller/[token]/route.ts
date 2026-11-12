@@ -9,6 +9,7 @@ import { asegurarPropuestaFormal, compararPropuestas } from "../../../../lib/lic
 import { getSignedDownloadUrls } from "../../../../lib/backblaze"
 import { puntajePosicion } from "../../../../lib/confianza"
 import { evaluacionesDe } from "../../../../lib/trust"
+import { ETAPAS_REPORTABLES, NOMBRE_PROBLEMA, TipoProblema } from "../../../../lib/disputa"
 import {
   EXPLICA_ETAPA,
   NOMBRE_ETAPA,
@@ -168,7 +169,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       .filter((e) => e.nota)
       .map((e) => ({ fecha: e.created_at, quien: e.actor, nota: ocultarContacto(e.nota) })),
     envio: s.paqueteria || s.guia ? { paqueteria: s.paqueteria || "", guia: s.guia || "" } : null,
-    puede_confirmar: etapa === "entregada",
+    // Con una disputa abierta no se confirma: primero HETNA resuelve.
+    puede_confirmar: etapa === "entregada" && !s.disputa,
+    puede_reportar: (ETAPAS_REPORTABLES as readonly string[]).includes(etapa) && !s.disputa,
+    // true = el cliente le paga directo a la cuenta del taller: HETNA no retiene nada.
+    cobro_directo: s.cobro === "taller",
+    disputa: s.disputa
+      ? { tipo: s.disputa, nombre: NOMBRE_PROBLEMA[s.disputa as TipoProblema] || "Problema", desde: s.disputa_desde }
+      : null,
     modo: s.modo,
     estado: s.estado,
     creada: s.created_at,
