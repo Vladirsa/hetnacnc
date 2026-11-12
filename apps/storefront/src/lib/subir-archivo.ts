@@ -2,13 +2,13 @@
 //
 // Primero intenta la subida DIRECTA a Backblaze: pide un boleto a
 // /store/solicitud-archivos/boleto (vía /api/solicitud-archivo/boleto) y
-// manda los bytes a B2 sin pasar por nuestros servidores. Así caben modelos
-// de hasta 500 MB. Si el boleto o B2 fallan (por ejemplo, faltan las reglas
-// CORS del bucket) y el archivo pesa 50 MB o menos, se sube por el servidor
-// como antes (/api/solicitud-archivo).
+// manda los bytes a B2 sin pasar por nuestros servidores. Si el boleto o B2
+// fallan (por ejemplo, faltan las reglas CORS del bucket), se sube por el
+// servidor (/api/solicitud-archivo). Los dos caminos admiten lo mismo:
+// MAX_MB_ARCHIVO (lib/fabricacion/opciones.ts).
 //
 // XHR y no fetch: fetch no informa el avance de una subida, y con un STEP de
-// 200 MB en datos móviles una barra quieta parece formulario trabado.
+// 100 MB en datos móviles una barra quieta parece formulario trabado.
 //
 // destino "taller" guarda en la carpeta de portafolios de talleres; "envio",
 // en la de evidencia de Envíos HETNA; sin destino, en la de solicitudes.
