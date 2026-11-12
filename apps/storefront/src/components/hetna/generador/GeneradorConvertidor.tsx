@@ -28,7 +28,7 @@ type Archivo =
 
 type ModoEscala = "igual" | "espesor" | "ancho" | "porcentaje" | "unidades"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 30 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10

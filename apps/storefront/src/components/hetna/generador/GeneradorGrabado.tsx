@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { type Difusion, type Estilo, type OpcionesGrabado, aGris, cobertura, grabar, pngConDPI } from "@/lib/generador/grabado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const MAX_PX = 25_000_000 // imagen final
 const MAX_VISTA = 1_200_000 // vista previa

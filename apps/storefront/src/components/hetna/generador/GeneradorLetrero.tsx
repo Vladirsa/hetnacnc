@@ -7,7 +7,7 @@ import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { type Fuente, type Letrero, type OpcionesLetrero, hacerLetrero, vistaLetrero } from "@/lib/generador/letreros"
 import { vectorDXF, vectorSVG } from "@/lib/generador/trazado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const CDN = "https://cdn.jsdelivr.net/npm"
 const OPENTYPE = `${CDN}/opentype.js@1.3.4/dist/opentype.min.js`
 

@@ -85,7 +85,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
         <p className="text-[12.5px] text-[#6B675C]">
           Las licitaciones privadas y restringidas, el resumen con IA y “sólo talleres verificados” son de la <b>Membresía Empresarial</b>, gratis por
           ahora. Entra con tu cuenta y escríbenos por{" "}
-          <a className="font-semibold text-[#C2560A] underline" href="https://wa.me/522461217072?text=Quiero%20la%20Membres%C3%ADa%20Empresarial%20de%20HETNA" target="_blank" rel="noreferrer">
+          <a className="font-semibold text-[#C2560A] underline" href="https://wa.me/522217076014?text=Quiero%20la%20Membres%C3%ADa%20Empresarial%20de%20HETNA" target="_blank" rel="noreferrer">
             WhatsApp
           </a>{" "}
           para activarla.

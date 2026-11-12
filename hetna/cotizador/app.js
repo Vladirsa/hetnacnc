@@ -1099,7 +1099,7 @@
     ["Industrial", "$1,199/mes", "Todo lo de Pro, usuarios ilimitados y, pronto, facturación electrónica."],
   ];
   const abrirModal = (tipo) => {
-    const tel = (PUENTE && PUENTE.whatsappHetna) || "522461217072";
+    const tel = (PUENTE && PUENTE.whatsappHetna) || "522217076014";
     const quien = cuenta.correo ? ` Mi cuenta: ${cuenta.correo}.` : "";
     const planes = PLANES.map(([n, p, d]) => `<div class="plan"><div><b>${n}</b> <span class="precio">${p}</span><p class="ayuda">${d}</p></div><a class="btn chico primario" target="_blank" rel="noopener" href="https://wa.me/${tel}?text=${encodeURIComponent(`Hola HETNA CNC, quiero contratar el plan ${n} de HetNa Taller.${quien}`)}">Contratar</a></div>`).join("");
     let h = "";

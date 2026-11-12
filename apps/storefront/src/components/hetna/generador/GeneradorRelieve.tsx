@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { aGris, pngConDPI } from "@/lib/generador/grabado"
 import { type Alturas, type Forma, type OpcionesRelieve, alturas, mallaSTL, mapaAlturas, medidasPieza, vistaLuz, vistaSombra, volumen } from "@/lib/generador/relieve"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const MAX_PUNTOS = 160_000 // malla de hasta ~32 MB en STL
 const CALIDADES = [

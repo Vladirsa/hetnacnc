@@ -53,7 +53,7 @@ const MODELOS = [
   { id: "huacal", nombre: "Huacal", a: 400, f: 300, h: 250, e: 9 },
 ]
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 export function GeneradorCaja() {
   const { locale } = useParams<{ locale: string }>()

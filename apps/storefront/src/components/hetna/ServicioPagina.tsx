@@ -15,7 +15,7 @@ import type { LearningArticle } from "@/lib/data/learning-articles"
 import type { Course } from "@/lib/data/courses"
 import { enlaceServicio } from "@/lib/hetna/disenar"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 export const enlaceWhatsApp = (mensaje: string) =>
   `https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`
 

@@ -20,8 +20,8 @@ export const EMPRESA = {
   // Por seguridad no se publica calle ni número de un domicilio particular. Ver
   // "Paquete legal" (pregunta al abogado: domicilio para oír y recibir notificaciones).
   domicilioCompleto: "Col. Centro, Apizaco, Tlaxcala, México",
-  whatsapp: "522461217072",
-  whatsappVisible: "+52 246 121 7072",
+  whatsapp: "522217076014",
+  whatsappVisible: "+52 221 707 6014",
   // Teléfono de atención (llamadas)
   telefono: "522217076014",
   telefonoVisible: "+52 221 707 6014",
