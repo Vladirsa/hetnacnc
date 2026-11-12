@@ -346,7 +346,7 @@ export async function promoHerramienta(scope: any, logger?: any, clave?: string,
   let planes = ""
   if (DEL_COTIZADOR.includes(h.clave)) {
     try {
-      const { PLANES_COTIZADOR } = await import("../cotizador-suscripciones")
+      const { PLANES_COTIZADOR } = require("../cotizador-suscripciones")
       const precio = us ? PLANES_COTIZADOR.taller?.precioUsd : PLANES_COTIZADOR.taller?.precio
       if (precio)
         planes = us
@@ -375,7 +375,7 @@ export async function promocionesDelDia(scope: any, logger?: any) {
   if (dia === 2 || dia === 5) await intenta("blog", () => promoBlog(scope, logger))
   // Herramientas y Cotizador: todos los días en el job de madrugada (jobs/promo-herramientas.ts)
   // Plantillas de dos lados (lib/fabrica/oportunidades): radar para talleres y talleres listos para clientes
-  const op = await import("./oportunidades")
+  const op = require("./oportunidades")
   if (dia === 3 || dia === 6) await intenta("radar por estado", () => op.radarEstado(scope, logger))
   if (dia === 0 || dia === 2) await intenta("talleres listos", () => op.talleresListos(scope, logger))
   if (hechos.length) logger?.info?.(`[promo] hechas: ${hechos.join(", ")}`)

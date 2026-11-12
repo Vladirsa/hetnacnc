@@ -83,7 +83,7 @@ export function diarioDe(c: ConfigAnuncios) {
 const token = () => process.env.META_ADS_TOKEN || ""
 export const anunciosListos = () => !!token()
 
-async function graph(ruta: string, cuerpo?: Record<string, any>) {
+export async function graph(ruta: string, cuerpo?: Record<string, any>) {
   const url = new URL(`${GRAPH()}/${ruta}`)
   const init: RequestInit = { signal: AbortSignal.timeout(30_000) }
   if (cuerpo) {
@@ -162,7 +162,7 @@ export async function proponerAnuncio(knex: any, logger?: any) {
   logger?.info?.(`[anuncios] propuesta ${id}: ${cand.titulo} (${cand.motivo}), $${diario} al día por ${c.dias} días`)
   // Aviso por Telegram (si está vinculado); la aprobación es en el panel
   try {
-    const { mandarPrivado } = await import("./social-telegram")
+    const { mandarPrivado } = require("./social-telegram")
     await mandarPrivado(knex, { texto: `📣 Propuesta de anuncio: "${cand.titulo}"\n${cand.motivo}.\n$${diario} MXN al día por ${c.dias} días (total máx. $${Math.round(diario * c.dias)}).\nApruébala o recházala en Social Hub → Resultados → Anuncios.` })
   } catch {}
   return id

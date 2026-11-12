@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   const error = u.searchParams.get("error_description") || u.searchParams.get("error") || ""
   if (error) return pagina(false, `TikTok respondió: ${esc(error.slice(0, 200))}. Vuelve al panel y aprieta "Conectar TikTok" otra vez.`)
   if (!code || !state) return pagina(false, "Faltan datos de TikTok. Vuelve al panel y aprieta \"Conectar TikTok\".")
-  const token = process.env.N8N_REDES_TOKEN || ""
+  const token = (process.env.N8N_REDES_TOKEN || "").trim().replace(/^["']|["']$/g, "")
   if (!token) return pagina(false, "Falta configurar el servidor (N8N_REDES_TOKEN en la tienda).")
   try {
     const r = await fetch(`${MEDUSA_BACKEND_URL}/hooks/social-hub/tiktok`, {

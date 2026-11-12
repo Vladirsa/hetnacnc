@@ -28,7 +28,7 @@ import { type Dibujo, dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vec
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 // Modelos con nombre: mismas opciones, distinto punto de partida
 const MODELOS: { id: string; nombre: string; forma: FormaLlavero; texto: string; alto: string; fuente: string }[] = [

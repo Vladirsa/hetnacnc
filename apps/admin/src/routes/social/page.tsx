@@ -112,7 +112,7 @@ function Chips({ redes, todas, alCambiar }: { redes: string[]; todas: RedInfo[];
             key={r.clave}
             type="button"
             onClick={() => alCambiar(on ? redes.filter((x) => x !== r.clave) : [...redes, r.clave])}
-            title={r.auto ? "Se publica sola" : "Copiar y pegar (la red no permite automatizar)"}
+            title={(r as any).nota || (r.auto ? "Se publica sola" : "Copiar y pegar (la red no permite automatizar)")}
             style={{ ...boton("normal"), padding: "4px 10px", fontWeight: 600, background: on ? "#142033" : C.fondo, color: on ? "#fff" : C.texto }}
           >
             {r.nombre}
@@ -442,6 +442,63 @@ function TelegramAprobacion() {
         </>
       )}
       {nota && <span style={{ color: C.tenue }}>{nota}</span>}
+    </div>
+  )
+}
+
+/** WhatsApp de HETNA (Evolution API): reconectar con QR, recibir mensajes y probar. Sólo números verificados reciben avisos. */
+function WhatsappConexion() {
+  const [e, setE] = useState<any>(null)
+  const [falla, setFalla] = useState<string | null>(null)
+  const [qr, setQr] = useState<string | null>(null)
+  const [num, setNum] = useState("")
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const cargar = () => api<any>("/whatsapp").then((x) => { setE(x); setFalla(null) }).catch((er) => setFalla((er as Error).message))
+  useEffect(() => { void cargar() }, [])
+  const hacer = async (cuerpo: any) => {
+    setOcupado(true)
+    try {
+      const d = await api<any>("/whatsapp", cuerpo)
+      if (cuerpo.accion === "qr") {
+        if (d.conectado) { setQr(null); setNota({ ok: true, t: "✓ El WhatsApp ya está conectado" }) }
+        else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
+      } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
+      else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
+      void cargar()
+    } catch (er) {
+      setNota({ ok: false, t: `✗ ${(er as Error).message}` })
+    } finally {
+      setOcupado(false)
+    }
+  }
+  const conectado = e?.conexion === "open"
+  return (
+    <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>💬 WhatsApp</b>
+        {falla ? <span style={{ color: C.rojo }}>No se pudo leer el estado: {falla}</span> : !e ? <span style={{ color: C.tenue }}>Cargando…</span> : (
+          <span style={{ color: !e.configurado ? C.rojo : conectado ? C.verde : C.rojo, fontWeight: 600 }}>
+            {!e.configurado ? "Faltan las llaves en el servidor" : conectado ? "Conectado" : `Desconectado (${e.conexion || "sin datos"})`}
+          </span>
+        )}
+        {e && <span style={{ color: C.tenue }}>· {e.verificados} números verificados ({e.talleres} talleres, {e.clientes} clientes) · {e.bajas} bajas</span>}
+        <span style={{ flex: 1 }} />
+        {e?.configurado && <button type="button" style={boton(conectado ? "normal" : "primario")} disabled={ocupado} onClick={() => void hacer({ accion: "qr" })}>{conectado ? "Ver estado" : "Reconectar (QR)"}</button>}
+        {e?.configurado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer({ accion: "webhook" })}>Recibir mensajes</button>}
+      </div>
+      {qr && <img src={qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`} alt="QR de WhatsApp" style={{ width: 240, height: 240, marginTop: 8, border: `1px solid ${C.borde}`, borderRadius: 8 }} />}
+      {e?.configurado && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+          <input value={num} onChange={(x) => setNum(x.target.value)} placeholder="Tu celular a 10 dígitos" style={{ padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 12 }} />
+          <button type="button" style={boton("normal")} disabled={ocupado || !num} onClick={() => void hacer({ accion: "prueba", numero: num })}>Mandar prueba</button>
+          {e.numero_hetna ? <span style={{ color: C.tenue, fontSize: 12 }}>Número de HETNA para verificar: +{e.numero_hetna}</span> : <span style={{ color: C.rojo, fontSize: 12 }}>Falta WHATSAPP_HETNA (número de HETNA) en el .env del backend</span>}
+        </div>
+      )}
+      <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
+        Sólo reciben avisos por WhatsApp los talleres y clientes que verificaron su número (ellos escriben primero). Se mandan uno a la vez, con pausa y tope de {e?.tope_dia || 250} al día para cuidar el número. BAJA = dejar de recibir.
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
     </div>
   )
 }
@@ -917,6 +974,7 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <PruebaRed red="threads" nombre="Threads" />
       <PruebaRed red="youtube" nombre="YouTube" />
       <TikTokConexion />
+      <WhatsappConexion />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
       {Object.keys(c.automatico).map((k) => (
@@ -1929,6 +1987,173 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
   )
 }
 
+async function apiCamp<T>(cuerpo?: unknown): Promise<T> {
+  const r = await fetch("/admin/hetna-campanas", {
+    credentials: "include",
+    ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }),
+  })
+  const d = (await r.json().catch(() => ({}))) as any
+  if (!r.ok) throw new Error(d?.message || `Error ${r.status}`)
+  return d as T
+}
+
+/** Motor de campañas de anuncios: Google, Meta y TikTok. */
+function CampanasAds() {
+  const [d, setD] = useState<any>(null)
+  const [f, setF] = useState<any>({ que: "cotizador", objetivo: "registros", zona: "Todo México", diario: 100, dias: 7, plataformas: ["meta", "google", "tiktok"] })
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState<string | null>(null)
+  const [abierta, setAbierta] = useState<string | null>(null)
+  const cargar = useCallback(async () => setD(await apiCamp<any>().catch((e) => ({ error: (e as Error).message }))), [])
+  useEffect(() => { void cargar() }, [cargar])
+  // Mientras haya una generándose, se actualiza cada 10 s
+  useEffect(() => {
+    if (!d?.campanas?.some((c: any) => c.estado === "generando")) return
+    const t = setTimeout(() => void cargar(), 10_000)
+    return () => clearTimeout(t)
+  }, [d, cargar])
+  if (!d) return <p>Cargando…</p>
+  if (d.error) return <p style={{ color: C.rojo }}>{d.error}</p>
+  const op = d.opciones
+  const pesos = (n: number) => "$" + Math.round(Number(n) || 0).toLocaleString("es-MX")
+  const NOMBRE_PLAT: Record<string, string> = { meta: "Meta (Facebook e Instagram)", google: "Google Ads (búsqueda)", tiktok: "TikTok Ads" }
+  const hacer = async (cuerpo: any, msj: string, clave: string) => {
+    setOcupado(clave)
+    try {
+      const r = await apiCamp<any>(cuerpo)
+      if (cuerpo.accion === "csv_google") {
+        const url = URL.createObjectURL(new Blob(["﻿" + r.csv], { type: "text/csv;charset=utf-8" }))
+        const a = document.createElement("a")
+        a.href = url
+        a.download = r.nombre
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+      if (cuerpo.accion === "meta" && r.administrador) window.open(r.administrador, "_blank", "noopener")
+      setNota({ ok: true, t: msj })
+      void cargar()
+    } catch (e) {
+      setNota({ ok: false, t: `✗ ${(e as Error).message}` })
+    } finally {
+      setOcupado(null)
+    }
+  }
+  const copiar = (t: string) => { void navigator.clipboard?.writeText(t); setNota({ ok: true, t: "✓ Copiado" }) }
+  const campo: CSSProperties = { padding: "6px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 13 }
+  return (
+    <div>
+      <section style={caja}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🚀 Campañas Ads: el motor arma tu campaña completa</h3>
+        <p style={{ margin: "0 0 10px", color: C.tenue, fontSize: 13 }}>
+          Escoge qué vender y el motor arma públicos, palabras clave, 3 versiones de textos e imágenes con el estilo de HETNA, con los datos reales de tu sistema.
+          Meta se crea en tu cuenta <b>en pausa</b> (tú la activas); Google sale como archivo para Google Ads Editor y TikTok listo para copiar en TikTok Ads Manager. No se gasta nada hasta que tú lo actives.
+        </p>
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", fontSize: 13 }}>
+          <label>Qué vender<br /><select style={{ ...campo, width: "100%" }} value={f.que} onChange={(e) => setF({ ...f, que: e.target.value })}>{Object.entries(op.que).map(([k, v]: any) => <option key={k} value={k}>{v.nombre}</option>)}</select></label>
+          <label>Objetivo<br /><select style={{ ...campo, width: "100%" }} value={f.objetivo} onChange={(e) => setF({ ...f, objetivo: e.target.value })}>{op.objetivos.map((o: string) => <option key={o} value={o}>{{ clics: "Visitas (clics)", registros: "Registros", ventas: "Ventas" }[o] || o}</option>)}</select></label>
+          <label>Zona<br /><input style={{ ...campo, width: "100%" }} value={f.zona} onChange={(e) => setF({ ...f, zona: e.target.value })} placeholder="Todo México, Jalisco, CDMX…" /></label>
+          <label>Presupuesto por día (MXN)<br /><input type="number" min={20} style={{ ...campo, width: "100%" }} value={f.diario} onChange={(e) => setF({ ...f, diario: Number(e.target.value) })} /></label>
+          <label>Días<br /><input type="number" min={3} max={30} style={{ ...campo, width: "100%" }} value={f.dias} onChange={(e) => setF({ ...f, dias: Number(e.target.value) })} /></label>
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginTop: 10, fontSize: 13 }}>
+          {op.plataformas.map((p: string) => (
+            <label key={p} style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input type="checkbox" checked={f.plataformas.includes(p)} onChange={(e) => setF({ ...f, plataformas: e.target.checked ? [...f.plataformas, p] : f.plataformas.filter((x: string) => x !== p) })} /> {NOMBRE_PLAT[p]}
+            </label>
+          ))}
+          <span style={{ flex: 1 }} />
+          <span style={{ color: C.tenue }}>Total máx.: {pesos(f.diario * f.dias)} por plataforma</span>
+          <button type="button" style={boton("primario")} disabled={!!ocupado || !f.plataformas.length} onClick={() => void hacer({ accion: "generar", ...f }, "✓ Armando la campaña (1 o 2 minutos). Aparece abajo en cuanto esté.", "generar")}>{ocupado === "generar" ? "Enviando…" : "Generar campaña"}</button>
+        </div>
+        {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 8 }}>{nota.t}</div>}
+      </section>
+
+      {(d.campanas || []).map((c: any) => {
+        const p = c.plan
+        const abiertaEsta = abierta === c.id
+        const r = c.resultados || {}
+        return (
+          <section key={c.id} style={caja}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <b style={{ fontSize: 12, color: c.estado === "error" ? C.rojo : c.estado === "generando" ? "#8A5A00" : c.estado === "creada_meta" ? C.verde : C.tenue }}>
+                {{ generando: "Armando…", lista: "Lista", creada_meta: "Creada en Meta (en pausa)", error: "Error" }[c.estado as string] || c.estado}
+              </b>
+              <b style={{ flex: 1 }}>{c.nombre}</b>
+              <span style={{ color: C.tenue, fontSize: 12 }}>{pesos(c.diario)}/día · {c.dias} días · {c.zona}</span>
+              {p && <button type="button" style={boton("normal")} onClick={() => setAbierta(abiertaEsta ? null : c.id)}>{abiertaEsta ? "Cerrar" : "Ver campaña"}</button>}
+              {c.estado !== "creada_meta" && <button type="button" style={boton("normal")} disabled={!!ocupado} onClick={() => { if (confirm("¿Borrar esta campaña?")) void hacer({ accion: "borrar", id: c.id }, "Campaña borrada", "b" + c.id) }}>Borrar</button>}
+            </div>
+            {c.error && <div style={{ color: C.rojo, fontSize: 12, marginTop: 4 }}>{c.error}</div>}
+            {Object.keys(r).length > 0 && (
+              <div style={{ fontSize: 12, color: C.tenue, marginTop: 4 }}>
+                {Object.entries(r).map(([pl, x]: any) => `${NOMBRE_PLAT[pl] || pl}: ${x.clics} clics${x.registro_cliente ? `, ${x.registro_cliente} registros` : ""}${x.prueba_cotizador ? `, ${x.prueba_cotizador} pruebas` : ""}${x.pago_cotizador || x.compra_creditos || x.venta ? `, ${(x.pago_cotizador || 0) + (x.compra_creditos || 0) + (x.venta || 0)} pagos` : ""}`).join(" · ")}
+              </div>
+            )}
+            {abiertaEsta && p && (
+              <div style={{ display: "grid", gap: 12, marginTop: 10, fontSize: 13 }}>
+                <div><b>Estrategia:</b> {p.resumen}<br /><b>A quién:</b> {p.publico}</div>
+                {(c.creativos || []).length > 0 && (
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {c.creativos.map((x: any) => <a key={x.url} href={x.url} target="_blank" rel="noreferrer"><img src={x.url} alt={x.titulo} style={{ height: 160, borderRadius: 8, border: `1px solid ${C.borde}` }} /></a>)}
+                  </div>
+                )}
+                {c.plataformas.includes("meta") && (
+                  <div style={{ borderTop: `1px solid ${C.borde}`, paddingTop: 8 }}>
+                    <b>Meta</b> · edad {p.meta.edad_min}–{p.meta.edad_max} · intereses: {p.meta.intereses.join(", ") || "—"} · botón {p.meta.cta}
+                    {p.meta.textos.map((t: any, i: number) => (
+                      <div key={i} style={{ background: C.fondo, border: `1px solid ${C.borde}`, borderRadius: 8, padding: 8, marginTop: 6 }}>
+                        <div style={{ fontSize: 11, color: C.tenue }}>Versión {i + 1}</div>
+                        <div>{t.principal}</div><b>{t.titulo}</b> <span style={{ color: C.tenue }}>{t.descripcion}</span>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      {c.meta?.campana ? (
+                        <a href={`https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${d.cuenta_meta}&selected_campaign_ids=${c.meta.campana}`} target="_blank" rel="noreferrer" style={{ fontWeight: 700 }}>Abrir en el Administrador de anuncios →</a>
+                      ) : (
+                        <button type="button" style={boton("primario")} disabled={!!ocupado || !d.meta_listo} onClick={() => { if (confirm(`Se crea en tu cuenta de Meta EN PAUSA (no gasta hasta que la actives). Máximo ${pesos(c.diario * c.dias)}. ¿Crear?`)) void hacer({ accion: "meta", id: c.id }, "✓ Creada en Meta en pausa. Revísala y actívala en el Administrador de anuncios.", "m" + c.id) }}>{ocupado === "m" + c.id ? "Creando…" : "Crear en Meta (en pausa)"}</button>
+                      )}
+                      {!d.meta_listo && <span style={{ color: C.tenue, fontSize: 12 }}>Falta el token o la cuenta en Resultados → Anuncios en Meta.</span>}
+                    </div>
+                  </div>
+                )}
+                {c.plataformas.includes("google") && (
+                  <div style={{ borderTop: `1px solid ${C.borde}`, paddingTop: 8 }}>
+                    <b>Google Ads</b> · {p.google.grupos.length} grupos · negativas: {p.google.negativas.slice(0, 12).join(", ") || "—"}
+                    {p.google.grupos.map((g: any, i: number) => (
+                      <div key={i} style={{ background: C.fondo, border: `1px solid ${C.borde}`, borderRadius: 8, padding: 8, marginTop: 6 }}>
+                        <b>{g.nombre}</b>
+                        <div style={{ fontSize: 12 }}><b>Palabras:</b> {g.palabras.join(" · ")}</div>
+                        <div style={{ fontSize: 12 }}><b>Títulos:</b> {g.titulos.join(" | ")}</div>
+                        <div style={{ fontSize: 12 }}><b>Descripciones:</b> {g.descripciones.join(" | ")}</div>
+                      </div>
+                    ))}
+                    <button type="button" style={{ ...boton("primario"), marginTop: 6 }} disabled={!!ocupado} onClick={() => void hacer({ accion: "csv_google", id: c.id }, "✓ Archivo descargado. Ábrelo en Google Ads Editor: Cuenta → Importar → Desde archivo. Queda en pausa.", "g" + c.id)}>Descargar para Google Ads Editor</button>
+                  </div>
+                )}
+                {c.plataformas.includes("tiktok") && (
+                  <div style={{ borderTop: `1px solid ${C.borde}`, paddingTop: 8 }}>
+                    <b>TikTok Ads</b> · edad {p.tiktok.edad_min}–{p.tiktok.edad_max} · intereses: {p.tiktok.intereses.join(", ") || "—"} · botón "{p.tiktok.cta}"
+                    {p.tiktok.textos.map((t: string, i: number) => (
+                      <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", background: C.fondo, border: `1px solid ${C.borde}`, borderRadius: 8, padding: 8, marginTop: 6 }}>
+                        <span style={{ flex: 1 }}>{t}</span>
+                        <button type="button" style={boton("normal")} onClick={() => copiar(t)}>Copiar</button>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
+                      En TikTok Ads Manager: crea la campaña con objetivo de tráfico, usa las imágenes verticales (9:16) de arriba o un video de la Fábrica, pega un texto y pon esta liga: {c.ligas?.tiktok}
+                      <button type="button" style={{ ...boton("normal"), marginLeft: 6 }} onClick={() => copiar(c.ligas?.tiktok || "")}>Copiar liga</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
 const VISTAS = [
   ["referencias", "Referencias"],
   ["fabrica", "Fábrica"],
@@ -1940,6 +2165,7 @@ const VISTAS = [
   ["publicada", "Publicadas"],
   ["conversaciones", "Conversaciones"],
   ["resultados", "Resultados"],
+  ["campanas", "Campañas Ads"],
   ["config", "Configuración"],
 ] as const
 
@@ -2032,6 +2258,8 @@ export default function SocialHubPage() {
         <Conversaciones />
       ) : vista === "resultados" ? (
         <Resultados />
+      ) : vista === "campanas" ? (
+        <CampanasAds />
       ) : vista === "config" ? (
         <Configuracion datos={datos} alGuardar={() => void cargar()} />
       ) : (

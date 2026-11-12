@@ -1,5 +1,6 @@
 "use client"
 
+import { DIAS_VIGENCIA_PROPUESTA } from "@/lib/hetna/promesas"
 import { useEffect, useState } from "react"
 
 import type { CotizacionPublica } from "@/lib/cotizador/liga"
@@ -27,7 +28,7 @@ const fecha = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : ""
 const vence = (c: CotizacionPublica) => {
   const d = new Date(c.creada)
-  d.setDate(d.getDate() + Number(c.vigencia_dias || 7))
+  d.setDate(d.getDate() + Number(c.vigencia_dias || DIAS_VIGENCIA_PROPUESTA))
   return d
 }
 

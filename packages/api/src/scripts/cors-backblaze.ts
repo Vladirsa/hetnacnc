@@ -1,5 +1,5 @@
 // Pone las reglas CORS del bucket privado de Backblaze para que el navegador
-// suba los archivos de /fabricacion directo a B2 (hasta 500 MB sin pasar por
+// suba los archivos de /fabricacion directo a B2 (hasta 100 MB sin pasar por
 // este servidor) y el visor de planos pueda leerlos con liga firmada.
 // Se corre UNA vez después de desplegar (y otra vez si cambia el bucket).
 //

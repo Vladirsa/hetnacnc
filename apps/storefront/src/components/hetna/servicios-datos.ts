@@ -58,7 +58,7 @@ export const SERVICIOS: Servicio[] = [
       "STL",
       "STEP"
     ],
-    "proximo": "Ya disponibles gratis: cajas con juntas de dedo, plantillas de empaque, convertidor de archivos, despiece de muebles, vectorizador de imágenes, letreros con nombres, foto para grabado láser y litofanías y relieves 3D. Muy pronto: arte con IA.",
+    "proximo": null,
     "whatsapp": "Hola HETNA CNC, quiero un diseño 2D/3D.",
     "boton": "Pedir mi diseño"
   },
@@ -621,7 +621,7 @@ export const SERVICIOS: Servicio[] = [
       "1 a 1",
       "Taller"
     ],
-    "proximo": "Muy pronto: cursos en línea y guías gratis en esta sección.",
+    "proximo": null,
     "whatsapp": "Hola HETNA CNC, quiero aprender CNC.",
     "boton": "Quiero aprender"
   },
@@ -664,7 +664,7 @@ export const SERVICIOS: Servicio[] = [
       "STL",
       "STEP"
     ],
-    "proximo": "Muy pronto: sube tu archivo aquí y obtén el precio al instante.",
+    "proximo": null,
     "whatsapp": "Hola HETNA CNC, quiero cotizar una pieza.",
     "boton": "Cotizar ahora"
   }

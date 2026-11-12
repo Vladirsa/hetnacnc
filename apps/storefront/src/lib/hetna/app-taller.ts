@@ -15,7 +15,7 @@ export const APP_TALLER = {
 }
 
 // Lo que va aparte de los planes, para decirlo junto a la tabla.
-export const NOTA_PLANES = "En el CAM Studio calcular y simular siempre es gratis: el plan cuenta los programas que descargas. Imagen a 3D con IA y el escaneo 3D se pagan con créditos. Las licitaciones de fabricación tienen su propia comisión por plan."
+export const NOTA_PLANES = "En el CAM Studio calcular y simular siempre es gratis: el plan cuenta los programas que descargas. Imagen a 3D con IA y el escaneo 3D se pagan con créditos. Las solicitudes de fabricación no cobran comisión: sólo pagas tu plan."
 
 export type PlanApp = { nombre: string; precio: string; nota: string; para: string; destacado?: boolean; puntos: string[] }
 

@@ -232,6 +232,84 @@ function Certificaciones() {
   )
 }
 
+// WhatsApp del taller: lo verifica escribiéndonos (él escribe primero) y así
+// recibe por WhatsApp las solicitudes de su zona; además puede mandar por ahí las
+// fotos de su taller para esta verificación (packages/api/src/lib/whatsapp.ts).
+function WhatsappTaller() {
+  const [e, setE] = useState(null)
+  const [num, setNum] = useState("")
+  const [liga, setLiga] = useState(null)
+  const [codigo, setCodigo] = useState("")
+  const [nota, setNota] = useState(null)
+  const [ocupado, setOcupado] = useState(false)
+  const pedir = async (cuerpo) => {
+    const r = await fetch("/vendor/hetna-whatsapp", { method: cuerpo ? "POST" : "GET", credentials: "include", headers: { "Content-Type": "application/json" }, body: cuerpo ? JSON.stringify(cuerpo) : undefined })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(d.message || `Error ${r.status}`)
+    return d
+  }
+  const cargar = () => pedir().then(setE).catch(() => setE({ verificado: false }))
+  useEffect(() => { cargar() }, [])
+  // Mientras espera el mensaje, revisa cada 5 s si ya llegó
+  useEffect(() => {
+    if (!liga || e?.verificado) return
+    const t = setInterval(cargar, 5000)
+    return () => clearInterval(t)
+  }, [liga, e?.verificado])
+  const hacer = async (cuerpo, ok) => {
+    setOcupado(true)
+    setNota(null)
+    try {
+      const d = await pedir(cuerpo)
+      if (cuerpo.accion === "iniciar") {
+        setLiga(d.liga)
+        if (d.liga) window.open(d.liga, "_blank", "noopener")
+      }
+      if (ok) setNota({ ok: true, t: ok })
+      cargar()
+    } catch (er) {
+      setNota({ ok: false, t: er.message })
+    } finally {
+      setOcupado(false)
+    }
+  }
+  if (!e) return null
+  if (e.verificado)
+    return (
+      <section style={{ ...S.card, borderColor: "#BFE3CB", background: "#F3FBF6" }}>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: "#1E7B3A" }}>✓ WhatsApp verificado: +{e.numero}</p>
+        <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>
+          Te avisamos por ahí de solicitudes de trabajo en tu zona.{e.fotos ? ` Recibimos ${e.fotos} foto(s) de tu taller por WhatsApp.` : " Si quieres, mándanos por WhatsApp 3 fotos (frente del taller, tus máquinas y un trabajo terminado) y se agregan aquí."}
+          {e.avisos === false ? " (Tienes los avisos en pausa: escribe ALTA al WhatsApp de HETNA para reactivarlos.)" : ""}
+        </p>
+      </section>
+    )
+  return (
+    <section style={S.card}>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>💬 Verifica tu WhatsApp y recibe trabajos ahí</p>
+      <p style={{ margin: "4px 0 10px", fontSize: 14, color: "#40403A" }}>
+        Te avisamos de solicitudes en tu zona por WhatsApp (lo ves antes que el correo). Escribe tu celular y toca el botón: se abre WhatsApp con un mensaje listo para HETNA, sólo dale Enviar.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <input value={num} onChange={(x) => setNum(x.target.value)} placeholder="Celular a 10 dígitos" inputMode="tel" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14 }} />
+        <button type="button" style={S.btn} disabled={ocupado || num.replace(/\D/g, "").length < 10} onClick={() => hacer({ accion: "iniciar", numero: num })}>Verificar mi WhatsApp</button>
+      </div>
+      {liga && (
+        <div style={{ marginTop: 10, fontSize: 13, color: "#40403A" }}>
+          <p style={{ margin: 0 }}>Se abrió WhatsApp con el mensaje. Dale <b>Enviar</b> y esta tarjeta se pone en verde sola. ¿No se abrió? <a href={liga} target="_blank" rel="noreferrer">Ábrelo aquí</a>.</p>
+          <p style={{ margin: "8px 0 4px" }}>¿Estás en la computadora? Te mandamos el código a tu WhatsApp y lo escribes aquí:</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "codigo", numero: num }, "Te mandamos el código por WhatsApp.")}>Mandarme el código</button>
+            <input value={codigo} onChange={(x) => setCodigo(x.target.value)} placeholder="Código de 6 dígitos" inputMode="numeric" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14, width: 150 }} />
+            <button type="button" style={S.btn2} disabled={ocupado || codigo.length !== 6} onClick={() => hacer({ accion: "confirmar", numero: num, codigo }, "✓ WhatsApp verificado")}>Confirmar</button>
+          </div>
+        </div>
+      )}
+      {nota && <p style={{ margin: "8px 0 0", fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</p>}
+    </section>
+  )
+}
+
 export default function VerificacionPage() {
   const [datos, setDatos] = useState(null)
   const [error, setError] = useState("")
@@ -302,6 +380,7 @@ export default function VerificacionPage() {
         Así los clientes saben que eres un taller real.
       </p>
 
+      <WhatsappTaller />
       <PagoVerificacion />
 
       <section style={{ ...S.card, background: est.bg, borderColor: est.bg }}>

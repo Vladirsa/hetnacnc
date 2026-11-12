@@ -6,6 +6,7 @@ import { EMPRESA, medioContacto, responsableLegal } from "@/lib/hetna/empresa"
 import { TablaTarifas } from "@/components/hetna/TablaTarifas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.4 · 12 nov 2026 (licitaciones como conexión sin comisión y protección sólo en pagos dentro, cláusula 8).
 // Versión 1.3 · 4 nov 2026 (aceptación expresa en el panel y verificación de tarjeta, cláusulas 2 y 3).
 // Versión 1.2 · 3 nov 2026 (libros y PDF de la Academia y lista de precios, cláusula 8).
 // Versión 1.1 · 1 nov 2026 (comisión de cursos de la Academia, cláusula 8).
@@ -115,7 +116,8 @@ export default function TerminosVendedores() {
         <li>Cursos, libros y PDF de la Academia HETNA: publicarlos es gratis. Si los cobras, HETNA cobra la comisión que indica la lista de precios (abajo) sobre el precio de cada venta y el resto se abona a tu saldo en cuanto se confirma el pago. Lo que publicas gratis no paga comisión.</li>
         <li>Al publicar un libro, PDF o curso declaras que el contenido es tuyo o que tienes permiso para venderlo. HETNA puede retirar el que infrinja derechos de terceros (cláusula 7).</li>
         <li>Los cambios de comisión o de plan se avisan con al menos 15 días de anticipación y no afectan pedidos ya pagados.</li>
-        <li>Está prohibido cerrar fuera de la plataforma ventas o trabajos que llegaron por HETNA, o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>
+        <li>Ventas de la tienda y de la Academia: está prohibido cerrarlas fuera de la plataforma o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>
+        <li>Solicitudes de fabricación (licitaciones): son una conexión con el cliente y no pagan comisión a HETNA; lo que pagas son tus planes de suscripción (lista de precios, abajo). Antes de que el cliente te elija, la comunicación va por HETNA y no puedes pedir ni dar datos de contacto. Si te elige y comparte su contacto, pueden acordar el pago dentro o fuera de la plataforma. Sólo el pago hecho dentro de HETNA (directo a tu Mercado Pago o PayPal conectado, o a HETNA como respaldo, que te lo libera cuando el cliente confirma que recibió) queda registrado y protegido; lo acordado por fuera es directamente entre tú y el cliente.</li>
       </ul>
 
       <h3 id="tarifas">Lista de precios y comisiones</h3>
@@ -155,7 +157,7 @@ export default function TerminosVendedores() {
       <h2>12. Datos personales de los clientes</h2>
       <ul>
         <li>Para cumplir un pedido recibes algunos datos del cliente (nombre, dirección de entrega, teléfono). Los recibes como responsable independiente: debes usarlos solo para fabricar, enviar y dar garantía de ese pedido, y cumplir la ley de protección de datos que te aplique.</li>
-        <li>No puedes usarlos para enviar publicidad sin el consentimiento del cliente, venderlos, compartirlos ni contactar al cliente para hacer tratos fuera de HETNA.</li>
+        <li>No puedes usarlos para enviar publicidad sin el consentimiento del cliente, venderlos, compartirlos ni contactar al cliente para hacer tratos fuera de HETNA. En las solicitudes de fabricación, el contacto que el cliente decide compartirte al elegirte sólo puedes usarlo para ese trabajo.</li>
         <li>Debes protegerlos y borrarlos cuando ya no los necesites. Si sufres una pérdida o robo de esos datos, avisa a HETNA de inmediato.</li>
         <li>Tus propios datos como Vendedor (incluidos los bancarios y los de verificación) se tratan como explica el Aviso de privacidad.</li>
       </ul>

@@ -23,7 +23,7 @@ import { listCategories } from "@/lib/data/categories"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 
 const WHATSAPP_NUMERO =
-  process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522461217072"
+  process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 const whatsappLink = (mensaje: string) =>
   `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`

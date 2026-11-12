@@ -47,7 +47,7 @@ export const CotizadorEmbebido = ({
       registrar: (p: Record<string, unknown>) => tallerRegistrar(p),
       estado: (id: string, e: string) => tallerEstado(id, e),
       borrar: (id: string) => tallerBorrar(id),
-      whatsappHetna: "522461217072",
+      whatsappHetna: "522217076014",
       irA: (destino: string) => {
         if (destino === "cerrar" && onCerrar) return onCerrar()
         const rutas: Record<string, string> = {

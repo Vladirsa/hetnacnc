@@ -105,7 +105,7 @@ const Form = () => {
     formData.append("password", data.password)
     formData.append("first_name", data.firstName)
     formData.append("last_name", data.lastName)
-    // Con la lada del país: "+52 2461217072". Así se distingue México de
+    // Con la lada del país: "+52 2217076014". Así se distingue México de
     // EE. UU. (+1) y de otros países al llamar o mandar WhatsApp.
     formData.append("phone", `${data.lada} ${data.phone}`)
 

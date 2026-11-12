@@ -33,8 +33,9 @@ export default function FormasDePago() {
 
       <h2>Paga siempre dentro de HETNA</h2>
       <p>
-        Los pagos hechos dentro de la plataforma quedan registrados y te dan respaldo si hay algún problema. HETNA no se
-        hace responsable de pagos o tratos hechos por fuera de la plataforma.
+        Los pagos hechos dentro de la plataforma quedan registrados y te dan respaldo si hay algún problema. En una
+        solicitud de fabricación puedes acordar con el taller pagarle por fuera, pero entonces HETNA no puede proteger ese
+        pago: no se hace responsable de pagos o tratos hechos por fuera de la plataforma.
       </p>
 
       <p>

@@ -440,7 +440,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   // Saldo de Skydropx (lib/saldos.ts): ¿alcanza?, ¿hay que recargar?, notas de compra
   let saldos = null
   await seguro(async () => {
-    const { estadoSaldoSkydropx, cargosExtraSkydropx, listarRecargas } = await import("./saldos")
+    const { estadoSaldoSkydropx, cargosExtraSkydropx, listarRecargas } = require("./saldos")
     const s = await estadoSaldoSkydropx(container)
     const recargas = await listarRecargas(container, 20)
     saldos = { skydropx: s, recargas }
@@ -478,7 +478,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   // Agente de recargas y vencimientos (lib/vigilancia.ts): RunPod, Meta y Google
   // Ads, Resend, disco del servidor, R2, Supabase, dominio, SSL y Hostinger.
   await seguro(async () => {
-    const { vigilarServicios, avisosDeServicios } = await import("./vigilancia")
+    const { vigilarServicios, avisosDeServicios } = require("./vigilancia")
     const servicios = await vigilarServicios(container)
     saldos = { ...(saldos || { skydropx: null, recargas: [] }), servicios }
     avisos.push(...avisosDeServicios(servicios, `${ADMIN}/control`))
@@ -487,7 +487,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   // Talleres nuevos esperando aprobación (lib/alta-taller.ts). Solo los que ya
   // confirmaron su correo: los demás todavía no terminan de registrarse.
   await seguro(async () => {
-    const { correoConfirmado } = await import("./alta-taller")
+    const { correoConfirmado } = require("./alta-taller")
     const { data } = await query.graph({
       entity: "seller",
       fields: ["id", "name", "email", "status", "created_at", "metadata"],
@@ -522,7 +522,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
 
   // Cotizador: pruebas que se terminan y planes cancelados
   await seguro(async () => {
-    const { panelVentas } = await import("./cotizador-crm")
+    const { panelVentas } = require("./cotizador-crm")
     const p = await panelVentas()
     if (p?.por_vencer?.length) {
       avisos.push({

@@ -424,7 +424,7 @@ async function contextoReal(knex: any) {
   const ap = await aprendizaje(knex).catch(() => null)
   if (ap?.resumen?.length) partes.push(`Lo que mejor ha funcionado en nuestras redes (estadísticas reales): ${ap.resumen.join(" ")}`)
   // Guía de estilo del dueño (biblioteca de referencias)
-  const { guiaParaPrompt } = await import("./referencias")
+  const { guiaParaPrompt } = require("./referencias")
   const guia = await guiaParaPrompt(knex)
   if (guia) partes.push(guia.trim())
   partes.push("HETNA no cobra comisión en licitaciones; los talleres pueden estar verificados y tener certificaciones; hay ranking público por evaluaciones reales; contratos SafeDeal opcionales.")

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { FormFiscal } from "@/components/hetna/cuenta/Facturacion"
 import { TuNegocio } from "@/components/hetna/cuenta/TuNegocio"
+import { WhatsappCuenta } from "@/components/hetna/cuenta/WhatsappCuenta"
 import { LoginForm } from "@/components/molecules/LoginForm/LoginForm"
 import { ProfileDetails } from "@/components/molecules/ProfileDetails/ProfileDetails"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
@@ -30,6 +31,7 @@ export default async function DatosCuenta() {
             <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">Tus datos de contacto, tu contraseña y los datos para que los talleres te facturen.</p>
           </div>
           <ProfileDetails user={user} />
+          <WhatsappCuenta telefono={user.phone} />
           <TuNegocio inicial={String((user.metadata as Record<string, unknown> | null)?.giro || "")} />
           <ProfilePassword user={user} />
           <section id="fiscal" className="scroll-mt-28 rounded-[16px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5 sm:p-6">

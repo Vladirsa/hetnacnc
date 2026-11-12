@@ -152,7 +152,7 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
     const [accion, id] = String(b.data || "").split(":")
     // Comentarios: r = enviar respuesta, rc = cambiarla, ri = ignorar
     if (["r", "rc", "ri"].includes(accion)) {
-      const com = await import("./social-comentarios")
+      const com = require("./social-comentarios")
       if (accion === "ri") {
         await com.ignorar(knex, id)
         return "🗑 Comentario ignorado."
@@ -209,7 +209,7 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
     return "Va, te los mando…"
   }
   if (/^\/resumen/i.test(texto)) {
-    const { resumenSemanal } = await import("./social-semanal")
+    const { resumenSemanal } = require("./social-semanal")
     return resumenSemanal(knex)
   }
   if (/^\/(start|ayuda|help)/i.test(texto)) return AYUDA
@@ -217,7 +217,7 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
   if (tg.editando?.startsWith("com:") && texto) {
     const id = tg.editando.slice(4)
     await guardarTg(knex, { editando: null })
-    const com = await import("./social-comentarios")
+    const com = require("./social-comentarios")
     // Si parece instrucción corta ("más corta", "más amable"), la IA la aplica; si no, se usa tal cual
     let nueva = texto.slice(0, 1500)
     const actual = await knex(com.T_COMENTARIO).where({ id }).first()

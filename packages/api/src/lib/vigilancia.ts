@@ -317,7 +317,7 @@ function resend() {
       } catch (e) {
         // Una llave "solo envío" no puede leer /usage: se usa lo que Resend
         // reportó en los encabezados del último correo enviado (lib/resend.ts).
-        const { cuotaResend } = await import("./resend")
+        const { cuotaResend } = require("./resend")
         const c = cuotaResend()
         if (!c) throw new Error(`${e?.message || e}. Se llenará solo con el siguiente correo que salga.`)
         mes = c.mes === null ? null : { used: c.mes, limit: num("RESEND_LIMITE_MES", 3000) }

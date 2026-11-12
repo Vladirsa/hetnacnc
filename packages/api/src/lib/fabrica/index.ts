@@ -187,7 +187,7 @@ async function contexto(knex: any) {
   const partes = ["HETNA no cobra comisión en licitaciones; talleres verificados y con certificaciones; ranking público por evaluaciones reales; contratos SafeDeal opcionales; ligas en hetnacnc.com."]
   const n = await knex("seller").whereNull("deleted_at").count({ n: "*" }).first().catch(() => null)
   if (n) partes.push(`Talleres registrados: ${n.n}.`)
-  const { guiaParaPrompt } = await import("../referencias")
+  const { guiaParaPrompt } = require("../referencias")
   const guia = await guiaParaPrompt(knex)
   if (guia) partes.push(guia.trim())
   return partes.join("\n")
@@ -350,7 +350,7 @@ export async function producir(scope: any, id: string, logger?: any) {
 
     // 5) Artículo (borrador en Aprendizaje CNC)
     try {
-      const { createLearningArticleWorkflow } = await import("../../workflows/create-learning-article")
+      const { createLearningArticleWorkflow } = require("../../workflows/create-learning-article")
       const slug = `${p.articulo.titulo}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) + `-${id.slice(-5)}`
       await (createLearningArticleWorkflow as any)(scope).run({ input: { slug, title: p.articulo.titulo, excerpt: p.articulo.resumen, content_html: p.articulo.html, cover_image_url: mini, source: "fabrica", published_at: null } })
       piezas.articulo = slug
@@ -429,7 +429,7 @@ export async function tarjetasAutomaticas(scope: any, logger?: any) {
       const tema = temaDe(`${p.titulo} ${p.texto_base}`)
       const foto = await fondoDe(knex, tema)
       // Licitación: ficha "Se busca taller" con los datos reales de la solicitud
-      const { fichaSolicitud } = await import("./oportunidades")
+      const { fichaSolicitud } = require("./oportunidades")
       const ficha = p.origen === "licitacion" && p.origen_id ? await fichaSolicitud(knex, p.origen_id).catch(() => null) : null
       const spec =
         ficha

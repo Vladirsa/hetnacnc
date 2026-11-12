@@ -19,7 +19,7 @@ const links = {
     { label: 'TikTok', path: 'https://www.tiktok.com/@hetna_cnc' },
     { label: 'X', path: 'https://x.com/CncHetna' },
     { label: 'YouTube', path: 'https://www.youtube.com/channel/UCw3eWFopDZAzKa4mRIM8YoQ' },
-    { label: 'WhatsApp', path: 'https://wa.me/522461217072' },
+    { label: 'WhatsApp', path: 'https://wa.me/522217076014' },
   ],
 };
 
