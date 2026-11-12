@@ -17,7 +17,10 @@
 // (las mismas de n8n); WHATSAPP_API_URL (por omisión https://whatsapp.hetnacnc.com).
 import { randomInt } from "crypto"
 
+import { STORE_URL } from "./licitacion"
 import { asegurarSocial } from "./social-hub"
+import { expedienteOCrear, guardarExpediente } from "./verificacion"
+import { guardarArchivo, TIPOS } from "./verificacion-archivos"
 
 export const T_WA = "hetna_whatsapp"
 const URL_API = () => (process.env.WHATSAPP_API_URL || process.env.EVOLUTION_API_URL_PUBLICA || "https://whatsapp.hetnacnc.com").replace(/\/$/, "")
@@ -233,8 +236,6 @@ export async function mensajeEntrante(scope: any, m: { numero: string; texto?: s
     try {
       const b64 = m.base64 || (m.mensaje_id ? await bajarMedia(m.mensaje_id) : null)
       if (!b64) throw new Error("no se pudo bajar la foto")
-      const { guardarArchivo, TIPOS } = await import("./verificacion-archivos")
-      const { expedienteOCrear, guardarExpediente } = await import("./verificacion")
       const exp = await expedienteOCrear(scope, f.seller_id)
       if (exp.estado === "verificado" || exp.estado === "en_revision") {
         await knex(T_WA).where({ numero }).update({ esperando_fotos: false })
@@ -288,7 +289,6 @@ export async function avisarWhatsapp(knex: any, a: { sellerIds?: string[]; custo
       })
       .select("numero")
     if (!filas.length) return 0
-    const { STORE_URL } = await import("./licitacion")
     const liga = aviso.url ? (/^https?:\/\//.test(aviso.url) ? aviso.url : `${STORE_URL}${aviso.url.startsWith("/") ? "" : "/"}${aviso.url}`) : ""
     const texto = `*${aviso.titulo}*\n${aviso.cuerpo}${liga ? `\n\n${liga}` : ""}\n\n_Escribe BAJA para no recibir avisos._`
     let n = 0
@@ -364,7 +364,6 @@ export async function configurarWebhook() {
   if (!whatsappListo()) throw new Error("Faltan EVOLUTION_API_KEY y EVOLUTION_INSTANCE en el .env del backend")
   const token = process.env.N8N_REDES_TOKEN || ""
   if (!token) throw new Error("Falta N8N_REDES_TOKEN en el .env del backend")
-  const { STORE_URL } = await import("./licitacion")
   const url = `${STORE_URL}/r/wa/${token}`
   // Evolution v2 (y respaldo con el formato de v1)
   const intentos = [

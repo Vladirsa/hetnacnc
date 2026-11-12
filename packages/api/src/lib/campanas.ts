@@ -66,10 +66,10 @@ export async function asegurarCampanas(knex: any) {
 
 async function hechosDe(knex: any, que: string) {
   const l: string[] = []
-  const { HERRAMIENTAS, DEL_COTIZADOR, DEL_3D } = await import("./fabrica/promociones")
+  const { HERRAMIENTAS, DEL_COTIZADOR, DEL_3D } = require("./fabrica/promociones")
   if (que === "cotizador") {
     try {
-      const { PLANES_COTIZADOR } = await import("./cotizador-suscripciones")
+      const { PLANES_COTIZADOR } = require("./cotizador-suscripciones")
       l.push(`Planes: Gratis (5 cotizaciones al mes), prueba de 14 días sin límite, ${Object.values(PLANES_COTIZADOR).map((p: any) => `${p.nombre} $${p.precio} MXN/mes`).join(", ")}.`)
     } catch {}
     for (const h of HERRAMIENTAS.filter((x: any) => DEL_COTIZADOR.includes(x.clave))) l.push(`- ${h.texto}`)
@@ -216,9 +216,9 @@ export async function generarCampana(scope: any, o: { que: string; objetivo: str
     // Imágenes con el estilo nuevo: feed (4:5) e historias/TikTok (9:16)
     const creativos: any[] = []
     try {
-      const { poster } = await import("./fabrica/poster")
-      const { temaPara, iconoPara } = await import("./fabrica/hyperframes")
-      const { subir } = await import("./fabrica/index")
+      const { poster } = require("./fabrica/poster")
+      const { temaPara, iconoPara } = require("./fabrica/hyperframes")
+      const { subir } = require("./fabrica/index")
       const titulos = plan.titulos_imagen.length ? plan.titulos_imagen : [QUE_VENDER[o.que].nombre]
       for (const [i, titulo] of titulos.entries()) {
         for (const formato of ["4:5", "9:16"] as const) {

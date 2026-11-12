@@ -553,7 +553,7 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     // TikTok en borrador: el texto no viaja con el video; se manda por Telegram para pegarlo
     if (red === "tiktok" && r.ok && r.borrador) {
       try {
-        const { mandarPrivado } = await import("./social-telegram")
+        const { mandarPrivado } = require("./social-telegram")
         await mandarPrivado(knex, { texto: `🎵 Video en tu bandeja de TikTok ("${String(p.titulo || "").slice(0, 60)}"). Ábrelo, pon un sonido de moda y pega este texto:\n\n${texto}` })
       } catch {}
     }

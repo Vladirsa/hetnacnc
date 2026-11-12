@@ -162,7 +162,7 @@ export async function proponerAnuncio(knex: any, logger?: any) {
   logger?.info?.(`[anuncios] propuesta ${id}: ${cand.titulo} (${cand.motivo}), $${diario} al día por ${c.dias} días`)
   // Aviso por Telegram (si está vinculado); la aprobación es en el panel
   try {
-    const { mandarPrivado } = await import("./social-telegram")
+    const { mandarPrivado } = require("./social-telegram")
     await mandarPrivado(knex, { texto: `📣 Propuesta de anuncio: "${cand.titulo}"\n${cand.motivo}.\n$${diario} MXN al día por ${c.dias} días (total máx. $${Math.round(diario * c.dias)}).\nApruébala o recházala en Social Hub → Resultados → Anuncios.` })
   } catch {}
   return id
