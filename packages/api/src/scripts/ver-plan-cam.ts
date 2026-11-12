@@ -11,11 +11,23 @@ import { planDelCliente } from "../lib/descargas-gratis"
 //   NODE_ENV=production ./node_modules/.bin/medusa exec ./src/scripts/ver-plan-cam.ts cliente@correo.com
 export default async function verPlanCam({ container, args }: ExecArgs) {
   const correo = String(args?.[0] || "").trim().toLowerCase()
+  const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+  const ultimas = async () => {
+    const filas = await knex("customer")
+      .select("email", "created_at")
+      .where("has_account", true)
+      .whereNull("deleted_at")
+      .orderBy("created_at", "desc")
+      .limit(10)
+    console.log("\nÚltimas cuentas registradas (usa una de éstas):")
+    for (const f of filas) console.log(`  ${f.email}  (${new Date(f.created_at).toISOString().slice(0, 16).replace("T", " ")})`)
+    console.log("")
+  }
   if (!/@/.test(correo)) {
     console.log("Uso: ... ver-plan-cam.ts cliente@correo.com")
+    await ultimas()
     return
   }
-  const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const cliente = await knex("customer")
     .select("id", "email", "has_account", "created_at")
     .whereRaw("lower(email) = ?", [correo])
@@ -24,6 +36,7 @@ export default async function verPlanCam({ container, args }: ExecArgs) {
     .first()
   if (!cliente) {
     console.log(`No hay cuenta con ${correo}`)
+    await ultimas()
     return
   }
   const [casa, vinculo, plan, cam] = await Promise.all([
