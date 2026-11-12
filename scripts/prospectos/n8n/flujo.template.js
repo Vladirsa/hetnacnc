@@ -59,8 +59,8 @@ const enviar = node({
       toEmail: expr('{{ $json.email }}'),
       subject: expr('{{ $json.asunto }}'),
       emailFormat: 'html',
-      // Agrega las redes de HETNA arriba del pie (antes del <hr>) de cada correo.
-      html: expr('{{ $json.html.replace(\'<hr \', \'<p style="font-size:14px">👉 <a href="https://www.facebook.com/hetna.cnc">Facebook</a> · <a href="https://www.instagram.com/hetna_cnc/">Instagram</a> · <a href="https://www.tiktok.com/@hetna_cnc">TikTok</a> · <a href="https://www.youtube.com/channel/UCw3eWFopDZAzKa4mRIM8YoQ">YouTube</a> · <a href="https://x.com/CncHetna">X</a></p><hr \') }}'),
+      // Antes del pie: invitación a verificar WhatsApp (sólo correos en español) y redes de HETNA.
+      html: expr('{{ $json.html.replace(\'<hr \', ($json.html.includes(\'Hola, equipo de\') ? \'<p style="font-size:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 12px">📲 <b>Al crear tu cuenta en HETNA</b>, verifica tu WhatsApp desde tu panel y recibe ahí los avisos de cotizaciones y solicitudes de trabajo de tu zona. Tú nos escribes primero; nunca te pediremos códigos ni contraseñas.</p>\' : \'\') + \'<p style="font-size:14px">👉 <a href="https://www.facebook.com/hetna.cnc">Facebook</a> · <a href="https://www.instagram.com/hetna_cnc/">Instagram</a> · <a href="https://www.tiktok.com/@hetna_cnc">TikTok</a> · <a href="https://www.youtube.com/channel/UCw3eWFopDZAzKa4mRIM8YoQ">YouTube</a> · <a href="https://x.com/CncHetna">X</a></p><hr \') }}'),
       options: { appendAttribution: false, replyTo: 'contacto@hetnacnc.com' },
     },
     credentials: { smtp: { id: '6IssBAMil5xjjgPf', name: 'SMTP account' } },
