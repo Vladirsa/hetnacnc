@@ -336,9 +336,20 @@ export async function resumenWhatsapp(knex: any) {
 /** QR para volver a conectar el WhatsApp de HETNA (se escanea desde WhatsApp → Dispositivos vinculados). */
 export async function qrConexion() {
   if (!whatsappListo()) throw new Error("Faltan EVOLUTION_API_KEY y EVOLUTION_INSTANCE en el .env del backend")
-  const r = await fetch(`${URL_API()}/instance/connect/${INSTANCIA()}`, { headers: { apikey: LLAVE() }, signal: AbortSignal.timeout(30_000) })
-  const d = await r.json().catch(() => ({}))
-  if (!r.ok) throw new Error(`WhatsApp: ${d?.response?.message || d?.message || r.status} (¿la instancia se llama "${INSTANCIA()}"? En Evolution importan las mayúsculas)`)
+  let r = await fetch(`${URL_API()}/instance/connect/${INSTANCIA()}`, { headers: { apikey: LLAVE() }, signal: AbortSignal.timeout(30_000) })
+  let d = await r.json().catch(() => ({}))
+  // Si la instancia no existe (se borró o nunca se creó), se crea aquí y Evolution regresa su QR
+  if (r.status === 404 || /does not exist|not found/i.test(JSON.stringify(d?.response || d?.message || ""))) {
+    r = await fetch(`${URL_API()}/instance/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: LLAVE() },
+      body: JSON.stringify({ instanceName: INSTANCIA(), integration: "WHATSAPP-BAILEYS", qrcode: true, ...(numeroHetna() ? { number: numeroHetna() } : {}) }),
+      signal: AbortSignal.timeout(30_000),
+    })
+    d = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(`WhatsApp no pudo crear la instancia "${INSTANCIA()}": ${JSON.stringify(d?.response?.message || d?.message || r.status).slice(0, 160)}`)
+    d = { base64: d?.qrcode?.base64 || d?.base64 || null, pairingCode: d?.qrcode?.pairingCode || null }
+  } else if (!r.ok) throw new Error(`WhatsApp: ${d?.response?.message || d?.message || r.status}`)
   const base64 = d?.base64 || d?.qrcode?.base64 || null
   if (!base64 && d?.instance?.state === "open") return { conectado: true }
   return { conectado: false, qr: base64, codigo: d?.pairingCode || d?.code || null }
