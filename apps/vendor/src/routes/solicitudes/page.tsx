@@ -436,11 +436,16 @@ function AcuerdoSafeDeal({ sol }) {
 // (7 indicadores) y ve, ya publicada, la evaluación que el cliente le dio.
 function RepCliente({ rep }) {
   if (!rep) return null
-  if (!rep.evaluaciones) return <span style={S.tag("#F3F1EA", "#6B675C")} title="Todavía no tiene evaluaciones de otros talleres">Cliente nuevo</span>
+  // Lo que hizo el cliente en HETNA (no opinión): trabajos que pagó y cancelaciones después de elegir taller
+  const m = rep.medido
+  const hechos = m && (m.pagados || m.cancelados_tras_elegir)
+    ? ` · pagó ${m.pagados} ${m.pagados === 1 ? "trabajo" : "trabajos"}${m.cancelados_tras_elegir ? ` · canceló ${m.cancelados_tras_elegir} tras elegir` : ""}`
+    : ""
+  if (!rep.evaluaciones) return <span style={S.tag("#F3F1EA", "#6B675C")} title="Todavía no tiene evaluaciones de otros talleres">Cliente nuevo{hechos}</span>
   const buena = rep.promedio >= 4
   return (
     <span style={S.tag(buena ? "#E6F4EA" : "#FFF8EE", buena ? "#1E7B3A" : "#8A5A00")} title={rep.suficiente ? "Evaluado por talleres en trabajos pagados" : "Historial todavía insuficiente"}>
-      Cliente ★ {rep.promedio} · {rep.evaluaciones} {rep.evaluaciones === 1 ? "trabajo" : "trabajos"}{!rep.suficiente ? " (poco historial)" : ""}
+      Cliente ★ {rep.promedio} · {rep.evaluaciones} {rep.evaluaciones === 1 ? "evaluación" : "evaluaciones"}{!rep.suficiente ? " (poco historial)" : ""}{hechos}
     </span>
   )
 }

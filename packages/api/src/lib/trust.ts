@@ -15,6 +15,7 @@
 import { T_PROPUESTA, T_SOLICITUD, VENDOR_URL, boton, esc, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto } from "./licitacion"
 import { T_RESENA, asegurarExtra } from "./licitacion-extra"
 import { sendEmail } from "./resend"
+import { medirCliente, medirTaller } from "./reputacion-medida"
 
 export const T_RESENA_CLIENTE = "hetna_resena_cliente"
 export const T_RECLAMO = "hetna_resena_reclamo"
@@ -275,6 +276,8 @@ export async function recalcularTaller(knex: any, sellerId: string) {
     reputacion_comercial: n ? prom(comercial as number[]) : null,
     capacidad_tecnica: n ? prom(tecnica as number[]) : null,
     historial_suficiente: n >= MIN_HISTORIAL,
+    // Lo que hizo (puntualidad real, terminados, reclamos), no sólo lo que opinaron: ver reputacion-medida.ts
+    medido: await medirTaller(knex, sellerId).catch(() => null),
   }
   await knex.raw(
     `update seller set metadata = coalesce(metadata, '{}'::jsonb) || jsonb_build_object('perfil', coalesce(metadata->'perfil', '{}'::jsonb) || ?::jsonb) where id = ?`,
@@ -293,13 +296,14 @@ export async function reputacionCliente(knex: any, c: { clienteId?: string | nul
     if (email) w.orWhere("cliente_email", email)
   })
   const sel = Object.fromEntries(INDICADORES_CLIENTE.map(([k]) => [k, k]))
-  const r = await q.avg({ prom: "promedio", ...sel }).count({ n: "*" }).first()
+  const [r, medido] = await Promise.all([q.avg({ prom: "promedio", ...sel }).count({ n: "*" }).first(), medirCliente(knex, c).catch(() => null)])
   const n = Number(r?.n || 0)
   return {
     promedio: n ? r1(r.prom) : null,
     evaluaciones: n,
     suficiente: n >= MIN_HISTORIAL,
     indicadores: n ? Object.fromEntries(INDICADORES_CLIENTE.map(([k]) => [k, r1(r[k])])) : null,
+    medido,
   }
 }
 
@@ -403,7 +407,7 @@ export async function reputacionesClientes(knex: any, filas: { id: string; clien
   await asegurarTrust(knex)
   const ids = [...new Set(filas.map((f) => f.cliente_id).filter(Boolean))] as string[]
   const correos = [...new Set(filas.map((f) => String(f.email || "").toLowerCase()).filter(Boolean))]
-  const out = new Map<string, { promedio: number | null; evaluaciones: number; suficiente: boolean }>()
+  const out = new Map<string, { promedio: number | null; evaluaciones: number; suficiente: boolean; medido?: { pagados: number; cancelados_tras_elegir: number } | null }>()
   if (!ids.length && !correos.length) return out
   const evs = await publica(knex(T_RESENA_CLIENTE))
     .andWhere((w: any) => {
@@ -416,6 +420,19 @@ export async function reputacionesClientes(knex: any, filas: { id: string; clien
     const mias = evs.filter((e: any) => (f.cliente_id && e.cliente_id === f.cliente_id) || (email && e.cliente_email === email))
     const n = mias.length
     out.set(f.id, { promedio: n ? r1(mias.reduce((a: number, e: any) => a + Number(e.promedio), 0) / n) : null, evaluaciones: n, suficiente: n >= MIN_HISTORIAL })
+  }
+  // Lo que hizo como comprador (pagó o canceló después de elegir), una consulta por cliente distinto
+  const clave = (f: { cliente_id?: string | null; email?: string | null }) => f.cliente_id || String(f.email || "").toLowerCase()
+  const unicos = new Map(filas.filter((f) => clave(f)).map((f) => [clave(f), f]))
+  const medidas = new Map(
+    await Promise.all(
+      [...unicos].map(async ([k, f]) => [k, await medirCliente(knex, { clienteId: f.cliente_id, email: f.email }).catch(() => null)] as const)
+    )
+  )
+  for (const f of filas) {
+    const m = medidas.get(clave(f))
+    const r = out.get(f.id)
+    if (r && m) r.medido = { pagados: m.pagados, cancelados_tras_elegir: m.cancelados_tras_elegir }
   }
   return out
 }

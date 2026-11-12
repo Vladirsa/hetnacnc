@@ -21,8 +21,10 @@
 //   - cancelada: HETNA la rechaza en la revisión.
 // HETNA puede mover cualquiera a mano desde el dashboard.
 import { sendEmail } from "./resend"
+import { recalcularTaller } from "./trust"
 import {
   STORE_URL,
+  T_PROPUESTA,
   T_SOLICITUD,
   asegurarTablas,
   boton,
@@ -184,6 +186,16 @@ const CORREO: Partial<Record<Etapa, { asunto: string; titulo: string; texto: str
   },
 }
 
+async function actualizarReputacion(knex: any, solicitudId: string) {
+  const fila = await knex(`${T_SOLICITUD} as s`)
+    .join(`${T_PROPUESTA} as p`, "p.id", "s.propuesta_elegida")
+    .where("s.id", solicitudId)
+    .select("p.seller_id")
+    .first()
+  if (!fila?.seller_id) return
+  await recalcularTaller(knex, fila.seller_id)
+}
+
 export const cambiarEtapa = async (
   knex: any,
   s: { id: string; folio: number | string; token: string; contacto?: any; etapa?: string | null },
@@ -209,6 +221,10 @@ export const cambiarEtapa = async (
     nota: opciones.nota ? opciones.nota.slice(0, 2000) : null,
     visible_cliente: opciones.visibleCliente !== false,
   })
+  // Producción, entrega y cancelación cambian la puntualidad y los trabajos terminados del taller
+  if (etapa === "en_produccion" || etapa === "entregada" || etapa === "cancelada" || etapa === "cerrada") {
+    actualizarReputacion(knex, s.id).catch((e: Error) => opciones.logger?.info(`[seguimiento] reputación no actualizada: ${e.message}`))
+  }
 
   let c = CORREO[etapa]
   // Cerrada sin taller elegido (sin propuestas o cancelada): no hay a quién calificar.
