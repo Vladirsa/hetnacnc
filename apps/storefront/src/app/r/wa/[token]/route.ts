@@ -26,9 +26,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   }
   const data = body?.data || body
   const key = data?.key || {}
-  const jid = String(key.remoteJid || "")
+  // WhatsApp ya manda muchos chats con un id anónimo (@lid) en vez del número;
+  // en ese caso el número real viene aparte (remoteJidAlt / senderPn).
+  const candidatos = [key.remoteJid, key.remoteJidAlt, key.senderPn, data?.senderPn, key.participantPn].map((x) => String(x || ""))
+  const jid = candidatos.find((x) => x.endsWith("@s.whatsapp.net")) || ""
   // Sólo mensajes de personas (no grupos, no estados) y que no mandamos nosotros
-  if (key.fromMe || !jid.endsWith("@s.whatsapp.net")) return ok()
+  if (key.fromMe || !jid || String(key.remoteJid || "").endsWith("@g.us")) return ok()
   const msg = data?.message || {}
   const imagen = msg.imageMessage
   const texto = msg.conversation || msg.extendedTextMessage?.text || imagen?.caption || ""
