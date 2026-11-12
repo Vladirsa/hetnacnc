@@ -161,6 +161,15 @@ const nextConfig: NextConfig = {
       // /app → la página de la app; /app/android → el APK más reciente (release
       // de GitHub del repo Vladirsa/Cotizador); /app/ios → cómo instalarla en iPhone.
       { source: "/app", destination: "/mx/servicios/cotizador-cnc", permanent: false },
+      // Panel de vendedor: vive en /seller (lo sirve el backend, sin idioma).
+      // Ligas viejas o compartidas con el idioma delante (/mx/seller) daban
+      // "Página no encontrada": el registro de nginx del 12 de noviembre tiene
+      // visitas reales a /mx/seller, y el 31 de octubre muchas con ?_rsc= (un
+      // botón de una versión anterior). /mx/sellers (sin taller) no tiene
+      // página: va al directorio de talleres. /mx/sellers/<taller> no cambia.
+      { source: "/:locale([a-z]{2})/seller", destination: "/seller/", permanent: false },
+      { source: "/:locale([a-z]{2})/seller/:ruta*", destination: "/seller/:ruta*", permanent: false },
+      { source: "/:locale([a-z]{2})/sellers", destination: "/:locale/talleres", permanent: false },
       { source: "/app/android", destination: "https://github.com/Vladirsa/Cotizador/releases/latest/download/HetnaCNC_arm64.apk", permanent: false },
       { source: "/app/ios", destination: "/mx/servicios/cotizador-cnc#instalar", permanent: false },
       // Herramientas CNC: /cam y la página del Generador se juntaron en
