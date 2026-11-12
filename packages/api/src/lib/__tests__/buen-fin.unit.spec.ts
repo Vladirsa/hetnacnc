@@ -1,5 +1,5 @@
 import { etapa, fechaBuenFin, rango, validar } from "../fabrica/buen-fin"
-import { palabrasClave } from "../whatsapp-bot"
+import { catalogoVentas, palabrasClave } from "../whatsapp-bot"
 
 const mx = (s: string) => new Date(`${s}T18:00:00Z`) // mediodía en México
 const base = { activo: true, desde: "2026-11-13", hasta: "2026-11-16", descuento: "10% en productos seleccionados", cupon: "", etiquetas: ["buen-fin"] }
@@ -34,5 +34,10 @@ describe("respondedor de WhatsApp", () => {
   it("saca las palabras que sirven para buscar productos", () => {
     expect(palabrasClave("Hola, ¿tienen llaveros de acrílico personalizados?")).toEqual(["llaveros", "acrilico", "personalizados"])
     expect(palabrasClave("hola buenas tardes")).toEqual([])
+  })
+  it("el agente sólo trae precios reales: los planes del Cotizador", () => {
+    const c = catalogoVentas().join("\n")
+    expect(c).toMatch(/Taller \$299 MXN\/mes/)
+    expect(c).toContain("/mx/cotizar")
   })
 })

@@ -26,6 +26,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   }
   const data = body?.data || body
   const key = data?.key || {}
+  const msg = data?.message || {}
+  const imagen = msg.imageMessage
+  const texto = msg.conversation || msg.extendedTextMessage?.text || imagen?.caption || ""
   // Rastro mínimo (sin texto ni números completos) para revisar con pm2 logs hetna-web
   console.log(`[wa] evento=${body?.event || "?"} propio=${!!key.fromMe} jid=${String(key.remoteJid || "").replace(/^\d+(?=\d{4}@)/, "…")} alt=${key.remoteJidAlt || key.senderPn ? "sí" : "no"}`)
   // WhatsApp ya manda muchos chats con un id anónimo (@lid) en vez del número;
@@ -39,14 +42,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
     await fetch(`${MEDUSA_BACKEND_URL}/hooks/whatsapp`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-hetna-token": esperado },
-      body: JSON.stringify({ desde_mi: true, numero: jid.replace("@s.whatsapp.net", "").replace(/\D/g, ""), mensaje_id: key.id || null }),
+      body: JSON.stringify({ desde_mi: true, numero: jid.replace("@s.whatsapp.net", "").replace(/\D/g, ""), mensaje_id: key.id || null, texto: String(texto).slice(0, 2000) }),
       signal: AbortSignal.timeout(15_000),
     }).catch(() => null)
     return ok()
   }
-  const msg = data?.message || {}
-  const imagen = msg.imageMessage
-  const texto = msg.conversation || msg.extendedTextMessage?.text || imagen?.caption || ""
+
   const mensaje = {
     numero: jid.replace("@s.whatsapp.net", "").replace(/\D/g, ""),
     texto: String(texto).slice(0, 2000),

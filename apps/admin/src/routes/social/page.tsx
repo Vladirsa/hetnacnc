@@ -465,7 +465,7 @@ function WhatsappConexion() {
         else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
       } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
       else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
-      else if (cuerpo.accion === "bot") setNota({ ok: true, t: cuerpo.activo ? "✓ Respondedor encendido" : "Respondedor apagado" })
+      else if (cuerpo.accion === "bot") setNota({ ok: true, t: cuerpo.activo ? "✓ Agente de ventas encendido" : "Agente de ventas apagado" })
       void cargar()
     } catch (er) {
       setNota({ ok: false, t: `✗ ${(er as Error).message}` })
@@ -500,9 +500,9 @@ function WhatsappConexion() {
         <label style={{ display: "flex", gap: 6, alignItems: "flex-start", marginTop: 6, fontSize: 13 }}>
           <input type="checkbox" checked={!!e.bot.activo} disabled={ocupado || !e.bot.ia} onChange={(x) => void hacer({ accion: "bot", activo: x.target.checked })} />
           <span>
-            <b>Respondedor automático</b>: contesta las dudas de quien escribe al WhatsApp (cómo cotizar, si hay tal producto, registrarse) sólo con datos reales y ligas de la tienda; lo que no sabe te lo pasa por Telegram. Si contestas tú desde el celular, se calla 12 h en ese chat.
+            <b>Agente de ventas</b>: atiende a quien escribe al WhatsApp como un vendedor: entiende qué busca, recomienda el producto, la cotización o la herramienta que le sirve con su liga y lo lleva a comprar. Sólo con datos reales (no inventa precios). Los clientes calientes y lo que necesita a una persona te llegan por Telegram con el resumen. Si contestas tú desde el celular, se calla 12 h en ese chat.
             {!e.bot.ia && <span style={{ color: C.rojo }}> (Falta la llave de IA en el servidor)</span>}
-            <span style={{ color: C.tenue }}> · Hoy: {e.bot.respuestas_hoy} respuestas en {e.bot.chats_hoy} chats · {e.bot.pasados} pasados a ti</span>
+            <span style={{ color: C.tenue }}> · Hoy: {e.bot.respuestas_hoy} respuestas en {e.bot.chats_hoy} chats · {e.bot.calientes_7d ?? 0} clientes calientes (7 días) · {e.bot.pasados} pasados a ti</span>
           </span>
         </label>
       )}

@@ -21,7 +21,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       const id = b.mensaje_id ? String(b.mensaje_id) : null
       // Evolution a veces avisa antes de que el sistema reciba la confirmación de su envío
       if (!esPropio(id)) await new Promise((ok) => setTimeout(ok, 4000))
-      if (!esPropio(id)) await pausarChat(knex, String(b.numero || ""))
+      if (!esPropio(id)) await pausarChat(knex, String(b.numero || ""), b.texto ? String(b.texto).slice(0, 2000) : undefined)
       return res.json({ manejado: true })
     }
     const m = { numero: String(b.numero || ""), texto: String(b.texto || "").slice(0, 2000), tipo: String(b.tipo || "texto"), mensaje_id: b.mensaje_id ? String(b.mensaje_id).slice(0, 120) : undefined, base64: typeof b.base64 === "string" ? b.base64.slice(0, 12_000_000) : null }
