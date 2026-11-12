@@ -1,3 +1,4 @@
+import { DIAS_SOLICITUD_ABIERTA, MAX_ARCHIVOS, MAX_MB_ARCHIVO } from "@/lib/hetna/promesas"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
@@ -30,7 +31,7 @@ const PREGUNTAS: { p: string; r: string }[] = [
   },
   {
     p: "¿Cómo pido una cotización de maquila o corte?",
-    r: "En Cotizar describes tu trabajo (material, cantidad, medidas y fecha) y puedes adjuntar la liga a tus archivos DXF, SVG, STL o STEP. Te enviamos la cotización por correo. Para corte láser y router tienes además un precio estimado al instante.",
+    r: `En Cotizar describes tu trabajo (material, cantidad, medidas y fecha) y subes hasta ${MAX_ARCHIVOS} archivos de hasta ${MAX_MB_ARCHIVO} MB (DXF, SVG, STL, STEP y más). HETNA revisa tu solicitud y la publica a los talleres de la red, que te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días; las comparas y eliges. Para corte láser, router, plasma e impresión 3D tienes además un precio estimado al instante.`,
   },
   {
     p: "¿Mis datos los ve el taller?",
