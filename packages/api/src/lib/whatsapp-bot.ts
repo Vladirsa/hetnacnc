@@ -200,6 +200,7 @@ export async function redactar(historia: { rol: string; texto: string }[], produ
 }
 
 const turnos = new Map<string, ReturnType<typeof setTimeout>>()
+const RESPALDO = `¡Gracias por escribir a HETNA CNC! En un momento una persona del equipo te contesta. Mientras, puedes ver la tienda en ${STORE_URL}/mx o publicar gratis la pieza que necesitas en ${STORE_URL}/mx/cotizar.`
 
 /**
  * ¿Le toca al agente? (encendido, IA, sin pausa por humano, sin pasar el tope).
@@ -239,7 +240,16 @@ async function contestar(knex: any, numero: string, logger?: any) {
     if (!historia.length || historia[historia.length - 1].rol !== "cliente") return
     const textoCliente = historia.filter((x: any) => x.rol === "cliente").slice(-4).map((x: any) => x.texto).join(" ")
     const productos = await productosParecidos(knex, textoCliente).catch(() => [])
-    const r = await redactar(historia, productos, f?.perfil || null)
+    let r: any
+    try {
+      r = await redactar(historia, productos, f?.perfil || null)
+    } catch (e) {
+      // Sin IA (sin saldo, caída): el cliente no se queda sin respuesta y el dueño se entera
+      const msg = (e as Error).message || ""
+      logger?.warn?.(`[whatsapp-agente] IA: ${msg.slice(0, 200)}`)
+      if (historia.filter((x: any) => x.rol === "agente").slice(-1)[0]?.texto === RESPALDO) return
+      r = { tipo: "pasar_a_persona", respuesta: RESPALDO, perfil: null, temperatura: null, avisar_equipo: true, resumen_para_equipo: /credit balance/i.test(msg) ? "⚠️ El agente no pudo contestar: la cuenta de la IA (Anthropic) no tiene saldo." : "⚠️ El agente no pudo contestar: la IA falló." }
+    }
     if (!r) return
     const hoy = new Date().toISOString().slice(0, 10)
     await knex(T_CHAT).where({ numero }).update({
