@@ -60,7 +60,7 @@ export const FavoritosBoton = () => {
       className="relative flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"
     >
       <Corazon />
-      <span className="hidden lg:inline text-[13px] font-medium">Favoritos</span>
+      <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium">Favoritos</span>
       {lista.length > 0 && (
         <span className="absolute top-0 left-5 min-w-4 h-4 px-1 rounded-full bg-[#C2560A] text-white text-[10px] font-bold flex items-center justify-center">
           {lista.length}

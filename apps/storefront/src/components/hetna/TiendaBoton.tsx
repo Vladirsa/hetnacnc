@@ -49,6 +49,6 @@ export const CotizadorBoton = () => (
       <rect x="6" y="3" width="12" height="18" rx="1.5" />
       <path d="M9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01" />
     </svg>
-    <span className="hidden lg:inline text-[13px] font-medium">Cotizador</span>
+    <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium">Cotizador taller</span>
   </a>
 )
