@@ -6,7 +6,8 @@
 //   - Arriba, los accesos rápidos (cotizar, precio al instante, calculadora).
 //   - Luego las cinco secciones del menú principal: Categorías, Fabricación
 //     (por tipo de proceso), Herramientas CNC, Talleres y Foro CNC.
-//   - El contenido del panel se dibuja SÓLO cuando se abre: antes el árbol
+//   - Los árboles (categorías, fabricación, herramientas) se dibujan SÓLO
+//     cuando se abre; antes va un primer nivel ligero de enlaces. Antes el árbol
 //     completo de categorías iba en el HTML de cada página aunque nadie
 //     abriera el menú (los buscadores ya lo leen en la barra de computadora).
 //
@@ -69,6 +70,26 @@ const Rama = ({ c, nivel }: { c: NodoMenu; nivel: number }) => {
 const ENLACE_SIMPLE = "block border-b border-[#E7E4DC] px-4 py-4 text-[15px] font-bold text-[#142033]"
 const TITULO_ACORDEON =
   "flex cursor-pointer list-none items-center justify-between border-b border-[#E7E4DC] px-4 py-4 text-[15px] font-bold text-[#142033] [&::-webkit-details-marker]:hidden"
+
+// Primer nivel, siempre en la página: así el panel nunca sale vacío aunque el
+// JavaScript no haya cargado (o falle). Al abrirlo con JS se cambia por el
+// menú completo con acordeones.
+const Ligero = () => (
+  <div className="flex-1 overflow-y-auto">
+    <div className="grid grid-cols-3 gap-2 border-b border-[#E7E4DC] bg-[#FAF6EF] p-3">
+      {ACCESOS_RAPIDOS.map((a) => (
+        <LocalizedClientLink key={a.href} href={a.href} className="rounded-[10px] bg-white p-2.5 text-center shadow-sm">
+          <span className="block text-[13px] font-bold leading-tight text-[#142033]">{a.texto}</span>
+        </LocalizedClientLink>
+      ))}
+    </div>
+    <LocalizedClientLink href="/categories" className={ENLACE_SIMPLE}>Categorías</LocalizedClientLink>
+    <LocalizedClientLink href="/fabricacion" className={ENLACE_SIMPLE}>Fabricación</LocalizedClientLink>
+    <LocalizedClientLink href="/herramientas-cnc" className={ENLACE_SIMPLE}>Herramientas CNC</LocalizedClientLink>
+    <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>Talleres</LocalizedClientLink>
+    <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>Foro CNC</LocalizedClientLink>
+  </div>
+)
 
 const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: HerramientaMenu[] }) => (
   <div className="flex-1 overflow-y-auto">
@@ -189,7 +210,7 @@ export const MenuMovil = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramie
             <span className="sr-only">Cerrar menú</span>
           </label>
         </div>
-        {abierto && <Contenido arbol={arbol} herramientas={herramientas} />}
+        {abierto ? <Contenido arbol={arbol} herramientas={herramientas} /> : <Ligero />}
       </div>
     </div>
   )

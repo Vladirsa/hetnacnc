@@ -189,10 +189,12 @@ const MenuHerramientas = () => (
 
 const MenuFabricacion = () => (
   <div className="group relative h-full flex items-center shrink-0">
-    <span tabIndex={0} className={ENLACE + " cursor-default"}>
+    {/* Es enlace a /fabricacion (en pantallas táctiles el hover no es confiable)
+        y el desplegable se abre al pasar el mouse o con el teclado. */}
+    <LocalizedClientLink href="/fabricacion" className={ENLACE}>
       Fabricación
       <Flecha />
-    </span>
+    </LocalizedClientLink>
     <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[620px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-4 whitespace-normal">
       <div className="grid grid-cols-4 gap-4">
         {FABRICACION.map((g) => (
@@ -234,7 +236,7 @@ export const BarraNavegacion = ({
       <CerrarMenus />
       <nav
         aria-label="Principal"
-        className="relative z-40 hidden lg:flex bg-[#142033] px-4 lg:px-8 xl:px-16 h-[46px] items-center gap-7"
+        className="relative z-40 hidden lg:flex bg-[#142033] px-4 lg:px-8 xl:px-16 h-[46px] items-center gap-5 xl:gap-7"
       >
         <MegaCategorias raices={raices} />
         <MenuFabricacion />
@@ -242,9 +244,10 @@ export const BarraNavegacion = ({
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
         <LocalizedClientLink href="/foro-cnc" className={ENLACE}>Foro CNC</LocalizedClientLink>
         <span className="flex-1" />
+        {/* Desde xl: entre 1024 y 1280 px no cabe (y ya está en Fabricación) */}
         <LocalizedClientLink
           href="/cotizar"
-          className="shrink-0 border border-white/40 hover:bg-white/10 text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
+          className="hidden xl:inline-block shrink-0 border border-white/40 hover:bg-white/10 text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
         >
           Cotizar un trabajo
         </LocalizedClientLink>

@@ -40,9 +40,15 @@ export const NavbarSearch = ({ className }: Props) => {
   // País de la URL (/mx/...) para que la búsqueda no pierda el prefijo
   const pais = ruta?.match(/^\/([a-z]{2})(\/|$)/i)?.[1] || "mx"
 
+  // Las sugerencias son una server action: un POST a la página actual. En
+  // /<país>/user y /user/register nginx limita los POST a 10 por minuto (login,
+  // infra/nginx/hetna-limites.conf): ahí no se piden, para no gastarle el cupo
+  // de inicio de sesión a quien escribe en el buscador.
+  const sinSugerencias = /^\/[a-z]{2}\/user(\/register)?\/?$/i.test(ruta || "")
+
   useEffect(() => {
     const q = texto.trim()
-    if (q.length < 2) {
+    if (q.length < 2 || sinSugerencias) {
       setLista([])
       return
     }
@@ -55,7 +61,7 @@ export const NavbarSearch = ({ className }: Props) => {
       }
     }, 250)
     return () => clearTimeout(t)
-  }, [texto])
+  }, [texto, sinSugerencias])
 
   // Cerrar al tocar fuera
   useEffect(() => {
