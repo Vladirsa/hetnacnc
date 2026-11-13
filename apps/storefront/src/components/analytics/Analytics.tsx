@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
-import { EVENTO_CONSENTIMIENTO, permiteRastreo } from '@/lib/hetna/consentimiento';
+import { EVENTO_CONSENTIMIENTO, permiteRastreo, senalNoRastrear } from '@/lib/hetna/consentimiento';
 
-// Carga GA4 y/o Meta Pixel solo si:
-//   1) sus IDs están configurados en el entorno, y
-//   2) la persona aceptó las cookies de estadística y publicidad
-//      (y su navegador no manda Global Privacy Control / Do Not Track).
-// Sin eso no renderiza nada. Ver src/lib/hetna/consentimiento.ts y el aviso
-// de privacidad (sección Cookies).
+// Google Analytics usa el Modo de consentimiento v2 de Google: el gtag carga
+// siempre, pero arranca con todo "denied" (sin cookies ni identificadores);
+// así GA cuenta visitas de forma anónima y sin cookies hasta que la persona
+// acepta, y entonces pasa a "granted". Antes GA sólo cargaba al aceptar y,
+// como casi nadie acepta, dejó de medir desde el 31-oct-2026.
+// Meta Pixel y Microsoft Clarity siguen cargando SÓLO con el consentimiento.
+// Si el navegador manda Global Privacy Control / Do Not Track no se carga nada.
+// Ver src/lib/hetna/consentimiento.ts y el aviso de privacidad (sección Cookies).
 // VELOCIDAD: strategy="lazyOnload" para que no compitan con la tienda al cargar.
 export function Analytics() {
   const ga4Id = process.env.NEXT_PUBLIC_GA4_ID;
@@ -23,15 +25,23 @@ export function Analytics() {
   const clarityCrudo = process.env.NEXT_PUBLIC_CLARITY_ID || '';
   const clarityId = /^[a-z0-9]{6,20}$/i.test(clarityCrudo) ? clarityCrudo : '';
   const [permitido, setPermitido] = useState(false);
+  const [noRastrear, setNoRastrear] = useState(true);
 
   useEffect(() => {
+    setNoRastrear(senalNoRastrear());
     setPermitido(permiteRastreo());
-    const alCambiar = () => setPermitido(permiteRastreo());
+    const alCambiar = () => {
+      const si = permiteRastreo();
+      setPermitido(si);
+      // Avisa a Google del cambio sin recargar la página
+      const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+      w.gtag?.('consent', 'update', estadoConsentimiento(si));
+    };
     window.addEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
     return () => window.removeEventListener(EVENTO_CONSENTIMIENTO, alCambiar);
   }, []);
 
-  if (!permitido || (!gtagId && !metaPixelId && !clarityId)) return null;
+  if (noRastrear || (!gtagId && !metaPixelId && !clarityId)) return null;
 
   return (
     <>
@@ -41,10 +51,13 @@ export function Analytics() {
             src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`}
             strategy="lazyOnload"
           />
-          <Script id="ga4-init" strategy="lazyOnload">
+          <Script id="ga4-init" strategy="afterInteractive">
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
+              window.gtag = gtag;
+              gtag('consent', 'default', ${JSON.stringify(estadoConsentimiento(false))});
+              ${permitido ? `gtag('consent', 'update', ${JSON.stringify(estadoConsentimiento(true))});` : ''}
               gtag('js', new Date());
               ${ga4Id ? `gtag('config', '${ga4Id}');` : ''}
               ${adsId ? `gtag('config', '${adsId}', { allow_enhanced_conversions: true });` : ''}
@@ -52,7 +65,7 @@ export function Analytics() {
           </Script>
         </>
       )}
-      {metaPixelId && (
+      {permitido && metaPixelId && (
         <Script id="meta-pixel-init" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
@@ -68,7 +81,7 @@ export function Analytics() {
           `}
         </Script>
       )}
-      {clarityId && (
+      {permitido && clarityId && (
         <Script id="clarity-init" strategy="lazyOnload">
           {`
             (function(c,l,a,r,i,t,y){
@@ -81,4 +94,10 @@ export function Analytics() {
       )}
     </>
   );
+}
+
+// Señales del Modo de consentimiento v2 de Google
+function estadoConsentimiento(aceptado: boolean) {
+  const v = aceptado ? 'granted' : 'denied';
+  return { ad_storage: v, analytics_storage: v, ad_user_data: v, ad_personalization: v };
 }

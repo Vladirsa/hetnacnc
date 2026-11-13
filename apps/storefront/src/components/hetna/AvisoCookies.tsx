@@ -11,8 +11,9 @@ import {
 } from "@/lib/hetna/consentimiento"
 
 // Aviso de cookies. Sale abajo la primera vez y cada que alguien pulsa
-// "Preferencias de cookies". Mientras no se acepte, no se carga Google
-// Analytics ni Meta Pixel (ver components/analytics/Analytics.tsx).
+// "Preferencias de cookies". Mientras no se acepte, Google Analytics sólo
+// cuenta visitas sin cookies (modo de consentimiento) y no se cargan Meta
+// Pixel ni Clarity (ver components/analytics/Analytics.tsx).
 export function AvisoCookies() {
   const [abierto, setAbierto] = useState(false)
 
