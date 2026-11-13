@@ -4,10 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import "leaflet/dist/leaflet.css"
 
 import type { RedPorEstado } from "@/lib/foro/red"
+import type { PorUnirse } from "@/lib/hetna/directorio"
 import type { Taller } from "@/lib/hetna/talleres"
 
 // Mapa de la red CNC por estado, con un ícono por tipo (talleres verificados,
-// fundadores y de la comunidad, proveedores y profesionales). El mapa SOLO
+// fundadores y de la comunidad, proveedores, profesionales y empresas del
+// directorio que aún no se unen: perfiles no reclamados). El mapa SOLO
 // muestra cuántos hay por estado y municipio: nunca la ubicación exacta.
 const CENTROS: Record<string, [number, number]> = {
   "Aguascalientes": [21.88, -102.29], "Baja California": [30.84, -115.28], "Baja California Sur": [26.04, -111.67],
@@ -36,7 +38,7 @@ const esc = (s: string) =>
 // Tipos del mapa: color e ícono (trazos de 24×24, en blanco sobre el color)
 // ---------------------------------------------------------------------
 
-type Tipo = "verificado" | "fundador" | "comunidad" | "proveedor" | "profesional"
+type Tipo = "verificado" | "fundador" | "comunidad" | "proveedor" | "profesional" | "por_unirse"
 
 const TIPOS: { id: Tipo; nombre: string; uno: string; varios: string; color: string; icono: string }[] = [
   {
@@ -79,6 +81,15 @@ const TIPOS: { id: Tipo; nombre: string; uno: string; varios: string; color: str
     color: "#6C3FC4",
     icono: '<path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5v4c1.5 1.5 3.5 2.3 5.5 2.3s4-.8 5.5-2.3v-4"/><path d="M21.5 9.5v5"/>',
   },
+  {
+    // Directorio: empresas CNC con datos públicos que todavía no tienen cuenta
+    id: "por_unirse",
+    nombre: "Empresas por unirse",
+    uno: "empresa por unirse",
+    varios: "empresas por unirse",
+    color: "#7A7F87",
+    icono: '<circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.5"/><path d="M12 8v8M8 12h8"/>',
+  },
 ]
 
 const svgIcono = (t: (typeof TIPOS)[number], tam: number) =>
@@ -116,12 +127,15 @@ export const agruparPorEstado = (talleres: Taller[]): Grupo[] => [...agrupar(tal
 export default function MapaTalleres({
   talleres,
   red = {},
+  porUnirse = {},
   locale = "mx",
   altura = 520,
   onEstado,
 }: {
   talleres: Taller[]
   red?: RedPorEstado
+  /** Empresas del directorio (perfiles no reclamados) por estado */
+  porUnirse?: PorUnirse
   locale?: string
   altura?: number
   /** Al elegir "Ver talleres" en un globo, filtra la lista por ese estado. */
@@ -138,6 +152,11 @@ export default function MapaTalleres({
       comunidad: agrupar(talleres.filter((t) => tipoDeTaller(t) === "comunidad")),
       proveedor: new Map(),
       profesional: new Map(),
+      por_unirse: new Map(),
+    }
+    for (const [e, g] of Object.entries(porUnirse)) {
+      const estado = estadoValido(e)
+      if (estado && g.total) porTipo.por_unirse.set(estado, { estado, total: g.total, municipios: g.municipios })
     }
     for (const [e, n] of Object.entries(red)) {
       const estado = estadoValido(e)
@@ -149,7 +168,7 @@ export default function MapaTalleres({
       }
     }
     return porTipo
-  }, [talleres, red])
+  }, [talleres, red, porUnirse])
 
   const totales = useMemo(
     () => Object.fromEntries(TIPOS.map((t) => [t.id, [...datos[t.id].values()].reduce((a, g) => a + g.total, 0)])) as Record<Tipo, number>,
@@ -226,6 +245,13 @@ export default function MapaTalleres({
                   .map(([mun, n]) => `${esc(mun)} (${n})`)
                   .join(" · ")}</div>`
               : "")
+          if (t.id === "por_unirse") {
+            const liga = document.createElement("a")
+            liga.href = `/${locale}/talleres/directorio?estado=${encodeURIComponent(estado)}`
+            liga.textContent = "Ver directorio (perfiles no reclamados) →"
+            liga.setAttribute("style", "display:block;margin:2px 0 0 26px;font-size:12.5px;font-weight:600;color:#C2560A")
+            fila.appendChild(liga)
+          }
           if (t.id === "proveedor" || t.id === "profesional") {
             const liga = document.createElement("a")
             liga.href = `/${locale}/foro-cnc/profesionales?estado=${encodeURIComponent(estado)}${t.id === "proveedor" ? "&tipo=proveedor" : ""}`
@@ -360,6 +386,9 @@ export default function MapaTalleres({
       )}
       <p className="mt-2 text-xs text-[#6B675C]">
         El mapa muestra cuántos hay por estado y municipio, nunca la dirección. La cotización y el contacto se hacen dentro de HETNA.
+        {totales.por_unirse > 0 && (
+          <> «Empresas por unirse» son negocios CNC con datos públicos que todavía no tienen cuenta en HETNA.</>
+        )}
       </p>
     </div>
   )

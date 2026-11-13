@@ -139,3 +139,24 @@ momento: `POST https://n8n.hetnacnc.com/webhook/hetna-prospectos-resumen`.
 Las empresas con estatus `SIN_EMAIL` (sólo teléfono) están en la hoja de Google
 «HETNA · Lista de llamadas (prospectos sin correo)», ordenadas por país y estado,
 con un guion corto por tipo de empresa y columnas para anotar el resultado.
+
+## Directorio de talleres (perfiles no reclamados)
+
+Las empresas de la hoja aparecen en la tienda como **perfiles no reclamados**:
+en el mapa de `/talleres` («Empresas por unirse», sólo números por estado), en
+`/talleres/directorio` y cada una en `/talleres/directorio/<dominio-con-guiones>`.
+Sólo se publican datos de empresa (nombre, tipo, ciudad, servicios); nunca correo
+ni teléfono. Por ahora sólo México.
+
+Flujo de n8n «HETNA - Directorio de talleres (perfiles no reclamados)»
+(`https://n8n.hetnacnc.com/workflow/ycE6PPtdz25dc3HB`, código en `n8n/directorio/`):
+
+| Webhook | Qué hace |
+|---|---|
+| `GET hetna-directorio` | Lista pública que lee la tienda (caché de 1 h). Fuera: `BAJA`, `REGISTRADO`, compradores, filas con «Descartado» en notas y las que tengan `NO` en la columna **publicar** (agrégala a la hoja si quieres ocultar alguna a mano). |
+| `POST hetna-directorio-interes` | Un cliente pidió cotización desde un perfil. La solicitud va **abierta** a los talleres registrados (el cliente nunca se queda sin respuesta) y a la empresa le llega «Solicitud de cotización en tu zona» con qué y dónde, **sin datos del cliente**, invitándola a reclamar su perfil. Máximo 1 aviso por empresa cada 7 días y 25 al día. Si no tiene correo, te llega por Telegram para que le llames. Queda anotado en `notas`. |
+| `POST hetna-directorio-quitar` | Botón «Quitar este perfil»: manda a la empresa su enlace de baja para que lo confirme ella misma (nadie puede quitar el perfil de otro). |
+
+Al registrarse, el aviso de registro marca la fila `REGISTRADO` y el perfil no
+reclamado desaparece: queda sólo su perfil real de HETNA.
+Para recrear el flujo: `python3 n8n/directorio/generar_flujo.py` → `n8n/directorio/flujo.sdk.js`.

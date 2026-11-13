@@ -3,3 +3,4 @@ __pycache__/
 n8n/flujo.sdk.js
 .venv/
 .env
+n8n/directorio/flujo.sdk.js
