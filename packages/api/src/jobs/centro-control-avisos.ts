@@ -14,6 +14,11 @@
 // activados, se espera al informe del día siguiente. Para volver a recibir las
 // alertas por correo: CONTROL_URGENTES_CORREO=on.
 //
+// TELEGRAM: si el chat del dueño ya está vinculado (Panel → Social Hub →
+// Telegram, el mismo bot de n8n), cada aviso urgente nuevo llega también ahí,
+// a cualquier hora de revisión (saldos por acabarse, servicios por vencer,
+// Supabase en bucle…). Para apagarlo: CONTROL_TELEGRAM=off.
+//
 // A quién: CONTROL_AVISOS_PARA (o RESUMEN_DIARIO_PARA, o la cuenta de la casa).
 // Se puede poner más de un correo separado por comas (por ejemplo, el tuyo y el
 // de tu esposa). Para apagarlo: CONTROL_AVISOS=off.
@@ -24,6 +29,7 @@ import { ADMIN, calcularCentroControl, correoCentroControl } from "../lib/centro
 import { correosDeLaCasa } from "../lib/cuentas-casa"
 import { pushACliente } from "../lib/push"
 import { sendEmail } from "../lib/resend"
+import { mandarPrivado } from "../lib/social-telegram"
 import { calcularResumenDiario } from "../lib/resumen-diario"
 
 const pesos = (n) => Number(n || 0).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 })
@@ -118,6 +124,24 @@ ${nuevos
   .join("")}
 <p><a href="${ADMIN}/control" style="background:#C2560A;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700">Abrir el centro de control</a></p></div>`
       for (const to of para) await sendEmail({ to, subject: `⚠ HETNA: ${nuevos[0].titulo}${nuevos.length > 1 ? ` y ${nuevos.length - 1} más` : ""}`, html })
+    }
+
+    // Telegram (además del correo o del aviso al celular)
+    if (nuevos.length && (process.env.CONTROL_TELEGRAM || "").toLowerCase() !== "off") {
+      const texto =
+        `⚠ HETNA: ${nuevos.length === 1 ? "1 aviso urgente" : `${nuevos.length} avisos urgentes`}\n\n` +
+        nuevos
+          .slice(0, 6)
+          .map((a) => `• ${a.titulo}${a.detalle ? `\n  ${String(a.detalle).slice(0, 220)}` : ""}${a.url ? `\n  ${a.url}` : ""}`)
+          .join("\n\n") +
+        (nuevos.length > 6 ? `\n\n…y ${nuevos.length - 6} más.` : "") +
+        `\n\nCentro de control: ${ADMIN}/control`
+      try {
+        const r = await mandarPrivado(knex, { texto })
+        if (!r?.ok && r?.error) logger.info(`[centro-control] Telegram: ${r.error}`)
+      } catch (e) {
+        logger.warn(`[centro-control] Telegram: ${e?.message || e}`)
+      }
     }
 
     if (nuevos.length) await knex(T).insert(nuevos.map((a) => ({ clave: clave(a) }))).onConflict("clave").ignore()

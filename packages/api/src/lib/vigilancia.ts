@@ -24,6 +24,9 @@
 //                                                      GOOGLE_ADS_SALDO_MINIMO=200
 //   CLOUDFLARE_API_TOKEN  CLOUDFLARE_ACCOUNT_ID        R2_LIMITE_GB=10
 //   COTIZADOR_SUPABASE_URL/_SERVICE_KEY  (ya existen)  SUPABASE_LIMITE_BD_MB=500  SUPABASE_LIMITE_ARCHIVOS_MB=1024
+//                                        SUPABASE_CONSULTAS_HORA_AMBAR=3000  SUPABASE_CONSULTAS_HORA_ROJO=10000
+//                                        (consultas por hora: detecta un proceso en bucle, como el del
+//                                         corte de comisiones de nov 2026 que gastó 7 GB de transferencia)
 //   HOSTINGER_API_TOKEN
 //   VIGILAR_DOMINIOS=hetnacnc.com        VIGILAR_SSL=hetnacnc.com
 //   VENCIMIENTOS="Google Workspace=2027-01-10;Otro servicio=2027-05-01"
@@ -456,6 +459,100 @@ function supabaseApp() {
 //   revoke all on function public.hetna_uso() from public, anon, authenticated;
 //   grant execute on function public.hetna_uso() to service_role;
 
+// ---- Consultas por hora a Supabase (detector de bucles) ---------------------------
+// Supabase cobra / restringe por transferencia y por registros, y ambos crecen
+// con cada consulta. Con pocos talleres lo normal son cientos por hora; si un
+// job o una pantalla se queda en bucle se vuelven decenas de miles. Se toma el
+// total de pg_stat_statements en cada revisión y se compara con la anterior
+// (guardada en la base de la tienda, para que sobreviva a los despliegues).
+const T_MUESTRA = "hetna_vigilancia_muestra"
+
+async function muestraAnterior(knex, clave: string, valor: number) {
+  if (!(await knex.schema.hasTable(T_MUESTRA))) {
+    await knex.schema.createTable(T_MUESTRA, (t) => {
+      t.text("clave").primary()
+      t.decimal("valor", 20, 2).notNullable()
+      t.timestamp("tomada", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+    })
+  }
+  const prev = await knex(T_MUESTRA).where({ clave }).first()
+  await knex(T_MUESTRA)
+    .insert({ clave, valor, tomada: new Date() })
+    .onConflict("clave")
+    .merge()
+  return prev ? { valor: Number(prev.valor), tomada: new Date(prev.tomada) } : null
+}
+
+/** '…FROM "public"."cotizacion_pagos"…' -> 'cotizacion_pagos' */
+function tablaDeConsulta(q: string) {
+  const m = String(q || "").match(/(?:from|into|update)\s+"?public"?\."?([a-z0-9_]+)"?/i)
+  return m ? m[1] : null
+}
+
+function supabaseConsultas(container) {
+  const url = env("COTIZADOR_SUPABASE_URL").replace(/\/$/, "")
+  const llave = env("COTIZADOR_SUPABASE_SERVICE_KEY")
+  return revisar(
+    { id: "supabase_consultas", nombre: "Supabase: consultas por hora", grupo: "uso", url: "https://supabase.com/dashboard/org/_/usage" },
+    url && llave ? null : "COTIZADOR_SUPABASE_URL y COTIZADOR_SUPABASE_SERVICE_KEY",
+    async () => {
+      let d
+      try {
+        d = await pedir(`${url}/rest/v1/rpc/hetna_consultas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: llave, authorization: `Bearer ${llave}` },
+          body: "{}",
+        })
+      } catch (e) {
+        if (e?.status === 404) throw new Error("falta crear la función hetna_consultas en Supabase (ver SQL en lib/vigilancia.ts)")
+        throw e
+      }
+      const total = Number(d?.total) || 0
+      const top = Array.isArray(d?.top) ? d.top : []
+      const knex = container.resolve("__pg_connection__")
+      const prev = await muestraAnterior(knex, "supabase_consultas", total)
+      const horas = prev ? (Date.now() - prev.tomada.getTime()) / 3_600_000 : 0
+      // Sin muestra anterior, contador reiniciado o muestras muy juntas: todavía no hay ritmo
+      if (!prev || total < prev.valor || horas < 0.05) {
+        return { estado: "ok", valor: "midiendo…", detalle: `Primera medición: ${miles(total)} consultas acumuladas. El ritmo sale en la siguiente revisión.` }
+      }
+      const porHora = (total - prev.valor) / horas
+      const ambar = num("SUPABASE_CONSULTAS_HORA_AMBAR", 3000)
+      const rojo = num("SUPABASE_CONSULTAS_HORA_ROJO", 10000)
+      const estado: EstadoServicio = porHora >= rojo ? "rojo" : porHora >= ambar ? "ambar" : "ok"
+      const quien = top
+        .slice(0, 3)
+        .map((t) => `${tablaDeConsulta(t.consulta) || "otra"} (${miles(t.veces)})`)
+        .join(", ")
+      return {
+        estado,
+        valor: `${miles(porHora)} por hora`,
+        detalle: `Últimas ${horas < 1 ? `${Math.round(horas * 60)} min` : `${horas.toFixed(1)} h`} · normal: menos de ${miles(ambar)}/h${quien ? ` · más repetidas: ${quien}` : ""}`,
+        alerta:
+          estado === "ok"
+            ? undefined
+            : `Supabase de la app recibe ${miles(porHora)} consultas por hora${quien ? ` (sobre todo ${quien.split(",")[0]})` : ""}. Puede ser algo en bucle: gasta la transferencia del plan y la app puede quedar restringida.`,
+      }
+    }
+  )
+}
+// SQL para pegar una vez en Supabase (SQL Editor) del proyecto de la app:
+//
+//   create or replace function public.hetna_consultas() returns json
+//   language sql security definer set search_path = public, extensions as $$
+//     select json_build_object(
+//       -- cada petición a la API de Supabase empieza con un "select set_config(...)"
+//       'total', coalesce((select sum(calls) from extensions.pg_stat_statements
+//                          where query ilike 'select set_config(%'), 0),
+//       'top', coalesce((select json_agg(x) from (
+//           select calls as veces, left(query, 300) as consulta
+//           from extensions.pg_stat_statements
+//           where query ilike '%pgrst_source%'
+//           order by calls desc limit 5) x), '[]'::json))
+//   $$;
+//   revoke all on function public.hetna_consultas() from public, anon, authenticated;
+//   grant execute on function public.hetna_consultas() to service_role;
+
 // ---- Vencimientos -----------------------------------------------------------------
 
 function itemVence(id: string, nombre: string, fecha: string | number | Date, extra: Partial<Servicio> = {}, renovacionAuto = false): Servicio {
@@ -582,6 +679,7 @@ export async function vigilarServicios(container, { fresco = false }: { fresco?:
     servidor(container),
     r2(),
     supabaseApp(),
+    supabaseConsultas(container),
     dominios(),
     ssl(),
     hostinger(),
