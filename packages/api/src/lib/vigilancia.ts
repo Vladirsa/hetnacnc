@@ -29,7 +29,7 @@
 //                                         corte de comisiones de nov 2026 que gastó 7 GB de transferencia)
 //   HOSTINGER_API_TOKEN
 //   VIGILAR_DOMINIOS=hetnacnc.com        VIGILAR_SSL=hetnacnc.com
-//   VENCIMIENTOS="Google Workspace=2027-01-10;Otro servicio=2027-05-01"
+//   VENCIMIENTOS="Google Workspace=2027-01-10;Hostinger VPS=mensual:23"  (fecha fija o cobro mensual)
 //   VIGILANCIA_DIAS_AVISO=15  VIGILANCIA_PCT_AMBAR=80  VIGILANCIA_PCT_ROJO=90
 import { statfs } from "fs/promises"
 import tls from "tls"
@@ -412,11 +412,11 @@ function r2() {
 }
 
 function supabaseApp() {
-  const url = env("COTIZADOR_SUPABASE_URL").replace(/\/$/, "")
+  const url = (env("COTIZADOR_SUPABASE_URL") || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
   const llave = env("COTIZADOR_SUPABASE_SERVICE_KEY")
   return revisar(
     { id: "supabase", nombre: "Supabase (app del taller)", grupo: "uso", url: "https://supabase.com/dashboard/org/_/usage" },
-    url && llave ? null : "COTIZADOR_SUPABASE_URL y COTIZADOR_SUPABASE_SERVICE_KEY",
+    llave ? null : "COTIZADOR_SUPABASE_SERVICE_KEY",
     async () => {
       let d
       try {
@@ -490,11 +490,11 @@ function tablaDeConsulta(q: string) {
 }
 
 function supabaseConsultas(container) {
-  const url = env("COTIZADOR_SUPABASE_URL").replace(/\/$/, "")
+  const url = (env("COTIZADOR_SUPABASE_URL") || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
   const llave = env("COTIZADOR_SUPABASE_SERVICE_KEY")
   return revisar(
     { id: "supabase_consultas", nombre: "Supabase: consultas por hora", grupo: "uso", url: "https://supabase.com/dashboard/org/_/usage" },
-    url && llave ? null : "COTIZADOR_SUPABASE_URL y COTIZADOR_SUPABASE_SERVICE_KEY",
+    llave ? null : "COTIZADOR_SUPABASE_SERVICE_KEY",
     async () => {
       let d
       try {
@@ -656,9 +656,19 @@ function manuales(): Servicio[] {
     .filter(Boolean)
     .map((p, i) => {
       const [nombre, fecha] = p.split("=").map((s) => s.trim())
+      // Pago mensual: "Hostinger VPS=mensual:23" → avisa antes del próximo día 23
+      const mes = String(fecha || "").match(/^(?:mensual|cada\s*mes)\s*:?\s*(\d{1,2})$/i)
+      if (nombre && mes) {
+        const dia = Math.min(28, Math.max(1, Number(mes[1])))
+        const hoy = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" }))
+        let prox = new Date(hoy.getFullYear(), hoy.getMonth(), dia, 12)
+        if (prox.getTime() < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime()) prox = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia, 12)
+        const iso = `${prox.getFullYear()}-${String(prox.getMonth() + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}T12:00:00-06:00`
+        return itemVence(`manual_${i}`, nombre, iso, { detalle: `${fechaCorta(iso)} · se cobra cada mes el día ${dia}` }, true)
+      }
       const t = Date.parse(fecha || "")
       if (!nombre || Number.isNaN(t)) {
-        return { id: `manual_${i}`, nombre: nombre || p, grupo: "vence" as const, estado: "error" as const, detalle: "Fecha inválida en VENCIMIENTOS (usa Nombre=AAAA-MM-DD)" }
+        return { id: `manual_${i}`, nombre: nombre || p, grupo: "vence" as const, estado: "error" as const, detalle: "Fecha inválida en VENCIMIENTOS (usa Nombre=AAAA-MM-DD o Nombre=mensual:DÍA)" }
       }
       return itemVence(`manual_${i}`, nombre, `${fecha}T12:00:00-06:00`)
     })
