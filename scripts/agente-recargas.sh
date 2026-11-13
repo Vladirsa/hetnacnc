@@ -14,8 +14,11 @@ if [ ! -f "$ENV_API" ]; then
   echo "No encontré el .env de la API ($ENV_API)."
   exit 1
 fi
+# Medusa también lee .env.production y .env.local (loadEnv): se revisan todos
+ENVS=()
+for f in "$ENV_API" "${ENV_API}.production" "${ENV_API}.local"; do [ -f "$f" ] && ENVS+=("$f"); done
 
-tiene() { grep -Eq "^[[:space:]]*(export[[:space:]]+)?$1=[^[:space:]#]" "$ENV_API"; }
+tiene() { grep -Eqs "^[[:space:]]*(export[[:space:]]+)?$1=[^[:space:]#]" "${ENVS[@]}"; }
 
 revisar() {
   # revisar "Nombre del servicio" VAR1 VAR2 ...
@@ -30,6 +33,7 @@ revisar() {
 }
 
 echo "Agente de recargas y vencimientos — $(date '+%d %b %Y %H:%M')"
+echo "(revisando: ${ENVS[*]})"
 echo
 echo "Saldos"
 revisar "RunPod (escaneo 3D)"            RUNPOD_API_KEY
@@ -40,7 +44,7 @@ echo "Uso"
 revisar "Resend (correos)"               RESEND_API_KEY
 echo   "  ✅ Disco del servidor                siempre (no necesita llave)"
 revisar "Cloudflare R2 (archivos)"       CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
-revisar "Supabase de la app"             COTIZADOR_SUPABASE_URL COTIZADOR_SUPABASE_SERVICE_KEY
+revisar "Supabase de la app"             COTIZADOR_SUPABASE_SERVICE_KEY
 echo
 echo "Vencimientos"
 echo   "  ✅ Dominio y certificado SSL         siempre (hetnacnc.com)"
@@ -51,7 +55,7 @@ echo "Avisos"
 revisar "Correo de la mañana"            RESEND_API_KEY
 tiene CONTROL_AVISOS_PARA && echo "  ✅ Destinatarios propios (CONTROL_AVISOS_PARA)" \
   || echo "  ·  Destinatarios: la cuenta de la casa (CONTROL_AVISOS_PARA no está puesto)"
-grep -Eq "^CONTROL_AVISOS=off" "$ENV_API" && echo "  ⚠ CONTROL_AVISOS=off: los avisos están APAGADOS"
+grep -Eqs "^CONTROL_AVISOS=off" "${ENVS[@]}" && echo "  ⚠ CONTROL_AVISOS=off: los avisos están APAGADOS"
 echo
 echo "Telegram: se vincula en el panel (Social Hub → Telegram). Supabase: pegar el SQL"
 echo "de hetna_uso y hetna_consultas (ver la guía) para el espacio y el detector de bucles."
