@@ -31,6 +31,8 @@ type Solicitud = {
 }
 type Detalle = {
   archivos: { nombre: string; tamano: number; url: string | null }[]
+  archivos_borrados_en?: string | null
+  accesos?: { fecha: string; archivo: string; quien: string; actor: string; accion: string; ip: string | null }[]
   eventos: { fecha: string; etapa: string | null; etapa_nombre: string | null; actor: string; nota: string | null; visible_cliente: boolean }[]
   propuestas: { id: string; precio: number; dias: number; incluye_envio: string; condiciones: string; estado: string; taller: string; taller_email: string }[]
 }
@@ -264,9 +266,23 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
             <>
               {det.archivos.length > 0 && (
                 <div style={{ marginBottom: 12, fontSize: 13 }}>
-                  <strong>Archivos</strong> <span style={{ color: C.tenue }}>(ligas de 1 hora)</span>
+                  <strong>Archivos</strong> <span style={{ color: C.tenue }}>(ligas de 1 hora; tu descarga queda registrada y el cliente la ve)</span>
                   {det.archivos.map((a, i) => (
                     <div key={i}>{a.url ? <a href={a.url} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>⬇ {a.nombre}</a> : `${a.nombre} (no disponible)`}</div>
+                  ))}
+                </div>
+              )}
+              {det.archivos_borrados_en && (
+                <p style={{ margin: "0 0 12px", fontSize: 13, color: C.tenue }}>Archivos borrados el {fecha(det.archivos_borrados_en)}.</p>
+              )}
+              {(det.accesos || []).length > 0 && (
+                <div style={{ marginBottom: 12, fontSize: 13 }}>
+                  <strong>Quién bajó los archivos</strong>
+                  {(det.accesos || []).slice(0, 30).map((x, i) => (
+                    <div key={i} style={{ color: x.accion === "negada" ? C.rojo : C.texto }}>
+                      {fecha(x.fecha)} · {x.quien} · {x.accion === "vista" ? "vio" : x.accion === "negada" ? "intentó bajar (sin permiso)" : "descargó"} {x.archivo}
+                      {x.ip ? <span style={{ color: C.tenue }}> · IP {x.ip}</span> : null}
+                    </div>
                   ))}
                 </div>
               )}

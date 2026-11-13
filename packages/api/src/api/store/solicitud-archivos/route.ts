@@ -2,7 +2,11 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { randomBytes } from "crypto"
 
 import { listaDeArchivos } from "../../cam-multipart"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+
 import { uploadFile } from "../../../lib/backblaze"
+import { T_SUBIDA, asegurarSubidas, revisarArchivo } from "../../../lib/archivo-seguro"
+import { ipCliente } from "../../../lib/ip-cliente"
 import { EXT_ARCHIVO_SOLICITUD, MAX_MB_ARCHIVO_SOLICITUD } from "../../../lib/licitacion"
 
 // POST /store/solicitud-archivos  (multipart, campo "archivo")
@@ -11,6 +15,11 @@ import { EXT_ARCHIVO_SOLICITUD, MAX_MB_ARCHIVO_SOLICITUD } from "../../../lib/li
 // PRIVADO de B2 y devuelve la clave. El formulario manda esas claves junto
 // con la solicitud; los talleres las ven con una liga firmada desde su panel.
 // El archivo nunca queda en una URL pública.
+//
+// Antes de guardarlo se revisa el contenido real, los ZIP y, si está instalado,
+// el antivirus (lib/archivo-seguro). Es el ÚNICO camino de subida: el boleto
+// de subida directa a B2 se quitó porque su token servía para escribir
+// cualquier archivo del bucket.
 
 const nombreSeguro = (nombre: string) =>
   nombre
@@ -47,11 +56,24 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const nombre = nombreSeguro(archivo.originalname)
   const clave = `${carpeta}/${mes}/${randomBytes(12).toString("hex")}/${nombre}`
 
-  const r = await uploadFile(archivo.buffer, clave, archivo.mimetype || "b2/x-auto")
+  const revision = await revisarArchivo(archivo.buffer, archivo.originalname)
+  if (!revision.ok) {
+    logger.warn(`[solicitud-archivos] rechazado ${nombre} (${ipCliente(req)}): ${revision.motivo}`)
+    return res.status(400).json({ message: `No aceptamos "${archivo.originalname.slice(0, 80)}": ${revision.motivo}.` })
+  }
+
+  // b2/x-auto: B2 deduce el tipo; nunca se confía en el que manda el navegador.
+  const r = await uploadFile(archivo.buffer, clave, "b2/x-auto")
   if (!r.ok) {
     logger.error(`[solicitud-archivos] no se pudo subir ${clave}: ${r.reason}`)
     return res.status(503).json({ message: "No pudimos guardar tu archivo. Intenta de nuevo en un momento." })
   }
+
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+  await asegurarSubidas(knex)
+  await knex(T_SUBIDA)
+    .insert({ clave, carpeta, nombre: archivo.originalname.slice(0, 200), tamano: archivo.size, sha256: revision.sha256, tipo: revision.tipo, antivirus: revision.antivirus, ip: ipCliente(req) })
+    .catch((e: Error) => logger.error(`[solicitud-archivos] no se registró ${clave}: ${e.message}`))
 
   return res.status(201).json({
     clave,

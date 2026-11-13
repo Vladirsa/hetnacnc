@@ -9,6 +9,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { uploadFile } from "../../../../../lib/backblaze"
+import { revisarArchivo } from "../../../../../lib/archivo-seguro"
 import { T_PROPUESTA, asegurarTablas } from "../../../../../lib/licitacion"
 import { type AdjuntoPropuesta, MAX_ADJUNTOS_PROPUESTA, asegurarPropuestaFormal } from "../../../../../lib/licitacion-propuesta"
 import type { ArchivoSubido } from "../../../../cam-multipart"
@@ -35,6 +36,10 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   if (!archivo?.buffer?.length) return res.status(400).json({ message: "Elige un archivo." })
   const nombre = String((archivo as any).originalname || (archivo as any).nombre || "archivo").replace(/[^\w.\- ()áéíóúñÁÉÍÓÚÑ]/g, "_").slice(0, 120)
   if (!EXT_OK.test(nombre)) return res.status(400).json({ message: "Sube un PDF, plano (DXF, DWG, STEP, STL, SVG), imagen, Excel o Word." })
+
+  // Misma revisión que los archivos de los clientes (lib/archivo-seguro).
+  const revision = await revisarArchivo(archivo.buffer, nombre)
+  if (!revision.ok) return res.status(400).json({ message: `No aceptamos "${nombre}": ${revision.motivo}.` })
 
   const clave = `propuestas/${String(req.params.id)}/${sellerId}/${randomBytes(8).toString("hex")}-${nombre.replace(/\s+/g, "_")}`
   const subida = await uploadFile(archivo.buffer, clave)

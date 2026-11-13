@@ -3,6 +3,8 @@
 // "https://" (una vista previa "blob:", por ejemplo).
 import {
   DIAS_CIERRE_AUTOMATICO,
+  DIAS_CONSERVACION_ARCHIVOS,
+  MINUTOS_LIGA_ARCHIVO,
   DIAS_HABILES_DECISION_DISPUTA,
   DIAS_RETRASO_CANCELACION,
   DIAS_SOLICITUD_ABIERTA,
@@ -124,7 +126,11 @@ const CALCULADORAS = [
 export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   {
     p: "¿Qué archivos aceptan?",
-    r: `Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta ${MAX_ARCHIVOS} archivos de hasta ${MAX_MB_ARCHIVO} MB cada uno, y se guardan privados: sólo los ven los talleres que cotizan tu trabajo.`,
+    r: `Para corte y grabado: DXF, DWG, SVG, AI, EPS, PDF o CDR. Para impresión 3D y maquinado: STL, STEP, IGES, 3MF u OBJ. También fotos, bocetos y ZIP. Puedes subir hasta ${MAX_ARCHIVOS} archivos de hasta ${MAX_MB_ARCHIVO} MB cada uno, y se guardan en un almacenamiento privado (ve "¿Cómo protegen mis planos?").`,
+  },
+  {
+    p: "¿Cómo protegen mis planos?",
+    r: `Antes de guardar cada archivo rechazamos programas y scripts disfrazados de plano, páginas web, SVG con código y ZIP que traen programas o tienen contraseña. Tú eliges quién puede descargarlos (cualquier taller que cotiza, sólo los que autorices o sólo el que elijas) y, en cuanto eliges una propuesta, sólo el taller elegido conserva el acceso. Cada liga dura ${MINUTOS_LIGA_ARCHIVO} minutos, cada descarga queda registrada y en tu solicitud ves quién descargó qué. Los archivos se borran ${DIAS_CONSERVACION_ARCHIVOS} días después de que la solicitud se cierra, o antes si tú los borras.`,
   },
   {
     p: "¿Puedo pedir solo una pieza?",

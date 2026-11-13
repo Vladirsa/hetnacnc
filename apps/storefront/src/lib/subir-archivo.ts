@@ -1,11 +1,9 @@
 // Subida de un archivo al bucket privado, desde el navegador, con avance.
 //
-// Primero intenta la subida DIRECTA a Backblaze: pide un boleto a
-// /store/solicitud-archivos/boleto (vía /api/solicitud-archivo/boleto) y
-// manda los bytes a B2 sin pasar por nuestros servidores. Si el boleto o B2
-// fallan (por ejemplo, faltan las reglas CORS del bucket), se sube por el
-// servidor (/api/solicitud-archivo). Los dos caminos admiten lo mismo:
-// MAX_MB_ARCHIVO (lib/fabricacion/opciones.ts).
+// Siempre por el servidor (/api/solicitud-archivo → POST /store/solicitud-archivos),
+// que revisa el contenido real, los ZIP y el antivirus antes de guardarlo. La
+// subida directa a Backblaze se quitó: el token que usaba servía para escribir
+// cualquier archivo del bucket y se saltaba esas revisiones.
 //
 // XHR y no fetch: fetch no informa el avance de una subida, y con un STEP de
 // 100 MB en datos móviles una barra quieta parece formulario trabado.
@@ -16,20 +14,6 @@ import { MAX_MB_ARCHIVO_SERVIDOR } from "@/lib/fabricacion/opciones"
 
 export type ArchivoGuardado = { clave: string; nombre: string; tamano: number }
 type Destino = "taller" | "envio" | undefined
-
-type Boleto = { url: string; token: string; nombre_b2: string; clave: string; nombre: string; tamano: number }
-
-// B2 exige el SHA-1 del archivo (o "do_not_verify"). Hasta 150 MB se
-// calcula aquí; más grande, se confía en TLS para no cargar todo en memoria.
-async function sha1(archivo: File): Promise<string> {
-  if (archivo.size > 150 * 1024 * 1024 || !globalThis.crypto?.subtle) return "do_not_verify"
-  try {
-    const h = await crypto.subtle.digest("SHA-1", await archivo.arrayBuffer())
-    return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("")
-  } catch {
-    return "do_not_verify"
-  }
-}
 
 function xhrSubir(
   abrir: (xhr: XMLHttpRequest) => void,
@@ -46,44 +30,9 @@ function xhrSubir(
   })
 }
 
-async function subirDirecto(archivo: File, alAvanzar: (n: number) => void, destino: Destino): Promise<ArchivoGuardado> {
-  const r = await fetch("/api/solicitud-archivo/boleto", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ nombre: archivo.name, tamano: archivo.size, destino }),
-  })
-  const b = (await r.json().catch(() => ({}))) as Partial<Boleto> & { message?: string }
-  if (!r.ok || !b.url || !b.token || !b.clave) {
-    // 400/413 son del archivo (tipo o tamaño): no tiene caso reintentar por el servidor
-    throw Object.assign(new Error(b.message || "No se pudo preparar la subida."), { definitivo: r.status === 400 || r.status === 413 })
-  }
-  const hash = await sha1(archivo)
-  const res = await xhrSubir(
-    (xhr) => {
-      xhr.open("POST", b.url!)
-      xhr.setRequestHeader("Authorization", b.token!)
-      xhr.setRequestHeader("X-Bz-File-Name", b.nombre_b2!)
-      xhr.setRequestHeader("Content-Type", archivo.type || "b2/x-auto")
-      xhr.setRequestHeader("X-Bz-Content-Sha1", hash)
-    },
-    archivo,
-    alAvanzar
-  )
-  if (res.status < 200 || res.status >= 300) {
-    let detalle = ""
-    try {
-      detalle = JSON.parse(res.texto)?.message || JSON.parse(res.texto)?.code || ""
-    } catch {}
-    throw new Error(`Backblaze respondió ${res.status || "sin conexión (¿CORS?)"}${detalle ? `: ${detalle}` : ""}`)
-  }
-  return { clave: b.clave, nombre: b.nombre || archivo.name, tamano: b.tamano || archivo.size }
-}
-
-async function subirPorServidor(archivo: File, alAvanzar: (n: number) => void, destino: Destino, motivo?: string): Promise<ArchivoGuardado> {
+export async function subirArchivo(archivo: File, alAvanzar: (n: number) => void, destino?: Destino): Promise<ArchivoGuardado> {
   if (archivo.size > MAX_MB_ARCHIVO_SERVIDOR * 1024 * 1024) {
-    throw new Error(
-      `No se pudo subir directo (${motivo || "sin detalle"}) y por el servidor el tope es ${MAX_MB_ARCHIVO_SERVIDOR} MB. Intenta de nuevo o comprímelo en ZIP.`
-    )
+    throw new Error(`El archivo pesa más de ${MAX_MB_ARCHIVO_SERVIDOR} MB. Comprímelo en ZIP o divídelo.`)
   }
   const fd = new FormData()
   if (destino) fd.append("destino", destino)
@@ -97,15 +46,4 @@ async function subirPorServidor(archivo: File, alAvanzar: (n: number) => void, d
     return { clave: cuerpo.clave, nombre: cuerpo.nombre || archivo.name, tamano: cuerpo.tamano || archivo.size }
   }
   throw new Error(cuerpo.message || "No se pudo subir.")
-}
-
-export async function subirArchivo(archivo: File, alAvanzar: (n: number) => void, destino?: Destino): Promise<ArchivoGuardado> {
-  try {
-    return await subirDirecto(archivo, alAvanzar, destino)
-  } catch (e) {
-    if ((e as { definitivo?: boolean }).definitivo) throw e
-    console.warn("[subir-archivo] directa falló, se intenta por el servidor:", (e as Error).message)
-    alAvanzar(0)
-    return subirPorServidor(archivo, alAvanzar, destino, (e as Error).message)
-  }
 }

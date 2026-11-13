@@ -219,6 +219,8 @@ export const avisoEs = (d: Datos): Seccion[] => [
             ["Mensajes de soporte y WhatsApp", "El tiempo necesario para atenderte y dar seguimiento, normalmente no más de 2 años"],
             ["Foro, reseñas y contenido publicado", "Mientras esté publicado; puedes borrarlo o pedirnos que lo borremos"],
             ["Datos de estadística (Google Analytics)", "Hasta 14 meses en Google Analytics; la cookie puede durar hasta 2 años en tu navegador y puedes borrarla cuando quieras"],
+            ["Planos, modelos y fotos de una solicitud de fabricación", "Hasta 180 días después de que la solicitud se cierra o se cancela; después se borran de forma definitiva. Puedes borrarlos antes desde la liga de tu solicitud, en cuanto se cierra o se cancela. Los que subiste pero no enviaste en una solicitud se borran a los 7 días"],
+            ["Registro de descargas de tus archivos (quién, cuándo, dirección IP)", "Mientras exista la solicitud; lo usamos para seguridad y para resolver reclamos sobre el uso de tus planos"],
             ["Respaldos cifrados del sistema", "Hasta 12 meses; después se eliminan automáticamente"],
           ],
         },
@@ -235,6 +237,8 @@ export const avisoEs = (d: Datos): Seccion[] => [
           "Las contraseñas se guardan cifradas; nadie en HETNA puede verlas.",
           "La base de datos y los servicios internos no son accesibles desde internet; el servidor tiene firewall.",
           "Los documentos de verificación se guardan en una carpeta privada sin dirección pública; solo pueden descargarlos, con sesión iniciada, el propio taller y administradores de HETNA.",
+          "Los planos, modelos y fotos de las solicitudes de fabricación se guardan en un almacenamiento privado sin dirección pública. Antes de guardarlos los revisamos: rechazamos programas y scripts disfrazados de archivo, páginas web, SVG con código y ZIP que traen programas o tienen contraseña, y en PDF, imágenes, STEP, DWG y comprimidos comprobamos que el formato coincida con la extensión.",
+          "Cada descarga de esos archivos pasa por HETNA: revisamos en ese momento que el taller tenga permiso (en cuanto eliges una propuesta, solo el taller elegido), la liga dura una hora y la descarga queda registrada con nombre, fecha y dirección IP. Tú ves en tu solicitud quién descargó tus archivos.",
           "Los respaldos se cifran antes de salir del servidor.",
           "Solo las personas que lo necesitan para su trabajo tienen acceso a los datos, con obligación de confidencialidad.",
         ],
@@ -524,6 +528,8 @@ export const avisoEn = (d: Datos): Seccion[] => [
             ["Support and WhatsApp messages", "As long as needed to help you and follow up, usually no more than 2 years"],
             ["Forum, reviews and published content", "While published; you can delete it or ask us to delete it"],
             ["Analytics data (Google Analytics)", "Up to 14 months in Google Analytics; the cookie may last up to 2 years in your browser and you can delete it at any time"],
+            ["Drawings, models and photos of a manufacturing request", "Up to 180 days after the request is closed or cancelled; then permanently deleted. You can delete them earlier from your request link once it is closed or cancelled. Files uploaded but never sent in a request are deleted after 7 days"],
+            ["Download log of your files (who, when, IP address)", "While the request exists; we use it for security and to resolve claims about the use of your drawings"],
             ["Encrypted system backups", "Up to 12 months; then deleted automatically"],
           ],
         },
@@ -540,6 +546,8 @@ export const avisoEn = (d: Datos): Seccion[] => [
           "Passwords are stored hashed; nobody at HETNA can see them.",
           "The database and internal services cannot be reached from the internet; the server has a firewall.",
           "Verification documents are stored in a private folder with no public URL; only the shop itself and HETNA administrators can download them, while signed in.",
+          "Drawings, models and photos of manufacturing requests are stored in private storage with no public URL. Before storing them we check them: we reject programs and scripts disguised as files, web pages, SVGs with code and ZIP files that contain programs or are password-protected, and for PDF, images, STEP, DWG and archives we confirm the format matches the extension.",
+          "Every download of those files goes through HETNA: we check at that moment that the shop has permission (once you choose a proposal, only the chosen shop), the link lasts one hour and the download is logged with name, date and IP address. You can see in your request who downloaded your files.",
           "Backups are encrypted before they leave the server.",
           "Only people who need it for their work can access data, under a duty of confidentiality.",
         ],
@@ -657,6 +665,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.5",
+    fecha: "2026-11-12",
+    cambio: "Archivos de solicitudes de fabricación: revisión del contenido al subir, descargas registradas (con IP) y visibles para el cliente, y borrado definitivo 180 días después del cierre.",
+    cambioEn: "Manufacturing request files: content check on upload, logged downloads (with IP) visible to the customer, and permanent deletion 180 days after closing.",
+  },
   {
     version: "2.4",
     fecha: "2026-11-03",

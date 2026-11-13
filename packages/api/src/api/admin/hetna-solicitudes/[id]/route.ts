@@ -1,10 +1,11 @@
 // GET /admin/hetna-solicitudes/:id
 // Detalle para el dashboard: historial completo (también las notas internas),
-// propuestas y ligas firmadas de 1 hora a los archivos del cliente.
+// propuestas, ligas de 1 hora a los archivos del cliente (registradas, ver
+// lib/archivo-acceso) y quién ha bajado cada archivo.
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { getSignedDownloadUrl } from "../../../../lib/backblaze"
+import { accesosDe, ligaArchivo } from "../../../../lib/archivo-acceso"
 import { T_PROPUESTA, T_SOLICITUD, folioTexto } from "../../../../lib/licitacion"
 import { NOMBRE_ETAPA, T_EVENTO, asegurarSeguimiento, type Etapa } from "../../../../lib/seguimiento"
 
@@ -23,15 +24,20 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       .select("p.id", "p.precio", "p.dias", "p.incluye_envio", "p.condiciones", "p.estado", "v.name as taller", "v.email as taller_email"),
   ])
 
+  const adminId = String((req as any).auth_context?.actor_id || "admin")
   const archivos: { nombre: string; tamano: number; url: string | null }[] = []
   for (const a of s.trabajo?.archivos || []) {
-    const r = await getSignedDownloadUrl(a.clave, 3600)
-    archivos.push({ nombre: a.nombre, tamano: a.tamano, url: r.ok ? r.url : null })
+    archivos.push({ nombre: a.nombre, tamano: a.tamano, url: ligaArchivo({ s: s.id, k: a.clave, a: "hetna", i: adminId }) })
   }
+  const accesos = await accesosDe(knex, s.id).catch(() => [])
 
   res.json({
     folio: folioTexto(s.folio),
     archivos,
+    archivos_borrados_en: s.trabajo?.archivos_borrados_en || null,
+    accesos: (accesos as any[]).map((x) => ({
+      fecha: x.created_at, archivo: x.nombre, quien: x.actor_nombre || x.actor, actor: x.actor, accion: x.accion, ip: x.ip,
+    })),
     eventos: (eventos as any[]).map((e) => ({
       fecha: e.created_at,
       etapa: e.etapa,

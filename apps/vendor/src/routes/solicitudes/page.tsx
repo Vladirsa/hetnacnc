@@ -176,7 +176,7 @@ function ArchivosCliente({ sol }) {
                 </a>
                 {/\.(dxf|svg|stl|obj)$/i.test(a.nombre) && (
                   <a
-                    href={`${SITIO}/mx/visor?u=${encodeURIComponent(a.url)}&n=${encodeURIComponent(a.nombre)}`}
+                    href={`${SITIO}/mx/visor?u=${encodeURIComponent(a.ver_url || a.url)}&n=${encodeURIComponent(a.nombre)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "#1a3a5c", fontWeight: 600, fontSize: 12 }}
@@ -192,7 +192,10 @@ function ArchivosCliente({ sol }) {
             )
           )}
           {ligas.some((a) => a.bloqueado) && <PedirAcceso sol={sol} />}
-          <span style={{ color: "#6B675C", fontSize: 12 }}>Las ligas duran una hora.</span>
+          <span style={{ color: "#6B675C", fontSize: 12 }}>
+            Las ligas duran una hora y cada descarga queda registrada (el cliente ve quién bajó sus archivos). Los planos son confidenciales:
+            úsalos sólo para cotizar y fabricar este trabajo.
+          </span>
         </div>
       )}
     </div>

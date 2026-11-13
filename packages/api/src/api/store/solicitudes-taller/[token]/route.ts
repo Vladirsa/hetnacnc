@@ -9,6 +9,8 @@ import { asegurarPropuestaFormal, compararPropuestas } from "../../../../lib/lic
 import { getSignedDownloadUrls } from "../../../../lib/backblaze"
 import { puntajePosicion } from "../../../../lib/confianza"
 import { evaluacionesDe } from "../../../../lib/trust"
+import { accesosDe } from "../../../../lib/archivo-acceso"
+import { DIAS_CONSERVACION, etapaTerminada } from "../../../../lib/conservacion-archivos"
 import { ETAPAS_REPORTABLES, NOMBRE_PROBLEMA, TipoProblema } from "../../../../lib/disputa"
 import {
   EXPLICA_ETAPA,
@@ -153,6 +155,12 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       .catch(() => []),
   ])
 
+  // Problema 4: quién bajó sus archivos (sin IP) y su conservación.
+  const descargas = ((await accesosDe(knex, s.id, 100).catch(() => [])) as any[])
+    .filter((x) => x.accion !== "negada")
+    .map((x) => ({ fecha: x.created_at, archivo: x.nombre, quien: x.actor === "hetna" ? "HETNA" : x.actor_nombre || "Taller", accion: x.accion }))
+  const nArchivos = (s.trabajo?.archivos || []).length
+
   const [cobro, preguntas, resena, evaluaciones] = await Promise.all([
     s.propuesta_elegida ? estadoCobro(knex, s).catch(() => null) : null,
     preguntasDe(knex, s.id).catch(() => []),
@@ -184,6 +192,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     // Con una disputa abierta no se confirma: primero HETNA resuelve.
     puede_confirmar: etapa === "entregada" && !s.disputa,
     puede_reportar: (ETAPAS_REPORTABLES as readonly string[]).includes(etapa) && !s.disputa,
+    archivos_protegidos: {
+      descargas,
+      borrados_en: s.trabajo?.archivos_borrados_en || null,
+      borrados: (s.trabajo?.archivos_borrados || []).map((a: any) => a.nombre),
+      puede_borrar: nArchivos > 0 && etapaTerminada(s) && !s.disputa,
+      dias_conservacion: DIAS_CONSERVACION,
+    },
     // true = el cliente le paga directo a la cuenta del taller: HETNA no retiene nada.
     cobro_directo: s.cobro === "taller",
     disputa: s.disputa

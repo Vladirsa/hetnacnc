@@ -16,7 +16,7 @@
 //
 // "Participante" = taller invitado, con acceso aprobado, que ya mandó
 // propuesta, o el taller al que va dirigida.
-import { T_PROPUESTA, T_SOLICITUD, ocultarContacto, type Trabajo } from "./licitacion"
+import { T_PROPUESTA, T_SOLICITUD, ocultarContacto, recibePropuestas, type Trabajo } from "./licitacion"
 
 export const T_INVITADO = "hetna_solicitud_invitado"
 export const T_ACCESO = "hetna_solicitud_acceso"
@@ -272,4 +272,14 @@ export async function invitarTalleres(knex: any, solicitudId: string, handles: u
     await knex(T_INVITADO).insert({ solicitud_id: solicitudId, seller_id: t.id }).onConflict(["solicitud_id", "seller_id"]).ignore()
   }
   return talleres
+}
+
+/** ¿Puede descargar AHORA? Igual que puedeDescargar, pero en cuanto el cliente
+ *  elige taller o la solicitud deja de recibir propuestas, sólo el elegido
+ *  conserva el acceso: los que cotizaron y no ganaron ya no bajan los planos.
+ *  Se revisa al dar la liga y otra vez al abrirla (lib/archivo-acceso). */
+export function puedeDescargarAhora(s: any, r: RelacionTaller, nombreArchivo: string): boolean {
+  if (r.elegido) return true
+  if (s.propuesta_elegida || !recibePropuestas(s)) return false
+  return tallerPuedeVer(s, r) && puedeDescargar(s, r, nombreArchivo)
 }
