@@ -412,11 +412,11 @@ function r2() {
 }
 
 function supabaseApp() {
-  const url = env("COTIZADOR_SUPABASE_URL").replace(/\/$/, "")
+  const url = (env("COTIZADOR_SUPABASE_URL") || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
   const llave = env("COTIZADOR_SUPABASE_SERVICE_KEY")
   return revisar(
     { id: "supabase", nombre: "Supabase (app del taller)", grupo: "uso", url: "https://supabase.com/dashboard/org/_/usage" },
-    url && llave ? null : "COTIZADOR_SUPABASE_URL y COTIZADOR_SUPABASE_SERVICE_KEY",
+    llave ? null : "COTIZADOR_SUPABASE_SERVICE_KEY",
     async () => {
       let d
       try {
@@ -490,11 +490,11 @@ function tablaDeConsulta(q: string) {
 }
 
 function supabaseConsultas(container) {
-  const url = env("COTIZADOR_SUPABASE_URL").replace(/\/$/, "")
+  const url = (env("COTIZADOR_SUPABASE_URL") || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
   const llave = env("COTIZADOR_SUPABASE_SERVICE_KEY")
   return revisar(
     { id: "supabase_consultas", nombre: "Supabase: consultas por hora", grupo: "uso", url: "https://supabase.com/dashboard/org/_/usage" },
-    url && llave ? null : "COTIZADOR_SUPABASE_URL y COTIZADOR_SUPABASE_SERVICE_KEY",
+    llave ? null : "COTIZADOR_SUPABASE_SERVICE_KEY",
     async () => {
       let d
       try {
