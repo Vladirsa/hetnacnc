@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titulo = "Talleres CNC que cotizan en línea"
   const descripcion = "Sube tu archivo DXF, SVG o STL y pide tu cotización de corte láser, router, plasma o impresión 3D directo a un taller."
   return {
-    title: `${titulo} | HETNA CNC`,
+    title: titulo,
     description: descripcion,
     alternates: { canonical: `https://hetnacnc.com/mx/t` },
     openGraph: { title: titulo, description: descripcion, images: [IMAGEN_OG] },
