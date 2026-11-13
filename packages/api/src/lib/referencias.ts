@@ -14,6 +14,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { nuevoId } from "./licitacion"
 import { T_CONFIG_S, asegurarSocial, iaSocial } from "./social-hub"
 import { ffmpegBin } from "./fabrica/video"
+import { modeloIA } from "./ia-modelo"
 
 export const T_REF = "hetna_marketing_referencia"
 let listo = false
@@ -95,11 +96,9 @@ export async function analizarReferencia(knex: any, id: string, logger?: any) {
     } else extra = `Es una liga (${r.url}); no puedes verla: analiza sólo con la descripción del dueño.`
     contenido.push({ type: "text", text: `Referencia que le gusta al dueño de HETNA CNC (marketplace de fabricación CNC: talleres, proveedores y clientes). ${extra}\nNota del dueño: ${r.nota || "(sin nota)"}\nAnaliza qué la hace buena y cómo replicar el FORMATO (no copiar el contenido ni la marca ajena).` })
     const resp = await cliente().beta.messages.create({
-      model: "claude-opus-5-5",
+      ...modeloIA(),
       max_tokens: 2000,
       output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system: "Eres director creativo de una agencia de marketing para la industria. Analizas piezas de redes sociales con mirada profesional y en español de México.",
       messages: [{ role: "user", content: contenido }],
     } as any)
@@ -155,11 +154,9 @@ export async function generarGuia(knex: any, logger?: any) {
   if (!iaSocial()) throw Object.assign(new Error("Falta la llave de IA (ANTHROPIC_API_KEY)."), { status: 400 })
   const resumen = refs.map((r: any, i: number) => `#${i + 1} (${r.tipo})${r.nota ? ` nota del dueño: ${r.nota}` : ""}\n${JSON.stringify(r.analisis)}`).join("\n\n")
   const resp = await cliente().beta.messages.create({
-    model: "claude-opus-5-5",
+    ...modeloIA(),
     max_tokens: 3000,
     output_config: { effort: "medium" },
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     system:
       "Eres el director creativo de HETNA CNC. Con los análisis de las referencias que le gustan al dueño, escribe la GUÍA DE ESTILO de HETNA para imágenes y videos: " +
       "formatos preferidos y cuándo usar cada uno, estructura de guion (gancho, problema, explicación, prueba, llamado), ritmo y duración de videos, estilo de ilustración, " +

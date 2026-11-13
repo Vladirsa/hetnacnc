@@ -24,6 +24,7 @@ import { STORE_URL, nuevoId } from "./licitacion"
 import { publicarThreads, threadsListo } from "./threads"
 import { borradorTikTok, tiktokConectado } from "./tiktok"
 import { sendEmail } from "./resend"
+import { modeloIA } from "./ia-modelo"
 
 export const T_POST = "hetna_social_post"
 export const T_LIGA = "hetna_social_liga"
@@ -267,7 +268,6 @@ export function adaptarSinIa(base: string, red: Red) {
 }
 
 let ia: Anthropic | null = null
-const MODELO = "claude-opus-5-5"
 export const iaSocial = () => !!process.env.ANTHROPIC_API_KEY && (process.env.SOCIAL_IA || "").toLowerCase() !== "off"
 
 /** Pide a Claude un texto por red. Devuelve null si no hay IA o falla. */
@@ -277,11 +277,9 @@ export async function adaptarConIa(base: string, redes: Red[], logger?: any, mer
     ia ??= new Anthropic()
     const guia = redes.map((r) => `- ${r}: máximo ${REDES[r].max} caracteres; estilo: ${REDES[r].estilo}`).join("\n")
     const resp = await ia.beta.messages.create({
-      model: MODELO,
+      ...modeloIA(),
       max_tokens: 4000,
       output_config: { effort: "low", format: { type: "json_schema", schema: { type: "object", properties: Object.fromEntries(redes.map((r) => [r, { type: "string" }])), required: redes, additionalProperties: false } } },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system:
         "Eres el community manager de HETNA CNC, marketplace mexicano de fabricación CNC (talleres, clientes industriales y proveedores). " +
         `Adapta la publicación a cada red para el mercado ${MERCADOS[mercado]?.nombre || "México"}: escribe en ${MERCADOS[mercado]?.nota || "español de México"}. Si el texto original está en otro idioma, tradúcelo y adáptalo (no traduzcas literal). Reglas: usa SOLO los datos del texto original; no inventes precios, capacidades, ` +

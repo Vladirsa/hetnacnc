@@ -25,6 +25,7 @@ import sharp from "sharp"
 import { carpetaFuentes, PRINCIPIOS_VIDEO } from "./render"
 import { temporadaDe } from "./calendario"
 import { ffmpegBin } from "./video"
+import { modeloIA } from "../ia-modelo"
 
 const DIR = () => process.env.HYPERFRAMES_DIR || "/opt/hyperframes"
 const BIN = () => process.env.HYPERFRAMES_BIN || path.join(DIR(), "node_modules", ".bin", "hyperframes")
@@ -283,11 +284,9 @@ export async function guionista(p: { texto: string; publico?: string; emocion?: 
     ia ??= new Anthropic()
     const en = p.idioma === "en"
     const resp = await ia.beta.messages.create({
-      model: "claude-opus-5-5",
+      ...modeloIA(),
       max_tokens: 1500,
       output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA } },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system:
         `Eres el guionista de videos verticales de 15 a 25 segundos de HETNA CNC (marketplace de fabricación CNC). ${PRINCIPIOS_VIDEO} ` +
         "Escribe de 3 a 5 bloques (el cierre con la marca lo pone el sistema; no lo escribas). " +

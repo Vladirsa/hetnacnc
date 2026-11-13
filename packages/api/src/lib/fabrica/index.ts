@@ -26,6 +26,7 @@ import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
 import { iconoPara, temaPara } from "./hyperframes"
 import { laminaEstilo, miniaturaEstilo } from "./poster"
+import { modeloIA } from "../ia-modelo"
 
 export const T_TRABAJO = "hetna_fabrica_trabajo"
 export const T_FONDO = "hetna_fabrica_fondo"
@@ -159,11 +160,9 @@ export async function generarPaquete(entrada: { guion?: string; tema?: string; m
   const m = MERCADOS[entrada.mercado || "mx"] || MERCADOS.mx
   const reglas = Object.entries(GUIAS).map(([r, g]) => `- ${r}: ${g.claves} Liga: ${g.liga === "perfil" ? "no pongas URL, di 'liga en el perfil'" : g.liga === "primer_comentario" ? "no pongas URL en el texto" : "incluye {{liga}}"}; hashtags ${g.hashtags[0]}-${g.hashtags[1]}.`).join("\n")
   const resp = await ia.beta.messages.create({
-    model: "claude-opus-5-5",
+    ...modeloIA(),
     max_tokens: 16000,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     system:
       "Eres el director de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
       `Escribe para el mercado ${m.nombre}: ${m.nota}. ` +
@@ -595,9 +594,9 @@ async function elegirCortes(segmentos: any[], e: any) {
   const m = MERCADOS[e.mercado || "mx"] || MERCADOS.mx
   const transcripcion = segmentos.map((s) => `[${s.inicio.toFixed(1)}-${s.fin.toFixed(1)}] ${s.texto}`).join("\n").slice(0, 60000)
   const resp = await ia.beta.messages.create({
-    model: "claude-opus-5-5", max_tokens: 6000,
+    ...modeloIA(), max_tokens: 6000,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA_CORTES } },
-    betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
+   
     system:
       `Eres el editor de video de HETNA CNC. Escribe para ${m.nombre} (${m.nota}). De la transcripción con tiempos, elige los 5 mejores momentos para cortos verticales ` +
       "de 15 a 45 segundos: que se entiendan solos, que empiecen con algo que atrape y terminen en una idea completa. Usa los tiempos exactos de la transcripción (inicio de una línea y fin de otra). " +

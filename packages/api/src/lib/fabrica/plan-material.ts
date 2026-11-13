@@ -23,6 +23,7 @@ import { vozLocal } from "./voz-local"
 import { bloquesBasicos, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 import { laminaEstilo, miniaturaEstilo, poster } from "./poster"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
+import { modeloIA } from "../ia-modelo"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
 
@@ -95,11 +96,9 @@ export async function ganchoAlterno(gancho: string, frases: string[], mercado: s
   try {
     ia ??= new Anthropic()
     const resp = await ia.beta.messages.create({
-      model: "claude-opus-5-5",
+      ...modeloIA(),
       max_tokens: 200,
       output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system:
         "Escribe UN gancho alterno para el primer segundo de un video corto de HETNA CNC. Máximo 8 palabras, con otro enfoque que el original " +
         "(si el original es pregunta, usa un problema o un resultado; si es afirmación, usa una pregunta). No inventes cifras, precios ni datos. Devuelve sólo el gancho, sin comillas.",
