@@ -47,18 +47,30 @@ export function Footer() {
     { label: "Términos para vendedores", path: "/terminos-vendedores" },
   ]
 
+  // Guías CNC (lib/seo/guias.ts): enlaces internos a las páginas por búsqueda
+  const guias = [
+    { label: "Guías CNC", path: "/cnc" },
+    { label: "Taller de router CNC", path: "/cnc/taller-router-cnc-mexico" },
+    { label: "Corte láser de MDF", path: "/cnc/corte-laser-mdf" },
+    { label: "Maquinado de aluminio", path: "/cnc/maquinado-cnc-aluminio" },
+    { label: "Programación CAM 5 ejes", path: "/cnc/programacion-cam-5-ejes" },
+    { label: "Archivos DXF para router", path: "/cnc/archivos-dxf-router-cnc" },
+    { label: "Calculadora de avance y RPM", path: "/calculadora-cnc" },
+  ]
+
   return (
     <footer
       className="bg-[#0F1826] text-[#C9D2E0] px-4 lg:px-16 pt-12 pb-7 w-full"
       data-testid="footer"
     >
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 pb-8 border-b border-[#23324A]">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 pb-8 border-b border-[#23324A]">
         <Columna
           titulo="Atención al cliente"
           links={footerLinks.customerServices}
         />
         <Columna titulo="Nosotros" links={footerLinks.about} />
         <Columna titulo="Vendedores" links={vendedores} />
+        <Columna titulo="Guías CNC" links={guias} />
         <div className="flex flex-col gap-2.5">
           <span className="text-white font-semibold text-[13.5px]">
             Síguenos

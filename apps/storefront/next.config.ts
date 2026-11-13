@@ -128,6 +128,8 @@ const nextConfig: NextConfig = {
   },
   logging: { fetches: { fullUrl: true } },
   images: {
+    // AVIF primero (pesa menos), WebP para los navegadores que no lo leen
+    formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

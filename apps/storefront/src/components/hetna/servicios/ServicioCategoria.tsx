@@ -17,6 +17,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import { listarTalleres, ubicacion } from "@/lib/hetna/talleres"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
+import { GUIAS } from "@/lib/seo/guias"
 
 // Página de las categorías de Servicios. Un servicio no es un producto con
 // precio fijo: quien llega aquí busca QUIÉN le fabrique algo, y casi nunca sabe
@@ -211,6 +212,8 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
     .filter((t) => !info.coincide.length || t.perfil.servicios.some((s) => info.coincide.includes(s)))
     .sort((a, b) => Number(b.verificado) - Number(a.verificado))
     .slice(0, 6)
+  // Guías CNC que tratan este servicio; en la página general, todas.
+  const guias = GUIAS.filter((g) => raiz || g.coincide.some((c) => info.coincide.includes(c))).slice(0, 4)
   const cotizar = `/cotizar${info.servicio ? `?servicio=${encodeURIComponent(info.servicio)}` : ""}`
 
   const caminos = [
@@ -320,7 +323,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
               >
                 <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#142033] font-extrabold text-white">
                   {t.logo ? (
-                    <Image src={t.logo} alt="" className="h-full w-full object-cover" width={300} height={300} />
+                    <Image src={t.logo} alt={`Logo de ${t.nombre}`} className="h-full w-full object-cover" width={300} height={300} />
                   ) : (
                     t.nombre.slice(0, 2).toUpperCase()
                   )}
@@ -358,6 +361,21 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
           </li>
         ))}
       </ol>
+
+      {/* Guías relacionadas (enlaces internos a lib/seo/guias.ts) */}
+      {guias.length > 0 && (
+        <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
+          <h3 className="mb-2 text-lg font-extrabold text-[#142033]">Guías relacionadas</h3>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {guias.map((g) => (
+              <li key={g.slug}>
+                <LocalizedClientLink href={`/cnc/${g.slug}`} className="font-semibold text-[#C2560A] hover:underline">{g.h1}</LocalizedClientLink>
+                <span className="block text-sm text-[#6B675C]">{g.descripcion}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* 5. Preguntas frecuentes (también para Google) */}
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">

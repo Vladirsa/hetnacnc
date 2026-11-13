@@ -78,7 +78,8 @@ export async function generateMetadata({
 
   const texto = contenidoCategoria(categoryHandle)
   return {
-    title: texto?.titulo_seo || title,
+    // La plantilla del layout ya agrega "| HETNA CNC": se quita si el título SEO la trae
+    title: (texto?.titulo_seo || title).replace(/\s*[|·—-]\s*HETNA( CNC)?\s*$/i, ""),
     description: texto?.descripcion_seo || description,
     alternates: {
       canonical,

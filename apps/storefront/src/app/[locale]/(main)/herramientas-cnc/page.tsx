@@ -13,7 +13,9 @@ const SITIO = "https://hetnacnc.com"
 
 export const metadata: Metadata = {
   // Título ≤ 60 y descripción ≤ 155 caracteres: lo que Google muestra sin cortar
-  title: "Calculadora CNC: RPM, avance y potencia láser",
+  // La búsqueda "calculadora de avance y RPM" la contesta /calculadora-cnc; ésta
+  // es la página general de herramientas (calculadora + cotizador para talleres).
+  title: "Herramientas CNC gratis: calculadora y cotizador",
   description:
     "Calculadora CNC gratis: RPM, avance y pasadas para router; velocidad y potencia para láser CO₂, fibra y plasma. Y un cotizador que lee tu DXF.",
   alternates: {

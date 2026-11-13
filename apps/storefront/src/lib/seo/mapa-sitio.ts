@@ -20,6 +20,7 @@ import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { SITIO_CANONICO } from "@/lib/helpers/hreflang"
+import { CIUDADES, GUIAS, enCiudad } from "@/lib/seo/guias"
 
 type Frecuencia = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never"
 export type Entrada = {
@@ -119,6 +120,18 @@ const productos = async (): Promise<{ handle: string; fecha: Date }[]> => {
 }
 
 
+async function ciudadesIndexables(): Promise<string[]> {
+  const talleres = await listarTalleres().catch(() => [])
+  const rutas: string[] = []
+  for (const g of GUIAS.filter((x) => x.ciudades)) {
+    const delServicio = talleres.filter((t) => t.perfil.servicios.some((s) => g.coincide.includes(s)))
+    for (const c of CIUDADES) {
+      if (delServicio.some((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad))) rutas.push(`/cnc/${g.slug}/${c.slug}`)
+    }
+  }
+  return rutas
+}
+
 export const ARCHIVOS_MAPA = ["paginas", "servicios", "categorias", "productos", "talleres", "articulos", "foro"] as const
 export type ArchivoMapa = (typeof ARCHIVOS_MAPA)[number]
 
@@ -132,6 +145,11 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         { url: US, lastModified: hoy, changeFrequency: "daily", priority: 0.6, alternates: portada },
         ...FIJAS.filter(([r]) => r !== "").map(([r, f, p]) => pagina(r, f, p, hoy)),
         ...HERRAMIENTAS_DISENO.map((h) => pagina(`/disenar/${h.slug}`, "weekly", 0.8, hoy)),
+        // Guías CNC; de las ciudades sólo las que tienen talleres de ese
+        // servicio en su estado (las demás llevan noindex: cnc/[guia]/[ciudad])
+        pagina("/cnc", "weekly", 0.8, hoy),
+        ...GUIAS.map((g) => pagina(`/cnc/${g.slug}`, "weekly", 0.8, hoy)),
+        ...(await ciudadesIndexables()).map((r) => pagina(r, "weekly", 0.7, hoy)),
       ]
     }
     case "servicios":

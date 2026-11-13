@@ -39,7 +39,7 @@ export default async function DirectorioTalleresPage() {
                 >
                   {t.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={t.logo} alt="" className="h-12 w-12 shrink-0 rounded-[10px] object-contain" loading="lazy" />
+                    <img src={t.logo} alt={`Logo de ${t.nombre}`} className="h-12 w-12 shrink-0 rounded-[10px] object-contain" loading="lazy" />
                   ) : (
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-[#F3F2EE] text-[20px]" aria-hidden="true">
                       🏭
