@@ -131,7 +131,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
       {
         ul: [
           "Enviarte promociones, novedades y contenido de HETNA CNC por correo o WhatsApp.",
-          "Medir el uso del sitio para mejorarlo (Google Analytics y Microsoft Clarity, que oculta lo que escribes en los formularios), solo si aceptas las cookies de estadística.",
+          "Medir el uso del sitio para mejorarlo con Google Analytics: si no aceptas las cookies de estadística, sólo cuenta visitas de forma anónima, sin cookies ni identificadores (modo de consentimiento de Google); si las aceptas, usa cookies para medir mejor. Microsoft Clarity (que oculta lo que escribes en los formularios) sólo se usa si aceptas las cookies de estadística.",
           "Mostrarte publicidad de HETNA en otras plataformas (Meta Pixel), solo si aceptas las cookies de publicidad.",
           "Invitarte a encuestas de satisfacción.",
         ],
@@ -440,7 +440,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
       {
         ul: [
           "Send you promotions, news and HETNA CNC content by email or WhatsApp.",
-          "Measure site usage to improve it (Google Analytics and Microsoft Clarity, which masks what you type in forms), only if you accept analytics cookies.",
+          "Measure site usage to improve it with Google Analytics: if you do not accept analytics cookies, it only counts visits anonymously, without cookies or identifiers (Google consent mode); if you accept them, it uses cookies to measure better. Microsoft Clarity (which masks what you type in forms) is only used if you accept analytics cookies.",
           "Show you HETNA ads on other platforms (Meta Pixel), only if you accept advertising cookies.",
           "Invite you to satisfaction surveys.",
         ],
