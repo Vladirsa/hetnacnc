@@ -30,7 +30,7 @@ import { createHmac, timingSafeEqual } from "crypto"
 
 import { avisarTaller } from "./avisos-taller"
 import { paypal, paypalListo } from "./paypal-api"
-import { adminDesdeToken, ErrorSuscripcion, supa } from "./cotizador-suscripciones"
+import { adminDesdeToken, ErrorSuscripcion, supa, supaBase } from "./cotizador-suscripciones"
 
 const MP_API = "https://api.mercadopago.com"
 const SITIO = (process.env.STOREFRONT_URL || "https://hetnacnc.com").replace(/\/$/, "")
@@ -337,6 +337,25 @@ export function anticipoDe(c): number {
 }
 
 /** Lo que ve la página pública. Marca la primera vista. */
+// El PDF de la cotización: la app lo sube a un bucket privado de Supabase y guarda la
+// ruta ("cotizaciones-pdf/<negocio>/<id>.pdf"); aquí se firma por una hora para que el
+// cliente lo vea o lo descargue. Las ligas viejas que ya eran URL completas pasan igual.
+async function ligaPdf(pdfUrl: string | null | undefined): Promise<string | null> {
+  const ruta = String(pdfUrl || "").trim()
+  if (!ruta) return null
+  if (/^https:\/\//i.test(ruta)) return ruta
+  if (!ruta.startsWith("cotizaciones-pdf/") || ruta.includes("..")) return null
+  try {
+    const r = await supa<{ signedURL?: string }>(`/storage/v1/object/sign/${ruta.split("/").map(encodeURIComponent).join("/")}`, {
+      method: "POST",
+      body: JSON.stringify({ expiresIn: 3600 }),
+    })
+    return r?.signedURL ? `${supaBase()}/storage/v1${r.signedURL}` : null
+  } catch {
+    return null // sin PDF la liga sigue funcionando
+  }
+}
+
 export async function paginaPublica(token: string) {
   const c = await cotizacionPorToken(token)
   const [negocio, config, cliente, items, pagos, mp, pp] = await Promise.all([
@@ -411,7 +430,7 @@ export async function paginaPublica(token: string) {
     fecha_entrega: c.fecha_entrega,
     dias_habiles: c.dias_habiles,
     notas: c.notas,
-    pdf: c.pdf_url || null,
+    pdf: await ligaPdf(c.pdf_url),
     aceptada: c.aceptada_en ? { en: c.aceptada_en, por: c.aceptada_por } : null,
     moneda,
     anticipo: (() => {
