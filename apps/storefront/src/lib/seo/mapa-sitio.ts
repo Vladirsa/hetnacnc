@@ -15,6 +15,7 @@ import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { sdk } from "@/lib/client"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
+import { directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
@@ -62,6 +63,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/torno", "weekly", 0.6],
   ["/talleres", "weekly", 0.8],
   ["/talleres/unete", "weekly", 0.8],
+  ["/talleres/directorio", "weekly", 0.6],
   ["/foro-cnc/blog", "weekly", 0.7],
   ["/foro-cnc/empleos", "weekly", 0.6],
   ["/foro-cnc/profesionales", "weekly", 0.6],
@@ -166,7 +168,13 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
     case "productos":
       return (await productos()).map((p) => pagina(`/products/${p.handle}`, "weekly", 0.7, p.fecha))
     case "talleres":
-      return (await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy))
+      return [
+        ...(await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
+        // Perfiles no reclamados: sólo los que tienen descripción (los demás son noindex)
+        ...(await directorioMexico())
+          .filter((e) => e.servicios)
+          .map((e) => pagina(`/talleres/directorio/${e.slug}`, "monthly", 0.3, hoy)),
+      ]
     case "articulos": {
       const [{ learning_articles }, { courses }, { trabajos }] = await Promise.all([
         listLearningArticles({ limit: 200 }).catch(() => ({ learning_articles: [] as { slug: string; published_at: string | null }[] })),

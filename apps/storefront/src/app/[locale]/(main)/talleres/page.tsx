@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import DirectorioTalleres from "@/components/hetna/taller/DirectorioTalleres"
 import ParaTalleres from "@/components/hetna/taller/ParaTalleres"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { contarPorEstado, directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { redPorEstado } from "@/lib/foro/red"
 
@@ -19,7 +20,7 @@ export default async function TalleresPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const [talleres, red] = await Promise.all([listarTalleres(), redPorEstado()])
+  const [talleres, red, directorio] = await Promise.all([listarTalleres(), redPorEstado(), directorioMexico()])
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 lg:px-8">
@@ -56,6 +57,12 @@ export default async function TalleresPage({
           >
             🏆 Ranking
           </LocalizedClientLink>
+          <LocalizedClientLink
+            href="/talleres/directorio"
+            className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
+          >
+            Directorio CNC
+          </LocalizedClientLink>
           <a
             href="#para-talleres"
             className="rounded-xl border border-[#F2A25F] px-5 py-3 font-semibold text-[#F2A25F] hover:bg-white/10"
@@ -81,7 +88,7 @@ export default async function TalleresPage({
 
       <div id="directorio" className="scroll-mt-24" />
 
-      <DirectorioTalleres talleres={talleres} locale={locale} red={red} />
+      <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} />
 
       {/* Para dueños de taller: cómo funciona, beneficios, perfiles,
           preguntas y registro, aquí mismo (la versión completa vive en

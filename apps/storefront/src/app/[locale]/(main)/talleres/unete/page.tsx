@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 
 import {
   BeneficiosTaller,
@@ -7,6 +8,7 @@ import {
   PreguntasTaller,
   RegistroTaller,
 } from "@/components/hetna/taller/ParaTalleres"
+import { AvisoReclamarPerfil } from "@/components/hetna/taller/AvisoReclamarPerfil"
 import { ComparativaComisiones } from "@/components/hetna/taller/ComparativaComisiones"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -62,6 +64,9 @@ export default async function UneteTallerPage() {
 
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <Suspense fallback={null}>
+        <AvisoReclamarPerfil />
+      </Suspense>
       {/* Hero */}
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1200px] px-4 py-12 sm:py-16 lg:px-8">

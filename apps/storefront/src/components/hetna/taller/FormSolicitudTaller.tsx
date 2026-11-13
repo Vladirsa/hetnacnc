@@ -84,12 +84,15 @@ export default function FormSolicitudTaller({
   servicioInicial,
   necesidadInicial,
   prellenado,
+  alEnviar,
 }: {
   taller?: string
   nombreTaller?: string
   servicioInicial?: string
   necesidadInicial?: string
   prellenado?: Prellenado
+  /** Se llama cuando la solicitud quedó registrada (p. ej. el directorio avisa a la empresa). */
+  alEnviar?: (d: { folio: string; servicio: string; material: string; cantidad: string; ciudad: string; estado_mx: string }) => void
 }) {
   const [estado, setEstado] = useState<"listo" | "enviando" | "ok" | "error">("listo")
   const [mensaje, setMensaje] = useState("")
@@ -271,6 +274,14 @@ export default function FormSolicitudTaller({
       invitados: v("invitados"),
     })
     if (r.ok) {
+      alEnviar?.({
+        folio: r.folio || "",
+        servicio: v("servicio") || necesidad,
+        material: v("material"),
+        cantidad: v("cantidad"),
+        ciudad: v("ciudad"),
+        estado_mx: v("estado_mx"),
+      })
       setFolio(r.folio || "")
       setResumen(
         [necesidad, v("cantidad") && `${v("cantidad")}`, v("material") && `en ${v("material")}`, v("ciudad") || v("estado_mx")]
