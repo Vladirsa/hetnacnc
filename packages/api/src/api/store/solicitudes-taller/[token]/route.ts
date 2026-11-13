@@ -82,6 +82,18 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           estado: perfil.estado || "",
           calificacion: perfil.calificacion ?? null,
           resenas: Number(perfil.resenas || 0),
+          // Historial medido (puntualidad real, terminados, reclamos): lib/reputacion-medida.ts
+          medido: perfil.medido
+            ? {
+                terminados: Number(perfil.medido.terminados || 0),
+                puntualidad_pct: perfil.medido.puntualidad_pct ?? null,
+                terminados_pct: perfil.medido.terminados_pct ?? null,
+                reclamos: Number(perfil.medido.reclamos || 0),
+                reclamos_resueltos: Number(perfil.medido.reclamos_resueltos || 0),
+                puntaje: perfil.medido.puntaje ?? null,
+                suficiente: perfil.medido.suficiente === true,
+              }
+            : null,
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",
         },
         destacado: pesoPlan(p.metadata) > 0,

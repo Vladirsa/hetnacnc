@@ -156,6 +156,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                       ? ` · ★ ${Number(p.taller.calificacion).toFixed(1)}${p.taller.resenas ? ` (${p.taller.resenas} ${p.taller.resenas === 1 ? "reseña" : "reseñas"})` : ""}`
                       : " · Sin reseñas todavía"}
                   </p>
+                  <HistorialMedido m={p.taller.medido} />
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-extrabold text-[#142033]">{pesos(p.precio)} <span className="text-sm font-semibold text-[#6B675C]">{p.moneda || "MXN"}</span></p>
@@ -276,5 +277,29 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         </div>
       )}
     </section>
+  )
+}
+
+/** Historial medido del taller: lo que hizo en HETNA, no sólo lo que opinaron de él. */
+function HistorialMedido({ m }: { m?: Propuesta["taller"]["medido"] }) {
+  if (!m || !m.terminados) return <p className="mt-1 text-xs text-[#6B675C]">Sin trabajos terminados en HETNA todavía</p>
+  const datos = [
+    m.puntualidad_pct != null && `${m.puntualidad_pct}% a tiempo`,
+    `${m.terminados} ${m.terminados === 1 ? "trabajo terminado" : "trabajos terminados"}`,
+    m.reclamos > 0 && `${m.reclamos_resueltos} de ${m.reclamos} reclamos resueltos`,
+  ].filter(Boolean)
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-[#40403A]">
+      {m.suficiente && m.puntaje != null && (
+        <span
+          className={`rounded-full px-2 py-0.5 font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
+          title="Puntaje HETNA: puntualidad real 40%, calidad calificada 25%, trabajos terminados 20%, reclamos resueltos 15%"
+        >
+          Cumplimiento {m.puntaje}/100
+        </span>
+      )}
+      <span>{datos.join(" · ")}</span>
+      {!m.suficiente && <span className="text-[#6B675C]">(historial corto)</span>}
+    </p>
   )
 }

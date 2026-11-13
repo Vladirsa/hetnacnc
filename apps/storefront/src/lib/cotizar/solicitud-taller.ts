@@ -95,7 +95,24 @@ export type Propuesta = {
   destacado: boolean
   // Anticipo que pide el taller si le pagas directo (null = pago completo)
   anticipo_pct?: number | null
-  taller: { nombre: string; handle: string; estado: string; calificacion: number | null; resenas?: number; verificado?: boolean }
+  taller: {
+    nombre: string
+    handle: string
+    estado: string
+    calificacion: number | null
+    resenas?: number
+    verificado?: boolean
+    /** Lo que el taller hizo en HETNA: entregas a tiempo, trabajos terminados, reclamos */
+    medido?: {
+      terminados: number
+      puntualidad_pct: number | null
+      terminados_pct: number | null
+      reclamos: number
+      reclamos_resueltos: number
+      puntaje: number | null
+      suficiente: boolean
+    } | null
+  }
   // Licitaciones 3.0 (Fase 2): propuesta formal
   moneda?: string
   materiales?: string
