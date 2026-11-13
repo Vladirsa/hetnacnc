@@ -112,6 +112,8 @@ export type Propuesta = {
       puntaje: number | null
       suficiente: boolean
     } | null
+    /** Máquinas que declaró en su perfil y su área de trabajo más grande */
+    capacidad?: { maquinas: number; resumen: string; area_mayor: string | null } | null
   }
   // Licitaciones 3.0 (Fase 2): propuesta formal
   moneda?: string
