@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: titulo,
     description: descripcion,
-    alternates: { canonical: `https://hetnacnc.com/${locale}/t/${t.slug}` },
+    alternates: { canonical: `https://hetnacnc.com/mx/t/${t.slug}` },
     openGraph: { title: titulo, description: descripcion, images: [t.logo || IMAGEN_OG] },
   }
 }

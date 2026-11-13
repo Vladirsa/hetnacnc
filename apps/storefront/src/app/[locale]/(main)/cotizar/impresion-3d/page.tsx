@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { JsonLd } from "@/components/hetna/JsonLd"
+import { migas, servicioSchema } from "@/lib/hetna/schema"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
@@ -17,6 +19,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CotizarImpresion3d() {
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <JsonLd
+        datos={[
+          servicioSchema({ nombre: "Impresión 3D", descripcion: "Precio al instante de impresión 3D en PLA, PETG, ABS y resina con talleres de México.", ruta: "/mx/cotizar/impresion-3d", tipo: "Impresión 3D" }),
+          migas([{ nombre: "Inicio", ruta: "https://hetnacnc.com/mx" }, { nombre: "Cotizar impresión 3D" }]),
+        ]}
+      />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
         <span>/</span>

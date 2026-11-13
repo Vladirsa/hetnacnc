@@ -441,7 +441,8 @@ fi
 # tráfico real al VPS. DESPLIEGUE_CALENTAR=0 lo salta.
 if [ "${DESPLIEGUE_CALENTAR:-1}" != "0" ]; then
   paso "Calentando la caché de productos y categorías"
-  rutas="$(curl -s --max-time 20 "$SITIO/sitemap.xml" \
+  # El mapa del sitio va por tipos (lib/seo/mapa-sitio.ts): productos y categorías
+  rutas="$( { curl -s --max-time 20 "$SITIO/sitemaps/productos.xml"; curl -s --max-time 20 "$SITIO/sitemaps/categorias.xml"; } \
     | grep -oE '<loc>[^<]+/(products|categories)(/[^<]*)?</loc>' \
     | sed -E 's#</?loc>##g' | sort -u || true)"
   rutas="$SITIO/mx $SITIO/us $rutas"

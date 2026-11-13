@@ -7,7 +7,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Cotizar una pieza — HETNA CNC",
+  title: "Cotizar una pieza",
   description: "Sube tu archivo, ve tu pieza y recibe un estimado al instante; después pide propuestas reales a talleres CNC verificados.",
   robots: { index: false, follow: false },
 }

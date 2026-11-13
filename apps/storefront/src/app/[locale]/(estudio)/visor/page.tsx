@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import { VisorDeLiga } from "@/components/hetna/visor/VisorDeLiga"
 
 export const metadata: Metadata = {
-  title: "Visor de planos y modelos | HETNA",
+  title: "Visor de planos y modelos",
   robots: { index: false, follow: false },
 }
 

@@ -5,7 +5,7 @@ import { listarEscaneos } from "@/lib/escaneos/acciones"
 import { ESTATUS_CLASE, ESTATUS_ETIQUETA, fechaHora, MODO_ETIQUETA } from "@/lib/escaneos/formato"
 
 export const metadata: Metadata = {
-  title: "Escaneos 3D — HETNA CNC",
+  title: "Escaneos 3D",
   description: "Tus piezas escaneadas, con sus archivos listos para descargar.",
 }
 

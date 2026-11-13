@@ -5,7 +5,7 @@ import FormSuministro from "@/components/hetna/taller/FormSuministro"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/cotizar/suministro" },
-  title: "Cotiza material e insumos CNC con proveedores | HETNA CNC",
+  title: "Cotiza material e insumos CNC con proveedores",
   description:
     "Pide cotización de lámina, MDF, acrílico, fresas, refacciones y consumibles CNC a proveedores de México. Compara precios y tiempos de entrega gratis.",
 }

@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { JsonLd } from "@/components/hetna/JsonLd"
+import { migas, servicioSchema } from "@/lib/hetna/schema"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
@@ -18,6 +20,12 @@ const MATERIALES = ["MDF 3mm", "MDF 9mm", "MDF 15mm", "MDF 18mm", "Acrilico", "P
 export default async function CotizarRouterCnc() {
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <JsonLd
+        datos={[
+          servicioSchema({ nombre: "Corte en router CNC", descripcion: "Precio al instante de corte en router CNC en MDF, acrílico, madera y aluminio con talleres de México.", ruta: "/mx/cotizar/router-cnc", tipo: "Corte CNC" }),
+          migas([{ nombre: "Inicio", ruta: "https://hetnacnc.com/mx" }, { nombre: "Cotizar router CNC" }]),
+        ]}
+      />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
         <span>/</span>

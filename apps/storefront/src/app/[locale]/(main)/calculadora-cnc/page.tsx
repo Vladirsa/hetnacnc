@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "Velocidades y avances para router CNC y fresadora, potencia y velocidad para láser CO₂ (K40 a 300 W), marcado con fibra y UV, corte de lámina por fibra, plasma CNC e impresión 3D. Gratis, con tu máquina guardada.",
   alternates: {
     canonical: `${SITIO}/mx/calculadora-cnc`,
-    languages: { "es-MX": `${SITIO}/mx/calculadora-cnc`, "en-US": `${SITIO}/us/calculadora-cnc` },
+    languages: { "es-MX": `${SITIO}/mx/calculadora-cnc` },
   },
 }
 

@@ -14,12 +14,13 @@ import { DISENO_A_LA_MEDIDA } from "@/lib/hetna/herramientas"
 const SITIO = "https://hetnacnc.com"
 
 export const metadata: Metadata = {
-  title: "Diseño 3D y 2D gratis para CNC, láser e impresión 3D: imagen a 3D, cajas, vectorizar | HETNA",
+  // Título ≤ 60 y descripción ≤ 155 caracteres: lo que Google muestra sin cortar
+  title: "Diseño 2D y 3D gratis para CNC y láser",
   description:
-    "Convierte una foto en modelo 3D con IA, crea letras 3D, llaveros, litofanías, cajas para láser, letreros y vectoriza imágenes a DXF. Gratis, en el navegador y listo para fabricar.",
+    "Foto a modelo 3D con IA, letras 3D, litofanías, cajas para láser, letreros y vectores DXF. Gratis, en el navegador y listo para fabricar.",
   alternates: {
     canonical: `${SITIO}/mx/disenar`,
-    languages: { "es-MX": `${SITIO}/mx/disenar`, "en-US": `${SITIO}/us/disenar` },
+    languages: { "es-MX": `${SITIO}/mx/disenar` },
   },
   openGraph: {
     title: "HETNA 3D Studio y 2D Studio: diseña para CNC gratis",

@@ -8,7 +8,7 @@ import { conversacionDelTaller, mensajesDe } from "@/lib/chat/consultas"
 import { db } from "@/lib/foro/db"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Mensaje de un cliente | HETNA CNC", robots: { index: false, follow: false } }
+export const metadata = { title: "Mensaje de un cliente", robots: { index: false, follow: false } }
 
 export default async function Page({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
