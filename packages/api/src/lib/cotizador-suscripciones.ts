@@ -38,6 +38,8 @@ import { eventoPorCliente } from "./social-hub"
 const MP_API = "https://api.mercadopago.com"
 const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
 const supaUrl = () => (process.env.COTIZADOR_SUPABASE_URL || "https://ldfmkfbhcbsbecfbzsny.supabase.co").replace(/\/$/, "")
+/** Dirección del proyecto de Supabase del Cotizador (para ligas firmadas de Storage) */
+export const supaBase = () => supaUrl()
 const supaKey = () => process.env.COTIZADOR_SUPABASE_SERVICE_KEY || ""
 export const RETORNO = process.env.COTIZADOR_URL_RETORNO || "https://hetnacnc.com/cotizador/"
 
