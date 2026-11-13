@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { misConversaciones, sesionChat } from "@/lib/chat/consultas"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Mis mensajes | HETNA CNC", robots: { index: false } }
+export const metadata = { title: "Mis mensajes", robots: { index: false } }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params

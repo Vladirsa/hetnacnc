@@ -4,7 +4,7 @@ import { EstudioCam2D } from "@/components/hetna/cam/EstudioCam2D"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/cam/subir" },
-  title: "CAM Studio 2D: de tu DXF a G-code en un minuto | HETNA",
+  title: "CAM Studio 2D: de tu DXF a G-code en un minuto",
   description:
     "Sube tu DXF, elige material y fresa, mira la trayectoria simulada y descarga el G-code listo para tu router. Gratis y sin cuenta.",
 }

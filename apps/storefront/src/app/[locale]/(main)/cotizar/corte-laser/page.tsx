@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { JsonLd } from "@/components/hetna/JsonLd"
+import { migas, servicioSchema } from "@/lib/hetna/schema"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
@@ -18,6 +20,12 @@ const MATERIALES = ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílic
 export default async function CotizarCorteLaser() {
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <JsonLd
+        datos={[
+          servicioSchema({ nombre: "Corte láser", descripcion: "Precio al instante de corte y grabado láser en MDF, acrílico y otros materiales con talleres de México.", ruta: "/mx/cotizar/corte-laser", tipo: "Corte láser" }),
+          migas([{ nombre: "Inicio", ruta: "https://hetnacnc.com/mx" }, { nombre: "Cotizar corte láser" }]),
+        ]}
+      />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
         <span>/</span>

@@ -81,31 +81,35 @@ type HreflangAlternates = {
   languages: Record<string, string>
 }
 
-// Builds hreflang alternates where every entry — including x-default and the
-// self-referencing link — points at a locale-prefixed URL that returns 200.
+// Canonical y hreflang (auditoría SEO del 13 nov 2026).
+//
+// Todas las versiones por país (/hn, /ar, /us…) sirven el MISMO contenido en
+// español: antes cada una se declaraba canónica de sí misma y anunciaba 18
+// alternativas, así que cada producto existía 19 veces para Google. Ahora:
+//   - la URL principal de todo es /mx (dominio sin www);
+//   - hreflang sólo une /mx y /us en la PORTADA, la única con versión en inglés
+//     propia (título, descripción e imagen). En lo demás /us es la misma
+//     página traducida en el navegador y su canónica es /mx.
+// Cuando haya páginas traducidas de verdad, se agregan aquí sus pares.
+export const SITIO_CANONICO = "https://hetnacnc.com"
+
 export const buildHreflangAlternates = ({
-  baseUrl,
   path,
   locale,
-  locales,
 }: {
-  baseUrl: string
+  baseUrl?: string
   // Path after the locale segment, starting with "/" (empty string for home).
   path: string
   locale: string
-  locales: string[]
+  locales?: string[]
 }): HreflangAlternates => {
-  const list = locales.length ? locales : [locale]
-
-  const languages = list.reduce<Record<string, string>>((acc, code) => {
-    acc[toHreflang(code)] = `${baseUrl}/${code}${path}`
-    return acc
-  }, {})
-
-  languages["x-default"] = `${baseUrl}/${resolveXDefaultLocale(list)}${path}`
-
-  return {
-    canonical: `${baseUrl}/${locale}${path}`,
-    languages,
+  const mx = `${SITIO_CANONICO}/mx${path}`
+  if (path === "" || path === "/") {
+    const us = `${SITIO_CANONICO}/us`
+    return {
+      canonical: locale.toLowerCase() === "us" ? us : `${SITIO_CANONICO}/mx`,
+      languages: { "es-MX": `${SITIO_CANONICO}/mx`, "en-US": us, "x-default": `${SITIO_CANONICO}/mx` },
+    }
   }
+  return { canonical: mx, languages: { "es-MX": mx, "x-default": mx } }
 }

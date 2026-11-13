@@ -9,7 +9,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 // todavía no tiene taller en el Cotizador (o no ha confirmado su correo). Ver
 // packages/api/src/lib/cotizador-vinculo.ts (entradaCotizador, activarCotizador).
 export const metadata: Metadata = {
-  title: "Activa tu Cotizador | HETNA CNC",
+  title: "Activa tu Cotizador",
   robots: { index: false, follow: false },
 }
 export const dynamic = "force-dynamic"

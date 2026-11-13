@@ -154,3 +154,18 @@ export const negocioLocalSchema = (t: Taller, locale: string) => {
     ...(ubicacion(p) ? { slogan: p.lema || undefined } : {}),
   }
 }
+
+// ---------------------------------------------------------------------
+// Servicio (cotizadores, solicitud de cotización, servicios de fabricación)
+// ---------------------------------------------------------------------
+const SITIO_SCHEMA = "https://hetnacnc.com"
+export const servicioSchema = ({ nombre, descripcion, ruta, tipo }: { nombre: string; descripcion: string; ruta: string; tipo: string }) => ({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: nombre,
+  description: descripcion,
+  serviceType: tipo,
+  url: `${SITIO_SCHEMA}${ruta}`,
+  areaServed: { "@type": "Country", name: "México" },
+  provider: { "@type": "Organization", "@id": `${SITIO_SCHEMA}/#organization`, name: "HETNA CNC", url: SITIO_SCHEMA },
+})

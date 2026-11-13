@@ -13,7 +13,6 @@ import { EMPRESA } from "@/lib/hetna/empresa"
 import {
   buildHreflangAlternates,
   getStorefrontLocales,
-  toHreflang,
 } from "@/lib/helpers/hreflang"
 
 export async function generateMetadata({
@@ -44,7 +43,7 @@ export async function generateMetadata({
 
   // /us sale en inglés: título, descripción e imagen para Google y redes en inglés
   const enIngles = locale.toLowerCase() === "us"
-  const title = enIngles ? "CNC marketplace, quotes and shop software" : "Inicio"
+  const title = enIngles ? "CNC marketplace, quotes and shop software" : "Marketplace CNC en México: talleres y diseños"
   const description = enIngles
     ? "HETNA CNC: the CNC marketplace. DXF, SVG and STL designs, machines, tooling, materials, CNC quoting software and design and machining services."
     : "HETNA CNC: marketplace de CNC en México. Diseños DXF, SVG y STL, máquinas, herramientas, materiales y servicios de diseño y maquila."
@@ -110,7 +109,11 @@ export default async function Home({
   const headersList = await headers()
   const host = headersList.get("host")
   const protocol = headersList.get("x-forwarded-proto") || "https"
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
+  // Siempre el dominio canónico (sin www): el @id de la organización lo usan
+  // también los Service de los cotizadores (lib/hetna/schema.ts).
+  void protocol
+  void host
+  const baseUrl = "https://hetnacnc.com"
 
   const siteName =
     process.env.NEXT_PUBLIC_SITE_NAME ||
@@ -164,8 +167,8 @@ export default async function Home({
             "@type": "WebSite",
             name: siteName,
             alternateName: "HETNA",
-            url: `${baseUrl}/${locale}`,
-            inLanguage: toHreflang(locale),
+            url: `${baseUrl}/${locale === "us" ? "us" : "mx"}`,
+            inLanguage: locale === "us" ? "en-US" : "es-MX",
             publisher: { "@id": `${baseUrl}/#organization` },
           }).replace(/</g, "\\u003c"),
         }}

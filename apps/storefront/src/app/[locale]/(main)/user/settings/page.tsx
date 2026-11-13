@@ -11,7 +11,7 @@ import { leerFiscal } from "@/lib/cuenta/facturas"
 import { retrieveCustomer } from "@/lib/data/customer"
 
 export const metadata: Metadata = {
-  title: "Datos y contraseña | HETNA CNC",
+  title: "Datos y contraseña",
   robots: { index: false, follow: false },
 }
 

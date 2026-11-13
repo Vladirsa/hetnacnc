@@ -12,12 +12,15 @@ import { SliderHerramientas } from "@/components/hetna/herramientas/SliderHerram
 const SITIO = "https://hetnacnc.com"
 
 export const metadata: Metadata = {
-  title: "Calculadora CNC y cotizador para talleres: RPM, avance, láser y precios al momento | HETNA",
+  // Título ≤ 60 y descripción ≤ 155 caracteres: lo que Google muestra sin cortar
+  // La búsqueda "calculadora de avance y RPM" la contesta /calculadora-cnc; ésta
+  // es la página general de herramientas (calculadora + cotizador para talleres).
+  title: "Herramientas CNC gratis: calculadora y cotizador",
   description:
-    "Calculadora CNC gratis: RPM, avance y pasadas para router, velocidad y potencia para láser CO₂, fibra, plasma e impresión 3D. Y la app HETNA Cotizador: lee tu DXF, calcula el precio y lo manda por WhatsApp.",
+    "Calculadora CNC gratis: RPM, avance y pasadas para router; velocidad y potencia para láser CO₂, fibra y plasma. Y un cotizador que lee tu DXF.",
   alternates: {
     canonical: `${SITIO}/mx/herramientas-cnc`,
-    languages: { "es-MX": `${SITIO}/mx/herramientas-cnc`, "en-US": `${SITIO}/us/herramientas-cnc` },
+    languages: { "es-MX": `${SITIO}/mx/herramientas-cnc` },
   },
   openGraph: {
     title: "Calculadora CNC y cotizador para talleres | HETNA",

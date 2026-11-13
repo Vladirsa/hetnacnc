@@ -1,4 +1,6 @@
 import { DIAS_SOLICITUD_ABIERTA } from "@/lib/hetna/promesas"
+import { JsonLd } from "@/components/hetna/JsonLd"
+import { migas, servicioSchema } from "@/lib/hetna/schema"
 import type { Metadata } from "next"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
@@ -62,6 +64,12 @@ export default async function CotizarPage({
 
   return (
     <main className="w-full bg-[#FAF9F6]">
+      <JsonLd
+        datos={[
+          servicioSchema({ nombre: "Cotización de trabajos CNC", descripcion: "Describe tu trabajo de corte, grabado, maquinado o impresión 3D y recibe propuestas de talleres CNC de México.", ruta: "/mx/cotizar", tipo: "Fabricación CNC" }),
+          migas([{ nombre: "Inicio", ruta: "https://hetnacnc.com/mx" }, { nombre: "Solicitar cotización" }]),
+        ]}
+      />
       <div className="mx-auto w-full max-w-[1100px] px-4 py-8 lg:px-6">
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>

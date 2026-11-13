@@ -16,7 +16,7 @@ import { sesionForo } from "@/lib/foro/consultas"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
-  title: "Mi cuenta | HETNA CNC",
+  title: "Mi cuenta",
   robots: { index: false, follow: false },
 }
 

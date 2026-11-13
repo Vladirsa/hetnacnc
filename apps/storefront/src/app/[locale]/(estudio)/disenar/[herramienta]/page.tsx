@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: descripcionCorta(h.descripcion),
     alternates: {
       canonical: `${SITIO}/mx/disenar/${h.slug}`,
-      languages: { "es-MX": `${SITIO}/mx/disenar/${h.slug}`, "en-US": `${SITIO}/us/disenar/${h.slug}` },
+      languages: { "es-MX": `${SITIO}/mx/disenar/${h.slug}` },
     },
   }
 }

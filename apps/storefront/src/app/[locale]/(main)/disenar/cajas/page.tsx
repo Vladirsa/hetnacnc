@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "Más de 170 cajas y objetos gratis para láser y router CNC: juntas de dedo, bisagras, cajoneras, organizadores y más. Pon tus medidas y descarga DXF o SVG.",
   alternates: {
     canonical: `${SITIO}/mx/disenar/cajas`,
-    languages: { "es-MX": `${SITIO}/mx/disenar/cajas`, "en-US": `${SITIO}/us/disenar/cajas` },
+    languages: { "es-MX": `${SITIO}/mx/disenar/cajas` },
   },
 }
 

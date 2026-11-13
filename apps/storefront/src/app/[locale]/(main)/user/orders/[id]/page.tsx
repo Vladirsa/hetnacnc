@@ -11,7 +11,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 import { retrieveOrderGroup } from "@/lib/data/orders"
 
 export const metadata: Metadata = {
-  title: "Detalle de tu compra | HETNA CNC",
+  title: "Detalle de tu compra",
   robots: { index: false, follow: false },
 }
 

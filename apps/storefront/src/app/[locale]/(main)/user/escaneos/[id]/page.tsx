@@ -14,7 +14,7 @@ import {
 } from "@/lib/escaneos/formato"
 
 export const metadata: Metadata = {
-  title: "Escaneo 3D — HETNA CNC",
+  title: "Escaneo 3D",
 }
 
 export default async function TallerEscaneoDetalle({

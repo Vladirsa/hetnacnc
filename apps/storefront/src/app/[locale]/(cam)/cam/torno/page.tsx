@@ -5,7 +5,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/cam/torno" },
-  title: "CAM Studio Torno: balaustres, patas y columnas | HETNA",
+  title: "CAM Studio Torno: balaustres, patas y columnas",
   description:
     "Diseña piezas torneadas por segmentos y descarga el G-code para tu router CNC con eje rotativo (Mach3 / Mach4). Gratis y sin cuenta.",
 }

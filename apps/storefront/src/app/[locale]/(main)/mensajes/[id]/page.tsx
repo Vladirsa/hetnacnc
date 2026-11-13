@@ -8,7 +8,7 @@ import { conversacionDelCliente, mensajesDe, sesionChat } from "@/lib/chat/consu
 import { db } from "@/lib/foro/db"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Conversación | HETNA CNC", robots: { index: false } }
+export const metadata = { title: "Conversación", robots: { index: false } }
 
 export default async function Page({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params

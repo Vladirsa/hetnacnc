@@ -11,12 +11,14 @@ import { PROCESOS } from "@/lib/calculadora"
 const SITIO = "https://hetnacnc.com"
 
 export const metadata: Metadata = {
-  title: "Calculadora CNC profesional: router, láser CO₂, fibra, plasma e impresión 3D",
+  // Enfocada en "calculadora de avance y revoluciones": /herramientas-cnc es la
+  // página general de herramientas (no compiten por la misma búsqueda).
+  title: "Calculadora CNC de avance y revoluciones (RPM)",
   description:
-    "Velocidades y avances para router CNC y fresadora, potencia y velocidad para láser CO₂ (K40 a 300 W), marcado con fibra y UV, corte de lámina por fibra, plasma CNC e impresión 3D. Gratis, con tu máquina guardada.",
+    "Calcula RPM y avance para router CNC y fresadora según fresa, filos y material, más potencia para láser, plasma e impresión 3D. Gratis y con fórmulas.",
   alternates: {
     canonical: `${SITIO}/mx/calculadora-cnc`,
-    languages: { "es-MX": `${SITIO}/mx/calculadora-cnc`, "en-US": `${SITIO}/us/calculadora-cnc` },
+    languages: { "es-MX": `${SITIO}/mx/calculadora-cnc` },
   },
 }
 
@@ -79,7 +81,7 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#C2560A] opacity-30 blur-3xl" />
         <div className="relative mx-auto max-w-[1280px]">
           <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.08em] text-[#FFB27A]">Gratis · sin cuenta</span>
-          <h1 className="m-0 mt-3 font-display text-[28px] font-bold leading-tight lg:text-[40px]">Calculadora CNC profesional</h1>
+          <h1 className="m-0 mt-3 font-display text-[28px] font-bold leading-tight lg:text-[40px]">Calculadora CNC de avance y revoluciones (RPM)</h1>
           <p className="m-0 mt-2 max-w-[720px] text-[15px] leading-relaxed text-white/75">
             Dile qué máquina tienes y qué vas a cortar. Te da los parámetros para empezar y revisa que tu máquina pueda con ellos: potencia, flexión de la fresa, alcance del láser, perforación del plasma.
           </p>
@@ -96,6 +98,25 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
       <div className="relative mx-auto -mt-24 max-w-[1280px] px-4 pb-10 lg:px-8">
         <CalculadoraCNC procesoInicial={proceso} />
       </div>
+      <section className="mx-auto max-w-[1280px] px-4 pb-10 lg:px-8">
+        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]">Fórmulas de revoluciones y avance</h2>
+        <div className="grid gap-3 text-[14px] leading-relaxed text-[#40403A] lg:grid-cols-2">
+          <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
+            <p className="m-0 font-bold text-[#142033]">Revoluciones (RPM)</p>
+            <p className="m-0 mt-1 font-mono text-[13px]">RPM = (Vc × 1000) ÷ (π × D)</p>
+            <p className="m-0 mt-1.5">Vc es la velocidad de corte del material en m/min (la da el fabricante de la fresa) y D el diámetro de la fresa en mm.</p>
+          </div>
+          <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
+            <p className="m-0 font-bold text-[#142033]">Avance (mm/min)</p>
+            <p className="m-0 mt-1 font-mono text-[13px]">Avance = RPM × z × fz</p>
+            <p className="m-0 mt-1.5">z es el número de filos y fz la carga de viruta por filo en mm. Si fz es muy baja la fresa roza y se quema; si es muy alta se rompe.</p>
+          </div>
+        </div>
+        <p className="m-0 mt-3 max-w-[760px] text-[13px] leading-relaxed text-[#6B6A63]">
+          Ejemplo con números redondos: una fresa de 6 mm a Vc = 300 m/min gira a (300 × 1000) ÷ (3.1416 × 6) ≈ 15,900 RPM; con 2 filos y fz = 0.1 mm,
+          el avance es 15,900 × 2 × 0.1 ≈ 3,180 mm/min. La calculadora de arriba hace estas cuentas con los rangos del material y revisa que tu máquina las aguante.
+        </p>
+      </section>
       <section className="mx-auto max-w-[1280px] px-4 pb-10 lg:px-8">
         <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]">Cómo se calcula</h2>
         <p className="m-0 mb-4 max-w-[760px] text-[14px] leading-relaxed text-[#6B6A63]">No es una tabla fija: cada resultado sale de un rango de fabricante y después se ajusta a lo que tu máquina puede hacer.</p>

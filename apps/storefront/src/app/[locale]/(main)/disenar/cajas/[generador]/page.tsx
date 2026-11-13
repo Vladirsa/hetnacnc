@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: `${e.descripcion || e.nombre}. Escribe tus medidas y el espesor del material y descarga gratis el archivo para corte láser o router CNC en DXF, SVG, PDF o LightBurn. O pide que un taller cercano te la corte.`,
     alternates: {
       canonical: `${SITIO}/mx/disenar/cajas/${e.id}`,
-      languages: { "es-MX": `${SITIO}/mx/disenar/cajas/${e.id}`, "en-US": `${SITIO}/us/disenar/cajas/${e.id}` },
+      languages: { "es-MX": `${SITIO}/mx/disenar/cajas/${e.id}` },
     },
   }
 }
