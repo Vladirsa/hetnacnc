@@ -15,7 +15,8 @@ import { BarraNavegacion } from "./BarraNavegacion"
 import { FavoritosBoton } from "./Favoritos"
 import { CotizadorBoton } from "./TiendaBoton"
 import { CampanitaChat } from "./chat/CampanitaChat"
-import { MenuMovil } from "./MenuMovil"
+import { MenuMovil, type HerramientaMenu, type NodoMenu } from "./MenuMovil"
+import { GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 import { OcultarAlBajar } from "./OcultarAlBajar"
 import { IdiomaSelector, MonedaSelector } from "./Selectores"
 import { listRegions } from "@/lib/data/regions"
@@ -40,6 +41,20 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
   }
 
   const navCategories = parentCategories
+  // Para el menú de celular: árbol mínimo (sin "Servicios", que vive en
+  // Fabricación) y herramientas reducidas. Ver MenuMovil.
+  const aNodo = (c: HttpTypes.StoreProductCategory): NodoMenu => ({
+    n: c.name,
+    h: c.handle,
+    c: ((c.category_children as HttpTypes.StoreProductCategory[] | undefined) ?? []).map(aNodo),
+  })
+  const arbolMenu = parentCategories.filter((c) => c.handle !== "servicios").map(aNodo)
+  const herramientasMenu: HerramientaMenu[] = GRUPOS_HERRAMIENTAS.map((g) => ({
+    id: g.id,
+    titulo: g.titulo,
+    href: g.href ?? `/herramientas-cnc#${g.id}`,
+    icono: g.icono,
+  }))
   const redes = footerLinks.connect
   const whatsapp = redes.find((r) => r.label === "WhatsApp")?.path
 
@@ -88,8 +103,8 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
       <OcultarAlBajar>
       {/* Barra principal (z-50: sus menus, como el carrito, quedan por encima de la barra azul) */}
       <div className="relative z-50 bg-white border-b border-[#E7E4DC] px-4 lg:px-16 py-3 lg:py-4 flex items-center gap-3 md:gap-4 lg:gap-8">
-        {/* Celular: menú de 3 rayitas con todo lo de la barra azul */}
-        <MenuMovil categorias={navCategories} />
+        {/* Celular y tableta (hasta lg): menú de 3 rayitas */}
+        <MenuMovil arbol={arbolMenu} herramientas={herramientasMenu} />
         <LocalizedClientLink
           href="/"
           className="shrink-0 flex items-center"
@@ -146,9 +161,10 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
         <SaldoCreditos isLoggedIn={isLoggedIn} />
       </div>
 
-      {/* Categorias, servicios y herramientas (solo computadora; se esconde al bajar) */}
+      {/* Menú principal (sólo computadora, desde lg; se esconde al bajar).
+          En celular y tableta lo reemplaza MenuMovil. */}
       <OcultarAlBajar tambienEscritorio>
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <BarraNavegacion categorias={navCategories} />
         </div>
       </OcultarAlBajar>

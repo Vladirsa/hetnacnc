@@ -3,6 +3,27 @@
 import { EN_HERRAMIENTAS } from "./en-herramientas"
 
 export const EN: Record<string, string> = {
+  // Menú principal y buscador (problema 5 de la auditoría)
+  "Fabricación": "Manufacturing",
+  "Cotizar un trabajo": "Get a quote",
+  "Cotizador taller": "Shop quoting app",
+  "Buscar productos y servicios": "Search products and services",
+  "Impresión 3D y producción": "3D printing and production",
+  "Diseño y CAM": "Design and CAM",
+  "Trabajos abiertos": "Open jobs",
+  "Guías CNC": "CNC guides",
+  "Recibe propuestas de talleres": "Get proposals from shops",
+  "Láser, router, plasma y 3D": "Laser, router, plasma and 3D",
+  "Avance y RPM": "Feed and RPM",
+  "Maquila por lotes": "Batch production",
+  "Prototipos": "Prototypes",
+  "4 y 5 ejes": "4 and 5 axis",
+  "Archivos DXF": "DXF files",
+  "Diseño 2D y 3D": "2D and 3D design",
+  "Router CNC": "CNC router",
+  "Categoría": "Category",
+  "Guía": "Guide",
+  "Herramienta": "Tool",
  ...EN_HERRAMIENTAS,
  "Generador 2D y 3D": "2D & 3D Generator",
  "Convierte tu idea, foto o boceto en un archivo listo para cortar o maquinar.": "Turn your idea, photo or sketch into a file ready to cut or machine.",
