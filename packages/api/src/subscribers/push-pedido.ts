@@ -34,7 +34,8 @@ export default async function pushPedido({ event, container }: SubscriberArgs<{ 
 
     if (event.name === "order.canceled") {
       await pushATalleres(knex, talleres, { titulo: `Pedido #${o.display_id} cancelado`, cuerpo: "No lo prepares ni lo envíes.", url: `/seller/orders/${o.id}`, etiqueta: `pedido-${o.id}` }, logger)
-      await pushACliente(knex, { customerId: o.customer_id, email: o.email }, { titulo: `Tu pedido #${o.display_id} fue cancelado`, cuerpo: "Si pagaste, el reembolso se hace al mismo medio de pago.", url: "/mx/user/orders", etiqueta: `pedido-${o.id}` }, logger)
+      // El WhatsApp de pedidos lo manda subscribers/whatsapp-pedido.ts
+      await pushACliente(knex, { customerId: o.customer_id, email: o.email }, { titulo: `Tu pedido #${o.display_id} fue cancelado`, cuerpo: "Si pagaste, el reembolso se hace al mismo medio de pago.", url: "/mx/user/orders", etiqueta: `pedido-${o.id}` }, logger, { whatsapp: false })
       return
     }
     await pushATalleres(
@@ -47,7 +48,8 @@ export default async function pushPedido({ event, container }: SubscriberArgs<{ 
       knex,
       { customerId: o.customer_id, email: o.email },
       { titulo: `Recibimos tu pedido #${o.display_id}`, cuerpo: "Te avisaremos aquí cuando vaya en camino.", url: "/mx/user/orders", etiqueta: `pedido-${o.id}` },
-      logger
+      logger,
+      { whatsapp: false }
     )
   } catch (e) {
     logger.warn(`[push] pedido ${event.data.id}: ${(e as Error).message}`)

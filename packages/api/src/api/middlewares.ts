@@ -27,6 +27,7 @@ import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
 import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
 import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
+import { storeAfiliacionMiddlewares } from "./store/hetna-afiliacion/middlewares";
 import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
 import { sinContacto } from "../lib/clientes-taller";
 import { ipCliente } from "../lib/ip-cliente";
@@ -172,6 +173,7 @@ export default defineMiddlewares({
         ...storeSolicitudesTallerMiddlewares,
         ...storeCuponesMiddlewares,
         ...storeRecomiendaMiddlewares,
+        ...storeAfiliacionMiddlewares,
         // CORS de la app del Cotizador en web (localhost:8080) para /api/cotizador-*
         ...corsAppMiddlewares,
         // Cotizador en línea de cada taller: el cliente sube su archivo (hetnacnc.com/t/<slug>)

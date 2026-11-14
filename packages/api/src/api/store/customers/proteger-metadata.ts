@@ -28,6 +28,8 @@ const PROTEGIDAS = [
   "referido_en",
   "recompensa_referido_en",
   "recompensa_referido_cupon",
+  // Número de afiliación (lib/afiliacion.ts)
+  "afiliacion",
 ]
 
 type Meta = Record<string, unknown>

@@ -1,6 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { activandoDesdeCorreo, afiliar } from "../lib/afiliacion"
 import { sendEmail } from "../lib/resend"
 import { welcomeEmailHtml } from "../lib/email-templates"
 import { mandarCorreoVerificacion, requiereVerificacion } from "../lib/verificar-correo"
@@ -25,6 +26,26 @@ export default async function customerCreatedWelcomeEmail({
     // cuenta: no les mandamos correo de bienvenida, solo a quien se registró.
     if (!customer?.email || !customer.has_account) {
       return
+    }
+
+    // Número de afiliación para toda cuenta nueva (lib/afiliacion.ts)
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+    try {
+      const af = await afiliar(knex, {
+        email: customer.email,
+        nombre: customer.first_name || null,
+        origen: "registro",
+        customerId: customer.id,
+      })
+      if (af && (customer.metadata as any)?.afiliacion !== af.numero) {
+        const clientes = container.resolve(Modules.CUSTOMER) as any
+        await clientes.updateCustomers(customer.id, { metadata: { ...(customer.metadata || {}), afiliacion: af.numero } })
+      }
+      // Viene de «Activar mi cuenta» con la liga del correo: esa activación
+      // confirma el correo y manda su propia bienvenida.
+      if (await activandoDesdeCorreo(knex, customer.email)) return
+    } catch (e) {
+      logger.warn(`[afiliacion] no se pudo asignar número a ${customer.email}: ${(e as Error).message}`)
     }
 
     // Cuenta nueva: primero tiene que confirmar el correo. La bienvenida sale

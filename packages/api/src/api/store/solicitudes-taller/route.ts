@@ -2,6 +2,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SUBIDA, asegurarSubidas } from "../../../lib/archivo-seguro"
+import { afiliar, ligaActivar, tieneCuenta } from "../../../lib/afiliacion"
+import { bloqueAfiliacion } from "../../../lib/afiliacion-correos"
 import { sendEmail } from "../../../lib/resend"
 import { difundirSolicitud } from "../../../lib/difusion"
 import { ADMIN_URL, asegurarSeguimiento, cambiarEtapa, horasRevision, revisionActiva } from "../../../lib/seguimiento"
@@ -39,6 +41,8 @@ type Body = {
   email?: string
   telefono?: string
   whatsapp?: string
+  // Alta rápida con número de afiliado (lib/afiliacion.ts)
+  crear_cuenta?: boolean | string
   ciudad?: string
   estado_mx?: string
   cp?: string
@@ -260,8 +264,42 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     return res.status(500).json({ message: "No se pudo registrar tu solicitud. Intenta de nuevo en unos minutos." })
   }
 
+  // Alta rápida del cliente (lib/afiliacion.ts): sin sesión y con la casilla
+  // «Crear mi cuenta» marcada, recibe ya su número de afiliado y la liga para
+  // elegir su contraseña. Si falla, la solicitud sigue igual.
+  let afiliacion: { numero: string; activar: string | null; cuenta_existe: boolean; ligaCorreo: string | null } | null = null
+  const sesion = (req as any).auth_context?.actor_id
+  if (!sesion && si(b.crear_cuenta)) {
+    try {
+      const a = await afiliar(knex, {
+        email,
+        nombre: contacto.nombre || null,
+        telefono: contacto.whatsapp || contacto.telefono || null,
+        origen: "solicitud",
+      })
+      if (a) {
+        const existe = !!a.customer_id || (await tieneCuenta(knex, email))
+        afiliacion = {
+          numero: a.numero,
+          activar: existe ? null : ligaActivar(a.token_pantalla),
+          cuenta_existe: existe,
+          ligaCorreo: existe ? null : ligaActivar(a.token_correo),
+        }
+      }
+    } catch (e) {
+      logger.warn(`[afiliacion] no se pudo dar número a ${email}: ${(e as Error).message}`)
+    }
+  }
+
   // Respondemos ya; los correos salen después (Resend permite ~2 por segundo).
-  res.status(200).json({ ok: true, folio, token, taller: taller ? taller.name : null, revision })
+  res.status(200).json({
+    ok: true,
+    folio,
+    token,
+    taller: taller ? taller.name : null,
+    revision,
+    afiliacion: afiliacion ? { numero: afiliacion.numero, activar: afiliacion.activar, cuenta_existe: afiliacion.cuenta_existe } : null,
+  })
 
   const liga = ligaPropuestas(token)
 
@@ -311,6 +349,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
           ` Te avisaremos por correo en cada paso.</p>` +
           `<p style="margin:0 0 12px;color:#40403A">Guarda esta liga: ahí ves en qué va tu solicitud, comparas propuestas y eliges.</p>` +
           boton("Seguir mi solicitud", liga) +
+          (afiliacion ? bloqueAfiliacion({ numero: afiliacion.numero, ligaActivar: afiliacion.ligaCorreo }) : "") +
           `<hr style="border:0;border-top:1px solid #E7E4DC;margin:20px 0"/>` +
           tablaTrabajo(trabajo)
       ),

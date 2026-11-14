@@ -664,7 +664,9 @@ async function registrarEnPedido(c: MedusaContainer, orderId: string) {
         url: fila.rastreo_url || "/mx/user/orders",
         etiqueta: `pedido-${orderId}`,
       },
-      logger
+      logger,
+      // El WhatsApp «va en camino» lo manda subscribers/whatsapp-pedido.ts
+      { whatsapp: false }
     )
     const rastreo = fila.rastreo_url
       ? `<p style="margin-top:20px;"><a href="${fila.rastreo_url}" style="background:#C2560A;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Rastrear mi paquete</a></p>`

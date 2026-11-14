@@ -9,7 +9,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { contarSinLeer } from "@/lib/chat/campanita"
 import { misSolicitudes } from "@/lib/cotizar/solicitud-taller"
 import { obtenerSaldo } from "@/lib/creditos/acciones"
-import { retrieveCustomer } from "@/lib/data/customer"
+import { miAfiliacion, retrieveCustomer } from "@/lib/data/customer"
 import { listOrders } from "@/lib/data/orders"
 import { misEnvios } from "@/lib/envios/cotizar"
 import { sesionForo } from "@/lib/foro/consultas"
@@ -51,9 +51,10 @@ const TONOS = {
   azul: "border-[#C9D6EC] bg-[#EEF3FB] text-[#1D3E6E]",
 }
 
-export default async function MiCuenta() {
+export default async function MiCuenta({ searchParams }: { searchParams: Promise<{ bienvenida?: string }> }) {
   const user = await retrieveCustomer()
   if (!user) redirect("/login")
+  const [{ bienvenida }, afiliacion] = await Promise.all([searchParams, miAfiliacion().catch(() => null)])
 
   const [todosPedidos, envios, saldo, foro, solicitudes, chat] = await Promise.all([
     listOrders(20).catch(() => []),
@@ -176,6 +177,25 @@ export default async function MiCuenta() {
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-8">
         <UserNavigation />
         <div className="flex min-w-0 flex-col gap-6 md:col-span-3">
+          {bienvenida && (
+            <section className="rounded-[18px] border-2 border-[#C2560A] bg-[#FDEEE1] p-5 text-[#142033]">
+              <p className="m-0 text-[20px] font-extrabold">¡Tu cuenta está activa{afiliacion ? `, afiliado ${afiliacion}` : ""}!</p>
+              <ul className="m-0 mt-2 space-y-1 p-0 text-[14px] text-[#40403A] [list-style:none]">
+                <li>🎁 Usa el cupón <b>BIENVENIDA</b>: $100 de descuento en tu primera compra de $800 o más.</li>
+                <li>
+                  📋 Tus solicitudes de cotización ya están en{" "}
+                  <LocalizedClientLink href="/user/solicitudes" className="font-semibold text-[#C2560A] underline">Mis solicitudes</LocalizedClientLink>.
+                </li>
+                <li>
+                  🛠️ ¿Tienes taller?{" "}
+                  <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#C2560A] underline">
+                    Regístralo gratis y prueba 14 días el Cotizador CNC
+                  </LocalizedClientLink>
+                  .
+                </li>
+              </ul>
+            </section>
+          )}
           {/* Encabezado */}
           <section className="flex flex-wrap items-center gap-4 rounded-[18px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5 sm:p-6">
             <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#C2560A] text-2xl font-bold text-white">
@@ -187,6 +207,11 @@ export default async function MiCuenta() {
                 {user.email}
                 {user.created_at ? ` · Cliente desde ${new Date(user.created_at).toLocaleDateString("es-MX", { month: "long", year: "numeric" })}` : ""}
               </p>
+              {afiliacion && (
+                <p className="m-0 mt-1 text-[13px] text-[#142033]">
+                  Afiliado <b className="tracking-wide">{afiliacion}</b>
+                </p>
+              )}
             </div>
             {creditos != null && (
               <LocalizedClientLink href="/user/creditos" className="rounded-[12px] bg-[#F4F1EA] px-4 py-2 text-center hover:bg-[#EDE8DC]">

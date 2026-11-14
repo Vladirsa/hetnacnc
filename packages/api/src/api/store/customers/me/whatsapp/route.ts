@@ -7,6 +7,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { confirmarCodigo, estadoDe, iniciarVerificacion, mandarCodigo } from "../../../../../lib/whatsapp"
+import { ponerAlDiaPedidos } from "../../../../../lib/whatsapp-pedidos"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const customerId = req.auth_context?.actor_id
@@ -25,7 +26,12 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       return res.json({ numero: r.numero, liga: r.liga })
     }
     if (b.accion === "codigo") return res.json(await mandarCodigo(knex, String(b.numero || "")))
-    if (b.accion === "confirmar") return res.json(await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || "")))
+    if (b.accion === "confirmar") {
+      const r = await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || ""))
+      // Ya verificado: el seguimiento de sus pedidos abiertos sigue por WhatsApp
+      setTimeout(() => void ponerAlDiaPedidos(req.scope, customerId, req.scope.resolve("logger")), 5000)
+      return res.json(r)
+    }
     res.status(400).json({ message: "Acción no válida." })
   } catch (e) {
     res.status(400).json({ message: (e as Error).message })

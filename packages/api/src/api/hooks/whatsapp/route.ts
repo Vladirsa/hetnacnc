@@ -6,7 +6,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { esPropio, mensajeEntrante } from "../../../lib/whatsapp"
+import { T_WA, esPropio, mensajeEntrante, normalizarNumero } from "../../../lib/whatsapp"
+import { ponerAlDiaPedidos } from "../../../lib/whatsapp-pedidos"
 import { intentarResponder, pausarChat } from "../../../lib/whatsapp-bot"
 import { tokenValido } from "../../../lib/social-hub-token"
 
@@ -26,6 +27,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     }
     const m = { numero: String(b.numero || ""), texto: String(b.texto || "").slice(0, 2000), tipo: String(b.tipo || "texto"), mensaje_id: b.mensaje_id ? String(b.mensaje_id).slice(0, 120) : undefined, base64: typeof b.base64 === "string" ? b.base64.slice(0, 12_000_000) : null }
     const r = await mensajeEntrante(req.scope, m, logger)
+    // Recién verificado: si es cliente, le mandamos cómo van sus pedidos abiertos (después de la bienvenida)
+    if (r.manejado && (r as any).accion === "verificado") {
+      const fila = await knex(T_WA).where({ numero: normalizarNumero(m.numero) }).first().catch(() => null)
+      if (fila?.customer_id) setTimeout(() => void ponerAlDiaPedidos(req.scope, fila.customer_id, logger), 5000)
+    }
     if (r.manejado) return res.json(r)
     // Si no era verificación, BAJA/ALTA ni fotos: el respondedor (si está encendido)
     if (await intentarResponder(knex, m, logger).catch(() => false)) return res.json({ manejado: true, accion: "respondedor" })
