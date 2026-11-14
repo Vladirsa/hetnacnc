@@ -9,6 +9,9 @@
 // - Sólo datos reales: DATOS_HETNA, las herramientas y planes con sus precios
 //   del código, y productos de la tienda que coinciden (nombre y liga; el precio
 //   está en la liga). Nunca inventa precios, descuentos, plazos ni existencias.
+// - Precio aproximado de piezas a la medida: el agente junta servicio, material,
+//   medidas y cantidad; el rango lo calcula lib/whatsapp-estimado.ts con el mismo
+//   estimador de la página y el texto con el precio lo arma el código.
 // - Cliente caliente, queja, pago, factura o negociación: te avisa por Telegram
 //   con el resumen del cliente para que cierres tú.
 // - Espera unos segundos por si el cliente manda varios mensajes seguidos y
@@ -22,6 +25,7 @@ import { DATOS_HETNA } from "./social-comentarios"
 import { mandarPrivado } from "./social-telegram"
 import { enviarTexto, normalizarNumero, whatsappListo } from "./whatsapp"
 import { IA_MODELO_WHATSAPP, modeloIA } from "./ia-modelo"
+import { ESQUEMA_ESTIMADO, REGLAS_ESTIMADO, calcularEstimado, catalogoEstimado } from "./whatsapp-estimado"
 
 export const T_CHAT = "hetna_whatsapp_chat"
 export const T_MSG = "hetna_whatsapp_msg"
@@ -134,7 +138,7 @@ export function catalogoVentas() {
 
 const ESQUEMA = {
   type: "object", additionalProperties: false,
-  required: ["tipo", "respuesta", "perfil", "temperatura", "avisar_equipo", "resumen_para_equipo"],
+  required: ["tipo", "respuesta", "perfil", "temperatura", "avisar_equipo", "resumen_para_equipo", "estimado"],
   properties: {
     tipo: { type: "string", enum: ["responder", "pasar_a_persona", "ignorar"] },
     respuesta: { type: "string" },
@@ -149,6 +153,7 @@ const ESQUEMA = {
     temperatura: { type: "string", enum: ["frio", "tibio", "caliente"] },
     avisar_equipo: { type: "boolean" },
     resumen_para_equipo: { type: "string" },
+    estimado: ESQUEMA_ESTIMADO,
   },
 }
 
@@ -163,13 +168,14 @@ const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }
   "- Objeciones (precio, confianza, tiempo): responde con hechos de abajo (pago protegido, talleres verificados con evaluaciones, empieza gratis), sin presionar.\n" +
   "- Usa el nombre del cliente si lo dio. No repitas lo que ya dijiste en la conversación.\n\n" +
   "Reglas que no se rompen:\n" +
-  "- Usa SÓLO los datos y productos de abajo. Nunca inventes precios de productos o piezas, descuentos, existencias, tiempos de entrega, costos de envío ni capacidades. El precio de un producto está en su liga; el de una pieza a la medida lo dan los talleres al cotizar.\n" +
+  "- Usa SÓLO los datos y productos de abajo. Nunca inventes precios de productos o piezas, descuentos, existencias, tiempos de entrega, costos de envío ni capacidades. El precio de un producto está en su liga; el de una pieza a la medida lo dan los talleres al cotizar (salvo el aproximado que calcula el sistema, ver «estimado» abajo).\n" +
   "- Los únicos precios que puedes decir son los de los planes del Cotizador escritos abajo.\n" +
   "- tipo = pasar_a_persona si: queja, problema con un pedido, pago o envío, factura, piden hablar con alguien, quieren negociar o un trato especial, o no se puede contestar con estos datos. En respuesta dile que una persona del equipo le contesta en breve (y si falta, pídele el dato que ayude: qué pieza, cuántas, ciudad).\n" +
   "- tipo = ignorar sólo para «ok», «gracias», stickers o spam cuando no hace falta contestar (respuesta vacía).\n" +
   "- temperatura: caliente = quiere comprar o cotizar ya, pidió precio de algo concreto con cantidad, es empresa o pedido grande, o quiere contratar un plan; tibio = interesado con dudas; frio = sólo curiosea.\n" +
   "- avisar_equipo = true cuando está caliente o pasas a persona. resumen_para_equipo: quién es, qué necesita, datos que dio y qué le ofreciste, en 2 a 3 líneas.\n" +
   "- perfil: llena lo que ya se sabe de la conversación (vacío si no se sabe).\n\n" +
+  REGLAS_ESTIMADO + catalogoEstimado() + "\n\n" +
   "Datos de HETNA (lo único que puedes afirmar):\n- " + catalogo.join("\n- ") +
   "\n\nProductos de la tienda que coinciden con la conversación:\n" + (productos.length ? productos.map((p) => `- ${p.nombre}: ${p.liga}`).join("\n") : "(ninguno)") +
   (perfil ? `\n\nLo que ya sabemos de este cliente: ${JSON.stringify(perfil)}` : "")
@@ -260,6 +266,16 @@ async function contestar(knex: any, numero: string, logger?: any) {
       updated_at: new Date(),
     })
     let respuesta = String(r.respuesta || "").trim()
+    // Precio aproximado: el número y el texto los pone el código, nunca la IA
+    if (r.tipo === "responder" && r.estimado?.pedir) {
+      const est = calcularEstimado(r.estimado)
+      respuesta = [est.texto, respuesta].filter(Boolean).join("\n\n")
+      if (est.ok) {
+        r.temperatura = "caliente"
+        r.avisar_equipo = true
+        r.resumen_para_equipo = `${r.resumen_para_equipo || ""} · Le dimos un aproximado: ${est.resumen}`.replace(/^ · /, "")
+      }
+    }
     if (r.tipo === "ignorar" && !respuesta) return
     if (!respuesta) respuesta = "Gracias por escribir. Una persona del equipo de HETNA te contesta en breve."
     await enviarTexto(numero, respuesta.slice(0, 1500))
