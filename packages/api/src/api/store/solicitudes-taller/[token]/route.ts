@@ -1,3 +1,4 @@
+import { asegurarVersiones, historialDe } from "../../../../lib/licitacion-versiones"
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
@@ -43,12 +44,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const clienteId = (req as unknown as AuthenticatedMedusaRequest).auth_context?.actor_id
   if (clienteId) await ligarCliente(knex, s.id, clienteId).catch(() => {})
 
+  await asegurarVersiones(knex) // agrega la columna "version" si todavía no existe
   const props = (await knex(`${T_PROPUESTA} as p`)
     .join("seller as v", "v.id", "p.seller_id")
     .where("p.solicitud_id", s.id)
     .select(
       "p.id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado", "p.created_at", "p.anticipo_pct",
-      "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos",
+      "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos", "p.version",
       "v.name as taller", "v.handle", "v.metadata"
     )) as any[]
 
@@ -56,6 +58,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const clavesAdj = props.flatMap((p) => (Array.isArray(p.adjuntos) ? p.adjuntos : []).map((a: any) => a.clave))
   const ligasAdj = clavesAdj.length ? await getSignedDownloadUrls(clavesAdj, 3600).catch(() => new Map<string, string>()) : new Map<string, string>()
 
+  // Versiones anteriores y contraofertas de cada propuesta
+  const hist = await historialDe(knex, s.id).catch(() => null)
   const propuestas = props
     .map((p) => {
       const perfil = p.metadata?.perfil || {}
@@ -101,6 +105,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           capacidad: capacidadTaller(perfil.maquinas),
         },
         destacado: pesoPlan(p.metadata) > 0,
+        version: Number(p.version || 1),
+        historial: hist?.versiones.get(p.id) || [],
+        contraofertas: hist?.contras.get(p.id) || [],
         _peso: puntajePosicion(p.metadata),
       }
     })

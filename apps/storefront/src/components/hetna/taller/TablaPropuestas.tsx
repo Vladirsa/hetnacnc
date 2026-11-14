@@ -74,6 +74,7 @@ export default function TablaPropuestas({
   elegida,
   abierta,
   onElegir,
+  negociacion,
 }: {
   propuestas: Propuesta[]
   /** Lo que le falta a cada propuesta (de la comparación del servidor) */
@@ -81,6 +82,8 @@ export default function TablaPropuestas({
   elegida?: string | null
   abierta: boolean
   onElegir: (p: Propuesta) => void
+  /** Versiones y contraofertas de cada propuesta (renglón "Negociación") */
+  negociacion?: (p: Propuesta) => React.JSX.Element
 }) {
   // Celda ganadora de cada fila (si no empatan todos)
   const ganadores = FILAS.map((f) => {
@@ -125,6 +128,16 @@ export default function TablaPropuestas({
               })}
             </tr>
           ))}
+          {negociacion && (
+            <tr className="bg-white">
+              <th scope="row" className="sticky left-0 z-10 bg-white p-3 text-left align-top font-semibold text-[#142033]" title="Versiones de la propuesta y tus contraofertas">
+                Negociación
+              </th>
+              {propuestas.map((p) => (
+                <td key={p.id} className="p-3 align-top">{negociacion(p)}</td>
+              ))}
+            </tr>
+          )}
           <tr className="bg-[#FFF8EE]">
             <th scope="row" className="sticky left-0 z-10 bg-[#FFF8EE] p-3 text-left align-top font-semibold text-[#8A5A00]">Pregúntale antes</th>
             {propuestas.map((p) => (
