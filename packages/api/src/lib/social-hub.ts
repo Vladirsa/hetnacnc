@@ -23,6 +23,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { STORE_URL, nuevoId } from "./licitacion"
 import { publicarThreads, threadsListo } from "./threads"
 import { borradorTikTok, tiktokConectado } from "./tiktok"
+import { pinterestConectado, publicarPinterest } from "./pinterest"
 import { sendEmail } from "./resend"
 import { modeloIA } from "./ia-modelo"
 
@@ -501,7 +502,9 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   const cfgPub = await leerConfig(knex)
   // TikTok: si está conectado y hay video, se manda como borrador a la app (el dueño lo publica con un toque)
   const tiktok = (p.redes as Red[]).includes("tiktok") && !!video && (await tiktokConectado(knex))
-  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : r === "threads" ? threadsListo() : r === "tiktok" ? tiktok : !!REDES[r]?.auto)
+  // Pinterest: si está conectado y hay imagen, sale como pin (los videos se quedan a mano)
+  const pinterest = (p.redes as Red[]).includes("pinterest") && !!(imagen || imagenes[0]) && (await pinterestConectado(knex).catch(() => false))
+  const esAuto = (r: string) => (r === "youtube" ? cfgPub.youtube_auto : r === "threads" ? threadsListo() : r === "tiktok" ? tiktok : r === "pinterest" ? pinterest : !!REDES[r]?.auto)
   for (const red of (p.redes as Red[]).filter((r) => !soloRedes || soloRedes.includes(r))) {
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
@@ -526,6 +529,8 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
         ? await publicarThreads(knex, { texto, imagen, video, imagenes })
         : red === "tiktok"
         ? await borradorTikTok(knex, video)
+        : red === "pinterest"
+        ? await publicarPinterest(knex, { texto, titulo: p.titulo, imagen: imagen || imagenes[0], liga })
         : red === "youtube"
         ? await enviarAN8n(youtubeDe(texto, p.titulo, video))
         : red === "instagram_historia"

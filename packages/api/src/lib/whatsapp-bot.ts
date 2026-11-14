@@ -21,7 +21,7 @@ import { T_CONFIG_S, asegurarSocial, iaSocial } from "./social-hub"
 import { DATOS_HETNA } from "./social-comentarios"
 import { mandarPrivado } from "./social-telegram"
 import { enviarTexto, normalizarNumero, whatsappListo } from "./whatsapp"
-import { modeloIA } from "./ia-modelo"
+import { IA_MODELO_WHATSAPP, modeloIA } from "./ia-modelo"
 
 export const T_CHAT = "hetna_whatsapp_chat"
 export const T_MSG = "hetna_whatsapp_msg"
@@ -188,7 +188,7 @@ export async function redactar(historia: { rol: string; texto: string }[], produ
   while (turnos.length && turnos[0].role !== "user") turnos.shift()
   if (!turnos.length || turnos[turnos.length - 1].role !== "user") return null
   const resp = await ia.beta.messages.create({
-    ...modeloIA(),
+    ...modeloIA(IA_MODELO_WHATSAPP()),
     max_tokens: 1200,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
     system: SISTEMA(catalogoVentas(), productos, perfil),

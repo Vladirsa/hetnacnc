@@ -8,6 +8,7 @@ import { MERCADOS, ORIGENES, REDES, T_POST, asegurarSocial, crearPublicacion, le
 import { puntuar } from "../../../lib/estrategia"
 import { threadsListo } from "../../../lib/threads"
 import { tiktokConectado } from "../../../lib/tiktok"
+import { pinterestConectado } from "../../../lib/pinterest"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -28,9 +29,10 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   // "a mano" en cuanto están conectadas: lo mismo que decide publicar()
   const config = await leerConfig(knex)
   const tiktok = await tiktokConectado(knex).catch(() => false)
+  const pinterest = await pinterestConectado(knex).catch(() => false)
   const autoDe = (clave: string, r: any) =>
-    clave === "youtube" ? !!config.youtube_auto : clave === "threads" ? threadsListo() : clave === "tiktok" ? !!tiktok : !!r.auto
-  const notas: Record<string, string> = { tiktok: "Con video llega como borrador a la app de TikTok: tú le das Publicar" }
+    clave === "youtube" ? !!config.youtube_auto : clave === "threads" ? threadsListo() : clave === "tiktok" ? !!tiktok : clave === "pinterest" ? !!pinterest : !!r.auto
+  const notas: Record<string, string> = { tiktok: "Con video llega como borrador a la app de TikTok: tú le das Publicar", pinterest: "Las publicaciones con imagen salen como pin; las de video se quedan para copiar y pegar" }
   res.json({
     publicaciones,
     redes: Object.entries(REDES).map(([clave, r]) => ({ clave, ...r, auto: autoDe(clave, r), nota: autoDe(clave, r) ? notas[clave] : undefined })),
