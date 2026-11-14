@@ -133,6 +133,12 @@ export default defineMiddlewares({
           matcher: "/vendor/hetna-solicitudes/:id/adjunto",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 25 })],
         },
+        // Seguimiento: foto del avance de un hito de producción
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-solicitudes/:id/hito-foto",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 15 })],
+        },
         // PDF de un libro de la Academia desde el panel del taller
         {
           method: ["POST"],
