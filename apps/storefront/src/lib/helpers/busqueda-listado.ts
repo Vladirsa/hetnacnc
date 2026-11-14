@@ -4,9 +4,10 @@
 // vuelve a pedir cuando cambian los filtros: así los dos piden lo mismo.
 import { PRODUCT_LIMIT } from "@/const"
 import type { SortOptions } from "@/types/product"
+import { leerFiltroLicencia, type FiltroLicencia } from "@/lib/helpers/filtrar-listado"
 
 // Parámetros que manejan el listado en sí y no son filtros por atributo.
-export const PARAMS_RESERVADOS = new Set(["query", "page", "sortBy", "min_price", "max_price", "disponible"])
+export const PARAMS_RESERVADOS = new Set(["query", "page", "sortBy", "min_price", "max_price", "disponible", "licencia"])
 
 export type ArgsListado = {
   query?: string
@@ -16,6 +17,8 @@ export type ArgsListado = {
   minPrice?: number
   maxPrice?: number
   onlyAvailable: boolean
+  // Licencia de diseños (lib/helpers/filtrar-listado.ts)
+  licencia?: FiltroLicencia
   attributes: Record<string, string[]>
 }
 
@@ -35,12 +38,13 @@ export function argsDeListado(params: URLSearchParams): ArgsListado {
     minPrice: min ? Number(min) : undefined,
     maxPrice: max ? Number(max) : undefined,
     onlyAvailable: params.get("disponible") === "1",
+    licencia: leerFiltroLicencia(params.get("licencia")),
     attributes,
   }
 }
 
 /** Una clave estable para saber si la primera página del servidor sirve para lo que pide el navegador. */
-export const claveListado = (a: ArgsListado, extra: string) => JSON.stringify([extra, a.query ?? "", a.page, a.sortBy ?? "", a.minPrice ?? "", a.maxPrice ?? "", a.onlyAvailable, Object.entries(a.attributes).sort()])
+export const claveListado = (a: ArgsListado, extra: string) => JSON.stringify([extra, a.query ?? "", a.page, a.sortBy ?? "", a.minPrice ?? "", a.maxPrice ?? "", a.onlyAvailable, a.licencia ?? "", Object.entries(a.attributes).sort()])
 
 /** Los parámetros que Next entrega a la página, como URLSearchParams. */
 export function paramsDe(sp: Record<string, string | string[] | undefined> | undefined): URLSearchParams {

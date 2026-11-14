@@ -3,7 +3,7 @@
 import { HttpTypes } from '@medusajs/types';
 
 import { sortProducts } from '@/lib/helpers/sort-products';
-import { filtrarYOrdenar } from '@/lib/helpers/filtrar-listado';
+import { filtrarYOrdenar, type FiltroLicencia } from '@/lib/helpers/filtrar-listado';
 import { SortOptions } from '@/types/product';
 
 import { sdk } from '../client';
@@ -255,6 +255,7 @@ export const searchProducts = async ({
   minPrice,
   maxPrice,
   onlyAvailable,
+  licencia,
 }: {
   query?: string;
   countryCode?: string;
@@ -270,6 +271,8 @@ export const searchProducts = async ({
   minPrice?: number;
   maxPrice?: number;
   onlyAvailable?: boolean;
+  /** Licencia de diseños (?licencia=). */
+  licencia?: FiltroLicencia;
 }): Promise<{
   products: HttpTypes.StoreProduct[];
   count: number;
@@ -315,6 +318,7 @@ export const searchProducts = async ({
     typeof minPrice === 'number' ||
     typeof maxPrice === 'number' ||
     Boolean(onlyAvailable) ||
+    Boolean(licencia) ||
     sortBy === 'price_asc' ||
     sortBy === 'price_desc';
   if (conFiltros) {
@@ -324,7 +328,7 @@ export const searchProducts = async ({
       todos.push(...r.products);
       if (r.products.length < 100 || todos.length >= r.count) break;
     }
-    const lista = filtrarYOrdenar(todos, { min: minPrice, max: maxPrice, disponible: onlyAvailable }, sortBy);
+    const lista = filtrarYOrdenar(todos, { min: minPrice, max: maxPrice, disponible: onlyAvailable, licencia }, sortBy);
     return {
       products: lista.slice(offset, offset + limit),
       count: lista.length,

@@ -9,6 +9,7 @@ const filtersLabels = {
   min_price: "Precio mínimo",
   max_price: "Precio máximo",
   disponible: "Existencia",
+  licencia: "Licencia",
   color: "Color",
   size: "Medida",
   query: "Búsqueda",
@@ -49,7 +50,11 @@ export const ActiveFilterElement = ({
         const Element = () => {
           return (
             <span className="flex gap-2 items-center cursor-default whitespace-nowrap">
-              {filter[0] === "disponible" ? "Sólo con existencia" : element}{" "}
+              {filter[0] === "disponible"
+                ? "Sólo con existencia"
+                : filter[0] === "licencia"
+                  ? ({ personal: "Personal", comercial: "Para vender piezas", comercial_ampliada: "Producción sin límite" } as Record<string, string>)[element] || element
+                  : element}{" "}
               <span onClick={() => removeFilterHandler(element)}>
                 <CloseIcon size={16} className="cursor-pointer" />
               </span>

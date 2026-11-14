@@ -88,6 +88,7 @@ Respuestas recibidas a `preguntas-contador-y-abogado.md`. Son **preliminares**: 
 
 - Disputas (términos para clientes, seguimiento de la solicitud y preguntas de fabricación): "buscamos resolver en 5 días hábiles", con derecho a responder, decisión registrada y aclaración de que no limita acudir a la PROFECO. Términos actualizados al 14 nov.
 - Aviso de privacidad 2.6: usos de Claude por medio de la API comercial, y atención humana en WhatsApp.
+- **Licencias de diseños** (pregunta 8): personal, comercial limitada (con número de piezas) y comercial ampliada. El vendedor elige la licencia de cada diseño en su panel (Licencias), la ficha la muestra antes de pagar, la tienda filtra por licencia y la página /mx/licencias-disenos explica las tres. Términos cláusula 8 actualizada para remitir a esa página. **El abogado debe revisar los textos** (`apps/storefront/src/lib/hetna/licencias.ts`): territorio, duración, modificaciones y transferencia.
 - Los términos de vendedores **no se tocaron**: los revisa el abogado antes de publicar la v1.5.
 
 ## Pendientes del dueño
