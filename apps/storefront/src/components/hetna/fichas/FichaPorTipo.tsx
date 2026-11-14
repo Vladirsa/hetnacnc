@@ -3,6 +3,7 @@
 // conserva su bloque de envíos y devoluciones (ProductDetailsShipping).
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { datosDigital, datosServicio } from "@/lib/hetna/tipo-ficha"
+import { REGLAS_COMUNES, licenciaDe } from "@/lib/hetna/licencias"
 
 type Meta = Record<string, unknown> | null | undefined
 
@@ -28,6 +29,38 @@ const Lista = ({ titulo, items, marca = "✓" }: { titulo: string; items: string
     </div>
   ) : null
 
+/** Qué permite la licencia de ESTE diseño, antes de comprarlo. */
+export const BloqueLicencia = ({ metadata }: { metadata: Meta }) => {
+  const { licencia, piezas } = licenciaDe(metadata)
+  return (
+    <div className="mt-3 rounded-[10px] border border-[#E7E4DC] bg-[#FAF6EF] p-3 text-[13.5px]" data-testid="bloque-licencia">
+      <p className="m-0">
+        <strong className="text-[#142033]">Licencia {licencia.nombre}</strong>
+        {piezas ? ` · hasta ${piezas.toLocaleString("es-MX")} piezas` : ""}. {licencia.resumen}
+      </p>
+      <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+        {licencia.permisos.map((p) => (
+          <li key={p.que} className="flex gap-2">
+            <span className={p.si ? "text-[#17803F]" : "text-[#B91C1C]"} aria-label={p.si ? "Sí" : "No"}>
+              {p.si ? "✓" : "✕"}
+            </span>
+            <span>
+              {p.que}
+              {p.nota ? <span className="text-[#6B6A63]"> ({p.nota})</span> : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="m-0 mt-2 text-[12.5px] text-[#6B6A63]">
+        {REGLAS_COMUNES[0]}{" "}
+        <LocalizedClientLink href="/licencias-disenos" className="font-semibold text-[#B34D07] underline">
+          Ver las tres licencias
+        </LocalizedClientLink>
+      </p>
+    </div>
+  )
+}
+
 /** Plantilla A: qué trae el archivo y su licencia. */
 export const FichaDigital = ({ metadata }: { metadata: Meta }) => {
   const d = datosDigital(metadata)
@@ -50,9 +83,7 @@ export const FichaDigital = ({ metadata }: { metadata: Meta }) => {
           ))}
         </dl>
       )}
-      <p className="mt-3 rounded-[8px] bg-[#FAF6EF] p-3 text-[13.5px]">
-        <strong>Licencia.</strong> {d.licencia}
-      </p>
+      <BloqueLicencia metadata={metadata} />
       <p className="mt-2 text-[13px] text-[#6B6A63]">
         Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.{" "}
         <LocalizedClientLink href="/devoluciones" className="underline">

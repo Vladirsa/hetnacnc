@@ -40,10 +40,8 @@ const lista = (v: unknown): string[] =>
 
 // ---------------------------------------------------------------- digital
 
-export type DatosDigital = { filas: [string, string][]; licencia: string }
-
-const LICENCIA =
-  "Para tu uso: puedes cortar o imprimir las piezas que necesites. No se permite revender ni compartir el archivo. Si lo quieres para producir y vender piezas en serie, escríbenos antes de comprar."
+// La licencia ya no va aquí: cada diseño trae la suya (lib/hetna/licencias.ts)
+export type DatosDigital = { filas: [string, string][] }
 
 /** Lo que trae el archivo. Sólo salen los datos que el producto tiene cargados. */
 export function datosDigital(metadata?: Record<string, unknown> | null): DatosDigital {
@@ -63,7 +61,7 @@ export function datosDigital(metadata?: Record<string, unknown> | null): DatosDi
   agrega("Material sugerido", "material_sugerido", "material")
   agrega("Grosor recomendado", "grosor", "espesor")
   agrega("Máquina", "maquina", "maquina_sugerida")
-  return { filas, licencia: texto(m.licencia) || LICENCIA }
+  return { filas }
 }
 
 // ---------------------------------------------------------------- servicio

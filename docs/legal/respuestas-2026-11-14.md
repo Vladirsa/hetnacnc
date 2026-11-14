@@ -4,15 +4,9 @@ Respuestas recibidas a `preguntas-contador-y-abogado.md`. Son **preliminares**: 
 
 ## Lo urgente (antes de seguir creciendo)
 
-1. **Marca HETNA CNC (registro 2439401): riesgo serio de caducidad.**
-   - El artículo 233 de la LFPPI pide declarar el uso entre el 18 de agosto y el 18 de noviembre de 2025. Si no se declaró, el registro caduca de pleno derecho.
-   - Pasos:
-     1. Consultar el expediente 2647167 en el IMPI.
-     2. Buscar el acuse de la declaración de uso.
-     3. Si no existe, pedir dictamen sobre la situación registral.
-     4. Si se confirma la caducidad, presentar una solicitud nueva sin demora.
-   - No suponer que el IMPI acepta una declaración extemporánea.
-   - **No usar ® en servicios sin registro vigente.** El logotipo del sitio trae ® dentro de la imagen: hay que cambiarla si se confirma la caducidad.
+1. **Marca HETNA CNC (registro 2439401).** Actualización del 14 nov 2026: el dueño confirma que la marca está a su nombre y que la declaración de uso se presentó. Por eso se sigue usando ® en el logotipo.
+   - Guardar el **acuse de la declaración de uso** (presentada entre el 18 de agosto y el 18 de noviembre de 2025) junto con el título. Es la prueba de que el registro sigue vigente si alguien lo cuestiona o en la renovación de 2032.
+   - Si el acuse no aparece, consultar el expediente 2647167 en el IMPI.
 2. **Modelo de cobro del marketplace.** No usar una cuenta propia para custodiar dinero de terceros.
    - Modelo recomendado: el proveedor de pagos, con su solución de marketplace, reparte el dinero (taller recibe su pago, HETNA su comisión).
    - No anunciar SafeDeal como escrow ni como depósito en garantía. El sitio hoy no usa esas palabras.
@@ -94,11 +88,12 @@ Respuestas recibidas a `preguntas-contador-y-abogado.md`. Son **preliminares**: 
 
 - Disputas (términos para clientes, seguimiento de la solicitud y preguntas de fabricación): "buscamos resolver en 5 días hábiles", con derecho a responder, decisión registrada y aclaración de que no limita acudir a la PROFECO. Términos actualizados al 14 nov.
 - Aviso de privacidad 2.6: usos de Claude por medio de la API comercial, y atención humana en WhatsApp.
+- **Licencias de diseños** (pregunta 8): personal, comercial limitada (con número de piezas) y comercial ampliada. El vendedor elige la licencia de cada diseño en su panel (Licencias), la ficha la muestra antes de pagar, la tienda filtra por licencia y la página /mx/licencias-disenos explica las tres. Términos cláusula 8 actualizada para remitir a esa página. **El abogado debe revisar los textos** (`apps/storefront/src/lib/hetna/licencias.ts`): territorio, duración, modificaciones y transferencia.
 - Los términos de vendedores **no se tocaron**: los revisa el abogado antes de publicar la v1.5.
 
 ## Pendientes del dueño
 
-1. **Hoy:** revisar en el IMPI el expediente 2647167 y la declaración de uso.
+1. Guardar el acuse de la declaración de uso de la marca junto con el título (registro 2439401).
 2. Contratar el trabajo jurídico por paquetes: propiedad intelectual, contratos, fiscal e internacional.
 3. Con el contador: regularizar las suscripciones y pedir el dictamen de retenciones y la matriz fiscal.
 4. Decidir la constitución de la persona moral.

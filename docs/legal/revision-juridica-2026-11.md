@@ -25,7 +25,7 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 "HETNA CNC" (mixta, con logotipo), registro IMPI 2439401, expediente 2647167. Titular: Roberto Vladimir Rivera Sánchez Armas (persona física). Clase 35: "venta de artículos digitales para maquinado o impresión en 3D". Otorgada el 18 ago 2022, vigente hasta el 18 ago 2032; primer uso declarado: 14 feb 2019.
 
 **Huecos:**
-- La declaración de uso que pide la ley vigente al cumplirse 3 años del registro (ventana que habría cerrado alrededor del 18 nov 2025) no consta en los papeles revisados.
+- Declaración de uso a los 3 años del registro: el dueño confirma que se presentó (falta archivar el acuse junto con el título).
 - La clase y la descripción no cubren el marketplace, la fabricación a pedido, el software Cotizador, los cursos ni la tienda física.
 - El titular es una persona física: si se constituye una persona moral, hará falta cesión o licencia.
 
@@ -86,7 +86,7 @@ Preguntas detalladas en `preguntas-contador-y-abogado.md`.
 - "Formas de pago" no mencionaba PayPal, que sí se usa en las solicitudes de fabricación y en el Cotizador.
 
 ## Pendientes del dueño antes de la revisión
-- Confirmar con el abogado si se presentó la declaración de uso de la marca (registro 2439401) y si el registro sigue vigente.
+- Archivar el acuse de la declaración de uso de la marca (registro 2439401).
 - Decidir si se constituye persona moral (cambia razón social, RFC y varias respuestas fiscales).
 - Crear el correo de privacidad (hoy se usa contacto@hetnacnc.com para derechos ARCO).
 - Publicar los términos de vendedores v1.5 con aviso de 15 días.

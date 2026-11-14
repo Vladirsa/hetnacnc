@@ -10,8 +10,24 @@
 import type { HttpTypes } from "@medusajs/types"
 
 import type { SortOptions } from "@/types/product"
+import { licenciaDe } from "@/lib/hetna/licencias"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 
-export type FiltrosListado = { min?: number; max?: number; disponible?: boolean }
+// Filtro por licencia de diseños (?licencia=): "comercial" = permite vender
+// las piezas (comercial limitada o ampliada). Sólo deja diseños digitales.
+export type FiltroLicencia = "personal" | "comercial" | "comercial_ampliada"
+export const leerFiltroLicencia = (v: unknown): FiltroLicencia | undefined => {
+  const s = String(Array.isArray(v) ? v[0] : v ?? "")
+  return s === "personal" || s === "comercial" || s === "comercial_ampliada" ? s : undefined
+}
+export function cumpleLicencia(p: HttpTypes.StoreProduct, f: FiltroLicencia): boolean {
+  if (tipoFicha(p as never) !== "digital") return false
+  const clave = licenciaDe(p.metadata as Record<string, unknown> | null).licencia.clave
+  if (f === "comercial") return clave === "comercial_limitada" || clave === "comercial_ampliada"
+  return clave === f
+}
+
+export type FiltrosListado = { min?: number; max?: number; disponible?: boolean; licencia?: FiltroLicencia }
 
 const numero = (v: unknown): number | undefined => {
   const n = Number(Array.isArray(v) ? v[0] : v)
@@ -21,10 +37,10 @@ const numero = (v: unknown): number | undefined => {
 export function leerFiltros(p: Record<string, unknown> | URLSearchParams | undefined | null): FiltrosListado {
   const get = (k: string) => (p instanceof URLSearchParams ? p.get(k) : (p as Record<string, unknown> | undefined)?.[k])
   const d = get("disponible")
-  return { min: numero(get("min_price")), max: numero(get("max_price")), disponible: d === "1" || d === "true" }
+  return { min: numero(get("min_price")), max: numero(get("max_price")), disponible: d === "1" || d === "true", licencia: leerFiltroLicencia(get("licencia")) }
 }
 
-export const hayFiltros = (f: FiltrosListado) => f.min !== undefined || f.max !== undefined || Boolean(f.disponible)
+export const hayFiltros = (f: FiltrosListado) => f.min !== undefined || f.max !== undefined || Boolean(f.disponible) || Boolean(f.licencia)
 
 /** Precio más bajo del producto (pesos), o null si ninguna variante tiene precio. */
 export function precioMinimo(p: HttpTypes.StoreProduct): number | null {
@@ -52,6 +68,7 @@ export function filtrarYOrdenar(
 ): HttpTypes.StoreProduct[] {
   let lista = productos.filter((p) => {
     if (f.disponible && !hayExistencia(p)) return false
+    if (f.licencia && !cumpleLicencia(p, f.licencia)) return false
     if (f.min === undefined && f.max === undefined) return true
     const precio = precioMinimo(p)
     if (precio === null) return false
