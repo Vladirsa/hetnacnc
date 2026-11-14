@@ -19,7 +19,7 @@ import {
 import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
-import { tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
+import { tomarArchivoGrandeParaFabricar, tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
 import { type MedidaPieza, leerCantidad, medirArchivo } from "@/lib/hetna/estimado"
 import { subirArchivo } from "@/lib/subir-archivo"
 import { DIAS_CONSERVACION_ARCHIVOS } from "@/lib/hetna/promesas"
@@ -158,6 +158,16 @@ export default function FormSolicitudTaller({
       archivoPrellenado.current = true
       elegirArchivos([guardado])
       medir(guardado)
+      return
+    }
+    // Los grandes (STL de litofanías y relieves) llegan por IndexedDB
+    if (prellenado.pieza && !prellenado.archivo) {
+      archivoPrellenado.current = true
+      tomarArchivoGrandeParaFabricar().then((g) => {
+        if (!g) return
+        elegirArchivos([g])
+        medir(g)
+      })
       return
     }
     const ruta = prellenado.archivo

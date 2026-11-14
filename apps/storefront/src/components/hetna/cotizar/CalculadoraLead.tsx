@@ -1,12 +1,13 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { useParams } from "next/navigation"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cotizarLead, type CotizarLeadInput } from "@/lib/cotizar/acciones"
+import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 type Props = {
   servicio: CotizarLeadInput["servicio"]
@@ -39,6 +40,11 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   const [medidas, setMedidas] = useState({ ancho: "", largo: "", alto: "" })
   const [pieza, setPieza] = useState<{ nombre: string; geo: GeoCad } | null>(null)
   const [avisoArchivo, setAvisoArchivo] = useState("")
+  const { locale } = useParams<{ locale: string }>()
+  // Lo que el cliente ya capturó y su archivo: pasan tal cual a la solicitud
+  // formal, para que no lo vuelva a escribir ni a subir.
+  const archivoRef = useRef<File | null>(null)
+  const capturado = useRef<{ material: string; medidas: string; cantidad: number } | null>(null)
 
   // Lee el archivo en el navegador (no se sube): lo muestra y toma sus medidas
   const elegirArchivo = async (f: File | undefined) => {
@@ -53,6 +59,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         return setAvisoArchivo("No pude leer ese archivo. Sirven DXF, SVG, STL y OBJ; o captura las medidas a mano.")
       }
       setPieza({ nombre: f.name, geo })
+      archivoRef.current = f
       setMedidas({ ancho: cm(geo.ancho), largo: cm(geo.largo), alto: geo.tipo === "3d" ? cm(geo.alto, 0.1) : "" })
       if (pideAlto && geo.tipo !== "3d") setAvisoArchivo("Es un plano 2D: captura la altura de la pieza.")
     } catch {
@@ -67,6 +74,12 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
     const largo = Number(formData.get("largo"))
     const cantidad = Number(formData.get("cantidad"))
     const piezasMes = formData.get("piezas_mes") ? Number(formData.get("piezas_mes")) : undefined
+    const alto = pideAlto ? Number(formData.get("alto")) : 0
+    capturado.current = {
+      material: String(formData.get("material") || ""),
+      medidas: `${ancho} × ${largo}${alto ? ` × ${alto}` : ""} cm`,
+      cantidad,
+    }
 
     const r = await cotizarLead({
       servicio,
@@ -95,6 +108,24 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
     })
   }
 
+  // Precio formal: abre la solicitud con material, medidas, cantidad y (si lo
+  // subió) el archivo ya puestos. Sin archivo, o si es muy grande para pasarlo
+  // así, se abre la solicitud con los datos y el cliente lo sube ahí.
+  const pedirFormal = async () => {
+    const c = capturado.current
+    const pieza = c ? `${c.cantidad} ${c.cantidad === 1 ? "pieza" : "piezas"} en ${tituloServicio}` : tituloServicio
+    const f = archivoRef.current
+    if (f) {
+      const datos = await f.arrayBuffer().catch(() => null)
+      if (datos && mandarAFabricar(f.name, datos, locale, { pieza, medidas: c?.medidas, material: c?.material, proceso: servicioSolicitud })) return
+    }
+    const q = new URLSearchParams({ desde: "cotizador", pieza })
+    if (servicioSolicitud) q.set("servicio", servicioSolicitud)
+    if (c?.medidas) q.set("medidas", c.medidas)
+    if (c?.material) q.set("material", c.material)
+    window.location.href = `/${locale}/cotizar?${q.toString()}`
+  }
+
   if (estado.paso === "resultado") {
     return (
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-4">
@@ -115,12 +146,13 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           </div>
         )}
         {/* El estimado es para decidir; el precio formal lo dan los talleres. */}
-        <LocalizedClientLink
-          href={`/cotizar${servicioSolicitud ? `?servicio=${encodeURIComponent(servicioSolicitud)}` : ""}`}
+        <button
+          type="button"
+          onClick={pedirFormal}
           className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
         >
           Pedir precio formal a talleres
-        </LocalizedClientLink>
+        </button>
         <a
           href={estado.whatsappUrl}
           target="_blank"

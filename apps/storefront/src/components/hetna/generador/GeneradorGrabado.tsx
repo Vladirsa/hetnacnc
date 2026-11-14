@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useParams } from "next/navigation"
+
+import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 import { type Difusion, type Estilo, type OpcionesGrabado, aGris, cobertura, grabar, pngConDPI } from "@/lib/generador/grabado"
 
@@ -111,6 +114,8 @@ export function GeneradorGrabado() {
   const [procesando, setProcesando] = useState(false)
   const [preparando, setPreparando] = useState(false)
   const [info, setInfo] = useState<{ cobertura: number; reducida: boolean } | null>(null)
+  const { locale } = useParams<{ locale: string }>()
+  const [avisoFabricar, setAvisoFabricar] = useState("")
   const [acercar, setAcercar] = useState(false)
 
   const anchoMM = numero(ancho)
@@ -202,6 +207,18 @@ export function GeneradorGrabado() {
       for (let i = 0; i < png.length; i += 0x8000) s += String.fromCharCode(...png.subarray(i, i + 0x8000))
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${r1(anchoMM)}mm" height="${r1(altoMM)}mm" viewBox="0 0 ${r1(anchoMM)} ${r1(altoMM)}"><image width="${r1(anchoMM)}" height="${r1(altoMM)}" preserveAspectRatio="none" xlink:href="data:image/png;base64,${btoa(s)}"/></svg>\n`
       bajar(`${archivo}.svg`, new Blob([svg], { type: "image/svg+xml" }))
+    })
+
+  // Del grabado a la solicitud de fabricación, con el PNG ya adjunto
+  const fabricar = () =>
+    final((png) => {
+      const ok = mandarAFabricar(`${archivo}.png`, png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength) as ArrayBuffer, locale, {
+        pieza: "Grabado láser de foto",
+        medidas: `${r1(anchoMM)} × ${r1(altoMM)} mm`,
+        material,
+        proceso: "Grabado",
+      })
+      if (!ok) setAvisoFabricar("La imagen es muy grande para mandarla así. Descarga el PNG y súbelo en la solicitud.")
     })
 
   const mensaje =
@@ -350,10 +367,14 @@ export function GeneradorGrabado() {
               <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={bajarSVG} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
                 Descargar SVG
               </button>
-              <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                Pedir el grabado
-              </a>
+              <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={fabricar} className="bg-[#C2560A] hover:bg-[#A84A08] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
+                Fabrícamelo
+              </button>
             </div>
+            {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
+            <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="text-center text-[13px] font-semibold text-[#B34D07] hover:underline">
+              O pídelo por WhatsApp
+            </a>
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
               El PNG lleva guardada la resolución: LightBurn y otros programas lo abren al tamaño exacto. En el programa usa el modo «pasar» (threshold o pass-through) para que no vuelva a tramar la imagen.
             </p>
