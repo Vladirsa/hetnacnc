@@ -132,6 +132,36 @@ function PedirAcceso({ sol }) {
   )
 }
 
+// Expediente digital del proyecto (sólo el taller elegido): se pide una liga de
+// 1 hora a la tienda, donde se ve, se imprime o se guarda en PDF.
+function BotonExpediente({ sol }) {
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState("")
+  const abrir = async () => {
+    setCargando(true)
+    setError("")
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/expediente`, { credentials: "include" })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok || !d.url) throw new Error(d.message || String(r.status))
+      window.open(d.url, "_blank", "noopener")
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setCargando(false)
+    }
+  }
+  return (
+    <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+      <button type="button" style={{ ...S.btn2, padding: "6px 12px", fontSize: 13 }} disabled={cargando} onClick={abrir}>
+        {cargando ? "Abriendo..." : "📁 Expediente del proyecto"}
+      </button>
+      <span style={{ color: "#6B675C", fontSize: 12 }}>Archivos, propuesta, pagos, avances y entrega en un solo historial.</span>
+      {error && <span style={{ color: "#B3261E", fontSize: 12 }}>{error}</span>}
+    </div>
+  )
+}
+
 // Los archivos del cliente están en un bucket privado: la liga se pide al
 // momento y dura una hora.
 function ArchivosCliente({ sol }) {
@@ -1323,6 +1353,7 @@ export default function SolicitudesPage() {
               </p>
             )}
 
+            {p?.estado === "elegida" && <BotonExpediente sol={s} />}
             {p?.estado === "elegida" && <Pedido sol={s} alGuardar={cargar} />}
             {p?.estado === "elegida" && <Conversacion sol={s} />}
             {p?.estado === "elegida" && <AcuerdoSafeDeal sol={s} />}

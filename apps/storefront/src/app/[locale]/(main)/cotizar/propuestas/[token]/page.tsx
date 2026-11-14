@@ -84,6 +84,19 @@ export default async function PropuestasPage({
 
       <SeguimientoSolicitud token={token} s={s} />
 
+      {s.propuesta_elegida && (
+        <LocalizedClientLink
+          href={`/expediente/${token}`}
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4 hover:border-[#C2560A]"
+        >
+          <span>
+            <span className="block font-bold text-[#142033]">Expediente del proyecto</span>
+            <span className="block text-sm text-[#6B675C]">Archivos, propuesta, pagos, avances y entrega en un solo historial. Se puede imprimir o guardar en PDF.</span>
+          </span>
+          <span className="shrink-0 text-sm font-semibold text-[#C2560A]">Ver →</span>
+        </LocalizedClientLink>
+      )}
+
       {s.propuesta_elegida && <AcuerdoSafeDeal token={token} />}
 
       <ArchivosProtegidos token={token} s={s} />
