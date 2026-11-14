@@ -28,3 +28,16 @@ describe("Pinterest", () => {
     expect(textoPin("x".repeat(2000), "y".repeat(300)).titulo.length).toBe(100)
   })
 })
+
+import { correoFecha, esDeLaFecha } from "../invitar-temporada"
+describe("productos de temporada", () => {
+  it("reconoce la fecha sólo con la palabra completa en el nombre", () => {
+    expect(esDeLaFecha("Esfera navideña de MDF", "navidad")).toBe(true)
+    expect(esDeLaFecha("Letrero Feliz Navidad", "navidad")).toBe(true)
+    expect(esDeLaFecha("Plantilla de terreno para router", "navidad")).toBe(false)
+    expect(esDeLaFecha("Regalo para el 10 de mayo", "dia_madre")).toBe(true)
+  })
+  it("el correo invita a publicar con la palabra de la fecha", () => {
+    expect(correoFecha({ nombre: "Navidad", clave: "navidad" }, "24 de diciembre")).toContain("«navidad»")
+  })
+})

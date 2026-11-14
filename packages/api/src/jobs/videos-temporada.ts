@@ -7,9 +7,19 @@ import { MedusaContainer } from "@medusajs/framework/types"
 
 import { promoBuenFin } from "../lib/fabrica/buen-fin"
 import { promoTemporada } from "../lib/fabrica/temporadas"
+import { fechasActivas } from "../lib/fabrica/calendario"
+import { etiquetarNuevos } from "../lib/invitar-temporada"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 export default async function videosTemporada(container: MedusaContainer) {
   const logger = container.resolve("logger")
+  // Primero: lo que los talleres publicaron con la palabra de la fecha en el nombre se etiqueta solo
+  try {
+    const claves = [...new Set([...fechasActivas(), ...fechasActivas(new Date(Date.now() + 14 * 86_400_000))].map(({ f }) => f.clave))]
+    if (claves.length) await etiquetarNuevos(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), claves, logger)
+  } catch (e) {
+    logger.warn(`[temporada] etiquetar: ${(e as Error).message}`)
+  }
   try {
     await promoTemporada(container, logger)
   } catch (e) {

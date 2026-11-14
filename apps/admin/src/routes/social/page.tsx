@@ -1823,7 +1823,8 @@ function FechasEspeciales() {
     if (!r.ok) throw new Error(d?.message || `Error ${r.status}`)
     return d
   }
-  const cargar = async () => setFechas((await api().catch(() => ({ fechas: [] }))).fechas || [])
+  const [invit, setInvit] = useState<Record<string, any>>({})
+  const cargar = async () => { const d = await api().catch(() => ({ fechas: [] })); setFechas(d.fechas || []); setInvit(d.invitaciones || {}) }
   useEffect(() => { void cargar() }, [])
   const avisar = (clave: string, ok: boolean, t: string) => setNota((n) => ({ ...n, [clave]: { ok, t } }))
   return (
@@ -1849,6 +1850,17 @@ function FechasEspeciales() {
                 setHaciendo(f.clave)
                 try { const d = await api({ clave: f.clave, hacer: true }); avisar(f.clave, true, `✓ Haciendo la imagen y el video con: ${d.productos.join(", ")}. En unos minutos aparecen en Pendientes.`) } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) } finally { setHaciendo(null) }
               }}>{haciendo === f.clave ? "Haciendo…" : "🎬 Hacer video ahora"}</button>
+            {f.faltan <= 45 && (() => {
+              const k = `${f.clave}-${f.fecha.slice(0, 4)}`
+              const v = invit[k]
+              return (
+                <button type="button" disabled={haciendo === f.clave || v?.activo} title="Correo y aviso a tus talleres para que publiquen productos de esta fecha (una vez por taller)" style={{ ...boton("normal"), opacity: v?.activo ? 0.6 : 1 }}
+                  onClick={async () => {
+                    setHaciendo(f.clave)
+                    try { const d = await api({ clave: f.clave, invitar: true }); avisar(f.clave, true, d.hoy ? `✓ Invitando a ${d.hoy} talleres hoy a publicar productos de ${f.nombre}. Lo que publiquen con «${f.nombre}» en el nombre se etiqueta solo.` : "Ya se invitó a todos los talleres para esta fecha."); void cargar() } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) } finally { setHaciendo(null) }
+                  }}>{v?.activo ? `📨 Invitando (${v.invitados})` : v?.terminada ? `📨 Invitados (${v.invitados})` : "📨 Invitar a talleres"}</button>
+              )
+            })()}
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", fontSize: 12 }}>
             <span style={{ color: C.tenue }}>Etiquetas o categorías:</span>

@@ -1,15 +1,17 @@
 // GET  /admin/hetna-fabrica/temporadas -> fechas especiales, cuándo caen y qué productos coinciden
 // POST /admin/hetna-fabrica/temporadas { clave, etiquetas?: string[], activa?: boolean }  (guardar)
+//                                     | { clave, invitar: true }  (correo a talleres para que publiquen productos de la fecha)
 //                                     | { clave, hacer: true }  (imagen y video de esa fecha ahora)
 // Videos de productos por fecha especial (lib/fabrica/temporadas).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { iniciarInvitacionFecha, resumenInvitacionesFecha } from "../../../../lib/invitar-temporada"
 import { guardarFecha, leerFechas, productosDeFecha, promoTemporada, resumenFechas } from "../../../../lib/fabrica/temporadas"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
-  res.json({ fechas: await resumenFechas(knex) })
+  res.json({ fechas: await resumenFechas(knex), invitaciones: await resumenInvitacionesFecha(knex).catch(() => ({})) })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -18,6 +20,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const b: any = req.body || {}
   const clave = String(b.clave || "")
   try {
+    if (b.invitar) return res.json(await iniciarInvitacionFecha(knex, clave, logger))
     if (b.hacer) {
       const ajustes = await leerFechas(knex)
       if (!ajustes[clave]) return res.status(400).json({ message: "Fecha desconocida" })
