@@ -16,7 +16,7 @@ export default function Devoluciones() {
       etiqueta="Ayuda"
       titulo="Devoluciones y reembolsos"
       resumen="Qué puedes devolver, en qué plazo y cómo te reembolsamos."
-      actualizado
+      actualizado="4 de noviembre de 2026"
     >
       <h2>Productos físicos</h2>
       <ul>

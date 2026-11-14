@@ -28,8 +28,12 @@ export default function FormasDePago() {
       <h2>Trabajos fabricados a la medida</h2>
       <p>
         Cada cotización indica si se paga completa al aceptarla o con anticipo y el resto cuando el trabajo está listo,
-        antes de enviarlo.
+        antes de enviarlo. Las solicitudes de fabricación se pagan con Mercado Pago o con PayPal, a HETNA o directo a la
+        cuenta del taller conectada a HETNA, según lo que muestre la propuesta.
       </p>
+
+      <h2>Suscripciones del Cotizador para talleres</h2>
+      <p>Los planes del Cotizador se pagan cada mes con Mercado Pago o con PayPal.</p>
 
       <h2>Paga siempre dentro de HETNA</h2>
       <p>

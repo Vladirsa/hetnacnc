@@ -18,7 +18,10 @@ export default function PaginaInfo({
   etiqueta: string
   titulo: string
   resumen?: string
-  actualizado?: boolean
+  // true = fecha general de la empresa; texto = fecha propia de este documento.
+  // Los documentos legales pasan su fecha real: con una sola fecha para todos,
+  // los términos cambiados el 12 nov 2026 seguían diciendo "7 de octubre".
+  actualizado?: boolean | string
   children: ReactNode
   jsonLd?: Record<string, unknown>
 }) {
@@ -38,7 +41,11 @@ export default function PaginaInfo({
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">{etiqueta}</p>
           <h1 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">{titulo}</h1>
           {resumen && <p className="mt-3 max-w-2xl text-white/75">{resumen}</p>}
-          {actualizado && <p className="mt-4 text-xs text-white/50">Última actualización: {EMPRESA.actualizado}</p>}
+          {actualizado && (
+            <p className="mt-4 text-xs text-white/50">
+              Última actualización: {typeof actualizado === "string" ? actualizado : EMPRESA.actualizado}
+            </p>
+          )}
         </header>
 
         <article className="info-hetna mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[15px] leading-relaxed text-[#40403A] sm:p-9 [&_a]:font-semibold [&_a]:text-[#B34D07] [&_a:hover]:underline [&_h2]:mb-2 [&_h2]:mt-7 [&_h2]:text-lg [&_h2]:font-extrabold [&_h2]:text-[#142033] [&_h2:first-child]:mt-0 [&_li]:mb-1.5 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5">
