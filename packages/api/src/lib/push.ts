@@ -174,7 +174,9 @@ export async function pushACliente(
   knex: any,
   cliente: { customerId?: string | null; email?: string | null },
   aviso: AvisoPush,
-  logger?: any
+  logger?: any,
+  // whatsapp: false cuando el WhatsApp ya lo manda otro aviso más completo (pedidos: lib/whatsapp-pedidos.ts)
+  opciones: { whatsapp?: boolean } = {}
 ) {
   try {
     const ids = new Set<string>()
@@ -187,7 +189,7 @@ export async function pushACliente(
       for (const f of filas) ids.add(f.id)
     }
     // También por WhatsApp si el cliente verificó su número (en segundo plano)
-    if (ids.size) void avisarWhatsapp(knex, { customerIds: [...ids] }, aviso, logger)
+    if (ids.size && opciones.whatsapp !== false) void avisarWhatsapp(knex, { customerIds: [...ids] }, aviso, logger)
     if (!listo()) return 0
     await asegurarTablaPush(knex)
     if (!ids.size) return 0
