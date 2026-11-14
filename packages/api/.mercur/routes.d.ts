@@ -546,6 +546,9 @@ export type Routes = {
             temporadas: typeof import("../src/api/admin/hetna-fabrica/temporadas/route");
             video: typeof import("../src/api/admin/hetna-fabrica/video/route");
         };
+        hetnaLicitaciones: {
+            embudo: typeof import("../src/api/admin/hetna-licitaciones/embudo/route");
+        };
         hetnaMembresias: typeof import("../src/api/admin/hetna-membresias/route");
         hetnaRadar: typeof import("../src/api/admin/hetna-radar/route");
         hetnaReclamos: typeof import("../src/api/admin/hetna-reclamos/route");
@@ -563,6 +566,7 @@ export type Routes = {
             config: typeof import("../src/api/admin/hetna-social/config/route");
             estrategia: typeof import("../src/api/admin/hetna-social/estrategia/route");
             metricas: typeof import("../src/api/admin/hetna-social/metricas/route");
+            pinterest: typeof import("../src/api/admin/hetna-social/pinterest/route");
             plan: typeof import("../src/api/admin/hetna-social/plan/route");
             tiktok: typeof import("../src/api/admin/hetna-social/tiktok/route");
             videos: typeof import("../src/api/admin/hetna-social/videos/route") & {
@@ -635,6 +639,7 @@ export type Routes = {
             aviso: typeof import("../src/api/hooks/social-hub/aviso/route");
             clic: typeof import("../src/api/hooks/social-hub/clic/route");
             evento: typeof import("../src/api/hooks/social-hub/evento/route");
+            pinterest: typeof import("../src/api/hooks/social-hub/pinterest/route");
             telegram: typeof import("../src/api/hooks/social-hub/telegram/route");
             tiktok: typeof import("../src/api/hooks/social-hub/tiktok/route");
         };
@@ -808,6 +813,9 @@ export type Routes = {
             $id: typeof import("../src/api/store/escaneos/[id]/route");
             subida: typeof import("../src/api/store/escaneos/subida/route");
         };
+        expedientes: {
+            $clave: typeof import("../src/api/store/expedientes/[clave]/route");
+        };
         foro: {
             aviso: typeof import("../src/api/store/foro/aviso/route");
             miTaller: typeof import("../src/api/store/foro/mi-taller/route");
@@ -858,6 +866,7 @@ export type Routes = {
                 };
                 analisis: typeof import("../src/api/store/solicitudes-taller/[token]/analisis/route");
                 borrarArchivos: typeof import("../src/api/store/solicitudes-taller/[token]/borrar-archivos/route");
+                contraoferta: typeof import("../src/api/store/solicitudes-taller/[token]/contraoferta/route");
                 elegir: typeof import("../src/api/store/solicitudes-taller/[token]/elegir/route");
                 evaluacion: typeof import("../src/api/store/solicitudes-taller/[token]/evaluacion/route");
                 invitar: typeof import("../src/api/store/solicitudes-taller/[token]/invitar/route");
@@ -1250,7 +1259,11 @@ export type Routes = {
                 adjunto: typeof import("../src/api/vendor/hetna-solicitudes/[id]/adjunto/route");
                 archivos: typeof import("../src/api/vendor/hetna-solicitudes/[id]/archivos/route");
                 avance: typeof import("../src/api/vendor/hetna-solicitudes/[id]/avance/route");
+                contraoferta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/contraoferta/route");
                 evaluacion: typeof import("../src/api/vendor/hetna-solicitudes/[id]/evaluacion/route");
+                expediente: typeof import("../src/api/vendor/hetna-solicitudes/[id]/expediente/route");
+                hitoFoto: typeof import("../src/api/vendor/hetna-solicitudes/[id]/hito-foto/route");
+                hitos: typeof import("../src/api/vendor/hetna-solicitudes/[id]/hitos/route");
                 mensajes: typeof import("../src/api/vendor/hetna-solicitudes/[id]/mensajes/route");
                 pregunta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/pregunta/route");
                 propuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/propuesta/route");

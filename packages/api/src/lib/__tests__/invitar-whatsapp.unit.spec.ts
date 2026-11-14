@@ -18,3 +18,13 @@ describe("invitación a verificar WhatsApp y modelos de IA", () => {
     expect(modeloIA("claude-sonnet-5-5")).toMatchObject({ model: "claude-sonnet-5-5", fallbacks: "default" })
   })
 })
+
+import { textoPin } from "../pinterest"
+describe("Pinterest", () => {
+  it("arma título y descripción del pin sin ligas sueltas y dentro de los límites", () => {
+    const t = textoPin("Regalos de Navidad hechos en láser\n\nMira más: https://hetnacnc.com/r/abc", "")
+    expect(t.titulo).toBe("Regalos de Navidad hechos en láser")
+    expect(t.descripcion).not.toContain("https://")
+    expect(textoPin("x".repeat(2000), "y".repeat(300)).titulo.length).toBe(100)
+  })
+})
