@@ -97,6 +97,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
               }
             : null,
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",
+          // Capacidad declarada en su perfil: máquinas por tipo y el área de trabajo más grande
+          capacidad: capacidadTaller(perfil.maquinas),
         },
         destacado: pesoPlan(p.metadata) > 0,
         _peso: puntajePosicion(p.metadata),
@@ -229,4 +231,27 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     accesos,
     invitados,
   })
+}
+
+const NOMBRE_MAQUINA: Record<string, string> = {
+  router: "Router CNC", laser_co2: "Láser CO2", laser_fibra: "Láser de fibra", plasma: "Plasma CNC", fresadora: "Fresadora",
+  torno: "Torno CNC", impresora_3d: "Impresora 3D", waterjet: "Chorro de agua", dobladora: "Dobladora", otra: "Otra",
+}
+
+/** "2 Router CNC · 1 Láser CO2" y el área de trabajo mayor ("1300 × 2500 mm"), o null si no declaró máquinas. */
+function capacidadTaller(maquinas: unknown): { maquinas: number; resumen: string; area_mayor: string | null } | null {
+  if (!Array.isArray(maquinas) || !maquinas.length) return null
+  const porTipo = new Map<string, number>()
+  let mayor: { x: number; y: number } | null = null
+  for (const m of maquinas as any[]) {
+    const tipo = NOMBRE_MAQUINA[String(m?.tipo || "")] || String(m?.nombre || "Máquina").slice(0, 40)
+    porTipo.set(tipo, (porTipo.get(tipo) || 0) + 1)
+    const x = Number(m?.x) || 0, y = Number(m?.y) || 0
+    if (x > 0 && y > 0 && (!mayor || x * y > mayor.x * mayor.y)) mayor = { x, y }
+  }
+  return {
+    maquinas: maquinas.length,
+    resumen: [...porTipo].map(([t, n]) => `${n} ${t}`).join(" · "),
+    area_mayor: mayor ? `${Math.round(mayor.x)} × ${Math.round(mayor.y)} mm` : null,
+  }
 }

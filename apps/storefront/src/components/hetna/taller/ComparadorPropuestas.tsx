@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { analizarPropuestas, elegirPropuesta, type Propuesta, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
 
 import PagoSolicitud from "./PagoSolicitud"
+import TablaPropuestas from "./TablaPropuestas"
 
 const pesos = (n: number) => `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -26,6 +27,8 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
     setIa({ cargando: false, resumen: r.resumen, motivo: r.disponible ? r.motivo || (r.resumen ? undefined : "No se pudo preparar el resumen ahora.") : "El resumen con IA todavía no está disponible." })
   }
   const [soloEnvio, setSoloEnvio] = useState(false)
+  // Con 2 o más propuestas se abre en tabla (lado a lado); se puede cambiar a tarjetas
+  const [vista, setVista] = useState<"tabla" | "tarjetas">(solicitud.propuestas.length >= 2 ? "tabla" : "tarjetas")
   const [confirmar, setConfirmar] = useState<Propuesta | null>(null)
   const [error, setError] = useState("")
   const [pendiente, iniciar] = useTransition()
@@ -92,6 +95,16 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
             <input type="checkbox" checked={soloEnvio} onChange={(e) => setSoloEnvio(e.target.checked)} className="accent-[#C2560A]" />
             Con envío incluido
           </label>
+          {solicitud.propuestas.length >= 2 && (
+            <span className="ml-1 inline-flex overflow-hidden rounded-full border border-[#D9D5C9]">
+              {(["tabla", "tarjetas"] as const).map((v) => (
+                <button key={v} type="button" onClick={() => setVista(v)}
+                  className={`px-3 py-1.5 font-semibold ${vista === v ? "bg-[#C2560A] text-white" : "bg-white text-[#40403A]"}`}>
+                  {v === "tabla" ? "Tabla" : "Tarjetas"}
+                </button>
+              ))}
+            </span>
+          )}
         </div>
       </div>
 
@@ -134,6 +147,10 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         </div>
       )}
 
+      {vista === "tabla" && lista.length >= 1 && solicitud.propuestas.length >= 2 ? (
+        <TablaPropuestas propuestas={lista} faltan={new Map([...notasDe].map(([id, n]) => [id, n.faltan]))}
+          elegida={solicitud.propuesta_elegida} abierta={abierta} onElegir={setConfirmar} />
+      ) : (
       <div className="mt-4 grid gap-4">
         {lista.map((p) => {
           const elegida = solicitud.propuesta_elegida === p.id
@@ -244,6 +261,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
           )
         })}
       </div>
+      )}
 
       {confirmar && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true">
