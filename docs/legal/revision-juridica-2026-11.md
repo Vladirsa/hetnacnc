@@ -10,7 +10,7 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 |---|---|---|---|
 | Términos y condiciones (clientes) | /mx/terminos-y-condiciones | 12 nov 2026 | 10 cláusulas. Hasta el 14 nov mostraba "7 de octubre" por un error de fecha (corregido). |
 | Términos para vendedores y talleres | /mx/terminos-vendedores | v1.3, 4 nov 2026 | 19 cláusulas. El texto ya incluye cambios del 12 nov (licitaciones sin comisión, disputas) que **no se han publicado como versión nueva**: falta el aviso de 15 días (cl. 17) y subir a v1.5. Se marca como "BORRADOR para revisión de abogado y contador" en el código. |
-| Aviso de privacidad | /mx/aviso-de-privacidad | v2.5, 12 nov 2026 | Español e inglés. Incluye secciones por país (EE. UU., Brasil, Colombia, Chile, Argentina y otros). |
+| Aviso de privacidad | /mx/aviso-de-privacidad | v2.6, 14 nov 2026 | Español e inglés. Incluye secciones por país (EE. UU., Brasil, Colombia, Chile, Argentina y otros). |
 | Política de devoluciones | /mx/devoluciones | 4 nov 2026 | Físicos, trabajos a la medida, diseños digitales, garantía. |
 | Formas de pago | /mx/formas-de-pago | sin fecha | Mercado Pago, SPEI, trabajos a la medida, suscripciones del Cotizador. |
 | Acuerdo SafeDeal (opcional) | dentro de cada solicitud | — | Contrato de 12 secciones que firman cliente y taller (incluye incumplimiento y controversias). |
@@ -39,7 +39,7 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 **Preguntas:** ¿Qué licencias tipo conviene ofrecer (personal, comercial limitada, comercial ilimitada)? ¿Cómo se acredita que el vendedor tiene derechos sobre diseños que se parecen a marcas o personajes (la categoría "religiosos" y diseños virales)?
 
 ### 4. Tratamiento de archivos confidenciales
-**Hoy:** aviso de privacidad secciones 7 y 8 (v2.5); controles técnicos: revisión de contenido y antivirus al subir, descargas con permiso y registro (incluye IP), borrado a 180 días.
+**Hoy:** aviso de privacidad secciones 7 y 8 (v2.6); controles técnicos: revisión de contenido y antivirus al subir, descargas con permiso y registro (incluye IP), borrado a 180 días.
 **Preguntas:** ¿HETNA es responsable o encargado de los planos del cliente frente al taller? ¿Hace falta un contrato de encargado para los talleres que reciben datos personales del cliente (vendedores cl. 12)? ¿Es correcto registrar la IP de quien descarga y conservarla mientras exista la solicitud?
 
 ### 5. Política de reembolsos
@@ -57,7 +57,7 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 **Preguntas (contador):** ¿HETNA está obligada hoy a retener ISR e IVA a los vendedores personas físicas (LISR art. 113-A y LIVA art. 18-J) y a reportar al SAT? ¿Cómo se factura cuando el cliente paga a HETNA y HETNA libera al taller? ¿La persona física responsable puede operar así o conviene constituir la persona moral antes de crecer?
 
 ### 8. Protección de datos en México, Estados Unidos y otros países
-**Hoy:** aviso v2.5 con LFPDPPP (México), sección 13 por país (EE. UU. con derechos estatales, Brasil/LGPD, Colombia Ley 1581, Chile, Argentina y otros), transferencias a EE. UU. y Singapur (sección 6), cookies con consentimiento.
+**Hoy:** aviso v2.6 con LFPDPPP (México), sección 13 por país (EE. UU. con derechos estatales, Brasil/LGPD, Colombia Ley 1581, Chile, Argentina y otros), transferencias a EE. UU. y Singapur (sección 6), cookies con consentimiento.
 **Huecos:** términos y aviso remiten a ley mexicana y tribunales de Apizaco, Tlaxcala, también para clientes de otros países. No hay contacto ni representante en la UE (si se vende a Europa).
 **Preguntas:** ¿Es exigible la jurisdicción de Apizaco frente a consumidores extranjeros? ¿Qué falta para vender a EE. UU. (impuestos sobre ventas por estado, avisos estatales de privacidad, accesibilidad) y a la UE (GDPR, IVA digital)? ¿Conviene limitar por ahora la venta a México y declararlo?
 
@@ -70,6 +70,7 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 - El plan "Industrial" anuncia una llave de API como "próximamente": no existe todavía; el anuncio debe seguir diciendo "próximamente" hasta que exista.
 
 ## Inconsistencias que ya se corrigieron (sin necesidad de abogado)
+- El aviso de privacidad decía (v2.2) que se había retirado Anthropic, pero se seguía usando para el resumen de propuestas, el agente de WhatsApp y las respuestas a comentarios en redes. La v2.6 (14 nov) lo vuelve a declarar, junto con el nuevo asistente de IA para talleres. La página además mostraba "versión 2.4" aunque el historial iba en 2.5.
 - Todas las páginas legales mostraban la misma fecha ("7 de octubre de 2026"), aunque los términos cambiaron el 12 nov y la política de devoluciones el 4 nov. Cada documento ahora muestra su propia fecha.
 - "Formas de pago" no mencionaba PayPal, que sí se usa en las solicitudes de fabricación y en el Cotizador.
 

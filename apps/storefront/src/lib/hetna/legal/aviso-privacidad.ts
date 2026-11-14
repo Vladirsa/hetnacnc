@@ -183,7 +183,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
         },
       },
       {
-        p: "También usamos proveedores que tratan datos solo por cuenta de HETNA y bajo nuestras instrucciones (encargados): alojamiento del sitio y servidores (Hostinger), seguridad y entrega del sitio (Cloudflare), respaldos cifrados (Backblaze), generación de modelos 3D a partir de la foto que subes en la vista previa con IA (Tencent Cloud, en Singapur; solo recibe la foto de la pieza), envío de correos (Resend), base de datos del cotizador y del foro (Supabase), chat entre clientes y talleres (TalkJS) y automatización de mensajes de WhatsApp (servicio de WhatsApp de Meta, operado con herramientas instaladas en nuestro propio servidor). Estos proveedores no pueden usar tus datos para fines propios.",
+        p: "También usamos proveedores que tratan datos solo por cuenta de HETNA y bajo nuestras instrucciones (encargados): alojamiento del sitio y servidores (Hostinger), seguridad y entrega del sitio (Cloudflare), respaldos cifrados (Backblaze), generación de modelos 3D a partir de la foto que subes en la vista previa con IA (Tencent Cloud, en Singapur; solo recibe la foto de la pieza), envío de correos (Resend), base de datos del cotizador y del foro (Supabase), chat entre clientes y talleres (TalkJS), inteligencia artificial de Anthropic (Claude, en Estados Unidos) para el resumen que compara las propuestas que recibe un cliente (recibe lo que escribieron los talleres en sus propuestas, sin datos de contacto) y para el asistente de fabricación de los talleres con plan de pago (recibe las preguntas que el taller escribe en el chat; la conversación no se guarda en HETNA), y para proponer o enviar respuestas a quien nos escribe por WhatsApp o comenta nuestras publicaciones en Instagram y Facebook (recibe el texto del mensaje o comentario, los mensajes anteriores de esa conversación y el nombre con el que escribes); y automatización de mensajes de WhatsApp (servicio de WhatsApp de Meta, operado con herramientas instaladas en nuestro propio servidor). Estos proveedores no pueden usar tus datos para fines propios.",
       },
       {
         p: "El taller o vendedor que recibe tus datos para atender tu pedido o cotización es responsable de su propio uso de esos datos y debe cumplir la ley aplicable; solo recibe lo necesario para atenderte.",
@@ -201,7 +201,7 @@ export const avisoEs = (d: Datos): Seccion[] => [
     titulo: "6. Transferencias internacionales",
     bloques: [
       {
-        p: "Algunos de nuestros proveedores guardan o procesan datos fuera de tu país, principalmente en Estados Unidos (por ejemplo, PayPal, Google, Meta, Cloudflare, Backblaze) y en Singapur (Tencent Cloud, solo para las vistas previas 3D con IA). HETNA opera desde México; nuestros servidores y proveedores pueden estar en México, Estados Unidos u otros países, así que tus datos pueden tratarse fuera de tu país. Elegimos proveedores con compromisos públicos de seguridad y confidencialidad y solo compartimos lo necesario para cada finalidad.",
+        p: "Algunos de nuestros proveedores guardan o procesan datos fuera de tu país, principalmente en Estados Unidos (por ejemplo, PayPal, Google, Meta, Cloudflare, Backblaze, Anthropic) y en Singapur (Tencent Cloud, solo para las vistas previas 3D con IA). HETNA opera desde México; nuestros servidores y proveedores pueden estar en México, Estados Unidos u otros países, así que tus datos pueden tratarse fuera de tu país. Elegimos proveedores con compromisos públicos de seguridad y confidencialidad y solo compartimos lo necesario para cada finalidad.",
       },
     ],
   },
@@ -492,7 +492,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
         },
       },
       {
-        p: "We also use service providers that process data only on HETNA's behalf and under our instructions: site hosting and servers (Hostinger), site security and delivery (Cloudflare), encrypted backups (Backblaze), 3D model generation from the photo you upload for the AI preview (Tencent Cloud, in Singapore; it only receives the photo of the part), email delivery (Resend), database for the quoting tool and forum (Supabase), customer–shop chat (TalkJS) and WhatsApp message automation (Meta's WhatsApp service, run with tools installed on our own server). These providers may not use your data for their own purposes.",
+        p: "We also use service providers that process data only on HETNA's behalf and under our instructions: site hosting and servers (Hostinger), site security and delivery (Cloudflare), encrypted backups (Backblaze), 3D model generation from the photo you upload for the AI preview (Tencent Cloud, in Singapore; it only receives the photo of the part), email delivery (Resend), database for the quoting tool and forum (Supabase), customer–shop chat (TalkJS), artificial intelligence from Anthropic (Claude, in the United States) for the summary that compares the proposals a customer receives (it gets what the shops wrote in their proposals, without contact details) and for the manufacturing assistant for shops on a paid plan (it gets the questions the shop types in the chat; HETNA does not store the conversation), and to draft or send replies to people who message us on WhatsApp or comment on our Instagram and Facebook posts (it gets the text of the message or comment, the earlier messages in that conversation and the name you write under); and WhatsApp message automation (Meta's WhatsApp service, run with tools installed on our own server). These providers may not use your data for their own purposes.",
       },
       {
         p: "The shop or seller that receives your data to handle your order or quote is responsible for its own use of that data and must comply with applicable law; it only receives what it needs to serve you.",
@@ -510,7 +510,7 @@ export const avisoEn = (d: Datos): Seccion[] => [
     titulo: "6. International transfers",
     bloques: [
       {
-        p: "Some of our providers store or process data outside your country, mainly in the United States (for example PayPal, Google, Meta, Cloudflare, Backblaze) and in Singapore (Tencent Cloud, only for AI 3D previews). HETNA operates from Mexico; our servers and providers may be in Mexico, the United States or other countries, so your data may be processed outside your country. We choose providers with public security and confidentiality commitments and only share what each purpose needs.",
+        p: "Some of our providers store or process data outside your country, mainly in the United States (for example PayPal, Google, Meta, Cloudflare, Backblaze, Anthropic) and in Singapore (Tencent Cloud, only for AI 3D previews). HETNA operates from Mexico; our servers and providers may be in Mexico, the United States or other countries, so your data may be processed outside your country. We choose providers with public security and confidentiality commitments and only share what each purpose needs.",
       },
     ],
   },
@@ -665,6 +665,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.6",
+    fecha: "2026-11-14",
+    cambio: "Vuelve Anthropic (Claude, EE. UU.) como encargado: resumen que compara propuestas para el cliente, asistente de fabricación para talleres con plan de pago y respuestas a mensajes de WhatsApp y comentarios en redes.",
+    cambioEn: "Anthropic (Claude, U.S.) is back as a processor: proposal comparison summary for customers, manufacturing assistant for shops on a paid plan, and replies to WhatsApp messages and social media comments.",
+  },
   {
     version: "2.5",
     fecha: "2026-11-12",
