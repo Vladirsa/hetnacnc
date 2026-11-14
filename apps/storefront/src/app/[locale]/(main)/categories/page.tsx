@@ -1,3 +1,4 @@
+import { categoriasSugeridas } from "@/lib/hetna/catalogo"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
 
@@ -171,7 +172,7 @@ async function AllCategories({
         {bot ? (
           <ProductListing showSidebar locale={locale} searchParams={filtros} />
         ) : (
-          <SearchProductsListing locale={locale} inicial={inicial} />
+          <SearchProductsListing locale={locale} inicial={inicial} sugerencias={await categoriasSugeridas()} />
         )}
       </Suspense>
     </main>

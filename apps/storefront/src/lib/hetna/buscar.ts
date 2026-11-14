@@ -12,6 +12,7 @@ import { GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { FABRICACION } from "@/lib/hetna/navegacion"
 import { GUIAS } from "@/lib/seo/guias"
+import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 
 export type Sugerencia = { tipo: "producto" | "categoria" | "servicio" | "guia" | "herramienta"; texto: string; href: string; imagen?: string | null }
 
@@ -45,9 +46,10 @@ export async function sugerencias(consulta: string): Promise<Sugerencia[]> {
   const palabras = normal(q).split(/\s+/).filter(Boolean)
 
   type Producto = { title: string; handle: string; thumbnail?: string | null }
-  type Categoria = { name: string; handle: string }
+  type Categoria = { name: string; handle: string; vacia?: boolean }
   // El cliente de Medusa no trae tipos para estas consultas (igual que en lib/seo/mapa-sitio)
   const tienda = (sdk as unknown as { store: { products: { query: (p: unknown) => Promise<{ products?: Producto[] }> } } }).store
+  const conProductos = await categoriasConProductos()
   const [productos, categorias]: [Producto[], Categoria[]] = await Promise.all([
     tienda.products
       .query({ q, limit: 5, fields: "title,handle,thumbnail", fetchOptions: { next: { revalidate: 60 } } })
@@ -56,10 +58,11 @@ export async function sugerencias(consulta: string): Promise<Sugerencia[]> {
     // Todo el árbol (también las hojas, p. ej. "Routers CNC"), no sólo el segundo nivel
     listCategories()
       .then((r) => {
-        type Nodo = Categoria & { category_children?: Nodo[] | null }
+        type Nodo = Categoria & { id: string; category_children?: Nodo[] | null }
         const todas: Categoria[] = []
         const recorrer = (c: Nodo) => {
-          todas.push({ name: c.name, handle: c.handle })
+          // Catálogo honesto: no se sugiere una categoría sin productos
+          todas.push({ name: c.name, handle: c.handle, vacia: !tieneContenido(c, conProductos) })
           ;(c.category_children ?? []).forEach(recorrer)
         }
         ;((r as unknown as { parentCategories?: Nodo[] }).parentCategories ?? []).forEach(recorrer)
@@ -74,7 +77,7 @@ export async function sugerencias(consulta: string): Promise<Sugerencia[]> {
   return [
     ...productos.map((p) => ({ tipo: "producto" as const, texto: p.title, href: `/products/${p.handle}`, imagen: p.thumbnail || null })),
     ...categorias
-      .filter((c) => c.handle !== "servicios" && coincide(c.name, palabras))
+      .filter((c) => !c.vacia && c.handle !== "servicios" && coincide(c.name, palabras))
       .slice(0, 4)
       .map((c) => ({ tipo: "categoria" as const, texto: c.name, href: `/categories/${c.handle}` })),
     ...PAGINAS.filter((p) => coincide(p.texto, palabras)).slice(0, 5),

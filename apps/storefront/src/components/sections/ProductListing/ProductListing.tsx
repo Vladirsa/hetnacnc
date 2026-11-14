@@ -4,6 +4,8 @@ import { ProductSidebar } from "@/components/organisms/ProductSidebar/ProductSid
 import { ProductsList } from "@/components/organisms/ProductsList/ProductsList"
 import { ProductsPagination } from "@/components/organisms/ProductsPagination/ProductsPagination"
 import { PRODUCT_LIMIT } from "@/const"
+import ProductListingNoResultsView from "@/components/molecules/ProductListingNoResultsView/ProductListingNoResultsView"
+import { categoriasSugeridas } from "@/lib/hetna/catalogo"
 import { listProductsWithSort } from "@/lib/data/products"
 import { filtrarYOrdenar, leerFiltros, ordenValido } from "@/lib/helpers/filtrar-listado"
 
@@ -48,9 +50,17 @@ export const ProductListing = async ({
       <div className="grid grid-cols-1 md:grid-cols-4 mt-6 gap-4">
         {showSidebar && <ProductSidebar />}
         <section className={showSidebar ? "col-span-3" : "col-span-4"} data-testid="product-listing-section">
-          <div className="flex flex-wrap gap-4" data-testid="product-list">
-            <ProductsList products={products} />
-          </div>
+          {count === 0 ? (
+            // Catálogo honesto: nunca una página en blanco
+            <ProductListingNoResultsView
+              busqueda={typeof searchParams?.query === "string" ? searchParams.query : undefined}
+              sugerencias={await categoriasSugeridas()}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-4" data-testid="product-list">
+              <ProductsList products={products} />
+            </div>
+          )}
           <ProductsPagination pages={pages} />
         </section>
       </div>

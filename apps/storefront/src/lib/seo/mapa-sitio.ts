@@ -14,6 +14,7 @@
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { sdk } from "@/lib/client"
+import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
@@ -89,12 +90,18 @@ const CATEGORIAS_QUE_REDIRIGEN = new Set(["servicios"]) // → /fabricacion
 
 const categorias = async (): Promise<string[]> => {
   try {
-    const r = (await sdk.store.productCategories.query({
-      fields: "handle",
-      limit: 200,
-      fetchOptions: { next: { revalidate: 3600 } },
-    } as never)) as unknown as { product_categories: { handle?: string | null }[] }
+    const [r, conProductos] = await Promise.all([
+      sdk.store.productCategories.query({
+        fields: "id,handle,*category_children",
+        include_descendants_tree: true,
+        limit: 200,
+        fetchOptions: { next: { revalidate: 3600 } },
+      } as never) as unknown as Promise<{ product_categories: { id: string; handle: string; category_children?: any[] | null }[] }>,
+      categoriasConProductos(),
+    ])
+    // Catálogo honesto: una categoría vacía no se manda a Google (su página queda noindex)
     return (r.product_categories ?? [])
+      .filter((c) => tieneContenido(c, conProductos))
       .map((c) => c.handle)
       .filter((h): h is string => !!h && !CATEGORIAS_QUE_REDIRIGEN.has(h))
   } catch {

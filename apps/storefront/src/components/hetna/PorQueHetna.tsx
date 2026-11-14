@@ -14,7 +14,7 @@ const TARJETAS = [
   {
     icono: ShoppingCart,
     titulo: "Compra y producción juntas",
-    texto: "Compra máquinas, herramientas, materiales y diseños, o pide que fabriquen tus piezas.",
+    texto: "Compra diseños listos para cortar o pide que fabriquen tus piezas. Máquinas, herramientas y materiales, bajo cotización.",
   },
   {
     icono: Zap,

@@ -28,7 +28,23 @@ const PUNTOS = [
   },
 ]
 
-export const ConfianzaCompra = () => (
+// Compra sólo digital (tarea 4): no hay envío ni dirección que proteger
+const PUNTOS_DIGITAL = [
+  {
+    texto: "Si el archivo está dañado o no corresponde, te lo cambiamos o te devolvemos tu dinero.",
+    href: "/devoluciones",
+  },
+  {
+    texto: "Pagas dentro de HETNA. Tu tarjeta no pasa por el vendedor.",
+    href: "/formas-de-pago",
+  },
+  {
+    texto: "Descarga inmediata al confirmar el pago y copia de tus archivos por correo.",
+    href: "/preguntas-frecuentes",
+  },
+]
+
+export const ConfianzaCompra = ({ conPaypal = false, soloDigital = false }: { conPaypal?: boolean; soloDigital?: boolean }) => (
   <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
     <div className="flex items-center gap-2">
       <svg
@@ -49,7 +65,7 @@ export const ConfianzaCompra = () => (
     </div>
 
     <ul className="mt-2.5 flex flex-col gap-2">
-      {PUNTOS.map((p) => (
+      {(soloDigital ? PUNTOS_DIGITAL : PUNTOS).map((p) => (
         <li key={p.href} className="flex gap-2 text-[13px] leading-relaxed text-[#4A4943]">
           <span className="font-bold text-[#1E7A52]">✓</span>
           <span>
@@ -66,7 +82,7 @@ export const ConfianzaCompra = () => (
       <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]">
         Puedes pagar con
       </p>
-      <LogosPago />
+      <LogosPago conPaypal={conPaypal} />
     </div>
   </div>
 )

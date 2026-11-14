@@ -3,8 +3,8 @@ import { Headphones, Package, Truck, Users } from "lucide-react"
 const ITEMS = [
   {
     icono: Package,
-    titulo: "Productos CNC",
-    texto: "Máquinas, herramientas y materiales",
+    titulo: "Diseños y fabricación",
+    texto: "Archivos desde $30 y piezas a la medida",
   },
   {
     icono: Users,
