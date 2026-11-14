@@ -398,3 +398,113 @@ export const sendResetPasswordEmail = async (email: string) => {
     return { success: false, error: String(err) };
   }
 };
+
+// ── Número de afiliación y «Activar mi cuenta» (packages/api/src/lib/afiliacion.ts) ──
+
+/** ¿Hay sesión de cliente? (para no ofrecer «Crear mi cuenta» a quien ya tiene) */
+export async function haySesionCliente(): Promise<boolean> {
+  const auth = await getAuthHeaders();
+  if (!('authorization' in auth)) return false;
+  return Boolean(await clienteDeLaSesion());
+}
+
+export type DatosActivacion = {
+  numero: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  telefono: string;
+  cuenta_existe: boolean;
+};
+
+export async function datosActivacion(t: string): Promise<DatosActivacion | null> {
+  if (!/^[A-Za-z0-9_-]{20,40}$/.test(String(t || ''))) return null;
+  try {
+    const r = await fetch(`${BACKEND}/store/hetna-afiliacion/activar?t=${encodeURIComponent(t)}`, {
+      headers: { 'x-publishable-api-key': LLAVE },
+      cache: 'no-store'
+    });
+    return r.ok ? ((await r.json()) as DatosActivacion) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Mi número de afiliación (con sesión). Las cuentas de antes lo reciben aquí. */
+export async function miAfiliacion(): Promise<string | null> {
+  const auth = await getAuthHeaders();
+  if (!('authorization' in auth)) return null;
+  try {
+    const r = await fetch(`${BACKEND}/store/hetna-afiliacion`, {
+      headers: { ...auth, 'x-publishable-api-key': LLAVE },
+      cache: 'no-store'
+    });
+    return r.ok ? (((await r.json()) as { numero?: string }).numero ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * «Activar mi cuenta»: el correo viene de la liga (no del formulario), la persona
+ * sólo elige su contraseña. Con la liga del correo la cuenta queda confirmada y
+ * entra directo; con la de la pantalla le llega el «confirma tu correo» normal.
+ */
+export async function activarCuenta(
+  formData: FormData
+): Promise<{ ok: true; numero: string } | { ok: false; mensaje: string; verificar?: string }> {
+  const t = String(formData.get('t') || '');
+  const password = String(formData.get('password') || '');
+  const datos = await datosActivacion(t);
+  if (!datos) return { ok: false, mensaje: 'Esta liga ya no es válida. Crea tu cuenta normalmente.' };
+  if (password.length < 8) return { ok: false, mensaje: 'Tu contraseña debe tener al menos 8 caracteres.' };
+  const email = datos.email;
+  const perfil = {
+    first_name: String(formData.get('first_name') || datos.first_name || '').slice(0, 80),
+    last_name: String(formData.get('last_name') || datos.last_name || '').slice(0, 80),
+    phone: String(formData.get('phone') || datos.telefono || '').slice(0, 30)
+  };
+
+  try {
+    let token: string;
+    try {
+      token = await (sdk.auth.$actorType.$authProvider.register.mutate({
+        $actorType: 'customer',
+        $authProvider: 'emailpass',
+        email,
+        password
+      } as never) as unknown as Promise<{ token: string }>).then(({ token }) => token);
+    } catch (e) {
+      if (!/already exists/i.test(mensajeDeError(e))) throw e;
+      try {
+        token = await entrarConCorreo(email, password);
+      } catch {
+        return { ok: false, mensaje: 'Ese correo ya tiene una cuenta. Inicia sesión o usa "¿Olvidaste tu contraseña?".' };
+      }
+    }
+    await setAuthToken(token);
+    await asegurarCliente(email, password, perfil);
+
+    // Liga la cuenta con su número (y la confirma si la liga es la del correo)
+    const r = await fetch(`${BACKEND}/store/hetna-afiliacion/activar`, {
+      method: 'POST',
+      headers: { ...(await getAuthHeaders()), 'x-publishable-api-key': LLAVE, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t }),
+      cache: 'no-store'
+    });
+    const res = (await r.json().catch(() => ({}))) as { numero?: string };
+    await vincularRecomendacion();
+    await eventoSocial('registro_cliente', email);
+
+    if (await faltaConfirmar()) {
+      await removeAuthToken();
+      await reenviarConfirmacion(email);
+      return { ok: false, mensaje: '', verificar: email };
+    }
+    revalidateTag(await getCacheTag('customers'));
+    await transferCart().catch(() => undefined);
+    return { ok: true, numero: res.numero || datos.numero };
+  } catch (error: unknown) {
+    return { ok: false, mensaje: mensajeDeError(error) || 'No se pudo activar tu cuenta. Intenta de nuevo.' };
+  }
+}

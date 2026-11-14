@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
 import { PrivacidadSolicitud } from "./PrivacidadSolicitud"
+import { TarjetaAfiliacion } from "@/components/hetna/cuenta/TarjetaAfiliacion"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
@@ -16,7 +17,8 @@ import {
   NECESIDADES,
   TIENE_ARCHIVO,
 } from "@/lib/fabricacion/opciones"
-import { type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { type AfiliacionNueva, type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { haySesionCliente } from "@/lib/data/customer"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { tomarArchivoGrandeParaFabricar, tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
@@ -97,6 +99,13 @@ export default function FormSolicitudTaller({
   const [estado, setEstado] = useState<"listo" | "enviando" | "ok" | "error">("listo")
   const [mensaje, setMensaje] = useState("")
   const [folio, setFolio] = useState("")
+  // Alta rápida con número de afiliado: sólo se ofrece sin sesión
+  const [conSesion, setConSesion] = useState(true)
+  const [crearCuenta, setCrearCuenta] = useState(true)
+  const [afiliacion, setAfiliacion] = useState<AfiliacionNueva | null>(null)
+  useEffect(() => {
+    haySesionCliente().then(setConSesion).catch(() => setConSesion(false))
+  }, [])
   // Resumen para el mensaje de WhatsApp de después: la solicitud ya quedó
   // registrada con todos sus datos, el WhatsApp sólo la acompaña.
   const [resumen, setResumen] = useState("")
@@ -245,6 +254,7 @@ export default function FormSolicitudTaller({
     const v = (k: string) => String(fd.get(k) || "").trim()
     setEstado("enviando")
     const r = await enviarSolicitudTaller({
+      crear_cuenta: !conSesion && crearCuenta,
       taller,
       abierta: !taller || abiertaOtros,
       necesidad,
@@ -293,6 +303,7 @@ export default function FormSolicitudTaller({
         estado_mx: v("estado_mx"),
       })
       setFolio(r.folio || "")
+      setAfiliacion(r.afiliacion || null)
       setResumen(
         [necesidad, v("cantidad") && `${v("cantidad")}`, v("material") && `en ${v("material")}`, v("ciudad") || v("estado_mx")]
           .filter(Boolean)
@@ -311,6 +322,7 @@ export default function FormSolicitudTaller({
         <p className="text-2xl">✓</p>
         <h3 className="mt-2 text-xl font-extrabold text-[#142033]">Recibimos tu solicitud</h3>
         {folio && <p className="mt-1 font-semibold text-[#C2560A]">Folio {folio}</p>}
+        {afiliacion && <TarjetaAfiliacion afiliacion={afiliacion} />}
         <p className="mx-auto mt-2 max-w-md text-[#6B675C]">
           Te enviamos un correo con una liga privada. Ahí verás las propuestas
           {nombreTaller ? ` de ${nombreTaller}` : " de los talleres"} conforme lleguen, las comparas y eliges la que más te convenga.
@@ -634,6 +646,20 @@ export default function FormSolicitudTaller({
             <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
               <input type="checkbox" name="abierta" value="1" checked={abiertaOtros} onChange={(e) => setAbiertaOtros(e.target.checked)} className="mt-1 accent-[#C2560A]" />
               También quiero recibir propuestas de otros talleres de la red para comparar.
+            </label>
+          )}
+          {!conSesion && (
+            <label className="flex items-start gap-2 rounded-xl border border-[#F2C98F] bg-[#FFF8EE] p-3 text-sm text-[#40403A] sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={crearCuenta}
+                onChange={(e) => setCrearCuenta(e.target.checked)}
+                className="mt-1 accent-[#C2560A]"
+              />
+              <span>
+                <b className="text-[#142033]">Crear mi cuenta gratis con estos datos</b> y recibir mi número de afiliado HETNA,
+                más <b>$100 de descuento</b> en mi primera compra. Sólo tendré que elegir mi contraseña.
+              </span>
             </label>
           )}
           <input type="text" name="sitio_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />

@@ -13,6 +13,8 @@ export type ArchivoSubido = { clave: string; nombre: string; tamano: number }
 
 export type SolicitudTallerInput = {
   taller?: string
+  /** Sin sesión: crear la cuenta y dar número de afiliado (packages/api/src/lib/afiliacion.ts) */
+  crear_cuenta?: boolean
   abierta?: boolean
   nombre?: string
   email: string
@@ -52,7 +54,10 @@ export type SolicitudTallerInput = {
   unidad?: string
 }
 
-export type SolicitudTallerResultado = { ok: true; folio?: string } | { ok: false; mensaje: string }
+export type AfiliacionNueva = { numero: string; activar: string | null; cuenta_existe: boolean }
+export type SolicitudTallerResultado =
+  | { ok: true; folio?: string; afiliacion?: AfiliacionNueva | null }
+  | { ok: false; mensaje: string }
 
 export async function enviarSolicitudTaller(
   input: SolicitudTallerInput
@@ -74,7 +79,7 @@ export async function enviarSolicitudTaller(
     }
     const body = await res.json().catch(() => ({}))
     await eventoSocial("solicitud", String(body.folio || ""))
-    return { ok: true, folio: body.folio }
+    return { ok: true, folio: body.folio, afiliacion: body.afiliacion || null }
   } catch (e) {
     console.error("[cotizar] fallo llamando a solicitudes-taller", e)
     return { ok: false, mensaje: "No se pudo enviar tu solicitud. Intenta de nuevo." }
