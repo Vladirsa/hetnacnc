@@ -73,7 +73,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
   const [editando, setEditando] = useState(false)
   const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
   const [ocupado, setOcupado] = useState(false)
-  const [firma, setFirma] = useState({ nombre: "", representacion: "", codigo: "", acepto: false })
+  const [firma, setFirma] = useState({ nombre: "", representacion: "", codigo: "", acepto: false, autorizo_contacto: false })
   const [codigoEnviado, setCodigoEnviado] = useState("")
 
   const cargar = useCallback(async () => {
@@ -155,7 +155,9 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                   </label>
                 ))}
                 <details className="text-xs text-[#6B675C]">
-                  <summary className="cursor-pointer font-semibold">Cláusula fija: papel de HETNA</summary>
+                  <summary className="cursor-pointer font-semibold">
+                  Cláusula fija: papel de HETNA ({a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
+                </summary>
                   <p className="mt-1">{a.clausula_hetna}</p>
                 </details>
                 <div className="flex flex-wrap gap-2">
@@ -188,9 +190,20 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                 </div>
               ))}
             </dl>
+            <details className="text-xs text-[#6B675C]">
+              <summary className="cursor-pointer font-semibold">
+                Papel de HETNA ({a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
+              </summary>
+              <p className="mt-1">{a.clausula_hetna}</p>
+            </details>
+            {k.pendientes?.length > 0 && (
+              <p className="rounded-lg bg-[#FFF7ED] px-3 py-2 text-sm text-[#7C2D12]">
+                Antes de aprobar, completen lo que dice «indicar» o «por definir» en: {k.pendientes.join(", ")}. Usa «Proponer cambios».
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
               {!k.yo_aprobe && (
-                <button type="button" className={btn} disabled={ocupado} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}>
+                <button type="button" className={btn} disabled={ocupado || k.pendientes?.length > 0} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}>
                   ✓ Apruebo estas condiciones
                 </button>
               )}
@@ -221,11 +234,17 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                   <input type="checkbox" className="mt-1 accent-[#C2560A]" checked={firma.acepto} onChange={(e) => setFirma({ ...firma, acepto: e.target.checked })} />
                   Leí el contrato (versión {k.version}) y acepto firmarlo electrónicamente.
                 </label>
+                {/* Revisión jurídica (pregunta 24): autorización expresa, con los datos que se comparten */}
+                <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
+                  <input type="checkbox" className="mt-1 accent-[#C2560A]" checked={firma.autorizo_contacto} onChange={(e) => setFirma({ ...firma, autorizo_contacto: e.target.checked })} data-testid="autorizo-contacto" />
+                  {a.autorizacion_contacto}
+                </label>
+                <p className="text-xs text-[#6B675C] sm:col-span-2">Al firmar las dos partes, te mandamos a tu correo una copia del contrato y de la constancia de firmas.</p>
                 {!codigoEnviado ? (
                   <button
                     type="button"
                     className={btn + " sm:col-span-2 justify-self-start"}
-                    disabled={ocupado || !firma.acepto || firma.nombre.trim().length < 5}
+                    disabled={ocupado || !firma.acepto || !firma.autorizo_contacto || firma.nombre.trim().length < 5}
                     onClick={async () => {
                       const r = await hacer({ accion: "codigo" })
                       if (r) setCodigoEnviado(r.correo || "tu correo")
@@ -239,7 +258,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                     <button
                       type="button"
                       className={btn}
-                      disabled={ocupado || firma.codigo.length !== 6 || !firma.acepto}
+                      disabled={ocupado || firma.codigo.length !== 6 || !firma.acepto || !firma.autorizo_contacto}
                       onClick={() => hacer({ accion: "firmar", ...firma, sha256: k.sha256 }, "¡Firmaste! Te avisamos cuando firme el taller.")}
                     >
                       Firmar contrato
