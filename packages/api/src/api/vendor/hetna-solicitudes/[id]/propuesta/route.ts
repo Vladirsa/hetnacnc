@@ -12,6 +12,7 @@ import { asegurarPropuestaFormal, leerPropuestaFormal } from "../../../../../lib
 import { relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
+import { asegurarVersiones, cambio, diferencias, guardarVersion, marcarRespondidas } from "../../../../../lib/licitacion-versiones"
 
 type Body = {
   precio?: number | string
@@ -30,6 +31,8 @@ type Body = {
   condiciones_pago?: string
   garantia?: string
   observaciones?: string
+  // Por qué cambia la propuesta (lo ve el cliente en el historial de versiones)
+  motivo_cambio?: string
 }
 
 // El taller manda (o actualiza) su propuesta a una solicitud.
@@ -53,6 +56,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   await asegurarTablas(knex)
   await asegurarCobro(knex)
   await asegurarPropuestaFormal(knex)
+  await asegurarVersiones(knex)
   const formal = leerPropuestaFormal(b as Record<string, unknown>, ocultarContacto)
   const s = await knex(T_SOLICITUD).where({ id: String(req.params.id) }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
@@ -67,7 +71,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   // Licitación privada: sólo los talleres invitados
   if (!tallerPuedeVer(s, await relacionTaller(knex, s, sellerId))) return res.status(403).json({ message: "Esta licitación es privada: sólo participan los talleres invitados." })
 
-  const previa = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first("id")
+  const previa = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first()
   // Pasada la fecha de cierre ya no entran propuestas nuevas; la que el taller
   // ya mandó sí la puede corregir mientras el cliente no elija.
   if (!previa && !recibePropuestas(s)) {
@@ -82,13 +86,39 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       return res.status(402).json({ message: mensajeSinCupo(cupo), cupo })
     }
   }
-  const datos = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, anticipo_pct: anticipo, ...formal, updated_at: knex.fn.now() }
+  const datos: Record<string, any> = { precio, dias, vigencia_dias: vigencia, incluye_envio: incluye, condiciones, anticipo_pct: anticipo, ...formal, updated_at: knex.fn.now() }
+  // Corrección: la propuesta anterior se guarda como versión (antes se perdía)
+  let cambios: ReturnType<typeof diferencias> = []
+  if (previa && cambio(previa, datos)) {
+    cambios = diferencias(previa, datos)
+    datos.version = await guardarVersion(knex, previa, String(b.motivo_cambio ?? "").trim() || null, "taller")
+    await marcarRespondidas(knex, previa.id)
+  }
   if (previa) {
     await knex(T_PROPUESTA).where({ id: previa.id }).update(datos)
   } else {
     await knex(T_PROPUESTA).insert({ id: nuevoId("prop"), solicitud_id: s.id, seller_id: sellerId, ...datos })
   }
-  res.json({ ok: true, actualizada: Boolean(previa) })
+  res.json({ ok: true, actualizada: Boolean(previa), version: datos.version ?? previa?.version ?? 1 })
+
+  // Propuesta corregida: se le avisa al cliente qué cambió
+  if (previa && cambios.length && s.contacto?.email) {
+    const folio = folioTexto(s.folio)
+    const r = await sendEmail({
+      to: s.contacto.email,
+      subject: `[${folio}] Un taller actualizó su propuesta`,
+      html: marco(
+        "Un taller actualizó su propuesta",
+        `<table style="border-collapse:collapse;font-size:14px">` +
+          fila("Folio", folio) +
+          fila("Versión", String(datos.version)) +
+          cambios.map((c) => fila(c.campo, `${c.antes} → ${c.despues}`)).join("") +
+          `</table>` +
+          boton("Ver y comparar", ligaPropuestas(s.token))
+      ),
+    })
+    if (!r.sent) logger.info(`[licitacion] aviso de propuesta actualizada no enviado: ${r.reason}`)
+  }
 
   // La primera propuesta pasa la solicitud a "cotizada". Sin correo propio:
   // el aviso de propuesta nueva de abajo ya se lo dice al cliente.

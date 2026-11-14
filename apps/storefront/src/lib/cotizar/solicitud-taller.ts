@@ -115,6 +115,11 @@ export type Propuesta = {
     /** Máquinas que declaró en su perfil y su área de trabajo más grande */
     capacidad?: { maquinas: number; resumen: string; area_mayor: string | null } | null
   }
+  /** Versión actual (1 = nunca la corrigió) y las versiones anteriores */
+  version?: number
+  historial?: { version: number; precio: number | null; dias: number | null; fecha_entrega: string | null; motivo: string | null; origen: string; fecha: string }[]
+  /** Contraofertas del cliente a esta propuesta y su respuesta */
+  contraofertas?: { id: string; precio: number | null; dias: number | null; mensaje: string | null; estado: string; nota_taller: string | null; fecha: string; respondida_en: string | null }[]
   // Licitaciones 3.0 (Fase 2): propuesta formal
   moneda?: string
   materiales?: string
@@ -226,6 +231,26 @@ export async function elegirPropuesta(
     return { ok: true, pago_url: body.pago_url || null }
   } catch {
     return { ok: false, mensaje: "No se pudo elegir la propuesta. Intenta de nuevo." }
+  }
+}
+
+/** El cliente le propone al taller el precio y/o los días que le funcionan. */
+export async function mandarContraoferta(
+  token: string,
+  propuestaId: string,
+  datos: { precio?: number | null; dias?: number | null; mensaje?: string }
+): Promise<{ ok: true } | { ok: false; mensaje: string }> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller/${encodeURIComponent(token)}/contraoferta`, {
+      method: "POST",
+      headers: cabeceras(),
+      body: JSON.stringify({ propuesta_id: propuestaId, ...datos }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, mensaje: body.message || "No se pudo mandar la contraoferta." }
+    return { ok: true }
+  } catch {
+    return { ok: false, mensaje: "No se pudo mandar la contraoferta. Intenta de nuevo." }
   }
 }
 

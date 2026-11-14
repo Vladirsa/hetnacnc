@@ -1,3 +1,4 @@
+import { T_CONTRA, asegurarVersiones } from "../../../lib/licitacion-versiones"
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
@@ -41,6 +42,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   await asegurarExtra(knex)
   await asegurarPrivacidad(knex)
   await asegurarPropuestaFormal(knex)
+  await asegurarVersiones(knex) // columna "version" y tabla de contraofertas
   const filas0 = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, function (this: any) {
       this.on("p.solicitud_id", "=", "s.id").andOn("p.seller_id", "=", knex.raw("?", [sellerId]))
@@ -89,7 +91,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       "s.modalidad", "s.privacidad", "s.contacto", "s.cliente_id",
       "s.etapa", "s.pago_estado", "s.paqueteria", "s.guia",
       "s.propuesta_elegida", "s.cobro", "s.comision_pct", "s.pagado",
-      "p.id as p_id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
+      "p.id as p_id", "p.version as p_version", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado as p_estado", "p.anticipo_pct",
       "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos",
       "s.tipo", "s.solo_verificados",
       "r.motivo as r_motivo", "r.nota as r_nota"
@@ -144,6 +146,16 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     })
   )
 
+  // Contraofertas del cliente a mis propuestas (para aceptarlas o rechazarlas)
+  const misIds = filas.map((f) => f.p_id).filter(Boolean)
+  const contrasPorProp = new Map<string, any[]>()
+  if (misIds.length) {
+    for (const c of await knex(T_CONTRA).whereIn("propuesta_id", misIds).orderBy("created_at", "asc")) {
+      const l = contrasPorProp.get(c.propuesta_id) || []
+      l.push({ id: c.id, precio: c.precio != null ? Number(c.precio) : null, dias: c.dias, mensaje: c.mensaje || "", estado: c.estado, nota_taller: c.nota_taller || "", fecha: c.created_at })
+      contrasPorProp.set(c.propuesta_id, l)
+    }
+  }
   const solicitudes = filas.map((f) => ({
     id: f.id,
     folio: folioTexto(f.folio),
@@ -183,6 +195,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     mi_propuesta: f.p_id
       ? {
           id: f.p_id,
+          version: Number(f.p_version || 1),
+          contraofertas: contrasPorProp.get(f.p_id) || [],
           precio: Number(f.precio),
           dias: f.dias,
           vigencia_dias: f.vigencia_dias,

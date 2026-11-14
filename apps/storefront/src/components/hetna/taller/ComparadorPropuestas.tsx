@@ -7,6 +7,7 @@ import { analizarPropuestas, elegirPropuesta, type Propuesta, type VistaSolicitu
 
 import PagoSolicitud from "./PagoSolicitud"
 import TablaPropuestas from "./TablaPropuestas"
+import NegociacionPropuesta from "./NegociacionPropuesta"
 
 const pesos = (n: number) => `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -149,7 +150,8 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
 
       {vista === "tabla" && lista.length >= 1 && solicitud.propuestas.length >= 2 ? (
         <TablaPropuestas propuestas={lista} faltan={new Map([...notasDe].map(([id, n]) => [id, n.faltan]))}
-          elegida={solicitud.propuesta_elegida} abierta={abierta} onElegir={setConfirmar} />
+          elegida={solicitud.propuesta_elegida} abierta={abierta} onElegir={setConfirmar}
+          negociacion={(p) => <NegociacionPropuesta token={token} p={p} abierta={abierta} compacta />} />
       ) : (
       <div className="mt-4 grid gap-4">
         {lista.map((p) => {
@@ -242,6 +244,8 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                   )}
                 </div>
               ) : null}
+
+              <NegociacionPropuesta token={token} p={p} abierta={abierta} />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {abierta && (

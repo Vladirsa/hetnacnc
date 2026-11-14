@@ -698,6 +698,72 @@ function Preguntas({ sol, alGuardar }) {
   )
 }
 
+// Contraofertas del cliente a mi propuesta: aceptar (mi propuesta toma su precio y
+// días como versión nueva) o rechazar con una nota. También puedo corregir mi propuesta.
+const ESTADO_CONTRA = {
+  pendiente: ["Esperando tu respuesta", "#C2560A"],
+  aceptada: ["Aceptada: tu propuesta se actualizó", "#1E7B3A"],
+  rechazada: ["Rechazada", "#B3261E"],
+  respondida: ["Respondida con tu propuesta corregida", "#1F5FBF"],
+}
+const pesosMx = (n) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 })
+const queRide = (c) => [c.precio != null ? pesosMx(c.precio) : null, c.dias != null ? c.dias + " días" : null].filter(Boolean).join(" y ")
+function Contraofertas({ sol, alResponder }) {
+  const [enviando, setEnviando] = useState(null)
+  const [msg, setMsg] = useState(null)
+  const responder = async (c, accion) => {
+    let nota = ""
+    if (accion === "rechazar") {
+      const r = window.prompt("¿Por qué no puedes? El cliente verá esta nota (opcional)", "")
+      if (r === null) return
+      nota = r
+    } else if (!window.confirm("Tu propuesta quedará en " + queRide(c) + ". ¿Aceptar?")) return
+    setEnviando(c.id)
+    setMsg(null)
+    try {
+      const r = await fetch("/vendor/hetna-solicitudes/" + sol.id + "/contraoferta", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contraoferta_id: c.id, accion, nota }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setMsg({ ok: true, t: accion === "aceptar" ? "Aceptada. Tu propuesta se actualizó y le avisamos al cliente." : "Le avisamos al cliente." })
+      alResponder()
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setEnviando(null)
+    }
+  }
+  return (
+    <div style={{ margin: "10px 0", border: "1px solid #F3D9C4", background: "#FFF8F2", borderRadius: 10, padding: "8px 12px" }}>
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#142033" }}>Contraofertas del cliente</p>
+      {sol.mi_propuesta.contraofertas.map((c) => (
+        <div key={c.id} style={{ marginTop: 6, fontSize: 13, color: "#40403A" }}>
+          <span>
+            Pide: {queRide(c) || "—"}
+            {c.mensaje ? " · “" + c.mensaje + "”" : ""}
+          </span>
+          <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: (ESTADO_CONTRA[c.estado] || [])[1] }}>{(ESTADO_CONTRA[c.estado] || [c.estado])[0]}</span>
+          {c.nota_taller && <span style={{ display: "block", fontSize: 12, fontStyle: "italic", color: "#6B675C" }}>Tu nota: “{c.nota_taller}”</span>}
+          {c.estado === "pendiente" && sol.estado === "abierta" && (
+            <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+              {(c.precio != null || c.dias != null) && (
+                <button type="button" style={{ ...S.btn, padding: "6px 14px", fontSize: 13 }} disabled={enviando === c.id} onClick={() => responder(c, "aceptar")}>Aceptar</button>
+              )}
+              <button type="button" style={S.btn2} disabled={enviando === c.id} onClick={() => responder(c, "rechazar")}>Rechazar</button>
+              <span style={{ fontSize: 12, color: "#6B675C", alignSelf: "center" }}>o corrige tu propuesta</span>
+            </div>
+          )}
+        </div>
+      ))}
+      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+    </div>
+  )
+}
+
 function FormPropuesta({ sol, alGuardar, cobroTaller }) {
   const p = sol.mi_propuesta
   const [f, setF] = useState({
@@ -708,6 +774,7 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
     moneda: p?.moneda ?? "MXN", materiales: p?.materiales ?? "", operaciones: p?.operaciones ?? "",
     fecha_entrega: p?.fecha_entrega ?? "", condiciones_pago: p?.condiciones_pago ?? "", garantia: p?.garantia ?? "",
     observaciones: p?.observaciones ?? "",
+    motivo_cambio: "",
   })
   const [adjuntos, setAdjuntos] = useState(p?.adjuntos || [])
   const [subiendo, setSubiendo] = useState(false)
@@ -767,6 +834,13 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
 
   return (
     <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
+      {p && (
+        <div style={{ marginBottom: 10 }}>
+          <label style={S.label}>Motivo del cambio (lo ve el cliente en el historial · versión {p.version || 1} → {(p.version || 1) + 1})</label>
+          <input style={S.input} value={f.motivo_cambio} onChange={(e) => set("motivo_cambio", e.target.value)} maxLength={500}
+            placeholder="Ej: ajusté el precio por cantidad / cambié el material" />
+        </div>
+      )}
       <div style={S.grid}>
         <div>
           <label style={S.label}>Precio total ({f.moneda}, con IVA)</label>
@@ -1092,6 +1166,8 @@ export default function SolicitudesPage() {
                 {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}>Restringida</span>}
                 {s.tipo === "suministro" && <span style={S.tag("#EEF6F0", "#1E7B3A")}>📦 Suministro</span>}
                 {p?.estado === "elegida" && <span style={S.tag("#E6F4EA", "#1E7B3A")}>¡Ganaste!</span>}
+                {p?.version > 1 && <span style={S.tag("#EAF1FB", "#1F5FBF")}>Versión {p.version}</span>}
+                {p?.contraofertas?.some((c) => c.estado === "pendiente") && <span style={S.tag("#FFF1E6", "#C2560A")}>Contraoferta pendiente</span>}
                 {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}>No elegida</span>}
                 <span style={{ color: "#6B675C", fontSize: 12 }}>
                   {s.propuestas_recibidas} {s.propuestas_recibidas === 1 ? "propuesta" : "propuestas"}
@@ -1103,6 +1179,7 @@ export default function SolicitudesPage() {
               )}
             </div>
 
+            {p?.contraofertas?.length > 0 && <Contraofertas sol={s} alResponder={cargar} />}
             {t.cliente && t.cliente !== "Cliente HETNA" && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#40403A" }}>👤 {t.cliente}</p>}
             {t.descripcion_restringida ? (
               <div style={{ margin: "10px 0", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px", fontSize: 13, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
