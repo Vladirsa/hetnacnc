@@ -465,7 +465,7 @@ function WhatsappConexion() {
         else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
       } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
       else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
-      else if (cuerpo.accion === "invitar") setNota({ ok: true, t: `✓ Invitación iniciada: ${d.enviados} correos hoy${d.quedan ? "; mañana sigue con los demás" : " (ya no queda nadie por invitar)"}` })
+      else if (cuerpo.accion === "invitar") setNota({ ok: true, t: d.hoy ? `✓ Invitación iniciada: se están mandando ${d.hoy} correos hoy (${d.talleres} talleres, ${d.clientes} clientes); mañana sigue con los demás.` : "No hay a quién invitar: todos ya verificaron o ya fueron invitados." })
       else if (cuerpo.accion === "bot") setNota({ ok: true, t: cuerpo.activo ? "✓ Agente de ventas encendido" : "Agente de ventas apagado" })
       void cargar()
     } catch (er) {
