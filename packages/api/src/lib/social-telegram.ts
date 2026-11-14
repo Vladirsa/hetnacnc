@@ -15,6 +15,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, adaptar, asegurarSocial, dentroDeHorario, enviarAN8n, horaEn, iaSocial, leerConfig, publicar, zonaDe } from "./social-hub"
 import { puntuar } from "./estrategia"
 import { revisarPublicacion } from "./social-revisor"
+import { modeloIA } from "./ia-modelo"
 
 type EstadoTg = { chat_id?: string; codigo?: string; codigo_expira?: string; editando?: string | null; ultimo_aviso?: string }
 
@@ -111,11 +112,9 @@ async function aplicarCambio(p: any, instruccion: string, logger?: any) {
   try {
     ia ??= new Anthropic()
     const resp = await ia.beta.messages.create({
-      model: "claude-opus-5-5",
+      ...modeloIA(),
       max_tokens: 1500,
       output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system:
         "Eres el editor de redes de HETNA CNC. Recibes una publicación y la instrucción del dueño. Devuelve SÓLO el texto de la publicación corregido, sin comentarios. " +
         "Aplica la instrucción; si el dueño mandó un texto completo nuevo, úsalo tal cual. No inventes precios, cifras, clientes ni promociones. Conserva la marca {{liga}} donde va la liga.",

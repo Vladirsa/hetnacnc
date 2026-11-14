@@ -10,8 +10,8 @@
 import Anthropic from "@anthropic-ai/sdk"
 
 import type { PropuestaComparable } from "./licitacion-propuesta"
+import { modeloIA } from "./ia-modelo"
 
-const MODELO = process.env.LICITACION_IA_MODELO || "claude-opus-5-5"
 
 export const iaDisponible = () => !!process.env.ANTHROPIC_API_KEY && (process.env.LICITACION_IA || "").toLowerCase() !== "off"
 
@@ -58,11 +58,9 @@ export async function resumirPropuestas(
   }
   try {
     const r = await clienteIa().beta.messages.create({
-      model: MODELO,
+      ...modeloIA(),
       max_tokens: 2000,
       output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system: SISTEMA,
       messages: [{ role: "user", content: `Compara estas propuestas para el cliente:\n${JSON.stringify(datos)}` }],
     } as any)

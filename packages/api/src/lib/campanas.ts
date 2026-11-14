@@ -23,6 +23,7 @@ import { STORE_URL, nuevoId } from "./licitacion"
 import { T_CONFIG_S, T_EVENTO_S, T_LIGA, asegurarSocial, ligaPara, urlCorta } from "./social-hub"
 import { aprendizaje, ventasPorPublicacion } from "./social-estadisticas"
 import { TOPE_SEMANAL, anunciosListos, graph, leerAnuncios } from "./anuncios"
+import { modeloIA } from "./ia-modelo"
 
 export const T_CAMPANA = "hetna_campana_ads"
 export const PLATAFORMAS = ["meta", "google", "tiktok"] as const
@@ -170,11 +171,9 @@ async function planConIa(d: { que: string; objetivo: string; zona: string; diari
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("Falta ANTHROPIC_API_KEY en el servidor para armar la campaña.")
   ia ??= new Anthropic()
   const resp = await ia.beta.messages.create({
-    model: "claude-opus-5-5",
+    ...modeloIA(),
     max_tokens: 6000,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     system:
       "Eres el especialista en campañas de anuncios de HETNA CNC (marketplace de fabricación CNC en México). Arma una campaña completa para Meta (Facebook e Instagram), Google Ads (búsqueda) y TikTok Ads. " +
       "Reglas: usa SÓLO los datos que se te dan; no inventes precios, descuentos, cifras, testimonios ni garantías; nada de 'el mejor' ni superlativos sin prueba. Español de México, tuteando. " +

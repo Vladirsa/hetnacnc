@@ -19,6 +19,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { STORE_URL, nuevoId } from "./licitacion"
 import { MERCADOS, T_CONFIG_S, asegurarSocial, crearPublicacion, iaSocial } from "./social-hub"
+import { modeloIA } from "./ia-modelo"
 
 export const T_HALLAZGO = "hetna_radar_hallazgo"
 export const TIPOS = ["cliente", "taller", "contenido", "competencia", "evento", "mencion"] as const
@@ -116,11 +117,9 @@ export async function correrBusqueda(knex: any, b: Busqueda, logger?: any) {
   try {
     for (let vuelta = 0; vuelta < 3; vuelta++) {
       const resp = await ia.beta.messages.create({
-        model: "claude-opus-5-5",
+        ...modeloIA(),
         max_tokens: 4000,
         output_config: { effort: "low" },
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
         system: INSTRUCCIONES,
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4, user_location: { type: "approximate", country: pais } }],
         messages: mensajes,

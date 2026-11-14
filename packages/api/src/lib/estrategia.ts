@@ -21,6 +21,7 @@ import { aprendizaje } from "./social-estadisticas"
 import { STORE_URL, nuevoId } from "./licitacion"
 import { PRINCIPIOS_VIDEO } from "./fabrica/render"
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, asegurarSocial, crearPublicacion, horaEn, iaSocial, zonaDe } from "./social-hub"
+import { modeloIA } from "./ia-modelo"
 
 export const T_PLAN = "hetna_social_plan"
 
@@ -377,11 +378,9 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
     ia ??= new Anthropic()
     const g = GUIAS[slot.red]
     const resp = await ia.beta.messages.create({
-      model: "claude-opus-5-5",
+      ...modeloIA(),
       max_tokens: 1500,
       output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system:
         "Eres el estratega de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
         "Escribe UNA publicación lista para usar. Reglas: usa sólo datos reales del contexto, no inventes precios, cifras, clientes ni promociones; " +

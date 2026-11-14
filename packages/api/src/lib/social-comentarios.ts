@@ -13,6 +13,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { STORE_URL, nuevoId } from "./licitacion"
 import { MERCADOS, T_POST, asegurarSocial, enviarAN8n, iaSocial, leerConfig } from "./social-hub"
 import { mandarPrivado } from "./social-telegram"
+import { modeloIA } from "./ia-modelo"
 
 export const T_COMENTARIO = "hetna_social_comentario"
 const PAGINA_FB = "109722907076187"
@@ -60,7 +61,7 @@ export async function proponer(c: { texto: string; red: string; autor?: string }
   if (!iaSocial()) return null
   ia ??= new Anthropic()
   const resp = await ia.beta.messages.create({
-    model: "claude-opus-5-5",
+    ...modeloIA(),
     max_tokens: 800,
     output_config: {
       effort: "low",
@@ -76,8 +77,6 @@ export async function proponer(c: { texto: string; red: string; autor?: string }
         },
       },
     },
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     system:
       "Eres el community manager de HETNA CNC (marketplace de fabricación CNC en México). Clasifica el comentario y, si conviene, escribe una respuesta breve " +
       `(1 a 3 oraciones, cálida, en ${MERCADOS[mercado]?.nota || "español de México"}, tutea). Usa SÓLO estos datos de HETNA; si la pregunta pide algo que no está aquí ` +
