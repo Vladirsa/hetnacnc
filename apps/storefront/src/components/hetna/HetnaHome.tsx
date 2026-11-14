@@ -20,6 +20,7 @@ import EstadisticasConfianza from "@/components/hetna/EstadisticasConfianza"
 import { CifrasHetna } from "@/components/hetna/CifrasHetna"
 import { FilasProductos } from "@/components/hetna/FilasProductos"
 import { listCategories } from "@/lib/data/categories"
+import { categoriasConProductos, podarArbol } from "@/lib/hetna/catalogo"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 
 const WHATSAPP_NUMERO =
@@ -275,7 +276,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       etiqueta: "Marketplace CNC de México",
       titulo: "Todo lo que tu taller CNC necesita, en un solo lugar",
       texto:
-        "Máquinas, herramientas, materiales y diseños listos para cortar. Cotiza y produce tus piezas con talleres de todo México.",
+        "Diseños listos para cortar y fabricación a la medida con talleres de todo México. Máquinas, herramientas y materiales, bajo cotización.",
       foto: fotoHero("hetna-hero.jpg"),
       alt: "Router CNC cortando madera en un taller",
       botones: [
@@ -354,7 +355,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       <PorQueHetna />
 
 
-      <CategoriasVisuales categorias={parentCategories} />
+      <CategoriasVisuales categorias={podarArbol(parentCategories, await categoriasConProductos())} />
 
       {/* Aprendizaje CNC: artículos reales, solo si ya hay contenido publicado */}
       {articulosAprendizaje.length > 0 && (

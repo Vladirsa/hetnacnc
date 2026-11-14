@@ -29,12 +29,15 @@ export const SearchProductsListing = ({
   seller_id,
   locale = process.env.NEXT_PUBLIC_DEFAULT_REGION,
   inicial,
+  sugerencias,
 }: {
   category_id?: string | string[]
   collection_id?: string
   seller_id?: string
   locale?: string
   inicial?: ListadoInicial
+  // Categorías con productos para cuando el resultado sale vacío (lib/hetna/catalogo)
+  sugerencias?: { nombre: string; handle: string }[]
 }) => {
   const searchParams = useSearchParams()
   const categoryKey = Array.isArray(category_id)
@@ -128,7 +131,7 @@ export const SearchProductsListing = ({
         <div className="md:col-span-3 w-full flex flex-col">
           {isLoading && <ProductListingLoadingView />}
 
-          {!isLoading && !products.length && <ProductListingNoResultsView />}
+          {!isLoading && !products.length && <ProductListingNoResultsView busqueda={query || undefined} sugerencias={sugerencias} />}
 
           {!isLoading && products.length > 0 && (
             <ProductListingProductsView products={products} />

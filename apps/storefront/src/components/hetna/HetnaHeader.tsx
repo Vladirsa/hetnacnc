@@ -8,6 +8,7 @@ import { NavbarSearch } from "@/components/molecules/NavbarSearch/NavbarSearch"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import footerLinks from "@/data/footerLinks"
 import { listCategories } from "@/lib/data/categories"
+import { categoriasConProductos, podarArbol } from "@/lib/hetna/catalogo"
 import { retrieveCustomer } from "@/lib/data/customer"
 
 import { SocialIcon } from "./SocialIcon"
@@ -40,7 +41,8 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
     parentCategories: HttpTypes.StoreProductCategory[]
   }
 
-  const navCategories = parentCategories
+  // Catálogo honesto: sin categorías vacías en la barra ni en el menú de celular
+  const navCategories = podarArbol(parentCategories, await categoriasConProductos())
   // Para el menú de celular: árbol mínimo (sin "Servicios", que vive en
   // Fabricación) y herramientas reducidas. Ver MenuMovil.
   const aNodo = (c: HttpTypes.StoreProductCategory): NodoMenu => ({
@@ -48,7 +50,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
     h: c.handle,
     c: ((c.category_children as HttpTypes.StoreProductCategory[] | undefined) ?? []).map(aNodo),
   })
-  const arbolMenu = parentCategories.filter((c) => c.handle !== "servicios").map(aNodo)
+  const arbolMenu = navCategories.filter((c) => c.handle !== "servicios").map(aNodo)
   const herramientasMenu: HerramientaMenu[] = GRUPOS_HERRAMIENTAS.map((g) => ({
     id: g.id,
     titulo: g.titulo,

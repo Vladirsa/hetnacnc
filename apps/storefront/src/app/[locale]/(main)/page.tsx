@@ -46,7 +46,7 @@ export async function generateMetadata({
   const title = enIngles ? "CNC marketplace, quotes and shop software" : "Marketplace CNC en México: talleres y diseños"
   const description = enIngles
     ? "HETNA CNC: the CNC marketplace. DXF, SVG and STL designs, machines, tooling, materials, CNC quoting software and design and machining services."
-    : "HETNA CNC: marketplace de CNC en México. Diseños DXF, SVG y STL, máquinas, herramientas, materiales y servicios de diseño y maquila."
+    : "HETNA CNC: marketplace de CNC en México. Cotiza tu pieza con talleres sin registro, diseños DXF, SVG y STL desde $30 y servicios CAM, de diseño y maquila."
   const ogImage = enIngles ? "/og-hetna-en.png" : "/og-hetna.png"
 
   return {
@@ -138,7 +138,7 @@ export default async function Home({
             logo: `${baseUrl}/Logo.png`,
             image: `${baseUrl}/og-hetna.png`,
             description:
-              "Marketplace y software para talleres CNC: diseños, máquinas, herramientas, cotizador y maquila.",
+              "Marketplace y software para talleres CNC: fabricación a la medida, diseños digitales, cotizador y maquila.",
             address: {
               "@type": "PostalAddress",
               addressLocality: EMPRESA.ciudad,

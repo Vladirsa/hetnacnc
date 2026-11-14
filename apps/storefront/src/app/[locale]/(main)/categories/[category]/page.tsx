@@ -1,6 +1,7 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { GuiaCategoria, IntroCategoria } from "@/components/hetna/TextoCategoria"
 import { contenidoCategoria } from "@/lib/hetna/contenido-categorias"
+import { categoriasConProductos, categoriasSugeridas, tieneContenido } from "@/lib/hetna/catalogo"
 import { getCategoryByHandle, collectCategorySubtreeIds } from "@/lib/data/categories"
 import { Suspense } from "react"
 
@@ -85,7 +86,8 @@ export async function generateMetadata({
       canonical,
       languages,
     },
-    robots: { index: true, follow: true },
+    // Catálogo honesto: una categoría sin productos no se indexa hasta que tenga
+    robots: { index: tieneContenido(cat as any, await categoriasConProductos()), follow: true },
     openGraph: {
       title: `${title} | ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}`,
       description,
@@ -218,7 +220,7 @@ async function Category({
         {bot || process.env.NEXT_PUBLIC_LISTADO_CLIENTE !== "1" ? (
           <ProductListing category_id={categoryIds} showSidebar locale={locale} searchParams={filtros} />
         ) : (
-          <SearchProductsListing category_id={categoryIds} locale={locale} />
+          <SearchProductsListing category_id={categoryIds} locale={locale} sugerencias={await categoriasSugeridas()} />
         )}
       </Suspense>
       )}
