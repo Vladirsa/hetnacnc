@@ -526,6 +526,62 @@ function WhatsappConexion() {
 }
 
 /** TikTok: conectar la cuenta de HETNA; los videos llegan como borrador a la app de TikTok. */
+/** Pinterest: conectar la cuenta de HETNA y elegir el tablero donde salen los pines. */
+function PinterestConexion() {
+  const [e, setE] = useState<any>(null)
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const [falla, setFalla] = useState<string | null>(null)
+  const cargar = () => api<any>("/pinterest").then((x) => { setE(x); setFalla(null) }).catch((er) => setFalla((er as Error).message))
+  useEffect(() => { void cargar() }, [])
+  if (!e)
+    return (
+      <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+        <b>📌 Pinterest</b> <span style={{ color: falla ? C.rojo : C.tenue }}>{falla ? `No se pudo leer el estado: ${falla}` : "Cargando…"}</span>
+      </div>
+    )
+  const hacer = async (cuerpo: any) => {
+    setOcupado(true)
+    try {
+      const d = await api<any>("/pinterest", cuerpo)
+      if (cuerpo.accion === "conectar" && d.url) {
+        window.open(d.url, "_blank", "noopener")
+        setNota({ ok: true, t: "Se abrió Pinterest en otra pestaña: entra con la cuenta de HETNA y acepta. Cuando diga \"Pinterest conectado\", regresa aquí y aprieta \"Probar\"." })
+      } else if (cuerpo.accion === "probar") setNota(d.ok ? { ok: true, t: `✓ Conectado como ${d.usuario || "tu cuenta"}` } : { ok: false, t: `✗ ${d.error}` })
+      else if (cuerpo.accion === "tablero") setNota({ ok: true, t: "✓ Tablero guardado" })
+      else setNota({ ok: true, t: "Pinterest desconectado" })
+      void cargar()
+    } catch (er) {
+      setNota({ ok: false, t: `✗ ${(er as Error).message}` })
+    } finally {
+      setOcupado(false)
+    }
+  }
+  return (
+    <div style={{ border: `1px solid ${C.borde}`, borderRadius: 10, padding: 10, marginTop: 8, fontSize: 13 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>📌 Pinterest</b>
+        <span style={{ color: e.conectado ? C.verde : C.tenue, fontWeight: 600 }}>{!e.configurado ? "Faltan las llaves en el servidor" : e.conectado ? `Conectado${e.usuario ? ` (${e.usuario})` : ""}` : "Sin conectar"}</span>
+        {e.conectado && (
+          <select value={e.tablero || ""} disabled={ocupado} onChange={(x) => void hacer({ accion: "tablero", id: x.target.value })} style={{ padding: "3px 6px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 12 }}>
+            <option value="" disabled>Elige el tablero</option>
+            {(e.tableros || []).map((t: any) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+          </select>
+        )}
+        <span style={{ flex: 1 }} />
+        {e.configurado && <button type="button" style={boton(e.conectado ? "normal" : "primario")} disabled={ocupado} onClick={() => void hacer({ accion: "conectar" })}>{e.conectado ? "Volver a conectar" : "Conectar Pinterest"}</button>}
+        {e.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer({ accion: "probar" })}>Probar</button>}
+        {e.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void hacer({ accion: "desconectar" })}>Desconectar</button>}
+      </div>
+      <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
+        Las publicaciones con imagen que lleven Pinterest salen solas como pin en el tablero elegido, con la liga a la tienda. Las de video se quedan para copiar y pegar.
+        {!e.configurado && ` Guarda PINTEREST_APP_ID y PINTEREST_APP_SECRET en el .env del backend. URI de redireccionamiento para la app: ${e.redirect}`}
+      </div>
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 4 }}>{nota.t}</div>}
+    </div>
+  )
+}
+
 function TikTokConexion() {
   const [e, setE] = useState<any>(null)
   const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
@@ -996,6 +1052,7 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <PruebaRed red="threads" nombre="Threads" />
       <PruebaRed red="youtube" nombre="YouTube" />
       <TikTokConexion />
+      <PinterestConexion />
       <WhatsappConexion />
       <Chips redes={c.redes} todas={datos.redes} alCambiar={(r) => setC({ ...c, redes: r })} />
       <h3 style={{ margin: "16px 0 4px", fontSize: 15 }}>¿Qué sale solo y qué espera tu visto bueno?</h3>
