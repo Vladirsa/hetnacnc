@@ -100,8 +100,11 @@ export default function Terminos() {
 
       <h2>8. Propiedad intelectual</h2>
       <p>
-        Los diseños digitales se venden para uso según su descripción. No se permite revenderlos ni compartirlos como
-        archivos. Quien publica un diseño declara tener derecho a venderlo.
+        Cada diseño digital se vende con una licencia (personal, comercial limitada o comercial ampliada) que se indica en
+        su ficha antes de pagar y se explica en{" "}
+        <LocalizedClientLink href="/licencias-disenos">Licencias de diseños digitales</LocalizedClientLink>. Con ninguna
+        se permite revender ni compartir los archivos. Quien publica un diseño declara tener derecho a venderlo con la
+        licencia que elige.
       </p>
 
       <h2>9. Limitación de responsabilidad</h2>

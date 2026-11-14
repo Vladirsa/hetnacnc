@@ -96,6 +96,7 @@ export const SearchProductsListing = ({
           minPrice: minPrice ? Number(minPrice) : undefined,
           maxPrice: maxPrice ? Number(maxPrice) : undefined,
           onlyAvailable: disponible,
+          licencia: args.licencia,
         })
 
         setProducts(result.products)
@@ -110,7 +111,7 @@ export const SearchProductsListing = ({
 
     fetchProducts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, categoryKey, collection_id, seller_id, query, page, sortBy, attributesKey, minPrice, maxPrice, disponible])
+  }, [locale, categoryKey, collection_id, seller_id, query, page, sortBy, attributesKey, minPrice, maxPrice, disponible, args.licencia])
 
   if (isLoading && products.length === 0) return <ProductListingSkeleton />
 

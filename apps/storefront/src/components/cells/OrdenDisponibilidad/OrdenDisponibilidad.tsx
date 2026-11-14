@@ -28,9 +28,10 @@ export const OrdenDisponibilidad = () => {
 
   const orden = searchParams.get("sortBy") || "created_at"
   const disponible = searchParams.get("disponible") === "1"
+  const licencia = searchParams.get("licencia") || ""
 
   return (
-    <Accordion heading="Ordenar y existencia" data-testid="filter-orden">
+    <Accordion heading="Ordenar, existencia y licencia" data-testid="filter-orden">
       <div className="flex flex-col gap-3 mb-4">
         <select
           value={orden}
@@ -53,6 +54,21 @@ export const OrdenDisponibilidad = () => {
             data-testid="filter-disponible"
           />
           Sólo con existencia
+        </label>
+        {/* Licencia de diseños: qué puedes hacer con el archivo (lib/hetna/licencias) */}
+        <label className="flex flex-col gap-1 text-md">
+          <span>Licencia del diseño</span>
+          <select
+            value={licencia}
+            onChange={(e) => cambiar("licencia", e.target.value || null)}
+            className="w-full rounded-sm border border-primary bg-component px-3 py-2 text-md"
+            data-testid="filter-licencia"
+          >
+            <option value="">Cualquiera</option>
+            <option value="personal">Personal (uso propio)</option>
+            <option value="comercial">Para vender piezas</option>
+            <option value="comercial_ampliada">Producción sin límite</option>
+          </select>
         </label>
       </div>
     </Accordion>

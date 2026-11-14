@@ -27,6 +27,8 @@ const Ficha = z.object({
   meta_description: z.string().optional(),
   keyword_principal: z.string().optional(),
   faq: z.array(z.object({ p: z.string(), r: z.string() })).optional(),
+  licencia: z.enum(["personal", "comercial_limitada", "comercial_ampliada"]).optional(),
+  licencia_piezas: z.number().int().positive().max(1_000_000).optional(),
 }).refine((f) => f.gratis === true || (f.precio_mxn ?? 0) > 0, {
   message: "Si el archivo no es gratis, precio_mxn es obligatorio.",
   path: ["precio_mxn"],

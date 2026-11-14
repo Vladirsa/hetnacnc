@@ -117,10 +117,17 @@ export async function loteInvitacion(knex: any, logger?: any, limite = LOTE_DIA)
 
 /** Botón del panel: prende la campaña y manda el primer lote. */
 export async function iniciarCampana(knex: any, logger?: any) {
+  await asegurar(knex)
   await guardarCampana(knex, { activo: true, desde: new Date().toISOString() })
-  const r = await loteInvitacion(knex, logger)
-  if (!r.quedan) await guardarCampana(knex, { activo: false, terminada: new Date().toISOString() })
-  return r
+  const { talleres, clientes } = await pendientes(knex, LOTE_DIA)
+  // El lote tarda (una pausa entre correos): se manda en segundo plano y el panel no se queda esperando
+  void loteInvitacion(knex, logger)
+    .then(async (r) => {
+      logger?.info?.(`[wa-invitacion] primer lote: ${r.enviados} correos${r.motivo ? ` (${r.motivo})` : ""}`)
+      if (!r.quedan) await guardarCampana(knex, { activo: false, terminada: new Date().toISOString() })
+    })
+    .catch((e) => logger?.warn?.(`[wa-invitacion] ${(e as Error).message}`))
+  return { iniciada: true, hoy: talleres.length + clientes.length, talleres: talleres.length, clientes: clientes.length }
 }
 
 /** Job diario: sigue con los lotes hasta invitar a todos. */

@@ -3,6 +3,7 @@ import { EMPRESA } from "@/lib/hetna/empresa"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { nombreLicencia } from "@/lib/hetna/licencias"
 
 // Lo que de verdad decide la compra, en cuatro renglones arriba de todo.
 //
@@ -88,6 +89,21 @@ export const PuntosDestacados = ({
           ),
         }
   )
+
+  // Licencia de diseños (lib/hetna/licencias): qué puedes hacer con el archivo
+  if (digital) {
+    puntos.push({
+      icono: "📜",
+      texto: (
+        <>
+          Licencia: <span className="font-semibold">{nombreLicencia(product.metadata)}</span>.{" "}
+          <LocalizedClientLink href="/licencias-disenos" className="font-semibold text-[#B34D07] underline">
+            Qué incluye
+          </LocalizedClientLink>
+        </>
+      ),
+    })
+  }
 
   if (material) {
     puntos.push({ icono: "🪵", texto: <>Material: <span className="font-semibold">{material}</span></> })

@@ -1,4 +1,5 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
+import { PIEZAS_POR_OMISION, validarLicencia } from "./licencias"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { createOffersWorkflow } from "@mercurjs/core/workflows"
@@ -43,6 +44,9 @@ export type FichaDiseno = {
   meta_description?: string
   keyword_principal?: string
   faq?: { p: string; r: string }[]
+  // Licencia del diseño (lib/licencias.ts). Sin ella, personal.
+  licencia?: "personal" | "comercial_limitada" | "comercial_ampliada"
+  licencia_piezas?: number
 }
 
 export type DisenoPublicado = {
@@ -267,6 +271,7 @@ export async function publicarDiseno(
               seo_title: ficha.titulo_seo || "",
               meta_description: ficha.meta_description || "",
               keyword_principal: ficha.keyword_principal || "",
+              ...validarLicencia(ficha.licencia || "personal", ficha.licencia_piezas ?? PIEZAS_POR_OMISION),
             },
             options: [{ title: "Formato", values: ["Archivo digital"] }],
             variants: [
