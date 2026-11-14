@@ -204,6 +204,19 @@ export async function redactar(historia: { rol: string; texto: string }[], produ
   return JSON.parse(resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
 }
 
+/**
+ * Le pone ?wa=N a la liga de «Solicitar cotización»: con eso la tarjeta que arma
+ * WhatsApp muestra uno de los anuncios del espacio «vista_whatsapp» (se turnan;
+ * ver apps/storefront/src/lib/publicidad/vista-previa.ts). Sin anuncios sale la
+ * imagen de siempre.
+ */
+export function conVistaPublicidad(texto: string, n = Math.floor(Math.random() * 1000)) {
+  const base = STORE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return String(texto || "").replace(new RegExp(`${base}/mx/cotizar(\\?[^\\s]*[^\\s.,)])?(?=[\\s).,]|$)`, "g"), (_m, q) =>
+    `${STORE_URL}/mx/cotizar${q ? `${q}&` : "?"}wa=${n}`
+  )
+}
+
 const turnos = new Map<string, ReturnType<typeof setTimeout>>()
 const RESPALDO = `¡Gracias por escribir a HETNA CNC! En un momento una persona del equipo te contesta. Mientras, puedes ver la tienda en ${STORE_URL}/mx o publicar gratis la pieza que necesitas en ${STORE_URL}/mx/cotizar.`
 
@@ -276,6 +289,7 @@ async function contestar(knex: any, numero: string, logger?: any) {
         r.resumen_para_equipo = `${r.resumen_para_equipo || ""} · Le dimos un aproximado: ${est.resumen}`.replace(/^ · /, "")
       }
     }
+    respuesta = conVistaPublicidad(respuesta)
     if (r.tipo === "ignorar" && !respuesta) return
     if (!respuesta) respuesta = "Gracias por escribir. Una persona del equipo de HETNA te contesta en breve."
     await enviarTexto(numero, respuesta.slice(0, 1500))

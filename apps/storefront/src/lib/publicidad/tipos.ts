@@ -8,6 +8,7 @@ export type EspacioId =
   | "banner_herramientas"
   | "foro_lateral"
   | "categorias_lateral"
+  | "vista_whatsapp"
 
 export type ConfigEspacio = {
   nombre: string // nombre que ve el administrador
@@ -77,6 +78,16 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
     publicidad: true,
     ayuda: "Banner horizontal arriba del listado de productos de cada categoría.",
   },
+  vista_whatsapp: {
+    nombre: "Publicidad: vista previa en WhatsApp",
+    medidas: "1200 × 630 px",
+    anchoMax: 1200,
+    max: 6,
+    ratio: "1200 / 630",
+    publicidad: true,
+    ayuda:
+      "La imagen grande que sale cuando el WhatsApp de HETNA manda la liga de «Solicitar cotización». Si hay varias, se turnan en cada mensaje. Sin ninguna, sale la imagen de HETNA de siempre. Deja lo importante al centro: WhatsApp recorta un poco las orillas.",
+  },
 }
 
 export const ORDEN_ESPACIOS: EspacioId[] = [
@@ -86,6 +97,7 @@ export const ORDEN_ESPACIOS: EspacioId[] = [
   "banner_herramientas",
   "foro_lateral",
   "categorias_lateral",
+  "vista_whatsapp",
 ]
 
 export const esEspacio = (v: string): v is EspacioId => Object.prototype.hasOwnProperty.call(ESPACIOS, v)
