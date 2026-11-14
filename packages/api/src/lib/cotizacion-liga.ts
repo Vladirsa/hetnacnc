@@ -340,11 +340,17 @@ export function anticipoDe(c): number {
 // El PDF de la cotización: la app lo sube a un bucket privado de Supabase y guarda la
 // ruta ("cotizaciones-pdf/<negocio>/<id>.pdf"); aquí se firma por una hora para que el
 // cliente lo vea o lo descargue. Las ligas viejas que ya eran URL completas pasan igual.
-async function ligaPdf(pdfUrl: string | null | undefined): Promise<string | null> {
+async function ligaPdf(pdfUrl: string | null | undefined, negocioId: string): Promise<string | null> {
   const ruta = String(pdfUrl || "").trim()
   if (!ruta) return null
   if (/^https:\/\//i.test(ruta)) return ruta
-  if (!ruta.startsWith("cotizaciones-pdf/") || ruta.includes("..")) return null
+  // Sólo PDFs de la carpeta del taller dueño de la cotización: antes se firmaba
+  // cualquier ruta de cotizaciones-pdf/, y un taller que escribiera la ruta de
+  // otro en su pdf_url obtenía el PDF ajeno (auditoría del 14 nov 2026).
+  if (ruta.includes("..") || !ruta.startsWith(`cotizaciones-pdf/${negocioId}/`)) {
+    if (ruta.startsWith("cotizaciones-pdf/")) console.warn(`[cotizacion-liga] PDF fuera de la carpeta del taller ${negocioId}: ${ruta}`)
+    return null
+  }
   try {
     const r = await supa<{ signedURL?: string }>(`/storage/v1/object/sign/${ruta.split("/").map(encodeURIComponent).join("/")}`, {
       method: "POST",
@@ -430,7 +436,7 @@ export async function paginaPublica(token: string) {
     fecha_entrega: c.fecha_entrega,
     dias_habiles: c.dias_habiles,
     notas: c.notas,
-    pdf: await ligaPdf(c.pdf_url),
+    pdf: await ligaPdf(c.pdf_url, String(c.negocio_id)),
     aceptada: c.aceptada_en ? { en: c.aceptada_en, por: c.aceptada_por } : null,
     moneda,
     anticipo: (() => {
@@ -962,7 +968,17 @@ export async function desconectarPaypal(sesion: string | undefined) {
 }
 
 // ── OAuth: conectar la cuenta del taller ───────────────────────────────
-const firmar = (datos: string) => createHmac("sha256", clientSecret() || "sin-secreto").update(datos).digest("base64url")
+// Firma del `state` de OAuth (Mercado Pago y PayPal). Antes usaba el secreto de
+// Mercado Pago con "sin-secreto" de respaldo: sin esa variable cualquiera podía
+// fabricar un state y conectar SU cuenta de PayPal al taller de otro, y quedarse
+// con sus anticipos (auditoría del 14 nov 2026). Ahora usa un secreto propio
+// (o el JWT del API) y, si no hay ninguno, no firma.
+const secretoState = () => {
+  const s = process.env.OAUTH_STATE_SECRET || process.env.JWT_SECRET || ""
+  if (!s || s === "supersecret") throw new ErrorSuscripcion("Conectar cuentas de cobro no está disponible ahora. Avísanos por WhatsApp.", 503)
+  return s
+}
+const firmar = (datos: string) => createHmac("sha256", secretoState()).update(datos).digest("base64url")
 
 export async function ligaParaConectar(sesion: string | undefined) {
   if (!mpConexionLista()) throw new ErrorSuscripcion("Conectar Mercado Pago todavía no está activo. Avísanos por WhatsApp.", 503)

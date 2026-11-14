@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function Terminos() {
   return (
-    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado>
+    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="12 de noviembre de 2026">
       <h2>1. Quiénes somos</h2>
       <p>
         {EMPRESA.nombreComercial} ({EMPRESA.sitio}) es una plataforma operada por {responsableLegal("es")}, con domicilio en {EMPRESA.domicilioCompleto}, donde clientes, vendedores y

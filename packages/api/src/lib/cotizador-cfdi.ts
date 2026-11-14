@@ -260,7 +260,26 @@ export async function subirCsd(token: string | undefined, archivos: Record<strin
 }
 
 // ── Emitir ─────────────────────────────────────────────────────────────
+// Un pedido sólo se timbra una vez a la vez: con dos clics seguidos (o dos
+// pestañas) las dos peticiones pasaban la revisión de "ya tiene factura" antes
+// de que la primera la guardara, y salían dos CFDI (auditoría del 14 nov 2026).
+// El API corre en un solo proceso (pm2), así que basta un candado en memoria.
+const timbrando = new Set<string>()
+
 export async function emitirFactura(token: string | undefined, b: Record<string, any>, logger?: any) {
+  const llaveCandado = String(b?.pedido_id || "")
+  if (llaveCandado && timbrando.has(llaveCandado)) {
+    throw new ErrorSuscripcion("Esta factura ya se está emitiendo. Espera unos segundos.", 409)
+  }
+  if (llaveCandado) timbrando.add(llaveCandado)
+  try {
+    return await emitirFacturaUnaVez(token, b, logger)
+  } finally {
+    if (llaveCandado) timbrando.delete(llaveCandado)
+  }
+}
+
+async function emitirFacturaUnaVez(token: string | undefined, b: Record<string, any>, logger?: any) {
   if (!cfdiDisponible()) throw new ErrorSuscripcion("La facturación se está activando en HETNA. Intenta más tarde.", 503)
   const n = await tallerDeSesion(token)
   const incluidas = facturasIncluidas(n)
@@ -286,8 +305,14 @@ export async function emitirFactura(token: string | undefined, b: Record<string,
   if (!/^[0-9a-f-]{36}$/i.test(pedidoId)) throw new ErrorSuscripcion("Elige el pedido a facturar.")
   const ped = (await supa<any[]>(`/rest/v1/pedidos?id=eq.${pedidoId}&negocio_id=eq.${n.id}&select=id,folio,cotizacion_id,cliente_id,total&limit=1`))[0]
   if (!ped) throw new ErrorSuscripcion("No encontramos ese pedido.", 404)
-  const previas = await supa<any[]>(`/rest/v1/cfdi_emitidos?pedido_id=eq.${pedidoId}&estado=neq.cancelada&modo=eq.${modo}&select=id,uuid`)
-  if (previas.length && !b.forzar) throw new ErrorSuscripcion("Este pedido ya tiene una factura vigente. Cancélala primero si necesitas otra.", 409)
+  let previas = await supa<any[]>(`/rest/v1/cfdi_emitidos?pedido_id=eq.${pedidoId}&estado=neq.cancelada&modo=eq.${modo}&select=id,uuid,estado,facturapi_id`)
+  if (previas.some((p) => p.estado === "cancelacion_pendiente")) {
+    const llavePrev = await llaveDe(reg, modo)
+    const estados = await Promise.all(previas.map((p) => (p.estado === "cancelacion_pendiente" ? refrescarCancelacion(p, llavePrev) : p.estado)))
+    previas = previas.filter((_, i) => estados[i] !== "cancelada")
+  }
+  // Ya no se acepta "forzar" desde el cliente: para otra factura, cancelar primero.
+  if (previas.length) throw new ErrorSuscripcion("Este pedido ya tiene una factura vigente. Cancélala primero si necesitas otra.", 409)
   const cot = ped.cotizacion_id
     ? (await supa<any[]>(`/rest/v1/cotizaciones?id=eq.${ped.cotizacion_id}&select=id,descuento_pct,descuento_fijo,iva_pct,costo_envio,subtotal,total&limit=1`))[0]
     : null
@@ -368,7 +393,20 @@ export async function emitirFactura(token: string | undefined, b: Record<string,
     extra,
     costo_extra: extra ? PRECIO_EXTRA : 0,
   }
-  const guardada = await supa<any[]>(`/rest/v1/cfdi_emitidos`, { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(fila) })
+  // Facturapi ya timbró: si no queda registro, el pedido se podría facturar otra
+  // vez y la factura no contaría en el cupo. Se reintenta y, si aun así falla,
+  // queda en el log con el id de Facturapi para registrarla a mano.
+  let guardada: any[] | null = null
+  for (let intento = 1; intento <= 3 && !guardada; intento++) {
+    guardada = await supa<any[]>(`/rest/v1/cfdi_emitidos`, { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(fila) }).catch(
+      (e: Error) => {
+        logger?.error?.(`[cfdi] intento ${intento}: no se guardó el CFDI ${inv.id} (${inv.uuid || "sin uuid"}) de ${n.id}: ${e.message}`)
+        return null
+      }
+    )
+    if (!guardada && intento < 3) await new Promise((r) => setTimeout(r, 1000 * intento))
+  }
+  if (!guardada) logger?.error?.(`[cfdi] CFDI TIMBRADO SIN REGISTRO: facturapi=${inv.id} uuid=${inv.uuid || "?"} negocio=${n.id} pedido=${ped.id}. Regístralo a mano en cfdi_emitidos.`)
 
   // Datos fiscales del cliente para la próxima vez
   if (ped.cliente_id) {
@@ -421,13 +459,33 @@ export async function enviarFactura(token: string | undefined, id: string, corre
   return { ok: true, enviada_a: c }
 }
 
+// Una cancelación que el receptor tiene que aceptar queda pendiente: se vuelve
+// a preguntar a Facturapi cuando el taller lo intenta otra vez.
+async function refrescarCancelacion(f: any, llave: string): Promise<string> {
+  const inv = await fapi<any>(`/invoices/${f.facturapi_id}`, llave).catch(() => null)
+  if (inv?.status === "canceled") {
+    await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ estado: "cancelada" }),
+    })
+    return "cancelada"
+  }
+  return f.estado
+}
+
 export async function cancelarFactura(token: string | undefined, id: string, motivo: string) {
   const { f, llave } = await facturaDelTaller(token, id, true)
   if (f.estado === "cancelada") return { ok: true, estado: "cancelada" }
+  if (f.estado === "cancelacion_pendiente") return { ok: true, estado: await refrescarCancelacion(f, llave) }
+  // Motivos 02 (con errores, sin relación) y 03 (no se llevó a cabo). El 01
+  // (sustitución) falta: requiere la factura que la sustituye (pendiente).
   const m = motivo === "03" ? "03" : "02"
   const inv = await fapi<any>(`/invoices/${f.facturapi_id}?motive=${m}`, llave, { method: "DELETE" })
-  // Si el receptor tiene que aceptar la cancelación, queda pendiente
-  const estado = inv?.status === "canceled" ? "cancelada" : inv?.cancellation_status === "pending" ? "cancelacion_pendiente" : "cancelada"
+  // Si el receptor tiene que aceptar la cancelación, queda pendiente. Una
+  // respuesta desconocida ya no se toma como "cancelada" (eso dejaba volver a
+  // facturar el pedido con la factura original todavía vigente).
+  const estado = inv?.status === "canceled" ? "cancelada" : "cancelacion_pendiente"
   await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
