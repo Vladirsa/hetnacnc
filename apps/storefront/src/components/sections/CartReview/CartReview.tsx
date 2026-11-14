@@ -15,7 +15,7 @@ import PaymentButton from "./PaymentButton"
 // compra; en la pasarela ya no hay nada que elegir: lo que está en el carrito
 // es lo que se cobra, y el total bueno es el del backend, con su envío y sus
 // impuestos de la dirección real.
-const Review = ({ cart }: { cart: any }) => {
+const Review = ({ cart, conPaypal = false, soloDigital = false }: { cart: any; conPaypal?: boolean; soloDigital?: boolean }) => {
   const moneda = cart?.currency_code || "mxn"
   const precio = (amount: number) => convertToLocale({ amount, currency_code: moneda })
 
@@ -35,10 +35,13 @@ const Review = ({ cart }: { cart: any }) => {
     (cart.payment_collection || paidByGiftcard)
 
   const falta: { paso: string; texto: string }[] = []
-  if (!cart.shipping_address) {
+  if (soloDigital && (!cart.email || !allSellersHaveShipping)) {
+    // Compra digital: un solo paso de datos (correo y nombre)
+    falta.push({ paso: "address", texto: "Escribe tu correo y tu nombre" })
+  } else if (!cart.shipping_address) {
     falta.push({ paso: "address", texto: "Captura tu dirección de entrega" })
   }
-  if (!allSellersHaveShipping) {
+  if (!soloDigital && !allSellersHaveShipping) {
     falta.push({
       paso: "delivery",
       texto:
@@ -54,6 +57,10 @@ const Review = ({ cart }: { cart: any }) => {
   const envio = cart?.shipping_subtotal || 0
   const descuento = cart?.discount_total || 0
   const impuestos = cart?.tax_total || 0
+  // Tarea 4 de la auditoría: el IVA se explica, nunca un "$0" suelto. Sólo se
+  // dice "incluido" si el precio está marcado así en el sistema.
+  const items: any[] = cart?.items || []
+  const ivaIncluido = items.length > 0 && items.every((i) => i?.is_tax_inclusive === true)
 
   return (
     <div className="flex flex-col gap-4">
@@ -74,7 +81,9 @@ const Review = ({ cart }: { cart: any }) => {
           )}
 
           <Fila termino="Gastos de envío">
-            {allSellersHaveShipping ? (
+            {soloDigital && envio === 0 ? (
+              <span className="text-[13px] text-[#4A4943]">No aplica: es descarga</span>
+            ) : allSellersHaveShipping ? (
               <span className="font-medium text-[#1B1B18]">
                 {envio === 0 ? "Gratis" : precio(envio)}
               </span>
@@ -83,8 +92,14 @@ const Review = ({ cart }: { cart: any }) => {
             )}
           </Fila>
 
-          <Fila termino="Impuestos">
-            <span className="font-medium text-[#1B1B18]">{precio(impuestos)}</span>
+          <Fila termino="IVA">
+            {ivaIncluido ? (
+              <span className="text-[13px] text-[#4A4943]">Incluido en el precio{impuestos > 0 ? ` (${precio(impuestos)})` : ""}</span>
+            ) : impuestos > 0 ? (
+              <span className="font-medium text-[#1B1B18]">{precio(impuestos)}</span>
+            ) : (
+              <span className="text-[13px] text-[#4A4943]">No se agrega nada al precio mostrado</span>
+            )}
           </Fila>
         </dl>
 
@@ -138,7 +153,7 @@ const Review = ({ cart }: { cart: any }) => {
 
       <PromoCode cart={cart} />
 
-      <ConfianzaCompra />
+      <ConfianzaCompra conPaypal={conPaypal} soloDigital={soloDigital} />
     </div>
   )
 }

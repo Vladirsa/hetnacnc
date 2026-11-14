@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
+import { EMPRESA } from "@/lib/hetna/empresa"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { placeOrder } from "@/lib/data/cart"
 
@@ -66,6 +67,14 @@ export function RetornoMercadoPago() {
           >
             Volver al pago
           </LocalizedClientLink>
+          <a
+            href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent("Hola HETNA CNC, tuve un problema con el pago de mi compra. ¿Me ayudan?")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center border border-[#1F9D55] text-[#17803F] font-semibold px-5 h-11 rounded-full"
+          >
+            Escribir por WhatsApp
+          </a>
         </>
       )}
 
@@ -83,6 +92,14 @@ export function RetornoMercadoPago() {
           >
             Ver mis pedidos
           </LocalizedClientLink>
+          <a
+            href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent("Hola HETNA CNC, tuve un problema con el pago de mi compra. ¿Me ayudan?")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center border border-[#1F9D55] text-[#17803F] font-semibold px-5 h-11 rounded-full"
+          >
+            Escribir por WhatsApp
+          </a>
         </>
       )}
     </main>

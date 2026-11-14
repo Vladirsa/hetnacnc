@@ -140,3 +140,7 @@ export function datosServicio(metadata?: Record<string, unknown> | null): DatosS
     pasos: de("pasos", esCam ? PASOS_CAM : []),
   }
 }
+
+/** ¿El carrito sólo trae archivos o servicios (nada que enviar)? Tarea 4. */
+export const carritoSoloDigital = (items?: { product?: ProductoParaTipo | null }[] | null): boolean =>
+  !!items?.length && items.every((i) => !!i.product && tipoFicha(i.product) !== "fisico")

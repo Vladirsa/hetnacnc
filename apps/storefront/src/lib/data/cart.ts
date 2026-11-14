@@ -600,3 +600,62 @@ export async function listCartOptions() {
     shipping_options: HttpTypes.StoreCartShippingOption[];
   }>);
 }
+
+// ---------------------------------------------------------------------------
+// Compra digital en un paso (auditoría de mejoras del 14 nov 2026, tarea 4).
+//
+// Si el carrito sólo trae archivos digitales o servicios en línea, no se pide
+// dirección ni se elige envío: con el correo y el nombre basta. El país se
+// pone solo (lo necesita el backend para ofrecer la "Entrega digital" de $0)
+// y esa entrega se elige sola para cada vendedor. Si algún vendedor no tiene
+// una sola opción de $0, regresa "manual" y el cliente sigue con el paso de
+// envío de siempre: nunca se le cobra un envío que no eligió.
+// Mercado Pago y PayPal sólo usan el correo (PayPal va con NO_SHIPPING).
+export async function datosCompraDigital(_prev: unknown, formData: FormData): Promise<string> {
+  try {
+    const email = String(formData.get('email') || '').trim().slice(0, 200);
+    const nombre = String(formData.get('nombre') || '').trim().replace(/\s+/g, ' ').slice(0, 120);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Escribe un correo válido: ahí te llega tu descarga.';
+    if (!nombre) return 'Escribe tu nombre.';
+
+    const cart = await retrieveCart();
+    if (!cart) return 'No encontramos tu carrito. Recarga la página.';
+
+    const [first_name, ...resto] = nombre.split(' ');
+    const country_code =
+      cart.shipping_address?.country_code || cart.region?.countries?.[0]?.iso_2 || 'mx';
+    const direccion = { first_name, last_name: resto.join(' '), country_code, address_1: 'Entrega digital' };
+    await updateCart({ email, shipping_address: direccion, billing_address: direccion } as any);
+
+    const { listCartShippingMethods } = await import('./fulfillment');
+    const opciones = ((await listCartShippingMethods(cart.id, false)) || []).filter(
+      (o: any) => o.rules?.find((r: any) => r.attribute === 'is_return')?.value !== 'true'
+    ) as any[];
+    const porVendedor = new Map<string, any[]>();
+    for (const o of opciones) {
+      const k = String(o.seller_id || '_');
+      porVendedor.set(k, [...(porVendedor.get(k) || []), o]);
+    }
+    if (!porVendedor.size) return 'manual';
+
+    const elegir = (lista: any[]) => {
+      const gratis = lista.filter((o) => Number(o.amount ?? o.calculated_price?.calculated_amount ?? 0) === 0);
+      if (lista.length === 1 && gratis.length === 1) return lista[0];
+      const digitales = gratis.filter((o) => /digital|descarga|en l[ií]nea/i.test(String(o.name || '')));
+      return digitales.length === 1 ? digitales[0] : null;
+    };
+    const elegidas = [...porVendedor.values()].map(elegir);
+    if (elegidas.some((o) => !o)) return 'manual';
+
+    const yaElegidas = new Set((cart.shipping_methods || []).map((m: any) => m.shipping_option_id));
+    for (const o of elegidas) {
+      if (yaElegidas.has(o.id)) continue;
+      const r = await setShippingMethod({ cartId: cart.id, shippingMethodId: o.id });
+      if (!r.ok) return 'manual';
+    }
+    revalidatePath('/cart');
+    return 'success';
+  } catch (e: any) {
+    return e?.message || 'No se pudo guardar. Intenta de nuevo.';
+  }
+}

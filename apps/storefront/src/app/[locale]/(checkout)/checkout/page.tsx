@@ -14,6 +14,8 @@ import { retrieveCart } from '@/lib/data/cart';
 import { retrieveCustomer } from '@/lib/data/customer';
 import { listCartShippingMethods } from '@/lib/data/fulfillment';
 import { listCartPaymentMethods } from '@/lib/data/payment';
+import { carritoSoloDigital } from '@/lib/hetna/tipo-ficha';
+import { isPaypal } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Finalizar compra',
@@ -41,6 +43,10 @@ async function CheckoutPageContent({}) {
   const shippingMethods = await listCartShippingMethods(cart.id, false);
   const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? '');
   const customer = await retrieveCustomer();
+  // Sólo archivos o servicios: compra en un paso, sin dirección ni envío (tarea 4)
+  const soloDigital = carritoSoloDigital(cart.items as any);
+  // Logos de pago: sólo los que esta pasarela ofrece
+  const conPaypal = (paymentMethods ?? []).some((m: { id: string }) => isPaypal(m.id));
 
   return (
     <PaymentWrapper cart={cart}>
@@ -65,12 +71,15 @@ async function CheckoutPageContent({}) {
             <CartAddressSection
               cart={cart}
               customer={customer}
+              soloDigital={soloDigital}
             />
             <CartShippingMethodsSection
               cart={cart}
               availableShippingMethods={shippingMethods as any}
+              soloDigital={soloDigital}
             />
             <CartPaymentSection
+              soloDigital={soloDigital}
               cart={cart}
               availablePaymentMethods={paymentMethods}
             />
@@ -86,7 +95,7 @@ async function CheckoutPageContent({}) {
                 un bloque pegajoso más alto que la pantalla no se ve pegado --
                 se queda quieto hasta que ya lo pasaste de largo. */}
             <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto no-scrollbar">
-              <CartReview cart={cart} />
+              <CartReview cart={cart} conPaypal={conPaypal} soloDigital={soloDigital} />
             </div>
           </div>
         </div>

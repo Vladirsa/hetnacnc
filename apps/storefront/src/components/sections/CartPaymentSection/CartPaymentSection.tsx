@@ -33,10 +33,13 @@ type StoreCardPaymentMethod = any & {
 
 const CartPaymentSection = ({
   cart,
-  availablePaymentMethods
+  availablePaymentMethods,
+  soloDigital = false
 }: {
   cart: any;
   availablePaymentMethods: StoreCardPaymentMethod[] | null;
+  // Compra digital: sin paso de envío, el pago es el paso 2 (tarea 4)
+  soloDigital?: boolean;
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === 'pending'
@@ -138,11 +141,11 @@ const CartPaymentSection = ({
 
   return (
     <PasoCheckout
-      numero={3}
+      numero={soloDigital ? 2 : 3}
       titulo="Forma de pago"
       listo={!isOpen && paymentReady}
       onEditar={isEditEnabled ? handleEdit : undefined}
-      alerta={isOpen && faltaEnvio ? "Primero elige el envío de arriba." : undefined}
+      alerta={isOpen && faltaEnvio ? (soloDigital ? "Primero escribe tu correo y tu nombre arriba." : "Primero elige el envío de arriba.") : undefined}
       testId="checkout-step-payment"
     >
       <div>
