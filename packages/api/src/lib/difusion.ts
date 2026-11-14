@@ -38,10 +38,90 @@ export function trabajaMaterial(materialesTaller: unknown, pedido?: string) {
   })
 }
 
+// Talleres que pueden hacer una solicitud abierta, del más al menos indicado
+// (material, municipio, estado y posicionamiento). Sin tope: quien difunde
+// decide cuántos avisa. Respeta los filtros del cliente y de cada taller.
+export async function candidatosAbiertos(knex: any, s: any, excluir?: string | null): Promise<{ id: string; email: string; metadata: any }[]> {
+  const trabajo = s.trabajo || ({ descripcion: "" } as Trabajo)
+  const suministro = s.tipo === "suministro"
+  const otros = (await knex("seller")
+    .whereNull("deleted_at")
+    .whereNotNull("email")
+    .modify((q: any) => (excluir ? q.whereNot({ id: excluir }) : q))
+    .limit(500)
+    .select("id", "email", "metadata")) as { id: string; email: string; metadata: any }[]
+  // "Otro" no es un servicio que un taller pueda tener en su perfil: si
+  // se compara literal, la solicitud no le llega a nadie.
+  const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
+  // Licitaciones 3.0 (Fase 2): el suministro va a proveedores; la
+  // fabricación, a talleres. "Ambos" recibe las dos.
+  const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
+  // Fase 4: talleres que sólo reciben clientes con buena reputación
+  const repCliente = await reputacionCliente(knex, { clienteId: s.cliente_id, email: s.contacto?.email }).catch(() => null)
+  const coinciden = otros.filter((x) => {
+    if (!aceptaCliente(x.metadata, repCliente)) return false
+    const t = tipoCuenta(x)
+    if (s.solo_verificados && !tallerVerificado(x.metadata)) return false
+    if (suministro) return t === "proveedor" || t === "ambos"
+    if (t === "proveedor") return false
+    const servicios: string[] = x.metadata?.perfil?.servicios || []
+    return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
+  })
+  // Con el tope de avisos, el orden decide quién se entera. Primero los
+  // que trabajan el material que pide el cliente (si el taller lo puso
+  // en su perfil), luego los de su mismo estado, que entregan sin flete
+  // caro y son los que más contestan.
+  // Mismo municipio que el cliente: antes que nadie (puede entregar en mano).
+  const norm = (v: unknown) => String(v || "").trim().toLowerCase()
+  const mismoMunicipio = (p: any) => Boolean(trabajo.ciudad) && norm(p?.ciudad) === norm(trabajo.ciudad)
+  const prioridad = (x: { metadata: any }) =>
+    (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ||
+    (suministro && trabajaMaterial(x.metadata?.perfil?.marcas, `${trabajo.marca || ""} ${trabajo.material || ""}`))
+      ? 0
+      : 2) +
+    (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
+    (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
+  // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
+  // verificación y certificaciones). No cambia su calificación.
+  coinciden.sort((x, y) => prioridad(x) - prioridad(y) || puntajePosicion(y.metadata) - puntajePosicion(x.metadata))
+  return coinciden
+}
+
+// Quién recibió aviso de cada solicitud y en qué ronda (1 = al publicarse;
+// 2 y 3 = ampliaciones cuando nadie cotiza, ver lib/licitacion-ampliar).
+export const T_AVISO = "hetna_solicitud_aviso"
+let avisosListos = false
+export async function asegurarAvisos(knex: any) {
+  if (avisosListos) return
+  if (!(await knex.schema.hasTable(T_AVISO))) {
+    await knex.schema.createTable(T_AVISO, (t: any) => {
+      t.text("solicitud_id").notNullable().index()
+      t.text("seller_id").notNullable()
+      t.integer("ronda").notNullable().defaultTo(1)
+      t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+      t.primary(["solicitud_id", "seller_id", "ronda"])
+    })
+  }
+  avisosListos = true
+}
+export async function registrarAvisos(knex: any, solicitudId: string, sellerIds: (string | undefined | null)[], ronda: number) {
+  const ids = [...new Set(sellerIds.filter(Boolean))] as string[]
+  if (!ids.length) return
+  try {
+    await asegurarAvisos(knex)
+    await knex(T_AVISO).insert(ids.map((seller_id) => ({ solicitud_id: solicitudId, seller_id, ronda }))).onConflict(["solicitud_id", "seller_id", "ronda"]).ignore()
+  } catch {
+    /* el registro no debe frenar la difusión */
+  }
+}
+
 export async function difundirSolicitud(
   knex: any,
   logger: { info: (m: string) => void; warn: (m: string) => void },
-  s: { id: string; folio: number | string; modo: string; taller_id?: string | null; trabajo: Trabajo; [k: string]: any }
+  s: { id: string; folio: number | string; modo: string; taller_id?: string | null; trabajo: Trabajo; [k: string]: any },
+  // Ronda de ampliación (lib/licitacion-ampliar): sólo a estos talleres, con
+  // un aviso de que la solicitud sigue sin propuestas, y sin volver a redes.
+  extra?: { ronda: number; ids: string[]; intro: string; titulo: string }
 ): Promise<number> {
   const folio = folioTexto(s.folio)
   const trabajo = s.trabajo || ({ descripcion: "" } as Trabajo)
@@ -67,7 +147,8 @@ export async function difundirSolicitud(
 
   const avisoTaller = (nombreTaller?: string) =>
     marco(
-      nombreTaller ? `${nombreTaller}: un cliente quiere tu cotización` : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
+      extra ? extra.titulo : nombreTaller ? `${nombreTaller}: un cliente quiere tu cotización` : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
+      (extra ? `<p style="margin:0 0 12px;color:#40403A;background:#FFF8EE;padding:10px 12px;border-radius:8px">${esc(extra.intro)}</p>` : "") +
       `<p style="margin:0 0 12px;color:#40403A">Folio <strong>${esc(folio)}</strong>. ` +
         `Manda tu precio y tiempo de entrega desde tu panel de HETNA. El cliente compara propuestas y elige; ` +
         `el pago y el envío se hacen dentro de la plataforma.</p>` +
@@ -76,57 +157,24 @@ export async function difundirSolicitud(
     )
 
   const destinos: { email: string; nombre?: string; id?: string }[] = []
-  if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name, id: taller.id })
-  if (modalidad === "privada") {
+  if (extra) {
+    const filas = extra.ids.length
+      ? ((await knex("seller").whereIn("id", extra.ids).whereNull("deleted_at").whereNotNull("email").select("id", "email")) as any[])
+      : []
+    const orden = new Map(extra.ids.map((id, i) => [id, i]))
+    filas.sort((a, b) => (orden.get(a.id) ?? 0) - (orden.get(b.id) ?? 0))
+    for (const t of filas) destinos.push({ email: t.email, id: t.id })
+  } else if (taller?.email) destinos.push({ email: taller.email, nombre: taller.name, id: taller.id })
+  if (!extra && modalidad === "privada") {
     const ids = (await invitadosDe(knex, s).catch(() => [] as string[])).filter((x) => x !== taller?.id)
     if (ids.length) {
       const inv = (await knex("seller").whereIn("id", ids).whereNull("deleted_at").whereNotNull("email").select("id", "name", "email")) as any[]
       for (const t of inv) destinos.push({ email: t.email, nombre: t.name, id: t.id })
     }
   }
-  if (abierta) {
+  if (!extra && abierta) {
     try {
-      const otros = (await knex("seller")
-        .whereNull("deleted_at")
-        .whereNotNull("email")
-        .modify((q: any) => (taller ? q.whereNot({ id: taller.id }) : q))
-        .limit(500)
-        .select("id", "email", "metadata")) as { id: string; email: string; metadata: any }[]
-      // "Otro" no es un servicio que un taller pueda tener en su perfil: si
-      // se compara literal, la solicitud no le llega a nadie.
-      const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
-      // Licitaciones 3.0 (Fase 2): el suministro va a proveedores; la
-      // fabricación, a talleres. "Ambos" recibe las dos.
-      const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
-      // Fase 4: talleres que sólo reciben clientes con buena reputación
-      const repCliente = await reputacionCliente(knex, { clienteId: s.cliente_id, email: s.contacto?.email }).catch(() => null)
-      const coinciden = otros.filter((x) => {
-        if (!aceptaCliente(x.metadata, repCliente)) return false
-        const t = tipoCuenta(x)
-        if (s.solo_verificados && !tallerVerificado(x.metadata)) return false
-        if (suministro) return t === "proveedor" || t === "ambos"
-        if (t === "proveedor") return false
-        const servicios: string[] = x.metadata?.perfil?.servicios || []
-        return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
-      })
-      // Con el tope de avisos, el orden decide quién se entera. Primero los
-      // que trabajan el material que pide el cliente (si el taller lo puso
-      // en su perfil), luego los de su mismo estado, que entregan sin flete
-      // caro y son los que más contestan.
-      // Mismo municipio que el cliente: antes que nadie (puede entregar en mano).
-      const norm = (v: unknown) => String(v || "").trim().toLowerCase()
-      const mismoMunicipio = (p: any) => Boolean(trabajo.ciudad) && norm(p?.ciudad) === norm(trabajo.ciudad)
-      const prioridad = (x: { metadata: any }) =>
-        (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ||
-        (suministro && trabajaMaterial(x.metadata?.perfil?.marcas, `${trabajo.marca || ""} ${trabajo.material || ""}`))
-          ? 0
-          : 2) +
-        (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
-        (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
-      // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
-      // verificación y certificaciones). No cambia su calificación.
-      coinciden.sort((x, y) => prioridad(x) - prioridad(y) || puntajePosicion(y.metadata) - puntajePosicion(x.metadata))
-      for (const x of coinciden) {
+      for (const x of await candidatosAbiertos(knex, s, taller?.id)) {
         if (destinos.length >= MAX_AVISOS) break
         destinos.push({ email: x.email, id: x.id })
       }
@@ -134,11 +182,12 @@ export async function difundirSolicitud(
       logger.warn(`[licitacion] no se pudo listar talleres: ${(e as Error).message}`)
     }
   }
+  await registrarAvisos(knex, s.id, destinos.map((d) => d.id), extra?.ronda || 1)
   await pushATalleres(
     knex,
     destinos.map((d) => d.id),
     {
-      titulo: taller && !abierta ? "Un cliente quiere tu cotización" : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
+      titulo: extra ? extra.titulo : taller && !abierta ? "Un cliente quiere tu cotización" : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
       cuerpo: `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}`,
       url: "/seller/solicitudes",
       etiqueta: `sol-${s.id}`,
@@ -148,7 +197,7 @@ export async function difundirSolicitud(
   for (const d of destinos) {
     const r = await sendEmail({
       to: d.email,
-      subject: `[${folio}] Nueva solicitud de ${suministro ? "suministro" : "fabricación"} en ${SITIO}`,
+      subject: extra ? `[${folio}] ${extra.titulo}` : `[${folio}] Nueva solicitud de ${suministro ? "suministro" : "fabricación"} en ${SITIO}`,
       html: avisoTaller(d.nombre),
     })
     if (!r.sent) logger.info(`[licitacion] aviso a taller no enviado: ${r.reason}`)
@@ -158,7 +207,7 @@ export async function difundirSolicitud(
   // Redes: sólo con autorización expresa del cliente (difundir_redes), nunca
   // una privada, y con el resumen sin datos sensibles (Licitaciones 3.0 §1.3):
   // sin planos, sin presupuesto confidencial, sin contacto.
-  if (abierta && s.difundir_redes) {
+  if (!extra && abierta && s.difundir_redes) {
     // Fase 5A: pasa por el Social Hub (textos por red, horario y medición)
     await publicacionAutomatica(
       knex,
@@ -173,7 +222,7 @@ export async function difundirSolicitud(
       logger
     )
   }
-  logger.info(`[licitacion] ${folio} difundida a ${destinos.length} talleres`)
+  logger.info(`[licitacion] ${folio} difundida a ${destinos.length} talleres${extra ? ` (ronda ${extra.ronda})` : ""}`)
   return destinos.length
 }
 
