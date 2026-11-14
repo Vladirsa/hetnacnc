@@ -14,7 +14,7 @@ type Props = {
 
 // Si no llegan sugerencias (listado del lado del navegador), estas siempre existen
 const SIEMPRE = [
-  { nombre: "Diseños DXF y STL desde $30", href: "/categories/digital" },
+  { nombre: "Diseños DXF y STL desde $30", href: "/categories" },
   { nombre: "Fabricación a la medida", href: "/fabricacion" },
 ]
 

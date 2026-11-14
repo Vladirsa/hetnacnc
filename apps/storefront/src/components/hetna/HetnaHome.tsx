@@ -8,7 +8,7 @@ import path from "path"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import HeroSliderOptimizado from "@/components/hetna/HeroSliderOptimizado"
+import HeroFijo, { VenderConNosotros } from "@/components/hetna/HeroFijo"
 import BarraConfianza from "@/components/hetna/BarraConfianza"
 import ProcesoClienteTaller from "./ProcesoClienteTaller"
 import BannerHerramientas from "./BannerHerramientas"
@@ -344,11 +344,14 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      <HeroSliderOptimizado />
+      {/* Tarea 3 de la auditoría de mejoras: héroe fijo con una sola acción y,
+          justo debajo, productos reales con precio */}
+      <HeroFijo />
+      <FilasProductos locale={locale} />
       <BarraConfianza />
       <BannerPromo />
-      <FilasProductos locale={locale} />
       <ProcesoClienteTaller />
+      <VenderConNosotros />
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
       <BannerHerramientas />
       <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
