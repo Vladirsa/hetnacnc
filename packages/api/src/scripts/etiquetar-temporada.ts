@@ -19,8 +19,8 @@ import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 const NAVIDAD = [
-  "navidad", "navideñ", "christmas", "xmas", "santa claus", "santa", "reno", "pino", "arbolito", "árbol de navidad",
-  "nacimiento", "belén", "belen", "esfera", "estrella de belén", "corona navideña", "muñeco de nieve", "copo de nieve",
+  "navidad", "navideñ", "christmas", "xmas", "santa claus", "reno navideño", "renos", "pino navideño", "arbolito", "árbol de navidad",
+  "nacimiento de jesus", "nacimiento navideño", "belén", "belen", "esfera navideña", "esferas navideñas", "estrella de belén", "corona navideña", "muñeco de nieve", "copo de nieve",
   "noche buena", "nochebuena", "regalo", "adorno", "litofan", "llavero", "letrero", "caja de regalo", "calendario de adviento",
 ]
 
@@ -43,14 +43,16 @@ export default async function etiquetarTemporada({ container }: ExecArgs) {
   const elegidos = productos.filter((p: any) => {
     const t = texto(p)
     const n = sinAcento(p.title || "")
-    return palabras.some((w) => t.includes(w)) && !excluir.some((w) => n.includes(w))
+    // Palabra completa al inicio ("reno" no entra por "terreno"; "navideñ" sí cubre navideño/navideña)
+    const esta = (w: string) => new RegExp(`(^|[^a-z0-9ñ])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i").test(t)
+    return palabras.some(esta) && !excluir.some((w) => n.includes(w))
   })
 
   // Etiqueta (se crea si no existe)
   let tag = await knex("product_tag").whereNull("deleted_at").whereRaw("lower(value) = ?", [etiqueta]).first()
   const yaTienen = new Set(tag ? (await knex("product_tags").where({ product_tag_id: tag.id }).pluck("product_id")) : [])
 
-  log(`Etiqueta: "${etiqueta}" · palabras: ${palabras.length} · productos que coinciden: ${elegidos.length} (de ${productos.length})`)
+  log(`Etiqueta: "${etiqueta}" · palabras: ${palabras.length} · productos que coinciden: ${elegidos.length} (de ${productos.length}) · con la etiqueta hoy: ${yaTienen.size}`)
   for (const p of elegidos) log(`  ${yaTienen.has(p.id) ? "✓ ya la tiene" : quitar ? "  (no la tiene)" : "+ nueva     "} · ${p.status === "published" ? "" : `[${p.status}] `}${String(p.title).slice(0, 90)}`)
 
   if (!aplicar) {
@@ -69,6 +71,6 @@ export default async function etiquetarTemporada({ container }: ExecArgs) {
   }
   const nuevos = elegidos.filter((p: any) => !yaTienen.has(p.id))
   if (nuevos.length) await knex("product_tags").insert(nuevos.map((p: any) => ({ product_id: p.id, product_tag_id: tag.id }))).onConflict(["product_id", "product_tag_id"]).ignore()
-  log(`✓ Listo: ${nuevos.length} productos con la etiqueta nueva (${yaTienen.size} ya la tenían).`)
+  log(`✓ Listo: ${nuevos.length} productos con la etiqueta nueva (${elegidos.length - nuevos.length} de la lista ya la tenían).`)
   log(`Revisa en Social Hub → Fábrica → Fechas especiales que aparezcan con sus fotos.`)
 }
