@@ -82,26 +82,93 @@ export function cargarEnCotizador(iframe: HTMLIFrameElement) {
 // reciben tal cual. Nada se manda a un servidor hasta que el cliente envía.
 const CLAVE_FABRICAR = "hetna-archivo-para-fabricar"
 
+// Archivos grandes (STL de litofanías y relieves, 15–60 MB) no caben en
+// sessionStorage (~5 MB): esos van a IndexedDB, que aguanta lo que permite la
+// subida (100 MB). Sigue sin subirse nada hasta que el cliente envía.
+const IDB = "hetna-fabricar"
+const ALMACEN = "archivos"
+const MAX_GRANDE = 100 * 1024 * 1024
+
+const abrirIDB = () =>
+  new Promise<IDBDatabase>((ok, mal) => {
+    const r = indexedDB.open(IDB, 1)
+    r.onupgradeneeded = () => r.result.createObjectStore(ALMACEN)
+    r.onsuccess = () => ok(r.result)
+    r.onerror = () => mal(r.error)
+  })
+
+async function guardarGrande(nombre: string, blob: Blob): Promise<boolean> {
+  try {
+    const db = await abrirIDB()
+    await new Promise<void>((ok, mal) => {
+      const tx = db.transaction(ALMACEN, "readwrite")
+      tx.objectStore(ALMACEN).put({ nombre, blob, t: Date.now() }, "pendiente")
+      tx.oncomplete = () => ok()
+      tx.onerror = () => mal(tx.error)
+    })
+    db.close()
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** El archivo grande que dejó un generador (IndexedDB), si sigue vigente. */
+export async function tomarArchivoGrandeParaFabricar(): Promise<File | null> {
+  try {
+    const db = await abrirIDB()
+    const fila = await new Promise<{ nombre: string; blob: Blob; t: number } | undefined>((ok, mal) => {
+      const r = db.transaction(ALMACEN, "readonly").objectStore(ALMACEN).get("pendiente")
+      r.onsuccess = () => ok(r.result)
+      r.onerror = () => mal(r.error)
+    })
+    db.close()
+    if (!fila || Date.now() - fila.t > VIGENCIA) return null
+    return new File([fila.blob], fila.nombre, { type: "application/octet-stream" })
+  } catch {
+    return null
+  }
+}
+
 export function mandarAFabricar(
   nombre: string,
   contenido: string | ArrayBuffer,
   locale: string,
   datos: { pieza: string; medidas?: string; material?: string; proceso?: string }
 ): boolean {
+  let grande = false
   try {
     const binario = typeof contenido !== "string"
-    const d = binario ? aBase64(contenido as ArrayBuffer) : (contenido as string)
-    if (d.length > MAXIMO) return false
-    const p: Pendiente = { nombre, datos: d, binario, t: Date.now() }
-    sessionStorage.setItem(CLAVE_FABRICAR, JSON.stringify(p))
+    const tam = binario ? (contenido as ArrayBuffer).byteLength : (contenido as string).length
+    if (tam > 2.5 * 1024 * 1024) {
+      if (tam > MAX_GRANDE) return false
+      grande = true
+      sessionStorage.removeItem(CLAVE_FABRICAR) // que no se tome uno chico viejo
+    } else {
+      const d = binario ? aBase64(contenido as ArrayBuffer) : (contenido as string)
+      const p: Pendiente = { nombre, datos: d, binario, t: Date.now() }
+      sessionStorage.setItem(CLAVE_FABRICAR, JSON.stringify(p))
+    }
   } catch {
     return false
   }
   const q = new URLSearchParams({ desde: "generador", pieza: datos.pieza })
   if (datos.medidas) q.set("medidas", datos.medidas)
   if (datos.material) q.set("material", datos.material)
-  if (datos.proceso) q.set("proceso", datos.proceso)
-  window.location.href = `/${locale}/cotizar?${q.toString()}`
+  // El formulario sólo preselecciona procesos de SERVICIOS_SOLICITUD
+  // (lib/trabajos/servicios.ts): "Router CNC" ahí se llama "Corte CNC".
+  const proceso = datos.proceso === "Router CNC" ? "Corte CNC" : datos.proceso
+  if (proceso) q.set("proceso", proceso)
+  const ir = () => {
+    window.location.href = `/${locale}/cotizar?${q.toString()}`
+  }
+  if (!grande) {
+    ir()
+    return true
+  }
+  // Se navega cuando ya quedó guardado; si IndexedDB falla, se abre la
+  // solicitud igual (con los datos) y el cliente sube el archivo ahí.
+  void guardarGrande(nombre, new Blob([contenido])).then(ir)
   return true
 }
 

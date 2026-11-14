@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { cajaPatron, generarPatron, patronADXF, patronASVG, type FormaPatron } from "@/lib/generador/patronRadial"
+import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const r1 = (x: number) => Math.round(x * 10) / 10
@@ -79,6 +80,7 @@ export function GeneradorPatron() {
 
   const n = (s: string) => parseFloat(s.replace(",", ".")) || 0
 
+  const [avisoFabricar, setAvisoFabricar] = useState("")
   const r = useMemo(
     () =>
       generarPatron({
@@ -232,11 +234,29 @@ export function GeneradorPatron() {
                   Descargar SVG
                 </button>
               </div>
+              {/* Del diseño a la solicitud de fabricación, con el DXF ya adjunto */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    !mandarAFabricar(`${nombreArchivo}.dxf`, patronADXF(r.capas), locale, {
+                      pieza: "Patrón radial",
+                      medidas: caja ? `${r1(caja.ancho)} × ${r1(caja.alto)} mm` : undefined,
+                      proceso: "Corte láser",
+                    })
+                  )
+                    setAvisoFabricar("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en la solicitud.")
+                }}
+                className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3.5 rounded-[10px] text-[15px]"
+              >
+                Fabrícamelo: pide que un taller lo corte
+              </button>
+              {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
               <a
                 href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3.5 rounded-[10px] text-[15px] text-center"
+                className="border border-[#E7E4DC] bg-white text-[#142033] font-semibold py-3 rounded-[10px] text-[14px] text-center"
               >
                 Pedir por WhatsApp
               </a>

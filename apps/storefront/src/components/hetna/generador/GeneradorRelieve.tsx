@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useParams } from "next/navigation"
+
+import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 import { aGris, pngConDPI } from "@/lib/generador/grabado"
 import { type Alturas, type Forma, type OpcionesRelieve, alturas, mallaSTL, mapaAlturas, medidasPieza, vistaLuz, vistaSombra, volumen } from "@/lib/generador/relieve"
@@ -108,6 +111,8 @@ export function GeneradorRelieve() {
   const [vista, setVista] = useState<"luz" | "sombra">("luz")
   const [procesando, setProcesando] = useState(false)
   const [preparando, setPreparando] = useState(false)
+  const { locale } = useParams<{ locale: string }>()
+  const [avisoFabricar, setAvisoFabricar] = useState("")
   const [info, setInfo] = useState<{ ancho: number; alto: number; fondo: number; triangulos: number; volumen: number } | null>(null)
 
   const cambiarModo = (m: Modo) => {
@@ -220,6 +225,22 @@ export function GeneradorRelieve() {
   }
 
   const gramos = info ? (info.volumen / 1000) * 1.24 : 0
+  // Del relieve o la litofanía a la solicitud de fabricación, con el STL adjunto
+  const fabricar = () => {
+    const u = ultima.current
+    if (!u) return
+    setPreparando(true)
+    window.setTimeout(() => {
+      const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL(u.a, u.o), locale, {
+        pieza: modo === "litofania" ? "Litofanía" : "Relieve en madera",
+        medidas: `${r1(anchoMM)} mm de ancho`,
+        proceso: modo === "litofania" ? "Impresión 3D" : "Fresado de madera",
+      })
+      setPreparando(false)
+      if (!ok) setAvisoFabricar("El modelo es muy grande para mandarlo así. Descarga el STL y súbelo en la solicitud.")
+    }, 50)
+  }
+
   const mensaje =
     `Hola HETNA CNC, quiero ${modo === "litofania" ? "una litofanía impresa en 3D" : "un relieve maquinado en router"}:\n` +
     (info ? `- Medidas: ${r1(info.ancho)} × ${r1(info.alto)} × ${r1(info.fondo)} mm\n` : "") +
@@ -343,10 +364,14 @@ export function GeneradorRelieve() {
                   Mapa de alturas (PNG)
                 </button>
               )}
-              <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                {modo === "litofania" ? "Pedirla impresa" : "Pedirlo maquinado"}
-              </a>
+              <button type="button" disabled={preparando || !valido || !info} onClick={fabricar} className="bg-[#C2560A] hover:bg-[#A84A08] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
+                Fabrícamelo
+              </button>
             </div>
+            {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
+            <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="text-center text-[13px] font-semibold text-[#B34D07] hover:underline">
+              {modo === "litofania" ? "O pídela por WhatsApp" : "O pídelo por WhatsApp"}
+            </a>
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
               {modo === "litofania"
                 ? "El STL es una pieza cerrada en mm, lista para tu programa de impresión (Cura, PrusaSlicer, Bambu Studio)."

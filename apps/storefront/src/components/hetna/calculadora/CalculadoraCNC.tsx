@@ -223,6 +223,23 @@ const leerCompartido = (c: Calculadora, codigo: string): Entrada | null => {
   }
 }
 
+// Proceso de la calculadora → servicio de la solicitud (lib/trabajos/servicios.ts)
+// y cotizador de precio al instante, si lo hay.
+const SERVICIO_DE: Record<string, string> = {
+  router: "Corte CNC",
+  laser_co2: "Corte láser",
+  fibra: "Grabado",
+  fibra_corte: "Corte láser",
+  plasma: "Corte plasma",
+  impresion3d: "Impresión 3D",
+}
+const PRECIO_INSTANTE: Record<string, string> = {
+  router: "/cotizar/router-cnc",
+  laser_co2: "/cotizar/corte-laser",
+  plasma: "/cotizar/corte-plasma",
+  impresion3d: "/cotizar/impresion-3d",
+}
+
 export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) => {
   const [procesoId, setProcesoId] = useState(procesoPorId(procesoInicial).id)
   const proceso = procesoPorId(procesoId)
@@ -631,6 +648,26 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">Son puntos de partida calculados con rangos de fabricantes y los límites de tu máquina. Prueba siempre primero en un retazo del mismo material.</p>
             </>
           )}
+          {/* ¿No tienes la máquina? Un taller de la red lo fabrica (herramientas → marketplace) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#F2A65A] bg-[#FFF6EE] px-4 py-3.5">
+            <div className="min-w-0">
+              <p className="m-0 text-[14.5px] font-bold text-[#142033]">¿No tienes la máquina?</p>
+              <p className="m-0 text-[13px] text-[#6B6A63]">Un taller de la red lo fabrica: ve el precio al instante o pide propuestas.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PRECIO_INSTANTE[procesoId] && (
+                <LocalizedClientLink href={PRECIO_INSTANTE[procesoId]} className="rounded-[10px] border border-[#C2560A] px-4 py-2 text-[14px] font-bold text-[#B34D07] no-underline hover:bg-white">
+                  Precio al instante
+                </LocalizedClientLink>
+              )}
+              <LocalizedClientLink
+                href={`/cotizar?servicio=${encodeURIComponent(SERVICIO_DE[procesoId] || "Otro")}`}
+                className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-bold text-white no-underline hover:bg-[#A84A08]"
+              >
+                Pedir a un taller
+              </LocalizedClientLink>
+            </div>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3.5">
             <div className="min-w-0">
               <p className="m-0 text-[14.5px] font-bold text-[#142033]">¿Quieres cotizar con estos tiempos?</p>
