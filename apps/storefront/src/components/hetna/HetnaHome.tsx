@@ -8,7 +8,8 @@ import path from "path"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import HeroSliderOptimizado from "@/components/hetna/HeroSliderOptimizado"
+import HeroFijo, { VenderConNosotros } from "@/components/hetna/HeroFijo"
+import CasosReales from "@/components/hetna/CasosReales"
 import BarraConfianza from "@/components/hetna/BarraConfianza"
 import ProcesoClienteTaller from "./ProcesoClienteTaller"
 import BannerHerramientas from "./BannerHerramientas"
@@ -20,6 +21,7 @@ import EstadisticasConfianza from "@/components/hetna/EstadisticasConfianza"
 import { CifrasHetna } from "@/components/hetna/CifrasHetna"
 import { FilasProductos } from "@/components/hetna/FilasProductos"
 import { listCategories } from "@/lib/data/categories"
+import { categoriasConProductos, podarArbol } from "@/lib/hetna/catalogo"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 
 const WHATSAPP_NUMERO =
@@ -275,7 +277,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       etiqueta: "Marketplace CNC de México",
       titulo: "Todo lo que tu taller CNC necesita, en un solo lugar",
       texto:
-        "Máquinas, herramientas, materiales y diseños listos para cortar. Cotiza y produce tus piezas con talleres de todo México.",
+        "Diseños listos para cortar y fabricación a la medida con talleres de todo México. Máquinas, herramientas y materiales, bajo cotización.",
       foto: fotoHero("hetna-hero.jpg"),
       alt: "Router CNC cortando madera en un taller",
       botones: [
@@ -343,18 +345,22 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
 
   return (
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
-      <HeroSliderOptimizado />
+      {/* Tarea 3 de la auditoría de mejoras: héroe fijo con una sola acción y,
+          justo debajo, productos reales con precio */}
+      <HeroFijo />
+      <FilasProductos locale={locale} />
       <BarraConfianza />
       <BannerPromo />
-      <FilasProductos locale={locale} />
+      <CasosReales />
       <ProcesoClienteTaller />
+      <VenderConNosotros />
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
       <BannerHerramientas />
       <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
       <PorQueHetna />
 
 
-      <CategoriasVisuales categorias={parentCategories} />
+      <CategoriasVisuales categorias={podarArbol(parentCategories, await categoriasConProductos())} />
 
       {/* Aprendizaje CNC: artículos reales, solo si ya hay contenido publicado */}
       {articulosAprendizaje.length > 0 && (

@@ -79,6 +79,16 @@ const PanelHojas = ({ g }: { g: Grupo }) => (
 // ---------- Computadora ----------
 
 const MegaCategorias = ({ raices }: { raices: Raiz[] }) => {
+  // Catálogo honesto: si ninguna categoría tiene productos, una liga directa
+  // a la tienda en vez de un menú vacío
+  if (!raices.length) {
+    return (
+      <LocalizedClientLink href="/categories" className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15 shrink-0">
+        <Hamburguesa />
+        Todos los productos
+      </LocalizedClientLink>
+    )
+  }
   const primero = raices[0]?.grupos[0]?.id
   return (
     <div className="group relative h-full flex items-center shrink-0">

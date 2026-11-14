@@ -45,12 +45,15 @@ export const LogoTarjeta = ({ className = "" }: Props) => (
 )
 
 // La fila que se enseña junto al resumen: "con esto puedes pagar".
-export const LogosPago = ({ className = "" }: Props) => (
+// PayPal sólo sale si la pasarela de esta compra de verdad lo ofrece
+// (auditoría de mejoras, tarea 4): la tienda cobra con Mercado Pago y la
+// página de formas de pago dice lo mismo.
+export const LogosPago = ({ className = "", conPaypal = false }: Props & { conPaypal?: boolean }) => (
   <div className={`flex flex-wrap items-center gap-2 ${className}`}>
     <LogoVisa />
     <LogoMastercard />
     <LogoAmex />
     <LogoMercadoPago />
-    <LogoPaypal />
+    {conPaypal && <LogoPaypal />}
   </div>
 )

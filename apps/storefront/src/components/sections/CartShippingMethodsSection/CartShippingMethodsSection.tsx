@@ -53,9 +53,18 @@ type ShippingProps = {
           amount?: number;
         }[])
     | null;
+  soloDigital?: boolean;
 };
 
-const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShippingMethods }) => {
+const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShippingMethods, soloDigital = false }) => {
+  // Compra digital (tarea 4): la entrega digital se elige sola en "Tus datos".
+  // Este paso sólo aparece si algún vendedor pidió elegir a mano (?manual=1).
+  const manual = useSearchParams().get('manual') === '1';
+  if (soloDigital && !manual) return null;
+  return <EnvioFisico cart={cart} availableShippingMethods={availableShippingMethods} />;
+};
+
+const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);

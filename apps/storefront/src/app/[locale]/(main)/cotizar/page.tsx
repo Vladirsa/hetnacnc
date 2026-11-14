@@ -1,4 +1,6 @@
-import { DIAS_SOLICITUD_ABIERTA } from "@/lib/hetna/promesas"
+import { DIAS_SOLICITUD_ABIERTA, PLAZO_PRIMERA_RESPUESTA } from "@/lib/hetna/promesas"
+import EjemploCotizacion from "@/components/hetna/cotizar/EjemploCotizacion"
+import CasosReales from "@/components/hetna/CasosReales"
 import { JsonLd } from "@/components/hetna/JsonLd"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
 import type { Metadata } from "next"
@@ -81,12 +83,17 @@ export default async function CotizarPage({
               ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
               : `Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA.`}
           </p>
+          {/* Tarea 6 de la auditoría de mejoras: el plazo, visible antes del formulario */}
+          <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#EEF7F0] px-3 py-1.5 text-[14px] font-semibold text-[#17633A]" data-testid="plazo-respuesta">
+            ⏱ Te respondemos en {PLAZO_PRIMERA_RESPUESTA}. Sin registro: sólo tu nombre y correo.
+          </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
 
           <aside className="grid content-start gap-4">
+            <EjemploCotizacion />
             <TalleresCerca talleres={talleres.filter((x) => x.handle !== t?.handle)} proceso={proceso || servicio} query={query} />
             <LocalizedClientLink
               href="/cotizar/suministro"
@@ -116,6 +123,7 @@ export default async function CotizarPage({
             <BloquePublicidad />
           </aside>
         </div>
+        <CasosReales compacto />
       </div>
     </main>
   )

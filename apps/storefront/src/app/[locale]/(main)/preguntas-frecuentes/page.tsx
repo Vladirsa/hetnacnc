@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const PREGUNTAS: { p: string; r: string }[] = [
   {
     p: "¿Qué es HETNA CNC?",
-    r: "Un marketplace mexicano especializado en CNC: máquinas, herramientas, materiales, diseños digitales y servicios de fabricación (corte láser, router, plasma, maquinado e impresión 3D) con talleres de todo México.",
+    r: "Un marketplace mexicano especializado en CNC: servicios de fabricación (corte láser, router, plasma, maquinado e impresión 3D) con talleres de todo México y diseños digitales listos para cortar. Las máquinas, herramientas y materiales se cotizan con proveedores mientras se suma inventario publicado.",
   },
   {
     p: "¿Cómo compro un producto?",

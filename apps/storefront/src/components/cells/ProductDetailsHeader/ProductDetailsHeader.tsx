@@ -25,6 +25,7 @@ import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
 import { HttpTypes } from "@medusajs/types"
+import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
 import { SellerDTO } from "@mercurjs/types"
 
 // A partir de cuántas piezas deja de ser urgente decirlo. Arriba de esto el
@@ -52,12 +53,20 @@ export const ProductDetailsHeader = ({
   locale,
   offers = [],
   seller,
+  tipo = "fisico",
+  antesDeComprar,
 }: {
   product: HttpTypes.StoreProduct
   locale: string
   offers?: StoreOffer[]
   seller?: SellerDTO
+  // Plantilla de ficha (lib/hetna/tipo-ficha): un archivo o un servicio no
+  // tienen existencias, cantidad ni envío.
+  tipo?: TipoFicha
+  // Lo que hay que saber antes de pagar (p. ej. qué incluye un servicio)
+  antesDeComprar?: React.ReactNode
 }) => {
+  const fisico = tipo === "fisico"
   const { addToCart, onAddToCart, cart, isAddingItem } = useCartContext()
   const { allSearchParams } = useGetAllSearchParams()
   const [isCompareOpen, setIsCompareOpen] = useState(false)
@@ -299,7 +308,7 @@ export const ProductDetailsHeader = ({
           </span>
         )}
 
-        {hayOferta && disponibles > 0 && disponibles <= EXISTENCIAS_BAJAS && (
+        {fisico && hayOferta && disponibles > 0 && disponibles <= EXISTENCIAS_BAJAS && (
           <p className="mt-2 text-[13px] font-bold text-[#9B3225]">
             {disponibles === 1 ? "Queda 1 pieza" : `Solo quedan ${disponibles} piezas`}
           </p>
@@ -317,7 +326,16 @@ export const ProductDetailsHeader = ({
         <ProductVariants product={product} selectedVariant={selectedVariant} />
       )}
 
-      {hayOferta && disponibles > 0 && (
+      {!fisico && hayOferta && (
+        // Archivo o servicio: cantidad fija en 1, sin existencias ni envío
+        <p className="mt-4 rounded-[8px] bg-[#EEF7F0] px-3 py-2 text-[14px] font-semibold text-[#17633A]" data-testid="product-entrega-digital">
+          {tipo === "digital" ? "⬇️ Descarga inmediata tras el pago" : "🧑‍💻 Servicio en línea: no se envía nada por paquetería"}
+        </p>
+      )}
+
+      {antesDeComprar}
+
+      {fisico && hayOferta && disponibles > 0 && (
         <div className="mt-4 flex items-center gap-3">
           <span className="text-[14px] font-semibold text-[#4A4943]">Cantidad</span>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-[#E7E4DC]">

@@ -15,7 +15,7 @@ const TEMAS: Record<
   tienda: {
     icono: ShoppingBag,
     fondo: "from-[#0F1826] via-[#142033] to-[#1E3250]",
-    lema: "Máquinas, herramientas y materiales",
+    lema: "Máquinas, herramientas y materiales bajo cotización",
   },
   digital: {
     icono: FileCode,

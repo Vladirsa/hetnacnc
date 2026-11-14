@@ -1,6 +1,28 @@
 "use client"
 
-import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
+import MensajeError from "@/components/molecules/ErrorMessage/ErrorMessage"
+import { EMPRESA } from "@/lib/hetna/empresa"
+
+// Si el pago falla, además del motivo, un botón a WhatsApp para resolverlo sin
+// perder la compra (auditoría de mejoras, tarea 4). El carrito no se borra.
+const ErrorMessage = ({ error, "data-testid": testId }: { error?: string | null; "data-testid"?: string }) =>
+  error ? (
+    <div>
+      <MensajeError error={error} data-testid={testId} />
+      <p className="mt-1 text-[13px] text-[#4A4943]">
+        Tu carrito sigue guardado.{" "}
+        <a
+          href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent("Hola HETNA CNC, no pude completar el pago de mi compra. ¿Me ayudan?")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-[#17803F] underline"
+        >
+          Escríbenos por WhatsApp
+        </a>{" "}
+        y lo resolvemos contigo.
+      </p>
+    </div>
+  ) : null
 import { isManual, isMercadoPago, isPaypal, isStripe } from "../../../lib/constants"
 import { placeOrder } from "@/lib/data/cart"
 import { HttpTypes } from "@medusajs/types"

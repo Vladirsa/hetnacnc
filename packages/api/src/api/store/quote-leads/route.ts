@@ -1,7 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { calcular } from "../../../lib/cotizador-engine"
-import cotizadorDatos from "../../../lib/cotizador-datos.json"
+import { SERVICIOS_SOPORTADOS, precioInstantaneo } from "../../../lib/precio-instantaneo"
 import { sendEmail } from "../../../lib/resend"
 import { quoteLeadEmailHtml } from "../../../lib/email-templates"
 
@@ -30,47 +29,6 @@ type QuoteLeadBody = {
   ciudad?: string
 }
 
-// Lo que la calculadora pública le pregunta al cliente, en sus palabras, y
-// cómo se traduce a los parámetros del motor. Plasma e impresión 3D usan las
-// mismas tarifas que el Cotizador de los talleres (cotizador-datos.json).
-const PLASMA_MATERIAL: Record<string, string> = {
-  "Acero al carbón": "acero_negro",
-  "Acero inoxidable": "inox",
-  "Aluminio": "aluminio",
-}
-const PLASMA_CALIBRE: Record<string, string> = {
-  "Lámina delgada (cal. 20 a 12)": "Cal 14",
-  "Placa (cal. 10 o más grueso)": "Cal 10",
-}
-const IMPRESION_MATERIAL: Record<string, string> = {
-  PLA: "pla",
-  PETG: "petg",
-  ABS: "abs",
-  "TPU (flexible)": "tpu",
-}
-const IMPRESION_CALIDAD = ["Prototipo rápido", "Pieza funcional", "Alta calidad"]
-
-const SERVICIOS_SOPORTADOS: Record<string, { tipoNombre: string; materialLaserPorMaterial?: Record<string, string> }> = {
-  laser_co2: {
-    tipoNombre: "Solo corte",
-    materialLaserPorMaterial: {
-      "MDF delgado (hasta 2.5mm)": "mdf_fino",
-      "MDF/Madera (3-5mm)": "mdf_medio",
-      "Acrílico, cuero, tela u otro": "otros",
-    },
-  },
-  router: {
-    tipoNombre: "Corte simple",
-  },
-  plasma: {
-    tipoNombre: "Corte por m²",
-  },
-  impresion_3d: {
-    // Se reemplaza por la calidad que elija el cliente.
-    tipoNombre: "Pieza funcional",
-  },
-}
-
 const UMBRAL_VOLUMEN_ALTO = 100
 
 export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaResponse) => {
@@ -79,50 +37,15 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
 
   const { servicio, material, ancho, largo, alto, calibre, calidad, cantidad, piezas_mes_estimado, email, nombre, telefono, ciudad } = body
 
-  const soporte = servicio ? SERVICIOS_SOPORTADOS[servicio] : undefined
-  if (!soporte) {
+  if (!SERVICIOS_SOPORTADOS[servicio || ""]) {
     return res.status(400).json({ message: "servicio debe ser 'laser_co2', 'router', 'plasma' o 'impresion_3d'" })
   }
   if (!ancho || !largo || !cantidad || !email) {
     return res.status(400).json({ message: "Faltan campos requeridos: ancho, largo, cantidad, email" })
   }
-  // La impresión 3D se cobra por volumen: sin la altura no hay precio.
-  if (servicio === "impresion_3d" && !(Number(alto) > 0)) {
-    return res.status(400).json({ message: "Para impresión 3D falta la altura de la pieza." })
-  }
-
-  const datos = cotizadorDatos as any
-  const servicioCfg = datos.servicios.find((s: any) => s.clave === servicio)
-  const nombreTipo =
-    servicio === "impresion_3d" && calidad && IMPRESION_CALIDAD.includes(calidad) ? calidad : soporte.tipoNombre
-  const tipo = servicioCfg.tipos.find((t: any) => t.n === nombreTipo)
-
-  const materialLaser =
-    servicio === "laser_co2" && material && soporte.materialLaserPorMaterial
-      ? soporte.materialLaserPorMaterial[material] || "otros"
-      : undefined
-
-  const resultado = calcular({
-    cfg: { tarifas: servicioCfg.tarifas, rangos: servicioCfg.rangos },
-    costos: datos.costos,
-    tipo: { nombre: tipo.n, formula: tipo.f, factor: tipo.k },
-    nombreServicio: servicioCfg.nombre,
-    emojiServicio: servicioCfg.emoji,
-    ancho,
-    largo,
-    cantidad,
-    materialLaser,
-    ...(servicio === "plasma"
-      ? {
-          material: PLASMA_MATERIAL[material || ""] || "acero_negro",
-          calibre: PLASMA_CALIBRE[calibre || ""] || "Cal 14",
-        }
-      : {}),
-    ...(servicio === "impresion_3d"
-      ? { alto: Number(alto), materialImpresion: IMPRESION_MATERIAL[material || ""] || "pla" }
-      : {}),
-    aplicarIva: true,
-  })
+  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad })
+  if (!precio.ok) return res.status(400).json({ message: precio.mensaje })
+  const { servicioCfg, resultado } = precio
 
   const volumenAlto = Boolean(piezas_mes_estimado && piezas_mes_estimado >= UMBRAL_VOLUMEN_ALTO)
   const whatsappNumber = process.env.OWNER_WHATSAPP_NUMBER

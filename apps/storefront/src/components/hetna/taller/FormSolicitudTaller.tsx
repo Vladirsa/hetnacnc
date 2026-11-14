@@ -22,7 +22,7 @@ import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { tomarArchivoGrandeParaFabricar, tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
 import { type MedidaPieza, leerCantidad, medirArchivo } from "@/lib/hetna/estimado"
 import { subirArchivo } from "@/lib/subir-archivo"
-import { DIAS_CONSERVACION_ARCHIVOS } from "@/lib/hetna/promesas"
+import { DIAS_CONSERVACION_ARCHIVOS, PLAZO_PRIMERA_RESPUESTA } from "@/lib/hetna/promesas"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
 const SERVICIOS = SERVICIOS_SOLICITUD
@@ -315,6 +315,7 @@ export default function FormSolicitudTaller({
           Te enviamos un correo con una liga privada. Ahí verás las propuestas
           {nombreTaller ? ` de ${nombreTaller}` : " de los talleres"} conforme lleguen, las comparas y eliges la que más te convenga.
         </p>
+        <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-[#17633A]">Te respondemos en {PLAZO_PRIMERA_RESPUESTA}.</p>
         <ol className="mx-auto mt-5 grid max-w-md gap-2 text-left text-sm text-[#40403A]">
           <li><strong className="text-[#142033]">1.</strong> Los talleres que hacen ese trabajo la reciben y te mandan precio y tiempo.</li>
           <li><strong className="text-[#142033]">2.</strong> Si a un taller le falta un dato, te escribimos por correo o WhatsApp.</li>
