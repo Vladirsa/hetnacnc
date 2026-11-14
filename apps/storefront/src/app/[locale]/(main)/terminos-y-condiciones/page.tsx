@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function Terminos() {
   return (
-    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="12 de noviembre de 2026">
+    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="14 de noviembre de 2026">
       <h2>1. Quiénes somos</h2>
       <p>
         {EMPRESA.nombreComercial} ({EMPRESA.sitio}) es una plataforma operada por {responsableLegal("es")}, con domicilio en {EMPRESA.domicilioCompleto}, donde clientes, vendedores y
@@ -74,8 +74,10 @@ export default function Terminos() {
         <li>
           <strong>Piezas defectuosas y desacuerdos.</strong> El cliente reporta el problema desde la liga de su solicitud,
           antes de confirmar que recibió. Si pagó a HETNA, HETNA retiene el pago; en todo caso pide evidencia a las dos partes (fotos, guía de envío,
-          mensajes, acuerdo SafeDeal) y decide en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago al
-          taller, reembolso parcial o reembolso total. La decisión de HETNA no impide a las partes acudir a las autoridades.
+          mensajes, acuerdo SafeDeal), les da oportunidad de responder y busca resolver en {DIAS_HABILES_DECISION_DISPUTA} días
+          hábiles (es un objetivo de atención: un caso complejo puede tardar más, y se te avisa): liberar el pago al taller,
+          reembolso parcial o reembolso total. La decisión queda registrada. Este procedimiento no limita tu derecho de
+          acudir a la PROFECO o a los tribunales.
         </li>
         <li>
           <strong>Liberación del pago al taller.</strong> HETNA le paga al taller lo retenido cuando el cliente confirma que

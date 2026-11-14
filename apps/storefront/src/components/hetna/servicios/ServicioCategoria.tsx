@@ -179,7 +179,7 @@ export const PREGUNTAS_FABRICACION: { p: string; r: string }[] = [
   },
   {
     p: "¿Qué pasa si la pieza llega defectuosa?",
-    r: `Repórtalo desde la liga de tu solicitud antes de confirmar que la recibiste. Si le pagaste a HETNA, retenemos el pago al taller; en todo caso pedimos evidencia a los dos (fotos, guía, mensajes, acuerdo SafeDeal) y decidimos en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o total.`,
+    r: `Repórtalo desde la liga de tu solicitud antes de confirmar que la recibiste. Si le pagaste a HETNA, retenemos el pago al taller; en todo caso pedimos evidencia a los dos (fotos, guía, mensajes, acuerdo SafeDeal) y buscamos resolver en ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: liberar el pago, reembolso parcial o total. Esto no limita tu derecho de acudir a la PROFECO.`,
   },
   {
     p: "¿Cuándo recibe el taller su pago?",

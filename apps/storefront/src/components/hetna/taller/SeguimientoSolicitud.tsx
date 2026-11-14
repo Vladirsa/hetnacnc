@@ -133,7 +133,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           <p className="font-bold">Reportaste un problema: {s.disputa.nombre}</p>
           <p className="mt-1">
             {queSigue ||
-              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y decide en un máximo de ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
+              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y busca resolver en ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
             Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.
           </p>
         </div>
@@ -167,7 +167,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             {s.cobro_directo
               ? "Mientras lo revisamos el proyecto no se cierra solo. Como le pagaste directo al taller, si procede un reembolso lo hace él y HETNA se lo exige."
               : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}{" "}
-            Decidimos en un máximo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles.
+            Buscamos resolver en {DIAS_HABILES_DECISION_DISPUTA} días hábiles. Esto no limita tu derecho de acudir a la PROFECO.
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={enviarProblema} disabled={pendiente}
