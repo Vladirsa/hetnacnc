@@ -61,6 +61,14 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 **Huecos:** términos y aviso remiten a ley mexicana y tribunales de Apizaco, Tlaxcala, también para clientes de otros países. No hay contacto ni representante en la UE (si se vende a Europa).
 **Preguntas:** ¿Es exigible la jurisdicción de Apizaco frente a consumidores extranjeros? ¿Qué falta para vender a EE. UU. (impuestos sobre ventas por estado, avisos estatales de privacidad, accesibilidad) y a la UE (GDPR, IVA digital)? ¿Conviene limitar por ahora la venta a México y declararlo?
 
+## Hallazgos de la auditoría técnica del Cotizador que tocan lo legal y fiscal (14 nov 2026)
+- **HETNA no factura sus propias suscripciones del Cotizador** ($299 / $599 / $1,199 al mes): no hay código que emita el CFDI de HETNA al taller que paga. Pregunta para el contador: ¿cómo se facturan hoy y quién es el emisor?
+- La factura que el taller emite a SU cliente (Facturapi) calcula sólo IVA trasladado; **no aplica retenciones de ISR/IVA** cuando el cliente es persona moral y corresponde.
+- Cancelación de CFDI: sólo motivos 02 y 03; falta el 01 (sustitución con relación).
+- Cambio de plan del Cotizador: se cancela la suscripción anterior **sin prorrateo ni reembolso**. Debe decirlo el contrato (ver "Faltan dos documentos").
+- Reembolsos y contracargos de anticipos no se reflejan solos en el sistema.
+- El plan "Industrial" anuncia una llave de API como "próximamente": no existe todavía; el anuncio debe seguir diciendo "próximamente" hasta que exista.
+
 ## Inconsistencias que ya se corrigieron (sin necesidad de abogado)
 - Todas las páginas legales mostraban la misma fecha ("7 de octubre de 2026"), aunque los términos cambiaron el 12 nov y la política de devoluciones el 4 nov. Cada documento ahora muestra su propia fecha.
 - "Formas de pago" no mencionaba PayPal, que sí se usa en las solicitudes de fabricación y en el Cotizador.
@@ -70,3 +78,4 @@ Preparado el 14 de noviembre de 2026 a partir de la auditoría externa (punto 7,
 - Crear el correo de privacidad (hoy se usa contacto@hetnacnc.com para derechos ARCO).
 - Publicar los términos de vendedores v1.5 con aviso de 15 días.
 - Pedir al abogado los dos documentos que faltan: Términos del Cotizador y Licencia de diseños digitales.
+- Resolver con el contador cómo factura HETNA las suscripciones del Cotizador.

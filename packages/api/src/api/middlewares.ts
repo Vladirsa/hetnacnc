@@ -29,6 +29,7 @@ import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
 import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
 import { sinContacto } from "../lib/clientes-taller";
+import { ipCliente } from "../lib/ip-cliente";
 
 // Escudo de privacidad: el taller no ve correo ni teléfono de sus clientes en
 // las pantallas de Mercur (Clientes, Pedidos). Los tratos van por el chat.
@@ -38,8 +39,29 @@ const escudoContacto = (req: any, res: any, next: any) => {
     next();
 };
 
+// Ligas públicas de cotización (/c/<token>): sin sesión, así que se limitan
+// por IP para que nadie pueda probar tokens a ciegas (auditoría del 14 nov 2026).
+const LIGA_POR_MINUTO = 60;
+const visitasLiga = new Map<string, number[]>();
+const limitarLiga = (req: any, res: any, next: any) => {
+    const ip = ipCliente(req);
+    const ahora = Date.now();
+    const lista = (visitasLiga.get(ip) || []).filter((t) => ahora - t < 60_000);
+    if (lista.length >= LIGA_POR_MINUTO) {
+        res.status(429).json({ message: "Demasiadas consultas seguidas. Intenta de nuevo en un minuto." });
+        return;
+    }
+    lista.push(ahora);
+    visitasLiga.set(ip, lista);
+    if (visitasLiga.size > 5000) {
+        for (const [k, v] of visitasLiga) if (!v.some((t) => ahora - t < 60_000)) visitasLiga.delete(k);
+    }
+    next();
+};
+
 export default defineMiddlewares({
     routes: [
+        { matcher: "/api/cotizacion-liga/*", middlewares: [limitarLiga] },
         {
             matcher: "/api/auth/*",
             middlewares: [],
