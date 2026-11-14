@@ -6,11 +6,12 @@ import { SellerInfo } from "@/components/molecules/SellerInfo/SellerInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { tallerPorHandle, ubicacion } from "@/lib/hetna/talleres"
 import { SellerDTO } from "@mercurjs/types"
+import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
 
 // Tarjeta "Vendido por": muestra quién fabrica o vende el producto (logo, ciudad, experiencia,
 // calificación) con liga a su mini-sitio. Si el perfil del taller no está disponible,
 // se muestra la tarjeta original del vendedor.
-export const ProductDetailsSeller = async ({ seller }: { seller?: SellerDTO }) => {
+export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller?: SellerDTO; tipo?: TipoFicha }) => {
   if (!seller) return null
 
   const t = seller.handle ? await tallerPorHandle(seller.handle).catch(() => null) : null
@@ -29,7 +30,8 @@ export const ProductDetailsSeller = async ({ seller }: { seller?: SellerDTO }) =
   const donde = ubicacion(p)
   const datos: string[] = [
     p.anos !== undefined ? `${p.anos} años de experiencia` : "",
-    p.entrega ? `Entrega: ${p.entrega}` : "",
+    // El tiempo de entrega del taller sólo aplica a lo que se envía
+    tipo === "fisico" && p.entrega ? `Entrega: ${p.entrega}` : "",
     p.calificacion !== undefined ? `★ ${p.calificacion.toFixed(1)}${p.resenas ? ` (${p.resenas} reseñas)` : ""}` : "Taller nuevo en HETNA",
   ].filter(Boolean)
 

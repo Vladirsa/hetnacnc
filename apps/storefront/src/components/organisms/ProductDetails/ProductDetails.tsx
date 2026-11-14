@@ -18,6 +18,8 @@ import { escalonesDeOferta } from "@/lib/helpers/volumen"
 import { packsDeTalleres } from "@/lib/packs/acciones"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
+import { FichaDigital, FichaServicio, ResumenServicio } from "@/components/hetna/fichas/FichaPorTipo"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 
 type Props = {
   product: HttpTypes.StoreProduct & {
@@ -39,6 +41,8 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
   // Los productos maestros no tienen vendedor: el que se enseña sale de la
   // oferta que gana el buybox.
   const ganadora = getBuyboxWinner(rankOffers(offers))
+  // Plantilla de ficha: digital, servicio o físico (lib/hetna/tipo-ficha)
+  const tipo = tipoFicha(product as any)
   const seller = ganadora?.seller
 
   // El umbral de envío gratis del taller que gana el buybox -- el mismo que va
@@ -82,6 +86,8 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         locale={locale}
         offers={offers}
         seller={seller}
+        tipo={tipo}
+        antesDeComprar={tipo === "servicio" ? <ResumenServicio metadata={product.metadata} /> : undefined}
       />
 
       {typeof product.metadata?.curso_slug === "string" && (
@@ -102,13 +108,13 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         <EscalonesVolumen escalones={escalones} precioUnitario={precioUnitario} />
       )}
 
-      <DistintivoEnvioGratis desde={envioGratisDesde} currency_code={moneda} />
+      {tipo === "fisico" && <DistintivoEnvioGratis desde={envioGratisDesde} currency_code={moneda} />}
 
-      <ConfianzaProducto />
+      <ConfianzaProducto tipo={tipo} />
 
       <VenderMas titulo={product.title} handle={product.handle} locale={locale} vistas={vistas} />
 
-      <ProductDetailsSeller seller={seller} />
+      <ProductDetailsSeller seller={seller} tipo={tipo} />
     </div>
   )
 }
@@ -130,9 +136,11 @@ export const ProductDetallesLargos = ({
       taller={taller}
       atributos={product?.attribute_values || []}
     />
+    {tipoFicha(product as any) === "servicio" && <FichaServicio metadata={product?.metadata} />}
+    {tipoFicha(product as any) === "digital" && <FichaDigital metadata={product?.metadata} />}
     <ProductPageDetails details={product?.description || ""} />
     <ProductAdditionalAttributes attributes={product?.attribute_values || []} />
-    <ProductDetailsShipping />
+    {tipoFicha(product as any) === "fisico" && <ProductDetailsShipping />}
     <ProductDetailsFooter tags={product?.tags || []} posted={product?.created_at} />
   </div>
 )

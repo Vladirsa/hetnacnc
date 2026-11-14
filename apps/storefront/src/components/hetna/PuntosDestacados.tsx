@@ -2,6 +2,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { EMPRESA } from "@/lib/hetna/empresa"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 
 // Lo que de verdad decide la compra, en cuatro renglones arriba de todo.
 //
@@ -10,16 +11,6 @@ import { HttpTypes } from "@medusajs/types"
 // con un icono cada uno, para no obligar a leer tres acordeones antes de saber
 // qué se está comprando. Lo que no se puede sacar de los datos reales, no sale:
 // aquí no hay ningún renglón de adorno.
-const esDigital = (
-  product: HttpTypes.StoreProduct & { type?: { value?: string } | null }
-): boolean => {
-  const tipo = (product.type?.value || "").toLowerCase()
-  if (tipo.includes("digital")) return true
-  return (product.tags || []).some((t) =>
-    (t.value || "").toLowerCase().includes("digital")
-  )
-}
-
 export const PuntosDestacados = ({
   product,
   locale,
@@ -31,7 +22,10 @@ export const PuntosDestacados = ({
   taller?: { name?: string | null; handle?: string | null }
   atributos?: AdditionalAttributeProps[]
 }) => {
-  const digital = esDigital(product)
+  // Misma regla que el resto de la ficha (lib/hetna/tipo-ficha)
+  const tipo = tipoFicha(product as any)
+  const digital = tipo === "digital"
+  const servicio = tipo === "servicio"
   const categoria = (
     product as { categories?: { name?: string | null; handle?: string | null }[] }
   ).categories?.[0]
@@ -64,7 +58,17 @@ export const PuntosDestacados = ({
   }
 
   puntos.push(
-    digital
+    servicio
+      ? {
+          icono: "🧑‍💻",
+          texto: (
+            <>
+              <span className="font-semibold">Servicio en línea.</span> No te llega nada por
+              paquetería: recibes tus archivos en tu cuenta.
+            </>
+          ),
+        }
+      : digital
       ? {
           icono: "⬇️",
           texto: (
@@ -110,7 +114,14 @@ export const PuntosDestacados = ({
 
   puntos.push({
     icono: "↩️",
-    texto: digital ? (
+    texto: servicio ? (
+      <>
+        Si lo que entregamos no corresponde a lo acordado, lo corregimos.{" "}
+        <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
+          Ver política
+        </LocalizedClientLink>
+      </>
+    ) : digital ? (
       <>
         Los archivos no tienen devolución una vez descargados, salvo que estén dañados o
         no correspondan.{" "}
