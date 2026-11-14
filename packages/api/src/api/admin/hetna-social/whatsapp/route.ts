@@ -2,16 +2,18 @@
 // POST /admin/hetna-social/whatsapp { accion: "qr" }      -> QR para reconectar el WhatsApp de HETNA
 //                                   | { accion: "webhook" } -> que los mensajes que llegan pasen al sistema
 //                                   | { accion: "prueba", numero } -> mensaje de prueba
+//                                   | { accion: "invitar" } -> campaña de correos "verifica tu WhatsApp"
 //                                   | { accion: "bot", activo } -> respondedor automático encendido o apagado
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { iniciarCampana, resumenInvitacion } from "../../../../lib/invitar-whatsapp"
 import { activarBot, resumenBot } from "../../../../lib/whatsapp-bot"
 import { configurarWebhook, enviarTexto, normalizarNumero, qrConexion, resumenWhatsapp } from "../../../../lib/whatsapp"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  res.json({ ...(await resumenWhatsapp(knex)), bot: await resumenBot(knex).catch(() => null) })
+  res.json({ ...(await resumenWhatsapp(knex)), bot: await resumenBot(knex).catch(() => null), invitacion: await resumenInvitacion(knex).catch(() => null) })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -19,6 +21,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   try {
     if (b.accion === "qr") return res.json(await qrConexion())
     if (b.accion === "webhook") return res.json(await configurarWebhook())
+    if (b.accion === "invitar") return res.json(await iniciarCampana(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION), req.scope.resolve("logger")))
     if (b.accion === "bot") {
       await activarBot(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION), !!b.activo)
       return res.json({ ok: true })

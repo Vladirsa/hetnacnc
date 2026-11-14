@@ -465,6 +465,7 @@ function WhatsappConexion() {
         else { setQr(d.qr || null); setNota({ ok: true, t: d.qr ? "Escanéalo desde el celular de HETNA: WhatsApp → ⋮ → Dispositivos vinculados → Vincular un dispositivo. Después aprieta 'Ver estado'." : `Código para vincular: ${d.codigo || "—"}` }) }
       } else if (cuerpo.accion === "webhook") setNota({ ok: true, t: "✓ Listo: los mensajes que lleguen al WhatsApp de HETNA ya pasan al sistema (verificación, BAJA y fotos)." })
       else if (cuerpo.accion === "prueba") setNota({ ok: true, t: "✓ Mensaje de prueba enviado" })
+      else if (cuerpo.accion === "invitar") setNota({ ok: true, t: `✓ Invitación iniciada: ${d.enviados} correos hoy${d.quedan ? "; mañana sigue con los demás" : " (ya no queda nadie por invitar)"}` })
       else if (cuerpo.accion === "bot") setNota({ ok: true, t: cuerpo.activo ? "✓ Agente de ventas encendido" : "Agente de ventas apagado" })
       void cargar()
     } catch (er) {
@@ -505,6 +506,16 @@ function WhatsappConexion() {
             <span style={{ color: C.tenue }}> · Hoy: {e.bot.respuestas_hoy} respuestas en {e.bot.chats_hoy} chats · {e.bot.calientes_7d ?? 0} clientes calientes (7 días) · {e.bot.pasados} pasados a ti</span>
           </span>
         </label>
+      )}
+      {e?.invitacion && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, flexWrap: "wrap", fontSize: 13 }}>
+          <button type="button" style={boton(e.invitacion.activo ? "normal" : "primario")} disabled={ocupado || e.invitacion.activo} onClick={() => void hacer({ accion: "invitar" })}>
+            {e.invitacion.activo ? "📨 Invitación en curso" : "📨 Invitar a verificar su WhatsApp"}
+          </button>
+          <span style={{ color: C.tenue, fontSize: 12 }}>
+            Correo + aviso en la plataforma a talleres y clientes registrados (no por WhatsApp). {e.invitacion.lote_dia} al día hasta terminar, una vez por persona. Invitados: {e.invitacion.invitados}{e.invitacion.terminada ? " · terminada" : ""}
+          </span>
+        </div>
       )}
       <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>
         Sólo reciben avisos por WhatsApp los talleres y clientes que verificaron su número (ellos escriben primero). Se mandan uno a la vez, con pausa y tope de {e?.tope_dia || 250} al día para cuidar el número. BAJA = dejar de recibir.
