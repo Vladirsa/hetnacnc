@@ -83,6 +83,18 @@ export async function enviarSolicitudTaller(
 
 // ---- Vista privada de propuestas (liga del correo) ----
 
+export type HitoProduccion = {
+  clave: string
+  nombre: string
+  orden: number
+  fecha_plan: string | null
+  fecha_real: string | null
+  estado: "hecho" | "pendiente" | "atrasado"
+  dias_diferencia: number | null
+  nota: string | null
+  fotos: { clave: string; nombre: string; url: string | null }[]
+}
+
 export type Propuesta = {
   id: string
   precio: number
@@ -161,6 +173,8 @@ export type VistaSolicitud = {
   etapa_explica?: string
   linea?: { etapa: string; nombre: string; explica: string; fecha: string | null; estado: "hecha" | "actual" | "pendiente" | "omitida" }[]
   historial?: { fecha: string; quien: string; nota: string }[]
+  /** Hitos de producción: fecha planeada contra la real, nota y fotos del taller */
+  hitos?: HitoProduccion[]
   envio?: { paqueteria: string; guia: string } | null
   puede_confirmar?: boolean
   // Problema reportado por el cliente (cancelar | retraso | defecto | otro):

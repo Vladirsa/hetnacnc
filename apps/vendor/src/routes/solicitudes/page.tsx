@@ -534,6 +534,96 @@ function EvaluarCliente({ sol }) {
   )
 }
 
+// Hitos de producción del pedido ganado: fecha planeada (se puede mover), "Listo"
+// con nota y fotos. El cliente ve todo en su liga y le avisamos al terminar cada uno.
+function Hitos({ sol }) {
+  const [hitos, setHitos] = useState(null)
+  const [msg, setMsg] = useState(null)
+  const [ocupado, setOcupado] = useState(null)
+  const base = "/vendor/hetna-solicitudes/" + sol.id
+  useEffect(() => {
+    fetch(base + "/hitos", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setHitos(d.hitos || []))
+      .catch(() => setHitos([]))
+  }, [sol.id])
+  const guardar = async (clave, datos) => {
+    setOcupado(clave)
+    setMsg(null)
+    try {
+      const r = await fetch(base + "/hitos", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clave, ...datos }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setHitos(d.hitos || [])
+      if (datos.hecho) setMsg({ ok: true, t: "Listo. Le avisamos al cliente." })
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setOcupado(null)
+    }
+  }
+  const subirFoto = async (clave, archivo) => {
+    if (!archivo) return
+    setOcupado(clave)
+    setMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append("archivo", archivo)
+      fd.append("clave", clave)
+      const r = await fetch(base + "/hito-foto", { method: "POST", credentials: "include", body: fd })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setHitos(d.hitos || [])
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setOcupado(null)
+    }
+  }
+  if (!hitos) return <p style={{ fontSize: 12, color: "#6B675C", margin: "10px 0 0" }}>Cargando hitos…</p>
+  if (!hitos.length) return null
+  const color = { hecho: "#1E7B3A", atrasado: "#B3261E", pendiente: "#8A867B" }
+  return (
+    <div style={{ marginTop: 10, borderTop: "1px solid #E7E4DC", paddingTop: 10 }}>
+      <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#142033" }}>
+        Hitos de producción · {hitos.filter((h) => h.estado === "hecho").length} de {hitos.length} listos
+      </p>
+      {hitos.map((h) => (
+        <div key={h.clave} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.2fr) 140px 1fr", gap: 8, alignItems: "center", padding: "6px 0", borderBottom: "1px dashed #E7E4DC" }}>
+          <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13, fontWeight: 600, color: color[h.estado] }}>
+            <input type="checkbox" checked={h.estado === "hecho"} disabled={ocupado === h.clave}
+              onChange={(e) => guardar(h.clave, { hecho: e.target.checked })} />
+            {h.nombre}
+            {h.estado === "atrasado" && <span style={S.tag("#FDECEA", "#B3261E")}>Atrasado</span>}
+          </label>
+          <input type="date" style={{ ...S.input, height: 32 }} defaultValue={h.fecha_plan || ""} title="Fecha planeada"
+            onBlur={(e) => e.target.value && e.target.value !== h.fecha_plan && guardar(h.clave, { fecha_plan: e.target.value })} />
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <input style={{ ...S.input, height: 32, flex: "1 1 160px" }} defaultValue={h.nota || ""} placeholder="Nota para el cliente" maxLength={600}
+              onBlur={(e) => e.target.value !== (h.nota || "") && guardar(h.clave, { nota: e.target.value })} />
+            <label style={{ ...S.btn2, padding: "5px 10px", fontSize: 12, cursor: "pointer" }}>
+              📷 Foto{h.fotos.length ? " (" + h.fotos.length + ")" : ""}
+              <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }}
+                onChange={(e) => { subirFoto(h.clave, e.target.files && e.target.files[0]); e.target.value = "" }} />
+            </label>
+            {h.fotos.filter((ft) => ft.url).map((ft) => (
+              <a key={ft.clave} href={ft.url} target="_blank" rel="noreferrer">
+                <img src={ft.url} alt={ft.nombre} style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 6, border: "1px solid #E7E4DC" }} />
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+    </div>
+  )
+}
+
 function Pedido({ sol, alGuardar }) {
   const [modo, setModo] = useState(null) // "avance" | "entregada"
   const [f, setF] = useState({ nota: "", paqueteria: "", guia: "" })
@@ -589,6 +679,7 @@ function Pedido({ sol, alGuardar }) {
             : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos el pago completo al confirmar la entrega.`}
         </p>
       )}
+      <Hitos sol={sol} />
       {!modo && (
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button type="button" style={S.btn2} onClick={() => setModo("avance")}>Contar un avance al cliente</button>

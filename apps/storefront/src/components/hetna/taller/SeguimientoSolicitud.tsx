@@ -1,5 +1,6 @@
 "use client"
 
+import HitosProduccion from "./HitosProduccion"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -180,6 +181,8 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           {errorProblema && <p className="text-sm text-[#B3261E]">{errorProblema}</p>}
         </div>
       )}
+
+      <HitosProduccion hitos={s.hitos || []} />
 
       {(s.historial || []).length > 0 && (
         <div className="mt-5 border-t border-[#E7E4DC] pt-4">

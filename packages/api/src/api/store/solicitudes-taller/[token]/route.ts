@@ -1,4 +1,5 @@
 import { asegurarVersiones, historialDe } from "../../../../lib/licitacion-versiones"
+import { hitosConFotos } from "../../../../lib/licitacion-hitos-pedido"
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
@@ -123,6 +124,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   // Cuándo llegó a cada etapa (la última vez), para la línea de tiempo.
   const cuando: Record<string, string> = {}
   for (const e of eventos) if (e.etapa) cuando[e.etapa] = e.created_at
+  // Hitos de producción (plan contra real, con fotos) cuando ya se pagó
+  const hitos = ["en_produccion", "entregada", "cerrada"].includes(etapa) || s.estado === "pagada" || s.pago_estado === "pagado"
+    ? await hitosConFotos(knex, s, cuando["en_produccion"] || null).catch(() => [])
+    : []
   const posicion = CAMINO.indexOf(etapa)
   const linea = CAMINO
     // Si no hubo revisión, ese paso no se enseña.
@@ -194,6 +199,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     etapa_nombre: NOMBRE_ETAPA[etapa],
     etapa_explica: EXPLICA_ETAPA[etapa],
     linea,
+    hitos,
     historial: eventos
       .filter((e) => e.nota)
       .map((e) => ({ fecha: e.created_at, quien: e.actor, nota: ocultarContacto(e.nota) })),
