@@ -45,7 +45,7 @@ export default function HeroFijo() {
             </LocalizedClientLink>
             <LocalizedClientLink
               href="/categories"
-              className="text-[15px] font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
+              className="inline-block py-3 text-[15px] font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
             >
               Ver diseños desde $30
             </LocalizedClientLink>

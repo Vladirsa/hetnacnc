@@ -49,3 +49,9 @@ export const DIAS_HABILES_DECISION_DISPUTA = 5
 // cancelación; cada liga de descarga dura estos minutos y queda registrada.
 export const DIAS_CONSERVACION_ARCHIVOS = 180
 export const MINUTOS_LIGA_ARCHIVO = 60
+
+// Plazo de primera respuesta al que cotiza (auditoría de mejoras, tarea 6).
+// Es la meta del equipo: la revisión de la solicitud toma hasta
+// HORAS_REVISION_SOLICITUD y en cuanto llega una propuesta se avisa por correo.
+// Si no se puede cumplir, se cambia aquí y se actualiza en todas las páginas.
+export const PLAZO_PRIMERA_RESPUESTA = "1 a 2 días hábiles"

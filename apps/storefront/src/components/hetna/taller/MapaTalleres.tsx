@@ -345,6 +345,15 @@ export default function MapaTalleres({
         aria-label="Mapa de la red CNC por estado"
       />
 
+      {/* Auditoría de mejoras, tarea 5: talleres activos y empresas por unirse
+          se cuentan aparte, nunca sumados */}
+      <p className="mt-3 text-center text-[14.5px] text-[#142033]" data-testid="conteo-red">
+        <strong>Talleres activos en HETNA: {totales.verificado + totales.fundador + totales.comunidad}</strong>
+        {totales.por_unirse > 0 && (
+          <span className="text-[#6B675C]"> · Empresas por unirse (todavía sin cuenta): {totales.por_unirse}</span>
+        )}
+      </p>
+
       {/* Simbología: cada tipo se puede ocultar o mostrar */}
       <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 rounded-xl border border-[#E7E4DC] bg-[#FAF8F3] px-4 py-3">
         {TIPOS.filter((t) => totales[t.id] > 0).map((t) => {

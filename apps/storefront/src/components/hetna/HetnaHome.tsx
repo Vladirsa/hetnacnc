@@ -9,6 +9,7 @@ import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import HeroFijo, { VenderConNosotros } from "@/components/hetna/HeroFijo"
+import CasosReales from "@/components/hetna/CasosReales"
 import BarraConfianza from "@/components/hetna/BarraConfianza"
 import ProcesoClienteTaller from "./ProcesoClienteTaller"
 import BannerHerramientas from "./BannerHerramientas"
@@ -350,6 +351,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       <FilasProductos locale={locale} />
       <BarraConfianza />
       <BannerPromo />
+      <CasosReales />
       <ProcesoClienteTaller />
       <VenderConNosotros />
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
