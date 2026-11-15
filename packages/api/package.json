@@ -42,7 +42,7 @@
     "@mercurjs/core": "2.3.6-canary.1",
     "@mercurjs/types": "2.3.6-canary.1",
     "exceljs": "4.4.0",
-    "fast-xml-parser": "5.2.5",
+    "fast-xml-parser": "5.12.1",
     "fflate": "0.8.2",
     "http-proxy-middleware": "3.0.7",
     "pdf-lib": "1.17.1",

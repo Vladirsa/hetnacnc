@@ -328,7 +328,7 @@ function Auditoria({ alCambiar }: { alCambiar: () => void }) {
             <button type="button" style={boton("primario")} disabled={ocupado} onClick={() => auditar(false)}>Auditar ahora</button>
             <button type="button" style={boton()} disabled={ocupado} onClick={() => auditar(true)}>Auditar y consultar al SAT</button>
           </div>
-          {ocupado && <p style={tenue}>Revisando… (consultar al SAT tarda unos segundos por factura)</p>}
+          {ocupado && <p style={tenue}>Revisando… (se consultan hasta 20 facturas por clic; el resto lo revisa el loop diario)</p>}
           <Aviso msg={msg} />
           {datos?.listas?.length ? <p style={{ ...tenue, marginTop: 8 }}>Listas del SAT: {datos.listas.map((l: any) => `${l.lista === "69B" ? "69-B" : "No localizados"} ${Number(l.n).toLocaleString("es-MX")} RFC (${String(l.fecha).slice(0, 10)})`).join(" · ")}</p> : null}
         </div>

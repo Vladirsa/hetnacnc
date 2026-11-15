@@ -27,9 +27,9 @@ const etiqueta = (xml: string, nombre: string) => {
 }
 
 /** Consulta el estatus de un CFDI en el SAT. Nunca lanza: si falla devuelve estado "error". */
-export async function consultarEstatus(c: Pick<Cfdi, "emisor_rfc" | "receptor_rfc" | "total" | "uuid" | "sello_cfd_final">, f: typeof fetch = fetch): Promise<EstatusSat> {
+export async function consultarEstatus(c: Pick<Cfdi, "emisor_rfc" | "receptor_rfc" | "total" | "uuid" | "sello_cfd_final"> & { total_texto?: string }, f: typeof fetch = fetch): Promise<EstatusSat> {
   const esc = (v: string) => v.replace(/&/g, "&amp;")
-  const expresion = `?re=${esc(c.emisor_rfc)}&rr=${esc(c.receptor_rfc)}&tt=${c.total.toFixed(2)}&id=${c.uuid}${c.sello_cfd_final ? `&fe=${c.sello_cfd_final}` : ""}`
+  const expresion = `?re=${esc(c.emisor_rfc)}&rr=${esc(c.receptor_rfc)}&tt=${c.total_texto || c.total.toFixed(2)}&id=${c.uuid}${c.sello_cfd_final ? `&fe=${c.sello_cfd_final}` : ""}`
   const cuerpo = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soapenv:Header/><soapenv:Body><tem:Consulta><tem:expresionImpresa><![CDATA[${expresion}]]></tem:expresionImpresa></tem:Consulta></soapenv:Body></soapenv:Envelope>`
   try {
     const r = await f(SERVICIO_ESTATUS, {

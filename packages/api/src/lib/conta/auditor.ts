@@ -18,7 +18,12 @@ import { T_HALLAZGO, RFC_VALIDO } from "./almacen"
 import { CLAVES_COMBUSTIBLE, CLAVES_RESTAURANTE, FORMA_EFECTIVO, TOPE_EFECTIVO } from "./parametros"
 
 export type Hallazgo = { clave: string; regla: string; uuid: string | null; severidad: "alta" | "media" | "baja"; auditor: "fiscal" | "forense"; mensaje: string; base_legal: string }
-export type Contexto = { rfc: string; regimen: string; cp: string | null; listas: Record<string, { lista: string; situacion: string }[]>; hoy?: Date }
+export type Contexto = {
+  rfc: string; regimen: string; cp: string | null; listas: Record<string, { lista: string; situacion: string }[]>; hoy?: Date
+  // true cuando al menos un CFDI del contribuyente ya salió "Vigente" en el SAT: prueba de que la consulta
+  // funciona. Mientras no, "no encontrado" no se reporta (podría ser un error de formato, no una factura falsa).
+  satConfirmado?: boolean
+}
 
 const DIA = 86_400_000
 const pesos = (n: number) => `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -38,7 +43,7 @@ export function auditar(filas: FilaCfdi[], ctx: Contexto): Hallazgo[] {
 
   // Duplicados: mismo emisor, mismo total, mismo día, distinto UUID
   const firmas = new Map<string, FilaCfdi[]>()
-  for (const f of vivos.filter((x) => x.datos.tipo === "I")) {
+  for (const f of vivos.filter((x) => x.datos.tipo === "I" && x.direccion === "recibido")) {
     const k = `${f.datos.emisor_rfc}|${f.datos.receptor_rfc}|${f.datos.total.toFixed(2)}|${f.datos.fecha.slice(0, 10)}`
     firmas.set(k, [...(firmas.get(k) || []), f])
   }
@@ -51,7 +56,7 @@ export function auditar(filas: FilaCfdi[], ctx: Contexto): Hallazgo[] {
     // ── Forense: estatus en el SAT ──
     if (f.estatus_sat === "cancelado" && recibido && c.tipo !== "P")
       h("X03", f, "alta", "forense", `El SAT dice que la factura de ${quien(c, f.direccion)} por ${pesos(c.total_mxn)} está CANCELADA. No se puede deducir ni acreditar su IVA. Si la pagaste, pide una nueva.`, "CFF arts. 29 y 29-A; LISR art. 27 fr. III")
-    if (f.estatus_sat === "no_encontrado" && c.tipo !== "P")
+    if (f.estatus_sat === "no_encontrado" && c.tipo !== "P" && ctx.satConfirmado !== false)
       h("X03b", f, "media", "forense", `El SAT no encuentra la factura ${c.uuid} de ${quien(c, f.direccion)}. Puede ser reciente (tarda hasta 72 h) o apócrifa: revísala en verificacfdi.facturaelectronica.sat.gob.mx.`, "CFF art. 29 fr. IV")
 
     if (recibido && c.tipo !== "P") {
@@ -81,7 +86,7 @@ export function auditar(filas: FilaCfdi[], ctx: Contexto): Hallazgo[] {
         h("X08", f, "baja", "forense", `Gasto de ${pesos(c.total_mxn)} facturado en fin de semana por ${quien(c, f.direccion)}. No es ilegal, pero es una señal que el SAT revisa.`, "Heurística")
     }
 
-    if (c.tipo === "I") {
+    if (c.tipo === "I" && recibido) {
       const dup = firmas.get(`${c.emisor_rfc}|${c.receptor_rfc}|${c.total.toFixed(2)}|${c.fecha.slice(0, 10)}`) || []
       if (dup.length > 1 && f.estatus_sat !== "cancelado")
         h("X06", f, "media", "forense", `Posible factura duplicada: hay ${dup.length} facturas de ${quien(c, f.direccion)} por ${pesos(c.total_mxn)} el mismo día (${dup.map((d) => d.uuid.slice(0, 8)).join(", ")}).`, "Heurística")

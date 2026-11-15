@@ -60,5 +60,7 @@ describe("Lector de CFDI", () => {
   it("rechaza lo que no es un CFDI timbrado", () => {
     expect(() => leerCfdi("<hola/>")).toThrow(ErrorCfdi)
     expect(() => leerCfdi(cfdi({ uuid: "" }))).toThrow(/timbrado/)
+    // XML con entidades (ataque de expansión): se rechaza antes de leerlo
+    expect(() => leerCfdi('<?xml version="1.0"?><!DOCTYPE x [<!ENTITY a "aaaa">]><cfdi:Comprobante/>')).toThrow(/DOCTYPE/)
   })
 })

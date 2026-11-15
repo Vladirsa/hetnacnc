@@ -59,13 +59,14 @@ export async function filasParaAuditar(knex: any, contribuyenteId: string): Prom
 }
 
 /** Audita un contribuyente: estatus en el SAT (opcional), listas, reglas y hallazgos. */
-export async function correrAuditoria(knex: any, ctb: any, opciones: { consultarSat?: boolean; logger?: any } = {}) {
+export async function correrAuditoria(knex: any, ctb: any, opciones: { consultarSat?: boolean; maxSat?: number; logger?: any } = {}) {
   await asegurarConta(knex)
-  const estatus = opciones.consultarSat ? await revisarEstatus(knex, ctb.id) : { revisados: 0, cancelados: 0 }
+  const estatus = opciones.consultarSat ? await revisarEstatus(knex, ctb.id, opciones.maxSat ?? 150) : { revisados: 0, cancelados: 0 }
+  const satConfirmado = Boolean(await knex(T_CFDI).where({ contribuyente_id: ctb.id, estatus_sat: "vigente" }).first("id"))
   const filas = await filasParaAuditar(knex, ctb.id)
   const rfcs = [...new Set(filas.map((f) => (f.direccion === "recibido" ? f.datos.emisor_rfc : f.datos.receptor_rfc)))]
   const listas = await buscarEnListas(knex, rfcs)
-  const hallazgos = auditar(filas, { rfc: ctb.rfc, regimen: ctb.regimen, cp: ctb.cp, listas })
+  const hallazgos = auditar(filas, { rfc: ctb.rfc, regimen: ctb.regimen, cp: ctb.cp, listas, satConfirmado })
   const r = await guardarHallazgos(knex, ctb.id, hallazgos)
   return { ...r, estatus, revisadas: filas.length }
 }
@@ -81,7 +82,15 @@ export async function semaforo(knex: any, ctb: any, xml: string): Promise<{ colo
     estatus_sat: r.estado === "error" ? null : r.estado, datos: c,
   }
   const hallazgos = auditar([fila], { rfc: ctb.rfc, regimen: ctb.regimen, cp: ctb.cp, listas })
-  const color = hallazgos.some((h) => h.severidad === "alta") ? "rojo" : hallazgos.some((h) => h.severidad === "media") || r.estado === "error" ? "amarillo" : "verde"
+  const extra = (regla: string, severidad: Hallazgo["severidad"], mensaje: string, base_legal: string) =>
+    hallazgos.push({ clave: `${regla}:${c.uuid}`, regla, uuid: c.uuid, severidad, auditor: "forense", mensaje, base_legal })
+  if (c.receptor_rfc !== ctb.rfc)
+    extra("S01", "alta", `La factura no está a tu nombre: el receptor es ${c.receptor_rfc} y tu RFC es ${ctb.rfc}. Así no la puedes deducir.`, "CFF art. 29-A fr. IV")
+  const cargadas = await listasActualizadas(knex)
+  if (cargadas.length < 2 || cargadas.some((l) => Number(l.n) < 100))
+    extra("S02", "media", "No se pudieron revisar las listas negras del SAT (no se han descargado). Intenta de nuevo en unos minutos.", "CFF arts. 69 y 69-B")
+  if (r.estado === "error") extra("S03", "media", `No se pudo consultar al SAT si la factura está vigente (${r.codigo}).`, "CFF art. 29")
+  const color = hallazgos.some((h) => h.severidad === "alta") ? "rojo" : hallazgos.some((h) => h.severidad === "media") ? "amarillo" : "verde"
   return { color, hallazgos, estatus: r.estado === "error" ? `No se pudo consultar al SAT (${r.codigo})` : r.codigo || r.estado, uuid: c.uuid, emisor: `${c.emisor_nombre} (${c.emisor_rfc})`, total: c.total_mxn }
 }
 

@@ -76,6 +76,7 @@ export type Cfdi = {
   subtotal: number        // en moneda original
   descuento: number
   total: number
+  total_texto: string     // el Total tal como viene en el XML (para consultar al SAT)
   // En pesos (moneda original × tipo de cambio)
   subtotal_mxn: number
   descuento_mxn: number
@@ -205,6 +206,9 @@ function leerPagos(complemento: any): PagoCfdi[] {
 
 /** Lee un XML de CFDI. Lanza ErrorCfdi si no es un CFDI timbrado. */
 export function leerCfdi(xml: string): Cfdi {
+  // Un CFDI nunca trae DOCTYPE ni entidades propias: rechazarlos corta los ataques de expansión de entidades
+  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new ErrorCfdi("El archivo no es un CFDI válido (trae una declaración DOCTYPE).")
+  if (xml.length > 5_000_000) throw new ErrorCfdi("El XML es demasiado grande para ser un CFDI.")
   let raiz: any
   try {
     raiz = parser.parse(xml.replace(/^﻿/, ""))
@@ -245,6 +249,7 @@ export function leerCfdi(xml: string): Cfdi {
     subtotal: num(c.SubTotal),
     descuento: num(c.Descuento),
     total: num(c.Total),
+    total_texto: String(c.Total ?? ""),
     subtotal_mxn: r2(num(c.SubTotal) * tc),
     descuento_mxn: r2(num(c.Descuento) * tc),
     total_mxn: r2(num(c.Total) * tc),
