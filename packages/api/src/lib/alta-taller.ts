@@ -34,8 +34,26 @@ const VIGENCIA_CONFIRMAR_DIAS = 7
 const VIGENCIA_APROBAR_DIAS = 14
 
 const secreto = () => process.env.BAJA_SECRET || process.env.COOKIE_SECRET || process.env.JWT_SECRET || ""
-const firmar = (uso: "confirmar" | "aprobar", id: string, exp: number) =>
-  createHmac("sha256", secreto()).update(`taller-${uso}:${id}:${exp}`).digest("base64url").slice(0, 32)
+// La liga de confirmar firma también el correo al que se mandó: así se sabe qué
+// correo quedó confirmado (lib/cloud.ts importa con él los trabajos CAM).
+const firmar = (uso: "confirmar" | "aprobar", id: string, exp: number, correo?: string | null) =>
+  createHmac("sha256", secreto())
+    .update(`taller-${uso}:${id}:${exp}${correo ? `:${correo.trim().toLowerCase()}` : ""}`)
+    .digest("base64url")
+    .slice(0, 32)
+
+/** Liga de confirmar: "correo" si la firma incluye el correo actual del taller, "anterior" si es de antes. */
+export function firmaConfirmacion(id: string, exp: string, firma: string, correo: string | null | undefined): "correo" | "anterior" | null {
+  const n = Number(exp)
+  if (!id || !secreto() || !Number.isFinite(n) || n * 1000 < Date.now()) return null
+  const igual = (x: string) => {
+    const a = Buffer.from(x)
+    const b = Buffer.from(String(firma || ""))
+    return a.length === b.length && timingSafeEqual(a, b)
+  }
+  if (correo && igual(firmar("confirmar", id, n, correo))) return "correo"
+  return igual(firmar("confirmar", id, n)) ? "anterior" : null
+}
 
 export function firmaValida(uso: "confirmar" | "aprobar", id: string, exp: string, firma: string): boolean {
   const n = Number(exp)
@@ -45,10 +63,10 @@ export function firmaValida(uso: "confirmar" | "aprobar", id: string, exp: strin
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-const liga = (uso: "confirmar" | "aprobar", id: string, dias: number) => {
+const liga = (uso: "confirmar" | "aprobar", id: string, dias: number, correo?: string | null) => {
   const exp = Math.floor(Date.now() / 1000) + dias * 86400
   // Bajo /api/app/ de la tienda: nginx manda /api/v... a otro servicio.
-  return `${STORE_URL}/api/app/${uso}-taller?s=${encodeURIComponent(id)}&e=${exp}&t=${firmar(uso, id, exp)}`
+  return `${STORE_URL}/api/app/${uso}-taller?s=${encodeURIComponent(id)}&e=${exp}&t=${firmar(uso, id, exp, correo)}`
 }
 
 export type TallerAlta = {
@@ -96,7 +114,7 @@ export async function mandarConfirmacion(t: TallerAlta) {
     html: marco(
       "Confirma tu correo",
       `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Hola: recibimos el registro de <strong>${esc(t.name || "tu taller")}</strong> en HETNA CNC. Para seguir, confirma que este correo es tuyo:</p>` +
-        boton("Confirmar mi correo", liga("confirmar", t.id, VIGENCIA_CONFIRMAR_DIAS)) +
+        boton("Confirmar mi correo", liga("confirmar", t.id, VIGENCIA_CONFIRMAR_DIAS, t.email)) +
         `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Después revisamos tu taller y te avisamos por correo cuando puedas publicar (normalmente en menos de un día hábil). La liga sirve ${VIGENCIA_CONFIRMAR_DIAS} días. Si tú no te registraste, ignora este correo.</p>`
     ),
   })
@@ -143,13 +161,25 @@ export async function avisarAprobado(t: TallerAlta) {
 }
 
 /** Marca el correo como confirmado. Devuelve true si cambió (primera vez). */
-export async function marcarConfirmado(scope: { resolve: (k: string) => unknown }, id: string): Promise<boolean> {
+export async function marcarConfirmado(scope: { resolve: (k: string) => unknown }, id: string, correo?: string | null): Promise<boolean> {
   const talleres = servicioTalleres(scope)
   const t = await talleres.retrieveSeller(id)
-  if (t.metadata?.correo_confirmado === true) return false
+  const email = correo ? correo.trim().toLowerCase() : null
+  if (t.metadata?.correo_confirmado === true) {
+    // Ya confirmado: sólo se guarda el correo si es la primera vez que se sabe
+    if (email && !t.metadata?.correo_confirmado_email) {
+      await talleres.updateSellers({ id, metadata: { ...(t.metadata || {}), correo_confirmado_email: email } })
+    }
+    return false
+  }
   await talleres.updateSellers({
     id,
-    metadata: { ...(t.metadata || {}), correo_confirmado: true, correo_confirmado_en: new Date().toISOString() },
+    metadata: {
+      ...(t.metadata || {}),
+      correo_confirmado: true,
+      correo_confirmado_en: new Date().toISOString(),
+      ...(email ? { correo_confirmado_email: email } : {}),
+    },
   })
   return true
 }

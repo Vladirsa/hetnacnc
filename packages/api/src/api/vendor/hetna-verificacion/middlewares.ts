@@ -37,6 +37,7 @@ const PROTEGIDAS = [
   // Confirmación de correo del alta (lib/alta-taller.ts)
   "correo_confirmado",
   "correo_confirmado_en",
+  "correo_confirmado_email",
   // Requisitos para publicar (lib/requisitos-vendedor.ts)
   "terminos_version",
   "terminos_ip",
@@ -45,6 +46,9 @@ const PROTEGIDAS = [
   "tarjeta",
   "tarjeta_verificada_en",
   "requisitos_exento",
+  // Plan puesto a mano por HETNA (licitacion-plan, licitacion-cobro, ia-fabricacion)
+  "plan",
+  "plan_vence",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 
@@ -75,13 +79,17 @@ async function protegerMetadata(req: MedusaRequest, res: MedusaResponse, next: M
     const tocaMetadata = (b?: Meta) => !!b && "metadata" in b
     if (!tocaMetadata(r.body) && !tocaMetadata(r.validatedBody)) return next()
 
-    const sellerId = req.get("x-seller-id") || r.session?.seller_id
-    if (!sellerId) return next() // sin taller la ruta original responde el error
+    // POST /vendor/sellers (alta): todavía no hay datos guardados, así que se
+    // quitan todas las llaves protegidas. POST /vendor/sellers/:id: Mercur ya
+    // exige que :id sea del taller de la sesión (auditoría Thermos, 15 nov 2026).
+    const esAlta = req.method === "POST" && /\/vendor\/sellers\/?$/.test(String(req.originalUrl || req.url || "").split("?")[0])
+    const sellerId = esAlta ? null : (req.params as Record<string, string>)?.id && req.params.id !== "me" ? req.params.id : req.get("x-seller-id") || r.session?.seller_id
+    if (!sellerId && !esAlta) return next() // sin taller la ruta original responde el error
 
     const sellers = req.scope.resolve(MercurModules.SELLER) as {
       retrieveSeller: (id: string) => Promise<{ metadata?: Meta | null }>
     }
-    const guardada = objeto((await sellers.retrieveSeller(sellerId))?.metadata)
+    const guardada = sellerId ? objeto((await sellers.retrieveSeller(sellerId))?.metadata) : {}
 
     // Se blinda tanto el cuerpo crudo como el ya validado: así no importa en qué
     // orden corran este middleware y el validador de Mercur.
@@ -147,6 +155,17 @@ export const vendorVerificacionMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/vendor/sellers/me",
+    middlewares: [protegerMetadata],
+  },
+  // Mercur también deja editar el taller por su id y darlo de alta con metadata
+  {
+    method: ["POST"],
+    matcher: "/vendor/sellers/:id",
+    middlewares: [protegerMetadata],
+  },
+  {
+    method: ["POST"],
+    matcher: "/vendor/sellers",
     middlewares: [protegerMetadata],
   },
 ]

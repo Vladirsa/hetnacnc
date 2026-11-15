@@ -22,9 +22,14 @@ export function TarjetaAfiliacion({ afiliacion }: { afiliacion: AfiliacionNueva 
             Activar mi cuenta (30 segundos)
           </a>
         </>
-      ) : (
+      ) : afiliacion.cuenta_existe ? (
         <p className="mt-2 text-sm text-[#40403A]">
           Ya tienes cuenta con este correo: inicia sesión y verás esta solicitud en «Mis solicitudes».
+        </p>
+      ) : (
+        // El número ya existía: por seguridad la liga para activar la cuenta sólo va al correo
+        <p className="mt-2 text-sm text-[#40403A]">
+          Te mandamos a tu correo la liga para activar tu cuenta y ver todas tus solicitudes en un solo lugar.
         </p>
       )}
       <ul className="mt-3 space-y-1 text-[13px] text-[#40403A]">

@@ -425,7 +425,25 @@ export async function registrarPagoLicitacion(knex: any, solicitudId: string, da
       pagador: datos.pagador || null,
       updated_at: trx.fn.now(),
     }
-    if (previo) await trx(T_PAGO).where({ id: previo.id }).update(registro)
+    // Un pago ya registrado sólo cambia de estado: quién cobra, el taller y la
+    // comisión se quedan como se anotaron la primera vez. Un aviso repetido sin
+    // ?sol= convertía un pago directo al taller en "cobra HETNA" y HETNA se lo
+    // volvía a transferir al taller (auditoría Thermos, 15 nov 2026).
+    if (previo) {
+      const mismoCobro = previo.cobra === registro.cobra && (previo.negocio_id || null) === registro.negocio_id
+      if (!mismoCobro) logger?.warn?.(`[licitacion] pago ${registro.externo_id}: el aviso dice cobra=${registro.cobra}, se queda ${previo.cobra}`)
+      await trx(T_PAGO)
+        .where({ id: previo.id })
+        .update({
+          estado: registro.estado,
+          pagador: previo.pagador || registro.pagador,
+          updated_at: registro.updated_at,
+          // Mientras no estaba aprobado, monto y comisión se ponen al día (mismo cobro)
+          ...(!yaAprobado && mismoCobro
+            ? { tipo: registro.tipo, monto: registro.monto, comision: registro.comision, comision_cobrada: registro.comision_cobrada }
+            : {}),
+        })
+    }
     else await trx(T_PAGO).insert({ id: nuevoId("pag"), ...registro })
 
     // Reembolso o contracargo de un pago que ya contaba
@@ -588,6 +606,18 @@ export async function avisoMercadoPago(knex: any, pagoId: string, sol: string | 
     negocioId = cuenta.negocioId
   } else {
     pago = await consultarPago(pagoId) // llave de HETNA: el dinero llegó a HETNA
+    // La llave de HETNA también ve cobros de talleres conectados: si el dinero
+    // llegó a la cuenta de un taller, no es un cobro de HETNA (si no, HETNA se
+    // lo volvía a pagar al taller; auditoría Thermos, 15 nov 2026).
+    const collector = String(pago?.collector_id || "")
+    if (collector) {
+      const deTaller = await supa<any[]>(`/rest/v1/negocios_mp?mp_user_id=eq.${encodeURIComponent(collector)}&select=negocio_id&limit=1`).catch(() => null)
+      if (deTaller === null) throw new Error(`no se pudo revisar de quién es el pago ${pagoId}`) // que Mercado Pago reintente
+      if (deTaller.length) {
+        logger?.warn?.(`[licitacion] pago ${pagoId}: llegó sin solicitud pero es de la cuenta de un taller; no se anota como cobro de HETNA`)
+        return
+      }
+    }
   }
 
   const ref = leerReferencia(pago.external_reference)

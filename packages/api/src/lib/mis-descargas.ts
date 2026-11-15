@@ -8,6 +8,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { llaveDeProductoValida } from "./archivo-seguro"
 import { archivoDeProducto } from "./digital-delivery"
 import type { ArchivoEntrega } from "./pdf-entrega"
 
@@ -53,7 +54,7 @@ export async function comprasDigitales(container: MedusaContainer, customerId: s
     for (const i of o.items || []) {
       const p = porId.get(i?.product_id)
       const m = (p?.metadata || {}) as Record<string, unknown>
-      if (!p || vistos.has(p.id) || m.producto_digital !== true || !m.archivo_storage_key) continue
+      if (!p || vistos.has(p.id) || m.producto_digital !== true || !llaveDeProductoValida(m.archivo_storage_key)) continue
       vistos.add(p.id)
       const a = archivoDeProducto(p, i)
       lista.push({
@@ -97,7 +98,7 @@ export async function archivosDeOrden(
   for (const i of orden.items || []) {
     const p = (productos as any[]).find((x) => x.id === i?.product_id)
     const m = (p?.metadata || {}) as Record<string, unknown>
-    if (!p || vistos.has(p.id) || m.producto_digital !== true || !m.archivo_storage_key) continue
+    if (!p || vistos.has(p.id) || m.producto_digital !== true || !llaveDeProductoValida(m.archivo_storage_key)) continue
     vistos.add(p.id)
     archivos.push(archivoDeProducto(p, i))
   }
