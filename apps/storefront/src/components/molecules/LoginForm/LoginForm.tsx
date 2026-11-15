@@ -1,5 +1,6 @@
 'use client';
 
+import { destinoSeguro as destinoSeguroBase } from '@/lib/seguridad/destino-seguro';
 import { useState, type FormEvent } from 'react';
 
 import { zodResolver } from '@/lib/helpers/zod-resolver';
@@ -17,7 +18,7 @@ import { toast } from '@/lib/helpers/toast';
 import { LoginFormData, loginFormSchema } from './schema';
 
 // HETNA: a donde regresar despues de iniciar sesion (?volver=/mx/servicios/cotizador-cnc)
-const destinoSeguro = (v: string | null) => (v && v.startsWith('/') && !v.startsWith('//') ? v : '/user');
+const destinoSeguro = (v: string | null) => destinoSeguroBase(v, '/user');
 
 export const LoginForm = () => {
   const methods = useForm<LoginFormData>({

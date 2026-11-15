@@ -79,6 +79,21 @@ const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SEC
     ]
   : []
 
+
+// Secreto de sesiones (auditoría de seguridad del 15 nov 2026). Con el valor de
+// la plantilla ("supersecret") cualquiera podría fabricar sesiones de
+// administrador. En producción se avisa fuerte en el registro; genera uno con
+//   openssl rand -hex 64
+function secretoSesion(nombre: "JWT_SECRET" | "COOKIE_SECRET"): string {
+  const v = process.env[nombre]
+  if (!v || v === "supersecret" || v.length < 32) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(`[seguridad] ${nombre} falta, es "supersecret" o es muy corto. Cámbialo YA en packages/api/.env (openssl rand -hex 64) y reinicia.`)
+    }
+    return v || "supersecret"
+  }
+  return v
+}
 module.exports = withMercur({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -91,8 +106,8 @@ module.exports = withMercur({
       adminCors: process.env.ADMIN_CORS!,
       vendorCors: process.env.VENDOR_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || "supersecret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+      jwtSecret: secretoSesion("JWT_SECRET"),
+      cookieSecret: secretoSesion("COOKIE_SECRET"),
     }
   },
   featureFlags: {
