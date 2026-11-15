@@ -120,6 +120,11 @@ export default defineMiddlewares({
         },
         {
           method: ["POST"],
+          matcher: "/admin/hetna-conta/semaforo",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
           matcher: "/admin/hetna-conta/movimientos",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 5, forma: "lista" })],
         },
