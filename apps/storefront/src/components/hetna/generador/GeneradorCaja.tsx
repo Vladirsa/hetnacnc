@@ -390,6 +390,10 @@ export function GeneradorCaja() {
   }
 
 
+  // las medidas de esta caja viajan al generador del catálogo
+  const llevarMedidas = listo
+    ? `?${new URLSearchParams({ x: String(r1(ext.ancho)), y: String(r1(ext.fondo)), h: String(r1(ext.alto)), thickness: String(r1(esp)), outside: "1" })}`
+    : ""
   const volumen = (r.interior.ancho * r.interior.fondo * r.interior.alto) / 1e6 // litros
   const EJES = [
     { id: "x", nombre: "Ancho", color: "#F87171", valor: ancho, cambiar: setAncho },
@@ -435,7 +439,7 @@ export function GeneradorCaja() {
           {MAS_TIPOS.map((t) => (
             <LocalizedClientLink
               key={t.id}
-              href={`/disenar/cajas/${t.id}`}
+              href={`/disenar/cajas/${t.id}${llevarMedidas}`}
               className="flex flex-col items-center gap-1 rounded-[10px] border border-dashed border-[#2B3648] px-1 py-1.5 text-center text-[10.5px] font-semibold leading-tight text-[#C9D2E0] hover:border-[#F28A3C] hover:text-white"
             >
               <svg viewBox="0 0 40 40" className="h-7 w-7" fill="none" stroke="#8A97AB" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">

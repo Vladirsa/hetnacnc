@@ -4,7 +4,8 @@ import { notFound } from "next/navigation"
 import { GeneradorCajas } from "@/components/hetna/disenar/GeneradorCajas"
 import { esquemaCaja } from "@/lib/hetna/cajas"
 
-// Una caja de Boxes.py abierta dentro del espacio Diseñar y escanear.
+// Una caja de Boxes.py abierta dentro del 2D Studio (pantalla completa, con
+// la barra de los estudios), igual que la caja con juntas. Misma URL que antes.
 const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; generador: string }> }
