@@ -10,7 +10,7 @@ export const ProductReportButton = () => {
   return (
     <>
       <Button
-        className='uppercase label-md'
+        className='label-md'
         variant='tonal'
         onClick={() => setOpenModal(true)}
       >

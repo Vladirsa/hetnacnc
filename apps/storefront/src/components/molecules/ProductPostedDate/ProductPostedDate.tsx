@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export const ProductPostedDate = async ({
   posted,
@@ -7,12 +8,12 @@ export const ProductPostedDate = async ({
 }) => {
   const postedDate = formatDistanceToNow(
     new Date(posted || ''),
-    { addSuffix: true }
+    { addSuffix: true, locale: es }
   );
 
   return (
     <p className='label-md text-secondary'>
-      Posted: {postedDate}
+      Publicado {postedDate}
     </p>
   );
 };
