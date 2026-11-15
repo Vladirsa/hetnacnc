@@ -531,24 +531,27 @@ export function GeneradorCaja() {
         <Aviso tipo="ok">El archivo ya trae el alivio de esquina (&quot;dogbone&quot;) para tu fresa de {r1(numero(fresa) * k)} mm.</Aviso>
       )}
 
-      {/* Descargas y venta siempre a la mano, al pie del panel */}
-      <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923]/95 px-4 pb-4 pt-3 backdrop-blur">
-        <div className="grid grid-cols-3 gap-2">
-          <Boton tipo="primario" onClick={() => listo && descargar(`${nombreArchivo}.dxf`, aDXF(r.piezas), "application/dxf")}>
-            DXF
-          </Boton>
-          <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
-          <Boton onClick={() => listo && imprimir()}>PDF</Boton>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Boton tipo="verde" onClick={fabricar}>
-            Fabrícamela
-          </Boton>
-          <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
-        </div>
-        {aviso && <Aviso tipo="error">{aviso}</Aviso>}
-      </div>
     </div>
+  )
+
+  // Descargas y venta siempre a la mano, al pie del panel
+  const pie = (
+    <>
+      <div className="grid grid-cols-3 gap-2">
+        <Boton tipo="primario" onClick={() => listo && descargar(`${nombreArchivo}.dxf`, aDXF(r.piezas), "application/dxf")}>
+          DXF
+        </Boton>
+        <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
+        <Boton onClick={() => listo && imprimir()}>PDF</Boton>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Boton tipo="verde" onClick={fabricar}>
+          Fabrícamelo
+        </Boton>
+        <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
+      </div>
+      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+    </>
   )
 
   const diseno2d = (
@@ -647,6 +650,8 @@ export function GeneradorCaja() {
       exportacion={exportacion}
       avisos={[]}
       pestanaInicial="vista"
+      pie={pie}
+      medidasReales={listo ? r.armado : undefined}
       sinPieza={r.errores[0] || "Revisa las medidas del panel."}
       barra={
         listo ? (

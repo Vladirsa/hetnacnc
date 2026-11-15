@@ -124,6 +124,8 @@ export function Estudio3D({
   llenar = false,
   sinPieza,
   pestanaInicial,
+  medidasReales,
+  pie,
 }: {
   titulo: string
   subtitulo?: string
@@ -158,6 +160,11 @@ export function Estudio3D({
   sinPieza?: string
   // pestaña con la que abre (por omisión, Diseño 2D si hay)
   pestanaInicial?: "diseno" | "vista" | "exportar"
+  // medidas de la pieza terminada para la barra (ancho, fondo, alto en mm),
+  // cuando la malla no las representa (tapa levantada, piezas separadas)
+  medidasReales?: { ancho: number; fondo: number; alto: number }
+  // acciones fijas al pie del panel (descargas, fabricar)
+  pie?: React.ReactNode
 }) {
   const contRef = useRef<HTMLDivElement>(null)
   const marcoRef = useRef<HTMLDivElement>(null)
@@ -459,6 +466,8 @@ export function Estudio3D({
       controles.dispose()
       entorno.dispose()
       pmrem.dispose()
+      // suelta el contexto WebGL ya: el navegador sólo deja tener unos 16
+      renderer.forceContextLoss()
       renderer.dispose()
       scene.traverse((o) => {
         const x = o as THREE.Mesh
@@ -637,6 +646,12 @@ export function Estudio3D({
               </p>
             ))}
           </section>
+        )}
+
+        {pie && (
+          <div className="sticky bottom-0 z-10 -mx-4 -mb-4 mt-auto flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923] px-4 pb-4 pt-3 shadow-[0_-8px_16px_rgba(0,0,0,0.35)]">
+            {pie}
+          </div>
         )}
       </aside>
 
@@ -830,7 +845,9 @@ export function Estudio3D({
           {datos ? (
             <>
               <span>
-                {escalaReal
+                {medidasReales
+                  ? `${fmt(medidasReales.ancho, unidad)} × ${fmt(medidasReales.fondo, unidad)} × ${fmt(medidasReales.alto, unidad)}`
+                  : escalaReal
                   ? `${fmt(datos.x, unidad)} × ${fmt(datos.y, unidad)} × ${fmt(datos.z, unidad)}`
                   : "Proporciones aproximadas (sin escala real)"}
               </span>
