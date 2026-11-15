@@ -45,6 +45,24 @@ function gtagEvent(name: string, params: Record<string, unknown>) {
   }
 }
 
+// Interés en la app para talleres (Cotizador): clic en "Empezar gratis",
+// "Probar 14 días" o "Abrir la app" en /servicios/cotizador-cnc. Es la
+// conversión de las campañas de Google Ads para talleres.
+const ADS_LABEL_COTIZADOR = process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_COTIZADOR;
+const VALOR_LEAD_COTIZADOR = 100; // MXN de referencia por interesado
+
+export function trackLeadCotizador(boton: string) {
+  gtagEvent('generate_lead', { lead_source: 'cotizador', boton, currency: 'MXN', value: VALOR_LEAD_COTIZADOR });
+  if (ADS_ID && ADS_LABEL_COTIZADOR && typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'conversion', {
+      send_to: `${ADS_ID}/${ADS_LABEL_COTIZADOR}`,
+      value: VALOR_LEAD_COTIZADOR,
+      currency: 'MXN'
+    });
+  }
+  fbqEvent('Lead', { content_name: 'Cotizador', value: VALOR_LEAD_COTIZADOR, currency: 'MXN' });
+}
+
 function fbqEvent(name: string, params: Record<string, unknown>, eventId?: string) {
   if (typeof window !== 'undefined' && window.fbq) {
     // eventID: el mismo que manda el servidor por la API de conversiones, para
