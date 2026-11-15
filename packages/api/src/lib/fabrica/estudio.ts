@@ -201,6 +201,7 @@ export async function guionista(knex: any, tipo: "educativo" | "novela") {
   const capitulos = recientes.filter((r: any) => r.tipo === "novela" && r.guion?.resumen_capitulo).map((r: any) => r.guion.resumen_capitulo).slice(0, 6).reverse()
   const notas = await knex("hetna_estudio_nota").orderBy("created_at", "desc").limit(8).pluck("nota").catch(() => [])
   const aprendido = (await aprendizaje(knex, 60).catch(() => null))?.resumen?.slice(0, 6) || []
+  const ideas = await require("./estudio-datos").ideasParaGuion(knex).catch(() => ({ tendencias: [], referencias: [] }))
   const sistema =
     "Eres el guionista de videos cortos verticales de HETNA CNC (marketplace mexicano de fabricación CNC: tienda, talleres que cotizan piezas, Cotizador para talleres, herramientas 3D). " +
     "Escribe en español de México, natural y hablado. Duración total 25 a 40 segundos: de 5 a 7 escenas.\n\n" +
@@ -220,6 +221,8 @@ export async function guionista(knex: any, tipo: "educativo" | "novela") {
     tomas.length ? `No repitas estas tomas recientes: ${tomas.slice(0, 40).join(" | ")}` : "",
     aprendido.length ? `Lo aprendido en redes: ${aprendido.join(" ")}` : "",
     notas.length ? `Notas del analista de retención (aplícalas): ${notas.join(" | ")}` : "",
+    ideas.tendencias.length ? `Videos que están pegando en YouTube (toma el ángulo o la idea, NO copies): ${ideas.tendencias.join("; ")}` : "",
+    ideas.referencias.length ? `Videos que le gustan al dueño (inspírate en su estilo y ritmo): ${ideas.referencias.join("; ")}` : "",
     "Escribe el guion de hoy.",
   ].filter(Boolean).join("\n")
   const resp = await ia.beta.messages.create({

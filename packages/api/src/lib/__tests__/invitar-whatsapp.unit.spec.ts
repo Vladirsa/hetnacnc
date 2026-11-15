@@ -62,3 +62,19 @@ describe("Estudio diario", () => {
     expect(FORMULAS.titulares.length).toBe(10)
   })
 })
+
+import { dondeSeVan, idYoutube, vecesSobreMedia } from "../fabrica/estudio-datos"
+describe("agentes de datos del Estudio", () => {
+  it("tendencia: veces sobre la media del canal", () => {
+    expect(vecesSobreMedia(120000, 1_000_000, 100)).toEqual({ media: 10000, veces: 12 })
+    expect(vecesSobreMedia(10, 0, 0).veces).toBe(0)
+  })
+  it("retención: encuentra la caída más fuerte y el segundo", () => {
+    const r = dondeSeVan([[0, 1], [0.1, 0.55], [0.5, 0.45], [1, 0.3]], 30)
+    expect(r).toEqual({ segundo: 3, caida: 45, al_final: 30 })
+  })
+  it("saca el id del video de YouTube", () => {
+    expect(idYoutube({ url: "https://youtube.com/shorts/abcdefghijk" })).toBe("abcdefghijk")
+    expect(idYoutube({ id: "abcdefghijk" })).toBe("abcdefghijk")
+  })
+})

@@ -1809,8 +1809,54 @@ function EstudioDiario() {
           ))}
         </div>
       )}
+      {d.datos && <EstudioDatos datos={d.datos} api={api} alCambiar={cargar} avisar={setNota} />}
       {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 6 }}>{nota.t}</div>}
     </section>
+  )
+}
+
+/** Agentes de datos del Estudio: tendencias (1), referencias del dueño y retención (7). */
+function EstudioDatos({ datos, api, alCambiar, avisar }: { datos: any; api: (c?: unknown) => Promise<any>; alCambiar: () => void; avisar: (n: { ok: boolean; t: string }) => void }) {
+  const [url, setUrl] = useState("")
+  const [ocupado, setOcupado] = useState(false)
+  const g = datos.google || {}
+  const correr = async (cuerpo: any, ok: (x: any) => string) => {
+    setOcupado(true)
+    try { const x = await api(cuerpo); if (cuerpo.accion === "google" && x.url) { window.open(x.url, "_blank", "noopener"); avisar({ ok: true, t: "Se abrió Google: entra con la cuenta del canal de YouTube y acepta. Luego aprieta Actualizar." }) } else avisar({ ok: true, t: ok(x) }); alCambiar() } catch (e) { avisar({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) }
+  }
+  return (
+    <div style={{ borderTop: `1px solid ${C.borde}`, marginTop: 10, paddingTop: 8, fontSize: 13 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>📊 Datos (tendencias y retención)</b>
+        <span style={{ color: g.conectado ? C.verde : C.tenue, fontWeight: 600 }}>{!g.configurado ? "Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el servidor" : g.conectado ? `YouTube conectado${g.canal ? ` (${g.canal})` : ""}` : "YouTube sin conectar"}</span>
+        <span style={{ flex: 1 }} />
+        {g.configurado && <button type="button" style={boton(g.conectado ? "normal" : "primario")} disabled={ocupado} onClick={() => void correr({ accion: "google" }, () => "")}>{g.conectado ? "Volver a conectar" : "Conectar Google (YouTube)"}</button>}
+        {g.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void correr({ accion: "tendencias" }, (x) => `✓ Revisé ${x.revisados} videos; ${x.alarmas.length} alarmas (${datos.umbral}× la media).`)}>Revisar tendencias</button>}
+        {g.conectado && <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => void correr({ accion: "retencion" }, (x) => x.notas.length ? `✓ ${x.notas.length} notas para el guionista.` : "Todavía no hay videos del Estudio con 2 días publicados en YouTube.")}>Revisar retención</button>}
+      </div>
+      {!g.configurado && <div style={{ color: C.tenue, fontSize: 12, marginTop: 4 }}>URI de redireccionamiento para Google Cloud: {g.redirect}</div>}
+      {datos.tendencias?.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: C.tenue }}>Lo que más está pegando (vistas contra la media de su canal):</div>
+          {datos.tendencias.map((t: any) => (
+            <div key={t.url} style={{ fontSize: 12 }}>
+              {t.alarma ? "🚨" : "•"} <a href={t.url} target="_blank" rel="noreferrer">{t.titulo}</a> <span style={{ color: C.tenue }}>· {t.canal} · {Number(t.vistas).toLocaleString("es-MX")} vistas · <b>{t.veces}×</b></span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Pega la liga de un video que te guste (TikTok, Instagram o YouTube)" style={{ flex: 1, minWidth: 260, padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6, fontSize: 12 }} />
+        <button type="button" style={boton("normal")} disabled={ocupado || !url.trim()} onClick={() => void correr({ accion: "referencia", url }, (x) => { setUrl(""); return `✓ Referencia guardada: ${x.titulo}` })}>Agregar referencia</button>
+      </div>
+      {datos.referencias?.length > 0 && <div style={{ fontSize: 12, color: C.tenue, marginTop: 4 }}>Referencias: {datos.referencias.map((r: any) => r.titulo).join(" · ")}</div>}
+      {datos.notas?.length > 0 && (
+        <div style={{ marginTop: 6, fontSize: 12 }}>
+          <div style={{ color: C.tenue }}>Notas para el guionista:</div>
+          {datos.notas.map((n: any, i: number) => <div key={i}>📉 {n.nota}</div>)}
+        </div>
+      )}
+    </div>
   )
 }
 
