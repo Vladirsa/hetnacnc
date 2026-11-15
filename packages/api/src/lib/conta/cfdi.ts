@@ -209,7 +209,7 @@ export function leerCfdi(xml: string): Cfdi {
   try {
     raiz = parser.parse(xml.replace(/^﻿/, ""))
   } catch (e) {
-    throw new ErrorCfdi(`El archivo no es un XML válido: ${(e as Error).message}`)
+    throw new ErrorCfdi("El archivo no es un XML válido (está incompleto o dañado).")
   }
   const c = raiz?.Comprobante
   if (!c) throw new ErrorCfdi("El XML no es un CFDI (no tiene Comprobante).")

@@ -30,9 +30,8 @@ export type Categoria = keyof typeof CATEGORIAS
 let listo = false
 export async function asegurarConta(knex: any) {
   if (listo) return
-  const s = knex.schema
-  if (!(await s.hasTable(T_CONTRIBUYENTE))) {
-    await s.createTable(T_CONTRIBUYENTE, (t: any) => {
+  if (!(await knex.schema.hasTable(T_CONTRIBUYENTE))) {
+    await knex.schema.createTable(T_CONTRIBUYENTE, (t: any) => {
       t.text("id").primary()
       t.text("dueno").notNullable() // hetna | seller
       t.text("seller_id").nullable().unique()
@@ -44,8 +43,8 @@ export async function asegurarConta(knex: any) {
       t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
-  if (!(await s.hasTable(T_CFDI))) {
-    await s.createTable(T_CFDI, (t: any) => {
+  if (!(await knex.schema.hasTable(T_CFDI))) {
+    await knex.schema.createTable(T_CFDI, (t: any) => {
       t.text("id").primary()
       t.text("contribuyente_id").notNullable().index()
       t.text("uuid").notNullable()
@@ -81,8 +80,8 @@ export async function asegurarConta(knex: any) {
       t.index(["contribuyente_id", "fecha"])
     })
   }
-  if (!(await s.hasTable(T_MOVIMIENTO))) {
-    await s.createTable(T_MOVIMIENTO, (t: any) => {
+  if (!(await knex.schema.hasTable(T_MOVIMIENTO))) {
+    await knex.schema.createTable(T_MOVIMIENTO, (t: any) => {
       t.text("id").primary()
       t.text("contribuyente_id").notNullable().index()
       t.date("fecha").notNullable()
@@ -95,8 +94,8 @@ export async function asegurarConta(knex: any) {
       t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
-  if (!(await s.hasTable(T_HALLAZGO))) {
-    await s.createTable(T_HALLAZGO, (t: any) => {
+  if (!(await knex.schema.hasTable(T_HALLAZGO))) {
+    await knex.schema.createTable(T_HALLAZGO, (t: any) => {
       t.text("id").primary()
       t.text("contribuyente_id").notNullable().index()
       t.text("clave").notNullable() // regla:uuid (estable: el loop diario no repite)
