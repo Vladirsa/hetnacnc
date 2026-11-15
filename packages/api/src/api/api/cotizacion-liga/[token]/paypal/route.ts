@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
+import { unaVezALaVez } from "../../../../../lib/aviso-unico"
 import { capturarPaypal, pagarConPaypal } from "../../../../../lib/cotizacion-liga"
 import { responder } from "../../../cotizador-suscripcion/respuesta"
 
@@ -17,7 +18,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const orden = String((req.query as any)?.token || "")
   const logger = req.scope.resolve("logger") as any
   try {
-    res.redirect(await capturarPaypal(liga, orden, logger))
+    res.redirect(await unaVezALaVez(`pp:${orden}`, () => capturarPaypal(liga, orden, logger)))
   } catch (e) {
     logger.error(`[cotizador] PayPal regreso ${orden}: ${(e as Error).message}`)
     res.redirect(`${SITIO}/c/${encodeURIComponent(liga)}?pago=error`)

@@ -81,3 +81,21 @@ describe("unaVezALaVez (avisos de pago)", () => {
     expect(errorDefinitivo(new Error("red"))).toBe(false)
   })
 })
+
+import { leerOrdenCot, referenciaOrdenCot } from "../cotizacion-liga"
+
+describe("orden de PayPal de una cotización", () => {
+  const id = "0f8fad5b-d9cb-469f-a165-70867728950e"
+  it("guarda y lee lo que cubre la orden en la moneda de la cotización", () => {
+    const ref = referenciaOrdenCot(id, 1250000.5, "COP")
+    expect(ref.length).toBeLessThanOrEqual(127)
+    expect(leerOrdenCot(ref)).toEqual({ cotId: id, monto: 1250000.5, moneda: "COP" })
+  })
+  it("entiende las órdenes de antes (sin monto)", () => {
+    expect(leerOrdenCot(`cotizacion:${id}`)).toEqual({ cotId: id, monto: null, moneda: null })
+  })
+  it("rechaza referencias que no son de cotización", () => {
+    expect(leerOrdenCot("licitacion:abc|100|MXN")).toBeNull()
+    expect(leerOrdenCot(undefined)).toBeNull()
+  })
+})
