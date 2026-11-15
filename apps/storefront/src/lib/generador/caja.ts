@@ -491,6 +491,23 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
 
 const r = (x: number) => Math.round(x * 10) / 10
 
+// Par de prueba para ajustar el kerf antes de cortar la caja: dos tiras con
+// dedos que encajan (A con B). Si entran justas, el kerf es el bueno.
+export function piezasPrueba(espesor: number, kerf: number, dedo: number): Pieza[] {
+  const t = espesor
+  const d = dedo > 0 ? dedo : dedoAutomatico(t)
+  const n = 5
+  const largo = n * Math.max(d, 2 * t)
+  const ancho = Math.max(25, 6 * t)
+  return [
+    { nombre: "Prueba A", pts: cara(largo, ancho, ["A", "L", "L", "L"], n, 3, t) },
+    { nombre: "Prueba B", pts: cara(largo, ancho, ["B", "L", "L", "L"], n, 3, t) },
+  ].map(({ nombre, pts }) => {
+    const { desfase: _d, ...resto } = aOrigen(compensarKerf(pts, kerf))
+    return { nombre, ...resto }
+  })
+}
+
 // ---------- Acomodo y exportación ----------
 
 export type Colocada = Pieza & { x: number; y: number }

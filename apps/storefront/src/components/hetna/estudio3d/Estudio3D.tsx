@@ -123,6 +123,7 @@ export function Estudio3D({
   barra,
   llenar = false,
   sinPieza,
+  pestanaInicial,
 }: {
   titulo: string
   subtitulo?: string
@@ -155,6 +156,8 @@ export function Estudio3D({
   // mensaje cuando la herramienta no tiene pieza que mostrar (medidas
   // inválidas); sin esto se muestra "Cargando la pieza…"
   sinPieza?: string
+  // pestaña con la que abre (por omisión, Diseño 2D si hay)
+  pestanaInicial?: "diseno" | "vista" | "exportar"
 }) {
   const contRef = useRef<HTMLDivElement>(null)
   const marcoRef = useRef<HTMLDivElement>(null)
@@ -174,7 +177,7 @@ export function Estudio3D({
 
   const dePieRef = useRef(dePie)
   dePieRef.current = dePie
-  const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(diseno2d ? "diseno" : "vista")
+  const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(pestanaInicial || (diseno2d ? "diseno" : "vista"))
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [material, setMaterial] = useState(materialInicial)
   const [modo, setModo] = useState<Modo>("color")

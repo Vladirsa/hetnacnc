@@ -8,9 +8,11 @@
 // le pueden poner divisores, asas y (cerrada) ranura de alcancía. El ancho
 // de dedo va en automático (4 × espesor) para que al cambiar de material la
 // caja siga saliendo; a mano se puede fijar.
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
+
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 import {
   Aviso,
@@ -18,10 +20,8 @@ import {
   CampoNum,
   Chips,
   Datos,
-  Destacado,
   Interruptor,
   Opciones,
-  Seccion,
   TarjetaExport,
   descargar,
   grupoATris,
@@ -29,7 +29,7 @@ import {
   r1,
 } from "@/components/hetna/estudio3d/Controles"
 import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
-import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, type TipoCaja } from "@/lib/generador/caja"
+import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, piezasPrueba, type Pieza, type TipoCaja } from "@/lib/generador/caja"
 import { piezasAGrupo3D } from "@/lib/generador/caja3d"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -50,6 +50,30 @@ const ESPESORES = [
   { etiqueta: "Acrílico 3", mm: 3 },
   { etiqueta: "Acrílico 5", mm: 5 },
 ]
+// Dibujo isométrico chico de cada tipo, para elegir viendo
+const ICONOS: Record<TipoCaja, React.ReactNode> = {
+  cerrada: (
+    <>
+      <path d="M6 14l14-7 14 7v14l-14 7-14-7z" />
+      <path d="M6 14l14 7 14-7M20 21v14" />
+    </>
+  ),
+  abierta: (
+    <>
+      <path d="M6 16l14 7 14-7v12l-14 7-14-7z" />
+      <path d="M6 16l14-7 14 7M20 23v12" />
+    </>
+  ),
+  sobrepuesta: (
+    <>
+      <path d="M6 20l14 7 14-7v9l-14 7-14-7z" />
+      <path d="M20 27v9" />
+      <path d="M4 10l16-7 16 7v4l-16 7-16-7z" />
+      <path d="M4 10l16 7 16-7M20 17v4" />
+    </>
+  ),
+}
+
 const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "cerrada", nombre: "Cerrada", nota: "6 caras, tapa fija con dedos" },
   { id: "abierta", nombre: "Abierta", nota: "Charola u organizador, sin tapa" },
@@ -88,6 +112,33 @@ const MODELOS: Modelo[] = [
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
+// Definidos fuera del generador: un componente creado dentro del render se
+// vuelve a montar en cada tecla y el campo pierde el foco.
+const Contador = ({ etiqueta, valor, cambiar }: { etiqueta: string; valor: number; cambiar: (n: number) => void }) => (
+  <div className="flex min-w-0 flex-col gap-1">
+    <span className="text-[12.5px] text-[#C9D2E0]">{etiqueta}</span>
+    <div className="flex items-center rounded-[8px] bg-[#1C2431]">
+      <button type="button" aria-label={`Menos: ${etiqueta}`} onClick={() => cambiar(Math.max(1, valor - 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
+        −
+      </button>
+      <span className="flex-1 text-center text-[14px] font-semibold text-white">{valor}</span>
+      <button type="button" aria-label={`Más: ${etiqueta}`} onClick={() => cambiar(Math.min(12, valor + 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
+        +
+      </button>
+    </div>
+  </div>
+)
+
+const Paso = ({ n, titulo, children }: { n: number; titulo: string; children: React.ReactNode }) => (
+  <section className="flex flex-col gap-2.5 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
+    <h3 className="m-0 flex items-center gap-2 text-[13px] font-bold text-white">
+      <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C2560A] text-[11px]">{n}</span>
+      {titulo}
+    </h3>
+    {children}
+  </section>
+)
+
 export function GeneradorCaja() {
   const { locale } = useParams<{ locale: string }>()
   const [aviso, setAviso] = useState("")
@@ -105,6 +156,7 @@ export function GeneradorCaja() {
   const [asas, setAsas] = useState(false)
   const [ranura, setRanura] = useState(false)
   const [modelo, setModelo] = useState("")
+  const [despiece, setDespiece] = useState(0) // 0 = armada, 100 = piezas separadas
   const [maquina, setMaquina] = useState<keyof typeof MAQUINAS>("laser")
   const [kerf, setKerf] = useState<string>(MAQUINAS.laser.kerf)
   const [fresa, setFresa] = useState("3.175") // 1/8" en mm, fresa común para madera
@@ -139,22 +191,54 @@ export function GeneradorCaja() {
   const hoja = listo ? acomodar(r.piezas) : null
   const nombreArchivo = `caja-hetna-${r1(ext.ancho)}x${r1(ext.fondo)}x${r1(ext.alto)}mm-e${r1(esp)}`
 
+  // La vista 3D se rearma un instante después de dejar de teclear o mover un
+  // slider: rearmar la escena en cada tecla se siente trabado.
+  const [rVista, setRVista] = useState(r)
+  const [despieceVista, setDespieceVista] = useState(despiece)
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setRVista(r)
+      setDespieceVista(despiece)
+    }, 140)
+    return () => clearTimeout(id)
+  }, [r, despiece])
+
   // La caja armada, como malla para el visor del estudio
   const tris = useMemo(() => {
-    if (!listo) return undefined
+    const rv = rVista
+    if (!rv.piezas.length) return undefined
     try {
+      const W = rv.armado.ancho
+      const H = rv.armado.alto
+      const D = rv.armado.fondo
       // la tapa sobrepuesta se ve levantada, para que se vea adentro
-      const alzar = Math.max(15, ext.alto * 0.45)
-      const piezas = r.piezas.map((p) =>
-        p.nombre.startsWith("Tapa · ") && p.ubicacion
-          ? { ...p, ubicacion: { ...p.ubicacion, origen: [p.ubicacion.origen[0], p.ubicacion.origen[1] + alzar, p.ubicacion.origen[2]] as [number, number, number] } }
-          : p
-      )
-      return grupoATris(piezasAGrupo3D(piezas, esp, ext))
+      const alzar = Math.max(15, rv.exterior.alto * 0.45)
+      const sep = (despieceVista / 100) * Math.max(W, H, D) * 0.6
+      const mover = (p: Pieza, d: [number, number, number]): Pieza =>
+        p.ubicacion ? { ...p, ubicacion: { ...p.ubicacion, origen: [p.ubicacion.origen[0] + d[0], p.ubicacion.origen[1] + d[1], p.ubicacion.origen[2] + d[2]] } } : p
+      const piezas = rv.piezas.map((p) => {
+        const u = p.ubicacion
+        if (!u) return p
+        let q = p.nombre.startsWith("Tapa · ") ? mover(p, [0, alzar, 0]) : p
+        if (!sep) return q
+        // Despiece: cada pieza se aleja del centro de la caja en la dirección
+        // de su espesor; los divisores (al centro) suben.
+        const c = [0, 1, 2].map((i) => u.origen[i] + (p.ancho / 2) * u.ux[i] + (p.alto / 2) * u.uy[i] + (esp / 2) * u.uz[i])
+        const centro = [W / 2 - (W - rv.exterior.ancho) / 2, H / 2, D / 2 - (D - rv.exterior.fondo) / 2]
+        const dot = (c[0] - centro[0]) * u.uz[0] + (c[1] - centro[1]) * u.uz[1] + (c[2] - centro[2]) * u.uz[2]
+        const tam = Math.abs(u.uz[0]) * W + Math.abs(u.uz[1]) * H + Math.abs(u.uz[2]) * D
+        if (p.nombre.startsWith("Divisor") || Math.abs(dot) < tam * 0.2) q = mover(q, [0, sep * 1.2, 0])
+        else {
+          const sg = Math.sign(dot)
+          q = mover(q, [u.uz[0] * sg * sep, u.uz[1] * sg * sep, u.uz[2] * sg * sep])
+        }
+        return q
+      })
+      return grupoATris(piezasAGrupo3D(piezas, esp, rv.exterior))
     } catch {
       return undefined
     }
-  }, [listo, r, esp, ext])
+  }, [rVista, despieceVista, esp])
 
   const vista = useMemo(
     () =>
@@ -222,36 +306,59 @@ export function GeneradorCaja() {
     `- ${r.piezas.length} piezas${tapa ? " (con tapa)" : " (sin tapa)"}${columnas * filas > 1 ? `, ${columnas * filas} compartimentos` : ""}, ${hoja ? `hoja de ${r1(hoja.ancho)} x ${r1(hoja.alto)} mm` : ""}\n` +
     `- Máquina: ${MAQUINAS[maquina].nombre}`
 
-  const Contador = ({ etiqueta, valor, cambiar }: { etiqueta: string; valor: number; cambiar: (n: number) => void }) => (
-    <div className="flex min-w-0 flex-col gap-1">
-      <span className="text-[12.5px] text-[#C9D2E0]">{etiqueta}</span>
-      <div className="flex items-center rounded-[8px] bg-[#1C2431]">
-        <button type="button" aria-label={`Menos: ${etiqueta}`} onClick={() => cambiar(Math.max(1, valor - 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
-          −
-        </button>
-        <span className="flex-1 text-center text-[14px] font-semibold text-white">{valor}</span>
-        <button type="button" aria-label={`Más: ${etiqueta}`} onClick={() => cambiar(Math.min(12, valor + 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
-          +
-        </button>
-      </div>
-    </div>
-  )
+  const fabricar = () => {
+    if (!listo) return
+    if (
+      !mandarAFabricar(`${nombreArchivo}.dxf`, aDXF(r.piezas), locale, {
+        pieza: `Caja con juntas de dedo (${nombreTipo.toLowerCase()})`,
+        medidas: `${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`,
+        proceso: maquina === "router" ? "Router CNC" : "Corte láser",
+      })
+    )
+      setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
+  }
+
+
+  const volumen = (r.interior.ancho * r.interior.fondo * r.interior.alto) / 1e6 // litros
+  const EJES = [
+    { id: "x", nombre: "Ancho", color: "#F87171", valor: ancho, cambiar: setAncho },
+    { id: "y", nombre: "Fondo", color: "#60A5FA", valor: fondo, cambiar: setFondo },
+    { id: "z", nombre: "Alto", color: "#4ADE80", valor: alto, cambiar: setAlto },
+  ]
+  const minMed = Math.round((30 / k) * 100) / 100
+  const maxMed = Math.round((1000 / k) * 100) / 100
+
+  const descargarPrueba = () => {
+    const pr = piezasPrueba(esp, numero(kerf) || 0, dedoAuto ? 0 : numero(dedo) * k)
+    descargar(`prueba-kerf-e${r1(esp)}.svg`, aSVG(pr, "corte"), "image/svg+xml")
+  }
+
 
   const panel = (
-    <div className="flex flex-col gap-4">
-      <Seccion titulo="Tipo de caja">
-        <Opciones
-          opciones={TIPOS.map((t) => ({ id: t.id, nombre: t.nombre }))}
-          valor={tipo}
-          cambiar={(t) => {
-            setTipo(t)
-            setModelo("")
-          }}
-        />
+    <div className="flex flex-col gap-3">
+      <Paso n={1} titulo="Tipo de caja">
+        <div className="grid grid-cols-3 gap-2">
+          {TIPOS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={tipo === t.id}
+              onClick={() => {
+                setTipo(t.id)
+                setModelo("")
+              }}
+              className={`flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 text-[12px] font-semibold transition ${
+                tipo === t.id ? "bg-[#C2560A]/20 text-white ring-2 ring-[#F28A3C]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
+              }`}
+            >
+              <svg viewBox="0 0 40 40" className="h-9 w-9" fill="none" stroke={tipo === t.id ? "#F28A3C" : "#8A97AB"} strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+                {ICONOS[t.id]}
+              </svg>
+              {t.nombre}
+            </button>
+          ))}
+        </div>
         <span className="text-[11.5px] leading-snug text-[#8A97AB]">{TIPOS.find((t) => t.id === tipo)?.nota}</span>
-      </Seccion>
-
-      <Seccion titulo="Empezar con un modelo">
         <div className="flex flex-wrap gap-1.5">
           {MODELOS.map((m) => (
             <button
@@ -267,45 +374,89 @@ export function GeneradorCaja() {
             </button>
           ))}
         </div>
-      </Seccion>
+      </Paso>
 
-      <Destacado titulo="Medidas de la caja">
-        <Opciones
-          opciones={[
-            { id: "mm", nombre: "mm" },
-            { id: "cm", nombre: "cm" },
-            { id: "in", nombre: "pulgadas" },
-          ]}
-          valor={unidad}
-          cambiar={(u) => cambiarUnidad(u as Unidad)}
-        />
-        <div className="grid grid-cols-3 gap-2">
-          <CampoNum etiqueta="Ancho" valor={ancho} cambiar={setAncho} sufijo="" />
-          <CampoNum etiqueta="Fondo" valor={fondo} cambiar={setFondo} sufijo="" />
-          <CampoNum etiqueta="Alto" valor={alto} cambiar={setAlto} sufijo="" />
+      <LocalizedClientLink
+        href="/disenar/cajas"
+        className="flex items-center gap-3 rounded-[12px] border border-[#C2560A]/50 bg-gradient-to-r from-[#C2560A]/25 to-transparent p-3 hover:border-[#F28A3C]"
+      >
+        <span className="text-[22px] font-extrabold leading-none text-[#F28A3C]">170+</span>
+        <span className="min-w-0 text-[12.5px] leading-snug text-[#E6EBF2]">
+          <b className="text-white">Más diseños de cajas</b>
+          <br />
+          Bisagras, tapa corrediza, cajoneras, flexibles, en ángulo y más →
+        </span>
+      </LocalizedClientLink>
+
+      <Paso n={2} titulo="Medidas">
+        <div className="grid grid-cols-2 gap-2">
+          <Opciones
+            opciones={[
+              { id: "mm", nombre: "mm" },
+              { id: "cm", nombre: "cm" },
+              { id: "in", nombre: "in" },
+            ]}
+            valor={unidad}
+            cambiar={(u) => cambiarUnidad(u as Unidad)}
+          />
+          <Opciones
+            opciones={[
+              { id: "exteriores", nombre: "Exterior" },
+              { id: "interiores", nombre: "Interior" },
+            ]}
+            valor={medidas}
+            cambiar={(m) => setMedidas(m as "exteriores" | "interiores")}
+          />
         </div>
-        <Opciones
-          opciones={[
-            { id: "exteriores", nombre: "Exteriores" },
-            { id: "interiores", nombre: "Interiores" },
-          ]}
-          valor={medidas}
-          cambiar={(m) => setMedidas(m as "exteriores" | "interiores")}
-        />
+        {EJES.map((e) => (
+          <div key={e.id} className="grid grid-cols-[52px_1fr_84px] items-center gap-2">
+            <span className="text-[12.5px] font-semibold text-[#C9D2E0]">
+              {e.nombre} <span style={{ color: e.color }}>{e.id.toUpperCase()}</span>
+            </span>
+            <input
+              type="range"
+              min={minMed}
+              max={maxMed}
+              step={unidad === "mm" ? 1 : 0.1}
+              value={Math.min(maxMed, Math.max(minMed, numero(e.valor) || minMed))}
+              onChange={(ev) => e.cambiar(ev.target.value)}
+              aria-label={`${e.nombre} (${unidad})`}
+              className="w-full"
+              style={{ accentColor: e.color }}
+            />
+            <label className="flex items-center rounded-[8px] bg-[#1C2431] focus-within:ring-1 focus-within:ring-[#C2560A]">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={e.valor}
+                onChange={(ev) => e.cambiar(ev.target.value)}
+                aria-label={e.nombre}
+                className="w-full min-w-0 bg-transparent py-1.5 pl-2 text-right text-[14px] font-semibold text-white outline-none"
+              />
+              <span className="pl-1 pr-2 text-[11px] text-[#8A97AB]">{unidad}</span>
+            </label>
+          </div>
+        ))}
+        {tipo === "sobrepuesta" && <CampoNum etiqueta="Alto de la tapa (por fuera)" valor={altoTapa} cambiar={setAltoTapa} sufijo={unidad} />}
         {listo && (
-          <span className="text-[12px] text-[#F2D29B]">
-            Exterior {r1(ext.ancho)} × {r1(ext.fondo)} × {r1(ext.alto)} mm · interior {r1(r.interior.ancho)} × {r1(r.interior.fondo)} ×{" "}
-            {r1(r.interior.alto)} mm
-            {tipo === "sobrepuesta" && ` · con la tapa puesta ${r1(r.armado.ancho)} × ${r1(r.armado.fondo)} × ${r1(r.armado.alto)} mm`}
-          </span>
+          <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 rounded-[10px] bg-[#C2560A]/10 px-3 py-2 text-[12px]">
+            <dt className="text-[#8A97AB]">Volumen interior</dt>
+            <dd className="m-0 text-right font-semibold text-[#F2D29B]">{volumen < 1 ? `${Math.round(volumen * 1000)} ml` : `${volumen.toFixed(2)} L`}</dd>
+            <dt className="text-[#8A97AB]">Exterior</dt>
+            <dd className="m-0 text-right font-semibold text-white">
+              {r1(r.armado.ancho)} × {r1(r.armado.fondo)} × {r1(r.armado.alto)} mm
+            </dd>
+            <dt className="text-[#8A97AB]">Interior</dt>
+            <dd className="m-0 text-right font-semibold text-white">
+              {r1(r.interior.ancho)} × {r1(r.interior.fondo)} × {r1(r.interior.alto)} mm
+            </dd>
+            <dt className="text-[#8A97AB]">Hoja</dt>
+            <dd className="m-0 text-right font-semibold text-white">{hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"}</dd>
+          </dl>
         )}
-      </Destacado>
+      </Paso>
 
-      {tipo === "sobrepuesta" && (
-        <CampoNum etiqueta="Alto de la tapa (por fuera)" valor={altoTapa} cambiar={setAltoTapa} sufijo={unidad} />
-      )}
-
-      <Seccion titulo="Material">
+      <Paso n={3} titulo="Material">
         <CampoNum etiqueta="Espesor" valor={espesor} cambiar={setEspesor} sufijo={unidad} />
         <Chips
           items={ESPESORES.map((e) => ({ id: e.etiqueta, nombre: `${e.etiqueta} mm` }))}
@@ -314,49 +465,59 @@ export function GeneradorCaja() {
             if (e) setEspesor(String(Math.round((e.mm / k) * 1000) / 1000))
           }}
         />
-      </Seccion>
+      </Paso>
 
-      <Seccion titulo="Compartimentos" nota="Divisores sueltos que se cruzan a media altura; entran desde arriba.">
+      <Paso n={4} titulo="Extras">
         <div className="grid grid-cols-2 gap-2">
-          <Contador etiqueta="A lo ancho" valor={columnas} cambiar={setColumnas} />
-          <Contador etiqueta="A lo fondo" valor={filas} cambiar={setFilas} />
+          <Contador etiqueta="Divisiones a lo ancho" valor={columnas} cambiar={setColumnas} />
+          <Contador etiqueta="Divisiones a lo fondo" valor={filas} cambiar={setFilas} />
         </div>
-      </Seccion>
-
-      <div className="flex flex-col gap-2">
         <Interruptor etiqueta="Asas en los costados" activo={asas} cambiar={setAsas} />
         {tipo === "cerrada" && <Interruptor etiqueta="Ranura de alcancía en la tapa" activo={ranura} cambiar={setRanura} />}
-      </div>
+      </Paso>
 
-      <Seccion titulo="Máquina">
-        <Opciones
-          opciones={(Object.keys(MAQUINAS) as (keyof typeof MAQUINAS)[]).map((m) => ({ id: m, nombre: MAQUINAS[m].nombre }))}
-          valor={maquina}
-          cambiar={(m) => {
-            setMaquina(m)
-            setKerf(MAQUINAS[m].kerf)
-          }}
-        />
-      </Seccion>
-
-      <div className="flex flex-col gap-2">
-        <Interruptor
-          etiqueta={`Dedos automáticos${dedoAuto && listo ? ` (${r1(r.dedoUsado / k)} ${unidad})` : ""}`}
-          activo={dedoAuto}
-          cambiar={(v) => {
-            if (!v) setDedo(String(Math.round((r.dedoUsado || dedoAutomatico(esp)) / k * 1000) / 1000))
-            setDedoAuto(v)
-          }}
-        />
-        <div className="grid grid-cols-2 gap-2">
-          {!dedoAuto && <CampoNum etiqueta="Ancho de dedo" valor={dedo} cambiar={setDedo} sufijo={unidad} />}
-          {maquina === "router" ? (
-            <CampoNum etiqueta="Diámetro de fresa" valor={fresa} cambiar={setFresa} sufijo={unidad} />
-          ) : (
-            <CampoNum etiqueta="Kerf (corte)" valor={kerf} cambiar={setKerf} sufijo="mm" />
-          )}
+      <section className="flex flex-col gap-1.5 px-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[12.5px] font-semibold text-[#C9D2E0]">Ver cómo se arma</span>
+          <span className="text-[12px] font-semibold text-[#F28A3C]">{despiece === 0 ? "Armada" : `${despiece}%`}</span>
         </div>
-      </div>
+        <input type="range" min={0} max={100} value={despiece} onChange={(e) => setDespiece(Number(e.target.value))} aria-label="Separar las piezas en la vista 3D" style={{ accentColor: "#F28A3C" }} />
+      </section>
+
+      <details className="group rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
+        <summary className="cursor-pointer list-none text-[13px] font-bold text-white">
+          <span className="mr-1 inline-block transition group-open:rotate-90">▸</span> Avanzado: máquina, dedos y kerf
+        </summary>
+        <div className="mt-3 flex flex-col gap-3">
+          <Opciones
+            opciones={(Object.keys(MAQUINAS) as (keyof typeof MAQUINAS)[]).map((m) => ({ id: m, nombre: MAQUINAS[m].nombre }))}
+            valor={maquina}
+            cambiar={(m) => {
+              setMaquina(m)
+              setKerf(MAQUINAS[m].kerf)
+            }}
+          />
+          <Interruptor
+            etiqueta={`Dedos automáticos${dedoAuto && listo ? ` (${r1(r.dedoUsado / k)} ${unidad})` : ""}`}
+            activo={dedoAuto}
+            cambiar={(v) => {
+              if (!v) setDedo(String(Math.round(((r.dedoUsado || dedoAutomatico(esp)) / k) * 1000) / 1000))
+              setDedoAuto(v)
+            }}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            {!dedoAuto && <CampoNum etiqueta="Ancho de dedo" valor={dedo} cambiar={setDedo} sufijo={unidad} />}
+            {maquina === "router" ? (
+              <CampoNum etiqueta="Diámetro de fresa" valor={fresa} cambiar={setFresa} sufijo={unidad} />
+            ) : (
+              <CampoNum etiqueta="Kerf (corte)" valor={kerf} cambiar={setKerf} sufijo="mm" />
+            )}
+          </div>
+          <button type="button" onClick={descargarPrueba} className="rounded-[8px] border border-dashed border-[#3A4A63] px-3 py-2 text-left text-[12.5px] text-[#C9D2E0] hover:border-[#F28A3C] hover:text-white">
+            Descargar pieza de prueba (SVG): corta dos tiras chicas y revisa que encajen justas antes de cortar la caja.
+          </button>
+        </div>
+      </details>
 
       {r.errores.map((e) => (
         <Aviso key={e} tipo="error">
@@ -369,6 +530,24 @@ export function GeneradorCaja() {
       {maquina === "router" && numero(fresa) * k > 0 && listo && (
         <Aviso tipo="ok">El archivo ya trae el alivio de esquina (&quot;dogbone&quot;) para tu fresa de {r1(numero(fresa) * k)} mm.</Aviso>
       )}
+
+      {/* Descargas y venta siempre a la mano, al pie del panel */}
+      <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923]/95 px-4 pb-4 pt-3 backdrop-blur">
+        <div className="grid grid-cols-3 gap-2">
+          <Boton tipo="primario" onClick={() => listo && descargar(`${nombreArchivo}.dxf`, aDXF(r.piezas), "application/dxf")}>
+            DXF
+          </Boton>
+          <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
+          <Boton onClick={() => listo && imprimir()}>PDF</Boton>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Boton tipo="verde" onClick={fabricar}>
+            Fabrícamela
+          </Boton>
+          <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
+        </div>
+        {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      </div>
     </div>
   )
 
@@ -440,16 +619,7 @@ export function GeneradorCaja() {
         <div>
           <Boton
             tipo="primario"
-            onClick={() => {
-              if (
-                !mandarAFabricar(`${nombreArchivo}.dxf`, aDXF(r.piezas), locale, {
-                  pieza: `Caja con juntas de dedo (${nombreTipo.toLowerCase()})`,
-                  medidas: `${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`,
-                  proceso: maquina === "router" ? "Router CNC" : "Corte láser",
-                })
-              )
-                setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
-            }}
+            onClick={fabricar}
           >
             Fabrícamelo
           </Boton>
@@ -476,6 +646,7 @@ export function GeneradorCaja() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
+      pestanaInicial="vista"
       sinPieza={r.errores[0] || "Revisa las medidas del panel."}
       barra={
         listo ? (
