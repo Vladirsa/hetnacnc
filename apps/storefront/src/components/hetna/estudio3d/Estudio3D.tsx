@@ -122,6 +122,10 @@ export function Estudio3D({
   exportacion,
   barra,
   llenar = false,
+  sinPieza,
+  pestanaInicial,
+  medidasReales,
+  pie,
 }: {
   titulo: string
   subtitulo?: string
@@ -151,6 +155,16 @@ export function Estudio3D({
   barra?: React.ReactNode
   // ocupar toda la pantalla de los estudios (debajo de su barra de 3.5rem)
   llenar?: boolean
+  // mensaje cuando la herramienta no tiene pieza que mostrar (medidas
+  // inválidas); sin esto se muestra "Cargando la pieza…"
+  sinPieza?: string
+  // pestaña con la que abre (por omisión, Diseño 2D si hay)
+  pestanaInicial?: "diseno" | "vista" | "exportar"
+  // medidas de la pieza terminada para la barra (ancho, fondo, alto en mm),
+  // cuando la malla no las representa (tapa levantada, piezas separadas)
+  medidasReales?: { ancho: number; fondo: number; alto: number }
+  // acciones fijas al pie del panel (descargas, fabricar)
+  pie?: React.ReactNode
 }) {
   const contRef = useRef<HTMLDivElement>(null)
   const marcoRef = useRef<HTMLDivElement>(null)
@@ -170,7 +184,7 @@ export function Estudio3D({
 
   const dePieRef = useRef(dePie)
   dePieRef.current = dePie
-  const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(diseno2d ? "diseno" : "vista")
+  const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(pestanaInicial || (diseno2d ? "diseno" : "vista"))
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [material, setMaterial] = useState(materialInicial)
   const [modo, setModo] = useState<Modo>("color")
@@ -183,6 +197,11 @@ export function Estudio3D({
   const [girar, setGirar] = useState(false)
   const [completa, setCompleta] = useState(false)
   const [cargando, setCargando] = useState(true)
+  // sube cada vez que se arma la escena: los ajustes (material, modo, luz,
+  // rejilla) se vuelven a aplicar a la pieza nueva
+  const [version, setVersion] = useState(0)
+  // la cámara se queda donde el usuario la dejó al cambiar medidas
+  const vistaPrevia = useRef<{ dir: THREE.Vector3; zoom: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [datos, setDatos] = useState<{ x: number; y: number; z: number; triangulos: number; vertices: number } | null>(null)
 
@@ -259,15 +278,22 @@ export function Estudio3D({
       const radio = tam.length() / 2
       const vfov = (camara.fov * Math.PI) / 180
       const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camara.aspect)
-      const distancia = Math.max(radio / Math.sin(vfov / 2), radio / Math.sin(hfov / 2)) * 0.82
+      const distancia = Math.max(radio / Math.sin(vfov / 2), radio / Math.sin(hfov / 2)) * 1.02
       camara.near = lado0 / 1000
       camara.far = lado0 * 100
       camara.updateProjectionMatrix()
       controles.target.set(0, tam.y / 2, 0)
 
       Object.assign(estado.current, { renderer, camara, controles, rejilla: grid, cajaAyuda, distancia, luces: { luz, hemi }, ...extra })
-      ponerVista("iso")
+      const previa = vistaPrevia.current
+      if (previa) {
+        camara.position.copy(controles.target).add(previa.dir.clone().multiplyScalar(distancia * previa.zoom))
+        camara.lookAt(controles.target)
+        controles.update()
+      } else ponerVista("iso")
       setCargando(false)
+      setError(null)
+      setVersion((v) => v + 1)
     }
 
     const montar = (geo: THREE.BufferGeometry) => {
@@ -328,7 +354,8 @@ export function Estudio3D({
       }
 
       const n = geo.getAttribute("position")?.count || 0
-      setDatos({ x: tam.x, y: dePie ? tam.y : tam.z, z: dePie ? tam.z : tam.y, triangulos: n / 3, vertices: n })
+      // ancho × fondo × alto (Y es arriba en la escena)
+      setDatos({ x: tam.x, y: tam.z, z: tam.y, triangulos: n / 3, vertices: n })
       setConTextura(false)
       encuadrar(tam, geo.boundingBox!, { material: mat, malla, piezas: [{ mesh: malla, original: mat }] })
     }
@@ -357,6 +384,15 @@ export function Estudio3D({
       setDatos({ x: tam.x, y: tam.z, z: tam.y, triangulos: tri, vertices: ver })
       setConTextura(true)
       encuadrar(tam, cajaFinal, { piezas })
+    }
+
+    if (!(tris && tris.length >= 9) && !urlGlb && !urlStl) {
+      // nada que mostrar (p. ej. medidas inválidas): no dejar la pieza vieja
+      setDatos(null)
+      if (sinPieza) {
+        setCargando(false)
+        setError(sinPieza)
+      } else setCargando(true) // la herramienta todavía arma la pieza (p. ej. carga la letra)
     }
 
     if (tris && tris.length >= 9) {
@@ -419,11 +455,19 @@ export function Estudio3D({
 
     return () => {
       vivo = false
+      // guarda hacia dónde mira la cámara para la siguiente pieza
+      const { camara: cam, controles: ctl, distancia: dist } = estado.current
+      if (cam && ctl && dist) {
+        const v = cam.position.clone().sub(ctl.target)
+        vistaPrevia.current = { dir: v.clone().normalize(), zoom: Math.min(4, Math.max(0.2, v.length() / dist)) }
+      }
       cancelAnimationFrame(cuadro)
       obs.disconnect()
       controles.dispose()
       entorno.dispose()
       pmrem.dispose()
+      // suelta el contexto WebGL ya: el navegador sólo deja tener unos 16
+      renderer.forceContextLoss()
       renderer.dispose()
       scene.traverse((o) => {
         const x = o as THREE.Mesh
@@ -447,7 +491,7 @@ export function Estudio3D({
     mat.metalness = m.metal
     mat.map = m.fibra ? mdf() : null
     mat.needsUpdate = true
-  }, [material, cargando])
+  }, [material, version])
 
   // Modos de vista: color (material o textura del modelo), blanco, gris
   // (arcilla), normales (revisar la superficie) y malla (ver los triángulos)
@@ -461,27 +505,27 @@ export function Estudio3D({
     cache.normales ||= new THREE.MeshNormalMaterial({ side: THREE.DoubleSide })
     cache.malla ||= new THREE.MeshBasicMaterial({ color: 0x9fb3d1, wireframe: true })
     for (const p of piezas) p.mesh.material = modo === "color" ? p.original : cache[modo]
-  }, [modo, cargando])
+  }, [modo, version])
 
   useEffect(() => {
     const l = estado.current.luces
     if (!l) return
     l.luz.intensity = luzFuerte ? 1.6 : 0.7
     l.hemi.intensity = luzFuerte ? 0.35 : 0.9
-  }, [luzFuerte, cargando])
+  }, [luzFuerte, version])
 
   useEffect(() => {
     const { rejilla: g, cajaAyuda } = estado.current
     if (g) g.visible = rejilla
     if (cajaAyuda) cajaAyuda.visible = medidas
-  }, [rejilla, medidas, cargando])
+  }, [rejilla, medidas, version])
 
   useEffect(() => {
     const c = estado.current.controles
     if (!c) return
     c.autoRotate = girar
     c.autoRotateSpeed = 1.6
-  }, [girar, cargando])
+  }, [girar, version])
 
   useEffect(() => {
     const onCambio = () => setCompleta(document.fullscreenElement === marcoRef.current)
@@ -538,9 +582,9 @@ export function Estudio3D({
   )
 
   return (
-    <div ref={marcoRef} className={`bg-[#0B1017] text-white overflow-hidden grid lg:grid-cols-[280px_1fr] ${completa ? "h-screen rounded-none" : llenar ? "flex-1 min-h-[calc(100dvh-3.5rem)] rounded-none" : "rounded-[16px]"}`}>
+    <div ref={marcoRef} className={`bg-[#0B1017] text-white ${llenar && !completa ? "lg:overflow-hidden" : "overflow-hidden"} grid lg:grid-cols-[280px_1fr] ${completa ? "h-screen rounded-none" : llenar ? "flex-1 min-h-[calc(100dvh-3.5rem)] rounded-none" : "rounded-[16px]"}`}>
       {/* ---- Panel de ajustes ---- */}
-      <aside className={`bg-[#121923] border-b lg:border-b-0 lg:border-r border-[#1F2937] p-4 flex flex-col gap-5 lg:overflow-y-auto [&>*]:shrink-0 ${llenar ? "lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)]" : "lg:max-h-[720px]"}`}>
+      <aside className={`order-2 lg:order-none bg-[#121923] border-t lg:border-t-0 lg:border-b-0 lg:border-r border-[#1F2937] p-4 flex flex-col gap-5 lg:overflow-y-auto [&>*]:shrink-0 ${llenar ? "lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)]" : "lg:max-h-[720px]"}`}>
         <div className="flex items-center gap-2.5">
           <span className="w-9 h-9 rounded-[10px] bg-[#C2560A]/15 text-[#F28A3C] flex items-center justify-center" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -559,7 +603,7 @@ export function Estudio3D({
         {panel}
 
         <section className="flex flex-col gap-2">
-          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Material</h3>
+          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Color de la vista 3D</h3>
           <div className="grid grid-cols-2 gap-2">
             {MATERIALES.map((m) => (
               <button
@@ -603,10 +647,16 @@ export function Estudio3D({
             ))}
           </section>
         )}
+
+        {pie && (
+          <div className="sticky bottom-0 z-10 -mx-4 -mb-4 mt-auto flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923] px-4 pb-4 pt-3 shadow-[0_-8px_16px_rgba(0,0,0,0.35)]">
+            {pie}
+          </div>
+        )}
       </aside>
 
       {/* ---- Zona principal ---- */}
-      <div className="flex flex-col min-w-0">
+      <div className={`order-1 lg:order-none flex flex-col min-w-0 ${llenar ? "max-lg:sticky max-lg:top-14 max-lg:z-10" : ""}`}>
         <div className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-[#1F2937] bg-[#0F151E]">
           <div className="flex gap-1">
             {(
@@ -621,7 +671,7 @@ export function Estudio3D({
                 type="button"
                 onClick={() => setPestana(id)}
                 aria-pressed={pestana === id}
-                className={`rounded-[8px] px-3.5 py-2 text-[13.5px] font-semibold ${
+                className={`whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[13px] font-semibold lg:px-3.5 lg:py-2 lg:text-[13.5px] ${
                   pestana === id ? "bg-[#C2560A]/20 text-[#F28A3C] ring-1 ring-[#C2560A]/50" : "text-[#C9D2E0] hover:bg-[#1C2431]"
                 }`}
               >
@@ -644,7 +694,7 @@ export function Estudio3D({
           </div>
         </div>
 
-        <div className={`relative ${pestana === "vista" ? "" : "hidden"} ${completa || llenar ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>
+        <div className={`relative ${pestana === "vista" ? "" : "hidden"} ${completa ? "flex-1" : llenar ? "h-[42vh] lg:h-auto lg:flex-1" : "h-[420px] lg:h-[560px]"}`}>
           <div ref={contRef} className="absolute inset-0" />
           {cargando && (
             <div className="absolute inset-0 flex items-center justify-center text-[14px] text-[#8A97AB]">Cargando la pieza…</div>
@@ -761,11 +811,11 @@ export function Estudio3D({
         </div>
 
         {pestana === "diseno" && diseno2d && (
-          <div className={`overflow-auto bg-[#0B1017] ${completa || llenar ? "flex-1" : "h-[420px] lg:h-[560px]"}`}>{diseno2d}</div>
+          <div className={`overflow-auto bg-[#0B1017] ${completa ? "flex-1" : llenar ? "h-[42vh] lg:h-auto lg:flex-1" : "h-[420px] lg:h-[560px]"}`}>{diseno2d}</div>
         )}
 
         {pestana === "exportar" && exportacion && (
-          <div className={`p-5 lg:p-8 ${completa || llenar ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>{exportacion}</div>
+          <div className={`p-5 lg:p-8 ${completa ? "flex-1" : llenar ? "max-lg:max-h-[70vh] max-lg:overflow-y-auto lg:flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>{exportacion}</div>
         )}
 
         {pestana === "exportar" && !exportacion && (
@@ -790,16 +840,18 @@ export function Estudio3D({
           </div>
         )}
 
-        <div className="px-4 py-2.5 border-t border-[#1F2937] bg-[#0F151E] font-mono text-[12.5px] text-[#C9D2E0] flex flex-wrap gap-x-3 gap-y-1">
-          <span className="font-semibold text-white">«{titulo}»</span>
+        <div className="px-4 py-2 lg:py-2.5 border-t border-[#1F2937] bg-[#0F151E] font-mono text-[11px] lg:text-[12.5px] text-[#C9D2E0] flex flex-wrap gap-x-3 gap-y-1">
+          <span className="hidden lg:inline font-semibold text-white">«{titulo}»</span>
           {datos ? (
             <>
               <span>
-                {escalaReal
+                {medidasReales
+                  ? `${fmt(medidasReales.ancho, unidad)} × ${fmt(medidasReales.fondo, unidad)} × ${fmt(medidasReales.alto, unidad)}`
+                  : escalaReal
                   ? `${fmt(datos.x, unidad)} × ${fmt(datos.y, unidad)} × ${fmt(datos.z, unidad)}`
                   : "Proporciones aproximadas (sin escala real)"}
               </span>
-              <span>· {Math.round(datos.triangulos).toLocaleString("es-MX")} triángulos</span>
+              <span className="hidden lg:inline">· {Math.round(datos.triangulos).toLocaleString("es-MX")} triángulos</span>
             </>
           ) : (
             <span>{cargando ? "cargando…" : "sin datos"}</span>

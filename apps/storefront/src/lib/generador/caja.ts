@@ -9,23 +9,43 @@
 
 export type Punto = [number, number]
 
+export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta"
+
 export type OpcionesCaja = {
   ancho: number // eje X, mm
   fondo: number // eje Y, mm
   alto: number // eje Z, mm
   espesor: number // espesor del material, mm
-  dedo: number // ancho deseado de cada dedo, mm
+  dedo: number // ancho deseado de cada dedo, mm (0 = automático, 4 × espesor)
   kerf: number // grosor del corte (láser ~0.1-0.2 mm; router: 0), mm
   fresa: number // diámetro de la fresa, mm (router: agrega alivio de esquina "dogbone"; láser/plasma: 0)
   medidas: "exteriores" | "interiores"
-  tapa: boolean
+  // compatibilidad: tapa=true es "cerrada", false es "abierta"
+  tapa?: boolean
+  tipo?: TipoCaja
+  // alto de la tapa sobrepuesta (por fuera), mm
+  altoTapa?: number
+  // compartimentos: columnas a lo ancho y filas a lo fondo (1 = sin divisores)
+  columnas?: number
+  filas?: number
+  // agujeros para agarrar en los laterales
+  asas?: boolean
+  // ranura para monedas en la tapa (alcancía)
+  ranura?: boolean
 }
+
+export type Vec3 = [number, number, number]
+// Dónde va la pieza en la caja armada: punto (x, y) del contorno y z del
+// espesor -> origen + x·ux + y·uy + z·uz (Y es arriba, Z es el fondo).
+export type Ubicacion = { origen: Vec3; ux: Vec3; uy: Vec3; uz: Vec3 }
 
 export type Pieza = {
   nombre: string
   ancho: number
   alto: number
   contorno: Punto[] // polígono cerrado, en mm, con la esquina inferior izquierda en (0,0)
+  huecos?: Punto[][] // cortes interiores (asas, ranura), mismas coordenadas
+  ubicacion?: Ubicacion
 }
 
 export type ResultadoCaja = {
@@ -35,6 +55,9 @@ export type ResultadoCaja = {
   exterior: { ancho: number; fondo: number; alto: number }
   interior: { ancho: number; fondo: number; alto: number }
   dedos: { ancho: number; fondo: number; alto: number } // número de segmentos por lado
+  dedoUsado: number // ancho de dedo con el que se calculó, mm
+  // medidas de todo armado (con la tapa sobrepuesta puesta)
+  armado: { ancho: number; fondo: number; alto: number }
 }
 
 type TipoBorde = "A" | "B" | "L" // L = liso (sin dedos)
@@ -122,23 +145,26 @@ function limpiar(pts: Punto[]): Punto[] {
   return p
 }
 
-// Agranda el contorno la mitad del kerf hacia afuera (polígono de ángulos rectos, antihorario)
+// Corre el contorno la mitad del kerf hacia afuera (polígono antihorario).
+// Con kerf negativo lo encoge: así se compensan los huecos, que deben quedar
+// más chicos en el archivo para salir a su medida. En esquinas de 90° es el
+// mismo desplazamiento de siempre; en curvas (asas) usa la ingleta correcta.
 function compensarKerf(pts: Punto[], kerf: number): Punto[] {
   if (!kerf) return pts
   const d = kerf / 2
   const n = pts.length
+  const normal = (p: Punto, q: Punto): Punto => {
+    const dx = q[0] - p[0]
+    const dy = q[1] - p[1]
+    const l = Math.hypot(dx, dy) || 1
+    return [dy / l, -dx / l] // hacia afuera en sentido antihorario
+  }
   return pts.map((b, i) => {
-    const a = pts[(i + n - 1) % n]
-    const c = pts[(i + 1) % n]
-    const normal = (p: Punto, q: Punto): Punto => {
-      const dx = q[0] - p[0]
-      const dy = q[1] - p[1]
-      const l = Math.hypot(dx, dy) || 1
-      return [dy / l, -dx / l] // hacia afuera en sentido antihorario
-    }
-    const n1 = normal(a, b)
-    const n2 = normal(b, c)
-    return [redondear(b[0] + (n1[0] + n2[0]) * d), redondear(b[1] + (n1[1] + n2[1]) * d)]
+    const n1 = normal(pts[(i + n - 1) % n], b)
+    const n2 = normal(b, pts[(i + 1) % n])
+    const k = 1 + n1[0] * n2[0] + n1[1] * n2[1]
+    const m = k > 0.2 ? d / k : d / 0.2
+    return [redondear(b[0] + (n1[0] + n2[0]) * m), redondear(b[1] + (n1[1] + n2[1]) * m)]
   })
 }
 
@@ -178,106 +204,338 @@ function alivioEsquinas(pts: Punto[], r: number): Punto[] {
   return limpiar(out)
 }
 
-// deja la esquina inferior izquierda del contorno en (0,0)
-function aOrigen(pts: Punto[]) {
+// deja la esquina inferior izquierda del contorno en (0,0) (y mueve los huecos igual)
+function aOrigen(pts: Punto[], huecos: Punto[][] = []) {
   const minX = Math.min(...pts.map((p) => p[0]))
   const minY = Math.min(...pts.map((p) => p[1]))
-  const q = pts.map(([x, y]) => [redondear(x - minX), redondear(y - minY)] as Punto)
+  const mover = (l: Punto[]) => l.map(([x, y]) => [redondear(x - minX), redondear(y - minY)] as Punto)
+  const q = mover(pts)
   return {
     contorno: q,
+    ...(huecos.length ? { huecos: huecos.map(mover) } : {}),
     ancho: redondear(Math.max(...q.map((p) => p[0]))),
     alto: redondear(Math.max(...q.map((p) => p[1]))),
+    desfase: [minX, minY] as Punto,
   }
 }
+
+// Ranura redondeada (asa) centrada en (cx, cy), antihoraria
+function ranuraRedonda(cx: number, cy: number, largo: number, alto: number): Punto[] {
+  const r = alto / 2
+  const m = Math.max(0, largo / 2 - r)
+  const pts: Punto[] = []
+  const pasos = 10
+  for (let k = 0; k <= pasos; k++) {
+    const a = -Math.PI / 2 + (Math.PI * k) / pasos
+    pts.push([cx + m + r * Math.cos(a), cy + r * Math.sin(a)])
+  }
+  for (let k = 0; k <= pasos; k++) {
+    const a = Math.PI / 2 + (Math.PI * k) / pasos
+    pts.push([cx - m + r * Math.cos(a), cy + r * Math.sin(a)])
+  }
+  return pts
+}
+
+const rect = (x0: number, y0: number, x1: number, y1: number): Punto[] => [
+  [x0, y0],
+  [x1, y0],
+  [x1, y1],
+  [x0, y1],
+]
+
+// Divisor con ranuras a media altura (se cruzan como "huacal de huevo").
+// ranuras: centros de las ranuras a lo largo; desdeArriba: la ranura entra por arriba.
+function divisor(largo: number, alto: number, ranuras: number[], ancho: number, desdeArriba: boolean): Punto[] {
+  const h = alto / 2
+  const pts: Punto[] = []
+  if (desdeArriba) {
+    pts.push([0, 0], [largo, 0], [largo, alto])
+    for (const c of [...ranuras].sort((a, b) => b - a)) {
+      pts.push([c + ancho / 2, alto], [c + ancho / 2, h], [c - ancho / 2, h], [c - ancho / 2, alto])
+    }
+    pts.push([0, alto])
+  } else {
+    pts.push([0, 0])
+    for (const c of [...ranuras].sort((a, b) => a - b)) {
+      pts.push([c - ancho / 2, 0], [c - ancho / 2, h], [c + ancho / 2, h], [c + ancho / 2, 0])
+    }
+    pts.push([largo, 0], [largo, alto], [0, alto])
+  }
+  return limpiar(pts)
+}
+
+// Centros de los divisores para que todos los compartimentos midan igual
+function centros(interior: number, partes: number, t: number): number[] {
+  if (partes <= 1) return []
+  const hueco = (interior - (partes - 1) * t) / partes
+  return Array.from({ length: partes - 1 }, (_, j) => (j + 1) * hueco + j * t + t / 2)
+}
+
+// Ubicación en la caja armada de cada cara (W ancho, D fondo, H alto)
+function ubicar(nombre: string, t: number, W: number, D: number, H: number): Ubicacion {
+  switch (nombre) {
+    case "Base":
+      return { origen: [0, 0, 0], ux: [1, 0, 0], uy: [0, 0, 1], uz: [0, 1, 0] }
+    case "Tapa":
+      return { origen: [0, H - t, 0], ux: [1, 0, 0], uy: [0, 0, 1], uz: [0, 1, 0] }
+    case "Frente":
+      return { origen: [0, 0, 0], ux: [1, 0, 0], uy: [0, 1, 0], uz: [0, 0, 1] }
+    case "Atrás":
+      return { origen: [0, 0, D - t], ux: [1, 0, 0], uy: [0, 1, 0], uz: [0, 0, 1] }
+    case "Lateral izquierdo":
+      return { origen: [0, 0, 0], ux: [0, 0, 1], uy: [0, 1, 0], uz: [1, 0, 0] }
+    case "Lateral derecho":
+      return { origen: [W - t, 0, 0], ux: [0, 0, 1], uy: [0, 1, 0], uz: [1, 0, 0] }
+    default:
+      return { origen: [0, 0, 0], ux: [1, 0, 0], uy: [0, 1, 0], uz: [0, 0, 1] }
+  }
+}
+
+type Cruda = { nombre: string; pts: Punto[]; huecos?: Punto[][]; ubicacion: Ubicacion; conDedos: boolean }
+
+// Las caras de una caja de W × D × H (medidas exteriores) con juntas de dedo
+function caras(W: number, D: number, H: number, t: number, dedo: number, cerrada: boolean, prefijo = "") {
+  const nW = segmentos(W, dedo)
+  const nD = segmentos(D, dedo)
+  const nH = segmentos(H, dedo)
+  const arriba: TipoBorde = cerrada ? "A" : "L"
+  const lista: { nombre: string; pts: Punto[] }[] = [
+    { nombre: "Base", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t) },
+    ...(cerrada ? [{ nombre: "Tapa", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t) }] : []),
+    { nombre: "Frente", pts: cara(W, H, ["A", "A", arriba, "A"], nW, nH, t) },
+    { nombre: "Atrás", pts: cara(W, H, ["A", "A", arriba, "A"], nW, nH, t) },
+    { nombre: "Lateral izquierdo", pts: cara(D, H, ["A", "B", arriba, "B"], nD, nH, t) },
+    { nombre: "Lateral derecho", pts: cara(D, H, ["A", "B", arriba, "B"], nD, nH, t) },
+  ]
+  return {
+    nW,
+    nD,
+    nH,
+    minSeg: Math.min(W / nW, D / nD, H / nH),
+    crudas: lista.map(
+      (p): Cruda => ({ nombre: prefijo + p.nombre, pts: p.pts, ubicacion: ubicar(p.nombre, t, W, D, H), conDedos: true })
+    ),
+  }
+}
+
+export const dedoAutomatico = (espesor: number) => Math.max(8, 4 * espesor)
 
 export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const errores: string[] = []
   const avisos: string[] = []
   const t = o.espesor
+  const tipo: TipoCaja = o.tipo || (o.tapa === false ? "abierta" : "cerrada")
+  const cerrada = tipo === "cerrada"
   const extra = o.medidas === "interiores" ? 2 * t : 0
   const W = o.ancho + extra
   const D = o.fondo + extra
-  const H = o.alto + (o.medidas === "interiores" ? (o.tapa ? 2 * t : t) : 0)
+  const H = o.alto + (o.medidas === "interiores" ? (cerrada ? 2 * t : t) : 0)
+  const interior = { ancho: W - 2 * t, fondo: D - 2 * t, alto: H - (cerrada ? 2 : 1) * t }
+  const holgura = 0.5 // por lado, para la tapa sobrepuesta y los divisores
+  const Ht = Math.max(o.altoTapa || 0, 0)
+  const Wt = W + 2 * holgura + 2 * t
+  const Dt = D + 2 * holgura + 2 * t
+  const armado = tipo === "sobrepuesta" ? { ancho: Wt, fondo: Dt, alto: H + t } : { ancho: W, fondo: D, alto: H }
+
+  const autoDedo = !(o.dedo > 0)
+  let dedo = autoDedo ? dedoAutomatico(t) : o.dedo
 
   const vacio = (): ResultadoCaja => ({
     piezas: [],
     errores,
     avisos,
     exterior: { ancho: W, fondo: D, alto: H },
-    interior: { ancho: W - 2 * t, fondo: D - 2 * t, alto: H - (o.tapa ? 2 : 1) * t },
+    interior,
     dedos: { ancho: 0, fondo: 0, alto: 0 },
+    dedoUsado: dedo,
+    armado,
   })
 
-  if (![o.ancho, o.fondo, o.alto, t, o.dedo].every((x) => Number.isFinite(x) && x > 0)) {
+  if (![o.ancho, o.fondo, o.alto, t].every((x) => Number.isFinite(x) && x > 0)) {
     errores.push("Todas las medidas deben ser mayores que cero.")
     return vacio()
   }
   if (!(o.kerf >= 0 && o.kerf < t)) errores.push("El kerf debe ser 0 o mayor, y menor que el espesor.")
   if (Math.min(W, D, H) < 6 * t) errores.push("La caja es muy pequeña para ese espesor: cada lado debe medir al menos 6 veces el espesor.")
+  if (Math.max(W, D, H) > 3000) errores.push("La caja es demasiado grande: ningún lado puede pasar de 3 metros.")
+  if (tipo === "sobrepuesta" && Ht < 4 * t) errores.push(`La tapa debe medir al menos ${r(4 * t)} mm de alto con ese espesor.`)
+  if (tipo === "sobrepuesta" && Ht > H) errores.push("La tapa no puede ser más alta que la caja.")
   if (errores.length) return vacio()
 
-  const nW = segmentos(W, o.dedo)
-  const nD = segmentos(D, o.dedo)
-  const nH = segmentos(H, o.dedo)
-  const minSeg = Math.min(W / nW, D / nD, H / nH)
-  if (minSeg < 1.5 * t) {
-    errores.push(`Los dedos quedan muy angostos (${minSeg.toFixed(1)} mm). Usa un dedo de al menos ${(2 * t).toFixed(1)} mm.`)
+  // En automático, el dedo se agranda solo si no cabe; a mano se avisa
+  let base = caras(W, D, H, t, dedo, cerrada)
+  if (autoDedo) {
+    for (let i = 0; i < 8 && base.minSeg < 1.5 * t; i++) {
+      dedo *= 1.4
+      base = caras(W, D, H, t, dedo, cerrada)
+    }
+  }
+  if (base.minSeg < 1.5 * t) {
+    errores.push(`Los dedos quedan muy angostos (${base.minSeg.toFixed(1)} mm). Usa un dedo de al menos ${(2 * t).toFixed(1)} mm o déjalo en automático.`)
     return vacio()
   }
-  if (o.dedo < 2 * t) avisos.push("Con dedos menores a 2 veces el espesor la unión queda débil.")
+  if (!autoDedo && o.dedo < 2 * t) avisos.push("Con dedos menores a 2 veces el espesor la unión queda débil.")
   if (o.kerf === 0 && o.fresa === 0) avisos.push("Sin kerf las uniones quedan sueltas en láser. Si cortas con router, pon el diámetro de tu fresa para agregar alivio de esquina.")
   if (o.fresa < 0) errores.push("La fresa no puede ser negativa.")
-  if (o.fresa > 0 && o.fresa > minSeg) {
-    errores.push(`La fresa (${o.fresa} mm) es más ancha que el dedo (${minSeg.toFixed(1)} mm); usa una fresa más delgada o dedos más anchos.`)
+  if (o.fresa > 0 && o.fresa > base.minSeg) {
+    errores.push(`La fresa (${o.fresa} mm) es más ancha que el dedo (${base.minSeg.toFixed(1)} mm); usa una fresa más delgada o dedos más anchos.`)
   }
   if (errores.length) return vacio()
 
-  const arriba: TipoBorde = o.tapa ? "A" : "L"
-  const crudas: { nombre: string; pts: Punto[] }[] = [
-    { nombre: "Base", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t) },
-    ...(o.tapa ? [{ nombre: "Tapa", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t) }] : []),
-    { nombre: "Frente", pts: cara(W, H, ["A", "A", arriba, "A"], nW, nH, t) },
-    { nombre: "Atrás", pts: cara(W, H, ["A", "A", arriba, "A"], nW, nH, t) },
-    { nombre: "Lateral izquierdo", pts: cara(D, H, ["A", "B", arriba, "B"], nD, nH, t) },
-    { nombre: "Lateral derecho", pts: cara(D, H, ["A", "B", arriba, "B"], nD, nH, t) },
-  ]
+  const crudas: Cruda[] = [...base.crudas]
 
-  const piezas = crudas.map(({ nombre, pts }) => ({
-    nombre,
-    ...aOrigen(alivioEsquinas(compensarKerf(pts, o.kerf), o.fresa / 2)),
-  }))
+  // ---- Asas en los laterales
+  if (o.asas) {
+    const largo = Math.min(100, D * 0.45, D - 6 * t)
+    const altoAsa = Math.min(28, H * 0.22)
+    const techo = H - (cerrada ? t : 0)
+    const cy = techo - Math.max(altoAsa / 2 + 2 * t, H * 0.16)
+    if (largo < 2 * altoAsa || altoAsa < 12 || cy - altoAsa / 2 < 2 * t) {
+      avisos.push("La caja es muy chica para asas: se dejaron fuera.")
+    } else {
+      for (const c of crudas) if (c.nombre.startsWith("Lateral")) c.huecos = [ranuraRedonda(D / 2, cy, largo, altoAsa)]
+    }
+  }
+
+  // ---- Ranura para monedas en la tapa
+  if (o.ranura) {
+    const tapa = crudas.find((c) => c.nombre === "Tapa")
+    if (!tapa) avisos.push("La ranura para monedas va en la tapa: elige una caja cerrada.")
+    else if (W < 70 || D < 30) avisos.push("La tapa es muy chica para la ranura de monedas.")
+    else tapa.huecos = [rect(W / 2 - 22, D / 2 - 2.5, W / 2 + 22, D / 2 + 2.5)]
+  }
+
+  // ---- Divisores (sueltos, se meten desde arriba)
+  const cols = Math.max(1, Math.min(12, Math.round(o.columnas || 1)))
+  const filas = Math.max(1, Math.min(12, Math.round(o.filas || 1)))
+  if (cols > 1 || filas > 1) {
+    const hd = interior.alto - (cerrada ? 1 : 0)
+    const cx = centros(interior.ancho, cols, t)
+    const cz = centros(interior.fondo, filas, t)
+    const minComp = Math.min((interior.ancho - (cols - 1) * t) / cols, (interior.fondo - (filas - 1) * t) / filas)
+    if (minComp < 15) {
+      errores.push(`Los compartimentos quedan de ${minComp.toFixed(0)} mm: pon menos divisiones o una caja más grande.`)
+      return vacio()
+    }
+    const largoX = interior.ancho - 2 * holgura
+    const largoZ = interior.fondo - 2 * holgura
+    // ranura un poco más ancha que el espesor para que entren sin forzar
+    const ancho = t + 0.1
+    cz.forEach((z, i) =>
+      crudas.push({
+        nombre: `Divisor a lo ancho ${i + 1}`,
+        pts: divisor(largoX, hd, cx.map((x) => x - holgura), ancho, true),
+        ubicacion: { origen: [t + holgura, t, t + z - t / 2], ux: [1, 0, 0], uy: [0, 1, 0], uz: [0, 0, 1] },
+        conDedos: false,
+      })
+    )
+    cx.forEach((x, j) =>
+      crudas.push({
+        nombre: `Divisor a lo fondo ${j + 1}`,
+        pts: divisor(largoZ, hd, cz.map((z) => z - holgura), ancho, cz.length > 0 ? false : true),
+        ubicacion: { origen: [t + x - t / 2, t, t + holgura], ux: [0, 0, 1], uy: [0, 1, 0], uz: [1, 0, 0] },
+        conDedos: false,
+      })
+    )
+    if (cx.length && cz.length) avisos.push("Los divisores se cruzan a media altura: mete primero los de a lo fondo (ranura abajo) y luego los de a lo ancho.")
+  }
+
+  // ---- Tapa sobrepuesta: otra caja abierta, un poco más grande, de cabeza
+  if (tipo === "sobrepuesta") {
+    let tapa = caras(Wt, Dt, Ht, t, dedo, false, "Tapa · ")
+    if (autoDedo) for (let i = 0; i < 8 && tapa.minSeg < 1.5 * t; i++) tapa = caras(Wt, Dt, Ht, t, (dedo *= 1.25), false, "Tapa · ")
+    if (tapa.minSeg < 1.5 * t) {
+      errores.push("La tapa queda muy baja para esos dedos: súbele altura o usa dedos más chicos.")
+      return vacio()
+    }
+    // se pone de cabeza encima de la caja, centrada (reflexión en Y)
+    const off = t + holgura
+    // la base de la tapa descansa sobre las paredes de la caja
+    const techo = H + t
+    for (const c of tapa.crudas) {
+      const u = c.ubicacion
+      c.ubicacion = {
+        origen: [u.origen[0] - off, techo - u.origen[1], u.origen[2] - off],
+        ux: [u.ux[0], -u.ux[1], u.ux[2]],
+        uy: [u.uy[0], -u.uy[1], u.uy[2]],
+        uz: [u.uz[0], -u.uz[1], u.uz[2]],
+      }
+      crudas.push(c)
+    }
+  }
+
+  const piezas = crudas.map(({ nombre, pts, huecos, ubicacion, conDedos }) => {
+    const exterior = conDedos ? alivioEsquinas(compensarKerf(pts, o.kerf), o.fresa / 2) : compensarKerf(pts, o.kerf)
+    const hs = (huecos || []).map((h) => compensarKerf(h, -o.kerf))
+    const { desfase, ...resto } = aOrigen(exterior, hs)
+    // el contorno se movió a (0,0): la ubicación se corrige para que la pieza no se recorra
+    const u = ubicacion
+    const origen: Vec3 = [
+      u.origen[0] + desfase[0] * u.ux[0] + desfase[1] * u.uy[0],
+      u.origen[1] + desfase[0] * u.ux[1] + desfase[1] * u.uy[1],
+      u.origen[2] + desfase[0] * u.ux[2] + desfase[1] * u.uy[2],
+    ]
+    return { nombre, ...resto, ubicacion: { ...u, origen } }
+  })
   return {
     piezas,
     errores,
     avisos,
     exterior: { ancho: W, fondo: D, alto: H },
-    interior: { ancho: W - 2 * t, fondo: D - 2 * t, alto: H - (o.tapa ? 2 : 1) * t },
-    dedos: { ancho: nW, fondo: nD, alto: nH },
+    interior,
+    dedos: { ancho: base.nW, fondo: base.nD, alto: base.nH },
+    dedoUsado: dedo,
+    armado,
   }
+}
+
+const r = (x: number) => Math.round(x * 10) / 10
+
+// Par de prueba para ajustar el kerf antes de cortar la caja: dos tiras con
+// dedos que encajan (A con B). Si entran justas, el kerf es el bueno.
+export function piezasPrueba(espesor: number, kerf: number, dedo: number): Pieza[] {
+  const t = espesor
+  const d = dedo > 0 ? dedo : dedoAutomatico(t)
+  const n = 5
+  const largo = n * Math.max(d, 2 * t)
+  const ancho = Math.max(25, 6 * t)
+  return [
+    { nombre: "Prueba A", pts: cara(largo, ancho, ["A", "L", "L", "L"], n, 3, t) },
+    { nombre: "Prueba B", pts: cara(largo, ancho, ["B", "L", "L", "L"], n, 3, t) },
+  ].map(({ nombre, pts }) => {
+    const { desfase: _d, ...resto } = aOrigen(compensarKerf(pts, kerf))
+    return { nombre, ...resto }
+  })
 }
 
 // ---------- Acomodo y exportación ----------
 
 export type Colocada = Pieza & { x: number; y: number }
 
-// Acomoda las piezas en filas de dos, con separación (mm)
+// Acomoda las piezas en repisas (de la más alta a la más baja), buscando una
+// hoja lo más cuadrada posible, con separación (mm)
 export function acomodar(piezas: Pieza[], separacion = 5) {
   const colocadas: Colocada[] = []
+  if (!piezas.length) return { colocadas, ancho: 0, alto: 0 }
+  const area = piezas.reduce((s, p) => s + (p.ancho + separacion) * (p.alto + separacion), 0)
+  const limite = Math.max(...piezas.map((p) => p.ancho), Math.sqrt(area) * 1.25)
+  const orden = [...piezas].sort((a, b) => b.alto - a.alto)
+  let x = 0
   let y = 0
+  let altoFila = 0
   let anchoTotal = 0
-  for (let i = 0; i < piezas.length; i += 2) {
-    const fila = piezas.slice(i, i + 2)
-    let x = 0
-    let altoFila = 0
-    for (const p of fila) {
-      colocadas.push({ ...p, x, y })
-      x += p.ancho + separacion
-      altoFila = Math.max(altoFila, p.alto)
+  for (const p of orden) {
+    if (x > 0 && x + p.ancho > limite) {
+      y += altoFila + separacion
+      x = 0
+      altoFila = 0
     }
+    colocadas.push({ ...p, x, y })
+    x += p.ancho + separacion
+    altoFila = Math.max(altoFila, p.alto)
     anchoTotal = Math.max(anchoTotal, x - separacion)
-    y += altoFila + separacion
   }
-  return { colocadas, ancho: anchoTotal, alto: Math.max(0, y - separacion) }
+  return { colocadas, ancho: anchoTotal, alto: y + altoFila }
 }
 
 const f = (x: number) => String(Math.round(x * 1000) / 1000)
@@ -292,15 +550,13 @@ export function aSVG(piezas: Pieza[], modo: "corte" | "vista" = "corte") {
   const H = alto + 2 * m
   const vista = modo === "vista"
   const trazo = vista
-    ? `fill="#FDEEE1" fill-opacity="0.55" stroke="#C2560A" stroke-width="1.4" vector-effect="non-scaling-stroke"`
+    ? `fill="#FDEEE1" fill-opacity="0.55" fill-rule="evenodd" stroke="#C2560A" stroke-width="1.4" vector-effect="non-scaling-stroke"`
     : `fill="none" stroke="#FF0000" stroke-width="0.1"`
   const cuerpos = colocadas
     .map((p) => {
       // el SVG tiene Y hacia abajo: cada pieza se voltea en su lugar
-      const d =
-        p.contorno
-          .map(([x, y], i) => `${i ? "L" : "M"}${f(m + p.x + x)} ${f(m + p.y + p.alto - y)}`)
-          .join(" ") + " Z"
+      const camino = (l: Punto[]) => l.map(([x, y], i) => `${i ? "L" : "M"}${f(m + p.x + x)} ${f(m + p.y + p.alto - y)}`).join(" ") + " Z"
+      const d = [p.contorno, ...(p.huecos || [])].map(camino).join(" ")
       const etiqueta = vista
         ? `<text x="${f(m + p.x + p.ancho / 2)}" y="${f(m + p.y + p.alto / 2)}" font-size="${f(Math.max(3, Math.min(10, p.alto / 7, (0.8 * p.ancho) / (0.6 * p.nombre.length))))}" text-anchor="middle" dominant-baseline="middle" fill="#6B6A63" font-family="sans-serif">${p.nombre}</text>`
         : ""
@@ -310,7 +566,8 @@ export function aSVG(piezas: Pieza[], modo: "corte" | "vista" = "corte") {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="0 0 ${f(W)} ${f(H)}">\n${cuerpos}\n</svg>\n`
 }
 
-// DXF R12 con polilíneas cerradas en la capa CORTE, unidades mm
+// DXF R12 con polilíneas cerradas en la capa CORTE (huecos en CORTE_INTERIOR,
+// para cortarlos primero), unidades mm
 export function aDXF(piezas: Pieza[]) {
   const { colocadas } = acomodar(piezas)
   const l: string[] = []
@@ -320,13 +577,15 @@ export function aDXF(piezas: Pieza[]) {
   par(9, "$INSUNITS"); par(70, 4)
   par(0, "ENDSEC")
   par(0, "SECTION"); par(2, "ENTITIES")
-  for (const p of colocadas) {
-    par(0, "POLYLINE"); par(8, "CORTE"); par(66, 1); par(10, 0); par(20, 0); par(30, 0); par(70, 1)
-    for (const [x, y] of p.contorno) {
-      par(0, "VERTEX"); par(8, "CORTE"); par(10, f(p.x + x)); par(20, f(p.y + y)); par(30, 0)
+  const poli = (p: Colocada, pts: Punto[], capa: string) => {
+    par(0, "POLYLINE"); par(8, capa); par(66, 1); par(10, 0); par(20, 0); par(30, 0); par(70, 1)
+    for (const [x, y] of pts) {
+      par(0, "VERTEX"); par(8, capa); par(10, f(p.x + x)); par(20, f(p.y + y)); par(30, 0)
     }
-    par(0, "SEQEND"); par(8, "CORTE")
+    par(0, "SEQEND"); par(8, capa)
   }
+  for (const p of colocadas) for (const h of p.huecos || []) poli(p, h, "CORTE_INTERIOR")
+  for (const p of colocadas) poli(p, p.contorno, "CORTE")
   par(0, "ENDSEC"); par(0, "EOF")
   return l.join("\n") + "\n"
 }
