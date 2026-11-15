@@ -84,3 +84,29 @@ Y dos cláusulas fijas que nadie puede editar:
 5. Si los términos para clientes (cl. 6) y para vendedores tienen que cambiar para que coincidan.
 
 Con eso cambio el código el mismo día y, en el servidor, se pone `SAFEDEAL_REVISADO=1` para quitar la leyenda de "pendiente de revisión" de los PDF nuevos. Los contratos ya firmados conservan su leyenda; no se tocan.
+
+## Cambios aplicados el 14 nov 2026 (tras las respuestas jurídicas)
+
+Mecánica lista; **los textos siguen siendo preliminares** y el PDF conserva la leyenda de borrador mientras `SAFEDEAL_REVISADO` no sea "1".
+
+1. **Papel de HETNA en dos modalidades** (pregunta 14), según cómo se cobra la solicitud:
+   - **conecta:** el cliente paga directo al taller y HETNA no recibe ni retiene el dinero.
+   - **administra:** el cliente paga por medio de HETNA, que libera o reembolsa el pago según los términos.
+
+   Las dos versiones enumeran las responsabilidades de HETNA: intermediación tecnológica, administración operativa, gestión de controversias y, solo en "administra", gestión del pago. Las dos avisan que los pagos por fuera no tienen protección y que nada limita acudir a la PROFECO. No usan las palabras "escrow" ni "depósito en garantía". Cada versión del contrato guarda la modalidad y el texto exacto con que se generó, y los contratos anteriores se regeneran idénticos.
+2. **Apartados nuevos** (pregunta 15): retrasos y pena convencional, terminación anticipada, y caso fortuito y fuerza mayor.
+   - Propiedad intelectual ahora distingue el diseño del cliente, el diseño por encargo, el programa CAM y el código G, y las herramientas y macros previas del taller.
+   - Confidencialidad prohíbe copiar, reutilizar o publicar los planos y pide borrar las copias al terminar.
+   - Incumplimiento dice quién devuelve el dinero.
+   - Calidad dice cómo se acredita la entrega.
+3. **No se aprueba un contrato con textos por llenar:** «indicar», «por definir», «(nombre o razón social)».
+4. **Autorización expresa para compartir contactos** (pregunta 24): al firmar, cada parte marca una casilla con el texto exacto y la lista de sus datos que se compartirán. Sin ella no se puede firmar. Queda registrada en la firma y en el historial.
+5. **Evidencia reforzada** (pregunta 13). Cada firma guarda, además de lo que ya guardaba:
+   - la versión del contrato;
+   - una huella de la sesión;
+   - el texto aceptado;
+   - la autorización de contacto.
+
+   Al firmar las dos partes, cada firmante recibe por correo el contrato y la constancia **adjuntos**, y se registra la entrega. La constancia muestra todo esto.
+
+Pendiente: la constancia NOM-151 con un prestador de servicios de certificación (requiere contratar uno).
