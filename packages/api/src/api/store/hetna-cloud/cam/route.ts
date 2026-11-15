@@ -3,6 +3,7 @@
 // también tiene taller en HETNA (su cuenta de vendedor usa el mismo correo),
 // se crea un proyecto en su nube con el dibujo y el programa. Mismo cupo que
 // las demás subidas de la nube.
+import { clientesConCorreoConfiable } from "../../../../lib/verificar-correo"
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { randomBytes } from "crypto"
@@ -31,6 +32,11 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   if (!customerId) return res.status(401).json({ message: "Entra a tu cuenta para guardar en tu nube." })
 
   const cliente = await knex("customer").where({ id: customerId }).whereNull("deleted_at").first("email")
+  // Sólo con el correo confirmado: si no, alguien abría una cuenta con el correo
+  // de un taller y escribía en su nube (auditoría Thermos, 15 nov 2026)
+  if (cliente?.email && !(await clientesConCorreoConfiable(knex, cliente.email)).includes(customerId)) {
+    return res.status(403).json({ message: "Confirma tu correo para guardar en tu nube. Te mandamos la liga al registrarte.", codigo: "correo_sin_confirmar" })
+  }
   const correo = String(cliente?.email || "").trim().toLowerCase()
   const seller = correo ? await knex("seller").whereRaw("lower(email) = ?", [correo]).whereNull("deleted_at").first("id", "name") : null
   if (!seller) {

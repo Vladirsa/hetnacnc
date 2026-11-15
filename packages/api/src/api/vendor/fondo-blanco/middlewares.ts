@@ -5,6 +5,7 @@
 // Para apagar la regla sin tocar código: poner FONDO_BLANCO_ACTIVO=false en el .env de la API.
 // Si no se puede revisar una foto (error de red, formato raro), se deja pasar: nunca se frena una venta por un fallo técnico.
 
+import { urlPublica } from "../../../lib/url-publica"
 import { MedusaError } from "@medusajs/framework/utils"
 import type {
   MedusaNextFunction,
@@ -43,7 +44,11 @@ export async function revisarFoto(direccion: string): Promise<boolean | null> {
     if (direccion.startsWith("data:")) return null
     const url = new URL(direccion, process.env.BACKEND_URL || "http://localhost:9000")
     if (url.protocol !== "http:" && url.protocol !== "https:") return null
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+    // Las fotos del propio servidor (relativas) sí; una URL ajena sólo si es de
+    // internet, nunca de la red interna (auditoría Thermos, 15 nov 2026)
+    const propia = !/^https?:\/\//i.test(direccion)
+    if (!propia && !(await urlPublica(url))) return null
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: propia ? "follow" : "error" })
     if (!res.ok) return null
     const largo = Number(res.headers.get("content-length") || 0)
     if (largo > MAX_BYTES) return null

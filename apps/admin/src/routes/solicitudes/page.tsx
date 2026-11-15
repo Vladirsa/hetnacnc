@@ -182,7 +182,7 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
           <span><span style={{ color: C.tenue }}>Entrega:</span> <strong>{[t.ciudad, t.estado_mx].filter(Boolean).join(", ")}</strong></span>
         )}
         {(t.archivos || []).length > 0 && <span>📎 {(t.archivos || []).length} archivo(s)</span>}
-        {t.archivo && <a href={t.archivo} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>Liga del cliente ↗</a>}
+        {/^https?:\/\//i.test(String(t.archivo || "")) && <a href={t.archivo} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>Liga del cliente ↗</a>}
       </div>
       <div style={{ marginTop: 8, fontSize: 13, color: C.tenue }}>
         Cliente: <strong style={{ color: C.texto }}>{s.contacto?.nombre || "—"}</strong> · {s.contacto?.email}

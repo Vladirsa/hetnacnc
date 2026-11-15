@@ -117,3 +117,16 @@ describe("aviso de reembolso de PayPal", () => {
     expect(capturaDe({ id: "../x" })).toBeNull()
   })
 })
+
+import { ipPrivada } from "../url-publica"
+
+describe("ipPrivada (SSRF)", () => {
+  it("bloquea la red interna y los metadatos de la nube", () => {
+    for (const ip of ["127.0.0.1", "10.0.0.5", "172.16.3.1", "192.168.1.10", "169.254.169.254", "0.0.0.0", "::1", "fd00::1", "::ffff:127.0.0.1"]) {
+      expect(ipPrivada(ip)).toBe(true)
+    }
+  })
+  it("deja pasar IPs públicas", () => {
+    for (const ip of ["8.8.8.8", "104.16.0.1", "2606:4700::1111"]) expect(ipPrivada(ip)).toBe(false)
+  })
+})
