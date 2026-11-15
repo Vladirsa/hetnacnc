@@ -6,7 +6,7 @@
 //   1. Cliente y taller conversan en privado dentro de HETNA (contacto oculto
 //      hasta que el cliente lo comparta o firmen el acuerdo).
 //   2. SafeDeal es OPCIONAL, pero ambos ven una alerta que lo recomienda.
-//      Cualquiera de los dos prepara las condiciones (12 apartados); cada
+//      Cualquiera de los dos prepara las condiciones (15 apartados); cada
 //      cambio borra las aprobaciones. Cuando los dos aprueban, se genera el
 //      PDF, se calcula su huella SHA-256 y la versión queda BLOQUEADA.
 //   3. Firma electrónica simple con verificación reforzada: código de 6
@@ -101,6 +101,20 @@ export async function asegurarSafeDeal(knex: any) {
     t.timestamp("created_at").defaultTo(knex.fn.now())
   })
   await knex.raw(`alter table ?? add column if not exists contactos_liberados boolean`, [T_SOLICITUD])
+  // Revisión jurídica del 14 nov 2026 (preguntas 13, 14 y 24): la modalidad y el
+  // texto exacto del papel de HETNA con que se generó cada versión, y más
+  // evidencia de cada firma.
+  for (const [col, tipo] of [["modalidad", "text"], ["clausula_hetna", "text"]] as const)
+    await knex.raw(`alter table ?? add column if not exists ?? ${tipo}`, [T_CONTRATO, col])
+  for (const [col, tipo] of [
+    ["autoriza_contacto", "boolean"],
+    ["datos_contacto", "jsonb"],
+    ["texto_aceptado", "text"],
+    ["version", "integer"],
+    ["sesion", "text"],
+    ["copia_enviada_en", "timestamptz"],
+  ] as const)
+    await knex.raw(`alter table ?? add column if not exists ?? ${tipo}`, [T_FIRMA, col])
   listo = true
 }
 
@@ -191,7 +205,7 @@ export async function enviarMensaje(knex: any, s: any, parte: Parte, texto: stri
 }
 
 // ---------------------------------------------------------------------
-// Condiciones del acuerdo (12 apartados de la especificación, sección 2.2)
+// Condiciones del acuerdo (los 12 de la especificación, sección 2.2, más retrasos, terminación y caso fortuito desde el 14 nov 2026)
 // ---------------------------------------------------------------------
 
 export const APARTADOS: [clave: string, titulo: string][] = [
@@ -206,16 +220,77 @@ export const APARTADOS: [clave: string, titulo: string][] = [
   ["propiedad", "Propiedad intelectual"],
   ["confidencialidad", "Confidencialidad"],
   ["incumplimiento", "Incumplimiento"],
+  ["retrasos", "Retrasos y pena convencional"],
+  ["terminacion", "Terminación anticipada"],
+  ["fuerza_mayor", "Caso fortuito y fuerza mayor"],
   ["controversias", "Controversias"],
 ]
 
-/** Cláusula fija: qué hace y qué no hace HETNA (sección 2.3). No se edita. */
-export const CLAUSULA_HETNA =
+/** Texto de la cláusula de HETNA de los contratos generados antes del 14 nov 2026.
+ *  Se conserva para regenerar esos PDF exactamente igual (misma huella). */
+export const CLAUSULA_HETNA_ANTERIOR =
   "HETNA CNC proporciona la infraestructura tecnológica que conectó a las partes. HETNA no fabrica los productos ni presta los servicios contratados, " +
   "no fija los precios ni negocia en nombre de las partes, y no garantiza la calidad, la entrega, la solvencia ni el cumplimiento de ninguna de ellas. " +
   "La elección del taller fue decisión exclusiva del cliente. Cada parte es responsable de verificar las capacidades, obligaciones y acuerdos de la otra, " +
   "y los conflictos derivados de este contrato se resolverán entre las partes conforme a lo aquí pactado y a la legislación aplicable. " +
   "Esta cláusula no limita las obligaciones legales propias de HETNA, como la protección de datos personales y la seguridad de la información."
+export const CLAUSULA_HETNA = CLAUSULA_HETNA_ANTERIOR // compatibilidad
+
+// Revisión jurídica del 14 nov 2026 (pregunta 14): la cláusula no puede decir
+// que HETNA no interviene si en realidad recibe el pago, atiende reclamos y
+// decide liberaciones. Dos modalidades, según cómo se cobra la solicitud
+// (hetna_solicitud.cobro, lib/licitacion-cobro.ts):
+//   conecta     el cliente le paga directo al taller (cobro = "taller")
+//   administra  el cliente paga por medio de HETNA (cobro = "hetna" o vacío)
+// Texto preliminar para revisión del abogado.
+export type Modalidad = "conecta" | "administra"
+export const modalidadDe = (s: any): Modalidad => (s?.cobro === "taller" ? "conecta" : "administra")
+
+const BASE_HETNA =
+  "HETNA CNC no es parte del contrato de fabricación: no fabrica los productos ni presta los servicios contratados, no fija los precios ni negocia en nombre de las partes, " +
+  "y no garantiza el resultado técnico, la calidad ni la entrega, que son responsabilidad del taller. La elección del taller fue decisión del cliente. "
+
+export function clausulaHetna(m: Modalidad): string {
+  const alcance =
+    m === "conecta"
+      ? "En este contrato HETNA interviene así: (1) intermediación tecnológica: la plataforma que conectó a las partes y donde conversan; (2) administración operativa de la solicitud: registro de propuestas, mensajes, avances, entregas y este contrato; " +
+        "(3) gestión de controversias: recibe reportes, pide evidencia a ambas partes y propone una solución conforme a los Términos y condiciones. " +
+        "El cliente le paga directamente al taller, por medio del procesador de pagos conectado por el taller: HETNA no recibe ni retiene ese dinero, y si procede un reembolso lo hace el taller. "
+      : "En este contrato HETNA interviene así: (1) intermediación tecnológica: la plataforma que conectó a las partes y donde conversan; (2) administración operativa de la solicitud: registro de propuestas, mensajes, avances, entregas y este contrato; " +
+        "(3) gestión de controversias: recibe reportes, pide evidencia a ambas partes y decide conforme a los Términos y condiciones; (4) gestión del pago: el cliente paga por medio del procesador de pagos de HETNA, " +
+        "y HETNA libera el pago al taller cuando el cliente confirma la recepción o al vencer el plazo de confirmación, o lo reembolsa al cliente si así se resuelve una controversia, según los Términos y condiciones. "
+  return (
+    BASE_HETNA +
+    alcance +
+    "Los pagos hechos fuera de HETNA no tienen el registro ni el procedimiento de controversias de la plataforma. Este procedimiento no limita el derecho de las partes de acudir a la PROFECO o a los tribunales. " +
+    "Esta cláusula no limita las obligaciones legales propias de HETNA, como la protección de datos personales y la seguridad de la información."
+  )
+}
+
+/** Texto que el firmante acepta para compartir sus datos de contacto (pregunta 24). */
+export function textoAutorizacionContacto(parte: Parte, campos: string[]) {
+  const lista = campos.length ? campos.join(", ") : "nombre y correo electrónico"
+  return (
+    `Autorizo que HETNA comparta con ${parte === "cliente" ? "el taller" : "el cliente"} mis datos de contacto (${lista}) cuando ambas partes firmen este contrato, ` +
+    "sólo para coordinar la fabricación, la entrega, la comunicación y el cumplimiento del proyecto."
+  )
+}
+
+/** Qué datos de contacto de esta parte se compartirían. */
+export function camposContacto(c: { nombre?: string; empresa?: string; email?: string; telefono?: string; whatsapp?: string }) {
+  return [
+    c.nombre && "nombre",
+    c.empresa && "empresa",
+    c.email && "correo electrónico",
+    c.telefono && "teléfono",
+    c.whatsapp && "WhatsApp",
+  ].filter(Boolean) as string[]
+}
+
+// Textos que todavía no se llenan: con ellos no se aprueba el contrato
+const PENDIENTE = /\(indicar|indicar si|indicar\.|\(nombre o razón social\)|por definir|\(sin definir\)/i
+export const pendientesDe = (c: any) =>
+  APARTADOS.filter(([k]) => PENDIENTE.test(String((c || {})[k] || ""))).map(([, t]) => t)
 
 const corto = (v: unknown, max = 3000) => String(v ?? "").trim().slice(0, max)
 
@@ -246,19 +321,33 @@ export function condicionesIniciales(s: any, p: any) {
     pagos:
       (anticipo < 100 ? `Anticipo de ${anticipo}% al firmar y el resto contra entrega.` : "Pago del 100% antes de iniciar la fabricación.") +
       (p.condiciones_pago ? `\n${p.condiciones_pago}` : "") +
-      "\nLos pagos hechos dentro de HETNA quedan registrados en el folio.",
+      "\nLos pagos hechos dentro de HETNA quedan registrados en el folio. Los pagos hechos fuera de HETNA no tienen su registro ni su procedimiento de controversias.",
     entrega: `${p.dias} días naturales a partir del pago${p.fecha_entrega ? ` (fecha estimada: ${p.fecha_entrega})` : ""}. Lugar: ${[tr.ciudad, tr.estado_mx || tr.estado].filter(Boolean).join(", ") || "por definir"}.`,
     calidad:
-      "Las piezas se aceptan si cumplen las medidas, tolerancias, material y acabado de este acuerdo. El cliente tiene 5 días hábiles desde que recibe para reportar defectos con fotos; el taller los revisa y, si proceden, corrige o repone.",
+      "Las piezas se aceptan si cumplen las medidas, tolerancias, material y acabado de este acuerdo. La entrega se acredita con la guía de la paquetería o con la confirmación de recepción en HETNA. " +
+      "El cliente tiene 5 días hábiles desde que recibe para reportar defectos con fotos; el taller los revisa y, si proceden, corrige o repone.",
     garantias: p.garantia || "El taller corrige sin costo los defectos de fabricación reportados en el plazo de aceptación.",
     propiedad:
-      "Los planos, diseños y archivos del cliente siguen siendo del cliente. El taller sólo los usa para este trabajo y no puede fabricar, vender ni compartir las piezas o los diseños con terceros.",
+      "Los planos, diseños y archivos que entrega el cliente siguen siendo del cliente; el taller sólo los usa para este trabajo y no puede fabricar, vender ni compartir las piezas o los diseños con terceros. " +
+      "Si el taller elabora un diseño por encargo para este trabajo, el cliente recibe, al pagarlo, los derechos de uso sobre ese diseño y sobre los entregables pagados. " +
+      "El programa CAM y el código G son del taller, salvo que aquí se acuerde entregarlos. El taller conserva sus conocimientos, procesos, macros, bibliotecas y herramientas anteriores a este trabajo.",
     confidencialidad:
-      "Ambas partes guardan en secreto la información técnica y comercial que reciban de la otra durante y después de este trabajo, salvo obligación legal.",
+      "Ambas partes guardan en secreto la información técnica y comercial que reciban de la otra durante y después de este trabajo, salvo obligación legal. " +
+      "El taller no copia los planos para otros clientes, no los reutiliza en otros trabajos, no los publica ni los comparte, y borra sus copias al terminar, salvo que deba conservarlas por ley.",
     incumplimiento:
-      "Si el taller no entrega en el plazo acordado sin causa justificada, el cliente puede cancelar y pedir la devolución de lo pagado por lo no entregado. Si el cliente no paga en los plazos acordados, el taller puede suspender el trabajo.",
+      "Si el taller no entrega en el plazo acordado sin causa justificada, el cliente puede cancelar y pedir la devolución de lo pagado por lo no entregado; la devuelve quien recibió el pago (HETNA si se pagó por medio de HETNA, el taller si se le pagó directo). " +
+      "Si el cliente no paga en los plazos acordados, el taller puede suspender el trabajo.",
+    retrasos:
+      "Sin pena convencional, salvo que las partes la escriban aquí (por ejemplo: 1% del precio por cada día de retraso, hasta un máximo de 10%). Un retraso por causa del cliente (archivos, pagos o datos que faltan) recorre la fecha de entrega.",
+    terminacion:
+      "Cualquiera de las partes puede terminar el contrato si la otra incumple y no lo corrige en 5 días hábiles después de que se le avise por HETNA. " +
+      "Si el cliente cancela antes de que el taller reporte avance, se le devuelve el 100% de lo pagado; si cancela después, paga el material comprado y el trabajo hecho que el taller compruebe.",
+    fuerza_mayor:
+      "Ninguna parte responde por retrasos o incumplimientos causados por hechos fuera de su control (desastres naturales, cortes de energía prolongados, disposiciones de autoridad). " +
+      "Quien los sufra avisa a la otra por HETNA en cuanto pueda; la fecha de entrega se recorre lo que dure el hecho, y si dura más de 30 días cualquiera puede terminar el contrato con la devolución de lo no realizado.",
     controversias:
-      "Las partes intentarán resolver cualquier diferencia de buena fe en 15 días. Si no lo logran, se someten a las leyes de los Estados Unidos Mexicanos y a los tribunales competentes del domicilio del cliente.",
+      "Las partes intentarán resolver cualquier diferencia de buena fe en 15 días, y pueden usar el procedimiento de controversias de HETNA. Si no lo logran, se someten a las leyes de los Estados Unidos Mexicanos y a los tribunales competentes del domicilio del cliente. " +
+      "Nada de esto limita el derecho de acudir a la PROFECO.",
   }
 }
 
@@ -342,16 +431,20 @@ export async function generarPdfContrato(s: any, p: any, k: any) {
   texto(`Folio ${folio} · Versión ${k.version} · Celebrado mediante HETNA CNC (hetnacnc.com)`, { tam: 9, color: GRIS, esp: 10 })
   texto("Este contrato es entre el cliente y el taller. HETNA no es parte del contrato de fabricación.", { tam: 9, color: GRIS, esp: 10 })
   const c = k.condiciones || {}
-  APARTADOS.forEach(([clave, titulo], i) => {
+  // Sólo los apartados que trae esta versión: los contratos anteriores al 14 nov
+  // no tienen retrasos/terminación/fuerza mayor y deben regenerarse idénticos.
+  const presentes = APARTADOS.filter(([clave]) => c[clave] !== undefined)
+  presentes.forEach(([clave, titulo], i) => {
     texto(`${i + 1}. ${titulo.toUpperCase()}`, { tam: 10.5, bold: true, esp: 2 })
     texto(c[clave] || "(sin definir)", { tam: 10, esp: 8 })
   })
-  texto(`${APARTADOS.length + 1}. PAPEL DE HETNA`, { tam: 10.5, bold: true, esp: 2 })
-  texto(CLAUSULA_HETNA, { tam: 9.5, esp: 10 })
-  texto(`${APARTADOS.length + 2}. FIRMA ELECTRÓNICA`, { tam: 10.5, bold: true, esp: 2 })
+  texto(`${presentes.length + 1}. PAPEL DE HETNA`, { tam: 10.5, bold: true, esp: 2 })
+  texto(k.clausula_hetna || CLAUSULA_HETNA_ANTERIOR, { tam: 9.5, esp: 10 })
+  texto(`${presentes.length + 2}. FIRMA ELECTRÓNICA`, { tam: 10.5, bold: true, esp: 2 })
   texto(
     "Las partes aceptan firmar electrónicamente este documento conforme a los artículos 89 a 97 del Código de Comercio. Cada firma se otorga con la cuenta del firmante, " +
-      "un código de verificación enviado a su correo y la aceptación expresa del texto. La huella SHA-256 de este PDF y la constancia de firmas forman el expediente. " +
+      "un código de verificación enviado a su correo y la aceptación expresa del texto. La huella SHA-256 de este PDF y la constancia de firmas forman el expediente; " +
+      "cada firmante recibe por correo una copia de este contrato y de la constancia. " +
       "Si se modifica cualquier condición se genera una nueva versión que debe firmarse de nuevo.",
     { tam: 9.5, esp: 10 }
   )
@@ -375,6 +468,11 @@ export async function generarPdfConstancia(s: any, k: any, firmas: any[], evento
         f.representacion && `En representación de: ${f.representacion}`,
         `Correo verificado: ${f.email || ""}`,
         `Método: firma electrónica simple con código de verificación por correo`,
+        f.version && `Versión del contrato firmada: ${f.version}`,
+        f.sesion && `Identificador de sesión: ${f.sesion}`,
+        f.autoriza_contacto != null && `Autorizó compartir su contacto: ${f.autoriza_contacto ? `sí (${(f.datos_contacto || []).join(", ")})` : "no"}`,
+        f.texto_aceptado && `Texto aceptado: ${f.texto_aceptado}`,
+        f.copia_enviada_en && `Copia del contrato y la constancia enviada a su correo: ${fecha(f.copia_enviada_en)}`,
         `Fecha y hora: ${fecha(f.created_at)} (hora del centro de México)`,
         `Dirección IP: ${f.ip || "no disponible"}`,
         `Navegador: ${(f.agente || "").slice(0, 140)}`,
@@ -417,7 +515,11 @@ export async function estadoAcuerdo(knex: any, s: any, parte: Parte) {
     revisado_legal: REVISADO(),
     leyenda: REVISADO() ? null : LEYENDA_BORRADOR,
     apartados: APARTADOS.map(([clave, titulo]) => ({ clave, titulo })),
-    clausula_hetna: CLAUSULA_HETNA,
+    // La cláusula de HETNA de esta versión (la guardada si ya se generó)
+    modalidad: k?.modalidad || modalidadDe(s),
+    clausula_hetna: k?.clausula_hetna || clausulaHetna(modalidadDe(s)),
+    // Lo que el firmante autoriza compartir (pregunta 24)
+    autorizacion_contacto: textoAutorizacionContacto(parte, camposContacto(parte === "cliente" ? contactoCliente(s) : contactoTaller(p))),
     contrato: k
       ? {
           id: k.id,
@@ -425,6 +527,7 @@ export async function estadoAcuerdo(knex: any, s: any, parte: Parte) {
           estado: k.estado,
           condiciones: k.condiciones,
           huella: huellaCondiciones(k.condiciones),
+          pendientes: pendientesDe(k.condiciones),
           aprobo_cliente: k.aprobo_cliente,
           aprobo_taller: k.aprobo_taller,
           editado_por: k.editado_por,
@@ -444,7 +547,7 @@ export async function estadoAcuerdo(knex: any, s: any, parte: Parte) {
   }
 }
 
-type Ctx = { ip?: string | null; agente?: string | null; logger?: any }
+type Ctx = { ip?: string | null; agente?: string | null; sesion?: string | null; logger?: any }
 
 export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx: Ctx = {}) {
   await asegurarSafeDeal(knex)
@@ -495,6 +598,9 @@ export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx
   if (accion === "aprobar") {
     if (k.estado !== "borrador") return { ok: false, status: 409, message: "Esta versión ya no se puede aprobar." }
     if (b.huella !== huellaCondiciones(k.condiciones)) return { ok: false, status: 409, message: "Las condiciones cambiaron mientras las leías. Revísalas de nuevo." }
+    const faltan = pendientesDe(k.condiciones)
+    if (faltan.length)
+      return { ok: false, status: 400, message: `Antes de aprobar, completen lo que dice "indicar" o "por definir" en: ${faltan.join(", ")}.` }
     const n = await knex(T_CONTRATO).where({ id: k.id, estado: "borrador" }).update({ [`aprobo_${parte}`]: knex.fn.now() })
     if (!n) return { ok: false, status: 409, message: "Las condiciones cambiaron mientras las leías. Revísalas de nuevo." }
     await evento(knex, s, k.id, "condiciones aprobadas", parte, null, ip)
@@ -502,12 +608,15 @@ export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx
     if (k.aprobo_cliente && k.aprobo_taller) {
       // Ambos aprobaron: se genera el PDF y la versión queda bloqueada
       k.borrador_legal = !REVISADO()
+      // El papel de HETNA según cómo se cobra, guardado tal cual en esta versión
+      k.modalidad = modalidadDe(s)
+      k.clausula_hetna = clausulaHetna(k.modalidad)
       const bytes = await generarPdfContrato(s, p, k)
       const huella = sha(bytes)
       const clave = `contratos/${s.id}/${k.id}-v${k.version}.pdf`
       const sub = await uploadFile(Buffer.from(bytes), clave, "application/pdf")
       if (!sub.ok) ctx.logger?.warn?.(`[safedeal] no se pudo guardar el PDF ${clave}: ${sub.reason}`)
-      await knex(T_CONTRATO).where({ id: k.id }).update({ estado: "listo", sha256: huella, pdf_clave: sub.ok ? clave : null, borrador_legal: !REVISADO(), updated_at: knex.fn.now() })
+      await knex(T_CONTRATO).where({ id: k.id }).update({ estado: "listo", sha256: huella, pdf_clave: sub.ok ? clave : null, borrador_legal: !REVISADO(), modalidad: k.modalidad, clausula_hetna: k.clausula_hetna, updated_at: knex.fn.now() })
       await evento(knex, s, k.id, "contrato generado y bloqueado", "hetna", { sha256: huella }, null)
       await avisarOtro("El acuerdo está listo para firmar", "Ambos aprobaron las condiciones. Revisa el PDF y fírmalo con el código que te llegará a tu correo.")
       return { ok: true, listo: true }
@@ -542,6 +651,8 @@ export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx
   if (accion === "firmar") {
     if (k.estado !== "listo") return { ok: false, status: 409, message: "Esta versión no está lista para firmar." }
     if (!(b.acepto === true || b.acepto === "true")) return { ok: false, status: 400, message: "Marca que leíste y aceptas el contrato." }
+    if (!(b.autorizo_contacto === true || b.autorizo_contacto === "true"))
+      return { ok: false, status: 400, message: "Marca la autorización para compartir tus datos de contacto con tu contraparte." }
     const nombre = corto(b.nombre, 120)
     if (nombre.length < 5) return { ok: false, status: 400, message: "Escribe tu nombre completo." }
     if (b.sha256 && b.sha256 !== k.sha256) return { ok: false, status: 409, message: "El contrato cambió. Recarga la página y revísalo de nuevo." }
@@ -553,16 +664,25 @@ export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx
       return { ok: false, status: 400, message: "El código no coincide." }
     }
     const correo = parte === "cliente" ? s.contacto?.email : p.taller_email
+    const campos = camposContacto(parte === "cliente" ? contactoCliente(s) : contactoTaller(p))
+    const autorizacion = textoAutorizacionContacto(parte, campos)
     try {
       await knex(T_FIRMA).insert({
         id: nuevoId("fir"), contrato_id: k.id, parte, nombre, representacion: corto(b.representacion, 160) || null, email: correo,
         metodo: "simple+otp_correo", ip, agente: corto(ctx.agente, 400), sha256: k.sha256,
+        // Evidencia reforzada (revisión jurídica, pregunta 13)
+        version: k.version,
+        sesion: ctx.sesion || null,
+        autoriza_contacto: true,
+        datos_contacto: JSON.stringify(campos),
+        texto_aceptado: `Leí el contrato (versión ${k.version}) y acepto firmarlo electrónicamente. ${autorizacion}`,
       })
     } catch {
       return { ok: false, status: 409, message: "Ya firmaste esta versión." }
     }
     await knex(T_OTP).where({ contrato_id: k.id, parte }).del()
-    await evento(knex, s, k.id, "firmó", parte, { nombre }, ip)
+    await evento(knex, s, k.id, "firmó", parte, { nombre, version: k.version }, ip)
+    await evento(knex, s, k.id, "autorizó compartir sus datos de contacto", parte, { datos: campos }, ip)
     const firmas = await knex(T_FIRMA).where({ contrato_id: k.id })
     if (firmas.length >= 2) {
       await knex(T_CONTRATO).where({ id: k.id }).update({ estado: "firmado", firmado_en: knex.fn.now(), updated_at: knex.fn.now() })
@@ -571,10 +691,27 @@ export async function accionAcuerdo(knex: any, s: any, parte: Parte, b: any, ctx
       const ct = contactoTaller(p)
       const cc = contactoCliente(s)
       const lista = (o: any) => [o.nombre, o.empresa, o.email, o.telefono && `Tel. ${o.telefono}`, o.whatsapp && `WhatsApp ${o.whatsapp}`].filter(Boolean).map(esc).join("<br>")
-      if (s.contacto?.email)
-        await sendEmail({ to: s.contacto.email, subject: `[${folio}] Contrato firmado por ambas partes`, html: marco("¡Contrato firmado!", `<p style="color:#40403A">Ya pueden contactarse directamente. Datos del taller:</p><p style="color:#40403A">${lista(ct)}</p><p style="color:#6B675C;font-size:13px">Huella SHA-256: ${esc(k.sha256)}</p>` + boton("Descargar contrato y constancia", ligaPropuestas(s.token))) }).catch(() => {})
-      if (p.taller_email)
-        await sendEmail({ to: p.taller_email, subject: `[${folio}] Contrato firmado por ambas partes`, html: marco("¡Contrato firmado!", `<p style="color:#40403A">Ya pueden contactarse directamente. Datos del cliente:</p><p style="color:#40403A">${lista(cc)}</p><p style="color:#6B675C;font-size:13px">Huella SHA-256: ${esc(k.sha256)}</p>` + boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)) }).catch(() => {})
+      // Copia del contrato y de la constancia a cada firmante, adjuntas, y queda
+      // registrado a quién se le entregó (revisión jurídica, pregunta 13).
+      const adjuntos: { nombre: string; contenido: Uint8Array }[] = []
+      try {
+        const contrato = await documentoAcuerdo(knex, s, "contrato", k.version)
+        if (contrato) adjuntos.push({ nombre: contrato.nombre, contenido: contrato.bytes })
+        const constancia = await documentoAcuerdo(knex, s, "constancia", k.version)
+        if (constancia) adjuntos.push({ nombre: constancia.nombre, contenido: constancia.bytes })
+      } catch (e) {
+        ctx.logger?.warn?.(`[safedeal] no se pudieron adjuntar los PDF de ${folio}: ${(e as Error).message}`)
+      }
+      const copia = async (para: Parte, to: string | undefined, html: string) => {
+        if (!to) return
+        const r = await sendEmail({ to, subject: `[${folio}] Contrato firmado por ambas partes`, html, adjuntos } as any).catch(() => ({ sent: false }))
+        if (r?.sent) {
+          await knex(T_FIRMA).where({ contrato_id: k.id, parte: para }).update({ copia_enviada_en: knex.fn.now() })
+          await evento(knex, s, k.id, `copia del contrato y la constancia enviada al ${para}`, "hetna", { adjuntos: adjuntos.map((a) => a.nombre) }, null)
+        }
+      }
+      await copia("cliente", s.contacto?.email, marco("¡Contrato firmado!", `<p style="color:#40403A">Ya pueden contactarse directamente. Datos del taller:</p><p style="color:#40403A">${lista(ct)}</p><p style="color:#40403A">Te adjuntamos el contrato y la constancia de firmas. Guárdalos.</p><p style="color:#6B675C;font-size:13px">Huella SHA-256: ${esc(k.sha256)}</p>` + boton("Ver el acuerdo", ligaPropuestas(s.token))))
+      await copia("taller", p.taller_email, marco("¡Contrato firmado!", `<p style="color:#40403A">Ya pueden contactarse directamente. Datos del cliente:</p><p style="color:#40403A">${lista(cc)}</p><p style="color:#40403A">Te adjuntamos el contrato y la constancia de firmas. Guárdalos.</p><p style="color:#6B675C;font-size:13px">Huella SHA-256: ${esc(k.sha256)}</p>` + boton("Ver en mi panel", `${VENDOR_URL}/solicitudes`)))
       return { ok: true, firmado: true }
     }
     await avisarOtro("Tu contraparte ya firmó", "Falta tu firma para cerrar el expediente y compartir contactos.")
