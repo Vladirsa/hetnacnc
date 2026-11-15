@@ -509,11 +509,20 @@ async function cancelarEnFacturapi(f: any, llave: string, m: string, sustitutaFa
   // respuesta desconocida ya no se toma como "cancelada" (eso dejaba volver a
   // facturar el pedido con la factura original todavía vigente).
   const estado = inv?.status === "canceled" ? "cancelada" : "cancelacion_pendiente"
-  await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, {
-    method: "PATCH",
-    headers: { Prefer: "return=minimal" },
-    body: JSON.stringify({ estado, motivo_cancelacion: m, cancelado_en: new Date().toISOString() }),
-  })
+  // Facturapi ya canceló: si el registro falla se reintenta, para que la base
+  // no se quede con una factura "vigente" que el SAT ya canceló (auditoría
+  // Thermos, 15 nov 2026). Si aun así falla, refrescarCancelacion lo arregla
+  // la próxima vez que se consulte o cancele esa factura.
+  const cuerpo = JSON.stringify({ estado, motivo_cancelacion: m, cancelado_en: new Date().toISOString() })
+  for (let intento = 1; intento <= 3; intento++) {
+    try {
+      await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: cuerpo })
+      break
+    } catch (e) {
+      if (intento === 3) throw new ErrorSuscripcion(`La factura se canceló en el SAT, pero no se guardó el registro (${(e as Error).message}). Vuelve a cancelarla para actualizarla.`, 502)
+      await new Promise((r) => setTimeout(r, 500 * intento))
+    }
+  }
   return estado
 }
 
@@ -521,6 +530,8 @@ export async function cancelarFactura(token: string | undefined, id: string, mot
   const { f, llave } = await facturaDelTaller(token, id, true)
   if (f.estado === "cancelada") return { ok: true, estado: "cancelada" }
   if (f.estado === "cancelacion_pendiente") return { ok: true, estado: await refrescarCancelacion(f, llave) }
+  // Si ya está cancelada en Facturapi (un registro que no se guardó antes), sólo se actualiza la base
+  if ((await refrescarCancelacion(f, llave)) === "cancelada") return { ok: true, estado: "cancelada" }
   const m = ["01", "02", "03", "04"].includes(motivo) ? motivo : "02"
   let sustitutaFapi: string | undefined
   if (m === "01") {
@@ -528,6 +539,7 @@ export async function cancelarFactura(token: string | undefined, id: string, mot
     if (!sustituta) throw new ErrorSuscripcion("Con el motivo 01 indica la factura que sustituye a ésta (emítela primero).")
     const { f: nueva } = await facturaDelTaller(token, sustituta, true)
     if (nueva.id === f.id || String(nueva.estado || "").startsWith("cancel")) throw new ErrorSuscripcion("La factura sustituta debe ser otra factura vigente.")
+    if (nueva.pedido_id !== f.pedido_id) throw new ErrorSuscripcion("La factura sustituta debe ser del mismo pedido.")
     if (nueva.modo !== f.modo) throw new ErrorSuscripcion("La factura sustituta debe ser del mismo modo (prueba o real).")
     sustitutaFapi = nueva.facturapi_id
   }

@@ -13,7 +13,8 @@ export const ProductPostedDate = async ({
 
   return (
     <p className='label-md text-secondary'>
-      Publicado {postedDate}
+      {/* Un solo texto para que el traductor (REGLAS de i18n/en.ts) lo pase al inglés */}
+      {`Publicado ${postedDate}`}
     </p>
   );
 };

@@ -18,12 +18,13 @@ import Link from "next/link"
 import { PasswordValidator } from "@/components/cells/PasswordValidator/PasswordValidator"
 import { toast } from "@/lib/helpers/toast"
 import { copiarAutollenado } from "@/lib/helpers/autollenado"
+import { destinoSeguro } from "@/lib/seguridad/destino-seguro"
 
 // HETNA: a donde regresar despues de crear la cuenta (?volver=/mx/servicios/cotizador-cnc)
 const leerVolver = () => {
   if (typeof window === "undefined") return null
   const v = new URLSearchParams(window.location.search).get("volver")
-  return v && v.startsWith("/") && !v.startsWith("//") ? v : null
+  return v ? destinoSeguro(v, "") || null : null
 }
 
 // Lada por país. México primero (casi todos los clientes); EE. UU. y Canadá
