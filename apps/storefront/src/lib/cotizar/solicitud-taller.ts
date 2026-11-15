@@ -150,7 +150,7 @@ export type Propuesta = {
 
 export type CobroSolicitud = {
   modo: "taller" | "hetna"
-  metodos: ("mercadopago" | "paypal")[]
+  metodos: ("mercadopago" | "paypal" | "stripe")[]
   total: number
   pagado: number
   saldo: number
@@ -315,7 +315,7 @@ export async function reportarProblema(token: string, tipo: TipoProblema, detall
 /** Liga del siguiente pago (anticipo, resto o total) con Mercado Pago o PayPal. */
 export async function pagarSolicitud(
   token: string,
-  proveedor: "mercadopago" | "paypal"
+  proveedor: "mercadopago" | "paypal" | "stripe"
 ): Promise<{ ok: true; url: string } | { ok: false; mensaje: string }> {
   const r = await postar(`/store/solicitudes-taller/${encodeURIComponent(token)}/pagar`, { proveedor }, "No se pudo crear la liga de pago. Intenta de nuevo.")
   return r.ok ? { ok: true, url: r.body.url } : r
