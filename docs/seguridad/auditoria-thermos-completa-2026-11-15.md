@@ -6,14 +6,43 @@ Revisión de seguridad y fallas del código ya desplegado (rama main después de
 
 Prioridad Alta (los 6):
 1. **Datos protegidos del taller:** `plan` y `plan_vence` se podían escribir desde el panel, y `POST /vendor/sellers/:id` y `POST /vendor/sellers` no pasaban por `protegerMetadata` (insignia de verificado, exención de requisitos). Ahora las tres rutas blindan las llaves.
-2. **Archivos privados con un producto falso:** un taller podía poner `archivo_storage_key` con la llave de un archivo de pago o de los planos de un cliente. Ahora `/vendor/products*` no acepta `archivo_storage_key`, `archivo_gratis`, `producto_digital`, `precio_mxn` ni `creditos_otorgados`. Además, la entrega rechaza llaves de carpetas privadas (`solicitudes/`, `propuestas/`, `facturas/`, `cloud/`…). También cierra el M4 de pagos (venta "digital" sin espera) y el M5 (precio de créditos).
-3. **Solicitudes de otra persona por su correo:** la liga de pantalla de afiliación se entregaba aunque el número ya existiera, y "Activar mi cuenta" pasaba las solicitudes a una cuenta con el correo sin confirmar. Ahora la liga solo sale si el número es nuevo, las solicitudes solo se ligan con el correo confirmado y la pantalla no muestra el teléfono.
+2. **Archivos privados con un producto falso:** un taller podía poner `archivo_storage_key` con la llave de un archivo de pago o de los planos de un cliente. Ahora `/vendor/products*` no acepta `archivo_storage_key`, `archivo_gratis`, `producto_digital`, `precio_mxn` ni `creditos_otorgados`. Además, la entrega rechaza llaves de carpetas privadas (`solicitudes/`, `talleres/`, `envios/`, `propuestas/`, `facturas/`, `cloud/`…). También cierra el M4 de pagos (venta "digital" sin espera) y el M5 (precio de créditos).
+3. **Solicitudes de otra persona por su correo:** la liga de pantalla de afiliación se entregaba aunque el número ya existiera, y "Activar mi cuenta" pasaba las solicitudes a una cuenta con el correo sin confirmar. Ahora la liga solo sale si el número es nuevo, la pantalla no muestra el teléfono y las solicitudes se ligan solo con el correo confirmado: con la liga del correo de afiliación o al confirmar el correo de la cuenta (`hooks/verificar-correo`).
 4. **Trabajo CAM pagado con cualquier producto:** ahora la línea debe ser del producto y nivel del servicio, y el trabajo debe estar en el carrito.
-5. **HetNa Cloud importaba trabajos CAM por `seller.email`,** que el taller puede editar. Ahora usa los correos con los que entran los miembros del taller.
+5. **HetNa Cloud importaba trabajos CAM por `seller.email`,** que el taller puede editar. El correo de acceso tampoco está confirmado. Ahora la liga de confirmación del alta firma el correo al que se mandó, ese correo queda en `metadata.correo_confirmado_email` (protegido) y HetNa Cloud importa solo con él. Los talleres que confirmaron antes de este cambio no importan trabajos CAM automáticamente hasta tener ese dato.
 6. **XSS con un "G-code" `.html`:** el archivo siempre se guarda con extensión `.nc`.
 
 Prioridad Media:
-- **M1 de pagos:** un aviso repetido de Mercado Pago ya no cambia quién cobra, el taller ni la comisión de un pago ya registrado.
+- **M1 de pagos:**
+  - En el aviso sin `?sol=`, un pago cobrado por la cuenta de un taller conectado ya no se anota como cobro de HETNA.
+  - Un pago ya registrado no cambia quién cobra ni el taller.
+  - Mientras no está aprobado, monto y comisión se ponen al día.
+
+## Cómo se probó
+- `tsc` del API sin errores y 154 pruebas unitarias.
+- Hay pruebas nuevas en `lib/__tests__/auditoria-thermos.unit.spec.ts` para la lista de llaves privadas, el blindaje de la metadata de productos y la regla de pago de trabajos CAM (con un pedido de ejemplo).
+- **No se probó de punta a punta** (rutas, webhooks y flujos contra una base y servicios reales). Después de desplegar hay que revisar a mano estos flujos: alta de taller y confirmación de correo, publicar un producto, compra de un servicio CAM, activar cuenta desde una solicitud y un pago de licitación.
+
+## Revisar abusos anteriores (lo arreglado no deshace lo que ya se guardó)
+En el VPS, desde `~/hetnacnc/packages/api`, con la `DATABASE_URL` del `.env`. Las consultas solo leen.
+
+Talleres con plan, insignia o exención. Compáralos con los que HETNA aprobó:
+```sql
+select id, name, email, metadata->>'plan' plan, metadata->>'verificado' verificado,
+       metadata->>'empresa_verificada' empresa, metadata->>'requisitos_exento' exento
+from seller
+where deleted_at is null and (metadata ? 'plan' or metadata->>'verificado' = 'true'
+   or metadata->>'empresa_verificada' = 'true' or metadata->>'requisitos_exento' = 'true');
+```
+
+Productos con archivo descargable. Revisa que la llave sea del mismo taller y no de carpetas privadas:
+```sql
+select p.id, p.title, p.metadata->>'archivo_storage_key' llave, p.metadata->>'archivo_gratis' gratis,
+       p.metadata->>'producto_digital' digital
+from product p
+where p.deleted_at is null and (p.metadata ? 'archivo_storage_key' or p.metadata->>'producto_digital' = 'true')
+order by 3;
+```
 
 ## Pendiente (Media y Baja)
 

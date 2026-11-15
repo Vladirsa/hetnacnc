@@ -3,7 +3,9 @@
 //   POST /hooks/verificar-correo  { email }                        -> reenvía la liga
 // El POST no dice si el correo existe (para no regalar qué correos tienen cuenta).
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+
+import { ligarSolicitudesPorCorreo } from "../../../lib/afiliacion"
 
 import {
   VERIFICAR_DESDE,
@@ -29,6 +31,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       metadata: { ...(c.metadata || {}), correo_verificado: true, correo_verificado_en: new Date().toISOString() },
     })
     req.scope.resolve("logger").info(`[verificar-correo] ${c.email} confirmó su correo`)
+    // Con el correo confirmado, sus solicitudes enviadas sin cuenta pasan a
+    // «Mis solicitudes» (antes se ligaban sin confirmar; auditoría Thermos).
+    const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+    const ligadas = await ligarSolicitudesPorCorreo(knex, c.email, c.id).catch(() => 0)
+    if (ligadas) req.scope.resolve("logger").info(`[verificar-correo] ${ligadas} solicitudes ligadas a ${c.id}`)
     // La bienvenida va ahora, ya con el correo confirmado. Las cuentas de antes
     // (que confirman al activar el Cotizador) ya la recibieron al registrarse.
     const nueva = !c.created_at || new Date(c.created_at).getTime() >= VERIFICAR_DESDE().getTime()

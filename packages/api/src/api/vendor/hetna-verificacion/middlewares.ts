@@ -37,6 +37,7 @@ const PROTEGIDAS = [
   // Confirmación de correo del alta (lib/alta-taller.ts)
   "correo_confirmado",
   "correo_confirmado_en",
+  "correo_confirmado_email",
   // Requisitos para publicar (lib/requisitos-vendedor.ts)
   "terminos_version",
   "terminos_ip",

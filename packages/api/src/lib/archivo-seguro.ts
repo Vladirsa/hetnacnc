@@ -231,7 +231,7 @@ export async function asegurarSubidas(knex: any) {
 // servía para bajar archivos ajenos.
 const PREFIJOS_PRIVADOS = [
   "solicitudes/", "propuestas/", "avances/", "guias/", "facturas/", "certificaciones/", "cloud/",
-  "contratos/", "cotizaciones-pdf/", "escaneos3d/", "pruebas/", "verificacion",
+  "contratos/", "cotizaciones-pdf/", "escaneos3d/", "pruebas/", "verificacion", "talleres/", "envios/",
 ]
 export function llaveDeProductoValida(llave: unknown): llave is string {
   if (typeof llave !== "string" || !llave || llave.length > 500) return false

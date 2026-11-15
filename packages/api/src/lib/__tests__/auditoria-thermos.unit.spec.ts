@@ -30,3 +30,27 @@ describe("blindarProducto", () => {
     expect(out).toEqual({ archivo_storage_key: "libros/s/a.pdf", producto_digital: true, x: 1 })
   })
 })
+
+import { trabajosPagables } from "../../workflows/cam/steps/mark-cam-jobs-paid"
+
+describe("trabajosPagables (CAM)", () => {
+  const productos = [
+    { handle: "servicio-cam-5-ejes", variants: [
+      { id: "var_5_alta", options: [{ value: "Alta", option: { title: "Complejidad" } }] },
+      { id: "var_5_basica", options: [{ value: "Básica", option: { title: "Complejidad" } }] },
+    ] },
+    { handle: "revision-especialista-cam", variants: [{ id: "var_rev", options: [] }] },
+  ]
+  const job = { id: "camjob_1", status: "in_cart", service: "cam_5", tier: "Alta" }
+  it("paga con la línea del servicio y nivel correctos", () => {
+    expect(trabajosPagables([job], [{ variant_id: "var_5_alta", metadata: { cam_job_id: "camjob_1" } }], productos)).toHaveLength(1)
+  })
+  it("no paga con otro producto, otro nivel o sólo la revisión", () => {
+    expect(trabajosPagables([job], [{ variant_id: "var_barato", metadata: { cam_job_id: "camjob_1" } }], productos)).toHaveLength(0)
+    expect(trabajosPagables([job], [{ variant_id: "var_5_basica", metadata: { cam_job_id: "camjob_1" } }], productos)).toHaveLength(0)
+    expect(trabajosPagables([job], [{ variant_id: "var_rev", metadata: { cam_job_id: "camjob_1", cam_addon: "review" } }], productos)).toHaveLength(0)
+  })
+  it("no paga un trabajo que no estaba en el carrito", () => {
+    expect(trabajosPagables([{ ...job, status: "received" }], [{ variant_id: "var_5_alta", metadata: { cam_job_id: "camjob_1" } }], productos)).toHaveLength(0)
+  })
+})

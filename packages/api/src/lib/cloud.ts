@@ -322,24 +322,19 @@ const ESTADOS_CAM_LISTOS = ["paid", "in_review", "delivered"]
 
 /**
  * Importa los trabajos del servicio CAM de HETNA que pidió el taller (con
- * el correo con el que entra al panel) como proyectos con su modelo, su G-code
+ * el correo que confirmó en su alta) como proyectos con su modelo, su G-code
  * y los entregables. Idempotente, como las licitaciones.
  */
 export async function importarCam(knex: any, sellerId: string): Promise<number> {
   if (!(await knex.schema.hasTable("cam_job"))) return 0
-  // Correos con los que entran los miembros del taller (llegan por invitación
-  // o alta y el taller no los puede editar). Antes se usaba seller.email, que el
-  // taller cambia en su perfil sin confirmar: poniendo el correo de un cliente
+  // Sólo el correo que el taller confirmó con la liga de su alta
+  // (seller.metadata.correo_confirmado_email, protegido). Ni seller.email ni el
+  // correo de acceso están confirmados: con el correo de un cliente un taller
   // se llevaba sus modelos y G-code pagados (auditoría Thermos, 15 nov 2026).
-  const correos = ((await knex("seller_member as sm")
-    .join("member as m", "m.id", "sm.member_id")
-    .where("sm.seller_id", sellerId)
-    .whereNull("sm.deleted_at")
-    .whereNull("m.deleted_at")
-    .where("m.is_active", true)
-    .pluck("m.email")) as string[])
-    .map((c) => String(c || "").trim().toLowerCase())
-    .filter(Boolean)
+  const seller = await knex("seller").where({ id: sellerId }).first("metadata")
+  const meta = typeof seller?.metadata === "string" ? JSON.parse(seller.metadata) : seller?.metadata || {}
+  const confirmado = typeof meta?.correo_confirmado_email === "string" ? meta.correo_confirmado_email.trim().toLowerCase() : ""
+  const correos = confirmado ? [confirmado] : []
   if (!correos.length) return 0
   const clientes = (await knex("customer").whereRaw(`lower(email) in (${correos.map(() => "?").join(",")})`, correos).whereNull("deleted_at").pluck("id")) as string[]
 
