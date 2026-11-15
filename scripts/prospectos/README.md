@@ -106,8 +106,18 @@ Código: `n8n/clasificar_respuesta.js`.
 
 ## Búsqueda automática de prospectos (ScrapeGraphAI + Groq, todas las noches)
 
-`plan_busqueda.json` tiene 572 búsquedas (segmentos × ciudades de México, EE.UU.,
-Sudamérica y Brasil). Cada noche se corren las siguientes `TANDA` (15 por defecto);
+`plan_busqueda.json` tiene 1,069 búsquedas (segmentos × ciudades de México, EE.UU.,
+Sudamérica y Brasil), incluidos carpinterías con router, rotulistas, grabado láser,
+herrerías con plasma, impresión 3D y torno. Por cada búsqueda en español o portugués
+también busca **perfiles de negocio en Instagram y Facebook**: no entra a esas redes
+(piden sesión y sus reglas lo prohíben), sólo lee lo que el buscador muestra del perfil
+y lo guarda únicamente si el negocio publica ahí su correo o teléfono (id `ig-usuario`
+o `fb-pagina`). Nunca se manda mensaje por la red. LinkedIn no se busca: no muestra
+contactos sin sesión y prohíbe la extracción; los LinkedIn que aparecen en los sitios
+web de las empresas sí se guardan. Para apagar las redes: `REDES_SOCIALES=0` en `.env`.
+
+Lo nuevo se manda a n8n directo en el servidor (`http://127.0.0.1:5678`), sin pasar por
+Cloudflare (que bloqueaba el envío con 403). Cada noche se corren las siguientes `TANDA` (15 por defecto);
 al terminar todas, empieza otra vuelta y los sitios ya vistos se saltan. Lo nuevo
 se manda al webhook «Importar prospectos», que sólo agrega lo que no esté en la hoja.
 
