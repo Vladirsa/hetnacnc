@@ -425,7 +425,11 @@ export async function registrarPagoLicitacion(knex: any, solicitudId: string, da
       pagador: datos.pagador || null,
       updated_at: trx.fn.now(),
     }
-    if (previo) await trx(T_PAGO).where({ id: previo.id }).update(registro)
+    // Un pago ya registrado sólo cambia de estado: quién cobra, el taller y la
+    // comisión se quedan como se anotaron la primera vez. Un aviso repetido sin
+    // ?sol= convertía un pago directo al taller en "cobra HETNA" y HETNA se lo
+    // volvía a transferir al taller (auditoría Thermos, 15 nov 2026).
+    if (previo) await trx(T_PAGO).where({ id: previo.id }).update({ estado: registro.estado, pagador: previo.pagador || registro.pagador, updated_at: registro.updated_at })
     else await trx(T_PAGO).insert({ id: nuevoId("pag"), ...registro })
 
     // Reembolso o contracargo de un pago que ya contaba

@@ -42,7 +42,10 @@ export async function POST(
       },
       gcode: gcode
         ? {
-            filename: safeFilename(gcode.originalname || "programa.nc"),
+            // Siempre .nc: el archivo se guarda en /static y una extensión como
+            // .html o .svg se abría como página en el dominio del panel (XSS
+            // al descargarlo el administrador; auditoría Thermos, 15 nov 2026).
+            filename: `${safeFilename(gcode.originalname || "programa").replace(/\.[^.]*$/, "") || "programa"}.nc`,
             mimeType: "text/plain",
             content: gcode.buffer.toString("base64"),
           }

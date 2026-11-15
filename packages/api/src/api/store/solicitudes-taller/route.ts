@@ -281,7 +281,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         const existe = !!a.customer_id || (await tieneCuenta(knex, email))
         afiliacion = {
           numero: a.numero,
-          activar: existe ? null : ligaActivar(a.token_pantalla),
+          // La liga de pantalla sólo si el número se acaba de crear: si ya
+          // existía, quien manda la solicitud podría no ser el dueño del correo
+          // (auditoría Thermos, 15 nov 2026). La del correo le llega al dueño.
+          activar: existe || !a.nueva ? null : ligaActivar(a.token_pantalla),
           cuenta_existe: existe,
           ligaCorreo: existe ? null : ligaActivar(a.token_correo),
         }

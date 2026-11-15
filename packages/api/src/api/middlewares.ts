@@ -15,6 +15,7 @@ import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middle
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
+import { vendorProductoProtegidoMiddlewares } from "./vendor/hetna-producto-protegido/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
 import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
@@ -102,6 +103,7 @@ export default defineMiddlewares({
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
+        ...vendorProductoProtegidoMiddlewares,
         ...vendorAltaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
         // Factura del pedido (PDF + XML del CFDI) desde el panel del taller

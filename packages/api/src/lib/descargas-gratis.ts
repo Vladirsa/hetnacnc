@@ -5,6 +5,7 @@ import { COTIZADOR_MODULE } from "../modules/cotizador"
 import type CotizadorModuleService from "../modules/cotizador/service"
 import { DESCARGAS_MODULE } from "../modules/descargas"
 import type DescargasModuleService from "../modules/descargas/service"
+import { llaveDeProductoValida } from "./archivo-seguro"
 import { getSignedDownloadUrl } from "./backblaze"
 import { planEfectivo, type PerfilParaPlan } from "./cotizador-plan"
 import { planVinculado } from "./cotizador-vinculo"
@@ -139,7 +140,7 @@ export async function descargarGratis(
     throw new DescargaError("no_es_gratis", "Este archivo no es de descarga gratis.")
   }
   const storageKey = typeof meta.archivo_storage_key === "string" ? meta.archivo_storage_key : ""
-  if (!storageKey) {
+  if (!llaveDeProductoValida(storageKey)) {
     throw new DescargaError("sin_archivo", "Este archivo todavía no está listo para descargarse.")
   }
 

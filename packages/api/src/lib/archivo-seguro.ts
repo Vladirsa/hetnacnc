@@ -224,3 +224,17 @@ export async function asegurarSubidas(knex: any) {
   }
   tablaLista = true
 }
+
+// Llaves que nunca se entregan como archivo de un producto (descarga gratis o
+// compra digital): planos y documentos de clientes y talleres. Auditoría
+// Thermos del 15 nov 2026: un producto con archivo_storage_key apuntando aquí
+// servía para bajar archivos ajenos.
+const PREFIJOS_PRIVADOS = [
+  "solicitudes/", "propuestas/", "avances/", "guias/", "facturas/", "certificaciones/", "cloud/",
+  "contratos/", "cotizaciones-pdf/", "escaneos3d/", "pruebas/", "verificacion",
+]
+export function llaveDeProductoValida(llave: unknown): llave is string {
+  if (typeof llave !== "string" || !llave || llave.length > 500) return false
+  if (llave.includes("..") || llave.startsWith("/") || llave.includes("\\")) return false
+  return !PREFIJOS_PRIVADOS.some((p) => llave.startsWith(p))
+}
