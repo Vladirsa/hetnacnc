@@ -175,8 +175,11 @@ def generar(nombre, params, formato):
         if isinstance(a.type, BoolArg):
             v = "1" if v in ("1", "true", "on", "True") else "0"
         argv.append(f"--{a.dest}={v}")
-    # labels/reference: siempre sin rectángulo de referencia; etiquetas si el usuario las pidió
+    # Sin rectángulo de referencia ni etiquetas: Boxes.py rotula las piezas en
+    # inglés ("wall 1", "Bottom") y en el mismo rojo que el corte, así que el
+    # láser las cortaría. "labels" está oculto al usuario (ARGS_OCULTOS).
     argv.append("--reference=0")
+    argv.append("--labels=0")
     with tempfile.TemporaryDirectory() as d:
         salida = os.path.join(d, "pieza." + formato)
         argv += [f"--format={formato}", f"--output={salida}"]
