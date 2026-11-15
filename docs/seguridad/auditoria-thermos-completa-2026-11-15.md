@@ -30,6 +30,11 @@ Prioridad Media:
   - Antes de cobrar se revisa que la orden vaya al PayPal actual del taller y que no sea por más de lo que falta.
   - Un mismo regreso de PayPal se procesa uno tras otro.
 
+- **Verificación de WhatsApp (M3 de vendor-admin), corregido después:**
+  - La página solo acepta el código que HETNA mandó a ese teléfono (uno nuevo por envío), y solo desde la cuenta que empezó la verificación.
+  - Máximo 5 intentos por código.
+  - La liga sigue funcionando porque lo que la valida es el número de donde llega el mensaje.
+
 ## Cómo se probó
 - `tsc` del API sin errores y 154 pruebas unitarias.
 - Hay pruebas nuevas en `lib/__tests__/auditoria-thermos.unit.spec.ts` para la lista de llaves privadas, el blindaje de la metadata de productos y la regla de pago de trabajos CAM (con un pedido de ejemplo).
@@ -60,7 +65,6 @@ order by 3;
 
 Están en los informes de abajo. Los más importantes:
 - **Reembolsos y contracargos del Cotizador:** no deshacen el anticipo.
-- **WhatsApp:** la verificación no comprueba que el número sea del taller.
 - **"Marcar pagado":** puede incluir pedidos que no entraron en la transferencia.
 - **Servidor de `/static`:** conviene servirlo con `Content-Disposition: attachment` y `X-Content-Type-Options: nosniff` desde nginx.
 
