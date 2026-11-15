@@ -70,6 +70,7 @@ export async function asegurarConta(knex: any) {
       t.decimal("ieps", 14, 2).notNullable().defaultTo(0)
       t.text("categoria").notNullable()
       t.boolean("categoria_manual").notNullable().defaultTo(false)
+      t.text("tipo_activo").nullable() // si es inversión: clave de DEPRECIACION (parametros.ts)
       t.jsonb("datos").notNullable() // el Cfdi leído completo (conceptos, relacionados, pagos…)
       t.text("xml").notNullable()
       t.text("origen").notNullable().defaultTo("xml") // xml | zip | sat | facturapi | tienda
@@ -89,7 +90,6 @@ export async function asegurarConta(knex: any) {
       t.text("concepto").notNullable()
       t.decimal("subtotal", 14, 2).notNullable()
       t.decimal("iva", 14, 2).notNullable().defaultTo(0)
-      t.boolean("deducible").notNullable().defaultTo(false)
       t.text("uuid").nullable() // si en realidad tiene factura, para conciliar
       t.text("origen").notNullable().defaultTo("excel")
       t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
