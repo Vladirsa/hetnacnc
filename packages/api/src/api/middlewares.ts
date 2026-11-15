@@ -122,6 +122,11 @@ export default defineMiddlewares({
         },
         {
           method: ["POST"],
+          matcher: "/admin/hetna-conta/efirma",
+          middlewares: [leerMultipart({ campos: { cer: 1, key: 1 }, maxMb: 1 })],
+        },
+        {
+          method: ["POST"],
           matcher: "/admin/hetna-conta/semaforo",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
         },
