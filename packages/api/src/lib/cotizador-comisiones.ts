@@ -230,7 +230,8 @@ export async function pagoComisionMercadoPago(paymentId: string, logger?: any) {
     signal: AbortSignal.timeout(15_000),
   })
   const p = (await r.json().catch(() => ({}))) as any
-  if (!r.ok) return null
+  // Un error pasajero se lanza para que Mercado Pago reintente el aviso
+  if (!r.ok) throw Object.assign(new Error(`Mercado Pago respondió ${r.status}`), { status: r.status })
   const m = String(p.external_reference || "").match(/^comision:([0-9a-f-]{36})$/i)
   if (!m || p.status !== "approved") return null
   const cobro = await cobroPorId(m[1])
