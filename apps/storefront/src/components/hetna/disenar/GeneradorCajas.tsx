@@ -50,9 +50,10 @@ const Campo = ({ a, valor, cambiar }: { a: ArgCajas; valor: string | number | bo
     return (
       <label htmlFor={id} className="flex flex-col gap-1 text-[12px] font-semibold text-[#4A4943]" title={a.ayuda}>
         {a.etiqueta}
-        <select id={id} value={String(valor ?? "")} onChange={(e) => cambiar(e.target.value)} className={base + " font-semibold"}>
+        <select id={id} value={String(valor ?? "")} onChange={(e) => cambiar(e.target.value)} className={base + " text-ellipsis pr-8 text-[13.5px] font-semibold"}>
           {a.opciones.map((o) => (
-            <option key={o.valor} value={o.valor}>{o.nombre}</option>
+            // sin la letra de código de Boxes.py ("h Canto…" -> "Canto…")
+            <option key={o.valor} value={o.valor}>{String(o.valor).length === 1 && String(o.nombre).startsWith(`${o.valor} `) ? String(o.nombre).slice(2) : o.nombre}</option>
           ))}
         </select>
       </label>

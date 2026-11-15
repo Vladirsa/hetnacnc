@@ -74,6 +74,77 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
   ),
 }
 
+// Más tipos: viven en el catálogo de cajas (motor Boxes.py, /disenar/cajas)
+const MAS_TIPOS: { id: string; nombre: string; icono: React.ReactNode }[] = [
+  {
+    id: "SlidingLidBox",
+    nombre: "Tapa corrediza",
+    icono: (
+      <>
+        <path d="M6 18l14 7 14-7v10l-14 7-14-7z" />
+        <path d="M10 12l14 7 10-5" />
+        <path d="M30 9l6 3" strokeDasharray="2 2" />
+      </>
+    ),
+  },
+  {
+    id: "HingeBox",
+    nombre: "Con bisagra",
+    icono: (
+      <>
+        <path d="M6 20l14 7 14-7v9l-14 7-14-7z" />
+        <path d="M6 20L12 6l14 7-6 14" />
+      </>
+    ),
+  },
+  {
+    id: "SlidingDrawer",
+    nombre: "Cajonera",
+    icono: (
+      <>
+        <path d="M8 10h24v22H8z" />
+        <path d="M11 14h18v7H11zM11 24h18v5H11z" />
+        <path d="M18 17.5h4M18 26.5h4" />
+      </>
+    ),
+  },
+  {
+    id: "TypeTray",
+    nombre: "Divisiones a medida",
+    icono: (
+      <>
+        <path d="M6 10h28v20H6z" />
+        <path d="M18 10v20M6 20h12M26 10v20" />
+      </>
+    ),
+  },
+  {
+    id: "StackableBin",
+    nombre: "Contenedor apilable",
+    icono: (
+      <>
+        <path d="M8 8h24v10H8zM8 22h24v10H8z" />
+        <path d="M8 13l6-5M8 27l6-5" />
+      </>
+    ),
+  },
+  {
+    id: "RegularBox",
+    nombre: "Poligonal",
+    icono: <path d="M20 5l13 9-5 16H12L7 14z" />,
+  },
+  {
+    id: "FlexBox",
+    nombre: "Curva (flexible)",
+    icono: (
+      <>
+        <path d="M8 12h16a8 8 0 0 1 8 8v0a8 8 0 0 1-8 8H8z" />
+        <path d="M26 13v14M28 15v10" />
+      </>
+    ),
+  },
+]
+
 const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "cerrada", nombre: "Cerrada", nota: "6 caras, tapa fija con dedos" },
   { id: "abierta", nombre: "Abierta", nota: "Charola u organizador, sin tapa" },
@@ -359,6 +430,28 @@ export function GeneradorCaja() {
           ))}
         </div>
         <span className="text-[11.5px] leading-snug text-[#8A97AB]">{TIPOS.find((t) => t.id === tipo)?.nota}</span>
+        <span className="mt-1 text-[11.5px] font-bold uppercase tracking-wide text-[#8A97AB]">Más tipos · abren en el catálogo</span>
+        <div className="grid grid-cols-4 gap-1.5">
+          {MAS_TIPOS.map((t) => (
+            <LocalizedClientLink
+              key={t.id}
+              href={`/disenar/cajas/${t.id}`}
+              className="flex flex-col items-center gap-1 rounded-[10px] border border-dashed border-[#2B3648] px-1 py-1.5 text-center text-[10.5px] font-semibold leading-tight text-[#C9D2E0] hover:border-[#F28A3C] hover:text-white"
+            >
+              <svg viewBox="0 0 40 40" className="h-7 w-7" fill="none" stroke="#8A97AB" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+                {t.icono}
+              </svg>
+              {t.nombre}
+            </LocalizedClientLink>
+          ))}
+          <LocalizedClientLink
+            href="/disenar/cajas"
+            className="flex flex-col items-center justify-center gap-0.5 rounded-[10px] border border-dashed border-[#C2560A]/60 px-1 py-1.5 text-center text-[10.5px] font-semibold leading-tight text-[#F28A3C] hover:border-[#F28A3C]"
+          >
+            <span className="text-[15px] font-extrabold">170+</span>
+            Ver todas
+          </LocalizedClientLink>
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {MODELOS.map((m) => (
             <button
@@ -375,18 +468,6 @@ export function GeneradorCaja() {
           ))}
         </div>
       </Paso>
-
-      <LocalizedClientLink
-        href="/disenar/cajas"
-        className="flex items-center gap-3 rounded-[12px] border border-[#C2560A]/50 bg-gradient-to-r from-[#C2560A]/25 to-transparent p-3 hover:border-[#F28A3C]"
-      >
-        <span className="text-[22px] font-extrabold leading-none text-[#F28A3C]">170+</span>
-        <span className="min-w-0 text-[12.5px] leading-snug text-[#E6EBF2]">
-          <b className="text-white">Más diseños de cajas</b>
-          <br />
-          Bisagras, tapa corrediza, cajoneras, flexibles, en ángulo y más →
-        </span>
-      </LocalizedClientLink>
 
       <Paso n={2} titulo="Medidas">
         <div className="grid grid-cols-2 gap-2">
