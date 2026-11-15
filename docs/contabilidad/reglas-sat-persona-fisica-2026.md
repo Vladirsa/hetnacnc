@@ -139,10 +139,10 @@ Montos [ley estable]. Verifica que no hayan sido actualizados.
 | Activo | % anual | Fundamento |
 |---|---|---|
 | Computadoras, laptops, servidores, impresoras | 30% | Art. 34 fr. VII |
-| Dados, troqueles, moldes, matrices, herramental | 35% | Art. 34 fr. IX **[confirmar fracción]** |
+| Dados, troqueles, moldes, matrices, herramental | 35% | Art. 34 fr. VIII ✔ (verificado en la LISR vigente, 15-nov-2026) |
 | Mobiliario y equipo de oficina | 10% | Art. 34 fr. III |
 | Automóviles | 25% | Art. 34 fr. VI |
-| Maquinaria CNC (router, fresadora, láser, torno) | 10% si el giro es fabricación de productos de metal o maquinaria; en otros giros, % según el art. 35 | Art. 35 **[POR CONFIRMAR fracción y %]** |
+| Maquinaria CNC (router, fresadora, láser, torno) | **8%** si se usa en la fabricación de productos de metal o de maquinaria (art. 35 fr. IV); 9% en productos de plástico o impresión gráfica (fr. V); **10%** en otras actividades no especificadas (fr. XIV). Con varias actividades, el % de la que dio más ingresos el año anterior | Art. 35 ✔ (verificado en la LISR vigente, 15-nov-2026) |
 | Software comprado (activo intangible) | 15% si es regalía o asistencia técnica; 5% si es gasto diferido | Art. 33 **[POR CONFIRMAR]** |
 | Construcciones | 5% | Art. 34 fr. I |
 
