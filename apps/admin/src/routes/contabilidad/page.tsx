@@ -103,6 +103,91 @@ function Datos({ r, alGuardar }: { r: Resumen; alGuardar: () => void }) {
   )
 }
 
+// ─────────────────────────── Descarga automática del SAT (e.firma) ───────────────────────────
+function DescargaSat({ anio, alCambiar }: { anio: number; alCambiar: () => void }) {
+  const [d, setD] = useState<any>(null)
+  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const cer = useRef<HTMLInputElement>(null)
+  const key = useRef<HTMLInputElement>(null)
+  const [clave, setClave] = useState("")
+  const cargar = useCallback(() => { api<any>("/efirma").then(setD).catch((e) => setMsg({ ok: false, t: e.message })) }, [])
+  useEffect(() => { cargar() }, [cargar])
+  const hacer = async (f: () => Promise<string>) => {
+    setOcupado(true); setMsg(null)
+    try { setMsg({ ok: true, t: await f() }); cargar(); alCambiar() } catch (e) { setMsg({ ok: false, t: (e as Error).message }) } finally { setOcupado(false) }
+  }
+  const guardar = () => hacer(async () => {
+    const c = cer.current?.files?.[0], k = key.current?.files?.[0]
+    if (!c || !k || !clave) throw new Error("Elige el .cer, el .key y escribe la contraseña.")
+    const form = new FormData()
+    form.append("cer", c); form.append("key", k); form.append("clave", clave)
+    const r = await api<any>("/efirma", { form })
+    setClave("")
+    if (cer.current) cer.current.value = ""
+    if (key.current) key.current.value = ""
+    return `e.firma guardada y cifrada (RFC ${r.rfc}${r.vence ? `, vence ${String(r.vence).slice(0, 10)}` : ""}).`
+  })
+  const e = d?.efirma
+  const ESTADO: Record<string, string> = { enviada: "En proceso en el SAT", descargada: "Descargada", vacia: "Sin facturas", fallida: "Falló" }
+  return (
+    <div style={caja}>
+      <p style={{ margin: "0 0 4px", fontWeight: 700 }}>Descarga automática del SAT</p>
+      <p style={{ ...tenue, margin: "0 0 12px" }}>
+        Con tu e.firma, el sistema baja cada día todas tus facturas emitidas y recibidas (incluso las que te emitieron sin avisarte).
+        La e.firma se guarda <strong>cifrada</strong> en tu servidor y sólo la usa la descarga; cada uso queda registrado abajo. Nunca la mandes por chat ni correo.
+      </p>
+      {d && !d.servidor_listo && (
+        <p style={{ fontSize: 13, color: C.rojo, background: "#FDECEA", padding: 10, borderRadius: 8 }}>
+          Falta la llave de cifrado en el servidor. En el .env de packages/api agrega <code>CONTA_EFIRMA_KEY=</code> con el resultado de <code>openssl rand -base64 32</code> y reinicia. Sin ella no se guarda ninguna e.firma.
+        </p>
+      )}
+      {e?.guardada ? (
+        <div style={{ fontSize: 13, marginBottom: 10 }}>
+          <span style={{ fontWeight: 700, color: e.vencida ? C.rojo : C.verde }}>{e.vencida ? "⚠ e.firma vencida" : "✔ e.firma guardada"}</span>
+          {" "}· RFC {e.rfc}{e.vence ? ` · vence ${String(e.vence).slice(0, 10)}` : ""}{e.ultimo_uso ? ` · último uso ${new Date(e.ultimo_uso).toLocaleString("es-MX")}` : ""}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            <button type="button" style={boton("primario")} disabled={ocupado} onClick={() => hacer(async () => { const r = await api<any>("/descarga", { cuerpo: { accion: "anio", anio } }); if (!r.ok) throw new Error(r.mensaje); return `Se pidieron ${r.solicitudes} paquetes al SAT. Tardan de minutos a horas; se descargan solos.` })}>Traer todo {anio}</button>
+            <button type="button" style={boton()} disabled={ocupado} onClick={() => hacer(async () => { const r = await api<any>("/descarga", { cuerpo: { accion: "revisar" } }); return `Revisadas ${r.revisadas} solicitudes: ${r.nuevos} facturas nuevas.` })}>Revisar ahora</button>
+            <button type="button" style={boton("peligro")} disabled={ocupado} onClick={() => { if (confirm("¿Borrar tu e.firma del servidor? La descarga automática se detiene.")) hacer(async () => { await api("/efirma", { metodo: "DELETE" }); return "e.firma borrada." }) }}>Borrar e.firma</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, alignItems: "end" }}>
+          <label style={tenue}>Certificado (.cer)<br /><input ref={cer} type="file" accept=".cer" /></label>
+          <label style={tenue}>Llave privada (.key)<br /><input ref={key} type="file" accept=".key" /></label>
+          <label style={tenue}>Contraseña de la e.firma<br /><input style={{ ...input, width: "100%" }} type="password" autoComplete="off" value={clave} onChange={(ev) => setClave(ev.target.value)} /></label>
+          <button type="button" style={boton("primario")} disabled={ocupado || (d && !d.servidor_listo)} onClick={guardar}>Validar y guardar</button>
+        </div>
+      )}
+      {ocupado && <p style={tenue}>Hablando con el SAT…</p>}
+      <Aviso msg={msg} />
+      {d?.solicitudes?.length ? (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 12 }}>
+          <thead><tr style={{ textAlign: "left", color: C.tenue }}>{["Pedida", "Qué", "Periodo", "Estado", "Nuevas"].map((h) => <th key={h} style={{ padding: 4 }}>{h}</th>)}</tr></thead>
+          <tbody>
+            {d.solicitudes.map((x: any) => (
+              <tr key={x.id} style={{ borderTop: `1px solid ${C.borde}` }}>
+                <td style={{ padding: 4 }}>{new Date(x.created_at).toLocaleString("es-MX")}</td>
+                <td style={{ padding: 4 }}>{x.tipo === "issued" ? "Emitidas" : "Recibidas"}</td>
+                <td style={{ padding: 4 }}>{String(x.desde).slice(0, 10)} – {String(x.hasta).slice(0, 10)}</td>
+                <td style={{ padding: 4, color: x.estado === "fallida" ? C.rojo : x.estado === "descargada" ? C.verde : C.texto }} title={x.mensaje || ""}>{ESTADO[x.estado] || x.estado}</td>
+                <td style={{ padding: 4 }}>{x.nuevos ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+      {e?.usos?.length ? (
+        <details style={{ marginTop: 10 }}>
+          <summary style={{ ...tenue, cursor: "pointer" }}>Bitácora de uso de la e.firma</summary>
+          {e.usos.map((u: any, i: number) => <p key={i} style={{ ...tenue, margin: "4px 0" }}>{new Date(u.created_at).toLocaleString("es-MX")} · {u.accion}{u.detalle ? ` · ${u.detalle}` : ""}</p>)}
+        </details>
+      ) : null}
+    </div>
+  )
+}
+
 // ─────────────────────────── Resumen ───────────────────────────
 function VistaResumen({ r }: { r: Resumen }) {
   const t = r.meses.reduce((a, m) => ({ isr: a.isr + m.isr_a_pagar, iva: a.iva + m.iva_a_pagar, ing: a.ing + m.ingresos }), { isr: 0, iva: 0, ing: 0 })
@@ -456,7 +541,7 @@ export default function Contabilidad() {
           {pestana === "facturas" && <Facturas anio={anio} alCambiar={cargar} />}
           {pestana === "auditoria" && <Auditoria alCambiar={cargar} />}
           {pestana === "excel" && <Excel r={r} alCambiar={cargar} />}
-          {pestana === "datos" && <Datos r={r} alGuardar={cargar} />}
+          {pestana === "datos" && <><Datos r={r} alGuardar={cargar} /><DescargaSat anio={anio} alCambiar={cargar} /></>}
         </>
       )}
     </div>
