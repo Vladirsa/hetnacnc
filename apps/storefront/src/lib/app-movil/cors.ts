@@ -6,7 +6,12 @@
 import { NextResponse } from "next/server"
 import { ipDe } from "@/lib/seguridad/ip-cliente"
 
-const BASE = ["https://hetnacnc.com", "https://www.hetnacnc.com", "http://localhost:8080", "http://localhost:5000"]
+// localhost sólo fuera de producción (auditoría de seguridad, 15 nov 2026)
+const BASE = [
+  "https://hetnacnc.com",
+  "https://www.hetnacnc.com",
+  ...(process.env.NODE_ENV === "production" ? [] : ["http://localhost:8080", "http://localhost:5000"]),
+]
 const permitidos = () => [...BASE, ...(process.env.APP_CORS || "").split(",").map((x) => x.trim()).filter(Boolean)]
 
 export function cors(req: Request) {

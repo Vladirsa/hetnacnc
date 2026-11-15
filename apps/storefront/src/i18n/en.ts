@@ -1,8 +1,11 @@
 // Diccionario espanol -> ingles de la tienda HETNA CNC
 // Para agregar una traduccion: "Texto en espanol": "English text",
 import { EN_HERRAMIENTAS } from "./en-herramientas"
+import { EN_PAGINAS } from "./en-paginas"
 
 export const EN: Record<string, string> = {
+  // Primero, para que las entradas de abajo tengan prioridad
+  ...EN_PAGINAS,
   // Menú principal y buscador (problema 5 de la auditoría)
   "Fabricación": "Manufacturing",
   "Cotizar un trabajo": "Get a quote",

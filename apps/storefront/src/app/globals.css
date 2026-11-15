@@ -128,11 +128,41 @@ button:disabled svg path {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/* Descripción del producto (pedido del dueño, 15 nov 2026: que se lea como en
+   Amazon o Mercado Libre, no un bloque gris): párrafos justificados, títulos
+   marcados y viñetas con palomita. */
 .product-details {
-  @apply text-md;
+  @apply text-[15px] leading-[1.7] text-[#2E2D29];
+}
+.product-details p {
+  @apply my-3;
+  text-align: justify;
+  hyphens: auto;
+}
+.product-details h2,
+.product-details h3,
+.product-details h4 {
+  @apply mt-6 mb-2 border-l-4 border-[#C2560A] pl-3 text-[17px] font-bold text-[#142033];
 }
 .product-details ul {
-  @apply list-disc text-md pl-5;
+  @apply my-3 grid gap-1.5 pl-0 sm:grid-cols-2;
+  list-style: none;
+}
+.product-details ul li {
+  @apply relative rounded-[8px] bg-[#FAF6EF] py-1.5 pl-8 pr-2;
+}
+.product-details ul li::before {
+  content: "✓";
+  @apply absolute left-2.5 top-1.5 font-bold text-[#17803F];
+}
+.product-details ol {
+  @apply my-3 list-decimal pl-6;
+}
+.product-details strong {
+  @apply font-semibold text-[#142033];
+}
+.product-details a {
+  @apply font-semibold text-[#B34D07] underline;
 }
 .embla__container {
   touch-action: pan-y pinch-zoom;

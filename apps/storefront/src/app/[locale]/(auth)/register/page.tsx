@@ -1,4 +1,5 @@
 import { RegisterForm } from "@/components/molecules/RegisterForm/RegisterForm"
+import { destinoSeguro } from "@/lib/seguridad/destino-seguro"
 import { retrieveCustomer } from "@/lib/data/customer"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
@@ -16,7 +17,7 @@ export default async function Pagina({ searchParams }: Props) {
 
   if (user) {
     // HETNA: si ya tiene sesion, regresa a donde iba (p. ej. el Cotizador CNC)
-    redirect(volver && volver.startsWith("/") && !volver.startsWith("//") ? volver : "/user")
+    redirect(destinoSeguro(volver, "/user"))
   }
 
   return <RegisterForm />

@@ -269,8 +269,8 @@ export const ProductDetailsHeader = ({
       ) : (
       <>
       <div
-        className={`mt-4 rounded-[12px] px-4 py-3 ${
-          hayDescuento ? "bg-[#FFF3EC]" : "bg-[#F7F5EF]"
+        className={`mt-4 rounded-[12px] border px-4 py-3 ${
+          hayDescuento ? "border-[#F5C9A8] bg-[#FFF3EC]" : "border-[#F2DCC8] bg-gradient-to-br from-[#FFF8F1] to-[#FFF1E4]"
         }`}
         data-testid="product-price-container"
       >
@@ -278,7 +278,7 @@ export const ProductDetailsHeader = ({
           <>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span
-                className="text-[30px] font-bold leading-none text-[#1B1B18]"
+                className="text-[34px] font-extrabold leading-none text-[#B34D07]"
                 data-testid="product-price-current"
               >
                 {precioTexto(offerAmount as number)}
