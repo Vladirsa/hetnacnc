@@ -9,15 +9,15 @@ export const storeSolicitudesTallerMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/store/quote-leads",
-    middlewares: [limitarFormulario({ nombre: "quote-lead", porIpHora: 10, porCorreoHora: 4 })],
+    middlewares: [limitarFormulario({ nombre: "quote-lead", porCorreoHora: 4, totalHora: 200 })],
   },
   {
     method: ["POST"],
     matcher: "/store/solicitudes-taller",
     middlewares: [
       authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true }),
-      // Sin sesión: 8 por hora por IP; 4 por hora por correo (avisos y correos a terceros)
-      limitarFormulario({ nombre: "solicitud", porIpHora: 8, porCorreoHora: 4 }),
+      // Sin sesión: 4 por hora por correo y 120 por hora en total
+      limitarFormulario({ nombre: "solicitud", porCorreoHora: 4, totalHora: 120 }),
     ],
   },
   {

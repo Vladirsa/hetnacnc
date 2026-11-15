@@ -3,11 +3,13 @@
 // script podía hacer que HETNA mandara miles de correos a direcciones ajenas
 // (se daña la reputación del dominio y se agota la cuota de Resend).
 //
-// Dos límites en memoria (el API corre en un solo proceso): por IP y por correo
-// de destino. Con sesión de cliente no se limita por IP.
+// No se limita por IP: la tienda llama a estas rutas desde su servidor (server
+// actions), así que todos los visitantes llegan con la misma IP y un límite por
+// IP bloquearía el formulario para todo el sitio. En su lugar, en memoria (el
+// API corre en un solo proceso):
+//   - por correo de destino, sólo sin sesión (con sesión, el correo es el suyo);
+//   - un tope total por hora para envíos sin sesión, que frena un envío masivo.
 import type { MedusaNextFunction, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-
-import { ipCliente } from "./ip-cliente"
 
 const HORA = 3600_000
 
@@ -29,18 +31,18 @@ function contador() {
   }
 }
 
-export function limitarFormulario(opc: { porIpHora: number; porCorreoHora: number; nombre: string }) {
-  const porIp = contador()
+export function limitarFormulario(opc: { nombre: string; porCorreoHora: number; totalHora: number }) {
   const porCorreo = contador()
+  const total = contador()
   return (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
-    const conSesion = !!(req as any).auth_context?.actor_id
-    if (!conSesion && !porIp(`${opc.nombre}:${ipCliente(req as any)}`, opc.porIpHora)) {
-      res.status(429).json({ message: "Mandaste muchas solicitudes seguidas. Intenta de nuevo en un rato o escríbenos por WhatsApp." })
-      return
-    }
+    if ((req as any).auth_context?.actor_id) return next()
     const correo = String(((req.body || {}) as { email?: unknown }).email || "").trim().toLowerCase()
     if (correo && !porCorreo(`${opc.nombre}:${correo}`, opc.porCorreoHora)) {
-      res.status(429).json({ message: "Ya recibimos varias solicitudes con ese correo en la última hora. Intenta más tarde." })
+      res.status(429).json({ message: "Ya recibimos varias solicitudes con ese correo en la última hora. Intenta más tarde o entra a tu cuenta." })
+      return
+    }
+    if (!total(opc.nombre, opc.totalHora)) {
+      res.status(429).json({ message: "Estamos recibiendo muchas solicitudes. Intenta de nuevo en unos minutos o escríbenos por WhatsApp." })
       return
     }
     next()

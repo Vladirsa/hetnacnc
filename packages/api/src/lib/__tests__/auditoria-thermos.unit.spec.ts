@@ -122,7 +122,7 @@ import { ipPrivada } from "../url-publica"
 
 describe("ipPrivada (SSRF)", () => {
   it("bloquea la red interna y los metadatos de la nube", () => {
-    for (const ip of ["127.0.0.1", "10.0.0.5", "172.16.3.1", "192.168.1.10", "169.254.169.254", "0.0.0.0", "::1", "fd00::1", "::ffff:127.0.0.1"]) {
+    for (const ip of ["127.0.0.1", "10.0.0.5", "172.16.3.1", "192.168.1.10", "169.254.169.254", "0.0.0.0", "::1", "fd00::1", "::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:a9fe:a9fe", "64:ff9b::a9fe:a9fe", "2002:7f00:1::"]) {
       expect(ipPrivada(ip)).toBe(true)
     }
   })
