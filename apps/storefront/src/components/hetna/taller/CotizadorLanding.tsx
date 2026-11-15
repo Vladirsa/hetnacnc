@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { hayArchivoPendiente } from "@/lib/generador/aCotizador"
 import { APP_TALLER, NOTA_PLANES, PLANES_APP } from "@/lib/hetna/app-taller"
+import { trackLeadCotizador } from "@/lib/analytics/events"
 
 import { FranjaAyuda } from "../ServicioPagina"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
@@ -52,8 +53,18 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
 
   if (demo) return <CotizadorEmbebido modo="demo" locale={locale} onCerrar={cerrar} />
 
+  // Cada clic que lleva a la app (registro, abrir, APK) cuenta como interesado
+  // para Google Ads / GA4 / Meta (ver trackLeadCotizador).
+  const alClic = (e: React.MouseEvent) => {
+    const a = (e.target as HTMLElement).closest("a")
+    const href = a?.getAttribute("href") || ""
+    if ([APP_TALLER.registro, APP_TALLER.web, APP_TALLER.android].includes(href)) {
+      trackLeadCotizador(href === APP_TALLER.registro ? "registro" : href === APP_TALLER.android ? "apk" : "abrir_app")
+    }
+  }
+
   return (
-    <main className="w-full bg-[#FAF9F6]">
+    <main className="w-full bg-[#FAF9F6]" onClickCapture={alClic}>
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
         <span>/</span>
