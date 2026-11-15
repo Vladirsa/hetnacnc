@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { unaVezALaVez } from "../../../lib/aviso-unico"
 import { avisoMercadoPago } from "../../../lib/licitacion-cobro"
 
 // Aviso de Mercado Pago para pagos de licitación (https://hetnacnc.com/api/mp-licitacion).
@@ -23,7 +24,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   // base) se responde 500 y Mercado Pago vuelve a avisar. Anotar el mismo pago
   // dos veces no cuenta doble (externo_id único).
   try {
-    await avisoMercadoPago(knex, pagoId, sol, logger)
+    await unaVezALaVez(`mp:${pagoId}`, () => avisoMercadoPago(knex, pagoId, sol, logger))
     return res.status(200).json({ ok: true })
   } catch (e) {
     logger.error(`[licitacion] error procesando aviso de Mercado Pago ${pagoId}: ${(e as Error).message}`)

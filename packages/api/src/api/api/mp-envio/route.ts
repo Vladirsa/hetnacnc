@@ -2,12 +2,16 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sendEmail } from "../../../lib/resend"
+import { errorDefinitivo, unaVezALaVez } from "../../../lib/aviso-unico"
 import { STORE_URL, consultarPago, esc, fila, marco } from "../../../lib/licitacion"
 import { T_ENVIO, asegurarTablasEnvio, folioEnvio } from "../../../lib/envios"
 import { T_SOBREPESO, asegurarTablaSobrepesos, folioSobrepeso } from "../../../lib/sobrepesos"
 
 // Aviso de Mercado Pago para pagos de Envíos HETNA (external_reference "envio:<id>").
 // No confiamos en el cuerpo: consultamos el pago con nuestra llave y validamos monto y moneda.
+// Se responde DESPUÉS de procesar: si algo falla (base, Mercado Pago), responde
+// 500 y Mercado Pago reintenta. Antes se respondía 200 de inmediato y un fallo
+// dejaba el envío pagado en "pendiente_pago" (auditoría Thermos, 15 nov 2026).
 const dir = (d: any) =>
   `${esc(d.nombre)}${d.empresa ? ` (${esc(d.empresa)})` : ""}<br>${esc(d.calle)}, Col. ${esc(d.colonia)}<br>${esc(d.municipio)}, ${esc(d.estado)}, C.P. ${esc(d.cp)}` +
   `${d.referencias ? `<br>Ref.: ${esc(d.referencias)}` : ""}<br>Tel. ${esc(d.telefono)} · ${esc(d.email)}`
@@ -20,10 +24,23 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const tipo = String(b.type || b.topic || q.type || q.topic || "")
   const pagoId = String(b?.data?.id || q["data.id"] || q.id || "")
 
-  res.status(200).json({ ok: true })
-  if (tipo !== "payment" || !/^\d+$/.test(pagoId)) return
+  if (tipo !== "payment" || !/^\d+$/.test(pagoId)) return res.status(200).json({ ok: true })
 
   try {
+    await unaVezALaVez(`mp:${pagoId}`, () => procesar(knex, logger, pagoId))
+    res.status(200).json({ ok: true })
+  } catch (err) {
+    if (errorDefinitivo(err)) {
+      logger.warn(`[envios] aviso ${pagoId}: ${(err as Error).message}; no se reintenta`)
+      return res.status(200).json({ ok: true })
+    }
+    logger.error(`[envios] error procesando aviso de Mercado Pago ${pagoId}: ${(err as Error).message}`)
+    res.status(500).json({ ok: false })
+  }
+}
+
+async function procesar(knex: any, logger: any, pagoId: string) {
+  {
     const pago = await consultarPago(pagoId)
     const ref = String(pago.external_reference || "")
     if (ref.startsWith("sobrepeso:")) return await pagoDeSobrepeso(knex, logger, pago, ref.slice("sobrepeso:".length))
@@ -92,14 +109,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             : "")),
       },
     ].filter(Boolean) as { to: string; subject: string; html: string }[]
+    // El pago ya quedó anotado: un correo que falle no debe provocar reintento
     for (const a of avisos) {
-      const r = await sendEmail(a)
+      const r = await sendEmail(a).catch((e: Error) => ({ sent: false, reason: e.message }))
       if (!r.sent) logger.info(`[envios] aviso de pago no enviado: ${r.reason}`)
       await new Promise((r) => setTimeout(r, 600))
     }
     logger.info(`[envios] ${folio} PAGADO (pago ${pago.id})`)
-  } catch (err) {
-    logger.error(`[envios] error procesando aviso de Mercado Pago ${pagoId}: ${(err as Error).message}`)
   }
 }
 
@@ -113,11 +129,24 @@ async function pagoDeSobrepeso(knex: any, logger: any, pago: any, id: string) {
   if (!s) return
   const folio = folioSobrepeso(s.folio)
   if (pago.status !== "approved" || s.estado === "pagado") return
+  // Sólo se cobra lo que está por cobrar: si ya se descontó de los pagos al
+  // taller o se anuló, este pago se tiene que devolver (auditoría Thermos)
+  if (s.estado !== "por_cobrar") {
+    logger.error(`[sobrepesos] ${folio} pago ${pago.id} llegó con el sobrepeso en "${s.estado}": revisar y devolver`)
+    if (process.env.HETNA_LEADS_EMAIL) {
+      await sendEmail({
+        to: process.env.HETNA_LEADS_EMAIL,
+        subject: `[${folio}] Pago de sobrepeso para devolver`,
+        html: marco("Pago de sobrepeso que ya no se debía", `<p>Llegó el pago ${esc(String(pago.id))} por $${Number(pago.transaction_amount || 0)} MXN, pero el sobrepeso está en "${esc(String(s.estado))}". Devuélvelo desde Mercado Pago.</p>`),
+      }).catch(() => undefined)
+    }
+    return
+  }
   if (pago.currency_id !== "MXN" || Math.abs(Number(pago.transaction_amount || 0) - Number(s.monto)) > 0.01) {
     logger.error(`[sobrepesos] ${folio} pago ${pago.id} con monto/moneda inesperado (${pago.transaction_amount} ${pago.currency_id})`)
     return
   }
-  await knex(T_SOBREPESO).where({ id }).update({ estado: "pagado", pago_id: String(pago.id), updated_at: knex.fn.now() })
+  await knex(T_SOBREPESO).where({ id, estado: "por_cobrar" }).update({ estado: "pagado", pago_id: String(pago.id), updated_at: knex.fn.now() })
   logger.info(`[sobrepesos] ${folio} PAGADO (pago ${pago.id})`)
   if (process.env.HETNA_LEADS_EMAIL) {
     await sendEmail({

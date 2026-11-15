@@ -18,6 +18,23 @@ Prioridad Media:
   - Un pago ya registrado no cambia quién cobra ni el taller.
   - Mientras no está aprobado, monto y comisión se ponen al día.
 
+- **Avisos de Mercado Pago (M3 de pagos), corregido después en la misma rama:**
+  - `mp-envio`, `mp-cotizacion`, `mp-comision` y `mp-licitacion` procesan y luego responden: 500 si algo falla, para que Mercado Pago reintente.
+  - Los avisos del mismo pago se procesan uno tras otro (`lib/aviso-unico.ts`), lo que también evita el pedido duplicado del Cotizador (M1 del Cotizador).
+  - Si un aviso falló después de anotar el pago, el reintento crea el pedido.
+  - El puente de la tienda `/api/mp/licitacion` ya no responde 200 cuando la API falla.
+  - Un pago de sobrepeso solo se acepta si el sobrepeso estaba `por_cobrar` (B3). Si no, se avisa para devolverlo.
+
+- **PayPal del Cotizador (M2 de pagos, M2 del Cotizador y B1), corregido después:**
+  - La orden guarda cuánto cubre en la moneda de la cotización y eso es lo que se acredita. Recargar la página ya no deja el anticipo en 0, y una orden vieja ya no acredita el anticipo nuevo completo.
+  - Antes de cobrar se revisa que la orden vaya al PayPal actual del taller y que no sea por más de lo que falta.
+  - Un mismo regreso de PayPal se procesa uno tras otro.
+
+- **Verificación de WhatsApp (M3 de vendor-admin), corregido después:**
+  - La página solo acepta el código que HETNA mandó a ese teléfono (uno nuevo por envío), y solo desde la cuenta que empezó la verificación.
+  - Máximo 5 intentos por código.
+  - La liga sigue funcionando porque lo que la valida es el número de donde llega el mensaje.
+
 ## Cómo se probó
 - `tsc` del API sin errores y 154 pruebas unitarias.
 - Hay pruebas nuevas en `lib/__tests__/auditoria-thermos.unit.spec.ts` para la lista de llaves privadas, el blindaje de la metadata de productos y la regla de pago de trabajos CAM (con un pedido de ejemplo).
@@ -47,10 +64,7 @@ order by 3;
 ## Pendiente (Media y Baja)
 
 Están en los informes de abajo. Los más importantes:
-- **Avisos de Mercado Pago que contestan 200 antes de procesar** (`mp-envio`, `mp-cotizacion`, `mp-comision`). No hay conciliación, así que un fallo pierde el pago.
-- **Anticipo de PayPal en COP, PEN o CLP:** vuelve a 0 si el cliente recarga la página de regreso.
 - **Reembolsos y contracargos del Cotizador:** no deshacen el anticipo.
-- **WhatsApp:** la verificación no comprueba que el número sea del taller.
 - **"Marcar pagado":** puede incluir pedidos que no entraron en la transferencia.
 - **Servidor de `/static`:** conviene servirlo con `Content-Disposition: attachment` y `X-Content-Type-Options: nosniff` desde nginx.
 

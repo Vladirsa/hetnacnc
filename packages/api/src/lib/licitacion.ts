@@ -106,7 +106,7 @@ export const consultarPago = async (pagoId: string) => {
   const r = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(pagoId)}`, {
     headers: { Authorization: `Bearer ${mpToken()}` },
   })
-  if (!r.ok) throw new Error(`Mercado Pago respondió ${r.status}`)
+  if (!r.ok) throw Object.assign(new Error(`Mercado Pago respondió ${r.status}`), { status: r.status })
   return (await r.json()) as { id: number; status: string; external_reference?: string; transaction_amount?: number; currency_id?: string }
 }
 

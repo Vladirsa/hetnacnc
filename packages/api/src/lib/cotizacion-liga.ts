@@ -560,6 +560,21 @@ async function guardarConexion(negocioId: string, t: any) {
 }
 
 export const referenciaCot = (cotId: string) => `cotizacion:${cotId}`
+
+// Orden de PayPal: custom_id = "cotizacion:<id>|<centavos>|<moneda>". Guarda
+// cuánto cubre la orden en la moneda de la cotización (COP/PEN/CLP se cobran en
+// dólares): al cobrarla se acredita eso, no "lo que falte hoy". Antes, recargar
+// la página de regreso dejaba el anticipo en 0, y una orden vieja acreditaba el
+// anticipo nuevo completo (auditoría Thermos, 15 nov 2026).
+export const referenciaOrdenCot = (cotId: string, monto: number, moneda: string) =>
+  `${referenciaCot(cotId)}|${Math.round(monto * 100)}|${moneda}`
+export function leerOrdenCot(customId: string | undefined): { cotId: string; monto: number | null; moneda: string | null } | null {
+  const [ref, centavos, moneda] = String(customId || "").split("|")
+  const cotId = leerReferenciaCot(ref)
+  if (!cotId) return null
+  const n = Number(centavos)
+  return { cotId, monto: centavos && Number.isFinite(n) ? n / 100 : null, moneda: moneda || null }
+}
 export function leerReferenciaCot(ref: string | undefined): string | null {
   const m = String(ref || "").match(/^cotizacion:([0-9a-f-]{36})$/i)
   return m ? m[1] : null
@@ -631,10 +646,13 @@ async function trasPago(
     if (c.estado !== "Pedido") cambios.estado = "Aprobada"
   }
   await patchCotizacion(c.id, cambios)
+  // El pedido se asegura en cada aviso con el anticipo completo (asegurarPedido
+  // no duplica): si un aviso anterior falló después de anotar el pago, el
+  // reintento de Mercado Pago lo crea (auditoría Thermos, 15 nov 2026).
+  const pedidoId = cambios.anticipo_estado === "pagado" ? await asegurarPedido(c, pagado, logger) : null
   if (!p.recienAprobado) return
 
   const completo = cambios.anticipo_estado === "pagado" && c.anticipo_estado !== "pagado"
-  const pedidoId = completo ? await asegurarPedido(c, pagado, logger) : null
   const cliente = await clienteDe(c.cliente_id).catch(() => null)
   const quien = cliente?.nombre || p.nombre || "Tu cliente"
   await avisarTaller(
@@ -676,7 +694,11 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
       pago = await mpCon(appToken, `/v1/payments/${encodeURIComponent(paymentId)}`)
     } catch (e) {
       logger?.warn?.(`[cotizador] pago ${paymentId}: no se pudo leer con el token de la app (${(e as Error).message})`)
-      return null
+      // 404/401/403: no es un pago que podamos leer. Otro error (red, 5xx): se
+      // lanza para que el aviso responda 500 y Mercado Pago lo reintente.
+      const s = Number((e as { status?: number }).status)
+      if (s === 404 || s === 401 || s === 403) return null
+      throw e
     }
   }
   let cotId = leerReferenciaCot(pago?.external_reference)
@@ -764,7 +786,7 @@ export async function pagarConPaypal(token: string) {
       purchase_units: [
         {
           reference_id: c.id,
-          custom_id: referenciaCot(c.id),
+          custom_id: referenciaOrdenCot(c.id, resta, moneda),
           description: (`Anticipo de la cotización ${c.folio} · ${nombreTaller}` +
             (cobro.tipo_cambio ? ` · ${dinero(resta, moneda)}` : "")).slice(0, 127),
           amount: { currency_code: cobro.moneda, value: cobro.monto.toFixed(2) },
@@ -800,11 +822,26 @@ export async function capturarPaypal(token: string, ordenId: string, logger?: an
 
   let orden = await paypal<any>(`/v2/checkout/orders/${ordenId}`)
   const unidad = orden.purchase_units?.[0]
-  if (unidad?.custom_id !== referenciaCot(c.id)) {
+  const ref = leerOrdenCot(unidad?.custom_id)
+  if (ref?.cotId !== c.id) {
     logger?.warn?.(`[cotizador] PayPal ${ordenId}: no es de la cotización ${c.folio}`)
     return `${liga}?pago=error`
   }
   if (orden.status === "APPROVED") {
+    // Se revisa ANTES de cobrar: si el taller cambió su PayPal, el dinero se iría
+    // a la cuenta anterior; si la orden es por más de lo que falta (otra pestaña,
+    // orden vieja), el cliente pagaría de más (auditoría Thermos, 15 nov 2026).
+    const destinoOrden = unidad?.payee?.merchant_id
+    if (destinoOrden && destinoOrden !== pp.payer_id) {
+      logger?.warn?.(`[cotizador] PayPal ${ordenId}: la orden va a otra cuenta de PayPal; no se cobra (${c.folio})`)
+      return `${liga}?pago=error`
+    }
+    const falta = Math.round((anticipoDe(c) - num(c.anticipo_pagado)) * 100) / 100
+    const cubre = ref.monto ?? null
+    if (falta <= 0 || (cubre != null && cubre > falta + 0.01)) {
+      logger?.warn?.(`[cotizador] PayPal ${ordenId}: la orden cubre ${cubre} y falta ${falta}; no se cobra (${c.folio})`)
+      return `${liga}?pago=error`
+    }
     orden = await paypal<any>(`/v2/checkout/orders/${ordenId}/capture`, {
       method: "POST",
       headers: { "PayPal-Request-Id": `cap-${ordenId}` },
@@ -827,13 +864,22 @@ export async function capturarPaypal(token: string, ordenId: string, logger?: an
   // Cotización en COP/PEN/CLP cobrada en dólares: la orden fue por todo lo que
   // faltaba del anticipo, así que cubre eso en la moneda de la cotización.
   const monedaCot = monedaDe(config)
-  const montoCot = monedaCot === moneda ? monto : Math.round((anticipoDe(c) - num(c.anticipo_pagado)) * 100) / 100
   const pct = comisionPct(negocio?.plan, negocio?.trial_hasta)
   const tope = moneda === "USD" ? COMISION_TOPE_USD : COMISION_TOPE
   const comision = Math.min(tope, Math.round(monto * pct) / 100)
   const idPago = `pp:${captura.id}`
 
-  const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(idPago)}&select=estado&limit=1`)
+  const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(idPago)}&select=estado,detalle&limit=1`)
+  // Lo que cubre en la moneda de la cotización: lo que dice la orden; si ya se
+  // anotó (página recargada), lo anotado; sólo en órdenes de antes, lo que falta.
+  const montoCot =
+    monedaCot === moneda
+      ? monto
+      : ref.monto != null && ref.moneda === monedaCot
+        ? ref.monto
+        : previo[0]?.detalle?.monto_cotizacion != null
+          ? Number(previo[0].detalle.monto_cotizacion)
+          : Math.max(0, Math.round((anticipoDe(c) - num(c.anticipo_pagado)) * 100) / 100)
   const recienAprobado = estado === "approved" && previo[0]?.estado !== "approved"
   await guardarPago({
     cotizacion_id: c.id,
