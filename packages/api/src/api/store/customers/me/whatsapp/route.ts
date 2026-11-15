@@ -27,7 +27,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     }
     if (b.accion === "codigo") return res.json(await mandarCodigo(knex, String(b.numero || "")))
     if (b.accion === "confirmar") {
-      const r = await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || ""))
+      const r = await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || ""), { customer_id: customerId })
       // Ya verificado: el seguimiento de sus pedidos abiertos sigue por WhatsApp
       setTimeout(() => void ponerAlDiaPedidos(req.scope, customerId, req.scope.resolve("logger")), 5000)
       return res.json(r)

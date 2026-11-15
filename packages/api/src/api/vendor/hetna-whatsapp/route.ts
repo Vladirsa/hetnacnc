@@ -23,7 +23,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       return res.json({ numero: r.numero, liga: r.liga })
     }
     if (b.accion === "codigo") return res.json(await mandarCodigo(knex, String(b.numero || "")))
-    if (b.accion === "confirmar") return res.json(await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || "")))
+    if (b.accion === "confirmar") return res.json(await confirmarCodigo(knex, String(b.numero || ""), String(b.codigo || ""), { seller_id: sellerId }))
     res.status(400).json({ message: "Acción no válida." })
   } catch (e) {
     res.status(400).json({ message: (e as Error).message })

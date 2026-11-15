@@ -56,7 +56,17 @@ export async function asegurarWhatsapp(knex: any) {
       t.timestamp("updated_at", { useTz: true }).defaultTo(knex.fn.now())
     })
   }
+  if (!columnasCodigoListas) {
+    // Código que se manda AL teléfono (distinto del de la liga) e intentos fallidos
+    for (const [col, tipo] of [["codigo_enviado", "text"], ["intentos", "integer"]] as const) {
+      if (!(await knex.schema.hasColumn(T_WA, col))) {
+        await knex.schema.alterTable(T_WA, (t: any) => (tipo === "text" ? t.text(col) : t.integer(col).defaultTo(0)))
+      }
+    }
+    columnasCodigoListas = true
+  }
 }
+let columnasCodigoListas = false
 
 /** "33 1234 5678", "+52 1 33…", "5213312345678" → "523312345678". null si no es un celular de México válido. */
 export function normalizarNumero(n: string) {
@@ -133,6 +143,16 @@ export async function enviarMedia(numero: string, url: string, tipo: "image" | "
 const codigoNuevo = () => String(randomInt(100000, 1000000))
 export const textoVerificacion = (codigo: string) => `Hola HETNA, mi código de verificación es ${codigo}`
 
+// Dos formas de comprobar que el número es de quien lo pide (auditoría Thermos,
+// 15 nov 2026):
+//   1. La liga: la persona manda desde SU WhatsApp el mensaje con el código. Lo
+//      que prueba que es suyo es el número de donde llega (mensajeEntrante), así
+//      que este código sí puede ir en la liga.
+//   2. El código escrito en la página: sólo vale el que HETNA mandó a ese
+//      teléfono (mandarCodigo). Antes la página aceptaba el código de la liga,
+//      que el navegador ya conocía, y cualquiera confirmaba el número de otro.
+const MAX_INTENTOS = 5
+
 /** Empieza la verificación: guarda un código y regresa la liga de WhatsApp con el mensaje ya escrito. */
 export async function iniciarVerificacion(knex: any, d: { numero: string; quien: "taller" | "cliente"; seller_id?: string | null; customer_id?: string | null }) {
   await asegurarWhatsapp(knex)
@@ -144,7 +164,7 @@ export async function iniciarVerificacion(knex: any, d: { numero: string; quien:
   const codigo = codigoNuevo()
   const fila = {
     numero, pend_quien: d.quien, pend_seller_id: d.seller_id || null, pend_customer_id: d.customer_id || null,
-    codigo, codigo_hasta: new Date(Date.now() + 30 * 60_000), updated_at: new Date(),
+    codigo, codigo_hasta: new Date(Date.now() + 30 * 60_000), codigo_enviado: null, intentos: 0, updated_at: new Date(),
   }
   if (previo) await knex(T_WA).where({ numero }).update(fila)
   else await knex(T_WA).insert({ ...fila, created_at: new Date() })
@@ -165,8 +185,13 @@ export async function mandarCodigo(knex: any, numeroCrudo: string) {
   const n = f.codigos_dia === hoy ? Number(f.codigos_hoy || 0) : 0
   if (n >= 3) throw new Error("Ya se mandaron 3 códigos hoy a este número. Intenta mañana o escríbenos tú por WhatsApp.")
   if (f.ultimo_codigo && Date.now() - new Date(f.ultimo_codigo).getTime() < 5 * 60_000) throw new Error("Espera 5 minutos para pedir otro código.")
-  await enviarTexto(numero, `Tu código de HETNA CNC es *${f.codigo}*. Escríbelo en la página para verificar tu WhatsApp.\n\nSi no lo pediste, ignora este mensaje.`)
-  await knex(T_WA).where({ numero }).update({ codigos_hoy: n + 1, codigos_dia: hoy, ultimo_codigo: new Date() })
+  // Un código nuevo, sólo para este mensaje: es el único que acepta la página
+  const enviado = codigoNuevo()
+  await enviarTexto(numero, `Tu código de HETNA CNC es *${enviado}*. Escríbelo en la página para verificar tu WhatsApp.\n\nSi no lo pediste, ignora este mensaje.`)
+  await knex(T_WA).where({ numero }).update({
+    codigo_enviado: enviado, intentos: 0, codigo_hasta: new Date(Date.now() + 30 * 60_000),
+    codigos_hoy: n + 1, codigos_dia: hoy, ultimo_codigo: new Date(),
+  })
   return { ok: true }
 }
 
@@ -175,7 +200,7 @@ async function marcarVerificado(knex: any, f0: any) {
   const f = { ...f0, quien: f0.pend_quien || f0.quien, seller_id: f0.pend_seller_id || f0.seller_id, customer_id: f0.pend_customer_id || f0.customer_id }
   await knex(T_WA).where({ numero: f.numero }).update({
     quien: f.quien, seller_id: f.seller_id || null, customer_id: f.customer_id || null, pend_quien: null, pend_seller_id: null, pend_customer_id: null,
-    verificado_en: new Date(), codigo: null, codigo_hasta: null, avisos: true, esperando_fotos: f.quien === "taller" && !!f.seller_id, updated_at: new Date(),
+    verificado_en: new Date(), codigo: null, codigo_enviado: null, intentos: 0, codigo_hasta: null, avisos: true, esperando_fotos: f.quien === "taller" && !!f.seller_id, updated_at: new Date(),
   })
   const bienvenida =
     f.quien === "taller"
@@ -186,13 +211,29 @@ async function marcarVerificado(knex: any, f0: any) {
   await enviarTexto(f.numero, bienvenida).catch(() => null)
 }
 
-/** El código escrito en la página. */
-export async function confirmarCodigo(knex: any, numeroCrudo: string, codigo: string) {
+/** El código escrito en la página: sólo el que se mandó a ese WhatsApp, y quien lo escribe es quien lo pidió. */
+export async function confirmarCodigo(
+  knex: any,
+  numeroCrudo: string,
+  codigo: string,
+  cuenta?: { seller_id?: string | null; customer_id?: string | null }
+) {
   await asegurarWhatsapp(knex)
   const numero = normalizarNumero(numeroCrudo)
   const f = numero ? await knex(T_WA).where({ numero }).first() : null
-  if (!f?.codigo || String(codigo).trim() !== f.codigo) throw new Error("El código no coincide.")
+  if (!f?.codigo_enviado) throw new Error("Primero pide que te mandemos el código por WhatsApp, o manda el mensaje desde tu WhatsApp con el botón.")
+  // Sólo la cuenta que empezó la verificación puede terminarla
+  if (cuenta && ((cuenta.seller_id && f.pend_seller_id !== cuenta.seller_id) || (cuenta.customer_id && f.pend_customer_id !== cuenta.customer_id))) {
+    throw new Error("Vuelve a tocar 'Verificar mi WhatsApp'.")
+  }
+  if (Number(f.intentos || 0) >= MAX_INTENTOS) throw new Error("Demasiados intentos. Pide un código nuevo.")
   if (new Date(f.codigo_hasta).getTime() < Date.now()) throw new Error("El código venció. Pide uno nuevo.")
+  if (String(codigo).trim() !== f.codigo_enviado) {
+    const intentos = Number(f.intentos || 0) + 1
+    // Al llegar al límite el código deja de servir
+    await knex(T_WA).where({ numero }).update(intentos >= MAX_INTENTOS ? { intentos, codigo_enviado: null } : { intentos })
+    throw new Error("El código no coincide.")
+  }
   await marcarVerificado(knex, f)
   return { ok: true }
 }
