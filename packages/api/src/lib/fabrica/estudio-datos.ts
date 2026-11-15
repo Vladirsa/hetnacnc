@@ -66,7 +66,7 @@ export async function ligaConectarGoogle(knex: any) {
   if (!googleConfigurado()) throw new Error("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el .env del backend.")
   const state = randomBytes(16).toString("hex")
   await guardar(knex, { ...(await leer(knex)), state, state_hasta: Date.now() + 15 * 60_000 })
-  const q = new URLSearchParams({ client_id: cid(), redirect_uri: redirectGoogle(), response_type: "code", scope: ALCANCES, access_type: "offline", prompt: "consent", include_granted_scopes: "true", state })
+  const q = new URLSearchParams({ client_id: cid(), redirect_uri: redirectGoogle(), response_type: "code", scope: ALCANCES, access_type: "offline", prompt: "consent", state })
   return `https://accounts.google.com/o/oauth2/v2/auth?${q}`
 }
 
