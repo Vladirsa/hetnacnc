@@ -28,3 +28,37 @@ describe("Pinterest", () => {
     expect(textoPin("x".repeat(2000), "y".repeat(300)).titulo.length).toBe(100)
   })
 })
+
+import { correoFecha, esDeLaFecha } from "../invitar-temporada"
+describe("productos de temporada", () => {
+  it("reconoce la fecha sólo con la palabra completa en el nombre", () => {
+    expect(esDeLaFecha("Esfera navideña de MDF", "navidad")).toBe(true)
+    expect(esDeLaFecha("Letrero Feliz Navidad", "navidad")).toBe(true)
+    expect(esDeLaFecha("Plantilla de terreno para router", "navidad")).toBe(false)
+    expect(esDeLaFecha("Regalo para el 10 de mayo", "dia_madre")).toBe(true)
+  })
+  it("el correo invita a publicar con la palabra de la fecha", () => {
+    expect(correoFecha({ nombre: "Navidad", clave: "navidad" }, "24 de diciembre")).toContain("«navidad»")
+  })
+})
+
+import { assEstudio, FORMULAS, PERSONAJES, promptEscena, tocaNovela } from "../fabrica/estudio"
+describe("Estudio diario", () => {
+  it("novela martes, jueves y sábado", () => {
+    expect(tocaNovela(new Date("2026-11-17T18:00:00Z"))).toBe(true) // martes
+    expect(tocaNovela(new Date("2026-11-16T18:00:00Z"))).toBe(false) // lunes
+  })
+  it("cada escena lleva cámara distinta y la descripción fija del personaje", () => {
+    const a = promptEscena({ toma: "Don Chuy checks a part", personajes: ["Don Chuy"] }, 0)
+    const b = promptEscena({ toma: "Don Chuy checks a part", personajes: ["Don Chuy"] }, 1)
+    expect(a.video).not.toBe(b.video)
+    expect(a.imagen).toContain(PERSONAJES[0].visual)
+    expect(a.imagen).toContain("No text")
+  })
+  it("el gancho y la CTA salen en pantalla", () => {
+    const ass = assEstudio([{ texto: "hola mundo", inicio: 0.1, fin: 2 }], "Tu fresa se quema", { texto: "Cotiza gratis", inicio: 2, fin: 4 })
+    expect(ass).toContain("TU FRESA SE QUEMA")
+    expect(ass).toContain("hetnacnc.com")
+    expect(FORMULAS.titulares.length).toBe(10)
+  })
+})

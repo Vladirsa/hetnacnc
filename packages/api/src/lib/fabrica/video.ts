@@ -17,7 +17,7 @@ export function ffmpegDisponible() {
   }
 }
 
-function correr(args: string[], tope = 10 * 60_000) {
+export function correr(args: string[], tope = 10 * 60_000) {
   return new Promise<void>((ok, mal) => {
     const p = spawn(ffmpegBin(), ["-hide_banner", "-loglevel", "error", "-y", ...args])
     let err = ""

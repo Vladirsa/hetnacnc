@@ -1756,6 +1756,64 @@ function Temario({ alCambiar }: { alCambiar: () => void }) {
 }
 
 /** Fechas especiales: videos de productos con la etiqueta de cada fecha (Día de las Madres, Muertos, Navidad…). */
+/** Estudio diario: un video al día hecho por la cadena de agentes (guion, voz, escenas con IA de video, publicación). */
+function EstudioDiario() {
+  const [d, setD] = useState<any>(null)
+  const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const api = async (cuerpo?: unknown) => {
+    const r = await fetch("/admin/hetna-fabrica/estudio", { credentials: "include", ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }) })
+    const x = await r.json().catch(() => ({}))
+    if (r.status === 401) throw new Error(MSG_SESION)
+    if (!r.ok) throw new Error(x?.message || `Error ${r.status}`)
+    return x
+  }
+  const cargar = () => api().then(setD).catch((e) => setNota({ ok: false, t: (e as Error).message }))
+  useEffect(() => { void cargar() }, [])
+  if (!d) return nota ? <section style={caja}><b>🎬 Estudio diario</b> <span style={{ color: C.rojo, fontSize: 13 }}>{nota.t}</span></section> : null
+  const hacer = async (tipo?: string) => {
+    setOcupado(true)
+    try { await api({ hacer: true, tipo }); setNota({ ok: true, t: "✓ Haciendo el video: guion, voz y escenas con IA. Tarda de 5 a 15 minutos y aparece en Pendientes. Recarga esta tarjeta para ver el avance." }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) }
+  }
+  return (
+    <section style={caja}>
+      <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>🎬 Estudio diario (video con IA)</h3>
+      <p style={{ margin: "0 0 8px", color: C.tenue, fontSize: 13 }}>
+        Un video vertical al día para YouTube, Instagram, TikTok y Facebook: el guionista escribe con gancho en el primer segundo (fórmulas AIDA, FAB, títulos y CTA), se pone la voz, cada escena se anima con IA de video sin repetir tomas y se programa a la hora que mejor ha funcionado.
+        Martes, jueves y sábado: novela <b>«El Taller»</b> (ficción con {d.personajes.map((p: any) => p.nombre).join(", ")}); los demás días, educativo.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
+        <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <input type="checkbox" checked={!!d.activo} disabled={ocupado || !d.listo} onChange={async (e) => { try { setD(await api({ activo: e.target.checked })) } catch (er) { setNota({ ok: false, t: (er as Error).message }) } }} /> Hacer uno cada día (de madrugada)
+        </label>
+        <button type="button" style={boton("primario")} disabled={ocupado || !d.listo} onClick={() => void hacer()}>🎬 Hacer el de hoy ({d.toca_hoy})</button>
+        <button type="button" style={boton("normal")} disabled={ocupado || !d.listo} onClick={() => void hacer(d.toca_hoy === "novela" ? "educativo" : "novela")}>Hacer uno {d.toca_hoy === "novela" ? "educativo" : "de novela"}</button>
+        <button type="button" style={boton("normal")} onClick={() => void cargar()}>Actualizar</button>
+      </div>
+      <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
+        {d.listo ? <span style={{ color: C.verde, fontWeight: 600 }}>Listo para trabajar</span> : <span style={{ color: C.rojo, fontWeight: 600 }}>Falta {d.falta} en el servidor</span>}
+        {" · "}Gasto hoy: {d.gasto_hoy} USD (tope {d.tope_dia}) · este mes: {d.gasto_mes} USD
+      </div>
+      {d.videos?.length > 0 && (
+        <div style={{ marginTop: 8, display: "grid", gap: 4 }}>
+          {d.videos.map((v: any) => (
+            <div key={v.id} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", borderTop: `1px solid ${C.borde}`, paddingTop: 4 }}>
+              <span style={{ color: C.tenue }}>{v.dia}</span>
+              <span>{v.tipo === "novela" ? "🎬" : "🎓"}</span>
+              <b style={{ flex: 1, minWidth: 180 }}>{v.titulo || v.tema || "(guion en proceso)"}</b>
+              <span style={{ color: v.estado === "listo" ? C.verde : v.estado === "error" ? C.rojo : C.tenue, fontWeight: 600 }}>{v.estado === "listo" ? "Listo" : v.estado === "error" ? "Error" : "Haciendo…"}</span>
+              <span style={{ color: C.tenue }}>{v.costo.toFixed(2)} USD</span>
+              {v.video && <a href={v.video} target="_blank" rel="noreferrer">Ver video</a>}
+              {v.error && <span style={{ color: C.rojo, width: "100%" }}>{v.error}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      {nota && <div style={{ fontSize: 12, fontWeight: 600, color: nota.ok ? C.verde : C.rojo, marginTop: 6 }}>{nota.t}</div>}
+    </section>
+  )
+}
+
 /** Buen Fin: fechas, descuento y cupón los pone el dueño; sin eso no se publica nada. */
 function BuenFin() {
   const [d, setD] = useState<any>(null)
@@ -1823,7 +1881,8 @@ function FechasEspeciales() {
     if (!r.ok) throw new Error(d?.message || `Error ${r.status}`)
     return d
   }
-  const cargar = async () => setFechas((await api().catch(() => ({ fechas: [] }))).fechas || [])
+  const [invit, setInvit] = useState<Record<string, any>>({})
+  const cargar = async () => { const d = await api().catch(() => ({ fechas: [] })); setFechas(d.fechas || []); setInvit(d.invitaciones || {}) }
   useEffect(() => { void cargar() }, [])
   const avisar = (clave: string, ok: boolean, t: string) => setNota((n) => ({ ...n, [clave]: { ok, t } }))
   return (
@@ -1849,6 +1908,17 @@ function FechasEspeciales() {
                 setHaciendo(f.clave)
                 try { const d = await api({ clave: f.clave, hacer: true }); avisar(f.clave, true, `✓ Haciendo la imagen y el video con: ${d.productos.join(", ")}. En unos minutos aparecen en Pendientes.`) } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) } finally { setHaciendo(null) }
               }}>{haciendo === f.clave ? "Haciendo…" : "🎬 Hacer video ahora"}</button>
+            {f.faltan <= 45 && (() => {
+              const k = `${f.clave}-${f.fecha.slice(0, 4)}`
+              const v = invit[k]
+              return (
+                <button type="button" disabled={haciendo === f.clave || v?.activo} title="Correo y aviso a tus talleres para que publiquen productos de esta fecha (una vez por taller)" style={{ ...boton("normal"), opacity: v?.activo ? 0.6 : 1 }}
+                  onClick={async () => {
+                    setHaciendo(f.clave)
+                    try { const d = await api({ clave: f.clave, invitar: true }); avisar(f.clave, true, d.hoy ? `✓ Invitando a ${d.hoy} talleres hoy a publicar productos de ${f.nombre}. Lo que publiquen con «${f.nombre}» en el nombre se etiqueta solo.` : "Ya se invitó a todos los talleres para esta fecha."); void cargar() } catch (er) { avisar(f.clave, false, `✗ ${(er as Error).message}`) } finally { setHaciendo(null) }
+                  }}>{v?.activo ? `📨 Invitando (${v.invitados})` : v?.terminada ? `📨 Invitados (${v.invitados})` : "📨 Invitar a talleres"}</button>
+              )
+            })()}
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", fontSize: 12 }}>
             <span style={{ color: C.tenue }}>Etiquetas o categorías:</span>
@@ -2010,6 +2080,7 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
         </label>
       </section>
 
+      <EstudioDiario />
       <FechasEspeciales />
       <BuenFin />
 
