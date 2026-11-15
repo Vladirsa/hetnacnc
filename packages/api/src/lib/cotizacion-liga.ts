@@ -631,10 +631,13 @@ async function trasPago(
     if (c.estado !== "Pedido") cambios.estado = "Aprobada"
   }
   await patchCotizacion(c.id, cambios)
+  // El pedido se asegura en cada aviso con el anticipo completo (asegurarPedido
+  // no duplica): si un aviso anterior falló después de anotar el pago, el
+  // reintento de Mercado Pago lo crea (auditoría Thermos, 15 nov 2026).
+  const pedidoId = cambios.anticipo_estado === "pagado" ? await asegurarPedido(c, pagado, logger) : null
   if (!p.recienAprobado) return
 
   const completo = cambios.anticipo_estado === "pagado" && c.anticipo_estado !== "pagado"
-  const pedidoId = completo ? await asegurarPedido(c, pagado, logger) : null
   const cliente = await clienteDe(c.cliente_id).catch(() => null)
   const quien = cliente?.nombre || p.nombre || "Tu cliente"
   await avisarTaller(
@@ -676,7 +679,11 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
       pago = await mpCon(appToken, `/v1/payments/${encodeURIComponent(paymentId)}`)
     } catch (e) {
       logger?.warn?.(`[cotizador] pago ${paymentId}: no se pudo leer con el token de la app (${(e as Error).message})`)
-      return null
+      // 404/401/403: no es un pago que podamos leer. Otro error (red, 5xx): se
+      // lanza para que el aviso responda 500 y Mercado Pago lo reintente.
+      const s = Number((e as { status?: number }).status)
+      if (s === 404 || s === 401 || s === 403) return null
+      throw e
     }
   }
   let cotId = leerReferenciaCot(pago?.external_reference)
