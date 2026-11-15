@@ -160,3 +160,19 @@ Flujo de n8n «HETNA - Directorio de talleres (perfiles no reclamados)»
 Al registrarse, el aviso de registro marca la fila `REGISTRADO` y el perfil no
 reclamado desaparece: queda sólo su perfil real de HETNA.
 Para recrear el flujo: `python3 n8n/directorio/generar_flujo.py` → `n8n/directorio/flujo.sdk.js`.
+
+## Aviso de clic (Telegram)
+
+Las ligas de los correos llevan `&e=<id de la fila>` (se agrega en el nodo «Enviar
+correo» del flujo de la campaña, sin tocar las plantillas). Cuando alguien abre una
+liga, la tienda (`apps/storefront/src/components/hetna/RastreoCorreo.tsx` →
+`/api/app/clic-correo`) avisa al webhook `hetna-prospecto-clic` del flujo
+«HETNA - Directorio de talleres» (código: `n8n/directorio/clic.js`):
+
+- Te llega a Telegram «👀 Empresa abrió tu correo y está viendo …» con su teléfono
+  y correo, para llamarle mientras tiene la página abierta.
+- Queda anotado en `notas` («Abrió una liga del correo el …»). Un aviso por empresa al día.
+- No cuentan los robots de antivirus que abren ligas (sólo navegadores reales).
+
+Si regeneras el flujo de la campaña con `generar_flujo.py`, vuelve a agregar en
+«Enviar correo» el `split('utm_source=correo&').join('utm_source=correo&e=' + encodeURIComponent($json.id) + '&')`.

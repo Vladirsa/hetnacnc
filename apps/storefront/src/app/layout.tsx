@@ -7,6 +7,7 @@ import './globals.css';
 import { Toaster } from '@medusajs/ui';
 
 import { Analytics } from '@/components/analytics/Analytics';
+import { RastreoCorreo } from '@/components/hetna/RastreoCorreo';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
 import { AvisoCookies } from '@/components/hetna/AvisoCookies';
 import { Traductor } from '@/components/hetna/Traductor';
@@ -118,6 +119,7 @@ export default async function RootLayout({
       <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
         <Analytics />
+        <RastreoCorreo />
         <HtmlLangSetter />
         <Traductor />
         <Providers cart={cart}>
