@@ -7,8 +7,10 @@
 // actions), así que todos los visitantes llegan con la misma IP y un límite por
 // IP bloquearía el formulario para todo el sitio. En su lugar, en memoria (el
 // API corre en un solo proceso):
-//   - por correo de destino, sólo sin sesión (con sesión, el correo es el suyo);
+//   - por correo de destino (también con sesión: la ruta usa el correo del formulario);
 //   - un tope total por hora para envíos sin sesión, que frena un envío masivo.
+// Sólo cuentan las solicitudes con un correo válido (las demás no mandan
+// correos): así un script con cuerpos basura no agota el tope para todos.
 import type { MedusaNextFunction, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 const HORA = 3600_000
@@ -35,13 +37,14 @@ export function limitarFormulario(opc: { nombre: string; porCorreoHora: number; 
   const porCorreo = contador()
   const total = contador()
   return (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
-    if ((req as any).auth_context?.actor_id) return next()
     const correo = String(((req.body || {}) as { email?: unknown }).email || "").trim().toLowerCase()
-    if (correo && !porCorreo(`${opc.nombre}:${correo}`, opc.porCorreoHora)) {
-      res.status(429).json({ message: "Ya recibimos varias solicitudes con ese correo en la última hora. Intenta más tarde o entra a tu cuenta." })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return next() // sin correo válido: la ruta lo rechaza o no manda correo
+    const conSesion = !!(req as any).auth_context?.actor_id
+    if (!porCorreo(`${opc.nombre}:${correo}`, opc.porCorreoHora)) {
+      res.status(429).json({ message: "Ya recibimos varias solicitudes con ese correo en la última hora. Intenta más tarde." })
       return
     }
-    if (!total(opc.nombre, opc.totalHora)) {
+    if (!conSesion && !total(opc.nombre, opc.totalHora)) {
       res.status(429).json({ message: "Estamos recibiendo muchas solicitudes. Intenta de nuevo en unos minutos o escríbenos por WhatsApp." })
       return
     }

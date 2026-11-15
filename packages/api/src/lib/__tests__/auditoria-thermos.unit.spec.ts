@@ -118,7 +118,7 @@ describe("aviso de reembolso de PayPal", () => {
   })
 })
 
-import { ipPrivada } from "../url-publica"
+import { esArchivoPropio, ipPrivada } from "../url-publica"
 
 describe("ipPrivada (SSRF)", () => {
   it("bloquea la red interna y los metadatos de la nube", () => {
@@ -128,5 +128,17 @@ describe("ipPrivada (SSRF)", () => {
   })
   it("deja pasar IPs públicas", () => {
     for (const ip of ["8.8.8.8", "104.16.0.1", "2606:4700::1111"]) expect(ipPrivada(ip)).toBe(false)
+  })
+})
+
+describe("esArchivoPropio (fotos del almacenamiento)", () => {
+  const antes = process.env.FILE_BACKEND_URL
+  afterAll(() => { process.env.FILE_BACKEND_URL = antes })
+  it("sólo el mismo origen y la carpeta de archivos", () => {
+    process.env.FILE_BACKEND_URL = "http://localhost:9000/static"
+    expect(esArchivoPropio(new URL("http://localhost:9000/static/foto.jpg"))).toBe(true)
+    expect(esArchivoPropio(new URL("http://localhost:6379/"))).toBe(false)
+    expect(esArchivoPropio(new URL("http://localhost:9000/admin/users"))).toBe(false)
+    expect(esArchivoPropio(new URL("https://localhost:9000/static/foto.jpg"))).toBe(false)
   })
 })

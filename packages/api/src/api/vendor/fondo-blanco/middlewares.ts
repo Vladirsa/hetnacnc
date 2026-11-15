@@ -5,7 +5,7 @@
 // Para apagar la regla sin tocar código: poner FONDO_BLANCO_ACTIVO=false en el .env de la API.
 // Si no se puede revisar una foto (error de red, formato raro), se deja pasar: nunca se frena una venta por un fallo técnico.
 
-import { esHostPropio, urlPublica } from "../../../lib/url-publica"
+import { esArchivoPropio, urlPublica } from "../../../lib/url-publica"
 import { MedusaError } from "@medusajs/framework/utils"
 import type {
   MedusaNextFunction,
@@ -48,9 +48,10 @@ export async function revisarFoto(direccion: string): Promise<boolean | null> {
     // "//10.0.0.5" o "/\\host" no son relativas); una URL ajena sólo si es de
     // internet, nunca de la red interna (auditoría Thermos, 15 nov 2026)
     const relativa = /^\/(?![\/\\])/.test(direccion) // "/static/x.jpg", no "//host" ni "/\\host"
-    const propia = relativa || esHostPropio(url)
+    // Propia: ruta relativa real o archivo del almacenamiento (mismo origen exacto)
+    const propia = relativa || esArchivoPropio(url)
     if (!propia && !(await urlPublica(url))) return null
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: propia ? "follow" : "error" })
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: "error" })
     if (!res.ok) return null
     const largo = Number(res.headers.get("content-length") || 0)
     if (largo > MAX_BYTES) return null

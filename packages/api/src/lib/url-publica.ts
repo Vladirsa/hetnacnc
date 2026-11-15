@@ -58,10 +58,26 @@ export function hostsPropios(): string[] {
     .concat(["hetnacnc.com"])
 }
 
-/** ¿La URL (ya interpretada) es de un host del propio sitio? */
+/** ¿La URL (ya interpretada) es de un host del propio sitio? Ojo: puede ser
+ *  localhost en desarrollo; para descargar, usar esArchivoPropio. */
 export function esHostPropio(u: URL): boolean {
   const h = u.hostname.toLowerCase().replace(/^www\./, "")
   return hostsPropios().some((x) => h === x || h.endsWith(`.${x}`))
+}
+
+/** ¿Es un archivo del almacenamiento propio? Mismo origen exacto (esquema,
+ *  host y puerto) que FILE_BACKEND_URL y dentro de su carpeta: si se comparara
+ *  sólo el nombre, "http://localhost:6379" contaría como propio. */
+export function esArchivoPropio(u: URL): boolean {
+  const base = process.env.FILE_BACKEND_URL || ""
+  if (!base) return false
+  try {
+    const b = new URL(base)
+    const carpeta = b.pathname.endsWith("/") ? b.pathname : `${b.pathname}/`
+    return u.origin === b.origin && u.pathname.startsWith(carpeta) && !u.pathname.includes("..")
+  } catch {
+    return false
+  }
 }
 
 /** true si es http(s) y todas las IPs del nombre son públicas. */
