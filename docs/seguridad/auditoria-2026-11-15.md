@@ -8,9 +8,19 @@ Revisión de solo lectura del repositorio, hecha desde la sesión de Claude Code
 
 ## Corregido en el código (15 nov)
 - **Redirección abierta después del login:** `?volver=/\evil.com` mandaba a otro sitio. Ahora solo se aceptan rutas del mismo sitio (`apps/storefront/src/lib/seguridad/destino-seguro.ts`).
-- **CORS:** `localhost` ya no se acepta en producción (backend y tienda).
+- **CORS:** `localhost` ya no se acepta en producción (backend y tienda). Para probar la app de Flutter en web contra el API de producción, agregar `APP_CORS=http://localhost:8080` (o el puerto que use) en el `.env`.
 - **Secretos de webhooks internos:** se comparan en tiempo constante (`revalidate`, `pub/vencimientos`).
 - **Secreto de sesiones:** si en producción falta `JWT_SECRET` o `COOKIE_SECRET`, o vale "supersecret", el backend lo avisa en el registro.
+
+## Auditoría Thermos del PR 185 (15 nov)
+Segunda revisión con el método Thermos (`.claude/skills/thermos`). Corregido:
+- **Alta:** el primer arreglo de la redirección dejaba pasar `?volver=/.//evil.com` (la normalización de la URL lo convertía en `//evil.com`). Ahora también se revisa el resultado. El formulario de registro usaba todavía el chequeo viejo; ya usa `destinoSeguro`.
+- **Media:** en la sustitución de facturas, si Facturapi cancelaba pero no se guardaba el registro, la base quedaba con la factura "vigente". Ahora se reintenta y, al volver a cancelar, se consulta Facturapi para ponerla al día. La factura sustituta debe ser del mismo pedido.
+- **Baja:** la fecha "Publicado hace…" se traduce al inglés y las filas de la portada se piden en paralelo (carga más rápida).
+
+Queda como decisión del dueño:
+- Si una factura de sustitución debe contar en el cupo mensual del plan (hoy cuenta).
+- Si el backend debe negarse a arrancar en producción con un secreto de sesión débil (hoy sólo avisa en el registro).
 
 ## Para el dueño (en orden)
 1. **Revisar el secreto de sesiones en el VPS.** Si sale `supersecret` o vacío, cambiarlo por uno nuevo de `openssl rand -hex 64` y reiniciar. Todas las sesiones se cierran y hay que volver a entrar.

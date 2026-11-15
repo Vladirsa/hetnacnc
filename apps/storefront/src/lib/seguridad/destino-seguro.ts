@@ -8,7 +8,10 @@ export function destinoSeguro(v: string | null | undefined, porOmision = "/user"
   try {
     const base = "https://hetnacnc.com"
     const u = new URL(s, base)
-    return u.origin === base ? u.pathname + u.search + u.hash : porOmision
+    // Se revisa también la salida: new URL quita los segmentos "." y "..", y
+    // "/.//evil.com" saldría como "//evil.com" (auditoría Thermos, 15 nov 2026)
+    const out = u.pathname + u.search + u.hash
+    return u.origin === base && !out.startsWith("//") && !out.includes("\\") ? out : porOmision
   } catch {
     return porOmision
   }

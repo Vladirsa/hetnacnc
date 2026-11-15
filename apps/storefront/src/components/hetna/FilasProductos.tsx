@@ -65,12 +65,19 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
   const conPrecio = todos.filter((p) => precioMinimo(p) !== null || (p.metadata as Record<string, unknown> | null)?.archivo_gratis === true)
   const MAX = 14
 
-  const filas: Fila[] = [{ titulo: "Lo más nuevo", href: "/categories", productos: todos.slice(0, MAX) }]
-
+  // Más vendidos y las categorías se piden en paralelo (auditoría Thermos)
   const masVendidos = cols.collections.find((c) => c.handle === "mas-vendidos")
-  if (masVendidos) {
-    filas.push({ titulo: "Más vendidos", productos: await traer(locale, { collection_id: masVendidos.id }) })
-  }
+  const todas = [...cats.categories, ...cats.parentCategories]
+  const conCategoria = ["Máquinas y equipos", "Herramientas y componentes", "Materiales y consumibles", "Diseños CNC", "Productos"]
+    .map((nombre) => todas.find((x) => normaliza(x.name) === normaliza(nombre)))
+    .filter((c): c is NonNullable<typeof c> => !!c)
+  const [vendidos, porCategoria] = await Promise.all([
+    masVendidos ? traer(locale, { collection_id: masVendidos.id }) : Promise.resolve([] as HttpTypes.StoreProduct[]),
+    Promise.all(conCategoria.map((c) => traer(locale, { category_id: collectCategorySubtreeIds(c) }))),
+  ])
+
+  const filas: Fila[] = [{ titulo: "Lo más nuevo", href: "/categories", productos: todos.slice(0, MAX) }]
+  if (masVendidos) filas.push({ titulo: "Más vendidos", productos: vendidos })
 
   const digitales = todos.filter((p) => tipo(p) === "digital")
   filas.push({
@@ -104,11 +111,7 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
   })
 
   // Y las categorías que sí tienen productos
-  const todas = [...cats.categories, ...cats.parentCategories]
-  for (const nombre of ["Máquinas y equipos", "Herramientas y componentes", "Materiales y consumibles", "Diseños CNC", "Productos"]) {
-    const c = todas.find((x) => normaliza(x.name) === normaliza(nombre))
-    if (c) filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: await traer(locale, { category_id: collectCategorySubtreeIds(c) }) })
-  }
+  conCategoria.forEach((c, i) => filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: porCategoria[i] }))
 
   // Sin filas vacías ni repetidas
   const vistas = new Set<string>()
