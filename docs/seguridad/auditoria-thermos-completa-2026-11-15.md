@@ -35,6 +35,11 @@ Prioridad Media:
   - Máximo 5 intentos por código.
   - La liga sigue funcionando porque lo que la valida es el número de donde llega el mensaje.
 
+- **Reembolsos y contracargos del Cotizador (M3 del Cotizador), corregido después:**
+  - Si un pago aprobado se reembolsa, se desconoce o se cancela (Mercado Pago), el anticipo vuelve a "pendiente" cuando ya no está completo y se avisa al taller. El pedido no se borra.
+  - Hay un aviso nuevo de PayPal, `/api/paypal-cotizacion`, para PAYMENT.CAPTURE.REFUNDED y REVERSED. Verifica la firma con PayPal y vuelve a consultar la captura.
+  - **Para que funcione, el dueño debe registrar el webhook en PayPal y poner `PAYPAL_WEBHOOK_ID_COTIZACION` en el `.env`.**
+
 ## Cómo se probó
 - `tsc` del API sin errores y 154 pruebas unitarias.
 - Hay pruebas nuevas en `lib/__tests__/auditoria-thermos.unit.spec.ts` para la lista de llaves privadas, el blindaje de la metadata de productos y la regla de pago de trabajos CAM (con un pedido de ejemplo).
@@ -64,7 +69,6 @@ order by 3;
 ## Pendiente (Media y Baja)
 
 Están en los informes de abajo. Los más importantes:
-- **Reembolsos y contracargos del Cotizador:** no deshacen el anticipo.
 - **"Marcar pagado":** puede incluir pedidos que no entraron en la transferencia.
 - **Servidor de `/static`:** conviene servirlo con `Content-Disposition: attachment` y `X-Content-Type-Options: nosniff` desde nginx.
 

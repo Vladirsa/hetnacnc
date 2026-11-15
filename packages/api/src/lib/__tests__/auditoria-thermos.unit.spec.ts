@@ -99,3 +99,21 @@ describe("orden de PayPal de una cotización", () => {
     expect(leerOrdenCot(undefined)).toBeNull()
   })
 })
+
+import { capturaDe } from "../../api/api/paypal-cotizacion/route"
+
+describe("aviso de reembolso de PayPal", () => {
+  it("saca la captura de la liga 'up' de un reembolso", () => {
+    const reembolso = { id: "1JU08902781691411", links: [
+      { rel: "self", href: "https://api.paypal.com/v2/payments/refunds/1JU08902781691411" },
+      { rel: "up", href: "https://api.paypal.com/v2/payments/captures/2GG279541U471931P" },
+    ] }
+    expect(capturaDe(reembolso)).toBe("2GG279541U471931P")
+  })
+  it("si el recurso es la captura, usa su id", () => {
+    expect(capturaDe({ id: "2GG279541U471931P", links: [] })).toBe("2GG279541U471931P")
+  })
+  it("rechaza ids raros", () => {
+    expect(capturaDe({ id: "../x" })).toBeNull()
+  })
+})

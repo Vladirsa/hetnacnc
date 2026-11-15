@@ -627,7 +627,15 @@ export async function pagarAnticipo(token: string) {
  *  el anticipo, crea el pedido si se completó y avisa al taller una sola vez. */
 async function trasPago(
   c,
-  p: { monto: number; recienAprobado: boolean; pagador: string | null; nombre: string | null; dondeLlega: string },
+  p: {
+    monto: number
+    recienAprobado: boolean
+    pagador: string | null
+    nombre: string | null
+    dondeLlega: string
+    /** El pago estaba aprobado y se reembolsó, se desconoció o se canceló */
+    revertido?: { motivo: string }
+  },
   logger?: any
 ) {
   const aprobados = await supa<any[]>(`/rest/v1/cotizacion_pagos?cotizacion_id=eq.${c.id}&estado=eq.approved&select=monto,detalle`)
@@ -644,8 +652,34 @@ async function trasPago(
       cambios.aceptada_por = p.pagador || "Pago en línea"
     }
     if (c.estado !== "Pedido") cambios.estado = "Aprobada"
+  } else if (anticipo > 0 && c.anticipo_estado === "pagado") {
+    // Un reembolso o contracargo dejó el anticipo incompleto: vuelve a
+    // pendiente (el cliente lo puede pagar de nuevo desde su liga) y se avisa al
+    // taller abajo. El pedido no se borra: el taller decide si lo detiene
+    // (auditoría Thermos, 15 nov 2026).
+    cambios.anticipo_estado = "pendiente"
   }
   await patchCotizacion(c.id, cambios)
+
+  if (p.revertido) {
+    await avisarTaller(
+      {
+        negocioId: c.negocio_id,
+        tipo: "anticipo_pagado",
+        titulo: `⚠️ Se revirtió un pago de ${dinero(p.monto, moneda)} de la cotización ${c.folio}`,
+        cuerpo:
+          `${p.revertido.motivo} ` +
+          (cambios.anticipo_estado === "pendiente"
+            ? `El anticipo ya no está completo (lleva ${dinero(pagado, moneda)} de ${dinero(anticipo, moneda)}): revisa antes de seguir fabricando.`
+            : `Lleva ${dinero(pagado, moneda)} pagado.`),
+        cotizacionId: c.id,
+        clienteId: c.cliente_id,
+        boton: "Ver la cotización",
+      },
+      logger
+    ).catch((e: Error) => logger?.warn?.(`[cotizador] aviso de pago revertido ${c.folio}: ${e.message}`))
+    return
+  }
   // El pedido se asegura en cada aviso con el anticipo completo (asegurarPedido
   // no duplica): si un aviso anterior falló después de anotar el pago, el
   // reintento de Mercado Pago lo crea (auditoría Thermos, 15 nov 2026).
@@ -671,6 +705,49 @@ async function trasPago(
     },
     logger
   )
+}
+
+const MOTIVO_REVERSO: Record<string, string> = {
+  refunded: "El pago se reembolsó al cliente.",
+  charged_back: "El cliente desconoció el cargo con su banco (contracargo).",
+  cancelled: "El pago se canceló.",
+  REFUNDED: "El pago se reembolsó al cliente en PayPal.",
+  REVERSED: "PayPal revirtió el pago (contracargo o disputa del cliente).",
+}
+
+/** Aviso de PayPal (webhook PAYMENT.CAPTURE.REFUNDED / REVERSED) de un anticipo. */
+export async function reversoPaypal(capturaId: string, estadoPaypal: string, logger?: any) {
+  const idPago = `pp:${capturaId}`
+  const filas = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(idPago)}&select=estado,cotizacion_id,monto,detalle&limit=1`)
+  const fila = filas[0]
+  if (!fila) return null // no es un anticipo de cotización
+  const estado = estadoPaypal === "REFUNDED" ? "refunded" : estadoPaypal === "REVERSED" ? "charged_back" : null
+  if (!estado) {
+    logger?.info?.(`[cotizador] PayPal ${capturaId}: estado ${estadoPaypal}, no cambia el anticipo`)
+    return null
+  }
+  if (fila.estado === estado) return null // ya anotado
+  const c = await cotizacionPorId(fila.cotizacion_id)
+  if (!c) return null
+  await supa(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(idPago)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ estado, actualizado: new Date().toISOString() }),
+  })
+  await trasPago(
+    c,
+    {
+      monto: Number(fila.detalle?.monto_cotizacion ?? fila.monto ?? 0),
+      recienAprobado: false,
+      revertido: fila.estado === "approved" ? { motivo: MOTIVO_REVERSO[estadoPaypal] } : undefined,
+      pagador: null,
+      nombre: null,
+      dondeLlega: "",
+    },
+    logger
+  )
+  logger?.info?.(`[cotizador] PayPal ${capturaId} ${estado} en ${c.folio}`)
+  return { cotizacion: c.folio, estado }
 }
 
 /** Aviso de Mercado Pago: consulta el pago con el token del taller y lo anota. */
@@ -722,6 +799,7 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
   // Estado anterior de este pago (Mercado Pago avisa varias veces el mismo pago)
   const previo = await supa<any[]>(`/rest/v1/cotizacion_pagos?mp_payment_id=eq.${encodeURIComponent(String(p.id))}&select=estado&limit=1`)
   const recienAprobado = p.status === "approved" && previo[0]?.estado !== "approved"
+  const revertido = previo[0]?.estado === "approved" && MOTIVO_REVERSO[String(p.status)] ? { motivo: MOTIVO_REVERSO[String(p.status)] } : undefined
   await guardarPago({
       cotizacion_id: c.id,
       negocio_id: c.negocio_id,
@@ -744,6 +822,7 @@ export async function registrarPago(paymentId: string, mpUserId: string | undefi
     {
       monto,
       recienAprobado,
+      revertido,
       pagador: p.payer?.email || null,
       nombre: p.payer?.first_name || null,
       dondeLlega: neto > 0 ? `Te llegan ${mxn(neto)} a tu Mercado Pago (ya sin comisiones).` : "El dinero entra a tu Mercado Pago.",
