@@ -64,6 +64,14 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
       <path d="M6 16l14-7 14 7M20 23v12" />
     </>
   ),
+  corrediza: (
+    <>
+      <path d="M6 16l14 7 14-7v12l-14 7-14-7z" />
+      <path d="M20 23v12" />
+      <path d="M2 11l14 7 14-7" />
+      <path d="M2 11l14-7 14 7" strokeDasharray="2 2" />
+    </>
+  ),
   cajonera: (
     <>
       <path d="M6 12l14-7 14 7v16l-14 7-14-7z" />
@@ -158,6 +166,7 @@ const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "abierta", nombre: "Abierta", nota: "Charola u organizador, sin tapa" },
   { id: "sobrepuesta", nombre: "Con tapa", nota: "Tapa que se quita, cae por fuera" },
   { id: "cajonera", nombre: "Cajonera", nota: "Carcasa con un cajón que entra con 1 mm de juego por lado y jaladera" },
+  { id: "corrediza", nombre: "Corrediza", nota: "Tapa que corre por una ranura en los costados; travesaño al frente que la sujeta" },
 ]
 
 type Modelo = {
@@ -189,6 +198,8 @@ const MODELOS: Modelo[] = [
   { id: "cubo", nombre: "Cubo", tipo: "cerrada", a: 100, f: 100, h: 100, e: 3 },
   { id: "cajon", nombre: "Cajón para mueble", tipo: "abierta", a: 450, f: 400, h: 150, e: 12 },
   { id: "cajonera", nombre: "Cajonera de escritorio", tipo: "cajonera", a: 300, f: 250, h: 110, e: 3 },
+  { id: "estuche", nombre: "Estuche de lápices", tipo: "corrediza", a: 210, f: 70, h: 50, e: 3 },
+  { id: "te-corrediza", nombre: "Caja de té corrediza", tipo: "corrediza", a: 240, f: 170, h: 100, e: 3, cols: 3, filas: 2 },
   { id: "cajonera-herr", nombre: "Cajonera para herramientas", tipo: "cajonera", a: 420, f: 320, h: 140, e: 6 },
 ]
 
@@ -340,6 +351,8 @@ export function GeneradorCaja() {
         if (!u) return p
         let q = p.nombre.startsWith("Tapa · ") ? mover(p, [0, alzar + sep * 0.8, 0]) : p
         if (p.nombre.startsWith("Cajón · ")) q = mover(q, [0, 0, -(jalar + sep * 1.8)])
+        // la tapa corrediza se ve medio abierta, saliendo por el frente
+        if (p.nombre === "Tapa corrediza") q = mover(q, [0, sep * 0.5, -(rv.exterior.fondo * 0.4 + sep)])
         if (!sep) return q
         // Despiece: cada pieza se aleja del centro de su grupo en la dirección
         // de su espesor; los divisores (al centro) suben.
@@ -481,7 +494,7 @@ export function GeneradorCaja() {
   const panel = (
     <div className="flex flex-col gap-3">
       <Paso n={1} titulo="Tipo de caja">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {TIPOS.map((t) => (
             <button
               key={t.id}
