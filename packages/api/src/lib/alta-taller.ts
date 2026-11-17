@@ -1,7 +1,8 @@
 // Alta segura de talleres (vendedores).
 //
 // Por qué: cualquiera podía registrarse en /seller con un correo ajeno o
-// inventado y empezar a publicar. Ahora:
+// inventado y empezar a publicar. Ahora (con el alta automática del 17 nov 2026,
+// lib/aprobar-taller.ts, el paso 2 aprueba solo y el admin sólo recibe el aviso):
 //   1. Al registrarse, el taller recibe una liga para confirmar su correo.
 //   2. Al confirmarlo, el administrador recibe un correo con el botón
 //      "Aprobar taller" (y aparece en el Centro de control).
@@ -215,5 +216,4 @@ export function motivoParaNoPublicar(t: TallerAlta): string | null {
     return "Antes de publicar confirma tu correo: te mandamos una liga al registrarte. Si no te llegó, búscala en spam o pide otra desde Mi tablero."
   }
   return "Tu tienda está en revisión. Te avisamos por correo en cuanto la aprobemos (normalmente en menos de un día hábil) y entonces podrás publicar."
-  // (Con el alta automática esto casi no pasa: el taller queda aprobado al confirmar su correo)
 }

@@ -444,12 +444,19 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
  * Según la configuración sale sola (programada dentro del horario) o queda
  * como borrador esperando visto bueno.
  */
-export async function publicacionAutomatica(knex: any, d: NuevaPub & { origen: Exclude<Origen, "manual" | "taller_video">; origen_id: string }, logger?: any) {
+export async function publicacionAutomatica(
+  knex: any,
+  d: NuevaPub & { origen: Exclude<Origen, "manual" | "taller_video">; origen_id: string },
+  logger?: any,
+  // revision: queda en borrador aunque la configuración sea automática (talleres
+  // nuevos sin verificar: nadie los revisó antes de salir en las redes de HETNA)
+  opc: { revision?: boolean } = {}
+) {
   try {
     await asegurarSocial(knex)
     if (await knex(T_POST).where({ origen: d.origen, origen_id: d.origen_id }).first("id")) return null
     const cfg = await leerConfig(knex)
-    const auto = !!cfg.automatico[d.origen]
+    const auto = !opc.revision && !!cfg.automatico[d.origen]
     const cuando = auto ? dentroDeHorario(new Date(Date.now() + cfg.retraso_min * 60_000), cfg.horario) : null
     return await crearPublicacion(knex, { ...d, estado: auto ? "programada" : "borrador", programada_para: d.programada_para || cuando }, logger)
   } catch (e) {

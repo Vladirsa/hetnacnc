@@ -10,6 +10,7 @@ type Taller = {
   email: string | null
   titular: string | null
   cuenta: string | null
+  tarjeta_verificada?: boolean
   moneda: string
   pendiente: number
   disponible: number
@@ -42,6 +43,7 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
   const [msg, setMsg] = useState("")
   const pagar = async () => {
     if (ref.trim().length < 4) return setMsg("Pon la clave de rastreo del SPEI.")
+    if (t.tarjeta_verificada === false && !confirm(`${t.nombre} no ha verificado su tarjeta. Lo recomendado es pedírsela antes de transferirle. ¿Marcar el pago de todos modos?`)) return
     if (!confirm(`¿Ya le transferiste ${dinero(t.disponible, t.moneda)} a ${t.nombre}?`)) return
     setTrabajando(true)
     setMsg("")
@@ -53,7 +55,11 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
       body: JSON.stringify({ seller_id: t.seller_id, referencia: ref.trim(), metodo: "spei", total: t.disponible, moneda: t.moneda }),
     }).catch(() => null)
     setTrabajando(false)
-    if (r?.ok) alPagar()
+    if (r?.ok) {
+      const j = await r.json().catch(() => ({}))
+      if (j?.aviso) alert(j.aviso)
+      alPagar()
+    }
     else setMsg((await r?.json().catch(() => null))?.message || "No se pudo marcar. Intenta de nuevo.")
   }
   return (
@@ -65,6 +71,9 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
           <p style={S.meta}>
             Cuenta: {t.cuenta ? `${t.cuenta} · ${t.titular || "sin titular"}` : "⚠ el taller no ha guardado su cuenta"}
           </p>
+          {t.tarjeta_verificada === false && (
+            <p style={{ ...S.meta, color: "#9A6A06", fontWeight: 600 }}>⚠ No ha verificado su tarjeta: pídesela antes de transferirle.</p>
+          )}
         </div>
         <div style={{ textAlign: "right" }}>
           <p style={{ margin: 0, fontSize: 12, color: "#1E7B3A", fontWeight: 700 }}>DISPONIBLE PARA PAGAR</p>

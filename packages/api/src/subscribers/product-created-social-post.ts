@@ -1,6 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { estadoRequisitos } from "../lib/requisitos-vendedor"
 import { publicacionAutomatica } from "../lib/social-hub"
 
 export default async function productCreatedSocialPost({
@@ -17,13 +18,28 @@ export default async function productCreatedSocialPost({
       data: [product],
     } = await query.graph({
       entity: "product",
-      fields: ["id", "title", "description", "handle", "thumbnail", "images.url"],
+      fields: ["id", "title", "description", "handle", "thumbnail", "images.url", "metadata", "sellers.id"],
       filters: { id: event.data.id },
     })
 
     if (!product?.thumbnail && !product?.images?.length) {
       // Sin imagen no hay nada que publicar en redes.
       return
+    }
+
+    // Los productos importados de distribuidores (Admin › Importar productos)
+    // no se anuncian uno por uno: con 200 se llenarían las redes
+    if ((product.metadata as Record<string, unknown> | null)?.importado === true) return
+
+    // Con el alta automática ya nadie revisa al taller antes de publicar: sus
+    // productos salen en las redes sólo si verificó su tarjeta (o es de
+    // HETNA); si no, quedan en borrador para que HETNA los apruebe.
+    let verificado = false
+    const sellerId = ((product as any).sellers || [])[0]?.id
+    if (sellerId) {
+      const { data: [vendedor] } = await query.graph({ entity: "seller", fields: ["id", "email", "metadata"], filters: { id: sellerId } })
+      const e = vendedor ? estadoRequisitos(vendedor) : null
+      verificado = !!e && (e.exento || e.tarjeta.ok)
     }
 
     const storefrontUrl = process.env.STOREFRONT_URL || "https://hetnacnc.com"
@@ -40,9 +56,11 @@ export default async function productCreatedSocialPost({
         url: `${storefrontUrl}/mx/products/${product.handle}`,
         medios: [{ url: product.thumbnail || product.images?.[0]?.url, tipo: "imagen" }],
       },
-      logger
+      logger,
+      { revision: !verificado }
     )
-    if (!webhookUrl) return
+    // El aviso a n8n también sólo para talleres verificados (n8n puede publicarlo solo)
+    if (!webhookUrl || !verificado) return
 
     const res = await fetch(webhookUrl, {
       method: "POST",

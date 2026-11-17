@@ -27,12 +27,19 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       // revisa después. Si algo falla, vuelve a la aprobación manual.
       if (altaAutomatica()) {
         try {
-          await aprobarTaller(req.scope, t as any)
+          await aprobarTaller(req.scope, t as any, { automatica: true })
           t = { ...t, status: "open" }
           await avisarAdminAltaAutomatica(t).catch(() => undefined)
         } catch (e) {
-          req.scope.resolve("logger").error(`[alta-taller] no se aprobó solo ${t.email}: ${(e as Error).message}`)
-          await avisarAdmin(t).catch(() => undefined)
+          // Dos clics casi juntos (o el antivirus del correo): si ya quedó
+          // aprobado por la otra petición, no hay nada que avisar
+          const actual = await servicioTalleres(req.scope).retrieveSeller(id).catch(() => null)
+          if (actual?.status === "open") {
+            t = actual
+          } else {
+            req.scope.resolve("logger").error(`[alta-taller] no se aprobó solo ${t.email}: ${(e as Error).message}`)
+            await avisarAdmin(t).catch(() => undefined)
+          }
         }
       } else {
         await avisarAdmin(t).catch(() => undefined)

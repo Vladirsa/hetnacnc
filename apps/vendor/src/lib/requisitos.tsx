@@ -55,7 +55,10 @@ export function useRequisitos() {
 export function AvisoRequisitos() {
   const e = useRequisitos()
   if (!e || e.completo) return null
-  const falta = [!e.terminos.ok && "aceptar los Términos para vendedores", !e.tarjeta.ok && "verificar tu tarjeta"].filter(Boolean)
+  // Para publicar basta con los términos; la tarjeta es para cotizar y cobrar
+  const texto = !e.terminos.ok
+    ? "para publicar falta aceptar los Términos para vendedores" + (e.tarjeta.ok ? "." : "; la tarjeta la verificas para cotizar licitaciones y cobrar tus ventas.")
+    : "ya puedes publicar. Para cotizar licitaciones y cobrar tus ventas falta verificar tu tarjeta."
   return (
     <div
       style={{
@@ -73,8 +76,8 @@ export function AvisoRequisitos() {
       }}
     >
       <span style={{ fontSize: 14 }}>
-        <strong>Activa tu cuenta:</strong> para publicar y cotizar falta {falta.join(" y ")}. Toma un minuto; el cargo de $
-        {e.monto_verificacion || 10} se devuelve al momento.
+        <strong>Activa tu cuenta:</strong> {texto} Toma un minuto; el cargo de ${e.monto_verificacion || 10} de la tarjeta se devuelve
+        al momento.
       </span>
       <a
         href="/seller/requisitos"

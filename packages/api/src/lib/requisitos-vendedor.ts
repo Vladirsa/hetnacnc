@@ -73,7 +73,6 @@ export function estadoRequisitos(s: any): EstadoRequisitos {
   }
 }
 
-/** Mensaje para el taller si le falta algo para publicar; null si cumple. */
 /** Lo que le falta al taller. Con `tarjeta: false` (publicar productos) sólo
  *  se piden los términos: la tarjeta se pide para cotizar licitaciones y para
  *  cobrar (17 nov 2026: publicar más fácil para que haya más productos). */

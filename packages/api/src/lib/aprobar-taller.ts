@@ -15,7 +15,7 @@ export const altaAutomatica = () => process.env.ALTA_AUTOMATICA !== "false"
 
 type Scope = { resolve: (k: string) => any }
 
-export async function aprobarTaller(scope: Scope, t: TallerAlta & { photo?: string | null }) {
+export async function aprobarTaller(scope: Scope, t: TallerAlta & { photo?: string | null }, opc: { automatica?: boolean } = {}) {
   await (flujos as any).approveSellerWorkflow(scope).run({ input: { seller_id: t.id } })
   scope.resolve("logger").info(`[alta-taller] aprobado ${t.name} (${t.email})`)
   await avisarAprobado(t)
@@ -33,7 +33,9 @@ export async function aprobarTaller(scope: Scope, t: TallerAlta & { photo?: stri
         medios: t.photo ? [{ url: t.photo, tipo: "imagen" }] : [],
         programada_para: new Date(Date.now() + 24 * 3_600_000),
       },
-      scope.resolve("logger")
+      scope.resolve("logger"),
+      // Alta automática: el anuncio queda en borrador hasta que HETNA lo revise
+      { revision: !!opc.automatica }
     )
   }
 }
