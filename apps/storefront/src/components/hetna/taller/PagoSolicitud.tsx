@@ -15,7 +15,7 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
   const c = s.cobro
   if (!c) return null
 
-  const pagar = (proveedor: "mercadopago" | "paypal") =>
+  const pagar = (proveedor: "mercadopago" | "paypal" | "stripe") =>
     iniciar(async () => {
       setError("")
       const r = await pagarSolicitud(token, proveedor)
@@ -77,6 +77,17 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
               className="rounded-xl border-2 border-[#142033] bg-white px-5 py-2.5 font-semibold text-[#142033] hover:bg-[#F3F1EA] disabled:opacity-60"
             >
               Pagar con PayPal
+            </button>
+          )}
+          {c.metodos.includes("stripe") && (
+            <button
+              type="button"
+              disabled={pendiente}
+              onClick={() => pagar("stripe")}
+              className="rounded-xl border-2 border-[#142033] bg-white px-5 py-2.5 font-semibold text-[#142033] hover:bg-[#F3F1EA] disabled:opacity-60"
+              title="Tarjeta de crédito o débito sin crear cuenta, efectivo en OXXO o transferencia SPEI"
+            >
+              Tarjeta, OXXO o SPEI
             </button>
           )}
           {!c.metodos.length && <p className="text-sm text-[#6B675C]">En breve te mandamos la liga de pago por correo.</p>}

@@ -37,6 +37,7 @@ import { cambiarEtapa } from "./seguimiento"
 import { sendEmail } from "./resend"
 import { paypal, paypalListo } from "./paypal-api"
 import { supa } from "./cotizador-suscripciones"
+import { stripe, stripeListo } from "./stripe-api"
 import { mpCon, mpDelNegocio, paypalDelNegocio, tokenDelTaller } from "./cotizacion-liga"
 import { leerPlanApp } from "./licitacion-plan"
 import {
@@ -179,7 +180,7 @@ export async function cuentaTaller(correo: string | null | undefined, estricto =
 // ── Estado del cobro de una solicitud ─────────────────────────────────
 export type Cobro = {
   modo: "taller" | "hetna"
-  metodos: ("mercadopago" | "paypal")[]
+  metodos: ("mercadopago" | "paypal" | "stripe")[]
   // true = el taller ya no tiene cuenta conectada y lo que falta lo cobra HETNA
   respaldo: boolean
   total: number
@@ -228,7 +229,7 @@ export async function estadoCobro(knex: any, s: any, p?: any, cuenta?: CuentaTal
   const pagado = await pagadoDe(knex, s, total)
   const saldo = r2(Math.max(0, total - pagado))
   const modo = s.cobro === "taller" ? "taller" : "hetna"
-  let metodos: ("mercadopago" | "paypal")[] = []
+  let metodos: ("mercadopago" | "paypal" | "stripe")[] = []
   let respaldo = false
   if (modo === "taller") {
     cuenta = cuenta || (await cuentaTaller(p.taller_email))
@@ -239,6 +240,8 @@ export async function estadoCobro(knex: any, s: any, p?: any, cuenta?: CuentaTal
       respaldo = true
     }
   } else if (mpDisponible()) metodos = ["mercadopago"]
+  // Stripe (tarjeta, OXXO, SPEI): sólo cuando el dinero lo recibe HETNA
+  if ((modo === "hetna" || respaldo) && stripeListo()) metodos.push("stripe")
   const pct = modo === "taller" ? pctAnticipo(p) : 100
   // Se puede pagar mientras haya saldo, también después de cerrada (el resto
   // de un anticipo), pero no si se canceló.
@@ -265,7 +268,7 @@ const NOMBRE_TIPO = { anticipo: "Anticipo", resto: "Resto", total: "Pago" }
 const err = (m: string, status: number) => Object.assign(new Error(m), { status })
 
 /** Liga de pago del siguiente cobro (anticipo, resto o total). */
-export async function ligaDePago(knex: any, s: any, proveedor: "mercadopago" | "paypal", logger?: any) {
+export async function ligaDePago(knex: any, s: any, proveedor: "mercadopago" | "paypal" | "stripe", logger?: any) {
   await asegurarCobro(knex)
   const p = await propuestaElegida(knex, s)
   if (!p) throw err("Primero elige una propuesta.", 409)
@@ -284,6 +287,28 @@ export async function ligaDePago(knex: any, s: any, proveedor: "mercadopago" | "
   const retorno = ligaPropuestas(s.token)
   const pct = pctDe(s)
   const ref = `licitacion:${s.id}:${tipo}`
+
+  // Cobra HETNA con Stripe: tarjeta, OXXO o SPEI en una sola página
+  if (proveedor === "stripe") {
+    const sesion = await stripe<{ id: string; url: string }>("/checkout/sessions", {
+      datos: {
+        mode: "payment",
+        line_items: [{ quantity: 1, price_data: { currency: "mxn", unit_amount: Math.round(monto * 100), product_data: { name: titulo.slice(0, 250) } } }],
+        client_reference_id: ref,
+        metadata: { ref },
+        payment_intent_data: { metadata: { ref }, description: titulo.slice(0, 250) },
+        customer_email: s.contacto?.email || undefined,
+        locale: "es-419",
+        success_url: `${retorno}?pago=stripe`,
+        cancel_url: retorno,
+      },
+      idempotencia: `lic-st-${s.id}-${tipo}-${Math.round(monto * 100)}-${Math.floor(Date.now() / 600_000)}`,
+    })
+    await knex(T_SOLICITUD)
+      .where({ id: s.id })
+      .update({ pago_url: sesion.url, pago_monto: monto, ...(c.pagado > 0 ? {} : { pago_estado: "pendiente" }), updated_at: knex.fn.now() })
+    return { url: sesion.url, monto, tipo }
+  }
 
   // Cobra HETNA: taller sin cuenta conectada, solicitud de antes, o respaldo
   if (c.modo === "hetna" || (c.respaldo && proveedor === "mercadopago")) {
@@ -362,7 +387,7 @@ export const leerReferencia = (ref: string | undefined) => {
 type DatosPago = {
   externoId: string
   tipo: "anticipo" | "resto" | "total"
-  proveedor: "mercadopago" | "paypal"
+  proveedor: "mercadopago" | "paypal" | "stripe"
   cobra: "taller" | "hetna"
   negocioId?: string | null
   monto: number
@@ -741,4 +766,35 @@ export async function liquidacionTaller(knex: any, s: any) {
   const cobrado = r2(pagos.reduce((a, x) => a + Number(x.monto), 0))
   const comision = r2(pagos.reduce((a, x) => a + Number(x.comision), 0))
   return { cobrado, comision, aPagar: r2(cobrado - comision) }
+}
+
+/** Aviso de Stripe de un pago de licitación: se vuelve a consultar la sesión con la llave de HETNA.
+ *  OXXO y SPEI quedan "pendiente" hasta que el cliente paga; tarjeta queda aprobada al instante. */
+export async function avisoStripeLicitacion(knex: any, sesionId: string, logger?: any) {
+  await asegurarCobro(knex)
+  if (!/^cs_(live|test)_[A-Za-z0-9]{8,200}$/.test(sesionId)) return null
+  const sesion = await stripe<any>(`/checkout/sessions/${sesionId}`)
+  const ref = leerReferencia(sesion?.metadata?.ref)
+  if (!ref || sesion.mode !== "payment" || sesion.currency !== "mxn") return null
+  const s = await knex(T_SOLICITUD).where({ id: ref.solicitudId }).first()
+  if (!s) return null
+  const monto = r2(Number(sesion.amount_total || 0) / 100)
+  const estado = sesion.payment_status === "paid" ? "approved" : sesion.status === "expired" ? "cancelled" : sesion.status === "complete" ? "pending" : "pending"
+  if (sesion.status === "open") return null // todavía no paga ni elige método
+  return registrarPagoLicitacion(
+    knex,
+    s.id,
+    {
+      externoId: `st:${sesion.payment_intent || sesion.id}`,
+      tipo: ref.tipo,
+      proveedor: "stripe",
+      cobra: "hetna",
+      monto,
+      comision: comisionDe(monto, pctDe(s)), // cobra HETNA: se descuenta al liquidar al taller
+      comisionCobrada: false,
+      estado,
+      pagador: sesion.customer_details?.email || null,
+    },
+    logger
+  )
 }
