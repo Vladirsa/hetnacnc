@@ -5,14 +5,15 @@
 //                                  descripcion, sku? } -> { product_id, handle }
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { LEYENDA, revisarFoto } from "../fondo-blanco/middlewares"
+import { LEYENDA, fondoBlancoModo, revisarFoto } from "../fondo-blanco/middlewares"
 import { ErrorPublicar, categoriasParaPublicar, publicarRapido, validar } from "../../../lib/publicar-rapido"
 
-const fondoBlancoActivo = () => process.env.FONDO_BLANCO_ACTIVO !== "false"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   try {
-    res.json({ categorias: await categoriasParaPublicar(req.scope), fondo_blanco: fondoBlancoActivo() })
+    const modo = fondoBlancoModo()
+    // fondo_blanco: si bloquea; fondo_revisar: si se revisan las fotos para avisar
+    res.json({ categorias: await categoriasParaPublicar(req.scope), fondo_blanco: modo === "bloquear", fondo_revisar: modo !== "apagado" })
   } catch (e) {
     req.scope.resolve("logger").error(`[publicar] categorías: ${(e as Error).message}`)
     res.status(500).json({ message: "No se pudieron cargar las categorías." })
@@ -26,7 +27,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   try {
     const datos = validar((req.body || {}) as Record<string, unknown>)
     // La misma regla del formulario de Mercur (fondo-blanco/middlewares.ts)
-    if (fondoBlancoActivo()) {
+    if (fondoBlancoModo() === "bloquear") {
       for (let i = 0; i < datos.fotos.length; i++) {
         if ((await revisarFoto(datos.fotos[i])) === false) {
           throw new ErrorPublicar(`La foto ${i + 1} no tiene fondo blanco. ${LEYENDA}`)

@@ -73,15 +73,19 @@ export function estadoRequisitos(s: any): EstadoRequisitos {
   }
 }
 
-/** Mensaje para el taller si le falta algo para publicar; null si cumple. */
-export function motivoRequisitos(s: any): string | null {
+/** Lo que le falta al taller. Con `tarjeta: false` (publicar productos) sólo
+ *  se piden los términos: la tarjeta se pide para cotizar licitaciones y para
+ *  cobrar (17 nov 2026: publicar más fácil para que haya más productos). */
+export function motivoRequisitos(s: any, opc: { tarjeta?: boolean; para?: string } = {}): string | null {
   const e = estadoRequisitos(s)
-  if (e.completo) return null
+  if (e.exento) return null
+  const conTarjeta = opc.tarjeta !== false
   const falta = [
     !e.terminos.ok && (e.terminos.version_aceptada ? "aceptar la versión nueva de los Términos para vendedores" : "aceptar los Términos para vendedores"),
-    !e.tarjeta.ok && "verificar una tarjeta de débito o crédito (se cobra $10 y se devuelven al momento)",
+    conTarjeta && !e.tarjeta.ok && "verificar una tarjeta de débito o crédito (se cobra $10 y se devuelven al momento)",
   ].filter(Boolean)
-  return `Para publicar o cotizar en HETNA falta ${falta.join(" y ")}. Hazlo en tu panel, en "Activa tu cuenta".`
+  if (!falta.length) return null
+  return `Para ${opc.para || (conTarjeta ? "publicar o cotizar" : "publicar")} en HETNA falta ${falta.join(" y ")}. Hazlo en tu panel, en "Activa tu cuenta".`
 }
 
 async function guardar(knex: any, sellerId: string, datos: Record<string, unknown>) {

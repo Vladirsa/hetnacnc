@@ -38,6 +38,16 @@ function direccionesDeFotos(cuerpo: Record<string, any>): string[] {
   return [...vistas].slice(0, MAX_FOTOS)
 }
 
+/** Qué se hace con las fotos sin fondo blanco (17 nov 2026: para que publicar
+ *  sea más fácil, por omisión sólo se avisa):
+ *    "avisar"   se revisa y se le dice al taller, pero puede publicar
+ *    "bloquear" no deja publicar (FONDO_BLANCO_MODO=bloquear, como antes)
+ *    "apagado"  no se revisa (FONDO_BLANCO_ACTIVO=false) */
+export function fondoBlancoModo(): "avisar" | "bloquear" | "apagado" {
+  if (process.env.FONDO_BLANCO_ACTIVO === "false") return "apagado"
+  return process.env.FONDO_BLANCO_MODO === "bloquear" ? "bloquear" : "avisar"
+}
+
 // true = fondo blanco, false = NO es blanco, null = no se pudo revisar (se deja pasar)
 export async function revisarFoto(direccion: string): Promise<boolean | null> {
   try {
@@ -66,7 +76,8 @@ export async function revisarFoto(direccion: string): Promise<boolean | null> {
 
 async function exigirFondoBlanco(req: MedusaRequest, _res: MedusaResponse, next: MedusaNextFunction) {
   try {
-    if (process.env.FONDO_BLANCO_ACTIVO === "false") return next()
+    // Sólo bloquea en modo "bloquear"; en "avisar" el aviso lo da el formulario
+    if (fondoBlancoModo() !== "bloquear") return next()
     const fotos = direccionesDeFotos((req.body ?? {}) as Record<string, any>)
     for (let i = 0; i < fotos.length; i++) {
       if ((await revisarFoto(fotos[i])) === false) {

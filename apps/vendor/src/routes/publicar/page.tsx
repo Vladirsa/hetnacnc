@@ -168,7 +168,8 @@ const PublicarPage = () => {
   const [d, setD] = useState(VACIO)
   const [paso, setPaso] = useState(0)
   const [categorias, setCategorias] = useState([])
-  const [fondoBlanco, setFondoBlanco] = useState(true)
+  const [fondoBlanco, setFondoBlanco] = useState(false) // ¿bloquea?
+  const [fondoRevisar, setFondoRevisar] = useState(true) // ¿se revisa para avisar?
   const [buscar, setBuscar] = useState("")
   const [error, setError] = useState("")
   const [publicando, setPublicando] = useState(false)
@@ -190,7 +191,8 @@ const PublicarPage = () => {
       .then((r) => r.json())
       .then((r) => {
         setCategorias(Array.isArray(r.categorias) ? r.categorias : [])
-        setFondoBlanco(r.fondo_blanco !== false)
+        setFondoBlanco(r.fondo_blanco === true)
+        setFondoRevisar(r.fondo_revisar !== false)
       })
       .catch(() => setError("No se pudieron cargar las categorías. Recarga la página."))
   }, [])
@@ -213,7 +215,7 @@ const PublicarPage = () => {
       const t = temporales[i]
       try {
         const url = await subirFoto(archivos[i])
-        const blanco = fondoBlanco ? await revisarFondo(url) : true
+        const blanco = fondoRevisar ? await revisarFondo(url) : true
         setD((p) => {
           const n = { ...p, fotos: p.fotos.map((f) => (f.clave === t.clave ? { url, blanco } : f)) }
           guardarBorrador({ ...n, fotos: n.fotos.filter((f) => !f.subiendo) })
@@ -385,7 +387,9 @@ const PublicarPage = () => {
                     {f.subiendo ? (
                       <span style={{ color: "#6B675C" }}>Subiendo…</span>
                     ) : f.blanco === false ? (
-                      <span style={{ color: "#9B3225", fontWeight: 600 }}>⚠ Sin fondo blanco</span>
+                      <span style={{ color: fondoBlanco ? "#9B3225" : "#9A6A06", fontWeight: 600 }} title={fondoBlanco ? "" : "Puedes publicarla, pero con fondo blanco se vende más"}>
+                        ⚠ Sin fondo blanco{fondoBlanco ? "" : " (recomendado)"}
+                      </span>
                     ) : i === 0 ? (
                       <span style={{ color: "#14683F", fontWeight: 600 }}>★ Principal</span>
                     ) : (

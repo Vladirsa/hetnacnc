@@ -5,6 +5,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SALDO, asegurarTablaSaldos, diasLiberacion, filaParaRespuesta, netoTaller } from "../../../lib/saldos-talleres"
+import { estadoRequisitos } from "../../../lib/requisitos-vendedor"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -27,7 +28,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   const ids = [...new Set([...porTaller.values()].map((t) => t.seller_id))]
   const { data: sellers } = ids.length
-    ? await query.graph({ entity: "seller", fields: ["id", "name", "email", "payment_details.*"], filters: { id: ids } })
+    ? await query.graph({ entity: "seller", fields: ["id", "name", "email", "metadata", "payment_details.*"], filters: { id: ids } })
     : { data: [] as any[] }
   const info = new Map((sellers as any[]).map((s) => [s.id, s]))
   res.json({
@@ -43,6 +44,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           // Para hacer el SPEI: titular y cuenta/CLABE que el taller guardó en su panel
           titular: pd?.holder_name || null,
           cuenta: pd?.account_number || pd?.iban || null,
+          // La tarjeta ya no se pide para publicar: se revisa antes de transferir
+          tarjeta_verificada: s.id ? (() => { const e = estadoRequisitos(s); return e.exento || e.tarjeta.ok })() : false,
         }
       })
       .sort((a, b) => b.disponible - a.disponible),

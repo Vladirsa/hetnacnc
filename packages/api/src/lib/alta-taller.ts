@@ -1,7 +1,8 @@
 // Alta segura de talleres (vendedores).
 //
 // Por qué: cualquiera podía registrarse en /seller con un correo ajeno o
-// inventado y empezar a publicar. Ahora:
+// inventado y empezar a publicar. Ahora (con el alta automática del 17 nov 2026,
+// lib/aprobar-taller.ts, el paso 2 aprueba solo y el admin sólo recibe el aviso):
 //   1. Al registrarse, el taller recibe una liga para confirmar su correo.
 //   2. Al confirmarlo, el administrador recibe un correo con el botón
 //      "Aprobar taller" (y aparece en el Centro de control).
@@ -143,6 +144,28 @@ export async function avisarAdmin(t: TallerAlta) {
   )
   for (const to of para) {
     await sendEmail({ to, subject: `Taller nuevo por aprobar: ${t.name || t.email || t.id}`, html }).catch(() => undefined)
+  }
+}
+
+/** Alta automática: el taller ya puede publicar; HETNA lo revisa después y lo
+ *  suspende desde el panel si algo no cuadra. */
+export async function avisarAdminAltaAutomatica(t: TallerAlta) {
+  const para = destinatariosAdmin()
+  if (!para.length) return
+  const html = marco(
+    "Taller nuevo aprobado automáticamente",
+    `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Un taller confirmó su correo y quedó aprobado solo: ya puede publicar. Revisa sus datos y sus primeros productos; si algo no cuadra, suspéndelo desde el panel.</p>` +
+      `<table style="border-collapse:collapse;font-size:14px">` +
+      fila("Taller", t.name || "") +
+      fila("Correo", t.email || "") +
+      fila("Teléfono", t.phone || "") +
+      fila("Registrado", t.created_at ? new Date(t.created_at).toLocaleString("es-MX", { timeZone: "America/Mexico_City" }) : "") +
+      `</table>` +
+      boton("Revisar o suspender en el panel", `${ADMIN}/sellers/${encodeURIComponent(t.id)}`) +
+      `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Para volver a aprobar a mano cada taller, pon ALTA_AUTOMATICA=false en el .env del API.</p>`
+  )
+  for (const to of para) {
+    await sendEmail({ to, subject: `Taller nuevo (aprobado automáticamente): ${t.name || t.email || t.id}`, html }).catch(() => undefined)
   }
 }
 

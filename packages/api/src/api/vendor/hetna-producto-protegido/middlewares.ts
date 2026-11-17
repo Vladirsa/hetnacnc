@@ -16,6 +16,8 @@ export const LLAVES_PRODUCTO_PROTEGIDAS = [
   "producto_digital",
   "precio_mxn",
   "creditos_otorgados",
+  // Lo pone Publicar rápido; el suscriptor de redes decide con él si el taller está verificado
+  "seller_id",
 ]
 
 type Meta = Record<string, unknown>
