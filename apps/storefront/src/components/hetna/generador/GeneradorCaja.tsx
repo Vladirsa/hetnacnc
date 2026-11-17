@@ -64,6 +64,14 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
       <path d="M6 16l14-7 14 7M20 23v12" />
     </>
   ),
+  bisagra: (
+    <>
+      <path d="M6 18l14 7 14-7v11l-14 7-14-7z" />
+      <path d="M20 25v11" />
+      <path d="M6 18L13 6l14 7-7 12" />
+      <circle cx="29" cy="20" r="1.6" />
+    </>
+  ),
   corrediza: (
     <>
       <path d="M6 16l14 7 14-7v12l-14 7-14-7z" />
@@ -167,6 +175,7 @@ const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "sobrepuesta", nombre: "Con tapa", nota: "Tapa que se quita, cae por fuera" },
   { id: "cajonera", nombre: "Cajonera", nota: "Carcasa con un cajón que entra con 1 mm de juego por lado y jaladera" },
   { id: "corrediza", nombre: "Corrediza", nota: "Tapa que corre por una ranura en los costados; travesaño al frente que la sujeta" },
+  { id: "bisagra", nombre: "Bisagra", nota: "Tapa que abre girando sobre dos pernos en los costados; se detiene sola a 90°" },
 ]
 
 type Modelo = {
@@ -199,6 +208,8 @@ const MODELOS: Modelo[] = [
   { id: "cajon", nombre: "Cajón para mueble", tipo: "abierta", a: 450, f: 400, h: 150, e: 12 },
   { id: "cajonera", nombre: "Cajonera de escritorio", tipo: "cajonera", a: 300, f: 250, h: 110, e: 3 },
   { id: "estuche", nombre: "Estuche de lápices", tipo: "corrediza", a: 210, f: 70, h: 50, e: 3 },
+  { id: "joyero-bisagra", nombre: "Joyero con bisagra", tipo: "bisagra", a: 200, f: 140, h: 70, e: 3, cols: 3, filas: 2, tapa: 30 },
+  { id: "recuerdos", nombre: "Caja de recuerdos", tipo: "bisagra", a: 300, f: 220, h: 120, e: 6, tapa: 45 },
   { id: "te-corrediza", nombre: "Caja de té corrediza", tipo: "corrediza", a: 240, f: 170, h: 100, e: 3, cols: 3, filas: 2 },
   { id: "cajonera-herr", nombre: "Cajonera para herramientas", tipo: "cajonera", a: 420, f: 320, h: 140, e: 6 },
 ]
@@ -244,6 +255,7 @@ export function GeneradorCaja() {
   const [dedoAuto, setDedoAuto] = useState(true)
   const [tipo, setTipo] = useState<TipoCaja>("cerrada")
   const [altoTapa, setAltoTapa] = useState("30")
+  const [perno, setPerno] = useState("3") // caja con bisagra: diámetro del perno, mm
   const [columnas, setColumnas] = useState(1)
   const [filas, setFilas] = useState(1)
   const [asas, setAsas] = useState(false)
@@ -288,12 +300,13 @@ export function GeneradorCaja() {
         medidas,
         tipo,
         altoTapa: numero(altoTapa) * k,
+        perno: numero(perno) || 3,
         columnas,
         filas,
         asas,
         ranura: tipo === "cerrada" && ranura,
       }),
-    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, columnas, filas, asas, ranura, k]
+    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, perno, columnas, filas, asas, ranura, k]
   )
   const listo = r.piezas.length > 0
   const ext = r.exterior
@@ -370,11 +383,34 @@ export function GeneradorCaja() {
         }
         return q
       })
+      // Caja con bisagra: la tapa se ve abierta, girada sobre el eje de los pernos
+      const P = rv.pivote
+      const abierta = P
+        ? piezas.map((p) => {
+            if (!p.nombre.startsWith("Tapa abatible · ") || !p.ubicacion) return p
+            const th = ((65 + despieceVista * 0.25) * Math.PI) / 180
+            const co = Math.cos(th)
+            const si = Math.sin(th)
+            // giro en el plano (z, y): el frente sube y va hacia atrás
+            const gira = (v: [number, number, number]): [number, number, number] => [v[0], -v[2] * si + v[1] * co, v[2] * co + v[1] * si]
+            const o = p.ubicacion.origen
+            const d = gira([0, o[1] - P.y, o[2] - P.z])
+            return {
+              ...p,
+              ubicacion: {
+                origen: [o[0], P.y + d[1], P.z + d[2]] as [number, number, number],
+                ux: gira(p.ubicacion.ux),
+                uy: gira(p.ubicacion.uy),
+                uz: gira(p.ubicacion.uz),
+              },
+            }
+          })
+        : piezas
       // La cámara del estudio mira desde +Z; el frente de la caja está en Z = 0.
       // Se refleja a lo fondo para que el frente (y el cajón que sale) quede de
       // cara a quien mira.
       const F = rv.exterior.fondo
-      const deFrente = piezas.map((p) =>
+      const deFrente = abierta.map((p) =>
         p.ubicacion
           ? {
               ...p,
@@ -604,7 +640,13 @@ export function GeneradorCaja() {
             </label>
           </div>
         ))}
-        {tipo === "sobrepuesta" && <CampoNum etiqueta="Alto de la tapa (por fuera)" valor={altoTapa} cambiar={setAltoTapa} sufijo={unidad} />}
+        {(tipo === "sobrepuesta" || tipo === "bisagra") && <CampoNum etiqueta="Alto de la tapa (por fuera)" valor={altoTapa} cambiar={setAltoTapa} sufijo={unidad} />}
+        {tipo === "bisagra" && (
+          <div className="flex flex-col gap-1">
+            <CampoNum etiqueta="Diámetro del perno" valor={perno} cambiar={setPerno} sufijo="mm" />
+            <span className="text-[11.5px] leading-snug text-[#8A97AB]">Clavo, tornillo M3 o filamento de 3 mm. El agujero sale del diámetro exacto (justo); para que gire suelto, súbele 0.2 mm.</span>
+          </div>
+        )}
         {listo && (
           <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 rounded-[10px] bg-[#C2560A]/10 px-3 py-2 text-[12px]">
             <dt className="text-[#8A97AB]">Volumen interior</dt>
