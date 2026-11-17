@@ -244,7 +244,8 @@ export async function publicarRapido(
           category_ids: [cat.id],
           sales_channels: (canales as { id: string }[]).map((c) => ({ id: c.id })),
           ...medidas,
-          metadata: { condicion, publicado_con: "publicar-facil" },
+          // seller_id: el suscriptor de redes lo lee sin esperar el vínculo producto↔taller
+          metadata: { condicion, publicado_con: "publicar-facil", seller_id: sellerId },
           options: [{ title: "Presentación", values: [presentacion] }],
           variants: [
             {

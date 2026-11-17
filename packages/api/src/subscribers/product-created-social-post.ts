@@ -34,8 +34,19 @@ export default async function productCreatedSocialPost({
     // Con el alta automática ya nadie revisa al taller antes de publicar: sus
     // productos salen en las redes sólo si verificó su tarjeta (o es de
     // HETNA); si no, quedan en borrador para que HETNA los apruebe.
+    // El vínculo producto↔taller puede crearse justo después del evento: se
+    // usa metadata.seller_id (Publicar rápido) y, si no, se espera un momento
+    // y se vuelve a consultar. Sin taller después de eso, lo creó HETNA desde
+    // el admin (sólo un administrador puede): se trata como verificado.
     let verificado = false
-    const sellerId = ((product as any).sellers || [])[0]?.id
+    let sellerId: string | undefined =
+      ((product as any).sellers || [])[0]?.id || ((product.metadata as Record<string, unknown> | null)?.seller_id as string | undefined)
+    if (!sellerId) {
+      await new Promise((r) => setTimeout(r, 4000))
+      const { data: [otra] } = await query.graph({ entity: "product", fields: ["id", "sellers.id"], filters: { id: product.id } })
+      sellerId = ((otra as any)?.sellers || [])[0]?.id
+      if (!sellerId) verificado = true
+    }
     if (sellerId) {
       const { data: [vendedor] } = await query.graph({ entity: "seller", fields: ["id", "email", "metadata"], filters: { id: sellerId } })
       const e = vendedor ? estadoRequisitos(vendedor) : null
