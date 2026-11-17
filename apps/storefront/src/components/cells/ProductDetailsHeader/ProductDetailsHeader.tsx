@@ -26,6 +26,7 @@ import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
 import { HttpTypes } from "@medusajs/types"
 import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
+import type { Cart } from "@/types/cart"
 import { SellerDTO } from "@mercurjs/types"
 
 // A partir de cuántas piezas deja de ser urgente decirlo. Arriba de esto el
@@ -68,8 +69,6 @@ export const ProductDetailsHeader = ({
 }) => {
   const fisico = tipo === "fisico"
   const { addToCart, onAddToCart, cart, isAddingItem } = useCartContext()
-  // Carrito que devolvió el último "agregar" (para decidir a dónde va "Comprar ahora")
-  const carritoNuevo = useRef<{ items?: unknown[] } | null | undefined>(undefined)
   const { allSearchParams } = useGetAllSearchParams()
   const [isCompareOpen, setIsCompareOpen] = useState(false)
   const [cantidad, setCantidad] = useState(1)
@@ -171,7 +170,8 @@ export const ProductDetailsHeader = ({
 
   const noSePuedeComprar = !hayOferta || disponibles === 0
 
-  const agregar = async (): Promise<boolean> => {
+  // Devuelve el carrito ya actualizado (null si no se pudo agregar)
+  const agregar = async (): Promise<Cart | null | false> => {
     if (!winnerOffer || noSePuedeComprar) return false
 
     const total = (offerAmount as number) * cantidadValida
@@ -195,11 +195,11 @@ export const ProductDetailsHeader = ({
     )
 
     try {
-      carritoNuevo.current = (await addToCart({
+      const nuevo = await addToCart({
         offerId: winnerOffer.id,
         quantity: cantidadValida,
         countryCode: locale,
-      })) as { items?: unknown[] } | null | undefined
+      })
       trackAddToCart(
         {
           item_id: product.id,
@@ -209,7 +209,7 @@ export const ProductDetailsHeader = ({
         },
         offerCurrency
       )
-      return true
+      return nuevo
     } catch (error) {
       toast.error({
         title: "No se pudo agregar al carrito",
@@ -227,17 +227,16 @@ export const ProductDetailsHeader = ({
   // (revisión Thermos). Antes siempre iba al carrito: un clic de más.
   const comprarAhora = async () => {
     setComprando(true)
-    carritoNuevo.current = undefined
-    const listo = await agregar()
+    const nuevo = await agregar()
     setComprando(false)
-    if (!listo) return
-    // (se vuelve a leer: TypeScript no sabe que agregar() lo cambió)
-    const leido = carritoNuevo.current as { items?: unknown[] } | null | undefined
-    const renglones = leido?.items || []
-    const unico = renglones.length === 1 ? (renglones[0] as any) : null
+    if (nuevo === false) return
+    const renglones = nuevo?.items || []
+    const unico = renglones.length === 1 ? renglones[0] : null
+    const ofertaDe = (r: NonNullable<typeof unico>) =>
+      (r as { offer?: { id?: string } }).offer?.id || (r.metadata as { offer_id?: string } | null)?.offer_id
     const esEste =
       !!unico &&
-      (unico.offer?.id || unico.metadata?.offer_id) === winnerOffer?.id &&
+      ofertaDe(unico) === winnerOffer?.id &&
       Number(unico.quantity) === cantidadValida
     router.push(`/${locale}/${esEste ? "checkout" : "cart"}`)
   }

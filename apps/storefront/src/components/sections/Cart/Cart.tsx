@@ -14,7 +14,7 @@ import { useCartContext } from "@/components/providers"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
-import { tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { envioDelCarrito } from "@/lib/hetna/tipo-ficha"
 import { HttpTypes } from "@medusajs/types"
 
 import { ResumenCarrito } from "./ResumenCarrito"
@@ -39,11 +39,8 @@ export const Cart = () => {
   const marcados = items.filter((i) => seleccion.estaSeleccionado(i.id))
   const noMarcados = items.filter((i) => !seleccion.estaSeleccionado(i.id))
   const totalesMarcados = calcularTotales(marcados)
-  // ¿Lo marcado lleva envío? Una sola regla para el resumen y la barra del
-  // teléfono: archivos → "descarga inmediata"; con algún servicio → sólo "sin envío"
-  const tipos = marcados.map((i) => (i.product ? tipoFicha(i.product as never) : "fisico"))
-  const sinEnvio: null | "descarga" | "servicio" =
-    !tipos.length || tipos.includes("fisico") ? null : tipos.every((t) => t === "digital") ? "descarga" : "servicio"
+  // ¿Lo marcado lleva envío? La misma regla que el checkout (lib/hetna/tipo-ficha.ts)
+  const sinEnvio = envioDelCarrito(marcados)
 
   const aFavorito = (i: HttpTypes.StoreCartLineItem) => ({
     id: i.product_id as string,

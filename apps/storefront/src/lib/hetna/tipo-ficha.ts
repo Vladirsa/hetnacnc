@@ -139,6 +139,16 @@ export function datosServicio(metadata?: Record<string, unknown> | null): DatosS
   }
 }
 
+/** ¿Lleva envío? null = sí; "descarga" = sólo archivos; "servicio" = sin envío
+ *  pero con algún servicio (no es descarga inmediata). Un renglón sin producto
+ *  cuenta como físico. Lo usan el carrito y el checkout. */
+export function envioDelCarrito(items?: { product?: ProductoParaTipo | null }[] | null): null | "descarga" | "servicio" {
+  if (!items?.length) return null
+  const tipos = items.map((i) => (i.product ? tipoFicha(i.product) : "fisico"))
+  if (tipos.includes("fisico")) return null
+  return tipos.every((t) => t === "digital") ? "descarga" : "servicio"
+}
+
 /** ¿El carrito sólo trae archivos o servicios (nada que enviar)? Tarea 4. */
 export const carritoSoloDigital = (items?: { product?: ProductoParaTipo | null }[] | null): boolean =>
-  !!items?.length && items.every((i) => !!i.product && tipoFicha(i.product) !== "fisico")
+  envioDelCarrito(items) !== null
