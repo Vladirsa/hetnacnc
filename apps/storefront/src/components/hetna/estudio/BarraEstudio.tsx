@@ -12,7 +12,9 @@ export function BarraEstudio() {
   const params = useParams()
   const ruta = usePathname() || ""
   // el catálogo de cajas (/disenar/cajas y /disenar/cajas/<Id>) cuenta como "Cajas"
-  const actual = /\/disenar\/cajas(\/|$)/.test(ruta) ? "caja-con-juntas" : String(params?.herramienta || "")
+  // y el organizador de cajón, que ahora es un tipo de caja
+  const actual =
+    /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon" ? "caja-con-juntas" : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.
   useEffect(() => {

@@ -326,7 +326,6 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "rebanado-capas", corto: "Rebanado" },
       { slug: "engranes", corto: "Engranes" },
       { slug: "relojes", corto: "Relojes" },
-      { slug: "organizador-cajon", corto: "Organizador" },
       { slug: "lamparas-capas", corto: "Lámparas" },
       { slug: "estencil-letras", corto: "Esténcil" },
       { slug: "marcos-portarretratos", corto: "Marcos" },

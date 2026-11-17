@@ -75,7 +75,8 @@ export function anidar(piezas: PiezaAnidar[], o: OpcionesAnidado): ResultadoAnid
           // giro de 90°: (lx, ly) → (ancho_girado - ly, lx)
           return c.girada ? [x + (m.alto - ly), y + lx] : [x + lx, y + ly]
         })
-        trazos.push({ pts, cerrado: t.cerrado, capa: "CORTE" })
+        // lo grabado sigue siendo grabado; todo lo demás es corte
+        trazos.push({ pts, cerrado: t.cerrado, capa: (t.capa || "").toLowerCase() === "grabado" ? "grabado" : "CORTE" })
       }
     }
     return { colocaciones, trazos }
