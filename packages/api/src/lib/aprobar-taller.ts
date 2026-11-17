@@ -18,7 +18,7 @@ type Scope = { resolve: (k: string) => any }
 export async function aprobarTaller(scope: Scope, t: TallerAlta & { photo?: string | null }, opc: { automatica?: boolean } = {}) {
   await (flujos as any).approveSellerWorkflow(scope).run({ input: { seller_id: t.id } })
   scope.resolve("logger").info(`[alta-taller] aprobado ${t.name} (${t.email})`)
-  await avisarAprobado(t)
+  await avisarAprobado(t, scope)
   // Fase 5A: anuncio del taller nuevo en redes, un día después para que
   // alcance a llenar su perfil. Las cuentas de prueba no se anuncian.
   if (!(t.metadata as any)?.prueba && t.handle) {

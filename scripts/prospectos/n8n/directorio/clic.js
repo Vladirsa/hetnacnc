@@ -16,12 +16,19 @@ if (est === 'BAJA' || notas.indexOf(MARCA + hoy) >= 0) return [{ json: { anotar:
 const ruta = String(b.ruta || '/').slice(0, 120);
 const campana = String(b.campana || '').slice(0, 40);
 const contacto = [r.telefono ? '📞 ' + r.telefono : '', r.whatsapp && r.whatsapp !== r.telefono ? 'WhatsApp ' + r.whatsapp : '', r.email ? '✉️ ' + r.email : ''].filter(Boolean).join(' · ');
+// Liga para escribirle por WhatsApp con un mensaje ya escrito (lo mandas tú desde tu celular)
+const digitos = (v) => String(v || '').split('').filter((c) => c >= '0' && c <= '9').join('');
+let num = digitos(r.whatsapp) || digitos(r.telefono);
+if (num.length === 10 && (r.pais === 'México' || r.pais === 'Mexico')) num = '52' + num;
+if (num.length === 13 && num.startsWith('521')) num = '52' + num.slice(3);
+const textoWa = 'Hola, soy Vladimir de HETNA CNC. Vi que revisaron la información que les mandamos por correo. ¿Les ayudo a registrar su taller? Toma 5 minutos y como taller fundador tienen 6 meses del plan Pro gratis.';
+const ligaWa = num.length >= 11 && num.length <= 13 ? 'https://wa.me/' + num + '?text=' + encodeURIComponent(textoWa) : '';
 const aviso = [
   '👀 ' + r.empresa + ' abrió tu correo y está viendo la página ahora',
   [r.ciudad, r.region, r.pais].filter(Boolean).join(', '),
   'Página: hetnacnc.com' + ruta + (campana ? ' · correo ' + campana : ''),
   contacto,
-  est === 'REGISTRADO' ? 'Ya está registrado en HETNA.' : 'Buen momento para llamarle o escribirle: todavía tiene la página abierta.',
+  est === 'REGISTRADO' ? 'Ya está registrado en HETNA.' : (ligaWa ? 'Buen momento para escribirle por WhatsApp (mensaje listo): ' + ligaWa : 'Buen momento para escribirle: todavía tiene la página abierta.'),
 ].filter(Boolean).join(NL);
 return [{ json: {
   anotar: true,
