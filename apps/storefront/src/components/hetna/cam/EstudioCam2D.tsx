@@ -22,6 +22,7 @@ import { FichaFresa } from "@/components/hetna/cam/FichaFresa"
 import { ProbadoCam } from "@/components/hetna/cam/ProbadoCam"
 import { ProyectosCam } from "@/components/hetna/cam/ProyectosCam"
 import { acomodarPiezas } from "@/lib/cam/acomodar"
+import { anidar, separarPiezas } from "@/lib/generador/anidado"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
 import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
@@ -188,8 +189,30 @@ export function EstudioCam2D() {
         : null,
     [pieza, hoja, extras]
   )
-  const dibujo = acomodo?.dibujo ?? null
-  const variasCopias = (acomodo?.puestas ?? 1) > 1
+  // Anidar: separa las piezas del archivo, junta las demás piezas y las
+  // copias, y las reparte en todas las hojas que hagan falta (motor de la
+  // herramienta Anidado). El G-code se calcula para la hoja que se elija.
+  const [anidarHojas, setAnidarHojas] = useState(false)
+  const [hojaVer, setHojaVer] = useState(0)
+  const anidado = useMemo(() => {
+    if (!anidarHojas || !pieza) return null
+    const partes = separarPiezas(pieza)
+    const copias = numero(hoja.copias) || 1
+    return anidar(
+      [
+        ...partes.map((d, i) => ({ id: `a${i}`, nombre: partes.length > 1 ? `Pieza ${i + 1} del archivo` : "Pieza del archivo", dibujo: d, cantidad: copias })),
+        ...extras.map((x, i) => ({ id: `e${i}`, nombre: x.nombre, dibujo: x.dibujo, cantidad: numero(x.copias) || 1 })),
+      ],
+      { hoja: { ancho: numero(hoja.ancho) || 1220, alto: numero(hoja.largo) || 2440 }, separacion: numero(hoja.separacion) || 0, margen: 0, girar: true, conservarCapas: true }
+    )
+  }, [anidarHojas, pieza, hoja, extras])
+  const hojaActual = anidado && anidado.hojas.length ? Math.min(hojaVer, anidado.hojas.length - 1) : 0
+  const dibujoAnidado = useMemo<Dibujo | null>(() => {
+    if (!anidado || !anidado.hojas.length || !pieza) return null
+    return { ...pieza, trazos: anidado.hojas[hojaActual].trazos.filter((t) => t.capa !== "HOJA") }
+  }, [anidado, hojaActual, pieza])
+  const dibujo = dibujoAnidado ?? acomodo?.dibujo ?? null
+  const variasCopias = Boolean(dibujoAnidado) || (acomodo?.puestas ?? 1) > 1
   const [origen, setOrigen] = useState(true)
   const [material, setMaterial] = useState<Material>("mdf")
   const [espesor, setEspesor] = useState("18")
@@ -292,7 +315,7 @@ export function EstudioCam2D() {
   // Proyecto guardado en la cuenta: el dibujo (como DXF) y cómo se va a cortar
   const proyectoActual = () => {
     if (!pieza) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
-    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja, extras: extras.map((x) => ({ nombre: x.nombre, dxf: dibujoDXF(x.dibujo), copias: x.copias })) }
+    return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja, anidar: anidarHojas, extras: extras.map((x) => ({ nombre: x.nombre, dxf: dibujoDXF(x.dibujo), copias: x.copias })) }
   }
   const aplicarProyecto = (d: any): boolean => {
     if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
@@ -313,6 +336,8 @@ export function EstudioCam2D() {
     const hj = d.hoja && typeof d.hoja === "object" ? d.hoja : {}
     const txt = (v: unknown, def: string) => (typeof v === "string" && numero(v) >= 0 ? v.slice(0, 8) : def)
     setHoja({ copias: txt(hj.copias, "1"), ancho: txt(hj.ancho, "1220"), largo: txt(hj.largo, "2440"), separacion: txt(hj.separacion, "8") })
+    setAnidarHojas(Boolean(d.anidar))
+    setHojaVer(0)
     const otras: typeof extras = []
     for (const x of Array.isArray(d.extras) ? d.extras.slice(0, 12) : []) {
       try {
@@ -664,14 +689,60 @@ export function EstudioCam2D() {
             )}
             {extras.length > 0 && <span className="text-[11.5px] leading-snug text-[#8A97AB]">Las operaciones se aplican a todas las piezas: usa los mismos nombres de capa en todos tus dibujos.</span>}
           </div>
-          {acomodo && ((numero(hoja.copias) || 1) > 1 || extras.length > 0) && (
+          {!anidarHojas && acomodo && ((numero(hoja.copias) || 1) > 1 || extras.length > 0) && (
             <span className="text-[12px] leading-snug text-[#C9D2E0]">
               {extras.length === 0 && acomodo.caben > 0 && `Caben ${acomodo.caben} por hoja${acomodo.girada ? " girando la pieza 90°" : ""}. `}
               {variasCopias && acomodo.encajadas && "Las copias que lo permiten van encajadas: una derecha y la siguiente volteada 180°. "}
               {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
             </span>
           )}
-          {acomodo?.aviso && <Aviso>{acomodo.aviso}</Aviso>}
+          {!anidarHojas && acomodo?.aviso && <Aviso>{acomodo.aviso}</Aviso>}
+          <div className="flex flex-col gap-2 rounded-[10px] border border-[#2B3648] bg-[#0F151E] p-2.5">
+            <Interruptor
+              etiqueta="Anidar en varias hojas"
+              activo={anidarHojas}
+              cambiar={(v) => {
+                setAnidarHojas(v)
+                setHojaVer(0)
+                setPlan(null)
+                setGcode(null)
+              }}
+            />
+            <span className="text-[11.5px] leading-snug text-[#8A97AB]">
+              Separa las piezas que vengan juntas en tu archivo, suma las copias y las otras piezas, y las reparte en todas las hojas que hagan falta, girándolas si conviene.
+            </span>
+            {anidarHojas && anidado && (
+              <>
+                <p className="m-0 rounded-[8px] bg-[#C2560A]/10 px-2.5 py-2 text-[12px] leading-snug text-[#F2D29B]">
+                  {anidado.totalPiezas} piezas en <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> de {numero(hoja.ancho) || 1220} × {numero(hoja.largo) || 2440} mm · aprovechamiento{" "}
+                  <b className="text-white">{Math.round(anidado.aprovechamiento * 100)}%</b>
+                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]">No caben en la hoja: {anidado.noCaben.slice(0, 3).join(", ")}.</span>}
+                </p>
+                {anidado.hojas.length > 1 && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[12px] text-[#C9D2E0]">Hoja que se calcula (un G-code por hoja):</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {anidado.hojas.map((h, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-pressed={hojaActual === i}
+                          onClick={() => {
+                            setHojaVer(i)
+                            setPlan(null)
+                            setGcode(null)
+                          }}
+                          className={`rounded-[8px] px-2.5 py-1 text-[12px] font-semibold ${hojaActual === i ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
+                        >
+                          Hoja {i + 1} · {h.colocaciones.length}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </Seccion>
 
         <Seccion titulo="Operaciones" nota="Se hacen en este orden. Elige la capa del dibujo que usa cada una.">
