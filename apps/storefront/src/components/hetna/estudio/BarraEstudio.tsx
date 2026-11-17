@@ -14,7 +14,11 @@ export function BarraEstudio() {
   // el catálogo de cajas (/disenar/cajas y /disenar/cajas/<Id>) cuenta como "Cajas"
   // y el organizador de cajón, que ahora es un tipo de caja
   const actual =
-    /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon" ? "caja-con-juntas" : String(params?.herramienta || "")
+    /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon"
+      ? "caja-con-juntas"
+      : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva"
+        ? "celosias" // los tres modos de Patrones de corte
+        : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.
   useEffect(() => {

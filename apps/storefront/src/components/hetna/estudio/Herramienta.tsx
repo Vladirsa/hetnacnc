@@ -14,11 +14,11 @@ const GeneradorLetrero = dynamic(() => import("@/components/hetna/generador/Gene
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
 const GeneradorMueble = dynamic(() => import("@/components/hetna/generador/GeneradorMueble").then((m) => m.GeneradorMueble))
-const GeneradorPatron = dynamic(() => import("@/components/hetna/generador/GeneradorPatron").then((m) => m.GeneradorPatron))
 const GeneradorRelieve = dynamic(() => import("@/components/hetna/generador/GeneradorRelieve").then((m) => m.GeneradorRelieve))
 const GeneradorRompecabezas = dynamic(() => import("@/components/hetna/generador/GeneradorRompecabezas").then((m) => m.GeneradorRompecabezas))
-const GeneradorCelosias = dynamic(() => import("@/components/hetna/generador/GeneradorCelosias").then((m) => m.GeneradorCelosias))
-const GeneradorBisagra = dynamic(() => import("@/components/hetna/generador/GeneradorBisagra").then((m) => m.GeneradorBisagra))
+// celosías, patrones radiales y bisagra viva: una sola herramienta con modos
+const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
+const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
 const GeneradorQR = dynamic(() => import("@/components/hetna/generador/GeneradorQR").then((m) => m.GeneradorQR))
 const GeneradorRebanado = dynamic(() => import("@/components/hetna/generador/GeneradorRebanado").then((m) => m.GeneradorRebanado))
 const GeneradorEngranes = dynamic(() => import("@/components/hetna/generador/GeneradorEngranes").then((m) => m.GeneradorEngranes))
@@ -41,12 +41,9 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "plantillas-empaque": GeneradorEmpaques,
   "grabado-foto": GeneradorGrabado,
   "litofania-relieve": GeneradorRelieve,
-  "patrones-radiales": GeneradorPatron,
   convertidor: GeneradorConvertidor,
   "svg-a-stl": GeneradorExtruir,
   "anidado-piezas": GeneradorAnidado,
-  celosias: GeneradorCelosias,
-  "bisagra-viva": GeneradorBisagra,
   "codigo-qr": GeneradorQR,
   "rebanado-capas": GeneradorRebanado,
   engranes: GeneradorEngranes,
@@ -57,9 +54,10 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "marcos-portarretratos": GeneradorMarcos,
 }
 
-export const HAY_HERRAMIENTA = new Set(Object.keys(GENERADORES))
+export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON)])
 
 export function Herramienta({ slug }: { slug: string }) {
+  if (MODO_PATRON[slug]) return <GeneradorPatronesCorte modoInicial={MODO_PATRON[slug]} />
   const G = GENERADORES[slug]
   return G ? <G /> : null
 }
