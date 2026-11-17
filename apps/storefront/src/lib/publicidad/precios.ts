@@ -11,6 +11,7 @@ export const PRECIO_30_DIAS: Record<EspacioId, number> = {
   banner_herramientas: 500,
   foro_lateral: 400,
   categorias_lateral: 400,
+  vista_whatsapp: 600,
 }
 
 export const PLANES = [

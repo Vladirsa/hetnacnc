@@ -5,17 +5,25 @@ import { JsonLd } from "@/components/hetna/JsonLd"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
 import type { Metadata } from "next"
 
+import { vistaPreviaWhatsapp } from "@/lib/publicidad/vista-previa"
+
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BloquePublicidad } from "@/components/hetna/disenar/BloquePublicidad"
 import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
 import { listarTalleres, tallerPorHandle } from "@/lib/hetna/talleres"
 
-export const metadata: Metadata = {
+const METADATA: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/cotizar" },
   title: "Solicitar cotización CNC",
   description:
     "Cotiza corte láser, router CNC, grabado y maquinado con talleres de México. Describe tu trabajo y recibe propuestas de talleres para comparar y elegir.",
+}
+
+// ?wa=N: la liga viene del WhatsApp de HETNA y la tarjeta muestra un anuncio (lib/publicidad/vista-previa.ts)
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ wa?: string }> }): Promise<Metadata> {
+  const { wa } = await searchParams
+  return vistaPreviaWhatsapp(wa, METADATA)
 }
 
 const CALCULADORAS = [

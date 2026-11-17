@@ -251,6 +251,69 @@ PAUSA_S = float(os.environ.get("PAUSA_S", "20"))  # segundos antes de cada uso d
 MAX_IA = int(os.environ.get("MAX_IA", "25"))       # usos de la IA por corrida (plan gratis de Groq)
 
 
+# ── Perfiles de negocio en Instagram y Facebook ──────────────────────────────
+# Muchos talleres chicos no tienen sitio web, sólo Instagram o Facebook. Aquí NO se
+# entra a esas redes (piden sesión y sus reglas lo prohíben): sólo se lee lo que el
+# buscador muestra públicamente de cada perfil (nombre y descripción). Se guarda
+# únicamente si en esa descripción el negocio publica su correo o teléfono, y
+# nunca se manda mensaje por la red: el contacto sigue siendo por correo o llamada.
+REDES_BUSQUEDA = {"instagram": "instagram.com", "facebook": "facebook.com"}
+NO_PERFIL = ("/p/", "/reel", "/explore", "/stories", "/groups/", "/events/", "/watch", "/photo", "/posts/",
+             "/videos/", "/marketplace", "/share", "/hashtag", "/login", "/people/", "/public/", "/tv/")
+
+
+def ciudad_de(consulta: str) -> str:
+    plan = json.loads((AQUI / "plan_busqueda.json").read_text(encoding="utf-8"))
+    for info in plan["ciudades"].values():
+        for c in info["lista"]:
+            if consulta.endswith(c):
+                return c
+    return ""
+
+
+def buscar_perfiles(consulta: str, red: str, maximo: int) -> list[dict]:
+    try:
+        from ddgs import DDGS
+    except ImportError:
+        from duckduckgo_search import DDGS
+    try:
+        with DDGS() as d:
+            resultados = list(d.text(f"site:{REDES_BUSQUEDA[red]} {consulta}", max_results=maximo * 3))
+    except Exception as e:  # noqa: BLE001
+        print(f"  … búsqueda en {red} falló ({type(e).__name__})")
+        return []
+    out = []
+    for r in resultados:
+        url = (r.get("href") or r.get("url") or "").split("?")[0].rstrip("/")
+        m = re.match(r"https?://(?:[a-z]{2,3}\.|www\.|m\.)?(instagram|facebook)\.com/([A-Za-z0-9._-]{3,60})$", url)
+        if not m or any(x in url for x in NO_PERFIL):
+            continue
+        red_url, usuario = m.group(1), m.group(2).lower()
+        if usuario in ("pages", "profile.php", "groups", "home"):
+            continue
+        titulo = html_mod.unescape(r.get("title") or "")
+        texto = html_mod.unescape(f"{titulo} {r.get('body') or ''}")
+        if not any(w in texto.lower() for w in CNC_PALABRAS):
+            continue
+        email = next((e.lower() for e in EMAIL_EN_TEXTO.findall(texto)
+                      if EMAIL_RE.match(e) and not any(b in e.lower() for b in BASURA_MAIL)), "")
+        tel = next((t.strip() for t in TEL_RE.findall(texto) if 10 <= len(re.sub(r"\D", "", t)) <= 13), "")
+        if not email and not tel:
+            continue
+        nombre = re.split(r"\s+[(•|·-]\s*|\s+\(@", titulo)[0].strip() or usuario
+        out.append({
+            "empresa": nombre[:90], "email": email, "telefono": tel, "whatsapp": "",
+            red_url: f"https://www.{red_url}.com/{usuario}",
+            "productos_servicios": re.sub(r"\s+", " ", r.get("body") or "")[:200],
+            "fuente_url": url, "web": url,
+            "dominio": f"{'ig' if red_url == 'instagram' else 'fb'}-{usuario}",
+            "es_cnc": True,
+        })
+        if len(out) >= maximo:
+            break
+    return out
+
+
 def leer_consultas(archivo: Path) -> list[tuple[str, str, str, str]]:
     out = []
     for linea in archivo.read_text(encoding="utf-8").splitlines():
@@ -340,6 +403,23 @@ def main() -> None:
             nuevos += 1
             lote.append(fila)
             print(f"  ✔ {fila['empresa'] or dom}  {email or fila['telefono']}")
+        # Perfiles de negocio en Instagram y Facebook (sólo los que publican contacto)
+        if idioma in ("es", "pt") and os.environ.get("REDES_SOCIALES", "1") != "0":
+            ciudad = ciudad_de(consulta)
+            for red in REDES_BUSQUEDA:
+                time.sleep(float(os.environ.get("PAUSA_BUSQUEDA_S", "15")))
+                for c in buscar_perfiles(consulta, red, max(3, args.max_por_consulta // 2)):
+                    dom, email = c["dominio"], c["email"]
+                    if dom in vistos or (email and email in vistos):
+                        continue
+                    fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
+                    fila.update(tipo=tipo, pais=pais, idioma=idioma, ciudad=ciudad, segmento=consulta)
+                    with SALIDA.open("a", encoding="utf-8") as f:
+                        f.write(json.dumps(fila, ensure_ascii=False) + "\n")
+                    vistos.update({dom, email} - {""})
+                    nuevos += 1
+                    lote.append(fila)
+                    print(f"  ✔ [{red}] {fila['empresa']}  {email or fila['telefono']}")
         if args.auto:
             marcar_hecha(consulta)
 

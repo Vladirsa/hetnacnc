@@ -28,7 +28,7 @@ const registrados = filas.filter((r) => semana(enNotas(r, 'Registrado en HETNA')
 const bajas = filas.filter((r) => semana(enNotas(r, 'Pidió su baja')) || semana(enNotas(r, 'Pidió la baja')));
 const rebotes = filas.filter((r) => semana(enNotas(r, 'Rebotó el')));
 const cola = (cuenta.NUEVO || 0);
-const porDia = $now.setZone(zona) < DateTime.fromISO('2026-11-26', { zone: zona }) ? 20 : 40;
+const porDia = 40; // desde el 13 nov 2026 salen 40 correos por día
 
 const lista = (arr) => arr.slice(0, 8).map((r) => '• ' + String(r.empresa || r.id).replace(/[<>&]/g, '') + ' (' + (r.pais || '') + ')').join(NL);
 const partes = [
