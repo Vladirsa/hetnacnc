@@ -40,6 +40,18 @@ Prioridad Media:
   - Hay un aviso nuevo de PayPal, `/api/paypal-cotizacion`, para PAYMENT.CAPTURE.REFUNDED y REVERSED. Verifica la firma con PayPal y vuelve a consultar la captura.
   - **Para que funcione, el dueño debe registrar el webhook en PayPal y poner `PAYPAL_WEBHOOK_ID_COTIZACION` en el `.env`.**
 
+- **Lote de pendientes medianos y bajos, corregido después:**
+  - "Marcar pagado" solo marca si el disponible sigue igual a lo que vio el admin. Si cambió, responde 409.
+  - La Membresía Empresarial está protegida y solo cuenta con sesión, no con el correo escrito en el formulario.
+  - Foro "mi taller" exige el correo confirmado.
+  - Solicitudes y cotizaciones sin sesión tienen límite por IP y por correo.
+  - `archivo_url` solo acepta http(s), también en los paneles.
+  - Avisos push, avisos de WhatsApp de pedidos y la nube CAM solo confían en cuentas con el correo confirmado.
+  - Fondo blanco ya no descarga URLs de la red interna (SSRF).
+  - Un taller ya no puede borrar la suscripción push de otro.
+  - El nombre del taller va escapado en el correo de videos.
+  - **Sigue pendiente:** el nivel y el precio del servicio CAM salen de datos del navegador (`stats` y `strategy_kind`).
+
 ## Cómo se probó
 - `tsc` del API sin errores y 154 pruebas unitarias.
 - Hay pruebas nuevas en `lib/__tests__/auditoria-thermos.unit.spec.ts` para la lista de llaves privadas, el blindaje de la metadata de productos y la regla de pago de trabajos CAM (con un pedido de ejemplo).

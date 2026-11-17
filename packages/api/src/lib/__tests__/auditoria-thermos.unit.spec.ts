@@ -117,3 +117,28 @@ describe("aviso de reembolso de PayPal", () => {
     expect(capturaDe({ id: "../x" })).toBeNull()
   })
 })
+
+import { esArchivoPropio, ipPrivada } from "../url-publica"
+
+describe("ipPrivada (SSRF)", () => {
+  it("bloquea la red interna y los metadatos de la nube", () => {
+    for (const ip of ["127.0.0.1", "10.0.0.5", "172.16.3.1", "192.168.1.10", "169.254.169.254", "0.0.0.0", "::1", "fd00::1", "::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:a9fe:a9fe", "64:ff9b::a9fe:a9fe", "2002:7f00:1::"]) {
+      expect(ipPrivada(ip)).toBe(true)
+    }
+  })
+  it("deja pasar IPs públicas", () => {
+    for (const ip of ["8.8.8.8", "104.16.0.1", "2606:4700::1111"]) expect(ipPrivada(ip)).toBe(false)
+  })
+})
+
+describe("esArchivoPropio (fotos del almacenamiento)", () => {
+  const antes = process.env.FILE_BACKEND_URL
+  afterAll(() => { process.env.FILE_BACKEND_URL = antes })
+  it("sólo el mismo origen y la carpeta de archivos", () => {
+    process.env.FILE_BACKEND_URL = "http://localhost:9000/static"
+    expect(esArchivoPropio(new URL("http://localhost:9000/static/foto.jpg"))).toBe(true)
+    expect(esArchivoPropio(new URL("http://localhost:6379/"))).toBe(false)
+    expect(esArchivoPropio(new URL("http://localhost:9000/admin/users"))).toBe(false)
+    expect(esArchivoPropio(new URL("https://localhost:9000/static/foto.jpg"))).toBe(false)
+  })
+})

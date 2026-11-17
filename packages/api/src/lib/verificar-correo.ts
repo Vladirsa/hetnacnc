@@ -40,6 +40,24 @@ export function requiereVerificacion(c: ClienteParaVerificar | null | undefined)
   return !!c.created_at && new Date(c.created_at).getTime() >= VERIFICAR_DESDE().getTime()
 }
 
+/** Ids de las cuentas de cliente con ese correo en las que se puede confiar:
+ *  correo confirmado (o cuentas de antes de pedir confirmación). El registro de
+ *  la tienda no verifica el correo, así que alguien podía abrir una cuenta con
+ *  el correo de otra persona y recibir sus avisos de pedido (auditoría Thermos,
+ *  15 nov 2026). */
+export async function clientesConCorreoConfiable(knex: any, email: string | null | undefined): Promise<string[]> {
+  const correo = String(email || "").trim().toLowerCase()
+  if (!correo) return []
+  const filas = await knex("customer")
+    .whereRaw("lower(email) = ?", [correo])
+    .whereNull("deleted_at")
+    .select("id", "email", "has_account", "metadata", "created_at")
+  return filas
+    .map((f: any) => ({ ...f, metadata: typeof f.metadata === "string" ? JSON.parse(f.metadata) : f.metadata }))
+    .filter((f: any) => !requiereVerificacion(f))
+    .map((f: any) => String(f.id))
+}
+
 export function ligaVerificacion(id: string): string {
   const exp = Math.floor(Date.now() / 1000) + VIGENCIA_DIAS * 86400
   // Va bajo /api/app/: en el servidor, nginx manda todo /api/v... a otro

@@ -4,7 +4,7 @@
 // archivo que no corresponde, contracargo).
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { marcarPagado, retener } from "../../../../lib/saldos-talleres"
+import { SaldoCambio, marcarPagado, retener } from "../../../../lib/saldos-talleres"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const b = (req.body || {}) as Record<string, unknown>
@@ -19,6 +19,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   const orderIds = Array.isArray(b.order_ids) ? (b.order_ids as unknown[]).filter((x): x is string => typeof x === "string") : undefined
   const metodo = ["spei", "mercadopago", "paypal"].includes(String(b.metodo)) ? String(b.metodo) : "spei"
-  const n = await marcarPagado(req.scope, sellerId, { referencia, metodo, orderIds })
-  res.json({ ok: true, pagados: n })
+  const totalVisto = typeof b.total === "number" && Number.isFinite(b.total) ? b.total : undefined
+  const moneda = typeof b.moneda === "string" ? b.moneda : undefined
+  try {
+    const n = await marcarPagado(req.scope, sellerId, { referencia, metodo, orderIds, totalVisto, moneda })
+    res.json({ ok: true, pagados: n })
+  } catch (e) {
+    if (e instanceof SaldoCambio) return res.status(409).json({ message: e.message })
+    throw e
+  }
 }

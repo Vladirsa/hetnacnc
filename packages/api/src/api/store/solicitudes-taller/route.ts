@@ -163,7 +163,8 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     frecuencia: corto(b.frecuencia, 60),
     presupuesto: corto(b.presupuesto, 60),
     acepta_envio: corto(b.acepta_envio, 10),
-    archivo: corto(b.archivo_url, 500),
+    // Sólo ligas http(s): se pinta como <a href> en los paneles (javascript: no)
+    archivo: /^https?:\/\//i.test(String(b.archivo_url || "").trim()) ? corto(b.archivo_url, 500) : "",
     marca: corto(b.marca, 120),
     unidad: corto(b.unidad, 40),
   }
@@ -209,12 +210,14 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   // Fase 3: licitación privada o restringida (abierta, no dirigida a un taller)
   // y "sólo talleres verificados" son de la Membresía Empresarial.
   const pideEmpresarial = (modo === "abierta" && modalidad !== "publica") || si(b.solo_verificados)
+  // Sólo con la sesión del miembro: antes bastaba escribir en el formulario el
+  // correo de un miembro (auditoría Thermos, 15 nov 2026)
   const miembro = pideEmpresarial
-    ? await esMiembroEmpresarial(knex, { customerId: (req as any).auth_context?.actor_id, email })
+    ? await esMiembroEmpresarial(knex, { customerId: (req as any).auth_context?.actor_id })
     : false
   if (pideEmpresarial && !miembro) {
     return res.status(403).json({
-      message: "Las licitaciones privadas, restringidas y \"sólo talleres verificados\" son de la Membresía Empresarial. Por ahora es gratis: escríbenos y te la activamos. También puedes mandar tu solicitud como pública.",
+      message: "Las licitaciones privadas, restringidas y \"sólo talleres verificados\" son de la Membresía Empresarial: inicia sesión con tu cuenta de miembro. Por ahora es gratis: escríbenos y te la activamos. También puedes mandar tu solicitud como pública.",
       empresarial: true,
     })
   }
