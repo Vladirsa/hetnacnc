@@ -23,6 +23,7 @@
 // confirmar nada: ya estaban y siguen igual.
 import { createHmac, timingSafeEqual } from "crypto"
 
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { MercurModules } from "@mercurjs/types"
 
 import { correosDeLaCasa } from "./cuentas-casa"
@@ -169,16 +170,61 @@ export async function avisarAdminAltaAutomatica(t: TallerAlta) {
   }
 }
 
-export async function avisarAprobado(t: TallerAlta) {
+const CUPO_FUNDADORES = 30
+const WHATSAPP_HETNA = "+52 221 707 6014"
+
+/** Cuántos lugares de taller fundador quedan (null si no se puede leer). */
+async function lugaresFundador(scope?: { resolve: (k: string) => any }): Promise<number | null> {
+  if (!scope) return null
+  try {
+    const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    const fila = await knex("seller").whereRaw("metadata->>'fundador' = 'true'").whereNull("deleted_at").count({ n: "*" }).first()
+    return Math.max(CUPO_FUNDADORES - Number(fila?.n || 0), 0)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Bienvenida automática al quedar aprobado (decidido por Vlado el 17 nov 2026):
+ * los primeros pasos, el lugar de taller fundador, la prueba del Cotizador CNC,
+ * cómo le llegan clientes y cómo cobra. Sólo datos reales de la plataforma.
+ */
+export async function avisarAprobado(t: TallerAlta, scope?: { resolve: (k: string) => any }) {
   if (!t.email) return
+  const quedan = await lugaresFundador(scope)
+  const paso = (n: number, titulo: string, texto: string, liga: string, boton_: string) =>
+    `<tr><td style="vertical-align:top;padding:10px 12px 10px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#C2560A;color:#fff;text-align:center;line-height:28px;font-weight:700">${n}</span></td>` +
+    `<td style="padding:10px 0"><b style="color:#142033">${titulo}</b><br><span style="color:#40403A">${texto}</span><br><a href="${liga}" style="color:#C2560A;font-weight:700">${boton_} →</a></td></tr>`
   await sendEmail({
     to: t.email,
-    subject: "¡Tu taller ya está aprobado en HETNA CNC!",
+    subject: `¡Bienvenido a HETNA CNC, ${t.name || "tu taller"}! Tus primeros pasos`,
     html: marco(
-      "Tu taller ya está aprobado",
-      `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Listo: <strong>${esc(t.name || "tu taller")}</strong> ya puede publicar productos y recibir pedidos en HETNA CNC.</p>` +
-        boton("Publicar mi primer producto", `${VENDOR_URL}/publicar`) +
-        `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Consejo: completa tu perfil y pide la insignia de taller verificado; los clientes confían más y te compran más.</p>`
+      "Tu taller ya está activo",
+      `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Hola, equipo de <strong>${esc(t.name || "tu taller")}</strong>: gracias por unirse a HETNA CNC, el marketplace mexicano de fabricación CNC. Su taller ya puede publicar, recibir solicitudes de clientes y vender.</p>` +
+        `<p style="margin:0 0 4px;color:#142033;font-weight:700">Para recibir trabajo esta semana (unos 15 minutos):</p>` +
+        `<table style="border-collapse:collapse;font-size:14px;line-height:1.45">` +
+        paso(1, "Completen su perfil", "Municipio, servicios, máquinas, materiales y 3 a 5 fotos de trabajos terminados. Así los clientes los encuentran y confían.", `${VENDOR_URL}/perfil-taller`, "Completar mi perfil") +
+        paso(
+          2,
+          "Pidan su lugar de taller fundador",
+          `Los primeros ${CUPO_FUNDADORES} talleres verificados reciben la insignia de Taller fundador para siempre y <b>6 meses del plan Pro gratis</b> (sus propuestas salen primero).${quedan !== null ? ` Quedan <b>${quedan}</b> lugares.` : ""} Sólo revisamos que el taller sea real.`,
+          `${VENDOR_URL}/verificacion`,
+          "Verificar mi taller"
+        ) +
+        paso(3, "Publiquen su primer producto o servicio", "Publicar es gratis: sólo pagan 6% de comisión cuando venden (5% en máquinas CNC).", `${VENDOR_URL}/publicar`, "Publicar ahora") +
+        `</table>` +
+        `<div style="margin:18px 0;padding:14px 16px;border:2px solid #C2560A;border-radius:12px;background:#FDEEE1">` +
+        `<p style="margin:0 0 6px;color:#142033;font-weight:700">🧮 Prueben el Cotizador CNC 14 días sin límite</p>` +
+        `<p style="margin:0 0 8px;color:#40403A;line-height:1.5">Calculen el precio de un corte o maquinado en segundos y manden una cotización profesional por WhatsApp o correo. Después pueden seguir gratis con 5 cotizaciones al mes.</p>` +
+        `<a href="${STORE_URL}/mx/herramientas-cnc" style="color:#C2560A;font-weight:700">Probar el Cotizador →</a></div>` +
+        `<p style="margin:0 0 6px;color:#142033;font-weight:700">Cómo les llega el trabajo y cómo cobran</p>` +
+        `<ul style="margin:0 0 12px;padding-left:18px;color:#40403A;line-height:1.5">` +
+        `<li>Les llegan solicitudes de clientes con material, medidas, cantidad y archivo, en la pestaña <a href="${VENDOR_URL}/solicitudes" style="color:#C2560A">Solicitudes</a>; cotizan sólo lo que les conviene.</li>` +
+        `<li>Verifiquen su WhatsApp desde su panel y les avisamos ahí de los trabajos de su zona.</li>` +
+        `<li>El cliente paga con Mercado Pago dentro de HETNA y ustedes empiezan cuando el pago está confirmado. Cada taller factura directo a su cliente.</li>` +
+        `<li>Pueden enviar con Envíos HETNA: guías de paquetería desde su panel.</li></ul>` +
+        `<p style="margin:16px 0 0;color:#40403A;line-height:1.5">¿Dudas o quieren que les ayudemos a dejar todo listo? Respondan este correo o escríbannos por WhatsApp al ${WHATSAPP_HETNA}.</p>`
     ),
   }).catch(() => undefined)
 }
