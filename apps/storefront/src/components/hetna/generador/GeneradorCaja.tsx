@@ -64,6 +64,14 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
       <path d="M6 16l14-7 14 7M20 23v12" />
     </>
   ),
+  apilable: (
+    <>
+      <path d="M8 22l12 6 12-6v8l-12 6-12-6z" />
+      <path d="M8 22l5-2.5M32 22l-5-2.5" />
+      <path d="M8 10l12 6 12-6v8l-12 6-12-6z" />
+      <path d="M8 10l12-6 12 6" />
+    </>
+  ),
   bisagra: (
     <>
       <path d="M6 18l14 7 14-7v11l-14 7-14-7z" />
@@ -176,6 +184,7 @@ const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "cajonera", nombre: "Cajonera", nota: "Carcasa con un cajón que entra con 1 mm de juego por lado y jaladera" },
   { id: "corrediza", nombre: "Corrediza", nota: "Tapa que corre por una ranura en los costados; travesaño al frente que la sujeta" },
   { id: "bisagra", nombre: "Bisagra", nota: "Tapa que abre girando sobre dos pernos en los costados; se detiene sola a 90°" },
+  { id: "apilable", nombre: "Apilable", nota: "Frente bajo para sacar piezas; patas que traban en las muescas del de abajo" },
 ]
 
 type Modelo = {
@@ -208,11 +217,19 @@ const MODELOS: Modelo[] = [
   { id: "cajon", nombre: "Cajón para mueble", tipo: "abierta", a: 450, f: 400, h: 150, e: 12 },
   { id: "cajonera", nombre: "Cajonera de escritorio", tipo: "cajonera", a: 300, f: 250, h: 110, e: 3 },
   { id: "estuche", nombre: "Estuche de lápices", tipo: "corrediza", a: 210, f: 70, h: 50, e: 3 },
+  { id: "tornilleria", nombre: "Contenedor de tornillería", tipo: "apilable", a: 120, f: 180, h: 80, e: 3 },
+  { id: "gaveta", nombre: "Gaveta apilable grande", tipo: "apilable", a: 250, f: 350, h: 150, e: 6, cols: 2 },
   { id: "joyero-bisagra", nombre: "Joyero con bisagra", tipo: "bisagra", a: 200, f: 140, h: 70, e: 3, cols: 3, filas: 2, tapa: 30 },
   { id: "recuerdos", nombre: "Caja de recuerdos", tipo: "bisagra", a: 300, f: 220, h: 120, e: 6, tapa: 45 },
   { id: "te-corrediza", nombre: "Caja de té corrediza", tipo: "corrediza", a: 240, f: 170, h: 100, e: 3, cols: 3, filas: 2 },
   { id: "cajonera-herr", nombre: "Cajonera para herramientas", tipo: "cajonera", a: 420, f: 320, h: 140, e: 6 },
 ]
+
+// "1, 1, 2" -> [1, 1, 2]; menos de dos números válidos -> nada
+const leerProporciones = (texto: string) => {
+  const v = texto.split(/[,;\s]+/).map((x) => parseFloat(x.replace(",", "."))).filter((x) => Number.isFinite(x) && x > 0)
+  return v.length >= 2 ? v.slice(0, 12) : undefined
+}
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
@@ -257,6 +274,9 @@ export function GeneradorCaja() {
   const [altoTapa, setAltoTapa] = useState("30")
   const [perno, setPerno] = useState("3") // caja con bisagra: diámetro del perno, mm
   const [columnas, setColumnas] = useState(1)
+  // divisiones a medida: proporciones como "1,1,2" (vacío = todas iguales)
+  const [propAncho, setPropAncho] = useState("")
+  const [propFondo, setPropFondo] = useState("")
   const [filas, setFilas] = useState(1)
   const [asas, setAsas] = useState(false)
   const [ranura, setRanura] = useState(false)
@@ -303,10 +323,12 @@ export function GeneradorCaja() {
         perno: numero(perno) || 3,
         columnas,
         filas,
+        proporcionesAncho: leerProporciones(propAncho),
+        proporcionesFondo: leerProporciones(propFondo),
         asas,
         ranura: tipo === "cerrada" && ranura,
       }),
-    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, perno, columnas, filas, asas, ranura, k]
+    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, perno, columnas, filas, propAncho, propFondo, asas, ranura, k]
   )
   const listo = r.piezas.length > 0
   const ext = r.exterior
@@ -406,6 +428,11 @@ export function GeneradorCaja() {
             }
           })
         : piezas
+      // Contenedor apilable: se muestra otro encima, trabado en las muescas
+      if (rv.paso) {
+        const extraY = sep * 0.9
+        for (const p of piezas.slice()) if (!p.nombre.startsWith("Encima · ")) piezas.push({ ...mover(p, [0, rv.paso + extraY, 0]), nombre: "Encima · " + p.nombre })
+      }
       // La cámara del estudio mira desde +Z; el frente de la caja está en Z = 0.
       // Se refleja a lo fondo para que el frente (y el cajón que sale) quede de
       // cara a quien mira.
@@ -467,6 +494,8 @@ export function GeneradorCaja() {
     setAlto(a(m.h))
     setEspesor(a(m.e))
     setColumnas(m.cols || 1)
+    setPropAncho("")
+    setPropFondo("")
     setFilas(m.filas || 1)
     setAsas(!!m.asas)
     setRanura(!!m.ranura)
@@ -681,6 +710,20 @@ export function GeneradorCaja() {
           <Contador etiqueta="Divisiones a lo ancho" valor={columnas} cambiar={setColumnas} />
           <Contador etiqueta="Divisiones a lo fondo" valor={filas} cambiar={setFilas} />
         </div>
+        <details className="rounded-[8px] bg-[#1C2431] px-2.5 py-2" open={Boolean(propAncho || propFondo)}>
+          <summary className="cursor-pointer text-[12.5px] font-semibold text-[#C9D2E0]">Divisiones a medida (proporciones)</summary>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <label className="flex min-w-0 flex-col gap-1 text-[12px] text-[#C9D2E0]">
+              A lo ancho
+              <input value={propAncho} onChange={(e) => setPropAncho(e.target.value)} placeholder="1, 1, 2" className="w-full rounded-[8px] bg-[#121923] px-2 py-1.5 text-[13.5px] text-white outline-none placeholder:text-[#5B6880] focus:ring-1 focus:ring-[#C2560A]" />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1 text-[12px] text-[#C9D2E0]">
+              A lo fondo
+              <input value={propFondo} onChange={(e) => setPropFondo(e.target.value)} placeholder="2, 1" className="w-full rounded-[8px] bg-[#121923] px-2 py-1.5 text-[13.5px] text-white outline-none placeholder:text-[#5B6880] focus:ring-1 focus:ring-[#C2560A]" />
+            </label>
+          </div>
+          <span className="mt-1 block text-[11px] leading-snug text-[#8A97AB]">&quot;1, 1, 2&quot; = tres compartimentos, el último del doble. Si lo llenas, manda sobre los contadores.</span>
+        </details>
         <Interruptor etiqueta="Asas en los costados" activo={asas} cambiar={setAsas} />
         {tipo === "cerrada" && <Interruptor etiqueta="Ranura de alcancía en la tapa" activo={ranura} cambiar={setRanura} />}
       </Paso>

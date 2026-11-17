@@ -83,6 +83,8 @@ const VERSION_HETNA: Record<string, { tipo: string; texto: string }> = {
   SlidingDrawer: { tipo: "cajonera", texto: "Ver una cajonera armada en 3D (versión HETNA) →" },
   SlidingLidBox: { tipo: "corrediza", texto: "Ver una caja de tapa corrediza armada en 3D (versión HETNA) →" },
   HingeBox: { tipo: "bisagra", texto: "Ver una caja con bisagra armada en 3D (versión HETNA) →" },
+  StackableBin: { tipo: "apilable", texto: "Ver un contenedor apilable armado en 3D (versión HETNA) →" },
+  TypeTray: { tipo: "abierta", texto: "Ver un organizador con divisiones a medida en 3D (versión HETNA) →" },
   ClosedBox: { tipo: "cerrada", texto: "Ver una caja cerrada armada en 3D (versión HETNA) →" },
   OpenBox: { tipo: "abierta", texto: "Ver una caja abierta armada en 3D (versión HETNA) →" },
   TwoPiece: { tipo: "sobrepuesta", texto: "Ver una caja con tapa armada en 3D (versión HETNA) →" },

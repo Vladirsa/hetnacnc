@@ -9,7 +9,7 @@
 
 export type Punto = [number, number]
 
-export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza" | "bisagra"
+export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza" | "bisagra" | "apilable"
 
 export type OpcionesCaja = {
   ancho: number // eje X, mm
@@ -28,6 +28,10 @@ export type OpcionesCaja = {
   // compartimentos: columnas a lo ancho y filas a lo fondo (1 = sin divisores)
   columnas?: number
   filas?: number
+  // divisiones a medida: proporción de cada compartimento, p. ej. [1, 1, 2]
+  // (si viene, manda sobre columnas/filas)
+  proporcionesAncho?: number[]
+  proporcionesFondo?: number[]
   // agujeros para agarrar en los laterales
   asas?: boolean
   // ranura para monedas en la tapa (alcancía)
@@ -62,6 +66,8 @@ export type ResultadoCaja = {
   armado: { ancho: number; fondo: number; alto: number }
   // caja con bisagra: eje de giro de la tapa (paralelo al ancho), mm
   pivote?: { y: number; z: number }
+  // contenedor apilable: separación entre uno y el de encima, mm
+  paso?: number
 }
 
 type TipoBorde = "A" | "B" | "L" // L = liso (sin dedos)
@@ -288,10 +294,27 @@ function divisor(largo: number, alto: number, ranuras: number[], ancho: number, 
 }
 
 // Centros de los divisores para que todos los compartimentos midan igual
-function centros(interior: number, partes: number, t: number): number[] {
+// Centros de los divisores. Con `pesos` cada compartimento mide en proporción
+// (p. ej. [1, 1, 2]: el último el doble); sin pesos, todos iguales.
+function centros(interior: number, partes: number, t: number, pesos?: number[]): number[] {
   if (partes <= 1) return []
-  const hueco = (interior - (partes - 1) * t) / partes
-  return Array.from({ length: partes - 1 }, (_, j) => (j + 1) * hueco + j * t + t / 2)
+  const w = pesos && pesos.length === partes ? pesos : Array(partes).fill(1)
+  const total = w.reduce((a, b) => a + b, 0)
+  const libre = interior - (partes - 1) * t
+  const out: number[] = []
+  let x = 0
+  for (let j = 0; j < partes - 1; j++) {
+    x += (libre * w[j]) / total
+    out.push(x + t / 2)
+    x += t
+  }
+  return out
+}
+
+// Proporciones válidas (números > 0, de 2 a 12); si no, nada
+const proporciones = (p?: number[]) => {
+  const v = (p || []).filter((x) => Number.isFinite(x) && x > 0)
+  return v.length >= 2 && v.length <= 12 ? v : undefined
 }
 
 // Ubicación en la caja armada de cada cara (W ancho, D fondo, H alto)
@@ -352,6 +375,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const cajonera = tipo === "cajonera"
   const corrediza = tipo === "corrediza"
   const bisagra = tipo === "bisagra"
+  const apilable = tipo === "apilable"
   const extra = o.medidas === "interiores" ? 2 * t : 0
   const W = o.ancho + extra
   // la carcasa de la cajonera no tiene frente: por dentro le falta un solo espesor a lo fondo
@@ -379,6 +403,13 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const altoAtrasBis = H - ePerno
   // alto mínimo de la tapa: que quepa el perno con margen y que sus dedos (3 como mínimo) no queden angostos
   const altoTapaBis = Math.max(o.altoTapa || 0, t + ePerno + perno / 2 + 4, 5 * t)
+  // Contenedor apilable: caja abierta con el frente bajo (para sacar piezas
+  // aunque estén apilados). Los dedos de las esquinas de abajo de los costados
+  // y de la pared de atrás bajan `pata` más que la base; en la orilla de arriba
+  // hay muescas donde entran las patas del contenedor de encima.
+  const pata = Math.max(t, 3)
+  const holgPata = 0.3 // por lado, en las muescas
+  const altoFrenteApi = Math.max(Math.round(H * 0.5), 4 * t)
   const interior = cajonera
     ? { ancho: cajon.ancho - 2 * t, fondo: cajon.fondo - 2 * t, alto: cajon.alto - t }
     : corrediza
@@ -393,7 +424,9 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
       ? { ancho: Wt, fondo: Dt, alto: H + t }
       : tipo === "bisagra"
         ? { ancho: W + 2 * t + 1, fondo: D + t + 0.5, alto: H + t } // la tapa cubre por fuera (juego 0.5 por lado)
-        : { ancho: W, fondo: D, alto: H }
+        : tipo === "apilable"
+          ? { ancho: W, fondo: D, alto: H + Math.max(t, 3) } // con las patas
+          : { ancho: W, fondo: D, alto: H }
 
   const autoDedo = !(o.dedo > 0)
   let dedo = autoDedo ? dedoAutomatico(t) : o.dedo
@@ -421,6 +454,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   if (bisagra && altoAtrasBis < Math.max(4 * t, 20))
     errores.push(`Para la bisagra la caja debe medir al menos ${r(Math.max(4 * t, 20) + ePerno)} mm de alto con ese espesor.`)
   if (bisagra && D < 4 * ePerno) errores.push("La caja es muy corta de fondo para la bisagra.")
+  if (apilable && H < Math.max(30, 6 * t + pata)) errores.push(`El contenedor apilable debe medir al menos ${r(Math.max(30, 6 * t + pata))} mm de alto.`)
   if (corrediza && altoFrente < Math.max(4 * t, 20))
     errores.push(`Para la tapa corrediza la caja debe medir al menos ${r(Math.max(4 * t, 20) + ranuraCorr + franja)} mm de alto con ese espesor.`)
   if (cajonera && Math.min(cajon.ancho, cajon.fondo, cajon.alto) < 6 * t)
@@ -562,8 +596,75 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     }
     return { nW, nD, nH, minSeg: Math.min(W / nW, D / nD, H / nH, altoAtrasBis / nB, Wt / tW, Dl / tD, Ht / tH), crudas: caja }
   }
+  const armarApilable = (d: number) => {
+    const nW = segmentos(W, d)
+    const nD = segmentos(D, d)
+    const nH = segmentos(H, d)
+    const nF = segmentos(altoFrenteApi, d)
+    const prof = pata + 0.2 // hondo de las muescas
+    // Borde de abajo con dedos A cuyo primer y último dedo bajan `pata`.
+    // x0 y x1 recortan las esquinas donde el borde vecino tiene hueco.
+    const abajoConPatas = (largo: number, n: number, x0: number, x1: number): Punto[] => {
+      const sg = largo / n
+      const pts: Punto[] = []
+      for (let j = 0; j < n; j++) {
+        const y = j === 0 || j === n - 1 ? -pata : profundidad("A", j, t)
+        pts.push([j === 0 ? x0 : j * sg, y], [j === n - 1 ? x1 : (j + 1) * sg, y])
+      }
+      return pts
+    }
+    const sD = D / nD
+    const sW = W / nW
+    // Costado (D × H, frente en x = 0): abajo con patas, atrás B, arriba liso
+    // con dos muescas, frente liso arriba y B en la altura del frente.
+    const costado = (): Punto[] =>
+      limpiar([
+        ...abajoConPatas(D, nD, t, D - t),
+        ...bordeDedos([D, 0], [0, 1], [-1, 0], H, nH, "B", t),
+        [D - t, H - prof],
+        [(nD - 1) * sD - holgPata, H - prof],
+        [(nD - 1) * sD - holgPata, H],
+        [sD + holgPata, H],
+        [sD + holgPata, H - prof],
+        [t - holgPata, H - prof],
+        [t - holgPata, H],
+        [0, H],
+        [0, altoFrenteApi],
+        ...bordeDedos([0, altoFrenteApi], [0, -1], [1, 0], altoFrenteApi, nF, "B", t),
+      ])
+    // Pared de atrás (W × H): abajo con patas en las esquinas, lados A, arriba
+    // con muescas abiertas en las dos esquinas.
+    const atras = (): Punto[] =>
+      limpiar([
+        ...abajoConPatas(W, nW, 0, W),
+        ...bordeDedos([W, 0], [0, 1], [-1, 0], H, nH, "A", t),
+        [W, H - prof],
+        [W - sW - holgPata, H - prof],
+        [W - sW - holgPata, H],
+        [sW + holgPata, H],
+        [sW + holgPata, H - prof],
+        [0, H - prof],
+        ...bordeDedos([0, H], [0, -1], [1, 0], H, nH, "A", t),
+      ])
+    const lista: Cruda[] = [
+      { nombre: "Base", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t), ubicacion: ubicar("Base", t, W, D, H), conDedos: true },
+      { nombre: "Frente", pts: cara(W, altoFrenteApi, ["A", "A", "L", "A"], nW, nF, t), ubicacion: ubicar("Frente", t, W, D, H), conDedos: true },
+      { nombre: "Atrás", pts: atras(), ubicacion: ubicar("Atrás", t, W, D, H), conDedos: true },
+      { nombre: "Lateral izquierdo", pts: costado(), ubicacion: ubicar("Lateral izquierdo", t, W, D, H), conDedos: true },
+      { nombre: "Lateral derecho", pts: costado(), ubicacion: ubicar("Lateral derecho", t, W, D, H), conDedos: true },
+    ]
+    return { nW, nD, nH, minSeg: Math.min(W / nW, D / nD, H / nH, altoFrenteApi / nF), crudas: lista }
+  }
   const armar = (d: number) =>
-    cajonera ? armarCajonera(d) : corrediza ? armarCorrediza(d) : bisagra ? armarBisagra(d) : caras(W, D, H, t, d, cerrada)
+    cajonera
+      ? armarCajonera(d)
+      : corrediza
+        ? armarCorrediza(d)
+        : bisagra
+          ? armarBisagra(d)
+          : apilable
+            ? armarApilable(d)
+            : caras(W, D, H, t, d, cerrada)
 
   // En automático, el dedo se agranda solo si no cabe; a mano se avisa
   let base = armar(dedo)
@@ -589,6 +690,8 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
 
   if (cajonera && (o.asas || o.ranura || (o.columnas || 1) > 1 || (o.filas || 1) > 1))
     avisos.push("La cajonera todavía no lleva asas, ranura ni divisiones: se dejaron fuera.")
+  if (apilable && (o.asas || o.ranura))
+    avisos.push("El contenedor apilable no lleva asas ni ranura de alcancía: se dejaron fuera.")
   if (bisagra && (o.asas || o.ranura))
     avisos.push("La caja con bisagra no lleva asas ni ranura de alcancía: se dejaron fuera.")
   if (bisagra) avisos.push(`Pernos: 2 de ${r(perno)} mm (clavo, tornillo o filamento), de unos ${r(2 * t + juegoTapa + 2)} mm de largo, uno por lado.`)
@@ -596,7 +699,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     avisos.push("La caja de tapa corrediza no lleva asas ni ranura de alcancía: se dejaron fuera.")
 
   // ---- Asas en los laterales
-  if (o.asas && !cajonera && !corrediza && !bisagra) {
+  if (o.asas && !cajonera && !corrediza && !bisagra && !apilable) {
     const largo = Math.min(100, D * 0.45, D - 6 * t)
     const altoAsa = Math.min(28, H * 0.22)
     const techo = H - (cerrada ? t : 0)
@@ -609,7 +712,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   }
 
   // ---- Ranura para monedas en la tapa
-  if (o.ranura && !cajonera && !corrediza && !bisagra) {
+  if (o.ranura && !cajonera && !corrediza && !bisagra && !apilable) {
     const tapa = crudas.find((c) => c.nombre === "Tapa")
     if (!tapa) avisos.push("La ranura para monedas va en la tapa: elige una caja cerrada.")
     else if (W < 70 || D < 30) avisos.push("La tapa es muy chica para la ranura de monedas.")
@@ -617,13 +720,16 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   }
 
   // ---- Divisores (sueltos, se meten desde arriba)
-  const cols = Math.max(1, Math.min(12, Math.round(o.columnas || 1)))
-  const filas = Math.max(1, Math.min(12, Math.round(o.filas || 1)))
+  const pAncho = proporciones(o.proporcionesAncho)
+  const pFondo = proporciones(o.proporcionesFondo)
+  const cols = pAncho ? pAncho.length : Math.max(1, Math.min(12, Math.round(o.columnas || 1)))
+  const filas = pFondo ? pFondo.length : Math.max(1, Math.min(12, Math.round(o.filas || 1)))
   if (!cajonera && (cols > 1 || filas > 1)) {
     const hd = interior.alto - (cerrada ? 1 : 0)
-    const cx = centros(interior.ancho, cols, t)
-    const cz = centros(interior.fondo, filas, t)
-    const minComp = Math.min((interior.ancho - (cols - 1) * t) / cols, (interior.fondo - (filas - 1) * t) / filas)
+    const cx = centros(interior.ancho, cols, t, pAncho)
+    const cz = centros(interior.fondo, filas, t, pFondo)
+    const menor = (libre: number, n: number, p?: number[]) => (p ? (libre * Math.min(...p)) / p.reduce((a, b) => a + b, 0) : libre / n)
+    const minComp = Math.min(menor(interior.ancho - (cols - 1) * t, cols, pAncho), menor(interior.fondo - (filas - 1) * t, filas, pFondo))
     if (minComp < 15) {
       errores.push(`Los compartimentos quedan de ${minComp.toFixed(0)} mm: pon menos divisiones o una caja más grande.`)
       return vacio()
@@ -698,6 +804,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     dedoUsado: dedo,
     armado,
     ...(bisagra ? { pivote: { y: H - ePerno, z: D - ePerno } } : {}),
+    ...(apilable ? { paso: H } : {}),
   }
 }
 
