@@ -312,7 +312,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
     herramientas: [
       { slug: "caja-con-juntas", corto: "Cajas" },
       { slug: "vectorizador", corto: "Vectorizador" },
-      { slug: "letreros", corto: "Letreros" },
+      { slug: "letreros", corto: "Letreros y placas" }, // letreros + esténcil + código QR
       { slug: "rompecabezas", corto: "Rompecabezas" },
       { slug: "despiece-muebles", corto: "Muebles" },
       { slug: "plantillas-empaque", corto: "Empaques" },
@@ -320,12 +320,10 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "convertidor", corto: "Convertidor" },
       { slug: "anidado-piezas", corto: "Anidado" },
       { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
-      { slug: "codigo-qr", corto: "Código QR" },
       { slug: "rebanado-capas", corto: "Rebanado" },
       { slug: "engranes", corto: "Engranes" },
       { slug: "relojes", corto: "Relojes" },
       { slug: "lamparas-capas", corto: "Lámparas" },
-      { slug: "estencil-letras", corto: "Esténcil" },
       { slug: "marcos-portarretratos", corto: "Marcos" },
     ],
   },

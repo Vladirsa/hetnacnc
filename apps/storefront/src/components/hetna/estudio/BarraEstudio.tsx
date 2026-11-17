@@ -18,6 +18,8 @@ export function BarraEstudio() {
       ? "caja-con-juntas"
       : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva"
         ? "celosias" // los tres modos de Patrones de corte
+        : params?.herramienta === "estencil-letras" || params?.herramienta === "codigo-qr"
+          ? "letreros" // los tres modos de Letreros y placas
         : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.
