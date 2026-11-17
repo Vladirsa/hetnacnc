@@ -146,6 +146,28 @@ export async function avisarAdmin(t: TallerAlta) {
   }
 }
 
+/** Alta automática: el taller ya puede publicar; HETNA lo revisa después y lo
+ *  suspende desde el panel si algo no cuadra. */
+export async function avisarAdminAltaAutomatica(t: TallerAlta) {
+  const para = destinatariosAdmin()
+  if (!para.length) return
+  const html = marco(
+    "Taller nuevo aprobado automáticamente",
+    `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Un taller confirmó su correo y quedó aprobado solo: ya puede publicar. Revisa sus datos y sus primeros productos; si algo no cuadra, suspéndelo desde el panel.</p>` +
+      `<table style="border-collapse:collapse;font-size:14px">` +
+      fila("Taller", t.name || "") +
+      fila("Correo", t.email || "") +
+      fila("Teléfono", t.phone || "") +
+      fila("Registrado", t.created_at ? new Date(t.created_at).toLocaleString("es-MX", { timeZone: "America/Mexico_City" }) : "") +
+      `</table>` +
+      boton("Revisar o suspender en el panel", `${ADMIN}/sellers/${encodeURIComponent(t.id)}`) +
+      `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Para volver a aprobar a mano cada taller, pon ALTA_AUTOMATICA=false en el .env del API.</p>`
+  )
+  for (const to of para) {
+    await sendEmail({ to, subject: `Taller nuevo (aprobado automáticamente): ${t.name || t.email || t.id}`, html }).catch(() => undefined)
+  }
+}
+
 export async function avisarAprobado(t: TallerAlta) {
   if (!t.email) return
   await sendEmail({
@@ -193,4 +215,5 @@ export function motivoParaNoPublicar(t: TallerAlta): string | null {
     return "Antes de publicar confirma tu correo: te mandamos una liga al registrarte. Si no te llegó, búscala en spam o pide otra desde Mi tablero."
   }
   return "Tu tienda está en revisión. Te avisamos por correo en cuanto la aprobemos (normalmente en menos de un día hábil) y entonces podrás publicar."
+  // (Con el alta automática esto casi no pasa: el taller queda aprobado al confirmar su correo)
 }

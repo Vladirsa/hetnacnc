@@ -3,7 +3,8 @@
 //   GET /hooks/alta-taller/confirmar?s=<taller>&e=<vence>&t=<firma>
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { avisarAdmin, firmaConfirmacion, marcarConfirmado, servicioTalleres } from "../../../../lib/alta-taller"
+import { avisarAdmin, avisarAdminAltaAutomatica, firmaConfirmacion, marcarConfirmado, servicioTalleres } from "../../../../lib/alta-taller"
+import { altaAutomatica, aprobarTaller } from "../../../../lib/aprobar-taller"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const q = (req.query || {}) as Record<string, string>
@@ -21,7 +22,22 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const primeraVez = await marcarConfirmado(req.scope, id, firma === "correo" ? t.email : null)
   if (primeraVez) {
     req.scope.resolve("logger").info(`[alta-taller] ${t.email} confirmó su correo`)
-    if (t.status === "pending_approval") await avisarAdmin(t).catch(() => undefined)
+    if (t.status === "pending_approval") {
+      // Alta automática: queda aprobado al confirmar su correo y HETNA lo
+      // revisa después. Si algo falla, vuelve a la aprobación manual.
+      if (altaAutomatica()) {
+        try {
+          await aprobarTaller(req.scope, t as any)
+          t = { ...t, status: "open" }
+          await avisarAdminAltaAutomatica(t).catch(() => undefined)
+        } catch (e) {
+          req.scope.resolve("logger").error(`[alta-taller] no se aprobó solo ${t.email}: ${(e as Error).message}`)
+          await avisarAdmin(t).catch(() => undefined)
+        }
+      } else {
+        await avisarAdmin(t).catch(() => undefined)
+      }
+    }
   }
   res.json({ ok: true, aprobado: t.status === "open" })
 }
