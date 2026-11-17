@@ -12,9 +12,6 @@ import HeroFijo, { VenderConNosotros } from "@/components/hetna/HeroFijo"
 import CasosReales from "@/components/hetna/CasosReales"
 import BarraConfianza from "@/components/hetna/BarraConfianza"
 import ProcesoClienteTaller from "./ProcesoClienteTaller"
-import BannerHerramientas from "./BannerHerramientas"
-import BannerPromo from "./BannerPromo"
-import PorQueHetna from "./PorQueHetna"
 import CarruselColeccion from "./CarruselColeccion"
 import CategoriasVisuales from "./CategoriasVisuales"
 import EstadisticasConfianza from "@/components/hetna/EstadisticasConfianza"
@@ -348,17 +345,14 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       {/* Tarea 3 de la auditoría de mejoras: héroe fijo con una sola acción y,
           justo debajo, productos reales con precio */}
       <HeroFijo />
+      {/* Pedido del dueño (15 nov 2026): más productos que banners, como una
+          tienda en línea. Carruseles primero; lo informativo, al final. */}
       <FilasProductos locale={locale} />
-      <BarraConfianza />
-      <BannerPromo />
-      <CasosReales />
-      <ProcesoClienteTaller />
-      <VenderConNosotros />
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
-      <BannerHerramientas />
       <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
-      <PorQueHetna />
-
+      <CasosReales />
+      <BarraConfianza />
+      <ProcesoClienteTaller />
 
       <CategoriasVisuales categorias={podarArbol(parentCategories, await categoriasConProductos())} />
 
@@ -407,29 +401,7 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       {/* <EstadisticasConfianza /> oculto: datos de relleno hasta tener cifras reales */}
       {/* Cifras reales: sólo aparece con 10 talleres o más */}
       <CifrasHetna />
-      {/* Banner proyecto a la medida */}
-      <section className="mx-4 lg:mx-16 mb-12 bg-[#142033] rounded-[20px] px-6 py-8 lg:px-12 lg:py-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-        <div className="flex flex-col gap-2.5 max-w-[560px]">
-          <span className="uppercase tracking-[0.08em] text-[11.5px] font-semibold text-[#F2A65A]">
-            Proyectos a la medida
-          </span>
-          <h3 className="font-display m-0 text-[24px] lg:text-[26px] font-bold text-white">
-            ¿Tienes una idea? Nosotros la hacemos realidad
-          </h3>
-          <p className="m-0 text-[14px] leading-[1.6] text-[#C9D2E0]">
-            Cuéntanos qué necesitas y te cotizamos el diseño, el corte o la
-            pieza terminada.
-          </p>
-        </div>
-        <a
-          href={whatsappLink("Hola HETNA CNC, tengo un proyecto a la medida")}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 bg-[#C2560A] hover:bg-[#A84A08] text-white px-6 py-3 rounded-[10px] text-[14.5px] font-semibold"
-        >
-          Cotizar por WhatsApp
-        </a>
-      </section>
+      <VenderConNosotros />
     </div>
   )
 }

@@ -69,6 +69,8 @@ export type Afiliado = {
   token_pantalla: string
   activado_en: Date | null
   created_at: Date
+  /** true sólo si la fila se creó en esta llamada (para no entregar ligas de otro) */
+  nueva?: boolean
 }
 
 const aAfiliado = (f: any): Afiliado => ({ ...f, numero: numeroAfiliado(Number(f.id)) })
@@ -81,7 +83,7 @@ export async function afiliar(
   const email = limpiarCorreo(d.email)
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
   await asegurarTablaAfiliado(knex)
-  await knex(T_AFILIADO)
+  const insertadas = await knex(T_AFILIADO)
     .insert({
       email,
       nombre: d.nombre || null,
@@ -94,6 +96,7 @@ export async function afiliar(
     })
     .onConflict("email")
     .ignore()
+    .returning("id")
   const fila = await knex(T_AFILIADO).where({ email }).first()
   if (!fila) return null
   // Completa lo que falte sin pisar lo que ya había
@@ -108,7 +111,7 @@ export async function afiliar(
     await knex(T_AFILIADO).where({ id: fila.id }).update(cambios)
     Object.assign(fila, cambios)
   }
-  return aAfiliado(fila)
+  return { ...aAfiliado(fila), nueva: Array.isArray(insertadas) && insertadas.length > 0 }
 }
 
 export async function afiliadoPorToken(knex: any, token: string): Promise<{ afiliado: Afiliado; deCorreo: boolean } | null> {

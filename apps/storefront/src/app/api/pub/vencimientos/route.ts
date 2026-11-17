@@ -2,6 +2,7 @@
 // 5 días o menos (una sola vez cada uno) para mandarles el recordatorio de renovación.
 // Protegido con el mismo token de n8n (N8N_REDES_TOKEN) en la cabecera x-hetna-token.
 
+import { secretoIgual } from "@/lib/seguridad/secreto-igual"
 import { revalidateTag } from "next/cache"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {
   const esperado = process.env.N8N_REDES_TOKEN
-  if (!esperado || req.headers.get("x-hetna-token") !== esperado) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
+  if (!esperado || !secretoIgual(req.headers.get("x-hetna-token"), esperado)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
   try {
     const vencidos = await db().query(
       `update publicidad.pedidos set estado = 'vencido' where estado = 'pagado' and vence < now() returning pieza_id`

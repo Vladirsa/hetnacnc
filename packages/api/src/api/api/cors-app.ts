@@ -5,7 +5,12 @@ import type { MedusaNextFunction, MedusaRequest, MedusaResponse } from "@medusaj
 // del mismo origen; esto es para la web en localhost (flutter run --web-port 8080)
 // o un subdominio. Orígenes extra: APP_CORS="https://a,https://b" (mismo
 // formato que apps/storefront/src/lib/app-movil/cors.ts).
-const BASE = ["https://hetnacnc.com", "https://www.hetnacnc.com", "http://localhost:8080", "http://localhost:5000"]
+// localhost sólo fuera de producción (auditoría de seguridad, 15 nov 2026)
+const BASE = [
+  "https://hetnacnc.com",
+  "https://www.hetnacnc.com",
+  ...(process.env.NODE_ENV === "production" ? [] : ["http://localhost:8080", "http://localhost:5000"]),
+]
 const permitidos = () => [...BASE, ...(process.env.APP_CORS || "").split(",").map((x) => x.trim()).filter(Boolean)]
 
 export function corsApp(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) {

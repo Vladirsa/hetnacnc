@@ -1,8 +1,11 @@
 // Diccionario espanol -> ingles de la tienda HETNA CNC
 // Para agregar una traduccion: "Texto en espanol": "English text",
 import { EN_HERRAMIENTAS } from "./en-herramientas"
+import { EN_PAGINAS } from "./en-paginas"
 
 export const EN: Record<string, string> = {
+  // Primero, para que las entradas de abajo tengan prioridad
+  ...EN_PAGINAS,
   // Menú principal y buscador (problema 5 de la auditoría)
   "Fabricación": "Manufacturing",
   "Cotizar un trabajo": "Get a quote",
@@ -1609,7 +1612,25 @@ export const EN: Record<string, string> = {
  "Transferencia SPEI": "SPEI bank transfer"
 }
 
+// "Publicado hace 3 días" (date-fns, locale es) en la ficha de producto
+// [singular, plural] en español y en inglés
+const UNIDADES: [string, string, string, string][] = [
+  ["segundo", "segundos", "second", "seconds"], ["minuto", "minutos", "minute", "minutes"], ["hora", "horas", "hour", "hours"],
+  ["día", "días", "day", "days"], ["semana", "semanas", "week", "weeks"], ["mes", "meses", "month", "months"], ["año", "años", "year", "years"],
+]
+const CALIFICA: [string, string][] = [["alrededor de ", "about "], ["casi ", "almost "], ["más de ", "over "], ["", ""]]
+const REGLAS_PUBLICADO: [RegExp, string][] = [
+  [/^Publicado hace menos de un minuto$/, "Posted less than a minute ago"],
+  ...CALIFICA.flatMap(([ces, cen]) =>
+    UNIDADES.flatMap(([s1, sN, e1, eN]): [RegExp, string][] => [
+      [new RegExp(`^Publicado hace ${ces}1 ${s1}$`), `Posted ${cen}1 ${e1} ago`],
+      [new RegExp(`^Publicado hace ${ces}(\\d+) ${sN}$`), `Posted ${cen}$1 ${eN} ago`],
+    ])
+  ),
+]
+
 export const REGLAS: [RegExp, string][] = [
+  ...REGLAS_PUBLICADO,
   [/^Enviar a (.+)$/, "Deliver to $1"],
   [/^CP (.+)$/, "ZIP $1"],
   [/^Comparar otras (\d+) ofertas$/, "Compare $1 other offers"],

@@ -15,6 +15,7 @@ import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middle
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
+import { vendorProductoProtegidoMiddlewares } from "./vendor/hetna-producto-protegido/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
 import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
@@ -102,6 +103,7 @@ export default defineMiddlewares({
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
+        ...vendorProductoProtegidoMiddlewares,
         ...vendorAltaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
         // Factura del pedido (PDF + XML del CFDI) desde el panel del taller
@@ -112,6 +114,27 @@ export default defineMiddlewares({
         },
         // Licitaciones 3.0 (Fase 3): certificado del taller (PDF o foto)
         // Marketing HETNA: tu video grabado para la Fábrica (hasta 95 MB, límite de Nginx 100 MB)
+        // Contabilidad: facturas XML/ZIP y plantilla de movimientos
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/archivos",
+          middlewares: [leerMultipart({ campos: { archivos: 20 }, maxMb: 25, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/efirma",
+          middlewares: [leerMultipart({ campos: { cer: 1, key: 1 }, maxMb: 1 })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/semaforo",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/movimientos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 5, forma: "lista" })],
+        },
         {
           method: ["POST"],
           matcher: "/admin/hetna-fabrica/video",

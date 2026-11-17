@@ -49,11 +49,12 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
       method: "POST",
       credentials: "include",
       headers: { ...cabeceras(), "content-type": "application/json" },
-      body: JSON.stringify({ seller_id: t.seller_id, referencia: ref.trim(), metodo: "spei" }),
+      // Lo que se vio y se transfirió: si el disponible cambió, el servidor no marca nada
+      body: JSON.stringify({ seller_id: t.seller_id, referencia: ref.trim(), metodo: "spei", total: t.disponible, moneda: t.moneda }),
     }).catch(() => null)
     setTrabajando(false)
     if (r?.ok) alPagar()
-    else setMsg("No se pudo marcar. Intenta de nuevo.")
+    else setMsg((await r?.json().catch(() => null))?.message || "No se pudo marcar. Intenta de nuevo.")
   }
   return (
     <div style={S.card}>

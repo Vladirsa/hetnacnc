@@ -219,17 +219,34 @@ export async function retener(c: MedusaContainer, orderId: string, motivo: strin
     .update({ estado: "retenido", motivo: motivo.slice(0, 300), actualizado: knex.fn.now() })
 }
 
-/** HETNA le transfirió al taller todo lo disponible (o los pedidos indicados). */
+export class SaldoCambio extends Error {}
+
+/** HETNA le transfirió al taller lo disponible (o los pedidos indicados).
+ *  Con `totalVisto` (lo que el admin vio y transfirió), si el disponible cambió
+ *  mientras tanto no se marca nada: antes se marcaba todo lo disponible, también
+ *  lo que se liberó después y nunca se transfirió (auditoría Thermos, 15 nov 2026). */
 export async function marcarPagado(
   c: MedusaContainer,
   sellerId: string,
-  datos: { referencia: string; metodo?: string; orderIds?: string[] }
+  datos: { referencia: string; metodo?: string; orderIds?: string[]; totalVisto?: number; moneda?: string }
 ) {
   const knex = knexDe(c)
   await asegurarTablaSaldos(knex)
   let q = knex(T_SALDO).where({ seller_id: sellerId, estado: "disponible" })
   if (datos.orderIds?.length) q = q.whereIn("order_id", datos.orderIds)
-  return q.update({
+  if (datos.moneda) q = q.where({ moneda: datos.moneda })
+  const filas = await q.clone().select("*")
+  if (datos.totalVisto != null) {
+    const total = Math.round(filas.reduce((s: number, f: any) => s + netoTaller(f), 0) * 100) / 100
+    if (Math.abs(total - datos.totalVisto) > 0.01) {
+      throw new SaldoCambio(`El disponible cambió (ahora ${total.toFixed(2)}, viste ${datos.totalVisto.toFixed(2)}). Recarga la página y revisa antes de marcarlo.`)
+    }
+  }
+  if (!filas.length) return 0
+  return knex(T_SALDO)
+    .whereIn("order_id", filas.map((f: any) => f.order_id))
+    .where({ seller_id: sellerId, estado: "disponible" })
+    .update({
     estado: "pagado",
     pagado_en: new Date(),
     pago_metodo: (datos.metodo || "spei").slice(0, 20),

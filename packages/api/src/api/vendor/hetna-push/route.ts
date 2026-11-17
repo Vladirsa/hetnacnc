@@ -46,6 +46,8 @@ export const DELETE = async (req: AuthenticatedMedusaRequest, res: MedusaRespons
   const endpoint = String(((req.body || {}) as { endpoint?: string }).endpoint || "")
   if (!endpoint) return res.status(400).json({ message: "Falta el endpoint." })
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  await borrarSuscripcion(knex, endpoint, "taller")
+  const sellerId = (req as any).seller_context?.seller_id as string | undefined
+  if (!sellerId) return res.status(401).json({ message: "Sin taller." })
+  await borrarSuscripcion(knex, endpoint, "taller", { sellerId })
   res.json({ ok: true })
 }

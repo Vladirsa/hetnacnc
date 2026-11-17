@@ -7,6 +7,7 @@
 // sola vez por pedido y etapa (tabla hetna_wa_pedido), aunque el evento llegue
 // dos veces. Si el cliente verifica su número DESPUÉS de comprar, se le manda el
 // estado de sus pedidos abiertos en ese momento.
+import { clientesConCorreoConfiable } from "./verificar-correo"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_GUIAS } from "./guias"
@@ -131,10 +132,8 @@ export async function datosPedido(container: any, orderId: string): Promise<Dato
 async function numerosDelCliente(knex: any, d: { customerId: string | null; email: string | null }): Promise<string[]> {
   const ids = new Set<string>()
   if (d.customerId) ids.add(d.customerId)
-  if (d.email) {
-    const filas = await knex("customer").whereRaw("lower(email) = ?", [d.email.trim().toLowerCase()]).whereNull("deleted_at").select("id")
-    for (const f of filas) ids.add(f.id)
-  }
+  // Por correo sólo las cuentas con el correo confirmado (auditoría Thermos)
+  if (d.email) for (const id of await clientesConCorreoConfiable(knex, d.email)) ids.add(id)
   if (!ids.size) return []
   const filas = await knex(T_WA).whereNotNull("verificado_en").where("avisos", true).whereIn("customer_id", [...ids]).select("numero")
   return [...new Set<string>(filas.map((f: any) => String(f.numero)))]

@@ -1,22 +1,23 @@
-import Image from "next/image"
 import { promediosDeProductos } from "@/lib/resenas/acciones"
 
 import TarjetaProducto, { vendedoresPorProducto } from "./TarjetaProducto"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import CarruselFila from "./CarruselFila"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { licenciaDe } from "@/lib/hetna/licencias"
+import { precioMinimo } from "@/lib/helpers/filtrar-listado"
 import {
   collectCategorySubtreeIds,
   listCategories,
 } from "@/lib/data/categories"
 import { listCollections } from "@/lib/data/collections"
 import { listProducts } from "@/lib/data/products"
-import { getProductPrice } from "@/lib/helpers/get-product-price"
 
 const LIMITE = 10
 
 type Filtro = { category_id?: string[]; collection_id?: string }
-type Pedido = { titulo: string; href?: string; filtro: Filtro }
 
 const normaliza = (t?: string | null) =>
   (t || "")
@@ -35,45 +36,15 @@ const traer = async (locale: string, filtro: Filtro) => {
   return response.products
 }
 
-const Tarjeta = ({ product }: { product: HttpTypes.StoreProduct }) => {
-  const precio = getProductPrice({ product }).cheapestPrice?.calculated_price
-  let foto: string | null = null
-  try {
-    foto = product.thumbnail ? decodeURIComponent(product.thumbnail) : null
-  } catch {
-    foto = product.thumbnail || null
-  }
-
-  return (
-    <LocalizedClientLink
-      href={`/products/${product.handle}`}
-      className="snap-start shrink-0 w-[150px] sm:w-[165px] bg-white border border-[#E7E4DC] rounded-[12px] overflow-hidden flex flex-col transition hover:shadow-[0_4px_14px_rgba(27,27,24,0.08)]"
-    >
-      <div className="relative h-[120px] sm:h-[130px] bg-[#F4F1EA]">
-        <Image
-          src={foto || "/images/placeholder.svg"}
-          alt={product.title || "Producto"}
-          fill
-          sizes="165px"
-          loading="lazy"
-          unoptimized={!foto}
-          className="object-contain p-2"
-        />
-      </div>
-      <div className="p-2.5 flex flex-col gap-1">
-        <span className="text-[12.5px] leading-[1.3] text-[#1B1B18] line-clamp-2 min-h-[32px]">
-          {product.title}
-        </span>
-        <span className="text-[14px] font-semibold text-[#142033]">
-          {precio}
-        </span>
-      </div>
-    </LocalizedClientLink>
-  )
-}
+// Inicio con varias filas de productos, como una tienda en línea (pedido del
+// dueño, 15 nov 2026: "más carruseles, hay más banners que productos").
+// Las filas se arman por TIPO de producto y no sólo por categoría, así se
+// llenan aunque los productos todavía no estén en una categoría visible.
+// Una fila con los mismos productos que otra anterior no se repite.
+type Fila = { titulo: string; subtitulo?: string; href?: string; productos: HttpTypes.StoreProduct[] }
 
 export const FilasProductos = async ({ locale }: { locale: string }) => {
-  const [cats, cols] = await Promise.all([
+  const [cats, cols, todosResp] = await Promise.all([
     listCategories({ query: { include_ancestors_tree: true } }).catch(() => ({
       categories: [],
       parentCategories: [],
@@ -85,84 +56,99 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
       collections: [] as HttpTypes.StoreCollection[],
       count: 0,
     })),
+    listProducts({ countryCode: locale, queryParams: { limit: 100, order: "-created_at" } }).catch(() => ({
+      response: { products: [] as HttpTypes.StoreProduct[], count: 0 },
+    })),
+  ])
+  const todos = (todosResp as { response: { products: HttpTypes.StoreProduct[] } }).response.products
+  const tipo = (p: HttpTypes.StoreProduct) => tipoFicha(p as never)
+  const conPrecio = todos.filter((p) => precioMinimo(p) !== null || (p.metadata as Record<string, unknown> | null)?.archivo_gratis === true)
+  const MAX = 14
+
+  // Más vendidos y las categorías se piden en paralelo (auditoría Thermos)
+  const masVendidos = cols.collections.find((c) => c.handle === "mas-vendidos")
+  const todas = [...cats.categories, ...cats.parentCategories]
+  const conCategoria = ["Máquinas y equipos", "Herramientas y componentes", "Materiales y consumibles", "Diseños CNC", "Productos"]
+    .map((nombre) => todas.find((x) => normaliza(x.name) === normaliza(nombre)))
+    .filter((c): c is NonNullable<typeof c> => !!c)
+  const [vendidos, porCategoria] = await Promise.all([
+    masVendidos ? traer(locale, { collection_id: masVendidos.id }) : Promise.resolve([] as HttpTypes.StoreProduct[]),
+    Promise.all(conCategoria.map((c) => traer(locale, { category_id: collectCategorySubtreeIds(c) }))),
   ])
 
-  const todas = [...cats.categories, ...cats.parentCategories]
-  const pedidos: Pedido[] = [
-    { titulo: "Lo más nuevo", href: "/categories", filtro: {} },
-  ]
+  const filas: Fila[] = [{ titulo: "Lo más nuevo", href: "/categories", productos: todos.slice(0, MAX) }]
+  if (masVendidos) filas.push({ titulo: "Más vendidos", productos: vendidos })
 
-  const masVendidos = cols.collections.find((c) => c.handle === "mas-vendidos")
-  if (masVendidos) {
-    pedidos.push({
-      titulo: "Más vendidos",
-      filtro: { collection_id: masVendidos.id },
-    })
-  }
+  const digitales = todos.filter((p) => tipo(p) === "digital")
+  filas.push({
+    titulo: "Diseños DXF y STL listos para cortar",
+    subtitulo: "Descarga inmediata tras el pago",
+    href: "/categories",
+    productos: digitales.slice(0, MAX),
+  })
+  filas.push({
+    titulo: "Programación CAM y servicios",
+    subtitulo: "Te entregamos el programa listo para tu máquina",
+    href: "/laboratorio-cam",
+    productos: todos.filter((p) => tipo(p) === "servicio").slice(0, MAX),
+  })
+  filas.push({
+    titulo: "Para vender tus piezas",
+    subtitulo: "Diseños con licencia comercial",
+    href: "/categories?licencia=comercial",
+    productos: digitales.filter((p) => licenciaDe(p.metadata as Record<string, unknown> | null).licencia.clave !== "personal").slice(0, MAX),
+  })
+  filas.push({
+    titulo: "Precios bajos",
+    subtitulo: "Lo más accesible de la tienda",
+    href: "/categories?sortBy=price_asc",
+    productos: [...conPrecio].sort((a, b) => (precioMinimo(a) ?? 0) - (precioMinimo(b) ?? 0)).slice(0, MAX),
+  })
+  filas.push({
+    titulo: "Máquinas, herramientas y materiales",
+    href: "/categories",
+    productos: todos.filter((p) => tipo(p) === "fisico").slice(0, MAX),
+  })
 
-  for (const nombre of [
-    "Máquinas y equipos",
-    "Herramientas y componentes",
-    "Materiales y consumibles",
-    "Diseños CNC",
-    "Productos",
-  ]) {
-    const c = todas.find((x) => normaliza(x.name) === normaliza(nombre))
-    if (c) {
-      pedidos.push({
-        titulo: c.name,
-        href: `/categories/${c.handle}`,
-        filtro: { category_id: collectCategorySubtreeIds(c) },
-      })
-    }
-  }
+  // Y las categorías que sí tienen productos
+  conCategoria.forEach((c, i) => filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: porCategoria[i] }))
 
-  const filas = (
-    await Promise.all(
-      pedidos.map(async (p) => ({
-        ...p,
-        productos: await traer(locale, p.filtro),
-      }))
-    )
-  ).filter((f) => f.productos.length > 0)
-
-  if (!filas.length) return null
+  // Sin filas vacías ni repetidas
+  const vistas = new Set<string>()
+  const finales = filas.filter((f) => {
+    if (!f.productos.length) return false
+    const clave = f.productos.map((p) => p.id).sort().join(",")
+    if (vistas.has(clave)) return false
+    vistas.add(clave)
+    return true
+  })
+  if (!finales.length) return null
 
   const mapa = await vendedoresPorProducto(locale)
   // Los promedios de TODAS las filas en una sola llamada. Una por tarjeta
   // serían veinte peticiones en la pantalla donde más importa la velocidad.
-  const calificaciones = await promediosDeProductos(
-    [...new Set(filas.flatMap((f) => f.productos.map((p) => p.id)))]
-  )
+  const calificaciones = await promediosDeProductos([...new Set(finales.flatMap((f) => f.productos.map((p) => p.id)))])
 
   return (
-    <div className="w-full">
-      {filas.map((f) => (
-        <section key={f.titulo} className="px-4 lg:px-16 py-3">
-          <div className="flex items-baseline justify-between mb-2.5">
-            <h2 className="font-display text-[18px] font-semibold m-0">
-              {f.titulo}
-            </h2>
+    <div className="w-full py-2" data-testid="filas-productos">
+      {finales.map((f) => (
+        <section key={f.titulo} className="px-4 lg:px-16 py-4">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display m-0 text-[20px] font-bold text-[#142033]">{f.titulo}</h2>
+              {f.subtitulo && <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">{f.subtitulo}</p>}
+            </div>
             {f.href && (
-              <LocalizedClientLink
-                href={f.href}
-                className="text-[13px] font-semibold text-[#B34D07]"
-              >
+              <LocalizedClientLink href={f.href} className="shrink-0 text-[13.5px] font-semibold text-[#B34D07] hover:underline">
                 Ver todo →
               </LocalizedClientLink>
             )}
           </div>
-          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2">
+          <CarruselFila>
             {f.productos.map((p) => (
-              <TarjetaProducto
-                key={p.id}
-                product={p}
-                vendedor={mapa.get(p.id)}
-                calificacion={calificaciones.get(p.id)}
-                locale={locale}
-              />
+              <TarjetaProducto key={p.id} product={p} vendedor={mapa.get(p.id)} calificacion={calificaciones.get(p.id)} locale={locale} />
             ))}
-          </div>
+          </CarruselFila>
         </section>
       ))}
     </div>

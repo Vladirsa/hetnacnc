@@ -7,9 +7,9 @@ const s = { id: "sol_1", folio: 7, token: "t", contacto: { nombre: "Ana", empres
 const p = { taller: "Taller X", precio: 1000, moneda: "MXN", dias: 5, anticipo_pct: 50, incluye_envio: "si" }
 
 describe("SafeDeal (Fase 4)", () => {
-  it("las condiciones iniciales llenan los 12 apartados", () => {
+  it("las condiciones iniciales llenan los 15 apartados", () => {
     const c = condicionesIniciales(s, p) as Record<string, string>
-    expect(APARTADOS).toHaveLength(12)
+    expect(APARTADOS).toHaveLength(15)
     for (const [k] of APARTADOS) expect(c[k]?.length).toBeGreaterThan(0)
     expect(c.pagos).toContain("50%")
   })

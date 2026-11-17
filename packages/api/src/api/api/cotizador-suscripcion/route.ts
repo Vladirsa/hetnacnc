@@ -1,17 +1,19 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { crearSuscripcionPaypal } from "../../../lib/cotizador-paypal"
+import { crearSuscripcionStripe } from "../../../lib/cotizador-stripe"
 import { crearSuscripcion, preciosCotizador } from "../../../lib/cotizador-suscripciones"
 import { responder, tokenDe } from "./respuesta"
 
 // POST https://hetnacnc.com/api/cotizador-suscripcion  { plan, proveedor?, correo_pago? }
 // La app del Cotizador pide suscribirse; devuelve { url } para pagar.
-// proveedor: "mercadopago" (México, MXN; por defecto) o "paypal" (USD).
+// proveedor: "mercadopago" (México, MXN; por defecto), "paypal" (USD) o "stripe" (tarjeta, MXN).
 export const POST = (req: MedusaRequest, res: MedusaResponse) =>
   responder(req, res, () => {
     const b = (req.body || {}) as { plan?: string; proveedor?: string; correo_pago?: string }
     const plan = String(b.plan || "")
     if (b.proveedor === "paypal") return crearSuscripcionPaypal({ token: tokenDe(req), plan })
+    if (b.proveedor === "stripe") return crearSuscripcionStripe({ token: tokenDe(req), plan })
     return crearSuscripcion({ token: tokenDe(req), plan, correoPago: b.correo_pago })
   })
 

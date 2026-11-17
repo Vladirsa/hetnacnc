@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Ayudas HTTP compartidas por las rutas de SafeDeal (cliente con su liga
 // secreta y taller con su sesión).
+import { createHash } from "crypto"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas } from "./licitacion"
@@ -10,6 +11,12 @@ import { asegurarSafeDeal } from "./safedeal"
 export const ipDe = (req: any) =>
   String(req.headers?.["cf-connecting-ip"] || String(req.headers?.["x-forwarded-for"] || "").split(",")[0] || req.ip || "").trim().slice(0, 64) || null
 export const agenteDe = (req: any) => String(req.headers?.["user-agent"] || "").slice(0, 400)
+/** Identificador de la sesión con que se firmó: huella de la sesión, nunca la sesión misma. */
+export const sesionDe = (req: any) =>
+  createHash("sha256")
+    .update([req.headers?.authorization || "", req.headers?.cookie || "", req.params?.token || "", req.seller_context?.seller_id || ""].join("|"))
+    .digest("hex")
+    .slice(0, 16)
 
 /** La solicitud del cliente (por su liga secreta). */
 export async function solicitudCliente(req: any) {

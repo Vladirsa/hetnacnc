@@ -26,6 +26,8 @@ export const DELETE = async (req: AuthenticatedMedusaRequest, res: MedusaRespons
   const endpoint = String(((req.body || {}) as { endpoint?: string }).endpoint || "")
   if (!endpoint) return res.status(400).json({ message: "Falta el endpoint." })
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  await borrarSuscripcion(knex, endpoint, "cliente")
+  // Con sesión, sólo la suscripción de ese cliente
+  const customerId = req.auth_context?.actor_id
+  await borrarSuscripcion(knex, endpoint, "cliente", customerId ? { customerId } : undefined)
   res.json({ ok: true })
 }

@@ -20,6 +20,7 @@ import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 import { FichaDigital, FichaServicio, ResumenServicio } from "@/components/hetna/fichas/FichaPorTipo"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
 
 type Props = {
   product: HttpTypes.StoreProduct & {
@@ -130,6 +131,7 @@ export const ProductDetallesLargos = ({
   taller?: { name?: string | null; handle?: string | null }
 }) => (
   <div className="flex flex-col gap-4">
+    <LoMasImportante descripcion={product?.description} />
     <PuntosDestacados
       product={product}
       locale={locale}

@@ -70,7 +70,11 @@ export function Estudio2D({
   const { locale } = useParams<{ locale: string }>()
   const cajaRef = useRef<HTMLDivElement>(null)
   const [vista, setVista] = useState<{ x: number; y: number; k: number }>({ x: 0, y: 0, k: 1 })
-  const arrastre = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null)
+  // dedos (o ratón) sobre la vista: uno arrastra, dos hacen zoom
+  const punteros = useRef(new Map<number, { x: number; y: number }>())
+  const gesto = useRef<{ dist: number; k: number; cx: number; cy: number; vx: number; vy: number } | null>(null)
+  const vistaRef = useRef(vista)
+  vistaRef.current = vista
   const [aviso, setAviso] = useState("")
 
   const paraExportar = useMemo(() => {
@@ -127,9 +131,43 @@ export function Estudio2D({
     setTimeout(() => w.print(), 300)
   }
 
-  const rueda = (e: React.WheelEvent) => {
-    const k = Math.min(20, Math.max(0.3, vista.k * (e.deltaY < 0 ? 1.15 : 1 / 1.15)))
-    setVista({ ...vista, k })
+  // Zoom hacia un punto de la vista (px desde su centro): lo que está bajo
+  // el cursor o entre los dedos se queda en su lugar.
+  const zoomEn = (k: number, px: number, py: number, base = vistaRef.current) => {
+    const nk = Math.min(40, Math.max(0.3, k))
+    const r = nk / base.k
+    setVista({ k: nk, x: px - (px - base.x) * r, y: py - (py - base.y) * r })
+  }
+  const desdeCentro = (x: number, y: number) => {
+    const c = cajaRef.current?.getBoundingClientRect()
+    return c ? [x - c.left - c.width / 2, y - c.top - c.height / 2] : [0, 0]
+  }
+
+  // La rueda va con un oyente no pasivo: así hace zoom sin mover la página
+  useEffect(() => {
+    const el = cajaRef.current
+    if (!el) return
+    const onRueda = (e: WheelEvent) => {
+      e.preventDefault()
+      const [px, py] = desdeCentro(e.clientX, e.clientY)
+      const v = vistaRef.current
+      zoomEn(v.k * Math.pow(1.0018, -e.deltaY), px, py)
+    }
+    el.addEventListener("wheel", onRueda, { passive: false })
+    return () => el.removeEventListener("wheel", onRueda)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const empezarGesto = () => {
+    const ps = [...punteros.current.values()]
+    const v = vistaRef.current
+    if (ps.length >= 2) {
+      const [a, b] = ps
+      const [cx, cy] = desdeCentro((a.x + b.x) / 2, (a.y + b.y) / 2)
+      gesto.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: v.k, cx, cy, vx: v.x, vy: v.y }
+    } else if (ps.length === 1) {
+      gesto.current = { dist: 0, k: v.k, cx: ps[0].x, cy: ps[0].y, vx: v.x, vy: v.y }
+    } else gesto.current = null
   }
 
   const ancho = medidas ? medidas.x1 - medidas.x0 : 0
@@ -137,7 +175,7 @@ export function Estudio2D({
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[#0D1015] text-white lg:flex-row">
-      <aside className="flex w-full flex-col gap-4 border-b border-[#1F2937] bg-[#111722] p-4 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:w-[330px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      <aside className="order-2 flex w-full flex-col gap-4 border-t border-[#1F2937] lg:order-none lg:border-t-0 bg-[#111722] p-4 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:w-[330px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#C2560A]/20 text-[#F28A3C]">{icono}</span>
           <div className="min-w-0">
@@ -188,13 +226,14 @@ export function Estudio2D({
         <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]">Todo se calcula en tu navegador. Medidas en milímetros.</p>
       </aside>
 
-      <section className="relative flex min-h-[60vh] flex-1 flex-col">
+      {/* En el celular la vista va arriba y fija: se ve cada cambio del panel */}
+      <section className="sticky top-14 z-10 order-1 flex h-[46vh] flex-col bg-[#0D1015] lg:static lg:order-none lg:h-auto lg:min-h-[60vh] lg:flex-1">
         <div className="flex items-center gap-1 border-b border-[#1F2937] bg-[#0F141C] px-3 py-2 text-[12.5px] text-[#8A97AB]">
           <span className="mr-auto font-semibold text-[#C9D2E0]">Vista 2D</span>
           {[
             ["Ajustar", () => setVista({ x: 0, y: 0, k: 1 })],
-            ["Acercar", () => setVista({ ...vista, k: Math.min(20, vista.k * 1.3) })],
-            ["Alejar", () => setVista({ ...vista, k: Math.max(0.3, vista.k / 1.3) })],
+            ["Acercar", () => zoomEn(vista.k * 1.3, 0, 0)],
+            ["Alejar", () => zoomEn(vista.k / 1.3, 0, 0)],
           ].map(([t, fn]) => (
             <button key={t as string} type="button" onClick={fn as () => void} className="rounded-[7px] px-2.5 py-1 hover:bg-[#1C2431] hover:text-white">
               {t as string}
@@ -203,23 +242,44 @@ export function Estudio2D({
         </div>
         <div
           ref={cajaRef}
-          className="relative flex-1 cursor-grab overflow-hidden active:cursor-grabbing"
+          className="relative flex-1 cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
           style={{
             backgroundColor: "#0B0F15",
             backgroundImage:
               "linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px)",
             backgroundSize: "24px 24px",
           }}
-          onWheel={rueda}
           onPointerDown={(e) => {
-            arrastre.current = { x: e.clientX, y: e.clientY, vx: vista.x, vy: vista.y }
-            ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+            ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+            punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+            empezarGesto()
           }}
           onPointerMove={(e) => {
-            const a = arrastre.current
-            if (a) setVista({ ...vista, x: a.vx + e.clientX - a.x, y: a.vy + e.clientY - a.y })
+            if (!punteros.current.has(e.pointerId)) return
+            punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+            const g = gesto.current
+            if (!g) return
+            const ps = [...punteros.current.values()]
+            if (ps.length >= 2 && g.dist) {
+              const [a, b] = ps
+              const base = { k: g.k, x: g.vx, y: g.vy }
+              const [cx, cy] = desdeCentro((a.x + b.x) / 2, (a.y + b.y) / 2)
+              const nk = Math.min(40, Math.max(0.3, (g.k * Math.hypot(a.x - b.x, a.y - b.y)) / g.dist))
+              const r = nk / base.k
+              setVista({ k: nk, x: cx - (g.cx - base.x) * r, y: cy - (g.cy - base.y) * r })
+            } else if (ps.length === 1) {
+              setVista({ ...vistaRef.current, x: g.vx + ps[0].x - g.cx, y: g.vy + ps[0].y - g.cy })
+            }
           }}
-          onPointerUp={() => (arrastre.current = null)}
+          onPointerUp={(e) => {
+            punteros.current.delete(e.pointerId)
+            empezarGesto()
+          }}
+          onPointerCancel={(e) => {
+            punteros.current.delete(e.pointerId)
+            empezarGesto()
+          }}
+          onDoubleClick={() => setVista({ x: 0, y: 0, k: 1 })}
         >
           {svg ? (
             <svg

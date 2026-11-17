@@ -29,6 +29,7 @@
 // cotizador-paypal.ts también importa este archivo; sólo se usan sus funciones
 // dentro de otras funciones, así que el ciclo no causa problemas al cargar.
 import { cancelarSuscripcionPaypal, sincronizarSuscripcionPaypal } from "./cotizador-paypal"
+import { cancelarStripeAnterior, cancelarSuscripcionStripe, stripeSuscripcionesListas, verificarStripe } from "./cotizador-stripe"
 import { paypal, paypalListo } from "./paypal-api"
 import { correosDeLaCasa, PLAN_APP_DE_LA_CASA } from "./cuentas-casa"
 import { container } from "@medusajs/framework"
@@ -81,6 +82,7 @@ export function preciosCotizador() {
     ),
     mercadopago: suscripcionesListas(),
     paypal: Boolean(supaKey() && paypalListo()),
+    stripe: stripeSuscripcionesListas(),
   }
 }
 
@@ -295,6 +297,7 @@ export async function sincronizarSuscripcion(preapprovalId: string, logger?: Bit
     // Si ya tenía otra suscripción activa (cambio de plan o venía de PayPal), se cancela la anterior
     await cancelarMercadoPagoAnterior(negocio, pre.id, logger)
     await cancelarPaypalAnterior(negocio, "", logger)
+    await cancelarStripeAnterior(negocio.id, "", logger)
     await actualizarNegocio(negocio.id, {
       plan: ref.plan,
       plan_estado: "activa",
@@ -356,6 +359,7 @@ export async function verificarSuscripcion(token?: string) {
   if (ppId && paypalListo()) {
     resultado = (await sincronizarSuscripcionPaypal(ppId)) ?? resultado
   }
+  if (!resultado) resultado = (await verificarStripe(negocio)) ?? resultado
   if (resultado) return resultado
   const actual = await leerNegocio(negocio.id)
   return { plan: actual?.plan ?? negocio.plan, estado: actual?.plan_estado ?? negocio.plan_estado }
@@ -368,6 +372,7 @@ export async function cancelarSuscripcion(token?: string) {
   if (negocio.pago_proveedor === "paypal" && negocio.pp_suscripcion_id) {
     return cancelarSuscripcionPaypal(negocio)
   }
+  if (negocio.pago_proveedor === "stripe") return cancelarSuscripcionStripe(negocio)
   if (!negocio.mp_suscripcion_id) throw new ErrorSuscripcion("Tu taller no tiene una suscripción activa.")
   if (!mpToken()) throw new ErrorSuscripcion("El cobro en línea todavía no está activo.", 503)
   await mp(`/preapproval/${negocio.mp_suscripcion_id}`, { method: "PUT", body: JSON.stringify({ status: "cancelled" }) })

@@ -85,7 +85,7 @@ export const BotonFavorito = ({ producto }: { producto: Favorito }) => {
       type="button"
       onClick={() => setActivo(alternarFavorito(producto))}
       aria-pressed={activo}
-      className={`w-full uppercase mb-4 py-3 flex justify-center items-center gap-2 rounded-sm font-medium border ${
+      className={`w-full mb-4 py-3 font-semibold flex justify-center items-center gap-2 rounded-sm font-medium border ${
         activo
           ? "bg-[#FDEEE1] border-[#C2560A] text-[#B34D07]"
           : "bg-white border-[#E7E4DC] text-[#1B1B18] hover:border-[#C2560A]"

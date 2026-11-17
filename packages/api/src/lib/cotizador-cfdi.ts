@@ -14,7 +14,11 @@
 //   POST /api/cotizador-cfdi/emitir             factura de un pedido
 //   GET  /api/cotizador-cfdi/:id/pdf | /xml     descargar
 //   POST /api/cotizador-cfdi/:id/enviar         mandar por correo
-//   POST /api/cotizador-cfdi/:id/cancelar       cancelar (motivo 02 o 03)
+//   POST /api/cotizador-cfdi/:id/cancelar       cancelar (motivo 01, 02, 03 o 04)
+//
+// Sustitución (motivo 01, pedido del contador, 14 nov 2026): se emite la
+// factura nueva con { sustituye: <id de la anterior> }; sale relacionada con
+// el tipo 04 y la anterior se cancela sola con motivo 01 y el folio sustituto.
 //
 // Facturas incluidas por plan (al mes, sólo modo real): Taller 30, Pro 150,
 // Industrial sin límite, prueba vigente 10. Las extra se anotan a
@@ -281,7 +285,10 @@ export async function emitirFactura(token: string | undefined, b: Record<string,
 
 async function emitirFacturaUnaVez(token: string | undefined, b: Record<string, any>, logger?: any) {
   if (!cfdiDisponible()) throw new ErrorSuscripcion("La facturación se está activando en HETNA. Intenta más tarde.", 503)
-  const n = await tallerDeSesion(token)
+  // Sustituir cancela la anterior: sólo el administrador del taller
+  const sustituye = String(b.sustituye || "")
+  if (sustituye && !/^[0-9a-f-]{36}$/i.test(sustituye)) throw new ErrorSuscripcion("La factura a sustituir no es válida.")
+  const n = await tallerDeSesion(token, !!sustituye)
   const incluidas = facturasIncluidas(n)
   if (incluidas === 0) throw new ErrorSuscripcion("La factura electrónica viene desde el plan Taller.", 402)
   const reg = await registroDe(n.id)
@@ -311,7 +318,11 @@ async function emitirFacturaUnaVez(token: string | undefined, b: Record<string, 
     const estados = await Promise.all(previas.map((p) => (p.estado === "cancelacion_pendiente" ? refrescarCancelacion(p, llavePrev) : p.estado)))
     previas = previas.filter((_, i) => estados[i] !== "cancelada")
   }
-  // Ya no se acepta "forzar" desde el cliente: para otra factura, cancelar primero.
+  // Ya no se acepta "forzar" desde el cliente: para otra factura, cancelar
+  // primero o sustituirla (motivo 01).
+  const anterior = sustituye ? previas.find((p) => p.id === sustituye && p.estado !== "cancelacion_pendiente") : null
+  if (sustituye && !anterior?.uuid) throw new ErrorSuscripcion("La factura a sustituir no es una factura vigente de este pedido.", 409)
+  if (anterior) previas = previas.filter((p) => p.id !== anterior.id)
   if (previas.length) throw new ErrorSuscripcion("Este pedido ya tiene una factura vigente. Cancélala primero si necesitas otra.", 409)
   const cot = ped.cotizacion_id
     ? (await supa<any[]>(`/rest/v1/cotizaciones?id=eq.${ped.cotizacion_id}&select=id,descuento_pct,descuento_fijo,iva_pct,costo_envio,subtotal,total&limit=1`))[0]
@@ -366,6 +377,8 @@ async function emitirFacturaUnaVez(token: string | undefined, b: Record<string, 
     currency: "MXN",
   }
   if (cuerpo.payment_method === "PPD") cuerpo.payment_form = "99"
+  // Relación 04: sustitución de los CFDI previos
+  if (anterior) (cuerpo as any).related_documents = [{ relationship: "04", documents: [anterior.uuid] }]
 
   // Cupo del mes (sólo modo real)
   const usadas = modo === "real" ? await usadasEsteMes(n.id) : 0
@@ -422,7 +435,19 @@ async function emitirFacturaUnaVez(token: string | undefined, b: Record<string, 
     )
   }
   logger?.info?.(`[cfdi] ${modo} ${fila.serie}${fila.folio || ""} de ${n.id} por $${fila.total}${extra ? " (extra)" : ""}`)
+
+  // La nueva ya está timbrada: se cancela la anterior con motivo 01. Si el SAT
+  // o Facturapi fallan aquí, la nueva queda bien y la anterior se puede
+  // cancelar después con motivo 01 y esta factura como sustituta.
+  let anteriorEstado: string | null = null
+  if (anterior) {
+    anteriorEstado = await cancelarEnFacturapi(anterior, llave, "01", inv.id).catch((e: Error) => {
+      logger?.error?.(`[cfdi] no se canceló ${anterior.facturapi_id} (sustituida por ${inv.id}): ${e.message}`)
+      return "vigente"
+    })
+  }
   return {
+    ...(anterior ? { sustituida: { id: anterior.id, estado: anteriorEstado } } : {}),
     id: guardada?.[0]?.id,
     uuid: fila.uuid,
     serie: fila.serie,
@@ -474,22 +499,49 @@ async function refrescarCancelacion(f: any, llave: string): Promise<string> {
   return f.estado
 }
 
-export async function cancelarFactura(token: string | undefined, id: string, motivo: string) {
-  const { f, llave } = await facturaDelTaller(token, id, true)
-  if (f.estado === "cancelada") return { ok: true, estado: "cancelada" }
-  if (f.estado === "cancelacion_pendiente") return { ok: true, estado: await refrescarCancelacion(f, llave) }
-  // Motivos 02 (con errores, sin relación) y 03 (no se llevó a cabo). El 01
-  // (sustitución) falta: requiere la factura que la sustituye (pendiente).
-  const m = motivo === "03" ? "03" : "02"
-  const inv = await fapi<any>(`/invoices/${f.facturapi_id}?motive=${m}`, llave, { method: "DELETE" })
+// Motivos del SAT: 01 con errores con relación (lleva el folio sustituto),
+// 02 con errores sin relación, 03 no se llevó a cabo, 04 operación nominativa
+// relacionada en una factura global.
+async function cancelarEnFacturapi(f: any, llave: string, m: string, sustitutaFacturapi?: string) {
+  const q = `motive=${m}${m === "01" ? `&substitution=${encodeURIComponent(sustitutaFacturapi || "")}` : ""}`
+  const inv = await fapi<any>(`/invoices/${f.facturapi_id}?${q}`, llave, { method: "DELETE" })
   // Si el receptor tiene que aceptar la cancelación, queda pendiente. Una
   // respuesta desconocida ya no se toma como "cancelada" (eso dejaba volver a
   // facturar el pedido con la factura original todavía vigente).
   const estado = inv?.status === "canceled" ? "cancelada" : "cancelacion_pendiente"
-  await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, {
-    method: "PATCH",
-    headers: { Prefer: "return=minimal" },
-    body: JSON.stringify({ estado, motivo_cancelacion: m, cancelado_en: new Date().toISOString() }),
-  })
-  return { ok: true, estado }
+  // Facturapi ya canceló: si el registro falla se reintenta, para que la base
+  // no se quede con una factura "vigente" que el SAT ya canceló (auditoría
+  // Thermos, 15 nov 2026). Si aun así falla, refrescarCancelacion lo arregla
+  // la próxima vez que se consulte o cancele esa factura.
+  const cuerpo = JSON.stringify({ estado, motivo_cancelacion: m, cancelado_en: new Date().toISOString() })
+  for (let intento = 1; intento <= 3; intento++) {
+    try {
+      await supa(`/rest/v1/cfdi_emitidos?id=eq.${f.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: cuerpo })
+      break
+    } catch (e) {
+      if (intento === 3) throw new ErrorSuscripcion(`La factura se canceló en el SAT, pero no se guardó el registro (${(e as Error).message}). Vuelve a cancelarla para actualizarla.`, 502)
+      await new Promise((r) => setTimeout(r, 500 * intento))
+    }
+  }
+  return estado
+}
+
+export async function cancelarFactura(token: string | undefined, id: string, motivo: string, sustituta?: string) {
+  const { f, llave } = await facturaDelTaller(token, id, true)
+  if (f.estado === "cancelada") return { ok: true, estado: "cancelada" }
+  if (f.estado === "cancelacion_pendiente") return { ok: true, estado: await refrescarCancelacion(f, llave) }
+  // Si ya está cancelada en Facturapi (un registro que no se guardó antes), sólo se actualiza la base
+  if ((await refrescarCancelacion(f, llave)) === "cancelada") return { ok: true, estado: "cancelada" }
+  const m = ["01", "02", "03", "04"].includes(motivo) ? motivo : "02"
+  let sustitutaFapi: string | undefined
+  if (m === "01") {
+    // La sustituta se emite antes: del mismo taller, vigente, otra y del mismo modo
+    if (!sustituta) throw new ErrorSuscripcion("Con el motivo 01 indica la factura que sustituye a ésta (emítela primero).")
+    const { f: nueva } = await facturaDelTaller(token, sustituta, true)
+    if (nueva.id === f.id || String(nueva.estado || "").startsWith("cancel")) throw new ErrorSuscripcion("La factura sustituta debe ser otra factura vigente.")
+    if (nueva.pedido_id !== f.pedido_id) throw new ErrorSuscripcion("La factura sustituta debe ser del mismo pedido.")
+    if (nueva.modo !== f.modo) throw new ErrorSuscripcion("La factura sustituta debe ser del mismo modo (prueba o real).")
+    sustitutaFapi = nueva.facturapi_id
+  }
+  return { ok: true, estado: await cancelarEnFacturapi(f, llave, m, sustitutaFapi) }
 }

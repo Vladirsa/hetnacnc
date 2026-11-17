@@ -3,14 +3,16 @@
 // Barra de arriba de los estudios de pantalla completa: cambia entre 3D y 2D
 // y entre las herramientas del estudio, sin el encabezado ni el pie del sitio.
 import { useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ESTUDIOS, estudioDe, type Estudio } from "@/lib/hetna/disenar"
 
 export function BarraEstudio() {
   const params = useParams()
-  const actual = String(params?.herramienta || "")
+  const ruta = usePathname() || ""
+  // el catálogo de cajas (/disenar/cajas y /disenar/cajas/<Id>) cuenta como "Cajas"
+  const actual = /\/disenar\/cajas(\/|$)/.test(ruta) ? "caja-con-juntas" : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.
   useEffect(() => {

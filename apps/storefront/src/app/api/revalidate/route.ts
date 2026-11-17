@@ -1,4 +1,5 @@
 import { revalidateTag } from 'next/cache';
+import { secretoIgual } from '@/lib/seguridad/secreto-igual';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (request.headers.get('x-revalidate-secret') !== secret) {
+  if (!secretoIgual(request.headers.get('x-revalidate-secret'), secret)) {
     return NextResponse.json(
       { revalidated: false, error: 'Unauthorized' },
       { status: 401 }
