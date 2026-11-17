@@ -13,6 +13,7 @@
 // se crea un plan nuevo con el precio nuevo; los talleres ya suscritos siguen
 // con el que contrataron.
 
+import { cancelarStripeAnterior } from "./cotizador-stripe"
 import {
   adminDesdeToken,
   anotarEvento,
@@ -213,6 +214,7 @@ export async function sincronizarSuscripcionPaypal(id: string, logger?: Bitacora
     // Una sola suscripción activa: se cancela la anterior (de PayPal o de Mercado Pago)
     await cancelarPaypalAnterior(negocio, sub.id, logger)
     await cancelarMercadoPagoAnterior(negocio, "", logger)
+    await cancelarStripeAnterior(negocio.id, "", logger)
     await actualizarNegocio(negocio.id, {
       plan: ref.plan,
       plan_estado: "activa",
