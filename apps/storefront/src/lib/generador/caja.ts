@@ -9,7 +9,7 @@
 
 export type Punto = [number, number]
 
-export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta"
+export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera"
 
 export type OpcionesCaja = {
   ancho: number // eje X, mm
@@ -326,11 +326,18 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const t = o.espesor
   const tipo: TipoCaja = o.tipo || (o.tapa === false ? "abierta" : "cerrada")
   const cerrada = tipo === "cerrada"
+  const cajonera = tipo === "cajonera"
   const extra = o.medidas === "interiores" ? 2 * t : 0
   const W = o.ancho + extra
-  const D = o.fondo + extra
-  const H = o.alto + (o.medidas === "interiores" ? (cerrada ? 2 * t : t) : 0)
-  const interior = { ancho: W - 2 * t, fondo: D - 2 * t, alto: H - (cerrada ? 2 : 1) * t }
+  // la carcasa de la cajonera no tiene frente: por dentro le falta un solo espesor a lo fondo
+  const D = o.fondo + (cajonera ? extra / 2 : extra)
+  const H = o.alto + (o.medidas === "interiores" ? (cerrada || cajonera ? 2 * t : t) : 0)
+  // Cajonera: el cajón deja 1 mm por lado contra la carcasa (y 1 mm atrás)
+  const juego = 1
+  const cajon = { ancho: W - 2 * t - 2 * juego, fondo: D - t - juego, alto: H - 2 * t - 2 * juego }
+  const interior = cajonera
+    ? { ancho: cajon.ancho - 2 * t, fondo: cajon.fondo - 2 * t, alto: cajon.alto - t }
+    : { ancho: W - 2 * t, fondo: D - 2 * t, alto: H - (cerrada ? 2 : 1) * t }
   const holgura = 0.5 // por lado, para la tapa sobrepuesta y los divisores
   const Ht = Math.max(o.altoTapa || 0, 0)
   const Wt = W + 2 * holgura + 2 * t
@@ -360,14 +367,42 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   if (Math.max(W, D, H) > 3000) errores.push("La caja es demasiado grande: ningún lado puede pasar de 3 metros.")
   if (tipo === "sobrepuesta" && Ht < 4 * t) errores.push(`La tapa debe medir al menos ${r(4 * t)} mm de alto con ese espesor.`)
   if (tipo === "sobrepuesta" && Ht > H) errores.push("La tapa no puede ser más alta que la caja.")
+  if (cajonera && Math.min(cajon.ancho, cajon.fondo, cajon.alto) < 6 * t)
+    errores.push("La carcasa es muy chica para un cajón con ese espesor: hazla más grande o usa material más delgado.")
   if (errores.length) return vacio()
 
+  // Cajonera: una carcasa (caja abierta girada, la boca al frente) y un cajón
+  // (caja abierta normal) que entra en ella con juego.
+  const armarCajonera = (d: number) => {
+    // carcasa: caja abierta de W × H × D con la boca arriba, girada para que
+    // la boca quede al frente: (x, y, z) local -> (x, z, D - y) en la caja
+    const carcasa = caras(W, H, D, t, d, false, "Carcasa · ")
+    const nombres: Record<string, string> = { "Carcasa · Base": "Carcasa · Atrás", "Carcasa · Frente": "Carcasa · Piso", "Carcasa · Atrás": "Carcasa · Techo" }
+    const giro = (v: Vec3): Vec3 => [v[0], v[2], -v[1]]
+    for (const c of carcasa.crudas) {
+      const u = c.ubicacion
+      c.nombre = nombres[c.nombre] || c.nombre
+      c.ubicacion = { origen: [u.origen[0], u.origen[2], D - u.origen[1]], ux: giro(u.ux), uy: giro(u.uy), uz: giro(u.uz) }
+    }
+    const caj = caras(cajon.ancho, cajon.fondo, cajon.alto, t, d, false, "Cajón · ")
+    for (const c of caj.crudas) {
+      const u = c.ubicacion
+      c.ubicacion = { ...u, origen: [u.origen[0] + t + juego, u.origen[1] + t + juego, u.origen[2]] }
+      // jaladera: hueco para los dedos en el frente del cajón
+      if (c.nombre === "Cajón · Frente" && cajon.ancho >= 70 && cajon.alto >= 40) {
+        c.huecos = [ranuraRedonda(cajon.ancho / 2, cajon.alto * 0.62, Math.min(70, cajon.ancho * 0.4), Math.min(22, cajon.alto * 0.25))]
+      }
+    }
+    return { nW: carcasa.nW, nD: carcasa.nD, nH: carcasa.nH, minSeg: Math.min(carcasa.minSeg, caj.minSeg), crudas: [...carcasa.crudas, ...caj.crudas] }
+  }
+  const armar = (d: number) => (cajonera ? armarCajonera(d) : caras(W, D, H, t, d, cerrada))
+
   // En automático, el dedo se agranda solo si no cabe; a mano se avisa
-  let base = caras(W, D, H, t, dedo, cerrada)
+  let base = armar(dedo)
   if (autoDedo) {
     for (let i = 0; i < 8 && base.minSeg < 1.5 * t; i++) {
       dedo *= 1.4
-      base = caras(W, D, H, t, dedo, cerrada)
+      base = armar(dedo)
     }
   }
   if (base.minSeg < 1.5 * t) {
@@ -384,8 +419,11 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
 
   const crudas: Cruda[] = [...base.crudas]
 
+  if (cajonera && (o.asas || o.ranura || (o.columnas || 1) > 1 || (o.filas || 1) > 1))
+    avisos.push("La cajonera todavía no lleva asas, ranura ni divisiones: se dejaron fuera.")
+
   // ---- Asas en los laterales
-  if (o.asas) {
+  if (o.asas && !cajonera) {
     const largo = Math.min(100, D * 0.45, D - 6 * t)
     const altoAsa = Math.min(28, H * 0.22)
     const techo = H - (cerrada ? t : 0)
@@ -398,7 +436,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   }
 
   // ---- Ranura para monedas en la tapa
-  if (o.ranura) {
+  if (o.ranura && !cajonera) {
     const tapa = crudas.find((c) => c.nombre === "Tapa")
     if (!tapa) avisos.push("La ranura para monedas va en la tapa: elige una caja cerrada.")
     else if (W < 70 || D < 30) avisos.push("La tapa es muy chica para la ranura de monedas.")
@@ -408,7 +446,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   // ---- Divisores (sueltos, se meten desde arriba)
   const cols = Math.max(1, Math.min(12, Math.round(o.columnas || 1)))
   const filas = Math.max(1, Math.min(12, Math.round(o.filas || 1)))
-  if (cols > 1 || filas > 1) {
+  if (!cajonera && (cols > 1 || filas > 1)) {
     const hd = interior.alto - (cerrada ? 1 : 0)
     const cx = centros(interior.ancho, cols, t)
     const cz = centros(interior.fondo, filas, t)
