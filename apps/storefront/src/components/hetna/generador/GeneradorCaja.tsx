@@ -64,6 +64,14 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
       <path d="M6 16l14-7 14 7M20 23v12" />
     </>
   ),
+  cajonera: (
+    <>
+      <path d="M6 12l14-7 14 7v16l-14 7-14-7z" />
+      <path d="M6 12l14 7 14-7M20 19v16" />
+      <path d="M9 18l9 4.5v8L9 26z" />
+      <path d="M12 23.5l3 1.5" />
+    </>
+  ),
   sobrepuesta: (
     <>
       <path d="M6 20l14 7 14-7v9l-14 7-14-7z" />
@@ -149,6 +157,7 @@ const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "cerrada", nombre: "Cerrada", nota: "6 caras, tapa fija con dedos" },
   { id: "abierta", nombre: "Abierta", nota: "Charola u organizador, sin tapa" },
   { id: "sobrepuesta", nombre: "Con tapa", nota: "Tapa que se quita, cae por fuera" },
+  { id: "cajonera", nombre: "Cajonera", nota: "Carcasa con un cajón que entra con 1 mm de juego por lado y jaladera" },
 ]
 
 type Modelo = {
@@ -179,6 +188,8 @@ const MODELOS: Modelo[] = [
   { id: "vino", nombre: "Caja para vino", tipo: "sobrepuesta", a: 110, f: 110, h: 360, e: 6, tapa: 60 },
   { id: "cubo", nombre: "Cubo", tipo: "cerrada", a: 100, f: 100, h: 100, e: 3 },
   { id: "cajon", nombre: "Cajón para mueble", tipo: "abierta", a: 450, f: 400, h: 150, e: 12 },
+  { id: "cajonera", nombre: "Cajonera de escritorio", tipo: "cajonera", a: 300, f: 250, h: 110, e: 3 },
+  { id: "cajonera-herr", nombre: "Cajonera para herramientas", tipo: "cajonera", a: 420, f: 320, h: 140, e: 6 },
 ]
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
@@ -228,6 +239,25 @@ export function GeneradorCaja() {
   const [ranura, setRanura] = useState(false)
   const [modelo, setModelo] = useState("")
   const [despiece, setDespiece] = useState(0) // 0 = armada, 100 = piezas separadas
+
+  // Llegar con medidas desde el catálogo: ?tipo=cajonera&x=&y=&h=&thickness=&outside=
+  // (x ancho, y fondo, h alto, en mm; outside=0 son medidas interiores)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const num = (k: string) => {
+      const v = q.get(k)
+      return v && /^[0-9.]+$/.test(v) && Number(v) > 0 ? v : null
+    }
+    const t = q.get("tipo")
+    if (t && TIPOS.some((x) => x.id === t)) setTipo(t as TipoCaja)
+    const x = num("x"), y = num("y"), h = num("h"), e = num("thickness")
+    if (x) setAncho(x)
+    if (y) setFondo(y)
+    if (h) setAlto(h)
+    if (e) setEspesor(e)
+    if (q.get("outside") === "0") setMedidas("interiores")
+    else if (q.get("outside") === "1") setMedidas("exteriores")
+  }, [])
   const [maquina, setMaquina] = useState<keyof typeof MAQUINAS>("laser")
   const [kerf, setKerf] = useState<string>(MAQUINAS.laser.kerf)
   const [fresa, setFresa] = useState("3.175") // 1/8" en mm, fresa común para madera
@@ -257,7 +287,7 @@ export function GeneradorCaja() {
   const listo = r.piezas.length > 0
   const ext = r.exterior
   const esp = numero(espesor) * k
-  const tapa = tipo !== "abierta"
+  const tapa = tipo === "cerrada" || tipo === "sobrepuesta"
   const nombreTipo = TIPOS.find((x) => x.id === tipo)?.nombre || ""
   const hoja = listo ? acomodar(r.piezas) : null
   const nombreArchivo = `caja-hetna-${r1(ext.ancho)}x${r1(ext.fondo)}x${r1(ext.alto)}mm-e${r1(esp)}`
@@ -282,30 +312,69 @@ export function GeneradorCaja() {
       const W = rv.armado.ancho
       const H = rv.armado.alto
       const D = rv.armado.fondo
-      // la tapa sobrepuesta se ve levantada, para que se vea adentro
+      // la tapa sobrepuesta se ve levantada y el cajón medio abierto, para que se vea adentro
       const alzar = Math.max(15, rv.exterior.alto * 0.45)
+      const jalar = rv.exterior.fondo * 0.45
       const sep = (despieceVista / 100) * Math.max(W, H, D) * 0.6
       const mover = (p: Pieza, d: [number, number, number]): Pieza =>
         p.ubicacion ? { ...p, ubicacion: { ...p.ubicacion, origen: [p.ubicacion.origen[0] + d[0], p.ubicacion.origen[1] + d[1], p.ubicacion.origen[2] + d[2]] } } : p
+      // Grupos: la caja, la tapa ("Tapa · …"), la carcasa y el cajón. El
+      // despiece separa cada grupo alrededor de su propio centro, así el cajón
+      // no choca con la carcasa.
+      const grupo = (p: Pieza) => (p.nombre.includes(" · ") ? p.nombre.split(" · ")[0] : "caja")
+      const cajas = new Map<string, { mn: number[]; mx: number[] }>()
+      for (const p of rv.piezas) {
+        const u = p.ubicacion
+        if (!u) continue
+        const g = cajas.get(grupo(p)) || { mn: [Infinity, Infinity, Infinity], mx: [-Infinity, -Infinity, -Infinity] }
+        for (const a of [0, p.ancho]) for (const b of [0, p.alto]) for (const c of [0, esp])
+          for (let i = 0; i < 3; i++) {
+            const w = u.origen[i] + a * u.ux[i] + b * u.uy[i] + c * u.uz[i]
+            g.mn[i] = Math.min(g.mn[i], w)
+            g.mx[i] = Math.max(g.mx[i], w)
+          }
+        cajas.set(grupo(p), g)
+      }
       const piezas = rv.piezas.map((p) => {
         const u = p.ubicacion
         if (!u) return p
-        let q = p.nombre.startsWith("Tapa · ") ? mover(p, [0, alzar, 0]) : p
+        let q = p.nombre.startsWith("Tapa · ") ? mover(p, [0, alzar + sep * 0.8, 0]) : p
+        if (p.nombre.startsWith("Cajón · ")) q = mover(q, [0, 0, -(jalar + sep * 1.8)])
         if (!sep) return q
-        // Despiece: cada pieza se aleja del centro de la caja en la dirección
+        // Despiece: cada pieza se aleja del centro de su grupo en la dirección
         // de su espesor; los divisores (al centro) suben.
+        const g = cajas.get(grupo(p))!
+        const centro = [0, 1, 2].map((i) => (g.mn[i] + g.mx[i]) / 2)
+        const tam = [0, 1, 2].map((i) => g.mx[i] - g.mn[i])
         const c = [0, 1, 2].map((i) => u.origen[i] + (p.ancho / 2) * u.ux[i] + (p.alto / 2) * u.uy[i] + (esp / 2) * u.uz[i])
-        const centro = [W / 2 - (W - rv.exterior.ancho) / 2, H / 2, D / 2 - (D - rv.exterior.fondo) / 2]
         const dot = (c[0] - centro[0]) * u.uz[0] + (c[1] - centro[1]) * u.uz[1] + (c[2] - centro[2]) * u.uz[2]
-        const tam = Math.abs(u.uz[0]) * W + Math.abs(u.uz[1]) * H + Math.abs(u.uz[2]) * D
-        if (p.nombre.startsWith("Divisor") || Math.abs(dot) < tam * 0.2) q = mover(q, [0, sep * 1.2, 0])
+        const largo = Math.abs(u.uz[0]) * tam[0] + Math.abs(u.uz[1]) * tam[1] + Math.abs(u.uz[2]) * tam[2]
+        const s2 = sep * 0.6
+        if (p.nombre.startsWith("Divisor") || Math.abs(dot) < largo * 0.2) q = mover(q, [0, s2 * 1.2, 0])
         else {
           const sg = Math.sign(dot)
-          q = mover(q, [u.uz[0] * sg * sep, u.uz[1] * sg * sep, u.uz[2] * sg * sep])
+          q = mover(q, [u.uz[0] * sg * s2, u.uz[1] * sg * s2, u.uz[2] * sg * s2])
         }
         return q
       })
-      return grupoATris(piezasAGrupo3D(piezas, esp, rv.exterior))
+      // La cámara del estudio mira desde +Z; el frente de la caja está en Z = 0.
+      // Se refleja a lo fondo para que el frente (y el cajón que sale) quede de
+      // cara a quien mira.
+      const F = rv.exterior.fondo
+      const deFrente = piezas.map((p) =>
+        p.ubicacion
+          ? {
+              ...p,
+              ubicacion: {
+                origen: [p.ubicacion.origen[0], p.ubicacion.origen[1], F - p.ubicacion.origen[2]] as [number, number, number],
+                ux: [p.ubicacion.ux[0], p.ubicacion.ux[1], -p.ubicacion.ux[2]] as [number, number, number],
+                uy: [p.ubicacion.uy[0], p.ubicacion.uy[1], -p.ubicacion.uy[2]] as [number, number, number],
+                uz: [p.ubicacion.uz[0], p.ubicacion.uz[1], -p.ubicacion.uz[2]] as [number, number, number],
+              },
+            }
+          : p
+      )
+      return grupoATris(piezasAGrupo3D(deFrente, esp, rv.exterior))
     } catch {
       return undefined
     }
@@ -412,7 +481,7 @@ export function GeneradorCaja() {
   const panel = (
     <div className="flex flex-col gap-3">
       <Paso n={1} titulo="Tipo de caja">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {TIPOS.map((t) => (
             <button
               key={t.id}

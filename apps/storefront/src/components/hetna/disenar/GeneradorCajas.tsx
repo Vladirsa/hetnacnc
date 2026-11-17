@@ -77,6 +77,15 @@ const OTROS: { id: string; nombre: string }[] = [
   { id: "TwoPiece", nombre: "Dos piezas" },
 ]
 
+// Diseños del catálogo con una versión propia de HETNA (otro motor, mismas
+// medidas) que sí se arma en 3D. No son estas mismas piezas armadas.
+const VERSION_HETNA: Record<string, { tipo: string; texto: string }> = {
+  SlidingDrawer: { tipo: "cajonera", texto: "Ver una cajonera armada en 3D (versión HETNA) →" },
+  ClosedBox: { tipo: "cerrada", texto: "Ver una caja cerrada armada en 3D (versión HETNA) →" },
+  OpenBox: { tipo: "abierta", texto: "Ver una caja abierta armada en 3D (versión HETNA) →" },
+  TwoPiece: { tipo: "sobrepuesta", texto: "Ver una caja con tapa armada en 3D (versión HETNA) →" },
+}
+
 // Medidas que llegan en la liga (?x=&y=&h=&thickness=&outside=): sólo las
 // que este generador tiene, para seguir con la caja que el usuario ya traía
 const LLEGAN = ["x", "y", "h", "thickness", "outside"]
@@ -274,6 +283,15 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
           <LocalizedClientLink href="/disenar/caja-con-juntas" className="self-start text-[12px] font-semibold text-[#F28A3C] hover:underline">
             ← Caja con juntas (con vista 3D)
           </LocalizedClientLink>
+          {/* Diseños con una versión propia de HETNA armada en 3D */}
+          {VERSION_HETNA[esquema.id] && (
+            <LocalizedClientLink
+              href={`/disenar/caja-con-juntas?tipo=${VERSION_HETNA[esquema.id].tipo}${llevar.toString() ? `&${llevar.toString()}` : ""}`}
+              className="flex items-center gap-2 rounded-[10px] border border-[#C2560A]/60 bg-[#C2560A]/15 px-3 py-2 text-[12.5px] font-semibold text-white hover:border-[#F28A3C]"
+            >
+              {VERSION_HETNA[esquema.id].texto}
+            </LocalizedClientLink>
+          )}
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#C2560A]/20 text-[#F28A3C]" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
