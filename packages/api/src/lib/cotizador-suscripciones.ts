@@ -166,7 +166,7 @@ export async function adminDesdeToken(token: string | undefined): Promise<{ user
 }
 
 // ── Mercado Pago ──────────────────────────────────────────────────────────
-async function mp<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
+export async function mp<T = any>(ruta: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${MP_API}${ruta}`, {
     ...init,
     headers: { Authorization: `Bearer ${mpToken()}`, "Content-Type": "application/json", ...(init.headers || {}) },

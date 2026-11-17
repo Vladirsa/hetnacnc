@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { sincronizarSuscripcionPaypal } from "../../../lib/cotizador-paypal"
+import { registrarCobroPaypal } from "../../../lib/cotizador-facturacion"
 
 // Aviso de PayPal para las suscripciones del Cotizador:
 // https://hetnacnc.com/api/paypal-suscripcion
@@ -24,6 +25,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
   try {
     await sincronizarSuscripcionPaypal(id, logger)
+    // Cada cobro (sale) lleva su CFDI de HETNA
+    if (tipo === "PAYMENT.SALE.COMPLETED" && b.resource?.id) await registrarCobroPaypal(String(b.resource.id), logger)
   } catch (e) {
     logger.error(`[cotizador] error con el aviso de PayPal ${tipo} ${id}: ${(e as Error).message}`)
   }

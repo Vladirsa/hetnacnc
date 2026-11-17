@@ -4,6 +4,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { sincronizarSesionStripe, sincronizarSuscripcionStripe } from "../../../lib/cotizador-stripe"
 import { avisoStripeLicitacion } from "../../../lib/licitacion-cobro"
+import { registrarCobroStripe } from "../../../lib/cotizador-facturacion"
 
 // Aviso de Stripe: https://hetnacnc.com/api/stripe-webhook
 // (Stripe > Desarrolladores > Webhooks > Agregar destino; eventos checkout.session.completed,
@@ -30,6 +31,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     else if (tipo.startsWith("invoice.")) {
       const sub = o.subscription || o.parent?.subscription_details?.subscription
       if (typeof sub === "string") await sincronizarSuscripcionStripe(sub, logger)
+      // Cada factura pagada de Stripe lleva su CFDI de HETNA
+      if (tipo === "invoice.paid" && typeof o.id === "string") await registrarCobroStripe(o.id, logger)
     }
   } catch (e) {
     logger.error(`[stripe] error con el aviso ${tipo}: ${(e as Error).message}`)

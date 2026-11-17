@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { preapprovalDePago, sincronizarSuscripcion } from "../../../lib/cotizador-suscripciones"
+import { registrarCobroMercadoPago } from "../../../lib/cotizador-facturacion"
 
 // Aviso de Mercado Pago para las suscripciones del Cotizador:
 // https://hetnacnc.com/api/mp-suscripcion
@@ -24,6 +25,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     } else if (tipo === "subscription_authorized_payment" || tipo === "authorized_payment") {
       const pre = await preapprovalDePago(id)
       if (pre) await sincronizarSuscripcion(pre, logger)
+      // Cada cobro mensual lleva su CFDI de HETNA (lib/cotizador-facturacion)
+      await registrarCobroMercadoPago(id, logger).catch((e: Error) => logger.error(`[cfdi-suscripcion] MP ${id}: ${e.message}`))
     }
   } catch (e) {
     logger.error(`[cotizador] error con el aviso de Mercado Pago ${tipo} ${id}: ${(e as Error).message}`)
