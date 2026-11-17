@@ -308,6 +308,7 @@ def buscar_perfiles(consulta: str, red: str, maximo: int) -> list[dict]:
             "fuente_url": url, "web": url,
             "dominio": f"{'ig' if red_url == 'instagram' else 'fb'}-{usuario}",
             "es_cnc": True,
+            "_texto": texto.lower(),
         })
         if len(out) >= maximo:
             break
@@ -413,7 +414,10 @@ def main() -> None:
                     if dom in vistos or (email and email in vistos):
                         continue
                     fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
-                    fila.update(tipo=tipo, pais=pais, idioma=idioma, ciudad=ciudad, segmento=consulta)
+                    # La ciudad de la búsqueda sólo se pone si el perfil la menciona: el buscador
+                    # también trae negocios de otras ciudades y saldrían mal en el mapa.
+                    en_texto = ciudad and ciudad.lower().split(" ")[0] in c.get("_texto", "")
+                    fila.update(tipo=tipo, pais=pais, idioma=idioma, ciudad=ciudad if en_texto else "", segmento=consulta)
                     with SALIDA.open("a", encoding="utf-8") as f:
                         f.write(json.dumps(fila, ensure_ascii=False) + "\n")
                     vistos.update({dom, email} - {""})
