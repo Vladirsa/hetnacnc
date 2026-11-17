@@ -81,6 +81,7 @@ const OTROS: { id: string; nombre: string }[] = [
 // medidas) que sí se arma en 3D. No son estas mismas piezas armadas.
 const VERSION_HETNA: Record<string, { tipo: string; texto: string }> = {
   SlidingDrawer: { tipo: "cajonera", texto: "Ver una cajonera armada en 3D (versión HETNA) →" },
+  SlidingLidBox: { tipo: "corrediza", texto: "Ver una caja de tapa corrediza armada en 3D (versión HETNA) →" },
   ClosedBox: { tipo: "cerrada", texto: "Ver una caja cerrada armada en 3D (versión HETNA) →" },
   OpenBox: { tipo: "abierta", texto: "Ver una caja abierta armada en 3D (versión HETNA) →" },
   TwoPiece: { tipo: "sobrepuesta", texto: "Ver una caja con tapa armada en 3D (versión HETNA) →" },
