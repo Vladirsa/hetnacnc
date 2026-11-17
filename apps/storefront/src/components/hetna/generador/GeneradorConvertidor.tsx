@@ -73,7 +73,7 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo }: { etiqueta: string; valor: 
   </label>
 )
 
-export function GeneradorConvertidor() {
+export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [avisoCotizar, setAvisoCotizar] = useState("")
   const [archivo, setArchivo] = useState<Archivo | null>(null)
@@ -151,6 +151,7 @@ export function GeneradorConvertidor() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" />

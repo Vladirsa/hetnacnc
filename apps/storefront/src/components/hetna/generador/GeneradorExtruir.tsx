@@ -50,7 +50,7 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; 
   </label>
 )
 
-export function GeneradorExtruir() {
+export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [archivo, setArchivo] = useState<{ nombre: string; dibujo: Dibujo } | null>(null)
   const [error, setError] = useState("")
@@ -115,6 +115,7 @@ export function GeneradorExtruir() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <label
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); abrir(e.dataTransfer.files?.[0]) }}

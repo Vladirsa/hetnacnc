@@ -20,6 +20,10 @@ export function BarraEstudio() {
         ? "celosias" // los tres modos de Patrones de corte
         : params?.herramienta === "estencil-letras" || params?.herramienta === "codigo-qr"
           ? "letreros" // los tres modos de Letreros y placas
+          : params?.herramienta === "grabado-foto" || params?.herramienta === "litofania-relieve"
+            ? "vectorizador" // Imagen
+            : ["anidado-piezas", "rebanado-capas", "svg-a-stl"].includes(String(params?.herramienta))
+              ? "convertidor" // Archivos
         : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.

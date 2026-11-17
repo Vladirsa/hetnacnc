@@ -303,24 +303,19 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
-      { slug: "litofania-relieve", corto: "Litofanías y relieves" },
-      { slug: "svg-a-stl", corto: "SVG a STL" },
     ],
   },
   "2d": {
     nombre: "2D Studio",
     herramientas: [
       { slug: "caja-con-juntas", corto: "Cajas" },
-      { slug: "vectorizador", corto: "Vectorizador" },
+      { slug: "vectorizador", corto: "Imagen" }, // vectorizador + foto a grabado + litofanía
       { slug: "letreros", corto: "Letreros y placas" }, // letreros + esténcil + código QR
       { slug: "rompecabezas", corto: "Rompecabezas" },
       { slug: "despiece-muebles", corto: "Muebles" },
       { slug: "plantillas-empaque", corto: "Empaques" },
-      { slug: "grabado-foto", corto: "Foto a grabado" },
-      { slug: "convertidor", corto: "Convertidor" },
-      { slug: "anidado-piezas", corto: "Anidado" },
+      { slug: "convertidor", corto: "Archivos" }, // convertidor + anidado + rebanado + SVG a STL
       { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
-      { slug: "rebanado-capas", corto: "Rebanado" },
       { slug: "engranes", corto: "Engranes" },
       { slug: "relojes", corto: "Relojes" },
       { slug: "lamparas-capas", corto: "Lámparas" },
