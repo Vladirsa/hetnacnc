@@ -153,6 +153,11 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
       return [
         { url: MX, lastModified: hoy, changeFrequency: "daily", priority: 1, alternates: portada },
         { url: US, lastModified: hoy, changeFrequency: "daily", priority: 0.6, alternates: portada },
+        // La app para talleres en inglés (/us/cotizador) y su par en español
+        ...(() => {
+          const app = { "es-MX": `${MX}/servicios/cotizador-cnc`, "en-US": `${US}/cotizador`, "x-default": `${MX}/servicios/cotizador-cnc` }
+          return [{ url: `${US}/cotizador`, lastModified: hoy, changeFrequency: "weekly" as Frecuencia, priority: 0.7, alternates: app }]
+        })(),
         ...FIJAS.filter(([r]) => r !== "").map(([r, f, p]) => pagina(r, f, p, hoy)),
         ...HERRAMIENTAS_DISENO.map((h) => pagina(`/disenar/${h.slug}`, "weekly", 0.8, hoy)),
         // Guías CNC; de las ciudades sólo las que tienen talleres de ese
