@@ -20,12 +20,15 @@ export const ResumenCarrito = ({
   sinMarcar,
   onContinuar,
   trabajando,
+  sinEnvio,
 }: {
   cart: Cart
   marcados: HttpTypes.StoreCartLineItem[]
   sinMarcar: number
   onContinuar: () => void
   trabajando: boolean
+  /** Lo marcado no lleva envío: null = sí lleva; "descarga" = sólo archivos; "servicio" = incluye servicios */
+  sinEnvio: null | "descarga" | "servicio"
 }) => {
   const moneda = cart.currency_code || "mxn"
   const precio = (amount: number) => convertToLocale({ amount, currency_code: moneda })
@@ -105,7 +108,11 @@ export const ResumenCarrito = ({
           )}
 
           <Fila termino="Envío">
-            {t.envio > 0 ? (
+            {sinEnvio ? (
+              <span className="text-[13px] font-medium text-[#1E7B3A]">
+                {sinEnvio === "descarga" ? "Sin envío · descarga inmediata" : "Sin envío"}
+              </span>
+            ) : t.envio > 0 ? (
               <span className="font-medium text-[#1B1B18]">{precio(t.envio)}</span>
             ) : (
               <span className="text-[13px] text-[#6B6A63]">Se calcula con tu dirección</span>
@@ -126,7 +133,7 @@ export const ResumenCarrito = ({
           </span>
         </div>
 
-        {t.envio === 0 && hayAlgo && (
+        {t.envio === 0 && hayAlgo && !sinEnvio && (
           <p className="mt-1 text-[12px] text-[#6B6A63]">
             Falta el envío. Lo ves completo antes de pagar, nunca después.
           </p>

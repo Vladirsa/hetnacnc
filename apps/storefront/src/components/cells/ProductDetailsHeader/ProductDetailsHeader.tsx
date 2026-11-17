@@ -26,6 +26,7 @@ import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
 import { HttpTypes } from "@medusajs/types"
 import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
+import type { Cart } from "@/types/cart"
 import { SellerDTO } from "@mercurjs/types"
 
 // A partir de cuántas piezas deja de ser urgente decirlo. Arriba de esto el
@@ -169,7 +170,8 @@ export const ProductDetailsHeader = ({
 
   const noSePuedeComprar = !hayOferta || disponibles === 0
 
-  const agregar = async (): Promise<boolean> => {
+  // Devuelve el carrito ya actualizado (null si no se pudo agregar)
+  const agregar = async (): Promise<Cart | null | false> => {
     if (!winnerOffer || noSePuedeComprar) return false
 
     const total = (offerAmount as number) * cantidadValida
@@ -193,7 +195,7 @@ export const ProductDetailsHeader = ({
     )
 
     try {
-      await addToCart({
+      const nuevo = await addToCart({
         offerId: winnerOffer.id,
         quantity: cantidadValida,
         countryCode: locale,
@@ -207,7 +209,7 @@ export const ProductDetailsHeader = ({
         },
         offerCurrency
       )
-      return true
+      return nuevo
     } catch (error) {
       toast.error({
         title: "No se pudo agregar al carrito",
@@ -218,13 +220,25 @@ export const ProductDetailsHeader = ({
     }
   }
 
-  // "Comprar ahora" es lo mismo que agregar y caminar al carrito, sin pedirle
-  // al cliente que encuentre el carrito. Es un atajo, no un segundo cobro.
+  // "Comprar ahora": agrega y va directo a pagar, pero sólo si el carrito que
+  // queda DESPUÉS de agregar es exactamente esto (un renglón, esta oferta, esta
+  // cantidad). Si trae algo más (otra pestaña, otra oferta, piezas de antes) o
+  // no se pudo leer, pasa por el carrito para que el cliente elija qué paga
+  // (revisión Thermos). Antes siempre iba al carrito: un clic de más.
   const comprarAhora = async () => {
     setComprando(true)
-    const listo = await agregar()
+    const nuevo = await agregar()
     setComprando(false)
-    if (listo) router.push(`/${locale}/cart`)
+    if (nuevo === false) return
+    const renglones = nuevo?.items || []
+    const unico = renglones.length === 1 ? renglones[0] : null
+    const ofertaDe = (r: NonNullable<typeof unico>) =>
+      (r as { offer?: { id?: string } }).offer?.id || (r.metadata as { offer_id?: string } | null)?.offer_id
+    const esEste =
+      !!unico &&
+      ofertaDe(unico) === winnerOffer?.id &&
+      Number(unico.quantity) === cantidadValida
+    router.push(`/${locale}/${esEste ? "checkout" : "cart"}`)
   }
 
   return (

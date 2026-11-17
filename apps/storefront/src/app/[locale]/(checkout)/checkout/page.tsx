@@ -40,9 +40,12 @@ async function CheckoutPageContent({}) {
     return notFound();
   }
 
-  const shippingMethods = await listCartShippingMethods(cart.id, false);
-  const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? '');
-  const customer = await retrieveCustomer();
+  // En paralelo: antes iban una tras otra y el cliente veía "Cargando..." más tiempo
+  const [shippingMethods, paymentMethods, customer] = await Promise.all([
+    listCartShippingMethods(cart.id, false),
+    listCartPaymentMethods(cart.region?.id ?? ''),
+    retrieveCustomer(),
+  ]);
   // Sólo archivos o servicios: compra en un paso, sin dirección ni envío (tarea 4)
   const soloDigital = carritoSoloDigital(cart.items as any);
   // Logos de pago: sólo los que esta pasarela ofrece
