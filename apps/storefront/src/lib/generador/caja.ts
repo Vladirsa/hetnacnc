@@ -9,7 +9,7 @@
 
 export type Punto = [number, number]
 
-export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza"
+export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza" | "bisagra"
 
 export type OpcionesCaja = {
   ancho: number // eje X, mm
@@ -32,6 +32,8 @@ export type OpcionesCaja = {
   asas?: boolean
   // ranura para monedas en la tapa (alcancía)
   ranura?: boolean
+  // caja con bisagra: diámetro del perno (clavo, tornillo o filamento), mm
+  perno?: number
 }
 
 export type Vec3 = [number, number, number]
@@ -58,6 +60,8 @@ export type ResultadoCaja = {
   dedoUsado: number // ancho de dedo con el que se calculó, mm
   // medidas de todo armado (con la tapa sobrepuesta puesta)
   armado: { ancho: number; fondo: number; alto: number }
+  // caja con bisagra: eje de giro de la tapa (paralelo al ancho), mm
+  pivote?: { y: number; z: number }
 }
 
 type TipoBorde = "A" | "B" | "L" // L = liso (sin dedos)
@@ -251,6 +255,10 @@ function ranuraRedonda(cx: number, cy: number, largo: number, alto: number): Pun
   return pts
 }
 
+// Círculo (agujero del perno), antihorario
+const circulo = (cx: number, cy: number, r: number, lados = 24): Punto[] =>
+  Array.from({ length: lados }, (_, k) => [cx + r * Math.cos((2 * Math.PI * k) / lados), cy + r * Math.sin((2 * Math.PI * k) / lados)] as Punto)
+
 const rect = (x0: number, y0: number, x1: number, y1: number): Punto[] => [
   [x0, y0],
   [x1, y0],
@@ -343,6 +351,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const cerrada = tipo === "cerrada"
   const cajonera = tipo === "cajonera"
   const corrediza = tipo === "corrediza"
+  const bisagra = tipo === "bisagra"
   const extra = o.medidas === "interiores" ? 2 * t : 0
   const W = o.ancho + extra
   // la carcasa de la cajonera no tiene frente: por dentro le falta un solo espesor a lo fondo
@@ -358,6 +367,18 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const franja = Math.max(5 * t, 15) // franja de lateral arriba de la ranura (y alto del travesaño)
   const altoFrente = H - ranuraCorr - franja
   const finRanura = D - 2 * t // la ranura no llega a la pared de atrás: el lateral queda entero ahí
+  // Caja con bisagra: la tapa (caja abierta de cabeza, sin pared de atrás)
+  // gira sobre dos pernos que cruzan sus costados y los de la caja cerca de la
+  // esquina de atrás. Para que gire sin chocar, la pared de atrás es más baja
+  // (H - e) y la esquina de atrás-arriba de los costados es un arco de radio e
+  // alrededor del perno. Al llegar a 90° la tapa se recarga en la pared de
+  // atrás, que hace de tope.
+  const perno = Math.max(1, o.perno || 3)
+  const ePerno = Math.max(2 * t, perno / 2 + 3, 6) // distancia del perno a la orilla de arriba y a la de atrás
+  const juegoTapa = 0.5 // por lado, entre los costados de la tapa y los de la caja
+  const altoAtrasBis = H - ePerno
+  // alto mínimo de la tapa: que quepa el perno con margen y que sus dedos (3 como mínimo) no queden angostos
+  const altoTapaBis = Math.max(o.altoTapa || 0, t + ePerno + perno / 2 + 4, 5 * t)
   const interior = cajonera
     ? { ancho: cajon.ancho - 2 * t, fondo: cajon.fondo - 2 * t, alto: cajon.alto - t }
     : corrediza
@@ -367,7 +388,12 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const Ht = Math.max(o.altoTapa || 0, 0)
   const Wt = W + 2 * holgura + 2 * t
   const Dt = D + 2 * holgura + 2 * t
-  const armado = tipo === "sobrepuesta" ? { ancho: Wt, fondo: Dt, alto: H + t } : { ancho: W, fondo: D, alto: H }
+  const armado =
+    tipo === "sobrepuesta"
+      ? { ancho: Wt, fondo: Dt, alto: H + t }
+      : tipo === "bisagra"
+        ? { ancho: W + 2 * t + 1, fondo: D + t + 0.5, alto: H + t } // la tapa cubre por fuera (juego 0.5 por lado)
+        : { ancho: W, fondo: D, alto: H }
 
   const autoDedo = !(o.dedo > 0)
   let dedo = autoDedo ? dedoAutomatico(t) : o.dedo
@@ -392,6 +418,9 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   if (Math.max(W, D, H) > 3000) errores.push("La caja es demasiado grande: ningún lado puede pasar de 3 metros.")
   if (tipo === "sobrepuesta" && Ht < 4 * t) errores.push(`La tapa debe medir al menos ${r(4 * t)} mm de alto con ese espesor.`)
   if (tipo === "sobrepuesta" && Ht > H) errores.push("La tapa no puede ser más alta que la caja.")
+  if (bisagra && altoAtrasBis < Math.max(4 * t, 20))
+    errores.push(`Para la bisagra la caja debe medir al menos ${r(Math.max(4 * t, 20) + ePerno)} mm de alto con ese espesor.`)
+  if (bisagra && D < 4 * ePerno) errores.push("La caja es muy corta de fondo para la bisagra.")
   if (corrediza && altoFrente < Math.max(4 * t, 20))
     errores.push(`Para la tapa corrediza la caja debe medir al menos ${r(Math.max(4 * t, 20) + ranuraCorr + franja)} mm de alto con ese espesor.`)
   if (cajonera && Math.min(cajon.ancho, cajon.fondo, cajon.alto) < 6 * t)
@@ -468,7 +497,73 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     ]
     return { nW, nD, nH, minSeg: Math.min(W / nW, D / nD, H / nH, altoFrente / nF, franja / nT), crudas: lista }
   }
-  const armar = (d: number) => (cajonera ? armarCajonera(d) : corrediza ? armarCorrediza(d) : caras(W, D, H, t, d, cerrada))
+  const armarBisagra = (d: number) => {
+    const nW = segmentos(W, d)
+    const nD = segmentos(D, d)
+    const nH = segmentos(H, d)
+    const nB = segmentos(altoAtrasBis, d) // unión lateral-pared de atrás (más baja)
+    const pz = D - ePerno // perno: a lo fondo
+    const py = H - ePerno // perno: a lo alto
+    // Lateral de la caja (D × H, frente en x = 0): abajo A, atrás B hasta la
+    // altura de la pared de atrás, arco alrededor del perno, arriba liso, frente B.
+    const arco: Punto[] = Array.from({ length: 13 }, (_, k) => {
+      const a = (Math.PI / 2) * (k / 12)
+      return [pz + ePerno * Math.cos(a), py + ePerno * Math.sin(a)] as Punto
+    })
+    const lateralCaja = (): Punto[] =>
+      limpiar([
+        ...bordeDedos([0, 0], [1, 0], [0, 1], D, nD, "A", t),
+        ...bordeDedos([D, 0], [0, 1], [-1, 0], altoAtrasBis, nB, "B", t),
+        ...arco,
+        [t, H],
+        ...bordeDedos([0, H], [0, -1], [1, 0], H, nH, "B", t),
+      ])
+    const caja: Cruda[] = [
+      { nombre: "Base", pts: cara(W, D, ["B", "B", "B", "B"], nW, nD, t), ubicacion: ubicar("Base", t, W, D, H), conDedos: true },
+      { nombre: "Frente", pts: cara(W, H, ["A", "A", "L", "A"], nW, nH, t), ubicacion: ubicar("Frente", t, W, D, H), conDedos: true },
+      { nombre: "Atrás", pts: cara(W, altoAtrasBis, ["A", "A", "L", "A"], nW, nB, t), ubicacion: ubicar("Atrás", t, W, D, H), conDedos: true },
+      { nombre: "Lateral izquierdo", pts: lateralCaja(), huecos: [circulo(pz, py, perno / 2)], ubicacion: ubicar("Lateral izquierdo", t, W, D, H), conDedos: true },
+      { nombre: "Lateral derecho", pts: lateralCaja(), huecos: [circulo(pz, py, perno / 2)], ubicacion: ubicar("Lateral derecho", t, W, D, H), conDedos: true },
+    ]
+    // Tapa: caja abierta de cabeza (techo, frente y dos costados; sin atrás,
+    // que chocaría al girar). Los costados y el frente van por fuera de la caja
+    // con juego. Verificado girándola de 0° a 90° sin tocar la caja.
+    const Wt = W + 2 * t + 2 * juegoTapa
+    const Dl = D + t + juegoTapa
+    const Ht = altoTapaBis
+    const tW = segmentos(Wt, d)
+    const tD = segmentos(Dl, d)
+    const tH = segmentos(Ht, d)
+    const off = t + juegoTapa
+    const techo = H + t
+    // agujero del perno en el costado de la tapa (coordenadas de la tapa sin voltear)
+    const hueco = circulo(pz + off, techo - py, perno / 2)
+    const tapaLocal: { nombre: string; pts: Punto[]; huecos?: Punto[][]; u: Ubicacion }[] = [
+      { nombre: "Techo", pts: cara(Wt, Dl, ["B", "B", "L", "B"], tW, tD, t), u: ubicar("Base", t, Wt, Dl, Ht) },
+      { nombre: "Frente", pts: cara(Wt, Ht, ["A", "A", "L", "A"], tW, tH, t), u: ubicar("Frente", t, Wt, Dl, Ht) },
+      { nombre: "Lateral izquierdo", pts: cara(Dl, Ht, ["A", "L", "L", "B"], tD, tH, t), huecos: [hueco], u: ubicar("Lateral izquierdo", t, Wt, Dl, Ht) },
+      { nombre: "Lateral derecho", pts: cara(Dl, Ht, ["A", "L", "L", "B"], tD, tH, t), huecos: [hueco], u: ubicar("Lateral derecho", t, Wt, Dl, Ht) },
+    ]
+    for (const p of tapaLocal) {
+      const u = p.u
+      caja.push({
+        nombre: "Tapa abatible · " + p.nombre,
+        pts: p.pts,
+        huecos: p.huecos,
+        // de cabeza encima de la caja (reflexión en Y), corrida para que los costados queden por fuera
+        ubicacion: {
+          origen: [u.origen[0] - off, techo - u.origen[1], u.origen[2] - off],
+          ux: [u.ux[0], -u.ux[1], u.ux[2]],
+          uy: [u.uy[0], -u.uy[1], u.uy[2]],
+          uz: [u.uz[0], -u.uz[1], u.uz[2]],
+        },
+        conDedos: true,
+      })
+    }
+    return { nW, nD, nH, minSeg: Math.min(W / nW, D / nD, H / nH, altoAtrasBis / nB, Wt / tW, Dl / tD, Ht / tH), crudas: caja }
+  }
+  const armar = (d: number) =>
+    cajonera ? armarCajonera(d) : corrediza ? armarCorrediza(d) : bisagra ? armarBisagra(d) : caras(W, D, H, t, d, cerrada)
 
   // En automático, el dedo se agranda solo si no cabe; a mano se avisa
   let base = armar(dedo)
@@ -494,11 +589,14 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
 
   if (cajonera && (o.asas || o.ranura || (o.columnas || 1) > 1 || (o.filas || 1) > 1))
     avisos.push("La cajonera todavía no lleva asas, ranura ni divisiones: se dejaron fuera.")
+  if (bisagra && (o.asas || o.ranura))
+    avisos.push("La caja con bisagra no lleva asas ni ranura de alcancía: se dejaron fuera.")
+  if (bisagra) avisos.push(`Pernos: 2 de ${r(perno)} mm (clavo, tornillo o filamento), de unos ${r(2 * t + juegoTapa + 2)} mm de largo, uno por lado.`)
   if (corrediza && (o.asas || o.ranura))
     avisos.push("La caja de tapa corrediza no lleva asas ni ranura de alcancía: se dejaron fuera.")
 
   // ---- Asas en los laterales
-  if (o.asas && !cajonera && !corrediza) {
+  if (o.asas && !cajonera && !corrediza && !bisagra) {
     const largo = Math.min(100, D * 0.45, D - 6 * t)
     const altoAsa = Math.min(28, H * 0.22)
     const techo = H - (cerrada ? t : 0)
@@ -511,7 +609,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   }
 
   // ---- Ranura para monedas en la tapa
-  if (o.ranura && !cajonera && !corrediza) {
+  if (o.ranura && !cajonera && !corrediza && !bisagra) {
     const tapa = crudas.find((c) => c.nombre === "Tapa")
     if (!tapa) avisos.push("La ranura para monedas va en la tapa: elige una caja cerrada.")
     else if (W < 70 || D < 30) avisos.push("La tapa es muy chica para la ranura de monedas.")
@@ -599,6 +697,7 @@ export function generarCaja(o: OpcionesCaja): ResultadoCaja {
     dedos: { ancho: base.nW, fondo: base.nD, alto: base.nH },
     dedoUsado: dedo,
     armado,
+    ...(bisagra ? { pivote: { y: H - ePerno, z: D - ePerno } } : {}),
   }
 }
 
