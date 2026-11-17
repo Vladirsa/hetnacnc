@@ -218,13 +218,15 @@ export const ProductDetailsHeader = ({
     }
   }
 
-  // "Comprar ahora" es lo mismo que agregar y caminar al carrito, sin pedirle
-  // al cliente que encuentre el carrito. Es un atajo, no un segundo cobro.
+  // "Comprar ahora": agrega y va directo a pagar. Si el carrito ya traía otros
+  // productos, pasa por el carrito para que el cliente elija qué paga ahora
+  // (antes siempre iba al carrito: un clic de más para comprar una sola cosa).
   const comprarAhora = async () => {
+    const otros = (cart?.items || []).some((i) => i.variant_id !== variantId)
     setComprando(true)
     const listo = await agregar()
     setComprando(false)
-    if (listo) router.push(`/${locale}/cart`)
+    if (listo) router.push(`/${locale}/${otros ? "cart" : "checkout"}`)
   }
 
   return (

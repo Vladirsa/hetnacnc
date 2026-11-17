@@ -7,6 +7,7 @@ import { ConfianzaCompra } from "@/components/hetna/ConfianzaCompra"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PromoCode } from "@/components/organisms/PromoCode/PromoCode"
 import { convertToLocale } from "@/lib/helpers/money"
+import { carritoSoloDigital } from "@/lib/hetna/tipo-ficha"
 import { Cart } from "@/types/cart"
 import { HttpTypes } from "@medusajs/types"
 
@@ -39,6 +40,8 @@ export const ResumenCarrito = ({
   const visibles = marcados.slice(0, 5)
   const sobrantes = marcados.length - visibles.length
   const hayAlgo = marcados.length > 0
+  // Sólo archivos o servicios: no hay envío que calcular (el checkout tampoco lo pide)
+  const soloDigital = hayAlgo && carritoSoloDigital(marcados as never)
 
   return (
     <div className="flex flex-col gap-4">
@@ -105,7 +108,9 @@ export const ResumenCarrito = ({
           )}
 
           <Fila termino="Envío">
-            {t.envio > 0 ? (
+            {soloDigital ? (
+              <span className="text-[13px] font-medium text-[#1E7B3A]">Sin envío · descarga inmediata</span>
+            ) : t.envio > 0 ? (
               <span className="font-medium text-[#1B1B18]">{precio(t.envio)}</span>
             ) : (
               <span className="text-[13px] text-[#6B6A63]">Se calcula con tu dirección</span>
@@ -126,7 +131,7 @@ export const ResumenCarrito = ({
           </span>
         </div>
 
-        {t.envio === 0 && hayAlgo && (
+        {t.envio === 0 && hayAlgo && !soloDigital && (
           <p className="mt-1 text-[12px] text-[#6B6A63]">
             Falta el envío. Lo ves completo antes de pagar, nunca después.
           </p>
