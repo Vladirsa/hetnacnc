@@ -14,7 +14,7 @@ const USOS = [
   { id: "lampara", nombre: "Lámpara cilíndrica (360°)", ancho: 520, alto: 250, radio: 75, angulo: 360 },
 ]
 
-export function GeneradorBisagra() {
+export function GeneradorBisagra({ cabecera }: { cabecera?: React.ReactNode }) {
   const [patron, setPatron] = useState<PatronBisagra>("recto")
   const [ancho, setAncho] = useState("200")
   const [alto, setAlto] = useState("100")
@@ -98,7 +98,12 @@ export function GeneradorBisagra() {
           <path d="M3 6h18v12H3zM9 6v5M11 9v6M13 6v5M15 9v6" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`bisagra-viva-${patron}-${Math.round(o.ancho)}x${Math.round(o.alto)}`}

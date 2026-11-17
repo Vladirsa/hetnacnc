@@ -317,11 +317,9 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "despiece-muebles", corto: "Muebles" },
       { slug: "plantillas-empaque", corto: "Empaques" },
       { slug: "grabado-foto", corto: "Foto a grabado" },
-      { slug: "patrones-radiales", corto: "Patrones" },
       { slug: "convertidor", corto: "Convertidor" },
       { slug: "anidado-piezas", corto: "Anidado" },
-      { slug: "celosias", corto: "Celosías" },
-      { slug: "bisagra-viva", corto: "Bisagra viva" },
+      { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
       { slug: "codigo-qr", corto: "Código QR" },
       { slug: "rebanado-capas", corto: "Rebanado" },
       { slug: "engranes", corto: "Engranes" },
