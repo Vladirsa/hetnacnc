@@ -188,6 +188,65 @@ function DescargaSat({ anio, alCambiar }: { anio: number; alCambiar: () => void 
   )
 }
 
+// ─────────────────────────── CFDI de las suscripciones del Cotizador ───────────────────────────
+function SuscripcionesCfdi({ alCambiar }: { alCambiar: () => void }) {
+  const [d, setD] = useState<any>(null)
+  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
+  const [ocupado, setOcupado] = useState<string | null>(null)
+  const cargar = useCallback(() => { api<any>("/suscripciones").then(setD).catch((e) => setMsg({ ok: false, t: e.message })) }, [])
+  useEffect(() => { cargar() }, [cargar])
+  const reintentar = async (cobro_id: string) => {
+    setOcupado(cobro_id); setMsg(null)
+    try {
+      const r = await api<any>("/suscripciones", { cuerpo: { cobro_id } })
+      setMsg({ ok: r.estado === "facturado" || r.estado === "en_global", t: r.mensaje || `Estado: ${r.estado}` })
+      cargar(); alCambiar()
+    } catch (e) { setMsg({ ok: false, t: (e as Error).message }) } finally { setOcupado(null) }
+  }
+  const ESTADO: Record<string, [string, string]> = {
+    facturado: ["Facturado", C.verde], en_global: ["En la global del mes", C.tenue], pendiente: ["Pendiente", C.ambar],
+    procesando: ["Procesando", C.tenue], revisar: ["Revisar a mano", C.rojo], error: ["Error", C.rojo],
+  }
+  return (
+    <div style={caja}>
+      <p style={{ margin: "0 0 4px", fontWeight: 700 }}>Facturas de las suscripciones del Cotizador</p>
+      <p style={{ ...tenue, margin: "0 0 10px" }}>
+        Cada cobro de un plan (Mercado Pago, PayPal o Stripe) lleva su CFDI de HETNA: nominativo si el taller capturó sus datos fiscales en la app;
+        si no, entra en la factura global del mes (se emite sola el día 1). El XML entra solo a tu contabilidad.
+      </p>
+      {d && !d.lista && <p style={{ fontSize: 13, color: C.ambar, background: "#FFF6E0", padding: 10, borderRadius: 8 }}>Facturación apagada: {d.motivo} Los cobros se guardan y se facturan cuando la actives.</p>}
+      <Aviso msg={msg} />
+      {!d ? <p style={tenue}>Cargando…</p> : !d.cobros.length ? <p style={tenue}>Todavía no hay cobros de suscripciones.</p> : (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, marginTop: 8 }}>
+          <thead><tr style={{ textAlign: "left", color: C.tenue }}>{["Fecha", "Proveedor", "Plan", "Monto", "CFDI", "Receptor", ""].map((h) => <th key={h} style={{ padding: 5 }}>{h}</th>)}</tr></thead>
+          <tbody>
+            {d.cobros.map((c: any) => {
+              const [txt, color] = ESTADO[c.estado] || [c.estado, C.texto]
+              return (
+                <tr key={c.cobro_id} style={{ borderTop: `1px solid ${C.borde}` }}>
+                  <td style={{ padding: 5 }}>{String(c.fecha).slice(0, 10)}</td>
+                  <td style={{ padding: 5 }}>{({ mercadopago: "Mercado Pago", paypal: "PayPal", stripe: "Stripe" } as any)[c.proveedor] || c.proveedor}</td>
+                  <td style={{ padding: 5 }}>{c.plan}</td>
+                  <td style={{ padding: 5 }}>{c.moneda === "MXN" ? pesos(c.monto) : `${c.monto.toFixed(2)} ${c.moneda}`}</td>
+                  <td style={{ padding: 5, color, fontWeight: 600 }} title={c.mensaje || ""}>{txt}{c.uuid ? ` · ${String(c.uuid).slice(0, 8)}` : ""}{c.estado === "facturado" && !c.en_contabilidad ? " (falta contabilidad)" : ""}</td>
+                  <td style={{ padding: 5 }}>{c.receptor_rfc || "—"}</td>
+                  <td style={{ padding: 5 }}>
+                    {["pendiente", "error", "revisar"].includes(c.estado) || (c.estado === "facturado" && !c.en_contabilidad) ? (
+                      <button type="button" style={{ ...boton(), padding: "4px 10px", fontSize: 12 }} disabled={ocupado === c.cobro_id} onClick={() => reintentar(c.cobro_id)}>
+                        {ocupado === c.cobro_id ? "…" : "Reintentar"}
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
 // ─────────────────────────── Resumen ───────────────────────────
 function VistaResumen({ r }: { r: Resumen }) {
   const t = r.meses.reduce((a, m) => ({ isr: a.isr + m.isr_a_pagar, iva: a.iva + m.iva_a_pagar, ing: a.ing + m.ingresos }), { isr: 0, iva: 0, ing: 0 })
@@ -538,7 +597,7 @@ export default function Contabilidad() {
             </select>
           </div>
           {pestana === "resumen" && <VistaResumen r={r} />}
-          {pestana === "facturas" && <Facturas anio={anio} alCambiar={cargar} />}
+          {pestana === "facturas" && <><Facturas anio={anio} alCambiar={cargar} /><SuscripcionesCfdi alCambiar={cargar} /></>}
           {pestana === "auditoria" && <Auditoria alCambiar={cargar} />}
           {pestana === "excel" && <Excel r={r} alCambiar={cargar} />}
           {pestana === "datos" && <><Datos r={r} alGuardar={cargar} /><DescargaSat anio={anio} alCambiar={cargar} /></>}
