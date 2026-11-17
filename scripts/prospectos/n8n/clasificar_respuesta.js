@@ -4,6 +4,10 @@
 //   hoja que aparezcan en el mensaje.
 // - Respuesta de un prospecto (por correo exacto o dominio de empresa):
 //   BAJA si pide no recibir más; si no, RESPONDIO.
+// - Respuesta AUTOMÁTICA (fuera de la oficina, vacaciones, filtros antispam que
+//   piden verificar al remitente): no cambia el estatus ni la secuencia; sólo se
+//   anota y avisa (Intermaq, 13 nov 2026: su filtro pidió verificación y se había
+//   tomado como respuesta).
 // Sólo mira el texto nuevo de la respuesta, no lo citado (que trae el enlace
 // de baja de nuestro propio correo). Sin barras invertidas a propósito: este
 // código se pega dentro de una plantilla del Workflow SDK.
@@ -42,6 +46,11 @@ const BAJA = ['darme de baja', 'dar de baja', 'denme de baja', 'me den de baja',
   'unsubscribe', 'remove me', 'not interested', 'stop sending', 'take me off', 'descadastr', 'não tenho interesse', 'nao tenho interesse', 'parem de enviar'];
 const pideBaja = BAJA.some((k) => nuevoMin.includes(k));
 
+const AUTOMATICA = ['requires verification', 'verify your email', 'verify#', 'verificación de remitente', 'verificar su correo', 'challenge',
+  'auto-reply', 'autoreply', 'automatic reply', 'auto reply', 'respuesta automática', 'respuesta automatica', 'resposta automática', 'resposta automatica',
+  'fuera de la oficina', 'fuera de oficina', 'out of office', 'out of the office', 'ausente', 'vacaciones', 'ausência', 'no-reply', 'noreply'];
+const esAutomatica = !pideBaja && (AUTOMATICA.some((k) => nuevoMin.includes(k)) || de.startsWith('no-reply') || de.startsWith('noreply'));
+
 const LIBRES = ['gmail.com', 'hotmail.com', 'hotmail.es', 'outlook.com', 'outlook.es', 'live.com', 'live.com.mx', 'yahoo.com', 'yahoo.com.mx', 'icloud.com', 'msn.com',
   'aol.com', 'prodigy.net.mx', 'proton.me', 'protonmail.com', 'uol.com.br', 'bol.com.br', 'terra.com.br', 'sbcglobal.net'];
 const textoMin = texto.toLowerCase();
@@ -57,17 +66,19 @@ for (const r of filas) {
   if (esRebote) {
     if (textoMin.includes(re)) accion = 'REBOTE';
   } else if (re === de || (deDom && !LIBRES.includes(deDom) && (reDom === deDom || rd === deDom || rd.endsWith('.' + deDom)))) {
-    accion = pideBaja ? 'BAJA' : 'RESPONDIO';
+    accion = pideBaja ? 'BAJA' : esAutomatica ? 'AUTOMATICA' : 'RESPONDIO';
   }
   if (!accion) continue;
   const previo = String(r.estatus || '').toUpperCase();
   // Si ya se registró en HETNA, no se degrada: sólo se anota.
-  const estatus = previo === 'REGISTRADO' ? 'REGISTRADO' : accion;
-  const nota = accion === 'REBOTE' ? 'Rebotó el ' + hoy : (accion === 'BAJA' ? 'Pidió la baja por correo el ' + hoy : 'Respondió el ' + hoy) + ': "' + asunto.slice(0, 80) + '"';
+  // Una respuesta automática no cambia nada: sigue la secuencia como iba.
+  const estatus = previo === 'REGISTRADO' || accion === 'AUTOMATICA' ? (previo || 'CONTACTADO') : accion;
+  const nota = accion === 'REBOTE' ? 'Rebotó el ' + hoy
+    : (accion === 'BAJA' ? 'Pidió la baja por correo el ' + hoy : accion === 'AUTOMATICA' ? 'Respuesta automática el ' + hoy : 'Respondió el ' + hoy) + ': "' + asunto.slice(0, 80) + '"';
   out.push({ json: {
     id: r.id,
     estatus,
-    proximo_contacto: '',
+    proximo_contacto: accion === 'AUTOMATICA' ? String(r.proximo_contacto || '') : '',
     notas: (r.notas ? r.notas + ' | ' : '') + nota,
     empresa: r.empresa || r.id,
     pais: r.pais || '',
