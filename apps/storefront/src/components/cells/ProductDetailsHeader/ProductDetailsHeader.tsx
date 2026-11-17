@@ -68,6 +68,8 @@ export const ProductDetailsHeader = ({
 }) => {
   const fisico = tipo === "fisico"
   const { addToCart, onAddToCart, cart, isAddingItem } = useCartContext()
+  // Carrito que devolvió el último "agregar" (para decidir a dónde va "Comprar ahora")
+  const carritoNuevo = useRef<{ items?: unknown[] } | null | undefined>(undefined)
   const { allSearchParams } = useGetAllSearchParams()
   const [isCompareOpen, setIsCompareOpen] = useState(false)
   const [cantidad, setCantidad] = useState(1)
@@ -193,11 +195,11 @@ export const ProductDetailsHeader = ({
     )
 
     try {
-      await addToCart({
+      carritoNuevo.current = (await addToCart({
         offerId: winnerOffer.id,
         quantity: cantidadValida,
         countryCode: locale,
-      })
+      })) as { items?: unknown[] } | null | undefined
       trackAddToCart(
         {
           item_id: product.id,
@@ -218,15 +220,26 @@ export const ProductDetailsHeader = ({
     }
   }
 
-  // "Comprar ahora": agrega y va directo a pagar. Si el carrito ya traía otros
-  // productos, pasa por el carrito para que el cliente elija qué paga ahora
-  // (antes siempre iba al carrito: un clic de más para comprar una sola cosa).
+  // "Comprar ahora": agrega y va directo a pagar, pero sólo si el carrito que
+  // queda DESPUÉS de agregar es exactamente esto (un renglón, esta oferta, esta
+  // cantidad). Si trae algo más (otra pestaña, otra oferta, piezas de antes) o
+  // no se pudo leer, pasa por el carrito para que el cliente elija qué paga
+  // (revisión Thermos). Antes siempre iba al carrito: un clic de más.
   const comprarAhora = async () => {
-    const otros = (cart?.items || []).some((i) => i.variant_id !== variantId)
     setComprando(true)
+    carritoNuevo.current = undefined
     const listo = await agregar()
     setComprando(false)
-    if (listo) router.push(`/${locale}/${otros ? "cart" : "checkout"}`)
+    if (!listo) return
+    // (se vuelve a leer: TypeScript no sabe que agregar() lo cambió)
+    const leido = carritoNuevo.current as { items?: unknown[] } | null | undefined
+    const renglones = leido?.items || []
+    const unico = renglones.length === 1 ? (renglones[0] as any) : null
+    const esEste =
+      !!unico &&
+      (unico.offer?.id || unico.metadata?.offer_id) === winnerOffer?.id &&
+      Number(unico.quantity) === cantidadValida
+    router.push(`/${locale}/${esEste ? "checkout" : "cart"}`)
   }
 
   return (

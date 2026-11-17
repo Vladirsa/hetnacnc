@@ -14,6 +14,7 @@ import { useCartContext } from "@/components/providers"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import { HttpTypes } from "@medusajs/types"
 
 import { ResumenCarrito } from "./ResumenCarrito"
@@ -38,6 +39,11 @@ export const Cart = () => {
   const marcados = items.filter((i) => seleccion.estaSeleccionado(i.id))
   const noMarcados = items.filter((i) => !seleccion.estaSeleccionado(i.id))
   const totalesMarcados = calcularTotales(marcados)
+  // ¿Lo marcado lleva envío? Una sola regla para el resumen y la barra del
+  // teléfono: archivos → "descarga inmediata"; con algún servicio → sólo "sin envío"
+  const tipos = marcados.map((i) => (i.product ? tipoFicha(i.product as never) : "fisico"))
+  const sinEnvio: null | "descarga" | "servicio" =
+    !tipos.length || tipos.includes("fisico") ? null : tipos.every((t) => t === "digital") ? "descarga" : "servicio"
 
   const aFavorito = (i: HttpTypes.StoreCartLineItem) => ({
     id: i.product_id as string,
@@ -108,7 +114,7 @@ export const Cart = () => {
       <div className="col-span-12 mb-3 lg:hidden">
         <div className="flex items-center justify-between gap-3 rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5">
           <div>
-            <p className="text-[12px] text-[#6B6A63]">Estimación (falta envío)</p>
+            <p className="text-[12px] text-[#6B6A63]">{sinEnvio ? "Total (sin envío)" : "Estimación (falta envío)"}</p>
             <p className="text-[19px] font-bold leading-tight text-[#1B1B18]">
               {convertToLocale({
                 amount: totalesMarcados.total,
@@ -193,6 +199,7 @@ export const Cart = () => {
             marcados={marcados}
             sinMarcar={noMarcados.length}
             onContinuar={continuar}
+            sinEnvio={sinEnvio}
             trabajando={trabajando === "continuar"}
           />
         </div>

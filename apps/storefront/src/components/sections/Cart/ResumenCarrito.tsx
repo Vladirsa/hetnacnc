@@ -7,7 +7,6 @@ import { ConfianzaCompra } from "@/components/hetna/ConfianzaCompra"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PromoCode } from "@/components/organisms/PromoCode/PromoCode"
 import { convertToLocale } from "@/lib/helpers/money"
-import { carritoSoloDigital } from "@/lib/hetna/tipo-ficha"
 import { Cart } from "@/types/cart"
 import { HttpTypes } from "@medusajs/types"
 
@@ -21,12 +20,15 @@ export const ResumenCarrito = ({
   sinMarcar,
   onContinuar,
   trabajando,
+  sinEnvio,
 }: {
   cart: Cart
   marcados: HttpTypes.StoreCartLineItem[]
   sinMarcar: number
   onContinuar: () => void
   trabajando: boolean
+  /** Lo marcado no lleva envío: null = sí lleva; "descarga" = sólo archivos; "servicio" = incluye servicios */
+  sinEnvio: null | "descarga" | "servicio"
 }) => {
   const moneda = cart.currency_code || "mxn"
   const precio = (amount: number) => convertToLocale({ amount, currency_code: moneda })
@@ -40,8 +42,6 @@ export const ResumenCarrito = ({
   const visibles = marcados.slice(0, 5)
   const sobrantes = marcados.length - visibles.length
   const hayAlgo = marcados.length > 0
-  // Sólo archivos o servicios: no hay envío que calcular (el checkout tampoco lo pide)
-  const soloDigital = hayAlgo && carritoSoloDigital(marcados as never)
 
   return (
     <div className="flex flex-col gap-4">
@@ -108,8 +108,10 @@ export const ResumenCarrito = ({
           )}
 
           <Fila termino="Envío">
-            {soloDigital ? (
-              <span className="text-[13px] font-medium text-[#1E7B3A]">Sin envío · descarga inmediata</span>
+            {sinEnvio ? (
+              <span className="text-[13px] font-medium text-[#1E7B3A]">
+                {sinEnvio === "descarga" ? "Sin envío · descarga inmediata" : "Sin envío"}
+              </span>
             ) : t.envio > 0 ? (
               <span className="font-medium text-[#1B1B18]">{precio(t.envio)}</span>
             ) : (
@@ -131,7 +133,7 @@ export const ResumenCarrito = ({
           </span>
         </div>
 
-        {t.envio === 0 && hayAlgo && !soloDigital && (
+        {t.envio === 0 && hayAlgo && !sinEnvio && (
           <p className="mt-1 text-[12px] text-[#6B6A63]">
             Falta el envío. Lo ves completo antes de pagar, nunca después.
           </p>
