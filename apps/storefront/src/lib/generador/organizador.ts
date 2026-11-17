@@ -87,6 +87,51 @@ function limpiar(pts: P[]): P[] {
   return out
 }
 
+/**
+ * Las tiras del organizador con su lugar en el cajón, para armarlo en 3D (lo
+ * usa la caja con juntas, tipo "separadores"). Mismas tiras que
+ * hacerOrganizador(): `eje` dice hacia dónde corre la tira y `pos` es el
+ * centro de su espesor (en Y si corre a lo ancho, en X si corre a lo fondo).
+ */
+export function tirasOrganizador(o: Omit<OpcionesOrganizador, "hoja">, ranura: number) {
+  const t = Math.max(1, o.espesor)
+  const cols = o.columnas.filter((x) => x > 0).slice(0, 20)
+  const fils = o.filas.filter((x) => x > 0).slice(0, 20)
+  const xs = posiciones(o.ancho, cols.length ? cols : [1], t, o.paredes)
+  const ys = posiciones(o.fondo, fils.length ? fils : [1], t, o.paredes)
+  const radio = Math.min(o.alto * 0.35, 14)
+  const centros = (pos: number[], largo: number) => {
+    const bordes = o.paredes ? pos : [0, ...pos, largo]
+    const c: number[] = []
+    for (let i = 0; i < bordes.length - 1; i++) {
+      const a = bordes[i] + t / 2
+      const b = bordes[i + 1] - t / 2
+      if (b - a > radio * 2 + 6) c.push((a + b) / 2)
+    }
+    return c
+  }
+  const tiras: { nombre: string; eje: "ancho" | "fondo"; pos: number; pts: P[] }[] = []
+  ys.forEach((y, i) => {
+    const pared = o.paredes && (i === 0 || i === ys.length - 1)
+    tiras.push({
+      nombre: pared ? (i === 0 ? "Pared del frente" : "Pared de atrás") : `Separador a lo ancho ${o.paredes ? i : i + 1}`,
+      eje: "ancho",
+      pos: y,
+      pts: tira(o.ancho, o.alto, xs, ranura, true, o.dedos && !pared ? centros(xs, o.ancho) : [], radio).pts,
+    })
+  })
+  xs.forEach((x, i) => {
+    const pared = o.paredes && (i === 0 || i === xs.length - 1)
+    tiras.push({
+      nombre: pared ? (i === 0 ? "Pared izquierda" : "Pared derecha") : `Separador a lo fondo ${o.paredes ? i : i + 1}`,
+      eje: "fondo",
+      pos: x,
+      pts: tira(o.fondo, o.alto, ys, ranura, false, o.dedos && !pared ? centros(ys, o.fondo) : [], radio).pts,
+    })
+  })
+  return tiras
+}
+
 export function hacerOrganizador(o: OpcionesOrganizador) {
   const avisos: string[] = []
   const t = Math.max(1, o.espesor)

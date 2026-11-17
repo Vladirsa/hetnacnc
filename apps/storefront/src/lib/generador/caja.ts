@@ -7,9 +7,11 @@
 //  - Base y tapa: todos sus bordes tipo B (hueco en las esquinas).
 // Cada borde tipo A encaja con uno tipo B del mismo largo y mismo número de dedos.
 
+import { tirasOrganizador } from "./organizador"
+
 export type Punto = [number, number]
 
-export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza" | "bisagra" | "apilable"
+export type TipoCaja = "cerrada" | "abierta" | "sobrepuesta" | "cajonera" | "corrediza" | "bisagra" | "apilable" | "separadores"
 
 export type OpcionesCaja = {
   ancho: number // eje X, mm
@@ -38,6 +40,8 @@ export type OpcionesCaja = {
   ranura?: boolean
   // caja con bisagra: diámetro del perno (clavo, tornillo o filamento), mm
   perno?: number
+  // separadores de cajón: muesca para los dedos en cada compartimento
+  muescas?: boolean
 }
 
 export type Vec3 = [number, number, number]
@@ -366,11 +370,85 @@ function caras(W: number, D: number, H: number, t: number, dedo: number, cerrada
 
 export const dedoAutomatico = (espesor: number) => Math.max(8, 4 * espesor)
 
+// Organizador de cajón (antes su propia herramienta): rejilla de tiras que se
+// cruzan a media madera, con paredes de orilla, a la medida de ADENTRO del
+// cajón. Las tiras salen del mismo motor que el organizador
+// (organizador.ts); aquí sólo se les da su lugar para verlas armadas.
+function generarSeparadores(o: OpcionesCaja): ResultadoCaja {
+  const errores: string[] = []
+  const avisos: string[] = []
+  const t = o.espesor
+  const W = o.ancho
+  const D = o.fondo
+  const H = o.alto
+  const vacio = (): ResultadoCaja => ({
+    piezas: [],
+    errores,
+    avisos,
+    exterior: { ancho: W, fondo: D, alto: H },
+    interior: { ancho: W, fondo: D, alto: H },
+    dedos: { ancho: 0, fondo: 0, alto: 0 },
+    dedoUsado: 0,
+    armado: { ancho: W, fondo: D, alto: H },
+  })
+  if (![W, D, H, t].every((x) => Number.isFinite(x) && x > 0)) {
+    errores.push("Todas las medidas deben ser mayores que cero.")
+    return vacio()
+  }
+  if (H < 3 * t) errores.push("Los separadores deben medir al menos 3 veces el espesor de alto.")
+  if (Math.max(W, D) > 3000) errores.push("Ningún lado puede pasar de 3 metros.")
+  if (!(o.kerf >= 0 && o.kerf < t)) errores.push("El kerf debe ser 0 o mayor, y menor que el espesor.")
+  if (errores.length) return vacio()
+  const columnas = proporciones(o.proporcionesAncho) || Array(Math.max(1, Math.min(12, Math.round(o.columnas || 1)))).fill(1)
+  const filas = proporciones(o.proporcionesFondo) || Array(Math.max(1, Math.min(12, Math.round(o.filas || 1)))).fill(1)
+  // ranura = espesor + 0.2 de juego; se le suma el kerf porque la
+  // compensación del kerf la vuelve a cerrar
+  const ranura = t + 0.2 + (o.kerf || 0)
+  const tiras = tirasOrganizador(
+    { ancho: W, fondo: D, alto: H, espesor: t, holgura: 0.2, columnas, filas, paredes: true, dedos: o.muescas !== false },
+    ranura
+  )
+  const libreX = W - (columnas.length + 1) * t
+  const libreZ = D - (filas.length + 1) * t
+  const minComp = Math.min(
+    (libreX * Math.min(...columnas)) / columnas.reduce((a, b) => a + b, 0),
+    (libreZ * Math.min(...filas)) / filas.reduce((a, b) => a + b, 0)
+  )
+  if (minComp < 15) avisos.push(`Hay compartimentos de ${Math.round(minComp)} mm: revisa las proporciones.`)
+  avisos.push("Las medidas son las de ADENTRO del cajón; si entra muy justo, quita 1 mm al ancho y al fondo.")
+  avisos.push(`Ranuras de ${r(t + 0.2)} mm: si el material sale más grueso, súbele al kerf. Corta primero una tira de prueba.`)
+  const piezas: Pieza[] = tiras.map((x) => {
+    const pts = compensarKerf(x.pts, o.kerf)
+    const { desfase, ...resto } = aOrigen(pts)
+    const u: Ubicacion =
+      x.eje === "ancho"
+        ? { origen: [0, 0, x.pos - t / 2], ux: [1, 0, 0], uy: [0, 1, 0], uz: [0, 0, 1] }
+        : { origen: [x.pos - t / 2, 0, 0], ux: [0, 0, 1], uy: [0, 1, 0], uz: [1, 0, 0] }
+    const origen: Vec3 = [
+      u.origen[0] + desfase[0] * u.ux[0] + desfase[1] * u.uy[0],
+      u.origen[1] + desfase[0] * u.ux[1] + desfase[1] * u.uy[1],
+      u.origen[2] + desfase[0] * u.ux[2] + desfase[1] * u.uy[2],
+    ]
+    return { nombre: x.nombre, ...resto, ubicacion: { ...u, origen } }
+  })
+  return {
+    piezas,
+    errores,
+    avisos,
+    exterior: { ancho: W, fondo: D, alto: H },
+    interior: { ancho: W, fondo: D, alto: H },
+    dedos: { ancho: 0, fondo: 0, alto: 0 },
+    dedoUsado: 0,
+    armado: { ancho: W, fondo: D, alto: H },
+  }
+}
+
 export function generarCaja(o: OpcionesCaja): ResultadoCaja {
   const errores: string[] = []
   const avisos: string[] = []
   const t = o.espesor
   const tipo: TipoCaja = o.tipo || (o.tapa === false ? "abierta" : "cerrada")
+  if (tipo === "separadores") return generarSeparadores(o)
   const cerrada = tipo === "cerrada"
   const cajonera = tipo === "cajonera"
   const corrediza = tipo === "corrediza"

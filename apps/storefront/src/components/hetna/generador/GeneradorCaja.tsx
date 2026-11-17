@@ -64,6 +64,13 @@ const ICONOS: Record<TipoCaja, React.ReactNode> = {
       <path d="M6 16l14-7 14 7M20 23v12" />
     </>
   ),
+  separadores: (
+    <>
+      <path d="M5 14l15 7 15-7-15-7z" />
+      <path d="M5 14v8l15 7 15-7v-8M20 21v8" />
+      <path d="M12.5 10.5v8M27.5 10.5v8M10 17l15-7" />
+    </>
+  ),
   apilable: (
     <>
       <path d="M8 22l12 6 12-6v8l-12 6-12-6z" />
@@ -185,6 +192,7 @@ const TIPOS: { id: TipoCaja; nombre: string; nota: string }[] = [
   { id: "corrediza", nombre: "Corrediza", nota: "Tapa que corre por una ranura en los costados; travesaño al frente que la sujeta" },
   { id: "bisagra", nombre: "Bisagra", nota: "Tapa que abre girando sobre dos pernos en los costados; se detiene sola a 90°" },
   { id: "apilable", nombre: "Apilable", nota: "Frente bajo para sacar piezas; patas que traban en las muescas del de abajo" },
+  { id: "separadores", nombre: "Separadores", nota: "Organizador de cajón: rejilla a media madera con paredes, a la medida de ADENTRO del cajón" },
 ]
 
 type Modelo = {
@@ -217,6 +225,8 @@ const MODELOS: Modelo[] = [
   { id: "cajon", nombre: "Cajón para mueble", tipo: "abierta", a: 450, f: 400, h: 150, e: 12 },
   { id: "cajonera", nombre: "Cajonera de escritorio", tipo: "cajonera", a: 300, f: 250, h: 110, e: 3 },
   { id: "estuche", nombre: "Estuche de lápices", tipo: "corrediza", a: 210, f: 70, h: 50, e: 3 },
+  { id: "cubiertos", nombre: "Organizador de cubiertos", tipo: "separadores", a: 400, f: 450, h: 60, e: 6, cols: 4 },
+  { id: "cajon-herr", nombre: "Organizador de herramientas", tipo: "separadores", a: 500, f: 400, h: 70, e: 6, cols: 3, filas: 2 },
   { id: "tornilleria", nombre: "Contenedor de tornillería", tipo: "apilable", a: 120, f: 180, h: 80, e: 3 },
   { id: "gaveta", nombre: "Gaveta apilable grande", tipo: "apilable", a: 250, f: 350, h: 150, e: 6, cols: 2 },
   { id: "joyero-bisagra", nombre: "Joyero con bisagra", tipo: "bisagra", a: 200, f: 140, h: 70, e: 3, cols: 3, filas: 2, tapa: 30 },
@@ -260,22 +270,30 @@ const Paso = ({ n, titulo, children }: { n: number; titulo: string; children: Re
   </section>
 )
 
-export function GeneradorCaja() {
+// La dirección vieja del organizador de cajón abre las cajas en ese tipo
+export function GeneradorOrganizadorCaja() {
+  return <GeneradorCaja tipoInicial="separadores" />
+}
+
+export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
+  const sep0 = tipoInicial === "separadores"
   const { locale } = useParams<{ locale: string }>()
   const [aviso, setAviso] = useState("")
   const [unidad, setUnidad] = useState<Unidad>("mm")
-  const [ancho, setAncho] = useState("200")
-  const [fondo, setFondo] = useState("150")
-  const [alto, setAlto] = useState("100")
-  const [espesor, setEspesor] = useState("3")
+  // el organizador arranca con las medidas que tenía antes (cajón de cocina)
+  const [ancho, setAncho] = useState(sep0 ? "400" : "200")
+  const [fondo, setFondo] = useState(sep0 ? "450" : "150")
+  const [alto, setAlto] = useState(sep0 ? "60" : "100")
+  const [espesor, setEspesor] = useState(sep0 ? "6" : "3")
   const [dedo, setDedo] = useState("12")
   const [dedoAuto, setDedoAuto] = useState(true)
-  const [tipo, setTipo] = useState<TipoCaja>("cerrada")
+  const [tipo, setTipo] = useState<TipoCaja>(tipoInicial || "cerrada")
+  const [muescas, setMuescas] = useState(true) // separadores: muesca para los dedos
   const [altoTapa, setAltoTapa] = useState("30")
   const [perno, setPerno] = useState("3") // caja con bisagra: diámetro del perno, mm
   const [columnas, setColumnas] = useState(1)
   // divisiones a medida: proporciones como "1,1,2" (vacío = todas iguales)
-  const [propAncho, setPropAncho] = useState("")
+  const [propAncho, setPropAncho] = useState(sep0 ? "1, 1, 1, 2" : "")
   const [propFondo, setPropFondo] = useState("")
   const [filas, setFilas] = useState(1)
   const [asas, setAsas] = useState(false)
@@ -326,9 +344,10 @@ export function GeneradorCaja() {
         proporcionesAncho: leerProporciones(propAncho),
         proporcionesFondo: leerProporciones(propFondo),
         asas,
+        muescas,
         ranura: tipo === "cerrada" && ranura,
       }),
-    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, perno, columnas, filas, propAncho, propFondo, asas, ranura, k]
+    [ancho, fondo, alto, espesor, dedo, dedoAuto, kerf, fresa, maquina, medidas, tipo, altoTapa, perno, columnas, filas, propAncho, propFondo, asas, muescas, ranura, k]
   )
   const listo = r.piezas.length > 0
   const ext = r.exterior
@@ -724,7 +743,11 @@ export function GeneradorCaja() {
           </div>
           <span className="mt-1 block text-[11px] leading-snug text-[#8A97AB]">&quot;1, 1, 2&quot; = tres compartimentos, el último del doble. Si lo llenas, manda sobre los contadores.</span>
         </details>
-        <Interruptor etiqueta="Asas en los costados" activo={asas} cambiar={setAsas} />
+        {tipo === "separadores" ? (
+          <Interruptor etiqueta="Muescas para los dedos" activo={muescas} cambiar={setMuescas} />
+        ) : (
+          <Interruptor etiqueta="Asas en los costados" activo={asas} cambiar={setAsas} />
+        )}
         {tipo === "cerrada" && <Interruptor etiqueta="Ranura de alcancía en la tapa" activo={ranura} cambiar={setRanura} />}
       </Paso>
 
