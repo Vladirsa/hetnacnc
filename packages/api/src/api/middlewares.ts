@@ -135,6 +135,12 @@ export default defineMiddlewares({
           matcher: "/admin/hetna-conta/movimientos",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 5, forma: "lista" })],
         },
+        // Importador de productos de la tienda HETNA (plantilla de Excel)
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-productos/importar",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
+        },
         {
           method: ["POST"],
           matcher: "/admin/hetna-fabrica/video",
