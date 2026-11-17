@@ -30,7 +30,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ ruta: st
     if (accion === "generar") {
       // Descarga con nombre legible cuando lo piden así (?descargar=1)
       const q = new URL(req.url).searchParams
-      if (q.get("descargar")) cab.set("content-disposition", `attachment; filename="hetna-${id}.${q.get("formato") || "svg"}"`)
+      // extensión real del archivo (svg_Ponoko es un SVG)
+      const formato = (q.get("formato") || "svg").replace(/[^a-z0-9_]/gi, "")
+      const ext = formato === "svg_Ponoko" ? "svg" : formato
+      if (q.get("descargar")) cab.set("content-disposition", `attachment; filename="hetna-${id}.${ext}"`)
       cab.set("cache-control", "private, max-age=300")
     }
     return new NextResponse(cuerpo, { status: r.status, headers: cab })

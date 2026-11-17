@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { FORMATOS, rutaArchivo, type ArgCajas, type EsquemaCajas } from "@/lib/hetna/cajas"
@@ -37,6 +38,30 @@ const aQuery = (v: Valores) => {
   for (const [k, x] of Object.entries(v)) q.set(k, typeof x === "boolean" ? (x ? "1" : "0") : String(x))
   return q
 }
+
+// three.js sólo se descarga al abrir la pestaña Vista 3D
+const Piezas3D = dynamic(() => import("./Piezas3D"), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 grid place-items-center text-[14px] text-[#8A97AB]">Cargando la vista 3D…</div>,
+})
+
+// Todos los formatos que entrega Boxes.py, con para qué sirve cada uno
+const FORMATOS_TODOS: { id: string; nombre: string; para: string; ext: string; nota?: string }[] = [
+  { id: "dxf", nombre: "DXF", para: "Router CNC, plasma, Aspire, Fusion, VCarve y la mayoría de los programas.", ext: "dxf" },
+  { id: "svg", nombre: "SVG", para: "Láser con Inkscape, Illustrator o RDWorks.", ext: "svg" },
+  { id: "lbrn2", nombre: "LightBurn", para: "Abre directo en LightBurn, con capas listas.", ext: "lbrn2" },
+  { id: "pdf", nombre: "PDF", para: "Imprimir a escala 100% o mandar a un taller.", ext: "pdf" },
+  { id: "plt", nombre: "PLT (HPGL)", para: "Plotter de corte de vinil o cartón y algunos láseres.", ext: "plt" },
+  { id: "ps", nombre: "PostScript", para: "Programas de imprenta y algunos plotters.", ext: "ps" },
+  { id: "svg_Ponoko", nombre: "SVG Ponoko", para: "Formato del servicio de corte Ponoko.", ext: "svg" },
+  {
+    id: "gcode",
+    nombre: "G-code",
+    para: "G-code genérico en pulgadas, sin encendido de láser ni husillo.",
+    ext: "gcode",
+    nota: "Revísalo antes de usar. Para tu máquina, mejor DXF a G-code de HETNA.",
+  },
+]
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
@@ -121,6 +146,8 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
   const [valores, setValores] = useState<Valores>(() => inicial(esquema))
   const [material, setMaterial] = useState<string>("")
   const [vista, setVista] = useState<string>("")
+  const [svgCrudo, setSvgCrudo] = useState<string>("") // tal cual sale, para la vista 3D
+  const [pestana, setPestana] = useState<"plano" | "3d" | "exportar">("plano")
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [abiertos, setAbiertos] = useState<Record<number, boolean>>({ 0: true, 1: true })
@@ -155,7 +182,9 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         // Sólo para verlo en el estudio oscuro: cortes en naranja, cortes
         // interiores en azul y líneas de grosor fijo en pantalla. Las descargas
         // no pasan por aquí: salen tal cual del servicio.
-        const svg = (await r.text())
+        const crudo = await r.text()
+        setSvgCrudo(crudo)
+        const svg = crudo
           .replace(/stroke="rgb\(0,0,0\)"/g, 'stroke="#FF7A2E"')
           .replace(/stroke="rgb\(0,0,255\)"/g, 'stroke="#5FA8F5"')
           .replace(/stroke-width="[^"]*"/g, 'stroke-width="1.3" vector-effect="non-scaling-stroke"')
@@ -363,23 +392,89 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
 
       {/* Plano de corte: arriba y fijo en el celular */}
       <section className="sticky top-14 z-10 order-1 flex h-[46vh] flex-col bg-[#0D1015] lg:static lg:order-none lg:h-auto lg:min-h-[60vh] lg:flex-1">
-        <div className="flex items-center gap-1 border-b border-[#1F2937] bg-[#0F141C] px-3 py-2 text-[12.5px] text-[#8A97AB]">
-          <span className="mr-auto font-semibold text-[#C9D2E0]">Plano de corte · 2D</span>
-          {(
-            [
-              ["Ajustar", () => setCam({ x: 0, y: 0, k: 1 })],
-              ["Acercar", () => zoomEn(cam.k * 1.3, 0, 0)],
-              ["Alejar", () => zoomEn(cam.k / 1.3, 0, 0)],
-            ] as const
-          ).map(([t, fn]) => (
-            <button key={t} type="button" onClick={fn} className="rounded-[7px] px-2.5 py-1 hover:bg-[#1C2431] hover:text-white">
-              {t}
-            </button>
-          ))}
+        <div className="flex items-center gap-1 border-b border-[#1F2937] bg-[#0F141C] px-2 py-1.5 text-[12.5px] text-[#8A97AB]">
+          <div className="mr-auto flex gap-1">
+            {(
+              [
+                ["plano", "Plano 2D"],
+                ["3d", "Vista 3D"],
+                ["exportar", "Exportación"],
+              ] as const
+            ).map(([id, txt]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={pestana === id}
+                onClick={() => setPestana(id)}
+                className={`whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[13px] font-semibold ${
+                  pestana === id ? "bg-[#C2560A]/20 text-[#F28A3C] ring-1 ring-[#C2560A]/50" : "text-[#C9D2E0] hover:bg-[#1C2431]"
+                }`}
+              >
+                {txt}
+              </button>
+            ))}
+          </div>
+          {pestana === "plano" &&
+            (
+              [
+                ["Ajustar", () => setCam({ x: 0, y: 0, k: 1 })],
+                ["+", () => zoomEn(cam.k * 1.3, 0, 0)],
+                ["−", () => zoomEn(cam.k / 1.3, 0, 0)],
+              ] as const
+            ).map(([t, fn]) => (
+              <button key={t} type="button" onClick={fn} aria-label={t === "+" ? "Acercar" : t === "−" ? "Alejar" : t} className="rounded-[7px] px-2.5 py-1 hover:bg-[#1C2431] hover:text-white">
+                {t}
+              </button>
+            ))}
         </div>
+        {pestana === "3d" && (
+          <div className="relative flex-1">
+            {svgCrudo && !error ? (
+              <Piezas3D svg={svgCrudo} espesor={Number(valores.thickness) || 3} />
+            ) : (
+              <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]">{error || "Dibujando…"}</div>
+            )}
+          </div>
+        )}
+        {pestana === "exportar" && (
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <h2 className="m-0 text-[17px] font-bold text-white">Archivos de corte</h2>
+            <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">Con tus medidas y tu material. Haz una prueba de encaje en un recorte antes de cortar todo.</p>
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+              {FORMATOS_TODOS.filter((f) => !esquema.formatos?.length || esquema.formatos.includes(f.id)).map((f) => (
+                <a
+                  key={f.id}
+                  href={rutaArchivo(locale, "generar", esquema.id, `formato=${f.id}&descargar=1&${query}`)}
+                  download
+                  className="flex flex-col gap-1 rounded-[12px] border border-[#2B3648] bg-[#1C2431] p-3.5 hover:border-[#F28A3C]"
+                >
+                  <span className="flex items-center justify-between text-[15px] font-bold text-white">
+                    {f.nombre}
+                    <span className="text-[11px] font-semibold text-[#8A97AB]">.{f.ext}</span>
+                  </span>
+                  <span className="text-[12.5px] leading-snug text-[#C9D2E0]">{f.para}</span>
+                  {f.nota && <span className="text-[11.5px] leading-snug text-[#F2D29B]">{f.nota}</span>}
+                </a>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
+              <span className="text-[15px] font-bold">¿No tienes máquina?</span>
+              <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA te la corta y te la envía: el archivo, las medidas y el material ya van llenos.</span>
+              <div className="flex max-w-[420px] gap-2">
+                <a href={fabricar} className="flex-1 rounded-[8px] bg-[#16794F] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#12623F]">
+                  Fabrícamelo
+                </a>
+                <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
+                <LocalizedClientLink href="/cam/subir" className="flex-1 rounded-[8px] bg-[#2B3648] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#344158]">
+                  DXF a G-code
+                </LocalizedClientLink>
+              </div>
+            </div>
+          </div>
+        )}
         <div
           ref={cajaRef}
-          className="relative flex-1 cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
+          className={`${pestana === "plano" ? "" : "hidden"} relative flex-1 cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing`}
           style={{
             backgroundColor: "#0B0F15",
             backgroundImage: "linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px)",
