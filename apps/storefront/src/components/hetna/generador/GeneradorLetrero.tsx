@@ -113,7 +113,7 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; 
   </label>
 )
 
-export function GeneradorLetrero() {
+export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [texto, setTexto] = useState("Taller HETNA")
   const [fuenteId, setFuenteId] = useState("pacifico")
@@ -227,6 +227,7 @@ export function GeneradorLetrero() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[400px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <label className="flex flex-col gap-1">
             <span className="text-[13px] font-semibold text-[#1B1B18]">Texto</span>
             <textarea

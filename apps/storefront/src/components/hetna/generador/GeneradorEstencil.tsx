@@ -14,7 +14,7 @@ import { useFuente } from "./useFuente"
 const LETRAS = FUENTES.filter((f) => f.grupo !== "Cursiva")
 const EJEMPLOS = ["FRÁGIL", "ESTE LADO ARRIBA", "NO ESTIBAR", "SALIDA", "PROHIBIDO ESTACIONARSE"]
 
-export function GeneradorEstencil() {
+export function GeneradorEstencil({ cabecera }: { cabecera?: React.ReactNode }) {
   const [texto, setTexto] = useState("FRÁGIL")
   const [letra, setLetra] = useState("stardos-stencil")
   const [alto, setAlto] = useState("60")
@@ -103,7 +103,12 @@ export function GeneradorEstencil() {
           <path d="M7 15l2.5-6 2.5 6M8 13h3M15 9v6M15 9h2.5a1.5 1.5 0 010 3H15" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`estencil-${texto.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30) || "texto"}`}

@@ -17,7 +17,7 @@ const EJEMPLOS = [
   { nombre: "Pagos", etiqueta: "PAGA AQUÍ" },
 ]
 
-export function GeneradorQR() {
+export function GeneradorQR({ cabecera }: { cabecera?: React.ReactNode }) {
   const [texto, setTexto] = useState("https://hetnacnc.com")
   const [lado, setLado] = useState("60")
   const [zona, setZona] = useState("3")
@@ -105,7 +105,12 @@ export function GeneradorQR() {
           <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo="codigo-qr"
