@@ -74,8 +74,12 @@ export default function DirectorioTalleres({
       const cal = (t: Taller) => (t.perfil.calificacion ?? 0) * Math.min(1, (t.perfil.resenas ?? 0) / 3)
       if (orden === "calificacion") return cal(b) - cal(a)
       // Recomendados: verificados, embajadores, con reseñas y con perfil completo primero
+      // Perfil completo (mismas casillas que el panel del taller, /panel-taller): +1
+      const completo = (t: Taller) =>
+        Boolean(t.logo && t.banner && t.perfil.lema && t.perfil.ciudad && t.perfil.estado && t.perfil.horario) &&
+        t.perfil.servicios.length > 0 && t.perfil.materiales.length > 0 && t.perfil.maquinas.length > 0 && t.perfil.galeria.length >= 3
       const puntos = (t: Taller) =>
-        (t.verificado ? 3 : 0) + cal(t) + (t.perfil.maquinas.length ? 1 : 0) + (t.perfil.galeria.length ? 1 : 0) + (t.fundador ? 0.5 : 0) + (t.embajador ? 2 : 0)
+        (t.verificado ? 3 : 0) + cal(t) + (t.perfil.maquinas.length ? 1 : 0) + (t.perfil.galeria.length ? 1 : 0) + (completo(t) ? 1 : 0) + (t.fundador ? 0.5 : 0) + (t.embajador ? 2 : 0)
       return puntos(b) - puntos(a)
     })
   }, [talleres, q, estado, servicio, material, maquina, areaMin, soloVerificados, orden])
