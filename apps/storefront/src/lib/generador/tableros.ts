@@ -24,7 +24,13 @@
 
 import { type Herramienta, type Mueble, type P, type PiezaEnsamble, type Plano, aMueble, exteriorConAlivios, mortaja } from "./ensamble"
 
-export type Tablero = { nombre: string; plano?: Plano; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }
+// Abertura: hueco rectangular dentro de un tablero (pasacables, ventana, agarradera).
+// En mm desde la esquina menor del tablero, sobre sus ejes (u, v): lateral (Y, Z),
+// horizontal (X, Y), frontal (X, Z).
+export type Abertura = { u0: number; v0: number; u1: number; v1: number }
+export type Tablero = { nombre: string; plano?: Plano; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number; aberturas?: Abertura[] }
+// pieza con el índice del tablero de donde salió (para seleccionarla y editarla)
+export type PiezaTablero = PiezaEnsamble & { origen: number; indice: number }
 
 export type OpcionesTableros = {
   ancho?: number // medidas totales deseadas (sin dato = las de la lectura)
@@ -43,10 +49,14 @@ export const TABLEROS_INICIO: Omit<OpcionesTableros, "ancho" | "fondo" | "alto">
   herramienta: { tipo: "fresa", diametro: 6.35 },
 }
 
-export type MuebleTableros = Mueble & { descartados: string[]; uniones: number; aTope: number; original: { ancho: number; fondo: number; alto: number } }
+// tablerosFinales: los tableros ya armados (recortados, escalados y con su grosor),
+// en el orden de las piezas: editar sobre ellos da el mismo mueble. sueltos: los que
+// no tocan al resto (no se cortan; la vista 3D los muestra para corregirlos).
+export type MuebleTableros = Omit<Mueble, "piezas"> & { piezas: PiezaTablero[]; tablerosFinales: Tablero[]; sueltos: Tablero[]; descartados: string[]; uniones: number; aTope: number; original: { ancho: number; fondo: number; alto: number } }
 
 type Eje = 0 | 1 | 2
-type Caja = { nombre: string; k: Eje; lo: number[]; hi: number[] }
+// ab: aberturas en coordenadas absolutas (u0, v0, u1, v1) sobre los ejes del tablero
+type Caja = { nombre: string; k: Eje; lo: number[]; hi: number[]; origen: number; ab: number[][] }
 // puntaje: qué tanto cae el grueso de Q dentro de P; borde: qué tanto de la orilla de Q cae en P
 type Union = { q: number; A: Eje; s: 0 | 1; p: number; puntaje: number; borde: number }
 
@@ -57,6 +67,17 @@ const EJE_V: Record<Eje, Eje> = { 0: 2, 1: 2, 2: 1 }
 const MAX_TABLEROS = 60
 const traslape = (a0: number, a1: number, b0: number, b1: number) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0))
 const r1 = (v: number) => Math.round(v * 10) / 10
+
+function aTablero(c: Caja): Tablero {
+  const U = EJE_U[c.k], V = EJE_V[c.k]
+  const t: Tablero = { nombre: c.nombre, plano: PLANO[c.k], x0: r1(c.lo[0]), x1: r1(c.hi[0]), y0: r1(c.lo[1]), y1: r1(c.hi[1]), z0: r1(c.lo[2]), z1: r1(c.hi[2]) }
+  // el grosor se guarda exacto para que volver a armar dé lo mismo
+  if (c.k === 0) t.x1 = t.x0 + (c.hi[0] - c.lo[0])
+  if (c.k === 1) t.y1 = t.y0 + (c.hi[1] - c.lo[1])
+  if (c.k === 2) t.z1 = t.z0 + (c.hi[2] - c.lo[2])
+  if (c.ab.length) t.aberturas = c.ab.map((h) => ({ u0: r1(h[0] - c.lo[U]), v0: r1(h[1] - c.lo[V]), u1: r1(h[2] - c.lo[U]), v1: r1(h[3] - c.lo[V]) }))
+  return t
+}
 
 export function cajaDeTablero(t: Tablero) {
   return { lo: [Math.min(t.x0, t.x1), Math.min(t.y0, t.y1), Math.min(t.z0, t.z1)], hi: [Math.max(t.x0, t.x1), Math.max(t.y0, t.y1), Math.max(t.z0, t.z1)] }
@@ -90,12 +111,12 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   const saliente = acotar(o0.saliente, 0, 60)
   const cl = holgura / 2
   const r = o0.herramienta.tipo === "fresa" ? Math.max(0.5, o0.herramienta.diametro / 2) : 0
-  const vacio = (msg: string): MuebleTableros => ({ piezas: [], compras: [], medidas: { ancho: 0, fondo: 0, alto: 0 }, errores: [msg], avisos, descartados, uniones: 0, aTope: 0, original: { ancho: 0, fondo: 0, alto: 0 } })
+  const vacio = (msg: string): MuebleTableros => ({ piezas: [], compras: [], medidas: { ancho: 0, fondo: 0, alto: 0 }, errores: [msg], avisos, descartados, uniones: 0, aTope: 0, tablerosFinales: [], sueltos: [], original: { ancho: 0, fondo: 0, alto: 0 } })
 
   // ---- 1. limpiar la lectura ----
   const nombres = new Map<string, number>()
   let cajas: Caja[] = []
-  for (const t of tableros.slice(0, MAX_TABLEROS)) {
+  for (const [origen, t] of tableros.slice(0, MAX_TABLEROS).entries()) {
     const vals = [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1]
     if (!vals.every((v) => Number.isFinite(v))) continue
     const { lo, hi } = cajaDeTablero({ ...t, x0: acotar(t.x0, -5000, 5000), x1: acotar(t.x1, -5000, 5000), y0: acotar(t.y0, -5000, 5000), y1: acotar(t.y1, -5000, 5000), z0: acotar(t.z0, -5000, 5000), z1: acotar(t.z1, -5000, 5000) })
@@ -114,7 +135,11 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
       descartados.push(`${nombre} (no es un tablero: mide ${Math.round(ext[k])} mm de grueso)`)
       continue
     }
-    cajas.push({ nombre, k, lo, hi })
+    const U0 = EJE_U[k], V0 = EJE_V[k]
+    const ab = (t.aberturas || [])
+      .filter((a) => [a.u0, a.v0, a.u1, a.v1].every(Number.isFinite))
+      .map((a) => [lo[U0] + Math.min(a.u0, a.u1), lo[V0] + Math.min(a.v0, a.v1), lo[U0] + Math.max(a.u0, a.u1), lo[V0] + Math.max(a.v0, a.v1)])
+    cajas.push({ nombre, k, lo, hi, origen, ab })
   }
   // cruces: un tablero que atraviesa a otro perpendicular se parte en dos en sus
   // caras (cada mitad se une con espiga); se parte el vertical, o el más chico
@@ -132,10 +157,13 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
         const area = (c: Caja) => [0, 1, 2].filter((k) => k !== c.k).reduce((a, k) => a * (c.hi[k] - c.lo[k]), 1)
         // se parte X si es vertical y Y horizontal, o si es el más chico; si no, en otra vuelta se parte Y
         if (!((X.k !== 2 && Y.k === 2) || (X.k !== 2 && Y.k !== 2 && area(X) <= area(Y)) || (X.k === 2 && Y.k === 2))) continue
-        const a: Caja = { nombre: `${X.nombre} (1)`, k: X.k, lo: [...X.lo], hi: [...X.hi] }
-        const b: Caja = { nombre: `${X.nombre} (2)`, k: X.k, lo: [...X.lo], hi: [...X.hi] }
+        const a: Caja = { nombre: `${X.nombre} (1)`, k: X.k, lo: [...X.lo], hi: [...X.hi], origen: X.origen, ab: [] }
+        const b: Caja = { nombre: `${X.nombre} (2)`, k: X.k, lo: [...X.lo], hi: [...X.hi], origen: X.origen, ab: [] }
         a.hi[A] = Y.lo[A]
         b.lo[A] = Y.hi[A]
+        // cada abertura se queda en la mitad donde cae
+        const enA = EJE_U[X.k] === A ? 0 : 1
+        for (const h of X.ab) (h[enA + 2] <= Y.lo[A] ? a : b).ab.push(h)
         cajas.splice(i, 1, a, b)
         avisos.push(`${X.nombre} atravesaba a ${Y.nombre}: se partió en dos piezas que se unen a ${Y.nombre}.`)
         hecho = true
@@ -213,8 +241,10 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   cajas.forEach((_, i) => grupos.set(raiz(i), [...(grupos.get(raiz(i)) || []), i]))
   const principal = [...grupos.values()].sort((a, b) => b.length - a.length)[0]
   if (principal.length < 2) return { ...vacio("Los tableros no se tocan entre sí: no se puede armar el mueble. Revisa sus medidas."), original }
+  let fuera: Caja[] = []
   if (principal.length < cajas.length) {
     const queda = new Set(principal)
+    fuera = cajas.filter((_, i) => !queda.has(i))
     cajas.forEach((c, i) => !queda.has(i) && descartados.push(`${c.nombre} (no toca al resto)`))
     const nuevo = new Map(principal.map((i, j) => [i, j]))
     uniones = uniones.filter((u) => queda.has(u.q) && queda.has(u.p)).map((u) => ({ ...u, q: nuevo.get(u.q)!, p: nuevo.get(u.p)! }))
@@ -242,7 +272,8 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     else l = mapa(k, (c.lo[k] + c.hi[k]) / 2) - e / 2
     lo[k] = r1(l)
     hi[k] = lo[k] + e // exacto: las caras unidas deben coincidir con desfase + grosor
-    return { nombre: c.nombre, k, lo, hi }
+    const U1 = EJE_U[k], V1 = EJE_V[k]
+    return { nombre: c.nombre, k, lo, hi, origen: c.origen, ab: c.ab.map((h) => [mapa(U1, h[0]), mapa(V1, h[1]), mapa(U1, h[2]), mapa(V1, h[3])]) }
   })
   cajas.forEach((c, q) => {
     for (const A of [0, 1, 2] as Eje[]) {
@@ -324,6 +355,7 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   const orillas = fin.map(() => new Map<string, Espiga[]>())
   const huecos: P[][][] = fin.map(() => [])
   const puestas: [number, number, number, number][][] = fin.map(() => []) // mortajas ya puestas en cada pieza (u0, u1, v0, v1)
+  const huecosAb: [number, number, number, number][][] = fin.map(() => []) // aberturas ya puestas
   let alTope = 0
   for (const u of uniones) {
     const Q = fin[u.q], Pc = fin[u.p]
@@ -389,7 +421,25 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   }
   if (alTope) avisos.push(`${alTope} unión${alTope > 1 ? "es son" : " es"} muy angosta${alTope > 1 ? "s" : ""} para espiga y queda${alTope > 1 ? "n" : ""} a tope: lleva${alTope > 1 ? "n" : ""} pegamento.`)
 
-  const piezas: PiezaEnsamble[] = fin.map((c, i) => {
+  // aberturas: dentro del cuerpo de la pieza y lejos de las mortajas
+  let abFuera = 0
+  fin.forEach((c, i) => {
+    const U = EJE_U[c.k], V = EJE_V[c.k]
+    for (const [a0, b0, a1, b1] of c.ab) {
+      const dentro = a0 >= c.lo[U] + 10 && a1 <= c.hi[U] - 10 && b0 >= c.lo[V] + 10 && b1 <= c.hi[V] - 10 && a1 - a0 >= 10 && b1 - b0 >= 10
+      const libre = puestas[i].every((q) => a1 + 5 <= q[0] || q[1] + 5 <= a0 || b1 + 5 <= q[2] || q[3] + 5 <= b0)
+      const entreAberturas = huecosAb[i].every((q) => a1 + 5 <= q[0] || q[1] + 5 <= a0 || b1 + 5 <= q[2] || q[3] + 5 <= b0)
+      if (!dentro || !libre || !entreAberturas) {
+        abFuera++
+        continue
+      }
+      huecosAb[i].push([a0, a1, b0, b1])
+      huecos[i].push([[a0, b0], [a1, b0], [a1, b1], [a0, b1]])
+    }
+  })
+  if (abFuera) avisos.push(`${abFuera} hueco${abFuera > 1 ? "s quedaron" : " quedó"} fuera del tablero o encima de una mortaja y no se ${abFuera > 1 ? "cortan" : "corta"}: muévelo${abFuera > 1 ? "s" : ""}.`)
+
+  const piezas: PiezaTablero[] = fin.map((c, i) => {
     const U = EJE_U[c.k], V = EJE_V[c.k]
     const u0 = c.lo[U], u1 = c.hi[U], v0 = c.lo[V], v1 = c.hi[V]
     const es = (A: Eje, s: 0 | 1) => orillas[i].get(`${A}:${s}`) || []
@@ -401,7 +451,7 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     for (const t of [...es(V, 1)].reverse()) pts.push([t.b, v1], [t.b, v1 + t.L], [t.a, v1 + t.L], [t.a, v1])
     pts.push([u0, v1])
     for (const t of [...es(U, 0)].reverse()) pts.push([u0, t.b], [u0 - t.L, t.b], [u0 - t.L, t.a], [u0, t.a])
-    return { nombre: c.nombre, plano: PLANO[c.k], contorno: exteriorConAlivios(pts, r), huecos: huecos[i], desfase: c.lo[c.k], grosor: e }
+    return { nombre: c.nombre, plano: PLANO[c.k], contorno: exteriorConAlivios(pts, r), huecos: huecos[i], desfase: c.lo[c.k], grosor: e, origen: c.origen, indice: i }
   })
 
   // ---- 7. revisiones ----
@@ -442,5 +492,15 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     uniones: uniones.length,
     aTope: alTope,
     original,
+    tablerosFinales: fin.map((c) => aTablero(c)),
+    sueltos: fuera.map((c) => {
+      // se llevan a la misma escala que el mueble, con el grosor nuevo
+      const lo = [0, 1, 2].map((i) => mapa(i, c.lo[i])), hi = [0, 1, 2].map((i) => mapa(i, c.hi[i]))
+      const m = (lo[c.k] + hi[c.k]) / 2
+      lo[c.k] = m - e / 2
+      hi[c.k] = m + e / 2
+      const U = EJE_U[c.k], V = EJE_V[c.k]
+      return aTablero({ ...c, lo, hi, ab: c.ab.map((h) => [mapa(U, h[0]), mapa(V, h[1]), mapa(U, h[2]), mapa(V, h[3])]) })
+    }),
   }
 }
