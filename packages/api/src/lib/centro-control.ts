@@ -18,6 +18,7 @@
 // tabla que todavía no existe), las demás salen igual: el panel nunca se queda
 // en blanco por una pieza.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { intentosFallidosAdmin } from "./bitacora-seguridad"
 
 import { T_GUIAS } from "./guias"
 import { STORE_URL } from "./licitacion"
@@ -28,6 +29,10 @@ const HORA = 3_600_000
 export const ADMIN = (process.env.ADMIN_PANEL_URL || `${STORE_URL}/dashboard`).replace(/\/$/, "")
 const HORAS_SIN_ENVIAR = () => Number(process.env.CONTROL_HORAS_SIN_ENVIAR ?? 48)
 
+/** Día (AAAA-MM-DD) en hora del centro de México: "Ventas por día" agrupa por
+ *  el día de México, no el de UTC (una venta a las 19:00 ya era "mañana" en UTC). */
+export const diaMx = (d: Date | string | number) => new Date(d).toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+
 export type Nivel = "rojo" | "ambar" | "azul"
 export type Aviso = {
   nivel: Nivel
@@ -36,6 +41,7 @@ export type Aviso = {
   detalle?: string
   url?: string
   cuando?: string
+  clave?: string // identidad estable para no repetir el aviso urgente (lib/control-aviso-clave.ts)
 }
 
 const pagada = (o) =>
@@ -127,7 +133,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   const previo = { pedidos: 0, ingresos: 0 }
   const porDia = new Map<string, { ingresos: number; pedidos: number }>()
   for (let i = dias - 1; i >= 0; i--) {
-    porDia.set(new Date(ahora - i * DIA).toISOString().slice(0, 10), { ingresos: 0, pedidos: 0 })
+    porDia.set(diaMx(ahora - i * DIA), { ingresos: 0, pedidos: 0 })
   }
   const porTaller = new Map<string, { pedidos: number; ingresos: number }>()
   const porProducto = new Map<string, { titulo: string; piezas: number; ingresos: number }>()
@@ -139,7 +145,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
     if (en(o.created_at, desde, ahora)) {
       actual.pedidos++
       actual.ingresos += total
-      const d = porDia.get(new Date(o.created_at).toISOString().slice(0, 10))
+      const d = porDia.get(diaMx(o.created_at))
       if (d) {
         d.ingresos += total
         d.pedidos++
@@ -247,6 +253,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         detalle: `Taller: ${taller(o.id)} · ${pesos(o.total)} · ${(o.items || []).map((i) => i.title).slice(0, 2).join(", ")}`,
         url: pedidoUrl(o.id),
         cuando: o.created_at,
+        clave: `pedido:${o.id}`, // el título cambia con las horas ("26 h" → "2 días")
       })
     }
   }
@@ -337,6 +344,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         detalle: r.customer_note ? `"${String(r.customer_note).slice(0, 160)}"` : "Sin comentario",
         url: `${ADMIN}/reviews`,
         cuando: r.created_at,
+        clave: `resena:${r.id}`, // cada reseña mala avisa una vez (aunque compartan la misma liga)
       })
     }
   }, undefined, logger)
@@ -500,7 +508,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         tipo: "taller_por_aprobar",
         titulo: `${listos.length} taller(es) nuevo(s) esperan que los apruebes`,
         detalle: `${listos.slice(0, 5).map((t) => t.name || t.email).join(", ")}. Mientras no los apruebes no pueden publicar.`,
-        url: `${ADMIN}/sellers`,
+        url: `${ADMIN}/stores`,
       })
     }
   }, undefined, logger)
@@ -536,6 +544,23 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   }, undefined, logger)
 
   const orden = { rojo: 0, ambar: 1, azul: 2 }
+  // Seguridad: muchos intentos fallidos de entrar al panel de administración
+  try {
+    const f = await intentosFallidosAdmin(knex, 24)
+    if (f.total >= 10) {
+      avisos.push({
+        nivel: f.total >= 30 ? "rojo" : "ambar",
+        tipo: "seguridad_login",
+        clave: "login-admin",
+        titulo: `${f.total} intentos fallidos de entrar al panel de administración en 24 h`,
+        detalle: `Desde ${f.ips} dirección(es) IP, probando ${f.correos} correo(s). Si no fuiste tú, cambia tu contraseña y revisa quién tiene acceso en Configuraciones → Usuarios.`,
+        url: `${ADMIN}/settings/users`,
+      })
+    }
+  } catch {
+    /* sin bitácora no hay aviso */
+  }
+
   avisos.sort(
     (a, b) => orden[a.nivel] - orden[b.nivel] || new Date(b.cuando || 0).getTime() - new Date(a.cuando || 0).getTime()
   )

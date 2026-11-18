@@ -49,6 +49,12 @@ Ya están en el código, pero necesitan este orden:
 - [ ] Prueba rápida: `curl -s -o /dev/null -w '%{http_code}' https://hetnacnc.com/api/cotizador-catalogo` debe dar **401** (no 404).
 - [ ] **WhatsApp de soporte**: la app usa el 52 246 121 7072 y la página web el de `NEXT_PUBLIC_WHATSAPP_DEFAULT` (52 221 707 6014 por omisión). Confirmar cuál debe recibir el soporte.
 
-## 6. Legal
+## 6. Google Calendar (pedidos en el calendario)
+- [ ] **`CALENDARIO_SECRET`** en el `.env` de `packages/api`: se genera con `openssl rand -base64 32`. Firma las ligas privadas de los calendarios; si se cambia, todas las ligas dejan de servir y hay que volver a suscribirse (sirve para "revocarlas"). Sin ella se usa `JWT_SECRET` si mide 16 caracteres o más.
+- [ ] Suscribir **tu** calendario: Dashboard → Google Calendar → "Agregar a Google Calendar" (pedidos de la tienda, cierres de licitaciones, entregas e hitos).
+- [ ] Los talleres lo conectan en la app: Más → Google Calendar.
+- Prueba: la liga del Dashboard abierta en el navegador debe descargar un archivo `.ics`.
+
+## 7. Legal
 - [ ] Respuesta del abogado sobre SafeDeal (`docs/legal/safedeal-revision.md`).
 - [ ] Contador: retención como plataforma y si conviene RESICO (`docs/contabilidad/guia-rapida.md`, sección 7).

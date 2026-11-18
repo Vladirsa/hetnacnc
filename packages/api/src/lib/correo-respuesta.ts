@@ -110,11 +110,27 @@ export async function redactarRespuestaCorreo(container: MedusaContainer, c: Cor
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string)
 
-/** El cuerpo en HTML sencillo (párrafos y ligas), para el correo. */
+/** ¿La dirección es de hetnacnc.com (o un subdominio), por https y sin trucos
+ *  de usuario@? Sólo esas se vuelven liga: el texto lo escribe la IA a partir
+ *  del correo de un extraño, que puede traer instrucciones escondidas para que
+ *  salga una liga ajena firmada por HETNA. */
+export function esLigaDeHetna(direccion: string): boolean {
+  if (direccion.includes("\\")) return false
+  try {
+    const u = new URL(direccion)
+    const host = u.hostname.toLowerCase()
+    return u.protocol === "https:" && !u.username && !u.password && (host === "hetnacnc.com" || host.endsWith(".hetnacnc.com"))
+  } catch {
+    return false
+  }
+}
+
+/** El cuerpo en HTML sencillo (párrafos y ligas), para el correo. Las
+ *  direcciones que no son de HETNA se quedan como texto. */
 export function cuerpoHtml(cuerpo: string): string {
   const parrafos = cuerpo.split(/\n{2,}/).map((p) =>
     esc(p)
-      .replace(/(https?:\/\/[^\s<]+[^\s<.,)])/g, '<a href="$1">$1</a>')
+      .replace(/(https?:\/\/[^\s<]+[^\s<.,)])/g, (d) => (esLigaDeHetna(d) ? `<a href="${d}">${d}</a>` : d))
       .replace(/\n/g, "<br>")
   )
   return (

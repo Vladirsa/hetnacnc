@@ -25,5 +25,11 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     return res.json(await infoThreads(knexTg))
   }
   if ((req.body as any)?.probar === "instagram") return res.json(await enviarAN8n({ red: "instagram_info", texto: "" }))
-  res.json(await guardarConfig(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION), (req.body || {}) as any))
+  try {
+    res.json(await guardarConfig(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION), (req.body || {}) as any))
+  } catch (e) {
+    // Datos no válidos (p. ej. horario al revés): el panel muestra el mensaje en lugar de "Guardado."
+    if ((e as any)?.status === 400) return res.status(400).json({ message: (e as Error).message })
+    throw e
+  }
 }

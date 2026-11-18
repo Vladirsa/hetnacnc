@@ -130,7 +130,10 @@ const nextConfig: NextConfig = {
   images: {
     // AVIF primero (pesa menos), WebP para los navegadores que no lo leen
     formats: ['image/avif', 'image/webp'],
-    dangerouslyAllowSVG: true,
+    // Sin SVG en el optimizador (auditoría del 18 nov 2026): un SVG puede traer
+    // código y Next tuvo una falla grave justo ahí. Los SVG propios de /public
+    // se siguen viendo: next/image los sirve tal cual, sin pasar por el optimizador.
+    dangerouslyAllowSVG: false,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 31536000,
@@ -138,7 +141,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'medusa-public-images.s3.eu-west-1.amazonaws.com' },
       { protocol: 'https', hostname: 'mercur-connect.s3.eu-central-1.amazonaws.com' },
       { protocol: 'https', hostname: 'api.mercurjs.com' },
-      { protocol: 'http', hostname: 'localhost' },
+      // localhost sólo en desarrollo: en producción dejaría pedir, a través del
+      // optimizador, imágenes a servicios internos del servidor
+      ...(process.env.NODE_ENV === 'production' ? [] : [{ protocol: 'http' as const, hostname: 'localhost' }]),
       { protocol: 'https', hostname: 'api-sandbox.mercurjs.com', pathname: '/static/**' },
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 's3.eu-central-1.amazonaws.com' },

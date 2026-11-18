@@ -6,7 +6,7 @@ import { revalidateTag } from "next/cache"
 import { db } from "@/lib/foro/db"
 
 import { todasLasPiezas } from "./consultas"
-import { esEspacio, type DatosPieza, type Pieza } from "./tipos"
+import { ESPACIOS, esEspacio, type DatosPieza, type Pieza } from "./tipos"
 
 export type Res<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -38,7 +38,24 @@ export async function listar(): Promise<Res<{ piezas: Pieza[] }>> {
   }
 }
 
-export async function guardar(d: DatosPieza): Promise<Res<{ id: string }>> {
+// ¿Cuántos otros anuncios activos del mismo espacio coinciden en fechas con este?
+// El sitio sólo muestra los primeros `max` por orden: los que sobran no salen.
+async function activosQueCoinciden(espacio: string, id: string, desde: string | null, hasta: string | null): Promise<number> {
+  const r = await db().query(
+    `with esta as (
+       -- Desde hoy en adelante: lo que ya venció no ocupa lugar aunque siga marcado activo
+       select greatest(coalesce($3::timestamptz, (select desde from publicidad.piezas where id::text = $2), now()), now()) as desde, $4::timestamptz as hasta
+     )
+     select count(*)::int as n from publicidad.piezas p, esta
+     where p.espacio = $1 and p.activo and p.id::text <> $2
+       and (p.hasta is null or p.hasta > esta.desde)
+       and (esta.hasta is null or p.desde < esta.hasta)`,
+    [espacio, id, desde, hasta]
+  )
+  return r.rows[0]?.n ?? 0
+}
+
+export async function guardar(d: DatosPieza & { forzar?: boolean }): Promise<Res<{ id: string }> | { ok: false; error: string; lleno: true }> {
   if (!d || !esEspacio(String(d.espacio))) return { ok: false, error: "Elige un espacio válido." }
   const enlace = enlaceSeguro(String(d.enlace ?? ""))
   if (enlace === null) return { ok: false, error: "El enlace debe empezar con / (dentro del sitio) o con https://" }
@@ -54,6 +71,24 @@ export async function guardar(d: DatosPieza): Promise<Res<{ id: string }>> {
   const hasta = fechaONull(String(d.hasta ?? ""))
   if (hasta && desde && Date.parse(hasta) <= Date.parse(desde))
     return { ok: false, error: "La fecha de fin debe ser después de la de inicio." }
+
+  // Cupo del espacio: si ya están llenos los lugares en esas fechas, se avisa antes de guardar
+  // (el panel pregunta y, si confirmas, vuelve a mandar con forzar)
+  if (Boolean(d.activo) && !d.forzar && !(hasta && Date.parse(hasta) <= Date.now())) {
+    if (d.id && !UUID.test(d.id)) return { ok: false, error: "Anuncio no válido." }
+    try {
+      const max = ESPACIOS[d.espacio as keyof typeof ESPACIOS].max
+      const otros = await activosQueCoinciden(String(d.espacio), d.id || "", desde, hasta)
+      if (otros >= max)
+        return {
+          ok: false,
+          lleno: true,
+          error: `En "${ESPACIOS[d.espacio as keyof typeof ESPACIOS].nombre}" caben ${max} a la vez y ya hay ${otros} activo(s) en esas fechas. El sitio sólo muestra los primeros ${max} por orden; los demás no saldrán.`,
+        }
+    } catch (e) {
+      console.error("[publicidad] cupo", e instanceof Error ? e.message : e)
+    }
+  }
 
   const orden = Number(d.orden)
   const valores = [

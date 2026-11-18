@@ -4,7 +4,7 @@
 // con un error máximo de TOL mm, que es lo que usan láser, plasma y router.
 
 export type P = [number, number]
-export type Trazo = { pts: P[]; cerrado: boolean; capa: string }
+export type Trazo = { pts: P[]; cerrado: boolean; capa: string; color?: string } // color: el del trazo en el SVG (#rrggbb)
 export type Dibujo = { trazos: Trazo[]; avisos: string[]; unidades: string }
 
 const TOL = 0.02 // mm de error máximo al convertir curvas en tramos
@@ -439,6 +439,35 @@ function arcoSVG(p0: P, p1: P, rx: number, ry: number, rotG: number, grande: boo
   return out
 }
 
+// Color de línea y relleno de un elemento SVG (atributo o style), heredado del grupo
+type Pintura = { stroke: string; fill: string }
+const NOMBRES_COLOR: Record<string, string> = {
+  black: "#000000", white: "#ffffff", red: "#ff0000", blue: "#0000ff", green: "#008000", lime: "#00ff00", yellow: "#ffff00",
+  magenta: "#ff00ff", fuchsia: "#ff00ff", cyan: "#00ffff", aqua: "#00ffff", orange: "#ffa500", gray: "#808080", grey: "#808080", purple: "#800080",
+}
+export function normalizarColor(v: string): string {
+  const c = v.trim().toLowerCase()
+  if (!c || c === "none" || c === "transparent") return c === "" ? "" : "none"
+  if (NOMBRES_COLOR[c]) return NOMBRES_COLOR[c]
+  let m = c.match(/^#([0-9a-f]{3})$/)
+  if (m) return "#" + m[1].split("").map((x) => x + x).join("")
+  if (/^#[0-9a-f]{6}$/.test(c)) return c
+  m = c.match(/^rgb\(\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*\)$/)
+  if (m) return "#" + m.slice(1, 4).map((x) => Math.max(0, Math.min(255, Math.round(Number(x)))).toString(16).padStart(2, "0")).join("")
+  return c // url(#degradado), currentColor…: se queda como viene
+}
+function pinturaDe(el: any, heredada: Pintura): Pintura {
+  const estilo: Record<string, string> = {}
+  for (const par of String(el.getAttribute?.("style") || "").split(";")) {
+    const i = par.indexOf(":")
+    if (i > 0) estilo[par.slice(0, i).trim().toLowerCase()] = par.slice(i + 1).trim()
+  }
+  const valor = (n: string) => estilo[n] ?? el.getAttribute?.(n) ?? ""
+  const stroke = normalizarColor(valor("stroke"))
+  const fill = normalizarColor(valor("fill"))
+  return { stroke: stroke || heredada.stroke, fill: fill || heredada.fill }
+}
+
 // El SVG se lee con el DOMParser del navegador (se puede pasar otro en pruebas)
 export function leerSVG(texto: string, parser: { parseFromString(s: string, t: string): any } = new DOMParser()): Dibujo {
   const doc = parser.parseFromString(texto, "image/svg+xml")
@@ -465,17 +494,20 @@ export function leerSVG(texto: string, parser: { parseFromString(s: string, t: s
   const ignorados: Record<string, number> = {}
   const atr = (el: any, n: string, def = 0) => { const v = parseFloat(el.getAttribute(n) || ""); return Number.isFinite(v) ? v : def }
 
-  const visitar = (el: any, m: Mat, capa: string) => {
+  const visitar = (el: any, m: Mat, capa: string, pintura: Pintura) => {
     const tag = (el.localName || el.nodeName || "").replace(/^svg:/, "")
     if (["defs", "clipPath", "mask", "metadata", "title", "desc", "style", "symbol", "marker", "pattern", "linearGradient", "radialGradient"].includes(tag)) return
     if ((el.getAttribute?.("display") || "") === "none") return
     const mm = mult(m, transformar(el.getAttribute?.("transform")))
     const capaAct = el.getAttribute?.("inkscape:label") || el.getAttribute?.("id") || capa
+    const pint = pinturaDe(el, pintura)
+    // color del trazo: el de la línea; si no tiene línea, el del relleno
+    const color = pint.stroke && pint.stroke !== "none" ? pint.stroke : pint.fill && pint.fill !== "none" ? pint.fill : "#000000"
     const agregar = (lista: { pts: P[]; cerrado: boolean }[]) => {
-      for (const t of lista) if (t.pts.length > 1) trazos.push({ pts: t.pts.map((p) => ap(mm, p)), cerrado: t.cerrado, capa: tag === "g" ? capaAct : capa })
+      for (const t of lista) if (t.pts.length > 1) trazos.push({ pts: t.pts.map((p) => ap(mm, p)), cerrado: t.cerrado, capa: tag === "g" ? capaAct : capa, color })
     }
     if (tag === "g" || tag === "svg" || tag === "a") {
-      for (const h of Array.from(el.childNodes || []) as any[]) if (h.nodeType === 1) visitar(h, mm, tag === "g" ? capaAct : capa)
+      for (const h of Array.from(el.childNodes || []) as any[]) if (h.nodeType === 1) visitar(h, mm, tag === "g" ? capaAct : capa, pint)
       return
     }
     if (tag === "path") agregar(trazosDePath(el.getAttribute("d") || ""))
@@ -505,7 +537,7 @@ export function leerSVG(texto: string, parser: { parseFromString(s: string, t: s
       agregar([{ pts, cerrado: tag === "polygon" }])
     } else if (tag) ignorados[tag] = (ignorados[tag] || 0) + 1
   }
-  visitar(svg, raiz, "0")
+  visitar(svg, raiz, "0", { stroke: "", fill: "" })
 
   // quitar el punto final repetido de los cerrados
   for (const t of trazos) {
@@ -580,10 +612,12 @@ export function unir(d: Dibujo, tol = 0.01): Dibujo {
     }
   }
   abiertos.forEach((t, i) => { idx(t.pts[0], i); idx(t.pts[t.pts.length - 1], i) })
+  // sólo se unen líneas del mismo color y capa (una línea de corte no se pega a una de doblez)
   const buscar = (p: P, excepto: number): [number, boolean] | null => {
     for (const j of indice.get(clave(p)) || []) {
       if (usados.has(j) || j === excepto) continue
       const t = abiertos[j]
+      if (t.color !== abiertos[excepto].color || t.capa !== abiertos[excepto].capa) continue
       if (cerca(t.pts[0], p)) return [j, false]
       if (cerca(t.pts[t.pts.length - 1], p)) return [j, true]
     }
@@ -607,7 +641,7 @@ export function unir(d: Dibujo, tol = 0.01): Dibujo {
     }
     const cerrado = pts.length > 2 && cerca(pts[0], pts[pts.length - 1])
     if (cerrado) pts.pop()
-    salida.push({ pts, cerrado, capa: abiertos[i].capa })
+    salida.push({ pts, cerrado, capa: abiertos[i].capa, color: abiertos[i].color })
   }
   abiertos = []
   return { ...d, trazos: [...cerrados, ...salida] }

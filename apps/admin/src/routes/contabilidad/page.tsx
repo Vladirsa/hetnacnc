@@ -203,6 +203,36 @@ function SuscripcionesCfdi({ alCambiar }: { alCambiar: () => void }) {
       cargar(); alCambiar()
     } catch (e) { setMsg({ ok: false, t: (e as Error).message }) } finally { setOcupado(null) }
   }
+  // Global a mano (si la del día 1 no salió): por omisión, el mes anterior en hora de México
+  const [mesGlobal, setMesGlobal] = useState(() => {
+    const [a, m] = new Date().toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" }).split("-").map(Number)
+    const d = new Date(Date.UTC(a, m - 2, 1))
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`
+  })
+  const emitirGlobal = async () => {
+    const [anio, mes] = mesGlobal.split("-").map(Number)
+    if (!anio || !mes) return
+    if (!confirm(`¿Emitir ahora la factura global de ${String(mes).padStart(2, "0")}/${anio}? Se timbra ante el SAT con los cobros de ese mes que no tienen CFDI.`)) return
+    setOcupado("global"); setMsg(null)
+    const pedir = (otra: boolean) => api<any>("/suscripciones", { cuerpo: { global: { anio, mes, otra } } })
+    try {
+      let r
+      try {
+        r = await pedir(false)
+      } catch (e) {
+        // El servidor no deja emitir otra global del mismo mes sin confirmarlo
+        if (!/ya se emitió/.test((e as Error).message)) throw e
+        if (!confirm(`${(e as Error).message}\n\n¿Emitir otra global sólo con esos cobros?`)) return
+        r = await pedir(true)
+      }
+      const texto = r.estado === "facturado" ? `Global emitida: ${r.cobros} cobros${r.uuid ? ` · UUID ${r.uuid}` : ""}.`
+        : r.estado === "vacia" ? "No hay cobros de ese mes pendientes de la global."
+        : r.estado === "ocupado" ? "Otra emisión de la global está en curso; espera un momento y recarga."
+        : r.mensaje || `Estado: ${r.estado}`
+      setMsg({ ok: r.estado === "facturado" || r.estado === "vacia", t: texto })
+      cargar(); alCambiar()
+    } catch (e) { setMsg({ ok: false, t: (e as Error).message }) } finally { setOcupado(null) }
+  }
   const ESTADO: Record<string, [string, string]> = {
     facturado: ["Facturado", C.verde], en_global: ["En la global del mes", C.tenue], pendiente: ["Pendiente", C.ambar],
     procesando: ["Procesando", C.tenue], revisar: ["Revisar a mano", C.rojo], error: ["Error", C.rojo],
@@ -215,6 +245,13 @@ function SuscripcionesCfdi({ alCambiar }: { alCambiar: () => void }) {
         si no, entra en la factura global del mes (se emite sola el día 1). El XML entra solo a tu contabilidad.
       </p>
       {d && !d.lista && <p style={{ fontSize: 13, color: C.ambar, background: "#FFF6E0", padding: 10, borderRadius: 8 }}>Facturación apagada: {d.motivo} Los cobros se guardan y se facturan cuando la actives.</p>}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 8px" }}>
+        <span style={{ fontSize: 13 }}>Global de un mes cerrado (si la del día 1 no salió):</span>
+        <input type="month" style={input} value={mesGlobal} onChange={(e) => setMesGlobal(e.target.value)} />
+        <button type="button" style={{ ...boton(), padding: "6px 12px", fontSize: 12.5 }} disabled={ocupado === "global" || !d?.lista} onClick={emitirGlobal}>
+          {ocupado === "global" ? "Emitiendo…" : "Emitir global"}
+        </button>
+      </div>
       <Aviso msg={msg} />
       {!d ? <p style={tenue}>Cargando…</p> : !d.cobros.length ? <p style={tenue}>Todavía no hay cobros de suscripciones.</p> : (
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, marginTop: 8 }}>

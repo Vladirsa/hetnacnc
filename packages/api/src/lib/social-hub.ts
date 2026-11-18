@@ -20,7 +20,7 @@
 import { randomBytes } from "crypto"
 import Anthropic from "@anthropic-ai/sdk"
 
-import { STORE_URL, nuevoId } from "./licitacion"
+import { STORE_URL, esc, nuevoId } from "./licitacion"
 import { publicarThreads, threadsListo } from "./threads"
 import { borradorTikTok, tiktokConectado } from "./tiktok"
 import { pinterestConectado, publicarPinterest } from "./pinterest"
@@ -77,7 +77,8 @@ export type ConfigSocial = {
 }
 const CONFIG_INICIAL: ConfigSocial = {
   redes: ["facebook", "telegram"],
-  // promociones: imagen y video diarios de productos, blog y herramientas (lib/fabrica/promociones)
+  // promociones: todo el contenido generado con imagen y video: promociones diarias de productos, blog y
+  // herramientas (lib/fabrica/promociones), Oportunidades, Estudio diario y Fechas especiales
   automatico: { licitacion: true, taller: true, producto: true, foro: true, promociones: false },
   horario: { desde: 9, hasta: 20 },
   retraso_min: 10,
@@ -133,6 +134,8 @@ export async function asegurarSocial(knex: any) {
   await knex.raw(`alter table ?? add column if not exists emocion text`, [T_POST]).catch(() => {})
   // Fecha especial (Día de las Madres, Muertos…): después de esta fecha ya no se publica ni se recicla
   await knex.raw(`alter table ?? add column if not exists vence timestamptz`, [T_POST]).catch(() => {})
+  // Retenida para revisión (taller sin verificar o dado de alta solo): el piloto automático nunca la programa
+  await knex.raw(`alter table ?? add column if not exists en_revision boolean`, [T_POST]).catch(() => {})
   await crear(T_LIGA, (t) => {
     t.text("codigo").primary()
     t.text("post_id").index()
@@ -188,8 +191,22 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
   }
 }
 
+/** Revisa el horario que llega del panel. Devuelve el mensaje de error o null si está bien. */
+export function validarHorario(h: { desde?: unknown; hasta?: unknown } | null | undefined, actual: { desde: number; hasta: number }): string | null {
+  const desde = Number(h?.desde ?? actual.desde)
+  const hasta = Number(h?.hasta ?? actual.hasta)
+  if (!Number.isFinite(desde) || !Number.isFinite(hasta)) return "El horario debe ser un número de hora (0 a 24)."
+  const d = Math.max(0, Math.min(23, Math.round(desde)))
+  const a = Math.max(1, Math.min(24, Math.round(hasta)))
+  if (a <= d) return `El horario no es válido: la hora final (${a} h) debe ser después de la inicial (${d} h). No se guardó nada.`
+  return null
+}
+
 export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
   const actual = await leerConfig(knex)
+  // Un horario al revés ya no se descarta en silencio: se avisa al panel (la ruta responde 400)
+  const malHorario = validarHorario(c.horario, actual.horario)
+  if (malHorario) throw Object.assign(new Error(malHorario), { status: 400 })
   const nueva: ConfigSocial = {
     redes: Array.isArray(c.redes) ? (c.redes.filter((x) => x in REDES) as Red[]) : actual.redes,
     automatico: { ...actual.automatico, ...Object.fromEntries(Object.entries(c.automatico || {}).filter(([k]) => k in actual.automatico).map(([k, v]) => [k, !!v])) },
@@ -215,7 +232,6 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
     youtube_auto: c.youtube_auto != null ? !!c.youtube_auto : actual.youtube_auto,
     auto_respuestas: c.auto_respuestas != null ? !!c.auto_respuestas : actual.auto_respuestas,
   }
-  if (nueva.horario.hasta <= nueva.horario.desde) nueva.horario = actual.horario
   await knex.raw(`insert into ?? (clave, valor) values ('general', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(nueva)])
   return nueva
 }
@@ -283,6 +299,9 @@ export function adaptarSinIa(base: string, red: Red) {
 
 let ia: Anthropic | null = null
 export const iaSocial = () => !!process.env.ANTHROPIC_API_KEY && (process.env.SOCIAL_IA || "").toLowerCase() !== "off"
+/** Por qué no hay IA: falta la llave o está apagada a propósito con SOCIAL_IA=off. */
+export const motivoSinIa = () =>
+  process.env.ANTHROPIC_API_KEY ? "La IA está apagada en el servidor (SOCIAL_IA=off). Quita esa variable para usarla." : "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor."
 
 /** Pide a Claude un texto por red. Devuelve null si no hay IA o falla. */
 export async function adaptarConIa(base: string, redes: Red[], logger?: any, mercado = "mx"): Promise<Record<string, string> | null> {
@@ -448,6 +467,7 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
     url_destino: d.url, estado: d.estado || "borrador", programada_para: prog, adaptada_ia: conIa, mercado, notas: d.notas || null,
     fuente: (d as any).fuente || null,
     vence: (d as any).vence || null,
+    en_revision: (d as any).en_revision ? true : null,
   })
   return id
 }
@@ -471,7 +491,7 @@ export async function publicacionAutomatica(
     const cfg = await leerConfig(knex)
     const auto = !opc.revision && !!cfg.automatico[d.origen]
     const cuando = auto ? dentroDeHorario(new Date(Date.now() + cfg.retraso_min * 60_000), cfg.horario) : null
-    return await crearPublicacion(knex, { ...d, estado: auto ? "programada" : "borrador", programada_para: d.programada_para || cuando }, logger)
+    return await crearPublicacion(knex, { ...d, estado: auto ? "programada" : "borrador", programada_para: d.programada_para || cuando, ...(opc.revision ? { en_revision: true } : {}) } as any, logger)
   } catch (e) {
     logger?.warn?.(`[social] no se creó la publicación automática (${d.origen}): ${(e as Error).message}`)
     return null
@@ -787,9 +807,9 @@ export async function revisarIntegraciones(knex: any, logger?: any) {
       subject: "Social Hub: revisa las conexiones con redes",
       html:
         `<p>Revisión semanal del Social Hub.</p>` +
-        (!conN8n ? `<p><b>No hay conexión con n8n</b>: ${String(prueba.error || "")}</p>` : "") +
+        (!conN8n ? `<p><b>No hay conexión con n8n</b>: ${esc(String(prueba.error || ""))}</p>` : "") +
         (Object.keys(porRed).length
-          ? `<p>Redes con errores esta semana:</p><ul>${Object.entries(porRed).map(([r, e]) => `<li>${REDES[r as Red]?.nombre || r}: ${String(e).slice(0, 200)}</li>`).join("")}</ul><p>Suele ser un permiso vencido: reconéctalo en n8n.</p>`
+          ? `<p>Redes con errores esta semana:</p><ul>${Object.entries(porRed).map(([r, e]) => `<li>${esc(REDES[r as Red]?.nombre || r)}: ${esc(String(e).slice(0, 200))}</li>`).join("")}</ul><p>Suele ser un permiso vencido: reconéctalo en n8n.</p>`
           : ""),
     }).catch(() => {})
   }

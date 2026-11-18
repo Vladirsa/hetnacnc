@@ -22,10 +22,10 @@
 // A quién: CONTROL_AVISOS_PARA (o RESUMEN_DIARIO_PARA, o la cuenta de la casa).
 // Se puede poner más de un correo separado por comas (por ejemplo, el tuyo y el
 // de tu esposa). Para apagarlo: CONTROL_AVISOS=off.
-import { createHash } from "crypto"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ADMIN, calcularCentroControl, correoCentroControl } from "../lib/centro-control"
+import { claveAviso, claveAvisoAnterior } from "../lib/control-aviso-clave"
 import { correosDeLaCasa } from "../lib/cuentas-casa"
 import { pushACliente } from "../lib/push"
 import { sendEmail } from "../lib/resend"
@@ -65,13 +65,16 @@ const destinatarios = () =>
     .map((s) => s.trim())
     .filter(Boolean)
 
-const clave = (a) => createHash("sha1").update(`${a.tipo}|${a.url || ""}|${a.titulo}`).digest("hex")
+// Clave estable (sin las cifras que cambian: horas, saldos…), ver lib/control-aviso-clave.ts
+const clave = claveAviso
 
 export default async function centroControlAvisos(container) {
   const logger = container.resolve("logger")
-  if ((process.env.CONTROL_AVISOS || "").toLowerCase() === "off" || !process.env.RESEND_API_KEY) return
+  if ((process.env.CONTROL_AVISOS || "").toLowerCase() === "off") return
+  // Sin RESEND_API_KEY sólo se salta el correo: el aviso al celular y Telegram siguen
+  const conCorreo = !!process.env.RESEND_API_KEY
   const para = destinatarios()
-  if (!para.length) return
+  if (!para.length && (process.env.CONTROL_TELEGRAM || "").toLowerCase() === "off") return
 
   try {
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
@@ -88,15 +91,20 @@ export default async function centroControlAvisos(container) {
 
     const d = await calcularCentroControl(container, { dias: 1 })
     const urgentes = d.avisos.filter((a) => a.nivel === "rojo")
-    const ya = new Set((await knex(T).whereIn("clave", urgentes.map(clave)).select("clave")).map((f) => f.clave))
-    const nuevos = urgentes.filter((a) => !ya.has(clave(a)))
+    // También cuenta como enviado lo anotado con la clave anterior (título exacto), para no repetir todo al cambiar de formato
+    // La clave anterior sólo vale para los avisos sin clave propia: con ella, todas las
+    // reseñas malas compartían una sola clave y una ya avisada tapaba a las nuevas
+    const anterior = (a) => (a.clave ? clave(a) : claveAvisoAnterior(a))
+    const vigentes = [...new Set([...urgentes.map(clave), ...urgentes.map(anterior)])]
+    const ya = new Set((await knex(T).whereIn("clave", vigentes).select("clave")).map((f) => f.clave))
+    const nuevos = urgentes.filter((a) => !ya.has(clave(a)) && !ya.has(anterior(a)))
 
-    if (manana) {
+    if (manana && conCorreo && para.length) {
       const { asunto, html } = correoCentroControl(d)
       const extra = await seccionResumen(container)
       const completo = extra ? html.replace(/<p style="margin-top:20px">/, `${extra}<p style="margin-top:20px">`) : html
       for (const to of para) await sendEmail({ to, subject: `Informe diario · ${asunto.replace(/^HETNA: /, "")}`, html: completo })
-    } else if (nuevos.length && (process.env.CONTROL_URGENTES_CORREO || "").toLowerCase() !== "on") {
+    } else if (nuevos.length && para.length && (!conCorreo || (process.env.CONTROL_URGENTES_CORREO || "").toLowerCase() !== "on")) {
       // Sin correo: aviso al celular del dueño
       const knexPush = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
       for (const correo of para) {
@@ -112,13 +120,13 @@ export default async function centroControlAvisos(container) {
           logger
         )
       }
-    } else if (nuevos.length) {
+    } else if (nuevos.length && para.length) {
       const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:620px;margin:0 auto;color:#142033">
 <h2 style="margin:0 0 10px;color:#B42318">Atiende esto hoy</h2>
 ${nuevos
   .map(
-    (a) => `<p style="margin:0 0 12px"><b>${a.titulo}</b><br><span style="color:#555;font-size:13px">${a.detalle || ""}</span>${
-      a.url ? `<br><a href="${a.url}" style="color:#C2560A;font-size:13px">Abrir</a>` : ""
+    (a) => `<p style="margin:0 0 12px"><b>${esc(a.titulo)}</b><br><span style="color:#555;font-size:13px">${esc(a.detalle || "")}</span>${
+      a.url ? `<br><a href="${esc(a.url)}" style="color:#C2560A;font-size:13px">Abrir</a>` : ""
     }</p>`
   )
   .join("")}
@@ -145,6 +153,9 @@ ${nuevos
     }
 
     if (nuevos.length) await knex(T).insert(nuevos.map((a) => ({ clave: clave(a) }))).onConflict("clave").ignore()
+    // Lo que ya no está urgente se olvida: si vuelve a pasar (un servicio que se
+    // recargó y se acaba otra vez), se avisa de nuevo
+    await knex(T).whereNotIn("clave", vigentes.length ? vigentes : [""]).del()
     // Lo de hace más de 30 días se puede volver a avisar si sigue igual
     await knex(T).where("enviado", "<", new Date(Date.now() - 30 * 86_400_000)).del()
     logger.info(`[centro-control] ${manana ? "resumen de la mañana" : "revisión"}: ${urgentes.length} urgentes, ${nuevos.length} nuevos`)
@@ -152,6 +163,10 @@ ${nuevos
     logger.error(`[centro-control] avisos: ${e?.message || e}`)
   }
 }
+
+// Los títulos y detalles traen texto de fuera (nombre de un taller, una reseña):
+// se escapan para que no puedan meter HTML ni ligas en el correo del dueño
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
 
 export const config = {
   name: "centro-control-avisos",

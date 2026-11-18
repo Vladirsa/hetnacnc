@@ -4,7 +4,9 @@
 // mueves la etapa a mano si hace falta y ves el historial completo.
 //
 // Lo que se aprueba aquí sale a los talleres y al tablero público. Si nadie
-// la revisa en LICITACION_REVISION_HORAS (24 h), se aprueba sola.
+// la revisa en LICITACION_REVISION_HORAS (24 h), se aprueba sola. "Pedir
+// información al cliente" detiene ese reloj: si nadie la aprueba o cancela, se
+// aprueba sola LICITACION_INFO_HORAS (72 h) después de la última petición.
 import { useCallback, useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 
@@ -18,6 +20,8 @@ type Solicitud = {
   etapa_desde: string
   creada: string
   cierra_en: string | null
+  info_pedida_en?: string | null
+  aprueba_sola_en?: string | null
   trabajo: Record<string, any> & { archivos?: { nombre: string; tamano: number }[] }
   contacto: { nombre?: string; email?: string; telefono?: string; whatsapp?: string }
   propuestas: number
@@ -123,6 +127,9 @@ const soloDigitos = (t?: string) => (t || "").replace(/\D/g, "")
 function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
   const [abierta, setAbierta] = useState(false)
   const [det, setDet] = useState<Detalle | null>(null)
+  // Cada caja con su propio texto: escribir en una no llena las otras
+  const [notaRevision, setNotaRevision] = useState("")
+  const [notaDisputa, setNotaDisputa] = useState("")
   const [nota, setNota] = useState("")
   const [etapa, setEtapa] = useState(s.etapa)
   const [interna, setInterna] = useState(false)
@@ -140,13 +147,13 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
     if (abierta && !det) cargarDetalle()
   }, [abierta, det, cargarDetalle])
 
-  const accion = async (cuerpo: Record<string, unknown>, listo: string) => {
+  const accion = async (cuerpo: Record<string, unknown>, listo: string, limpiar: (v: string) => void) => {
     setOcupado(true)
     setMsg(null)
     try {
       await api(`/${s.id}/accion`, cuerpo)
       setMsg({ ok: true, t: listo })
-      setNota("")
+      limpiar("")
       setDet(null)
       alCambiar()
     } catch (e) {
@@ -201,19 +208,25 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
       {s.estado === "revision" && (
         <div style={{ marginTop: 12, background: C.suave, borderRadius: 10, padding: 12 }}>
           <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700 }}>Revisión: ¿tiene lo necesario para cotizar?</p>
-          <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)}
+          {s.info_pedida_en && (
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: C.tenue }}>
+              Esperando respuesta del cliente desde {fecha(s.info_pedida_en)} (contesta por correo o WhatsApp).
+              {s.aprueba_sola_en ? ` Si nadie la aprueba o cancela, se aprueba sola el ${fecha(s.aprueba_sola_en)}.` : ""}
+            </p>
+          )}
+          <textarea style={area} value={notaRevision} onChange={(e) => setNotaRevision(e.target.value)}
             placeholder="Para pedir información o cancelar, escribe aquí lo que le dices al cliente. Para aprobar es opcional." />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
             <button type="button" style={boton("primario")} disabled={ocupado}
-              onClick={() => accion({ accion: "aprobar", nota }, "Aprobada: se está enviando a los talleres.")}>
+              onClick={() => accion({ accion: "aprobar", nota: notaRevision }, "Aprobada: se está enviando a los talleres.", setNotaRevision)}>
               Aprobar y enviar a talleres
             </button>
             <button type="button" style={boton("normal")} disabled={ocupado}
-              onClick={() => accion({ accion: "pedir_info", nota }, "Le mandamos tu pregunta al cliente.")}>
+              onClick={() => accion({ accion: "pedir_info", nota: notaRevision }, "Le mandamos tu pregunta al cliente. La aprobación automática queda en pausa.", setNotaRevision)}>
               Pedir información al cliente
             </button>
             <button type="button" style={boton("peligro")} disabled={ocupado}
-              onClick={() => window.confirm("¿Cancelar esta solicitud? El cliente recibe tu motivo por correo.") && accion({ accion: "cancelar", nota }, "Cancelada.")}>
+              onClick={() => window.confirm("¿Cancelar esta solicitud? El cliente recibe tu motivo por correo.") && accion({ accion: "cancelar", nota: notaRevision }, "Cancelada.", setNotaRevision)}>
               Cancelar
             </button>
           </div>
@@ -233,7 +246,7 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
             Pide evidencia a los dos (fotos, guía, mensajes, SafeDeal) y decide en máximo 5 días hábiles. Si el taller no ha reportado avance
             en el historial, una cancelación es reembolso total. El reembolso y la transferencia se hacen a mano.
           </p>
-          <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)}
+          <textarea style={area} value={notaDisputa} onChange={(e) => setNotaDisputa(e.target.value)}
             placeholder="Decisión y motivo (con montos si es parcial). El cliente y el taller la leen." />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
             <select value={decision} onChange={(e) => setDecision(e.target.value)}
@@ -243,9 +256,9 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
               <option value="reembolso_parcial">Reembolso parcial y cerrar</option>
               <option value="reembolso_total">Reembolso total y cancelar</option>
             </select>
-            <button type="button" style={boton("primario")} disabled={ocupado || !decision || nota.trim().length < 10}
+            <button type="button" style={boton("primario")} disabled={ocupado || !decision || notaDisputa.trim().length < 10}
               onClick={() => window.confirm("¿Guardar la resolución? Se avisa al cliente y al taller.") &&
-                accion({ accion: "resolver_disputa", decision, nota }, "Disputa resuelta. Recuerda hacer el reembolso o la transferencia.")}>
+                accion({ accion: "resolver_disputa", decision, nota: notaDisputa }, "Disputa resuelta. Recuerda hacer el reembolso o la transferencia.", setNotaDisputa)}>
               Resolver
             </button>
           </div>
@@ -310,21 +323,22 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
 
               <div style={{ background: C.suave, borderRadius: 10, padding: 12 }}>
                 <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700 }}>Mover etapa o anotar</p>
-                <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota (el cliente la ve, salvo que la marques como interna)" />
+                <textarea style={area} value={nota} onChange={(e) => setNota(e.target.value)}
+                  placeholder={interna ? "Nota interna: sólo la ve HETNA (no sale en la liga del cliente ni en su correo)" : "Mensaje para el cliente: lo ve en su liga y, al mover de etapa, le llega en el correo"} />
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
                   <select value={etapa} onChange={(e) => setEtapa(e.target.value)}
                     style={{ borderRadius: 8, border: `1px solid ${C.borde}`, padding: "7px 8px", fontSize: 13, background: C.fondo, color: C.texto }}>
                     {TODAS_ETAPAS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
                   </select>
                   <button type="button" style={boton("normal")} disabled={ocupado || etapa === s.etapa}
-                    onClick={() => accion({ accion: "etapa", etapa, nota }, "Etapa actualizada; el cliente fue avisado si aplica.")}>
+                    onClick={() => accion({ accion: "etapa", etapa, nota, interna }, "Etapa actualizada; el cliente fue avisado si aplica.", setNota)}>
                     Mover a esta etapa
                   </button>
                   <label style={{ fontSize: 13, display: "flex", gap: 4, alignItems: "center" }}>
-                    <input type="checkbox" checked={interna} onChange={(e) => setInterna(e.target.checked)} /> Nota interna
+                    <input type="checkbox" checked={interna} onChange={(e) => setInterna(e.target.checked)} /> Nota interna (el cliente no la ve)
                   </label>
                   <button type="button" style={boton("normal")} disabled={ocupado || !nota.trim()}
-                    onClick={() => accion({ accion: "nota", nota, interna }, "Nota guardada.")}>
+                    onClick={() => accion({ accion: "nota", nota, interna }, interna ? "Nota interna guardada." : "Mensaje guardado: el cliente lo ve en su liga.", setNota)}>
                     Sólo anotar
                   </button>
                 </div>
@@ -365,7 +379,7 @@ export default function SolicitudesPage() {
       <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px" }}>Solicitudes de fabricación</h1>
       <p style={{ color: C.tenue, margin: "0 0 14px", fontSize: 14 }}>
         Aprueba las nuevas antes de que lleguen a los talleres y sigue cada pedido hasta que se entrega.
-        Las que nadie revise en 24 horas se aprueban solas.
+        Las que nadie revise en 24 horas se aprueban solas (si le pediste información al cliente, 72 horas después de pedirla).
       </p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         {ETAPAS.map((e) => (

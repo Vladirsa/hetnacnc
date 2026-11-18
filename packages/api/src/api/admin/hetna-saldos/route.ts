@@ -1,10 +1,12 @@
 // Pagos a talleres: cuánto se le debe a cada uno.
 //   GET /admin/hetna-saldos              -> por taller: pendiente, disponible, pagado
 //   GET /admin/hetna-saldos?seller_id=…  -> los pedidos de ese taller
+// "descuentos" = sobrepesos descontados que todavía no se aplican en un pago
+// (ya van restados dentro de "disponible").
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { T_SALDO, asegurarTablaSaldos, diasLiberacion, filaParaRespuesta, netoTaller } from "../../../lib/saldos-talleres"
+import { T_SALDO, asegurarTablaSaldos, diasLiberacion, esAjuste, filaParaRespuesta, netoTaller } from "../../../lib/saldos-talleres"
 import { estadoRequisitos } from "../../../lib/requisitos-vendedor"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -18,12 +20,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     return res.json({ movimientos: filas.map(filaParaRespuesta) })
   }
 
-  const filas = await knex(T_SALDO).select("seller_id", "estado", "moneda", "productos", "envio", "comision", "envio_al_taller")
-  const porTaller = new Map<string, { seller_id: string; moneda: string; pendiente: number; disponible: number; pagado: number; retenido: number }>()
+  const filas = await knex(T_SALDO).select("order_id", "seller_id", "estado", "moneda", "productos", "envio", "comision", "envio_al_taller")
+  type Totales = { seller_id: string; moneda: string; pendiente: number; disponible: number; pagado: number; retenido: number; descuentos: number }
+  const porTaller = new Map<string, Totales>()
+  const r2 = (n: number) => Math.round(n * 100) / 100
   for (const f of filas) {
     const k = `${f.seller_id}|${f.moneda}`
-    const t = porTaller.get(k) || { seller_id: f.seller_id, moneda: f.moneda, pendiente: 0, disponible: 0, pagado: 0, retenido: 0 }
-    ;(t as any)[f.estado] = Math.round(((t as any)[f.estado] + netoTaller(f)) * 100) / 100
+    const t = porTaller.get(k) || { seller_id: f.seller_id, moneda: f.moneda, pendiente: 0, disponible: 0, pagado: 0, retenido: 0, descuentos: 0 }
+    ;(t as any)[f.estado] = r2((t as any)[f.estado] + netoTaller(f))
+    if (esAjuste(f.order_id) && f.estado === "disponible") t.descuentos = r2(t.descuentos + netoTaller(f))
     porTaller.set(k, t)
   }
   const ids = [...new Set([...porTaller.values()].map((t) => t.seller_id))]

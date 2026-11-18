@@ -99,7 +99,10 @@ export default function SaldoPage() {
               <tbody>
                 {datos.movimientos.map((f) => (
                   <tr key={f.order_id} style={{ borderTop: "1px solid #EFECE4" }}>
-                    <td style={{ padding: "8px" }}>#{f.display_id ?? "—"}{f.digital ? " · digital" : ""}</td>
+                    <td style={{ padding: "8px" }}>
+                      {/* Descuento por sobrepeso de una guía de HETNA: resta de tu siguiente pago */}
+                      {f.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}>{f.motivo || "Descuento por sobrepeso"}</span> : <>#{f.display_id ?? "—"}{f.digital ? " · digital" : ""}</>}
+                    </td>
                     <td style={{ padding: "8px" }}>{dinero(f.productos, f.moneda)}</td>
                     <td style={{ padding: "8px" }}>−{dinero(f.comision, f.moneda)}</td>
                     <td style={{ padding: "8px", fontWeight: 700 }}>{dinero(f.neto, f.moneda)}</td>

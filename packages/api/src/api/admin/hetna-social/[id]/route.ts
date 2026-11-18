@@ -12,7 +12,7 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { deshacerRevision, revisarPublicacion } from "../../../../lib/social-revisor"
-import { REDES, T_POST, adaptar, zonaDe, asegurarSocial, dentroDeHorario, leerConfig, ligaPara, publicar, urlCorta, vistaPublicacion } from "../../../../lib/social-hub"
+import { REDES, T_LIGA, T_POST, adaptar, motivoSinIa, zonaDe, asegurarSocial, dentroDeHorario, leerConfig, ligaPara, publicar, urlCorta, vistaPublicacion } from "../../../../lib/social-hub"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -34,15 +34,21 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
 
   switch (b.accion) {
     case "guardar": {
+      // La liga de destino se puede cambiar desde la tarjeta; si no es https se avisa en lugar de ignorarla
+      const destino = typeof b.url_destino === "string" ? b.url_destino.trim() : ""
+      if (destino && !/^https:\/\/\S+$/.test(destino)) return res.status(400).json({ message: "La liga de destino debe empezar con https://" })
+      if (b.titulo != null && !String(b.titulo).trim()) return res.status(400).json({ message: "El título no puede quedar vacío." })
       const textos = typeof b.textos === "object" && b.textos ? Object.fromEntries(Object.entries(b.textos).map(([k, v]) => [k, String(v).slice(0, 5000)])) : p.textos
       await knex(T_POST).where({ id: p.id }).update({
-        titulo: String(b.titulo || p.titulo).slice(0, 160),
+        titulo: String(b.titulo || p.titulo).trim().slice(0, 160),
         textos: JSON.stringify(textos),
         redes: JSON.stringify(redesValidas(b.redes)),
         medios: JSON.stringify(Array.isArray(b.medios) ? b.medios.filter((m: any) => /^https:\/\//.test(m?.url)).slice(0, 10) : p.medios || []),
-        url_destino: /^https:\/\//.test(String(b.url_destino || "")) ? b.url_destino : p.url_destino,
+        url_destino: destino || p.url_destino,
         updated_at: knex.fn.now(),
       })
+      // Las ligas medidas ya creadas (al copiar o publicar) apuntan al nuevo destino
+      if (destino && destino !== p.url_destino) await knex(T_LIGA).where({ post_id: p.id }).update({ destino })
       break
     }
     case "adaptar": {
@@ -60,9 +66,17 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       break
     }
     case "publicar": {
-      if (p.estado === "publicada") await knex(T_POST).where({ id: p.id }).update({ estado: "parcial" })
+      // Fecha especial vencida: ya no sale (y no se toca su estado)
+      if (p.vence && new Date(p.vence).getTime() <= Date.now()) return res.status(409).json({ message: "Esta publicación era para una fecha especial que ya pasó; ya no se publica." })
+      if (p.estado === "descartada") return res.status(409).json({ message: "Esta publicación está descartada; no se puede publicar." })
+      if (p.estado === "publicando") return res.status(409).json({ message: "Se está publicando en este momento." })
+      if (p.estado === "publicada") await knex(T_POST).where({ id: p.id, estado: "publicada" }).update({ estado: "parcial" })
       const r = await publicar(knex, p.id, logger, Array.isArray(b.redes) ? b.redes : undefined)
-      if (!r) return res.status(409).json({ message: "Se está publicando en este momento." })
+      if (!r) {
+        // No se pudo tomar (otra petición la tomó o cambió mientras): si estaba publicada, se deja como estaba
+        if (p.estado === "publicada") await knex(T_POST).where({ id: p.id, estado: "parcial" }).update({ estado: "publicada" })
+        return res.status(409).json({ message: "No se pudo publicar: la publicación cambió o se está publicando en este momento. Recarga la página." })
+      }
       break
     }
     case "descartar":
@@ -70,7 +84,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       break
     case "revisar": {
       const r = await revisarPublicacion(knex, p.id, logger, { forzar: true })
-      if (!r.cambiadas?.length) return res.status(400).json({ message: r.motivo === "sin IA configurada" ? "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." : r.motivo === "no editable" ? "Esta publicación ya no se puede cambiar." : "La IA no mejoró el texto; quedó como estaba." })
+      if (!r.cambiadas?.length) return res.status(400).json({ message: r.motivo === "sin IA configurada" ? motivoSinIa() : r.motivo === "no editable" ? "Esta publicación ya no se puede cambiar." : "La IA no mejoró el texto; quedó como estaba." })
       extra = { cambiadas: r.cambiadas }
       break
     }

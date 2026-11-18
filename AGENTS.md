@@ -43,8 +43,8 @@ bun run dev
 This starts:
 
 - Backend API at `http://localhost:9000`
-- Admin Panel at `http://localhost:9000/seller`
-- Vendor Panel at `http://localhost:9000/dashboard`
+- Admin Panel at `http://localhost:9000/dashboard`
+- Vendor Panel at `http://localhost:9000/seller`
 
 <!-- BEGIN:turborepo-agent-rules -->
 

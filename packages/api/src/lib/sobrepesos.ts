@@ -176,7 +176,10 @@ export async function cobrarSobrepeso(knex: any, s: Sobrepeso, logger: any) {
       logger.error(`[sobrepesos] ${folioSobrepeso(s.folio)} sin liga de pago: ${(e as Error).message}`)
     }
   }
-  await knex(T_SOBREPESO).where({ id: s.id }).update({ estado: "por_cobrar", pago_url: pagoUrl, updated_at: knex.fn.now() })
+  // Condicionado al estado que se leyó: si mientras tanto se descontó del saldo
+  // del taller, no se le manda además la liga de pago (sería cobrarle dos veces)
+  const n = await knex(T_SOBREPESO).where({ id: s.id, estado: s.estado }).update({ estado: "por_cobrar", pago_url: pagoUrl, updated_at: knex.fn.now() })
+  if (!n) return { cambio: true as const, pago_url: null, correo: false }
   const r = await avisarSobrepeso({ ...s, estado: "por_cobrar", pago_url: pagoUrl })
   if (!r.sent) logger.warn(`[sobrepesos] ${folioSobrepeso(s.folio)} correo no enviado: ${r.reason}`)
   return { pago_url: pagoUrl, correo: r.sent }

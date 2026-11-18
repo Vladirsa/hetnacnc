@@ -16,7 +16,8 @@ import { mandarPrivado } from "./social-telegram"
 import { IA_MODELO_RAPIDO, modeloIA } from "./ia-modelo"
 
 export const T_COMENTARIO = "hetna_social_comentario"
-const PAGINA_FB = "109722907076187"
+// La misma página que usan los anuncios (lib/anuncios.ts): META_PAGE_ID, o la de HETNA por omisión
+const PAGINA_FB = () => process.env.META_PAGE_ID || "109722907076187"
 const USUARIO_IG = "hetna_cnc"
 
 let listo = false
@@ -132,7 +133,7 @@ export async function revisarComentarios(knex: any, logger?: any) {
       if (!r.ok) continue
       for (const k of r.datos?.comments?.data || []) {
         const autor = red === "instagram" ? k.username : k.from?.name
-        const propio = red === "instagram" ? k.username === USUARIO_IG : k.from?.id === PAGINA_FB
+        const propio = red === "instagram" ? k.username === USUARIO_IG : k.from?.id === PAGINA_FB()
         const texto = String(k.text || k.message || "").trim()
         if (propio || !texto) continue
         const ins = await knex(T_COMENTARIO).insert({ id: nuevoId("com"), externo: String(k.id), red, post_id: p.id, autor: autor || null, texto: texto.slice(0, 2000), fecha: k.timestamp || k.created_time || null }).onConflict("externo").ignore().returning("id")
@@ -168,6 +169,8 @@ export async function revisarComentarios(knex: any, logger?: any) {
 export async function listarComentarios(knex: any, estado?: string) {
   await asegurar(knex)
   const q = knex(`${T_COMENTARIO} as c`).leftJoin(`${T_POST} as p`, "p.id", "c.post_id").orderBy("c.created_at", "desc").limit(100).select("c.*", "p.titulo as post_titulo")
-  if (estado) q.where("c.estado", estado)
+  // Varios estados separados por coma ("propuesta,nuevo" = por responder)
+  const estados = String(estado || "").split(",").map((x) => x.trim()).filter(Boolean)
+  if (estados.length) q.whereIn("c.estado", estados)
   return q
 }

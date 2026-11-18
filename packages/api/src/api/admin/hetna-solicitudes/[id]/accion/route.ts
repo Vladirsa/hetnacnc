@@ -1,8 +1,12 @@
 // POST /admin/hetna-solicitudes/:id/accion
 //   { accion: "aprobar", nota? }               → a los talleres
-//   { accion: "pedir_info", nota }             → correo al cliente, sigue en revisión
+//   { accion: "pedir_info", nota }             → correo al cliente, sigue en revisión con el
+//                                                reloj de la aprobación automática detenido
+//                                                (lib/seguimiento: horasEsperaInfo)
 //   { accion: "cancelar", nota }               → cancelada, con correo al cliente
-//   { accion: "etapa", etapa, nota? }          → mover a mano (corrige lo que haga falta)
+//   { accion: "etapa", etapa, nota?, interna? } → mover a mano (corrige lo que haga falta).
+//       interna = la nota sólo la ve HETNA: no sale en la liga del cliente ni en su correo.
+//       A "enviada_talleres" desde la revisión = aprobar (avisa a los talleres).
 //   { accion: "nota", nota, interna? }         → sólo anota en el historial
 //   { accion: "resolver_disputa", decision, nota }
 //       decision = liberar           → el taller cobra; si ya entregó, se cierra y se avisa la liquidación
@@ -49,6 +53,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
     case "pedir_info": {
       if (nota.length < 5) return res.status(400).json({ message: "Escribe qué le falta al cliente." })
       await anotar(knex, s.id, "hetna", `HETNA pidió más información: ${nota}`)
+      // Se detiene el reloj de la aprobación automática mientras el cliente contesta
+      await knex(T_SOLICITUD).where({ id: s.id, estado: "revision" }).update({ info_pedida_en: knex.fn.now() })
       if (s.contacto?.email) {
         await sendEmail({
           to: s.contacto.email,
@@ -76,8 +82,21 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       // pagada): eso lo deciden la elección y el pago. Sólo cerrar y cancelar
       // la sacan de la lista de los talleres.
       // Cerrar o cancelar a mano también da por terminado un problema abierto.
+      const interna = b.interna === true
+      // Enviarla a talleres desde la revisión es aprobarla: mismo camino que el
+      // botón "Aprobar" (difunde y avisa a los talleres). Se responde antes de
+      // difundir. Desde otras etapas ya se difundió: sólo se corrige la etapa.
+      if (etapa === "enviada_talleres" && s.estado === "revision") {
+        res.json({ ok: true })
+        const ok = await aprobarSolicitud(knex, logger, s, "hetna", interna ? undefined : nota || undefined)
+        if (ok && interna && nota) await anotar(knex, s.id, "hetna", nota, false)
+        return
+      }
       const extra = etapa === "cerrada" || etapa === "cancelada" ? { estado: "cerrada", disputa: null, disputa_detalle: null } : undefined
-      await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: nota || undefined, extra, logger })
+      // El cambio de etapa siempre queda a la vista (la liga del cliente y el
+      // expediente necesitan su fecha); lo que se esconde es sólo la nota interna.
+      await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: interna ? undefined : nota || undefined, extra, logger })
+      if (interna && nota) await anotar(knex, s.id, "hetna", nota, false)
       return res.json({ ok: true })
     }
     case "nota": {
@@ -103,8 +122,21 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
           await avisarLiquidacion(knex, s, "HETNA resolvió la disputa a favor del taller en").catch(() => null)
         }
       } else {
-        // Liberar antes de entregar: el trabajo sigue su curso.
+        // Liberar antes de entregar: el trabajo sigue su curso. No cambia de
+        // etapa (no hay correo de etapa), así que al cliente se le avisa aquí.
         await anotar(knex, s.id, "hetna", texto)
+        if (s.contacto?.email) {
+          await sendEmail({
+            to: s.contacto.email,
+            subject: `[${folio}] HETNA resolvió el problema reportado`,
+            html: marco(
+              "Resolución de HETNA",
+              `<p style="margin:0 0 12px;color:#40403A">${esc(texto)}</p>` +
+                `<p style="margin:0 0 12px;color:#40403A">El trabajo sigue su curso; puedes ver el avance en tu liga.</p>` +
+                boton("Ver mi solicitud", ligaPropuestas(s.token))
+            ),
+          }).catch(() => null)
+        }
       }
       const p = await propuestaElegida(knex, s).catch(() => null)
       if (p?.taller_email) {

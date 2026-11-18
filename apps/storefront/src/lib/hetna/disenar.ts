@@ -147,12 +147,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "svg-a-stl",
     nombre: "SVG o DXF a STL",
-    texto: "Extruye un logotipo, nombre o silueta en 3D, con placa base para llaveros.",
+    texto: "Archivos de corte láser a 3D: corte, grabado y líneas marcadas por color; placa base para llaveros.",
     icono: "extruir",
     acceso: "gratis",
     titulo: "Convertir SVG o DXF a STL gratis: extruir logotipos y letras en 3D",
     descripcion:
-      "Sube un SVG o DXF, dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Placa base opcional para llaveros, placas y letreros; modo espejo para sellos. Sin subir tu archivo.",
+      "Sube un SVG o DXF de corte láser, elige qué hace cada color (corte, grabado hundido o línea marcada), dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Placa base opcional para llaveros, placas y letreros; modo espejo para sellos. Sin subir tu archivo.",
   },
   {
     slug: "anidado-piezas",

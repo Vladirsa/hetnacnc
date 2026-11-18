@@ -1,6 +1,6 @@
 # Manual del panel de administración de HETNA CNC
 
-**Para:** el dueño y el equipo de HETNA CNC · **Versión:** 18 de noviembre de 2026
+**Para:** el dueño y el equipo de HETNA CNC · **Versión:** 18 de noviembre de 2026 (segunda edición)
 
 Este manual explica cómo usar el panel de administración de hetnacnc.com (`hetnacnc.com/dashboard`), página por página. El capítulo más largo es el de **Social Hub**, donde se maneja el marketing en redes.
 
@@ -11,7 +11,7 @@ Se escribió leyendo el código del panel, así que describe lo que de verdad ha
 - Los textos en **negritas** son los que ves en pantalla, tal cual.
 - Los horarios están en **hora del centro de México**.
 - Las "variables del servidor" son ajustes del archivo `packages/api/.env` del servidor. Para cambiar una hay que volver a desplegar (`./scripts/desplegar.sh`). Aquí sólo aparece su nombre, para qué sirve y su valor si no se pone; nunca sus valores reales.
-- Al final está el **Apéndice: cosas que hoy no funcionan como dice la pantalla**. Léelo antes de usar Solicitudes, Envíos y Social Hub.
+- Al final está el **Apéndice: lo que se corrigió y lo que sigue pendiente**.
 
 ## Contenido
 
@@ -19,7 +19,7 @@ Se escribió leyendo el código del panel, así que describe lo que de verdad ha
 2. **Social Hub**: conectar redes, crear y programar publicaciones, aprobar borradores, el plan semanal, comentarios, estadísticas, Telegram y lo que pasa solo.
 3. **Páginas del panel (parte A)**: Centro de control, Resultados, Publicidad, Blog, Contabilidad, Pagos a talleres, Envíos y Cargar productos.
 4. **Páginas del panel (parte B)**: Solicitudes, Verificaciones, Cotizador, Trabajos CAM, Trabajos reales, Fundadores y Categorías ocultas.
-5. **Apéndice**: cosas que hoy no funcionan como dice la pantalla.
+5. **Apéndice**: lo que se corrigió el 18 de noviembre y lo que sigue pendiente.
 
 ## Tu día a día, en 5 minutos
 
@@ -238,10 +238,10 @@ Los talleres registrados antes del 2 de noviembre de 2026 no tienen que confirma
 
 **Cuidado.**
 
-- **Aprobar con Confirmar desde el panel no es igual que la aprobación automática.** Con **Confirmar** no sale el correo de bienvenida de HETNA ni el anuncio para redes. Además, el taller queda activo aunque no haya confirmado su correo (verificar). Si apruebas a mano, escríbele tú.
+- **Aprobar con Confirmar desde el panel también manda la bienvenida.** Al taller le llega el correo de bienvenida de HETNA y se programa su anuncio en redes, igual que en la aprobación automática (una sola vez, aunque se apruebe por dos caminos). Como lo aprobaste tú, el anuncio no queda en borrador. El taller queda activo aunque no haya confirmado su correo (verificar).
 - **Finalizada no se puede deshacer.** Sólo se puede cuando el taller ya no tiene pedidos ni pagos pendientes. Para pausar a un taller usa siempre **Inactiva**.
 - **Eliminar una tienda tampoco se puede deshacer.** Mejor suspéndela.
-- **El botón "Revisar o suspender en el panel" del correo de alta automática puede llevarte a una página que no existe** (la dirección usa /sellers y en el panel la sección es /stores). Si te pasa, entra a **Tiendas** y busca al taller por su nombre.
+- **El botón "Revisar o suspender en el panel" del correo de alta automática** te lleva a la página del taller en **Tiendas**.
 - **Para encender o apagar la aprobación automática**, pide que cambien estas variables del servidor:
 
 | Variable | Para qué sirve | De fábrica |
@@ -619,7 +619,7 @@ Al abrirla:
   - el resultado de la última publicación: "✓ publicada", "✓ lista para pegar", "⏳ Instagram la está procesando…" o "✗ el error",
   - **ver ↗** para abrir la publicación en la red,
   - el conteo de **caracteres** (en rojo si se pasa del máximo de la red),
-  - **Copiar**: copia el texto ya con la liga medida puesta. Ojo: las ligas medidas se crean **al publicar**. Antes de publicar, "Copiar" te da el texto con `{{liga}}` literal y la tabla de ligas está vacía. Para las redes a mano: primero publica (o "Lo antes posible") y después copia.
+  - **Copiar**: copia el texto ya con la liga medida puesta. Si la liga de esa red todavía no existe, se crea en ese momento.
   - **No borres `{{liga}}`** del texto: ahí el sistema pone la liga medida al publicar.
 - Botones de acción:
   - **Guardar cambios**: guarda textos y redes. **Aprieta Guardar cambios antes de usar ✨, 🧠 o ↩**: esos botones trabajan con lo guardado y reemplazan lo que tengas en los cuadros.
@@ -891,7 +891,7 @@ Las estadísticas de alcance y "me gusta" sólo existen para **Facebook e Instag
 5. Si no se puede arreglar, quita esa red con su botón, **Guardar cambios** y vuelve a publicar, o **Descartar**.
 
 Importante:
-- **Las publicaciones en Error no se reintentan solas.** Lo único que se reintenta solo es Instagram cuando está "procesando" (hasta 24 horas).
+- **Las publicaciones en Error no se reintentan solas.** Lo único que se reintenta solo es Instagram cuando está "procesando" (hasta 24 horas). Para las demás, usa **🚀 Publicar ahora**: sólo reintenta las redes que fallaron.
 - Si el servidor se reinicia mientras publicaba, después de 30 minutos la publicación vuelve sola a la cola de programadas.
 - Cada lunes llega un correo "Social Hub: revisa las conexiones con redes" si hubo errores en la semana o no hay conexión con n8n (sólo si está configurado `HETNA_LEADS_EMAIL`).
 
@@ -1015,7 +1015,8 @@ Los tokens de **Facebook e Instagram** no están en el `.env`: viven en las cred
 | "Instagram no terminó de procesar el archivo en 24 horas." | Instagram no aceptó el video o la imagen | Prueba con otro archivo (vertical, más corto) y vuelve a publicar |
 | "Se está publicando en este momento." | Ya se está publicando, **o** era de una fecha especial ya vencida | Espera unos minutos y recarga; si es de fecha especial vencida, ya no se puede publicar |
 | "Fecha no válida." | La fecha de programación está mal | Elige otra fecha en el calendario |
-| "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." | Mejorar con IA sin llave, **o** con `SOCIAL_IA=off` | Agrega la llave al `.env` (y quita `SOCIAL_IA=off` si está) y redeploy |
+| "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." | Mejorar con IA sin llave | Agrega la llave al `.env` y redeploy |
+| "La IA está apagada en el servidor (SOCIAL_IA=off). Quita esa variable para usarla." | La llave está, pero la IA de Social Hub está apagada | Quita `SOCIAL_IA=off` del `.env` y redeploy |
 | "Esta publicación ya no se puede cambiar." | Mejorar con IA en una Publicada, Parcial o Descartada | Sólo se mejora en Borrador, Programada o Error |
 | "La IA no mejoró el texto; quedó como estaba." | La IA no encontró una versión con mejor o igual puntaje, o no respondió | Edita a mano o inténtalo después |
 | "No hay versión anterior." | Deshacer sin una mejora previa | Nada que hacer |
@@ -1199,7 +1200,7 @@ Si el periodo anterior estaba en cero, en lugar del porcentaje sale **nuevo**.
   - y además un mensaje por **Telegram**, si tu chat ya está vinculado en el Social Hub.
 - Cada aviso urgente se manda **una sola vez**. Si después de 30 días sigue igual, puede volver a avisarse. Ojo: si el título del aviso cambia (por ejemplo "lleva 3 días" pasa a "lleva 4 días"), el sistema lo toma como aviso nuevo y te lo vuelve a mandar.
 - **Detección de recargas**: cuando el saldo de Skydropx sube más de $50 entre una lectura y otra, se anota una recarga "detectada" por la diferencia. Las lecturas se guardan como máximo una vez por hora.
-- **Servicios**: se consultan cuando abres la página o corre la revisión, y el resultado se guarda 10 minutos. No hay un proceso aparte que los revise cada 10 minutos (aunque la pantalla diga "Se revisa cada 10 minutos").
+- **Servicios**: se consultan cuando abres la página o corre la revisión automática (cada 2 horas, de 7:40 a 21:40), y el resultado se guarda 10 minutos.
 
 ### Variables del servidor
 
@@ -1702,7 +1703,7 @@ Es el departamento de contabilidad de HETNA (persona física, régimen 612 · Ac
 - Facturas que **no son de tu RFC** se rechazan al subir.
 - Nunca mandes tu e.firma ni su contraseña por chat o correo. Sólo súbela en esta página. Se guarda cifrada y cada uso queda en la bitácora.
 - Si compartiste por error la liga de **Excel siempre conectado**, toca **Cambiar liga**: la vieja deja de funcionar.
-- La factura global del mes sólo se emite sola el día 1; esta página no tiene botón para emitirla a mano (verificar con soporte si la necesitas).
+- La factura global del mes se emite sola los primeros días del mes. Si hizo falta, puedes emitirla tú: elige el mes (sólo meses ya cerrados) y confirma. Si ese mes ya tiene global, la página te lo avisa y pide una segunda confirmación; la nueva sólo incluiría cobros que llegaron tarde.
 
 ---
 
@@ -1880,7 +1881,7 @@ Estados y botones de cada sobrepeso:
 - **OJO: no salió el correo; revisa Resend/Mercado Pago.** Se registró pero no se pudo avisar (sin correo del responsable o falla del servicio). Avísale tú.
 - **Este sobrepeso ya está pagado.** Ya no se puede cambiar (sólo anular).
 - **Sólo a un taller se le puede descontar de sus pagos.**
-- **Descontado al taller sólo cambia el estado.** No resta nada de **Pagos a talleres**: tienes que descontarlo tú al transferirle (verificar). Al marcar el pago, la pantalla registra el disponible completo aunque hayas transferido menos; anota la diferencia en la nota de tu banco.
+- **Descontado al taller resta el sobrepeso de su siguiente pago.** Aparece en **Pagos a talleres** como "Incluye descuentos por sobrepeso" y el taller lo ve en su saldo con el folio SOB. Se descuenta una sola vez. Si el taller no tiene saldo suficiente, queda **saldo en contra** y se descuenta del siguiente pago. Para deshacerlo usa **Anular**: si el descuento todavía no se aplicó en un pago, se devuelve; si ya se aplicó, la página te avisa y lo corriges en el siguiente pago. Los que marcaste como descontados antes del 18 de noviembre de 2026 no se descuentan solos: ésos los descontaste (o los descuentas) tú.
 - **Las ligas de las fotos duran 1 hora.** Descárgalas en cuanto las abras.
 - **Envío no encontrado.** El folio ya no existe.
 
@@ -2085,7 +2086,7 @@ Quién mueve cada etapa:
 2. Lee la tarjeta. Pregúntate: ¿un taller puede dar un precio real con esto? (material, cantidad, medidas, archivo).
 3. Abajo verás el cuadro **Revisión: ¿tiene lo necesario para cotizar?** Elige una opción:
    - Si está completa, da clic en **Aprobar y enviar a talleres**. La nota es opcional; si escribes una, el cliente la lee en su correo. Verás **"Aprobada: se está enviando a los talleres."** El aviso a los talleres puede tardar unos minutos.
-   - Si falta algo, escribe en el cuadro qué necesitas (mínimo 5 letras) y da clic en **Pedir información al cliente**. Al cliente le llega un correo con tu pregunta. La solicitud se queda en revisión.
+   - Si falta algo, escribe en el cuadro qué necesitas (mínimo 5 letras) y da clic en **Pedir información al cliente**. Al cliente le llega un correo con tu pregunta. La solicitud se queda en revisión y **en pausa**: no se aprueba sola mientras esperas. La tarjeta te dice desde cuándo espera y cuándo se aprobaría sola (72 horas después de tu última pregunta, si nadie hace nada).
    - Si no se puede hacer, escribe el motivo y da clic en **Cancelar**, luego confirma. El cliente recibe tu motivo por correo.
 
 Qué pasa al aprobar (con el botón o sola a las 24 horas):
@@ -2156,10 +2157,10 @@ Variables de entorno:
 
 ### Cuidado / problemas comunes
 
-- **Las 24 horas cuentan desde que el cliente creó la solicitud.** Pedir información **no detiene el reloj**. Si le pides un dato y no contesta a tiempo, la solicitud se aprueba sola igual. Si de verdad no se puede cotizar, mejor **Cancelar**.
-- **Para mandarla a talleres usa siempre Aprobar y enviar a talleres.** Si la mueves a mano a **Enviada a talleres** con la lista, al cliente le llega el correo "Tu solicitud ya está con los talleres", pero **ningún taller recibe aviso**. Además sigue contando como "en revisión" y, al cumplir 24 horas, se aprueba sola.
+- **Las 24 horas cuentan desde que el cliente creó la solicitud.** Si usas **Pedir información al cliente**, la aprobación automática se detiene. El cliente contesta por correo o WhatsApp: cuando tengas su respuesta, aprueba o cancela tú. Si nadie hace nada, se aprueba sola 72 horas después de tu última pregunta (se cambia con `LICITACION_INFO_HORAS`).
+- **Mover a mano a Enviada a talleres desde la revisión es lo mismo que Aprobar y enviar a talleres**: se difunde y se avisa a los talleres. Desde otra etapa sólo corrige la etapa (ya se había difundido).
 - **Los cuadros de texto de una tarjeta comparten lo que escribes.** El texto de revisión, el de disputa y el de **Mover etapa o anotar** son el mismo. Revisa el texto antes de dar clic en otro botón.
-- **Nota interna sólo aplica a Sólo anotar.** Si escribes una nota y das clic en **Mover a esta etapa**, el cliente la ve aunque marques la casilla.
+- **Nota interna (el cliente no la ve)** vale también al mover de etapa: el cliente ve el cambio de etapa, pero no tu nota. Sin marcar la casilla, lo que escribas es un mensaje para el cliente.
 - **Mover una etapa a mano le manda correo al cliente** cuando la nueva etapa es **En revisión**, **Enviada a talleres**, **Entregada**, **Cerrada** o **Cancelada**. El correo lleva tu nota. Por ejemplo, mover a **Entregada** le pide "Confirmar que lo recibí". Mueve etapas sólo para corregir algo que ya pasó.
 - **Cerrar o cancelar a mano da por terminada una disputa abierta.** Mejor resuélvela con **Resolver**.
 - **Cada pestaña muestra máximo 200 solicitudes** (las más recientes).
@@ -2595,57 +2596,58 @@ Una categoría oculta:
 
 ---
 
-# Apéndice · Cosas que hoy no funcionan como dice la pantalla
+# Apéndice · Lo que se corrigió y lo que sigue pendiente
 
-Al leer el código para escribir este manual salieron detalles en los que la pantalla promete algo distinto de lo que pasa. Mientras no se arreglen, trabaja como dice la columna **Qué hacer mientras**. Todos se pueden corregir; pide el que más te estorbe.
+Al escribir este manual salieron detalles en los que la pantalla prometía algo distinto de lo que pasaba. El 18 de noviembre de 2026 se corrigieron casi todos. Este manual ya describe el comportamiento nuevo.
 
-## Dinero y envíos
+## Corregido el 18 de noviembre de 2026
+
+**Dinero y envíos**
+
+- **Sobrepesos:** **Descontado al taller** ya resta el monto del siguiente pago, una sola vez. Los marcados antes de esa fecha no se descuentan solos.
+- **Pagos a talleres:** hay **Ver pedidos** por taller, con **Retener** (pide el motivo) y **Liberar**, y se ve el total retenido.
+- **Contabilidad:** hay botón para emitir la factura global de un mes cerrado, con aviso si ese mes ya tiene una.
+- **Ventas por día** (Centro de control): los días ya son los de México.
+
+**Solicitudes**
+
+- **Pedir información al cliente** detiene la aprobación automática (se reanuda sola a las 72 horas si nadie hace nada).
+- La **Nota interna** ya no la ve el cliente al mover de etapa.
+- Cada caja de texto de la tarjeta guarda su propio texto.
+- Mover a **Enviada a talleres** desde la revisión avisa a los talleres.
+- **Liberar** en una disputa antes de la entrega le manda correo al cliente.
+- El número de **Por revisar** coincide con la lista.
+
+**Talleres**
+
+- El botón de los correos de alta lleva a la página correcta en **Tiendas**.
+- **Confirmar** en **Tiendas** manda la bienvenida y programa el anuncio, sin duplicarlos.
+- **Verificaciones:** aprobar, rechazar o quitar una verificación le manda un correo al taller.
+
+**Social Hub**
+
+- **⏰ Programar** y **🚀 Publicar ahora** se detienen si el guardado falla.
+- **Copiar** pone la liga real.
+- Una publicación de fecha especial vencida lo dice claro al intentar publicarla.
+- Los comentarios nuevos aparecen en **Por responder** aunque no haya llave de IA.
+- Un horario con fin menor o igual al inicio muestra un error en lugar de "Guardado."
+- La tarjeta muestra el título y la liga de destino, y se pueden editar.
+- El piloto automático nunca programa un borrador que está en revisión.
+- La casilla **Promociones** ya dice todo lo que controla.
+
+**Otras páginas**
+
+- **Publicidad:** al guardar un anuncio activo en un espacio lleno, la página avisa y pide confirmar. El aviso "Vence hoy" ya sale el último día.
+- **Blog:** una liga de portada o video que no empieza con `https://` muestra un error. El título también se revisa al editar.
+- **Centro de control:** los avisos urgentes ya no se repiten cuando sólo cambia un número, y el aviso al celular y Telegram funcionan aunque falte el correo.
+
+## Sigue pendiente
 
 | Dónde | Qué pasa | Qué hacer mientras |
 |---|---|---|
-| **Envíos › Sobrepesos** | **Descontado al taller** sólo cambia el estado. No resta nada del saldo del taller en **Pagos a talleres**. | Descuenta el sobrepeso a mano al transferirle al taller. |
 | **Pagos** (sección de fábrica) | Probablemente sale vacía: no hay un proveedor de pagos automáticos conectado (verificar). | Los pagos reales a talleres se hacen en **Pagos a talleres**. |
-| **Pagos a talleres** | El sistema puede retener un pedido, pero la página no tiene botón para hacerlo ni muestra lo retenido. | Si necesitas retener un pago, no lo marques como pagado. |
-| **Contabilidad** | La factura global del mes sólo se emite sola el día 1. No hay botón para emitirla a mano. | Si el día 1 falló, avisa para emitirla. |
-| **Resultados › Ventas por día** | Agrupa por día en hora de Londres (UTC): lo que se vende de noche cae en la barra del día siguiente. | Tómalo en cuenta al comparar días. |
-
-## Solicitudes de fabricación
-
-| Qué pasa | Qué hacer mientras |
-|---|---|
-| **Pedir información al cliente** no detiene el reloj de 24 horas: la solicitud se aprueba sola aunque estés esperando la respuesta. | Si falta información, rechaza la solicitud con una nota que explique qué debe mandar el cliente. |
-| La **Nota interna** al mover de etapa **sí la ve el cliente**, y en 5 etapas le llega por correo. | No escribas en esa caja nada que el cliente no deba leer. |
-| Las cajas de revisión, disputa y "Mover etapa o anotar" de una tarjeta comparten el mismo texto. | Escribe la nota justo antes de tocar el botón que la usa. |
-| Mover a mano a **Enviada a talleres** le avisa al cliente, pero **no avisa a ningún taller**. | Avísales tú, o deja que la solicitud llegue a esa etapa sola. |
-| En una disputa, **Liberar** antes de la entrega sólo deja una nota en el historial: no le llega correo al cliente, aunque el aviso de confirmación dice que sí. | Escríbele al cliente directamente. |
-| El número de **Por revisar** puede no coincidir con la lista (las solicitudes antiguas no se cuentan). | Fíate de la lista, no del número. |
-
-## Talleres (Tiendas y Verificaciones)
-
-| Qué pasa | Qué hacer mientras |
-|---|---|
-| El botón **Revisar o suspender en el panel** de los correos de alta lleva a una dirección que probablemente ya no existe (verificar). | Entra a **Tiendas** desde el menú. |
-| Aprobar un taller con **Confirmar** en **Tiendas** no le manda el correo de bienvenida de HETNA ni crea su anuncio en redes. El alta automática sí hace las dos cosas. | Escríbele tú la bienvenida o crea su anuncio en **Social Hub**. |
-| Aprobar, rechazar o quitar una verificación no le manda correo al taller (verificar). | Avísale tú. |
-
-## Social Hub
-
-| Qué pasa | Qué hacer mientras |
-|---|---|
-| Una publicación en **error no se reintenta sola** (sólo Instagram, mientras está "procesando"). | Revisa **Publicadas** y usa **Publicar ahora**: sólo reintenta las redes que fallaron. |
-| **Copiar** antes de publicar pone el texto `{{liga}}` en lugar de la liga real. | Usa **Crear y copiar**, o copia después de publicar. |
-| Si **⏰ Programar** o **🚀 Publicar ahora** fallan al guardar, de todos modos intentan programar o publicar. | Si ves un error, recarga la página y revisa la publicación antes de volver a intentarlo. |
-| Una publicación de fecha especial vencida responde "Se está publicando en este momento" al intentar publicarla. | Ignórala o descártala: ya pasó su fecha. |
-| Sin llave de IA, los comentarios nuevos sólo aparecen en el filtro **Todos**. | Revisa ese filtro. |
-| Un horario con "hasta" menor o igual a "desde" no se guarda, aunque diga **Guardado.** | Revisa que el horario de fin sea mayor que el de inicio. |
-| La tarjeta de un borrador no enseña a qué página lleva, y el título y el destino no se pueden editar. | Ábrelo desde la vista previa para ver la liga. |
-| No hay vista de **descartadas**: una vez descartada, no se recupera desde el panel. | Descarta sólo lo que de verdad no quieres. |
-| La casilla **Promociones** también decide si se programan solas las piezas del Estudio diario y de Fechas especiales, aunque su texto no lo dice. | Tenlo en cuenta al apagarla. |
-
-## Otras páginas
-
-| Dónde | Qué pasa | Qué hacer mientras |
-|---|---|---|
-| **Publicidad** | No revisa cuántos anuncios caben en cada espacio: si activas más, sólo se ven los primeros según el orden. El aviso "Vence hoy" nunca sale. | Activa sólo los que caben y revisa las fechas de fin. |
-| **Blog** | Una liga de portada o video que no empieza con `https://` se guarda vacía sin avisar. Al editar, el título puede quedar con menos de 8 letras. | Pega ligas completas y revisa el título. |
-| **Centro de control** | "Se revisa cada 10 minutos" no es exacto: se actualiza al abrir la página o cuando corre el aviso automático (cada 2 horas, de 7:40 a 21:40). Los avisos con números que cambian ("lleva N días") pueden llegar repetidos. | Recarga la página para ver lo más reciente. |
+| **Envíos › Sobrepesos** | El descuento es en pesos. Un taller que sólo vende en dólares queda con saldo en contra que no se compensa solo. | Cóbrale con la liga de pago (**Cobrar**) en lugar de descontar. |
+| **Publicidad** | El botón **Pausar/Activar** de la lista no revisa el cupo del espacio. | Revisa el cupo al reactivar un anuncio. |
+| **Social Hub** | No hay vista de **descartadas**: una vez descartada, no se recupera desde el panel. | Descarta sólo lo que de verdad no quieres. |
+| **Social Hub** | Una publicación en error no se reintenta sola (sólo Instagram mientras está "procesando"). | Usa **🚀 Publicar ahora**. |
+| **Fundadores** | La insignia no activa ningún plan por sí sola (verificar). | Activa el beneficio aparte si corresponde. |

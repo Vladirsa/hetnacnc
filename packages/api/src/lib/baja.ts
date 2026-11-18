@@ -10,25 +10,32 @@
 import { createHmac, timingSafeEqual } from "crypto"
 
 import { STORE_URL } from "./licitacion"
+import { secretoLigas } from "./secreto-ligas"
 
 export const T_BAJA = "hetna_correo_baja"
 
-const secreto = () => process.env.BAJA_SECRET || process.env.COOKIE_SECRET || process.env.JWT_SECRET || ""
-
 const normal = (correo: string) => correo.trim().toLowerCase()
 
-export const firmaBaja = (correo: string) =>
-  createHmac("sha256", secreto()).update(`baja:${normal(correo)}`).digest("base64url").slice(0, 32)
+// Sin secreto propio (lib/secreto-ligas.ts) no hay firma: "" y ninguna liga vale.
+export const firmaBaja = (correo: string) => {
+  const s = secretoLigas()
+  return s ? createHmac("sha256", s).update(`baja:${normal(correo)}`).digest("base64url").slice(0, 32) : ""
+}
 
 export const firmaValida = (correo: string, firma: string) => {
-  const a = Buffer.from(firmaBaja(correo))
+  const esperada = firmaBaja(correo)
+  if (!esperada) return false
+  const a = Buffer.from(esperada)
   const b = Buffer.from(String(firma || ""))
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-// Liga pública (pasa por la tienda, que la reenvía a la API)
-export const ligaBaja = (correo: string) =>
-  `${STORE_URL}/api/baja?e=${encodeURIComponent(normal(correo))}&t=${firmaBaja(correo)}`
+// Liga pública (pasa por la tienda, que la reenvía a la API). "" si no se
+// puede firmar: el correo sale sin liga de baja en vez de con una que no sirve.
+export const ligaBaja = (correo: string) => {
+  const t = firmaBaja(correo)
+  return t ? `${STORE_URL}/api/baja?e=${encodeURIComponent(normal(correo))}&t=${t}` : ""
+}
 
 let lista = false
 export async function asegurarTablaBaja(knex: any) {
