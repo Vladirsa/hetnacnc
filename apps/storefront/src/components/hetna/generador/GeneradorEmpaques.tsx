@@ -70,6 +70,9 @@ const ICONOS: Record<Gen, string> = {
   cartas: "M7 3h10v18H7zM10 3a2 2 0 0 0 4 0M9 8h6",
   rebanada: "M4 18l16-6v6zM4 18l16-12v6M20 6v6",
   explosiva: "M9 9h6v6H9zM9 9L5 5M15 9l4-4M9 15l-4 4M15 15l4 4",
+  redonda: "M4 8a8 3 0 0 0 16 0a8 3 0 0 0-16 0zM4 8v9a8 3 0 0 0 16 0V8",
+  corazon: "M12 20s-8-5-8-11a4 4 0 0 1 8-1a4 4 0 0 1 8 1c0 6-8 11-8 11z",
+  estrella: "M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z",
 }
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
