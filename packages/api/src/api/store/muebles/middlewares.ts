@@ -15,4 +15,11 @@ export const storeMueblesMiddlewares: MiddlewareRoute[] = [
     bodyParser: { sizeLimit: "8mb" },
     middlewares: [soloClientes],
   },
+  {
+    method: ["POST"],
+    matcher: "/store/muebles/tableros",
+    // la imagen viaja en base64 dentro del JSON (máx. ~5 MB de imagen)
+    bodyParser: { sizeLimit: "8mb" },
+    middlewares: [soloClientes],
+  },
 ]

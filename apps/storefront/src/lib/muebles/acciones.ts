@@ -59,3 +59,19 @@ export async function disenarMuebleDesdeImagen(imagen: string, medio: "image/jpe
   if (imagen.length > 950_000) return { ok: false, mensaje: "La imagen es muy grande." } as Fallo
   return llamar<{ lectura: LecturaMueble; cobrado: number; saldo: number | null }>("/store/muebles/imagen", { imagen, medio })
 }
+
+export type LecturaTableros = {
+  tipo: "tableros" | "no_tableros"
+  nombre: string
+  grosor: number
+  tableros: { nombre: string; plano: "lateral" | "horizontal" | "frontal"; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }[]
+  confianza: "alta" | "media" | "baja"
+  notas: string
+}
+
+// Convierte la imagen de cualquier mueble de tableros en una lista de tableros
+// a escala (2 créditos; se regresan si la imagen no sirve)
+export async function disenarTablerosDesdeImagen(imagen: string, medio: "image/jpeg" | "image/png" | "image/webp") {
+  if (imagen.length > 950_000) return { ok: false, mensaje: "La imagen es muy grande." } as Fallo
+  return llamar<{ lectura: LecturaTableros; cobrado: number; saldo: number | null }>("/store/muebles/tableros", { imagen, medio })
+}

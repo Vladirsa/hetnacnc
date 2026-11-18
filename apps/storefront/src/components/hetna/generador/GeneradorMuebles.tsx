@@ -1,17 +1,32 @@
 "use client"
 
-// Muebles (2D Studio): ensamble sin tornillos (ranura y espiga, nuevo) y
-// despiece de gabinetes con herrajes (el de siempre). Cada modo conserva su
-// dirección: /disenar/muebles-ensamble y /disenar/despiece-muebles.
+// Muebles (2D Studio): mueble desde una imagen (cualquier mueble de tablero,
+// con IA), ensamble sin tornillos (exhibidor paramétrico) y despiece de
+// gabinetes con herrajes. Cada modo conserva su dirección:
+// /disenar/muebles-desde-imagen, /disenar/muebles-ensamble y /disenar/despiece-muebles.
 import { useState } from "react"
 
 import { GeneradorEnsamble } from "./GeneradorEnsamble"
 import { GeneradorMueble } from "./GeneradorMueble"
+import { GeneradorTableros } from "./GeneradorTableros"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoMuebles = "ensamble" | "gabinete"
+export type ModoMuebles = "imagen" | "ensamble" | "gabinete"
 
 const MODOS: Modo<ModoMuebles>[] = [
+  {
+    id: "imagen",
+    slug: "muebles-desde-imagen",
+    nombre: "Desde una imagen",
+    nota: "Cualquier mueble de tablero, con IA",
+    icono: (
+      <>
+        <rect x="5" y="7" width="30" height="24" rx="3" />
+        <path d="M5 25l9-8 7 6 5-4 9 7" />
+        <circle cx="27" cy="14" r="2.5" />
+      </>
+    ),
+  },
   {
     id: "ensamble",
     slug: "muebles-ensamble",
@@ -41,6 +56,7 @@ const MODOS: Modo<ModoMuebles>[] = [
 export function GeneradorMuebles({ modoInicial = "ensamble" }: { modoInicial?: ModoMuebles }) {
   const [modo, setModo] = useState<ModoMuebles>(modoInicial)
   const cabecera = <SelectorModos titulo="Muebles" modos={MODOS} modo={modo} cambiar={setModo} />
+  if (modo === "imagen") return <GeneradorTableros cabecera={cabecera} />
   if (modo === "gabinete")
     return (
       <div className="tema-estudio flex-1">

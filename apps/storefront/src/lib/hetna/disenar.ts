@@ -85,6 +85,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Convierte gratis un logotipo, dibujo o foto en vector: contornos cerrados en DXF o SVG listos para corte láser, router CNC o plasma. Tu imagen no se sube a ningún servidor.",
   },
   {
+    slug: "muebles-desde-imagen",
+    nombre: "Mueble desde una imagen",
+    texto: "Sube la foto o el plano de un mueble y sale listo para maquilar, visto armado en 3D.",
+    icono: "mueble",
+    acceso: "creditos",
+    titulo: "Diseñar un mueble desde una foto o plano para router CNC: piezas de caja y espiga",
+    descripcion:
+      "Sube la foto, boceto o plano de un mueble de tablero: la IA lo convierte en piezas con espigas y mortajas a las medidas y el grosor que elijas, lo ves armado en 3D y descargas DXF, SVG o PDF listos para router CNC o láser.",
+  },
+  {
     slug: "muebles-ensamble",
     nombre: "Muebles de ensamble sin tornillos",
     texto: "Exhibidores y repisas de ranura y espiga a tu medida, con vista 3D armada.",
