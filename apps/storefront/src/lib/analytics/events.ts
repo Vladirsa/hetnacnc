@@ -45,6 +45,16 @@ function gtagEvent(name: string, params: Record<string, unknown>) {
   }
 }
 
+// Tienda (/mx/tienda): qué stock conseguir primero. "Avísame" en una
+// categoría sin productos y cotizar algo que la búsqueda no encontró. Además
+// se guardan en HETNA (/api/tienda-interes → /admin/hetna-interes-tienda).
+export function trackAvisameCategoria(categoria: string) {
+  gtagEvent('avisame_categoria', { categoria });
+}
+export function trackCotizarBusqueda(termino: string) {
+  gtagEvent('cotizar_desde_busqueda', { search_term: termino });
+}
+
 // Interés en la app para talleres (Cotizador): clic en "Empezar gratis",
 // "Probar 14 días" o "Abrir la app" en /servicios/cotizador-cnc. Es la
 // conversión de las campañas de Google Ads para talleres.
@@ -142,7 +152,7 @@ export function trackPurchase(
       });
     }
     window.gtag('event', 'conversion', {
-      send_to: `${ADS_ID}/${ADS_LABEL_COMPRA}`,
+      send_to: `${ADS_ID}/${ADS_LABEL_COTIZADOR_PLACEHOLDER}`,
       value: toGa4Amount(value),
       currency: currency.toUpperCase(),
       transaction_id: orderId
