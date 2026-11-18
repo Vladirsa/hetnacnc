@@ -6,12 +6,13 @@
 // motor y mismos archivos). Las direcciones viejas siguen vivas y abren su modo.
 import { useState } from "react"
 
+import { GeneradorEsferas } from "./GeneradorEsferas"
 import { GeneradorLamparas } from "./GeneradorLamparas"
 import { GeneradorMarcos } from "./GeneradorMarcos"
 import { GeneradorRelojes } from "./GeneradorRelojes"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoDecoracion = "reloj" | "marco" | "lampara"
+export type ModoDecoracion = "reloj" | "marco" | "lampara" | "esfera"
 
 const MODOS: Modo<ModoDecoracion>[] = [
   {
@@ -50,6 +51,18 @@ const MODOS: Modo<ModoDecoracion>[] = [
       </>
     ),
   },
+  {
+    id: "esfera",
+    slug: "esferas-navidad",
+    nombre: "Esfera con nombre",
+    nota: "Adornos navideños, uno por nombre",
+    icono: (
+      <>
+        <circle cx="20" cy="23" r="12" />
+        <path d="M16 11h8V8h-8zM20 8V5M8 21h24M8 26h24" />
+      </>
+    ),
+  },
 ]
 
 export function GeneradorDecoracion({ modoInicial = "reloj" }: { modoInicial?: ModoDecoracion }) {
@@ -57,5 +70,6 @@ export function GeneradorDecoracion({ modoInicial = "reloj" }: { modoInicial?: M
   const cabecera = <SelectorModos titulo="Decoración" modos={MODOS} modo={modo} cambiar={setModo} />
   if (modo === "marco") return <GeneradorMarcos cabecera={cabecera} />
   if (modo === "lampara") return <GeneradorLamparas cabecera={cabecera} />
+  if (modo === "esfera") return <GeneradorEsferas cabecera={cabecera} />
   return <GeneradorRelojes cabecera={cabecera} />
 }

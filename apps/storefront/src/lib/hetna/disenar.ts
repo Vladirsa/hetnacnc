@@ -265,6 +265,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Elige el tamaño de la foto, el estilo del borde y un nombre o fecha: te damos el frente, la capa con ranura para vidrio y foto, la espalda y la pata para mesa o el colgador. Descarga DXF, SVG o PDF.",
   },
   {
+    slug: "esferas-navidad",
+    nombre: "Esferas navideñas con nombre",
+    texto: "Adornos de Navidad personalizados: escribe los nombres y descarga una esfera por cada uno.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Esferas navideñas con nombre para corte láser gratis (DXF y SVG)",
+    descripcion:
+      "Generador de esferas de Navidad personalizadas: elige el diseño (copos, estrellas, pinos, regalos…), escribe uno o varios nombres y descarga las esferas de una sola pieza, con las letras unidas, en DXF, SVG o PDF para corte láser, plotter o cartulina.",
+  },
+  {
     slug: ESCANEAR,
     nombre: "Imagen a 3D con IA",
     texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
