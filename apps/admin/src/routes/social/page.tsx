@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_nueva?: boolean }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_nueva?: boolean; max_dia?: number; separacion_h?: number; mercados_redes?: string[] }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -1126,6 +1126,17 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={c.imagen_nueva !== false} onChange={(e) => setC({ ...c, imagen_nueva: e.target.checked })} />
         Imágenes con el estilo nuevo (los mismos fondos que los videos animados). Si se apaga o falla, salen con el estilo anterior
+      </label>
+      <div style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+        <span>Ritmo: máximo</span>
+        <input type="number" min={0} max={12} value={c.max_dia ?? 3} onChange={(e) => setC({ ...c, max_dia: Number(e.target.value) })} style={{ width: 56, padding: "2px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
+        <span>publicaciones al día, separadas al menos</span>
+        <input type="number" min={0} max={12} value={c.separacion_h ?? 3} onChange={(e) => setC({ ...c, separacion_h: Number(e.target.value) })} style={{ width: 56, padding: "2px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
+        <span>horas (las historias no cuentan; muchas seguidas se ven como spam)</span>
+      </div>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
+        <input type="checkbox" checked={(c.mercados_redes || ["mx"]).length > 1} onChange={(e) => setC({ ...c, mercados_redes: e.target.checked ? ["mx", "us", "co"] : ["mx"] })} />
+        Publicar también lo de otros mercados (EE. UU. en inglés, Colombia) en las cuentas de HETNA. Apagado: sólo México; lo demás queda en borrador.
       </label>
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={!!c.video_animado} onChange={(e) => setC({ ...c, video_animado: e.target.checked })} />

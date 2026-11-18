@@ -26,6 +26,7 @@ import { borradorTikTok, tiktokConectado } from "./tiktok"
 import { pinterestConectado, publicarPinterest } from "./pinterest"
 import { sendEmail } from "./resend"
 import { modeloIA } from "./ia-modelo"
+import { limpiarTextoRed, sinLigasCrudas, tieneBasura } from "./limpiar-texto"
 
 export const T_POST = "hetna_social_post"
 export const T_LIGA = "hetna_social_liga"
@@ -67,6 +68,9 @@ export type ConfigSocial = {
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
   primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
   imagen_nueva: boolean // imágenes con el estilo nuevo (fondos de tema, como los videos); si Chrome falla, la de siempre
+  max_dia: number // publicaciones de feed al día por mercado (las historias no cuentan)
+  separacion_h: number // horas mínimas entre publicaciones
+  mercados_redes: string[] // mercados que salen en las cuentas de HETNA (por omisión sólo México)
   video_animado: boolean // videos del plan con HyperFrames (estilo «¿Máquina parada?»); apagado hasta que el dueño lo apruebe
   youtube_auto: boolean // YouTube conectado en n8n: los videos verticales salen solos como Shorts
   auto_respuestas: boolean // la IA contesta sola las preguntas frecuentes y los elogios en comentarios
@@ -82,6 +86,9 @@ const CONFIG_INICIAL: ConfigSocial = {
   aviso_hora: 8,
   primer_comentario: true,
   imagen_nueva: true,
+  max_dia: 3,
+  separacion_h: 3,
+  mercados_redes: ["mx"],
   video_animado: false,
   youtube_auto: false,
   auto_respuestas: false,
@@ -175,6 +182,9 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
     primer_comentario: v.primer_comentario !== false,
     imagen_nueva: v.imagen_nueva !== false,
+    max_dia: Number.isFinite(Number(v.max_dia)) ? Math.max(0, Math.min(12, Number(v.max_dia))) : 3,
+    separacion_h: Number.isFinite(Number(v.separacion_h)) ? Math.max(0, Math.min(12, Number(v.separacion_h))) : 3,
+    mercados_redes: Array.isArray(v.mercados_redes) && v.mercados_redes.length ? v.mercados_redes.filter((x: string) => x in MERCADOS) : ["mx"],
     video_animado: !!v.video_animado,
     youtube_auto: !!v.youtube_auto,
     auto_respuestas: !!v.auto_respuestas,
@@ -215,6 +225,9 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
     primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
     imagen_nueva: c.imagen_nueva != null ? !!c.imagen_nueva : actual.imagen_nueva,
+    max_dia: c.max_dia != null ? Math.max(0, Math.min(12, Number(c.max_dia) || 0)) : actual.max_dia,
+    separacion_h: c.separacion_h != null ? Math.max(0, Math.min(12, Number(c.separacion_h) || 0)) : actual.separacion_h,
+    mercados_redes: Array.isArray(c.mercados_redes) && c.mercados_redes.length ? (c.mercados_redes as string[]).filter((x) => x in MERCADOS) : actual.mercados_redes,
     video_animado: c.video_animado != null ? !!c.video_animado : actual.video_animado,
     youtube_auto: c.youtube_auto != null ? !!c.youtube_auto : actual.youtube_auto,
     auto_respuestas: c.auto_respuestas != null ? !!c.auto_respuestas : actual.auto_respuestas,
@@ -440,11 +453,11 @@ export async function crearPublicacion(knex: any, d: NuevaPub, logger?: any) {
   await asegurarSocial(knex)
   const cfg = await leerConfig(knex)
   const redes = (d.redes?.length ? d.redes : cfg.redes).filter((r) => r in REDES) as Red[]
-  const base = d.texto_base?.trim() || textoBase(d.origen, d)
+  const base = limpiarTextoRed(d.texto_base?.trim() || "") || textoBase(d.origen, d)
   const mercado = d.mercado && MERCADOS[d.mercado] ? d.mercado : "mx"
   const conLiga = base.includes(LIGA_MARCA) ? base : `${base}\n\n${LIGA_MARCA}`
   const { textos, ia: conIa } = d.textos
-    ? { textos: Object.fromEntries(redes.map((r) => [r, d.textos![r] || adaptarSinIa(conLiga, r)])), ia: true }
+    ? { textos: Object.fromEntries(redes.map((r) => [r, d.textos![r] ? limpiarTextoRed(d.textos![r]) : adaptarSinIa(conLiga, r)])), ia: true }
     : await adaptar(conLiga, redes, logger, mercado)
   const id = nuevoId("spost")
   const prog = d.programada_para ? new Date(d.programada_para) : null
@@ -519,6 +532,14 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   const n = await knex(T_POST).where({ id: postId }).whereIn("estado", ["programada", "borrador", "error", "parcial"]).whereRaw("(vence is null or vence > now())").update({ estado: "publicando", updated_at: knex.fn.now() })
   if (!n) return null
   const p = await knex(T_POST).where({ id: postId }).first()
+  // Borradores viejos que la IA escribió con instrucciones internas: sus imágenes ya
+  // salieron con ese texto (p. ej. "**CARRUSEL – Instagram…"). No se publican.
+  const crudoTodo = [p.titulo, p.texto_base, ...Object.values(p.textos || {})].join("\n")
+  if (/diapositiva\s*\d|carrusel\s*[–-]|nota antes de publicar|contexto no incluye/i.test(crudoTodo)) {
+    await knex(T_POST).where({ id: postId }).update({ estado: "descartada", notas: "La IA escribió instrucciones internas en el texto; se descartó para no publicar algo mal hecho. El plan la vuelve a hacer.", updated_at: knex.fn.now() })
+    logger?.warn?.(`[social] ${postId} descartada: texto con instrucciones internas de la IA`)
+    return { estado: "descartada", resultado: {} }
+  }
   const resultado = { ...(p.resultado || {}) }
   const medio = (p.medios || [])[0] || null
   const esVideo = medio?.tipo === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(String(medio?.url || ""))
@@ -536,7 +557,15 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
     if (resultado[red]?.ok) continue
     const codigo = await ligaPara(knex, p.id, red, p.url_destino)
     const liga = urlCorta(codigo)
-    const texto = String(p.textos?.[red] || adaptarSinIa(p.texto_base, red)).replace(LIGA_MARCA, liga)
+    const crudo = String(p.textos?.[red] || adaptarSinIa(p.texto_base, red))
+    let texto = limpiarTextoRed(crudo).split(LIGA_MARCA).join(liga)
+    // Instagram y TikTok: las ligas no se pueden tocar en el texto
+    if (["instagram", "instagram_historia", "tiktok"].includes(red)) texto = sinLigasCrudas(texto)
+    // Si todavía trae instrucciones internas, no sale (mejor no publicar que publicar mal)
+    if (tieneBasura(texto)) {
+      resultado[red] = { ok: false, error: "El texto traía instrucciones internas de la IA; no se publicó.", en: new Date().toISOString() }
+      continue
+    }
     if (!esAuto(red)) {
       resultado[red] = { ok: true, manual: true, en: new Date().toISOString() }
       continue
@@ -649,9 +678,36 @@ export async function publicarPendientes(knex: any, logger?: any) {
   // Las que se quedaron "publicando" más de 30 min (reinicio del servidor) vuelven a la cola
   await knex(T_POST).where({ estado: "publicando" }).where("updated_at", "<", knex.raw("now() - interval '30 minutes'")).update({ estado: "programada" })
   await descartarVencidas(knex, logger)
-  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(10).select("id", "mercado")
+  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(10).select("id", "mercado", "redes", "medios", "fuente")
+  // Las cuentas de HETNA son de México: lo de otros mercados (EE. UU., Colombia…) no
+  // sale en las mismas cuentas salvo que se active en Configuración (mercados_redes)
+  const mercadosOk: string[] = Array.isArray(cfg.mercados_redes) && cfg.mercados_redes.length ? cfg.mercados_redes : ["mx"]
+  const ritmo = { max: Number(cfg.max_dia ?? 3), separacion: Number(cfg.separacion_h ?? 3) }
   let n = 0
-  for (const { id, mercado } of listas) {
+  for (const { id, mercado, redes, medios, fuente } of listas) {
+    if (!mercadosOk.includes(mercado || "mx")) {
+      await knex(T_POST).where({ id }).update({ estado: "borrador", notas: `Es para el mercado ${String(mercado).toUpperCase()}; las cuentas son de México. Actívalo en Configuración si quieres publicarlo.`, updated_at: knex.fn.now() })
+      continue
+    }
+    // Ritmo: pocas publicaciones al día y separadas (muchas seguidas se ven como spam y el algoritmo las castiga).
+    // Las historias no cuentan.
+    const soloHistoria = Array.isArray(redes) && redes.length > 0 && redes.every((r: string) => r === "instagram_historia")
+    if (!soloHistoria && ritmo.max > 0) {
+      const hoy = await knex(T_POST).where("publicada_en", ">=", knex.raw(`date_trunc('day', now() at time zone ?) at time zone ?`, [zonaDe(mercado), zonaDe(mercado)])).whereIn("estado", ["publicada", "parcial"]).whereRaw(`not (redes::jsonb <@ '["instagram_historia"]'::jsonb)`).select("publicada_en").orderBy("publicada_en", "desc")
+      const ultima = hoy[0]?.publicada_en ? new Date(hoy[0].publicada_en).getTime() : 0
+      const espera = ultima + ritmo.separacion * 3600_000 - Date.now()
+      if (hoy.length >= ritmo.max || espera > 0) {
+        // Si ya lleva días esperando turno, se descarta: lo nuevo es mejor que lo acumulado
+        const vieja = await knex(T_POST).where({ id }).where("created_at", "<", knex.raw("now() - interval '4 days'")).first("id")
+        if (vieja) {
+          await knex(T_POST).where({ id }).update({ estado: "descartada", notas: "Esperó turno más de 4 días (tope de publicaciones por día).", updated_at: knex.fn.now() })
+          continue
+        }
+        const cuando = hoy.length >= ritmo.max ? new Date(Date.now() + 24 * 3600_000) : new Date(Date.now() + espera + 5 * 60_000)
+        await knex(T_POST).where({ id }).update({ programada_para: dentroDeHorario(cuando, cfg.horario, zonaDe(mercado)) })
+        continue
+      }
+    }
     // Cada mercado publica dentro de su propio horario
     const zona = zonaDe(mercado)
     const hh = horaEn(new Date(), zona)

@@ -13,7 +13,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { STORE_URL, nuevoId } from "./licitacion"
 import { MERCADOS, T_POST, asegurarSocial, enviarAN8n, iaSocial, leerConfig } from "./social-hub"
 import { mandarPrivado } from "./social-telegram"
-import { modeloIA } from "./ia-modelo"
+import { IA_MODELO_RAPIDO, modeloIA } from "./ia-modelo"
 
 export const T_COMENTARIO = "hetna_social_comentario"
 // La misma página que usan los anuncios (lib/anuncios.ts): META_PAGE_ID, o la de HETNA por omisión
@@ -62,7 +62,7 @@ export async function proponer(c: { texto: string; red: string; autor?: string }
   if (!iaSocial()) return null
   ia ??= new Anthropic()
   const resp = await ia.beta.messages.create({
-    ...modeloIA(),
+    ...modeloIA(IA_MODELO_RAPIDO()),
     max_tokens: 800,
     output_config: {
       effort: "low",

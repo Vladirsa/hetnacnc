@@ -22,6 +22,7 @@ import { STORE_URL, nuevoId } from "./licitacion"
 import { PRINCIPIOS_VIDEO } from "./fabrica/render"
 import { MERCADOS, REDES, T_CONFIG_S, T_POST, asegurarSocial, crearPublicacion, horaEn, iaSocial, zonaDe } from "./social-hub"
 import { modeloIA } from "./ia-modelo"
+import { limpiarTextoRed, tieneBasura } from "./limpiar-texto"
 
 export const T_PLAN = "hetna_social_plan"
 
@@ -380,12 +381,24 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
     const resp = await ia.beta.messages.create({
       ...modeloIA(),
       max_tokens: 1500,
-      output_config: { effort: "low" },
+      output_config: {
+        effort: "low",
+        format: {
+          type: "json_schema",
+          schema: {
+            type: "object", additionalProperties: false, required: ["texto", "guion"],
+            properties: {
+              texto: { type: "string", description: "SÓLO el texto que se publica tal cual en la red (sin títulos como 'Texto de la publicación', sin markdown ni asteriscos, sin notas internas, sin explicar el formato)" },
+              guion: { type: "string", description: "si es video o reel: guion de 15 a 30 segundos en bloques (acción visual + texto en pantalla de máximo 4 palabras); si no, vacío" },
+            },
+          },
+        },
+      },
       system:
         "Eres el estratega de contenido de HETNA CNC, marketplace de fabricación CNC (talleres, clientes industriales, makers y proveedores). " +
         "Escribe UNA publicación lista para usar. Reglas: usa sólo datos reales del contexto, no inventes precios, cifras, clientes ni promociones; " +
-        "si el formato es video o reel, escribe el texto de la publicación y al final una línea 'GUION:' con el guion de 15 a 30 segundos (gancho en el primer segundo), " +
-        "escrito como bloques donde cada bloque dice la acción visual concreta y el texto en pantalla de máximo 4 palabras. Principios de video: " + PRINCIPIOS_VIDEO + " " +
+        "el campo texto es exactamente lo que verá la gente: sin encabezados, sin asteriscos ni markdown, sin notas para el equipo, sin describir diapositivas. Si no hay un caso real, no lo menciones ni expliques: escribe sobre algo que sí sea real. " +
+        "Si el formato es video o reel, el guion va en su propio campo (gancho en el primer segundo). Principios de video: " + PRINCIPIOS_VIDEO + " " +
         "Incluye la marca {{liga}} donde va la liga. Sin teléfonos ni correos. " +
         "Diseño que funciona (docs/investigacion-disenos-virales.md): primera línea de máximo 8 palabras que se entienda sola y, si hay un dato real en el contexto, con número; " +
         "habla de un estado o proceso concreto cuando el contexto lo permita; una sola llamada a la acción; pide que lo manden a quien lo necesita (nunca 'comenta SÍ' ni 'etiqueta a'); " +
@@ -403,8 +416,12 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
       }],
     } as any)
     if (resp.stop_reason === "refusal") return { texto: plantilla, ia: false }
-    const texto = resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim()
-    return { texto: texto || plantilla, ia: !!texto }
+    const crudo = resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim()
+    let j: any = null
+    try { j = JSON.parse(crudo) } catch { j = { texto: crudo, guion: "" } }
+    const texto = limpiarTextoRed(j.texto || "")
+    if (!texto || tieneBasura(texto)) return { texto: plantilla, ia: false }
+    return { texto: j.guion?.trim() ? `${texto}\nGUION: ${String(j.guion).trim()}` : texto, ia: true }
   } catch (e) {
     logger?.warn?.(`[estrategia] IA no disponible: ${(e as Error).message}`)
     return { texto: plantilla, ia: false }

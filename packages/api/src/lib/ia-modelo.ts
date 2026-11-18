@@ -2,7 +2,11 @@
 // Por defecto el más barato (Claude Haiku 5.5: unas 40 veces más barato que Opus).
 // Para cambiarlo sin tocar código: IA_MODELO=claude-sonnet-5-5 (o claude-opus-5-5)
 // en el .env del backend.
-export const IA_MODELO = () => (process.env.IA_MODELO || "claude-haiku-5-5").trim()
+// Lo que se PUBLICA (textos, guiones, campañas) usa Sonnet: Haiku salía con
+// instrucciones internas y markdown en los textos. Las tareas de volumen
+// (revisor, clasificar comentarios, radar) usan Haiku: IA_MODELO_RAPIDO.
+export const IA_MODELO = () => (process.env.IA_MODELO || "claude-sonnet-5-5").trim()
+export const IA_MODELO_RAPIDO = () => (process.env.IA_MODELO_RAPIDO || "claude-haiku-5-5").trim()
 
 /**
  * Modelo del agente de ventas de WhatsApp: es el que habla con clientes, así
