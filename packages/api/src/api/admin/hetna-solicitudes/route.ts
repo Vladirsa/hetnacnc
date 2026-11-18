@@ -6,7 +6,11 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, folioTexto, ligaPropuestas } from "../../../lib/licitacion"
 import { NOMBRE_PROBLEMA, type TipoProblema } from "../../../lib/disputa"
-import { ETAPAS, NOMBRE_ETAPA, asegurarSeguimiento, etapaDe } from "../../../lib/seguimiento"
+import { ETAPAS, NOMBRE_ETAPA, asegurarSeguimiento, etapaDe, limiteRevision } from "../../../lib/seguimiento"
+
+// "Por revisar": las que tienen la etapa y las de antes de existir la columna,
+// que se deducen del estado. La misma regla para la lista y para su conteo.
+const enRevision = (q: any) => q.where((w: any) => w.where({ etapa: "en_revision" }).orWhere({ estado: "revision" }))
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -17,8 +21,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .modify((q: any) => {
       if (etapa === "disputa") return q.whereNotNull("disputa")
       if (!(ETAPAS as readonly string[]).includes(etapa)) return
-      // Las de antes de existir la columna se deducen del estado.
-      if (etapa === "en_revision") q.where((w: any) => w.where({ etapa }).orWhere({ estado: "revision" }))
+      if (etapa === "en_revision") enRevision(q)
       else q.where({ etapa })
     })
     .orderBy("created_at", "desc")
@@ -41,6 +44,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   res.json({
     totales: {
       ...Object.fromEntries(porEtapa.map((e) => [e.etapa || "sin_etapa", Number(e.n)])),
+      en_revision: Number(((await enRevision(knex(T_SOLICITUD)).count("* as n").first()) as any)?.n || 0),
       disputa: Number(((await knex(T_SOLICITUD).whereNotNull("disputa").count("* as n").first()) as any)?.n || 0),
     },
     solicitudes: filas.map((s) => {
@@ -55,6 +59,9 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
         etapa_desde: s.etapa_desde || s.updated_at,
         creada: s.created_at,
         cierra_en: s.cierra_en,
+        // Revisión: si se le pidió información al cliente y cuándo se aprueba sola
+        info_pedida_en: s.info_pedida_en || null,
+        aprueba_sola_en: s.estado === "revision" ? limiteRevision(s) : null,
         trabajo: { ...s.trabajo, archivos: (s.trabajo?.archivos || []).map((a: any) => ({ nombre: a.nombre, tamano: a.tamano })) },
         contacto: s.contacto,
         propuestas: nPor[s.id] || 0,
