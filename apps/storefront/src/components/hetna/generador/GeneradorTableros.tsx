@@ -6,7 +6,7 @@
 // alivios. La vista principal es el mueble armado en 3D, hecho con las mismas
 // piezas que se cortan. Leer la imagen cuesta 2 créditos (se regresan si no
 // sirve); ver, ajustar y medir es gratis; descargar los archivos, 1 crédito.
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -18,10 +18,15 @@ import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, muebleDeTableros } from "@/lib/generador/tableros"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
-import { claveDiseno, mallaArmada, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
+import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
+
+import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
+import type { CajaVista } from "./Mueble3D"
 import { Visor3D } from "./Visor3D"
 
-const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
+const Mueble3D = dynamic(() => import("./Mueble3D"), { ssr: false })
+type Pt = [number, number, number]
+const cajaVista = (t: Tablero): CajaVista => ({ lo: [t.x0, t.y0, t.z0], hi: [t.x1, t.y1, t.z1] })
 const TABLERO = { ancho: 1220, largo: 2440 }
 const FRESAS = [
   { id: "laser", nombre: "Láser" },
@@ -69,7 +74,14 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [textos, setTextos] = useState<Record<string, string>>({}) // lo que el cliente escribe en las medidas de cada tablero
   const [v, setV] = useState<Record<string, string>>({ ancho: "", fondo: "", alto: "", grosor: String(EJEMPLO.grosor), holgura: "0.3", saliente: "0" })
   const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
-  const [tris, setTris] = useState<number[] | null>(null)
+  const [sel, setSel] = useState<number | null>(null) // pieza seleccionada en el 3D (índice de tablerosFinales)
+  const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
+  const [explotar, setExplotar] = useState(0)
+  const [rayosX, setRayosX] = useState(false)
+  const [ajustar, setAjustar] = useState(0)
+  const [pasado, setPasado] = useState<Tablero[][]>([])
+  const [futuro, setFuturo] = useState<Tablero[][]>([])
+  const [hueco, setHueco] = useState({ ancho: "160", alto: "60" })
   const [pagados, setPagados] = useState<Record<string, boolean>>({})
   const [cobrando, setCobrando] = useState(false)
   const [avisoCobro, setAvisoCobro] = useState<{ texto: string; login?: boolean; creditos?: boolean } | null>(null)
@@ -90,16 +102,62 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const m = useMemo(() => muebleDeTableros(tableros, opciones), [clave])
   const d = useMemo(() => (m.piezas.length && !m.errores.length ? dibujo(piezasTendidas(m.piezas)) : null), [m])
 
-  // el armado 3D se rehace al cambiar el diseño (con una pausa corta al teclear)
+  // ---- editor: cada cambio se hace sobre el mueble ya armado (lo que se ve) ----
+  const base = useCallback((): Tablero[] => (m.piezas.length ? [...m.tablerosFinales, ...m.sueltos] : tableros), [m, tableros])
+  const aplicar = useCallback(
+    (cambio: (ts: Tablero[]) => Tablero[], nuevaSel?: number | null) => {
+      const antes = base()
+      const despues = cambio(antes)
+      if (despues === antes) return
+      setPasado((h) => [...h.slice(-49), tableros])
+      setFuturo([])
+      setTableros(despues)
+      setTextos({})
+      setEsEjemplo(false)
+      // el mueble ya armado trae sus medidas: las totales quedan libres
+      setV((x) => ({ ...x, ancho: "", fondo: "", alto: "" }))
+      if (nuevaSel !== undefined) setSel(nuevaSel)
+    },
+    [base, tableros],
+  )
+  const deshacer = useCallback(() => {
+    if (!pasado.length) return
+    setFuturo((f) => [tableros, ...f])
+    setTableros(pasado[pasado.length - 1])
+    setPasado((h) => h.slice(0, -1))
+    setSel(null)
+  }, [pasado, tableros])
+  const rehacer = useCallback(() => {
+    if (!futuro.length) return
+    setPasado((h) => [...h, tableros])
+    setTableros(futuro[0])
+    setFuturo((f) => f.slice(1))
+    setSel(null)
+  }, [futuro, tableros])
   useEffect(() => {
-    if (!m.piezas.length) return setTris(null)
-    let vivo = true
-    const t = setTimeout(() => mallaArmada(m.piezas).then((x) => vivo && setTris(x)), 150)
-    return () => {
-      vivo = false
-      clearTimeout(t)
+    const tecla = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault()
+        if (e.shiftKey) rehacer()
+        else deshacer()
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault()
+        rehacer()
+      } else if ((e.key === "Delete" || e.key === "Backspace") && sel !== null) {
+        e.preventDefault()
+        aplicar((ts) => quitar(ts, sel), null)
+      } else if (e.key === "Escape") setSel(null)
     }
-  }, [m])
+    window.addEventListener("keydown", tecla)
+    return () => window.removeEventListener("keydown", tecla)
+  }, [deshacer, rehacer, aplicar, sel])
+  const selT = sel !== null ? m.tablerosFinales[sel] : null
+  const agregarTablero = (tipo: TipoNuevo) => {
+    const r = agregar(base(), tipo, punto, opciones.grosor)
+    aplicar(() => r.tableros, r.indice)
+  }
 
   const areaM2 = useMemo(() => {
     let a = 0
@@ -126,6 +184,11 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         setLectura({ texto: `${r.lectura.notas || "La imagen no parece un mueble de tablero."} ${r.cobrado === 0 ? "No se te cobró." : "No pudimos regresarte los créditos solos: escríbenos y te los devolvemos."}`, tipo: "aviso" })
       else {
         setTableros(r.lectura.tableros)
+        setPasado([])
+        setFuturo([])
+        setSel(null)
+        setPunto(null)
+        setAjustar((n) => n + 1)
         setTextos({})
         setNombre(r.lectura.nombre)
         setEsEjemplo(false)
@@ -174,6 +237,58 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones de caja y espiga, sin tornillos.
         {esEjemplo && " Es un ejemplo: sube tu imagen para reemplazarlo."}
       </div>
+
+      <Seccion titulo="Editar en 3D">
+        <span className="text-[12px] text-[#8A97AB]">
+          Toca una pieza para seleccionarla. Arrastra una de sus caras para estirarla; la cara grande la mueve completa (Shift = de 1 en 1 mm). El punto azul marca dónde se agrega o se abre un hueco.
+        </span>
+        <div className="flex gap-2">
+          <button type="button" disabled={!pasado.length} onClick={deshacer} className="flex-1 rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045] disabled:opacity-40">↶ Deshacer</button>
+          <button type="button" disabled={!futuro.length} onClick={rehacer} className="flex-1 rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045] disabled:opacity-40">↷ Rehacer</button>
+        </div>
+        <span className="text-[12px] font-semibold text-[#C9D2E0]">Agregar {punto ? "en el punto azul" : "al centro del mueble"}</span>
+        <div className="grid grid-cols-2 gap-2">
+          {([["repisa", "Repisa"], ["division", "División"], ["respaldo", "Respaldo"], ["travesano", "Travesaño"]] as const).map(([t, n]) => (
+            <button key={t} type="button" onClick={() => agregarTablero(t)} className="rounded-[8px] bg-[#243045] px-2 py-2 text-[12.5px] font-semibold text-white ring-1 ring-[#2F3D55] hover:ring-[#C2560A]">
+              + {n}
+            </button>
+          ))}
+        </div>
+        {selT && sel !== null && (
+          <div className="flex flex-col gap-2 rounded-[10px] border border-[#C2560A] bg-[#1A1410] p-2.5">
+            <div className="flex items-center justify-between gap-2 text-[12.5px]">
+              <b className="truncate text-white">{selT.nombre}</b>
+              <span className="text-[#C9D2E0]">{Math.round(selT.x1 - selT.x0)} × {Math.round(selT.y1 - selT.y0)} × {Math.round(selT.z1 - selT.z0)} mm</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 text-[12px]">
+              {([[0, "←", -10], [0, "→", 10], [2, "↑", 10], [2, "↓", -10], [1, "Al frente", -10], [1, "Atrás", 10]] as const).map(([eje, t, d]) => (
+                <button key={t} type="button" onClick={() => aplicar((ts) => mover(ts, sel, [eje === 0 ? d : 0, eje === 1 ? d : 0, eje === 2 ? d : 0]))} className="rounded-[7px] bg-[#1C2431] px-1.5 py-1.5 font-semibold text-[#C9D2E0] hover:bg-[#243045]" title={`Mover 10 mm`}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <button type="button" onClick={() => aplicar((ts) => duplicar(ts, sel), base().length)} className="flex-1 rounded-[7px] bg-[#1C2431] px-2 py-1.5 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">Duplicar</button>
+              <button type="button" onClick={() => aplicar((ts) => quitar(ts, sel), null)} className="flex-1 rounded-[7px] bg-[#2A1C1C] px-2 py-1.5 text-[12.5px] font-semibold text-[#F6B8AE] hover:bg-[#3A2222]">Quitar</button>
+            </div>
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">Hueco (pasacables, ventana, agarradera)</span>
+            <div className="grid grid-cols-2 gap-2">
+              <CampoNum etiqueta="Ancho" valor={hueco.ancho} cambiar={(x) => setHueco((h) => ({ ...h, ancho: x }))} sufijo="mm" />
+              <CampoNum etiqueta="Alto" valor={hueco.alto} cambiar={(x) => setHueco((h) => ({ ...h, alto: x }))} sufijo="mm" />
+            </div>
+            <div className="flex gap-1.5">
+              <button type="button" onClick={() => aplicar((ts) => abrirHueco(ts, sel, numero(hueco.ancho) || 160, numero(hueco.alto) || 60, punto))} className="flex-1 rounded-[7px] bg-[#243045] px-2 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[#2C3A52]">
+                Abrir hueco {punto ? "en el punto" : "al centro"}
+              </button>
+              {!!selT.aberturas?.length && (
+                <button type="button" onClick={() => aplicar((ts) => quitarHuecos(ts, sel))} className="rounded-[7px] px-2 py-1.5 text-[12.5px] font-semibold text-[#F6B8AE] hover:bg-[#2A1C1C]">
+                  Quitar huecos
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </Seccion>
 
       <Seccion titulo="Medidas totales">
         <div className="grid grid-cols-3 gap-2">
@@ -255,11 +370,39 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
 
   const vista3D = (
     <Visor3D oscuro alto="h-full min-h-[260px]">
-      {tris && tris.length ? (
-        <Malla3D oscuro tris={tris} color={0xd8b98e} />
+      {m.piezas.length ? (
+        <Mueble3D
+          piezas={m.piezas}
+          sueltos={m.sueltos.map(cajaVista)}
+          seleccion={sel}
+          explotar={explotar}
+          rayosX={rayosX}
+          editable
+          ajustar={ajustar}
+          punto={punto}
+          alSeleccionar={(i, p) => {
+            setSel(i)
+            setPunto(p)
+          }}
+          alEmpujar={(i, eje, lado, delta) => aplicar((ts) => empujar(ts, i, eje, lado, delta))}
+          cajaDe={(i) => (m.tablerosFinales[i] ? cajaVista(m.tablerosFinales[i]) : null)}
+        />
       ) : (
-        <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]">{m.piezas.length ? "Armando el mueble…" : m.errores[0] || "Sube la imagen de un mueble."}</div>
+        <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]">{m.errores[0] || "Sube la imagen de un mueble."}</div>
       )}
+      <div className="absolute bottom-9 left-2 right-2 flex flex-wrap items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0] sm:right-auto">
+        <label className="flex items-center gap-2">
+          Explotar
+          <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />
+        </label>
+        <button type="button" aria-pressed={rayosX} onClick={() => setRayosX((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${rayosX ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+          Rayos X
+        </button>
+        <button type="button" onClick={() => setAjustar((n) => n + 1)} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
+          Ajustar vista
+        </button>
+        {m.sueltos.length > 0 && <span className="text-[#FF9A9A]">En rojo: tableros que no tocan al mueble</span>}
+      </div>
     </Visor3D>
   )
 
