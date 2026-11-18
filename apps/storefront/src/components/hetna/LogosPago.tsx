@@ -7,20 +7,22 @@
 // Sólo se pone lo que de verdad se puede cobrar. Un logo de más en esta fila no
 // es decoración: es una promesa de que ese medio funciona.
 
-type Props = { className?: string }
+type Props = { className?: string; grande?: boolean }
 
 const CAJA = "h-[40px] w-[64px] shrink-0 rounded-[6px] border border-[#E2E1DC] bg-white object-contain"
+// La marca de la pasarela al elegir cómo pagar: grande, para que se note cuál eliges
+const CAJA_GRANDE = "h-[60px] w-[96px] shrink-0 rounded-[8px] border border-[#E2E1DC] bg-white object-contain sm:h-[68px] sm:w-[108px]"
 
-const Marca = ({ archivo, nombre, className = "" }: Props & { archivo: string; nombre: string }) => (
+const Marca = ({ archivo, nombre, className = "", grande = false }: Props & { archivo: string; nombre: string }) => (
   // eslint-disable-next-line @next/next/no-img-element
   <img
     src={`/pagos/${archivo}.webp`}
     alt={nombre}
-    width={64}
-    height={40}
+    width={grande ? 108 : 64}
+    height={grande ? 68 : 40}
     loading="lazy"
     decoding="async"
-    className={`${CAJA} ${className}`}
+    className={`${grande ? CAJA_GRANDE : CAJA} ${className}`}
   />
 )
 
@@ -31,10 +33,12 @@ export const LogoMastercard = ({ className = "" }: Props) => (
 export const LogoAmex = ({ className = "" }: Props) => (
   <Marca archivo="amex" nombre="American Express" className={className} />
 )
-export const LogoMercadoPago = ({ className = "" }: Props) => (
-  <Marca archivo="mercadopago" nombre="Mercado Pago" className={className} />
+export const LogoMercadoPago = ({ className = "", grande = false }: Props) => (
+  <Marca archivo="mercadopago" nombre="Mercado Pago" className={className} grande={grande} />
 )
-export const LogoPaypal = ({ className = "" }: Props) => <Marca archivo="paypal" nombre="PayPal" className={className} />
+export const LogoPaypal = ({ className = "", grande = false }: Props) => (
+  <Marca archivo="paypal" nombre="PayPal" className={className} grande={grande} />
+)
 
 export const LogoTarjeta = ({ className = "" }: Props) => (
   <svg viewBox="0 0 42 26" className={`h-[40px] w-[64px] shrink-0 rounded-[6px] ${className}`} role="img" aria-label="Tarjeta">
