@@ -8,7 +8,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 // arriba). La usan las herramientas que producen STL: extruir, litofanías…
 
 // Sin `alto` llena el contenedor (Visor3D); con `alto` mide eso en px.
-export default function Malla3D({ tris, alto, oscuro = false }: { tris: number[]; alto?: number; oscuro?: boolean }) {
+export default function Malla3D({ tris, alto, oscuro = false, color = 0xff6a1a }: { tris: number[]; alto?: number; oscuro?: boolean; color?: number }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function Malla3D({ tris, alto, oscuro = false }: { tris: number[]
     const geo = new THREE.BufferGeometry()
     geo.setAttribute("position", new THREE.Float32BufferAttribute(tris, 3))
     geo.computeVertexNormals()
-    const mat = new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
     const malla = new THREE.Mesh(geo, mat)
     // el dibujo está en XY con Z arriba; three mira con Y arriba
     malla.rotation.x = -Math.PI / 2
@@ -89,7 +89,7 @@ export default function Malla3D({ tris, alto, oscuro = false }: { tris: number[]
       renderer.dispose()
       if (renderer.domElement.parentNode === el) el.removeChild(renderer.domElement)
     }
-  }, [tris])
+  }, [tris, color, oscuro])
 
   return <div ref={ref} style={alto ? { height: alto } : undefined} className="w-full h-full min-h-[300px] rounded-[12px] overflow-hidden cursor-grab active:cursor-grabbing" />
 }

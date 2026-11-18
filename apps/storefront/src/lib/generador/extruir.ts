@@ -52,11 +52,34 @@ const limpiar = (pts: P[]) => {
     const b = out[out.length - 1]
     if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 1e-4) out.pop()
   }
+  // Quita los puntos alineados con sus vecinos. El triangulador de three
+  // (earcut) los descarta en las tapas; si las paredes los conservan, las
+  // aristas no coinciden y el STL queda con huecos (no es "watertight").
+  let cambio = true
+  while (cambio && out.length > 3) {
+    cambio = false
+    for (let i = 0; i < out.length && out.length > 3; i++) {
+      const p = out[(i + out.length - 1) % out.length]
+      const q = out[i]
+      const r = out[(i + 1) % out.length]
+      if (Math.abs((q[0] - p[0]) * (r[1] - q[1]) - (q[1] - p[1]) * (r[0] - q[0])) < 1e-9) {
+        out.splice(i, 1)
+        cambio = true
+        i--
+      }
+    }
+  }
   return out
 }
 
 export function extruir(d: Dibujo, o: OpcionesExtruir): ResultadoExtruir {
-  const cerrados = d.trazos.filter((t) => t.cerrado).map((t) => limpiar(t.pts)).filter((p) => p.length >= 3 && Math.abs(area2(p)) > 0.01)
+  // Cada contorno se mueve una fracción de micra en Y: cuando varios huecos
+  // tienen bordes sobre la misma recta exacta (letras que tocan un riel),
+  // earcut une mal los huecos y el STL queda abierto. No cambia la pieza.
+  const cerrados = d.trazos
+    .filter((t) => t.cerrado)
+    .map((t, k) => limpiar(t.pts).map(([x, y]) => [x, y + ((k % 997) + 1) * 1e-6] as P))
+    .filter((p) => p.length >= 3 && Math.abs(area2(p)) > 0.01)
   if (!cerrados.length) return { malla: { tris: [], avisos: [] }, piezas: 0, agujeros: 0, errores: ["El dibujo no tiene contornos cerrados que extruir. Revisa que las líneas cierren o usa «Unir líneas sueltas» en el convertidor."] }
 
   // profundidad de anidado de cada contorno
