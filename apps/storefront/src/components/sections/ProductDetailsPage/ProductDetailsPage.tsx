@@ -14,6 +14,9 @@ import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
 import { productoExtra } from "@/lib/hetna/producto-extra"
 import { VideoProducto } from "@/components/hetna/VenderMas"
+import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
+import { GaleriaDescarga } from "@/components/hetna/fichas/descarga/GaleriaDescarga"
+import { AbajoDescarga, vistasGaleria } from "@/components/hetna/fichas/descarga/FichaDescarga"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -95,6 +98,16 @@ export const ProductDetailsPage = async ({
 
   const pendienteDeEste = pendientes.find((p) => p.product_id === prod.id)
 
+  // Diseño para descargar: galería con esquema, "Cómo funciona", pestañas y
+  // preguntas (components/hetna/fichas/descarga). Sin existencias ni envíos.
+  const descarga = esFichaDescarga(prod)
+  const largosDescarga = descarga ? (
+    <div className="flex flex-col gap-6">
+      <AbajoDescarga product={prod as never} />
+      <ResenasProducto datos={resenas} productId={prod.id} pendiente={pendienteDeEste} />
+    </div>
+  ) : null
+
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto
   const base = baseSitio()
   const categoria = (prod as { categories?: { name?: string | null; handle?: string | null }[] }).categories?.[0]
@@ -131,23 +144,28 @@ export const ProductDetailsPage = async ({
         data-testid="product-details-page"
       >
         <div className="min-w-0" data-testid="product-gallery-container">
-          <ProductGallery images={prod?.images || []} title={prod.title} />
+          {descarga ? (
+            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} />
+          ) : (
+            <ProductGallery images={prod?.images || []} title={prod.title} />
+          )}
           {/* La ficha larga va debajo de las fotos, no en la columna de la
               compra: así el bloque de compra cabe en la pantalla y se puede
               quedar pegado mientras se lee todo esto. */}
           <div className="mt-8 hidden lg:block">
-            <ProductDetallesLargos
+            {largosDescarga}
+            {!descarga && <ProductDetallesLargos
               product={prod}
               locale={locale}
               taller={{ name: vendedor?.name, handle: vendedor?.handle }}
-            />
-            <div className="mt-4">
+            />}
+            {!descarga && <div className="mt-4">
               <ResenasProducto
                 datos={resenas}
                 productId={prod.id}
                 pendiente={pendienteDeEste}
               />
-            </div>
+            </div>}
           </div>
         </div>
 
@@ -165,18 +183,19 @@ export const ProductDetailsPage = async ({
         {/* En celular no hay dos columnas, así que la ficha larga va al final
             y no entre las fotos y el botón de comprar. */}
         <div className="lg:hidden">
-          <ProductDetallesLargos
+          {largosDescarga}
+          {!descarga && <ProductDetallesLargos
             product={prod}
             locale={locale}
             taller={{ name: vendedor?.name, handle: vendedor?.handle }}
-          />
-          <div className="mt-4">
+          />}
+          {!descarga && <div className="mt-4">
             <ResenasProducto
               datos={resenas}
               productId={prod.id}
               pendiente={pendienteDeEste}
             />
-          </div>
+          </div>}
         </div>
       </div>
       {/* Compatibilidad, videos, archivos y preguntas frecuentes del producto
@@ -185,6 +204,7 @@ export const ProductDetailsPage = async ({
       <FichaProducto
         metadata={prod.metadata as Record<string, unknown> | null | undefined}
         titulo={prod.title}
+        omitirFaq={descarga}
       />
       {extra.video && <VideoProducto url={extra.video} titulo={prod.title} />}
 
@@ -207,7 +227,7 @@ export const ProductDetailsPage = async ({
       {relacionados.length > 0 && (
         <div className="mt-4">
           <HomeProductSection
-            heading="También te puede interesar"
+            heading={descarga ? "Otros diseños" : "También te puede interesar"}
             products={relacionados as never}
             locale={locale}
           />
