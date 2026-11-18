@@ -13,6 +13,9 @@ const GeneradorImagen = dynamic(() => import("@/components/hetna/generador/Gener
 const GeneradorArchivos = dynamic(() => import("@/components/hetna/generador/GeneradorArchivos").then((m) => m.GeneradorArchivos))
 const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve"> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve" }
 const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir" }
+// relojes, marcos y lámparas: Decoración
+const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
+const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara" }
 const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
@@ -22,11 +25,8 @@ const GeneradorRompecabezas = dynamic(() => import("@/components/hetna/generador
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
 const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
 const GeneradorEngranes = dynamic(() => import("@/components/hetna/generador/GeneradorEngranes").then((m) => m.GeneradorEngranes))
-const GeneradorRelojes = dynamic(() => import("@/components/hetna/generador/GeneradorRelojes").then((m) => m.GeneradorRelojes))
 // el organizador de cajón ahora es un tipo de caja (separadores)
 const GeneradorOrganizador = dynamic(() => import("@/components/hetna/generador/GeneradorCaja").then((m) => m.GeneradorOrganizadorCaja))
-const GeneradorLamparas = dynamic(() => import("@/components/hetna/generador/GeneradorLamparas").then((m) => m.GeneradorLamparas))
-const GeneradorMarcos = dynamic(() => import("@/components/hetna/generador/GeneradorMarcos").then((m) => m.GeneradorMarcos))
 
 const GENERADORES: Record<string, React.ComponentType> = {
   "caja-con-juntas": GeneradorCaja,
@@ -36,19 +36,17 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "despiece-muebles": GeneradorMueble,
   "plantillas-empaque": GeneradorEmpaques,
   engranes: GeneradorEngranes,
-  relojes: GeneradorRelojes,
   "organizador-cajon": GeneradorOrganizador,
-  "lamparas-capas": GeneradorLamparas,
-  "marcos-portarretratos": GeneradorMarcos,
 }
 
-export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS)])
+export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION)])
 
 export function Herramienta({ slug }: { slug: string }) {
   if (MODO_PATRON[slug]) return <GeneradorPatronesCorte modoInicial={MODO_PATRON[slug]} />
   if (MODO_LETRERO[slug]) return <GeneradorLetrerosPlacas modoInicial={MODO_LETRERO[slug]} />
   if (MODO_IMAGEN[slug]) return <GeneradorImagen modoInicial={MODO_IMAGEN[slug]} />
   if (MODO_ARCHIVOS[slug]) return <GeneradorArchivos modoInicial={MODO_ARCHIVOS[slug]} />
+  if (MODO_DECORACION[slug]) return <GeneradorDecoracion modoInicial={MODO_DECORACION[slug]} />
   const G = GENERADORES[slug]
   return G ? <G /> : null
 }
