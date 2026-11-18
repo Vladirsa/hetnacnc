@@ -2,7 +2,7 @@ jest.mock("../backblaze", () => ({ uploadFile: jest.fn(async (_b: Buffer, k: str
 jest.mock("../fabrica/estudio", () => ({ fal: jest.fn() }))
 jest.mock("../fabrica/index", () => ({ subir: jest.fn() }))
 
-import { extension, guardarArchivo, nombreSeguro, nuevoSku, revisarParaPublicar, slug } from "../subir-disenos"
+import { extension, guardarArchivo, nombreSeguro, nuevoSku, prepararImagen, revisarParaPublicar, slug } from "../subir-disenos"
 
 describe("subir diseños", () => {
   it("SKU único con fecha", () => {
@@ -37,7 +37,6 @@ describe("imagen tal cual", () => {
     const { subir } = jest.requireMock("../fabrica/index")
     let guardado: Buffer = Buffer.alloc(0)
     subir.mockImplementation(async (_s: any, _n: string, _m: string, b: Buffer) => { guardado = b; return "https://cdn/x.jpg" })
-    const { prepararImagen } = await import("../subir-disenos")
     const png = await sharp({ create: { width: 800, height: 400, channels: 4, background: { r: 200, g: 0, b: 0, alpha: 0 } } }).png().toBuffer()
     const r = await prepararImagen({}, png, "foto.png", "original")
     expect(r).toEqual({ url: "https://cdn/x.jpg", modo: "original" })
