@@ -21,6 +21,7 @@ import re
 import sys
 import html as html_mod
 import time
+import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -133,22 +134,55 @@ def texto_pagina(url: str) -> str:
         return ""
 
 
-def buscar_sitios(consulta: str, maximo: int, cfg: dict) -> list[str]:
-    """Busca sitios en DuckDuckGo SIN gastar tokens de la IA (antes se usaba
-    SearchGraph, que se comía el límite diario de Groq sólo para listar URLs)."""
+BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
+MOTORES_DDGS = ["auto", "bing", "brave", "mojeek", "yahoo"]
+
+
+def buscar_web(consulta: str, maximo: int, region: str = "mx-es") -> list[dict]:
+    """Resultados de búsqueda como [{href, title, body}].
+    1) Brave Search API si hay BRAVE_API_KEY (plan gratis: 2,000 búsquedas al mes,
+       1 por segundo); no bloquea como DuckDuckGo desde el VPS.
+    2) Si no, ddgs probando varios motores (DuckDuckGo bloqueaba casi todo: DDGSException)."""
+    clave = os.environ.get("BRAVE_API_KEY", "").strip()
+    if clave:
+        pais = (region.split("-")[0] or "mx").upper()
+        idioma = region.split("-")[1] if "-" in region else "es"
+        q = urllib.parse.urlencode({"q": consulta, "count": min(20, max(1, maximo)), "country": pais, "search_lang": idioma})
+        req = urllib.request.Request(f"{BRAVE_URL}?{q}", headers={"Accept": "application/json", "X-Subscription-Token": clave})
+        for intento in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=20) as r:
+                    datos = json.loads(r.read().decode("utf-8", "ignore"))
+                time.sleep(1.1)  # límite del plan gratis: 1 por segundo
+                return [{"href": x.get("url", ""), "title": x.get("title", ""), "body": x.get("description", "")}
+                        for x in (datos.get("web") or {}).get("results", [])]
+            except Exception as e:  # noqa: BLE001
+                print(f"  … Brave falló ({type(e).__name__}); reintento en {5 * (intento + 1)} s")
+                time.sleep(5 * (intento + 1))
+        print("  … Brave no respondió; se intenta con los buscadores gratis")
     try:
         from ddgs import DDGS
     except ImportError:
         from duckduckgo_search import DDGS
-    resultados = []
-    for intento in range(3):
+    for motor in MOTORES_DDGS:
         try:
             with DDGS() as d:
-                resultados = list(d.text(consulta, max_results=maximo * 3))
-            break
-        except Exception as e:  # noqa: BLE001  (timeouts / límite de DuckDuckGo)
-            print(f"  … DuckDuckGo falló ({type(e).__name__}); reintento en {20 * (intento + 1)} s")
-            time.sleep(20 * (intento + 1))
+                try:
+                    res = list(d.text(consulta, region=region, max_results=maximo, backend=motor))
+                except TypeError:  # versiones viejas sin "backend"
+                    res = list(d.text(consulta, max_results=maximo))
+            if res:
+                return res
+        except Exception as e:  # noqa: BLE001
+            print(f"  … {motor} falló ({type(e).__name__})")
+            time.sleep(4)
+    return []
+
+
+def buscar_sitios(consulta: str, maximo: int, cfg: dict) -> list[str]:
+    """Busca sitios (Brave o ddgs, ver buscar_web) SIN gastar tokens de la IA (antes
+    se usaba SearchGraph, que se comía el límite diario de Groq sólo para listar URLs)."""
+    resultados = buscar_web(consulta, maximo * 3)
     limpias, vistos = [], set()
     for r in resultados:
         u = r.get("href") or r.get("url") or ""
@@ -272,15 +306,9 @@ def ciudad_de(consulta: str) -> str:
 
 
 def buscar_perfiles(consulta: str, red: str, maximo: int) -> list[dict]:
-    try:
-        from ddgs import DDGS
-    except ImportError:
-        from duckduckgo_search import DDGS
-    try:
-        with DDGS() as d:
-            resultados = list(d.text(f"site:{REDES_BUSQUEDA[red]} {consulta}", max_results=maximo * 3))
-    except Exception as e:  # noqa: BLE001
-        print(f"  … búsqueda en {red} falló ({type(e).__name__})")
+    resultados = buscar_web(f"site:{REDES_BUSQUEDA[red]} {consulta}", maximo * 3)
+    if not resultados:
+        print(f"  … búsqueda en {red} sin resultados")
         return []
     out = []
     for r in resultados:

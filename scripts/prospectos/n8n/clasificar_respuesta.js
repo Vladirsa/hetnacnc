@@ -48,7 +48,11 @@ const pideBaja = BAJA.some((k) => nuevoMin.includes(k));
 
 const AUTOMATICA = ['requires verification', 'verify your email', 'verify#', 'verificación de remitente', 'verificar su correo', 'challenge',
   'auto-reply', 'autoreply', 'automatic reply', 'auto reply', 'respuesta automática', 'respuesta automatica', 'resposta automática', 'resposta automatica',
-  'fuera de la oficina', 'fuera de oficina', 'out of office', 'out of the office', 'ausente', 'vacaciones', 'ausência', 'no-reply', 'noreply'];
+  'fuera de la oficina', 'fuera de oficina', 'out of office', 'out of the office', 'ausente', 'vacaciones', 'ausência', 'no-reply', 'noreply',
+  // Acuses de sistemas de tickets (18 nov 2026: Ultraprint 3D)
+  'confirmación de recepción', 'confirmacion de recepcion', 'escriba su respuesta por encima', 'escribe tu respuesta por encima', 'reply above this line',
+  'hemos recibido su solicitud', 'hemos recibido tu solicitud', 'hemos recibido su mensaje', 'hemos recibido tu mensaje', 'hemos recibido su correo',
+  'número de ticket', 'numero de ticket', 'ticket #', 'we have received your', 'recebemos sua mensagem', 'recebemos sua solicitação'];
 const esAutomatica = !pideBaja && (AUTOMATICA.some((k) => nuevoMin.includes(k)) || de.startsWith('no-reply') || de.startsWith('noreply'));
 
 const LIBRES = ['gmail.com', 'hotmail.com', 'hotmail.es', 'outlook.com', 'outlook.es', 'live.com', 'live.com.mx', 'yahoo.com', 'yahoo.com.mx', 'icloud.com', 'msn.com',

@@ -106,6 +106,15 @@ Código: `n8n/clasificar_respuesta.js`.
 
 ## Búsqueda automática de prospectos (ScrapeGraphAI + Groq, todas las noches)
 
+**Buscador (18 nov 2026):** DuckDuckGo bloqueaba casi todas las búsquedas desde el
+VPS (`DDGSException`). Ahora `buscar_web()` usa la **Brave Search API** si en `.env`
+hay `BRAVE_API_KEY=` (plan gratis de 2,000 búsquedas al mes en
+https://api-dashboard.search.brave.com) y, si no, prueba varios motores gratis
+(auto, Bing, Brave, Mojeek, Yahoo) con la región de México.
+
+**Que corra sola:** revisa con `crontab -l | grep prospectos`. Si no sale nada, instálala:
+`( crontab -l 2>/dev/null; echo "30 2 * * * $HOME/hetnacnc/scripts/prospectos/correr_diario.sh" ) | crontab -`
+
 `plan_busqueda.json` tiene 1,447 búsquedas (segmentos × ciudades de México, EE.UU.,
 Sudamérica y Brasil), incluidos carpinterías con router, rotulistas, grabado láser,
 herrerías con plasma, impresión 3D y torno, y desde el 18 nov 2026 **compradores**
