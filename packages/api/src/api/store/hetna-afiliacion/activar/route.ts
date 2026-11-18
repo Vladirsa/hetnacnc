@@ -23,7 +23,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     email: a.email,
     first_name: nombre || "",
     last_name: resto.join(" "),
-    telefono: a.telefono || "",
+    // El número sólo con la liga del correo: la de pantalla la ve quien mandó el formulario
+    telefono: deCorreo ? a.telefono || "" : "",
     cuenta_existe: !!a.customer_id || (await tieneCuenta(knex, a.email)),
   })
 }
@@ -51,7 +52,11 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   }
   await clientes.updateCustomers(c.id, { metadata })
   await knex("hetna_afiliado").where({ id: a.id }).whereNull("customer_id").update({ customer_id: c.id, activado_en: knex.fn.now() })
-  const ligadas = await ligarSolicitudesPorCorreo(knex, a.email, c.id).catch(() => 0)
+  // Las solicitudes de ese correo sólo pasan a la cuenta con el correo
+  // confirmado: el registro de la tienda no verifica el correo, así que con la
+  // liga de pantalla alguien podría quedarse con las solicitudes de otra
+  // persona (auditoría Thermos, 15 nov 2026). Al abrir la liga del correo se ligan.
+  const ligadas = deCorreo || yaVerificado ? await ligarSolicitudesPorCorreo(knex, a.email, c.id).catch(() => 0) : 0
 
   if (deCorreo && !yaVerificado) {
     await sendEmail({

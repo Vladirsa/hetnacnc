@@ -13,7 +13,7 @@ import { useFuente } from "./useFuente"
 
 const LETRAS = FUENTES.filter((f) => ["cinzel", "montserrat", "oswald", "roboto-slab", "bebas-neue", "allerta-stencil", "stardos-stencil"].includes(f.id))
 
-export function GeneradorRelojes() {
+export function GeneradorRelojes({ cabecera }: { cabecera?: React.ReactNode }) {
   const [diametro, setDiametro] = useState("300")
   const [forma, setForma] = useState<Forma>("circulo")
   const [numeros, setNumeros] = useState<Numeros>("romanos")
@@ -96,7 +96,12 @@ export function GeneradorRelojes() {
           <path d="M12 7v5l3 2" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`reloj-${diametro}mm`}

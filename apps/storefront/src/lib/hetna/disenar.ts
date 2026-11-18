@@ -102,7 +102,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     acceso: "gratis",
     titulo: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
     descripcion:
-      "35 plantillas gratis a tu medida: caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+      "49 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón, de estrella, ataúd y de N lados con tapa, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
   },
   {
     slug: "grabado-foto",
@@ -265,6 +265,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Elige el tamaño de la foto, el estilo del borde y un nombre o fecha: te damos el frente, la capa con ranura para vidrio y foto, la espalda y la pata para mesa o el colgador. Descarga DXF, SVG o PDF.",
   },
   {
+    slug: "esferas-navidad",
+    nombre: "Esferas navideñas con nombre",
+    texto: "Adornos de Navidad personalizados: escribe los nombres y descarga una esfera por cada uno.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Esferas navideñas con nombre para corte láser gratis (DXF y SVG)",
+    descripcion:
+      "Generador de esferas de Navidad personalizadas: elige el diseño (copos, estrellas, pinos, regalos…), escribe uno o varios nombres y descarga las esferas de una sola pieza, con las letras unidas, en DXF, SVG o PDF para corte láser, plotter o cartulina.",
+  },
+  {
     slug: ESCANEAR,
     nombre: "Imagen a 3D con IA",
     texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
@@ -303,33 +313,20 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
-      { slug: "litofania-relieve", corto: "Litofanías y relieves" },
-      { slug: "svg-a-stl", corto: "SVG a STL" },
     ],
   },
   "2d": {
     nombre: "2D Studio",
     herramientas: [
       { slug: "caja-con-juntas", corto: "Cajas" },
-      { slug: "vectorizador", corto: "Vectorizador" },
-      { slug: "letreros", corto: "Letreros" },
-      { slug: "rompecabezas", corto: "Rompecabezas" },
+      { slug: "vectorizador", corto: "Imagen" }, // vectorizador + foto a grabado + litofanía
+      { slug: "letreros", corto: "Letreros y placas" }, // letreros + esténcil + código QR
+      { slug: "rompecabezas", corto: "Juegos y mecanismos" }, // rompecabezas + engranes
       { slug: "despiece-muebles", corto: "Muebles" },
       { slug: "plantillas-empaque", corto: "Empaques" },
-      { slug: "grabado-foto", corto: "Foto a grabado" },
-      { slug: "patrones-radiales", corto: "Patrones" },
-      { slug: "convertidor", corto: "Convertidor" },
-      { slug: "anidado-piezas", corto: "Anidado" },
-      { slug: "celosias", corto: "Celosías" },
-      { slug: "bisagra-viva", corto: "Bisagra viva" },
-      { slug: "codigo-qr", corto: "Código QR" },
-      { slug: "rebanado-capas", corto: "Rebanado" },
-      { slug: "engranes", corto: "Engranes" },
-      { slug: "relojes", corto: "Relojes" },
-      { slug: "organizador-cajon", corto: "Organizador" },
-      { slug: "lamparas-capas", corto: "Lámparas" },
-      { slug: "estencil-letras", corto: "Esténcil" },
-      { slug: "marcos-portarretratos", corto: "Marcos" },
+      { slug: "convertidor", corto: "Archivos" }, // convertidor + anidado + rebanado + SVG a STL
+      { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
+      { slug: "relojes", corto: "Decoración" }, // relojes + marcos + lámparas
     ],
   },
 }

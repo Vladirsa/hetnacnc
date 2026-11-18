@@ -32,7 +32,7 @@ PAUSA_S=20
 MODEL_TOKENS=4000
 # Veces por noche que se usa la IA (sólo cuando la página no trae el correo a la vista)
 MAX_IA=25
-N8N_IMPORTAR_URL=https://n8n.hetnacnc.com/webhook/hetna-prospectos-importar
+N8N_IMPORTAR_URL=http://127.0.0.1:5678/webhook/hetna-prospectos-importar
 ENV
   chmod 600 .env
   echo ">> Edita $AQUI/.env y pega tu llave de Groq en LLM_API_KEY"

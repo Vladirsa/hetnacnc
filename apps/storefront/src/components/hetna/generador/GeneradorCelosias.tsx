@@ -15,7 +15,7 @@ const MEDIDAS = [
   { id: "cuadro", nombre: "Cuadro 30×30", ancho: 300, alto: 300 },
 ]
 
-export function GeneradorCelosias() {
+export function GeneradorCelosias({ cabecera }: { cabecera?: React.ReactNode }) {
   const [patron, setPatron] = useState<Patron>("rombos")
   const [ancho, setAncho] = useState("600")
   const [alto, setAlto] = useState("900")
@@ -108,7 +108,12 @@ export function GeneradorCelosias() {
           <path d="M8 6l2 3-2 3-2-3zM16 6l2 3-2 3-2-3zM12 12l2 3-2 3-2-3z" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`celosia-${patron}-${Math.round(numero(ancho) || 0)}x${Math.round(numero(alto) || 0)}`}

@@ -30,6 +30,9 @@ const PROTEGIDAS = [
   "recompensa_referido_cupon",
   // Número de afiliación (lib/afiliacion.ts)
   "afiliacion",
+  // Membresía Empresarial (lib/confianza.ts): la activa HETNA, no el cliente
+  // (auditoría Thermos, 15 nov 2026)
+  "membresia_empresarial",
 ]
 
 type Meta = Record<string, unknown>

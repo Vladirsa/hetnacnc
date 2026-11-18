@@ -1,6 +1,7 @@
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import type { IOrderModuleService, MedusaContainer } from "@medusajs/framework/types"
 
+import { llaveDeProductoValida } from "./archivo-seguro"
 import { getSignedDownloadUrl } from "./backblaze"
 import { digitalDownloadEmailHtml } from "./email-templates"
 import { STORE_URL } from "./licitacion"
@@ -110,7 +111,7 @@ export async function deliverDigitalProductsForOrder(
     }
     const product = products.find((p: any) => p.id === item.product_id)
     const metadata = (product?.metadata || {}) as Record<string, unknown>
-    if (metadata.producto_digital !== true || !metadata.archivo_storage_key) {
+    if (metadata.producto_digital !== true || !llaveDeProductoValida(metadata.archivo_storage_key)) {
       continue
     }
     vistos.add(pid)

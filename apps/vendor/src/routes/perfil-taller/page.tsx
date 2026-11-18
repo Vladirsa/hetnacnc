@@ -168,7 +168,7 @@ export default function PerfilTallerPage() {
   const [galeria, setGaleria] = useState([])
   const [subiendoGal, setSubiendoGal] = useState(false)
   const [f, setF] = useState({
-    lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", anos: "",
+    lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", horario: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
     tarifas: {}, tipo_cuenta: "taller", marcas: "",
   })
@@ -197,6 +197,7 @@ export default function PerfilTallerPage() {
           cp: p.cp || "",
           ofrece: Array.isArray(p.ofrece) ? p.ofrece : [],
           entrega: p.entrega || "",
+          horario: p.horario || "",
           anos: p.anos ?? "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
           // Licitaciones 3.0: taller (fabrica), proveedor (vende productos) o ambos
@@ -238,6 +239,7 @@ export default function PerfilTallerPage() {
       lat: undefined,
       lng: undefined,
       entrega: f.entrega.trim(),
+      horario: (f.horario || "").trim().slice(0, 120),
       anos: f.anos === "" ? undefined : Number(f.anos),
       whatsapp: undefined,
       servicios: f.servicios,
@@ -386,6 +388,8 @@ export default function PerfilTallerPage() {
             <input style={S.input} type="number" min="0" value={f.anos} onChange={(e) => set("anos", e.target.value)} />
           </div>
         </div>
+        <label style={{ ...S.label, marginTop: 12 }}>Horario de atención</label>
+        <input style={S.input} value={f.horario || ""} onChange={(e) => set("horario", e.target.value)} placeholder="Ej. Lunes a viernes 9:00 a 18:00, sábado 9:00 a 14:00" maxLength={120} />
       </section>
 
       <section style={S.card}>
@@ -558,6 +562,7 @@ function VistaPrevia({ nombre, handle, logo, banner, f, galeria }) {
     ["Portada", !!banner],
     ["Lema", !!(f.lema || "").trim()],
     ["Ubicación", !!(f.ciudad && f.estado)],
+    ["Horario", !!(f.horario || "").trim()],
     ["Servicios", (f.servicios || []).length > 0],
     ["Materiales", (f.materiales || []).length > 0],
     ["Máquinas", (f.maquinas || []).length > 0],

@@ -157,7 +157,8 @@ const diasRestantes = (p: Pieza): number | null =>
 const fechaCorta = (t: string | null) => (t ? t.slice(0, 10) : "sin fin")
 
 // Reduce la imagen en el navegador (WebP, máx. ~800 KB) para que el sitio siga rápido.
-async function comprimir(archivo: File, anchoMax: number): Promise<Blob> {
+// La vista previa de WhatsApp va en JPG: WhatsApp no siempre muestra WebP en la tarjeta.
+async function comprimir(archivo: File, anchoMax: number, tipo: "image/webp" | "image/jpeg" = "image/webp"): Promise<Blob> {
   const bmp = await createImageBitmap(archivo)
   const escala = Math.min(1, anchoMax / bmp.width)
   const lienzo = document.createElement("canvas")
@@ -168,7 +169,7 @@ async function comprimir(archivo: File, anchoMax: number): Promise<Blob> {
   ctx.drawImage(bmp, 0, 0, lienzo.width, lienzo.height)
   const aBlob = (q: number) =>
     new Promise<Blob>((ok, mal) =>
-      lienzo.toBlob((b) => (b ? ok(b) : mal(new Error("No se pudo comprimir la imagen."))), "image/webp", q)
+      lienzo.toBlob((b) => (b ? ok(b) : mal(new Error("No se pudo comprimir la imagen."))), tipo, q)
     )
   let calidad = 0.85
   let blob = await aBlob(calidad)
@@ -224,12 +225,14 @@ function CampoImagen({
   valor,
   anchoMax,
   onCambio,
+  jpg = false,
 }: {
   titulo: string
   ayuda: string
   valor: string
   anchoMax: number
   onCambio: (url: string) => void
+  jpg?: boolean
 }) {
   const [subiendo, setSubiendo] = useState(false)
   const [msg, setMsg] = useState("")
@@ -241,9 +244,9 @@ function CampoImagen({
     setSubiendo(true)
     setMsg("")
     try {
-      const blob = await comprimir(f, anchoMax)
+      const blob = await comprimir(f, anchoMax, jpg ? "image/jpeg" : "image/webp")
       const fd = new FormData()
-      fd.append("archivo", new File([blob], "banner.webp", { type: "image/webp" }))
+      fd.append("archivo", jpg ? new File([blob], "banner.jpg", { type: "image/jpeg" }) : new File([blob], "banner.webp", { type: "image/webp" }))
       const r = await fetch("/api/pub/subir", { method: "POST", headers: cabeceras(), body: fd, credentials: "include" })
       const j = (await r.json().catch(() => ({}))) as { url?: string; error?: string }
       if (!r.ok || !j.url)
@@ -399,6 +402,7 @@ export default function PaginaPublicidad() {
           valor={editando.imagen_url}
           anchoMax={cfg?.anchoMax ?? 1200}
           onCambio={(u) => cambia("imagen_url", u)}
+          jpg={editando.espacio === "vista_whatsapp"}
         />
 
         {editando.espacio === "carrusel_principal" && (

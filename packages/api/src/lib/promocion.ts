@@ -13,7 +13,7 @@
 //    liga al perfil del taller. Así HETNA tiene contenido original y legal.
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
-import { STORE_URL, T_PROPUESTA, T_SOLICITUD, nuevoId } from "./licitacion"
+import { STORE_URL, T_PROPUESTA, T_SOLICITUD, esc, nuevoId } from "./licitacion"
 import { ligaPara, urlCorta, T_LIGA, T_EVENTO_S, crearPublicacion, leerConfig, dentroDeHorario, asegurarSocial } from "./social-hub"
 import { sendEmail } from "./resend"
 
@@ -200,7 +200,7 @@ export async function subirVideo(scope: any, sellerId: string, archivo: any, cam
   })
   if (process.env.HETNA_LEADS_EMAIL) {
     const v = await knex("seller").where({ id: sellerId }).first("name")
-    await sendEmail({ to: process.env.HETNA_LEADS_EMAIL, subject: `Video nuevo de ${v?.name || "un taller"} para redes`, html: `<p>${v?.name || "Un taller"} subió un video de su trabajo con autorización para publicarlo. Revísalo en Admin → Social Hub → Videos de talleres.</p>` }).catch(() => {})
+    await sendEmail({ to: process.env.HETNA_LEADS_EMAIL, subject: `Video nuevo de ${v?.name || "un taller"} para redes`, html: `<p>${esc(v?.name || "Un taller")} subió un video de su trabajo con autorización para publicarlo. Revísalo en Admin → Social Hub → Videos de talleres.</p>` }).catch(() => {})
   }
   return { id }
 }

@@ -69,6 +69,11 @@ export default async function PropuestasPage({
           ¡Gracias! Recibimos tu pago. En unos minutos se refleja aquí.
         </p>
       )}
+      {pago === "stripe" && (
+        <p className="mt-4 rounded-xl bg-[#E6F4EA] p-3 text-sm font-semibold text-[#1E7B3A]">
+          ¡Gracias! Si pagaste con tarjeta, se refleja aquí en unos minutos. Si elegiste OXXO o transferencia SPEI, paga con la ficha que te dio Stripe: te avisamos por correo cuando llegue.
+        </p>
+      )}
       {pago === "pendiente" && (
         <p className="mt-4 rounded-xl bg-[#FFF1E6] p-3 text-sm font-semibold text-[#C2560A]">
           Tu pago está en proceso. Te avisamos por correo en cuanto se confirme.

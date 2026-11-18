@@ -5,6 +5,7 @@
 // Para apagar la regla sin tocar código: poner FONDO_BLANCO_ACTIVO=false en el .env de la API.
 // Si no se puede revisar una foto (error de red, formato raro), se deja pasar: nunca se frena una venta por un fallo técnico.
 
+import { esArchivoPropio, urlPublica } from "../../../lib/url-publica"
 import { MedusaError } from "@medusajs/framework/utils"
 import type {
   MedusaNextFunction,
@@ -37,13 +38,30 @@ function direccionesDeFotos(cuerpo: Record<string, any>): string[] {
   return [...vistas].slice(0, MAX_FOTOS)
 }
 
+/** Qué se hace con las fotos sin fondo blanco (17 nov 2026: para que publicar
+ *  sea más fácil, por omisión sólo se avisa):
+ *    "avisar"   se revisa y se le dice al taller, pero puede publicar
+ *    "bloquear" no deja publicar (FONDO_BLANCO_MODO=bloquear, como antes)
+ *    "apagado"  no se revisa (FONDO_BLANCO_ACTIVO=false) */
+export function fondoBlancoModo(): "avisar" | "bloquear" | "apagado" {
+  if (process.env.FONDO_BLANCO_ACTIVO === "false") return "apagado"
+  return process.env.FONDO_BLANCO_MODO === "bloquear" ? "bloquear" : "avisar"
+}
+
 // true = fondo blanco, false = NO es blanco, null = no se pudo revisar (se deja pasar)
 export async function revisarFoto(direccion: string): Promise<boolean | null> {
   try {
     if (direccion.startsWith("data:")) return null
     const url = new URL(direccion, process.env.BACKEND_URL || "http://localhost:9000")
     if (url.protocol !== "http:" && url.protocol !== "https:") return null
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+    // Las fotos del propio sitio sí (se decide con la URL ya interpretada:
+    // "//10.0.0.5" o "/\\host" no son relativas); una URL ajena sólo si es de
+    // internet, nunca de la red interna (auditoría Thermos, 15 nov 2026)
+    const relativa = /^\/(?![\/\\])/.test(direccion) // "/static/x.jpg", no "//host" ni "/\\host"
+    // Propia: ruta relativa real o archivo del almacenamiento (mismo origen exacto)
+    const propia = relativa || esArchivoPropio(url)
+    if (!propia && !(await urlPublica(url))) return null
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: "error" })
     if (!res.ok) return null
     const largo = Number(res.headers.get("content-length") || 0)
     if (largo > MAX_BYTES) return null
@@ -58,7 +76,8 @@ export async function revisarFoto(direccion: string): Promise<boolean | null> {
 
 async function exigirFondoBlanco(req: MedusaRequest, _res: MedusaResponse, next: MedusaNextFunction) {
   try {
-    if (process.env.FONDO_BLANCO_ACTIVO === "false") return next()
+    // Sólo bloquea en modo "bloquear"; en "avisar" el aviso lo da el formulario
+    if (fondoBlancoModo() !== "bloquear") return next()
     const fotos = direccionesDeFotos((req.body ?? {}) as Record<string, any>)
     for (let i = 0; i < fotos.length; i++) {
       if ((await revisarFoto(fotos[i])) === false) {

@@ -48,6 +48,8 @@ export type Perfil = {
   maquinas: Maquina[]
   materiales: string[]
   entrega?: string
+  // Horario de atención, texto libre del taller ("Lunes a viernes 9 a 18")
+  horario?: string
   anos?: number
   calificacion?: number
   resenas?: number
@@ -67,6 +69,8 @@ export type Taller = {
   logo?: string | null
   banner?: string | null
   fundador: boolean
+  // Invitó a otro taller que ya vende (packages/api/src/lib/referidos.ts)
+  embajador: boolean
   // Aprobado por HETNA con identificación y fotos del taller (lo marca solo el administrador)
   verificado: boolean
   // Fase 3: constancia fiscal revisada por HETNA y certificaciones acreditadas vigentes
@@ -130,6 +134,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     maquinas,
     materiales: lista(p.materiales),
     entrega: texto(p.entrega),
+    horario: texto(p.horario),
     anos: num(p.anos),
     calificacion: num(p.calificacion),
     resenas: num(p.resenas),
@@ -149,6 +154,7 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   logo: s.logo,
   banner: s.banner,
   fundador: s.metadata?.fundador === true,
+  embajador: s.metadata?.embajador === true,
   verificado: s.metadata?.verificado === true,
   empresaVerificada: s.metadata?.empresa_verificada === true,
   certificaciones: (Array.isArray(s.metadata?.certificaciones) ? s.metadata.certificaciones : []).filter(

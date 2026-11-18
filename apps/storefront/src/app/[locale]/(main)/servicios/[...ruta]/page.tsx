@@ -23,7 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const alternates = { canonical: `https://hetnacnc.com/mx/servicios/${(ruta || []).map(encodeURIComponent).join("/")}` }
   if (s.slug === "cotizador-cnc") {
     return {
-      alternates,
+      // Versión en inglés para talleres de EE. UU. (/us/cotizador)
+      alternates: {
+        ...alternates,
+        languages: { "es-MX": alternates.canonical, "en-US": "https://hetnacnc.com/us/cotizador", "x-default": alternates.canonical },
+      },
       title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
       description: "App para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos e inventario. Web y Android, gratis.",
     }

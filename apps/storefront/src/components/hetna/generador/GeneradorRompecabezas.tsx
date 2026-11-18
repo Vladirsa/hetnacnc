@@ -43,7 +43,7 @@ const MODELOS: { id: string; nombre: string; detalle: string; ancho: string; alt
   { id: "corazon", nombre: "Mensaje", detalle: "9 piezas, con marco", ancho: "150", alto: "150", columnas: "3", filas: "3" },
 ]
 
-export function GeneradorRompecabezas() {
+export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [ancho, setAncho] = useState("200")
   const [alto, setAlto] = useState("150")
@@ -104,6 +104,7 @@ export function GeneradorRompecabezas() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[400px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-semibold text-[#1B1B18]">Empieza con un modelo</span>
             <div className="grid grid-cols-3 gap-1.5">

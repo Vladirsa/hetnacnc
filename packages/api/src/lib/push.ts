@@ -19,6 +19,7 @@
 //   VAPID_PUBLIC_KEY   pública (también la usa el navegador)
 //   VAPID_PRIVATE_KEY  privada: nunca sale del servidor
 //   VAPID_SUBJECT      mailto: de contacto (por defecto mailto:hola@hetnacnc.com)
+import { clientesConCorreoConfiable } from "./verificar-correo"
 import webpush from "web-push"
 
 import { avisarWhatsapp } from "./whatsapp"
@@ -106,9 +107,17 @@ export async function guardarSuscripcion(
 }
 
 /** Quita el aviso de este navegador para el cliente o el taller (o del todo). */
-export async function borrarSuscripcion(knex: any, endpoint: string, quien: "cliente" | "taller" | "todo" = "todo") {
+export async function borrarSuscripcion(
+  knex: any,
+  endpoint: string,
+  quien: "cliente" | "taller" | "todo" = "todo",
+  // Sólo la suscripción de esa cuenta (antes un taller podía borrar la de otro)
+  dueno?: { sellerId?: string; customerId?: string }
+) {
   await asegurarTablaPush(knex)
   const q = knex(T_PUSH).where({ endpoint: String(endpoint || "") })
+  if (dueno?.sellerId) q.where({ seller_id: dueno.sellerId })
+  if (dueno?.customerId) q.where({ customer_id: dueno.customerId })
   if (quien === "todo") return q.delete()
   await q.clone().update(quien === "cliente" ? { customer_id: null } : { seller_id: null })
   await knex(T_PUSH).where({ endpoint: String(endpoint || "") }).whereNull("customer_id").whereNull("seller_id").delete()
@@ -181,13 +190,8 @@ export async function pushACliente(
   try {
     const ids = new Set<string>()
     if (cliente.customerId) ids.add(cliente.customerId)
-    if (cliente.email) {
-      const filas = await knex("customer")
-        .whereRaw("lower(email) = ?", [String(cliente.email).trim().toLowerCase()])
-        .whereNull("deleted_at")
-        .select("id")
-      for (const f of filas) ids.add(f.id)
-    }
+    // Por correo sólo las cuentas con el correo confirmado
+    if (cliente.email) for (const id of await clientesConCorreoConfiable(knex, cliente.email)) ids.add(id)
     // También por WhatsApp si el cliente verificó su número (en segundo plano)
     if (ids.size && opciones.whatsapp !== false) void avisarWhatsapp(knex, { customerIds: [...ids] }, aviso, logger)
     if (!listo()) return 0

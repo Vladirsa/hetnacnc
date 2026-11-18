@@ -1326,7 +1326,7 @@ export default function SolicitudesPage() {
               {CAMPOS.filter(([k]) => t[k]).map(([k, l]) => (
                 <span key={k}><span style={{ color: "#6B675C" }}>{l}:</span> <strong>{t[k]}</strong></span>
               ))}
-              {t.archivo && (
+              {/^https?:\/\//i.test(String(t.archivo || "")) && (
                 <a href={t.archivo} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>Ver archivos</a>
               )}
             </div>

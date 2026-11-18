@@ -165,7 +165,8 @@ export function CartProvider({ cart, children }: CartProviderProps) {
         quantity,
         countryCode
       });
-      await refreshCart();
+      // Se devuelve el carrito ya actualizado: "Comprar ahora" decide con él
+      return await refreshCart();
     } catch (error) {
       console.error('Error adding product to cart:', error);
       await refreshCart();

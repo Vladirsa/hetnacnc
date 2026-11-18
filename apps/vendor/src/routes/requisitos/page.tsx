@@ -1,9 +1,10 @@
 // @ts-nocheck
-// Panel del taller > Activa tu cuenta: los dos requisitos para publicar y
-// cotizar en HETNA (decisión del 4 nov 2026):
-//   1. Aceptar los Términos para vendedores vigentes.
+// Panel del taller > Activa tu cuenta (decisión del 4 nov 2026, cambiada el
+// 17 nov 2026 para que publicar sea más fácil):
+//   1. Aceptar los Términos para vendedores vigentes: para publicar.
 //   2. Verificar una tarjeta de débito o crédito con Mercado Pago o PayPal
-//      (cargo de $10 que se devuelve al momento; HETNA no ve ni guarda el número).
+//      (cargo de $10 que se devuelve al momento; HETNA no ve ni guarda el
+//      número): para cotizar licitaciones y para cobrar tus ventas.
 // Backend: /vendor/hetna-requisitos (packages/api/src/lib/requisitos-vendedor.ts)
 import { useEffect, useState } from "react"
 import { Badge, Button, Container, Heading, Text, toast } from "@medusajs/ui"
@@ -94,8 +95,8 @@ export default function RequisitosPage() {
           <div>
             <Heading>Activa tu cuenta</Heading>
             <Text className="mt-1 text-ui-fg-subtle">
-              Para publicar productos, cursos y libros y para cotizar licitaciones en HETNA, todos los talleres y vendedores cumplen dos pasos. Así los
-              clientes saben que tratan con negocios reales.
+              Para publicar productos, cursos y libros basta con aceptar los términos. La tarjeta se verifica para cotizar licitaciones y antes
+              de cobrar tus ventas. Así los clientes saben que tratan con negocios reales.
             </Text>
           </div>
           <Badge color={e.completo ? "green" : "orange"}>{e.completo ? "Cuenta activa" : "Falta completar"}</Badge>
@@ -150,7 +151,7 @@ export default function RequisitosPage() {
       <Container className="p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <Heading level="h2">2. Verifica tu tarjeta de débito o crédito</Heading>
+            <Heading level="h2">2. Verifica tu tarjeta de débito o crédito (para cotizar y cobrar)</Heading>
             <Text className="mt-1 text-ui-fg-subtle">
               Se hace un cargo de ${e.monto_verificacion} MXN que se devuelve al momento (puede tardar unos días en verse en tu estado de cuenta). Sólo
               comprueba que la tarjeta es real: HETNA no ve ni guarda el número y no se te cobra nada más.

@@ -1,4 +1,4 @@
-// POST /store/solicitudes-taller/:token/pagar  { proveedor: "mercadopago" | "paypal" }
+// POST /store/solicitudes-taller/:token/pagar  { proveedor: "mercadopago" | "paypal" | "stripe" }
 // Liga del siguiente cobro (anticipo, resto o total) de la propuesta elegida.
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
@@ -11,7 +11,8 @@ export const POST = async (req: MedusaRequest<{ proveedor?: string }>, res: Medu
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const token = String(req.params.token || "")
   if (token.length < 32) return res.status(404).json({ message: "Solicitud no encontrada." })
-  const proveedor = (req.body as any)?.proveedor === "paypal" ? "paypal" : "mercadopago"
+  const pedido = (req.body as any)?.proveedor
+  const proveedor = pedido === "paypal" ? "paypal" : pedido === "stripe" ? "stripe" : "mercadopago"
 
   await asegurarTablas(knex)
   const s = await knex(T_SOLICITUD).where({ token }).first()

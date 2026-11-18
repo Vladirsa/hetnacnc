@@ -4,7 +4,9 @@
 // archivo que no corresponde, contracargo).
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { marcarPagado, retener } from "../../../../lib/saldos-talleres"
+import { SaldoCambio, marcarPagado, retener } from "../../../../lib/saldos-talleres"
+import { estadoRequisitos } from "../../../../lib/requisitos-vendedor"
+import { servicioTalleres } from "../../../../lib/alta-taller"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const b = (req.body || {}) as Record<string, unknown>
@@ -19,6 +21,24 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   const orderIds = Array.isArray(b.order_ids) ? (b.order_ids as unknown[]).filter((x): x is string => typeof x === "string") : undefined
   const metodo = ["spei", "mercadopago", "paypal"].includes(String(b.metodo)) ? String(b.metodo) : "spei"
-  const n = await marcarPagado(req.scope, sellerId, { referencia, metodo, orderIds })
-  res.json({ ok: true, pagados: n })
+  // La tarjeta verificada ya no se pide para publicar sino antes de cobrar
+  // (17 nov 2026). La pantalla de pagos lo muestra ANTES de transferir; aquí
+  // el SPEI ya se hizo, así que sólo se avisa (bloquear dejaría el saldo como
+  // "disponible" y se podría pagar dos veces).
+  let aviso: string | null = null
+  try {
+    const e = estadoRequisitos(await servicioTalleres(req.scope).retrieveSeller(sellerId))
+    if (!e.exento && !e.tarjeta.ok) aviso = "Este taller todavía no verifica su tarjeta: pídele que lo haga antes del siguiente pago."
+  } catch {
+    /* sin datos del taller no se avisa */
+  }
+  const totalVisto = typeof b.total === "number" && Number.isFinite(b.total) ? b.total : undefined
+  const moneda = typeof b.moneda === "string" ? b.moneda : undefined
+  try {
+    const n = await marcarPagado(req.scope, sellerId, { referencia, metodo, orderIds, totalVisto, moneda })
+    res.json({ ok: true, pagados: n, ...(aviso ? { aviso } : {}) })
+  } catch (e) {
+    if (e instanceof SaldoCambio) return res.status(409).json({ message: e.message })
+    throw e
+  }
 }

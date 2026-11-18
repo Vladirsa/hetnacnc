@@ -322,21 +322,27 @@ const ESTADOS_CAM_LISTOS = ["paid", "in_review", "delivered"]
 
 /**
  * Importa los trabajos del servicio CAM de HETNA que pidió el taller (con
- * el correo de su cuenta de vendedor) como proyectos con su modelo, su G-code
+ * el correo que confirmó en su alta) como proyectos con su modelo, su G-code
  * y los entregables. Idempotente, como las licitaciones.
  */
 export async function importarCam(knex: any, sellerId: string): Promise<number> {
   if (!(await knex.schema.hasTable("cam_job"))) return 0
-  const seller = await knex("seller").where({ id: sellerId }).first("email")
-  const correo = String(seller?.email || "").trim().toLowerCase()
-  if (!correo) return 0
-  const clientes = (await knex("customer").whereRaw("lower(email) = ?", [correo]).whereNull("deleted_at").pluck("id")) as string[]
+  // Sólo el correo que el taller confirmó con la liga de su alta
+  // (seller.metadata.correo_confirmado_email, protegido). Ni seller.email ni el
+  // correo de acceso están confirmados: con el correo de un cliente un taller
+  // se llevaba sus modelos y G-code pagados (auditoría Thermos, 15 nov 2026).
+  const seller = await knex("seller").where({ id: sellerId }).first("metadata")
+  const meta = typeof seller?.metadata === "string" ? JSON.parse(seller.metadata) : seller?.metadata || {}
+  const confirmado = typeof meta?.correo_confirmado_email === "string" ? meta.correo_confirmado_email.trim().toLowerCase() : ""
+  const correos = confirmado ? [confirmado] : []
+  if (!correos.length) return 0
+  const clientes = (await knex("customer").whereRaw(`lower(email) in (${correos.map(() => "?").join(",")})`, correos).whereNull("deleted_at").pluck("id")) as string[]
 
   const trabajos = (await knex("cam_job as j")
     .whereIn("j.status", ESTADOS_CAM_LISTOS)
     .whereNull("j.deleted_at")
     .where((q: any) => {
-      q.whereRaw("lower(j.email) = ?", [correo])
+      q.whereRaw(`lower(j.email) in (${correos.map(() => "?").join(",")})`, correos)
       if (clientes.length) q.orWhereIn("j.customer_id", clientes)
     })
     .whereNotExists(function (this: any) {

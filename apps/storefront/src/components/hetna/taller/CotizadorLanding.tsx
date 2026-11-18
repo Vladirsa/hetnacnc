@@ -9,6 +9,7 @@ import { trackLeadCotizador } from "@/lib/analytics/events"
 
 import { FranjaAyuda } from "../ServicioPagina"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
+import { SoporteWhatsApp } from "./SoporteWhatsApp"
 
 // Página de la app HETNA CNC para talleres (el Cotizador): explica qué hace,
 // cómo se conecta con la plataforma, cómo instalarla y los planes. Todos los
@@ -232,6 +233,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
 
         <FranjaAyuda />
       </div>
+      <SoporteWhatsApp />
     </main>
   )
 }

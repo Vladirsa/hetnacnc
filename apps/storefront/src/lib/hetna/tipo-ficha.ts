@@ -139,6 +139,26 @@ export function datosServicio(metadata?: Record<string, unknown> | null): DatosS
   }
 }
 
+/** ¿Lleva envío? null = sí; "descarga" = sólo archivos; "servicio" = sin envío
+ *  pero con algún servicio (no es descarga inmediata). Un renglón sin producto
+ *  cuenta como físico. Lo usan el carrito y el checkout. */
+export function envioDelCarrito(items?: { product?: ProductoParaTipo | null }[] | null): null | "descarga" | "servicio" {
+  if (!items?.length) return null
+  const tipos = items.map((i) => (i.product ? tipoFicha(i.product) : "fisico"))
+  if (tipos.includes("fisico")) return null
+  return tipos.every((t) => t === "digital") ? "descarga" : "servicio"
+}
+
 /** ¿El carrito sólo trae archivos o servicios (nada que enviar)? Tarea 4. */
 export const carritoSoloDigital = (items?: { product?: ProductoParaTipo | null }[] | null): boolean =>
-  !!items?.length && items.every((i) => !!i.product && tipoFicha(i.product) !== "fisico")
+  envioDelCarrito(items) !== null
+
+/** Diseño para descargar (la ficha con galería de vistas, licencia y "Cómo
+ *  funciona"). Los paquetes de créditos y los cursos también son digitales,
+ *  pero no se descargan: conservan su ficha. */
+export function esFichaDescarga(producto: any): boolean {
+  const m = (producto?.metadata || {}) as Record<string, unknown>
+  if (m.producto_creditos_3d === true || m.producto_creditos_3d === "true") return false
+  if (typeof m.curso_slug === "string" && m.curso_slug) return false
+  return tipoFicha(producto) === "digital"
+}

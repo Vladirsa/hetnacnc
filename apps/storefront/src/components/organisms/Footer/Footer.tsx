@@ -17,6 +17,9 @@ const Columna = ({
         <LocalizedClientLink
           key={label}
           href={path}
+          // Sin precarga: el pie trae ~25 ligas y Next.js las precargaba todas al
+          // verse, gastando datos del celular en cada página (se cargan al tocar)
+          prefetch={false}
           className="text-[13px] text-[#9FACC2] hover:text-white"
         >
           {label}
@@ -95,7 +98,7 @@ export function Footer() {
       >
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#9FACC2]">
           <span>© 2026 HETNA CNC. Hecho en México.</span>
-          <LocalizedClientLink href="/aviso-de-privacidad" className="hover:text-white">
+          <LocalizedClientLink href="/aviso-de-privacidad" prefetch={false} className="hover:text-white">
             Privacidad
           </LocalizedClientLink>
           <BotonPreferenciasCookies className="hover:text-white" />

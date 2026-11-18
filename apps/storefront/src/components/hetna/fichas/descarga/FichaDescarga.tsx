@@ -1,0 +1,282 @@
+// Ficha de un diseño para descargar (DXF, STL…). Piezas que usa la ficha:
+//   vistasGaleria   fotos del producto + esquema de medidas (si las trae)
+//   ColumnaDescarga lo que va antes del botón: lo más importante, licencia y qué recibes
+//   AbajoDescarga   cómo funciona, pestañas y preguntas frecuentes
+// Regla: nada de existencias, tiempos de envío ni reseñas que no existan.
+// Todo sale del producto (descripción, metadata) o de reglas que ya son ciertas
+// para cualquier descarga en HETNA.
+import "@/components/hetna/tienda/fuentes-tienda.css"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { caracteristicasDe } from "@/components/hetna/fichas/LoMasImportante"
+import { faq } from "@/lib/helpers/product-metadata"
+import { esquemaDe, svgEsquema } from "@/lib/hetna/plano-diseno"
+import { REGLAS_COMUNES, licenciaDe } from "@/lib/hetna/licencias"
+import { datosDigital } from "@/lib/hetna/tipo-ficha"
+import { htmlSeguro } from "@/lib/seguridad/html-seguro"
+import type { VistaGaleria } from "./GaleriaDescarga"
+import { Pestanas } from "./Pestanas"
+
+type Producto = {
+  handle?: string | null
+  title?: string | null
+  description?: string | null
+  metadata?: Record<string, unknown> | null
+  images?: { id?: string; url: string }[] | null
+}
+
+const meta = (p: Producto) => (p.metadata || {}) as Record<string, unknown>
+
+export function vistasGaleria(p: Producto): VistaGaleria[] {
+  const fotos: VistaGaleria[] = (p.images || [])
+    .filter((i) => i?.url)
+    .map((i, n) => ({ clave: i.id || `foto-${n}`, tipo: "foto", url: i.url, titulo: `Foto ${n + 1}` }))
+  const e = esquemaDe(p)
+  return e ? [...fotos, { clave: "esquema", tipo: "esquema", svg: svgEsquema(e), titulo: "Detalle del patrón" }] : fotos
+}
+
+function formatos(p: Producto): string | null {
+  return datosDigital(p.metadata).filas.find(([k]) => k === "Formatos incluidos")?.[1] || null
+}
+
+const Marca = ({ si }: { si: boolean }) => (
+  <span
+    className={`mt-[2px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${si ? "bg-[#E8F5EC] text-[#17803F]" : "bg-[#FDECEC] text-[#B91C1C]"}`}
+    aria-label={si ? "Sí" : "No"}
+  >
+    {si ? "✓" : "✕"}
+  </span>
+)
+
+/** Lo que se lee antes de pagar: pastillas, licencia y qué recibes. */
+export function ColumnaDescarga({ product }: { product: Producto }) {
+  const pastillas = caracteristicasDe(product.description)
+  const { licencia, piezas } = licenciaDe(product.metadata)
+  const fmt = formatos(product)
+  const otros = datosDigital(product.metadata).filas.filter(([k]) => k !== "Formatos incluidos")
+
+  return (
+    <div className="mt-4 flex flex-col gap-4" data-testid="columna-descarga">
+      {pastillas.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Lo más importante">
+          {pastillas.map((t) => (
+            <li key={t} className="rounded-full border border-[#D4D9DF] bg-[#F4F5F7] px-2.5 py-1 text-[12.5px] font-semibold leading-tight text-[#1E2329]">
+              {t}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <section className="rounded-md border border-[#D4D9DF] bg-white" aria-labelledby="titulo-licencia">
+        <div className="flex items-center justify-between gap-2 border-b border-[#D4D9DF] bg-[#1E2329] px-3 py-2 text-white">
+          <h2 id="titulo-licencia" className="fuente-condensada m-0 text-[18px] font-bold uppercase leading-none">
+            Licencia {licencia.nombre}
+          </h2>
+          {piezas ? <span className="fuente-mono text-[12px]">hasta {piezas.toLocaleString("es-MX")} piezas</span> : null}
+        </div>
+        <div className="p-3">
+          <p className="m-0 text-[13.5px] text-[#3A414B]">{licencia.resumen}</p>
+          <ul className="mt-2 grid gap-1.5">
+            {licencia.permisos.map((x) => (
+              <li key={x.que} className="flex gap-2 text-[13.5px] text-[#1E2329]">
+                <Marca si={x.si} />
+                <span>
+                  {x.que}
+                  {x.nota ? <span className="text-[#5B6370]"> ({x.nota})</span> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <LocalizedClientLink href="/licencias-disenos" className="mt-2 inline-block text-[12.5px] font-semibold text-[#C24E03] underline">
+            Ver las tres licencias
+          </LocalizedClientLink>
+        </div>
+      </section>
+
+      <section aria-labelledby="titulo-recibes">
+        <h2 id="titulo-recibes" className="fuente-condensada m-0 text-[18px] font-bold uppercase leading-none text-[#1E2329]">
+          Qué recibes
+        </h2>
+        <ul className="mt-2 grid gap-1.5 text-[13.5px] text-[#1E2329]">
+          <li className="flex gap-2">
+            <Marca si />
+            <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}, listo para tu CAM.</span>
+          </li>
+          {otros.map(([k, v]) => (
+            <li key={k} className="flex gap-2">
+              <Marca si />
+              <span>
+                {k}: {v}
+              </span>
+            </li>
+          ))}
+          <li className="flex gap-2">
+            <Marca si />
+            <span>
+              Lo descargas en{" "}
+              <LocalizedClientLink href="/user/descargas" className="font-semibold underline">
+                Mi cuenta › Mis descargas
+              </LocalizedClientLink>{" "}
+              en cuanto se confirma el pago.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <Marca si />
+            <span>Licencia {licencia.nombre} a tu nombre.</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  )
+}
+
+const PASOS = [
+  { n: "01", t: "Pagas", d: "Dentro de HETNA, con Mercado Pago. Tu pago queda protegido." },
+  { n: "02", t: "Descargas", d: "" }, // su texto lleva liga, va abajo
+  { n: "03", t: "Cortas", d: "Lo abres en tu CAM (Vectric, Fusion, ArtCAM…), eliges herramienta y material, y a la máquina." },
+]
+
+/** Lo que va debajo: cómo funciona, pestañas y preguntas frecuentes. */
+export function AbajoDescarga({ product }: { product: Producto }) {
+  const preguntas = faq(product.metadata)
+  const pastillas = caracteristicasDe(product.description)
+  const filas = datosDigital(product.metadata).filas
+  const { licencia, piezas } = licenciaDe(product.metadata)
+  const m = meta(product)
+
+  return (
+    <div className="flex flex-col gap-6">
+      <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
+        <h2 id="titulo-como" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
+          Cómo funciona
+        </h2>
+        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+          {PASOS.map((p) => (
+            <li key={p.n} className="flex gap-3 sm:flex-col sm:gap-2">
+              <span className="fuente-mono flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#E85D04] text-[15px] font-bold text-white">{p.n}</span>
+              <div>
+                <p className="m-0 text-[16px] font-bold text-[#1E2329]">{p.t}</p>
+                <p className="m-0 mt-0.5 text-[14px] leading-snug text-[#5B6370]">
+                  {p.n === "02" ? (
+                    <>
+                      El archivo aparece en{" "}
+                      <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#1E2329] underline">
+                        Mi cuenta › Mis descargas
+                      </LocalizedClientLink>{" "}
+                      en cuanto se confirma el pago.
+                    </>
+                  ) : (
+                    p.d
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <Pestanas
+        pestanas={[
+          {
+            clave: "descripcion",
+            titulo: "Descripción",
+            contenido: product.description ? (
+              <div className="product-details text-[15px] leading-relaxed text-[#2E333A]" dangerouslySetInnerHTML={{ __html: htmlSeguro(product.description) }} />
+            ) : (
+              <p className="m-0 text-[14px] text-[#5B6370]">El vendedor no escribió una descripción.</p>
+            ),
+          },
+          {
+            clave: "especificaciones",
+            titulo: "Especificaciones",
+            contenido: (
+              <dl className="m-0 grid grid-cols-1 gap-x-6 text-[14px] sm:grid-cols-[minmax(160px,auto)_1fr]">
+                {[
+                  ...filas,
+                  ...(pastillas.length ? ([["Características", pastillas.join(" · ")]] as [string, string][]) : []),
+                  ["Licencia", piezas ? `${licencia.nombre} (hasta ${piezas.toLocaleString("es-MX")} piezas)` : licencia.nombre] as [string, string],
+                  ["Entrega", "Descarga digital. No se envía nada por paquetería."] as [string, string],
+                  ...(typeof m.archivo_gratis === "boolean" && m.archivo_gratis ? ([["Precio", "Gratis, con tu cuenta"]] as [string, string][]) : []),
+                ].map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="border-b border-[#EEF0F2] py-2 font-semibold text-[#1E2329]">{k}</dt>
+                    <dd className="fuente-mono m-0 border-b border-[#EEF0F2] py-2 text-[13.5px] text-[#2E333A]">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            ),
+          },
+          {
+            clave: "licencia",
+            titulo: "Licencia",
+            contenido: (
+              <div className="text-[14px] text-[#2E333A]">
+                <p className="m-0">
+                  <strong>Licencia {licencia.nombre}.</strong> {licencia.resumen}
+                </p>
+                <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
+                  {licencia.permisos.map((x) => (
+                    <li key={x.que} className="flex gap-2">
+                      <Marca si={x.si} />
+                      <span>
+                        {x.que}
+                        {x.nota ? <span className="text-[#5B6370]"> ({x.nota})</span> : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="m-0 mt-4 font-semibold text-[#1E2329]">Aplica a todas las licencias</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-[#3A414B]">
+                  {REGLAS_COMUNES.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                <p className="m-0 mt-3 text-[13px] text-[#5B6370]">
+                  Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.{" "}
+                  <LocalizedClientLink href="/devoluciones" className="underline">
+                    Ver política
+                  </LocalizedClientLink>{" "}
+                  ·{" "}
+                  <LocalizedClientLink href="/licencias-disenos" className="underline">
+                    Comparar las tres licencias
+                  </LocalizedClientLink>
+                </p>
+              </div>
+            ),
+          },
+        ]}
+      />
+
+      {preguntas.length > 0 && (
+        <section aria-labelledby="titulo-faq" className="rounded-md border border-[#D4D9DF] bg-white p-5">
+          <script
+            id="ld-faq-product"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: preguntas.map((q) => ({ "@type": "Question", name: q.pregunta, acceptedAnswer: { "@type": "Answer", text: q.respuesta } })),
+              }).replace(/</g, "\\u003c"),
+            }}
+          />
+          <h2 id="titulo-faq" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
+            Preguntas frecuentes
+          </h2>
+          <div className="mt-3 divide-y divide-[#EEF0F2]">
+            {preguntas.map((q) => (
+              <details key={q.pregunta} className="group py-1">
+                <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold text-[#1E2329]">
+                  {q.pregunta}
+                  <span className="text-[20px] text-[#E85D04] transition-transform group-open:rotate-45" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p className="m-0 pb-3 text-[14.5px] leading-relaxed text-[#3A414B]">{q.respuesta}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}

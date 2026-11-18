@@ -1,3 +1,4 @@
+import type { AbandonedCartItem } from "../../lib/email-templates"
 import { createWorkflow, when, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
 
 import { sendAbandonedCartEmailStep } from "./steps/send-abandoned-cart-email"
@@ -6,7 +7,7 @@ import { markAbandonedCartEmailSentStep } from "./steps/mark-abandoned-cart-emai
 export type SendAbandonedCartEmailWorkflowInput = {
   cart_id: string
   email: string
-  items: { title: string; quantity: number }[]
+  items: AbandonedCartItem[]
   total: number
   currency_code: string
   cart_url: string

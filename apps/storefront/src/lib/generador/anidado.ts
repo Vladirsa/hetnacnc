@@ -18,6 +18,8 @@ export type OpcionesAnidado = {
   separacion: number // entre piezas (kerf + margen)
   margen: number // orilla de la hoja
   girar: boolean // permitir giro de 90°
+  // conservar el nombre de capa de cada trazo (el CAM asigna operaciones por capa)
+  conservarCapas?: boolean
 }
 
 export type Colocacion = { pieza: PiezaAnidar; x: number; y: number; w: number; h: number; girada: boolean; n: number }
@@ -75,7 +77,9 @@ export function anidar(piezas: PiezaAnidar[], o: OpcionesAnidado): ResultadoAnid
           // giro de 90°: (lx, ly) → (ancho_girado - ly, lx)
           return c.girada ? [x + (m.alto - ly), y + lx] : [x + lx, y + ly]
         })
-        trazos.push({ pts, cerrado: t.cerrado, capa: "CORTE" })
+        // lo grabado sigue siendo grabado; todo lo demás es corte
+        const capa = o.conservarCapas ? t.capa : (t.capa || "").toLowerCase() === "grabado" ? "grabado" : "CORTE"
+        trazos.push({ pts, cerrado: t.cerrado, capa })
       }
     }
     return { colocaciones, trazos }

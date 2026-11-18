@@ -1,12 +1,16 @@
 "use client"
 
+// Patrones radiales (mandalas, arte de pared) dentro del 2D Studio: capas de
+// una figura escaladas y rotadas con una fórmula. Ahora usa la misma pantalla
+// que celosías y bisagra viva (Estudio2D), así gana zoom, descargas,
+// Fabrícamelo y "Acomodar en hojas".
 import { useMemo, useState } from "react"
-import { useParams } from "next/navigation"
 
-import { cajaPatron, generarPatron, patronADXF, patronASVG, type FormaPatron } from "@/lib/generador/patronRadial"
-import { mandarAFabricar } from "@/lib/generador/aCotizador"
+import { CampoNum, CampoTexto, Opciones, Seccion } from "@/components/hetna/estudio3d/Controles"
+import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
+import { cajaPatron, generarPatron, type FormaPatron } from "@/lib/generador/patronRadial"
+import type { Dibujo } from "@/lib/generador/vectores"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const r1 = (x: number) => Math.round(x * 10) / 10
 
 const EJEMPLOS: { nombre: string; escala: string; rotacion: string }[] = [
@@ -16,56 +20,7 @@ const EJEMPLOS: { nombre: string; escala: string; rotacion: string }[] = [
   { nombre: "Ondulado", escala: "i*4.5", rotacion: "15*sin(i/3)" },
 ]
 
-function descargar(nombre: string, contenido: string, tipo: string) {
-  const url = URL.createObjectURL(new Blob([contenido], { type: tipo }))
-  const a = document.createElement("a")
-  a.href = url
-  a.download = nombre
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-const Campo = ({
-  etiqueta,
-  valor,
-  cambiar,
-  sufijo,
-}: {
-  etiqueta: string
-  valor: string
-  cambiar: (v: string) => void
-  sufijo?: string
-}) => (
-  <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
-    <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
-      <input
-        type="text"
-        value={valor}
-        onChange={(e) => cambiar(e.target.value)}
-        className="w-full min-w-0 px-3 py-2.5 text-[15px] text-[#1B1B18] bg-transparent outline-none font-mono"
-      />
-      {sufijo && <span className="pr-3 text-[13px] text-[#9A978C]">{sufijo}</span>}
-    </span>
-  </label>
-)
-
-const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () => void; children: React.ReactNode }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`px-3 py-2 rounded-[8px] text-[13.5px] font-semibold border ${
-      activa ? "bg-[#142033] text-white border-[#142033]" : "bg-white text-[#1B1B18] border-[#E7E4DC] hover:border-[#C2560A]"
-    }`}
-  >
-    {children}
-  </button>
-)
-
-export function GeneradorPatron() {
-  const { locale } = useParams<{ locale: string }>()
+export function GeneradorPatron({ cabecera }: { cabecera?: React.ReactNode }) {
   const [forma, setForma] = useState<FormaPatron>("poligono")
   const [lados, setLados] = useState("5")
   const [capas, setCapas] = useState("25")
@@ -80,7 +35,6 @@ export function GeneradorPatron() {
 
   const n = (s: string) => parseFloat(s.replace(",", ".")) || 0
 
-  const [avisoFabricar, setAvisoFabricar] = useState("")
   const r = useMemo(
     () =>
       generarPatron({
@@ -100,173 +54,82 @@ export function GeneradorPatron() {
     [forma, lados, capas, radioMin, radioMax, anguloMin, anguloMax, formulaEscala, formulaRotacion, redondeo, semilla]
   )
   const listo = r.capas.length > 0
-  const vista = useMemo(() => (listo ? patronASVG(r.capas, "vista") : ""), [r, listo])
   const caja = listo ? cajaPatron(r.capas) : null
-  const nombreArchivo = `patron-hetna-${forma}-${capas}capas`
+  // cada capa es un contorno cerrado de corte (el SVG/DXF de siempre)
+  const dibujo = useMemo<Dibujo | null>(
+    () => (listo ? { unidades: "mm", avisos: [], trazos: r.capas.map((pts) => ({ pts: pts.map(([x, y]) => [x, y] as [number, number]), cerrado: true, capa: "corte" })) } : null),
+    [r, listo]
+  )
 
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar el corte láser de un patrón decorativo:\n` +
-    `- ${capas} capas, figura de ${lados} lados${forma === "organico" ? " (orgánica)" : ""}\n` +
-    `- Tamaño aproximado: ${caja ? `${r1(caja.ancho)} x ${r1(caja.alto)} mm` : "-"}`
+  const panel = (
+    <div className="flex flex-col gap-4">
+      {cabecera}
+      <Seccion titulo="Figura base">
+        <Opciones
+          opciones={[
+            { id: "poligono", nombre: "Polígono" },
+            { id: "organico", nombre: "Orgánica" },
+          ]}
+          valor={forma}
+          cambiar={(v) => setForma(v as FormaPatron)}
+        />
+      </Seccion>
+      <div className="grid grid-cols-2 gap-2">
+        <CampoNum etiqueta="Lados" valor={lados} cambiar={setLados} sufijo="" />
+        <CampoNum etiqueta="Capas" valor={capas} cambiar={setCapas} sufijo="" />
+        <CampoNum etiqueta="Radio inicial" valor={radioMin} cambiar={setRadioMin} />
+        <CampoNum etiqueta="Radio de referencia" valor={radioMax} cambiar={setRadioMax} />
+        <CampoNum etiqueta="Ángulo inicial" valor={anguloMin} cambiar={setAnguloMin} sufijo="°" />
+        <CampoNum etiqueta="Ángulo final" valor={anguloMax} cambiar={setAnguloMax} sufijo="°" />
+      </div>
+      <Seccion titulo="Redondeo de esquinas">
+        <input type="range" min={0} max={1} step={0.05} value={redondeo} onChange={(e) => setRedondeo(parseFloat(e.target.value))} aria-label="Redondeo de esquinas" style={{ accentColor: "#F28A3C" }} />
+      </Seccion>
+      {forma === "organico" && <CampoNum etiqueta="Semilla (para repetir el mismo patrón)" valor={semilla} cambiar={setSemilla} sufijo="" />}
+      <Seccion titulo="Fórmula de escala (i = número de capa)">
+        <CampoTexto valor={formulaEscala} cambiar={setFormulaEscala} max={80} />
+      </Seccion>
+      <Seccion titulo="Fórmula de rotación (grados)">
+        <CampoTexto valor={formulaRotacion} cambiar={setFormulaRotacion} max={80} />
+      </Seccion>
+      <Seccion titulo="Ejemplos">
+        <div className="flex flex-wrap gap-1.5">
+          {EJEMPLOS.map((e) => (
+            <button
+              key={e.nombre}
+              type="button"
+              onClick={() => {
+                setFormulaEscala(e.escala)
+                setFormulaRotacion(e.rotacion)
+              }}
+              className="rounded-full bg-[#1C2431] px-2.5 py-1 text-[11.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045] hover:text-white"
+            >
+              {e.nombre}
+            </button>
+          ))}
+        </div>
+      </Seccion>
+    </div>
+  )
 
   return (
-    <div className="w-full bg-[#FAF9F6]">
-      <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">
-          Gratis
-        </span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">
-          Generador de patrones radiales (mandalas, arte de pared)
-        </h1>
-        <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[680px]">
-          Capas de una misma figura, escaladas y rotadas con una fórmula matemática, para corte láser decorativo. Descarga en DXF o SVG.
-        </p>
-      </section>
-
-      <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
-        {/* Datos */}
-        <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Figura base</span>
-            <div className="flex gap-2">
-              <Opcion activa={forma === "poligono"} onClick={() => setForma("poligono")}>Polígono</Opcion>
-              <Opcion activa={forma === "organico"} onClick={() => setForma("organico")}>Orgánica</Opcion>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Campo etiqueta="Lados" valor={lados} cambiar={setLados} />
-            <Campo etiqueta="Capas" valor={capas} cambiar={setCapas} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Campo etiqueta="Radio inicial" valor={radioMin} cambiar={setRadioMin} sufijo="mm" />
-            <Campo etiqueta="Radio de referencia" valor={radioMax} cambiar={setRadioMax} sufijo="mm" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Campo etiqueta="Ángulo inicial" valor={anguloMin} cambiar={setAnguloMin} sufijo="°" />
-            <Campo etiqueta="Ángulo final" valor={anguloMax} cambiar={setAnguloMax} sufijo="°" />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Redondeo de esquinas</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={redondeo}
-              onChange={(e) => setRedondeo(parseFloat(e.target.value))}
-              className="accent-[#C2560A]"
-            />
-          </div>
-
-          {forma === "organico" && <Campo etiqueta="Semilla (para repetir el mismo patrón)" valor={semilla} cambiar={setSemilla} />}
-
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Fórmula de escala (variable: i = número de capa)</span>
-            <Campo etiqueta="" valor={formulaEscala} cambiar={setFormulaEscala} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Fórmula de rotación (grados)</span>
-            <Campo etiqueta="" valor={formulaRotacion} cambiar={setFormulaRotacion} />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Ejemplos</span>
-            <div className="flex flex-wrap gap-1.5">
-              {EJEMPLOS.map((e) => (
-                <button
-                  key={e.nombre}
-                  type="button"
-                  onClick={() => { setFormulaEscala(e.escala); setFormulaRotacion(e.rotacion) }}
-                  className="text-[12px] font-semibold bg-[#FAF9F6] border border-[#E7E4DC] hover:border-[#C2560A] px-2.5 py-1 rounded-full text-[#1B1B18]"
-                >
-                  {e.nombre}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Vista previa y descarga */}
-        <section className="flex flex-col gap-4 min-w-0">
-          {r.errores.length > 0 && (
-            <div className="bg-[#FDECEC] border border-[#F2B8B5] text-[#8A1C1C] rounded-[12px] px-4 py-3 text-[14px]">
-              {r.errores.map((e) => <p key={e} className="m-0">{e}</p>)}
-            </div>
-          )}
-
-          {listo && (
-            <>
-              <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-5">
-                <div
-                  className="w-full aspect-square [&>svg]:w-full [&>svg]:h-full"
-                  dangerouslySetInnerHTML={{ __html: vista }}
-                />
-              </div>
-
-              <dl className="grid grid-cols-2 gap-2 m-0">
-                <div className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5">
-                  <dt className="text-[12px] text-[#6B6A63]">Tamaño</dt>
-                  <dd className="m-0 text-[14px] font-semibold text-[#1B1B18]">{caja ? `${r1(caja.ancho)} × ${r1(caja.alto)} mm` : "-"}</dd>
-                </div>
-                <div className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5">
-                  <dt className="text-[12px] text-[#6B6A63]">Capas</dt>
-                  <dd className="m-0 text-[14px] font-semibold text-[#1B1B18]">{r.capas.length}</dd>
-                </div>
-              </dl>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => descargar(`${nombreArchivo}.dxf`, patronADXF(r.capas), "application/dxf")}
-                  className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
-                >
-                  Descargar DXF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => descargar(`${nombreArchivo}.svg`, patronASVG(r.capas, "corte"), "image/svg+xml")}
-                  className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
-                >
-                  Descargar SVG
-                </button>
-              </div>
-              {/* Del diseño a la solicitud de fabricación, con el DXF ya adjunto */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (
-                    !mandarAFabricar(`${nombreArchivo}.dxf`, patronADXF(r.capas), locale, {
-                      pieza: "Patrón radial",
-                      medidas: caja ? `${r1(caja.ancho)} × ${r1(caja.alto)} mm` : undefined,
-                      proceso: "Corte láser",
-                    })
-                  )
-                    setAvisoFabricar("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en la solicitud.")
-                }}
-                className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3.5 rounded-[10px] text-[15px]"
-              >
-                Fabrícamelo: pide que un taller lo corte
-              </button>
-              {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
-              <a
-                href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-[#E7E4DC] bg-white text-[#142033] font-semibold py-3 rounded-[10px] text-[14px] text-center"
-              >
-                Pedir por WhatsApp
-              </a>
-              <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                Las fórmulas aceptan funciones como sin, cos, sqrt, etc. Si escribes algo inválido, esa capa usa 0 en vez de romper el patrón.
-              </p>
-            </>
-          )}
-        </section>
-      </div>
-    </div>
+    <Estudio2D
+      titulo="Patrones radiales"
+      acento="2D"
+      subtitulo="Mandalas y arte de pared por capas"
+      icono={
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 3l7 5-3 9H8L5 8z" />
+          <path d="M12 7l3.5 2.5-1.5 4.5h-4L8.5 9.5z" />
+        </svg>
+      }
+      panel={panel}
+      dibujo={dibujo}
+      avisos={r.errores}
+      archivo={`patron-hetna-${forma}-${capas}capas`}
+      pieza={`Patrón radial de ${capas} capas (figura de ${lados} lados${forma === "organico" ? ", orgánica" : ""})`}
+      datos={caja ? [["Capas", String(r.capas.length)], ["Tamaño", `${r1(caja.ancho)} × ${r1(caja.alto)} mm`]] : []}
+      vacio="Revisa las fórmulas y las medidas del panel."
+    />
   )
 }

@@ -11,6 +11,11 @@ echo "===== $(date '+%F %T') ====="
 [ -x "$AQUI/.venv/bin/python" ] || { echo "Falta el entorno .venv: corre instalar_servidor.sh"; exit 1; }
 set -a; source "$AQUI/.env"; set +a          # LLM_MODEL, LLM_API_KEY, TANDA, N8N_IMPORTAR_URL
 case "${LLM_API_KEY:-}" in ""|PEGA_AQUI*) echo "Pega tu llave de Groq en $AQUI/.env (LLM_API_KEY)"; exit 1;; esac
+# n8n corre en este mismo servidor: se le manda directo (127.0.0.1:5678) para no
+# pasar por Cloudflare, que bloqueaba el envío con 403. La dirección pública del
+# .env se cambia sola a la local.
+URL="${N8N_IMPORTAR_URL:-http://127.0.0.1:5678/webhook/hetna-prospectos-importar}"
+URL="${URL/https:\/\/n8n.hetnacnc.com/http://127.0.0.1:5678}"
 "$AQUI/.venv/bin/python" buscar_prospectos.py \
   --auto "${TANDA:-20}" --max-por-consulta 10 \
-  --enviar "${N8N_IMPORTAR_URL:-https://n8n.hetnacnc.com/webhook/hetna-prospectos-importar}"
+  --enviar "$URL"

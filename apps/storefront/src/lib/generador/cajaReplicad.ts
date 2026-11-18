@@ -9,29 +9,19 @@ import type { Pieza } from "./caja"
 
 type Plano = { origen: [number, number, number]; xDir: [number, number, number]; normal: [number, number, number] }
 
-// Plano de bosquejo de cada pieza: origen + dirección X + normal (= dirección
-// de extrusión). Elegidos para que normal = xDir × yDir (base derecha), así
-// no hace falta ninguna rotación - solo traslación. Verificado numéricamente:
-// las 6 piezas arman una caja de exactamente ancho×alto×fondo sin huecos ni
-// traslapes (ver notas de la sesión; cada combinación fresa/kerf/tapa probada).
-function planoDe(nombre: string, t: number, ext: { ancho: number; fondo: number; alto: number }): Plano {
-  const { ancho: W, fondo: D, alto: H } = ext
-  switch (nombre) {
-    case "Base":
-      return { origen: [0, 0, D], xDir: [1, 0, 0], normal: [0, 1, 0] }
-    case "Tapa":
-      return { origen: [0, H - t, D], xDir: [1, 0, 0], normal: [0, 1, 0] }
-    case "Frente":
-      return { origen: [0, 0, 0], xDir: [1, 0, 0], normal: [0, 0, 1] }
-    case "Atrás":
-      return { origen: [0, 0, D - t], xDir: [1, 0, 0], normal: [0, 0, 1] }
-    case "Lateral izquierdo":
-      return { origen: [0, H, 0], xDir: [0, 0, 1], normal: [1, 0, 0] }
-    case "Lateral derecho":
-      return { origen: [W - t, H, 0], xDir: [0, 0, 1], normal: [1, 0, 0] }
-    default:
-      return { origen: [0, 0, 0], xDir: [1, 0, 0], normal: [0, 0, 1] }
-  }
+type V = [number, number, number]
+const cruz = (a: V, b: V): V => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+// Plano de bosquejo de cada pieza a partir de su ubicación (origen + ejes,
+// ver caja.ts). replicad pide una base derecha (normal = xDir × yDir): si la
+// ubicación es una reflexión (uz opuesto a ux × uy), el origen se corre un
+// espesor sobre uz y se extruye hacia el otro lado; ocupa el mismo lugar.
+function planoDe(pieza: Pieza, t: number): Plano {
+  const u = pieza.ubicacion || { origen: [0, 0, 0] as V, ux: [1, 0, 0] as V, uy: [0, 1, 0] as V, uz: [0, 0, 1] as V }
+  const n = cruz(u.ux, u.uy)
+  const mismoLado = n[0] * u.uz[0] + n[1] * u.uz[1] + n[2] * u.uz[2] > 0
+  const origen: V = mismoLado ? u.origen : [u.origen[0] + t * u.uz[0], u.origen[1] + t * u.uz[1], u.origen[2] + t * u.uz[2]]
+  return { origen, xDir: u.ux, normal: n }
 }
 
 // Radio de chaflán más grande que es geométricamente seguro para estas
@@ -78,7 +68,7 @@ export type PiezaSolida = { nombre: string; shape: Shape3D }
 export async function construirSolidos(
   piezas: Pieza[],
   espesor: number,
-  exterior: { ancho: number; fondo: number; alto: number },
+  _exterior: { ancho: number; fondo: number; alto: number },
   chaflanMm = 0
 ): Promise<PiezaSolida[]> {
   await cargarOC()
@@ -92,14 +82,18 @@ export async function construirSolidos(
   }
 
   return piezas.map((pieza) => {
-    const { origen, xDir, normal } = planoDe(pieza.nombre, espesor, exterior)
+    const { origen, xDir, normal } = planoDe(pieza, espesor)
     const plano = new Plane(origen, xDir, normal)
-    let pluma = draw(pieza.contorno[0])
-    for (const p of pieza.contorno.slice(1)) pluma = pluma.lineTo(p)
-    // el contorno de cada pieza es siempre un único polígono cerrado simple,
-    // nunca un compuesto de varias curvas, así que sketchOnPlane() siempre
-    // da un Sketch (no Sketches) aquí.
-    const sketch = pluma.close().sketchOnPlane(plano) as Sketch
+    const poligono = (pts: [number, number][]) => {
+      let pluma = draw(pts[0])
+      for (const p of pts.slice(1)) pluma = pluma.lineTo(p)
+      return pluma.close()
+    }
+    let dibujo = poligono(pieza.contorno)
+    for (const h of pieza.huecos || []) dibujo = dibujo.cut(poligono(h))
+    // un contorno exterior (con o sin huecos) es una sola cara, así que
+    // sketchOnPlane() da un Sketch (no Sketches) aquí.
+    const sketch = dibujo.sketchOnPlane(plano) as Sketch
     let solido: Shape3D = sketch.extrude(espesor)
 
     if (chaflanMm > 0) {

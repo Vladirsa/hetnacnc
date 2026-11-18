@@ -15,6 +15,7 @@ import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middle
 import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares";
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
+import { vendorProductoProtegidoMiddlewares } from "./vendor/hetna-producto-protegido/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
 import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
@@ -102,6 +103,7 @@ export default defineMiddlewares({
         ...vendorFondoBlancoMiddlewares,
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
+        ...vendorProductoProtegidoMiddlewares,
         ...vendorAltaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
         // Factura del pedido (PDF + XML del CFDI) desde el panel del taller
@@ -112,6 +114,39 @@ export default defineMiddlewares({
         },
         // Licitaciones 3.0 (Fase 3): certificado del taller (PDF o foto)
         // Marketing HETNA: tu video grabado para la Fábrica (hasta 95 MB, límite de Nginx 100 MB)
+        // Contabilidad: facturas XML/ZIP y plantilla de movimientos
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/archivos",
+          middlewares: [leerMultipart({ campos: { archivos: 20 }, maxMb: 25, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/efirma",
+          middlewares: [leerMultipart({ campos: { cer: 1, key: 1 }, maxMb: 1 })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/semaforo",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-conta/movimientos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 5, forma: "lista" })],
+        },
+        // "Te cargamos tu catálogo": plantilla llena del taller (lib/cotizador-catalogo.ts)
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-catalogos/:id/cargar",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
+        },
+        // Importador de productos de la tienda HETNA (plantilla de Excel)
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-productos/importar",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
+        },
         {
           method: ["POST"],
           matcher: "/admin/hetna-fabrica/video",
@@ -181,6 +216,19 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/api/taller-publico/:slug/solicitar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: Number(process.env.COTIZADOR_SOLICITUD_MAX_MB || 50) })],
+        },
+        // Posventa: el cliente reporta una falla con hasta 3 fotos desde su liga (lib/cotizador-posventa.ts).
+        // El GET ya pasa por limitarLiga (/api/cotizacion-liga/*).
+        {
+          method: ["POST"],
+          matcher: "/api/cotizacion-liga/:token/posventa",
+          middlewares: [leerMultipart({ campos: { fotos: 3 }, maxMb: 8 })],
+        },
+        // "Te cargamos tu catálogo": el taller manda su lista (lib/cotizador-catalogo.ts)
+        {
+          method: ["POST"],
+          matcher: "/api/cotizador-catalogo",
+          middlewares: [leerMultipart({ campos: { archivos: 5 }, maxMb: 20 })],
         },
         // CSD del taller (.cer y .key) para la factura electrónica: va directo a Facturapi
         {

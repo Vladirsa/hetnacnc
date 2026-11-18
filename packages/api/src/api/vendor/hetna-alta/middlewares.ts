@@ -10,7 +10,9 @@ import type {
 import { motivoParaNoPublicar, servicioTalleres } from "../../../lib/alta-taller"
 import { motivoRequisitos } from "../../../lib/requisitos-vendedor"
 
-async function exigirTallerAprobado(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) {
+// Para publicar productos sólo se piden los términos; la tarjeta, para cotizar
+// licitaciones y para cobrar (admin/hetna-saldos/pagar).
+const exigirTallerAprobado = (opc: { tarjeta: boolean }) => async (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
   const r = req as unknown as { seller_context?: { seller_id?: string }; session?: { seller_id?: string } }
   const sellerId = r.seller_context?.seller_id || req.get("x-seller-id") || r.session?.seller_id
   if (!sellerId) return next() // sin taller la ruta original responde el error
@@ -22,19 +24,22 @@ async function exigirTallerAprobado(req: MedusaRequest, res: MedusaResponse, nex
   }
   const mensaje = motivoParaNoPublicar(taller)
   if (mensaje) return res.status(403).json({ type: "not_allowed", message: mensaje, codigo: "taller_no_aprobado" })
-  // Requisitos (4 nov 2026): términos vigentes y tarjeta verificada
-  const falta = motivoRequisitos(taller)
+  // Requisitos (4 nov 2026): términos vigentes y, según la ruta, tarjeta verificada
+  const falta = motivoRequisitos(taller, { tarjeta: opc.tarjeta })
   if (falta) return res.status(403).json({ type: "not_allowed", message: falta, codigo: "requisitos_pendientes" })
   next()
 }
 
+const publicar = exigirTallerAprobado({ tarjeta: false })
+const cotizar = exigirTallerAprobado({ tarjeta: true })
+
 export const vendorAltaMiddlewares: MiddlewareRoute[] = [
-  { method: ["POST"], matcher: "/vendor/products", middlewares: [exigirTallerAprobado] },
-  { method: ["POST"], matcher: "/vendor/offers", middlewares: [exigirTallerAprobado] },
-  { method: ["POST"], matcher: "/vendor/offers/batch", middlewares: [exigirTallerAprobado] },
-  { method: ["POST"], matcher: "/vendor/hetna-publicar", middlewares: [exigirTallerAprobado] },
+  { method: ["POST"], matcher: "/vendor/products", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/offers", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/offers/batch", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/hetna-publicar", middlewares: [publicar] },
   // Servicios: cursos, libros y propuestas de licitación
-  { method: ["POST"], matcher: "/vendor/courses", middlewares: [exigirTallerAprobado] },
-  { method: ["POST"], matcher: "/vendor/hetna-libros", middlewares: [exigirTallerAprobado] },
-  { method: ["POST"], matcher: "/vendor/hetna-solicitudes/:id/propuesta", middlewares: [exigirTallerAprobado] },
+  { method: ["POST"], matcher: "/vendor/courses", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/hetna-libros", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/hetna-solicitudes/:id/propuesta", middlewares: [cotizar] },
 ]

@@ -12,7 +12,7 @@ import { leerOBJ, leerSTL } from "@/lib/generador/vectores"
 
 const LIMITE = 40 * 1024 * 1024
 
-export function GeneradorRebanado() {
+export function GeneradorRebanado({ cabecera }: { cabecera?: React.ReactNode }) {
   const [nombre, setNombre] = useState("")
   const [tris, setTris] = useState<number[]>([])
   const [error, setError] = useState("")
@@ -103,7 +103,12 @@ export function GeneradorRebanado() {
           <path d="M12 3l8 4-8 4-8-4zM4 12l8 4 8-4M4 16.5l8 4 8-4" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={tris.length ? r.avisos : []}
       archivo={`capas-${(nombre || "modelo").replace(/\.[^.]+$/, "")}`}
