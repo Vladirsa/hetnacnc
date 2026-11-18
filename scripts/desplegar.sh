@@ -238,6 +238,15 @@ rm -rf "apps/storefront/$DIST_NUEVA"
 export NEXT_DIST_DIR="$DIST_NUEVA"
 echo "   tienda: sirviendo desde $DIST_ACTUAL, construyendo en $DIST_NUEVA"
 bun run build
+# Las fotos ya optimizadas (AVIF/WebP de /_next/image) viven en <dist>/cache/images.
+# Al construir en la otra carpeta se perdían en cada despliegue y el primer
+# visitante de cada producto esperaba a que el servidor las volviera a hacer
+# (hasta 3 s por foto en el catálogo). Se copian a la carpeta nueva.
+if [ -d "apps/storefront/$DIST_ACTUAL/cache/images" ]; then
+  mkdir -p "apps/storefront/$DIST_NUEVA/cache"
+  cp -a "apps/storefront/$DIST_ACTUAL/cache/images" "apps/storefront/$DIST_NUEVA/cache/" 2>/dev/null \
+    && verde "   ✓ fotos optimizadas conservadas" || rojo "   ! no se pudieron copiar las fotos optimizadas (se rehacen solas)"
+fi
 
 # --- 4. Base de datos ---
 
@@ -453,8 +462,17 @@ if [ "${DESPLIEGUE_CALENTAR:-1}" != "0" ]; then
     # En /us sin hetna_lang, que es como llega un visitante nuevo de EE. UU.
     galleta="_medusa_cache_id=calentar-cache"
     case "$url" in */us|*/us/*) ;; *) galleta="$galleta; hetna_lang=es" ;; esac
-    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -A 'Mozilla/5.0 (hetna-calentar)' -H "Cookie: $galleta" "$url" 2>/dev/null || true)"
+    pagina="$(mktemp)"
+    codigo="$(curl -s -o "$pagina" -w '%{http_code}' --max-time 30 -A 'Mozilla/5.0 (hetna-calentar)' -H "Cookie: $galleta" "$url" 2>/dev/null || true)"
     if [ "$codigo" = "200" ]; then ok=$((ok + 1)); else mal=$((mal + 1)); echo "   ✗ $codigo $url"; fi
+    # En el inicio y las categorías también se piden las primeras fotos, para
+    # que el servidor las deje optimizadas antes de que llegue un visitante.
+    case "$url" in */mx|*/categories*)
+      grep -oE '/_next/image\?url=[^" ,]+' "$pagina" 2>/dev/null | sed 's/&amp;/\&/g' | sort -u | head -12 | while read -r foto; do
+        curl -s -o /dev/null --max-time 20 -H 'Accept: image/avif,image/webp,*/*' "$SITIO$foto" 2>/dev/null || true
+      done || true ;;
+    esac
+    rm -f "$pagina"
   done
   if [ "$mal" -gt 0 ]; then verde "   ✓ $ok páginas en caché ($mal con error)"; else verde "   ✓ $ok páginas en caché"; fi
 fi
