@@ -49,7 +49,24 @@ export function welcomeEmailHtml({ name }: { name: string }): string {
   )
 }
 
-export type AbandonedCartItem = { title: string; quantity: number }
+export type AbandonedCartItem = { title: string; quantity: number; thumbnail?: string | null; unit_price?: number | null; product_handle?: string | null }
+
+const escCarrito = (t: string) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string)
+const dineroCarrito = (n: number, moneda = "MXN") => `$${Number(n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${moneda.toUpperCase()}`
+const BASE_TIENDA = () => (process.env.NEXT_PUBLIC_BASE_URL || process.env.STOREFRONT_URL || "https://hetnacnc.com").replace(/\/$/, "")
+
+/** Renglón de producto con foto, nombre (liga a su ficha), cantidad y precio. */
+function renglonCarrito(i: AbandonedCartItem, moneda: string): string {
+  const liga = i.product_handle ? `${BASE_TIENDA()}/mx/products/${encodeURIComponent(i.product_handle)}` : null
+  const nombre = liga ? `<a href="${liga}" style="color:#142033;font-weight:600;text-decoration:none;">${escCarrito(i.title)}</a>` : `<span style="font-weight:600;">${escCarrito(i.title)}</span>`
+  const foto = i.thumbnail ? `<img src="${escCarrito(i.thumbnail)}" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #E7E4DC;display:block;">` : ""
+  const precio = i.unit_price != null ? dineroCarrito(i.unit_price * i.quantity, moneda) : ""
+  return `<tr>
+    <td style="padding:8px 10px 8px 0;width:64px;vertical-align:top;">${foto}</td>
+    <td style="padding:8px 0;vertical-align:top;">${nombre}<div style="color:#6B6A63;font-size:13px;">Cantidad: ${i.quantity}</div></td>
+    <td style="padding:8px 0;text-align:right;vertical-align:top;white-space:nowrap;">${precio}</td>
+  </tr>`
+}
 
 // Segundo recordatorio del carrito (un día después del primero): más corto, con
 // ayuda directa por WhatsApp y, si se configuró, un cupón.
@@ -64,16 +81,13 @@ export function abandonedCartSegundoEmailHtml({
   whatsappUrl: string
   cupon?: string | null
 }): string {
-  const lista = items
-    .slice(0, 3)
-    .map((i) => `<li>${esc(i.title)}${i.quantity > 1 ? ` (x${i.quantity})` : ""}</li>`)
-    .join("")
+  const lista = items.slice(0, 3).map((i) => renglonCarrito(i, "MXN")).join("")
   return layout(
     "Tu carrito en " + SITE_NAME + " sigue guardado",
     `
       <h1 style="font-size:20px;margin:0 0 16px;">¿Te ayudamos a terminar tu compra?</h1>
       <p>Tu carrito sigue guardado:</p>
-      <ul style="margin:8px 0 16px;padding-left:18px;">${lista}</ul>
+      <table style="width:100%;border-collapse:collapse;margin:8px 0 16px;">${lista}</table>
       ${cupon ? `<p style="background:#FFF3E8;border-radius:6px;padding:10px 12px;">Usa el cupón <b>${cupon}</b> al pagar.</p>` : ""}
       <p>Si tienes dudas de medidas, material, envío o forma de pago, escríbenos y te ayudamos en minutos.</p>
       <p style="margin-top:20px;">
@@ -96,12 +110,7 @@ export function abandonedCartEmailHtml({
   currencyCode: string
   cartUrl: string
 }): string {
-  const rows = items
-    .map(
-      (i) =>
-        `<tr><td style="padding:6px 0;">${esc(i.title)}</td><td style="padding:6px 0;text-align:right;">x${i.quantity}</td></tr>`
-    )
-    .join("")
+  const rows = items.map((i) => renglonCarrito(i, currencyCode)).join("")
 
   return layout(
     "Recibiste este correo porque dejaste productos en tu carrito en " + SITE_NAME,
@@ -109,7 +118,7 @@ export function abandonedCartEmailHtml({
       <h1 style="font-size:20px;margin:0 0 16px;">Dejaste algo en tu carrito</h1>
       <p>Tus productos siguen disponibles. Termina tu compra antes de que se agote el stock:</p>
       <table style="width:100%;border-collapse:collapse;margin:16px 0;">${rows}</table>
-      <p style="font-weight:600;">Total: ${total.toFixed(2)} ${currencyCode.toUpperCase()}</p>
+      <p style="font-weight:600;text-align:right;">Total: ${dineroCarrito(total, currencyCode)}</p>
       <p style="margin-top:24px;">
         <a href="${cartUrl}"
            style="background:${BRAND_COLOR};color:#fff;padding:12px 20px;border-radius:4px;text-decoration:none;display:inline-block;">

@@ -30,7 +30,7 @@ type CandidateCart = {
   total: number | null
   metadata: Record<string, unknown> | null
   updated_at: string
-  items: { title: string; quantity: number }[] | null
+  items: { title: string; quantity: number; thumbnail?: string | null; unit_price?: number | null; product_handle?: string | null }[] | null
 }
 
 export default async function abandonedCartReminder(container: MedusaContainer) {
@@ -61,6 +61,9 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
       "completed_at",
       "items.title",
       "items.quantity",
+      "items.thumbnail",
+      "items.unit_price",
+      "items.product_handle",
     ],
     filters: {
       completed_at: null,
@@ -88,7 +91,7 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
         input: {
           cart_id: cart.id,
           email: cart.email as string,
-          items: (cart.items || []).map((i) => ({ title: i.title, quantity: i.quantity })),
+          items: (cart.items || []).map((i) => ({ title: i.title, quantity: i.quantity, thumbnail: i.thumbnail, unit_price: i.unit_price, product_handle: i.product_handle })),
           total: cart.total || 0,
           currency_code: cart.currency_code,
           cart_url: `${storefrontUrl}/mx/cart`,

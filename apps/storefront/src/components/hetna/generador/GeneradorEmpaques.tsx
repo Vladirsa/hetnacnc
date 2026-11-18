@@ -73,6 +73,9 @@ const ICONOS: Record<Gen, string> = {
   redonda: "M4 8a8 3 0 0 0 16 0a8 3 0 0 0-16 0zM4 8v9a8 3 0 0 0 16 0V8",
   corazon: "M12 20s-8-5-8-11a4 4 0 0 1 8-1a4 4 0 0 1 8 1c0 6-8 11-8 11z",
   estrella: "M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z",
+  poligonal: "M8 4h8l4 8-4 8H8l-4-8z",
+  ataud: "M9 3h6l3 6-2 12H8L6 9z",
+  rombo: "M12 3l8 9-8 9-8-9z",
 }
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
@@ -117,6 +120,7 @@ export function GeneradorEmpaques() {
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [valores, setValores] = useState<Record<Forma, Valores>>(INICIO)
   const [conBase, setConBase] = useState(true)
+  const [anguloPestana, setAnguloPestana] = useState("45")
   const [modoDoblez, setModoDoblez] = useState<ModoDoblez>("marcar")
   const [corteDoblez, setCorteDoblez] = useState("6")
   const [puenteDoblez, setPuenteDoblez] = useState("3")
@@ -165,8 +169,9 @@ export function GeneradorEmpaques() {
       filas: entero("filas"),
       columnas: entero("columnas"),
       diametro: mm("diametro"),
+      anguloPestana: numero(anguloPestana),
     })
-  }, [forma, v, k, conBase])
+  }, [forma, v, k, conBase, anguloPestana])
 
   const listo = r.piezas.length > 0
   const dob: OpcionesDoblez = useMemo(
@@ -381,6 +386,22 @@ export function GeneradorEmpaques() {
               <input type="checkbox" checked={conBase} onChange={(e) => setConBase(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
               {ETIQUETAS[forma].conBase || "Con base"} (pestañas y tapa redonda)
             </label>
+          )}
+
+          {def.campos.includes("pestana") && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold text-[#1B1B18]">Ángulo de las pestañas</span>
+              <div className="flex flex-wrap gap-2">
+                {["30", "45", "60", "90"].map((a) => (
+                  <Opcion key={a} activa={anguloPestana === a} onClick={() => setAnguloPestana(a)}>
+                    {a}°
+                  </Opcion>
+                ))}
+              </div>
+              <p className="m-0 text-[12px] text-[#9A978C]">
+                45° es lo normal. Con menos ángulo las pestañas quedan más afiladas y no chocan en las esquinas; con 90° quedan rectangulares y pegan más.
+              </p>
+            </div>
           )}
 
           <div className="flex flex-col gap-2">

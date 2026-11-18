@@ -152,3 +152,13 @@ export function envioDelCarrito(items?: { product?: ProductoParaTipo | null }[] 
 /** ¿El carrito sólo trae archivos o servicios (nada que enviar)? Tarea 4. */
 export const carritoSoloDigital = (items?: { product?: ProductoParaTipo | null }[] | null): boolean =>
   envioDelCarrito(items) !== null
+
+/** Diseño para descargar (la ficha con galería de vistas, licencia y "Cómo
+ *  funciona"). Los paquetes de créditos y los cursos también son digitales,
+ *  pero no se descargan: conservan su ficha. */
+export function esFichaDescarga(producto: any): boolean {
+  const m = (producto?.metadata || {}) as Record<string, unknown>
+  if (m.producto_creditos_3d === true || m.producto_creditos_3d === "true") return false
+  if (typeof m.curso_slug === "string" && m.curso_slug) return false
+  return tipoFicha(producto) === "digital"
+}

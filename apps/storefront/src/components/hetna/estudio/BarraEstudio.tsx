@@ -24,7 +24,7 @@ export function BarraEstudio() {
             ? "vectorizador" // Imagen
             : ["anidado-piezas", "rebanado-capas", "svg-a-stl"].includes(String(params?.herramienta))
               ? "convertidor" // Archivos
-              : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas"
+              : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas" || params?.herramienta === "esferas-navidad"
                 ? "relojes" // Decoración
                 : params?.herramienta === "engranes"
                   ? "rompecabezas" // Juegos y mecanismos

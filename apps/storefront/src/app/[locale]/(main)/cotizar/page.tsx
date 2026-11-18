@@ -8,6 +8,7 @@ import type { Metadata } from "next"
 import { vistaPreviaWhatsapp } from "@/lib/publicidad/vista-previa"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
+import { CotizadorCliente } from "@/components/hetna/cotizador/CotizadorCliente"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BloquePublicidad } from "@/components/hetna/disenar/BloquePublicidad"
 import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
@@ -63,10 +64,13 @@ export default async function CotizarPage({
     material?: string
     archivo?: string
     proceso?: string
+    // Desde la tienda: lo que se buscó y no había
+    descripcion?: string
   }>
 }) {
   const sp = await searchParams
-  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso } = sp
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion } = sp
+  const descripcionInicial = typeof descripcion === "string" && descripcion.trim() ? descripcion.trim() : undefined
   const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
   // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
   const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
@@ -89,7 +93,9 @@ export default async function CotizarPage({
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t
               ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
-              : `Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA.`}
+              : prellenado
+                ? `Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA.`
+                : `Sube tu archivo o escribe las medidas y ve un precio aproximado al instante. Si te conviene, pide propuestas: los talleres de la red te cotizan durante ${DIAS_SOLICITUD_ABIERTA} días y tú eliges y pagas dentro de HETNA.`}
           </p>
           {/* Tarea 6 de la auditoría de mejoras: el plazo, visible antes del formulario */}
           <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#EEF7F0] px-3 py-1.5 text-[14px] font-semibold text-[#17633A]" data-testid="plazo-respuesta">
@@ -98,7 +104,24 @@ export default async function CotizarPage({
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
+          {t || prellenado ? (
+            <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} descripcionInicial={descripcionInicial} prellenado={prellenado} />
+          ) : (
+            // Sin taller ni datos prellenados: primero el estimado al instante (lo que
+            // prometen los anuncios y los correos a compradores) y, para diseño,
+            // grabado, volumen o trabajos sin medidas, la solicitud completa.
+            <div className="grid content-start gap-6">
+              <CotizadorCliente />
+              <details className="rounded-[18px] border border-[#E7E4DC] bg-white p-5" open={Boolean(servicio || necesidad || descripcionInicial)}>
+                <summary className="cursor-pointer text-[16px] font-bold text-[#142033]">
+                  ¿Necesitas diseño, grabado, producción por volumen o no tienes medidas? Llena la solicitud completa
+                </summary>
+                <div className="mt-4">
+                  <FormSolicitudTaller servicioInicial={servicio} necesidadInicial={necesidad} descripcionInicial={descripcionInicial} />
+                </div>
+              </details>
+            </div>
+          )}
 
           <aside className="grid content-start gap-4">
             <EjemploCotizacion />

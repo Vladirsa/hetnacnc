@@ -102,7 +102,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     acceso: "gratis",
     titulo: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
     descripcion:
-      "46 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón y de estrella, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+      "49 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón, de estrella, ataúd y de N lados con tapa, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
   },
   {
     slug: "grabado-foto",
@@ -263,6 +263,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     titulo: "Generador de portarretratos y marcos para corte láser gratis (DXF y SVG)",
     descripcion:
       "Elige el tamaño de la foto, el estilo del borde y un nombre o fecha: te damos el frente, la capa con ranura para vidrio y foto, la espalda y la pata para mesa o el colgador. Descarga DXF, SVG o PDF.",
+  },
+  {
+    slug: "esferas-navidad",
+    nombre: "Esferas navideñas con nombre",
+    texto: "Adornos de Navidad personalizados: escribe los nombres y descarga una esfera por cada uno.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Esferas navideñas con nombre para corte láser gratis (DXF y SVG)",
+    descripcion:
+      "Generador de esferas de Navidad personalizadas: elige el diseño (copos, estrellas, pinos, regalos…), escribe uno o varios nombres y descarga las esferas de una sola pieza, con las letras unidas, en DXF, SVG o PDF para corte láser, plotter o cartulina.",
   },
   {
     slug: ESCANEAR,

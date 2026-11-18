@@ -3,6 +3,7 @@
 // and the Spanish landing (CotizadorLanding.tsx); prices in USD come from the backend
 // (GET /api/cotizador-suscripcion → planes.*.usd) with the same defaults as the backend.
 import { APP_TALLER } from "@/lib/hetna/app-taller"
+import { SoporteWhatsApp } from "./SoporteWhatsApp"
 
 export type PreciosUsd = { taller: number; pro: number; industrial: number; paypal: boolean }
 
@@ -234,6 +235,7 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
           ¿Hablas español? <a href="/mx/servicios/cotizador-cnc" hrefLang="es-MX" className="underline">Ver la app HETNA CNC en español</a>
         </p>
       </div>
+      <SoporteWhatsApp en />
     </main>
   )
 }

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 
 import type { CotizacionPublica } from "@/lib/cotizador/liga"
 
+import { PosventaCliente } from "./PosventaCliente"
+
 // Lo que ve el cliente del taller en hetnacnc.com/c/<token>: la cotización,
 // el botón de aceptar y el de pagar el anticipo (Mercado Pago del taller).
 type Props = { token: string; inicial: CotizacionPublica; pago: string }
@@ -142,6 +144,8 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
 
       {/* Seguimiento del pedido */}
       {c.pedido ? <Seguimiento p={c.pedido} /> : null}
+      {/* Posventa: falla, garantía o ajuste con el pedido ya entregado */}
+      {c.pedido?.estado === "Entregado" ? <PosventaCliente token={token} /> : null}
 
       {/* Partidas */}
       <section className={caja}>

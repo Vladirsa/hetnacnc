@@ -48,6 +48,8 @@ export type Perfil = {
   maquinas: Maquina[]
   materiales: string[]
   entrega?: string
+  // Horario de atención, texto libre del taller ("Lunes a viernes 9 a 18")
+  horario?: string
   anos?: number
   calificacion?: number
   resenas?: number
@@ -132,6 +134,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     maquinas,
     materiales: lista(p.materiales),
     entrega: texto(p.entrega),
+    horario: texto(p.horario),
     anos: num(p.anos),
     calificacion: num(p.calificacion),
     resenas: num(p.resenas),

@@ -19,7 +19,8 @@ import { packsDeTalleres } from "@/lib/packs/acciones"
 import { AdditionalAttributeProps } from "@/types/product"
 import { HttpTypes } from "@medusajs/types"
 import { FichaDigital, FichaServicio, ResumenServicio } from "@/components/hetna/fichas/FichaPorTipo"
-import { tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { esFichaDescarga, tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { ColumnaDescarga } from "@/components/hetna/fichas/descarga/FichaDescarga"
 import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
 
 type Props = {
@@ -44,6 +45,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
   const ganadora = getBuyboxWinner(rankOffers(offers))
   // Plantilla de ficha: digital, servicio o físico (lib/hetna/tipo-ficha)
   const tipo = tipoFicha(product as any)
+  const descarga = esFichaDescarga(product)
   const seller = ganadora?.seller
 
   // El umbral de envío gratis del taller que gana el buybox -- el mismo que va
@@ -88,7 +90,14 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         offers={offers}
         seller={seller}
         tipo={tipo}
-        antesDeComprar={tipo === "servicio" ? <ResumenServicio metadata={product.metadata} /> : undefined}
+        descarga={descarga}
+        antesDeComprar={
+          tipo === "servicio" ? (
+            <ResumenServicio metadata={product.metadata} />
+          ) : descarga ? (
+            <ColumnaDescarga product={product as never} />
+          ) : undefined
+        }
       />
 
       {typeof product.metadata?.curso_slug === "string" && (

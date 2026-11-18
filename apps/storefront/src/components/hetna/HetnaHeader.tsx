@@ -104,7 +104,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
       {/* En celular se oculta al bajar; solo queda el buscador. En computadora siempre visible. */}
       <OcultarAlBajar>
       {/* Barra principal (z-50: sus menus, como el carrito, quedan por encima de la barra azul) */}
-      <div className="relative z-50 bg-white border-b border-[#E7E4DC] px-4 lg:px-16 py-3 lg:py-4 flex items-center gap-3 md:gap-4 lg:gap-8">
+      <div className="relative z-50 bg-white border-b border-[#E7E4DC] px-4 max-[359px]:px-3 lg:px-16 py-3 lg:py-4 flex items-center gap-3 max-[359px]:gap-2 md:gap-4 lg:gap-8">
         {/* Celular y tableta (hasta lg): menú de 3 rayitas */}
         <MenuMovil arbol={arbolMenu} herramientas={herramientasMenu} />
         <LocalizedClientLink
@@ -112,7 +112,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           className="shrink-0 flex items-center"
           data-testid="header-logo-link"
         >
-          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority className="h-auto w-[110px] md:w-[180px]" />
+          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority className="h-auto w-[110px] max-[359px]:w-[74px] md:w-[180px]" />
         </LocalizedClientLink>
         <div className="hidden md:flex shrink-0">
           <EnvioA user={user} />
@@ -143,8 +143,10 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           />
           <CartDropdown />
         </div>
-        {/* Celular: campanita de mensajes, idioma y moneda */}
-        <div className="ml-auto flex md:hidden items-center gap-2">
+        {/* Celular: campanita de mensajes, idioma y moneda. En pantallas de menos de
+            360 px (celulares chicos) se aprietan logo y espacios para que la fila
+            quepa y la página no se arrastre hacia los lados. */}
+        <div className="ml-auto flex md:hidden items-center gap-2 max-[359px]:gap-1">
           <CampanitaChat isLoggedIn={isLoggedIn} compacto />
           <IdiomaSelector />
           <MonedaSelector regions={regions} />
