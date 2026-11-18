@@ -14,6 +14,7 @@ import {
   formaPorId,
   generarEmpaque,
   plantillaDXF,
+  doblecesSinPerforar,
   type ModoDoblez,
   type OpcionesDoblez,
   plantillaSVG,
@@ -54,6 +55,12 @@ const ICONOS: Record<Gen, string> = {
   maceta: "M6 5h12l-2 14H8zM6 5a6 2 0 0 0 12 0",
   tarjeta: "M4 5h16v14H4zM12 5v14",
   inserto: "M3 5h18v14H3zM8 12a2 2 0 1 0 0-.1M16 12a2 2 0 1 0 0-.1",
+  envio: "M3 9h18v10H3zM3 9l3-4h12l3 4M9 13h6",
+  leche: "M6 9h12v12H6zM6 9l6-5 6 5M12 4V2",
+  exhibidor: "M4 14h16v6H4zM6 14V4h12v10M9 8h6",
+  cartas: "M7 3h10v18H7zM10 3a2 2 0 0 0 4 0M9 8h6",
+  rebanada: "M4 18l16-6v6zM4 18l16-12v6M20 6v6",
+  explosiva: "M9 9h6v6H9zM9 9L5 5M15 9l4-4M9 15l-4 4M15 15l4 4",
 }
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
@@ -151,6 +158,7 @@ export function GeneradorEmpaques() {
   // perforado sí (es corte), el marcado no.
   const dobCotizar: OpcionesDoblez = dob.modo === "perforado" ? dob : { ...dob, modo: "ninguno" }
   const vista = useMemo(() => (listo ? plantillaSVG(r.piezas, "vista", dob) : ""), [r, listo, dob])
+  const sinPerforar = useMemo(() => (listo ? doblecesSinPerforar(r.piezas, dob) : 0), [r, listo, dob])
   const hoja = listo ? acomodarPlantillas(r.piezas) : null
   const SIN_UNIDAD = ["lados", "filas", "columnas"]
   const nombreArchivo = `${forma}-hetna-${campos.map((c) => (SIN_UNIDAD.includes(c) ? v[c] : r1(numero(v[c]) * k))).join("x")}`
@@ -202,7 +210,7 @@ export function GeneradorEmpaques() {
           Generador de plantillas de empaque
         </h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[680px]">
-          Más de 30 modelos: cajas con tapa, de regalo, para pizza o pastel, bolsas con asas, sobres, tubos, pirámides y más, a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.
+          Más de 40 modelos: cajas con tapa, de regalo, para pizza o pastel, bolsas con asas, sobres, tubos, pirámides y más, a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.
         </p>
       </section>
 
@@ -350,6 +358,11 @@ export function GeneradorEmpaques() {
                 </div>
               </div>
 
+              {sinPerforar > 0 && (
+                <p className="m-0 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] px-4 py-3">
+                  {sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`} para {r1(dob.corte)} mm de corte y {r1(dob.puente)} mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.
+                </p>
+              )}
               {r.avisos.length > 0 && (
                 <ul className="m-0 pl-5 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] py-3 pr-4">
                   {r.avisos.map((a) => <li key={a}>{a}</li>)}

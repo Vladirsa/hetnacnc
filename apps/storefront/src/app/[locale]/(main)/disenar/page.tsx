@@ -59,7 +59,7 @@ const FAQ = [
   },
   {
     p: "¿Qué puedo diseñar gratis para corte láser?",
-    r: "En el 2D Studio tienes generador de cajas con juntas de dedo, más de 35 plantillas de empaque, letreros con nombre, rompecabezas, mandalas en capas, despiece de muebles y foto para grabado. Todo se descarga en DXF, SVG o PDF.",
+    r: "En el 2D Studio tienes generador de cajas con juntas de dedo, más de 40 plantillas de empaque, letreros con nombre, rompecabezas, mandalas en capas, despiece de muebles y foto para grabado. Todo se descarga en DXF, SVG o PDF.",
   },
   {
     p: "¿Cómo vectorizo una imagen a DXF para CNC?",
