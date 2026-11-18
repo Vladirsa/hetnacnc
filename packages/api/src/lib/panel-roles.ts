@@ -50,9 +50,10 @@ export const ROLES_VALIDOS = Object.keys(PAGINAS_ROL) as Rol[]
 export const puede = (rol: Rol, pagina: string) => PAGINAS_ROL[rol]?.includes(pagina) ?? false
 export const puedeActuar = (rol: Rol, area: string) => ACCIONES[rol]?.includes(area) ?? false
 
-type Regla = { metodo: "GET" | "POST"; patron: RegExp }
+// acciones: si se da, el cuerpo debe traer { accion } de esa lista
+type Regla = { metodo: "GET" | "POST"; patron: RegExp; acciones?: string[] }
 const ID = "[\\w-]+"
-const r = (metodo: Regla["metodo"], fuente: string): Regla => ({ metodo, patron: new RegExp(`^${fuente}$`) })
+const r = (metodo: Regla["metodo"], fuente: string, acciones?: string[]): Regla => ({ metodo, patron: new RegExp(`^${fuente}$`), acciones })
 
 /**
  * Lista blanca: rutas /admin que usa cada PÁGINA del panel para leer
@@ -79,7 +80,9 @@ export const RUTAS_PAGINA: Record<string, Regla[]> = {
  * en apps/storefront/src/app/api/app/panel/accion/route.ts).
  */
 export const RUTAS_ACCION: Record<string, Regla[]> = {
-  licitaciones: [r("POST", `/admin/hetna-solicitudes/${ID}/accion`)],
+  // Sólo las acciones que ofrece el panel (components/hetna/panel/Acciones.tsx).
+  // "resolver_disputa" (reembolsos y liberar el pago al taller) queda para el dueño.
+  licitaciones: [r("POST", `/admin/hetna-solicitudes/${ID}/accion`, ["aprobar", "pedir_info", "cancelar", "etapa", "nota"])],
   talleres: [r("POST", `/admin/hetna-verificacion/${ID}`)],
   pedidos: [r("POST", `/admin/orders/${ID}/(cancel|complete)`)],
   distribuidores: [r("POST", "/admin/hetna-distribuidores")],
@@ -94,17 +97,20 @@ export function rutaSinConsulta(url: string): string {
   return p.length > 1 ? p.replace(/\/+$/, "") : p
 }
 
-const coincide = (reglas: Regla[] | undefined, metodo: string, ruta: string) =>
-  (reglas || []).some((x) => x.metodo === metodo && x.patron.test(ruta))
+const accionDe = (cuerpo: unknown) =>
+  cuerpo && typeof cuerpo === "object" ? String((cuerpo as Record<string, unknown>).accion ?? "") : ""
+
+const coincide = (reglas: Regla[] | undefined, metodo: string, ruta: string, cuerpo?: unknown) =>
+  (reglas || []).some((x) => x.metodo === metodo && x.patron.test(ruta) && (!x.acciones || x.acciones.includes(accionDe(cuerpo))))
 
 /** ¿El rol puede usar esta ruta /admin? (dueño: todo) */
-export function rutaPermitida(rol: Rol, metodo: string, url: string): boolean {
+export function rutaPermitida(rol: Rol, metodo: string, url: string, cuerpo?: unknown): boolean {
   if (rol === "dueno") return true
   const m = String(metodo || "").toUpperCase()
   const ruta = rutaSinConsulta(url)
   if (coincide(RUTAS_TODOS, m, ruta)) return true
   if (PAGINAS_ROL[rol]?.some((p) => coincide(RUTAS_PAGINA[p], m, ruta))) return true
-  if (ACCIONES[rol]?.some((a) => coincide(RUTAS_ACCION[a], m, ruta))) return true
+  if (ACCIONES[rol]?.some((a) => coincide(RUTAS_ACCION[a], m, ruta, cuerpo))) return true
   return false
 }
 
@@ -155,6 +161,7 @@ export type Entrada = {
   auth?: { actor_type?: string; actor_id?: string } | null
   metodo: string
   url: string
+  cuerpo?: unknown // cuerpo JSON ya leído (para acotar por { accion })
   usuarios: UsuarioAdmin[] | null // null: no se pudo leer la lista
   duenos: string[]
   interruptor?: string
@@ -181,6 +188,6 @@ export function decidir(e: Entrada): Decision {
   const rol = rolEfectivo(e.auth.actor_id, e.usuarios, e.duenos)
   if (!rol) return { pasa: false, estado: 403, mensaje: MSG_SIN_ACCESO }
   if (rol === "dueno") return { pasa: true, rol, motivo: "dueno" }
-  if (rutaPermitida(rol, e.metodo, e.url)) return { pasa: true, rol, motivo: "lista_blanca" }
+  if (rutaPermitida(rol, e.metodo, e.url, e.cuerpo)) return { pasa: true, rol, motivo: "lista_blanca" }
   return { pasa: false, estado: 403, rol, mensaje: rol === "sin_acceso" ? MSG_SIN_ACCESO : MSG_SIN_PERMISO }
 }

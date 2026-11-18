@@ -87,10 +87,15 @@ describe("panel-roles: decisión", () => {
     expect(pasa("GET", "/admin/orders?limit=30&order=-created_at&fields=id,*items")).toBe(true)
     expect(pasa("POST", "/admin/orders/order_01ABC/cancel")).toBe(true)
     expect(pasa("GET", "/admin/hetna-solicitudes?etapa=revision")).toBe(true)
-    expect(pasa("POST", "/admin/hetna-solicitudes/sol_1/accion")).toBe(true)
+    expect(decidir({ ...base, auth: user("user_2"), metodo: "POST", url: "/admin/hetna-solicitudes/sol_1/accion", cuerpo: { accion: "etapa", etapa: "cerrada" }, usuarios }).pasa).toBe(true)
+    // Resolver disputas (reembolso / liberar pago al taller) no está en el panel: sólo dueño
+    expect(decidir({ ...base, auth: user("user_2"), metodo: "POST", url: "/admin/hetna-solicitudes/sol_1/accion", cuerpo: { accion: "resolver_disputa", decision: "liberar" }, usuarios }).pasa).toBe(false)
+    expect(pasa("POST", "/admin/hetna-solicitudes/sol_1/accion")).toBe(false) // sin cuerpo
     expect(pasa("GET", "/admin/hetna-verificacion?estado=pendiente")).toBe(true)
     expect(pasa("GET", "/admin/hetna-verificacion/sel_1/archivos/arc_1")).toBe(true)
     expect(pasa("POST", "/admin/hetna-verificacion/sel_1")).toBe(true)
+    // El dueño sí puede resolver disputas
+    expect(decidir({ ...base, auth: user("user_1"), metodo: "POST", url: "/admin/hetna-solicitudes/sol_1/accion", cuerpo: { accion: "resolver_disputa" }, usuarios }).pasa).toBe(true)
   })
 
   it("rol limitado: lo que no le toca → 403 con mensaje en español", () => {

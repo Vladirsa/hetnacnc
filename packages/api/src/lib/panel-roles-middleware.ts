@@ -1,6 +1,7 @@
 // Middleware de /admin/*: aplica los roles del HETNA Panel en el API.
 // La decisión vive en ./panel-roles.ts (función pura, con pruebas); aquí sólo
 // se lee la lista de administradores (con cache corto) y se responde 403.
+import type { IUserModuleService } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 
 import { type UsuarioAdmin, apagado, decidir, duenosDeEnv, rutaSinConsulta } from "./panel-roles"
@@ -16,7 +17,7 @@ export function invalidarCachePanelRoles() {
 }
 
 async function leerUsuarios(scope: any): Promise<UsuarioAdmin[]> {
-  const userModule = scope.resolve(Modules.USER)
+  const userModule: IUserModuleService = scope.resolve(Modules.USER)
   const lista = await userModule.listUsers(
     {},
     { select: ["id", "email", "metadata", "created_at"], take: 10_000, order: { created_at: "ASC" } }
@@ -67,6 +68,7 @@ export async function panelRolesAdmin(req: any, res: any, next: any) {
     auth,
     metodo,
     url,
+    cuerpo: req.body,
     usuarios: lista,
     duenos: duenosDeEnv(process.env.PANEL_DUENOS),
     interruptor: process.env.PANEL_ROLES_API,
