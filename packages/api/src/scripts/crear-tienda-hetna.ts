@@ -1,5 +1,5 @@
-// Crea la tienda oficial "HETNA CNC" (moneda MXN, estado open) y liga como dueño
-// a la cuenta de vendedor que ya existe con el correo indicado.
+// Crea la tienda oficial "HETNA CNC" (moneda MXN, estado open). Para ligar tu
+// cuenta como dueña de la tienda, después corre ligar-dueno-tienda.ts.
 //
 // Uso (en packages/api):
 //   CORREO=tu-correo-del-panel@dominio.com NODE_ENV=production bunx medusa exec ./src/scripts/crear-tienda-hetna.ts
@@ -65,7 +65,7 @@ export default async function crearTiendaHetna({ container }: ExecArgs) {
   // (pide member_id): fallaba y el error se tragaba, y la tienda quedaba sin
   // dueño (el panel pedía "crear una tienda"). Ahora lo hace el script de abajo.
   logger.info(
-    `Para ligar ${correo} como dueño de la tienda corre: CORREO=${correo} APLICAR=1 NODE_ENV=production bunx medusa exec ./src/scripts/ligar-dueno-tienda.ts`
+    `Para ligar ${correo} como dueño de la tienda corre (primero sin cambiar nada; revisa la salida y repite con APLICAR=1): CORREO=${correo} NODE_ENV=production bunx medusa exec ./src/scripts/ligar-dueno-tienda.ts`
   )
 
   // 3. Resumen
