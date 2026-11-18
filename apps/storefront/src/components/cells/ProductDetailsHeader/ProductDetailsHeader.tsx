@@ -56,6 +56,7 @@ export const ProductDetailsHeader = ({
   seller,
   tipo = "fisico",
   antesDeComprar,
+  descarga = false,
 }: {
   product: HttpTypes.StoreProduct
   locale: string
@@ -66,6 +67,9 @@ export const ProductDetailsHeader = ({
   tipo?: TipoFicha
   // Lo que hay que saber antes de pagar (p. ej. qué incluye un servicio)
   antesDeComprar?: React.ReactNode
+  // Ficha de diseño para descargar: precio con "MXN", "Sin envío: es
+  // descarga", botón "Comprar y descargar ahora" y nada de existencias.
+  descarga?: boolean
 }) => {
   const fisico = tipo === "fisico"
   const { addToCart, onAddToCart, cart, isAddingItem } = useCartContext()
@@ -81,10 +85,12 @@ export const ProductDetailsHeader = ({
   useEffect(() => {
     const el = botonesRef.current
     if (!el || typeof IntersectionObserver === "undefined") return
-    const o = new IntersectionObserver(([e]) => setBotonesFuera(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0 })
+    // En la ficha de descarga la barra está siempre que los botones no se ven
+    // (también antes de llegar a ellos, mientras se ve la galería)
+    const o = new IntersectionObserver(([e]) => setBotonesFuera(!e.isIntersecting && (descarga || e.boundingClientRect.top < 0)), { threshold: 0 })
     o.observe(el)
     return () => o.disconnect()
-  }, [])
+  }, [descarga])
   const router = useRouter()
 
   const { cheapestVariant, cheapestPrice } = getProductPrice({ product })
@@ -297,6 +303,7 @@ export const ProductDetailsHeader = ({
               >
                 {precioTexto(offerAmount as number)}
               </span>
+              {descarga && <span className="text-[15px] font-bold text-[#B34D07]">{offerCurrency.toUpperCase()}</span>}
               {hayDescuento && (
                 <>
                   <span className="text-[15px] text-[#8A8780] line-through">
@@ -308,8 +315,12 @@ export const ProductDetailsHeader = ({
                 </>
               )}
             </div>
-            {ivaIncluido && (
-              <p className="mt-1 text-[12px] text-[#6B6A63]">IVA incluido</p>
+            {descarga ? (
+              <p className="mt-1 text-[12.5px] text-[#6B6A63]" data-testid="product-precio-nota">
+                {ivaIncluido ? "IVA incluido · " : ""}Sin envío: es descarga
+              </p>
+            ) : (
+              ivaIncluido && <p className="mt-1 text-[12px] text-[#6B6A63]">IVA incluido</p>
             )}
           </>
         ) : hayAnyPrecio(hasAnyPrice, variantPrice) ? (
@@ -327,7 +338,8 @@ export const ProductDetailsHeader = ({
             {disponibles === 1 ? "Queda 1 pieza" : `Solo quedan ${disponibles} piezas`}
           </p>
         )}
-        {hayOferta && disponibles === 0 && (
+        {/* Un archivo no se agota: nunca se habla de existencias */}
+        {fisico && hayOferta && disponibles === 0 && (
           <p className="mt-2 text-[13px] font-bold text-[#9B3225]">
             {enCarrito > 0
               ? "Ya tienes en el carrito todo lo que hay"
@@ -340,7 +352,7 @@ export const ProductDetailsHeader = ({
         <ProductVariants product={product} selectedVariant={selectedVariant} />
       )}
 
-      {!fisico && hayOferta && (
+      {!fisico && !descarga && hayOferta && (
         // Archivo o servicio: cantidad fija en 1, sin existencias ni envío
         <p className="mt-4 rounded-[8px] bg-[#EEF7F0] px-3 py-2 text-[14px] font-semibold text-[#17633A]" data-testid="product-entrega-digital">
           {tipo === "digital" ? "⬇️ Descarga inmediata tras el pago" : "🧑‍💻 Servicio en línea: no se envía nada por paquetería"}
@@ -389,7 +401,7 @@ export const ProductDetailsHeader = ({
           className="w-full py-3.5 text-[16px] font-bold"
           data-testid="product-buy-now-button"
         >
-          {noSePuedeComprar ? "No disponible" : "Comprar ahora"}
+          {noSePuedeComprar ? "No disponible" : descarga ? "Comprar y descargar ahora" : "Comprar ahora"}
         </Button>
 
         <button
@@ -407,11 +419,14 @@ export const ProductDetailsHeader = ({
           <div className="min-w-0 flex-1">
             <p className="m-0 truncate text-[12.5px] text-[#6B6A63]">{product.title}</p>
             {typeof offerAmount === "number" && (
-              <p className="m-0 text-[18px] font-bold leading-tight text-[#1B1B18]">{precioTexto(offerAmount)}</p>
+              <p className="m-0 text-[18px] font-bold leading-tight text-[#1B1B18]">
+                {precioTexto(offerAmount)}
+                {descarga && <span className="ml-1 text-[12px] font-semibold text-[#6B6A63]">{offerCurrency.toUpperCase()} · descarga</span>}
+              </p>
             )}
           </div>
           <Button onClick={comprarAhora} disabled={isAddingItem} loading={comprando} className="shrink-0 px-5 py-3 text-[15px] font-bold">
-            Comprar ahora
+            {descarga ? "Comprar y descargar" : "Comprar ahora"}
           </Button>
         </div>
       )}
