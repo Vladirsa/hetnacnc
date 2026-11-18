@@ -56,6 +56,7 @@ export function Estudio2D({
   pieza,
   material,
   sinHojas = false,
+  descargas,
   vacio,
 }: {
   titulo: string
@@ -73,6 +74,8 @@ export function Estudio2D({
   material?: string
   // las líneas de "hoja" no se exportan
   sinHojas?: boolean
+  // reemplaza los botones de descarga (p. ej. descarga con créditos); recibe la función que exporta
+  descargas?: (exportar: (tipo: "dxf" | "svg" | "pdf") => void) => React.ReactNode
   // mensaje cuando todavía no hay dibujo
   vacio?: React.ReactNode
 }) {
@@ -261,11 +264,15 @@ export function Estudio2D({
         </section>
 
         <Seccion titulo="Descargar">
-          <div className="flex gap-2">
-            <Boton tipo="primario" onClick={() => exportar("dxf")}>DXF</Boton>
-            <Boton onClick={() => exportar("svg")}>SVG</Boton>
-            <Boton onClick={() => exportar("pdf")}>PDF</Boton>
-          </div>
+          {descargas ? (
+            descargas(exportar)
+          ) : (
+            <div className="flex gap-2">
+              <Boton tipo="primario" onClick={() => exportar("dxf")}>DXF</Boton>
+              <Boton onClick={() => exportar("svg")}>SVG</Boton>
+              <Boton onClick={() => exportar("pdf")}>PDF</Boton>
+            </div>
+          )}
         </Seccion>
         <Seccion titulo="¿No tienes máquina?" nota="Un taller de HETNA te lo corta y te lo manda.">
           <div className="flex gap-2">
