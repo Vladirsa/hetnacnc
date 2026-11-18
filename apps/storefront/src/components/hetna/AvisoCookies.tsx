@@ -48,7 +48,7 @@ export function AvisoCookies() {
           Usamos cookies necesarias para que el sitio funcione. Con tu permiso, también usamos cookies de estadística y de
           publicidad para mejorar el sitio y mostrarte anuncios de HETNA.{" "}
           <LocalizedClientLink href="/aviso-de-privacidad#cookies" className="font-semibold text-[#B34D07] underline">
-            Más información
+            Más información sobre las cookies
           </LocalizedClientLink>
         </p>
         <div className="flex shrink-0 gap-2">
