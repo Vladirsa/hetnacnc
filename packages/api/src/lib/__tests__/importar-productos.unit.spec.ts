@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs"
 
 import { COLUMNAS, HOJA, leerPlantilla, numero, plantillaProductos } from "../importar-productos/plantilla"
-import { entradaCrear, planear, preciosOferta, resolverCategoria, type Categoria } from "../importar-productos/importar"
+import { entradaCrear, metadataProducto, planear, preciosOferta, resolverCategoria, type Categoria } from "../importar-productos/importar"
 
 type Fila = Partial<Record<(typeof COLUMNAS)[number]["clave"], unknown>>
 async function archivo(filas: Fila[], opciones: { quitar?: string } = {}) {
@@ -135,5 +135,26 @@ describe("Planeación contra la tienda", () => {
     expect(e.thumbnail).toBe("https://cdn/x.jpg")
     expect(preciosOferta(379, true)).toEqual([{ currency_code: "mxn", amount: 379 }, { currency_code: "usd", amount: expect.any(Number) }])
     expect(preciosOferta(379, false)).toHaveLength(1)
+  })
+  it("lee condición, código de barras y número de parte para Google Shopping", async () => {
+    const r = await leerPlantilla(await archivo([
+      { ...base, nombre: "Husillo usado 2.2 kW", sku: "HUS-1", condicion: "Usado", gtin: "7501234567890", mpn: "GDZ-80-2.2" },
+      { ...base, nombre: "Fresa X", sku: "FX-1", gtin: "12345", condicion: "roto" },
+    ]))
+    expect(r.errores.map((e) => e.columna)).toEqual(["Condición", "Código de barras (GTIN)"])
+    const [h] = r.productos
+    expect([h.condicion, h.gtin, h.mpn]).toEqual(["used", "7501234567890", "GDZ-80-2.2"])
+    expect(metadataProducto(h)).toMatchObject({ condicion: "used", gtin: "7501234567890", mpn: "GDZ-80-2.2" })
+  })
+
+  it("al actualizar, las celdas vacías no borran lo que ya tenía el producto", async () => {
+    const lectura = await leerPlantilla(await archivo([{ ...base, nombre: "Aceite soluble 1 L", sku: "REF-1L" }]))
+    const p = lectura.productos[0]
+    expect(p.estado).toBeNull()
+    expect(p.descripcion).toBe("")
+    const previa = { marca: "Mobil", seo_title: "Aceite", gtin: "7501234567890", seller_id: "sel_1" }
+    expect(metadataProducto(p, previa)).toEqual({ ...previa, importado: true })
+    // Nuevo sin Estado: se publica
+    expect(entradaCrear(p, { categoria_id: "c2", perfil_id: "sp", canales: [], tag_ids: [], imagenes: [] }).status).toBe("published")
   })
 })

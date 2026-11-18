@@ -28,7 +28,7 @@ import { normalizar, type Lectura, type Problema, type ProductoImport } from "./
 // ── Planeación (pura: se prueba sin base) ────────────────────────────────
 
 export type Categoria = { id: string; name: string; handle: string; parent_category_id: string | null; is_active?: boolean; is_internal?: boolean }
-export type Existente = { id: string; handle: string; variants: { id: string; sku: string | null }[] }
+export type Existente = { id: string; handle: string; metadata?: Record<string, unknown> | null; variants: { id: string; sku: string | null }[] }
 export type Paso = {
   producto: ProductoImport
   accion: "crear" | "actualizar"
@@ -112,12 +112,21 @@ export function medidasProducto(p: ProductoImport) {
   return { weight: mayor.peso_kg, length: mayor.largo_cm, width: mayor.ancho_cm, height: mayor.alto_cm }
 }
 
-export function metadataProducto(p: ProductoImport) {
+/**
+ * Metadata del producto. Al actualizar se parte de la que ya tiene: una celda
+ * vacía no borra lo que había (marca, SEO, código de barras…) ni las llaves que
+ * pusieron otros flujos.
+ */
+export function metadataProducto(p: ProductoImport, previa: Record<string, unknown> = {}) {
   return {
+    ...previa,
     importado: true,
     ...(p.marca ? { marca: p.marca } : {}),
-    seo_title: p.seo_titulo || "",
-    meta_description: p.seo_descripcion || "",
+    ...(p.condicion ? { condicion: p.condicion } : {}),
+    ...(p.gtin ? { gtin: p.gtin } : {}),
+    ...(p.mpn ? { mpn: p.mpn } : {}),
+    ...(p.seo_titulo ? { seo_title: p.seo_titulo } : {}),
+    ...(p.seo_descripcion ? { meta_description: p.seo_descripcion } : {}),
   }
 }
 
@@ -129,7 +138,7 @@ export function entradaCrear(p: ProductoImport, ctx: { categoria_id: string; per
     title: p.nombre,
     description: descripcionAHtml(p.descripcion || ""),
     handle: p.handle,
-    status: p.estado,
+    status: p.estado ?? "published",
     discountable: true,
     thumbnail: ctx.imagenes[0],
     images: ctx.imagenes.map((url) => ({ url })),
@@ -205,8 +214,8 @@ export async function revisar(container: MedusaContainer, lectura: Lectura): Pro
   const skus = lectura.productos.flatMap((p) => p.variantes.map((v) => v.sku))
   const existentes = new Map<string, Existente>()
   if (handles.length) {
-    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "variants.id", "variants.sku"], filters: { handle: handles } })
-    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, variants: p.variants || [] })
+    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "metadata", "variants.id", "variants.sku"], filters: { handle: handles } })
+    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, metadata: p.metadata, variants: p.variants || [] })
   }
   const skuEnProducto = new Map<string, string>()
   if (skus.length) {
@@ -216,8 +225,8 @@ export async function revisar(container: MedusaContainer, lectura: Lectura): Pro
   // Productos dueños de esos SKU (para reconocer un producto al que le cambiaron el nombre)
   const faltan = [...new Set(skuEnProducto.values())].filter((h) => !existentes.has(h))
   if (faltan.length) {
-    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "variants.id", "variants.sku"], filters: { handle: faltan } })
-    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, variants: p.variants || [] })
+    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "metadata", "variants.id", "variants.sku"], filters: { handle: faltan } })
+    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, metadata: p.metadata, variants: p.variants || [] })
   }
   return planear(lectura, cats, existentes, skuEnProducto)
 }
@@ -305,13 +314,14 @@ export async function importar(container: MedusaContainer, plan: Plan): Promise<
             selector: { id: productId },
             update: {
               title: p.nombre,
-              description: descripcionAHtml(p.descripcion || ""),
-              status: p.estado,
+              // Celdas vacías no borran lo que ya tenía el producto
+              ...(p.descripcion ? { description: descripcionAHtml(p.descripcion) } : {}),
+              ...(p.estado ? { status: p.estado } : {}),
               category_ids: [paso.categoria_id],
               ...(imagenes.length ? { thumbnail: imagenes[0], images: imagenes.map((url) => ({ url })) } : {}),
               ...(tagIds.length ? { tag_ids: tagIds } : {}),
               ...medidasProducto(p),
-              metadata: metadataProducto(p),
+              metadata: metadataProducto(p, paso.existente!.metadata || {}),
             } as any,
           },
         })

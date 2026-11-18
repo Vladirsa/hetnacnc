@@ -16,20 +16,23 @@ export const HOJA = "Productos"
 export const COLUMNAS = [
   { clave: "agrupador", titulo: "Agrupador", ancho: 22, ayuda: "Opcional. Mismo texto en varios renglones = un producto con varias medidas. Si lo dejas vacío se agrupa por nombre." },
   { clave: "nombre", titulo: "Nombre del producto *", ancho: 40, ayuda: "Qué es, marca o material y la medida principal. 3 a 120 letras." },
-  { clave: "descripcion", titulo: "Descripción", ancho: 50, ayuda: "Para qué sirve, materiales, compatibilidad. Renglones que empiezan con - se vuelven lista." },
+  { clave: "descripcion", titulo: "Descripción", ancho: 50, ayuda: "Para qué sirve, materiales, compatibilidad. Renglones que empiezan con - se vuelven lista. Si el producto ya existe y la dejas vacía, se queda la que tiene." },
   { clave: "categoria", titulo: "Categoría *", ancho: 28, ayuda: 'Como se llama en la tienda. Si hay dos iguales: "Padre > Hija".' },
-  { clave: "marca", titulo: "Marca", ancho: 16, ayuda: "Opcional." },
+  { clave: "marca", titulo: "Marca", ancho: 16, ayuda: "Recomendado: Google Shopping la pide. Vacío = el nombre de la tienda." },
+  { clave: "condicion", titulo: "Condición", ancho: 14, ayuda: '"nuevo", "usado" o "reacondicionado". Vacío = nuevo.' },
+  { clave: "gtin", titulo: "Código de barras (GTIN)", ancho: 18, ayuda: "Opcional. El número bajo el código de barras (8, 12, 13 o 14 dígitos). Con él Google enseña más tu producto. Pon la columna como Texto en Excel para no perder ceros al inicio." },
+  { clave: "mpn", titulo: "Número de parte (MPN)", ancho: 18, ayuda: "Opcional. El número de parte o modelo del fabricante. Si no hay código de barras, Google usa marca + número de parte." },
   { clave: "variante", titulo: "Variante (qué cambia)", ancho: 20, ayuda: 'Ej. "Diámetro", "Color", "Longitud". Igual en todo el grupo. Vacío si sólo hay una presentación.' },
   { clave: "valor", titulo: "Valor de la variante", ancho: 18, ayuda: 'Ej. "6 mm", "Negro", "1 kg". Obligatorio si el grupo tiene más de un renglón.' },
   { clave: "sku", titulo: "SKU *", ancho: 18, ayuda: "Tu código. Único en todo el archivo; sirve para actualizar después." },
   { clave: "precio", titulo: "Precio MXN (IVA incluido) *", ancho: 18, ayuda: "El precio final que ve el cliente. La tienda no le suma IVA." },
-  { clave: "existencias", titulo: "Existencias *", ancho: 12, ayuda: "Piezas disponibles (número entero, 0 o más)." },
+  { clave: "existencias", titulo: "Existencias *", ancho: 12, ayuda: "Piezas disponibles hoy (número entero, 0 o más). Al actualizar, este número reemplaza al que había (no se suma)." },
   { clave: "peso", titulo: "Peso kg *", ancho: 10, ayuda: "Con empaque. La paquetería cotiza con esto." },
   { clave: "largo", titulo: "Largo cm *", ancho: 10, ayuda: "Del paquete." },
   { clave: "ancho", titulo: "Ancho cm *", ancho: 10, ayuda: "Del paquete." },
   { clave: "alto", titulo: "Alto cm *", ancho: 10, ayuda: "Del paquete." },
   { clave: "imagenes", titulo: "Imágenes (ligas)", ancho: 40, ayuda: "Ligas https a las fotos, separadas por coma. La primera es la portada." },
-  { clave: "estado", titulo: "Estado", ancho: 12, ayuda: '"publicado" (se ve en la tienda) o "borrador". Vacío = publicado.' },
+  { clave: "estado", titulo: "Estado", ancho: 12, ayuda: '"publicado" (se ve en la tienda) o "borrador". Vacío = publicado si es nuevo; si ya existe, se queda como está.' },
   { clave: "seo_titulo", titulo: "Título SEO", ancho: 30, ayuda: "Opcional. Lo que sale en Google (máx. 70 letras). Vacío = el nombre." },
   { clave: "seo_descripcion", titulo: "Descripción SEO", ancho: 40, ayuda: "Opcional. El texto bajo el título en Google (máx. 160 letras)." },
   { clave: "etiquetas", titulo: "Etiquetas", ancho: 24, ayuda: "Opcional. Palabras para la búsqueda, separadas por coma." },
@@ -54,9 +57,12 @@ export type ProductoImport = {
   descripcion: string
   categoria: string
   marca: string | null
+  condicion: "new" | "used" | "refurbished" | null // null = no se dijo (nuevo, o se deja como está)
+  gtin: string | null
+  mpn: string | null
   opcion: string // nombre de la opción ("Presentación" si no hay variantes)
   imagenes: string[]
-  estado: "published" | "draft"
+  estado: "published" | "draft" | null // null = no se dijo (publicado si es nuevo; si ya existe, como está)
   seo_titulo: string | null
   seo_descripcion: string | null
   etiquetas: string[]
@@ -70,7 +76,7 @@ export const PRESENTACION = "Presentación"
 export const UNICA = "Única"
 
 const EJEMPLOS: Partial<Record<Clave, string | number>>[] = [
-  { agrupador: "fresa-recta-2-filos", nombre: "Fresa recta de carburo 2 filos para router CNC", descripcion: "Fresa de carburo sólido para MDF, triplay y acrílico.\n- Zanco de 1/4\"\n- Recubrimiento TiAlN", categoria: "Fresas", marca: "HETNA", variante: "Diámetro", valor: "3.175 mm", sku: "FR2F-3175", precio: 189, existencias: 25, peso: 0.05, largo: 12, ancho: 4, alto: 2, imagenes: "https://ejemplo.com/fresa-3175.jpg", estado: "publicado", seo_titulo: "Fresa recta 2 filos carburo para router CNC", seo_descripcion: "Fresa de carburo sólido de 2 filos para MDF, triplay y acrílico. Envío a todo México.", etiquetas: "fresa, carburo, router" },
+  { agrupador: "fresa-recta-2-filos", condicion: "nuevo", mpn: "FR2F-3175", nombre: "Fresa recta de carburo 2 filos para router CNC", descripcion: "Fresa de carburo sólido para MDF, triplay y acrílico.\n- Zanco de 1/4\"\n- Recubrimiento TiAlN", categoria: "Fresas", marca: "HETNA", variante: "Diámetro", valor: "3.175 mm", sku: "FR2F-3175", precio: 189, existencias: 25, peso: 0.05, largo: 12, ancho: 4, alto: 2, imagenes: "https://ejemplo.com/fresa-3175.jpg", estado: "publicado", seo_titulo: "Fresa recta 2 filos carburo para router CNC", seo_descripcion: "Fresa de carburo sólido de 2 filos para MDF, triplay y acrílico. Envío a todo México.", etiquetas: "fresa, carburo, router" },
   { agrupador: "fresa-recta-2-filos", nombre: "Fresa recta de carburo 2 filos para router CNC", categoria: "Fresas", variante: "Diámetro", valor: "6 mm", sku: "FR2F-6", precio: 249, existencias: 15, peso: 0.06, largo: 12, ancho: 4, alto: 2 },
   { nombre: "Aceite soluble para corte CNC 1 L", descripcion: "Refrigerante soluble para maquinado de aluminio y acero.", categoria: "Consumibles", marca: "HETNA", sku: "REF-1L", precio: 320, existencias: 40, peso: 1.1, largo: 10, ancho: 10, alto: 25, imagenes: "https://ejemplo.com/refrigerante.jpg" },
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Negro", sku: "PLA-175-NEG", precio: 379, existencias: 30, peso: 1.3, largo: 21, ancho: 21, alto: 8, estado: "borrador" },
@@ -159,6 +165,13 @@ export function numero(v: unknown): number | null {
 
 const URL_OK = /^https?:\/\/[^\s]+$/i
 
+// Lo que escribe la gente → lo que entiende Google Shopping
+const CONDICIONES: Record<string, "new" | "used" | "refurbished"> = {
+  nuevo: "new", nueva: "new", new: "new",
+  usado: "used", usada: "used", seminuevo: "used", used: "used",
+  reacondicionado: "refurbished", reacondicionada: "refurbished", refurbished: "refurbished",
+}
+
 /** Lee el Excel lleno: agrupa en productos y revisa cada renglón (sin tocar la base). */
 export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
   const wb = new ExcelJS.Workbook()
@@ -231,6 +244,11 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
     }
     const est = normalizar(texto(r.estado))
     if (est && !["publicado", "borrador", "published", "draft"].includes(est)) err(f, "estado", 'Escribe "publicado" o "borrador".')
+    const cond = normalizar(texto(r.condicion))
+    if (cond && !CONDICIONES[cond]) err(f, "condicion", 'Escribe "nuevo", "usado" o "reacondicionado".')
+    const gtin = texto(r.gtin).replace(/[\s-]/g, "")
+    if (gtin && !/^\d{8}$|^\d{12,14}$/.test(gtin)) err(f, "gtin", "El código de barras son 8, 12, 13 o 14 dígitos (sólo números).")
+    if (texto(r.mpn).length > 70) err(f, "mpn", "El número de parte no puede pasar de 70 letras.")
     const agrupador = texto(r.agrupador)
     if (agrupador && !slug(agrupador)) err(f, "agrupador", "El agrupador debe tener letras o números.")
     const clave = agrupador ? `a:${slug(agrupador)}` : `n:${normalizar(nombre)}`
@@ -249,7 +267,7 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
     for (const r of filas) {
       if (r !== p0) {
         if (texto(r.variante) && normalizar(texto(r.variante)) !== normalizar(opcionTxt)) err(r._fila, "variante", `En el mismo producto la variante debe ser igual a la del renglón ${p0._fila} ("${opcionTxt}").`)
-        for (const c of ["nombre", "categoria", "descripcion", "imagenes", "marca"] as Clave[]) {
+        for (const c of ["nombre", "categoria", "descripcion", "imagenes", "marca", "condicion", "gtin", "mpn"] as Clave[]) {
           const a = texto(p0[c]), b = texto(r[c])
           if (b && a && normalizar(a) !== normalizar(b)) avisos.push({ fila: r._fila, columna: COLUMNAS.find((x) => x.clave === c)!.titulo, mensaje: `Distinto al renglón ${p0._fila}; se usa el del renglón ${p0._fila} para todo el producto.` })
         }
@@ -275,9 +293,12 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
       descripcion: texto(p0.descripcion),
       categoria: texto(p0.categoria),
       marca: texto(p0.marca) || null,
+      condicion: CONDICIONES[normalizar(texto(p0.condicion))] || null,
+      gtin: /^\d{8}$|^\d{12,14}$/.test(texto(p0.gtin).replace(/[\s-]/g, "")) ? texto(p0.gtin).replace(/[\s-]/g, "") : null,
+      mpn: texto(p0.mpn).slice(0, 70) || null,
       opcion: opcionTxt || PRESENTACION,
       imagenes: texto(p0.imagenes).split(",").map((x) => x.trim()).filter((u) => URL_OK.test(u)).slice(0, 10),
-      estado: est === "borrador" || est === "draft" ? "draft" : "published",
+      estado: est === "borrador" || est === "draft" ? "draft" : est ? "published" : null,
       seo_titulo: seoT || null,
       seo_descripcion: seoD || null,
       etiquetas: texto(p0.etiquetas).split(",").map((x) => x.trim().toLowerCase()).filter(Boolean).slice(0, 10),
