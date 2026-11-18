@@ -7,6 +7,7 @@ import "@/components/hetna/tienda/fuentes-tienda.css"
 import { JsonLd } from "@/components/hetna/JsonLd"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { TiendaVista } from "@/components/hetna/tienda/TiendaVista"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { catalogoTienda, PROCESOS } from "@/lib/hetna/tienda"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { migas } from "@/lib/hetna/schema"
@@ -61,7 +62,7 @@ export default async function TiendaPage({ params }: { params: Promise<{ locale:
           </ul>
         </header>
 
-        <TiendaVista catalogo={catalogo} procesos={PROCESOS} />
+        <TiendaVista catalogo={catalogo} procesos={PROCESOS} publicidad={<AnunciosEspacio espacio="tienda_banner" className="mt-8" />} />
       </div>
     </main>
   )

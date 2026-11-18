@@ -1,12 +1,13 @@
 // Recibe el formulario de "Anúnciate", guarda el pedido y devuelve la liga de pago de Mercado Pago.
 // No cobra nada por sí mismo: el anuncio solo se crea cuando Mercado Pago confirma el pago (ver mp-aviso).
 
+import { randomBytes } from "node:crypto"
 import { NextRequest, NextResponse } from "next/server"
 
 import { SITIO } from "@/lib/foro/tipos"
 import { crearPedido, guardarPreferencia, lugaresLibres } from "@/lib/publicidad/pedidos"
-import { calcularMonto, DIAS_VALIDOS } from "@/lib/publicidad/precios"
-import { ESPACIOS, esEspacio } from "@/lib/publicidad/tipos"
+import { calcularMonto, DIAS_PAQUETE_VISTAS, DIAS_VALIDOS, miles, montoVistas, PAQUETES_VISTAS } from "@/lib/publicidad/precios"
+import { enlaceInterno, ESPACIOS, esEspacio, type TipoAnunciante } from "@/lib/publicidad/tipos"
 import { ipDe } from "@/lib/seguridad/ip-cliente"
 
 export const dynamic = "force-dynamic"
@@ -44,9 +45,15 @@ export async function POST(req: NextRequest) {
   try {
     const f = await req.formData()
     const espacio = texto(f.get("espacio"), 40)
-    const dias = Number(texto(f.get("dias"), 4))
     if (!esEspacio(espacio)) return NextResponse.json({ error: "Elige un espacio." }, { status: 400 })
-    if (!DIAS_VALIDOS.includes(dias)) return NextResponse.json({ error: "Elige la duración." }, { status: 400 })
+    // Por periodo (7, 30, 90 o 365 días) o por un paquete de vistas
+    const modalidad = texto(f.get("modalidad"), 10) === "vistas" ? "vistas" : "periodo"
+    const vistasCompradas = modalidad === "vistas" ? Number(texto(f.get("vistas"), 6)) : null
+    const dias = modalidad === "vistas" ? DIAS_PAQUETE_VISTAS : Number(texto(f.get("dias"), 4))
+    if (modalidad === "periodo" && !DIAS_VALIDOS.includes(dias)) return NextResponse.json({ error: "Elige la duración." }, { status: 400 })
+    if (modalidad === "vistas" && !(PAQUETES_VISTAS as readonly number[]).includes(vistasCompradas ?? 0))
+      return NextResponse.json({ error: "Elige un paquete de vistas." }, { status: 400 })
+    const tipoAnunciante: TipoAnunciante = texto(f.get("tipo_anunciante"), 10) === "marca" ? "marca" : "cnc"
 
     const anunciante = texto(f.get("anunciante"), 120)
     const correo = texto(f.get("correo"), 160).toLowerCase()
@@ -54,6 +61,12 @@ export async function POST(req: NextRequest) {
     if (anunciante.length < 2) return NextResponse.json({ error: "Escribe el nombre de tu taller o empresa." }, { status: 400 })
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return NextResponse.json({ error: "Escribe un correo válido." }, { status: 400 })
     if (!enlace) return NextResponse.json({ error: "El enlace debe empezar con / o con https://" }, { status: 400 })
+    // Talleres y proveedores CNC: el negocio se hace dentro de HETNA, así que su anuncio liga a HETNA
+    if (tipoAnunciante === "cnc" && !enlaceInterno(enlace))
+      return NextResponse.json(
+        { error: "Los anuncios de talleres y proveedores CNC llevan a tu perfil o tus productos dentro de HETNA (una dirección de hetnacnc.com)." },
+        { status: 400 }
+      )
     if (f.get("aceptar") !== "1") return NextResponse.json({ error: "Acepta las condiciones para continuar." }, { status: 400 })
 
     const archivo = f.get("archivo")
@@ -65,9 +78,13 @@ export async function POST(req: NextRequest) {
     if ((await lugaresLibres(espacio)) <= 0)
       return NextResponse.json({ error: "Este espacio está lleno por ahora. Elige otro o escríbenos para la lista de espera." }, { status: 409 })
 
-    const monto = calcularMonto(espacio, dias)
+    const monto = modalidad === "vistas" ? montoVistas(espacio, vistasCompradas ?? 0) : calcularMonto(espacio, dias)
+    if (!monto) return NextResponse.json({ error: "No se pudo calcular el precio." }, { status: 400 })
+    // Llave del panel del anunciante (ve sus vistas y clics sin crear cuenta)
+    const token = randomBytes(24).toString("hex")
     const id = await crearPedido({
       espacio, dias, monto, anunciante, correo, enlace, imagen, imagenTipo: archivo.type,
+      modalidad, vistasCompradas, tipoAnunciante, token,
       nombre: texto(f.get("nombre"), 120),
       telefono: texto(f.get("telefono"), 30),
       titulo: texto(f.get("titulo"), 140),
@@ -82,7 +99,10 @@ export async function POST(req: NextRequest) {
         items: [
           {
             id: espacio,
-            title: `Publicidad HETNA CNC: ${ESPACIOS[espacio].nombre} (${dias} días)`,
+            title:
+              modalidad === "vistas"
+                ? `Publicidad HETNA CNC: ${ESPACIOS[espacio].nombre} (${miles(vistasCompradas ?? 0)} vistas)`
+                : `Publicidad HETNA CNC: ${ESPACIOS[espacio].nombre} (${dias} días)`,
             quantity: 1,
             currency_id: "MXN",
             unit_price: monto,
@@ -92,8 +112,8 @@ export async function POST(req: NextRequest) {
         external_reference: id,
         notification_url: `${SITIO}/api/pub/mp-aviso`,
         back_urls: {
-          success: `${SITIO}/mx/anunciate/gracias?pedido=${id}`,
-          pending: `${SITIO}/mx/anunciate/gracias?pedido=${id}`,
+          success: `${SITIO}/mx/anunciate/gracias?pedido=${id}&t=${token}`,
+          pending: `${SITIO}/mx/anunciate/gracias?pedido=${id}&t=${token}`,
           failure: `${SITIO}/mx/anunciate?error=pago`,
         },
         auto_return: "approved",

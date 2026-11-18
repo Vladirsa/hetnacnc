@@ -1,5 +1,6 @@
 // Puerta de entrada del panel de publicidad que vive dentro del /dashboard.
 //   GET  /api/pub/admin/lista      -> anuncios + configuración de espacios
+//   GET  /api/pub/admin/pedidos    -> pedidos pagados por anunciantes + ingresos
 //   POST /api/pub/admin/guardar    -> crear o editar
 //   POST /api/pub/admin/borrar     -> { id }
 //   POST /api/pub/admin/alternar   -> { id, activo }
@@ -8,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { alternar, borrar, guardar, listar } from "@/lib/publicidad/admin"
+import { resumenPedidos } from "@/lib/publicidad/pedidos"
 import { autorizacion } from "@/lib/publicidad/sesion"
 import { ESPACIOS, ORDEN_ESPACIOS, type DatosPieza } from "@/lib/publicidad/tipos"
 
@@ -19,8 +21,16 @@ type Ctx = { params: Promise<{ accion: string }> }
 
 export async function GET(req: NextRequest, ctx: Ctx) {
   const { accion } = await ctx.params
-  if (accion !== "lista") return json({ ok: false, error: "No existe." }, 404)
+  if (accion !== "lista" && accion !== "pedidos") return json({ ok: false, error: "No existe." }, 404)
   if (!(await autorizacion(req))) return json({ ok: false, error: "sin_sesion" }, 401)
+  if (accion === "pedidos") {
+    try {
+      return json({ ok: true, ...(await resumenPedidos()) })
+    } catch (e) {
+      console.error("[publicidad] pedidos", e instanceof Error ? e.message : e)
+      return json({ ok: false, error: "No se pudieron leer los pedidos." }, 500)
+    }
+  }
   const r = await listar()
   return r.ok ? json({ ...r, espacios: ESPACIOS, orden: ORDEN_ESPACIOS }) : json(r, 500)
 }

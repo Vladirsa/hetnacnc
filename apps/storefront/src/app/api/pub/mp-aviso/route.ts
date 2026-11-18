@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { correoPagoAnunciante } from "@/lib/publicidad/correo"
 import { avisarN8n, leerPedido, marcarPagado, UUID } from "@/lib/publicidad/pedidos"
 
 export const dynamic = "force-dynamic"
@@ -57,8 +58,23 @@ async function procesar(req: NextRequest) {
       correo: listo.correo,
       telefono: listo.telefono,
       vence: listo.vence,
-      revisar: "https://hetnacnc.com/dashboard",
+      modalidad: listo.modalidad,
+      vistas: listo.vistas_compradas,
+      revisar: "https://hetnacnc.com/dashboard/publicidad",
+      // Liga para el anunciante: su panel con vistas, clics y renovar
+      panel: listo.token ? `https://hetnacnc.com/mx/anunciate/mi-anuncio?pedido=${listo.id}&t=${listo.token}` : null,
     })
+    if (listo.token)
+      await correoPagoAnunciante({
+        correo: listo.correo,
+        anunciante: listo.anunciante,
+        espacio: listo.espacio,
+        modalidad: listo.modalidad,
+        dias: listo.dias,
+        vistas: listo.vistas_compradas,
+        monto: listo.monto,
+        panel: `https://hetnacnc.com/mx/anunciate/mi-anuncio?pedido=${listo.id}&t=${listo.token}`,
+      })
   }
   return NextResponse.json({ ok: true })
 }

@@ -46,7 +46,7 @@ export function Footer() {
     { label: "Trabajos buscando taller", path: "/trabajos" },
     { label: "Cotizador para tu taller", path: "/servicios/cotizador-cnc" },
     { label: "Talleres fundadores", path: "/talleres/fundadores" },
-    { label: "Anuncia tu taller", path: "/anunciate" },
+    { label: "Anúnciate en HETNA", path: "/anunciate" },
     { label: "Términos para vendedores", path: "/terminos-vendedores" },
   ]
 
