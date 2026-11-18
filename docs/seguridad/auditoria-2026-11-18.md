@@ -41,7 +41,7 @@ Revisión de la tienda (hetnacnc.com) y del Cotizador, pedida por el dueño. Par
 | 22 | Paquetes sin uso | Pendiente | Lista en "Lo que sigue pendiente". No se quitaron: Medusa carga algunos por nombre y hay que probar cada uno. |
 | 23 | Archivos expuestos | **Corregido** | Nada sensible se sirve. Se borraron del repositorio dos respaldos olvidados. |
 | 24 | Secretos en el historial de git | Bien | Ninguno en los dos repositorios. |
-| 25 | Revocar llaves comprometidas | Sin llaves que revocar | No se encontró ninguna llave filtrada. Recomendación general abajo. |
+| 25 | Revocar llaves comprometidas | Sin llaves que revocar | No se encontró ninguna llave filtrada. Vale mientras `/static` no tenga páginas subidas por extraños y la lista de usuarios del panel no tenga desconocidos (pasos 4 y revisión de **Configuraciones → Usuarios**). |
 
 ## Lo más grave que se encontró (y ya está corregido)
 
@@ -55,12 +55,13 @@ Revisión de la tienda (hetnacnc.com) y del Cotizador, pedida por el dueño. Par
 
 En este orden. Los comandos están en el mensaje de entrega.
 
-1. Desplegar la tienda.
-2. Copiar la configuración nueva de nginx (límites y `/static`) y recargar nginx.
-3. Correr `./scripts/revisar-seguridad.sh` en el servidor y corregir cada FALLA.
-4. Correr `cotizador-proteger-plan.sql` en el SQL Editor del proyecto de Supabase del Cotizador y revisar las cuatro consultas del final.
-5. Poner el repositorio del Cotizador en privado (GitHub → Settings → General → Change visibility).
-6. Correr `./scripts/probar-protecciones.sh` desde cualquier computadora.
+1. **Antes de desplegar:** correr `./scripts/revisar-seguridad.sh` en el servidor y corregir las FALLAS de la sección "Secretos de sesión y de firma". Con un secreto vacío o de ejemplo, las ligas de confirmar correo dejan de salir al desplegar (a propósito: con ese secreto cualquiera podía fabricarlas).
+2. Desplegar la tienda (API y tienda juntos, como siempre).
+3. Copiar la configuración nueva de nginx (límites y `/static`) y recargar nginx.
+4. Volver a correr `./scripts/revisar-seguridad.sh` y corregir lo que quede. Si encuentra páginas o scripts ya subidos a `/static`, bórralos y avisa: habría que cambiar los secretos de sesión y revisar la lista de usuarios del panel.
+5. Correr `cotizador-proteger-plan.sql` en el SQL Editor del proyecto de Supabase del Cotizador y revisar las cuatro consultas del final.
+6. Poner el repositorio del Cotizador en privado (GitHub → Settings → General → Change visibility).
+7. Correr `./scripts/probar-protecciones.sh` desde cualquier computadora.
 
 ## Lo que sigue pendiente
 

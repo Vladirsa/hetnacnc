@@ -14,6 +14,9 @@ codigo() { curl -s -m 20 -o /dev/null -w '%{http_code}' "$@"; }
 cab()    { curl -s -m 20 -I "$1" | tr -d '\r' | grep -i "^$2:" | head -1; }
 
 echo "== HTTPS y cabeceras ($H)"
+sin_s="http://${H#https://}"
+r=$(curl -s -m 20 -o /dev/null -w '%{http_code} %{redirect_url}' "$sin_s/mx")
+case "$r" in 30[1278]\ https://*) bien "http:// redirige a https://";; *) falla "http:// no redirige a https:// (respondió: $r)";; esac
 [ -n "$(cab "$H/mx" strict-transport-security)" ] && bien "HSTS (obliga HTTPS)" || falla "falta Strict-Transport-Security"
 [ -n "$(cab "$H/mx" x-content-type-options)" ] && bien "X-Content-Type-Options" || falla "falta X-Content-Type-Options"
 [ -n "$(cab "$H/mx" x-frame-options)" ] && bien "X-Frame-Options (no se puede incrustar el sitio)" || falla "falta X-Frame-Options"
