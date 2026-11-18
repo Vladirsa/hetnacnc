@@ -27,7 +27,7 @@ const FRESAS = [
 ] as const
 
 // piezas tendidas en renglones para la vista 2D (Y hacia arriba)
-function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
+export function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
   const trazos: Trazo[] = []
   let x = 0
   let y = 0
@@ -52,7 +52,7 @@ function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
 }
 
 // Clave corta de un diseño (para no cobrar dos veces el mismo mueble)
-function claveDiseno(texto: string) {
+export function claveDiseno(texto: string) {
   let h1 = 0x811c9dc5, h2 = 0x01000193
   for (let i = 0; i < texto.length; i++) {
     const c = texto.charCodeAt(i)
@@ -64,7 +64,7 @@ function claveDiseno(texto: string) {
 
 // Reduce la imagen en el navegador (lado mayor 1568 px, JPEG): basta para leer
 // cotas y pesa poco para mandarla
-function reducirImagen(archivo: File): Promise<string> {
+export function reducirImagen(archivo: File): Promise<string> {
   return new Promise((ok, mal) => {
     const url = URL.createObjectURL(archivo)
     const img = new Image()
@@ -96,7 +96,7 @@ function reducirImagen(archivo: File): Promise<string> {
 }
 
 // malla del mueble armado: cada pieza extruida a su grosor y llevada a su lugar
-async function mallaArmada(piezas: PiezaEnsamble[]) {
+export async function mallaArmada(piezas: PiezaEnsamble[]) {
   const { extruir } = await import("@/lib/generador/extruir")
   const tris: number[] = []
   for (const p of piezas) {

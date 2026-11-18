@@ -82,8 +82,8 @@ const area2 = (p: P[]) => {
   for (let i = 0, j = p.length - 1; i < p.length; j = i++) s += (p[j][0] - p[i][0]) * (p[j][1] + p[i][1])
   return s / 2 // > 0 antihorario (suma de (x_ant - x)(y_ant + y))
 }
-const ccw = (p: P[]) => (area2(p) > 0 ? p : [...p].reverse())
-const rect = (u0: number, v0: number, u1: number, v1: number): P[] => [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]
+export const ccw = (p: P[]) => (area2(p) > 0 ? p : [...p].reverse())
+export const rect = (u0: number, v0: number, u1: number, v1: number): P[] => [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]
 const circulo = (cu: number, cv: number, r: number, n = 40): P[] => Array.from({ length: n }, (_, i) => [cu + r * Math.cos((2 * Math.PI * i) / n), cv + r * Math.sin((2 * Math.PI * i) / n)] as P)
 
 // Alivio para fresa ("dogbone") en una esquina: la fresa redonda no corta
@@ -143,9 +143,9 @@ function conAlivios(p: P[], r: number, esquina: (i: number, giro: number) => boo
   return out
 }
 // mortaja (hueco rectangular) con alivio en sus cuatro esquinas si hay fresa
-const mortaja = (u0: number, v0: number, u1: number, v1: number, r: number): P[] => conAlivios(ccw(rect(u0, v0, u1, v1)), r, () => true)
+export const mortaja = (u0: number, v0: number, u1: number, v1: number, r: number): P[] => conAlivios(ccw(rect(u0, v0, u1, v1)), r, () => true)
 // contorno exterior (antihorario) con alivio sólo en las esquinas cóncavas (raíz de las espigas)
-const exteriorConAlivios = (p: P[], r: number) => conAlivios(ccw(p), r, (_, giro) => giro < -1e-9)
+export const exteriorConAlivios = (p: P[], r: number) => conAlivios(ccw(p), r, (_, giro) => giro < -1e-9)
 
 // ---------- el exhibidor ----------
 export function exhibidor(o0: OpcionesExhibidor): Mueble {
