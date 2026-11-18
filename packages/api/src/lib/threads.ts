@@ -4,6 +4,7 @@
 // 60 días y hay que renovarlo: el primero va en el .env (THREADS_TOKEN) y las
 // renovaciones se guardan en la configuración del Social Hub (nunca salen del
 // servidor). Publica texto (máx. 500), imagen, carrusel (hasta 20) o video.
+import { cifrarCampos, descifrar } from "./cifrado-llaves"
 import { T_CONFIG_S, asegurarSocial } from "./social-hub"
 
 const API = "https://graph.threads.net/v1.0"
@@ -13,8 +14,9 @@ async function leer(knex: any) {
   await asegurarSocial(knex)
   return (await knex(T_CONFIG_S).where({ clave: "threads" }).first())?.valor || {}
 }
+// El token renovado se guarda cifrado (lib/cifrado-llaves.ts).
 async function guardar(knex: any, v: any) {
-  await knex.raw(`insert into ?? (clave, valor) values ('threads', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(v)])
+  await knex.raw(`insert into ?? (clave, valor) values ('threads', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(cifrarCampos(v, ["token"]))])
 }
 
 /** Token vigente: el renovado (si es del mismo token base) o el del .env. */
@@ -23,7 +25,15 @@ export async function tokenThreads(knex: any) {
   if (!env) return ""
   const v = await leer(knex)
   // Si cambian el token del .env, se usa el nuevo y se olvida el renovado
-  if (v.base && v.base === env.slice(-12) && v.token) return v.token
+  if (v.base && v.base === env.slice(-12) && v.token) {
+    // Si no se puede descifrar (falta la llave o cambió), se usa el del .env:
+    // publicar no debe tronar por eso; la renovación semanal lo vuelve a guardar.
+    try {
+      return descifrar(v.token)
+    } catch (e) {
+      console.warn(`[social] token de Threads guardado ilegible, uso el del .env: ${(e as Error).message}`)
+    }
+  }
   return env
 }
 export const threadsListo = () => !!process.env.THREADS_TOKEN
