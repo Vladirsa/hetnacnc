@@ -8,6 +8,8 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { agregarReferencia, ligaConectarGoogle, resumenDatos, revisarRetencion, revisarTendencias } from "../../../../lib/fabrica/estudio-datos"
 import { limpiarMedios } from "../../../../lib/limpieza-medios"
+import { posterPro } from "../../../../lib/fabrica/poster-pro"
+import { subir } from "../../../../lib/fabrica/index"
 import { publicarVideoEstudio, recuperarVideos, T_ESTUDIO } from "../../../../lib/fabrica/estudio"
 import { estudioListo, guardarEstudioCfg, resumenEstudio, videoDelDia } from "../../../../lib/fabrica/estudio"
 
@@ -21,6 +23,11 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const logger = req.scope.resolve("logger")
   const b: any = req.body || {}
   try {
+    if (b.accion === "imagen_prueba") {
+      const r = await posterPro({ texto: String(b.texto || "Cotiza tu pieza CNC gratis en HETNA: talleres de tu zona te mandan propuesta y eliges. Pago protegido.").slice(0, 1500), formato: b.formato === "9:16" ? "9:16" : "4:5" }, logger)
+      if (!r) return res.status(400).json({ message: "No se pudo hacer la imagen (revisa FAL_KEY y Chrome en el servidor, o el tope diario)." })
+      return res.json({ url: await subir(req.scope, `estudio-prueba-${Date.now()}.png`, "image/png", r.png), idea: r.idea })
+    }
     if (b.accion === "recuperar") return res.json(await recuperarVideos(knex))
     if (b.accion === "publicar") {
       const f = await knex(T_ESTUDIO).where({ id: String(b.id || "") }).first()

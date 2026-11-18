@@ -67,6 +67,7 @@ export type ConfigSocial = {
   piloto: { activo: boolean; minimo: number; redes: Red[] }
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
   primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
+  imagen_pro: boolean // imágenes "pro": foto realista con IA de una persona en taller + diseño de anuncio (fal.ai)
   imagen_nueva: boolean // imágenes con el estilo nuevo (fondos de tema, como los videos); si Chrome falla, la de siempre
   borrar_medios_dias: number // días para borrar del servidor las imágenes y videos generados (0 = nunca)
   max_dia: number // publicaciones de feed al día por mercado (las historias no cuentan)
@@ -86,6 +87,7 @@ const CONFIG_INICIAL: ConfigSocial = {
   piloto: { activo: false, minimo: 75, redes: [] },
   aviso_hora: 8,
   primer_comentario: true,
+  imagen_pro: true,
   imagen_nueva: true,
   borrar_medios_dias: 30,
   max_dia: 3,
@@ -183,6 +185,7 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     },
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
     primer_comentario: v.primer_comentario !== false,
+    imagen_pro: v.imagen_pro !== false,
     imagen_nueva: v.imagen_nueva !== false,
     borrar_medios_dias: Number.isFinite(Number(v.borrar_medios_dias)) ? Math.max(0, Math.min(365, Number(v.borrar_medios_dias))) : 30,
     max_dia: Number.isFinite(Number(v.max_dia)) ? Math.max(0, Math.min(12, Number(v.max_dia))) : 3,
@@ -227,6 +230,7 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
       : actual.piloto,
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
     primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
+    imagen_pro: c.imagen_pro != null ? !!c.imagen_pro : actual.imagen_pro,
     imagen_nueva: c.imagen_nueva != null ? !!c.imagen_nueva : actual.imagen_nueva,
     borrar_medios_dias: c.borrar_medios_dias != null ? Math.max(0, Math.min(365, Number(c.borrar_medios_dias) || 0)) : actual.borrar_medios_dias,
     max_dia: c.max_dia != null ? Math.max(0, Math.min(12, Number(c.max_dia) || 0)) : actual.max_dia,

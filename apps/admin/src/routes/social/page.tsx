@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_nueva?: boolean; max_dia?: number; separacion_h?: number; mercados_redes?: string[]; borrar_medios_dias?: number }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_pro?: boolean; imagen_nueva?: boolean; max_dia?: number; separacion_h?: number; mercados_redes?: string[]; borrar_medios_dias?: number }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -1124,6 +1124,10 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         Primer comentario automático con la liga en Facebook (necesita el permiso pages_manage_engagement)
       </label>
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
+        <input type="checkbox" checked={c.imagen_pro !== false} onChange={(e) => setC({ ...c, imagen_pro: e.target.checked })} />
+        Imágenes pro: foto realista con IA de una persona en un taller con el tema, logo, título grande en blanco y naranja y barra con la web y el WhatsApp (~0.06 USD cada una, máximo 8 al día). Los productos de la tienda siguen con su foto real.
+      </label>
+      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={c.imagen_nueva !== false} onChange={(e) => setC({ ...c, imagen_nueva: e.target.checked })} />
         Imágenes con el estilo nuevo (los mismos fondos que los videos animados). Si se apaga o falla, salen con el estilo anterior
       </label>
@@ -1846,6 +1850,7 @@ function EstudioDiario() {
         <button type="button" style={boton("primario")} disabled={ocupado || !d.listo} onClick={() => void hacer()}>🎬 Hacer el de hoy ({d.toca_hoy})</button>
         <button type="button" style={boton("normal")} disabled={ocupado || !d.listo} onClick={() => void hacer(d.toca_hoy === "novela" ? "educativo" : "novela")}>Hacer uno {d.toca_hoy === "novela" ? "educativo" : "de novela"}</button>
         <button type="button" style={boton("normal")} onClick={() => void cargar()}>Actualizar</button>
+        <button type="button" style={boton("normal")} disabled={ocupado} title="Hace una imagen pro de muestra (cuesta ~0.06 USD)" onClick={async () => { setOcupado(true); setNota({ ok: true, t: "Haciendo la imagen de prueba (unos 30 segundos)…" }); try { const r = await api({ accion: "imagen_prueba" }); window.open(r.url, "_blank", "noopener"); setNota({ ok: true, t: `✓ Imagen de prueba lista: «${r.idea.linea1} ${r.idea.linea2}». Se abrió en otra pestaña.` }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>🖼️ Imagen pro de prueba</button>
         <button type="button" style={boton("normal")} disabled={ocupado} title="Busca en el servidor los videos que se hicieron pero no se guardaron por un error" onClick={async () => { setOcupado(true); try { const r = await api({ accion: "recuperar" }); setNota({ ok: true, t: r.recuperados ? `✓ Recuperé ${r.recuperados} videos: ábrelos con "Ver video" y publícalos si te gustan.` : "No encontré videos perdidos." }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Recuperar videos</button>
       </div>
       <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
