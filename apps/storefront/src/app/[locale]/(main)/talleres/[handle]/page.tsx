@@ -82,6 +82,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
   const donde = ubicacion(p)
   const datos: [string, string][] = [
     p.entrega ? ["Entrega típica", p.entrega] : null,
+    p.horario ? ["Horario", p.horario] : null,
     p.maquinas.length ? ["Máquinas", String(p.maquinas.length)] : null,
     p.anos !== undefined ? ["Años de experiencia", String(p.anos)] : null,
     p.calificacion !== undefined
