@@ -25,6 +25,17 @@ function segmento(tipo) {
   return 'vendedor'; // Taller (cliente y vendedor), Proveedor
 }
 
+// Ejemplos según el giro del prospecto (la búsqueda que lo encontró), para
+// que el correo al comprador hable de lo que ellos fabrican.
+function ejemplosComprador(r) {
+  const g = String((r.segmento || '') + ' ' + (r.productos_servicios || '')).toLowerCase();
+  if (/mueble|cocina|carpinter|closet/.test(g)) return { asunto: 'corte CNC de MDF y piezas para muebles con talleres de su zona', para: 'cortar tableros, frentes, celosías y piezas de muebles en MDF, triplay o acrílico', corto: 'frentes, celosías, piezas de MDF' };
+  if (/arquitect|interior|construc|fachada|acabado/.test(g)) return { asunto: 'celosías, fachadas y letreros cortados en CNC', para: 'celosías, paneles decorativos, fachadas, letreros y piezas metálicas a la medida para sus obras', corto: 'celosías, paneles, letreros' };
+  if (/pop|exhibidor|stand|exposici|publicidad|señal|letrero|rotul/.test(g)) return { asunto: 'exhibidores, letreros y stands con talleres CNC', para: 'exhibidores, letreros corpóreos, señalética y piezas para stands en acrílico, MDF, PVC o metal', corto: 'exhibidores, letreros, piezas de stand' };
+  if (/manten|refacci|maquinaria|equipo industrial|molde|troquel/.test(g)) return { asunto: 'refacciones y piezas maquinadas en CNC a la medida', para: 'refacciones, piezas maquinadas en torno o fresadora y cortes de placa para mantenimiento y producción', corto: 'refacciones, piezas maquinadas, placas' };
+  return { asunto: 'cortes láser, router y maquinados CNC con talleres verificados', para: 'piezas, letreros, prototipos y producción por lote', corto: 'piezas, letreros, prototipos' };
+}
+
 function liga(ruta, r, paso) {
   const utm = 'utm_source=correo&utm_medium=prospeccion&utm_campaign=' + segmento(r.tipo) + '_p' + paso;
   return SITIO + ruta + (ruta.includes('?') ? '&' : '?') + utm;
@@ -116,21 +127,24 @@ const T = {
     },
     comprador: {
       1: (r) => ({
-        asunto: r.empresa + ': herramientas, refacciones y maquinados CNC en un solo lugar',
-        cuerpo: '<p>En <b>HETNA CNC</b> reunimos a talleres y proveedores de todo México: fresas, insertos, refacciones, máquinas, materiales, maquinados a medida, corte láser/plasma y cursos.</p>' +
-          '<ul><li>Pide cotizaciones o publica una <b>licitación de fabricación</b> y recibe propuestas de varios talleres.</li><li>Compara precios y paga en línea con factura del vendedor.</li><li>Talleres verificados y reseñas reales.</li></ul>' +
-          boton(liga('/cotizar', r, 1), 'Pedir una cotización') +
-          '<p>Y si su empresa también vende productos o servicios de CNC, puede abrir su tienda gratis pagando sólo 6% por venta.</p>',
+        asunto: r.empresa + ': ' + ejemplosComprador(r).asunto,
+        cuerpo: '<p>Les escribo de <b>HETNA CNC</b>, la red mexicana de talleres CNC (router, láser, plasma, torno y fresadora). Pensamos que les puede servir para ' + ejemplosComprador(r).para + '.</p>' +
+          '<ul><li><b>Precio aproximado al momento:</b> en la página de cotizar o mandando las medidas por WhatsApp al +52 221 707 6014.</li>' +
+          '<li><b>Varias propuestas:</b> suben su plano o foto y los talleres de la red les cotizan; ustedes eligen.</li>' +
+          '<li><b>Pago seguro:</b> pagan con Mercado Pago dentro de HETNA y el taller empieza cuando el pago está confirmado; cada taller les factura (CFDI).</li></ul>' +
+          '<p>Pedir cotización no tiene costo para ustedes.</p>' +
+          boton(liga('/cotizar', r, 1), 'Ver un precio aproximado'),
       }),
       2: (r) => ({
-        asunto: '¿Necesitan una pieza o maquinado este mes?',
-        cuerpo: '<p>Publiquen lo que necesitan (planos, cantidades, material) y los talleres de HETNA les mandan propuestas. Sin costo para ustedes.</p>' +
-          boton(liga('/cotizar', r, 2), 'Publicar lo que necesito'),
+        asunto: '¿Tienen alguna pieza o proyecto por fabricar este mes?',
+        cuerpo: '<p>Retomo mi correo anterior. Si tienen algo por fabricar (' + ejemplosComprador(r).corto + '), manden las medidas, el material y la cantidad, y les damos un precio aproximado en minutos.</p>' +
+          '<p>Si les conviene, varios talleres verificados de la red les mandan su propuesta formal.</p>' +
+          boton(liga('/cotizar', r, 2), 'Cotizar mi proyecto'),
       }),
       3: (r) => ({
         asunto: 'Último correo de HETNA CNC',
-        cuerpo: '<p>Éste es el último correo por ahora. Cuando necesiten herramientas, refacciones o maquinados CNC, aquí estamos:</p>' +
-          boton(liga('/', r, 3), 'Visitar HETNA CNC'),
+        cuerpo: '<p>Éste es el último correo por ahora. Cuando necesiten cortar, grabar o maquinar algo, guarden esta liga o escríbannos por WhatsApp al +52 221 707 6014:</p>' +
+          boton(liga('/cotizar', r, 3), 'Guardar HETNA CNC'),
       }),
       4: (r) => ({
         asunto: r.empresa + ': novedades en HETNA CNC',

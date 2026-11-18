@@ -106,9 +106,12 @@ Código: `n8n/clasificar_respuesta.js`.
 
 ## Búsqueda automática de prospectos (ScrapeGraphAI + Groq, todas las noches)
 
-`plan_busqueda.json` tiene 1,069 búsquedas (segmentos × ciudades de México, EE.UU.,
+`plan_busqueda.json` tiene 1,447 búsquedas (segmentos × ciudades de México, EE.UU.,
 Sudamérica y Brasil), incluidos carpinterías con router, rotulistas, grabado láser,
-herrerías con plasma, impresión 3D y torno. Por cada búsqueda en español o portugués
+herrerías con plasma, impresión 3D y torno, y desde el 18 nov 2026 **compradores**
+(mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands,
+mantenimiento industrial y fabricantes de maquinaria), que reciben el correo de
+comprador con ejemplos de su giro (`ejemplosComprador` en `n8n/preparar_correos.js`). Por cada búsqueda en español o portugués
 también busca **perfiles de negocio en Instagram y Facebook**: no entra a esas redes
 (piden sesión y sus reglas lo prohíben), sólo lee lo que el buscador muestra del perfil
 y lo guarda únicamente si el negocio publica ahí su correo o teléfono (id `ig-usuario`

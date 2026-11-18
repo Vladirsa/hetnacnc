@@ -1,5 +1,5 @@
 {
-  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo).",
+  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo). Desde el 18 nov 2026 incluye compradores: mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands, mantenimiento industrial y fabricantes de maquinaria.",
   "segmentos": {
     "es": [
       [
@@ -57,6 +57,30 @@
       [
         "Cliente comprador",
         "fábrica de señalética y letreros corpóreos {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "fábrica de muebles y cocinas integrales {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "despacho de arquitectura e interiorismo {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "constructora acabados y fachadas {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "exhibidores POP y stands para exposiciones {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "mantenimiento industrial refacciones a la medida {ciudad}"
+      ],
+      [
+        "Cliente comprador",
+        "fabricante de maquinaria y equipo industrial {ciudad}"
       ]
     ],
     "en": [
