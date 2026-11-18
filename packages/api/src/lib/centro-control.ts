@@ -28,6 +28,10 @@ const HORA = 3_600_000
 export const ADMIN = (process.env.ADMIN_PANEL_URL || `${STORE_URL}/dashboard`).replace(/\/$/, "")
 const HORAS_SIN_ENVIAR = () => Number(process.env.CONTROL_HORAS_SIN_ENVIAR ?? 48)
 
+/** Día (AAAA-MM-DD) en hora del centro de México: "Ventas por día" agrupa por
+ *  el día de México, no el de UTC (una venta a las 19:00 ya era "mañana" en UTC). */
+export const diaMx = (d: Date | string | number) => new Date(d).toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+
 export type Nivel = "rojo" | "ambar" | "azul"
 export type Aviso = {
   nivel: Nivel
@@ -127,7 +131,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   const previo = { pedidos: 0, ingresos: 0 }
   const porDia = new Map<string, { ingresos: number; pedidos: number }>()
   for (let i = dias - 1; i >= 0; i--) {
-    porDia.set(new Date(ahora - i * DIA).toISOString().slice(0, 10), { ingresos: 0, pedidos: 0 })
+    porDia.set(diaMx(ahora - i * DIA), { ingresos: 0, pedidos: 0 })
   }
   const porTaller = new Map<string, { pedidos: number; ingresos: number }>()
   const porProducto = new Map<string, { titulo: string; piezas: number; ingresos: number }>()
@@ -139,7 +143,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
     if (en(o.created_at, desde, ahora)) {
       actual.pedidos++
       actual.ingresos += total
-      const d = porDia.get(new Date(o.created_at).toISOString().slice(0, 10))
+      const d = porDia.get(diaMx(o.created_at))
       if (d) {
         d.ingresos += total
         d.pedidos++
@@ -500,7 +504,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         tipo: "taller_por_aprobar",
         titulo: `${listos.length} taller(es) nuevo(s) esperan que los apruebes`,
         detalle: `${listos.slice(0, 5).map((t) => t.name || t.email).join(", ")}. Mientras no los apruebes no pueden publicar.`,
-        url: `${ADMIN}/sellers`,
+        url: `${ADMIN}/stores`,
       })
     }
   }, undefined, logger)

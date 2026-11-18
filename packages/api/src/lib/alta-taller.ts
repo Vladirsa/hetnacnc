@@ -141,7 +141,7 @@ export async function avisarAdmin(t: TallerAlta) {
       fila("Registrado", t.created_at ? new Date(t.created_at).toLocaleString("es-MX", { timeZone: "America/Mexico_City" }) : "") +
       `</table>` +
       boton("Revisar y aprobar", liga("aprobar", t.id, VIGENCIA_APROBAR_DIAS)) +
-      `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">El botón abre una página para confirmar; nada se aprueba solo con abrir el correo. También puedes hacerlo desde <a href="${esc(`${ADMIN}/sellers`)}">el panel de administración</a>.</p>`
+      `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">El botón abre una página para confirmar; nada se aprueba solo con abrir el correo. También puedes hacerlo desde <a href="${esc(`${ADMIN}/stores`)}">el panel de administración</a>.</p>`
   )
   for (const to of para) {
     await sendEmail({ to, subject: `Taller nuevo por aprobar: ${t.name || t.email || t.id}`, html }).catch(() => undefined)
@@ -162,7 +162,7 @@ export async function avisarAdminAltaAutomatica(t: TallerAlta) {
       fila("Teléfono", t.phone || "") +
       fila("Registrado", t.created_at ? new Date(t.created_at).toLocaleString("es-MX", { timeZone: "America/Mexico_City" }) : "") +
       `</table>` +
-      boton("Revisar o suspender en el panel", `${ADMIN}/sellers/${encodeURIComponent(t.id)}`) +
+      boton("Revisar o suspender en el panel", `${ADMIN}/stores/${encodeURIComponent(t.id)}`) +
       `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Para volver a aprobar a mano cada taller, pon ALTA_AUTOMATICA=false en el .env del API.</p>`
   )
   for (const to of para) {

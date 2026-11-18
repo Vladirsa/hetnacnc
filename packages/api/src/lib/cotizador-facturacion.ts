@@ -239,14 +239,33 @@ export async function facturarCobro(knex: any, cobroId: string, opciones: { fetc
 }
 
 /** Factura global del mes anterior con los cobros en pesos sin datos fiscales. Idempotente por mes. */
+/** Ventana de un mes en hora del centro de México (medianoche ≈ 06:00 UTC). */
+export const ventanaMesMx = (anio: number, mes: number) => ({
+  desde: new Date(Date.UTC(anio, mes - 1, 1, 6)),
+  hasta: new Date(Date.UTC(anio, mes, 1, 6)),
+})
+
+/** El mes ya terminó en México (la global de un mes en curso dejaría fuera los
+ *  cobros que faltan y el día 1 saldría otra). */
+export const mesCerradoMx = (anio: number, mes: number, ahora = new Date()) => ventanaMesMx(anio, mes).hasta.getTime() <= ahora.getTime()
+
+/** La global ya emitida de ese mes (si hay), para no emitir otra a mano por error. */
+export async function globalEmitida(knex: any, anio: number, mes: number): Promise<{ uuid: string | null; cobros: number } | null> {
+  await asegurarCobros(knex)
+  const { desde, hasta } = ventanaMesMx(anio, mes)
+  const filas = (await knex(T_COBRO).where({ tipo_cfdi: "global", estado: "facturado" })
+    .where("fecha", ">=", desde).where("fecha", "<", hasta).select("uuid", "facturapi_id")) as any[]
+  if (!filas.length) return null
+  return { uuid: filas[0].uuid || filas[0].facturapi_id || null, cobros: filas.length }
+}
+
 export async function facturaGlobalDelMes(knex: any, anio: number, mes: number, opciones: { fetch?: Fetch; logger?: any } = {}) {
   const f = opciones.fetch || fetch
   await asegurarCobros(knex)
   const lista = await facturacionLista(knex)
   if (!lista.ok) return { estado: "pendiente", mensaje: lista.motivo }
   if (!lista.ctb.cp) return { estado: "pendiente", mensaje: "Falta el código postal fiscal de HETNA (lugar de expedición de la global)." }
-  const desde = new Date(Date.UTC(anio, mes - 1, 1, 6)) // medianoche del centro de México ≈ 06:00 UTC
-  const hasta = new Date(Date.UTC(anio, mes, 1, 6))
+  const { desde, hasta } = ventanaMesMx(anio, mes) // medianoche del centro de México ≈ 06:00 UTC
   const filas = (await knex(T_COBRO).where({ estado: "en_global", moneda: "MXN" }).whereNull("facturapi_id")
     .where("fecha", ">=", desde).where("fecha", "<", hasta).orderBy("fecha").select("*")) as any[]
   if (!filas.length) return { estado: "vacia" }
