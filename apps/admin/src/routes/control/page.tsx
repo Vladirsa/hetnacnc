@@ -233,7 +233,7 @@ function Servicios({ lista }: { lista: Servicio[] }) {
     <div style={caja}>
       <h2 style={{ margin: "0 0 4px", fontSize: 16 }}>Servicios: saldos, límites y vencimientos</h2>
       <p style={{ fontSize: 13, color: C.tenue, margin: "0 0 10px" }}>
-        Se revisa cada 10 minutos. Lo que esté en rojo o naranja también te llega en el correo de la mañana.
+        Los datos se guardan 10 minutos: se vuelven a leer al abrir esta página (si ya pasaron) y en cada revisión automática (cada 2 horas). Lo que esté en rojo o naranja también te llega en el correo de la mañana.
       </p>
       {GRUPOS.map((g) => {
         const filas = activos.filter((s) => s.grupo === g.id)

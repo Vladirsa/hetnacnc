@@ -22,10 +22,10 @@
 // A quién: CONTROL_AVISOS_PARA (o RESUMEN_DIARIO_PARA, o la cuenta de la casa).
 // Se puede poner más de un correo separado por comas (por ejemplo, el tuyo y el
 // de tu esposa). Para apagarlo: CONTROL_AVISOS=off.
-import { createHash } from "crypto"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ADMIN, calcularCentroControl, correoCentroControl } from "../lib/centro-control"
+import { claveAviso, claveAvisoAnterior } from "../lib/control-aviso-clave"
 import { correosDeLaCasa } from "../lib/cuentas-casa"
 import { pushACliente } from "../lib/push"
 import { sendEmail } from "../lib/resend"
@@ -65,13 +65,16 @@ const destinatarios = () =>
     .map((s) => s.trim())
     .filter(Boolean)
 
-const clave = (a) => createHash("sha1").update(`${a.tipo}|${a.url || ""}|${a.titulo}`).digest("hex")
+// Clave estable (sin las cifras que cambian: horas, saldos…), ver lib/control-aviso-clave.ts
+const clave = claveAviso
 
 export default async function centroControlAvisos(container) {
   const logger = container.resolve("logger")
-  if ((process.env.CONTROL_AVISOS || "").toLowerCase() === "off" || !process.env.RESEND_API_KEY) return
+  if ((process.env.CONTROL_AVISOS || "").toLowerCase() === "off") return
+  // Sin RESEND_API_KEY sólo se salta el correo: el aviso al celular y Telegram siguen
+  const conCorreo = !!process.env.RESEND_API_KEY
   const para = destinatarios()
-  if (!para.length) return
+  if (!para.length && (process.env.CONTROL_TELEGRAM || "").toLowerCase() === "off") return
 
   try {
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
@@ -88,15 +91,16 @@ export default async function centroControlAvisos(container) {
 
     const d = await calcularCentroControl(container, { dias: 1 })
     const urgentes = d.avisos.filter((a) => a.nivel === "rojo")
-    const ya = new Set((await knex(T).whereIn("clave", urgentes.map(clave)).select("clave")).map((f) => f.clave))
-    const nuevos = urgentes.filter((a) => !ya.has(clave(a)))
+    // También cuenta como enviado lo anotado con la clave anterior (título exacto), para no repetir todo al cambiar de formato
+    const ya = new Set((await knex(T).whereIn("clave", [...urgentes.map(clave), ...urgentes.map(claveAvisoAnterior)]).select("clave")).map((f) => f.clave))
+    const nuevos = urgentes.filter((a) => !ya.has(clave(a)) && !ya.has(claveAvisoAnterior(a)))
 
-    if (manana) {
+    if (manana && conCorreo && para.length) {
       const { asunto, html } = correoCentroControl(d)
       const extra = await seccionResumen(container)
       const completo = extra ? html.replace(/<p style="margin-top:20px">/, `${extra}<p style="margin-top:20px">`) : html
       for (const to of para) await sendEmail({ to, subject: `Informe diario · ${asunto.replace(/^HETNA: /, "")}`, html: completo })
-    } else if (nuevos.length && (process.env.CONTROL_URGENTES_CORREO || "").toLowerCase() !== "on") {
+    } else if (nuevos.length && para.length && (!conCorreo || (process.env.CONTROL_URGENTES_CORREO || "").toLowerCase() !== "on")) {
       // Sin correo: aviso al celular del dueño
       const knexPush = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
       for (const correo of para) {
@@ -112,7 +116,7 @@ export default async function centroControlAvisos(container) {
           logger
         )
       }
-    } else if (nuevos.length) {
+    } else if (nuevos.length && para.length) {
       const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:620px;margin:0 auto;color:#142033">
 <h2 style="margin:0 0 10px;color:#B42318">Atiende esto hoy</h2>
 ${nuevos
