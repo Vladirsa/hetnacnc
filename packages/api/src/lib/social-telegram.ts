@@ -17,7 +17,12 @@ import { puntuar } from "./estrategia"
 import { revisarPublicacion } from "./social-revisor"
 import { modeloIA } from "./ia-modelo"
 
-type EstadoTg = { chat_id?: string; codigo?: string; codigo_expira?: string; editando?: string | null; ultimo_aviso?: string }
+type EstadoTg = { chat_id?: string; codigo?: string; codigo_expira?: string; codigo_intentos?: number; editando?: string | null; ultimo_aviso?: string }
+
+// Tope de intentos de /vincular por código: sin él, el código de 6 dígitos se
+// podía adivinar probando. Es uno solo para todos los chats (por chat, cada
+// chat nuevo daría otros 5). Al llegar al tope el código deja de servir.
+export const MAX_INTENTOS_CODIGO = 5
 
 export async function leerTg(knex: any): Promise<EstadoTg> {
   await asegurarSocial(knex)
@@ -32,8 +37,27 @@ async function guardarTg(knex: any, cambios: Partial<EstadoTg>) {
 /** Código de 6 dígitos (15 min) para vincular el chat del dueño. */
 export async function nuevoCodigo(knex: any) {
   const codigo = String(randomInt(100000, 1000000))
-  await guardarTg(knex, { codigo, codigo_expira: new Date(Date.now() + 15 * 60_000).toISOString() })
+  await guardarTg(knex, { codigo, codigo_expira: new Date(Date.now() + 15 * 60_000).toISOString(), codigo_intentos: 0 })
   return codigo
+}
+
+/** Resultado de un intento de /vincular, con el intento ya contado en `tg`. */
+export function veredictoVincular(tg: EstadoTg, codigo: string, ahora = Date.now()): "ok" | "mal" | "agotado" {
+  const vigente = tg.codigo && tg.codigo_expira && new Date(tg.codigo_expira).getTime() > ahora
+  if (!vigente) return "mal"
+  if (Number(tg.codigo_intentos || 0) > MAX_INTENTOS_CODIGO) return "agotado"
+  return codigo === tg.codigo ? "ok" : "mal"
+}
+
+/** Cuenta el intento en la base ANTES de comparar (en una sola sentencia, para
+ *  que muchos intentos al mismo tiempo no se salten el tope) y regresa el estado. */
+async function contarIntento(knex: any): Promise<EstadoTg> {
+  await asegurarSocial(knex)
+  const r = await knex.raw(
+    `update ?? set valor = jsonb_set(valor, '{codigo_intentos}', to_jsonb(coalesce((valor->>'codigo_intentos')::int, 0) + 1)) where clave = 'telegram' returning valor`,
+    [T_CONFIG_S]
+  )
+  return r?.rows?.[0]?.valor || {}
 }
 export async function desvincular(knex: any) {
   await guardarTg(knex, { chat_id: undefined, editando: null })
@@ -140,9 +164,14 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
   // Vincular: /vincular 123456 (el código sale del panel y dura 15 minutos)
   const v = texto.match(/^\/vincular(?:@\w+)?\s+(\d{6})$/i)
   if (v) {
-    const vigente = tg.codigo && tg.codigo_expira && new Date(tg.codigo_expira).getTime() > Date.now()
-    if (!vigente || v[1] !== tg.codigo) return "Código incorrecto o vencido. Genera uno nuevo en Admin → Social Hub → Configuración."
-    await guardarTg(knex, { chat_id: chat, codigo: undefined, codigo_expira: undefined, editando: null })
+    const veredicto = veredictoVincular(await contarIntento(knex), v[1])
+    if (veredicto === "agotado") {
+      // Demasiados intentos: el código se invalida y hay que generar otro
+      await guardarTg(knex, { codigo: undefined, codigo_expira: undefined })
+      logger?.warn?.(`[social] Telegram: código de vinculación invalidado tras ${MAX_INTENTOS_CODIGO} intentos (chat ${chat})`)
+    }
+    if (veredicto !== "ok") return "Código incorrecto o vencido. Genera uno nuevo en Admin → Social Hub → Configuración."
+    await guardarTg(knex, { chat_id: chat, codigo: undefined, codigo_expira: undefined, codigo_intentos: 0, editando: null })
     return `✅ Listo: este chat quedó vinculado al Social Hub de HETNA.\n\n${AYUDA}`
   }
   if (!tg.chat_id || chat !== String(tg.chat_id)) return /^\//.test(texto) || b.tipo === "boton" ? "Este bot es privado de HETNA CNC." : ""
