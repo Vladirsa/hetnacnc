@@ -20,6 +20,7 @@ import {
   hojaDXF,
   hojaSVG,
   hojasVistaSVG,
+  paginasMosaico,
   TAMANOS_HOJA,
   type Hoja,
   doblecesSinPerforar,
@@ -122,6 +123,7 @@ export function GeneradorEmpaques() {
   const [margenHoja, setMargenHoja] = useState("5")
   const [anchoHoja, setAnchoHoja] = useState("600")
   const [altoHoja, setAltoHoja] = useState("400")
+  const [papelMosaico, setPapelMosaico] = useState("carta")
 
   // /disenar/plantillas-empaque?modelo=pizza abre esa plantilla
   useEffect(() => {
@@ -256,6 +258,25 @@ export function GeneradorEmpaques() {
           plantillaSVG(r.piezas, "imprimir", dob)
       )
     }
+    w.document.close()
+    w.focus()
+    setTimeout(() => w.print(), 300)
+  }
+
+  // Plantillas grandes en hojas de impresora: una página por pedazo, más un mapa de armado
+  const papel = TAMANOS_HOJA.find((t) => t.id === papelMosaico) || TAMANOS_HOJA[0]
+  const mosaico = useMemo(() => (listo ? paginasMosaico(hojaAjustada(r.piezas, 0), papel.ancho, papel.alto, dob) : null), [r, listo, papel, dob])
+  const imprimirMosaico = () => {
+    if (!mosaico) return
+    const w = window.open("", "_blank")
+    if (!w) return
+    w.document.write(
+      `<!doctype html><title>${nombreArchivo}-mosaico</title><style>@page{size:${papel.ancho}mm ${papel.alto}mm;margin:0}body{margin:0}` +
+        `.h{width:${papel.ancho}mm;height:${papel.alto}mm;break-after:page;overflow:hidden}.h:last-child{break-after:auto}.h svg{display:block}` +
+        `.n{font:12px sans-serif;padding:8px}@media print{.n{display:none}}</style>` +
+        `<p class="n">Imprime al 100% (sin "ajustar a la página") en hojas ${papel.nombre}. La primera página es el mapa de armado.</p>` +
+        [mosaico.mapa, ...mosaico.paginas.map((x) => x.svg)].map((x) => `<div class="h">${x}</div>`).join("")
+    )
     w.document.close()
     w.focus()
     setTimeout(() => w.print(), 300)
@@ -540,6 +561,29 @@ export function GeneradorEmpaques() {
                 >
                   Pedir por WhatsApp
                 </a>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5">
+                <span className="text-[13px] font-semibold text-[#1B1B18]">¿Es más grande que tu hoja?</span>
+                <select
+                  value={papelMosaico}
+                  onChange={(e) => setPapelMosaico(e.target.value)}
+                  aria-label="Papel para imprimir en mosaico"
+                  className="bg-white border border-[#E7E4DC] rounded-[8px] px-2 py-1.5 text-[14px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
+                >
+                  {TAMANOS_HOJA.filter((t) => t.grupo === "Impresora").map((t) => (
+                    <option key={t.id} value={t.id}>{t.nombre}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={imprimirMosaico}
+                  className="bg-white border border-[#142033] text-[#142033] font-semibold px-3 py-1.5 rounded-[8px] text-[14px]"
+                >
+                  Imprimir en mosaico{mosaico ? ` (${mosaico.paginas.length} ${mosaico.paginas.length === 1 ? "página" : "páginas"} + mapa)` : ""}
+                </button>
+                <span className="basis-full text-[12px] text-[#6B6A63]">
+                  Parte la plantilla en hojas {papel.nombre} que se recortan y se pegan encimadas 10 mm, con un mapa para armarlas.
+                </span>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
                 {dob.modo === "perforado"
