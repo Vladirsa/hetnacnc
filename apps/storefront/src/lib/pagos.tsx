@@ -51,3 +51,4 @@ export const paymentInfoMap: Record<
     icon: <Cash />,
   },
 }
+
