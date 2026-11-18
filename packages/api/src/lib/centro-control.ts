@@ -18,6 +18,7 @@
 // tabla que todavía no existe), las demás salen igual: el panel nunca se queda
 // en blanco por una pieza.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { intentosFallidosAdmin } from "./bitacora-seguridad"
 
 import { T_GUIAS } from "./guias"
 import { STORE_URL } from "./licitacion"
@@ -543,6 +544,23 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   }, undefined, logger)
 
   const orden = { rojo: 0, ambar: 1, azul: 2 }
+  // Seguridad: muchos intentos fallidos de entrar al panel de administración
+  try {
+    const f = await intentosFallidosAdmin(knex, 24)
+    if (f.total >= 10) {
+      avisos.push({
+        nivel: f.total >= 30 ? "rojo" : "ambar",
+        tipo: "seguridad_login",
+        clave: "login-admin",
+        titulo: `${f.total} intentos fallidos de entrar al panel de administración en 24 h`,
+        detalle: `Desde ${f.ips} dirección(es) IP, probando ${f.correos} correo(s). Si no fuiste tú, cambia tu contraseña y revisa quién tiene acceso en Configuraciones → Usuarios.`,
+        url: `${ADMIN}/settings/users`,
+      })
+    }
+  } catch {
+    /* sin bitácora no hay aviso */
+  }
+
   avisos.sort(
     (a, b) => orden[a.nivel] - orden[b.nivel] || new Date(b.cuando || 0).getTime() - new Date(a.cuando || 0).getTime()
   )
