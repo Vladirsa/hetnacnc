@@ -19,3 +19,20 @@ describe("limpieza de textos de la IA antes de publicar", () => {
     expect(sinLigasCrudas("Cotiza aquí 👉 https://hetnacnc.com/r/abc")).toBe("Cotiza aquí 👉 liga en la bio")
   })
 })
+
+import { candidatos } from "../limpieza-medios"
+describe("limpieza de medios generados", () => {
+  const ahora = Date.parse("2026-12-31T00:00:00Z")
+  const viejo = ahora - 40 * 86_400_000
+  it("sólo borra lo generado para redes y más viejo que los días", () => {
+    const l = candidatos([
+      { nombre: "1794709770778-estudio-estudio_0fe.mp4", mtimeMs: viejo },
+      { nombre: "1794709770778-plan-spost_1-2.png", mtimeMs: viejo },
+      { nombre: "1794709770778-fondo-taller-ia_1-0.jpg", mtimeMs: viejo },
+      { nombre: "1794709770778-foto-producto.jpg", mtimeMs: viejo },
+      { nombre: "1794709770778-promo-x.png", mtimeMs: ahora - 86_400_000 },
+    ], 30, ahora).map((x) => x.nombre)
+    expect(l).toEqual(["1794709770778-estudio-estudio_0fe.mp4", "1794709770778-plan-spost_1-2.png"])
+    expect(candidatos([{ nombre: "1794709770778-plan-a.png", mtimeMs: viejo }], 0, ahora)).toEqual([])
+  })
+})

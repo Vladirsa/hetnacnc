@@ -68,6 +68,7 @@ export type ConfigSocial = {
   aviso_hora: number // hora (centro de México) del mensaje diario de aprobación por Telegram
   primer_comentario: boolean // en Facebook, la liga medida también va en el primer comentario
   imagen_nueva: boolean // imágenes con el estilo nuevo (fondos de tema, como los videos); si Chrome falla, la de siempre
+  borrar_medios_dias: number // días para borrar del servidor las imágenes y videos generados (0 = nunca)
   max_dia: number // publicaciones de feed al día por mercado (las historias no cuentan)
   separacion_h: number // horas mínimas entre publicaciones
   mercados_redes: string[] // mercados que salen en las cuentas de HETNA (por omisión sólo México)
@@ -86,6 +87,7 @@ const CONFIG_INICIAL: ConfigSocial = {
   aviso_hora: 8,
   primer_comentario: true,
   imagen_nueva: true,
+  borrar_medios_dias: 30,
   max_dia: 3,
   separacion_h: 3,
   mercados_redes: ["mx"],
@@ -182,6 +184,7 @@ export async function leerConfig(knex: any): Promise<ConfigSocial> {
     aviso_hora: Number.isFinite(Number(v.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(v.aviso_hora)))) : CONFIG_INICIAL.aviso_hora,
     primer_comentario: v.primer_comentario !== false,
     imagen_nueva: v.imagen_nueva !== false,
+    borrar_medios_dias: Number.isFinite(Number(v.borrar_medios_dias)) ? Math.max(0, Math.min(365, Number(v.borrar_medios_dias))) : 30,
     max_dia: Number.isFinite(Number(v.max_dia)) ? Math.max(0, Math.min(12, Number(v.max_dia))) : 3,
     separacion_h: Number.isFinite(Number(v.separacion_h)) ? Math.max(0, Math.min(12, Number(v.separacion_h))) : 3,
     mercados_redes: Array.isArray(v.mercados_redes) && v.mercados_redes.length ? v.mercados_redes.filter((x: string) => x in MERCADOS) : ["mx"],
@@ -225,6 +228,7 @@ export async function guardarConfig(knex: any, c: Partial<ConfigSocial>) {
     aviso_hora: c.aviso_hora != null && Number.isFinite(Number(c.aviso_hora)) ? Math.max(0, Math.min(23, Math.round(Number(c.aviso_hora)))) : actual.aviso_hora,
     primer_comentario: c.primer_comentario != null ? !!c.primer_comentario : actual.primer_comentario,
     imagen_nueva: c.imagen_nueva != null ? !!c.imagen_nueva : actual.imagen_nueva,
+    borrar_medios_dias: c.borrar_medios_dias != null ? Math.max(0, Math.min(365, Number(c.borrar_medios_dias) || 0)) : actual.borrar_medios_dias,
     max_dia: c.max_dia != null ? Math.max(0, Math.min(12, Number(c.max_dia) || 0)) : actual.max_dia,
     separacion_h: c.separacion_h != null ? Math.max(0, Math.min(12, Number(c.separacion_h) || 0)) : actual.separacion_h,
     mercados_redes: Array.isArray(c.mercados_redes) && c.mercados_redes.length ? (c.mercados_redes as string[]).filter((x) => x in MERCADOS) : actual.mercados_redes,

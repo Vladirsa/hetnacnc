@@ -27,7 +27,7 @@ type Pub = {
   notas?: string | null
   puntajes?: Record<string, { puntaje: number; revisiones: { ok: boolean; texto: string; consejo?: string }[] }>
 }
-type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_nueva?: boolean; max_dia?: number; separacion_h?: number; mercados_redes?: string[] }
+type Config = { redes: string[]; automatico: Record<string, boolean>; horario: { desde: number; hasta: number }; retraso_min: number; piloto?: { activo: boolean; minimo: number; redes: string[] }; aviso_hora?: number; primer_comentario?: boolean; youtube_auto?: boolean; auto_respuestas?: boolean; video_animado?: boolean; imagen_nueva?: boolean; max_dia?: number; separacion_h?: number; mercados_redes?: string[]; borrar_medios_dias?: number }
 type Datos = { publicaciones: Pub[]; redes: RedInfo[]; config: Config; n8n: boolean; mercados?: { clave: string; nombre: string }[] }
 
 const C = {
@@ -1134,6 +1134,11 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         <input type="number" min={0} max={12} value={c.separacion_h ?? 3} onChange={(e) => setC({ ...c, separacion_h: Number(e.target.value) })} style={{ width: 56, padding: "2px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
         <span>horas (las historias no cuentan; muchas seguidas se ven como spam)</span>
       </div>
+      <div style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+        <span>Borrar del servidor las imágenes y videos generados para redes después de</span>
+        <input type="number" min={0} max={365} value={c.borrar_medios_dias ?? 30} onChange={(e) => setC({ ...c, borrar_medios_dias: Number(e.target.value) })} style={{ width: 64, padding: "2px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
+        <span>días (0 = nunca). Las redes guardan su copia; no toca fotos de productos ni archivos de talleres, ni lo que sigue pendiente.</span>
+      </div>
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={(c.mercados_redes || ["mx"]).length > 1} onChange={(e) => setC({ ...c, mercados_redes: e.target.checked ? ["mx", "us", "co"] : ["mx"] })} />
         Publicar también lo de otros mercados (EE. UU. en inglés, Colombia) en las cuentas de HETNA. Apagado: sólo México; lo demás queda en borrador.
@@ -1841,6 +1846,7 @@ function EstudioDiario() {
         <button type="button" style={boton("primario")} disabled={ocupado || !d.listo} onClick={() => void hacer()}>🎬 Hacer el de hoy ({d.toca_hoy})</button>
         <button type="button" style={boton("normal")} disabled={ocupado || !d.listo} onClick={() => void hacer(d.toca_hoy === "novela" ? "educativo" : "novela")}>Hacer uno {d.toca_hoy === "novela" ? "educativo" : "de novela"}</button>
         <button type="button" style={boton("normal")} onClick={() => void cargar()}>Actualizar</button>
+        <button type="button" style={boton("normal")} disabled={ocupado} title="Busca en el servidor los videos que se hicieron pero no se guardaron por un error" onClick={async () => { setOcupado(true); try { const r = await api({ accion: "recuperar" }); setNota({ ok: true, t: r.recuperados ? `✓ Recuperé ${r.recuperados} videos: ábrelos con "Ver video" y publícalos si te gustan.` : "No encontré videos perdidos." }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Recuperar videos</button>
       </div>
       <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
         {d.listo ? <span style={{ color: C.verde, fontWeight: 600 }}>Listo para trabajar</span> : <span style={{ color: C.rojo, fontWeight: 600 }}>Falta {d.falta} en el servidor</span>}
@@ -1856,6 +1862,7 @@ function EstudioDiario() {
               <span style={{ color: v.estado === "listo" ? C.verde : v.estado === "error" ? C.rojo : C.tenue, fontWeight: 600 }}>{v.estado === "listo" ? "Listo" : v.estado === "error" ? "Error" : "Haciendo…"}</span>
               <span style={{ color: C.tenue }}>{v.costo.toFixed(2)} USD</span>
               {v.video && <a href={v.video} target="_blank" rel="noreferrer">Ver video</a>}
+              {v.publicable && <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { const r = await api({ accion: "publicar", id: v.id }); setNota({ ok: true, t: r.estado === "programada" ? `✓ Programado para las ${r.hora}:00` : "✓ Quedó en Pendientes del Social Hub para que lo apruebes" }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Publicar</button>}
               {v.error && <span style={{ color: C.rojo, width: "100%" }}>{v.error}</span>}
             </div>
           ))}
