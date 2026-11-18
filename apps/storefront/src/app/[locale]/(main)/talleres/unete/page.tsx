@@ -9,6 +9,7 @@ import {
   RegistroTaller,
 } from "@/components/hetna/taller/ParaTalleres"
 import { AvisoReclamarPerfil } from "@/components/hetna/taller/AvisoReclamarPerfil"
+import { GuardarInvitacion } from "@/components/hetna/taller/GuardarInvitacion"
 import { ComparativaComisiones } from "@/components/hetna/taller/ComparativaComisiones"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -66,6 +67,7 @@ export default async function UneteTallerPage() {
     <main className="w-full bg-[#FAF9F6]">
       <Suspense fallback={null}>
         <AvisoReclamarPerfil />
+        <GuardarInvitacion />
       </Suspense>
       {/* Hero */}
       <section className="bg-[#142033] text-white">

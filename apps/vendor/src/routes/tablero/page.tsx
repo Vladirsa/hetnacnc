@@ -884,6 +884,95 @@ function AvisoAlta({ onEstado }: { onEstado?: (a: EstadoAlta | null) => void }) 
   )
 }
 
+// "Invita a otro taller" (packages/api/src/lib/referidos.ts). Además, si este
+// taller llegó por la liga de otro (cookie hetna_ref que guarda la tienda en
+// /talleres/unete?ref=...), lo liga una sola vez con quien lo invitó.
+type Referidos = {
+  liga: string | null
+  embajador: boolean
+  para_embajador: number
+  invitados: { nombre: string; estado: string; activo: boolean }[]
+}
+
+function InvitaTaller() {
+  const [d, setD] = useState<Referidos | null>(null)
+  const [copiado, setCopiado] = useState(false)
+
+  useEffect(() => {
+    const m = document.cookie.match(/(?:^|; )hetna_ref=([a-z0-9_-]{1,80})/)
+    const ligar = m
+      ? fetch("/vendor/hetna-referidos", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ref: m[1] }),
+        })
+          .catch(() => null)
+          .finally(() => {
+            document.cookie = "hetna_ref=; path=/; max-age=0"
+          })
+      : Promise.resolve(null)
+    ligar
+      .then(() => fetch("/vendor/hetna-referidos", { credentials: "include" }))
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setD)
+      .catch(() => setD(null))
+  }, [])
+
+  if (!d?.liga) return null
+  const mensaje = `Te invito a HETNA CNC, el marketplace de talleres CNC de México: llegan solicitudes de clientes y publicar es gratis. Regístrate aquí: ${d.liga}`
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(d.liga!)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      /* sin portapapeles */
+    }
+  }
+  const activos = d.invitados.filter((i) => i.activo).length
+  return (
+    <div style={{ ...S.card, background: "#EEF2FB", borderColor: "#C9DBF0" }}>
+      <p style={{ ...S.h2, color: "#1a3a5c" }}>
+        {d.embajador ? "🤝 Eres Taller embajador" : "🤝 Invita a otro taller"}
+      </p>
+      <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
+        {d.embajador
+          ? "Gracias por traer talleres de confianza. Tu perfil lleva la insignia y sales entre los primeros del directorio."
+          : `Cuando un taller que invites quede activo y publique, recibes la insignia de Taller embajador y sales entre los primeros del directorio. Entre más talleres, más clientes llegan a todos.`}
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <input readOnly value={d.liga} style={{ ...S.input, flex: "1 1 260px", minWidth: 0 }} onFocus={(e) => e.currentTarget.select()} />
+        <button type="button" style={S.btn} onClick={() => void copiar()}>
+          {copiado ? "¡Copiada!" : "Copiar liga"}
+        </button>
+        <a
+          style={{ ...S.btn, background: "#1E7B3A", textDecoration: "none", display: "inline-block" }}
+          href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Mandar por WhatsApp
+        </a>
+      </div>
+      {d.invitados.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <p style={S.etiqueta}>
+            Talleres que invitaste: {d.invitados.length} ({activos} {activos === 1 ? "activo" : "activos"})
+          </p>
+          <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
+            {d.invitados.slice(0, 10).map((i, n) => (
+              <li key={n}>
+                {i.nombre}: <span style={{ color: i.activo ? "#1E7B3A" : "#6B675C" }}>{i.estado}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------- pantalla
 
 // Avisos al celular del taller (packages/api/src/lib/push.ts): pedidos nuevos,
@@ -1158,6 +1247,8 @@ export default function TableroPage() {
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 
       <AvisosCelular />
+
+      <InvitaTaller />
 
       <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>
       <p style={S.sub}>Las gráficas y los conteos son de los últimos {v.ventana_dias} días.</p>

@@ -73,9 +73,9 @@ export default function DirectorioTalleres({
       if (orden === "nombre") return a.nombre.localeCompare(b.nombre, "es")
       const cal = (t: Taller) => (t.perfil.calificacion ?? 0) * Math.min(1, (t.perfil.resenas ?? 0) / 3)
       if (orden === "calificacion") return cal(b) - cal(a)
-      // Recomendados: verificados, con reseñas y con perfil completo primero
+      // Recomendados: verificados, embajadores, con reseñas y con perfil completo primero
       const puntos = (t: Taller) =>
-        (t.verificado ? 3 : 0) + cal(t) + (t.perfil.maquinas.length ? 1 : 0) + (t.perfil.galeria.length ? 1 : 0) + (t.fundador ? 0.5 : 0)
+        (t.verificado ? 3 : 0) + cal(t) + (t.perfil.maquinas.length ? 1 : 0) + (t.perfil.galeria.length ? 1 : 0) + (t.fundador ? 0.5 : 0) + (t.embajador ? 2 : 0)
       return puntos(b) - puntos(a)
     })
   }, [talleres, q, estado, servicio, material, maquina, areaMin, soloVerificados, orden])

@@ -1,10 +1,12 @@
 // Cada día: reenvía la liga de confirmar a talleres que no confirmaron su
 // correo (días 1, 3 y 7), felicita a quien publicó su primer producto y manda
-// al dueño por Telegram la lista de talleres a medio registro.
+// al dueño por Telegram la lista de talleres a medio registro. También da la
+// insignia de Taller embajador (lib/referidos.ts).
 // Ver lib/alta-recordatorios.ts
 import { MedusaContainer } from "@medusajs/framework/types"
 
 import { altaRecordatoriosApagado, correrAltaRecordatorios } from "../lib/alta-recordatorios"
+import { actualizarEmbajadores } from "../lib/referidos"
 
 export default async function altaRecordatoriosJob(container: MedusaContainer) {
   if (altaRecordatoriosApagado() || !process.env.RESEND_API_KEY) return
@@ -15,6 +17,12 @@ export default async function altaRecordatoriosJob(container: MedusaContainer) {
       logger.info(`[alta-recordatorios] confirmar ${r.confirmar}, felicitados ${r.felicitados}, fallidos ${r.fallidos}, atorados ${r.atorados.length}`)
   } catch (e) {
     logger.error(`[alta-recordatorios] falló la corrida: ${(e as Error).message}`)
+  }
+  try {
+    const e = await actualizarEmbajadores(container)
+    if (e.nuevos) logger.info(`[alta-recordatorios] talleres embajador nuevos: ${e.nuevos}`)
+  } catch (e) {
+    logger.error(`[alta-recordatorios] embajadores falló la corrida: ${(e as Error).message}`)
   }
 }
 
