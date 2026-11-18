@@ -63,10 +63,12 @@ export default async function CotizarPage({
     material?: string
     archivo?: string
     proceso?: string
+    // Desde la tienda: lo que se buscó y no había
+    descripcion?: string
   }>
 }) {
   const sp = await searchParams
-  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso } = sp
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion } = sp
   const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
   // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
   const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
@@ -98,7 +100,7 @@ export default async function CotizarPage({
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
+          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} descripcionInicial={typeof descripcion === "string" ? descripcion : undefined} prellenado={prellenado} />
 
           <aside className="grid content-start gap-4">
             <EjemploCotizacion />

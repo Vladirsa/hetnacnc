@@ -10,7 +10,7 @@ import type { Metadata } from "next"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { SearchProductsListing } from "@/components/sections/ProductListing/SearchProductsListing"
 import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
-import { notFound, permanentRedirect, redirect } from "next/navigation"
+import { permanentRedirect, redirect } from "next/navigation"
 import ServicioCategoria, { esCategoriaServicio } from "@/components/hetna/servicios/ServicioCategoria"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import isBot from "@/lib/helpers/isBot"
@@ -128,7 +128,8 @@ async function Category({
     // Router CNC): mientras se crea, se manda a la más cercana.
     const alias = ALIAS_CATEGORIA[categoryHandle]
     if (alias) redirect(`/${locale}/categories/${alias}`)
-    return notFound()
+    // Ninguna categoría da 404: la que no existe manda a la tienda
+    redirect(`/${locale}/tienda`)
   }
 
   // Include the whole category subtree so a parent department page lists every
