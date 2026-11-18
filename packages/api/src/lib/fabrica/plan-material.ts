@@ -25,6 +25,7 @@ import { laminaEstilo, miniaturaEstilo, poster } from "./poster"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 import { modeloIA } from "../ia-modelo"
 import { limpiarTextoRed } from "../limpiar-texto"
+import { posterPro } from "./poster-pro"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
 
@@ -162,6 +163,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   const cfgFab = await leerConfig(knex)
   const animado = !!cfgFab.video_animado && hfDisponible()
   const imagenNueva = cfgFab.imagen_nueva !== false
+  const imagenPro = (await leerConfig(knex)).imagen_pro !== false
   let filas = await knex(`${T_PLAN} as h`)
     .join(`${T_POST} as p`, "p.id", "h.post_id")
     .whereNull("h.material")
@@ -298,6 +300,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
         const titulo = gancho || palabras(f.pilar, 9)
         const fondoFoto = await foto()
         const png =
+          (imagenPro && (await posterPro({ texto, titulo, formato: "4:5" }, logger))?.png) ||
           (imagenNueva &&
             (await poster({ tema: temaPara(f.id, !!fondoFoto, { publico: f.publico, fecha: f.programada_para ? new Date(f.programada_para) : new Date(f.fecha) }), fondo: fondoFoto, cinta: t.cinta, titulo, icono: iconoPara(`${titulo} ${f.pilar}`), cta: t.cta, liga, ...(f.red === "instagram" ? { liga_texto: t.perfil } : {}) }, logger))) ||
           (await tarjeta({ tema, foto_url: fondoFoto, cinta: { texto: t.cinta }, titulo, cta: t.cta, liga, ...(f.red === "instagram" ? { liga_texto: t.perfil } : {}) }))

@@ -58,3 +58,14 @@ describe("edición del Estudio", () => {
     expect(b[1].fin).toBeCloseTo(3)
   })
 })
+
+import { htmlPro } from "../fabrica/poster-pro"
+describe("imagen pro", () => {
+  it("arma el diseño con logo, título en dos colores y barra con web y WhatsApp", () => {
+    const h = htmlPro({ linea1: "MAQUINADO CNC", linea2: "DE PRECISIÓN", sub: "Piezas exactas", foto: "" }, { alto: 1920, whatsapp: "+52 221 707 6014" })
+    expect(h).toContain("MAQUINADO CNC")
+    expect(h).toContain("DE PRECISIÓN")
+    expect(h).toContain("logo.png")
+    expect(h).toContain("WhatsApp: +52 221 707 6014")
+  })
+})

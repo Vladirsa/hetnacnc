@@ -18,6 +18,7 @@ import { VOZ, correr, idiomaDe, ligasB2, runpodListo } from "./runpod"
 import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
 import { laminaEstilo, poster } from "./poster"
+import { posterPro } from "./poster-pro"
 import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 
 export const T_PROMO = "hetna_promo"
@@ -247,6 +248,8 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
     // Estilo nuevo (fondos de tema, como los videos); si no se puede, la tarjeta de siempre
     const cfgImg = await leerConfig(knex)
     const png =
+      // Imagen pro (foto con IA) para herramientas, Cotizador y blog; los productos llevan su foto real
+      (cfgImg.imagen_pro !== false && d.tipo !== "producto" && (await posterPro({ texto: d.texto, titulo: d.titulo, formato: "4:5" }, logger))?.png) ||
       (cfgImg.imagen_nueva !== false &&
         (await poster({ tema: temaPara(p1), cinta: d.cinta, titulo: palabras(d.titulo, 10), foto: d.producto_url || d.fotos.find((u) => u) || null, icono: iconoPara(`${d.titulo} ${d.gancho}`), cta: d.cta, liga: liga1 }, logger))) ||
       (await tarjeta({ tema: d.tema, foto_url: d.producto_url ? await fondoDe(knex, d.tema) : d.fotos[0] || (await fondoDe(knex, d.tema)), producto_url: d.producto_url || null, cinta: { texto: d.cinta, tono: d.tipo === "producto" ? "verde" : "naranja" }, titulo: palabras(d.titulo, 10), cta: d.cta, liga: liga1 }))
