@@ -83,7 +83,7 @@ const Ligero = () => (
         </LocalizedClientLink>
       ))}
     </div>
-    <LocalizedClientLink href="/categories" className={ENLACE_SIMPLE}>Categorías</LocalizedClientLink>
+    <LocalizedClientLink href="/tienda" className={ENLACE_SIMPLE}>Tienda</LocalizedClientLink>
     <LocalizedClientLink href="/fabricacion" className={ENLACE_SIMPLE}>Fabricación</LocalizedClientLink>
     <LocalizedClientLink href="/herramientas-cnc" className={ENLACE_SIMPLE}>Herramientas CNC</LocalizedClientLink>
     <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>Talleres</LocalizedClientLink>
@@ -110,7 +110,7 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
           <Flecha />
         </summary>
         <div className="border-b border-[#E7E4DC]">
-          <LocalizedClientLink href="/categories" className="block px-4 py-3 text-[14px] font-bold text-[#B34D07]">
+          <LocalizedClientLink href="/tienda" className="block px-4 py-3 text-[14px] font-bold text-[#B34D07]">
             Ver todo el catálogo
           </LocalizedClientLink>
           {arbol.map((c) => (
@@ -120,7 +120,7 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
       </details>
     ) : (
       // Catálogo honesto: sin categorías con productos, liga directa a la tienda
-      <LocalizedClientLink href="/categories" className={ENLACE_SIMPLE}>
+      <LocalizedClientLink href="/tienda" className={ENLACE_SIMPLE}>
         Todos los productos
       </LocalizedClientLink>
     )}

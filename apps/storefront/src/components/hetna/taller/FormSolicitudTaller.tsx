@@ -85,6 +85,7 @@ export default function FormSolicitudTaller({
   nombreTaller,
   servicioInicial,
   necesidadInicial,
+  descripcionInicial,
   prellenado,
   alEnviar,
 }: {
@@ -92,6 +93,8 @@ export default function FormSolicitudTaller({
   nombreTaller?: string
   servicioInicial?: string
   necesidadInicial?: string
+  /** Texto con el que empieza "Comentarios" (p. ej. lo que se buscó en la tienda sin resultados). */
+  descripcionInicial?: string
   prellenado?: Prellenado
   /** Se llama cuando la solicitud quedó registrada (p. ej. el directorio avisa a la empresa). */
   alEnviar?: (d: { folio: string; servicio: string; material: string; cantidad: string; ciudad: string; estado_mx: string }) => void
@@ -515,6 +518,8 @@ export default function FormSolicitudTaller({
                   ? prellenado.descripcion
                   : prellenado
                   ? `Pieza diseñada con las herramientas de HETNA: ${prellenado.pieza}${prellenado.medidas ? `, ${prellenado.medidas}` : ""}${prellenado.material ? `, en ${prellenado.material}` : ""}. El archivo de corte va adjunto; sólo necesito que la corten.`
+                  : descripcionInicial
+                  ? `Busco: ${descripcionInicial.slice(0, 200)}. `
                   : undefined
               }
               className="w-full rounded-xl border border-[#E7E4DC] bg-white p-3 text-sm text-[#142033] outline-none focus:border-[#C2560A]"
