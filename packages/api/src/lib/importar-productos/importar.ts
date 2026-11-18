@@ -28,7 +28,7 @@ import { normalizar, type Lectura, type Problema, type ProductoImport } from "./
 // ── Planeación (pura: se prueba sin base) ────────────────────────────────
 
 export type Categoria = { id: string; name: string; handle: string; parent_category_id: string | null; is_active?: boolean; is_internal?: boolean }
-export type Existente = { id: string; handle: string; metadata?: Record<string, unknown> | null; variants: { id: string; sku: string | null }[] }
+export type Existente = { id: string; handle: string; variants: { id: string; sku: string | null }[] }
 export type Paso = {
   producto: ProductoImport
   accion: "crear" | "actualizar"
@@ -113,13 +113,12 @@ export function medidasProducto(p: ProductoImport) {
 }
 
 /**
- * Metadata del producto. Al actualizar se parte de la que ya tiene: una celda
- * vacía no borra lo que había (marca, SEO, código de barras…) ni las llaves que
- * pusieron otros flujos.
+ * Metadata del producto: sólo las llaves con valor. Medusa mezcla la metadata al
+ * actualizar (mergeMetadata), así que lo que no se manda se queda como estaba;
+ * mandar "" sí borraría, por eso las celdas vacías no se mandan.
  */
-export function metadataProducto(p: ProductoImport, previa: Record<string, unknown> = {}) {
+export function metadataProducto(p: ProductoImport) {
   return {
-    ...previa,
     importado: true,
     ...(p.marca ? { marca: p.marca } : {}),
     ...(p.condicion ? { condicion: p.condicion } : {}),
@@ -214,8 +213,8 @@ export async function revisar(container: MedusaContainer, lectura: Lectura): Pro
   const skus = lectura.productos.flatMap((p) => p.variantes.map((v) => v.sku))
   const existentes = new Map<string, Existente>()
   if (handles.length) {
-    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "metadata", "variants.id", "variants.sku"], filters: { handle: handles } })
-    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, metadata: p.metadata, variants: p.variants || [] })
+    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "variants.id", "variants.sku"], filters: { handle: handles } })
+    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, variants: p.variants || [] })
   }
   const skuEnProducto = new Map<string, string>()
   if (skus.length) {
@@ -225,8 +224,8 @@ export async function revisar(container: MedusaContainer, lectura: Lectura): Pro
   // Productos dueños de esos SKU (para reconocer un producto al que le cambiaron el nombre)
   const faltan = [...new Set(skuEnProducto.values())].filter((h) => !existentes.has(h))
   if (faltan.length) {
-    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "metadata", "variants.id", "variants.sku"], filters: { handle: faltan } })
-    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, metadata: p.metadata, variants: p.variants || [] })
+    const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "variants.id", "variants.sku"], filters: { handle: faltan } })
+    for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, variants: p.variants || [] })
   }
   return planear(lectura, cats, existentes, skuEnProducto)
 }
@@ -321,7 +320,7 @@ export async function importar(container: MedusaContainer, plan: Plan): Promise<
               ...(imagenes.length ? { thumbnail: imagenes[0], images: imagenes.map((url) => ({ url })) } : {}),
               ...(tagIds.length ? { tag_ids: tagIds } : {}),
               ...medidasProducto(p),
-              metadata: metadataProducto(p, paso.existente!.metadata || {}),
+              metadata: metadataProducto(p),
             } as any,
           },
         })

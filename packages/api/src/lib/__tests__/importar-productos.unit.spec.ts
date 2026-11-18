@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs"
 
-import { COLUMNAS, HOJA, leerPlantilla, numero, plantillaProductos } from "../importar-productos/plantilla"
+import { COLUMNAS, HOJA, gtinDe, gtinValido, leerPlantilla, numero, plantillaProductos } from "../importar-productos/plantilla"
 import { entradaCrear, metadataProducto, planear, preciosOferta, resolverCategoria, type Categoria } from "../importar-productos/importar"
 
 type Fila = Partial<Record<(typeof COLUMNAS)[number]["clave"], unknown>>
@@ -138,13 +138,20 @@ describe("Planeación contra la tienda", () => {
   })
   it("lee condición, código de barras y número de parte para Google Shopping", async () => {
     const r = await leerPlantilla(await archivo([
-      { ...base, nombre: "Husillo usado 2.2 kW", sku: "HUS-1", condicion: "Usado", gtin: "7501234567890", mpn: "GDZ-80-2.2" },
+      { ...base, nombre: "Husillo usado 2.2 kW", sku: "HUS-1", condicion: "Usado", gtin: "7501234567893", mpn: "GDZ-80-2.2" },
       { ...base, nombre: "Fresa X", sku: "FX-1", gtin: "12345", condicion: "roto" },
+      { ...base, nombre: "Fresa Y", sku: "FY-1", gtin: "7501234567891" },
+      { ...base, agrupador: "fz", nombre: "Fresa Z", variante: "Diámetro", valor: "3 mm", sku: "FZ-3", gtin: "7501234567893" },
+      { ...base, agrupador: "fz", nombre: "Fresa Z", variante: "Diámetro", valor: "6 mm", sku: "FZ-6", gtin: "4006381333931" },
     ]))
-    expect(r.errores.map((e) => e.columna)).toEqual(["Condición", "Código de barras (GTIN)"])
+    expect(r.errores.map((e) => [e.fila, e.columna])).toEqual([
+      [3, "Condición"], [3, "Código de barras (GTIN)"], // no es número de 8/12/13/14
+      [4, "Código de barras (GTIN)"], // dígito verificador mal
+      [5, "Código de barras (GTIN)"], // dos medidas con códigos distintos
+    ])
     const [h] = r.productos
-    expect([h.condicion, h.gtin, h.mpn]).toEqual(["used", "7501234567890", "GDZ-80-2.2"])
-    expect(metadataProducto(h)).toMatchObject({ condicion: "used", gtin: "7501234567890", mpn: "GDZ-80-2.2" })
+    expect([h.condicion, h.gtin, h.mpn]).toEqual(["used", "7501234567893", "GDZ-80-2.2"])
+    expect(metadataProducto(h)).toMatchObject({ condicion: "used", gtin: "7501234567893", mpn: "GDZ-80-2.2" })
   })
 
   it("al actualizar, las celdas vacías no borran lo que ya tenía el producto", async () => {
@@ -152,9 +159,19 @@ describe("Planeación contra la tienda", () => {
     const p = lectura.productos[0]
     expect(p.estado).toBeNull()
     expect(p.descripcion).toBe("")
-    const previa = { marca: "Mobil", seo_title: "Aceite", gtin: "7501234567890", seller_id: "sel_1" }
-    expect(metadataProducto(p, previa)).toEqual({ ...previa, importado: true })
+    // Sólo llaves con valor: Medusa mezcla la metadata, lo que no se manda se queda
+    expect(metadataProducto(p)).toEqual({ importado: true })
     // Nuevo sin Estado: se publica
     expect(entradaCrear(p, { categoria_id: "c2", perfil_id: "sp", canales: [], tag_ids: [], imagenes: [] }).status).toBe("published")
+  })
+
+  it("código de barras: dígito verificador y ceros que Excel quitó", () => {
+    expect(gtinValido("7501234567893")).toBe(true)
+    expect(gtinValido("4006381333931")).toBe(true)
+    expect(gtinValido("00000000")).toBe(false)
+    expect(gtinDe("750-1234-567893")).toBe("7501234567893")
+    expect(gtinDe(12345678905)).toBe("012345678905") // UPC-A con cero al inicio, leído como número
+    expect(gtinDe("12345678905")).toBeNull() // como texto no se adivina
+    expect(gtinDe("")).toBeUndefined()
   })
 })

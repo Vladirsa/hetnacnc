@@ -76,9 +76,9 @@ export const PRESENTACION = "Presentación"
 export const UNICA = "Única"
 
 const EJEMPLOS: Partial<Record<Clave, string | number>>[] = [
-  { agrupador: "fresa-recta-2-filos", condicion: "nuevo", mpn: "FR2F-3175", nombre: "Fresa recta de carburo 2 filos para router CNC", descripcion: "Fresa de carburo sólido para MDF, triplay y acrílico.\n- Zanco de 1/4\"\n- Recubrimiento TiAlN", categoria: "Fresas", marca: "HETNA", variante: "Diámetro", valor: "3.175 mm", sku: "FR2F-3175", precio: 189, existencias: 25, peso: 0.05, largo: 12, ancho: 4, alto: 2, imagenes: "https://ejemplo.com/fresa-3175.jpg", estado: "publicado", seo_titulo: "Fresa recta 2 filos carburo para router CNC", seo_descripcion: "Fresa de carburo sólido de 2 filos para MDF, triplay y acrílico. Envío a todo México.", etiquetas: "fresa, carburo, router" },
+  { agrupador: "fresa-recta-2-filos", condicion: "nuevo", nombre: "Fresa recta de carburo 2 filos para router CNC", descripcion: "Fresa de carburo sólido para MDF, triplay y acrílico.\n- Zanco de 1/4\"\n- Recubrimiento TiAlN", categoria: "Fresas", marca: "HETNA", variante: "Diámetro", valor: "3.175 mm", sku: "FR2F-3175", precio: 189, existencias: 25, peso: 0.05, largo: 12, ancho: 4, alto: 2, imagenes: "https://ejemplo.com/fresa-3175.jpg", estado: "publicado", seo_titulo: "Fresa recta 2 filos carburo para router CNC", seo_descripcion: "Fresa de carburo sólido de 2 filos para MDF, triplay y acrílico. Envío a todo México.", etiquetas: "fresa, carburo, router" },
   { agrupador: "fresa-recta-2-filos", nombre: "Fresa recta de carburo 2 filos para router CNC", categoria: "Fresas", variante: "Diámetro", valor: "6 mm", sku: "FR2F-6", precio: 249, existencias: 15, peso: 0.06, largo: 12, ancho: 4, alto: 2 },
-  { nombre: "Aceite soluble para corte CNC 1 L", descripcion: "Refrigerante soluble para maquinado de aluminio y acero.", categoria: "Consumibles", marca: "HETNA", sku: "REF-1L", precio: 320, existencias: 40, peso: 1.1, largo: 10, ancho: 10, alto: 25, imagenes: "https://ejemplo.com/refrigerante.jpg" },
+  { nombre: "Aceite soluble para corte CNC 1 L", condicion: "nuevo", gtin: "7501031311309", mpn: "REF-SOL-1L", descripcion: "Refrigerante soluble para maquinado de aluminio y acero.", categoria: "Consumibles", marca: "HETNA", sku: "REF-1L", precio: 320, existencias: 40, peso: 1.1, largo: 10, ancho: 10, alto: 25, imagenes: "https://ejemplo.com/refrigerante.jpg" },
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Negro", sku: "PLA-175-NEG", precio: 379, existencias: 30, peso: 1.3, largo: 21, ancho: 21, alto: 8, estado: "borrador" },
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Blanco", sku: "PLA-175-BLA", precio: 379, existencias: 0, peso: 1.3, largo: 21, ancho: 21, alto: 8 },
 ]
@@ -92,6 +92,8 @@ function encabezado(ws: ExcelJS.Worksheet) {
   f.height = 32
   ws.views = [{ state: "frozen", ySplit: 1 }]
   COLUMNAS.forEach((c, i) => { f.getCell(i + 1).note = c.ayuda })
+  // Como texto, para que Excel no le quite los ceros del inicio al código de barras
+  ws.getColumn(COLUMNAS.findIndex((c) => c.clave === "gtin") + 1).numFmt = "@"
 }
 
 /** La plantilla: hoja "Productos" vacía para llenar, "Ejemplos" (no se importa) e "Instrucciones". */
@@ -116,8 +118,9 @@ export async function plantillaProductos(categorias: string[] = []): Promise<Buf
     ["3.", "Las columnas con * son obligatorias. Precio: el final con IVA incluido (la tienda no le suma IVA)."],
     ["4.", "Peso y medidas son del paquete ya empacado: con eso se cotiza el envío."],
     ["5.", "Al subir el archivo primero se revisa todo y ves los errores renglón por renglón. Nada se publica hasta que confirmas."],
-    ["6.", "Si vuelves a subir un producto con el mismo Agrupador, se actualiza (nombre, descripción, precio, existencias…), no se duplica."],
-    ["7.", "Las fotos se copian a la tienda desde las ligas que pongas. Usa ligas directas a la imagen (terminan en .jpg, .png o .webp)."],
+    ["6.", "Si vuelves a subir un producto con el mismo Agrupador, se actualiza (nombre, descripción, precio, existencias…), no se duplica. Las celdas que dejes vacías se quedan como estaban; para borrar un dato (marca, código de barras, SEO…) hazlo en el panel."],
+    ["7.", "Código de barras y número de parte: si el producto tiene varias medidas o colores, cada una tiene el suyo. Déjalos vacíos o sube cada medida como producto aparte (sin Agrupador)."],
+    ["8.", "Las fotos se copian a la tienda desde las ligas que pongas. Usa ligas directas a la imagen (terminan en .jpg, .png o .webp)."],
   ]) ins.addRow(linea)
   ins.addRow([])
   ins.addRow(["Columna", "Qué poner"]).font = { bold: true }
@@ -170,6 +173,35 @@ const CONDICIONES: Record<string, "new" | "used" | "refurbished"> = {
   nuevo: "new", nueva: "new", new: "new",
   usado: "used", usada: "used", seminuevo: "used", used: "used",
   reacondicionado: "refurbished", reacondicionada: "refurbished", refurbished: "refurbished",
+}
+/** undefined = vacía; null = no se entiende. */
+export function condicionDe(v: unknown): "new" | "used" | "refurbished" | null | undefined {
+  const n = normalizar(texto(v))
+  return n ? CONDICIONES[n] || null : undefined
+}
+
+/** Dígito verificador GS1 (módulo 10): descarta códigos mal copiados. */
+export function gtinValido(d: string): boolean {
+  if (!/^\d{8}$|^\d{12,14}$/.test(d) || /^0+$/.test(d)) return false
+  let suma = 0
+  for (let i = d.length - 2, peso = 3; i >= 0; i--, peso = 4 - peso) suma += Number(d[i]) * peso
+  return (10 - (suma % 10)) % 10 === Number(d[d.length - 1])
+}
+
+/**
+ * Código de barras de la celda. Si Excel lo guardó como número y le quitó los
+ * ceros del inicio, se le regresan hasta el largo válido que cuadre.
+ * undefined = vacía; null = no es un código válido.
+ */
+export function gtinDe(v: unknown): string | null | undefined {
+  const crudo = valorCelda(v)
+  const d = texto(crudo).replace(/[\s-]/g, "")
+  if (!d) return undefined
+  if (gtinValido(d)) return d
+  if (typeof crudo === "number" && /^\d+$/.test(d)) {
+    for (const largo of [8, 12, 13, 14]) if (largo > d.length && gtinValido(d.padStart(largo, "0"))) return d.padStart(largo, "0")
+  }
+  return null
 }
 
 /** Lee el Excel lleno: agrupa en productos y revisa cada renglón (sin tocar la base). */
@@ -244,10 +276,8 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
     }
     const est = normalizar(texto(r.estado))
     if (est && !["publicado", "borrador", "published", "draft"].includes(est)) err(f, "estado", 'Escribe "publicado" o "borrador".')
-    const cond = normalizar(texto(r.condicion))
-    if (cond && !CONDICIONES[cond]) err(f, "condicion", 'Escribe "nuevo", "usado" o "reacondicionado".')
-    const gtin = texto(r.gtin).replace(/[\s-]/g, "")
-    if (gtin && !/^\d{8}$|^\d{12,14}$/.test(gtin)) err(f, "gtin", "El código de barras son 8, 12, 13 o 14 dígitos (sólo números).")
+    if (condicionDe(r.condicion) === null) err(f, "condicion", 'Escribe "nuevo", "usado" o "reacondicionado".')
+    if (gtinDe(r.gtin) === null) err(f, "gtin", "Código de barras no válido: son 8, 12, 13 o 14 dígitos y el último debe cuadrar. Cópialo tal cual de la etiqueta.")
     if (texto(r.mpn).length > 70) err(f, "mpn", "El número de parte no puede pasar de 70 letras.")
     const agrupador = texto(r.agrupador)
     if (agrupador && !slug(agrupador)) err(f, "agrupador", "El agrupador debe tener letras o números.")
@@ -267,7 +297,7 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
     for (const r of filas) {
       if (r !== p0) {
         if (texto(r.variante) && normalizar(texto(r.variante)) !== normalizar(opcionTxt)) err(r._fila, "variante", `En el mismo producto la variante debe ser igual a la del renglón ${p0._fila} ("${opcionTxt}").`)
-        for (const c of ["nombre", "categoria", "descripcion", "imagenes", "marca", "condicion", "gtin", "mpn"] as Clave[]) {
+        for (const c of ["nombre", "categoria", "descripcion", "imagenes", "marca", "condicion"] as Clave[]) {
           const a = texto(p0[c]), b = texto(r[c])
           if (b && a && normalizar(a) !== normalizar(b)) avisos.push({ fila: r._fila, columna: COLUMNAS.find((x) => x.clave === c)!.titulo, mensaje: `Distinto al renglón ${p0._fila}; se usa el del renglón ${p0._fila} para todo el producto.` })
         }
@@ -277,6 +307,13 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
         if (!v) err(r._fila, "valor", "Falta el valor de la variante (ej. 6 mm, Negro).")
         else if (valores.has(normalizar(v))) err(r._fila, "valor", `Valor repetido en el mismo producto (renglón ${valores.get(normalizar(v))}).`)
         else valores.set(normalizar(v), r._fila)
+      }
+    }
+    // Código de barras y número de parte van por producto: con varias medidas sólo
+    // valen si son el mismo para todas (Google rechaza un código con el precio de otra medida)
+    for (const c of ["gtin", "mpn"] as Clave[]) {
+      if (varios && new Set(filas.map((r) => normalizar(texto(r[c])))).size > 1) {
+        err(p0._fila, c, "Este producto tiene varias medidas o colores y cada una trae su propio código. Déjalo vacío o sube cada medida como producto aparte (sin Agrupador).")
       }
     }
     const handle = slug(texto(p0.agrupador) || texto(p0.nombre)) || "producto"
@@ -293,8 +330,8 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
       descripcion: texto(p0.descripcion),
       categoria: texto(p0.categoria),
       marca: texto(p0.marca) || null,
-      condicion: CONDICIONES[normalizar(texto(p0.condicion))] || null,
-      gtin: /^\d{8}$|^\d{12,14}$/.test(texto(p0.gtin).replace(/[\s-]/g, "")) ? texto(p0.gtin).replace(/[\s-]/g, "") : null,
+      condicion: condicionDe(p0.condicion) || null,
+      gtin: gtinDe(p0.gtin) || null,
       mpn: texto(p0.mpn).slice(0, 70) || null,
       opcion: opcionTxt || PRESENTACION,
       imagenes: texto(p0.imagenes).split(",").map((x) => x.trim()).filter((u) => URL_OK.test(u)).slice(0, 10),
