@@ -93,7 +93,10 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
         return
       }
       const extra = etapa === "cerrada" || etapa === "cancelada" ? { estado: "cerrada", disputa: null, disputa_detalle: null } : undefined
-      await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: nota || undefined, visibleCliente: !interna, extra, logger })
+      // El cambio de etapa siempre queda a la vista (la liga del cliente y el
+      // expediente necesitan su fecha); lo que se esconde es sólo la nota interna.
+      await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: interna ? undefined : nota || undefined, extra, logger })
+      if (interna && nota) await anotar(knex, s.id, "hetna", nota, false)
       return res.json({ ok: true })
     }
     case "nota": {

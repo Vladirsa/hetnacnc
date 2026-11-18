@@ -38,6 +38,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
   if (accion === "cobrar") {
     const r = await cobrarSobrepeso(knex, s, logger)
+    if ("cambio" in r) return res.status(409).json({ message: "El sobrepeso cambió mientras tanto. Recarga la página." })
     return res.json({ ok: true, ...r })
   }
   const estado = DESTINO[accion]

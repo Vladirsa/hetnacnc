@@ -167,8 +167,12 @@ export async function marcarEntregado(c: MedusaContainer, orderId: string, por: 
   await registrarVenta(c, orderId).catch(() => false)
   const ahora = new Date()
   const libera = new Date(ahora.getTime() + diasLiberacion() * 24 * 60 * 60 * 1000)
+  // También se anota en un pedido retenido (no lo libera: liberarVencidos sólo
+  // toma los pendientes). Así, al quitar la retención la cuenta ya trae su fecha
+  // y el dinero del taller no se queda atorado sin plazo.
   return knex(T_SALDO)
-    .where({ order_id: orderId, estado: "pendiente" })
+    .where({ order_id: orderId })
+    .whereIn("estado", ["pendiente", "retenido"])
     .whereNull("entregado_en")
     .update({ entregado_en: ahora, entregado_por: por, disponible_en: libera, actualizado: knex.fn.now() })
 }
@@ -336,10 +340,10 @@ export async function cambiarSobrepesoConSaldo(knex: any, s: any, accion: string
   if (!d || d.tipo === "nada" || d.tipo === "bloqueado") return d
   if (d.tipo === "descontar") {
     await knex.transaction(async (trx: any) => {
-      // Condicionado al estado: dos clics casi juntos sólo descuentan una vez
+      // Condicionado al estado que se leyó: dos clics casi juntos sólo descuentan
+      // una vez, y no se pisa un "anulado" o "en disputa" puesto mientras tanto
       const n = await trx(T_SOBREPESO)
-        .where({ id: s.id })
-        .whereNotIn("estado", ["descontado", "pagado"])
+        .where({ id: s.id, estado: s.estado })
         .update({ estado: "descontado", updated_at: trx.fn.now() })
       if (n) await trx(T_SALDO).insert(filaAjusteSobrepeso(s)).onConflict("order_id").ignore()
     })

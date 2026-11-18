@@ -92,8 +92,12 @@ export default async function centroControlAvisos(container) {
     const d = await calcularCentroControl(container, { dias: 1 })
     const urgentes = d.avisos.filter((a) => a.nivel === "rojo")
     // También cuenta como enviado lo anotado con la clave anterior (título exacto), para no repetir todo al cambiar de formato
-    const ya = new Set((await knex(T).whereIn("clave", [...urgentes.map(clave), ...urgentes.map(claveAvisoAnterior)]).select("clave")).map((f) => f.clave))
-    const nuevos = urgentes.filter((a) => !ya.has(clave(a)) && !ya.has(claveAvisoAnterior(a)))
+    // La clave anterior sólo vale para los avisos sin clave propia: con ella, todas las
+    // reseñas malas compartían una sola clave y una ya avisada tapaba a las nuevas
+    const anterior = (a) => (a.clave ? clave(a) : claveAvisoAnterior(a))
+    const vigentes = [...new Set([...urgentes.map(clave), ...urgentes.map(anterior)])]
+    const ya = new Set((await knex(T).whereIn("clave", vigentes).select("clave")).map((f) => f.clave))
+    const nuevos = urgentes.filter((a) => !ya.has(clave(a)) && !ya.has(anterior(a)))
 
     if (manana && conCorreo && para.length) {
       const { asunto, html } = correoCentroControl(d)
@@ -121,8 +125,8 @@ export default async function centroControlAvisos(container) {
 <h2 style="margin:0 0 10px;color:#B42318">Atiende esto hoy</h2>
 ${nuevos
   .map(
-    (a) => `<p style="margin:0 0 12px"><b>${a.titulo}</b><br><span style="color:#555;font-size:13px">${a.detalle || ""}</span>${
-      a.url ? `<br><a href="${a.url}" style="color:#C2560A;font-size:13px">Abrir</a>` : ""
+    (a) => `<p style="margin:0 0 12px"><b>${esc(a.titulo)}</b><br><span style="color:#555;font-size:13px">${esc(a.detalle || "")}</span>${
+      a.url ? `<br><a href="${esc(a.url)}" style="color:#C2560A;font-size:13px">Abrir</a>` : ""
     }</p>`
   )
   .join("")}
@@ -149,6 +153,9 @@ ${nuevos
     }
 
     if (nuevos.length) await knex(T).insert(nuevos.map((a) => ({ clave: clave(a) }))).onConflict("clave").ignore()
+    // Lo que ya no está urgente se olvida: si vuelve a pasar (un servicio que se
+    // recargó y se acaba otra vez), se avisa de nuevo
+    await knex(T).whereNotIn("clave", vigentes.length ? vigentes : [""]).del()
     // Lo de hace más de 30 días se puede volver a avisar si sigue igual
     await knex(T).where("enviado", "<", new Date(Date.now() - 30 * 86_400_000)).del()
     logger.info(`[centro-control] ${manana ? "resumen de la mañana" : "revisión"}: ${urgentes.length} urgentes, ${nuevos.length} nuevos`)
@@ -156,6 +163,10 @@ ${nuevos
     logger.error(`[centro-control] avisos: ${e?.message || e}`)
   }
 }
+
+// Los títulos y detalles traen texto de fuera (nombre de un taller, una reseña):
+// se escapan para que no puedan meter HTML ni ligas en el correo del dueño
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
 
 export const config = {
   name: "centro-control-avisos",
