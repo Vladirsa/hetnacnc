@@ -192,7 +192,7 @@ const ESQUEMA = {
       items: {
         type: "object", additionalProperties: false, required: ["narracion", "toma", "personajes"],
         properties: {
-          narracion: S("lo que dice la voz en esta escena, 6 a 18 palabras"),
+          narracion: S("lo que dice la voz en esta escena: 5 a 12 palabras, una sola idea, frase corta y hablada"),
           toma: S("descripción VISUAL de la toma en inglés para la IA de video: qué se ve, acción, encuadre. Sin texto ni letreros en pantalla."),
           personajes: { type: "array", items: S("nombre exacto del personaje que aparece") },
         },
@@ -215,7 +215,7 @@ export async function guionista(knex: any, tipo: "educativo" | "novela") {
   const ideas = await require("./estudio-datos").ideasParaGuion(knex).catch(() => ({ tendencias: [], referencias: [] }))
   const sistema =
     "Eres el guionista de videos cortos verticales de HETNA CNC (marketplace mexicano de fabricación CNC: tienda, talleres que cotizan piezas, Cotizador para talleres, herramientas 3D). " +
-    "Escribe en español de México, natural y hablado. Duración total 25 a 40 segundos: de 5 a 7 escenas.\n\n" +
+    "Escribe en español de México, natural y hablado, con ritmo rápido de Shorts. Duración total 20 a 32 segundos: de 6 a 9 escenas cortas (2 a 4 segundos cada una).\n\n" +
     "REGLA DE ORO: el primer segundo atrapa. La escena 1 abre con el gancho (sin saludos, sin «hola», sin «en este video»). Cada escena deja una pregunta abierta para que sigan viendo.\n" +
     "Enseña algo útil y verdadero de CNC, corte láser, router, plasma, impresión 3D, materiales, costos o cómo cobrar en un taller. Nunca inventes datos técnicos dudosos, precios, clientes ni testimonios.\n" +
     "MARKETING: cada video vende UNA oferta concreta de HETNA que se conecte con el tema (la de hoy: " + ofertaDelDia() + "). Presenta el problema, enseña algo útil y muestra cómo esa oferta lo resuelve con su beneficio real. La última escena es la llamada a la acción a esa oferta (con hetnacnc.com). Nada de anuncio aburrido: que se sienta como un consejo de un experto que además tiene la herramienta.\n\n" +
@@ -300,25 +300,81 @@ async function bajar(url: string, archivo: string) {
 }
 
 /** ASS: subtítulos karaoke + el gancho grande arriba en el primer segundo y la CTA al final. */
-export function assEstudio(subs: { texto: string; inicio: number; fin: number }[], gancho: string, cta: { texto: string; inicio: number; fin: number }) {
-  const base = assKaraoke(subs)
-  const estilo = "Style: Gancho,Archivo ExtraBold,118,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,-1,0,0,0,100,100,0,0,3,0,0,8,70,70,260,1"
-  const t = (s: number) => { const cs = Math.round(s * 100); return `0:${String(Math.floor(cs / 6000)).padStart(2, "0")}:${String(Math.floor((cs % 6000) / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}` }
-  const limpio = (x: string) => String(x || "").replace(/[{}\\\n]/g, " ").trim()
-  return base.replace(/(Style: Sub,[^\n]*\n)/, `$1${estilo}\n`) +
-    `Dialogue: 1,${t(0)},${t(1.9)},Gancho,,0,0,0,,{\\fad(0,200)\\c&H005FA2F2&}${limpio(gancho).toUpperCase()}\n` +
-    `Dialogue: 1,${t(cta.inicio)},${t(cta.fin)},Gancho,,0,0,0,,{\\fad(200,0)}${limpio(cta.texto)}\\N{\\fs80\\c&H005FA2F2&}hetnacnc.com\n`
+/** Bloques de pocas palabras (subtítulo estilo Shorts: grandes, 1 línea, cambian rápido). */
+export function bloquesSub(texto: string, inicio: number, fin: number, max = 3) {
+  const w = String(texto || "").replace(/[{}\\\n]/g, " ").trim().split(/\s+/).filter(Boolean)
+  if (!w.length || fin <= inicio) return []
+  const grupos: string[][] = []
+  for (let i = 0; i < w.length; i += max) grupos.push(w.slice(i, i + max))
+  const peso = grupos.map((g) => g.join(" ").length + 4)
+  const total = peso.reduce((a, b) => a + b, 0)
+  let t = inicio
+  return grupos.map((g, k) => {
+    const d = ((fin - inicio) * peso[k]) / total
+    const b = { texto: g.join(" "), inicio: t, fin: t + d }
+    t += d
+    return b
+  })
 }
 
-async function armar(clips: string[], durs: number[], voz: string | string[] | null, musica: string | null, ass: string, dir: string) {
+/** ASS del Estudio: gancho grande en caja arriba, subtítulos cortos y gruesos abajo, CTA al final. */
+export function assEstudio(subs: { texto: string; inicio: number; fin: number }[], gancho: string, cta: { texto: string; inicio: number; fin: number }) {
+  const t = (s: number) => { const cs = Math.max(0, Math.round(s * 100)); return `0:${String(Math.floor(cs / 6000)).padStart(2, "0")}:${String(Math.floor((cs % 6000) / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}` }
+  const limpio = (x: string) => String(x || "").replace(/[{}\\\n]/g, " ").trim()
+  const cab = [
+    "[Script Info]", "ScriptType: v4.00+", "PlayResX: 1080", "PlayResY: 1920", "WrapStyle: 0", "ScaledBorderAndShadow: yes", "",
+    "[V4+ Styles]",
+    "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+    // Subtítulo: blanco grueso con contorno negro; la palabra que se dice, en naranja HETNA
+    "Style: Sub,Archivo ExtraBold,122,&H005FA2F2,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,9,4,2,60,60,560,1",
+    // Gancho: texto negro sobre caja blanca, arriba
+    "Style: Gancho,Archivo ExtraBold,96,&H00141414,&H00141414,&H00FFFFFF,&H00FFFFFF,-1,0,0,0,100,100,0,0,3,26,0,8,70,70,230,1",
+    // CTA: caja naranja al centro
+    "Style: Cta,Archivo ExtraBold,112,&H00FFFFFF,&H00FFFFFF,&H000A56C2,&H000A56C2,-1,0,0,0,100,100,0,0,3,30,0,5,80,80,0,1",
+    "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
+  ]
+  const lineas: string[] = []
+  for (const sb of subs) {
+    for (const b of bloquesSub(sb.texto, sb.inicio, sb.fin)) {
+      const palabras = b.texto.split(" ")
+      const dur = Math.max(0.2, b.fin - b.inicio)
+      const k = palabras.map((p) => `{\\kf${Math.max(6, Math.round((dur * 100) / palabras.length))}}${p}`).join(" ")
+      lineas.push(`Dialogue: 0,${t(b.inicio)},${t(b.fin)},Sub,,0,0,0,,{\\fscx92\\fscy92\\t(0,90,\\fscx100\\fscy100)}${k}`)
+    }
+  }
+  lineas.push(`Dialogue: 1,${t(0)},${t(2.4)},Gancho,,0,0,0,,{\\fad(0,180)\\fscx85\\fscy85\\t(0,140,\\fscx100\\fscy100)}${limpio(gancho).toUpperCase()}`)
+  lineas.push(`Dialogue: 1,${t(cta.inicio)},${t(cta.fin)},Cta,,0,0,0,,{\\fad(150,0)}${limpio(cta.texto)}\\N{\\fs84}hetnacnc.com`)
+  return [...cab, ...lineas].join("\n") + "\n"
+}
+
+const ZOOMS = [1, 1.28, 1.12, 1.2]
+/** Tramos de una escena: cortes de 1.6 a 2.6 s que suman exactamente la duración. */
+export function cortesDe(d: number) {
+  const n = Math.max(1, Math.round(d / 2.1))
+  const paso = d / n
+  return Array.from({ length: n }, (_, k) => ({ desde: k * paso, hasta: k === n - 1 ? d : (k + 1) * paso }))
+}
+
+export async function armar(clips: string[], durs: number[], voz: string | string[] | null, musica: string | null, ass: string, dir: string) {
   const fps = 30
   const entradas: string[] = []
   const filtros: string[] = []
+  // Ritmo de Short: cada escena se parte en cortes de ~2 s con encuadres distintos
+  // (plano, acercamiento fuerte, medio), como haría un editor; sin cuadros congelados.
+  const etiquetas: string[] = []
   clips.forEach((c, i) => {
     entradas.push("-i", c)
-    filtros.push(`[${i}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=${fps},setsar=1,tpad=stop_mode=clone:stop_duration=6,trim=0:${durs[i].toFixed(2)},setpts=PTS-STARTPTS,format=yuv420p[v${i}]`)
+    const tramos = cortesDe(durs[i])
+    filtros.push(`[${i}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=${fps},setsar=1,tpad=stop_mode=clone:stop_duration=6,format=yuv420p,split=${tramos.length}${tramos.map((_, k) => `[s${i}_${k}]`).join("")}`)
+    tramos.forEach((tr, k) => {
+      const z = ZOOMS[(i + k) % ZOOMS.length]
+      const w = Math.round(1080 * z), h = Math.round(1920 * z)
+      const x = Math.round((w - 1080) * (k % 2 ? 0.62 : 0.4)), y = Math.round((h - 1920) * 0.45)
+      filtros.push(`[s${i}_${k}]trim=${tr.desde.toFixed(2)}:${tr.hasta.toFixed(2)},setpts=PTS-STARTPTS,scale=${w}:${h}:flags=lanczos,crop=1080:1920:${x}:${y},setsar=1[c${i}_${k}]`)
+      etiquetas.push(`[c${i}_${k}]`)
+    })
   })
-  filtros.push(`${clips.map((_, i) => `[v${i}]`).join("")}concat=n=${clips.length}:v=1:a=0[vb]`)
+  filtros.push(`${etiquetas.join("")}concat=n=${etiquetas.length}:v=1:a=0[vb]`)
   const assArchivo = path.join(dir, "subs.ass")
   fs.writeFileSync(assArchivo, ass)
   const esc = (x: string) => x.replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "\\'")
@@ -498,7 +554,7 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
           await bajar(imagen, ini)
           url = await escenaHiggsfield(p.video, ini, Math.max(4, seg))
         } else {
-          const vid = await fal(MODELO_VIDEO(), { prompt: p.video, image_url: imagen, duration: seg, resolution: "768P", prompt_expansion_mode: "balanced" }, 15)
+          const vid = await fal(MODELO_VIDEO(), { prompt: p.video, image_url: imagen, duration: seg, resolution: "1080P", prompt_expansion_mode: "balanced" }, 15)
           costo += seg * USD_VIDEO_SEG
           url = vid?.video?.url
         }

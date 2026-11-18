@@ -58,6 +58,7 @@ describe("Estudio diario", () => {
   it("el gancho y la CTA salen en pantalla", () => {
     const ass = assEstudio([{ texto: "hola mundo", inicio: 0.1, fin: 2 }], "Tu fresa se quema", { texto: "Cotiza gratis", inicio: 2, fin: 4 })
     expect(ass).toContain("TU FRESA SE QUEMA")
+    expect(ass).not.toContain("hola mundo}") // subtítulo en bloques cortos
     expect(ass).toContain("hetnacnc.com")
     expect(FORMULAS.titulares.length).toBe(10)
   })

@@ -44,3 +44,17 @@ describe("Higgsfield", () => {
     expect(ligaDe("listo sin liga")).toBeNull()
   })
 })
+
+import { bloquesSub, cortesDe } from "../fabrica/estudio"
+describe("edición del Estudio", () => {
+  it("parte cada escena en cortes de unos 2 s que suman su duración", () => {
+    const c = cortesDe(6.3)
+    expect(c.length).toBe(3)
+    expect(c[c.length - 1].hasta).toBe(6.3)
+  })
+  it("subtítulos de máximo 3 palabras", () => {
+    const b = bloquesSub("Primer culpable la velocidad muy lenta", 0, 3)
+    expect(b.map((x) => x.texto)).toEqual(["Primer culpable la", "velocidad muy lenta"])
+    expect(b[1].fin).toBeCloseTo(3)
+  })
+})
