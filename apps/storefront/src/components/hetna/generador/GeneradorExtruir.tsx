@@ -5,8 +5,8 @@ import { useParams } from "next/navigation"
 import dynamic from "next/dynamic"
 
 import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
-import { extruir } from "@/lib/generador/extruir"
-import { type Dibujo, dibujoSVG, escalar, leerDXF, leerSVG, mallaSTL, medidas, unir } from "@/lib/generador/vectores"
+import { type Operacion, extruir } from "@/lib/generador/extruir"
+import { type Trazo, type Dibujo, dibujoSVG, escalar, leerDXF, leerSVG, mallaSTL, medidas, unir } from "@/lib/generador/vectores"
 
 import { Visor3D } from "./Visor3D"
 
@@ -50,6 +50,26 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; 
   </label>
 )
 
+// Grupos del archivo: por color en SVG, por capa en DXF
+const claveGrupo = (t: Trazo) => (t.color ? t.color : `capa:${t.capa}`)
+const OPERACIONES: { id: Operacion; nombre: string }[] = [
+  { id: "corte", nombre: "Corte" },
+  { id: "grabado", nombre: "Grabado" },
+  { id: "marcar", nombre: "Línea marcada" },
+  { id: "ignorar", nombre: "Ignorar" },
+]
+// Operación que se propone para cada grupo, por su nombre y por si sus líneas cierran
+// (en láser el rojo suele ser el corte: si hay rojo, los demás colores cerrados se proponen como grabado)
+function operacionInicial(clave: string, cerrados: number, abiertos: number, hayRojo: boolean): Operacion {
+  const n = clave.toLowerCase()
+  if (/grab|engrav|raster|fill/.test(n)) return "grabado"
+  if (/dobl|score|fold|marc|perfor|pliegue/.test(n)) return "marcar"
+  if (/ignor|guia|guide|ref/.test(n)) return "ignorar"
+  if (cerrados < abiertos) return "marcar"
+  if (hayRojo && n.startsWith("#") && n !== "#ff0000") return "grabado"
+  return "corte"
+}
+
 export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [archivo, setArchivo] = useState<{ nombre: string; dibujo: Dibujo } | null>(null)
@@ -63,6 +83,9 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   const [redondear, setRedondear] = useState("4")
   const [espejo, setEspejo] = useState(false)
   const [vista, setVista] = useState<"3d" | "2d">("3d")
+  const [modos, setModos] = useState<Record<string, Operacion>>({})
+  const [profundidad, setProfundidad] = useState("0.6")
+  const [anchoLinea, setAnchoLinea] = useState("0.8")
 
   const abrir = async (f?: File | null) => {
     setError("")
@@ -74,6 +97,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
       const d = ext === "svg" || /^\s*(<\?xml|<svg)/i.test(texto.slice(0, 200)) ? leerSVG(texto) : leerDXF(texto)
       setArchivo({ nombre: f.name.replace(/\.[^.]+$/, ""), dibujo: unir(d) })
       setAncho("")
+      setModos({})
     } catch {
       setError("No pude leer el archivo. Sube un SVG o DXF.")
     }
@@ -84,6 +108,23 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   const dibujo = useMemo(() => (archivo ? (factor !== 1 ? escalar(archivo.dibujo, factor) : archivo.dibujo) : null), [archivo, factor])
   const med = useMemo(() => (dibujo ? medidas(dibujo) : null), [dibujo])
 
+  // grupos de color o capa con cuántas líneas cerradas y abiertas tienen
+  const grupos = useMemo(() => {
+    if (!archivo) return []
+    const m = new Map<string, { clave: string; cerrados: number; abiertos: number }>()
+    for (const t of archivo.dibujo.trazos) {
+      const k = claveGrupo(t)
+      const g = m.get(k) || { clave: k, cerrados: 0, abiertos: 0 }
+      if (t.cerrado) g.cerrados++
+      else g.abiertos++
+      m.set(k, g)
+    }
+    return [...m.values()].sort((a, b) => b.cerrados + b.abiertos - (a.cerrados + a.abiertos))
+  }, [archivo])
+  const hayRojo = grupos.some((g) => g.clave === "#ff0000" && g.cerrados >= g.abiertos)
+  const modoDe = (k: string) => modos[k] ?? operacionInicial(k, grupos.find((g) => g.clave === k)?.cerrados ?? 0, grupos.find((g) => g.clave === k)?.abiertos ?? 0, hayRojo)
+  const hayRebaje = grupos.some((g) => ["grabado", "marcar"].includes(modoDe(g.clave)))
+
   const r = useMemo(() => {
     if (!dibujo || !(numero(alto) > 0)) return null
     return extruir(dibujo, {
@@ -92,8 +133,12 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
       margenBase: Math.max(0, numero(margen) || 0),
       redondearBase: Math.max(0, numero(redondear) || 0),
       espejo,
+      operacion: (t) => modoDe(claveGrupo(t)),
+      profundidad: Math.max(0.05, numero(profundidad) || 0.6),
+      anchoLinea: Math.max(0.1, numero(anchoLinea) || 0.8),
     })
-  }, [dibujo, alto, conBase, base, margen, redondear, espejo])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dibujo, alto, conBase, base, margen, redondear, espejo, modos, grupos, profundidad, anchoLinea])
 
   const listo = !!r && !r.errores.length && r.malla.tris.length > 0
   const nombre = archivo ? `${archivo.nombre}-${r1(numero(alto))}mm` : "pieza"
@@ -109,7 +154,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
         <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">SVG o DXF a STL: extruir en 3D</h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Sube un logotipo, un nombre o una silueta en SVG o DXF, dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Con placa base opcional para llaveros, letreros y placas. Tu archivo no se sube a ningún servidor.
+          Sube un logotipo, un nombre o un archivo de corte láser en SVG o DXF, elige qué hace cada color (corte, grabado hundido o línea marcada), dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Con placa base opcional para llaveros, letreros y placas. Tu archivo no se sube a ningún servidor.
         </p>
       </section>
 
@@ -123,10 +168,50 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
           >
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{archivo ? `${archivo.nombre} (cambiar)` : "Sube tu SVG o DXF"}</span>
-            <span className="text-[12px] text-[#6B6A63]">Contornos cerrados: logotipos, letras ya vectorizadas, siluetas</span>
+            <span className="text-[12px] text-[#6B6A63]">Logotipos, letras ya vectorizadas o archivos de corte láser con varios colores</span>
             <input type="file" accept=".svg,.dxf" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
+
+          {archivo && grupos.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-semibold text-[#1B1B18]">
+                {grupos.some((g) => g.clave.startsWith("capa:")) ? "Capas del archivo" : "Colores del archivo"} y qué hacer con cada uno
+              </span>
+              {grupos.map((g) => (
+                <div key={g.clave} className="flex items-center gap-2">
+                  {g.clave.startsWith("capa:") ? (
+                    <span className="w-4 h-4 rounded-[4px] border border-[#E7E4DC] bg-[#FAF9F6] shrink-0" aria-hidden="true" />
+                  ) : (
+                    <span className="w-4 h-4 rounded-[4px] border border-[#E7E4DC] shrink-0" style={{ background: g.clave.startsWith("#") ? g.clave : "#999" }} aria-hidden="true" />
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-[#1B1B18]" title={g.clave}>
+                    {g.clave.startsWith("capa:") ? `Capa ${g.clave.slice(5)}` : g.clave}
+                    <span className="text-[#9A978C]"> · {g.cerrados ? `${g.cerrados} cerrada${g.cerrados === 1 ? "" : "s"}` : ""}{g.cerrados && g.abiertos ? ", " : ""}{g.abiertos ? `${g.abiertos} abierta${g.abiertos === 1 ? "" : "s"}` : ""}</span>
+                  </span>
+                  <select
+                    value={modoDe(g.clave)}
+                    onChange={(e) => setModos((m) => ({ ...m, [g.clave]: e.target.value as Operacion }))}
+                    aria-label={`Operación para ${g.clave}`}
+                    className="bg-white border border-[#E7E4DC] rounded-[8px] px-2 py-1.5 text-[13px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
+                  >
+                    {OPERACIONES.map((o) => (
+                      <option key={o.id} value={o.id}>{o.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+              <p className="m-0 text-[12px] text-[#6B6A63]">
+                Corte forma las piezas y sus huecos. Grabado hunde las áreas cerradas en la cara de arriba (lo que queda dentro de un área grabada vuelve a subir). Línea marcada convierte las líneas en canales.
+              </p>
+              {hayRebaje && (
+                <div className="grid grid-cols-2 gap-2">
+                  <Campo etiqueta="Profundidad del grabado" valor={profundidad} cambiar={setProfundidad} />
+                  <Campo etiqueta="Ancho de línea marcada" valor={anchoLinea} cambiar={setAnchoLinea} />
+                </div>
+              )}
+            </div>
+          )}
 
           {archivo && med0 && (
             <>
