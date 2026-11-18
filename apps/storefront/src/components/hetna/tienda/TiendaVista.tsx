@@ -27,7 +27,16 @@ const cotizarHref = (p: { servicio?: string; descripcion?: string; origen?: stri
   return `/cotizar${s ? `?${s}` : ""}`
 }
 
-export function TiendaVista({ catalogo, procesos }: { catalogo: CatalogoTienda; procesos: Proceso[] }) {
+export function TiendaVista({
+  catalogo,
+  procesos,
+  publicidad,
+}: {
+  catalogo: CatalogoTienda
+  procesos: Proceso[]
+  // Espacio de publicidad (componente de servidor), debajo de las categorías
+  publicidad?: React.ReactNode
+}) {
   const [q, setQ] = useState("")
   const [filtro, setFiltro] = useState<Filtro>("todo")
   const cats = catalogo.categorias
@@ -141,6 +150,8 @@ export function TiendaVista({ catalogo, procesos }: { catalogo: CatalogoTienda; 
               )}
             </section>
           )}
+
+          {verTodo && publicidad}
 
           {(verTodo || filtro === "cotizar") && <Procesos procesos={procesos} />}
         </>
