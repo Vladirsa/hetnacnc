@@ -11,7 +11,30 @@ fallas=0
 bien()  { printf '  BIEN   %s\n' "$1"; }
 falla() { printf '  FALLA  %s\n' "$1"; fallas=$((fallas + 1)); }
 aviso() { printf '  AVISO  %s\n' "$1"; }
-valor() { [ -f "$1" ] && grep -E "^$2=" "$1" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"; }
+# Lo que de verdad usa cada proceso. Un valor puede estar en tres lugares y gana
+# el primero: (1) lo que pm2 guardó al arrancar el proceso, (2) .env.production,
+# (3) .env. El 18 nov 2026 el API corría con el secreto de ejemplo guardado en
+# pm2 aunque el .env tenía uno bueno: por eso aquí NO basta con leer el .env.
+PM2_JSON="$(pm2 jlist 2>/dev/null || echo '[]')"
+efectivo() { # efectivo <proceso pm2> <carpeta> <NOMBRE> → "<origen>\t<valor>"
+  printf '%s' "$PM2_JSON" | node -e '
+    const fs=require("fs");const [proc,dir,k]=process.argv.slice(1);let d="";
+    process.stdin.on("data",c=>d+=c).on("end",()=>{
+      const leer=f=>{const o={};try{for(const l of fs.readFileSync(f,"utf8").split("\n")){const m=/^\s*(?:export\s+)?([A-Za-z0-9_]+)\s*=\s*(.*)$/.exec(l);if(m)o[m[1]]=m[2].trim().replace(/^["\x27]|["\x27]$/g,"")}}catch{}return o};
+      let pm={};try{const p=JSON.parse(d).find(x=>x.name===proc);const e=(p&&p.pm2_env)||{};pm=Object.assign({},e.env||{},e)}catch{}
+      const prod=leer(dir+"/.env.production"),env=leer(dir+"/.env"),loc=leer(dir+"/.env.local");
+      const r=typeof pm[k]==="string"?["pm2",pm[k]]:k in prod?[".env.production",prod[k]]:k in loc?[".env.local",loc[k]]:k in env?[".env",env[k]]:["",""];
+      process.stdout.write(r[0]+"\t"+r[1]);
+    })' "$1" "$2" "$3" 2>/dev/null
+}
+# valor <archivo .env del API o de la tienda> <NOMBRE>: el valor que de verdad se usa
+valor() {
+  case "$1" in
+    "$API") efectivo hetna-api "$R/packages/api" "$2" | cut -f2- ;;
+    *)      efectivo hetna-web "$R/apps/storefront" "$2" | cut -f2- ;;
+  esac
+}
+origen() { efectivo hetna-api "$R/packages/api" "$1" | cut -f1; }
 
 echo "== Archivos .env"
 for f in "$API" "$WEB"; do
@@ -20,15 +43,25 @@ for f in "$API" "$WEB"; do
 done
 git -C "$R" ls-files --error-unmatch packages/api/.env >/dev/null 2>&1 && falla "packages/api/.env está dentro de git" || bien "el .env no está en git"
 
-echo "== Secretos de sesión y de firma (API)"
+echo "== Secretos de sesión y de firma (lo que de verdad usa el API)"
 for v in JWT_SECRET COOKIE_SECRET; do
-  x=$(valor "$API" $v)
-  if [ -z "$x" ]; then falla "$v está vacío"; elif [ "$x" = supersecret ]; then falla "$v vale el de ejemplo (supersecret)"; elif [ ${#x} -lt 32 ]; then falla "$v es corto (${#x} letras; usa openssl rand -hex 64)"; else bien "$v propio y largo"; fi
+  x=$(valor "$API" $v); de=$(origen $v)
+  if [ -z "$x" ]; then falla "$v está vacío"; elif [ "$x" = supersecret ]; then falla "$v vale el de ejemplo (supersecret); sale de: $de. CUALQUIERA PUEDE FABRICAR SESIONES DE ADMINISTRADOR"; elif [ ${#x} -lt 32 ]; then falla "$v es corto (${#x} letras; sale de: $de; usa openssl rand -hex 64)"; else bien "$v propio y largo (sale de: $de)"; fi
 done
 [ "$(valor "$API" JWT_SECRET)" != "$(valor "$API" COOKIE_SECRET)" ] && bien "JWT_SECRET y COOKIE_SECRET son distintos" || falla "JWT_SECRET y COOKIE_SECRET son iguales"
 for v in BAJA_SECRET ARCHIVOS_SECRETO STOREFRONT_REVALIDATE_SECRET N8N_REDES_TOKEN ESCANEO_CALLBACK_SECRET; do
   x=$(valor "$API" $v); [ -n "$x" ] && [ "$x" != supersecret ] && bien "$v puesto" || aviso "$v vacío o de ejemplo (si usas esa función, ponle un secreto propio)"
 done
+
+echo "== Valores del .env que NO se están usando (otro lugar le gana)"
+otros=0
+if [ -f "$API" ]; then
+  for k in $(grep -oE '^[A-Za-z0-9_]+=' "$API" | tr -d '=' | sort -u); do
+    de=$(origen "$k"); enarchivo=$(grep -E "^$k=" "$API" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+    if [ -n "$de" ] && [ "$de" != ".env" ] && [ "$(valor "$API" "$k")" != "$enarchivo" ]; then aviso "$k: manda $de, no el .env"; otros=$((otros + 1)); fi
+  done
+fi
+[ "$otros" = 0 ] && bien "todo lo del .env del API es lo que se usa"
 
 echo "== Modo de producción"
 [ "$(valor "$API" NODE_ENV)" = production ] && bien "API con NODE_ENV=production" || aviso "NODE_ENV no está en el .env del API: confirma que pm2 lo pone (pm2 env <id> | grep NODE_ENV)"

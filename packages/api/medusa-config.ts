@@ -81,18 +81,28 @@ const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SEC
 
 
 // Secreto de sesiones (auditoría de seguridad del 15 nov 2026). Con el valor de
-// la plantilla ("supersecret") cualquiera podría fabricar sesiones de
-// administrador. En producción se avisa fuerte en el registro; genera uno con
-//   openssl rand -hex 64
+// la plantilla ("supersecret") cualquiera puede fabricar sesiones de
+// administrador: pasó en producción (18 nov 2026) porque pm2 tenía guardado el
+// valor de ejemplo y el del .env nunca se usó (lo que ya está en el entorno del
+// proceso le gana al .env).
+//
+// Por eso en producción NUNCA se arranca con un secreto débil: si falta, es el
+// de ejemplo o es corto, se usa uno al azar para este arranque. El sitio sigue
+// funcionando y nadie puede fabricar sesiones; el costo es que las sesiones se
+// cierran en cada reinicio hasta que se ponga uno propio (openssl rand -hex 64).
+const secretosDeArranque: Record<string, string> = {}
 function secretoSesion(nombre: "JWT_SECRET" | "COOKIE_SECRET"): string {
   const v = process.env[nombre]
-  if (!v || v === "supersecret" || v.length < 32) {
-    if (process.env.NODE_ENV === "production") {
-      console.error(`[seguridad] ${nombre} falta, es "supersecret" o es muy corto. Cámbialo YA en packages/api/.env (openssl rand -hex 64) y reinicia.`)
-    }
-    return v || "supersecret"
-  }
-  return v
+  if (v && v !== "supersecret" && v.length >= 32) return v
+  if (process.env.NODE_ENV !== "production") return v || "supersecret"
+  secretosDeArranque[nombre] ??= require("crypto").randomBytes(48).toString("hex")
+  console.error(
+    `[seguridad] ${nombre} falta, es "supersecret" o es muy corto. Se usa uno al azar para este arranque (las sesiones se cierran en cada reinicio). ` +
+      "Revisa con ./scripts/revisar-seguridad.sh de dónde sale el valor: pm2 y .env.production le ganan al .env."
+  )
+  // Lo que lee el resto del código (firmas de ligas de correo, etc.) también usa el bueno
+  process.env[nombre] = secretosDeArranque[nombre]
+  return secretosDeArranque[nombre]
 }
 module.exports = withMercur({
   projectConfig: {
