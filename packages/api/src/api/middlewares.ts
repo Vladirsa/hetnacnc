@@ -217,11 +217,11 @@ export default defineMiddlewares({
           matcher: "/api/taller-publico/:slug/solicitar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: Number(process.env.COTIZADOR_SOLICITUD_MAX_MB || 50) })],
         },
-        // Posventa: el cliente final reporta una falla con hasta 3 fotos (lib/cotizador-posventa.ts)
-        { method: ["GET"], matcher: "/api/cotizador-posventa/:pedido", middlewares: [limitarLiga] },
+        // Posventa: el cliente reporta una falla con hasta 3 fotos desde su liga (lib/cotizador-posventa.ts).
+        // El GET ya pasa por limitarLiga (/api/cotizacion-liga/*).
         {
           method: ["POST"],
-          matcher: "/api/cotizador-posventa/:pedido",
+          matcher: "/api/cotizacion-liga/:token/posventa",
           middlewares: [leerMultipart({ campos: { fotos: 3 }, maxMb: 8 })],
         },
         // "Te cargamos tu catálogo": el taller manda su lista (lib/cotizador-catalogo.ts)

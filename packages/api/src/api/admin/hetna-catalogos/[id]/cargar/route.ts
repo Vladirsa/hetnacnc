@@ -5,7 +5,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 
 import { adminCargar } from "../../../../../lib/cotizador-catalogo"
 import { listaDeArchivos } from "../../../../cam-multipart"
-import { responderTaller } from "../../../../api/cotizador-posventa/responder"
+import { responderTaller } from "../../../../api/cotizador-catalogo/responder"
 
 export const POST = (req: AuthenticatedMedusaRequest, res: MedusaResponse) =>
   responderTaller(req, res, "cargar catálogo", () => {

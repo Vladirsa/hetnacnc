@@ -41,6 +41,14 @@ Los archivos ya se generan solos con los productos de la tienda. Falta darlos de
 - [ ] Probar el Cotizador sin internet en un celular real: abrir con señal, entrar, modo avión y cotizar.
 - [ ] Agregar "IVA incluido" en las pantallas de planes del Cotizador (así se factura).
 
-## 5. Legal
+## 5. Cotizador: posventa, kit comercial y "Te cargamos tu catálogo"
+Ya están en el código, pero necesitan este orden:
+- [ ] **Correr el SQL una vez**: en Supabase (proyecto del Cotizador) → SQL Editor, pegar y correr `supabase/taller_vende_mas.sql` del repo del Cotizador. Sin esto, las pantallas dicen "se está activando".
+- [ ] **Desplegar** hetnacnc (`bash scripts/desplegar.sh`) y **publicar la app** (fusionar el PR del Cotizador; la APK y la web se arman solas).
+- [ ] **`HETNA_LEADS_EMAIL`** en el `.env` de `packages/api` (si no está): ahí llega el correo "Catálogo por cargar". Sin él, revisa Dashboard → Catálogos por cargar.
+- [ ] Prueba rápida: `curl -s -o /dev/null -w '%{http_code}' https://hetnacnc.com/api/cotizador-catalogo` debe dar **401** (no 404).
+- [ ] **WhatsApp de soporte**: la app usa el 52 246 121 7072 y la página web el de `NEXT_PUBLIC_WHATSAPP_DEFAULT` (52 221 707 6014 por omisión). Confirmar cuál debe recibir el soporte.
+
+## 6. Legal
 - [ ] Respuesta del abogado sobre SafeDeal (`docs/legal/safedeal-revision.md`).
 - [ ] Contador: retención como plataforma y si conviene RESICO (`docs/contabilidad/guia-rapida.md`, sección 7).

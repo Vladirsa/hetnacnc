@@ -406,8 +406,13 @@ export async function adminCargar(id: string, archivo: ArchivoSubido | undefined
   const negocio = (await supa<any[]>(`/rest/v1/negocios?id=eq.${s.negocio_id}&select=id,nombre&limit=1`))[0]
   if (!negocio) throw new ErrorSuscripcion("No encontramos el taller de esta solicitud.", 404)
 
-  const ya = await supa<any[]>(`/rest/v1/productos?negocio_id=eq.${negocio.id}&activo=eq.true&select=nombre&limit=10000`)
-  const existentes = new Set(ya.map((p) => normal(p.nombre)))
+  // Supabase entrega a lo más 1000 renglones por consulta: se lee por páginas
+  const existentes = new Set<string>()
+  for (let desde = 0; desde < 20000; desde += 1000) {
+    const pagina = await supa<any[]>(`/rest/v1/productos?negocio_id=eq.${negocio.id}&activo=eq.true&select=nombre&order=id&offset=${desde}&limit=1000`)
+    for (const p of pagina) existentes.add(normal(p.nombre))
+    if (pagina.length < 1000) break
+  }
   const nuevas = filas.filter((f) => !existentes.has(normal(f.nombre)))
   const repetidos = filas.length - nuevas.length
 
@@ -434,6 +439,7 @@ export async function adminCargar(id: string, archivo: ArchivoSubido | undefined
 
   let cargados = 0
   const fallidos: string[] = []
+  let primerError = ""
   for (let i = 0; i < nuevas.length; i += 100) {
     const lote = nuevas.slice(i, i + 100)
     try {
@@ -446,6 +452,7 @@ export async function adminCargar(id: string, archivo: ArchivoSubido | undefined
           await insertar([fila(f)])
           cargados++
         } catch (e) {
+          primerError ||= (e as Error).message
           if (f.sku && /23505|duplicate|sku/i.test((e as Error).message)) {
             try {
               await insertar([fila(f, false)])
@@ -459,6 +466,11 @@ export async function adminCargar(id: string, archivo: ArchivoSubido | undefined
     }
   }
 
+  // Si no entró ninguno, no se marca lista ni se avisa al taller: algo está mal en la base
+  if (nuevas.length > 0 && cargados === 0) {
+    logger?.error?.(`[catalogo] ${negocio.nombre}: no entró ningún producto: ${primerError}`)
+    throw new ErrorSuscripcion(`No se pudo guardar ningún producto. La base respondió: ${primerError.slice(0, 300)}`, 502)
+  }
   const total = Number(s.productos_cargados || 0) + cargados
   await supa(`/rest/v1/catalogo_solicitudes?id=eq.${id}`, {
     method: "PATCH",

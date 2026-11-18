@@ -1,11 +1,11 @@
 // Posventa del Cotizador: después de entregar, el cliente final reporta una
-// falla, pide garantía o un ajuste desde la misma liga de su pedido
-// (hetnacnc.com/cotizador/pedido/<id>). Al taller le llega como caso a seguir
-// (alerta en la app, push y correo) y lo atiende en la pantalla Posventa.
+// falla, pide garantía o un ajuste desde la misma liga donde siguió su pedido
+// (hetnacnc.com/c/<token>). Al taller le llega como caso a seguir (alerta en
+// la app, push y correo) y lo atiende en la pantalla Posventa de la app.
 //
-//   GET  /api/cotizador-posventa/<pedidoId>   casos del pedido (sin datos de contacto)
-//   POST /api/cotizador-posventa/<pedidoId>   multipart: tipo, descripcion, nombre,
-//                                             contacto, sitio_web (trampa) y hasta 3 fotos
+//   GET  /api/cotizacion-liga/<token>/posventa   casos del pedido (sin datos de contacto)
+//   POST /api/cotizacion-liga/<token>/posventa   multipart: tipo, descripcion, nombre,
+//                                                contacto, sitio_web (trampa) y hasta 3 fotos
 //
 // Tabla posventa_casos (supabase/taller_vende_mas.sql del repo del Cotizador).
 // Las fotos van al bucket privado "solicitudes" bajo <negocio>/posventa/...
@@ -13,48 +13,55 @@ import { randomUUID } from "crypto"
 
 import { avisarTaller } from "./avisos-taller"
 import { extension, limitador, nombreSeguro, subirArchivo } from "./cotizador-archivos"
+import { cotizacionPorToken } from "./cotizacion-liga"
 import { ErrorSuscripcion, supa } from "./cotizador-suscripciones"
 
 const SITIO = (process.env.STOREFRONT_URL || "https://hetnacnc.com").replace(/\/$/, "")
 
 export const TIPOS_POSVENTA = { falla: "una falla", garantia: "garantía", ajuste: "un ajuste", otro: "un comentario" } as const
-export const ESTADOS_ENTREGADOS = ["Entrega", "Entregado"]
+// "Entrega" es "listo para entrega": todavía no lo tiene el cliente
+export const ESTADOS_ENTREGADOS = ["Entregado"]
 export const FOTOS_MAX = 3
 export const FOTO_MAX_MB = 8
 const EXT_FOTO = ["jpg", "jpeg", "png", "webp", "heic"]
 const ABIERTOS_MAX = 3
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const limpio = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max)
 // 5 reportes por hora por IP
 const permitido = limitador(5, 3_600_000)
 
-async function pedidoPublico(pedidoId: string) {
-  if (!UUID.test(pedidoId)) throw new ErrorSuscripcion("No encontramos este pedido.", 404)
-  const filas = await supa<any[]>(`/rest/v1/pedidos?id=eq.${pedidoId}&select=id,negocio_id,folio,estado,cliente_id&limit=1`)
+/** El pedido de la liga del cliente (el más reciente de esa cotización). */
+async function pedidoDeLiga(token: string) {
+  const c = await cotizacionPorToken(token)
+  const filas = await supa<any[]>(
+    `/rest/v1/pedidos?cotizacion_id=eq.${c.id}&select=id,negocio_id,folio,estado,cliente_id&order=created_at.desc&limit=1`
+  )
   const p = filas[0]
-  if (!p) throw new ErrorSuscripcion("No encontramos este pedido.", 404)
+  if (!p) throw new ErrorSuscripcion("Esta cotización todavía no es pedido.", 404)
   return p
 }
 
-async function casosDe(pedidoId: string): Promise<any[]> {
+const sinTabla = (e: unknown) => /posventa_casos|42P01|PGRST205/.test((e as Error).message)
+
+async function casosDe(pedidoId: string): Promise<any[] | null> {
   try {
     return await supa<any[]>(
       `/rest/v1/posventa_casos?pedido_id=eq.${pedidoId}&select=id,tipo,descripcion,estado,respuesta,created_at,resuelto_en&order=created_at.desc&limit=20`
     )
   } catch (e) {
-    // Sin la tabla (no se ha corrido el SQL): la página del pedido no se cae
-    if (/posventa_casos|42P01|PGRST205/.test((e as Error).message)) return []
+    // Sin la tabla (no se ha corrido el SQL): la liga no se cae
+    if (sinTabla(e)) return null
     throw e
   }
 }
 
 /** Lo que ve el cliente en la liga de su pedido. */
-export async function posventaPublica(pedidoId: string) {
-  const p = await pedidoPublico(pedidoId)
-  const casos = await casosDe(p.id)
+export async function posventaPublica(token: string) {
+  const p = await pedidoDeLiga(token)
+  const lista = await casosDe(p.id)
+  const casos = lista || []
   return {
-    disponible: ESTADOS_ENTREGADOS.includes(p.estado),
+    disponible: lista !== null && ESTADOS_ENTREGADOS.includes(p.estado),
     casos: casos.map((c) => ({
       id: c.id,
       tipo: c.tipo,
@@ -69,12 +76,12 @@ export async function posventaPublica(pedidoId: string) {
 
 export type FotoSubida = { originalname: string; mimetype: string; size: number; buffer: Buffer }
 
-export async function reportarPosventa(pedidoId: string, campos: Record<string, any>, fotos: FotoSubida[], ip: string, logger?: any) {
+export async function reportarPosventa(token: string, campos: Record<string, any>, fotos: FotoSubida[], ip: string, logger?: any) {
   // Trampa para robots: el campo va oculto y vacío en la app
   if (limpio(campos.sitio_web, 10)) return { ok: true }
   if (!permitido(ip)) throw new ErrorSuscripcion("Ya mandaste varios reportes. Intenta de nuevo en una hora.", 429)
 
-  const p = await pedidoPublico(pedidoId)
+  const p = await pedidoDeLiga(token)
   if (!ESTADOS_ENTREGADOS.includes(p.estado))
     throw new ErrorSuscripcion("El reporte de posventa se abre cuando el pedido ya fue entregado. Mientras, escríbele al taller.")
 
@@ -84,7 +91,9 @@ export async function reportarPosventa(pedidoId: string, campos: Record<string, 
   const nombre = limpio(campos.nombre, 120) || null
   const contacto = limpio(campos.contacto, 160) || null
 
-  const abiertos = (await casosDe(p.id)).filter((c) => c.estado === "nuevo" || c.estado === "en_revision")
+  const previos = await casosDe(p.id)
+  if (previos === null) throw new ErrorSuscripcion("El taller todavía no activa la posventa. Escríbele por WhatsApp.", 503)
+  const abiertos = previos.filter((c) => c.estado === "nuevo" || c.estado === "en_revision")
   if (abiertos.length >= ABIERTOS_MAX)
     throw new ErrorSuscripcion("Ya hay reportes abiertos de este pedido. El taller te responderá aquí mismo.")
 

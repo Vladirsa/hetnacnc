@@ -3,7 +3,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { adminCambiar } from "../../../../lib/cotizador-catalogo"
-import { responderTaller } from "../../../api/cotizador-posventa/responder"
+import { responderTaller } from "../../../api/cotizador-catalogo/responder"
 
 export const POST = (req: AuthenticatedMedusaRequest, res: MedusaResponse) =>
   responderTaller(req, res, "catálogos", () => adminCambiar(String(req.params.id || ""), (req.body || {}) as any, req.scope.resolve("logger")))

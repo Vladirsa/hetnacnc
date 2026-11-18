@@ -15,13 +15,20 @@ jest.mock("../cotizador-archivos", () => {
   return { ...real, subirArchivo: (...a: any[]) => subirMock(...a) }
 })
 jest.mock("../resend", () => ({ sendEmail: jest.fn(async () => ({ sent: true })) }))
+jest.mock("../cotizacion-liga", () => ({
+  cotizacionPorToken: async (t: string) => {
+    if (t !== TOKEN) throw Object.assign(new Error("no existe"), { status: 404 })
+    return { id: "cot1", negocio_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" }
+  },
+}))
 
 import ExcelJS from "exceljs"
 
 import { adminCargar, leerPlantilla, numero, plantillaXlsx } from "../cotizador-catalogo"
-import { reportarPosventa } from "../cotizador-posventa"
+import { posventaPublica, reportarPosventa } from "../cotizador-posventa"
 
 const PEDIDO = "11111111-2222-3333-4444-555555555555"
+const TOKEN = "AbCdEfGh12345678XyZ"
 const NEG = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
 beforeEach(() => {
@@ -106,10 +113,27 @@ describe("adminCargar", () => {
   })
 })
 
+describe("adminCargar cuando la base rechaza todo", () => {
+  it("no marca lista ni avisa, y dice por qué", async () => {
+    const SOL = "99999999-8888-7777-6666-555555555555"
+    supaMock.mockImplementation(async (ruta: string, init?: any) => {
+      if (ruta.startsWith("/rest/v1/catalogo_solicitudes?id=eq.") && !init) return [{ id: SOL, negocio_id: NEG, estado: "en_proceso", productos_cargados: 0 }]
+      if (ruta.startsWith("/rest/v1/negocios")) return [{ id: NEG, nombre: "Taller Uno" }]
+      if (ruta.startsWith("/rest/v1/productos?negocio_id")) return []
+      if (ruta.startsWith("/rest/v1/categorias_producto")) return []
+      if (ruta === "/rest/v1/productos") throw new Error("Supabase 400: column negocio_id does not exist")
+      return null
+    })
+    await expect(adminCargar(SOL, { originalname: "p.xlsx", mimetype: "", size: 1, buffer: await plantillaXlsx() }, false)).rejects.toThrow(/negocio_id/)
+    expect(supaMock.mock.calls.some((c) => c[1]?.method === "PATCH")).toBe(false)
+    expect(avisoMock).not.toHaveBeenCalled()
+  })
+})
+
 describe("reportarPosventa", () => {
   const pedido = (estado: string, casos: any[] = []) =>
     supaMock.mockImplementation(async (ruta: string) => {
-      if (ruta.startsWith("/rest/v1/pedidos")) return [{ id: PEDIDO, negocio_id: NEG, folio: "P-10", estado, cliente_id: "c1" }]
+      if (ruta.startsWith("/rest/v1/pedidos?cotizacion_id=eq.cot1")) return [{ id: PEDIDO, negocio_id: NEG, folio: "P-10", estado, cliente_id: "c1" }]
       if (ruta.startsWith("/rest/v1/posventa_casos?")) return casos
       return null
     })
@@ -118,31 +142,41 @@ describe("reportarPosventa", () => {
   const nuevaIp = () => `10.0.0.${++ip}`
 
   it("la trampa para robots no guarda nada", async () => {
-    await expect(reportarPosventa(PEDIDO, { ...ok, sitio_web: "x" }, [], nuevaIp())).resolves.toEqual({ ok: true })
+    await expect(reportarPosventa(TOKEN, { ...ok, sitio_web: "x" }, [], nuevaIp())).resolves.toEqual({ ok: true })
     expect(supaMock).not.toHaveBeenCalled()
   })
 
-  it("sólo se abre con el pedido entregado", async () => {
-    pedido("Produccion")
-    await expect(reportarPosventa(PEDIDO, ok, [], nuevaIp())).rejects.toThrow(/entregado/)
+  it("sólo se abre con el pedido entregado (no basta 'listo para entrega')", async () => {
+    pedido("Entrega")
+    await expect(reportarPosventa(TOKEN, ok, [], nuevaIp())).rejects.toThrow(/entregado/)
+  })
+
+  it("sin la tabla, la liga dice que no está disponible en lugar de fallar", async () => {
+    supaMock.mockImplementation(async (ruta: string) => {
+      if (ruta.startsWith("/rest/v1/pedidos")) return [{ id: PEDIDO, negocio_id: NEG, folio: "P-10", estado: "Entregado" }]
+      if (ruta.startsWith("/rest/v1/posventa_casos")) throw new Error('Supabase 404: {"code":"PGRST205","message":"posventa_casos"}')
+      return null
+    })
+    await expect(posventaPublica(TOKEN)).resolves.toEqual({ disponible: false, casos: [] })
+    await expect(reportarPosventa(TOKEN, ok, [], nuevaIp())).rejects.toThrow(/todavía no activa/)
   })
 
   it("pide una descripción y fotos válidas", async () => {
     pedido("Entregado")
-    await expect(reportarPosventa(PEDIDO, { descripcion: "mal" }, [], nuevaIp())).rejects.toThrow(/detalle/)
+    await expect(reportarPosventa(TOKEN, { descripcion: "mal" }, [], nuevaIp())).rejects.toThrow(/detalle/)
     await expect(
-      reportarPosventa(PEDIDO, ok, [{ originalname: "virus.exe", mimetype: "application/x", size: 10, buffer: Buffer.from("") }], nuevaIp())
+      reportarPosventa(TOKEN, ok, [{ originalname: "virus.exe", mimetype: "application/x", size: 10, buffer: Buffer.from("") }], nuevaIp())
     ).rejects.toThrow(/JPG/)
   })
 
   it("limita los casos abiertos por pedido", async () => {
     pedido("Entregado", [{ estado: "nuevo" }, { estado: "en_revision" }, { estado: "nuevo" }])
-    await expect(reportarPosventa(PEDIDO, ok, [], nuevaIp())).rejects.toThrow(/abiertos/)
+    await expect(reportarPosventa(TOKEN, ok, [], nuevaIp())).rejects.toThrow(/abiertos/)
   })
 
   it("guarda el caso con sus fotos en la carpeta del taller y le avisa", async () => {
     pedido("Entregado", [{ estado: "resuelto" }])
-    const r = await reportarPosventa(PEDIDO, ok, [{ originalname: "foto 1.JPG", mimetype: "image/jpeg", size: 100, buffer: Buffer.from("x") }], nuevaIp())
+    const r = await reportarPosventa(TOKEN, ok, [{ originalname: "foto 1.JPG", mimetype: "image/jpeg", size: 100, buffer: Buffer.from("x") }], nuevaIp())
     expect(r.ok).toBe(true)
     expect(subirMock.mock.calls[0][0]).toMatch(new RegExp(`^${NEG}/posventa/[0-9a-f-]{36}/1_foto_1\\.JPG$`))
     const alta = supaMock.mock.calls.find((c) => c[0] === "/rest/v1/posventa_casos")
@@ -153,7 +187,7 @@ describe("reportarPosventa", () => {
   it("frena a quien manda demasiados reportes", async () => {
     pedido("Entregado")
     const misma = "10.9.9.9"
-    for (let i = 0; i < 5; i++) await reportarPosventa(PEDIDO, ok, [], misma)
-    await expect(reportarPosventa(PEDIDO, ok, [], misma)).rejects.toThrow(/una hora/)
+    for (let i = 0; i < 5; i++) await reportarPosventa(TOKEN, ok, [], misma)
+    await expect(reportarPosventa(TOKEN, ok, [], misma)).rejects.toThrow(/una hora/)
   })
 })

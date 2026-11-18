@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { misSolicitudes, solicitarCarga } from "../../../lib/cotizador-catalogo"
 import { tokenDe } from "../cotizador-suscripcion/respuesta"
-import { responderTaller } from "../cotizador-posventa/responder"
+import { responderTaller } from "./responder"
 
 // GET  https://hetnacnc.com/api/cotizador-catalogo  (sesión de Supabase del taller) -> { disponible, solicitudes }
 // POST multipart: archivos (hasta 5: Excel, PDF, Word o fotos) y nota  -> { ok, id }
