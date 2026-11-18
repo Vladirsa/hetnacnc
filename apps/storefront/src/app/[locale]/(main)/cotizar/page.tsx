@@ -100,7 +100,7 @@ export default async function CotizarPage({
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} descripcionInicial={typeof descripcion === "string" ? descripcion : undefined} prellenado={prellenado} />
+          <FormSolicitudTaller taller={t?.handle} nombreTaller={t?.nombre} servicioInicial={servicio} necesidadInicial={necesidad} prellenado={prellenado} />
 
           <aside className="grid content-start gap-4">
             <EjemploCotizacion />
