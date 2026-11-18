@@ -112,12 +112,20 @@ export function medidasProducto(p: ProductoImport) {
   return { weight: mayor.peso_kg, length: mayor.largo_cm, width: mayor.ancho_cm, height: mayor.alto_cm }
 }
 
+/**
+ * Metadata del producto: sólo las llaves con valor. Medusa mezcla la metadata al
+ * actualizar (mergeMetadata), así que lo que no se manda se queda como estaba;
+ * mandar "" sí borraría, por eso las celdas vacías no se mandan.
+ */
 export function metadataProducto(p: ProductoImport) {
   return {
     importado: true,
     ...(p.marca ? { marca: p.marca } : {}),
-    seo_title: p.seo_titulo || "",
-    meta_description: p.seo_descripcion || "",
+    ...(p.condicion ? { condicion: p.condicion } : {}),
+    ...(p.gtin ? { gtin: p.gtin } : {}),
+    ...(p.mpn ? { mpn: p.mpn } : {}),
+    ...(p.seo_titulo ? { seo_title: p.seo_titulo } : {}),
+    ...(p.seo_descripcion ? { meta_description: p.seo_descripcion } : {}),
   }
 }
 
@@ -129,7 +137,7 @@ export function entradaCrear(p: ProductoImport, ctx: { categoria_id: string; per
     title: p.nombre,
     description: descripcionAHtml(p.descripcion || ""),
     handle: p.handle,
-    status: p.estado,
+    status: p.estado ?? "published",
     discountable: true,
     thumbnail: ctx.imagenes[0],
     images: ctx.imagenes.map((url) => ({ url })),
@@ -305,8 +313,9 @@ export async function importar(container: MedusaContainer, plan: Plan): Promise<
             selector: { id: productId },
             update: {
               title: p.nombre,
-              description: descripcionAHtml(p.descripcion || ""),
-              status: p.estado,
+              // Celdas vacías no borran lo que ya tenía el producto
+              ...(p.descripcion ? { description: descripcionAHtml(p.descripcion) } : {}),
+              ...(p.estado ? { status: p.estado } : {}),
               category_ids: [paso.categoria_id],
               ...(imagenes.length ? { thumbnail: imagenes[0], images: imagenes.map((url) => ({ url })) } : {}),
               ...(tagIds.length ? { tag_ids: tagIds } : {}),
