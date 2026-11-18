@@ -64,6 +64,8 @@ const limitarLiga = (req: any, res: any, next: any) => {
 export default defineMiddlewares({
     routes: [
         { matcher: "/api/cotizacion-liga/*", middlewares: [limitarLiga] },
+        // Respuesta rápida a grupos de Facebook: puede traer la captura de la publicación
+        { method: ["POST"], matcher: "/admin/hetna-grupos", bodyParser: { sizeLimit: "8mb" } },
         {
             matcher: "/api/auth/*",
             middlewares: [],
