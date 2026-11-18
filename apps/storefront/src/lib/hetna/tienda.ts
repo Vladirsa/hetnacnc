@@ -115,7 +115,8 @@ function precioDe(p: any): number | null {
   return montos.length ? Math.min(...montos) : null
 }
 
-export async function catalogoTienda(countryCode: string): Promise<CatalogoTienda> {
+// Lee todos los productos publicados (la respuesta del API queda en la caché de Next)
+async function leerProductos(countryCode: string): Promise<{ productos: ProductoTienda[]; fallo: boolean }> {
   const productos: ProductoTienda[] = []
   let fallo = false
   for (let page = 1; page <= 10; page++) {
@@ -143,6 +144,23 @@ export async function catalogoTienda(countryCode: string): Promise<CatalogoTiend
     }
     if (!r.nextPage) break
   }
+  return { productos, fallo }
+}
+
+export type MenuTienda = { total: number; categorias: { clave: ClaveCategoria; nombre: string; conteo: number }[] }
+
+/** Lo que muestra el menú "Todos los productos" (computadora): categorías de la tienda con su conteo real. */
+export async function menuTienda(countryCode: string): Promise<MenuTienda | null> {
+  const { productos, fallo } = await leerProductos(countryCode)
+  if (fallo) return null
+  return {
+    total: productos.length,
+    categorias: CATEGORIAS.map((c) => ({ clave: c.clave, nombre: c.nombre, conteo: productos.filter((p) => p.categoria === c.clave).length })),
+  }
+}
+
+export async function catalogoTienda(countryCode: string): Promise<CatalogoTienda> {
+  const { productos, fallo } = await leerProductos(countryCode)
 
   // Los paquetes de créditos no tienen oferta en el carrito: su precio sale de su catálogo
   const creditos = productos.some((p) => p.categoria === "creditos-3d") ? await listarPaquetes().catch(() => null) : null
