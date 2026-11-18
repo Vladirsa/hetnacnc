@@ -27,7 +27,7 @@ function Silueta({ forma }: { forma: FormaLampara }) {
   )
 }
 
-export function GeneradorLamparas() {
+export function GeneradorLamparas({ cabecera }: { cabecera?: React.ReactNode }) {
   const [forma, setForma] = useState<FormaLampara>("esfera")
   const [alto, setAlto] = useState("300")
   const [diametro, setDiametro] = useState("260")
@@ -102,7 +102,12 @@ export function GeneradorLamparas() {
           <path d="M12 2v3M7 9a5 5 0 0110 0c0 3-2 5-2 8H9c0-3-2-5-2-8zM10 21h4" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`lampara-${forma}-${alto}mm`}

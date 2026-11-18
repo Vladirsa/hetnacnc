@@ -19,7 +19,7 @@ const FOTOS = [
 ] as const
 type Foto = (typeof FOTOS)[number]["id"]
 
-export function GeneradorMarcos() {
+export function GeneradorMarcos({ cabecera }: { cabecera?: React.ReactNode }) {
   const [foto, setFoto] = useState<Foto>("10x15")
   const [fotoA, setFotoA] = useState("100")
   const [fotoB, setFotoB] = useState("150")
@@ -106,7 +106,12 @@ export function GeneradorMarcos() {
           <rect x="7" y="7" width="10" height="10" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`marco-${Math.round(fw / 10)}x${Math.round(fh / 10)}`}

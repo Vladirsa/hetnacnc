@@ -24,6 +24,8 @@ export function BarraEstudio() {
             ? "vectorizador" // Imagen
             : ["anidado-piezas", "rebanado-capas", "svg-a-stl"].includes(String(params?.herramienta))
               ? "convertidor" // Archivos
+              : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas"
+                ? "relojes" // Decoración
         : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.

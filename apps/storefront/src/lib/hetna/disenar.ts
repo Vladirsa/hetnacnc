@@ -317,9 +317,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "convertidor", corto: "Archivos" }, // convertidor + anidado + rebanado + SVG a STL
       { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
       { slug: "engranes", corto: "Engranes" },
-      { slug: "relojes", corto: "Relojes" },
-      { slug: "lamparas-capas", corto: "Lámparas" },
-      { slug: "marcos-portarretratos", corto: "Marcos" },
+      { slug: "relojes", corto: "Decoración" }, // relojes + marcos + lámparas
     ],
   },
 }
