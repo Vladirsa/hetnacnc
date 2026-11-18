@@ -26,6 +26,8 @@ export function BarraEstudio() {
               ? "convertidor" // Archivos
               : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas"
                 ? "relojes" // Decoración
+                : params?.herramienta === "engranes"
+                  ? "rompecabezas" // Juegos y mecanismos
         : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.

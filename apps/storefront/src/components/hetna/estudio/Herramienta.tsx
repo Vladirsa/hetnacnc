@@ -16,15 +16,16 @@ const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extrui
 // relojes, marcos y lámparas: Decoración
 const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
 const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara" }
+// rompecabezas y engranes: Juegos y mecanismos
+const GeneradorJuegos = dynamic(() => import("@/components/hetna/generador/GeneradorJuegos").then((m) => m.GeneradorJuegos))
+const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas: "rompecabezas", engranes: "engranes" }
 const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
 const GeneradorMueble = dynamic(() => import("@/components/hetna/generador/GeneradorMueble").then((m) => m.GeneradorMueble))
-const GeneradorRompecabezas = dynamic(() => import("@/components/hetna/generador/GeneradorRompecabezas").then((m) => m.GeneradorRompecabezas))
 // celosías, patrones radiales y bisagra viva: una sola herramienta con modos
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
 const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
-const GeneradorEngranes = dynamic(() => import("@/components/hetna/generador/GeneradorEngranes").then((m) => m.GeneradorEngranes))
 // el organizador de cajón ahora es un tipo de caja (separadores)
 const GeneradorOrganizador = dynamic(() => import("@/components/hetna/generador/GeneradorCaja").then((m) => m.GeneradorOrganizadorCaja))
 
@@ -32,14 +33,12 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "caja-con-juntas": GeneradorCaja,
   "letras-3d": GeneradorLetras3D,
   llaveros: GeneradorLlaveros,
-  rompecabezas: GeneradorRompecabezas,
   "despiece-muebles": GeneradorMueble,
   "plantillas-empaque": GeneradorEmpaques,
-  engranes: GeneradorEngranes,
   "organizador-cajon": GeneradorOrganizador,
 }
 
-export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION)])
+export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION), ...Object.keys(MODO_JUEGOS)])
 
 export function Herramienta({ slug }: { slug: string }) {
   if (MODO_PATRON[slug]) return <GeneradorPatronesCorte modoInicial={MODO_PATRON[slug]} />
@@ -47,6 +46,7 @@ export function Herramienta({ slug }: { slug: string }) {
   if (MODO_IMAGEN[slug]) return <GeneradorImagen modoInicial={MODO_IMAGEN[slug]} />
   if (MODO_ARCHIVOS[slug]) return <GeneradorArchivos modoInicial={MODO_ARCHIVOS[slug]} />
   if (MODO_DECORACION[slug]) return <GeneradorDecoracion modoInicial={MODO_DECORACION[slug]} />
+  if (MODO_JUEGOS[slug]) return <GeneradorJuegos modoInicial={MODO_JUEGOS[slug]} />
   const G = GENERADORES[slug]
   return G ? <G /> : null
 }
