@@ -171,12 +171,8 @@ function Destacada() {
             Fabricación a medida
           </h2>
           <p className="max-w-md text-[16px] leading-relaxed text-white/80">
-            Cotiza tu pieza en 2 minutos, sin registro. Sube tu archivo o describe lo que necesitas y los talleres te mandan su precio.
+            Cotiza tu pieza en 2 minutos, sin registro. Sube tu archivo o escribe las medidas, ve un precio aproximado al instante y pide propuestas a los talleres.
           </p>
-          <ul className="fuente-mono grid gap-1 text-[13px] text-white/70">
-            <li>01 · Qué necesitas · 02 · Archivo · 03 · Material y cantidad</li>
-            <li>04 · Dónde lo entregamos · 05 · Qué ven los talleres</li>
-          </ul>
           <div>
             <LocalizedClientLink href="/cotizar" className={BTN}>
               Cotizar mi pieza
