@@ -56,7 +56,7 @@ type Borrador = {
 
 type Datos = { piezas: Pieza[]; espacios: Record<string, Config>; orden: string[] }
 type Lista = { ok: true } & Datos
-type Falla = { ok: false; error: string }
+type Falla = { ok: false; error: string; lleno?: boolean }
 type Guardado = { ok: true; id: string } | Falla
 type Simple = { ok: true } | Falla
 
@@ -151,8 +151,17 @@ const estadoDe = (p: Pieza): { texto: string; fondo: string; color: string } => 
   return { texto: "Activo", fondo: "#d9f2e3", color: "#16794f" }
 }
 
-const diasRestantes = (p: Pieza): number | null =>
-  p.hasta ? Math.ceil((Date.parse(p.hasta) - Date.now()) / 86_400_000) : null
+// Día del calendario en la Ciudad de México (aaaa-mm-dd) de un instante
+const diaMx = (t: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(t))
+
+// Días de calendario (hora del centro de México) entre hoy y el día en que vence: 0 = vence hoy.
+// Antes se redondeaba hacia arriba desde ahora y nunca daba 0 mientras seguía activo.
+const diasRestantes = (p: Pieza): number | null => {
+  if (!p.hasta) return null
+  const fin = Date.parse(p.hasta)
+  if (Number.isNaN(fin)) return null
+  return Math.round((Date.parse(diaMx(fin)) - Date.parse(diaMx(Date.now()))) / 86_400_000)
+}
 
 const fechaCorta = (t: string | null) => (t ? t.slice(0, 10) : "sin fin")
 
@@ -337,15 +346,20 @@ export default function PaginaPublicidad() {
     setGuardando(true)
     setError("")
     const b = editando
-    const r = await api<Guardado>("guardar", {
+    const cuerpo = {
       ...b,
       desde: b.desde ? `${b.desde}T00:00:00-06:00` : "",
       hasta: b.hasta ? `${b.hasta}T23:59:59-06:00` : "",
-    })
+    }
+    let r = await api<Guardado>("guardar", cuerpo)
+    // Espacio lleno en esas fechas: se avisa y sólo se guarda si confirmas
+    if (!r.ok && r.lleno && window.confirm(`${r.error}\n\n¿Guardarlo de todos modos?`)) r = await api<Guardado>("guardar", { ...cuerpo, forzar: true })
     setGuardando(false)
     if (r.ok) {
       setEditando(null)
       await cargar()
+    } else if (r.lleno) {
+      setError("No se guardó: el espacio ya está lleno en esas fechas. Pausa otro anuncio, cambia las fechas o confirma al guardar.")
     } else {
       setError(r.error === "sin_sesion" ? MSG_SESION : r.error)
     }

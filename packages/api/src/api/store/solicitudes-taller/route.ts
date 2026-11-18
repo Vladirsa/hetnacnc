@@ -304,7 +304,9 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     token,
     taller: taller ? taller.name : null,
     revision,
-    afiliacion: afiliacion ? { numero: afiliacion.numero, activar: afiliacion.activar, cuenta_existe: afiliacion.cuenta_existe } : null,
+    // No se dice si ese correo ya tiene cuenta: este formulario no pide sesión
+    // y servía para averiguar qué correos están registrados.
+    afiliacion: afiliacion ? { numero: afiliacion.numero, activar: afiliacion.activar } : null,
   })
 
   const liga = ligaPropuestas(token)

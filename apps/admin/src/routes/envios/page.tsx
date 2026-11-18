@@ -162,7 +162,8 @@ const ACCIONES: Record<string, [string, string][]> = {
   por_cobrar: [["disputar", "Pasar a disputa"], ["pagado", "Pagó por fuera"], ["descontado", "Descontado al taller"], ["anular", "Anular"]],
   en_disputa: [["cobrar", "Perdimos: cobrar"], ["anular", "Ganamos: anular"]],
   pagado: [],
-  descontado: [],
+  // Ya descontado: sólo anular (devuelve el descuento si aún no se le pagó al taller)
+  descontado: [["anular", "Anular y devolver el descuento"]],
   anulado: [["cobrar", "Volver a cobrar"]],
 }
 
@@ -184,6 +185,8 @@ function Sobrepesos() {
   }, [cargar])
   const accion = async (s: Sobrepeso, a: string) => {
     if (a === "cobrar" && !confirm(`Se le mandará a ${s.responsable_email || "el responsable"} una liga para pagar ${pesos(s.monto)}. ¿Seguir?`)) return
+    if (a === "descontado" && !confirm(`Se descontarán ${pesos(s.monto)} del siguiente pago a ${s.responsable_nombre || "el taller"} (Pagos a talleres). ¿Seguir?`)) return
+    if (a === "anular" && s.estado === "descontado" && !confirm(`¿Anular el sobrepeso y devolverle el descuento de ${pesos(s.monto)} al taller?`)) return
     try {
       await sob(`/${s.id}`, { accion: a })
       await cargar()

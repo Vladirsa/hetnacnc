@@ -172,7 +172,8 @@ export default function PaginaFundadores() {
   }, [datos, buscar])
 
   const lleno = datos ? datos.usados >= datos.cupo : false
-  const pct = datos ? Math.min(100, Math.round((datos.usados / datos.cupo) * 100)) : 0
+  // Cupo 0: no se divide entre cero; la barra sale llena, igual que el aviso "Cupo lleno"
+  const pct = !datos ? 0 : datos.cupo > 0 ? Math.min(100, Math.round((datos.usados / datos.cupo) * 100)) : 100
 
   return (
     <div style={{ display: "grid", gap: 16, padding: 24, maxWidth: 960 }}>

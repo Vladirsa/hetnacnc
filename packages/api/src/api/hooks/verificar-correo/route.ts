@@ -1,7 +1,10 @@
 // Confirmación de correo (lib/verificar-correo.ts). Llega desde la tienda:
-//   GET  /hooks/verificar-correo?c=<cliente>&e=<vence>&t=<firma>  -> confirma
+//   GET  /hooks/verificar-correo?c=<cliente>&e=<vence>&t=<firma>  -> sólo revisa la liga (no cambia nada)
+//   POST /hooks/verificar-correo  { c, e, t }                      -> confirma
 //   POST /hooks/verificar-correo  { email }                        -> reenvía la liga
-// El POST no dice si el correo existe (para no regalar qué correos tienen cuenta).
+// El GET no confirma a propósito: los antivirus del correo abren las ligas
+// solos y con eso un extraño podía dejar confirmada una cuenta con correo ajeno.
+// El reenvío no dice si el correo existe (para no regalar qué correos tienen cuenta).
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
@@ -16,18 +19,30 @@ import {
 import { sendEmail } from "../../../lib/resend"
 import { welcomeEmailHtml } from "../../../lib/email-templates"
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const q = (req.query || {}) as Record<string, string>
-  const id = String(q.c || "")
-  if (!firmaVerificacionValida(id, String(q.e || ""), String(q.t || ""))) {
-    return res.status(400).json({ ok: false, motivo: "liga" })
-  }
+type Leido = { error: number; motivo: string } | { c: any; clientes: any }
+
+const leer = async (req: MedusaRequest, d: Record<string, unknown>): Promise<Leido> => {
+  const id = String(d.c || "")
+  if (!firmaVerificacionValida(id, String(d.e || ""), String(d.t || ""))) return { error: 400, motivo: "liga" }
   const clientes = req.scope.resolve(Modules.CUSTOMER) as any
   const [c] = await clientes.listCustomers({ id }, { take: 1 })
-  if (!c) return res.status(404).json({ ok: false, motivo: "cuenta" })
+  if (!c) return { error: 404, motivo: "cuenta" }
+  return { c, clientes }
+}
 
-  if (c.metadata?.correo_verificado !== true) {
-    await clientes.updateCustomers(id, {
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+  const r = await leer(req, (req.query || {}) as Record<string, unknown>)
+  if ("error" in r) return res.status(r.error).json({ ok: false, motivo: r.motivo })
+  res.json({ ok: true, ya: r.c.metadata?.correo_verificado === true })
+}
+
+async function confirmar(req: MedusaRequest, res: MedusaResponse, d: Record<string, unknown>) {
+  const r = await leer(req, d)
+  if ("error" in r) return res.status(r.error).json({ ok: false, motivo: r.motivo })
+  const { c, clientes } = r
+  const ya = c.metadata?.correo_verificado === true
+  if (!ya) {
+    await clientes.updateCustomers(c.id, {
       metadata: { ...(c.metadata || {}), correo_verificado: true, correo_verificado_en: new Date().toISOString() },
     })
     req.scope.resolve("logger").info(`[verificar-correo] ${c.email} confirmó su correo`)
@@ -45,11 +60,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       html: welcomeEmailHtml({ name: c.first_name || "" }),
     }).catch(() => undefined)
   }
-  res.json({ ok: true, email: c.email })
+  res.json({ ok: true, ya })
 }
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-  const correo = String(((req.body || {}) as { email?: string }).email || "").trim().toLowerCase()
+  const b = (req.body || {}) as Record<string, unknown>
+  // Con la firma de la liga (c, e, t) es la confirmación; con { email }, el reenvío.
+  if (b.c || b.t) return confirmar(req, res, b)
+  const correo = String(b.email || "").trim().toLowerCase()
   if (correo.includes("@")) {
     const clientes = req.scope.resolve(Modules.CUSTOMER) as any
     const lista = await clientes.listCustomers({ email: correo, has_account: true }, { take: 1 })

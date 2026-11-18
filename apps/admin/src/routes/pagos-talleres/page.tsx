@@ -1,6 +1,10 @@
 // Pantalla "Pagos a talleres" del dashboard: cuánto se le debe a cada taller.
 // Lo disponible ya se le puede transferir (SPEI a la cuenta que guardó en su
 // perfil). Después de transferir, se marca como pagado con la clave de rastreo.
+// Los sobrepesos "Descontado al taller" (Envíos > Sobrepesos) entran aquí como
+// un renglón negativo: ya van restados del disponible. Si el disponible queda
+// negativo, se arrastra al siguiente pago. Cada pedido se puede retener (no se
+// paga) o liberar desde "Ver pedidos".
 import { useCallback, useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 
@@ -16,6 +20,20 @@ type Taller = {
   disponible: number
   pagado: number
   retenido: number
+  descuentos?: number
+}
+type Movimiento = {
+  order_id: string
+  display_id: number | null
+  moneda: string
+  neto: number
+  estado: string
+  estado_nombre: string
+  digital: boolean
+  motivo: string | null
+  ajuste?: boolean
+  disponible_en: string | null
+  creado: string
 }
 
 const cabeceras = (): Record<string, string> => {
@@ -35,12 +53,88 @@ const S: Record<string, CSSProperties> = {
   meta: { color: "#6B675C", fontSize: 13, margin: "2px 0 0" },
   btn: { background: "#C2560A", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer" },
   input: { border: "1px solid #C9C5BA", borderRadius: 8, padding: "7px 10px", fontSize: 13, minWidth: 220 },
+  chico: { background: "#fff", color: "#142033", border: "1px solid #C9C5BA", borderRadius: 8, padding: "4px 10px", fontWeight: 600, fontSize: 12, cursor: "pointer" },
+}
+
+const enviar = (cuerpo: Record<string, unknown>) =>
+  fetch("/admin/hetna-saldos/pagar", {
+    method: "POST",
+    credentials: "include",
+    headers: { ...cabeceras(), "content-type": "application/json" },
+    body: JSON.stringify(cuerpo),
+  }).catch(() => null)
+
+// Pedidos de un taller, con Retener / Liberar
+function Pedidos({ sellerId, moneda, alCambiar }: { sellerId: string; moneda: string; alCambiar: () => void }) {
+  const [lista, setLista] = useState<Movimiento[] | null>(null)
+  const [msg, setMsg] = useState("")
+  const [ocupado, setOcupado] = useState("")
+  const cargar = useCallback(() => {
+    fetch(`/admin/hetna-saldos?seller_id=${encodeURIComponent(sellerId)}`, { credentials: "include", headers: cabeceras() })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => setLista(((d.movimientos || []) as Movimiento[]).filter((m) => m.moneda === moneda)))
+      .catch(() => setMsg("No se pudieron cargar los pedidos."))
+  }, [sellerId, moneda])
+  useEffect(cargar, [cargar])
+  const cambiar = async (m: Movimiento, liberar: boolean) => {
+    let cuerpo: Record<string, unknown>
+    if (liberar) {
+      if (!confirm(`¿Liberar el pedido #${m.display_id ?? "—"}? Vuelve a contar para pagarle al taller.`)) return
+      cuerpo = { order_id: m.order_id, liberar: true }
+    } else {
+      const motivo = prompt(`¿Por qué se retiene el pedido #${m.display_id ?? "—"}? (no se le paga al taller mientras tanto)`)
+      if (motivo === null) return
+      cuerpo = { order_id: m.order_id, retener: motivo.trim() || "Retenido por HETNA" }
+    }
+    setOcupado(m.order_id)
+    setMsg("")
+    const r = await enviar(cuerpo)
+    setOcupado("")
+    if (!r?.ok) setMsg((await r?.json().catch(() => null))?.message || "No se pudo guardar. Intenta de nuevo.")
+    cargar()
+    alCambiar()
+  }
+  if (!lista) return <p style={S.meta}>{msg || "Cargando pedidos…"}</p>
+  return (
+    <div style={{ marginTop: 12, borderTop: "1px solid #EFECE4", paddingTop: 8 }}>
+      {msg && <p style={{ color: "#B3261E", fontSize: 13, margin: "0 0 6px" }}>{msg}</p>}
+      {lista.length === 0 ? (
+        <p style={S.meta}>Sin pedidos.</p>
+      ) : (
+        <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+          <tbody>
+            {lista.map((m) => (
+              <tr key={m.order_id} style={{ borderTop: "1px solid #F3F1EA" }}>
+                <td style={{ padding: "6px 4px" }}>
+                  {m.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}>{m.motivo || "Descuento por sobrepeso"}</span> : <>#{m.display_id ?? "—"}{m.digital ? " · digital" : ""}</>}
+                </td>
+                <td style={{ padding: "6px 4px", fontWeight: 600, color: m.neto < 0 ? "#B3261E" : undefined }}>{dinero(m.neto, m.moneda)}</td>
+                <td style={{ padding: "6px 4px" }}>
+                  {m.estado_nombre}
+                  {m.estado === "retenido" && m.motivo && <span style={{ display: "block", ...S.meta }}>{m.motivo}</span>}
+                </td>
+                <td style={{ padding: "6px 4px", textAlign: "right" }}>
+                  {!m.ajuste && (m.estado === "pendiente" || m.estado === "disponible") && (
+                    <button style={S.chico} disabled={ocupado === m.order_id} onClick={() => cambiar(m, false)}>Retener</button>
+                  )}
+                  {!m.ajuste && m.estado === "retenido" && (
+                    <button style={S.chico} disabled={ocupado === m.order_id} onClick={() => cambiar(m, true)}>Liberar</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
 }
 
 function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
   const [ref, setRef] = useState("")
   const [trabajando, setTrabajando] = useState(false)
   const [msg, setMsg] = useState("")
+  const [verPedidos, setVerPedidos] = useState(false)
   const pagar = async () => {
     if (ref.trim().length < 4) return setMsg("Pon la clave de rastreo del SPEI.")
     if (t.tarjeta_verificada === false && !confirm(`${t.nombre} no ha verificado su tarjeta. Lo recomendado es pedírsela antes de transferirle. ¿Marcar el pago de todos modos?`)) return
@@ -76,11 +170,21 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
           )}
         </div>
         <div style={{ textAlign: "right" }}>
-          <p style={{ margin: 0, fontSize: 12, color: "#1E7B3A", fontWeight: 700 }}>DISPONIBLE PARA PAGAR</p>
-          <p style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{dinero(t.disponible, t.moneda)}</p>
+          <p style={{ margin: 0, fontSize: 12, color: t.disponible < 0 ? "#B3261E" : "#1E7B3A", fontWeight: 700 }}>
+            {t.disponible < 0 ? "SALDO EN CONTRA (SE DESCUENTA DEL SIGUIENTE PAGO)" : "DISPONIBLE PARA PAGAR"}
+          </p>
+          <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: t.disponible < 0 ? "#B3261E" : undefined }}>{dinero(t.disponible, t.moneda)}</p>
+          {!!t.descuentos && (
+            <p style={{ ...S.meta, color: "#B3261E" }}>Incluye descuentos por sobrepeso: {dinero(t.descuentos, t.moneda)}</p>
+          )}
           <p style={S.meta}>Pendiente de entrega: {dinero(t.pendiente, t.moneda)} · Pagado: {dinero(t.pagado, t.moneda)}</p>
+          {t.retenido !== 0 && <p style={{ ...S.meta, color: "#9A6A06" }}>Retenido (no se paga): {dinero(t.retenido, t.moneda)}</p>}
+          <button style={{ ...S.chico, marginTop: 6 }} onClick={() => setVerPedidos(!verPedidos)}>
+            {verPedidos ? "Ocultar pedidos" : "Ver pedidos"}
+          </button>
         </div>
       </div>
+      {verPedidos && <Pedidos sellerId={t.seller_id} moneda={t.moneda} alCambiar={alPagar} />}
       {t.disponible > 0 && (
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
           <input style={S.input} placeholder="Clave de rastreo del SPEI" value={ref} onChange={(e) => setRef(e.target.value)} />
@@ -107,7 +211,8 @@ export default function PagosTalleresPage() {
 
   if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}>{error}</p></div>
   if (!datos) return <div style={S.page}><p style={S.meta}>Cargando…</p></div>
-  const total = datos.talleres.reduce((s, t) => s + (t.moneda === "mxn" ? t.disponible : 0), 0)
+  // Un saldo en contra no resta de lo que se les paga a los demás talleres
+  const total = datos.talleres.reduce((s, t) => s + (t.moneda === "mxn" ? Math.max(0, t.disponible) : 0), 0)
   return (
     <div style={S.page}>
       <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px" }}>Pagos a talleres</h1>

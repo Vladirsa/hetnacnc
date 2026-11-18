@@ -82,6 +82,36 @@ export const horasRevision = () => {
   const n = Number(process.env.LICITACION_REVISION_HORAS || 24)
   return n > 0 ? n : 24
 }
+// "Pedir información al cliente" detiene el reloj de la aprobación automática:
+// el cliente contesta por correo o WhatsApp (no hay respuesta dentro del
+// sistema), así que HETNA la aprueba o cancela al leerlo. Si nadie hace nada,
+// el reloj vuelve a correr desde la última petición y la solicitud se aprueba
+// sola pasadas LICITACION_INFO_HORAS (72 por defecto): nunca se queda colgada.
+export const horasEsperaInfo = () => {
+  const n = Number(process.env.LICITACION_INFO_HORAS || 72)
+  return n > 0 ? n : 72
+}
+
+/** Cuándo se aprueba sola una solicitud en revisión. */
+export const limiteRevision = (s: { created_at: Date | string; info_pedida_en?: Date | string | null }) =>
+  s.info_pedida_en
+    ? new Date(new Date(s.info_pedida_en).getTime() + horasEsperaInfo() * 3600e3)
+    : new Date(new Date(s.created_at).getTime() + horasRevision() * 3600e3)
+
+/** Las solicitudes en revisión que ya pasaron su límite (misma regla que
+ *  limiteRevision, en SQL para que el límite de filas no deje fuera a las
+ *  vencidas detrás de las que esperan al cliente). */
+export const revisionesVencidas = (knex: any, ahora = new Date(), limite = 20) =>
+  knex(T_SOLICITUD)
+    .where({ estado: "revision" })
+    .where((w: any) =>
+      w
+        .where((a: any) => a.whereNull("info_pedida_en").where("created_at", "<=", new Date(ahora.getTime() - horasRevision() * 3600e3)))
+        .orWhere("info_pedida_en", "<=", new Date(ahora.getTime() - horasEsperaInfo() * 3600e3))
+    )
+    .orderBy("created_at", "asc")
+    .limit(limite)
+    .select("*")
 // Dirección pública del dashboard (Nginx manda /dashboard al backend). No se
 // arma con MEDUSA_BACKEND_URL: en el servidor ésa es la interna (localhost).
 export const ADMIN_URL = (process.env.ADMIN_PANEL_URL || `${STORE_URL}/dashboard`).replace(/\/$/, "")
@@ -101,6 +131,9 @@ export const asegurarSeguimiento = async (knex: any) => {
     ["disputa", "text"],
     ["disputa_desde", "fecha"],
     ["disputa_detalle", "text"],
+    // Última vez que HETNA pidió información al cliente (detiene el reloj de la
+    // aprobación automática; ver horasEsperaInfo)
+    ["info_pedida_en", "fecha"],
   ] as const) {
     if (!(await knex.schema.hasColumn(T_SOLICITUD, col))) {
       await knex.schema.alterTable(T_SOLICITUD, (t: any) =>

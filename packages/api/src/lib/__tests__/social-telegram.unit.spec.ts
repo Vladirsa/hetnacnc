@@ -1,4 +1,20 @@
-import { puntajeDe, vistaPrevia } from "../social-telegram"
+import { MAX_INTENTOS_CODIGO, puntajeDe, veredictoVincular, vistaPrevia } from "../social-telegram"
+
+describe("Vincular el chat de Telegram", () => {
+  const base = { codigo: "123456", codigo_expira: new Date(Date.now() + 60_000).toISOString() }
+  it("acepta el código correcto dentro del tope de intentos", () => {
+    expect(veredictoVincular({ ...base, codigo_intentos: 1 }, "123456")).toBe("ok")
+    expect(veredictoVincular({ ...base, codigo_intentos: MAX_INTENTOS_CODIGO }, "123456")).toBe("ok")
+    expect(veredictoVincular({ ...base, codigo_intentos: 2 }, "654321")).toBe("mal")
+  })
+  it("pasado el tope ya no acepta ni el código correcto", () => {
+    expect(veredictoVincular({ ...base, codigo_intentos: MAX_INTENTOS_CODIGO + 1 }, "123456")).toBe("agotado")
+  })
+  it("sin código o vencido no vincula", () => {
+    expect(veredictoVincular({}, "123456")).toBe("mal")
+    expect(veredictoVincular({ ...base, codigo_expira: new Date(Date.now() - 1000).toISOString() }, "123456")).toBe("mal")
+  })
+})
 
 describe("Aprobación por Telegram", () => {
   const p = {

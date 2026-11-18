@@ -19,7 +19,7 @@
 import { randomBytes } from "crypto"
 
 import { correosDeLaCasa } from "./cuentas-casa"
-import { STORE_URL, VENDOR_URL } from "./licitacion"
+import { STORE_URL, VENDOR_URL, esc } from "./licitacion"
 import { paypal, paypalListo } from "./paypal-api"
 import { sendEmail } from "./resend"
 
@@ -310,6 +310,6 @@ async function avisarDevolucionPendiente(pago: string, seller: any) {
   await sendEmail({
     to: process.env.HETNA_LEADS_EMAIL,
     subject: `Devolver a mano: verificación de tarjeta de ${seller?.name || seller?.id}`,
-    html: `<p>No se pudo devolver solo el cargo de verificación de $${MONTO_VERIFICACION} MXN (${pago}) del taller ${seller?.name || ""} (${seller?.id}). Devuélvelo desde el panel del procesador.</p>`,
+    html: `<p>No se pudo devolver solo el cargo de verificación de $${MONTO_VERIFICACION} MXN (${esc(pago)}) del taller ${esc(seller?.name || "")} (${esc(seller?.id)}). Devuélvelo desde el panel del procesador.</p>`,
   }).catch(() => {})
 }

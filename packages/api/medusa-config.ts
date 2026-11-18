@@ -191,7 +191,10 @@ module.exports = withMercur({
       options: {
         providers: [
           {
-            resolve: '@medusajs/medusa/file-local',
+            // El file-local de Medusa con filtro: rechaza .html, .svg, scripts e
+            // instaladores (lo que suben talleres y panel se sirve desde /static
+            // en el dominio propio). Ver src/modules/archivo-local-seguro.
+            resolve: './src/modules/archivo-local-seguro',
             id: 'local',
             options: {
               backend_url: process.env.FILE_BACKEND_URL || 'http://localhost:9000/static',

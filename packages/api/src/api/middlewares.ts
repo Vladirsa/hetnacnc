@@ -32,6 +32,7 @@ import { storeAfiliacionMiddlewares } from "./store/hetna-afiliacion/middlewares
 import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
 import { sinContacto } from "../lib/clientes-taller";
 import { ipCliente } from "../lib/ip-cliente";
+import { bitacoraAdmin, bitacoraLogin } from "../lib/bitacora-seguridad";
 
 // Escudo de privacidad: el taller no ve correo ni teléfono de sus clientes en
 // las pantallas de Mercur (Clientes, Pedidos). Los tratos van por el chat.
@@ -63,6 +64,9 @@ const limitarLiga = (req: any, res: any, next: any) => {
 
 export default defineMiddlewares({
     routes: [
+        // Bitácora de seguridad: inicios de sesión rechazados y cambios en /admin
+        { matcher: "/auth/*", middlewares: [bitacoraLogin] },
+        { matcher: "/admin/*", middlewares: [bitacoraAdmin] },
         { matcher: "/api/cotizacion-liga/*", middlewares: [limitarLiga] },
         {
             matcher: "/api/auth/*",

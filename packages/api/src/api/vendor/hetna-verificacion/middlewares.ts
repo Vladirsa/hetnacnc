@@ -56,6 +56,8 @@ const PROTEGIDAS = [
   "embajador_desde",
   "aviso_confirmar",
   "felicitado_primer_producto",
+  // Bienvenida al aprobarse (lib/aprobar-taller.ts): se manda una sola vez
+  "bienvenida_hetna_en",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 

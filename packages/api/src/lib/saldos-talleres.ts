@@ -25,6 +25,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_GUIAS, asegurarTablaGuias } from "./guias"
+import { T_SOBREPESO, asegurarTablaSobrepesos } from "./sobrepesos"
 
 export const T_SALDO = "hetna_saldo_taller"
 
@@ -166,8 +167,12 @@ export async function marcarEntregado(c: MedusaContainer, orderId: string, por: 
   await registrarVenta(c, orderId).catch(() => false)
   const ahora = new Date()
   const libera = new Date(ahora.getTime() + diasLiberacion() * 24 * 60 * 60 * 1000)
+  // También se anota en un pedido retenido (no lo libera: liberarVencidos sólo
+  // toma los pendientes). Así, al quitar la retención la cuenta ya trae su fecha
+  // y el dinero del taller no se queda atorado sin plazo.
   return knex(T_SALDO)
-    .where({ order_id: orderId, estado: "pendiente" })
+    .where({ order_id: orderId })
+    .whereIn("estado", ["pendiente", "retenido"])
     .whereNull("entregado_en")
     .update({ entregado_en: ahora, entregado_por: por, disponible_en: libera, actualizado: knex.fn.now() })
 }
@@ -209,14 +214,155 @@ export async function registrarFaltantes(c: MedusaContainer, dias = 30): Promise
   return n
 }
 
-/** Pedido cancelado o reembolsado: no se le paga al taller. */
+/** Pedido cancelado o reembolsado: no se le paga al taller. Un descuento por
+ *  sobrepeso no se retiene: retenerlo sería perdonarle el cargo al taller. */
 export async function retener(c: MedusaContainer, orderId: string, motivo: string) {
   const knex = knexDe(c)
   await asegurarTablaSaldos(knex)
+  if (esAjuste(orderId)) return 0
   return knex(T_SALDO)
     .where({ order_id: orderId })
     .whereIn("estado", ["pendiente", "disponible"])
     .update({ estado: "retenido", motivo: motivo.slice(0, 300), actualizado: knex.fn.now() })
+}
+
+/** A dónde regresa un pedido retenido al liberarlo: lo digital queda
+ *  disponible al momento; lo físico vuelve a "pendiente" y la tarea
+ *  (liberarVencidos) lo pasa a disponible cuando se cumpla su plazo de entrega. */
+export const estadoAlLiberar = (f: { digital: boolean }): EstadoSaldo => (f.digital ? "disponible" : "pendiente")
+
+export class SaldoNoLiberable extends Error {}
+
+/** HETNA quita la retención de un pedido (p. ej. el reclamo se resolvió a favor
+ *  del taller). Se vuelve a revisar el pedido en vivo: si está cancelado o ya
+ *  no tiene pago confirmado (reembolso), no se libera. */
+export async function liberarRetenido(c: MedusaContainer, orderId: string): Promise<number> {
+  const knex = knexDe(c)
+  await asegurarTablaSaldos(knex)
+  const f = await knex(T_SALDO).where({ order_id: orderId, estado: "retenido" }).first()
+  if (!f || esAjuste(orderId)) return 0
+  const query = c.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({
+    entity: "order",
+    fields: ["id", "status", "payment_status", "fulfillments.delivered_at"],
+    filters: { id: orderId },
+  })
+  const o = data[0] as any
+  if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status)) || String(o.payment_status) === "partially_refunded") {
+    throw new SaldoNoLiberable("Este pedido está cancelado o reembolsado: no se puede liberar.")
+  }
+  // Si se entregó mientras estaba retenido, marcarEntregado no lo anotó (sólo
+  // toca los pendientes): se arranca aquí la cuenta desde esa entrega.
+  const extra: Record<string, unknown> = {}
+  if (!f.digital && !f.entregado_en) {
+    await asegurarTablaGuias(knex)
+    const guia = await knex(T_GUIAS).where({ order_id: orderId, estado: "entregada" }).first("actualizado")
+    const fechas = ((o.fulfillments || []) as any[]).map((x) => x?.delivered_at).filter(Boolean).map((d) => new Date(d).getTime())
+    if (guia) fechas.push(new Date(guia.actualizado || Date.now()).getTime())
+    if (fechas.length) {
+      const entregado = new Date(Math.min(...fechas))
+      Object.assign(extra, {
+        entregado_en: entregado,
+        entregado_por: guia ? "guia" : "admin",
+        disponible_en: new Date(entregado.getTime() + diasLiberacion() * 24 * 60 * 60 * 1000),
+      })
+    }
+  }
+  return knex(T_SALDO)
+    .where({ order_id: orderId, estado: "retenido" })
+    .update({ estado: estadoAlLiberar(f), motivo: null, ...extra, actualizado: knex.fn.now() })
+}
+
+// ── Sobrepesos descontados del pago al taller ──────────────────────────────────────────
+// Cuando HETNA marca un sobrepeso de guía como "Descontado al taller", entra al
+// saldo un renglón negativo (order_id "sobrepeso:<id>", ya "disponible"): resta
+// de lo que se le transfiere en el siguiente pago y se marca pagado junto con
+// sus ventas. La llave primaria evita descontarlo dos veces (doble clic). Si el
+// disponible no alcanza, el saldo queda negativo y se arrastra al siguiente
+// pago (la pantalla lo enseña así; no hay botón de pagar con saldo negativo).
+// Sólo se descuenta al cambiar de estado: los sobrepesos que ya estaban
+// "descontado" antes de esto no tienen renglón y no se vuelven a descontar
+// (pudieron descontarse a mano).
+export const PREFIJO_SOBREPESO = "sobrepeso:"
+export const esAjuste = (orderId: string) => String(orderId || "").startsWith(PREFIJO_SOBREPESO)
+export const ajusteSobrepesoId = (sobrepesoId: string) => `${PREFIJO_SOBREPESO}${sobrepesoId}`
+
+/** Renglón del saldo que descuenta un sobrepeso (monto en MXN). */
+export function filaAjusteSobrepeso(s: { id: string; folio: number | string; responsable_id: string; monto: any; referencia?: string | null }) {
+  const folio = `SOB-${String(s.folio).padStart(5, "0")}`
+  return {
+    order_id: ajusteSobrepesoId(s.id),
+    seller_id: s.responsable_id,
+    display_id: null,
+    moneda: "mxn",
+    productos: -r2(Math.abs(Number(s.monto) || 0)),
+    envio: 0,
+    comision: 0,
+    envio_al_taller: false,
+    digital: false,
+    estado: "disponible",
+    disponible_en: new Date(),
+    motivo: `Sobrepeso ${folio}${s.referencia ? ` (${s.referencia})` : ""}`.slice(0, 300),
+  }
+}
+
+export type DecisionSobrepeso =
+  | { tipo: "nada" } // ya estaba descontado (doble clic): no se toca nada
+  | { tipo: "descontar" } // pasa a descontado y entra el renglón negativo
+  | { tipo: "devolver" } // anular: se borra el renglón (aún no pagado)
+  | { tipo: "solo_estado" } // anular uno descontado antes de esto (sin renglón)
+  | { tipo: "bloqueado"; mensaje: string }
+  | null // la acción no toca el saldo (sigue el flujo normal)
+
+/** Qué le pasa al saldo con una acción sobre un sobrepeso.
+ *  @param ajuste estado del renglón del saldo de ese sobrepeso, o null si no hay. */
+export function decidirSobrepeso(estado: string, accion: string, ajuste: string | null): DecisionSobrepeso {
+  if (estado === "descontado") {
+    if (accion === "descontado") return { tipo: "nada" }
+    if (accion !== "anular") return { tipo: "bloqueado", mensaje: "Este sobrepeso ya se descontó del pago al taller: sólo se puede anular." }
+    if (!ajuste) return { tipo: "solo_estado" }
+    if (ajuste === "disponible") return { tipo: "devolver" }
+    return { tipo: "bloqueado", mensaje: "El descuento ya se aplicó en un pago al taller: si hay que devolverlo, hazlo a mano en el siguiente pago." }
+  }
+  if (accion === "descontado") return { tipo: "descontar" }
+  return null
+}
+
+/** Aplica "descontado" o "anular" de un sobrepeso de taller junto con su efecto en
+ *  el saldo, en una sola transacción. Devuelve la decisión tomada (null = la
+ *  acción no toca el saldo y la ruta sigue con su flujo normal). */
+export async function cambiarSobrepesoConSaldo(knex: any, s: any, accion: string): Promise<DecisionSobrepeso> {
+  await asegurarTablaSaldos(knex)
+  await asegurarTablaSobrepesos(knex)
+  const id = ajusteSobrepesoId(s.id)
+  const ajuste = await knex(T_SALDO).where({ order_id: id }).first("estado")
+  const d = decidirSobrepeso(s.estado, accion, ajuste?.estado ?? null)
+  if (!d || d.tipo === "nada" || d.tipo === "bloqueado") return d
+  if (d.tipo === "descontar") {
+    await knex.transaction(async (trx: any) => {
+      // Condicionado al estado que se leyó: dos clics casi juntos sólo descuentan
+      // una vez, y no se pisa un "anulado" o "en disputa" puesto mientras tanto
+      const n = await trx(T_SOBREPESO)
+        .where({ id: s.id, estado: s.estado })
+        .update({ estado: "descontado", updated_at: trx.fn.now() })
+      if (n) await trx(T_SALDO).insert(filaAjusteSobrepeso(s)).onConflict("order_id").ignore()
+    })
+    return d
+  }
+  let pagado = false
+  await knex.transaction(async (trx: any) => {
+    if (d.tipo === "devolver") {
+      const n = await trx(T_SALDO).where({ order_id: id, estado: "disponible" }).del()
+      // Se marcó pagado mientras tanto: el descuento ya se aplicó
+      if (!n) {
+        pagado = true
+        return
+      }
+    }
+    await trx(T_SOBREPESO).where({ id: s.id, estado: "descontado" }).update({ estado: "anulado", updated_at: trx.fn.now() })
+  })
+  if (pagado) return decidirSobrepeso("descontado", "anular", "pagado")
+  return d
 }
 
 export class SaldoCambio extends Error {}
@@ -274,6 +420,8 @@ export function filaParaRespuesta(f: any) {
     pago_referencia: f.pago_referencia,
     motivo: f.motivo,
     creado: f.creado,
+    // Descuento por sobrepeso (renglón negativo), no una venta
+    ajuste: esAjuste(f.order_id),
   }
 }
 

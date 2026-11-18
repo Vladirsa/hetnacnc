@@ -1,10 +1,11 @@
 // Marcar como pagado lo disponible de un taller, después de hacerle el SPEI.
 //   POST /admin/hetna-saldos/pagar { seller_id, referencia, metodo?, order_ids? }
 // También: { order_id, retener: "motivo" } para no pagar un pedido (reclamo,
-// archivo que no corresponde, contracargo).
+// archivo que no corresponde, contracargo), y { order_id, liberar: true } para
+// quitarle la retención (si el pedido sigue pagado y sin cancelar).
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { SaldoCambio, marcarPagado, retener } from "../../../../lib/saldos-talleres"
+import { SaldoCambio, SaldoNoLiberable, liberarRetenido, marcarPagado, retener } from "../../../../lib/saldos-talleres"
 import { estadoRequisitos } from "../../../../lib/requisitos-vendedor"
 import { servicioTalleres } from "../../../../lib/alta-taller"
 
@@ -13,6 +14,14 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (typeof b.retener === "string" && typeof b.order_id === "string") {
     const n = await retener(req.scope, b.order_id, b.retener.trim() || "Retenido por HETNA")
     return res.json({ ok: true, retenidos: n })
+  }
+  if (b.liberar === true && typeof b.order_id === "string") {
+    try {
+      return res.json({ ok: true, liberados: await liberarRetenido(req.scope, b.order_id) })
+    } catch (e) {
+      if (e instanceof SaldoNoLiberable) return res.status(409).json({ message: e.message })
+      throw e
+    }
   }
   const sellerId = typeof b.seller_id === "string" ? b.seller_id : ""
   const referencia = typeof b.referencia === "string" ? b.referencia.trim() : ""

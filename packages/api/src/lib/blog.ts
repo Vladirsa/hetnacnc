@@ -24,16 +24,19 @@ export const slugDe = (t: string) =>
 
 type Entrada = Record<string, unknown>
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "")
-const url = (v: unknown) => {
+// Vacío = sin liga (null). Con algo escrito debe empezar con http(s); si no, es error (antes se guardaba vacía sin avisar).
+const url = (v: unknown): string | null | undefined => {
   const s = texto(v, 500)
-  return /^https?:\/\//.test(s) ? s : null
+  if (!s) return null
+  return /^https?:\/\//.test(s) ? s : undefined
 }
 
 // Valida y normaliza lo que manda el editor del dashboard.
 export function leerArticulo(b: Entrada, parcial = false): { datos?: Record<string, unknown>; error?: string } {
   const titulo = texto(b.title, 200)
   const contenido = typeof b.content_html === "string" ? b.content_html.slice(0, 200_000) : ""
-  if (!parcial && titulo.length < 8) return { error: "El título debe tener al menos 8 letras." }
+  // Al editar también: si llega el título, debe tener al menos 8 letras
+  if ((!parcial || "title" in b) && titulo.length < 8) return { error: "El título debe tener al menos 8 letras." }
   if (!parcial && contenido.trim().length < 50) return { error: "El artículo está muy corto." }
   const datos: Record<string, unknown> = {}
   if (titulo) datos.title = titulo
@@ -41,8 +44,16 @@ export function leerArticulo(b: Entrada, parcial = false): { datos?: Record<stri
   const slug = slugDe(texto(b.slug, 120) || titulo)
   if (slug) datos.slug = slug
   if ("excerpt" in b || !parcial) datos.excerpt = texto(b.excerpt, 400) || titulo
-  if ("cover_image_url" in b) datos.cover_image_url = url(b.cover_image_url)
-  if ("video_url" in b) datos.video_url = url(b.video_url)
+  if ("cover_image_url" in b) {
+    const u = url(b.cover_image_url)
+    if (u === undefined) return { error: "La liga de la portada debe empezar con http:// o https://" }
+    datos.cover_image_url = u
+  }
+  if ("video_url" in b) {
+    const u = url(b.video_url)
+    if (u === undefined) return { error: "La liga del video debe empezar con http:// o https://" }
+    datos.video_url = u
+  }
   if ("seo_title" in b) datos.seo_title = texto(b.seo_title, 70) || null
   if ("seo_description" in b) datos.seo_description = texto(b.seo_description, 170) || null
   if ("categoria" in b) {
