@@ -14,6 +14,14 @@ import {
   formaPorId,
   generarEmpaque,
   plantillaDXF,
+  acomodarEnHojas,
+  aprovechamiento,
+  hojaAjustada,
+  hojaDXF,
+  hojaSVG,
+  hojasVistaSVG,
+  TAMANOS_HOJA,
+  type Hoja,
   doblecesSinPerforar,
   type ModoDoblez,
   type OpcionesDoblez,
@@ -108,6 +116,12 @@ export function GeneradorEmpaques() {
   const [modoDoblez, setModoDoblez] = useState<ModoDoblez>("marcar")
   const [corteDoblez, setCorteDoblez] = useState("6")
   const [puenteDoblez, setPuenteDoblez] = useState("3")
+  // Hoja: "ajustar" (tamaño del dibujo), un tamaño de TAMANOS_HOJA o "medida"
+  const [tamano, setTamano] = useState("ajustar")
+  const [horizontal, setHorizontal] = useState(false)
+  const [margenHoja, setMargenHoja] = useState("5")
+  const [anchoHoja, setAnchoHoja] = useState("600")
+  const [altoHoja, setAltoHoja] = useState("400")
 
   // /disenar/plantillas-empaque?modelo=pizza abre esa plantilla
   useEffect(() => {
@@ -157,7 +171,44 @@ export function GeneradorEmpaques() {
   // Para cotizar o mandar a un taller sólo van líneas que se cortan: el
   // perforado sí (es corte), el marcado no.
   const dobCotizar: OpcionesDoblez = dob.modo === "perforado" ? dob : { ...dob, modo: "ninguno" }
-  const vista = useMemo(() => (listo ? plantillaSVG(r.piezas, "vista", dob) : ""), [r, listo, dob])
+  // Tamaño de hoja elegido (mm) y piezas acomodadas en una o varias hojas
+  const medidaHoja = useMemo(() => {
+    if (tamano === "ajustar") return null
+    const t = TAMANOS_HOJA.find((x) => x.id === tamano)
+    const w = t ? t.ancho : (numero(anchoHoja) || 0) * k
+    const h = t ? t.alto : (numero(altoHoja) || 0) * k
+    if (!(w > 10 && h > 10)) return null
+    // los tamaños de la lista vienen verticales; la medida propia se respeta tal cual
+    return t && horizontal ? { w: h, h: w } : { w, h }
+  }, [tamano, horizontal, anchoHoja, altoHoja, k])
+  const margenMm = Math.max(0, (numero(margenHoja) || 0) * k)
+  const acomodo = useMemo(() => {
+    if (!listo) return { hojas: [] as Hoja[], noCaben: [] as string[] }
+    if (!medidaHoja) return { hojas: [hojaAjustada(r.piezas)], noCaben: [] as string[] }
+    return acomodarEnHojas(r.piezas, medidaHoja.w, medidaHoja.h, Math.min(margenMm, medidaHoja.w / 3, medidaHoja.h / 3))
+  }, [r, listo, medidaHoja, margenMm])
+  const hojas = acomodo.hojas
+  const vista = useMemo(
+    () => (!listo ? "" : medidaHoja ? (hojas.length ? hojasVistaSVG(hojas, dob) : "") : plantillaSVG(r.piezas, "vista", dob)),
+    [r, listo, dob, hojas, medidaHoja],
+  )
+  const nombreHoja = tamano === "ajustar" ? "" : tamano === "medida" ? "medida propia" : TAMANOS_HOJA.find((x) => x.id === tamano)?.nombre || ""
+  const usoHojas = medidaHoja && hojas.length ? Math.round((hojas.reduce((a, h) => a + aprovechamiento(h), 0) / hojas.length) * 100) : 0
+  // Descarga por hoja: con más de una, un archivo por hoja (-hoja1, -hoja2…)
+  const descargarHojas = (ext: "dxf" | "svg") => {
+    if (!medidaHoja) {
+      if (ext === "dxf") descargar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas, dob), "application/dxf")
+      else descargar(`${nombreArchivo}.svg`, plantillaSVG(r.piezas, "corte", dob), "image/svg+xml")
+      return
+    }
+    hojas.forEach((h, i) => {
+      const nombre = `${nombreArchivo}${hojas.length > 1 ? `-hoja${i + 1}` : ""}.${ext}`
+      setTimeout(() => {
+        if (ext === "dxf") descargar(nombre, hojaDXF(h, dob), "application/dxf")
+        else descargar(nombre, hojaSVG(h, "corte", dob), "image/svg+xml")
+      }, i * 400)
+    })
+  }
   const sinPerforar = useMemo(() => (listo ? doblecesSinPerforar(r.piezas, dob) : 0), [r, listo, dob])
   const hoja = listo ? acomodarPlantillas(r.piezas) : null
   const SIN_UNIDAD = ["lados", "filas", "columnas"]
@@ -179,17 +230,32 @@ export function GeneradorEmpaques() {
       }
       return y
     })
+    setMargenHoja(conv)
+    setAnchoHoja(conv)
+    setAltoHoja(conv)
     setUnidad(u)
   }
 
   const imprimir = () => {
     const w = window.open("", "_blank")
     if (!w) return
-    w.document.write(
-      `<!doctype html><title>${nombreArchivo}</title><style>@page{margin:5mm}body{margin:0}</style>` +
-        `<p style="font:12px sans-serif">Imprime al 100% (sin "ajustar a la página"). ${dob.modo === "perforado" ? "Negro: corte · Magenta: perforado para doblar." : "Negro: corte · Azul punteado: doblez."}</p>` +
-        plantillaSVG(r.piezas, "imprimir", dob)
-    )
+    const nota = `Imprime al 100% (sin "ajustar a la página"). ${dob.modo === "perforado" ? "Negro: corte · Magenta: perforado para doblar." : "Negro: corte · Azul punteado: doblez."}`
+    if (medidaHoja && hojas.length) {
+      // una página por hoja, del tamaño de la hoja elegida (sirve para guardar como PDF)
+      w.document.write(
+        `<!doctype html><title>${nombreArchivo}</title><style>@page{size:${r1(medidaHoja.w)}mm ${r1(medidaHoja.h)}mm;margin:0}body{margin:0}` +
+          `.h{width:${r1(medidaHoja.w)}mm;height:${r1(medidaHoja.h)}mm;break-after:page;overflow:hidden}.h:last-child{break-after:auto}.h svg{display:block}` +
+          `.n{font:12px sans-serif;padding:8px}@media print{.n{display:none}}</style>` +
+          `<p class="n">${nota} Elige el tamaño ${nombreHoja} en el cuadro de impresión.</p>` +
+          hojas.map((h) => `<div class="h">${hojaSVG(h, "imprimir", dob)}</div>`).join("")
+      )
+    } else {
+      w.document.write(
+        `<!doctype html><title>${nombreArchivo}</title><style>@page{margin:5mm}body{margin:0}</style>` +
+          `<p style="font:12px sans-serif">${nota}</p>` +
+          plantillaSVG(r.piezas, "imprimir", dob)
+      )
+    }
     w.document.close()
     w.focus()
     setTimeout(() => w.print(), 300)
@@ -334,6 +400,54 @@ export function GeneradorEmpaques() {
               </>
             )}
           </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-semibold text-[#1B1B18]">Tamaño de hoja</span>
+            <select
+              value={tamano}
+              onChange={(e) => setTamano(e.target.value)}
+              className="w-full bg-white border border-[#E7E4DC] rounded-[10px] px-3 py-2.5 text-[15px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
+            >
+              <option value="ajustar">Ajustar al dibujo</option>
+              {[...new Set(TAMANOS_HOJA.map((t) => t.grupo))].map((g) => (
+                <optgroup key={g} label={g}>
+                  {TAMANOS_HOJA.filter((t) => t.grupo === g).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nombre} ({r1(t.ancho)} × {r1(t.alto)} mm)
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+              <option value="medida">Medida propia</option>
+            </select>
+            {tamano !== "ajustar" && (
+              <>
+                {tamano !== "medida" && (
+                  <div className="flex gap-2">
+                    <Opcion activa={!horizontal} onClick={() => setHorizontal(false)}>Vertical</Opcion>
+                    <Opcion activa={horizontal} onClick={() => setHorizontal(true)}>Horizontal</Opcion>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  {(tamano === "medida"
+                    ? ([["Ancho de hoja", anchoHoja, setAnchoHoja], ["Alto de hoja", altoHoja, setAltoHoja], ["Margen", margenHoja, setMargenHoja]] as const)
+                    : ([["Margen", margenHoja, setMargenHoja]] as const)
+                  ).map(([t, val, set]) => (
+                    <label key={t} className="flex flex-col gap-1">
+                      <span className="text-[13px] font-semibold text-[#1B1B18]">{t}</span>
+                      <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
+                        <input type="text" inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
+                        <span className="pr-3 text-[13px] text-[#9A978C]">{unidad}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="m-0 text-[12.5px] text-[#6B6A63]">
+                  Las piezas se acomodan en la hoja y se giran si así caben. Si no caben en una, se usan varias y cada hoja se descarga en su propio archivo. Al imprimir, cada hoja sale en su página.
+                </p>
+              </>
+            )}
+          </div>
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
@@ -354,10 +468,20 @@ export function GeneradorEmpaques() {
                   <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> Corte</span>
                   {dob.modo === "marcar" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#1F5FBF]" /> Doblez (marcar)</span>}
                   {dob.modo === "perforado" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#B0127A]" /> Doblez perforado ({r1(dob.corte)} mm corte / {r1(dob.puente)} mm puente)</span>}
-                  {hoja && <span>Hoja necesaria: {r1(hoja.ancho)} × {r1(hoja.alto)} mm</span>}
+                  {hoja && !medidaHoja && <span>Hoja necesaria: {r1(hoja.ancho)} × {r1(hoja.alto)} mm</span>}
+                  {medidaHoja && hojas.length > 0 && (
+                    <span>
+                      {hojas.length === 1 ? "1 hoja" : `${hojas.length} hojas`} {nombreHoja} de {r1(medidaHoja.w)} × {r1(medidaHoja.h)} mm · aprovechamiento {usoHojas}%
+                    </span>
+                  )}
                 </div>
               </div>
 
+              {acomodo.noCaben.length > 0 && (
+                <p className="m-0 text-[13.5px] text-[#8A1C1C] bg-[#FDECEC] border border-[#F2B8B5] rounded-[12px] px-4 py-3">
+                  No cabe en la hoja {nombreHoja} ni girándola: {acomodo.noCaben.join(", ")}. Elige una hoja más grande, baja las medidas o usa &quot;Ajustar al dibujo&quot;.
+                </p>
+              )}
               {sinPerforar > 0 && (
                 <p className="m-0 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] px-4 py-3">
                   {sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`} para {r1(dob.corte)} mm de corte y {r1(dob.puente)} mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.
@@ -389,14 +513,14 @@ export function GeneradorEmpaques() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
-                  onClick={() => descargar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas, dob), "application/dxf")}
+                  onClick={() => descargarHojas("dxf")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
                   Descargar DXF
                 </button>
                 <button
                   type="button"
-                  onClick={() => descargar(`${nombreArchivo}.svg`, plantillaSVG(r.piezas, "corte", dob), "image/svg+xml")}
+                  onClick={() => descargarHojas("svg")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
                   Descargar SVG

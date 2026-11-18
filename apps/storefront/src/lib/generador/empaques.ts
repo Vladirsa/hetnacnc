@@ -1090,17 +1090,121 @@ export const doblecesSinPerforar = (piezas: Plantilla[], d: OpcionesDoblez) =>
 const perforaciones = (p: Plantilla, d: OpcionesDoblez) =>
   cadenasDoblez(p.pliegues, p.cortes).flatMap((c) => partirEnCortes(c, p.cortes)).flatMap((c) => perforar(c, d.corte, d.puente))
 
-// modo "vista": para la pantalla · "corte": para la máquina (sin estilos de
-// línea punteada: Cricut, LightBurn y casi todos los programas los ignoran y
-// cortarían la línea completa) · "imprimir": papel, doblez punteado.
-export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" | "imprimir" = "corte", dob: OpcionesDoblez = DOBLEZ_MARCAR) {
+// ---------- Hojas ----------
+// Una hoja es un tamaño de papel o de material con las piezas ya colocadas
+// (coordenadas en mm, origen abajo a la izquierda de la hoja).
+export type Hoja = { ancho: number; alto: number; piezas: Plantilla[] }
+export type TamanoHoja = { id: string; nombre: string; ancho: number; alto: number; grupo: string }
+
+// Tamaños comunes de impresora, plotter de corte, láser y material (vertical: ancho ≤ alto)
+export const TAMANOS_HOJA: TamanoHoja[] = [
+  { id: "carta", nombre: "Carta", ancho: 215.9, alto: 279.4, grupo: "Impresora" },
+  { id: "oficio", nombre: "Oficio", ancho: 215.9, alto: 340, grupo: "Impresora" },
+  { id: "a4", nombre: "A4", ancho: 210, alto: 297, grupo: "Impresora" },
+  { id: "a3", nombre: "A3", ancho: 297, alto: 420, grupo: "Impresora" },
+  { id: "tabloide", nombre: "Tabloide", ancho: 279.4, alto: 431.8, grupo: "Impresora" },
+  { id: "p12x12", nombre: "Plotter 12×12 in", ancho: 304.8, alto: 304.8, grupo: "Plotter de corte" },
+  { id: "p12x24", nombre: "Plotter 12×24 in", ancho: 304.8, alto: 609.6, grupo: "Plotter de corte" },
+  { id: "glowforge", nombre: "Glowforge", ancho: 279, alto: 495, grupo: "Láser" },
+  { id: "l600", nombre: "Láser 400×600", ancho: 400, alto: 600, grupo: "Láser" },
+  { id: "l900", nombre: "Láser 600×900", ancho: 600, alto: 900, grupo: "Láser" },
+  { id: "l1300", nombre: "Láser 900×1300", ancho: 900, alto: 1300, grupo: "Láser" },
+  { id: "carton", nombre: "Cartón 1200×2400", ancho: 1200, alto: 2400, grupo: "Material" },
+  { id: "mdf", nombre: "Tablero 1220×2440", ancho: 1220, alto: 2440, grupo: "Material" },
+]
+
+const mover = (pl: Plantilla, t: (q: P) => P): Plantilla => ({
+  nombre: pl.nombre,
+  cortes: pl.cortes.map((c) => c.map(t)),
+  pliegues: pl.pliegues.map(([a, b]) => [t(a), t(b)] as [P, P]),
+})
+
+// Todas las piezas en una fila, en una hoja del tamaño justo del dibujo
+export function hojaAjustada(piezas: Plantilla[], margen = 3): Hoja {
   const { pos, ancho, alto } = acomodarPlantillas(piezas)
-  const m = 3
-  const W = ancho + 2 * m
-  const H = alto + 2 * m
+  return {
+    ancho: ancho + 2 * margen,
+    alto: alto + 2 * margen,
+    piezas: piezas.map((p, i) => mover(p, ([x, y]) => [x + pos[i].dx + margen, y + pos[i].dy + margen])),
+  }
+}
+
+// Acomoda las piezas en hojas de un tamaño fijo, por renglones. Gira una pieza
+// 90° si así cabe. Las que no caben ni giradas se reportan en noCaben.
+export function acomodarEnHojas(piezas: Plantilla[], ancho: number, alto: number, margen = 5, sep = 8) {
+  const uw = ancho - 2 * margen
+  const uh = alto - 2 * margen
+  const hojas: Hoja[] = []
+  const noCaben: string[] = []
+  type Estado = { hoja: Hoja; x: number; y: number; renglon: number }
+  let actual: Estado | null = null
+  const nueva = (): Estado => {
+    const h: Hoja = { ancho, alto, piezas: [] }
+    hojas.push(h)
+    return { hoja: h, x: 0, y: 0, renglon: 0 }
+  }
+  const orden = piezas.map((p, i) => ({ p, i, b: caja(p) })).sort((a, b) => (b.b.y1 - b.b.y0) - (a.b.y1 - a.b.y0) || a.i - b.i)
+  for (const { p } of orden) {
+    const opciones = [p, mover(p, ([x, y]) => [-y, x])]
+      .map((q) => ({ q, b: caja(q) }))
+      .filter(({ b }) => b.x1 - b.x0 <= uw + 1e-6 && b.y1 - b.y0 <= uh + 1e-6)
+    if (!opciones.length) {
+      const b = caja(p)
+      noCaben.push(`${p.nombre} (${r3(b.x1 - b.x0)} × ${r3(b.y1 - b.y0)} mm)`)
+      continue
+    }
+    const intentar = (e: Estado) => {
+      for (const { q, b } of opciones) {
+        const w = b.x1 - b.x0
+        const h = b.y1 - b.y0
+        let { x, y, renglon } = e
+        if (x > 0 && x + w > uw + 1e-6) {
+          y += renglon + sep
+          x = 0
+          renglon = 0
+        }
+        if (x + w <= uw + 1e-6 && y + h <= uh + 1e-6) {
+          e.hoja.piezas.push(mover(q, ([px, py]) => [px - b.x0 + margen + x, py - b.y0 + margen + y]))
+          e.x = x + w + sep
+          e.y = y
+          e.renglon = Math.max(renglon, h)
+          return true
+        }
+      }
+      return false
+    }
+    if (!actual || !intentar(actual)) {
+      actual = nueva()
+      intentar(actual)
+    }
+  }
+  return { hojas, noCaben }
+}
+
+// Qué tanto de la hoja usan las piezas (área de los contornos exteriores)
+export function aprovechamiento(h: Hoja) {
+  let a = 0
+  for (const p of h.piezas) {
+    const c = p.cortes[0]
+    if (!c) continue
+    let s = 0
+    for (let i = 0, j = c.length - 1; i < c.length; i = i + 1) {
+      s += (c[j][0] + c[i][0]) * (c[j][1] - c[i][1])
+      j = i
+    }
+    a += Math.abs(s / 2)
+  }
+  return a / (h.ancho * h.alto)
+}
+
+// Elementos SVG de una hoja. modo "vista": para la pantalla · "corte": para la
+// máquina (sin estilos de línea punteada: Cricut, LightBurn y casi todos los
+// programas los ignoran y cortarían la línea completa) · "imprimir": papel,
+// doblez punteado. ox/oy: dónde va la hoja dentro del SVG (Y hacia abajo).
+function elementosHoja(h: Hoja, modo: "corte" | "vista" | "imprimir", dob: OpcionesDoblez, ox = 0, oy = 0) {
   const vista = modo === "vista"
-  const X = (x: number, i: number) => f(m + x + pos[i].dx)
-  const Y = (y: number, i: number) => f(H - m - (y + pos[i].dy)) // Y hacia abajo
+  const X = (x: number) => f(ox + x)
+  const Y = (y: number) => f(oy + h.alto - y)
   const corte = vista
     ? `fill="#FDEEE1" fill-opacity="0.55" stroke="#C2560A" stroke-width="1.4" vector-effect="non-scaling-stroke"`
     : modo === "imprimir"
@@ -1115,23 +1219,50 @@ export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" | "imp
     ? `fill="none" stroke="#B0127A" stroke-width="1.4" stroke-linecap="butt" vector-effect="non-scaling-stroke"`
     : `fill="none" stroke="#FF00FF" stroke-width="${modo === "imprimir" ? 0.3 : 0.1}"`
   const capas = { corte: [] as string[], doblez: [] as string[], perforado: [] as string[] }
-  piezas.forEach((p, i) => {
-    for (const pts of p.cortes) capas.corte.push(`<path d="${pts.map(([x, y], j) => `${j ? "L" : "M"}${X(x, i)} ${Y(y, i)}`).join(" ")} Z" ${corte}/>`)
+  for (const p of h.piezas) {
+    for (const pts of p.cortes) capas.corte.push(`<path d="${pts.map(([x, y], j) => `${j ? "L" : "M"}${X(x)} ${Y(y)}`).join(" ")} Z" ${corte}/>`)
     if (dob.modo === "marcar")
-      for (const [a, b] of p.pliegues) capas.doblez.push(`<line x1="${X(a[0], i)}" y1="${Y(a[1], i)}" x2="${X(b[0], i)}" y2="${Y(b[1], i)}" ${doblez}/>`)
+      for (const [a, b] of p.pliegues) capas.doblez.push(`<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" ${doblez}/>`)
     if (dob.modo === "perforado") {
-      const d = perforaciones(p, dob).map((t) => t.map(([x, y], j) => `${j ? "L" : "M"}${X(x, i)} ${Y(y, i)}`).join(" ")).join(" ")
+      const d = perforaciones(p, dob).map((t) => t.map(([x, y], j) => `${j ? "L" : "M"}${X(x)} ${Y(y)}`).join(" ")).join(" ")
       if (d) capas.perforado.push(`<path d="${d}" ${perforado}/>`)
     }
-  })
-  const grupo = (id: string, l: string[]) => (l.length ? `<g id="${id}">\n${l.join("\n")}\n</g>\n` : "")
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="0 0 ${f(W)} ${f(H)}">\n${grupo("CORTE", capas.corte)}${grupo("DOBLEZ", capas.doblez)}${grupo("PERFORADO", capas.perforado)}</svg>\n`
+  }
+  return capas
+}
+
+const grupoSVG = (id: string, l: string[]) => (l.length ? `<g id="${id}">\n${l.join("\n")}\n</g>\n` : "")
+
+// SVG de una hoja, al tamaño real en mm
+export function hojaSVG(h: Hoja, modo: "corte" | "vista" | "imprimir" = "corte", dob: OpcionesDoblez = DOBLEZ_MARCAR) {
+  const c = elementosHoja(h, modo, dob)
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(h.ancho)}mm" height="${f(h.alto)}mm" viewBox="0 0 ${f(h.ancho)} ${f(h.alto)}">\n${grupoSVG("CORTE", c.corte)}${grupoSVG("DOBLEZ", c.doblez)}${grupoSVG("PERFORADO", c.perforado)}</svg>\n`
+}
+
+// Vista de pantalla de varias hojas, una junto a otra, con el borde de cada hoja
+export function hojasVistaSVG(hojas: Hoja[], dob: OpcionesDoblez = DOBLEZ_MARCAR, conBorde = true) {
+  const gap = hojas.length > 1 ? Math.max(...hojas.map((h) => h.ancho)) * 0.06 : 0
+  const H = Math.max(...hojas.map((h) => h.alto))
+  let ox = 0
+  const partes: string[] = []
+  for (const h of hojas) {
+    if (conBorde) partes.push(`<rect x="${f(ox)}" y="0" width="${f(h.ancho)}" height="${f(h.alto)}" fill="#FFFFFF" fill-opacity="0.06" stroke="#8A97AB" stroke-width="1" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`)
+    const c = elementosHoja(h, "vista", dob, ox, 0)
+    partes.push(...c.corte, ...c.doblez, ...c.perforado)
+    ox += h.ancho + gap
+  }
+  const W = ox - gap
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${f(W)} ${f(H)}">\n${partes.join("\n")}\n</svg>\n`
+}
+
+// SVG de todas las piezas en una fila (hoja ajustada al dibujo)
+export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" | "imprimir" = "corte", dob: OpcionesDoblez = DOBLEZ_MARCAR) {
+  return hojaSVG(hojaAjustada(piezas), modo, dob)
 }
 
 // DXF R12: capa CORTE (rojo, polilíneas cerradas), DOBLEZ (azul, líneas para
 // marcar) y PERFORADO (magenta, tramos de corte con puentes)
-export function plantillaDXF(piezas: Plantilla[], dob: OpcionesDoblez = DOBLEZ_MARCAR) {
-  const { pos } = acomodarPlantillas(piezas)
+export function hojaDXF(h: Hoja, dob: OpcionesDoblez = DOBLEZ_MARCAR) {
   const l: string[] = []
   const par = (c: number | string, v: number | string) => l.push(String(c), String(v))
   par(0, "SECTION"); par(2, "HEADER"); par(9, "$ACADVER"); par(1, "AC1009"); par(9, "$INSUNITS"); par(70, 4); par(0, "ENDSEC")
@@ -1141,22 +1272,26 @@ export function plantillaDXF(piezas: Plantilla[], dob: OpcionesDoblez = DOBLEZ_M
   }
   par(0, "ENDTAB"); par(0, "ENDSEC")
   par(0, "SECTION"); par(2, "ENTITIES")
-  const linea = (capa: string, a: P, b: P, dx: number, dy: number) => {
+  const linea = (capa: string, a: P, b: P) => {
     par(0, "LINE"); par(8, capa)
-    par(10, f(a[0] + dx)); par(20, f(a[1] + dy)); par(30, 0)
-    par(11, f(b[0] + dx)); par(21, f(b[1] + dy)); par(31, 0)
+    par(10, f(a[0])); par(20, f(a[1])); par(30, 0)
+    par(11, f(b[0])); par(21, f(b[1])); par(31, 0)
   }
-  piezas.forEach((p, i) => {
-    const { dx, dy } = pos[i]
+  for (const p of h.piezas) {
     for (const pts of p.cortes) {
       par(0, "POLYLINE"); par(8, "CORTE"); par(66, 1); par(10, 0); par(20, 0); par(30, 0); par(70, 1)
-      for (const [x, y] of pts) { par(0, "VERTEX"); par(8, "CORTE"); par(10, f(x + dx)); par(20, f(y + dy)); par(30, 0) }
+      for (const [x, y] of pts) { par(0, "VERTEX"); par(8, "CORTE"); par(10, f(x)); par(20, f(y)); par(30, 0) }
       par(0, "SEQEND"); par(8, "CORTE")
     }
-    if (dob.modo === "marcar") for (const [a, b] of p.pliegues) linea("DOBLEZ", a, b, dx, dy)
+    if (dob.modo === "marcar") for (const [a, b] of p.pliegues) linea("DOBLEZ", a, b)
     if (dob.modo === "perforado")
-      for (const t of perforaciones(p, dob)) for (let k = 1; k < t.length; k++) linea("PERFORADO", t[k - 1], t[k], dx, dy)
-  })
+      for (const t of perforaciones(p, dob)) for (let k = 1; k < t.length; k++) linea("PERFORADO", t[k - 1], t[k])
+  }
   par(0, "ENDSEC"); par(0, "EOF")
   return l.join("\n") + "\n"
+}
+
+// DXF de todas las piezas en una fila, desde el origen (como antes)
+export function plantillaDXF(piezas: Plantilla[], dob: OpcionesDoblez = DOBLEZ_MARCAR) {
+  return hojaDXF(hojaAjustada(piezas, 0), dob)
 }
