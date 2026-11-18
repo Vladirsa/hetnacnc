@@ -8,7 +8,7 @@ import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/h
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import { hacerEngranes } from "@/lib/generador/engranes"
 
-export function GeneradorEngranes() {
+export function GeneradorEngranes({ cabecera }: { cabecera?: React.ReactNode }) {
   const [dientes, setDientes] = useState("24")
   const [modulo, setModulo] = useState("3")
   const [presion, setPresion] = useState<"14.5" | "20" | "25">("20")
@@ -88,7 +88,12 @@ export function GeneradorEngranes() {
           <circle cx="12" cy="12" r="7" />
         </svg>
       }
-      panel={panel}
+      panel={
+        <>
+          {cabecera}
+          {panel}
+        </>
+      }
       dibujo={r.dibujo}
       avisos={r.avisos}
       archivo={`engrane-${dientes}d-m${modulo}${par ? `-y-${dientesPar}d` : ""}`}

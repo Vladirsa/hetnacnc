@@ -311,12 +311,11 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "caja-con-juntas", corto: "Cajas" },
       { slug: "vectorizador", corto: "Imagen" }, // vectorizador + foto a grabado + litofanía
       { slug: "letreros", corto: "Letreros y placas" }, // letreros + esténcil + código QR
-      { slug: "rompecabezas", corto: "Rompecabezas" },
+      { slug: "rompecabezas", corto: "Juegos y mecanismos" }, // rompecabezas + engranes
       { slug: "despiece-muebles", corto: "Muebles" },
       { slug: "plantillas-empaque", corto: "Empaques" },
       { slug: "convertidor", corto: "Archivos" }, // convertidor + anidado + rebanado + SVG a STL
       { slug: "celosias", corto: "Patrones" }, // celosías + patrones radiales + bisagra viva
-      { slug: "engranes", corto: "Engranes" },
       { slug: "relojes", corto: "Decoración" }, // relojes + marcos + lámparas
     ],
   },
