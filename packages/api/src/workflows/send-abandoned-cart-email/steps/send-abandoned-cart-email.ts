@@ -1,3 +1,4 @@
+import type { AbandonedCartItem } from "../../../lib/email-templates"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
@@ -8,7 +9,7 @@ import { abandonedCartEmailHtml } from "../../../lib/email-templates"
 
 export type SendAbandonedCartEmailStepInput = {
   to: string
-  items: { title: string; quantity: number }[]
+  items: AbandonedCartItem[]
   total: number
   currency_code: string
   cart_url: string
