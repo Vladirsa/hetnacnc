@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import DirectorioTalleres from "@/components/hetna/taller/DirectorioTalleres"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import ParaTalleres from "@/components/hetna/taller/ParaTalleres"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { contarPorEstado, directorioMexico } from "@/lib/hetna/directorio"
@@ -87,6 +88,9 @@ export default async function TalleresPage({
       </a>
 
       <div id="directorio" className="scroll-mt-24" />
+
+      {/* Talleres destacados: pagan por salir hasta arriba (se compra en /anunciate) */}
+      <AnunciosEspacio espacio="directorio_talleres" titulo="Talleres destacados" columnas invitar className="mb-6" />
 
       <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} />
 
