@@ -9,10 +9,13 @@
 //      "sueltos" (DXF, IGES, OBJ, STL, SKP, CDR) sólo pasan la revisión de
 //      peligro: un falso rechazo cuesta una venta.
 //   2. Comprimidos ZIP (y 3MF/F3D, que son ZIP): se lee la lista de archivos
-//      sin descomprimir y se rechazan ejecutables, macros y ZIP con contraseña.
+//      sin descomprimir y se rechazan ejecutables, scripts, accesos directos,
+//      imágenes de disco, páginas, documentos con macros y ZIP con contraseña.
 //      RAR y 7z no se pueden listar aquí: sólo los revisa el antivirus.
 //   3. Antivirus ClamAV, si está instalado (socket de clamd). Si no está o no
-//      responde, la subida sigue y el archivo queda marcado "sin antivirus".
+//      responde, la subida sigue y el archivo queda marcado "sin antivirus",
+//      salvo RAR y 7z: sin un antivirus que los revise por dentro se rechazan
+//      (auditoría del 18 nov 2026) y se pide subirlos como ZIP.
 import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
 import net from "node:net"
@@ -28,12 +31,16 @@ const DE = (b: Buffer, desde: number, hasta: number) => b.subarray(desde, Math.m
 const empieza = (b: Buffer, ...bytes: number[]) => bytes.every((x, i) => b[i] === x)
 const textoInicio = (b: Buffer, n = 4096) => DE(b, 0, n).toString("latin1")
 
-// Extensiones que nunca deben venir dentro de un comprimido de planos.
-// Sólo programas y scripts: lo demás (hojas con macros, accesos directos,
-// páginas) suele venir en carpetas de proyecto comprimidas y lo revisa ClamAV.
-const PELIGROSAS = new Set([
+// Extensiones que nunca deben venir dentro de un comprimido de planos:
+// programas y scripts y, desde la auditoría del 18 nov 2026, también lo que
+// sirve para colar uno: accesos directos (lnk, url), imágenes de disco (iso,
+// img, vhd, vhdx), ayuda compilada (chm), páginas (html, htm, svg) y documentos
+// de Office con macros (docm, xlsm, pptm). No se puede contar con que ClamAV
+// esté instalado para revisarlos.
+export const PELIGROSAS = new Set([
   "exe", "dll", "com", "bat", "cmd", "scr", "pif", "msi", "msp", "vbs", "vbe", "js", "jse", "wsf", "wsh",
   "ps1", "psm1", "hta", "cpl", "jar", "apk", "sh", "reg", "scf", "gadget", "dmg", "pkg",
+  "lnk", "url", "iso", "img", "vhd", "vhdx", "chm", "html", "htm", "svg", "docm", "xlsm", "pptm",
 ])
 
 /** Ejecutables, scripts y páginas web: se rechazan sea cual sea la extensión. */
@@ -198,6 +205,10 @@ export async function revisarArchivo(b: Buffer, nombre: string): Promise<Revisio
   if (motivo) return { ok: false, motivo }
   const av = await escanearClam(b)
   if ("virus" in av) return { ok: false, motivo: `el antivirus encontró una amenaza (${av.virus})` }
+  // RAR y 7z no se pueden listar aquí: si el antivirus no los revisó (no está
+  // instalado, falló o el archivo pasa de su tope), no entran.
+  if (["rar", "7z"].includes(ext) && av.estado !== "limpio")
+    return { ok: false, motivo: `no podemos revisar por dentro un .${ext} en este momento; comprímelo como ZIP y súbelo de nuevo` }
   return { ok: true, tipo: ext, antivirus: av.estado, sha256: createHash("sha256").update(b).digest("hex") }
 }
 
