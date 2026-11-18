@@ -31,9 +31,21 @@ página de precios antes de decidir, porque cambia):
 protección contra llaves filtradas la cubren las revisiones que ya hacemos
 (nunca hubo una llave en el historial).
 
+**Antes de hacerlo privado**, revisa cómo baja el código el servidor:
+
+```bash
+cd ~/hetnacnc && git remote -v
+```
+
+- Si dice `git@...` o un alias como `github-hetna:...`, el servidor usa una llave
+  SSH y seguirá funcionando. Confirma en el repositorio, **Settings** → **Deploy
+  keys**, que esa llave existe y **no** tiene "Allow write access".
+- Si dice `https://github.com/...`, el siguiente despliegue fallará al hacerlo
+  privado. Primero hay que crear una llave de despliegue de sólo lectura y
+  cambiar el remoto (pídelo y se prepara paso a paso).
+
 Para hacerlo privado: **Settings** del repositorio → **General** → hasta abajo,
 **Danger Zone** → **Change repository visibility** → **Change to private**.
-El despliegue sigue funcionando: el servidor baja el código con su propia llave.
 
 ## 3. Proteger la rama `main` (si es público o tienes Pro)
 

@@ -43,6 +43,7 @@ async function usuarios(scope: any, actorId: string): Promise<UsuarioAdmin[]> {
 const CAMBIA_USUARIOS = /^\/admin\/(users|invites)(\/|$)/
 
 let ultimoError = 0
+let ultimaLista: UsuarioAdmin[] | null = null
 
 export async function panelRolesAdmin(req: any, res: any, next: any) {
   const metodo = String(req.method || "GET").toUpperCase()
@@ -56,12 +57,17 @@ export async function panelRolesAdmin(req: any, res: any, next: any) {
   if (auth?.actor_type === "user" && auth?.actor_id && !apagado(process.env.PANEL_ROLES_API)) {
     try {
       lista = await usuarios(req.scope, auth.actor_id)
+      ultimaLista = lista
     } catch (e) {
       if (Date.now() - ultimoError > 60_000) {
         ultimoError = Date.now()
         console.error(`[panel-roles] no pude leer los administradores: ${(e as Error)?.message || e}`)
       }
-      lista = null
+      // Con la última lista buena se sigue decidiendo igual. Si nunca se ha
+      // podido leer, se deja pasar: los roles sólo limitan a administradores ya
+      // autenticados, y un 503 en todo /admin dejaría fuera al dueño.
+      if (!ultimaLista) return next()
+      lista = ultimaLista
     }
   }
   const d = decidir({

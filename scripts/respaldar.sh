@@ -120,7 +120,13 @@ find "$LOCAL" \( -name 'db-*.sql.gz' -o -name 'supabase-*.sql.gz' -o -name '*-po
 
 # --- 2. Copia cifrada en Backblaze B2 ---
 RUTAS=("$LOCAL")
-for r in /root/hetna-privado /root/hetnacnc/packages/api/static \
+# Los archivos subidos viven en la carpeta "static" de donde arranca el API
+# (packages/api o .medusa/server, según cómo lo arranque pm2) o en FILE_UPLOAD_DIR.
+# readlink -f: si es un enlace, se respalda la carpeta real.
+for r in /root/hetnacnc/packages/api/static /root/hetnacnc/packages/api/.medusa/server/static ${FILE_UPLOAD_DIR:-}; do
+  [ -e "$r" ] && RUTAS+=("$(readlink -f "$r")")
+done
+for r in /root/hetna-privado \
          /root/hetnacnc/packages/api/.env /root/hetnacnc/packages/api/.env.production \
          /root/hetnacnc/apps/storefront/.env /root/hetnacnc/apps/storefront/.env.local /root/hetnacnc/apps/storefront/.env.production; do
   [ -e "$r" ] && RUTAS+=("$r")
@@ -132,7 +138,16 @@ for vol in $(docker volume ls --format '{{.Name}}' | grep -E '(^|_)(n8n_data|evo
   [ -n "$dir" ] && [ -d "$dir" ] && RUTAS+=("$dir")
 done
 
-restic backup --tag diario --host srv2007412 "${RUTAS[@]}"
+# restic sale con 3 cuando el respaldo quedó hecho pero no pudo leer algún
+# archivo (p. ej. uno que cambió mientras se copiaba en la sesión de WhatsApp):
+# eso es un aviso, no un respaldo perdido.
+rc=0
+restic backup --tag diario --host srv2007412 "${RUTAS[@]}" || rc=$?
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
+  echo "✗ restic no pudo hacer el respaldo (código $rc)"
+  exit 1
+fi
+[ "$rc" -eq 3 ] && echo "⚠ restic no pudo leer algunos archivos; el resto del respaldo quedó en B2"
 restic forget --tag diario --host srv2007412 --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
 
 # Marca para el Centro de control: el respaldo de la tienda sí quedó en B2
@@ -140,7 +155,7 @@ date '+%s %F %T' > "$LOCAL/ultimo-ok"
 chmod 644 "$LOCAL/ultimo-ok"
 
 if [ "$fallas_externas" -gt 0 ]; then
-  echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) de Supabase fallaron"
+  echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) extra (Supabase, n8n o WhatsApp) fallaron"
   exit 2
 fi
 echo "✓ $(date '+%F %T') respaldo completo"

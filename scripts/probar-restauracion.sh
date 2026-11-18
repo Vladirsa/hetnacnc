@@ -39,7 +39,7 @@ echo "    $(basename "$DUMP") ($(du -h "$DUMP" | cut -f1))"
 VER="$(docker exec hetnacnc-postgres sh -c 'postgres --version' | grep -oE '[0-9]+' | head -1)"
 echo "==> Cargándola en una base temporal (Postgres $VER)"
 docker run -d --name "$CONT" -e POSTGRES_PASSWORD=prueba --network none "postgres:${VER}-alpine" >/dev/null
-for _ in $(seq 1 60); do docker exec "$CONT" pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+for _ in $(seq 1 60); do docker exec "$CONT" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1 && break; sleep 1; done
 gunzip -c "$DUMP" | docker exec -i "$CONT" psql -U postgres -q -v ON_ERROR_STOP=0 >/dev/null 2>"$TMP/errores.txt" || true
 
 contar() { # contar <contenedor> <tabla> [usuario]
@@ -51,7 +51,8 @@ ok=1
 for t in order product customer seller; do
   r="$(contar "$CONT" "$t")"; v="$(contar hetnacnc-postgres "$t")"
   printf '   %-10s %12s %12s\n' "$t" "$r" "$v"
-  case "$r" in ''|'?') ok=0 ;; esac
+  # Vacía en el respaldo pero con datos en la real = no se restauró bien
+  case "$r" in ''|'?') ok=0 ;; 0) [ "$v" != 0 ] && ok=0 ;; esac
 done
 
 if [ "$ok" = 1 ]; then

@@ -5,6 +5,14 @@ pueden hacer desde el repositorio. Van en orden de importancia.
 
 ## 1. Probar que el respaldo se puede restaurar (una vez al mes)
 
+Después del primer despliegue con estos cambios, corre una vez el respaldo a
+mano para que el Centro de control no avise "No hay registro…" hasta la
+corrida de la mañana:
+
+```bash
+bash /root/hetnacnc/scripts/respaldar.sh
+```
+
 El respaldo diario ya corre (`/etc/cron.d/hetna-respaldo`, 9:17 hora del servidor)
 y sube cifrado a Backblaze. Una vez al mes, prueba que de verdad se restaura:
 
@@ -37,8 +45,9 @@ protege su propia contraseña. Cloudflare Access pone una pantalla de acceso ant
    segunda aplicación para el mismo dominio con **Path** `webhook` (y otra para
    `webhook-test`) y política **Bypass** → **Everyone**. Por ahí llegan los
    avisos de la tienda, de Meta y de WhatsApp a n8n.
-5. Repite para `whatsapp.hetnacnc.com` protegiendo sólo el panel (`/manager`).
-   La tienda y n8n le hablan por la red interna de Docker, no por el dominio.
+5. Repite para `whatsapp.hetnacnc.com` protegiendo **sólo** el panel
+   (`/manager`). No protejas el dominio completo: el API de la tienda le manda
+   los mensajes por `https://whatsapp.hetnacnc.com` y dejaría de enviar WhatsApp.
 6. **Prueba:** abre `https://n8n.hetnacnc.com` en una ventana privada (debe pedir
    el código) y manda un mensaje de prueba por WhatsApp (debe seguir
    contestando).

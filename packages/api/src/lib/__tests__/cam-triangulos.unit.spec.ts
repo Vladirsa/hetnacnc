@@ -34,3 +34,15 @@ describe("Triángulos contados en el servidor (precio CAM)", () => {
     expect(statsVerificadas(null, 5000)?.triangles).toBe(5000)
   })
 })
+
+describe("OBJ grande sin congelar el servidor", () => {
+  it("cuenta igual con tabuladores y CRLF, y se detiene al pasar el tope", () => {
+    expect(contarTriangulos(Buffer.from("f\t1 2 3 4\r\nf 1 2 3\r\n"), "x.obj")).toBe(3)
+    const grande = Buffer.from("f 1 2 3\n".repeat(700_000))
+    const t = Date.now()
+    const n = contarTriangulos(grande, "x.obj")!
+    expect(n).toBeGreaterThan(500_000)
+    expect(n).toBeLessThanOrEqual(600_001)
+    expect(Date.now() - t).toBeLessThan(1500)
+  })
+})

@@ -13,6 +13,9 @@
 //   - STEP / IGES: no se puede sin teselar el modelo → null (se usa lo del navegador).
 import type { CamJobStats } from "./catalog"
 
+/** Más allá del umbral más alto (catalog.ts › TIER_RULES) el nivel ya no cambia. */
+const TOPE_TRIANGULOS = 600_000
+
 export function contarTriangulos(buf: Buffer, nombre: string): number | null {
   const ext = (nombre.split(".").pop() || "").toLowerCase()
   if (ext === "stl") {
@@ -25,11 +28,28 @@ export function contarTriangulos(buf: Buffer, nombre: string): number | null {
     return (texto.match(/\bfacet\s+normal\b/gi) || []).length
   }
   if (ext === "obj") {
+    // Se recorre el archivo sin partirlo en líneas (un OBJ de 80 MB en un
+    // split congelaba el servidor varios segundos) y se deja de contar al
+    // pasar el último umbral de precio: más allá no cambia el nivel.
     let total = 0
-    for (const linea of buf.toString("latin1").split(/\r?\n/)) {
-      if (!/^f\s/.test(linea)) continue
-      const vertices = linea.trim().split(/\s+/).length - 1
-      if (vertices >= 3) total += vertices - 2
+    let inicio = 0
+    const n = buf.length
+    while (inicio < n && total <= TOPE_TRIANGULOS) {
+      let fin = buf.indexOf(10, inicio) // \n
+      if (fin < 0) fin = n
+      // "f " o "f\t" al inicio de la línea
+      if (buf[inicio] === 102 && (buf[inicio + 1] === 32 || buf[inicio + 1] === 9)) {
+        let vertices = 0
+        let enToken = false
+        for (let k = inicio + 2; k < fin; k++) {
+          const c = buf[k]
+          const espacio = c === 32 || c === 9 || c === 13
+          if (!espacio && !enToken && ++vertices > TOPE_TRIANGULOS + 2) break
+          enToken = !espacio
+        }
+        if (vertices >= 3) total += vertices - 2
+      }
+      inicio = fin + 1
     }
     return total
   }
