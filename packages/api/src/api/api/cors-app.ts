@@ -41,4 +41,5 @@ export const corsAppMiddlewares = [
   { matcher: "/api/cotizador-cfdi/*", middlewares: [corsApp] },
   { matcher: "/api/cotizador-catalogo", middlewares: [corsApp] },
   { matcher: "/api/cotizador-catalogo/*", middlewares: [corsApp] },
+  { matcher: "/api/cotizador-calendario", middlewares: [corsApp] },
 ]
