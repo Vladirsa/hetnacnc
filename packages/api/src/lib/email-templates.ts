@@ -3,6 +3,11 @@ import { CUPON_BIENVENIDA, MINIMO, MONTO, pesos } from "./cupones"
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"
 const BRAND_COLOR = "#142033"
 
+// Todo lo que viene de fuera (nombres de clientes y talleres, títulos de
+// productos) se escapa antes de meterlo al HTML del correo.
+const esc = (t: unknown) =>
+  String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string)
+
 function layout(title: string, bodyHtml: string): string {
   return `
     <div style="font-family: Arial, Helvetica, sans-serif; background:#f4f4f4; padding:24px;">
@@ -22,7 +27,7 @@ function layout(title: string, bodyHtml: string): string {
 }
 
 export function welcomeEmailHtml({ name }: { name: string }): string {
-  const greeting = name ? `Hola ${name}` : "Hola"
+  const greeting = name ? `Hola ${esc(name)}` : "Hola"
   return layout(
     "Recibiste este correo por crear una cuenta en " + SITE_NAME,
     `
@@ -61,7 +66,7 @@ export function abandonedCartSegundoEmailHtml({
 }): string {
   const lista = items
     .slice(0, 3)
-    .map((i) => `<li>${i.title}${i.quantity > 1 ? ` (x${i.quantity})` : ""}</li>`)
+    .map((i) => `<li>${esc(i.title)}${i.quantity > 1 ? ` (x${i.quantity})` : ""}</li>`)
     .join("")
   return layout(
     "Tu carrito en " + SITE_NAME + " sigue guardado",
@@ -94,7 +99,7 @@ export function abandonedCartEmailHtml({
   const rows = items
     .map(
       (i) =>
-        `<tr><td style="padding:6px 0;">${i.title}</td><td style="padding:6px 0;text-align:right;">x${i.quantity}</td></tr>`
+        `<tr><td style="padding:6px 0;">${esc(i.title)}</td><td style="padding:6px 0;text-align:right;">x${i.quantity}</td></tr>`
     )
     .join("")
 
@@ -132,8 +137,6 @@ export function digitalDownloadEmailHtml({
     month: "long",
     year: "numeric",
   })
-  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string)
-
   return layout(
     "Recibiste este correo por comprar un producto digital en " + SITE_NAME,
     `
@@ -208,15 +211,15 @@ export function reviewRequestEmailHtml({
   nombre?: string | null
   productos: ProductoAResenar[]
 }): string {
-  const saludo = nombre ? `Hola ${nombre},` : "Hola,"
+  const saludo = nombre ? `Hola ${esc(nombre)},` : "Hola,"
 
   const filas = productos
     .map(
       (p) =>
         `<tr><td style="padding:10px 0;border-bottom:1px solid #eee;">
-           <a href="${p.url}" style="color:${BRAND_COLOR};text-decoration:none;font-weight:600;">${p.titulo}</a>
+           <a href="${esc(p.url)}" style="color:${BRAND_COLOR};text-decoration:none;font-weight:600;">${esc(p.titulo)}</a>
            <br/>
-           <a href="${p.url}" style="color:#B34D07;font-size:13px;">Calificar este producto →</a>
+           <a href="${esc(p.url)}" style="color:#B34D07;font-size:13px;">Calificar este producto →</a>
          </td></tr>`
     )
     .join("")
@@ -297,7 +300,7 @@ export function resumenDiarioEmailHtml(r: ResumenParaCorreo): string {
            .map(
              (t) =>
                `<tr>
-                  <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${t.nombre}</td>
+                  <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${esc(t.nombre)}</td>
                   <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;text-align:right;">${t.pedidos} ped.</td>
                   <td style="padding:6px 0 6px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700;">${dinero(t.ingresos)}</td>
                 </tr>`

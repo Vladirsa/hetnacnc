@@ -12,6 +12,7 @@ import { MedusaContainer } from "@medusajs/framework/types"
 
 import { sincronizarSuscripcionPaypal } from "../lib/cotizador-paypal"
 import { sincronizarSuscripcion, supa, type Negocio } from "../lib/cotizador-suscripciones"
+import { esc } from "../lib/licitacion"
 import { sendEmail } from "../lib/resend"
 
 const DIAS_GRACIA = 7
@@ -50,7 +51,7 @@ export default async function conciliarSuscripciones(container: MedusaContainer)
         html:
           `<p>Estos talleres siguen con plan de pago, pero su última renovación es de hace más de ${DIAS_GRACIA} días. Revísalos en Mercado Pago o PayPal:</p><ul>` +
           atrasadas
-            .map((a) => `<li>${a.nombre || a.id} · plan ${a.plan} · ${a.pago_proveedor || "?"} · renovaba ${String(a.plan_renueva || "").slice(0, 10)}</li>`)
+            .map((a) => `<li>${esc(a.nombre || a.id)} · plan ${esc(a.plan)} · ${esc(a.pago_proveedor || "?")} · renovaba ${esc(String(a.plan_renueva || "").slice(0, 10))}</li>`)
             .join("") +
           `</ul>`,
       }).catch(() => null)
