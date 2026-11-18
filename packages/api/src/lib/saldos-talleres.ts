@@ -238,14 +238,35 @@ export async function liberarRetenido(c: MedusaContainer, orderId: string): Prom
   const f = await knex(T_SALDO).where({ order_id: orderId, estado: "retenido" }).first()
   if (!f || esAjuste(orderId)) return 0
   const query = c.resolve(ContainerRegistrationKeys.QUERY)
-  const { data } = await query.graph({ entity: "order", fields: ["id", "status", "payment_status"], filters: { id: orderId } })
+  const { data } = await query.graph({
+    entity: "order",
+    fields: ["id", "status", "payment_status", "fulfillments.delivered_at"],
+    filters: { id: orderId },
+  })
   const o = data[0] as any
   if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status)) || String(o.payment_status) === "partially_refunded") {
     throw new SaldoNoLiberable("Este pedido está cancelado o reembolsado: no se puede liberar.")
   }
+  // Si se entregó mientras estaba retenido, marcarEntregado no lo anotó (sólo
+  // toca los pendientes): se arranca aquí la cuenta desde esa entrega.
+  const extra: Record<string, unknown> = {}
+  if (!f.digital && !f.entregado_en) {
+    await asegurarTablaGuias(knex)
+    const guia = await knex(T_GUIAS).where({ order_id: orderId, estado: "entregada" }).first("actualizado")
+    const fechas = ((o.fulfillments || []) as any[]).map((x) => x?.delivered_at).filter(Boolean).map((d) => new Date(d).getTime())
+    if (guia) fechas.push(new Date(guia.actualizado || Date.now()).getTime())
+    if (fechas.length) {
+      const entregado = new Date(Math.min(...fechas))
+      Object.assign(extra, {
+        entregado_en: entregado,
+        entregado_por: guia ? "guia" : "admin",
+        disponible_en: new Date(entregado.getTime() + diasLiberacion() * 24 * 60 * 60 * 1000),
+      })
+    }
+  }
   return knex(T_SALDO)
     .where({ order_id: orderId, estado: "retenido" })
-    .update({ estado: estadoAlLiberar(f), motivo: null, actualizado: knex.fn.now() })
+    .update({ estado: estadoAlLiberar(f), motivo: null, ...extra, actualizado: knex.fn.now() })
 }
 
 // ── Sobrepesos descontados del pago al taller ──────────────────────────────────────────

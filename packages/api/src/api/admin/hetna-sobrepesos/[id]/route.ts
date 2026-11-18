@@ -42,7 +42,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   const estado = DESTINO[accion]
   if (!estado) return res.status(400).json({ message: "Acción no válida." })
-  await knex(T_SOBREPESO).where({ id: s.id }).update({ estado, updated_at: knex.fn.now() })
+  // Condicionado al estado que se leyó: si otra acción lo cambió mientras tanto
+  // (p. ej. se descontó), no se pisa
+  const n = await knex(T_SOBREPESO).where({ id: s.id, estado: s.estado }).update({ estado, updated_at: knex.fn.now() })
+  if (!n) return res.status(409).json({ message: "El sobrepeso cambió mientras tanto. Recarga la página." })
   logger.info(`[sobrepesos] ${folioSobrepeso(s.folio)} -> ${estado}`)
   return res.json({ ok: true, estado })
 }
