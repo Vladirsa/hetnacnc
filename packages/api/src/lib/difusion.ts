@@ -59,6 +59,8 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
   // Fase 4: talleres que sólo reciben clientes con buena reputación
   const repCliente = await reputacionCliente(knex, { clienteId: s.cliente_id, email: s.contacto?.email }).catch(() => null)
   const coinciden = otros.filter((x) => {
+    // El taller pausó "Recibiendo solicitudes" en su panel (/mx/panel-taller)
+    if (x.metadata?.recibe_solicitudes === false) return false
     if (!aceptaCliente(x.metadata, repCliente)) return false
     const t = tipoCuenta(x)
     if (s.solo_verificados && !tallerVerificado(x.metadata)) return false
