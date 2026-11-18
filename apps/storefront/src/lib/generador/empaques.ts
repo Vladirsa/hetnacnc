@@ -1255,6 +1255,84 @@ export function hojasVistaSVG(hojas: Hoja[], dob: OpcionesDoblez = DOBLEZ_MARCAR
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${f(W)} ${f(H)}">\n${partes.join("\n")}\n</svg>\n`
 }
 
+// ---------- Impresión en mosaico ----------
+// Parte una hoja grande en páginas de impresora que se unen con cinta o
+// pegamento. Cada página imprime su parte dentro del área segura (margen) y
+// se encima con la vecina "traslape" mm:
+//  - Línea continua gris en el borde derecho/inferior del área: ahí llega la
+//    página de al lado.
+//  - Línea punteada a "traslape" mm del borde izquierdo/superior: se recorta
+//    por ahí y ese borde se alinea con la línea continua de la página anterior.
+// Las páginas se nombran por fila (A, B…) y columna (1, 2…).
+export function paginasMosaico(
+  h: Hoja,
+  papelAncho: number,
+  papelAlto: number,
+  dob: OpcionesDoblez = DOBLEZ_MARCAR,
+  margen = 10,
+  traslape = 10,
+) {
+  const aw = papelAncho - 2 * margen
+  const ah = papelAlto - 2 * margen
+  const sx = aw - traslape
+  const sy = ah - traslape
+  const cols = Math.max(1, Math.ceil((h.ancho - traslape) / sx - 1e-9))
+  const filas = Math.max(1, Math.ceil((h.alto - traslape) / sy - 1e-9))
+  const fila = (r: number) => String.fromCharCode(65 + (r % 26))
+  const nombre = (r: number, c: number) => `${fila(r)}${c + 1}`
+  const texto = (x: number, y: number, t: string, tam = 3, ancla = "start") =>
+    `<text x="${f(x)}" y="${f(y)}" font-family="Arial, sans-serif" font-size="${tam}" fill="#555" text-anchor="${ancla}">${t}</text>`
+  const guia = `stroke="#888" stroke-width="0.25" fill="none"`
+  const paginas: { nombre: string; svg: string }[] = []
+  for (let r = 0; r < filas; r++)
+    for (let c = 0; c < cols; c++) {
+      const id = `m${r}_${c}`
+      const capas = elementosHoja(h, "imprimir", dob, margen - c * sx, margen - r * sy)
+      const partes: string[] = [
+        `<defs><clipPath id="${id}"><rect x="${f(margen)}" y="${f(margen)}" width="${f(aw)}" height="${f(ah)}"/></clipPath></defs>`,
+        `<g clip-path="url(#${id})">${capas.corte.join("")}${capas.doblez.join("")}${capas.perforado.join("")}</g>`,
+      ]
+      // bordes donde llega la página vecina (derecha y abajo)
+      if (c < cols - 1) partes.push(`<line x1="${f(margen + aw)}" y1="${f(margen)}" x2="${f(margen + aw)}" y2="${f(margen + ah)}" ${guia}/>`)
+      if (r < filas - 1) partes.push(`<line x1="${f(margen)}" y1="${f(margen + ah)}" x2="${f(margen + aw)}" y2="${f(margen + ah)}" ${guia}/>`)
+      // líneas de recorte (izquierda y arriba)
+      if (c > 0) partes.push(`<line x1="${f(margen + traslape)}" y1="${f(margen)}" x2="${f(margen + traslape)}" y2="${f(margen + ah)}" ${guia} stroke-dasharray="2 1.5"/>`, texto(margen + traslape + 1.5, margen + ah / 2, `✂ recorta y encima sobre ${nombre(r, c - 1)}`, 2.8))
+      if (r > 0) partes.push(`<line x1="${f(margen)}" y1="${f(margen + traslape)}" x2="${f(margen + aw)}" y2="${f(margen + traslape)}" ${guia} stroke-dasharray="2 1.5"/>`, texto(margen + aw / 2, margen + traslape - 1.5, `✂ recorta y encima sobre ${nombre(r - 1, c)}`, 2.8, "middle"))
+      // etiqueta y escala de comprobación
+      partes.push(texto(margen, margen - 3, `Página ${nombre(r, c)} · fila ${fila(r)}, columna ${c + 1} · ${filas * cols} páginas (${filas} × ${cols})`, 3.2))
+      if (r === 0 && c === 0)
+        partes.push(
+          `<line x1="${f(papelAncho - margen - 50)}" y1="${f(papelAlto - margen / 2)}" x2="${f(papelAncho - margen)}" y2="${f(papelAlto - margen / 2)}" stroke="#000" stroke-width="0.4"/>`,
+          texto(papelAncho - margen - 52, papelAlto - margen / 2 + 1, "Esta línea debe medir 50 mm", 2.8, "end"),
+        )
+      paginas.push({
+        nombre: nombre(r, c),
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${f(papelAncho)}mm" height="${f(papelAlto)}mm" viewBox="0 0 ${f(papelAncho)} ${f(papelAlto)}">\n${partes.join("\n")}\n</svg>\n`,
+      })
+    }
+  // Mapa: el dibujo completo con la cuadrícula de páginas, en una sola hoja
+  const esc = Math.min(aw / h.ancho, (ah - 20) / h.alto, 1)
+  const cuerpo = elementosHoja(h, "imprimir", dob, 0, 0)
+  const celdas: string[] = []
+  for (let r = 0; r < filas; r++)
+    for (let c = 0; c < cols; c++) {
+      const x = c * sx
+      const y = r * sy
+      const w = Math.min(aw, h.ancho - x)
+      const hh = Math.min(ah, h.alto - y)
+      celdas.push(
+        `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(hh)}" fill="none" stroke="#C2560A" stroke-width="${f(0.5 / esc)}"/>`,
+        `<text x="${f(x + w / 2)}" y="${f(y + hh / 2)}" font-family="Arial, sans-serif" font-size="${f(Math.min(w, hh, sx, sy) / 4)}" fill="#C2560A" fill-opacity="0.7" text-anchor="middle" dominant-baseline="middle">${nombre(r, c)}</text>`,
+      )
+    }
+  const mapa =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${f(papelAncho)}mm" height="${f(papelAlto)}mm" viewBox="0 0 ${f(papelAncho)} ${f(papelAlto)}">\n` +
+    texto(margen, margen + 4, `Mapa de armado: ${filas * cols === 1 ? "1 página" : `${filas * cols} páginas`} (${filas} ${filas === 1 ? "fila" : "filas"} × ${cols} ${cols === 1 ? "columna" : "columnas"})`, 4.5) +
+    texto(margen, margen + 10, `Imprime todo al 100%, recorta por la línea punteada de cada página y encímala sobre la anterior. Traslape: ${f(traslape)} mm.`, 2.8) +
+    `<g transform="translate(${f(margen)} ${f(margen + 16)}) scale(${f(esc)})">${cuerpo.corte.join("")}${cuerpo.doblez.join("")}${cuerpo.perforado.join("")}${celdas.join("")}</g>\n</svg>\n`
+  return { filas, cols, paginas, mapa }
+}
+
 // SVG de todas las piezas en una fila (hoja ajustada al dibujo)
 export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" | "imprimir" = "corte", dob: OpcionesDoblez = DOBLEZ_MARCAR) {
   return hojaSVG(hojaAjustada(piezas), modo, dob)
