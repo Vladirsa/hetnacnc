@@ -19,7 +19,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { STORE_URL, nuevoId } from "./licitacion"
 import { MERCADOS, T_CONFIG_S, asegurarSocial, crearPublicacion, iaSocial } from "./social-hub"
-import { modeloIA } from "./ia-modelo"
+import { IA_MODELO_RAPIDO, modeloIA } from "./ia-modelo"
 
 export const T_HALLAZGO = "hetna_radar_hallazgo"
 export const TIPOS = ["cliente", "taller", "contenido", "competencia", "evento", "mencion"] as const
@@ -117,7 +117,7 @@ export async function correrBusqueda(knex: any, b: Busqueda, logger?: any) {
   try {
     for (let vuelta = 0; vuelta < 3; vuelta++) {
       const resp = await ia.beta.messages.create({
-        ...modeloIA(),
+        ...modeloIA(IA_MODELO_RAPIDO()),
         max_tokens: 4000,
         output_config: { effort: "low" },
         system: INSTRUCCIONES,

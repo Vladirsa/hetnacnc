@@ -9,7 +9,7 @@ import Anthropic from "@anthropic-ai/sdk"
 
 import { MERCADOS, REDES, T_POST, asegurarSocial, iaSocial, leerConfig } from "./social-hub"
 import { GUIAS, puntuar } from "./estrategia"
-import { modeloIA } from "./ia-modelo"
+import { IA_MODELO_RAPIDO, modeloIA } from "./ia-modelo"
 
 const SIN_TEXTO = ["instagram_historia"]
 let ia: Anthropic | null = null
@@ -39,7 +39,7 @@ async function corregir(p: any, faltas: Record<string, { consejos: string[] }>, 
       .map((r) => `### ${r} (máx. ${REDES[r].max} caracteres; estilo: ${REDES[r].estilo}; lo que premia: ${GUIAS[r]?.claves || "-"})\nTexto actual:\n${p.textos?.[r] || p.texto_base}\nCorrige: ${faltas[r].consejos.join(" | ")}`)
       .join("\n\n")
     const resp = await ia.beta.messages.create({
-      ...modeloIA(),
+      ...modeloIA(IA_MODELO_RAPIDO()),
       max_tokens: 4000,
       output_config: { effort: "low", format: { type: "json_schema", schema: { type: "object", properties: Object.fromEntries(redes.map((r) => [r, { type: "string" }])), required: redes, additionalProperties: false } } },
       system:

@@ -11,7 +11,7 @@ describe("invitación a verificar WhatsApp y modelos de IA", () => {
     delete process.env.IA_MODELO_WHATSAPP
     delete process.env.IA_MODELO
     expect(IA_MODELO_WHATSAPP(new Date("2026-11-20T12:00:00Z"))).toBe("claude-sonnet-5-5")
-    expect(IA_MODELO_WHATSAPP(new Date("2026-12-02T12:00:00Z"))).toBe("claude-haiku-5-5")
+    expect(IA_MODELO_WHATSAPP(new Date("2026-12-02T12:00:00Z"))).toBe("claude-sonnet-5-5")
   })
   it("Haiku va sin respaldo del servidor; los demás con él", () => {
     expect(modeloIA("claude-haiku-5-5")).toEqual({ model: "claude-haiku-5-5" })

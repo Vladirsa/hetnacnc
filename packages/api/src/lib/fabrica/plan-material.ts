@@ -24,12 +24,13 @@ import { bloquesBasicos, guionista, hfDisponible, horaTranquila, iconoPara, para
 import { laminaEstilo, miniaturaEstilo, poster } from "./poster"
 import { EMOCIONES, REGLAS_EMOCION } from "../estrategia"
 import { modeloIA } from "../ia-modelo"
+import { limpiarTextoRed } from "../limpiar-texto"
 
 const FORMATOS_VIDEO = ["reel", "short", "video", "estado"]
 
 /** Quita la liga, hashtags y espacios de sobra. */
 export function limpiar(t: string) {
-  return String(t || "")
+  return limpiarTextoRed(String(t || "").split(/\n\s*GUION:\s*/i)[0])
     .replace(/\{\{liga\}\}/g, "")
     .replace(/https?:\/\/\S+/g, "")
     .split("\n")
