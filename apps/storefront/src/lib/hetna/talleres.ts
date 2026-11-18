@@ -67,6 +67,8 @@ export type Taller = {
   logo?: string | null
   banner?: string | null
   fundador: boolean
+  // Invitó a otro taller que ya vende (packages/api/src/lib/referidos.ts)
+  embajador: boolean
   // Aprobado por HETNA con identificación y fotos del taller (lo marca solo el administrador)
   verificado: boolean
   // Fase 3: constancia fiscal revisada por HETNA y certificaciones acreditadas vigentes
@@ -149,6 +151,7 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   logo: s.logo,
   banner: s.banner,
   fundador: s.metadata?.fundador === true,
+  embajador: s.metadata?.embajador === true,
   verificado: s.metadata?.verificado === true,
   empresaVerificada: s.metadata?.empresa_verificada === true,
   certificaciones: (Array.isArray(s.metadata?.certificaciones) ? s.metadata.certificaciones : []).filter(

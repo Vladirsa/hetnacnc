@@ -49,6 +49,13 @@ const PROTEGIDAS = [
   // Plan puesto a mano por HETNA (licitacion-plan, licitacion-cobro, ia-fabricacion)
   "plan",
   "plan_vence",
+  // Invitaciones entre talleres y seguimiento del alta (lib/referidos.ts, lib/alta-recordatorios.ts)
+  "referido_por",
+  "referido_en",
+  "embajador",
+  "embajador_desde",
+  "aviso_confirmar",
+  "felicitado_primer_producto",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 
