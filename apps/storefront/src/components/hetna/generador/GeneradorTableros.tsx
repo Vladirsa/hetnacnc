@@ -390,7 +390,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
       ) : (
         <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]">{m.errores[0] || "Sube la imagen de un mueble."}</div>
       )}
-      <div className="absolute bottom-9 left-2 right-2 flex flex-wrap items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0] sm:right-auto">
+      <div className="absolute top-2 left-2 right-36 flex flex-wrap items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0] sm:right-auto">
         <label className="flex items-center gap-2">
           Explotar
           <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />

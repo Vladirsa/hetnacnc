@@ -4,20 +4,20 @@
 // gabinete y repisas, de ranura y espiga, listo para router CNC o láser.
 // Ver en 3D, medidas y material es gratis; la descarga de archivos va con créditos.
 // También se puede diseñar desde una foto o plano: la IA llena las medidas.
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
 import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { EXHIBIDOR_INICIO, type Herramienta, type OpcionesExhibidor, type PiezaEnsamble, aMueble, exhibidor, piezaPrueba } from "@/lib/generador/ensamble"
+import { EXHIBIDOR_INICIO, type Herramienta, type OpcionesExhibidor, type PiezaEnsamble, exhibidor, piezaPrueba } from "@/lib/generador/ensamble"
 import { type Trazo, dibujo } from "@/lib/generador/geo2d"
 import { type LecturaMueble, cobrarDescargaMueble, disenarMuebleDesdeImagen } from "@/lib/muebles/acciones"
 
 import { Visor3D } from "./Visor3D"
 
-const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
+const Mueble3D = dynamic(() => import("./Mueble3D"), { ssr: false })
 const TABLERO = { ancho: 1220, largo: 2440 }
 
 const FRESAS = [
@@ -95,21 +95,6 @@ export function reducirImagen(archivo: File): Promise<string> {
   })
 }
 
-// malla del mueble armado: cada pieza extruida a su grosor y llevada a su lugar
-export async function mallaArmada(piezas: PiezaEnsamble[]) {
-  const { extruir } = await import("@/lib/generador/extruir")
-  const tris: number[] = []
-  for (const p of piezas) {
-    const r = extruir(
-      { trazos: [{ pts: p.contorno, cerrado: true, capa: "c" }, ...p.huecos.map((h) => ({ pts: h, cerrado: true, capa: "c" }))], avisos: [], unidades: "mm" },
-      { alto: p.grosor, base: 0, margenBase: 0, redondearBase: 0, espejo: false },
-    )
-    const t = r.malla.tris
-    for (let i = 0; i < t.length; i += 3) tris.push(...aMueble(p, t[i], t[i + 1], t[i + 2]))
-  }
-  return tris
-}
-
 export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [pagados, setPagados] = useState<Record<string, boolean>>({})
@@ -130,7 +115,8 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
   const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
   const [prueba, setPrueba] = useState(false)
   const [ver3D, setVer3D] = useState(false)
-  const [tris, setTris] = useState<number[] | null>(null)
+  const [explotar, setExplotar] = useState(0)
+  const [rayosX, setRayosX] = useState(false)
   const cambiar = (k: string) => (x: string) => setV((s) => ({ ...s, [k]: x }))
   const n = (k: keyof OpcionesExhibidor) => numero(v[k as string] ?? "") || 0
 
@@ -173,15 +159,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
   }, [m])
   const tableros = Math.max(1, Math.ceil(areaM2 / ((TABLERO.ancho * TABLERO.largo) / 1e6) / 0.8))
 
-  useEffect(() => {
-    if (!ver3D || m.errores.length) return
-    let vivo = true
-    setTris(null)
-    mallaArmada(m.piezas).then((t) => vivo && setTris(t))
-    return () => {
-      vivo = false
-    }
-  }, [ver3D, m])
+  const piezas3D = useMemo(() => m.piezas.map((p, i) => ({ ...p, indice: i })), [m])
 
   const aplicarLectura = (l: LecturaMueble) => {
     const campos = ["ancho", "fondoGabinete", "fondoRepisas", "altoGabinete", "repisas", "espacioSobreGabinete", "separacion", "sobreUltima", "numDivisores", "altoDivisor", "barrote"] as const
@@ -318,13 +296,18 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
                 Cerrar
               </button>
             </div>
-            {tris ? (
-              <Visor3D oscuro alto="h-[70vh]">
-                <Malla3D oscuro tris={tris} color={0xd8b98e} />
-              </Visor3D>
-            ) : (
-              <div className="grid h-[70vh] place-items-center text-[14px] text-[#8A97AB]">Armando el mueble…</div>
-            )}
+            <Visor3D oscuro alto="h-[70vh]">
+              <Mueble3D piezas={piezas3D} seleccion={null} explotar={explotar} rayosX={rayosX} />
+              <div className="absolute top-2 left-2 flex items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0]">
+                <label className="flex items-center gap-2">
+                  Explotar
+                  <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />
+                </label>
+                <button type="button" aria-pressed={rayosX} onClick={() => setRayosX((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${rayosX ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                  Rayos X
+                </button>
+              </div>
+            </Visor3D>
           </div>
         </div>
       )}
