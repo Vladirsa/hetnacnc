@@ -20,11 +20,12 @@ const Bloque = ({ children }: { children: React.ReactNode }) => (
 
 // Compatibilidad, videos, archivos descargables y preguntas frecuentes de un producto.
 // Todo sale de product.metadata; si el producto no trae nada, no se pinta nada.
-export const FichaProducto = ({ metadata, titulo }: { metadata?: Meta; titulo: string }) => {
+// `omitirFaq`: la ficha de descarga ya enseña sus preguntas (y su JSON-LD).
+export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadata?: Meta; titulo: string; omitirFaq?: boolean }) => {
   const compat = leerCompatibilidad(metadata)
   const videos = leerVideos(metadata)
   const archivos = leerArchivos(metadata)
-  const preguntas = leerFaq(metadata)
+  const preguntas = omitirFaq ? [] : leerFaq(metadata)
 
   if (!compat.length && !videos.length && !archivos.length && !preguntas.length) return null
 
