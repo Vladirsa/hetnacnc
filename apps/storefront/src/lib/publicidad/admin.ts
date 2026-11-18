@@ -43,7 +43,8 @@ export async function listar(): Promise<Res<{ piezas: Pieza[] }>> {
 async function activosQueCoinciden(espacio: string, id: string, desde: string | null, hasta: string | null): Promise<number> {
   const r = await db().query(
     `with esta as (
-       select coalesce($3::timestamptz, (select desde from publicidad.piezas where id::text = $2), now()) as desde, $4::timestamptz as hasta
+       -- Desde hoy en adelante: lo que ya venció no ocupa lugar aunque siga marcado activo
+       select greatest(coalesce($3::timestamptz, (select desde from publicidad.piezas where id::text = $2), now()), now()) as desde, $4::timestamptz as hasta
      )
      select count(*)::int as n from publicidad.piezas p, esta
      where p.espacio = $1 and p.activo and p.id::text <> $2
@@ -73,7 +74,7 @@ export async function guardar(d: DatosPieza & { forzar?: boolean }): Promise<Res
 
   // Cupo del espacio: si ya están llenos los lugares en esas fechas, se avisa antes de guardar
   // (el panel pregunta y, si confirmas, vuelve a mandar con forzar)
-  if (Boolean(d.activo) && !d.forzar) {
+  if (Boolean(d.activo) && !d.forzar && !(hasta && Date.parse(hasta) <= Date.now())) {
     if (d.id && !UUID.test(d.id)) return { ok: false, error: "Anuncio no válido." }
     try {
       const max = ESPACIOS[d.espacio as keyof typeof ESPACIOS].max

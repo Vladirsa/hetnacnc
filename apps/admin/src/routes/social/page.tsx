@@ -217,14 +217,17 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   }, [p.id, p.textos, p.redes, p.titulo, p.url_destino])
   const nombre = (c: string) => redes.find((r) => r.clave === c)?.nombre || c
   const auto = (c: string) => !!redes.find((r) => r.clave === c)?.auto
-  const ligaDe = (red: string) => p.ligas.find((l) => l.red === red && !l.grupo)?.url
+  // Ligas creadas desde esta tarjeta (sin recargar la lista, para no perder lo que aún no se guarda)
+  const [ligasNuevas, setLigasNuevas] = useState<Record<string, string>>({})
+  const ligaDe = (red: string) => p.ligas.find((l) => l.red === red && !l.grupo)?.url || ligasNuevas[red]
   // Copiar antes de publicar: crea (o reusa) la liga medida de esa red, la misma que usará la publicación
   const copiarTexto = async (red: string) => {
     let liga = ligaDe(red)
     try {
       if (!liga) {
-        liga = (await api<{ url: string }>(`/${p.id}`, { accion: "liga", red })).url
-        alCambiar()
+        const url = (await api<{ url: string }>(`/${p.id}`, { accion: "liga", red })).url
+        liga = url
+        setLigasNuevas((m) => ({ ...m, [red]: url }))
       }
       copiar((textos[red] || "").split("{{liga}}").join(liga))
       setNotaOk(true)

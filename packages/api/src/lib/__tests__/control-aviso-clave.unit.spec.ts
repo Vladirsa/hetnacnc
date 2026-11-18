@@ -21,8 +21,16 @@ describe("Clave de los avisos urgentes del Centro de control", () => {
     const servicio = (saldo: string, dias: string) => ({ id: "runpod", nombre: "RunPod", grupo: "saldo", estado: "rojo", valor: saldo, alerta: `Recarga RunPod: te quedan ${saldo} (${dias}). Sin saldo se detienen los escaneos 3D.` })
     const [a] = avisosDeServicios([servicio("US$8.50", "≈2 días")] as any, "/control")
     const [b] = avisosDeServicios([servicio("US$3.10", "alcanza hoy")] as any, "/control")
-    expect((a as any).clave).toBe("servicio:runpod:rojo")
+    expect((a as any).clave).toBe("servicio:runpod:RunPod:rojo")
     expect(claveAviso(a as any)).toBe(claveAviso(b as any))
+  })
+  it("con clave propia: el pedido no cambia al pasar de horas a días y cada reseña es distinta", () => {
+    const p26 = { ...pedido(123, "26 h"), clave: "pedido:order_123" }
+    const p2d = { ...pedido(123, "2 días"), clave: "pedido:order_123" }
+    expect(claveAviso(p26)).toBe(claveAviso(p2d))
+    const resena = (id: string, estrellas: number) => ({ tipo: "resena_mala", titulo: `Reseña de ${estrellas} estrella(s) a un taller`, url: "https://x/dashboard/reviews", clave: `resena:${id}` })
+    expect(claveAviso(resena("rev_1", 1))).not.toBe(claveAviso(resena("rev_2", 1)))
+    expect(claveAviso(resena("rev_1", 1))).not.toBe(claveAviso(resena("rev_2", 2)))
   })
   it("la clave anterior es el título exacto (para reconocer lo ya enviado)", () => {
     expect(claveAvisoAnterior(pedido(1, "26 h"))).not.toBe(claveAvisoAnterior(pedido(1, "28 h")))

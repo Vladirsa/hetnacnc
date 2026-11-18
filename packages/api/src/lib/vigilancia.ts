@@ -720,7 +720,7 @@ export function avisosDeServicios(servicios: Servicio[], urlControl: string) {
             detalle: [s.valor, s.detalle].filter(Boolean).join(" · "),
             url: s.url || urlControl,
             // Clave estable para no repetir el aviso urgente cada vez que cambia el saldo o los días
-            clave: `servicio:${s.id}:${s.estado}`,
+            clave: `servicio:${s.id}:${s.nombre}:${s.estado}`,
           }
     )
 }
