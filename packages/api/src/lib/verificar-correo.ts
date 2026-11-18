@@ -16,13 +16,16 @@ import { createHmac, timingSafeEqual } from "crypto"
 import { correosDeLaCasa } from "./cuentas-casa"
 import { STORE_URL, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
+import { secretoLigas } from "./secreto-ligas"
 
 export const VERIFICAR_DESDE = () => new Date(process.env.VERIFICAR_CORREO_DESDE || "2026-10-31T02:00:00Z")
 const VIGENCIA_DIAS = 7
 
-const secreto = () => process.env.BAJA_SECRET || process.env.COOKIE_SECRET || process.env.JWT_SECRET || ""
-const firmar = (id: string, exp: number) =>
-  createHmac("sha256", secreto()).update(`verificar:${id}:${exp}`).digest("base64url").slice(0, 32)
+// Sin secreto propio (lib/secreto-ligas.ts) no hay firma: "" y ninguna liga vale.
+const firmar = (id: string, exp: number) => {
+  const s = secretoLigas()
+  return s ? createHmac("sha256", s).update(`verificar:${id}:${exp}`).digest("base64url").slice(0, 32) : ""
+}
 
 export type ClienteParaVerificar = {
   id: string
@@ -58,17 +61,22 @@ export async function clientesConCorreoConfiable(knex: any, email: string | null
     .map((f: any) => String(f.id))
 }
 
+/** "" si no hay secreto para firmar (no se manda una liga que no va a servir). */
 export function ligaVerificacion(id: string): string {
   const exp = Math.floor(Date.now() / 1000) + VIGENCIA_DIAS * 86400
+  const t = firmar(id, exp)
+  if (!t) return ""
   // Va bajo /api/app/: en el servidor, nginx manda todo /api/v... a otro
   // servicio (Express) y /api/verificar-correo daba "Cannot GET".
-  return `${STORE_URL}/api/app/verificar-correo?c=${encodeURIComponent(id)}&e=${exp}&t=${firmar(id, exp)}`
+  return `${STORE_URL}/api/app/verificar-correo?c=${encodeURIComponent(id)}&e=${exp}&t=${t}`
 }
 
 export function firmaVerificacionValida(id: string, exp: string, firma: string): boolean {
   const n = Number(exp)
   if (!id || !Number.isFinite(n) || n * 1000 < Date.now()) return false
-  const a = Buffer.from(firmar(id, n))
+  const esperada = firmar(id, n)
+  if (!esperada) return false
+  const a = Buffer.from(esperada)
   const b = Buffer.from(String(firma || ""))
   return a.length === b.length && timingSafeEqual(a, b)
 }
@@ -76,8 +84,9 @@ export function firmaVerificacionValida(id: string, exp: string, firma: string):
 export async function mandarCorreoVerificacion(c: { id: string; email: string; first_name?: string | null }) {
   // El registro la manda dos veces casi juntas (el aviso de cuenta creada y
   // la tienda al ver que falta confirmar): sólo sale una por minuto.
-  if (!puedeReenviar(c.id)) return { sent: false, reason: "ya se mandó hace menos de un minuto" }
   const liga = ligaVerificacion(c.id)
+  if (!liga) return { sent: false, reason: "falta el secreto para firmar la liga (BAJA_SECRET)" }
+  if (!puedeReenviar(c.id)) return { sent: false, reason: "ya se mandó hace menos de un minuto" }
   return sendEmail({
     to: c.email,
     subject: "Confirma tu correo para activar tu cuenta de HETNA CNC",
