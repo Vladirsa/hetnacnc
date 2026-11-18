@@ -19,7 +19,12 @@ export function Analytics() {
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   // Google Ads (AW-...): remarketing dinámico y conversiones. Opcional.
   const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-  const gtagId = ga4Id || adsId;
+  // El gtag.js se carga con el ID de Google Ads cuando existe: el 18 nov 2026 la
+  // etiqueta G- de Analytics dejó de servirse sola (Google respondía 404 porque
+  // quedó combinada en otra cuenta) y, al cargar con ella, se caían Analytics
+  // Y Ads juntos. Cargando con AW-, Ads mide siempre y Analytics se activa con
+  // su gtag('config') aparte.
+  const gtagId = adsId || ga4Id;
   // Microsoft Clarity (mapas de calor y grabaciones). Oculta lo que se
   // escribe en formularios. Sólo letras y números: va dentro del script.
   const clarityCrudo = process.env.NEXT_PUBLIC_CLARITY_ID || '';

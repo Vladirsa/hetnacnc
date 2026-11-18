@@ -11,7 +11,47 @@ fallas=0
 bien()  { printf '  BIEN   %s\n' "$1"; }
 falla() { printf '  FALLA  %s\n' "$1"; fallas=$((fallas + 1)); }
 aviso() { printf '  AVISO  %s\n' "$1"; }
-valor() { [ -f "$1" ] && grep -E "^$2=" "$1" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"; }
+# Lo que de verdad usa cada proceso. Un valor puede estar en varios lugares y
+# gana el primero: lo que pm2 guardó al arrancar el proceso, luego los archivos.
+#   API (Medusa):  pm2 > .env.production > .env
+#   Tienda (Next): pm2 > .env.production.local > .env.local > .env.production > .env
+# El 18 nov 2026 el API corría con el secreto de ejemplo guardado en pm2 aunque
+# el .env tenía uno bueno: por eso aquí NO basta con leer el .env.
+command -v node >/dev/null || { echo "Falta node en el PATH: no se puede revisar."; exit 2; }
+# Una sola pasada: "proceso<TAB>NOMBRE<TAB>origen<TAB>valor" por cada llave, y
+# "proceso<TAB>@pm2<TAB>si|no" para saber si se pudo leer lo que guarda pm2.
+TABLA="$( (pm2 jlist 2>/dev/null || true) | node -e '
+  const fs=require("fs"),path=require("path");const raiz=process.argv[1];let d="";
+  process.stdin.on("data",c=>d+=c).on("end",()=>{
+    // Igual que dotenv: export opcional, comillas, comentario al final, CRLF
+    const leer=f=>{const o={};let t;try{t=fs.readFileSync(f,"utf8")}catch{return o}
+      for(const l0 of t.split(/\r?\n/)){const m=/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(l0);if(!m)continue;let v=m[2];
+        const q=/^(["\x27`])((?:\\.|(?!\1).)*)\1/.exec(v);v=q?q[2]:v.replace(/\s+#.*$/,"").trim();o[m[1]]=v}
+      return o};
+    let ps=[];let leido=false;try{const i=d.indexOf("[");ps=JSON.parse(i>=0?d.slice(i):d);leido=Array.isArray(ps)}catch{}
+    const uno=(nombre,dirPorOmision,archivos)=>{
+      const p=leido?ps.find(x=>x&&x.name===nombre):null;const e=(p&&p.pm2_env)||{};
+      const pm=p?Object.assign({},e.env||{},e):{};const dir=(p&&e.pm_cwd)||dirPorOmision;
+      console.log([nombre,"@pm2",p?"si":"no"].join("\t"));console.log([nombre,"@dir",dir].join("\t"));
+      const capas=archivos.map(a=>[a,leer(path.join(dir,a))]);
+      const llaves=new Set();for(const[,o]of capas)for(const k of Object.keys(o))llaves.add(k);
+      for(const k of Object.keys(pm))if(typeof pm[k]==="string"&&/^[A-Z][A-Z0-9_]*$/.test(k))llaves.add(k);
+      for(const k of llaves){let de="",v="";if(typeof pm[k]==="string"){de="pm2";v=pm[k]}else for(const[a,o]of capas)if(k in o){de=a;v=o[k];break}
+        console.log([nombre,k,de,String(v).replace(/[\t\n\r]/g," ")].join("\t"))}
+    };
+    uno("hetna-api",path.join(raiz,"packages/api"),[".env.production",".env"]);
+    uno("hetna-web",path.join(raiz,"apps/storefront"),[".env.production.local",".env.local",".env.production",".env"]);
+  })' "$R" 2>/dev/null)"
+campo() { printf '%s\n' "$TABLA" | awk -F'\t' -v p="$1" -v k="$2" -v n="$3" '$1==p && $2==k {print $n; exit}'; }
+valor_fila() { printf '%s\n' "$TABLA" | awk -F'\t' -v p="$1" -v k="$2" '$1==p && $2==k {sub(/^[^\t]*\t[^\t]*\t[^\t]*\t/,""); print; exit}'; }
+# valor <archivo .env del API o de la tienda> <NOMBRE>: el valor que de verdad se usa
+valor() { case "$1" in "$API") valor_fila hetna-api "$2" ;; *) valor_fila hetna-web "$2" ;; esac; }
+origen() { campo hetna-api "$1" 3; }
+PM2_API="$(campo hetna-api @pm2 3)"
+
+echo "== ¿Se pudo leer lo que guarda pm2?"
+if [ "$PM2_API" = si ]; then bien "proceso hetna-api encontrado en pm2 (carpeta: $(campo hetna-api @dir 3))"
+else falla "no pude leer el proceso hetna-api de pm2 (¿otro usuario, otro nombre o pm2 sin instalar?). Lo de abajo sale SÓLO de los archivos .env y puede no ser lo que usa el API: corre esto con el mismo usuario que corre pm2"; fi
 
 echo "== Archivos .env"
 for f in "$API" "$WEB"; do
@@ -20,18 +60,28 @@ for f in "$API" "$WEB"; do
 done
 git -C "$R" ls-files --error-unmatch packages/api/.env >/dev/null 2>&1 && falla "packages/api/.env está dentro de git" || bien "el .env no está en git"
 
-echo "== Secretos de sesión y de firma (API)"
+echo "== Secretos de sesión y de firma (lo que de verdad usa el API)"
 for v in JWT_SECRET COOKIE_SECRET; do
-  x=$(valor "$API" $v)
-  if [ -z "$x" ]; then falla "$v está vacío"; elif [ "$x" = supersecret ]; then falla "$v vale el de ejemplo (supersecret)"; elif [ ${#x} -lt 32 ]; then falla "$v es corto (${#x} letras; usa openssl rand -hex 64)"; else bien "$v propio y largo"; fi
+  x=$(valor "$API" $v); de=$(origen $v)
+  if [ -z "$x" ]; then falla "$v está vacío"; elif [ "$x" = supersecret ]; then falla "$v vale el de ejemplo (supersecret); sale de: $de. Con la versión anterior del API cualquiera podía fabricar sesiones; con la actual se usa uno al azar y las sesiones se cierran en cada reinicio. Pon uno propio"; elif [ ${#x} -lt 32 ]; then falla "$v es corto (${#x} letras; sale de: $de; usa openssl rand -hex 64)"; else bien "$v propio y largo (sale de: $de)"; fi
 done
 [ "$(valor "$API" JWT_SECRET)" != "$(valor "$API" COOKIE_SECRET)" ] && bien "JWT_SECRET y COOKIE_SECRET son distintos" || falla "JWT_SECRET y COOKIE_SECRET son iguales"
 for v in BAJA_SECRET ARCHIVOS_SECRETO STOREFRONT_REVALIDATE_SECRET N8N_REDES_TOKEN ESCANEO_CALLBACK_SECRET; do
   x=$(valor "$API" $v); [ -n "$x" ] && [ "$x" != supersecret ] && bien "$v puesto" || aviso "$v vacío o de ejemplo (si usas esa función, ponle un secreto propio)"
 done
 
+echo "== Valores del .env que NO se están usando (otro lugar le gana)"
+otros=0
+if [ -f "$API" ]; then
+  for k in $(grep -oE '^[A-Za-z0-9_]+=' "$API" | tr -d '=' | sort -u); do
+    de=$(origen "$k"); enarchivo=$(grep -E "^$k=" "$API" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+    if [ -n "$de" ] && [ "$de" != ".env" ] && [ "$(valor "$API" "$k")" != "$enarchivo" ]; then aviso "$k: manda $de, no el .env"; otros=$((otros + 1)); fi
+  done
+fi
+if [ "$PM2_API" != si ]; then aviso "sin pm2 no se puede saber si algo le gana al .env"; elif [ "$otros" = 0 ]; then bien "todo lo del .env del API es lo que se usa"; fi
+
 echo "== Modo de producción"
-[ "$(valor "$API" NODE_ENV)" = production ] && bien "API con NODE_ENV=production" || aviso "NODE_ENV no está en el .env del API: confirma que pm2 lo pone (pm2 env <id> | grep NODE_ENV)"
+[ "$(valor "$API" NODE_ENV)" = production ] && bien "API con NODE_ENV=production" || aviso "el API no tiene NODE_ENV=production ni en pm2 ni en sus .env (medusa start lo pone solo; confírmalo con: pm2 logs hetna-api --lines 5 --nostream)"
 for v in PAYPAL_SANDBOX SKYDROPX_SANDBOX META_CAPI_TEST_CODE CSP_SOLO_REPORTE; do
   x="$(valor "$API" $v)$(valor "$WEB" $v)"; case "$x" in ""|0|false|off) bien "$v apagado";; *) falla "$v está encendido en producción";; esac
 done
@@ -40,7 +90,7 @@ case "$(valor "$API" FILE_BACKEND_URL)" in https://*) bien "FILE_BACKEND_URL con
 
 echo "== CORS"
 for v in STORE_CORS ADMIN_CORS VENDOR_CORS AUTH_CORS APP_CORS; do
-  x=$(valor "$API" $v); case "$x" in *localhost*|*127.0.0.1*) falla "$v incluye localhost";; "") [ $v = APP_CORS ] && bien "$v vacío" || falla "$v vacío";; *"*"*) falla "$v incluye *";; *) bien "$v sin localhost ni *";; esac
+  x=$(valor "$API" $v); case "$x" in *localhost*|*127.0.0.1*) falla "$v incluye localhost";; *docs.medusajs.com*|*http://*) falla "$v incluye un origen de fábrica o sin https";; "") [ $v = APP_CORS ] && bien "$v vacío" || falla "$v vacío";; *"*"*) falla "$v incluye *";; *) bien "$v sin localhost ni *";; esac
 done
 
 echo "== Archivos peligrosos ya subidos a /static"
