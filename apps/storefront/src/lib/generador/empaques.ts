@@ -19,6 +19,7 @@ export type Gen =
   | "caja" | "piramide" | "cono" | "sobre" | "bolsa" | "hexagonal"
   | "bandeja" | "tapaFondo" | "pillow" | "bolsaAsa" | "bolsaPlana" | "prisma" | "cilindro"
   | "tetra" | "maceta" | "sobreBolsillo" | "sobrePuntas" | "tarjeta" | "cajaVentana" | "cajon" | "bisagra" | "inserto"
+  | "envio" | "leche" | "exhibidor" | "cartas" | "rebanada" | "explosiva"
 export type Forma = string // id de la plantilla en FORMAS
 
 export type Datos = {
@@ -623,6 +624,176 @@ function inserto(d: Datos): Resultado {
   return { piezas: [{ nombre: "Inserto", cortes, pliegues: [] }], errores: [], avisos: ["Córtalo en cartulina gruesa o MDF de 3 mm; se apoya dentro de la caja."] }
 }
 
+
+// Caja de envío autoarmable (mailer): base, paredes laterales dobles que
+// atrapan las orejas del frente y de atrás, tapa unida con solapas y lengüeta
+// que entra detrás del frente. Se arma sin pegamento.
+function envio(d: Datos): Resultado {
+  const { largo: L, ancho: W, alto: H } = d
+  const t = 1 // holgura por el grosor del cartón
+  const e = Math.min(W * 0.45, H * 2) // orejas
+  const be = Math.min(e * 0.3, H * 0.25)
+  const ch = Math.min(H * 0.5, W * 0.12) // biseles de la pared interior
+  const dH = Math.max(5, H - t) // solapas de la tapa
+  const cc = Math.min(dH * 0.5, W * 0.15)
+  const Hf = Math.max(5, H - t) // frente de la tapa
+  const T = Math.min(Hf * 0.9, W * 0.35) // lengüeta
+  const ct = Math.min(T * 0.6, L * 0.15)
+  const y1 = W + H
+  const y2 = y1 + W
+  const y3 = y2 + Hf
+  const pts: P[] = [
+    [0, -H], [L, -H],
+    [L + e, -H + be], [L + e, -be], [L, 0],
+    [L + H, 0], [L + 2 * H - t, ch], [L + 2 * H - t, W - ch], [L + H, W], [L, W],
+    [L + e, W + be], [L + e, y1 - be], [L, y1],
+    [L + dH, y1 + cc], [L + dH, y2 - cc], [L, y2],
+    [L, y3], [L - ct, y3 + T], [ct, y3 + T], [0, y3],
+    [0, y2], [-dH, y2 - cc], [-dH, y1 + cc], [0, y1],
+    [-e, y1 - be], [-e, W + be], [0, W],
+    [-H, W], [-2 * H + t, W - ch], [-2 * H + t, ch], [-H, 0], [0, 0],
+    [-e, -be], [-e, -H + be],
+  ]
+  const pl: [P, P][] = [
+    [[0, 0], [L, 0]], [[L, 0], [L, W]], [[0, W], [L, W]], [[0, 0], [0, W]],
+    [[L + H, 0], [L + H, W]], [[-H, 0], [-H, W]],
+    [[0, -H], [0, 0]], [[L, -H], [L, 0]], [[0, W], [0, y1]], [[L, W], [L, y1]],
+    [[0, y1], [L, y1]], [[0, y1], [0, y2]], [[L, y1], [L, y2]], [[0, y2], [L, y2]], [[0, y3], [L, y3]],
+  ]
+  return {
+    piezas: [{ nombre: "Caja de envío", cortes: [limpiar(pts)], pliegues: pl }],
+    errores: [],
+    avisos: [
+      "Se arma sin pegamento: dobla las orejas hacia dentro, luego la pared lateral doble encima de ellas, y cierra metiendo la lengüeta detrás del frente.",
+      "Las medidas son por dentro. Para envíos usa cartón corrugado y dobleces perforados o marcados.",
+    ],
+  }
+}
+
+// Caja de leche (techo a dos aguas): cuatro paredes, fondo con lengüeta y
+// techo con fuelles triangulares en los lados y aleta de cierre arriba.
+function leche(d: Datos): Resultado {
+  const { largo: L, ancho: W, alto: H } = d
+  const g = Math.min(d.pestana, L * 0.4)
+  const R = W / 2
+  const fin = Math.min(15, Math.max(8, W * 0.2))
+  const dp = Math.min(W * 0.7, L / 2 - 1)
+  const polvo = trapecio(W, dp, Math.min(dp * 0.4, W * 0.2))
+  const f = franja([L, W, L, W], H + R + fin, g, [tapa(L, W), polvo, null, polvo], [null, null, null, null])
+  const xs = f.xs
+  const pl = [...f.pliegues]
+  for (let i = 0; i < 4; i++) {
+    const [a, b] = [xs[i], xs[i + 1]]
+    pl.push([[a, H], [b, H]], [[a, H + R], [b, H + R]])
+    if (i % 2 === 1) {
+      const m = (a + b) / 2
+      pl.push([[a, H], [m, H + R]], [[b, H], [m, H + R]], [[m, H + R], [m, H + R + fin]])
+    }
+  }
+  return {
+    piezas: [{ nombre: "Caja de leche", cortes: [f.contorno], pliegues: pl }],
+    errores: [],
+    avisos: ["Los lados del techo se doblan hacia dentro por las diagonales. Cierra la aleta de arriba con pegamento, un broche o una perforación con listón."],
+  }
+}
+
+// Exhibidor de mostrador: charola con frente bajo, lados inclinados y
+// respaldo alto para el letrero. Pestañas de pegado en frente y respaldo.
+function exhibidor(d: Datos): Resultado {
+  const { largo: L, ancho: W, alto: Hb } = d
+  const hF = d.altoTapa
+  if (hF >= Hb) return { piezas: [], errores: ["El frente debe ser más bajo que el respaldo."], avisos: [] }
+  const hS = Math.max(hF, Math.min(Hb, hF + W * 0.6)) // alto de los lados atrás
+  const g = Math.min(d.pestana, W * 0.4)
+  const b = Math.min(g * 0.6, hF * 0.3)
+  const bs = Math.min(g * 0.6, hS * 0.3)
+  const r = Math.min(10, L * 0.1) // esquinas del respaldo
+  const top = W + Hb
+  const pts: P[] = [
+    [0, -hF], [L, -hF],
+    [L + g, -hF + b], [L + g, -b], [L, 0],
+    [L + hF, 0], [L + hS, W], [L, W],
+    [L + g, W + bs], [L + g, W + hS - bs], [L, W + hS],
+    [L, top - r], [L - r, top], [r, top], [0, top - r],
+    [0, W + hS], [-g, W + hS - bs], [-g, W + bs], [0, W],
+    [-hS, W], [-hF, 0], [0, 0],
+    [-g, -b], [-g, -hF + b],
+  ]
+  const pl: [P, P][] = [
+    [[0, 0], [L, 0]], [[L, 0], [L, W]], [[0, W], [L, W]], [[0, 0], [0, W]],
+    [[0, -hF], [0, 0]], [[L, -hF], [L, 0]], [[0, W], [0, W + hS]], [[L, W], [L, W + hS]],
+  ]
+  return {
+    piezas: [{ nombre: "Exhibidor", cortes: [limpiar(pts)], pliegues: pl }],
+    errores: [],
+    avisos: ["Pega las pestañas del frente y del respaldo por dentro de los lados. El respaldo queda libre para tu logo o letrero."],
+  }
+}
+
+// Caja para cartas o tarjetas: caja con solapas y muesca para el pulgar en el frente
+function cartas(d: Datos): Resultado {
+  const r = cajaSolapas(d)
+  const { largo: L, alto: H } = d
+  const g = Math.min(d.pestana, L * 0.4)
+  const c = r.piezas[0].cortes[0]
+  const i = c.findIndex((q, k) => {
+    const n = c[(k + 1) % c.length]
+    return Math.abs(q[0] - (g + L)) < 1e-3 && Math.abs(q[1] - H) < 1e-3 && Math.abs(n[0] - g) < 1e-3 && Math.abs(n[1] - H) < 1e-3
+  })
+  const rad = Math.min(L * 0.18, 12, H * 0.2)
+  if (i >= 0) {
+    const cx = g + L / 2
+    const arco: P[] = Array.from({ length: 17 }, (_, j) => [cx + rad * Math.cos((-PI * j) / 16), H + rad * Math.sin((-PI * j) / 16)] as P)
+    c.splice(i + 1, 0, ...arco)
+    r.piezas[0].cortes[0] = limpiar(c)
+  }
+  r.piezas[0].nombre = "Caja para cartas"
+  return r
+}
+
+// Rebanada de pastel: prisma triangular. Las tapas (triángulos) van unidas a
+// un lado; el respaldo y el otro lado llevan pestañas para pegarlas.
+function rebanada(d: Datos): Resultado {
+  const R = d.largo
+  const H = d.alto
+  const n = Math.round(d.lados)
+  if (n < 3 || n > 24) return { piezas: [], errores: ["Las rebanadas por pastel van de 3 a 24."], avisos: [] }
+  const th = (2 * PI) / n
+  const cuerda = 2 * R * Math.sin(th / 2)
+  const g = Math.min(d.pestana, H * 0.4)
+  const tri: Solapa = { puntos: [[R * Math.cos(th), R * Math.sin(th)]] }
+  const f = franja(
+    [R, cuerda, R],
+    H,
+    g,
+    [tri, trapecio(cuerda, Math.min(g, cuerda * 0.3), g * 0.6), trapecio(R, g, g)],
+    [tri, trapecio(cuerda, Math.min(g, cuerda * 0.3), g * 0.6), trapecio(R, g, g)],
+  )
+  return {
+    piezas: [{ nombre: "Rebanada", cortes: [f.contorno], pliegues: f.pliegues }],
+    errores: [],
+    avisos: [`Ángulo de la punta: ${r3((360 / n) * 10) / 10}°. Las pestañas del respaldo y del lado se pegan por dentro de los triángulos.`],
+  }
+}
+
+// Caja sorpresa (explosiva): cruz de base y cuatro paredes que se abren al
+// quitar la tapa, más la tapa suelta.
+function explosiva(d: Datos): Resultado {
+  const { largo: L, alto: H } = d
+  const hol = Math.max(0, d.holgura) + 0.4
+  const tapaAlto = Math.min(d.altoTapa, H)
+  const pts: P[] = [[0, -H], [L, -H], [L, 0], [L + H, 0], [L + H, L], [L, L], [L, L + H], [0, L + H], [0, L], [-H, L], [-H, 0], [0, 0]]
+  const pl: [P, P][] = [[[0, 0], [L, 0]], [[L, 0], [L, L]], [[0, L], [L, L]], [[0, 0], [0, L]]]
+  return {
+    piezas: [
+      { nombre: "Base y paredes", cortes: [limpiar(pts)], pliegues: pl },
+      bandejaPieza(L + 2 * hol, L + 2 * hol, tapaAlto, d.pestana, "Tapa"),
+    ],
+    errores: [],
+    avisos: ["Las paredes no se pegan: la tapa las mantiene cerradas y al quitarla se abren. Decora el interior con fotos o mensajes."],
+  }
+}
+
 // quita puntos repetidos consecutivos y puntos en línea recta
 function limpiar(pts: P[]): P[] {
   let p = pts.map(([x, y]) => [r3(x), r3(y)] as P)
@@ -685,6 +856,13 @@ export const FORMAS: FormaDef[] = [
   { id: "triangular", nombre: "Caja triangular", grupo: "Cajas", gen: "prisma", campos: ["lados", "ancho", "alto", "pestana"], inicio: { lados: 3, ancho: 60, alto: 150, pestana: 12 }, detalle: "Tipo chocolate suizo" },
   { id: "prisma", nombre: "Prisma de N lados", grupo: "Cajas", gen: "prisma", campos: ["lados", "ancho", "alto", "pestana"], inicio: { lados: 5, ancho: 45, alto: 90, pestana: 12 } },
   { id: "cilindro", nombre: "Tubo con tapas", grupo: "Cajas", gen: "cilindro", campos: ["ancho", "alto", "pestana"], inicio: { ancho: 70, alto: 120, pestana: 12 }, detalle: "Cilindro para velas, té, dulces" },
+  { id: "envio", nombre: "Caja de envío autoarmable", grupo: "Cajas", gen: "envio", campos: ["largo", "ancho", "alto"], inicio: { largo: 250, ancho: 180, alto: 80 }, detalle: "Mailer para tienda en línea, sin pegamento" },
+  { id: "cartas", nombre: "Caja para cartas", grupo: "Cajas", gen: "cartas", campos: C.caja, inicio: { largo: 64, ancho: 23, alto: 90, pestana: 12 }, detalle: "Baraja o tarjetas, con muesca para el pulgar" },
+  { id: "cerillos", nombre: "Caja de cerillos", grupo: "Cajas", gen: "cajon", campos: [...C.caja, "holgura"], inicio: { largo: 55, ancho: 36, alto: 15, pestana: 8, holgura: 0.6 }, detalle: "Funda y cajón pequeños" },
+  { id: "leche", nombre: "Caja de leche", grupo: "Cajas", gen: "leche", campos: C.caja, inicio: { largo: 70, ancho: 70, alto: 120, pestana: 12 }, detalle: "Techo a dos aguas, para dulces o recuerdos" },
+  { id: "explosiva", nombre: "Caja sorpresa (explosiva)", grupo: "Cajas", gen: "explosiva", campos: ["largo", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 100, alto: 100, altoTapa: 30, holgura: 1, pestana: 12 }, detalle: "Al quitar la tapa se abren las paredes" },
+  { id: "exhibidor", nombre: "Exhibidor de mostrador", grupo: "Cajas", gen: "exhibidor", campos: ["largo", "ancho", "alto", "altoTapa", "pestana"], inicio: { largo: 220, ancho: 160, alto: 220, altoTapa: 50, pestana: 20 }, detalle: "Charola con respaldo alto para punto de venta" },
+  { id: "rebanada", nombre: "Rebanada de pastel", grupo: "Cajas", gen: "rebanada", campos: ["largo", "alto", "lados", "pestana"], inicio: { largo: 110, alto: 70, lados: 8, pestana: 10 }, detalle: "Varias forman un pastel completo" },
   { id: "poster", nombre: "Tubo para póster", grupo: "Cajas", gen: "cilindro", campos: ["ancho", "alto", "pestana"], inicio: { ancho: 60, alto: 450, pestana: 15 } },
   // Bolsas y sobres
   { id: "bolsa", nombre: "Bolsa con fuelle", grupo: "Bolsas y sobres", gen: "bolsa", campos: C.caja, inicio: { largo: 160, ancho: 80, alto: 220, pestana: 15 } },
@@ -732,6 +910,10 @@ const ETIQUETAS_GEN: Partial<Record<Gen, Partial<Record<keyof Datos, string>>>> 
   tarjeta: { largo: "Ancho cerrada", ancho: "Alto" },
   pillow: { largo: "Largo", ancho: "Ancho" },
   cajaVentana: { margen: "Marco alrededor de la ventana" },
+  envio: { largo: "Largo (por dentro)", ancho: "Fondo (por dentro)", alto: "Alto (por dentro)" },
+  exhibidor: { largo: "Ancho del frente", ancho: "Fondo", alto: "Alto del respaldo", altoTapa: "Alto del frente" },
+  rebanada: { largo: "Largo de la rebanada (radio)", lados: "Rebanadas por pastel" },
+  explosiva: { largo: "Lado de la base", alto: "Alto de las paredes" },
 }
 
 // Etiqueta de cada campo según la plantilla
@@ -745,6 +927,7 @@ const GENERADORES: Record<Gen, (d: Datos) => Resultado> = {
   caja: cajaSolapas, piramide, cono, sobre, bolsa, hexagonal,
   bandeja, tapaFondo, pillow, bolsaAsa, bolsaPlana, prisma, cilindro,
   tetra, maceta, sobreBolsillo, sobrePuntas, tarjeta, cajaVentana, cajon, bisagra, inserto,
+  envio, leche, exhibidor, cartas, rebanada, explosiva,
 }
 
 export function generarEmpaque(forma: Forma, d: Datos): Resultado {
@@ -897,6 +1080,12 @@ export function partirEnCortes(c: P[], cortes: P[][]): P[][] {
   }
   return salida
 }
+
+// Dobleces tan cortos que no les cabe ni un tramo de corte con sus puentes
+export const doblecesSinPerforar = (piezas: Plantilla[], d: OpcionesDoblez) =>
+  d.modo !== "perforado"
+    ? 0
+    : piezas.reduce((n, p) => n + cadenasDoblez(p.pliegues, p.cortes).flatMap((c) => partirEnCortes(c, p.cortes)).filter((c) => !perforar(c, d.corte, d.puente).length).length, 0)
 
 const perforaciones = (p: Plantilla, d: OpcionesDoblez) =>
   cadenasDoblez(p.pliegues, p.cortes).flatMap((c) => partirEnCortes(c, p.cortes)).flatMap((c) => perforar(c, d.corte, d.puente))
