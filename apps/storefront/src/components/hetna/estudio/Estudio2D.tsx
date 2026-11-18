@@ -58,6 +58,7 @@ export function Estudio2D({
   sinHojas = false,
   descargas,
   vacio,
+  vista3D,
 }: {
   titulo: string
   acento?: string
@@ -78,6 +79,8 @@ export function Estudio2D({
   descargas?: (exportar: (tipo: "dxf" | "svg" | "pdf") => void) => React.ReactNode
   // mensaje cuando todavía no hay dibujo
   vacio?: React.ReactNode
+  // vista del objeto armado: si viene, es la vista principal y el 2D queda en otra pestaña
+  vista3D?: React.ReactNode
 }) {
   const { locale } = useParams<{ locale: string }>()
   const cajaRef = useRef<HTMLDivElement>(null)
@@ -88,6 +91,8 @@ export function Estudio2D({
   const vistaRef = useRef(vista)
   vistaRef.current = vista
   const [aviso, setAviso] = useState("")
+  const [pestana, setPestana] = useState<"3d" | "2d">("3d")
+  const en3D = !!vista3D && pestana === "3d"
 
   // ---- Acomodar en hojas: las piezas del dibujo, con copias, en hojas de
   // material (mismo motor que la herramienta Anidado). Sirve para saber
@@ -306,20 +311,38 @@ export function Estudio2D({
       {/* En el celular la vista va arriba y fija: se ve cada cambio del panel */}
       <section className="sticky top-14 z-10 order-1 flex h-[46vh] flex-col bg-[#0D1015] lg:static lg:order-none lg:h-auto lg:min-h-[60vh] lg:flex-1">
         <div className="flex items-center gap-1 border-b border-[#1F2937] bg-[#0F141C] px-3 py-2 text-[12.5px] text-[#8A97AB]">
-          <span className="mr-auto font-semibold text-[#C9D2E0]">Vista 2D</span>
-          {[
+          {vista3D ? (
+            <div className="mr-auto flex gap-1" role="tablist">
+              {([["3d", "Armado 3D"], ["2d", "Piezas 2D"]] as const).map(([id, t]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={pestana === id}
+                  onClick={() => setPestana(id)}
+                  className={`rounded-[7px] px-2.5 py-1 font-semibold ${pestana === id ? "bg-[#1C2431] text-white ring-1 ring-[#C2560A]" : "text-[#8A97AB] hover:text-white"}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className="mr-auto font-semibold text-[#C9D2E0]">Vista 2D</span>
+          )}
+          {(en3D ? [] : [
             ["Ajustar", () => setVista({ x: 0, y: 0, k: 1 })],
             ["Acercar", () => zoomEn(vista.k * 1.3, 0, 0)],
             ["Alejar", () => zoomEn(vista.k / 1.3, 0, 0)],
-          ].map(([t, fn]) => (
+          ]).map(([t, fn]) => (
             <button key={t as string} type="button" onClick={fn as () => void} className="rounded-[7px] px-2.5 py-1 hover:bg-[#1C2431] hover:text-white">
               {t as string}
             </button>
           ))}
         </div>
+        {en3D && <div className="relative flex min-h-0 flex-1 flex-col">{vista3D}</div>}
         <div
           ref={cajaRef}
-          className="relative flex-1 cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
+          className={`relative flex-1 cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing ${en3D ? "hidden" : ""}`}
           style={{
             backgroundColor: "#0B0F15",
             backgroundImage:

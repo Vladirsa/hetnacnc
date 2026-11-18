@@ -21,6 +21,7 @@ import { HttpTypes } from "@medusajs/types"
 import { FichaDigital, FichaServicio, ResumenServicio } from "@/components/hetna/fichas/FichaPorTipo"
 import { esFichaDescarga, tipoFicha } from "@/lib/hetna/tipo-ficha"
 import { ColumnaDescarga } from "@/components/hetna/fichas/descarga/FichaDescarga"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
 
 type Props = {
@@ -125,6 +126,9 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
       <VenderMas titulo={product.title} handle={product.handle} locale={locale} vistas={vistas} />
 
       <ProductDetailsSeller seller={seller} tipo={tipo} />
+
+      {/* Publicidad (talleres, proveedores, marcas): se compra en /anunciate */}
+      <AnunciosEspacio espacio="ficha_producto" titulo="Patrocinado" invitar />
     </div>
   )
 }

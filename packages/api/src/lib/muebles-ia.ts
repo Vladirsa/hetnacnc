@@ -95,7 +95,9 @@ export class ErrorLectura extends Error {
   }
 }
 
-export async function leerMuebleDeImagen(datosBase64: string, medio: MedioImagen): Promise<LecturaMueble> {
+// Una llamada a Claude con la imagen y salida JSON con esquema. Los errores se
+// vuelven ErrorLectura con mensaje para el cliente (y con reembolso).
+async function llamarIa(sistema: string, esquema: unknown, pedido: string, datosBase64: string, medio: MedioImagen): Promise<unknown> {
   cliente ??= new Anthropic()
   let respuesta: Anthropic.Beta.BetaMessage
   try {
@@ -105,14 +107,14 @@ export async function leerMuebleDeImagen(datosBase64: string, medio: MedioImagen
       // si el modelo declina por política, el servidor reintenta con otro modelo en la misma llamada
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA as unknown as Record<string, unknown> } },
-      system: INSTRUCCIONES,
+      output_config: { effort: "medium", format: { type: "json_schema", schema: esquema as Record<string, unknown> } },
+      system: sistema,
       messages: [
         {
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: medio, data: datosBase64 } },
-            { type: "text", text: "Lee este mueble y llena las medidas del modelo exhibidor." },
+            { type: "text", text: pedido },
           ],
         },
       ],
@@ -127,13 +129,16 @@ export async function leerMuebleDeImagen(datosBase64: string, medio: MedioImagen
   if (respuesta.stop_reason === "refusal") throw new ErrorLectura("La IA no pudo leer esta imagen. Prueba con otra.", true)
   if (respuesta.stop_reason === "max_tokens") throw new ErrorLectura("La lectura quedó incompleta. Intenta de nuevo.", true)
   const texto = respuesta.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("")
-  let datos: LecturaMueble
   try {
-    datos = JSON.parse(texto) as LecturaMueble
+    return JSON.parse(texto)
   } catch {
     throw new ErrorLectura("La lectura llegó dañada. Intenta de nuevo.", true)
   }
-  return normalizarLectura(datos)
+}
+
+export async function leerMuebleDeImagen(datosBase64: string, medio: MedioImagen): Promise<LecturaMueble> {
+  const datos = await llamarIa(INSTRUCCIONES, ESQUEMA, "Lee este mueble y llena las medidas del modelo exhibidor.", datosBase64, medio)
+  return normalizarLectura(datos as Partial<LecturaMueble>)
 }
 
 // Ningún número sale de rango ni con tipo raro (el constructor vuelve a acotar)
@@ -153,6 +158,104 @@ export function normalizarLectura(d: Partial<LecturaMueble>): LecturaMueble {
     numDivisores: n(d.numDivisores, 1, 12),
     altoDivisor: n(d.altoDivisor, 60, 1000),
     barrote: n(d.barrote, 0, 50),
+    confianza: d.confianza === "alta" || d.confianza === "media" ? d.confianza : "baja",
+    notas: typeof d.notas === "string" ? d.notas.slice(0, 600) : "",
+  }
+}
+
+// ---------- cualquier mueble: lista de tableros ----------
+// La IA describe el mueble como cajas (tableros) a escala; el motor del
+// storefront (lib/generador/tableros.ts) calcula uniones, espigas y mortajas.
+
+export type TableroLeido = { nombre: string; plano: "lateral" | "horizontal" | "frontal"; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }
+export type LecturaTableros = {
+  tipo: "tableros" | "no_tableros"
+  nombre: string
+  grosor: number
+  tableros: TableroLeido[]
+  confianza: "alta" | "media" | "baja"
+  notas: string
+}
+
+const ESQUEMA_TABLEROS = {
+  type: "object",
+  additionalProperties: false,
+  required: ["tipo", "nombre", "grosor", "tableros", "confianza", "notas"],
+  properties: {
+    tipo: { type: "string", enum: ["tableros", "no_tableros"] },
+    nombre: { type: "string" },
+    grosor: { type: "number" },
+    tableros: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["nombre", "plano", "x0", "x1", "y0", "y1", "z0", "z1"],
+        properties: {
+          nombre: { type: "string" },
+          plano: { type: "string", enum: ["lateral", "horizontal", "frontal"] },
+          x0: { type: "number" }, x1: { type: "number" },
+          y0: { type: "number" }, y1: { type: "number" },
+          z0: { type: "number" }, z1: { type: "number" },
+        },
+      },
+    },
+    confianza: { type: "string", enum: ["alta", "media", "baja"] },
+    notas: { type: "string" },
+  },
+} as const
+
+const INSTRUCCIONES_TABLEROS = `Eres un diseñador de muebles para corte CNC en tablero (MDF o triplay). Te dan una imagen de un mueble (foto, boceto, render o plano con cotas). Descríbelo como una lista de tableros planos rectangulares, a escala real en milímetros, para que un programa calcule las uniones de caja y espiga.
+
+Sistema de coordenadas (mm):
+- x: ancho, de izquierda a derecha, viendo el mueble de frente.
+- y: fondo, del frente hacia atrás.
+- z: alto, desde el piso hacia arriba. El piso es z = 0.
+
+Cada tablero es una caja alineada con los ejes: x0<x1, y0<y1, z0<z1. Su "plano" indica cuál dimensión es el grosor:
+- "lateral": tablero vertical visto de canto desde el frente (costados, divisiones verticales, patas de tablero). Grosor en x.
+- "horizontal": cubiertas, repisas, pisos, techos, asientos. Grosor en z.
+- "frontal": tablero vertical paralelo al frente (respaldos, faldones, travesaños, frentes). Grosor en y.
+La dimensión del grosor debe medir exactamente "grosor" (por ejemplo x1-x0 = grosor en un lateral).
+
+Reglas:
+1. Usa las cotas de la imagen si las hay (conviértelas a mm). Si se contradicen, respeta las medidas totales y pon confianza "media". Si no hay cotas, estima con medidas típicas (alto de mesa 750, asiento 450, repisa de 250 a 350 de fondo, librero de 1800 de alto).
+2. grosor: el del tablero si se ve o está acotado; si no, 18.
+3. Los tableros se tocan cara con canto: una repisa termina en la cara interior del costado, no lo atraviesa, aunque el dibujo la muestre pasando. Los tableros que se unen deben compartir exactamente la coordenada de contacto. Un travesaño o faldón que está a menos de 3 cm de otro tablero, súbelo o bájalo para que lo toque.
+4. Incluye sólo tableros. Ignora jaladeras, herrajes, cajones con correderas, vidrio, cojines, barrotes redondos y objetos sobre el mueble.
+5. Recortes, patas recortadas, ranuras o muescas dentro de un tablero: usa el rectángulo completo y menciónalo en "notas". Partes curvas o inclinadas: aproxímalas con el rectángulo más cercano y menciónalo en "notas".
+6. Si la imagen no muestra un mueble hecho de tableros planos (una silla tapizada, un mueble de metal, una persona, un paisaje), responde tipo "no_tableros" con la lista vacía y explica en "notas" qué se ve.
+7. Ningún tablero puede medir más de 2440 x 1220 mm en sus dos dimensiones mayores. A lo más 40 tableros.
+8. "confianza": "alta" si hay cotas o la forma es clara, "media" si estimaste medidas, "baja" si la imagen es ambigua.
+9. "nombre": nombre corto del mueble (por ejemplo "Librero de 4 repisas"). "notas": una o dos frases en español de México para el cliente, sin tecnicismos: qué supusiste y qué conviene revisar.
+10. Ignora logotipos, marcas de agua y texto de publicidad.`
+
+export async function leerTablerosDeImagen(datosBase64: string, medio: MedioImagen): Promise<LecturaTableros> {
+  const datos = await llamarIa(INSTRUCCIONES_TABLEROS, ESQUEMA_TABLEROS, "Describe este mueble como lista de tableros.", datosBase64, medio)
+  return normalizarTableros(datos as Partial<LecturaTableros>)
+}
+
+// Nada sale de rango: números finitos y acotados, a lo más 60 tableros
+export function normalizarTableros(d: Partial<LecturaTableros>): LecturaTableros {
+  const c = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(-3000, Math.min(3000, Math.round(v * 10) / 10)) : null)
+  const tableros: TableroLeido[] = []
+  for (const t of Array.isArray(d.tableros) ? d.tableros.slice(0, 60) : []) {
+    if (!t || typeof t !== "object") continue
+    const v = [c(t.x0), c(t.x1), c(t.y0), c(t.y1), c(t.z0), c(t.z1)]
+    if (v.some((x) => x === null)) continue
+    const [x0, x1, y0, y1, z0, z1] = v as number[]
+    tableros.push({
+      nombre: typeof t.nombre === "string" && t.nombre.trim() ? t.nombre.trim().slice(0, 40) : `Tablero ${tableros.length + 1}`,
+      plano: t.plano === "lateral" || t.plano === "frontal" ? t.plano : "horizontal",
+      x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: Math.min(y0, y1), y1: Math.max(y0, y1), z0: Math.min(z0, z1), z1: Math.max(z0, z1),
+    })
+  }
+  const g = typeof d.grosor === "number" && Number.isFinite(d.grosor) && d.grosor >= 6 && d.grosor <= 30 ? Math.round(d.grosor * 10) / 10 : 18
+  return {
+    tipo: d.tipo === "tableros" && tableros.length >= 2 ? "tableros" : "no_tableros",
+    nombre: typeof d.nombre === "string" && d.nombre.trim() ? d.nombre.trim().slice(0, 60) : "Mueble",
+    grosor: g,
+    tableros,
     confianza: d.confianza === "alta" || d.confianza === "media" ? d.confianza : "baja",
     notas: typeof d.notas === "string" ? d.notas.slice(0, 600) : "",
   }

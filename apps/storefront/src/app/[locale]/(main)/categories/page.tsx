@@ -3,6 +3,7 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { Suspense } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { argsDeListado, claveListado, paramsDe } from "@/lib/helpers/busqueda-listado"
 import { SearchProductsListing, type ListadoInicial } from "@/components/sections/ProductListing/SearchProductsListing"
@@ -173,6 +174,8 @@ async function AllCategories({
           Ver la tienda por categorías →
         </LocalizedClientLink>
       </div>
+
+      <AnunciosEspacio espacio="listado_productos" className="my-4" />
 
       <Suspense fallback={<div data-testid="all-categories-page-loading"><ProductListingSkeleton /></div>}>
         {bot ? (

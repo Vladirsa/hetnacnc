@@ -34,7 +34,31 @@ type Pieza = {
   activo: boolean
   vistas: number
   clics: number
+  vistas_objetivo?: number | null
+  pedido_id?: string | null
 }
+
+// Pedidos que pagaron los anunciantes en /mx/anunciate
+type Pedido = {
+  id: string
+  espacio: string
+  anunciante: string
+  correo: string
+  modalidad: string
+  dias: number
+  vistas_compradas: number | null
+  monto: number
+  estado: string
+  pagado_en: string | null
+  vence: string | null
+  pieza_id: string | null
+  activo: boolean | null
+  vistas: number | null
+  clics: number | null
+  tipo_anunciante: string
+  creado: string
+}
+type Pedidos = { ok: true; pedidos: Pedido[]; ingresosMes: number; ingresosTotal: number; porRevisar: number }
 
 type Borrador = {
   id?: string
@@ -164,6 +188,8 @@ const diasRestantes = (p: Pieza): number | null => {
 }
 
 const fechaCorta = (t: string | null) => (t ? t.slice(0, 10) : "sin fin")
+
+const pesosMx = (n: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(n)
 
 // Reduce la imagen en el navegador (WebP, máx. ~800 KB) para que el sitio siga rápido.
 // La vista previa de WhatsApp va en JPG: WhatsApp no siempre muestra WebP en la tarjeta.
@@ -320,10 +346,12 @@ export default function PaginaPublicidad() {
   const [cargando, setCargando] = useState(true)
   const [editando, setEditando] = useState<Borrador | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const [ventas, setVentas] = useState<Pedidos | null>(null)
 
   const cargar = useCallback(async () => {
     setCargando(true)
-    const r = await api<Lista>("lista")
+    const [r, v] = await Promise.all([api<Lista>("lista"), api<Pedidos>("pedidos")])
+    if (v.ok) setVentas(v)
     setCargando(false)
     if (r.ok) {
       setDatos({ piezas: r.piezas, espacios: r.espacios, orden: r.orden })
@@ -560,6 +588,80 @@ export default function PaginaPublicidad() {
       )}
       {cargando && <p style={{ margin: 0, fontSize: 14, color: C.tenue }}>Cargando…</p>}
 
+      {ventas && (
+        <section style={caja}>
+          <h2 style={{ margin: 0, fontSize: 17, color: C.texto }}>Ventas de publicidad</h2>
+          <p style={{ margin: "2px 0 12px", fontSize: 13, color: C.tenue }}>
+            Los anunciantes compran solos en hetnacnc.com/mx/anunciate. Cada pedido pagado crea su anuncio <b>pausado</b>: revísalo y actívalo.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 12 }}>
+            {[
+              ["Este mes", pesosMx(ventas.ingresosMes)],
+              ["Total cobrado", pesosMx(ventas.ingresosTotal)],
+              ["Por revisar", String(ventas.porRevisar)],
+            ].map(([k, v]) => (
+              <div key={k} style={{ padding: 12, borderRadius: 10, background: C.suave, border: `1px solid ${C.borde}` }}>
+                <p style={{ margin: 0, fontSize: 12, color: C.tenue }}>{k}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 700, color: k === "Por revisar" && ventas.porRevisar ? C.naranja : C.texto }}>{v}</p>
+              </div>
+            ))}
+          </div>
+          {ventas.pedidos.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 14, color: C.tenue }}>Todavía no hay pedidos. Comparte la liga hetnacnc.com/mx/anunciate con talleres y proveedores.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {ventas.pedidos.slice(0, 30).map((v) => {
+                const pieza = datos?.piezas.find((p) => p.id === v.pieza_id)
+                const revisar = v.estado === "pagado" && v.activo === false
+                const etiqueta =
+                  v.estado === "pendiente" ? "Sin pagar" : v.estado === "rechazado" ? "Rechazado" : v.estado === "vencido" ? "Terminó" : revisar ? "Por revisar" : "Activo"
+                return (
+                  <div
+                    key={v.id}
+                    style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, padding: 10, borderRadius: 10, border: `1px solid ${revisar ? C.naranja : C.borde}` }}
+                  >
+                    <div style={{ flex: 1, minWidth: 220 }}>
+                      <strong style={{ fontSize: 14.5, color: C.texto }}>{v.anunciante}</strong>
+                      <span style={{ marginLeft: 8, fontSize: 12, color: C.tenue }}>
+                        {v.tipo_anunciante === "marca" ? "Marca de otro giro" : "Taller/proveedor CNC"}
+                      </span>
+                      <p style={{ margin: "2px 0 0", fontSize: 13, color: C.tenue }}>
+                        {datos?.espacios[v.espacio]?.nombre ?? v.espacio} ·{" "}
+                        {v.modalidad === "vistas" ? `${(v.vistas_compradas || 0).toLocaleString("es-MX")} vistas` : `${v.dias} días`} · {pesosMx(v.monto)} ·{" "}
+                        {v.correo}
+                      </p>
+                      {v.vistas != null && (
+                        <p style={{ margin: "2px 0 0", fontSize: 13, color: C.texto }}>
+                          {v.vistas.toLocaleString("es-MX")}
+                          {v.modalidad === "vistas" && v.vistas_compradas ? ` de ${v.vistas_compradas.toLocaleString("es-MX")}` : ""} vistas · {v.clics} clics
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        background: revisar ? "#fdeee1" : v.estado === "pagado" ? "#d9f2e3" : "#e7e4dc",
+                        color: revisar ? "#b34d07" : v.estado === "pagado" ? "#16794f" : "#44433d",
+                      }}
+                    >
+                      {etiqueta}
+                    </span>
+                    {pieza && (
+                      <button type="button" style={boton(revisar)} onClick={() => setEditando(aBorrador(pieza))}>
+                        {revisar ? "Revisar y activar" : "Ver anuncio"}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {datos &&
         datos.orden.map((id) => {
           const cfg = datos.espacios[id]
@@ -639,7 +741,8 @@ export default function PaginaPublicidad() {
                             {fechaCorta(p.desde)} → {fechaCorta(p.hasta)} · orden {p.orden}
                           </p>
                           <p style={{ margin: "4px 0 0", fontSize: 13, color: C.texto }}>
-                            {p.vistas} vistas · {p.clics} clics · {ctr}% de clics
+                            {p.vistas}
+                            {p.vistas_objetivo ? ` de ${p.vistas_objetivo} vistas (paquete)` : " vistas"} · {p.clics} clics · {ctr}% de clics
                           </p>
                           {porVencer && dias !== null && (
                             <p style={{ margin: "4px 0 0", fontSize: 13, fontWeight: 700, color: "#b34d07" }}>
@@ -668,8 +771,9 @@ export default function PaginaPublicidad() {
         })}
 
       <section style={{ ...caja, borderStyle: "dashed", fontSize: 14, color: C.texto }}>
-        <strong>Próxima etapa:</strong> cobro a anunciantes con Mercado Pago, mensajes a talleres ofreciendo el servicio de
-        publicidad y avisos automáticos para renovar antes de que termine.
+        <strong>Cómo se vende:</strong> los precios por semana, mes, 3 meses, año y por vistas están en
+        apps/storefront/src/lib/publicidad/precios.ts. El kit de medios con vistas y clics reales está en hetnacnc.com/mx/anunciate.
+        Si hay más anuncios que lugares en un espacio, se turnan cada minuto.
       </section>
     </div>
   )
