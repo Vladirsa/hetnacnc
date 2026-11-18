@@ -54,16 +54,25 @@ export async function usuarioPanel(): Promise<UsuarioPanel | null> {
       // Arranque: mientras NINGÚN administrador tenga rol del panel, todos los
       // administradores entran como dueño (sólo el dueño crea administradores).
       // En cuanto se asigna el primer rol en Equipo, manda lo asignado.
+      // Misma regla que el API (packages/api/src/lib/panel-roles.ts): si ya hay
+      // roles, el administrador más antiguo sin rol sigue siendo dueño (así el
+      // dueño original no se queda fuera si el primer rol se puso por otro lado).
       try {
-        const lista = await adminFetch<{ users: { id: string; email: string; metadata?: Record<string, unknown> }[] }>("/admin/users?limit=100")
+        const lista = await adminFetch<{ users: { id: string; email: string; metadata?: Record<string, unknown>; created_at?: string }[] }>("/admin/users?limit=1000&order=created_at")
         const conRol = lista.users.filter((x) => x.metadata?.panel_rol)
-        arranque = conRol.length === 0
+        const masAntiguo = [...lista.users].sort((a, b) => (Date.parse(a.created_at || "") || Infinity) - (Date.parse(b.created_at || "") || Infinity) || (a.id < b.id ? -1 : 1))[0]
+        arranque = conRol.length === 0 || masAntiguo?.id === u.id
         if (!arranque) diagnostico = `Ya hay administradores con rol (${conRol.map((x) => x.email).join(", ")}); pide a uno de ellos que te asigne el tuyo en Equipo.`
       } catch (e) {
-        // Si no se puede leer la lista, los administradores siguen siendo de
-        // confianza (sólo el dueño los crea): entra como dueño
-        arranque = true
-        diagnostico = `No pude leer la lista de administradores (${(e as Error).message}).`
+        const m = (e as Error).message
+        // 403: el API ya revisó los roles y esta cuenta no tiene acceso
+        // (PANEL_ROLES_API). Cualquier otro error: los administradores siguen
+        // siendo de confianza (sólo el dueño los crea) y entra como dueño;
+        // el API de todos modos aplica los roles en cada llamada.
+        arranque = !m.startsWith("403")
+        diagnostico = arranque
+          ? `No pude leer la lista de administradores (${m}).`
+          : "Aún no tienes un rol del HETNA Panel; pide al dueño que te asigne uno en Equipo."
       }
       const duenos = (process.env.PANEL_DUENOS || "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean)
       if (duenos.includes(u.email.toLowerCase())) arranque = true
