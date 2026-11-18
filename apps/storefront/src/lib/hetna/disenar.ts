@@ -85,6 +85,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Convierte gratis un logotipo, dibujo o foto en vector: contornos cerrados en DXF o SVG listos para corte láser, router CNC o plasma. Tu imagen no se sube a ningún servidor.",
   },
   {
+    slug: "muebles-ensamble",
+    nombre: "Muebles de ensamble sin tornillos",
+    texto: "Exhibidores y repisas de ranura y espiga a tu medida, con vista 3D armada.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores a la medida",
+    descripcion:
+      "Diseña un exhibidor de ranura y espiga con gabinete, repisas y divisores ranurados: elige medidas, grosor real del tablero, holgura y fresa, mira el mueble armado en 3D y calcula el tablero. Alivios para fresa incluidos, listo para maquilar.",
+  },
+  {
     slug: "despiece-muebles",
     nombre: "Despiece de muebles",
     texto: "Gabinetes, closets y cocinas: piezas, acomodo en hojas, canto y herraje.",

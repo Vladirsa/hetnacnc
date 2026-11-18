@@ -22,7 +22,9 @@ const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas:
 const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
-const GeneradorMueble = dynamic(() => import("@/components/hetna/generador/GeneradorMueble").then((m) => m.GeneradorMueble))
+const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/GeneradorMuebles").then((m) => m.GeneradorMuebles))
+// ensamble sin tornillos y despiece de gabinetes: Muebles
+const MODO_MUEBLES: Record<string, "ensamble" | "gabinete"> = { "muebles-ensamble": "ensamble", "despiece-muebles": "gabinete" }
 // celosías, patrones radiales y bisagra viva: una sola herramienta con modos
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
 const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
@@ -33,12 +35,11 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "caja-con-juntas": GeneradorCaja,
   "letras-3d": GeneradorLetras3D,
   llaveros: GeneradorLlaveros,
-  "despiece-muebles": GeneradorMueble,
   "plantillas-empaque": GeneradorEmpaques,
   "organizador-cajon": GeneradorOrganizador,
 }
 
-export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION), ...Object.keys(MODO_JUEGOS)])
+export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION), ...Object.keys(MODO_JUEGOS), ...Object.keys(MODO_MUEBLES)])
 
 export function Herramienta({ slug }: { slug: string }) {
   if (MODO_PATRON[slug]) return <GeneradorPatronesCorte modoInicial={MODO_PATRON[slug]} />
@@ -47,6 +48,7 @@ export function Herramienta({ slug }: { slug: string }) {
   if (MODO_ARCHIVOS[slug]) return <GeneradorArchivos modoInicial={MODO_ARCHIVOS[slug]} />
   if (MODO_DECORACION[slug]) return <GeneradorDecoracion modoInicial={MODO_DECORACION[slug]} />
   if (MODO_JUEGOS[slug]) return <GeneradorJuegos modoInicial={MODO_JUEGOS[slug]} />
+  if (MODO_MUEBLES[slug]) return <GeneradorMuebles modoInicial={MODO_MUEBLES[slug]} />
   const G = GENERADORES[slug]
   return G ? <G /> : null
 }

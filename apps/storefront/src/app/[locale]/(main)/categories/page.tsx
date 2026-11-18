@@ -2,6 +2,7 @@ import { categoriasSugeridas } from "@/lib/hetna/catalogo"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
 
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { argsDeListado, claveListado, paramsDe } from "@/lib/helpers/busqueda-listado"
 import { SearchProductsListing, type ListadoInicial } from "@/components/sections/ProductListing/SearchProductsListing"
@@ -166,7 +167,12 @@ async function AllCategories({
         <Breadcrumbs items={breadcrumbsItems} />
       </div>
 
-      <h1 className="heading-xl uppercase">Todos los productos</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="heading-xl uppercase">Todos los productos</h1>
+        <LocalizedClientLink href="/tienda" className="mb-1 text-[14px] font-bold text-[#B34D07] hover:underline">
+          Ver la tienda por categorías →
+        </LocalizedClientLink>
+      </div>
 
       <Suspense fallback={<div data-testid="all-categories-page-loading"><ProductListingSkeleton /></div>}>
         {bot ? (

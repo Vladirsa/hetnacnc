@@ -26,7 +26,9 @@ export function BarraEstudio() {
               ? "convertidor" // Archivos
               : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas" || params?.herramienta === "esferas-navidad"
                 ? "relojes" // Decoración
-                : params?.herramienta === "engranes"
+                : params?.herramienta === "muebles-ensamble"
+                  ? "despiece-muebles" // Muebles
+                  : params?.herramienta === "engranes"
                   ? "rompecabezas" // Juegos y mecanismos
         : String(params?.herramienta || "")
   const estudio: Estudio = estudioDe(actual)

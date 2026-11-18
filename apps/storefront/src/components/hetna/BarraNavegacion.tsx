@@ -83,7 +83,7 @@ const MegaCategorias = ({ raices }: { raices: Raiz[] }) => {
   // a la tienda en vez de un menú vacío
   if (!raices.length) {
     return (
-      <LocalizedClientLink href="/tienda" className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15 shrink-0">
+      <LocalizedClientLink href="/categories" className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15 shrink-0">
         <Hamburguesa />
         Todos los productos
       </LocalizedClientLink>

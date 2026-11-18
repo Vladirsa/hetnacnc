@@ -125,7 +125,7 @@ function Boceto({ o }: { o: OpcionesMueble }) {
   )
 }
 
-export function GeneradorMueble() {
+export function GeneradorMueble({ cabecera }: { cabecera?: React.ReactNode } = {}) {
   const { locale } = useParams<{ locale: string }>()
   const [t, setT] = useState<Texto>(aTexto(OPCIONES_INICIO))
   const [frente, setFrente] = useState<Frente>(OPCIONES_INICIO.frente)
@@ -204,6 +204,7 @@ export function GeneradorMueble() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <div className="grid grid-cols-3 gap-2">
             <Campo etiqueta="Ancho" valor={t.ancho} cambiar={cambiar("ancho")} />
             <Campo etiqueta="Alto" valor={t.alto} cambiar={cambiar("alto")} />
