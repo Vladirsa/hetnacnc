@@ -78,7 +78,7 @@ export const UNICA = "Única"
 const EJEMPLOS: Partial<Record<Clave, string | number>>[] = [
   { agrupador: "fresa-recta-2-filos", condicion: "nuevo", nombre: "Fresa recta de carburo 2 filos para router CNC", descripcion: "Fresa de carburo sólido para MDF, triplay y acrílico.\n- Zanco de 1/4\"\n- Recubrimiento TiAlN", categoria: "Fresas", marca: "HETNA", variante: "Diámetro", valor: "3.175 mm", sku: "FR2F-3175", precio: 189, existencias: 25, peso: 0.05, largo: 12, ancho: 4, alto: 2, imagenes: "https://ejemplo.com/fresa-3175.jpg", estado: "publicado", seo_titulo: "Fresa recta 2 filos carburo para router CNC", seo_descripcion: "Fresa de carburo sólido de 2 filos para MDF, triplay y acrílico. Envío a todo México.", etiquetas: "fresa, carburo, router" },
   { agrupador: "fresa-recta-2-filos", nombre: "Fresa recta de carburo 2 filos para router CNC", categoria: "Fresas", variante: "Diámetro", valor: "6 mm", sku: "FR2F-6", precio: 249, existencias: 15, peso: 0.06, largo: 12, ancho: 4, alto: 2 },
-  { nombre: "Aceite soluble para corte CNC 1 L", condicion: "nuevo", gtin: "7501031311309", mpn: "REF-SOL-1L", descripcion: "Refrigerante soluble para maquinado de aluminio y acero.", categoria: "Consumibles", marca: "HETNA", sku: "REF-1L", precio: 320, existencias: 40, peso: 1.1, largo: 10, ancho: 10, alto: 25, imagenes: "https://ejemplo.com/refrigerante.jpg" },
+  { nombre: "Aceite soluble para corte CNC 1 L", condicion: "nuevo", mpn: "REF-SOL-1L", descripcion: "Refrigerante soluble para maquinado de aluminio y acero.", categoria: "Consumibles", marca: "HETNA", sku: "REF-1L", precio: 320, existencias: 40, peso: 1.1, largo: 10, ancho: 10, alto: 25, imagenes: "https://ejemplo.com/refrigerante.jpg" },
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Negro", sku: "PLA-175-NEG", precio: 379, existencias: 30, peso: 1.3, largo: 21, ancho: 21, alto: 8, estado: "borrador" },
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Blanco", sku: "PLA-175-BLA", precio: 379, existencias: 0, peso: 1.3, largo: 21, ancho: 21, alto: 8 },
 ]
@@ -119,7 +119,7 @@ export async function plantillaProductos(categorias: string[] = []): Promise<Buf
     ["4.", "Peso y medidas son del paquete ya empacado: con eso se cotiza el envío."],
     ["5.", "Al subir el archivo primero se revisa todo y ves los errores renglón por renglón. Nada se publica hasta que confirmas."],
     ["6.", "Si vuelves a subir un producto con el mismo Agrupador, se actualiza (nombre, descripción, precio, existencias…), no se duplica. Las celdas que dejes vacías se quedan como estaban; para borrar un dato (marca, código de barras, SEO…) hazlo en el panel."],
-    ["7.", "Código de barras y número de parte: si el producto tiene varias medidas o colores, cada una tiene el suyo. Déjalos vacíos o sube cada medida como producto aparte (sin Agrupador)."],
+    ["7.", "Código de barras y número de parte: si el producto tiene varias medidas o colores, cada una tiene el suyo. Ponlos sólo si son iguales para todas, o sube cada medida como producto aparte (sin Agrupador y con nombre distinto)."],
     ["8.", "Las fotos se copian a la tienda desde las ligas que pongas. Usa ligas directas a la imagen (terminan en .jpg, .png o .webp)."],
   ]) ins.addRow(linea)
   ins.addRow([])
@@ -198,7 +198,7 @@ export function gtinDe(v: unknown): string | null | undefined {
   const d = texto(crudo).replace(/[\s-]/g, "")
   if (!d) return undefined
   if (gtinValido(d)) return d
-  if (typeof crudo === "number" && /^\d+$/.test(d)) {
+  if (typeof crudo === "number" && crudo > 0 && /^\d+$/.test(d)) {
     for (const largo of [8, 12, 13, 14]) if (largo > d.length && gtinValido(d.padStart(largo, "0"))) return d.padStart(largo, "0")
   }
   return null
@@ -312,8 +312,9 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
     // Código de barras y número de parte van por producto: con varias medidas sólo
     // valen si son el mismo para todas (Google rechaza un código con el precio de otra medida)
     for (const c of ["gtin", "mpn"] as Clave[]) {
-      if (varios && new Set(filas.map((r) => normalizar(texto(r[c])))).size > 1) {
-        err(p0._fila, c, "Este producto tiene varias medidas o colores y cada una trae su propio código. Déjalo vacío o sube cada medida como producto aparte (sin Agrupador).")
+      const clave = (r: Renglon) => (c === "gtin" ? gtinDe(r.gtin) ?? "" : normalizar(texto(r[c])))
+      if (varios && new Set(filas.map(clave)).size > 1) {
+        err(p0._fila, c, "En un producto con varias medidas o colores, este código debe ser el mismo en todos los renglones o quedar vacío. Si cada medida tiene el suyo, súbelas como productos aparte (sin Agrupador y con nombre distinto).")
       }
     }
     const handle = slug(texto(p0.agrupador) || texto(p0.nombre)) || "producto"

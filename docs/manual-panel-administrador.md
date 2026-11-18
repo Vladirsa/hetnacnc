@@ -1917,7 +1917,7 @@ Sirve para subir **muchos productos de la tienda HETNA de una vez** con una plan
 | **Categoría \*** | Como se llama en la tienda. Si hay dos iguales: `Padre > Hija`. |
 | **Marca** | Recomendada: Google Shopping la pide. Vacía = el nombre de la tienda. |
 | **Condición** | "nuevo", "usado" o "reacondicionado". Vacía = nuevo. |
-| **Código de barras (GTIN)** | Opcional. El número bajo el código de barras (8, 12, 13 o 14 dígitos). Con él Google enseña más tu producto. Pon esa columna como **Texto** en Excel para no perder ceros al inicio. |
+| **Código de barras (GTIN)** | Opcional. El número bajo el código de barras (8, 12, 13 o 14 dígitos). Con él Google enseña más tu producto. Pon esa columna como **Texto** en Excel para no perder ceros al inicio. Si el producto tiene varias medidas o colores, sólo se acepta si es el mismo en todos los renglones; si cada medida tiene el suyo, súbelas como productos aparte. |
 | **Número de parte (MPN)** | Opcional. El número de parte o modelo del fabricante. Si no hay código de barras, Google usa marca + número de parte. |
 | **Variante (qué cambia)** | Ej. "Diámetro", "Color". Igual en todo el grupo. Vacío si sólo hay una presentación. |
 | **Valor de la variante** | Ej. "6 mm", "Negro". Obligatorio si el grupo tiene más de un renglón. |

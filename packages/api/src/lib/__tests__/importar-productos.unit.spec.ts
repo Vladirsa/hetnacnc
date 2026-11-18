@@ -173,5 +173,6 @@ describe("Planeación contra la tienda", () => {
     expect(gtinDe(12345678905)).toBe("012345678905") // UPC-A con cero al inicio, leído como número
     expect(gtinDe("12345678905")).toBeNull() // como texto no se adivina
     expect(gtinDe("")).toBeUndefined()
+    expect(gtinDe(-12345678905)).toBeNull()
   })
 })
