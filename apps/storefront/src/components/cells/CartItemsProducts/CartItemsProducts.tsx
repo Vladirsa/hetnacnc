@@ -1,7 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import { BotonFavoritoIcono } from "@/components/hetna/Favoritos"

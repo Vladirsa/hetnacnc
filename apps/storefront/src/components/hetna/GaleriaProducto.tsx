@@ -3,7 +3,7 @@
 // Galería de la ficha de producto: foto grande, miniaturas debajo y ampliación a pantalla completa.
 // Funciona con el dedo en celular (deslizar en la foto ampliada) y con flechas del teclado en computadora.
 
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 type Img = { id?: string; url: string }

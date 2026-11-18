@@ -10,7 +10,7 @@ import { Heading } from "@medusajs/ui"
 import { format } from "date-fns"
 import { useEffect, useRef, useState } from "react"
 import { Chat } from "../Chat/Chat"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { convertToLocale } from "@/lib/helpers/money"
 import { StepProgressBar } from "@/components/cells/StepProgressBar/StepProgressBar"
 

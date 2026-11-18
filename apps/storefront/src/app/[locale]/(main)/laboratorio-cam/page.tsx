@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 import { VistaColumnaTorno, VistaContornoMdf, VistaPlacaAluminio } from "@/components/hetna/cam/VistasConceptuales"
 import { ServicioIcono } from "@/components/hetna/ServicioIcono"

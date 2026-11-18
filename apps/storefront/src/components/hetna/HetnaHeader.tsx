@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { HttpTypes } from "@medusajs/types"
 
 import { CartDropdown } from "@/components/cells/CartDropdown/CartDropdown"
