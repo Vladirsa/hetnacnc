@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 // Se importa por su ruta, no por el barril de molecules: este archivo es una
 // de las molecules que el barril exporta, y pedirle al barril desde aquí cierra

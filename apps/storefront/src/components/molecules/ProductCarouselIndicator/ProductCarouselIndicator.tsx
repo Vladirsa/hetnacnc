@@ -1,5 +1,5 @@
 "use client"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { HttpTypes } from "@medusajs/types"
 import { EmblaCarouselType } from "embla-carousel"
 import { useCallback, useEffect, useState } from "react"

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { PREGUNTAS_FABRICACION } from "@/components/hetna/servicios/ServicioCategoria"

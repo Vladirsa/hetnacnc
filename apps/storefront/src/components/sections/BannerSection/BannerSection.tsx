@@ -1,6 +1,6 @@
 import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 export const BannerSection = () => {
   return (

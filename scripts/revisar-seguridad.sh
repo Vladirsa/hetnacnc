@@ -69,6 +69,12 @@ done
 for v in BAJA_SECRET ARCHIVOS_SECRETO STOREFRONT_REVALIDATE_SECRET N8N_REDES_TOKEN ESCANEO_CALLBACK_SECRET; do
   x=$(valor "$API" $v); [ -n "$x" ] && [ "$x" != supersecret ] && bien "$v puesto" || aviso "$v vacío o de ejemplo (si usas esa función, ponle un secreto propio)"
 done
+# Mismos formatos que acepta packages/api/src/lib/cifrado-llaves.ts: 64 letras hex o base64 de 32 bytes
+llave_ok() { printf '%s' "$1" | grep -Eq '^[0-9a-fA-F]{64}$' && return 0; printf '%s' "$1" | grep -Eq '^[A-Za-z0-9+/_-]{43}=?$' || return 1; [ "$(printf '%s' "$1" | tr -- '-_' '+/' | sed 's/=*$/=/' | base64 -d 2>/dev/null | wc -c)" = 32 ]; }
+x=$(valor "$API" LLAVES_CIFRADO | tr -d '[:space:]')
+if [ -z "$x" ]; then aviso "LLAVES_CIFRADO vacía: los tokens de Mercado Pago, Facturapi y redes se guardan sin cifrar (openssl rand -hex 32; guárdala también fuera del servidor)"
+elif llave_ok "$x"; then bien "LLAVES_CIFRADO puesta y con formato válido"
+else aviso "LLAVES_CIFRADO con formato inválido (deben ser 32 bytes: openssl rand -hex 32); así no se cifra nada"; fi
 
 echo "== Valores del .env que NO se están usando (otro lugar le gana)"
 otros=0

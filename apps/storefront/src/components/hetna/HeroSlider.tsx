@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
+import Image from "@/lib/imagenes/Imagen"
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 

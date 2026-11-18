@@ -4,7 +4,7 @@
 // medida, rejilla de categorías, fabricación por proceso y cierre. Los datos
 // (conteos y precios "desde") llegan calculados del servidor
 // (lib/hetna/tienda.ts); aquí sólo se filtran y se buscan.
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"

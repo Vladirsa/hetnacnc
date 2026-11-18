@@ -4,7 +4,7 @@
 // cotizador con capturas reales. Avanza solo cada 6 s (se pausa al pasar el
 // mouse o al tocar) y se puede cambiar con los puntos o las flechas.
 import { useEffect, useState } from "react"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 

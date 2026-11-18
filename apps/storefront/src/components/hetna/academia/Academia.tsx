@@ -2,7 +2,7 @@
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
 // una comisión (5%, ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import type { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"

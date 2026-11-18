@@ -28,6 +28,7 @@
 // Variables (.env de packages/api):
 //   FACTURAPI_USER_KEY   llave secreta de USUARIO (sk_user_...), dashboard.facturapi.io/integration
 //   FACTURAPI_MODO       "prueba" (por defecto: facturas sin validez, gratis) o "real"
+import { cifrarCampos, descifrar } from "./cifrado-llaves"
 import { ErrorSuscripcion, supa } from "./cotizador-suscripciones"
 
 const API = "https://www.facturapi.io/v2"
@@ -105,11 +106,15 @@ async function registroDe(negocioId: string) {
   }
 }
 
+// Las llaves de Facturapi se guardan cifradas (lib/cifrado-llaves.ts) y se
+// descifran sólo en llaveDe(); registroDe() regresa la fila tal cual.
+const LLAVES_FACTURAPI = ["llave_prueba", "llave_real"]
+
 async function guardarRegistro(negocioId: string, cambios: Record<string, any>) {
   await supa(`/rest/v1/negocios_facturapi?on_conflict=negocio_id`, {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify({ negocio_id: negocioId, ...cambios, actualizado: new Date().toISOString() }),
+    body: JSON.stringify({ negocio_id: negocioId, ...cifrarCampos(cambios, LLAVES_FACTURAPI), actualizado: new Date().toISOString() }),
   })
 }
 
@@ -125,17 +130,19 @@ async function usadasEsteMes(negocioId: string) {
   return filas.length
 }
 
-/** Llave de la organización para el modo actual (la pide a Facturapi la primera vez). */
-async function llaveDe(reg, modo = modoCfdi()) {
+/** Llave de la organización para el modo actual (la pide a Facturapi la primera vez).
+ *  Si la guardada no se puede descifrar, el error sube: NO se pide otra llave
+ *  a Facturapi (eso cambiaría la llave real del taller sin necesidad). */
+export async function llaveDe(reg, modo = modoCfdi()) {
   if (modo === "prueba") {
-    if (reg.llave_prueba) return reg.llave_prueba
+    if (reg.llave_prueba) return descifrar(reg.llave_prueba)
     const k = await fapi<any>(`/organizations/${reg.org_id}/apikeys/test`, llaveUsuario())
     const llave = typeof k === "string" ? k : k?.key || k?.api_key
     if (!llave) throw new Error("Facturapi no devolvió la llave de prueba")
     await guardarRegistro(reg.negocio_id, { org_id: reg.org_id, llave_prueba: llave })
     return llave
   }
-  if (reg.llave_real) return reg.llave_real
+  if (reg.llave_real) return descifrar(reg.llave_real)
   let k
   try {
     k = await fapi<any>(`/organizations/${reg.org_id}/apikeys/live`, llaveUsuario(), { method: "POST" })

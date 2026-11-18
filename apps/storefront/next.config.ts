@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { DOMINIOS_IMAGENES } from './src/lib/imagenes/dominios';
 
 // ---------------------------------------------------------------------
 // CONTENT-SECURITY-POLICY (CSP): la lista de lugares desde donde el navegador
@@ -137,18 +138,14 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 31536000,
+    // Sólo dominios propios (src/lib/imagenes/dominios.ts). Las fotos de otros
+    // dominios se muestran sin optimizar (src/lib/imagenes/Imagen.tsx) en vez de
+    // pasar por el servidor.
     remotePatterns: [
-      { protocol: 'https', hostname: 'medusa-public-images.s3.eu-west-1.amazonaws.com' },
-      { protocol: 'https', hostname: 'mercur-connect.s3.eu-central-1.amazonaws.com' },
-      { protocol: 'https', hostname: 'api.mercurjs.com' },
+      ...DOMINIOS_IMAGENES.map((hostname) => ({ protocol: 'https' as const, hostname })),
       // localhost sólo en desarrollo: en producción dejaría pedir, a través del
       // optimizador, imágenes a servicios internos del servidor
       ...(process.env.NODE_ENV === 'production' ? [] : [{ protocol: 'http' as const, hostname: 'localhost' }]),
-      { protocol: 'https', hostname: 'api-sandbox.mercurjs.com', pathname: '/static/**' },
-      { protocol: 'https', hostname: 'i.imgur.com' },
-      { protocol: 'https', hostname: 's3.eu-central-1.amazonaws.com' },
-      { protocol: "https", hostname: "mercur-testing.up.railway.app" },
-      { protocol: 'https', hostname: '**' }
     ]
   },
   // URLs viejas que siguen circulando y daban 404.

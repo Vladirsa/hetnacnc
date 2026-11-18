@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { promediosDeProductos } from "@/lib/resenas/acciones"
 
 import TarjetaProducto, { vendedoresPorProducto } from "./TarjetaProducto"

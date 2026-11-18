@@ -26,6 +26,29 @@ import { T_SOBREPESO } from "./sobrepesos"
 
 const DIA = 86_400_000
 const HORA = 3_600_000
+/** Aviso si el respaldo diario no ha corrido (null si está al día o no aplica). */
+export function estadoRespaldo(ahora = Date.now(), leer: (f: string) => string = (f) => require("fs").readFileSync(f, "utf8")) {
+  // Sólo en el servidor de producción, donde corre el respaldo
+  if (process.env.NODE_ENV !== "production" || process.env.RESPALDO_AVISO === "off") return null
+  const marca = process.env.RESPALDO_MARCA || "/root/respaldos/ultimo-ok"
+  let segundos = 0
+  try {
+    segundos = Number(String(leer(marca)).trim().split(/\s+/)[0]) || 0
+  } catch {
+    /* sin marca: nunca ha terminado bien */
+  }
+  const horas = segundos ? (ahora / 1000 - segundos) / 3600 : Infinity
+  if (horas <= 26) return null
+  return {
+    nivel: "rojo",
+    tipo: "respaldo",
+    clave: "respaldo-atrasado",
+    titulo: segundos ? `El respaldo de la base no ha corrido en ${Math.floor(horas)} horas` : "No hay registro de que el respaldo de la base haya terminado bien",
+    detalle: "Sin respaldo reciente no hay de dónde recuperar la tienda si algo sale mal. En el servidor corre: bash /root/hetnacnc/scripts/respaldar.sh y revisa qué dice.",
+    url: null,
+  }
+}
+
 export const ADMIN = (process.env.ADMIN_PANEL_URL || `${STORE_URL}/dashboard`).replace(/\/$/, "")
 const HORAS_SIN_ENVIAR = () => Number(process.env.CONTROL_HORAS_SIN_ENVIAR ?? 48)
 
@@ -544,6 +567,12 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
   }, undefined, logger)
 
   const orden = { rojo: 0, ambar: 1, azul: 2 }
+  // Seguridad: el respaldo diario (scripts/respaldar.sh) deja su marca al
+  // terminar bien. Si tiene más de 26 horas o no existe, el respaldo dejó de
+  // correr y no hay de dónde recuperar la tienda si algo sale mal.
+  const respaldo = estadoRespaldo()
+  if (respaldo) avisos.push(respaldo)
+
   // Seguridad: muchos intentos fallidos de entrar al panel de administración
   try {
     const f = await intentosFallidosAdmin(knex, 24)

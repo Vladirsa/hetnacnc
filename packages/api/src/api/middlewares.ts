@@ -35,6 +35,7 @@ import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/mi
 import { sinContacto } from "../lib/clientes-taller";
 import { ipCliente } from "../lib/ip-cliente";
 import { bitacoraAdmin, bitacoraLogin } from "../lib/bitacora-seguridad";
+import { panelRolesAdmin } from "../lib/panel-roles-middleware";
 
 // Escudo de privacidad: el taller no ve correo ni teléfono de sus clientes en
 // las pantallas de Mercur (Clientes, Pedidos). Los tratos van por el chat.
@@ -68,7 +69,9 @@ export default defineMiddlewares({
     routes: [
         // Bitácora de seguridad: inicios de sesión rechazados y cambios en /admin
         { matcher: "/auth/*", middlewares: [bitacoraLogin] },
-        { matcher: "/admin/*", middlewares: [bitacoraAdmin] },
+        // Roles del HETNA Panel también en el API (lib/panel-roles.ts). Va después
+        // de la bitácora para que los 403 queden anotados. PANEL_ROLES_API=off lo apaga.
+        { matcher: "/admin/*", middlewares: [bitacoraAdmin, panelRolesAdmin] },
         { matcher: "/api/cotizacion-liga/*", middlewares: [limitarLiga] },
         // Respuesta rápida a grupos de Facebook: puede traer la captura de la publicación
         { method: ["POST"], matcher: "/admin/hetna-grupos", bodyParser: { sizeLimit: "8mb" } },
