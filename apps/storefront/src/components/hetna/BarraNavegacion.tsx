@@ -6,6 +6,7 @@ import { CerrarMenus } from "./CerrarMenus"
 import { ServicioIcono } from "./ServicioIcono"
 import { GRUPOS_HERRAMIENTAS } from "@/lib/hetna/herramientas"
 import { FABRICACION, FABRICACION_EXTRA } from "@/lib/hetna/navegacion"
+import type { MenuTienda } from "@/lib/hetna/tienda"
 
 // Barra de navegación HETNA (sólo computadora, desde lg). Cinco secciones:
 // Categorías, Fabricación (por tipo de proceso), Herramientas CNC, Talleres y
@@ -78,17 +79,61 @@ const PanelHojas = ({ g }: { g: Grupo }) => (
 
 // ---------- Computadora ----------
 
-const MegaCategorias = ({ raices }: { raices: Raiz[] }) => {
-  // Catálogo honesto: si ninguna categoría tiene productos, una liga directa
-  // a la tienda en vez de un menú vacío
-  if (!raices.length) {
-    return (
-      <LocalizedClientLink href="/categories" className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15 shrink-0">
-        <Hamburguesa />
-        Todos los productos
-      </LocalizedClientLink>
-    )
-  }
+// "Todos los productos": al hacer clic abre la lista completa (/categories);
+// al pasar el mouse muestra las categorías de la tienda con su conteo real.
+// Las que aún no tienen productos dicen "Próximamente" (catálogo honesto).
+const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
+  <div className="group relative h-full flex items-center shrink-0">
+    <LocalizedClientLink
+      href="/categories"
+      className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15"
+    >
+      <Hamburguesa />
+      Todos los productos
+      {tienda && <Flecha />}
+    </LocalizedClientLink>
+    {tienda && (
+      <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[340px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
+        <p className="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]">Categorías</p>
+        {tienda.categorias.map((c) => (
+          <LocalizedClientLink
+            key={c.clave}
+            href={"/tienda/" + c.clave}
+            className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
+          >
+            <span>{c.nombre}</span>
+            {c.conteo > 0 ? (
+              <span className="shrink-0 font-mono text-[12px] text-[#6B6A63]">{c.conteo}</span>
+            ) : (
+              <span className="shrink-0 rounded bg-[#FFF4EC] px-1.5 py-0.5 text-[10.5px] font-bold uppercase text-[#A84303]">Próximamente</span>
+            )}
+          </LocalizedClientLink>
+        ))}
+        <div className="mt-1 border-t border-[#E7E4DC] pt-1">
+          <LocalizedClientLink
+            href="/categories"
+            className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
+          >
+            Ver todos los productos ({tienda.total})
+            <FlechaDerecha />
+          </LocalizedClientLink>
+          <LocalizedClientLink
+            href="/tienda"
+            className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF]"
+          >
+            Ir a la tienda
+            <FlechaDerecha />
+          </LocalizedClientLink>
+        </div>
+      </div>
+    )}
+  </div>
+)
+
+const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda | null }) => {
+  // Catálogo honesto: si ninguna categoría del catálogo tiene productos
+  // anidados, el menú muestra las categorías de la tienda con su conteo
+  if (!raices.length) return <MenuProductos tienda={tienda} />
   const primero = raices[0]?.grupos[0]?.id
   return (
     <div className="group relative h-full flex items-center shrink-0">
@@ -242,8 +287,10 @@ const MenuFabricacion = () => (
 
 export const BarraNavegacion = ({
   categorias,
+  tienda = null,
 }: {
   categorias: HttpTypes.StoreProductCategory[]
+  tienda?: MenuTienda | null
 }) => {
   // "Servicios" no va en Categorías: sus páginas están en el menú Fabricación
   const raices = armarRaices(categorias.filter((c) => c.handle !== "servicios"))
@@ -255,7 +302,7 @@ export const BarraNavegacion = ({
         aria-label="Principal"
         className="relative z-40 hidden lg:flex bg-[#142033] px-4 lg:px-8 xl:px-16 h-[46px] items-center gap-5 xl:gap-7"
       >
-        <MegaCategorias raices={raices} />
+        <MegaCategorias raices={raices} tienda={tienda} />
         <MenuFabricacion />
         <MenuHerramientas />
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
