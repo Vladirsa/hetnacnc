@@ -133,7 +133,10 @@ export function TiendaVista({ catalogo, procesos }: { catalogo: CatalogoTienda; 
                 <p className="fuente-mono mt-4 text-[13px] leading-relaxed text-[#5B6370]">
                   Total en la tienda: {catalogo.total} {catalogo.total === 1 ? "producto publicado" : "productos publicados"}
                   {conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}. Los planes del Cotizador y los talleres del
-                  directorio no son productos de la tienda y no entran en la cuenta.
+                  directorio no son productos de la tienda y no entran en la cuenta.{" "}
+                  <LocalizedClientLink href="/categories" className="font-semibold text-[#C24E03] underline">
+                    Ver todos los productos en una lista
+                  </LocalizedClientLink>
                 </p>
               )}
             </section>
