@@ -20,7 +20,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 
 import { STORE_URL } from "./licitacion"
-import { T_CONFIG_S, asegurarSocial, iaSocial } from "./social-hub"
+import { T_CONFIG_S, asegurarSocial, iaSocial, motivoSinIa } from "./social-hub"
 import { DATOS_HETNA } from "./social-comentarios"
 import { mandarPrivado } from "./social-telegram"
 import { enviarTexto, normalizarNumero, whatsappListo } from "./whatsapp"
@@ -323,5 +323,5 @@ export async function resumenBot(knex: any) {
   const r = await knex(T_CHAT).where({ dia: hoy }).sum({ n: "respuestas" }).count({ chats: "*" }).first().catch(() => null)
   const p = await knex(T_CHAT).sum({ n: "pasados" }).first().catch(() => null)
   const calientes = await knex(T_CHAT).where({ temperatura: "caliente" }).where("updated_at", ">=", knex.raw("now() - interval '7 days'")).count({ n: "*" }).first().catch(() => null)
-  return { activo: await botActivo(knex), ia: iaSocial(), respuestas_hoy: Number(r?.n || 0), chats_hoy: Number(r?.chats || 0), pasados: Number(p?.n || 0), calientes_7d: Number(calientes?.n || 0) }
+  return { activo: await botActivo(knex), ia: iaSocial(), ia_motivo: iaSocial() ? null : motivoSinIa(), respuestas_hoy: Number(r?.n || 0), chats_hoy: Number(r?.chats || 0), pasados: Number(p?.n || 0), calientes_7d: Number(calientes?.n || 0) }
 }

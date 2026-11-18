@@ -243,16 +243,31 @@ export async function atender(knex: any, b: { tipo: string; chat_id: string; tex
   return texto ? `No entendí.\n\n${AYUDA}` : ""
 }
 
+// Lo que genera el sistema (plan, promociones, Fábrica, reciclaje, fechas especiales)
+export const FUENTES_PILOTO = ["plan", "promo", "fabrica", "reciclaje", "temporada"]
+
+/**
+ * ¿El piloto puede programar este borrador? Sólo contenido generado por el
+ * sistema (origen "manual" con fuente conocida). Nunca lo que quedó retenido
+ * para revisión (talleres sin verificar o dados de alta solos: taller y
+ * producto nuevos), aunque su título empiece con "Promo".
+ */
+export function pilotoPuedeProgramar(p: { estado?: string; origen?: string; fuente?: string | null; en_revision?: boolean | null }) {
+  return p?.estado === "borrador" && p.origen === "manual" && !p.en_revision && FUENTES_PILOTO.includes(String(p.fuente || ""))
+}
+
 /** Piloto automático: programa solos los borradores generados que ya están listos. */
 export async function pilotoAutomatico(knex: any, logger?: any) {
   const cfg = await leerConfig(knex)
   if (!cfg.piloto.activo) return { programadas: 0 }
   // Borradores anteriores a la columna "fuente": se reconocen por el plan o el título
-  await knex.raw(`update ?? set fuente = 'plan' where fuente is null and estado = 'borrador' and id in (select post_id from hetna_social_plan where post_id is not null)`, [T_POST]).catch(() => {})
-  await knex.raw(`update ?? set fuente = case when titulo like 'Promo%' then 'promo' else 'fabrica' end where fuente is null and estado = 'borrador' and (titulo like 'Promo%' or titulo like 'Fábrica ·%')`, [T_POST]).catch(() => {})
+  // (sólo origen "manual": los anuncios de talleres y productos nuevos nunca se reclasifican)
+  await knex.raw(`update ?? set fuente = 'plan' where fuente is null and estado = 'borrador' and origen = 'manual' and id in (select post_id from hetna_social_plan where post_id is not null)`, [T_POST]).catch(() => {})
+  await knex.raw(`update ?? set fuente = case when titulo like 'Promo%' then 'promo' else 'fabrica' end where fuente is null and estado = 'borrador' and origen = 'manual' and (titulo like 'Promo%' or titulo like 'Fábrica ·%')`, [T_POST]).catch(() => {})
   const lista = await knex(T_POST)
-    .where({ estado: "borrador" })
-    .whereIn("fuente", ["plan", "promo", "fabrica", "reciclaje", "temporada"])
+    .where({ estado: "borrador", origen: "manual" })
+    .whereIn("fuente", FUENTES_PILOTO)
+    .whereRaw("coalesce(en_revision, false) = false")
     .whereRaw("(vence is null or vence > programada_para)")
     .whereNotNull("programada_para")
     .where("programada_para", "<=", knex.raw("now() + interval '36 hours'"))
@@ -261,6 +276,8 @@ export async function pilotoAutomatico(knex: any, logger?: any) {
     .limit(30)
   let n = 0
   for (const p of lista) {
+    // Segunda barrera, por si la consulta cambia: lo retenido para revisión no sale solo
+    if (!pilotoPuedeProgramar(p)) continue
     const redes = p.redes || []
     if (cfg.piloto.redes.length && !redes.every((r: string) => cfg.piloto.redes.includes(r))) continue
     if (puntajeDe(p) < cfg.piloto.minimo) {

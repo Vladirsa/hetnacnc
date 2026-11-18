@@ -52,7 +52,7 @@ const boton = (tipo: "primario" | "normal" | "peligro"): CSSProperties => ({
   color: tipo === "normal" ? C.texto : "#fff",
 })
 const campo: CSSProperties = { width: "100%", boxSizing: "border-box", borderRadius: 8, border: `1px solid ${C.borde}`, padding: 8, fontSize: 14, background: C.fondo, color: C.texto }
-const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller", promociones: "Promociones diarias (producto, blog y herramientas con imagen y video)" }
+const ORIGEN: Record<string, string> = { manual: "Manual", licitacion: "Licitación", taller: "Taller nuevo", producto: "Producto", foro: "Foro", taller_video: "Video de taller", promociones: "Contenido generado con imagen y video (promociones diarias de producto, blog y herramientas, Oportunidades, Estudio diario y Fechas especiales)" }
 const ESTADO: Record<string, [string, string]> = {
   borrador: ["Borrador", "#8A5A00"],
   programada: ["Programada", "#1a3a5c"],
@@ -200,6 +200,8 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   const [abierta, setAbierta] = useState(p.estado === "borrador" || p.estado === "error")
   const [textos, setTextos] = useState<Record<string, string>>(p.textos || {})
   const [sel, setSel] = useState<string[]>(p.redes)
+  const [titulo, setTitulo] = useState(p.titulo)
+  const [destino, setDestino] = useState(p.url_destino || "")
   const [cuando, setCuando] = useState(aLocal(p.programada_para))
   const [grupo, setGrupo] = useState("")
   const [nota, setNota] = useState("")
@@ -210,11 +212,30 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
   useEffect(() => {
     setTextos(p.textos || {})
     setSel(p.redes)
-  }, [p.id, p.textos, p.redes])
+    setTitulo(p.titulo)
+    setDestino(p.url_destino || "")
+  }, [p.id, p.textos, p.redes, p.titulo, p.url_destino])
   const nombre = (c: string) => redes.find((r) => r.clave === c)?.nombre || c
   const auto = (c: string) => !!redes.find((r) => r.clave === c)?.auto
   const ligaDe = (red: string) => p.ligas.find((l) => l.red === red && !l.grupo)?.url
-  const hacer = async (cuerpo: Record<string, unknown>, ok: string) => {
+  // Copiar antes de publicar: crea (o reusa) la liga medida de esa red, la misma que usará la publicación
+  const copiarTexto = async (red: string) => {
+    let liga = ligaDe(red)
+    try {
+      if (!liga) {
+        liga = (await api<{ url: string }>(`/${p.id}`, { accion: "liga", red })).url
+        alCambiar()
+      }
+      copiar((textos[red] || "").split("{{liga}}").join(liga))
+      setNotaOk(true)
+      setNota(`Texto de ${nombre(red)} copiado con su liga medida.`)
+    } catch (e) {
+      setNotaOk(false)
+      setNota((e as Error).message)
+    }
+  }
+  // Devuelve si salió bien, para no seguir con el segundo paso (programar o publicar) si el guardado falló
+  const hacer = async (cuerpo: Record<string, unknown>, ok: string): Promise<boolean> => {
     setOcupado(true)
     setHaciendo(String(cuerpo.accion || ""))
     setNota("")
@@ -228,9 +249,11 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
       setNotaOk(true)
       setNota(cs.length ? `${ok} Se mejoró: ${cs.map((c) => nombre(c)).join(", ")}.` : ok)
       alCambiar()
+      return true
     } catch (e) {
       setNotaOk(false)
       setNota((e as Error).message)
+      return false
     } finally {
       setOcupado(false)
       setHaciendo("")
@@ -268,6 +291,21 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             ))}
           {p.mercado && p.mercado !== "mx" && <span style={{ fontSize: 12, color: C.tenue }}>🌎 Mercado: {p.mercado.toUpperCase()} (sale en las mismas cuentas, en su idioma y a su hora)</span>}
           {p.notas && <div style={{ fontSize: 12, background: "#FFF8EE", borderRadius: 8, padding: 8, whiteSpace: "pre-wrap" }}>🎬 {p.notas}</div>}
+          <label style={{ fontSize: 12, color: C.tenue, display: "grid", gap: 4 }}>
+            Título interno
+            <input style={{ ...campo, fontSize: 13 }} value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          </label>
+          <label style={{ fontSize: 12, color: C.tenue, display: "grid", gap: 4 }}>
+            <span>
+              Liga de destino (a dónde llevan las ligas medidas){" "}
+              {p.url_destino && (
+                <a href={p.url_destino} target="_blank" rel="noreferrer" style={{ color: C.naranja }}>
+                  abrir ↗
+                </a>
+              )}
+            </span>
+            <input style={{ ...campo, fontSize: 13 }} placeholder="https://hetnacnc.com/mx/…" value={destino} onChange={(e) => setDestino(e.target.value)} />
+          </label>
           <label style={{ ...boton("normal"), fontWeight: 600, justifySelf: "start" }}>
             {p.medios?.length ? "Cambiar imagen o video" : "+ Agregar imagen o video"}
             <input
@@ -280,7 +318,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
                 setNota("Subiendo…")
                 try {
                   const url = await subirImagen(a)
-                  await hacer({ accion: "guardar", textos, redes: sel, medios: [{ url, tipo: a.type.startsWith("video") ? "video" : "imagen" }] }, "Listo, quedó agregado.")
+                  await hacer({ accion: "guardar", titulo, url_destino: destino, textos, redes: sel, medios: [{ url, tipo: a.type.startsWith("video") ? "video" : "imagen" }] }, "Listo, quedó agregado.")
                 } catch (er) {
                   setNota((er as Error).message)
                 }
@@ -290,7 +328,6 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
           <Chips redes={sel} todas={redes} alCambiar={setSel} />
           {sel.map((red) => {
             const r = p.resultado?.[red]
-            const final = (textos[red] || "").replace("{{liga}}", ligaDe(red) || "{{liga}}")
             return (
               <div key={red} style={{ background: cambiadas.includes(red) ? "#e8f7ee" : C.suave, border: cambiadas.includes(red) ? `2px solid ${C.verde}` : "2px solid transparent", borderRadius: 10, padding: 10, transition: "background .4s" }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 6 }}>
@@ -308,7 +345,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
                   <span style={{ fontSize: 11, color: (textos[red] || "").length > (redes.find((x) => x.clave === red)?.max || 9999) ? C.rojo : C.tenue }}>
                     {(textos[red] || "").length} caracteres
                   </span>
-                  <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={() => copiar(final)}>
+                  <button type="button" style={{ ...boton("normal"), padding: "2px 8px", fontSize: 12 }} onClick={() => void copiarTexto(red)}>
                     Copiar
                   </button>
                 </div>
@@ -317,7 +354,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
             )
           })}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "guardar", textos, redes: sel }, "Guardado.")}>
+            <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "guardar", titulo, url_destino: destino, textos, redes: sel }, "Guardado.")}>
               Guardar cambios
             </button>
             <button type="button" style={boton("normal")} disabled={ocupado} onClick={() => hacer({ accion: "adaptar", redes: sel }, "Textos reescritos.")}>
@@ -337,7 +374,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
               style={boton("normal")}
               disabled={ocupado}
               onClick={async () => {
-                await hacer({ accion: "guardar", textos, redes: sel }, "")
+                if (!(await hacer({ accion: "guardar", titulo, url_destino: destino, textos, redes: sel }, ""))) return
                 await hacer({ accion: "programar", programada_para: cuando ? new Date(cuando).toISOString() : null }, "Programada.")
               }}
             >
@@ -348,7 +385,7 @@ function Tarjeta({ p, redes, alCambiar }: { p: Pub; redes: RedInfo[]; alCambiar:
               style={boton("primario")}
               disabled={ocupado}
               onClick={async () => {
-                await hacer({ accion: "guardar", textos, redes: sel }, "")
+                if (!(await hacer({ accion: "guardar", titulo, url_destino: destino, textos, redes: sel }, ""))) return
                 await hacer({ accion: "publicar" }, "Publicación enviada.")
               }}
             >
@@ -502,7 +539,7 @@ function WhatsappConexion() {
           <input type="checkbox" checked={!!e.bot.activo} disabled={ocupado || !e.bot.ia} onChange={(x) => void hacer({ accion: "bot", activo: x.target.checked })} />
           <span>
             <b>Agente de ventas</b>: atiende a quien escribe al WhatsApp como un vendedor: entiende qué busca, recomienda el producto, la cotización o la herramienta que le sirve con su liga y lo lleva a comprar. Sólo con datos reales (no inventa precios). Los clientes calientes y lo que necesita a una persona te llegan por Telegram con el resumen. Si contestas tú desde el celular, se calla 12 h en ese chat.
-            {!e.bot.ia && <span style={{ color: C.rojo }}> (Falta la llave de IA en el servidor)</span>}
+            {!e.bot.ia && <span style={{ color: C.rojo }}> ({e.bot.ia_motivo || "La IA no está disponible en el servidor"})</span>}
             <span style={{ color: C.tenue }}> · Hoy: {e.bot.respuestas_hoy} respuestas en {e.bot.chats_hoy} chats · {e.bot.calientes_7d ?? 0} clientes calientes (7 días) · {e.bot.pasados} pasados a ti</span>
           </span>
         </label>
@@ -669,7 +706,8 @@ function PruebaInstagram() {
 type Comentario = { id: string; red: string; autor: string | null; texto: string; estado: string; categoria: string | null; respuesta: string | null; error: string | null; post_titulo: string | null; created_at: string }
 function Conversaciones() {
   const [lista, setLista] = useState<Comentario[] | null>(null)
-  const [filtro, setFiltro] = useState("propuesta")
+  // "Por responder" incluye los que quedaron en "nuevo" (sin IA o si la IA falló al clasificarlos)
+  const [filtro, setFiltro] = useState("propuesta,nuevo")
   const [edit, setEdit] = useState<Record<string, string>>({})
   const [ocupado, setOcupado] = useState("")
   const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
@@ -696,7 +734,7 @@ function Conversaciones() {
   return (
     <section style={caja}>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
-        {[["propuesta", "Por responder"], ["respondido", "Respondidos"], ["ignorado", "Ignorados"], ["error", "Con error"], ["", "Todos"]].map(([v, t]) => (
+        {[["propuesta,nuevo", "Por responder"], ["respondido", "Respondidos"], ["ignorado", "Ignorados"], ["error", "Con error"], ["", "Todos"]].map(([v, t]) => (
           <button key={v || "todos"} type="button" onClick={() => setFiltro(v)} style={{ ...boton("normal"), padding: "3px 10px", fontSize: 12, background: filtro === v ? "#142033" : C.fondo, color: filtro === v ? "#fff" : C.texto }}>{t}</button>
         ))}
         <span style={{ flex: 1 }} />
@@ -1114,7 +1152,7 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
       </div>
       <p style={{ fontSize: 12, color: datos.n8n ? C.verde : C.rojo, marginTop: 12 }}>
-        {datos.n8n ? "✓ Conectado a n8n (flujo Social Hub - Publicar)." : "✗ Falta configurar N8N_REDES_URL en el servidor."}
+        {datos.n8n ? "✓ Conectado a n8n (flujo Social Hub - Publicar)." : "✗ Falta configurar N8N_SOCIAL_URL (o N8N_REDES_URL) en el servidor."}
       </p>
     </section>
   )
