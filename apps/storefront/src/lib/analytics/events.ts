@@ -152,7 +152,7 @@ export function trackPurchase(
       });
     }
     window.gtag('event', 'conversion', {
-      send_to: `${ADS_ID}/${ADS_LABEL_COTIZADOR_PLACEHOLDER}`,
+      send_to: `${ADS_ID}/${ADS_LABEL_COMPRA}`,
       value: toGa4Amount(value),
       currency: currency.toUpperCase(),
       transaction_id: orderId
