@@ -66,6 +66,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [leyendo, setLeyendo] = useState(false)
   const [lectura, setLectura] = useState<{ texto: string; tipo: "ok" | "aviso" | "error"; login?: boolean; creditos?: boolean } | null>(null)
   const [abierto, setAbierto] = useState<number | null>(null)
+  const [textos, setTextos] = useState<Record<string, string>>({}) // lo que el cliente escribe en las medidas de cada tablero
   const [v, setV] = useState<Record<string, string>>({ ancho: "", fondo: "", alto: "", grosor: String(EJEMPLO.grosor), holgura: "0.3", saliente: "0" })
   const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
   const [tris, setTris] = useState<number[] | null>(null)
@@ -121,9 +122,11 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
       setFoto(`data:image/jpeg;base64,${datos}`)
       const r = await disenarTablerosDesdeImagen(datos, "image/jpeg")
       if (!r.ok) setLectura({ texto: r.mensaje, tipo: "error", login: r.noAutenticado, creditos: r.saldoInsuficiente })
-      else if (r.lectura.tipo !== "tableros") setLectura({ texto: `${r.lectura.notas || "La imagen no parece un mueble de tablero."} No se te cobró.`, tipo: "aviso" })
+      else if (r.lectura.tipo !== "tableros")
+        setLectura({ texto: `${r.lectura.notas || "La imagen no parece un mueble de tablero."} ${r.cobrado === 0 ? "No se te cobró." : "No pudimos regresarte los créditos solos: escríbenos y te los devolvemos."}`, tipo: "aviso" })
       else {
         setTableros(r.lectura.tableros)
+        setTextos({})
         setNombre(r.lectura.nombre)
         setEsEjemplo(false)
         setAbierto(null)
@@ -219,13 +222,17 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
                         <CampoNum
                           key={k}
                           etiqueta={{ x0: "Izquierda", x1: "Derecha", y0: "Frente", y1: "Atrás", z0: "Abajo", z1: "Arriba" }[k]}
-                          valor={String(t[k])}
-                          cambiar={(x) => Number.isFinite(numero(x)) && editar(i, { [k]: numero(x) })}
+                          valor={textos[`${i}:${k}`] ?? String(t[k])}
+                          cambiar={(x) => {
+                            // el texto se guarda tal cual (se puede borrar y reescribir); el número sólo cuando es válido
+                            setTextos((s) => ({ ...s, [`${i}:${k}`]: x }))
+                            if (x.trim() !== "" && Number.isFinite(numero(x))) editar(i, { [k]: numero(x) })
+                          }}
                           sufijo="mm"
                         />
                       ))}
                     </div>
-                    <button type="button" onClick={() => { setTableros((ts) => ts.filter((_, j) => j !== i)); setAbierto(null) }} className="self-start rounded-[7px] px-2 py-1 text-[12.5px] font-semibold text-[#F6B8AE] hover:bg-[#2A1C1C]">
+                    <button type="button" onClick={() => { setTableros((ts) => ts.filter((_, j) => j !== i)); setTextos({}); setAbierto(null) }} className="self-start rounded-[7px] px-2 py-1 text-[12.5px] font-semibold text-[#F6B8AE] hover:bg-[#2A1C1C]">
                       Quitar tablero
                     </button>
                   </div>

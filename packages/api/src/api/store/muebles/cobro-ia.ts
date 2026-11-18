@@ -53,27 +53,30 @@ export async function lecturaConCobro<L>(
     }
     throw e
   }
-  const reembolsar = async (motivo: string) => {
+  const reembolsar = async (motivo: string): Promise<boolean> => {
     try {
       await grantCreditsWorkflow(req.scope).run({
         input: { customer_id: customerId, amount: CREDITOS_IMAGEN_MUEBLE, type: "reembolso", reference_id: referencia, description: `Reembolso: ${motivo}` },
       })
       if (saldo !== null) saldo += CREDITOS_IMAGEN_MUEBLE
+      return true
     } catch (r) {
       logger.error(`[muebles-ia] falló el reembolso de ${referencia}: ${r}`)
+      return false
     }
   }
 
   try {
     const lectura = await opciones.leer(base64, datos.data.medio)
     if (opciones.inutil(lectura)) {
-      await reembolsar("la imagen no era un mueble que se pueda diseñar")
-      return res.json({ ok: true, lectura, cobrado: 0, saldo })
+      const regresado = await reembolsar("la imagen no era un mueble que se pueda diseñar")
+      return res.json({ ok: true, lectura, cobrado: regresado ? 0 : CREDITOS_IMAGEN_MUEBLE, saldo })
     }
     res.json({ ok: true, lectura, cobrado: CREDITOS_IMAGEN_MUEBLE, saldo })
   } catch (e) {
     logger.error(`[muebles-ia] ${referencia}: ${e instanceof Error ? e.message : String(e)}`)
-    await reembolsar("no se pudo leer la imagen del mueble")
-    res.status(502).json({ ok: false, mensaje: e instanceof ErrorLectura ? `${e.message} No se te cobró.` : "No se pudo leer la imagen. No se te cobró." })
+    const regresado = await reembolsar("no se pudo leer la imagen del mueble")
+    const cola = regresado ? "No se te cobró." : "No pudimos regresarte los créditos solos: escríbenos y te los devolvemos."
+    res.status(502).json({ ok: false, mensaje: e instanceof ErrorLectura ? `${e.message} ${cola}` : `No se pudo leer la imagen. ${cola}` })
   }
 }

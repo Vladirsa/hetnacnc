@@ -116,7 +116,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
   const [cobrando, setCobrando] = useState(false)
   const [avisoCobro, setAvisoCobro] = useState<{ texto: string; login?: boolean; creditos?: boolean } | null>(null)
   const [leyendo, setLeyendo] = useState(false)
-  const [lectura, setLectura] = useState<{ texto: string; tipo: "ok" | "aviso" | "error"; login?: boolean; creditos?: boolean } | null>(null)
+  const [lectura, setLectura] = useState<{ texto: string; tipo: "ok" | "aviso" | "error"; login?: boolean; creditos?: boolean; otroMueble?: boolean } | null>(null)
   const [v, setV] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       Object.entries(EXHIBIDOR_INICIO)
@@ -201,7 +201,8 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
       const datos = await reducirImagen(archivo)
       const r = await disenarMuebleDesdeImagen(datos, "image/jpeg")
       if (!r.ok) setLectura({ texto: r.mensaje, tipo: "error", login: r.noAutenticado, creditos: r.saldoInsuficiente })
-      else if (r.lectura.tipo !== "exhibidor") setLectura({ texto: `${r.lectura.notas || "La imagen no parece un exhibidor."} Por ahora el constructor sólo hace exhibidores de ensamble.`, tipo: "aviso" })
+      else if (r.lectura.tipo !== "exhibidor")
+        setLectura({ texto: `${r.lectura.notas || "La imagen no parece un exhibidor."} ${r.cobrado === 0 ? "No se te cobró." : "No pudimos regresarte los créditos solos: escríbenos y te los devolvemos."} Para cualquier otro mueble usa el modo Desde una imagen.`, tipo: "aviso", otroMueble: true })
       else {
         aplicarLectura(r.lectura)
         const conf = r.lectura.confianza === "alta" ? "" : r.lectura.confianza === "media" ? " Revisa las medidas: algunas son estimadas." : " Revisa todas las medidas: la imagen no tenía cotas claras."
@@ -228,9 +229,10 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
             {lectura.texto}{" "}
             {lectura.login && <Link href={`/${locale}/login`} className="underline">Iniciar sesión</Link>}
             {lectura.creditos && <Link href={`/${locale}/user/creditos`} className="underline">Comprar créditos</Link>}
+            {lectura.otroMueble && <Link href={`/${locale}/disenar/muebles-desde-imagen`} className="underline">Abrir Desde una imagen</Link>}
           </p>
         )}
-        <span className="text-[11.5px] text-[#5B6880]">Si la lectura falla no se cobra. Después puedes ajustar cualquier medida.</span>
+        <span className="text-[11.5px] text-[#5B6880]">Si la lectura falla o la imagen no es un exhibidor, no se cobra. Después puedes ajustar cualquier medida.</span>
       </Seccion>
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
         <b className="text-white">Exhibidor con gabinete.</b> Laterales con mortajas, repisas con espigas pasantes, frente y respaldo que lo hacen firme, travesaño trasero y divisores ranurados. Sin tornillos ni herrajes.

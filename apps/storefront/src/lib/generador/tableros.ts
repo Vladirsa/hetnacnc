@@ -22,7 +22,7 @@
 //
 // Límite: tableros planos a escuadra. Curvas o inclinaciones se aproximan.
 
-import { type Herramienta, type Mueble, type P, type PiezaEnsamble, type Plano, exteriorConAlivios, mortaja } from "./ensamble"
+import { type Herramienta, type Mueble, type P, type PiezaEnsamble, type Plano, aMueble, exteriorConAlivios, mortaja } from "./ensamble"
 
 export type Tablero = { nombre: string; plano?: Plano; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }
 
@@ -43,7 +43,7 @@ export const TABLEROS_INICIO: Omit<OpcionesTableros, "ancho" | "fondo" | "alto">
   herramienta: { tipo: "fresa", diametro: 6.35 },
 }
 
-export type MuebleTableros = Mueble & { descartados: string[]; uniones: number; original: { ancho: number; fondo: number; alto: number } }
+export type MuebleTableros = Mueble & { descartados: string[]; uniones: number; aTope: number; original: { ancho: number; fondo: number; alto: number } }
 
 type Eje = 0 | 1 | 2
 type Caja = { nombre: string; k: Eje; lo: number[]; hi: number[] }
@@ -62,7 +62,25 @@ export function cajaDeTablero(t: Tablero) {
   return { lo: [Math.min(t.x0, t.x1), Math.min(t.y0, t.y1), Math.min(t.z0, t.z1)], hi: [Math.max(t.x0, t.x1), Math.max(t.y0, t.y1), Math.max(t.z0, t.z1)] }
 }
 
-export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
+// Las medidas que pide el cliente son las del mueble terminado (con lo que
+// crecen las orillas y sobresalen las espigas): se arma una vez, se mide lo
+// que sobra por eje y se vuelve a armar descontándolo.
+export function muebleDeTableros(tableros: Tablero[], o: OpcionesTableros): MuebleTableros {
+  let m = armar(tableros, o)
+  const meta = [o.ancho, o.fondo, o.alto].map((v) => (v && Number.isFinite(v) ? Math.max(100, Math.min(3000, v)) : undefined))
+  if (!meta.some((v) => v) || !m.piezas.length) return m
+  let pedir = [...meta]
+  for (let vuelta = 0; vuelta < 3; vuelta++) {
+    const med = [m.medidas.ancho, m.medidas.fondo, m.medidas.alto]
+    if (meta.every((v, i) => !v || Math.abs(med[i] - v) <= 1)) break
+    pedir = pedir.map((v, i) => (v && meta[i] ? Math.max(100, v + (meta[i]! - med[i])) : undefined))
+    m = armar(tableros, { ...o, ancho: pedir[0], fondo: pedir[1], alto: pedir[2] })
+    if (!m.piezas.length) break
+  }
+  return m
+}
+
+function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   const errores: string[] = []
   const avisos: string[] = []
   const descartados: string[] = []
@@ -72,7 +90,7 @@ export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): Mue
   const saliente = acotar(o0.saliente, 0, 60)
   const cl = holgura / 2
   const r = o0.herramienta.tipo === "fresa" ? Math.max(0.5, o0.herramienta.diametro / 2) : 0
-  const vacio = (msg: string): MuebleTableros => ({ piezas: [], compras: [], medidas: { ancho: 0, fondo: 0, alto: 0 }, errores: [msg], avisos, descartados, uniones: 0, original: { ancho: 0, fondo: 0, alto: 0 } })
+  const vacio = (msg: string): MuebleTableros => ({ piezas: [], compras: [], medidas: { ancho: 0, fondo: 0, alto: 0 }, errores: [msg], avisos, descartados, uniones: 0, aTope: 0, original: { ancho: 0, fondo: 0, alto: 0 } })
 
   // ---- 1. limpiar la lectura ----
   const nombres = new Map<string, number>()
@@ -97,6 +115,32 @@ export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): Mue
       continue
     }
     cajas.push({ nombre, k, lo, hi })
+  }
+  // cruces: un tablero que atraviesa a otro perpendicular se parte en dos en sus
+  // caras (cada mitad se une con espiga); se parte el vertical, o el más chico
+  for (let vuelta = 0; vuelta < 40; vuelta++) {
+    let hecho = false
+    for (let i = 0; i < cajas.length && !hecho; i++)
+      for (let j = 0; j < cajas.length && !hecho; j++) {
+        const X = cajas[i], Y = cajas[j]
+        if (i === j || X.k === Y.k) continue
+        const A = Y.k, B = X.k
+        const C = (3 - A - B) as Eje
+        const t = Math.max(10, 0.75 * e)
+        const cruza = X.lo[A] < Y.lo[A] - t && X.hi[A] > Y.hi[A] + t && Y.lo[B] < X.lo[B] - t && Y.hi[B] > X.hi[B] + t && traslape(X.lo[C], X.hi[C], Y.lo[C], Y.hi[C]) >= 30
+        if (!cruza) continue
+        const area = (c: Caja) => [0, 1, 2].filter((k) => k !== c.k).reduce((a, k) => a * (c.hi[k] - c.lo[k]), 1)
+        // se parte X si es vertical y Y horizontal, o si es el más chico; si no, en otra vuelta se parte Y
+        if (!((X.k !== 2 && Y.k === 2) || (X.k !== 2 && Y.k !== 2 && area(X) <= area(Y)) || (X.k === 2 && Y.k === 2))) continue
+        const a: Caja = { nombre: `${X.nombre} (1)`, k: X.k, lo: [...X.lo], hi: [...X.hi] }
+        const b: Caja = { nombre: `${X.nombre} (2)`, k: X.k, lo: [...X.lo], hi: [...X.hi] }
+        a.hi[A] = Y.lo[A]
+        b.lo[A] = Y.hi[A]
+        cajas.splice(i, 1, a, b)
+        avisos.push(`${X.nombre} atravesaba a ${Y.nombre}: se partió en dos piezas que se unen a ${Y.nombre}.`)
+        hecho = true
+      }
+    if (!hecho) break
   }
   if (tableros.length > MAX_TABLEROS) avisos.push(`Sólo se usaron los primeros ${MAX_TABLEROS} tableros.`)
   if (cajas.length < 2) return vacio("Hacen falta al menos dos tableros que se toquen.")
@@ -228,8 +272,12 @@ export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): Mue
         return null
       }
       const r1q = recorte(Q, Pc, q), r1p = recorte(Pc, Q, p)
-      const usarQ = r1q && (!r1p || r1q.cuanto <= r1p.cuanto)
-      const [iq, ip, rr] = usarQ ? [q, p, r1q!] : r1p ? [p, q, r1p] : [-1, -1, null]
+      // sólo se recorta un encime chico (una punta que se mete); uno grande es un error de medidas
+      const maxRecorte = Math.max(tol, e) + 1
+      const okq = r1q && r1q.cuanto <= maxRecorte ? r1q : null
+      const okp = r1p && r1p.cuanto <= maxRecorte ? r1p : null
+      const usarQ = okq && (!okp || okq.cuanto <= okp.cuanto)
+      const [iq, ip, rr] = usarQ ? [q, p, okq!] : okp ? [p, q, okp] : [-1, -1, null]
       if (!rr) continue
       const X = fin[iq], Y = fin[ip]
       if (rr.s === 0) X.lo[rr.A] = Y.hi[rr.A]
@@ -373,8 +421,17 @@ export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): Mue
   if (descartados.length) avisos.push(`Se quitaron ${descartados.length} tablero${descartados.length > 1 ? "s" : ""}: ${descartados.join(", ")}.`)
   if (o0.herramienta.tipo === "fresa" && o0.herramienta.diametro > e * 0.7) avisos.push("La fresa es gruesa para ese tablero: los alivios de las esquinas se notarán.")
 
-  const lo = [0, 1, 2].map((i) => Math.min(...fin.map((c) => c.lo[i])))
-  const hi = [0, 1, 2].map((i) => Math.max(...fin.map((c) => c.hi[i])))
+  // medidas del mueble terminado: con las espigas que sobresalen
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity]
+  for (const pz of piezas)
+    for (const [u, v] of pz.contorno)
+      for (const w of [0, pz.grosor]) {
+        const q = aMueble(pz, u, v, w)
+        for (const i of [0, 1, 2]) {
+          lo[i] = Math.min(lo[i], q[i])
+          hi[i] = Math.max(hi[i], q[i])
+        }
+      }
   return {
     piezas,
     compras: [],
@@ -383,6 +440,7 @@ export function muebleDeTableros(tableros: Tablero[], o0: OpcionesTableros): Mue
     avisos,
     descartados,
     uniones: uniones.length,
+    aTope: alTope,
     original,
   }
 }
