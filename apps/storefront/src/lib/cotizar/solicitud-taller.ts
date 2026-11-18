@@ -54,7 +54,7 @@ export type SolicitudTallerInput = {
   unidad?: string
 }
 
-export type AfiliacionNueva = { numero: string; activar: string | null; cuenta_existe: boolean }
+export type AfiliacionNueva = { numero: string; activar: string | null }
 export type SolicitudTallerResultado =
   | { ok: true; folio?: string; afiliacion?: AfiliacionNueva | null }
   | { ok: false; mensaje: string }

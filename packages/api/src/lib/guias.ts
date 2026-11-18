@@ -31,6 +31,7 @@ import { SkydropxClient, leerEnvio, mejorTarifa, type Envio } from "../modules/s
 import { armarPaquete, tarifaRapida } from "../modules/skydropx/tarifas"
 import { EVIDENCIA_OBLIGATORIA, type Evidencia, buscarCP, leerEvidencia } from "./envios"
 import { folioSobrepeso, sobrepesosPendientes } from "./sobrepesos"
+import { esc } from "./licitacion"
 import { sendEmail } from "./resend"
 import { pushACliente } from "./push"
 
@@ -669,7 +670,7 @@ async function registrarEnPedido(c: MedusaContainer, orderId: string) {
       { whatsapp: false }
     )
     const rastreo = fila.rastreo_url
-      ? `<p style="margin-top:20px;"><a href="${fila.rastreo_url}" style="background:#C2560A;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Rastrear mi paquete</a></p>`
+      ? `<p style="margin-top:20px;"><a href="${esc(fila.rastreo_url)}" style="background:#C2560A;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Rastrear mi paquete</a></p>`
       : ""
     const { sent } = await sendEmail({
       to: pedido.email,
@@ -678,9 +679,9 @@ async function registrarEnPedido(c: MedusaContainer, orderId: string) {
 <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
 <div style="background:#142033;padding:20px 24px;color:#fff;font-size:18px;font-weight:600;">HETNA CNC</div>
 <div style="padding:24px;color:#1a1a1a;font-size:15px;line-height:1.5;">
-<h1 style="font-size:20px;margin:0 0 12px;">¡Tu pedido #${pedido.display_id} va en camino!</h1>
+<h1 style="font-size:20px;margin:0 0 12px;">¡Tu pedido #${esc(pedido.display_id)} va en camino!</h1>
 <p>El taller ya entregó tu paquete a la paquetería.</p>
-<p><b>Paquetería:</b> ${fila.paqueteria || "—"}<br><b>Número de guía:</b> ${fila.guia}</p>
+<p><b>Paquetería:</b> ${esc(fila.paqueteria || "—")}<br><b>Número de guía:</b> ${esc(fila.guia)}</p>
 ${rastreo}
 <p style="color:#666;font-size:13px;margin-top:20px;">También puedes ver el envío en Mis pedidos, en hetnacnc.com.</p>
 </div></div></div>`,

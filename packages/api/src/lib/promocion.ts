@@ -269,6 +269,6 @@ export async function rechazarVideo(knex: any, id: string, motivo: string) {
   if (!x) throw Object.assign(new Error("Video no encontrado."), { status: 404 })
   await knex(T_VIDEO).where({ id }).update({ estado: "rechazado", motivo: String(motivo || "").slice(0, 300) || null })
   if (x.email && motivo)
-    await sendEmail({ to: x.email, subject: "Sobre el video que subiste a HETNA", html: `<p>Esta vez no pudimos publicar tu video: ${String(motivo).replace(/</g, "&lt;")}</p><p>Puedes subir otro desde Promociona tu taller.</p>` }).catch(() => {})
+    await sendEmail({ to: x.email, subject: "Sobre el video que subiste a HETNA", html: `<p>Esta vez no pudimos publicar tu video: ${esc(String(motivo))}</p><p>Puedes subir otro desde Promociona tu taller.</p>` }).catch(() => {})
   return { ok: true }
 }

@@ -29,26 +29,31 @@ import { MercurModules } from "@mercurjs/types"
 import { correosDeLaCasa } from "./cuentas-casa"
 import { STORE_URL, VENDOR_URL, boton, esc, fila, marco } from "./licitacion"
 import { sendEmail } from "./resend"
+import { secretoLigas } from "./secreto-ligas"
 
 export const ALTA_DESDE = () => new Date(process.env.ALTA_TALLER_DESDE || "2026-11-02T00:00:00Z")
 const ADMIN = (process.env.ADMIN_PANEL_URL || `${STORE_URL}/dashboard`).replace(/\/$/, "")
 const VIGENCIA_CONFIRMAR_DIAS = 7
 const VIGENCIA_APROBAR_DIAS = 14
 
-const secreto = () => process.env.BAJA_SECRET || process.env.COOKIE_SECRET || process.env.JWT_SECRET || ""
 // La liga de confirmar firma también el correo al que se mandó: así se sabe qué
 // correo quedó confirmado (lib/cloud.ts importa con él los trabajos CAM).
-const firmar = (uso: "confirmar" | "aprobar", id: string, exp: number, correo?: string | null) =>
-  createHmac("sha256", secreto())
+// Sin secreto propio (lib/secreto-ligas.ts) no hay firma: "" y ninguna liga vale.
+const firmar = (uso: "confirmar" | "aprobar", id: string, exp: number, correo?: string | null) => {
+  const s = secretoLigas()
+  if (!s) return ""
+  return createHmac("sha256", s)
     .update(`taller-${uso}:${id}:${exp}${correo ? `:${correo.trim().toLowerCase()}` : ""}`)
     .digest("base64url")
     .slice(0, 32)
+}
 
 /** Liga de confirmar: "correo" si la firma incluye el correo actual del taller, "anterior" si es de antes. */
 export function firmaConfirmacion(id: string, exp: string, firma: string, correo: string | null | undefined): "correo" | "anterior" | null {
   const n = Number(exp)
-  if (!id || !secreto() || !Number.isFinite(n) || n * 1000 < Date.now()) return null
+  if (!id || !secretoLigas() || !Number.isFinite(n) || n * 1000 < Date.now()) return null
   const igual = (x: string) => {
+    if (!x) return false
     const a = Buffer.from(x)
     const b = Buffer.from(String(firma || ""))
     return a.length === b.length && timingSafeEqual(a, b)
@@ -59,16 +64,18 @@ export function firmaConfirmacion(id: string, exp: string, firma: string, correo
 
 export function firmaValida(uso: "confirmar" | "aprobar", id: string, exp: string, firma: string): boolean {
   const n = Number(exp)
-  if (!id || !secreto() || !Number.isFinite(n) || n * 1000 < Date.now()) return false
+  if (!id || !secretoLigas() || !Number.isFinite(n) || n * 1000 < Date.now()) return false
   const a = Buffer.from(firmar(uso, id, n))
   const b = Buffer.from(String(firma || ""))
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+/** "" si no hay secreto para firmar (no se manda una liga que no va a servir). */
 const liga = (uso: "confirmar" | "aprobar", id: string, dias: number, correo?: string | null) => {
   const exp = Math.floor(Date.now() / 1000) + dias * 86400
+  const t = firmar(uso, id, exp, correo)
   // Bajo /api/app/ de la tienda: nginx manda /api/v... a otro servicio.
-  return `${STORE_URL}/api/app/${uso}-taller?s=${encodeURIComponent(id)}&e=${exp}&t=${firmar(uso, id, exp, correo)}`
+  return t ? `${STORE_URL}/api/app/${uso}-taller?s=${encodeURIComponent(id)}&e=${exp}&t=${t}` : ""
 }
 
 export type TallerAlta = {
@@ -109,6 +116,8 @@ const puedeEnviar = (clave: string) => {
 
 export async function mandarConfirmacion(t: TallerAlta) {
   if (!t.email) return { sent: false, reason: "el taller no tiene correo" }
+  const ligaConfirmar = liga("confirmar", t.id, VIGENCIA_CONFIRMAR_DIAS, t.email)
+  if (!ligaConfirmar) return { sent: false, reason: "falta el secreto para firmar la liga (BAJA_SECRET)" }
   if (!puedeEnviar(`confirmar:${t.id}`)) return { sent: false, reason: "ya se mandó hace menos de un minuto" }
   return sendEmail({
     to: t.email,
@@ -116,7 +125,7 @@ export async function mandarConfirmacion(t: TallerAlta) {
     html: marco(
       "Confirma tu correo",
       `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Hola: recibimos el registro de <strong>${esc(t.name || "tu taller")}</strong> en HETNA CNC. Para seguir, confirma que este correo es tuyo:</p>` +
-        boton("Confirmar mi correo", liga("confirmar", t.id, VIGENCIA_CONFIRMAR_DIAS, t.email)) +
+        boton("Confirmar mi correo", ligaConfirmar) +
         `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Después revisamos tu taller y te avisamos por correo cuando puedas publicar (normalmente en menos de un día hábil). La liga sirve ${VIGENCIA_CONFIRMAR_DIAS} días. Si tú no te registraste, ignora este correo.</p>`
     ),
   })
@@ -131,6 +140,8 @@ const destinatariosAdmin = () =>
 export async function avisarAdmin(t: TallerAlta) {
   const para = destinatariosAdmin()
   if (!para.length) return
+  // Sin secreto no hay botón firmado: se aprueba desde el panel
+  const ligaAprobar = liga("aprobar", t.id, VIGENCIA_APROBAR_DIAS)
   const html = marco(
     "Taller nuevo por aprobar",
     `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">Un taller se registró y ya confirmó su correo. Mientras no lo apruebes, no puede publicar.</p>` +
@@ -140,8 +151,10 @@ export async function avisarAdmin(t: TallerAlta) {
       fila("Teléfono", t.phone || "") +
       fila("Registrado", t.created_at ? new Date(t.created_at).toLocaleString("es-MX", { timeZone: "America/Mexico_City" }) : "") +
       `</table>` +
-      boton("Revisar y aprobar", liga("aprobar", t.id, VIGENCIA_APROBAR_DIAS)) +
-      `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">El botón abre una página para confirmar; nada se aprueba solo con abrir el correo. También puedes hacerlo desde <a href="${esc(`${ADMIN}/stores`)}">el panel de administración</a>.</p>`
+      (ligaAprobar
+        ? boton("Revisar y aprobar", ligaAprobar) +
+          `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">El botón abre una página para confirmar; nada se aprueba solo con abrir el correo. También puedes hacerlo desde <a href="${esc(`${ADMIN}/stores`)}">el panel de administración</a>.</p>`
+        : boton("Aprobar en el panel", `${ADMIN}/stores`))
   )
   for (const to of para) {
     await sendEmail({ to, subject: `Taller nuevo por aprobar: ${t.name || t.email || t.id}`, html }).catch(() => undefined)

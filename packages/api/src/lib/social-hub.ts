@@ -20,7 +20,7 @@
 import { randomBytes } from "crypto"
 import Anthropic from "@anthropic-ai/sdk"
 
-import { STORE_URL, nuevoId } from "./licitacion"
+import { STORE_URL, esc, nuevoId } from "./licitacion"
 import { publicarThreads, threadsListo } from "./threads"
 import { borradorTikTok, tiktokConectado } from "./tiktok"
 import { pinterestConectado, publicarPinterest } from "./pinterest"
@@ -751,9 +751,9 @@ export async function revisarIntegraciones(knex: any, logger?: any) {
       subject: "Social Hub: revisa las conexiones con redes",
       html:
         `<p>Revisión semanal del Social Hub.</p>` +
-        (!conN8n ? `<p><b>No hay conexión con n8n</b>: ${String(prueba.error || "")}</p>` : "") +
+        (!conN8n ? `<p><b>No hay conexión con n8n</b>: ${esc(String(prueba.error || ""))}</p>` : "") +
         (Object.keys(porRed).length
-          ? `<p>Redes con errores esta semana:</p><ul>${Object.entries(porRed).map(([r, e]) => `<li>${REDES[r as Red]?.nombre || r}: ${String(e).slice(0, 200)}</li>`).join("")}</ul><p>Suele ser un permiso vencido: reconéctalo en n8n.</p>`
+          ? `<p>Redes con errores esta semana:</p><ul>${Object.entries(porRed).map(([r, e]) => `<li>${esc(REDES[r as Red]?.nombre || r)}: ${esc(String(e).slice(0, 200))}</li>`).join("")}</ul><p>Suele ser un permiso vencido: reconéctalo en n8n.</p>`
           : ""),
     }).catch(() => {})
   }
