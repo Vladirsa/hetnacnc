@@ -25,8 +25,8 @@ import path from "path"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, nuevoId } from "../licitacion"
-import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, iaSocial, leerConfig, zonaDe } from "../social-hub"
-import { aprendizaje, horaEn } from "../social-estadisticas"
+import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, horaEn, iaSocial, leerConfig, zonaDe } from "../social-hub"
+import { aprendizaje } from "../social-estadisticas"
 import { modeloIA } from "../ia-modelo"
 import { musicaAlAzar, subir } from "./index"
 import { vozPara } from "./promociones"
@@ -94,6 +94,16 @@ export const PERSONAJES = [
   { nombre: "Beto", rol: "aprendiz de 19 años, curioso y a veces impulsivo", visual: "young Mexican man around 19, black baseball cap backwards, orange safety vest over a white t-shirt, slim build" },
   { nombre: "Doña Mari", rol: "dueña del taller, 47 años, sabe de números y clientes", visual: "Mexican woman in her late 40s, shoulder-length wavy hair, denim shirt, reading glasses hanging from a cord, confident posture" },
 ]
+
+export const OFERTAS = [
+  "Publicar gratis tu pieza en hetnacnc.com/mx/cotizar: varios talleres de tu zona te cotizan y eliges; pago protegido",
+  "HETNA Cotizador para talleres: subes tu DXF y sale el precio con tus costos; empieza gratis (5 cotizaciones al mes) o prueba 14 días",
+  "Registro gratis para talleres CNC: recibe solicitudes de trabajo de tu zona sin comisión en las licitaciones",
+  "HETNA 3D Studio: de foto a modelo 3D y de SVG a STL para imprimir o tallar; el primero del mes es gratis",
+  "Tienda HETNA: diseños listos para cortar (DXF, STL) y productos de talleres mexicanos, con pago protegido",
+  "Calculadora CNC gratis: RPM, avance y potencia para router, láser, fibra, plasma e impresión 3D",
+]
+export const ofertaDelDia = (d = new Date()) => OFERTAS[Math.floor(Date.parse(diaMx(d)) / 86_400_000) % OFERTAS.length]
 
 const CAMARAS = ["slow push-in", "slow dolly left", "orbit around the subject", "low angle tilt up", "overhead top-down slow rotation", "close-up macro with shallow depth of field", "handheld follow shot", "rack focus from foreground to subject", "slow pull-back reveal", "side tracking shot"]
 
@@ -207,7 +217,7 @@ export async function guionista(knex: any, tipo: "educativo" | "novela") {
     "Escribe en español de México, natural y hablado. Duración total 25 a 40 segundos: de 5 a 7 escenas.\n\n" +
     "REGLA DE ORO: el primer segundo atrapa. La escena 1 abre con el gancho (sin saludos, sin «hola», sin «en este video»). Cada escena deja una pregunta abierta para que sigan viendo.\n" +
     "Enseña algo útil y verdadero de CNC, corte láser, router, plasma, impresión 3D, materiales, costos o cómo cobrar en un taller. Nunca inventes datos técnicos dudosos, precios, clientes ni testimonios.\n" +
-    "La última escena es la llamada a la acción. Al final puedes mencionar HETNA de forma natural (cotizar gratis en hetnacnc.com, el Cotizador para talleres).\n\n" +
+    "MARKETING: cada video vende UNA oferta concreta de HETNA que se conecte con el tema (la de hoy: " + ofertaDelDia() + "). Presenta el problema, enseña algo útil y muestra cómo esa oferta lo resuelve con su beneficio real. La última escena es la llamada a la acción a esa oferta (con hetnacnc.com). Nada de anuncio aburrido: que se sienta como un consejo de un experto que además tiene la herramienta.\n\n" +
     `Estructuras: ${FORMULAS.estructuras.join(" | ")}\nFórmulas de títulos: ${FORMULAS.titulares.join(" | ")}\nTipos de gancho: ${FORMULAS.ganchos.join(" | ")}\nIdeas de CTA: ${FORMULAS.cta.join(" | ")}\n\n` +
     "Tomas (campo toma, en inglés): describe una escena real y concreta del taller; cada escena con encuadre y acción DIFERENTES; nada de texto en pantalla. " +
     (tipo === "novela"
@@ -225,15 +235,23 @@ export async function guionista(knex: any, tipo: "educativo" | "novela") {
     ideas.referencias.length ? `Videos que le gustan al dueño (inspírate en su estilo y ritmo): ${ideas.referencias.join("; ")}` : "",
     "Escribe el guion de hoy.",
   ].filter(Boolean).join("\n")
-  const resp = await ia.beta.messages.create({
-    ...modeloIA(process.env.IA_MODELO_ESTUDIO || undefined),
-    max_tokens: 4000,
-    output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-    system: sistema,
-    messages: [{ role: "user", content: usuario }],
-  } as any)
-  if (resp.stop_reason === "refusal") throw new Error("La IA no quiso escribir este guion.")
-  const g = JSON.parse(resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
+  let g: any = null
+  for (let intento = 0; intento < 2 && !g; intento++) {
+    const resp = await ia.beta.messages.create({
+      ...modeloIA(process.env.IA_MODELO_ESTUDIO || undefined),
+      max_tokens: 10000,
+      output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
+      system: sistema,
+      messages: [{ role: "user", content: usuario }],
+    } as any)
+    if (resp.stop_reason === "refusal") throw new Error("La IA no quiso escribir este guion.")
+    try {
+      g = JSON.parse(resp.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
+    } catch {
+      g = null // salió cortado: se intenta una vez más
+    }
+  }
+  if (!g) throw new Error("La IA entregó el guion incompleto dos veces.")
   g.escenas = (g.escenas || []).filter((e: any) => e.narracion && e.toma).slice(0, 7)
   if (g.escenas.length < 3) throw new Error("El guion salió con muy pocas escenas.")
   return g
@@ -247,6 +265,27 @@ export function promptEscena(e: { toma: string; personajes?: string[] }, i: numb
     imagen: `${e.toma}. ${gente.map((p: any) => `${p.nombre}: ${p.visual}`).join(". ")}${gente.length ? ". " : ""}Setting: ${LUGAR}. No text, no letters, no logos.`,
     video: `${e.toma}. Camera: ${camara}. Natural realistic motion, cinematic lighting.`,
   }
+}
+
+// ---------------------------------------------------------------------
+// 3. Voz (MiniMax Speech en fal.ai: voz natural en español; ~0.05 USD por video)
+// ---------------------------------------------------------------------
+
+const MODELO_VOZ = () => process.env.ESTUDIO_MODELO_VOZ || "fal-ai/minimax/speech-2.8-hd"
+const VOZ_ID = () => process.env.ESTUDIO_VOZ || "Determined_Man"
+const USD_VOZ_MIL = 0.1
+
+export async function vozEscena(texto: string) {
+  const out = await fal(MODELO_VOZ(), {
+    prompt: texto,
+    voice_setting: { voice_id: VOZ_ID(), speed: 1.08, vol: 1, pitch: 0 },
+    language_boost: "Spanish",
+    output_format: "url",
+    audio_setting: { format: "mp3", sample_rate: 44100, bitrate: 128000, channel: 1 },
+  }, 4)
+  const url = out?.audio?.url
+  if (!url) throw new Error("La IA de voz no regresó audio")
+  return { url, segundos: Number(out.duration_ms || 0) / 1000, costo: (texto.length / 1000) * USD_VOZ_MIL }
 }
 
 // ---------------------------------------------------------------------
@@ -270,7 +309,7 @@ export function assEstudio(subs: { texto: string; inicio: number; fin: number }[
     `Dialogue: 1,${t(cta.inicio)},${t(cta.fin)},Gancho,,0,0,0,,{\\fad(200,0)}${limpio(cta.texto)}\\N{\\fs80\\c&H005FA2F2&}hetnacnc.com\n`
 }
 
-async function armar(clips: string[], durs: number[], voz: string | null, musica: string | null, ass: string, dir: string) {
+async function armar(clips: string[], durs: number[], voz: string | string[] | null, musica: string | null, ass: string, dir: string) {
   const fps = 30
   const entradas: string[] = []
   const filtros: string[] = []
@@ -288,19 +327,30 @@ async function armar(clips: string[], durs: number[], voz: string | null, musica
   const audio: string[] = []
   if (musica) {
     entradas.push("-stream_loop", "-1", "-i", musica)
-    audio.push(`[${idx}:a]atrim=0:${total.toFixed(2)},asetpts=PTS-STARTPTS,volume=${voz ? 0.16 : 0.6},afade=t=in:d=0.4,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5[mus]`)
+    audio.push(`[${idx}:a]atrim=0:${total.toFixed(2)},asetpts=PTS-STARTPTS,volume=${(Array.isArray(voz) ? voz.length : voz) ? 0.14 : 0.6},afade=t=in:d=0.4,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5[mus]`)
     idx++
   }
-  if (voz) {
-    entradas.push("-i", voz)
+  if (Array.isArray(voz) && voz.length) {
+    // Una pista por escena: cada una se rellena con silencio hasta lo que dura su escena y se pegan
+    const partes: string[] = []
+    voz.forEach((v, k) => {
+      entradas.push("-i", v)
+      audio.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=mono,apad,atrim=0:${durs[k].toFixed(2)},asetpts=PTS-STARTPTS[vz${k}]`)
+      partes.push(`[vz${k}]`)
+      idx++
+    })
+    audio.push(`${partes.join("")}concat=n=${partes.length}:v=0:a=1,volume=1.15[voz]`)
+  } else if (voz) {
+    entradas.push("-i", voz as string)
     audio.push(`[${idx}:a]apad,atrim=0:${total.toFixed(2)},volume=1.0[voz]`)
   }
   let mapa: string[] = []
-  if (musica && voz) {
+  const hayVoz = Array.isArray(voz) ? voz.length > 0 : !!voz
+  if (musica && hayVoz) {
     audio.push(`[mus][voz]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[musb]`, `[musb][voz]amix=inputs=2:duration=first:dropout_transition=0[aout]`)
     mapa = ["-map", "[aout]"]
   } else if (musica) mapa = ["-map", "[mus]"]
-  else if (voz) mapa = ["-map", "[voz]"]
+  else if (hayVoz) mapa = ["-map", "[voz]"]
   const salida = path.join(dir, "estudio.mp4")
   await correr([
     ...entradas, "-filter_complex", [...filtros, ...audio].join(";"), "-map", "[vout]", ...mapa,
@@ -348,6 +398,11 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
   if (VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo uno" }
   const hoy = diaMx()
   if (!o.forzar && (await knex(T_ESTUDIO).where({ dia: hoy }).whereIn("estado", ["listo", "haciendo"]).first())) return { hecho: false, motivo: "Ya se hizo el video de hoy" }
+  // Freno: si los dos últimos fallaron, el automático no gasta más hasta que alguien lo revise (el botón sí funciona)
+  if (!o.forzar) {
+    const ult = await knex(T_ESTUDIO).orderBy("created_at", "desc").limit(2).pluck("estado")
+    if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos videos fallaron: el automático se detuvo. Revisa el error y aprieta 'Hacer el de hoy'." }
+  }
   const tipo = o.tipo || (tocaNovela() ? "novela" : "educativo")
   const estimado = 7 * (USD_IMAGEN + 6 * USD_VIDEO_SEG)
   if ((await gastoDeHoy(knex)) + estimado > TOPE_USD()) return { hecho: false, motivo: `Se pasaría del tope diario de ${TOPE_USD()} USD (ESTUDIO_TOPE_USD)` }
@@ -363,8 +418,25 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
     logger?.info?.(`[estudio] guion (${tipo}): ${g.tema}`)
     // 3. Voz (una frase por escena; la duración de cada escena sale de la voz)
     const narraciones = g.escenas.map((e: any) => e.narracion)
-    const voz: any = await vozPara(`estudio-${id}`, narraciones.map((n: string) => paraVoz(n)), "mx", logger).catch(() => null)
-    const durs = narraciones.map((n: string, i: number) => Math.max(1.6, Math.min(7, voz?.duraciones?.[i] ? voz.duraciones[i] + 0.1 : n.split(/\s+/).length * 0.42)))
+    // Una voz por escena (así cada escena dura lo que dura su frase); si la IA de voz falla, la voz de la Fábrica
+    let vocesEscena: (string | null)[] = []
+    let durVoz: number[] = []
+    try {
+      const vs = await Promise.all(narraciones.map((n: string) => vozEscena(paraVoz(n))))
+      for (const [i, v] of vs.entries()) {
+        const archivo = path.join(dir, `v${i}.mp3`)
+        await bajar(v.url, archivo)
+        vocesEscena.push(archivo)
+        durVoz.push(v.segundos)
+        costo += v.costo
+      }
+    } catch (e) {
+      logger?.warn?.(`[estudio] voz IA: ${(e as Error).message}; uso la voz de la Fábrica`)
+      vocesEscena = []
+      durVoz = []
+    }
+    const voz: any = vocesEscena.length ? null : await vozPara(`estudio-${id}`, narraciones.map((n: string) => paraVoz(n)), "mx", logger).catch(() => null)
+    const durs = narraciones.map((n: string, i: number) => Math.max(1.6, Math.min(8, durVoz[i] ? durVoz[i] + 0.25 : voz?.duraciones?.[i] ? voz.duraciones[i] + 0.1 : n.split(/\s+/).length * 0.42)))
     // 4. Escenas: imagen de arranque + animación (en paralelo de 3 en 3)
     const ndia = Number(hoy.slice(-2))
     const escenas: any[] = []
@@ -395,8 +467,10 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
     const ultimo = t - durs[durs.length - 1]
     const ass = assEstudio(subs.slice(0, -1).concat([{ ...subs[subs.length - 1], fin: ultimo + 0.01 }]).filter((s) => s.fin > s.inicio), g.gancho_pantalla, { texto: g.cta, inicio: ultimo, fin: t })
     const musica = await musicaAlAzar(knex).catch(() => null)
-    const mp4 = await armar(clips, durs, voz?.url || null, musica, ass, dir)
+    const mp4 = await armar(clips, durs, vocesEscena.length ? vocesEscena : voz?.url || null, musica, ass, dir)
     const videoUrl = await subir(scope, `estudio-${id}.mp4`, "video/mp4", mp4)
+    // El video ya existe: se guarda antes de publicar (si algo falla después, no se pierde lo pagado)
+    await knex(T_ESTUDIO).where({ id }).update({ video_url: videoUrl, costo_usd: costo, updated_at: new Date() })
     // 6. Publicación (título SEO, descripción, hashtags, mejor hora)
     const c = await cuandoPublicar(knex)
     const etiqueta = tipo === "novela" ? "\n\n(Historia ficticia: personajes y situaciones inventados para enseñar.)" : ""
@@ -418,6 +492,10 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
     return { hecho: true, id, tipo, tema: g.tema, costo_usd: +costo.toFixed(2), post, hora: c.hora }
   } catch (e) {
     await knex(T_ESTUDIO).where({ id }).update({ estado: "error", costo_usd: costo, error: (e as Error).message.slice(0, 500), updated_at: new Date() })
+    try {
+      const { mandarPrivado } = require("../social-telegram")
+      await mandarPrivado(knex, { texto: `⚠️ Estudio: el video de hoy falló (${costo.toFixed(2)} USD gastados): ${(e as Error).message.slice(0, 300)}` })
+    } catch {}
     logger?.warn?.(`[estudio] ${(e as Error).message}`)
     return { hecho: false, motivo: (e as Error).message }
   } finally {

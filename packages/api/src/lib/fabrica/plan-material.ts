@@ -162,7 +162,7 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
   const cfgFab = await leerConfig(knex)
   const animado = !!cfgFab.video_animado && hfDisponible()
   const imagenNueva = cfgFab.imagen_nueva !== false
-  const filas = await knex(`${T_PLAN} as h`)
+  let filas = await knex(`${T_PLAN} as h`)
     .join(`${T_POST} as p`, "p.id", "h.post_id")
     .whereNull("h.material")
     .whereIn("p.estado", ["borrador", "programada"])
@@ -177,6 +177,15 @@ async function hacerMaterial(scope: any, logger?: any, limite = 6) {
     .limit(limite)
     .select("h.id as plan_id", "h.semana", "h.fecha", "h.formato", "h.publico", "h.red", "h.pilar", "h.mercado", "p.id", "p.texto_base", "p.textos", "p.notas", "p.url_destino", "p.titulo", "p.ab", "p.programada_para", "p.emocion")
   if (!filas.length) return { hechos: 0 }
+  // Con el Estudio diario prendido, los videos los hace él (con IA de video y voz profesional):
+  // los reels del plan con el estilo viejo (todos se veían iguales) ya no se hacen.
+  const estudioActivo = !!(await require("./estudio").leerEstudioCfg(knex).catch(() => ({}))).activo
+  if (estudioActivo) {
+    const viejos = filas.filter((f: any) => FORMATOS_VIDEO.includes(f.formato))
+    for (const f of viejos) await knex(T_POST).where({ id: f.id }).update({ estado: "descartada", notas: "Los videos ahora los hace el Estudio diario.", updated_at: new Date() })
+    filas = filas.filter((f: any) => !FORMATOS_VIDEO.includes(f.formato))
+    if (!filas.length) return { hechos: 0 }
+  }
   const hayVideo = ffmpegDisponible()
   const musica = hayVideo ? await musicaAlAzar(knex) : null
 
