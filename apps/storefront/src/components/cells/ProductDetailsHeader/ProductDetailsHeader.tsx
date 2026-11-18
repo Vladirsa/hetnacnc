@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
+import AvisoExistencia from "@/components/hetna/AvisoExistencia"
 import { BotonFavorito } from "@/components/hetna/Favoritos"
 import { DescargarGratis } from "@/components/hetna/descargas/DescargarGratis"
 import { ProductVariants } from "@/components/molecules/ProductVariants/ProductVariants"
@@ -333,6 +334,9 @@ export const ProductDetailsHeader = ({
               ? "Ya tienes en el carrito todo lo que hay"
               : "Agotado por ahora"}
           </p>
+        )}
+        {fisico && hayOferta && disponibles === 0 && enCarrito === 0 && (
+          <AvisoExistencia productId={product.id} variantId={variantId || null} />
         )}
       </div>
 
