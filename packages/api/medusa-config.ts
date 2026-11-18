@@ -1,4 +1,5 @@
 import { loadEnv } from '@medusajs/framework/utils'
+import { randomBytes } from 'crypto'
 import { withMercur } from '@mercurjs/core'
 import fs from 'fs'
 import path from 'path'
@@ -86,22 +87,28 @@ const envios = process.env.SKYDROPX_CLIENT_ID && process.env.SKYDROPX_CLIENT_SEC
 // valor de ejemplo y el del .env nunca se usó (lo que ya está en el entorno del
 // proceso le gana al .env).
 //
-// Por eso en producción NUNCA se arranca con un secreto débil: si falta, es el
-// de ejemplo o es corto, se usa uno al azar para este arranque. El sitio sigue
-// funcionando y nadie puede fabricar sesiones; el costo es que las sesiones se
-// cierran en cada reinicio hasta que se ponga uno propio (openssl rand -hex 64).
+// Por eso fuera de desarrollo NUNCA se arranca con un secreto débil: si falta, es
+// el de ejemplo o mide menos de 32 letras, se usa uno al azar para este arranque.
+// El sitio sigue funcionando y nadie puede fabricar sesiones; el costo es que las
+// sesiones se cierran en cada reinicio hasta que se ponga uno propio
+// (openssl rand -hex 64). Vale para un solo proceso del API, que es como corre.
 const secretosDeArranque: Record<string, string> = {}
 function secretoSesion(nombre: "JWT_SECRET" | "COOKIE_SECRET"): string {
   const v = process.env[nombre]
   if (v && v !== "supersecret" && v.length >= 32) return v
-  if (process.env.NODE_ENV !== "production") return v || "supersecret"
-  secretosDeArranque[nombre] ??= require("crypto").randomBytes(48).toString("hex")
-  console.error(
-    `[seguridad] ${nombre} falta, es "supersecret" o es muy corto. Se usa uno al azar para este arranque (las sesiones se cierran en cada reinicio). ` +
-      "Revisa con ./scripts/revisar-seguridad.sh de dónde sale el valor: pm2 y .env.production le ganan al .env."
-  )
-  // Lo que lee el resto del código (firmas de ligas de correo, etc.) también usa el bueno
-  process.env[nombre] = secretosDeArranque[nombre]
+  // Sólo en la computadora de quien programa se acepta el valor de ejemplo
+  if (["development", "test"].includes(process.env.NODE_ENV || "development")) return v || "supersecret"
+  if (!secretosDeArranque[nombre]) {
+    secretosDeArranque[nombre] = randomBytes(48).toString("hex")
+    const motivo = !v ? "falta" : v === "supersecret" ? 'es el de ejemplo ("supersecret")' : `mide ${v.length} letras y el mínimo es 32`
+    console.error(
+      `[seguridad] ${nombre} ${motivo}. Se usa uno al azar para este arranque: las sesiones se cierran en cada reinicio y las ligas de correo no se firman. ` +
+        "Pon uno propio (openssl rand -hex 64) y revisa con ./scripts/revisar-seguridad.sh de dónde sale el valor: pm2 y .env.production le ganan al .env."
+    )
+  }
+  // No se escribe en process.env a propósito: las ligas de correo y de archivos
+  // (lib/secreto-ligas.ts, lib/archivo-acceso.ts) siguen negándose a firmar con
+  // un secreto débil, en vez de emitir ligas que morirían en el siguiente reinicio.
   return secretosDeArranque[nombre]
 }
 module.exports = withMercur({
