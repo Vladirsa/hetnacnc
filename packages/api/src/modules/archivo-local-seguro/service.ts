@@ -31,7 +31,8 @@ const EXT_PROHIBIDAS = new Set([
  * también .xsd, .kml, .gpx, .rss y cualquier otro "+xml", que el navegador
  * pinta como documento y ejecuta sus <script>.
  */
-const TIPO_ACTIVO = /html|xml|javascript|ecmascript|svg|shockwave|x-component|wasm|xsl/i
+// "xml" sólo como tipo completo o como +xml: los .xlsx/.docx (…openxmlformats…) son descargas normales
+const TIPO_ACTIVO = /html|\+xml$|^(text|application)\/xml|javascript|ecmascript|svg|shockwave|x-component|wasm|xsl/i
 
 /** Tipos declarados que se sirven como página aunque la extensión sea otra. */
 const MIME_PROHIBIDO = /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|text\/xml|application\/xml|application\/javascript|text\/javascript|application\/x-msdownload|application\/x-httpd-php)/i

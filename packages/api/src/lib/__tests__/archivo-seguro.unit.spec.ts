@@ -61,12 +61,12 @@ describe("revisión de archivos subidos (lib/archivo-seguro)", () => {
   })
 
   it("la lista incluye accesos directos, imágenes de disco, páginas y macros", () => {
-    for (const e of ["lnk", "iso", "img", "vhd", "vhdx", "chm", "url", "html", "htm", "hta", "svg", "docm", "xlsm", "pptm", "jar", "msi", "scr", "ps1", "vbs", "js", "wsf", "reg"]) {
+    for (const e of ["lnk", "iso", "img", "vhd", "vhdx", "chm", "url", "html", "htm", "hta", "docm", "xlsm", "pptm", "jar", "msi", "scr", "ps1", "vbs", "js", "wsf", "reg"]) {
       expect(PELIGROSAS.has(e)).toBe(true)
     }
   })
 
-  it.each(["factura.pdf.lnk", "disco.iso", "respaldo.IMG", "disco.vhdx", "ayuda.chm", "liga.url", "ver.html", "index.HTM", "logo.svg", "cotizacion.docm", "lista.xlsm", "presenta.pptm", "instalar.exe", "x.js"])(
+  it.each(["factura.pdf.lnk", "disco.iso", "respaldo.IMG", "disco.vhdx", "ayuda.chm", "liga.url", "ver.html", "index.HTM", "cotizacion.docm", "lista.xlsm", "presenta.pptm", "instalar.exe", "x.js"])(
     "rechaza un ZIP que trae %s",
     async (malo) => {
       const r = await revisarArchivo(zipCon(["pieza.dxf", `carpeta/${malo}`]), "proyecto.zip")

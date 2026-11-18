@@ -36,7 +36,7 @@ describe("Archivos locales con filtro", () => {
       expect(motivoArchivoProhibido({ filename: n, content: b64("x") })).toBeTruthy()
     }
     // Lo que se sirve como descarga o texto sí pasa
-    for (const n of ["x.html.", "notas.txt", "programa.nc", "post.cps", "sinextension"]) {
+    for (const n of ["x.html.", "notas.txt", "programa.nc", "post.cps", "sinextension", "lista.xlsx", "carta.docx", "plano.dxf"]) {
       expect(motivoArchivoProhibido({ filename: n, content: b64("x") })).toBeNull()
     }
   })

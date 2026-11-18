@@ -40,7 +40,7 @@ o=$(curl -s -m 20 -o /dev/null -D - -H "Origin: https://sitio-ajeno.example" "$H
 [ -z "$o" ] && bien "sin Access-Control-Allow-Origin para un origen ajeno" || falla "responde $o"
 
 echo "== Límite de intentos de inicio de sesión (40 intentos con contraseña mala)"
-n429=$(seq 1 40 | xargs -P 10 -I{} curl -s -m 20 -o /dev/null -w '%{http_code}\n' -X POST "$H/auth/user/emailpass" \
+n429=$(seq 1 40 | xargs -P 10 -I{} curl -s -m 20 -o /dev/null -w '%{http_code}\n' -X POST "$H/auth/customer/emailpass" \
   -H 'content-type: application/json' -d '{"email":"prueba-seguridad@hetnacnc.invalid","password":"mala-{}"}' | grep -c 429)
 [ "$n429" -gt 0 ] && bien "bloqueó $n429 de 40 intentos (429)" || falla "ningún 429: falta infra/nginx/hetna-limites.conf"
 

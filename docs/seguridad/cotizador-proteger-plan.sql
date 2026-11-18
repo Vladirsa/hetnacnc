@@ -52,16 +52,20 @@ drop trigger if exists tr_proteger_plan on public.negocios;
 create trigger tr_proteger_plan before update on public.negocios
   for each row execute function public.proteger_plan_negocio();
 
--- 2) Llaves viejas de facturación que quedaron en una tabla que la app lee.
---    Hoy las llaves viven en negocios_facturapi (sólo servidor). Si la columna
---    no existe en tu base, esta parte no hace nada.
-do $$
-begin
-  if exists (select 1 from information_schema.columns
-             where table_schema = 'public' and table_name = 'configuracion_empresa' and column_name = 'factura_api_key') then
-    execute 'update public.configuracion_empresa set factura_api_key = null where factura_api_key is not null';
-  end if;
-end $$;
+-- 2) Llaves viejas de facturación en una tabla que la app lee (OPCIONAL).
+--    Hoy las llaves viven en negocios_facturapi (sólo servidor), pero puede
+--    quedar una copia vieja en configuracion_empresa.factura_api_key. Borrarla
+--    no tiene vuelta atrás, así que NO se hace sola. Primero mira cuántas hay:
+--
+--      select count(*) from public.configuracion_empresa where factura_api_key is not null;
+--
+--    Si salen, confirma que todos tus talleres ya usan la versión actual de la
+--    app (la que factura a través de hetnacnc.com) y entonces corre:
+--
+--      create table if not exists public._respaldo_factura_api_key as
+--        select negocio_id, factura_api_key from public.configuracion_empresa where factura_api_key is not null;
+--      alter table public._respaldo_factura_api_key enable row level security;
+--      update public.configuracion_empresa set factura_api_key = null where factura_api_key is not null;
 
 -- 3) REVISIÓN (sólo lee). Corre cada consulta y revisa el resultado:
 

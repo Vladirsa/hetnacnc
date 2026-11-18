@@ -34,13 +34,13 @@ const textoInicio = (b: Buffer, n = 4096) => DE(b, 0, n).toString("latin1")
 // Extensiones que nunca deben venir dentro de un comprimido de planos:
 // programas y scripts y, desde la auditoría del 18 nov 2026, también lo que
 // sirve para colar uno: accesos directos (lnk, url), imágenes de disco (iso,
-// img, vhd, vhdx), ayuda compilada (chm), páginas (html, htm, svg) y documentos
+// img, vhd, vhdx), ayuda compilada (chm), páginas (html, htm) y documentos
 // de Office con macros (docm, xlsm, pptm). No se puede contar con que ClamAV
 // esté instalado para revisarlos.
 export const PELIGROSAS = new Set([
   "exe", "dll", "com", "bat", "cmd", "scr", "pif", "msi", "msp", "vbs", "vbe", "js", "jse", "wsf", "wsh",
   "ps1", "psm1", "hta", "cpl", "jar", "apk", "sh", "reg", "scf", "gadget", "dmg", "pkg",
-  "lnk", "url", "iso", "img", "vhd", "vhdx", "chm", "html", "htm", "svg", "docm", "xlsm", "pptm",
+  "lnk", "url", "iso", "img", "vhd", "vhdx", "chm", "html", "htm", "docm", "xlsm", "pptm",
 ])
 
 /** Ejecutables, scripts y páginas web: se rechazan sea cual sea la extensión. */

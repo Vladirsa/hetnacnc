@@ -50,6 +50,7 @@ export function tipoDeLogin(metodo: string, ruta: string): string | null {
 }
 
 let ultimaLimpieza = 0
+let ultimoError = 0
 async function anotar(req: any, fila: Record<string, unknown>) {
   try {
     const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
@@ -59,8 +60,12 @@ async function anotar(req: any, fila: Record<string, unknown>) {
       ultimaLimpieza = Date.now()
       await knex(T_BITACORA).where("creado", "<", new Date(Date.now() - DIAS * 86_400_000)).del()
     }
-  } catch {
-    /* la bitácora nunca tumba una petición */
+  } catch (e) {
+    // La bitácora nunca tumba una petición, pero una bitácora rota se avisa (una vez por hora)
+    if (Date.now() - ultimoError > 3_600_000) {
+      ultimoError = Date.now()
+      console.error(`[bitacora-seguridad] no se pudo anotar: ${(e as Error)?.message || e}`)
+    }
   }
 }
 
