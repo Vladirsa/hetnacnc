@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 export const SellerAvatar = ({
   photo = "",

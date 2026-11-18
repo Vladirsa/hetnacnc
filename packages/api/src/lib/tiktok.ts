@@ -16,6 +16,7 @@
 // Llaves en el .env del backend: TIKTOK_CLIENT_KEY y TIKTOK_CLIENT_SECRET.
 import { randomBytes } from "crypto"
 
+import { cifrarCampos, descifrar } from "./cifrado-llaves"
 import { STORE_URL } from "./licitacion"
 import { T_CONFIG_S, asegurarSocial } from "./social-hub"
 
@@ -32,8 +33,12 @@ async function leer(knex: any) {
   await asegurarSocial(knex)
   return (await knex(T_CONFIG_S).where({ clave: "tiktok" }).first())?.valor || {}
 }
+// Los tokens se guardan cifrados (lib/cifrado-llaves.ts) y se descifran sólo
+// donde se usan; leer() los deja como están para que el "...v" de cada
+// guardado no los descifre ni los cifre dos veces.
+const CAMPOS_SECRETOS = ["access", "refresh"]
 async function guardar(knex: any, v: any) {
-  await knex.raw(`insert into ?? (clave, valor) values ('tiktok', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(v)])
+  await knex.raw(`insert into ?? (clave, valor) values ('tiktok', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(cifrarCampos(v, CAMPOS_SECRETOS))])
 }
 
 /** Liga para entrar con la cuenta de TikTok de HETNA (con "state" para que nadie más pueda conectar la suya). */
@@ -84,9 +89,9 @@ export async function conectarConCodigo(knex: any, code: string, state: string) 
 export async function tokenTikTok(knex: any) {
   const v = await leer(knex)
   if (!v.access) return ""
-  if (Date.now() < Number(v.access_hasta || 0)) return v.access
+  if (Date.now() < Number(v.access_hasta || 0)) return descifrar(v.access)
   if (!v.refresh || !tiktokConfigurado()) return ""
-  const d = await pedirToken({ grant_type: "refresh_token", refresh_token: v.refresh })
+  const d = await pedirToken({ grant_type: "refresh_token", refresh_token: descifrar(v.refresh) })
   const nuevo = guardarTokens(v, d)
   await guardar(knex, nuevo)
   return nuevo.access

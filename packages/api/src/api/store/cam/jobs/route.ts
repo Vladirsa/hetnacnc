@@ -7,6 +7,7 @@ import type {
 import { MedusaError } from "@medusajs/framework/utils"
 import { CAM_MODULE } from "../../../../modules/cam"
 import { computeTier, serviceFromStrategy } from "../../../../modules/cam/catalog"
+import { contarTriangulos, statsVerificadas } from "../../../../modules/cam/contar-triangulos"
 import type CamModuleService from "../../../../modules/cam/service"
 import { createCamJobWorkflow } from "../../../../workflows/cam/create-cam-job"
 import { archivosDe } from "../../../cam-multipart"
@@ -30,7 +31,9 @@ export async function POST(
   const p = req.validatedBody.payload
   const strategy = p.config.strategy as { kind?: string } | undefined
   const service = p.service === "post" ? "post" : serviceFromStrategy(p.strategy_kind ?? strategy?.kind)
-  const stats = p.stats ?? null
+  // Los triángulos se cuentan aquí con el archivo real: el nivel de precio no
+  // puede depender sólo de lo que diga el navegador (contar-triangulos.ts)
+  const stats = statsVerificadas(p.stats ?? null, contarTriangulos(model.buffer, model.originalname || ""))
   const customerId = (req as unknown as AuthenticatedMedusaRequest).auth_context?.actor_id || null
 
   const { result } = await createCamJobWorkflow(req.scope).run({

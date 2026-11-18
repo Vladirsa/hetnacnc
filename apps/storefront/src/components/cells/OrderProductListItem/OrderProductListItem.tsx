@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 
-import Image from 'next/image';
+import Image from "@/lib/imagenes/Imagen"
 
 import { Divider } from '@/components/atoms/Divider/Divider'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';

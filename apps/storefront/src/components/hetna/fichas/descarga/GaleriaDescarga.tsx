@@ -4,7 +4,7 @@
 // producto trae sus medidas, un esquema dibujado con ellas (rotulado como
 // esquema: no se hace pasar por foto ni por el archivo). Sello "Descarga
 // inmediata" siempre visible.
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { useState } from "react"
 
 export type VistaGaleria =

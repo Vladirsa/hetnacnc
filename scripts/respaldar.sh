@@ -7,6 +7,13 @@
 #   - /root/hetna-privado: documentos de verificación de talleres (INE, fotos).
 #   - Los .env de la API y de la tienda (llaves): sin ellos, restaurar el
 #     servidor implicaría volver a sacar todas las llaves.
+#   - Desde el 18 nov 2026 también:
+#       · packages/api/static: fotos y archivos que suben talleres y panel
+#         (viven en el disco del servidor, no en la base);
+#       · las bases y volúmenes de n8n y de WhatsApp (Evolution): flujos,
+#         credenciales cifradas de n8n y la sesión de WhatsApp.
+#   - Al terminar bien deja /root/respaldos/ultimo-ok: el Centro de control
+#     avisa si tiene más de 26 horas (el respaldo dejó de correr).
 #
 # Dónde queda:
 #   - Copia local en /root/respaldos (últimos 14 días).
@@ -90,20 +97,65 @@ for var in $(compgen -v | grep '^RESPALDO_DB_' || true); do
   rm -f /tmp/respaldo-$nombre.err
 done
 
+# --- 1c. Bases de n8n y de WhatsApp (Evolution), en contenedores Docker ---
+# Se buscan por la etiqueta de docker compose (infra/n8n/docker-compose.yml).
+for servicio in n8n-postgres evolution-postgres; do
+  cont="$(docker ps --filter "label=com.docker.compose.service=$servicio" --format '{{.Names}}' | head -1)"
+  [ -n "$cont" ] || continue
+  destino="$LOCAL/$servicio-$HOY.sql.gz"
+  if docker exec "$cont" sh -c 'pg_dumpall -U "${POSTGRES_USER:-postgres}"' 2>/tmp/respaldo-$servicio.err | gzip > "$destino.tmp" \
+     && [ "$(stat -c %s "$destino.tmp")" -gt 2000 ]; then
+    mv "$destino.tmp" "$destino"
+    echo "    $servicio: $(du -h "$destino" | cut -f1)"
+  else
+    rm -f "$destino.tmp"
+    fallas_externas=$((fallas_externas + 1))
+    echo "⚠ No se pudo respaldar $servicio: $(head -c 300 /tmp/respaldo-$servicio.err 2>/dev/null)"
+  fi
+  rm -f /tmp/respaldo-$servicio.err
+done
+
 # Copias locales viejas
-find "$LOCAL" \( -name 'db-*.sql.gz' -o -name 'supabase-*.sql.gz' \) -mtime +"$DIAS_LOCAL" -delete
+find "$LOCAL" \( -name 'db-*.sql.gz' -o -name 'supabase-*.sql.gz' -o -name '*-postgres-*.sql.gz' \) -mtime +"$DIAS_LOCAL" -delete
 
 # --- 2. Copia cifrada en Backblaze B2 ---
 RUTAS=("$LOCAL")
-for r in /root/hetna-privado /root/hetnacnc/packages/api/.env /root/hetnacnc/apps/storefront/.env /root/hetnacnc/apps/storefront/.env.local; do
+# Los archivos subidos viven en la carpeta "static" de donde arranca el API
+# (packages/api o .medusa/server, según cómo lo arranque pm2) o en FILE_UPLOAD_DIR.
+# readlink -f: si es un enlace, se respalda la carpeta real.
+for r in /root/hetnacnc/packages/api/static /root/hetnacnc/packages/api/.medusa/server/static ${FILE_UPLOAD_DIR:-}; do
+  [ -e "$r" ] && RUTAS+=("$(readlink -f "$r")")
+done
+for r in /root/hetna-privado \
+         /root/hetnacnc/packages/api/.env /root/hetnacnc/packages/api/.env.production \
+         /root/hetnacnc/apps/storefront/.env /root/hetnacnc/apps/storefront/.env.local /root/hetnacnc/apps/storefront/.env.production; do
   [ -e "$r" ] && RUTAS+=("$r")
 done
+# Volúmenes de n8n (trae la llave con la que n8n cifra sus credenciales) y de
+# la sesión de WhatsApp: sin ellos habría que reconectar todo a mano
+for vol in $(docker volume ls --format '{{.Name}}' | grep -E '(^|_)(n8n_data|evolution_data)$' || true); do
+  dir="$(docker volume inspect "$vol" --format '{{.Mountpoint}}' 2>/dev/null || true)"
+  [ -n "$dir" ] && [ -d "$dir" ] && RUTAS+=("$dir")
+done
 
-restic backup --tag diario --host srv2007412 "${RUTAS[@]}"
+# restic sale con 3 cuando el respaldo quedó hecho pero no pudo leer algún
+# archivo (p. ej. uno que cambió mientras se copiaba en la sesión de WhatsApp):
+# eso es un aviso, no un respaldo perdido.
+rc=0
+restic backup --tag diario --host srv2007412 "${RUTAS[@]}" || rc=$?
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
+  echo "✗ restic no pudo hacer el respaldo (código $rc)"
+  exit 1
+fi
+[ "$rc" -eq 3 ] && echo "⚠ restic no pudo leer algunos archivos; el resto del respaldo quedó en B2"
 restic forget --tag diario --host srv2007412 --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
 
+# Marca para el Centro de control: el respaldo de la tienda sí quedó en B2
+date '+%s %F %T' > "$LOCAL/ultimo-ok"
+chmod 644 "$LOCAL/ultimo-ok"
+
 if [ "$fallas_externas" -gt 0 ]; then
-  echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) de Supabase fallaron"
+  echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) extra (Supabase, n8n o WhatsApp) fallaron"
   exit 2
 fi
 echo "✓ $(date '+%F %T') respaldo completo"

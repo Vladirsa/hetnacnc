@@ -1,5 +1,5 @@
 import { SingleProductImage } from "@/types/product"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 export const GalleryCarouselItem = ({
   image,

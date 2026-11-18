@@ -2,7 +2,7 @@
 // Una categoría sin productos muestra "Próximamente" con Avísame (nunca 404);
 // una que no existe manda a /mx/tienda.
 import type { Metadata } from "next"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { redirect } from "next/navigation"
 
 import "@/components/hetna/tienda/fuentes-tienda.css"

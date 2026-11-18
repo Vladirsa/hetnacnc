@@ -1,5 +1,5 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { Brand } from "@/types/brands"
 
 interface BrandCardProps {
