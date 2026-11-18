@@ -20,7 +20,7 @@ export const paymentInfoMap: Record<
   pp_mercadopago_mercadopago: {
     title: "Mercado Pago",
     descripcion: "Tarjeta, saldo, meses sin intereses o efectivo.",
-    icon: <LogoMercadoPago />,
+    icon: <LogoMercadoPago grande />,
   },
   "pp_card_stripe-connect": {
     title: "Tarjeta de crédito o débito",
@@ -42,8 +42,8 @@ export const paymentInfoMap: Record<
   },
   pp_paypal_paypal: {
     title: "PayPal",
-    descripcion: "Pagas con tu cuenta de PayPal.",
-    icon: <LogoPaypal />,
+    descripcion: "Con tu cuenta PayPal o las tarjetas que tengas en ella.",
+    icon: <LogoPaypal grande />,
   },
   pp_system_default: {
     title: "Pago manual",
@@ -51,4 +51,3 @@ export const paymentInfoMap: Record<
     icon: <Cash />,
   },
 }
-
