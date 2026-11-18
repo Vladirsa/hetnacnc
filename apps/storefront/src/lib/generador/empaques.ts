@@ -20,6 +20,7 @@ export type Gen =
   | "bandeja" | "tapaFondo" | "pillow" | "bolsaAsa" | "bolsaPlana" | "prisma" | "cilindro"
   | "tetra" | "maceta" | "sobreBolsillo" | "sobrePuntas" | "tarjeta" | "cajaVentana" | "cajon" | "bisagra" | "inserto"
   | "envio" | "leche" | "exhibidor" | "cartas" | "rebanada" | "explosiva"
+  | "redonda" | "corazon" | "estrella"
 export type Forma = string // id de la plantilla en FORMAS
 
 export type Datos = {
@@ -794,6 +795,165 @@ function explosiva(d: Datos): Resultado {
   }
 }
 
+// ---------- Cajas de contorno (redonda, ovalada, corazón, estrella) ----------
+// Base con la figura y pestañas alrededor, una tira de pared del largo del
+// perímetro con pestaña de pegado, y la tapa igual pero un poco más grande.
+// Las curvas se aproximan con tramos rectos: cada tramo es un doblez de la base.
+
+const areaFirmada = (c: P[]) => {
+  let s = 0
+  for (let i = 0, j = c.length - 1; i < c.length; j = i++) s += (c[j][0] - c[i][0]) * (c[j][1] + c[i][1])
+  return s / 2
+}
+// a la medida largo × ancho, centrada en el origen y antihoraria
+function ajustarFigura(pts: P[], L: number, W: number): P[] {
+  const xs = pts.map((p) => p[0])
+  const ys = pts.map((p) => p[1])
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+  const q = pts.map(([x, y]) => [((x - (x0 + x1) / 2) * L) / (x1 - x0 || 1), ((y - (y0 + y1) / 2) * W) / (y1 - y0 || 1)] as P)
+  // al voltear se conserva el punto 0 (la tira de pared empieza ahí)
+  return areaFirmada(q) < 0 ? [q[0], ...q.slice(1).reverse()] : q
+}
+// reparte n puntos a la misma distancia sobre un contorno cerrado (empieza en el punto 0)
+function remuestrear(pts: P[], n: number): P[] {
+  const c = [...pts, pts[0]]
+  const acum = [0]
+  for (let i = 1; i < c.length; i++) acum.push(acum[i - 1] + Math.hypot(c[i][0] - c[i - 1][0], c[i][1] - c[i - 1][1]))
+  const L = acum[acum.length - 1]
+  const out: P[] = []
+  let i = 1
+  for (let k = 0; k < n; k++) {
+    const s = (L * k) / n
+    while (i < acum.length - 1 && acum[i] < s) i++
+    const t = (s - acum[i - 1]) / (acum[i] - acum[i - 1] || 1)
+    out.push([c[i - 1][0] + (c[i][0] - c[i - 1][0]) * t, c[i - 1][1] + (c[i][1] - c[i - 1][1]) * t])
+  }
+  return out
+}
+const perimetro = (c: P[]) => c.reduce((s, p, i) => s + Math.hypot(c[(i + 1) % c.length][0] - p[0], c[(i + 1) % c.length][1] - p[1]), 0)
+
+type Figura = (L: number, W: number) => P[]
+const figuraElipse: Figura = (L, W) => {
+  // tramos del mismo largo (en una elipse, repartir por ángulo deja tramos cortos en las puntas)
+  const fino = ajustarFigura(Array.from({ length: 720 }, (_, j) => [Math.cos((2 * PI * j) / 720), Math.sin((2 * PI * j) / 720)] as P), L, W)
+  const n = Math.max(20, Math.min(60, Math.round(perimetro(fino) / 14)))
+  return remuestrear(fino, n)
+}
+const figuraCorazon: Figura = (L, W) => {
+  const fino = Array.from({ length: 720 }, (_, j) => {
+    const t = (2 * PI * j) / 720
+    return [16 * Math.sin(t) ** 3, 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)] as P
+  })
+  const base = ajustarFigura(fino, L, W)
+  let n = Math.max(24, Math.min(60, Math.round(perimetro(base) / 14)))
+  n += n % 2 // par: así la punta de abajo también es vértice
+  return remuestrear(base, n)
+}
+const figuraEstrella: Figura = (L, W) =>
+  ajustarFigura(
+    Array.from({ length: 10 }, (_, j) => {
+      const a = PI / 2 + (PI * j) / 5
+      const r = j % 2 ? 0.45 : 1
+      return [r * Math.cos(a), r * Math.sin(a)] as P
+    }),
+    L,
+    W,
+  )
+
+// segmentos de un contorno que se cruzan (sin contar los vecinos)
+function primerCruce(c: P[]): [number, number] | null {
+  const o = (p: P, q: P, r: P) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+  const n = c.length
+  for (let i = 0; i < n; i++)
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue
+      const [a, b, d, e] = [c[i], c[(i + 1) % n], c[j], c[(j + 1) % n]]
+      if (o(a, b, d) * o(a, b, e) < 0 && o(d, e, a) * o(d, e, b) < 0) return [i, j]
+    }
+  return null
+}
+
+// Base (o tapa) con pestañas hacia afuera en cada tramo. Quita las pestañas
+// que chocan entre sí (en las partes cóncavas, como el centro del corazón).
+function baseConPestanas(fig: P[], prof: number, nombre: string): Plantilla {
+  const n = fig.length
+  const con = fig.map(() => true)
+  const armar = () => {
+    const pts: P[] = []
+    const dueno: number[] = []
+    for (let i = 0; i < n; i++) {
+      const [p, q] = [fig[i], fig[(i + 1) % n]]
+      pts.push(p)
+      dueno.push(i)
+      if (con[i]) {
+        const largo = Math.hypot(q[0] - p[0], q[1] - p[1])
+        for (const r of pestana(p, q, Math.min(prof, largo * 0.8), Math.min(prof * 0.9, largo * 0.3))) {
+          pts.push(r)
+          dueno.push(i)
+        }
+      }
+    }
+    return { pts, dueno }
+  }
+  for (let vuelta = 0; vuelta < n; vuelta++) {
+    const { pts, dueno } = armar()
+    const x = primerCruce(pts)
+    if (!x) break
+    const cand = [dueno[x[0]], dueno[x[1]]].filter((i) => con[i])
+    if (!cand.length) break
+    con[cand[vuelta % cand.length]] = false
+  }
+  const { pts } = armar()
+  const pliegues: [P, P][] = []
+  for (let i = 0; i < n; i++) if (con[i]) pliegues.push([fig[i], fig[(i + 1) % n]])
+  return { nombre, cortes: [pts], pliegues }
+}
+
+// Tira de pared: largo del perímetro, con pestaña de pegado al final y
+// dobleces en las esquinas de la figura (índices de vértice; la tira empieza
+// en el vértice 0, así que ese no lleva doblez)
+function tiraPared(fig: P[], alto: number, pegado: number, nombre: string, esquinas: number[]): Plantilla {
+  const n = fig.length
+  const P_ = perimetro(fig)
+  const g = Math.min(pegado, alto * 0.8)
+  const b = Math.min(g, alto * 0.25)
+  const pts: P[] = [[0, 0], [P_, 0], [P_ + g, b], [P_ + g, alto - b], [P_, alto], [0, alto]]
+  const pliegues: [P, P][] = [[[P_, 0], [P_, alto]]]
+  let s = 0
+  for (let i = 0; i < n; i++) {
+    const [p, q] = [fig[i], fig[(i + 1) % n]]
+    if (i > 0 && esquinas.includes(i)) pliegues.push([[s, 0], [s, alto]])
+    s += Math.hypot(q[0] - p[0], q[1] - p[1])
+  }
+  return { nombre, cortes: [pts], pliegues }
+}
+
+function cajaContorno(d: Datos, figura: Figura, nombre: string, esquinas: (n: number) => number[] = () => []): Resultado {
+  const { largo: L, ancho: W, alto: H } = d
+  const hol = Math.max(0, d.holgura) + 0.5
+  const tapaAlto = Math.min(d.altoTapa, H)
+  const prof = Math.min(d.pestana, Math.min(L, W) / 6, H * 0.6)
+  const fig = figura(L, W)
+  const figTapa = figura(L + 2 * hol, W + 2 * hol)
+  return {
+    piezas: [
+      baseConPestanas(fig, prof, `Base de ${nombre}`),
+      tiraPared(fig, H, d.pestana, "Pared", esquinas(fig.length)),
+      baseConPestanas(figTapa, Math.min(prof, tapaAlto * 0.6), "Tapa"),
+      tiraPared(figTapa, tapaAlto, d.pestana, "Pared de la tapa", esquinas(figTapa.length)),
+    ],
+    errores: [],
+    avisos: [
+      "Dobla las pestañas de la base hacia arriba y pega la pared por fuera de ellas, siguiendo el contorno. La tapa se arma igual.",
+      `La pared mide ${Math.round(perimetro(fig))} mm de largo; si no cabe en tu hoja, elige una hoja más grande o imprime en mosaico.`,
+    ],
+  }
+}
+const redonda = (d: Datos) => cajaContorno(d, figuraElipse, "caja redonda")
+// corazón: la tira empieza en el centro de arriba (vértice 0); la punta de abajo es el vértice n/2
+const corazon = (d: Datos) => cajaContorno(d, figuraCorazon, "corazón", (n) => [n / 2])
+const estrella = (d: Datos) => cajaContorno(d, figuraEstrella, "estrella", (n) => Array.from({ length: n }, (_, i) => i))
+
 // quita puntos repetidos consecutivos y puntos en línea recta
 function limpiar(pts: P[]): P[] {
   let p = pts.map(([x, y]) => [r3(x), r3(y)] as P)
@@ -863,6 +1023,10 @@ export const FORMAS: FormaDef[] = [
   { id: "explosiva", nombre: "Caja sorpresa (explosiva)", grupo: "Cajas", gen: "explosiva", campos: ["largo", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 100, alto: 100, altoTapa: 30, holgura: 1, pestana: 12 }, detalle: "Al quitar la tapa se abren las paredes" },
   { id: "exhibidor", nombre: "Exhibidor de mostrador", grupo: "Cajas", gen: "exhibidor", campos: ["largo", "ancho", "alto", "altoTapa", "pestana"], inicio: { largo: 220, ancho: 160, alto: 220, altoTapa: 50, pestana: 20 }, detalle: "Charola con respaldo alto para punto de venta" },
   { id: "rebanada", nombre: "Rebanada de pastel", grupo: "Cajas", gen: "rebanada", campos: ["largo", "alto", "lados", "pestana"], inicio: { largo: 110, alto: 70, lados: 8, pestana: 10 }, detalle: "Varias forman un pastel completo" },
+  { id: "redonda", nombre: "Caja redonda con tapa", grupo: "Cajas", gen: "redonda", campos: ["largo", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 100, ancho: 100, alto: 60, altoTapa: 25, holgura: 1, pestana: 10 }, detalle: "Sombrerera para regalos, velas o dulces" },
+  { id: "ovalada", nombre: "Caja ovalada con tapa", grupo: "Cajas", gen: "redonda", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 140, ancho: 90, alto: 50, altoTapa: 20, holgura: 1, pestana: 10 } },
+  { id: "corazon", nombre: "Caja corazón con tapa", grupo: "Cajas", gen: "corazon", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 130, ancho: 120, alto: 50, altoTapa: 20, holgura: 1, pestana: 10 }, detalle: "Para chocolates o San Valentín" },
+  { id: "estrella", nombre: "Caja estrella con tapa", grupo: "Cajas", gen: "estrella", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 130, ancho: 124, alto: 45, altoTapa: 20, holgura: 1, pestana: 10 } },
   { id: "poster", nombre: "Tubo para póster", grupo: "Cajas", gen: "cilindro", campos: ["ancho", "alto", "pestana"], inicio: { ancho: 60, alto: 450, pestana: 15 } },
   // Bolsas y sobres
   { id: "bolsa", nombre: "Bolsa con fuelle", grupo: "Bolsas y sobres", gen: "bolsa", campos: C.caja, inicio: { largo: 160, ancho: 80, alto: 220, pestana: 15 } },
@@ -914,6 +1078,9 @@ const ETIQUETAS_GEN: Partial<Record<Gen, Partial<Record<keyof Datos, string>>>> 
   exhibidor: { largo: "Ancho del frente", ancho: "Fondo", alto: "Alto del respaldo", altoTapa: "Alto del frente" },
   rebanada: { largo: "Largo de la rebanada (radio)", lados: "Rebanadas por pastel" },
   explosiva: { largo: "Lado de la base", alto: "Alto de las paredes" },
+  redonda: { largo: "Diámetro (o largo)", ancho: "Ancho", alto: "Alto de la pared" },
+  corazon: { alto: "Alto de la pared" },
+  estrella: { alto: "Alto de la pared" },
 }
 
 // Etiqueta de cada campo según la plantilla
@@ -928,6 +1095,7 @@ const GENERADORES: Record<Gen, (d: Datos) => Resultado> = {
   bandeja, tapaFondo, pillow, bolsaAsa, bolsaPlana, prisma, cilindro,
   tetra, maceta, sobreBolsillo, sobrePuntas, tarjeta, cajaVentana, cajon, bisagra, inserto,
   envio, leche, exhibidor, cartas, rebanada, explosiva,
+  redonda, corazon, estrella,
 }
 
 export function generarEmpaque(forma: Forma, d: Datos): Resultado {
@@ -941,6 +1109,8 @@ export function generarEmpaque(forma: Forma, d: Datos): Resultado {
   }
   if (def.gen === "cono" && !(d.diametroSup >= 0)) return { piezas: [], errores: ["El diámetro de arriba debe ser 0 o mayor."], avisos: [] }
   if (!(d.holgura >= 0)) d = { ...d, holgura: 0 }
+  // caja redonda: sólo se pide el diámetro
+  if (def.gen === "redonda" && !def.campos.includes("ancho")) d = { ...d, ancho: d.largo }
   return GENERADORES[def.gen](d)
 }
 
