@@ -40,6 +40,7 @@ export type Aviso = {
   detalle?: string
   url?: string
   cuando?: string
+  clave?: string // identidad estable para no repetir el aviso urgente (lib/control-aviso-clave.ts)
 }
 
 const pagada = (o) =>
@@ -251,6 +252,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         detalle: `Taller: ${taller(o.id)} · ${pesos(o.total)} · ${(o.items || []).map((i) => i.title).slice(0, 2).join(", ")}`,
         url: pedidoUrl(o.id),
         cuando: o.created_at,
+        clave: `pedido:${o.id}`, // el título cambia con las horas ("26 h" → "2 días")
       })
     }
   }
@@ -341,6 +343,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
         detalle: r.customer_note ? `"${String(r.customer_note).slice(0, 160)}"` : "Sin comentario",
         url: `${ADMIN}/reviews`,
         cuando: r.created_at,
+        clave: `resena:${r.id}`, // cada reseña mala avisa una vez (aunque compartan la misma liga)
       })
     }
   }, undefined, logger)

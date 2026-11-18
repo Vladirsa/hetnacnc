@@ -12,7 +12,7 @@ import path from "path"
 import Anthropic from "@anthropic-ai/sdk"
 
 import { nuevoId } from "./licitacion"
-import { T_CONFIG_S, asegurarSocial, iaSocial } from "./social-hub"
+import { T_CONFIG_S, asegurarSocial, iaSocial, motivoSinIa } from "./social-hub"
 import { ffmpegBin } from "./fabrica/video"
 import { modeloIA } from "./ia-modelo"
 
@@ -81,7 +81,7 @@ export async function analizarReferencia(knex: any, id: string, logger?: any) {
   const r = await knex(T_REF).where({ id }).first()
   if (!r) return null
   if (!iaSocial()) {
-    await knex(T_REF).where({ id }).update({ estado: "error", error: "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor." })
+    await knex(T_REF).where({ id }).update({ estado: "error", error: motivoSinIa() })
     return null
   }
   try {
@@ -151,7 +151,7 @@ export async function generarGuia(knex: any, logger?: any) {
   await asegurar(knex)
   const refs = await knex(T_REF).where({ estado: "listo" }).orderBy("created_at", "desc").limit(40)
   if (!refs.length) throw Object.assign(new Error("Primero agrega referencias y espera a que se analicen."), { status: 400 })
-  if (!iaSocial()) throw Object.assign(new Error("Falta la llave de IA (ANTHROPIC_API_KEY)."), { status: 400 })
+  if (!iaSocial()) throw Object.assign(new Error(motivoSinIa()), { status: 400 })
   const resumen = refs.map((r: any, i: number) => `#${i + 1} (${r.tipo})${r.nota ? ` nota del dueño: ${r.nota}` : ""}\n${JSON.stringify(r.analisis)}`).join("\n\n")
   const resp = await cliente().beta.messages.create({
     ...modeloIA(),

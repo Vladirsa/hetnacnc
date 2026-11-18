@@ -1,4 +1,4 @@
-// GET  /admin/hetna-social/comentarios?estado= -> comentarios de Instagram y Facebook con su respuesta propuesta
+// GET  /admin/hetna-social/comentarios?estado=propuesta,nuevo -> comentarios de Instagram y Facebook con su respuesta propuesta
 // POST /admin/hetna-social/comentarios { id, accion: "enviar" | "ignorar" | "guardar", texto? }
 //      { accion: "revisar" } -> lee ahora los comentarios nuevos
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
