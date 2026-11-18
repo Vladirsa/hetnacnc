@@ -14,6 +14,8 @@ import {
   formaPorId,
   generarEmpaque,
   plantillaDXF,
+  type ModoDoblez,
+  type OpcionesDoblez,
   plantillaSVG,
 } from "@/lib/generador/empaques"
 import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
@@ -81,6 +83,13 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
   </button>
 )
 
+// Puntos de partida para perforar dobleces según el material (corte / puente, mm)
+const PERFORADOS = [
+  { nombre: "Cartulina", corte: 4, puente: 2 },
+  { nombre: "Cartón gris", corte: 6, puente: 3 },
+  { nombre: "Corrugado", corte: 10, puente: 4 },
+]
+
 export function GeneradorEmpaques() {
   const { locale } = useParams<{ locale: string }>()
   const [avisoCotizar, setAvisoCotizar] = useState("")
@@ -89,6 +98,9 @@ export function GeneradorEmpaques() {
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [valores, setValores] = useState<Record<Forma, Valores>>(INICIO)
   const [conBase, setConBase] = useState(true)
+  const [modoDoblez, setModoDoblez] = useState<ModoDoblez>("marcar")
+  const [corteDoblez, setCorteDoblez] = useState("6")
+  const [puenteDoblez, setPuenteDoblez] = useState("3")
 
   // /disenar/plantillas-empaque?modelo=pizza abre esa plantilla
   useEffect(() => {
@@ -131,7 +143,14 @@ export function GeneradorEmpaques() {
   }, [forma, v, k, conBase])
 
   const listo = r.piezas.length > 0
-  const vista = useMemo(() => (listo ? plantillaSVG(r.piezas, "vista") : ""), [r, listo])
+  const dob: OpcionesDoblez = useMemo(
+    () => ({ modo: modoDoblez, corte: Math.max(0.5, numero(corteDoblez) || 0), puente: Math.max(0.3, numero(puenteDoblez) || 0) }),
+    [modoDoblez, corteDoblez, puenteDoblez],
+  )
+  // Para cotizar o mandar a un taller sólo van líneas que se cortan: el
+  // perforado sí (es corte), el marcado no.
+  const dobCotizar: OpcionesDoblez = dob.modo === "perforado" ? dob : { ...dob, modo: "ninguno" }
+  const vista = useMemo(() => (listo ? plantillaSVG(r.piezas, "vista", dob) : ""), [r, listo, dob])
   const hoja = listo ? acomodarPlantillas(r.piezas) : null
   const SIN_UNIDAD = ["lados", "filas", "columnas"]
   const nombreArchivo = `${forma}-hetna-${campos.map((c) => (SIN_UNIDAD.includes(c) ? v[c] : r1(numero(v[c]) * k))).join("x")}`
@@ -160,8 +179,8 @@ export function GeneradorEmpaques() {
     if (!w) return
     w.document.write(
       `<!doctype html><title>${nombreArchivo}</title><style>@page{margin:5mm}body{margin:0}</style>` +
-        `<p style="font:12px sans-serif">Imprime al 100% (sin "ajustar a la página"). Rojo: corte · Azul punteado: doblez.</p>` +
-        plantillaSVG(r.piezas, "corte")
+        `<p style="font:12px sans-serif">Imprime al 100% (sin "ajustar a la página"). ${dob.modo === "perforado" ? "Negro: corte · Magenta: perforado para doblar." : "Negro: corte · Azul punteado: doblez."}</p>` +
+        plantillaSVG(r.piezas, "imprimir", dob)
     )
     w.document.close()
     w.focus()
@@ -265,6 +284,48 @@ export function GeneradorEmpaques() {
               {ETIQUETAS[forma].conBase || "Con base"} (pestañas y tapa redonda)
             </label>
           )}
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-semibold text-[#1B1B18]">Líneas de doblez</span>
+            <div className="flex flex-wrap gap-2">
+              <Opcion activa={modoDoblez === "marcar"} onClick={() => setModoDoblez("marcar")}>Marcar</Opcion>
+              <Opcion activa={modoDoblez === "perforado"} onClick={() => setModoDoblez("perforado")}>Perforado (cartón)</Opcion>
+              <Opcion activa={modoDoblez === "ninguno"} onClick={() => setModoDoblez("ninguno")}>Sin líneas</Opcion>
+            </div>
+            <p className="m-0 text-[12.5px] text-[#6B6A63]">
+              {modoDoblez === "marcar" && "Línea continua para marcar con plotter o grabar con láser a baja potencia."}
+              {modoDoblez === "perforado" && "La máquina corta el doblez por distancias: un tramo de corte y un puente sin cortar, repetidos. Cada doblez empieza y termina con puente para que la solapa no se desprenda."}
+              {modoDoblez === "ninguno" && "Sólo el contorno de corte; los dobleces los haces a mano."}
+            </p>
+            {modoDoblez === "perforado" && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {([["Corte", corteDoblez, setCorteDoblez], ["Puente (sin cortar)", puenteDoblez, setPuenteDoblez]] as const).map(([t, val, set]) => (
+                    <label key={t} className="flex flex-col gap-1">
+                      <span className="text-[13px] font-semibold text-[#1B1B18]">{t}</span>
+                      <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
+                        <input type="text" inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
+                        <span className="pr-3 text-[13px] text-[#9A978C]">mm</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {PERFORADOS.map((pr) => (
+                    <button
+                      key={pr.nombre}
+                      type="button"
+                      onClick={() => { setCorteDoblez(String(pr.corte)); setPuenteDoblez(String(pr.puente)) }}
+                      className={`rounded-full border px-2.5 py-1 text-[12px] font-semibold ${numero(corteDoblez) === pr.corte && numero(puenteDoblez) === pr.puente ? "border-[#C2560A] bg-[#FDEEE1] text-[#8A3D06]" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#C2560A]"}`}
+                    >
+                      {pr.nombre} · {pr.corte}/{pr.puente}
+                    </button>
+                  ))}
+                </div>
+                <p className="m-0 text-[12px] text-[#9A978C]">Son valores para empezar. Haz una prueba en tu cartón: si dobla duro, alarga el corte; si se rompe, alarga el puente.</p>
+              </>
+            )}
+          </div>
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
@@ -283,7 +344,8 @@ export function GeneradorEmpaques() {
                 />
                 <div className="mt-3 flex flex-wrap gap-4 text-[12.5px] text-[#6B6A63]">
                   <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> Corte</span>
-                  <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#1F5FBF]" /> Doblez</span>
+                  {dob.modo === "marcar" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#1F5FBF]" /> Doblez (marcar)</span>}
+                  {dob.modo === "perforado" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#B0127A]" /> Doblez perforado ({r1(dob.corte)} mm corte / {r1(dob.puente)} mm puente)</span>}
                   {hoja && <span>Hoja necesaria: {r1(hoja.ancho)} × {r1(hoja.alto)} mm</span>}
                 </div>
               </div>
@@ -296,7 +358,7 @@ export function GeneradorEmpaques() {
 
               <button
                 type="button"
-                onClick={() => { if (!mandarACotizador(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas.map((p) => ({ ...p, pliegues: [] }))), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                onClick={() => { if (!mandarACotizador(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas, dobCotizar), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
                 className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
@@ -304,7 +366,7 @@ export function GeneradorEmpaques() {
               </button>
               <button
                 type="button"
-                onClick={() => { if (!mandarAFabricar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas.map((p) => ({ ...p, pliegues: [] }))), locale, { pieza: "Plantilla de empaque", proceso: "Corte láser" })) setAvisoCotizar("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.") }}
+                onClick={() => { if (!mandarAFabricar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas, dobCotizar), locale, { pieza: "Plantilla de empaque", proceso: "Corte láser" })) setAvisoCotizar("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.") }}
                 className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
@@ -314,14 +376,14 @@ export function GeneradorEmpaques() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
-                  onClick={() => descargar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas), "application/dxf")}
+                  onClick={() => descargar(`${nombreArchivo}.dxf`, plantillaDXF(r.piezas, dob), "application/dxf")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
                   Descargar DXF
                 </button>
                 <button
                   type="button"
-                  onClick={() => descargar(`${nombreArchivo}.svg`, plantillaSVG(r.piezas, "corte"), "image/svg+xml")}
+                  onClick={() => descargar(`${nombreArchivo}.svg`, plantillaSVG(r.piezas, "corte", dob), "image/svg+xml")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
                   Descargar SVG
@@ -343,7 +405,11 @@ export function GeneradorEmpaques() {
                 </a>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                En el DXF, la capa CORTE es la línea de corte y la capa DOBLEZ se marca o se graba a baja potencia. En plotter (Cricut, Silhouette) usa DOBLEZ como línea de marcado.
+                {dob.modo === "perforado"
+                  ? "En el DXF y el SVG, la capa CORTE (rojo) es el contorno y la capa PERFORADO (magenta) son los cortes cortos de los dobleces. Las dos se cortan; puedes darle a PERFORADO otra velocidad o potencia."
+                  : dob.modo === "marcar"
+                    ? "En el DXF y el SVG, la capa CORTE (rojo) es la línea de corte y la capa DOBLEZ (azul) se marca o se graba a baja potencia. En plotter (Cricut, Silhouette) usa DOBLEZ como línea de marcado."
+                    : "El archivo sólo trae la capa CORTE (rojo), sin líneas de doblez."}
               </p>
             </>
           )}

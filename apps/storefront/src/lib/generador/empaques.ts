@@ -1,7 +1,8 @@
 // Plantillas de empaque (troqueles) para imprimir, cortar con plotter o láser.
 // Todo en milímetros, calculado en el navegador.
 //  - Líneas de CORTE: contornos cerrados.
-//  - Líneas de DOBLEZ: segmentos sueltos (marcar o grabar a baja potencia).
+//  - Líneas de DOBLEZ: segmentos sueltos. Salen marcadas (capa DOBLEZ) o
+//    perforadas para cartón (capa PERFORADO, cortes con puentes).
 
 export type P = [number, number]
 export type Plantilla = {
@@ -786,7 +787,124 @@ export function acomodarPlantillas(piezas: Plantilla[], sep = 8) {
 
 const f = (x: number) => String(r3(x))
 
-export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" = "corte") {
+// Cómo salen las líneas de doblez en el archivo:
+//  - marcar: línea continua en la capa DOBLEZ (marcador del plotter o láser a baja potencia)
+//  - perforado: cortes cortos separados por puentes, en la capa PERFORADO. Es lo
+//    que se usa en cartón: la máquina corta "por distancias" y el cartón dobla
+//    limpio por la línea sin separarse.
+//  - ninguno: sin líneas de doblez.
+export type ModoDoblez = "marcar" | "perforado" | "ninguno"
+export type OpcionesDoblez = { modo: ModoDoblez; corte: number; puente: number }
+export const DOBLEZ_MARCAR: OpcionesDoblez = { modo: "marcar", corte: 6, puente: 3 }
+
+// Parte una polilínea en tramos de corte separados por puentes. Siempre deja
+// un puente completo (o más) en cada punta: si un corte tocara el contorno, la
+// solapa se desprendería. El sobrante se reparte igual en las dos puntas.
+export function perforar(pts: P[], corte: number, puente: number): P[][] {
+  if (pts.length < 2 || !(corte > 0) || !(puente >= 0)) return []
+  const acum = [0]
+  for (let i = 1; i < pts.length; i++) acum.push(acum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+  const L = acum[acum.length - 1]
+  const n = Math.floor((L - puente) / (corte + puente) + 1e-9)
+  if (n < 1) return []
+  const inicio = puente + (L - n * corte - (n + 1) * puente) / 2
+  const punto = (s: number): P => {
+    let i = 1
+    while (i < acum.length - 1 && acum[i] < s) i++
+    const t = (s - acum[i - 1]) / (acum[i] - acum[i - 1] || 1)
+    return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]
+  }
+  const tramos: P[][] = []
+  for (let k = 0; k < n; k++) {
+    const a = inicio + k * (corte + puente)
+    const b = a + corte
+    const tramo: P[] = [punto(a)]
+    for (let i = 1; i < acum.length - 1; i++) if (acum[i] > a && acum[i] < b) tramo.push(pts[i])
+    tramo.push(punto(b))
+    tramos.push(tramo)
+  }
+  return tramos
+}
+
+// Los dobleces curvos (caja almohada) vienen en muchos segmentos cortos. Se
+// juntan en una sola polilínea cuando un segmento sigue al anterior con un
+// giro suave; si no, cada segmento sería más corto que un corte y quedaría sin
+// perforar. Nunca se juntan en un punto que toca una línea de corte: ahí un
+// tramo de perforado cruzaría el contorno y la solapa se desprendería.
+const distSeg = (q: P, a: P, b: P) => {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(q[0] - a[0] - t * dx, q[1] - a[1] - t * dy)
+}
+const tocaCorte = (q: P, cortes: P[][]) =>
+  cortes.some((c) => c.some((a, i) => distSeg(q, a, c[(i + 1) % c.length]) < 0.05))
+
+export function cadenasDoblez(pliegues: [P, P][], cortes: P[][] = []): P[][] {
+  const cadenas: P[][] = []
+  for (const [a, b] of pliegues) {
+    const c = cadenas[cadenas.length - 1]
+    if (c) {
+      const u = c[c.length - 1]
+      const v = c[c.length - 2]
+      const giro = Math.abs(Math.atan2(b[1] - a[1], b[0] - a[0]) - Math.atan2(u[1] - v[1], u[0] - v[0]))
+      const g = Math.min(giro, 2 * Math.PI - giro)
+      if (Math.hypot(a[0] - u[0], a[1] - u[1]) < 0.01 && g > 0.005 && g < 0.6 && !tocaCorte(u, cortes)) {
+        c.push(b)
+        continue
+      }
+    }
+    cadenas.push([a, b])
+  }
+  return cadenas
+}
+
+// Parte un doblez en cada punto donde lo toca un corte (las muescas en V de
+// las pestañas de un tubo llegan hasta la línea de doblez). Cada tramo
+// resultante lleva su propio puente en las puntas.
+export function partirEnCortes(c: P[], cortes: P[][]): P[][] {
+  const acum = [0]
+  for (let i = 1; i < c.length; i++) acum.push(acum[i - 1] + Math.hypot(c[i][0] - c[i - 1][0], c[i][1] - c[i - 1][1]))
+  const L = acum[acum.length - 1]
+  const marcas: number[] = []
+  for (const cc of cortes)
+    for (const q of cc)
+      for (let i = 1; i < c.length; i++) {
+        const [a, b] = [c[i - 1], c[i]]
+        if (distSeg(q, a, b) < 0.05) {
+          const s = acum[i - 1] + Math.hypot(q[0] - a[0], q[1] - a[1])
+          if (s > 0.05 && s < L - 0.05) marcas.push(s)
+          break
+        }
+      }
+  if (!marcas.length) return [c]
+  marcas.sort((x, y) => x - y)
+  const punto = (s: number): P => {
+    let i = 1
+    while (i < acum.length - 1 && acum[i] < s) i++
+    const t = (s - acum[i - 1]) / (acum[i] - acum[i - 1] || 1)
+    return [c[i - 1][0] + (c[i][0] - c[i - 1][0]) * t, c[i - 1][1] + (c[i][1] - c[i - 1][1]) * t]
+  }
+  const salida: P[][] = []
+  const lim = [0, ...marcas, L]
+  for (let k = 1; k < lim.length; k++) {
+    const [a, b] = [lim[k - 1], lim[k]]
+    if (b - a < 0.05) continue
+    const tramo: P[] = [punto(a)]
+    for (let i = 1; i < c.length - 1; i++) if (acum[i] > a && acum[i] < b) tramo.push(c[i])
+    tramo.push(punto(b))
+    salida.push(tramo)
+  }
+  return salida
+}
+
+const perforaciones = (p: Plantilla, d: OpcionesDoblez) =>
+  cadenasDoblez(p.pliegues, p.cortes).flatMap((c) => partirEnCortes(c, p.cortes)).flatMap((c) => perforar(c, d.corte, d.puente))
+
+// modo "vista": para la pantalla · "corte": para la máquina (sin estilos de
+// línea punteada: Cricut, LightBurn y casi todos los programas los ignoran y
+// cortarían la línea completa) · "imprimir": papel, doblez punteado.
+export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" | "imprimir" = "corte", dob: OpcionesDoblez = DOBLEZ_MARCAR) {
   const { pos, ancho, alto } = acomodarPlantillas(piezas)
   const m = 3
   const W = ancho + 2 * m
@@ -796,34 +914,49 @@ export function plantillaSVG(piezas: Plantilla[], modo: "corte" | "vista" = "cor
   const Y = (y: number, i: number) => f(H - m - (y + pos[i].dy)) // Y hacia abajo
   const corte = vista
     ? `fill="#FDEEE1" fill-opacity="0.55" stroke="#C2560A" stroke-width="1.4" vector-effect="non-scaling-stroke"`
-    : `fill="none" stroke="#FF0000" stroke-width="0.1"`
+    : modo === "imprimir"
+      ? `fill="none" stroke="#000000" stroke-width="0.3"`
+      : `fill="none" stroke="#FF0000" stroke-width="0.1"`
   const doblez = vista
     ? `stroke="#1F5FBF" stroke-width="1.1" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"`
-    : `stroke="#0000FF" stroke-width="0.1" stroke-dasharray="3 2"`
-  const cuerpo = piezas
-    .map((p, i) => {
-      const c = p.cortes
-        .map((pts) => `<path d="${pts.map(([x, y], j) => `${j ? "L" : "M"}${X(x, i)} ${Y(y, i)}`).join(" ")} Z" ${corte}/>`)
-        .join("")
-      const d = p.pliegues.map(([a, b]) => `<line x1="${X(a[0], i)}" y1="${Y(a[1], i)}" x2="${X(b[0], i)}" y2="${Y(b[1], i)}" ${doblez}/>`).join("")
-      return c + d
-    })
-    .join("\n")
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="0 0 ${f(W)} ${f(H)}">\n${cuerpo}\n</svg>\n`
+    : modo === "imprimir"
+      ? `stroke="#0000FF" stroke-width="0.3" stroke-dasharray="3 2"`
+      : `stroke="#0000FF" stroke-width="0.1"`
+  const perforado = vista
+    ? `fill="none" stroke="#B0127A" stroke-width="1.4" stroke-linecap="butt" vector-effect="non-scaling-stroke"`
+    : `fill="none" stroke="#FF00FF" stroke-width="${modo === "imprimir" ? 0.3 : 0.1}"`
+  const capas = { corte: [] as string[], doblez: [] as string[], perforado: [] as string[] }
+  piezas.forEach((p, i) => {
+    for (const pts of p.cortes) capas.corte.push(`<path d="${pts.map(([x, y], j) => `${j ? "L" : "M"}${X(x, i)} ${Y(y, i)}`).join(" ")} Z" ${corte}/>`)
+    if (dob.modo === "marcar")
+      for (const [a, b] of p.pliegues) capas.doblez.push(`<line x1="${X(a[0], i)}" y1="${Y(a[1], i)}" x2="${X(b[0], i)}" y2="${Y(b[1], i)}" ${doblez}/>`)
+    if (dob.modo === "perforado") {
+      const d = perforaciones(p, dob).map((t) => t.map(([x, y], j) => `${j ? "L" : "M"}${X(x, i)} ${Y(y, i)}`).join(" ")).join(" ")
+      if (d) capas.perforado.push(`<path d="${d}" ${perforado}/>`)
+    }
+  })
+  const grupo = (id: string, l: string[]) => (l.length ? `<g id="${id}">\n${l.join("\n")}\n</g>\n` : "")
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="0 0 ${f(W)} ${f(H)}">\n${grupo("CORTE", capas.corte)}${grupo("DOBLEZ", capas.doblez)}${grupo("PERFORADO", capas.perforado)}</svg>\n`
 }
 
-// DXF R12: capa CORTE (rojo) con polilíneas cerradas y capa DOBLEZ (azul) con líneas
-export function plantillaDXF(piezas: Plantilla[]) {
+// DXF R12: capa CORTE (rojo, polilíneas cerradas), DOBLEZ (azul, líneas para
+// marcar) y PERFORADO (magenta, tramos de corte con puentes)
+export function plantillaDXF(piezas: Plantilla[], dob: OpcionesDoblez = DOBLEZ_MARCAR) {
   const { pos } = acomodarPlantillas(piezas)
   const l: string[] = []
   const par = (c: number | string, v: number | string) => l.push(String(c), String(v))
   par(0, "SECTION"); par(2, "HEADER"); par(9, "$ACADVER"); par(1, "AC1009"); par(9, "$INSUNITS"); par(70, 4); par(0, "ENDSEC")
-  par(0, "SECTION"); par(2, "TABLES"); par(0, "TABLE"); par(2, "LAYER"); par(70, 2)
-  for (const [nombre, color] of [["CORTE", 1], ["DOBLEZ", 5]] as const) {
+  par(0, "SECTION"); par(2, "TABLES"); par(0, "TABLE"); par(2, "LAYER"); par(70, 3)
+  for (const [nombre, color] of [["CORTE", 1], ["DOBLEZ", 5], ["PERFORADO", 6]] as const) {
     par(0, "LAYER"); par(2, nombre); par(70, 0); par(62, color); par(6, "CONTINUOUS")
   }
   par(0, "ENDTAB"); par(0, "ENDSEC")
   par(0, "SECTION"); par(2, "ENTITIES")
+  const linea = (capa: string, a: P, b: P, dx: number, dy: number) => {
+    par(0, "LINE"); par(8, capa)
+    par(10, f(a[0] + dx)); par(20, f(a[1] + dy)); par(30, 0)
+    par(11, f(b[0] + dx)); par(21, f(b[1] + dy)); par(31, 0)
+  }
   piezas.forEach((p, i) => {
     const { dx, dy } = pos[i]
     for (const pts of p.cortes) {
@@ -831,11 +964,9 @@ export function plantillaDXF(piezas: Plantilla[]) {
       for (const [x, y] of pts) { par(0, "VERTEX"); par(8, "CORTE"); par(10, f(x + dx)); par(20, f(y + dy)); par(30, 0) }
       par(0, "SEQEND"); par(8, "CORTE")
     }
-    for (const [a, b] of p.pliegues) {
-      par(0, "LINE"); par(8, "DOBLEZ")
-      par(10, f(a[0] + dx)); par(20, f(a[1] + dy)); par(30, 0)
-      par(11, f(b[0] + dx)); par(21, f(b[1] + dy)); par(31, 0)
-    }
+    if (dob.modo === "marcar") for (const [a, b] of p.pliegues) linea("DOBLEZ", a, b, dx, dy)
+    if (dob.modo === "perforado")
+      for (const t of perforaciones(p, dob)) for (let k = 1; k < t.length; k++) linea("PERFORADO", t[k - 1], t[k], dx, dy)
   })
   par(0, "ENDSEC"); par(0, "EOF")
   return l.join("\n") + "\n"
