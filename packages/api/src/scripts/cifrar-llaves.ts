@@ -88,7 +88,8 @@ async function supabase(aplicar: boolean, logger: any) {
             const n = Array.isArray(r) ? r.length : 0
             for (const c of Object.keys(cambios)) conteos[c][n ? "escritas" : "saltadas"]++
           } catch (e) {
-            errores.push(`${f.negocio_id}: ${String((e as Error).message).slice(0, 120)}`)
+            // Sólo el código HTTP: el cuerpo de un error de Postgres puede traer la fila
+            errores.push(`${f.negocio_id}: ${/Supabase (\d+)/.exec(String((e as Error).message))?.[1] || "error"}`)
           }
         }
         if (!filas || filas.length < LOTE) break
@@ -100,7 +101,7 @@ async function supabase(aplicar: boolean, logger: any) {
         logger.info(`${tabla}: la tabla no existe en Supabase; nada que hacer.`)
         continue
       }
-      logger.error(`${tabla}: no se pudo leer (${m.slice(0, 160)})`)
+      logger.error(`${tabla}: no se pudo leer (${/Supabase (\d+)/.exec(m)?.[0] || "error de red"})`)
       continue
     }
     for (const c of campos) {
@@ -128,7 +129,7 @@ async function configSocial(knex: any, aplicar: boolean, logger: any) {
         const enc = cifrarComprobado(v)
         // Sólo ese campo, y sólo si sigue igual (el valor va como parámetro, no en el texto)
         const r = await knex.raw(
-          `update ?? set valor = jsonb_set(valor, ?::text[], to_jsonb(?::text)) where clave = ? and valor->>? = ?`,
+          `update ?? set valor = jsonb_set(valor, ?::text[], to_jsonb(?::text)) where clave = ? and valor->>(?::text) = ?::text`,
           [T_CONFIG_S, `{${campo}}`, enc, clave, campo, v]
         )
         k[(r?.rowCount || 0) > 0 ? "escritas" : "saltadas"]++
