@@ -63,7 +63,7 @@ function pixeles(img: HTMLImageElement, lado: number): Imagen | null {
   return { data: d.data, width: w, height: h }
 }
 
-export function GeneradorVectorizador() {
+export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const imgRef = useRef<HTMLImageElement | null>(null)
   const [nombre, setNombre] = useState("")
@@ -290,6 +290,7 @@ export function GeneradorVectorizador() {
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[#0D1015] text-white lg:flex-row">
       {/* Panel */}
       <aside className="flex w-full flex-col gap-4 border-b border-[#1F2937] bg-[#111722] p-4 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        {cabecera}
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-[#C2560A]/20 text-[#F28A3C]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

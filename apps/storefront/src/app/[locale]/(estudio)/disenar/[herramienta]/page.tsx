@@ -17,7 +17,8 @@ type Props = { params: Promise<{ locale: string; herramienta: string }> }
 const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas", "celosias", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos"])
 
 // "letreros" se pinta oscuro dentro de Letreros y placas (los tres modos)
-const OSCURAS = new Set(["letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "llaveros", "vectorizador", "celosias", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos"])
+// las herramientas que juntan varias (Imagen, Archivos) ponen su propio tema
+const OSCURAS = new Set(["letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "grabado-foto", "litofania-relieve", "convertidor", "anidado-piezas", "svg-a-stl", "llaveros", "vectorizador", "celosias", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos"])
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params

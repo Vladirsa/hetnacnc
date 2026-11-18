@@ -89,7 +89,7 @@ const Deslizador = ({ etiqueta, valor, min, max, paso = 1, cambiar }: { etiqueta
   </label>
 )
 
-export function GeneradorRelieve() {
+export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
   const imgRef = useRef<HTMLImageElement | null>(null)
   const lienzo = useRef<HTMLCanvasElement>(null)
   const ultima = useRef<{ a: Alturas; o: OpcionesRelieve } | null>(null)
@@ -258,6 +258,7 @@ export function GeneradorRelieve() {
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
+          {cabecera}
           <label
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); abrir(e.dataTransfer.files?.[0]) }}
