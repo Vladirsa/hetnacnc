@@ -135,6 +135,12 @@ export default defineMiddlewares({
           matcher: "/admin/hetna-conta/movimientos",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 5, forma: "lista" })],
         },
+        // "Te cargamos tu catálogo": plantilla llena del taller (lib/cotizador-catalogo.ts)
+        {
+          method: ["POST"],
+          matcher: "/admin/hetna-catalogos/:id/cargar",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
+        },
         // Importador de productos de la tienda HETNA (plantilla de Excel)
         {
           method: ["POST"],
@@ -210,6 +216,19 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/api/taller-publico/:slug/solicitar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: Number(process.env.COTIZADOR_SOLICITUD_MAX_MB || 50) })],
+        },
+        // Posventa: el cliente final reporta una falla con hasta 3 fotos (lib/cotizador-posventa.ts)
+        { method: ["GET"], matcher: "/api/cotizador-posventa/:pedido", middlewares: [limitarLiga] },
+        {
+          method: ["POST"],
+          matcher: "/api/cotizador-posventa/:pedido",
+          middlewares: [leerMultipart({ campos: { fotos: 3 }, maxMb: 8 })],
+        },
+        // "Te cargamos tu catálogo": el taller manda su lista (lib/cotizador-catalogo.ts)
+        {
+          method: ["POST"],
+          matcher: "/api/cotizador-catalogo",
+          middlewares: [leerMultipart({ campos: { archivos: 5 }, maxMb: 20 })],
         },
         // CSD del taller (.cer y .key) para la factura electrónica: va directo a Facturapi
         {
