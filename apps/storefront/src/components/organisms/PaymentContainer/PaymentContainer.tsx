@@ -33,8 +33,11 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   const info = paymentInfoMap[paymentProviderId]
   const elegido = selectedPaymentOptionId === paymentProviderId
   // Medios por los que pasa una tarjeta: ahí sí se enseñan las marcas.
+  // PayPal también: se paga con las tarjetas Visa, Mastercard o Amex de la cuenta.
   const aceptaTarjetas =
-    paymentProviderId.includes("mercadopago") || paymentProviderId.includes("stripe")
+    paymentProviderId.includes("mercadopago") ||
+    paymentProviderId.includes("stripe") ||
+    paymentProviderId.includes("paypal")
 
   return (
     <RadioGroupOption
