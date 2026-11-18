@@ -60,7 +60,7 @@ export const SECCIONES: SeccionDiseno[] = [
     id: "papel",
     titulo: "Plantillas de papel y cartón",
     subtitulo: "Regalo, repostería, cosmética · líneas de corte y doblez separadas",
-    ver: { texto: "Ver las 46", href: "/disenar/plantillas-empaque" },
+    ver: { texto: "Ver las 49", href: "/disenar/plantillas-empaque" },
     tarjetas: [
       { nombre: "Caja de regalo con tapa", texto: "Base y tapa, pestañas de pegado.", href: "/disenar/plantillas-empaque?modelo=tapa-fondo", icono: "empaque", color: VERDE, acceso: "gratis", para: ["papel", "laser"] },
       { nombre: "Caja almohada", texto: "Para detalles y recuerdos.", href: "/disenar/plantillas-empaque?modelo=pillow", icono: "empaque", color: VERDE, acceso: "gratis", para: ["papel", "laser"], claves: "pillow" },

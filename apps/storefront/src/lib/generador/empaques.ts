@@ -20,7 +20,7 @@ export type Gen =
   | "bandeja" | "tapaFondo" | "pillow" | "bolsaAsa" | "bolsaPlana" | "prisma" | "cilindro"
   | "tetra" | "maceta" | "sobreBolsillo" | "sobrePuntas" | "tarjeta" | "cajaVentana" | "cajon" | "bisagra" | "inserto"
   | "envio" | "leche" | "exhibidor" | "cartas" | "rebanada" | "explosiva"
-  | "redonda" | "corazon" | "estrella"
+  | "redonda" | "corazon" | "estrella" | "poligonal" | "ataud" | "rombo"
 export type Forma = string // id de la plantilla en FORMAS
 
 export type Datos = {
@@ -37,6 +37,7 @@ export type Datos = {
   filas: number // inserto: filas de huecos
   columnas: number // inserto: columnas de huecos
   diametro: number // inserto: diámetro de cada hueco
+  anguloPestana?: number // ángulo de los lados de las pestañas de pegado (30° a 90°, 45° por omisión)
 }
 
 const PI = Math.PI
@@ -48,9 +49,15 @@ const largoDe = (a: P) => Math.hypot(a[0], a[1])
 const unit = (a: P): P => mul(a, 1 / (largoDe(a) || 1))
 const rot = (a: P, t: number): P => [a[0] * Math.cos(t) - a[1] * Math.sin(t), a[0] * Math.sin(t) + a[1] * Math.cos(t)]
 
+// Ángulo de las pestañas de pegado (grados entre el doblez y el lado de la
+// pestaña). Lo fija generarEmpaque antes de llamar al generador; 45° deja el
+// bisel igual a la profundidad, 90° hace pestañas rectangulares.
+let ANGULO_PESTANA = 45
+const bis = (prof: number) => (ANGULO_PESTANA === 45 ? prof : prof / Math.tan((ANGULO_PESTANA * PI) / 180))
+
 // Pestaña trapecial a la derecha del tramo p→q (afuera, en un contorno antihorario).
 // Devuelve los puntos intermedios (sin p ni q).
-function pestana(p: P, q: P, prof: number, bisel = prof): P[] {
+function pestana(p: P, q: P, prof: number, bisel = bis(prof)): P[] {
   const d = sub(q, p)
   const L = largoDe(d)
   const u = unit(d)
@@ -101,7 +108,7 @@ function franja(
     pts.push([x, alto])
   }
   // pestaña de pegado a la izquierda
-  const c = Math.min(pegado, alto / 4)
+  const c = Math.min(bis(pegado), alto / 4)
   pts.push([0, alto - c], [0, c])
   // dobleces verticales entre paneles
   for (let i = 0; i < anchos.length; i++) pliegues.push([[xs[i], 0], [xs[i], alto]])
@@ -225,7 +232,8 @@ function piramide(d: Datos): Resultado {
       // recorrer la base con pestañas en sus bordes libres
       const base = [...Q.slice(1), Q[0]] // P_k, Q2..Q_{n-1}, P_{k+1}
       for (let j = 0; j < base.length - 1; j++) {
-        pts.push(...pestana(base[j], base[j + 1], tab))
+        // la base queda pegada a los triángulos vecinos: sus pestañas nunca más rectas que 45°
+        pts.push(...pestana(base[j], base[j + 1], tab, Math.max(bis(tab), tab)))
         pts.push(base[j + 1])
         pl.push([base[j], base[j + 1]])
       }
@@ -233,7 +241,8 @@ function piramide(d: Datos): Resultado {
       pl.push([Pn(k), Pn(k + 1)])
     }
   }
-  pts.push(...pestana(Pn(n), O, g, g))
+  // la pestaña de pegado queda junto al primer triángulo: nunca más recta que 45°
+  pts.push(...pestana(Pn(n), O, g, Math.max(bis(g), g)))
   pl.push([Pn(n), O])
   return { piezas: [{ nombre: "Pirámide", cortes: [limpiar(pts)], pliegues: pl }], errores: [], avisos: [] }
 }
@@ -271,7 +280,7 @@ function cono(d: Datos): Resultado {
   pts.push(fin)
   // pestaña de pegado en el borde recto final
   const interiorFin: P = r > 0 ? arco(r, f0 + th) : [0, 0]
-  pts.push(...pestana(fin, interiorFin, g, g))
+  pts.push(...pestana(fin, interiorFin, g, bis(g)))
   pl.push([fin, interiorFin])
   if (r > 0) {
     const m = Math.max(12, Math.ceil(th / (PI / 90)))
@@ -307,7 +316,7 @@ function rectRedondo(x: number, y: number, w: number, h: number, r: number): P[]
 // Charola abierta (cruz con pestañas en las paredes cortas). Base L × W, alto H.
 function bandejaPieza(L: number, W: number, H: number, pest: number, nombre: string): Plantilla {
   const g = Math.min(pest, H * 0.8)
-  const b = Math.min(g, H * 0.3)
+  const b = Math.min(bis(g), H * 0.3)
   const pts: P[] = [
     [0, -H], [L, -H], [L, 0],
     [L + b, -g], [L + H - b, -g], [L + H, 0],
@@ -413,8 +422,11 @@ function prisma(d: Datos): Resultado {
   const poli: Solapa = { puntos: V.slice(2).reverse() }
   const t = Math.min(a * 0.3, 12)
   const tab = trapecio(a, t, t)
-  const abajo = Array.from({ length: n }, (_, i) => (i === n - 2 ? poli : tab))
-  const arriba = Array.from({ length: n }, (_, i) => (i === 1 ? poli : tab))
+  // Con 8 lados o más, la tapa poligonal se abre hacia los paneles vecinos y
+  // se enciman con sus pestañas: esos dos paneles van sin pestaña.
+  const vecino = (i: number, c: number) => n >= 8 && Math.abs(i - c) === 1
+  const abajo = Array.from({ length: n }, (_, i) => (i === n - 2 ? poli : vecino(i, n - 2) ? null : tab))
+  const arriba = Array.from({ length: n }, (_, i) => (i === 1 ? poli : vecino(i, 1) ? null : tab))
   const f = franja(Array(n).fill(a), H, g, abajo, arriba)
   return { piezas: [{ nombre: `Prisma de ${n} lados`, cortes: [f.contorno], pliegues: f.pliegues }], errores: [], avisos: [] }
 }
@@ -516,18 +528,29 @@ function maceta(d: Datos): Resultado {
   const base = [...Q.slice(1), Q[0]] // de abajo[0][0] rodeando hasta abajo[0][1]
   pts.push(abajo[0][0])
   for (let j = 0; j < base.length - 1; j++) {
-    pts.push(...pestana(base[j], base[j + 1], tab))
+    // el último lado de la base queda junto al segundo panel, que se abre
+    // hacia abajo: una pestaña ahí se metería en ese panel
+    if (j < base.length - 2) {
+      pts.push(...pestana(base[j], base[j + 1], tab))
+      pl.push([base[j], base[j + 1]])
+    }
     pts.push(base[j + 1])
-    pl.push([base[j], base[j + 1]])
   }
   pl.push([abajo[0][0], abajo[0][1]])
+  // El segundo panel va sin pestaña abajo: la base (colgada del primero) se
+  // mete debajo de él y la pestaña quedaría encimada.
   for (let i = 1; i < n; i++) {
-    pts.push(abajo[i][0], ...pestana(abajo[i][0], abajo[i][1], tab), abajo[i][1])
-    pl.push([abajo[i][0], abajo[i][1]])
+    if (i === 1) pts.push(abajo[i][0], abajo[i][1])
+    else {
+      // los bordes de abajo forman un arco hacia adentro: el bisel debe
+      // compensar el giro entre paneles (2·th) para que las pestañas no se enciman
+      pts.push(abajo[i][0], ...pestana(abajo[i][0], abajo[i][1], tab, Math.max(bis(tab), tab * Math.tan(th) * 1.15 + 0.3)), abajo[i][1])
+      pl.push([abajo[i][0], abajo[i][1]])
+    }
   }
   const fin = abajo[n - 1][1]
   const finSup = arriba[2 * (n - 1) + 1]
-  pts.push(...pestana(fin, finSup, g, g))
+  pts.push(...pestana(fin, finSup, g, bis(g)))
   pl.push([fin, finSup])
   for (let i = n - 1; i >= 0; i--) pts.push(arriba[2 * i + 1], arriba[2 * i])
   return { piezas: [{ nombre: `Maceta de ${n} lados`, cortes: [limpiar(pts)], pliegues: pl }], errores: [], avisos: [] }
@@ -538,7 +561,7 @@ function sobreBolsillo(d: Datos): Resultado {
   const w = d.largo + 3
   const h = d.ancho + 3
   const g = Math.min(d.pestana, w * 0.25)
-  const b = Math.min(g, h * 0.15)
+  const b = Math.min(bis(g), h * 0.15)
   const pts: P[] = [[0, -h], [w, -h], [w, 0], [w + g, b], [w + g, h - b], [w, h], [0, h], [-g, h - b], [-g, b], [0, 0]]
   const pl: [P, P][] = [[[0, 0], [w, 0]], [[w, 0], [w, h]], [[0, 0], [0, h]]]
   return { piezas: [{ nombre: "Funda", cortes: [limpiar(pts)], pliegues: pl }], errores: [], avisos: ["Dobla el frente sobre el fondo y pega las pestañas laterales por detrás."] }
@@ -589,7 +612,7 @@ function cajon(d: Datos): Resultado {
 function bisagra(d: Datos): Resultado {
   const { largo: L, ancho: W, alto: H } = d
   const g = Math.min(d.pestana, H * 0.8)
-  const b = Math.min(g, H * 0.3)
+  const b = Math.min(bis(g), H * 0.3)
   const f = Math.max(5, H - 1.5) // solapas de la tapa, entran por dentro
   const bf = Math.min(f * 0.5, W * 0.1)
   const ft = Math.max(5, H * 0.9)
@@ -916,7 +939,7 @@ function tiraPared(fig: P[], alto: number, pegado: number, nombre: string, esqui
   const n = fig.length
   const P_ = perimetro(fig)
   const g = Math.min(pegado, alto * 0.8)
-  const b = Math.min(g, alto * 0.25)
+  const b = Math.min(bis(g), alto * 0.25)
   const pts: P[] = [[0, 0], [P_, 0], [P_ + g, b], [P_ + g, alto - b], [P_, alto], [0, alto]]
   const pliegues: [P, P][] = [[[P_, 0], [P_, alto]]]
   let s = 0
@@ -950,6 +973,30 @@ function cajaContorno(d: Datos, figura: Figura, nombre: string, esquinas: (n: nu
   }
 }
 const redonda = (d: Datos) => cajaContorno(d, figuraElipse, "caja redonda")
+// polígono regular de n lados, con un lado abajo
+// (regular: se escala parejo para que el ancho de punta a punta sea L)
+const figuraPoligono = (n: number): Figura => (L) => {
+  const pts = Array.from({ length: n }, (_, j) => {
+    const a = -PI / 2 + PI / n + (2 * PI * j) / n
+    return [Math.cos(a), Math.sin(a)] as P
+  })
+  const xs = pts.map((p) => p[0])
+  const ys = pts.map((p) => p[1])
+  const rel = (Math.max(...ys) - Math.min(...ys)) / (Math.max(...xs) - Math.min(...xs))
+  return ajustarFigura(pts, L, L * rel)
+}
+// ataúd: pies angostos, hombros anchos al 70% del largo, cabeza un poco más angosta
+const figuraAtaud: Figura = (L, W) => ajustarFigura([[-0.3, -0.5], [0.3, -0.5], [0.5, 0.2], [0.36, 0.5], [-0.36, 0.5], [-0.5, 0.2]], W, L)
+const figuraRombo: Figura = (L, W) => ajustarFigura([[0, -1], [1, 0], [0, 1], [-1, 0]], L, W)
+const todas = (n: number) => Array.from({ length: n }, (_, i) => i)
+function poligonal(d: Datos): Resultado {
+  const n = Math.round(d.lados)
+  if (n < 3 || n > 12) return { piezas: [], errores: ["Los lados van de 3 a 12."], avisos: [] }
+  return cajaContorno({ ...d, ancho: d.largo }, figuraPoligono(n), `caja de ${n} lados`, todas)
+}
+const ataud = (d: Datos) => cajaContorno(d, figuraAtaud, "ataúd", todas)
+const rombo = (d: Datos) => cajaContorno(d, figuraRombo, "rombo", todas)
+
 // corazón: la tira empieza en el centro de arriba (vértice 0); la punta de abajo es el vértice n/2
 const corazon = (d: Datos) => cajaContorno(d, figuraCorazon, "corazón", (n) => [n / 2])
 const estrella = (d: Datos) => cajaContorno(d, figuraEstrella, "estrella", (n) => Array.from({ length: n }, (_, i) => i))
@@ -1027,6 +1074,9 @@ export const FORMAS: FormaDef[] = [
   { id: "ovalada", nombre: "Caja ovalada con tapa", grupo: "Cajas", gen: "redonda", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 140, ancho: 90, alto: 50, altoTapa: 20, holgura: 1, pestana: 10 } },
   { id: "corazon", nombre: "Caja corazón con tapa", grupo: "Cajas", gen: "corazon", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 130, ancho: 120, alto: 50, altoTapa: 20, holgura: 1, pestana: 10 }, detalle: "Para chocolates o San Valentín" },
   { id: "estrella", nombre: "Caja estrella con tapa", grupo: "Cajas", gen: "estrella", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 130, ancho: 124, alto: 45, altoTapa: 20, holgura: 1, pestana: 10 } },
+  { id: "poligonal", nombre: "Caja de N lados con tapa", grupo: "Cajas", gen: "poligonal", campos: ["lados", "largo", "alto", "altoTapa", "holgura", "pestana"], inicio: { lados: 6, largo: 110, alto: 50, altoTapa: 20, holgura: 1, pestana: 10 }, detalle: "Hexagonal, octagonal o triangular con tapa suelta" },
+  { id: "ataud", nombre: "Caja ataúd con tapa", grupo: "Cajas", gen: "ataud", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 160, ancho: 70, alto: 40, altoTapa: 15, holgura: 1, pestana: 10 }, detalle: "Para Halloween o Día de Muertos" },
+  { id: "rombo", nombre: "Caja rombo con tapa", grupo: "Cajas", gen: "rombo", campos: ["largo", "ancho", "alto", "altoTapa", "holgura", "pestana"], inicio: { largo: 140, ancho: 90, alto: 40, altoTapa: 18, holgura: 1, pestana: 10 } },
   { id: "poster", nombre: "Tubo para póster", grupo: "Cajas", gen: "cilindro", campos: ["ancho", "alto", "pestana"], inicio: { ancho: 60, alto: 450, pestana: 15 } },
   // Bolsas y sobres
   { id: "bolsa", nombre: "Bolsa con fuelle", grupo: "Bolsas y sobres", gen: "bolsa", campos: C.caja, inicio: { largo: 160, ancho: 80, alto: 220, pestana: 15 } },
@@ -1081,6 +1131,9 @@ const ETIQUETAS_GEN: Partial<Record<Gen, Partial<Record<keyof Datos, string>>>> 
   redonda: { largo: "Diámetro (o largo)", ancho: "Ancho", alto: "Alto de la pared" },
   corazon: { alto: "Alto de la pared" },
   estrella: { alto: "Alto de la pared" },
+  poligonal: { largo: "Ancho de punta a punta", alto: "Alto de la pared", lados: "Número de lados" },
+  ataud: { largo: "Largo", ancho: "Ancho en los hombros", alto: "Alto de la pared" },
+  rombo: { alto: "Alto de la pared" },
 }
 
 // Etiqueta de cada campo según la plantilla
@@ -1095,7 +1148,7 @@ const GENERADORES: Record<Gen, (d: Datos) => Resultado> = {
   bandeja, tapaFondo, pillow, bolsaAsa, bolsaPlana, prisma, cilindro,
   tetra, maceta, sobreBolsillo, sobrePuntas, tarjeta, cajaVentana, cajon, bisagra, inserto,
   envio, leche, exhibidor, cartas, rebanada, explosiva,
-  redonda, corazon, estrella,
+  redonda, corazon, estrella, poligonal, ataud, rombo,
 }
 
 export function generarEmpaque(forma: Forma, d: Datos): Resultado {
@@ -1109,6 +1162,8 @@ export function generarEmpaque(forma: Forma, d: Datos): Resultado {
   }
   if (def.gen === "cono" && !(d.diametroSup >= 0)) return { piezas: [], errores: ["El diámetro de arriba debe ser 0 o mayor."], avisos: [] }
   if (!(d.holgura >= 0)) d = { ...d, holgura: 0 }
+  const ang = d.anguloPestana
+  ANGULO_PESTANA = Number.isFinite(ang) ? Math.max(30, Math.min(90, ang as number)) : 45
   // caja redonda: sólo se pide el diámetro
   if (def.gen === "redonda" && !def.campos.includes("ancho")) d = { ...d, ancho: d.largo }
   return GENERADORES[def.gen](d)

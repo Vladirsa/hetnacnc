@@ -102,7 +102,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     acceso: "gratis",
     titulo: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
     descripcion:
-      "46 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón y de estrella, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+      "49 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón, de estrella, ataúd y de N lados con tapa, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
   },
   {
     slug: "grabado-foto",
