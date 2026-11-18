@@ -384,6 +384,46 @@ async function cuandoPublicar(knex: any) {
 // La cadena completa
 // ---------------------------------------------------------------------
 
+/** Deja el video en el Social Hub con título SEO, descripción, hashtags y la mejor hora. */
+export async function publicarVideoEstudio(knex: any, f: { id: string; tipo: string; guion: any; video_url: string }, logger?: any) {
+  const g = f.guion || {}
+  if (!f.video_url || !g.titulo_seo) throw new Error("Ese video no tiene guion o archivo para publicar.")
+  const c = await cuandoPublicar(knex)
+  const etiqueta = f.tipo === "novela" ? "\n\n(Historia ficticia: personajes y situaciones inventados para enseñar.)" : ""
+  const tags = (g.hashtags || []).slice(0, 5).map((h: string) => `#${String(h).replace(/^#/, "").replace(/\s+/g, "")}`).join(" ")
+  const textos = {
+    youtube: `${g.titulo_seo}\n${g.descripcion}${etiqueta}\n\n${tags}`,
+    facebook: `${g.titulo_seo}\n\n${g.descripcion}${etiqueta}`,
+    instagram: `${g.titulo_seo}\n\n${String(g.descripcion).replace(/\{\{liga\}\}/g, "liga en el perfil")}${etiqueta}\n\n${tags}`,
+    instagram_historia: g.titulo_seo,
+    tiktok: `${g.titulo_seo} ${tags}${f.tipo === "novela" ? " (historia ficticia)" : ""}`,
+  }
+  const post = await crearPublicacion(knex, {
+    origen: "manual", fuente: "estudio", titulo: `${f.tipo === "novela" ? "🎬 El Taller" : "🎓 Estudio"} · ${g.tema}`, texto_base: textos.facebook,
+    textos, url: `${STORE_URL}/mx`, redes: ["youtube", "instagram", "tiktok", "facebook"], medios: [{ url: f.video_url, tipo: "video" }],
+    estado: c.estado, programada_para: c.fecha, mercado: "mx",
+  } as any, logger)
+  await knex(T_ESTUDIO).where({ id: f.id }).update({ estado: "listo", post_id: post, video_url: f.video_url, error: null, updated_at: new Date() })
+  return { post, hora: c.hora, estado: c.estado }
+}
+
+/** Videos que se hicieron pero no quedaron guardados (falla al publicar): se buscan en el almacenamiento. */
+export async function recuperarVideos(knex: any) {
+  await asegurarEstudio(knex)
+  const dir = path.resolve(process.env.FILE_UPLOAD_DIR || "static")
+  const base = (process.env.FILE_BACKEND_URL || "http://localhost:9000/static").replace(/\/$/, "")
+  const archivos = fs.existsSync(dir) ? fs.readdirSync(dir).filter((n) => /-estudio-estudio_[\w]+\.mp4$/.test(n)) : []
+  const filas = await knex(T_ESTUDIO).whereNull("video_url").select("id")
+  let n = 0
+  for (const f of filas) {
+    const a = archivos.find((x) => x.endsWith(`-estudio-${f.id}.mp4`))
+    if (!a) continue
+    await knex(T_ESTUDIO).where({ id: f.id }).update({ video_url: `${base}/${a}`, updated_at: new Date() })
+    n++
+  }
+  return { recuperados: n }
+}
+
 const VUELTA = { activa: false }
 
 export async function gastoDeHoy(knex: any) {
@@ -472,22 +512,9 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
     // El video ya existe: se guarda antes de publicar (si algo falla después, no se pierde lo pagado)
     await knex(T_ESTUDIO).where({ id }).update({ video_url: videoUrl, costo_usd: costo, updated_at: new Date() })
     // 6. Publicación (título SEO, descripción, hashtags, mejor hora)
-    const c = await cuandoPublicar(knex)
-    const etiqueta = tipo === "novela" ? "\n\n(Historia ficticia: personajes y situaciones inventados para enseñar.)" : ""
-    const tags = (g.hashtags || []).slice(0, 5).map((h: string) => `#${String(h).replace(/^#/, "").replace(/\s+/g, "")}`).join(" ")
-    const textos = {
-      youtube: `${g.titulo_seo}\n${g.descripcion}${etiqueta}\n\n${tags}`,
-      facebook: `${g.titulo_seo}\n\n${g.descripcion}${etiqueta}`,
-      instagram: `${g.titulo_seo}\n\n${String(g.descripcion).replace(/\{\{liga\}\}/g, "liga en el perfil")}${etiqueta}\n\n${tags}`,
-      instagram_historia: g.titulo_seo,
-      tiktok: `${g.titulo_seo} ${tags}${tipo === "novela" ? " (historia ficticia)" : ""}`,
-    }
-    const post = await crearPublicacion(knex, {
-      origen: "manual", fuente: "estudio", titulo: `${tipo === "novela" ? "🎬 El Taller" : "🎓 Estudio"} · ${g.tema}`, texto_base: textos.facebook,
-      textos, url: `${STORE_URL}/mx`, redes: ["youtube", "instagram", "tiktok", "facebook"], medios: [{ url: videoUrl, tipo: "video" }],
-      estado: c.estado, programada_para: c.fecha, mercado: "mx",
-    } as any, logger)
-    await knex(T_ESTUDIO).where({ id }).update({ estado: "listo", costo_usd: costo, post_id: post, video_url: videoUrl, updated_at: new Date() })
+    const { post, hora } = await publicarVideoEstudio(knex, { id, tipo, guion: g, video_url: videoUrl }, logger)
+    const c = { hora }
+    await knex(T_ESTUDIO).where({ id }).update({ costo_usd: costo, updated_at: new Date() })
     logger?.info?.(`[estudio] listo: ${g.tema} · ${costo.toFixed(2)} USD · sale a las ${c.hora}:00`)
     return { hecho: true, id, tipo, tema: g.tema, costo_usd: +costo.toFixed(2), post, hora: c.hora }
   } catch (e) {
@@ -531,6 +558,6 @@ export async function resumenEstudio(knex: any) {
     gasto_mes: +Number(mes?.s || 0).toFixed(2),
     toca_hoy: tocaNovela() ? "novela" : "educativo",
     personajes: PERSONAJES.map((p) => ({ nombre: p.nombre, rol: p.rol })),
-    videos: videos.map((v: any) => ({ id: v.id, dia: v.dia, tipo: v.tipo, estado: v.estado, costo: Number(v.costo_usd || 0), video: v.video_url, post: v.post_id, error: v.error, tema: v.guion?.tema || null, titulo: v.guion?.titulo_seo || null })),
+    videos: videos.map((v: any) => ({ id: v.id, dia: v.dia, tipo: v.tipo, estado: v.estado, costo: Number(v.costo_usd || 0), video: v.video_url, post: v.post_id, error: v.error, tema: v.guion?.tema || null, titulo: v.guion?.titulo_seo || null, publicable: !!(v.video_url && !v.post_id && v.guion?.titulo_seo) })),
   }
 }

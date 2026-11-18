@@ -531,13 +531,38 @@ export type Routes = {
         hetnaBlog: typeof import("../src/api/admin/hetna-blog/route") & {
             $id: typeof import("../src/api/admin/hetna-blog/[id]/route");
         };
+        hetnaCalendario: typeof import("../src/api/admin/hetna-calendario/route");
         hetnaCampanas: typeof import("../src/api/admin/hetna-campanas/route");
         hetnaCasos: typeof import("../src/api/admin/hetna-casos/route") & {
             $id: typeof import("../src/api/admin/hetna-casos/[id]/route");
         };
+        hetnaCatalogos: typeof import("../src/api/admin/hetna-catalogos/route") & {
+            $id: typeof import("../src/api/admin/hetna-catalogos/[id]/route") & {
+                cargar: typeof import("../src/api/admin/hetna-catalogos/[id]/cargar/route");
+            };
+            plantilla: typeof import("../src/api/admin/hetna-catalogos/plantilla/route");
+        };
         hetnaCategoriasVacias: typeof import("../src/api/admin/hetna-categorias-vacias/route");
         hetnaCertificaciones: typeof import("../src/api/admin/hetna-certificaciones/route") & {
             $id: typeof import("../src/api/admin/hetna-certificaciones/[id]/route");
+        };
+        hetnaConta: typeof import("../src/api/admin/hetna-conta/route") & {
+            archivos: typeof import("../src/api/admin/hetna-conta/archivos/route");
+            auditar: typeof import("../src/api/admin/hetna-conta/auditar/route");
+            cfdi: typeof import("../src/api/admin/hetna-conta/cfdi/route") & {
+                $uuid: typeof import("../src/api/admin/hetna-conta/cfdi/[uuid]/route");
+            };
+            descarga: typeof import("../src/api/admin/hetna-conta/descarga/route");
+            efirma: typeof import("../src/api/admin/hetna-conta/efirma/route");
+            excel: typeof import("../src/api/admin/hetna-conta/excel/route");
+            hallazgos: typeof import("../src/api/admin/hetna-conta/hallazgos/route") & {
+                $id: typeof import("../src/api/admin/hetna-conta/hallazgos/[id]/route");
+            };
+            movimientos: typeof import("../src/api/admin/hetna-conta/movimientos/route");
+            plantilla: typeof import("../src/api/admin/hetna-conta/plantilla/route");
+            semaforo: typeof import("../src/api/admin/hetna-conta/semaforo/route");
+            suscripciones: typeof import("../src/api/admin/hetna-conta/suscripciones/route");
+            token: typeof import("../src/api/admin/hetna-conta/token/route");
         };
         hetnaControl: typeof import("../src/api/admin/hetna-control/route") & {
             recargas: typeof import("../src/api/admin/hetna-control/recargas/route");
@@ -554,13 +579,20 @@ export type Routes = {
             temporadas: typeof import("../src/api/admin/hetna-fabrica/temporadas/route");
             video: typeof import("../src/api/admin/hetna-fabrica/video/route");
         };
+        hetnaGrupos: typeof import("../src/api/admin/hetna-grupos/route");
+        hetnaInteresTienda: typeof import("../src/api/admin/hetna-interes-tienda/route");
         hetnaLicitaciones: {
             embudo: typeof import("../src/api/admin/hetna-licitaciones/embudo/route");
         };
         hetnaMembresias: typeof import("../src/api/admin/hetna-membresias/route");
+        hetnaProductos: {
+            importar: typeof import("../src/api/admin/hetna-productos/importar/route");
+            plantilla: typeof import("../src/api/admin/hetna-productos/plantilla/route");
+        };
         hetnaRadar: typeof import("../src/api/admin/hetna-radar/route");
         hetnaReclamos: typeof import("../src/api/admin/hetna-reclamos/route");
         hetnaReferencias: typeof import("../src/api/admin/hetna-referencias/route");
+        hetnaResponderCorreo: typeof import("../src/api/admin/hetna-responder-correo/route");
         hetnaSaldos: typeof import("../src/api/admin/hetna-saldos/route") & {
             pagar: typeof import("../src/api/admin/hetna-saldos/pagar/route");
         };
@@ -835,6 +867,7 @@ export type Routes = {
         hetnaAjustes: {
             $clave: typeof import("../src/api/store/hetna-ajustes/[clave]/route");
         };
+        hetnaAvisoExistencia: typeof import("../src/api/store/hetna-aviso-existencia/route");
         hetnaCasos: typeof import("../src/api/store/hetna-casos/route");
         hetnaCloud: {
             $token: typeof import("../src/api/store/hetna-cloud/[token]/route");
@@ -1254,6 +1287,7 @@ export type Routes = {
         };
         hetnaLicencias: typeof import("../src/api/vendor/hetna-licencias/route");
         hetnaMensajes: typeof import("../src/api/vendor/hetna-mensajes/route");
+        hetnaPanelTaller: typeof import("../src/api/vendor/hetna-panel-taller/route");
         hetnaPromocion: typeof import("../src/api/vendor/hetna-promocion/route") & {
             videos: typeof import("../src/api/vendor/hetna-promocion/videos/route") & {
                 $id: typeof import("../src/api/vendor/hetna-promocion/videos/[id]/route");
@@ -1263,6 +1297,7 @@ export type Routes = {
             revisarFoto: typeof import("../src/api/vendor/hetna-publicar/revisar-foto/route");
         };
         hetnaPush: typeof import("../src/api/vendor/hetna-push/route");
+        hetnaReferidos: typeof import("../src/api/vendor/hetna-referidos/route");
         hetnaRequisitos: typeof import("../src/api/vendor/hetna-requisitos/route") & {
             tarjeta: typeof import("../src/api/vendor/hetna-requisitos/tarjeta/route");
             terminos: typeof import("../src/api/vendor/hetna-requisitos/terminos/route");
@@ -1278,6 +1313,7 @@ export type Routes = {
                 archivos: typeof import("../src/api/vendor/hetna-solicitudes/[id]/archivos/route");
                 avance: typeof import("../src/api/vendor/hetna-solicitudes/[id]/avance/route");
                 contraoferta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/contraoferta/route");
+                etapaTaller: typeof import("../src/api/vendor/hetna-solicitudes/[id]/etapa-taller/route");
                 evaluacion: typeof import("../src/api/vendor/hetna-solicitudes/[id]/evaluacion/route");
                 expediente: typeof import("../src/api/vendor/hetna-solicitudes/[id]/expediente/route");
                 hitoFoto: typeof import("../src/api/vendor/hetna-solicitudes/[id]/hito-foto/route");
@@ -1303,13 +1339,32 @@ export type Routes = {
         };
     };
     api: {
+        avisoExistencia: {
+            baja: typeof import("../src/api/api/aviso-existencia/baja/route");
+        };
+        calendario: {
+            hetna: {
+                $firma: typeof import("../src/api/api/calendario/hetna/[firma]/route");
+            };
+            taller: {
+                $negocio: {
+                    $firma: typeof import("../src/api/api/calendario/taller/[negocio]/[firma]/route");
+                };
+            };
+        };
+        contaFeed: {
+            $token: typeof import("../src/api/api/conta-feed/[token]/route");
+        };
         cotizacionLiga: {
             $token: typeof import("../src/api/api/cotizacion-liga/[token]/route") & {
                 aceptar: typeof import("../src/api/api/cotizacion-liga/[token]/aceptar/route");
                 pagar: typeof import("../src/api/api/cotizacion-liga/[token]/pagar/route");
                 paypal: typeof import("../src/api/api/cotizacion-liga/[token]/paypal/route");
+                posventa: typeof import("../src/api/api/cotizacion-liga/[token]/posventa/route");
             };
         };
+        cotizadorCalendario: typeof import("../src/api/api/cotizador-calendario/route");
+        cotizadorCatalogo: typeof import("../src/api/api/cotizador-catalogo/route");
         cotizadorCfdi: typeof import("../src/api/api/cotizador-cfdi/route") & {
             $id: {
                 cancelar: typeof import("../src/api/api/cotizador-cfdi/[id]/cancelar/route");
@@ -1363,7 +1418,9 @@ export type Routes = {
         mpSuscripcion: typeof import("../src/api/api/mp-suscripcion/route");
         mpTarjeta: typeof import("../src/api/api/mp-tarjeta/route");
         mpVerificacion: typeof import("../src/api/api/mp-verificacion/route");
+        paypalCotizacion: typeof import("../src/api/api/paypal-cotizacion/route");
         paypalSuscripcion: typeof import("../src/api/api/paypal-suscripcion/route");
+        stripeWebhook: typeof import("../src/api/api/stripe-webhook/route");
         tallerPublico: typeof import("../src/api/api/taller-publico/route") & {
             $slug: typeof import("../src/api/api/taller-publico/[slug]/route") & {
                 estimar: typeof import("../src/api/api/taller-publico/[slug]/estimar/route");
@@ -1371,6 +1428,7 @@ export type Routes = {
             };
         };
         tarjetaPaypal: typeof import("../src/api/api/tarjeta-paypal/route");
+        tiendaInteres: typeof import("../src/api/api/tienda-interes/route");
     };
     cotizacion: {
         $token: typeof import("../src/api/cotizacion/[token]/route");
