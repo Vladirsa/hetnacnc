@@ -1851,6 +1851,7 @@ function EstudioDiario() {
       <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
         {d.listo ? <span style={{ color: C.verde, fontWeight: 600 }}>Listo para trabajar</span> : <span style={{ color: C.rojo, fontWeight: 600 }}>Falta {d.falta} en el servidor</span>}
         {" · "}Gasto hoy: {d.gasto_hoy} USD (tope {d.tope_dia}) · este mes: {d.gasto_mes} USD
+        {d.motor && <>{" · "}Motor de video: {d.motor}</>}
       </div>
       {d.videos?.length > 0 && (
         <div style={{ marginTop: 8, display: "grid", gap: 4 }}>

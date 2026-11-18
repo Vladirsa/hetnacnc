@@ -36,3 +36,11 @@ describe("limpieza de medios generados", () => {
     expect(candidatos([{ nombre: "1794709770778-plan-a.png", mtimeMs: viejo }], 0, ahora)).toEqual([])
   })
 })
+
+import { ligaDe } from "../fabrica/higgsfield"
+describe("Higgsfield", () => {
+  it("saca la liga del video de la salida del programa", () => {
+    expect(ligaDe('[{"id":"x","results":{"raw":{"url":"https://cdn.higgsfield.ai/a/b.mp4"}},"thumb":"https://cdn.higgsfield.ai/a/b.jpg"}]')).toBe("https://cdn.higgsfield.ai/a/b.mp4")
+    expect(ligaDe("listo sin liga")).toBeNull()
+  })
+})

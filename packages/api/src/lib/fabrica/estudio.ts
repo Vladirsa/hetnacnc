@@ -33,6 +33,7 @@ import { vozPara } from "./promociones"
 import { carpetaFuentes } from "./render"
 import { assKaraoke, correr, ffmpegDisponible } from "./video"
 import { paraVoz } from "./hyperframes"
+import { calificarVideo, escenaHiggsfield, motorHiggsfield } from "./higgsfield"
 
 export const T_ESTUDIO = "hetna_estudio"
 const FAL = () => (process.env.FAL_KEY || "").trim()
@@ -490,9 +491,17 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
         const imagen = img?.images?.[0]?.url
         if (!imagen) throw new Error("La IA de imagen no regresó imagen")
         const seg = Math.min(10, Math.max(3, Math.ceil(durs[i] + 0.5)))
-        const vid = await fal(MODELO_VIDEO(), { prompt: p.video, image_url: imagen, duration: seg, resolution: "768P", prompt_expansion_mode: "balanced" }, 15)
-        costo += seg * USD_VIDEO_SEG
-        const url = vid?.video?.url
+        let url: string | null = null
+        if (motorHiggsfield()) {
+          // Higgsfield (Seedance 2.5): se le pasa la imagen de arranque como archivo
+          const ini = path.join(dir, `i${i}.jpg`)
+          await bajar(imagen, ini)
+          url = await escenaHiggsfield(p.video, ini, Math.max(4, seg))
+        } else {
+          const vid = await fal(MODELO_VIDEO(), { prompt: p.video, image_url: imagen, duration: seg, resolution: "768P", prompt_expansion_mode: "balanced" }, 15)
+          costo += seg * USD_VIDEO_SEG
+          url = vid?.video?.url
+        }
         if (!url) throw new Error("La IA de video no regresó video")
         const archivo = path.join(dir, `c${i}.mp4`)
         await bajar(url, archivo)
@@ -509,6 +518,20 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
     const musica = await musicaAlAzar(knex).catch(() => null)
     const mp4 = await armar(clips, durs, vocesEscena.length ? vocesEscena : voz?.url || null, musica, ass, dir)
     const videoUrl = await subir(scope, `estudio-${id}.mp4`, "video/mp4", mp4)
+    // Virality Predictor (si Higgsfield está activo): calificación antes de publicar
+    if (motorHiggsfield()) {
+      try {
+        const archivo = path.join(dir, "final.mp4")
+        fs.writeFileSync(archivo, mp4)
+        const cal = await calificarVideo(archivo)
+        g.viralidad = cal
+        await knex(T_ESTUDIO).where({ id }).update({ guion: JSON.stringify(g) })
+        const { mandarPrivado } = require("../social-telegram")
+        await mandarPrivado(knex, { texto: `🧠 Virality Predictor · «${g.titulo_seo}»\n\n${cal.texto.slice(0, 900)}${cal.informe ? `\n\nInforme: ${cal.informe}` : ""}` }).catch(() => null)
+      } catch (e) {
+        logger?.warn?.(`[estudio] Virality Predictor: ${(e as Error).message}`)
+      }
+    }
     // El video ya existe: se guarda antes de publicar (si algo falla después, no se pierde lo pagado)
     await knex(T_ESTUDIO).where({ id }).update({ video_url: videoUrl, costo_usd: costo, updated_at: new Date() })
     // 6. Publicación (título SEO, descripción, hashtags, mejor hora)
@@ -551,6 +574,7 @@ export async function resumenEstudio(knex: any) {
   const mes = await knex(T_ESTUDIO).where("created_at", ">=", knex.raw("date_trunc('month', now())")).sum({ s: "costo_usd" }).first().catch(() => null)
   return {
     listo: estudioListo(),
+    motor: motorHiggsfield() ? "Higgsfield (Seedance 2.5 + Virality Predictor)" : "fal.ai (MiniMax H3)",
     falta: !FAL() ? "FAL_KEY" : !iaSocial() ? "ANTHROPIC_API_KEY" : !ffmpegDisponible() ? "FFmpeg" : null,
     activo: !!(await leerEstudioCfg(knex)).activo,
     tope_dia: TOPE_USD(),
