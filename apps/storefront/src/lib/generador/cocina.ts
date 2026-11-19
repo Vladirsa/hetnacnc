@@ -113,9 +113,23 @@ export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: strin
       if (ult && Math.abs(ult[1] - b[0]) < 0.5) ult[1] = b[1]
       else tramos.push([...b])
     }
-    tramos.forEach(([a, b], k) => {
-      if (b - a > 2440) avisos.push(`La cubierta ${k + 1} mide ${Math.round(b - a)} mm: necesitará unión (las cubiertas comunes miden hasta 2440 o 3050 mm).`)
-      t.push({ nombre: tramos.length > 1 ? `Cubierta ${k + 1}` : "Cubierta", plano: "horizontal", rol: "cubierta", material: "encino", x0: a, x1: b, y0: -o.grosor - 20, y1: o.fondoBajos, z0: o.altoBajos, z1: o.altoBajos + o.gCubierta })
+    // un tramo de más de 2440 mm no cabe en un tablero: se parte en la unión de dos módulos
+    const cortes = new Set(bajos.map((b) => Math.round(b[1] * 10) / 10))
+    const partes: [number, number][] = []
+    const partir = (a: number, b: number) => {
+      if (b - a <= 2440) return partes.push([a, b])
+      const posibles = [...cortes].filter((c) => c > a + 1 && c < b - 1 && c - a <= 2440)
+      if (!posibles.length) return partes.push([a, b])
+      // el corte más cercano a la mitad que deje la primera parte de 2440 o menos
+      const c = posibles.sort((x, y) => Math.abs(x - (a + b) / 2) - Math.abs(y - (a + b) / 2))[0]
+      partir(a, c)
+      partir(c, b)
+    }
+    for (const [a, b] of tramos) partir(a, b)
+    if (partes.length > tramos.length) avisos.push(`La cubierta se parte en ${partes.length} piezas en la unión de los módulos: se juntan con tornillo de unión para cubierta y silicón.`)
+    partes.forEach(([a, b], k) => {
+      if (b - a > 2440) avisos.push(`La cubierta ${k + 1} mide ${Math.round(b - a)} mm y no cabe en un tablero de 2440: pide una cubierta de 3050 mm.`)
+      t.push({ nombre: partes.length > 1 ? `Cubierta ${k + 1}` : "Cubierta", plano: "horizontal", rol: "cubierta", material: "encino", x0: a, x1: b, y0: -o.grosor - 20, y1: o.fondoBajos, z0: o.altoBajos, z1: o.altoBajos + o.gCubierta })
     })
   }
   if (o.conAltos && o.alturaAltos < o.altoBajos + o.gCubierta + 450) avisos.push("Los gabinetes altos quedan muy cerca de la cubierta: súbelos (lo común es dejar 600 mm).")
