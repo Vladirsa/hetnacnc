@@ -26,11 +26,33 @@ export type Guia = {
   faqs: { p: string; r: string }[]
   enlaces: Enlace[]
   ciudades?: boolean
+  // Calculadora de precio dentro de la página (la misma de /cotizar/<servicio>)
+  calculadora?: Calculadora
+}
+
+export type Calculadora = {
+  servicio: "laser_co2" | "router" | "plasma" | "impresion_3d"
+  titulo: string
+  materiales: string[]
+  servicioSolicitud: string
+  opcion?: { campo: "calibre" | "calidad"; etiqueta: string; valores: string[]; inicial?: string }
+}
+
+// Las mismas opciones que las páginas /cotizar/* (no cambiar una sin la otra)
+const CALC_LASER: Calculadora = { servicio: "laser_co2", titulo: "corte láser", materiales: ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílico, cuero, tela u otro"], servicioSolicitud: "Corte láser" }
+const CALC_ROUTER: Calculadora = { servicio: "router", titulo: "router CNC", materiales: ["MDF 3mm", "MDF 9mm", "MDF 15mm", "MDF 18mm", "Acrilico", "Pino", "Cedro", "Parota", "Encino", "Aluminio"], servicioSolicitud: "Corte CNC" }
+const CALC_PLASMA: Calculadora = {
+  servicio: "plasma",
+  titulo: "corte plasma",
+  materiales: ["Acero al carbón", "Acero inoxidable", "Aluminio"],
+  opcion: { campo: "calibre", etiqueta: "Grosor", valores: ["Lámina delgada (cal. 20 a 12)", "Placa (cal. 10 o más grueso)"] },
+  servicioSolicitud: "Corte plasma",
 }
 
 export type Ciudad = { slug: string; nombre: string; estado: string; alias: string[] }
 
-// Ciudades con más demanda de corte láser. El estado decide qué talleres son "locales".
+// Ciudades con más demanda de CNC. El estado decide qué talleres son "locales";
+// una ciudad sin talleres de ese servicio en su estado no se indexa (ciudadIndexable).
 export const CIUDADES: Ciudad[] = [
   { slug: "cdmx", nombre: "Ciudad de México", estado: "Ciudad de México", alias: ["ciudad de mexico", "cdmx", "df", "distrito federal"] },
   { slug: "guadalajara", nombre: "Guadalajara", estado: "Jalisco", alias: ["jalisco", "guadalajara"] },
@@ -40,6 +62,18 @@ export const CIUDADES: Ciudad[] = [
   { slug: "tlaxcala", nombre: "Tlaxcala y Apizaco", estado: "Tlaxcala", alias: ["tlaxcala", "apizaco"] },
   { slug: "toluca", nombre: "Toluca", estado: "Estado de México", alias: ["estado de mexico", "edomex", "toluca", "mexico"] },
   { slug: "leon", nombre: "León", estado: "Guanajuato", alias: ["guanajuato", "leon"] },
+  { slug: "aguascalientes", nombre: "Aguascalientes", estado: "Aguascalientes", alias: ["aguascalientes"] },
+  { slug: "san-luis-potosi", nombre: "San Luis Potosí", estado: "San Luis Potosí", alias: ["san luis potosi", "slp"] },
+  { slug: "saltillo", nombre: "Saltillo", estado: "Coahuila", alias: ["coahuila", "saltillo", "torreon"] },
+  { slug: "chihuahua", nombre: "Chihuahua y Ciudad Juárez", estado: "Chihuahua", alias: ["chihuahua", "juarez"] },
+  { slug: "tijuana", nombre: "Tijuana y Mexicali", estado: "Baja California", alias: ["baja california", "tijuana", "mexicali", "ensenada"] },
+  { slug: "hermosillo", nombre: "Hermosillo", estado: "Sonora", alias: ["sonora", "hermosillo"] },
+  { slug: "morelia", nombre: "Morelia", estado: "Michoacán", alias: ["michoacan", "morelia"] },
+  { slug: "veracruz", nombre: "Veracruz y Xalapa", estado: "Veracruz", alias: ["veracruz", "xalapa"] },
+  { slug: "merida", nombre: "Mérida", estado: "Yucatán", alias: ["yucatan", "merida"] },
+  { slug: "cancun", nombre: "Cancún", estado: "Quintana Roo", alias: ["quintana roo", "cancun", "playa del carmen"] },
+  { slug: "culiacan", nombre: "Culiacán", estado: "Sinaloa", alias: ["sinaloa", "culiacan", "mazatlan"] },
+  { slug: "pachuca", nombre: "Pachuca", estado: "Hidalgo", alias: ["hidalgo", "pachuca"] },
 ]
 
 const normal = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
@@ -49,6 +83,8 @@ export const enCiudad = (c: Ciudad, estado?: string, ciudad?: string) => {
   const e = normal(estado || "")
   const ci = normal(ciudad || "")
   if (c.slug === "toluca" && e.includes("ciudad de mexico")) return false
+  // "Nuevo León" contiene "leon": no es León, Guanajuato
+  if (c.slug === "leon" && (e.includes("nuevo leon") || ci.includes("nuevo leon"))) return false
   return c.alias.some((a) => e === a || e.includes(a) || ci.includes(a))
 }
 
@@ -67,6 +103,8 @@ export const GUIAS: Guia[] = [
     materiales: ["MDF", "Triplay", "Madera", "Acrílico"],
     tipo: "Corte y tallado en router CNC",
     cta: { href: "/cotizar/router-cnc", texto: "Ver precio al instante" },
+    ciudades: true,
+    calculadora: CALC_ROUTER,
     secciones: [
       {
         titulo: "Qué puede hacer un taller de router CNC",
@@ -131,6 +169,7 @@ export const GUIAS: Guia[] = [
     tipo: "Corte y grabado láser",
     cta: { href: "/cotizar/corte-laser", texto: "Ver precio al instante" },
     ciudades: true,
+    calculadora: CALC_LASER,
     secciones: [
       {
         titulo: "Qué espesores de MDF se cortan con láser",
@@ -332,6 +371,242 @@ export const GUIAS: Guia[] = [
       { href: "/categories/disenos-2d", texto: "Diseños 2D", detalle: "Para router, láser y plasma" },
       { href: "/disenar/vectorizador", texto: "Vectorizar imagen a DXF", detalle: "Gratis, en el navegador" },
       { href: "/cam/subir", texto: "De DXF a G-code", detalle: "CAM Studio 2D gratis" },
+    ],
+  },
+  {
+    slug: "corte-plasma",
+    titulo: "Corte plasma CNC: lámina y placa de acero",
+    descripcion: "Corte plasma CNC de lámina y placa de acero, inoxidable y aluminio con talleres de México. Cómo preparar tu archivo y precio al instante.",
+    h1: "Corte plasma CNC",
+    intro: [
+      "El plasma CNC corta metal conductor —acero al carbón, inoxidable y aluminio— desde lámina delgada hasta placa gruesa. Es la opción más económica para piezas de herrería, bases, soportes, letreros de metal y piezas estructurales.",
+      "Calcula el precio al instante o publica tu trabajo para que talleres de corte plasma te manden su propuesta, en tu ciudad o con envío.",
+    ],
+    servicio: "Corte plasma",
+    coincide: ["Corte plasma"],
+    materiales: ["Acero", "Acero inoxidable", "Aluminio"],
+    tipo: "Corte plasma CNC",
+    cta: { href: "/cotizar/corte-plasma", texto: "Ver precio al instante" },
+    ciudades: true,
+    calculadora: CALC_PLASMA,
+    secciones: [
+      {
+        titulo: "Qué se corta con plasma",
+        parrafos: [
+          "Acero al carbón, acero inoxidable, aluminio y otros metales que conducen electricidad. El espesor máximo depende del equipo (su amperaje): cada taller dice en su perfil hasta qué grosor corta. Madera, acrílico o plástico no se cortan con plasma.",
+        ],
+      },
+      {
+        titulo: "Qué esperar del corte",
+        lista: [
+          "El borde queda con una ligera inclinación y puede traer escoria abajo: se limpia con esmeril o lija.",
+          "El corte se lleva algunos décimos de milímetro a más de un milímetro de material (kerf), según el equipo y el grosor.",
+          "Los agujeros muy chicos no salen redondos: como regla práctica, que no sean menores que el grosor de la lámina. Para agujeros de precisión, se cortan más chicos y se taladran.",
+          "Si necesitas bordes muy finos o detalle pequeño, pregunta por láser de fibra.",
+        ],
+      },
+      {
+        titulo: "Cómo preparar el archivo",
+        lista: [
+          "DXF en milímetros y a escala 1:1.",
+          "Contornos cerrados y sin líneas duplicadas.",
+          "Letras y figuras con \"puentes\" para que las partes interiores (como el centro de la O) no se caigan.",
+          "Indica el material, el grosor (calibre o milímetros) y la cantidad.",
+        ],
+      },
+      {
+        titulo: "Usos más comunes",
+        lista: ["Herrería y portones", "Bases y placas de anclaje", "Soportes y escuadras", "Letreros y figuras de metal", "Piezas para remolques y maquinaria", "Decoración (siluetas, parrillas, chimeneas)"],
+      },
+    ],
+    faqs: [
+      { p: "¿Cuánto cuesta el corte plasma?", r: "Depende de los metros de corte, el número de perforaciones, el grosor, la cantidad y si el taller pone el material. Con la calculadora ves un rango al instante; para un precio exacto publica tu trabajo y compara propuestas." },
+      { p: "¿Plasma o láser de fibra?", r: "El plasma es más económico y corta placa gruesa; el láser de fibra deja un borde más fino y detalle más pequeño en lámina. Si no sabes, publica tu trabajo y deja que el taller te recomiende." },
+      { p: "¿El taller pone el material?", r: "Muchos sí. Al pedir precio indica si lo pones tú o si el taller lo consigue." },
+      { p: "¿Hacen envíos?", r: "Sí. Cada taller dice en su propuesta si el precio incluye envío; si prefieres recoger en tu ciudad, indícalo." },
+    ],
+    enlaces: [
+      { href: "/cotizar/corte-plasma", texto: "Precio de corte plasma", detalle: "Estimado al instante" },
+      { href: "/cnc/preparar-archivo-corte-plasma", texto: "Cómo preparar tu archivo para plasma", detalle: "Puentes, agujeros y escala" },
+      { href: "/disenar/letreros", texto: "Diseñar letreros", detalle: "Genera el DXF de tu letrero" },
+      { href: "/talleres", texto: "Talleres de la red", detalle: "Con reputación medida" },
+    ],
+  },
+  {
+    slug: "corte-laser-acrilico",
+    titulo: "Corte láser de acrílico: espesores y talleres",
+    descripcion: "Corte y grabado láser de acrílico cristal y de color con talleres de México. Qué espesores se cortan, cómo preparar tu archivo y precio al instante.",
+    h1: "Corte láser de acrílico",
+    intro: [
+      "El láser CO₂ corta el acrílico (PMMA) con un borde pulido y brillante, sin lijar: por eso es el proceso favorito para exhibidores, letreros, trofeos, llaveros y piezas transparentes.",
+      "Calcula el precio de tu corte al instante o publica tu trabajo para que talleres de corte láser te manden su propuesta, en tu ciudad o con envío a todo México.",
+    ],
+    servicio: "Corte láser",
+    coincide: ["Corte láser", "Grabado"],
+    materiales: ["Acrílico"],
+    tipo: "Corte y grabado láser de acrílico",
+    cta: { href: "/cotizar/corte-laser", texto: "Ver precio al instante" },
+    ciudades: true,
+    calculadora: CALC_LASER,
+    secciones: [
+      {
+        titulo: "Qué espesores de acrílico se cortan con láser",
+        parrafos: [
+          "Los más comunes son de 2 a 6 mm. Con más potencia se cortan espesores mayores, más lento. El máximo depende del equipo de cada taller: compáralo en sus perfiles o pregúntalo al pedir precio.",
+        ],
+      },
+      {
+        titulo: "Acrílico cristal, de color, espejo y \"cast\" o extruido",
+        lista: [
+          "Acrílico cast (colado): da el mejor borde pulido y graba en blanco escarchado.",
+          "Acrílico extruido: más barato; corta bien pero el grabado queda menos contrastado.",
+          "Acrílico espejo: se graba por la parte de atrás para que el espejo quede al frente.",
+          "Pide que dejen el papel protector durante el corte para que no se marque la superficie.",
+        ],
+      },
+      {
+        titulo: "Cómo preparar el archivo",
+        lista: [
+          "Vectores en DXF, SVG, AI o PDF, en milímetros y a escala 1:1.",
+          "Contornos cerrados y sin líneas duplicadas.",
+          "Un color o capa para corte y otro para grabado.",
+          "Textos convertidos a curvas; en piezas transparentes, piensa si el grabado va al frente o en espejo atrás.",
+        ],
+      },
+      {
+        titulo: "Usos más comunes",
+        lista: ["Exhibidores y porta folletos", "Letreros y señalización", "Trofeos y reconocimientos", "Llaveros y recuerdos", "Cajas y organizadores", "Protecciones y guardas de máquinas"],
+      },
+    ],
+    faqs: [
+      { p: "¿Cuánto cuesta el corte láser de acrílico?", r: "Depende de la longitud de corte, el espesor, la cantidad y si el taller pone el material. Con la calculadora ves un rango al instante; para un precio exacto publica tu trabajo y compara propuestas." },
+      { p: "¿El borde queda transparente?", r: "Con acrílico cast y un láser bien ajustado, el borde queda pulido y brillante. El extruido también queda liso, aunque menos brillante." },
+      { p: "¿Se puede doblar el acrílico?", r: "Sí, con calor (termoformado). Pregunta en tu solicitud si el taller ofrece doblado." },
+      { p: "¿Hacen envíos?", r: "Sí. Cada taller dice en su propuesta si el precio incluye envío; si prefieres recoger en tu ciudad, indícalo." },
+    ],
+    enlaces: [
+      { href: "/cotizar/corte-laser", texto: "Precio de corte láser", detalle: "Estimado al instante" },
+      { href: "/cnc/preparar-archivo-corte-laser", texto: "Cómo preparar tu archivo para láser", detalle: "Capas, colores y escala" },
+      { href: "/disenar/llaveros", texto: "Diseñar llaveros", detalle: "DXF a tu medida, gratis" },
+      { href: "/cnc/corte-laser-mdf", texto: "Corte láser de MDF", detalle: "Espesores y usos" },
+    ],
+  },
+  {
+    slug: "preparar-archivo-corte-laser",
+    titulo: "Cómo preparar tu archivo para corte láser",
+    descripcion: "Guía para preparar tu archivo de corte láser: formatos, escala, contornos cerrados, capas de corte y grabado, textos y kerf. Revísalo gratis al subirlo.",
+    h1: "Cómo preparar tu archivo para corte láser",
+    intro: [
+      "La mitad de los retrasos en un corte láser vienen del archivo: una línea abierta, un texto sin convertir o un dibujo en la escala equivocada. Con esta guía tu archivo sale a la primera.",
+      "Al subir tu DXF o SVG en la calculadora de abajo, HETNA lo revisa al instante y te dice qué corregir antes de pedir precio.",
+    ],
+    servicio: "Corte láser",
+    coincide: ["Corte láser", "Grabado", "Diseño CAD/CAM"],
+    tipo: "Preparación de archivos para corte láser",
+    cta: { href: "/cotizar/corte-laser", texto: "Revisar mi archivo y ver precio" },
+    calculadora: CALC_LASER,
+    secciones: [
+      {
+        titulo: "1. Formato y escala",
+        lista: [
+          "Formatos vectoriales: DXF, SVG, AI o PDF vectorial. Una foto o un JPG no sirven para cortar (primero se vectorizan).",
+          "En milímetros y a escala real 1:1: si tu pieza mide 10 cm, en el archivo debe medir 100 mm.",
+          "Si exportas desde Illustrator o Inkscape, revisa que el SVG traiga las medidas en mm.",
+        ],
+      },
+      {
+        titulo: "2. Contornos cerrados y sin duplicados",
+        lista: [
+          "Cada pieza debe ser un contorno cerrado: si no cierra, la máquina no sabe qué es pieza y qué es sobrante.",
+          "Borra las líneas encimadas o duplicadas: se cortarían dos veces, quemando la orilla y cobrando de más.",
+          "Borra puntos sueltos y restos del dibujo.",
+        ],
+      },
+      {
+        titulo: "3. Corte y grabado separados",
+        lista: [
+          "Usa un color o capa para corte (por ejemplo rojo) y otro para grabado (negro o relleno).",
+          "El grabado de rellenos va como área rellena; el grabado de líneas, como línea de otro color.",
+          "Corta primero los interiores y al final el contorno exterior (el taller suele configurarlo así).",
+        ],
+      },
+      {
+        titulo: "4. Textos, detalles y kerf",
+        lista: [
+          "Convierte los textos a curvas o contornos: si no, el taller puede no tener tu tipografía.",
+          "Detalles más finos que el grosor del material pueden quemarse o romperse.",
+          "El láser se lleva unas décimas de milímetro (kerf): en ensambles a presión, considéralo o pide al taller que lo compense.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Qué pasa si mi archivo tiene errores?", r: "Al subirlo en la calculadora te mostramos la lista de lo que hay que corregir (contornos abiertos, duplicados, textos, agujeros chicos). Puedes pedir precio igual; la revisión viaja con tu solicitud para que el taller la vea." },
+      { p: "Sólo tengo una imagen, ¿me sirve?", r: "Conviértela a vectores con el vectorizador gratis de HETNA, o publica tu trabajo con la imagen y pide que el taller te haga el archivo." },
+      { p: "¿Puedo mandar un PDF?", r: "Sí, si es vectorial (hecho desde un programa de diseño, no escaneado). Para el precio al instante usa DXF o SVG." },
+    ],
+    enlaces: [
+      { href: "/disenar/vectorizador", texto: "Vectorizar imagen", detalle: "De JPG/PNG a DXF o SVG, gratis" },
+      { href: "/cnc/corte-laser-mdf", texto: "Corte láser de MDF", detalle: "Espesores y usos" },
+      { href: "/cnc/corte-laser-acrilico", texto: "Corte láser de acrílico", detalle: "Cast, extruido y espejo" },
+      { href: "/cnc/archivos-dxf-router-cnc", texto: "Archivos DXF para router CNC", detalle: "Si tu pieza va en router" },
+    ],
+  },
+  {
+    slug: "preparar-archivo-corte-plasma",
+    titulo: "Cómo preparar tu archivo para corte plasma",
+    descripcion: "Guía para preparar tu DXF de corte plasma: escala, contornos cerrados, puentes en letras, agujeros mínimos y kerf. Revisa tu archivo gratis al subirlo.",
+    h1: "Cómo preparar tu archivo para corte plasma",
+    intro: [
+      "En plasma, un buen archivo ahorra lámina y retrabajo: letras con puentes, agujeros del tamaño correcto y contornos cerrados.",
+      "Al subir tu DXF en la calculadora de abajo, HETNA lo revisa al instante y te avisa de lo que conviene corregir antes de pedir precio.",
+    ],
+    servicio: "Corte plasma",
+    coincide: ["Corte plasma", "Diseño CAD/CAM"],
+    tipo: "Preparación de archivos para corte plasma",
+    cta: { href: "/cotizar/corte-plasma", texto: "Revisar mi archivo y ver precio" },
+    calculadora: CALC_PLASMA,
+    secciones: [
+      {
+        titulo: "1. Formato y escala",
+        lista: [
+          "DXF en milímetros y a escala real 1:1 (es el formato que usan casi todas las mesas de plasma).",
+          "Curvas como arcos o polilíneas, no miles de segmentos diminutos: la antorcha avanza a tirones y el borde sale ondulado.",
+        ],
+      },
+      {
+        titulo: "2. Contornos cerrados y sin duplicados",
+        lista: [
+          "Cada pieza, un contorno cerrado.",
+          "Sin líneas duplicadas: el plasma pasaría dos veces y dañaría el borde.",
+          "Borra cotas, textos de notas y marcos del dibujo: el taller los podría confundir con cortes.",
+        ],
+      },
+      {
+        titulo: "3. Letras, figuras y puentes",
+        lista: [
+          "Las partes interiores de letras como A, B, D, O, P, Q y R se caen al cortar: agrega puentes (pequeñas uniones) o usa una tipografía de esténcil.",
+          "Los detalles muy delgados se deforman con el calor: dales al menos el grosor de la lámina.",
+        ],
+      },
+      {
+        titulo: "4. Agujeros y precisión",
+        lista: [
+          "Como regla práctica, un agujero no debe ser más chico que el grosor de la lámina; si lo es, puede no salir redondo.",
+          "Para agujeros de precisión (tornillería ajustada), pide que los corten más chicos y los taladren después.",
+          "El plasma se lleva material (kerf) y deja una ligera inclinación en el borde: si la medida es crítica, indícalo.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Qué pasa si mi archivo tiene errores?", r: "Al subirlo en la calculadora te mostramos lo que hay que corregir (contornos abiertos, duplicados, textos, agujeros más chicos que el grosor). Puedes pedir precio igual; la revisión viaja con tu solicitud para que el taller la vea." },
+      { p: "¿Cómo pongo puentes en mis letras?", r: "En tu programa de diseño, corta pequeñas uniones entre la parte interior y el resto de la letra, o usa el generador de esténcil de HETNA." },
+      { p: "¿En qué grosor me conviene?", r: "Depende del uso. Si no sabes, publica tu trabajo con la descripción y el taller te recomienda el calibre." },
+    ],
+    enlaces: [
+      { href: "/cnc/corte-plasma", texto: "Corte plasma CNC", detalle: "Materiales, usos y talleres" },
+      { href: "/disenar/estencil-letras", texto: "Esténcil con puentes", detalle: "Letras listas para plasma" },
+      { href: "/disenar/vectorizador", texto: "Vectorizar imagen", detalle: "De JPG/PNG a DXF, gratis" },
+      { href: "/cotizar/corte-plasma", texto: "Precio de corte plasma", detalle: "Estimado al instante" },
     ],
   },
 ]

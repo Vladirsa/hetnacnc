@@ -5,6 +5,7 @@
 import { ImagenSegura as Image } from "@/components/hetna/ImagenSegura"
 import { JsonLd } from "@/components/hetna/JsonLd"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
+import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres, ubicacion, type Taller } from "@/lib/hetna/talleres"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
@@ -107,6 +108,30 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
           </LocalizedClientLink>
         </div>
       </section>
+
+      {g.calculadora && (
+        <section id="precio" className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,480px)]">
+          <div>
+            <h2 className="text-xl font-extrabold text-[#142033]">
+              Precio al instante{ciudad ? ` en ${ciudad.nombre}` : ""}
+            </h2>
+            <p className="mt-2 text-[#40403A]">
+              Sube tu archivo (DXF, SVG, STL u OBJ) o escribe las medidas. Lo revisamos al momento —contornos abiertos, líneas duplicadas, textos sin
+              convertir, agujeros muy chicos— y te damos un rango de precio sin crear cuenta.
+            </p>
+            <p className="mt-2 text-sm text-[#6B675C]">
+              El estimado sirve para decidir; el precio final lo dan los talleres en sus propuestas{ciudad ? `, incluido el envío a ${ciudad.nombre} si no recoges` : ""}.
+            </p>
+          </div>
+          <CalculadoraLead
+            servicio={g.calculadora.servicio}
+            tituloServicio={g.calculadora.titulo}
+            materiales={g.calculadora.materiales}
+            opcion={g.calculadora.opcion}
+            servicioSolicitud={g.calculadora.servicioSolicitud}
+          />
+        </section>
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <article className="grid gap-6">
