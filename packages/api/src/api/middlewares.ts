@@ -237,6 +237,12 @@ export default defineMiddlewares({
           matcher: "/api/cotizacion-liga/:token/posventa",
           middlewares: [leerMultipart({ campos: { fotos: 3 }, maxMb: 8 })],
         },
+        // Relieve con profundidad IA: la foto ya reducida en el navegador (lib/relieve-ia/servicio.ts)
+        {
+          method: ["POST"],
+          matcher: "/api/relieve-ia",
+          middlewares: [leerMultipart({ campos: { rgb: 1 }, maxMb: 4 })],
+        },
         // "Te cargamos tu catálogo": el taller manda su lista (lib/cotizador-catalogo.ts)
         {
           method: ["POST"],

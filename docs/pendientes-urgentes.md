@@ -55,6 +55,12 @@ Ya están en el código, pero necesitan este orden:
 - [ ] Los talleres lo conectan en la app: Más → Google Calendar.
 - Prueba: la liga del Dashboard abierta en el navegador debe descargar un archivo `.ics`.
 
-## 7. Legal
+## 7. Relieves con "Profundidad con IA"
+- Nada que hacer: `scripts/desplegar.sh` baja solo el modelo (Depth Anything V2 Small, Apache-2.0, ~95 MB) a `~/.hetna/modelos/` la primera vez y revisa su huella.
+- El motor de IA (`onnxruntime-node`) ocupa ~290 MB en disco. Corre en un proceso aparte con prioridad baja, una foto a la vez, y se apaga tras 10 min sin uso (~500 MB de memoria mientras trabaja).
+- Para apagarlo: `RELIEVE_IA=0` en el `.env` de `packages/api` (la página sigue con el relieve por brillo).
+- Prueba: `curl -s https://hetnacnc.com/api/relieve-ia` debe responder `{"disponible":true}`.
+
+## 8. Legal
 - [ ] Respuesta del abogado sobre SafeDeal (`docs/legal/safedeal-revision.md`).
 - [ ] Contador: retención como plataforma y si conviene RESICO (`docs/contabilidad/guia-rapida.md`, sección 7).

@@ -7,6 +7,9 @@ import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 import { aGris, pngConDPI } from "@/lib/generador/grabado"
 import { type Alturas, type Forma, type OpcionesRelieve, alturas, mallaSTL, mapaAlturas, medidasPieza, vistaLuz, vistaSombra, volumen } from "@/lib/generador/relieve"
+import { type Profundidad, grisDeProfundidad, iaDisponible, pedirProfundidad } from "@/lib/generador/profundidad-ia"
+
+import { EjemplosRelieve } from "./EjemplosRelieve"
 
 const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
@@ -114,6 +117,15 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [avisoFabricar, setAvisoFabricar] = useState("")
   const [info, setInfo] = useState<{ ancho: number; alto: number; fondo: number; triangulos: number; volumen: number } | null>(null)
+  // Relieve: altura por brillo de la foto o por profundidad estimada con IA (servidor de HETNA)
+  const [iaLista, setIaLista] = useState(false)
+  const [altura, setAltura] = useState<"ia" | "brillo">("ia")
+  const [prof, setProf] = useState<{ version: number; p: Profundidad } | null>(null)
+  const [estadoIA, setEstadoIA] = useState<"" | "cargando" | "error">("")
+  const [errorIA, setErrorIA] = useState("")
+  const [intentoIA, setIntentoIA] = useState(0)
+  const [textura, setTextura] = useState(15)
+  const usarIA = modo === "relieve" && altura === "ia" && iaLista
 
   const cambiarModo = (m: Modo) => {
     setModo(m)
@@ -180,13 +192,39 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
     return () => window.removeEventListener("paste", pegar)
   })
 
-  const clave = JSON.stringify([version, w, h, opciones, vista])
+  useEffect(() => {
+    iaDisponible().then(setIaLista)
+  }, [])
+
+  // Con la IA prendida, se pide la profundidad una vez por foto
+  useEffect(() => {
+    const img = imgRef.current
+    if (!usarIA || !img || prof?.version === version) return
+    const control = new AbortController()
+    setEstadoIA("cargando")
+    setErrorIA("")
+    pedirProfundidad(img, control.signal)
+      .then((p) => {
+        setProf({ version, p })
+        setEstadoIA("")
+      })
+      .catch((e: Error) => {
+        if (control.signal.aborted) return
+        setEstadoIA("error")
+        setErrorIA(e.message)
+      })
+    return () => control.abort()
+  }, [usarIA, version, intentoIA]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const profLista = usarIA && prof?.version === version
+  const clave = JSON.stringify([version, w, h, opciones, vista, usarIA, profLista, textura])
   useEffect(() => {
     const img = imgRef.current
     if (!img || !valido || !lienzo.current) return
+    if (usarIA && !profLista) return // se espera a la IA
     setProcesando(true)
     const t = window.setTimeout(() => {
-      const g = grisDe(img, w, h)
+      const g = usarIA && prof ? grisDeProfundidad(prof.p, w, h, textura / 100, textura > 0 ? grisDe(img, w, h) : null) : grisDe(img, w, h)
       if (g && lienzo.current) {
         const a = alturas(g, w, h, opciones)
         ultima.current = { a, o: opciones }
@@ -252,7 +290,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
         <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Litofanías y relieves 3D desde una foto</h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Convierte una foto en un STL: litofanía plana, curva o en cilindro para lámpara, o un relieve para tallar en router. Tu foto no se sube a ningún servidor.
+          Convierte una foto en un STL: litofanía plana, curva o en cilindro para lámpara, o un relieve para tallar en router. La litofanía y el relieve por brillo se hacen en tu navegador; con «Profundidad con IA» la foto reducida se procesa en el servidor de HETNA y no se guarda.
         </p>
       </section>
 
@@ -281,6 +319,31 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
               <Opcion activa={modo === "relieve"} onClick={() => cambiarModo("relieve")}>Relieve para router</Opcion>
             </div>
           </div>
+          {modo === "relieve" && iaLista && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-semibold text-[#1B1B18]">Cómo se calcula la altura</span>
+              <div className="flex flex-wrap gap-2">
+                <Opcion activa={altura === "ia"} onClick={() => setAltura("ia")}>✨ Profundidad con IA</Opcion>
+                <Opcion activa={altura === "brillo"} onClick={() => setAltura("brillo")}>Por brillo</Opcion>
+              </div>
+              <span className="text-[12.5px] text-[#6B6A63]">
+                {altura === "ia"
+                  ? "La IA entiende qué está cerca y qué lejos: caras, mascotas y objetos salen con volumen real, aunque tengan ropa oscura."
+                  : "Lo claro sale alto y lo oscuro bajo. Va bien con logotipos, dibujos y fotos en blanco y negro."}
+              </span>
+              {altura === "ia" && estadoIA === "cargando" && (
+                <span className="text-[13px] text-[#C2560A] font-semibold" aria-live="polite">La IA está calculando la profundidad… (unos segundos)</span>
+              )}
+              {altura === "ia" && estadoIA === "error" && (
+                <span className="text-[13px] text-[#8A1C1C]">
+                  {errorIA}{" "}
+                  <button type="button" onClick={() => setIntentoIA((n) => n + 1)} className="underline font-semibold">Reintentar</button>{" "}
+                  o usa <button type="button" onClick={() => setAltura("brillo")} className="underline font-semibold">por brillo</button>.
+                </span>
+              )}
+              {altura === "ia" && <Deslizador etiqueta="Textura de la foto (pelo, tela, letras)" valor={textura} min={0} max={60} paso={5} cambiar={setTextura} />}
+            </div>
+          )}
           {modo === "litofania" && (
             <div className="flex flex-col gap-2">
               <span className="text-[13px] font-semibold text-[#1B1B18]">Forma</span>
@@ -320,6 +383,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
+          {!nombre && <EjemplosRelieve conIA={iaLista} />}
           {!nombre && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14.5px] text-[#6B6A63] flex flex-col gap-2">
               <p className="m-0 font-semibold text-[#1B1B18]">Para que salga bien</p>
@@ -336,7 +400,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
                 <Opcion activa={vista === "luz"} onClick={() => setVista("luz")}>Con luz atrás</Opcion>
                 <Opcion activa={vista === "sombra"} onClick={() => setVista("sombra")}>Relieve</Opcion>
               </div>
-              <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{procesando ? "Calculando..." : ""}</span>
+              <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{procesando || (usarIA && estadoIA === "cargando") ? "Calculando..." : ""}</span>
             </div>
             <div className="bg-[#2A2622] border border-[#E7E4DC] rounded-[14px] p-3 flex items-center justify-center">
               <canvas ref={lienzo} className="max-w-full max-h-[520px] h-auto" />

@@ -131,6 +131,23 @@ paso "Instalando dependencias"
 git checkout -- bun.lock 2>/dev/null || true
 bun install
 
+# Relieves con "Profundidad con IA" (packages/api/src/lib/relieve-ia): modelo
+# Depth Anything V2 Small (Apache-2.0, ~95 MB), versión fija y revisada por su
+# huella. Se baja una sola vez; si falla, sólo avisa y el relieve sigue por brillo.
+MODELO_IA="${RELIEVE_IA_MODELO:-$HOME/.hetna/modelos/depth-anything-v2-small.onnx}"
+MODELO_IA_SHA="afb6a5c28f3b6bf1618c6e43f02073ef9dfdc70e937502d51603e57b0a1df10c"
+MODELO_IA_URL="https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/4472b7362082ad9968fee890ca0f1e5aca36b93d/onnx/model.onnx"
+if ! { [ -f "$MODELO_IA" ] && echo "$MODELO_IA_SHA  $MODELO_IA" | sha256sum -c --status 2>/dev/null; }; then
+  paso "Bajando el modelo de IA para relieves (una sola vez)"
+  mkdir -p "$(dirname "$MODELO_IA")"
+  if curl -fsSL --retry 3 -o "$MODELO_IA.tmp" "$MODELO_IA_URL" && echo "$MODELO_IA_SHA  $MODELO_IA.tmp" | sha256sum -c --status; then
+    mv "$MODELO_IA.tmp" "$MODELO_IA" && verde "✓ Modelo de IA listo"
+  else
+    rm -f "$MODELO_IA.tmp"
+    rojo "   ⚠ No se pudo bajar el modelo de IA: el relieve sigue por brillo hasta la próxima vez"
+  fi
+fi
+
 # La Fábrica de contenido (Marketing HETNA) arma los videos con FFmpeg. Si el
 # servidor no lo tiene, se instala una sola vez. Si no se puede, sólo avisa:
 # el resto del sitio no depende de esto.
