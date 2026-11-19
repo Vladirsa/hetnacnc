@@ -6,7 +6,8 @@ const CLAVE = "hetna-archivo-para-cotizar"
 const VIGENCIA = 10 * 60 * 1000 // 10 minutos
 const MAXIMO = 3.5 * 1024 * 1024 // sessionStorage aguanta ~5 MB
 
-type Pendiente = { nombre: string; datos: string; binario: boolean; t: number }
+// nota: texto para la nota al cliente (p. ej. el resumen del mueble)
+type Pendiente = { nombre: string; datos: string; binario: boolean; t: number; nota?: string }
 
 const aBase64 = (buf: ArrayBuffer) => {
   let s = ""
@@ -16,12 +17,12 @@ const aBase64 = (buf: ArrayBuffer) => {
 }
 
 // Devuelve false si el archivo es muy grande o el navegador no deja guardarlo
-export function mandarACotizador(nombre: string, contenido: string | ArrayBuffer, locale: string): boolean {
+export function mandarACotizador(nombre: string, contenido: string | ArrayBuffer, locale: string, nota?: string): boolean {
   try {
     const binario = typeof contenido !== "string"
     const datos = binario ? aBase64(contenido as ArrayBuffer) : (contenido as string)
     if (datos.length > MAXIMO) return false
-    const p: Pendiente = { nombre, datos, binario, t: Date.now() }
+    const p: Pendiente = { nombre, datos, binario, t: Date.now(), ...(nota ? { nota: nota.slice(0, 900) } : {}) }
     sessionStorage.setItem(CLAVE, JSON.stringify(p))
   } catch {
     return false
@@ -68,6 +69,12 @@ export function cargarEnCotizador(iframe: HTMLIFrameElement) {
         dt.items.add(new win.File([bytes], pendiente.nombre))
         input.files = dt.files
         input.dispatchEvent(new win.Event("change", { bubbles: true }))
+        // el resumen del mueble va en la nota para el cliente
+        const nota = doc?.getElementById("cli-nota") as HTMLTextAreaElement | null
+        if (pendiente.nota && nota && !nota.value.trim()) {
+          nota.value = pendiente.nota
+          nota.dispatchEvent(new win.Event("input", { bubbles: true }))
+        }
         sessionStorage.removeItem(CLAVE)
       } catch (e) {
         console.error("[generador] no se pudo cargar el archivo en el Cotizador", e)

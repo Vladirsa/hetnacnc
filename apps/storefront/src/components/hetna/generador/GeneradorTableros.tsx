@@ -21,6 +21,8 @@ import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generado
 import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
+import { mandarACotizador } from "@/lib/generador/aCotizador"
+import { tallerCargar } from "@/lib/taller/acciones"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
@@ -456,6 +458,64 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     return { filas, metrosCanto, pCanto, herr, total, faltan, veces }
   }, [m, acomodo, copias, hoja.largo, hoja.ancho, precios])
   const pesos = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
+
+  // ---- cotizador: mandar el mueble acomodado en hojas (área y metros de corte reales) con su resumen ----
+  const [avisoCotiz, setAvisoCotiz] = useState("")
+  const cotizarMueble = () => {
+    if (!m.piezas.length || m.errores.length) return
+    const grupos = new Map<string, number[]>()
+    m.piezas.forEach((p, i) => {
+      const k = `${p.material}|${Math.round(p.grosor * 10) / 10}`
+      grupos.set(k, [...(grupos.get(k) || []), i])
+    })
+    const trazos: ReturnType<typeof acomodarEnTablero>["trazos"] = []
+    const hojasTxt: string[] = []
+    let dy = 0
+    for (const [k, idx] of grupos) {
+      const r = acomodarEnTablero(
+        idx.map((i) => ({ id: `p${i}`, nombre: m.piezas[i].nombre, trazos: piezasTendidas([m.piezas[i]]), veta: vetaDe(m.piezas[i].nombre), cantidad: 1 })),
+        { largo: hoja.largo, ancho: hoja.ancho, separacion, margen: Math.max(0, numero(ah.margen) || 0), conVeta, etiquetas: false, desde: 0 },
+      )
+      // sólo el corte: el cotizador mide área y metros de corte (los barrenos y las hojas no son corte)
+      for (const t of r.trazos) if (t.capa === "corte" || t.capa === "CORTE") trazos.push({ ...t, pts: t.pts.map(([x, y]) => [x, y + dy] as [number, number]) })
+      dy -= r.hojas.length * (hoja.ancho + 150) + 250
+      const [mat, g] = k.split("|")
+      hojasTxt.push(`${r.hojas.length} ${r.hojas.length === 1 ? "hoja" : "hojas"} de ${materialDe(mat).nombre} ${g} mm`)
+    }
+    const herr = m.compras.filter((c) => !/^Canto/.test(c.nombre)).slice(0, 6).map((c) => `${c.cantidad} ${c.nombre}`)
+    const nota = [`${nombre}: ${m.piezas.length} piezas, ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.fondo)} × ${Math.round(m.medidas.alto)} mm.`, `Material: ${hojasTxt.join(", ")}.`, m.cantoMetros ? `Canto: ${m.cantoMetros} m.` : "", herr.length ? `Herrajes: ${herr.join(", ")}.` : ""].filter(Boolean).join(" ")
+    const dib = dibujo(trazos)
+    const ok = mandarACotizador(`${nombreArchivo(nombre)}-${m.piezas.length}-piezas.dxf`, dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: "corte" })) }), locale, nota)
+    if (!ok) setAvisoCotiz("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en el cotizador.")
+  }
+  // ---- precios: los del cotizador del taller llenan el costo del mueble ----
+  const traerPreciosCotizador = async () => {
+    setAvisoCotiz("")
+    let mats: Record<string, number | null> = {}
+    try {
+      const r = await tallerCargar()
+      if (r.ok) mats = ((r.config as { materiales?: Record<string, number | null> }).materiales || {}) as Record<string, number | null>
+    } catch {
+      // sin cuenta: se intenta con el cotizador de este navegador
+    }
+    if (!Object.values(mats).some((x) => Number(x) > 0)) {
+      try {
+        mats = (JSON.parse(localStorage.getItem("hetna-cotizador") || "null")?.materiales || {}) as Record<string, number | null>
+      } catch {
+        mats = {}
+      }
+    }
+    const grupoDe = (id: string) => (id.startsWith("melamina") ? "Melamina" : id.startsWith("mdf") || id === "hdf" ? "MDF" : id.startsWith("triplay") ? "Triplay" : id === "encino" ? "Madera sólida" : "")
+    const hojaM2 = (TABLERO.ancho * TABLERO.largo) / 1e6
+    const nuevos: Record<string, string> = {}
+    for (const f of costo.filas) {
+      const precioM2 = Number(mats[grupoDe(f.k.split("|")[0])]) || 0
+      if (precioM2 > 0) nuevos[f.k] = String(Math.round(precioM2 * hojaM2))
+    }
+    if (!Object.keys(nuevos).length) return setAvisoCotiz("Tu cotizador todavía no tiene precios de material (MDF, melamina, triplay o madera por m²). Ponlos en Cotizador → Precios de materiales.")
+    setPrecios((x) => ({ ...x, ...nuevos }))
+    setAvisoCotiz(`Listo: ${Object.keys(nuevos).length} ${Object.keys(nuevos).length === 1 ? "precio" : "precios"} por hoja desde tu cotizador (precio por m² × hoja de ${TABLERO.largo} × ${TABLERO.ancho}).`)
+  }
 
   // ---- planos de taller, etiquetas y presupuesto ----
   const [presu, setPresu] = useGuardado<Omit<DatosPresupuesto, "material" | "partidas" | "cliente" | "nota"> & { manoObraTxt: string; margenTxt: string }>("hetna-presupuesto", {
@@ -1175,6 +1235,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             <span>{pesos(costo.total)}</span>
           </div>
         </div>
+        <button type="button" onClick={traerPreciosCotizador} className="self-start rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+          Traer precios de mi cotizador
+        </button>
         <span className="text-[11.5px] text-[#8A97AB]">El precio de cada herraje se cambia en Uniones → Ajustar medidas. No incluye mano de obra ni corte.</span>
       </Seccion>
 
@@ -1249,6 +1312,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           <button type="button" disabled={!m.piezas.length} onClick={verPresupuesto} className="rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
             Ver presupuesto
           </button>
+          <button type="button" disabled={!m.piezas.length || !!m.errores.length} onClick={cotizarMueble} className="rounded-[8px] bg-[#16794F] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#12623F] disabled:opacity-50">
+            Cotizar con mi tarifa (Cotizador CNC)
+          </button>
+          <span className="text-[11px] text-[#8A97AB]">Manda el mueble acomodado en hojas: el cotizador lo precia con tus tarifas (área y metros de corte reales), con el resumen de piezas, material y herrajes en la nota para el cliente, y lo guarda en tu historial.</span>
+          {avisoCotiz && <span className="text-[12px] text-[#F6D58E]">{avisoCotiz}</span>}
         </div>
         {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}
       </Seccion>
