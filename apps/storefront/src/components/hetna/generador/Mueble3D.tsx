@@ -82,6 +82,65 @@ const SELECCION = 0xff8a3d
 const aThree = (p: Pt) => new THREE.Vector3(p[0], p[2], -p[1])
 const deThree = (v: THREE.Vector3): Pt => [v.x, -v.z, v.y]
 
+// textura de veta de madera (procedural, una sola para todo): líneas onduladas claras y oscuras
+let veta: THREE.CanvasTexture | null = null
+function texturaVeta() {
+  if (veta) return veta
+  const c = document.createElement("canvas")
+  c.width = 1024
+  c.height = 256
+  const g = c.getContext("2d")!
+  g.fillStyle = "#e9e4dc"
+  g.fillRect(0, 0, c.width, c.height)
+  let semilla = 7
+  const azar = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647
+  for (let k = 0; k < 70; k++) {
+    const y0 = azar() * c.height
+    const amp = 2 + azar() * 6
+    const fase = azar() * 6.28
+    const oscuro = 150 + Math.floor(azar() * 70)
+    g.strokeStyle = `rgba(${oscuro - 40},${oscuro - 60},${oscuro - 80},${0.15 + azar() * 0.3})`
+    g.lineWidth = 0.6 + azar() * 2.2
+    g.beginPath()
+    for (let x = 0; x <= c.width; x += 8) {
+      const y = y0 + Math.sin(x / 90 + fase) * amp + Math.sin(x / 23 + fase * 2) * amp * 0.25
+      if (x === 0) g.moveTo(x, y)
+      else g.lineTo(x, y)
+    }
+    g.stroke()
+  }
+  veta = new THREE.CanvasTexture(c)
+  veta.wrapS = veta.wrapT = THREE.RepeatWrapping
+  veta.colorSpace = THREE.SRGBColorSpace
+  veta.anisotropy = 4
+  return veta
+}
+
+// letrero de una cota (siempre de frente a la cámara)
+function letrero(texto: string, alto: number) {
+  const c = document.createElement("canvas")
+  const g = c.getContext("2d")!
+  const fs = 44
+  g.font = `600 ${fs}px system-ui, sans-serif`
+  const w = Math.ceil(g.measureText(texto).width) + 28
+  c.width = w
+  c.height = fs + 22
+  g.font = `600 ${fs}px system-ui, sans-serif`
+  g.fillStyle = "rgba(11,15,21,0.85)"
+  g.beginPath()
+  g.roundRect(0, 0, c.width, c.height, 12)
+  g.fill()
+  g.fillStyle = "#ffffff"
+  g.textBaseline = "middle"
+  g.fillText(texto, 14, c.height / 2 + 2)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }))
+  sp.scale.set((alto * c.width) / c.height, alto, 1)
+  sp.renderOrder = 10
+  return sp
+}
+
 async function geometrias(piezas: PiezaVista[]) {
   const { extruir } = await import("@/lib/generador/extruir")
   return piezas.map((p) => {
@@ -101,6 +160,22 @@ async function geometrias(piezas: PiezaVista[]) {
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3))
     g.computeVertexNormals()
     g.computeBoundingBox()
+    // coordenadas de textura: proyección por cara, con la veta a lo largo del lado más largo de la pieza
+    const bb = g.boundingBox!
+    const ext = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z]
+    const largo = ext.indexOf(Math.max(...ext))
+    const nor = g.getAttribute("normal") as THREE.BufferAttribute
+    const uv = new Float32Array((pos.length / 3) * 2)
+    for (let v = 0; v < pos.length / 3; v++) {
+      const n = [Math.abs(nor.getX(v)), Math.abs(nor.getY(v)), Math.abs(nor.getZ(v))]
+      const cara = n.indexOf(Math.max(...n))
+      const ejes = [0, 1, 2].filter((i) => i !== cara)
+      const u = ejes.includes(largo) ? largo : ejes[ext[ejes[0]] >= ext[ejes[1]] ? 0 : 1]
+      const w = ejes.find((i) => i !== u)!
+      uv[v * 2] = pos[v * 3 + u] / 900
+      uv[v * 2 + 1] = pos[v * 3 + w] / 260
+    }
+    g.setAttribute("uv", new THREE.BufferAttribute(uv, 2))
     return g
   })
 }
@@ -112,6 +187,7 @@ export default function Mueble3D({
   seleccion,
   explotar = 0,
   rayosX = false,
+  cotas = true,
   editable = false,
   ajustar = 0,
   punto,
@@ -125,6 +201,7 @@ export default function Mueble3D({
   seleccion: number | null // índice de la pieza
   explotar?: number // 0 a 1
   rayosX?: boolean
+  cotas?: boolean // líneas de medida del mueble y de la pieza seleccionada
   editable?: boolean
   ajustar?: number // cambiarlo vuelve a encuadrar la cámara
   punto?: Pt | null
@@ -147,6 +224,9 @@ export default function Mueble3D({
     lineas: THREE.LineSegments[]
     centro: THREE.Vector3
     encuadrado: boolean
+    luz: THREE.DirectionalLight
+    piso: THREE.Mesh
+    cotasG: THREE.Group
   } | null>(null)
   const props = useRef({ seleccion, editable, alSeleccionar, alEmpujar, cajaDe, explotar })
   props.current = { seleccion, editable, alSeleccionar, alEmpujar, cajaDe, explotar }
@@ -161,13 +241,25 @@ export default function Mueble3D({
     scene.background = new THREE.Color(0x0f151e)
     const camera = new THREE.PerspectiveCamera(40, Math.max(1, el.clientWidth) / Math.max(1, el.clientHeight), 1, 50000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(el.clientWidth || 300, el.clientHeight || 300)
     el.appendChild(renderer.domElement)
     scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3328, 0.85))
     const luz = new THREE.DirectionalLight(0xffffff, 1.1)
     luz.position.set(0.6, 1.4, 1.0)
-    scene.add(luz)
+    luz.castShadow = true
+    luz.shadow.mapSize.set(2048, 2048)
+    luz.shadow.bias = -0.0004
+    scene.add(luz, luz.target)
+    // piso que recibe la sombra
+    const piso = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.32 }))
+    piso.rotation.x = -Math.PI / 2
+    piso.receiveShadow = true
+    scene.add(piso)
+    const cotasG = new THREE.Group()
+    scene.add(cotasG)
     const luz2 = new THREE.DirectionalLight(0xffffff, 0.4)
     luz2.position.set(-1, 0.4, -0.8)
     scene.add(luz2)
@@ -183,7 +275,7 @@ export default function Mueble3D({
     scene.add(marca)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
-    st.current = { scene, camera, renderer, controls, grupo, extras, fantasma, marca, rejilla: null, mallas: [], lineas: [], centro: new THREE.Vector3(), encuadrado: false }
+    st.current = { scene, camera, renderer, controls, grupo, extras, fantasma, marca, rejilla: null, mallas: [], lineas: [], centro: new THREE.Vector3(), encuadrado: false, luz, piso, cotasG }
 
     let activo = true
     const animar = () => {
@@ -321,7 +413,7 @@ export default function Mueble3D({
       s.lineas = []
       geos.forEach((g, i) => {
         const p = piezas[i]
-        const mat = new THREE.MeshStandardMaterial({ color: p.color ? new THREE.Color(p.color) : (COLOR[p.plano] ?? 0xd8b98e), roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+        const mat = new THREE.MeshStandardMaterial({ map: p.veta ? texturaVeta() : null, color: p.color ? new THREE.Color(p.color) : (COLOR[p.plano] ?? 0xd8b98e), roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
         const m = new THREE.Mesh(g, mat)
         m.userData.indice = p.indice
         m.userData.plano = p.plano
@@ -332,6 +424,8 @@ export default function Mueble3D({
           h.userData.herraje = true
           m.add(h)
         }
+        m.castShadow = true
+        m.receiveShadow = true
         s.grupo.add(m)
         s.mallas.push(m)
         s.lineas.push(l)
@@ -360,6 +454,7 @@ export default function Mueble3D({
       const caja = new THREE.Box3().setFromObject(s.grupo)
       s.centro = caja.getCenter(new THREE.Vector3())
       if (!s.encuadrado) encuadrar()
+      else ajustarEscena()
       setListo((n) => n + 1)
     })
     return () => {
@@ -367,6 +462,35 @@ export default function Mueble3D({
     }
   }, [piezas, sueltos, accesorios]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // rejilla, piso de sombra y luz según el tamaño del mueble (no mueve la cámara)
+  const ajustarEscena = () => {
+    const s = st.current
+    if (!s || !s.mallas.length) return
+    const caja = new THREE.Box3().setFromObject(s.grupo)
+    const tam = caja.getSize(new THREE.Vector3())
+    const centro = caja.getCenter(new THREE.Vector3())
+    if (s.rejilla) s.scene.remove(s.rejilla)
+    const rej = new THREE.GridHelper(Math.ceil((Math.max(tam.x, tam.z) * 2.2) / 100) * 100, 22, 0x3b4658, 0x222b38)
+    // el piso queda bajo las patas (si hay)
+    const conExtras = caja.clone().union(new THREE.Box3().setFromObject(s.extras))
+    const pisoY = Math.min(caja.min.y, conExtras.min.y)
+    rej.position.set(centro.x, pisoY - 0.5, centro.z)
+    s.scene.add(rej)
+    s.rejilla = rej
+    const lado = Math.max(tam.x, tam.z) * 4
+    s.piso.scale.set(lado, lado, 1)
+    s.piso.position.set(centro.x, pisoY - 0.2, centro.z)
+    // la luz que da sombra sigue al mueble
+    const r2 = tam.length()
+    s.luz.position.copy(centro.clone().add(new THREE.Vector3(0.45, 1.3, 0.7).normalize().multiplyScalar(r2 * 1.5)))
+    s.luz.target.position.copy(centro)
+    const cam = s.luz.shadow.camera
+    cam.left = cam.bottom = -r2
+    cam.right = cam.top = r2
+    cam.near = r2 * 0.1
+    cam.far = r2 * 4
+    cam.updateProjectionMatrix()
+  }
   const encuadrar = () => {
     const s = st.current
     if (!s || !s.mallas.length) return
@@ -380,16 +504,74 @@ export default function Mueble3D({
     s.camera.near = Math.max(1, dist / 200)
     s.camera.far = dist * 20
     s.camera.updateProjectionMatrix()
-    if (s.rejilla) s.scene.remove(s.rejilla)
-    const rej = new THREE.GridHelper(Math.ceil((Math.max(tam.x, tam.z) * 2.2) / 100) * 100, 22, 0x3b4658, 0x222b38)
-    rej.position.set(centro.x, caja.min.y - 0.5, centro.z)
-    s.scene.add(rej)
-    s.rejilla = rej
+    ajustarEscena()
     s.encuadrado = true
   }
   useEffect(() => {
     if (ajustar) encuadrar()
   }, [ajustar]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // cotas: ancho, alto y fondo del mueble, y las medidas de la pieza seleccionada
+  useEffect(() => {
+    const s = st.current
+    if (!s) return
+    for (const o of [...s.cotasG.children]) {
+      s.cotasG.remove(o)
+      o.traverse((x) => {
+        const mm = x as THREE.Mesh
+        mm.geometry?.dispose?.()
+        const mat = mm.material as THREE.Material & { map?: THREE.Texture }
+        mat?.map?.dispose?.()
+        mat?.dispose?.()
+      })
+    }
+    if (!cotas || explotar > 0 || !s.mallas.length) return
+    const caja = new THREE.Box3().setFromObject(s.grupo)
+    if (s.extras.children.length) caja.union(new THREE.Box3().setFromObject(s.extras))
+    const tam = caja.getSize(new THREE.Vector3())
+    const off = Math.max(60, tam.length() * 0.06)
+    const alto = Math.max(30, tam.length() * 0.035)
+    const matL = new THREE.LineBasicMaterial({ color: 0x7fd3ff, depthTest: false, transparent: true })
+    const cota = (a: THREE.Vector3, b: THREE.Vector3, hacia: THREE.Vector3, texto: string, mat = matL) => {
+      const t = hacia.clone().normalize().multiplyScalar(off * 0.35)
+      const pts = [a, b, a.clone().sub(t), a.clone().add(t), b.clone().sub(t), b.clone().add(t)]
+      const geo = new THREE.BufferGeometry().setFromPoints([pts[0], pts[1], pts[2], pts[3], pts[4], pts[5]])
+      const l = new THREE.LineSegments(geo, mat)
+      l.renderOrder = 9
+      s.cotasG.add(l)
+      const sp = letrero(texto, alto)
+      sp.position.copy(a.clone().add(b).multiplyScalar(0.5).add(hacia.clone().normalize().multiplyScalar(off * 0.6)))
+      s.cotasG.add(sp)
+    }
+    const { min, max } = caja
+    const mm = (v: number) => `${Math.round(v)} mm`
+    // ancho: al frente, abajo; alto: a la izquierda, al frente; fondo: a la derecha, abajo
+    cota(new THREE.Vector3(min.x, min.y, max.z + off), new THREE.Vector3(max.x, min.y, max.z + off), new THREE.Vector3(0, 0, 1), mm(tam.x))
+    cota(new THREE.Vector3(min.x - off, min.y, max.z), new THREE.Vector3(min.x - off, max.y, max.z), new THREE.Vector3(-1, 0, 0), mm(tam.y))
+    cota(new THREE.Vector3(max.x + off, min.y, min.z), new THREE.Vector3(max.x + off, min.y, max.z), new THREE.Vector3(1, 0, 0), mm(tam.z))
+    // pieza seleccionada: sus dos medidas grandes, pegadas a ella
+    const sel = s.mallas.find((m) => m.userData.indice === seleccion)
+    if (sel) {
+      const b = new THREE.Box3().setFromObject(sel)
+      const e = b.getSize(new THREE.Vector3())
+      const matS = new THREE.LineBasicMaterial({ color: 0xffb070, depthTest: false, transparent: true })
+      const ejes = (["x", "y", "z"] as const).filter((k) => e[k] > Math.min(e.x, e.y, e.z) + 0.5)
+      for (const k of ejes.slice(0, 2)) {
+        const a = b.min.clone(), z = b.min.clone()
+        z[k] = b.max[k]
+        // sobre la cara del frente (z mayor) para que se vea
+        a.z = z.z = Math.max(b.max.z, k === "z" ? b.min.z : b.max.z)
+        if (k === "z") {
+          a.z = b.min.z
+          z.z = b.max.z
+          a.x = z.x = b.max.x
+        }
+        const hacia = k === "x" ? new THREE.Vector3(0, -1, 0) : k === "y" ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(1, 0, 0)
+        const t = hacia.clone().multiplyScalar(off * 0.5)
+        cota(a.clone().add(t), z.clone().add(t), hacia, mm(e[k]), matS)
+      }
+    }
+  }, [cotas, explotar, seleccion, listo])
 
   // selección, rayos X y explosión: sólo materiales y posiciones
   useEffect(() => {
