@@ -786,7 +786,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
                 aplicar(() => g.tableros, null)
                 setVarios(false)
                 setNombre(`${modeloActual.nombre} ${Math.round(med.ancho)} mm`)
-                if (union === "espiga") setUnion("confirmat")
+                if (union === "espiga" || union === "dedos") setUnion("confirmat")
                 setPunto(null)
                 setAjustar((k) => k + 1)
                 setLectura(g.avisos.length ? { texto: g.avisos.join(" "), tipo: "aviso" } : null)
@@ -887,7 +887,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             setHabVista({ firma: r.tableros[0]?.nombre || "", colocacion: r.colocacion, ambiente: { muros: r.muros, vidrios: r.vidrios, aparatos: r.aparatos } })
             setVerHab(true)
             setNombre(`Cocina ${hab.forma === "recta" ? "recta" : `en ${hab.forma}`} ${Math.round(hab.largos[0])} mm${conIsla ? " con isla" : ""}`)
-            if (union === "espiga") setUnion("confirmat")
+            if (union === "espiga" || union === "dedos") setUnion("confirmat")
             setPunto(null)
             setVista(undefined)
             setAjustar((n) => n + 1)
@@ -943,7 +943,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             setVarios(true)
             setHabVista(c.aparatos.length ? { firma: c.tableros[0]?.nombre || "", colocacion: [], ambiente: { muros: [], vidrios: [], aparatos: c.aparatos } } : null)
             setNombre(`Cocina de ${Math.round(c.largo)} mm`)
-            if (union === "espiga") setUnion("confirmat")
+            if (union === "espiga" || union === "dedos") setUnion("confirmat")
             setPunto(null)
             setAjustar((n) => n + 1)
             setLectura(c.avisos.length ? { texto: c.avisos.join(" "), tipo: "aviso" } : null)
@@ -1004,7 +1004,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             setVarios(false)
             setNombre(`Gabinete ${gab.tipo === "bajo" ? "bajo" : gab.tipo === "alto" ? "alto" : "columna"} ${Math.round(gab.ancho)} mm`)
             // los gabinetes de cocina van con herraje: confirmat si estaba en caja y espiga
-            if (union === "espiga") setUnion("confirmat")
+            if (union === "espiga" || union === "dedos") setUnion("confirmat")
             setPunto(null)
             setAjustar((n) => n + 1)
             if (g.avisos.length) setLectura({ texto: g.avisos.join(" "), tipo: "aviso" })
@@ -1020,7 +1020,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
       )}
 
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
-        <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones {union === "espiga" ? "de caja y espiga, sin tornillos" : `con ${nombreUnion.toLowerCase()}`}.
+        <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones {union === "espiga" ? "de caja y espiga, sin tornillos" : union === "dedos" ? "de dedos en las esquinas (y caja y espiga en las T), sin tornillos" : `con ${nombreUnion.toLowerCase()}`}.
         {esEjemplo && " Es un ejemplo: sube tu imagen para reemplazarlo."}
       </div>
 
@@ -1159,7 +1159,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             </button>
           ))}
         </div>
-        {union !== "espiga" && (
+        {union !== "espiga" && union !== "dedos" && (
           <BibliotecaHerrajes
             valor={herraje}
             lista={herrajes}
@@ -1170,7 +1170,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             }}
           />
         )}
-        {union !== "espiga" && (
+        {union !== "espiga" && union !== "dedos" && (
           <span className="text-[12px] text-[#8A97AB]">
             Las piezas van a tope. Los barrenos de cara salen en el archivo, en capas BARRENO con su diámetro y profundidad (ABAJO = voltea la pieza). Los de canto van marcados en la orilla (capas CANTO) y se hacen con taladro y guía.
           </span>
@@ -1468,8 +1468,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
       <Seccion titulo="Tablero y máquina">
         <div className="grid grid-cols-2 gap-2">
           <CampoNum etiqueta="Grosor real (medido)" valor={v.grosor} cambiar={cambiar("grosor")} sufijo="mm" />
-          {union === "espiga" && <CampoNum etiqueta="Holgura de ensamble" valor={v.holgura} cambiar={cambiar("holgura")} sufijo="mm" />}
-          {union === "espiga" && <CampoNum etiqueta="Espiga sobresale" valor={v.saliente} cambiar={cambiar("saliente")} sufijo="mm" />}
+          {(union === "espiga" || union === "dedos") && <CampoNum etiqueta="Holgura de ensamble" valor={v.holgura} cambiar={cambiar("holgura")} sufijo="mm" />}
+          {(union === "espiga" || union === "dedos") && <CampoNum etiqueta="Espiga sobresale" valor={v.saliente} cambiar={cambiar("saliente")} sufijo="mm" />}
         </div>
         <span className="text-[12px] text-[#8A97AB]">Mide el grosor con vernier: el MDF de «18 mm» suele medir entre 17.5 y 18.5.</span>
       </Seccion>
@@ -1521,7 +1521,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           ))}
         </div>
         {esquinas.tipo !== "recta" && <CampoNum etiqueta={esquinas.tipo === "redonda" ? "Radio" : "Chaflán"} valor={esquinas.medida} cambiar={(x) => setEsquinas((e) => ({ ...e, medida: x }))} sufijo="mm" />}
-        {!laser && union === "espiga" && (
+        {!laser && (union === "espiga" || union === "dedos") && (
           <>
             <span className="text-[12px] font-semibold text-[#C9D2E0]">Esquinas interiores (mortajas y raíz de las espigas)</span>
             <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
@@ -1534,7 +1534,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             </span>
           </>
         )}
-        {union === "espiga" && (
+        {(union === "espiga" || union === "dedos") && (
           <>
             <span className="text-[12px] font-semibold text-[#C9D2E0]">Espigas por unión</span>
             <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">

@@ -28,7 +28,7 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { mandarAFabricar, materialLaserPorEspesor, materialRouterMDF, mandarPaqueteACotizador, nombresDeArchivo } from "@/lib/generador/aCotizador"
 import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, piezasPrueba, type Pieza, type TipoCaja } from "@/lib/generador/caja"
 import { piezasAGrupo3D } from "@/lib/generador/caja3d"
 
@@ -880,13 +880,27 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             <Boton
               tipo="verde"
               onClick={() => {
-                if (!mandarACotizador(`${nombreArchivo}.dxf`, aDXF(r.piezas), locale, {
+                // Cada pieza con su medida; las iguales (dos laterales) van juntas con su cantidad
+                const grupos: { nombres: string[]; pieza: Pieza; cantidad: number }[] = []
+                const red = (l: [number, number][]) => l.map(([x, y]) => [Math.round(x * 10), Math.round(y * 10)])
+                const firma = (p: Pieza) => JSON.stringify([red(p.contorno), (p.huecos || []).map(red)])
+                const vistas = new Map<string, number>()
+                for (const p of r.piezas) {
+                  const k = firma(p)
+                  const i = vistas.get(k)
+                  if (i === undefined) { vistas.set(k, grupos.length); grupos.push({ nombres: [p.nombre], pieza: p, cantidad: 1 }) }
+                  else { grupos[i].cantidad++; grupos[i].nombres.push(p.nombre) }
+                }
+                const nombres = nombresDeArchivo(grupos.map((g) => (g.nombres.length > 2 ? g.nombres[0] : g.nombres.join(" y "))), "dxf")
+                if (!mandarPaqueteACotizador({
+                    proyecto: nombreArchivo,
                     origen: "Cajas",
                     ...(maquina === "router"
-                      ? { servicio: "router", material: materialRouterMDF(esp) }
-                      : { servicio: "laser_co2", material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(esp) } }),
-                    nota: `Caja de ${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm en ${r1(esp)} mm, ${r.piezas.length} piezas acomodadas en la hoja.`,
-                  }))
+                      ? { servicio: "router" as const, material: materialRouterMDF(esp) }
+                      : { servicio: "laser_co2" as const, material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(esp) } }),
+                    nota: `Caja de ${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm en ${r1(esp)} mm, ${r.piezas.length} piezas.`,
+                    piezas: grupos.map((g, i) => ({ nombre: nombres[i], contenido: aDXF([g.pieza]), cantidad: g.cantidad })),
+                  }, locale))
                   setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
               }}
             >

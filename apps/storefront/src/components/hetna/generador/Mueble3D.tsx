@@ -264,6 +264,7 @@ export default function Mueble3D({
     luz: THREE.DirectionalLight
     piso: THREE.Mesh
     cotasG: THREE.Group
+    sucio: number // cuadros que faltan por dibujar (sólo se dibuja cuando algo cambia)
   } | null>(null)
   const props = useRef({ seleccion, editable, alSeleccionar, alEmpujar, cajaDe, explotar })
   props.current = { seleccion, editable, alSeleccionar, alEmpujar, cajaDe, explotar }
@@ -312,13 +313,19 @@ export default function Mueble3D({
     scene.add(marca)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
-    st.current = { scene, camera, renderer, controls, grupo, extras, fantasma, marca, rejilla: null, mallas: [], lineas: [], centro: new THREE.Vector3(), encuadrado: false, luz, piso, cotasG }
+    st.current = { scene, camera, renderer, controls, grupo, extras, fantasma, marca, rejilla: null, mallas: [], lineas: [], centro: new THREE.Vector3(), encuadrado: false, luz, piso, cotasG, sucio: 3 }
 
     let activo = true
+    // se dibuja sólo cuando la cámara se mueve o algo cambió: con el mueble quieto
+    // no gasta procesador ni batería (una cocina grande pesa en cada cuadro)
     const animar = () => {
       if (!activo) return
-      controls.update()
-      renderer.render(scene, camera)
+      const s = st.current
+      const movio = controls.update()
+      if (s && (movio || s.sucio > 0)) {
+        renderer.render(scene, camera)
+        if (s.sucio > 0) s.sucio--
+      }
       requestAnimationFrame(animar)
     }
     animar()
@@ -327,6 +334,7 @@ export default function Mueble3D({
       renderer.setSize(w, h)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
+      if (st.current) st.current.sucio = 3
     })
     ro.observe(el)
 
@@ -353,6 +361,7 @@ export default function Mueble3D({
       fantasma.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
       fantasma.scale.set(Math.max(1, Math.abs(b.x - a.x)), Math.max(1, Math.abs(b.y - a.y)), Math.max(1, Math.abs(b.z - a.z)))
       fantasma.visible = true
+      if (st.current) st.current.sucio = 3
     }
     const abajo = (e: PointerEvent) => {
       inicio = { x: e.clientX, y: e.clientY }
@@ -406,6 +415,7 @@ export default function Mueble3D({
         arrastre = null
         controls.enabled = true
         fantasma.visible = false
+        if (st.current) st.current.sucio = 3
         setEtiqueta(null)
         if (a.delta) props.current.alEmpujar?.(a.indice, a.eje, a.lado, a.delta)
       } else if (movido < 5) {
@@ -432,6 +442,11 @@ export default function Mueble3D({
       st.current = null
     }
   }, [])
+
+  // cualquier cambio que pase por React vuelve a dibujar unos cuadros
+  useEffect(() => {
+    if (st.current) st.current.sucio = 3
+  })
 
   // piezas: se rehacen las mallas cuando cambia el diseño
   useEffect(() => {
