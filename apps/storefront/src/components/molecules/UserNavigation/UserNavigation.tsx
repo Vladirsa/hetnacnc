@@ -57,6 +57,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
     items: [
       { label: "Datos y contraseña", href: "/user/settings", icono: "seguridad" },
       { label: "Direcciones", href: "/user/addresses", icono: "direcciones" },
+      { label: "¿Qué mejorarías?", href: "/opinion", icono: "idea" },
       { label: "Ayuda", href: "/preguntas-frecuentes", icono: "ayuda" },
     ],
   },
