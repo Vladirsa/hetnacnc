@@ -31,8 +31,8 @@ const MODOS: Modo<ModoMuebles>[] = [
   {
     id: "cocina",
     slug: "despiece-muebles",
-    nombre: "Cocina integral",
-    nota: "Biblioteca de gabinetes a tu medida",
+    nombre: "Cocina y muebles de melamina",
+    nota: "Gabinetes, libreros, roperos y cómodas a tu medida",
     icono: (
       <>
         <rect x="5" y="18" width="30" height="16" rx="1.5" />

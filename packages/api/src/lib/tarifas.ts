@@ -14,6 +14,7 @@ import { MercurModules } from "@mercurjs/types"
 import { COMISION_TOPE, comisionPct } from "./cotizacion-liga"
 import { CUPO_GB } from "./cloud"
 import { PAQUETES } from "./creditos-compra"
+import { diasVigencia, escalones } from "./comision-autores"
 import { creditosDe, creditosModeloIa, previewsGratisPorMes } from "../workflows/create-escaneo/steps/create-escaneo"
 
 export type FilaTarifa = { concepto: string; precio: string; nota?: string }
@@ -46,6 +47,19 @@ async function comisionAcademia(container: MedusaContainer, code: string): Promi
   } catch {
     return null
   }
+}
+
+// Descuento a instructores que escriben en el blog (lib/comision-autores.ts)
+function filasAutor(base: number | null): FilaTarifa[] {
+  if (base === null) return []
+  const dias = diasVigencia()
+  return escalones()
+    .filter((e) => e.pct < base)
+    .map((e) => ({
+      concepto: `Venta de un curso, con ${e.articulos} ${e.articulos === 1 ? "artículo" : "artículos o más"} en el blog`,
+      precio: `${e.pct}% por venta`,
+      nota: `Artículos aprobados por HETNA en los últimos ${dias} días`,
+    }))
 }
 
 async function comisionGlobal(container: MedusaContainer): Promise<number | null> {
@@ -86,6 +100,7 @@ export async function tarifasHetna(container: MedusaContainer): Promise<{ actual
       filas: [
         { concepto: "Publicar cursos, libros y PDF", precio: "Gratis" },
         { concepto: "Venta de un curso", precio: pct(cursos), nota: "El resto llega a tu saldo al confirmarse el pago" },
+        ...filasAutor(cursos),
         { concepto: "Venta de un libro o PDF", precio: pct(libros), nota: "Entrega automática al comprador" },
         { concepto: "Cursos y libros gratis", precio: "Sin comisión" },
       ],

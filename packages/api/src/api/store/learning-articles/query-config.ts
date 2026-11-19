@@ -15,9 +15,11 @@ const fields = [
 export const storeLearningArticleQueryConfig = {
   list: {
     defaults: fields,
+    allowed: fields,
     isList: true,
   },
   retrieve: {
     defaults: fields,
+    allowed: fields,
   },
 }

@@ -116,13 +116,13 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   },
   {
     slug: "despiece-muebles",
-    nombre: "Cocina integral a la medida",
-    texto: "Biblioteca de gabinetes de cocina: elige el modelo, cambia sus medidas y sale el despiece.",
+    nombre: "Cocina y muebles de melamina a la medida",
+    texto: "Gabinetes de cocina, libreros, roperos, cómodas y burós: elige el modelo, cambia sus medidas y sale el despiece.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Cocina integral para router CNC: gabinetes prefabricados a la medida, despiece y hojas",
+    titulo: "Planos de muebles de melamina a la medida gratis: cocina, librero, ropero y cómoda con despiece",
     descripcion:
-      "Elige gabinetes de cocina (bajos, cajoneras, fregadero, esquinero, altos, abatibles y alacenas), cambia ancho, alto y fondo, o arma la cocina completa de una pared. Melamina o MDF, minifix o confirmat, bisagras, correderas, lista de corte con canto, acomodo en hojas y DXF para tu router CNC."
+      "Gabinetes de cocina, alacenas, libreros, roperos, cómodas, burós, zapateras y muebles de TV a tu medida: cambia ancho, alto y fondo o arma la cocina completa. Melamina o MDF, minifix o confirmat, bisagras, correderas, lista de corte con canto, acomodo en hojas y DXF. Y si quieres, lo manda a cortar un taller HETNA."
   },
   {
     slug: "plantillas-empaque",
