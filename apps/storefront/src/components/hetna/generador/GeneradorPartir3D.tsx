@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { leerOBJ, leerSTL, mallaSTL, medidasMalla, type Malla } from "@/lib/generador/vectores"
-import { mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { OPCIONES_BASE, cabe, cortesParaCama, partir, type Corte, type Eje, type Resultado, type TipoConector } from "@/lib/generador/partir3d"
 
 const Vista = dynamic(() => import("./Partir3DVista"), { ssr: false, loading: () => <div className="w-full h-[460px] rounded-[12px] bg-[#0F151E]" /> })
@@ -209,6 +209,26 @@ export function GeneradorPartir3D() {
     descargar(`${nombre}-partido.zip`, zip as unknown as BlobPart, "application/zip")
   }
 
+  // Todas las piezas (y los pernos) al Cotizador como un proyecto
+  const cotizar = () => {
+    if (!res) return
+    const piezas = res.piezas.map((p) => ({ nombre: `${nombre}-${p.nombre}.stl`, contenido: mallaSTL(p.malla), cantidad: 1 }))
+    if (res.perno) piezas.push({ nombre: `perno-${diametro}x${res.pernoLargo}mm.stl`, contenido: mallaSTL(res.perno), cantidad: res.conectores })
+    const union = CONECTORES.find((c) => c.id === conector)?.nombre.toLowerCase() || ""
+    const ok = mandarPaqueteACotizador(
+      {
+        proyecto: nombre,
+        origen: "Partir modelo 3D",
+        servicio: "impresion_3d",
+        opciones: { materialImpresion: "pla" },
+        nota: `${nombre} partido en ${res.piezas.length} piezas para cama de ${camaN.join(" × ")} mm${conector === "ninguno" ? "" : `, unión con ${union}`}${conector === "imanes" && res.conectores ? ` (${res.conectores * 2} imanes de ${imanD} × ${imanH} mm)` : ""}.`,
+        piezas,
+      },
+      locale
+    )
+    if (!ok) setAviso("El proyecto es muy grande para pasarlo al Cotizador. Descarga el ZIP y súbelo pieza por pieza.")
+  }
+
   const mensaje = res
     ? `Hola HETNA, partí mi modelo "${nombre}" en ${res.piezas.length} piezas (${med ? `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm` : ""}) y quiero que me lo impriman.`
     : "Hola HETNA, quiero imprimir un modelo grande en partes."
@@ -364,8 +384,12 @@ export function GeneradorPartir3D() {
                   {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`} en la cama de {camaN.join("×")} mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</p>}
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
 
+                  <button type="button" onClick={cotizar} className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
+                    Ver precio de todas las piezas en el Cotizador
+                  </button>
                   <div className="grid sm:grid-cols-2 gap-2">
-                    <button type="button" onClick={bajarZip} className="bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px]">
+                    <button type="button" onClick={bajarZip} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3.5 rounded-[10px] text-[15px]">
                       Descargar todo (ZIP)
                     </button>
                     <button

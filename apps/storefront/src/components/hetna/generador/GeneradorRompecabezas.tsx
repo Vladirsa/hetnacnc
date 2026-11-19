@@ -186,7 +186,7 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
               )}
               <button
                 type="button"
-                onClick={() => { if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r.dibujo), locale)) setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                onClick={() => { if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r.dibujo), locale, { origen: "Rompecabezas", servicio: "laser_co2", material: "MDF", nota: `Rompecabezas de ${r.piezas} piezas, ${ancho} × ${alto} mm.` })) setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
                 className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
