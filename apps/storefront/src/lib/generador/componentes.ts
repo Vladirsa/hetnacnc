@@ -113,6 +113,22 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     return n
   })
 
+  // la cubierta se asienta sobre lo más alto de la estructura que tiene debajo
+  // (con caja y espiga los costados pueden subir unos milímetros sobre los travesaños)
+  for (const t of extras) {
+    if (t.rol !== "cubierta") continue
+    const g = t.z1 - t.z0
+    let tope = -Infinity
+    for (const f of m.tablerosFinales) {
+      const sobre = f.x1 > t.x0 + 1 && f.x0 < t.x1 - 1 && f.y1 > t.y0 + 1 && f.y0 < t.y1 - 1
+      if (sobre && f.z1 <= t.z0 + 60 && f.z1 >= t.z0 - 60) tope = Math.max(tope, f.z1)
+    }
+    if (Number.isFinite(tope) && tope > t.z0) {
+      t.z0 = r1(tope)
+      t.z1 = t.z0 + g
+    }
+  }
+
   // piezas de estructura: con su material y el índice en la lista completa
   const piezas: PiezaMueble[] = m.piezas.map((p) => ({ ...p, origen: idxE[p.origen] ?? p.origen, rol: "estructura" as Rol, material: matE, barrenos: [...p.barrenos], ranuras: [] }))
   const accesorios: Accesorio[] = []
