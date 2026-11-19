@@ -57,10 +57,14 @@ export default function Caja3D({ piezas, espesor, exterior }: Props) {
     controls.target.set(0, 0, 0)
 
     let activo = true
+    // se dibuja sólo cuando la cámara se mueve (o al abrir y al cambiar de tamaño)
+    let sucio = 3
     const animar = () => {
       if (!activo) return
-      controls.update()
-      renderer.render(scene, camera)
+      if (controls.update() || sucio > 0) {
+        renderer.render(scene, camera)
+        if (sucio > 0) sucio--
+      }
       requestAnimationFrame(animar)
     }
     animar()
@@ -71,6 +75,7 @@ export default function Caja3D({ piezas, espesor, exterior }: Props) {
       renderer.setSize(w, h)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
+      sucio = 3
     }
     const ro = new ResizeObserver(onResize)
     ro.observe(el)
