@@ -4,7 +4,7 @@ import { BotonesCam } from "./BotonesCam"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
-import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarAFabricar, mandarPaqueteACotizador, nombresDeArchivo } from "@/lib/generador/aCotizador"
 import { type PiezaAnidar, anidar, hojaAnidadaSVG, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
 import { dibujoDXF, dibujoSVG, leerDXF, leerSVG, medidas, unir } from "@/lib/generador/vectores"
 
@@ -236,7 +236,18 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
 
                   <button
                     type="button"
-                    onClick={() => { if (!mandarACotizador(`${nombre}.dxf`, dibujoDXF(dibujoTodo!), locale, { origen: "Anidado", nota: `${colocadas} piezas anidadas en ${r.hojas.length} hoja(s) de ${r1(hoja.ancho)} × ${r1(hoja.alto)} mm.` })) setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                    onClick={() => {
+                      // cada pieza con su cantidad (el acomodo en hojas va en la nota)
+                      const usadas = piezas.filter((p) => p.cantidad > 0)
+                      const nombres = nombresDeArchivo(usadas.map((p) => p.nombre), "dxf")
+                      const ok = mandarPaqueteACotizador({
+                        proyecto: nombre,
+                        origen: "Anidado",
+                        nota: `${colocadas} piezas anidadas en ${r.hojas.length} hoja(s) de ${r1(hoja.ancho)} × ${r1(hoja.alto)} mm.`,
+                        piezas: usadas.map((p, i) => ({ nombre: nombres[i], contenido: dibujoDXF(p.dibujo), cantidad: p.cantidad })),
+                      }, locale)
+                      if (!ok) setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
+                    }}
                     className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>

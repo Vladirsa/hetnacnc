@@ -40,6 +40,17 @@ export type ContextoCotizacion = {
 export type PaqueteCotizacion = ContextoCotizacion & { proyecto: string; origen: string; piezas: PiezaPaquete[] }
 
 /** Material de láser CO2 del cotizador según el espesor de MDF (mm). */
+/** Nombre de archivo limpio y único dentro de un proyecto ("Lateral izquierdo" → "lateral-izquierdo.dxf"). */
+export function nombresDeArchivo(nombres: string[], ext: string): string[] {
+  const usados = new Map<string, number>()
+  return nombres.map((n) => {
+    const base = (n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "pieza").slice(0, 40)
+    const k = (usados.get(base) || 0) + 1
+    usados.set(base, k)
+    return `${k > 1 ? `${base}-${k}` : base}.${ext}`
+  })
+}
+
 /** Material del router en el cotizador: el MDF de lista más cercano al espesor (mm). */
 export const materialRouterMDF = (mm: number) => `MDF ${[3, 9, 15, 18].reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))}mm`
 
