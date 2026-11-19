@@ -5,6 +5,7 @@
 // Todo en milímetros, Y hacia arriba, calculado en el navegador.
 
 import { extruir } from "@/lib/generador/extruir"
+import { unirContornos } from "@/lib/generador/unirContornos"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import type { Curva, Pt } from "@/lib/generador/trazado"
 import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
@@ -113,7 +114,8 @@ export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlave
   if (!(o.alto > 0)) return vacio("Escribe el alto de las letras.")
 
   const t = textoACurvas(fuente, { texto: o.texto, alto: o.alto, espaciado: o.espaciado, interlineado: 1.4, alineacion: "centro" })
-  const letras = t.curvas.map((c) => aplanar(c)).filter((p) => p.length >= 3)
+  // unidas: en letra cursiva las letras se enciman y, sin unir, se "borran" pedazos
+  const letras = unirContornos(t.curvas.map((c) => aplanar(c)).filter((p) => p.length >= 3))
   if (!letras.length) return vacio("La tipografía no tiene esas letras.")
   const xs = letras.flat().map((p) => p[0])
   const ys = letras.flat().map((p) => p[1])
