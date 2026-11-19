@@ -14,6 +14,7 @@ import { useParams } from "next/navigation"
 import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import type { Herramienta, Plano } from "@/lib/generador/ensamble"
+import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES, muebleDeTableros } from "@/lib/generador/tableros"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
@@ -103,7 +104,49 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const clave = JSON.stringify({ tableros, opciones })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const m = useMemo(() => muebleDeTableros(tableros, opciones), [clave])
-  const d = useMemo(() => (m.piezas.length && !m.errores.length ? dibujo(piezasTendidas(m.piezas)) : null), [m])
+  // ---- acomodo en hojas ----
+  const [acomodar, setAcomodar] = useState(false)
+  const [hojaId, setHojaId] = useState<string>(HOJAS_TABLERO[0].id)
+  const [hojaPropia, setHojaPropia] = useState({ largo: "2440", ancho: "1220" })
+  const [ah, setAh] = useState({ separacion: "", margen: "10", copias: "1" })
+  const [conVeta, setConVeta] = useState(false)
+  const [etiquetas, setEtiquetas] = useState(true)
+  const [vetas, setVetas] = useState<Record<string, Veta>>({}) // por nombre de pieza
+  const hoja = hojaId === "propia" ? { largo: numero(hojaPropia.largo) || 2440, ancho: numero(hojaPropia.ancho) || 1220 } : HOJAS_TABLERO.find((h) => h.id === hojaId) || HOJAS_TABLERO[0]
+  const sepAuto = herramienta.tipo === "fresa" ? herramienta.diametro + 2 : 3
+  const separacion = ah.separacion.trim() === "" ? sepAuto : Math.max(0, numero(ah.separacion) || 0)
+  const copias = Math.max(1, Math.min(50, Math.round(numero(ah.copias) || 1)))
+  const vetaDe = (nombre: string): Veta => vetas[nombre] ?? "largo"
+  const acomodo = useMemo(() => {
+    if (!acomodar || !m.piezas.length || m.errores.length) return null
+    return acomodarEnTablero(
+      m.piezas.map((p, i) => ({ id: `p${i}`, nombre: p.nombre, trazos: piezasTendidas([p]), veta: vetaDe(p.nombre), cantidad: copias })),
+      { largo: hoja.largo, ancho: hoja.ancho, separacion, margen: Math.max(0, numero(ah.margen) || 0), conVeta, etiquetas },
+    )
+  }, [acomodar, m, hoja.largo, hoja.ancho, separacion, ah.margen, conVeta, etiquetas, copias, vetas]) // eslint-disable-line react-hooks/exhaustive-deps
+  const d = useMemo(() => {
+    if (!m.piezas.length || m.errores.length) return null
+    if (acomodo && acomodo.hojas.length) return dibujo(acomodo.trazos)
+    return dibujo(piezasTendidas(m.piezas))
+  }, [m, acomodo])
+  const bajarLista = () => {
+    if (!acomodo) return
+    const numeros = new Map<string, number[]>()
+    for (const h of acomodo.hojas) for (const c of h.colocadas) numeros.set(c.id, [...(numeros.get(c.id) || []), c.n])
+    const filas = m.piezas.map((p, i) => {
+      const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
+      const a = Math.max(...us) - Math.min(...us), b = Math.max(...vs) - Math.min(...vs)
+      return { nombre: p.nombre, largo: Math.max(a, b), ancho: Math.min(a, b), grosor: p.grosor, cantidad: copias, veta: conVeta ? vetaDe(p.nombre) : ("libre" as Veta), numeros: (numeros.get(`p${i}`) || []).sort((x, y) => x - y) }
+    })
+    const url = URL.createObjectURL(new Blob(["\ufeff" + listaCorteCSV(filas)], { type: "text/csv;charset=utf-8" }))
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `lista-de-corte-${m.medidas.ancho}x${m.medidas.alto}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 
   // ---- editor: cada cambio se hace sobre el mueble ya armado (lo que se ve) ----
   const base = useCallback((): Tablero[] => (m.piezas.length ? [...m.tablerosFinales, ...m.sueltos] : tableros), [m, tableros])
@@ -172,7 +215,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     }
     return a / 1e6
   }, [m])
-  const hojas = Math.max(1, Math.ceil(areaM2 / ((TABLERO.ancho * TABLERO.largo) / 1e6) / 0.8))
+  const hojasEstimadas = Math.max(1, Math.ceil(areaM2 / ((TABLERO.ancho * TABLERO.largo) / 1e6) / 0.8))
 
   const subirImagen = async (archivo?: File | null) => {
     if (!archivo) return
@@ -336,6 +379,77 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         )}
       </Seccion>
 
+      <Seccion titulo="Acomodo en hojas">
+        <label className="flex items-center justify-between gap-2 text-[13px] font-semibold text-white">
+          Acomodar las piezas en hojas
+          <input type="checkbox" checked={acomodar} onChange={(e) => setAcomodar(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
+        </label>
+        {acomodar && (
+          <>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[...HOJAS_TABLERO, { id: "propia", nombre: "Otra medida" }].map((h) => (
+                <button key={h.id} type="button" aria-pressed={hojaId === h.id} onClick={() => setHojaId(h.id)} className={`rounded-[8px] px-2 py-1.5 text-left text-[11.5px] font-semibold ${hojaId === h.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+                  {h.nombre}
+                </button>
+              ))}
+            </div>
+            {hojaId === "propia" && (
+              <div className="grid grid-cols-2 gap-2">
+                <CampoNum etiqueta="Largo de la hoja" valor={hojaPropia.largo} cambiar={(x) => setHojaPropia((h) => ({ ...h, largo: x }))} sufijo="mm" />
+                <CampoNum etiqueta="Ancho de la hoja" valor={hojaPropia.ancho} cambiar={(x) => setHojaPropia((h) => ({ ...h, ancho: x }))} sufijo="mm" />
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-2">
+              <CampoNum etiqueta={`Separación (${sepAuto})`} valor={ah.separacion} cambiar={(x) => setAh((s) => ({ ...s, separacion: x }))} sufijo="mm" />
+              <CampoNum etiqueta="Margen" valor={ah.margen} cambiar={(x) => setAh((s) => ({ ...s, margen: x }))} sufijo="mm" />
+              <CampoNum etiqueta="Muebles" valor={ah.copias} cambiar={(x) => setAh((s) => ({ ...s, copias: x }))} />
+            </div>
+            <span className="text-[12px] text-[#8A97AB]">Separación vacía = la fresa más 2 mm. Margen = orilla de la hoja que no se usa (la prensa o el canto dañado).</span>
+            <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
+              El material tiene veta (melamina con diseño, triplay)
+              <input type="checkbox" checked={conVeta} onChange={(e) => setConVeta(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
+            </label>
+            <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
+              Número en cada pieza (capa ETIQUETA)
+              <input type="checkbox" checked={etiquetas} onChange={(e) => setEtiquetas(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
+            </label>
+            {conVeta && (
+              <div className="flex flex-col gap-1 rounded-[9px] border border-[#2A3546] bg-[#111821] p-2">
+                <span className="text-[12px] text-[#8A97AB]">Veta de cada pieza (la veta de la hoja va a lo largo):</span>
+                {[...new Set(m.piezas.map((p) => p.nombre))].map((nom) => (
+                  <div key={nom} className="flex items-center justify-between gap-2 text-[12px]">
+                    <span className="truncate text-[#C9D2E0]">{nom}</span>
+                    <span className="flex shrink-0 gap-1">
+                      {([["largo", "A lo largo"], ["ancho", "Atravesada"], ["libre", "Libre"]] as const).map(([id, t]) => (
+                        <button key={id} type="button" aria-pressed={vetaDe(nom) === id} onClick={() => setVetas((v) => ({ ...v, [nom]: id }))} className={`rounded-[6px] px-1.5 py-0.5 font-semibold ${vetaDe(nom) === id ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+                          {t}
+                        </button>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {acomodo && (
+              <div className="flex flex-col gap-2 rounded-[9px] bg-[#C2560A]/10 px-2.5 py-2 text-[12.5px] text-[#F2D29B]">
+                <span>
+                  {acomodo.piezas} piezas en <b className="text-white">{acomodo.hojas.length} {acomodo.hojas.length === 1 ? "hoja" : "hojas"}</b> de {hoja.largo} × {hoja.ancho} mm · aprovechamiento <b className="text-white">{Math.round(acomodo.aprovechamiento * 100)}%</b>
+                </span>
+                {acomodo.noCaben.length > 0 && (
+                  <span className="text-[#F6B8AE]">
+                    No caben: {acomodo.noCaben.slice(0, 3).join(", ")}{acomodo.noCaben.length > 3 ? "…" : ""}. {conVeta ? "Prueba con su veta libre o " : ""}Elige una hoja más grande.
+                  </span>
+                )}
+                <button type="button" onClick={bajarLista} className="self-start rounded-[7px] bg-[#1C2431] px-2.5 py-1.5 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+                  Descargar lista de corte (CSV)
+                </button>
+              </div>
+            )}
+            <span className="text-[12px] text-[#8A97AB]">En «Piezas 2D» ves las hojas; la descarga DXF, SVG o PDF sale ya acomodada.</span>
+          </>
+        )}
+      </Seccion>
+
       <Seccion titulo="Tablero y máquina">
         <div className="grid grid-cols-2 gap-2">
           <CampoNum etiqueta="Grosor real (medido)" valor={v.grosor} cambiar={cambiar("grosor")} sufijo="mm" />
@@ -459,6 +573,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         </>
       }
       vista3D={vista3D}
+      sinAcomodo
       dibujo={d}
       avisos={avisos}
       archivo={`mueble-${m.medidas.ancho}x${m.medidas.alto}-${opciones.grosor}mm`}
@@ -467,7 +582,9 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
       datos={[
         ["Armado", medidasTxt],
         ["Piezas", String(m.piezas.length)],
-        ["Tablero", `${areaM2.toFixed(2)} m² · ${hojas} ${hojas === 1 ? "hoja" : "hojas"} de ${TABLERO.largo} × ${TABLERO.ancho}`],
+        acomodo
+          ? ["Hojas", `${acomodo.hojas.length} de ${hoja.largo} × ${hoja.ancho} · ${Math.round(acomodo.aprovechamiento * 100)}% aprovechado${copias > 1 ? ` · ${copias} muebles` : ""}`]
+          : ["Tablero", `${areaM2.toFixed(2)} m² · ~${hojasEstimadas} ${hojasEstimadas === 1 ? "hoja" : "hojas"} de ${TABLERO.largo} × ${TABLERO.ancho}`],
         ["Unión", nombreUnion],
         ...m.compras.map((c) => [c.nombre, String(c.cantidad)] as [string, string]),
       ]}
