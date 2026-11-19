@@ -19,7 +19,7 @@ import { type Barreno, type MuebleTableros, type OpcionesTableros, type PiezaTab
 
 export type Rol = "estructura" | "puerta" | "frente" | "cajon" | "fondo" | "cubierta"
 export type Bisagra = "izq" | "der" | "arriba"
-export type TableroC = Tablero & { rol?: Rol; material?: string; bisagra?: Bisagra; jaladera?: number }
+export type TableroC = Tablero & { rol?: Rol; material?: string; bisagra?: Bisagra; jaladera?: number; enRanura?: boolean }
 
 export type Material = { id: string; nombre: string; color: string; veta: boolean; grosores: number[]; canto: boolean }
 export const MATERIALES: Material[] = [
@@ -52,7 +52,9 @@ export const ROLES: { id: Rol; nombre: string }[] = [
 ]
 
 export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number }
-export type PiezaMueble = PiezaTablero & { rol: Rol; material: string }
+// ranura: canal (para el fondo) en una cara de la pieza, de u0..u1 × v0..v1 y prof de hondo
+export type Ranura = { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }
+export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[] }
 // accesorios para el 3D (en mm del mueble)
 export type Accesorio = { tipo: "pata"; x: number; y: number; z0: number; z1: number; d: number } | { tipo: "jaladera"; a: [number, number, number]; b: [number, number, number]; sale: [number, number, number] }
 export type MuebleCompleto = Omit<MuebleTableros, "piezas" | "tablerosFinales"> & { piezas: PiezaMueble[]; tablerosFinales: TableroC[]; accesorios: Accesorio[]; cantoMetros: number }
@@ -84,8 +86,11 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
   const cajaDe = (ts: Tablero[]) => [0, 1, 2].map((i) => [Math.min(...ts.map((t) => t[LO[i]])), Math.max(...ts.map((t) => t[HI[i]]))])
   const antes = estructura.length ? cajaDe(estructura) : null
   const despues = m.tablerosFinales.length ? cajaDe(m.tablerosFinales) : null
+  // sólo cuando se piden medidas totales: si no, los componentes se quedan donde están
+  // (que la estructura crezca unos milímetros por el margen de las mortajas no los mueve)
+  const escalado = [o.ancho, o.fondo, o.alto].some((v) => v && Number.isFinite(v))
   const llevar = (i: number, v: number) => {
-    if (!antes || !despues) return v
+    if (!antes || !despues || !escalado) return v
     const [a0, a1] = antes[i], [b0, b1] = despues[i]
     return a1 - a0 < 1 ? v - a0 + b0 : b0 + ((v - a0) * (b1 - b0)) / (a1 - a0)
   }
@@ -109,7 +114,7 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
   })
 
   // piezas de estructura: con su material y el índice en la lista completa
-  const piezas: PiezaMueble[] = m.piezas.map((p) => ({ ...p, origen: idxE[p.origen] ?? p.origen, rol: "estructura" as Rol, material: matE, barrenos: [...p.barrenos] }))
+  const piezas: PiezaMueble[] = m.piezas.map((p) => ({ ...p, origen: idxE[p.origen] ?? p.origen, rol: "estructura" as Rol, material: matE, barrenos: [...p.barrenos], ranuras: [] }))
   const accesorios: Accesorio[] = []
   let bisagras = 0, jaladeras = 0
   const correderas: number[] = []
@@ -138,6 +143,7 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
       indice: piezas.length + j,
       barrenos,
       cantos: [],
+      ranuras: [],
       rol: t.rol || "puerta",
       material: materialDe(t.material || PREDETERMINADO[(t.rol || "puerta") as Exclude<Rol, "estructura">]?.material || matE).id,
     }
@@ -204,6 +210,26 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
       }
     }
     if (t.rol === "cajon" && k === 0) correderas.push(Math.round(hi[1] - lo[1]))
+    // fondo en ranura: canal de 4 mm × 8 mm en cada pieza de estructura donde entra
+    if (t.rol === "fondo" && t.enRanura) {
+      const anchoR = 4, profR = 8
+      const c = (lo[k] + hi[k]) / 2
+      const f0 = [...lo], f1 = [...hi]
+      f0[k] = c - anchoR / 2
+      f1[k] = c + anchoR / 2
+      m.tablerosFinales.forEach((tf, i) => {
+        const p = piezas[i]
+        if (!p || p.rol !== "estructura") return
+        const kp = ejeDelgado(tf)
+        if (kp === k) return
+        const plo = [tf.x0, tf.y0, tf.z0], phi = [tf.x1, tf.y1, tf.z1]
+        const o0 = [0, 1, 2].map((a) => Math.max(f0[a], plo[a])), o1 = [0, 1, 2].map((a) => Math.min(f1[a], phi[a]))
+        if (o0.some((v, a) => o1[a] - v <= 0.2)) return
+        const U = EJE_U[kp], V = EJE_V[kp]
+        const cara: 0 | 1 = (lo[kp] + hi[kp]) / 2 > (plo[kp] + phi[kp]) / 2 ? 1 : 0
+        p.ranuras.push({ u0: o0[U], v0: o0[V], u1: o1[U], v1: o1[V], prof: profR, cara })
+      })
+    }
     piezas.push(pz)
   })
 
@@ -232,7 +258,7 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     }
     for (const [l, n] of porLargo) compras.push({ nombre: `Corredera telescópica de ${l} mm (par)`, cantidad: Math.max(1, Math.round(n / 2)), nota: "Holgura de 12.7 mm por lado." })
   }
-  if (extras.some((t) => t.rol === "fondo")) compras.push({ nombre: "Clavo o grapa para fondo", cantidad: 1, nota: "Una caja; también se puede atornillar." })
+  if (extras.some((t) => t.rol === "fondo" && !t.enRanura)) compras.push({ nombre: "Clavo o grapa para fondo", cantidad: 1, nota: "Una caja; también se puede atornillar." })
   if (extras.some((t) => t.rol === "cubierta")) compras.push({ nombre: "Escuadra de fijación para cubierta", cantidad: 4 + 2 * Math.max(0, Math.floor((m.medidas.ancho - 600) / 600)), nota: "Se atornilla por abajo." })
   if (extras.some((t) => t.rol === "cajon")) compras.push({ nombre: "Tornillo para madera 4 × 40", cantidad: 1, nota: "Una caja: armado de los cajones y frentes." })
 

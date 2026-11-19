@@ -226,9 +226,17 @@ function numero(txt: string, cx: number, cy: number, alto: number): Trazo[] {
 }
 
 // Lista de corte en CSV (para el taller o la cotización)
-export function listaCorteCSV(piezas: { nombre: string; largo: number; ancho: number; grosor: number; cantidad: number; veta: Veta; numeros: number[]; material?: string; hojas?: string }[]) {
+export function listaCorteCSV(piezas: { nombre: string; largo: number; ancho: number; grosor: number; cantidad: number; veta: Veta; numeros: number[]; material?: string; hojas?: string; canto?: { l1: boolean; l2: boolean; a1: boolean; a2: boolean; grosor: number } }[]) {
   const esc = (s: string) => `"${s.replace(/"/g, '""')}"`
-  const filas = [["Números", "Pieza", "Material", "Largo (mm)", "Ancho (mm)", "Grosor (mm)", "Cantidad", "Veta", "Hojas"].map(esc).join(",")]
-  for (const p of piezas) filas.push([p.numeros.join(" "), p.nombre, p.material || "", String(Math.round(p.largo)), String(Math.round(p.ancho)), String(Math.round(p.grosor * 10) / 10), String(p.cantidad), p.veta === "libre" ? "Sin veta" : p.veta === "largo" ? "A lo largo" : "Atravesada", p.hojas || ""].map(esc).join(","))
+  // canto por orilla: L1 y L2 son las orillas largas, A1 y A2 las cortas; la medida de corte descuenta el canto
+  const filas = [["Números", "Pieza", "Material", "Largo (mm)", "Ancho (mm)", "Grosor (mm)", "Cantidad", "Veta", "Canto L1", "Canto L2", "Canto A1", "Canto A2", "Corte largo (mm)", "Corte ancho (mm)"].map(esc).join(",")]
+  for (const p of piezas) {
+    const c = p.canto
+    const g = c?.grosor || 0
+    const corteL = p.largo - (c ? ((c.a1 ? 1 : 0) + (c.a2 ? 1 : 0)) * g : 0)
+    const corteA = p.ancho - (c ? ((c.l1 ? 1 : 0) + (c.l2 ? 1 : 0)) * g : 0)
+    const si = (b?: boolean) => (b ? `${g} mm` : "")
+    filas.push([p.numeros.join(" "), p.nombre, p.material || "", String(Math.round(p.largo)), String(Math.round(p.ancho)), String(Math.round(p.grosor * 10) / 10), String(p.cantidad), p.veta === "libre" ? "Sin veta" : p.veta === "largo" ? "A lo largo" : "Atravesada", si(c?.l1), si(c?.l2), si(c?.a1), si(c?.a2), String(Math.round(corteL * 10) / 10), String(Math.round(corteA * 10) / 10)].map(esc).join(","))
+  }
   return filas.join("\n") + "\n"
 }
