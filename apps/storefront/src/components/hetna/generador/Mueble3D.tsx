@@ -28,10 +28,12 @@ export type PiezaVista = PiezaEnsamble & {
   // herrajes (opcional): barrenos de cara y de canto, en coordenadas de la pieza
   barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]
   cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[]
-  ranuras?: { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }[]
+  ranuras?: { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1; decor?: boolean }[]
 }
 // cilindro de radio y alto 1 (se escala por barreno); materiales compartidos
 const CILINDRO = new THREE.CylinderGeometry(1, 1, 1, 18)
+// rebaje de diseño (shaker, estriado, uñero): sombra suave sobre la cara
+const MAT_REBAJE = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })
 const MAT_BARRENO = new THREE.MeshBasicMaterial({ color: 0x15100a })
 const CAJA = new THREE.BoxGeometry(1, 1, 1)
 const MAT_CANTO = new THREE.MeshBasicMaterial({ color: 0x2f6fd6 })
@@ -58,7 +60,7 @@ function herrajes(p: PiezaVista): THREE.Object3D[] {
     // canal: una caja oscura delgada en la cara de la pieza
     const w0 = rr.cara === 1 ? e - rr.prof : 0, w1 = rr.cara === 1 ? e + 0.2 : rr.prof
     const a = enThree(p, rr.u0, rr.v0, w0), b = enThree(p, rr.u1, rr.v1, w1)
-    const m = new THREE.Mesh(CAJA, MAT_BARRENO)
+    const m = new THREE.Mesh(CAJA, rr.decor ? MAT_REBAJE : MAT_BARRENO)
     m.position.copy(a.clone().add(b).multiplyScalar(0.5))
     m.scale.set(Math.max(0.5, Math.abs(b.x - a.x)), Math.max(0.5, Math.abs(b.y - a.y)), Math.max(0.5, Math.abs(b.z - a.z)))
     out.push(m)
@@ -95,7 +97,7 @@ const deThree = (v: THREE.Vector3): Pt => [v.x, -v.z, v.y]
 
 // cocina en habitación: cada tramo se fabrica derecho y aquí se gira a su lugar
 export type ColocacionVista = { x0: number; x1: number; origen: number; giro: number; dx: number; dy: number }
-export type AmbienteVista = { muros: { lo: Pt; hi: Pt }[]; vidrios: { lo: Pt; hi: Pt }[] }
+export type AmbienteVista = { muros: { lo: Pt; hi: Pt }[]; vidrios: { lo: Pt; hi: Pt }[]; aparatos?: { tipo: string; lo: Pt; hi: Pt }[] }
 const matrizTramo = (c: ColocacionVista) =>
   new THREE.Matrix4().makeTranslation(c.dx, 0, -c.dy).multiply(new THREE.Matrix4().makeRotationY(c.giro)).multiply(new THREE.Matrix4().makeTranslation(-c.origen, 0, 0))
 
@@ -542,6 +544,29 @@ export default function Mueble3D({
     }
     for (const c of ambiente.muros) caja(c, new THREE.MeshStandardMaterial({ color: 0xe4e0d8, roughness: 0.95 }))
     for (const c of ambiente.vidrios) caja(c, new THREE.MeshStandardMaterial({ color: 0x9fd3ff, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }))
+    // electrodomésticos: acero, negro y detalles sencillos
+    const acero = () => new THREE.MeshStandardMaterial({ color: 0xc9ced4, metalness: 0.6, roughness: 0.35 })
+    const negro = () => new THREE.MeshStandardMaterial({ color: 0x1b1d20, metalness: 0.2, roughness: 0.4 })
+    for (const ap of ambiente.aparatos || []) {
+      caja(ap, ap.tipo === "parrilla" ? negro() : acero())
+      const [x0, y0, z0] = ap.lo, [x1, y1, z1] = ap.hi
+      // quemadores: parrilla y estufa
+      if (ap.tipo === "parrilla" || ap.tipo === "estufa") {
+        const zq = z1 + 1
+        const w = x1 - x0, d = y1 - y0
+        for (const [fx, fy] of [[0.28, 0.3], [0.72, 0.3], [0.28, 0.7], [0.72, 0.7]]) {
+          const r = Math.min(w, d) * 0.11
+          const q = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 4, 24), ap.tipo === "parrilla" ? acero() : negro())
+          const c = aThree([x0 + w * fx, y0 + d * fy, zq])
+          q.position.copy(c)
+          amb!.add(q)
+        }
+      }
+      // refri: línea de las puertas (congelador arriba)
+      if (ap.tipo === "refri") caja({ lo: [x0 + 5, y0 - 2, z0 + (z1 - z0) * 0.68], hi: [x1 - 5, y0, z0 + (z1 - z0) * 0.68 + 8] }, negro())
+      // lavavajillas y estufa: tablero de mandos negro arriba al frente
+      if (ap.tipo === "lavavajillas" || ap.tipo === "estufa") caja({ lo: [x0 + 5, y0 - 2, z1 - 90], hi: [x1 - 5, y0, z1 - 20] }, negro())
+    }
     s.scene.add(amb)
   }, [ambiente])
 

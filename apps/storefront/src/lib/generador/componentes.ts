@@ -54,9 +54,25 @@ export const ROLES: { id: Rol; nombre: string }[] = [
   { id: "repisa", nombre: "Repisa movible" },
 ]
 
-export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number; soporte?: DefSoporte }
+// tirador: cómo se abren puertas y cajones; disenoFrente: rebajes que la router hace en puertas (y frentes)
+export type Tirador = "jaladera" | "gola" | "unero" | "push"
+export type DisenoFrente = "liso" | "shaker" | "estriado" | "vidrio"
+export const TIRADORES: { id: Tirador; nombre: string; nota: string }[] = [
+  { id: "jaladera", nombre: "Jaladera", nota: "De barra, con 2 tornillos" },
+  { id: "gola", nombre: "Perfil Gola", nota: "Aluminio corrido, sin jaladeras" },
+  { id: "unero", nombre: "Uñero fresado", nota: "Rebaje en la orilla: lo hace la CNC" },
+  { id: "push", nombre: "Push", nota: "Se abren al empujar" },
+]
+export const DISENOS_FRENTE: { id: DisenoFrente; nombre: string; nota: string }[] = [
+  { id: "liso", nombre: "Liso", nota: "Sin rebajes" },
+  { id: "shaker", nombre: "Shaker", nota: "Tablero rebajado con marco" },
+  { id: "estriado", nombre: "Estriado", nota: "Canales verticales" },
+  { id: "vidrio", nombre: "Con vidrio", nota: "Hueco y rebaje para vidrio (sólo puertas)" },
+]
+export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number; soporte?: DefSoporte; tirador?: Tirador; disenoFrente?: DisenoFrente }
 // ranura: canal (para el fondo) en una cara de la pieza, de u0..u1 × v0..v1 y prof de hondo
-export type Ranura = { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }
+// decor: rebaje de diseño (shaker, estriado, uñero), no un canal de ensamble
+export type Ranura = { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1; decor?: boolean }
 // cantoLados: orillas con canto (u0 = la del u menor, etc.)
 export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[]; cantoLados?: ("u0" | "u1" | "v0" | "v1")[] }
 // accesorios para el 3D (en mm del mueble)
@@ -136,7 +152,8 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
   // piezas de estructura: con su material y el índice en la lista completa
   const piezas: PiezaMueble[] = m.piezas.map((p) => ({ ...p, origen: idxE[p.origen] ?? p.origen, rol: "estructura" as Rol, material: matE, barrenos: [...p.barrenos], ranuras: [] }))
   const accesorios: Accesorio[] = []
-  let bisagras = 0, jaladeras = 0
+  let bisagras = 0, jaladeras = 0, golaMm = 0, pushes = 0
+  const vidrios: string[] = []
   const correderas: number[] = []
 
   extras.forEach((t, j) => {
@@ -210,7 +227,8 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
       }
     }
     // ---- jaladera (puerta o frente): dos barrenos pasados de 5 mm ----
-    if ((t.rol === "puerta" || t.rol === "frente") && t.jaladera && t.jaladera > 0 && k === 1) {
+    const tirador = o.tirador || "jaladera"
+    if ((t.rol === "puerta" || t.rol === "frente") && t.jaladera && t.jaladera > 0 && k === 1 && tirador === "jaladera") {
       const sep = t.jaladera
       const lado = t.bisagra || "izq"
       let a: [number, number], b: [number, number]
@@ -229,6 +247,34 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
         jaladeras++
         const pa = enMueble(a[0], a[1], 0), pb = enMueble(b[0], b[1], 0)
         accesorios.push({ tipo: "jaladera", a: pa, b: pb, sale: [0, -32, 0] })
+      }
+    }
+    // ---- sin jaladera: Gola, uñero o push ----
+    if ((t.rol === "puerta" || t.rol === "frente") && k === 1 && t.jaladera && t.jaladera > 0 && tirador !== "jaladera") {
+      // en los altos (arriba de 1300 mm) se abre por abajo; en los bajos, por arriba
+      const arriba = (lo[2] + hi[2]) / 2 < 1300
+      if (tirador === "gola") golaMm += u1 - u0
+      if (tirador === "push") pushes++
+      if (tirador === "unero" && g >= 12) pz.ranuras.push({ u0, u1, v0: arriba ? v1 - 25 : v0, v1: arriba ? v1 : v0 + 25, prof: Math.round(g * 0.55 * 10) / 10, cara: 1, decor: true })
+    }
+    // ---- diseño del frente: rebajes en la cara de afuera (cara 0) ----
+    const diseno = o.disenoFrente || "liso"
+    if (diseno !== "liso" && k === 1 && (t.rol === "puerta" || (t.rol === "frente" && diseno !== "vidrio")) && g >= 15) {
+      const w = u1 - u0, h = v1 - v0
+      const marco = Math.max(50, Math.min(75, Math.min(w, h) * 0.12))
+      if (diseno === "shaker" && w - 2 * marco >= 80 && h - 2 * marco >= 60) pz.ranuras.push({ u0: u0 + marco, u1: u1 - marco, v0: v0 + marco, v1: v1 - marco, prof: 5, cara: 0, decor: true })
+      if (diseno === "estriado") {
+        const paso = 25, ancho = 8
+        const n = Math.floor((w - 30) / paso)
+        const ini = u0 + (w - (n - 1) * paso) / 2
+        for (let i = 0; i < n; i++) pz.ranuras.push({ u0: ini + i * paso - ancho / 2, u1: ini + i * paso + ancho / 2, v0, v1, prof: 4, cara: 0, decor: true })
+      }
+      if (diseno === "vidrio" && w - 140 >= 120 && h - 140 >= 120) {
+        const m0 = 70
+        huecos.push([[u0 + m0, v0 + m0], [u1 - m0, v0 + m0], [u1 - m0, v1 - m0], [u0 + m0, v1 - m0]])
+        // rebaje de 10 mm alrededor del hueco, por atrás, donde se asienta el vidrio
+        pz.ranuras.push({ u0: u0 + m0 - 10, u1: u1 - m0 + 10, v0: v0 + m0 - 10, v1: v1 - m0 + 10, prof: 6, cara: 1, decor: true })
+        vidrios.push(`${Math.round(w - 2 * m0 + 18)} × ${Math.round(h - 2 * m0 + 18)}`)
       }
     }
     if (t.rol === "cajon" && k === 0) correderas.push(Math.round(hi[1] - lo[1]))
@@ -310,6 +356,10 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     compras.push({ nombre: `Pata niveladora de ${patas} mm`, cantidad: columnas.length * 2, nota: "Se atornilla bajo el piso del mueble." })
   }
   if (bisagras) compras.push({ nombre: "Bisagra de cazoleta 35 mm (sobrepuesta)", cantidad: bisagras, nota: "Con su base y tornillos." })
+  if (golaMm) compras.push({ nombre: "Perfil Gola de aluminio (de sobreponer)", cantidad: Math.ceil((golaMm / 1000) * 1.1), nota: "Metros, con 10 % extra; se corta a la medida de cada frente." })
+  if (pushes) compras.push({ nombre: "Pulsador push para puerta", cantidad: pushes, nota: "Uno por puerta; en cajones usa corredera push." })
+  if (vidrios.length) compras.push({ nombre: "Vidrio de 4 mm", cantidad: vidrios.length, nota: `Medidas: ${[...new Set(vidrios)].join(", ")} mm; se fija con silicón o junquillo.` })
+  if ((o.disenoFrente || "liso") !== "liso" && piezas.some((p) => (p.rol === "puerta" || p.rol === "frente") && /^melamina/.test(p.material))) avisos.push("Los rebajes del frente dejan ver el aglomerado en la melamina: para shaker, estriado o vidrio usa MDF y píntalo.")
   if (jaladeras) compras.push({ nombre: "Jaladera", cantidad: jaladeras, nota: `Con tornillo de 5 mm${extras.some((t) => t.jaladera) ? `, centros a ${[...new Set(extras.filter((t) => t.jaladera).map((t) => t.jaladera))].join(" / ")} mm` : ""}.` })
   // correderas: un par por cajón (cada caja tiene dos lados)
   if (correderas.length) {

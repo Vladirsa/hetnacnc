@@ -26,7 +26,7 @@ import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
 import { type Abertura, COCINA_INICIO, HABITACION_INICIO, MODULOS, type Modulo, type OpcionesHabitacion, type TipoModulo, cocina, habitacion, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
-import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
+import { DISENOS_FRENTE, type DisenoFrente, TIRADORES, type Tirador, MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
 import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
@@ -158,6 +158,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [material, setMaterial] = useState("melamina-blanca")
   const [patas, setPatas] = useState("0")
   const [cantoG, setCantoG] = useState(1)
+  const [tirador, setTirador] = useState<Tirador>("jaladera")
+  const [disenoFrente, setDisenoFrente] = useState<DisenoFrente>("liso")
   // cocina completa en una pared
   const [varios, setVarios] = useState(false)
   const [pared, setPared] = useState("3000")
@@ -170,7 +172,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   // cocina en una habitación (L o U, ventanas, puertas, isla)
   const [hab, setHab] = useState<Omit<OpcionesHabitacion, "grosor" | "isla"> & { conIsla: boolean; islaLargo: number; islaPasillo: number }>({ ...HABITACION_INICIO, conIsla: false, islaLargo: 1800, islaPasillo: 1000 })
   const [habTxt, setHabTxt] = useState<Record<string, string>>({})
-  const [habVista, setHabVista] = useState<{ colocacion: ColocacionVista[]; ambiente: AmbienteVista } | null>(null)
+  // firma: nombre del primer tablero del diseño (mientras siga ahí, se muestra la escena)
+  const [habVista, setHabVista] = useState<{ firma: string; colocacion: ColocacionVista[]; ambiente: AmbienteVista } | null>(null)
   const [verHab, setVerHab] = useState(true)
   const numHab = (k: string, inicial: number, poner: (n: number) => void) => ({
     valor: habTxt[k] ?? String(inicial),
@@ -207,6 +210,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const opciones = {
     union,
     herraje,
+    tirador,
+    disenoFrente,
     material,
     patas: Math.max(0, numero(patas) || 0),
     varios,
@@ -695,6 +700,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conAltos} onChange={(e) => setHab((h) => ({ ...h, conAltos: e.target.checked }))} className="accent-[#C2560A]" /> Gabinetes altos</label>
           <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conColumna} onChange={(e) => setHab((h) => ({ ...h, conColumna: e.target.checked }))} className="accent-[#C2560A]" /> Columna (alacena)</label>
           <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conIsla} onChange={(e) => setHab((h) => ({ ...h, conIsla: e.target.checked }))} className="accent-[#C2560A]" /> Isla</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!hab.refri} onChange={(e) => setHab((h) => ({ ...h, refri: e.target.checked }))} className="accent-[#C2560A]" /> Refrigerador</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!hab.lavavajillas} onChange={(e) => setHab((h) => ({ ...h, lavavajillas: e.target.checked }))} className="accent-[#C2560A]" /> Lavavajillas</label>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          Estufa:
+          {([["parrilla", "Parrilla empotrada"], ["libre", "De piso"], ["ninguna", "Sin estufa"]] as const).map(([k, n]) => (
+            <button key={k} type="button" aria-pressed={hab.estufa === k} onClick={() => setHab((h) => ({ ...h, estufa: k }))} className={`rounded-[6px] px-2 py-1 font-semibold ${hab.estufa === k ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
         </div>
         {hab.conIsla && (
           <div className="grid grid-cols-2 gap-2">
@@ -714,7 +729,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             const r = habitacion({ ...resto, grosor: opciones.grosor, repisasMovibles: movibles, isla: conIsla ? { largo: islaLargo, distancia: islaPasillo } : undefined })
             aplicar(() => r.tableros, null)
             setVarios(true)
-            setHabVista({ colocacion: r.colocacion, ambiente: { muros: r.muros, vidrios: r.vidrios } })
+            setHabVista({ firma: r.tableros[0]?.nombre || "", colocacion: r.colocacion, ambiente: { muros: r.muros, vidrios: r.vidrios, aparatos: r.aparatos } })
             setVerHab(true)
             setNombre(`Cocina ${hab.forma === "recta" ? "recta" : `en ${hab.forma}`} ${Math.round(hab.largos[0])} mm${conIsla ? " con isla" : ""}`)
             if (union === "espiga") setUnion("confirmat")
@@ -771,6 +786,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             const c = cocina({ ...COCINA_INICIO, modulos, grosor: opciones.grosor, conAltos, cubierta: conCubierta, alturaAltos: numero(alturaAltos) || COCINA_INICIO.alturaAltos, repisasMovibles: movibles })
             aplicar(() => c.tableros, null)
             setVarios(true)
+            setHabVista(c.aparatos.length ? { firma: c.tableros[0]?.nombre || "", colocacion: [], ambiente: { muros: [], vidrios: [], aparatos: c.aparatos } } : null)
             setNombre(`Cocina de ${Math.round(c.largo)} mm`)
             if (union === "espiga") setUnion("confirmat")
             setPunto(null)
@@ -1264,6 +1280,25 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             ))}
           </div>
         )}
+        <span className="text-[12.5px] font-semibold text-white">Cómo se abren</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          {TIRADORES.map((x) => (
+            <button key={x.id} type="button" aria-pressed={tirador === x.id} onClick={() => setTirador(x.id)} className={`flex flex-col items-start rounded-[8px] px-2 py-1.5 text-left ${tirador === x.id ? "bg-[#2A1C12] ring-1 ring-[#C2560A]" : "bg-[#141B26] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}>
+              <span className="text-[12.5px] font-semibold text-white">{x.nombre}</span>
+              <span className="text-[11px] text-[#8A97AB]">{x.nota}</span>
+            </button>
+          ))}
+        </div>
+        <span className="text-[12.5px] font-semibold text-white">Diseño de puertas y frentes</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          {DISENOS_FRENTE.map((x) => (
+            <button key={x.id} type="button" aria-pressed={disenoFrente === x.id} onClick={() => setDisenoFrente(x.id)} className={`flex flex-col items-start rounded-[8px] px-2 py-1.5 text-left ${disenoFrente === x.id ? "bg-[#2A1C12] ring-1 ring-[#C2560A]" : "bg-[#141B26] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}>
+              <span className="text-[12.5px] font-semibold text-white">{x.nombre}</span>
+              <span className="text-[11px] text-[#8A97AB]">{x.nota}</span>
+            </button>
+          ))}
+        </div>
+        {disenoFrente !== "liso" && <span className="text-[11.5px] text-[#8A97AB]">Los rebajes salen en el DXF en capas RANURA (con su profundidad) para fresarlos en la router. Mejor en MDF para pintar.</span>}
         <span className="text-[12px] text-[#8A97AB]">Material de la estructura. Puertas, frentes, fondo y cubierta pueden llevar otro: selecciónalos en el 3D.{materialDe(material).canto ? " Lleva canto de PVC en las orillas del frente." : ""}</span>
       </Seccion>
 
@@ -1407,7 +1442,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   )
 
   // la cocina en habitación se ve en el cuarto mientras el diseño sea el de la habitación
-  const esHabitacion = !!habVista && tableros.some((t) => t.nombre.startsWith("Pared A · "))
+  const conEscena = !!habVista && tableros.some((t) => t.nombre === habVista.firma)
+  const esHabitacion = conEscena && habVista!.colocacion.length > 0
   const enHabitacion = esHabitacion && verHab
   const vista3D = (
     <Visor3D oscuro alto="h-full min-h-[260px]">
@@ -1424,7 +1460,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           ajustar={ajustar}
           vista={vista}
           colocacion={enHabitacion ? habVista!.colocacion : undefined}
-          ambiente={enHabitacion ? habVista!.ambiente : undefined}
+          ambiente={enHabitacion || (conEscena && !esHabitacion) ? habVista!.ambiente : undefined}
           punto={punto}
           alSeleccionar={(i, p) => {
             setSel(i)

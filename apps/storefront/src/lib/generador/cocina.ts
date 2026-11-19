@@ -10,7 +10,7 @@
 import type { TableroC } from "./componentes"
 import { GABINETE_INICIO, gabinete } from "./gabinete"
 
-export type TipoModulo = "puertas" | "fregadero" | "cajonera" | "columna" | "esquina" | "hueco"
+export type TipoModulo = "puertas" | "fregadero" | "cajonera" | "columna" | "esquina" | "hueco" | "parrilla" | "estufa" | "refri" | "lavavajillas"
 // esquina: esquinero ciego (ciegoLado = donde llega el otro tramo); hueco: espacio libre (puerta, estufa, refri)
 // sinAlto: no lleva gabinete alto encima (ventana)
 export type Modulo = { tipo: TipoModulo; ancho: number; sinAlto?: boolean; ciegoLado?: "izq" | "der"; ciego?: number }
@@ -20,8 +20,14 @@ export const MODULOS: { id: TipoModulo; nombre: string }[] = [
   { id: "cajonera", nombre: "Cajonera" },
   { id: "columna", nombre: "Columna (alacena)" },
   { id: "esquina", nombre: "Esquinero ciego" },
-  { id: "hueco", nombre: "Espacio libre (estufa, refri)" },
+  { id: "hueco", nombre: "Espacio libre" },
+  { id: "parrilla", nombre: "Bajo con parrilla (recorte en la cubierta)" },
+  { id: "estufa", nombre: "Estufa (de piso)" },
+  { id: "refri", nombre: "Refrigerador" },
+  { id: "lavavajillas", nombre: "Lavavajillas" },
 ]
+// electrodomésticos: sólo se dibujan (no son piezas); la parrilla sí corta la cubierta
+export type Aparato = { tipo: "refri" | "estufa" | "parrilla" | "lavavajillas" | "campana" | "chimenea"; lo: [number, number, number]; hi: [number, number, number] }
 
 export type OpcionesCocina = {
   modulos: Modulo[]
@@ -77,14 +83,44 @@ export function proponerModulos(largo: number, conColumna: boolean): Modulo[] {
   return mods
 }
 
-export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: string[]; largo: number } {
+export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: string[]; largo: number; aparatos: Aparato[] } {
   const avisos: string[] = []
   const t: TableroC[] = []
+  const aparatos: Aparato[] = []
+  const parrillas: number[] = [] // centro en X de cada parrilla (para el recorte de la cubierta)
+  const zCubierta = o.altoBajos + o.gCubierta
+  // campana sobre la estufa o la parrilla (en lugar del gabinete alto)
+  const campana = (x0: number, ancho: number) => {
+    if (!o.conAltos) return
+    const w = Math.min(900, ancho)
+    const cx = x0 + ancho / 2
+    const z0 = Math.max(zCubierta + 650, o.alturaAltos)
+    aparatos.push({ tipo: "campana", lo: [cx - w / 2, o.fondoBajos - 500, z0], hi: [cx + w / 2, o.fondoBajos, z0 + 120] })
+    aparatos.push({ tipo: "chimenea", lo: [cx - 130, o.fondoBajos - 260, z0 + 120], hi: [cx + 130, o.fondoBajos, Math.max(z0 + 400, o.alturaAltos + o.altoAltos)] })
+  }
   let x = 0
   const bajos: [number, number][] = [] // tramos de x con gabinete bajo (para la cubierta)
   o.modulos.forEach((m, i) => {
     if (m.tipo === "hueco") {
       x += Math.max(0, m.ancho)
+      return
+    }
+    if (m.tipo === "refri" || m.tipo === "estufa" || m.tipo === "lavavajillas") {
+      const a = Math.max(450, Math.min(1000, m.ancho))
+      if (m.tipo === "refri") aparatos.push({ tipo: "refri", lo: [x + 10, -40, 0], hi: [x + a - 10, o.fondoBajos, 1800] })
+      if (m.tipo === "estufa") {
+        aparatos.push({ tipo: "estufa", lo: [x + 5, -30, 0], hi: [x + a - 5, o.fondoBajos - 20, zCubierta] })
+        campana(x, a)
+      }
+      if (m.tipo === "lavavajillas") {
+        aparatos.push({ tipo: "lavavajillas", lo: [x + 2, -o.grosor, 0], hi: [x + a - 2, o.fondoBajos - 20, o.altoBajos - 3] })
+        bajos.push([x, x + a]) // la cubierta sigue encima
+        if (o.conAltos && !m.sinAlto) {
+          const ga = gabinete({ ...GABINETE_INICIO.alto, ancho: a, alto: o.altoAltos, fondo: o.fondoAltos, grosor: o.grosor, gFrente: o.grosor, frente: a >= 500 ? "puertas" : "puerta", repisasMovibles: o.repisasMovibles })
+          t.push(...ga.tableros.map((b) => ({ ...b, nombre: `M${i + 1} alto: ${b.nombre}`, x0: b.x0 + x, x1: b.x1 + x, y0: b.y0 + o.fondoBajos - o.fondoAltos, y1: b.y1 + o.fondoBajos - o.fondoAltos, z0: b.z0 + o.alturaAltos, z1: b.z1 + o.alturaAltos })))
+        }
+      }
+      x += a
       return
     }
     const ancho = Math.max(150, Math.min(1200, m.ancho))
@@ -104,11 +140,18 @@ export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: strin
             ? gabinete({ ...base, frente: "cajones", cajones: 3 })
             : m.tipo === "esquina"
               ? gabinete({ ...base, frente: "esquinero", repisas: 1, ciegoLado: m.ciegoLado, ciego: m.ciego })
+              : m.tipo === "parrilla"
+                ? gabinete({ ...base, frente: ancho >= 500 ? "puertas" : "puerta", repisas: 0 })
             : gabinete({ ...base, frente: ancho >= 500 ? "puertas" : "puerta", repisas: 1 })
-      t.push(...mover(g.tableros, x, 0, `${n} ${m.tipo === "fregadero" ? "fregadero" : m.tipo === "cajonera" ? "cajonera" : m.tipo === "esquina" ? "esquinero" : "bajo"}:`))
+      t.push(...mover(g.tableros, x, 0, `${n} ${m.tipo === "fregadero" ? "fregadero" : m.tipo === "cajonera" ? "cajonera" : m.tipo === "esquina" ? "esquinero" : m.tipo === "parrilla" ? "parrilla" : "bajo"}:`))
       avisos.push(...g.avisos)
       bajos.push([x, x + ancho])
-      if (o.conAltos && !m.sinAlto) {
+      if (m.tipo === "parrilla") {
+        parrillas.push(x + ancho / 2)
+        const w = Math.min(600, ancho - 60)
+        aparatos.push({ tipo: "parrilla", lo: [x + ancho / 2 - w / 2, o.fondoBajos / 2 - 255, zCubierta], hi: [x + ancho / 2 + w / 2, o.fondoBajos / 2 + 255, zCubierta + 8] })
+        campana(x, ancho)
+      } else if (o.conAltos && !m.sinAlto) {
         const ga = gabinete({ ...GABINETE_INICIO.alto, ancho, alto: o.altoAltos, fondo: o.fondoAltos, grosor: o.grosor, gFrente: o.grosor, frente: ancho >= 500 ? "puertas" : "puerta", repisasMovibles: o.repisasMovibles })
         // los altos van contra la pared (atrás)
         t.push(...mover(ga.tableros, x, o.alturaAltos, `${n} alto:`, o.fondoBajos - o.fondoAltos))
@@ -140,11 +183,24 @@ export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: strin
     if (partes.length > tramos.length) avisos.push(`La cubierta se parte en ${partes.length} piezas en la unión de los módulos: se juntan con tornillo de unión para cubierta y silicón.`)
     partes.forEach(([a, b], k) => {
       if (b - a > 2440) avisos.push(`La cubierta ${k + 1} mide ${Math.round(b - a)} mm y no cabe en un tablero de 2440: pide una cubierta de 3050 mm.`)
-      t.push({ nombre: partes.length > 1 ? `Cubierta ${k + 1}` : "Cubierta", plano: "horizontal", rol: "cubierta", material: "encino", x0: a, x1: b, y0: -o.grosor - 20, y1: o.fondoBajos, z0: o.altoBajos, z1: o.altoBajos + o.gCubierta })
+      // recorte de cada parrilla que cae en esta parte (560 × 490, al centro del fondo)
+      const y0 = -o.grosor - 20
+      // (si el tramo es angosto el recorte se achica hasta 500 mm: parrilla de 50 cm)
+      const aberturas = parrillas
+        .filter((c) => c > a && c < b)
+        .map((c) => ({ c, mitad: Math.min(280, c - a - 15, b - c - 15) }))
+        .filter(({ mitad }) => mitad >= 250)
+        .map(({ c, mitad }) => {
+          if (mitad < 280) avisos.push(`El recorte de la parrilla queda de ${Math.round(mitad * 2)} mm: usa una parrilla de 50 cm o haz más ancho ese gabinete.`)
+          return { u0: c - mitad - a, u1: c + mitad - a, v0: o.fondoBajos / 2 - 245 - y0, v1: o.fondoBajos / 2 + 245 - y0 }
+        })
+      for (const c of parrillas) if (c > a && c < b && Math.min(c - a, b - c) - 15 < 250) avisos.push("La parrilla no cabe en ese tramo de cubierta: hazlo más ancho (60 cm o más).")
+      t.push({ nombre: partes.length > 1 ? `Cubierta ${k + 1}` : "Cubierta", plano: "horizontal", rol: "cubierta", material: "encino", x0: a, x1: b, y0, y1: o.fondoBajos, z0: o.altoBajos, z1: o.altoBajos + o.gCubierta, ...(aberturas.length ? { aberturas } : {}) })
     })
   }
   if (o.conAltos && o.alturaAltos < o.altoBajos + o.gCubierta + 450) avisos.push("Los gabinetes altos quedan muy cerca de la cubierta: súbelos (lo común es dejar 600 mm).")
-  return { tableros: t, avisos, largo: x }
+  if (parrillas.length && !o.cubierta) avisos.push("La parrilla necesita cubierta para el recorte.")
+  return { tableros: t, avisos, largo: x, aparatos }
 }
 
 // ---------------------------------------------------------------------------
@@ -167,6 +223,9 @@ export type OpcionesHabitacion = Omit<OpcionesCocina, "modulos"> & {
   altoTecho: number
   conColumna: boolean
   isla?: { largo: number; distancia: number } // distancia: pasillo entre los frentes
+  refri?: boolean
+  estufa?: "parrilla" | "libre" | "ninguna"
+  lavavajillas?: boolean
 }
 // x0..x1: qué parte de X es de este tramo; origen: la X que va a la esquina del tramo
 export type Colocacion = { x0: number; x1: number; origen: number; giro: number; dx: number; dy: number }
@@ -180,6 +239,9 @@ export const HABITACION_INICIO: Omit<OpcionesHabitacion, "grosor"> = {
   aberturas: [{ tipo: "ventana", pared: 0, desde: 1500, ancho: 1000, alto: 1000, sobrePiso: 1100 }],
   altoTecho: 2500,
   conColumna: true,
+  refri: true,
+  estufa: "parrilla",
+  lavavajillas: false,
 }
 
 const PASILLO_ESQUINA = 20 // separación del tramo del lado contra el frente de la esquina (además del vuelo de la cubierta)
@@ -200,7 +262,7 @@ function repartir(w: number, sinAlto: (a: number, b: number) => boolean, x0: num
   return r
 }
 
-export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; avisos: string[]; colocacion: Colocacion[]; muros: CajaAmbiente[]; vidrios: CajaAmbiente[] } {
+export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; avisos: string[]; colocacion: Colocacion[]; muros: CajaAmbiente[]; vidrios: CajaAmbiente[]; aparatos: Aparato[] } {
   const avisos: string[] = []
   const F = o.fondoBajos
   const gF = o.grosor
@@ -220,7 +282,7 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
   const anchoEsq = Math.min(1200, Math.round((ciego + 450) / 10) * 10)
 
   // arma la secuencia de módulos de una pared entre "desde" s0 y s1, saltando puertas
-  const secuencia = (pared: number, s0: number, s1: number, extra: { fregadero?: number; columnaAl?: "inicio" | "fin" }): Modulo[] => {
+  const secuencia = (pared: number, s0: number, s1: number, extra: { fregadero?: number; columnaAl?: "inicio" | "fin"; bloque?: Modulo[] }): Modulo[] => {
     const ven = conVentana(pared)
     // tramos libres
     let libres: [number, number][] = [[s0, s1]]
@@ -235,15 +297,22 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
       hueco(a)
       let ini = a, fin = b
       const pre: Modulo[] = [], post: Modulo[] = []
-      // la columna sólo si deja lugar al fregadero
-      const minimo = 1200 + (extra.fregadero !== undefined ? 800 : 0)
-      if (extra.columnaAl === "inicio" && k === 0 && fin - ini >= minimo) {
-        pre.push({ tipo: "columna", ancho: 600 })
-        ini += 600
+      // columna y refri en el extremo libre, sólo si dejan lugar al fregadero
+      const resto = (extra.fregadero !== undefined ? 800 : 0) + 300
+      const sumar = (b: Modulo[]) => b.reduce((t, m) => t + m.ancho, 0)
+      let bloque = extra.bloque || [{ tipo: "columna" as TipoModulo, ancho: 600 }]
+      // si no cabe todo, primero se queda el refri
+      if (fin - ini < sumar(bloque) + resto) bloque = bloque.filter((m) => m.tipo === "refri")
+      if (fin - ini < sumar(bloque) + resto) bloque = []
+      const anchoB = sumar(bloque)
+      const minimo = anchoB + resto
+      if (bloque.length && extra.columnaAl === "inicio" && k === 0 && fin - ini >= minimo) {
+        pre.push(...[...bloque].reverse())
+        ini += anchoB
       }
-      if (extra.columnaAl === "fin" && k === libres.length - 1 && fin - ini >= minimo) {
-        post.unshift({ tipo: "columna", ancho: 600 })
-        fin -= 600
+      if (bloque.length && extra.columnaAl === "fin" && k === libres.length - 1 && fin - ini >= minimo) {
+        post.unshift(...bloque)
+        fin -= anchoB
       }
       ms.push(...pre)
       x = ini
@@ -285,8 +354,10 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
     fin = LA - anchoEsq
   }
   const fregaderoEnA = ventanaA ? ventanaA.desde + ventanaA.ancho / 2 : (ini + fin) / 2
-  const columnaEnA = o.conColumna && (o.forma === "recta" || o.forma === "L") ? (o.forma === "L" && o.ladoL === "der" ? "inicio" : "fin") : undefined
-  msA.push(...secuencia(0, ini, fin, { fregadero: fregaderoEnA, columnaAl: columnaEnA }), ...finA)
+  // columna (alacena) y refri: juntos en el extremo libre de la cocina
+  const bloque: Modulo[] = [...(o.conColumna ? [{ tipo: "columna" as TipoModulo, ancho: 600 }] : []), ...(o.refri ? [{ tipo: "refri" as TipoModulo, ancho: 900, sinAlto: true }] : [])]
+  const bloqueEnA = bloque.length && (o.forma === "recta" || o.forma === "L") ? (o.forma === "L" && o.ladoL === "der" ? "inicio" : "fin") : undefined
+  msA.push(...secuencia(0, ini, fin, { fregadero: fregaderoEnA, columnaAl: bloqueEnA, bloque }), ...finA)
   if (!msA.some((m) => m.tipo === "fregadero")) avisos.push("No cupo el fregadero en la pared del fondo: agrégalo a mano o mueve la ventana o la puerta.")
 
   type Tramo = { nombre: string; modulos: Modulo[]; giro: number; dx: number; dy: number; conAltos: boolean; largo: number }
@@ -294,8 +365,8 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
   for (const l of lados) {
     const LB = largoDe(l.pared)
     const s0 = F + sep // desde la esquina: aquí empieza el primer gabinete del lado
-    const columna = o.conColumna && o.forma === "U" && l.lado === "der" ? "fin" : undefined
-    const seq = secuencia(l.pared, s0, LB, { columnaAl: columna })
+    const columna = bloque.length && o.forma === "U" && l.lado === "der" ? "fin" : undefined
+    const seq = secuencia(l.pared, s0, LB, { columnaAl: columna, bloque })
     const largo = ancho(seq)
     if (l.lado === "izq") {
       // en el tramo, X crece hacia la esquina: la secuencia (que va desde la esquina) se invierte
@@ -318,14 +389,44 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
     if (seq.length) tramos.push({ nombre: "Isla", modulos: seq, giro: Math.PI, dx: x0Isla + L, dy: yFrente, conAltos: false, largo: L })
   }
 
+  if (o.refri && !tramos.some((t) => t.modulos.some((m) => m.tipo === "refri"))) avisos.push("No cupo el refrigerador: hazle lugar con un módulo «Refrigerador».")
+  // ---- estufa: en un lado (si hay) o en la pared A, lejos del fregadero; lavavajillas junto al fregadero ----
+  if (o.estufa && o.estufa !== "ninguna") {
+    const orden = [...tramos.slice(1).filter((t) => t.nombre !== "Isla"), tramos[0]]
+    let puesta = false
+    for (const tr of orden) {
+      const cands = tr.modulos.map((m, i) => ({ m, i })).filter(({ m }) => m.tipo === "puertas" && m.ancho >= (o.estufa === "libre" ? 700 : 550) && m.ancho <= (o.estufa === "libre" ? 950 : 1200))
+      if (!cands.length) continue
+      const iF = tr.modulos.findIndex((m) => m.tipo === "fregadero")
+      const c = iF >= 0 ? cands.sort((a, b) => Math.abs(b.i - iF) - Math.abs(a.i - iF))[0] : cands[Math.floor(cands.length / 2)]
+      tr.modulos[c.i] = { ...c.m, tipo: o.estufa === "libre" ? "estufa" : "parrilla", sinAlto: true }
+      puesta = true
+      break
+    }
+    if (!puesta) avisos.push("No hubo lugar para la estufa: ponla a mano con un módulo de parrilla o estufa.")
+  }
+  if (o.lavavajillas) {
+    const tr = tramos[0]
+    const i = tr.modulos.findIndex((m) => m.tipo === "cajonera" && m.ancho >= 600)
+    if (i >= 0) tr.modulos[i] = { ...tr.modulos[i], tipo: "lavavajillas", ancho: tr.modulos[i].ancho }
+    else avisos.push("No hubo lugar para el lavavajillas junto al fregadero.")
+  }
+
   // ---- armar cada tramo y ponerlos uno tras otro para fabricar ----
   const tableros: TableroC[] = []
   const colocacion: Colocacion[] = []
+  const aparatos: Aparato[] = []
   let x = 0
   for (const tr of tramos) {
     const c = cocina({ ...o, modulos: tr.modulos, conAltos: tr.conAltos })
     avisos.push(...c.avisos.map((a) => `${tr.nombre}: ${a}`))
     for (const t of c.tableros) tableros.push({ ...t, nombre: `${tr.nombre} · ${t.nombre}`, x0: t.x0 + x, x1: t.x1 + x })
+    // los aparatos ya van colocados en el cuarto
+    const co = Math.round(Math.cos(tr.giro)), si = Math.round(Math.sin(tr.giro))
+    for (const ap of c.aparatos) {
+      const pts = [[ap.lo[0], ap.lo[1]], [ap.hi[0], ap.hi[1]]].map(([a, b]) => [tr.dx + a * co - b * si, tr.dy + a * si + b * co])
+      aparatos.push({ tipo: ap.tipo, lo: [Math.min(pts[0][0], pts[1][0]), Math.min(pts[0][1], pts[1][1]), ap.lo[2]], hi: [Math.max(pts[0][0], pts[1][0]), Math.max(pts[0][1], pts[1][1]), ap.hi[2]] })
+    }
     // M = T(dx, dy) · R(giro) · T(-x, 0)
     colocacion.push({ x0: x - 600, x1: x + c.largo + 600, origen: x, giro: tr.giro, dx: tr.dx, dy: tr.dy })
     x += c.largo + 1500
@@ -356,5 +457,5 @@ export function habitacion(o: OpcionesHabitacion): { tableros: TableroC[]; aviso
   // esquinas del muro (para que no quede un hueco)
   if (hayIzq) muros.push({ lo: [-e, F, 0], hi: [0, F + e, H] })
   if (hayDer) muros.push({ lo: [LA, F, 0], hi: [LA + e, F + e, H] })
-  return { tableros, avisos, colocacion, muros, vidrios }
+  return { tableros, avisos, colocacion, muros, vidrios, aparatos }
 }
