@@ -20,7 +20,7 @@ const MODOS: Modo<ModoArchivos>[] = [
     id: "convertir",
     slug: "convertidor",
     nombre: "Convertir",
-    nota: "DXF ↔ SVG, STL ↔ OBJ y escalar",
+    nota: "DXF ↔ SVG, STEP ↔ STL ↔ OBJ y escalar",
     icono: (
       <>
         <path d="M8 14h20l-5-5M32 26H12l5 5" />

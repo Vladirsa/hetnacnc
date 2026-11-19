@@ -167,12 +167,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "convertidor",
     nombre: "Convertidor y reescalador",
-    texto: "DXF a SVG y al revés, STL a OBJ, cambio de tamaño y de espesor.",
+    texto: "DXF a SVG y al revés, STEP a STL y STL a STEP, STL a OBJ, cambio de tamaño y de espesor.",
     icono: "convertir",
     acceso: "gratis",
-    titulo: "Convertir DXF a SVG, SVG a DXF y STL a OBJ gratis en línea",
+    titulo: "Convertir STEP a STL, STL a STEP, DXF a SVG y STL a OBJ gratis en línea",
     descripcion:
-      "Convierte gratis archivos DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
+      "Convierte gratis archivos STEP, DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
   },
   {
     slug: "svg-a-stl",
