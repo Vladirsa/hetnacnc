@@ -57,7 +57,8 @@ export const ROLES: { id: Rol; nombre: string }[] = [
 export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number; soporte?: DefSoporte }
 // ranura: canal (para el fondo) en una cara de la pieza, de u0..u1 × v0..v1 y prof de hondo
 export type Ranura = { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }
-export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[] }
+// cantoLados: orillas con canto (u0 = la del u menor, etc.)
+export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[]; cantoLados?: ("u0" | "u1" | "v0" | "v1")[] }
 // accesorios para el 3D (en mm del mueble)
 export type Accesorio = { tipo: "pata"; x: number; y: number; z0: number; z1: number; d: number } | { tipo: "jaladera"; a: [number, number, number]; b: [number, number, number]; sale: [number, number, number] }
 export type MuebleCompleto = Omit<MuebleTableros, "piezas" | "tablerosFinales"> & { piezas: PiezaMueble[]; tablerosFinales: TableroC[]; accesorios: Accesorio[]; cantoMetros: number }
@@ -330,11 +331,19 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     if (!materialDe(p.material).canto) continue
     const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
     const a = Math.max(...us) - Math.min(...us), b = Math.max(...vs) - Math.min(...vs)
-    if (p.rol === "puerta" || p.rol === "frente" || p.rol === "cubierta") canto += 2 * (a + b)
-    else if (p.rol === "estructura") {
+    if (p.rol === "puerta" || p.rol === "frente" || p.rol === "cubierta") {
+      canto += 2 * (a + b)
+      p.cantoLados = ["u0", "u1", "v0", "v1"]
+    } else if (p.rol === "estructura") {
       // la orilla del frente: lateral (u = Y) y horizontal (v = Y) tocan el frente con su lado de largo b o a
-      if (p.plano === "lateral" && Math.abs(Math.min(...us) - yFrente) < 25) canto += b
-      if (p.plano === "horizontal" && Math.abs(Math.min(...vs) - yFrente) < 25) canto += a
+      if (p.plano === "lateral" && Math.abs(Math.min(...us) - yFrente) < 25) {
+        canto += b
+        p.cantoLados = ["u0"]
+      }
+      if (p.plano === "horizontal" && Math.abs(Math.min(...vs) - yFrente) < 25) {
+        canto += a
+        p.cantoLados = ["v0"]
+      }
     }
   }
   if (canto > 0) compras.push({ nombre: "Canto de PVC (enchapado)", cantidad: Math.ceil((canto / 1000) * 1.1), nota: "Metros, con 10 % extra. Del color del material." })

@@ -21,6 +21,7 @@ import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generado
 import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
+import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
 import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
@@ -435,6 +436,33 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     return { filas, metrosCanto, pCanto, herr, total, faltan, veces }
   }, [m, acomodo, copias, hoja.largo, hoja.ancho, precios])
   const pesos = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
+
+  // ---- planos de taller, etiquetas y presupuesto ----
+  const [presu, setPresu] = useGuardado<Omit<DatosPresupuesto, "material" | "partidas" | "cliente" | "nota"> & { manoObraTxt: string; margenTxt: string }>("hetna-presupuesto", {
+    taller: "",
+    telefono: "",
+    manoObra: 0,
+    manoObraTxt: "",
+    margen: 30,
+    margenTxt: "30",
+    iva: true,
+    vigencia: 15,
+    anticipo: 50,
+    entrega: "10 días hábiles",
+    desglose: false,
+  })
+  const [cliente, setCliente] = useState("")
+  const [avisoDoc, setAvisoDoc] = useState("")
+  const datosDoc = () => ({ nombre, m, union: nombreUnion, taller: presu.taller || undefined, vetaLarga: (n: string) => vetaDe(n) !== "ancho" })
+  const abrir = (html: string) => setAvisoDoc(abrirDocumento(html) ? "" : "Permite las ventanas emergentes para ver el documento.")
+  const verPresupuesto = () => {
+    const partidas = [
+      ...costo.filas.filter((f) => f.precio).map((f) => ({ concepto: `${f.nombre} (${f.hojas} ${f.hojas === 1 ? "hoja" : "hojas"})`, importe: f.total })),
+      ...(costo.pCanto && costo.metrosCanto ? [{ concepto: `Canto (${costo.metrosCanto} m)`, importe: costo.metrosCanto * costo.pCanto }] : []),
+      ...(costo.herr.length ? [{ concepto: "Herrajes", importe: costo.herr.reduce((t, h) => t + h.total, 0) }] : []),
+    ]
+    abrir(htmlPresupuesto(datosDoc(), { ...presu, cliente, nota: "", material: costo.total, partidas }))
+  }
 
   const subirImagen = async (archivo?: File | null) => {
     if (!archivo) return
@@ -927,6 +955,81 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           </div>
         </div>
         <span className="text-[11.5px] text-[#8A97AB]">El precio de cada herraje se cambia en Uniones → Ajustar medidas. No incluye mano de obra ni corte.</span>
+      </Seccion>
+
+      <Seccion titulo="Planos, etiquetas y presupuesto">
+        <span className="text-[11.5px] text-[#8A97AB]">Se abren en otra pestaña: de ahí imprimes o guardas en PDF.</span>
+        {pagados[claveDiseno(clave)] ? (
+          <div className="grid grid-cols-2 gap-1.5">
+            <button type="button" onClick={() => abrir(htmlPlanos(datosDoc()))} className="rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-white hover:bg-[#243045]">
+              Planos de taller
+              <span className="block text-[11px] font-normal text-[#8A97AB]">Vistas acotadas, lista de corte y plano de cada pieza</span>
+            </button>
+            <button type="button" onClick={() => abrir(htmlEtiquetas(datosDoc(), acomodo ? copias : 1))} className="rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-white hover:bg-[#243045]">
+              Etiquetas con QR
+              <span className="block text-[11px] font-normal text-[#8A97AB]">Hoja A4 de 24 (70 × 37 mm)</span>
+            </button>
+          </div>
+        ) : (
+          <span className="text-[12px] text-[#8A97AB]">Los planos de taller y las etiquetas se activan al descargar el diseño (1 crédito). El presupuesto es gratis.</span>
+        )}
+        <div className="flex flex-col gap-1.5 rounded-[9px] border border-[#2A3546] bg-[#111821] p-2.5">
+          <span className="text-[12.5px] font-semibold text-white">Presupuesto para tu cliente</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Tu taller
+              <input value={presu.taller} onChange={(e) => setPresu((x) => ({ ...x, taller: e.target.value.slice(0, 60) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Teléfono
+              <input value={presu.telefono} onChange={(e) => setPresu((x) => ({ ...x, telefono: e.target.value.slice(0, 30) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="col-span-2 flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Cliente
+              <input value={cliente} onChange={(e) => setCliente(e.target.value.slice(0, 80))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Mano de obra $
+              <input value={presu.manoObraTxt} onChange={(e) => setPresu((x) => ({ ...x, manoObraTxt: e.target.value, manoObra: Math.max(0, numero(e.target.value) || 0) }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Utilidad %
+              <input value={presu.margenTxt} onChange={(e) => setPresu((x) => ({ ...x, margenTxt: e.target.value, margen: Math.max(0, numero(e.target.value) || 0) }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Anticipo %
+              <input value={String(presu.anticipo)} onChange={(e) => setPresu((x) => ({ ...x, anticipo: Math.min(100, Math.max(0, Math.round(numero(e.target.value) || 0))) }))} inputMode="numeric" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Entrega
+              <input value={presu.entrega} onChange={(e) => setPresu((x) => ({ ...x, entrega: e.target.value.slice(0, 40) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-3 text-[12px] text-[#C9D2E0]">
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={presu.iva} onChange={(e) => setPresu((x) => ({ ...x, iva: e.target.checked }))} className="h-3.5 w-3.5 accent-[#C2560A]" />
+              Sumar IVA 16 %
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={presu.desglose} onChange={(e) => setPresu((x) => ({ ...x, desglose: e.target.checked }))} className="h-3.5 w-3.5 accent-[#C2560A]" />
+              Desglosar materiales
+            </label>
+          </div>
+          {(() => {
+            const sub = (costo.total + presu.manoObra) * (1 + presu.margen / 100)
+            const total = sub * (presu.iva ? 1.16 : 1)
+            return (
+              <div className="flex items-center justify-between text-[13px] text-white">
+                <span>Precio al cliente{costo.faltan ? <span className="text-[11.5px] text-[#F6D58E]"> (faltan precios arriba)</span> : null}</span>
+                <b>{pesos(Math.round(total * 100) / 100)}</b>
+              </div>
+            )
+          })()}
+          <button type="button" disabled={!m.piezas.length} onClick={verPresupuesto} className="rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
+            Ver presupuesto
+          </button>
+        </div>
+        {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}
       </Seccion>
 
       <Seccion titulo="Capas para tu CAM">
