@@ -14,7 +14,7 @@ import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { SellerOffersListing } from "@/components/sections/SellerOffersListing/SellerOffersListing"
-import { areaTexto, nombreTipoMaquina, tallerPorHandle, ubicacion, type Taller } from "@/lib/hetna/talleres"
+import { areaTexto, nombreTipoMaquina, tallerPorHandle, textoRespuesta, ubicacion, type Medido, type Taller } from "@/lib/hetna/talleres"
 import { TarjetaTema } from "@/components/hetna/foro/Piezas"
 import { BotonSeguir } from "@/components/hetna/foro/RedCliente"
 import { listaTemas, sesionForo } from "@/lib/foro/consultas"
@@ -88,6 +88,8 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
     p.calificacion !== undefined
       ? ["Calificación", `★ ${p.calificacion.toFixed(1)}${p.resenas ? ` (${p.resenas})` : ""}`]
       : ["Calificación", "Taller nuevo"],
+    p.medido?.respuesta_horas != null ? ["Responde en", textoRespuesta(p.medido.respuesta_horas)] : null,
+    p.medido?.puntualidad_pct != null && p.medido.con_fecha >= 3 ? ["Entregas a tiempo", `${p.medido.puntualidad_pct}%`] : null,
   ].filter(Boolean) as [string, string][]
 
   return (
@@ -230,6 +232,8 @@ function Inicio({
           </div>
         ))}
       </dl>
+
+      {p.medido && (p.medido.terminados > 0 || p.medido.respuesta_horas != null) && <Cumplimiento m={p.medido} />}
 
       {p.resenas ? (
         <section className={CAJA}>
@@ -488,6 +492,43 @@ function CtaCotizar({ t }: { t: Taller }) {
       >
         Solicitar cotización
       </LocalizedClientLink>
+    </section>
+  )
+}
+
+/** Lo que el taller hizo en HETNA (medido, no opinado): lib/reputacion-medida.ts en la API. */
+function Cumplimiento({ m }: { m: Medido }) {
+  const datos: [string, string, string?][] = []
+  if (m.puntualidad_pct != null && m.con_fecha > 0)
+    datos.push(["Entregas a tiempo", `${m.puntualidad_pct}%`, `de ${m.con_fecha} ${m.con_fecha === 1 ? "entrega con fecha" : "entregas con fecha"}`])
+  datos.push(["Trabajos terminados", String(m.terminados), m.terminados_pct != null ? `${m.terminados_pct}% de los que empezó` : undefined])
+  if (m.respuesta_horas != null) datos.push(["Tiempo de respuesta", textoRespuesta(m.respuesta_horas), "mediana, últimos 4 meses"])
+  datos.push(["Reclamos", m.reclamos ? `${m.reclamos_resueltos} de ${m.reclamos}` : "0", m.reclamos ? "resueltos" : "sin reclamos"])
+  return (
+    <section className={CAJA}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className={H2}>Cumplimiento medido en HETNA</h2>
+        {m.suficiente && m.puntaje != null && (
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
+          >
+            {m.puntaje}/100
+          </span>
+        )}
+      </div>
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {datos.map(([k, v, nota]) => (
+          <div key={k} className="rounded-xl bg-[#FAF9F5] p-3">
+            <dt className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">{k}</dt>
+            <dd className="m-0 mt-1 text-xl font-extrabold text-[#142033]">{v}</dd>
+            {nota && <dd className="m-0 text-xs text-[#6B675C]">{nota}</dd>}
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs text-[#6B675C]">
+        Datos reales de sus pedidos en HETNA, recalculados cada día: fecha prometida contra fecha de entrega, trabajos terminados, reclamos y
+        tiempo entre que le llega una solicitud y manda su propuesta.{!m.suficiente && " Todavía tiene pocos trabajos: tómalo con cautela."}
+      </p>
     </section>
   )
 }

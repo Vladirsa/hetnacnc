@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import { textoRespuesta } from "@/lib/hetna/respuesta"
 import { analizarPropuestas, elegirPropuesta, type Propuesta, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
 
 import PagoSolicitud from "./PagoSolicitud"
@@ -304,11 +305,17 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
 
 /** Historial medido del taller: lo que hizo en HETNA, no sólo lo que opinaron de él. */
 function HistorialMedido({ m }: { m?: Propuesta["taller"]["medido"] }) {
-  if (!m || !m.terminados) return <p className="mt-1 text-xs text-[#6B675C]">Sin trabajos terminados en HETNA todavía</p>
+  if (!m || !m.terminados)
+    return (
+      <p className="mt-1 text-xs text-[#6B675C]">
+        Sin trabajos terminados en HETNA todavía{m?.respuesta_horas != null ? ` · responde en ${textoRespuesta(m.respuesta_horas)}` : ""}
+      </p>
+    )
   const datos = [
     m.puntualidad_pct != null && `${m.puntualidad_pct}% a tiempo`,
     `${m.terminados} ${m.terminados === 1 ? "trabajo terminado" : "trabajos terminados"}`,
     m.reclamos > 0 && `${m.reclamos_resueltos} de ${m.reclamos} reclamos resueltos`,
+    m.respuesta_horas != null && `responde en ${textoRespuesta(m.respuesta_horas)}`,
   ].filter(Boolean)
   return (
     <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-[#40403A]">

@@ -18,6 +18,9 @@ import { T_PROPUESTA, T_SOLICITUD } from "./licitacion"
 const T_EVENTO = "hetna_solicitud_evento"
 const T_RECLAMO = "hetna_resena_reclamo"
 const T_RESENA = "hetna_resena_taller"
+const T_AVISO = "hetna_solicitud_aviso" // difusion.ts: cuándo se le avisó al taller de cada solicitud
+const MIN_RESPUESTAS = 3 // propuestas mínimas para mostrar el tiempo de respuesta
+const VENTANA_RESPUESTA_DIAS = 120
 export const MIN_TRABAJOS = 3
 const GRACIA_DIAS = 1 // entregar un día después de lo prometido todavía cuenta como a tiempo
 
@@ -38,6 +41,36 @@ export type MedidaTaller = {
   calidad: number | null
   puntaje: number | null
   suficiente: boolean
+  /** Horas (mediana) desde que HETNA le avisa de una solicitud hasta que manda su propuesta.
+   *  null si tiene menos de MIN_RESPUESTAS propuestas medibles en los últimos 120 días. */
+  respuesta_horas?: number | null
+  respuestas_medidas?: number
+}
+
+/** Mediana de una lista de números (null si está vacía). */
+export function mediana(xs: number[]): number | null {
+  if (!xs.length) return null
+  const o = xs.slice().sort((a, b) => a - b)
+  const k = Math.floor(o.length / 2)
+  return o.length % 2 ? o[k] : (o[k - 1] + o[k]) / 2
+}
+
+/** Tiempo de respuesta: aviso → propuesta, en horas. Sólo cuenta el primer aviso
+ *  de cada solicitud y propuestas que llegaron después de él. */
+async function tiempoRespuesta(knex: any, sellerId: string): Promise<{ horas: number | null; n: number }> {
+  if (!(await existe(knex, T_AVISO))) return { horas: null, n: 0 }
+  const desde = new Date(Date.now() - VENTANA_RESPUESTA_DIAS * DIA)
+  const filas: { aviso: string | Date; propuesta: string | Date }[] = await knex(`${T_PROPUESTA} as p`)
+    .where("p.seller_id", sellerId)
+    .where("p.created_at", ">=", desde)
+    .select({ propuesta: "p.created_at" }, { aviso: knex.raw(`(select min(a.created_at) from ${T_AVISO} a where a.solicitud_id = p.solicitud_id and a.seller_id = p.seller_id)`) })
+    .catch(() => [])
+  const horas = filas
+    .filter((f) => f.aviso && f.propuesta)
+    .map((f) => (new Date(f.propuesta).getTime() - new Date(f.aviso).getTime()) / 3_600_000)
+    .filter((h) => h >= 0 && h < 24 * 30)
+  const med = horas.length >= MIN_RESPUESTAS ? mediana(horas) : null
+  return { horas: med == null ? null : r1(med), n: horas.length }
 }
 
 type Fila = {
@@ -135,6 +168,9 @@ export async function medirTaller(knex: any, sellerId: string): Promise<MedidaTa
   }
   m.suficiente = m.terminados >= MIN_TRABAJOS
   m.puntaje = m.suficiente ? puntajeMedido(m) : null
+  const resp = await tiempoRespuesta(knex, sellerId).catch(() => ({ horas: null, n: 0 }))
+  m.respuesta_horas = resp.horas
+  m.respuestas_medidas = resp.n
   return m
 }
 

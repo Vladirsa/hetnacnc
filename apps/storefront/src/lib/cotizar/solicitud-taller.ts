@@ -128,6 +128,7 @@ export type Propuesta = {
       reclamos_resueltos: number
       puntaje: number | null
       suficiente: boolean
+      respuesta_horas?: number | null
     } | null
     /** Máquinas que declaró en su perfil y su área de trabajo más grande */
     capacidad?: { maquinas: number; resumen: string; area_mayor: string | null } | null
