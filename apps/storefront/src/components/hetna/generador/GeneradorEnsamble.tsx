@@ -27,7 +27,11 @@ const FRESAS = [
 ] as const
 
 // piezas tendidas en renglones para la vista 2D (Y hacia arriba)
-export function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
+// barrenos de herraje (si la pieza los trae): de cara en capas BARRENO_D{diámetro}_P{profundidad}_{ARRIBA|ABAJO}
+// (ABAJO = en la cara de abajo: se voltea la pieza) y de canto como marca en la orilla (capa CANTO_D{d}_P{prof})
+type ConBarrenos = PiezaEnsamble & { barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]; cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[] }
+const fmt = (n: number) => String(Math.round(n * 10) / 10).replace(".", "_")
+export function piezasTendidas(piezas: ConBarrenos[]): Trazo[] {
   const trazos: Trazo[] = []
   let x = 0
   let y = 0
@@ -45,6 +49,11 @@ export function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
     const mover = (pts: [number, number][]) => pts.map(([u, v]) => [x + u - u0, y + v - v0 - h] as [number, number])
     trazos.push({ pts: mover(p.contorno), cerrado: true, capa: "corte" })
     for (const hh of p.huecos) trazos.push({ pts: mover(hh), cerrado: true, capa: "corte" })
+    for (const b of p.barrenos || []) {
+      const circ = Array.from({ length: 20 }, (_, k) => [b.u + (b.d / 2) * Math.cos((k * Math.PI) / 10), b.v + (b.d / 2) * Math.sin((k * Math.PI) / 10)] as [number, number])
+      trazos.push({ pts: mover(circ), cerrado: true, capa: `BARRENO_D${fmt(b.d)}_P${fmt(b.prof)}_${b.cara === 1 ? "ARRIBA" : "ABAJO"}` })
+    }
+    for (const c of p.cantos || []) trazos.push({ pts: mover([[c.u, c.v], [c.u + c.du * c.prof, c.v + c.dv * c.prof]]), cerrado: false, capa: `CANTO_D${fmt(c.d)}_P${fmt(c.prof)}` })
     x += w + 40
     altoRenglon = Math.max(altoRenglon, h)
   }

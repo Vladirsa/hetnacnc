@@ -21,7 +21,46 @@ import { aMueble, type PiezaEnsamble } from "@/lib/generador/ensamble"
 
 type Eje = 0 | 1 | 2
 type Pt = [number, number, number]
-export type PiezaVista = PiezaEnsamble & { indice: number }
+export type PiezaVista = PiezaEnsamble & {
+  indice: number
+  // herrajes (opcional): barrenos de cara y de canto, en coordenadas de la pieza
+  barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]
+  cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[]
+}
+// cilindro de radio y alto 1 (se escala por barreno); materiales compartidos
+const CILINDRO = new THREE.CylinderGeometry(1, 1, 1, 18)
+const MAT_BARRENO = new THREE.MeshBasicMaterial({ color: 0x15100a })
+const MAT_CANTO = new THREE.MeshBasicMaterial({ color: 0x2f6fd6 })
+const EJE_Y = new THREE.Vector3(0, 1, 0)
+// punto del mueble en coordenadas de three
+const enThree = (p: PiezaEnsamble, u: number, v: number, w: number) => {
+  const q = aMueble(p, u, v, w)
+  return new THREE.Vector3(q[0], q[2], -q[1])
+}
+function herrajes(p: PiezaVista): THREE.Object3D[] {
+  const out: THREE.Object3D[] = []
+  const e = p.grosor
+  // dirección del grosor de la pieza en three
+  const normal = enThree(p, 0, 0, 1).sub(enThree(p, 0, 0, 0)).normalize()
+  for (const b of p.barrenos || []) {
+    const c = enThree(p, b.u, b.v, b.cara === 1 ? e - b.prof / 2 + 0.2 : b.prof / 2 - 0.2)
+    const m = new THREE.Mesh(CILINDRO, MAT_BARRENO)
+    m.position.copy(c)
+    m.scale.set(b.d / 2, b.prof + 0.4, b.d / 2)
+    m.quaternion.setFromUnitVectors(EJE_Y, normal)
+    out.push(m)
+  }
+  for (const k of p.cantos || []) {
+    const a = enThree(p, k.u, k.v, e / 2), z = enThree(p, k.u + k.du * k.prof, k.v + k.dv * k.prof, e / 2)
+    const dir = z.clone().sub(a)
+    const m = new THREE.Mesh(CILINDRO, MAT_CANTO)
+    m.position.copy(a.clone().add(z).multiplyScalar(0.5))
+    m.scale.set(k.d / 2, dir.length(), k.d / 2)
+    m.quaternion.setFromUnitVectors(EJE_Y, dir.normalize())
+    out.push(m)
+  }
+  return out
+}
 export type CajaVista = { lo: Pt; hi: Pt }
 
 const COLOR: Record<string, number> = { lateral: 0xd6b48a, horizontal: 0xe8cfa6, frontal: 0xc7a175 }
@@ -272,6 +311,10 @@ export default function Mueble3D({
         m.userData.plano = p.plano
         const l = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), new THREE.LineBasicMaterial({ color: 0x2b1d10 }))
         m.add(l)
+        for (const h of herrajes(p)) {
+          h.userData.herraje = true
+          m.add(h)
+        }
         s.grupo.add(m)
         s.mallas.push(m)
         s.lineas.push(l)
@@ -334,6 +377,8 @@ export default function Mueble3D({
       mat.opacity = transparente ? 0.22 : 1
       mat.depthWrite = !transparente
       mat.needsUpdate = true
+      // en rayos X los herrajes se ven a través del mueble
+      for (const h of m.children) if (h.userData.herraje) ((h as THREE.Mesh).renderOrder = rayosX ? 2 : 0)
       const l = m.children[0] as THREE.LineSegments
       ;(l.material as THREE.LineBasicMaterial).color.setHex(rayosX ? 0xb98a5a : 0x2b1d10)
       // explotar: cada pieza se aleja del centro sobre su grosor
