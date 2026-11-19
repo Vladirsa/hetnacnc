@@ -75,7 +75,8 @@ const PLANOS = (() => {
       g.closePath(); g.fill(); g.lineWidth = 0.6; g.stroke();
     }
     // contorno de la silueta: se oscurece el borde con un trazo del canal alfa
-    return { url: cv.toDataURL("image/png"), ancho, alto };
+    // JPEG: jsPDF guarda los PNG sin comprimir (decenas de MB con varias vistas)
+    return { url: cv.toDataURL("image/jpeg", 0.82), ancho, alto };
   };
   const cajaTris = (tris) => {
     const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
@@ -191,7 +192,8 @@ const PLANOS = (() => {
         // planta (L x A) arriba, frente (L x H) abajo, lateral (A x H) a la derecha del frente
         const gap = 22;
         escala = escalaPara(L + A + gap, A + Hh + gap, area.w - 16, area.h - 16);
-        const pxmm = Math.min(6, 1800 / Math.max(L, A, Hh) / 1);
+        // ~8 px por mm impreso (unos 200 ppp), con tope de 1100 px por vista
+        const pxmm = Math.min(8 * escala, 1100 / Math.max(L, A, Hh));
         const ox = area.x + 12 + (area.w - 16 - (L + A + gap) * escala) / 2, oy = area.y + 10;
         const vistas = [
           ["PLANTA", VISTAS.planta, ox, oy, L, A],
@@ -201,7 +203,7 @@ const PLANOS = (() => {
         for (const [nom, v, x, yy, w, h] of vistas) {
           const derecha = nom === "LATERAL"; // su cota vertical va a la derecha para no chocar con el frente
           const img = pintarVista(tris, f, v, caja, pxmm);
-          try { doc.addImage(img.url, "PNG", x, yy, w * escala, h * escala); } catch (e) {}
+          try { doc.addImage(img.url, "JPEG", x, yy, w * escala, h * escala); } catch (e) {}
           doc.setDrawColor(...TINTA); doc.setLineWidth(0.2); doc.rect(x, yy, w * escala, h * escala);
           txt(nom, x, yy - 1.5, { b: true, s: 7.5, c: GRIS });
           cota(x, yy + h * escala + 5, x + w * escala, yy + h * escala + 5, fmt(w));
@@ -214,7 +216,13 @@ const PLANOS = (() => {
       const cy = H - 62;
       doc.setDrawColor(...LINEA); doc.setLineWidth(0.3); doc.rect(M, cy, W - 2 * M, 46);
       doc.line(M, cy + 23, W - M, cy + 23); doc.line(M + 62, cy, M + 62, cy + 46); doc.line(M + 124, cy, M + 124, cy + 46);
-      const celda = (k, v, x, yy) => { txt(k, x + 3, yy + 5.5, { b: true, s: 7.5, c: GRIS }); txt(doc.splitTextToSize(limpio(v), 56)[0], x + 3, yy + 13, { s: 10.5 }); };
+      // el texto se ajusta al ancho de la celda (splitTextToSize mide con la letra actual)
+      const celda = (k, v, x, yy) => {
+        txt(k, x + 3, yy + 5.5, { b: true, s: 7.5, c: GRIS });
+        const t = limpio(v), tam = t.length > 30 ? 8.5 : 10.5;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(tam);
+        doc.splitTextToSize(t, 56).slice(0, 2).forEach((l, n) => txt(l, x + 3, yy + 12.5 + n * 4.4, { s: tam }));
+      };
       celda("PIEZA", p.nombre, M, cy); celda("CANTIDAD", `${p.cantidad} ${p.cantidad === 1 ? "pieza" : "piezas"}`, M + 62, cy); celda("ESCALA (en carta)", nombreEscala(escala), M + 124, cy);
       celda("MATERIAL", info.material || "—", M, cy + 23); celda("MEDIDAS (mm)", m.tipo === "2d" ? `${fmt(m.largoMm)} x ${fmt(m.anchoMm)}` : `${fmt(m.largoMm)} x ${fmt(m.anchoMm)} x ${fmt(m.altoMm)}`, M + 62, cy + 23); celda("TALLER · FECHA", `${info.taller} · ${hoy}`, M + 124, cy + 23);
       notas.slice(0, 3).forEach((n, k) => txt(n, M, cy - 10 + k * 4.6 - (notas.length - 1) * 4.6, { s: 8.5, c: GRIS }));

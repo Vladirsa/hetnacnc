@@ -280,3 +280,71 @@ export function tomarArchivoParaFabricar(): File | null {
     return null
   }
 }
+
+// ---------- Fabrícamelo con varios archivos (proyecto completo) ----------
+// Mismo IndexedDB que los archivos grandes ("hetna-fabricar"), con la clave
+// "pendientes": una lista de archivos (piezas, ZIP, planos en PDF) que el
+// formulario de /cotizar sube todos. El Cotizador (hetna/cotizador/app.js)
+// escribe lo mismo desde su botón "Pídelo a un taller": las claves deben
+// coincidir con FAB allá.
+const CLAVE_VARIOS = "pendientes"
+export const MAX_ARCHIVOS_FABRICAR = 5 // = MAX_ARCHIVOS del formulario (lib/fabricacion/opciones.ts)
+
+export type DatosFabricar = { pieza: string; medidas?: string; material?: string; proceso?: string; cantidad?: string; nota?: string }
+
+/** URL de /cotizar con los datos del trabajo ya puestos. */
+export function urlFabricar(locale: string, datos: DatosFabricar) {
+  const q = new URLSearchParams({ desde: "generador", pieza: datos.pieza.slice(0, 120) })
+  if (datos.medidas) q.set("medidas", datos.medidas.slice(0, 120))
+  if (datos.material) q.set("material", datos.material.slice(0, 80))
+  const proceso = datos.proceso === "Router CNC" ? "Corte CNC" : datos.proceso
+  if (proceso) q.set("proceso", proceso)
+  if (datos.cantidad) q.set("cantidad", datos.cantidad.slice(0, 60))
+  if (datos.nota) q.set("nota", datos.nota.slice(0, 1500))
+  return `/${locale}/cotizar?${q.toString()}`
+}
+
+/**
+ * Manda varios archivos (máx. 5 de 100 MB) a la solicitud de fabricación y la
+ * abre cuando quedaron guardados. Devuelve false si no caben.
+ */
+export function mandarArchivosAFabricar(archivos: { nombre: string; contenido: Blob | ArrayBuffer | string }[], locale: string, datos: DatosFabricar): boolean {
+  if (!archivos.length || archivos.length > MAX_ARCHIVOS_FABRICAR || typeof indexedDB === "undefined") return false
+  const blobs = archivos.map((a) => ({ nombre: a.nombre, blob: a.contenido instanceof Blob ? a.contenido : new Blob([a.contenido]) }))
+  if (blobs.some((b) => b.blob.size > MAX_GRANDE)) return false
+  try {
+    sessionStorage.removeItem(CLAVE_FABRICAR) // que no se tome uno chico viejo
+  } catch {
+    return false
+  }
+  void abrirIDB()
+    .then(
+      (db) =>
+        new Promise<void>((ok, mal) => {
+          const tx = db.transaction(ALMACEN, "readwrite")
+          tx.objectStore(ALMACEN).put({ t: Date.now(), archivos: blobs }, CLAVE_VARIOS)
+          tx.oncomplete = () => { db.close(); ok() }
+          tx.onerror = () => { db.close(); mal(tx.error) }
+        })
+    )
+    .catch(() => {}) // si falla, la solicitud abre igual con los datos y el cliente sube sus archivos
+    .then(() => { window.location.href = urlFabricar(locale, datos) })
+  return true
+}
+
+/** Los archivos que dejó un proyecto (IndexedDB), si siguen vigentes. */
+export async function tomarArchivosParaFabricar(): Promise<File[]> {
+  try {
+    const db = await abrirIDB()
+    const fila = await new Promise<{ t: number; archivos: { nombre: string; blob: Blob }[] } | undefined>((ok, mal) => {
+      const r = db.transaction(ALMACEN, "readonly").objectStore(ALMACEN).get(CLAVE_VARIOS)
+      r.onsuccess = () => ok(r.result)
+      r.onerror = () => mal(r.error)
+    })
+    db.close()
+    if (!fila || Date.now() - fila.t > VIGENCIA) return []
+    return fila.archivos.map((a) => new File([a.blob], a.nombre, { type: a.blob.type || "application/octet-stream" }))
+  } catch {
+    return []
+  }
+}

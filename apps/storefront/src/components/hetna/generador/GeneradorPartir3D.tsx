@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { leerOBJ, leerSTL, mallaSTL, medidasMalla, type Malla } from "@/lib/generador/vectores"
-import { mandarAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
+import { mandarArchivosAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { OPCIONES_BASE, cabe, cortesParaCama, partir, type Corte, type Eje, type Resultado, type TipoConector } from "@/lib/generador/partir3d"
 
 const Vista = dynamic(() => import("./Partir3DVista"), { ssr: false, loading: () => <div className="w-full h-[460px] rounded-[12px] bg-[#0F151E]" /> })
@@ -187,8 +187,8 @@ export function GeneradorPartir3D() {
 
   const noCaben = res ? res.piezas.filter((p) => !cabe(p.tam, camaN)).length : 0
 
-  const bajarZip = async () => {
-    if (!res) return
+  const armarZip = async (): Promise<Uint8Array | null> => {
+    if (!res) return null
     const { zipSync } = await import("fflate")
     const archivos: Record<string, Uint8Array> = {}
     for (const p of res.piezas) archivos[`${nombre}-${p.nombre}.stl`] = new Uint8Array(mallaSTL(p.malla))
@@ -205,8 +205,31 @@ export function GeneradorPartir3D() {
       "Imprime cada pieza con la cara del corte sobre la cama: queda plana y sin soportes en esa cara.",
     ].filter(Boolean).join("\r\n")
     archivos["LEEME.txt"] = new TextEncoder().encode(leeme)
-    const zip = zipSync(archivos, { level: 6 })
-    descargar(`${nombre}-partido.zip`, zip as unknown as BlobPart, "application/zip")
+    return zipSync(archivos, { level: 6 })
+  }
+  const bajarZip = async () => {
+    const zip = await armarZip()
+    if (zip) descargar(`${nombre}-partido.zip`, zip as unknown as BlobPart, "application/zip")
+  }
+  // Fabrícamelo: el proyecto completo (ZIP con piezas, pernos y LEEME) a la solicitud
+  const fabricar = async () => {
+    if (!res || !med) return
+    const zip = await armarZip()
+    if (!zip) return
+    const unidades = res.piezas.length + (res.perno ? res.conectores : 0)
+    const ok = mandarArchivosAFabricar([{ nombre: `${nombre}-partido.zip`, contenido: new Blob([zip as unknown as BlobPart], { type: "application/zip" }) }], locale, {
+      pieza: `${nombre}: modelo partido en ${res.piezas.length} piezas`,
+      medidas: `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm (armado)`,
+      proceso: "Impresión 3D",
+      cantidad: `${unidades} piezas (1 juego)`,
+      nota: [
+        `Imprimir ${nombre} partido en ${res.piezas.length} piezas (cama de ${camaN.join(" × ")} mm). El ZIP trae cada pieza en STL y un LEEME con instrucciones.`,
+        `Piezas: ${res.piezas.map((p) => `${p.nombre} (${p.tam.join("×")} mm)`).join(", ")}.`,
+        conector === "pernos" ? `Más ${res.conectores} pernos Ø${diametro} × ${res.pernoLargo} mm (incluidos en el ZIP).` : "",
+        conector === "imanes" ? `Lleva ${res.conectores * 2} imanes de ${imanD} × ${imanH} mm.` : "",
+      ].filter(Boolean).join(" "),
+    })
+    if (!ok) setAviso("El proyecto es muy grande para mandarlo. Descarga el ZIP y súbelo en la solicitud.")
   }
 
   // Todas las piezas (y los pernos) al Cotizador como un proyecto
@@ -394,7 +417,7 @@ export function GeneradorPartir3D() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { if (!mandarAFabricar(`${nombre}.stl`, mallaSTL(malla), locale, { pieza: `Modelo grande partido en ${res.piezas.length} piezas`, medidas: `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm`, proceso: "Impresión 3D" })) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.") }}
+                      onClick={fabricar}
                       className="bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px]"
                     >
                       Fabrícamelo: que un taller lo imprima

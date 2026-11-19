@@ -11,6 +11,7 @@
     { id: "MDF", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_mdf_m2 ?? null, origen: "Tu app: Carpintería (material MDF por m²)" },
     { id: "Triplay", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_triplay_m2 ?? null, origen: "Tu app: Carpintería (material triplay por m²)" },
     { id: "Madera sólida", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_madera_m2 ?? null, origen: "Tu app: Carpintería (material madera por m²)" },
+    { id: "Melamina", precio: null, origen: "Falta precio (también lo usa el diseñador de muebles)" },
     { id: "Acrílico", precio: null, origen: "Falta precio" },
     { id: "Acero al carbón", precio: null, origen: "Falta precio" },
     { id: "Acero inoxidable", precio: null, origen: "Falta precio" },
@@ -20,6 +21,7 @@
   ];
   const grupoMaterial = (nombre) => {
     const n = (nombre || "").toLowerCase();
+    if (n.includes("melamina")) return "Melamina";
     if (n.includes("mdf")) return "MDF";
     if (n.includes("triplay")) return "Triplay";
     if (/pino|cedro|parota|encino|madera/.test(n)) return "Madera sólida";
@@ -74,7 +76,7 @@
     piezas: [], activa: 0, proyecto: null,
   };
   const enProyecto = () => st.piezas.length > 1;
-  const CAMPOS_PIEZA = ["datos", "formato", "nombreArchivo", "unidadSel", "mmPorUnidad", "medidas", "camposArchivo", "campos"];
+  const CAMPOS_PIEZA = ["datos", "formato", "nombreArchivo", "unidadSel", "mmPorUnidad", "medidas", "camposArchivo", "campos", "bruto"];
   const guardarActiva = () => { if (st.piezas.length) for (const k of CAMPOS_PIEZA) st.piezas[st.activa][k] = st[k]; };
   const tomarPieza = (i) => { st.activa = i; for (const k of CAMPOS_PIEZA) st[k] = st.piezas[i][k]; };
   const salirDeProyecto = () => { st.piezas = []; st.activa = 0; st.proyecto = null; };
@@ -115,7 +117,7 @@
     try {
       const d = leerDatos(nombre, contenido);
       salirDeProyecto();
-      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false;
+      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false; st.bruto = contenido;
       st.unidadSel = d.tipo === "2d" ? "auto" : "1";
       aplicarUnidad();
       st.servicio = sugerido(); st.tipoIdx = 0; st.extras = {};
@@ -765,7 +767,7 @@
         const contenido = pz.contenido instanceof Blob ? await pz.contenido.arrayBuffer() : pz.contenido;
         const d = leerDatos(pz.nombre, contenido);
         if (piezas.length && d.tipo !== piezas[0].datos.tipo) { avisos.push(`${pz.nombre}: no se mezcla 2D con 3D en un proyecto.`); continue; }
-        const p = { datos: d, formato: d.formato, nombreArchivo: pz.nombre, unidadSel: d.tipo === "2d" ? "auto" : "1", cantidad: Math.max(1, Math.round(pz.cantidad || 1)) };
+        const p = { datos: d, formato: d.formato, nombreArchivo: pz.nombre, unidadSel: d.tipo === "2d" ? "auto" : "1", cantidad: Math.max(1, Math.round(pz.cantidad || 1)), bruto: contenido };
         medir(p);
         piezas.push(p);
       } catch (e) { avisos.push(`${pz.nombre}: ${e.message || "no se pudo leer"}`); }
@@ -1314,6 +1316,101 @@
     } catch (e) { aviso("No se pudieron armar los planos de este archivo."); }
   };
   $("btn-planos").addEventListener("click", generarPlanos);
+
+  // ---------- Fabrícamelo: el proyecto a la solicitud de fabricación ----------
+  // Sólo para quien cotiza sin cuenta (clientes que llegan de las herramientas).
+  // Guarda los archivos en IndexedDB como lo hace la tienda (lib/generador/aCotizador.ts:
+  // base "hetna-fabricar", almacén "archivos", clave "pendientes") y abre /cotizar
+  // con los datos puestos. Máximo 5 archivos: con más piezas van en un ZIP.
+  const FAB = { db: "hetna-fabricar", almacen: "archivos", clave: "pendientes", max: 5 };
+  const PROCESO = { laser_co2: "Corte láser", plasma: "Corte plasma", router: "Corte CNC", impresion_3d: "Impresión 3D", carpinteria: "Fresado de madera", laser_fibra: "Grabado", herreria: "Otro", diseno: "Diseño CAD/CAM" };
+  // ZIP sin compresión (los STL y DXF ya pesan poco y así no hace falta otra librería)
+  const crcTabla = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = crcTabla[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const zipSimple = (archivos) => {
+    const enc = new TextEncoder(), partes = [], central = [];
+    let off = 0;
+    for (const a of archivos) {
+      const nom = enc.encode(a.nombre), datos = a.bytes, crc = crc32(datos);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint32(14, crc, true); h.setUint32(18, datos.length, true); h.setUint32(22, datos.length, true); h.setUint16(26, nom.length, true);
+      partes.push(new Uint8Array(h.buffer), nom, datos);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint32(16, crc, true); c.setUint32(20, datos.length, true); c.setUint32(24, datos.length, true); c.setUint16(28, nom.length, true); c.setUint32(42, off, true);
+      central.push(new Uint8Array(c.buffer), nom);
+      off += 30 + nom.length + datos.length;
+    }
+    const tam = central.reduce((s, x) => s + x.length, 0);
+    const fin = new DataView(new ArrayBuffer(22));
+    fin.setUint32(0, 0x06054b50, true); fin.setUint16(8, archivos.length, true); fin.setUint16(10, archivos.length, true); fin.setUint32(12, tam, true); fin.setUint32(16, off, true);
+    return new Blob([...partes, ...central, new Uint8Array(fin.buffer)], { type: "application/zip" });
+  };
+  const aBytes = (x) => (typeof x === "string" ? new TextEncoder().encode(x) : new Uint8Array(x));
+  const guardarParaFabricar = (archivos) => new Promise((ok) => {
+    try {
+      const r = indexedDB.open(FAB.db, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(FAB.almacen);
+      r.onerror = () => ok(false);
+      r.onsuccess = () => {
+        const db = r.result;
+        try {
+          const tx = db.transaction(FAB.almacen, "readwrite");
+          tx.objectStore(FAB.almacen).put({ t: Date.now(), archivos }, FAB.clave);
+          tx.oncomplete = () => { db.close(); ok(true); };
+          tx.onerror = () => { db.close(); ok(false); };
+        } catch (e) { db.close(); ok(false); }
+      };
+    } catch (e) { ok(false); }
+  });
+  const pedirATaller = async () => {
+    const r = st.resultado;
+    if (!st.datos) { aviso("Sube tu archivo primero."); return; }
+    guardarActiva();
+    const piezas = enProyecto() ? st.piezas : [{ nombreArchivo: st.nombreArchivo, bruto: st.bruto, cantidad: 1, medidas: st.medidas, datos: st.datos, mmPorUnidad: st.mmPorUnidad }];
+    const proyecto = st.proyecto?.nombre || (st.nombreArchivo || "pieza").replace(/\.[^.]+$/, "");
+    const archivos = [];
+    const sueltos = piezas.filter((p) => p.bruto);
+    if (sueltos.length <= FAB.max - 1) for (const p of sueltos) archivos.push({ nombre: p.nombreArchivo, blob: new Blob([aBytes(p.bruto)]) });
+    else archivos.push({ nombre: `${proyecto.replace(/[^\w.-]+/g, "_").slice(0, 40)}-piezas.zip`, blob: zipSimple(sueltos.map((p) => ({ nombre: p.nombreArchivo, bytes: aBytes(p.bruto) }))) });
+    // planos y lista de corte, si se pueden armar aquí
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (J) {
+      try {
+        const s = servicio(), t = tipo();
+        const lista = piezas.map((p) => ({ nombre: p.nombreArchivo, cantidad: (enProyecto() ? Math.max(1, p.cantidad) * st.cantidad : st.cantidad), datos: p.datos, medidas: p.medidas, mmPorUnidad: p.mmPorUnidad }));
+        const doc = PLANOS.generar(J, lista, { taller: "HETNA CNC", folio: "", proyecto, servicio: s && t ? `${nombreServicio(s)} · ${t.n}` : "", material: st.material && !$("campo-material").hidden ? st.material : "", juegos: enProyecto() ? st.cantidad : 1, nota: "", marca: true });
+        archivos.push({ nombre: `Planos-${proyecto.replace(/[^\w-]+/g, "_").slice(0, 40)}.pdf`, blob: doc.output("blob") });
+      } catch (e) { /* sin planos: van sólo los archivos */ }
+    }
+    const unidades = enProyecto() ? unidadesProyecto() : st.cantidad;
+    const est = r && r.pvRecomendado > 0 ? opcionesPrecio(r).find((o) => o.id === "estandar").total : 0;
+    const s = servicio();
+    const lineas = enProyecto()
+      ? st.piezas.slice(0, 20).map((p) => `${p.nombreArchivo} ×${Math.max(1, p.cantidad) * st.cantidad} (${medidaTexto(p.medidas)})`).join(", ") + (st.piezas.length > 20 ? ` y ${st.piezas.length - 20} más` : "")
+      : `${st.nombreArchivo} (${medidaTexto(st.medidas)})`;
+    const nota = [
+      st.proyecto?.nota || "",
+      `Piezas: ${lineas}.`,
+      est ? `Precio de referencia del Cotizador HETNA: ${dinero(est)} ${st.iva ? "con IVA" : "más IVA"} (Estándar, ${s ? nombreServicio(s) : ""}).` : "",
+      archivos.some((a) => a.nombre.endsWith(".pdf")) ? "Adjunto los archivos y los planos con la lista de corte." : "Adjunto los archivos.",
+    ].filter(Boolean).join(" ").slice(0, 1500);
+    const q = new URLSearchParams({ desde: "cotizador", pieza: enProyecto() ? `${proyecto} (${st.piezas.length} piezas)` : proyecto });
+    q.set("medidas", enProyecto() ? `${st.piezas.length} piezas distintas, ver planos` : medidaTexto(st.medidas));
+    if (st.material && !$("campo-material").hidden) q.set("material", st.material);
+    if (s && PROCESO[s.clave]) q.set("proceso", PROCESO[s.clave]);
+    q.set("cantidad", `${unidades} ${unidades === 1 ? "pieza" : "piezas"}${enProyecto() && st.cantidad > 1 ? ` (${st.cantidad} juegos)` : ""}`);
+    q.set("nota", nota);
+    aviso("Preparando tu solicitud...");
+    await guardarParaFabricar(archivos);
+    const top = (() => { try { return window.top.location; } catch (e) { return window.location; } })();
+    const seg = top.pathname.split("/")[1] || "";
+    const locale = /^[a-z]{2}(-[a-z]{2})?$/i.test(seg) ? seg : "mx"; // /mx/... (o "mx" si se abrió suelto)
+    top.href = `/${locale}/cotizar?${q.toString()}`;
+  };
+  $("btn-fabricar").addEventListener("click", pedirATaller);
+  $("bloque-fabricar").hidden = MODO === "cuenta";
 
   // Pestañas
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {

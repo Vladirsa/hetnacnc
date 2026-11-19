@@ -88,6 +88,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .medida { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
 .medida small { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .medida b { font-family: var(--font-mono); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
+.fabricar { border: 1px solid var(--line); border-radius: 12px; background: var(--accent-soft); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .proyecto { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .proyecto-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
 .proyecto-h b { font-size: 15px; }
@@ -313,6 +314,10 @@ details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
       </div>
       <button class="btn bloque" type="button" id="btn-pdf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar PDF de la cotización</button>
         <button class="btn bloque" type="button" id="btn-planos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar planos y lista de corte (PDF)</button>
+        <div class="fabricar" id="bloque-fabricar" hidden>
+          <div class="ayuda"><b>¿No tienes taller?</b> Pídelo a la red HETNA: tu proyecto (archivos, planos y este precio de referencia) llega listo a los talleres y te mandan propuestas.</div>
+          <button class="btn bloque primario" type="button" id="btn-fabricar">Pídelo a un taller (Fabrícamelo)</button>
+        </div>
       <p class="ayuda">Descarga el PDF y mándalo por WhatsApp junto con el mensaje.</p>
       <details class="desglose"><summary>Ver el mensaje</summary><pre id="mensaje" style="white-space:pre-wrap;font-family:var(--font-body);font-size:14px;background:var(--surface-2);padding:10px;border-radius:10px;margin:8px 0 0"></pre></details>
     </section>
@@ -1075,7 +1080,8 @@ const PLANOS = (() => {
       g.closePath(); g.fill(); g.lineWidth = 0.6; g.stroke();
     }
     // contorno de la silueta: se oscurece el borde con un trazo del canal alfa
-    return { url: cv.toDataURL("image/png"), ancho, alto };
+    // JPEG: jsPDF guarda los PNG sin comprimir (decenas de MB con varias vistas)
+    return { url: cv.toDataURL("image/jpeg", 0.82), ancho, alto };
   };
   const cajaTris = (tris) => {
     const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
@@ -1191,7 +1197,8 @@ const PLANOS = (() => {
         // planta (L x A) arriba, frente (L x H) abajo, lateral (A x H) a la derecha del frente
         const gap = 22;
         escala = escalaPara(L + A + gap, A + Hh + gap, area.w - 16, area.h - 16);
-        const pxmm = Math.min(6, 1800 / Math.max(L, A, Hh) / 1);
+        // ~8 px por mm impreso (unos 200 ppp), con tope de 1100 px por vista
+        const pxmm = Math.min(8 * escala, 1100 / Math.max(L, A, Hh));
         const ox = area.x + 12 + (area.w - 16 - (L + A + gap) * escala) / 2, oy = area.y + 10;
         const vistas = [
           ["PLANTA", VISTAS.planta, ox, oy, L, A],
@@ -1201,7 +1208,7 @@ const PLANOS = (() => {
         for (const [nom, v, x, yy, w, h] of vistas) {
           const derecha = nom === "LATERAL"; // su cota vertical va a la derecha para no chocar con el frente
           const img = pintarVista(tris, f, v, caja, pxmm);
-          try { doc.addImage(img.url, "PNG", x, yy, w * escala, h * escala); } catch (e) {}
+          try { doc.addImage(img.url, "JPEG", x, yy, w * escala, h * escala); } catch (e) {}
           doc.setDrawColor(...TINTA); doc.setLineWidth(0.2); doc.rect(x, yy, w * escala, h * escala);
           txt(nom, x, yy - 1.5, { b: true, s: 7.5, c: GRIS });
           cota(x, yy + h * escala + 5, x + w * escala, yy + h * escala + 5, fmt(w));
@@ -1214,7 +1221,13 @@ const PLANOS = (() => {
       const cy = H - 62;
       doc.setDrawColor(...LINEA); doc.setLineWidth(0.3); doc.rect(M, cy, W - 2 * M, 46);
       doc.line(M, cy + 23, W - M, cy + 23); doc.line(M + 62, cy, M + 62, cy + 46); doc.line(M + 124, cy, M + 124, cy + 46);
-      const celda = (k, v, x, yy) => { txt(k, x + 3, yy + 5.5, { b: true, s: 7.5, c: GRIS }); txt(doc.splitTextToSize(limpio(v), 56)[0], x + 3, yy + 13, { s: 10.5 }); };
+      // el texto se ajusta al ancho de la celda (splitTextToSize mide con la letra actual)
+      const celda = (k, v, x, yy) => {
+        txt(k, x + 3, yy + 5.5, { b: true, s: 7.5, c: GRIS });
+        const t = limpio(v), tam = t.length > 30 ? 8.5 : 10.5;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(tam);
+        doc.splitTextToSize(t, 56).slice(0, 2).forEach((l, n) => txt(l, x + 3, yy + 12.5 + n * 4.4, { s: tam }));
+      };
       celda("PIEZA", p.nombre, M, cy); celda("CANTIDAD", `${p.cantidad} ${p.cantidad === 1 ? "pieza" : "piezas"}`, M + 62, cy); celda("ESCALA (en carta)", nombreEscala(escala), M + 124, cy);
       celda("MATERIAL", info.material || "—", M, cy + 23); celda("MEDIDAS (mm)", m.tipo === "2d" ? `${fmt(m.largoMm)} x ${fmt(m.anchoMm)}` : `${fmt(m.largoMm)} x ${fmt(m.anchoMm)} x ${fmt(m.altoMm)}`, M + 62, cy + 23); celda("TALLER · FECHA", `${info.taller} · ${hoy}`, M + 124, cy + 23);
       notas.slice(0, 3).forEach((n, k) => txt(n, M, cy - 10 + k * 4.6 - (notas.length - 1) * 4.6, { s: 8.5, c: GRIS }));
@@ -1815,7 +1828,7 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
     piezas: [], activa: 0, proyecto: null,
   };
   const enProyecto = () => st.piezas.length > 1;
-  const CAMPOS_PIEZA = ["datos", "formato", "nombreArchivo", "unidadSel", "mmPorUnidad", "medidas", "camposArchivo", "campos"];
+  const CAMPOS_PIEZA = ["datos", "formato", "nombreArchivo", "unidadSel", "mmPorUnidad", "medidas", "camposArchivo", "campos", "bruto"];
   const guardarActiva = () => { if (st.piezas.length) for (const k of CAMPOS_PIEZA) st.piezas[st.activa][k] = st[k]; };
   const tomarPieza = (i) => { st.activa = i; for (const k of CAMPOS_PIEZA) st[k] = st.piezas[i][k]; };
   const salirDeProyecto = () => { st.piezas = []; st.activa = 0; st.proyecto = null; };
@@ -1856,7 +1869,7 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
     try {
       const d = leerDatos(nombre, contenido);
       salirDeProyecto();
-      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false;
+      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false; st.bruto = contenido;
       st.unidadSel = d.tipo === "2d" ? "auto" : "1";
       aplicarUnidad();
       st.servicio = sugerido(); st.tipoIdx = 0; st.extras = {};
@@ -2506,7 +2519,7 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
         const contenido = pz.contenido instanceof Blob ? await pz.contenido.arrayBuffer() : pz.contenido;
         const d = leerDatos(pz.nombre, contenido);
         if (piezas.length && d.tipo !== piezas[0].datos.tipo) { avisos.push(`${pz.nombre}: no se mezcla 2D con 3D en un proyecto.`); continue; }
-        const p = { datos: d, formato: d.formato, nombreArchivo: pz.nombre, unidadSel: d.tipo === "2d" ? "auto" : "1", cantidad: Math.max(1, Math.round(pz.cantidad || 1)) };
+        const p = { datos: d, formato: d.formato, nombreArchivo: pz.nombre, unidadSel: d.tipo === "2d" ? "auto" : "1", cantidad: Math.max(1, Math.round(pz.cantidad || 1)), bruto: contenido };
         medir(p);
         piezas.push(p);
       } catch (e) { avisos.push(`${pz.nombre}: ${e.message || "no se pudo leer"}`); }
@@ -3055,6 +3068,101 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
     } catch (e) { aviso("No se pudieron armar los planos de este archivo."); }
   };
   $("btn-planos").addEventListener("click", generarPlanos);
+
+  // ---------- Fabrícamelo: el proyecto a la solicitud de fabricación ----------
+  // Sólo para quien cotiza sin cuenta (clientes que llegan de las herramientas).
+  // Guarda los archivos en IndexedDB como lo hace la tienda (lib/generador/aCotizador.ts:
+  // base "hetna-fabricar", almacén "archivos", clave "pendientes") y abre /cotizar
+  // con los datos puestos. Máximo 5 archivos: con más piezas van en un ZIP.
+  const FAB = { db: "hetna-fabricar", almacen: "archivos", clave: "pendientes", max: 5 };
+  const PROCESO = { laser_co2: "Corte láser", plasma: "Corte plasma", router: "Corte CNC", impresion_3d: "Impresión 3D", carpinteria: "Fresado de madera", laser_fibra: "Grabado", herreria: "Otro", diseno: "Diseño CAD/CAM" };
+  // ZIP sin compresión (los STL y DXF ya pesan poco y así no hace falta otra librería)
+  const crcTabla = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = crcTabla[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const zipSimple = (archivos) => {
+    const enc = new TextEncoder(), partes = [], central = [];
+    let off = 0;
+    for (const a of archivos) {
+      const nom = enc.encode(a.nombre), datos = a.bytes, crc = crc32(datos);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint32(14, crc, true); h.setUint32(18, datos.length, true); h.setUint32(22, datos.length, true); h.setUint16(26, nom.length, true);
+      partes.push(new Uint8Array(h.buffer), nom, datos);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint32(16, crc, true); c.setUint32(20, datos.length, true); c.setUint32(24, datos.length, true); c.setUint16(28, nom.length, true); c.setUint32(42, off, true);
+      central.push(new Uint8Array(c.buffer), nom);
+      off += 30 + nom.length + datos.length;
+    }
+    const tam = central.reduce((s, x) => s + x.length, 0);
+    const fin = new DataView(new ArrayBuffer(22));
+    fin.setUint32(0, 0x06054b50, true); fin.setUint16(8, archivos.length, true); fin.setUint16(10, archivos.length, true); fin.setUint32(12, tam, true); fin.setUint32(16, off, true);
+    return new Blob([...partes, ...central, new Uint8Array(fin.buffer)], { type: "application/zip" });
+  };
+  const aBytes = (x) => (typeof x === "string" ? new TextEncoder().encode(x) : new Uint8Array(x));
+  const guardarParaFabricar = (archivos) => new Promise((ok) => {
+    try {
+      const r = indexedDB.open(FAB.db, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(FAB.almacen);
+      r.onerror = () => ok(false);
+      r.onsuccess = () => {
+        const db = r.result;
+        try {
+          const tx = db.transaction(FAB.almacen, "readwrite");
+          tx.objectStore(FAB.almacen).put({ t: Date.now(), archivos }, FAB.clave);
+          tx.oncomplete = () => { db.close(); ok(true); };
+          tx.onerror = () => { db.close(); ok(false); };
+        } catch (e) { db.close(); ok(false); }
+      };
+    } catch (e) { ok(false); }
+  });
+  const pedirATaller = async () => {
+    const r = st.resultado;
+    if (!st.datos) { aviso("Sube tu archivo primero."); return; }
+    guardarActiva();
+    const piezas = enProyecto() ? st.piezas : [{ nombreArchivo: st.nombreArchivo, bruto: st.bruto, cantidad: 1, medidas: st.medidas, datos: st.datos, mmPorUnidad: st.mmPorUnidad }];
+    const proyecto = st.proyecto?.nombre || (st.nombreArchivo || "pieza").replace(/\.[^.]+$/, "");
+    const archivos = [];
+    const sueltos = piezas.filter((p) => p.bruto);
+    if (sueltos.length <= FAB.max - 1) for (const p of sueltos) archivos.push({ nombre: p.nombreArchivo, blob: new Blob([aBytes(p.bruto)]) });
+    else archivos.push({ nombre: `${proyecto.replace(/[^\w.-]+/g, "_").slice(0, 40)}-piezas.zip`, blob: zipSimple(sueltos.map((p) => ({ nombre: p.nombreArchivo, bytes: aBytes(p.bruto) }))) });
+    // planos y lista de corte, si se pueden armar aquí
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (J) {
+      try {
+        const s = servicio(), t = tipo();
+        const lista = piezas.map((p) => ({ nombre: p.nombreArchivo, cantidad: (enProyecto() ? Math.max(1, p.cantidad) * st.cantidad : st.cantidad), datos: p.datos, medidas: p.medidas, mmPorUnidad: p.mmPorUnidad }));
+        const doc = PLANOS.generar(J, lista, { taller: "HETNA CNC", folio: "", proyecto, servicio: s && t ? `${nombreServicio(s)} · ${t.n}` : "", material: st.material && !$("campo-material").hidden ? st.material : "", juegos: enProyecto() ? st.cantidad : 1, nota: "", marca: true });
+        archivos.push({ nombre: `Planos-${proyecto.replace(/[^\w-]+/g, "_").slice(0, 40)}.pdf`, blob: doc.output("blob") });
+      } catch (e) { /* sin planos: van sólo los archivos */ }
+    }
+    const unidades = enProyecto() ? unidadesProyecto() : st.cantidad;
+    const est = r && r.pvRecomendado > 0 ? opcionesPrecio(r).find((o) => o.id === "estandar").total : 0;
+    const s = servicio();
+    const lineas = enProyecto()
+      ? st.piezas.slice(0, 20).map((p) => `${p.nombreArchivo} ×${Math.max(1, p.cantidad) * st.cantidad} (${medidaTexto(p.medidas)})`).join(", ") + (st.piezas.length > 20 ? ` y ${st.piezas.length - 20} más` : "")
+      : `${st.nombreArchivo} (${medidaTexto(st.medidas)})`;
+    const nota = [
+      st.proyecto?.nota || "",
+      `Piezas: ${lineas}.`,
+      est ? `Precio de referencia del Cotizador HETNA: ${dinero(est)} ${st.iva ? "con IVA" : "más IVA"} (Estándar, ${s ? nombreServicio(s) : ""}).` : "",
+      archivos.some((a) => a.nombre.endsWith(".pdf")) ? "Adjunto los archivos y los planos con la lista de corte." : "Adjunto los archivos.",
+    ].filter(Boolean).join(" ").slice(0, 1500);
+    const q = new URLSearchParams({ desde: "cotizador", pieza: enProyecto() ? `${proyecto} (${st.piezas.length} piezas)` : proyecto });
+    q.set("medidas", enProyecto() ? `${st.piezas.length} piezas distintas, ver planos` : medidaTexto(st.medidas));
+    if (st.material && !$("campo-material").hidden) q.set("material", st.material);
+    if (s && PROCESO[s.clave]) q.set("proceso", PROCESO[s.clave]);
+    q.set("cantidad", `${unidades} ${unidades === 1 ? "pieza" : "piezas"}${enProyecto() && st.cantidad > 1 ? ` (${st.cantidad} juegos)` : ""}`);
+    q.set("nota", nota);
+    aviso("Preparando tu solicitud...");
+    await guardarParaFabricar(archivos);
+    const top = (() => { try { return window.top.location; } catch (e) { return window.location; } })();
+    const seg = top.pathname.split("/")[1] || "";
+    const locale = /^[a-z]{2}(-[a-z]{2})?$/i.test(seg) ? seg : "mx"; // /mx/... (o "mx" si se abrió suelto)
+    top.href = `/${locale}/cotizar?${q.toString()}`;
+  };
+  $("btn-fabricar").addEventListener("click", pedirATaller);
+  $("bloque-fabricar").hidden = MODO === "cuenta";
 
   // Pestañas
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
