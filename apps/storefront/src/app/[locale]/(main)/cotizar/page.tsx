@@ -64,17 +64,21 @@ export default async function CotizarPage({
     material?: string
     archivo?: string
     proceso?: string
+    // Proyectos (Cotizador, Partir 3D): cantidad total y descripción ya escrita
+    cantidad?: string
+    nota?: string
     // Desde la tienda: lo que se buscó y no había
     descripcion?: string
   }>
 }) {
   const sp = await searchParams
-  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion } = sp
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion, cantidad, nota } = sp
   const descripcionInicial = typeof descripcion === "string" && descripcion.trim() ? descripcion.trim() : undefined
   const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
   // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
   const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
-  const prellenado = desde && pieza ? { pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso } : undefined
+  const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined)
+  const prellenado = desde && pieza ? { pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso, cantidad: texto(cantidad, 60), descripcion: texto(nota, 1500) } : undefined
 
   return (
     <main className="w-full bg-[#FAF9F6]">
