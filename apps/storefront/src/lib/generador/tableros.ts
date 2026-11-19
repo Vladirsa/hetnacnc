@@ -36,9 +36,10 @@ export type PiezaTablero = PiezaEnsamble & { origen: number; indice: number; bar
 // Cómo se unen las piezas: caja y espiga (sin tornillos, para router), o con
 // herraje de carpintería: confirmat, minifix con taquetes, o sólo taquetes con
 // pegamento. Con herraje las piezas van a tope y llevan sus barrenos marcados.
-export type TipoUnion = "espiga" | "confirmat" | "minifix" | "taquete" | "biblioteca"
+export type TipoUnion = "espiga" | "dedos" | "confirmat" | "minifix" | "taquete" | "biblioteca"
 export const UNIONES: { id: TipoUnion; nombre: string; nota: string }[] = [
   { id: "espiga", nombre: "Caja y espiga", nota: "Sin tornillos ni herrajes" },
+  { id: "dedos", nombre: "Uniones de dedos", nota: "Esquinas entrelazadas: ideal para láser" },
   { id: "confirmat", nombre: "Confirmat", nota: "Tornillo 7 × 50: rápido y firme" },
   { id: "minifix", nombre: "Minifix + taquete", nota: "Se arma y desarma: cocinas y closets" },
   { id: "taquete", nombre: "Taquete y pegamento", nota: "Unión fija, sin herraje visible" },
@@ -380,9 +381,20 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
 
   // ---- 5. margen de las mortajas: P crece si la mortaja queda en su orilla ----
   const m = Math.max(12, e)
-  for (let paso = 0; paso < 3 && tipoUnion === "espiga"; paso++) {
+  // en uniones de dedos, una esquina es donde P llega al ras de la cara de afuera de Q
+  // (los dedos entran en la orilla de P); en las uniones en T se queda la caja y espiga
+  const ladoEsquina = (u: Union): 0 | 1 | null => {
+    if (tipoUnion !== "dedos") return null
+    const Q = fin[u.q], Pc = fin[u.p], B = Q.k
+    if (Math.abs(Pc.hi[B] - Q.hi[B]) < 0.6) return 1
+    if (Math.abs(Pc.lo[B] - Q.lo[B]) < 0.6) return 0
+    return null
+  }
+  const esquinasDedos = new Set(uniones.filter((u) => ladoEsquina(u) !== null))
+  for (let paso = 0; paso < 3 && (tipoUnion === "espiga" || tipoUnion === "dedos"); paso++) {
     let cambio = false
     for (const u of uniones) {
+      if (esquinasDedos.has(u)) continue
       const Q = fin[u.q], Pc = fin[u.p]
       const B = Q.k
       const fija0 = unida.has(`${u.p}:${B}:0`), fija1 = unida.has(`${u.p}:${B}:1`)
@@ -535,10 +547,40 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     }
     if (!puestos) alTope++
   }
+  let dedosPuestos = 0
   for (const u of uniones) {
-    if (tipoUnion !== "espiga") {
+    if (tipoUnion !== "espiga" && tipoUnion !== "dedos") {
       herraje(u)
       continue
+    }
+    // ---- uniones de dedos en las esquinas: Q lleva dedos del grueso de P; P, muescas abiertas en su orilla ----
+    const lado = ladoEsquina(u)
+    if (lado !== null && esquinasDedos.has(u)) {
+      const Q = fin[u.q], Pc = fin[u.p]
+      const A = u.A, B = Q.k
+      const C = (3 - A - B) as Eje
+      // en las puntas queda material entero: ahí se juntan las muescas de otra orilla (esquina de tres tableros)
+      const mg = Math.max(1, 2 * r + 1)
+      const c0 = Math.max(Q.lo[C], Pc.lo[C]) + mg, c1 = Math.min(Q.hi[C], Pc.hi[C]) - mg
+      const d = c1 - c0
+      if (d >= 30 && traslape(Q.lo[B], Q.hi[B], Pc.lo[B], Pc.hi[B]) >= e - 0.05) {
+        const objetivo = o0.anchoEspiga && o0.anchoEspiga > 0 ? o0.anchoEspiga : Math.max(12, Math.min(50, e * 2.5))
+        let n = Math.max(3, Math.round(d / objetivo))
+        if (n % 2 === 0) n += 1
+        const w = d / n
+        const dq: Espiga[] = [], mp: Espiga[] = []
+        for (let i = 0; i < n; i += 2) {
+          const a = c0 + i * w, b = c0 + (i + 1) * w
+          // juego: el dedo de Q un poco más angosto, la muesca de P un poco más ancha (no en las orillas)
+          dq.push({ a: a + (i > 0 ? cl : 0), b: b - (i < n - 1 ? cl : 0), L: e + saliente })
+          mp.push({ a: a - (i > 0 ? cl : 0), b: b + (i < n - 1 ? cl : 0), L: -e })
+        }
+        const kq = `${A}:${u.s}`, kp = `${B}:${lado}`
+        orillas[u.q].set(kq, [...(orillas[u.q].get(kq) || []), ...dq].sort((x, y) => x.a - y.a))
+        orillas[u.p].set(kp, [...(orillas[u.p].get(kp) || []), ...mp].sort((x, y) => x.a - y.a))
+        dedosPuestos++
+        continue
+      }
     }
     const Q = fin[u.q], Pc = fin[u.p]
     const A = u.A, B = Q.k
@@ -608,11 +650,12 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     const clave = `${A}:${u.s}`
     orillas[u.q].set(clave, [...(orillas[u.q].get(clave) || []), ...lista].sort((x, y) => x.a - y.a))
   }
-  if (alTope) avisos.push(`${alTope} unión${alTope > 1 ? "es son" : " es"} muy angosta${alTope > 1 ? "s" : ""} para ${tipoUnion === "espiga" ? "espiga" : "herraje"} y queda${alTope > 1 ? "n" : ""} a tope: lleva${alTope > 1 ? "n" : ""} pegamento.`)
+  if (tipoUnion === "dedos" && uniones.length > dedosPuestos) avisos.push(`${uniones.length - dedosPuestos} unión${uniones.length - dedosPuestos > 1 ? "es no son esquinas y llevan" : " no es esquina y lleva"} caja y espiga.`)
+  if (alTope) avisos.push(`${alTope} unión${alTope > 1 ? "es son" : " es"} muy angosta${alTope > 1 ? "s" : ""} para ${tipoUnion === "espiga" || tipoUnion === "dedos" ? "espiga" : "herraje"} y queda${alTope > 1 ? "n" : ""} a tope: lleva${alTope > 1 ? "n" : ""} pegamento.`)
   const compras: Mueble["compras"] = []
   if (cuenta.principal) compras.push({ nombre: def.compra, cantidad: Math.ceil(cuenta.principal * (def.precio < 2 ? 1.05 : 1)), nota: def.nota, precio: def.precio || undefined })
   if (cuenta.acompanante && def.acompanante) compras.push({ nombre: def.acompanante.compra, cantidad: Math.ceil(cuenta.acompanante * 1.1), nota: "Con pegamento blanco.", precio: def.acompanante.precio || undefined })
-  if (tipoUnion !== "espiga" && cuenta.principal)
+  if (tipoUnion !== "espiga" && tipoUnion !== "dedos" && cuenta.principal)
     avisos.push("Los barrenos de cara van en el archivo (capas BARRENO). Los de canto se hacen con taladro y guía: van marcados en la orilla de cada pieza (capas CANTO).")
 
   // aberturas: dentro del cuerpo de la pieza y lejos de las mortajas
@@ -632,6 +675,26 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     }
   })
   if (abFuera) avisos.push(`${abFuera} hueco${abFuera > 1 ? "s quedaron" : " quedó"} fuera del tablero o encima de una mortaja y no se ${abFuera > 1 ? "cortan" : "corta"}: muévelo${abFuera > 1 ? "s" : ""}.`)
+
+  // dos muescas (o dos espigas) que se enciman en la misma orilla se vuelven una; si una espiga y una
+  // muesca se enciman, se queda la primera (la orilla no puede salir y entrar en el mismo lugar)
+  for (const mapa of orillas)
+    for (const [k, lista] of mapa) {
+      const limpia: Espiga[] = []
+      for (const t of [...lista].sort((x, y) => x.a - y.a)) {
+        const ult = limpia[limpia.length - 1]
+        const sep = Math.max(1, 2 * r + 1)
+        if (ult && t.a < ult.b + sep) {
+          if (Math.sign(t.L) === Math.sign(ult.L)) {
+            ult.b = Math.max(ult.b, t.b)
+            ult.L = Math.sign(t.L) * Math.max(Math.abs(t.L), Math.abs(ult.L))
+          }
+          continue
+        }
+        limpia.push({ ...t })
+      }
+      mapa.set(k, limpia)
+    }
 
   const piezas: PiezaTablero[] = fin.map((c, i) => {
     const U = EJE_U[c.k], V = EJE_V[c.k]

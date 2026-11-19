@@ -5,6 +5,7 @@ import { z } from "@medusajs/framework/zod"
 
 import { ErrorDiseno, HERRAMIENTAS, guardarDiseno, listarDisenos } from "../../../../lib/disenos-guardados"
 import { MAX_DISENOS_GUARDADOS } from "../../../../lib/precios-diseno"
+import { avisarN8n } from "../../../../lib/disenos-correos"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const h = typeof req.query.herramienta === "string" && (HERRAMIENTAS as readonly string[]).includes(req.query.herramienta) ? req.query.herramienta : undefined
@@ -26,6 +27,8 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   if (JSON.stringify(d.data.datos).length > 1_500_000) return res.status(413).json({ ok: false, mensaje: "El diseño es muy grande para guardarlo." })
   try {
     const id = await guardarDiseno(req.scope, req.auth_context.actor_id, d.data)
+    // un diseño nuevo es un cliente interesado: al CRM (n8n), sin esperar respuesta
+    if (!d.data.id) void avisarN8n("diseno_guardado", { customer_id: req.auth_context.actor_id, herramienta: d.data.herramienta, nombre_diseno: d.data.nombre, resumen: d.data.resumen || null })
     res.json({ ok: true, id })
   } catch (e) {
     if (e instanceof ErrorDiseno) return res.status(e.status).json({ ok: false, mensaje: e.message })
