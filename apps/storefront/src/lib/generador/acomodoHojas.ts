@@ -174,7 +174,23 @@ export function acomodarEnTablero(piezas: PiezaHoja[], o: OpcionesHoja): Acomodo
         return c.girada ? [X + (b.h - ly), Y + lx] : [X + lx, Y + ly]
       }
       for (const t of p.trazos) trazos.push({ ...t, pts: t.pts.map(llevar) })
-      if (o.etiquetas) trazos.push(...numero(String(c.n), X + c.w / 2, Y + c.h / 2, Math.max(12, Math.min(40, Math.min(c.w, c.h) * 0.22))))
+      if (o.etiquetas) {
+        // el número va donde no haya huecos ni barrenos: se prueban varios puntos de la pieza
+        const alto = Math.max(12, Math.min(40, Math.min(c.w, c.h) * 0.22))
+        const txt = String(c.n)
+        const ancho = alto * 0.55 * 1.45 * txt.length
+        const estorbos = p.trazos
+          .filter((t) => t !== p.trazos[0])
+          .map((t) => {
+            const pts = t.pts.map(llevar)
+            return [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))]
+          })
+        const libre = (cx: number, cy: number) => estorbos.every(([a, b, cc, dd]) => cx + ancho / 2 + 4 < a || cx - ancho / 2 - 4 > cc || cy + alto / 2 + 4 < b || cy - alto / 2 - 4 > dd)
+        const cands: P[] = []
+        for (const fx of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const fy of [0.5, 0.3, 0.7]) cands.push([X + c.w * fx, Y + c.h * fy])
+        const [cx, cy] = cands.find(([a, b]) => libre(a, b)) || cands[0]
+        trazos.push(...numero(txt, cx, cy, alto))
+      }
     }
   })
   const areaPiezas = res.hojas.reduce((t, h) => t + h.usado, 0)
