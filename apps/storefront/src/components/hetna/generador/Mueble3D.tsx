@@ -28,10 +28,12 @@ export type PiezaVista = PiezaEnsamble & {
   // herrajes (opcional): barrenos de cara y de canto, en coordenadas de la pieza
   barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]
   cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[]
+  ranuras?: { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }[]
 }
 // cilindro de radio y alto 1 (se escala por barreno); materiales compartidos
 const CILINDRO = new THREE.CylinderGeometry(1, 1, 1, 18)
 const MAT_BARRENO = new THREE.MeshBasicMaterial({ color: 0x15100a })
+const CAJA = new THREE.BoxGeometry(1, 1, 1)
 const MAT_CANTO = new THREE.MeshBasicMaterial({ color: 0x2f6fd6 })
 const EJE_Y = new THREE.Vector3(0, 1, 0)
 // punto del mueble en coordenadas de three
@@ -50,6 +52,15 @@ function herrajes(p: PiezaVista): THREE.Object3D[] {
     m.position.copy(c)
     m.scale.set(b.d / 2, b.prof + 0.4, b.d / 2)
     m.quaternion.setFromUnitVectors(EJE_Y, normal)
+    out.push(m)
+  }
+  for (const rr of p.ranuras || []) {
+    // canal: una caja oscura delgada en la cara de la pieza
+    const w0 = rr.cara === 1 ? e - rr.prof : 0, w1 = rr.cara === 1 ? e + 0.2 : rr.prof
+    const a = enThree(p, rr.u0, rr.v0, w0), b = enThree(p, rr.u1, rr.v1, w1)
+    const m = new THREE.Mesh(CAJA, MAT_BARRENO)
+    m.position.copy(a.clone().add(b).multiplyScalar(0.5))
+    m.scale.set(Math.max(0.5, Math.abs(b.x - a.x)), Math.max(0.5, Math.abs(b.y - a.y)), Math.max(0.5, Math.abs(b.z - a.z)))
     out.push(m)
   }
   for (const k of p.cantos || []) {
