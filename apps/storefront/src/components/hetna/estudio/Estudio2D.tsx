@@ -126,7 +126,7 @@ export function Estudio2D({
 
   const b = useMemo(() => (dibujo && dibujo.trazos.length ? cajaDibujo(dibujo.trazos) : null), [dibujo])
   const medidas = useMemo(() => (paraExportar && paraExportar.trazos.length ? cajaDibujo(paraExportar.trazos) : null), [paraExportar])
-  const largo = useMemo(() => (paraExportar ? largoCorte(paraExportar.trazos.filter((t) => t.capa !== "grabado" && !t.capa.startsWith("BARRENO") && !t.capa.startsWith("CANTO") && t.capa !== "ETIQUETA")) : 0), [paraExportar])
+  const largo = useMemo(() => (paraExportar ? largoCorte(paraExportar.trazos.filter((t) => t.capa !== "grabado" && !t.capa.startsWith("BARRENO") && !t.capa.startsWith("CANTO") && t.capa !== "ETIQUETA" && !t.capa.startsWith("RANURA"))) : 0), [paraExportar])
 
   // Al cambiar el tamaño del dibujo, se vuelve a ajustar a la vista
   const clave = b ? `${Math.round(b.x1 - b.x0)}x${Math.round(b.y1 - b.y0)}` : ""
@@ -150,7 +150,7 @@ export function Estudio2D({
       ...dibujo.trazos
         .filter((t) => !(t.capa === "grabado" && t.cerrado))
         .map((t, i) => {
-          const col = COLORES[t.capa] || (t.capa === "ETIQUETA" ? "#9BE3B8" : t.capa.startsWith("BARRENO") ? (t.capa.endsWith("ABAJO") ? "#B58CFF" : "#5FA8F5") : t.capa.startsWith("CANTO") ? "#9BE3B8" : COLORES.corte)
+          const col = COLORES[t.capa] || (t.capa === "ETIQUETA" ? "#9BE3B8" : t.capa.startsWith("RANURA") ? "#F5C451" : t.capa.startsWith("BARRENO") ? (t.capa.endsWith("ABAJO") ? "#B58CFF" : "#5FA8F5") : t.capa.startsWith("CANTO") ? "#9BE3B8" : COLORES.corte)
           return <path key={i} d={camino(t.pts, t.cerrado)} fill="none" stroke={col} strokeWidth={t.capa === "hoja" ? 1 : 1.3} vectorEffect="non-scaling-stroke" strokeDasharray={t.capa === "doblez" || t.capa === "guia" ? "6 4" : undefined} />
         }),
     ]

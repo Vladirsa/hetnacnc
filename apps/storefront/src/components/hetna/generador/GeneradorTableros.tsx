@@ -17,6 +17,7 @@ import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES } from "@/lib/generador/tableros"
+import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
 import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
@@ -88,6 +89,16 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [futuro, setFuturo] = useState<TableroC[][]>([])
   const [material, setMaterial] = useState("melamina-blanca")
   const [patas, setPatas] = useState("0")
+  const [cantoG, setCantoG] = useState(1)
+  const [gab, setGab] = useState<Omit<OpcionesGabinete, "grosor" | "gFrente">>(GABINETE_INICIO.bajo)
+  const [gabTxt, setGabTxt] = useState<Record<string, string>>({})
+  const campoGab = (k: "ancho" | "alto" | "fondo" | "zoclo" | "zocloRemetido" | "repisas" | "cajones") => ({
+    valor: gabTxt[k] ?? String(gab[k]),
+    cambiar: (x: string) => {
+      setGabTxt((s) => ({ ...s, [k]: x }))
+      if (x.trim() !== "" && Number.isFinite(numero(x))) setGab((g) => ({ ...g, [k]: numero(x) }))
+    },
+  })
   const [hueco, setHueco] = useState({ ancho: "160", alto: "60" })
   const [pagados, setPagados] = useState<Record<string, boolean>>({})
   const [cobrando, setCobrando] = useState(false)
@@ -167,10 +178,25 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     if (!acomodo) return
     const numeros = new Map<string, number[]>()
     for (const h of acomodo.hojas) for (const c of h.colocadas) numeros.set(c.id, [...(numeros.get(c.id) || []), c.n])
+    // orillas con canto: puertas, frentes y cubierta todo el contorno; la estructura, la orilla del frente
+    const yFrente = Math.min(...m.piezas.filter((p) => p.rol === "estructura").flatMap((p) => p.contorno.map(([u, v]) => (p.plano === "lateral" ? u : p.plano === "horizontal" ? v : Infinity))))
     const filas = m.piezas.map((p, i) => {
+      const us0 = p.contorno.map((q) => q[0]), vs0 = p.contorno.map((q) => q[1])
+      const du = Math.max(...us0) - Math.min(...us0), dv = Math.max(...vs0) - Math.min(...vs0)
+      const conCanto = materialDe(p.material).canto
+      let l1 = false, l2 = false, a1 = false, a2 = false
+      if (conCanto && (p.rol === "puerta" || p.rol === "frente" || p.rol === "cubierta")) l1 = l2 = a1 = a2 = true
+      else if (conCanto && p.rol === "estructura") {
+        // la orilla del frente: en costados es u mínima (orilla paralela a v); en horizontales es v mínima
+        const frenteU = p.plano === "lateral" && Math.abs(Math.min(...us0) - yFrente) < 25
+        const frenteV = p.plano === "horizontal" && Math.abs(Math.min(...vs0) - yFrente) < 25
+        // una orilla paralela a v mide dv: es larga si dv >= du
+        if (frenteU) (dv >= du ? (l1 = true) : (a1 = true))
+        if (frenteV) (du >= dv ? (l1 = true) : (a1 = true))
+      }
       const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
       const a = Math.max(...us) - Math.min(...us), b = Math.max(...vs) - Math.min(...vs)
-      return { nombre: p.nombre, material: materialDe(p.material).nombre, largo: Math.max(a, b), ancho: Math.min(a, b), grosor: p.grosor, cantidad: copias, veta: conVeta ? vetaDe(p.nombre) : ("libre" as Veta), numeros: (numeros.get(`p${i}`) || []).sort((x, y) => x - y) }
+      return { canto: { l1, l2, a1, a2, grosor: cantoG }, nombre: p.nombre, material: materialDe(p.material).nombre, largo: Math.max(a, b), ancho: Math.min(a, b), grosor: p.grosor, cantidad: copias, veta: conVeta ? vetaDe(p.nombre) : ("libre" as Veta), numeros: (numeros.get(`p${i}`) || []).sort((x, y) => x - y) }
     })
     const url = URL.createObjectURL(new Blob(["\ufeff" + listaCorteCSV(filas)], { type: "text/csv;charset=utf-8" }))
     const a = document.createElement("a")
@@ -333,6 +359,65 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         <span className="text-[11.5px] text-[#5B6880]">
           Funciona con muebles de tablero plano a escuadra (libreros, mesas, bancos, repisas, exhibidores). Curvas e inclinaciones se aproximan con rectángulos. Si la imagen no sirve, no se cobra.
         </span>
+      </Seccion>
+
+      <Seccion titulo="O arma un gabinete de cocina">
+        <div className="grid grid-cols-3 gap-1.5">
+          {([["bajo", "Bajo"], ["alto", "Alto (aéreo)"], ["columna", "Columna"]] as const).map(([t, n]) => (
+            <button key={t} type="button" aria-pressed={gab.tipo === t} onClick={() => { setGab(GABINETE_INICIO[t as TipoGabinete]); setGabTxt({}) }} className={`rounded-[8px] px-2 py-1.5 text-[12px] font-semibold ${gab.tipo === t ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <CampoNum etiqueta="Ancho" {...campoGab("ancho")} sufijo="mm" />
+          <CampoNum etiqueta="Alto" {...campoGab("alto")} sufijo="mm" />
+          <CampoNum etiqueta="Fondo" {...campoGab("fondo")} sufijo="mm" />
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          Techo:
+          {([["completo", "Completo"], ["travesanos", "Travesaños"], ["sin", "Sin techo"]] as const).map(([t, n]) => (
+            <button key={t} type="button" aria-pressed={gab.techo === t} onClick={() => setGab((g) => ({ ...g, techo: t }))} className={`rounded-[6px] px-2 py-1 font-semibold ${gab.techo === t ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          Fondo:
+          {([["ranura", "HDF en ranura"], ["clavado", "Clavado"], ["sin", "Sin fondo"]] as const).map(([t, n]) => (
+            <button key={t} type="button" aria-pressed={gab.fondoTipo === t} onClick={() => setGab((g) => ({ ...g, fondoTipo: t }))} className={`rounded-[6px] px-2 py-1 font-semibold ${gab.fondoTipo === t ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n}</button>
+          ))}
+        </div>
+        {gab.tipo !== "alto" && (
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Zoclo (0 = sin)" {...campoGab("zoclo")} sufijo="mm" />
+            <CampoNum etiqueta="Remetido del zoclo" {...campoGab("zocloRemetido")} sufijo="mm" />
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          Frente:
+          {([["nada", "Abierto"], ["puerta", "1 puerta"], ["puertas", "2 puertas"], ["cajones", "Cajones"]] as const).map(([t, n]) => (
+            <button key={t} type="button" aria-pressed={gab.frente === t} onClick={() => setGab((g) => ({ ...g, frente: t }))} className={`rounded-[6px] px-2 py-1 font-semibold ${gab.frente === t ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n}</button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {gab.frente === "cajones" ? <CampoNum etiqueta="Cuántos cajones" {...campoGab("cajones")} /> : <CampoNum etiqueta="Repisas" {...campoGab("repisas")} />}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const g = gabinete({ ...gab, grosor: opciones.grosor, gFrente: opciones.grosor })
+            aplicar(() => g.tableros, null)
+            setNombre(`Gabinete ${gab.tipo === "bajo" ? "bajo" : gab.tipo === "alto" ? "alto" : "columna"} ${Math.round(gab.ancho)} mm`)
+            // los gabinetes de cocina van con herraje: confirmat si estaba en caja y espiga
+            if (union === "espiga") setUnion("confirmat")
+            setPunto(null)
+            setAjustar((n) => n + 1)
+            if (g.avisos.length) setLectura({ texto: g.avisos.join(" "), tipo: "aviso" })
+          }}
+          className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
+        >
+          Crear gabinete
+        </button>
+        <span className="text-[11.5px] text-[#8A97AB]">Reemplaza el mueble actual (puedes deshacer). Sale con zoclo, fondo de HDF en ranura de 4 × 8 mm a 11 mm de la orilla, repisas o cajones con corredera, y lo editas en 3D.</span>
       </Seccion>
 
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
@@ -586,6 +671,16 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
           ))}
         </div>
         <CampoNum etiqueta="Patas (alto, 0 = sin patas)" valor={patas} cambiar={setPatas} sufijo="mm" />
+        {materialDe(material).canto && (
+          <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+            Canto de PVC:
+            {[0.45, 1, 2].map((g) => (
+              <button key={g} type="button" aria-pressed={cantoG === g} onClick={() => setCantoG(g)} className={`rounded-[6px] px-2 py-1 font-semibold ${cantoG === g ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                {g} mm
+              </button>
+            ))}
+          </div>
+        )}
         <span className="text-[12px] text-[#8A97AB]">Material de la estructura. Puertas, frentes, fondo y cubierta pueden llevar otro: selecciónalos en el 3D.{materialDe(material).canto ? " Lleva canto de PVC en las orillas del frente." : ""}</span>
       </Seccion>
 
