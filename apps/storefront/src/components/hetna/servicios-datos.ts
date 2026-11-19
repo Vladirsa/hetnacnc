@@ -208,7 +208,7 @@ export const SERVICIOS: Servicio[] = [
     "nombre": "Litofanías y relieves 3D (gratis)",
     "resumen": "Tu foto convertida en STL: litofanía plana, curva o de lámpara, o relieve para tallar en router.",
     "titulo": "Litofanías y relieves 3D desde una foto",
-    "subtitulo": "La foto se convierte en tu navegador, sin subirla.",
+    "subtitulo": "Litofanía y relieve por brillo en tu navegador; profundidad con IA en el servidor de HETNA, sin guardar tu foto.",
     "incluye": [],
     "pasos": [],
     "formatos": [
