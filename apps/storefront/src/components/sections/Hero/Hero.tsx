@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 
 import tailwindConfig from "../../../../tailwind.config"
 import { ArrowRightIcon } from "@/icons"

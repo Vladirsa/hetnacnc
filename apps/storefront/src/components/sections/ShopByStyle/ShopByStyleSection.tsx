@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ArrowRightIcon } from "@/icons"
 import { Style } from "@/types/styles"

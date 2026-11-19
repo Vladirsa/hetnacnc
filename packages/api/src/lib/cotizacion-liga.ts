@@ -7,7 +7,9 @@
 //        POST /api/cotizador-mp/conectar  (sesión de Supabase)  -> { url }
 //        GET  /api/cotizador-mp/callback?code&state           <- Mercado Pago
 //      El access_token del taller se guarda en `negocios_mp` (Supabase, sin
-//      políticas: sólo lo lee el servidor con la llave de servicio).
+//      políticas: sólo lo lee el servidor con la llave de servicio), cifrado
+//      con LLAVES_CIFRADO (lib/cifrado-llaves.ts). mpDelNegocio() regresa la
+//      fila tal cual (cifrada): el token en claro sólo sale de tokenDelTaller().
 //   2. Cada cotización tiene token_publico; la liga es hetnacnc.com/c/<token>.
 //        GET  /api/cotizacion-liga/<token>           -> datos para la página
 //        POST /api/cotizacion-liga/<token>/aceptar   { nombre }
@@ -29,6 +31,7 @@
 import { createHmac, timingSafeEqual } from "crypto"
 
 import { avisarTaller } from "./avisos-taller"
+import { cifrar, descifrar } from "./cifrado-llaves"
 import { paypal, paypalListo } from "./paypal-api"
 import { adminDesdeToken, ErrorSuscripcion, supa, supaBase } from "./cotizador-suscripciones"
 
@@ -517,6 +520,8 @@ export async function tokenDelTaller(negocioId: string): Promise<{ token: string
   const fila = await mpDelNegocio(negocioId)
   if (!fila) throw new ErrorSuscripcion("El taller todavía no conecta su Mercado Pago.", 409)
   const vence = fila.expira_en ? new Date(fila.expira_en).getTime() : 0
+  // Si no se puede descifrar, truena aquí con un mensaje claro (sin el valor)
+  const accessToken = descifrar(fila.access_token)
   if (fila.refresh_token && vence && vence - Date.now() < 15 * 86_400_000 && mpConexionLista()) {
     try {
       const r = await fetch(`${MP_API}/oauth/token`, {
@@ -526,7 +531,7 @@ export async function tokenDelTaller(negocioId: string): Promise<{ token: string
           client_id: appId(),
           client_secret: clientSecret(),
           grant_type: "refresh_token",
-          refresh_token: fila.refresh_token,
+          refresh_token: descifrar(fila.refresh_token),
         }),
         signal: AbortSignal.timeout(15_000),
       })
@@ -539,7 +544,7 @@ export async function tokenDelTaller(negocioId: string): Promise<{ token: string
       // se usa el token actual mientras siga vivo
     }
   }
-  return { token: fila.access_token, mpUserId: String(fila.mp_user_id) }
+  return { token: accessToken, mpUserId: String(fila.mp_user_id) }
 }
 
 async function guardarConexion(negocioId: string, t: any) {
@@ -550,8 +555,8 @@ async function guardarConexion(negocioId: string, t: any) {
     body: JSON.stringify({
       negocio_id: negocioId,
       mp_user_id: String(t.user_id),
-      access_token: t.access_token,
-      refresh_token: t.refresh_token || null,
+      access_token: cifrar(t.access_token),
+      refresh_token: cifrar(t.refresh_token || null),
       public_key: t.public_key || null,
       expira_en: expira,
       actualizado: new Date().toISOString(),

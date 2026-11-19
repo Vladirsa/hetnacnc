@@ -17,6 +17,7 @@
 // y YouTube Analytics API activadas). Redirect: https://hetnacnc.com/r/google-callback
 import { randomBytes } from "crypto"
 
+import { cifrarCampos, descifrar } from "../cifrado-llaves"
 import { STORE_URL } from "../licitacion"
 import { T_CONFIG_S, T_POST, asegurarSocial } from "../social-hub"
 import { T_ESTUDIO, asegurarEstudio } from "./estudio"
@@ -35,8 +36,11 @@ async function leer(knex: any) {
   await asegurarSocial(knex)
   return (await knex(T_CONFIG_S).where({ clave: "google" }).first())?.valor || {}
 }
+// Los tokens se guardan cifrados (lib/cifrado-llaves.ts) y se descifran sólo
+// donde se usan; leer() los deja como están.
+const CAMPOS_SECRETOS = ["access", "refresh"]
 async function guardar(knex: any, v: any) {
-  await knex.raw(`insert into ?? (clave, valor) values ('google', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(v)])
+  await knex.raw(`insert into ?? (clave, valor) values ('google', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify(cifrarCampos(v, CAMPOS_SECRETOS))])
 }
 
 export async function asegurarDatos(knex: any) {
@@ -96,9 +100,9 @@ export async function conectarGoogle(knex: any, code: string, state: string) {
 
 async function token(knex: any) {
   const v = await leer(knex)
-  if (v.access && Date.now() < Number(v.access_hasta || 0)) return v.access
+  if (v.access && Date.now() < Number(v.access_hasta || 0)) return descifrar(v.access)
   if (!v.refresh || !googleConfigurado()) return ""
-  const d = await pedirToken({ grant_type: "refresh_token", refresh_token: v.refresh })
+  const d = await pedirToken({ grant_type: "refresh_token", refresh_token: descifrar(v.refresh) })
   await guardar(knex, { ...v, access: d.access_token, access_hasta: Date.now() + (Number(d.expires_in) || 3600) * 1000 - 120_000 })
   return d.access_token
 }

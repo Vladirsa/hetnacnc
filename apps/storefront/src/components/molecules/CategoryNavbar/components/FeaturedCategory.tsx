@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import LocalizedClientLink from "../../LocalizedLink/LocalizedLink"
 import { ArrowRightIcon } from "@/icons"
 interface Props {

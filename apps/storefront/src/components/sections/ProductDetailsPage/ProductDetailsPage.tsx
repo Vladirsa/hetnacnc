@@ -10,6 +10,7 @@ import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
 import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
+import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
 import { productoExtra } from "@/lib/hetna/producto-extra"
@@ -69,7 +70,7 @@ export const ProductDetailsPage = async ({
   // Ofertas, reseñas y relacionados no dependen entre sí: se piden a la vez.
   // Antes iban uno tras otro y cada uno sumaba su espera a la de la ficha.
   const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
-  const [{ offers }, resenas, pendientes, relacionados, extra] = await Promise.all([
+  const [{ offers }, resenas, pendientes, relacionados, extra, recientes] = await Promise.all([
     listOffers({ productId: prod.id, countryCode: locale }),
     resenasDeProducto(prod.id),
     resenasPendientes(),
@@ -80,7 +81,14 @@ export const ProductDetailsPage = async ({
       : Promise.resolve([]),
     // Visitas de la semana y el video de redes del producto (no frena la ficha: 2.5 s máximo y caché)
     productoExtra(prod.id),
+    // Lo más nuevo de toda la tienda, para cerrar la ficha invitando a ver más
+    listProducts({ countryCode: locale, queryParams: { limit: 16, order: "-created_at" } as never })
+      .then(({ response }) => response.products)
+      .catch(() => []),
   ])
+  // Sin repetir lo que ya sale en "Más de este taller" o en los similares
+  const yaMostrados = new Set([prod.id, ...relacionados.map((p) => p.id), ...((prod.seller?.products ?? []) as { id: string }[]).map((p) => p.id)])
+  const masProductos = recientes.filter((p) => !yaMostrados.has(p.id)).slice(0, 12)
 
   const { cheapestPrice } = getProductPrice({ product: prod })
   const eventPrice = cheapestPrice?.calculated_price_number ?? 0
@@ -227,10 +235,17 @@ export const ProductDetailsPage = async ({
       {relacionados.length > 0 && (
         <div className="mt-4">
           <HomeProductSection
-            heading={descarga ? "Otros diseños" : "También te puede interesar"}
+            heading={descarga ? "Otros diseños" : "Productos similares"}
             products={relacionados as never}
             locale={locale}
           />
+        </div>
+      )}
+
+      {/* Al final de la ficha: más productos para seguir viendo */}
+      {masProductos.length > 0 && (
+        <div className="mt-4">
+          <ProductosCompactos titulo="Descubre más productos" productos={masProductos as never} />
         </div>
       )}
     </>

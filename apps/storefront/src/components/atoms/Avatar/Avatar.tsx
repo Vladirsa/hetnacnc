@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { ProfileIcon } from "@/icons"
 
 interface AvatarProps {

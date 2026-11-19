@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { HttpTypes } from "@medusajs/types"
 
 import { CartDropdown } from "@/components/cells/CartDropdown/CartDropdown"
@@ -13,6 +13,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 
 import { SocialIcon } from "./SocialIcon"
 import { BarraNavegacion } from "./BarraNavegacion"
+import { menuTienda } from "@/lib/hetna/tienda"
 import { FavoritosBoton } from "./Favoritos"
 import { CotizadorBoton } from "./TiendaBoton"
 import { CampanitaChat } from "./chat/CampanitaChat"
@@ -43,6 +44,8 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
 
   // Catálogo honesto: sin categorías vacías en la barra ni en el menú de celular
   const navCategories = podarArbol(parentCategories, await categoriasConProductos())
+  // Menú "Todos los productos" en computadora: categorías de la tienda con conteo real
+  const menu = await menuTienda(locale).catch(() => null)
   // Para el menú de celular: árbol mínimo (sin "Servicios", que vive en
   // Fabricación) y herramientas reducidas. Ver MenuMovil.
   const aNodo = (c: HttpTypes.StoreProductCategory): NodoMenu => ({
@@ -169,7 +172,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           En celular y tableta lo reemplaza MenuMovil. */}
       <OcultarAlBajar tambienEscritorio>
         <div className="hidden lg:block">
-          <BarraNavegacion categorias={navCategories} />
+          <BarraNavegacion categorias={navCategories} tienda={menu} />
         </div>
       </OcultarAlBajar>
     </header>

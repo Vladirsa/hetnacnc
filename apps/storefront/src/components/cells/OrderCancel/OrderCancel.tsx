@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import { Divider } from "@/components/atoms/Divider/Divider"
 import { Modal } from "@/components/molecules/Modal/Modal"
 import { useState } from "react"
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { convertToLocale } from "@/lib/helpers/money"
 import { cn } from "@/lib/utils"
 

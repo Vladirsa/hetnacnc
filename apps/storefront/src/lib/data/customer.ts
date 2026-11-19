@@ -1,5 +1,6 @@
 'use server';
 
+import { cabeceraIpCliente } from '@/lib/seguridad/ip-firmada';
 import { HttpTypes } from '@medusajs/types';
 import { revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -63,9 +64,11 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
 // sirve y la tienda vuelve a pedir iniciar sesión. Las funciones de abajo
 // reparan ese caso solas: entran con la contraseña y crean el cliente que faltó.
 
-const entrarConCorreo = (email: string, password: string) =>
+// La IP del comprador va firmada (lib/seguridad/ip-firmada.ts): así la bitácora
+// de intentos fallidos del API ve de dónde viene cada uno
+const entrarConCorreo = async (email: string, password: string) =>
   (sdk.auth.$actorType.$authProvider
-    .mutate({ $actorType: 'customer', $authProvider: 'emailpass', email, password } as never) as unknown as Promise<{ token: string }>)
+    .mutate({ $actorType: 'customer', $authProvider: 'emailpass', email, password, fetchOptions: { headers: await cabeceraIpCliente() } } as never) as unknown as Promise<{ token: string }>)
     .then(({ token }) => token);
 
 const clienteDeLaSesion = async (): Promise<HttpTypes.StoreCustomer | null> => {
@@ -172,7 +175,8 @@ export async function signup(formData: FormData) {
           $actorType: 'customer',
           $authProvider: 'emailpass',
           email,
-          password
+          password,
+          fetchOptions: { headers: await cabeceraIpCliente() }
         } as never) as unknown as Promise<{ token: string }>)
         .then(({ token }) => token);
     } catch (e) {

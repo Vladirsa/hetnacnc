@@ -1,4 +1,4 @@
-import NextImage from "next/image"
+import NextImage, { seOptimiza } from "@/lib/imagenes/Imagen"
 
 // `next/image` con una dirección que viene de la base de datos o del navegador
 // del cliente.
@@ -23,9 +23,9 @@ export const esSrcDeNextImage = (src: unknown): src is string => {
   if (typeof src !== "string" || !src) return false
   // "//cdn.ejemplo.com/x.jpg" no lo acepta: no trae protocolo.
   if (src.startsWith("//")) return false
-  if (src.startsWith("/")) return true
-  // Sólo https: el next.config de este sitio sólo tiene http para localhost.
-  return /^https:\/\//i.test(src)
+  // Sólo lo que el optimizador acepta: rutas propias y dominios de la lista
+  // (src/lib/imagenes/dominios.ts). Lo demás se pinta con <img> tal cual.
+  return seOptimiza(src)
 }
 
 type Props = {

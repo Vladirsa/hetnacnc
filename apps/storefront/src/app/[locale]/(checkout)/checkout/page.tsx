@@ -8,7 +8,7 @@ import PaymentWrapper from '@/components/organisms/PaymentContainer/PaymentWrapp
 import { CartAddressSection } from '@/components/sections/CartAddressSection/CartAddressSection';
 import CartPaymentSection from '@/components/sections/CartPaymentSection/CartPaymentSection';
 import { CartItems as CheckoutItems } from '@/components/sections/CartReview/CartItems';
-import CartReview from '@/components/sections/CartReview/CartReview';
+import { CuponCompra, PagarCompra, ResumenCompra } from '@/components/sections/CartReview/CartReview';
 import CartShippingMethodsSection from '@/components/sections/CartShippingMethodsSection/CartShippingMethodsSection';
 import { retrieveCart } from '@/lib/data/cart';
 import { retrieveCustomer } from '@/lib/data/customer';
@@ -65,12 +65,20 @@ async function CheckoutPageContent({}) {
         }))}
       />
       <main className="container" data-testid="checkout-page">
-        {/* Los pasos y los productos van juntos a la izquierda, y el resumen
-            queda pegado a la derecha mientras se baja. Antes los productos
-            estaban en la columna del resumen, así que para ver qué se estaba
-            comprando había que buscarlo junto al botón de pagar. */}
-        <div className="grid gap-8 lg:grid-cols-11">
-          <div className="flex flex-col gap-4 lg:col-span-7" data-testid="checkout-steps-container">
+        {/* Izquierda: sólo lo que compras. Derecha: resumen con miniaturas,
+            cupón, tus datos, envío, forma de pago y el botón de pagar, en ese
+            orden (pedido de Vlado, nov 2026). */}
+        <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
+          <section className="lg:col-span-7" data-testid="checkout-items-container" aria-labelledby="titulo-productos">
+            <h2 id="titulo-productos" className="mb-3 text-[20px] font-extrabold text-[#111]">
+              Productos ({(cart.items ?? []).reduce((s: number, i: { quantity?: number }) => s + (i.quantity || 0), 0)})
+            </h2>
+            <CheckoutItems cart={cart} />
+          </section>
+
+          <div className="flex flex-col gap-4 lg:col-span-5" data-testid="checkout-steps-container">
+            <ResumenCompra cart={cart} soloDigital={soloDigital} />
+            <CuponCompra cart={cart} />
             <CartAddressSection
               cart={cart}
               customer={customer}
@@ -86,19 +94,8 @@ async function CheckoutPageContent({}) {
               cart={cart}
               availablePaymentMethods={paymentMethods}
             />
-
-            <section data-testid="checkout-items-container">
-              <h2 className="mb-3 text-[18px] font-bold text-[#1B1B18]">Lo que vas a recibir</h2>
-              <CheckoutItems cart={cart} />
-            </section>
-          </div>
-
-          <div className="lg:col-span-4" data-testid="checkout-review-container">
-            {/* El tope de alto es lo que hace que de verdad se quede pegado:
-                un bloque pegajoso más alto que la pantalla no se ve pegado --
-                se queda quieto hasta que ya lo pasaste de largo. */}
-            <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto no-scrollbar">
-              <CartReview cart={cart} conPaypal={conPaypal} soloDigital={soloDigital} />
+            <div data-testid="checkout-review-container">
+              <PagarCompra cart={cart} conPaypal={conPaypal} soloDigital={soloDigital} />
             </div>
           </div>
         </div>

@@ -4,20 +4,20 @@
 // gabinete y repisas, de ranura y espiga, listo para router CNC o láser.
 // Ver en 3D, medidas y material es gratis; la descarga de archivos va con créditos.
 // También se puede diseñar desde una foto o plano: la IA llena las medidas.
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
 import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { EXHIBIDOR_INICIO, type Herramienta, type OpcionesExhibidor, type PiezaEnsamble, aMueble, exhibidor, piezaPrueba } from "@/lib/generador/ensamble"
+import { EXHIBIDOR_INICIO, type Herramienta, type OpcionesExhibidor, type PiezaEnsamble, exhibidor, piezaPrueba } from "@/lib/generador/ensamble"
 import { type Trazo, dibujo } from "@/lib/generador/geo2d"
 import { type LecturaMueble, cobrarDescargaMueble, disenarMuebleDesdeImagen } from "@/lib/muebles/acciones"
 
 import { Visor3D } from "./Visor3D"
 
-const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
+const Mueble3D = dynamic(() => import("./Mueble3D"), { ssr: false })
 const TABLERO = { ancho: 1220, largo: 2440 }
 
 const FRESAS = [
@@ -27,7 +27,11 @@ const FRESAS = [
 ] as const
 
 // piezas tendidas en renglones para la vista 2D (Y hacia arriba)
-export function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
+// barrenos de herraje (si la pieza los trae): de cara en capas BARRENO_D{diámetro}_P{profundidad}_{ARRIBA|ABAJO}
+// (ABAJO = en la cara de abajo: se voltea la pieza) y de canto como marca en la orilla (capa CANTO_D{d}_P{prof})
+type ConBarrenos = PiezaEnsamble & { barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]; cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[] }
+const fmt = (n: number) => String(Math.round(n * 10) / 10).replace(".", "_")
+export function piezasTendidas(piezas: ConBarrenos[]): Trazo[] {
   const trazos: Trazo[] = []
   let x = 0
   let y = 0
@@ -45,6 +49,11 @@ export function piezasTendidas(piezas: PiezaEnsamble[]): Trazo[] {
     const mover = (pts: [number, number][]) => pts.map(([u, v]) => [x + u - u0, y + v - v0 - h] as [number, number])
     trazos.push({ pts: mover(p.contorno), cerrado: true, capa: "corte" })
     for (const hh of p.huecos) trazos.push({ pts: mover(hh), cerrado: true, capa: "corte" })
+    for (const b of p.barrenos || []) {
+      const circ = Array.from({ length: 20 }, (_, k) => [b.u + (b.d / 2) * Math.cos((k * Math.PI) / 10), b.v + (b.d / 2) * Math.sin((k * Math.PI) / 10)] as [number, number])
+      trazos.push({ pts: mover(circ), cerrado: true, capa: `BARRENO_D${fmt(b.d)}_P${fmt(b.prof)}_${b.cara === 1 ? "ARRIBA" : "ABAJO"}` })
+    }
+    for (const c of p.cantos || []) trazos.push({ pts: mover([[c.u, c.v], [c.u + c.du * c.prof, c.v + c.dv * c.prof]]), cerrado: false, capa: `CANTO_D${fmt(c.d)}_P${fmt(c.prof)}` })
     x += w + 40
     altoRenglon = Math.max(altoRenglon, h)
   }
@@ -95,21 +104,6 @@ export function reducirImagen(archivo: File): Promise<string> {
   })
 }
 
-// malla del mueble armado: cada pieza extruida a su grosor y llevada a su lugar
-export async function mallaArmada(piezas: PiezaEnsamble[]) {
-  const { extruir } = await import("@/lib/generador/extruir")
-  const tris: number[] = []
-  for (const p of piezas) {
-    const r = extruir(
-      { trazos: [{ pts: p.contorno, cerrado: true, capa: "c" }, ...p.huecos.map((h) => ({ pts: h, cerrado: true, capa: "c" }))], avisos: [], unidades: "mm" },
-      { alto: p.grosor, base: 0, margenBase: 0, redondearBase: 0, espejo: false },
-    )
-    const t = r.malla.tris
-    for (let i = 0; i < t.length; i += 3) tris.push(...aMueble(p, t[i], t[i + 1], t[i + 2]))
-  }
-  return tris
-}
-
 export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [pagados, setPagados] = useState<Record<string, boolean>>({})
@@ -130,7 +124,8 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
   const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
   const [prueba, setPrueba] = useState(false)
   const [ver3D, setVer3D] = useState(false)
-  const [tris, setTris] = useState<number[] | null>(null)
+  const [explotar, setExplotar] = useState(0)
+  const [rayosX, setRayosX] = useState(false)
   const cambiar = (k: string) => (x: string) => setV((s) => ({ ...s, [k]: x }))
   const n = (k: keyof OpcionesExhibidor) => numero(v[k as string] ?? "") || 0
 
@@ -173,15 +168,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
   }, [m])
   const tableros = Math.max(1, Math.ceil(areaM2 / ((TABLERO.ancho * TABLERO.largo) / 1e6) / 0.8))
 
-  useEffect(() => {
-    if (!ver3D || m.errores.length) return
-    let vivo = true
-    setTris(null)
-    mallaArmada(m.piezas).then((t) => vivo && setTris(t))
-    return () => {
-      vivo = false
-    }
-  }, [ver3D, m])
+  const piezas3D = useMemo(() => m.piezas.map((p, i) => ({ ...p, indice: i })), [m])
 
   const aplicarLectura = (l: LecturaMueble) => {
     const campos = ["ancho", "fondoGabinete", "fondoRepisas", "altoGabinete", "repisas", "espacioSobreGabinete", "separacion", "sobreUltima", "numDivisores", "altoDivisor", "barrote"] as const
@@ -318,13 +305,18 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
                 Cerrar
               </button>
             </div>
-            {tris ? (
-              <Visor3D oscuro alto="h-[70vh]">
-                <Malla3D oscuro tris={tris} color={0xd8b98e} />
-              </Visor3D>
-            ) : (
-              <div className="grid h-[70vh] place-items-center text-[14px] text-[#8A97AB]">Armando el mueble…</div>
-            )}
+            <Visor3D oscuro alto="h-[70vh]">
+              <Mueble3D piezas={piezas3D} seleccion={null} explotar={explotar} rayosX={rayosX} />
+              <div className="absolute top-2 left-2 flex items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0]">
+                <label className="flex items-center gap-2">
+                  Explotar
+                  <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />
+                </label>
+                <button type="button" aria-pressed={rayosX} onClick={() => setRayosX((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${rayosX ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                  Rayos X
+                </button>
+              </div>
+            </Visor3D>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client"
 
-import Image from "next/image"
+import Image from "@/lib/imagenes/Imagen"
 import { Button } from "@/components/atoms/Button/Button"
 import { HttpTypes } from "@medusajs/types"
 import { cn } from "@/lib/utils"
