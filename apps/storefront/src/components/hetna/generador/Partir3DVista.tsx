@@ -4,23 +4,32 @@ import { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
-import type { Corte } from "@/lib/generador/partir3d"
+import type { Corte, Marca } from "@/lib/generador/partir3d"
 
-// Vista de "Partir modelo 3D": el modelo con los planos de corte, o las piezas
-// ya partidas y separadas (vista explotada), cada una de un color. Z hacia arriba.
+// Vista de "Partir modelo 3D". Dos modos:
+//  · "piezas": las piezas ya partidas y separadas (vista explotada), cada una de un color
+//  · "cortes": el modelo translúcido con los planos de corte y cada perno o imán dibujado;
+//    tocando el modelo (sin arrastrar) se avisa el punto para agregar un corte ahí.
+// Z hacia arriba.
 const COLORES = [0xff6a1a, 0x2f80ed, 0x16a34a, 0xf2c94c, 0x9b51e0, 0xeb5757, 0x00a3a3, 0xd97706]
 
 type Props = {
   modelo: number[] | null
   piezas: { nombre: string; tris: number[] }[] | null
   cortes: Corte[]
+  marcas?: Marca[]
+  modo?: "piezas" | "cortes"
   separar: number
   alto?: number
+  /** Punto del modelo (mm) donde se tocó, en modo "cortes". */
+  alTocar?: (p: [number, number, number]) => void
 }
 
-export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 460 }: Props) {
+export default function Partir3DVista({ modelo, piezas, cortes, marcas = [], modo = "piezas", separar, alto = 460, alTocar }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const estado = useRef<{ scene: THREE.Scene; camera: THREE.PerspectiveCamera; grupo: THREE.Group; render: () => void; tam: number; listo: boolean } | null>(null)
+  const tocar = useRef(alTocar)
+  tocar.current = alTocar
+  const estado = useRef<{ scene: THREE.Scene; camera: THREE.PerspectiveCamera; grupo: THREE.Group; render: () => void; tam: number; listo: boolean; blanco: THREE.Mesh | null } | null>(null)
 
   // Escena, cámara y controles: una vez
   useEffect(() => {
@@ -63,9 +72,32 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
     }
     const obs = new ResizeObserver(ajustar)
     obs.observe(el)
-    estado.current = { scene, camera, grupo, render, tam: 0, listo: false }
+
+    // Tocar (sin arrastrar) el modelo: punto en milímetros del modelo
+    let abajo: { x: number; y: number } | null = null
+    const rayo = new THREE.Raycaster()
+    const alBajar = (e: PointerEvent) => { abajo = { x: e.clientX, y: e.clientY } }
+    const alSubir = (e: PointerEvent) => {
+      const s = estado.current
+      if (!abajo || !s?.blanco || !tocar.current) return
+      const movio = Math.hypot(e.clientX - abajo.x, e.clientY - abajo.y)
+      abajo = null
+      if (movio > 6) return
+      const r = renderer.domElement.getBoundingClientRect()
+      rayo.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera)
+      const hit = rayo.intersectObject(s.blanco, false)[0]
+      if (!hit) return
+      const p = s.blanco.worldToLocal(hit.point.clone())
+      tocar.current([p.x, p.y, p.z])
+    }
+    renderer.domElement.addEventListener("pointerdown", alBajar)
+    renderer.domElement.addEventListener("pointerup", alSubir)
+
+    estado.current = { scene, camera, grupo, render, tam: 0, listo: false, blanco: null }
     return () => {
       obs.disconnect()
+      renderer.domElement.removeEventListener("pointerdown", alBajar)
+      renderer.domElement.removeEventListener("pointerup", alSubir)
       controles.dispose()
       renderer.dispose()
       el.removeChild(renderer.domElement)
@@ -73,7 +105,7 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
     }
   }, [alto])
 
-  // Contenido: se rehace cuando cambian las piezas, los cortes o la separación
+  // Contenido: se rehace cuando cambian las piezas, los cortes, los pernos o el modo
   useEffect(() => {
     const s = estado.current
     if (!s) return
@@ -81,6 +113,7 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
       s.grupo.remove(h)
       h.traverse((o: any) => { o.geometry?.dispose?.(); o.material?.dispose?.() })
     }
+    s.blanco = null
     const base = modelo && modelo.length >= 9 ? modelo : null
     if (!base) return s.render()
 
@@ -93,12 +126,13 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
       const geo = new THREE.BufferGeometry()
       geo.setAttribute("position", new THREE.Float32BufferAttribute(tris, 3))
       geo.computeVertexNormals()
-      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide, transparent: opaco < 1, opacity: opaco, flatShading: false })
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide, transparent: opaco < 1, opacity: opaco, depthWrite: opaco >= 1 })
       return new THREE.Mesh(geo, mat)
     }
 
-    if (piezas && piezas.length) {
-      piezas.forEach((p, i) => {
+    const explotado = modo === "piezas" && piezas && piezas.length > 1
+    if (explotado) {
+      piezas!.forEach((p, i) => {
         const m = malla(p.tris, COLORES[i % COLORES.length])
         m.geometry.computeBoundingBox()
         const c = m.geometry.boundingBox!.getCenter(new THREE.Vector3())
@@ -109,16 +143,18 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
         s.grupo.add(m)
       })
     } else {
-      const m = malla(base, 0xb9b3a6)
+      const conPernos = marcas.length > 0
+      const m = malla(base, 0xb9b3a6, conPernos ? 0.45 : 1)
       m.position.sub(centro)
       s.grupo.add(m)
+      s.blanco = m
       // planos de corte, un poco más grandes que el modelo
       for (const k of cortes) {
         const ancho = k.eje === 0 ? tam.y : tam.x
         const altoP = k.eje === 2 ? tam.y : tam.z
         const plano = new THREE.Mesh(
           new THREE.PlaneGeometry(ancho * 1.15 + 6, altoP * 1.15 + 6),
-          new THREE.MeshBasicMaterial({ color: 0xff6a1a, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false })
+          new THREE.MeshBasicMaterial({ color: 0xff6a1a, transparent: true, opacity: conPernos ? 0.12 : 0.22, side: THREE.DoubleSide, depthWrite: false })
         )
         if (k.eje === 0) plano.rotation.set(Math.PI / 2, Math.PI / 2, 0)
         else if (k.eje === 1) plano.rotation.set(Math.PI / 2, 0, 0)
@@ -127,10 +163,23 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
         plano.position.copy(p.sub(centro))
         s.grupo.add(plano)
       }
+      // pernos / imanes: cilindros a lo largo del eje de su corte
+      // en modelos grandes se dibujan un poco más gruesos para que se vean (sólo en pantalla)
+      const matPerno = new THREE.MeshBasicMaterial({ color: 0x3dff8b, depthTest: false })
+      const minR = tam.length() * 0.007, minL = tam.length() * 0.035
+      for (const mk of marcas) {
+        const cil = new THREE.Mesh(new THREE.CylinderGeometry(Math.max(mk.radio, minR), Math.max(mk.radio, minR), Math.max(2 * mk.mitad, minL), 16), matPerno)
+        cil.renderOrder = 2 // encima del modelo translúcido
+        // CylinderGeometry va a lo largo de Y: se gira hacia el eje del corte
+        if (mk.eje === 0) cil.rotation.z = Math.PI / 2
+        else if (mk.eje === 2) cil.rotation.x = Math.PI / 2
+        cil.position.set(mk.p[0] - centro.x, mk.p[1] - centro.y, mk.p[2] - centro.z)
+        s.grupo.add(cil)
+      }
     }
 
     // Cámara: sólo al cambiar de modelo (para no perder el giro del usuario)
-    const largo = tam.length() + (piezas?.length ? separar * 2 : 0)
+    const largo = tam.length() + (explotado ? separar * 2 : 0)
     if (!s.listo || Math.abs(largo - s.tam) / Math.max(1, s.tam) > 0.25) {
       const vfov = (s.camera.fov * Math.PI) / 180
       const dist = (largo / 2 / Math.sin(vfov / 2)) * 1.1
@@ -140,7 +189,7 @@ export default function Partir3DVista({ modelo, piezas, cortes, separar, alto = 
       s.listo = true
     }
     s.render()
-  }, [modelo, piezas, cortes, separar])
+  }, [modelo, piezas, cortes, marcas, modo, separar])
 
-  return <div ref={ref} className="w-full rounded-[12px] overflow-hidden border border-[#2B3648]" style={{ height: alto }} />
+  return <div ref={ref} className={`w-full rounded-[12px] overflow-hidden border border-[#2B3648] ${alTocar && modo === "cortes" ? "cursor-crosshair" : ""}`} style={{ height: alto }} />
 }
