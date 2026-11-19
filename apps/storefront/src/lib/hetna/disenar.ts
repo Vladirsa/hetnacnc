@@ -95,24 +95,34 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Sube la foto, boceto o plano de un mueble de tablero: la IA lo convierte en piezas con espigas y mortajas a las medidas y el grosor que elijas, lo ves armado en 3D y descargas DXF, SVG o PDF listos para router CNC o láser.",
   },
   {
-    slug: "muebles-ensamble",
-    nombre: "Muebles de ensamble sin tornillos",
-    texto: "Exhibidores y repisas de ranura y espiga a tu medida, con vista 3D armada.",
+    slug: "molduras-tallados",
+    nombre: "Molduras y tallados",
+    texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores a la medida",
+    titulo: "Molduras y paneles tallados para router CNC: perfiles 3D y STL gratis",
     descripcion:
-      "Diseña un exhibidor de ranura y espiga con gabinete, repisas y divisores ranurados: elige medidas, grosor real del tablero, holgura y fresa, mira el mueble armado en 3D y calcula el tablero. Alivios para fresa incluidos, listo para maquilar.",
+      "Diseña molduras con perfil de fresa (media caña, bocel, gola, romana, clásica) y paneles con marco moldurado y centro tallado (rosetón, estrella, rombos o tu imagen). Vista 3D, STL para desbaste y acabado, DXF para tallar en V y envío directo al Laboratorio CAM.",
+  },
+  {
+    slug: "muebles-ensamble",
+    nombre: "Muebles de ensamble sin tornillos",
+    texto: "Exhibidores, libreros y muebles de caja y espiga del catálogo, a tu medida y vistos armados en 3D.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores y libreros a la medida",
+    descripcion:
+      "Elige un exhibidor, librero, mesa o banco de caja y espiga del catálogo, o sube la foto de tu mueble: cambia medidas, grosor, número de espigas y tipo de alivio (cabeza de fémur o en T), míralo armado en 3D y descarga las piezas listas para el router.",
   },
   {
     slug: "despiece-muebles",
-    nombre: "Despiece de muebles",
-    texto: "Gabinetes, closets y cocinas: piezas, acomodo en hojas, canto y herraje.",
+    nombre: "Cocina integral a la medida",
+    texto: "Biblioteca de gabinetes de cocina: elige el modelo, cambia sus medidas y sale el despiece.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Despiece de muebles gratis: lista de corte y acomodo en hojas (DXF)",
+    titulo: "Cocina integral para router CNC: gabinetes prefabricados a la medida, despiece y hojas",
     descripcion:
-      "Calcula gratis el despiece de gabinetes, libreros, closets y cocinas en melamina o MDF: lista de corte, acomodo en hojas, metros de canto y herrajes. Descarga el DXF para tu router CNC.",
+      "Elige gabinetes de cocina (bajos, cajoneras, fregadero, esquinero, altos, abatibles y alacenas), cambia ancho, alto y fondo, o arma la cocina completa de una pared. Melamina o MDF, minifix o confirmat, bisagras, correderas, lista de corte con canto, acomodo en hojas y DXF para tu router CNC."
   },
   {
     slug: "plantillas-empaque",

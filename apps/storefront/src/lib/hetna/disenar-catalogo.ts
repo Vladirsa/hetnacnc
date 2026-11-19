@@ -89,9 +89,10 @@ export const SECCIONES: SeccionDiseno[] = [
     titulo: "Para el taller",
     subtitulo: "Muebles, anidado, rompecabezas, patrones y conversión de archivos",
     tarjetas: [
+      { nombre: "Molduras y tallados", texto: "Perfiles y paneles tallados en 3D.", href: "/disenar/molduras-tallados", icono: "mueble", color: "#C2560A", acceso: "gratis", para: ["router"], claves: "moldura tallado relieve panel puerta rosetón perfil fresa bola stl" },
       { nombre: "Mueble desde una imagen", texto: "Foto o plano → piezas listas, vistas armadas.", href: "/disenar/muebles-desde-imagen", icono: "mueble", color: "#C2560A", acceso: "creditos", para: ["router", "laser"], claves: "foto plano imagen ia mueble mesa librero banco repisa ranura espiga" },
-      { nombre: "Muebles de ensamble", texto: "Exhibidores sin tornillos, vista 3D armada.", href: "/disenar/muebles-ensamble", icono: "mueble", color: "#C2560A", acceso: "gratis", para: ["router", "laser"], claves: "exhibidor repisa estante librero ranura espiga sin tornillos stand" },
-      { nombre: "Despiece de muebles", texto: "Lista de corte, hojas, canto y herraje.", href: "/disenar/despiece-muebles", icono: "mueble", color: "#C2560A", acceso: "gratis", para: ["router"], claves: "gabinete closet cocina melamina" },
+      { nombre: "Muebles de ensamble", texto: "Exhibidores y libreros sin tornillos, del catálogo.", href: "/disenar/muebles-desde-imagen", icono: "mueble", color: "#C2560A", acceso: "gratis", para: ["router", "laser"], claves: "exhibidor repisa estante librero ranura espiga sin tornillos stand" },
+      { nombre: "Cocina integral", texto: "Gabinetes de cocina a tu medida, despiece y hojas.", href: "/disenar/despiece-muebles", icono: "mueble", color: "#C2560A", acceso: "gratis", para: ["router"], claves: "gabinete closet cocina melamina" },
       { nombre: "Anidado de piezas", texto: "Tus DXF acomodados en la hoja.", href: "/disenar/anidado-piezas", icono: "anidado", color: MARINO, acceso: "gratis", para: ["laser", "router"], claves: "nesting hoja" },
       { nombre: "Rompecabezas", texto: "Piezas a tu medida, con marco y base.", href: "/disenar/rompecabezas", icono: "rompecabezas", color: AMARILLO, acceso: "gratis", para: ["laser"], claves: "puzzle juego regalo foto" },
       { nombre: "Patrones y mandalas", texto: "Arte de pared en capas.", href: "/disenar/patrones-radiales", icono: "generador", color: ROSA, acceso: "gratis", para: ["laser", "router"] },

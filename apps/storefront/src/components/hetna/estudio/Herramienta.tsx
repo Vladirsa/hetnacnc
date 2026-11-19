@@ -24,7 +24,7 @@ const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/Gen
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
 const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/GeneradorMuebles").then((m) => m.GeneradorMuebles))
 // desde imagen, ensamble sin tornillos y despiece de gabinetes: Muebles
-const MODO_MUEBLES: Record<string, "imagen" | "ensamble" | "gabinete"> = { "muebles-desde-imagen": "imagen", "muebles-ensamble": "ensamble", "despiece-muebles": "gabinete" }
+const MODO_MUEBLES: Record<string, "imagen" | "cocina" | "molduras"> = { "muebles-desde-imagen": "imagen", "molduras-tallados": "molduras", "muebles-ensamble": "imagen", "despiece-muebles": "cocina" }
 // celosías, patrones radiales y bisagra viva: una sola herramienta con modos
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
 const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }

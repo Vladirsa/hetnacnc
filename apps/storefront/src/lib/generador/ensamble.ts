@@ -130,22 +130,101 @@ function alivio(Pp: P, V: P, N: P, r: number): P[] {
   out.push(P2)
   return out
 }
+// arco de radio r alrededor de C, de un ángulo a otro pasando por "via"
+function arco(C: P, r: number, a1: number, a2: number, via: number, n = 10): P[] {
+  const norm = (a: number) => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
+  const s = norm(via - a1) <= norm(a2 - a1) ? 1 : -1
+  let total = norm(s * (a2 - a1))
+  if (total === 0) total = 2 * Math.PI
+  const out: P[] = []
+  for (let k = 0; k <= n; k++) {
+    const a = a1 + (s * total * k) / n
+    out.push([C[0] + r * Math.cos(a), C[1] + r * Math.sin(a)])
+  }
+  return out
+}
+
+// Alivio en T ("T-bone"): el círculo de la fresa se abre hacia un solo lado, en
+// la pared de la orilla más corta, para que las caras largas (las que aprietan
+// la espiga) queden limpias. El centro va sobre la línea de esa orilla, a r de
+// la esquina, y el círculo pasa por ella.
+function alivioT(Pp: P, V: P, N: P, r: number): P[] {
+  const ux = V[0] - Pp[0], uy = V[1] - Pp[1]
+  const wx = N[0] - V[0], wy = N[1] - V[1]
+  const lu = Math.hypot(ux, uy) || 1, lw = Math.hypot(wx, wy) || 1
+  const u: P = [ux / lu, uy / lu]
+  const w: P = [wx / lw, wy / lw]
+  // b apunta al lado vacío (igual que en el alivio de hueso)
+  const bx = w[0] - u[0], by = w[1] - u[1]
+  // lado del material de una orilla: la normal que se aleja de b
+  const material = (d: P): P => {
+    const n: P = [-d[1], d[0]]
+    return n[0] * bx + n[1] * by > 0 ? [-n[0], -n[1]] : n
+  }
+  const ang = (x: number, y: number) => Math.atan2(y, x)
+  if (lu >= lw) {
+    // la orilla que sale es la corta: el alivio se mete en su pared
+    if (2 * r > lw * 0.45) return [V]
+    const C: P = [V[0] + r * w[0], V[1] + r * w[1]]
+    const m = material(w)
+    return arco(C, r, ang(-w[0], -w[1]), ang(w[0], w[1]), ang(m[0], m[1]))
+  }
+  if (2 * r > lu * 0.45) return [V]
+  const C: P = [V[0] - r * u[0], V[1] - r * u[1]]
+  const m = material(u)
+  return arco(C, r, ang(-u[0], -u[1]), ang(u[0], u[1]), ang(m[0], m[1]))
+}
+
+// Tipo de alivio en las esquinas interiores: "hueso" (cabeza de fémur), "t" o "ninguno"
+export type TipoAlivio = "hueso" | "t" | "ninguno"
+
 // aplica alivios en las esquinas indicadas (índices) de un polígono
-function conAlivios(p: P[], r: number, esquina: (i: number, giro: number) => boolean): P[] {
-  if (!(r > 0)) return p
+function conAlivios(p: P[], r: number, esquina: (i: number, giro: number) => boolean, tipo: TipoAlivio = "hueso"): P[] {
+  if (!(r > 0) || tipo === "ninguno") return p
   const out: P[] = []
   for (let i = 0; i < p.length; i++) {
     const a = p[(i + p.length - 1) % p.length], v = p[i], b = p[(i + 1) % p.length]
     const giro = (v[0] - a[0]) * (b[1] - v[1]) - (v[1] - a[1]) * (b[0] - v[0])
-    if (esquina(i, giro)) out.push(...alivio(a, v, b, r))
+    if (esquina(i, giro)) out.push(...(tipo === "t" ? alivioT(a, v, b, r) : alivio(a, v, b, r)))
     else out.push(v)
   }
   return out
 }
 // mortaja (hueco rectangular) con alivio en sus cuatro esquinas si hay fresa
-export const mortaja = (u0: number, v0: number, u1: number, v1: number, r: number): P[] => conAlivios(ccw(rect(u0, v0, u1, v1)), r, () => true)
+export const mortaja = (u0: number, v0: number, u1: number, v1: number, r: number, tipo: TipoAlivio = "hueso"): P[] => conAlivios(ccw(rect(u0, v0, u1, v1)), r, () => true, tipo)
 // contorno exterior (antihorario) con alivio sólo en las esquinas cóncavas (raíz de las espigas)
-export const exteriorConAlivios = (p: P[], r: number) => conAlivios(ccw(p), r, (_, giro) => giro < -1e-9)
+export const exteriorConAlivios = (p: P[], r: number, tipo: TipoAlivio = "hueso") => conAlivios(ccw(p), r, (_, giro) => giro < -1e-9, tipo)
+
+// Esquinas exteriores de una pieza: redondeadas (radio) o con chaflán a 45° (medida),
+// sólo en las esquinas convexas cuyas dos orillas miden más que la medida.
+export type TipoEsquina = "recta" | "redonda" | "chaflan"
+export function esquinasExteriores(p: P[], tipo: TipoEsquina, medida: number, cuales?: (v: P) => boolean): P[] {
+  if (tipo === "recta" || !(medida > 0)) return p
+  const q = ccw(p)
+  const out: P[] = []
+  for (let i = 0; i < q.length; i++) {
+    const a = q[(i + q.length - 1) % q.length], v = q[i], b = q[(i + 1) % q.length]
+    const ux = v[0] - a[0], uy = v[1] - a[1], wx = b[0] - v[0], wy = b[1] - v[1]
+    const lu = Math.hypot(ux, uy), lw = Math.hypot(wx, wy)
+    const giro = ux * wy - uy * wx
+    if (giro <= 1e-9 || lu < medida * 2.05 || lw < medida * 2.05 || (cuales && !cuales(v))) {
+      out.push(v)
+      continue
+    }
+    const u: P = [ux / lu, uy / lu], w: P = [wx / lw, wy / lw]
+    const P1: P = [v[0] - u[0] * medida, v[1] - u[1] * medida]
+    const P2: P = [v[0] + w[0] * medida, v[1] + w[1] * medida]
+    if (tipo === "chaflan") {
+      out.push(P1, P2)
+      continue
+    }
+    // redonda: arco tangente a las dos orillas (esquinas a escuadra: centro a r de cada una)
+    const C: P = [P1[0] + w[0] * medida, P1[1] + w[1] * medida]
+    const a1 = Math.atan2(P1[1] - C[1], P1[0] - C[0]), a2 = Math.atan2(P2[1] - C[1], P2[0] - C[0])
+    out.push(...arco(C, medida, a1, a2, Math.atan2(v[1] - C[1], v[0] - C[0]), 8))
+  }
+  return out
+}
 
 // ---------- el exhibidor ----------
 export function exhibidor(o0: OpcionesExhibidor): Mueble {

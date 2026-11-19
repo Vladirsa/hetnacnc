@@ -26,7 +26,7 @@ export function BarraEstudio() {
               ? "convertidor" // Archivos
               : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas" || params?.herramienta === "esferas-navidad"
                 ? "relojes" // Decoración
-                : params?.herramienta === "muebles-ensamble" || params?.herramienta === "muebles-desde-imagen"
+                : params?.herramienta === "muebles-ensamble" || params?.herramienta === "muebles-desde-imagen" || params?.herramienta === "molduras-tallados"
                   ? "despiece-muebles" // Muebles
                   : params?.herramienta === "engranes"
                   ? "rompecabezas" // Juegos y mecanismos

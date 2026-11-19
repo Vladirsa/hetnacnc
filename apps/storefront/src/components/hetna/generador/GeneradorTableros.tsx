@@ -17,6 +17,8 @@ import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES } from "@/lib/generador/tableros"
+import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
+import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
 import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
 import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
@@ -26,17 +28,13 @@ import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, 
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
 import type { CajaVista } from "./Mueble3D"
+import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
 
 const Mueble3D = dynamic(() => import("./Mueble3D"), { ssr: false })
 type Pt = [number, number, number]
 const cajaVista = (t: Tablero): CajaVista => ({ lo: [t.x0, t.y0, t.z0], hi: [t.x1, t.y1, t.z1] })
 const TABLERO = { ancho: 1220, largo: 2440 }
-const FRESAS = [
-  { id: "laser", nombre: "Láser" },
-  { id: "3.175", nombre: "Fresa 1/8″" },
-  { id: "6.35", nombre: "Fresa 1/4″" },
-] as const
 const PLANOS: { id: Plano; nombre: string }[] = [
   { id: "lateral", nombre: "Costado" },
   { id: "horizontal", nombre: "Repisa" },
@@ -66,19 +64,30 @@ function tableroNuevo(ts: Tablero[], g: number): Tablero {
   return { nombre: `Tablero ${ts.length + 1}`, plano: "horizontal", x0: 0, x1, y0: 0, y1, z0: z, z1: z + g }
 }
 
-export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) {
+// enfoque "imagen": mueble desde una foto o del catálogo; "cocina": biblioteca de gabinetes de cocina y cocina completa
+export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?: React.ReactNode; enfoque?: "imagen" | "cocina" }) {
+  const inicioCocina = enfoque === "cocina" ? gabinete(opcionesModelo(MODELOS_COCINA[1], MODELOS_COCINA[1].medidas, 18)).tableros : null
   const { locale } = useParams<{ locale: string }>()
-  const [nombre, setNombre] = useState(EJEMPLO.nombre)
-  const [tableros, setTableros] = useState<TableroC[]>(EJEMPLO.tableros)
-  const [esEjemplo, setEsEjemplo] = useState(true)
+  const [nombre, setNombre] = useState(enfoque === "cocina" ? MODELOS_COCINA[1].nombre : EJEMPLO.nombre)
+  const [tableros, setTableros] = useState<TableroC[]>(inicioCocina || EJEMPLO.tableros)
+  const [esEjemplo, setEsEjemplo] = useState(enfoque !== "cocina")
   const [foto, setFoto] = useState<string | null>(null)
   const [leyendo, setLeyendo] = useState(false)
   const [lectura, setLectura] = useState<{ texto: string; tipo: "ok" | "aviso" | "error"; login?: boolean; creditos?: boolean } | null>(null)
   const [abierto, setAbierto] = useState<number | null>(null)
   const [textos, setTextos] = useState<Record<string, string>>({}) // lo que el cliente escribe en las medidas de cada tablero
   const [v, setV] = useState<Record<string, string>>({ ancho: "", fondo: "", alto: "", grosor: String(EJEMPLO.grosor), holgura: "0.3", saliente: "0" })
-  const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
-  const [union, setUnion] = useState<TipoUnion>("espiga")
+  const [laser, setLaser] = useState(false)
+  const [herr, setHerr] = useState("base-r635") // fresa de corte (id de la base)
+  const [herrRanura, setHerrRanura] = useState("base-r3")
+  const [herrV, setHerrV] = useState("base-v60")
+  const { todas: fresas, agregar: agregarFresa } = useFresas()
+  // acomodo de espigas y esquinas
+  const [alivio, setAlivio] = useState<"hueso" | "t" | "ninguno">("hueso")
+  const [numEspigas, setNumEspigas] = useState(0)
+  const [anchoEspiga, setAnchoEspiga] = useState("")
+  const [esquinas, setEsquinas] = useState<{ tipo: "recta" | "redonda" | "chaflan"; medida: string }>({ tipo: "recta", medida: "10" })
+  const [union, setUnion] = useState<TipoUnion>(enfoque === "cocina" ? "confirmat" : "espiga")
   const nombreUnion = UNIONES.find((x) => x.id === union)?.nombre || ""
   const [sel, setSel] = useState<number | null>(null) // pieza seleccionada en el 3D (índice de tablerosFinales)
   const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
@@ -100,6 +109,13 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [conCubierta, setConCubierta] = useState(true)
   const [alturaAltos, setAlturaAltos] = useState(String(COCINA_INICIO.alturaAltos))
   const sumaModulos = modulos.reduce((t, x) => t + (x.ancho || 0), 0)
+  // biblioteca de cocina: modelo elegido y sus medidas
+  const [modeloSel, setModeloSel] = useState<string | null>(null)
+  const [medModelo, setMedModelo] = useState({ ancho: "", alto: "", fondo: "" })
+  const modelos = useMemo(() => (enfoque === "cocina" ? MODELOS_COCINA.map((x) => ({ ...x, svg: miniaturaSVG(gabinete(opcionesModelo(x, x.medidas, 18)).tableros, 120, 64).replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') })) : []), [enfoque])
+  const modeloActual = MODELOS_COCINA.find((x) => x.id === modeloSel) || null
+  // miniaturas del catálogo (una vez)
+  const catalogo = useMemo(() => CATALOGO.filter((c) => c.categoria !== "Cocina").map((c) => ({ ...c, svg: miniaturaSVG(c.generar(18), 120, 64).replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') })), [])
   const [gab, setGab] = useState<Omit<OpcionesGabinete, "grosor" | "gFrente">>(GABINETE_INICIO.bajo)
   const [gabTxt, setGabTxt] = useState<Record<string, string>>({})
   const campoGab = (k: "ancho" | "alto" | "fondo" | "zoclo" | "zocloRemetido" | "repisas" | "cajones") => ({
@@ -115,7 +131,8 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [avisoCobro, setAvisoCobro] = useState<{ texto: string; login?: boolean; creditos?: boolean } | null>(null)
   const cambiar = (k: string) => (x: string) => setV((s) => ({ ...s, [k]: x }))
 
-  const herramienta: Herramienta = herr === "laser" ? { tipo: "laser" } : { tipo: "fresa", diametro: Number(herr) }
+  const fresaCorte = fresas.find((f) => f.id === herr)
+  const herramienta: Herramienta = laser ? { tipo: "laser" } : { tipo: "fresa", diametro: fresaCorte?.diametro || 6.35 }
   const opciones = {
     union,
     material,
@@ -128,6 +145,10 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     holgura: numero(v.holgura) >= 0 ? numero(v.holgura) : TABLEROS_INICIO.holgura,
     saliente: numero(v.saliente) >= 0 ? numero(v.saliente) : 0,
     herramienta,
+    alivio,
+    numEspigas,
+    anchoEspiga: numero(anchoEspiga) || 0,
+    esquinas: { tipo: esquinas.tipo, medida: numero(esquinas.medida) || 0 },
   }
   const clave = JSON.stringify({ tableros, opciones })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -351,6 +372,8 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
 
   const panel = (
     <div className="flex flex-col gap-4">
+      {enfoque === "imagen" && (
+        <>
       <Seccion titulo="Sube la imagen de tu mueble">
         <label className={`flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-[#2A3546] p-3 text-center hover:border-[#C2560A] ${leyendo ? "pointer-events-none opacity-60" : ""}`}>
           <span className="text-[13.5px] font-semibold text-white">{leyendo ? "Leyendo la imagen…" : "Foto, boceto, render o plano"}</span>
@@ -371,6 +394,94 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         <span className="text-[11.5px] text-[#5B6880]">
           Funciona con muebles de tablero plano a escuadra (libreros, mesas, bancos, repisas, exhibidores). Curvas e inclinaciones se aproximan con rectángulos. Si la imagen no sirve, no se cobra.
         </span>
+      </Seccion>
+
+      <Seccion titulo="Catálogo de muebles">
+        <div className="grid grid-cols-3 gap-1.5">
+          {catalogo.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              title={`${c.nombre} · ${c.nota}`}
+              onClick={() => {
+                aplicar(() => c.generar(opciones.grosor), null)
+                setVarios(!!c.varios)
+                setNombre(c.nombre)
+                setUnion(c.union)
+                setMaterial(c.material)
+                setPunto(null)
+                setAjustar((k) => k + 1)
+                setLectura(null)
+              }}
+              className="flex flex-col items-center gap-0.5 rounded-[9px] bg-[#141B26] p-1.5 text-center ring-1 ring-[#2A3546] hover:ring-[#C2560A]"
+            >
+              {/* miniatura generada aquí mismo (no viene de afuera) */}
+              <span className="block h-[56px] w-full" dangerouslySetInnerHTML={{ __html: c.svg }} />
+              <span className="text-[11px] font-semibold leading-tight text-white">{c.nombre}</span>
+              <span className="text-[10px] leading-tight text-[#8A97AB]">{c.nota}</span>
+            </button>
+          ))}
+        </div>
+        <span className="text-[11.5px] text-[#8A97AB]">Elige uno y modifícalo: medidas totales, material, uniones, puertas, cajones, repisas y huecos. Reemplaza el mueble actual (puedes deshacer).</span>
+      </Seccion>
+
+        </>
+      )}
+
+      {enfoque === "cocina" && (
+        <>
+      <Seccion titulo="Biblioteca de cocina">
+        {(["Bajos", "Altos", "Columnas"] as const).map((g) => (
+          <div key={g} className="flex flex-col gap-1">
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">{g}</span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {modelos.filter((x) => x.grupo === g).map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  aria-pressed={modeloSel === x.id}
+                  onClick={() => {
+                    setModeloSel(x.id)
+                    setMedModelo({ ancho: String(x.medidas.ancho), alto: String(x.medidas.alto), fondo: String(x.medidas.fondo) })
+                  }}
+                  className={`flex flex-col items-center gap-0.5 rounded-[9px] p-1.5 text-center ring-1 ${modeloSel === x.id ? "bg-[#2A1C12] ring-[#C2560A]" : "bg-[#141B26] ring-[#2A3546] hover:ring-[#3A4A63]"}`}
+                >
+                  {/* miniatura generada aquí mismo */}
+                  <span className="block h-[50px] w-full" dangerouslySetInnerHTML={{ __html: x.svg }} />
+                  <span className="text-[11px] font-semibold leading-tight text-white">{x.nombre}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        {modeloActual && (
+          <div className="flex flex-col gap-2 rounded-[10px] border border-[#C2560A] bg-[#1A1410] p-2.5">
+            <b className="text-[13px] text-white">{modeloActual.nombre}</b>
+            <div className="grid grid-cols-3 gap-2">
+              <CampoNum etiqueta="Ancho" valor={medModelo.ancho} cambiar={(x) => setMedModelo((m0) => ({ ...m0, ancho: x }))} sufijo="mm" />
+              <CampoNum etiqueta="Alto" valor={medModelo.alto} cambiar={(x) => setMedModelo((m0) => ({ ...m0, alto: x }))} sufijo="mm" />
+              <CampoNum etiqueta="Fondo" valor={medModelo.fondo} cambiar={(x) => setMedModelo((m0) => ({ ...m0, fondo: x }))} sufijo="mm" />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const med = { ancho: numero(medModelo.ancho) || modeloActual.medidas.ancho, alto: numero(medModelo.alto) || modeloActual.medidas.alto, fondo: numero(medModelo.fondo) || modeloActual.medidas.fondo }
+                const g = gabinete(opcionesModelo(modeloActual, med, opciones.grosor))
+                aplicar(() => g.tableros, null)
+                setVarios(false)
+                setNombre(`${modeloActual.nombre} ${Math.round(med.ancho)} mm`)
+                if (union === "espiga") setUnion("confirmat")
+                setPunto(null)
+                setAjustar((k) => k + 1)
+                setLectura(g.avisos.length ? { texto: g.avisos.join(" "), tipo: "aviso" } : null)
+              }}
+              className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
+            >
+              Abrir en el editor
+            </button>
+            <span className="text-[11.5px] text-[#8A97AB]">Después cambias material, uniones, puertas, cajones, repisas y huecos en 3D. Reemplaza el mueble actual (puedes deshacer).</span>
+          </div>
+        )}
       </Seccion>
 
       <Seccion titulo="Cocina completa en una pared">
@@ -426,7 +537,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         <span className="text-[11.5px] text-[#8A97AB]">Cada módulo es un gabinete completo (zoclo, fondo en ranura, puertas o cajones); los altos van alineados arriba, contra la pared. Todo sale en una sola lista de corte, acomodo y lista de compra.</span>
       </Seccion>
 
-      <Seccion titulo="O arma un gabinete de cocina">
+      <Seccion titulo="Gabinete a la medida">
         <div className="grid grid-cols-3 gap-1.5">
           {([["bajo", "Bajo"], ["alto", "Alto (aéreo)"], ["columna", "Columna"]] as const).map(([t, n]) => (
             <button key={t} type="button" aria-pressed={gab.tipo === t} onClick={() => { setGab(GABINETE_INICIO[t as TipoGabinete]); setGabTxt({}) }} className={`rounded-[8px] px-2 py-1.5 text-[12px] font-semibold ${gab.tipo === t ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
@@ -485,6 +596,9 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         </button>
         <span className="text-[11.5px] text-[#8A97AB]">Reemplaza el mueble actual (puedes deshacer). Sale con zoclo, fondo de HDF en ranura de 4 × 8 mm a 11 mm de la orilla, repisas o cajones con corredera, y lo editas en 3D.</span>
       </Seccion>
+
+        </>
+      )}
 
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
         <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones {union === "espiga" ? "de caja y espiga, sin tornillos" : `con ${nombreUnion.toLowerCase()}`}.
@@ -756,8 +870,80 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
           {union === "espiga" && <CampoNum etiqueta="Holgura de ensamble" valor={v.holgura} cambiar={cambiar("holgura")} sufijo="mm" />}
           {union === "espiga" && <CampoNum etiqueta="Espiga sobresale" valor={v.saliente} cambiar={cambiar("saliente")} sufijo="mm" />}
         </div>
-        <Opciones opciones={FRESAS.map((f) => ({ id: f.id, nombre: f.nombre }))} valor={herr} cambiar={setHerr} />
-        <span className="text-[12px] text-[#8A97AB]">Mide el grosor con vernier: el MDF de «18 mm» suele medir entre 17.5 y 18.5. Con fresa, las esquinas llevan alivio para que asienten.</span>
+        <span className="text-[12px] text-[#8A97AB]">Mide el grosor con vernier: el MDF de «18 mm» suele medir entre 17.5 y 18.5.</span>
+      </Seccion>
+
+      <Seccion titulo="Herramientas de corte">
+        <Opciones opciones={[{ id: "router", nombre: "Router CNC" }, { id: "laser", nombre: "Láser" }]} valor={laser ? "laser" : "router"} cambiar={(x) => setLaser(x === "laser")} />
+        {!laser && (
+          <>
+            <SelectorFresa etiqueta="Corte" tipos={["recta", "upcut", "downcut", "compresion", "un_filo"]} valor={herr} cambiar={(f) => setHerr(f.id)} todas={fresas} agregar={agregarFresa} nota="Su diámetro da los alivios de las esquinas y la separación en las hojas." />
+            {m.piezas.some((p) => p.ranuras.length) && (
+              <SelectorFresa
+                etiqueta="Ranura"
+                tipos={["recta", "upcut", "downcut"]}
+                valor={herrRanura}
+                cambiar={(f) => setHerrRanura(f.id)}
+                todas={fresas}
+                agregar={agregarFresa}
+                nota={(fresas.find((f) => f.id === herrRanura)?.diametro || 0) > 4 ? "Esa fresa es más ancha que la ranura del fondo (4 mm): usa una de 3 o 4 mm." : "La ranura del fondo mide 4 mm de ancho y 8 de hondo."}
+              />
+            )}
+            {(etiquetas || m.piezas.some((p) => p.barrenos.length)) && <SelectorFresa etiqueta="Grabado en V" tipos={["v"]} valor={herrV} cambiar={(f) => setHerrV(f.id)} todas={fresas} agregar={agregarFresa} nota="Para los números de las piezas (capa ETIQUETA)." />}
+            {(() => {
+              // brocas que pide el diseño, y si están en tu base
+              const ds = [...new Set(m.piezas.flatMap((p) => [...p.barrenos.map((b) => b.d), ...p.cantos.map((c) => c.d), ...p.huecos.filter((h) => h.length >= 20).map((h) => Math.round((Math.max(...h.map((q) => q[0])) - Math.min(...h.map((q) => q[0]))) * 10) / 10)]))].filter((d) => d <= 40).sort((a, b) => a - b)
+              if (!ds.length) return null
+              return (
+                <div className="flex flex-col gap-1 rounded-[8px] border border-[#2A3546] bg-[#111821] p-2 text-[12px] text-[#C9D2E0]">
+                  <span className="font-semibold text-white">Brocas que pide el diseño</span>
+                  {ds.map((d) => {
+                    const hay = fresas.find((f) => (f.tipo === "broca" || f.tipo === "recta") && Math.abs(f.diametro - d) < 0.3)
+                    return (
+                      <span key={d}>
+                        Ø{d} mm: {hay ? <span className="text-[#9FE0B5]">{hay.nombre}</span> : <span className="text-[#F6D58E]">no está en tu base (agrégala con +)</span>}
+                      </span>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </>
+        )}
+      </Seccion>
+
+      <Seccion titulo="Esquinas y espigas">
+        <span className="text-[12px] font-semibold text-[#C9D2E0]">Esquinas exteriores de las piezas</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          {([["recta", "Rectas"], ["redonda", "Redondeadas"], ["chaflan", "Chaflán 45°"]] as const).map(([t, n]) => (
+            <button key={t} type="button" aria-pressed={esquinas.tipo === t} onClick={() => setEsquinas((e) => ({ ...e, tipo: t }))} className={`rounded-[6px] px-2 py-1 font-semibold ${esquinas.tipo === t ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n}</button>
+          ))}
+        </div>
+        {esquinas.tipo !== "recta" && <CampoNum etiqueta={esquinas.tipo === "redonda" ? "Radio" : "Chaflán"} valor={esquinas.medida} cambiar={(x) => setEsquinas((e) => ({ ...e, medida: x }))} sufijo="mm" />}
+        {!laser && union === "espiga" && (
+          <>
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">Esquinas interiores (mortajas y raíz de las espigas)</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+              {([["hueso", "Cabeza de fémur"], ["t", "En T"], ["ninguno", "Sin alivio"]] as const).map(([t, n]) => (
+                <button key={t} type="button" aria-pressed={alivio === t} onClick={() => setAlivio(t)} className={`rounded-[6px] px-2 py-1 font-semibold ${alivio === t ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n}</button>
+              ))}
+            </div>
+            <span className="text-[11.5px] text-[#8A97AB]">
+              {alivio === "hueso" ? "Un círculo de la fresa en cada esquina: la espiga asienta hasta el fondo." : alivio === "t" ? "El círculo se abre hacia un solo lado (la orilla corta): las caras largas quedan limpias." : "Sin alivio: la esquina queda redonda del radio de la fresa; lima la espiga o usa láser."}
+            </span>
+          </>
+        )}
+        {union === "espiga" && (
+          <>
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">Espigas por unión</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+              {[0, 1, 2, 3, 4].map((n) => (
+                <button key={n} type="button" aria-pressed={numEspigas === n} onClick={() => setNumEspigas(n)} className={`rounded-[6px] px-2 py-1 font-semibold ${numEspigas === n ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>{n === 0 ? "Automático" : n}</button>
+              ))}
+            </div>
+            <CampoNum etiqueta="Ancho de cada espiga (vacío = automático)" valor={anchoEspiga} cambiar={setAnchoEspiga} sufijo="mm" />
+          </>
+        )}
       </Seccion>
 
       <Seccion titulo={`Tableros (${tableros.length})`}>
@@ -862,9 +1048,9 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
 
   return (
     <Estudio2D
-      titulo="Mueble desde imagen"
+      titulo={enfoque === "cocina" ? "Cocina integral" : "Mueble desde imagen"}
       acento="2D"
-      subtitulo="Tu foto o plano, listo para maquilar"
+      subtitulo={enfoque === "cocina" ? "Biblioteca de gabinetes a tu medida" : "Tu foto o plano, listo para maquilar"}
       icono={
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="14" rx="2" />
@@ -891,6 +1077,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
           ? ["Hojas", `${acomodo.hojas.length} de ${hoja.largo} × ${hoja.ancho} · ${Math.round(acomodo.aprovechamiento * 100)}% aprovechado${copias > 1 ? ` · ${copias} muebles` : ""}`]
           : ["Tablero", `${areaM2.toFixed(2)} m² · ~${hojasEstimadas} ${hojasEstimadas === 1 ? "hoja" : "hojas"} de ${TABLERO.largo} × ${TABLERO.ancho}`],
         ["Unión", nombreUnion],
+        ["Herramientas", laser ? "Láser" : [fresaCorte?.nombre, m.piezas.some((p) => p.ranuras.length) ? fresas.find((f) => f.id === herrRanura)?.nombre : null, etiquetas ? fresas.find((f) => f.id === herrV)?.nombre : null].filter(Boolean).join(" · ")],
         ...m.compras.map((c) => [c.nombre, String(c.cantidad)] as [string, string]),
       ]}
       descargas={(exportar) => {

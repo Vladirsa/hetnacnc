@@ -22,7 +22,7 @@
 //
 // Límite: tableros planos a escuadra. Curvas o inclinaciones se aproximan.
 
-import { type Herramienta, type Mueble, type P, type PiezaEnsamble, type Plano, aMueble, exteriorConAlivios, mortaja } from "./ensamble"
+import { type Herramienta, type Mueble, type P, type PiezaEnsamble, type Plano, type TipoAlivio, type TipoEsquina, aMueble, esquinasExteriores, exteriorConAlivios, mortaja } from "./ensamble"
 
 // Abertura: hueco rectangular dentro de un tablero (pasacables, ventana, agarradera).
 // En mm desde la esquina menor del tablero, sobre sus ejes (u, v): lateral (Y, Z),
@@ -59,6 +59,13 @@ export type OpcionesTableros = {
   // varios muebles en un mismo diseño (una cocina): se conservan todos los grupos
   // de tableros unidos entre sí, no sólo el más grande
   varios?: boolean
+  // esquinas interiores (mortajas y raíz de las espigas): cabeza de fémur, en T o sin alivio
+  alivio?: TipoAlivio
+  // esquinas exteriores de cada pieza: rectas, redondeadas o con chaflán (medida en mm)
+  esquinas?: { tipo: TipoEsquina; medida: number }
+  // espigas por unión (0 = automático) y ancho de cada espiga en mm (0 = automático)
+  numEspigas?: number
+  anchoEspiga?: number
 }
 
 export const TABLEROS_INICIO: Omit<OpcionesTableros, "ancho" | "fondo" | "alto"> = {
@@ -518,10 +525,17 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
       return W.k === B && traslape(W.lo[B] - hol, W.hi[B] + hol, Q.lo[B], Q.hi[B]) > 0 && traslape(W.lo[C], W.hi[C], c0, c1) > 0
     })
     let tw = Math.max(25, Math.min(80, d * 0.22))
+    const nPedidas = Math.max(0, Math.min(6, Math.round(o0.numEspigas || 0)))
+    if (o0.anchoEspiga && o0.anchoEspiga > 0) tw = Math.max(8, Math.min(o0.anchoEspiga, d * 0.9))
     let fr: number[]
     if (compartida) {
       tw = Math.min(tw, d * 0.12)
       fr = d > 140 ? (u.s === 0 ? [0.125, 0.625] : [0.375, 0.875]) : u.s === 0 ? [0.3] : [0.7]
+    } else if (nPedidas > 0) {
+      // espigas pedidas: repartidas parejo a lo largo de la unión (si caben)
+      const n = Math.max(1, Math.min(nPedidas, Math.floor(d / (tw + 2 * (r + 2) + 4))))
+      tw = Math.min(tw, (d / n) * 0.7)
+      fr = Array.from({ length: n }, (_, k) => (k + 0.5) / n)
     } else fr = d > 140 ? [0.25, 0.75] : [0.5]
     const L = compartida ? e : e + saliente
     // cada espiga busca un lugar libre en P: si choca con otra mortaja se corre
@@ -551,7 +565,7 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
       if (elegido === null) continue
       const caja = libre(elegido)!
       puestas[u.p].push(caja)
-      huecos[u.p].push(mortaja(caja[0], caja[2], caja[1], caja[3], r))
+      huecos[u.p].push(mortaja(caja[0], caja[2], caja[1], caja[3], r, o0.alivio || "hueso"))
       lista.push({ a: elegido, b: elegido + tw, L })
     }
     if (!lista.length) {
@@ -599,7 +613,9 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
     for (const t of [...es(V, 1)].reverse()) pts.push([t.b, v1], [t.b, v1 + t.L], [t.a, v1 + t.L], [t.a, v1])
     pts.push([u0, v1])
     for (const t of [...es(U, 0)].reverse()) pts.push([u0, t.b], [u0 - t.L, t.b], [u0 - t.L, t.a], [u0, t.a])
-    return { nombre: c.nombre, plano: PLANO[c.k], contorno: exteriorConAlivios(pts, r), huecos: huecos[i], desfase: c.lo[c.k], grosor: e, origen: c.origen, indice: i, barrenos: barrenos[i], cantos: cantos[i] }
+    // esquinas exteriores (sólo las 4 del rectángulo de la pieza, si no hay espiga en ellas)
+    const esq = o0.esquinas && o0.esquinas.tipo !== "recta" ? esquinasExteriores(pts, o0.esquinas.tipo, Math.max(0, Math.min(100, o0.esquinas.medida || 0)), (q) => (Math.abs(q[0] - u0) < 1e-6 || Math.abs(q[0] - u1) < 1e-6) && (Math.abs(q[1] - v0) < 1e-6 || Math.abs(q[1] - v1) < 1e-6)) : pts
+    return { nombre: c.nombre, plano: PLANO[c.k], contorno: exteriorConAlivios(esq, r, o0.alivio || "hueso"), huecos: huecos[i], desfase: c.lo[c.k], grosor: e, origen: c.origen, indice: i, barrenos: barrenos[i], cantos: cantos[i] }
   })
 
   // ---- 7. revisiones ----

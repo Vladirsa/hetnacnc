@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { calcRouter } from "@/lib/calculadora/router"
 import { addCamJobToCart } from "@/lib/data/cam"
 import type { FresaCam } from "@/lib/data/cam-maquinas"
+import { tomarPiezaParaLaboratorio } from "@/lib/generador/aLaboratorio"
 import { guardarBase, leerBase } from "@/lib/hetna/base-herramientas"
 
 type TrabajoCreado = {
@@ -47,6 +48,16 @@ export function MarcoLaboratorio({
   useEffect(() => {
     const alRecibir = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== marco.current?.contentWindow) {
+        return
+      }
+      // El laboratorio ya cargó: si un generador del sitio le dejó una pieza (molduras, tallados…), se la entrega
+      if ((event.data as { type?: string })?.type === "hetna-cam:ready") {
+        const pieza = await tomarPiezaParaLaboratorio()
+        if (pieza) {
+          setAviso({ tono: "info", texto: `Abriendo ${pieza.nombre} en el laboratorio…` })
+          marco.current?.contentWindow?.postMessage({ type: "hetna-cam:load-file", nombre: pieza.nombre, datos: pieza.datos }, window.location.origin, [pieza.datos])
+          setTimeout(() => setAviso(null), 4000)
+        }
         return
       }
       // El laboratorio pide avances y velocidades a la Calculadora CNC del sitio
