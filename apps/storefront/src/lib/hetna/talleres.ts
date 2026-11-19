@@ -58,8 +58,44 @@ export type Perfil = {
   reputacion_comercial?: number
   capacidad_tecnica?: number
   historial_suficiente?: boolean
+  // Lo que el taller HIZO en HETNA (packages/api/src/lib/reputacion-medida.ts),
+  // recalculado cada día: puntualidad real, terminados, reclamos, respuesta.
+  medido?: Medido
   galeria: string[]
 }
+
+export type Medido = {
+  terminados: number
+  puntualidad_pct: number | null
+  con_fecha: number
+  retraso_promedio_dias: number | null
+  terminados_pct: number | null
+  reclamos: number
+  reclamos_resueltos: number
+  puntaje: number | null
+  suficiente: boolean
+  respuesta_horas: number | null
+}
+
+const leerMedido = (v: unknown): Medido | undefined => {
+  if (!v || typeof v !== "object") return undefined
+  const m = v as Record<string, unknown>
+  const n = (x: unknown) => (typeof x === "number" && Number.isFinite(x) ? x : null)
+  return {
+    terminados: n(m.terminados) ?? 0,
+    puntualidad_pct: n(m.puntualidad_pct),
+    con_fecha: n(m.con_fecha) ?? 0,
+    retraso_promedio_dias: n(m.retraso_promedio_dias),
+    terminados_pct: n(m.terminados_pct),
+    reclamos: n(m.reclamos) ?? 0,
+    reclamos_resueltos: n(m.reclamos_resueltos) ?? 0,
+    puntaje: n(m.puntaje),
+    suficiente: m.suficiente === true,
+    respuesta_horas: n(m.respuesta_horas),
+  }
+}
+
+export { textoRespuesta } from "./respuesta"
 
 export type Taller = {
   id: string
@@ -142,6 +178,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     reputacion_comercial: num(p.reputacion_comercial),
     capacidad_tecnica: num(p.capacidad_tecnica),
     historial_suficiente: p.historial_suficiente === true,
+    medido: leerMedido(p.medido),
     galeria: lista(p.galeria).filter((u) => /^https?:\/\//.test(u)).slice(0, 12),
   }
 }

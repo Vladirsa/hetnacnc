@@ -99,6 +99,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 reclamos_resueltos: Number(perfil.medido.reclamos_resueltos || 0),
                 puntaje: perfil.medido.puntaje ?? null,
                 suficiente: perfil.medido.suficiente === true,
+                respuesta_horas: perfil.medido.respuesta_horas ?? null,
               }
             : null,
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",

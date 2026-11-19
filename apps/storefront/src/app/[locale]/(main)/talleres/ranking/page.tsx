@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { listarTalleres, type Taller } from "@/lib/hetna/talleres"
+import { listarTalleres, textoRespuesta, type Taller } from "@/lib/hetna/talleres"
 
 // HETNA Trust & Ranking (Licitaciones 3.0, Fase 4 — sección 8.E y 8.F):
 // clasificaciones públicas por especialidad y región, con reputación
@@ -162,6 +162,8 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
                   {p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}
                   {!p.historial_suficiente && " · historial aún corto"}
                   {t.certificaciones.length > 0 && ` · 🎖 ${t.certificaciones.length} certificación(es)`}
+                  {p.medido?.puntualidad_pct != null && p.medido.con_fecha >= 3 && ` · ⏱ ${p.medido.puntualidad_pct}% a tiempo`}
+                  {p.medido?.respuesta_horas != null && ` · responde en ${textoRespuesta(p.medido.respuesta_horas)}`}
                 </span>
               </li>
             )
