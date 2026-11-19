@@ -10,7 +10,7 @@ import type { TipoUnion } from "./tableros"
 export type MuebleCatalogo = {
   id: string
   nombre: string
-  categoria: "Recámara" | "Sala" | "Oficina" | "Cocina" | "Comedor" | "Organización"
+  categoria: "Recámara" | "Sala" | "Oficina" | "Cocina" | "Comedor" | "Organización" | "Comercio"
   nota: string
   union: TipoUnion
   material: string
@@ -38,7 +38,31 @@ function librero(e: number, ancho: number, alto: number, fondo: number, repisas:
 
 const conG = <T extends object>(o: T, e: number) => ({ ...o, grosor: e, gFrente: e })
 
+// exhibidor de ensamble sin tornillos: gabinete abajo, postes con repisas arriba y panel trasero
+function exhibidor(e: number): TableroC[] {
+  const A = 1000, Hb = 690, Fb = 492, Fs = 250, H = 1800
+  const t: TableroC[] = gabinete(conG({ ...GABINETE_INICIO.bajo, ancho: A, alto: Hb, fondo: Fb, zoclo: 80, techo: "completo", fondoTipo: "clavado", frente: "puertas", repisas: 1 }, e)).tableros.map((b) => ({ ...b, nombre: `Gabinete: ${b.nombre}` }))
+  const y0 = Fb - Fs
+  // postes a 50 mm de la orilla (como el plano original): la mortaja del techo del gabinete queda lejos de su orilla
+  const xp0 = 50, xp1 = A - 50 - e
+  t.push({ nombre: "Poste izquierdo", plano: "lateral", x0: xp0, x1: xp0 + e, y0, y1: Fb, z0: Hb, z1: H })
+  t.push({ nombre: "Poste derecho", plano: "lateral", x0: xp1, x1: xp1 + e, y0, y1: Fb, z0: Hb, z1: H })
+  for (const [i, z] of [870, 1230, 1590].entries()) t.push({ nombre: `Repisa ${i + 1}`, plano: "horizontal", x0: xp0 + e, x1: xp1, y0, y1: Fb, z0: z, z1: z + e })
+  t.push({ nombre: "Panel trasero", plano: "frontal", x0: xp0 + e, x1: xp1, y0: Fb - e, y1: Fb, z0: Hb, z1: 870 })
+  t.push({ nombre: "Travesaño trasero", plano: "frontal", x0: xp0 + e, x1: xp1, y0: Fb - e, y1: Fb, z0: 1590 - 140, z1: 1590 })
+  return t
+}
+
 export const CATALOGO: MuebleCatalogo[] = [
+  {
+    id: "exhibidor",
+    nombre: "Exhibidor con gabinete",
+    categoria: "Comercio",
+    nota: "1000 × 1800 × 492, sin tornillos",
+    union: "espiga",
+    material: "triplay-pino",
+    generar: (e) => exhibidor(e),
+  },
   {
     id: "librero",
     nombre: "Librero de 4 repisas",
