@@ -24,7 +24,7 @@ import { hacerZip } from "@/lib/generador/zip"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
-import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
+import { type Abertura, COCINA_INICIO, HABITACION_INICIO, MODULOS, type Modulo, type OpcionesHabitacion, type TipoModulo, cocina, habitacion, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
 import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
@@ -33,7 +33,7 @@ import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, 
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
 import { BibliotecaHerrajes, useHerrajes } from "./BibliotecaHerrajes"
-import type { CajaVista, VistaEstandar } from "./Mueble3D"
+import type { AmbienteVista, CajaVista, ColocacionVista, VistaEstandar } from "./Mueble3D"
 import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
 
@@ -167,6 +167,19 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [conCubierta, setConCubierta] = useState(true)
   const [alturaAltos, setAlturaAltos] = useState(String(COCINA_INICIO.alturaAltos))
   const sumaModulos = modulos.reduce((t, x) => t + (x.ancho || 0), 0)
+  // cocina en una habitación (L o U, ventanas, puertas, isla)
+  const [hab, setHab] = useState<Omit<OpcionesHabitacion, "grosor" | "isla"> & { conIsla: boolean; islaLargo: number; islaPasillo: number }>({ ...HABITACION_INICIO, conIsla: false, islaLargo: 1800, islaPasillo: 1000 })
+  const [habTxt, setHabTxt] = useState<Record<string, string>>({})
+  const [habVista, setHabVista] = useState<{ colocacion: ColocacionVista[]; ambiente: AmbienteVista } | null>(null)
+  const [verHab, setVerHab] = useState(true)
+  const numHab = (k: string, inicial: number, poner: (n: number) => void) => ({
+    valor: habTxt[k] ?? String(inicial),
+    cambiar: (x: string) => {
+      setHabTxt((t) => ({ ...t, [k]: x }))
+      if (x.trim() !== "" && Number.isFinite(numero(x))) poner(numero(x))
+    },
+  })
+  const setAb = (i: number, c: Partial<Abertura>) => setHab((h) => ({ ...h, aberturas: h.aberturas.map((a, j) => (j === i ? { ...a, ...c } : a)) }))
   // biblioteca de cocina: modelo elegido y sus medidas
   const [modeloSel, setModeloSel] = useState<string | null>(null)
   const [medModelo, setMedModelo] = useState({ ancho: "", alto: "", fondo: "" })
@@ -625,6 +638,96 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             <span className="text-[11.5px] text-[#8A97AB]">Después cambias material, uniones, puertas, cajones, repisas y huecos en 3D. Reemplaza el mueble actual (puedes deshacer).</span>
           </div>
         )}
+      </Seccion>
+
+      <Seccion titulo="Cocina en la habitación (L, U, isla)">
+        <div className="grid grid-cols-3 gap-1.5">
+          {([["recta", "Recta"], ["L", "En L"], ["U", "En U"]] as const).map(([f, n]) => (
+            <button key={f} type="button" aria-pressed={hab.forma === f} onClick={() => setHab((h) => ({ ...h, forma: f }))} className={`rounded-[8px] px-2 py-1.5 text-[12px] font-semibold ${hab.forma === f ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
+        </div>
+        {hab.forma === "L" && (
+          <div className="flex items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+            Segunda pared:
+            {([["izq", "a la izquierda"], ["der", "a la derecha"]] as const).map(([l, n]) => (
+              <button key={l} type="button" aria-pressed={hab.ladoL === l} onClick={() => setHab((h) => ({ ...h, ladoL: l }))} className={`rounded-[6px] px-2 py-1 font-semibold ${hab.ladoL === l ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-2">
+          <CampoNum etiqueta="Pared del fondo" {...numHab("l0", hab.largos[0], (n) => setHab((h) => ({ ...h, largos: [n, h.largos[1], h.largos[2]] })))} sufijo="mm" />
+          {hab.forma !== "recta" && <CampoNum etiqueta={hab.forma === "U" ? "Pared izquierda" : "Segunda pared"} {...numHab("l1", hab.largos[1], (n) => setHab((h) => ({ ...h, largos: [h.largos[0], n, h.largos[2]] })))} sufijo="mm" />}
+          {hab.forma === "U" && <CampoNum etiqueta="Pared derecha" {...numHab("l2", hab.largos[2], (n) => setHab((h) => ({ ...h, largos: [h.largos[0], h.largos[1], n] })))} sufijo="mm" />}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[12px] font-semibold text-white">Ventanas y puertas</span>
+          {hab.aberturas.map((a, i) => (
+            <div key={i} className="flex flex-wrap items-end gap-1.5 rounded-[8px] bg-[#111821] p-1.5 text-[11px] text-[#8A97AB]">
+              <select value={a.tipo} onChange={(e) => setAb(i, { tipo: e.target.value as Abertura["tipo"], ...(e.target.value === "puerta" ? { sobrePiso: 0, alto: 2100, ancho: 900 } : { sobrePiso: 1100, alto: 1000 }) })} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" aria-label="Tipo">
+                <option value="ventana">Ventana</option>
+                <option value="puerta">Puerta</option>
+              </select>
+              <select value={a.pared} onChange={(e) => setAb(i, { pared: Number(e.target.value) })} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" aria-label="Pared">
+                <option value={0}>Fondo</option>
+                {hab.forma !== "recta" && <option value={1}>{hab.forma === "U" ? "Izquierda" : "Segunda"}</option>}
+                {hab.forma === "U" && <option value={2}>Derecha</option>}
+              </select>
+              {([["desde", "Desde"], ["ancho", "Ancho"], ["alto", "Alto"], ...(a.tipo === "ventana" ? [["sobrePiso", "Sobre piso"]] : [])] as [keyof Abertura, string][]).map(([k, n]) => (
+                <label key={k} className="flex w-[3.9rem] flex-col gap-0.5">
+                  {n}
+                  <input value={habTxt[`a${i}${k}`] ?? String(a[k])} onChange={(e) => { setHabTxt((t) => ({ ...t, [`a${i}${k}`]: e.target.value })); if (Number.isFinite(numero(e.target.value))) setAb(i, { [k]: numero(e.target.value) }) }} inputMode="numeric" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" />
+                </label>
+              ))}
+              <button type="button" onClick={() => { setHab((h) => ({ ...h, aberturas: h.aberturas.filter((_, j) => j !== i) })); setHabTxt({}) }} className="px-1 pb-1 text-[#F6B8AE]" aria-label="Quitar">✕</button>
+            </div>
+          ))}
+          <div className="flex gap-1.5">
+            <button type="button" onClick={() => setHab((h) => ({ ...h, aberturas: [...h.aberturas, { tipo: "ventana", pared: 0, desde: 800, ancho: 1000, alto: 1000, sobrePiso: 1100 }] }))} className="rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">+ Ventana</button>
+            <button type="button" onClick={() => setHab((h) => ({ ...h, aberturas: [...h.aberturas, { tipo: "puerta", pared: h.forma === "recta" ? 0 : 1, desde: 1200, ancho: 900, alto: 2100, sobrePiso: 0 }] }))} className="rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">+ Puerta</button>
+          </div>
+          <span className="text-[11px] text-[#8A97AB]">«Desde»: en la pared del fondo, desde la esquina izquierda; en las de los lados, desde la esquina con el fondo.</span>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-[#C9D2E0]">
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conAltos} onChange={(e) => setHab((h) => ({ ...h, conAltos: e.target.checked }))} className="accent-[#C2560A]" /> Gabinetes altos</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conColumna} onChange={(e) => setHab((h) => ({ ...h, conColumna: e.target.checked }))} className="accent-[#C2560A]" /> Columna (alacena)</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conIsla} onChange={(e) => setHab((h) => ({ ...h, conIsla: e.target.checked }))} className="accent-[#C2560A]" /> Isla</label>
+        </div>
+        {hab.conIsla && (
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Largo de la isla" {...numHab("isla", hab.islaLargo, (n) => setHab((h) => ({ ...h, islaLargo: n })))} sufijo="mm" />
+            <CampoNum etiqueta="Pasillo" {...numHab("pasillo", hab.islaPasillo, (n) => setHab((h) => ({ ...h, islaPasillo: n })))} sufijo="mm" />
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <CampoNum etiqueta="Altura de los altos" {...numHab("altos", hab.alturaAltos, (n) => setHab((h) => ({ ...h, alturaAltos: n })))} sufijo="mm" />
+          <CampoNum etiqueta="Alto del techo" {...numHab("techo", hab.altoTecho, (n) => setHab((h) => ({ ...h, altoTecho: n })))} sufijo="mm" />
+        </div>
+        {interruptorMovibles}
+        <button
+          type="button"
+          onClick={() => {
+            const { conIsla, islaLargo, islaPasillo, ...resto } = hab
+            const r = habitacion({ ...resto, grosor: opciones.grosor, repisasMovibles: movibles, isla: conIsla ? { largo: islaLargo, distancia: islaPasillo } : undefined })
+            aplicar(() => r.tableros, null)
+            setVarios(true)
+            setHabVista({ colocacion: r.colocacion, ambiente: { muros: r.muros, vidrios: r.vidrios } })
+            setVerHab(true)
+            setNombre(`Cocina ${hab.forma === "recta" ? "recta" : `en ${hab.forma}`} ${Math.round(hab.largos[0])} mm${conIsla ? " con isla" : ""}`)
+            if (union === "espiga") setUnion("confirmat")
+            setPunto(null)
+            setVista(undefined)
+            setAjustar((n) => n + 1)
+            setLectura(r.avisos.length ? { texto: r.avisos.join(" "), tipo: "aviso" } : null)
+          }}
+          className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
+        >
+          Crear cocina en la habitación
+        </button>
+        <span className="text-[11.5px] text-[#8A97AB]">Pone esquineros ciegos en las esquinas, el fregadero bajo la ventana, deja libre donde hay puertas y no pone altos frente a las ventanas. En el 3D la ves en el cuarto; con «Ver recto» la editas pared por pared. Cada pared sale en la lista de corte, los planos y el acomodo.</span>
       </Seccion>
 
       <Seccion titulo="Cocina completa en una pared">
@@ -1303,6 +1406,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     </div>
   )
 
+  // la cocina en habitación se ve en el cuarto mientras el diseño sea el de la habitación
+  const esHabitacion = !!habVista && tableros.some((t) => t.nombre.startsWith("Pared A · "))
+  const enHabitacion = esHabitacion && verHab
   const vista3D = (
     <Visor3D oscuro alto="h-full min-h-[260px]">
       {m.piezas.length ? (
@@ -1314,9 +1420,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           explotar={explotar}
           rayosX={rayosX}
           cotas={verCotas}
-          editable
+          editable={!enHabitacion}
           ajustar={ajustar}
           vista={vista}
+          colocacion={enHabitacion ? habVista!.colocacion : undefined}
+          ambiente={enHabitacion ? habVista!.ambiente : undefined}
           punto={punto}
           alSeleccionar={(i, p) => {
             setSel(i)
@@ -1342,6 +1450,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         <button type="button" onClick={() => { setVista(undefined); setAjustar((n) => n + 1) }} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
           Ajustar vista
         </button>
+        {esHabitacion && (
+          <button type="button" aria-pressed={verHab} onClick={() => { setVerHab((x) => !x); setAjustar((n) => n + 1) }} className={`rounded-[7px] px-2 py-1 font-semibold ${verHab ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`} title="En el cuarto se ve; recto se edita pared por pared">
+            {verHab ? "Ver recto (editar)" : "Ver en la habitación"}
+          </button>
+        )}
         <span className="flex flex-wrap items-center gap-1" role="group" aria-label="Vistas">
           {VISTAS.map(([id, n]) => (
             <button key={id} type="button" onClick={() => setVista((x) => ({ cual: id, n: (x?.n || 0) + 1 }))} title={`Vista ${n.toLowerCase()}`} className={`rounded-[6px] px-1.5 py-1 text-[11.5px] font-semibold ${vista?.cual === id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] hover:bg-[#243045]"}`}>

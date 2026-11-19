@@ -167,7 +167,9 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   for (const [origen, t] of tableros.slice(0, maxT).entries()) {
     const vals = [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1]
     if (!vals.every((v) => Number.isFinite(v))) continue
-    const { lo, hi } = cajaDeTablero({ ...t, x0: acotar(t.x0, -5000, 5000), x1: acotar(t.x1, -5000, 5000), y0: acotar(t.y0, -5000, 5000), y1: acotar(t.y1, -5000, 5000), z0: acotar(t.z0, -5000, 5000), z1: acotar(t.z1, -5000, 5000) })
+    // una cocina completa (varios) mide hasta decenas de metros puesta en fila
+    const L = o0.varios ? 60000 : 5000
+    const { lo, hi } = cajaDeTablero({ ...t, x0: acotar(t.x0, -L, L), x1: acotar(t.x1, -L, L), y0: acotar(t.y0, -L, L), y1: acotar(t.y1, -L, L), z0: acotar(t.z0, -5000, 5000), z1: acotar(t.z1, -5000, 5000) })
     const ext = [0, 1, 2].map((i) => hi[i] - lo[i])
     const k = ext.indexOf(Math.min(...ext)) as Eje
     let nombre = (t.nombre || "Tablero").trim().slice(0, 40) || "Tablero"

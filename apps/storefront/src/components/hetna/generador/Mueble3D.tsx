@@ -93,6 +93,12 @@ const SELECCION = 0xff8a3d
 const aThree = (p: Pt) => new THREE.Vector3(p[0], p[2], -p[1])
 const deThree = (v: THREE.Vector3): Pt => [v.x, -v.z, v.y]
 
+// cocina en habitación: cada tramo se fabrica derecho y aquí se gira a su lugar
+export type ColocacionVista = { x0: number; x1: number; origen: number; giro: number; dx: number; dy: number }
+export type AmbienteVista = { muros: { lo: Pt; hi: Pt }[]; vidrios: { lo: Pt; hi: Pt }[] }
+const matrizTramo = (c: ColocacionVista) =>
+  new THREE.Matrix4().makeTranslation(c.dx, 0, -c.dy).multiply(new THREE.Matrix4().makeRotationY(c.giro)).multiply(new THREE.Matrix4().makeTranslation(-c.origen, 0, 0))
+
 // textura de veta de madera (procedural, una sola para todo): líneas onduladas claras y oscuras
 let veta: THREE.CanvasTexture | null = null
 function texturaVeta() {
@@ -214,6 +220,8 @@ export default function Mueble3D({
   editable = false,
   ajustar = 0,
   vista,
+  colocacion,
+  ambiente,
   punto,
   alSeleccionar,
   alEmpujar,
@@ -229,6 +237,8 @@ export default function Mueble3D({
   editable?: boolean
   ajustar?: number // cambiarlo vuelve a encuadrar la cámara
   vista?: { cual: VistaEstandar; n: number } // vista estándar (cambiar n la vuelve a poner)
+  colocacion?: ColocacionVista[] // tramos girados a su lugar en la habitación
+  ambiente?: AmbienteVista // muros y vidrios de la habitación
   punto?: Pt | null
   alSeleccionar?: (indice: number | null, punto: Pt | null) => void
   alEmpujar?: (indice: number, eje: Eje, lado: 0 | 1, delta: number) => void
@@ -398,7 +408,9 @@ export default function Mueble3D({
         if (a.delta) props.current.alEmpujar?.(a.indice, a.eje, a.lado, a.delta)
       } else if (movido < 5) {
         const g = golpe(e)
-        props.current.alSeleccionar?.(g ? (g.object.userData.indice as number) : null, g ? deThree(g.point.clone().sub(st.current!.grupo.position)) : null)
+        const pt = g ? g.point.clone().sub(st.current!.grupo.position) : null
+        if (pt && g!.object.userData.inv) pt.applyMatrix4(g!.object.userData.inv as THREE.Matrix4)
+        props.current.alSeleccionar?.(g ? (g.object.userData.indice as number) : null, pt ? deThree(pt) : null)
       }
       inicio = null
     }
@@ -436,8 +448,16 @@ export default function Mueble3D({
       s.grupo.clear()
       s.mallas = []
       s.lineas = []
+      const matrices = (colocacion || []).map((c) => ({ c, M: matrizTramo(c) }))
+      const colocar = (x: number) => matrices.find((k) => x >= k.c.x0 && x <= k.c.x1)?.M || null
       geos.forEach((g, i) => {
         const p = piezas[i]
+        g.computeBoundingBox()
+        const M = matrices.length ? colocar(g.boundingBox!.getCenter(new THREE.Vector3()).x) : null
+        if (M) {
+          g.applyMatrix4(M)
+          g.computeBoundingBox()
+        }
         const mat = new THREE.MeshStandardMaterial({ map: p.veta ? texturaVeta() : null, color: p.color ? new THREE.Color(p.color) : (COLOR[p.plano] ?? 0xd8b98e), roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
         const m = new THREE.Mesh(g, mat)
         m.userData.indice = p.indice
@@ -447,8 +467,10 @@ export default function Mueble3D({
         m.add(l)
         for (const h of herrajes(p)) {
           h.userData.herraje = true
+          if (M) h.applyMatrix4(M)
           m.add(h)
         }
+        if (M) m.userData.inv = M.clone().invert()
         m.castShadow = true
         m.receiveShadow = true
         s.grupo.add(m)
@@ -461,9 +483,12 @@ export default function Mueble3D({
         const a = aThree(c.lo), b = aThree(c.hi)
         const caja = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(b.x - a.x), Math.abs(b.y - a.y), Math.abs(b.z - a.z)), new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, opacity: 0.35, depthWrite: false }))
         caja.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
+        const M = colocar((c.lo[0] + c.hi[0]) / 2)
+        if (M) caja.applyMatrix4(M)
         s.extras.add(caja)
       }
       // patas y jaladeras
+      const antes = s.extras.children.length
       for (const ac of accesorios) {
         if (ac.tipo === "pata") s.extras.add(cilindroEntre(aThree([ac.x, ac.y, ac.z0]), aThree([ac.x, ac.y, ac.z1]), ac.d / 2, MAT_PATA))
         else {
@@ -476,6 +501,12 @@ export default function Mueble3D({
           s.extras.add(cilindroEntre(a2.clone().sub(ext), b2.clone().add(ext), 6, MAT_METAL))
         }
       }
+      // patas y jaladeras de los tramos girados
+      if (matrices.length)
+        for (const o of s.extras.children.slice(antes)) {
+          const M = colocar(o.position.x)
+          if (M) o.applyMatrix4(M)
+        }
       const caja = new THREE.Box3().setFromObject(s.grupo)
       s.centro = caja.getCenter(new THREE.Vector3())
       if (!s.encuadrado) encuadrar()
@@ -485,7 +516,34 @@ export default function Mueble3D({
     return () => {
       vivo = false
     }
-  }, [piezas, sueltos, accesorios]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [piezas, sueltos, accesorios, colocacion]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // muros y ventanas de la habitación (sólo se ven; no se tocan)
+  useEffect(() => {
+    const s = st.current
+    if (!s) return
+    let amb = s.scene.getObjectByName("ambiente") as THREE.Group | undefined
+    if (amb) {
+      for (const o of amb.children) {
+        ;(o as THREE.Mesh).geometry.dispose()
+        ;((o as THREE.Mesh).material as THREE.Material).dispose()
+      }
+      s.scene.remove(amb)
+    }
+    if (!ambiente) return
+    amb = new THREE.Group()
+    amb.name = "ambiente"
+    const caja = (c: { lo: Pt; hi: Pt }, mat: THREE.Material) => {
+      const a = aThree(c.lo), b = aThree(c.hi)
+      const m = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(b.x - a.x), Math.abs(b.y - a.y), Math.abs(b.z - a.z)), mat)
+      m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
+      m.receiveShadow = true
+      amb!.add(m)
+    }
+    for (const c of ambiente.muros) caja(c, new THREE.MeshStandardMaterial({ color: 0xe4e0d8, roughness: 0.95 }))
+    for (const c of ambiente.vidrios) caja(c, new THREE.MeshStandardMaterial({ color: 0x9fd3ff, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }))
+    s.scene.add(amb)
+  }, [ambiente])
 
   // rejilla, piso de sombra y luz según el tamaño del mueble (no mueve la cámara)
   const ajustarEscena = () => {
@@ -636,7 +694,8 @@ export default function Mueble3D({
         const g = m.geometry.boundingBox!
         const c = g.getCenter(new THREE.Vector3())
         const d = c.clone().sub(s.centro)
-        const eje = m.userData.plano === "lateral" ? "x" : m.userData.plano === "horizontal" ? "y" : "z"
+        const tg = g.getSize(new THREE.Vector3())
+        const eje = tg.x <= tg.y && tg.x <= tg.z ? "x" : tg.y <= tg.z ? "y" : "z"
         const lado = Math.abs(d[eje]) < 1 ? 0 : Math.sign(d[eje])
         const t = tam[eje] || 1
         m.position[eje] = explotar * (d[eje] * 0.7 + lado * t * 0.12)
@@ -650,6 +709,8 @@ export default function Mueble3D({
     if (!s) return
     if (punto && explotar === 0) {
       s.marca.position.copy(aThree(punto))
+      const c = (colocacion || []).find((k) => punto[0] >= k.x0 && punto[0] <= k.x1)
+      if (c) s.marca.position.applyMatrix4(matrizTramo(c))
       const caja = new THREE.Box3().setFromObject(s.grupo)
       s.marca.scale.setScalar(Math.max(6, caja.getSize(new THREE.Vector3()).length() / 160))
       s.marca.visible = true
