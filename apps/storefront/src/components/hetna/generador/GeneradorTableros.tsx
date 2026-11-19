@@ -16,7 +16,8 @@ import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
-import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES, muebleDeTableros } from "@/lib/generador/tableros"
+import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES } from "@/lib/generador/tableros"
+import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
 import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
@@ -66,7 +67,7 @@ function tableroNuevo(ts: Tablero[], g: number): Tablero {
 export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [nombre, setNombre] = useState(EJEMPLO.nombre)
-  const [tableros, setTableros] = useState<Tablero[]>(EJEMPLO.tableros)
+  const [tableros, setTableros] = useState<TableroC[]>(EJEMPLO.tableros)
   const [esEjemplo, setEsEjemplo] = useState(true)
   const [foto, setFoto] = useState<string | null>(null)
   const [leyendo, setLeyendo] = useState(false)
@@ -82,8 +83,10 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [explotar, setExplotar] = useState(0)
   const [rayosX, setRayosX] = useState(false)
   const [ajustar, setAjustar] = useState(0)
-  const [pasado, setPasado] = useState<Tablero[][]>([])
-  const [futuro, setFuturo] = useState<Tablero[][]>([])
+  const [pasado, setPasado] = useState<TableroC[][]>([])
+  const [futuro, setFuturo] = useState<TableroC[][]>([])
+  const [material, setMaterial] = useState("melamina-blanca")
+  const [patas, setPatas] = useState("0")
   const [hueco, setHueco] = useState({ ancho: "160", alto: "60" })
   const [pagados, setPagados] = useState<Record<string, boolean>>({})
   const [cobrando, setCobrando] = useState(false)
@@ -93,6 +96,8 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const herramienta: Herramienta = herr === "laser" ? { tipo: "laser" } : { tipo: "fresa", diametro: Number(herr) }
   const opciones = {
     union,
+    material,
+    patas: Math.max(0, numero(patas) || 0),
     ancho: numero(v.ancho) || undefined,
     fondo: numero(v.fondo) || undefined,
     alto: numero(v.alto) || undefined,
@@ -103,7 +108,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   }
   const clave = JSON.stringify({ tableros, opciones })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const m = useMemo(() => muebleDeTableros(tableros, opciones), [clave])
+  const m = useMemo(() => muebleCompleto(tableros, opciones), [clave])
   // ---- acomodo en hojas ----
   const [acomodar, setAcomodar] = useState(false)
   const [hojaId, setHojaId] = useState<string>(HOJAS_TABLERO[0].id)
@@ -117,12 +122,40 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const separacion = ah.separacion.trim() === "" ? sepAuto : Math.max(0, numero(ah.separacion) || 0)
   const copias = Math.max(1, Math.min(50, Math.round(numero(ah.copias) || 1)))
   const vetaDe = (nombre: string): Veta => vetas[nombre] ?? "largo"
+  // piezas de distinto material o grosor van en hojas distintas: un acomodo por grupo
   const acomodo = useMemo(() => {
     if (!acomodar || !m.piezas.length || m.errores.length) return null
-    return acomodarEnTablero(
-      m.piezas.map((p, i) => ({ id: `p${i}`, nombre: p.nombre, trazos: piezasTendidas([p]), veta: vetaDe(p.nombre), cantidad: copias })),
-      { largo: hoja.largo, ancho: hoja.ancho, separacion, margen: Math.max(0, numero(ah.margen) || 0), conVeta, etiquetas },
-    )
+    const grupos = new Map<string, { nombre: string; idx: number[] }>()
+    m.piezas.forEach((p, i) => {
+      const g = Math.round(p.grosor * 10) / 10
+      const k = `${p.material}|${g}`
+      if (!grupos.has(k)) grupos.set(k, { nombre: `${materialDe(p.material).nombre} ${g} mm`, idx: [] })
+      grupos.get(k)!.idx.push(i)
+    })
+    const res: { nombre: string; r: ReturnType<typeof acomodarEnTablero> }[] = []
+    const trazos: ReturnType<typeof acomodarEnTablero>["trazos"] = []
+    let dy = 0
+    let n0 = 0
+    for (const g of grupos.values()) {
+      const r = acomodarEnTablero(
+        g.idx.map((i) => ({ id: `p${i}`, nombre: m.piezas[i].nombre, trazos: piezasTendidas([m.piezas[i]]), veta: vetaDe(m.piezas[i].nombre), cantidad: copias })),
+        { largo: hoja.largo, ancho: hoja.ancho, separacion, margen: Math.max(0, numero(ah.margen) || 0), conVeta, etiquetas, desde: n0 },
+      )
+      n0 += r.piezas
+      for (const t of r.trazos) trazos.push({ ...t, pts: t.pts.map(([x, y]) => [x, y + dy] as [number, number]) })
+      dy -= r.hojas.length * (hoja.ancho + 150) + (r.hojas.length ? 250 : 0)
+      res.push({ nombre: g.nombre, r })
+    }
+    const hojasTot = res.reduce((t, x) => t + x.r.hojas.length, 0)
+    const area = res.reduce((t, x) => t + x.r.aprovechamiento * x.r.hojas.length, 0)
+    return {
+      grupos: res,
+      hojas: res.flatMap((x) => x.r.hojas),
+      piezas: res.reduce((t, x) => t + x.r.piezas, 0),
+      noCaben: res.flatMap((x) => x.r.noCaben),
+      aprovechamiento: hojasTot ? area / hojasTot : 0,
+      trazos,
+    }
   }, [acomodar, m, hoja.largo, hoja.ancho, separacion, ah.margen, conVeta, etiquetas, copias, vetas]) // eslint-disable-line react-hooks/exhaustive-deps
   const d = useMemo(() => {
     if (!m.piezas.length || m.errores.length) return null
@@ -136,7 +169,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     const filas = m.piezas.map((p, i) => {
       const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
       const a = Math.max(...us) - Math.min(...us), b = Math.max(...vs) - Math.min(...vs)
-      return { nombre: p.nombre, largo: Math.max(a, b), ancho: Math.min(a, b), grosor: p.grosor, cantidad: copias, veta: conVeta ? vetaDe(p.nombre) : ("libre" as Veta), numeros: (numeros.get(`p${i}`) || []).sort((x, y) => x - y) }
+      return { nombre: p.nombre, material: materialDe(p.material).nombre, largo: Math.max(a, b), ancho: Math.min(a, b), grosor: p.grosor, cantidad: copias, veta: conVeta ? vetaDe(p.nombre) : ("libre" as Veta), numeros: (numeros.get(`p${i}`) || []).sort((x, y) => x - y) }
     })
     const url = URL.createObjectURL(new Blob(["\ufeff" + listaCorteCSV(filas)], { type: "text/csv;charset=utf-8" }))
     const a = document.createElement("a")
@@ -149,9 +182,9 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   }
 
   // ---- editor: cada cambio se hace sobre el mueble ya armado (lo que se ve) ----
-  const base = useCallback((): Tablero[] => (m.piezas.length ? [...m.tablerosFinales, ...m.sueltos] : tableros), [m, tableros])
+  const base = useCallback((): TableroC[] => (m.piezas.length ? [...m.tablerosFinales, ...m.sueltos] : tableros), [m, tableros])
   const aplicar = useCallback(
-    (cambio: (ts: Tablero[]) => Tablero[], nuevaSel?: number | null) => {
+    (cambio: (ts: TableroC[]) => TableroC[], nuevaSel?: number | null) => {
       const antes = base()
       const despues = cambio(antes)
       if (despues === antes) return
@@ -200,10 +233,32 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     return () => window.removeEventListener("keydown", tecla)
   }, [deshacer, rehacer, aplicar, sel])
   const selT = sel !== null ? m.tablerosFinales[sel] : null
+  // piezas para el 3D con el color de su material (memo: el visor rehace las mallas si cambia la lista)
+  const piezas3D = useMemo(() => m.piezas.map((p) => ({ ...p, color: materialDe(p.material).color, veta: materialDe(p.material).veta })), [m])
   const agregarTablero = (tipo: TipoNuevo) => {
-    const r = agregar(base(), tipo, punto, opciones.grosor)
+    // los tableros nuevos de estructura se ajustan sólo a la estructura
+    const todos = base()
+    const est = todos.filter(esEstructura)
+    const r = agregar(est, tipo, punto, opciones.grosor)
+    const nuevo = r.tableros[r.tableros.length - 1]
+    aplicar(() => [...todos, nuevo], todos.length)
+  }
+  const agregarComp = (tipo: TipoComponente) => {
+    const r = agregarComponente(base(), tipo, punto, opciones.grosor)
     aplicar(() => r.tableros, r.indice)
   }
+  // cambiar el grosor de un componente: crece hacia afuera del mueble (la cara que toca la estructura no se mueve)
+  const cambiarGrosor = (i: number, g: number) =>
+    aplicar((ts) =>
+      ts.map((t, j) => {
+        if (j !== i) return t
+        const ext = [t.x1 - t.x0, t.y1 - t.y0, t.z1 - t.z0]
+        const k = ext.indexOf(Math.min(...ext))
+        const lo = (["x0", "y0", "z0"] as const)[k], hi = (["x1", "y1", "z1"] as const)[k]
+        const haciaAbajo = t.rol === "puerta" || t.rol === "frente" // el frente crece hacia adelante (Y menor)
+        return haciaAbajo ? { ...t, [lo]: t[hi] - g } : { ...t, [hi]: t[lo] + g }
+      }),
+    )
 
   const areaM2 = useMemo(() => {
     let a = 0
@@ -300,12 +355,69 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
             </button>
           ))}
         </div>
+        <span className="text-[12px] font-semibold text-[#C9D2E0]">Componentes</span>
+        <div className="grid grid-cols-3 gap-2">
+          {([["puerta", "Puerta"], ["puertas", "2 puertas"], ["cajon", "Cajón"], ["fondo", "Fondo"], ["cubierta", "Cubierta"]] as const).map(([t, n]) => (
+            <button key={t} type="button" onClick={() => agregarComp(t)} className="rounded-[8px] bg-[#2A1C12] px-2 py-2 text-[12.5px] font-semibold text-white ring-1 ring-[#5A3A1E] hover:ring-[#C2560A]">
+              + {n}
+            </button>
+          ))}
+        </div>
+        <span className="text-[11.5px] text-[#8A97AB]">Puertas y cajones llenan el hueco donde tocaste: sobrepuestos, con bisagras de cazoleta o correderas. El fondo y la cubierta cubren todo el mueble.</span>
         {selT && sel !== null && (
           <div className="flex flex-col gap-2 rounded-[10px] border border-[#C2560A] bg-[#1A1410] p-2.5">
             <div className="flex items-center justify-between gap-2 text-[12.5px]">
               <b className="truncate text-white">{selT.nombre}</b>
               <span className="text-[#C9D2E0]">{Math.round(selT.x1 - selT.x0)} × {Math.round(selT.y1 - selT.y0)} × {Math.round(selT.z1 - selT.z0)} mm</span>
             </div>
+            <label className="flex items-center justify-between gap-2 text-[12px] text-[#C9D2E0]">
+              Es
+              <select value={selT.rol || "estructura"} onChange={(e) => aplicar((ts) => ts.map((t, j) => (j === sel ? { ...t, rol: e.target.value as Rol } : t)))} className="rounded-[7px] border border-[#2A3546] bg-[#0B0F15] px-2 py-1 text-[12.5px] text-white">
+                {ROLES.map((r) => (
+                  <option key={r.id} value={r.id}>{r.nombre}</option>
+                ))}
+              </select>
+            </label>
+            {selT.rol && selT.rol !== "estructura" && (
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-1 text-[12px] text-[#C9D2E0]">
+                  Material
+                  <select value={selT.material || PREDETERMINADO[selT.rol as Exclude<Rol, "estructura">]?.material || material} onChange={(e) => aplicar((ts) => ts.map((t, j) => (j === sel ? { ...t, material: e.target.value } : t)))} className="rounded-[7px] border border-[#2A3546] bg-[#0B0F15] px-2 py-1 text-[12.5px] text-white">
+                    {MATERIALES.map((x) => (
+                      <option key={x.id} value={x.id}>{x.nombre}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-[12px] text-[#C9D2E0]">
+                  Grosor
+                  <select value={String(Math.round(Math.min(selT.x1 - selT.x0, selT.y1 - selT.y0, selT.z1 - selT.z0)))} onChange={(e) => cambiarGrosor(sel, Number(e.target.value))} className="rounded-[7px] border border-[#2A3546] bg-[#0B0F15] px-2 py-1 text-[12.5px] text-white">
+                    {[...new Set([...materialDe(selT.material || PREDETERMINADO[selT.rol as Exclude<Rol, "estructura">]?.material || material).grosores, Math.round(Math.min(selT.x1 - selT.x0, selT.y1 - selT.y0, selT.z1 - selT.z0))])].sort((a, b) => a - b).map((g) => (
+                      <option key={g} value={g}>{g} mm</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+            {selT.rol === "puerta" && (
+              <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+                Bisagras:
+                {([["izq", "Izquierda"], ["der", "Derecha"], ["arriba", "Arriba"]] as const).map(([b, n]) => (
+                  <button key={b} type="button" aria-pressed={(selT.bisagra || "izq") === b} onClick={() => aplicar((ts) => ts.map((t, j) => (j === sel ? { ...t, bisagra: b } : t)))} className={`rounded-[6px] px-2 py-1 font-semibold ${(selT.bisagra || "izq") === b ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            )}
+            {(selT.rol === "puerta" || selT.rol === "frente") && (
+              <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+                Jaladera:
+                {[0, 96, 128, 160].map((j) => (
+                  <button key={j} type="button" aria-pressed={(selT.jaladera || 0) === j} onClick={() => aplicar((ts) => ts.map((t, k) => (k === sel ? { ...t, jaladera: j } : t)))} className={`rounded-[6px] px-2 py-1 font-semibold ${(selT.jaladera || 0) === j ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                    {j ? `${j} mm` : "Sin"}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-1.5 text-[12px]">
               {([[0, "←", -10], [0, "→", 10], [2, "↑", 10], [2, "↓", -10], [1, "Al frente", -10], [1, "Atrás", 10]] as const).map(([eje, t, d]) => (
                 <button key={t} type="button" onClick={() => aplicar((ts) => mover(ts, sel, [eje === 0 ? d : 0, eje === 1 ? d : 0, eje === 2 ? d : 0]))} className="rounded-[7px] bg-[#1C2431] px-1.5 py-1.5 font-semibold text-[#C9D2E0] hover:bg-[#243045]" title={`Mover 10 mm`}>
@@ -435,6 +547,15 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
                 <span>
                   {acomodo.piezas} piezas en <b className="text-white">{acomodo.hojas.length} {acomodo.hojas.length === 1 ? "hoja" : "hojas"}</b> de {hoja.largo} × {hoja.ancho} mm · aprovechamiento <b className="text-white">{Math.round(acomodo.aprovechamiento * 100)}%</b>
                 </span>
+                {acomodo.grupos.length > 1 && (
+                  <ul className="m-0 list-none p-0 text-[12px]">
+                    {acomodo.grupos.map((g) => (
+                      <li key={g.nombre}>
+                        {g.nombre}: <b className="text-white">{g.r.hojas.length} {g.r.hojas.length === 1 ? "hoja" : "hojas"}</b>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {acomodo.noCaben.length > 0 && (
                   <span className="text-[#F6B8AE]">
                     No caben: {acomodo.noCaben.slice(0, 3).join(", ")}{acomodo.noCaben.length > 3 ? "…" : ""}. {conVeta ? "Prueba con su veta libre o " : ""}Elige una hoja más grande.
@@ -448,6 +569,23 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
             <span className="text-[12px] text-[#8A97AB]">En «Piezas 2D» ves las hojas; la descarga DXF, SVG o PDF sale ya acomodada.</span>
           </>
         )}
+      </Seccion>
+
+      <Seccion titulo="Material y patas">
+        <select value={material} onChange={(e) => { setMaterial(e.target.value); const g = materialDe(e.target.value).grosores; if (!g.includes(numero(v.grosor))) setV((x) => ({ ...x, grosor: String(g.includes(18) ? 18 : g[g.length - 1]) })) }} className="rounded-[8px] border border-[#2A3546] bg-[#0B0F15] px-2.5 py-2 text-[13px] text-white" aria-label="Material de la estructura">
+          {MATERIALES.map((x) => (
+            <option key={x.id} value={x.id}>{x.nombre}</option>
+          ))}
+        </select>
+        <div className="flex flex-wrap gap-1.5">
+          {materialDe(material).grosores.map((g) => (
+            <button key={g} type="button" aria-pressed={numero(v.grosor) === g} onClick={() => setV((x) => ({ ...x, grosor: String(g) }))} className={`rounded-[7px] px-2 py-1 text-[12px] font-semibold ${numero(v.grosor) === g ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+              {g} mm
+            </button>
+          ))}
+        </div>
+        <CampoNum etiqueta="Patas (alto, 0 = sin patas)" valor={patas} cambiar={setPatas} sufijo="mm" />
+        <span className="text-[12px] text-[#8A97AB]">Material de la estructura. Puertas, frentes, fondo y cubierta pueden llevar otro: selecciónalos en el 3D.{materialDe(material).canto ? " Lleva canto de PVC en las orillas del frente." : ""}</span>
       </Seccion>
 
       <Seccion titulo="Tablero y máquina">
@@ -521,7 +659,8 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     <Visor3D oscuro alto="h-full min-h-[260px]">
       {m.piezas.length ? (
         <Mueble3D
-          piezas={m.piezas}
+          piezas={piezas3D}
+          accesorios={m.accesorios}
           sueltos={m.sueltos.map(cajaVista)}
           seleccion={sel}
           explotar={explotar}

@@ -23,6 +23,8 @@ type Eje = 0 | 1 | 2
 type Pt = [number, number, number]
 export type PiezaVista = PiezaEnsamble & {
   indice: number
+  color?: string // color del material (si no, uno por tipo de pieza)
+  veta?: boolean
   // herrajes (opcional): barrenos de cara y de canto, en coordenadas de la pieza
   barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]
   cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[]
@@ -62,6 +64,18 @@ function herrajes(p: PiezaVista): THREE.Object3D[] {
   return out
 }
 export type CajaVista = { lo: Pt; hi: Pt }
+// patas y jaladeras (de catálogo): sólo se dibujan
+export type AccesorioVista = { tipo: "pata"; x: number; y: number; z0: number; z1: number; d: number } | { tipo: "jaladera"; a: Pt; b: Pt; sale: Pt }
+const MAT_METAL = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.7, roughness: 0.35 })
+const MAT_PATA = new THREE.MeshStandardMaterial({ color: 0x2a2d31, metalness: 0.3, roughness: 0.6 })
+function cilindroEntre(a: THREE.Vector3, b: THREE.Vector3, r: number, mat: THREE.Material) {
+  const d = b.clone().sub(a)
+  const m = new THREE.Mesh(CILINDRO, mat)
+  m.position.copy(a.clone().add(b).multiplyScalar(0.5))
+  m.scale.set(r, d.length(), r)
+  m.quaternion.setFromUnitVectors(EJE_Y, d.normalize())
+  return m
+}
 
 const COLOR: Record<string, number> = { lateral: 0xd6b48a, horizontal: 0xe8cfa6, frontal: 0xc7a175 }
 const SELECCION = 0xff8a3d
@@ -94,6 +108,7 @@ async function geometrias(piezas: PiezaVista[]) {
 export default function Mueble3D({
   piezas,
   sueltos = [],
+  accesorios = [],
   seleccion,
   explotar = 0,
   rayosX = false,
@@ -106,6 +121,7 @@ export default function Mueble3D({
 }: {
   piezas: PiezaVista[]
   sueltos?: CajaVista[] // tableros que no tocan al mueble (se muestran en rojo)
+  accesorios?: AccesorioVista[]
   seleccion: number | null // índice de la pieza
   explotar?: number // 0 a 1
   rayosX?: boolean
@@ -305,10 +321,11 @@ export default function Mueble3D({
       s.lineas = []
       geos.forEach((g, i) => {
         const p = piezas[i]
-        const mat = new THREE.MeshStandardMaterial({ color: COLOR[p.plano] ?? 0xd8b98e, roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+        const mat = new THREE.MeshStandardMaterial({ color: p.color ? new THREE.Color(p.color) : (COLOR[p.plano] ?? 0xd8b98e), roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
         const m = new THREE.Mesh(g, mat)
         m.userData.indice = p.indice
         m.userData.plano = p.plano
+        m.userData.color = p.color ? new THREE.Color(p.color).getHex() : (COLOR[p.plano] ?? 0xd8b98e)
         const l = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), new THREE.LineBasicMaterial({ color: 0x2b1d10 }))
         m.add(l)
         for (const h of herrajes(p)) {
@@ -327,6 +344,19 @@ export default function Mueble3D({
         caja.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
         s.extras.add(caja)
       }
+      // patas y jaladeras
+      for (const ac of accesorios) {
+        if (ac.tipo === "pata") s.extras.add(cilindroEntre(aThree([ac.x, ac.y, ac.z0]), aThree([ac.x, ac.y, ac.z1]), ac.d / 2, MAT_PATA))
+        else {
+          const a = aThree(ac.a), b = aThree(ac.b)
+          const sale = aThree(ac.sale).sub(aThree([0, 0, 0]))
+          const a2 = a.clone().add(sale), b2 = b.clone().add(sale)
+          s.extras.add(cilindroEntre(a, a2, 5, MAT_METAL), cilindroEntre(b, b2, 5, MAT_METAL))
+          const largo = b2.clone().sub(a2)
+          const ext = largo.clone().normalize().multiplyScalar(25)
+          s.extras.add(cilindroEntre(a2.clone().sub(ext), b2.clone().add(ext), 6, MAT_METAL))
+        }
+      }
       const caja = new THREE.Box3().setFromObject(s.grupo)
       s.centro = caja.getCenter(new THREE.Vector3())
       if (!s.encuadrado) encuadrar()
@@ -335,7 +365,7 @@ export default function Mueble3D({
     return () => {
       vivo = false
     }
-  }, [piezas, sueltos]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [piezas, sueltos, accesorios]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const encuadrar = () => {
     const s = st.current
@@ -367,10 +397,12 @@ export default function Mueble3D({
     if (!s) return
     const caja = new THREE.Box3().setFromObject(s.grupo)
     const tam = caja.getSize(new THREE.Vector3())
+    // las patas y jaladeras no se separan: se esconden al explotar
+    s.extras.visible = explotar === 0
     for (const m of s.mallas) {
       const mat = m.material as THREE.MeshStandardMaterial
       const sel = m.userData.indice === seleccion
-      mat.color.setHex(sel ? SELECCION : (COLOR[m.userData.plano] ?? 0xd8b98e))
+      mat.color.setHex(sel ? SELECCION : m.userData.color)
       mat.emissive.setHex(sel ? 0x401800 : 0x000000)
       const transparente = rayosX && !sel
       mat.transparent = transparente
