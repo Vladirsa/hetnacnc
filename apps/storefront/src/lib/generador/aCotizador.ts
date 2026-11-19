@@ -15,23 +15,118 @@ const aBase64 = (buf: ArrayBuffer) => {
   return btoa(s)
 }
 
-// Devuelve false si el archivo es muy grande o el navegador no deja guardarlo
-export function mandarACotizador(nombre: string, contenido: string | ArrayBuffer, locale: string): boolean {
+// ---------- Paquete de cotización ----------
+// Lo que el cliente ya hizo en la herramienta llega completo al Cotizador:
+// una o varias piezas (cada una con su cantidad), el servicio, el material y
+// una nota. El Cotizador (public/hetna-cotizador/app.html, mismo sitio) lo lee
+// de IndexedDB al abrir, precarga todo y cotiza el proyecto completo.
+// Las claves deben coincidir con PAQ en hetna/cotizador/app.js.
+const PAQ_DB = "hetna-cotizador-paquete"
+const PAQ_ALMACEN = "paquetes"
+const PAQ_CLAVE = "pendiente"
+const PAQ_MARCA = "hetna-paquete-pendiente"
+const PAQ_MAXIMO = 100 * 1024 * 1024
+
+export type PiezaPaquete = { nombre: string; contenido: string | ArrayBuffer; cantidad?: number }
+/** Claves de servicio, tipo y material como en hetna/cotizador/datos.json; lo que no exista ahí se ignora. */
+export type ContextoCotizacion = {
+  servicio?: "laser_co2" | "plasma" | "router" | "impresion_3d" | "carpinteria" | "laser_fibra" | "herreria"
+  tipo?: string
+  material?: string
+  opciones?: { materialImpresion?: "pla" | "abs" | "petg" | "tpu"; materialLaser?: "mdf_fino" | "mdf_medio" | "otros" }
+  juegos?: number
+  nota?: string
+}
+export type PaqueteCotizacion = ContextoCotizacion & { proyecto: string; origen: string; piezas: PiezaPaquete[] }
+
+/** Material de láser CO2 del cotizador según el espesor de MDF (mm). */
+/** Material del router en el cotizador: el MDF de lista más cercano al espesor (mm). */
+export const materialRouterMDF = (mm: number) => `MDF ${[3, 9, 15, 18].reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))}mm`
+
+export const materialLaserPorEspesor = (mm: number): "mdf_fino" | "mdf_medio" | "otros" => (mm <= 4.5 ? "mdf_fino" : mm <= 7.5 ? "mdf_medio" : "otros")
+
+function guardarPaquete(p: PaqueteCotizacion & { t: number }): Promise<boolean> {
+  return new Promise((ok) => {
+    try {
+      const r = indexedDB.open(PAQ_DB, 1)
+      r.onupgradeneeded = () => r.result.createObjectStore(PAQ_ALMACEN)
+      r.onerror = () => ok(false)
+      r.onsuccess = () => {
+        const db = r.result
+        try {
+          const tx = db.transaction(PAQ_ALMACEN, "readwrite")
+          tx.objectStore(PAQ_ALMACEN).put(p, PAQ_CLAVE)
+          tx.oncomplete = () => { db.close(); ok(true) }
+          tx.onerror = () => { db.close(); ok(false) }
+          tx.onabort = () => { db.close(); ok(false) }
+        } catch {
+          db.close()
+          ok(false)
+        }
+      }
+    } catch {
+      ok(false)
+    }
+  })
+}
+
+/**
+ * Manda el proyecto al Cotizador y lo abre. Devuelve false (sin navegar) si es
+ * muy grande o el navegador no deja guardarlo; si no, navega cuando ya quedó
+ * guardado. Nada se sube a un servidor.
+ */
+export function mandarPaqueteACotizador(paquete: PaqueteCotizacion, locale: string): boolean {
+  const piezas = paquete.piezas.filter((p) => p.contenido && (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength) > 0)
+  if (!piezas.length) return false
+  const total = piezas.reduce((s, p) => s + (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength), 0)
+  if (total > PAQ_MAXIMO || typeof indexedDB === "undefined") return false
+  const t = Date.now()
   try {
-    const binario = typeof contenido !== "string"
-    const datos = binario ? aBase64(contenido as ArrayBuffer) : (contenido as string)
-    if (datos.length > MAXIMO) return false
-    const p: Pendiente = { nombre, datos, binario, t: Date.now() }
-    sessionStorage.setItem(CLAVE, JSON.stringify(p))
+    sessionStorage.removeItem(CLAVE) // que no se cargue también un archivo suelto viejo
+    sessionStorage.removeItem(PAQ_MARCA)
   } catch {
     return false
   }
-  window.location.href = `/${locale}/servicios/cotizador-cnc?archivo=generador`
+  const guardado = {
+    ...paquete,
+    t,
+    piezas: piezas.map((p) => ({ nombre: p.nombre, cantidad: Math.max(1, Math.round(p.cantidad || 1)), contenido: new Blob([p.contenido]) })),
+  }
+  void guardarPaquete(guardado as unknown as PaqueteCotizacion & { t: number }).then((ok) => {
+    if (ok) {
+      try {
+        sessionStorage.setItem(PAQ_MARCA, JSON.stringify({ t, proyecto: paquete.proyecto }))
+      } catch {
+        /* sin marca el Cotizador abre con su ejemplo */
+      }
+    } else if (piezas.length === 1) {
+      // Sin IndexedDB: una pieza chica todavía cabe por el camino de antes
+      const c = piezas[0].contenido
+      const binario = typeof c !== "string"
+      const datos = binario ? aBase64(c as ArrayBuffer) : (c as string)
+      if (datos.length <= MAXIMO) {
+        try {
+          sessionStorage.setItem(CLAVE, JSON.stringify({ nombre: piezas[0].nombre, datos, binario, t } satisfies Pendiente))
+        } catch {
+          /* se abre el Cotizador vacío */
+        }
+      }
+    }
+    window.location.href = `/${locale}/servicios/cotizador-cnc?archivo=generador`
+  })
   return true
+}
+
+// Un solo archivo, con lo que la herramienta sepa del trabajo (servicio, material...)
+export function mandarACotizador(nombre: string, contenido: string | ArrayBuffer, locale: string, contexto: ContextoCotizacion & { origen?: string; cantidad?: number } = {}): boolean {
+  const { origen = "", cantidad = 1, ...resto } = contexto
+  return mandarPaqueteACotizador({ ...resto, proyecto: nombre.replace(/\.[^.]+$/, ""), origen, piezas: [{ nombre, contenido, cantidad }] }, locale)
 }
 
 export function hayArchivoPendiente(): boolean {
   try {
+    const marca = JSON.parse(sessionStorage.getItem(PAQ_MARCA) || "null") as { t: number } | null
+    if (marca && Date.now() - marca.t < 30 * 60 * 1000) return true
     const p = JSON.parse(sessionStorage.getItem(CLAVE) || "null") as Pendiente | null
     return !!p && Date.now() - p.t < VIGENCIA
   } catch {

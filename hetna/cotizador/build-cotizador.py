@@ -17,6 +17,7 @@ pagina = leer("plantilla.html")
 partes = {
     "__DATOS__": leer("datos.json"),
     "__ENGINE__": leer("engine.js") + "\nconst calcular_hetna = calcular;\n",
+    "__PROYECTO__": leer("proyecto.js"),
     "__GEO__": leer("geo.js"),
     "__EJEMPLOS__": leer("ejemplos.js"),
     "__APP__": leer("app.js"),
