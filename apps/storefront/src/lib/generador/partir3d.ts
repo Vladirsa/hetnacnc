@@ -23,9 +23,13 @@ export type OpcionesPartir = {
   holgura: number // juego radial (mm)
   imanD: number
   imanH: number
+  /** Conectores por unión (cada cara de corte de cada pieza). 0 = automático según el tamaño de la cara. */
+  porUnion?: number
 }
 export type Pieza = { nombre: string; malla: Malla; tam: [number, number, number] }
-export type Resultado = { piezas: Pieza[]; conectores: number; perno: Malla | null; pernoLargo: number; avisos: string[] }
+/** Dónde quedó cada conector (para dibujarlo): centro en el plano del corte, eje del corte y medio largo. */
+export type Marca = { p: [number, number, number]; eje: Eje; radio: number; mitad: number }
+export type Resultado = { piezas: Pieza[]; conectores: number; perno: Malla | null; pernoLargo: number; avisos: string[]; marcas: Marca[]; uniones: number }
 
 export const OPCIONES_BASE: Omit<OpcionesPartir, "cortes"> = { conector: "pernos", diametro: 5, largo: 12, holgura: 0.2, imanD: 6, imanH: 3 }
 // mismo nombre que copia scripts/copiar-wasm-replicad.mjs (versión de manifold-3d en package.json)
@@ -142,12 +146,15 @@ function dentro(px: number, py: number, polis: [number, number][][]) {
 }
 
 /** Puntos para conectores en una sección (u, v): dentro del material, separados entre sí. */
-function puntosConector(seccion: any, radio: number, separacion: number, evitar: (u: number, v: number) => boolean): [number, number][] {
+function puntosConector(seccion: any, radio: number, separacion: number, evitar: (u: number, v: number) => boolean, porUnion = 0): { puntos: [number, number][]; faltaron: number } {
   const out: [number, number][] = []
+  let faltaron = 0
   for (const region of seccion.decompose()) {
     const area = region.area()
-    const chica = region.offset(-(radio + PARED), "Round")
-    if (chica.isEmpty()) continue
+    // con espacio, 4 mm de pared alrededor del agujero; si no cabe, el mínimo de 2 mm
+    let chica = region.offset(-(radio + 2 * PARED), "Round")
+    if (chica.isEmpty() || chica.area() < 1) chica = region.offset(-(radio + PARED), "Round")
+    if (chica.isEmpty()) { if (porUnion > 0) faltaron += porUnion; continue }
     const polis = chica.toPolygons() as [number, number][][]
     const b = chica.bounds()
     const pasos = 18
@@ -159,8 +166,8 @@ function puntosConector(seccion: any, radio: number, separacion: number, evitar:
         if (dentro(u, v, polis) && !evitar(u, v)) cand.push([u, v])
       }
     }
-    if (!cand.length) continue
-    const quiero = area < 900 ? 1 : area < 4000 ? 2 : area < 12000 ? 3 : 4
+    if (!cand.length) { if (porUnion > 0) faltaron += porUnion; continue }
+    const quiero = porUnion > 0 ? porUnion : area < 900 ? 1 : area < 4000 ? 2 : area < 12000 ? 3 : 4
     // el primero, el más cercano al centro de la región encogida; luego, el más lejos de los ya elegidos
     const cu = (b.min[0] + b.max[0]) / 2, cv = (b.min[1] + b.max[1]) / 2
     cand.sort((p, q) => Math.hypot(p[0] - cu, p[1] - cv) - Math.hypot(q[0] - cu, q[1] - cv))
@@ -177,13 +184,15 @@ function puntosConector(seccion: any, radio: number, separacion: number, evitar:
           const d = Math.min(...elegidos.map((e) => Math.hypot(c[0] - e[0], c[1] - e[1])))
           if (d > dMejor) { dMejor = d; mejor = c }
         }
-        if (!mejor || dMejor < separacion) break
+        // con número fijo se acepta menos separación (hasta tocar pared con pared)
+        if (!mejor || dMejor < (porUnion > 0 ? 2 * radio + PARED : separacion)) break
         elegidos.push(mejor)
       }
     }
+    if (porUnion > 0) faltaron += Math.max(0, porUnion - elegidos.length)
     out.push(...elegidos)
   }
-  return out
+  return { puntos: out, faltaron }
 }
 
 /** Parte la malla con los cortes y pone los conectores. */
@@ -220,6 +229,9 @@ export async function partir(m: Malla, op: OpcionesPartir): Promise<Resultado> {
     let piezas: any[] = [todo]
     let conectores = 0
     let sinConector = 0
+    let faltaron = 0
+    let uniones = 0
+    const marcas: Marca[] = []
     const seg = 24
     for (const c of cortes) {
       const otros = cortes.filter((d) => d.eje !== c.eje)
@@ -238,9 +250,13 @@ export async function partir(m: Malla, op: OpcionesPartir): Promise<Resultado> {
             const q = a3D(c.eje, u, v, c.pos)
             return otros.some((d) => Math.abs(q[d.eje] - d.pos) < rAguj + PARED)
           }
-          const puntos = puntosConector(seccion, rAguj, Math.max(3 * rAguj * 2, 15), evitar)
+          const lugar = puntosConector(seccion, rAguj, Math.max(3 * rAguj * 2, 15), evitar, Math.max(0, Math.round(op.porUnion || 0)))
+          const puntos = lugar.puntos
+          faltaron += lugar.faltaron
+          uniones++
           if (!puntos.length) sinConector++
           for (const [u, v] of puntos) {
+            marcas.push({ p: a3D(c.eje, u, v, c.pos), eje: c.eje, radio: rAguj, mitad: op.conector === "integrado" ? mitad : imanes ? mitad : mitad + 0.4 })
             // cilindro a lo largo del eje del corte, centrado en el plano
             const cil = (r: number, largo: number, desde: number) => {
               const z = guarda(Manifold.cylinder(largo, r, r, seg, false))
@@ -301,9 +317,10 @@ export async function partir(m: Malla, op: OpcionesPartir): Promise<Resultado> {
       const punta2 = guarda(Manifold.cylinder(0.5, r, r - 0.4, seg, false).translate([0, 0, 2 * mitad - 0.5]))
       perno = aMalla(guarda(Manifold.union([cuerpo, punta1, punta2])))
     }
+    if (conConector && faltaron > 0 && conectores) avisos.push(`No cupieron todos los ${imanes ? "imanes" : "pernos"} que pediste por unión: faltaron ${faltaron}. La cara es chica para ${imanes ? "ese imán" : `pernos de ${op.diametro} mm`} con 2 mm de pared; baja el número o el diámetro.`)
     if (conConector && !conectores) avisos.push(`Las paredes son muy delgadas para ${imanes ? "estos imanes" : `pernos de ${op.diametro} mm`} (necesitan ${r1(2 * (rAguj + PARED))} mm de grosor): las caras quedaron planas para pegar. Prueba ${imanes ? "imanes más chicos" : "un diámetro menor"}.`)
     else if (conConector && sinConector) avisos.push(`${sinConector === 1 ? "Una unión quedó" : `${sinConector} uniones quedaron`} sin conector porque la pared es delgada (necesitan ${r1(2 * (rAguj + PARED))} mm de grosor): pégalas o prueba ${imanes ? "imanes más chicos" : "un diámetro menor"}.`)
-    return { piezas: res, conectores, perno, pernoLargo, avisos }
+    return { piezas: res, conectores, perno, pernoLargo, avisos, marcas, uniones }
   } finally {
     for (const x of basura) { try { x?.delete?.() } catch {} }
   }
