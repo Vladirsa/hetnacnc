@@ -70,7 +70,7 @@ export const EXHIBIDOR_INICIO: OpcionesExhibidor = {
 
 export type Mueble = {
   piezas: PiezaEnsamble[]
-  compras: { nombre: string; cantidad: number; nota?: string }[]
+  compras: { nombre: string; cantidad: number; nota?: string; precio?: number }[]
   medidas: { ancho: number; fondo: number; alto: number }
   errores: string[]
   avisos: string[]
