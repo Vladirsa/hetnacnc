@@ -88,6 +88,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .medida { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
 .medida small { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .medida b { font-family: var(--font-mono); font-weight: 500; font-size: 16px; font-variant-numeric: tabular-nums; }
+.proyecto { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.proyecto-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.proyecto-h b { font-size: 15px; }
+.proyecto-h small, .proyecto-nota { color: var(--muted); font-size: 12.5px; }
+.piezas { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow: auto; }
+.pieza { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; text-align: left; }
+.pieza[aria-current="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.pieza > button { all: unset; cursor: pointer; min-width: 0; }
+.pieza > button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; border-radius: 4px; }
+.pieza .pn { font-family: var(--font-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+.pieza .pm { display: block; color: var(--muted); font-size: 11.5px; font-family: inherit; }
+.pieza input { width: 54px; min-height: 34px; padding: 4px 6px; text-align: center; }
+.pieza .pp { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; min-width: 74px; text-align: right; }
 .archivo-nombre { font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
 .aviso { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--warn-soft); color: var(--warn); }
 .aviso.ok { background: var(--ok-soft); color: var(--ok); }
@@ -219,6 +232,7 @@ details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
             <div class="ayuda" id="sim-tiempo"></div>
           </div>
         </div>
+        <div class="proyecto" id="proyecto" hidden></div>
         <div class="archivo-nombre" id="archivo-nombre"></div>
         <div class="medidas" id="medidas"></div>
         <div class="campos">
@@ -250,7 +264,7 @@ details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
       <div class="campos" id="campos-medidas"></div>
       <div class="campos">
         <div class="campo">
-          <label for="cantidad">Cantidad de piezas</label>
+          <label for="cantidad" id="lbl-cantidad">Cantidad de piezas</label>
           <div class="contador"><button type="button" id="menos" aria-label="Menos piezas">−</button><input id="cantidad" type="number" min="1" step="1" value="1" inputmode="numeric"><button type="button" id="mas" aria-label="Más piezas">+</button></div>
         </div>
         <div class="campo" id="campo-material"><label for="material">Material</label><select id="material"></select></div>
@@ -298,6 +312,7 @@ details.desglose summary { cursor: pointer; font-weight: 600; font-size: 14px; }
         <button class="btn primario" type="button" id="btn-guardar" style="flex:1">Guardar en historial</button>
       </div>
       <button class="btn bloque" type="button" id="btn-pdf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar PDF de la cotización</button>
+        <button class="btn bloque" type="button" id="btn-planos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg>Descargar planos y lista de corte (PDF)</button>
       <p class="ayuda">Descarga el PDF y mándalo por WhatsApp junto con el mensaje.</p>
       <details class="desglose"><summary>Ver el mensaje</summary><pre id="mensaje" style="white-space:pre-wrap;font-family:var(--font-body);font-size:14px;background:var(--surface-2);padding:10px;border-radius:10px;margin:8px 0 0"></pre></details>
     </section>
@@ -361,6 +376,12 @@ const DATOS = __DATOS__;
 </script>
 <script>
 __ENGINE__
+</script>
+<script>
+__PROYECTO__
+</script>
+<script>
+__PLANOS__
 </script>
 <script>
 __GEO__

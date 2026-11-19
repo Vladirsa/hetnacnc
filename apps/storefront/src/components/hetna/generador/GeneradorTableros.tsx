@@ -21,7 +21,8 @@ import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generado
 import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
-import { mandarACotizador } from "@/lib/generador/aCotizador"
+import { mandarPaqueteACotizador, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { listaCorte } from "@/lib/generador/planosTaller"
 import { tallerCargar } from "@/lib/taller/acciones"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
@@ -463,30 +464,22 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [avisoCotiz, setAvisoCotiz] = useState("")
   const cotizarMueble = () => {
     if (!m.piezas.length || m.errores.length) return
-    const grupos = new Map<string, number[]>()
-    m.piezas.forEach((p, i) => {
-      const k = `${p.material}|${Math.round(p.grosor * 10) / 10}`
-      grupos.set(k, [...(grupos.get(k) || []), i])
+    // piezas iguales juntas: cada una va con su DXF (sólo el corte) y su cantidad
+    const filas = listaCorte(m)
+    const piezasPaq = filas.map((f) => {
+      const p = m.piezas[f.nums[0] - 1]
+      const dib = dibujo(piezasTendidas([p]).filter((t) => t.capa === "corte"))
+      return { nombre: `${nombreArchivo(f.nombres[0])}-${f.largo}x${f.ancho}x${f.grosor}.dxf`, contenido: dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: "corte" })) }), cantidad: f.nums.length }
     })
-    const trazos: ReturnType<typeof acomodarEnTablero>["trazos"] = []
-    const hojasTxt: string[] = []
-    let dy = 0
-    for (const [k, idx] of grupos) {
-      const r = acomodarEnTablero(
-        idx.map((i) => ({ id: `p${i}`, nombre: m.piezas[i].nombre, trazos: piezasTendidas([m.piezas[i]]), veta: vetaDe(m.piezas[i].nombre), cantidad: 1 })),
-        { largo: hoja.largo, ancho: hoja.ancho, separacion, margen: Math.max(0, numero(ah.margen) || 0), conVeta, etiquetas: false, desde: 0 },
-      )
-      // sólo el corte: el cotizador mide área y metros de corte (los barrenos y las hojas no son corte)
-      for (const t of r.trazos) if (t.capa === "corte" || t.capa === "CORTE") trazos.push({ ...t, pts: t.pts.map(([x, y]) => [x, y + dy] as [number, number]) })
-      dy -= r.hojas.length * (hoja.ancho + 150) + 250
-      const [mat, g] = k.split("|")
-      hojasTxt.push(`${r.hojas.length} ${r.hojas.length === 1 ? "hoja" : "hojas"} de ${materialDe(mat).nombre} ${g} mm`)
-    }
+    const hojasTxt = costo.filas.map((f) => `${f.hojas} ${f.hojas === 1 ? "hoja" : "hojas"} de ${f.nombre}`)
     const herr = m.compras.filter((c) => !/^Canto/.test(c.nombre)).slice(0, 6).map((c) => `${c.cantidad} ${c.nombre}`)
     const nota = [`${nombre}: ${m.piezas.length} piezas, ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.fondo)} × ${Math.round(m.medidas.alto)} mm.`, `Material: ${hojasTxt.join(", ")}.`, m.cantoMetros ? `Canto: ${m.cantoMetros} m.` : "", herr.length ? `Herrajes: ${herr.join(", ")}.` : ""].filter(Boolean).join(" ")
-    const dib = dibujo(trazos)
-    const ok = mandarACotizador(`${nombreArchivo(nombre)}-${m.piezas.length}-piezas.dxf`, dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: "corte" })) }), locale, nota)
-    if (!ok) setAvisoCotiz("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en el cotizador.")
+    // si todo es MDF del mismo grosor, el cotizador ya sabe el material
+    const mats = new Set(m.piezas.map((p) => `${p.material}|${Math.round(p.grosor)}`))
+    const unico = mats.size === 1 ? [...mats][0].split("|") : null
+    const material = unico && unico[0].startsWith("mdf") ? materialRouterMDF(Number(unico[1])) : undefined
+    const ok = mandarPaqueteACotizador({ proyecto: nombre, origen: "muebles", servicio: "router", ...(material ? { material } : {}), nota: nota.slice(0, 900), piezas: piezasPaq }, locale)
+    if (!ok) setAvisoCotiz("El proyecto es muy grande para mandarlo así. Descarga los archivos y súbelos en el cotizador.")
   }
   // ---- precios: los del cotizador del taller llenan el costo del mueble ----
   const traerPreciosCotizador = async () => {
@@ -1315,7 +1308,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           <button type="button" disabled={!m.piezas.length || !!m.errores.length} onClick={cotizarMueble} className="rounded-[8px] bg-[#16794F] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#12623F] disabled:opacity-50">
             Cotizar con mi tarifa (Cotizador CNC)
           </button>
-          <span className="text-[11px] text-[#8A97AB]">Manda el mueble acomodado en hojas: el cotizador lo precia con tus tarifas (área y metros de corte reales), con el resumen de piezas, material y herrajes en la nota para el cliente, y lo guarda en tu historial.</span>
+          <span className="text-[11px] text-[#8A97AB]">Manda cada pieza con su cantidad: el cotizador precia el proyecto completo con tus tarifas, con el resumen de piezas, material y herrajes en la nota para el cliente, y lo guarda en tu historial.</span>
           {avisoCotiz && <span className="text-[12px] text-[#F6D58E]">{avisoCotiz}</span>}
         </div>
         {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}

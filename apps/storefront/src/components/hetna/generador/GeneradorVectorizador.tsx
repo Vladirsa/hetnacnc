@@ -404,7 +404,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                       <Boton
                         tipo="verde"
                         onClick={() => {
-                          if (!mandarACotizador(`${archivo}.dxf`, vectorDXF(res, anchoMM), locale))
+                          if (!mandarACotizador(`${archivo}.dxf`, vectorDXF(res, anchoMM), locale, { origen: "Vectorizador" }))
                             setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
                         }}
                       >
