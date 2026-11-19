@@ -97,6 +97,9 @@ const CORREOS: [string, string][] = [
   ["cot_prueba_4", "Quedan días de prueba"],
   ["cot_prueba_fin", "Terminó la prueba"],
   ["cot_limite", "Llegó a 5 cotizaciones"],
+  ["cot_sin_cotizar", "No ha cotizado (1 a 4 días)"],
+  ["cot_primera", "Mandó su primera cotización"],
+  ["cot_ganada", "Su cliente aprobó (ofrecer plan)"],
 ]
 
 // WhatsApp de México: 10 dígitos -> 52 + número

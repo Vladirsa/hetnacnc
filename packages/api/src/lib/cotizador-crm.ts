@@ -216,8 +216,31 @@ export async function panelVentas() {
 }
 
 // ── Correos ───────────────────────────────────────────────────────────────────────────
-export type TipoCorreoCot = "cot_bienvenida" | "cot_prueba_4" | "cot_prueba_fin" | "cot_limite"
-export const TIPOS_CORREO_COT: TipoCorreoCot[] = ["cot_bienvenida", "cot_prueba_4", "cot_prueba_fin", "cot_limite"]
+export type TipoCorreoCot = "cot_bienvenida" | "cot_prueba_4" | "cot_prueba_fin" | "cot_limite" | "cot_sin_cotizar" | "cot_primera" | "cot_ganada"
+export const TIPOS_CORREO_COT: TipoCorreoCot[] = ["cot_bienvenida", "cot_prueba_4", "cot_prueba_fin", "cot_limite", "cot_sin_cotizar", "cot_primera", "cot_ganada"]
+
+/** Lo que hizo cada taller con sus cotizaciones (para los mensajes según su uso). */
+export type Actividad = { total: number; enviadas: number; primeraEnviada: number | null; ganada: { fecha: number; total: number } | null }
+export async function actividadTalleres(ahora = Date.now()): Promise<Map<string, Actividad>> {
+  const desde = new Date(ahora - 60 * DIA).toISOString()
+  const filas = await supa<{ negocio_id: string; estado: string; total: number; created_at: string }[]>(
+    `/rest/v1/cotizaciones?select=negocio_id,estado,total,created_at&created_at=gte.${desde}&order=created_at.asc&limit=50000`
+  ).catch(() => [])
+  const m = new Map<string, Actividad>()
+  for (const f of filas) {
+    if (!f.negocio_id) continue
+    const a = m.get(f.negocio_id) || { total: 0, enviadas: 0, primeraEnviada: null, ganada: null }
+    a.total++
+    const t = Date.parse(f.created_at)
+    if (["Enviada", "Aprobada", "Pedido"].includes(f.estado)) {
+      a.enviadas++
+      if (a.primeraEnviada === null) a.primeraEnviada = t
+    }
+    if (["Aprobada", "Pedido"].includes(f.estado) && (!a.ganada || t > a.ganada.fecha)) a.ganada = { fecha: t, total: Number(f.total || 0) }
+    m.set(f.negocio_id, a)
+  }
+  return m
+}
 
 const utm = (tipo: TipoCorreoCot, extra = "") =>
   `${APP}?${extra ? `${extra}&` : ""}utm_source=email&utm_medium=automatico&utm_campaign=${tipo}`
@@ -237,7 +260,7 @@ const LO_DEL_TALLER = () => [
 
 export function correoCotizador(
   tipo: TipoCorreoCot,
-  d: { nombre?: string | null; dias?: number; usadas?: number }
+  d: { nombre?: string | null; dias?: number; usadas?: number; monto?: number }
 ): { asunto: string; html: string } {
   const precio = `$${TALLER()}`
   switch (tipo) {
@@ -285,6 +308,47 @@ export function correoCotizador(
             boton("Recuperar mi plan", utm(tipo, "planes=1"))
         ),
       }
+    case "cot_sin_cotizar":
+      return {
+        asunto: "Tu primera cotización en 3 minutos",
+        html: marco(
+          "Manda tu primera cotización hoy",
+          p(`${hola(d.nombre)} ya tienes tu taller en el Cotizador, pero todavía no has cotizado. La primera es la que más cuesta; aquí va el camino corto:`) +
+            `<ol style="margin:0 0 12px;padding-left:20px;color:#40403A;line-height:1.6">` +
+            `<li>Toca <b>Cotizar</b> y escribe la pieza y sus medidas (o sube el DXF/STL).</li>` +
+            `<li>Elige el material: el sistema calcula 3 precios con tus costos.</li>` +
+            `<li>Toca <b>WhatsApp</b>: a tu cliente le llega un PDF profesional.</li>` +
+            `</ol>` +
+            p("Mándatela a ti mismo primero para ver cómo la recibe tu cliente.") +
+            boton("Hacer mi primera cotización", utm(tipo))
+        ),
+      }
+    case "cot_primera":
+      return {
+        asunto: "¡Tu primera cotización ya salió! Lo que sigue",
+        html: marco(
+          "Ya mandaste tu primera cotización",
+          p(`${hola(d.nombre)} ¡bien! Tu taller ya cotiza como profesional. Para que esa cotización se convierta en pedido:`) +
+            lista([
+              "<b>Da seguimiento</b>: si en 2 días no contesta, la app te recuerda escribirle (Alertas).",
+              "<b>Pide anticipo</b> con la liga de pago: tu cliente paga con tarjeta, OXXO o transferencia.",
+              "<b>Pon tu logo</b> en Configuración para que el PDF lleve tu marca.",
+            ]) +
+            boton("Ver mis cotizaciones", utm(tipo))
+        ),
+      }
+    case "cot_ganada": {
+      const monto = d.monto ? `$${Math.round(d.monto).toLocaleString("es-MX")}` : ""
+      return {
+        asunto: monto ? `Tu cliente aprobó: ${monto} con HETNA` : "Tu cliente aprobó tu cotización",
+        html: marco(
+          monto ? `Ganaste un trabajo de ${monto}` : "Ganaste un trabajo",
+          p(`${hola(d.nombre)} tu cliente aprobó la cotización${monto ? ` de <b>${monto}</b>` : ""}. ¡Felicidades!`) +
+            p(`Con el plan <b>Taller</b> (${precio} al mes, menos de lo que te deja una sola pieza) cotizas sin límite, tu PDF sale con tu logo y sin marca de agua, y llevas el costo real y la utilidad de cada pedido.`) +
+            boton("Pasarme al plan Taller", utm(tipo, "planes=1"))
+        ),
+      }
+    }
     case "cot_limite":
       return {
         asunto: `Ya usaste tus ${LIMITE_GRATIS} cotizaciones gratis de este mes`,
@@ -299,10 +363,10 @@ export function correoCotizador(
   }
 }
 
-export type CandidatoCot = { tipo: TipoCorreoCot; ref: string; correo: string; nombre: string | null; dias?: number; usadas?: number }
+export type CandidatoCot = { tipo: TipoCorreoCot; ref: string; correo: string; nombre: string | null; dias?: number; usadas?: number; monto?: number; negocio?: string }
 
 /** A quién le toca qué correo hoy (sin revisar bajas ni lo ya enviado). */
-export function candidatosCotizador(talleres: Taller[], cots: Map<string, number>, ahora = Date.now()): CandidatoCot[] {
+export function candidatosCotizador(talleres: Taller[], cots: Map<string, number>, ahora = Date.now(), act: Map<string, Actividad> = new Map()): CandidatoCot[] {
   const mes = inicioDeMes(new Date(ahora)).toISOString().slice(0, 7)
   const out: CandidatoCot[] = []
   for (const t of talleres) {
@@ -320,19 +384,27 @@ export function candidatosCotizador(talleres: Taller[], cots: Map<string, number
       out.push({ ...base, tipo: "cot_prueba_4", ref: `${t.id}:${t.trial_hasta?.slice(0, 10)}`, dias: Math.ceil(d) })
     if (enPruebaOFin && d !== null && d <= 0 && d > -3)
       out.push({ ...base, tipo: "cot_prueba_fin", ref: `${t.id}:${t.trial_hasta?.slice(0, 10)}` })
+    // Según lo que hizo (o no hizo) con sus cotizaciones
+    const a = act.get(t.id)
+    if (reg && ahora - reg.getTime() >= 1 * DIA && ahora - reg.getTime() <= 4 * DIA && !(a?.total))
+      out.push({ ...base, tipo: "cot_sin_cotizar", ref: t.id, negocio: t.id })
+    if (a?.primeraEnviada && ahora - a.primeraEnviada <= 3 * DIA)
+      out.push({ ...base, tipo: "cot_primera", ref: t.id, negocio: t.id })
+    if (a?.ganada && ahora - a.ganada.fecha <= 3 * DIA && !pagaSuscripcion(t))
+      out.push({ ...base, tipo: "cot_ganada", ref: t.id, monto: a.ganada.total, negocio: t.id })
     const usadas = cots.get(t.id) || 0
     if (plan === "gratis" && usadas >= LIMITE_GRATIS)
       out.push({ ...base, tipo: "cot_limite", ref: `${t.id}:${mes}`, usadas })
   }
   // Lo más cerca de pagar va primero (por si se acaba el tope del día)
-  const orden: TipoCorreoCot[] = ["cot_limite", "cot_prueba_fin", "cot_prueba_4", "cot_bienvenida"]
+  const orden: TipoCorreoCot[] = ["cot_ganada", "cot_limite", "cot_prueba_fin", "cot_prueba_4", "cot_primera", "cot_sin_cotizar", "cot_bienvenida"]
   return out.sort((a, b) => orden.indexOf(a.tipo) - orden.indexOf(b.tipo))
 }
 
 export type ResumenCot = Record<TipoCorreoCot, number> & { presupuesto: number; omitidos: number }
 
 export async function correrCorreosCotizador(knex: any, logger: any, o: { simular?: boolean } = {}): Promise<ResumenCot> {
-  const r: ResumenCot = { cot_bienvenida: 0, cot_prueba_4: 0, cot_prueba_fin: 0, cot_limite: 0, presupuesto: 0, omitidos: 0 }
+  const r: ResumenCot = { cot_bienvenida: 0, cot_prueba_4: 0, cot_prueba_fin: 0, cot_limite: 0, cot_sin_cotizar: 0, cot_primera: 0, cot_ganada: 0, presupuesto: 0, omitidos: 0 }
   if (!supabaseListo()) return r
   await asegurarTablaPromo(knex)
 
@@ -343,9 +415,9 @@ export async function correrCorreosCotizador(knex: any, logger: any, o: { simula
   r.presupuesto = presupuesto
   if (presupuesto <= 0) return r
 
-  const [talleres, cots] = await Promise.all([leerTalleres(), cotizacionesDelMes()])
+  const [talleres, cots, act] = await Promise.all([leerTalleres(), cotizacionesDelMes(), actividadTalleres()])
   const tocados = new Set<string>()
-  for (const c of candidatosCotizador(talleres, cots)) {
+  for (const c of candidatosCotizador(talleres, cots, Date.now(), act)) {
     if (presupuesto <= 0) break
     // Un solo correo del Cotizador por persona al día
     if (tocados.has(c.correo)) {
@@ -369,6 +441,17 @@ export async function correrCorreosCotizador(knex: any, logger: any, o: { simula
       continue
     }
     await knex(T_PROMO).insert({ correo: c.correo, tipo: c.tipo, ref: c.ref }).onConflict(["tipo", "ref", "correo"]).ignore()
+    // Los mensajes según su uso también por WhatsApp (sólo si el taller verificó su número)
+    if (c.negocio && ["cot_sin_cotizar", "cot_primera", "cot_ganada"].includes(c.tipo)) {
+      try {
+        const clientes = await knex("hetna_cotizador_vinculo").where({ negocio_id: c.negocio }).pluck("customer_id")
+        if (clientes.length) {
+          const { avisarWhatsapp } = require("./whatsapp")
+          const cuerpo = c.tipo === "cot_ganada" ? "Con el plan Taller cotizas sin límite y con tu logo." : c.tipo === "cot_primera" ? "Dale seguimiento y pide anticipo desde la app." : "Haz tu primera cotización en 3 minutos desde la app."
+          await avisarWhatsapp(knex, { customerIds: clientes }, { titulo: asunto, cuerpo, url: "https://hetnacnc.com/cotizador/" }, logger)
+        }
+      } catch {}
+    }
     r[c.tipo]++
     presupuesto--
   }

@@ -12,10 +12,10 @@ export default async function cotizadorCorreos(container: MedusaContainer) {
   const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   try {
     const r = await correrCorreosCotizador(knex, logger)
-    const total = r.cot_bienvenida + r.cot_prueba_4 + r.cot_prueba_fin + r.cot_limite
+    const total = r.cot_bienvenida + r.cot_prueba_4 + r.cot_prueba_fin + r.cot_limite + r.cot_sin_cotizar + r.cot_primera + r.cot_ganada
     if (total)
       logger.info(
-        `[cotizador-correos] enviados ${total} (bienvenida ${r.cot_bienvenida}, quedan días ${r.cot_prueba_4}, fin de prueba ${r.cot_prueba_fin}, límite ${r.cot_limite})`
+        `[cotizador-correos] enviados ${total} (bienvenida ${r.cot_bienvenida}, quedan días ${r.cot_prueba_4}, fin de prueba ${r.cot_prueba_fin}, límite ${r.cot_limite}, sin cotizar ${r.cot_sin_cotizar}, primera ${r.cot_primera}, ganada ${r.cot_ganada})`
       )
   } catch (e) {
     logger.error(`[cotizador-correos] falló la corrida: ${(e as Error).message}`)
