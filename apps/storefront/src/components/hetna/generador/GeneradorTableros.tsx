@@ -15,7 +15,7 @@ import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { dibujo } from "@/lib/generador/geo2d"
-import { TABLEROS_INICIO, type Tablero, muebleDeTableros } from "@/lib/generador/tableros"
+import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES, muebleDeTableros } from "@/lib/generador/tableros"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
 import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
@@ -74,6 +74,8 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [textos, setTextos] = useState<Record<string, string>>({}) // lo que el cliente escribe en las medidas de cada tablero
   const [v, setV] = useState<Record<string, string>>({ ancho: "", fondo: "", alto: "", grosor: String(EJEMPLO.grosor), holgura: "0.3", saliente: "0" })
   const [herr, setHerr] = useState<(typeof FRESAS)[number]["id"]>("6.35")
+  const [union, setUnion] = useState<TipoUnion>("espiga")
+  const nombreUnion = UNIONES.find((x) => x.id === union)?.nombre || ""
   const [sel, setSel] = useState<number | null>(null) // pieza seleccionada en el 3D (índice de tablerosFinales)
   const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
   const [explotar, setExplotar] = useState(0)
@@ -89,6 +91,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
 
   const herramienta: Herramienta = herr === "laser" ? { tipo: "laser" } : { tipo: "fresa", diametro: Number(herr) }
   const opciones = {
+    union,
     ancho: numero(v.ancho) || undefined,
     fondo: numero(v.fondo) || undefined,
     alto: numero(v.alto) || undefined,
@@ -234,7 +237,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
       </Seccion>
 
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
-        <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones de caja y espiga, sin tornillos.
+        <b className="text-white">{nombre}.</b> {m.piezas.length} piezas, {m.uniones} uniones {union === "espiga" ? "de caja y espiga, sin tornillos" : `con ${nombreUnion.toLowerCase()}`}.
         {esEjemplo && " Es un ejemplo: sube tu imagen para reemplazarlo."}
       </div>
 
@@ -301,11 +304,43 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         </span>
       </Seccion>
 
+      <Seccion titulo="Uniones">
+        <div className="grid grid-cols-2 gap-2">
+          {UNIONES.map((x) => (
+            <button
+              key={x.id}
+              type="button"
+              aria-pressed={union === x.id}
+              onClick={() => setUnion(x.id)}
+              className={`flex flex-col items-start rounded-[9px] px-2.5 py-2 text-left ${union === x.id ? "bg-[#2A1C12] ring-1 ring-[#C2560A]" : "bg-[#141B26] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}
+            >
+              <span className="text-[13px] font-semibold text-white">{x.nombre}</span>
+              <span className="text-[11.5px] text-[#8A97AB]">{x.nota}</span>
+            </button>
+          ))}
+        </div>
+        {union !== "espiga" && (
+          <span className="text-[12px] text-[#8A97AB]">
+            Las piezas van a tope. Los barrenos de cara salen en el archivo, en capas BARRENO con su diámetro y profundidad (ABAJO = voltea la pieza). Los de canto van marcados en la orilla (capas CANTO) y se hacen con taladro y guía.
+          </span>
+        )}
+        {m.compras.length > 0 && (
+          <ul className="m-0 flex list-none flex-col gap-1 rounded-[9px] border border-[#2A3546] bg-[#111821] p-2.5 text-[12.5px] text-[#C9D2E0]">
+            {m.compras.map((c) => (
+              <li key={c.nombre}>
+                <b className="text-white">{c.cantidad}</b> × {c.nombre}
+                {c.nota && <span className="block text-[11.5px] text-[#8A97AB]">{c.nota}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Seccion>
+
       <Seccion titulo="Tablero y máquina">
         <div className="grid grid-cols-2 gap-2">
           <CampoNum etiqueta="Grosor real (medido)" valor={v.grosor} cambiar={cambiar("grosor")} sufijo="mm" />
-          <CampoNum etiqueta="Holgura de ensamble" valor={v.holgura} cambiar={cambiar("holgura")} sufijo="mm" />
-          <CampoNum etiqueta="Espiga sobresale" valor={v.saliente} cambiar={cambiar("saliente")} sufijo="mm" />
+          {union === "espiga" && <CampoNum etiqueta="Holgura de ensamble" valor={v.holgura} cambiar={cambiar("holgura")} sufijo="mm" />}
+          {union === "espiga" && <CampoNum etiqueta="Espiga sobresale" valor={v.saliente} cambiar={cambiar("saliente")} sufijo="mm" />}
         </div>
         <Opciones opciones={FRESAS.map((f) => ({ id: f.id, nombre: f.nombre }))} valor={herr} cambiar={setHerr} />
         <span className="text-[12px] text-[#8A97AB]">Mide el grosor con vernier: el MDF de «18 mm» suele medir entre 17.5 y 18.5. Con fresa, las esquinas llevan alivio para que asienten.</span>
@@ -427,12 +462,14 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
       dibujo={d}
       avisos={avisos}
       archivo={`mueble-${m.medidas.ancho}x${m.medidas.alto}-${opciones.grosor}mm`}
-      pieza={`${nombre}: ${medidasTxt}, ${m.piezas.length} piezas de caja y espiga`}
+      pieza={`${nombre}: ${medidasTxt}, ${m.piezas.length} piezas, unión ${nombreUnion.toLowerCase()}`}
       material={`Triplay o MDF de ${opciones.grosor} mm`}
       datos={[
         ["Armado", medidasTxt],
         ["Piezas", String(m.piezas.length)],
         ["Tablero", `${areaM2.toFixed(2)} m² · ${hojas} ${hojas === 1 ? "hoja" : "hojas"} de ${TABLERO.largo} × ${TABLERO.ancho}`],
+        ["Unión", nombreUnion],
+        ...m.compras.map((c) => [c.nombre, String(c.cantidad)] as [string, string]),
       ]}
       descargas={(exportar) => {
         const claveCobro = claveDiseno(clave)
