@@ -33,6 +33,7 @@ const aviso = [
 return [{ json: {
   anotar: true,
   id: r.id,
-  notas: (notas ? notas + ' | ' : '') + MARCA + hoy + ' (' + ruta + ')',
+  // La versión del correo (vendedor_p1b…) queda anotada para medir qué plantilla funciona
+  notas: (notas ? notas + ' | ' : '') + MARCA + hoy + ' (' + ruta + (campana ? ', ' + campana : '') + ')',
   aviso,
 } }];
