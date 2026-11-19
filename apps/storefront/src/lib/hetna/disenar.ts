@@ -95,6 +95,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Sube la foto, boceto o plano de un mueble de tablero: la IA lo convierte en piezas con espigas y mortajas a las medidas y el grosor que elijas, lo ves armado en 3D y descargas DXF, SVG o PDF listos para router CNC o láser.",
   },
   {
+    slug: "molduras-tallados",
+    nombre: "Molduras y tallados",
+    texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Molduras y paneles tallados para router CNC: perfiles 3D y STL gratis",
+    descripcion:
+      "Diseña molduras con perfil de fresa (media caña, bocel, gola, romana, clásica) y paneles con marco moldurado y centro tallado (rosetón, estrella, rombos o tu imagen). Vista 3D, STL para desbaste y acabado, DXF para tallar en V y envío directo al Laboratorio CAM.",
+  },
+  {
     slug: "muebles-ensamble",
     nombre: "Muebles de ensamble sin tornillos",
     texto: "Exhibidores y repisas de ranura y espiga a tu medida, con vista 3D armada.",

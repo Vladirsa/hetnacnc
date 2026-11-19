@@ -8,10 +8,11 @@ import { useState } from "react"
 
 import { GeneradorEnsamble } from "./GeneradorEnsamble"
 import { GeneradorMueble } from "./GeneradorMueble"
+import { GeneradorMolduras } from "./GeneradorMolduras"
 import { GeneradorTableros } from "./GeneradorTableros"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoMuebles = "imagen" | "ensamble" | "gabinete"
+export type ModoMuebles = "imagen" | "ensamble" | "gabinete" | "molduras"
 
 const MODOS: Modo<ModoMuebles>[] = [
   {
@@ -40,6 +41,19 @@ const MODOS: Modo<ModoMuebles>[] = [
     ),
   },
   {
+    id: "molduras",
+    slug: "molduras-tallados",
+    nombre: "Molduras y tallados",
+    nota: "Perfiles de fresa y paneles tallados en 3D",
+    icono: (
+      <>
+        <rect x="6" y="6" width="28" height="28" rx="2" />
+        <rect x="12" y="12" width="16" height="16" rx="1" />
+        <circle cx="20" cy="20" r="3" />
+      </>
+    ),
+  },
+  {
     id: "gabinete",
     slug: "despiece-muebles",
     nombre: "Gabinete con herrajes",
@@ -57,6 +71,7 @@ export function GeneradorMuebles({ modoInicial = "ensamble" }: { modoInicial?: M
   const [modo, setModo] = useState<ModoMuebles>(modoInicial)
   const cabecera = <SelectorModos titulo="Muebles" modos={MODOS} modo={modo} cambiar={setModo} />
   if (modo === "imagen") return <GeneradorTableros cabecera={cabecera} />
+  if (modo === "molduras") return <GeneradorMolduras cabecera={cabecera} />
   if (modo === "gabinete")
     return (
       <div className="tema-estudio flex-1">
