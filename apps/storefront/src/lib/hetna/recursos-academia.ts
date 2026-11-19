@@ -16,7 +16,7 @@ export type Recurso = {
   orden: number
 }
 
-// Misma lista que packages/api/src/lib/recursos-academia.ts (una prueba lo revisa).
+// Mismas listas que packages/api/src/lib/recursos-academia.ts (una prueba lo revisa).
 export const CATEGORIAS_RECURSO: [string, string][] = [
   ["muebles-melamina", "Muebles y melamina"],
   ["carpinteria", "Carpintería y madera"],
@@ -29,14 +29,14 @@ export const CATEGORIAS_RECURSO: [string, string][] = [
   ["programas", "Programas gratis"],
   ["otros", "Otros"],
 ]
-export const TIPOS_RECURSO: Record<string, string> = {
-  planos: "Planos",
-  guia: "Guía",
-  video: "Video",
-  programa: "Programa",
-  pdf: "Libro o PDF",
-  sitio: "Sitio de consulta",
-}
+export const TIPOS_RECURSO: [string, string][] = [
+  ["planos", "Planos"],
+  ["guia", "Guía o tutorial"],
+  ["video", "Video"],
+  ["programa", "Programa"],
+  ["pdf", "Libro o PDF"],
+  ["sitio", "Sitio de consulta"],
+]
 
 export async function listarRecursos(): Promise<Recurso[]> {
   try {
@@ -46,7 +46,7 @@ export async function listarRecursos(): Promise<Recurso[]> {
     })
     if (!r.ok) return []
     const d = (await r.json()) as { recursos?: Recurso[] }
-    // Sólo ligas http(s): el API ya lo valida, esto es por si acaso.
+    // Defensa en profundidad: el API ya valida que sean http(s).
     return (d.recursos || []).filter((x) => /^https?:\/\//i.test(x.url))
   } catch {
     return []

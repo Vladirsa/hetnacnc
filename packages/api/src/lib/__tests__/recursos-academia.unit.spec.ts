@@ -1,4 +1,4 @@
-import { CATEGORIAS_RECURSO, dominioDe, leerRecurso, ligaValida } from "../recursos-academia"
+import { CATEGORIAS_RECURSO, TIPOS_RECURSO, dominioDe, leerRecurso, ligaValida } from "../recursos-academia"
 
 describe("biblioteca de recursos de la Academia", () => {
   it("sólo acepta ligas http(s) completas", () => {
@@ -32,14 +32,28 @@ describe("biblioteca de recursos de la Academia", () => {
     expect(leerRecurso({ orden: "99999" }, true).datos).toEqual({ orden: 9999 })
   })
 
-  it("las categorías coinciden con las de la tienda", () => {
+  it("las categorías y tipos coinciden en la tienda y el dashboard", () => {
     const fs = require("fs") as typeof import("fs")
     const path = require("path") as typeof import("path")
-    const tienda = fs.readFileSync(
-      path.join(__dirname, "../../../../../apps/storefront/src/lib/hetna/recursos-academia.ts"),
-      "utf8"
-    )
-    for (const [clave, nombre] of CATEGORIAS_RECURSO) expect(tienda).toContain(`["${clave}", "${nombre}"]`)
+    const raiz = path.join(__dirname, "../../../../..")
+    for (const archivo of ["apps/storefront/src/lib/hetna/recursos-academia.ts", "apps/admin/src/routes/recursos/page.tsx"]) {
+      const s = fs.readFileSync(path.join(raiz, archivo), "utf8")
+      for (const [clave, nombre] of [...CATEGORIAS_RECURSO, ...TIPOS_RECURSO]) expect(s).toContain(`["${clave}", "${nombre}"]`)
+    }
+  })
+
+  it("saca el dominio de la liga", () => {
     expect(dominioDe("https://www.foo.mx/x")).toBe("foo.mx")
+  })
+})
+
+describe("biblioteca: detalles de la revisión", () => {
+  it("publicado y destacado sólo aceptan booleanos", () => {
+    expect(leerRecurso({ publicado: "false", destacado: "true" }, true).datos).toEqual({})
+    expect(leerRecurso({ publicado: false, destacado: true }, true).datos).toEqual({ publicado: false, destacado: true })
+  })
+  it("acepta extensiones internacionales y sigue rechazando IPs", () => {
+    expect(ligaValida("https://ejemplo.xn--p1ai/")).toBe("https://ejemplo.xn--p1ai/")
+    expect(ligaValida("http://192.168.1.10/")).toBeNull()
   })
 })

@@ -22,7 +22,7 @@ import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/c
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
-import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
+import { GRUPOS_MODELO, MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
 import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
@@ -573,7 +573,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
       {enfoque === "cocina" && (
         <>
       <Seccion titulo="Biblioteca de cocina y muebles">
-        {([["Bajos", "Cocina: bajos"], ["Altos", "Cocina: altos"], ["Columnas", "Cocina: columnas"], ["Casa", "Muebles para la casa"]] as const).map(([g, etiqueta]) => (
+        {GRUPOS_MODELO.map(([g, etiqueta]) => (
           <div key={g} className="flex flex-col gap-1">
             <span className="text-[12px] font-semibold text-[#C9D2E0]">{etiqueta}</span>
             <div className="grid grid-cols-3 gap-1.5">

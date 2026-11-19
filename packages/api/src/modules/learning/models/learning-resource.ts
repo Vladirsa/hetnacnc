@@ -8,7 +8,7 @@ export const LearningResource = model.define("learning_resource", {
   id: model.id().primaryKey(),
   titulo: model.text(),
   descripcion: model.text().default(""),
-  url: model.text(),
+  url: model.text().unique(),
   fuente: model.text(),
   categoria: model.text(),
   tipo: model.text().default("guia"),

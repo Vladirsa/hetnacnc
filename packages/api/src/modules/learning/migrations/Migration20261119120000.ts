@@ -21,7 +21,7 @@ export class Migration20261119120000 extends Migration {
       constraint "learning_resource_pkey" primary key ("id")
     );`)
     this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_learning_resource_deleted_at" ON "learning_resource" ("deleted_at") WHERE deleted_at IS NULL;`)
-    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_learning_resource_categoria" ON "learning_resource" ("categoria") WHERE deleted_at IS NULL;`)
+    this.addSql(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_learning_resource_url_unique" ON "learning_resource" ("url") WHERE deleted_at IS NULL;`)
   }
 
   override async down(): Promise<void> {

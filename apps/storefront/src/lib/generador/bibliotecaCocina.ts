@@ -5,10 +5,18 @@
 
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete } from "./gabinete"
 
+/** Grupos de la biblioteca, en el orden y con el nombre que salen en pantalla. */
+export const GRUPOS_MODELO = [
+  ["Bajos", "Cocina: bajos"],
+  ["Altos", "Cocina: altos"],
+  ["Columnas", "Cocina: columnas"],
+  ["Casa", "Muebles para la casa"],
+] as const
+
 export type ModeloCocina = {
   id: string
   nombre: string
-  grupo: "Bajos" | "Altos" | "Columnas" | "Casa"
+  grupo: (typeof GRUPOS_MODELO)[number][0]
   base: TipoGabinete
   medidas: { ancho: number; alto: number; fondo: number }
   receta: Partial<Omit<OpcionesGabinete, "grosor" | "gFrente" | "ancho" | "alto" | "fondo">>
@@ -29,6 +37,7 @@ export const MODELOS_COCINA: ModeloCocina[] = [
   { id: "alto-abierto", nombre: "Alto abierto (especiero)", grupo: "Altos", base: "alto", medidas: { ancho: 300, alto: 720, fondo: 320 }, receta: { frente: "nada", repisas: 3 } },
   { id: "alacena", nombre: "Alacena 2 puertas", grupo: "Columnas", base: "columna", medidas: { ancho: 600, alto: 2100, fondo: 560 }, receta: { frente: "puertas", repisas: 4 } },
   { id: "columna-cajones", nombre: "Columna de cajones", grupo: "Columnas", base: "columna", medidas: { ancho: 600, alto: 2100, fondo: 560 }, receta: { frente: "cajones", cajones: 6 } },
+  { id: "sobre-refri", nombre: "Alto sobre refrigerador", grupo: "Altos", base: "alto", medidas: { ancho: 900, alto: 400, fondo: 560 }, receta: { frente: "puertas", repisas: 0 } },
   // Muebles de la casa (melamina): mismas reglas de carpintería que la cocina.
   { id: "librero-abierto", nombre: "Librero abierto", grupo: "Casa", base: "columna", medidas: { ancho: 800, alto: 1800, fondo: 300 }, receta: { frente: "nada", repisas: 4, zoclo: 60, zocloRemetido: 20 } },
   { id: "librero-puertas", nombre: "Librero con puertas", grupo: "Casa", base: "columna", medidas: { ancho: 800, alto: 1800, fondo: 350 }, receta: { frente: "puertas", repisas: 4, zoclo: 60, zocloRemetido: 20 } },
@@ -38,7 +47,6 @@ export const MODELOS_COCINA: ModeloCocina[] = [
   { id: "zapatera", nombre: "Zapatera 2 puertas", grupo: "Casa", base: "bajo", medidas: { ancho: 800, alto: 1000, fondo: 350 }, receta: { frente: "puertas", repisas: 3, techo: "completo", zoclo: 60, zocloRemetido: 20 } },
   { id: "centro-tv", nombre: "Mueble de TV", grupo: "Casa", base: "bajo", medidas: { ancho: 1200, alto: 500, fondo: 420 }, receta: { frente: "nada", repisas: 1, techo: "completo", zoclo: 60, zocloRemetido: 20 } },
   { id: "repisa-pared", nombre: "Repisa de pared", grupo: "Casa", base: "alto", medidas: { ancho: 900, alto: 300, fondo: 250 }, receta: { frente: "nada", repisas: 0 } },
-  { id: "sobre-refri", nombre: "Alto sobre refrigerador", grupo: "Altos", base: "alto", medidas: { ancho: 900, alto: 400, fondo: 560 }, receta: { frente: "puertas", repisas: 0 } },
 ]
 
 export function opcionesModelo(m: ModeloCocina, medidas: { ancho: number; alto: number; fondo: number }, grosor: number): OpcionesGabinete {

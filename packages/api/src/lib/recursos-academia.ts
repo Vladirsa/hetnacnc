@@ -51,7 +51,7 @@ export function ligaValida(v: unknown): string | null {
   }
   if (u.protocol !== "https:" && u.protocol !== "http:") return null
   if (u.username || u.password) return null
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(u.hostname)) return null
+  if (!/^[a-z0-9.-]+\.[a-z0-9-]{2,}$/i.test(u.hostname) || /^[\d.]+$/.test(u.hostname)) return null
   return u.toString()
 }
 
@@ -63,6 +63,9 @@ export const dominioDe = (liga: string) => {
     return ""
   }
 }
+
+/** ¿El error es la liga repetida (índice único de url)? */
+export const esLigaRepetida = (e: unknown) => /unique|duplicate|23505/i.test(String((e as Error)?.message || e))
 
 type Entrada = Record<string, unknown>
 
@@ -103,8 +106,9 @@ export function leerRecurso(b: Entrada, parcial = false): { datos?: Record<strin
       datos.imagen_url = u
     }
   }
-  if ("destacado" in b) datos.destacado = b.destacado === true
-  if ("publicado" in b) datos.publicado = b.publicado !== false
+  // Sólo booleanos de verdad: un "false" en texto no debe publicar nada.
+  if (typeof b.destacado === "boolean") datos.destacado = b.destacado
+  if (typeof b.publicado === "boolean") datos.publicado = b.publicado
   if ("orden" in b) {
     const n = Math.round(Number(b.orden))
     datos.orden = Number.isFinite(n) ? Math.min(Math.max(n, -9999), 9999) : 0
