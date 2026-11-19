@@ -54,3 +54,44 @@ export async function tomarPiezaParaLaboratorio(): Promise<{ nombre: string; dat
     return null
   }
 }
+
+// ---- CAM Studio 2D (corte láser o router: perfiles, cajas, barrenos) ----
+// Igual que la pieza 3D: el DXF se guarda un momento y el CAM 2D lo abre solo.
+export async function mandarACam2D(nombre: string, dxf: string, locale: string): Promise<boolean> {
+  try {
+    const db = await abrir()
+    await new Promise<void>((ok, mal) => {
+      const tx = db.transaction(ALMACEN, "readwrite")
+      tx.objectStore(ALMACEN).put({ nombre, datos: dxf, t: Date.now() }, "pendiente2d")
+      tx.oncomplete = () => ok()
+      tx.onerror = () => mal(tx.error)
+    })
+    db.close()
+    window.location.href = `/${locale}/cam/subir?pieza=1`
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** El DXF que dejó un generador para el CAM 2D, si sigue vigente (y se borra). */
+export async function tomarPiezaParaCam2D(): Promise<{ nombre: string; dxf: string } | null> {
+  try {
+    const db = await abrir()
+    const fila = await new Promise<{ nombre: string; datos: string; t: number } | undefined>((ok, mal) => {
+      const tx = db.transaction(ALMACEN, "readwrite")
+      const st = tx.objectStore(ALMACEN)
+      const r = st.get("pendiente2d")
+      r.onsuccess = () => {
+        st.delete("pendiente2d")
+        ok(r.result)
+      }
+      r.onerror = () => mal(r.error)
+    })
+    db.close()
+    if (!fila || typeof fila.datos !== "string" || Date.now() - fila.t > VIGENCIA) return null
+    return { nombre: fila.nombre, dxf: fila.datos }
+  } catch {
+    return null
+  }
+}

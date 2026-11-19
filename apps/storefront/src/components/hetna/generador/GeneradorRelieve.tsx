@@ -1,5 +1,6 @@
 "use client"
 
+import { BotonesCam } from "./BotonesCam"
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -433,6 +434,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
                 Fabrícamelo
               </button>
             </div>
+            {modo === "relieve" && valido && info && <BotonesCam nombre={archivo} stl={() => (ultima.current ? mallaSTL(ultima.current.a, ultima.current.o) : null)} />}
             {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
             <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="text-center text-[13px] font-semibold text-[#B34D07] hover:underline">
               {modo === "litofania" ? "O pídela por WhatsApp" : "O pídelo por WhatsApp"}

@@ -32,6 +32,7 @@ export type OpcionesCocina = {
   cubierta: boolean
   gCubierta: number
   altoColumna: number
+  repisasMovibles?: boolean // repisas sobre pines (sistema 32)
 }
 
 export const COCINA_INICIO: Omit<OpcionesCocina, "modulos" | "grosor"> = {
@@ -83,11 +84,11 @@ export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: strin
     const mover = (ts: TableroC[], dx: number, dz: number, prefijo: string, dy = 0) =>
       ts.map((b) => ({ ...b, nombre: `${prefijo} ${b.nombre}`, x0: b.x0 + dx, x1: b.x1 + dx, y0: b.y0 + dy, y1: b.y1 + dy, z0: b.z0 + dz, z1: b.z1 + dz }))
     if (m.tipo === "columna") {
-      const g = gabinete({ ...GABINETE_INICIO.columna, ancho, alto: o.altoColumna, fondo: o.fondoBajos, zoclo: o.zoclo, grosor: o.grosor, gFrente: o.grosor })
+      const g = gabinete({ ...GABINETE_INICIO.columna, ancho, alto: o.altoColumna, fondo: o.fondoBajos, zoclo: o.zoclo, grosor: o.grosor, gFrente: o.grosor, repisasMovibles: o.repisasMovibles })
       t.push(...mover(g.tableros, x, 0, `${n} columna:`))
       avisos.push(...g.avisos)
     } else {
-      const base = { ...GABINETE_INICIO.bajo, ancho, alto: o.altoBajos, fondo: o.fondoBajos, zoclo: o.zoclo, grosor: o.grosor, gFrente: o.grosor }
+      const base = { ...GABINETE_INICIO.bajo, ancho, alto: o.altoBajos, fondo: o.fondoBajos, zoclo: o.zoclo, grosor: o.grosor, gFrente: o.grosor, repisasMovibles: o.repisasMovibles }
       const g =
         m.tipo === "fregadero"
           ? gabinete({ ...base, fondoTipo: "sin", techo: "travesanos", repisas: 0, frente: "puertas" })
@@ -98,7 +99,7 @@ export function cocina(o: OpcionesCocina): { tableros: TableroC[]; avisos: strin
       avisos.push(...g.avisos)
       bajos.push([x, x + ancho])
       if (o.conAltos) {
-        const ga = gabinete({ ...GABINETE_INICIO.alto, ancho, alto: o.altoAltos, fondo: o.fondoAltos, grosor: o.grosor, gFrente: o.grosor, frente: ancho >= 500 ? "puertas" : "puerta" })
+        const ga = gabinete({ ...GABINETE_INICIO.alto, ancho, alto: o.altoAltos, fondo: o.fondoAltos, grosor: o.grosor, gFrente: o.grosor, frente: ancho >= 500 ? "puertas" : "puerta", repisasMovibles: o.repisasMovibles })
         // los altos van contra la pared (atrás)
         t.push(...mover(ga.tableros, x, o.alturaAltos, `${n} alto:`, o.fondoBajos - o.fondoAltos))
       }

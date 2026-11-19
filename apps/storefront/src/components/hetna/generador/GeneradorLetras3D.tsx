@@ -18,6 +18,7 @@ import {
   resumenMateriales,
 } from "@/lib/generador/letras3d"
 import type { Fuente } from "@/lib/generador/letreros"
+import { BotonesCam } from "./BotonesCam"
 import { dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -338,6 +339,7 @@ export function GeneradorLetras3D() {
                   SVG
                 </button>
               </div>
+              <BotonesCam nombre={nombre} dxf={() => dibujoDXF(d)} compacto />
             </div>
           )
         })}
@@ -356,6 +358,13 @@ export function GeneradorLetras3D() {
         >
           Descargar STL
         </button>
+        <BotonesCam
+          nombre={archivo}
+          stl={() => {
+            const m = mallaLetras(r!, 0)
+            return mallaSTL({ tris: [...m.tris, ...m.acrilico], avisos: [] })
+          }}
+        />
       </div>
 
       <div className="rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4 flex flex-col gap-2">

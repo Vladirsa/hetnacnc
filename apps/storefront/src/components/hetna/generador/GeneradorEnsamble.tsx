@@ -29,7 +29,7 @@ const FRESAS = [
 // piezas tendidas en renglones para la vista 2D (Y hacia arriba)
 // barrenos de herraje (si la pieza los trae): de cara en capas BARRENO_D{diámetro}_P{profundidad}_{ARRIBA|ABAJO}
 // (ABAJO = en la cara de abajo: se voltea la pieza) y de canto como marca en la orilla (capa CANTO_D{d}_P{prof})
-type ConBarrenos = PiezaEnsamble & { ranuras?: { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }[]; barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1 }[]; cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number }[] }
+type ConBarrenos = PiezaEnsamble & { ranuras?: { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }[]; barrenos?: { u: number; v: number; d: number; prof: number; cara: 0 | 1; capa?: string }[]; cantos?: { u: number; v: number; du: number; dv: number; d: number; prof: number; capa?: string }[] }
 const fmt = (n: number) => String(Math.round(n * 10) / 10).replace(".", "_")
 export function piezasTendidas(piezas: ConBarrenos[]): Trazo[] {
   const trazos: Trazo[] = []
@@ -51,10 +51,10 @@ export function piezasTendidas(piezas: ConBarrenos[]): Trazo[] {
     for (const hh of p.huecos) trazos.push({ pts: mover(hh), cerrado: true, capa: "corte" })
     for (const b of p.barrenos || []) {
       const circ = Array.from({ length: 20 }, (_, k) => [b.u + (b.d / 2) * Math.cos((k * Math.PI) / 10), b.v + (b.d / 2) * Math.sin((k * Math.PI) / 10)] as [number, number])
-      trazos.push({ pts: mover(circ), cerrado: true, capa: `BARRENO_D${fmt(b.d)}_P${fmt(b.prof)}_${b.cara === 1 ? "ARRIBA" : "ABAJO"}` })
+      trazos.push({ pts: mover(circ), cerrado: true, capa: `BARRENO_D${fmt(b.d)}_P${fmt(b.prof)}_${b.cara === 1 ? "ARRIBA" : "ABAJO"}${b.capa ? `@${b.capa}` : ""}` })
     }
     for (const r of p.ranuras || []) trazos.push({ pts: mover([[r.u0, r.v0], [r.u1, r.v0], [r.u1, r.v1], [r.u0, r.v1]]), cerrado: true, capa: `RANURA_P${fmt(r.prof)}_${r.cara === 1 ? "ARRIBA" : "ABAJO"}` })
-    for (const c of p.cantos || []) trazos.push({ pts: mover([[c.u, c.v], [c.u + c.du * c.prof, c.v + c.dv * c.prof]]), cerrado: false, capa: `CANTO_D${fmt(c.d)}_P${fmt(c.prof)}` })
+    for (const c of p.cantos || []) trazos.push({ pts: mover([[c.u, c.v], [c.u + c.du * c.prof, c.v + c.dv * c.prof]]), cerrado: false, capa: `CANTO_D${fmt(c.d)}_P${fmt(c.prof)}${c.capa ? `@${c.capa}` : ""}` })
     x += w + 40
     altoRenglon = Math.max(altoRenglon, h)
   }
@@ -347,6 +347,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
           ["Tablero", `${areaM2.toFixed(2)} m² · ${tableros} ${tableros === 1 ? "hoja" : "hojas"} de ${TABLERO.largo} × ${TABLERO.ancho}`],
           ...m.compras.map((c) => [c.nombre, c.nota || String(c.cantidad)] as [string, string]),
         ]}
+        camBloqueado={pagados[claveDiseno(JSON.stringify({ ...opciones, prueba }))] ? undefined : "Descarga el diseño (1 crédito) y se activa el envío al CAM 2D."}
         descargas={(exportar) => {
           const clave = claveDiseno(JSON.stringify({ ...opciones, prueba }))
           if (pagados[clave])

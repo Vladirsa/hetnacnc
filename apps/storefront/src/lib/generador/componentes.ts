@@ -15,9 +15,10 @@
 // el 3D y salen en la lista de compra.
 
 import { aMueble, esquinasExteriores, type P } from "./ensamble"
+import { type DefSoporte, SOPORTE_BASE } from "./herrajes"
 import { type Barreno, type MuebleTableros, type OpcionesTableros, type PiezaTablero, type Tablero, muebleDeTableros } from "./tableros"
 
-export type Rol = "estructura" | "puerta" | "frente" | "cajon" | "fondo" | "cubierta"
+export type Rol = "estructura" | "puerta" | "frente" | "cajon" | "fondo" | "cubierta" | "repisa"
 export type Bisagra = "izq" | "der" | "arriba"
 export type TableroC = Tablero & { rol?: Rol; material?: string; bisagra?: Bisagra; jaladera?: number; enRanura?: boolean }
 
@@ -41,6 +42,7 @@ export const PREDETERMINADO: Record<Exclude<Rol, "estructura">, { material?: str
   cajon: { grosor: 15 },
   fondo: { material: "hdf", grosor: 3 },
   cubierta: { material: "encino", grosor: 25 },
+  repisa: {},
 }
 export const ROLES: { id: Rol; nombre: string }[] = [
   { id: "estructura", nombre: "Estructura" },
@@ -49,12 +51,14 @@ export const ROLES: { id: Rol; nombre: string }[] = [
   { id: "cajon", nombre: "Caja de cajón" },
   { id: "fondo", nombre: "Fondo" },
   { id: "cubierta", nombre: "Cubierta" },
+  { id: "repisa", nombre: "Repisa movible" },
 ]
 
-export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number }
+export type OpcionesMueble = OpcionesTableros & { material?: string; patas?: number; soporte?: DefSoporte }
 // ranura: canal (para el fondo) en una cara de la pieza, de u0..u1 × v0..v1 y prof de hondo
 export type Ranura = { u0: number; v0: number; u1: number; v1: number; prof: number; cara: 0 | 1 }
-export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[] }
+// cantoLados: orillas con canto (u0 = la del u menor, etc.)
+export type PiezaMueble = PiezaTablero & { rol: Rol; material: string; ranuras: Ranura[]; cantoLados?: ("u0" | "u1" | "v0" | "v1")[] }
 // accesorios para el 3D (en mm del mueble)
 export type Accesorio = { tipo: "pata"; x: number; y: number; z0: number; z1: number; d: number } | { tipo: "jaladera"; a: [number, number, number]; b: [number, number, number]; sale: [number, number, number] }
 export type MuebleCompleto = Omit<MuebleTableros, "piezas" | "tablerosFinales"> & { piezas: PiezaMueble[]; tablerosFinales: TableroC[]; accesorios: Accesorio[]; cantoMetros: number }
@@ -251,6 +255,46 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     piezas.push(pz)
   })
 
+  // ---- repisas movibles (sistema 32): dos filas de barrenos en la cara de cada costado que las sostiene ----
+  const sop = o.soporte || SOPORTE_BASE
+  const filasPuestas = new Set<string>()
+  let pines = 0
+  extras.forEach((t) => {
+    if (t.rol !== "repisa" || ejeDelgado(t) !== 2) return
+    pines += 4
+    for (const lado of [0, 1] as const) {
+      const xBorde = lado === 0 ? t.x0 : t.x1
+      // costado (o división) de la estructura cuya cara toca ese extremo de la repisa
+      let mejor: { p: PiezaMueble; d: number } | null = null
+      for (const p of piezas) {
+        if (p.rol !== "estructura" || p.plano !== "lateral") continue
+        const cara = lado === 0 ? p.desfase + p.grosor : p.desfase
+        const d = Math.abs(cara - xBorde)
+        const vs = p.contorno.map((q) => q[1])
+        if (d < 6 && t.z0 > Math.min(...vs) && t.z1 < Math.max(...vs) && (!mejor || d < mejor.d)) mejor = { p, d }
+      }
+      if (!mejor) continue
+      const p = mejor.p
+      const clave = `${p.indice}:${lado}`
+      if (filasPuestas.has(clave)) continue
+      filasPuestas.add(clave)
+      const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
+      const u0 = Math.min(...us), u1 = Math.max(...us), v0 = Math.min(...vs), v1 = Math.max(...vs)
+      const cara: 0 | 1 = lado === 0 ? 1 : 0 // la repisa está del lado de la cara mayor del costado izquierdo
+      for (const u of [u0 + sop.delFrente, u1 - sop.deAtras]) {
+        for (let v = v0 + sop.margen; v <= v1 - sop.margen; v += sop.paso) {
+          // no encima de otro barreno ni de una mortaja
+          const libre = p.barrenos.every((b) => Math.hypot(b.u - u, b.v - v) > (b.d + sop.d) / 2 + 2) && p.huecos.every((h) => {
+            const hu = h.map((q) => q[0]), hv = h.map((q) => q[1])
+            return u + sop.d < Math.min(...hu) || u - sop.d > Math.max(...hu) || v + sop.d < Math.min(...hv) || v - sop.d > Math.max(...hv)
+          })
+          if (libre) p.barrenos.push({ u, v, d: sop.d, prof: Math.min(sop.prof, p.grosor - 3), cara, tipo: "soporte-repisa" })
+        }
+      }
+    }
+  })
+  if (pines) compras.push({ nombre: sop.compra, cantidad: pines, nota: `Filas de barrenos Ø${sop.d} cada ${sop.paso} mm (sistema 32).`, precio: sop.precio || undefined })
+
   // ---- patas: 4 (o 6) bajo la huella del mueble ----
   const patas = Math.max(0, o.patas || 0)
   if (patas > 0 && piezas.length) {
@@ -287,11 +331,19 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     if (!materialDe(p.material).canto) continue
     const us = p.contorno.map((q) => q[0]), vs = p.contorno.map((q) => q[1])
     const a = Math.max(...us) - Math.min(...us), b = Math.max(...vs) - Math.min(...vs)
-    if (p.rol === "puerta" || p.rol === "frente" || p.rol === "cubierta") canto += 2 * (a + b)
-    else if (p.rol === "estructura") {
+    if (p.rol === "puerta" || p.rol === "frente" || p.rol === "cubierta") {
+      canto += 2 * (a + b)
+      p.cantoLados = ["u0", "u1", "v0", "v1"]
+    } else if (p.rol === "estructura") {
       // la orilla del frente: lateral (u = Y) y horizontal (v = Y) tocan el frente con su lado de largo b o a
-      if (p.plano === "lateral" && Math.abs(Math.min(...us) - yFrente) < 25) canto += b
-      if (p.plano === "horizontal" && Math.abs(Math.min(...vs) - yFrente) < 25) canto += a
+      if (p.plano === "lateral" && Math.abs(Math.min(...us) - yFrente) < 25) {
+        canto += b
+        p.cantoLados = ["u0"]
+      }
+      if (p.plano === "horizontal" && Math.abs(Math.min(...vs) - yFrente) < 25) {
+        canto += a
+        p.cantoLados = ["v0"]
+      }
     }
   }
   if (canto > 0) compras.push({ nombre: "Canto de PVC (enchapado)", cantidad: Math.ceil((canto / 1000) * 1.1), nota: "Metros, con 10 % extra. Del color del material." })
@@ -356,7 +408,7 @@ const nombreLibre = (ts: Tablero[], base: string) => {
   for (let n = 2; ; n++) if (!usados.has(`${base} ${n}`)) return `${base} ${n}`
 }
 
-export type TipoComponente = "puerta" | "puertas" | "cajon" | "fondo" | "cubierta"
+export type TipoComponente = "puerta" | "puertas" | "cajon" | "fondo" | "cubierta" | "repisa-movil"
 export function agregarComponente(ts: TableroC[], tipo: TipoComponente, punto: Pt | null, gEstructura: number): { tableros: TableroC[]; indice: number } {
   const h = huecoEn(ts, punto)
   const holgura = 2 // entre puertas y orillas
@@ -390,6 +442,10 @@ export function agregarComponente(ts: TableroC[], tipo: TipoComponente, punto: P
     nuevos.push({ nombre: `${base}: frente interior`, plano: "frontal", rol: "cajon", x0: bx0 + g, x1: bx1 - g, y0: by0, y1: by0 + g, z0: bz0, z1: bz1 })
     nuevos.push({ nombre: `${base}: trasera`, plano: "frontal", rol: "cajon", x0: bx0 + g, x1: bx1 - g, y0: by1 - g, y1: by1, z0: bz0, z1: bz1 })
     nuevos.push({ nombre: `${base}: fondo`, plano: "horizontal", rol: "cajon", material: "hdf", x0: bx0, x1: bx1, y0: by0, y1: by1, z0: bz0 - 3, z1: bz0 })
+  } else if (tipo === "repisa-movil") {
+    // repisa sobre pines: 1 mm de holgura por lado y 5 mm menos de fondo
+    const z = Math.max(h.z0.val + 30, Math.min(h.z1.val - 30, (punto ? punto[2] : (h.z0.val + h.z1.val) / 2) - gEstructura / 2))
+    nuevos.push({ nombre: nombreLibre(ts, "Repisa movible"), plano: "horizontal", rol: "repisa", x0: h.x0.val + 1, x1: h.x1.val - 1, y0: h.y0, y1: h.y1 - 5, z0: z, z1: z + gEstructura })
   } else if (tipo === "fondo") {
     const [cx, , cz] = h.caja
     const g = PREDETERMINADO.fondo.grosor || 3

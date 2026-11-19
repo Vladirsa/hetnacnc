@@ -17,6 +17,11 @@ import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES } from "@/lib/generador/tableros"
+import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generador/herrajes"
+import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
+import { dibujoDXF } from "@/lib/generador/vectores"
+import { hacerZip } from "@/lib/generador/zip"
+import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
 import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
@@ -27,7 +32,8 @@ import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/
 import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
-import type { CajaVista } from "./Mueble3D"
+import { BibliotecaHerrajes, useHerrajes } from "./BibliotecaHerrajes"
+import type { CajaVista, VistaEstandar } from "./Mueble3D"
 import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
 
@@ -58,6 +64,49 @@ const EJEMPLO: { nombre: string; grosor: number; tableros: Tablero[] } = {
 }
 
 // tablero nuevo: una repisa al centro del mueble actual
+const VISTAS: [VistaEstandar, string][] = [["iso", "Iso"], ["arriba", "Arriba"], ["frente", "Frente"], ["derecha", "Derecha"], ["atras", "Atrás"], ["izquierda", "Izquierda"], ["abajo", "Abajo"]]
+
+// valor guardado en el navegador (precios, capas): se lee al abrir y se guarda al cambiar
+function useGuardado<T>(clave: string, inicio: T): [T, (f: (x: T) => T) => void] {
+  const [v, setV] = useState<T>(inicio)
+  useEffect(() => {
+    try {
+      const x = localStorage.getItem(clave)
+      if (x) setV({ ...inicio, ...JSON.parse(x) })
+    } catch {
+      // nada guardado
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const cambiar = (f: (x: T) => T) =>
+    setV((x) => {
+      const n = f(x)
+      try {
+        localStorage.setItem(clave, JSON.stringify(n))
+      } catch {
+        // sin espacio
+      }
+      return n
+    })
+  return [v, cambiar]
+}
+
+function bajarArchivo(nombre: string, datos: BlobPart, tipo: string) {
+  const url = URL.createObjectURL(new Blob([datos], { type: tipo }))
+  const a = document.createElement("a")
+  a.href = url
+  a.download = nombre
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
+}
+
+const nombreArchivo = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^\w]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase() || "pieza"
+
 function tableroNuevo(ts: Tablero[], g: number): Tablero {
   const x1 = Math.max(400, ...ts.map((t) => t.x1)), y1 = Math.max(250, ...ts.map((t) => t.y1)), z1 = Math.max(400, ...ts.map((t) => t.z1))
   const z = Math.round(z1 / 2)
@@ -88,7 +137,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [anchoEspiga, setAnchoEspiga] = useState("")
   const [esquinas, setEsquinas] = useState<{ tipo: "recta" | "redonda" | "chaflan"; medida: string }>({ tipo: "recta", medida: "10" })
   const [union, setUnion] = useState<TipoUnion>(enfoque === "cocina" ? "confirmat" : "espiga")
-  const nombreUnion = UNIONES.find((x) => x.id === union)?.nombre || ""
+  const herrajes = useHerrajes()
+  const [herraje, setHerraje] = useState<DefHerraje>(HERRAJES_BASE[0])
+  // al escoger Confirmat, Minifix o Taquete se usa ese herraje (con las medidas que el cliente le haya puesto)
+  useEffect(() => {
+    const id = HERRAJE_DE_UNION[union]
+    if (id) setHerraje(herrajes.todos.find((h) => h.id === id) || HERRAJES_BASE[0])
+  }, [union, herrajes.todos.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [movibles, setMovibles] = useState(false) // repisas sobre pines
+  const [vista, setVista] = useState<{ cual: VistaEstandar; n: number } | undefined>(undefined)
+  const nombreUnion = union === "biblioteca" ? herraje.nombre : UNIONES.find((x) => x.id === union)?.nombre || ""
   const [sel, setSel] = useState<number | null>(null) // pieza seleccionada en el 3D (índice de tablerosFinales)
   const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
   const [explotar, setExplotar] = useState(0)
@@ -135,6 +193,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const herramienta: Herramienta = laser ? { tipo: "laser" } : { tipo: "fresa", diametro: fresaCorte?.diametro || 6.35 }
   const opciones = {
     union,
+    herraje,
     material,
     patas: Math.max(0, numero(patas) || 0),
     varios,
@@ -331,6 +390,80 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   }, [m])
   const hojasEstimadas = Math.max(1, Math.ceil(areaM2 / ((TABLERO.ancho * TABLERO.largo) / 1e6) / 0.8))
 
+  // ---- capas para el CAM del cliente ----
+  const [capas, setCapas] = useGuardado<PlantillasCapas>("hetna-capas", CAPAS_INICIO)
+  const capasPropias = (Object.keys(CAPAS_INICIO) as (keyof PlantillasCapas)[]).some((k) => capas[k] !== CAPAS_INICIO[k])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const renombrarCapa = useCallback((c: string) => capaFinal(c, capas), [JSON.stringify(capas)])
+  const bajarZip = () => {
+    const usados = new Set<string>()
+    const archivos = m.piezas.map((p, i) => {
+      let base = `${String(i + 1).padStart(2, "0")}-${nombreArchivo(p.nombre)}`
+      while (usados.has(base)) base += "b"
+      usados.add(base)
+      const dib = dibujo(piezasTendidas([p]))
+      return { nombre: `${base}.dxf`, texto: dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: renombrarCapa(t.capa) })) }) }
+    })
+    bajarArchivo(`mueble-${m.medidas.ancho}x${m.medidas.alto}-piezas.zip`, hacerZip(archivos) as BlobPart, "application/zip")
+  }
+
+  // ---- costo: tablero por hoja (por material y grosor), canto por metro y herrajes ----
+  const [precios, setPrecios] = useGuardado<Record<string, string>>("hetna-precios", {})
+  const costo = useMemo(() => {
+    const grupos = new Map<string, { nombre: string; area: number }>()
+    for (const p of m.piezas) {
+      const g = Math.round(p.grosor * 10) / 10
+      const k = `${p.material}|${g}`
+      if (!grupos.has(k)) grupos.set(k, { nombre: `${materialDe(p.material).nombre} ${g} mm`, area: 0 })
+      let a = 0
+      const c = p.contorno
+      for (let i = 0, j = c.length - 1; i < c.length; j = i++) a += (c[j][0] - c[i][0]) * (c[j][1] + c[i][1])
+      grupos.get(k)!.area += Math.abs(a / 2) / 1e6
+    }
+    const veces = acomodo ? copias : 1
+    const hojaM2 = (acomodo ? hoja.largo * hoja.ancho : TABLERO.ancho * TABLERO.largo) / 1e6 || 2.98
+    const filas = [...grupos.entries()].map(([k, g]) => {
+      const exacto = acomodo?.grupos.find((x) => x.nombre === g.nombre)?.r.hojas.length
+      const hojas = exacto ?? Math.max(1, Math.ceil((g.area * veces) / hojaM2 / 0.8))
+      const precio = numero(precios[k] || "") || 0
+      return { k, nombre: g.nombre, hojas, exacto: exacto !== undefined, precio, total: hojas * precio }
+    })
+    const metrosCanto = (m.compras.find((c) => c.nombre.startsWith("Canto de PVC"))?.cantidad || 0) * veces
+    const pCanto = numero(precios.canto || "") || 0
+    const herr = m.compras.filter((c) => c.precio).map((c) => ({ nombre: c.nombre, cantidad: c.cantidad * veces, total: c.cantidad * veces * (c.precio || 0) }))
+    const total = filas.reduce((t, f) => t + f.total, 0) + metrosCanto * pCanto + herr.reduce((t, h) => t + h.total, 0)
+    const faltan = filas.some((f) => !f.precio) || (metrosCanto > 0 && !pCanto)
+    return { filas, metrosCanto, pCanto, herr, total, faltan, veces }
+  }, [m, acomodo, copias, hoja.largo, hoja.ancho, precios])
+  const pesos = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
+
+  // ---- planos de taller, etiquetas y presupuesto ----
+  const [presu, setPresu] = useGuardado<Omit<DatosPresupuesto, "material" | "partidas" | "cliente" | "nota"> & { manoObraTxt: string; margenTxt: string }>("hetna-presupuesto", {
+    taller: "",
+    telefono: "",
+    manoObra: 0,
+    manoObraTxt: "",
+    margen: 30,
+    margenTxt: "30",
+    iva: true,
+    vigencia: 15,
+    anticipo: 50,
+    entrega: "10 días hábiles",
+    desglose: false,
+  })
+  const [cliente, setCliente] = useState("")
+  const [avisoDoc, setAvisoDoc] = useState("")
+  const datosDoc = () => ({ nombre, m, union: nombreUnion, taller: presu.taller || undefined, vetaLarga: (n: string) => vetaDe(n) !== "ancho" })
+  const abrir = (html: string) => setAvisoDoc(abrirDocumento(html) ? "" : "Permite las ventanas emergentes para ver el documento.")
+  const verPresupuesto = () => {
+    const partidas = [
+      ...costo.filas.filter((f) => f.precio).map((f) => ({ concepto: `${f.nombre} (${f.hojas} ${f.hojas === 1 ? "hoja" : "hojas"})`, importe: f.total })),
+      ...(costo.pCanto && costo.metrosCanto ? [{ concepto: `Canto (${costo.metrosCanto} m)`, importe: costo.metrosCanto * costo.pCanto }] : []),
+      ...(costo.herr.length ? [{ concepto: "Herrajes", importe: costo.herr.reduce((t, h) => t + h.total, 0) }] : []),
+    ]
+    abrir(htmlPresupuesto(datosDoc(), { ...presu, cliente, nota: "", material: costo.total, partidas }))
+  }
+
   const subirImagen = async (archivo?: File | null) => {
     if (!archivo) return
     setLectura(null)
@@ -369,6 +502,15 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const editar = (i: number, cambio: Partial<Tablero>) => setTableros((ts) => ts.map((t, j) => (j === i ? { ...t, ...cambio } : t)))
   const medidasTxt = `${m.medidas.ancho} × ${m.medidas.fondo} × ${m.medidas.alto} mm`
   const avisos = [...m.errores, ...m.avisos]
+
+  const interruptorMovibles = (
+    <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
+      <span>
+        Repisas movibles <span className="text-[11.5px] text-[#8A97AB]">(sobre pines, barrenos Ø5 cada 32 mm en los costados)</span>
+      </span>
+      <input type="checkbox" checked={movibles} onChange={(e) => setMovibles(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
+    </label>
+  )
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -462,11 +604,12 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
               <CampoNum etiqueta="Alto" valor={medModelo.alto} cambiar={(x) => setMedModelo((m0) => ({ ...m0, alto: x }))} sufijo="mm" />
               <CampoNum etiqueta="Fondo" valor={medModelo.fondo} cambiar={(x) => setMedModelo((m0) => ({ ...m0, fondo: x }))} sufijo="mm" />
             </div>
+            {interruptorMovibles}
             <button
               type="button"
               onClick={() => {
                 const med = { ancho: numero(medModelo.ancho) || modeloActual.medidas.ancho, alto: numero(medModelo.alto) || modeloActual.medidas.alto, fondo: numero(medModelo.fondo) || modeloActual.medidas.fondo }
-                const g = gabinete(opcionesModelo(modeloActual, med, opciones.grosor))
+                const g = gabinete({ ...opcionesModelo(modeloActual, med, opciones.grosor), repisasMovibles: movibles })
                 aplicar(() => g.tableros, null)
                 setVarios(false)
                 setNombre(`${modeloActual.nombre} ${Math.round(med.ancho)} mm`)
@@ -517,11 +660,12 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             </span>
           </div>
         </div>
+        {interruptorMovibles}
         <button
           type="button"
           disabled={!modulos.length}
           onClick={() => {
-            const c = cocina({ ...COCINA_INICIO, modulos, grosor: opciones.grosor, conAltos, cubierta: conCubierta, alturaAltos: numero(alturaAltos) || COCINA_INICIO.alturaAltos })
+            const c = cocina({ ...COCINA_INICIO, modulos, grosor: opciones.grosor, conAltos, cubierta: conCubierta, alturaAltos: numero(alturaAltos) || COCINA_INICIO.alturaAltos, repisasMovibles: movibles })
             aplicar(() => c.tableros, null)
             setVarios(true)
             setNombre(`Cocina de ${Math.round(c.largo)} mm`)
@@ -577,10 +721,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         <div className="grid grid-cols-2 gap-2">
           {gab.frente === "cajones" ? <CampoNum etiqueta="Cuántos cajones" {...campoGab("cajones")} /> : <CampoNum etiqueta="Repisas" {...campoGab("repisas")} />}
         </div>
+        {interruptorMovibles}
         <button
           type="button"
           onClick={() => {
-            const g = gabinete({ ...gab, grosor: opciones.grosor, gFrente: opciones.grosor })
+            const g = gabinete({ ...gab, grosor: opciones.grosor, gFrente: opciones.grosor, repisasMovibles: movibles })
             aplicar(() => g.tableros, null)
             setVarios(false)
             setNombre(`Gabinete ${gab.tipo === "bajo" ? "bajo" : gab.tipo === "alto" ? "alto" : "columna"} ${Math.round(gab.ancho)} mm`)
@@ -741,6 +886,17 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           ))}
         </div>
         {union !== "espiga" && (
+          <BibliotecaHerrajes
+            valor={herraje}
+            lista={herrajes}
+            cambiar={(h) => {
+              setHerraje(h)
+              const u = (Object.keys(HERRAJE_DE_UNION) as TipoUnion[]).find((k) => HERRAJE_DE_UNION[k] === h.id)
+              setUnion(u || "biblioteca")
+            }}
+          />
+        )}
+        {union !== "espiga" && (
           <span className="text-[12px] text-[#8A97AB]">
             Las piezas van a tope. Los barrenos de cara salen en el archivo, en capas BARRENO con su diámetro y profundidad (ABAJO = voltea la pieza). Los de canto van marcados en la orilla (capas CANTO) y se hacen con taladro y guía.
           </span>
@@ -754,6 +910,150 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
               </li>
             ))}
           </ul>
+        )}
+      </Seccion>
+
+      <Seccion titulo="Costo del mueble">
+        <span className="text-[11.5px] text-[#8A97AB]">
+          Pon tus precios: se guardan en este navegador.{" "}
+          {costo.filas.some((f) => !f.exacto) ? "Las hojas son una estimación (80 % de aprovechamiento); con «Acomodo en hojas» salen exactas." : `Hojas exactas del acomodo${costo.veces > 1 ? `, para ${costo.veces} muebles` : ""}.`}
+        </span>
+        <div className="flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
+          {costo.filas.map((f) => (
+            <div key={f.k} className="flex items-center gap-2">
+              <span className="min-w-0 flex-1">
+                {f.hojas} {f.hojas === 1 ? "hoja" : "hojas"} · {f.nombre}
+              </span>
+              <label className="flex items-center gap-1 text-[11.5px] text-[#8A97AB]">
+                $/hoja
+                <input value={precios[f.k] ?? ""} onChange={(e) => setPrecios((x) => ({ ...x, [f.k]: e.target.value }))} inputMode="decimal" className="w-20 rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-white" aria-label={`Precio por hoja de ${f.nombre}`} />
+              </label>
+              <span className="w-20 text-right text-white">{f.precio ? pesos(f.total) : "—"}</span>
+            </div>
+          ))}
+          {costo.metrosCanto > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1">{costo.metrosCanto} m de canto</span>
+              <label className="flex items-center gap-1 text-[11.5px] text-[#8A97AB]">
+                $/metro
+                <input value={precios.canto ?? ""} onChange={(e) => setPrecios((x) => ({ ...x, canto: e.target.value }))} inputMode="decimal" className="w-20 rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-white" aria-label="Precio por metro de canto" />
+              </label>
+              <span className="w-20 text-right text-white">{costo.pCanto ? pesos(costo.metrosCanto * costo.pCanto) : "—"}</span>
+            </div>
+          )}
+          {costo.herr.map((h) => (
+            <div key={h.nombre} className="flex items-center gap-2">
+              <span className="min-w-0 flex-1">
+                {h.cantidad} × {h.nombre}
+              </span>
+              <span className="w-20 text-right text-white">{pesos(h.total)}</span>
+            </div>
+          ))}
+          <div className="mt-1 flex items-center justify-between border-t border-[#2A3546] pt-1.5 text-[13.5px] font-semibold text-white">
+            <span>Costo de material{costo.faltan ? " (faltan precios)" : ""}</span>
+            <span>{pesos(costo.total)}</span>
+          </div>
+        </div>
+        <span className="text-[11.5px] text-[#8A97AB]">El precio de cada herraje se cambia en Uniones → Ajustar medidas. No incluye mano de obra ni corte.</span>
+      </Seccion>
+
+      <Seccion titulo="Planos, etiquetas y presupuesto">
+        <span className="text-[11.5px] text-[#8A97AB]">Se abren en otra pestaña: de ahí imprimes o guardas en PDF.</span>
+        {pagados[claveDiseno(clave)] ? (
+          <div className="grid grid-cols-2 gap-1.5">
+            <button type="button" onClick={() => abrir(htmlPlanos(datosDoc()))} className="rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-white hover:bg-[#243045]">
+              Planos de taller
+              <span className="block text-[11px] font-normal text-[#8A97AB]">Vistas acotadas, lista de corte y plano de cada pieza</span>
+            </button>
+            <button type="button" onClick={() => abrir(htmlEtiquetas(datosDoc(), acomodo ? copias : 1))} className="rounded-[8px] bg-[#1C2431] px-2 py-2 text-[12.5px] font-semibold text-white hover:bg-[#243045]">
+              Etiquetas con QR
+              <span className="block text-[11px] font-normal text-[#8A97AB]">Hoja A4 de 24 (70 × 37 mm)</span>
+            </button>
+          </div>
+        ) : (
+          <span className="text-[12px] text-[#8A97AB]">Los planos de taller y las etiquetas se activan al descargar el diseño (1 crédito). El presupuesto es gratis.</span>
+        )}
+        <div className="flex flex-col gap-1.5 rounded-[9px] border border-[#2A3546] bg-[#111821] p-2.5">
+          <span className="text-[12.5px] font-semibold text-white">Presupuesto para tu cliente</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Tu taller
+              <input value={presu.taller} onChange={(e) => setPresu((x) => ({ ...x, taller: e.target.value.slice(0, 60) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Teléfono
+              <input value={presu.telefono} onChange={(e) => setPresu((x) => ({ ...x, telefono: e.target.value.slice(0, 30) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="col-span-2 flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Cliente
+              <input value={cliente} onChange={(e) => setCliente(e.target.value.slice(0, 80))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Mano de obra $
+              <input value={presu.manoObraTxt} onChange={(e) => setPresu((x) => ({ ...x, manoObraTxt: e.target.value, manoObra: Math.max(0, numero(e.target.value) || 0) }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Utilidad %
+              <input value={presu.margenTxt} onChange={(e) => setPresu((x) => ({ ...x, margenTxt: e.target.value, margen: Math.max(0, numero(e.target.value) || 0) }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Anticipo %
+              <input value={String(presu.anticipo)} onChange={(e) => setPresu((x) => ({ ...x, anticipo: Math.min(100, Math.max(0, Math.round(numero(e.target.value) || 0))) }))} inputMode="numeric" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-right text-[12px] text-white" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-[11px] text-[#8A97AB]">
+              Entrega
+              <input value={presu.entrega} onChange={(e) => setPresu((x) => ({ ...x, entrega: e.target.value.slice(0, 40) }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" />
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-3 text-[12px] text-[#C9D2E0]">
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={presu.iva} onChange={(e) => setPresu((x) => ({ ...x, iva: e.target.checked }))} className="h-3.5 w-3.5 accent-[#C2560A]" />
+              Sumar IVA 16 %
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={presu.desglose} onChange={(e) => setPresu((x) => ({ ...x, desglose: e.target.checked }))} className="h-3.5 w-3.5 accent-[#C2560A]" />
+              Desglosar materiales
+            </label>
+          </div>
+          {(() => {
+            const sub = (costo.total + presu.manoObra) * (1 + presu.margen / 100)
+            const total = sub * (presu.iva ? 1.16 : 1)
+            return (
+              <div className="flex items-center justify-between text-[13px] text-white">
+                <span>Precio al cliente{costo.faltan ? <span className="text-[11.5px] text-[#F6D58E]"> (faltan precios arriba)</span> : null}</span>
+                <b>{pesos(Math.round(total * 100) / 100)}</b>
+              </div>
+            )
+          })()}
+          <button type="button" disabled={!m.piezas.length} onClick={verPresupuesto} className="rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
+            Ver presupuesto
+          </button>
+        </div>
+        {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}
+      </Seccion>
+
+      <Seccion titulo="Capas para tu CAM">
+        <span className="text-[11.5px] text-[#8A97AB]">
+          Cómo se llaman las capas en el DXF. {"{d}"} = diámetro, {"{p}"} = profundidad (0 = pasado), {"{cara}"} = ARRIBA o ABAJO.
+        </span>
+        {(
+          [
+            ["corte", "Corte"],
+            ["barrenoArriba", "Barreno arriba"],
+            ["barrenoAbajo", "Barreno abajo"],
+            ["ranura", "Ranura"],
+            ["canto", "Barreno de canto"],
+          ] as const
+        ).map(([k, n]) => (
+          <label key={k} className="flex items-center gap-2 text-[12.5px] text-[#C9D2E0]">
+            <span className="w-32 shrink-0">{n}</span>
+            <input value={capas[k]} onChange={(e) => setCapas((x) => ({ ...x, [k]: e.target.value.replace(/[^\w{}\- ]/g, "").slice(0, 40) }))} placeholder={CAPAS_INICIO[k]} className="min-w-0 flex-1 rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 font-mono text-[12px] text-white" />
+          </label>
+        ))}
+        {capasPropias && (
+          <button type="button" onClick={() => setCapas(() => CAPAS_INICIO)} className="self-start rounded-[6px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+            Volver a las de fábrica
+          </button>
         )}
       </Seccion>
 
@@ -1016,6 +1316,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           cotas={verCotas}
           editable
           ajustar={ajustar}
+          vista={vista}
           punto={punto}
           alSeleccionar={(i, p) => {
             setSel(i)
@@ -1038,9 +1339,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         <button type="button" aria-pressed={verCotas} onClick={() => setVerCotas((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${verCotas ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
           Cotas
         </button>
-        <button type="button" onClick={() => setAjustar((n) => n + 1)} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
+        <button type="button" onClick={() => { setVista(undefined); setAjustar((n) => n + 1) }} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
           Ajustar vista
         </button>
+        <span className="flex flex-wrap items-center gap-1" role="group" aria-label="Vistas">
+          {VISTAS.map(([id, n]) => (
+            <button key={id} type="button" onClick={() => setVista((x) => ({ cual: id, n: (x?.n || 0) + 1 }))} title={`Vista ${n.toLowerCase()}`} className={`rounded-[6px] px-1.5 py-1 text-[11.5px] font-semibold ${vista?.cual === id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
+        </span>
         {m.sueltos.length > 0 && <span className="text-[#FF9A9A]">En rojo: tableros que no tocan al mueble</span>}
       </div>
     </Visor3D>
@@ -1064,6 +1372,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         </>
       }
       vista3D={vista3D}
+      renombrarCapa={renombrarCapa}
+      camBloqueado={pagados[claveDiseno(clave)] ? undefined : "Descarga el diseño (1 crédito) y se activa el envío al CAM 2D."}
       sinAcomodo
       dibujo={d}
       avisos={avisos}
@@ -1092,6 +1402,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
                   </button>
                 ))}
               </div>
+              <button type="button" onClick={bajarZip} className="rounded-[8px] bg-[#1C2431] px-3 py-2 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+                Una pieza por archivo (ZIP de DXF)
+              </button>
               <span className="text-[12px] text-[#9FE0B5]">Pagado. Puedes bajar los tres formatos de este diseño durante 24 horas sin costo extra.</span>
             </div>
           )

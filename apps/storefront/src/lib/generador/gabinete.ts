@@ -25,6 +25,7 @@ export type OpcionesGabinete = {
   frente: Frente
   cajones: number
   gFrente: number // grosor de puertas y frentes
+  repisasMovibles?: boolean // sobre pines (sistema 32) en vez de fijas
 }
 
 export const GABINETE_INICIO: Record<TipoGabinete, Omit<OpcionesGabinete, "grosor" | "gFrente">> = {
@@ -88,7 +89,11 @@ export function gabinete(o0: OpcionesGabinete): { tableros: TableroC[]; avisos: 
   if (o.frente !== "cajones")
     for (let i = 1; i <= o.repisas; i++) {
       const z = zInt0 + ((zRep1 - zInt0) * i) / (o.repisas + 1) - e / 2
-      t.push({ nombre: o.repisas > 1 ? `Repisa ${i}` : "Repisa", plano: "horizontal", rol: "estructura", x0: xi0, x1: xi1, y0: 0, y1: fondoRepisa, z0: z, z1: z + e })
+      t.push(
+        o.repisasMovibles
+          ? { nombre: o.repisas > 1 ? `Repisa movible ${i}` : "Repisa movible", plano: "horizontal", rol: "repisa", x0: xi0 + 1, x1: xi1 - 1, y0: 0, y1: fondoRepisa - 5, z0: z, z1: z + e }
+          : { nombre: o.repisas > 1 ? `Repisa ${i}` : "Repisa", plano: "horizontal", rol: "estructura", x0: xi0, x1: xi1, y0: 0, y1: fondoRepisa, z0: z, z1: z + e },
+      )
     }
   // fondo
   if (o.fondoTipo === "ranura") {
