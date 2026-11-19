@@ -519,7 +519,10 @@ export default function Mueble3D({
     s.encuadrado = true
   }
   useEffect(() => {
-    if (ajustar) encuadrar()
+    if (!ajustar) return
+    encuadrar()
+    // si el mueble se está rehaciendo, se vuelve a encuadrar cuando termine
+    if (st.current) st.current.encuadrado = false
   }, [ajustar]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // cotas: ancho, alto y fondo del mueble, y las medidas de la pieza seleccionada
