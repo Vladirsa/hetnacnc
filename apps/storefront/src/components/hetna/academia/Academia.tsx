@@ -244,6 +244,23 @@ export function Academia({
           </section>
         )}
 
+        <LocalizedClientLink
+          href="/disenar/despiece-muebles"
+          className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#142033] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
+        >
+          <span className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Gratis · sin cuenta</span>
+            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]">Planos de muebles de melamina a tu medida</span>
+            <span className="max-w-[640px] text-[14.5px] leading-relaxed text-white/75">
+              Cocina, librero, ropero, cómoda, buró o mueble de TV: pon tus medidas y sale la lista de cortes con cantos, los
+              herrajes, el acomodo en hojas y el DXF. Si quieres, un taller HETNA te lo corta.
+            </span>
+          </span>
+          <span className="shrink-0 self-start rounded-[10px] bg-[#F07A1A] px-5 py-3 text-[14.5px] font-extrabold text-white group-hover:brightness-110 sm:self-auto">
+            Diseñar mi mueble →
+          </span>
+        </LocalizedClientLink>
+
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 md:grid-cols-3 gap-4">

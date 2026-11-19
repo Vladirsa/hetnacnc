@@ -1,4 +1,5 @@
-// Biblioteca de gabinetes de cocina prefabricados: cada modelo es una receta del
+// Biblioteca de gabinetes de cocina y muebles de melamina para la casa
+// (libreros, roperos, cómodas, burós…): cada modelo es una receta del
 // asistente de gabinete (gabinete.ts) con sus medidas de inicio; el cliente las
 // cambia y lo abre en el editor.
 
@@ -7,7 +8,7 @@ import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete } from "./gab
 export type ModeloCocina = {
   id: string
   nombre: string
-  grupo: "Bajos" | "Altos" | "Columnas"
+  grupo: "Bajos" | "Altos" | "Columnas" | "Casa"
   base: TipoGabinete
   medidas: { ancho: number; alto: number; fondo: number }
   receta: Partial<Omit<OpcionesGabinete, "grosor" | "gFrente" | "ancho" | "alto" | "fondo">>
@@ -28,6 +29,15 @@ export const MODELOS_COCINA: ModeloCocina[] = [
   { id: "alto-abierto", nombre: "Alto abierto (especiero)", grupo: "Altos", base: "alto", medidas: { ancho: 300, alto: 720, fondo: 320 }, receta: { frente: "nada", repisas: 3 } },
   { id: "alacena", nombre: "Alacena 2 puertas", grupo: "Columnas", base: "columna", medidas: { ancho: 600, alto: 2100, fondo: 560 }, receta: { frente: "puertas", repisas: 4 } },
   { id: "columna-cajones", nombre: "Columna de cajones", grupo: "Columnas", base: "columna", medidas: { ancho: 600, alto: 2100, fondo: 560 }, receta: { frente: "cajones", cajones: 6 } },
+  // Muebles de la casa (melamina): mismas reglas de carpintería que la cocina.
+  { id: "librero-abierto", nombre: "Librero abierto", grupo: "Casa", base: "columna", medidas: { ancho: 800, alto: 1800, fondo: 300 }, receta: { frente: "nada", repisas: 4, zoclo: 60, zocloRemetido: 20 } },
+  { id: "librero-puertas", nombre: "Librero con puertas", grupo: "Casa", base: "columna", medidas: { ancho: 800, alto: 1800, fondo: 350 }, receta: { frente: "puertas", repisas: 4, zoclo: 60, zocloRemetido: 20 } },
+  { id: "ropero-2p", nombre: "Ropero 2 puertas", grupo: "Casa", base: "columna", medidas: { ancho: 900, alto: 2000, fondo: 580 }, receta: { frente: "puertas", repisas: 3, zoclo: 80, zocloRemetido: 30 } },
+  { id: "comoda-4", nombre: "Cómoda 4 cajones", grupo: "Casa", base: "bajo", medidas: { ancho: 800, alto: 900, fondo: 450 }, receta: { frente: "cajones", cajones: 4, techo: "completo", zoclo: 60, zocloRemetido: 20 } },
+  { id: "buro-2", nombre: "Buró 2 cajones", grupo: "Casa", base: "bajo", medidas: { ancho: 450, alto: 550, fondo: 400 }, receta: { frente: "cajones", cajones: 2, techo: "completo", zoclo: 50, zocloRemetido: 20 } },
+  { id: "zapatera", nombre: "Zapatera 2 puertas", grupo: "Casa", base: "bajo", medidas: { ancho: 800, alto: 1000, fondo: 350 }, receta: { frente: "puertas", repisas: 3, techo: "completo", zoclo: 60, zocloRemetido: 20 } },
+  { id: "centro-tv", nombre: "Mueble de TV", grupo: "Casa", base: "bajo", medidas: { ancho: 1200, alto: 500, fondo: 420 }, receta: { frente: "nada", repisas: 1, techo: "completo", zoclo: 60, zocloRemetido: 20 } },
+  { id: "repisa-pared", nombre: "Repisa de pared", grupo: "Casa", base: "alto", medidas: { ancho: 900, alto: 300, fondo: 250 }, receta: { frente: "nada", repisas: 0 } },
   { id: "sobre-refri", nombre: "Alto sobre refrigerador", grupo: "Altos", base: "alto", medidas: { ancho: 900, alto: 400, fondo: 560 }, receta: { frente: "puertas", repisas: 0 } },
 ]
 

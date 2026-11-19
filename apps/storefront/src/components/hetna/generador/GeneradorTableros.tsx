@@ -572,10 +572,10 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
 
       {enfoque === "cocina" && (
         <>
-      <Seccion titulo="Biblioteca de cocina">
-        {(["Bajos", "Altos", "Columnas"] as const).map((g) => (
+      <Seccion titulo="Biblioteca de cocina y muebles">
+        {([["Bajos", "Cocina: bajos"], ["Altos", "Cocina: altos"], ["Columnas", "Cocina: columnas"], ["Casa", "Muebles para la casa"]] as const).map(([g, etiqueta]) => (
           <div key={g} className="flex flex-col gap-1">
-            <span className="text-[12px] font-semibold text-[#C9D2E0]">{g}</span>
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">{etiqueta}</span>
             <div className="grid grid-cols-3 gap-1.5">
               {modelos.filter((x) => x.grupo === g).map((x) => (
                 <button
@@ -1356,9 +1356,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
 
   return (
     <Estudio2D
-      titulo={enfoque === "cocina" ? "Cocina integral" : "Mueble desde imagen"}
+      titulo={enfoque === "cocina" ? "Cocina y muebles de melamina" : "Mueble desde imagen"}
       acento="2D"
-      subtitulo={enfoque === "cocina" ? "Biblioteca de gabinetes a tu medida" : "Tu foto o plano, listo para maquilar"}
+      subtitulo={enfoque === "cocina" ? "Gabinetes, libreros, roperos y cómodas a tu medida" : "Tu foto o plano, listo para maquilar"}
       icono={
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="14" rx="2" />
