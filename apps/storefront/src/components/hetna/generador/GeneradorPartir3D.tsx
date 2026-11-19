@@ -86,6 +86,9 @@ export function GeneradorPartir3D() {
   const [res, setRes] = useState<Resultado | null>(null)
   const [calculando, setCalculando] = useState(false)
   const [separar, setSeparar] = useState(20)
+  const [porUnion, setPorUnion] = useState(0) // 0 = automático
+  const [vista, setVista] = useState<"piezas" | "cortes">("piezas")
+  const [ejeToque, setEjeToque] = useState<Eje>(2)
   const turno = useRef(0)
 
   const med = useMemo(() => (malla ? medidasMalla(malla) : null), [malla])
@@ -150,6 +153,7 @@ export function GeneradorPartir3D() {
           holgura: Number.isFinite(numero(holgura)) ? numero(holgura) : OPCIONES_BASE.holgura,
           imanD: numero(imanD) || OPCIONES_BASE.imanD,
           imanH: numero(imanH) || OPCIONES_BASE.imanH,
+          porUnion,
         })
         if (n === turno.current) { setRes(r); setError("") }
       } catch (e) {
@@ -159,7 +163,17 @@ export function GeneradorPartir3D() {
       }
     }, 350)
     return () => clearTimeout(reloj)
-  }, [malla, cortes, conector, diametro, largo, holgura, imanD, imanH])
+  }, [malla, cortes, conector, diametro, largo, holgura, imanD, imanH, porUnion])
+
+  // Para la vista: arreglos estables (si no, el 3D se rehace en cada render)
+  const piezasVista = useMemo(() => (res && res.piezas.length > 1 ? res.piezas.map((p) => ({ nombre: p.nombre, tris: p.malla.tris })) : null), [res])
+  const marcasVista = useMemo(() => (res ? res.marcas : []), [res])
+  // Tocar el modelo en la vista "Cortes y pernos": corte en ese punto, en el eje elegido
+  const cortarAqui = (p: [number, number, number]) => {
+    const pos = r1(p[ejeToque])
+    if (cortes.some((c) => c.eje === ejeToque && Math.abs(c.pos - pos) < 2)) return
+    setCortes((cs) => [...cs, { eje: ejeToque, pos }])
+  }
 
   const elegirImpresora = (i: number) => {
     setImpresora(i)
@@ -341,6 +355,19 @@ export function GeneradorPartir3D() {
                   {CONECTORES.map((c) => <Opcion key={c.id} activa={conector === c.id} onClick={() => setConector(c.id)}>{c.nombre}</Opcion>)}
                 </div>
                 <span className="text-[12.5px] text-[#6B6A63]">{CONECTORES.find((c) => c.id === conector)?.nota}</span>
+                {conector !== "ninguno" && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[12px] font-semibold text-[#6B6A63]">{conector === "imanes" ? "Imanes" : "Pernos"} por unión</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[0, 1, 2, 3, 4, 6].map((n) => (
+                        <Opcion key={n} activa={porUnion === n} onClick={() => setPorUnion(n)}>{n === 0 ? "Automático" : n}</Opcion>
+                      ))}
+                    </div>
+                    <span className="text-[12px] text-[#6B6A63]">
+                      {porUnion === 0 ? "Según el tamaño de cada cara: 1 en caras chicas y hasta 4 en las grandes." : `${porUnion} en cada cara de corte, si caben con su pared.`} Ve dónde quedan en “Cortes y pernos”.
+                    </span>
+                  </div>
+                )}
                 {(conector === "pernos" || conector === "integrado") && (
                   <div className="grid grid-cols-3 gap-2">
                     <Numero etiqueta="Diámetro" valor={diametro} cambiar={setDiametro} />
@@ -377,10 +404,23 @@ export function GeneradorPartir3D() {
           {malla && med && (
             <>
               <div className="relative">
-                <Vista modelo={malla.tris} piezas={res && res.piezas.length > 1 ? res.piezas.map((p) => ({ nombre: p.nombre, tris: p.malla.tris })) : null} cortes={cortes} separar={separar} />
+                <Vista modelo={malla.tris} piezas={piezasVista} cortes={cortes} marcas={vista === "cortes" ? marcasVista : []} modo={vista} separar={separar} alTocar={cortarAqui} />
                 {calculando && <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-[12.5px] font-semibold text-[#6B6A63] border border-[#E7E4DC]">Partiendo...</span>}
               </div>
-              {res && res.piezas.length > 1 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Opcion activa={vista === "piezas"} onClick={() => setVista("piezas")}>Piezas</Opcion>
+                <Opcion activa={vista === "cortes"} onClick={() => setVista("cortes")}>Cortes y {conector === "imanes" ? "imanes" : "pernos"}</Opcion>
+                {vista === "cortes" && (
+                  <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6B6A63]">
+                    <span className="ml-1">Toca el modelo para cortar en</span>
+                    {EJES.map((e, i) => (
+                      <Opcion key={e} activa={ejeToque === i} onClick={() => setEjeToque(i as Eje)}>{e}</Opcion>
+                    ))}
+                  </span>
+                )}
+              </div>
+              {vista === "cortes" && <p className="m-0 text-[12.5px] text-[#6B6A63]">Los planos naranjas son los cortes y los cilindros verdes, {conector === "imanes" ? "los huecos de los imanes" : "los pernos"}. Gira con un dedo o el ratón; un toque sin arrastrar agrega un corte en ese punto.</p>}
+              {res && res.piezas.length > 1 && vista === "piezas" && (
                 <label className="flex items-center gap-3 text-[13px] text-[#6B6A63]">
                   Separar piezas
                   <input type="range" min={0} max={80} value={separar} onChange={(e) => setSeparar(Number(e.target.value))} className="flex-1 max-w-[260px] accent-[#C2560A]" />
@@ -391,7 +431,7 @@ export function GeneradorPartir3D() {
                 {[
                   ["Modelo", `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm`],
                   ["Piezas", res ? String(res.piezas.length) : "—"],
-                  [conector === "imanes" ? "Imanes" : "Conectores", res ? String(conector === "imanes" ? res.conectores * 2 : res.conectores) : "—"],
+                  [conector === "imanes" ? "Imanes" : "Pernos", res ? (conector === "ninguno" ? "—" : `${conector === "imanes" ? res.conectores * 2 : res.conectores} en ${res.uniones} ${res.uniones === 1 ? "unión" : "uniones"}`) : "—"],
                   ["Caben en la cama", res ? (noCaben ? `${res.piezas.length - noCaben} de ${res.piezas.length}` : "Todas ✓") : "—"],
                 ].map(([t, v]) => (
                   <div key={t} className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5">
