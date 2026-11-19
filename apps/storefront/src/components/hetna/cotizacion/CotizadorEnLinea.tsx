@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 
 import { leerArchivoCad, type GeoCad } from "@/lib/cotizador/archivo-cad"
+import { procesoDe, puntosRevision, resumenRevision } from "@/lib/cotizador/revision-archivo"
+import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
 import type { ServicioPublico, TallerPublico, TipoPublico } from "@/lib/cotizador/taller-publico"
 
 // Cotizador en línea de un taller (hetnacnc.com/t/<slug>):
@@ -170,6 +172,7 @@ export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
       if (servicio) fd.append("servicio_id", servicio.id)
       if (tipo) fd.append("tipo_id", tipo.id)
       fd.append("medidas", JSON.stringify(medidas))
+      if (geo) fd.append("revision", resumenRevision(puntosRevision(geo, { proceso: procesoDe(servicio?.nombre) })))
       if (archivo) fd.append("archivo", archivo)
       const r = await fetch(`/api/taller-publico/${taller.slug}/solicitar`, { method: "POST", body: fd })
       const d = await r.json().catch(() => ({}))
@@ -315,6 +318,9 @@ export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
             {geo.avisos.length ? (
               <p className="m-0 text-[12px] text-[#8A3D06] md:col-span-2">{geo.avisos.join(" ")}</p>
             ) : null}
+            <div className="md:col-span-2">
+              <RevisionArchivo geo={geo} proceso={procesoDe(servicio?.nombre)} />
+            </div>
           </div>
         ) : (
           <div className="mt-4">

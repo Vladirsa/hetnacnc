@@ -399,8 +399,12 @@ export async function solicitar(slug: string, campos: Record<string, any>, archi
   const med = textoMedidas(medidas)
   const partida = servicio ? `${servicio.emoji || "🔧"} ${servicio.nombre} — ${tipo.nombre}` : "Solicitud en línea"
   const descripcion = [med, archivoGuardado ? `Archivo: ${archivoGuardado.nombre}` : "", d.mensaje].filter(Boolean).join("\n")
+  // Revisión automática del archivo hecha en el navegador del cliente
+  // (contornos abiertos, duplicados, textos...): el taller la ve en las notas.
+  const revision = String(campos.revision || "").replace(/[\u0000-\u001f]/g, " ").slice(0, 600).trim()
   const notas =
     `🌐 Solicitud desde tu cotizador en línea.\n` +
+    (revision ? `📐 Revisión del archivo: ${revision}\n` : "") +
     (estimado ? `Precio estimado automático: ${dinero(estimado, moneda)} + IVA (revísalo antes de mandarla).\n` : "Sin precio automático: pon tú el precio.\n") +
     (d.mensaje ? `Mensaje del cliente: ${d.mensaje}` : "")
 

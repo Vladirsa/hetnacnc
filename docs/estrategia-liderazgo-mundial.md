@@ -28,6 +28,13 @@ Hoy nadie junta las seis piezas: marketplace de máquinas e insumos, fabricació
 | Pago protegido (Laserhub) | SafeDeal y expediente del pedido | Pasar de "protegido" a "HETNA responde" (Fase 4) |
 | Anidado y plantillas (O'Brien, JLC) | Generadores paramétricos y anidado | Unirlos con cotizar y comprar en un solo paso |
 | Software gratis para el taller (Xometry Workcenter) | App Cotizador con plan gratis | Ya lo tenemos y es más completo; hay que comunicarlo |
+| Páginas por ciudad (LaserBoost, QuickCut) | `/cnc/<guía>/<ciudad>` con 8 ciudades, pero sólo la guía de corte láser en MDF las tiene activas | Llevarlo a láser, router y plasma, con calculadora en la página |
+| Guías de diseño (LaserBoost) | Guía "archivos DXF para router" | Guías de preparar archivo para láser y plasma |
+| Métricas públicas (Fictiv) | Se calculan cada día (% a tiempo, trabajos terminados, reclamos), pero sólo se ven al comparar propuestas | Mostrarlas en el perfil y el ranking, y medir el tiempo de respuesta |
+| Asignación de taller (Factorem, Laserhub) | La solicitud se difunde a hasta 60 talleres por material y zona, y la ronda se amplía sola | Elegir el mejor taller por capacidad, puntualidad y cercanía |
+| Pago retenido (Laserhub) | En modo "hetna" el cliente le paga a HETNA y el taller cobra al entregar; hay fotos por hito | Garantía de fecha, exprés y reposición (Fase 4) |
+| Generador → fabricar | El diseño pasa directo a la solicitud de fabricación | Mostrar precio y comprar en el mismo paso |
+| Nesting | Se usa en los generadores para contar hojas | Usarlo para cobrar material real en el precio |
 
 ---
 
@@ -43,7 +50,7 @@ No cambia la operación. Cada punto se puede programar y desplegar por separado.
 
 | # | Mejora | Copiado de | Carril | Por qué primero |
 |---|---|---|---|---|
-| 1.1 | **Revisión automática del archivo**: contornos abiertos, líneas duplicadas (corte doble), huecos muy chicos, piezas fuera de medida de hoja, texto sin convertir, malla 3D abierta. Se muestra como lista ✓/⚠ con cómo arreglarlo. | OSH Cut, RapidDirect, Protolabs | 🛠️🏢 | La lectura del archivo ya existe; un solo cambio mejora los 3 cotizadores (tienda, `/t/<taller>`, solicitudes). Menos reclamos y más confianza. |
+| 1.1 ✅ | **Revisión automática del archivo**: contornos abiertos, líneas duplicadas (corte doble), huecos muy chicos, piezas fuera de medida de hoja, texto sin convertir, malla 3D abierta. Se muestra como lista ✓/⚠ con cómo arreglarlo. | OSH Cut, RapidDirect, Protolabs | 🛠️🏢 | La lectura del archivo ya existe; un solo cambio mejora los 3 cotizadores (tienda, `/t/<taller>`, solicitudes). Menos reclamos y más confianza. |
 | 1.2 | **Precio desglosado y en vivo**: material, corte, perforaciones, cantidad y envío. Cambia al mover material, espesor o cantidad. | JLC, Ponoko | 🛠️🏢 | El precio se ve justo; el cliente prueba opciones en vez de irse. |
 | 1.3 | **Métricas públicas del taller**: % de entregas a tiempo, tiempo de respuesta y trabajos terminados, en el perfil y el ranking. | Fictiv (95.4%), FACTUREE | 🛠️🏢 | Las insignias ya existen; con números reales se gana confianza B2B. |
 | 1.4 | **Páginas por ciudad × servicio** ("corte láser en Puebla", "router CNC en Monterrey"…) con calculadora y talleres de esa ciudad, más **guías de diseño en español** (cómo preparar tu DXF para láser, router, plasma). | LaserBoost, QuickCut, Craftcloud | 🛠️🏢 | Tráfico gratis de Google que llega directo a cotizar. La fábrica de contenido las genera. |

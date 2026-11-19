@@ -7,6 +7,8 @@ import { PrivacidadSolicitud } from "./PrivacidadSolicitud"
 import { TarjetaAfiliacion } from "@/components/hetna/cuenta/TarjetaAfiliacion"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
+import { procesoDe } from "@/lib/cotizador/revision-archivo"
+import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
 
 import {
   ACABADOS,
@@ -120,6 +122,10 @@ export default function FormSolicitudTaller({
     (prellenado?.archivos || []).map((a, i) => ({ id: `ini-${i}`, nombre: a.nombre, tamano: a.tamano, avance: 100, subido: a, geo: a.geo }))
   )
   const entrada = useRef<HTMLInputElement>(null)
+  // Proceso elegido en el formulario (para la revisión del archivo: el agujero
+  // mínimo no es igual en láser, router o plasma)
+  const procesoElegido = () =>
+    (typeof document !== "undefined" ? (document.getElementById("servicio") as HTMLSelectElement | null)?.value : "") || servicioInicial || prellenado?.proceso || ""
   const medidasRef = useRef<HTMLInputElement>(null)
   const archivoPrellenado = useRef(false)
   const [cp, setCp] = useState("")
@@ -224,9 +230,9 @@ export default function FormSolicitudTaller({
         .catch((e: Error) => poner({ error: e.message }))
       // Vista previa de medidas: se lee aquí mismo, sin mandar nada.
       if (/\.(dxf|svg|stl|obj)$/i.test(f.name)) {
-        import("@/lib/cotizador/archivo-cad")
-          .then(({ leerArchivoCad }) => leerArchivoCad(f))
-          .then((g) => {
+        Promise.all([import("@/lib/cotizador/archivo-cad"), import("@/lib/cotizador/revision-archivo")])
+          .then(async ([{ leerArchivoCad }, rev]) => ({ g: await leerArchivoCad(f), rev }))
+          .then(({ g, rev }) => {
             if (!g || !(g.largo > 0)) return
             const mm = (n: number) => (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("es-MX")
             const texto =
@@ -234,7 +240,11 @@ export default function FormSolicitudTaller({
                 ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm${g.volumen_cm3 ? ` · ${mm(g.volumen_cm3)} cm³` : ""}`
                 : `${mm(g.largo)} × ${mm(g.ancho)} mm · ${(g.corte_mm / 1000).toLocaleString("es-MX", { maximumFractionDigits: 2 })} m de corte` +
                   (g.perforaciones ? ` · ${g.perforaciones} perforaciones` : "")
-            poner({ geo: texto, cad: g, verCad: true })
+            // La revisión automática del archivo viaja con las medidas: así el
+            // taller ve de una vez si el archivo trae contornos abiertos, textos...
+            const malos = rev.puntosRevision(g, { proceso: rev.procesoDe(procesoElegido()) }).filter((p) => p.nivel !== "ok")
+            const conRevision = malos.length ? `${texto} · revisión: ${rev.resumenRevision(malos)}` : `${texto} · archivo revisado sin problemas`
+            poner({ geo: conRevision, cad: g, verCad: true })
             const campo = medidasRef.current
             if (campo && !campo.value.trim()) campo.value = g.tipo === "3d" ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm` : `${mm(g.largo)} × ${mm(g.ancho)} mm`
           })
@@ -482,6 +492,9 @@ export default function FormSolicitudTaller({
                       <div className="px-3 pb-3">
                         <VisorCad geo={a.cad} alto={240} />
                         <p className="mt-1 text-xs text-[#6B675C]">Revisa que sea la pieza correcta: así la verá el taller al cotizar.</p>
+                        <div className="mt-2">
+                          <RevisionArchivo geo={a.cad} proceso={procesoDe(procesoElegido())} />
+                        </div>
                       </div>
                     )}
                   </li>
