@@ -41,15 +41,15 @@ describe("artículos de instructores: HTML seguro", () => {
 })
 
 describe("comisión de instructores con artículos", () => {
-  it("escalones por omisión: 1 artículo 4 %, 2 o más 3 %", () => {
-    expect(escalones("")).toEqual([{ articulos: 1, pct: 4 }, { articulos: 2, pct: 3 }])
+  it("escalones por omisión: 1 artículo 4.5 %, 2 o más 4 %", () => {
+    expect(escalones("")).toEqual([{ articulos: 1, pct: 4.5 }, { articulos: 2, pct: 4 }])
     expect(comisionPara(0, 5)).toBe(5)
-    expect(comisionPara(1, 5)).toBe(4)
-    expect(comisionPara(7, 5)).toBe(3)
+    expect(comisionPara(1, 5)).toBe(4.5)
+    expect(comisionPara(7, 5)).toBe(4)
   })
   it("nunca sube la comisión normal", () => {
-    expect(comisionPara(1, 3.5)).toBe(3.5)
-    expect(comisionPara(2, 3.5)).toBe(3)
+    expect(comisionPara(1, 4.2)).toBe(4.2)
+    expect(comisionPara(2, 4.2)).toBe(4)
   })
   it("lee la regla del entorno e ignora valores raros", () => {
     expect(escalones("3:2, 1:4.5, x:1, 2:0")).toEqual([{ articulos: 1, pct: 4.5 }, { articulos: 3, pct: 2 }])
@@ -57,8 +57,8 @@ describe("comisión de instructores con artículos", () => {
     expect(diasVigencia("60")).toBe(60)
   })
   it("dice cuál es el siguiente escalón", () => {
-    expect(siguienteEscalon(0, 5)).toEqual({ articulos: 1, pct: 4 })
-    expect(siguienteEscalon(1, 5)).toEqual({ articulos: 2, pct: 3 })
+    expect(siguienteEscalon(0, 5)).toEqual({ articulos: 1, pct: 4.5 })
+    expect(siguienteEscalon(1, 5)).toEqual({ articulos: 2, pct: 4 })
     expect(siguienteEscalon(2, 5)).toBeNull()
   })
 })

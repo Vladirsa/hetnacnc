@@ -1,8 +1,10 @@
 // Instructores que escriben en el blog pagan menos comisión por curso vendido.
 //
 // Regla (cambiable con variables de entorno, sin tocar código):
-//   ACADEMIA_AUTOR_ESCALONES="1:4,2:3"   artículos aprobados → % de comisión
-//                                         (1 artículo = 4 %, 2 o más = 3 %)
+//   ACADEMIA_AUTOR_ESCALONES="1:4.5,2:4"  artículos aprobados → % de comisión
+//                                         (1 artículo = 4.5 %, 2 o más = 4 %)
+// Ojo: la comisión de Mercado Pago/PayPal (~3.5 % + IVA) sale de la parte de
+// HETNA. Por debajo de ~4 % cada venta de curso deja pérdida.
 //   ACADEMIA_AUTOR_DIAS=90                cuántos días cuenta cada artículo
 // La comisión normal de cursos es la regla "cursos" de Mercur
 // (scripts/setup-course-commission.ts); el descuento nunca la sube.
@@ -21,13 +23,13 @@ import { servicioBlog } from "./blog"
 export type Escalon = { articulos: number; pct: number }
 
 export function escalones(texto = process.env.ACADEMIA_AUTOR_ESCALONES): Escalon[] {
-  const lista = String(texto || "1:4,2:3")
+  const lista = String(texto || "1:4.5,2:4")
     .split(",")
     .map((x) => x.split(":").map((n) => Number(n.trim())))
     .filter(([a, p]) => Number.isInteger(a) && a > 0 && Number.isFinite(p) && p >= 1 && p <= 100)
     .map(([articulos, pct]) => ({ articulos, pct }))
     .sort((a, b) => a.articulos - b.articulos)
-  return lista.length ? lista : [{ articulos: 1, pct: 4 }, { articulos: 2, pct: 3 }]
+  return lista.length ? lista : [{ articulos: 1, pct: 4.5 }, { articulos: 2, pct: 4 }]
 }
 
 export const diasVigencia = (texto = process.env.ACADEMIA_AUTOR_DIAS) => {

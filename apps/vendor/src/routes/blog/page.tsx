@@ -68,7 +68,8 @@ Deja una línea vacía entre párrafos. **Negritas** con dos asteriscos.
 - Un elemento por línea
 
 [Texto de una liga](https://...)
-![Descripción de una foto](https://...)`
+
+Para poner una foto usa el botón "Agregar foto": se sube y se pega sola.`
 
 const subirPortada = async (archivo: File): Promise<string> => {
   if (!/^image\/(jpeg|png|webp)$/.test(archivo.type)) throw new Error("Usa una imagen JPG, PNG o WEBP.")
@@ -125,6 +126,22 @@ export default function BlogTallerPage() {
     try {
       const url = await subirPortada(a)
       setF((x) => ({ ...x, portada: url }))
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  const agregarFoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const a = e.target.files?.[0]
+    e.target.value = ""
+    if (!a) return
+    setOcupado(true)
+    try {
+      const url = await subirPortada(a)
+      const desc = a.name.replace(/\.[^.]+$/, "").replace(/[\[\]()]/g, " ").slice(0, 60) || "foto"
+      setF((x) => ({ ...x, texto: `${x.texto.trimEnd()}\n\n![${desc}](${url})\n\n` }))
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -244,9 +261,15 @@ export default function BlogTallerPage() {
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <Label>Artículo *</Label>
-              <button type="button" className="text-xs text-ui-fg-interactive" onClick={() => setAyuda(!ayuda)}>
-                {ayuda ? "Ocultar ayuda" : "¿Cómo doy formato?"}
-              </button>
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer text-xs text-ui-fg-interactive">
+                  Agregar foto
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={agregarFoto} disabled={ocupado} className="hidden" />
+                </label>
+                <button type="button" className="text-xs text-ui-fg-interactive" onClick={() => setAyuda(!ayuda)}>
+                  {ayuda ? "Ocultar ayuda" : "¿Cómo doy formato?"}
+                </button>
+              </div>
             </div>
             {ayuda && <pre className="whitespace-pre-wrap rounded-md bg-ui-bg-subtle p-3 text-xs">{AYUDA}</pre>}
             <Textarea rows={18} value={f.texto} onChange={(e) => setF({ ...f, texto: e.target.value })} placeholder="Escribe aquí. Deja una línea vacía entre párrafos." />
