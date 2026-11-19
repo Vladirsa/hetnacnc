@@ -3,6 +3,7 @@
 // Llaveros, placas y adornos con nombre dentro del 3D Studio: el llavero en
 // 3D (placa con letras en relieve, para imprimir), el dibujo para láser en
 // Diseño 2D (capa CORTE y capa GRABADO) y los archivos en Exportación.
+import { BotonesCam } from "./BotonesCam"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -329,6 +330,9 @@ export function GeneradorLlaveros() {
           </div>
         </TarjetaExport>
       </div>
+      <TarjetaExport titulo="Maquinar en tu láser o router" nota="Se abre en el CAM de HETNA: eliges máquina y herramienta y bajas el G-code.">
+        <BotonesCam nombre={archivo} dxf={() => dibujoDXF(r!.dibujo)} stl={() => mallaSTL(r!.malla)} />
+      </TarjetaExport>
 
       <TarjetaExport titulo="¿Cuánto cuesta?" nota={`Precio para ${piezas} ${piezas === 1 ? "pieza" : "piezas"}, al instante o por WhatsApp.`}>
         <div className="flex gap-2">

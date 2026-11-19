@@ -191,6 +191,18 @@ async function geometrias(piezas: PiezaVista[]) {
   })
 }
 
+// vistas estándar, como en SketchUp (en three: y arriba, z al frente, x a la derecha)
+export type VistaEstandar = "iso" | "arriba" | "frente" | "derecha" | "atras" | "izquierda" | "abajo"
+const DIR_VISTA: Record<VistaEstandar, THREE.Vector3> = {
+  iso: new THREE.Vector3(0.75, 0.55, 1),
+  arriba: new THREE.Vector3(0, 1, 0.0001),
+  frente: new THREE.Vector3(0, 0, 1),
+  derecha: new THREE.Vector3(1, 0, 0),
+  atras: new THREE.Vector3(0, 0, -1),
+  izquierda: new THREE.Vector3(-1, 0, 0),
+  abajo: new THREE.Vector3(0, -1, 0.0001),
+}
+
 export default function Mueble3D({
   piezas,
   sueltos = [],
@@ -201,6 +213,7 @@ export default function Mueble3D({
   cotas = true,
   editable = false,
   ajustar = 0,
+  vista,
   punto,
   alSeleccionar,
   alEmpujar,
@@ -215,6 +228,7 @@ export default function Mueble3D({
   cotas?: boolean // líneas de medida del mueble y de la pieza seleccionada
   editable?: boolean
   ajustar?: number // cambiarlo vuelve a encuadrar la cámara
+  vista?: { cual: VistaEstandar; n: number } // vista estándar (cambiar n la vuelve a poner)
   punto?: Pt | null
   alSeleccionar?: (indice: number | null, punto: Pt | null) => void
   alEmpujar?: (indice: number, eje: Eje, lado: 0 | 1, delta: number) => void
@@ -502,6 +516,7 @@ export default function Mueble3D({
     cam.far = r2 * 4
     cam.updateProjectionMatrix()
   }
+  const dirVista = useRef(new THREE.Vector3(0.75, 0.55, 1))
   const encuadrar = () => {
     const s = st.current
     if (!s || !s.mallas.length) return
@@ -510,7 +525,7 @@ export default function Mueble3D({
     const centro = caja.getCenter(new THREE.Vector3())
     const r = tam.length() / 2 || 500
     const dist = r / Math.sin(((s.camera.fov * Math.PI) / 180) / 2) * (s.camera.aspect < 1 ? 1.5 : 1.05)
-    s.camera.position.copy(centro.clone().add(new THREE.Vector3(0.75, 0.55, 1).normalize().multiplyScalar(dist)))
+    s.camera.position.copy(centro.clone().add(dirVista.current.clone().normalize().multiplyScalar(dist)))
     s.controls.target.copy(centro)
     s.camera.near = Math.max(1, dist / 200)
     s.camera.far = dist * 20
@@ -519,7 +534,13 @@ export default function Mueble3D({
     s.encuadrado = true
   }
   useEffect(() => {
+    if (!vista) return
+    dirVista.current.copy(DIR_VISTA[vista.cual])
+    encuadrar()
+  }, [vista?.cual, vista?.n]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
     if (!ajustar) return
+    dirVista.current.set(0.75, 0.55, 1)
     encuadrar()
     // si el mueble se está rehaciendo, se vuelve a encuadrar cuando termine
     if (st.current) st.current.encuadrado = false

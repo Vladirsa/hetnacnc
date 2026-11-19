@@ -15,6 +15,7 @@
 // del cliente (lib/data/cam-maquinas) o, sin sesión, en este navegador.
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { tomarPiezaParaCam2D } from "@/lib/generador/aLaboratorio"
 import { Aviso, Boton, CampoNum, Datos, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import type { DatosCam, FresaCam, MaquinaCam } from "@/lib/data/cam-maquinas"
 import { CandadoCam, type NegadoCam, textoCupo, useCupoCam } from "@/components/hetna/cam/CandadoCam"
@@ -317,6 +318,14 @@ export function EstudioCam2D() {
     if (!pieza) return "Sube primero tu DXF o SVG: el proyecto guarda el dibujo y sus operaciones."
     return { version: 1, archivo: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), dxf: dibujoDXF(pieza), material, espesor, maquinaId, origen, ops, hoja, anidar: anidarHojas, extras: extras.map((x) => ({ nombre: x.nombre, dxf: dibujoDXF(x.dibujo), copias: x.copias })) }
   }
+  // un generador del sitio dejó su DXF para maquinarlo aquí
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("pieza")) return
+    tomarPiezaParaCam2D().then((p) => {
+      if (p) abrir(new File([p.dxf], p.nombre.replace(/[^\w.\- ]/g, "").slice(0, 80) || "pieza.dxf", { type: "application/dxf" }))
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const aplicarProyecto = (d: any): boolean => {
     if (!d || typeof d.dxf !== "string" || !Array.isArray(d.ops)) return false
     let leido: Dibujo

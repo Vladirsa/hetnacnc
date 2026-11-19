@@ -3,6 +3,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { BotonesCam } from "./BotonesCam"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -396,6 +397,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                       </Boton>
                       <Boton onClick={() => descargar(`${archivo}.svg`, vectorSVG(res, anchoMM), "image/svg+xml")}>SVG</Boton>
                     </div>
+                    <BotonesCam nombre={archivo} dxf={() => vectorDXF(res, anchoMM)} compacto />
                   </TarjetaExport>
                   <TarjetaExport titulo="¿Cuánto cuesta cortarlo?" nota="Precio al instante o por WhatsApp.">
                     <div className="flex gap-2">
