@@ -10,6 +10,7 @@ import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
 import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
+import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
 import { productoExtra } from "@/lib/hetna/producto-extra"
@@ -244,7 +245,7 @@ export const ProductDetailsPage = async ({
       {/* Al final de la ficha: más productos para seguir viendo */}
       {masProductos.length > 0 && (
         <div className="mt-4">
-          <HomeProductSection heading="Descubre más productos" products={masProductos as never} locale={locale} />
+          <ProductosCompactos titulo="Descubre más productos" productos={masProductos as never} />
         </div>
       )}
     </>
