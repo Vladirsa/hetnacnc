@@ -4,15 +4,25 @@
 // nuevos de control que se escriben de vuelta en la hoja.
 //
 // Secuencia: paso 1 (presentación) -> +4 días paso 2 -> +6 días paso 3
-// -> pausa 60 días -> paso 4 (último recordatorio) -> FINALIZADO.
-// Nunca escribe a REGISTRADO, BAJA, RESPONDIO, REBOTE, SIN_EMAIL ni FINALIZADO.
+// -> pausa 60 días -> paso 4 -> desde ahí una novedad al mes (paso 5, 6, …)
+// hasta que se registre, responda o pida su baja (decidido por Vlado el 19 nov
+// 2026). Nunca escribe a REGISTRADO, BAJA, RESPONDIO, REBOTE, SIN_EMAIL ni ERROR.
+// Los FINALIZADO de antes (paso 4) entran a las novedades 30 días después.
+//
+// Pruebas A/B/C: en español, el correo 1 (y el 2 de talleres) tiene varias
+// versiones. A cada empresa le toca siempre la misma (según su id) y la liga
+// lleva la versión en utm_campaign (vendedor_p1b…) para medir cuál funciona.
+// Desde el correo 3 va la encuesta de un clic "¿por qué no se registran?"
+// (flujo «Prospectos HETNA - Opinión», webhook hetna-prospectos-opinion).
 
 const LIMITE = 40;
 const SITIO = 'https://www.hetnacnc.com';
 const BAJA = 'https://n8n.hetnacnc.com/webhook/hetna-prospectos-baja';
 const DOMICILIO = 'HETNA CNC · Col. Centro, Apizaco, Tlaxcala, México';
 const ESPERA = { 1: 4, 2: 6, 3: 60 };
-const NO_TOCAR = ['REGISTRADO', 'BAJA', 'RESPONDIO', 'REBOTE', 'SIN_EMAIL', 'FINALIZADO', 'ERROR'];
+const MENSUAL = 30;
+const OPINION = 'https://n8n.hetnacnc.com/webhook/hetna-prospectos-opinion';
+const NO_TOCAR = ['REGISTRADO', 'BAJA', 'RESPONDIO', 'REBOTE', 'SIN_EMAIL', 'ERROR'];
 
 const hoy = $now.setZone('America/Mexico_City').startOf('day');
 const HOY = hoy.toISODate();
@@ -36,8 +46,16 @@ function ejemplosComprador(r) {
   return { asunto: 'cortes láser, router y maquinados CNC con talleres verificados', para: 'piezas, letreros, prototipos y producción por lote', corto: 'piezas, letreros, prototipos' };
 }
 
+// Versión de la prueba A/B/C que le toca a esta empresa (siempre la misma)
+function variante(id, n) {
+  let h = 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003;
+  return h % n;
+}
+
 function liga(ruta, r, paso) {
-  const utm = 'utm_source=correo&utm_medium=prospeccion&utm_campaign=' + segmento(r.tipo) + '_p' + paso;
+  const utm = 'utm_source=correo&utm_medium=prospeccion&utm_campaign=' + segmento(r.tipo) + '_p' + paso + (r._v || '');
   return SITIO + ruta + (ruta.includes('?') ? '&' : '?') + utm;
 }
 
@@ -207,6 +225,103 @@ const T = {
   },
 };
 
+// Versiones B y C (español) para medir qué mensaje funciona mejor. La A es la de T.
+const VARIANTES = {
+  vendedor: {
+    1: [
+      (r) => ({
+        asunto: r.empresa + ': clientes que buscan talleres en ' + (r.ciudad || 'su zona'),
+        cuerpo: '<p>En <b>HETNA CNC</b> los clientes publican lo que necesitan fabricar (pieza, material, medidas y archivo) y la solicitud les llega a los talleres de su zona. Ustedes cotizan sólo lo que les conviene.</p>' +
+          '<ul><li>Registrarse y publicar es gratis; sólo pagan 6% cuando venden.</li><li>Cobran protegido con Mercado Pago y facturan directo a su cliente.</li>' +
+          '<li>Los primeros 30 talleres verificados quedan como <b>Taller fundador</b>: insignia para siempre y 6 meses del plan Pro gratis.</li></ul>' +
+          boton(liga('/talleres/unete', r, 1), 'Quiero recibir solicitudes'),
+      }),
+      (r) => ({
+        asunto: 'Pregunta rápida, ' + r.empresa,
+        cuerpo: '<p>Soy Vladimir, de HETNA CNC, en Apizaco, Tlaxcala. Estamos armando la red de talleres CNC de México y vi su trabajo' + (r.ciudad ? ' en ' + esc(r.ciudad) : '') + '.</p>' +
+          '<p>¿Les interesaría recibir solicitudes de clientes que buscan corte, maquinado o piezas a la medida? Registrarse es gratis y sólo se cobra 6% cuando venden.</p>' +
+          '<p>Se dan de alta en 3 minutos aquí: <a href="' + liga('/talleres/unete', r, 1) + '">hetnacnc.com/talleres/unete</a>. O respondan este correo y les ayudo yo.</p>',
+      }),
+    ],
+    2: [
+      (r) => ({
+        asunto: 'Una herramienta gratis para cotizar más rápido, ' + r.empresa,
+        cuerpo: '<p>Además del marketplace, en HETNA hay un <b>Cotizador CNC</b> para talleres: calculan el precio de un corte o maquinado en segundos y mandan una cotización profesional por WhatsApp o correo.</p>' +
+          '<p>Al registrarse lo prueban <b>14 días sin límite</b>; después pueden seguir gratis con 5 cotizaciones al mes.</p>' +
+          boton(liga('/herramientas-cnc', r, 2), 'Probar el Cotizador'),
+      }),
+    ],
+  },
+  comprador: {
+    1: [
+      (r) => ({
+        asunto: '¿Necesitan cortar o maquinar algo, ' + r.empresa + '?',
+        cuerpo: '<p>Soy Vladimir, de HETNA CNC. Conectamos empresas con talleres CNC verificados de México (láser, router, plasma, torno y fresadora).</p>' +
+          '<p>Si tienen una pieza o un proyecto (' + ejemplosComprador(r).corto + '), en la página de cotizar ven un precio aproximado al instante y varios talleres les mandan su propuesta. Pedirla no cuesta.</p>' +
+          '<p><a href="' + liga('/cotizar', r, 1) + '">Ver un precio aproximado</a> · o respondan este correo con las medidas y les ayudo.</p>',
+      }),
+    ],
+  },
+};
+
+// Una novedad al mes después del correo 4 (paso 5, 6, … rotando)
+const NOVEDADES = {
+  vendedor: [
+    (r) => ({
+      asunto: 'Novedades de HETNA CNC para talleres',
+      cuerpo: '<p>Los clientes ya pueden ver en HETNA un precio aproximado al instante y pedir propuestas a los talleres de su zona. Si quieren recibir esas solicitudes, regístrense gratis (sólo pagan 6% cuando venden):</p>' +
+        boton(liga('/talleres/unete', r, r._paso), 'Recibir solicitudes'),
+    }),
+    (r) => ({
+      asunto: 'Todavía hay lugares de Taller fundador',
+      cuerpo: '<p>Los primeros 30 talleres verificados de HETNA quedan como <b>Taller fundador</b>: insignia para siempre en su perfil y <b>6 meses del plan Pro gratis</b> (sus propuestas salen primero).</p>' +
+        boton(liga('/talleres/fundadores', r, r._paso), 'Ver cómo ser fundador'),
+    }),
+    (r) => ({
+      asunto: 'Herramientas CNC gratis para su taller',
+      cuerpo: '<p>En HETNA hay generadores gratis de archivos DXF (cajas con ensamble, celosías, letreros y placas), calculadoras de corte y un convertidor de archivos. Úsenlos aunque todavía no vendan con nosotros:</p>' +
+        boton(liga('/disenar', r, r._paso), 'Abrir las herramientas'),
+    }),
+  ],
+  comprador: [
+    (r) => ({
+      asunto: 'Cotiza tu pieza CNC al instante',
+      cuerpo: '<p>En HETNA ya puedes subir tu archivo o escribir las medidas y ver un precio aproximado al momento. Si te conviene, varios talleres te mandan su propuesta.</p>' + boton(liga('/cotizar', r, r._paso), 'Ver un precio aproximado'),
+    }),
+    (r) => ({
+      asunto: 'Talleres CNC verificados cerca de ustedes',
+      cuerpo: '<p>En el directorio de HETNA encuentran talleres de corte láser, router, plasma, torno y fresadora por estado, con sus máquinas, materiales y fotos de trabajos.</p>' + boton(liga('/talleres', r, r._paso), 'Ver talleres'),
+    }),
+    (r) => ({
+      asunto: 'Diseños listos para fabricar',
+      cuerpo: '<p>Si necesitan un letrero, una caja o una celosía, en HETNA pueden generar el diseño gratis en minutos y mandarlo a fabricar con un taller.</p>' + boton(liga('/disenar', r, r._paso), 'Crear un diseño'),
+    }),
+  ],
+  instructor: [
+    (r) => ({
+      asunto: 'Novedades de la Academia HETNA',
+      cuerpo: '<p>Seguimos sumando talleres y operadores que buscan capacitación en CNC, CAD/CAM y programación. Publicar cursos es gratis y sólo se cobra comisión al vender:</p>' + boton(liga('/talleres/unete', r, r._paso), 'Publicar mis cursos'),
+    }),
+  ],
+};
+
+// Encuesta de un clic (desde el correo 3, en español)
+const MOTIVOS = [
+  ['ya_vendo', 'Ya vendo en otro lado'],
+  ['sin_tiempo', 'Ahorita no tengo tiempo'],
+  ['no_entiendo', 'No entiendo cómo funciona'],
+  ['comision', 'La comisión'],
+  ['no_confio', 'No conozco la plataforma'],
+  ['no_aplica', 'No es para mi negocio'],
+  ['baja', 'No me interesa'],
+];
+function encuesta(r) {
+  const base = OPINION + '?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.token || '') + '&r=';
+  return '<div style="margin:20px 0;padding:12px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;font-size:13px">' +
+    '<b>¿No es para ustedes?</b> Cuéntennos por qué en un clic; nos ayuda a mejorar:<br>' +
+    MOTIVOS.map((m) => '<a href="' + base + m[0] + '" style="color:#c2410c">' + m[1] + '</a>').join(' · ') + '</div>';
+}
+
 // 1) Quién toca hoy
 const filas = $input.all().map((i) => i.json);
 const candidatos = [];
@@ -216,17 +331,26 @@ for (const r of filas) {
   if (!r.id || !email || NO_TOCAR.includes(estatus)) continue;
   const paso = Number(r.paso || 0);
   const prox = String(r.proximo_contacto || '').slice(0, 10);
-  if (estatus !== 'NUEVO' && prox && prox > HOY) continue;
   let siguiente;
-  if (estatus === 'NUEVO' && paso === 0) siguiente = 1;
-  else if (estatus === 'CONTACTADO' && (paso === 1 || paso === 2)) siguiente = paso + 1;
-  else if (estatus === 'PAUSA' && paso === 3) siguiente = 4;
-  else continue;
+  if (estatus === 'FINALIZADO') {
+    // Terminaron la secuencia vieja: a los 30 días de su último correo pasan a las novedades
+    const ult = String(r.ultimo_contacto || '').slice(0, 10);
+    if (paso < 4 || (ult && ult > masDias(-MENSUAL))) continue;
+    siguiente = paso + 1;
+  } else {
+    if (estatus !== 'NUEVO' && prox && prox > HOY) continue;
+    if (estatus === 'NUEVO' && paso === 0) siguiente = 1;
+    else if (estatus === 'CONTACTADO' && (paso === 1 || paso === 2)) siguiente = paso + 1;
+    else if (estatus === 'PAUSA' && paso >= 3) siguiente = paso + 1;
+    else continue;
+  }
   candidatos.push({ r, email, siguiente });
 }
 
-// Primero los seguimientos (no dejar secuencias a medias), luego México, luego el resto.
-candidatos.sort((a, b) => (b.siguiente > 1) - (a.siguiente > 1) || (b.r.pais === 'México') - (a.r.pais === 'México'));
+// Primero los seguimientos 2 y 3 (no dejar secuencias a medias), luego los nuevos,
+// al final las novedades mensuales; y dentro de cada grupo, México primero.
+const orden = (c) => (c.siguiente === 2 || c.siguiente === 3 ? 0 : c.siguiente === 1 ? 1 : 2);
+candidatos.sort((a, b) => orden(a) - orden(b) || (b.r.pais === 'México') - (a.r.pais === 'México'));
 
 // 2) Arma los correos sin repetir destinatario en el mismo día
 const yaHoy = new Set();
@@ -240,12 +364,23 @@ for (const c of candidatos) {
   const t = T[idioma];
   const seg = segmento(r.tipo);
   const empresa = String(r.empresa || '').trim() || r.dominio;
-  const plantilla = t[seg][c.siguiente]({ ...r, empresa });
+  const paso = c.siguiente;
+  let plantilla;
+  if (paso >= 5) {
+    const lista = NOVEDADES[seg] || NOVEDADES.vendedor;
+    const datos = { ...r, empresa, _paso: paso, _v: '' };
+    plantilla = idioma === 'es' ? lista[(paso - 5) % lista.length](datos) : t[seg][4](datos);
+  } else {
+    const otras = idioma === 'es' && VARIANTES[seg] && VARIANTES[seg][paso] ? VARIANTES[seg][paso] : [];
+    const v = otras.length ? variante(r.id, otras.length + 1) : 0;
+    const datos = { ...r, empresa, _v: otras.length ? 'abc'.charAt(v) : '' };
+    plantilla = v === 0 ? t[seg][paso](datos) : otras[v - 1](datos);
+  }
+  if (idioma === 'es' && paso >= 3) plantilla = { asunto: plantilla.asunto, cuerpo: plantilla.cuerpo + encuesta(r) };
   const urlBaja = BAJA + '?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.token || '');
   const html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#111827;max-width:600px">' +
     '<p>' + t.hola(esc(empresa)) + '</p>' + plantilla.cuerpo + '<p>' + t.firma + '</p>' +
     '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"><p style="font-size:12px;color:#6b7280">' + t.pie(urlBaja) + '<br>' + DOMICILIO + '</p></div>';
-  const fin = c.siguiente === 4;
   salida.push({
     json: {
       id: r.id,
@@ -253,9 +388,9 @@ for (const c of candidatos) {
       asunto: plantilla.asunto,
       html,
       paso: String(c.siguiente),
-      estatus: fin ? 'FINALIZADO' : c.siguiente === 3 ? 'PAUSA' : 'CONTACTADO',
+      estatus: paso >= 3 ? 'PAUSA' : 'CONTACTADO',
       ultimo_contacto: HOY,
-      proximo_contacto: fin ? '' : masDias(ESPERA[c.siguiente]),
+      proximo_contacto: masDias(paso >= 4 ? MENSUAL : ESPERA[paso]),
       notas: String(r.notas || ''),
     },
   });
