@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 
 import { ServicioPagina } from "@/components/hetna/ServicioPagina"
+import { listarRecursos } from "@/lib/hetna/recursos-academia"
 import { Academia } from "@/components/hetna/academia/Academia"
 import { getCategoryByHandle } from "@/lib/data/categories"
 import { listProducts } from "@/lib/data/products"
@@ -63,12 +64,13 @@ export default async function ServicioRuta({ params, searchParams }: Props) {
   // redirige al espacio "Diseñar y escanear" (/disenar, ver next.config).
 
   if (s.slug === "aprendizaje-cnc") {
-    const [{ learning_articles }, { courses }, libros] = await Promise.all([
+    const [{ learning_articles }, { courses }, libros, recursos] = await Promise.all([
       listLearningArticles({ limit: 9 }),
       listCourses({ limit: 60 }),
       librosAcademia(locale),
+      listarRecursos(),
     ])
-    return <Academia cursos={courses} articulos={learning_articles} libros={libros} />
+    return <Academia cursos={courses} articulos={learning_articles} libros={libros} recursos={recursos} />
   }
 
   return <ServicioPagina s={s} />

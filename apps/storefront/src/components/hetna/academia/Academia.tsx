@@ -12,6 +12,9 @@ import type { LearningArticle } from "@/lib/data/learning-articles"
 
 import { ServicioIcono } from "../ServicioIcono"
 import { ArticuloAprendizajeCard, FranjaAyuda } from "../ServicioPagina"
+import type { Recurso } from "@/lib/hetna/recursos-academia"
+
+import { BibliotecaRecursos } from "./BibliotecaRecursos"
 import { CatalogoCursos } from "./CatalogoCursos"
 
 const PASOS_ALUMNO = [
@@ -65,7 +68,17 @@ const TarjetaLibro = ({ p }: { p: Producto }) => {
   )
 }
 
-export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[]; articulos?: LearningArticle[]; libros?: Producto[] }) {
+export function Academia({
+  cursos,
+  articulos,
+  libros = [],
+  recursos = [],
+}: {
+  cursos: Course[]
+  articulos?: LearningArticle[]
+  libros?: Producto[]
+  recursos?: Recurso[]
+}) {
   const gratis =
     cursos.filter((c) => !c.precio || c.precio.gratis).length +
     libros.filter((l) => (l.metadata as Record<string, unknown> | null)?.archivo_gratis === true).length
@@ -108,6 +121,11 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
                 <a href="#libros" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
                   Libros y PDF
                 </a>
+                {recursos.length > 0 && (
+                  <a href="#biblioteca" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
+                    Biblioteca gratis
+                  </a>
+                )}
               </div>
               {cursos.length + libros.length > 0 && (
                 <dl className="m-0 grid max-w-[520px] grid-cols-3 gap-3 pt-3">
@@ -213,6 +231,18 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
             </div>
           )}
         </section>
+
+        {recursos.length > 0 && (
+          <section id="biblioteca" className="flex flex-col gap-4 scroll-mt-24">
+            <div>
+              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Biblioteca de recursos gratis</h2>
+              <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">
+                Planos, guías, videos y programas que recomendamos de otros sitios. Se abren en su página original.
+              </p>
+            </div>
+            <BibliotecaRecursos recursos={recursos} />
+          </section>
+        )}
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
