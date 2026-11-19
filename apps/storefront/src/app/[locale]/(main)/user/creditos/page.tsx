@@ -61,8 +61,9 @@ export default async function CreditosPage({
         Mis créditos
       </h1>
       <p className="mt-2 max-w-[640px] text-[15px] leading-relaxed text-[#4A4943]">
-        Los créditos pagan las herramientas de HETNA: el escaneo 3D profesional y el
-        cotizador. No son dinero, no caducan y no se pueden retirar.
+        Los créditos pagan las herramientas de HETNA: diseño de muebles y cocinas,
+        molduras y tallados, escaneo 3D y cotizador. No son dinero, no caducan y no se
+        pueden retirar.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -110,6 +111,25 @@ export default async function CreditosPage({
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
             <h3 className="text-[14px] font-bold text-[#1B1B18]">¿En qué se gastan?</h3>
             <ul className="mt-2 flex flex-col gap-2 text-[13px] leading-relaxed text-[#4A4943]">
+              <li className="flex gap-2">
+                <span className="font-bold text-[#C2560A]">·</span>
+                <span>
+                  <LocalizedClientLink href="/disenar/muebles-ensamble" className="font-semibold text-[#B34D07] underline">
+                    Muebles
+                  </LocalizedClientLink>{" "}
+                  y{" "}
+                  <LocalizedClientLink href="/disenar/despiece-muebles" className="font-semibold text-[#B34D07] underline">
+                    cocina integral
+                  </LocalizedClientLink>
+                  : diseñar, editar, cotizar y guardar es gratis. Bajar archivos, planos y etiquetas: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). Leer una imagen con IA: 2 (se regresan si no sirve).
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-bold text-[#C2560A]">·</span>
+                <span>
+                  Molduras: 1 crédito; panel tallado: 2. El mismo diseño nunca se cobra dos veces.
+                </span>
+              </li>
               <li className="flex gap-2">
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>

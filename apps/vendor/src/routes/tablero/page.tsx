@@ -973,6 +973,98 @@ function InvitaTaller() {
   )
 }
 
+// Buzón de opiniones (packages/api/src/lib/opiniones.ts): qué mejorarías de
+// HETNA. Llega al dueño por Telegram y al panel de administración (Opiniones).
+function QueMejorarias() {
+  const [abierto, setAbierto] = useState(false)
+  const [puntaje, setPuntaje] = useState<number | null>(null)
+  const [comentario, setComentario] = useState("")
+  const [estado, setEstado] = useState<"" | "enviando" | "listo">("")
+  const [error, setError] = useState("")
+
+  const enviar = async () => {
+    setEstado("enviando")
+    setError("")
+    try {
+      const r = await fetch("/vendor/hetna-opinion", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ puntaje, comentario, pagina: "Tablero del taller" }),
+      })
+      const d = await r.json().catch(() => null)
+      if (!r.ok) throw new Error(d?.message || "No se pudo enviar. Intenta de nuevo.")
+      setEstado("listo")
+    } catch (e) {
+      setEstado("")
+      setError((e as Error).message)
+    }
+  }
+
+  if (estado === "listo")
+    return (
+      <div style={{ ...S.card, background: "#F1F8F2", borderColor: "#CFE6D3" }}>
+        <p style={{ ...S.h2, color: "#1E7B3A" }}>¡Gracias! Ya lo recibimos.</p>
+        <p style={{ margin: "4px 0 0", fontSize: 14 }}>Lo lee directamente el equipo de HETNA. Si es una idea, te avisamos cuando la tengamos lista.</p>
+      </div>
+    )
+
+  return (
+    <div style={{ ...S.card, background: "#FBF7EE", borderColor: "#EADFC4" }}>
+      <p style={S.h2}>💡 ¿Qué mejorarías de HETNA?</p>
+      <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
+        Estamos construyendo la plataforma con los talleres. Dinos qué te falta, qué no te gusta o qué te gustaría que inventáramos.
+      </p>
+      {!abierto ? (
+        <button type="button" style={S.btn} onClick={() => setAbierto(true)}>
+          Dar mi opinión
+        </button>
+      ) : (
+        <>
+          <p style={{ ...S.etiqueta, marginBottom: 6 }}>Del 0 al 10, ¿recomendarías HETNA a otro taller? (opcional)</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4, maxWidth: 460 }}>
+            {Array.from({ length: 11 }, (_, n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setPuntaje(puntaje === n ? null : n)}
+                style={{
+                  height: 34,
+                  borderRadius: 6,
+                  border: "1px solid #E7E4DC",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: puntaje === n ? "#C2560A" : n <= 6 ? "#FBF1EC" : n <= 8 ? "#FBF6E7" : "#EEF7EF",
+                  color: puntaje === n ? "#fff" : "#1B1B18",
+                }}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            maxLength={2000}
+            rows={4}
+            placeholder="Ej.: quiero recibir las solicitudes de mi ciudad por WhatsApp, o poder subir varios productos a la vez…"
+            style={{ ...S.input, width: "100%", marginTop: 10, fontFamily: "inherit", boxSizing: "border-box" }}
+          />
+          {error && <p style={{ color: "#B42318", fontSize: 13, margin: "6px 0 0" }}>{error}</p>}
+          <button
+            type="button"
+            style={{ ...S.btn, marginTop: 8, opacity: estado === "enviando" || (puntaje === null && comentario.trim().length < 3) ? 0.5 : 1 }}
+            disabled={estado === "enviando" || (puntaje === null && comentario.trim().length < 3)}
+            onClick={() => void enviar()}
+          >
+            {estado === "enviando" ? "Enviando…" : "Enviar"}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------- pantalla
 
 // Avisos al celular del taller (packages/api/src/lib/push.ts): pedidos nuevos,
@@ -1249,6 +1341,7 @@ export default function TableroPage() {
       <AvisosCelular />
 
       <InvitaTaller />
+      <QueMejorarias />
 
       <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>
       <p style={S.sub}>Las gráficas y los conteos son de los últimos {v.ventana_dias} días.</p>

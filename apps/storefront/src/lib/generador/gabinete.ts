@@ -26,6 +26,9 @@ export type OpcionesGabinete = {
   cajones: number
   gFrente: number // grosor de puertas y frentes
   repisasMovibles?: boolean // sobre pines (sistema 32) en vez de fijas
+  // esquinero: de qué lado queda el panel ciego (donde llega el otro tramo) y cuánto mide
+  ciegoLado?: "izq" | "der"
+  ciego?: number
 }
 
 export const GABINETE_INICIO: Record<TipoGabinete, Omit<OpcionesGabinete, "grosor" | "gFrente">> = {
@@ -117,9 +120,14 @@ export function gabinete(o0: OpcionesGabinete): { tableros: TableroC[]; avisos: 
     t.push({ nombre: "Puerta abatible", plano: "frontal", rol: "puerta", bisagra: "arriba", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
   } else if (o.frente === "esquinero") {
     // esquinero ciego: la puerta de un lado y un panel fijo donde llega el otro tramo de la cocina
-    const anchoPuerta = Math.min(500, Math.max(300, A - 450))
-    t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: fx0 + anchoPuerta, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
-    t.push({ nombre: "Panel ciego", plano: "frontal", rol: "frente", jaladera: 0, x0: fx0 + anchoPuerta + 3, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+    const anchoPuerta = o.ciego ? Math.max(250, Math.min(600, fx1 - fx0 - o.ciego - 3)) : Math.min(500, Math.max(300, A - 450))
+    if (o.ciegoLado === "izq") {
+      t.push({ nombre: "Panel ciego", plano: "frontal", rol: "frente", jaladera: 0, x0: fx0, x1: fx1 - anchoPuerta - 3, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+      t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "der", jaladera: 128, x0: fx1 - anchoPuerta, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+    } else {
+      t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: fx0 + anchoPuerta, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+      t.push({ nombre: "Panel ciego", plano: "frontal", rol: "frente", jaladera: 0, x0: fx0 + anchoPuerta + 3, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+    }
   } else if (o.frente === "cajon-puertas") {
     const fSep = fz1 - altoCajonArriba
     t.push({ nombre: "Cajón: frente", plano: "frontal", rol: "frente", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fSep + 1.5, z1: fz1 })

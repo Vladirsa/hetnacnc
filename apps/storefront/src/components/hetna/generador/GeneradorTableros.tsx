@@ -21,19 +21,24 @@ import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generado
 import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
+import { mandarPaqueteACotizador, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { listaCorte } from "@/lib/generador/planosTaller"
+import { tallerCargar } from "@/lib/taller/acciones"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { GRUPOS_MODELO, MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
-import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
+import { type Abertura, COCINA_INICIO, HABITACION_INICIO, MODULOS, type Modulo, type OpcionesHabitacion, type TipoModulo, cocina, habitacion, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
-import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
+import { DISENOS_FRENTE, type DisenoFrente, TIRADORES, type Tirador, MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
 
 import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, quitarHuecos } from "@/lib/generador/editorTableros"
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
 import { BibliotecaHerrajes, useHerrajes } from "./BibliotecaHerrajes"
-import type { CajaVista, VistaEstandar } from "./Mueble3D"
+import { MisDisenos, PanelCreditos } from "./PanelCuenta"
+import { creditosDescarga, textoCreditos } from "@/lib/hetna/precios-diseno"
+import type { AmbienteVista, CajaVista, ColocacionVista, VistaEstandar } from "./Mueble3D"
 import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
 
@@ -158,6 +163,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [material, setMaterial] = useState("melamina-blanca")
   const [patas, setPatas] = useState("0")
   const [cantoG, setCantoG] = useState(1)
+  const [tirador, setTirador] = useState<Tirador>("jaladera")
+  const [disenoFrente, setDisenoFrente] = useState<DisenoFrente>("liso")
   // cocina completa en una pared
   const [varios, setVarios] = useState(false)
   const [pared, setPared] = useState("3000")
@@ -167,6 +174,20 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [conCubierta, setConCubierta] = useState(true)
   const [alturaAltos, setAlturaAltos] = useState(String(COCINA_INICIO.alturaAltos))
   const sumaModulos = modulos.reduce((t, x) => t + (x.ancho || 0), 0)
+  // cocina en una habitación (L o U, ventanas, puertas, isla)
+  const [hab, setHab] = useState<Omit<OpcionesHabitacion, "grosor" | "isla"> & { conIsla: boolean; islaLargo: number; islaPasillo: number }>({ ...HABITACION_INICIO, conIsla: false, islaLargo: 1800, islaPasillo: 1000 })
+  const [habTxt, setHabTxt] = useState<Record<string, string>>({})
+  // firma: nombre del primer tablero del diseño (mientras siga ahí, se muestra la escena)
+  const [habVista, setHabVista] = useState<{ firma: string; colocacion: ColocacionVista[]; ambiente: AmbienteVista } | null>(null)
+  const [verHab, setVerHab] = useState(true)
+  const numHab = (k: string, inicial: number, poner: (n: number) => void) => ({
+    valor: habTxt[k] ?? String(inicial),
+    cambiar: (x: string) => {
+      setHabTxt((t) => ({ ...t, [k]: x }))
+      if (x.trim() !== "" && Number.isFinite(numero(x))) poner(numero(x))
+    },
+  })
+  const setAb = (i: number, c: Partial<Abertura>) => setHab((h) => ({ ...h, aberturas: h.aberturas.map((a, j) => (j === i ? { ...a, ...c } : a)) }))
   // biblioteca de cocina: modelo elegido y sus medidas
   const [modeloSel, setModeloSel] = useState<string | null>(null)
   const [medModelo, setMedModelo] = useState({ ancho: "", alto: "", fondo: "" })
@@ -194,6 +215,8 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const opciones = {
     union,
     herraje,
+    tirador,
+    disenoFrente,
     material,
     patas: Math.max(0, numero(patas) || 0),
     varios,
@@ -437,6 +460,56 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   }, [m, acomodo, copias, hoja.largo, hoja.ancho, precios])
   const pesos = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
 
+  // ---- cotizador: mandar el mueble acomodado en hojas (área y metros de corte reales) con su resumen ----
+  const [avisoCotiz, setAvisoCotiz] = useState("")
+  const cotizarMueble = () => {
+    if (!m.piezas.length || m.errores.length) return
+    // piezas iguales juntas: cada una va con su DXF (sólo el corte) y su cantidad
+    const filas = listaCorte(m)
+    const piezasPaq = filas.map((f) => {
+      const p = m.piezas[f.nums[0] - 1]
+      const dib = dibujo(piezasTendidas([p]).filter((t) => t.capa === "corte"))
+      return { nombre: `${nombreArchivo(f.nombres[0])}-${f.largo}x${f.ancho}x${f.grosor}.dxf`, contenido: dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: "corte" })) }), cantidad: f.nums.length }
+    })
+    const hojasTxt = costo.filas.map((f) => `${f.hojas} ${f.hojas === 1 ? "hoja" : "hojas"} de ${f.nombre}`)
+    const herr = m.compras.filter((c) => !/^Canto/.test(c.nombre)).slice(0, 6).map((c) => `${c.cantidad} ${c.nombre}`)
+    const nota = [`${nombre}: ${m.piezas.length} piezas, ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.fondo)} × ${Math.round(m.medidas.alto)} mm.`, `Material: ${hojasTxt.join(", ")}.`, m.cantoMetros ? `Canto: ${m.cantoMetros} m.` : "", herr.length ? `Herrajes: ${herr.join(", ")}.` : ""].filter(Boolean).join(" ")
+    // si todo es MDF del mismo grosor, el cotizador ya sabe el material
+    const mats = new Set(m.piezas.map((p) => `${p.material}|${Math.round(p.grosor)}`))
+    const unico = mats.size === 1 ? [...mats][0].split("|") : null
+    const material = unico && unico[0].startsWith("mdf") ? materialRouterMDF(Number(unico[1])) : undefined
+    const ok = mandarPaqueteACotizador({ proyecto: nombre, origen: "muebles", servicio: "router", ...(material ? { material } : {}), nota: nota.slice(0, 900), piezas: piezasPaq }, locale)
+    if (!ok) setAvisoCotiz("El proyecto es muy grande para mandarlo así. Descarga los archivos y súbelos en el cotizador.")
+  }
+  // ---- precios: los del cotizador del taller llenan el costo del mueble ----
+  const traerPreciosCotizador = async () => {
+    setAvisoCotiz("")
+    let mats: Record<string, number | null> = {}
+    try {
+      const r = await tallerCargar()
+      if (r.ok) mats = ((r.config as { materiales?: Record<string, number | null> }).materiales || {}) as Record<string, number | null>
+    } catch {
+      // sin cuenta: se intenta con el cotizador de este navegador
+    }
+    if (!Object.values(mats).some((x) => Number(x) > 0)) {
+      try {
+        mats = (JSON.parse(localStorage.getItem("hetna-cotizador") || "null")?.materiales || {}) as Record<string, number | null>
+      } catch {
+        mats = {}
+      }
+    }
+    const grupoDe = (id: string) => (id.startsWith("melamina") ? "Melamina" : id.startsWith("mdf") || id === "hdf" ? "MDF" : id.startsWith("triplay") ? "Triplay" : id === "encino" ? "Madera sólida" : "")
+    const hojaM2 = (TABLERO.ancho * TABLERO.largo) / 1e6
+    const nuevos: Record<string, string> = {}
+    for (const f of costo.filas) {
+      const precioM2 = Number(mats[grupoDe(f.k.split("|")[0])]) || 0
+      if (precioM2 > 0) nuevos[f.k] = String(Math.round(precioM2 * hojaM2))
+    }
+    if (!Object.keys(nuevos).length) return setAvisoCotiz("Tu cotizador todavía no tiene precios de material (MDF, melamina, triplay o madera por m²). Ponlos en Cotizador → Precios de materiales.")
+    setPrecios((x) => ({ ...x, ...nuevos }))
+    setAvisoCotiz(`Listo: ${Object.keys(nuevos).length} ${Object.keys(nuevos).length === 1 ? "precio" : "precios"} por hoja desde tu cotizador (precio por m² × hoja de ${TABLERO.largo} × ${TABLERO.ancho}).`)
+  }
+
   // ---- planos de taller, etiquetas y presupuesto ----
   const [presu, setPresu] = useGuardado<Omit<DatosPresupuesto, "material" | "partidas" | "cliente" | "nota"> & { manoObraTxt: string; margenTxt: string }>("hetna-presupuesto", {
     taller: "",
@@ -503,6 +576,90 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const medidasTxt = `${m.medidas.ancho} × ${m.medidas.fondo} × ${m.medidas.alto} mm`
   const avisos = [...m.errores, ...m.avisos]
 
+  // ---- créditos: cuánto cuesta bajar este diseño (según sus piezas) ----
+  const herramientaCobro = varios || enfoque === "cocina" ? "cocina" : "mueble"
+  const costoCreditos = creditosDescarga(herramientaCobro, m.piezas.length)
+  const pagadoEste = !!pagados[claveDiseno(clave)]
+  const [recargaSaldo, setRecargaSaldo] = useState(0)
+
+  // ---- el diseño completo, para guardarlo en la cuenta o en el navegador ----
+  const datosDiseno = () => ({
+    v: 1,
+    nombre,
+    tableros,
+    union,
+    herraje,
+    material,
+    patas,
+    medidas: v,
+    tirador,
+    disenoFrente,
+    varios,
+    cantoG,
+    movibles,
+    esquinas,
+    alivio,
+    numEspigas,
+    anchoEspiga,
+    laser,
+    herr,
+    habVista,
+  })
+  const aplicarDatos = (d: Record<string, unknown>, nombreD?: string) => {
+    if (!Array.isArray(d.tableros) || !d.tableros.length) return false
+    const ts = (d.tableros as TableroC[]).filter((t) => t && typeof t.nombre === "string" && [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1].every((n) => Number.isFinite(n)))
+    if (!ts.length) return false
+    setPasado((p) => [...p.slice(-30), tableros])
+    setFuturo([])
+    setTableros(ts)
+    setEsEjemplo(false)
+    setNombre(typeof d.nombre === "string" ? d.nombre : nombreD || "Mi diseño")
+    if (typeof d.union === "string" && UNIONES.some((x) => x.id === d.union)) setUnion(d.union as TipoUnion)
+    if (d.herraje && typeof d.herraje === "object" && typeof (d.herraje as DefHerraje).id === "string") setHerraje(d.herraje as DefHerraje)
+    if (typeof d.material === "string") setMaterial(d.material)
+    if (typeof d.patas === "string") setPatas(d.patas)
+    if (d.medidas && typeof d.medidas === "object") setV((x) => ({ ...x, ...(d.medidas as Record<string, string>) }))
+    if (typeof d.tirador === "string") setTirador(d.tirador as Tirador)
+    if (typeof d.disenoFrente === "string") setDisenoFrente(d.disenoFrente as DisenoFrente)
+    setVarios(!!d.varios)
+    if (typeof d.cantoG === "number") setCantoG(d.cantoG)
+    setMovibles(!!d.movibles)
+    if (d.esquinas && typeof d.esquinas === "object") setEsquinas(d.esquinas as typeof esquinas)
+    if (d.alivio === "hueso" || d.alivio === "t" || d.alivio === "ninguno") setAlivio(d.alivio)
+    if (typeof d.numEspigas === "number") setNumEspigas(d.numEspigas)
+    if (typeof d.anchoEspiga === "string") setAnchoEspiga(d.anchoEspiga)
+    setLaser(!!d.laser)
+    if (typeof d.herr === "string") setHerr(d.herr)
+    setHabVista(d.habVista && typeof d.habVista === "object" ? (d.habVista as typeof habVista) : null)
+    setSel(null)
+    setPunto(null)
+    setVista(undefined)
+    setAjustar((n) => n + 1)
+    return true
+  }
+  // borrador en el navegador: se guarda solo y se recupera al volver (p. ej. después de pagar créditos)
+  const claveBorrador = `hetna-borrador-${enfoque}`
+  const guardarBorrador = () => {
+    if (esEjemplo) return
+    try {
+      localStorage.setItem(claveBorrador, JSON.stringify({ t: Date.now(), datos: datosDiseno() }))
+    } catch {
+      // sin espacio: no pasa nada
+    }
+  }
+  useEffect(() => {
+    try {
+      const b = JSON.parse(localStorage.getItem(claveBorrador) || "null") as { t: number; datos: Record<string, unknown> } | null
+      if (b && Date.now() - b.t < 14 * 24 * 3600 * 1000 && aplicarDatos(b.datos)) setLectura({ texto: "Recuperamos el diseño en el que estabas trabajando.", tipo: "ok" })
+    } catch {
+      // borrador dañado
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const t = setTimeout(guardarBorrador, 1200)
+    return () => clearTimeout(t)
+  }, [clave, nombre]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const interruptorMovibles = (
     <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
       <span>
@@ -512,8 +669,24 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     </label>
   )
 
+  const panelCuenta = (
+    <Seccion titulo="Créditos y mis diseños">
+      <PanelCreditos costo={costoCreditos} pagado={pagadoEste} antesDePagar={guardarBorrador} recarga={recargaSaldo} />
+      <MisDisenos
+        herramienta={herramientaCobro}
+        tipos={["mueble", "cocina"]}
+        actual={() => ({ nombre, resumen: `${m.piezas.length} piezas · ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.alto)} mm`, datos: datosDiseno() })}
+        abrir={(d, n) => {
+          if (!aplicarDatos(d, n)) setLectura({ texto: "Ese diseño no se pudo abrir.", tipo: "error" })
+        }}
+      />
+      <span className="text-[11.5px] text-[#8A97AB]">Diseñar, editar, ver medidas, costo y presupuesto es gratis. Pagas al bajar los archivos para fabricar: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). El mismo diseño no se vuelve a cobrar.</span>
+    </Seccion>
+  )
+
   const panel = (
     <div className="flex flex-col gap-4">
+      {panelCuenta}
       {enfoque === "imagen" && (
         <>
       <Seccion titulo="Sube la imagen de tu mueble">
@@ -627,6 +800,106 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         )}
       </Seccion>
 
+      <Seccion titulo="Cocina en la habitación (L, U, isla)">
+        <div className="grid grid-cols-3 gap-1.5">
+          {([["recta", "Recta"], ["L", "En L"], ["U", "En U"]] as const).map(([f, n]) => (
+            <button key={f} type="button" aria-pressed={hab.forma === f} onClick={() => setHab((h) => ({ ...h, forma: f }))} className={`rounded-[8px] px-2 py-1.5 text-[12px] font-semibold ${hab.forma === f ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
+        </div>
+        {hab.forma === "L" && (
+          <div className="flex items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+            Segunda pared:
+            {([["izq", "a la izquierda"], ["der", "a la derecha"]] as const).map(([l, n]) => (
+              <button key={l} type="button" aria-pressed={hab.ladoL === l} onClick={() => setHab((h) => ({ ...h, ladoL: l }))} className={`rounded-[6px] px-2 py-1 font-semibold ${hab.ladoL === l ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-2">
+          <CampoNum etiqueta="Pared del fondo" {...numHab("l0", hab.largos[0], (n) => setHab((h) => ({ ...h, largos: [n, h.largos[1], h.largos[2]] })))} sufijo="mm" />
+          {hab.forma !== "recta" && <CampoNum etiqueta={hab.forma === "U" ? "Pared izquierda" : "Segunda pared"} {...numHab("l1", hab.largos[1], (n) => setHab((h) => ({ ...h, largos: [h.largos[0], n, h.largos[2]] })))} sufijo="mm" />}
+          {hab.forma === "U" && <CampoNum etiqueta="Pared derecha" {...numHab("l2", hab.largos[2], (n) => setHab((h) => ({ ...h, largos: [h.largos[0], h.largos[1], n] })))} sufijo="mm" />}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[12px] font-semibold text-white">Ventanas y puertas</span>
+          {hab.aberturas.map((a, i) => (
+            <div key={i} className="flex flex-wrap items-end gap-1.5 rounded-[8px] bg-[#111821] p-1.5 text-[11px] text-[#8A97AB]">
+              <select value={a.tipo} onChange={(e) => setAb(i, { tipo: e.target.value as Abertura["tipo"], ...(e.target.value === "puerta" ? { sobrePiso: 0, alto: 2100, ancho: 900 } : { sobrePiso: 1100, alto: 1000 }) })} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" aria-label="Tipo">
+                <option value="ventana">Ventana</option>
+                <option value="puerta">Puerta</option>
+              </select>
+              <select value={a.pared} onChange={(e) => setAb(i, { pared: Number(e.target.value) })} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" aria-label="Pared">
+                <option value={0}>Fondo</option>
+                {hab.forma !== "recta" && <option value={1}>{hab.forma === "U" ? "Izquierda" : "Segunda"}</option>}
+                {hab.forma === "U" && <option value={2}>Derecha</option>}
+              </select>
+              {([["desde", "Desde"], ["ancho", "Ancho"], ["alto", "Alto"], ...(a.tipo === "ventana" ? [["sobrePiso", "Sobre piso"]] : [])] as [keyof Abertura, string][]).map(([k, n]) => (
+                <label key={k} className="flex w-[3.9rem] flex-col gap-0.5">
+                  {n}
+                  <input value={habTxt[`a${i}${k}`] ?? String(a[k])} onChange={(e) => { setHabTxt((t) => ({ ...t, [`a${i}${k}`]: e.target.value })); if (Number.isFinite(numero(e.target.value))) setAb(i, { [k]: numero(e.target.value) }) }} inputMode="numeric" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1 py-1 text-[12px] text-white" />
+                </label>
+              ))}
+              <button type="button" onClick={() => { setHab((h) => ({ ...h, aberturas: h.aberturas.filter((_, j) => j !== i) })); setHabTxt({}) }} className="px-1 pb-1 text-[#F6B8AE]" aria-label="Quitar">✕</button>
+            </div>
+          ))}
+          <div className="flex gap-1.5">
+            <button type="button" onClick={() => setHab((h) => ({ ...h, aberturas: [...h.aberturas, { tipo: "ventana", pared: 0, desde: 800, ancho: 1000, alto: 1000, sobrePiso: 1100 }] }))} className="rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">+ Ventana</button>
+            <button type="button" onClick={() => setHab((h) => ({ ...h, aberturas: [...h.aberturas, { tipo: "puerta", pared: h.forma === "recta" ? 0 : 1, desde: 1200, ancho: 900, alto: 2100, sobrePiso: 0 }] }))} className="rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">+ Puerta</button>
+          </div>
+          <span className="text-[11px] text-[#8A97AB]">«Desde»: en la pared del fondo, desde la esquina izquierda; en las de los lados, desde la esquina con el fondo.</span>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-[#C9D2E0]">
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conAltos} onChange={(e) => setHab((h) => ({ ...h, conAltos: e.target.checked }))} className="accent-[#C2560A]" /> Gabinetes altos</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conColumna} onChange={(e) => setHab((h) => ({ ...h, conColumna: e.target.checked }))} className="accent-[#C2560A]" /> Columna (alacena)</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={hab.conIsla} onChange={(e) => setHab((h) => ({ ...h, conIsla: e.target.checked }))} className="accent-[#C2560A]" /> Isla</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!hab.refri} onChange={(e) => setHab((h) => ({ ...h, refri: e.target.checked }))} className="accent-[#C2560A]" /> Refrigerador</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!hab.lavavajillas} onChange={(e) => setHab((h) => ({ ...h, lavavajillas: e.target.checked }))} className="accent-[#C2560A]" /> Lavavajillas</label>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#C9D2E0]">
+          Estufa:
+          {([["parrilla", "Parrilla empotrada"], ["libre", "De piso"], ["ninguna", "Sin estufa"]] as const).map(([k, n]) => (
+            <button key={k} type="button" aria-pressed={hab.estufa === k} onClick={() => setHab((h) => ({ ...h, estufa: k }))} className={`rounded-[6px] px-2 py-1 font-semibold ${hab.estufa === k ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+              {n}
+            </button>
+          ))}
+        </div>
+        {hab.conIsla && (
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Largo de la isla" {...numHab("isla", hab.islaLargo, (n) => setHab((h) => ({ ...h, islaLargo: n })))} sufijo="mm" />
+            <CampoNum etiqueta="Pasillo" {...numHab("pasillo", hab.islaPasillo, (n) => setHab((h) => ({ ...h, islaPasillo: n })))} sufijo="mm" />
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <CampoNum etiqueta="Altura de los altos" {...numHab("altos", hab.alturaAltos, (n) => setHab((h) => ({ ...h, alturaAltos: n })))} sufijo="mm" />
+          <CampoNum etiqueta="Alto del techo" {...numHab("techo", hab.altoTecho, (n) => setHab((h) => ({ ...h, altoTecho: n })))} sufijo="mm" />
+        </div>
+        {interruptorMovibles}
+        <button
+          type="button"
+          onClick={() => {
+            const { conIsla, islaLargo, islaPasillo, ...resto } = hab
+            const r = habitacion({ ...resto, grosor: opciones.grosor, repisasMovibles: movibles, isla: conIsla ? { largo: islaLargo, distancia: islaPasillo } : undefined })
+            aplicar(() => r.tableros, null)
+            setVarios(true)
+            setHabVista({ firma: r.tableros[0]?.nombre || "", colocacion: r.colocacion, ambiente: { muros: r.muros, vidrios: r.vidrios, aparatos: r.aparatos } })
+            setVerHab(true)
+            setNombre(`Cocina ${hab.forma === "recta" ? "recta" : `en ${hab.forma}`} ${Math.round(hab.largos[0])} mm${conIsla ? " con isla" : ""}`)
+            if (union === "espiga") setUnion("confirmat")
+            setPunto(null)
+            setVista(undefined)
+            setAjustar((n) => n + 1)
+            setLectura(r.avisos.length ? { texto: r.avisos.join(" "), tipo: "aviso" } : null)
+          }}
+          className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
+        >
+          Crear cocina en la habitación
+        </button>
+        <span className="text-[11.5px] text-[#8A97AB]">Pone esquineros ciegos en las esquinas, el fregadero bajo la ventana, deja libre donde hay puertas y no pone altos frente a las ventanas. En el 3D la ves en el cuarto; con «Ver recto» la editas pared por pared. Cada pared sale en la lista de corte, los planos y el acomodo.</span>
+      </Seccion>
+
       <Seccion titulo="Cocina completa en una pared">
         <div className="grid grid-cols-2 gap-2">
           <CampoNum etiqueta="Largo de la pared" valor={pared} cambiar={setPared} sufijo="mm" />
@@ -668,6 +941,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             const c = cocina({ ...COCINA_INICIO, modulos, grosor: opciones.grosor, conAltos, cubierta: conCubierta, alturaAltos: numero(alturaAltos) || COCINA_INICIO.alturaAltos, repisasMovibles: movibles })
             aplicar(() => c.tableros, null)
             setVarios(true)
+            setHabVista(c.aparatos.length ? { firma: c.tableros[0]?.nombre || "", colocacion: [], ambiente: { muros: [], vidrios: [], aparatos: c.aparatos } } : null)
             setNombre(`Cocina de ${Math.round(c.largo)} mm`)
             if (union === "espiga") setUnion("confirmat")
             setPunto(null)
@@ -954,6 +1228,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             <span>{pesos(costo.total)}</span>
           </div>
         </div>
+        <button type="button" onClick={traerPreciosCotizador} className="self-start rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+          Traer precios de mi cotizador
+        </button>
         <span className="text-[11.5px] text-[#8A97AB]">El precio de cada herraje se cambia en Uniones → Ajustar medidas. No incluye mano de obra ni corte.</span>
       </Seccion>
 
@@ -1028,6 +1305,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           <button type="button" disabled={!m.piezas.length} onClick={verPresupuesto} className="rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
             Ver presupuesto
           </button>
+          <button type="button" disabled={!m.piezas.length || !!m.errores.length} onClick={cotizarMueble} className="rounded-[8px] bg-[#16794F] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#12623F] disabled:opacity-50">
+            Cotizar con mi tarifa (Cotizador CNC)
+          </button>
+          <span className="text-[11px] text-[#8A97AB]">Manda cada pieza con su cantidad: el cotizador precia el proyecto completo con tus tarifas, con el resumen de piezas, material y herrajes en la nota para el cliente, y lo guarda en tu historial.</span>
+          {avisoCotiz && <span className="text-[12px] text-[#F6D58E]">{avisoCotiz}</span>}
         </div>
         {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}
       </Seccion>
@@ -1161,6 +1443,25 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             ))}
           </div>
         )}
+        <span className="text-[12.5px] font-semibold text-white">Cómo se abren</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          {TIRADORES.map((x) => (
+            <button key={x.id} type="button" aria-pressed={tirador === x.id} onClick={() => setTirador(x.id)} className={`flex flex-col items-start rounded-[8px] px-2 py-1.5 text-left ${tirador === x.id ? "bg-[#2A1C12] ring-1 ring-[#C2560A]" : "bg-[#141B26] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}>
+              <span className="text-[12.5px] font-semibold text-white">{x.nombre}</span>
+              <span className="text-[11px] text-[#8A97AB]">{x.nota}</span>
+            </button>
+          ))}
+        </div>
+        <span className="text-[12.5px] font-semibold text-white">Diseño de puertas y frentes</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          {DISENOS_FRENTE.map((x) => (
+            <button key={x.id} type="button" aria-pressed={disenoFrente === x.id} onClick={() => setDisenoFrente(x.id)} className={`flex flex-col items-start rounded-[8px] px-2 py-1.5 text-left ${disenoFrente === x.id ? "bg-[#2A1C12] ring-1 ring-[#C2560A]" : "bg-[#141B26] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}>
+              <span className="text-[12.5px] font-semibold text-white">{x.nombre}</span>
+              <span className="text-[11px] text-[#8A97AB]">{x.nota}</span>
+            </button>
+          ))}
+        </div>
+        {disenoFrente !== "liso" && <span className="text-[11.5px] text-[#8A97AB]">Los rebajes salen en el DXF en capas RANURA (con su profundidad) para fresarlos en la router. Mejor en MDF para pintar.</span>}
         <span className="text-[12px] text-[#8A97AB]">Material de la estructura. Puertas, frentes, fondo y cubierta pueden llevar otro: selecciónalos en el 3D.{materialDe(material).canto ? " Lleva canto de PVC en las orillas del frente." : ""}</span>
       </Seccion>
 
@@ -1303,6 +1604,10 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     </div>
   )
 
+  // la cocina en habitación se ve en el cuarto mientras el diseño sea el de la habitación
+  const conEscena = !!habVista && tableros.some((t) => t.nombre === habVista.firma)
+  const esHabitacion = conEscena && habVista!.colocacion.length > 0
+  const enHabitacion = esHabitacion && verHab
   const vista3D = (
     <Visor3D oscuro alto="h-full min-h-[260px]">
       {m.piezas.length ? (
@@ -1314,9 +1619,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           explotar={explotar}
           rayosX={rayosX}
           cotas={verCotas}
-          editable
+          editable={!enHabitacion}
           ajustar={ajustar}
           vista={vista}
+          colocacion={enHabitacion ? habVista!.colocacion : undefined}
+          ambiente={enHabitacion || (conEscena && !esHabitacion) ? habVista!.ambiente : undefined}
           punto={punto}
           alSeleccionar={(i, p) => {
             setSel(i)
@@ -1342,6 +1649,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         <button type="button" onClick={() => { setVista(undefined); setAjustar((n) => n + 1) }} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
           Ajustar vista
         </button>
+        {esHabitacion && (
+          <button type="button" aria-pressed={verHab} onClick={() => { setVerHab((x) => !x); setAjustar((n) => n + 1) }} className={`rounded-[7px] px-2 py-1 font-semibold ${verHab ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`} title="En el cuarto se ve; recto se edita pared por pared">
+            {verHab ? "Ver recto (editar)" : "Ver en la habitación"}
+          </button>
+        )}
         <span className="flex flex-wrap items-center gap-1" role="group" aria-label="Vistas">
           {VISTAS.map(([id, n]) => (
             <button key={id} type="button" onClick={() => setVista((x) => ({ cual: id, n: (x?.n || 0) + 1 }))} title={`Vista ${n.toLowerCase()}`} className={`rounded-[6px] px-1.5 py-1 text-[11.5px] font-semibold ${vista?.cual === id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
@@ -1416,15 +1728,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
               onClick={async () => {
                 setCobrando(true)
                 setAvisoCobro(null)
-                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`)
+                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`, herramientaCobro, m.piezas.length)
                 setCobrando(false)
+                setRecargaSaldo((n) => n + 1)
                 if (!r.ok) return setAvisoCobro({ texto: r.mensaje, login: r.noAutenticado, creditos: r.saldoInsuficiente })
                 setPagados((p) => ({ ...p, [claveCobro]: true }))
                 exportar("dxf")
               }}
               className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50"
             >
-              {cobrando ? "Cobrando…" : "Descargar DXF, SVG y PDF · 1 crédito"}
+              {cobrando ? "Cobrando…" : `Descargar archivos, planos y etiquetas · ${textoCreditos(costoCreditos)}`}
             </button>
             {avisoCobro && (
               <span className="text-[12px] text-[#F6B8AE]">

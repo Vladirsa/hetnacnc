@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { leerOBJ, leerSTL, mallaSTL, medidasMalla, type Malla } from "@/lib/generador/vectores"
-import { mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarArchivosAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { OPCIONES_BASE, cabe, cortesParaCama, partir, type Corte, type Eje, type Resultado, type TipoConector } from "@/lib/generador/partir3d"
 
 const Vista = dynamic(() => import("./Partir3DVista"), { ssr: false, loading: () => <div className="w-full h-[460px] rounded-[12px] bg-[#0F151E]" /> })
@@ -187,8 +187,8 @@ export function GeneradorPartir3D() {
 
   const noCaben = res ? res.piezas.filter((p) => !cabe(p.tam, camaN)).length : 0
 
-  const bajarZip = async () => {
-    if (!res) return
+  const armarZip = async (): Promise<Uint8Array | null> => {
+    if (!res) return null
     const { zipSync } = await import("fflate")
     const archivos: Record<string, Uint8Array> = {}
     for (const p of res.piezas) archivos[`${nombre}-${p.nombre}.stl`] = new Uint8Array(mallaSTL(p.malla))
@@ -205,8 +205,51 @@ export function GeneradorPartir3D() {
       "Imprime cada pieza con la cara del corte sobre la cama: queda plana y sin soportes en esa cara.",
     ].filter(Boolean).join("\r\n")
     archivos["LEEME.txt"] = new TextEncoder().encode(leeme)
-    const zip = zipSync(archivos, { level: 6 })
-    descargar(`${nombre}-partido.zip`, zip as unknown as BlobPart, "application/zip")
+    return zipSync(archivos, { level: 6 })
+  }
+  const bajarZip = async () => {
+    const zip = await armarZip()
+    if (zip) descargar(`${nombre}-partido.zip`, zip as unknown as BlobPart, "application/zip")
+  }
+  // Fabrícamelo: el proyecto completo (ZIP con piezas, pernos y LEEME) a la solicitud
+  const fabricar = async () => {
+    if (!res || !med) return
+    const zip = await armarZip()
+    if (!zip) return
+    const unidades = res.piezas.length + (res.perno ? res.conectores : 0)
+    const ok = mandarArchivosAFabricar([{ nombre: `${nombre}-partido.zip`, contenido: new Blob([zip as unknown as BlobPart], { type: "application/zip" }) }], locale, {
+      pieza: `${nombre}: modelo partido en ${res.piezas.length} piezas`,
+      medidas: `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm (armado)`,
+      proceso: "Impresión 3D",
+      cantidad: `${unidades} piezas (1 juego)`,
+      nota: [
+        `Imprimir ${nombre} partido en ${res.piezas.length} piezas (cama de ${camaN.join(" × ")} mm). El ZIP trae cada pieza en STL y un LEEME con instrucciones.`,
+        `Piezas: ${res.piezas.map((p) => `${p.nombre} (${p.tam.join("×")} mm)`).join(", ")}.`,
+        conector === "pernos" ? `Más ${res.conectores} pernos Ø${diametro} × ${res.pernoLargo} mm (incluidos en el ZIP).` : "",
+        conector === "imanes" ? `Lleva ${res.conectores * 2} imanes de ${imanD} × ${imanH} mm.` : "",
+      ].filter(Boolean).join(" "),
+    })
+    if (!ok) setAviso("El proyecto es muy grande para mandarlo. Descarga el ZIP y súbelo en la solicitud.")
+  }
+
+  // Todas las piezas (y los pernos) al Cotizador como un proyecto
+  const cotizar = () => {
+    if (!res) return
+    const piezas = res.piezas.map((p) => ({ nombre: `${nombre}-${p.nombre}.stl`, contenido: mallaSTL(p.malla), cantidad: 1 }))
+    if (res.perno) piezas.push({ nombre: `perno-${diametro}x${res.pernoLargo}mm.stl`, contenido: mallaSTL(res.perno), cantidad: res.conectores })
+    const union = CONECTORES.find((c) => c.id === conector)?.nombre.toLowerCase() || ""
+    const ok = mandarPaqueteACotizador(
+      {
+        proyecto: nombre,
+        origen: "Partir modelo 3D",
+        servicio: "impresion_3d",
+        opciones: { materialImpresion: "pla" },
+        nota: `${nombre} partido en ${res.piezas.length} piezas para cama de ${camaN.join(" × ")} mm${conector === "ninguno" ? "" : `, unión con ${union}`}${conector === "imanes" && res.conectores ? ` (${res.conectores * 2} imanes de ${imanD} × ${imanH} mm)` : ""}.`,
+        piezas,
+      },
+      locale
+    )
+    if (!ok) setAviso("El proyecto es muy grande para pasarlo al Cotizador. Descarga el ZIP y súbelo pieza por pieza.")
   }
 
   const mensaje = res
@@ -364,13 +407,17 @@ export function GeneradorPartir3D() {
                   {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`} en la cama de {camaN.join("×")} mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</p>}
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
 
+                  <button type="button" onClick={cotizar} className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
+                    Ver precio de todas las piezas en el Cotizador
+                  </button>
                   <div className="grid sm:grid-cols-2 gap-2">
-                    <button type="button" onClick={bajarZip} className="bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px]">
+                    <button type="button" onClick={bajarZip} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3.5 rounded-[10px] text-[15px]">
                       Descargar todo (ZIP)
                     </button>
                     <button
                       type="button"
-                      onClick={() => { if (!mandarAFabricar(`${nombre}.stl`, mallaSTL(malla), locale, { pieza: `Modelo grande partido en ${res.piezas.length} piezas`, medidas: `${r1(med.x)} × ${r1(med.y)} × ${r1(med.z)} mm`, proceso: "Impresión 3D" })) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.") }}
+                      onClick={fabricar}
                       className="bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px]"
                     >
                       Fabrícamelo: que un taller lo imprima

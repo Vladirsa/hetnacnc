@@ -320,7 +320,7 @@ export function Estudio2D({
             <Boton
               onClick={() => {
                 if (!paraExportar?.trazos.length) return
-                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale))
+                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio" }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo al cotizador.")
               }}
             >

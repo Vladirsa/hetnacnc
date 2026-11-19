@@ -16,6 +16,11 @@ import { dibujo } from "@/lib/generador/geo2d"
 import { PATRONES, PERFILES, type Patron, type TipoPerfil, dibujoPanel, dibujoSeccion, mallaMoldura, mallaPanel, perfilDe, radioConcavoMinimo, trisDeSTL } from "@/lib/generador/molduras"
 
 import { SelectorFresa, useFresas } from "./SelectorFresa"
+import { MisDisenos, PanelCreditos } from "./PanelCuenta"
+import { claveDiseno } from "./GeneradorEnsamble"
+import { cobrarDescargaMueble } from "@/lib/muebles/acciones"
+import { creditosDescarga, textoCreditos } from "@/lib/hetna/precios-diseno"
+import Link from "next/link"
 import { Visor3D } from "./Visor3D"
 
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
@@ -131,8 +136,47 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
   const nombreArchivo = modo === "moldura" ? `moldura-${perfil}-${optMoldura.ancho}x${optMoldura.largo}` : `panel-${patron}-${W}x${H}`
   const stl = () => (modo === "moldura" ? mallaMoldura(optMoldura) : mallaPanel(optPanel))
 
+  // ---- créditos: moldura 1, panel tallado 2; el mismo diseño no se cobra dos veces ----
+  const herrCobro = modo === "moldura" ? "moldura" : "tallado"
+  const costo = creditosDescarga(herrCobro, 1)
+  const claveCobro = claveDiseno(JSON.stringify({ modo, perfil, v, invertir, patron, img: imagen ? `${imagen.w}x${imagen.h}:${imagen.gris.length}:${imagen.gris[Math.floor(imagen.gris.length / 2)]}` : null }))
+  const [pagados, setPagados] = useState<Record<string, boolean>>({})
+  const pagado = !!pagados[claveCobro]
+  const [cobrando, setCobrando] = useState(false)
+  const [avisoCobro, setAvisoCobro] = useState<{ texto: string; login?: boolean; creditos?: boolean } | null>(null)
+  const [recarga, setRecarga] = useState(0)
+  const datosDiseno = () => ({ v: 1, modo, perfil, medidas: v, invertir, patron: patron === "imagen" ? "roseton" : patron, desbaste, acabado, tallaV })
+  const abrirDatos = (dd: Record<string, unknown>) => {
+    if (dd.modo === "moldura" || dd.modo === "panel") setModo(dd.modo)
+    if (typeof dd.perfil === "string" && PERFILES.some((x) => x.id === dd.perfil)) setPerfil(dd.perfil as TipoPerfil)
+    if (dd.medidas && typeof dd.medidas === "object") setV((x) => ({ ...x, ...(dd.medidas as Record<string, string>) }))
+    setInvertir(!!dd.invertir)
+    if (typeof dd.patron === "string" && PATRONES.some((x) => x.id === dd.patron)) setPatron(dd.patron as Patron)
+    if (typeof dd.desbaste === "string") setDesbaste(dd.desbaste)
+    if (typeof dd.acabado === "string") setAcabado(dd.acabado)
+    if (typeof dd.tallaV === "string") setTallaV(dd.tallaV)
+  }
+  const cobrar = async () => {
+    setCobrando(true)
+    setAvisoCobro(null)
+    const r = await cobrarDescargaMueble(claveCobro, nombreArchivo, herrCobro)
+    setCobrando(false)
+    setRecarga((n) => n + 1)
+    if (!r.ok) {
+      setAvisoCobro({ texto: r.mensaje, login: r.noAutenticado, creditos: r.saldoInsuficiente })
+      return false
+    }
+    setPagados((p) => ({ ...p, [claveCobro]: true }))
+    return true
+  }
+
   const panel = (
     <div className="flex flex-col gap-4">
+      <Seccion titulo="Créditos y mis diseños">
+        <PanelCreditos costo={costo} pagado={pagado} recarga={recarga} />
+        <MisDisenos herramienta="moldura" tipos={["moldura"]} actual={() => ({ nombre: modo === "moldura" ? `Moldura ${perfilDe(perfil).nombre}` : `Panel ${PATRONES.find((p) => p.id === patron)?.nombre || ""}`, resumen: nombreArchivo, datos: datosDiseno() })} abrir={(dd) => abrirDatos(dd)} />
+        <span className="text-[11.5px] text-[#8A97AB]">Diseñar y ver es gratis. Bajar los archivos o mandarlos al Laboratorio CAM: moldura {textoCreditos(1)}, panel tallado {textoCreditos(2)}. El mismo diseño no se vuelve a cobrar.{patron === "imagen" ? " El tallado de tu foto no se guarda: vuelve a subir la foto al abrirlo." : ""}</span>
+      </Seccion>
       <Seccion titulo="Qué vas a hacer">
         <Opciones opciones={[{ id: "panel", nombre: "Panel tallado (puerta, frente)" }, { id: "moldura", nombre: "Moldura recta" }]} valor={modo} cambiar={(x) => setModo(x as "moldura" | "panel")} />
       </Seccion>
@@ -257,7 +301,22 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
           ? [["Perfil", perfilDe(perfil).nombre], ["Sección", `${optMoldura.ancho} × ${optMoldura.base + optMoldura.alto} mm`], ["Largo", `${optMoldura.largo} mm`]]
           : [["Panel", `${W} × ${H} × ${optPanel.grosor} mm`], ["Moldura", `${perfilDe(perfil).nombre} ${optPanel.anchoMoldura} mm`], ["Tallado", PATRONES.find((p) => p.id === patron)?.nombre || ""], ["Resolución", `${pasoArchivo} mm`]]
       }
-      descargas={(exportar) => (
+      camBloqueado={pagado ? undefined : `Paga la descarga (${textoCreditos(costo)}) y se activa el envío al CAM 2D.`}
+      descargas={(exportar) => !pagado ? (
+        <div className="flex flex-col gap-2">
+          <button type="button" disabled={cobrando || !tris.length} onClick={cobrar} className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
+            {cobrando ? "Cobrando…" : `STL, DXF y Laboratorio CAM · ${textoCreditos(costo)}`}
+          </button>
+          {avisoCobro && (
+            <span className="text-[12px] text-[#F6B8AE]">
+              {avisoCobro.texto}{" "}
+              {avisoCobro.login && <Link href={`/${locale}/login`} className="underline">Iniciar sesión</Link>}
+              {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline">Comprar créditos</Link>}
+            </span>
+          )}
+          <span className="text-[12px] text-[#8A97AB]">Ver el perfil, el tallado y las medidas es gratis.</span>
+        </div>
+      ) : (
         <div className="flex flex-col gap-2">
           <button
             type="button"

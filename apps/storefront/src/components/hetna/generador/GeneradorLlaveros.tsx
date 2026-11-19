@@ -21,7 +21,7 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
 import { FORMAS_LLAVERO, type FormaLlavero, hacerLlavero } from "@/lib/generador/llaveros"
@@ -339,7 +339,7 @@ export function GeneradorLlaveros() {
           <Boton
             tipo="verde"
             onClick={() => {
-              if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r!.dibujo), locale))
+              if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r!.dibujo), locale, { origen: "Llaveros", servicio: "laser_co2", cantidad: piezas, opciones: { materialLaser: materialLaserPorEspesor(numero(grosor) || 3) } }))
                 setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
             }}
           >
