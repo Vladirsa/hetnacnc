@@ -1763,6 +1763,7 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
     { id: "MDF", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_mdf_m2 ?? null, origen: "Tu app: Carpintería (material MDF por m²)" },
     { id: "Triplay", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_triplay_m2 ?? null, origen: "Tu app: Carpintería (material triplay por m²)" },
     { id: "Madera sólida", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_madera_m2 ?? null, origen: "Tu app: Carpintería (material madera por m²)" },
+    { id: "Melamina", precio: null, origen: "Falta precio (también lo usa el diseñador de muebles)" },
     { id: "Acrílico", precio: null, origen: "Falta precio" },
     { id: "Acero al carbón", precio: null, origen: "Falta precio" },
     { id: "Acero inoxidable", precio: null, origen: "Falta precio" },
@@ -1772,6 +1773,7 @@ if (typeof module !== "undefined") module.exports = EJEMPLOS;
   ];
   const grupoMaterial = (nombre) => {
     const n = (nombre || "").toLowerCase();
+    if (n.includes("melamina")) return "Melamina";
     if (n.includes("mdf")) return "MDF";
     if (n.includes("triplay")) return "Triplay";
     if (/pino|cedro|parota|encino|madera/.test(n)) return "Madera sólida";

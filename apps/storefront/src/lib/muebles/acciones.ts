@@ -31,9 +31,41 @@ async function llamar<T>(ruta: string, cuerpo: unknown): Promise<({ ok: true } &
   }
 }
 
-// Cobra la descarga de un diseño (el mismo diseño no se cobra dos veces en 24 h)
-export async function cobrarDescargaMueble(clave: string, descripcion: string) {
-  return llamar<{ cobrado: number; saldo: number | null }>("/store/muebles/descarga", { clave, descripcion: descripcion.slice(0, 200) })
+// Cobra la descarga de un diseño según su tamaño (el mismo diseño no se cobra dos veces)
+export async function cobrarDescargaMueble(clave: string, descripcion: string, herramienta?: "mueble" | "cocina" | "moldura" | "tallado", piezas?: number) {
+  return llamar<{ cobrado: number; saldo: number | null }>("/store/muebles/descarga", { clave, descripcion: descripcion.slice(0, 200), ...(herramienta ? { herramienta } : {}), ...(piezas ? { piezas: Math.max(1, Math.round(piezas)) } : {}) })
+}
+
+// ---- Mis diseños: guardados en la cuenta del cliente (gratis) ----
+export type DisenoGuardado = { id: string; herramienta: "mueble" | "cocina" | "moldura"; nombre: string; resumen: string | null; creado: string; actualizado: string }
+
+async function pedir<T>(ruta: string, metodo: "GET" | "DELETE"): Promise<({ ok: true } & T) | Fallo> {
+  const auth = (await getAuthHeaders()) as { authorization?: string }
+  if (!auth.authorization) return { ok: false, mensaje: "Inicia sesión para guardar tus diseños.", noAutenticado: true }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}${ruta}`, { method: metodo, headers: await encabezados(), cache: "no-store" })
+    if (res.status === 401) return { ok: false, mensaje: "Tu sesión expiró. Vuelve a iniciar sesión.", noAutenticado: true }
+    const datos = (await res.json().catch(() => null)) as ({ ok?: boolean; mensaje?: string } & T) | null
+    if (!res.ok || !datos?.ok) return { ok: false, mensaje: datos?.mensaje || "No se pudo completar." }
+    return { ...datos, ok: true }
+  } catch {
+    return { ok: false, mensaje: "No se pudo conectar con el servidor." }
+  }
+}
+
+export async function listarMisDisenos(herramienta?: string) {
+  return pedir<{ disenos: DisenoGuardado[]; maximo: number }>(`/store/muebles/disenos${herramienta ? `?herramienta=${encodeURIComponent(herramienta)}` : ""}`, "GET")
+}
+export async function abrirMiDiseno(id: string) {
+  if (!/^dis_[a-f0-9]{20}$/.test(id)) return { ok: false, mensaje: "Diseño inválido." } as Fallo
+  return pedir<{ diseno: DisenoGuardado & { datos: Record<string, unknown> } }>(`/store/muebles/disenos/${id}`, "GET")
+}
+export async function borrarMiDiseno(id: string) {
+  if (!/^dis_[a-f0-9]{20}$/.test(id)) return { ok: false, mensaje: "Diseño inválido." } as Fallo
+  return pedir<object>(`/store/muebles/disenos/${id}`, "DELETE")
+}
+export async function guardarMiDiseno(d: { id?: string; herramienta: "mueble" | "cocina" | "moldura"; nombre: string; resumen?: string; datos: Record<string, unknown> }) {
+  return llamar<{ id: string }>("/store/muebles/disenos", d)
 }
 
 export type LecturaMueble = {

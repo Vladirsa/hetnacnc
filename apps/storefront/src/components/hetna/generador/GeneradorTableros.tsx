@@ -21,6 +21,9 @@ import { type DefHerraje, HERRAJE_DE_UNION, HERRAJES_BASE } from "@/lib/generado
 import { CAPAS_INICIO, type PlantillasCapas, capaFinal } from "@/lib/generador/capas"
 import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
+import { mandarPaqueteACotizador, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { listaCorte } from "@/lib/generador/planosTaller"
+import { tallerCargar } from "@/lib/taller/acciones"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
@@ -33,6 +36,8 @@ import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, 
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
 import { BibliotecaHerrajes, useHerrajes } from "./BibliotecaHerrajes"
+import { MisDisenos, PanelCreditos } from "./PanelCuenta"
+import { creditosDescarga, textoCreditos } from "@/lib/hetna/precios-diseno"
 import type { AmbienteVista, CajaVista, ColocacionVista, VistaEstandar } from "./Mueble3D"
 import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
@@ -455,6 +460,56 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   }, [m, acomodo, copias, hoja.largo, hoja.ancho, precios])
   const pesos = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
 
+  // ---- cotizador: mandar el mueble acomodado en hojas (área y metros de corte reales) con su resumen ----
+  const [avisoCotiz, setAvisoCotiz] = useState("")
+  const cotizarMueble = () => {
+    if (!m.piezas.length || m.errores.length) return
+    // piezas iguales juntas: cada una va con su DXF (sólo el corte) y su cantidad
+    const filas = listaCorte(m)
+    const piezasPaq = filas.map((f) => {
+      const p = m.piezas[f.nums[0] - 1]
+      const dib = dibujo(piezasTendidas([p]).filter((t) => t.capa === "corte"))
+      return { nombre: `${nombreArchivo(f.nombres[0])}-${f.largo}x${f.ancho}x${f.grosor}.dxf`, contenido: dibujoDXF({ ...dib, trazos: dib.trazos.map((t) => ({ ...t, capa: "corte" })) }), cantidad: f.nums.length }
+    })
+    const hojasTxt = costo.filas.map((f) => `${f.hojas} ${f.hojas === 1 ? "hoja" : "hojas"} de ${f.nombre}`)
+    const herr = m.compras.filter((c) => !/^Canto/.test(c.nombre)).slice(0, 6).map((c) => `${c.cantidad} ${c.nombre}`)
+    const nota = [`${nombre}: ${m.piezas.length} piezas, ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.fondo)} × ${Math.round(m.medidas.alto)} mm.`, `Material: ${hojasTxt.join(", ")}.`, m.cantoMetros ? `Canto: ${m.cantoMetros} m.` : "", herr.length ? `Herrajes: ${herr.join(", ")}.` : ""].filter(Boolean).join(" ")
+    // si todo es MDF del mismo grosor, el cotizador ya sabe el material
+    const mats = new Set(m.piezas.map((p) => `${p.material}|${Math.round(p.grosor)}`))
+    const unico = mats.size === 1 ? [...mats][0].split("|") : null
+    const material = unico && unico[0].startsWith("mdf") ? materialRouterMDF(Number(unico[1])) : undefined
+    const ok = mandarPaqueteACotizador({ proyecto: nombre, origen: "muebles", servicio: "router", ...(material ? { material } : {}), nota: nota.slice(0, 900), piezas: piezasPaq }, locale)
+    if (!ok) setAvisoCotiz("El proyecto es muy grande para mandarlo así. Descarga los archivos y súbelos en el cotizador.")
+  }
+  // ---- precios: los del cotizador del taller llenan el costo del mueble ----
+  const traerPreciosCotizador = async () => {
+    setAvisoCotiz("")
+    let mats: Record<string, number | null> = {}
+    try {
+      const r = await tallerCargar()
+      if (r.ok) mats = ((r.config as { materiales?: Record<string, number | null> }).materiales || {}) as Record<string, number | null>
+    } catch {
+      // sin cuenta: se intenta con el cotizador de este navegador
+    }
+    if (!Object.values(mats).some((x) => Number(x) > 0)) {
+      try {
+        mats = (JSON.parse(localStorage.getItem("hetna-cotizador") || "null")?.materiales || {}) as Record<string, number | null>
+      } catch {
+        mats = {}
+      }
+    }
+    const grupoDe = (id: string) => (id.startsWith("melamina") ? "Melamina" : id.startsWith("mdf") || id === "hdf" ? "MDF" : id.startsWith("triplay") ? "Triplay" : id === "encino" ? "Madera sólida" : "")
+    const hojaM2 = (TABLERO.ancho * TABLERO.largo) / 1e6
+    const nuevos: Record<string, string> = {}
+    for (const f of costo.filas) {
+      const precioM2 = Number(mats[grupoDe(f.k.split("|")[0])]) || 0
+      if (precioM2 > 0) nuevos[f.k] = String(Math.round(precioM2 * hojaM2))
+    }
+    if (!Object.keys(nuevos).length) return setAvisoCotiz("Tu cotizador todavía no tiene precios de material (MDF, melamina, triplay o madera por m²). Ponlos en Cotizador → Precios de materiales.")
+    setPrecios((x) => ({ ...x, ...nuevos }))
+    setAvisoCotiz(`Listo: ${Object.keys(nuevos).length} ${Object.keys(nuevos).length === 1 ? "precio" : "precios"} por hoja desde tu cotizador (precio por m² × hoja de ${TABLERO.largo} × ${TABLERO.ancho}).`)
+  }
+
   // ---- planos de taller, etiquetas y presupuesto ----
   const [presu, setPresu] = useGuardado<Omit<DatosPresupuesto, "material" | "partidas" | "cliente" | "nota"> & { manoObraTxt: string; margenTxt: string }>("hetna-presupuesto", {
     taller: "",
@@ -521,6 +576,90 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const medidasTxt = `${m.medidas.ancho} × ${m.medidas.fondo} × ${m.medidas.alto} mm`
   const avisos = [...m.errores, ...m.avisos]
 
+  // ---- créditos: cuánto cuesta bajar este diseño (según sus piezas) ----
+  const herramientaCobro = varios || enfoque === "cocina" ? "cocina" : "mueble"
+  const costoCreditos = creditosDescarga(herramientaCobro, m.piezas.length)
+  const pagadoEste = !!pagados[claveDiseno(clave)]
+  const [recargaSaldo, setRecargaSaldo] = useState(0)
+
+  // ---- el diseño completo, para guardarlo en la cuenta o en el navegador ----
+  const datosDiseno = () => ({
+    v: 1,
+    nombre,
+    tableros,
+    union,
+    herraje,
+    material,
+    patas,
+    medidas: v,
+    tirador,
+    disenoFrente,
+    varios,
+    cantoG,
+    movibles,
+    esquinas,
+    alivio,
+    numEspigas,
+    anchoEspiga,
+    laser,
+    herr,
+    habVista,
+  })
+  const aplicarDatos = (d: Record<string, unknown>, nombreD?: string) => {
+    if (!Array.isArray(d.tableros) || !d.tableros.length) return false
+    const ts = (d.tableros as TableroC[]).filter((t) => t && typeof t.nombre === "string" && [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1].every((n) => Number.isFinite(n)))
+    if (!ts.length) return false
+    setPasado((p) => [...p.slice(-30), tableros])
+    setFuturo([])
+    setTableros(ts)
+    setEsEjemplo(false)
+    setNombre(typeof d.nombre === "string" ? d.nombre : nombreD || "Mi diseño")
+    if (typeof d.union === "string" && UNIONES.some((x) => x.id === d.union)) setUnion(d.union as TipoUnion)
+    if (d.herraje && typeof d.herraje === "object" && typeof (d.herraje as DefHerraje).id === "string") setHerraje(d.herraje as DefHerraje)
+    if (typeof d.material === "string") setMaterial(d.material)
+    if (typeof d.patas === "string") setPatas(d.patas)
+    if (d.medidas && typeof d.medidas === "object") setV((x) => ({ ...x, ...(d.medidas as Record<string, string>) }))
+    if (typeof d.tirador === "string") setTirador(d.tirador as Tirador)
+    if (typeof d.disenoFrente === "string") setDisenoFrente(d.disenoFrente as DisenoFrente)
+    setVarios(!!d.varios)
+    if (typeof d.cantoG === "number") setCantoG(d.cantoG)
+    setMovibles(!!d.movibles)
+    if (d.esquinas && typeof d.esquinas === "object") setEsquinas(d.esquinas as typeof esquinas)
+    if (d.alivio === "hueso" || d.alivio === "t" || d.alivio === "ninguno") setAlivio(d.alivio)
+    if (typeof d.numEspigas === "number") setNumEspigas(d.numEspigas)
+    if (typeof d.anchoEspiga === "string") setAnchoEspiga(d.anchoEspiga)
+    setLaser(!!d.laser)
+    if (typeof d.herr === "string") setHerr(d.herr)
+    setHabVista(d.habVista && typeof d.habVista === "object" ? (d.habVista as typeof habVista) : null)
+    setSel(null)
+    setPunto(null)
+    setVista(undefined)
+    setAjustar((n) => n + 1)
+    return true
+  }
+  // borrador en el navegador: se guarda solo y se recupera al volver (p. ej. después de pagar créditos)
+  const claveBorrador = `hetna-borrador-${enfoque}`
+  const guardarBorrador = () => {
+    if (esEjemplo) return
+    try {
+      localStorage.setItem(claveBorrador, JSON.stringify({ t: Date.now(), datos: datosDiseno() }))
+    } catch {
+      // sin espacio: no pasa nada
+    }
+  }
+  useEffect(() => {
+    try {
+      const b = JSON.parse(localStorage.getItem(claveBorrador) || "null") as { t: number; datos: Record<string, unknown> } | null
+      if (b && Date.now() - b.t < 14 * 24 * 3600 * 1000 && aplicarDatos(b.datos)) setLectura({ texto: "Recuperamos el diseño en el que estabas trabajando.", tipo: "ok" })
+    } catch {
+      // borrador dañado
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const t = setTimeout(guardarBorrador, 1200)
+    return () => clearTimeout(t)
+  }, [clave, nombre]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const interruptorMovibles = (
     <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
       <span>
@@ -530,8 +669,24 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     </label>
   )
 
+  const panelCuenta = (
+    <Seccion titulo="Créditos y mis diseños">
+      <PanelCreditos costo={costoCreditos} pagado={pagadoEste} antesDePagar={guardarBorrador} recarga={recargaSaldo} />
+      <MisDisenos
+        herramienta={herramientaCobro}
+        tipos={["mueble", "cocina"]}
+        actual={() => ({ nombre, resumen: `${m.piezas.length} piezas · ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.alto)} mm`, datos: datosDiseno() })}
+        abrir={(d, n) => {
+          if (!aplicarDatos(d, n)) setLectura({ texto: "Ese diseño no se pudo abrir.", tipo: "error" })
+        }}
+      />
+      <span className="text-[11.5px] text-[#8A97AB]">Diseñar, editar, ver medidas, costo y presupuesto es gratis. Pagas al bajar los archivos para fabricar: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). El mismo diseño no se vuelve a cobrar.</span>
+    </Seccion>
+  )
+
   const panel = (
     <div className="flex flex-col gap-4">
+      {panelCuenta}
       {enfoque === "imagen" && (
         <>
       <Seccion titulo="Sube la imagen de tu mueble">
@@ -1073,6 +1228,9 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
             <span>{pesos(costo.total)}</span>
           </div>
         </div>
+        <button type="button" onClick={traerPreciosCotizador} className="self-start rounded-[7px] bg-[#1C2431] px-2 py-1 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+          Traer precios de mi cotizador
+        </button>
         <span className="text-[11.5px] text-[#8A97AB]">El precio de cada herraje se cambia en Uniones → Ajustar medidas. No incluye mano de obra ni corte.</span>
       </Seccion>
 
@@ -1147,6 +1305,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
           <button type="button" disabled={!m.piezas.length} onClick={verPresupuesto} className="rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
             Ver presupuesto
           </button>
+          <button type="button" disabled={!m.piezas.length || !!m.errores.length} onClick={cotizarMueble} className="rounded-[8px] bg-[#16794F] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#12623F] disabled:opacity-50">
+            Cotizar con mi tarifa (Cotizador CNC)
+          </button>
+          <span className="text-[11px] text-[#8A97AB]">Manda cada pieza con su cantidad: el cotizador precia el proyecto completo con tus tarifas, con el resumen de piezas, material y herrajes en la nota para el cliente, y lo guarda en tu historial.</span>
+          {avisoCotiz && <span className="text-[12px] text-[#F6D58E]">{avisoCotiz}</span>}
         </div>
         {avisoDoc && <span className="text-[12px] text-[#F6D58E]">{avisoDoc}</span>}
       </Seccion>
@@ -1565,15 +1728,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
               onClick={async () => {
                 setCobrando(true)
                 setAvisoCobro(null)
-                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`)
+                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`, herramientaCobro, m.piezas.length)
                 setCobrando(false)
+                setRecargaSaldo((n) => n + 1)
                 if (!r.ok) return setAvisoCobro({ texto: r.mensaje, login: r.noAutenticado, creditos: r.saldoInsuficiente })
                 setPagados((p) => ({ ...p, [claveCobro]: true }))
                 exportar("dxf")
               }}
               className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50"
             >
-              {cobrando ? "Cobrando…" : "Descargar DXF, SVG y PDF · 1 crédito"}
+              {cobrando ? "Cobrando…" : `Descargar archivos, planos y etiquetas · ${textoCreditos(costoCreditos)}`}
             </button>
             {avisoCobro && (
               <span className="text-[12px] text-[#F6B8AE]">
