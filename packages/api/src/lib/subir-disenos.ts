@@ -11,7 +11,6 @@
 // IA de imágenes: fal.ai (FAL_KEY, la misma del Estudio). IA de texto: Claude.
 import Anthropic from "@anthropic-ai/sdk"
 import { randomBytes } from "crypto"
-import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { uploadFile } from "./backblaze"
