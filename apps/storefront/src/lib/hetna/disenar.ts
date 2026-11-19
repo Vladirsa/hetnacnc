@@ -175,6 +175,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Convierte gratis archivos STEP, DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
   },
   {
+    slug: "partir-3d",
+    nombre: "Partir modelo 3D",
+    texto: "Modelos que no caben en tu impresora, en piezas con pernos o imanes.",
+    icono: "partir",
+    acceso: "gratis",
+    titulo: "Partir modelo 3D gratis: dividir un STL grande en piezas para imprimir",
+    descripcion:
+      "Sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que caben en la cama, con pernos, perno integrado o huecos para imanes. Descarga todas las piezas en ZIP. Gratis, sin marca de agua y sin subir tu archivo.",
+  },
+  {
     slug: "svg-a-stl",
     nombre: "SVG o DXF a STL",
     texto: "Archivos de corte láser a 3D: corte, grabado y líneas marcadas por color; placa base para llaveros.",
@@ -343,6 +353,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
+      { slug: "partir-3d", corto: "Partir modelo" },
     ],
   },
   "2d": {
