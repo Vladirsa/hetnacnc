@@ -33,6 +33,8 @@ import { type TipoNuevo, abrirHueco, agregar, duplicar, empujar, mover, quitar, 
 
 import { claveDiseno, piezasTendidas, reducirImagen } from "./GeneradorEnsamble"
 import { BibliotecaHerrajes, useHerrajes } from "./BibliotecaHerrajes"
+import { MisDisenos, PanelCreditos } from "./PanelCuenta"
+import { creditosDescarga, textoCreditos } from "@/lib/hetna/precios-diseno"
 import type { AmbienteVista, CajaVista, ColocacionVista, VistaEstandar } from "./Mueble3D"
 import { SelectorFresa, useFresas } from "./SelectorFresa"
 import { Visor3D } from "./Visor3D"
@@ -521,6 +523,90 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const medidasTxt = `${m.medidas.ancho} × ${m.medidas.fondo} × ${m.medidas.alto} mm`
   const avisos = [...m.errores, ...m.avisos]
 
+  // ---- créditos: cuánto cuesta bajar este diseño (según sus piezas) ----
+  const herramientaCobro = varios || enfoque === "cocina" ? "cocina" : "mueble"
+  const costoCreditos = creditosDescarga(herramientaCobro, m.piezas.length)
+  const pagadoEste = !!pagados[claveDiseno(clave)]
+  const [recargaSaldo, setRecargaSaldo] = useState(0)
+
+  // ---- el diseño completo, para guardarlo en la cuenta o en el navegador ----
+  const datosDiseno = () => ({
+    v: 1,
+    nombre,
+    tableros,
+    union,
+    herraje,
+    material,
+    patas,
+    medidas: v,
+    tirador,
+    disenoFrente,
+    varios,
+    cantoG,
+    movibles,
+    esquinas,
+    alivio,
+    numEspigas,
+    anchoEspiga,
+    laser,
+    herr,
+    habVista,
+  })
+  const aplicarDatos = (d: Record<string, unknown>, nombreD?: string) => {
+    if (!Array.isArray(d.tableros) || !d.tableros.length) return false
+    const ts = (d.tableros as TableroC[]).filter((t) => t && typeof t.nombre === "string" && [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1].every((n) => Number.isFinite(n)))
+    if (!ts.length) return false
+    setPasado((p) => [...p.slice(-30), tableros])
+    setFuturo([])
+    setTableros(ts)
+    setEsEjemplo(false)
+    setNombre(typeof d.nombre === "string" ? d.nombre : nombreD || "Mi diseño")
+    if (typeof d.union === "string" && UNIONES.some((x) => x.id === d.union)) setUnion(d.union as TipoUnion)
+    if (d.herraje && typeof d.herraje === "object" && typeof (d.herraje as DefHerraje).id === "string") setHerraje(d.herraje as DefHerraje)
+    if (typeof d.material === "string") setMaterial(d.material)
+    if (typeof d.patas === "string") setPatas(d.patas)
+    if (d.medidas && typeof d.medidas === "object") setV((x) => ({ ...x, ...(d.medidas as Record<string, string>) }))
+    if (typeof d.tirador === "string") setTirador(d.tirador as Tirador)
+    if (typeof d.disenoFrente === "string") setDisenoFrente(d.disenoFrente as DisenoFrente)
+    setVarios(!!d.varios)
+    if (typeof d.cantoG === "number") setCantoG(d.cantoG)
+    setMovibles(!!d.movibles)
+    if (d.esquinas && typeof d.esquinas === "object") setEsquinas(d.esquinas as typeof esquinas)
+    if (d.alivio === "hueso" || d.alivio === "t" || d.alivio === "ninguno") setAlivio(d.alivio)
+    if (typeof d.numEspigas === "number") setNumEspigas(d.numEspigas)
+    if (typeof d.anchoEspiga === "string") setAnchoEspiga(d.anchoEspiga)
+    setLaser(!!d.laser)
+    if (typeof d.herr === "string") setHerr(d.herr)
+    setHabVista(d.habVista && typeof d.habVista === "object" ? (d.habVista as typeof habVista) : null)
+    setSel(null)
+    setPunto(null)
+    setVista(undefined)
+    setAjustar((n) => n + 1)
+    return true
+  }
+  // borrador en el navegador: se guarda solo y se recupera al volver (p. ej. después de pagar créditos)
+  const claveBorrador = `hetna-borrador-${enfoque}`
+  const guardarBorrador = () => {
+    if (esEjemplo) return
+    try {
+      localStorage.setItem(claveBorrador, JSON.stringify({ t: Date.now(), datos: datosDiseno() }))
+    } catch {
+      // sin espacio: no pasa nada
+    }
+  }
+  useEffect(() => {
+    try {
+      const b = JSON.parse(localStorage.getItem(claveBorrador) || "null") as { t: number; datos: Record<string, unknown> } | null
+      if (b && Date.now() - b.t < 14 * 24 * 3600 * 1000 && aplicarDatos(b.datos)) setLectura({ texto: "Recuperamos el diseño en el que estabas trabajando.", tipo: "ok" })
+    } catch {
+      // borrador dañado
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const t = setTimeout(guardarBorrador, 1200)
+    return () => clearTimeout(t)
+  }, [clave, nombre]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const interruptorMovibles = (
     <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
       <span>
@@ -530,8 +616,24 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
     </label>
   )
 
+  const panelCuenta = (
+    <Seccion titulo="Créditos y mis diseños">
+      <PanelCreditos costo={costoCreditos} pagado={pagadoEste} antesDePagar={guardarBorrador} recarga={recargaSaldo} />
+      <MisDisenos
+        herramienta={herramientaCobro}
+        tipos={["mueble", "cocina"]}
+        actual={() => ({ nombre, resumen: `${m.piezas.length} piezas · ${Math.round(m.medidas.ancho)} × ${Math.round(m.medidas.alto)} mm`, datos: datosDiseno() })}
+        abrir={(d, n) => {
+          if (!aplicarDatos(d, n)) setLectura({ texto: "Ese diseño no se pudo abrir.", tipo: "error" })
+        }}
+      />
+      <span className="text-[11.5px] text-[#8A97AB]">Diseñar, editar, ver medidas, costo y presupuesto es gratis. Pagas al bajar los archivos para fabricar: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). El mismo diseño no se vuelve a cobrar.</span>
+    </Seccion>
+  )
+
   const panel = (
     <div className="flex flex-col gap-4">
+      {panelCuenta}
       {enfoque === "imagen" && (
         <>
       <Seccion titulo="Sube la imagen de tu mueble">
@@ -1565,15 +1667,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
               onClick={async () => {
                 setCobrando(true)
                 setAvisoCobro(null)
-                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`)
+                const r = await cobrarDescargaMueble(claveCobro, `${nombre} ${medidasTxt}, ${opciones.grosor} mm`, herramientaCobro, m.piezas.length)
                 setCobrando(false)
+                setRecargaSaldo((n) => n + 1)
                 if (!r.ok) return setAvisoCobro({ texto: r.mensaje, login: r.noAutenticado, creditos: r.saldoInsuficiente })
                 setPagados((p) => ({ ...p, [claveCobro]: true }))
                 exportar("dxf")
               }}
               className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50"
             >
-              {cobrando ? "Cobrando…" : "Descargar DXF, SVG y PDF · 1 crédito"}
+              {cobrando ? "Cobrando…" : `Descargar archivos, planos y etiquetas · ${textoCreditos(costoCreditos)}`}
             </button>
             {avisoCobro && (
               <span className="text-[12px] text-[#F6B8AE]">

@@ -32,13 +32,23 @@ export const T_COMPRAS = "hetna_compra_creditos"
 // Paquetes a la venta. El título y los créditos se leen del producto del
 // catálogo (mismo handle) si existe; el precio se puede cambiar desde el panel
 // poniendo metadata.precio_mxn en el producto. Si no, vale el de aquí.
+// Escalera de precio por crédito: $23.8 → $19.9 → $18 → $15.4 (el paquete más
+// grande siempre sale más barato por crédito). En el panel se puede cambiar
+// con metadata del producto (creditos_otorgados, precio_mxn).
 export const PAQUETES: { handle: string; titulo: string; descripcion: string; creditos: number; precio: number }[] = [
+  {
+    handle: "creditos-3d-prueba",
+    titulo: "Paquete Prueba — 5 créditos",
+    descripcion: "Para empezar: hasta 5 muebles o una cocina completa.",
+    creditos: 5,
+    precio: 119,
+  },
   {
     handle: "creditos-3d-basico",
     titulo: "Paquete Básico — 10 créditos",
-    descripcion: "Para probar: 10 créditos para las herramientas de HETNA.",
+    descripcion: "10 créditos para las herramientas de HETNA.",
     creditos: 10,
-    precio: 249,
+    precio: 199,
   },
   {
     handle: "creditos-3d-estandar",
