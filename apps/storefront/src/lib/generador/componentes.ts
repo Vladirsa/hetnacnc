@@ -345,7 +345,7 @@ export function agregarComponente(ts: TableroC[], tipo: TipoComponente, punto: P
     nuevos.push({ nombre: `${base}: lado derecho`, plano: "lateral", rol: "cajon", x0: bx1 - g, x1: bx1, y0: by0, y1: by1, z0: bz0, z1: bz1 })
     nuevos.push({ nombre: `${base}: frente interior`, plano: "frontal", rol: "cajon", x0: bx0 + g, x1: bx1 - g, y0: by0, y1: by0 + g, z0: bz0, z1: bz1 })
     nuevos.push({ nombre: `${base}: trasera`, plano: "frontal", rol: "cajon", x0: bx0 + g, x1: bx1 - g, y0: by1 - g, y1: by1, z0: bz0, z1: bz1 })
-    nuevos.push({ nombre: `${base}: fondo`, plano: "horizontal", rol: "cajon", material: "hdf", x0: bx0, x1: bx1, y0: by0, y1: by1, z0: bz0 - 6, z1: bz0 })
+    nuevos.push({ nombre: `${base}: fondo`, plano: "horizontal", rol: "cajon", material: "hdf", x0: bx0, x1: bx1, y0: by0, y1: by1, z0: bz0 - 3, z1: bz0 })
   } else if (tipo === "fondo") {
     const [cx, , cz] = h.caja
     const g = PREDETERMINADO.fondo.grosor || 3
