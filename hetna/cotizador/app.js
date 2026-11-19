@@ -1278,6 +1278,43 @@
   };
   $("btn-pdf").addEventListener("click", generarPDF);
 
+  // ---------- Planos y lista de corte (no cuentan como cotización) ----------
+  const bajarBlob = async (blob, nombre, msg) => {
+    try {
+      const archivo = new File([blob], nombre, { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], title: nombre }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    aviso(msg);
+  };
+  const generarPlanos = async () => {
+    if (!st.datos) { aviso("Los planos salen del archivo: sube uno primero."); return; }
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (!J) { aviso("No se pudo cargar el generador de PDF. Revisa tu conexión e intenta de nuevo."); return; }
+    guardarActiva();
+    const lista = enProyecto()
+      ? st.piezas.map((p) => ({ nombre: p.nombreArchivo, cantidad: Math.max(1, p.cantidad) * st.cantidad, datos: p.datos, medidas: p.medidas, mmPorUnidad: p.mmPorUnidad }))
+      : [{ nombre: st.nombreArchivo, cantidad: st.cantidad, datos: st.datos, medidas: st.medidas, mmPorUnidad: st.mmPorUnidad }];
+    const s = servicio(), t = tipo();
+    const proyecto = st.proyecto?.nombre || (st.nombreArchivo || "pieza").replace(/\.[^.]+$/, "");
+    aviso("Armando los planos...");
+    await new Promise((ok) => setTimeout(ok, 30));
+    try {
+      const doc = PLANOS.generar(J, lista, {
+        taller: conf.taller.nombre, folio: folioActual(), proyecto,
+        servicio: s && t ? `${nombreServicio(s)} · ${t.n}` : "",
+        material: st.material && !$("campo-material").hidden ? st.material + (st.pone === "cliente" ? " (lo pone el cliente)" : "") : "",
+        juegos: enProyecto() ? st.cantidad : 1, nota: $("cli-nota").value.trim(),
+        marca: MODO === "demo" || MODO === "local" || (MODO === "cuenta" && cuenta.plan === "gratis"),
+      });
+      await bajarBlob(doc.output("blob"), `Planos-${proyecto.replace(/[^\w-]+/g, "_").slice(0, 40)}.pdf`, "Planos descargados.");
+    } catch (e) { aviso("No se pudieron armar los planos de este archivo."); }
+  };
+  $("btn-planos").addEventListener("click", generarPlanos);
+
   // Pestañas
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x === t));
