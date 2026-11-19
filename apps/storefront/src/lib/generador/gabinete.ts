@@ -9,7 +9,7 @@ import type { TableroC } from "./componentes"
 export type TipoGabinete = "bajo" | "alto" | "columna"
 export type Techo = "completo" | "travesanos" | "sin"
 export type FondoGabinete = "ranura" | "clavado" | "sin"
-export type Frente = "nada" | "puerta" | "puertas" | "cajones"
+export type Frente = "nada" | "puerta" | "puertas" | "cajones" | "cajon-puertas" | "esquinero" | "abatible"
 
 export type OpcionesGabinete = {
   tipo: TipoGabinete
@@ -25,6 +25,10 @@ export type OpcionesGabinete = {
   frente: Frente
   cajones: number
   gFrente: number // grosor de puertas y frentes
+  repisasMovibles?: boolean // sobre pines (sistema 32) en vez de fijas
+  // esquinero: de qué lado queda el panel ciego (donde llega el otro tramo) y cuánto mide
+  ciegoLado?: "izq" | "der"
+  ciego?: number
 }
 
 export const GABINETE_INICIO: Record<TipoGabinete, Omit<OpcionesGabinete, "grosor" | "gFrente">> = {
@@ -80,10 +84,19 @@ export function gabinete(o0: OpcionesGabinete): { tableros: TableroC[]; avisos: 
   // repisas fijas repartidas en el hueco
   const zInt0 = zPiso + e, zInt1 = o.techo === "sin" ? H : zTecho
   const fondoRepisa = Math.max(100, (o.fondoTipo === "ranura" ? yFondo0 : F) - 5)
+  // cajón arriba y puertas abajo: un separador fijo bajo el cajón
+  const altoCajonArriba = 150
+  const zSep = zInt1 - altoCajonArriba - e
+  if (o.frente === "cajon-puertas") t.push({ nombre: "Separador del cajón", plano: "horizontal", rol: "estructura", x0: xi0, x1: xi1, y0: 0, y1: Math.max(100, (o.fondoTipo === "ranura" ? F - RANURA.desde - RANURA.ancho : F) - 5), z0: zSep, z1: zSep + e })
+  const zRep1 = o.frente === "cajon-puertas" ? zSep : zInt1
   if (o.frente !== "cajones")
     for (let i = 1; i <= o.repisas; i++) {
-      const z = zInt0 + ((zInt1 - zInt0) * i) / (o.repisas + 1) - e / 2
-      t.push({ nombre: o.repisas > 1 ? `Repisa ${i}` : "Repisa", plano: "horizontal", rol: "estructura", x0: xi0, x1: xi1, y0: 0, y1: fondoRepisa, z0: z, z1: z + e })
+      const z = zInt0 + ((zRep1 - zInt0) * i) / (o.repisas + 1) - e / 2
+      t.push(
+        o.repisasMovibles
+          ? { nombre: o.repisas > 1 ? `Repisa movible ${i}` : "Repisa movible", plano: "horizontal", rol: "repisa", x0: xi0 + 1, x1: xi1 - 1, y0: 0, y1: fondoRepisa - 5, z0: z, z1: z + e }
+          : { nombre: o.repisas > 1 ? `Repisa ${i}` : "Repisa", plano: "horizontal", rol: "estructura", x0: xi0, x1: xi1, y0: 0, y1: fondoRepisa, z0: z, z1: z + e },
+      )
     }
   // fondo
   if (o.fondoTipo === "ranura") {
@@ -103,6 +116,35 @@ export function gabinete(o0: OpcionesGabinete): { tableros: TableroC[]; avisos: 
       t.push({ nombre: "Puerta izquierda", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: m - 1.5, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
       t.push({ nombre: "Puerta derecha", plano: "frontal", rol: "puerta", bisagra: "der", jaladera: 128, x0: m + 1.5, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
     } else t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+  } else if (o.frente === "abatible") {
+    t.push({ nombre: "Puerta abatible", plano: "frontal", rol: "puerta", bisagra: "arriba", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+  } else if (o.frente === "esquinero") {
+    // esquinero ciego: la puerta de un lado y un panel fijo donde llega el otro tramo de la cocina
+    const anchoPuerta = o.ciego ? Math.max(250, Math.min(600, fx1 - fx0 - o.ciego - 3)) : Math.min(500, Math.max(300, A - 450))
+    if (o.ciegoLado === "izq") {
+      t.push({ nombre: "Panel ciego", plano: "frontal", rol: "frente", jaladera: 0, x0: fx0, x1: fx1 - anchoPuerta - 3, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+      t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "der", jaladera: 128, x0: fx1 - anchoPuerta, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+    } else {
+      t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: fx0 + anchoPuerta, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+      t.push({ nombre: "Panel ciego", plano: "frontal", rol: "frente", jaladera: 0, x0: fx0 + anchoPuerta + 3, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fz1 })
+    }
+  } else if (o.frente === "cajon-puertas") {
+    const fSep = fz1 - altoCajonArriba
+    t.push({ nombre: "Cajón: frente", plano: "frontal", rol: "frente", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fSep + 1.5, z1: fz1 })
+    if (A >= 500) {
+      const mm = A / 2
+      t.push({ nombre: "Puerta izquierda", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: mm - 1.5, y0: yF0, y1: yF1, z0: fz0, z1: fSep - 1.5 })
+      t.push({ nombre: "Puerta derecha", plano: "frontal", rol: "puerta", bisagra: "der", jaladera: 128, x0: mm + 1.5, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fSep - 1.5 })
+    } else t.push({ nombre: "Puerta", plano: "frontal", rol: "puerta", bisagra: "izq", jaladera: 128, x0: fx0, x1: fx1, y0: yF0, y1: yF1, z0: fz0, z1: fSep - 1.5 })
+    // caja del cajón entre el separador y el techo
+    const gC = 15
+    const largo = [550, 500, 450, 400, 350, 300, 250].find((l) => l <= (o.fondoTipo === "ranura" ? yFondo0 : F) - 20) || 250
+    const bx0 = xi0 + 12.7, bx1 = xi1 - 12.7, bz0 = zSep + e + 10, bz1 = Math.max(bz0 + 60, zInt1 - 20)
+    t.push({ nombre: "Cajón: lado izquierdo", plano: "lateral", rol: "cajon", x0: bx0, x1: bx0 + gC, y0: 0, y1: largo, z0: bz0, z1: bz1 })
+    t.push({ nombre: "Cajón: lado derecho", plano: "lateral", rol: "cajon", x0: bx1 - gC, x1: bx1, y0: 0, y1: largo, z0: bz0, z1: bz1 })
+    t.push({ nombre: "Cajón: frente interior", plano: "frontal", rol: "cajon", x0: bx0 + gC, x1: bx1 - gC, y0: 0, y1: gC, z0: bz0, z1: bz1 })
+    t.push({ nombre: "Cajón: trasera", plano: "frontal", rol: "cajon", x0: bx0 + gC, x1: bx1 - gC, y0: largo - gC, y1: largo, z0: bz0, z1: bz1 })
+    t.push({ nombre: "Cajón: fondo", plano: "horizontal", rol: "cajon", material: "hdf", x0: bx0, x1: bx1, y0: 0, y1: largo, z0: bz0 - 3, z1: bz0 })
   } else if (o.frente === "cajones") {
     // cajones iguales en el hueco; cada uno con su frente y su caja sobre correderas
     const n = o.cajones

@@ -18,4 +18,14 @@ export const LearningArticle = model.define("learning_article", {
   categoria: model.text().nullable(),
   guia: model.boolean().default(false),
   autor: model.text().nullable(),
+  // Artículos de instructores (talleres): quién lo escribió y su revisión.
+  // revision: null = no necesita (o ya aprobado) | "pendiente" | "rechazado".
+  // aprobado_at: primera aprobación; cuenta para bajar la comisión de cursos
+  // (lib/comision-autores.ts) y no cambia al editar.
+  seller_id: model.text().nullable(),
+  revision: model.text().nullable(),
+  motivo_revision: model.text().nullable(),
+  aprobado_at: model.dateTime().nullable(),
+  // texto simple que escribió el taller (para volver a editarlo); el HTML se arma de aquí
+  texto_original: model.text().nullable(),
 })

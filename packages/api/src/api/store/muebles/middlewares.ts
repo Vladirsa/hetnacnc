@@ -4,6 +4,13 @@ const soloClientes = authenticate("customer", ["session", "bearer"])
 
 export const storeMueblesMiddlewares: MiddlewareRoute[] = [
   {
+    method: ["GET", "POST", "DELETE"],
+    matcher: "/store/muebles/disenos*",
+    // un diseño (tableros y opciones en JSON) pesa poco; una cocina grande, unos cientos de KB
+    bodyParser: { sizeLimit: "2mb" },
+    middlewares: [soloClientes],
+  },
+  {
     method: ["POST"],
     matcher: "/store/muebles/descarga",
     middlewares: [soloClientes],

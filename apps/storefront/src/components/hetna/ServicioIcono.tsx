@@ -44,6 +44,13 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="M6 7h5v5H6zM13 7h5v3h-5zM6 14h4v3H6zM12 12l3 5h3z" />
     </>
   ),
+  partir: (
+    <>
+      <path d="M4 9l6-3 3 1.5v9L7 19.5 4 18z" />
+      <path d="M15 8.5l3-1.5 3 1.5V17l-3 1.5-3-1.5z" />
+      <path d="M13 12h2" />
+    </>
+  ),
   convertir: (
     <>
       <path d="M4 7h13l-3-3M20 17H7l3 3" />

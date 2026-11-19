@@ -48,6 +48,7 @@
     "fflate": "0.8.2",
     "http-proxy-middleware": "3.0.7",
     "mime": "1.6.0",
+    "onnxruntime-node": "1.31.1",
     "pdf-lib": "1.17.1",
     "pg": "^8.11.3",
     "qrcode": "1.5.4",

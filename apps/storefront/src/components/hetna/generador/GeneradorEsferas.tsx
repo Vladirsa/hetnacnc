@@ -247,6 +247,11 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
         </div>
       )}
       <Estudio2D
+      stl={async () => {
+        if (!r.d) return null
+        const m = await extruirEsferas(r.d, G)
+        return m.errores.length || !m.malla.tris.length ? null : mallaSTL(m.malla)
+      }}
       titulo="Esferas navideñas con nombre"
       acento="2D"
       subtitulo="Una pieza por nombre, lista para corte láser"

@@ -95,24 +95,34 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Sube la foto, boceto o plano de un mueble de tablero: la IA lo convierte en piezas con espigas y mortajas a las medidas y el grosor que elijas, lo ves armado en 3D y descargas DXF, SVG o PDF listos para router CNC o láser.",
   },
   {
-    slug: "muebles-ensamble",
-    nombre: "Muebles de ensamble sin tornillos",
-    texto: "Exhibidores y repisas de ranura y espiga a tu medida, con vista 3D armada.",
+    slug: "molduras-tallados",
+    nombre: "Molduras y tallados",
+    texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores a la medida",
+    titulo: "Molduras y paneles tallados para router CNC: perfiles 3D y STL gratis",
     descripcion:
-      "Diseña un exhibidor de ranura y espiga con gabinete, repisas y divisores ranurados: elige medidas, grosor real del tablero, holgura y fresa, mira el mueble armado en 3D y calcula el tablero. Alivios para fresa incluidos, listo para maquilar.",
+      "Diseña molduras con perfil de fresa (media caña, bocel, gola, romana, clásica) y paneles con marco moldurado y centro tallado (rosetón, estrella, rombos o tu imagen). Vista 3D, STL para desbaste y acabado, DXF para tallar en V y envío directo al Laboratorio CAM.",
+  },
+  {
+    slug: "muebles-ensamble",
+    nombre: "Muebles de ensamble sin tornillos",
+    texto: "Exhibidores, libreros y muebles de caja y espiga del catálogo, a tu medida y vistos armados en 3D.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores y libreros a la medida",
+    descripcion:
+      "Elige un exhibidor, librero, mesa o banco de caja y espiga del catálogo, o sube la foto de tu mueble: cambia medidas, grosor, número de espigas y tipo de alivio (cabeza de fémur o en T), míralo armado en 3D y descarga las piezas listas para el router.",
   },
   {
     slug: "despiece-muebles",
-    nombre: "Despiece de muebles",
-    texto: "Gabinetes, closets y cocinas: piezas, acomodo en hojas, canto y herraje.",
+    nombre: "Cocina y muebles de melamina a la medida",
+    texto: "Gabinetes de cocina, libreros, roperos, cómodas y burós: elige el modelo, cambia sus medidas y sale el despiece.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Despiece de muebles gratis: lista de corte y acomodo en hojas (DXF)",
+    titulo: "Planos de muebles de melamina a la medida gratis: cocina, librero, ropero y cómoda con despiece",
     descripcion:
-      "Calcula gratis el despiece de gabinetes, libreros, closets y cocinas en melamina o MDF: lista de corte, acomodo en hojas, metros de canto y herrajes. Descarga el DXF para tu router CNC.",
+      "Gabinetes de cocina, alacenas, libreros, roperos, cómodas, burós, zapateras y muebles de TV a tu medida: cambia ancho, alto y fondo o arma la cocina completa. Melamina o MDF, minifix o confirmat, bisagras, correderas, lista de corte con canto, acomodo en hojas y DXF. Y si quieres, lo manda a cortar un taller HETNA."
   },
   {
     slug: "plantillas-empaque",
@@ -157,12 +167,22 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "convertidor",
     nombre: "Convertidor y reescalador",
-    texto: "DXF a SVG y al revés, STL a OBJ, cambio de tamaño y de espesor.",
+    texto: "DXF a SVG y al revés, STEP a STL y STL a STEP, STL a OBJ, cambio de tamaño y de espesor.",
     icono: "convertir",
     acceso: "gratis",
-    titulo: "Convertir DXF a SVG, SVG a DXF y STL a OBJ gratis en línea",
+    titulo: "Convertir STEP a STL, STL a STEP, DXF a SVG y STL a OBJ gratis en línea",
     descripcion:
-      "Convierte gratis archivos DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
+      "Convierte gratis archivos STEP, DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
+  },
+  {
+    slug: "partir-3d",
+    nombre: "Partir modelo 3D",
+    texto: "Modelos que no caben en tu impresora, en piezas con pernos o imanes.",
+    icono: "partir",
+    acceso: "gratis",
+    titulo: "Partir modelo 3D gratis: dividir un STL grande en piezas para imprimir",
+    descripcion:
+      "Sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que caben en la cama, con pernos, perno integrado o huecos para imanes. Descarga todas las piezas en ZIP. Gratis, sin marca de agua y sin subir tu archivo.",
   },
   {
     slug: "svg-a-stl",
@@ -333,6 +353,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
+      { slug: "partir-3d", corto: "Partir modelo" },
     ],
   },
   "2d": {

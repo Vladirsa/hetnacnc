@@ -19,6 +19,8 @@ import { anidar, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
 import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { cajaDibujo, largoCorte } from "@/lib/generador/geo2d"
 import { dibujoDXF, dibujoSVG, type Dibujo } from "@/lib/generador/vectores"
+import { capaFinal } from "@/lib/generador/capas"
+import { BotonesCam } from "@/components/hetna/generador/BotonesCam"
 
 const COLORES: Record<string, string> = { corte: "#FF7A2E", grabado: "#5FA8F5", interior: "#FFB067", doblez: "#5FA8F5", hoja: "#3A4658", guia: "#3A4658", texto: "#9BE3B8" }
 
@@ -60,6 +62,9 @@ export function Estudio2D({
   vacio,
   vista3D,
   sinAcomodo = false,
+  renombrarCapa,
+  stl,
+  camBloqueado,
 }: {
   titulo: string
   acento?: string
@@ -84,6 +89,12 @@ export function Estudio2D({
   vista3D?: React.ReactNode
   // la herramienta trae su propio acomodo en hojas (se oculta el de aquí)
   sinAcomodo?: boolean
+  // nombre de capa en el archivo (plantillas del cliente para su CAM)
+  renombrarCapa?: (capa: string) => string
+  // si la pieza también sale en 3D, se puede mandar al Laboratorio CAM 3-5 ejes
+  stl?: () => ArrayBuffer | null | Promise<ArrayBuffer | null>
+  // mensaje cuando todavía no se puede mandar al CAM (p. ej. falta pagar la descarga)
+  camBloqueado?: string
 }) {
   const { locale } = useParams<{ locale: string }>()
   const cajaRef = useRef<HTMLDivElement>(null)
@@ -124,6 +135,8 @@ export function Estudio2D({
     return { ...dibujo, trazos: dibujo.trazos.filter((t) => t.capa !== "hoja" && t.capa !== "guia" && !(sinHojas && t.capa === "hoja")) }
   }, [dibujo, sinHojas])
 
+  // lo que va al archivo: capas con el nombre final
+  const alArchivo = useMemo(() => (paraExportar ? { ...paraExportar, trazos: paraExportar.trazos.map((t) => ({ ...t, capa: renombrarCapa ? renombrarCapa(t.capa) : capaFinal(t.capa) })) } : null), [paraExportar, renombrarCapa])
   const b = useMemo(() => (dibujo && dibujo.trazos.length ? cajaDibujo(dibujo.trazos) : null), [dibujo])
   const medidas = useMemo(() => (paraExportar && paraExportar.trazos.length ? cajaDibujo(paraExportar.trazos) : null), [paraExportar])
   const largo = useMemo(() => (paraExportar ? largoCorte(paraExportar.trazos.filter((t) => t.capa !== "grabado" && !t.capa.startsWith("BARRENO") && !t.capa.startsWith("CANTO") && t.capa !== "ETIQUETA" && !t.capa.startsWith("RANURA"))) : 0), [paraExportar])
@@ -150,7 +163,7 @@ export function Estudio2D({
       ...dibujo.trazos
         .filter((t) => !(t.capa === "grabado" && t.cerrado))
         .map((t, i) => {
-          const col = COLORES[t.capa] || (t.capa === "ETIQUETA" ? "#9BE3B8" : t.capa.startsWith("RANURA") ? "#F5C451" : t.capa.startsWith("BARRENO") ? (t.capa.endsWith("ABAJO") ? "#B58CFF" : "#5FA8F5") : t.capa.startsWith("CANTO") ? "#9BE3B8" : COLORES.corte)
+          const col = COLORES[t.capa] || (t.capa === "ETIQUETA" ? "#9BE3B8" : t.capa.startsWith("RANURA") ? "#F5C451" : t.capa.startsWith("BARRENO") ? (t.capa.includes("_ABAJO") ? "#B58CFF" : "#5FA8F5") : t.capa.startsWith("CANTO") ? "#9BE3B8" : COLORES.corte)
           return <path key={i} d={camino(t.pts, t.cerrado)} fill="none" stroke={col} strokeWidth={t.capa === "hoja" ? 1 : 1.3} vectorEffect="non-scaling-stroke" strokeDasharray={t.capa === "doblez" || t.capa === "guia" ? "6 4" : undefined} />
         }),
     ]
@@ -158,15 +171,15 @@ export function Estudio2D({
   }, [dibujo, b])
 
   const exportar = (tipo: "dxf" | "svg" | "pdf") => {
-    if (!paraExportar?.trazos.length) return
-    if (tipo === "dxf") return descargar(`${archivo}.dxf`, dibujoDXF(paraExportar), "application/dxf")
-    if (tipo === "svg") return descargar(`${archivo}.svg`, dibujoSVG(paraExportar, "corte"), "image/svg+xml")
+    if (!alArchivo?.trazos.length) return
+    if (tipo === "dxf") return descargar(`${archivo}.dxf`, dibujoDXF(alArchivo), "application/dxf")
+    if (tipo === "svg") return descargar(`${archivo}.svg`, dibujoSVG(alArchivo, "corte"), "image/svg+xml")
     const w = window.open("", "_blank")
     if (!w) return setAviso("Permite las ventanas emergentes para imprimir el PDF.")
     w.document.write(
       `<!doctype html><title>${archivo}</title><style>@page{margin:5mm}body{margin:0}</style>` +
         `<p style="font:12px sans-serif">Imprime al 100% (sin "ajustar a la página"). Medidas en mm.</p>` +
-        dibujoSVG(paraExportar, "corte"),
+        dibujoSVG(alArchivo, "corte"),
     )
     w.document.close()
     w.focus()
@@ -282,6 +295,13 @@ export function Estudio2D({
             </div>
           )}
         </Seccion>
+        <Seccion titulo="Maquinar en tu router o láser" nota="Se abre en el CAM de HETNA: eliges máquina y fresa y bajas el G-code.">
+          {camBloqueado ? (
+            <span className="text-[12px] text-[#8A97AB]">{camBloqueado}</span>
+          ) : (
+            <BotonesCam nombre={archivo} dxf={() => (alArchivo?.trazos.length ? dibujoDXF(alArchivo) : null)} stl={stl} />
+          )}
+        </Seccion>
         <Seccion titulo="¿No tienes máquina?" nota="Un taller de HETNA te lo corta y te lo manda.">
           <div className="flex gap-2">
             <Boton
@@ -291,7 +311,7 @@ export function Estudio2D({
                 const medidasTxt = anidado?.hojas.length
                   ? `${anidado.hojas.length} ${anidado.hojas.length === 1 ? "hoja" : "hojas"} de ${HOJAS[hojaSel].ancho} × ${HOJAS[hojaSel].alto} mm (${anidado.totalPiezas} piezas, ${Math.round(anidado.aprovechamiento * 100)}% aprovechado)`
                   : `${Math.round(ancho)} × ${Math.round(alto)} mm`
-                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(paraExportar), locale, { pieza, medidas: medidasTxt, material }))
+                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { pieza, medidas: medidasTxt, material }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en Fabrícamelo.")
               }}
             >
@@ -300,7 +320,7 @@ export function Estudio2D({
             <Boton
               onClick={() => {
                 if (!paraExportar?.trazos.length) return
-                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(paraExportar), locale))
+                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio" }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo al cotizador.")
               }}
             >

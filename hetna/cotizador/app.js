@@ -11,6 +11,7 @@
     { id: "MDF", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_mdf_m2 ?? null, origen: "Tu app: Carpintería (material MDF por m²)" },
     { id: "Triplay", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_triplay_m2 ?? null, origen: "Tu app: Carpintería (material triplay por m²)" },
     { id: "Madera sólida", precio: DATOS.servicios.find((s) => s.clave === "carpinteria")?.tarifas.material_madera_m2 ?? null, origen: "Tu app: Carpintería (material madera por m²)" },
+    { id: "Melamina", precio: null, origen: "Falta precio (también lo usa el diseñador de muebles)" },
     { id: "Acrílico", precio: null, origen: "Falta precio" },
     { id: "Acero al carbón", precio: null, origen: "Falta precio" },
     { id: "Acero inoxidable", precio: null, origen: "Falta precio" },
@@ -20,6 +21,7 @@
   ];
   const grupoMaterial = (nombre) => {
     const n = (nombre || "").toLowerCase();
+    if (n.includes("melamina")) return "Melamina";
     if (n.includes("mdf")) return "MDF";
     if (n.includes("triplay")) return "Triplay";
     if (/pino|cedro|parota|encino|madera/.test(n)) return "Madera sólida";
@@ -69,7 +71,15 @@
     datos: null, medidas: null, formato: null, nombreArchivo: "", mmPorUnidad: 1, manual: false,
     servicio: null, tipoIdx: 0, campos: {}, camposArchivo: {}, cantidad: 1, material: "",
     pone: "taller", acabadoIdx: 0, iva: true, extras: {}, elegida: "estandar", resultado: null,
+    // Proyecto con varias piezas (llega de las herramientas de Diseñar): cada pieza
+    // guarda su archivo, medidas y cantidad; la activa se copia a los campos de arriba.
+    piezas: [], activa: 0, proyecto: null,
   };
+  const enProyecto = () => st.piezas.length > 1;
+  const CAMPOS_PIEZA = ["datos", "formato", "nombreArchivo", "unidadSel", "mmPorUnidad", "medidas", "camposArchivo", "campos", "bruto"];
+  const guardarActiva = () => { if (st.piezas.length) for (const k of CAMPOS_PIEZA) st.piezas[st.activa][k] = st[k]; };
+  const tomarPieza = (i) => { st.activa = i; for (const k of CAMPOS_PIEZA) st[k] = st.piezas[i][k]; };
+  const salirDeProyecto = () => { st.piezas = []; st.activa = 0; st.proyecto = null; };
   const servicio = () => DATOS.servicios.find((s) => s.clave === st.servicio);
   const tipo = () => (tiposVisibles()[st.tipoIdx] || tiposVisibles()[0]);
 
@@ -94,41 +104,54 @@
   const UNIDADES_2D = [["auto", "Automático"], ["1", "Milímetros"], ["10", "Centímetros"], ["25.4", "Pulgadas"], [String(25.4 / 96), "Pixeles (96 ppp)"], [String(25.4 / 72), "Pixeles (72 ppp)"]];
   const UNIDADES_3D = [["1", "Milímetros"], ["10", "Centímetros"], ["25.4", "Pulgadas"], ["1000", "Metros"]];
 
-  const cargarArchivo = async (nombre, contenido) => {
+  const leerDatos = (nombre, contenido) => {
     const ext = (nombre.split(".").pop() || "").toLowerCase();
+    const texto = () => (typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido));
+    if (ext === "dxf") return GEO.leerDXF(texto());
+    if (ext === "svg") return GEO.leerSVG(texto(), $("svg-host"));
+    if (ext === "stl") return GEO.leerSTL(typeof contenido === "string" ? new TextEncoder().encode(contenido).buffer : contenido);
+    if (ext === "obj") return GEO.leerOBJ(texto());
+    throw new Error("Ese tipo de archivo todavía no se puede leer. Usa DXF, SVG, STL u OBJ.");
+  };
+  const cargarArchivo = async (nombre, contenido) => {
     try {
-      let d;
-      if (ext === "dxf") d = GEO.leerDXF(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido));
-      else if (ext === "svg") d = GEO.leerSVG(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido), $("svg-host"));
-      else if (ext === "stl") d = GEO.leerSTL(contenido);
-      else if (ext === "obj") d = GEO.leerOBJ(typeof contenido === "string" ? contenido : new TextDecoder().decode(contenido));
-      else throw new Error("Ese tipo de archivo todavía no se puede leer. Usa DXF, SVG, STL u OBJ.");
-      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false;
+      const d = leerDatos(nombre, contenido);
+      salirDeProyecto();
+      st.datos = d; st.formato = d.formato; st.nombreArchivo = nombre; st.manual = false; st.bruto = contenido;
       st.unidadSel = d.tipo === "2d" ? "auto" : "1";
       aplicarUnidad();
       st.servicio = sugerido(); st.tipoIdx = 0; st.extras = {};
       $("zona-subir").hidden = true; $("zona-manual").hidden = true; $("zona-archivo").hidden = false;
       pintarArchivo();
       pintarTrabajo();
+      pintarProyecto();
     } catch (e) {
       aviso(e.message || "No se pudo leer el archivo.");
     }
   };
-  const aplicarUnidad = () => {
-    const d = st.datos;
+  // Medidas de una pieza (st o una del proyecto) según sus unidades
+  const medir = (o) => {
+    const d = o.datos;
     if (!d) return;
     if (d.tipo === "2d") {
-      st.mmPorUnidad = st.unidadSel === "auto" ? (d.unidadSugerida || 1) : num(st.unidadSel);
-      st.medidas = GEO.medir2D(d, st.mmPorUnidad);
+      o.mmPorUnidad = o.unidadSel === "auto" ? (d.unidadSugerida || 1) : num(o.unidadSel);
+      o.medidas = GEO.medir2D(d, o.mmPorUnidad);
     } else {
-      st.mmPorUnidad = num(st.unidadSel) || 1;
-      st.medidas = GEO.medir3D(d, st.mmPorUnidad);
+      o.mmPorUnidad = num(o.unidadSel) || 1;
+      o.medidas = GEO.medir3D(d, o.mmPorUnidad);
     }
-    const m = st.medidas;
-    st.camposArchivo = m.tipo === "2d"
+    const m = o.medidas;
+    o.camposArchivo = m.tipo === "2d"
       ? { largo: m.largoMm / 10, ancho: m.anchoMm / 10, metros: m.corteMm / 1000 }
       : { largo: m.largoMm / 10, ancho: m.anchoMm / 10, alto: m.altoMm / 10 };
-    st.campos = { ...st.camposArchivo };
+    o.campos = { ...o.camposArchivo };
+  };
+  const aplicarUnidad = () => {
+    if (!enProyecto()) return medir(st);
+    // en un proyecto las unidades aplican a todas las piezas
+    guardarActiva();
+    for (const p of st.piezas) { p.unidadSel = st.unidadSel; medir(p); }
+    tomarPieza(st.activa);
   };
 
   const pintarArchivo = () => {
@@ -557,25 +580,51 @@
   const calcular = () => {
     const s = servicio(), t = tipo();
     if (!s || !t) return;
+    if (!enProyecto()) {
+      const p = paramsDe(st, st.cantidad);
+      let r;
+      try { r = calcular_motor(p); } catch (e) { r = null; }
+      st.resultado = r;
+      pintarPrecio(r, p);
+      return;
+    }
+    // Proyecto: cada pieza con su medida y cantidad (× juegos), mínimos y cargos únicos una vez
+    guardarActiva();
+    const base = paramsDe(st, 1);
+    const lineas = st.piezas.map((pz) => {
+      const q = paramsDe(pz, Math.max(1, pz.cantidad) * st.cantidad);
+      return { nombre: pz.nombreArchivo, params: { largo: q.largo, ancho: q.ancho, alto: q.alto, peso: q.peso, metros: q.metros, minutos: q.minutos, perimetroRealMm: q.perimetroRealMm, volumenRealCm3: q.volumenRealCm3, materialLibrePrecio: q.materialLibrePrecio, cantidad: q.cantidad } };
+    });
+    let r = null;
+    try { r = PROYECTO.cotizar(base, lineas, calcular_hetna); } catch (e) { r = null; }
+    // "por hora" y "por diseño" no dependen de las piezas: un solo trabajo
+    if (!r && t && PROYECTO.POR_TRABAJO.includes(t.f)) { try { r = calcular_motor(paramsDe(st, st.cantidad)); } catch (e) { r = null; } }
+    st.resultado = r;
+    pintarPrecio(r, { cantidad: r && r.unidades ? r.unidades : st.cantidad });
+    pintarProyecto();
+  };
+  // Parámetros del motor para una pieza: o = st o una pieza del proyecto
+  const paramsDe = (o, cantidad) => {
+    const s = servicio(), t = tipo();
     const tarifas = { ...conf.tarifas[s.clave] };
     if (t.f === "precio_fijo") tarifas.precio_fijo = num(st.extras.precioFijo);
     const costos = { ...conf.costos, get costoHoraTotal() { return this.costoHoraTaller + this.costoHoraMaquina + this.costoHoraOperador; } };
     const { grupo, precio } = precioMaterial();
-    const areaPieza = (num(st.campos.largo) * num(st.campos.ancho)) / 10000;
+    const areaPieza = (num(o.campos.largo) * num(o.campos.ancho)) / 10000;
     const usaMaterial = !["diseno", "impresion_3d"].includes(s.clave) && t.f !== "por_hora";
     const tipoLaser = /corte/i.test(t.n) && /grab/i.test(t.n) ? "ambos" : /grab/i.test(t.n) ? "grabado" : "corte";
     const matPlasma = /inox/i.test(st.material) ? "inox" : /alumin/i.test(st.material) ? "aluminio" : "acero_negro";
     const acabado = (s.acabados || [])[st.acabadoIdx];
-    const m = st.medidas;
-    const archivoDe = (k) => st.campos[k] !== undefined && st.camposArchivo[k] !== undefined && Math.abs(num(st.campos[k]) - num(st.camposArchivo[k])) < 1e-9;
+    const m = o.medidas;
+    const archivoDe = (k) => o.campos[k] !== undefined && o.camposArchivo[k] !== undefined && Math.abs(num(o.campos[k]) - num(o.camposArchivo[k])) < 1e-9;
     const p = {
       cfg: { tarifas, rangos: s.rangos },
       costos,
       tipo: { nombre: t.n, formula: t.f, factor: t.k },
       nombreServicio: nombreServicio(s), emojiServicio: s.emoji,
-      largo: num(st.campos.largo), ancho: num(st.campos.ancho), alto: num(st.campos.alto),
-      peso: num(st.campos.peso), metros: num(st.campos.metros), horas: num(st.campos.horas), minutos: num(st.campos.minutos),
-      cantidad: Math.max(1, Math.round(st.cantidad)),
+      largo: num(o.campos.largo), ancho: num(o.campos.ancho), alto: num(o.campos.alto),
+      peso: num(o.campos.peso), metros: num(o.campos.metros), horas: num(st.campos.horas), minutos: num(o.campos.minutos),
+      cantidad: Math.max(1, Math.round(cantidad)),
       clienteTraeMaterial: st.pone === "cliente",
       materialLibreNombre: grupo || st.material,
       materialLibrePrecio: usaMaterial && st.pone === "taller" && precio > 0 ? areaPieza * precio : 0,
@@ -588,17 +637,14 @@
       llevaDiseno: !!st.extras.llevaDiseno,
       calibre: st.extras.calibre || "Cal 14", material: matPlasma,
       llevaLimpieza: !!st.extras.llevaLimpieza, llevaFlete: !!st.extras.llevaFlete,
-      llevaDisenoPlasma: !!st.extras.llevaDisenoPlasma, clienteTraeArchivoDXF: !!st.datos,
+      llevaDisenoPlasma: !!st.extras.llevaDisenoPlasma, clienteTraeArchivoDXF: !!o.datos,
       materialLaser: st.extras.materialLaser || "mdf_fino", densidadLaser: st.extras.densidadLaser || "normal", tipoLaser,
       llevaPlantilla: !!st.extras.llevaPlantilla, llevaRotativo: !!st.extras.llevaRotativo,
       materialImpresion: st.extras.materialImpresion || "pla",
       perimetroRealMm: m?.tipo === "2d" && archivoDe("largo") && archivoDe("ancho") ? m.corteMm : 0,
       volumenRealCm3: m?.tipo === "3d" && archivoDe("largo") && archivoDe("ancho") && archivoDe("alto") ? m.volumenCm3 : 0,
     };
-    let r;
-    try { r = calcular_motor(p); } catch (e) { r = null; }
-    st.resultado = r;
-    pintarPrecio(r, p);
+    return p;
   };
   const calcular_motor = (p) => calcular_hetna(p);
 
@@ -648,6 +694,11 @@
       ["Por pieza", dinero(estandar / p.cantidad)],
     ].map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
     const filas = Object.entries(r.detalle).filter(([, v]) => v !== 0).map(([k, v]) => `<tr><td>${esc(ETIQ[k] || k)}</td><td>${NO_DINERO.has(k) ? fmt(v, 3) : dinero(v)}</td></tr>`);
+    if (r.lineas) {
+      for (const l of r.lineas) filas.push(`<tr><td>${esc(l.nombre)} × ${l.cantidad}</td><td>${dinero(l.pvRecomendado)}</td></tr>`);
+      if (r.minimo) filas.push(`<tr><td>Ajuste al mínimo del trabajo (${dinero(r.minimo.valor)})</td><td>${dinero(r.minimo.agregado)}</td></tr>`);
+      if (r.unicos > 0) filas.push(`<tr><td>Cargos únicos del proyecto (diseño, flete, preparación)</td><td>${dinero(r.unicos)}</td></tr>`);
+    }
     if (r.cm > 0) filas.push(`<tr><td>Material${r.materialNombre ? " (" + esc(r.materialNombre) + ")" : ""}</td><td>${dinero(r.cm)}</td></tr>`);
     if (r.ca > 0) filas.push(`<tr><td>Acabado</td><td>${dinero(r.ca)}</td></tr>`);
     filas.push(`<tr><td><b>Subtotal Estándar sin IVA</b></td><td><b>${dinero(r.pvRecomendado)}</b></td></tr>`);
@@ -655,8 +706,99 @@
     actualizarMensaje();
   };
 
+  // ---------- Proyecto: lista de piezas ----------
+  const medidaTexto = (m) => (!m ? "" : m.tipo === "2d" ? `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} mm` : `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} × ${fmt(m.altoMm)} mm`);
+  const unidadesProyecto = () => st.piezas.reduce((s, p) => s + Math.max(1, p.cantidad), 0) * st.cantidad;
+  const pintarProyecto = () => {
+    const el = $("proyecto");
+    $("lbl-cantidad").textContent = enProyecto() ? "Juegos completos" : "Cantidad de piezas";
+    if (!enProyecto()) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    const lineas = st.resultado && st.resultado.lineas ? st.resultado.lineas : [];
+    const P = st.proyecto || {};
+    el.innerHTML = `<div class="proyecto-h"><b>${esc(P.nombre || "Proyecto")}</b><small>${st.piezas.length} piezas distintas · ${unidadesProyecto()} en total${st.cantidad > 1 ? ` (${st.cantidad} juegos)` : ""}</small></div>`
+      + (P.nota ? `<div class="proyecto-nota">${esc(P.nota)}</div>` : "")
+      + `<div class="piezas">${st.piezas.map((p, i) => `<div class="pieza" aria-current="${i === st.activa}"><button type="button" data-ver="${i}"><span class="pn">${esc(p.nombreArchivo)}</span><span class="pm">${esc(medidaTexto(p.medidas))}</span></button><input type="number" min="1" step="1" inputmode="numeric" value="${p.cantidad}" data-cant="${i}" aria-label="Piezas de ${esc(p.nombreArchivo)} por juego"><span class="pp">${lineas[i] ? dinero(lineas[i].pvRecomendado) : "—"}</span></div>`).join("")}</div>`
+      + `<div class="ayuda">Toca una pieza para verla. El precio de cada pieza es Estándar sin IVA; el mínimo y los cargos únicos se cobran una vez en el total.</div>`;
+  };
+  $("proyecto").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-ver]");
+    if (!b) return;
+    guardarActiva();
+    tomarPieza(+b.dataset.ver);
+    detenerSim();
+    pintarArchivo();
+    pintarCampos();
+    calcular();
+    requestAnimationFrame(dibujar);
+  });
+  $("proyecto").addEventListener("change", (e) => {
+    const i = e.target.dataset.cant;
+    if (i === undefined) return;
+    st.piezas[+i].cantidad = Math.max(1, Math.round(num(e.target.value)) || 1);
+    calcular();
+  });
+
+  // ---------- Paquete que dejan las herramientas de Diseñar ----------
+  // La tienda lo guarda en IndexedDB (mismo sitio) y deja una marca en
+  // sessionStorage; aquí se lee al arrancar. Se conserva mientras esté vigente
+  // (si el visitante va a crear su cuenta y regresa, sigue ahí).
+  const PAQ = { db: "hetna-cotizador-paquete", almacen: "paquetes", clave: "pendiente", marca: "hetna-paquete-pendiente", vigencia: 30 * 60 * 1000 };
+  const leerPaquete = () => new Promise((ok) => {
+    let marca = null;
+    try { marca = JSON.parse(sessionStorage.getItem(PAQ.marca) || "null"); } catch (e) { marca = null; }
+    if (!marca || Date.now() - marca.t > PAQ.vigencia || !window.indexedDB) return ok(null);
+    const r = indexedDB.open(PAQ.db, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(PAQ.almacen);
+    r.onerror = () => ok(null);
+    r.onsuccess = () => {
+      try {
+        const g = r.result.transaction(PAQ.almacen, "readonly").objectStore(PAQ.almacen).get(PAQ.clave);
+        g.onsuccess = () => { r.result.close(); const p = g.result; ok(p && p.t === marca.t ? p : null); };
+        g.onerror = () => { r.result.close(); ok(null); };
+      } catch (e) { ok(null); }
+    };
+  });
+  const MATERIALES_IMPRESION = ["pla", "abs", "petg", "tpu"], MATERIALES_LASER = ["mdf_fino", "mdf_medio", "otros"];
+  const cargarPaquete = async (paq) => {
+    const piezas = [], avisos = [];
+    for (const pz of paq.piezas || []) {
+      try {
+        const contenido = pz.contenido instanceof Blob ? await pz.contenido.arrayBuffer() : pz.contenido;
+        const d = leerDatos(pz.nombre, contenido);
+        if (piezas.length && d.tipo !== piezas[0].datos.tipo) { avisos.push(`${pz.nombre}: no se mezcla 2D con 3D en un proyecto.`); continue; }
+        const p = { datos: d, formato: d.formato, nombreArchivo: pz.nombre, unidadSel: d.tipo === "2d" ? "auto" : "1", cantidad: Math.max(1, Math.round(pz.cantidad || 1)), bruto: contenido };
+        medir(p);
+        piezas.push(p);
+      } catch (e) { avisos.push(`${pz.nombre}: ${e.message || "no se pudo leer"}`); }
+    }
+    if (!piezas.length) return false;
+    st.manual = false;
+    st.piezas = piezas.length > 1 ? piezas : [];
+    st.proyecto = { nombre: paq.proyecto || "Proyecto", origen: paq.origen || "", nota: paq.nota || "" };
+    if (piezas.length > 1) tomarPieza(0);
+    else { for (const k of CAMPOS_PIEZA) st[k] = piezas[0][k]; st.cantidad = piezas[0].cantidad; }
+    if (piezas.length > 1) st.cantidad = Math.max(1, Math.round(paq.juegos || 1));
+    $("cantidad").value = st.cantidad;
+    // Lo que el cliente ya eligió en la herramienta (sólo valores que existen aquí)
+    st.servicio = sugerido(); st.tipoIdx = 0; st.extras = {}; st.acabadoIdx = 0;
+    if (paq.servicio && serviciosVisibles().some((s) => s.clave === paq.servicio)) st.servicio = paq.servicio;
+    const o = paq.opciones || {};
+    if (MATERIALES_IMPRESION.includes(o.materialImpresion)) st.extras.materialImpresion = o.materialImpresion;
+    if (MATERIALES_LASER.includes(o.materialLaser)) st.extras.materialLaser = o.materialLaser;
+    if (paq.tipo) { const i = tiposVisibles().findIndex((t) => t.n === paq.tipo); if (i >= 0) st.tipoIdx = i; }
+    if (paq.material && (servicio()?.materiales || []).includes(paq.material)) st.material = paq.material;
+    if (paq.nota && !$("cli-nota").value.trim()) $("cli-nota").value = paq.nota;
+    $("zona-subir").hidden = true; $("zona-manual").hidden = true; $("zona-archivo").hidden = false;
+    pintarArchivo();
+    pintarTrabajo();
+    pintarProyecto();
+    if (avisos.length) $("avisos-archivo").insertAdjacentHTML("beforeend", avisos.map((t) => `<div class="aviso">${esc(t)}</div>`).join(""));
+    return true;
+  };
+
   // ---------- Mensaje de WhatsApp ----------
-  const firmaActual = () => JSON.stringify([st.servicio, st.tipoIdx, st.cantidad, st.material, st.pone, st.campos, st.extras, st.iva, st.acabadoIdx, st.nombreArchivo, st.resultado && st.resultado.pvRecomendado, $("cli-nombre").value.trim(), $("cli-tel").value.trim(), $("cli-nota").value.trim()]);
+  const firmaActual = () => JSON.stringify([st.servicio, st.tipoIdx, st.cantidad, st.material, st.pone, st.campos, st.extras, st.iva, st.acabadoIdx, st.nombreArchivo, st.resultado && st.resultado.pvRecomendado, st.piezas.map((p) => [p.nombreArchivo, p.cantidad]), $("cli-nombre").value.trim(), $("cli-tel").value.trim(), $("cli-nota").value.trim()]);
   const folioActual = () => {
     if (MODO === "local") return `COT-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${String(conf.folio).padStart(3, "0")}`;
     return cotActual && cotActual.firma === firmaActual() ? cotActual.folio : "";
@@ -676,10 +818,19 @@
     if (cli) L.push(`Para: ${cli}`);
     L.push("");
     L.push(`Trabajo: ${nombreServicio(s)} · ${t.n}`);
-    if (st.nombreArchivo) L.push(`Archivo: ${st.nombreArchivo}`);
-    if (med) L.push(`Medidas: ${med}`);
-    if (st.material && !$("campo-material").hidden) L.push(`Material: ${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`);
-    L.push(`Cantidad: ${st.cantidad} ${st.cantidad === 1 ? "pieza" : "piezas"}`);
+    if (enProyecto()) {
+      L.push(`Proyecto: ${st.proyecto?.nombre || "Proyecto"} (${st.piezas.length} piezas distintas, ${unidadesProyecto()} en total)`);
+      const max = 15;
+      st.piezas.slice(0, max).forEach((p) => L.push(`• ${p.nombreArchivo} ×${Math.max(1, p.cantidad) * st.cantidad} · ${medidaTexto(p.medidas)}`));
+      if (st.piezas.length > max) L.push(`• y ${st.piezas.length - max} piezas más`);
+      if (st.material && !$("campo-material").hidden) L.push(`Material: ${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`);
+      if (st.cantidad > 1) L.push(`Juegos completos: ${st.cantidad}`);
+    } else {
+      if (st.nombreArchivo) L.push(`Archivo: ${st.nombreArchivo}`);
+      if (med) L.push(`Medidas: ${med}`);
+      if (st.material && !$("campo-material").hidden) L.push(`Material: ${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`);
+      L.push(`Cantidad: ${st.cantidad} ${st.cantidad === 1 ? "pieza" : "piezas"}`);
+    }
     L.push("");
     for (const o of ops) L.push(`${o.id === st.elegida ? "▶ " : "• "}${o.nombre}: *${dinero(o.total)}*`);
     L.push(st.iva ? "Precios con IVA incluido." : "Precios más IVA.");
@@ -714,10 +865,13 @@
     try {
       res = await PUENTE.registrar({
         cliente: $("cli-nombre").value.trim(), tel: $("cli-tel").value.trim(),
-        servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: st.nombreArchivo, cantidad: st.cantidad,
+        servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: enProyecto() ? `${st.proyecto?.nombre || "Proyecto"} (${st.piezas.length} piezas)` : st.nombreArchivo, cantidad: enProyecto() ? unidadesProyecto() : st.cantidad,
         elegida: st.elegida, opciones: ops.map((o) => ({ n: o.nombre, t: o.total })), totalEstandar: ops[1].total,
         mensaje: textoMensaje("{{FOLIO}}"),
-        datos: { material: st.material, pone: st.pone, iva: st.iva, medidas: m ? { tipo: m.tipo, largoMm: m.largoMm, anchoMm: m.anchoMm, altoMm: m.altoMm, corteMm: m.corteMm, perforaciones: m.perforaciones, volumenCm3: m.volumenCm3 } : null },
+        datos: {
+          material: st.material, pone: st.pone, iva: st.iva, medidas: m ? { tipo: m.tipo, largoMm: m.largoMm, anchoMm: m.anchoMm, altoMm: m.altoMm, corteMm: m.corteMm, perforaciones: m.perforaciones, volumenCm3: m.volumenCm3 } : null,
+          ...(enProyecto() ? { proyecto: { nombre: st.proyecto?.nombre, origen: st.proyecto?.origen, juegos: st.cantidad, piezas: st.piezas.map((p, i) => ({ nombre: p.nombreArchivo, cantidad: p.cantidad, medidas: medidaTexto(p.medidas), subtotal: st.resultado?.lineas?.[i]?.pvRecomendado ?? null })) } } : {}),
+        },
       });
     } catch (e) { aviso("No se pudo guardar. Revisa tu conexión."); return false; }
     if (!res || !res.ok) {
@@ -744,7 +898,7 @@
     const ops = opcionesPrecio(r);
     conf.historial.unshift({
       folio: folioActual(), fecha: Date.now(), cliente: $("cli-nombre").value.trim(), tel: $("cli-tel").value.trim(),
-      servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: st.nombreArchivo, cantidad: st.cantidad,
+      servicio: nombreServicio(servicio()), tipo: tipo().n, archivo: enProyecto() ? `${st.proyecto?.nombre || "Proyecto"} (${st.piezas.length} piezas)` : st.nombreArchivo, cantidad: enProyecto() ? unidadesProyecto() : st.cantidad,
       opciones: ops.map((o) => ({ n: o.nombre, t: o.total })), elegida: st.elegida, mensaje: textoMensaje(), estado: "Enviada",
     });
     conf.folio += 1;
@@ -859,6 +1013,7 @@
   $("ej-2d").addEventListener("click", () => cargarArchivo("placa-montaje-ejemplo.dxf", EJEMPLOS.dxf()));
   $("ej-3d").addEventListener("click", () => cargarArchivo("soporte-L-ejemplo.stl", EJEMPLOS.stl()));
   $("sin-archivo").addEventListener("click", () => {
+    salirDeProyecto(); pintarProyecto();
     st.datos = null; st.medidas = null; st.nombreArchivo = ""; st.manual = true; st.camposArchivo = {}; st.campos = { largo: 60, ancho: 40, alto: 5, metros: 2, horas: 2, minutos: 10 };
     $("zona-subir").hidden = true; $("zona-manual").hidden = false; $("zona-archivo").hidden = true;
     pintarTrabajo();
@@ -885,7 +1040,7 @@
   $("iva").addEventListener("change", (e) => { st.iva = e.target.checked; calcular(); });
   $("campos-servicio").addEventListener("input", (e) => { const k = e.target.dataset.opc; if (!k) return; st.extras[k] = e.target.value; calcular(); });
   $("extras").addEventListener("change", (e) => { const k = e.target.dataset.extra; if (!k) return; st.extras[k] = e.target.checked; calcular(); });
-  $("opciones").addEventListener("click", (e) => { const b = e.target.closest("[data-opc-precio]"); if (!b) return; st.elegida = b.dataset.opcPrecio; pintarPrecio(st.resultado, { cantidad: st.cantidad }); });
+  $("opciones").addEventListener("click", (e) => { const b = e.target.closest("[data-opc-precio]"); if (!b) return; st.elegida = b.dataset.opcPrecio; pintarPrecio(st.resultado, { cantidad: st.resultado && st.resultado.unidades ? st.resultado.unidades : st.cantidad }); });
   ["cli-nombre", "cli-tel", "cli-nota"].forEach((id) => $(id).addEventListener("input", actualizarMensaje));
   $("btn-wa").addEventListener("click", async (e) => {
     if ($("btn-wa").getAttribute("aria-disabled") === "true") { e.preventDefault(); aviso("Completa la cotización primero."); return; }
@@ -915,6 +1070,12 @@
   const lineasDetalle = () => {
     const s = servicio(), t = tipo(), m = st.medidas;
     const filas = [["Servicio", `${nombreServicio(s)} · ${t.n}`]];
+    if (enProyecto()) {
+      filas.push(["Proyecto", st.proyecto?.nombre || "Proyecto"]);
+      filas.push(["Piezas", `${st.piezas.length} distintas, ${unidadesProyecto()} en total${st.cantidad > 1 ? ` (${st.cantidad} juegos)` : ""}`]);
+      if (st.material && !$("campo-material").hidden) filas.push(["Material", `${st.material}${st.pone === "cliente" ? " (lo pone el cliente)" : ""}`]);
+      return filas;
+    }
     if (st.nombreArchivo) filas.push(["Archivo", st.nombreArchivo]);
     if (m && m.tipo === "2d") {
       filas.push(["Medidas", `${fmt(m.largoMm)} × ${fmt(m.anchoMm)} mm`]);
@@ -997,6 +1158,41 @@
     }
     y = Math.max(y + (img ? 57 : 0), yd) + 8;
 
+    // Proyecto: lista de piezas. Si no caben en esta hoja, van completas en la siguiente.
+    const lin = r.lineas || [];
+    const tablaPiezas = (desde, hasta) => {
+      doc.setFillColor(246, 248, 251); doc.rect(M, y, W - 2 * M, 7, "F");
+      txt("Pieza", M + 3, y + 4.8, { b: true, s: 8.5, c: GRIS });
+      txt("Medidas", 100, y + 4.8, { b: true, s: 8.5, c: GRIS });
+      txt("Cant.", 160, y + 4.8, { b: true, s: 8.5, c: GRIS, a: "right" });
+      txt("Subtotal", W - M - 3, y + 4.8, { b: true, s: 8.5, c: GRIS, a: "right" });
+      y += 7;
+      for (let i = desde; i < hasta; i++) {
+        const p = st.piezas[i];
+        txt(doc.splitTextToSize(limpio(p.nombreArchivo), 80)[0], M + 3, y + 4.3, { s: 9 });
+        txt(medidaTexto(p.medidas), 100, y + 4.3, { s: 9, c: GRIS });
+        txt(String(Math.max(1, p.cantidad) * st.cantidad), 160, y + 4.3, { s: 9, a: "right" });
+        txt(lin[i] ? dinero(lin[i].pvRecomendado) : "", W - M - 3, y + 4.3, { s: 9, a: "right" });
+        doc.setDrawColor(...LINEA); doc.line(M, y + 6, W - M, y + 6);
+        y += 6;
+      }
+    };
+    const caben = Math.floor((262 - 100 - y) / 6); // deja lugar a opciones, nota y condiciones
+    const hojaAparte = enProyecto() && st.piezas.length > caben;
+    if (enProyecto()) {
+      txt("PIEZAS", M, y, { b: true, s: 8, c: GRIS });
+      y += 3;
+      if (hojaAparte) {
+        doc.setFillColor(246, 248, 251); doc.rect(M, y, W - 2 * M, 9, "F");
+        txt(`${st.piezas.length} piezas distintas, ${unidadesProyecto()} en total: la lista con medidas y subtotales va en la hoja 2.`, M + 3, y + 5.8, { s: 9.5 });
+        y += 14;
+      } else {
+        tablaPiezas(0, st.piezas.length);
+        txt("Subtotales Estándar sin IVA. El mínimo y los cargos únicos se cobran una vez en el total.", M, y + 4.5, { s: 8, c: GRIS });
+        y += 11;
+      }
+    }
+
     // Opciones de precio
     txt("OPCIONES", M, y, { b: true, s: 8, c: GRIS });
     y += 3;
@@ -1013,7 +1209,7 @@
       if (elegida) { doc.setFillColor(...SUAVE); doc.rect(M, y, W - 2 * M, 11, "F"); doc.setFillColor(...NAR); doc.rect(M, y, 1.4, 11, "F"); }
       txt(o.nombre + (elegida ? "  (sugerida)" : ""), M + 4, y + 7, { b: elegida, s: 10.5, c: elegida ? NAR : [19, 26, 37] });
       txt(entregas[o.id], 95, y + 7, { s: 9.5, c: GRIS });
-      txt(dinero(o.total / st.cantidad), 145, y + 7, { s: 10, a: "right" });
+      txt(dinero(o.total / (enProyecto() ? unidadesProyecto() : st.cantidad)), 145, y + 7, { s: 10, a: "right" });
       txt(dinero(o.total), W - M - 3, y + 7, { b: true, s: 11.5, a: "right" });
       doc.setDrawColor(...LINEA); doc.line(M, y + 11, W - M, y + 11);
       y += 11;
@@ -1037,6 +1233,25 @@
     doc.setDrawColor(...LINEA); doc.line(M, 262, W - M, 262);
     txt("Para confirmar, responde por WhatsApp con la opción que prefieres.", M, 268, { s: 9, c: GRIS });
     if (conMarca || MODO === "local") txt("Hecha con HetNa Cotizador · hetnacnc.com", W - M, 268, { s: 8.5, c: NAR, a: "right" });
+
+    // Hoja 2 (y más): lista completa de piezas del proyecto
+    if (hojaAparte) {
+      let i = 0, hoja = 2;
+      while (i < st.piezas.length) {
+        doc.addPage();
+        doc.setFillColor(...NAVY); doc.rect(0, 0, W, 16, "F");
+        txt(`${conf.taller.nombre} · ${folio || "Cotización"}`, M, 10.5, { b: true, s: 11, c: [255, 255, 255] });
+        txt(`Hoja ${hoja}`, W - M, 10.5, { s: 9.5, c: [201, 210, 224], a: "right" });
+        y = 26;
+        txt(`PIEZAS DEL PROYECTO: ${st.proyecto?.nombre || ""}`, M, y, { b: true, s: 8, c: GRIS });
+        y += 3;
+        const fin = Math.min(st.piezas.length, i + Math.floor((255 - y - 7) / 6));
+        tablaPiezas(i, fin);
+        i = fin;
+        hoja++;
+      }
+      txt("Subtotales Estándar sin IVA. El mínimo y los cargos únicos se cobran una vez en el total.", M, y + 4.5, { s: 8, c: GRIS });
+    }
 
     const blob = doc.output("blob");
     const nombre = `Cotizacion-${folio || "HetNa"}.pdf`;
@@ -1064,6 +1279,138 @@
     }
   };
   $("btn-pdf").addEventListener("click", generarPDF);
+
+  // ---------- Planos y lista de corte (no cuentan como cotización) ----------
+  const bajarBlob = async (blob, nombre, msg) => {
+    try {
+      const archivo = new File([blob], nombre, { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], title: nombre }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    aviso(msg);
+  };
+  const generarPlanos = async () => {
+    if (!st.datos) { aviso("Los planos salen del archivo: sube uno primero."); return; }
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (!J) { aviso("No se pudo cargar el generador de PDF. Revisa tu conexión e intenta de nuevo."); return; }
+    guardarActiva();
+    const lista = enProyecto()
+      ? st.piezas.map((p) => ({ nombre: p.nombreArchivo, cantidad: Math.max(1, p.cantidad) * st.cantidad, datos: p.datos, medidas: p.medidas, mmPorUnidad: p.mmPorUnidad }))
+      : [{ nombre: st.nombreArchivo, cantidad: st.cantidad, datos: st.datos, medidas: st.medidas, mmPorUnidad: st.mmPorUnidad }];
+    const s = servicio(), t = tipo();
+    const proyecto = st.proyecto?.nombre || (st.nombreArchivo || "pieza").replace(/\.[^.]+$/, "");
+    aviso("Armando los planos...");
+    await new Promise((ok) => setTimeout(ok, 30));
+    try {
+      const doc = PLANOS.generar(J, lista, {
+        taller: conf.taller.nombre, folio: folioActual(), proyecto,
+        servicio: s && t ? `${nombreServicio(s)} · ${t.n}` : "",
+        material: st.material && !$("campo-material").hidden ? st.material + (st.pone === "cliente" ? " (lo pone el cliente)" : "") : "",
+        juegos: enProyecto() ? st.cantidad : 1, nota: $("cli-nota").value.trim(),
+        marca: MODO === "demo" || MODO === "local" || (MODO === "cuenta" && cuenta.plan === "gratis"),
+      });
+      await bajarBlob(doc.output("blob"), `Planos-${proyecto.replace(/[^\w-]+/g, "_").slice(0, 40)}.pdf`, "Planos descargados.");
+    } catch (e) { aviso("No se pudieron armar los planos de este archivo."); }
+  };
+  $("btn-planos").addEventListener("click", generarPlanos);
+
+  // ---------- Fabrícamelo: el proyecto a la solicitud de fabricación ----------
+  // Sólo para quien cotiza sin cuenta (clientes que llegan de las herramientas).
+  // Guarda los archivos en IndexedDB como lo hace la tienda (lib/generador/aCotizador.ts:
+  // base "hetna-fabricar", almacén "archivos", clave "pendientes") y abre /cotizar
+  // con los datos puestos. Máximo 5 archivos: con más piezas van en un ZIP.
+  const FAB = { db: "hetna-fabricar", almacen: "archivos", clave: "pendientes", max: 5 };
+  const PROCESO = { laser_co2: "Corte láser", plasma: "Corte plasma", router: "Corte CNC", impresion_3d: "Impresión 3D", carpinteria: "Fresado de madera", laser_fibra: "Grabado", herreria: "Otro", diseno: "Diseño CAD/CAM" };
+  // ZIP sin compresión (los STL y DXF ya pesan poco y así no hace falta otra librería)
+  const crcTabla = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = crcTabla[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const zipSimple = (archivos) => {
+    const enc = new TextEncoder(), partes = [], central = [];
+    let off = 0;
+    for (const a of archivos) {
+      const nom = enc.encode(a.nombre), datos = a.bytes, crc = crc32(datos);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint32(14, crc, true); h.setUint32(18, datos.length, true); h.setUint32(22, datos.length, true); h.setUint16(26, nom.length, true);
+      partes.push(new Uint8Array(h.buffer), nom, datos);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint32(16, crc, true); c.setUint32(20, datos.length, true); c.setUint32(24, datos.length, true); c.setUint16(28, nom.length, true); c.setUint32(42, off, true);
+      central.push(new Uint8Array(c.buffer), nom);
+      off += 30 + nom.length + datos.length;
+    }
+    const tam = central.reduce((s, x) => s + x.length, 0);
+    const fin = new DataView(new ArrayBuffer(22));
+    fin.setUint32(0, 0x06054b50, true); fin.setUint16(8, archivos.length, true); fin.setUint16(10, archivos.length, true); fin.setUint32(12, tam, true); fin.setUint32(16, off, true);
+    return new Blob([...partes, ...central, new Uint8Array(fin.buffer)], { type: "application/zip" });
+  };
+  const aBytes = (x) => (typeof x === "string" ? new TextEncoder().encode(x) : new Uint8Array(x));
+  const guardarParaFabricar = (archivos) => new Promise((ok) => {
+    try {
+      const r = indexedDB.open(FAB.db, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(FAB.almacen);
+      r.onerror = () => ok(false);
+      r.onsuccess = () => {
+        const db = r.result;
+        try {
+          const tx = db.transaction(FAB.almacen, "readwrite");
+          tx.objectStore(FAB.almacen).put({ t: Date.now(), archivos }, FAB.clave);
+          tx.oncomplete = () => { db.close(); ok(true); };
+          tx.onerror = () => { db.close(); ok(false); };
+        } catch (e) { db.close(); ok(false); }
+      };
+    } catch (e) { ok(false); }
+  });
+  const pedirATaller = async () => {
+    const r = st.resultado;
+    if (!st.datos) { aviso("Sube tu archivo primero."); return; }
+    guardarActiva();
+    const piezas = enProyecto() ? st.piezas : [{ nombreArchivo: st.nombreArchivo, bruto: st.bruto, cantidad: 1, medidas: st.medidas, datos: st.datos, mmPorUnidad: st.mmPorUnidad }];
+    const proyecto = st.proyecto?.nombre || (st.nombreArchivo || "pieza").replace(/\.[^.]+$/, "");
+    const archivos = [];
+    const sueltos = piezas.filter((p) => p.bruto);
+    if (sueltos.length <= FAB.max - 1) for (const p of sueltos) archivos.push({ nombre: p.nombreArchivo, blob: new Blob([aBytes(p.bruto)]) });
+    else archivos.push({ nombre: `${proyecto.replace(/[^\w.-]+/g, "_").slice(0, 40)}-piezas.zip`, blob: zipSimple(sueltos.map((p) => ({ nombre: p.nombreArchivo, bytes: aBytes(p.bruto) }))) });
+    // planos y lista de corte, si se pueden armar aquí
+    const J = window.jspdf && window.jspdf.jsPDF;
+    if (J) {
+      try {
+        const s = servicio(), t = tipo();
+        const lista = piezas.map((p) => ({ nombre: p.nombreArchivo, cantidad: (enProyecto() ? Math.max(1, p.cantidad) * st.cantidad : st.cantidad), datos: p.datos, medidas: p.medidas, mmPorUnidad: p.mmPorUnidad }));
+        const doc = PLANOS.generar(J, lista, { taller: "HETNA CNC", folio: "", proyecto, servicio: s && t ? `${nombreServicio(s)} · ${t.n}` : "", material: st.material && !$("campo-material").hidden ? st.material : "", juegos: enProyecto() ? st.cantidad : 1, nota: "", marca: true });
+        archivos.push({ nombre: `Planos-${proyecto.replace(/[^\w-]+/g, "_").slice(0, 40)}.pdf`, blob: doc.output("blob") });
+      } catch (e) { /* sin planos: van sólo los archivos */ }
+    }
+    const unidades = enProyecto() ? unidadesProyecto() : st.cantidad;
+    const est = r && r.pvRecomendado > 0 ? opcionesPrecio(r).find((o) => o.id === "estandar").total : 0;
+    const s = servicio();
+    const lineas = enProyecto()
+      ? st.piezas.slice(0, 20).map((p) => `${p.nombreArchivo} ×${Math.max(1, p.cantidad) * st.cantidad} (${medidaTexto(p.medidas)})`).join(", ") + (st.piezas.length > 20 ? ` y ${st.piezas.length - 20} más` : "")
+      : `${st.nombreArchivo} (${medidaTexto(st.medidas)})`;
+    const nota = [
+      st.proyecto?.nota || "",
+      `Piezas: ${lineas}.`,
+      est ? `Precio de referencia del Cotizador HETNA: ${dinero(est)} ${st.iva ? "con IVA" : "más IVA"} (Estándar, ${s ? nombreServicio(s) : ""}).` : "",
+      archivos.some((a) => a.nombre.endsWith(".pdf")) ? "Adjunto los archivos y los planos con la lista de corte." : "Adjunto los archivos.",
+    ].filter(Boolean).join(" ").slice(0, 1500);
+    const q = new URLSearchParams({ desde: "cotizador", pieza: enProyecto() ? `${proyecto} (${st.piezas.length} piezas)` : proyecto });
+    q.set("medidas", enProyecto() ? `${st.piezas.length} piezas distintas, ver planos` : medidaTexto(st.medidas));
+    if (st.material && !$("campo-material").hidden) q.set("material", st.material);
+    if (s && PROCESO[s.clave]) q.set("proceso", PROCESO[s.clave]);
+    q.set("cantidad", `${unidades} ${unidades === 1 ? "pieza" : "piezas"}${enProyecto() && st.cantidad > 1 ? ` (${st.cantidad} juegos)` : ""}`);
+    q.set("nota", nota);
+    aviso("Preparando tu solicitud...");
+    await guardarParaFabricar(archivos);
+    const top = (() => { try { return window.top.location; } catch (e) { return window.location; } })();
+    const seg = top.pathname.split("/")[1] || "";
+    const locale = /^[a-z]{2}(-[a-z]{2})?$/i.test(seg) ? seg : "mx"; // /mx/... (o "mx" si se abrió suelto)
+    top.href = `/${locale}/cotizar?${q.toString()}`;
+  };
+  $("btn-fabricar").addEventListener("click", pedirATaller);
+  $("bloque-fabricar").hidden = MODO === "cuenta";
 
   // Pestañas
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
@@ -1127,7 +1474,9 @@
     $("pill-taller").textContent = conf.taller.nombre;
     if (MODO !== "cuenta") $("cli-nombre").value = "Cliente de ejemplo";
     pintarCuenta();
-    cargarArchivo("placa-montaje-ejemplo.dxf", EJEMPLOS.dxf());
+    leerPaquete().then((paq) => (paq ? cargarPaquete(paq) : false)).catch(() => false).then((cargado) => {
+      if (!cargado) cargarArchivo("placa-montaje-ejemplo.dxf", EJEMPLOS.dxf());
+    });
   };
   if (MODO === "cuenta") {
     Promise.resolve(PUENTE.cargar()).then((d) => {

@@ -198,3 +198,22 @@ liga, la tienda (`apps/storefront/src/components/hetna/RastreoCorreo.tsx` →
 
 Si regeneras el flujo de la campaña con `generar_flujo.py`, vuelve a agregar en
 «Enviar correo» el `split('utm_source=correo&').join('utm_source=correo&e=' + encodeURIComponent($json.id) + '&')`.
+
+## Pruebas A/B/C, novedades mensuales y encuesta (19 nov 2026)
+
+- **Versiones de correo:** en español, el correo 1 de talleres tiene 3 versiones (A: comisión 6% contra
+  Mercado Libre/Amazon; B: "clientes que buscan talleres en tu ciudad" + Taller fundador; C: correo corto y
+  personal de Vladimir), el correo 2 de talleres 2 versiones (A: cuánto les queda de cada venta; B: Cotizador
+  CNC 14 días gratis) y el correo 1 de compradores 2 versiones (A: ejemplos de su giro; B: corto y personal).
+  A cada empresa le toca siempre la misma versión (según su `id`) y la liga lleva la versión en
+  `utm_campaign` (`vendedor_p1b`, `comprador_p1a`…). Los clics se anotan en `notas` con esa versión
+  ("Abrió una liga del correo el … (/mx/talleres/unete, vendedor_p1b)") y en Google Analytics se ven por campaña.
+- **Seguimiento sin fin:** después del correo 4, una **novedad al mes** (paso 5, 6, … rotando 3 textos por
+  segmento) hasta que se registre, responda o pida su baja. Todos llevan la liga de baja. Los `FINALIZADO`
+  de antes entran a las novedades 30 días después de su último correo.
+- **Encuesta "¿por qué no se registran?"** desde el correo 3 (en español): 7 respuestas de un clic que abren
+  una página para confirmar y dejar un comentario (flujo n8n «Prospectos HETNA - Opinión», webhook
+  `hetna-prospectos-opinion`; código en `n8n/opinion_pagina.js` y `n8n/opinion_registrar.js`). La opinión se
+  anota en `notas` ("Opinión AAAA-MM-DD: …"), "No me interesa" da de baja, "Ahorita no tengo tiempo" pospone
+  60 días y "No entiendo cómo funciona" / "No conozco la plataforma" llegan por Telegram con 🔥 para escribirles.
+

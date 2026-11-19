@@ -30,6 +30,7 @@ import { adminSubirDisenosMiddlewares } from "./admin/hetna-subir-disenos/middle
 import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
 import { corsAppMiddlewares } from "./api/cors-app";
 import { storeRecomiendaMiddlewares } from "./store/hetna-recomienda/middlewares";
+import { storeOpinionMiddlewares } from "./store/hetna-opinion/middlewares";
 import { storeAfiliacionMiddlewares } from "./store/hetna-afiliacion/middlewares";
 import { storeSolicitudesTallerMiddlewares } from "./store/solicitudes-taller/middlewares";
 import { sinContacto } from "../lib/clientes-taller";
@@ -221,6 +222,7 @@ export default defineMiddlewares({
         ...storeSolicitudesTallerMiddlewares,
         ...storeCuponesMiddlewares,
         ...storeRecomiendaMiddlewares,
+        ...storeOpinionMiddlewares,
         ...storeAfiliacionMiddlewares,
         // CORS de la app del Cotizador en web (localhost:8080) para /api/cotizador-*
         ...corsAppMiddlewares,
@@ -236,6 +238,12 @@ export default defineMiddlewares({
           method: ["POST"],
           matcher: "/api/cotizacion-liga/:token/posventa",
           middlewares: [leerMultipart({ campos: { fotos: 3 }, maxMb: 8 })],
+        },
+        // Relieve con profundidad IA: la foto ya reducida en el navegador (lib/relieve-ia/servicio.ts)
+        {
+          method: ["POST"],
+          matcher: "/api/relieve-ia",
+          middlewares: [leerMultipart({ campos: { rgb: 1 }, maxMb: 4 })],
         },
         // "Te cargamos tu catálogo": el taller manda su lista (lib/cotizador-catalogo.ts)
         {

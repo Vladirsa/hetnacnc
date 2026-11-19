@@ -4,6 +4,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { leerArticulo, servicioBlog } from "../../../../lib/blog"
+import { recalcularSinFallar } from "../../../../lib/comision-autores"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const [articulo] = await servicioBlog(req.scope).listLearningArticles({ id: String(req.params.id) }, { take: 1 })
@@ -16,6 +17,12 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const id = String(req.params.id)
   const [actual] = await blog.listLearningArticles({ id }, { take: 1 })
   if (!actual) return res.status(404).json({ message: "Artículo no encontrado." })
+  // Artículos de instructores: el contenido lo edita el taller (desde su texto
+  // simple) y se aprueban o rechazan sólo en /revision (con correo y recálculo
+  // de su comisión). Así lo publicado es siempre lo que se aprobó.
+  if ((actual as any).seller_id) {
+    return res.status(400).json({ message: "Este artículo es de un instructor: apruébalo o recházalo desde Por revisar. El contenido lo corrige el instructor." })
+  }
   const b = (req.body || {}) as Record<string, unknown>
   const { datos, error } = leerArticulo(b, true)
   if (error || !datos) return res.status(400).json({ message: error })
@@ -30,6 +37,10 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
 }
 
 export const DELETE = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
-  await servicioBlog(req.scope).softDeleteLearningArticles(String(req.params.id))
+  const blog = servicioBlog(req.scope)
+  const [actual] = await blog.listLearningArticles({ id: String(req.params.id) }, { take: 1 })
+  if (!actual) return res.status(404).json({ message: "Artículo no encontrado." })
+  await blog.softDeleteLearningArticles(actual.id)
+  await recalcularSinFallar(req.scope, (actual as any).seller_id)
   res.json({ ok: true })
 }

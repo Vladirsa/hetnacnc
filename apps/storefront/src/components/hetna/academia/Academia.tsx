@@ -1,6 +1,6 @@
 // /servicios/aprendizaje-cnc: la Academia HETNA, estilo Udemy/Domestika.
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
-// una comisión (5%, ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
+// una comisión (5%, menos si el instructor escribe en el blog; ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
 import Image from "@/lib/imagenes/Imagen"
 import type { HttpTypes } from "@medusajs/types"
@@ -12,6 +12,9 @@ import type { LearningArticle } from "@/lib/data/learning-articles"
 
 import { ServicioIcono } from "../ServicioIcono"
 import { ArticuloAprendizajeCard, FranjaAyuda } from "../ServicioPagina"
+import type { Recurso } from "@/lib/hetna/recursos-academia"
+
+import { BibliotecaRecursos } from "./BibliotecaRecursos"
 import { CatalogoCursos } from "./CatalogoCursos"
 
 const PASOS_ALUMNO = [
@@ -25,12 +28,14 @@ const PASOS_TALLER = [
   "En tu panel de taller entra a Cursos o a Libros y PDF y llena la ficha.",
   "Elige si es gratis o pon tu precio. HETNA lo promociona en la tienda, Facebook e Instagram.",
   "Cada vez que alguien compra tu curso o tu libro, la venta llega a tu saldo al momento.",
+  "¿Quieres pagar menos comisión? Escribe artículos en el blog: con uno aprobado tus cursos pagan menos.",
 ]
 
 const QUE_PUBLICAR = [
   { icono: "aprender", t: "Cursos en video", d: "Router, láser, plasma, torno, Fusion 360, G-code. Con temario, lecciones de muestra y alumnos inscritos.", href: "/seller/courses", boton: "Publicar un curso" },
   { icono: "cotizador", t: "Libros y PDF", d: "Manuales de tu máquina, guías de parámetros, libros de diseño o plantillas. Entrega automática al comprador.", href: "/seller/libros", boton: "Publicar un libro" },
   { icono: "ia", t: "Guías gratis", d: "Un curso o un PDF gratis te trae alumnos que después te compran o te mandan trabajos.", href: "/seller/libros", boton: "Regalar una guía" },
+  { icono: "letrero", t: "Artículos en el blog", d: "Escribe sobre innovación o técnicas de tu taller. Cada artículo aprobado baja la comisión de tus cursos.", href: "/seller/blog", boton: "Escribir en el blog" },
 ]
 
 const BENEFICIOS = [
@@ -65,7 +70,17 @@ const TarjetaLibro = ({ p }: { p: Producto }) => {
   )
 }
 
-export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[]; articulos?: LearningArticle[]; libros?: Producto[] }) {
+export function Academia({
+  cursos,
+  articulos,
+  libros = [],
+  recursos = [],
+}: {
+  cursos: Course[]
+  articulos?: LearningArticle[]
+  libros?: Producto[]
+  recursos?: Recurso[]
+}) {
   const gratis =
     cursos.filter((c) => !c.precio || c.precio.gratis).length +
     libros.filter((l) => (l.metadata as Record<string, unknown> | null)?.archivo_gratis === true).length
@@ -108,6 +123,11 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
                 <a href="#libros" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
                   Libros y PDF
                 </a>
+                {recursos.length > 0 && (
+                  <a href="#biblioteca" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
+                    Biblioteca gratis
+                  </a>
+                )}
               </div>
               {cursos.length + libros.length > 0 && (
                 <dl className="m-0 grid max-w-[520px] grid-cols-3 gap-3 pt-3">
@@ -213,6 +233,35 @@ export function Academia({ cursos, articulos, libros = [] }: { cursos: Course[];
             </div>
           )}
         </section>
+
+        {recursos.length > 0 && (
+          <section id="biblioteca" className="flex flex-col gap-4 scroll-mt-24">
+            <div>
+              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Biblioteca de recursos gratis</h2>
+              <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">
+                Planos, guías, videos y programas que recomendamos de otros sitios. Se abren en su página original.
+              </p>
+            </div>
+            <BibliotecaRecursos recursos={recursos} />
+          </section>
+        )}
+
+        <LocalizedClientLink
+          href="/disenar/despiece-muebles"
+          className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#142033] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
+        >
+          <span className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Gratis · sin cuenta</span>
+            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]">Planos de muebles de melamina a tu medida</span>
+            <span className="max-w-[640px] text-[14.5px] leading-relaxed text-white/75">
+              Cocina, librero, ropero, cómoda, buró o mueble de TV: pon tus medidas y sale la lista de cortes con cantos, los
+              herrajes, el acomodo en hojas y el DXF. Si quieres, un taller HETNA te lo corta.
+            </span>
+          </span>
+          <span className="shrink-0 self-start rounded-[10px] bg-[#F07A1A] px-5 py-3 text-[14.5px] font-extrabold text-white group-hover:brightness-110 sm:self-auto">
+            Diseñar mi mueble →
+          </span>
+        </LocalizedClientLink>
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>

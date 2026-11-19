@@ -1,5 +1,6 @@
 "use client"
 
+import { BotonesCam } from "./BotonesCam"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -21,10 +22,11 @@ import {
   unir,
 } from "@/lib/generador/vectores"
 import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { type CalidadStep, leerSTEP, stepDesdeForma, stepDesdeMalla, triangular } from "@/lib/generador/step"
 
 type Archivo =
   | { tipo: "2d"; nombre: string; formato: "dxf" | "svg"; dibujo: Dibujo }
-  | { tipo: "3d"; nombre: string; formato: "stl" | "obj"; malla: Malla }
+  | { tipo: "3d"; nombre: string; formato: "stl" | "obj" | "step"; malla: Malla; forma?: unknown }
 
 type ModoEscala = "igual" | "espesor" | "ancho" | "porcentaje" | "unidades"
 
@@ -34,7 +36,7 @@ const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10
 const r2 = (x: number) => Math.round(x * 100) / 100
 
-function descargar(nombre: string, contenido: string | ArrayBuffer, tipo: string) {
+function descargar(nombre: string, contenido: string | ArrayBuffer | Blob, tipo: string) {
   const url = URL.createObjectURL(new Blob([contenido], { type: tipo }))
   const a = document.createElement("a")
   a.href = url
@@ -86,6 +88,9 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
   const [anchoNuevo, setAnchoNuevo] = useState("")
   const [porcentaje, setPorcentaje] = useState("100")
   const [factorUnidades, setFactorUnidades] = useState(25.4)
+  const [calidad, setCalidad] = useState<CalidadStep>("normal")
+  const [avisoCarga, setAvisoCarga] = useState("")
+  const [haciendoStep, setHaciendoStep] = useState(false)
 
   const abrir = async (f: File | undefined) => {
     setError("")
@@ -93,15 +98,33 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
     if (f.size > LIMITE) { setError("El archivo pesa más de 30 MB."); return }
     const ext = (f.name.split(".").pop() || "").toLowerCase()
     setCargando(true)
+    setAvisoCarga(ext === "step" || ext === "stp" ? "Abriendo el STEP con el motor CAD (la primera vez baja ~23 MB y luego queda guardado)..." : "")
     try {
       if (ext === "dxf") setArchivo({ tipo: "2d", nombre: f.name, formato: "dxf", dibujo: leerDXF(await f.text()) })
       else if (ext === "svg") setArchivo({ tipo: "2d", nombre: f.name, formato: "svg", dibujo: leerSVG(await f.text()) })
       else if (ext === "stl") setArchivo({ tipo: "3d", nombre: f.name, formato: "stl", malla: leerSTL(await f.arrayBuffer()) })
       else if (ext === "obj") setArchivo({ tipo: "3d", nombre: f.name, formato: "obj", malla: leerOBJ(await f.text()) })
-      else setError("Formato no compatible. Sube un DXF, SVG, STL u OBJ.")
+      else if (ext === "step" || ext === "stp") {
+        const { malla, forma } = await leerSTEP(f, calidad)
+        setArchivo({ tipo: "3d", nombre: f.name, formato: "step", malla, forma })
+      } else setError("Formato no compatible. Sube un DXF, SVG, STL, OBJ o STEP.")
       setModo("igual")
-    } catch {
-      setError("No pude leer el archivo. Revisa que no esté dañado.")
+    } catch (e) {
+      setError(ext === "step" || ext === "stp" ? (e as Error).message : "No pude leer el archivo. Revisa que no esté dañado.")
+    } finally {
+      setCargando(false)
+      setAvisoCarga("")
+    }
+  }
+
+  // STEP: otro detalle de triangulado (más fino = más triángulos)
+  const cambiarCalidad = async (c: CalidadStep) => {
+    setCalidad(c)
+    if (archivo?.tipo !== "3d" || archivo.formato !== "step" || !archivo.forma) return
+    setCargando(true)
+    try {
+      const malla = await triangular(archivo.forma, c)
+      setArchivo({ ...archivo, malla })
     } finally {
       setCargando(false)
     }
@@ -129,6 +152,21 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
   const med3d = salida3d ? medidasMalla(salida3d) : null
 
   const raiz = archivo ? archivo.nombre.replace(/\.[^.]+$/, "") + (factorOk && factor !== 1 ? `-x${r2(factor)}` : "") : ""
+
+  // STEP de salida: el sólido original (escalado) si vino de STEP; si no, caras planas de la malla
+  const bajarSTEP = async () => {
+    if (archivo?.tipo !== "3d" || !salida3d) return
+    setHaciendoStep(true)
+    await new Promise((ok) => setTimeout(ok, 30)) // que se pinte "Preparando..."
+    try {
+      if (archivo.formato === "step" && archivo.forma) descargar(`${raiz}.step`, await stepDesdeForma(archivo.forma, factor), "model/step")
+      else descargar(`${raiz}.step`, stepDesdeMalla(salida3d, raiz), "model/step")
+    } catch {
+      setError("No se pudo armar el STEP. Intenta con otro archivo.")
+    } finally {
+      setHaciendoStep(false)
+    }
+  }
   const mensaje = med
     ? `Hola HETNA CNC, quiero cotizar el corte de mi archivo "${archivo?.nombre}":\n- Tamaño: ${r1(med.ancho)} x ${r1(med.alto)} mm\n- Longitud de corte: ${r2(med.largo / 1000)} m\n- Contornos: ${med.cerrados} cerrados, ${med.abiertos} abiertos`
     : med3d
@@ -145,7 +183,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
           Convertidor y reescalador de archivos
         </h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Pasa tu archivo de DXF a SVG (o al revés) y de STL a OBJ, cambia su tamaño o ajústalo a otro espesor de material. Tu archivo no se sube a ningún servidor: todo se hace en tu navegador.
+          Pasa tu archivo de DXF a SVG (o al revés), de STEP a STL u OBJ y de STL a STEP, cambia su tamaño o ajústalo a otro espesor de material. Tu archivo no se sube a ningún servidor: todo se hace en tu navegador.
         </p>
       </section>
 
@@ -157,10 +195,10 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               <path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" />
             </svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{archivo ? archivo.nombre : "Sube tu archivo"}</span>
-            <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL u OBJ · hasta 30 MB</span>
-            <input type="file" accept=".dxf,.svg,.stl,.obj" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
+            <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL, OBJ o STEP · hasta 30 MB</span>
+            <input type="file" accept=".dxf,.svg,.stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
-          {cargando && <p className="m-0 text-[13px] text-[#6B6A63]">Leyendo archivo...</p>}
+          {cargando && <p className="m-0 text-[13px] text-[#6B6A63]">{avisoCarga || "Leyendo archivo..."}</p>}
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
 
           {archivo && (
@@ -262,7 +300,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 <>
                 <button
                   type="button"
-                  onClick={() => { if (!mandarACotizador(`${raiz}.dxf`, dibujoDXF(salida2d), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                  onClick={() => { if (!mandarACotizador(`${raiz}.dxf`, dibujoDXF(salida2d), locale, { origen: "Convertidor" })) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
                   className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
@@ -276,6 +314,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
                   Fabrícamelo: que un taller la corte
                 </button>
+                <BotonesCam nombre={raiz} dxf={() => dibujoDXF(salida2d)} />
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.dxf`, dibujoDXF(salida2d), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
@@ -296,6 +335,16 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
           {archivo?.tipo === "3d" && med3d && med3d0 && (
             <>
               {archivo.malla.avisos.length > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{archivo.malla.avisos.join(" ")}</p>}
+              {archivo.formato === "step" && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-[#1B1B18]">Detalle del STL u OBJ</span>
+                  <div className="flex flex-wrap gap-2">
+                    <Opcion activa={calidad === "normal"} onClick={() => cambiarCalidad("normal")}>Normal (0.05 mm)</Opcion>
+                    <Opcion activa={calidad === "fina"} onClick={() => cambiarCalidad("fina")}>Fino (0.01 mm)</Opcion>
+                  </div>
+                  <span className="text-[12.5px] text-[#6B6A63]">Qué tanto se aparta la malla de la superficie real. Fino = curvas más lisas y archivo más grande.</span>
+                </div>
+              )}
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 m-0">
                 {[
                   ["Tamaño", `${r1(med3d.x)} × ${r1(med3d.y)} × ${r1(med3d.z)} mm`],
@@ -312,7 +361,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 <>
                 <button
                   type="button"
-                  onClick={() => { if (!mandarACotizador(`${raiz}.stl`, mallaSTL(salida3d), locale)) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
+                  onClick={() => { if (!mandarACotizador(`${raiz}.stl`, mallaSTL(salida3d), locale, { origen: "Convertidor", servicio: "impresion_3d" })) setAvisoCotizar("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.") }}
                   className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
@@ -327,17 +376,27 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   Fabrícamelo: que un taller la corte
                 </button>
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <BotonesCam nombre={raiz} stl={() => mallaSTL(salida3d)} />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.stl`, mallaSTL(salida3d), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar STL
                   </button>
                   <button type="button" onClick={() => descargar(`${raiz}.obj`, mallaOBJ(salida3d), "model/obj")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar OBJ
                   </button>
+                  <button type="button" disabled={haciendoStep} onClick={bajarSTEP} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-60 text-white font-semibold py-3 rounded-[10px] text-[14px]">
+                    {haciendoStep ? "Preparando..." : "Descargar STEP"}
+                  </button>
                   <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
                     Pedir por WhatsApp
                   </a>
                 </div>
+                {archivo.formato !== "step" && (
+                  <p className="m-0 text-[12.5px] text-[#6B6A63]">
+                    El STEP desde STL u OBJ sale con caras planas (los mismos triángulos): lo abren SolidWorks, Fusion, FreeCAD o tu CAM, pero no recupera las curvas originales.
+                    {salida3d.tris.length / 9 > 100000 ? " Esta malla es muy grande: el STEP puede pesar decenas de MB y tardar en abrir." : ""}
+                  </p>
+                )}
                 </>
               )}
             </>

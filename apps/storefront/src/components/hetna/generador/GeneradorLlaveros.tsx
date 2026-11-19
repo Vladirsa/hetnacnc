@@ -3,6 +3,7 @@
 // Llaveros, placas y adornos con nombre dentro del 3D Studio: el llavero en
 // 3D (placa con letras en relieve, para imprimir), el dibujo para láser en
 // Diseño 2D (capa CORTE y capa GRABADO) y los archivos en Exportación.
+import { BotonesCam } from "./BotonesCam"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -20,7 +21,7 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
 import { FORMAS_LLAVERO, type FormaLlavero, hacerLlavero } from "@/lib/generador/llaveros"
@@ -329,13 +330,16 @@ export function GeneradorLlaveros() {
           </div>
         </TarjetaExport>
       </div>
+      <TarjetaExport titulo="Maquinar en tu láser o router" nota="Se abre en el CAM de HETNA: eliges máquina y herramienta y bajas el G-code.">
+        <BotonesCam nombre={archivo} dxf={() => dibujoDXF(r!.dibujo)} stl={() => mallaSTL(r!.malla)} />
+      </TarjetaExport>
 
       <TarjetaExport titulo="¿Cuánto cuesta?" nota={`Precio para ${piezas} ${piezas === 1 ? "pieza" : "piezas"}, al instante o por WhatsApp.`}>
         <div className="flex gap-2">
           <Boton
             tipo="verde"
             onClick={() => {
-              if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r!.dibujo), locale))
+              if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(r!.dibujo), locale, { origen: "Llaveros", servicio: "laser_co2", cantidad: piezas, opciones: { materialLaser: materialLaserPorEspesor(numero(grosor) || 3) } }))
                 setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
             }}
           >

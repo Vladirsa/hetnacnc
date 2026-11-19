@@ -23,7 +23,7 @@ import { type AfiliacionNueva, type ArchivoSubido, enviarSolicitudTaller } from 
 import { haySesionCliente } from "@/lib/data/customer"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
-import { tomarArchivoGrandeParaFabricar, tomarArchivoParaFabricar } from "@/lib/generador/aCotizador"
+import { tomarArchivoGrandeParaFabricar, tomarArchivoParaFabricar, tomarArchivosParaFabricar } from "@/lib/generador/aCotizador"
 import { type MedidaPieza, leerCantidad, medirArchivo } from "@/lib/hetna/estimado"
 import { subirArchivo } from "@/lib/subir-archivo"
 import { DIAS_CONSERVACION_ARCHIVOS, PLAZO_PRIMERA_RESPUESTA } from "@/lib/hetna/promesas"
@@ -178,10 +178,18 @@ export default function FormSolicitudTaller({
       medir(guardado)
       return
     }
-    // Los grandes (STL de litofanías y relieves) llegan por IndexedDB
+    // Los grandes (STL de litofanías y relieves) y los proyectos con varios
+    // archivos (piezas, ZIP y planos del Cotizador) llegan por IndexedDB
     if (prellenado.pieza && !prellenado.archivo) {
       archivoPrellenado.current = true
-      tomarArchivoGrandeParaFabricar().then((g) => {
+      tomarArchivosParaFabricar().then(async (varios) => {
+        if (varios.length) {
+          elegirArchivos(varios)
+          const medible = varios.find((f) => /\.(dxf|svg|stl|obj)$/i.test(f.name))
+          if (varios.length === 1 && medible) medir(medible)
+          return
+        }
+        const g = await tomarArchivoGrandeParaFabricar()
         if (!g) return
         elegirArchivos([g])
         medir(g)

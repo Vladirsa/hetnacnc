@@ -23,6 +23,11 @@ type Articulo = {
   autor: string | null
   published_at: string | null
   created_at: string
+  // artículos de instructores (talleres)
+  seller_id?: string | null
+  revision?: string | null
+  motivo_revision?: string | null
+  updated_at?: string
 }
 
 const SECCIONES: [string, string][] = [
@@ -284,6 +289,8 @@ export default function BlogPage() {
   const [error, setError] = useState("")
   const [editando, setEditando] = useState<Borrador | null>(null)
   const [aviso, setAviso] = useState("")
+  // artículo de instructor abierto sólo para leerlo (no se edita aquí)
+  const [leyendo, setLeyendo] = useState<Articulo | null>(null)
 
   const cargar = useCallback(async () => {
     setError("")
@@ -298,6 +305,27 @@ export default function BlogPage() {
     void cargar()
   }, [cargar])
 
+  const revisar = async (a: Articulo, accion: "aprobar" | "rechazar") => {
+    let motivo = ""
+    if (accion === "rechazar") {
+      motivo = window.prompt(`¿Qué tiene que corregir "${a.title}"? (se lo mandamos por correo)`) || ""
+      if (motivo.trim().length < 5) return
+    } else if (!window.confirm(`¿Publicar "${a.title}"? Cuenta para bajar la comisión de cursos de ese instructor.`)) return
+    try {
+      const r = await api<{ comision?: { actual: number | null; base: number | null } | null }>(`/${a.id}/revision`, "POST", { accion, motivo, leido_at: a.updated_at })
+      const c = r.comision
+      setLeyendo(null)
+      setAviso(
+        accion === "aprobar"
+          ? `Publicado.${c?.actual != null && c.base != null && c.actual < c.base ? ` La comisión de cursos de ese instructor queda en ${c.actual}%.` : ""}`
+          : "Rechazado. Le avisamos al instructor por correo."
+      )
+      void cargar()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const borrar = async (a: Articulo) => {
     if (!window.confirm(`¿Borrar "${a.title}"? Deja de verse en el sitio.`)) return
     try {
@@ -307,6 +335,34 @@ export default function BlogPage() {
     } catch (e) {
       setError((e as Error).message)
     }
+  }
+
+  if (leyendo) {
+    return (
+      <div style={{ padding: 16, maxWidth: 900, color: C.texto }}>
+        <div style={caja}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <strong style={{ fontSize: 16 }}>Artículo de {leyendo.autor || "instructor"}</strong>
+            <button type="button" style={boton("normal")} onClick={() => setLeyendo(null)}>← Volver a la lista</button>
+          </div>
+          <h2 style={{ fontSize: 20, margin: "12px 0 4px" }}>{leyendo.title}</h2>
+          <p style={{ color: C.tenue, fontSize: 13, margin: 0 }}>{nombreSeccion(leyendo.categoria)} · {leyendo.excerpt}</p>
+          {leyendo.cover_image_url && <img src={leyendo.cover_image_url} alt="" style={{ maxWidth: "100%", borderRadius: 8, marginTop: 10 }} />}
+          {/* el HTML lo arma el servidor escapando todo lo que escribió el taller (lib/blog-instructores.ts) */}
+          <div style={{ ...campo, marginTop: 10, background: C.suave, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: leyendo.content_html }} />
+          <p style={{ fontSize: 12.5, color: C.tenue }}>El contenido lo corrige el instructor desde su panel. Si algo no va, recházalo y dile qué cambiar.</p>
+          {leyendo.revision === "pendiente" && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" style={boton("primario")} onClick={() => void revisar(leyendo, "aprobar")}>Aprobar y publicar</button>
+              <button type="button" style={boton("peligro")} onClick={() => void revisar(leyendo, "rechazar")}>Rechazar</button>
+            </div>
+          )}
+          {leyendo.revision !== "pendiente" && leyendo.published_at && (
+            <button type="button" style={boton("peligro")} onClick={() => void revisar(leyendo, "rechazar")}>Despublicar (rechazar con motivo)</button>
+          )}
+        </div>
+      </div>
+    )
   }
 
   if (editando) {
@@ -346,20 +402,48 @@ export default function BlogPage() {
         <p style={{ color: C.tenue }}>Todavía no hay artículos. Escribe el primero.</p>
       ) : (
         <div style={{ marginTop: 14 }}>
-          {lista.map((a) => (
+          {lista.some((a) => a.revision === "pendiente") && (
+            <div style={{ ...caja, borderColor: C.naranja }}>
+              <strong>Por revisar: artículos de instructores</strong>
+              <p style={{ fontSize: 13, color: C.tenue, margin: "4px 0 10px" }}>
+                Revisa que sea contenido propio y útil (no un anuncio ni copiado). Al aprobarlo se publica y baja la comisión de
+                cursos de ese instructor.
+              </p>
+              {lista.filter((a) => a.revision === "pendiente").map((a) => (
+                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center", padding: "8px 0", borderTop: `1px solid ${C.borde}` }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <strong>{a.title}</strong>
+                    <div style={{ fontSize: 13, color: C.tenue }}>{a.autor || "Instructor"} · {nombreSeccion(a.categoria)} · enviado {new Date(a.created_at).toLocaleDateString("es-MX")}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" style={boton("normal")} onClick={() => { setAviso(""); setLeyendo(a) }}>Leer</button>
+                    <button type="button" style={boton("primario")} onClick={() => void revisar(a, "aprobar")}>Aprobar</button>
+                    <button type="button" style={boton("peligro")} onClick={() => void revisar(a, "rechazar")}>Rechazar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {lista.filter((a) => a.revision !== "pendiente").map((a) => (
             <div key={a.id} style={{ ...caja, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <strong>{a.title}</strong>
                 <div style={{ fontSize: 13, color: C.tenue, marginTop: 2 }}>
                   {nombreSeccion(a.categoria)}
-                  {a.guia ? " · Guía fija" : ""} · {a.published_at ? `Publicado ${new Date(a.published_at).toLocaleDateString("es-MX")}` : "Borrador"}
+                  {a.guia ? " · Guía fija" : ""}
+                  {a.seller_id ? ` · Instructor: ${a.autor || "taller"}` : ""} ·{" "}
+                  {a.published_at ? `Publicado ${new Date(a.published_at).toLocaleDateString("es-MX")}` : a.revision === "rechazado" ? "Rechazado" : "Borrador"}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 {a.published_at && (
                   <a href={`${SITIO}/mx/foro-cnc/blog/${a.slug}`} target="_blank" rel="noreferrer" style={{ ...boton("normal"), textDecoration: "none" }}>Ver</a>
                 )}
-                <button type="button" style={boton("normal")} onClick={() => { setAviso(""); setEditando(deArticulo(a)) }}>Editar</button>
+                {a.seller_id ? (
+                  <button type="button" style={boton("normal")} onClick={() => { setAviso(""); setLeyendo(a) }}>Leer</button>
+                ) : (
+                  <button type="button" style={boton("normal")} onClick={() => { setAviso(""); setEditando(deArticulo(a)) }}>Editar</button>
+                )}
                 <button type="button" style={boton("peligro")} onClick={() => void borrar(a)}>Borrar</button>
               </div>
             </div>
