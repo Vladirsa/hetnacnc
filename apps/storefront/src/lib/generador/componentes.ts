@@ -14,7 +14,7 @@
 // material del mueble. Patas y jaladeras son de catálogo: se compran, se ven en
 // el 3D y salen en la lista de compra.
 
-import { aMueble, type P } from "./ensamble"
+import { aMueble, esquinasExteriores, type P } from "./ensamble"
 import { type Barreno, type MuebleTableros, type OpcionesTableros, type PiezaTablero, type Tablero, muebleDeTableros } from "./tableros"
 
 export type Rol = "estructura" | "puerta" | "frente" | "cajon" | "fondo" | "cubierta"
@@ -141,7 +141,9 @@ export function muebleCompleto(todos: TableroC[], o: OpcionesMueble): MuebleComp
     const lo = [t.x0, t.y0, t.z0], hi = [t.x1, t.y1, t.z1]
     const g = hi[k] - lo[k]
     const u0 = lo[U], u1 = hi[U], v0 = lo[V], v1 = hi[V]
-    const contorno: P[] = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]
+    const rectC: P[] = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]
+    // puertas, frentes y cubierta también llevan las esquinas redondeadas o con chaflán si se pidió
+    const contorno: P[] = o.esquinas && (t.rol === "puerta" || t.rol === "frente" || t.rol === "cubierta") ? esquinasExteriores(rectC, o.esquinas.tipo, o.esquinas.medida) : rectC
     const huecos: P[][] = []
     const barrenos: Barreno[] = []
     for (const a of t.aberturas || []) {

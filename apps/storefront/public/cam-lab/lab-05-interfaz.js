@@ -360,9 +360,23 @@ function initOrderUI(){
   });
 }
 
+/* ---------------- Pieza que manda otra herramienta del sitio (molduras, tallados…) ---------------- */
+function initPiezaExterna(){
+  if(window.parent===window)return;
+  window.addEventListener('message',e=>{
+    if(e.origin!==location.origin||e.source!==window.parent)return;const d=e.data||{};
+    if(d.type!=='hetna-cam:load-file'||!d.datos||!d.nombre)return;
+    const file=new File([d.datos],String(d.nombre).slice(0,120),{type:'application/octet-stream'});
+    // espera a que termine de cargar la pieza de muestra
+    let intentos=0;const t=setInterval(()=>{if(!S.busy||++intentos>80){clearInterval(t);loadFile(file);}},250);
+  });
+  window.parent.postMessage({type:'hetna-cam:ready'},location.origin);
+}
+
 /* ---------------- Arranque ---------------- */
 function boot(){
   if(!window.THREE||!THREE.OrbitControls){document.body.insertAdjacentHTML('afterbegin','<p style="padding:16px">No se pudo cargar el motor 3D. Revisa tu conexión.</p>');return;}
   libInit();init3D();initChrome();initMachineUI();initToolUI();initStratUI();initPostUI();initOrderUI();initExtrasUI();buildToolMesh();
   loadSample('blade');
+  initPiezaExterna();
 }
