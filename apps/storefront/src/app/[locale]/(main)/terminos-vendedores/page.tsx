@@ -7,6 +7,7 @@ import { TablaTarifas } from "@/components/hetna/TablaTarifas"
 import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CANCELACION } from "@/lib/hetna/promesas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.6 · 19 nov 2026 (artículos de instructores en el blog bajan la comisión de cursos, cláusula 8).
 // Versión 1.5 · 12 nov 2026 (cancelaciones, retrasos, disputas y liberación de pagos en solicitudes de fabricación, cláusula 8).
 // Versión 1.4 · 12 nov 2026 (licitaciones como conexión sin comisión y protección sólo en pagos dentro, cláusula 8).
 // Versión 1.3 · 4 nov 2026 (aceptación expresa en el panel y verificación de tarjeta, cláusulas 2 y 3).
@@ -116,6 +117,7 @@ export default function TerminosVendedores() {
         <li>Cuándo se libera tu pago: los diseños y archivos digitales, en cuanto se confirma el pago del cliente; los productos físicos, 3 días después de que el pedido se entrega (lo marca el rastreo de la guía o el cliente al confirmar que lo recibió). Ves tu saldo pendiente, disponible y pagado en tu panel, en Mi saldo.</li>
         <li>Si después hay una devolución, un contracargo o un reclamo procedente dentro del plazo que tiene el cliente, el importe se descuenta de tu siguiente pago. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
         <li>Cursos, libros y PDF de la Academia HETNA: publicarlos es gratis. Si los cobras, HETNA cobra la comisión que indica la lista de precios (abajo) sobre el precio de cada venta y el resto se abona a tu saldo en cuanto se confirma el pago. Lo que publicas gratis no paga comisión.</li>
+        <li>Artículos en el blog: si eres instructor y escribes artículos propios en el blog de HETNA (desde tu panel, sección Blog), cada artículo que HETNA aprueba baja la comisión de tus cursos como indica la lista de precios, durante el tiempo que ahí se señala. Aplica a ventas nuevas. HETNA puede rechazar o retirar artículos copiados, publicitarios o que no aporten, y entonces dejan de contar.</li>
         <li>Al publicar un libro, PDF o curso declaras que el contenido es tuyo o que tienes permiso para venderlo. HETNA puede retirar el que infrinja derechos de terceros (cláusula 7).</li>
         <li>Los cambios de comisión o de plan se avisan con al menos 15 días de anticipación y no afectan pedidos ya pagados.</li>
         <li>Ventas de la tienda y de la Academia: está prohibido cerrarlas fuera de la plataforma o pedir al cliente que pague por otro medio. Hacerlo puede causar la suspensión de la cuenta.</li>

@@ -4,6 +4,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { leerArticulo, servicioBlog } from "../../../../lib/blog"
+import { recalcularSinFallar } from "../../../../lib/comision-autores"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const [articulo] = await servicioBlog(req.scope).listLearningArticles({ id: String(req.params.id) }, { take: 1 })
@@ -25,11 +26,20 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     const [otro] = await blog.listLearningArticles({ slug: datos.slug as string }, { take: 1 })
     if (otro) return res.status(409).json({ message: "Ya hay otro artículo con ese slug." })
   }
+  // Artículo de instructor: publicarlo desde el editor equivale a aprobarlo;
+  // despublicarlo le quita el descuento. En ambos casos se recalcula su comisión.
+  const deTaller = (actual as any).seller_id as string | null
+  if (deTaller && datos.published_at) Object.assign(datos, { revision: null, motivo_revision: null, aprobado_at: (actual as any).aprobado_at || new Date() })
   const articulo = await blog.updateLearningArticles({ id, ...datos } as any)
+  await recalcularSinFallar(req.scope, deTaller)
   res.json({ articulo })
 }
 
 export const DELETE = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
-  await servicioBlog(req.scope).softDeleteLearningArticles(String(req.params.id))
+  const blog = servicioBlog(req.scope)
+  const [actual] = await blog.listLearningArticles({ id: String(req.params.id) }, { take: 1 })
+  if (!actual) return res.status(404).json({ message: "Artículo no encontrado." })
+  await blog.softDeleteLearningArticles(actual.id)
+  await recalcularSinFallar(req.scope, (actual as any).seller_id)
   res.json({ ok: true })
 }

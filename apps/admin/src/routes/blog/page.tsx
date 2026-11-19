@@ -23,6 +23,10 @@ type Articulo = {
   autor: string | null
   published_at: string | null
   created_at: string
+  // artículos de instructores (talleres)
+  seller_id?: string | null
+  revision?: string | null
+  motivo_revision?: string | null
 }
 
 const SECCIONES: [string, string][] = [
@@ -298,6 +302,26 @@ export default function BlogPage() {
     void cargar()
   }, [cargar])
 
+  const revisar = async (a: Articulo, accion: "aprobar" | "rechazar") => {
+    let motivo = ""
+    if (accion === "rechazar") {
+      motivo = window.prompt(`¿Qué tiene que corregir "${a.title}"? (se lo mandamos por correo)`) || ""
+      if (motivo.trim().length < 5) return
+    } else if (!window.confirm(`¿Publicar "${a.title}"? Cuenta para bajar la comisión de cursos de ese instructor.`)) return
+    try {
+      const r = await api<{ comision?: { actual: number | null; base: number | null } | null }>(`/${a.id}/revision`, "POST", { accion, motivo })
+      const c = r.comision
+      setAviso(
+        accion === "aprobar"
+          ? `Publicado.${c?.actual != null && c.base != null && c.actual < c.base ? ` La comisión de cursos de ese instructor queda en ${c.actual}%.` : ""}`
+          : "Rechazado. Le avisamos al instructor por correo."
+      )
+      void cargar()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const borrar = async (a: Articulo) => {
     if (!window.confirm(`¿Borrar "${a.title}"? Deja de verse en el sitio.`)) return
     try {
@@ -346,13 +370,37 @@ export default function BlogPage() {
         <p style={{ color: C.tenue }}>Todavía no hay artículos. Escribe el primero.</p>
       ) : (
         <div style={{ marginTop: 14 }}>
-          {lista.map((a) => (
+          {lista.some((a) => a.revision === "pendiente") && (
+            <div style={{ ...caja, borderColor: C.naranja }}>
+              <strong>Por revisar: artículos de instructores</strong>
+              <p style={{ fontSize: 13, color: C.tenue, margin: "4px 0 10px" }}>
+                Revisa que sea contenido propio y útil (no un anuncio ni copiado). Al aprobarlo se publica y baja la comisión de
+                cursos de ese instructor.
+              </p>
+              {lista.filter((a) => a.revision === "pendiente").map((a) => (
+                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center", padding: "8px 0", borderTop: `1px solid ${C.borde}` }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <strong>{a.title}</strong>
+                    <div style={{ fontSize: 13, color: C.tenue }}>{a.autor || "Instructor"} · {nombreSeccion(a.categoria)} · enviado {new Date(a.created_at).toLocaleDateString("es-MX")}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" style={boton("normal")} onClick={() => { setAviso(""); setEditando(deArticulo(a)) }}>Leer</button>
+                    <button type="button" style={boton("primario")} onClick={() => void revisar(a, "aprobar")}>Aprobar</button>
+                    <button type="button" style={boton("peligro")} onClick={() => void revisar(a, "rechazar")}>Rechazar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {lista.filter((a) => a.revision !== "pendiente").map((a) => (
             <div key={a.id} style={{ ...caja, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <strong>{a.title}</strong>
                 <div style={{ fontSize: 13, color: C.tenue, marginTop: 2 }}>
                   {nombreSeccion(a.categoria)}
-                  {a.guia ? " · Guía fija" : ""} · {a.published_at ? `Publicado ${new Date(a.published_at).toLocaleDateString("es-MX")}` : "Borrador"}
+                  {a.guia ? " · Guía fija" : ""}
+                  {a.seller_id ? ` · Instructor: ${a.autor || "taller"}` : ""} ·{" "}
+                  {a.published_at ? `Publicado ${new Date(a.published_at).toLocaleDateString("es-MX")}` : a.revision === "rechazado" ? "Rechazado" : "Borrador"}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>

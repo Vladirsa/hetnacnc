@@ -1,6 +1,6 @@
 // /servicios/aprendizaje-cnc: la Academia HETNA, estilo Udemy/Domestika.
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
-// una comisión (5%, ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
+// una comisión (5%, menos si el instructor escribe en el blog; ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
 import Image from "@/lib/imagenes/Imagen"
 import type { HttpTypes } from "@medusajs/types"
@@ -28,12 +28,14 @@ const PASOS_TALLER = [
   "En tu panel de taller entra a Cursos o a Libros y PDF y llena la ficha.",
   "Elige si es gratis o pon tu precio. HETNA lo promociona en la tienda, Facebook e Instagram.",
   "Cada vez que alguien compra tu curso o tu libro, la venta llega a tu saldo al momento.",
+  "¿Quieres pagar menos comisión? Escribe artículos en el blog: con uno aprobado tus cursos pagan menos.",
 ]
 
 const QUE_PUBLICAR = [
   { icono: "aprender", t: "Cursos en video", d: "Router, láser, plasma, torno, Fusion 360, G-code. Con temario, lecciones de muestra y alumnos inscritos.", href: "/seller/courses", boton: "Publicar un curso" },
   { icono: "cotizador", t: "Libros y PDF", d: "Manuales de tu máquina, guías de parámetros, libros de diseño o plantillas. Entrega automática al comprador.", href: "/seller/libros", boton: "Publicar un libro" },
   { icono: "ia", t: "Guías gratis", d: "Un curso o un PDF gratis te trae alumnos que después te compran o te mandan trabajos.", href: "/seller/libros", boton: "Regalar una guía" },
+  { icono: "letrero", t: "Artículos en el blog", d: "Escribe sobre innovación o técnicas de tu taller. Cada artículo aprobado baja la comisión de tus cursos.", href: "/seller/blog", boton: "Escribir en el blog" },
 ]
 
 const BENEFICIOS = [
