@@ -96,7 +96,7 @@ export const SECCIONES: SeccionDiseno[] = [
       { nombre: "Anidado de piezas", texto: "Tus DXF acomodados en la hoja.", href: "/disenar/anidado-piezas", icono: "anidado", color: MARINO, acceso: "gratis", para: ["laser", "router"], claves: "nesting hoja" },
       { nombre: "Rompecabezas", texto: "Piezas a tu medida, con marco y base.", href: "/disenar/rompecabezas", icono: "rompecabezas", color: AMARILLO, acceso: "gratis", para: ["laser"], claves: "puzzle juego regalo foto" },
       { nombre: "Patrones y mandalas", texto: "Arte de pared en capas.", href: "/disenar/patrones-radiales", icono: "generador", color: ROSA, acceso: "gratis", para: ["laser", "router"] },
-      { nombre: "Convertir y reescalar", texto: "DXF ↔ SVG, STL ↔ OBJ, otro espesor.", href: "/disenar/convertidor", icono: "convertir", color: GRIS, acceso: "gratis", para: ["laser", "router", "3d"], claves: "convertidor pulgadas" },
+      { nombre: "Convertir y reescalar", texto: "DXF ↔ SVG, STEP ↔ STL ↔ OBJ, otro espesor.", href: "/disenar/convertidor", icono: "convertir", color: GRIS, acceso: "gratis", para: ["laser", "router", "3d"], claves: "convertidor pulgadas step stp" },
     ],
   },
 ]
