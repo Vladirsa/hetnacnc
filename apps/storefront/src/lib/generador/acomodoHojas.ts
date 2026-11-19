@@ -18,7 +18,7 @@ import type { Trazo } from "./geo2d"
 type P = [number, number]
 export type Veta = "largo" | "ancho" | "libre"
 export type PiezaHoja = { id: string; nombre: string; trazos: Trazo[]; veta: Veta; cantidad: number }
-export type OpcionesHoja = { largo: number; ancho: number; separacion: number; margen: number; conVeta: boolean; etiquetas: boolean }
+export type OpcionesHoja = { largo: number; ancho: number; separacion: number; margen: number; conVeta: boolean; etiquetas: boolean; desde?: number /* primer número de pieza - 1 */ }
 export type Colocada = { id: string; nombre: string; n: number; x: number; y: number; w: number; h: number; girada: boolean }
 export type HojaAcomodada = { colocadas: Colocada[]; usado: number }
 export type Acomodo = { hojas: HojaAcomodada[]; noCaben: string[]; aprovechamiento: number; piezas: number; trazos: Trazo[] }
@@ -118,7 +118,7 @@ export function acomodarEnTablero(piezas: PiezaHoja[], o: OpcionesHoja): Acomodo
   const H = o.ancho - 2 * m + s
   const cajas = new Map(piezas.map((p) => [p.id, caja(p.trazos)]))
   const items: Item[] = []
-  let n = 0
+  let n = Math.max(0, Math.round(o.desde || 0))
   for (const p of piezas) {
     const c = cajas.get(p.id)!
     for (let k = 0; k < Math.max(0, Math.round(p.cantidad)); k++) items.push({ id: p.id, nombre: p.nombre, n: ++n, w: c.w, h: c.h, veta: p.veta })
@@ -226,9 +226,9 @@ function numero(txt: string, cx: number, cy: number, alto: number): Trazo[] {
 }
 
 // Lista de corte en CSV (para el taller o la cotización)
-export function listaCorteCSV(piezas: { nombre: string; largo: number; ancho: number; grosor: number; cantidad: number; veta: Veta; numeros: number[] }[]) {
+export function listaCorteCSV(piezas: { nombre: string; largo: number; ancho: number; grosor: number; cantidad: number; veta: Veta; numeros: number[]; material?: string; hojas?: string }[]) {
   const esc = (s: string) => `"${s.replace(/"/g, '""')}"`
-  const filas = [["Números", "Pieza", "Largo (mm)", "Ancho (mm)", "Grosor (mm)", "Cantidad", "Veta"].map(esc).join(",")]
-  for (const p of piezas) filas.push([p.numeros.join(" "), p.nombre, String(Math.round(p.largo)), String(Math.round(p.ancho)), String(p.grosor), String(p.cantidad), p.veta === "libre" ? "Sin veta" : p.veta === "largo" ? "A lo largo" : "Atravesada"].map(esc).join(","))
+  const filas = [["Números", "Pieza", "Material", "Largo (mm)", "Ancho (mm)", "Grosor (mm)", "Cantidad", "Veta", "Hojas"].map(esc).join(",")]
+  for (const p of piezas) filas.push([p.numeros.join(" "), p.nombre, p.material || "", String(Math.round(p.largo)), String(Math.round(p.ancho)), String(Math.round(p.grosor * 10) / 10), String(p.cantidad), p.veta === "libre" ? "Sin veta" : p.veta === "largo" ? "A lo largo" : "Atravesada", p.hojas || ""].map(esc).join(","))
   return filas.join("\n") + "\n"
 }
