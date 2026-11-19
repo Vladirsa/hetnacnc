@@ -5,6 +5,8 @@ import { useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
+import { procesoDe } from "@/lib/cotizador/revision-archivo"
+import { RevisionArchivo } from "./RevisionArchivo"
 
 import { cotizarLead, type CotizarLeadInput } from "@/lib/cotizar/acciones"
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
@@ -194,6 +196,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         {pieza?.geo.avisos.slice(0, 2).map((a) => (
           <span key={a} className="text-[12px] text-[#B34D07]">{a}</span>
         ))}
+        {pieza && <RevisionArchivo geo={pieza.geo} proceso={procesoDe(`${servicio} ${tituloServicio}`)} />}
         {avisoArchivo && <span className="text-[12.5px] text-[#B34D07]">{avisoArchivo}</span>}
       </div>
 

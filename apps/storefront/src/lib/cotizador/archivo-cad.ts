@@ -7,6 +7,8 @@
 // cerrados circulares, sin contar el exterior).
 // Todo en milímetros.
 
+import { analizar2d, contarOmitido, sinOmitidos, type DatosRevision, type Omitidos } from "./revision-archivo"
+
 export type Trazo = [number, number][]
 export type GeoCad = {
   tipo: "2d" | "3d"
@@ -19,6 +21,9 @@ export type GeoCad = {
   volumen_cm3: number
   trazos: Trazo[] // 2D: contornos; 3D: silueta vista de arriba (aristas del contorno)
   avisos: string[]
+  // 2D: revisión del archivo (contornos abiertos, duplicados, textos...),
+  // ver revision-archivo.ts
+  revision?: DatosRevision
   // 3D: los triángulos (x,y,z × 3) para el visor. Si la malla es enorme se
   // guarda una muestra (hasta MAX_TRIS_VISOR), suficiente para verla.
   malla?: Float32Array
@@ -97,8 +102,14 @@ function unirSegmentos(segs: Trazo[]): Trazo[] {
   return resultado
 }
 
-function resumen2d(trazos: Trazo[], avisos: string[]): GeoCad {
+function resumen2d(trazos: Trazo[], avisos: string[], omitidos: Omitidos = sinOmitidos()): GeoCad {
   trazos = trazos.filter((t) => t.length >= 2)
+  let revision: DatosRevision | undefined
+  try {
+    revision = analizar2d(trazos, omitidos)
+  } catch {
+    revision = undefined
+  }
   if (!trazos.length) throw new Error("No encontramos dibujo en el archivo.")
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
   for (const t of trazos)
@@ -134,6 +145,7 @@ function resumen2d(trazos: Trazo[], avisos: string[]): GeoCad {
     volumen_cm3: 0,
     trazos: decimar(trazos.map((t) => t.map(([x, y]) => [x - minX, y - minY] as [number, number]))),
     avisos,
+    revision,
   }
 }
 
@@ -210,6 +222,7 @@ export function leerDxf(texto: string): GeoCad {
   const lista = ini >= 0 ? pares.slice(ini + 1) : pares
   const sueltos: Trazo[] = []
   const trazos: Trazo[] = []
+  const omitidos = sinOmitidos()
   let i = 0
   const leerEntidad = () => {
     const tipo = lista[i][1]
@@ -301,10 +314,12 @@ export function leerDxf(texto: string): GeoCad {
       case "INSERT":
         if (!avisos.includes("El archivo usa bloques; puede que no contemos todo el dibujo.")) avisos.push("El archivo usa bloques; puede que no contemos todo el dibujo.")
         break
+      default:
+        contarOmitido(omitidos, tipo)
     }
   }
   const todos = trazos.concat(unirSegmentos(sueltos)).map((t) => t.map(([x, y]) => [x * escala, y * escala] as [number, number]))
-  return resumen2d(todos, avisos)
+  return resumen2d(todos, avisos, omitidos)
 }
 
 // ── SVG (con el navegador) ──────────────────────────────────────────────
@@ -359,7 +374,9 @@ export function leerSvg(texto: string): GeoCad {
       if (["rect", "circle", "ellipse", "polygon"].includes(tag) || /z\s*$/i.test(el.getAttribute("d") || "")) t[t.length - 1] = t[0]
       trazos.push(t)
     })
-    return resumen2d(trazos, avisos)
+    const omitidos = sinOmitidos()
+    omitidos.textos = svg.querySelectorAll("text").length
+    return resumen2d(trazos, avisos, omitidos)
   } finally {
     cont.remove()
   }

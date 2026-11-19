@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { redirect } from "next/navigation"
+import { permanentRedirect } from "next/navigation"
 
 import { CotizadorLandingEn, FAQ_EN, PRECIOS_USD_DEFAULT, type PreciosUsd } from "@/components/hetna/taller/CotizadorLandingEn"
 
@@ -52,7 +52,7 @@ async function preciosUsd(): Promise<PreciosUsd> {
 
 export default async function CotizadorEnPage({ params }: Props) {
   const { locale } = await params
-  if (locale !== "us") redirect(`/${locale}/servicios/cotizador-cnc`)
+  if (locale !== "us") permanentRedirect(`/${locale}/servicios/cotizador-cnc`)
   const precios = await preciosUsd()
 
   const jsonLd = [

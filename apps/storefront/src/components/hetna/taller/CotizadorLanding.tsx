@@ -8,6 +8,7 @@ import { APP_TALLER, NOTA_PLANES, PLANES_APP } from "@/lib/hetna/app-taller"
 import { trackLeadCotizador } from "@/lib/analytics/events"
 
 import { FranjaAyuda } from "../ServicioPagina"
+import { CalculadoraTiempo } from "./CalculadoraTiempo"
 import { CotizadorEmbebido } from "./CotizadorEmbebido"
 import { SoporteWhatsApp } from "./SoporteWhatsApp"
 
@@ -123,6 +124,8 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
       </section>
 
       <div className="px-4 lg:px-16 pb-12 flex flex-col gap-12">
+        <CalculadoraTiempo />
+
         {/* Cómo funciona */}
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
