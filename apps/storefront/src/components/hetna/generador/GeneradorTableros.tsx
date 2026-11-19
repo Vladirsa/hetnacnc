@@ -17,6 +17,7 @@ import type { Herramienta, Plano } from "@/lib/generador/ensamble"
 import { HOJAS_TABLERO, type Veta, acomodarEnTablero, listaCorteCSV } from "@/lib/generador/acomodoHojas"
 import { dibujo } from "@/lib/generador/geo2d"
 import { TABLEROS_INICIO, type Tablero, type TipoUnion, UNIONES } from "@/lib/generador/tableros"
+import { COCINA_INICIO, MODULOS, type Modulo, type TipoModulo, cocina, proponerModulos } from "@/lib/generador/cocina"
 import { GABINETE_INICIO, type OpcionesGabinete, type TipoGabinete, gabinete } from "@/lib/generador/gabinete"
 import { MATERIALES, PREDETERMINADO, ROLES, type Rol, type TableroC, type TipoComponente, agregarComponente, esEstructura, materialDe, muebleCompleto } from "@/lib/generador/componentes"
 import { cobrarDescargaMueble, disenarTablerosDesdeImagen } from "@/lib/muebles/acciones"
@@ -90,6 +91,15 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [material, setMaterial] = useState("melamina-blanca")
   const [patas, setPatas] = useState("0")
   const [cantoG, setCantoG] = useState(1)
+  // cocina completa en una pared
+  const [varios, setVarios] = useState(false)
+  const [pared, setPared] = useState("3000")
+  const [conColumna, setConColumna] = useState(true)
+  const [modulos, setModulos] = useState<Modulo[]>(() => proponerModulos(3000, true))
+  const [conAltos, setConAltos] = useState(true)
+  const [conCubierta, setConCubierta] = useState(true)
+  const [alturaAltos, setAlturaAltos] = useState(String(COCINA_INICIO.alturaAltos))
+  const sumaModulos = modulos.reduce((t, x) => t + (x.ancho || 0), 0)
   const [gab, setGab] = useState<Omit<OpcionesGabinete, "grosor" | "gFrente">>(GABINETE_INICIO.bajo)
   const [gabTxt, setGabTxt] = useState<Record<string, string>>({})
   const campoGab = (k: "ancho" | "alto" | "fondo" | "zoclo" | "zocloRemetido" | "repisas" | "cajones") => ({
@@ -110,6 +120,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
     union,
     material,
     patas: Math.max(0, numero(patas) || 0),
+    varios,
     ancho: numero(v.ancho) || undefined,
     fondo: numero(v.fondo) || undefined,
     alto: numero(v.alto) || undefined,
@@ -312,6 +323,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         setLectura({ texto: `${r.lectura.notas || "La imagen no parece un mueble de tablero."} ${r.cobrado === 0 ? "No se te cobró." : "No pudimos regresarte los créditos solos: escríbenos y te los devolvemos."}`, tipo: "aviso" })
       else {
         setTableros(r.lectura.tableros)
+        setVarios(false)
         setPasado([])
         setFuturo([])
         setSel(null)
@@ -361,6 +373,59 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         </span>
       </Seccion>
 
+      <Seccion titulo="Cocina completa en una pared">
+        <div className="grid grid-cols-2 gap-2">
+          <CampoNum etiqueta="Largo de la pared" valor={pared} cambiar={setPared} sufijo="mm" />
+          <CampoNum etiqueta="Altura de los altos" valor={alturaAltos} cambiar={setAlturaAltos} sufijo="mm" />
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-[#C9D2E0]">
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={conColumna} onChange={(e) => setConColumna(e.target.checked)} className="accent-[#C2560A]" /> Columna (alacena)</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={conAltos} onChange={(e) => setConAltos(e.target.checked)} className="accent-[#C2560A]" /> Gabinetes altos</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={conCubierta} onChange={(e) => setConCubierta(e.target.checked)} className="accent-[#C2560A]" /> Cubierta corrida</label>
+        </div>
+        <button type="button" onClick={() => setModulos(proponerModulos(numero(pared) || 3000, conColumna))} className="rounded-[8px] bg-[#1C2431] px-3 py-2 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+          Proponer módulos para {Math.round(numero(pared) || 0)} mm
+        </button>
+        <div className="flex flex-col gap-1.5">
+          {modulos.map((md, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-[12px]">
+              <span className="w-6 text-[#8A97AB]">M{i + 1}</span>
+              <select value={md.tipo} onChange={(e) => setModulos((ms) => ms.map((x, j) => (j === i ? { ...x, tipo: e.target.value as TipoModulo } : x)))} className="flex-1 rounded-[7px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" aria-label={`Tipo del módulo ${i + 1}`}>
+                {MODULOS.map((x) => (
+                  <option key={x.id} value={x.id}>{x.nombre}</option>
+                ))}
+              </select>
+              <input type="number" value={md.ancho} onChange={(e) => setModulos((ms) => ms.map((x, j) => (j === i ? { ...x, ancho: Number(e.target.value) || 0 } : x)))} className="w-20 rounded-[7px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-[12px] text-white" aria-label={`Ancho del módulo ${i + 1}`} />
+              <button type="button" onClick={() => setModulos((ms) => ms.filter((_, j) => j !== i))} className="px-1 text-[#F6B8AE]" aria-label={`Quitar módulo ${i + 1}`}>✕</button>
+            </div>
+          ))}
+          <div className="flex items-center justify-between text-[12px]">
+            <button type="button" onClick={() => setModulos((ms) => [...ms, { tipo: "puertas", ancho: 600 }])} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold text-[#C9D2E0] hover:bg-[#243045]">+ Módulo</button>
+            <span className={Math.abs(sumaModulos - (numero(pared) || 0)) > 1 ? "text-[#F6D58E]" : "text-[#8A97AB]"}>
+              Suma: {Math.round(sumaModulos)} mm{Math.abs(sumaModulos - (numero(pared) || 0)) > 1 ? ` (pared ${Math.round(numero(pared) || 0)})` : ""}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={!modulos.length}
+          onClick={() => {
+            const c = cocina({ ...COCINA_INICIO, modulos, grosor: opciones.grosor, conAltos, cubierta: conCubierta, alturaAltos: numero(alturaAltos) || COCINA_INICIO.alturaAltos })
+            aplicar(() => c.tableros, null)
+            setVarios(true)
+            setNombre(`Cocina de ${Math.round(c.largo)} mm`)
+            if (union === "espiga") setUnion("confirmat")
+            setPunto(null)
+            setAjustar((n) => n + 1)
+            setLectura(c.avisos.length ? { texto: c.avisos.join(" "), tipo: "aviso" } : null)
+          }}
+          className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50"
+        >
+          Crear cocina
+        </button>
+        <span className="text-[11.5px] text-[#8A97AB]">Cada módulo es un gabinete completo (zoclo, fondo en ranura, puertas o cajones); los altos van alineados arriba, contra la pared. Todo sale en una sola lista de corte, acomodo y lista de compra.</span>
+      </Seccion>
+
       <Seccion titulo="O arma un gabinete de cocina">
         <div className="grid grid-cols-3 gap-1.5">
           {([["bajo", "Bajo"], ["alto", "Alto (aéreo)"], ["columna", "Columna"]] as const).map(([t, n]) => (
@@ -406,6 +471,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
           onClick={() => {
             const g = gabinete({ ...gab, grosor: opciones.grosor, gFrente: opciones.grosor })
             aplicar(() => g.tableros, null)
+            setVarios(false)
             setNombre(`Gabinete ${gab.tipo === "bajo" ? "bajo" : gab.tipo === "alto" ? "alto" : "columna"} ${Math.round(gab.ancho)} mm`)
             // los gabinetes de cocina van con herraje: confirmat si estaba en caja y espiga
             if (union === "espiga") setUnion("confirmat")

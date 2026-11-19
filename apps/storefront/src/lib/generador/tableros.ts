@@ -56,6 +56,9 @@ export type OpcionesTableros = {
   holgura: number
   saliente: number // cuánto sobresalen las espigas pasadas (0 = al ras)
   herramienta: Herramienta
+  // varios muebles en un mismo diseño (una cocina): se conservan todos los grupos
+  // de tableros unidos entre sí, no sólo el más grande
+  varios?: boolean
 }
 
 export const TABLEROS_INICIO: Omit<OpcionesTableros, "ancho" | "fondo" | "alto"> = {
@@ -149,7 +152,8 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   // ---- 1. limpiar la lectura ----
   const nombres = new Map<string, number>()
   let cajas: Caja[] = []
-  for (const [origen, t] of tableros.slice(0, MAX_TABLEROS).entries()) {
+  const maxT = o0.varios ? 400 : MAX_TABLEROS
+  for (const [origen, t] of tableros.slice(0, maxT).entries()) {
     const vals = [t.x0, t.x1, t.y0, t.y1, t.z0, t.z1]
     if (!vals.every((v) => Number.isFinite(v))) continue
     const { lo, hi } = cajaDeTablero({ ...t, x0: acotar(t.x0, -5000, 5000), x1: acotar(t.x1, -5000, 5000), y0: acotar(t.y0, -5000, 5000), y1: acotar(t.y1, -5000, 5000), z0: acotar(t.z0, -5000, 5000), z1: acotar(t.z1, -5000, 5000) })
@@ -203,7 +207,7 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
       }
     if (!hecho) break
   }
-  if (tableros.length > MAX_TABLEROS) avisos.push(`Sólo se usaron los primeros ${MAX_TABLEROS} tableros.`)
+  if (tableros.length > maxT) avisos.push(`Sólo se usaron los primeros ${maxT} tableros.`)
   if (cajas.length < 2) return vacio("Hacen falta al menos dos tableros que se toquen.")
 
   const mn = [0, 1, 2].map((i) => Math.min(...cajas.map((c) => c.lo[i])))
@@ -272,7 +276,9 @@ function armar(tableros: Tablero[], o0: OpcionesTableros): MuebleTableros {
   for (const u of uniones) padre[raiz(u.q)] = raiz(u.p)
   const grupos = new Map<number, number[]>()
   cajas.forEach((_, i) => grupos.set(raiz(i), [...(grupos.get(raiz(i)) || []), i]))
-  const principal = [...grupos.values()].sort((a, b) => b.length - a.length)[0]
+  const principal = o0.varios
+    ? [...grupos.values()].filter((g) => g.length >= 2).flat().sort((a, b) => a - b)
+    : [...grupos.values()].sort((a, b) => b.length - a.length)[0] || []
   if (principal.length < 2) return { ...vacio("Los tableros no se tocan entre sí: no se puede armar el mueble. Revisa sus medidas."), original }
   let fuera: Caja[] = []
   if (principal.length < cajas.length) {
