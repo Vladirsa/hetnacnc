@@ -82,6 +82,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
   const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
   const [explotar, setExplotar] = useState(0)
   const [rayosX, setRayosX] = useState(false)
+  const [verCotas, setVerCotas] = useState(true)
   const [ajustar, setAjustar] = useState(0)
   const [pasado, setPasado] = useState<TableroC[][]>([])
   const [futuro, setFuturo] = useState<TableroC[][]>([])
@@ -665,6 +666,7 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
           seleccion={sel}
           explotar={explotar}
           rayosX={rayosX}
+          cotas={verCotas}
           editable
           ajustar={ajustar}
           punto={punto}
@@ -685,6 +687,9 @@ export function GeneradorTableros({ cabecera }: { cabecera?: React.ReactNode }) 
         </label>
         <button type="button" aria-pressed={rayosX} onClick={() => setRayosX((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${rayosX ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
           Rayos X
+        </button>
+        <button type="button" aria-pressed={verCotas} onClick={() => setVerCotas((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${verCotas ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
+          Cotas
         </button>
         <button type="button" onClick={() => setAjustar((n) => n + 1)} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]">
           Ajustar vista
