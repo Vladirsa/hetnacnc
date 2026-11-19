@@ -8,7 +8,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { servicioTalleres, motivoParaNoPublicar } from "../../../lib/alta-taller"
 import { servicioBlog } from "../../../lib/blog"
 import { ErrorArticulo, MAX_LETRAS, MAX_PENDIENTES, MIN_LETRAS, leerArticuloTaller, slugTaller } from "../../../lib/blog-instructores"
-import { type ResumenAutor, recalcularComisionAutor } from "../../../lib/comision-autores"
+import { type ResumenAutor, resumenComision } from "../../../lib/comision-autores"
 
 type Ctx = { seller_id?: string } | undefined
 export const sellerDe = (req: AuthenticatedMedusaRequest) =>
@@ -33,7 +33,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   })
   let comision: ResumenAutor | null = null
   try {
-    comision = await recalcularComisionAutor(req.scope, sellerId)
+    comision = await resumenComision(req.scope, sellerId)
   } catch (e) {
     req.scope.resolve("logger").warn(`[blog-taller] comisión ${sellerId}: ${(e as Error).message}`)
   }
@@ -59,8 +59,8 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       throw new ErrorArticulo(`Ya tienes ${pendientes.length} artículos esperando revisión. Cuando los revisemos podrás mandar más.`)
     }
     const [repetido] = await blog.listLearningArticles({ slug: slugTaller(d.title, false) }, { take: 1, withDeleted: true, select: ["id"] })
-    const articulo = await blog.createLearningArticles({
-      slug: slugTaller(d.title, Boolean(repetido)),
+    const crear = (slug: string) => blog.createLearningArticles({
+      slug,
       title: d.title,
       excerpt: d.excerpt,
       content_html: d.content_html,
@@ -74,6 +74,10 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       published_at: null,
       guia: false,
     } as any)
+    // si dos guardados con el mismo título chocan en el slug, otro con sufijo
+    const articulo = await crear(slugTaller(d.title, Boolean(repetido))).catch((e) =>
+      /unique|duplicate/i.test(String(e?.message)) ? crear(slugTaller(d.title, true)) : Promise.reject(e)
+    )
     res.status(201).json({ articulo: { id: (articulo as any).id, estado: "pendiente" } })
   } catch (e) {
     if (e instanceof ErrorArticulo) return res.status(400).json({ message: e.message })

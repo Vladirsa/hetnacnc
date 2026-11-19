@@ -53,6 +53,7 @@ const SECCIONES: [string, string][] = [
   ["controladores-electronica", "Controladores y electrónica"],
   ["materiales-herramientas", "Materiales y herramientas"],
   ["precios-negocio", "Precios y negocio"],
+  ["muestra-tu-trabajo", "Muestra tu trabajo"],
 ]
 const ESTADO: Record<Articulo["estado"], { texto: string; color: "orange" | "red" | "green" | "grey" }> = {
   pendiente: { texto: "En revisión", color: "orange" },

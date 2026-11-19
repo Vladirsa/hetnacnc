@@ -5,7 +5,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { MercurModules } from "@mercurjs/types"
 
 import { servicioBlog } from "../lib/blog"
-import { recalcularComisionAutor } from "../lib/comision-autores"
+import { recalcularComisionAutor, reglaCursos } from "../lib/comision-autores"
 
 export default async function comisionAutoresJob(container: MedusaContainer) {
   const logger = container.resolve("logger")
@@ -16,16 +16,16 @@ export default async function comisionAutoresJob(container: MedusaContainer) {
       ...conArticulos.map((a: any) => a.seller_id as string),
       ...reglas.map((r: any) => String(r.code).replace("autor-cursos-", "")),
     ])
+    const regla = await reglaCursos(container) // una vez para todos
     let cambios = 0
     for (const id of talleres) {
       try {
-        await recalcularComisionAutor(container, id)
-        cambios++
+        if ((await recalcularComisionAutor(container, id, regla)).cambio) cambios++
       } catch (e) {
         logger.warn(`[comision-autores] ${id}: ${(e as Error).message}`)
       }
     }
-    if (cambios) logger.info(`[comision-autores] ${cambios} instructores revisados`)
+    logger.info(`[comision-autores] ${talleres.size} instructores revisados, ${cambios} con comisión nueva`)
   } catch (e) {
     logger.error(`[comision-autores] ${(e as Error).message}`)
   }

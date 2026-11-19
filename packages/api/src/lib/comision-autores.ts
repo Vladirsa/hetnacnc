@@ -15,6 +15,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { MercurModules } from "@mercurjs/types"
 
+import { servicioTalleres } from "./alta-taller"
 import { servicioBlog } from "./blog"
 
 export type Escalon = { articulos: number; pct: number }
@@ -61,8 +62,10 @@ export async function articulosVigentes(c: MedusaContainer, sellerId: string, ah
   return lista as { id: string; aprobado_at: Date }[]
 }
 
+export type ReglaCursos = { pct: number; categorias: string[] }
+
 /** La regla normal de cursos: % y categorías a las que aplica. */
-async function reglaCursos(c: MedusaContainer): Promise<{ pct: number; categorias: string[] } | null> {
+export async function reglaCursos(c: MedusaContainer): Promise<ReglaCursos | null> {
   const [r] = await comisiones(c).listCommissionRates({ code: "cursos" }, { relations: ["rules"] })
   if (!r || r.is_enabled === false) return null
   const categorias = (r.rules || []).filter((x: any) => x.reference === "product_category").map((x: any) => x.reference_id)
@@ -79,30 +82,54 @@ export type ResumenAutor = {
   vence: string | null // cuándo deja de contar el artículo más viejo
 }
 
+/** Sólo calcula (no escribe): lo que paga hoy el taller y por qué. */
+export async function resumenComision(c: MedusaContainer, sellerId: string, regla?: ReglaCursos | null): Promise<ResumenAutor> {
+  const lista = escalones()
+  const dias = diasVigencia()
+  // Una tienda suspendida o cerrada no conserva el descuento.
+  const taller = await servicioTalleres(c).retrieveSeller(sellerId).catch(() => null)
+  const bloqueado = !taller || ["suspended", "terminated"].includes(String((taller as any).status))
+  const vigentes = bloqueado ? [] : await articulosVigentes(c, sellerId)
+  const n = vigentes.length
+  const resumen: ResumenAutor = { base: null, actual: null, articulos: n, dias, escalones: lista, siguiente: null, vence: null }
+  const r = regla === undefined ? await reglaCursos(c) : regla
+  if (!r) return resumen
+  resumen.base = r.pct
+  resumen.actual = comisionPara(n, r.pct, lista)
+  resumen.siguiente = siguienteEscalon(n, r.pct, lista)
+  if (vigentes[0]) resumen.vence = new Date(new Date(vigentes[0].aprobado_at).getTime() + dias * 86_400_000).toISOString()
+  return resumen
+}
+
 /**
  * Recalcula y guarda la comisión de cursos del taller. Se llama al aprobar,
  * rechazar, despublicar, editar o borrar uno de sus artículos, y cada día
- * (para que caduquen los artículos viejos). Nunca lanza: si algo falla, el
- * taller conserva la comisión que tenía.
+ * (para que caduquen los artículos viejos). `regla` se puede pasar para no
+ * leerla de nuevo (el job). Devuelve true si cambió algo.
  */
-export async function recalcularComisionAutor(c: MedusaContainer, sellerId: string): Promise<ResumenAutor> {
-  const lista = escalones()
-  const dias = diasVigencia()
-  const vigentes = await articulosVigentes(c, sellerId)
-  const n = vigentes.length
-  const resumen: ResumenAutor = { base: null, actual: null, articulos: n, dias, escalones: lista, siguiente: null, vence: null }
-  const regla = await reglaCursos(c)
-  if (!regla) return resumen
-  const pct = comisionPara(n, regla.pct, lista)
-  resumen.base = regla.pct
-  resumen.actual = pct
-  resumen.siguiente = siguienteEscalon(n, regla.pct, lista)
-  if (vigentes[0]) resumen.vence = new Date(new Date(vigentes[0].aprobado_at).getTime() + dias * 86_400_000).toISOString()
-
+export async function recalcularComisionAutor(c: MedusaContainer, sellerId: string, regla?: ReglaCursos | null): Promise<ResumenAutor & { cambio: boolean }> {
+  const r = regla === undefined ? await reglaCursos(c) : regla
+  const resumen = await resumenComision(c, sellerId, r)
   const svc = comisiones(c)
   const codigo = codigoAutor(sellerId)
-  const [existe] = await svc.listCommissionRates({ code: codigo })
-  if (pct < regla.pct) {
+  const [existe] = await svc.listCommissionRates({ code: codigo }, { relations: ["rules"] })
+  // Sin regla normal de cursos (se desactivó o borró) tampoco hay descuento.
+  if (!r || resumen.actual === null) {
+    if (existe && existe.is_enabled !== false) {
+      await svc.updateCommissionRates({ id: existe.id, is_enabled: false })
+      return { ...resumen, cambio: true }
+    }
+    return { ...resumen, cambio: false }
+  }
+  if (existe) {
+    const actuales = (existe.rules || []).filter((x: any) => x.reference === "product_category").map((x: any) => x.reference_id).sort().join()
+    if (actuales !== [...r.categorias].sort().join()) {
+      c.resolve("logger").warn(`[comision-autores] ${codigo}: las categorías de Cursos cambiaron; revisa esa regla en el dashboard de comisiones.`)
+    }
+  }
+  const pct = resumen.actual
+  let cambio = false
+  if (pct < r.pct) {
     if (!existe) {
       await svc.createCommissionRates({
         name: `Cursos: instructor con artículos en el blog (${sellerId})`,
@@ -114,24 +141,28 @@ export async function recalcularComisionAutor(c: MedusaContainer, sellerId: stri
         include_shipping: false,
         rules: [
           { reference: "seller", reference_id: sellerId },
-          ...regla.categorias.map((id) => ({ reference: "product_category", reference_id: id })),
+          ...r.categorias.map((id) => ({ reference: "product_category", reference_id: id })),
         ],
       })
+      cambio = true
     } else if (Number(existe.value) !== pct || existe.is_enabled === false) {
       await svc.updateCommissionRates({ id: existe.id, value: pct, is_enabled: true })
+      cambio = true
     }
   } else if (existe && existe.is_enabled !== false) {
     await svc.updateCommissionRates({ id: existe.id, is_enabled: false })
+    cambio = true
   }
-  return resumen
+  return { ...resumen, cambio }
 }
 
-/** Igual, pero sin romper la petición que la llamó (aprobar, borrar…). */
-export async function recalcularSinFallar(c: MedusaContainer, sellerId: string | null | undefined) {
-  if (!sellerId) return
+/** Igual, pero sin romper la petición que la llamó (aprobar, borrar…). null si falló. */
+export async function recalcularSinFallar(c: MedusaContainer, sellerId: string | null | undefined): Promise<ResumenAutor | null> {
+  if (!sellerId) return null
   try {
-    await recalcularComisionAutor(c, sellerId)
+    return await recalcularComisionAutor(c, sellerId)
   } catch (e) {
     c.resolve("logger").error(`[comision-autores] ${sellerId}: ${(e as Error).message}`)
+    return null
   }
 }

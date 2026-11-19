@@ -7,7 +7,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 
 import { servicioTalleres } from "../../../../../lib/alta-taller"
 import { servicioBlog } from "../../../../../lib/blog"
-import { recalcularComisionAutor, type ResumenAutor } from "../../../../../lib/comision-autores"
+import { recalcularSinFallar, type ResumenAutor } from "../../../../../lib/comision-autores"
 import { VENDOR_URL, boton, esc, marco } from "../../../../../lib/licitacion"
 import { sendEmail } from "../../../../../lib/resend"
 
@@ -43,7 +43,11 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const [a] = (await blog.listLearningArticles({ id }, { take: 1 })) as any[]
   if (!a) return res.status(404).json({ message: "Artículo no encontrado." })
   if (!a.seller_id) return res.status(400).json({ message: "Este artículo no es de un instructor." })
-  const b = (req.body || {}) as { accion?: string; motivo?: string }
+  const b = (req.body || {}) as { accion?: string; motivo?: string; leido_at?: string }
+  // Se aprueba lo que el administrador leyó: si el taller lo cambió después, 409.
+  if (b.accion === "aprobar" && b.leido_at && new Date(a.updated_at).getTime() !== new Date(b.leido_at).getTime()) {
+    return res.status(409).json({ message: "El instructor cambió el artículo mientras lo leías. Recarga la página y vuelve a leerlo antes de aprobarlo." })
+  }
   const motivo = typeof b.motivo === "string" ? b.motivo.trim().slice(0, 1000) : ""
   if (b.accion === "aprobar") {
     await blog.updateLearningArticles({
@@ -59,12 +63,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   } else {
     return res.status(400).json({ message: "Acción no válida." })
   }
-  let comision: ResumenAutor | null = null
-  try {
-    comision = await recalcularComisionAutor(req.scope, a.seller_id)
-  } catch (e) {
-    req.scope.resolve("logger").error(`[blog-revision] comisión ${a.seller_id}: ${(e as Error).message}`)
-  }
+  const comision = await recalcularSinFallar(req.scope, a.seller_id)
   await avisar(req.scope, a.seller_id, a.title, b.accion === "aprobar", motivo, a.slug, comision).catch(() => undefined)
   res.json({ ok: true, comision })
 }

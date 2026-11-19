@@ -17,6 +17,12 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const id = String(req.params.id)
   const [actual] = await blog.listLearningArticles({ id }, { take: 1 })
   if (!actual) return res.status(404).json({ message: "Artículo no encontrado." })
+  // Artículos de instructores: el contenido lo edita el taller (desde su texto
+  // simple) y se aprueban o rechazan sólo en /revision (con correo y recálculo
+  // de su comisión). Así lo publicado es siempre lo que se aprobó.
+  if ((actual as any).seller_id) {
+    return res.status(400).json({ message: "Este artículo es de un instructor: apruébalo o recházalo desde Por revisar. El contenido lo corrige el instructor." })
+  }
   const b = (req.body || {}) as Record<string, unknown>
   const { datos, error } = leerArticulo(b, true)
   if (error || !datos) return res.status(400).json({ message: error })
@@ -26,12 +32,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
     const [otro] = await blog.listLearningArticles({ slug: datos.slug as string }, { take: 1 })
     if (otro) return res.status(409).json({ message: "Ya hay otro artículo con ese slug." })
   }
-  // Artículo de instructor: publicarlo desde el editor equivale a aprobarlo;
-  // despublicarlo le quita el descuento. En ambos casos se recalcula su comisión.
-  const deTaller = (actual as any).seller_id as string | null
-  if (deTaller && datos.published_at) Object.assign(datos, { revision: null, motivo_revision: null, aprobado_at: (actual as any).aprobado_at || new Date() })
   const articulo = await blog.updateLearningArticles({ id, ...datos } as any)
-  await recalcularSinFallar(req.scope, deTaller)
   res.json({ articulo })
 }
 

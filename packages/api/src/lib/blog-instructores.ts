@@ -5,6 +5,10 @@
 // convierte a HTML escapando todo. Las ligas salen con rel="nofollow ugc".
 // Cada artículo nuevo o editado queda "pendiente" y no se ve hasta que HETNA
 // lo aprueba en el dashboard (Blog › Por revisar).
+//
+// El dashboard tiene su propio convertidor (apps/admin/src/routes/blog/page.tsx,
+// textoAHtml) para los artículos de HETNA: es más permisivo (ligas relativas,
+// sin nofollow) porque lo usa el administrador. Éste es el de los talleres.
 import { CATEGORIAS_BLOG, slugDe } from "./blog"
 
 export const MIN_LETRAS = 1500 // ~250 palabras: un artículo, no un anuncio
@@ -15,6 +19,26 @@ export class ErrorArticulo extends Error {}
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;")
+
+// Fotos sólo de nuestro almacenamiento (lo que devuelve /vendor/uploads): una
+// imagen de otro dominio serviría para rastrear la IP de cada lector.
+export const DOMINIOS_FOTOS = [
+  "hetnacnc.com",
+  "www.hetnacnc.com",
+  "hetnacnc.s3.us-west-004.backblazeb2.com",
+  ...(() => {
+    try {
+      return process.env.FILE_BACKEND_URL ? [new URL(process.env.FILE_BACKEND_URL).hostname] : []
+    } catch {
+      return []
+    }
+  })(),
+  ...String(process.env.BLOG_FOTOS_DOMINIOS || "").split(",").map((d) => d.trim().toLowerCase()).filter(Boolean),
+]
+const fotoPropia = (u: string) => {
+  const x = ligaSegura(u, true)
+  return x && DOMINIOS_FOTOS.includes(new URL(x).hostname.toLowerCase()) ? x : null
+}
 
 const ligaSegura = (u: string, soloHttps = false) => {
   try {
@@ -57,7 +81,7 @@ export function textoAHtmlSeguro(texto: string): string {
       if (una && /^##?\s/.test(una)) return `<h2>${enLinea(una.replace(/^##?\s+/, ""))}</h2>`
       const img = una?.match(/^!\[([^\]]{0,200})\]\((\S{1,500})\)$/)
       if (img) {
-        const u = ligaSegura(img[2], true)
+        const u = fotoPropia(img[2])
         return u ? `<p><img src="${esc(u)}" alt="${esc(img[1])}" loading="lazy" /></p>` : `<p>${enLinea(una!)}</p>`
       }
       if (lineas.every((l) => /^\s*[-*]\s/.test(l))) return `<ul>${lineas.map((l) => `<li>${enLinea(l.replace(/^\s*[-*]\s+/, ""))}</li>`).join("")}</ul>`
@@ -88,8 +112,8 @@ export function leerArticuloTaller(b: Record<string, unknown>): ArticuloTaller {
   if (texto.length > MAX_LETRAS) throw new ErrorArticulo(`El artículo es muy largo (máximo ${MAX_LETRAS} letras). Divídelo en dos.`)
   const c = limpio(b.categoria, 40)
   const portada = limpio(b.portada_url, 600)
-  const cover = portada ? ligaSegura(portada, true) : null
-  if (portada && !cover) throw new ErrorArticulo("La portada debe ser una imagen con liga https://")
+  const cover = portada ? fotoPropia(portada) : null
+  if (portada && !cover) throw new ErrorArticulo("Sube la portada desde el panel (no se aceptan ligas de otros sitios).")
   const resumen = limpio(b.resumen, 300)
   const sinFormato = texto.replace(/[#*![\]()>-]/g, " ").replace(/\s+/g, " ").trim()
   return {
@@ -103,5 +127,7 @@ export function leerArticuloTaller(b: Record<string, unknown>): ArticuloTaller {
 }
 
 /** Slug libre: el título y, si ya existe, un sufijo corto. */
-export const slugTaller = (titulo: string, existe: boolean) =>
-  existe ? `${slugDe(titulo).slice(0, 80)}-${Date.now().toString(36).slice(-5)}` : slugDe(titulo)
+export const slugTaller = (titulo: string, existe: boolean) => {
+  const base = slugDe(titulo) || "articulo"
+  return existe || base === "articulo" ? `${base.slice(0, 80)}-${Date.now().toString(36).slice(-5)}${Math.random().toString(36).slice(2, 5)}` : base
+}

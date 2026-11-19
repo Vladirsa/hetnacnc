@@ -23,7 +23,8 @@ describe("artículos de instructores: HTML seguro", () => {
 
   it("imágenes sólo https; títulos, listas y negritas", () => {
     expect(textoAHtmlSeguro("![foto](http://e.com/a.jpg)")).not.toContain("<img")
-    expect(textoAHtmlSeguro("![foto](https://e.com/a.jpg)")).toContain('<img src="https://e.com/a.jpg" alt="foto" loading="lazy" />')
+    expect(textoAHtmlSeguro("![foto](https://e.com/a.jpg)")).not.toContain("<img") // dominio ajeno: serviría para rastrear lectores
+    expect(textoAHtmlSeguro("![foto](https://hetnacnc.com/static/a.jpg)")).toContain('<img src="https://hetnacnc.com/static/a.jpg" alt="foto" loading="lazy" />')
     expect(textoAHtmlSeguro("## Hola **mundo**")).toBe("<h2>Hola <strong>mundo</strong></h2>")
     expect(textoAHtmlSeguro("- uno\n- dos")).toBe("<ul><li>uno</li><li>dos</li></ul>")
   })
@@ -31,7 +32,7 @@ describe("artículos de instructores: HTML seguro", () => {
   it("valida largo, título y portada", () => {
     expect(() => leerArticuloTaller({ titulo: "Corto", texto: largo() })).toThrow(ErrorArticulo)
     expect(() => leerArticuloTaller({ titulo: "Un título suficiente", texto: "poco" })).toThrow(/corto/)
-    expect(() => leerArticuloTaller({ titulo: "Un título suficiente", texto: largo(), portada_url: "http://e.com/a.jpg" })).toThrow(/https/)
+    expect(() => leerArticuloTaller({ titulo: "Un título suficiente", texto: largo(), portada_url: "https://otro-sitio.com/a.jpg" })).toThrow(/portada/)
     const a = leerArticuloTaller({ titulo: "Cómo fresar aluminio sin romper fresas", texto: largo("## Intro"), categoria: "router-cnc" })
     expect(a.categoria).toBe("router-cnc")
     expect(a.content_html.startsWith("<h2>Intro</h2>")).toBe(true)
@@ -59,5 +60,14 @@ describe("comisión de instructores con artículos", () => {
     expect(siguienteEscalon(0, 5)).toEqual({ articulos: 1, pct: 4 })
     expect(siguienteEscalon(1, 5)).toEqual({ articulos: 2, pct: 3 })
     expect(siguienteEscalon(2, 5)).toBeNull()
+  })
+})
+
+describe("slug de artículos de taller", () => {
+  it("nunca queda vacío", () => {
+    const { slugTaller } = require("../blog-instructores")
+    expect(slugTaller("¿¿¿¿¿¿¿¿¿¿", false)).toMatch(/^articulo-[a-z0-9]+$/)
+    expect(slugTaller("Fresado de aluminio", false)).toBe("fresado-de-aluminio")
+    expect(slugTaller("Fresado de aluminio", true)).toMatch(/^fresado-de-aluminio-[a-z0-9]+$/)
   })
 })

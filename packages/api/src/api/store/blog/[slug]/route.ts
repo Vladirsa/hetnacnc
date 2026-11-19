@@ -4,19 +4,19 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { servicioBlog } from "../../../../lib/blog"
 import { CAMPOS_LISTA } from "../route"
 
+// Lista blanca: los campos internos (revisión de instructores, etc.) nunca salen.
+const CAMPOS_DETALLE = [...CAMPOS_LISTA, "content_html", "seo_title", "seo_description", "updated_at"]
+
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const blog = servicioBlog(req.scope)
   const [articulo] = await blog.listLearningArticles(
     { slug: String(req.params.slug), published_at: { $ne: null } },
-    { take: 1 }
+    { take: 1, select: CAMPOS_DETALLE }
   )
   if (!articulo) return res.status(404).json({ message: "Artículo no encontrado." })
-  // Campos internos de la revisión de instructores: no salen al público.
-  const { revision, motivo_revision, texto_original, aprobado_at, seller_id, ...publico } = articulo as any
-  void revision; void motivo_revision; void texto_original; void aprobado_at; void seller_id
   const relacionados = await blog.listLearningArticles(
     { published_at: { $ne: null }, id: { $ne: articulo.id }, ...(articulo.categoria ? { categoria: articulo.categoria } : {}) },
     { take: 4, order: { published_at: "DESC" }, select: CAMPOS_LISTA }
   )
-  res.json({ articulo: publico, relacionados })
+  res.json({ articulo, relacionados })
 }

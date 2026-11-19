@@ -4,7 +4,8 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { servicioBlog } from "../../../../lib/blog"
-import { ErrorArticulo, leerArticuloTaller } from "../../../../lib/blog-instructores"
+import { motivoParaNoPublicar, servicioTalleres } from "../../../../lib/alta-taller"
+import { ErrorArticulo, MAX_PENDIENTES, leerArticuloTaller } from "../../../../lib/blog-instructores"
 import { recalcularSinFallar } from "../../../../lib/comision-autores"
 import { sellerDe } from "../route"
 
@@ -19,8 +20,15 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const { sellerId, articulo } = await propio(req)
   if (!sellerId) return res.status(401).json({ message: "Vuelve a iniciar sesión." })
   if (!articulo) return res.status(404).json({ message: "Artículo no encontrado." })
+  const taller = await servicioTalleres(req.scope).retrieveSeller(sellerId).catch(() => null)
+  const bloqueo = taller ? motivoParaNoPublicar(taller as any) : "Vuelve a iniciar sesión."
+  if (bloqueo) return res.status(403).json({ message: bloqueo })
   try {
     const d = leerArticuloTaller((req.body || {}) as Record<string, unknown>)
+    if ((articulo as any).revision !== "pendiente") {
+      const pendientes = await servicioBlog(req.scope).listLearningArticles({ seller_id: sellerId, revision: "pendiente" } as any, { take: MAX_PENDIENTES, select: ["id"] })
+      if (pendientes.length >= MAX_PENDIENTES) throw new ErrorArticulo(`Ya tienes ${pendientes.length} artículos esperando revisión. Cuando los revisemos podrás mandar más cambios.`)
+    }
     // Lo que se ve en el sitio debe ser lo que HETNA aprobó: al editar se
     // oculta y vuelve a revisión. La dirección (slug) no cambia.
     await servicioBlog(req.scope).updateLearningArticles({
