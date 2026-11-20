@@ -933,6 +933,7 @@ export type Routes = {
         solicitudArchivos: typeof import("../src/api/store/solicitud-archivos/route") & {
             boleto: typeof import("../src/api/store/solicitud-archivos/boleto/route");
         };
+        solicitudFoto: typeof import("../src/api/store/solicitud-foto/route");
         solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
             $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
                 acceso: typeof import("../src/api/store/solicitudes-taller/[token]/acceso/route");
@@ -1460,6 +1461,7 @@ export type Routes = {
             $slug: typeof import("../src/api/api/taller-publico/[slug]/route") & {
                 estimar: typeof import("../src/api/api/taller-publico/[slug]/estimar/route");
                 solicitar: typeof import("../src/api/api/taller-publico/[slug]/solicitar/route");
+                visita: typeof import("../src/api/api/taller-publico/[slug]/visita/route");
             };
         };
         tarjetaPaypal: typeof import("../src/api/api/tarjeta-paypal/route");

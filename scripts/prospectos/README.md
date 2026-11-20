@@ -217,3 +217,41 @@ Si regeneras el flujo de la campaña con `generar_flujo.py`, vuelve a agregar en
   anota en `notas` ("Opinión AAAA-MM-DD: …"), "No me interesa" da de baja, "Ahorita no tengo tiempo" pospone
   60 días y "No entiendo cómo funciona" / "No conozco la plataforma" llegan por Telegram con 🔥 para escribirles.
 
+
+## Agente «Cazador de solicitudes»
+
+Busca en la web pública (última semana) gente y empresas de México que **piden**
+un servicio CNC («busco quien me corte…», «se solicita proveedor de maquinados»,
+licitaciones) y las manda al flujo de n8n «Agente HETNA - Cazador de solicitudes»
+(webhook `hetna-cazador`).
+
+- La IA (la misma llave de Groq) descarta talleres que ofrecen, anuncios,
+  tutoriales y bolsas de trabajo; sólo pasa solicitudes reales (calificación 3/5 o más).
+- **Empresas con correo público en esa página** → entran a la hoja como «Cliente
+  comprador», segmento `solicitud`: la campaña les manda primero (antes que los
+  demás) un correo que habla de lo que pidieron, con la cotización ya llena y liga de baja.
+- **Personas** → no se les escribe en frío: te llega a Telegram la publicación,
+  la respuesta lista para pegar y la liga a /cotizar ya llena (`utm_source=cazador`).
+
+Instalar en el servidor (una vez), corre cada día a las 7:40:
+
+```bash
+( crontab -l 2>/dev/null | grep -v correr_cazador.sh ; echo "40 7 * * * $HOME/hetnacnc/scripts/prospectos/correr_cazador.sh" ) | crontab -
+```
+
+Probar sin mandar nada: `.venv/bin/python cazar_solicitudes.py --probar --tanda 3`
+
+## Agente «Monitor de precios de materiales»
+
+Cada lunes mide el precio público (páginas de producto de tiendas y distribuidores
+de México) de MDF 3/6/9/15/18 mm, triplay, acrílico 3/6 mm, lámina negra cal. 14,
+galvanizada cal. 18, inoxidable cal. 18, aluminio 1/8" y filamento PLA. Saca la
+mediana, mínimo y máximo y lo manda al flujo «Agente HETNA - Monitor de precios de
+materiales» (webhook `hetna-precios`), que guarda el historial en la tabla
+`precios_materiales` de n8n y te manda a Telegram los cambios de 5% o más.
+
+```bash
+( crontab -l 2>/dev/null | grep -v correr_precios.sh ; echo "50 6 * * 1 $HOME/hetnacnc/scripts/prospectos/correr_precios.sh" ) | crontab -
+```
+
+Probar un material: `.venv/bin/python precios_materiales.py --probar --solo mdf_15`

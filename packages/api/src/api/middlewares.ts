@@ -76,6 +76,8 @@ export default defineMiddlewares({
         { matcher: "/api/cotizacion-liga/*", middlewares: [limitarLiga] },
         // Respuesta rápida a grupos de Facebook: puede traer la captura de la publicación
         { method: ["POST"], matcher: "/admin/hetna-grupos", bodyParser: { sizeLimit: "8mb" } },
+        // Solicitud desde foto (la imagen viaja en base64 dentro del JSON)
+        { method: ["POST"], matcher: "/store/solicitud-foto", bodyParser: { sizeLimit: "8mb" } },
         {
             matcher: "/api/auth/*",
             middlewares: [],

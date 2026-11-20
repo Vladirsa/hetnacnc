@@ -402,8 +402,9 @@ export async function solicitar(slug: string, campos: Record<string, any>, archi
   // Revisión automática del archivo hecha en el navegador del cliente
   // (contornos abiertos, duplicados, textos...): el taller la ve en las notas.
   const revision = String(campos.revision || "").replace(/[\u0000-\u001f]/g, " ").slice(0, 600).trim()
+  const desdeWidget = String(campos.origen || "") === "widget"
   const notas =
-    `🌐 Solicitud desde tu cotizador en línea.\n` +
+    (desdeWidget ? `🌐 Solicitud desde el cotizador en tu página web (widget HETNA).\n` : `🌐 Solicitud desde tu cotizador en línea.\n`) +
     (revision ? `📐 Revisión del archivo: ${revision}\n` : "") +
     (estimado ? `Precio estimado automático: ${dinero(estimado, moneda)} + IVA (revísalo antes de mandarla).\n` : "Sin precio automático: pon tú el precio.\n") +
     (d.mensaje ? `Mensaje del cliente: ${d.mensaje}` : "")
@@ -529,6 +530,7 @@ export async function paginaDelTaller(sesion: string | undefined) {
     serviciosDe(negocio.id),
   ])
   return {
+    negocio_id: negocio.id, // sólo para las estadísticas; la ruta lo quita antes de responder
     tabla_lista: pagina !== null,
     slug: n.slug || "",
     url: n.slug ? `${SITIO}/t/${n.slug}` : null,

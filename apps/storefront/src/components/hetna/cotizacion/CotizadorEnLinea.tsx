@@ -62,7 +62,10 @@ function VistaPrevia({ geo }: { geo: GeoCad }) {
   )
 }
 
-export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
+// widget: versión que el taller pega en su página web o Facebook
+// (/embed/t/<slug>): las ligas abren en otra pestaña y la solicitud llega
+// marcada "desde tu página web".
+export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPublico; widget?: boolean }) {
   const [archivo, setArchivo] = useState<File | null>(null)
   const [geo, setGeo] = useState<GeoCad | null>(null)
   const [leyendo, setLeyendo] = useState(false)
@@ -78,6 +81,22 @@ export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
   const [error, setError] = useState("")
   const [listo, setListo] = useState("")
   const entrada = useRef<HTMLInputElement>(null)
+
+  // Visita para las estadísticas del taller (una por sesión del navegador)
+  useEffect(() => {
+    const origen = widget ? "widget" : "pagina"
+    const llave = `hetna_visita_${origen}_${taller.slug}`
+    try {
+      if (sessionStorage.getItem(llave)) return
+      sessionStorage.setItem(llave, "1")
+    } catch {}
+    fetch(`/api/taller-publico/${taller.slug}/visita`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ origen }),
+      keepalive: true,
+    }).catch(() => {})
+  }, [taller.slug, widget])
 
   const aceptar = taller.extensiones.map((e) => `.${e}`).join(",")
 
@@ -172,6 +191,7 @@ export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
       if (servicio) fd.append("servicio_id", servicio.id)
       if (tipo) fd.append("tipo_id", tipo.id)
       fd.append("medidas", JSON.stringify(medidas))
+      if (widget) fd.append("origen", "widget")
       if (geo) fd.append("revision", resumenRevision(puntosRevision(geo, { proceso: procesoDe(servicio?.nombre) })))
       if (archivo) fd.append("archivo", archivo)
       const r = await fetch(`/api/taller-publico/${taller.slug}/solicitar`, { method: "POST", body: fd })
@@ -478,19 +498,28 @@ export function CotizadorEnLinea({ taller }: { taller: TallerPublico }) {
         </button>
         <p className="m-0 mt-2 text-[12px] text-[#7A776E]">
           Tus datos y tu archivo los recibe sólo {taller.nombre} para cotizarte. Consulta el{" "}
-          <a href="/aviso-de-privacidad" className="underline">
+          <a href="/aviso-de-privacidad" target={widget ? "_blank" : undefined} rel={widget ? "noopener" : undefined} className="underline">
             aviso de privacidad
           </a>
           .
         </p>
       </Paso>
 
-      <p className="m-0 text-center text-[12px] text-[#7A776E]">
-        <a href="/t" className="underline">Más talleres que cotizan en línea</a> ·{" "}
-        <a href="/servicios/cotizador-cnc" className="underline">
-          ¿Tienes taller? Ten tu cotizador gratis
-        </a>
-      </p>
+      {widget ? (
+        <p className="m-0 text-center text-[12px] text-[#7A776E]">
+          Cotizador de {taller.nombre} ·{" "}
+          <a href="https://hetnacnc.com/mx/servicios/cotizador-cnc?utm_source=widget&utm_medium=referral" target="_blank" rel="noopener" className="underline">
+            hecho con HETNA CNC
+          </a>
+        </p>
+      ) : (
+        <p className="m-0 text-center text-[12px] text-[#7A776E]">
+          <a href="/t" className="underline">Más talleres que cotizan en línea</a> ·{" "}
+          <a href="/servicios/cotizador-cnc" className="underline">
+            ¿Tienes taller? Ten tu cotizador gratis
+          </a>
+        </p>
+      )}
     </form>
   )
 }
