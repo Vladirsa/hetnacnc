@@ -12,7 +12,7 @@ export type MaquinaCam = {
   id: string
   nombre: string
   tipo: "router" | "laser"
-  post: "mach3" | "grbl" | "linuxcnc" | "laser_grbl"
+  post: "mach3" | "grbl" | "linuxcnc" | "laser_grbl" | "ncstudio" | "richauto" | "syntec"
   tarifa: number // MXN por hora de máquina
   smax: number // S máximo del láser (GRBL: 1000)
 }
@@ -50,7 +50,7 @@ export type FresaCam = {
 export type DatosCam = { maquinas: MaquinaCam[]; fresas: FresaCam[] }
 
 const LLAVE = "cam_estudio"
-const POSTS = ["mach3", "grbl", "linuxcnc", "laser_grbl"]
+const POSTS = ["mach3", "grbl", "linuxcnc", "laser_grbl", "ncstudio", "richauto", "syntec"]
 const TIPOS_FRESA = ["recta", "upcut", "downcut", "compresion", "un_filo", "bola", "v", "planeadora", "desbaste", "toroidal", "conica_bola", "broca"]
 const MATERIALES_FRESA = ["carburo", "carburo_rec", "hss"]
 

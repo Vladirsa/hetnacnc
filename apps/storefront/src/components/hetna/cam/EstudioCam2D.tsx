@@ -41,13 +41,19 @@ const MAQUINAS_BASE: MaquinaCam[] = [
   { id: "base-mach3", nombre: "Router · Mach3", tipo: "router", post: "mach3", tarifa: 300, smax: 1000 },
   { id: "base-grbl", nombre: "Router · GRBL", tipo: "router", post: "grbl", tarifa: 250, smax: 1000 },
   { id: "base-linuxcnc", nombre: "Router · LinuxCNC", tipo: "router", post: "linuxcnc", tarifa: 300, smax: 1000 },
+  { id: "base-ncstudio", nombre: "Router · NcStudio (Weihong)", tipo: "router", post: "ncstudio", tarifa: 300, smax: 1000 },
+  { id: "base-richauto", nombre: "Router · Richauto DSP", tipo: "router", post: "richauto", tarifa: 300, smax: 1000 },
+  { id: "base-syntec", nombre: "Router · Syntec", tipo: "router", post: "syntec", tarifa: 300, smax: 1000 },
   { id: "base-laser", nombre: "Láser · GRBL", tipo: "laser", post: "laser_grbl", tarifa: 200, smax: 1000 },
 ]
-const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc" }
+const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc", ncstudio: "nc", richauto: "nc", syntec: "nc" }
 const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "mach3", nombre: "Mach3" },
   { id: "grbl", nombre: "GRBL" },
   { id: "linuxcnc", nombre: "LinuxCNC" },
+  { id: "ncstudio", nombre: "NcStudio (Weihong)" },
+  { id: "richauto", nombre: "Richauto DSP (A11/A18)" },
+  { id: "syntec", nombre: "Syntec" },
   { id: "laser_grbl", nombre: "Láser GRBL" },
 ]
 
@@ -107,9 +113,12 @@ type Op = {
   paso: string
   roscaIzq: boolean
   roscaExt: boolean
+  // esquinas interiores que la fresa no alcanza: sin alivio, cabeza de fémur o en T
+  alivio?: "ninguno" | "hueso" | "t"
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
+const CON_ALIVIO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra"]
 const sinCero = (v?: number) => (v && v > 0 ? String(v) : "")
 
 let contador = 0
@@ -422,6 +431,7 @@ export function EstudioCam2D() {
         ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
         ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq, rosca_exterior: o.roscaExt } : {}),
         ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
+        ...(CON_ALIVIO.includes(o.tipo) && o.alivio && o.alivio !== "ninguno" ? { alivio: o.alivio } : {}),
       })),
     }
     const form = new FormData()
@@ -861,6 +871,22 @@ export function EstudioCam2D() {
                       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Usa la misma figura y el mismo diámetro de fresa en la caja y en la pieza: las esquinas de la pieza salen redondeadas igual que las de la caja.</span>
                     )}
                     {CON_PESTANAS.includes(o.tipo) && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
+                    {CON_ALIVIO.includes(o.tipo) && maquina.tipo !== "laser" && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[12px] text-[#C9D2E0]">Esquinas interiores</span>
+                        <Opciones
+                          opciones={[
+                            { id: "ninguno", nombre: "Redondas" },
+                            { id: "hueso", nombre: "Hueso" },
+                            { id: "t", nombre: "En T" },
+                          ]}
+                          valor={o.alivio || "ninguno"}
+                          cambiar={(v) => cambiarOp(i, { alivio: v as Op["alivio"] })}
+                          columnas={3}
+                        />
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">La fresa redonda no llega a las esquinas a escuadra. Con el alivio entra hasta el fondo y las piezas embonan (cajas, espigas, uniones de dedos).</span>
+                      </div>
+                    )}
                     {CON_ACABADO.includes(o.tipo) && (
                       <>
                         <Interruptor etiqueta="Desbaste + pasada de acabado" activo={o.acabado} cambiar={(v) => cambiarOp(i, { acabado: v })} />
