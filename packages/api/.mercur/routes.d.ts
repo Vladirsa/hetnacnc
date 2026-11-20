@@ -933,6 +933,7 @@ export type Routes = {
         solicitudArchivos: typeof import("../src/api/store/solicitud-archivos/route") & {
             boleto: typeof import("../src/api/store/solicitud-archivos/boleto/route");
         };
+        solicitudFoto: typeof import("../src/api/store/solicitud-foto/route");
         solicitudesTaller: typeof import("../src/api/store/solicitudes-taller/route") & {
             $token: typeof import("../src/api/store/solicitudes-taller/[token]/route") & {
                 acceso: typeof import("../src/api/store/solicitudes-taller/[token]/acceso/route");

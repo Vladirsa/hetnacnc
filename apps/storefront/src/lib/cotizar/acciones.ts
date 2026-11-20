@@ -88,3 +88,43 @@ export async function precioEnVivo(
     return null
   }
 }
+
+// ── Solicitud desde foto o boceto (estrategia 2.2) ────────────────────────
+// La IA lee la imagen y regresa los campos de la solicitud para que el cliente
+// los revise. La imagen ya viene reducida desde el navegador (≤ 1400 px).
+export type LecturaFoto = {
+  es_pieza: boolean
+  pieza: string
+  descripcion: string
+  proceso: string
+  material: string | null
+  medidas: string | null
+  medidas_aproximadas: boolean
+  cantidad: string | null
+  acabado: string | null
+  preguntas: string[]
+  confianza: "alta" | "media" | "baja"
+}
+
+export async function leerFotoSolicitud(input: { imagen: string; medio: string; texto?: string }): Promise<{ ok: true; lectura: LecturaFoto } | { ok: false; mensaje: string }> {
+  try {
+    const { headers } = await import("next/headers")
+    const h = await headers()
+    const ip = h.get("cf-connecting-ip") || h.get("x-real-ip") || (h.get("x-forwarded-for") || "").split(",")[0] || ""
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitud-foto`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+        ...(ip ? { "x-real-ip": ip } : {}),
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, mensaje: d.message || "No se pudo leer la foto." }
+    return { ok: true, lectura: d as LecturaFoto }
+  } catch {
+    return { ok: false, mensaje: "No se pudo leer la foto. Llena la solicitud a mano." }
+  }
+}

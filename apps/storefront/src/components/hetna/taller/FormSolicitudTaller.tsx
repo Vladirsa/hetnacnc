@@ -9,6 +9,8 @@ import { TarjetaAfiliacion } from "@/components/hetna/cuenta/TarjetaAfiliacion"
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 import { procesoDe } from "@/lib/cotizador/revision-archivo"
 import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
+import { LeerFotoIA } from "./LeerFotoIA"
+import type { LecturaFoto } from "@/lib/cotizar/acciones"
 
 import {
   ACABADOS,
@@ -213,6 +215,28 @@ export default function FormSolicitudTaller({
 
   const opcionArchivo = TIENE_ARCHIVO.find((t) => t.valor === tieneArchivo)
   const subiendo = archivos.some((a) => !a.subido && !a.error)
+
+  // La IA leyó una foto o un boceto: llena los campos (el cliente los revisa).
+  // Sólo pisa un campo si está vacío, menos la descripción, que se completa.
+  const llenarDesdeFoto = (l: LecturaFoto) => {
+    const poner = (id: string, valor: string | null | undefined, siempre = false) => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null
+      if (!el || !valor) return
+      if (!siempre && el.value.trim()) return
+      el.value = valor
+    }
+    const desc = document.getElementById("descripcion") as HTMLTextAreaElement | null
+    if (desc) {
+      const ia = `${l.pieza}. ${l.descripcion}`.trim()
+      desc.value = desc.value.trim() ? `${desc.value.trim()}\n\n${ia}` : ia
+    }
+    poner("material", l.material)
+    poner("medidas", l.medidas ? `${l.medidas}${l.medidas_aproximadas ? " (aprox.)" : ""}` : null)
+    poner("cantidad", l.cantidad)
+    if (l.proceso && SERVICIOS.includes(l.proceso as (typeof SERVICIOS)[number])) poner("servicio", l.proceso)
+    if (l.acabado && ACABADOS.includes(l.acabado)) poner("acabado", l.acabado)
+    if (!tieneArchivo) setTieneArchivo("Tengo boceto o foto")
+  }
 
   const elegirArchivos = (lista: FileList | File[] | null) => {
     if (!lista) return
@@ -429,6 +453,8 @@ export default function FormSolicitudTaller({
             </button>
           ))}
         </div>
+
+        {!prellenado && <LeerFotoIA alLeer={llenarDesdeFoto} adjuntar={(f) => elegirArchivos([f])} />}
 
         {opcionArchivo && !opcionArchivo.pideArchivo && (
           <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
