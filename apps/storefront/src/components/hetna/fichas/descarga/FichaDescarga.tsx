@@ -12,6 +12,7 @@ import { faq } from "@/lib/helpers/product-metadata"
 import { esquemaDe, svgEsquema } from "@/lib/hetna/plano-diseno"
 import { REGLAS_COMUNES, licenciaDe } from "@/lib/hetna/licencias"
 import { datosDigital } from "@/lib/hetna/tipo-ficha"
+import { formatosDe, programasPara } from "@/lib/hetna/formatos"
 import { htmlSeguro } from "@/lib/seguridad/html-seguro"
 import type { VistaGaleria } from "./GaleriaDescarga"
 import { Pestanas } from "./Pestanas"
@@ -35,7 +36,10 @@ export function vistasGaleria(p: Producto): VistaGaleria[] {
 }
 
 function formatos(p: Producto): string | null {
-  return datosDigital(p.metadata).filas.find(([k]) => k === "Formatos incluidos")?.[1] || null
+  const meta = datosDigital(p.metadata).filas.find(([k]) => k === "Formatos incluidos")?.[1]
+  if (meta) return meta
+  const hallados = formatosDe(p)
+  return hallados.length ? hallados.join(", ") : null
 }
 
 const Marca = ({ si }: { si: boolean }) => (
@@ -52,6 +56,7 @@ export function ColumnaDescarga({ product }: { product: Producto }) {
   const pastillas = caracteristicasDe(product.description)
   const { licencia, piezas } = licenciaDe(product.metadata)
   const fmt = formatos(product)
+  const programas = programasPara(formatosDe(product))
   const otros = datosDigital(product.metadata).filas.filter(([k]) => k !== "Formatos incluidos")
 
   return (
@@ -101,6 +106,15 @@ export function ColumnaDescarga({ product }: { product: Producto }) {
             <Marca si />
             <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}, listo para tu CAM.</span>
           </li>
+          {programas.length > 0 && (
+            <li className="flex gap-2">
+              <Marca si />
+              <span>
+                Se abre en: <b className="font-semibold">{programas.join(", ")}</b>
+                {" "}y cualquier programa que lea {formatosDe(product).join(" o ")}.
+              </span>
+            </li>
+          )}
           {otros.map(([k, v]) => (
             <li key={k} className="flex gap-2">
               <Marca si />
@@ -191,7 +205,13 @@ export function AbajoDescarga({ product }: { product: Producto }) {
             contenido: (
               <dl className="m-0 grid grid-cols-1 gap-x-6 text-[14px] sm:grid-cols-[minmax(160px,auto)_1fr]">
                 {[
+                  ...(filas.some(([k]) => k === "Formatos incluidos") || !formatosDe(product).length
+                    ? []
+                    : ([["Formatos incluidos", formatosDe(product).join(", ")]] as [string, string][])),
                   ...filas,
+                  ...(programasPara(formatosDe(product)).length
+                    ? ([["Compatible con", programasPara(formatosDe(product), 8).join(", ")]] as [string, string][])
+                    : []),
                   ...(pastillas.length ? ([["Características", pastillas.join(" · ")]] as [string, string][]) : []),
                   ["Licencia", piezas ? `${licencia.nombre} (hasta ${piezas.toLocaleString("es-MX")} piezas)` : licencia.nombre] as [string, string],
                   ["Entrega", "Descarga digital. No se envía nada por paquetería."] as [string, string],
