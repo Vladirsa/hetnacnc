@@ -1,14 +1,14 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 import { procesoDe } from "@/lib/cotizador/revision-archivo"
 import { RevisionArchivo } from "./RevisionArchivo"
 
-import { cotizarLead, type CotizarLeadInput } from "@/lib/cotizar/acciones"
+import { cotizarLead, precioEnVivo, type CotizarLeadInput, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 type Props = {
@@ -47,6 +47,45 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   // formal, para que no lo vuelva a escribir ni a subir.
   const archivoRef = useRef<File | null>(null)
   const capturado = useRef<{ material: string; medidas: string; cantidad: number } | null>(null)
+
+  // Precio en vivo: se recalcula (con una pausa corta) cada vez que cambia
+  // material, medidas, opción o cantidad. No pide correo.
+  const formRef = useRef<HTMLFormElement>(null)
+  const [vivo, setVivo] = useState<PrecioEnVivo | null>(null)
+  const [calculandoVivo, setCalculandoVivo] = useState(false)
+  const pausa = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const turno = useRef(0)
+  const recalcular = useCallback(() => {
+    if (pausa.current) clearTimeout(pausa.current)
+    pausa.current = setTimeout(async () => {
+      const f = formRef.current
+      if (!f) return
+      const d = new FormData(f)
+      const ancho = Number(d.get("ancho")), largo = Number(d.get("largo")), cantidad = Number(d.get("cantidad"))
+      const alto = pideAlto ? Number(d.get("alto")) : 0
+      if (!(ancho > 0 && largo > 0 && cantidad > 0) || (pideAlto && !(alto > 0))) {
+        setVivo(null)
+        return
+      }
+      const mio = ++turno.current
+      setCalculandoVivo(true)
+      const r = await precioEnVivo({
+        servicio,
+        material: String(d.get("material") || ""),
+        ancho,
+        largo,
+        ...(pideAlto ? { alto } : {}),
+        ...(opcion ? { [opcion.campo]: String(d.get(opcion.campo) || "") } : {}),
+        cantidad,
+      })
+      if (mio !== turno.current) return // llegó una respuesta vieja
+      setCalculandoVivo(false)
+      setVivo(r)
+    }, 350)
+  }, [servicio, pideAlto, opcion])
+  useEffect(() => {
+    recalcular()
+  }, [medidas, recalcular])
 
   // Lee el archivo en el navegador (no se sube): lo muestra y toma sus medidas
   const elegirArchivo = async (f: File | undefined) => {
@@ -136,7 +175,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           {formatoMXN(estado.min)} – {formatoMXN(estado.max)}
         </p>
         <p className="m-0 text-[13px] text-[#6B6A63]">
-          Precio aproximado con IVA incluido. Te mandamos este estimado a tu correo también.
+          Precio aproximado, más IVA. Te mandamos este estimado a tu correo también.
         </p>
         {estado.volumenAlto && (
           <div className="bg-[#FDEEE1] border border-[#F2A65A] rounded-[10px] p-4 flex flex-col gap-1.5">
@@ -169,6 +208,8 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
 
   return (
     <form
+      ref={formRef}
+      onChange={recalcular}
       action={enviar}
       className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-4"
     >
@@ -243,6 +284,8 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         <input name="cantidad" type="number" min={1} step="1" defaultValue={1} required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
+      <PanelPrecioVivo p={vivo} calculando={calculandoVivo} />
+
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
         ¿Lo necesitas seguido? Piezas al mes aprox. (opcional)
         <input name="piezas_mes" type="number" min={0} step="1" className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
@@ -267,8 +310,56 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         disabled={estado.paso === "cargando"}
         className="inline-flex items-center justify-center bg-[#142033] hover:bg-[#1E2E4A] disabled:opacity-60 text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
       >
-        {estado.paso === "cargando" ? "Calculando…" : "Ver mi precio"}
+        {estado.paso === "cargando" ? "Calculando…" : vivo ? "Recibir mi estimado y pedir precio formal" : "Ver mi precio"}
       </button>
     </form>
+  )
+}
+
+/** Precio que cambia en vivo: rango, cómo se calculó y precio por volumen. */
+function PanelPrecioVivo({ p, calculando }: { p: PrecioEnVivo | null; calculando: boolean }) {
+  if (!p) return null
+  const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
+  return (
+    <div className={`rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-4 flex flex-col gap-3 transition-opacity ${calculando ? "opacity-60" : ""}`} aria-live="polite">
+      <div>
+        <p className="m-0 text-[12px] font-semibold uppercase tracking-wide text-[#8A3D06]">Precio estimado al momento</p>
+        <p className="m-0 text-[26px] font-extrabold text-[#1B1B18] leading-tight">
+          {pesos(p.minimo)} – {pesos(p.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]">+ IVA</span>
+        </p>
+        <p className="m-0 text-[12.5px] text-[#6B6A63]">
+          Precio típico {pesos(p.recomendado)} + IVA ({pesos(p.iva)}) = <b className="text-[#1B1B18]">{pesos(p.total)}</b>
+        </p>
+      </div>
+      {p.calculo.length > 0 && (
+        <div>
+          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]">Cómo se calcula</p>
+          <ul className="m-0 mt-1 pl-4 text-[12.5px] text-[#40403A] list-disc flex flex-col gap-0.5">
+            {p.calculo.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {p.por_volumen.length > 1 && (
+        <div>
+          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]">Precio por pieza según la cantidad</p>
+          <table className="mt-1 w-full text-[12.5px] text-[#40403A]">
+            <tbody>
+              {p.por_volumen.map((v) => (
+                <tr key={v.cantidad} className="border-t border-[#F2E2D2] first:border-t-0">
+                  <td className="py-1">{v.cantidad} {v.cantidad === 1 ? "pieza" : "piezas"}</td>
+                  <td className="py-1 text-right font-semibold text-[#1B1B18]">{pesos(v.unitario)} c/u</td>
+                  <td className="py-1 text-right text-[#6B6A63]">{pesos(v.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="m-0 text-[11.5px] text-[#7A776E]">
+        Estimado con tarifas de referencia de la red, sin envío. El precio final lo dan los talleres en sus propuestas (material, acabado y envío incluidos o no, según cada uno).
+      </p>
+    </div>
   )
 }
