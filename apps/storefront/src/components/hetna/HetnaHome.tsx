@@ -344,17 +344,21 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
     <div className="w-full bg-[#FAF9F6] text-[#1B1B18]">
       {/* Tarea 3 de la auditoría de mejoras: héroe fijo con una sola acción y,
           justo debajo, productos reales con precio */}
+      {/* Jerarquía (auditoría del 19 nov 2026), de lo que vende a lo que informa:
+          1. Héroe con una sola acción
+          2. Confianza en una franja corta (pago protegido, talleres verificados)
+          3. Productos: cada uno UNA sola vez, agrupados por tipo
+          4. Cómo funciona y categorías
+          5. Casos reales, aprendizaje y vender con nosotros */}
       <HeroFijo />
-      {/* Pedido del dueño (15 nov 2026): más productos que banners, como una
-          tienda en línea. Carruseles primero; lo informativo, al final. */}
+      <BarraConfianza />
       <FilasProductos locale={locale} />
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
       <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
-      <CasosReales />
-      <BarraConfianza />
       <ProcesoClienteTaller />
 
       <CategoriasVisuales categorias={podarArbol(parentCategories, await categoriasConProductos())} />
+      <CasosReales />
 
       {/* Aprendizaje CNC: artículos reales, solo si ya hay contenido publicado */}
       {articulosAprendizaje.length > 0 && (
