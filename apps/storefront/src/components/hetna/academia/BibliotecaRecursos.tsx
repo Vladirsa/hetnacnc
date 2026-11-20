@@ -37,8 +37,8 @@ const dominio = (u: string) => {
 function Portada({ r }: { r: Recurso }) {
   const p = Object.prototype.hasOwnProperty.call(PORTADA, r.categoria) ? PORTADA[r.categoria] : PORTADA.otros
   const categoria = CATEGORIAS_RECURSO.find(([c]) => c === r.categoria)?.[1] || "Recurso"
-  // Franja baja (una cuarta parte del alto de una foto 16:10): ícono, categoría
-  // y sitio; el título y la descripción van abajo en la tarjeta.
+  // Franja baja de color (88-96 px): ícono, categoría y sitio; el título y la
+  // descripción van abajo en la tarjeta.
   return (
     <span
       className="relative flex h-[88px] items-center gap-3 overflow-hidden px-5 text-white lg:h-[96px] lg:px-6"
@@ -52,7 +52,7 @@ function Portada({ r }: { r: Recurso }) {
       </span>
       <span className="relative flex min-w-0 flex-col items-start gap-1">
         <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wide text-white lg:text-[12.5px]">{categoria}</span>
-        <span className="max-w-full truncate text-[14.5px] font-semibold text-white lg:text-[15.5px]">{dominio(r.url)}</span>
+        <span className="max-w-full truncate rounded-[6px] bg-black/25 px-1.5 text-[14.5px] font-semibold text-white lg:text-[15.5px]">{dominio(r.url)}</span>
       </span>
     </span>
   )
@@ -129,7 +129,7 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
                     <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[#B34D07]">{TIPOS_RECURSO.find(([t]) => t === r.tipo)?.[1] || "Guía"}</span>
                     {r.destacado && <span className="rounded-full bg-[#142033] px-2 py-0.5 text-white">Recomendado</span>}
                   </span>
-                  <span className="text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]">{r.titulo}</span>
+                  <span className="break-words text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]">{r.titulo}</span>
                   {r.descripcion && <span className="line-clamp-3 text-[15px] leading-relaxed text-[#4A4943]">{r.descripcion}</span>}
                   <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-[13.5px] text-[#6B6A63]">
                     <span className="truncate">Fuente: {r.fuente}</span>
