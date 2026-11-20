@@ -37,20 +37,22 @@ const dominio = (u: string) => {
 function Portada({ r }: { r: Recurso }) {
   const p = Object.prototype.hasOwnProperty.call(PORTADA, r.categoria) ? PORTADA[r.categoria] : PORTADA.otros
   const categoria = CATEGORIAS_RECURSO.find(([c]) => c === r.categoria)?.[1] || "Recurso"
+  // Franja baja (una cuarta parte del alto de una foto 16:10): ícono, categoría
+  // y sitio; el título y la descripción van abajo en la tarjeta.
   return (
     <span
-      className="relative flex aspect-[16/10] flex-col justify-between overflow-hidden p-5 text-white lg:p-6"
+      className="relative flex h-[88px] items-center gap-3 overflow-hidden px-5 text-white lg:h-[96px] lg:px-6"
       style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(135deg, ${p.de}, ${p.a})`, backgroundSize: "16px 16px, 100% 100%" }}
     >
-      <span className="self-start rounded-full bg-black/25 px-3 py-1 text-[12.5px] font-bold uppercase tracking-wide text-white lg:text-[13.5px]">{categoria}</span>
-      <span className="pointer-events-none absolute -bottom-6 -right-5 text-white/20 transition group-hover:scale-105">
-        <ServicioIcono nombre={p.icono} size={190} />
+      <span className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 text-white/15">
+        <ServicioIcono nombre={p.icono} size={110} />
       </span>
-      <span className="relative flex min-w-0 items-center gap-2">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[12px] bg-white/15 lg:h-14 lg:w-14">
-          <ServicioIcono nombre={p.icono} size={30} />
-        </span>
-        <span className="min-w-0 truncate rounded-[6px] bg-black/25 px-2 py-1 text-[14.5px] font-semibold text-white lg:text-[15.5px]">{dominio(r.url)}</span>
+      <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-[12px] bg-white/15 lg:h-14 lg:w-14">
+        <ServicioIcono nombre={p.icono} size={30} />
+      </span>
+      <span className="relative flex min-w-0 flex-col items-start gap-1">
+        <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wide text-white lg:text-[12.5px]">{categoria}</span>
+        <span className="max-w-full truncate text-[14.5px] font-semibold text-white lg:text-[15.5px]">{dominio(r.url)}</span>
       </span>
     </span>
   )
