@@ -132,8 +132,9 @@ export async function POST(req: Request) {
 }
 
 /** Al calcular: el dibujo de la trayectoria. Al descargar: el programa, si el plan lo permite. */
-async function entregar(gcode: string, plan: unknown, descargar: boolean) {
-  if (!descargar) return NextResponse.json({ ok: true, plan, trayectoria: leerGcode(gcode) })
+// sim: la versión con comentarios (diámetro de cada fresa) cuando el controlador no los acepta
+async function entregar(gcode: string, plan: unknown, descargar: boolean, sim?: string) {
+  if (!descargar) return NextResponse.json({ ok: true, plan, trayectoria: leerGcode(sim || gcode) })
   const no = await autorizarDescarga("2d", huella(gcode))
   if (no) return NextResponse.json(no.negado, { status: no.status })
   return NextResponse.json({ ok: true, plan, gcode })
@@ -149,7 +150,8 @@ async function conOperaciones(archivo: Blob, config: Record<string, unknown>, de
     await writeFile(rutaConfig, JSON.stringify(config))
     const resultado = await correrBridge([entrada, salida, rutaConfig], BRIDGE_OPS)
     if (!resultado.ok) return NextResponse.json(resultado, { status: 422 })
-    return entregar(await readFile(salida, "utf-8"), (resultado as any).plan, descargar)
+    const sim = await readFile(`${salida}.sim`, "utf-8").catch(() => undefined)
+    return entregar(await readFile(salida, "utf-8"), (resultado as any).plan, descargar, sim)
   } catch (e) {
     console.error("[cam] falló la generación por operaciones", e)
     return fallo(
