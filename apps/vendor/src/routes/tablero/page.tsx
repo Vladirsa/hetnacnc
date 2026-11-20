@@ -973,6 +973,68 @@ function InvitaTaller() {
   )
 }
 
+// Agente SEO (packages/api/src/lib/seo-titulos.ts): títulos sugeridos con lo
+// que la gente busca en Google. El taller acepta o descarta cada uno.
+type SugerenciaSeo = { id: string; titulo: string; sugerencia: { titulo_visible: string; titulo_seo: string; meta_description: string; keyword_principal: string; motivo: string } }
+function SugerenciasSeo() {
+  const [lista, setLista] = useState<SugerenciaSeo[]>([])
+  const [ocupado, setOcupado] = useState("")
+  const [hecho, setHecho] = useState(0)
+
+  useEffect(() => {
+    fetch("/vendor/hetna-seo", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setLista(d?.sugerencias || []))
+      .catch(() => setLista([]))
+  }, [])
+
+  const responder = async (id: string, accion: "aceptar" | "descartar") => {
+    setOcupado(id)
+    try {
+      const r = await fetch("/vendor/hetna-seo", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: id, accion }),
+      })
+      if (r.ok) {
+        setLista((l) => l.filter((x) => x.id !== id))
+        if (accion === "aceptar") setHecho((n) => n + 1)
+      }
+    } finally {
+      setOcupado("")
+    }
+  }
+
+  if (!lista.length && !hecho) return null
+  return (
+    <div style={{ ...S.card, background: "#F3F8F1", borderColor: "#CFE2C8" }}>
+      <p style={S.h2}>🔎 Que te encuentren en Google</p>
+      <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
+        Revisamos lo que la gente escribe en Google y te sugerimos un mejor título para tus productos. La dirección de tu producto no cambia.
+      </p>
+      {hecho > 0 && <p style={{ margin: "0 0 10px", fontSize: 14, color: "#1E7B3A", fontWeight: 600 }}>✓ {hecho} título(s) actualizado(s).</p>}
+      {lista.slice(0, 5).map((x) => (
+        <div key={x.id} style={{ borderTop: "1px solid #DDE8D8", padding: "10px 0" }}>
+          <p style={{ ...S.etiqueta, margin: 0 }}>Ahora: {x.titulo}</p>
+          <p style={{ margin: "4px 0", fontSize: 15, fontWeight: 700 }}>Sugerido: {x.sugerencia.titulo_visible}</p>
+          <p style={{ margin: "0 0 6px", fontSize: 13, color: "#55534C" }}>
+            Se busca como «{x.sugerencia.keyword_principal}». {x.sugerencia.motivo}
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" style={S.btn} disabled={ocupado === x.id} onClick={() => void responder(x.id, "aceptar")}>
+              Usar este título
+            </button>
+            <button type="button" style={{ ...S.btn, background: "#fff", color: "#55534C", border: "1px solid #D9D6CC" }} disabled={ocupado === x.id} onClick={() => void responder(x.id, "descartar")}>
+              No, gracias
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Buzón de opiniones (packages/api/src/lib/opiniones.ts): qué mejorarías de
 // HETNA. Llega al dueño por Telegram y al panel de administración (Opiniones).
 function QueMejorarias() {
@@ -1341,6 +1403,7 @@ export default function TableroPage() {
       <AvisosCelular />
 
       <InvitaTaller />
+      <SugerenciasSeo />
       <QueMejorarias />
 
       <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>
