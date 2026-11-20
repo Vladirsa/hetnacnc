@@ -9,8 +9,14 @@
 //   - reclamos sobre las calificaciones de esos trabajos y cuántos se resolvieron.
 //
 // El puntaje (0–100) sólo se muestra con MIN_TRABAJOS terminados; antes es
-// "historial insuficiente". Pesos: puntualidad 40, calidad calificada 25,
-// trabajos terminados 20, reclamos resueltos 15 (si falta un dato, se reparte).
+// "historial insuficiente". Pesos (decisión del dueño, 19 nov 2026, sobre la
+// auditoría): trabajos terminados 30, calidad calificada 30, puntualidad 25,
+// tiempo de respuesta 10, historial de reclamos 5. Si falta un dato, su peso se
+// reparte entre los demás.
+//
+// La verificación y las certificaciones NO entran aquí (regla del 9 nov 2026):
+// en el plan Gratis la verificación se paga y no debe poder comprarse puntaje.
+// Sólo ayudan a salir más arriba en el orden (confianza.ts).
 import { T_PROPUESTA, T_SOLICITUD } from "./licitacion"
 
 // Los nombres se repiten aquí (y no se importan de trust.ts y seguimiento.ts) para no crear un ciclo:
@@ -101,15 +107,46 @@ export function fechaPrometida(f: Pick<Fila, "dias" | "fecha_entrega" | "producc
   return null
 }
 
+// Con cuántos trabajos terminados se llevan los 30 puntos completos de "terminados"
+export const META_TRABAJOS = 10
+// Responder en 4 h o menos vale todo; en 72 h o más, nada; en medio, proporcional
+const RESPUESTA_IDEAL_H = 4
+const RESPUESTA_LIMITE_H = 72
+
+export const PESOS_PUNTAJE = { terminados: 30, calidad: 30, puntualidad: 25, respuesta: 10, reclamos: 5 } as const
+
+type DatosPuntaje = {
+  terminados: number
+  terminados_pct: number | null
+  calidad: number | null
+  puntualidad_pct: number | null
+  respuesta_horas?: number | null
+  reclamos: number
+  reclamos_resueltos: number
+}
+
+/** Cada parte entre 0 y 1 (null si no hay dato para medirla). */
+export function partesPuntaje(m: DatosPuntaje) {
+  const clamp = (x: number) => Math.max(0, Math.min(1, x))
+  const abiertos = Math.max(0, m.reclamos - m.reclamos_resueltos)
+  return {
+    // Volumen y que termine lo que empieza: 10 trabajos sin cancelar = completo
+    terminados: m.terminados > 0 ? clamp(m.terminados / META_TRABAJOS) * ((m.terminados_pct ?? 100) / 100) : null,
+    calidad: m.calidad == null ? null : clamp(m.calidad / 5),
+    puntualidad: m.puntualidad_pct == null ? null : clamp(m.puntualidad_pct / 100),
+    respuesta:
+      m.respuesta_horas == null ? null : clamp((RESPUESTA_LIMITE_H - m.respuesta_horas) / (RESPUESTA_LIMITE_H - RESPUESTA_IDEAL_H)),
+    // Un reclamo abierto pesa entero y uno resuelto medio, contra los trabajos terminados
+    reclamos: m.terminados > 0 ? clamp(1 - (abiertos + 0.5 * m.reclamos_resueltos) / m.terminados) : null,
+  }
+}
+
 /** Puntaje 0–100 con los pesos de arriba; null si no hay ningún dato. */
-export function puntajeMedido(m: { puntualidad_pct: number | null; calidad: number | null; terminados_pct: number | null; reclamos: number; reclamos_resueltos: number }) {
-  const partes: [number | null, number][] = [
-    [m.puntualidad_pct == null ? null : m.puntualidad_pct / 100, 40],
-    [m.calidad == null ? null : m.calidad / 5, 25],
-    [m.terminados_pct == null ? null : m.terminados_pct / 100, 20],
-    [m.reclamos ? m.reclamos_resueltos / m.reclamos : null, 15],
-  ]
-  const con = partes.filter(([v]) => v != null) as [number, number][]
+export function puntajeMedido(m: DatosPuntaje) {
+  const partes = partesPuntaje(m)
+  const con = (Object.keys(PESOS_PUNTAJE) as (keyof typeof PESOS_PUNTAJE)[])
+    .filter((k) => partes[k] != null)
+    .map((k) => [partes[k] as number, PESOS_PUNTAJE[k]] as const)
   if (!con.length) return null
   const peso = con.reduce((a, [, w]) => a + w, 0)
   return Math.round((con.reduce((a, [v, w]) => a + v * w, 0) / peso) * 100)
@@ -166,11 +203,11 @@ export async function medirTaller(knex: any, sellerId: string): Promise<MedidaTa
     const r = await knex(T_RESENA).where({ seller_id: sellerId }).where((w: any) => w.whereNull("visible").orWhere("visible", true)).avg({ c: "calidad" }).first().catch(() => null)
     m.calidad = r?.c != null ? r1(Number(r.c)) : null
   }
-  m.suficiente = m.terminados >= MIN_TRABAJOS
-  m.puntaje = m.suficiente ? puntajeMedido(m) : null
   const resp = await tiempoRespuesta(knex, sellerId).catch(() => ({ horas: null, n: 0 }))
   m.respuesta_horas = resp.horas
   m.respuestas_medidas = resp.n
+  m.suficiente = m.terminados >= MIN_TRABAJOS
+  m.puntaje = m.suficiente ? puntajeMedido(m) : null
   return m
 }
 
