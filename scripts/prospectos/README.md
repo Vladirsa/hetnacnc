@@ -217,3 +217,26 @@ Si regeneras el flujo de la campaña con `generar_flujo.py`, vuelve a agregar en
   anota en `notas` ("Opinión AAAA-MM-DD: …"), "No me interesa" da de baja, "Ahorita no tengo tiempo" pospone
   60 días y "No entiendo cómo funciona" / "No conozco la plataforma" llegan por Telegram con 🔥 para escribirles.
 
+
+## Agente «Cazador de solicitudes»
+
+Busca en la web pública (última semana) gente y empresas de México que **piden**
+un servicio CNC («busco quien me corte…», «se solicita proveedor de maquinados»,
+licitaciones) y las manda al flujo de n8n «Agente HETNA - Cazador de solicitudes»
+(webhook `hetna-cazador`).
+
+- La IA (la misma llave de Groq) descarta talleres que ofrecen, anuncios,
+  tutoriales y bolsas de trabajo; sólo pasa solicitudes reales (calificación 3/5 o más).
+- **Empresas con correo público en esa página** → entran a la hoja como «Cliente
+  comprador», segmento `solicitud`: la campaña les manda primero (antes que los
+  demás) un correo que habla de lo que pidieron, con la cotización ya llena y liga de baja.
+- **Personas** → no se les escribe en frío: te llega a Telegram la publicación,
+  la respuesta lista para pegar y la liga a /cotizar ya llena (`utm_source=cazador`).
+
+Instalar en el servidor (una vez), corre cada día a las 7:40:
+
+```bash
+( crontab -l 2>/dev/null | grep -v correr_cazador.sh ; echo "40 7 * * * $HOME/hetnacnc/scripts/prospectos/correr_cazador.sh" ) | crontab -
+```
+
+Probar sin mandar nada: `.venv/bin/python cazar_solicitudes.py --probar --tanda 3`
