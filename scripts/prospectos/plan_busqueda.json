@@ -1,5 +1,5 @@
 {
-  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo). Desde el 18 nov 2026 incluye compradores: mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands, mantenimiento industrial y fabricantes de maquinaria.",
+  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo). Desde el 18 nov 2026 incluye compradores: mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands, mantenimiento industrial y fabricantes de maquinaria. Desde el 20 nov 2026 incluye proveedores extranjeros (China, Taiwán, Turquía, Italia, España, Alemania, India, Corea, EE. UU.) que podrían vender en México por HETNA: van como tipo «Proveedor extranjero», con su propio correo, y la cuarta parte de cada tanda diaria se reserva para ellos.",
   "segmentos": {
     "es": [
       [
@@ -137,6 +137,46 @@
       [
         "Servicios CNC",
         "corte a laser acrílico MDF personalizado {ciudad}"
+      ]
+    ],
+    "en_export": [
+      [
+        "Proveedor extranjero",
+        "CNC router manufacturer exporter {ciudad}"
+      ],
+      [
+        "Proveedor extranjero",
+        "fiber laser cutting machine manufacturer {ciudad} export"
+      ],
+      [
+        "Proveedor extranjero",
+        "CNC plasma cutting machine manufacturer {ciudad}"
+      ],
+      [
+        "Proveedor extranjero",
+        "carbide end mills CNC cutting tools manufacturer {ciudad}"
+      ],
+      [
+        "Proveedor extranjero",
+        "CNC spare parts spindle servo supplier {ciudad} export"
+      ],
+      [
+        "Proveedor extranjero",
+        "CO2 laser engraving machine factory {ciudad}"
+      ]
+    ],
+    "es_export": [
+      [
+        "Proveedor extranjero",
+        "fabricante de maquinaria CNC exportación {ciudad}"
+      ],
+      [
+        "Proveedor extranjero",
+        "fabricante de herramientas de corte CNC {ciudad}"
+      ],
+      [
+        "Proveedor extranjero",
+        "fabricante máquinas corte láser plasma {ciudad}"
       ]
     ]
   },
@@ -295,6 +335,97 @@
         "Belo Horizonte",
         "Sorocaba",
         "Ribeirão Preto"
+      ]
+    },
+    "China (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Jinan",
+        "Shenzhen",
+        "Dongguan",
+        "Wuhan",
+        "Guangzhou",
+        "Shanghai",
+        "Changzhou",
+        "Ningbo"
+      ]
+    },
+    "Taiwán (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Taichung",
+        "Taipei",
+        "Tainan"
+      ]
+    },
+    "Turquía (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Istanbul",
+        "Bursa",
+        "Konya",
+        "Ankara"
+      ]
+    },
+    "Italia (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Brescia",
+        "Milan",
+        "Bologna",
+        "Vicenza"
+      ]
+    },
+    "Alemania (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Stuttgart",
+        "Munich",
+        "Nuremberg"
+      ]
+    },
+    "India (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Pune",
+        "Ahmedabad",
+        "Bangalore",
+        "Coimbatore"
+      ]
+    },
+    "Corea (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Changwon",
+        "Busan",
+        "Incheon"
+      ]
+    },
+    "Estados Unidos (export)": {
+      "idioma": "en",
+      "segmentos": "en_export",
+      "lista": [
+        "Ohio",
+        "Michigan",
+        "Illinois"
+      ]
+    },
+    "España (export)": {
+      "idioma": "es",
+      "segmentos": "es_export",
+      "lista": [
+        "Gipuzkoa",
+        "Bizkaia",
+        "Barcelona",
+        "Valencia",
+        "Zaragoza"
       ]
     }
   }
