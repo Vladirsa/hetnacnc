@@ -96,7 +96,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
           tipo === "servicio" ? (
             <ResumenServicio metadata={product.metadata} />
           ) : descarga ? (
-            <ColumnaDescarga product={product as never} />
+            <ColumnaDescarga product={product as never} vendedor={seller ? { handle: seller.handle, name: seller.name } : null} />
           ) : undefined
         }
       />
