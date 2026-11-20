@@ -23,7 +23,7 @@ const normaliza = (t?: string | null) =>
   (t || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/\p{Diacritic}/gu, "")
     .trim()
 
 const traer = async (locale: string, filtro: Filtro) => {
