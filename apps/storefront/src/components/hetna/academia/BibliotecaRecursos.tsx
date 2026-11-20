@@ -117,7 +117,7 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
               >
                 {r.imagen_url ? (
                   <span className="relative block aspect-[16/10] bg-[#F3F1EA]">
-                    <Image src={r.imagen_url} alt="" fill sizes="(min-width: 1536px) 520px, (min-width: 768px) 48vw, 94vw" className="object-cover" />
+                    <Image src={r.imagen_url} alt="" fill sizes="(min-width: 1536px) 31vw, (min-width: 768px) 46vw, 92vw" className="object-cover" />
                   </span>
                 ) : (
                   <Portada r={r} />
