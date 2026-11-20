@@ -134,7 +134,9 @@ su herramienta y su profundidad:
   grabado en V (por desfases: la punta va a la distancia `d` de la orilla y a
   `d / tan(ángulo/2)` de profundidad) y barrenado con picoteo.
 - **Láser:** corte, línea y relleno (líneas en zigzag recortadas al área).
-- **Postprocesadores:** Mach3, GRBL, LinuxCNC y láser GRBL (M4 dinámico).
+- **Postprocesadores:** Mach3, GRBL, LinuxCNC, NcStudio (Weihong), Richauto DSP (A11/A18), Syntec y láser GRBL (M4 dinámico). Perfiles en `POSTS` de `cam2d.py`: inicio, fin, pausa para cambiar herramienta, comentarios, `%`/número de programa y fin de línea. Richauto no acepta comentarios ni pausa: el archivo sale sin comentarios (la simulación usa `pieza.nc.sim`) y con una sola herramienta.
+- **Cambiador automático** (`maquina.atc`): cada fresa sale con `T{n} M6` (el número de su ficha, `op.numero`, o uno en orden) en vez de pausar.
+- **Alivios en esquinas interiores** (`alivio`: `hueso` o `t`, en corte, perfilados, cajeado e incrustación hembra): la fresa entra hasta la esquina para que las piezas embonen a escuadra. En T, si la orilla corta no alcanza, va de hueso.
 - Lee líneas, arcos, splines, polilíneas con bulge y bloques; une trazos
   sueltos punta con punta y convierte pulgadas a mm.
 

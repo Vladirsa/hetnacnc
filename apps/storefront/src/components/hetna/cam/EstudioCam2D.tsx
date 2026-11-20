@@ -26,7 +26,9 @@ import { acomodarPiezas } from "@/lib/cam/acomodar"
 import { anidar, separarPiezas } from "@/lib/generador/anidado"
 import type { Movimiento } from "@/lib/cam/leer-gcode"
 import { FRESAS_BASE, guardarBase, leerBase, porGrupo } from "@/lib/hetna/base-herramientas"
-import { type Dibujo, dibujoDXF, leerDXF, leerSVG } from "@/lib/generador/vectores"
+import { type Dibujo, dibujoDXF, dibujoSVG, leerDXF, leerSVG } from "@/lib/generador/vectores"
+import { abrirDocumento } from "@/lib/generador/planosTaller"
+import { mandarPaqueteACotizador, materialRouterMDF } from "@/lib/generador/aCotizador"
 
 const MATERIALES = [
   { id: "mdf", nombre: "MDF" },
@@ -41,13 +43,19 @@ const MAQUINAS_BASE: MaquinaCam[] = [
   { id: "base-mach3", nombre: "Router · Mach3", tipo: "router", post: "mach3", tarifa: 300, smax: 1000 },
   { id: "base-grbl", nombre: "Router · GRBL", tipo: "router", post: "grbl", tarifa: 250, smax: 1000 },
   { id: "base-linuxcnc", nombre: "Router · LinuxCNC", tipo: "router", post: "linuxcnc", tarifa: 300, smax: 1000 },
+  { id: "base-ncstudio", nombre: "Router · NcStudio (Weihong)", tipo: "router", post: "ncstudio", tarifa: 300, smax: 1000 },
+  { id: "base-richauto", nombre: "Router · Richauto DSP", tipo: "router", post: "richauto", tarifa: 300, smax: 1000 },
+  { id: "base-syntec", nombre: "Router · Syntec", tipo: "router", post: "syntec", tarifa: 300, smax: 1000 },
   { id: "base-laser", nombre: "Láser · GRBL", tipo: "laser", post: "laser_grbl", tarifa: 200, smax: 1000 },
 ]
-const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc" }
+const EXTENSION: Record<MaquinaCam["post"], string> = { mach3: "tap", grbl: "nc", linuxcnc: "ngc", laser_grbl: "nc", ncstudio: "nc", richauto: "nc", syntec: "nc" }
 const POSTS: { id: MaquinaCam["post"]; nombre: string }[] = [
   { id: "mach3", nombre: "Mach3" },
   { id: "grbl", nombre: "GRBL" },
   { id: "linuxcnc", nombre: "LinuxCNC" },
+  { id: "ncstudio", nombre: "NcStudio (Weihong)" },
+  { id: "richauto", nombre: "Richauto DSP (A11/A18)" },
+  { id: "syntec", nombre: "Syntec" },
   { id: "laser_grbl", nombre: "Láser GRBL" },
 ]
 
@@ -107,9 +115,14 @@ type Op = {
   paso: string
   roscaIzq: boolean
   roscaExt: boolean
+  // esquinas interiores que la fresa no alcanza: sin alivio, cabeza de fémur o en T
+  alivio?: "ninguno" | "hueso" | "t"
+  // posición T de la fresa en el cambiador (de la ficha de la fresa)
+  numero?: number
 }
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
+const CON_ALIVIO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra"]
 const sinCero = (v?: number) => (v && v > 0 ? String(v) : "")
 
 let contador = 0
@@ -241,6 +254,28 @@ export function EstudioCam2D() {
   // Entrada en rampa: la fresa baja avanzando por el contorno (o en hélice) en
   // vez de entrar de punta. El motor usa 3 × el diámetro (rampa_entrada: -1).
   const [rampa, setRampa] = useState(true)
+  // cambiador automático de herramientas (M6 con el número T de cada fresa)
+  const [atc, setAtc] = useState(false)
+  // plantillas de operaciones por material, guardadas en este navegador
+  type Plantilla = { nombre: string; material: Material; espesor: string; ops: Omit<Op, "id">[] }
+  const [plantillas, setPlantillas] = useState<Plantilla[]>([])
+  const [nombrePlantilla, setNombrePlantilla] = useState("")
+  useEffect(() => {
+    try {
+      const x = JSON.parse(localStorage.getItem("hetna-cam-plantillas") || "[]")
+      if (Array.isArray(x)) setPlantillas(x.filter((t) => t && typeof t.nombre === "string" && Array.isArray(t.ops)).slice(0, 30))
+    } catch {
+      // sin plantillas guardadas
+    }
+  }, [])
+  const guardarPlantillas = (lista: Plantilla[]) => {
+    setPlantillas(lista)
+    try {
+      localStorage.setItem("hetna-cam-plantillas", JSON.stringify(lista.slice(0, 30)))
+    } catch {
+      // sin espacio
+    }
+  }
   const [avance, setAvance] = useState(1)
   const [corriendo, setCorriendo] = useState(false)
   const [editar, setEditar] = useState(false)
@@ -397,7 +432,7 @@ export function EstudioCam2D() {
     // con varias copias siempre se manda el dibujo ya acomodado, no el archivo original
     const cuerpo = esSVG || origen || variasCopias ? new Blob([dibujoDXF(dibujo)], { type: "application/dxf" }) : archivo
     const config = {
-      maquina: { tipo: maquina.tipo, post: maquina.post, smax: maquina.smax },
+      maquina: { tipo: maquina.tipo, post: maquina.post, smax: maquina.smax, atc: maquina.tipo !== "laser" && atc },
       rampa_entrada: maquina.tipo !== "laser" && rampa ? -1 : 0,
       operaciones: ops.map((o) => ({
         tipo: o.tipo,
@@ -422,6 +457,8 @@ export function EstudioCam2D() {
         ...(o.tipo === "textura" ? { separacion_textura: numero(o.sepTextura) || 5, onda: numero(o.onda) || 30, angulo_textura: numero(o.anguloTextura) || 0 } : {}),
         ...(o.tipo === "roscado" ? { paso: numero(o.paso) || 0, rosca_izquierda: o.roscaIzq, rosca_exterior: o.roscaExt } : {}),
         ...(o.tipo === "incrustacion_macho" ? { holgura: Math.max(0, numero(o.holgura) || 0) } : {}),
+        ...(CON_ALIVIO.includes(o.tipo) && o.alivio && o.alivio !== "ninguno" ? { alivio: o.alivio } : {}),
+        ...(o.numero && o.numero > 0 ? { numero: o.numero } : {}),
       })),
     }
     const form = new FormData()
@@ -593,6 +630,63 @@ export function EstudioCam2D() {
   const Y = (y: number) => f2((lienzo?.H || 0) - (lienzo?.mar || 0) - (y - (lienzo?.y0 || 0)))
   const minutos = plan ? plan.tiempo_estimado_min : 0
   const reloj = (min: number) => `${Math.floor(min)}:${String(Math.round((min % 1) * 60) % 60).padStart(2, "0")}`
+  const [avisoDoc, setAvisoDoc] = useState("")
+  // hoja de trabajo para el operador: lo que necesita saber antes de arrancar la máquina
+  const hojaDeTrabajo = () => {
+    if (!plan || !dibujo) return
+    const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
+    const nombreMat = MATERIALES.find((m) => m.id === material)?.nombre || material
+    const filas = plan.operaciones.map((po, i) => {
+      const o = ops[i]
+      const herr = o ? (o.fresa || (o.tipo === "grabado_v" ? `V ${o.angulo}° · Ø${o.diametro}` : laser ? "Láser" : `Fresa Ø${o.diametro} mm`)) : ""
+      const t = o?.numero && atc ? ` (T${o.numero})` : ""
+      const datos = o && !laser ? [`prof. ${o.profundidad || espesor} mm`, o.rpm ? `${o.rpm} rpm` : "", o.avance ? `${o.avance} mm/min` : "", o.alivio && o.alivio !== "ninguno" ? `alivio ${o.alivio === "t" ? "en T" : "hueso"}` : "", o.pestanas && CON_PESTANAS.includes(o.tipo) ? "con pestañas" : ""].filter(Boolean).join(" · ") : o ? `${o.potencia}% · ${o.velocidad} mm/min · ${o.pasadas} pasada(s)` : ""
+      return `<tr><td>${i + 1}</td><td>${esc(NOMBRE_OP[po.tipo] || po.nombre)}</td><td>${esc(po.capa || "todas")}</td><td>${esc(herr + t)}</td><td>${esc(datos)}</td><td class="n">${po.figuras}</td><td class="n">${reloj(po.minutos)}</td></tr>`
+    }).join("")
+    // cambios de herramienta en orden
+    const cambios: string[] = []
+    ops.forEach((o) => {
+      const h = laser ? "Láser" : o.fresa || (o.tipo === "grabado_v" ? `V ${o.angulo}° Ø${o.diametro}` : `Fresa Ø${o.diametro} mm`)
+      if (cambios[cambios.length - 1] !== h) cambios.push(h)
+    })
+    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de trabajo · ${esc(archivo?.name || "pieza")}</title><style>
+@page{size:A4;margin:10mm}body{font:12px/1.4 Arial,sans-serif;color:#111;margin:0}h1{font-size:19px;margin:0 0 4px}h2{font-size:13px;margin:14px 0 6px;border-bottom:2px solid #C2560A}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4px 6px;text-align:left;vertical-align:top}th{background:#f1ece2}td.n{text-align:right;white-space:nowrap}
+.fila{display:flex;gap:14px}.fila>div{flex:1}.caja{border:1px solid #ddd;border-radius:6px;padding:8px}.check{display:inline-block;width:12px;height:12px;border:1px solid #333;margin-right:6px;vertical-align:-2px}
+svg{max-width:100%;height:auto;max-height:360px;display:block;margin:0 auto}.barra{background:#1d1d1b;color:#fff;padding:8px;text-align:center}.barra button{font:600 13px Arial;padding:6px 14px;margin-left:8px}@media print{.barra{display:none}}
+</style></head><body><div class="barra">Hoja de trabajo <button onclick="print()">Imprimir</button></div><div style="padding:10mm">
+<h1>Hoja de trabajo · ${esc(archivo?.name || "pieza")}</h1><div>${new Date().toLocaleString("es-MX")} · HETNA CAM Studio 2D</div>
+<div class="fila" style="margin-top:10px"><div class="caja"><b>Material:</b> ${esc(nombreMat)} de ${esc(espesor)} mm<br><b>Medidas del trabajo:</b> ${plan.medidas[0]} × ${plan.medidas[1]} mm<br><b>Máquina:</b> ${esc(maquina.nombre)} · ${esc(POSTS.find((p) => p.id === maquina.post)?.nombre || maquina.post)}${atc ? " · cambiador automático" : ""}</div>
+<div class="caja"><b>Tiempo estimado:</b> ${reloj(plan.tiempo_estimado_min)} min<br><b>Corte:</b> ${(plan.largo_corte_mm / 1000).toFixed(2)} m<br><b>Origen:</b> ${origen ? "esquina de abajo a la izquierda del dibujo" : "el del archivo"} · <b>Z0</b> en la cara del material</div></div>
+<h2>Vista del trabajo</h2>${dibujoSVG(dibujo, "vista")}
+<h2>Operaciones (en este orden)</h2><table><tr><th>#</th><th>Operación</th><th>Capa</th><th>Herramienta</th><th>Datos</th><th>Figuras</th><th>Tiempo</th></tr>${filas}</table>
+${!laser ? `<h2>Herramientas en orden</h2><ol>${cambios.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>` : ""}
+${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : ""}
+<h2>Antes de arrancar</h2><div><span class="check"></span>Material sujeto y plano · <span class="check"></span>Cero X/Y en el origen · <span class="check"></span>Cero Z en la cara del material · <span class="check"></span>Fresa correcta y apretada · <span class="check"></span>Primera pasada en vacío o con avance reducido · <span class="check"></span>Aspiración y protección</div>
+</div></body></html>`
+    setAvisoDoc(abrirDocumento(html) ? "" : "Permite las ventanas emergentes para ver la hoja de trabajo.")
+  }
+  // cotizar con la tarifa del taller: el dibujo y el tiempo de máquina ya calculados
+  const cotizar = () => {
+    if (!plan || !pieza) return
+    const nombreMat = MATERIALES.find((m) => m.id === material)?.nombre || material
+    const nota = [`${archivo?.name || "Pieza"}: ${nombreMat} de ${espesor} mm, ${plan.medidas[0]} × ${plan.medidas[1]} mm.`, `Tiempo de máquina estimado: ${reloj(plan.tiempo_estimado_min)} min (${plan.operaciones.map((o) => NOMBRE_OP[o.tipo] || o.nombre).join(", ")}).`, costo ? `Costo de máquina: $${Math.round(costo)} MXN.` : ""].filter(Boolean).join(" ")
+    const ok = mandarPaqueteACotizador(
+      {
+        proyecto: (archivo?.name || "pieza").replace(/\.[^.]+$/, ""),
+        origen: "cam2d",
+        servicio: laser ? "laser_co2" : "router",
+        ...(material === "mdf" && !laser ? { material: materialRouterMDF(numero(espesor) || 18) } : {}),
+        nota: nota.slice(0, 900),
+        piezas: [
+          { nombre: (archivo?.name || "pieza").replace(/\.svg$/i, ".dxf"), contenido: dibujoDXF(pieza), cantidad: Math.max(1, Math.round(numero(hoja.copias) || 1)) },
+          ...extras.map((x) => ({ nombre: `${x.nombre}.dxf`, contenido: dibujoDXF(x.dibujo), cantidad: Math.max(1, Math.round(numero(x.copias) || 1)) })),
+        ],
+      },
+      "mx"
+    )
+    if (!ok) setAvisoDoc("El trabajo es muy grande para mandarlo así. Descarga el DXF y súbelo en el cotizador.")
+  }
   const costo = plan && maquina.tarifa ? (plan.tiempo_estimado_min / 60) * maquina.tarifa : 0
   const catalogo = laser ? OPS_LASER : OPS_ROUTER
 
@@ -655,6 +749,12 @@ export function EstudioCam2D() {
             {editar ? "Cerrar mis máquinas y fresas" : "Mis máquinas y fresas"}
           </button>
           {editar && <EditorMias datos={mias} guardar={guardarMias} sesion={sesion} aviso={guardado} />}
+          {!laser && (
+            <>
+              <Interruptor etiqueta="Cambiador automático de herramientas (M6)" activo={atc} cambiar={(v) => { setAtc(v); setPlan(null); setGcode(null) }} />
+              {atc && <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada fresa sale con su número T (el de su ficha en «Mis máquinas y fresas»; si no tiene, uno en orden) y M6, sin pausas.</span>}
+            </>
+          )}
         </Seccion>
 
         <Seccion titulo="Material">
@@ -755,6 +855,54 @@ export function EstudioCam2D() {
         </Seccion>
 
         <Seccion titulo="Operaciones" nota="Se hacen en este orden. Elige la capa del dibujo que usa cada una.">
+          <div className="flex flex-col gap-1.5 rounded-[10px] bg-[#151C27] p-2.5">
+            <span className="text-[12px] font-semibold text-[#C9D2E0]">Plantillas</span>
+            {plantillas.length > 0 && (
+              <div className="flex gap-1.5">
+                <Select
+                  valor=""
+                  cambiar={(v) => {
+                    const t = plantillas.find((x) => x.nombre === v)
+                    if (!t) return
+                    setMaterial(t.material)
+                    setEspesor(t.espesor)
+                    setOps(t.ops.map((o) => ({ ...nuevaOp(o.tipo, t.espesor), ...o, id: `op${Math.random().toString(36).slice(2, 8)}` })))
+                    setPlan(null)
+                    setGcode(null)
+                  }}
+                >
+                  <option value="">Usar una plantilla…</option>
+                  {plantillas.map((t) => (
+                    <option key={t.nombre} value={t.nombre}>
+                      {t.nombre}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            <div className="flex gap-1.5">
+              <input value={nombrePlantilla} onChange={(e) => setNombrePlantilla(e.target.value.slice(0, 50))} placeholder={`Ej. ${MATERIALES.find((m) => m.id === material)?.nombre || "MDF"} ${espesor} con compresión 1/4″`} className="min-w-0 flex-1 rounded-[8px] bg-[#1C2431] px-2.5 py-1.5 text-[12.5px] text-white outline-none placeholder:text-[#5B6880]" />
+              <button
+                type="button"
+                onClick={() => {
+                  const nombre = nombrePlantilla.trim()
+                  if (!nombre) return
+                  const t: Plantilla = { nombre, material, espesor, ops: ops.map(({ id: _id, ...o }) => o) }
+                  guardarPlantillas([t, ...plantillas.filter((x) => x.nombre !== nombre)])
+                  setNombrePlantilla("")
+                }}
+                className="shrink-0 rounded-[8px] bg-[#1C2431] px-2.5 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[#243045]"
+              >
+                Guardar
+              </button>
+            </div>
+            <span className="text-[11px] leading-snug text-[#8A97AB]">Guarda el material, el espesor y estas operaciones (fresas, profundidades, avances) para usarlos con otro archivo.</span>
+            {plantillas.length > 0 && (
+              <button type="button" onClick={() => { if (confirm("¿Borrar todas tus plantillas?")) guardarPlantillas([]) }} className="self-start text-[11px] text-[#8A97AB] hover:text-[#F28A3C]">
+                Borrar plantillas
+              </button>
+            )}
+          </div>
           {ops.map((o, i) => {
             const info = catalogo.find((c) => c.id === o.tipo)
             const router = !o.tipo.startsWith("laser")
@@ -811,6 +959,7 @@ export function EstudioCam2D() {
                             penetracion: sinCero(fr.penetracion),
                             fresa: fr.nombre,
                             largoCorte: fr.largoCorte || 0,
+                            numero: fr.numero || undefined,
                           })
                       }}
                     >
@@ -826,7 +975,7 @@ export function EstudioCam2D() {
                       ))}
                     </Select>
                     <div className="grid grid-cols-2 gap-2">
-                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v, fresa: "", largoCorte: 0 })} />
+                      <CampoNum etiqueta={o.tipo === "grabado_v" ? "Ø de la V" : "Ø fresa"} valor={o.diametro} cambiar={(v) => cambiarOp(i, { diametro: v, fresa: "", largoCorte: 0, numero: undefined })} />
                       <CampoNum etiqueta={o.tipo === "grabado_v" ? "Prof. máxima" : "Profundidad"} valor={o.profundidad} cambiar={(v) => cambiarOp(i, { profundidad: v })} />
                       {o.tipo === "grabado_v" && <CampoNum etiqueta="Ángulo" valor={o.angulo} cambiar={(v) => cambiarOp(i, { angulo: v })} sufijo="°" />}
                     </div>
@@ -861,6 +1010,22 @@ export function EstudioCam2D() {
                       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Usa la misma figura y el mismo diámetro de fresa en la caja y en la pieza: las esquinas de la pieza salen redondeadas igual que las de la caja.</span>
                     )}
                     {CON_PESTANAS.includes(o.tipo) && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
+                    {CON_ALIVIO.includes(o.tipo) && maquina.tipo !== "laser" && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[12px] text-[#C9D2E0]">Esquinas interiores</span>
+                        <Opciones
+                          opciones={[
+                            { id: "ninguno", nombre: "Redondas" },
+                            { id: "hueso", nombre: "Hueso" },
+                            { id: "t", nombre: "En T" },
+                          ]}
+                          valor={o.alivio || "ninguno"}
+                          cambiar={(v) => cambiarOp(i, { alivio: v as Op["alivio"] })}
+                          columnas={3}
+                        />
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">La fresa redonda no llega a las esquinas a escuadra. Con el alivio entra hasta el fondo y las piezas embonan (cajas, espigas, uniones de dedos).</span>
+                      </div>
+                    )}
                     {CON_ACABADO.includes(o.tipo) && (
                       <>
                         <Interruptor etiqueta="Desbaste + pasada de acabado" activo={o.acabado} cambiar={(v) => cambiarOp(i, { acabado: v })} />
@@ -1065,6 +1230,13 @@ export function EstudioCam2D() {
             </>
           ) : (
             <span className="text-[13px] text-[#8A97AB]">Aquí aparecen el tiempo, el costo de máquina y el detalle de cada operación.</span>
+          )}
+          {plan && (
+            <div className="flex flex-col gap-1.5">
+              <Boton onClick={hojaDeTrabajo}>Hoja de trabajo para el operador</Boton>
+              <Boton tipo="verde" onClick={cotizar}>Cotizar con mi tarifa</Boton>
+              {avisoDoc && <span className="text-[12px] text-[#F28A3C]">{avisoDoc}</span>}
+            </div>
           )}
         </Seccion>
         {plan?.advertencias.map((a) => (

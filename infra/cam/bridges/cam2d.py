@@ -33,7 +33,8 @@ import random
 import ezdxf
 from ezdxf import disassemble
 from ezdxf import path as dxfpath
-from shapely.geometry import LineString, MultiPolygon, Polygon
+from shapely.geometry import LineString, MultiPolygon, Point, Polygon
+from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -181,6 +182,68 @@ def _region(polys: list[Polygon]):
     return reduce(lambda a, b: a.symmetric_difference(b), polys[1:], polys[0]).buffer(0)
 
 
+def aliviar(geom, r: float, herramienta_afuera: bool, tipo: str):
+    """Alivios en las esquinas que la fresa no alcanza (cabeza de fémur o en
+    T), para que las piezas embonen a escuadra (cajas, espigas, dedos).
+
+    herramienta_afuera: la fresa corre por fuera de la región (corte de pieza,
+    perfilado por fuera); si no, por dentro (perfilado por dentro, cajeado).
+    Una esquina necesita alivio cuando, visto desde el lado de la fresa, su
+    ángulo es menor de ~170°. El círculo del alivio (radio de la fresa) pasa
+    por la esquina; se le quita a la región (fresa afuera) o se le suma
+    (fresa adentro)."""
+    if tipo not in ("hueso", "t") or r <= 0 or geom is None or geom.is_empty:
+        return geom
+    circulos = []
+    partes = list(geom.geoms) if hasattr(geom, "geoms") else [geom]
+    for parte in partes:
+        if not isinstance(parte, Polygon):
+            continue
+        parte = orient(parte, 1.0)  # exterior antihorario, huecos horario: la región queda a la izquierda
+        for anillo in [list(parte.exterior.coords)] + [list(h.coords) for h in parte.interiors]:
+            pts = anillo[:-1] if len(anillo) > 1 and anillo[0] == anillo[-1] else anillo
+            n = len(pts)
+            if n < 3:
+                continue
+            for i in range(n):
+                a, v, b = pts[i - 1], pts[i], pts[(i + 1) % n]
+                ux, uy = v[0] - a[0], v[1] - a[1]
+                wx, wy = b[0] - v[0], b[1] - v[1]
+                lu, lw = math.hypot(ux, uy), math.hypot(wx, wy)
+                if lu < 1e-6 or lw < 1e-6:
+                    continue
+                ux, uy, wx, wy = ux / lu, uy / lu, wx / lw, wy / lw
+                giro = ux * wy - uy * wx  # > 0: esquina convexa de la región (gira a la izquierda)
+                coseno = max(-1.0, min(1.0, -(ux * wx + uy * wy)))
+                interior = math.degrees(math.acos(coseno))  # ángulo entre las dos orillas (0..180)
+                if interior > 170:
+                    continue
+                convexa = giro > 0
+                # la fresa no llega a la esquina si la esquina apunta hacia el lado de la fresa
+                if herramienta_afuera == convexa:
+                    continue
+                # en T: el alivio se mete en la pared de la orilla más corta (como en Muebles);
+                # si esa orilla es muy corta para la fresa, va de cabeza de fémur (si no, no embonaría)
+                corta_cabe = (lw if lu >= lw else lu) * 0.45 >= 2 * r
+                if tipo == "t" and corta_cabe:
+                    if lu >= lw:
+                        cx, cy = v[0] + r * wx, v[1] + r * wy
+                    else:
+                        cx, cy = v[0] - r * ux, v[1] - r * uy
+                else:
+                    bx, by = wx - ux, wy - uy  # bisectriz hacia el lado del ángulo agudo
+                    lb = math.hypot(bx, by)
+                    if lb < 1e-9:
+                        continue
+                    cx, cy = v[0] + r * bx / lb, v[1] + r * by / lb
+                circulos.append(Point(cx, cy).buffer(r + 0.01, 24))
+    if not circulos:
+        return geom
+    union = unary_union(circulos)
+    salida = geom.difference(union) if herramienta_afuera else geom.union(union)
+    return salida.buffer(0)
+
+
 def _anillos(geom) -> list[list[tuple[float, float]]]:
     salida = []
     if geom is None or geom.is_empty:
@@ -203,6 +266,38 @@ def _largo(pts) -> float:
 
 
 # --- Escritor de G-code ----------------------------------------------------
+
+
+# Controladores: cómo empieza y termina el programa, cómo se pausa para cambiar
+# la herramienta y si acepta comentarios. NcStudio (Weihong), Richauto (DSP
+# A11/A18) y Syntec son los más comunes en los routers chinos que se venden en
+# México; los tres leen G-code ISO con G0/G1.
+#   - Richauto DSP no acepta comentarios ni pausa a mitad del programa: el
+#     archivo sale sin comentarios y con una sola herramienta.
+#   - Syntec es tipo Fanuc: "%" al principio y al final y número de programa.
+POSTS = {
+    "mach3": {"inicio": ["G21 G90 G17 G94"], "fin": "M30", "pausa": "M0", "comentarios": True, "envolver": False, "programa": None, "crlf": False},
+    "grbl": {"inicio": ["G21 G90 G17 G94"], "fin": "M30", "pausa": "M0", "comentarios": True, "envolver": False, "programa": None, "crlf": False},
+    "linuxcnc": {"inicio": ["G21 G90 G17 G94"], "fin": "M2", "pausa": "M0", "comentarios": True, "envolver": True, "programa": None, "crlf": False},
+    "laser_grbl": {"inicio": ["G21 G90 G17 G94"], "fin": "M30", "pausa": "M0", "comentarios": True, "envolver": False, "programa": None, "crlf": False},
+    "ncstudio": {"inicio": ["G17 G21 G90"], "fin": "M30", "pausa": "M00", "comentarios": True, "envolver": False, "programa": None, "crlf": True},
+    "richauto": {"inicio": ["G21 G90"], "fin": "M30", "pausa": None, "comentarios": False, "envolver": False, "programa": None, "crlf": True},
+    "syntec": {"inicio": ["G21 G90 G17"], "fin": "M30", "pausa": "M00", "comentarios": True, "envolver": True, "programa": "O0001", "crlf": True},
+}
+
+
+def texto_para_maquina(lineas: list[str], post: str) -> str:
+    """El programa como lo lee el controlador: sin comentarios si no los
+    acepta, con "%" y número de programa si los pide, y con fin de línea de
+    Windows para los que se cargan desde su software de escritorio."""
+    perfil = POSTS.get(post, POSTS["mach3"])
+    salida = [l for l in lineas if perfil["comentarios"] or not l.startswith("(")]
+    if perfil["programa"]:
+        salida = [perfil["programa"]] + salida
+    if perfil["envolver"]:
+        salida = ["%"] + salida + ["%"]
+    nl = "\r\n" if perfil["crlf"] else "\n"
+    return nl.join(salida) + nl
 
 
 class Gcode:
@@ -391,7 +486,7 @@ def _profundidades(total: float, pasada: float) -> list[float]:
 # --- Operaciones -----------------------------------------------------------
 
 
-def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre, sobre=0.0):
+def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, avisos, nombre, sobre=0.0, alivio="ninguno"):
     figuras = 0
     if modo == "corte":
         # barrenos por dentro primero, luego el borde por fuera
@@ -401,6 +496,9 @@ def op_contorno(g, polys, modo, r, prof, receta, pestanas, altura_pestana, aviso
         trabajos = [(p, -r, False) for p in interiores] + [(p, r, True) for p in exteriores]
     else:
         trabajos = [(p, r if modo == "fuera" else -r, modo == "fuera") for p in polys]
+    # alivios en las esquinas que la fresa no alcanza (afuera si el desfase es positivo)
+    if alivio in ("hueso", "t"):
+        trabajos = [(aliviar(p, r, d > 0, alivio), d, cp) for p, d, cp in trabajos]
     chicos = 0
     for p, desfase, con_pestanas in trabajos:
         def anillos_a(d, p=p):
@@ -558,8 +656,8 @@ def forma_incrustable(polys, r: float, holgura: float):
     return [p for p in getattr(forma, "geoms", [forma]) if isinstance(p, Polygon) and p.area > 0.5]
 
 
-def op_cajeado(g, polys, r, prof, receta, traslape, avisos, sobre=0.0):
-    region = _region(polys)
+def op_cajeado(g, polys, r, prof, receta, traslape, avisos, sobre=0.0, alivio="ninguno"):
+    region = aliviar(_region(polys), r, False, alivio)
     if region.is_empty:
         return 0
     paso = min(2 * r, max(0.1, 2 * r * (1 - traslape)))
@@ -824,12 +922,16 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         maquina = config.get("maquina") or {}
         tipo_maquina = "laser" if maquina.get("tipo") == "laser" else "router"
         post = str(maquina.get("post", "mach3"))
+        if post not in POSTS:
+            post = "mach3"
         if tipo_maquina == "laser" and post not in ("laser_grbl", "grbl"):
             post = "laser_grbl"
         seguridad = float(maquina.get("seguridad", 5))
         if not (math.isfinite(seguridad) and 1 <= seguridad <= 100):
             return error("entrada_invalida", "La altura de seguridad no es válida.", "Captúrala en mm, entre 1 y 100.")
         smax = float(maquina.get("smax", 1000))
+        # cambiador automático de herramientas: cada fresa va con su número T y M6 (sin pausa)
+        atc = bool(maquina.get("atc")) and tipo_maquina != "laser"
         ops = config.get("operaciones") or []
         if not ops:
             return error("entrada_invalida", "No hay operaciones.", "Agrega al menos una operación (por ejemplo, Corte de pieza).")
@@ -858,13 +960,16 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         if not (math.isfinite(rampa_cfg) and (rampa_cfg == -1 or 0 <= rampa_cfg <= 200)):
             return error("entrada_invalida", "El largo de la rampa de entrada no es válido.", "Captúralo en mm, entre 0 y 200 (0 = bajar en vertical).")
         g.c(f"HETNA CAM Studio 2D - {material} {espesor:g} mm - post {post}")
-        g.emitir("G21 G90 G17 G94")
+        perfil = POSTS[post]
+        for linea in perfil["inicio"]:
+            g.emitir(linea)
         if tipo_maquina != "laser":
             # Antes de cualquier traslado: la máquina puede venir de poner el
             # cero con la fresa tocando el material.
             g.emitir(f"G0 Z{seguridad:.3f}")
         herramienta_actual = None
         rpm_actual = None
+        herramientas_t: list = []  # (herramienta, número T) con cambiador automático
         resumen = []
         for i, op in enumerate(ops, 1):
             tipo = str(op.get("tipo", ""))
@@ -908,6 +1013,9 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 traslape = float(op.get("traslape", 0.4))
                 if not (math.isfinite(traslape) and 0 <= traslape <= 0.95):
                     return error("entrada_invalida", f"Operación {i}: el traslape no es válido.", "Captúralo entre 0 y 95 %.")
+                alivio = str(op.get("alivio") or "ninguno")
+                if alivio not in ("ninguno", "hueso", "t"):
+                    alivio = "ninguno"
                 prof = float(op.get("profundidad") or espesor)
                 prof = max(0.05, min(prof, espesor + 2))
                 try:
@@ -920,13 +1028,35 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 # rpm: una recta de 8 y una V de 12 giran igual en la tabla).
                 en_v = tipo == "grabado_v"
                 herramienta = (round(diam, 3), "v", float(op.get("angulo", 90))) if en_v else (round(diam, 3), "recta")
-                if herramienta_actual != herramienta:
+                try:
+                    num_t = int(op.get("numero") or 0)
+                except (TypeError, ValueError):
+                    num_t = 0
+                if not (1 <= num_t <= 99):
+                    num_t = 0
+                if herramienta_actual != herramienta and atc:
+                    # con cambiador: la máquina guarda la fresa y toma la que sigue
                     if herramienta_actual is not None:
+                        g.subir()
+                        g.emitir("M5")
+                    usadas = [h for h in herramientas_t if h[0] == herramienta]
+                    t = num_t or (usadas[0][1] if usadas else len({h[1] for h in herramientas_t}) + 1)
+                    herramientas_t.append((herramienta, t))
+                    g.c(f"Herramienta T{t}: {op.get('herramienta') or (f'V {herramienta[2]:g} grados' if en_v else f'fresa {diam:g} mm')}")
+                    g.emitir(f"T{t} M6")
+                    g.emitir(f"M3 S{receta['rpm']}")
+                    herramienta_actual = herramienta
+                    rpm_actual = receta["rpm"]
+                elif herramienta_actual != herramienta:
+                    if herramienta_actual is not None:
+                        if not perfil["pausa"]:
+                            return error("entrada_invalida", "Tu controlador no puede pausar a mitad del programa para cambiar la herramienta.",
+                                         "Haz un programa por herramienta: deja sólo las operaciones de una fresa, baja el archivo y repite con la siguiente.")
                         g.subir()
                         g.emitir("M5")
                         de_fabrica = f"fresa en V de {herramienta[2]:g} grados" if en_v else f"fresa {diam:g} mm"
                         g.c(f"Cambia la herramienta: {op.get('herramienta') or de_fabrica}")
-                        g.emitir("M0")
+                        g.emitir(perfil["pausa"])
                     g.emitir(f"M3 S{receta['rpm']}")
                     herramienta_actual = herramienta
                     rpm_actual = receta["rpm"]
@@ -936,11 +1066,11 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 if tipo in ("corte", "fuera", "dentro"):
                     figuras = op_contorno(g, polys, tipo, diam / 2, prof, receta,
                                           int(op.get("pestanas", 4 if tipo != "dentro" else 0)) if op.get("con_pestanas", True) else 0,
-                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre, sobre)
+                                          min(prof * 0.5, float(op.get("alto_pestana", 1.5))), avisos, nombre, sobre, alivio)
                 elif tipo == "linea":
                     figuras = op_linea(g, sel, prof, receta)
                 elif tipo in ("cajeado", "incrustacion_hembra"):
-                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, traslape, avisos, sobre)
+                    figuras = op_cajeado(g, polys, diam / 2, prof, receta, traslape, avisos, sobre, alivio)
                 elif tipo == "incrustacion_macho":
                     holgura = float(op.get("holgura", 0.1))
                     if not (math.isfinite(holgura) and 0 <= holgura <= 2):
@@ -986,13 +1116,15 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         g.subir()
         g.emitir("M5")
         g.emitir("G0 X0 Y0")
-        g.emitir("M2" if post == "linuxcnc" else "M30")
-        with open(ruta_salida, "w", encoding="utf-8") as f:
-            if post == "linuxcnc":
-                f.write("%\n")
-            f.write("\n".join(g.lineas) + "\n")
-            if post == "linuxcnc":
-                f.write("%\n")
+        g.emitir(perfil["fin"])
+        # el archivo para la máquina; si el controlador no acepta comentarios,
+        # aparte va la versión con comentarios para la simulación (trae el
+        # diámetro de cada fresa)
+        with open(ruta_salida, "w", encoding="utf-8", newline="") as f:
+            f.write(texto_para_maquina(g.lineas, post))
+        if not perfil["comentarios"]:
+            with open(ruta_salida + ".sim", "w", encoding="utf-8") as f:
+                f.write("\n".join(g.lineas) + "\n")
         todos = [p for t in trazos for p in t.pts]
         xs = [p[0] for p in todos]
         ys = [p[1] for p in todos]
@@ -1009,6 +1141,7 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 "capas": sorted({t.capa for t in trazos}),
                 "medidas": [round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)],
                 "post": post,
+                "cambiador": atc,
                 "advertencias": avisos,
             },
         }

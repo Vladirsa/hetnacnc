@@ -24,13 +24,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
   const h = buscarHerramientaDiseno(herramienta)
   if (!h) return {}
+  const descripcion = h.meta || descripcionCorta(h.descripcion)
+  const url = `${SITIO}/mx/disenar/${h.slug}`
+  // Al compartir en WhatsApp/Facebook: el título y la descripción de la herramienta
+  // (sin esto salían los genéricos de HETNA del layout)
+  const imagen = h.imagen ? { url: h.imagen, alt: h.nombre } : { url: "/og-hetna.png", width: 1200, height: 630, alt: "HETNA CNC" }
   return {
     title: h.titulo,
-    description: descripcionCorta(h.descripcion),
+    description: descripcion,
     alternates: {
-      canonical: `${SITIO}/mx/disenar/${h.slug}`,
-      languages: { "es-MX": `${SITIO}/mx/disenar/${h.slug}` },
+      canonical: url,
+      languages: { "es-MX": url },
     },
+    openGraph: { type: "website", locale: "es_MX", siteName: "HETNA CNC", title: `${h.titulo} | HETNA CNC`, description: descripcion, url, images: [imagen] },
+    twitter: { card: "summary_large_image", title: `${h.titulo} | HETNA CNC`, description: descripcion, images: [imagen.url] },
   }
 }
 

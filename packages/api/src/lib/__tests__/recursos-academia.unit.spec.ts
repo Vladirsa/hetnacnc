@@ -1,3 +1,4 @@
+import { DOMINIOS_COMPETENCIA, RECURSOS_MUNDO } from "../../scripts/datos-recursos-mundo"
 import { CATEGORIAS_RECURSO, TIPOS_RECURSO, dominioDe, leerRecurso, ligaValida } from "../recursos-academia"
 
 describe("biblioteca de recursos de la Academia", () => {
@@ -55,5 +56,21 @@ describe("biblioteca: detalles de la revisión", () => {
   it("acepta extensiones internacionales y sigue rechazando IPs", () => {
     expect(ligaValida("https://ejemplo.xn--p1ai/")).toBe("https://ejemplo.xn--p1ai/")
     expect(ligaValida("http://192.168.1.10/")).toBeNull()
+  })
+})
+
+describe("biblioteca: recursos de todo el mundo", () => {
+  it("todos son válidos, no se repiten y son al menos 100", () => {
+    const urls = new Set<string>()
+    for (const r of RECURSOS_MUNDO) {
+      const { datos, error } = leerRecurso({ ...r, publicado: true })
+      expect({ url: r.url, error }).toEqual({ url: r.url, error: undefined })
+      expect(urls.has(datos!.url as string)).toBe(false)
+      urls.add(datos!.url as string)
+    }
+    expect(RECURSOS_MUNDO.length).toBeGreaterThanOrEqual(100)
+  })
+  it("no incluye sitios que compiten con HETNA", () => {
+    for (const r of RECURSOS_MUNDO) expect({ url: r.url, competencia: DOMINIOS_COMPETENCIA.test(r.url) }).toEqual({ url: r.url, competencia: false })
   })
 })
