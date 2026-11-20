@@ -1,3 +1,4 @@
+import { DOMINIOS_COMPETENCIA, RECURSOS_MUNDO } from "../../scripts/datos-recursos-mundo"
 import { CATEGORIAS_RECURSO, TIPOS_RECURSO, dominioDe, leerRecurso, ligaValida } from "../recursos-academia"
 
 describe("biblioteca de recursos de la Academia", () => {
@@ -59,8 +60,7 @@ describe("biblioteca: detalles de la revisión", () => {
 })
 
 describe("biblioteca: recursos de todo el mundo", () => {
-  const { RECURSOS_MUNDO } = require("../../scripts/datos-recursos-mundo")
-  it("todos son válidos y no se repiten", () => {
+  it("todos son válidos, no se repiten y son al menos 100", () => {
     const urls = new Set<string>()
     for (const r of RECURSOS_MUNDO) {
       const { datos, error } = leerRecurso({ ...r, publicado: true })
@@ -71,7 +71,6 @@ describe("biblioteca: recursos de todo el mundo", () => {
     expect(RECURSOS_MUNDO.length).toBeGreaterThanOrEqual(100)
   })
   it("no incluye sitios que compiten con HETNA", () => {
-    const competencia = /xometry|sendcutsend|protolabs|ponoko|pcbway|jlcpcb|hubs\.com|fictiv|emachineshop|oshcut|cutlistoptimizer|grid\.space|boxes\.hackerspace|printables|thingiverse|cults3d|etsy|3axis|udemy|domestika|cnczone|reddit|easel\.inventables|fablabs\.io|xtool|glowforge|cnccookbook/i
-    for (const r of RECURSOS_MUNDO) expect(competencia.test(r.url)).toBe(false)
+    for (const r of RECURSOS_MUNDO) expect({ url: r.url, competencia: DOMINIOS_COMPETENCIA.test(r.url) }).toEqual({ url: r.url, competencia: false })
   })
 })
