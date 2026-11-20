@@ -137,13 +137,14 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
   const primero = raices[0]?.grupos[0]?.id
   return (
     <div className="group relative h-full flex items-center shrink-0">
-      <button
-        type="button"
+      {/* Al pasar el mouse abre el menú; al hacer clic, todos los productos */}
+      <LocalizedClientLink
+        href="/categories"
         className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15"
       >
         <Hamburguesa />
         Todas las categorías
-      </button>
+      </LocalizedClientLink>
       <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[720px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
         <div className="mega relative flex min-h-[380px]">
           <div className="w-[240px] shrink-0 border-r border-[#E7E4DC] pr-1 pb-2">
@@ -176,8 +177,15 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
               </div>
             ))}
             <LocalizedClientLink
-              href="/tienda"
+              href="/categories"
               className="mt-2 flex items-center justify-between gap-2 rounded-[8px] border-t border-[#E7E4DC] px-3 py-3 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
+            >
+              Ver todos los productos{tienda ? ` (${tienda.total})` : ""}
+              <FlechaDerecha />
+            </LocalizedClientLink>
+            <LocalizedClientLink
+              href="/tienda"
+              className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF]"
             >
               Ver toda la tienda
               <FlechaDerecha />
