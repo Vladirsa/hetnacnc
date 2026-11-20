@@ -177,12 +177,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "partir-3d",
     nombre: "Partir modelo 3D",
-    texto: "Modelos que no caben en tu impresora, en piezas con pernos o imanes.",
+    texto: "Imprime en grande: divide tu modelo en piezas que caben en la cama, con pernos o imanes.",
     icono: "partir",
     acceso: "gratis",
-    titulo: "Partir modelo 3D gratis: dividir un STL grande en piezas para imprimir",
+    titulo: "Partir modelo 3D gratis: imprime en grande dividiendo tu STL en piezas con pernos",
     descripcion:
-      "Sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que caben en la cama, con pernos, perno integrado o huecos para imanes. Descarga todas las piezas en ZIP. Gratis, sin marca de agua y sin subir tu archivo.",
+      "Divide gratis tu STL, OBJ o STEP en piezas que caben en tu impresora (Ender 3, Bambu, Prusa…): tú eliges dónde cortar y cuántos pernos o imanes por unión. Cascos, macetas, letreros y piezas largas. Descarga el ZIP, cotiza o pide que un taller lo imprima. Sin marca de agua.",
   },
   {
     slug: "svg-a-stl",

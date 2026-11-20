@@ -151,21 +151,31 @@ function puntosConector(seccion: any, radio: number, separacion: number, evitar:
   let faltaron = 0
   for (const region of seccion.decompose()) {
     const area = region.area()
-    // con espacio, 4 mm de pared alrededor del agujero; si no cabe, el mínimo de 2 mm
-    let chica = region.offset(-(radio + 2 * PARED), "Round")
-    if (chica.isEmpty() || chica.area() < 1) chica = region.offset(-(radio + PARED), "Round")
-    if (chica.isEmpty()) { if (porUnion > 0) faltaron += porUnion; continue }
-    const polis = chica.toPolygons() as [number, number][][]
-    const b = chica.bounds()
-    const pasos = 18
-    const cand: [number, number][] = []
-    for (let i = 0; i <= pasos; i++) {
-      for (let j = 0; j <= pasos; j++) {
-        const u = b.min[0] + ((b.max[0] - b.min[0]) * i) / pasos
-        const v = b.min[1] + ((b.max[1] - b.min[1]) * j) / pasos
-        if (dentro(u, v, polis) && !evitar(u, v)) cand.push([u, v])
+    // Centros posibles: la cara encogida (radio + pared). Con espacio, 4 mm de pared;
+    // si no, el mínimo de 2 mm. Se prueban puntos de una rejilla y, para paredes
+    // delgadas (macetas, jarrones) donde la rejilla no cae, los vértices de la orilla
+    // de la zona encogida (están justo a la distancia buena de la pared).
+    const candidatos = (encoger: number) => {
+      const chica = region.offset(-encoger, "Round")
+      if (chica.isEmpty()) return { cand: [] as [number, number][], b: null as any }
+      const polis = chica.toPolygons() as [number, number][][]
+      const b = chica.bounds()
+      const pasos = 18
+      const cand: [number, number][] = []
+      for (let i = 0; i <= pasos; i++) {
+        for (let j = 0; j <= pasos; j++) {
+          const u = b.min[0] + ((b.max[0] - b.min[0]) * i) / pasos
+          const v = b.min[1] + ((b.max[1] - b.min[1]) * j) / pasos
+          if (dentro(u, v, polis) && !evitar(u, v)) cand.push([u, v])
+        }
       }
+      const orilla = polis.flat()
+      const salto = Math.max(1, Math.ceil(orilla.length / 400))
+      for (let k = 0; k < orilla.length; k += salto) if (!evitar(orilla[k][0], orilla[k][1])) cand.push(orilla[k])
+      return { cand, b }
     }
+    let { cand, b } = candidatos(radio + 2 * PARED)
+    if (!cand.length) ({ cand, b } = candidatos(radio + PARED))
     if (!cand.length) { if (porUnion > 0) faltaron += porUnion; continue }
     const quiero = porUnion > 0 ? porUnion : area < 900 ? 1 : area < 4000 ? 2 : area < 12000 ? 3 : 4
     // el primero, el más cercano al centro de la región encogida; luego, el más lejos de los ya elegidos
