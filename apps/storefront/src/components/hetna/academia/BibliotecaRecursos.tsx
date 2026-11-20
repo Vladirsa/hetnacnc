@@ -6,9 +6,56 @@
 import { useMemo, useState } from "react"
 
 import Image from "@/lib/imagenes/Imagen"
+import { ServicioIcono } from "../ServicioIcono"
 import { CATEGORIAS_RECURSO, TIPOS_RECURSO, type Recurso } from "@/lib/hetna/recursos-academia"
 
 const INICIALES = 12
+
+// Portada propia de HETNA cuando el recurso no tiene foto: color e ícono por
+// categoría. No se usan imágenes de los otros sitios (derechos de autor) y no
+// pesa nada: es CSS y un SVG en línea.
+const PORTADA: Record<string, { icono: string; de: string; a: string }> = {
+  "muebles-melamina": { icono: "mueble", de: "#7C4A1E", a: "#C98A4B" },
+  carpinteria: { icono: "caja", de: "#5B3A1A", a: "#A8763E" },
+  "router-cnc": { icono: "cam", de: "#142033", a: "#2F4A70" },
+  "corte-laser": { icono: "grabado", de: "#7A1F12", a: "#E0532E" },
+  plasma: { icono: "partir", de: "#1E2A6B", a: "#4F6BE0" },
+  "impresion-3d": { icono: "extruir", de: "#0F5B4A", a: "#2DB38C" },
+  electronica: { icono: "ia", de: "#1F4E2C", a: "#5BAA3C" },
+  "diseno-cam": { icono: "vector", de: "#4A1F6B", a: "#9257D6" },
+  programas: { icono: "gcode", de: "#0E3D63", a: "#2B8BD6" },
+  otros: { icono: "aprender", de: "#3D3A33", a: "#8A8475" },
+}
+const dominio = (u: string) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, "")
+  } catch {
+    return ""
+  }
+}
+
+function Portada({ r }: { r: Recurso }) {
+  const p = PORTADA[r.categoria] || PORTADA.otros
+  const categoria = CATEGORIAS_RECURSO.find(([c]) => c === r.categoria)?.[1] || "Recurso"
+  return (
+    <span
+      aria-hidden="true"
+      className="relative flex aspect-[16/9] flex-col justify-between overflow-hidden p-4 text-white"
+      style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(135deg, ${p.de}, ${p.a})`, backgroundSize: "16px 16px, 100% 100%" }}
+    >
+      <span className="text-[11.5px] font-bold uppercase tracking-wide text-white/80">{categoria}</span>
+      <span className="pointer-events-none absolute -bottom-4 -right-3 text-white/20 transition group-hover:scale-105">
+        <ServicioIcono nombre={p.icono} size={120} />
+      </span>
+      <span className="relative flex items-center gap-2">
+        <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-white/15">
+          <ServicioIcono nombre={p.icono} size={24} />
+        </span>
+        <span className="truncate text-[13px] font-semibold text-white/90">{dominio(r.url)}</span>
+      </span>
+    </span>
+  )
+}
 
 export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
   const [cat, setCat] = useState("todas")
@@ -69,10 +116,12 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
                 rel="noopener noreferrer nofollow"
                 className="group flex h-full flex-col overflow-hidden rounded-[14px] border border-[#E7E4DC] bg-white transition hover:-translate-y-0.5 hover:border-[#C2560A]"
               >
-                {r.imagen_url && (
+                {r.imagen_url ? (
                   <span className="relative block aspect-[16/9] bg-[#F3F1EA]">
                     <Image src={r.imagen_url} alt="" fill sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw" className="object-cover" />
                   </span>
+                ) : (
+                  <Portada r={r} />
                 )}
                 <span className="flex flex-1 flex-col gap-2 p-4">
                   <span className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide">
