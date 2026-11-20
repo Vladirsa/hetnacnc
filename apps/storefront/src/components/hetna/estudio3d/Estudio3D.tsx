@@ -204,6 +204,12 @@ export function Estudio3D({
   const vistaPrevia = useRef<{ dir: THREE.Vector3; zoom: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [datos, setDatos] = useState<{ x: number; y: number; z: number; triangulos: number; vertices: number } | null>(null)
+  // Se dibuja sólo cuando algo cambia (antes: 60 veces por segundo sin parar, con
+  // sombras y reflejos; en un celular gastaba batería y trababa la página).
+  // "sucio" = hay que redibujar; "hasta" = seguir dibujando un rato (texturas que
+  // terminan de cargar después de montar un GLB).
+  const sucio = useRef(true)
+  const dibujarHasta = useRef(0)
 
   // ---- Escena: se arma una vez por pieza --------------------------------
   useEffect(() => {
@@ -227,6 +233,8 @@ export function Estudio3D({
     el.appendChild(renderer.domElement)
     const controles = new OrbitControls(camara, renderer.domElement)
     controles.enableDamping = true
+    const marcar = () => { sucio.current = true }
+    controles.addEventListener("change", marcar)
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0x223044, 0.35)
     scene.add(hemi)
@@ -247,6 +255,7 @@ export function Estudio3D({
       renderer.setSize(w, h)
       camara.aspect = w / h
       camara.updateProjectionMatrix()
+      sucio.current = true
     }
     const obs = new ResizeObserver(ajustar)
     obs.observe(el)
@@ -294,6 +303,8 @@ export function Estudio3D({
       setCargando(false)
       setError(null)
       setVersion((v) => v + 1)
+      sucio.current = true
+      dibujarHasta.current = performance.now() + 3000 // texturas del GLB que llegan después
     }
 
     const montar = (geo: THREE.BufferGeometry) => {
@@ -432,7 +443,10 @@ export function Estudio3D({
     const v = new THREE.Vector3()
     const animar = () => {
       cuadro = requestAnimationFrame(animar)
-      controles.update()
+      // update() dice si la cámara se movió (arrastre, inercia o "girar sola")
+      const movio = controles.update()
+      if (!movio && !sucio.current && performance.now() > dibujarHasta.current) return
+      sucio.current = false
       renderer.render(scene, camara)
       // Ejes de orientación: dónde quedan X, Y y Z vistos desde la cámara
       const svg = gizmoRef.current
@@ -526,6 +540,12 @@ export function Estudio3D({
     c.autoRotate = girar
     c.autoRotateSpeed = 1.6
   }, [girar, version])
+
+  // Cualquier cambio de pantalla (material, modo, luz, rejilla, medidas…) pide
+  // redibujar en el siguiente cuadro. Va después de los efectos que tocan la escena.
+  useEffect(() => {
+    sucio.current = true
+  })
 
   useEffect(() => {
     const onCambio = () => setCompleta(document.fullscreenElement === marcoRef.current)
