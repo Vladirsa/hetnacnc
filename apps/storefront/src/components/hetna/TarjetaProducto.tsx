@@ -10,7 +10,8 @@ import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { licenciaDe } from "@/lib/hetna/licencias"
-import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
+import { esFichaDescarga, tipoFicha } from "@/lib/hetna/tipo-ficha"
+import { origenDe } from "@/lib/hetna/origen"
 
 import { BotonAgregarRapido } from "./BotonAgregarRapido"
 import { DistintivoEnvioGratis } from "./envios/DistintivoEnvioGratis"
@@ -29,6 +30,7 @@ export type Calificacion = { promedio: number; total: number }
 
 export type Vendedor = {
   nombre: string
+  handle?: string
   total: number
   sellerId?: string
   ofertaId?: string
@@ -57,6 +59,7 @@ export const vendedoresPorProducto = async (
         (oferta as { product_id?: string }).product_id ||
         (oferta as { product?: { id?: string } }).product?.id
       const nombre = oferta.seller?.name
+      const handle = (oferta.seller as { handle?: string } | undefined)?.handle
       if (!id || !nombre) continue
       const sellerId = oferta.seller?.id
 
@@ -75,6 +78,7 @@ export const vendedoresPorProducto = async (
 
       mapa.set(id, {
         nombre: previo ? previo.nombre : nombre,
+        handle: previo ? previo.handle : handle,
         total: previo ? previo.total + 1 : 1,
         // El taller que se nombra y el umbral que se enseña son los de la
         // oferta ganadora, no los del primero que llegó.
@@ -155,11 +159,18 @@ export default function TarjetaProducto({
 
   const creado = product.created_at ? new Date(product.created_at).getTime() : 0
   const esNuevo = creado > 0 && Date.now() - creado < 30 * DIA
-  const quien = vendedor
-    ? vendedor.total > 1
-      ? "Varios talleres"
-      : "Vendido por " + vendedor.nombre
-    : null
+  // Quién lo vende y qué es (auditoría 19 nov, punto 4): tienda propia,
+  // taller de la plataforma o varios; y si es producto, descarga o servicio.
+  const origen = vendedor && vendedor.total === 1 ? origenDe({ handle: vendedor.handle, name: vendedor.nombre }) : null
+  const m = (product.metadata || {}) as Record<string, unknown>
+  const esCreditos = m.producto_creditos_3d === true || m.producto_creditos_3d === "true"
+  const tipo = esCreditos ? "creditos" : descarga ? "descarga" : tipoFicha(product as never) === "servicio" ? "servicio" : "fisico"
+  const ETIQUETA_TIPO = {
+    descarga: { texto: "⬇ Descarga", clase: "bg-[#1E2329] text-white" },
+    servicio: { texto: "Servicio", clase: "bg-[#E8F5EC] text-[#17603A] ring-1 ring-[#B9DFC6]" },
+    creditos: { texto: "Créditos", clase: "bg-[#EAF1FB] text-[#1F4E8C] ring-1 ring-[#C3D6F0]" },
+    fisico: { texto: "Producto", clase: "bg-[#F4F1EA] text-[#44433D] ring-1 ring-[#E0DCD2]" },
+  }[tipo]
 
   return (
     <div className={CARD}>
@@ -199,16 +210,26 @@ export default function TarjetaProducto({
         </div>
 
         <div className="flex flex-col gap-1 p-3">
-          {quien && (
-            <span className="truncate text-[11.5px] font-medium text-[#6B6A63]">{quien}</span>
-          )}
+          {/* Qué es y quién lo vende, de un vistazo */}
+          <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-bold">
+            <span className={`rounded px-1.5 py-0.5 ${ETIQUETA_TIPO.clase}`}>{ETIQUETA_TIPO.texto}</span>
+            {vendedor &&
+              (vendedor.total > 1 ? (
+                <span className="rounded px-1.5 py-0.5 text-[#44433D] ring-1 ring-[#E0DCD2]">Varios talleres</span>
+              ) : origen === "hetna" ? (
+                <span className="rounded bg-[#C2560A] px-1.5 py-0.5 text-white">HETNA oficial</span>
+              ) : (
+                <span className="max-w-[120px] truncate rounded px-1.5 py-0.5 text-[#1F4E8C] ring-1 ring-[#C3D6F0]" title={vendedor.nombre}>
+                  Taller · {vendedor.nombre}
+                </span>
+              ))}
+          </span>
           <span className="min-h-[34px] text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-2">
             {product.title}
           </span>
 
           {descarga && (
             <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-semibold">
-              <span className="rounded bg-[#1E2329] px-1.5 py-0.5 text-white">⬇ Descarga</span>
               {fmts.slice(0, 3).map((f) => (
                 <span key={f} className="rounded border border-[#D4D9DF] px-1.5 py-0.5 text-[#1E2329]">
                   {f}
