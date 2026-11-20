@@ -111,7 +111,7 @@ export const ProductDetailsPage = async ({
   const descarga = esFichaDescarga(prod)
   const largosDescarga = descarga ? (
     <div className="flex flex-col gap-6">
-      <AbajoDescarga product={prod as never} />
+      <AbajoDescarga product={prod as never} fotosCompradores={(resenas?.resenas || []).flatMap((r) => r.fotos || [])} />
       <ResenasProducto datos={resenas} productId={prod.id} pendiente={pendienteDeEste} />
     </div>
   ) : null
