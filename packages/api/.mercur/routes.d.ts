@@ -1460,6 +1460,7 @@ export type Routes = {
             $slug: typeof import("../src/api/api/taller-publico/[slug]/route") & {
                 estimar: typeof import("../src/api/api/taller-publico/[slug]/estimar/route");
                 solicitar: typeof import("../src/api/api/taller-publico/[slug]/solicitar/route");
+                visita: typeof import("../src/api/api/taller-publico/[slug]/visita/route");
             };
         };
         tarjetaPaypal: typeof import("../src/api/api/tarjeta-paypal/route");

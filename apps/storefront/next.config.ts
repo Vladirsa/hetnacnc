@@ -97,6 +97,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: encabezadosSeguridad },
+      // Widget del cotizador del taller (/embed/*): se puede mostrar dentro de
+      // la página web o el Facebook del taller. Esta regla va después y manda
+      // sobre la de arriba en estos dos encabezados.
+      {
+        source: '/:locale([a-z]{2})/embed/:path*',
+        headers: [
+          {
+            key: process.env.CSP_SOLO_REPORTE === '1' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
+            value: politicaCSP.replace("frame-ancestors 'self'", 'frame-ancestors *'),
+          },
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+        ],
+      },
       // Caché de los archivos de public/. Antes esta regla decía
       // '/public/:path*' y no cacheaba nada: Next sirve public/ en la raíz, o
       // sea /images/foo.webp, no /public/images/foo.webp. Se nombran las
