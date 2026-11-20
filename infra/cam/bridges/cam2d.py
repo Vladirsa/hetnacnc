@@ -930,6 +930,8 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
         if not (math.isfinite(seguridad) and 1 <= seguridad <= 100):
             return error("entrada_invalida", "La altura de seguridad no es válida.", "Captúrala en mm, entre 1 y 100.")
         smax = float(maquina.get("smax", 1000))
+        # cambiador automático de herramientas: cada fresa va con su número T y M6 (sin pausa)
+        atc = bool(maquina.get("atc")) and tipo_maquina != "laser"
         ops = config.get("operaciones") or []
         if not ops:
             return error("entrada_invalida", "No hay operaciones.", "Agrega al menos una operación (por ejemplo, Corte de pieza).")
@@ -967,6 +969,7 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
             g.emitir(f"G0 Z{seguridad:.3f}")
         herramienta_actual = None
         rpm_actual = None
+        herramientas_t: list = []  # (herramienta, número T) con cambiador automático
         resumen = []
         for i, op in enumerate(ops, 1):
             tipo = str(op.get("tipo", ""))
@@ -1025,7 +1028,26 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 # rpm: una recta de 8 y una V de 12 giran igual en la tabla).
                 en_v = tipo == "grabado_v"
                 herramienta = (round(diam, 3), "v", float(op.get("angulo", 90))) if en_v else (round(diam, 3), "recta")
-                if herramienta_actual != herramienta:
+                try:
+                    num_t = int(op.get("numero") or 0)
+                except (TypeError, ValueError):
+                    num_t = 0
+                if not (1 <= num_t <= 99):
+                    num_t = 0
+                if herramienta_actual != herramienta and atc:
+                    # con cambiador: la máquina guarda la fresa y toma la que sigue
+                    if herramienta_actual is not None:
+                        g.subir()
+                        g.emitir("M5")
+                    usadas = [h for h in herramientas_t if h[0] == herramienta]
+                    t = num_t or (usadas[0][1] if usadas else len({h[1] for h in herramientas_t}) + 1)
+                    herramientas_t.append((herramienta, t))
+                    g.c(f"Herramienta T{t}: {op.get('herramienta') or (f'V {herramienta[2]:g} grados' if en_v else f'fresa {diam:g} mm')}")
+                    g.emitir(f"T{t} M6")
+                    g.emitir(f"M3 S{receta['rpm']}")
+                    herramienta_actual = herramienta
+                    rpm_actual = receta["rpm"]
+                elif herramienta_actual != herramienta:
                     if herramienta_actual is not None:
                         if not perfil["pausa"]:
                             return error("entrada_invalida", "Tu controlador no puede pausar a mitad del programa para cambiar la herramienta.",
@@ -1119,6 +1141,7 @@ def generar(ruta_dxf: str, ruta_salida: str, config: dict) -> dict:
                 "capas": sorted({t.capa for t in trazos}),
                 "medidas": [round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)],
                 "post": post,
+                "cambiador": atc,
                 "advertencias": avisos,
             },
         }
