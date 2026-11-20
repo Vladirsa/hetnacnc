@@ -193,7 +193,7 @@ export function quoteLeadEmailHtml({
       <p style="font-size:24px;font-weight:700;margin:12px 0;">
         $${estimadoMin.toFixed(0)} – $${estimadoMax.toFixed(0)} MXN
       </p>
-      <p style="color:#666;font-size:13px;">Precio estimado, incluye IVA. El precio final puede variar según
+      <p style="color:#666;font-size:13px;">Precio estimado, más IVA. El precio final puede variar según
       el archivo real de tu pieza, acabados y disponibilidad de material.</p>
       <p style="margin-top:24px;">
         <a href="${whatsappUrl}"

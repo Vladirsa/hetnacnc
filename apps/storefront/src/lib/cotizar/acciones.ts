@@ -54,3 +54,37 @@ export async function cotizarLead(input: CotizarLeadInput): Promise<CotizarLeadR
     return { ok: false, mensaje: "No se pudo calcular el estimado. Intenta de nuevo." }
   }
 }
+
+// ── Precio en vivo (estrategia 1.2) ──────────────────────────────────────
+// Cómo se forma el precio y cuánto baja por volumen, mientras el cliente
+// mueve material, medidas o cantidad. No pide correo ni registra nada.
+export type PrecioEnVivo = {
+  minimo: number
+  recomendado: number
+  maximo: number
+  iva: number
+  total: number
+  calculo: string[]
+  aplica_minimo: boolean
+  por_volumen: { cantidad: number; unitario: number; total: number }[]
+}
+
+export async function precioEnVivo(
+  input: Omit<CotizarLeadInput, "email" | "nombre" | "telefono" | "ciudad" | "piezas_mes_estimado">
+): Promise<PrecioEnVivo | null> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/precio-instantaneo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    })
+    if (!res.ok) return null
+    return (await res.json()) as PrecioEnVivo
+  } catch {
+    return null
+  }
+}
