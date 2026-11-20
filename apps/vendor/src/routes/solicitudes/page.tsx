@@ -975,7 +975,7 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
       )}
       <div style={S.grid}>
         <div>
-          <label style={S.label}>Precio total ({f.moneda}, con IVA)</label>
+          <label style={S.label}>Precio total ({f.moneda}, con IVA) *</label>
           <input style={S.input} inputMode="decimal" value={f.precio} onChange={(e) => set("precio", e.target.value)} placeholder="3500" />
         </div>
         <div>
@@ -986,15 +986,15 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
           </select>
         </div>
         <div>
-          <label style={S.label}>Días de entrega</label>
+          <label style={S.label}>Días de fabricación *</label>
           <input style={S.input} type="number" min="1" value={f.dias} onChange={(e) => set("dias", e.target.value)} placeholder="5" />
         </div>
         <div>
-          <label style={S.label}>Fecha estimada de entrega</label>
-          <input style={S.input} type="date" value={f.fecha_entrega} onChange={(e) => set("fecha_entrega", e.target.value)} />
+          <label style={S.label}>Fecha estimada de entrega *</label>
+          <input style={S.input} type="date" min={new Date().toISOString().slice(0, 10)} value={f.fecha_entrega} onChange={(e) => set("fecha_entrega", e.target.value)} />
         </div>
         <div>
-          <label style={S.label}>Vigencia (días)</label>
+          <label style={S.label}>Vigencia (días) *</label>
           <input style={S.input} type="number" min="1" value={f.vigencia_dias} onChange={(e) => set("vigencia_dias", e.target.value)} />
         </div>
         <div>
@@ -1019,11 +1019,11 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
           : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos completo al confirmar la entrega. Conéctalos en la app para pedir anticipo y cobrar directo.`}
       </p>
       <p style={{ margin: "14px 0 4px", fontSize: 13, fontWeight: 700, color: "#142033" }}>
-        Propuesta formal <span style={{ fontWeight: 400, color: "#6B675C" }}>— mientras más completa, más confianza le da al cliente</span>
+        Propuesta formal <span style={{ fontWeight: 400, color: "#6B675C" }}>— los campos con * son obligatorios para que el cliente compare todas las propuestas con los mismos datos</span>
       </p>
       <div style={S.grid}>
         <div>
-          <label style={S.label}>Materiales que usarás</label>
+          <label style={S.label}>Material y especificaciones *</label>
           <textarea style={S.area} value={f.materiales} onChange={(e) => set("materiales", e.target.value)} placeholder="Ej. Acero A36 cal. 14, pintura electrostática negra" />
         </div>
         <div>
@@ -1031,11 +1031,11 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
           <textarea style={S.area} value={f.operaciones} onChange={(e) => set("operaciones", e.target.value)} placeholder="Ej. Corte plasma, doblez, soldadura MIG, pintura" />
         </div>
         <div>
-          <label style={S.label}>Condiciones de pago</label>
+          <label style={S.label}>Condiciones de pago *</label>
           <textarea style={S.area} value={f.condiciones_pago} onChange={(e) => set("condiciones_pago", e.target.value)} placeholder="Ej. 50% para empezar y 50% contra entrega; factura CFDI" />
         </div>
         <div>
-          <label style={S.label}>Garantía</label>
+          <label style={S.label}>Garantía *</label>
           <textarea style={S.area} value={f.garantia} onChange={(e) => set("garantia", e.target.value)} placeholder="Ej. Reposición sin costo por defecto de fabricación en 30 días" />
         </div>
       </div>
