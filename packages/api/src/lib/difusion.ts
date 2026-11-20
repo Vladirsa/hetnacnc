@@ -6,6 +6,7 @@ import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
 import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import { puntajePosicion, tallerVerificado } from "./confianza"
+import { acabadosPedidos, haceAcabados } from "./acabados"
 import { aceptaCliente, reputacionCliente } from "./trust"
 import { publicacionAutomatica } from "./social-hub"
 import {
@@ -76,12 +77,16 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
   // Mismo municipio que el cliente: antes que nadie (puede entregar en mano).
   const norm = (v: unknown) => String(v || "").trim().toLowerCase()
   const mismoMunicipio = (p: any) => Boolean(trabajo.ciudad) && norm(p?.ciudad) === norm(trabajo.ciudad)
+  // Estrategia 2.1: si pide acabados (pintura, doblez, roscado…), primero los
+  // talleres que dicen hacerlos en su perfil.
+  const pideAcabados = acabadosPedidos((trabajo as any).acabado, trabajo.descripcion)
   const prioridad = (x: { metadata: any }) =>
     (trabajaMaterial(x.metadata?.perfil?.materiales, trabajo.material) ||
     (suministro && trabajaMaterial(x.metadata?.perfil?.marcas, `${trabajo.marca || ""} ${trabajo.material || ""}`))
       ? 0
       : 2) +
     (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
+    (haceAcabados(x.metadata?.perfil, pideAcabados) ? -1 : 0) +
     (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
   // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
   // verificación y certificaciones). No cambia su calificación.

@@ -52,6 +52,21 @@ const OFRECE = [
   ["envio", "Envío por paquetería a todo México"],
 ]
 
+// Acabados y procesos extra (estrategia 2.1): las solicitudes que los piden
+// les llegan primero a los talleres que los marcan. Misma lista que
+// packages/api/src/lib/acabados.ts.
+const ACABADOS = [
+  ["pintura_electrostatica", "Pintura electrostática"],
+  ["pintura", "Pintura o barniz"],
+  ["lijado", "Lijado y pulido"],
+  ["doblez", "Doblez de lámina"],
+  ["roscado", "Roscado / machuelado"],
+  ["grabado", "Grabado (láser o fresa)"],
+  ["anodizado", "Anodizado / galvanizado"],
+  ["soldadura", "Soldadura"],
+  ["ensamble", "Ensamble"],
+]
+
 // Procesos con tarifa para el estimado rápido de "Fabrícamelo" (mismo nombre
 // que en SERVICIOS). El cliente ve "~$X" junto al taller antes de pedir.
 const PROCESOS_TARIFA = ["Corte láser", "Corte CNC", "Corte plasma"]
@@ -171,6 +186,8 @@ export default function PerfilTallerPage() {
     lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", horario: "", anos: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
     tarifas: {}, tipo_cuenta: "taller", marcas: "",
+    // { clave: "precio desde" (texto libre, opcional) } de los acabados que hace
+    acabados: {},
   })
 
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }))
@@ -206,6 +223,12 @@ export default function PerfilTallerPage() {
           materiales: mats.filter((m) => MATERIALES.includes(m)),
           otrosMateriales: mats.filter((m) => !MATERIALES.includes(m)).join(", "),
           capacidades: (Array.isArray(p.capacidades) ? p.capacidades : []).join("\n"),
+          acabados: Object.fromEntries(
+            (Array.isArray(p.acabados) ? p.acabados : [])
+              .map((a) => (typeof a === "string" ? { clave: a } : a))
+              .filter((a) => a && ACABADOS.some(([c]) => c === a.clave))
+              .map((a) => [a.clave, a.precio || ""])
+          ),
           // Las máquinas de antes sólo traían el área en texto ("1500 x 3000 mm")
           maquinas: (Array.isArray(p.maquinas) ? p.maquinas : []).map((m) => {
             // Sólo si parecen milímetros (en metros o cm se deja para que lo capture)
@@ -247,6 +270,7 @@ export default function PerfilTallerPage() {
       marcas: f.marcas.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 20),
       materiales: [...f.materiales, ...otros],
       capacidades: lineas(f.capacidades),
+      acabados: Object.entries(f.acabados).map(([clave, precio]) => ({ clave, ...(String(precio || "").trim() ? { precio: String(precio).trim().slice(0, 40) } : {}) })),
       // Con X e Y se arma el área en texto (la usan las páginas que ya existían)
       maquinas: f.maquinas
         .filter((m) => (m.nombre || "").trim() || m.tipo)
@@ -420,6 +444,43 @@ export default function PerfilTallerPage() {
             <button type="button" key={x} style={chip(f.servicios.includes(x))} onClick={() => alternar("servicios", x)}>{x}</button>
           ))}
         </div>
+      </section>
+
+      <section style={S.card}>
+        <h2 style={S.h2}>Acabados que haces</h2>
+        <p style={S.hint}>
+          Las solicitudes que piden estos acabados te llegan primero, y los clientes los ven en tu perfil. El precio es opcional
+          (ej. "desde $150 por pieza", "$15 por doblez").
+        </p>
+        {ACABADOS.map(([clave, nombre]) => {
+          const activo = Object.prototype.hasOwnProperty.call(f.acabados, clave)
+          return (
+            <div key={clave} style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minWidth: 220 }}>
+                <input
+                  type="checkbox"
+                  checked={activo}
+                  onChange={() => {
+                    const a = { ...f.acabados }
+                    if (activo) delete a[clave]
+                    else a[clave] = ""
+                    set("acabados", a)
+                  }}
+                />
+                {nombre}
+              </label>
+              {activo && (
+                <input
+                  style={{ ...S.input, maxWidth: 260 }}
+                  value={f.acabados[clave]}
+                  onChange={(e) => set("acabados", { ...f.acabados, [clave]: e.target.value })}
+                  placeholder="Precio desde (opcional)"
+                  maxLength={40}
+                />
+              )}
+            </div>
+          )
+        })}
       </section>
 
       <section style={S.card}>

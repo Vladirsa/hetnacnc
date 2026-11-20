@@ -1,5 +1,6 @@
 import { sdk } from "@/lib/client"
 import { type Tarifas, leerTarifas } from "@/lib/hetna/estimado"
+import { type AcabadoTaller, leerAcabados } from "@/lib/hetna/acabados"
 
 // Tipos de máquina (mismos valores que apps/vendor/src/routes/perfil-taller)
 export const TIPOS_MAQUINA: [string, string][] = [
@@ -61,6 +62,8 @@ export type Perfil = {
   // Lo que el taller HIZO en HETNA (packages/api/src/lib/reputacion-medida.ts),
   // recalculado cada día: puntualidad real, terminados, reclamos, respuesta.
   medido?: Medido
+  // Acabados que hace (pintura, doblez, roscado…) y su "precio desde" (estrategia 2.1)
+  acabados: AcabadoTaller[]
   galeria: string[]
 }
 
@@ -179,6 +182,7 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
     capacidad_tecnica: num(p.capacidad_tecnica),
     historial_suficiente: p.historial_suficiente === true,
     medido: leerMedido(p.medido),
+    acabados: leerAcabados(p.acabados),
     galeria: lista(p.galeria).filter((u) => /^https?:\/\//.test(u)).slice(0, 12),
   }
 }
