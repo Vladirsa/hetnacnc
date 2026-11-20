@@ -39,13 +39,13 @@ MATERIALES = [
     ("triplay_15", "Triplay pino 15 mm (hoja)", "precio triplay pino 15 mm 1.22 x 2.44", ["triplay", "15"], (400, 1800)),
     ("acrilico_3", "Acrílico cristal 3 mm (hoja 1.22×2.44)", "precio lámina acrílico cristal 3 mm 1.22 x 2.44", ["acrilico", "3"], (600, 2500)),
     ("acrilico_6", "Acrílico cristal 6 mm (hoja 1.22×2.44)", "precio lámina acrílico cristal 6 mm 1.22 x 2.44", ["acrilico", "6"], (1200, 4500)),
-    ("acero_cal14", "Lámina acero negro cal. 14 (4×8 ft)", "precio lámina negra calibre 14 4x8", ["14"], (900, 4000)),
-    ("acero_cal18", "Lámina galvanizada cal. 18 (4×8 ft)", "precio lámina galvanizada calibre 18 4x8", ["18"], (500, 2500)),
+    ("acero_cal14", "Lámina acero negro cal. 14 (4×8 ft)", "precio lámina negra calibre 14 4x8", ["negra", "14"], (900, 4000)),
+    ("acero_cal18", "Lámina galvanizada cal. 18 (4×8 ft)", "precio lámina galvanizada calibre 18 4x8", ["galvanizada", "18"], (500, 2500)),
     ("inox_cal18", "Lámina inoxidable 304 cal. 18 (4×8 ft)", "precio lámina acero inoxidable 304 calibre 18 4x8", ["inox", "18"], (2000, 9000)),
     ("aluminio_18", "Placa aluminio 1/8\" (4×8 ft)", "precio placa aluminio 1/8 4x8 hoja", ["aluminio", "1/8"], (2000, 9000)),
     ("pla_1kg", "Filamento PLA 1 kg 1.75 mm", "precio filamento PLA 1kg 1.75 mm", ["pla", "1"], (220, 900)),
 ]
-NO_TIENDA = ("youtube.", "facebook.", "instagram.", "tiktok.", "pinterest.", "wikipedia.", "reddit.", "listado.mercadolibre", "ebay.", "alibaba.", "aliexpress.")
+NO_TIENDA = ("youtube.", "facebook.", "instagram.", "tiktok.", "pinterest.", "wikipedia.", "reddit.", "listado.mercadolibre", "ebay.", "alibaba.", "aliexpress.", "/blog/", "/blogs/", "/noticias/")
 PRECIO_RE = re.compile(r"\$\s?(\d{1,3}(?:,\d{3})+|\d{2,6})(?:\.(\d{2}))?")
 
 
