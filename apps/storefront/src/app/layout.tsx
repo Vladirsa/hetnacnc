@@ -97,6 +97,8 @@ export default async function RootLayout({
   // la microcaché de nginx también sirve a quien tiene algo en el carrito.
   const ruta = (await headers()).get('x-hetna-ruta') || '';
   const cart = /^\/[a-z]{2}\/(cart|checkout)(\/|$)/.test(ruta) ? await retrieveCart() : null;
+  // Widget para sitios de terceros (/embed/*): sin barra móvil, aviso de instalar ni de cookies
+  const esWidget = /^\/[a-z]{2}\/embed\//.test(ruta);
 
   // Idioma de la página desde el servidor (lo que lee Google):
   // la cookie elegida manda; sin elección, /us es inglés y lo demás español del país.
@@ -116,7 +118,7 @@ export default async function RootLayout({
       lang={htmlLang}
       className=""
     >
-      <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased pb-16 md:pb-0`}>
+      <body className={`${funnelDisplay.className} ${hetnaDisplay.variable} relative bg-primary text-secondary antialiased ${esWidget ? '' : 'pb-16 md:pb-0'}`}>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_VELO }} />
         <Analytics />
         <RastreoCorreo />
@@ -124,10 +126,10 @@ export default async function RootLayout({
         <Traductor />
         <Providers cart={cart}>
           {children}
-          <MobileBottomNav />
-          <InstallPrompt />
+          {!esWidget && <MobileBottomNav />}
+          {!esWidget && <InstallPrompt />}
         </Providers>
-        <AvisoCookies />
+        {!esWidget && <AvisoCookies />}
         <Toaster position="top-right" />
       </body>
     </html>
