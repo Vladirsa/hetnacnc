@@ -147,7 +147,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
                   <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
                     {t.nombre}
                   </LocalizedClientLink>
-                  {t.verificado && <span className="ml-2 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span>}
+                  {t.verificado ? <span className="ml-2 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span> : <span className="ml-2 text-xs font-semibold text-[#8A877E]">Registrado</span>}
                   <p className="text-xs text-[#6B675C]">
                     {[p.ciudad, p.estado].filter(Boolean).join(", ")}
                     {p.servicios.length ? ` · ${p.servicios.slice(0, 3).join(", ")}` : ""}

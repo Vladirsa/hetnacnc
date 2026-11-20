@@ -2,14 +2,22 @@
 
 // Galería de un diseño para descargar: las fotos del producto y, si el
 // producto trae sus medidas, un esquema dibujado con ellas (rotulado como
-// esquema: no se hace pasar por foto ni por el archivo). Sello "Descarga
+// esquema: no se hace pasar por foto ni por el archivo). Si el vendedor subió
+// un modelo de muestra, una vista 3D que se puede girar. Sello "Descarga
 // inmediata" siempre visible.
 import Image from "@/lib/imagenes/Imagen"
+import dynamic from "next/dynamic"
 import { useState } from "react"
+
+import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
+
+// three.js sólo se baja si el cliente abre la vista 3D
+const VistaModelo = dynamic(() => import("./VistaModelo"), { ssr: false })
 
 export type VistaGaleria =
   | { clave: string; tipo: "foto"; url: string; titulo: string }
   | { clave: string; tipo: "esquema"; svg: string; titulo: string }
+  | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string }
 
 export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; titulo: string }) {
   const [i, setI] = useState(0)
@@ -29,6 +37,8 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
             sizes="(min-width: 1024px) 60vw, 100vw"
             className="object-contain"
           />
+        ) : v.tipo === "modelo" ? (
+          <VistaModelo url={v.url} formato={v.formato} />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-2 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: v.svg }} />
         )}
@@ -40,9 +50,10 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
           Descarga inmediata
         </span>
 
-        <span className="absolute bottom-3 left-3 max-w-[80%] rounded bg-white/95 px-2.5 py-1 text-[12.5px] font-semibold text-[#1E2329] shadow-sm">
+        <span className={`pointer-events-none absolute ${v.tipo === "modelo" ? "right-3 top-3" : "bottom-3 left-3"} max-w-[80%] rounded bg-white/95 px-2.5 py-1 text-[12.5px] font-semibold text-[#1E2329] shadow-sm`}>
           {v.titulo}
           {v.tipo === "esquema" && <span className="font-normal text-[#5B6370]"> · esquema con las medidas del archivo</span>}
+          {v.tipo === "modelo" && <span className="font-normal text-[#5B6370]"> · modelo de muestra del vendedor</span>}
         </span>
 
         {vistas.length > 1 && (
@@ -80,6 +91,11 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
               >
                 {x.tipo === "foto" ? (
                   <Image src={x.url} alt="" fill sizes="120px" className="object-cover" />
+                ) : x.tipo === "modelo" ? (
+                  <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 bg-[#1E2329] text-white">
+                    <span className="fuente-condensada text-[22px] font-bold leading-none">3D</span>
+                    <span className="text-[10.5px] font-semibold">Girar</span>
+                  </span>
                 ) : (
                   <span className="absolute inset-0 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: x.svg }} />
                 )}
