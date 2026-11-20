@@ -1,5 +1,6 @@
 "use client"
 
+import { origenDe } from "@/lib/hetna/origen"
 import { useEffect, useRef, useState } from "react"
 
 import { useRouter } from "next/navigation"
@@ -262,6 +263,12 @@ export const ProductDetailsHeader = ({
           >
             {seller.name}
           </a>
+          {/* Tienda propia o taller de la plataforma (auditoría 19 nov, punto 4) */}
+          {origenDe(seller) === "hetna" ? (
+            <span className="ml-2 rounded bg-[#C2560A] px-1.5 py-0.5 text-[11px] font-bold text-white">HETNA oficial</span>
+          ) : (
+            <span className="ml-2 rounded px-1.5 py-0.5 text-[11px] font-bold text-[#1F4E8C] ring-1 ring-[#C3D6F0]">Taller de la plataforma</span>
+          )}
         </p>
       )}
 
