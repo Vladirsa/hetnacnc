@@ -37,20 +37,22 @@ const dominio = (u: string) => {
 function Portada({ r }: { r: Recurso }) {
   const p = Object.prototype.hasOwnProperty.call(PORTADA, r.categoria) ? PORTADA[r.categoria] : PORTADA.otros
   const categoria = CATEGORIAS_RECURSO.find(([c]) => c === r.categoria)?.[1] || "Recurso"
+  // Franja baja de color (88-96 px): ícono, categoría y sitio; el título y la
+  // descripción van abajo en la tarjeta.
   return (
     <span
-      className="relative flex aspect-[16/9] flex-col justify-between overflow-hidden p-4 text-white"
+      className="relative flex h-[88px] items-center gap-3 overflow-hidden px-5 text-white lg:h-[96px] lg:px-6"
       style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(135deg, ${p.de}, ${p.a})`, backgroundSize: "16px 16px, 100% 100%" }}
     >
-      <span className="self-start rounded-full bg-black/25 px-2 py-0.5 text-[11.5px] font-bold uppercase tracking-wide text-white">{categoria}</span>
-      <span className="pointer-events-none absolute -bottom-4 -right-3 text-white/20 transition group-hover:scale-105">
-        <ServicioIcono nombre={p.icono} size={120} />
+      <span className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 text-white/15">
+        <ServicioIcono nombre={p.icono} size={110} />
       </span>
-      <span className="relative flex min-w-0 items-center gap-2">
-        <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-white/15">
-          <ServicioIcono nombre={p.icono} size={24} />
-        </span>
-        <span className="min-w-0 truncate rounded-[6px] bg-black/25 px-1.5 py-0.5 text-[13px] font-semibold text-white">{dominio(r.url)}</span>
+      <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-[12px] bg-white/15 lg:h-14 lg:w-14">
+        <ServicioIcono nombre={p.icono} size={30} />
+      </span>
+      <span className="relative flex min-w-0 flex-col items-start gap-1">
+        <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wide text-white lg:text-[12.5px]">{categoria}</span>
+        <span className="max-w-full truncate rounded-[6px] bg-black/25 px-1.5 text-[14.5px] font-semibold text-white lg:text-[15.5px]">{dominio(r.url)}</span>
       </span>
     </span>
   )
@@ -106,7 +108,7 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
       {lista.length === 0 ? (
         <p className="m-0 text-[14.5px] text-[#6B6A63]">No hay recursos con esa búsqueda.</p>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 2xl:grid-cols-3">
           {lista.map((r) => (
             <li key={r.id}>
               <a
@@ -116,20 +118,20 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
                 className="group flex h-full flex-col overflow-hidden rounded-[14px] border border-[#E7E4DC] bg-white transition hover:-translate-y-0.5 hover:border-[#C2560A]"
               >
                 {r.imagen_url ? (
-                  <span className="relative block aspect-[16/9] bg-[#F3F1EA]">
-                    <Image src={r.imagen_url} alt="" fill sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw" className="object-cover" />
+                  <span className="relative block aspect-[16/10] bg-[#F3F1EA]">
+                    <Image src={r.imagen_url} alt="" fill sizes="(min-width: 1536px) 31vw, (min-width: 768px) 46vw, 92vw" className="object-cover" />
                   </span>
                 ) : (
                   <Portada r={r} />
                 )}
-                <span className="flex flex-1 flex-col gap-2 p-4">
-                  <span className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide">
+                <span className="flex flex-1 flex-col gap-2.5 p-5 lg:p-6">
+                  <span className="flex flex-wrap items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wide">
                     <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[#B34D07]">{TIPOS_RECURSO.find(([t]) => t === r.tipo)?.[1] || "Guía"}</span>
                     {r.destacado && <span className="rounded-full bg-[#142033] px-2 py-0.5 text-white">Recomendado</span>}
                   </span>
-                  <span className="text-[16px] font-bold leading-snug text-[#1B1B18] group-hover:text-[#B34D07]">{r.titulo}</span>
-                  {r.descripcion && <span className="line-clamp-3 text-[13.5px] leading-relaxed text-[#4A4943]">{r.descripcion}</span>}
-                  <span className="mt-auto flex items-center justify-between gap-2 pt-1 text-[12.5px] text-[#6B6A63]">
+                  <span className="break-words text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]">{r.titulo}</span>
+                  {r.descripcion && <span className="line-clamp-3 text-[15px] leading-relaxed text-[#4A4943]">{r.descripcion}</span>}
+                  <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-[13.5px] text-[#6B6A63]">
                     <span className="truncate">Fuente: {r.fuente}</span>
                     <span className="shrink-0 font-bold text-[#C2560A]">Abrir ↗</span>
                   </span>
