@@ -136,9 +136,15 @@ export default function Partir3DVista({ modelo, piezas, cortes, marcas = [], mod
         const m = malla(p.tris, COLORES[i % COLORES.length])
         m.geometry.computeBoundingBox()
         const c = m.geometry.boundingBox!.getCenter(new THREE.Vector3())
-        // se aleja del centro en los ejes que tienen cortes
-        const dir = new THREE.Vector3(...([0, 1, 2].map((e) => (cortes.some((k) => k.eje === e) ? Math.sign(c.getComponent(e) - centro.getComponent(e)) : 0)) as [number, number, number]))
-        m.position.copy(dir.multiplyScalar(separar))
+        // cada pieza se corre según cuántos cortes tiene antes en cada eje (así se separan
+        // también las que quedan del mismo lado del centro), centrado en el modelo
+        const corrida = [0, 1, 2].map((e) => {
+          const pos = cortes.filter((k) => k.eje === e).map((k) => k.pos)
+          if (!pos.length) return 0
+          const antes = pos.filter((p) => p < c.getComponent(e)).length
+          return (antes - pos.length / 2) * separar
+        }) as [number, number, number]
+        m.position.set(...corrida)
         m.position.sub(centro)
         s.grupo.add(m)
       })

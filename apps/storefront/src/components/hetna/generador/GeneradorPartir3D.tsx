@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { leerOBJ, leerSTL, mallaSTL, medidasMalla, type Malla } from "@/lib/generador/vectores"
+import { EjemplosPartir } from "./EjemplosPartir"
 import { mandarArchivosAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { OPCIONES_BASE, cabe, cortesParaCama, partir, type Corte, type Eje, type Resultado, type TipoConector } from "@/lib/generador/partir3d"
 
@@ -274,9 +275,9 @@ export function GeneradorPartir3D() {
     <main className="flex-1 bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-6 pb-4">
         <span className="inline-block px-3 py-1 rounded-full bg-[#E6F4EC] text-[#16794F] text-[12px] font-bold tracking-wide">GRATIS · SIN MARCA DE AGUA</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Partir modelo 3D para imprimir</h1>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Imprime en grande con tu impresora de siempre</h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[760px]">
-          ¿Tu modelo no cabe en la impresora? Súbelo, elige tu impresora y lo partimos en piezas que sí caben, con pernos o imanes para armarlo. Tu archivo no se sube a ningún servidor: todo se hace en tu navegador.
+          <strong className="text-[#1B1B18]">Partir modelo 3D:</strong> sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que sí caben en la cama, con pernos o imanes para armarlo como una sola pieza. Cascos, macetas, letreros, piezas largas… Tu archivo no sale de tu navegador.
         </p>
       </section>
 
@@ -388,18 +389,7 @@ export function GeneradorPartir3D() {
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
-          {!malla && (
-            <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Así funciona</h2>
-              <ol className="m-0 pl-5 list-decimal flex flex-col gap-1.5 text-[14.5px] text-[#4A4943]">
-                <li>Sube tu STL, OBJ o STEP (una figura, un casco, una maceta, una pieza grande).</li>
-                <li>Elige tu impresora: repartimos los cortes para que cada pieza quepa en la cama.</li>
-                <li>Mueve o agrega cortes si quieres, y elige pernos, perno integrado o imanes.</li>
-                <li>Descarga todas las piezas en un ZIP (con los pernos y las instrucciones) o una por una.</li>
-              </ol>
-              <p className="m-0 text-[13px] text-[#6B6A63]">Gratis, sin cuenta y sin marca de agua. ¿No tienes impresora? Te conectamos con un taller que te lo imprime.</p>
-            </div>
-          )}
+          {!malla && <EjemplosPartir />}
 
           {malla && med && (
             <>
