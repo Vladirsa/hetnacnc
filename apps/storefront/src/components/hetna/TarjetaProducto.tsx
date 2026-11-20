@@ -8,6 +8,9 @@ import { compareOffers, getOfferAmount, getOfferStock, StoreOffer } from "@/lib/
 import { convertToLocale } from "@/lib/helpers/money"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { HttpTypes } from "@medusajs/types"
+import { formatosDe } from "@/lib/hetna/formatos"
+import { licenciaDe } from "@/lib/hetna/licencias"
+import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
 
 import { BotonAgregarRapido } from "./BotonAgregarRapido"
 import { DistintivoEnvioGratis } from "./envios/DistintivoEnvioGratis"
@@ -145,6 +148,11 @@ export default function TarjetaProducto({
     foto = product.thumbnail || null
   }
 
+  // Diseño para descargar: qué formato trae y con qué licencia, a la vista
+  const descarga = esFichaDescarga(product)
+  const fmts = descarga ? formatosDe(product) : []
+  const licencia = descarga ? licenciaDe(product.metadata as Record<string, unknown> | null).licencia.nombre : null
+
   const creado = product.created_at ? new Date(product.created_at).getTime() : 0
   const esNuevo = creado > 0 && Date.now() - creado < 30 * DIA
   const quien = vendedor
@@ -197,6 +205,18 @@ export default function TarjetaProducto({
           <span className="min-h-[34px] text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-2">
             {product.title}
           </span>
+
+          {descarga && (
+            <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-semibold">
+              <span className="rounded bg-[#1E2329] px-1.5 py-0.5 text-white">⬇ Descarga</span>
+              {fmts.slice(0, 3).map((f) => (
+                <span key={f} className="rounded border border-[#D4D9DF] px-1.5 py-0.5 text-[#1E2329]">
+                  {f}
+                </span>
+              ))}
+              {licencia && <span className="text-[#6B6A63]">Lic. {licencia}</span>}
+            </span>
+          )}
 
           <span className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
             <span className="text-[17px] font-extrabold text-[#142033]">{precio}</span>
