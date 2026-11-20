@@ -8,7 +8,7 @@ import { pushACliente } from "../../../../../lib/push"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
-import { asegurarPropuestaFormal, leerPropuestaFormal } from "../../../../../lib/licitacion-propuesta"
+import { asegurarPropuestaFormal, faltantesObligatorios, leerPropuestaFormal } from "../../../../../lib/licitacion-propuesta"
 import { relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
@@ -58,6 +58,9 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   await asegurarPropuestaFormal(knex)
   await asegurarVersiones(knex)
   const formal = leerPropuestaFormal(b as Record<string, unknown>, ocultarContacto)
+  // Propuesta completa o no se envía: el cliente compara con los mismos datos
+  const faltan = faltantesObligatorios(formal)
+  if (faltan.length) return res.status(400).json({ message: `Para que el cliente pueda comparar, agrega ${faltan.join(", ")}.`, faltan })
   const s = await knex(T_SOLICITUD).where({ id: String(req.params.id) }).first()
   if (!s) return res.status(404).json({ message: "Solicitud no encontrada." })
   if (s.estado !== "abierta") return res.status(409).json({ message: "Esta solicitud ya cerró." })
