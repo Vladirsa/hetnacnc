@@ -23,7 +23,7 @@ const normaliza = (t?: string | null) =>
   (t || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .trim()
 
 const traer = async (locale: string, filtro: Filtro) => {
@@ -40,8 +40,19 @@ const traer = async (locale: string, filtro: Filtro) => {
 // dueño, 15 nov 2026: "más carruseles, hay más banners que productos").
 // Las filas se arman por TIPO de producto y no sólo por categoría, así se
 // llenan aunque los productos todavía no estén en una categoría visible.
-// Una fila con los mismos productos que otra anterior no se repite.
-type Fila = { titulo: string; subtitulo?: string; href?: string; productos: HttpTypes.StoreProduct[] }
+//
+// Regla (auditoría del 19 nov 2026): en la portada cada producto sale UNA sola
+// vez. Las filas van en orden de importancia y cada una sólo enseña lo que no
+// salió antes; una fila que se queda con menos de MIN_FILA productos no se
+// dibuja. Lo que sobre va al final en "Más productos", para que nada se pierda.
+// Así la portada es más corta y no repite lo mismo tres veces.
+type Fila = { titulo: string; subtitulo?: string; href?: string; productos: HttpTypes.StoreProduct[]; min?: number }
+const MIN_FILA = 3
+
+const esCreditos = (p: HttpTypes.StoreProduct) => {
+  const m = (p.metadata || {}) as Record<string, unknown>
+  return m.producto_creditos_3d === true || m.producto_creditos_3d === "true"
+}
 
 export const FilasProductos = async ({ locale }: { locale: string }) => {
   const [cats, cols, todosResp] = await Promise.all([
@@ -76,21 +87,27 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
     Promise.all(conCategoria.map((c) => traer(locale, { category_id: collectCategorySubtreeIds(c) }))),
   ])
 
-  const filas: Fila[] = [{ titulo: "Lo más nuevo", href: "/categories", productos: todos.slice(0, MAX) }]
+  const filas: Fila[] = []
   if (masVendidos) filas.push({ titulo: "Más vendidos", productos: vendidos })
 
-  const digitales = todos.filter((p) => tipo(p) === "digital")
+  const digitales = todos.filter((p) => tipo(p) === "digital" && !esCreditos(p))
   filas.push({
     titulo: "Diseños DXF y STL listos para cortar",
     subtitulo: "Descarga inmediata tras el pago",
-    href: "/categories",
+    href: "/tienda/disenos-digitales",
     productos: digitales.slice(0, MAX),
   })
   filas.push({
     titulo: "Programación CAM y servicios",
     subtitulo: "Te entregamos el programa listo para tu máquina",
     href: "/laboratorio-cam",
-    productos: todos.filter((p) => tipo(p) === "servicio").slice(0, MAX),
+    productos: todos.filter((p) => tipo(p) === "servicio" && !esCreditos(p)).slice(0, MAX),
+  })
+  filas.push({
+    titulo: "Imagen a 3D con IA",
+    subtitulo: "Convierte una foto en modelo 3D: se paga por paquete de créditos",
+    href: "/tienda/creditos-3d",
+    productos: todos.filter(esCreditos).slice(0, MAX),
   })
   filas.push({
     titulo: "Para vender tus piezas",
@@ -107,21 +124,24 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
   filas.push({
     titulo: "Máquinas, herramientas y materiales",
     href: "/categories",
-    productos: todos.filter((p) => tipo(p) === "fisico").slice(0, MAX),
+    productos: todos.filter((p) => tipo(p) === "fisico" && !esCreditos(p)).slice(0, MAX),
   })
 
   // Y las categorías que sí tienen productos
   conCategoria.forEach((c, i) => filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: porCategoria[i] }))
 
-  // Sin filas vacías ni repetidas
-  const vistas = new Set<string>()
-  const finales = filas.filter((f) => {
-    if (!f.productos.length) return false
-    const clave = f.productos.map((p) => p.id).sort().join(",")
-    if (vistas.has(clave)) return false
-    vistas.add(clave)
-    return true
-  })
+  // Y al final, lo que no cupo en ninguna fila
+  filas.push({ titulo: "Más productos", href: "/categories", productos: todos.slice(0, 100), min: 1 })
+
+  // Cada producto una sola vez: cada fila se queda sólo con lo que no salió antes
+  const yaSalio = new Set<string>()
+  const finales: Fila[] = []
+  for (const f of filas) {
+    const nuevos = f.productos.filter((p) => !yaSalio.has(p.id)).slice(0, MAX)
+    if (nuevos.length < (f.min ?? MIN_FILA)) continue
+    nuevos.forEach((p) => yaSalio.add(p.id))
+    finales.push({ ...f, productos: nuevos })
+  }
   if (!finales.length) return null
 
   const mapa = await vendedoresPorProducto(locale)
