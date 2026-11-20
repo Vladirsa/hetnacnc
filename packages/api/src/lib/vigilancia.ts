@@ -2,7 +2,8 @@
 // Agente de recargas y vencimientos: revisa los servicios de los que depende
 // HETNA y avisa ANTES de que se acabe el saldo, se llene el espacio o venza algo.
 //
-//   Saldos       RunPod (escaneo 3D), Meta Ads, Google Ads
+//   Saldos       RunPod (escaneo 3D), fal.ai (imágenes con IA), Meta Ads, Google Ads
+//   Gasto        Anthropic (Claude) del mes; Meta, Google y fal.ai también traen su gasto del mes
 //                (Skydropx ya lo vigila lib/saldos.ts)
 //   Uso          Resend (correos del mes y del día), disco del servidor y base de
 //                datos de la tienda, Cloudflare R2, Supabase de la app del taller
@@ -18,6 +19,9 @@
 // Variables (.env de packages/api). Ninguna es obligatoria:
 //   RUNPOD_API_KEY                       (ya existe)   RUNPOD_SALDO_MINIMO=10 (US$)
 //   RESEND_API_KEY                       (ya existe)   RESEND_LIMITE_MES=3000  RESEND_LIMITE_DIA=100
+//   FAL_ADMIN_KEY (o FAL_KEY, ya existe) FAL_SALDO_MINIMO=5 (US$). La llave necesita el permiso
+//                                        de facturación (preset BILLING, READONLY o FULL en fal.ai)
+//   ANTHROPIC_ADMIN_KEY (sk-ant-admin…)  ANTHROPIC_PRESUPUESTO_MES=50 (US$; avisa al 80% y 90%)
 //   META_ADS_TOKEN  META_AD_ACCOUNT_ID                 META_ADS_SALDO_MINIMO=200
 //   GOOGLE_ADS_DEVELOPER_TOKEN  GOOGLE_ADS_CLIENT_ID  GOOGLE_ADS_CLIENT_SECRET
 //   GOOGLE_ADS_REFRESH_TOKEN  GOOGLE_ADS_CUSTOMER_ID  [GOOGLE_ADS_LOGIN_CUSTOMER_ID]
@@ -46,6 +50,7 @@ export type Servicio = {
   alerta?: string // título del aviso cuando está en rojo o ámbar
   url?: string // dónde recargar o renovar
   falta?: string // qué variable agregar cuando está sin configurar
+  gasto_mes?: { monto: number; moneda: string } // lo gastado en el mes en curso (IA y anuncios), para el Contador
 }
 
 const DIA = 86_400_000
@@ -178,8 +183,10 @@ function metaAds() {
         `${base}?fields=name,account_status,currency,balance,amount_spent,spend_cap,is_prepay_account,funding_source_details&${t}`
       )
       const hoy = await pedir(`${base}/insights?date_preset=today&fields=spend&${t}`).catch(() => null)
+      const mes = await pedir(`${base}/insights?date_preset=this_month&fields=spend&${t}`).catch(() => null)
       const moneda = a?.currency || "MXN"
       const gastoHoy = Number(hoy?.data?.[0]?.spend) || 0
+      const gastoMes = Number(mes?.data?.[0]?.spend) || 0
       const minimo = num("META_ADS_SALDO_MINIMO", 200)
       const estadoCuenta = Number(a?.account_status)
       const partes: string[] = []
@@ -222,8 +229,8 @@ function metaAds() {
           if (!alerta) alerta = `Meta Ads está por llegar a su límite de gasto (quedan ${dinero(restante, moneda)}). Súbelo o tus anuncios se detienen.`
         }
       }
-      partes.push(`Gasto de hoy: ${dinero(gastoHoy, moneda)}`)
-      return { estado, valor, detalle: partes.join(" · "), alerta: alerta || undefined }
+      partes.push(`Gasto de hoy: ${dinero(gastoHoy, moneda)}`, `este mes: ${dinero(gastoMes, moneda)}`)
+      return { estado, valor, detalle: partes.join(" · "), alerta: alerta || undefined, gasto_mes: { monto: gastoMes, moneda } }
     }
   )
 }
@@ -264,6 +271,8 @@ function googleAds() {
       const hoy = await buscar("SELECT customer.currency_code, metrics.cost_micros FROM customer WHERE segments.date DURING TODAY")
       const moneda = hoy[0]?.customer?.currencyCode || "MXN"
       const gastoHoy = hoy.reduce((s, r) => s + Number(r?.metrics?.costMicros || 0), 0) / 1e6
+      const delMes = await buscar("SELECT metrics.cost_micros FROM customer WHERE segments.date DURING THIS_MONTH").catch(() => [])
+      const gastoMes = delMes.reduce((s, r) => s + Number(r?.metrics?.costMicros || 0), 0) / 1e6
 
       const camp = await buscar(
         "SELECT campaign_budget.resource_name, campaign_budget.amount_micros FROM campaign WHERE campaign.status = 'ENABLED'"
@@ -282,7 +291,7 @@ function googleAds() {
       let estado: EstadoServicio = "ok"
       let alerta: string | undefined
       const partes = [
-        `Gasto de hoy: ${dinero(gastoHoy, moneda)}`,
+        `Gasto de hoy: ${dinero(gastoHoy, moneda)} · este mes: ${dinero(gastoMes, moneda)}`,
         presupuestos.size ? `presupuesto diario de campañas activas: ${dinero(presupuestoDia, moneda)}` : "sin campañas activas",
       ]
       let valor = dinero(gastoHoy, moneda) + " hoy"
@@ -298,7 +307,92 @@ function googleAds() {
       } else if (presupuestos.size) {
         partes.push("si pagas por adelantado, revisa el saldo en Facturación")
       }
-      return { estado, valor, detalle: partes.join(" · "), alerta }
+      return { estado, valor, detalle: partes.join(" · "), alerta, gasto_mes: { monto: gastoMes, moneda } }
+    }
+  )
+}
+
+/** Inicio del mes en curso (hora de México) en ISO UTC. */
+function inicioDelMes(ahora = new Date()) {
+  const mx = new Date(ahora.toLocaleString("en-US", { timeZone: "America/Mexico_City" }))
+  return new Date(Date.UTC(mx.getFullYear(), mx.getMonth(), 1, 6)).toISOString().replace(/\.\d{3}Z$/, "Z") // 00:00 en CDMX = 06:00 UTC
+}
+
+// fal.ai (imágenes de producto con IA): saldo de créditos y gasto del mes.
+function falAi() {
+  const llave = env("FAL_ADMIN_KEY") || env("FAL_KEY")
+  return revisar(
+    { id: "fal", nombre: "fal.ai (imágenes con IA)", grupo: "saldo", url: "https://fal.ai/dashboard/billing" },
+    llave ? null : "FAL_KEY (o FAL_ADMIN_KEY con permiso de facturación)",
+    async () => {
+      const headers = { authorization: `Key ${llave}` }
+      let cuenta
+      try {
+        cuenta = await pedir("https://api.fal.ai/v1/account/billing?expand=credits", { headers })
+      } catch (e) {
+        if (e?.status === 401 || e?.status === 403)
+          throw new Error("la llave no tiene permiso de facturación: crea en fal.ai una llave con el preset BILLING o READONLY y ponla en FAL_ADMIN_KEY")
+        throw e
+      }
+      const c = cuenta?.credits || {}
+      const saldo = Number(c.current_balance ?? c.balance ?? c.amount ?? cuenta?.current_balance)
+      const moneda = String(c.currency || "USD").toUpperCase()
+      // Gasto del mes: suma de los eventos de cobro (nano USD, sin error de redondeo)
+      let nano = 0
+      let cursor = ""
+      for (let i = 0; i < 5; i++) {
+        const q = new URLSearchParams({ start: inicioDelMes(), limit: "10000", ...(cursor ? { cursor } : {}) })
+        const d = await pedir(`https://api.fal.ai/v1/models/billing-events?${q}`, { headers }).catch(() => null)
+        if (!d) break
+        for (const ev of d.billing_events || []) nano += Number(ev.cost_estimate_nano_usd) || Math.round((Number(ev.cost_total) || 0) * 1e9)
+        if (!d.has_more || !d.next_cursor) break
+        cursor = d.next_cursor
+      }
+      const gastoMes = nano / 1e9
+      if (!Number.isFinite(saldo)) {
+        return { estado: "ok", valor: `${dinero(gastoMes, "USD")} este mes`, detalle: "fal.ai no devolvió el saldo; el gasto del mes sí", gasto_mes: { monto: gastoMes, moneda: "USD" } }
+      }
+      const minimo = num("FAL_SALDO_MINIMO", 5)
+      const estado: EstadoServicio = saldo <= minimo / 2 ? "rojo" : saldo <= minimo ? "ambar" : "ok"
+      return {
+        estado,
+        valor: dinero(saldo, moneda),
+        detalle: `Gastado este mes: ${dinero(gastoMes, "USD")} · avisamos debajo de ${dinero(minimo, "USD")}`,
+        alerta: `Recarga fal.ai: te quedan ${dinero(saldo, moneda)}. Sin saldo se detienen las fotos con IA de «Subir diseños» y la fábrica.`,
+        gasto_mes: { monto: gastoMes, moneda: "USD" },
+      }
+    }
+  )
+}
+
+// Anthropic (Claude: fichas SEO, respuestas, clasificaciones): costo del mes.
+// La API no da el saldo de créditos; se compara contra un presupuesto mensual.
+function anthropic() {
+  const llave = env("ANTHROPIC_ADMIN_KEY")
+  return revisar(
+    { id: "anthropic", nombre: "Anthropic (Claude)", grupo: "uso", url: "https://platform.claude.com/cost" },
+    llave ? null : "ANTHROPIC_ADMIN_KEY (llave de administrador sk-ant-admin…)",
+    async () => {
+      const q = new URLSearchParams({ starting_at: inicioDelMes(), limit: "20" })
+      q.append("group_by[]", "model")
+      const d = await pedir(`https://api.anthropic.com/v1/organizations/analytics/cost?${q}`, {
+        headers: { "x-api-key": llave, "anthropic-version": "2023-06-01", "anthropic-beta": "analytics-usage-cost-2026-08-24" },
+      })
+      const filas = (d?.data || []) as any[]
+      // amount viene en centavos de dólar, como texto decimal
+      const usd = (f: any) => (Number(f?.cost?.amount) || 0) / 100
+      const total = filas.reduce((s, f) => s + usd(f), 0)
+      const top = filas.slice().sort((a, b) => usd(b) - usd(a)).slice(0, 3).map((f) => `${f?.group?.model || "otro"} ${dinero(usd(f), "USD")}`)
+      const presupuesto = num("ANTHROPIC_PRESUPUESTO_MES", 50)
+      const pct = presupuesto > 0 ? Math.round((total / presupuesto) * 100) : null
+      const actualizado = d?.data_refreshed_at ? ` · datos al ${fechaCorta(d.data_refreshed_at)}` : ""
+      return {
+        estado: nivelUso(pct),
+        valor: `${dinero(total, "USD")} este mes`,
+        detalle: `${top.length ? top.join(" · ") : "sin gasto todavía"}${presupuesto > 0 ? ` · presupuesto ${dinero(presupuesto, "USD")} (${pct}%)` : ""}${actualizado}`,
+        alerta: `Claude (Anthropic) lleva ${dinero(total, "USD")} este mes, ${pct}% del presupuesto de ${dinero(presupuesto, "USD")}. Revisa créditos en la consola.`,
+        gasto_mes: { monto: total, moneda: "USD" },
+      }
     }
   )
 }
@@ -683,6 +777,8 @@ export async function vigilarServicios(container, { fresco = false }: { fresco?:
   if (!fresco && cache && Date.now() - cache.t < CACHE_MS) return cache.datos
   const grupos = await Promise.all([
     runpod(),
+    falAi(),
+    anthropic(),
     metaAds(),
     googleAds(),
     resend(),

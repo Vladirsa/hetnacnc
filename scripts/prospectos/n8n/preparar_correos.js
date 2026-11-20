@@ -305,6 +305,37 @@ const NOVEDADES = {
   ],
 };
 
+// Empresas que encontró el agente «Cazador de solicitudes» pidiendo un servicio
+// CNC (segmento "solicitud", scripts/prospectos/cazar_solicitudes.py): los dos
+// primeros correos hablan de lo que pidieron y llevan la cotización ya llena.
+// Después siguen la secuencia normal de compradores.
+const SOLICITUD = {
+  1: (r) => {
+    const necesidad = String(r.productos_servicios || 'su proyecto').slice(0, 140);
+    const zona = r.ciudad ? ' de ' + esc(r.ciudad) + ' y alrededores' : ' de su zona';
+    return {
+      asunto: 'Sobre lo que buscan fabricar: ' + necesidad.slice(0, 60),
+      cuerpo: '<p>Vimos su publicación donde buscan quién les fabrique: <b>' + esc(necesidad) + '</b>.</p>' +
+        '<p>En <b>HETNA CNC</b> talleres verificados' + zona + ' (corte láser, router, plasma, torno y fresadora) les cotizan <b>sin costo</b>:</p>' +
+        '<ul><li>Ven un <b>precio aproximado al momento</b> con las medidas y el material.</li>' +
+        '<li>Si les conviene, varios talleres les mandan su propuesta formal y ustedes eligen.</li>' +
+        '<li>Pagan con Mercado Pago dentro de HETNA y el taller empieza con el pago confirmado; cada taller factura (CFDI).</li></ul>' +
+        '<p>Ya les dejamos la solicitud capturada, sólo revisen los datos:</p>' +
+        boton(liga('/cotizar?desde=cazador&pieza=' + encodeURIComponent(necesidad), r, 1), 'Ver precio y pedir cotización') +
+        '<p style="font-size:13px;color:#6b7280">Si ya lo resolvieron, ¡qué bueno! Guarden la liga para su próximo proyecto.</p>',
+    };
+  },
+  2: (r) => {
+    const necesidad = String(r.productos_servicios || 'su proyecto').slice(0, 140);
+    return {
+      asunto: '¿Ya encontraron quién les fabrique ' + necesidad.slice(0, 50) + '?',
+      cuerpo: '<p>Retomo mi correo anterior. Si todavía buscan quién les haga <b>' + esc(necesidad) + '</b>, en un par de minutos pueden tener un precio aproximado y propuestas de talleres verificados, sin costo.</p>' +
+        '<p>También pueden mandar las medidas o una foto por WhatsApp al +52 221 707 6014.</p>' +
+        boton(liga('/cotizar?desde=cazador&pieza=' + encodeURIComponent(necesidad), r, 2), 'Cotizar ahora'),
+    };
+  },
+};
+
 // Encuesta de un clic (desde el correo 3, en español)
 const MOTIVOS = [
   ['ya_vendo', 'Ya vendo en otro lado'],
@@ -347,9 +378,10 @@ for (const r of filas) {
   candidatos.push({ r, email, siguiente });
 }
 
-// Primero los seguimientos 2 y 3 (no dejar secuencias a medias), luego los nuevos,
-// al final las novedades mensuales; y dentro de cada grupo, México primero.
-const orden = (c) => (c.siguiente === 2 || c.siguiente === 3 ? 0 : c.siguiente === 1 ? 1 : 2);
+// Primero las solicitudes del Cazador (son recientes y se enfrían rápido), luego
+// los seguimientos 2 y 3 (no dejar secuencias a medias), luego los nuevos, al
+// final las novedades mensuales; y dentro de cada grupo, México primero.
+const orden = (c) => (c.r.segmento === 'solicitud' && c.siguiente <= 2 ? -1 : c.siguiente === 2 || c.siguiente === 3 ? 0 : c.siguiente === 1 ? 1 : 2);
 candidatos.sort((a, b) => orden(a) - orden(b) || (b.r.pais === 'México') - (a.r.pais === 'México'));
 
 // 2) Arma los correos sin repetir destinatario en el mismo día
@@ -376,6 +408,7 @@ for (const c of candidatos) {
     const datos = { ...r, empresa, _v: otras.length ? 'abc'.charAt(v) : '' };
     plantilla = v === 0 ? t[seg][paso](datos) : otras[v - 1](datos);
   }
+  if (idioma === 'es' && r.segmento === 'solicitud' && SOLICITUD[paso]) plantilla = SOLICITUD[paso]({ ...r, empresa, _v: 's' });
   if (idioma === 'es' && paso >= 3) plantilla = { asunto: plantilla.asunto, cuerpo: plantilla.cuerpo + encuesta(r) };
   const urlBaja = BAJA + '?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.token || '');
   const html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#111827;max-width:600px">' +

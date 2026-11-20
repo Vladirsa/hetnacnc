@@ -138,7 +138,7 @@ BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
 MOTORES_DDGS = ["auto", "bing", "brave", "mojeek", "yahoo"]
 
 
-def buscar_web(consulta: str, maximo: int, region: str = "mx-es") -> list[dict]:
+def buscar_web(consulta: str, maximo: int, region: str = "mx-es", tiempo: str = "") -> list[dict]:
     """Resultados de búsqueda como [{href, title, body}].
     1) Brave Search API si hay BRAVE_API_KEY (plan gratis: 2,000 búsquedas al mes,
        1 por segundo); no bloquea como DuckDuckGo desde el VPS.
@@ -147,7 +147,10 @@ def buscar_web(consulta: str, maximo: int, region: str = "mx-es") -> list[dict]:
     if clave:
         pais = (region.split("-")[0] or "mx").upper()
         idioma = region.split("-")[1] if "-" in region else "es"
-        q = urllib.parse.urlencode({"q": consulta, "count": min(20, max(1, maximo)), "country": pais, "search_lang": idioma})
+        params = {"q": consulta, "count": min(20, max(1, maximo)), "country": pais, "search_lang": idioma}
+        if tiempo:  # d, w, m: Brave usa pd, pw, pm
+            params["freshness"] = "p" + tiempo
+        q = urllib.parse.urlencode(params)
         req = urllib.request.Request(f"{BRAVE_URL}?{q}", headers={"Accept": "application/json", "X-Subscription-Token": clave})
         for intento in range(3):
             try:
@@ -168,7 +171,7 @@ def buscar_web(consulta: str, maximo: int, region: str = "mx-es") -> list[dict]:
         try:
             with DDGS() as d:
                 try:
-                    res = list(d.text(consulta, region=region, max_results=maximo, backend=motor))
+                    res = list(d.text(consulta, region=region, max_results=maximo, backend=motor, timelimit=tiempo or None))
                 except TypeError:  # versiones viejas sin "backend"
                     res = list(d.text(consulta, max_results=maximo))
             if res:
