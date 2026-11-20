@@ -54,7 +54,7 @@ No cambia la operación. Cada punto se puede programar y desplegar por separado.
 | 1.2 ✅ | **Precio desglosado y en vivo**: material, corte, perforaciones, cantidad y envío. Cambia al mover material, espesor o cantidad. | JLC, Ponoko | 🛠️🏢 | El precio se ve justo; el cliente prueba opciones en vez de irse. |
 | 1.3 ✅ | **Métricas públicas del taller**: % de entregas a tiempo, tiempo de respuesta y trabajos terminados, en el perfil y el ranking. | Fictiv (95.4%), FACTUREE | 🛠️🏢 | Las insignias ya existen; con números reales se gana confianza B2B. |
 | 1.4 ✅ | **Páginas por ciudad × servicio** ("corte láser en Puebla", "router CNC en Monterrey"…) con calculadora y talleres de esa ciudad, más **guías de diseño en español** (cómo preparar tu DXF para láser, router, plasma). | LaserBoost, QuickCut, Craftcloud | 🛠️🏢 | Tráfico gratis de Google que llega directo a cotizar. La fábrica de contenido las genera. |
-| 1.5 | **Programa de creadores**: landing y código por youtuber o tiktoker CNC, con comisión por venta o por taller registrado. | SendCutSend, Inventables | 🛠️ | Adquisición barata y creíble; ya existen referidos y cupones. |
+| 1.5 ✅ | **Programa de creadores**: landing y código por youtuber o tiktoker CNC, con comisión por venta o por taller registrado. | SendCutSend, Inventables | 🛠️ | Adquisición barata y creíble; ya existen referidos y cupones. |
 
 ### Fase 2: diferenciadores (meses 2 y 3)
 
