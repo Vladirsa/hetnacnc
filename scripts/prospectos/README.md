@@ -240,3 +240,18 @@ Instalar en el servidor (una vez), corre cada día a las 7:40:
 ```
 
 Probar sin mandar nada: `.venv/bin/python cazar_solicitudes.py --probar --tanda 3`
+
+## Agente «Monitor de precios de materiales»
+
+Cada lunes mide el precio público (páginas de producto de tiendas y distribuidores
+de México) de MDF 3/6/9/15/18 mm, triplay, acrílico 3/6 mm, lámina negra cal. 14,
+galvanizada cal. 18, inoxidable cal. 18, aluminio 1/8" y filamento PLA. Saca la
+mediana, mínimo y máximo y lo manda al flujo «Agente HETNA - Monitor de precios de
+materiales» (webhook `hetna-precios`), que guarda el historial en la tabla
+`precios_materiales` de n8n y te manda a Telegram los cambios de 5% o más.
+
+```bash
+( crontab -l 2>/dev/null | grep -v correr_precios.sh ; echo "50 6 * * 1 $HOME/hetnacnc/scripts/prospectos/correr_precios.sh" ) | crontab -
+```
+
+Probar un material: `.venv/bin/python precios_materiales.py --probar --solo mdf_15`
