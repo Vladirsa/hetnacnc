@@ -18,6 +18,10 @@ export type HerramientaDiseno = {
   // Título y descripción para el buscador
   titulo: string
   descripcion: string
+  // Descripción corta para Google y redes (≤155, frase completa). Si falta, se recorta "descripcion".
+  meta?: string
+  // Imagen para compartir en redes (si falta, la de HETNA)
+  imagen?: string
 }
 
 // Antes "escanear-pieza": la dirección vieja redirige aquí (next.config).
@@ -30,7 +34,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Medidas y espesor, y descargas la caja en DXF, SVG o PDF.",
     icono: "caja",
     acceso: "gratis",
-    titulo: "Generador de caja con juntas de dedo gratis (DXF y SVG)",
+    titulo: "Generador de cajas con juntas de dedo gratis",
     descripcion:
       "Crea gratis una caja con juntas de dedo para corte láser o router CNC: escribe medidas y espesor de MDF o acrílico y descarga en DXF, SVG o PDF.",
   },
@@ -40,9 +44,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Letras huecas para anuncios luminosos: MDF y acrílico, por capas, con hojas de corte listas.",
     icono: "letrero",
     acceso: "gratis",
-    titulo: "Generador de letras 3D en caja para corte láser gratis (MDF y acrílico)",
+    titulo: "Letras 3D en caja para corte láser gratis",
     descripcion:
       "Escribe tu texto, elige la tipografía, el alto y el fondo, y descarga gratis las hojas de corte en DXF o SVG: frente de acrílico, paredes y fondo de MDF con barreno para el LED. Vista 3D del armado.",
+    meta: "Haz letras 3D en caja con frente de acrílico y paredes de MDF: elige texto, letra y alto, y descarga gratis el DXF o SVG para corte láser.",
   },
   {
     slug: "letreros",
@@ -50,7 +55,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Escribe el texto, elige la letra y descarga el DXF con las letras unidas.",
     icono: "letrero",
     acceso: "gratis",
-    titulo: "Generador de letreros y nombres en DXF gratis para router CNC y láser",
+    titulo: "Generador de letreros en DXF para CNC y láser",
     descripcion:
       "Escribe un nombre o un letrero, elige entre 19 tipografías y descarga gratis el DXF con las letras unidas, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
   },
@@ -60,9 +65,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Nombre, letra y forma; DXF para láser o STL con relieve para imprimir.",
     icono: "llavero",
     acceso: "gratis",
-    titulo: "Llaveros y placas con nombre gratis: DXF para láser y STL para impresión 3D",
+    titulo: "Llaveros con nombre gratis: DXF y STL",
     descripcion:
       "Haz llaveros, etiquetas, placas de mascota, corazones y adornos con nombre: elige la letra y la forma, y descarga el DXF/SVG con capas de corte y grabado o el STL con las letras en relieve. Con el agujero de la argolla.",
+    meta: "Llaveros, placas de mascota y adornos con nombre: elige letra y forma y descarga gratis el DXF para láser o el STL para impresión 3D.",
   },
   {
     slug: "rompecabezas",
@@ -70,7 +76,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
     icono: "rompecabezas",
     acceso: "gratis",
-    titulo: "Generador de rompecabezas para corte láser gratis (DXF y SVG)",
+    titulo: "Generador de rompecabezas para láser gratis",
     descripcion:
       "Crea gratis un rompecabezas a tu medida para corte láser en MDF, triplay o acrílico: elige columnas, filas y tamaño del nudo, con marco y base opcionales. Ninguna pieza se repite. Descarga en DXF o SVG.",
   },
@@ -80,7 +86,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Un logotipo o dibujo convertido en contornos DXF o SVG.",
     icono: "vector",
     acceso: "gratis",
-    titulo: "Vectorizar imagen gratis para CNC y láser: de JPG o PNG a DXF y SVG",
+    titulo: "Vectorizar imagen a DXF y SVG gratis",
     descripcion:
       "Convierte gratis un logotipo, dibujo o foto en vector: contornos cerrados en DXF o SVG listos para corte láser, router CNC o plasma. Tu imagen no se sube a ningún servidor.",
   },
@@ -90,9 +96,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Sube la foto o el plano de un mueble y sale listo para maquilar, visto armado en 3D.",
     icono: "mueble",
     acceso: "creditos",
-    titulo: "Diseñar un mueble desde una foto o plano para router CNC: piezas de caja y espiga",
+    titulo: "Diseñar muebles desde una foto para CNC",
     descripcion:
       "Sube la foto, boceto o plano de un mueble de tablero: la IA lo convierte en piezas con espigas y mortajas a las medidas y el grosor que elijas, lo ves armado en 3D y descargas DXF, SVG o PDF listos para router CNC o láser.",
+    meta: "Sube la foto o el plano de un mueble y la IA lo convierte en piezas con caja y espiga a tu medida, listas para cortar en router CNC.",
   },
   {
     slug: "molduras-tallados",
@@ -100,9 +107,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Molduras y paneles tallados para router CNC: perfiles 3D y STL gratis",
+    titulo: "Molduras y tallados 3D para router CNC gratis",
     descripcion:
       "Diseña molduras con perfil de fresa (media caña, bocel, gola, romana, clásica) y paneles con marco moldurado y centro tallado (rosetón, estrella, rombos o tu imagen). Vista 3D, STL para desbaste y acabado, DXF para tallar en V y envío directo al Laboratorio CAM.",
+    meta: "Diseña molduras con perfil de fresa y paneles tallados (rosetón, estrella, rombos) y descarga gratis el STL para tu router CNC.",
   },
   {
     slug: "muebles-ensamble",
@@ -110,9 +118,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Exhibidores, libreros y muebles de caja y espiga del catálogo, a tu medida y vistos armados en 3D.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Muebles de ensamble sin tornillos para router CNC: exhibidores y libreros a la medida",
+    titulo: "Muebles de ensamble sin tornillos para CNC",
     descripcion:
       "Elige un exhibidor, librero, mesa o banco de caja y espiga del catálogo, o sube la foto de tu mueble: cambia medidas, grosor, número de espigas y tipo de alivio (cabeza de fémur o en T), míralo armado en 3D y descarga las piezas listas para el router.",
+    meta: "Exhibidores, libreros, mesas y bancos de caja y espiga, sin tornillos: cambia medidas y grosor y descarga las piezas para router CNC.",
   },
   {
     slug: "despiece-muebles",
@@ -120,7 +129,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Gabinetes de cocina, libreros, roperos, cómodas y burós: elige el modelo, cambia sus medidas y sale el despiece.",
     icono: "mueble",
     acceso: "gratis",
-    titulo: "Planos de muebles de melamina a la medida gratis: cocina, librero, ropero y cómoda con despiece",
+    titulo: "Planos de muebles de melamina con despiece",
     descripcion:
       "Gabinetes de cocina, alacenas, libreros, roperos, cómodas, burós, zapateras y muebles de TV a tu medida: cambia ancho, alto y fondo o arma la cocina completa. Melamina o MDF, minifix o confirmat, bisagras, correderas, lista de corte con canto, acomodo en hojas y DXF. Y si quieres, lo manda a cortar un taller HETNA."
   },
@@ -130,9 +139,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "35 modelos: cajas con tapa, pizza, pastel, bolsas con asas, sobres, tubos y más.",
     icono: "empaque",
     acceso: "gratis",
-    titulo: "Generador de plantillas de cajas y empaques gratis (DXF, SVG, PDF)",
+    titulo: "Plantillas de cajas y empaques gratis (DXF)",
     descripcion:
       "49 plantillas gratis a tu medida: caja de envío autoarmable, cajas redonda, de corazón, de estrella, ataúd y de N lados con tapa, caja con tapa, para pizza, pastel, cupcakes, almohada, cajón, caja de leche, exhibidor de mostrador, hexagonal, tubos, bolsas con asas, sobres, pirámides, conos y macetas. Descarga en DXF, SVG o PDF para imprimir, plotter o láser.",
+    meta: "49 plantillas de cajas y empaques a tu medida: envío, pizza, regalo, redonda y más. Descarga gratis el DXF, SVG o PDF para cortar.",
   },
   {
     slug: "grabado-foto",
@@ -140,9 +150,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Tu foto tramada al tamaño y la resolución de tu láser.",
     icono: "grabado",
     acceso: "gratis",
-    titulo: "Foto para grabado láser gratis: tramado Jarvis, semitono y DPI exacto",
+    titulo: "Foto para grabado láser gratis (Jarvis y DPI)",
     descripcion:
       "Prepara gratis tu foto para grabar con láser en madera, MDF, piel, pizarra o acrílico: brillo, contraste, tramado Jarvis, Stucki o Floyd, semitono y PNG con la resolución exacta para LightBurn.",
+    meta: "Prepara gratis tu foto para grabado láser en madera, piel o acrílico: tramado Jarvis, Stucki o semitono y PNG al DPI exacto de tu láser.",
   },
   {
     slug: "litofania-relieve",
@@ -150,9 +161,11 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Tu foto convertida en STL: litofanía o relieve para tallar.",
     icono: "relieve",
     acceso: "gratis",
-    titulo: "Generador de litofanías y relieves 3D gratis: de foto a STL",
+    titulo: "Litofanías y relieves 3D de foto a STL gratis",
     descripcion:
       "Convierte gratis una foto en STL: litofanía plana, curva o en cilindro para lámpara lista para imprimir, o relieve 3D con mapa de alturas para tallar en router CNC con VCarve o Aspire.",
+    meta: "Convierte una foto en STL gratis: litofanía plana, curva o para lámpara, o relieve 3D con profundidad por IA para tallar o imprimir.",
+    imagen: "/img/relieve-ia/laser-relieve-ia.webp",
   },
   {
     slug: "patrones-radiales",
@@ -160,7 +173,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Mandalas y arte de pared en capas, listos para cortar.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de patrones radiales gratis: mandalas y arte de pared (DXF, SVG)",
+    titulo: "Mandalas y patrones radiales para láser gratis",
     descripcion:
       "Crea gratis mandalas y patrones decorativos para corte láser: capas escaladas y rotadas con una fórmula matemática. Descarga en DXF o SVG.",
   },
@@ -170,7 +183,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "DXF a SVG y al revés, STEP a STL y STL a STEP, STL a OBJ, cambio de tamaño y de espesor.",
     icono: "convertir",
     acceso: "gratis",
-    titulo: "Convertir STEP a STL, STL a STEP, DXF a SVG y STL a OBJ gratis en línea",
+    titulo: "Convertir STEP a STL y DXF a SVG gratis",
     descripcion:
       "Convierte gratis archivos STEP, DXF, SVG, STL y OBJ, cambia su tamaño o ajústalos a otro espesor de material para corte láser, router o plasma. Sin subir tu archivo.",
   },
@@ -180,9 +193,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Imprime en grande: divide tu modelo en piezas que caben en la cama, con pernos o imanes.",
     icono: "partir",
     acceso: "gratis",
-    titulo: "Partir modelo 3D gratis: imprime en grande dividiendo tu STL en piezas con pernos",
+    titulo: "Partir modelo 3D en piezas con pernos gratis",
     descripcion:
       "Divide gratis tu STL, OBJ o STEP en piezas que caben en tu impresora (Ender 3, Bambu, Prusa…): tú eliges dónde cortar y cuántos pernos o imanes por unión. Cascos, macetas, letreros y piezas largas. Descarga el ZIP, cotiza o pide que un taller lo imprima. Sin marca de agua.",
+    imagen: "/img/partir-3d/esfera-piezas.webp",
   },
   {
     slug: "svg-a-stl",
@@ -190,9 +204,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Archivos de corte láser a 3D: corte, grabado y líneas marcadas por color; placa base para llaveros.",
     icono: "extruir",
     acceso: "gratis",
-    titulo: "Convertir SVG o DXF a STL gratis: extruir logotipos y letras en 3D",
+    titulo: "Convertir SVG o DXF a STL gratis",
     descripcion:
       "Sube un SVG o DXF de corte láser, elige qué hace cada color (corte, grabado hundido o línea marcada), dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Placa base opcional para llaveros, placas y letreros; modo espejo para sellos. Sin subir tu archivo.",
+    meta: "Convierte gratis tu SVG o DXF en STL: elige qué color se corta, se graba o se marca, dale altura e imprime en 3D o talla en relieve.",
   },
   {
     slug: "anidado-piezas",
@@ -200,9 +215,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Acomoda muchas piezas en tus hojas de material para desperdiciar menos.",
     icono: "anidado",
     acceso: "gratis",
-    titulo: "Anidado de piezas gratis: acomodar DXF en hojas para láser, router y plasma",
+    titulo: "Anidado de piezas DXF en hojas gratis",
     descripcion:
       "Sube tus piezas en DXF o SVG, di cuántas de cada una y el tamaño de la hoja: te las acomodamos con giro de 90° y separación de kerf, y descargas el DXF con todas las hojas listo para cortar.",
+    meta: "Acomoda tus piezas DXF o SVG en hojas de material para desperdiciar menos: con giro y separación de kerf. Descarga el DXF gratis.",
   },
   {
     slug: "celosias",
@@ -210,7 +226,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Paneles calados para divisores, puertas, plafones y fachadas: 10 patrones.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de celosías y paneles decorativos gratis para router CNC y láser (DXF)",
+    titulo: "Celosías y paneles decorativos CNC gratis",
     descripcion:
       "Diseña gratis celosías y paneles calados para divisores, puertas de closet, plafones y fachadas: 10 patrones, medidas, marco y puente entre huecos. Descarga DXF, SVG o PDF para router, láser o plasma.",
   },
@@ -220,7 +236,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Cortes que dejan doblar el MDF: cajas redondeadas, lámparas y libretas.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de bisagra viva gratis: madera flexible para corte láser (DXF y SVG)",
+    titulo: "Bisagra viva para corte láser gratis (DXF)",
     descripcion:
       "Haz que el MDF o el triplay doble: elige el radio y el ángulo y el generador calcula la zona de cortes. Para cajas con esquinas curvas, lámparas y portadas de libreta. Descarga DXF, SVG o PDF.",
   },
@@ -230,7 +246,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "QR vectorial con texto y placa para grabar en láser o router.",
     icono: "grabado",
     acceso: "gratis",
-    titulo: "Generador de código QR en DXF y SVG gratis para grabar en láser o router CNC",
+    titulo: "Código QR en DXF y SVG para láser gratis",
     descripcion:
       "Convierte una liga en un código QR vectorial listo para grabar: placa con esquinas redondas, texto abajo como \"Escanea el menú\" y barreno para colgar. Descarga DXF, SVG o PDF.",
   },
@@ -240,7 +256,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Tu modelo 3D en capas numeradas para cortar y pegar, acomodadas en hojas.",
     icono: "anidado",
     acceso: "gratis",
-    titulo: "Rebanar STL en capas para corte láser gratis: de modelo 3D a DXF",
+    titulo: "Rebanar STL en capas para láser gratis",
     descripcion:
       "Sube un STL u OBJ, elige la altura y el espesor del material, y descarga las capas en DXF con número grabado, barrenos de alineación y acomodadas en tus hojas. Para esculturas, maquetas y topografía.",
   },
@@ -250,9 +266,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Engranes rectos que sí engranan, con su par y la distancia entre centros.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de engranes gratis en DXF y SVG para corte láser y router CNC",
+    titulo: "Generador de engranes en DXF gratis",
     descripcion:
       "Dibuja engranes rectos de evolvente que sí engranan: dientes, módulo, ángulo de presión, barreno con cuñero, rayos y el par con la distancia entre centros calculada. Descarga DXF, SVG o PDF.",
+    meta: "Engranes rectos de evolvente que sí engranan: dientes, módulo, barreno con cuñero y rayos. Descarga gratis el DXF o SVG para cortar.",
   },
   {
     slug: "relojes",
@@ -260,9 +277,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Carátulas con números romanos o arábigos y el hueco del mecanismo.",
     icono: "grabado",
     acceso: "gratis",
-    titulo: "Generador de carátulas de reloj de pared gratis para láser y router CNC (DXF)",
+    titulo: "Carátulas de reloj para láser y CNC gratis",
     descripcion:
       "Diseña la carátula de tu reloj: redonda, cuadrada o hexagonal, números romanos o arábigos grabados o calados, marcas de minutos, nombre al centro y el barreno del mecanismo. Descarga DXF, SVG o PDF.",
+    meta: "Diseña la carátula de tu reloj de pared: forma, números romanos o arábigos, marcas y nombre. Descarga gratis el DXF para láser o CNC.",
   },
   {
     slug: "organizador-cajon",
@@ -270,9 +288,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Separadores a la medida del cajón que se encastran, para cubiertos, herramienta o fresas.",
     icono: "caja",
     acceso: "gratis",
-    titulo: "Organizador de cajón a la medida para cortar en CNC o láser: DXF gratis",
+    titulo: "Organizador de cajón a la medida (DXF gratis)",
     descripcion:
       "Pon las medidas de tu cajón y cuántos compartimentos quieres: el generador dibuja las tiras con ranuras de media madera, paredes y muescas para los dedos, acomodadas en tu hoja. Descarga DXF, SVG o PDF.",
+    meta: "Pon las medidas de tu cajón y los compartimentos: te damos las tiras con ranuras de media madera listas para cortar. DXF gratis.",
   },
   {
     slug: "lamparas-capas",
@@ -280,9 +299,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Costillas y anillos que se encastran, con el hueco del socket E27.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de lámparas de madera por capas para corte láser y CNC (DXF gratis)",
+    titulo: "Lámparas de madera por capas para láser gratis",
     descripcion:
       "Elige la forma (esfera, gota, jarrón o cilindro), el alto, las costillas y los anillos: te damos todas las piezas encastrables con el hueco del socket, acomodadas en tus hojas. Descarga DXF, SVG o PDF.",
+    meta: "Lámparas de madera por capas (esfera, gota, jarrón o cilindro) con piezas encastrables y hueco para el socket. DXF gratis.",
   },
   {
     slug: "estencil-letras",
@@ -290,7 +310,7 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Plantillas de texto con puentes para pintar cajas, bultos y señalética.",
     icono: "letrero",
     acceso: "gratis",
-    titulo: "Generador de esténcil de letras gratis: plantillas en DXF para corte láser",
+    titulo: "Esténcil de letras en DXF gratis",
     descripcion:
       "Escribe el texto, elige la letra y descarga la plantilla con puentes en las islas (O, A, B, D) para pintar con aerosol cajas, costales y señalamientos. DXF, SVG o PDF.",
   },
@@ -300,9 +320,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Marco por capas con ranura para vidrio y foto, nombre grabado y pata.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Generador de portarretratos y marcos para corte láser gratis (DXF y SVG)",
+    titulo: "Portarretratos y marcos para láser gratis",
     descripcion:
       "Elige el tamaño de la foto, el estilo del borde y un nombre o fecha: te damos el frente, la capa con ranura para vidrio y foto, la espalda y la pata para mesa o el colgador. Descarga DXF, SVG o PDF.",
+    meta: "Marcos y portarretratos para corte láser: tamaño de foto, borde y nombre o fecha, con ranura para vidrio y pata. DXF y SVG gratis.",
   },
   {
     slug: "esferas-navidad",
@@ -310,9 +331,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Adornos de Navidad personalizados: escribe los nombres y descarga una esfera por cada uno.",
     icono: "generador",
     acceso: "gratis",
-    titulo: "Esferas navideñas con nombre para corte láser gratis (DXF y SVG)",
+    titulo: "Esferas navideñas con nombre para láser gratis",
     descripcion:
       "Generador de esferas de Navidad personalizadas: elige el diseño (copos, estrellas, pinos, regalos…), escribe uno o varios nombres y descarga las esferas de una sola pieza, con las letras unidas, en DXF, SVG o PDF para corte láser, plotter o cartulina.",
+    meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
     slug: ESCANEAR,
@@ -320,9 +342,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
     icono: "ia",
     acceso: "creditos",
-    titulo: "Imagen a 3D con IA: convierte una foto en modelo 3D (STL y GLB) gratis",
+    titulo: "Imagen a 3D con IA: de foto a modelo STL y GLB",
     descripcion:
       "Convierte una imagen en un modelo 3D con inteligencia artificial: sube la foto de una figura, pieza o producto y en 3 a 5 minutos descargas el modelo con textura en GLB y en STL para impresión 3D o router CNC. El primero de cada mes es gratis.",
+    meta: "Convierte una foto en modelo 3D con IA: en 3 a 5 minutos descargas el GLB con color y el STL para imprimir o maquinar. El primero es gratis.",
   },
 ]
 
