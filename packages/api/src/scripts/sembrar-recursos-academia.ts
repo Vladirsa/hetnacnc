@@ -1,13 +1,48 @@
-// Primeros recursos de la Biblioteca de la Academia, para que la sección no
-// arranque vacía. Son ligas con descripción propia y crédito; nada se copia.
+// Recursos de la Biblioteca de la Academia: los primeros y los de todo el
+// mundo (datos-recursos-mundo.ts). Son ligas con descripción propia y crédito;
+// nada se copia.
 //
 //   ./node_modules/.bin/medusa exec ./src/scripts/sembrar-recursos-academia.ts
 //
-// Idempotente: si la liga ya existe (aunque se haya borrado), no la toca.
-// Después se editan o borran desde el dashboard › Biblioteca.
+// - Prueba cada liga desde el servidor antes de agregarla: si no abre (no
+//   existe o da 404), no la agrega y la lista al final. SIN_PROBAR=1 se la salta.
+// - Idempotente: si la liga ya existe (aunque se haya borrado), no la toca.
+// - Oculta (no borra) los que compiten con HETNA y entraron en la primera carga.
+// Después se editan, ocultan o borran desde el dashboard › Biblioteca.
 import type { ExecArgs } from "@medusajs/framework/types"
 
 import { leerRecurso, servicioRecursos } from "../lib/recursos-academia"
+import { RECURSOS_MUNDO } from "./datos-recursos-mundo"
+
+// Entraron en la primera carga pero compiten con lo que ofrece HETNA
+// (generador de cajas, CAM en línea, acomodo en hojas, biblioteca de modelos).
+const RETIRAR = [
+  "https://www.cutlistoptimizer.com/",
+  "https://grid.space/kiri/",
+  "https://boxes.hackerspace-bamberg.de/",
+  "https://www.printables.com/",
+]
+
+/** ¿Abre la liga? 401/403/429 cuentan como "existe" (sitios que bloquean robots). */
+async function abre(url: string): Promise<{ ok: boolean; motivo: string }> {
+  const intento = async (metodo: "HEAD" | "GET") => {
+    const r = await fetch(url, {
+      method: metodo,
+      redirect: "follow",
+      signal: AbortSignal.timeout(15_000),
+      headers: { "user-agent": "Mozilla/5.0 (compatible; HETNA-Biblioteca/1.0)", accept: "text/html,*/*" },
+    })
+    return r.status
+  }
+  try {
+    let st = await intento("HEAD")
+    if (st === 405 || st === 404 || st >= 500) st = await intento("GET") // algunos sitios no aceptan HEAD
+    if (st < 400 || [401, 403, 429].includes(st)) return { ok: true, motivo: String(st) }
+    return { ok: false, motivo: `HTTP ${st}` }
+  } catch (e) {
+    return { ok: false, motivo: (e as Error).name === "TimeoutError" ? "no contestó" : "no existe o no abre" }
+  }
+}
 
 const RECURSOS = [
   {
@@ -29,15 +64,6 @@ const RECURSOS = [
     destacado: true,
     descripcion:
       "Sitio clásico en español con tutoriales de electrónica básica y digital, puerto paralelo, microcontroladores PIC, sensores y proyectos de máquinas CNC hechas en casa.",
-  },
-  {
-    titulo: "CutList Optimizer: acomoda tus cortes en la hoja",
-    url: "https://www.cutlistoptimizer.com/",
-    fuente: "cutlistoptimizer.com",
-    categoria: "muebles-melamina",
-    tipo: "programa",
-    descripcion:
-      "Calculadora en línea para acomodar piezas rectangulares en tableros de melamina o MDF y ver cuánto material se desperdicia. Gratis en el navegador.",
   },
   {
     titulo: "Inkscape: diseño vectorial gratis",
@@ -83,50 +109,47 @@ const RECURSOS = [
     descripcion:
       "Documentación oficial del firmware GRBL que usan muchos routers y láseres de escritorio: parámetros $, finales de carrera, homing y errores comunes (en inglés).",
   },
-  {
-    titulo: "Kiri:Moto: CAM gratis en el navegador",
-    url: "https://grid.space/kiri/",
-    fuente: "Grid.Space",
-    categoria: "diseno-cam",
-    tipo: "programa",
-    descripcion: "Genera G-code para router CNC, láser e impresión 3D sin instalar nada. Bueno para empezar y para trabajos sencillos.",
-  },
-  {
-    titulo: "Boxes.py: generador de cajas para láser",
-    url: "https://boxes.hackerspace-bamberg.de/",
-    fuente: "Hackerspace Bamberg",
-    categoria: "corte-laser",
-    tipo: "programa",
-    descripcion:
-      "Cientos de diseños de cajas, organizadores y repisas con ensamble de dedos: pones medidas y grosor del material y te da el archivo para cortar.",
-  },
-  {
-    titulo: "Printables: modelos 3D gratis",
-    url: "https://www.printables.com/",
-    fuente: "Prusa Research",
-    categoria: "impresion-3d",
-    tipo: "sitio",
-    descripcion: "Biblioteca enorme de modelos para imprimir en 3D, con fotos de quienes ya los imprimieron y la licencia de cada uno.",
-  },
 ]
 
 export default async function sembrarRecursosAcademia({ container }: ExecArgs) {
   const logger = container.resolve("logger")
   const svc = servicioRecursos(container)
   let nuevos = 0
-  for (const [i, r] of RECURSOS.entries()) {
+  const fallidas: string[] = []
+  const probar = process.env.SIN_PROBAR !== "1"
+  const todos = [...RECURSOS, ...RECURSOS_MUNDO]
+  for (const [i, r] of todos.entries()) {
     const { datos, error } = leerRecurso({ ...r, orden: i, publicado: true })
     if (error || !datos) {
       logger.warn(`[biblioteca] ${r.titulo}: ${error}`)
       continue
     }
     const [existe] = await svc.listLearningResources({ url: datos.url as string }, { take: 1, withDeleted: true })
-    if (existe) {
-      logger.info(`[biblioteca] ya existe: ${r.titulo}`)
-      continue
+    if (existe) continue
+    if (probar) {
+      const p = await abre(datos.url as string)
+      if (!p.ok) {
+        fallidas.push(`${r.titulo} (${datos.url}): ${p.motivo}`)
+        continue
+      }
     }
     await svc.createLearningResources(datos as any)
     nuevos++
   }
-  logger.info(`[biblioteca] ${nuevos} recursos nuevos.`)
+
+  let ocultos = 0
+  for (const url of RETIRAR) {
+    const [r] = await svc.listLearningResources({ url, publicado: true }, { take: 1 })
+    if (r) {
+      await svc.updateLearningResources({ id: r.id, publicado: false })
+      ocultos++
+    }
+  }
+
+  const total = await svc.listLearningResources({ publicado: true }, { take: 1000, select: ["id"] })
+  logger.info(`[biblioteca] ${nuevos} recursos nuevos, ${ocultos} ocultos por competir con HETNA, ${total.length} visibles en total.`)
+  if (fallidas.length) {
+    logger.warn(`[biblioteca] ${fallidas.length} ligas no se agregaron porque no abrieron:`)
+    for (const f of fallidas) logger.warn(`  - ${f}`)
+  }
 }

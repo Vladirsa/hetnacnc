@@ -57,3 +57,21 @@ describe("biblioteca: detalles de la revisión", () => {
     expect(ligaValida("http://192.168.1.10/")).toBeNull()
   })
 })
+
+describe("biblioteca: recursos de todo el mundo", () => {
+  const { RECURSOS_MUNDO } = require("../../scripts/datos-recursos-mundo")
+  it("todos son válidos y no se repiten", () => {
+    const urls = new Set<string>()
+    for (const r of RECURSOS_MUNDO) {
+      const { datos, error } = leerRecurso({ ...r, publicado: true })
+      expect({ url: r.url, error }).toEqual({ url: r.url, error: undefined })
+      expect(urls.has(datos!.url as string)).toBe(false)
+      urls.add(datos!.url as string)
+    }
+    expect(RECURSOS_MUNDO.length).toBeGreaterThanOrEqual(100)
+  })
+  it("no incluye sitios que compiten con HETNA", () => {
+    const competencia = /xometry|sendcutsend|protolabs|ponoko|pcbway|jlcpcb|hubs\.com|fictiv|emachineshop|oshcut|cutlistoptimizer|grid\.space|boxes\.hackerspace|printables|thingiverse|cults3d|etsy|3axis|udemy|domestika|cnczone|reddit|easel\.inventables|fablabs\.io|xtool|glowforge|cnccookbook/i
+    for (const r of RECURSOS_MUNDO) expect(competencia.test(r.url)).toBe(false)
+  })
+})
