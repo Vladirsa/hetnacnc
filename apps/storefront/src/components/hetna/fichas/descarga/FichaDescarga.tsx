@@ -1,11 +1,13 @@
 // Ficha de un diseño para descargar (DXF, STL…). Piezas que usa la ficha:
-//   vistasGaleria   fotos del producto + esquema de medidas (si las trae)
-//   ColumnaDescarga lo que va antes del botón: lo más importante, licencia y qué recibes
-//   AbajoDescarga   cómo funciona, pestañas y preguntas frecuentes
+//   vistasGaleria   fotos del producto + vista 3D de muestra + esquema de medidas (si los trae)
+//   ColumnaDescarga lo que va antes del botón: lo más importante, licencia, qué
+//                   recibes y "Pedir una modificación"
+//   AbajoDescarga   pieza fabricada, cómo funciona, pestañas y preguntas frecuentes
 // Regla: nada de existencias, tiempos de envío ni reseñas que no existan.
 // Todo sale del producto (descripción, metadata) o de reglas que ya son ciertas
 // para cualquier descarga en HETNA.
 import "@/components/hetna/tienda/fuentes-tienda.css"
+import Image from "@/lib/imagenes/Imagen"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { caracteristicasDe } from "@/components/hetna/fichas/LoMasImportante"
 import { faq } from "@/lib/helpers/product-metadata"
@@ -13,6 +15,7 @@ import { esquemaDe, svgEsquema } from "@/lib/hetna/plano-diseno"
 import { REGLAS_COMUNES, licenciaDe } from "@/lib/hetna/licencias"
 import { datosDigital } from "@/lib/hetna/tipo-ficha"
 import { formatosDe, programasPara } from "@/lib/hetna/formatos"
+import { fotosFabricadaDe, vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { htmlSeguro } from "@/lib/seguridad/html-seguro"
 import type { VistaGaleria } from "./GaleriaDescarga"
 import { Pestanas } from "./Pestanas"
@@ -31,8 +34,19 @@ export function vistasGaleria(p: Producto): VistaGaleria[] {
   const fotos: VistaGaleria[] = (p.images || [])
     .filter((i) => i?.url)
     .map((i, n) => ({ clave: i.id || `foto-${n}`, tipo: "foto", url: i.url, titulo: `Foto ${n + 1}` }))
+  // La vista 3D va segunda: la primera foto sigue siendo la portada
+  const vp = vistaPreviaDe(p.metadata)
+  if (vp) fotos.splice(Math.min(1, fotos.length), 0, { clave: "modelo", tipo: "modelo", url: vp.url, formato: vp.formato, titulo: "Vista 3D" })
   const e = esquemaDe(p)
   return e ? [...fotos, { clave: "esquema", tipo: "esquema", svg: svgEsquema(e), titulo: "Detalle del patrón" }] : fotos
+}
+
+/** "Pedir una modificación": solicitud dentro de HETNA con el diseño ya ligado. */
+export function ligaModificacion(p: Producto, vendedor?: { handle?: string | null } | null) {
+  const q = new URLSearchParams({ necesidad: "Diseño" })
+  if (vendedor?.handle) q.set("taller", vendedor.handle)
+  q.set("descripcion", `una modificación del diseño "${p.title || "de la tienda"}"${p.handle ? ` (hetnacnc.com/mx/products/${p.handle})` : ""}`)
+  return `/cotizar?${q.toString()}`
 }
 
 function formatos(p: Producto): string | null {
@@ -52,7 +66,7 @@ const Marca = ({ si }: { si: boolean }) => (
 )
 
 /** Lo que se lee antes de pagar: pastillas, licencia y qué recibes. */
-export function ColumnaDescarga({ product }: { product: Producto }) {
+export function ColumnaDescarga({ product, vendedor }: { product: Producto; vendedor?: { handle?: string | null; name?: string | null } | null }) {
   const pastillas = caracteristicasDe(product.description)
   const { licencia, piezas } = licenciaDe(product.metadata)
   const fmt = formatos(product)
@@ -139,7 +153,64 @@ export function ColumnaDescarga({ product }: { product: Producto }) {
           </li>
         </ul>
       </section>
+
+      <section className="rounded-md border border-dashed border-[#C5CCD3] bg-[#F7F8FA] p-3" aria-labelledby="titulo-modificar">
+        <h2 id="titulo-modificar" className="m-0 text-[14.5px] font-bold text-[#1E2329]">
+          ¿Lo necesitas con otras medidas?
+        </h2>
+        <p className="m-0 mt-1 text-[13px] text-[#3A414B]">
+          Pide una modificación{vendedor?.name ? ` a ${vendedor.name}` : ""} o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.
+        </p>
+        <LocalizedClientLink
+          href={ligaModificacion(product, vendedor)}
+          className="mt-2 inline-flex min-h-[44px] items-center rounded border border-[#1E2329] bg-white px-4 text-[14px] font-semibold text-[#1E2329] hover:bg-[#1E2329] hover:text-white"
+        >
+          Pedir una modificación
+        </LocalizedClientLink>
+      </section>
     </div>
+  )
+}
+
+/** Fotos reales de la pieza ya fabricada: del vendedor y de compradores (reseñas publicadas). */
+function PiezaFabricada({ fotos, compradores }: { fotos: string[]; compradores: string[] }) {
+  if (!fotos.length && !compradores.length) return null
+  return (
+    <section aria-labelledby="titulo-fabricada" className="rounded-md border border-[#D4D9DF] bg-white p-5">
+      <h2 id="titulo-fabricada" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
+        La pieza fabricada
+      </h2>
+      <p className="m-0 mt-1 text-[13.5px] text-[#5B6370]">Fotos reales de la pieza ya cortada o impresa con este archivo.</p>
+      {fotos.length > 0 && (
+        <>
+          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">Del vendedor</p>
+          <ul className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {fotos.map((u) => (
+              <li key={u} className="relative aspect-square overflow-hidden rounded border border-[#E2E5E9] bg-[#F4F5F7]">
+                <a href={u} target="_blank" rel="noopener noreferrer" aria-label="Ver foto de la pieza fabricada">
+                  <Image src={u} alt="Pieza fabricada" fill sizes="(min-width: 640px) 180px, 33vw" className="object-cover" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {compradores.length > 0 && (
+        <>
+          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">De compradores</p>
+          <ul className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {compradores.map((id) => (
+              <li key={id} className="relative aspect-square overflow-hidden rounded border border-[#E2E5E9] bg-[#F4F5F7]">
+                <a href={`/api/resena-foto/${id}`} target="_blank" rel="noopener noreferrer" aria-label="Ver foto de un comprador">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/api/resena-foto/${id}`} alt="Foto de un comprador" loading="lazy" className="h-full w-full object-cover" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   )
 }
 
@@ -150,7 +221,7 @@ const PASOS = [
 ]
 
 /** Lo que va debajo: cómo funciona, pestañas y preguntas frecuentes. */
-export function AbajoDescarga({ product }: { product: Producto }) {
+export function AbajoDescarga({ product, fotosCompradores = [] }: { product: Producto; fotosCompradores?: string[] }) {
   const preguntas = faq(product.metadata)
   const pastillas = caracteristicasDe(product.description)
   const filas = datosDigital(product.metadata).filas
@@ -159,6 +230,8 @@ export function AbajoDescarga({ product }: { product: Producto }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <PiezaFabricada fotos={fotosFabricadaDe(product.metadata)} compradores={fotosCompradores.slice(0, 8)} />
+
       <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
         <h2 id="titulo-como" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
           Cómo funciona
