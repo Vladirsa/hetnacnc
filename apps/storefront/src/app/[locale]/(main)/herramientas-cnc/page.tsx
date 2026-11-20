@@ -3,6 +3,7 @@ import Image from "@/lib/imagenes/Imagen"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { SliderHerramientas } from "@/components/hetna/herramientas/SliderHerramientas"
+import { PROGRAMAS } from "@/lib/seo/programas"
 
 // Calculadora y cotizador: la página que los promociona, primero la
 // calculadora (gratis, atrae tráfico) y después el cotizador para talleres
@@ -299,6 +300,22 @@ export default function HerramientasCnc() {
               </details>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Programas de diseño y CAM (páginas para buscadores) */}
+      <section className="px-4 pb-14 lg:px-10">
+        <div className="mx-auto max-w-[1240px]">
+          <h2 className="m-0 text-[22px] font-extrabold text-[#1B1B18]">Programas para muebles y CNC</h2>
+          <ul className="m-0 mt-4 grid gap-2.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
+            {PROGRAMAS.map((x) => (
+              <li key={x.slug} className="list-none">
+                <LocalizedClientLink href={`/programas/${x.slug}`} className="block rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3 text-[15px] font-semibold text-[#0E2A5C] hover:border-[#C2560A]">
+                  {x.herramienta.nombre}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </main>

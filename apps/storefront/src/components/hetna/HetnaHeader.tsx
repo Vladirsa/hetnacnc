@@ -172,7 +172,10 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           En celular y tableta lo reemplaza MenuMovil. */}
       <OcultarAlBajar tambienEscritorio>
         <div className="hidden lg:block">
-          <BarraNavegacion categorias={navCategories} tienda={menu} />
+          {/* Computadora: el menú completo de categorías, como antes del 14 nov
+              (Vlado lo prefiere: se ve más profesional). El celular sigue con
+              las categorías que tienen productos. */}
+          <BarraNavegacion categorias={parentCategories} tienda={menu} />
         </div>
       </OcultarAlBajar>
     </header>
