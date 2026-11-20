@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import CarruselFila from "./CarruselFila"
+import { ProximamenteFisicos } from "./ProximamenteFisicos"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import { licenciaDe } from "@/lib/hetna/licencias"
 import { precioMinimo } from "@/lib/helpers/filtrar-listado"
@@ -142,7 +143,9 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
     nuevos.forEach((p) => yaSalio.add(p.id))
     finales.push({ ...f, productos: nuevos })
   }
-  if (!finales.length) return null
+  // Sin catálogo físico real todavía (menos de 3), en su lugar va "Próximamente"
+  const hayFisicos = todos.filter((p) => tipo(p) === "fisico" && !esCreditos(p)).length >= MIN_FILA
+  if (!finales.length) return hayFisicos ? null : <ProximamenteFisicos />
 
   const mapa = await vendedoresPorProducto(locale)
   // Los promedios de TODAS las filas en una sola llamada. Una por tarjeta
@@ -171,6 +174,7 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
           </CarruselFila>
         </section>
       ))}
+      {!hayFisicos && <ProximamenteFisicos />}
     </div>
   )
 }

@@ -359,17 +359,29 @@ def plan_auto(n: int) -> list[tuple[str, str, str, str]]:
     plan = json.loads((AQUI / "plan_busqueda.json").read_text(encoding="utf-8"))
     todas = []
     for pais, info in plan["ciudades"].items():
+        # "segmentos" elige otra lista de búsquedas (p. ej. en_export para proveedores
+        # extranjeros) sin cambiar el idioma del correo; el país se guarda sin "(export)".
+        lista = plan["segmentos"][info.get("segmentos", info["idioma"])]
+        nombre = pais.replace(" (export)", "")
         for ciudad in info["lista"]:
-            for tipo, plantilla in plan["segmentos"][info["idioma"]]:
-                todas.append((pais, tipo, info["idioma"], plantilla.format(ciudad=ciudad)))
+            for tipo, plantilla in lista:
+                todas.append((nombre, tipo, info["idioma"], plantilla.format(ciudad=ciudad)))
     hechas = set(HECHAS.read_text(encoding="utf-8").splitlines()) if HECHAS.exists() else set()
     pendientes = [c for c in todas if c[3] not in hechas]
     if not pendientes:  # vuelta completa: empieza otra (los sitios ya vistos se saltan)
         print(f"Vuelta completa de {len(todas)} búsquedas; empieza una nueva.")
         HECHAS.unlink(missing_ok=True)
         pendientes = todas
-    print(f"Plan: {len(todas)} búsquedas, faltan {len(pendientes)} en esta vuelta; hoy {min(n, len(pendientes))}.")
-    return pendientes[:n]
+    # La cuarta parte de la tanda va a proveedores extranjeros para que no esperen
+    # semanas detrás de todas las ciudades de México y Latinoamérica.
+    extranjeros = [c for c in pendientes if c[1] == "Proveedor extranjero"]
+    resto = [c for c in pendientes if c[1] != "Proveedor extranjero"]
+    cupo = min(len(extranjeros), max(1, n // 4)) if extranjeros else 0
+    hoy = extranjeros[:cupo] + resto[: n - cupo]
+    if len(hoy) < n:
+        hoy += extranjeros[cupo : cupo + n - len(hoy)]
+    print(f"Plan: {len(todas)} búsquedas, faltan {len(pendientes)} en esta vuelta; hoy {len(hoy)} ({cupo} de proveedores extranjeros).")
+    return hoy
 
 
 def marcar_hecha(consulta: str) -> None:

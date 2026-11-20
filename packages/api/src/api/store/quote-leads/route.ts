@@ -3,6 +3,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { SERVICIOS_SOPORTADOS, precioInstantaneo } from "../../../lib/precio-instantaneo"
 import { sendEmail } from "../../../lib/resend"
 import { quoteLeadEmailHtml } from "../../../lib/email-templates"
+import { guardarEstimado } from "../../../lib/estimados"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 // Funnel público de ventas (job shop): calcula un estimado con el motor real
 // del Cotizador CNC (hetna/cotizador/engine.js, copiado en cotizador-engine.ts)
@@ -71,6 +73,22 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
   } else {
     logger.info(`[quote-lead] correo no enviado a ${email}: ${reason}`)
   }
+
+  // Agente «Reactivador de estimados» (lib/estimados.ts): seguimiento a los 2 y 7 días
+  await guardarEstimado(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION), {
+    email,
+    nombre,
+    telefono,
+    ciudad,
+    servicio: servicioCfg.nombre,
+    material,
+    ancho,
+    largo,
+    cantidad,
+    piezas_mes: piezas_mes_estimado,
+    estimado_min: resultado.pvMinimo,
+    estimado_max: resultado.pvPremium,
+  })
 
   const n8nWebhook = process.env.N8N_QUOTE_LEAD_WEBHOOK_URL
   if (n8nWebhook) {

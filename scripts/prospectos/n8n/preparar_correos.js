@@ -336,6 +336,47 @@ const SOLICITUD = {
   },
 };
 
+// Fabricantes y distribuidores de otros países (tipo "Proveedor extranjero",
+// búsquedas en_export / es_export del plan): los dos primeros correos hablan de
+// vender en México sin abrir oficina. Después siguen la secuencia de vendedores.
+const EXPORTADOR = {
+  en: {
+    1: (r) => ({
+      asunto: r.empresa + ': sell into Mexico without opening an office',
+      cuerpo: '<p>We are <b>HETNA CNC</b>, a Mexican marketplace 100% focused on CNC: machines, laser and plasma cutters, tooling, spare parts and services, with machine shops and manufacturers across Mexico buying every day.</p>' +
+        '<ul><li><b>No local entity needed to start:</b> list your products in English or Spanish; we help you with the Spanish listing and the buyer questions.</li>' +
+        '<li><b>Free to list, 6% fee per sale</b> (5% on CNC machines). No monthly plan.</li>' +
+        '<li><b>Quote requests and tenders</b> from Mexican shops looking for exactly what you make.</li>' +
+        '<li>Mexico is one of the largest CNC markets in Latin America and imports most of its machines, tooling and spare parts.</li></ul>' +
+        '<p>If you already ship to Mexico or have a distributor here, we can list through them too.</p>' +
+        boton(liga('/talleres/unete', r, 1), 'Open my free store'),
+    }),
+    2: (r) => ({
+      asunto: 'Mexican CNC buyers, ' + r.empresa,
+      cuerpo: '<p>Following up: shops on HETNA ask for machines, spindles, servo drives, end mills and laser parts every week. If you want to reach them for a 6% fee and no monthly plan, your store is free.</p>' +
+        '<p>Reply to this email and we will help you upload your first products.</p>' +
+        boton(liga('/talleres/unete', r, 2), 'See how it works'),
+    }),
+  },
+  es: {
+    1: (r) => ({
+      asunto: r.empresa + ': vendan en México sin abrir oficina',
+      cuerpo: '<p>Somos <b>HETNA CNC</b>, el marketplace mexicano 100% especializado en CNC: máquinas, corte láser y plasma, herramientas, refacciones y servicios, con talleres y fabricantes de todo México comprando cada día.</p>' +
+        '<ul><li><b>Sin abrir oficina para empezar:</b> publican sus productos y nosotros les ayudamos con las fichas y las preguntas de los compradores.</li>' +
+        '<li><b>Publicar es gratis y pagan 6% por venta</b> (5% en máquinas CNC). Sin mensualidad.</li>' +
+        '<li>Reciben <b>solicitudes de cotización y licitaciones</b> de talleres mexicanos que buscan justo lo que fabrican.</li></ul>' +
+        '<p>Si ya tienen distribuidor en México, también puede publicar con nosotros.</p>' +
+        boton(liga('/talleres/unete', r, 1), 'Abrir mi tienda gratis'),
+    }),
+    2: (r) => ({
+      asunto: 'Compradores CNC en México, ' + r.empresa,
+      cuerpo: '<p>Retomo mi correo: los talleres de HETNA piden cada semana máquinas, husillos, servos, fresas y refacciones de láser. Si quieren llegar a ellos pagando sólo 6% por venta, su tienda es gratis.</p>' +
+        '<p>Respondan este correo y les ayudamos a subir sus primeros productos.</p>' +
+        boton(liga('/talleres/unete', r, 2), 'Ver cómo funciona'),
+    }),
+  },
+};
+
 // Encuesta de un clic (desde el correo 3, en español)
 const MOTIVOS = [
   ['ya_vendo', 'Ya vendo en otro lado'],
@@ -408,6 +449,7 @@ for (const c of candidatos) {
     const datos = { ...r, empresa, _v: otras.length ? 'abc'.charAt(v) : '' };
     plantilla = v === 0 ? t[seg][paso](datos) : otras[v - 1](datos);
   }
+  if (r.tipo === 'Proveedor extranjero' && EXPORTADOR[idioma] && EXPORTADOR[idioma][paso]) plantilla = EXPORTADOR[idioma][paso]({ ...r, empresa, _v: 'x' });
   if (idioma === 'es' && r.segmento === 'solicitud' && SOLICITUD[paso]) plantilla = SOLICITUD[paso]({ ...r, empresa, _v: 's' });
   if (idioma === 'es' && paso >= 3) plantilla = { asunto: plantilla.asunto, cuerpo: plantilla.cuerpo + encuesta(r) };
   const urlBaja = BAJA + '?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.token || '');

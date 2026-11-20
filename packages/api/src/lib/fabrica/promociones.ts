@@ -19,6 +19,7 @@ import { corto, ffmpegDisponible, segundosPara } from "./video"
 import { vozLocal } from "./voz-local"
 import { laminaEstilo, poster } from "./poster"
 import { posterPro } from "./poster-pro"
+import { posterLimpio } from "./poster-limpio"
 import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, paraVoz, temaPara, videoHF } from "./hyperframes"
 
 export const T_PROMO = "hetna_promo"
@@ -130,6 +131,31 @@ export const HERRAMIENTAS: Herramienta[] = [
     clave: "licitaciones", nombre: "Licitaciones sin comisión", ruta: "/mx/cotizar", imagen: null, tema: "lamina", publico: "clientes_empresa",
     gancho: "Varios talleres cotizan tu pieza", frases: ["Publica tu solicitud gratis", "Compara propuestas", "Sin comisión"], cta: "Pide cotización",
     texto: "Publica tu pieza en HETNA y recibe propuestas de varios talleres CNC. Compara y elige: sin comisión.",
+  },
+  {
+    clave: "cocina_integral", nombre: "Diseño de cocinas integrales", ruta: "/mx/programas/diseno-de-cocinas-integrales", imagen: null, tema: "router", publico: "talleres",
+    gancho: "Diseña la cocina y sácale el despiece", frases: ["Módulos, cubierta y aparatos en 3D", "Lista de corte y cantos al instante", "Planos y presupuesto para tu cliente"], cta: "Diséñala en HETNA",
+    texto: "Diseña la cocina integral en 3D con las medidas del cuarto, acomoda módulos y aparatos, y saca la lista de corte, los planos y el presupuesto para tu cliente. Archivos listos para el router CNC.",
+  },
+  {
+    clave: "muebles_imagen", nombre: "Mueble desde una foto", ruta: "/mx/programas/mueble-desde-una-foto", imagen: null, tema: "router", publico: "talleres",
+    gancho: "De una foto a un mueble para fabricar", frases: ["Sube la foto del mueble", "Ajusta medidas y material", "Despiece y archivos para tu CNC"], cta: "Pruébalo en HETNA",
+    texto: "Sube la foto de un mueble que te gustó y HETNA lo convierte en un diseño con medidas, despiece y archivos para cortarlo en tu router CNC.",
+  },
+  {
+    clave: "molduras", nombre: "Molduras y tallados CNC", ruta: "/mx/programas/molduras-y-tallados-cnc", imagen: null, tema: "router", publico: "talleres",
+    gancho: "Molduras y tallados sin dibujar a mano", frases: ["Elige el perfil o el relieve", "Ajusta medidas y profundidad", "Listo para tu router CNC"], cta: "Diséñalo en HETNA",
+    texto: "Diseña molduras y tallados para puertas, cabeceras y marcos: eliges el perfil o el relieve, ajustas medidas y profundidad, y lo mandas a tu router CNC.",
+  },
+  {
+    clave: "planos_presupuesto", nombre: "Planos y presupuesto de muebles", ruta: "/mx/programas/planos-de-taller-y-presupuesto-de-muebles", imagen: null, tema: "router", publico: "talleres",
+    gancho: "Planos, etiquetas y presupuesto en un clic", frases: ["Vistas con medidas para el taller", "Etiquetas para cada pieza", "Presupuesto con tus costos"], cta: "Úsalo en HETNA",
+    texto: "Del diseño del mueble salen los planos con medidas, las etiquetas de cada pieza y el presupuesto con tus costos de material, cantos y herrajes, listo para mandarlo al cliente.",
+  },
+  {
+    clave: "cam2d", nombre: "G-code para NcStudio, Richauto y Syntec", ruta: "/mx/programas/generador-de-gcode-ncstudio-richauto-syntec", imagen: null, tema: "router", publico: "talleres",
+    gancho: "Sube tu DXF y saca el G-code", frases: ["NcStudio, Richauto, Syntec y más", "Perfiles, cajas y barrenos", "Simulación antes de cortar"], cta: "Genéralo en HETNA",
+    texto: "Sube tu DXF y HETNA genera el G-code para tu router: NcStudio, Richauto, Syntec y otros controladores, con perfiles, cajas, barrenos y la simulación antes de cortar.",
   },
 ]
 
@@ -249,6 +275,8 @@ async function publicarPar(scope: any, d: { tipo: string; ref: string; titulo: s
     const cfgImg = await leerConfig(knex)
     const png =
       // Imagen pro (foto con IA) para herramientas, Cotizador y blog; los productos llevan su foto real
+      // Estilo limpio (fondo blanco, el que le gusta al dueño) salvo que se pida el oscuro
+      (cfgImg.imagen_pro !== false && d.tipo !== "producto" && process.env.POSTER_ESTILO !== "oscuro" && (await posterLimpio({ texto: d.texto, titulo: d.titulo, formato: "4:5" }, logger))?.png) ||
       (cfgImg.imagen_pro !== false && d.tipo !== "producto" && (await posterPro({ texto: d.texto, titulo: d.titulo, formato: "4:5" }, logger))?.png) ||
       (cfgImg.imagen_nueva !== false &&
         (await poster({ tema: temaPara(p1), cinta: d.cinta, titulo: palabras(d.titulo, 10), foto: d.producto_url || d.fotos.find((u) => u) || null, icono: iconoPara(`${d.titulo} ${d.gancho}`), cta: d.cta, liga: liga1 }, logger))) ||
