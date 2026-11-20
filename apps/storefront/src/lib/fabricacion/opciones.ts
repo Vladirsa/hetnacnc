@@ -27,6 +27,10 @@ export const ACABADOS = [
   "Pintura o barniz",
   "Pintura electrostática",
   "Anodizado / galvanizado",
+  "Doblez de lámina",
+  "Roscado / machuelado",
+  "Grabado (láser o fresa)",
+  "Soldadura",
   "Ensamble",
   "No sé, que me recomienden",
 ]

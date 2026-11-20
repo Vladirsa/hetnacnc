@@ -16,7 +16,7 @@ export type MedioFoto = (typeof MEDIOS_FOTO)[number]
 
 // Mismas listas que el formulario (apps/storefront: lib/trabajos/servicios.ts y lib/fabricacion/opciones.ts)
 export const PROCESOS = ["Corte CNC", "Corte láser", "Corte plasma", "Grabado", "Fresado de madera", "Fresado de metal", "Maquinado", "Impresión 3D", "Diseño CAD/CAM", "Otro"] as const
-export const ACABADOS = ["Sin acabado (tal como sale de la máquina)", "Lijado", "Pintura o barniz", "Pintura electrostática", "Anodizado / galvanizado", "Ensamble", "No sé, que me recomienden"] as const
+export const ACABADOS = ["Sin acabado (tal como sale de la máquina)", "Lijado", "Pintura o barniz", "Pintura electrostática", "Anodizado / galvanizado", "Doblez de lámina", "Roscado / machuelado", "Grabado (láser o fresa)", "Soldadura", "Ensamble", "No sé, que me recomienden"] as const
 
 export type LecturaFoto = {
   es_pieza: boolean

@@ -409,7 +409,7 @@ function Nosotros({ t, donde }: { t: Taller; donde: string }) {
 
 function Capacidades({ t }: { t: Taller }) {
   const p = t.perfil
-  const vacio = !p.capacidades.length && !p.maquinas.length && !p.materiales.length && !p.servicios.length
+  const vacio = !p.capacidades.length && !p.maquinas.length && !p.materiales.length && !p.servicios.length && !p.acabados.length
   if (vacio) {
     return (
       <section className={CAJA}>
@@ -439,6 +439,20 @@ function Capacidades({ t }: { t: Taller }) {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+      {p.acabados.length > 0 && (
+        <section className={CAJA}>
+          <h2 className={H2}>Acabados que hace</h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {p.acabados.map((a) => (
+              <li key={a.clave} className="flex items-baseline justify-between gap-3 rounded-xl bg-[#FAF9F5] px-3 py-2 text-[#40403A]">
+                <span><span className="font-bold text-[#C2560A]">✓</span> {a.nombre}</span>
+                {a.precio && <span className="text-sm font-semibold text-[#142033]">{a.precio}</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-[#6B675C]">Precios de referencia que pone el taller; el precio final va en su propuesta.</p>
         </section>
       )}
       {p.maquinas.length > 0 && (
