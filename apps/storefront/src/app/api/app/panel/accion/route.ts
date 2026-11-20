@@ -13,6 +13,7 @@ const PERMITIDAS: { patron: RegExp; area: string }[] = [
   { patron: /^\/admin\/hetna-verificacion\/[\w-]+$/, area: "talleres" },
   { patron: /^\/admin\/orders\/[\w-]+\/(cancel|complete)$/, area: "pedidos" },
   { patron: /^\/admin\/hetna-distribuidores$/, area: "distribuidores" },
+  { patron: /^\/admin\/hetna-creadores$/, area: "distribuidores" },
 ]
 
 export async function POST(req: Request) {

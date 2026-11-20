@@ -570,6 +570,7 @@ export type Routes = {
             recargas: typeof import("../src/api/admin/hetna-control/recargas/route");
         };
         hetnaCotizador: typeof import("../src/api/admin/hetna-cotizador/route");
+        hetnaCreadores: typeof import("../src/api/admin/hetna-creadores/route");
         hetnaCrecimiento: typeof import("../src/api/admin/hetna-crecimiento/route");
         hetnaDistribuidores: typeof import("../src/api/admin/hetna-distribuidores/route");
         hetnaEnvios: typeof import("../src/api/admin/hetna-envios/route") & {
@@ -1428,6 +1429,10 @@ export type Routes = {
             cancelar: typeof import("../src/api/api/cotizador-suscripcion/cancelar/route");
             verificar: typeof import("../src/api/api/cotizador-suscripcion/verificar/route");
             vincular: typeof import("../src/api/api/cotizador-suscripcion/vincular/route");
+        };
+        creadorSolicitud: typeof import("../src/api/api/creador-solicitud/route");
+        creador: {
+            $codigo: typeof import("../src/api/api/creador/[codigo]/route");
         };
         distribuidorSolicitud: typeof import("../src/api/api/distribuidor-solicitud/route");
         distribuidor: {

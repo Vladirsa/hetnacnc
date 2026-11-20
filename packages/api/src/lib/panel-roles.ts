@@ -71,6 +71,7 @@ export const RUTAS_PAGINA: Record<string, Regla[]> = {
     r("GET", "/admin/hetna-cotizador"),
     r("GET", "/admin/hetna-crecimiento"),
     r("GET", "/admin/hetna-distribuidores"),
+    r("GET", "/admin/hetna-creadores"),
   ],
   // equipo: sólo dueño (que pasa todo); ningún rol limitado la tiene.
 }
@@ -85,7 +86,7 @@ export const RUTAS_ACCION: Record<string, Regla[]> = {
   licitaciones: [r("POST", `/admin/hetna-solicitudes/${ID}/accion`, ["aprobar", "pedir_info", "cancelar", "etapa", "nota"])],
   talleres: [r("POST", `/admin/hetna-verificacion/${ID}`)],
   pedidos: [r("POST", `/admin/orders/${ID}/(cancel|complete)`)],
-  distribuidores: [r("POST", "/admin/hetna-distribuidores")],
+  distribuidores: [r("POST", "/admin/hetna-distribuidores"), r("POST", "/admin/hetna-creadores")],
 }
 
 /** Toda sesión de administrador puede saber quién es (la tienda lo necesita). */
