@@ -1,7 +1,8 @@
 // @ts-nocheck
-// Panel del taller > Ficha del producto: lo que el cliente ve abajo de la
-// descripción en la tienda (compatibilidad, videos, archivos para descargar y
-// preguntas frecuentes). Antes sólo se podía poner a mano en Metadata.
+// Panel del taller > Ficha del producto: lo que el cliente ve en la tienda
+// (datos técnicos, vista 3D de muestra, fotos de la pieza fabricada,
+// compatibilidad, videos, archivos para descargar y preguntas frecuentes).
+// Antes sólo se podía poner a mano en Metadata.
 //   GET  /vendor/hetna-ficha        -> productos del taller con su ficha
 //   POST /vendor/hetna-ficha/:id    -> guarda (packages/api/src/lib/ficha-extendida.ts)
 import { useEffect, useMemo, useState } from "react"
@@ -41,7 +42,20 @@ const S = {
   fila: { display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap" },
 }
 
-const vacia = () => ({ compatibilidad: [], videos: [], archivos: [], faq: [] })
+const vacia = () => ({ compatibilidad: [], videos: [], archivos: [], faq: [], medidas: "", tolerancia: "", vista_previa: "", fotos_fabricada: [] })
+const EXT_VISTA = /\.(stl|obj|dxf|svg)$/i
+const EXT_FOTO = /\.(jpe?g|png|webp)$/i
+const MAX_VISTA_MB = 15
+
+// Sube al almacenamiento público del sitio y regresa la URL
+async function subirPublico(archivo) {
+  const fd = new FormData()
+  fd.append("files", archivo)
+  const r = await fetch("/vendor/uploads", { method: "POST", credentials: "include", body: fd })
+  const d = await r.json().catch(() => ({}))
+  if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || `No se pudo subir "${archivo.name}".`)
+  return d.files[0].url
+}
 
 function Chips({ valores, onChange, max }) {
   const [texto, setTexto] = useState("")
@@ -122,6 +136,38 @@ function Editor({ producto, limites, alGuardar }) {
     }
   }
 
+  const subirVista = async (archivo) => {
+    setMsg(null)
+    if (!EXT_VISTA.test(archivo.name)) return setMsg({ ok: false, t: "El modelo de muestra debe ser STL, OBJ, DXF o SVG." })
+    if (archivo.size > MAX_VISTA_MB * 1024 * 1024) return setMsg({ ok: false, t: `El modelo de muestra pesa más de ${MAX_VISTA_MB} MB. Usa una versión simplificada.` })
+    setSubiendo(true)
+    try {
+      set("vista_previa", await subirPublico(archivo))
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setSubiendo(false)
+    }
+  }
+
+  const subirFotos = async (archivos) => {
+    setMsg(null)
+    const libres = limites.fotos_fabricada - f.fotos_fabricada.length
+    const lista = [...archivos].slice(0, Math.max(0, libres))
+    if (lista.some((a) => !EXT_FOTO.test(a.name))) return setMsg({ ok: false, t: "Las fotos deben ser JPG, PNG o WebP." })
+    if (lista.some((a) => a.size > 8 * 1024 * 1024)) return setMsg({ ok: false, t: "Cada foto debe pesar menos de 8 MB." })
+    setSubiendo(true)
+    try {
+      const urls = []
+      for (const a of lista) urls.push(await subirPublico(a))
+      setF((x) => ({ ...x, fotos_fabricada: [...x.fotos_fabricada, ...urls] }))
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setSubiendo(false)
+    }
+  }
+
   const guardar = async () => {
     setGuardando(true)
     setMsg(null)
@@ -131,6 +177,10 @@ function Editor({ producto, limites, alGuardar }) {
         videos: f.videos.map((v) => v.trim()).filter(Boolean),
         archivos: f.archivos.filter((a) => a.url.trim()),
         faq: f.faq.filter((q) => q.pregunta.trim() || q.respuesta.trim()),
+        medidas: f.medidas.trim(),
+        tolerancia: f.tolerancia.trim(),
+        vista_previa: f.vista_previa,
+        fotos_fabricada: f.fotos_fabricada,
       }
       const r = await fetch(`/vendor/hetna-ficha/${producto.id}`, {
         method: "POST",
@@ -152,6 +202,58 @@ function Editor({ producto, limites, alGuardar }) {
 
   return (
     <div style={{ borderTop: "1px solid #E7E4DC", marginTop: 14, paddingTop: 14 }}>
+      <section style={{ marginBottom: 18 }}>
+        <h3 style={S.h2}>Datos técnicos</h3>
+        <p style={S.ayuda}>Salen en Especificaciones. Escribe sólo lo que puedas garantizar.</p>
+        <div style={S.fila}>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Medidas generales</label>
+            <input style={S.input} value={f.medidas} maxLength={120} placeholder="Ej. 120 × 80 × 15 mm" onChange={(e) => set("medidas", e.target.value)} />
+          </div>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Tolerancia</label>
+            <input style={S.input} value={f.tolerancia} maxLength={120} placeholder="Ej. ±0.1 mm en barrenos" onChange={(e) => set("tolerancia", e.target.value)} />
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 18 }}>
+        <h3 style={S.h2}>Vista 3D (modelo de muestra)</h3>
+        <p style={S.ayuda}>
+          El cliente lo puede girar en la tienda antes de comprar. <b>Este archivo es público:</b> sube una versión simplificada o de baja resolución, nunca el archivo que vendes. STL, OBJ, DXF o SVG, hasta {MAX_VISTA_MB} MB.
+        </p>
+        {f.vista_previa ? (
+          <div style={S.fila}>
+            <span style={{ ...S.chip, paddingRight: 12 }}>✓ {decodeURIComponent(f.vista_previa.split("?")[0].split("/").pop() || "modelo")}</span>
+            <button type="button" style={S.quitar} onClick={() => set("vista_previa", "")}>Quitar</button>
+          </div>
+        ) : (
+          <label style={{ ...S.btn2, display: "inline-block", opacity: subiendo ? 0.6 : 1 }}>
+            {subiendo ? "Subiendo..." : "Subir modelo de muestra"}
+            <input type="file" hidden accept=".stl,.obj,.dxf,.svg" disabled={subiendo} onChange={(e) => { const a = e.target.files?.[0]; e.target.value = ""; if (a) subirVista(a) }} />
+          </label>
+        )}
+      </section>
+
+      <section style={{ marginBottom: 18 }}>
+        <h3 style={S.h2}>Fotos de la pieza fabricada</h3>
+        <p style={S.ayuda}>Fotos reales de la pieza ya cortada o impresa. Dan mucha más confianza que un render. Hasta {limites.fotos_fabricada}.</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          {f.fotos_fabricada.map((u, i) => (
+            <div key={u} style={{ position: "relative" }}>
+              <img src={u} alt="" width={84} height={84} style={{ borderRadius: 8, objectFit: "cover", border: "1px solid #E7E4DC" }} />
+              <button type="button" aria-label="Quitar foto" onClick={() => quitar("fotos_fabricada", i)} style={{ position: "absolute", top: 2, right: 2, background: "#fff", border: "1px solid #E7E4DC", borderRadius: 999, width: 24, height: 24, cursor: "pointer", color: "#B3261E", fontWeight: 700 }}>×</button>
+            </div>
+          ))}
+        </div>
+        {f.fotos_fabricada.length < limites.fotos_fabricada && (
+          <label style={{ ...S.btn2, display: "inline-block", opacity: subiendo ? 0.6 : 1 }}>
+            {subiendo ? "Subiendo..." : "Subir fotos"}
+            <input type="file" hidden multiple accept="image/jpeg,image/png,image/webp" disabled={subiendo} onChange={(e) => { const a = e.target.files; if (a?.length) subirFotos(a); e.target.value = "" }} />
+          </label>
+        )}
+      </section>
+
       <section style={{ marginBottom: 18 }}>
         <h3 style={S.h2}>Compatibilidad</h3>
         <p style={S.ayuda}>Controladores, programas o máquinas con los que funciona. Ayuda a que lo encuentren y evita devoluciones.</p>
@@ -269,7 +371,7 @@ export default function FichaPage() {
     <div style={S.page}>
       <h1 style={S.h1}>Ficha del producto</h1>
       <p style={S.sub}>
-        Agrega compatibilidad, videos, manuales y preguntas frecuentes. Aparecen en la página del producto, abajo de la descripción, y le dan más confianza al cliente para comprar.
+        Agrega medidas y tolerancia, una vista 3D de muestra, fotos de la pieza fabricada, compatibilidad, videos, manuales y preguntas frecuentes. Aparecen en la página del producto y le dan más confianza al cliente para comprar.
       </p>
 
       {datos.productos.length > 6 && (
