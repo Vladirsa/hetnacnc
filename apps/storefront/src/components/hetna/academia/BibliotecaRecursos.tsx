@@ -35,23 +35,22 @@ const dominio = (u: string) => {
 }
 
 function Portada({ r }: { r: Recurso }) {
-  const p = PORTADA[r.categoria] || PORTADA.otros
+  const p = Object.prototype.hasOwnProperty.call(PORTADA, r.categoria) ? PORTADA[r.categoria] : PORTADA.otros
   const categoria = CATEGORIAS_RECURSO.find(([c]) => c === r.categoria)?.[1] || "Recurso"
   return (
     <span
-      aria-hidden="true"
       className="relative flex aspect-[16/9] flex-col justify-between overflow-hidden p-4 text-white"
       style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(135deg, ${p.de}, ${p.a})`, backgroundSize: "16px 16px, 100% 100%" }}
     >
-      <span className="text-[11.5px] font-bold uppercase tracking-wide text-white/80">{categoria}</span>
+      <span className="self-start rounded-full bg-black/25 px-2 py-0.5 text-[11.5px] font-bold uppercase tracking-wide text-white">{categoria}</span>
       <span className="pointer-events-none absolute -bottom-4 -right-3 text-white/20 transition group-hover:scale-105">
         <ServicioIcono nombre={p.icono} size={120} />
       </span>
-      <span className="relative flex items-center gap-2">
+      <span className="relative flex min-w-0 items-center gap-2">
         <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-white/15">
           <ServicioIcono nombre={p.icono} size={24} />
         </span>
-        <span className="truncate text-[13px] font-semibold text-white/90">{dominio(r.url)}</span>
+        <span className="min-w-0 truncate rounded-[6px] bg-black/25 px-1.5 py-0.5 text-[13px] font-semibold text-white">{dominio(r.url)}</span>
       </span>
     </span>
   )

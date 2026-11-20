@@ -82,6 +82,11 @@ async function subirImagen(archivo: File): Promise<string> {
   const d = (await r.json().catch(() => ({}))) as { files?: { url: string }[]; message?: string }
   if (r.status === 401) throw new Error(MSG_SESION)
   if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || "No se pudo subir la imagen.")
+  // La Biblioteca sólo acepta fotos https: si el servidor guarda archivos sin
+  // https (FILE_BACKEND_URL), avisar ya y no al guardar.
+  if (!d.files[0].url.startsWith("https://")) {
+    throw new Error("La imagen se subió, pero el servidor la guarda sin https (revisa FILE_BACKEND_URL). Pega una liga https.")
+  }
   return d.files[0].url
 }
 
