@@ -23,6 +23,7 @@ import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { SITIO_CANONICO } from "@/lib/helpers/hreflang"
 import { CIUDADES, GUIAS, enCiudad } from "@/lib/seo/guias"
+import { PROGRAMAS } from "@/lib/seo/programas"
 
 type Frecuencia = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never"
 export type Entrada = {
@@ -57,6 +58,8 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/fabricacion", "weekly", 0.9],
   ["/herramientas-cnc", "weekly", 0.9],
   ["/laboratorio-cam", "weekly", 0.8],
+  // páginas para buscadores de las herramientas de diseño y CAM (lib/seo/programas.ts)
+  ...PROGRAMAS.map((x) => [`/programas/${x.slug}`, "weekly", 0.8] as [string, Frecuencia, number]),
   ["/disenar", "weekly", 0.9],
   ["/disenar/cajas", "weekly", 0.9],
   ["/cam/subir", "weekly", 0.6],
