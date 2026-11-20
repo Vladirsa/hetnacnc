@@ -34,6 +34,20 @@ const icono = { rojo: '🔴', ambar: '🟠' };
 const servicios = ((ayer.saldos || {}).servicios || []).filter((s) => s.estado === 'rojo' || s.estado === 'ambar');
 const sky = (ayer.saldos || {}).skydropx;
 
+// Gasto del mes en IA y anuncios (fal.ai, Anthropic, Meta Ads, Google Ads...)
+const todos = (ayer.saldos || {}).servicios || [];
+const conGasto = todos.filter((s) => s.gasto_mes && s.gasto_mes.monto != null);
+const sinConfig = todos.filter((s) => ['fal', 'anthropic', 'meta_ads', 'google_ads'].indexOf(s.id) >= 0 && (s.estado === 'sin_config' || s.estado === 'error'));
+const dinero = (n, m) => (m === 'USD' ? 'US$' : '$') + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const totales = {};
+for (const s of conGasto) totales[s.gasto_mes.moneda] = (totales[s.gasto_mes.moneda] || 0) + Number(s.gasto_mes.monto || 0);
+const lineasGasto = conGasto.map((s) => '• ' + esc(s.nombre) + ': ' + dinero(s.gasto_mes.monto, s.gasto_mes.moneda) + (s.grupo === 'saldo' && s.valor && s.id === 'fal' ? ' · saldo ' + esc(s.valor) : ''));
+const bloqueGasto = (conGasto.length || sinConfig.length)
+  ? '<b>IA y anuncios este mes</b>' + NL +
+    (lineasGasto.length ? lineasGasto.join(NL) + NL + 'Total: ' + Object.keys(totales).map((m) => dinero(totales[m], m)).join(' + ') : 'Todavía sin datos de gasto.') +
+    (sinConfig.length ? NL + '⚙️ Falta conectar: ' + sinConfig.map((s) => esc(s.nombre) + (s.falta ? ' (' + esc(s.falta) + ')' : s.estado === 'error' ? ' (no se pudo leer)' : '')).join(', ') : '')
+  : '';
+
 const partes = [
   '<b>💰 Contador HETNA · ' + hoy.toFormat('dd/MM/yyyy') + '</b>',
   '',
@@ -58,6 +72,7 @@ const partes = [
   porPagar.slice(0, 5).map((t) => '• ' + esc(t.nombre) + ': ' + pesos(t.disponible)).join(NL),
   '',
   sky && sky.saldo != null ? '📦 Saldo Skydropx: ' + pesos(sky.saldo) + (sky.dias_restantes != null ? ' (≈' + sky.dias_restantes + ' días)' : '') : '',
+  bloqueGasto,
   servicios.length ? '<b>Servicios por pagar o renovar</b>' + NL + servicios.slice(0, 6).map((s) => (s.estado === 'rojo' ? '🔴 ' : '🟠 ') + esc(s.alerta || (s.nombre + ': ' + (s.valor || '')))).join(NL) : '',
   '',
   avisos.length
