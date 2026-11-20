@@ -73,6 +73,23 @@ async function api<T>(ruta: string, metodo = "GET", cuerpo?: unknown): Promise<T
   return d
 }
 
+async function subirImagen(archivo: File): Promise<string> {
+  if (!/^image\/(jpeg|png|webp)$/.test(archivo.type)) throw new Error("Usa una imagen JPG, PNG o WEBP.")
+  if (archivo.size > 8 * 1024 * 1024) throw new Error("La imagen pesa más de 8 MB.")
+  const fd = new FormData()
+  fd.append("files", archivo)
+  const r = await fetch("/admin/uploads", { method: "POST", credentials: "include", headers: cabeceras(), body: fd })
+  const d = (await r.json().catch(() => ({}))) as { files?: { url: string }[]; message?: string }
+  if (r.status === 401) throw new Error(MSG_SESION)
+  if (!r.ok || !d.files?.[0]?.url) throw new Error(d.message || "No se pudo subir la imagen.")
+  // La Biblioteca sólo acepta fotos https: si el servidor guarda archivos sin
+  // https (FILE_BACKEND_URL), avisar ya y no al guardar.
+  if (!d.files[0].url.startsWith("https://")) {
+    throw new Error("La imagen se subió, pero el servidor la guarda sin https (revisa FILE_BACKEND_URL). Pega una liga https.")
+  }
+  return d.files[0].url
+}
+
 const C = {
   borde: "var(--border-base, #e5e5e5)",
   fondo: "var(--bg-base, #ffffff)",
@@ -129,6 +146,7 @@ function Editor({ inicial, alSalir }: { inicial: Borrador; alSalir: (guardado: b
   const [b, setB] = useState<Borrador>(inicial)
   const [ocupado, setOcupado] = useState(false)
   const [msg, setMsg] = useState("")
+  const [subiendo, setSubiendo] = useState(false)
   const set = <K extends keyof Borrador>(k: K, v: Borrador[K]) => setB((x) => ({ ...x, [k]: v }))
 
   const guardar = async () => {
@@ -188,8 +206,42 @@ function Editor({ inicial, alSalir }: { inicial: Borrador; alSalir: (guardado: b
         onChange={(e) => set("descripcion", e.target.value)}
         placeholder="Qué encuentra el visitante y para quién sirve. No copies el texto del sitio original."
       />
-      <label style={etiqueta}>Imagen de vista previa (opcional, liga https)</label>
-      <input style={campo} value={b.imagen_url} onChange={(e) => set("imagen_url", e.target.value)} placeholder="Usa una foto tuya, no la del otro sitio" />
+      <label style={etiqueta}>Imagen de portada (opcional)</label>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <label style={{ ...boton("normal"), display: "inline-block" }}>
+          {subiendo ? "Subiendo…" : "Subir imagen"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            disabled={subiendo}
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              e.target.value = ""
+              if (!f) return
+              setSubiendo(true)
+              setMsg("")
+              try {
+                set("imagen_url", await subirImagen(f))
+              } catch (err) {
+                setMsg((err as Error).message)
+              } finally {
+                setSubiendo(false)
+              }
+            }}
+          />
+        </label>
+        {b.imagen_url && (
+          <>
+            <img src={b.imagen_url} alt="" style={{ height: 54, width: 96, objectFit: "cover", borderRadius: 6, border: `1px solid ${C.borde}` }} />
+            <button type="button" style={boton("normal")} onClick={() => set("imagen_url", "")}>Quitar</button>
+          </>
+        )}
+      </div>
+      <input style={{ ...campo, marginTop: 6 }} value={b.imagen_url} onChange={(e) => set("imagen_url", e.target.value)} placeholder="…o pega una liga https de una foto tuya" />
+      <p style={{ fontSize: 12, color: C.tenue, margin: "4px 0 0" }}>
+        Sin imagen, la Academia le pone una portada de HETNA con el color y el ícono de su categoría. Usa fotos tuyas, no las del otro sitio.
+      </p>
       <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginTop: 12, fontSize: 14 }}>
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input type="checkbox" checked={b.publicado} onChange={(e) => set("publicado", e.target.checked)} />
