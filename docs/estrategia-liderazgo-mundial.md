@@ -64,7 +64,7 @@ No cambia la operación. Cada punto se puede programar y desplegar por separado.
 | 2.2 ✅ | **Licitación desde una foto o un boceto con IA**: el cliente sin archivo toma foto, la IA arma la solicitud con medidas y material y la manda a talleres. | Alibaba Accio | 🛠️🏢 |
 | 2.3 ✅ | **Widget del cotizador del taller**: código para pegar en su web o Facebook, QR para su local y estadísticas de visitas y solicitudes. | Lantek Metal Shop, CutQuote | 🛠️ |
 | 2.4 ✅ (parte 1) | **Portal Empresas (v1)**: cuenta de empresa con varios usuarios, biblioteca de piezas para **repetir pedido en 1 clic**, órdenes de compra y CFDI. | Xometry, Kreatize | 🏢 |
-| 2.5 | **Recotizar trabajos parecidos** en la app Cotizador: sube un archivo y te muestra trabajos anteriores parecidos con su precio. | CADDi | 🛠️ |
+| 2.5 ✅ | **Recotizar trabajos parecidos** en la app Cotizador: sube un archivo y te muestra trabajos anteriores parecidos con su precio. | CADDi | 🛠️ |
 | 2.6 ✅ | **Generador → cotizar → comprar en un paso**: diseñas la caja, letrero o gabinete, ves el precio y lo mandas a fabricar con el material en el mismo carrito. | O'Brien, JLC | 🛠️ |
 
 ### Fase 3: nivel industrial (meses 4 a 6)
