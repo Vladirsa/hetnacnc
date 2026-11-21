@@ -24,7 +24,16 @@ export function Analytics() {
   // quedó combinada en otra cuenta) y, al cargar con ella, se caían Analytics
   // Y Ads juntos. Cargando con AW-, Ads mide siempre y Analytics se activa con
   // su gtag('config') aparte.
-  const gtagId = adsId || ga4Id;
+  //
+  // 21 nov 2026: las etiquetas se COMBINARON en una sola etiqueta de Google: la G-
+  // ya trae Ads como destino (configurando sólo G- salen la visita de Analytics,
+  // la de Ads y el remarketing; sólo con AW- no sale Analytics). Así se configura
+  // UNA etiqueta y se baja un paquete de Google en vez de dos (~160 KB y ~250 ms
+  // menos en el celular). Si algún día se separan otra vez o la G- deja de
+  // servirse, NEXT_PUBLIC_GTAG_SEPARADAS=1 vuelve al esquema anterior.
+  const separadas = process.env.NEXT_PUBLIC_GTAG_SEPARADAS === '1';
+  const combinada = !!ga4Id && !!adsId && !separadas;
+  const gtagId = combinada ? ga4Id : adsId || ga4Id;
   // Microsoft Clarity (mapas de calor y grabaciones). Oculta lo que se
   // escribe en formularios. Sólo letras y números: va dentro del script.
   const clarityCrudo = process.env.NEXT_PUBLIC_CLARITY_ID || '';
@@ -86,8 +95,10 @@ export function Analytics() {
               gtag('consent', 'default', ${JSON.stringify(estadoConsentimiento(false))});
               ${permitido ? `gtag('consent', 'update', ${JSON.stringify(estadoConsentimiento(true))});` : ''}
               gtag('js', new Date());
-              ${ga4Id ? `gtag('config', '${ga4Id}');` : ''}
-              ${adsId ? `gtag('config', '${adsId}', { allow_enhanced_conversions: true });` : ''}
+              ${combinada
+                ? `gtag('config', '${ga4Id}', { allow_enhanced_conversions: true });`
+                : `${ga4Id ? `gtag('config', '${ga4Id}');` : ''}
+              ${adsId ? `gtag('config', '${adsId}', { allow_enhanced_conversions: true });` : ''}`}
             `}
           </Script>
         </>
