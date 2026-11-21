@@ -9,7 +9,7 @@ import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
 import { asegurarPropuestaFormal, faltantesObligatorios, leerPropuestaFormal } from "../../../../../lib/licitacion-propuesta"
-import { relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
+import { faltaNda, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 import { cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
 import { asegurarCobro } from "../../../../../lib/licitacion-cobro"
 import { asegurarVersiones, cambio, diferencias, guardarVersion, marcarRespondidas } from "../../../../../lib/licitacion-versiones"
@@ -72,7 +72,10 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       return res.status(403).json({ message: "El cliente pidió propuestas sólo de talleres verificados. Verifica tu taller desde Verificación." })
   }
   // Licitación privada: sólo los talleres invitados
-  if (!tallerPuedeVer(s, await relacionTaller(knex, s, sellerId))) return res.status(403).json({ message: "Esta licitación es privada: sólo participan los talleres invitados." })
+  const rel = await relacionTaller(knex, s, sellerId)
+  if (!tallerPuedeVer(s, rel)) return res.status(403).json({ message: "Esta licitación es privada: sólo participan los talleres invitados." })
+  // El cliente pidió acuerdo de confidencialidad: primero se acepta
+  if (faltaNda(s, rel)) return res.status(403).json({ message: "Este cliente pide acuerdo de confidencialidad: léelo y acéptalo antes de cotizar.", nda: true })
 
   const previa = await knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first()
   // Pasada la fecha de cierre ya no entran propuestas nuevas; la que el taller
