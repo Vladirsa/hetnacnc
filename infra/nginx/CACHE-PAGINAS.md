@@ -60,6 +60,20 @@ La 2.ª y la 3.ª deben ser mucho más rápidas, y debe haber archivos en:
 find /var/cache/nginx/hetna-paginas -type f | wc -l
 ```
 
+## Mantenerla caliente (21 nov 2026)
+
+Con poco tráfico, la copia de 60 s casi siempre está vencida cuando llega un
+visitante nuevo, y ese visitante (sin cookies) tampoco crea copia porque la
+tienda le responde con Set-Cookie. `scripts/mantener-cache.sh` pide cada 30 s
+las páginas de entrada (inicio, cotizar, calculadoras, talleres, guías,
+Latinoamérica) con la cabecera `X-Hetna-Refrescar: calentar`: nginx las arma de
+nuevo y guarda la copia. Así nunca se sirve una copia vencida y el visitante
+nuevo recibe la página en ~0.1 s. `/cotizar` sólo se guarda sin consulta.
+
+```bash
+( crontab -l 2>/dev/null | grep -v mantener-cache; echo '* * * * * bash /root/hetnacnc/scripts/mantener-cache.sh >/dev/null 2>&1' ) | crontab -
+```
+
 ## Quitar
 
 ```bash
