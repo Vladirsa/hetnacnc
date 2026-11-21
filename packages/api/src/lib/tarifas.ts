@@ -13,6 +13,7 @@ import { MercurModules } from "@mercurjs/types"
 
 import { COMISION_TOPE, comisionPct } from "./cotizacion-liga"
 import { CUPO_GB } from "./cloud"
+import { PLANES_COTIZADOR } from "./cotizador-suscripciones"
 import { PAQUETES } from "./creditos-compra"
 import { diasVigencia, escalones } from "./comision-autores"
 import { creditosDe, creditosModeloIa, previewsGratisPorMes } from "../workflows/create-escaneo/steps/create-escaneo"
@@ -23,11 +24,11 @@ export type GrupoTarifas = { id: string; titulo: string; texto?: string; filas: 
 const pesos = (n: number) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(n)
 
+// Los precios salen de lo que de verdad se cobra (PLANES_COTIZADOR), no de una
+// copia: así la lista de precios nunca dice otra cosa que el cobro.
 const PLANES_APP = [
   { nombre: "Gratis", precio: 0, plan: "gratis" },
-  { nombre: "Taller", precio: 299, plan: "taller" },
-  { nombre: "Pro", precio: 599, plan: "pro" },
-  { nombre: "Industrial", precio: 1199, plan: "industrial" },
+  ...(["taller", "pro", "industrial"] as const).map((k) => ({ nombre: PLANES_COTIZADOR[k].nombre, precio: PLANES_COTIZADOR[k].precio, plan: k })),
 ]
 
 const PUBLICIDAD: [string, number][] = [
