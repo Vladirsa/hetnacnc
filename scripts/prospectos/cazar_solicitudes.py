@@ -70,7 +70,7 @@ CIUDADES = ["", "CDMX", "Guadalajara", "Monterrey", "Puebla", "Querétaro", "Le�
 PROMPT = """Eres analista de HETNA CNC, marketplace mexicano de talleres CNC (corte láser, router, plasma, torno, fresadora, impresión 3D, piezas a la medida).
 Te paso un resultado de búsqueda y el texto de la página. Decide si es una SOLICITUD REAL Y RECIENTE de alguien que NECESITA que le fabriquen o corten algo en México.
 
-NO es solicitud: un taller que ofrece sus servicios, un anuncio de venta, un tutorial, una noticia, una bolsa de trabajo (buscan empleados), alguien vendiendo una máquina, o publicaciones de otro país.
+NO es solicitud: algo que no se hace con CNC (costura, sublimación, serigrafía, impresión en papel, pintura, carpintería a mano), un taller que ofrece sus servicios, un anuncio de venta, un tutorial, una noticia, una bolsa de trabajo (buscan empleados), alguien vendiendo una máquina, o publicaciones de otro país.
 Sí puede ser: una persona o empresa preguntando "¿alguien que haga…?", "busco quien…", "necesito cotización de…", una empresa buscando proveedor, una licitación pública o privada.
 
 Reglas: NO inventes datos. "email" sólo si aparece literal en el texto y es de quien pide (no del sitio ni de un taller). Si no sabes un dato, pon "".
@@ -79,7 +79,7 @@ Responde SOLO JSON con estas llaves:
 {"es_solicitud": true/false, "calificacion": 1-5 (5 = cliente claro con pieza, cantidad y ciudad), "motivo": "por qué sí o no, 1 frase",
  "quien": "empresa" | "persona" | "gobierno" | "desconocido", "empresa": "", "email": "",
  "servicio": "corte láser | router | plasma | maquinado | impresión 3D | diseño | otro", "pieza": "", "material": "", "medidas": "", "cantidad": "",
- "ciudad": "", "fecha": "AAAA-MM-DD o ''", "resumen": "qué necesita en 1 frase",
+ "ciudad": "", "pais": "país de quien pide, p. ej. México, Chile, Colombia; '' si no se sabe", "fecha": "AAAA-MM-DD o ''", "resumen": "qué necesita en 1 frase",
  "respuesta": "comentario breve y amable (máx. 350 caracteres) para contestarle donde publicó: que en HETNA CNC talleres verificados de su zona le cotizan sin costo y que puede ver un precio aproximado en la liga {liga}. Sin exagerar, sin emojis de más."}
 
 RESULTADO:
@@ -151,6 +151,24 @@ def preguntar_ia(prompt: str) -> dict | None:
     return None
 
 
+TLD_OTROS = (".cl", ".co", ".ar", ".pe", ".ec", ".uy", ".py", ".bo", ".ve", ".gt", ".cr", ".es", ".br", ".com.co", ".com.ar", ".com.pe")
+ESTADOS_MX = ("cdmx", "ciudad de méxico", "méxico", "mexico", "jalisco", "nuevo león", "puebla", "querétaro", "guanajuato", "edomex", "estado de méxico",
+              "tlaxcala", "veracruz", "yucatán", "chihuahua", "sonora", "coahuila", "baja california", "aguascalientes", "san luis potosí", "michoacán",
+              "hidalgo", "morelos", "oaxaca", "tamaulipas", "sinaloa", "durango", "zacatecas", "quintana roo", "tabasco", "chiapas", "guerrero", "nayarit", "colima", "campeche")
+
+
+def es_de_mexico(d: dict, url: str) -> bool:
+    """El país lo dice la IA; si no lo sabe, se descarta lo que viene de un dominio de otro país."""
+    pais = str(d.get("pais") or "").strip().lower()
+    if pais:
+        return pais in ("méxico", "mexico")
+    dom = dominio_de(url)
+    if any(dom.endswith(t) for t in TLD_OTROS):
+        return False
+    ciudad = str(d.get("ciudad") or "").lower()
+    return not ciudad or any(e in ciudad for e in ESTADOS_MX) or dom.endswith(".mx")
+
+
 def correo_valido(email: str, texto: str, url: str) -> str:
     """El correo tiene que venir literal en la página y no ser basura ni del propio sitio de anuncios."""
     e = (email or "").strip().lower()
@@ -194,6 +212,9 @@ def cazar(n: int, probar: bool) -> list[dict]:
                              .replace("{fragmento}", r.get("body", "")[:600]).replace("{texto}", texto[:5000]).replace("{liga}", liga))
             time.sleep(2)  # Groq gratis: pocas peticiones por minuto
             if not d or not d.get("es_solicitud") or int(d.get("calificacion") or 0) < 3:
+                continue
+            if not es_de_mexico(d, url) or str(d.get("servicio", "")).strip().lower() in ("otro", ""):
+                print(f"  ✗ fuera de México o no es CNC: {d.get('resumen', '')[:70]}")
                 continue
             d["email"] = correo_valido(d.get("email", ""), texto + " " + r.get("body", ""), url)
             dom = d["email"].split("@")[1] if d["email"] else ""

@@ -44,7 +44,7 @@ const EXTRA = [
   "Contacto: correo contacto@hetnacnc.com y WhatsApp +52 221 707 6014. Se puede ofrecer una videollamada de 15 minutos para ayudarles a dar de alta su cuenta (la agenda Vladimir, del equipo de HETNA).",
 ]
 
-async function datos(container: MedusaContainer): Promise<string[]> {
+export async function datos(container: MedusaContainer): Promise<string[]> {
   const l = [...catalogoVentas(), ...EXTRA]
   try {
     const { grupos } = await tarifasHetna(container)
