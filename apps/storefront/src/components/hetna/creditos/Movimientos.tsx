@@ -1,4 +1,5 @@
 import type { Movimiento } from "@/lib/creditos/acciones"
+import { fechaSegura } from "@/lib/helpers/fecha-segura"
 
 // El historial del monedero. Es la única prueba que tiene el taller de que lo
 // que compró entró y de en qué se fue, así que se enseña completo: lo que
@@ -27,7 +28,7 @@ export const Movimientos = ({ movimientos }: { movimientos: Movimiento[] }) => (
                 {m.descripcion || m.tipo}
               </span>
               <span className="block text-[12px] text-[#8A8780]">
-                {FECHA.format(new Date(m.creado))}
+                {fechaSegura(FECHA, m.creado)}
               </span>
             </span>
             <span
