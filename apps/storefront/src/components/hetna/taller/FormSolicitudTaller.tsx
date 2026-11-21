@@ -265,14 +265,16 @@ export default function FormSolicitudTaller({
         .then((subido) => poner({ subido, avance: 100 }))
         .catch((e: Error) => poner({ error: e.message }))
       // Vista previa de medidas: se lee aquí mismo, sin mandar nada.
-      if (/\.(dxf|svg|stl|obj)$/i.test(f.name)) {
+      if (/\.(dxf|svg|stl|obj|step|stp)$/i.test(f.name)) {
         Promise.all([import("@/lib/cotizador/archivo-cad"), import("@/lib/cotizador/revision-archivo")])
           .then(async ([{ leerArchivoCad }, rev]) => ({ g: await leerArchivoCad(f), rev }))
           .then(({ g, rev }) => {
             if (!g || !(g.largo > 0)) return
             const mm = (n: number) => (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("es-MX")
-            const texto =
-              g.tipo === "3d"
+            const lam = g.lamina?.esLamina ? g.lamina : null
+            const texto = lam
+              ? `Lámina de ${mm(lam.espesor)} mm · ${lam.dobleces.length} ${lam.dobleces.length === 1 ? "doblez" : "dobleces"}${lam.radioInteriorMin != null ? ` (radio int. ${mm(lam.radioInteriorMin)} mm)` : ""} · extendida ${mm(lam.areaPlana / 100)} cm² · ${(lam.corte / 1000).toLocaleString("es-MX", { maximumFractionDigits: 2 })} m de corte${lam.barrenos ? ` · ${lam.barrenos} barrenos` : ""} · ${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm`
+              : g.tipo === "3d"
                 ? `${mm(g.largo)} × ${mm(g.ancho)} × ${mm(g.alto)} mm${g.volumen_cm3 ? ` · ${mm(g.volumen_cm3)} cm³` : ""}`
                 : `${mm(g.largo)} × ${mm(g.ancho)} mm · ${(g.corte_mm / 1000).toLocaleString("es-MX", { maximumFractionDigits: 2 })} m de corte` +
                   (g.perforaciones ? ` · ${g.perforaciones} perforaciones` : "")

@@ -112,22 +112,36 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
     setAvisoArchivo("")
     if (!f) return
     if (f.size > 40 * 1024 * 1024) return setAvisoArchivo("El archivo pasa de 40 MB. Captura las medidas a mano.")
+    const esStep = /\.(step|stp)$/i.test(f.name)
+    if (esStep) setAvisoArchivo("Leyendo el STEP… la primera vez tarda unos segundos.")
     try {
       const { leerArchivoCad } = await import("@/lib/cotizador/archivo-cad")
       const geo = await leerArchivoCad(f)
+      if (esStep) setAvisoArchivo("")
       if (!geo || !(geo.largo > 0) || !(geo.ancho > 0)) {
         setPieza(null)
         piezaRef.current = null
-        return setAvisoArchivo("No pude leer ese archivo. Sirven DXF, SVG, STL y OBJ; o captura las medidas a mano.")
+        return setAvisoArchivo("No pude leer ese archivo. Sirven DXF, SVG, STL, OBJ y STEP; o captura las medidas a mano.")
       }
       setPieza({ nombre: f.name, geo })
       piezaRef.current = { nombre: f.name, geo }
       archivoRef.current = f
-      setMedidas({ ancho: cm(geo.ancho), largo: cm(geo.largo), alto: geo.tipo === "3d" ? cm(geo.alto, 0.1) : "" })
+      // Lámina doblada (estrategia 3.1): el corte se cobra por la lámina extendida
+      const lam = geo.lamina?.esLamina && (servicio === "plasma" || servicio === "laser_co2") ? geo.lamina : null
+      if (lam) {
+        const lado = Math.sqrt(lam.areaPlana)
+        setMedidas({ ancho: cm(lado), largo: cm(lado), alto: "" })
+        const n = lam.dobleces.length
+        setAvisoArchivo(
+          `Lámina de ${lam.espesor} mm${n ? ` con ${n} ${n === 1 ? "doblez" : "dobleces"}` : ""}: el precio de corte usa el área de la lámina extendida (${Math.round(lam.areaPlana / 100).toLocaleString("es-MX")} cm², como un cuadro de ${cm(lado)} × ${cm(lado)} cm).${n ? " Los dobleces los cotiza el taller." : ""}`
+        )
+      } else {
+        setMedidas({ ancho: cm(geo.ancho), largo: cm(geo.largo), alto: geo.tipo === "3d" ? cm(geo.alto, 0.1) : "" })
+      }
       if (pideAlto && geo.tipo !== "3d") setAvisoArchivo("Es un plano 2D: captura la altura de la pieza.")
-    } catch {
+    } catch (e) {
       setPieza(null)
-      setAvisoArchivo("No pude leer ese archivo. Captura las medidas a mano.")
+      setAvisoArchivo(esStep && e instanceof Error && e.message ? e.message : "No pude leer ese archivo. Captura las medidas a mano.")
     }
   }
 
@@ -243,12 +257,12 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           ¿Tienes el archivo de tu pieza? Súbelo para verla y tomar sus medidas (opcional)
           <input
             type="file"
-            accept=".dxf,.svg,.stl,.obj"
+            accept=".dxf,.svg,.stl,.obj,.step,.stp"
             onChange={(e) => elegirArchivo(e.target.files?.[0])}
             className="text-[13px] font-normal text-[#4A4943] file:mr-3 file:rounded-[8px] file:border-0 file:bg-[#142033] file:px-3 file:py-2 file:text-[13px] file:font-semibold file:text-white"
           />
         </label>
-        <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL u OBJ. Se lee en tu navegador: no se sube ni se guarda.</span>
+        <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL, OBJ o STEP (lámina con dobleces). Se lee en tu navegador: no se sube ni se guarda.</span>
         {pieza && (
           <>
             <VisorCad geo={pieza.geo} alto={260} />

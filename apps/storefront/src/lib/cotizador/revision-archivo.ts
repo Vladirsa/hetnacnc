@@ -214,6 +214,7 @@ export function procesoDe(texto?: string | null): Proceso {
 
 type GeoParaRevisar = {
   tipo: "2d" | "3d"
+  lamina?: { esLamina: boolean; espesor: number; dobleces: { angulo: number; radioInterior: number }[]; radioInteriorMin: number | null; barrenos: number; motivo?: string }
   largo: number
   ancho: number
   alto: number
@@ -233,6 +234,28 @@ export function puntosRevision(geo: GeoParaRevisar, ctx: { proceso?: Proceso; es
     out.push({ nivel: "problema", titulo: `Tu pieza mide sólo ${mm(mayor)}`, detalle: "Puede que el archivo esté en pulgadas o centímetros. Revisa las medidas antes de pedir precio." })
   else if (mayor > 6000)
     out.push({ nivel: "problema", titulo: `Tu pieza mide ${mm(mayor)}`, detalle: "Es enorme; puede que el archivo esté en otra unidad. Revisa las medidas antes de pedir precio." })
+
+  // STEP de lámina (estrategia 3.1): espesor, dobleces y radio contra espesor
+  const lam = geo.lamina
+  if (geo.tipo === "3d" && lam?.esLamina) {
+    const n = lam.dobleces.length
+    out.push({
+      nivel: "ok",
+      titulo: `Lámina de ${mm(lam.espesor)} ${n ? `con ${n} ${n === 1 ? "doblez" : "dobleces"} (${[...new Set(lam.dobleces.map((d) => `${d.angulo}°`))].join(", ")})` : "plana, sin dobleces"}`,
+      detalle: lam.barrenos ? `${lam.barrenos} ${lam.barrenos === 1 ? "barreno" : "barrenos"}.` : undefined,
+    })
+    if (lam.radioInteriorMin != null && lam.radioInteriorMin < lam.espesor)
+      out.push({
+        nivel: "revisar",
+        titulo: `Radio interior de ${mm(lam.radioInteriorMin)}, menor que el espesor`,
+        detalle: "Doblar con un radio menor que el grueso puede agrietar la lámina, sobre todo en aluminio o acero duro. Muchos talleres usan un radio igual o mayor al espesor: confírmalo con el taller.",
+      })
+    if (n && proceso !== "plasma" && proceso !== "laser" && proceso !== "otro")
+      out.push({ nivel: "revisar", titulo: "Es lámina con dobleces", detalle: "Se hace con corte láser o plasma y luego doblez. Pídelo como lámina para que te coticen talleres que doblan." })
+    return out
+  }
+  if (geo.tipo === "3d" && lam && !lam.esLamina && lam.motivo && (proceso === "plasma" || proceso === "laser"))
+    out.push({ nivel: "revisar", titulo: "No parece lámina", detalle: lam.motivo })
 
   if (geo.tipo === "3d") {
     if (!(geo.volumen_cm3 > 0))

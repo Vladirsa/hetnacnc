@@ -8,6 +8,7 @@
 // Todo en milímetros.
 
 import { analizar2d, contarOmitido, sinOmitidos, type DatosRevision, type Omitidos } from "./revision-archivo"
+import type { AnalisisLamina } from "./lamina"
 
 export type Trazo = [number, number][]
 export type GeoCad = {
@@ -24,6 +25,8 @@ export type GeoCad = {
   // 2D: revisión del archivo (contornos abiertos, duplicados, textos...),
   // ver revision-archivo.ts
   revision?: DatosRevision
+  // STEP de lámina: espesor, dobleces, área extendida y corte (lamina.ts)
+  lamina?: AnalisisLamina
   // 3D: los triángulos (x,y,z × 3) para el visor. Si la malla es enorme se
   // guarda una muestra (hasta MAX_TRIS_VISOR), suficiente para verla.
   malla?: Float32Array
@@ -481,5 +484,22 @@ export async function leerArchivoCad(archivo: File): Promise<GeoCad | null> {
   if (ext === "svg") return leerSvg(await archivo.text())
   if (ext === "stl") return leerStl(await archivo.arrayBuffer())
   if (ext === "obj") return leerObj(await archivo.text())
+  if (ext === "step" || ext === "stp") return leerStepCad(archivo)
   return null
+}
+
+/** STEP: el sólido con OpenCascade (se carga sólo la primera vez, ~23 MB) y,
+ *  si es lámina, su espesor, dobleces y lámina extendida (estrategia 3.1). */
+async function leerStepCad(archivo: File): Promise<GeoCad> {
+  const { leerSTEP } = await import("@/lib/generador/step")
+  const { forma } = await leerSTEP(archivo)
+  const stl = (forma as any).blobSTL({ binary: true, tolerance: 0.05, angularTolerance: 0.2 }) as Blob
+  const g = leerStl(await stl.arrayBuffer())
+  try {
+    const [R, { analizarLamina }] = await Promise.all([import("replicad"), import("./lamina")])
+    g.lamina = analizarLamina(forma, { area: (s: any) => R.measureArea(s), volumen: (s: any) => R.measureVolume(s) })
+  } catch {
+    // sin análisis de lámina: queda como pieza 3D normal
+  }
+  return g
 }

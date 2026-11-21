@@ -71,7 +71,7 @@ No cambia la operación. Cada punto se puede programar y desplegar por separado.
 
 | # | Mejora | Copiado de | Carril |
 |---|---|---|---|
-| 3.1 | **STEP con doblez**: desdoblar lámina 3D, cobrar dobleces y revisar radios. | OSH Cut, Fractory, meviy | 🏢 |
+| 3.1 ✅ | **STEP con doblez**: desdoblar lámina 3D, cobrar dobleces y revisar radios. | OSH Cut, Fractory, meviy | 🏢 |
 | 3.2 ✅ (sin precio de material) | **Nesting real en el Cotizador**: cuántas piezas caben por hoja y el costo real de material. | Lantek, Almacam | 🛠️🏢 |
 | 3.3 ✅ (recomendación) | **Asignación automática de taller** por capacidad, cercanía, calificación y puntualidad, con opción "elige tú" o "HETNA elige". | Factorem, Laserhub | 🏢 |
 | 3.4 ✅ | **Precio dinámico por capacidad libre**: descuento si el taller tiene horas muertas esta semana. | Geomiq | 🛠️🏢 |
