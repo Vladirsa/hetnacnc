@@ -1,5 +1,6 @@
 "use client"
 
+import { LIMITE_COTIZACIONES_GRATIS } from "@/lib/hetna/app-taller"
 import { useState, type FormEvent } from "react"
 
 import { activarCotizador, reenviarConfirmacionCotizador } from "@/lib/cotizador/vinculo"
@@ -93,7 +94,7 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
       <h1 className="m-0 text-[24px] font-bold text-[#142033]">Activa tu Cotizador</h1>
       <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]">
         Con tu misma cuenta de HETNA CNC (<b>{correo}</b>), sin otra contraseña. Tienes <b>14 días con todo abierto</b>, sin
-        tarjeta. Después sigues gratis con 5 cotizaciones al mes o eliges un plan.
+        tarjeta. Después sigues gratis con {LIMITE_COTIZACIONES_GRATIS} cotizaciones al mes o eliges un plan.
       </p>
       <form onSubmit={activar} noValidate className="mt-5 space-y-4">
         <label className="block text-[14px] font-semibold text-[#142033]">
