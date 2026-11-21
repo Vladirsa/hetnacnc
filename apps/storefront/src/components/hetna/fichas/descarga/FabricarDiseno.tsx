@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState } from "react"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { type GeoCad, leerDxf, leerObj, leerStl, leerSvg } from "@/lib/cotizador/archivo-cad"
 import { estimar, materialesPara, type Pieza, piezaAMano, piezaDeGeo, pesos, SERVICIOS, type TipoMaquina } from "@/lib/cotizador/estimador"
+import { useConfigPrecios } from "@/lib/cotizador/config-precios"
 import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
 
 type Props = {
@@ -63,6 +64,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
     }
   }, [vistaPrevia])
 
+  const cfg = useConfigPrecios()
   const deFicha = leerMedidas(medidas)
   const [servicio, setServicio] = useState<TipoMaquina>(procesos[0])
   const mats = useMemo(() => materialesPara(servicio), [servicio])
@@ -104,7 +106,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
 
   const n = Math.max(1, Math.min(10000, Math.round(Number(cantidad) || 1)))
   const material = mats[Math.min(iMat, mats.length - 1)]
-  const r = pieza && material ? estimar({ servicio, pieza, material, cantidad: n, grabadoCm2 }) : null
+  const r = pieza && material ? estimar({ servicio, pieza, material, cantidad: n, grabadoCm2, cfg }) : null
   const nombreServicio = SERVICIOS.find((s) => s.clave === servicio)
 
   const liga = (() => {
