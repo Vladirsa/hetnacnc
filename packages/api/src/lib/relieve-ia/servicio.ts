@@ -30,20 +30,34 @@ export class ErrorRelieve extends Error {
 
 const archivoTrabajador = () => path.join(__dirname, "trabajador.js")
 
-let motorOk: boolean | null = null
+// Se recuerda sólo el "sí". Un "no" se vuelve a revisar cada minuto: si la API
+// arrancó a media instalación de dependencias (durante un despliegue), antes se
+// quedaba con "no disponible" hasta el siguiente reinicio.
+let motorOk = false
+let revisadoEn = 0
 function motorInstalado() {
-  if (motorOk === null) {
-    try {
-      require.resolve("onnxruntime-node")
-      motorOk = true
-    } catch {
-      motorOk = false
-    }
+  if (motorOk) return true
+  if (Date.now() - revisadoEn < 60_000) return false
+  revisadoEn = Date.now()
+  try {
+    require.resolve("onnxruntime-node")
+    motorOk = true
+  } catch {
+    motorOk = false
   }
   return motorOk
 }
 
-export const disponible = () => process.env.RELIEVE_IA !== "0" && motorInstalado() && fs.existsSync(MODELO()) && fs.existsSync(archivoTrabajador())
+/** Por qué no está disponible (o null si sí lo está). Sin rutas ni datos sensibles. */
+export function motivoNoDisponible(): "apagado" | "sin_motor" | "sin_modelo" | "sin_trabajador" | null {
+  if (process.env.RELIEVE_IA === "0") return "apagado"
+  if (!motorInstalado()) return "sin_motor"
+  if (!fs.existsSync(MODELO())) return "sin_modelo"
+  if (!fs.existsSync(archivoTrabajador())) return "sin_trabajador"
+  return null
+}
+
+export const disponible = () => motivoNoDisponible() === null
 
 /** Revisa que la foto venga con las medidas que espera el modelo. */
 export function validar(ancho: number, alto: number, bytes: number) {
