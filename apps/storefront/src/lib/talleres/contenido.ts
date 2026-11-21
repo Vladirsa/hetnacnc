@@ -49,7 +49,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   {
     p: "¿Cómo me contactan?",
     corta: true,
-    r: "Al registrarte, HETNA te escribe por WhatsApp o correo para darte de alta. Después, los trabajos te llegan por correo y en tu panel. Los clientes no ven tu teléfono ni tú el suyo: las preguntas, el pago y el seguimiento van por HETNA, así nadie se salta el pago. Un cliente también puede pedirte cotización directa desde tu perfil.",
+    r: "Al registrarte, HETNA te escribe por WhatsApp o correo para darte de alta. Después, los trabajos te llegan por correo y en tu panel. Mientras el cliente compara propuestas, no ve tu teléfono ni tú el suyo: las preguntas van por HETNA. Si te elige, él decide si comparte su contacto contigo. Un cliente también puede pedirte cotización directa desde tu perfil.",
   },
   {
     p: "¿Necesito facturar?",
@@ -61,7 +61,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   },
   {
     p: "¿Cómo me pagan?",
-    r: "El cliente paga dentro de HETNA (Mercado Pago) y tú empiezas cuando el pago está confirmado: nunca fabricas sin que esté pagado. HETNA no cobra comisión por los trabajos de fabricación: recibes el importe menos la tarifa de Mercado Pago y las retenciones que marque la ley.",
+    r: "HETNA no cobra comisión por los trabajos que ganas en solicitudes de fabricación. Si el cliente paga dentro de HETNA, el pago queda registrado y protegido: directo a tu Mercado Pago o PayPal conectado (ese servicio te descuenta su tarifa) o a HETNA como respaldo, que te lo libera completo, menos las retenciones que marque la ley, cuando el cliente confirma que recibió. Si cliente y taller acuerdan pagar por fuera, ese trato es directamente entre ustedes y no tiene la protección de HETNA. En las ventas de tu tienda el pago siempre es dentro de HETNA, con la comisión de la lista de precios.",
   },
   {
     p: "¿Qué pasa después de registrarme?",
