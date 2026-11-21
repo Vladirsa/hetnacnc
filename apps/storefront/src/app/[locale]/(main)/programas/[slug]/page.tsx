@@ -11,9 +11,9 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
-export function generateStaticParams() {
-  return PROGRAMAS.map((p) => ({ slug: p.slug }))
-}
+// Se arma en cada visita, como el resto de la tienda: el layout lee cabeceras y
+// cookies (idioma, sesión), y como página estática daba DYNAMIC_SERVER_USAGE (500).
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params

@@ -504,3 +504,35 @@ export async function guardarMiEmpresa(e: Partial<MiEmpresa>): Promise<{ ok: boo
     return { ok: false, mensaje: "No se pudo guardar. Intenta de nuevo." }
   }
 }
+
+// ---- Empresas, parte 2: equipo y aprobación de pedidos ----
+export type MiEquipo = {
+  empresa: { id: string; nombre: string; aprobacion: boolean } | null
+  rol?: "admin" | "comprador"
+  miembros?: { email: string; rol: string; estado: string }[]
+  por_aprobar?: { folio: string; quien: string; resumen: string; descripcion: string; creada: string }[]
+}
+
+export async function miEquipo(): Promise<{ sesion: boolean; equipo: MiEquipo }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { sesion: false, equipo: { empresa: null } }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mi-equipo`, { headers: { ...cabeceras(), ...auth }, cache: "no-store" })
+    if (res.status === 401) return { sesion: false, equipo: { empresa: null } }
+    return { sesion: true, equipo: ((await res.json().catch(() => ({}))) as MiEquipo) || { empresa: null } }
+  } catch {
+    return { sesion: true, equipo: { empresa: null } }
+  }
+}
+
+export async function accionEquipo(cuerpo: Record<string, unknown>): Promise<{ ok: boolean; mensaje?: string; estado?: string }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { ok: false, mensaje: "Inicia sesión." }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mi-equipo`, { method: "POST", headers: { ...cabeceras(), ...auth }, body: JSON.stringify(cuerpo), cache: "no-store" })
+    const body = await res.json().catch(() => ({}))
+    return res.ok ? { ok: true, estado: body.estado } : { ok: false, mensaje: body.message || "No se pudo." }
+  } catch {
+    return { ok: false, mensaje: "No se pudo. Intenta de nuevo." }
+  }
+}

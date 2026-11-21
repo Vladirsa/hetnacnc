@@ -1,9 +1,10 @@
 // Pestañas dentro de Panel → App: talleres de la app / referidos y distribuidores.
-export function SubApp({ locale, actual }: { locale: string; actual: "talleres" | "distribuidores" | "creadores" }) {
+export function SubApp({ locale, actual }: { locale: string; actual: "talleres" | "distribuidores" | "creadores" | "latam" }) {
   const op = [
     { clave: "talleres", nombre: "📱 Talleres de la app", ruta: `/${locale}/panel/cotizador` },
     { clave: "distribuidores", nombre: "🤝 Referidos y distribuidores", ruta: `/${locale}/panel/cotizador/distribuidores` },
     { clave: "creadores", nombre: "🎥 Creadores", ruta: `/${locale}/panel/cotizador/creadores` },
+    { clave: "latam", nombre: "🌎 Latinoamérica", ruta: `/${locale}/panel/cotizador/latam` },
   ]
   return (
     <div className="flex gap-2 overflow-x-auto pb-1">

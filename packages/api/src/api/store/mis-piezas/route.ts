@@ -7,16 +7,19 @@ import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto } from "../../../lib/licitacion"
+import { clientesDelEquipo } from "../../../lib/empresa-equipo"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const clienteId = req.auth_context?.actor_id
   if (!clienteId) return res.status(401).json({ message: "Inicia sesión." })
   await asegurarTablas(knex)
+  // Con empresa: las piezas de todo el equipo (2.4, parte 2)
+  const equipo = await clientesDelEquipo(knex, clienteId).catch(() => [clienteId])
   const filas = (await knex(`${T_SOLICITUD} as s`)
     .leftJoin(`${T_PROPUESTA} as p`, "p.id", "s.propuesta_elegida")
     .leftJoin("seller as v", "v.id", "p.seller_id")
-    .where("s.cliente_id", clienteId)
+    .whereIn("s.cliente_id", equipo)
     .whereRaw("coalesce(s.tipo, 'fabricacion') <> 'suministro'")
     .orderBy("s.created_at", "desc")
     .limit(200)
@@ -25,7 +28,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       knex(`${T_SOLICITUD} as s`)
         .leftJoin(`${T_PROPUESTA} as p`, "p.id", "s.propuesta_elegida")
         .leftJoin("seller as v", "v.id", "p.seller_id")
-        .where("s.cliente_id", clienteId)
+        .whereIn("s.cliente_id", equipo)
         .orderBy("s.created_at", "desc")
         .limit(200)
         .select("s.folio", "s.trabajo", "s.created_at", "s.etapa", "p.precio", "v.name as taller", "v.handle as taller_handle")

@@ -72,6 +72,7 @@ export const RUTAS_PAGINA: Record<string, Regla[]> = {
     r("GET", "/admin/hetna-crecimiento"),
     r("GET", "/admin/hetna-distribuidores"),
     r("GET", "/admin/hetna-creadores"),
+    r("GET", "/admin/hetna-latam"),
   ],
   // equipo: sólo dueño (que pasa todo); ningún rol limitado la tiene.
 }
