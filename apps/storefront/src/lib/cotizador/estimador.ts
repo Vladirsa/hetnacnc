@@ -78,17 +78,26 @@ export function materialesPara(servicio: TipoMaquina): MaterialRef[] {
   })
 }
 
-// Referencia HETNA por tipo de máquina: $/h, preparación por pedido, seg por perforación
-const MAQUINA_REF: Record<TipoMaquina, { costoHora: number; prep: number; perf: number; remocion?: number; impresion?: number }> = {
+// Referencia HETNA por tipo de máquina: $/h, preparación por pedido, seg por perforación.
+// `desatendida`: la máquina trabaja sola (impresora 3D): el operador y los
+// gastos fijos sólo cuentan en la preparación y el manejo, no en las horas de
+// impresión. Antes se cobraban operador y fijos durante TODA la impresión y un
+// cubo de 10 cm salía en más de $10,000 (revisión de precios, 21 nov 2026).
+const MAQUINA_REF: Record<TipoMaquina, { costoHora: number; prep: number; perf: number; remocion?: number; impresion?: number; desatendida?: boolean }> = {
   router: { costoHora: 350, prep: 15, perf: 2 },
   laser_co2: { costoHora: 320, prep: 8, perf: 0.5 },
   plasma: { costoHora: 480, prep: 10, perf: 1.5 },
   laser_fibra: { costoHora: 950, prep: 8, perf: 0.3 },
   router_3d: { costoHora: 350, prep: 20, perf: 2, remocion: 15 },
-  impresora_3d: { costoHora: 60, prep: 5, perf: 0, impresion: 12 },
+  // $/h de impresora: luz, desgaste, boquillas y piezas fallidas
+  impresora_3d: { costoHora: 45, prep: 10, perf: 0, impresion: 12, desatendida: true },
 }
 const OPERADOR_HORA = 95
-const FIJOS_HORA = 130
+// Gastos fijos del taller (renta, luz general, software) repartidos por hora
+// de trabajo de una máquina. Era 130 $/h: con eso la hora de router o láser
+// salía en ~$14–15/min, arriba de lo que cobra un taller en México
+// (~$8–13/min). Con 60 queda en ~$12–13/min (21 nov 2026).
+const FIJOS_HORA = 60
 const MARGEN = 0.35
 const MARKUP_MATERIAL = 0.2
 const MANEJO_MIN = 1
@@ -202,6 +211,8 @@ export function estimar(p: {
   cantidad: number
   acabado?: string
   relleno?: number
+  /** Grabado (texto o logo) en cm²: láser por barrido, router en V */
+  grabadoCm2?: number
 }): Estimado {
   const { servicio, pieza, material } = p
   const n = Math.max(1, Math.round(p.cantidad || 1))
@@ -234,6 +245,22 @@ export function estimar(p: {
     como = `${pieza.metrosCorte.toFixed(2)} m de corte ÷ ${vel.toFixed(2)} m/min${pieza.perforaciones > 0 ? ` + ${pieza.perforaciones} entradas` : ""}`
   }
 
+  // Grabado: láser a 190 mm/s con paso de 0.15 mm; router ~6 cm²/min en V
+  const grab = Math.max(0, p.grabadoCm2 || 0)
+  if (grab > 0) {
+    if (servicio === "laser_co2" || servicio === "laser_fibra") {
+      const minG = (grab * 100) / (0.15 * 190 * 60)
+      tPieza += minG
+      como += ` + grabado ${Math.round(grab)} cm² (${minG.toFixed(1)} min)`
+    } else if (servicio === "router" || servicio === "router_3d") {
+      const minG = grab / 6
+      tPieza += minG
+      como += ` + grabado ${Math.round(grab)} cm² (${minG.toFixed(1)} min)`
+    } else if (servicio === "plasma") {
+      avisos.push("El plasma no graba: el texto se haría como calado (corte) o con otro proceso.")
+    }
+  }
+
   // Material
   let unidades = 0, gramos = 0, hojas = 0, porHoja = 0
   if (material.unidad === "kg") {
@@ -263,11 +290,13 @@ export function estimar(p: {
   const tMaquina = tPieza * n
   const tManejo = (MANEJO_MIN + ac.min) * n
   const tTotal = tMaquina + tManejo + maq.prep
+  // Tiempo en que alguien del taller está ocupado con el pedido
+  const tAtendido = (maq.desatendida ? 0 : tMaquina) + tManejo + maq.prep
   const costoMaquina = (tMaquina / 60) * maq.costoHora
-  const costoOperador = ((tMaquina + tManejo) / 60) * OPERADOR_HORA
+  const costoOperador = ((tAtendido - maq.prep) / 60) * OPERADOR_HORA
   const costoPrep = (maq.prep / 60) * (maq.costoHora + OPERADOR_HORA)
   const costoAcabado = ac.pieza * n + ac.m2 * areaM2 * n
-  const costoFijos = (tTotal / 60) * FIJOS_HORA
+  const costoFijos = (tAtendido / 60) * FIJOS_HORA
   const costo = costoMaterial + costoMaquina + costoOperador + costoPrep + costoAcabado + costoFijos
   const total = costo / (1 - MARGEN)
   const red = (v: number) => Math.round(v / 5) * 5

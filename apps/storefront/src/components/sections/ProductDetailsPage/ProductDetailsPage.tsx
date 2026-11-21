@@ -148,7 +148,10 @@ export const ProductDetailsPage = async ({
       />
       <JsonLd id="ld-migas" datos={migas(rutaMigas)} />
       <div
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:gap-10"
+        // Fotos de tamaño contenido, como Amazon o AliExpress (pedido de Vlado,
+        // 21 nov 2026): la galería ocupa ~520–560 px y la información de compra
+        // el resto. La ficha larga va abajo, a todo lo ancho.
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
         <div className="min-w-0" data-testid="product-gallery-container">
@@ -157,28 +160,10 @@ export const ProductDetailsPage = async ({
           ) : (
             <ProductGallery images={prod?.images || []} title={prod.title} />
           )}
-          {/* La ficha larga va debajo de las fotos, no en la columna de la
-              compra: así el bloque de compra cabe en la pantalla y se puede
-              quedar pegado mientras se lee todo esto. */}
-          <div className="mt-8 hidden lg:block">
-            {largosDescarga}
-            {!descarga && <ProductDetallesLargos
-              product={prod}
-              locale={locale}
-              taller={{ name: vendedor?.name, handle: vendedor?.handle }}
-            />}
-            {!descarga && <div className="mt-4">
-              <ResenasProducto
-                datos={resenas}
-                productId={prod.id}
-                pendiente={pendienteDeEste}
-              />
-            </div>}
-          </div>
         </div>
 
         <div data-testid="product-details-container">
-          <div className="lg:sticky lg:top-6">
+          <div className="max-w-[640px]">
             <ProductDetails
               product={prod}
               locale={locale}
@@ -188,9 +173,9 @@ export const ProductDetailsPage = async ({
           </div>
         </div>
 
-        {/* En celular no hay dos columnas, así que la ficha larga va al final
-            y no entre las fotos y el botón de comprar. */}
-        <div className="lg:hidden">
+        {/* La ficha larga va al final, a todo lo ancho (en celular, después del
+            botón de comprar). */}
+        <div className="min-w-0 lg:col-span-2">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}

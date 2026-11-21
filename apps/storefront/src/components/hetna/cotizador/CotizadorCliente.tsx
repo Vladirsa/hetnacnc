@@ -27,6 +27,9 @@ import type { ArchivoSubido } from "@/lib/cotizar/solicitud-taller"
 import { subirArchivo } from "@/lib/subir-archivo"
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
 
+// El cliente piensa en medidas: ancho × alto (y profundidad si es 3D), no en "largo"
+const ETIQ_MEDIDA = { largo: "Ancho", ancho: "Alto", alto: "Profundidad" } as const
+
 const VisorCad = dynamic(() => import("@/components/hetna/visor/VisorCad").then((m) => m.VisorCad), { ssr: false })
 
 const CAMPO = "h-11 w-full rounded-xl border border-[#E7E4DC] bg-white px-3 text-sm text-[#142033] outline-none focus:border-[#C2560A]"
@@ -154,7 +157,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
               <div className="grid grid-cols-3 gap-2">
                 {(["largo", "ancho", "alto"] as const).map((k) => (
                   <div key={k}>
-                    <label className={ETIQUETA}>{k[0].toUpperCase() + k.slice(1)} (mm)</label>
+                    <label className={ETIQUETA}>{ETIQ_MEDIDA[k]} (mm)</label>
                     <input className={CAMPO} inputMode="decimal" value={dims[k]} onChange={(e) => setDims({ ...dims, [k]: e.target.value.replace(",", ".") })} placeholder={k === "alto" ? "sólo 3D" : "300"} />
                   </div>
                 ))}

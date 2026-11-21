@@ -18,6 +18,10 @@ export type CotizarLeadInput = {
   calidad?: string
   cantidad: number
   piezas_mes_estimado?: number
+  // Del archivo del cliente, ya a la escala de las medidas capturadas
+  corte_mm?: number
+  perforaciones?: number
+  volumen_cm3?: number
   email: string
   nombre?: string
   telefono?: string

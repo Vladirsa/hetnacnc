@@ -45,7 +45,13 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
   if (!ancho || !largo || !cantidad || !email) {
     return res.status(400).json({ message: "Faltan campos requeridos: ancho, largo, cantidad, email" })
   }
-  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad })
+  const b: any = body
+  const extra = {
+    corte_mm: Number(b.corte_mm) > 0 ? Math.min(5_000_000, Number(b.corte_mm)) : undefined,
+    perforaciones: Number(b.perforaciones) > 0 ? Math.min(100_000, Number(b.perforaciones)) : undefined,
+    volumen_cm3: Number(b.volumen_cm3) > 0 ? Math.min(1_000_000, Number(b.volumen_cm3)) : undefined,
+  }
+  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad, ...extra })
   if (!precio.ok) return res.status(400).json({ message: precio.mensaje })
   const { servicioCfg, resultado } = precio
 
