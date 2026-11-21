@@ -7,8 +7,8 @@ import { PAISES_LATAM } from "./paises"
 
 const campo = "w-full rounded-xl border border-[#E7E4DC] bg-white px-4 py-3 text-[15px] text-[#142033] outline-none focus:border-[#C2560A]"
 
-export function FormLatam() {
-  const [f, setF] = useState({ pais: "", tipo: "taller", nombre: "", empresa: "", correo: "", telefono: "", ciudad: "", maquinas: "", mensaje: "", sitio_web: "" })
+export function FormLatam({ paisInicial = "" }: { paisInicial?: string }) {
+  const [f, setF] = useState({ pais: paisInicial, tipo: "taller", nombre: "", empresa: "", correo: "", telefono: "", ciudad: "", maquinas: "", mensaje: "", sitio_web: "" })
   const [estado, setEstado] = useState<"" | "enviando" | "ok">("")
   const [error, setError] = useState("")
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value })

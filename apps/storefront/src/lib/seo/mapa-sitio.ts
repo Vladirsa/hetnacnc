@@ -68,6 +68,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/talleres", "weekly", 0.8],
   ["/creadores", "monthly", 0.5],
   ["/latinoamerica", "weekly", 0.6],
+  ...(["co", "cl", "pe", "ar", "gt", "ec", "cr", "bo", "do", "es"].map((c) => [`/latinoamerica/${c}`, "weekly", 0.5]) as [string, Frecuencia, number][]),
   ["/talleres/unete", "weekly", 0.8],
   ["/talleres/directorio", "weekly", 0.6],
   ["/foro-cnc/blog", "weekly", 0.7],
