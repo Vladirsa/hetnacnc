@@ -220,7 +220,9 @@ export const marco = (titulo: string, cuerpo: string) => `
   </div>
 </div>`
 
-export type ArchivoSolicitud = { clave: string; nombre: string; tamano: number }
+// solo_elegido: el cliente decidió que ese archivo lo vea sólo el taller que
+// elija (por ejemplo, el plano para cotizar sí, el modelo completo no).
+export type ArchivoSolicitud = { clave: string; nombre: string; tamano: number; solo_elegido?: boolean }
 
 export type Trabajo = {
   descripcion: string
