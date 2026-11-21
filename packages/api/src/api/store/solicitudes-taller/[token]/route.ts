@@ -1,4 +1,5 @@
 import { recomendarPropuesta } from "../../../../lib/asignacion"
+import { ndasDe } from "../../../../lib/licitacion-nda"
 import { asegurarVersiones, historialDe } from "../../../../lib/licitacion-versiones"
 import { hitosConFotos } from "../../../../lib/licitacion-hitos-pedido"
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
@@ -248,6 +249,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     difundir_redes: !!s.difundir_redes,
     accesos,
     invitados,
+    ndas: privacidadDe(s).nda === "requerido" ? await ndasDe(knex, s.id).catch(() => []) : [],
   })
 }
 
