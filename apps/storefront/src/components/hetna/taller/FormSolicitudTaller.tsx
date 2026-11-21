@@ -63,6 +63,8 @@ type Pendiente = {
   // Plano o modelo leído en el navegador, para el visor
   cad?: GeoCad
   verCad?: boolean
+  // El cliente decide: lo ve cualquier taller que pueda cotizar o sólo el que elija
+  soloElegido?: boolean
 }
 
 // Datos que llegan ya llenos desde una herramienta de Diseñar (botón
@@ -310,7 +312,7 @@ export default function FormSolicitudTaller({
       abierta: !taller || abiertaOtros,
       necesidad,
       tiene_archivo: tieneArchivo,
-      archivos: archivos.flatMap((a) => (a.subido ? [a.subido] : [])),
+      archivos: archivos.flatMap((a) => (a.subido ? [{ ...a.subido, ...(a.soloElegido ? { solo_elegido: true } : {}) }] : [])),
       nombre: v("nombre"),
       email: v("email"),
       whatsapp: v("whatsapp"),
@@ -525,6 +527,17 @@ export default function FormSolicitudTaller({
                     </span>
                     {a.geo && !a.error && (
                       <span className="hidden shrink-0 rounded-lg bg-[#F3F1EA] px-2 py-1 text-xs font-semibold text-[#142033] sm:block">📐 {a.geo}</span>
+                    )}
+                    {!a.error && (
+                      <select
+                        aria-label={`Quién ve ${a.nombre}`}
+                        value={a.soloElegido ? "elegido" : "todos"}
+                        onChange={(e) => setArchivos((xs) => xs.map((x) => (x.id === a.id ? { ...x, soloElegido: e.target.value === "elegido" } : x)))}
+                        className="max-w-[46%] shrink-0 rounded-lg border border-[#E7E4DC] bg-white px-2 py-1 text-xs text-[#142033]"
+                      >
+                        <option value="todos">Lo ven los talleres que cotizan</option>
+                        <option value="elegido">Sólo el taller que elija</option>
+                      </select>
                     )}
                     {a.cad && !a.error && (
                       <button

@@ -132,6 +132,72 @@ function PedirAcceso({ sol }) {
   )
 }
 
+// Acuerdo de confidencialidad (NDA): si el cliente lo pidió, el taller lo lee
+// y lo acepta antes de ver la descripción, los planos y las fotos, y antes de
+// cotizar. Queda registrado quién, cuándo, IP y navegador.
+function AcuerdoNda({ sol, alAceptar }) {
+  const [texto, setTexto] = useState(null)
+  const [acepto, setAcepto] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState("")
+  const t = sol.trabajo || {}
+  if (!t.nda_requerido || t.nda_aceptado) return null
+  const leer = async () => {
+    setError("")
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/nda`, { credentials: "include" })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      setTexto(d.texto || "")
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+  const aceptar = async () => {
+    setEnviando(true)
+    setError("")
+    try {
+      const r = await fetch(`/vendor/hetna-solicitudes/${sol.id}/nda`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acepto: true }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(d.message || String(r.status))
+      alAceptar?.()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+  return (
+    <div style={{ margin: "10px 0", background: "#FFF6EE", border: "1px solid #F2D4B8", borderRadius: 8, padding: "10px 12px", fontSize: 13 }}>
+      <b>🔏 Este cliente pide acuerdo de confidencialidad.</b> Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.
+      {texto === null ? (
+        <div style={{ marginTop: 8 }}>
+          <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} onClick={leer}>
+            Leer el acuerdo
+          </button>
+        </div>
+      ) : (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid #E7E4DC", borderRadius: 6, padding: 10, color: "#40403A" }}>{texto}</div>
+          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+            <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} />
+            Leí el acuerdo y lo acepto a nombre de mi taller.
+          </label>
+          <button type="button" style={{ ...S.btn, marginTop: 8, padding: "6px 14px", fontSize: 13 }} disabled={!acepto || enviando} onClick={aceptar}>
+            {enviando ? "Guardando..." : "Aceptar acuerdo"}
+          </button>
+        </div>
+      )}
+      {error && <div style={{ color: "#B3261E", marginTop: 6 }}>{error}</div>}
+    </div>
+  )
+}
+
 // Expediente digital del proyecto (sólo el taller elegido): se pide una liga de
 // 1 hora a la tienda, donde se ve, se imprime o se guarda en PDF.
 function BotonExpediente({ sol }) {
@@ -216,12 +282,19 @@ function ArchivosCliente({ sol }) {
                 )}
               </span>
             ) : a.bloqueado ? (
-              <span key={i} style={{ color: "#6B675C" }}>🔒 {a.nombre}: el cliente lo comparte sólo con talleres autorizados</span>
+              <span key={i} style={{ color: "#6B675C" }}>
+                🔒 {a.nombre}:{" "}
+                {a.motivo === "nda"
+                  ? "acepta el acuerdo de confidencialidad para descargarlo"
+                  : a.motivo === "solo_elegido"
+                    ? "el cliente lo comparte sólo con el taller que elija"
+                    : "el cliente lo comparte sólo con talleres autorizados"}
+              </span>
             ) : (
               <span key={i} style={{ color: "#B3261E" }}>{a.nombre}: no disponible, intenta más tarde</span>
             )
           )}
-          {ligas.some((a) => a.bloqueado) && <PedirAcceso sol={sol} />}
+          {ligas.some((a) => a.bloqueado && !a.motivo) && <PedirAcceso sol={sol} />}
           <span style={{ color: "#6B675C", fontSize: 12 }}>
             Las ligas duran una hora y cada descarga queda registrada (el cliente ve quién bajó sus archivos). Los planos son confidenciales:
             úsalos sólo para cotizar y fabricar este trabajo.
@@ -1313,7 +1386,8 @@ export default function SolicitudesPage() {
 
             {p?.contraofertas?.length > 0 && <Contraofertas sol={s} alResponder={cargar} />}
             {t.cliente && t.cliente !== "Cliente HETNA" && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#40403A" }}>👤 {t.cliente}</p>}
-            {t.descripcion_restringida ? (
+            <AcuerdoNda sol={s} alAceptar={cargar} />
+            {t.descripcion_restringida && t.nda_requerido && !t.nda_aceptado ? null : t.descripcion_restringida ? (
               <div style={{ margin: "10px 0", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px", fontSize: 13, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <span>🔒 El cliente reservó la descripción completa para los talleres que autorice.</span>
                 <PedirAcceso sol={s} />

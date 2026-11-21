@@ -20,6 +20,8 @@ import { T_PROPUESTA, T_SOLICITUD, ocultarContacto, recibePropuestas, type Traba
 
 export const T_INVITADO = "hetna_solicitud_invitado"
 export const T_ACCESO = "hetna_solicitud_acceso"
+// Acuerdos de confidencialidad aceptados (auditoría del 19 nov 2026, punto 4.1)
+export const T_NDA = "hetna_solicitud_nda"
 
 export type Modalidad = "publica" | "privada" | "restringida"
 export type Privacidad = {
@@ -31,6 +33,9 @@ export type Privacidad = {
   ubicacion: "ciudad" | "estado" | "confidencial"
   contacto: "oculto" | "autorizacion"
   empresa: "publico" | "confidencial"
+  // "requerido": ningún taller ve descripción, planos ni fotos sin aceptar
+  // antes el acuerdo de confidencialidad (queda registrado quién y cuándo)
+  nda: "no" | "requerido"
 }
 
 const OPCIONES: { [K in keyof Privacidad]: Privacidad[K][] } = {
@@ -42,6 +47,7 @@ const OPCIONES: { [K in keyof Privacidad]: Privacidad[K][] } = {
   ubicacion: ["ciudad", "estado", "confidencial"],
   contacto: ["oculto", "autorizacion"],
   empresa: ["publico", "confidencial"],
+  nda: ["no", "requerido"],
 }
 
 // Lo que tenían las solicitudes antes de la Fase 1 (así no cambia nada para
@@ -55,6 +61,7 @@ export const PRIVACIDAD_ANTERIOR: Privacidad = {
   ubicacion: "ciudad",
   contacto: "oculto",
   empresa: "confidencial",
+  nda: "no",
 }
 
 // Lo que propone el formulario a un cliente nuevo
@@ -107,18 +114,39 @@ export async function asegurarPrivacidad(knex: any) {
       t.primary(["solicitud_id", "seller_id"])
     })
   }
+  if (!(await knex.schema.hasTable(T_NDA))) {
+    await knex.schema.createTable(T_NDA, (t: any) => {
+      t.text("solicitud_id").notNullable().index()
+      t.text("seller_id").notNullable().index()
+      t.text("version").notNullable()
+      t.text("texto_sha256").notNullable()
+      t.text("quien").nullable() // id del usuario del panel que aceptó
+      t.text("ip").nullable()
+      t.text("agente").nullable()
+      t.timestamp("aceptado_en", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+      t.primary(["solicitud_id", "seller_id"])
+    })
+  }
   lista = true
 }
 
 /** Relación de un taller con una solicitud. */
-export type RelacionTaller = { invitado: boolean; acceso: "ninguno" | "pendiente" | "aprobado" | "rechazado"; propuso: boolean; elegido: boolean }
+export type RelacionTaller = {
+  invitado: boolean
+  acceso: "ninguno" | "pendiente" | "aprobado" | "rechazado"
+  propuso: boolean
+  elegido: boolean
+  /** Ya aceptó el acuerdo de confidencialidad de esta solicitud */
+  nda?: boolean
+}
 
 export async function relacionTaller(knex: any, s: any, sellerId: string): Promise<RelacionTaller> {
   await asegurarPrivacidad(knex)
-  const [inv, acc, prop] = await Promise.all([
+  const [inv, acc, prop, nda] = await Promise.all([
     knex(T_INVITADO).where({ solicitud_id: s.id, seller_id: sellerId }).first("seller_id"),
     knex(T_ACCESO).where({ solicitud_id: s.id, seller_id: sellerId }).first("estado"),
     knex(T_PROPUESTA).where({ solicitud_id: s.id, seller_id: sellerId }).first("id"),
+    knex(T_NDA).where({ solicitud_id: s.id, seller_id: sellerId }).first("seller_id"),
   ])
   const elegidaId = s.propuesta_elegida
   return {
@@ -126,6 +154,7 @@ export async function relacionTaller(knex: any, s: any, sellerId: string): Promi
     acceso: (acc?.estado as RelacionTaller["acceso"]) || "ninguno",
     propuso: !!prop,
     elegido: !!(prop && elegidaId && prop.id === elegidaId),
+    nda: !!nda,
   }
 }
 
@@ -135,11 +164,13 @@ export async function relacionesTaller(knex: any, filas: any[], sellerId: string
   const ids = filas.map((f) => f.id)
   const mapa = new Map<string, RelacionTaller>()
   if (!ids.length) return mapa
-  const [inv, acc, prop] = await Promise.all([
+  const [inv, acc, prop, nda] = await Promise.all([
     knex(T_INVITADO).whereIn("solicitud_id", ids).where({ seller_id: sellerId }).select("solicitud_id"),
     knex(T_ACCESO).whereIn("solicitud_id", ids).where({ seller_id: sellerId }).select("solicitud_id", "estado"),
     knex(T_PROPUESTA).whereIn("solicitud_id", ids).where({ seller_id: sellerId }).select("solicitud_id", "id"),
+    knex(T_NDA).whereIn("solicitud_id", ids).where({ seller_id: sellerId }).select("solicitud_id"),
   ])
+  const sNda = new Set(nda.map((x: any) => x.solicitud_id))
   const sInv = new Set(inv.map((x: any) => x.solicitud_id))
   const mAcc = new Map(acc.map((x: any) => [x.solicitud_id, x.estado]))
   const mProp = new Map(prop.map((x: any) => [x.solicitud_id, x.id]))
@@ -149,6 +180,7 @@ export async function relacionesTaller(knex: any, filas: any[], sellerId: string
       acceso: (mAcc.get(f.id) as RelacionTaller["acceso"]) || "ninguno",
       propuso: mProp.has(f.id),
       elegido: !!(f.propuesta_elegida && mProp.get(f.id) === f.propuesta_elegida),
+      nda: sNda.has(f.id),
     })
   }
   return mapa
@@ -159,12 +191,20 @@ export const tallerPuedeVer = (s: any, r: RelacionTaller) => modalidadDe(s) !== 
 
 const esParticipante = (r: RelacionTaller) => r.invitado || r.acceso === "aprobado" || r.propuso || r.elegido
 
+/** La solicitud pide acuerdo de confidencialidad y este taller todavía no lo acepta. */
+export const faltaNda = (s: any, r: RelacionTaller) => privacidadDe(s).nda === "requerido" && !r.nda && !r.elegido
+
 const EXT_FOTO = /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i
 export const esFoto = (nombre: string) => EXT_FOTO.test(nombre || "")
 
 /** ¿Este taller puede descargar este archivo? */
 export function puedeDescargar(s: any, r: RelacionTaller, nombreArchivo: string): boolean {
   if (r.elegido) return true
+  // Sin el acuerdo de confidencialidad aceptado, ningún archivo
+  if (faltaNda(s, r)) return false
+  // Archivo que el cliente marcó "sólo para el taller que elija"
+  const archivo = ((s?.trabajo as Trabajo)?.archivos || []).find((a) => a.nombre === nombreArchivo)
+  if (archivo?.solo_elegido) return false
   const p = privacidadDe(s)
   if (esFoto(nombreArchivo)) {
     if (p.fotos === "privadas") return false
@@ -200,8 +240,10 @@ export function trabajoParaTaller(s: any, r: RelacionTaller) {
     nombre: a.nombre,
     tamano: a.tamano,
     descargable: puedeDescargar(s, r, a.nombre),
+    solo_elegido: !!a.solo_elegido,
   }))
-  const verDescripcion = p.descripcion === "publica" || participante
+  const sinNda = faltaNda(s, r)
+  const verDescripcion = !sinNda && (p.descripcion === "publica" || participante)
   return {
     ...t,
     ...ubicacion(p),
@@ -212,6 +254,8 @@ export function trabajoParaTaller(s: any, r: RelacionTaller) {
     archivo: "",
     archivos,
     cliente: clienteVisible(s),
+    nda_requerido: p.nda === "requerido",
+    nda_aceptado: !!r.nda,
   }
 }
 
@@ -223,8 +267,10 @@ export function trabajoPublicoPrivado(s: any) {
   return {
     ciudad: u.ciudad ?? t.ciudad ?? "",
     estado_mx: u.estado_mx ?? t.estado_mx ?? "",
-    descripcion: p.descripcion === "publica" ? ocultarContacto(t.descripcion || "").slice(0, 1200) : "",
-    descripcion_restringida: p.descripcion !== "publica",
+    // Con acuerdo de confidencialidad la descripción nunca sale en público
+    descripcion: p.descripcion === "publica" && p.nda !== "requerido" ? ocultarContacto(t.descripcion || "").slice(0, 1200) : "",
+    descripcion_restringida: p.descripcion !== "publica" || p.nda === "requerido",
+    nda_requerido: p.nda === "requerido",
     presupuesto: p.presupuesto === "visible" ? t.presupuesto || "" : "",
     modalidad: modalidadDe(s),
     tipo: s?.tipo === "suministro" ? "suministro" : "fabricacion",

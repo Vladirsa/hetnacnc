@@ -1,3 +1,4 @@
+import { leerConfigPrecios } from "../../../lib/precios-config"
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { SERVICIOS_SOPORTADOS, precioInstantaneo } from "../../../lib/precio-instantaneo"
@@ -53,7 +54,8 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
     volumen_cm3: Number(b.volumen_cm3) > 0 ? Math.min(1_000_000, Number(b.volumen_cm3)) : undefined,
   }
   const precio_material = await precioMaterialParaCotizar(req.scope, String(servicio), material, calibre)
-  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad, ...extra, precio_material })
+  const { cfg } = await leerConfigPrecios(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION))
+  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad, ...extra, precio_material }, cfg)
   if (!precio.ok) return res.status(400).json({ message: precio.mensaje })
   const { servicioCfg, resultado } = precio
 
