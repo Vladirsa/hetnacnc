@@ -100,6 +100,12 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   const datosArchivo = (anchoCm: number) => {
     const g = piezaRef.current?.geo
     if (!g || !(g.ancho > 0)) return {}
+    // Lámina doblada (STEP): corte y barrenos de la lámina extendida, más sus dobleces
+    const lam = g.lamina?.esLamina && (servicio === "plasma" || servicio === "laser_co2") ? g.lamina : null
+    if (lam) {
+      const kl = (anchoCm * 10) / Math.sqrt(lam.areaPlana)
+      return { corte_mm: Math.round(lam.corte * kl), perforaciones: lam.barrenos + 1, dobleces: lam.dobleces.length }
+    }
     const k = (anchoCm * 10) / g.ancho
     return {
       ...(g.corte_mm > 0 ? { corte_mm: Math.round(g.corte_mm * k), perforaciones: Math.max(1, g.contornos + g.perforaciones) } : {}),

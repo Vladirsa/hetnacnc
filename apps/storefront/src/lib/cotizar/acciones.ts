@@ -22,6 +22,8 @@ export type CotizarLeadInput = {
   corte_mm?: number
   perforaciones?: number
   volumen_cm3?: number
+  // Lámina doblada desde STEP: dobleces por pieza (se suma la tarifa de referencia)
+  dobleces?: number
   email: string
   nombre?: string
   telefono?: string
