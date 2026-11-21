@@ -41,7 +41,18 @@ type Trabajo = {
   frecuencia?: string
   archivos?: Archivo[]
 }
-type MiPropuesta = { id: string; precio: number; dias: number; estado: string; condiciones?: string; vigencia_dias?: number }
+type MiPropuesta = {
+  id: string
+  precio: number
+  dias: number
+  estado: string
+  condiciones?: string
+  vigencia_dias?: number
+  fecha_entrega?: string | null
+  materiales?: string | null
+  condiciones_pago?: string | null
+  garantia?: string | null
+}
 type Solicitud = {
   id: string
   folio: string
@@ -739,33 +750,62 @@ function FormCotizar({
   alCancelar: () => void
   alEnviar: (p: { precio: number; dias: number; condiciones: string }) => void
 }) {
+  // Propuesta completa (auditoría del 19 nov 2026, punto 4.2): precio, días de
+  // fabricación, fecha de entrega, material, condiciones de pago, vigencia y
+  // garantía son obligatorios; el servidor también lo revisa.
+  const mp = (s.mi_propuesta || {}) as MiPropuesta
   const [precio, setPrecio] = useState(s.mi_propuesta ? String(s.mi_propuesta.precio) : "")
   const [dias, setDias] = useState(s.mi_propuesta ? String(s.mi_propuesta.dias) : "")
+  const [fecha, setFecha] = useState(mp.fecha_entrega || "")
+  const [vigencia, setVigencia] = useState(String(mp.vigencia_dias || 15))
+  const [materiales, setMateriales] = useState(mp.materiales || "")
+  const [pago, setPago] = useState(mp.condiciones_pago || "")
+  const [garantia, setGarantia] = useState(mp.garantia || "")
   const [nota, setNota] = useState(s.mi_propuesta?.condiciones || "")
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState("")
+  const hoy = new Date().toISOString().slice(0, 10)
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     const p = Number(String(precio).replace(/[^\d.]/g, ""))
     const d = Math.round(Number(dias))
+    const v = Math.round(Number(vigencia))
     if (!(p > 0)) return setError("Escribe el precio total.")
-    if (!(d >= 1 && d <= 365)) return setError("Escribe los días de entrega (1 a 365).")
+    if (!(d >= 1 && d <= 365)) return setError("Escribe los días de fabricación (1 a 365).")
+    if (!fecha || fecha < hoy) return setError("Elige la fecha estimada de entrega.")
+    if (!(v >= 1 && v <= 90)) return setError("La vigencia va de 1 a 90 días.")
+    if (!materiales.trim() || !pago.trim() || !garantia.trim()) return setError("Completa material, condiciones de pago y garantía.")
     setEnviando(true)
     const r = await vendor<{ message?: string }>(`/vendor/hetna-solicitudes/${s.id}/propuesta`, {
       method: "POST",
-      body: JSON.stringify({ precio: p, dias: d, condiciones: nota.trim(), vigencia_dias: s.mi_propuesta?.vigencia_dias || 15 }),
+      body: JSON.stringify({
+        precio: p,
+        dias: d,
+        moneda: "MXN",
+        fecha_entrega: fecha,
+        vigencia_dias: v,
+        materiales: materiales.trim(),
+        condiciones_pago: pago.trim(),
+        garantia: garantia.trim(),
+        condiciones: nota.trim(),
+      }),
     }).catch(() => ({ ok: false, status: 0, datos: {} as { message?: string } }))
     setEnviando(false)
     if (!r.ok) return setError(r.datos?.message || "No se pudo enviar. Intenta de nuevo.")
     alEnviar({ precio: p, dias: d, condiciones: nota.trim() })
   }
 
+  const campo = "mt-1 min-h-[44px] w-full rounded-xl border border-[#D9D5CB] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]"
+  const area = "mt-1 w-full rounded-xl border border-[#D9D5CB] bg-white px-3 py-2 text-[15px] outline-none focus:border-[#C2560A]"
+  const etiqueta = "block text-[13px] font-medium text-[#3F3D37]"
+
   return (
-    <form onSubmit={enviar} className="mt-4 grid gap-3 rounded-xl border border-[#F2D4B8] bg-[#FFF9F4] p-4 sm:grid-cols-[1fr_140px]">
-      <label className="block text-[13px] font-medium text-[#3F3D37]">
-        Precio total (MXN, IVA incluido)
+    <form onSubmit={enviar} className="mt-4 grid gap-3 rounded-xl border border-[#F2D4B8] bg-[#FFF9F4] p-4 sm:grid-cols-2">
+      <p className="text-[12.5px] text-[#6B6A63] sm:col-span-2">Todos los campos con * son obligatorios: así el cliente compara tu propuesta con las demás con los mismos datos.</p>
+      <label className={etiqueta}>
+        Precio total (MXN, IVA incluido) *
         <div className="mt-1 flex min-h-[44px] items-center rounded-xl border border-[#D9D5CB] bg-white px-3 focus-within:border-[#C2560A]">
           <span className="text-[#8A877E]">$</span>
           <input
@@ -779,28 +819,34 @@ function FormCotizar({
           />
         </div>
       </label>
-      <label className="block text-[13px] font-medium text-[#3F3D37]">
-        Días de entrega
-        <input
-          inputMode="numeric"
-          value={dias}
-          onChange={(e) => setDias(e.target.value)}
-          className="mt-1 min-h-[44px] w-full rounded-xl border border-[#D9D5CB] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]"
-          placeholder="5"
-          required
-        />
+      <label className={etiqueta}>
+        Días de fabricación *
+        <input inputMode="numeric" value={dias} onChange={(e) => setDias(e.target.value)} className={campo} placeholder="5" required />
       </label>
-      <label className="block text-[13px] font-medium text-[#3F3D37] sm:col-span-2">
+      <label className={etiqueta}>
+        Fecha estimada de entrega *
+        <input type="date" min={hoy} value={fecha} onChange={(e) => setFecha(e.target.value)} className={campo} required />
+      </label>
+      <label className={etiqueta}>
+        Vigencia de la propuesta (días) *
+        <input inputMode="numeric" value={vigencia} onChange={(e) => setVigencia(e.target.value)} className={campo} required />
+      </label>
+      <label className={`${etiqueta} sm:col-span-2`}>
+        Material y especificaciones *
+        <textarea value={materiales} onChange={(e) => setMateriales(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. MDF 18 mm, corte con fresa de 6 mm, tolerancia ±0.2 mm" required />
+      </label>
+      <label className={etiqueta}>
+        Condiciones de pago *
+        <textarea value={pago} onChange={(e) => setPago(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. 50% para empezar y 50% al entregar" required />
+      </label>
+      <label className={etiqueta}>
+        Garantía *
+        <textarea value={garantia} onChange={(e) => setGarantia(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. Reposición sin costo por defecto de fabricación en 30 días" required />
+      </label>
+      <label className={`${etiqueta} sm:col-span-2`}>
         Nota para el cliente (opcional)
-        <textarea
-          value={nota}
-          onChange={(e) => setNota(e.target.value)}
-          rows={3}
-          maxLength={1500}
-          className="mt-1 w-full rounded-xl border border-[#D9D5CB] bg-white px-3 py-2 text-[15px] outline-none focus:border-[#C2560A]"
-          placeholder="Qué incluye, material, cómo se entrega…"
-        />
-        <span className="mt-1 block text-[12px] font-normal text-[#8A877E]">Sin teléfonos ni correos: el trato sigue dentro de HETNA.</span>
+        <textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2} maxLength={1500} className={area} placeholder="Qué incluye, cómo se entrega…" />
+        <span className="mt-1 block text-[12px] font-normal text-[#8A877E]">Sin teléfonos ni correos: el trato sigue dentro de HETNA. Puedes adjuntar planos o fotos desde el panel de vendedor.</span>
       </label>
       {error && <p className="text-[13px] text-[#B3261E] sm:col-span-2">{error}</p>}
       <div className="flex flex-wrap gap-2 sm:col-span-2">

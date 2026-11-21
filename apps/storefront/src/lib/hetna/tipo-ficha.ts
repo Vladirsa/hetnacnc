@@ -58,6 +58,7 @@ export function datosDigital(metadata?: Record<string, unknown> | null): DatosDi
   }
   agrega("Formatos incluidos", "formatos")
   agrega("Medidas", "medidas", "dimensiones")
+  agrega("Tolerancia", "tolerancia", "tolerancias")
   agrega("Material sugerido", "material_sugerido", "material")
   agrega("Grosor recomendado", "grosor", "espesor")
   agrega("Máquina", "maquina", "maquina_sugerida")

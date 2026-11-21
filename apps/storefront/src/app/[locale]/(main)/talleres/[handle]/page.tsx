@@ -118,7 +118,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
             )}
           </div>
           <div className="min-w-0 flex-1 pt-2">
-            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}{t.verificado && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Taller verificado</span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal">🏢 Empresa verificada</span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]">★ Taller fundador</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA">🤝 Taller embajador</span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}</h1>
+            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}{t.verificado ? (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Taller verificado</span>) : (<span className="rounded-full bg-[#F1F0EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller">Registrado · sin verificar</span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal">🏢 Empresa verificada</span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]">★ Taller fundador</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA">🤝 Taller embajador</span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}</h1>
             {t.certificaciones.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2" aria-label="Certificaciones acreditadas">
                 {t.certificaciones.map((c) => (
@@ -540,8 +540,9 @@ function Cumplimiento({ m }: { m: Medido }) {
         ))}
       </dl>
       <p className="mt-3 text-xs text-[#6B675C]">
-        Datos reales de sus pedidos en HETNA, recalculados cada día: fecha prometida contra fecha de entrega, trabajos terminados, reclamos y
-        tiempo entre que le llega una solicitud y manda su propuesta.{!m.suficiente && " Todavía tiene pocos trabajos: tómalo con cautela."}
+        Datos reales de sus pedidos en HETNA, recalculados cada día. El puntaje pesa trabajos terminados 30%, calidad calificada por clientes
+        30%, entregas a tiempo 25%, tiempo de respuesta 10% y reclamos 5%. Pagar un plan o la verificación no lo cambia.
+        {m.suficiente ? "" : ` El puntaje aparece a partir de 3 trabajos terminados.`}
       </p>
     </section>
   )

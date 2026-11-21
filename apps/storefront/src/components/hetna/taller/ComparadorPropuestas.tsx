@@ -322,7 +322,7 @@ function HistorialMedido({ m }: { m?: Propuesta["taller"]["medido"] }) {
       {m.suficiente && m.puntaje != null && (
         <span
           className={`rounded-full px-2 py-0.5 font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
-          title="Puntaje HETNA: puntualidad real 40%, calidad calificada 25%, trabajos terminados 20%, reclamos resueltos 15%"
+          title="Puntaje HETNA: trabajos terminados 30%, calidad calificada 30%, entregas a tiempo 25%, tiempo de respuesta 10%, reclamos 5%. Pagar plan o verificación no lo cambia."
         >
           Cumplimiento {m.puntaje}/100
         </span>

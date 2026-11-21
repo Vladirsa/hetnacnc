@@ -8,6 +8,11 @@
 //   videos          string[]                       ligas de YouTube o Vimeo
 //   archivos        { nombre, url }[]              manuales, planos, fichas técnicas
 //   faq             { pregunta, respuesta }[]
+//   medidas         string     medidas generales ("120 × 80 × 15 mm")
+//   tolerancia      string     tolerancia general ("±0.1 mm")
+//   vista_previa    string     URL pública de un modelo de MUESTRA (STL, OBJ, DXF o SVG)
+//                              para el visor 3D de la tienda; nunca el archivo que se vende
+//   fotos_fabricada string[]   fotos de la pieza ya fabricada (subidas al sitio)
 // La tienda acepta también el formato de texto que se escribía a mano en
 // Metadata ("Nombre|URL" por línea), así que aquí se leen los dos.
 //
@@ -19,14 +24,24 @@ import { updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { ocultarContacto, STORE_URL } from "./licitacion"
 
-export const LIMITES = { compatibilidad: 30, videos: 6, archivos: 12, faq: 15 }
+export const LIMITES = { compatibilidad: 30, videos: 6, archivos: 12, faq: 15, fotos_fabricada: 8 }
 
 export type Ficha = {
   compatibilidad: string[]
   videos: string[]
   archivos: { nombre: string; url: string }[]
   faq: { pregunta: string; respuesta: string }[]
+  // Datos técnicos (auditoría 19 nov 2026). Opcionales al guardar: un panel
+  // viejo que no los manda no los borra.
+  medidas?: string
+  tolerancia?: string
+  vista_previa?: string
+  fotos_fabricada?: string[]
 }
+
+const EXT_VISTA = /\.(stl|obj|dxf|svg)$/i
+const EXT_FOTO = /\.(jpe?g|png|webp)$/i
+const sinQuery = (u: string) => u.split(/[?#]/)[0]
 
 export class ErrorFicha extends Error {}
 
@@ -78,6 +93,10 @@ export function leerFicha(meta: Record<string, any> | null | undefined): Ficha {
     videos: lista(m.videos, /[\n\s,;]+/),
     archivos: pares(m.archivos, [["nombre", "name", "titulo"], ["url", "href"]], true).map(([nombre, url]) => ({ nombre, url })),
     faq: pares(m.faq, [["pregunta", "p", "q"], ["respuesta", "r", "a"]], false).map(([pregunta, respuesta]) => ({ pregunta, respuesta })),
+    medidas: typeof m.medidas === "string" ? m.medidas : "",
+    tolerancia: typeof m.tolerancia === "string" ? m.tolerancia : "",
+    vista_previa: typeof m.vista_previa === "string" ? m.vista_previa : "",
+    fotos_fabricada: lista(m.fotos_fabricada, /[\n\s,;]+/),
   }
 }
 
@@ -138,7 +157,26 @@ export function validarFicha(b: Record<string, any>): Ficha {
   if (faq.length > LIMITES.faq) throw new ErrorFicha(`Máximo ${LIMITES.faq} preguntas.`)
   if (faq.some((f) => !f.pregunta || !f.respuesta)) throw new ErrorFicha("Cada pregunta necesita su respuesta.")
 
-  return { compatibilidad, videos, archivos, faq }
+  const out: Ficha = { compatibilidad, videos, archivos, faq }
+
+  if ("medidas" in b) out.medidas = texto(b.medidas, 120)
+  if ("tolerancia" in b) out.tolerancia = texto(b.tolerancia, 120)
+  if ("vista_previa" in b) {
+    const u = String(b.vista_previa || "").trim()
+    if (u && (!/^https:\/\/\S+$/i.test(u) || !permitido(u, propios) || !EXT_VISTA.test(sinQuery(u))))
+      throw new ErrorFicha("El modelo de muestra se sube aquí mismo y debe ser STL, OBJ, DXF o SVG.")
+    out.vista_previa = u
+  }
+  if ("fotos_fabricada" in b) {
+    const fotos = [...new Set(arr(b.fotos_fabricada).map((x) => String(x || "").trim()).filter(Boolean))]
+    if (fotos.length > LIMITES.fotos_fabricada) throw new ErrorFicha(`Máximo ${LIMITES.fotos_fabricada} fotos de la pieza fabricada.`)
+    for (const u of fotos) {
+      if (!/^https:\/\/\S+$/i.test(u) || !permitido(u, propios) || !EXT_FOTO.test(sinQuery(u)))
+        throw new ErrorFicha("Las fotos de la pieza fabricada se suben aquí mismo (JPG, PNG o WebP).")
+    }
+    out.fotos_fabricada = fotos
+  }
+  return out
 }
 
 type Producto = { id: string; title: string; handle: string; thumbnail: string | null; status: string; metadata: Record<string, any> | null }
@@ -185,6 +223,10 @@ export async function guardarFicha(container, sellerId: string, productId: strin
   for (const k of ["compatibilidad", "videos", "archivos", "faq"] as const) {
     meta[k] = ficha[k].length ? ficha[k] : ""
   }
+  for (const k of ["medidas", "tolerancia", "vista_previa"] as const) {
+    if (ficha[k] !== undefined) meta[k] = ficha[k] || ""
+  }
+  if (ficha.fotos_fabricada !== undefined) meta.fotos_fabricada = ficha.fotos_fabricada.length ? ficha.fotos_fabricada : ""
   meta.ficha_actualizada = new Date().toISOString()
   await updateProductsWorkflow(container).run({ input: { selector: { id: productId }, update: { metadata: meta } } })
   return leerFicha(meta)

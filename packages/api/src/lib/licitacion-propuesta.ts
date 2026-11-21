@@ -81,6 +81,23 @@ export type PropuestaComparable = {
   adjuntos?: number
 }
 
+/**
+ * Lo mínimo que toda propuesta debe traer (auditoría del 19 nov 2026, punto
+ * 4.2): precio y moneda, días de fabricación, fecha de entrega, material y
+ * especificaciones, condiciones de pago, vigencia y garantía. Precio, días,
+ * moneda y vigencia ya se exigen o tienen valor por omisión; aquí se revisa
+ * el resto. Devuelve la lista de lo que falta (vacía = completa).
+ */
+export function faltantesObligatorios(formal: ReturnType<typeof leerPropuestaFormal>, hoy = new Date()): string[] {
+  const f: string[] = []
+  if (!formal.materiales) f.push("el material y las especificaciones")
+  if (!formal.fecha_entrega) f.push("la fecha estimada de entrega")
+  else if (formal.fecha_entrega < hoy.toISOString().slice(0, 10)) f.push("una fecha de entrega que no haya pasado")
+  if (!formal.condiciones_pago) f.push("las condiciones de pago")
+  if (!formal.garantia) f.push("la garantía")
+  return f
+}
+
 /** Lo que le falta a una propuesta para que el cliente compare con confianza. */
 export function omisiones(p: PropuestaComparable): string[] {
   const f: string[] = []
