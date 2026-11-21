@@ -25,7 +25,7 @@ export function CotizarEscanear({
 }) {
   const [estado, setEstado] = useState("")
   const ext = (modelo?.nombre.split(".").pop() || "").toLowerCase()
-  const proceso = ["stl", "obj", "3mf"].includes(ext) ? "Impresión 3D" : "Maquinado CNC"
+  const proceso = ["stl", "obj", "3mf"].includes(ext) ? "Impresión 3D" : "Maquinado"
   const datos = { pieza: pieza.slice(0, 120), material: material || undefined, proceso, nota: `Pieza reconstruida en Escanear (${folio}) · ${salida}. Cotizar prototipo y pieza final.` }
 
   async function cotizar() {

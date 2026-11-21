@@ -233,7 +233,9 @@ const ligaCliente = (s: Solicitud) => `${STORE_URL}/mx/user/escanear/${s.id}`
 
 export async function avisarEquipo(knex: any, s: Solicitud, texto: string, logger?: any) {
   try {
-    await mandarPrivado(knex, { texto: `🧩 Escanear ${folioEscanear(s.folio)} · ${s.titulo}\n${texto}` })
+    const r: any = await mandarPrivado(knex, { texto: `🧩 Escanear ${folioEscanear(s.folio)} · ${s.titulo}\n${texto}` })
+    // Sin Telegram vinculado en Social Hub el aviso no sale: que quede en el registro
+    if (!r?.ok) logger?.warn?.(`[escanear] aviso por Telegram no enviado (${folioEscanear(s.folio)}): ${r?.error || "sin respuesta"}`)
   } catch (e) {
     logger?.warn?.(`[escanear] Telegram: ${(e as Error).message}`)
   }
