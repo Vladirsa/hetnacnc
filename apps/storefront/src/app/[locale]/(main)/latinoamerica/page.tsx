@@ -39,10 +39,10 @@ export default async function LatinoamericaPage() {
               const c = conteo[p.clave]
               const n = c ? c.talleres + c.clientes : 0
               return (
-                <span key={p.clave} className="rounded-full bg-white/10 px-3 py-1.5 text-sm">
+                <a key={p.clave} href={`/mx/latinoamerica/${p.clave}`} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
                   {p.bandera} {p.nombre}
                   {n > 0 ? ` · ${n} ${n === 1 ? "registro" : "registros"}` : ""}
-                </span>
+                </a>
               )
             })}
           </div>

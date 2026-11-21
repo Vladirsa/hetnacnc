@@ -9,7 +9,7 @@ import { procesoDe } from "@/lib/cotizador/revision-archivo"
 import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 import { RevisionArchivo } from "./RevisionArchivo"
 
-import { cotizarLead, precioEnVivo, type CotizarLeadInput, type PrecioEnVivo } from "@/lib/cotizar/acciones"
+import { acabadosReferencia, cotizarLead, precioEnVivo, type AcabadoReferencia, type CotizarLeadInput, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 type Props = {
@@ -56,6 +56,12 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   const [vivo, setVivo] = useState<PrecioEnVivo | null>(null)
   // Acomodo en hoja de 1.22 × 2.44 m (estrategia 3.2): láser, router y plasma
   const [hojas, setHojas] = useState("")
+  // Acabados con precio de referencia de los talleres (estrategia 2.1)
+  const [acabados, setAcabados] = useState<AcabadoReferencia[]>([])
+  useEffect(() => {
+    if (servicio === "impresion_3d") return
+    acabadosReferencia().then(setAcabados).catch(() => {})
+  }, [servicio])
   const [calculandoVivo, setCalculandoVivo] = useState(false)
   const pausa = useRef<ReturnType<typeof setTimeout> | null>(null)
   const turno = useRef(0)
@@ -84,6 +90,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         ...(opcion ? { [opcion.campo]: String(d.get(opcion.campo) || "") } : {}),
         cantidad,
         ...datosArchivo(ancho),
+        acabados: d.getAll("acabados").map(String),
       })
       if (mio !== turno.current) return // llegó una respuesta vieja
       setCalculandoVivo(false)
@@ -204,6 +211,10 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       if (datos && mandarAFabricar(f.name, datos, locale, { pieza, medidas: c?.medidas, material: c?.material, proceso: servicioSolicitud })) return
     }
     const q = new URLSearchParams({ desde: "cotizador", pieza })
+    // Los acabados elegidos viajan a la solicitud (los talleres que los hacen la reciben primero)
+    const elegidos = formRef.current ? new FormData(formRef.current).getAll("acabados").map(String) : []
+    const nombres = acabados.filter((a) => elegidos.includes(a.clave)).map((a) => a.nombre)
+    if (nombres.length) q.set("nota", `Acabados: ${nombres.join(", ")}.`)
     if (servicioSolicitud) q.set("servicio", servicioSolicitud)
     if (c?.medidas) q.set("medidas", c.medidas)
     if (c?.material) q.set("material", c.material)
@@ -320,6 +331,21 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
             ))}
           </select>
         </label>
+      )}
+
+      {acabados.length > 0 && (
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="text-[13.5px] font-medium text-[#1B1B18]">Acabados (opcional)</legend>
+          {acabados.map((a) => (
+            <label key={a.clave} className="flex items-center gap-2 text-[13.5px] text-[#40403A]">
+              <input type="checkbox" name="acabados" value={a.clave} className="accent-[#C2560A]" />
+              <span>
+                {a.nombre} <span className="text-[#6B6A63]">· +${a.tarifa.toLocaleString("es-MX")} por pieza</span>
+              </span>
+            </label>
+          ))}
+          <span className="text-[11.5px] text-[#7A776E]">Precio de referencia de los talleres que lo hacen; el final va en su propuesta.</span>
+        </fieldset>
       )}
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
