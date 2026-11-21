@@ -3,7 +3,8 @@ import { SellerDTO } from '@mercurjs/types';
 import { sdk } from '../client';
 
 const SELLER_FIELDS =
-  'id,name,handle,description,logo,banner,is_premium,metadata,created_at,email,phone';
+  'id,name,handle,description,logo,banner,is_premium,metadata,created_at';
+// Sin correo ni teléfono: la API pública ya no los da (api/store/proteger-vendedores.ts)
 
 export const getSellerByHandle = async (
   handle: string
