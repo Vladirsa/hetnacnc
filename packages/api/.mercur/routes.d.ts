@@ -812,6 +812,7 @@ export type Routes = {
                 calculate: typeof import("@medusajs/medusa/api/store/shipping-options/[id]/calculate/route");
             };
         };
+        acabadosReferencia: typeof import("../src/api/store/acabados-referencia/route");
         blog: typeof import("../src/api/store/blog/route") & {
             $slug: typeof import("../src/api/store/blog/[slug]/route");
         };

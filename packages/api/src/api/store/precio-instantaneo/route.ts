@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { precioMaterialParaCotizar } from "../../../lib/materiales-precios"
 import { precioDesglosado, type EntradaPrecio } from "../../../lib/precio-instantaneo"
-import { tarifaDoblez } from "../../../lib/tarifa-doblez"
+import { tarifaDoblez, tarifasAcabados } from "../../../lib/tarifa-doblez"
 
 // Precio desglosado y en vivo para las calculadoras públicas (/cotizar/*, guías):
 // se llama mientras el cliente mueve material, medidas o cantidad. No guarda
@@ -45,6 +45,25 @@ export const POST = async (req: MedusaRequest<EntradaPrecio>, res: MedusaRespons
     } else {
       p.calculo = [...(p.calculo || []), `Dobleces: ${dobleces} por pieza (el precio del doblez lo da cada taller)`]
       p.doblez = { dobleces, tarifa: null, talleres: 0, total: 0 }
+    }
+  }
+  // Acabados con precio inmediato (estrategia 2.1): el cliente los elige y se
+  // suma la tarifa de referencia por pieza que ponen los talleres.
+  const pedidos = Array.isArray(b.acabados) ? b.acabados.map(String).filter((c: string) => c !== "doblez").slice(0, 9) : []
+  if (pedidos.length) {
+    const p: any = r.precio
+    const tarifas = await tarifasAcabados(req.scope)
+    const elegidos = tarifas.filter((t) => t.unidad === "pieza" && pedidos.includes(t.clave))
+    if (elegidos.length) {
+      const extra = Math.round(elegidos.reduce((s, t) => s + t.tarifa, 0) * entrada.cantidad! * 100) / 100
+      const ivaPct = p.recomendado > 0 ? p.iva / p.recomendado : 0.16
+      p.minimo = Math.round((p.minimo + extra) * 100) / 100
+      p.recomendado = Math.round((p.recomendado + extra) * 100) / 100
+      p.maximo = Math.round((p.maximo + extra) * 100) / 100
+      p.iva = Math.round(p.recomendado * ivaPct * 100) / 100
+      p.total = Math.round((p.recomendado + p.iva) * 100) / 100
+      p.calculo = [...(p.calculo || []), ...elegidos.map((t) => `${t.nombre}: $${t.tarifa} por pieza (precio de referencia de ${t.talleres} ${t.talleres === 1 ? "taller" : "talleres"})`)]
+      p.acabados = elegidos.map((t) => ({ clave: t.clave, nombre: t.nombre, tarifa: t.tarifa, total: Math.round(t.tarifa * entrada.cantidad! * 100) / 100 }))
     }
   }
   res.json(r.precio)

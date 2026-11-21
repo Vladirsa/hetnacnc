@@ -24,6 +24,8 @@ export type CotizarLeadInput = {
   volumen_cm3?: number
   // Lámina doblada desde STEP: dobleces por pieza (se suma la tarifa de referencia)
   dobleces?: number
+  // Acabados elegidos (claves): se suma su precio de referencia por pieza
+  acabados?: string[]
   email: string
   nombre?: string
   telefono?: string
@@ -132,5 +134,21 @@ export async function leerFotoSolicitud(input: { imagen: string; medio: string; 
     return { ok: true, lectura: d as LecturaFoto }
   } catch {
     return { ok: false, mensaje: "No se pudo leer la foto. Llena la solicitud a mano." }
+  }
+}
+
+// ── Acabados con precio de referencia (estrategia 2.1) ───────────────────
+export type AcabadoReferencia = { clave: string; nombre: string; tarifa: number; unidad: "pieza" | "doblez"; talleres: number }
+
+export async function acabadosReferencia(): Promise<AcabadoReferencia[]> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/acabados-referencia`, {
+      headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string },
+      next: { revalidate: 600 },
+    })
+    if (!res.ok) return []
+    return (((await res.json()) as { acabados?: AcabadoReferencia[] }).acabados || []).filter((a) => a.unidad === "pieza")
+  } catch {
+    return []
   }
 }
