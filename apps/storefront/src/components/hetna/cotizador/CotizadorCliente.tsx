@@ -22,6 +22,7 @@ import {
   piezaAMano,
   piezaDeGeo,
 } from "@/lib/cotizador/estimador"
+import { useConfigPrecios } from "@/lib/cotizador/config-precios"
 import { EXTENSIONES_ARCHIVO, MAX_MB_ARCHIVO } from "@/lib/fabricacion/opciones"
 import type { ArchivoSubido } from "@/lib/cotizar/solicitud-taller"
 import { subirArchivo } from "@/lib/subir-archivo"
@@ -67,7 +68,8 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
     return piezaAMano(l, a, h, complejidad, servicio === "impresora_3d" || servicio === "router_3d")
   }, [geo, aMano, dims, complejidad, servicio, archivo])
 
-  const est = useMemo(() => (pieza && material ? estimar({ servicio, pieza, material, cantidad, acabado, relleno }) : null), [pieza, material, servicio, cantidad, acabado, relleno])
+  const cfg = useConfigPrecios()
+  const est = useMemo(() => (pieza && material ? estimar({ servicio, pieza, material, cantidad, acabado, relleno, cfg }) : null), [pieza, material, servicio, cantidad, acabado, relleno, cfg])
 
   const elegirArchivo = async (f: File | undefined) => {
     if (!f) return
@@ -253,7 +255,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
               <p className="mt-3 text-xs text-[#40403A]">
                 Por volumen:{" "}
                 {[1, 10, 50, 100].filter((n) => n !== cantidad).map((n) => {
-                  const e = estimar({ servicio, pieza, material, cantidad: n, acabado, relleno })
+                  const e = estimar({ servicio, pieza, material, cantidad: n, acabado, relleno, cfg })
                   return e.ok ? <button key={n} type="button" onClick={() => setCantidad(n)} className="mr-2 underline decoration-dotted hover:text-[#C2560A]">{n} pzas ≈ {pesos(e.precioPieza)} c/u</button> : null
                 })}
               </p>
