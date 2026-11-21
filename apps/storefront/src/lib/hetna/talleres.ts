@@ -1,6 +1,7 @@
 import { sdk } from "@/lib/client"
 import { type Tarifas, leerTarifas } from "@/lib/hetna/estimado"
 import { type AcabadoTaller, leerAcabados } from "@/lib/hetna/acabados"
+import { capacidadVigente, type CapacidadLibre } from "@/lib/hetna/capacidad-libre"
 
 // Tipos de máquina (mismos valores que apps/vendor/src/routes/perfil-taller)
 export const TIPOS_MAQUINA: [string, string][] = [
@@ -115,6 +116,8 @@ export type Taller = {
   // Fase 3: constancia fiscal revisada por HETNA y certificaciones acreditadas vigentes
   empresaVerificada: boolean
   certificaciones: { tipo: string; nombre: string; emisor: string | null; vigencia: string | null }[]
+  // Estrategia 3.4: avisó que tiene máquina libre (vence sola)
+  capacidadLibre: CapacidadLibre | null
   perfil: Perfil
 }
 
@@ -197,6 +200,7 @@ export const aTaller = (s: SellerCrudo): Taller => ({
   fundador: s.metadata?.fundador === true,
   embajador: s.metadata?.embajador === true,
   verificado: s.metadata?.verificado === true,
+  capacidadLibre: capacidadVigente(s.metadata?.capacidad_libre),
   empresaVerificada: s.metadata?.empresa_verificada === true,
   certificaciones: (Array.isArray(s.metadata?.certificaciones) ? s.metadata.certificaciones : []).filter(
     (c: any) => c && c.nombre && (!c.vigencia || new Date(c.vigencia).getTime() >= Date.now() - 86_400_000)

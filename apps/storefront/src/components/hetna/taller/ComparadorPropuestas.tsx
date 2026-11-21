@@ -188,6 +188,11 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-extrabold text-[#142033]">{p.taller.nombre}</h3>
                     {p.taller.verificado && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span>}
+                    {p.taller.capacidad_libre && (
+                      <span className="rounded-full bg-[#FFF6E0] px-2 py-0.5 text-xs font-bold text-[#8A5A00]" title={p.taller.capacidad_libre.nota || "Tiene máquina libre esta semana"}>
+                        ⚡ Máquina libre{p.taller.capacidad_libre.descuento_pct ? ` · ofrece hasta ${p.taller.capacidad_libre.descuento_pct}%` : ""}
+                      </span>
+                    )}
                     {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">⭐ Recomendada por HETNA</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}

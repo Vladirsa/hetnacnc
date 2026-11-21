@@ -1,4 +1,5 @@
 import { recomendarPropuesta } from "../../../../lib/asignacion"
+import { capacidadVigente } from "../../../../lib/capacidad-libre"
 import { asegurarVersiones, historialDe } from "../../../../lib/licitacion-versiones"
 import { hitosConFotos } from "../../../../lib/licitacion-hitos-pedido"
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
@@ -104,6 +105,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
               }
             : null,
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",
+          // Estrategia 3.4: tiene máquina libre esta semana (y el descuento que dice dar)
+          capacidad_libre: capacidadVigente(p.metadata),
           // Capacidad declarada en su perfil: máquinas por tipo y el área de trabajo más grande
           capacidad: capacidadTaller(perfil.maquinas),
         },

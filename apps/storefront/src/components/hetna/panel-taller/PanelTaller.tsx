@@ -17,6 +17,7 @@
 // Reglas: precios siempre en MXN con IVA incluido; el cliente cotiza sin
 // registrarse, el taller necesita su cuenta para responder; nunca se muestran
 // datos de contacto del cliente (el servidor ya no los manda).
+import { capacidadVigente, textoCapacidad, type CapacidadLibre } from "@/lib/hetna/capacidad-libre"
 import { PRECIO_PLAN } from "@/lib/hetna/app-taller"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -187,6 +188,8 @@ export function PanelTaller() {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([])
   const [cupo, setCupo] = useState<Cupo>(null)
   const [recibe, setRecibe] = useState(true)
+  // Estrategia 3.4: "Tengo máquina libre" (vence sola)
+  const [capacidad, setCapacidad] = useState<CapacidadLibre | null>(null)
   const [etapas, setEtapas] = useState<Record<string, EtapaTaller>>({})
   const [aviso, setAviso] = useState("")
 
@@ -200,7 +203,7 @@ export function PanelTaller() {
       setSeller(me.datos.seller)
       const [sol, panel] = await Promise.all([
         vendor<{ solicitudes?: Solicitud[]; cupo?: Cupo }>("/vendor/hetna-solicitudes"),
-        vendor<{ recibe_solicitudes?: boolean; etapas?: Record<string, EtapaTaller> }>("/vendor/hetna-panel-taller"),
+        vendor<{ recibe_solicitudes?: boolean; etapas?: Record<string, EtapaTaller>; capacidad_libre?: CapacidadLibre | null }>("/vendor/hetna-panel-taller"),
       ])
       if (!sol.ok) throw new Error()
       setSolicitudes(sol.datos.solicitudes || [])
@@ -208,6 +211,7 @@ export function PanelTaller() {
       if (panel.ok) {
         setRecibe(panel.datos.recibe_solicitudes !== false)
         setEtapas(panel.datos.etapas || {})
+        setCapacidad(capacidadVigente(panel.datos.capacidad_libre))
       }
       setEstado("listo")
     } catch {
@@ -287,6 +291,16 @@ export function PanelTaller() {
           </div>
           <Interruptor activo={recibe} alCambiar={cambiarRecibe} />
         </header>
+
+        <TarjetaCapacidad
+          capacidad={capacidad}
+          guardar={async (cuerpo) => {
+            const r = await vendor<{ capacidad_libre?: CapacidadLibre | null }>("/vendor/hetna-panel-taller", { method: "POST", body: JSON.stringify({ capacidad_libre: cuerpo }) })
+            if (!r.ok) return setAviso("No se pudo guardar. Intenta de nuevo.")
+            setCapacidad(capacidadVigente(r.datos.capacidad_libre))
+            setAviso(cuerpo.activa ? "Listo: las solicitudes nuevas te llegan antes mientras tengas máquina libre." : "Listo: quitaste el aviso de máquina libre.")
+          }}
+        />
 
         {!recibe && (
           <p className="mt-4 rounded-xl border border-[#F2D4B8] bg-[#FDF3EA] px-4 py-3 text-[14px] text-[#8A3F06]">
@@ -475,6 +489,83 @@ function TarjetaPlan({ cupo, compacta = false }: { cupo: Cupo; compacta?: boolea
 // ---------------------------------------------------------------------------
 // Encabezado: interruptor
 // ---------------------------------------------------------------------------
+// "¿Tienes máquina libre esta semana?" (estrategia 3.4): las solicitudes nuevas
+// le llegan antes y el cliente ve "⚡ Máquina libre" en sus propuestas.
+function TarjetaCapacidad({ capacidad, guardar }: { capacidad: CapacidadLibre | null; guardar: (c: { activa: boolean; descuento_pct?: number; dias?: number; nota?: string }) => Promise<void> }) {
+  const [abierta, setAbierta] = useState(false)
+  const [descuento, setDescuento] = useState(capacidad?.descuento_pct ?? 10)
+  const [dias, setDias] = useState(7)
+  const [nota, setNota] = useState(capacidad?.nota ?? "")
+  const [ocupado, setOcupado] = useState(false)
+  const correr = async (c: Parameters<typeof guardar>[0]) => {
+    setOcupado(true)
+    await guardar(c)
+    setOcupado(false)
+    setAbierta(false)
+  }
+  if (capacidad) {
+    return (
+      <section className="mt-4 flex flex-col gap-2 rounded-2xl border border-[#BFE3CC] bg-[#E6F4EA] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[15px] font-bold text-[#0F5C2A]">{textoCapacidad(capacidad)}</p>
+          <p className="text-[13px] text-[#1E4D2B]">
+            Hasta el {new Date(capacidad.hasta).toLocaleDateString("es-MX", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" })}: las solicitudes nuevas te llegan antes.
+            {capacidad.nota ? ` “${capacidad.nota}”` : ""}
+          </p>
+        </div>
+        <button type="button" disabled={ocupado} onClick={() => correr({ activa: false })} className="rounded-xl border border-[#1E7B3A] bg-white px-4 py-2 text-[13px] font-semibold text-[#0F5C2A] disabled:opacity-60">
+          Ya no tengo máquina libre
+        </button>
+      </section>
+    )
+  }
+  if (!abierta) {
+    return (
+      <button type="button" onClick={() => setAbierta(true)} className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-dashed border-[#C9C5BA] bg-white p-4 text-left">
+        <span>
+          <span className="block text-[15px] font-bold text-[#142033]">⚡ ¿Tienes máquina libre esta semana?</span>
+          <span className="block text-[13px] text-[#6B6A63]">Avísanos y las solicitudes nuevas te llegan antes. Si quieres, ofrece un descuento para llenarla.</span>
+        </span>
+        <span className="shrink-0 rounded-xl bg-[#142033] px-4 py-2 text-[13px] font-semibold text-white">Avisar</span>
+      </button>
+    )
+  }
+  return (
+    <section className="mt-4 grid gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
+      <p className="text-[15px] font-bold text-[#142033]">⚡ Tengo máquina libre</p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
+          Descuento que ofreces
+          <select value={descuento} onChange={(e) => setDescuento(Number(e.target.value))} className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]">
+            {[0, 5, 10, 15, 20].map((d) => (
+              <option key={d} value={d}>{d ? `${d}%` : "Sin descuento"}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
+          ¿Por cuántos días?
+          <select value={dias} onChange={(e) => setDias(Number(e.target.value))} className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]">
+            {[3, 7, 14].map((d) => (
+              <option key={d} value={d}>{d} días</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
+          Nota (opcional)
+          <input value={nota} onChange={(e) => setNota(e.target.value)} maxLength={140} placeholder="Ej. Router 1.3 × 2.5 m libre" className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]" />
+        </label>
+      </div>
+      <p className="text-[12px] text-[#6B6A63]">El descuento lo aplicas tú en tus propuestas; el cliente ve que lo ofreces. Se apaga solo al terminar los días.</p>
+      <div className="flex gap-2">
+        <button type="button" disabled={ocupado} onClick={() => correr({ activa: true, descuento_pct: descuento, dias, nota })} className={BTN_PRIMARIO}>
+          {ocupado ? "Guardando…" : "Avisar que tengo máquina libre"}
+        </button>
+        <button type="button" onClick={() => setAbierta(false)} className="rounded-xl px-4 py-2 text-[14px] text-[#40403A]">Cancelar</button>
+      </div>
+    </section>
+  )
+}
+
 function Interruptor({ activo, alCambiar }: { activo: boolean; alCambiar: (v: boolean) => void }) {
   return (
     <button

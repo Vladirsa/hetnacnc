@@ -13,6 +13,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD } from "../../../lib/licitacion"
 import { etapasDe } from "../../../lib/etapa-taller"
+import { capacidadVigente, nuevaCapacidad } from "../../../lib/capacidad-libre"
 
 const recibeSolicitudes = (metadata: any) => metadata?.recibe_solicitudes !== false
 
@@ -28,7 +29,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .select("s.id")
     .limit(500)) as { id: string }[]
   const etapas = await etapasDe(knex, ganadas.map((g) => g.id))
-  res.json({ recibe_solicitudes: recibeSolicitudes(v?.metadata), etapas })
+  res.json({ recibe_solicitudes: recibeSolicitudes(v?.metadata), etapas, capacidad_libre: capacidadVigente(v?.metadata) })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -36,6 +37,15 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const sellerId = (req as any).seller_context?.seller_id as string | undefined
   if (!sellerId) return res.status(401).json({ message: "Sin taller." })
   const b: any = req.body || {}
+  // Estrategia 3.4: "Tengo máquina libre" (con descuento opcional y fecha de fin)
+  if (b.capacidad_libre !== undefined) {
+    const c = nuevaCapacidad(b.capacidad_libre)
+    await knex.raw(
+      `update seller set metadata = coalesce(metadata, '{}'::jsonb) || jsonb_build_object('capacidad_libre', ?::jsonb) where id = ?`,
+      [JSON.stringify(c), sellerId]
+    )
+    return res.json({ ok: true, capacidad_libre: c })
+  }
   if (typeof b.recibe_solicitudes !== "boolean") return res.status(400).json({ message: "Falta recibe_solicitudes." })
   await knex.raw(
     `update seller set metadata = coalesce(metadata, '{}'::jsonb) || jsonb_build_object('recibe_solicitudes', ?::boolean) where id = ?`,

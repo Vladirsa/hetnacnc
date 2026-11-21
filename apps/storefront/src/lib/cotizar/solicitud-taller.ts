@@ -123,6 +123,8 @@ export type Propuesta = {
     calificacion: number | null
     resenas?: number
     verificado?: boolean
+    /** Estrategia 3.4: tiene máquina libre esta semana (y el descuento que dice dar) */
+    capacidad_libre?: { descuento_pct: number; hasta: string; nota: string } | null
     /** Lo que el taller hizo en HETNA: entregas a tiempo, trabajos terminados, reclamos */
     medido?: {
       terminados: number

@@ -8,6 +8,7 @@ import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./lic
 import { puntajePosicion, tallerVerificado } from "./confianza"
 import { acabadosPedidos, haceAcabados } from "./acabados"
 import { calidadTaller } from "./asignacion"
+import { capacidadVigente } from "./capacidad-libre"
 import { aceptaCliente, reputacionCliente } from "./trust"
 import { publicacionAutomatica } from "./social-hub"
 import {
@@ -88,6 +89,8 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
       : 2) +
     (mismoMunicipio(x.metadata?.perfil) ? -1 : 0) +
     (haceAcabados(x.metadata?.perfil, pideAcabados) ? -1 : 0) +
+    // Estrategia 3.4: con máquina libre esta semana, se entera antes
+    (capacidadVigente(x.metadata) ? -1 : 0) +
     (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
   // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
   // verificación y certificaciones). No cambia su calificación.
