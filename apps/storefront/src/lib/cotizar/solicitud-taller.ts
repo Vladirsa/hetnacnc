@@ -31,6 +31,10 @@ export type SolicitudTallerInput = {
   tiene_archivo?: string
   acabado?: string
   tolerancia?: string
+  // Estrategia 2.4: orden de compra, factura con los datos de Mi empresa y pedido repetido
+  orden_compra?: string
+  con_factura?: boolean
+  repite_folio?: string
   medidas_archivo?: string
   archivos?: ArchivoSubido[]
   servicio?: string
@@ -434,4 +438,63 @@ export async function accionAcuerdo(token: string, cuerpo: Record<string, unknow
 /** El cliente responde o reclama la evaluación que el taller hizo de él (Fase 4). */
 export async function accionEvaluacion(token: string, accion: "responder" | "reclamar", texto: string) {
   return postar(rutaSol(token, "evaluacion"), { accion, texto }, "No se pudo guardar.")
+}
+
+// ---- Estrategia 2.4: Mis piezas (repetir pedido) y Mi empresa (factura) ----
+
+export type MiPieza = {
+  folio: string
+  descripcion: string
+  servicio: string
+  material: string
+  medidas: string
+  cantidad: string
+  acabado: string
+  necesidad: string
+  archivos: ArchivoSubido[]
+  archivos_borrados: number
+  medidas_archivo: string
+  creada: string
+  etapa: string | null
+  taller: { nombre: string; handle: string; precio: number | null } | null
+}
+
+export async function misPiezas(): Promise<{ sesion: boolean; piezas: MiPieza[] }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { sesion: false, piezas: [] }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mis-piezas`, { headers: { ...cabeceras(), ...auth }, cache: "no-store" })
+    if (res.status === 401) return { sesion: false, piezas: [] }
+    const body = await res.json().catch(() => ({}))
+    return { sesion: true, piezas: (body.piezas || []) as MiPieza[] }
+  } catch {
+    return { sesion: true, piezas: [] }
+  }
+}
+
+export type MiEmpresa = { razon_social: string; rfc: string; regimen: string; uso_cfdi: string; cp: string; correo: string }
+
+export async function miEmpresa(): Promise<{ sesion: boolean; empresa: MiEmpresa | null }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { sesion: false, empresa: null }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mi-empresa`, { headers: { ...cabeceras(), ...auth }, cache: "no-store" })
+    if (res.status === 401) return { sesion: false, empresa: null }
+    const body = await res.json().catch(() => ({}))
+    return { sesion: true, empresa: (body.empresa || null) as MiEmpresa | null }
+  } catch {
+    return { sesion: true, empresa: null }
+  }
+}
+
+export async function guardarMiEmpresa(e: Partial<MiEmpresa>): Promise<{ ok: boolean; mensaje?: string }> {
+  const auth = await getAuthHeaders()
+  if (!("authorization" in auth)) return { ok: false, mensaje: "Inicia sesión." }
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/mi-empresa`, { method: "POST", headers: { ...cabeceras(), ...auth }, body: JSON.stringify(e), cache: "no-store" })
+    const body = await res.json().catch(() => ({}))
+    return res.ok ? { ok: true } : { ok: false, mensaje: body.message || "No se pudo guardar." }
+  } catch {
+    return { ok: false, mensaje: "No se pudo guardar. Intenta de nuevo." }
+  }
 }

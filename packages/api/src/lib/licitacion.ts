@@ -254,6 +254,11 @@ export type Trabajo = {
   presupuesto?: string
   acepta_envio?: string
   archivo?: string
+  // Estrategia 2.4 (empresas): número de orden de compra y datos para la factura
+  orden_compra?: string
+  factura?: { razon_social: string; rfc: string; regimen?: string; uso_cfdi?: string; cp?: string; correo?: string } | null
+  // Repetición de un pedido anterior (folio de la solicitud original)
+  repite_folio?: string
 }
 
 export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
@@ -272,6 +277,9 @@ export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
   fila("Frecuencia", t.frecuencia || "") +
   fila("Presupuesto aproximado", t.presupuesto || "") +
   fila("Acepta envío por paquetería", t.acepta_envio || "") +
+  fila("Orden de compra", t.orden_compra || "") +
+  fila("Factura a nombre de", t.factura ? `${t.factura.razon_social} · RFC ${t.factura.rfc}${t.factura.uso_cfdi ? ` · uso ${t.factura.uso_cfdi}` : ""}` : "") +
+  fila("Repite el pedido", t.repite_folio || "") +
   (conArchivo ? fila("Liga a archivos", t.archivo || "") : "") +
   fila(
     "Archivos subidos",
