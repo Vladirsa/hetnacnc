@@ -133,6 +133,27 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         )
       )}
 
+      {solicitud.recomendada && !solicitud.propuesta_elegida && (() => {
+        const r = solicitud.recomendada!
+        const p = solicitud.propuestas.find((x) => x.id === r.id)
+        if (!p) return null
+        return (
+          <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-4">
+            <p className="text-sm font-extrabold text-[#0F5C2A]">⭐ HETNA te recomienda: {p.taller.nombre}</p>
+            {r.razones.length > 0 && (
+              <ul className="mt-1 list-disc pl-5 text-sm text-[#1E4D2B]">
+                {r.razones.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-xs text-[#40403A]">
+              La que mejor equilibra precio, plazo y lo que el taller ha cumplido en HETNA (entregas a tiempo, calificación, verificación). La membresía no cuenta. Tú decides.
+            </p>
+          </div>
+        )
+      })()}
+
       {solicitud.propuestas.length >= 2 && (
         <div className="mt-4 rounded-2xl border border-[#E7E4DC] bg-[#FAF9F6] p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -167,6 +188,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-extrabold text-[#142033]">{p.taller.nombre}</h3>
                     {p.taller.verificado && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span>}
+                    {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">⭐ Recomendada por HETNA</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
                   </div>

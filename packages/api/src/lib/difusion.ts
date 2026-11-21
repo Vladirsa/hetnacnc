@@ -7,6 +7,7 @@ import { cambiarEtapa } from "./seguimiento"
 import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import { puntajePosicion, tallerVerificado } from "./confianza"
 import { acabadosPedidos, haceAcabados } from "./acabados"
+import { calidadTaller } from "./asignacion"
 import { aceptaCliente, reputacionCliente } from "./trust"
 import { publicacionAutomatica } from "./social-hub"
 import {
@@ -90,7 +91,10 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
     (Boolean(trabajo.estado_mx) && x.metadata?.perfil?.estado === trabajo.estado_mx ? 0 : 1)
   // Fase 3: a igual prioridad, primero los mejor posicionados (plan,
   // verificación y certificaciones). No cambia su calificación.
-  coinciden.sort((x, y) => prioridad(x) - prioridad(y) || puntajePosicion(y.metadata) - puntajePosicion(x.metadata))
+  // Estrategia 3.3: a igual prioridad, también cuenta lo que el taller ha
+  // cumplido en HETNA (puntualidad, calificación, rapidez para responder).
+  const orden = (x: { metadata: any }) => puntajePosicion(x.metadata) + calidadTaller(x.metadata?.perfil)
+  coinciden.sort((x, y) => prioridad(x) - prioridad(y) || orden(y) - orden(x))
   return coinciden
 }
 

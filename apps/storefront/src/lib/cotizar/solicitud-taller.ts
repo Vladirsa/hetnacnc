@@ -177,6 +177,8 @@ export type VistaSolicitud = {
   pago_url: string | null
   pago_estado: string | null
   propuestas: Propuesta[]
+  /** Estrategia 3.3: la que mejor equilibra precio, plazo y cumplimiento del taller (lib/asignacion del API) */
+  recomendada?: { id: string; puntaje: number; razones: string[] } | null
   // Seguimiento (ver lib/seguimiento del API)
   etapa?: string
   etapa_nombre?: string

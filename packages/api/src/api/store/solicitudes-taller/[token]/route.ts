@@ -1,3 +1,4 @@
+import { recomendarPropuesta } from "../../../../lib/asignacion"
 import { asegurarVersiones, historialDe } from "../../../../lib/licitacion-versiones"
 import { hitosConFotos } from "../../../../lib/licitacion-hitos-pedido"
 import { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
@@ -116,6 +117,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     // Talleres con membresía primero; luego el más barato.
     .sort((a, b) => b._peso - a._peso || a.precio - b.precio)
     .map(({ _peso, ...p }) => p)
+  // Estrategia 3.3: la que mejor equilibra precio, plazo y cumplimiento del taller
+  const recomendada = recomendarPropuesta(propuestas as any)
 
   const etapa = etapaDe(s, propuestas.length)
   const eventos = (await knex(T_EVENTO)
@@ -229,6 +232,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     pago_url: s.estado === "elegida" && s.pago_estado !== "pagado" && s.pago_estado !== "anticipo" ? s.pago_url || null : null,
     pago_estado: s.pago_estado || null,
     propuestas,
+    recomendada,
     // Comparación con reglas (diferencias y omisiones). El resumen con IA se
     // pide aparte: POST /store/solicitudes-taller/:token/analisis
     comparacion: compararPropuestas(
