@@ -82,6 +82,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/preguntas-frecuentes", "monthly", 0.5],
   ["/formas-de-pago", "monthly", 0.4],
   ["/devoluciones", "monthly", 0.3],
+  ["/reclamaciones", "monthly", 0.3],
   ["/licencias-disenos", "monthly", 0.4],
   ["/terminos-y-condiciones", "yearly", 0.2],
   ["/terminos-vendedores", "yearly", 0.2],

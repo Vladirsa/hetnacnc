@@ -88,6 +88,7 @@ const Ligero = () => (
     <LocalizedClientLink href="/herramientas-cnc" className={ENLACE_SIMPLE}>Herramientas CNC</LocalizedClientLink>
     <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>Talleres</LocalizedClientLink>
     <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>Foro CNC</LocalizedClientLink>
+    <LocalizedClientLink href="/servicios/aprendizaje-cnc" className={ENLACE_SIMPLE}>Academia</LocalizedClientLink>
   </div>
 )
 
@@ -178,6 +179,9 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
     </LocalizedClientLink>
     <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>
       Foro CNC
+    </LocalizedClientLink>
+    <LocalizedClientLink href="/servicios/aprendizaje-cnc" className={ENLACE_SIMPLE}>
+      Academia y guías CNC
     </LocalizedClientLink>
 
     <LocalizedClientLink href="/talleres/unete" className="mx-4 my-5 block rounded-full bg-[#C2560A] py-3 text-center text-[14.5px] font-bold text-white">

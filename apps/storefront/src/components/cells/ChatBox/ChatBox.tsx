@@ -28,7 +28,7 @@ export function ChatBox({ currentUser, supportUser, subject, order_id, product_i
   const chatboxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!currentUser?.id || !supportUser?.id || !currentUser?.email || !supportUser?.email) {
+    if (!currentUser?.id || !supportUser?.id || !currentUser?.email) {
       console.error('TalkJS: Missing required user data');
       return;
     }

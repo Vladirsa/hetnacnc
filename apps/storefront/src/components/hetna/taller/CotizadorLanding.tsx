@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { hayArchivoPendiente } from "@/lib/generador/aCotizador"
-import { APP_TALLER, NOTA_PLANES, PLANES_APP } from "@/lib/hetna/app-taller"
+import { APP_TALLER, DIAS_PRUEBA, ETIQUETA_ESTADO, type EstadoFuncion, FUNCIONES_PLANES, LIMITE_COTIZACIONES_GRATIS, NOTA_PLANES, PLANES_APP } from "@/lib/hetna/app-taller"
 import { trackLeadCotizador } from "@/lib/analytics/events"
 
 import { FranjaAyuda } from "../ServicioPagina"
@@ -34,7 +34,7 @@ const VINCULOS = [
   { t: "Foro y comunidad", d: "Pregunta y comparte con otros talleres de México desde la app.", i: "💬" },
 ]
 
-const SIEMPRE_GRATIS = ["Cotizaciones (5 al mes)", "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
+const SIEMPRE_GRATIS = [`Cotizaciones (${LIMITE_COTIZACIONES_GRATIS} al mes)`, "Clientes y productos", "Avances de cada trabajo", "Alertas y seguimiento por WhatsApp", "Calculadora CNC", "Envíos", "Tienda", "Foro", "Laboratorio CAM", "Licitaciones"]
 
 const PREGUNTAS = [
   ["¿Es la misma cuenta que en hetnacnc.com?", "Sí. Entras a la app con tu cuenta de hetnacnc.com, sin otra contraseña. Si todavía no tienes, la creas al registrarte y ahí mismo se crea tu taller con 14 días de prueba."],
@@ -191,7 +191,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         <section className="flex flex-col gap-4 scroll-mt-24" id="planes">
           <div>
             <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Planes</h2>
-            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Precios en pesos mexicanos al mes, IVA incluido. Todos empiezan con 14 días de prueba con todo abierto; el plan Gratis no vence.</p>
+            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Precios en pesos mexicanos al mes, IVA incluido. Todos empiezan con {DIAS_PRUEBA} días de prueba con todo abierto; el plan Gratis no vence.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {PLANES_APP.map((p) => (
@@ -206,7 +206,14 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                 </div>
                 <p className="m-0 text-[13px] text-[#6B6A63]">{p.para}</p>
                 <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[13.5px] text-[#1B1B18]">
-                  {p.puntos.map((x) => <li key={x} className="flex gap-2"><span className="text-[#16794F]" aria-hidden="true">✓</span>{x}</li>)}
+                  {p.puntos.map((x) => (
+                    <li key={x.texto} className="flex gap-2">
+                      <span className={x.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-hidden="true">{x.estado === "proximamente" ? "○" : "✓"}</span>
+                      <span className={x.estado === "proximamente" ? "text-[#6B6A63]" : undefined}>
+                        {x.texto} <Estado estado={x.estado} />
+                      </span>
+                    </li>
+                  ))}
                 </ul>
                 <a href={APP_TALLER.registro} className={`mt-auto text-center font-semibold px-4 py-2.5 rounded-[10px] text-[14px] ${p.destacado ? "bg-[#FF6A1A] hover:bg-[#E65C12] text-white" : "border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18]"}`}>
                   {p.nombre === "Gratis" ? "Empezar gratis" : "Probar 14 días gratis"}
@@ -215,6 +222,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
             ))}
           </div>
           <p className="m-0 text-[13px] leading-relaxed text-[#6B6A63]">{NOTA_PLANES}</p>
+          <TablaPlanes />
           <div className="bg-[#E6F4EC] border border-[#B7E0C8] rounded-[14px] px-5 py-4">
             <p className="m-0 text-[13.5px] font-bold text-[#16794F]">Siempre gratis, en todos los planes</p>
             <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]">{SIEMPRE_GRATIS.join(" · ")}</p>
@@ -238,5 +246,66 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
       </div>
       <SoporteWhatsApp />
     </main>
+  )
+}
+
+// Etiqueta de estado: "Disponible" no se pinta en cada línea (es lo normal);
+// sólo Beta y Próximamente, para que nadie compre algo que todavía no está.
+function Estado({ estado }: { estado: EstadoFuncion }) {
+  if (estado === "disponible") return null
+  return (
+    <span className={`ml-1 inline-block rounded-full px-2 py-0.5 align-middle text-[10.5px] font-bold uppercase tracking-wide ${estado === "beta" ? "bg-[#E6EEFB] text-[#1D4E9E]" : "bg-[#F1F0EC] text-[#6B6A63]"}`}>
+      {ETIQUETA_ESTADO[estado]}
+    </span>
+  )
+}
+
+/** Comparativa completa, de la misma fuente que las tarjetas. */
+function TablaPlanes() {
+  return (
+    <details className="group rounded-[14px] border border-[#E7E4DC] bg-white">
+      <summary className="cursor-pointer list-none px-5 py-4 text-[15px] font-bold text-[#1B1B18] min-h-[44px]">
+        Comparar todos los planes <span className="text-[#C2560A] group-open:hidden">+</span><span className="hidden text-[#C2560A] group-open:inline">−</span>
+      </summary>
+      <div className="overflow-x-auto px-2 pb-4 sm:px-5">
+        <table className="w-full min-w-[640px] border-collapse text-[13.5px]">
+          <thead>
+            <tr className="border-b border-[#E7E4DC] text-left">
+              <th scope="col" className="py-2 pr-3 font-semibold text-[#6B6A63]">Función</th>
+              {PLANES_APP.map((p) => (
+                <th key={p.clave} scope="col" className="px-2 py-2 text-center font-bold text-[#1B1B18]">
+                  {p.nombre}
+                  <span className="block text-[12px] font-normal text-[#6B6A63]">{p.precio}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {FUNCIONES_PLANES.map((f) => (
+              <tr key={f.nombre} className="border-b border-[#F1EFE9] align-top">
+                <th scope="row" className="py-2 pr-3 text-left font-normal text-[#1B1B18]">
+                  {f.nombre} <Estado estado={f.estado} />
+                </th>
+                {f.planes.map((c, i) => (
+                  <td key={i} className="px-2 py-2 text-center">
+                    {c === false ? (
+                      <span className="text-[#B5B2A8]" title="No incluido en este plan" aria-label="No incluido en este plan">—</span>
+                    ) : c === true ? (
+                      <span className={f.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-label={f.estado === "proximamente" ? "Próximamente" : "Incluido"}>{f.estado === "proximamente" ? "○" : "✓"}</span>
+                    ) : (
+                      <span className={f.estado === "proximamente" ? "text-[#6B6A63]" : "text-[#1B1B18]"}>{c}</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="m-0 mt-3 text-[12.5px] text-[#6B6A63]">
+          ✓ Disponible · <span className="rounded-full bg-[#E6EEFB] px-1.5 text-[#1D4E9E]">Beta</span> funciona, todavía en pruebas ·{" "}
+          <span className="rounded-full bg-[#F1F0EC] px-1.5">Próximamente</span> anunciada, todavía no incluida · — No incluido en este plan
+        </p>
+      </div>
+    </details>
   )
 }

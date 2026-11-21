@@ -3,6 +3,7 @@ const links = {
     { label: 'Preguntas frecuentes', path: '/preguntas-frecuentes' },
     { label: 'Rastrear pedido', path: '/user/orders' },
     { label: 'Devoluciones', path: '/devoluciones' },
+    { label: 'Reclamaciones', path: '/reclamaciones' },
     { label: 'Envíos', path: '/servicios/envios-hetna' },
     { label: 'Formas de pago', path: '/formas-de-pago' },
   ],
