@@ -27,7 +27,7 @@ export type Rol = "dueno" | "operaciones" | "ventas" | "finanzas" | "soporte" | 
 
 /** Páginas que ve cada rol (copia de ROLES[rol].paginas de la tienda). */
 export const PAGINAS_ROL: Record<Rol, string[]> = {
-  dueno: ["inicio", "pedidos", "licitaciones", "talleres", "cotizador", "equipo"],
+  dueno: ["inicio", "pedidos", "licitaciones", "talleres", "cotizador", "estrategia", "equipo"],
   operaciones: ["inicio", "pedidos", "licitaciones", "talleres"],
   ventas: ["inicio", "licitaciones", "cotizador"],
   finanzas: ["inicio", "pedidos"],
@@ -67,6 +67,7 @@ export const RUTAS_PAGINA: Record<string, Regla[]> = {
     r("GET", "/admin/hetna-verificacion"),
     r("GET", `/admin/hetna-verificacion/${ID}/archivos/${ID}`),
   ],
+  estrategia: [r("GET", "/admin/hetna-estrategia")],
   cotizador: [
     r("GET", "/admin/hetna-cotizador"),
     r("GET", "/admin/hetna-crecimiento"),

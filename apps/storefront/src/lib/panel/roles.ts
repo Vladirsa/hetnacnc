@@ -10,6 +10,7 @@ export const PAGINAS: Pagina[] = [
   { clave: "licitaciones", nombre: "Licitaciones", icono: "📋", ruta: "/panel/licitaciones", que: "Solicitudes de fabricación por revisar y en curso" },
   { clave: "talleres", nombre: "Talleres", icono: "🏭", ruta: "/panel/talleres", que: "Verificaciones pendientes de talleres" },
   { clave: "cotizador", nombre: "App", icono: "📱", ruta: "/panel/cotizador", que: "Talleres del Cotizador: prueba, gratis, pagando" },
+  { clave: "estrategia", nombre: "Estrategia", icono: "🏆", ruta: "/panel/estrategia", que: "Indicadores para ser líderes: solicitudes, respuesta, puntualidad, países" },
   { clave: "equipo", nombre: "Equipo", icono: "👥", ruta: "/panel/equipo", que: "Quién entra al panel y qué ve" },
 ]
 
