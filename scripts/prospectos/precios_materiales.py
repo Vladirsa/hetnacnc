@@ -56,10 +56,10 @@ MATERIALES = [
     ("aluminio_116", 'Lámina aluminio 1/16" (4×8 ft)', "precio lámina aluminio 1/16 4x8", ["aluminio", "1/16"], (1200, 6000)),
     ("aluminio_18", 'Placa aluminio 1/8" (4×8 ft)', "precio placa aluminio 1/8 4x8 hoja", ["aluminio", "1/8"], (2000, 9000)),
     ("aluminio_14", 'Placa aluminio 1/4" (4×8 ft)', "precio placa aluminio 1/4 4x8", ["aluminio", "1/4"], (4000, 18000)),
-    ("pla_1kg", "Filamento PLA 1 kg 1.75 mm", "precio filamento PLA 1kg 1.75 mm", ["pla", "1"], (220, 900)),
-    ("petg_1kg", "Filamento PETG 1 kg 1.75 mm", "precio filamento PETG 1kg 1.75 mm", ["petg", "1"], (250, 1000)),
-    ("abs_1kg", "Filamento ABS 1 kg 1.75 mm", "precio filamento ABS 1kg 1.75 mm", ["abs", "1"], (230, 950)),
-    ("tpu_1kg", "Filamento TPU 1 kg 1.75 mm", "precio filamento TPU flexible 1kg 1.75 mm", ["tpu"], (350, 1500)),
+    ("pla_1kg", "Filamento PLA 1 kg 1.75 mm", "precio filamento PLA 1kg 1.75 mm", ["pla", "1"], (220, 650)),
+    ("petg_1kg", "Filamento PETG 1 kg 1.75 mm", "precio filamento PETG 1kg 1.75 mm", ["petg", "1"], (250, 700)),
+    ("abs_1kg", "Filamento ABS 1 kg 1.75 mm", "precio filamento ABS 1kg 1.75 mm", ["abs", "1"], (230, 650)),
+    ("tpu_1kg", "Filamento TPU 1 kg 1.75 mm", "precio filamento TPU flexible 1kg 1.75 mm", ["tpu"], (350, 1000)),
     ("resina_1l", "Resina estándar 1 L", "precio resina impresora 3D estándar 1 litro", ["resina"], (300, 1500)),
 ]
 NO_TIENDA = ("youtube.", "facebook.", "instagram.", "tiktok.", "pinterest.", "wikipedia.", "reddit.", "listado.mercadolibre", "ebay.", "alibaba.", "aliexpress.", "/blog/", "/blogs/", "/noticias/")
@@ -99,6 +99,13 @@ def alternas(clave: str, nombre: str) -> list[str]:
     if clave.startswith("resina"):
         return ["resina estándar impresora 3D 1 kg precio México"]
     return []
+
+
+# Títulos que no son una hoja o un rollo suelto: paquetes, servicios con
+# impresión o instalación, y hojas de otro tamaño en los metales de 4×8 pies.
+EXCLUIR = re.compile(r"\b(pack|kit|paquete|lote|combo|mayoreo|x[2-9]|[2-9] (piezas|hojas|rollos|pzas))\b|impresion|instalacion|servicio de|renta")
+OTRO_TAMANO = re.compile(r"\b(3|5) ?pies\b|\b(3|4|5) ?x ?(10|12)\b|\b3 ?x ?8\b|\b(1|2) ?x ?(1|2)\b ?m")
+METAL_4X8 = ("negra_", "galv_", "inox_", "aluminio_")
 
 
 # Palabras que valen por otra en el título de la tienda
@@ -174,10 +181,14 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
         t = sin_acentos(titulo)
         if not all(coincide(p, t) for p in palabras):
             continue
+        if EXCLUIR.search(t) or (clave.startswith(METAL_4X8) and OTRO_TAMANO.search(t)):
+            continue
         p = precio_de(h)
         if p is None:  # sin dato estructurado: el precio que trae el resultado de búsqueda
             candidatos = [x for x in precio_texto(texto_busqueda) if rango[0] <= x <= rango[1]]
             p = candidatos[0] if candidatos else None
+        if p is not None and p > rango[1] and rango[0] <= p / 100 <= rango[1]:
+            p = p / 100  # algunas tiendas publican el precio en centavos (34800 = $348.00)
         if p is None or not (rango[0] <= p <= rango[1]):
             continue
         vistos.add(dom)
