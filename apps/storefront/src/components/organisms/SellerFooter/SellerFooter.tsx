@@ -15,7 +15,7 @@ export const SellerFooter = ({ seller }: { seller: SellerDTO }) => {
     <div className="flex justify-between items-center flex-col lg:flex-row p-5">
       <div className="flex gap-2 lg:gap-4 items-center label-sm lg:label-md text-secondary mb-4 lg:mb-0 justify-between w-full lg:justify-start lg:w-auto">
         <Divider square />
-        {seller.created_at && (
+        {seller.created_at && Number.isFinite(new Date(seller.created_at).getTime()) && (
           <p>Miembro desde {format(new Date(seller.created_at), "yyyy-MM-dd")}</p>
         )}
       </div>

@@ -6,10 +6,11 @@ export const ProductPostedDate = async ({
 }: {
   posted: string | null;
 }) => {
-  const postedDate = formatDistanceToNow(
-    new Date(posted || ''),
-    { addSuffix: true, locale: es }
-  );
+  // Sin fecha (o mal guardada) no se pone nada: formatDistanceToNow lanza
+  // "RangeError: Invalid time value" y tumbaba la ficha completa (21 nov 2026).
+  const fecha = posted ? new Date(posted) : null;
+  if (!fecha || !Number.isFinite(fecha.getTime())) return null;
+  const postedDate = formatDistanceToNow(fecha, { addSuffix: true, locale: es });
 
   return (
     <p className='label-md text-secondary'>
