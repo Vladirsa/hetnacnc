@@ -19,7 +19,9 @@ import { subir } from "./fabrica/index"
 import { IA_MODELO_WHATSAPP, modeloIA } from "./ia-modelo"
 import { iaSocial } from "./social-hub"
 
-export const MAX_MB_ARCHIVO = 14
+// Un STL o un ZIP de diseños pesa fácil 20–80 MB. Tope: 90 MB, bajo los 100 MB por
+// petición de Nginx y de Cloudflare (plan gratis).
+export const MAX_MB_ARCHIVO = 90
 export const MAX_MB_IMAGEN = 8
 export const EXTENSIONES = ["dxf", "svg", "dwg", "ai", "eps", "pdf", "stl", "step", "stp", "3mf", "obj", "crv", "crv3d", "zip", "rar", "nc", "tap", "gcode"]
 

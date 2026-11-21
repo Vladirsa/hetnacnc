@@ -47,4 +47,25 @@ describe("servicio", () => {
     process.env.RELIEVE_IA_MODELO = "/no/existe/modelo.onnx"
     expect(["sin_motor", "sin_modelo"]).toContain(motivoNoDisponible())
   })
+
+  it("si la API corre desde el código fuente, usa el trabajador compilado de .medusa/server", () => {
+    const fs = require("fs") as typeof import("fs")
+    const os = require("os") as typeof import("os")
+    const path = require("path") as typeof import("path")
+    const raiz = fs.mkdtempSync(path.join(os.tmpdir(), "relieve-"))
+    const dir = path.join(raiz, ".medusa", "server", "src", "lib", "relieve-ia")
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(path.join(dir, "trabajador.js"), "")
+    fs.writeFileSync(path.join(raiz, "modelo.onnx"), "")
+    const antes = process.cwd()
+    try {
+      process.chdir(raiz)
+      process.env.RELIEVE_IA_MODELO = path.join(raiz, "modelo.onnx")
+      // junto al .ts no hay trabajador.js: antes esto daba "sin_trabajador"
+      expect(motivoNoDisponible()).not.toBe("sin_trabajador")
+    } finally {
+      process.chdir(antes)
+      fs.rmSync(raiz, { recursive: true, force: true })
+    }
+  })
 })
