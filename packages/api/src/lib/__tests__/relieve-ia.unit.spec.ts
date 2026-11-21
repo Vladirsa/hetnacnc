@@ -1,6 +1,6 @@
 // Profundidad con IA: preparación de la imagen, normalización y validaciones.
 import { aTensor, normalizar } from "../relieve-ia/trabajador"
-import { ErrorRelieve, disponible, profundidad, validar } from "../relieve-ia/servicio"
+import { ErrorRelieve, disponible, motivoNoDisponible, profundidad, validar } from "../relieve-ia/servicio"
 
 describe("trabajador", () => {
   it("normaliza recortando extremos: cerca = 65535, lejos = 0", () => {
@@ -38,5 +38,13 @@ describe("servicio", () => {
     process.env.RELIEVE_IA_MODELO = "/no/existe/modelo.onnx"
     expect(disponible()).toBe(false)
     await expect(profundidad(602, 518, new Uint8Array(602 * 518 * 3))).rejects.toMatchObject({ status: 503 })
+  })
+
+  it("dice por qué no está disponible: apagado o sin modelo", () => {
+    process.env.RELIEVE_IA = "0"
+    expect(motivoNoDisponible()).toBe("apagado")
+    delete process.env.RELIEVE_IA
+    process.env.RELIEVE_IA_MODELO = "/no/existe/modelo.onnx"
+    expect(["sin_motor", "sin_modelo"]).toContain(motivoNoDisponible())
   })
 })

@@ -52,7 +52,7 @@ MATERIALES = [
     *[(f"galv_cal{c}", f"Lámina galvanizada cal. {c} (4×8 ft)", f"precio lámina galvanizada calibre {c} 4x8", ["galvanizada", str(c)], r)
       for c, r in [(18, (500, 2500)), (20, (400, 2000)), (22, (300, 1600)), (24, (250, 1300))]],
     *[(f"inox_cal{c}", f"Lámina inoxidable 304 cal. {c} (4×8 ft)", f"precio lámina acero inoxidable 304 calibre {c} 4x8", ["inox", str(c)], r)
-      for c, r in [(14, (3500, 14000)), (16, (2800, 11000)), (18, (2000, 9000)), (20, (1600, 7000))]],
+      for c, r in [(14, (2000, 12000)), (16, (1500, 9000)), (18, (1200, 7000)), (20, (900, 5500))]],
     ("aluminio_116", 'Lámina aluminio 1/16" (4×8 ft)', "precio lámina aluminio 1/16 4x8", ["aluminio", "1/16"], (1200, 6000)),
     ("aluminio_18", 'Placa aluminio 1/8" (4×8 ft)', "precio placa aluminio 1/8 4x8 hoja", ["aluminio", "1/8"], (2000, 9000)),
     ("aluminio_14", 'Placa aluminio 1/4" (4×8 ft)', "precio placa aluminio 1/4 4x8", ["aluminio", "1/4"], (4000, 18000)),
@@ -64,6 +64,46 @@ MATERIALES = [
 ]
 NO_TIENDA = ("youtube.", "facebook.", "instagram.", "tiktok.", "pinterest.", "wikipedia.", "reddit.", "listado.mercadolibre", "ebay.", "alibaba.", "aliexpress.", "/blog/", "/blogs/", "/noticias/")
 PRECIO_RE = re.compile(r"\$\s?(\d{1,3}(?:,\d{3})+|\d{2,6})(?:\.(\d{2}))?")
+
+
+# Búsquedas de respaldo por material: si la primera no encuentra 3 tiendas (o el
+# buscador falla) se prueban éstas. Usan los nombres comerciales con que se vende
+# en México (Trovicel/Sintra, Alucobond…).
+def alternas(clave: str, nombre: str) -> list[str]:
+    n = re.search(r"(\d+(?:/\d+)?)", clave.split("_", 1)[-1])
+    x = n.group(1) if n else ""
+    if clave.startswith("acrilico_color"):
+        return ["lámina acrílico de color 3 mm precio", "acrílico negro 3mm hoja precio México"]
+    if clave.startswith("acrilico"):
+        return [f"lámina de acrílico transparente {x} mm precio", f"acrílico cristal {x}mm hoja precio México"]
+    if clave.startswith("pvc"):
+        return [f"trovicel {x} mm precio hoja", f"sintra {x} mm precio", f"lámina PVC espumado {x}mm precio México"]
+    if clave.startswith("acm"):
+        return ["alucobond 3 mm precio hoja", "panel de aluminio compuesto 3mm precio México"]
+    if clave.startswith("inox"):
+        return [f"hoja acero inoxidable 304 calibre {x} precio", f"lámina inoxidable cal {x} 4x8 precio México"]
+    if clave.startswith("galv"):
+        return [f"lámina galvanizada lisa calibre {x} precio"]
+    if clave.startswith("negra"):
+        return [f"lámina rolada en frío calibre {x} precio"]
+    if clave.startswith("aluminio"):
+        pulg = {"116": "1/16", "18": "1/8", "14": "1/4"}.get(x, x)
+        return [f"lámina de aluminio {pulg} pulgada precio México", f"placa aluminio {pulg} 4 x 8 precio"]
+    if clave.startswith("mdf"):
+        return [f"tablero MDF {x} mm precio", f"MDF {x}mm 4x8 precio México"]
+    if clave.startswith("triplay"):
+        return [f"triplay {x} mm precio hoja México"]
+    if clave.endswith("_1kg"):
+        mat = clave.split("_")[0].upper()
+        return [f"filamento {mat} 1.75 1kg precio México", f"rollo {mat} 1kg impresora 3D precio"]
+    if clave.startswith("resina"):
+        return ["resina estándar impresora 3D 1 kg precio México"]
+    return []
+
+
+# Palabras que valen por otra en el título de la tienda
+SINONIMOS = {"pvc": ["pvc", "trovicel", "sintra", "espumado"], "acrilico": ["acrilico", "acrylic", "plexiglas"], "inox": ["inox", "inoxidable", "stainless"],
+             "galvanizada": ["galvanizada", "galvanizado"], "negra": ["negra", "rolada", "hr", "cr"]}
 
 
 def sin_acentos(s: str) -> str:
@@ -102,9 +142,28 @@ def precio_texto(t: str) -> list[float]:
     return [float(m.group(1).replace(",", "") + "." + (m.group(2) or "00")) for m in PRECIO_RE.finditer(t)]
 
 
+def coincide(palabra: str, titulo: str) -> bool:
+    """Números: que no estén pegados a otros dígitos («Espumado6MM» sí trae el 6).
+    Palabras: que no estén pegadas a otras letras («6mmTrovicel» sí trae trovicel)."""
+    def una(p: str) -> bool:
+        if re.fullmatch(r"[\d/.]+", p):
+            return re.search(r"(^|[^0-9./])" + re.escape(p) + r"($|[^0-9/])", titulo) is not None
+        return re.search(r"(^|[^a-z])" + re.escape(p) + r"($|[^a-z])", titulo) is not None
+    return any(una(p) for p in SINONIMOS.get(palabra, [palabra]))
+
+
+def resultados(consultas: list[str]):
+    """Resultados de la búsqueda principal y, después, de las de respaldo (con su número)."""
+    for i, c in enumerate(consultas):
+        for r in buscar_web(c, 15):
+            yield i, r
+
+
 def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tuple[int, int]) -> dict:
     vistos, fuentes = set(), []
-    for r in buscar_web(consulta, 15):
+    for i, r in resultados([consulta] + alternas(clave, nombre)):
+        if i > 0 and len(fuentes) >= 3:  # con 3 tiendas ya no hace falta el respaldo
+            break
         url = r.get("href") or r.get("url") or ""
         dom = dominio_de(url)
         if not url.startswith("http") or dom in vistos or any(x in url for x in NO_TIENDA):
@@ -113,7 +172,7 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
         h = pagina(url)
         titulo = titulo_de(h) or r.get("title", "")
         t = sin_acentos(titulo)
-        if not all(re.search(r"(^|[^0-9a-z])" + re.escape(p) + r"($|[^0-9a-z])", t) for p in palabras):
+        if not all(coincide(p, t) for p in palabras):
             continue
         p = precio_de(h)
         if p is None:  # sin dato estructurado: el precio que trae el resultado de búsqueda
