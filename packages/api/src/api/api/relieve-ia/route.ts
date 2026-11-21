@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { limitador } from "../../../lib/cotizador-archivos"
 import { ipCliente } from "../../../lib/ip-cliente"
-import { disponible, ErrorRelieve, profundidad } from "../../../lib/relieve-ia/servicio"
+import { ErrorRelieve, motivoNoDisponible, profundidad } from "../../../lib/relieve-ia/servicio"
 
 // Profundidad con IA para el generador de relieves (lib/relieve-ia/servicio.ts).
 // GET  https://hetnacnc.com/api/relieve-ia  -> { disponible }
@@ -13,7 +13,8 @@ const permitido = limitador(20, 3_600_000) // 20 fotos por hora por IP
 
 export const GET = (_req: MedusaRequest, res: MedusaResponse) => {
   res.setHeader("Cache-Control", "no-store")
-  res.json({ disponible: disponible() })
+  const motivo = motivoNoDisponible()
+  res.json(motivo ? { disponible: false, motivo } : { disponible: true })
 }
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
