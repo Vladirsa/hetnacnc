@@ -595,6 +595,7 @@ export type Routes = {
         };
         hetnaMembresias: typeof import("../src/api/admin/hetna-membresias/route");
         hetnaOpiniones: typeof import("../src/api/admin/hetna-opiniones/route");
+        hetnaPrecios: typeof import("../src/api/admin/hetna-precios/route");
         hetnaProductos: {
             importar: typeof import("../src/api/admin/hetna-productos/importar/route");
             plantilla: typeof import("../src/api/admin/hetna-productos/plantilla/route");
@@ -690,6 +691,9 @@ export type Routes = {
             $provider: typeof import("@medusajs/medusa/api/hooks/payment/[provider]/route");
         };
         payout: typeof import("@mercurjs/core/api/hooks/payout/route");
+        academia: {
+            invitarBlog: typeof import("../src/api/hooks/academia/invitar-blog/route");
+        };
         altaTaller: {
             aprobar: typeof import("../src/api/hooks/alta-taller/aprobar/route");
             confirmar: typeof import("../src/api/hooks/alta-taller/confirmar/route");
@@ -905,6 +909,7 @@ export type Routes = {
             };
         };
         hetnaPerfilUnico: typeof import("../src/api/store/hetna-perfil-unico/route");
+        hetnaPrecios: typeof import("../src/api/store/hetna-precios/route");
         hetnaProductoExtra: typeof import("../src/api/store/hetna-producto-extra/route");
         hetnaPush: typeof import("../src/api/store/hetna-push/route");
         hetnaRastreo: {
@@ -1365,6 +1370,7 @@ export type Routes = {
                 hitoFoto: typeof import("../src/api/vendor/hetna-solicitudes/[id]/hito-foto/route");
                 hitos: typeof import("../src/api/vendor/hetna-solicitudes/[id]/hitos/route");
                 mensajes: typeof import("../src/api/vendor/hetna-solicitudes/[id]/mensajes/route");
+                nda: typeof import("../src/api/vendor/hetna-solicitudes/[id]/nda/route");
                 pregunta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/pregunta/route");
                 propuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/propuesta/route");
                 respuesta: typeof import("../src/api/vendor/hetna-solicitudes/[id]/respuesta/route");
