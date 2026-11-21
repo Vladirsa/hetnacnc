@@ -10,7 +10,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const b = (req.body || {}) as { modo?: string; correo?: string }
   try {
     const r = await invitarBlog(req.scope, String(b.modo || ""), b.correo)
-    res.status(r.ok || b.modo === "prueba" ? 200 : 400).json(r)
+    res.status(r.ok ? 200 : 400).json(r)
   } catch (e) {
     req.scope.resolve("logger").error(`[invitacion-blog] ${(e as Error).message}`)
     res.status(500).json({ ok: false, error: "No se pudo completar." })
