@@ -8,6 +8,8 @@
 // para cualquier descarga en HETNA.
 import "@/components/hetna/tienda/fuentes-tienda.css"
 import Image from "@/lib/imagenes/Imagen"
+
+import FabricarDiseno from "./FabricarDiseno"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { caracteristicasDe } from "@/components/hetna/fichas/LoMasImportante"
 import { faq } from "@/lib/helpers/product-metadata"
@@ -156,7 +158,7 @@ export function ColumnaDescarga({ product, vendedor }: { product: Producto; vend
 
       <section className="rounded-md border border-dashed border-[#C5CCD3] bg-[#F7F8FA] p-3" aria-labelledby="titulo-modificar">
         <h2 id="titulo-modificar" className="m-0 text-[14.5px] font-bold text-[#1E2329]">
-          ¿Lo necesitas con otras medidas?
+          ¿Lo quieres ya fabricado o con otras medidas?
         </h2>
         <p className="m-0 mt-1 text-[13px] text-[#3A414B]">
           Pide una modificación{vendedor?.name ? ` a ${vendedor.name}` : ""} o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.
@@ -167,6 +169,12 @@ export function ColumnaDescarga({ product, vendedor }: { product: Producto; vend
         >
           Pedir una modificación
         </LocalizedClientLink>
+        <a
+          href="#fabricar"
+          className="mt-2 ml-2 inline-flex min-h-[44px] items-center rounded bg-[#1E2329] px-4 text-[14px] font-semibold text-white hover:bg-[#3A414B]"
+        >
+          Cotizar fabricación
+        </a>
       </section>
     </div>
   )
@@ -230,6 +238,14 @@ export function AbajoDescarga({ product, fotosCompradores = [] }: { product: Pro
 
   return (
     <div className="flex flex-col gap-6">
+      <FabricarDiseno
+        titulo={product.title || "Diseño"}
+        handle={product.handle}
+        formatos={formatosDe(product)}
+        medidas={typeof product.metadata?.medidas === "string" ? (product.metadata.medidas as string) : undefined}
+        vistaPrevia={vistaPreviaDe(product.metadata)}
+      />
+
       <PiezaFabricada fotos={fotosFabricadaDe(product.metadata)} compradores={fotosCompradores.slice(0, 8)} />
 
       <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
