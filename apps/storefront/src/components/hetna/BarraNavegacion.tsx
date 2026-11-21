@@ -293,6 +293,32 @@ const MenuFabricacion = () => (
 )
 
 
+// Comunidad (auditoría del 21 nov 2026: "Aprendizaje · Foro · Cursos ·
+// Recursos técnicos" agrupados, sin llenar la barra de enlaces sueltos)
+const COMUNIDAD = [
+  { href: "/servicios/aprendizaje-cnc", titulo: "Academia", texto: "Cursos, libros y recursos técnicos" },
+  { href: "/cnc", titulo: "Guías CNC", texto: "Router, láser, plasma, aluminio, CAM y DXF" },
+  { href: "/foro-cnc", titulo: "Foro CNC", texto: "Pregunta y ayuda a otros talleres" },
+  { href: "/foro-cnc/blog", titulo: "Blog", texto: "Artículos y casos reales" },
+]
+
+const MenuComunidad = () => (
+  <div className="group relative h-full flex items-center shrink-0">
+    <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
+      Comunidad
+      <Flecha />
+    </LocalizedClientLink>
+    <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[300px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
+      {COMUNIDAD.map((c) => (
+        <LocalizedClientLink key={c.href} href={c.href} className="block rounded-[8px] px-3 py-2.5 hover:bg-[#FAF6EF]">
+          <span className="block text-[13.5px] font-bold text-[#1B1B18]">{c.titulo}</span>
+          <span className="block text-[12.5px] text-[#6B6A63]">{c.texto}</span>
+        </LocalizedClientLink>
+      ))}
+    </div>
+  </div>
+)
+
 export const BarraNavegacion = ({
   categorias,
   tienda = null,
@@ -314,7 +340,7 @@ export const BarraNavegacion = ({
         <MenuFabricacion />
         <MenuHerramientas />
         <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
-        <LocalizedClientLink href="/foro-cnc" className={ENLACE}>Foro CNC</LocalizedClientLink>
+        <MenuComunidad />
         <span className="flex-1" />
         {/* Desde xl: entre 1024 y 1280 px no cabe (y ya está en Fabricación) */}
         <LocalizedClientLink
