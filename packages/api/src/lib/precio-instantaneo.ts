@@ -58,6 +58,8 @@ export type EntradaPrecio = {
   calibre?: string
   calidad?: string
   cantidad?: number
+  /** Precio de mercado del material (lib/materiales-precios.ts); sin él no se suma material */
+  precio_material?: { nombre?: string; precio_m2?: number | null; precio_gramo?: number | null } | null
 }
 
 export type PrecioInstantaneo =
@@ -87,8 +89,22 @@ export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
       ? soporte.materialLaserPorMaterial[material] || "otros"
       : undefined
 
+  // Material a precio de mercado: en hojas, área de la pieza × precio por m² (el
+  // motor suma 15% de merma); en impresión 3D, el costo por gramo del filamento.
+  const pm = e.precio_material
+  const conMaterial: Record<string, unknown> = {}
+  let tarifas = servicioCfg.tarifas
+  if (pm && servicio === "impresion_3d" && Number(pm.precio_gramo) > 0) {
+    const clave = { pla: "costo_pla", petg: "costo_petg", abs: "costo_abs", tpu: "costo_tpu" }[IMPRESION_MATERIAL[material || ""] || "pla"]
+    if (clave) tarifas = { ...tarifas, [clave]: Number(pm.precio_gramo) }
+  } else if (pm && Number(pm.precio_m2) > 0) {
+    conMaterial.materialLibrePrecio = ((ancho * largo) / 10000) * Number(pm.precio_m2)
+    conMaterial.materialLibreNombre = pm.nombre || "Material"
+  }
+
   const resultado = calcular({
-    cfg: { tarifas: servicioCfg.tarifas, rangos: servicioCfg.rangos },
+    ...conMaterial,
+    cfg: { tarifas, rangos: servicioCfg.rangos },
     costos: datos.costos,
     tipo: { nombre: tipo.n, formula: tipo.f, factor: tipo.k },
     nombreServicio: servicioCfg.nombre,
@@ -155,6 +171,7 @@ function lineasCalculo(servicio: string, d: Record<string, number>, cantidad: nu
       c.push(`Precio mínimo: ${pesos(d.precio_minimo)}${minimo ? " (tu pedido quedó en el mínimo)" : ""}`)
     }
   }
+  if (d.__material) c.push(String(d.__material))
   return { calculo: c, minimo }
 }
 
@@ -163,7 +180,9 @@ export function precioDesglosado(e: EntradaPrecio): { ok: true; precio: PrecioDe
   if (!p.ok) return p
   const r = p.resultado
   const cantidad = Math.max(1, Math.round(Number(e.cantidad) || 1))
-  const { calculo, minimo } = lineasCalculo(String(e.servicio), r.detalle || {}, cantidad, r.pvRecomendado)
+  const detalle: any = { ...(r.detalle || {}) }
+  if (r.cm > 0) detalle.__material = `Material (${r.materialNombre || "a precio de mercado"}): ${pesos(r.cm)} con 15% de merma`
+  const { calculo, minimo } = lineasCalculo(String(e.servicio), detalle, cantidad, r.pvRecomendado)
   const cantidades = [...new Set([...CANTIDADES_VOLUMEN, cantidad])].sort((a, b) => a - b)
   const por_volumen = cantidades
     .map((q) => {
