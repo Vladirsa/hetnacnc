@@ -28,7 +28,15 @@ export class ErrorRelieve extends Error {
   }
 }
 
-const archivoTrabajador = () => path.join(__dirname, "trabajador.js")
+// El proceso hijo necesita el trabajador ya compilado (.js). Si la API corre
+// desde el código fuente (src/*.ts, p. ej. `medusa start` en packages/api), junto
+// a este archivo sólo está trabajador.ts: se usa el compilado de .medusa/server.
+const candidatosTrabajador = () => [
+  path.join(__dirname, "trabajador.js"),
+  path.join(process.cwd(), ".medusa", "server", "src", "lib", "relieve-ia", "trabajador.js"),
+  path.join(process.cwd(), "packages", "api", ".medusa", "server", "src", "lib", "relieve-ia", "trabajador.js"),
+]
+const archivoTrabajador = () => candidatosTrabajador().find((f) => fs.existsSync(f)) || candidatosTrabajador()[0]
 
 // Se recuerda sólo el "sí". Un "no" se vuelve a revisar cada minuto: si la API
 // arrancó a media instalación de dependencias (durante un despliegue), antes se
