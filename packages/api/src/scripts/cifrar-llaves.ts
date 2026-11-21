@@ -25,8 +25,8 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { cifradoListo, cifrar, descifrar, estaCifrado } from "../lib/cifrado-llaves"
 import { supa } from "../lib/cotizador-suscripciones"
 
-type Conteo = { plano: number; cifrado: number; vacio: number; escritas: number; saltadas: number }
-const nuevoConteo = (): Conteo => ({ plano: 0, cifrado: 0, vacio: 0, escritas: 0, saltadas: 0 })
+type Conteo = { plano: number; cifrado: number; ilegibles: number; vacio: number; escritas: number; saltadas: number }
+const nuevoConteo = (): Conteo => ({ plano: 0, cifrado: 0, ilegibles: 0, vacio: 0, escritas: 0, saltadas: 0 })
 
 const TABLAS_SUPABASE = [
   { tabla: "negocios_mp", campos: ["access_token", "refresh_token"] },
@@ -50,8 +50,16 @@ function cifrarComprobado(valor: string): string {
 
 function contar(c: Conteo, v: unknown) {
   if (typeof v !== "string" || v === "") c.vacio++
-  else if (estaCifrado(v)) c.cifrado++
-  else c.plano++
+  else if (estaCifrado(v)) {
+    c.cifrado++
+    // Que se pueda leer con la llave actual o la anterior (si no, ese token
+    // ya no sirve y hay que volver a conectar la cuenta)
+    try {
+      descifrar(v)
+    } catch {
+      c.ilegibles++
+    }
+  } else c.plano++
 }
 
 async function supabase(aplicar: boolean, logger: any) {
@@ -106,7 +114,7 @@ async function supabase(aplicar: boolean, logger: any) {
     }
     for (const c of campos) {
       const k = conteos[c]
-      logger.info(`${tabla}.${c}: ${k.plano} en claro, ${k.cifrado} cifradas, ${k.vacio} vacías${aplicar ? `; cifradas ahora ${k.escritas}, saltadas por cambio ${k.saltadas}` : ""}`)
+      logger.info(`${tabla}.${c}: ${k.plano} en claro, ${k.cifrado} cifradas${k.ilegibles ? ` (${k.ilegibles} NO se pueden leer con las llaves actuales)` : ""}, ${k.vacio} vacías${aplicar ? `; cifradas ahora ${k.escritas}, saltadas por cambio ${k.saltadas}` : ""}`)
     }
     for (const e of errores) logger.error(`${tabla}: no se pudo escribir la fila ${e}`)
   }
@@ -134,7 +142,7 @@ async function configSocial(knex: any, aplicar: boolean, logger: any) {
         )
         k[(r?.rowCount || 0) > 0 ? "escritas" : "saltadas"]++
       }
-      logger.info(`${T_CONFIG_S}[${clave}].${campo}: ${k.plano} en claro, ${k.cifrado} cifradas, ${k.vacio} vacías${aplicar ? `; cifradas ahora ${k.escritas}, saltadas por cambio ${k.saltadas}` : ""}`)
+      logger.info(`${T_CONFIG_S}[${clave}].${campo}: ${k.plano} en claro, ${k.cifrado} cifradas${k.ilegibles ? ` (${k.ilegibles} NO se pueden leer con las llaves actuales)` : ""}, ${k.vacio} vacías${aplicar ? `; cifradas ahora ${k.escritas}, saltadas por cambio ${k.saltadas}` : ""}`)
     }
   }
 }

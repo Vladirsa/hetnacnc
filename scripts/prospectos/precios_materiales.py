@@ -135,8 +135,15 @@ def titulo_de(h: str) -> str:
     return html_mod.unescape(m.group(1)).strip()[:200] if m else ""
 
 
+MONEDA_RE = re.compile(r'(?:"priceCurrency"\s*:\s*"|product:price:currency["\'][^>]+content=["\']|itemprop=["\']priceCurrency["\'][^>]+content=["\'])([A-Za-z]{3})', re.I)
+
+
 def precio_de(h: str) -> float | None:
-    """Precio de la página de producto: JSON-LD, meta de Open Graph o itemprop."""
+    """Precio de la página de producto: JSON-LD, meta de Open Graph o itemprop.
+    Si la página dice la moneda y no es MXN (dólares, euros…), no sirve."""
+    m = MONEDA_RE.search(h)
+    if m and m.group(1).upper() != "MXN":
+        return None
     for patron in (
         r'"price"\s*:\s*"?(\d+(?:\.\d+)?)',
         r'product:price:amount["\'][^>]+content=["\'](\d+(?:\.\d+)?)',
@@ -188,6 +195,9 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
         if EXCLUIR.search(t) or (clave.startswith(METAL_4X8) and OTRO_TAMANO.search(t)) or (clave.startswith(("mdf_", "triplay_")) and CON_CUBIERTA.search(t)):
             continue
         p = precio_de(h)
+        mon = MONEDA_RE.search(h)
+        if mon and mon.group(1).upper() != "MXN":
+            continue
         if p is None:  # sin dato estructurado: el precio que trae el resultado de búsqueda
             candidatos = [x for x in precio_texto(texto_busqueda) if rango[0] <= x <= rango[1]]
             p = candidatos[0] if candidatos else None
