@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 import { procesoDe } from "@/lib/cotizador/revision-archivo"
+import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 import { RevisionArchivo } from "./RevisionArchivo"
 
 import { cotizarLead, precioEnVivo, type CotizarLeadInput, type PrecioEnVivo } from "@/lib/cotizar/acciones"
@@ -52,6 +53,8 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   // material, medidas, opción o cantidad. No pide correo.
   const formRef = useRef<HTMLFormElement>(null)
   const [vivo, setVivo] = useState<PrecioEnVivo | null>(null)
+  // Acomodo en hoja de 1.22 × 2.44 m (estrategia 3.2): láser, router y plasma
+  const [hojas, setHojas] = useState("")
   const [calculandoVivo, setCalculandoVivo] = useState(false)
   const pausa = useRef<ReturnType<typeof setTimeout> | null>(null)
   const turno = useRef(0)
@@ -67,6 +70,8 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         setVivo(null)
         return
       }
+      const s = SEPARACION[servicio]
+      setHojas(s ? textoHojas(calcularHojas({ pzL: largo * 10, pzA: ancho * 10, piezas: cantidad, sep: s.sep, orilla: s.orilla })) : "")
       const mio = ++turno.current
       setCalculandoVivo(true)
       const r = await precioEnVivo({
@@ -284,7 +289,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         <input name="cantidad" type="number" min={1} step="1" defaultValue={1} required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
-      <PanelPrecioVivo p={vivo} calculando={calculandoVivo} />
+      <PanelPrecioVivo p={vivo} calculando={calculandoVivo} hojas={hojas} />
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
         ¿Lo necesitas seguido? Piezas al mes aprox. (opcional)
@@ -317,7 +322,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
 }
 
 /** Precio que cambia en vivo: rango, cómo se calculó y precio por volumen. */
-function PanelPrecioVivo({ p, calculando }: { p: PrecioEnVivo | null; calculando: boolean }) {
+function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; calculando: boolean; hojas?: string }) {
   if (!p) return null
   const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
   return (
@@ -340,6 +345,11 @@ function PanelPrecioVivo({ p, calculando }: { p: PrecioEnVivo | null; calculando
             ))}
           </ul>
         </div>
+      )}
+      {hojas && (
+        <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
+          <b className="text-[#1B1B18]">Material:</b> {hojas}.
+        </p>
       )}
       {p.por_volumen.length > 1 && (
         <div>

@@ -11,6 +11,7 @@ import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
 import { precioEnVivo, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { leerDxf, type GeoCad } from "@/lib/cotizador/archivo-cad"
 import { mandarAFabricar, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 
 type Props = {
   /** DXF generado (en mm) */
@@ -105,6 +106,12 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
           />
         </label>
       </div>
+      {geo.largo > 0 && (
+        <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
+          <b className="text-[#1B1B18]">Material:</b>{" "}
+          {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
+        </p>
+      )}
       <RevisionArchivo geo={geo} proceso={maquina} espesor_mm={espesorMm} />
       <button
         type="button"
