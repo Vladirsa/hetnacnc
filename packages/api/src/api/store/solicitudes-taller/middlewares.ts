@@ -30,4 +30,15 @@ export const storeSolicitudesTallerMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/mis-solicitudes",
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
+  // Estrategia 2.4: piezas para repetir pedido y datos de empresa (factura)
+  {
+    method: ["GET"],
+    matcher: "/store/mis-piezas",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
+  {
+    method: ["GET", "POST"],
+    matcher: "/store/mi-empresa",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
 ]

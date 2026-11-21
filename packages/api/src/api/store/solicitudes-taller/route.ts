@@ -2,6 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SUBIDA, asegurarSubidas } from "../../../lib/archivo-seguro"
+import { leerEmpresa } from "../../../lib/cliente-empresa"
 import { afiliar, ligaActivar, tieneCuenta } from "../../../lib/afiliacion"
 import { bloqueAfiliacion } from "../../../lib/afiliacion-correos"
 import { sendEmail } from "../../../lib/resend"
@@ -50,6 +51,10 @@ type Body = {
   tiene_archivo?: string
   acabado?: string
   tolerancia?: string
+  // Estrategia 2.4: orden de compra, "necesito factura" (con los datos guardados en Mi empresa) y pedido repetido
+  orden_compra?: string
+  con_factura?: string | boolean
+  repite_folio?: string
   medidas_archivo?: string
   // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
   archivos?: { clave?: string; nombre?: string; tamano?: number }[] | string
@@ -139,6 +144,18 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       .whereNull("borrado_en")
       .select("clave")) as { clave: string }[]
     const validas = new Set(filas.map((f) => f.clave))
+    // "Repetir pedido" (Mis piezas, estrategia 2.4): el mismo cliente puede
+    // volver a usar los archivos de una solicitud suya anterior que no se han borrado.
+    const clienteSesion = (req as any).auth_context?.actor_id
+    if (clienteSesion && archivos.some((a) => !validas.has(a.clave))) {
+      const suyas = (await knex(`${T_SUBIDA} as u`)
+        .join(`${T_SOLICITUD} as s`, "s.id", "u.usado_en")
+        .whereIn("u.clave", archivos.map((a) => a.clave))
+        .whereNull("u.borrado_en")
+        .where("s.cliente_id", clienteSesion)
+        .select("u.clave")) as { clave: string }[]
+      for (const f of suyas) validas.add(f.clave)
+    }
     const falta = archivos.find((a) => !validas.has(a.clave))
     if (falta) {
       return res.status(400).json({ message: `Vuelve a subir "${falta.nombre}": no lo encontramos o ya se usó en otra solicitud.` })
@@ -167,6 +184,13 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     archivo: /^https?:\/\//i.test(String(b.archivo_url || "").trim()) ? corto(b.archivo_url, 500) : "",
     marca: corto(b.marca, 120),
     unidad: corto(b.unidad, 40),
+    orden_compra: corto(b.orden_compra, 60),
+    repite_folio: /^[A-Z]{0,4}-?\d{1,10}$/i.test(String(b.repite_folio || "")) ? corto(b.repite_folio, 20) : "",
+  }
+  // Factura: se toman los datos que el cliente guardó en Mi empresa (no del formulario)
+  const quiereFactura = b.con_factura === true || b.con_factura === "1" || b.con_factura === "on"
+  if (quiereFactura && (req as any).auth_context?.actor_id) {
+    trabajo.factura = await leerEmpresa(knex, (req as any).auth_context.actor_id).catch(() => null)
   }
   const tipo = b.tipo === "suministro" ? "suministro" : "fabricacion"
   const contacto = {

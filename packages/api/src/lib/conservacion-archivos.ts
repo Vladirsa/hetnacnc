@@ -33,6 +33,7 @@ export async function borrarArchivosSolicitud(
 ): Promise<{ ok: true; borrados: number } | { ok: false; motivo: string }> {
   const archivos = (s.trabajo?.archivos || []) as { clave: string; nombre: string; tamano: number }[]
   if (!archivos.length) return { ok: true, borrados: 0 }
+  const compartidas = new Set<string>()
   for (const a of archivos) {
     // Si otra solicitud usa la misma clave (no debería: cada subida sirve una
     // sola vez, pero las anteriores a esa regla no lo garantizaban), no se
@@ -42,7 +43,9 @@ export async function borrarArchivosSolicitud(
       .whereRaw(`trabajo->'archivos' @> ?::jsonb`, [JSON.stringify([{ clave: a.clave }])])
       .first("id")
     if (otra) {
+      // También pasa con "Repetir pedido": el cliente reusa su archivo en otra solicitud
       logger?.warn?.(`[conservacion] ${a.clave} también está en ${otra.id}: no se borra de B2`)
+      compartidas.add(a.clave)
       continue
     }
     const r = await borrarArchivoDefinitivo(a.clave)
@@ -51,7 +54,8 @@ export async function borrarArchivosSolicitud(
       return { ok: false, motivo: r.reason }
     }
   }
-  const claves = archivos.map((a) => a.clave)
+  // Las compartidas siguen vivas en la otra solicitud: no se marcan como borradas
+  const claves = archivos.map((a) => a.clave).filter((c) => !compartidas.has(c))
   const ahora = new Date()
   const trabajo = {
     ...s.trabajo,

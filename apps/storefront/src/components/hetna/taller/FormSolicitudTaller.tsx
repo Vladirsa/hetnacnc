@@ -80,6 +80,8 @@ export type Prellenado = {
   archivos?: (ArchivoSubido & { geo?: string })[]
   cantidad?: string
   descripcion?: string
+  // "Repetir pedido" desde Mis piezas: folio de la solicitud original
+  repiteFolio?: string
 }
 
 const pesoLegible = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`)
@@ -314,6 +316,9 @@ export default function FormSolicitudTaller({
       medidas: v("medidas"),
       acabado: v("acabado"),
       tolerancia: v("tolerancia"),
+      orden_compra: v("orden_compra") || undefined,
+      con_factura: fd.get("con_factura") === "1",
+      repite_folio: prellenado?.repiteFolio || undefined,
       // Medidas leídas de los archivos en el navegador
       medidas_archivo: archivos
         .filter((a) => a.geo && a.subido)
@@ -643,6 +648,22 @@ export default function FormSolicitudTaller({
               placeholder="Google Drive, Dropbox o WeTransfer"
             />
           </div>
+          {/* Empresas (estrategia 2.4): orden de compra y factura con los datos de Mi empresa */}
+          <div>
+            <label className={ETIQUETA} htmlFor="orden_compra">Orden de compra (opcional)</label>
+            <input id="orden_compra" name="orden_compra" className={CAMPO} maxLength={60} placeholder="Ej. OC-2026-0154" />
+          </div>
+          {conSesion && (
+            <div className="flex items-end">
+              <label className="flex items-start gap-2 text-sm text-[#40403A]">
+                <input type="checkbox" name="con_factura" value="1" className="mt-1 accent-[#C2560A]" />
+                <span>
+                  Necesito factura (CFDI) con los datos de{" "}
+                  <a href="/mx/user/empresa" target="_blank" className="font-semibold text-[#C2560A] underline">Mi empresa</a>
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       </fieldset>
 

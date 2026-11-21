@@ -31,6 +31,8 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
       { label: "Cotizador para talleres", href: "/api/app/entrar-cotizador", icono: "cotizador", externo: true },
       { label: "Cotizar una pieza", href: "/user/cotizar", icono: "cotizador" },
       { label: "Mis solicitudes de fabricación", href: "/user/solicitudes", icono: "cotizador" },
+      { label: "Mis piezas (repetir pedido)", href: "/user/piezas", icono: "cotizador" },
+      { label: "Mi empresa y facturación", href: "/user/empresa", icono: "cotizador" },
       { label: "Escaneos 3D", href: "/user/escaneos", icono: "escaneos" },
       { label: "Trabajos CAM", href: "/user/cam", icono: "cam" },
       { label: "Mis créditos", href: "/user/creditos", icono: "creditos" },

@@ -911,7 +911,9 @@ export type Routes = {
         learningArticles: typeof import("../src/api/store/learning-articles/route") & {
             $slug: typeof import("../src/api/store/learning-articles/[slug]/route");
         };
+        miEmpresa: typeof import("../src/api/store/mi-empresa/route");
         miMembresia: typeof import("../src/api/store/mi-membresia/route");
+        misPiezas: typeof import("../src/api/store/mis-piezas/route");
         misSolicitudes: typeof import("../src/api/store/mis-solicitudes/route");
         muebles: {
             descarga: typeof import("../src/api/store/muebles/descarga/route");
