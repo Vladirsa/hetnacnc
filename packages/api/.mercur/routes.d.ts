@@ -577,12 +577,14 @@ export type Routes = {
         hetnaEnvios: typeof import("../src/api/admin/hetna-envios/route") & {
             $folio: typeof import("../src/api/admin/hetna-envios/[folio]/route");
         };
+        hetnaEstrategia: typeof import("../src/api/admin/hetna-estrategia/route");
         hetnaFabrica: typeof import("../src/api/admin/hetna-fabrica/route") & {
             buenFin: typeof import("../src/api/admin/hetna-fabrica/buen-fin/route");
             estudio: typeof import("../src/api/admin/hetna-fabrica/estudio/route");
             temporadas: typeof import("../src/api/admin/hetna-fabrica/temporadas/route");
             video: typeof import("../src/api/admin/hetna-fabrica/video/route");
         };
+        hetnaFase4: typeof import("../src/api/admin/hetna-fase4/route");
         hetnaForoIa: typeof import("../src/api/admin/hetna-foro-ia/route");
         hetnaGrupos: typeof import("../src/api/admin/hetna-grupos/route");
         hetnaInteresTienda: typeof import("../src/api/admin/hetna-interes-tienda/route");
@@ -883,6 +885,7 @@ export type Routes = {
         expedientes: {
             $clave: typeof import("../src/api/store/expedientes/[clave]/route");
         };
+        fase4: typeof import("../src/api/store/fase4/route");
         foro: {
             aviso: typeof import("../src/api/store/foro/aviso/route");
             miTaller: typeof import("../src/api/store/foro/mi-taller/route");

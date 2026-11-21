@@ -189,6 +189,12 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     orden_compra: corto(b.orden_compra, 60),
     repite_folio: /^[A-Z]{0,4}-?\d{1,10}$/i.test(String(b.repite_folio || "")) ? corto(b.repite_folio, 20) : "",
   }
+  // Fase 4: exprés (sólo con la fase encendida y el sobreprecio definido)
+  {
+    const { configFase4 } = require("../../../lib/fase4")
+    const c4 = configFase4()
+    if (c4.activa && c4.expresPct && (b as any).expres === true) trabajo.expres = { pct: c4.expresPct }
+  }
   // Factura: se toman los datos que el cliente guardó en Mi empresa (no del formulario)
   const quiereFactura = b.con_factura === true || b.con_factura === "1" || b.con_factura === "on"
   if (quiereFactura && (req as any).auth_context?.actor_id) {

@@ -261,6 +261,8 @@ export type Trabajo = {
   factura?: { razon_social: string; rfc: string; regimen?: string; uso_cfdi?: string; cp?: string; correo?: string } | null
   // Repetición de un pedido anterior (folio de la solicitud original)
   repite_folio?: string
+  // Fase 4: servicio exprés con sobreprecio (FASE4_EXPRES_PCT)
+  expres?: { pct: number } | null
 }
 
 export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
@@ -282,6 +284,7 @@ export const tablaTrabajo = (t: Trabajo, conArchivo = true) =>
   fila("Orden de compra", t.orden_compra || "") +
   fila("Factura a nombre de", t.factura ? `${t.factura.razon_social} · RFC ${t.factura.rfc}${t.factura.uso_cfdi ? ` · uso ${t.factura.uso_cfdi}` : ""}` : "") +
   fila("Repite el pedido", t.repite_folio || "") +
+  fila("Exprés", t.expres ? `Sí, con +${t.expres.pct}% sobre el precio` : "") +
   (conArchivo ? fila("Liga a archivos", t.archivo || "") : "") +
   fila(
     "Archivos subidos",

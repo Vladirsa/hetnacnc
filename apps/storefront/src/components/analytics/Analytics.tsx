@@ -31,6 +31,26 @@ export function Analytics() {
   const clarityId = /^[a-z0-9]{6,20}$/i.test(clarityCrudo) ? clarityCrudo : '';
   const [permitido, setPermitido] = useState(false);
   const [noRastrear, setNoRastrear] = useState(true);
+  // VELOCIDAD (auditoría 21 nov 2026): los scripts de medición pesaban ~650 KB
+  // y bloqueaban el celular al cargar (TBT 460–620 ms). Ahora gtag.js, Meta y
+  // Clarity cargan con la primera interacción (toque, scroll, tecla) o a los
+  // 8 s, lo que pase primero. Los eventos esperan en dataLayer: no se pierden.
+  // Si Cloudflare ya inyecta Google Tag Manager (Google tag gateway, ruta
+  // /9j6s/) con Analytics y Ads, NEXT_PUBLIC_GTAG_POR_GTM=1 evita cargar
+  // gtag.js otra vez (el contenedor procesa los mismos gtag() de dataLayer).
+  const gtagPorGtm = process.env.NEXT_PUBLIC_GTAG_POR_GTM === '1';
+  const [despierto, setDespierto] = useState(false);
+  useEffect(() => {
+    if (despierto) return;
+    const eventos = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+    const despertar = () => setDespierto(true);
+    eventos.forEach((e) => window.addEventListener(e, despertar, { once: true, passive: true }));
+    const t = window.setTimeout(despertar, 8000);
+    return () => {
+      window.clearTimeout(t);
+      eventos.forEach((e) => window.removeEventListener(e, despertar));
+    };
+  }, [despierto]);
 
   useEffect(() => {
     setNoRastrear(senalNoRastrear());
@@ -52,10 +72,12 @@ export function Analytics() {
     <>
       {gtagId && (
         <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`}
-            strategy="lazyOnload"
-          />
+          {despierto && !gtagPorGtm && (
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`}
+              strategy="afterInteractive"
+            />
+          )}
           <Script id="ga4-init" strategy="afterInteractive">
             {`
               window.dataLayer = window.dataLayer || [];
@@ -70,7 +92,7 @@ export function Analytics() {
           </Script>
         </>
       )}
-      {permitido && metaPixelId && (
+      {despierto && permitido && metaPixelId && (
         <Script id="meta-pixel-init" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
@@ -86,7 +108,7 @@ export function Analytics() {
           `}
         </Script>
       )}
-      {permitido && clarityId && (
+      {despierto && permitido && clarityId && (
         <Script id="clarity-init" strategy="lazyOnload">
           {`
             (function(c,l,a,r,i,t,y){
