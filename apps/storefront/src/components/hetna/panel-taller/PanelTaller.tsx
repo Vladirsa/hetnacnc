@@ -28,6 +28,9 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 type Archivo = { nombre: string; tamano?: number }
 type Trabajo = {
   descripcion?: string
+  // Acuerdo de confidencialidad que pidió el cliente (lib/licitacion-nda.ts)
+  nda_requerido?: boolean
+  nda_aceptado?: boolean
   necesidad?: string
   servicio?: string
   material?: string
@@ -659,6 +662,7 @@ function TarjetaSolicitud({
         <Dato k="Cantidad" v={t.cantidad || "—"} />
       </dl>
 
+      <AcuerdoNda s={s} />
       <ArchivosCliente s={s} />
 
       {s.mi_propuesta && (
@@ -884,6 +888,54 @@ function ArchivosCliente({ s }: { s: Solicitud }) {
         {estado === "pidiendo" ? "Preparando…" : archivos.length === 1 ? "Descargar archivo" : "Descargar archivos"}
       </button>
       {estado === "error" && <span className="text-[13px] text-[#B3261E]">No se pudieron preparar los archivos.</span>}
+    </div>
+  )
+}
+
+// Acuerdo de confidencialidad: si el cliente lo pidió, se lee y se acepta
+// antes de ver la descripción, los planos y las fotos, y antes de cotizar.
+function AcuerdoNda({ s }: { s: Solicitud }) {
+  const [texto, setTexto] = useState<string | null>(null)
+  const [acepto, setAcepto] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState("")
+  if (!s.trabajo?.nda_requerido || s.trabajo?.nda_aceptado) return null
+  const leer = async () => {
+    setError("")
+    const r = await vendor<{ texto?: string; message?: string }>(`/vendor/hetna-solicitudes/${s.id}/nda`).catch(() => null)
+    if (!r?.ok) return setError(r?.datos?.message || "No se pudo abrir el acuerdo.")
+    setTexto(r.datos.texto || "")
+  }
+  const aceptar = async () => {
+    setEnviando(true)
+    setError("")
+    const r = await vendor<{ message?: string }>(`/vendor/hetna-solicitudes/${s.id}/nda`, { method: "POST", body: JSON.stringify({ acepto: true }) }).catch(() => null)
+    setEnviando(false)
+    if (!r?.ok) return setError(r?.datos?.message || "No se pudo guardar. Intenta de nuevo.")
+    window.location.reload()
+  }
+  return (
+    <div className="mt-3 rounded-xl border border-[#F2D4B8] bg-[#FFF9F4] p-3 text-[13.5px] text-[#3F3D37]">
+      <p className="m-0">
+        <b>🔏 Este cliente pide acuerdo de confidencialidad.</b> Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.
+      </p>
+      {texto === null ? (
+        <button type="button" onClick={leer} className={BTN_SECUNDARIO + " mt-2"}>
+          Leer el acuerdo
+        </button>
+      ) : (
+        <div className="mt-2">
+          <div className="max-h-56 overflow-y-auto whitespace-pre-line rounded-lg border border-[#E7E4DC] bg-white p-3 text-[13px] leading-relaxed">{texto}</div>
+          <label className="mt-2 flex min-h-[44px] items-center gap-2">
+            <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} className="h-5 w-5 accent-[#C2560A]" />
+            Leí el acuerdo y lo acepto a nombre de mi taller.
+          </label>
+          <button type="button" disabled={!acepto || enviando} onClick={aceptar} className={BTN_PRIMARIO}>
+            {enviando ? "Guardando…" : "Aceptar acuerdo"}
+          </button>
+        </div>
+      )}
+      {error && <p className="mt-2 text-[13px] text-[#B3261E]">{error}</p>}
     </div>
   )
 }
