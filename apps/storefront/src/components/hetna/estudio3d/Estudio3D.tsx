@@ -185,6 +185,13 @@ export function Estudio3D({
   const dePieRef = useRef(dePie)
   dePieRef.current = dePie
   const [pestana, setPestana] = useState<"diseno" | "vista" | "exportar">(pestanaInicial || (diseno2d ? "diseno" : "vista"))
+  // La escena 3D (WebGL, luz de estudio, sombras) se arma la primera vez que se
+  // abre "Vista 3D". Llaveros y Cajas abren en "Diseño 2D": antes la armaban
+  // escondida al cargar (~1 s de trabajo en un celular, Lighthouse 67).
+  const [verVista, setVerVista] = useState(pestana === "vista")
+  useEffect(() => {
+    if (pestana === "vista") setVerVista(true)
+  }, [pestana])
   const [unidad, setUnidad] = useState<Unidad>("mm")
   const [material, setMaterial] = useState(materialInicial)
   const [modo, setModo] = useState<Modo>("color")
@@ -215,6 +222,11 @@ export function Estudio3D({
   useEffect(() => {
     const el = contRef.current
     if (!el) return
+    if (!verVista) {
+      // Todavía sin 3D: las medidas de la barra salen directo de los triángulos
+      if (tris && tris.length >= 9) setDatos(datosDeTris(tris, !!dePie))
+      return
+    }
     let vivo = true
 
     const scene = new THREE.Scene()
@@ -493,7 +505,7 @@ export function Estudio3D({
       estado.current = {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlStl, urlGlb, tris, segunda, lineas, dePie])
+  }, [urlStl, urlGlb, tris, segunda, lineas, dePie, verVista])
 
   // ---- Ajustes que no rearman la escena --------------------------------
   useEffect(() => {
@@ -881,4 +893,13 @@ export function Estudio3D({
       </div>
     </div>
   )
+}
+
+// Medidas de la barra sin armar la escena (mismas que montar(): los STL vienen con
+// Z arriba; en la escena "ancho × fondo × alto"). Un letrero de pie no se gira.
+function datosDeTris(t: number[] | Float32Array, dePie: boolean) {
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity]
+  for (let i = 0; i < t.length; i += 3) for (let e = 0; e < 3; e++) { const v = t[i + e]; if (v < min[e]) min[e] = v; if (v > max[e]) max[e] = v }
+  const [dx, dy, dz] = [0, 1, 2].map((e) => max[e] - min[e])
+  return { x: dx, y: dePie ? dz : dy, z: dePie ? dy : dz, triangulos: t.length / 9, vertices: t.length / 3 }
 }
