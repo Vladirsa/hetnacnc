@@ -174,7 +174,7 @@ export default function PreciosCalculadora() {
       <div style={S.caja}>
         <h2 style={S.h2}>General</h2>
         <p style={S.ayuda}>
-          Precio = (material + máquina + operador + preparación + gastos fijos) ÷ (1 − margen). El rango es lo que se muestra arriba y abajo del precio.
+          Precio = (máquina + operador + preparación + gastos fijos) ÷ (1 − margen) + material. El material lleva su merma y el recargo al material, pero no vuelve a llevar el margen. El rango es lo que se muestra arriba y abajo del precio.
         </p>
         <div style={S.rejilla}>
           {campo("margenPct", "Margen de utilidad (%)", fab.margenPct, "%")}
