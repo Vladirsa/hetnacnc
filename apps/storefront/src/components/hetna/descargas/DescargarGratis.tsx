@@ -8,6 +8,7 @@ import {
   miCupoDeDescargas,
   type EstadoDescargas,
 } from "@/lib/descargas/acciones"
+import { fechaSegura } from "@/lib/helpers/fecha-segura"
 
 // Va en lugar del precio y los botones de compra cuando el archivo es gratis.
 //
@@ -16,14 +17,14 @@ import {
 // que con un plan del Cotizador no hay límite -- es el único lugar donde ese
 // beneficio se explica solo.
 const fecha = (iso: string) =>
-  new Intl.DateTimeFormat("es-MX", {
+  fechaSegura(new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
     day: "numeric",
     month: "long",
     hour: "numeric",
     minute: "2-digit",
     timeZone: "America/Mexico_City",
-  }).format(new Date(iso))
+  }), iso)
 
 export function DescargarGratis({ productId }: { productId: string }) {
   // undefined = todavía no se sabe; null = sin sesión.

@@ -290,7 +290,7 @@ export default function SubirDisenosPage() {
         <div style={{ fontSize: 28 }}>📂</div>
         <div style={{ fontWeight: 700, marginTop: 4 }}>Arrastra aquí tus archivos y fotos, o haz clic para elegirlos</div>
         <div style={{ fontSize: 12.5, color: C.tenue, marginTop: 4 }}>
-          Archivos: {(cfg?.extensiones || ["dxf", "svg", "stl", "zip"]).slice(0, 10).join(", ")}… hasta {cfg?.max_mb_archivo ?? 14} MB · Fotos: JPG, PNG o WebP
+          Archivos: {(cfg?.extensiones || ["dxf", "svg", "stl", "zip"]).slice(0, 10).join(", ")}… hasta {cfg?.max_mb_archivo ?? 90} MB · Fotos: JPG, PNG o WebP
           hasta {cfg?.max_mb_imagen ?? 8} MB
         </div>
         <input ref={entrada} type="file" multiple style={{ display: "none" }} onChange={(e) => e.target.files && agregar(e.target.files)} />

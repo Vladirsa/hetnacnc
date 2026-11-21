@@ -1,6 +1,7 @@
 import { Estrellas } from "./Estrellas"
 import { FormularioResena } from "./FormularioResena"
 import type { Pendiente, ResenasDeProducto } from "@/lib/resenas/acciones"
+import { fechaSegura } from "@/lib/helpers/fecha-segura"
 
 const FECHA = new Intl.DateTimeFormat("es-MX", {
   day: "numeric",
@@ -100,7 +101,7 @@ export const ResenasProducto = ({
                   </span>
                 </span>
                 <span className="shrink-0 text-[12px] text-[#8A8780]">
-                  {FECHA.format(new Date(r.creado))}
+                  {fechaSegura(FECHA, r.creado)}
                 </span>
               </div>
 
