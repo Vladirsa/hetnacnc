@@ -57,7 +57,7 @@ type Body = {
   repite_folio?: string
   medidas_archivo?: string
   // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
-  archivos?: { clave?: string; nombre?: string; tamano?: number }[] | string
+  archivos?: { clave?: string; nombre?: string; tamano?: number; solo_elegido?: boolean }[] | string
   servicio?: string
   material?: string
   cantidad?: string | number
@@ -106,6 +106,7 @@ function leerArchivos(v: Body["archivos"]): ArchivoSolicitud[] {
       clave: String(a.clave),
       nombre: corto(a.nombre || String(a.clave).split("/").pop(), 120),
       tamano: Math.max(0, Math.round(Number(a.tamano) || 0)),
+      ...(a.solo_elegido === true ? { solo_elegido: true } : {}),
     }))
 }
 
