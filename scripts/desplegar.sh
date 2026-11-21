@@ -114,7 +114,10 @@ if [ "$antes" = "$despues" ]; then
   echo "   Ya estaba al día en $(git log --oneline -1)"
 else
   echo "   $(git rev-list --count "$antes..$despues") commit(s) nuevos:"
-  git log --oneline "$antes..$despues" | head -10 | sed 's/^/     /'
+  # -10 en git log y no `| head -10`: con pipefail, head cerraba el tubo,
+  # git log moría por SIGPIPE y el guion se salía en silencio sin construir
+  # (pasó el 21 nov 2026 con 17 commits nuevos).
+  git log --oneline -10 "$antes..$despues" | sed 's/^/     /'
 fi
 
 # --- 3. Construir. Si truena, aquí se acaba. ---
