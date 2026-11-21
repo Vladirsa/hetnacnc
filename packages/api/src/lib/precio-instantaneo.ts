@@ -10,7 +10,7 @@
 // $0.89 y una pieza 3D se cobraba por la caja completa.
 //
 // Es una función pura: no guarda nada ni manda correos.
-import { estimar, MATERIALES, type MaterialRef, type Pieza, piezaAMano, type TipoMaquina } from "./estimador-referencia"
+import { type ConfigPrecios, estimar, MATERIALES, type MaterialRef, type Pieza, piezaAMano, type TipoMaquina } from "./estimador-referencia"
 
 // Lo que la calculadora pública le pregunta al cliente, en sus palabras.
 export const PLASMA_MATERIAL: Record<string, string> = {
@@ -102,7 +102,8 @@ export type PrecioInstantaneo =
 
 const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100
 
-export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
+/** `cfg`: ajustes de precio del dueño (lib/precios-config.ts); sin él, valores de fábrica. */
+export function precioInstantaneo(e: EntradaPrecio, cfg?: ConfigPrecios | null): PrecioInstantaneo {
   const { servicio, material, calibre, calidad } = e
   const ancho = Number(e.ancho)
   const largo = Number(e.largo)
@@ -124,7 +125,7 @@ export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
   }
   const { m: ref, aviso } = materialPara(servicio as string, material, calibre)
   const m = conPrecioDeMercado(ref, e.precio_material)
-  const r = estimar({ servicio: soporte.maquina, pieza, material: m, cantidad, relleno: es3D ? RELLENO_CALIDAD[calidad || ""] ?? 20 : undefined })
+  const r = estimar({ servicio: soporte.maquina, pieza, material: m, cantidad, relleno: es3D ? RELLENO_CALIDAD[calidad || ""] ?? 20 : undefined, cfg })
   if (!r.ok) return { ok: false, mensaje: r.motivo }
   return {
     ok: true,
@@ -154,8 +155,8 @@ export type PrecioDesglosado = {
 const pesos = (n: number) => `$${(Math.round(n * 100) / 100).toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
 const CANTIDADES_VOLUMEN = [1, 10, 50, 100]
 
-export function precioDesglosado(e: EntradaPrecio): { ok: true; precio: PrecioDesglosado } | { ok: false; mensaje: string } {
-  const p = precioInstantaneo(e)
+export function precioDesglosado(e: EntradaPrecio, cfg?: ConfigPrecios | null): { ok: true; precio: PrecioDesglosado } | { ok: false; mensaje: string } {
+  const p = precioInstantaneo(e, cfg)
   if (!p.ok) return p
   const cantidad = Math.max(1, Math.round(Number(e.cantidad) || 1))
   const est = p.estimado
@@ -169,7 +170,7 @@ export function precioDesglosado(e: EntradaPrecio): { ok: true; precio: PrecioDe
   const cantidades = [...new Set([...CANTIDADES_VOLUMEN, cantidad])].sort((a, b) => a - b)
   const por_volumen = cantidades
     .map((q) => {
-      const x = q === cantidad ? p : precioInstantaneo({ ...e, cantidad: q })
+      const x = q === cantidad ? p : precioInstantaneo({ ...e, cantidad: q }, cfg)
       if (!x.ok) return null
       const total = r2(x.resultado.pvRecomendado)
       return { cantidad: q, total, unitario: r2(total / q) }

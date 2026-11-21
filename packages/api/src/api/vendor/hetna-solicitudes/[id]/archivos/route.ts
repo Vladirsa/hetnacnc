@@ -3,7 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ligaArchivo } from "../../../../../lib/archivo-acceso"
 import { T_SOLICITUD, asegurarTablas, recibePropuestas, type Trabajo } from "../../../../../lib/licitacion"
-import { puedeDescargarAhora, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
+import { faltaNda, puedeDescargarAhora, relacionTaller, tallerPuedeVer } from "../../../../../lib/licitacion-privacidad"
 
 // GET /vendor/hetna-solicitudes/:id/archivos
 //
@@ -34,10 +34,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   if (!tallerPuedeVer(s, rel)) return res.status(404).json({ message: "Solicitud no encontrada." })
 
   const archivos = ((s.trabajo as Trabajo)?.archivos || [])
-  const ligas: { nombre: string; tamano: number; url: string | null; ver_url?: string | null; bloqueado?: boolean }[] = []
+  const ligas: { nombre: string; tamano: number; url: string | null; ver_url?: string | null; bloqueado?: boolean; motivo?: "nda" | "solo_elegido" }[] = []
+  const sinNda = faltaNda(s, rel)
   for (const a of archivos) {
     if (!puedeDescargarAhora(s, rel, a.nombre)) {
-      ligas.push({ nombre: a.nombre, tamano: a.tamano, url: null, bloqueado: true })
+      // motivo: para decirle al taller qué hacer (aceptar el acuerdo o esperar a ser elegido)
+      const motivo = sinNda ? "nda" : a.solo_elegido && !rel.elegido ? "solo_elegido" : undefined
+      ligas.push({ nombre: a.nombre, tamano: a.tamano, url: null, bloqueado: true, ...(motivo ? { motivo } : {}) })
       continue
     }
     const permiso = { s: s.id, k: a.clave, a: "taller" as const, i: sellerId }
