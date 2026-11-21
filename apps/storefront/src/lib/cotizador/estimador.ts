@@ -93,15 +93,55 @@ const MAQUINA_REF: Record<TipoMaquina, { costoHora: number; prep: number; perf: 
   impresora_3d: { costoHora: 45, prep: 10, perf: 0, impresion: 12, desatendida: true },
 }
 const OPERADOR_HORA = 95
+const OPERADOR_BASE = OPERADOR_HORA
 // Gastos fijos del taller (renta, luz general, software) repartidos por hora
 // de trabajo de una máquina. Era 130 $/h: con eso la hora de router o láser
 // salía en ~$14–15/min, arriba de lo que cobra un taller en México
 // (~$8–13/min). Con 60 queda en ~$12–13/min (21 nov 2026).
 const FIJOS_HORA = 60
+const FIJOS_BASE = FIJOS_HORA
 const MARGEN = 0.35
 const MARKUP_MATERIAL = 0.2
 const MANEJO_MIN = 1
 const RANGO = 0.15
+const MARGEN_BASE = MARGEN
+const MARKUP_BASE = MARKUP_MATERIAL
+const RANGO_BASE = RANGO
+
+// ── Ajustes del dueño (Panel de HETNA > Precios de la calculadora) ─────────
+// Todo lo de arriba son los valores de fábrica. El dueño puede cambiarlos
+// desde el panel (tabla hetna_precios_config del API): llegan aquí como `cfg`
+// y, lo que no traiga, se queda con el valor de fábrica.
+export type ConfigPrecios = {
+  maquinas?: Partial<Record<TipoMaquina, { costoHora?: number; prep?: number; velocidadPct?: number }>>
+  operadorHora?: number
+  fijosHora?: number
+  margenPct?: number
+  markupMaterialPct?: number
+  rangoPct?: number
+  /** Precio por hoja o por kg, por nombre del material ("MDF 3 mm") */
+  preciosMaterial?: Record<string, number>
+}
+
+/** Los valores de fábrica, completos (para el formulario del panel). */
+export function configDeFabrica() {
+  return {
+    maquinas: Object.fromEntries(
+      (Object.keys(MAQUINA_REF) as TipoMaquina[]).map((k) => [k, { costoHora: MAQUINA_REF[k].costoHora, prep: MAQUINA_REF[k].prep, velocidadPct: 100 }])
+    ) as Record<TipoMaquina, { costoHora: number; prep: number; velocidadPct: number }>,
+    operadorHora: OPERADOR_HORA,
+    fijosHora: FIJOS_HORA,
+    margenPct: MARGEN * 100,
+    markupMaterialPct: MARKUP_MATERIAL * 100,
+    rangoPct: RANGO * 100,
+    preciosMaterial: Object.fromEntries(MATERIALES.map((m) => [m.nombre, m.precio])) as Record<string, number>,
+  }
+}
+
+const entre = (v: unknown, min: number, max: number, def: number) => {
+  const n = Number(v)
+  return Number.isFinite(n) && n >= min && n <= max ? n : def
+}
 
 // Velocidades efectivas de corte (m/min) — mismas tablas que la app
 const CORTE: Record<string, Record<string, [number, number][]>> = {
@@ -213,10 +253,26 @@ export function estimar(p: {
   relleno?: number
   /** Grabado (texto o logo) en cm²: láser por barrido, router en V */
   grabadoCm2?: number
+  /** Ajustes del dueño; lo que falte usa el valor de fábrica */
+  cfg?: ConfigPrecios | null
 }): Estimado {
-  const { servicio, pieza, material } = p
+  const { servicio, pieza } = p
+  const c = p.cfg || {}
   const n = Math.max(1, Math.round(p.cantidad || 1))
-  const maq = MAQUINA_REF[servicio]
+  const ajusteMaq = c.maquinas?.[servicio] || {}
+  const maq = {
+    ...MAQUINA_REF[servicio],
+    costoHora: entre(ajusteMaq.costoHora, 0, 100000, MAQUINA_REF[servicio].costoHora),
+    prep: entre(ajusteMaq.prep, 0, 600, MAQUINA_REF[servicio].prep),
+  }
+  // Más rápido que la referencia = menos minutos (100 % = igual)
+  const vel = entre(ajusteMaq.velocidadPct, 10, 500, 100) / 100
+  const OPERADOR_HORA = entre(c.operadorHora, 0, 10000, OPERADOR_BASE)
+  const FIJOS_HORA = entre(c.fijosHora, 0, 10000, FIJOS_BASE)
+  const MARGEN = entre(c.margenPct, 0, 80, MARGEN_BASE * 100) / 100
+  const MARKUP_MATERIAL = entre(c.markupMaterialPct, 0, 300, MARKUP_BASE * 100) / 100
+  const RANGO = entre(c.rangoPct, 0, 50, RANGO_BASE * 100) / 100
+  const material = { ...p.material, precio: entre(c.preciosMaterial?.[p.material.nombre], 0, 1_000_000, p.material.precio) }
   const avisos: string[] = []
   let tPieza = 0
   let como = ""
@@ -225,7 +281,7 @@ export function estimar(p: {
     const imp = IMPRESION[material.clave] || maq.impresion || 12
     const factor = Math.min(1, (p.relleno ?? 20) / 100 + 0.25)
     if (pieza.volumenCm3 <= 0) return { ok: false, motivo: "Para impresión 3D necesito un STL u OBJ (o largo, ancho y alto)." }
-    tPieza = ((pieza.volumenCm3 * factor) / imp) * 60
+    tPieza = ((pieza.volumenCm3 * factor) / (imp * vel)) * 60
     como = `${pieza.volumenCm3.toFixed(1)} cm³ × ${Math.round(factor * 100)} % ÷ ${imp} cm³/h`
   } else if (servicio === "router_3d") {
     const rem = REMOCION[material.clave] || maq.remocion || 15
@@ -233,16 +289,16 @@ export function estimar(p: {
     const caja = (pieza.largo * pieza.ancho * alto) / 1000
     const quitar = Math.max(0, caja - pieza.volumenCm3)
     const acabado = (pieza.largo * pieza.ancho) / 100 * 0.006
-    tPieza = quitar / rem + acabado
+    tPieza = (quitar / rem + acabado) / vel
     como = `${quitar.toFixed(0)} cm³ a quitar ÷ ${rem} cm³/min + acabado`
     if (pieza.volumenCm3 <= 0) avisos.push("Sin modelo 3D se estima un relieve de profundidad media.")
   } else {
     const tabla = CORTE[servicio]?.[material.clave]
     if (!tabla) return { ok: false, motivo: `${material.nombre} no se corta normalmente con ${SERVICIOS.find((s) => s.clave === servicio)?.nombre}.` }
-    const vel = interpolar(tabla, material.espesor)
+    const velCorte = interpolar(tabla, material.espesor) * vel
     const perf = (pieza.perforaciones * maq.perf) / 60
-    tPieza = pieza.metrosCorte / vel + perf
-    como = `${pieza.metrosCorte.toFixed(2)} m de corte ÷ ${vel.toFixed(2)} m/min${pieza.perforaciones > 0 ? ` + ${pieza.perforaciones} entradas` : ""}`
+    tPieza = pieza.metrosCorte / velCorte + perf
+    como = `${pieza.metrosCorte.toFixed(2)} m de corte ÷ ${velCorte.toFixed(2)} m/min${pieza.perforaciones > 0 ? ` + ${pieza.perforaciones} entradas` : ""}`
   }
 
   // Grabado: láser a 190 mm/s con paso de 0.15 mm; router ~6 cm²/min en V
