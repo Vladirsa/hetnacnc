@@ -219,6 +219,8 @@ export type VistaSolicitud = {
   difundir_redes?: boolean
   accesos?: { seller_id: string; estado: "pendiente" | "aprobado" | "rechazado"; mensaje: string | null; created_at: string; taller: string; handle: string }[]
   invitados?: { seller_id: string; taller: string; handle: string }[]
+  // Talleres que aceptaron el acuerdo de confidencialidad (si lo pediste)
+  ndas?: { taller: string; aceptado_en: string; version: string }[]
   comparacion?: { mediana: number | null; notas: { id: string; notas: string[]; faltan: string[] }[] }
 }
 
