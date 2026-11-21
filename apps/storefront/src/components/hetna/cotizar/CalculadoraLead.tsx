@@ -46,6 +46,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   // Lo que el cliente ya capturó y su archivo: pasan tal cual a la solicitud
   // formal, para que no lo vuelva a escribir ni a subir.
   const archivoRef = useRef<File | null>(null)
+  const piezaRef = useRef<{ nombre: string; geo: GeoCad } | null>(null)
   const capturado = useRef<{ material: string; medidas: string; cantidad: number } | null>(null)
 
   // Precio en vivo: se recalcula (con una pausa corta) cada vez que cambia
@@ -77,6 +78,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         ...(pideAlto ? { alto } : {}),
         ...(opcion ? { [opcion.campo]: String(d.get(opcion.campo) || "") } : {}),
         cantidad,
+        ...datosArchivo(ancho),
       })
       if (mio !== turno.current) return // llegó una respuesta vieja
       setCalculandoVivo(false)
@@ -86,6 +88,19 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   useEffect(() => {
     recalcular()
   }, [medidas, recalcular])
+
+  // Metros de corte y volumen reales del archivo, a la escala de las medidas
+  // capturadas (si el cliente cambió el ancho, se escalan en proporción).
+  // Sin esto el precio salía con el rectángulo completo o la caja del modelo.
+  const datosArchivo = (anchoCm: number) => {
+    const g = piezaRef.current?.geo
+    if (!g || !(g.ancho > 0)) return {}
+    const k = (anchoCm * 10) / g.ancho
+    return {
+      ...(g.corte_mm > 0 ? { corte_mm: Math.round(g.corte_mm * k), perforaciones: Math.max(1, g.contornos + g.perforaciones) } : {}),
+      ...(g.tipo === "3d" && g.volumen_cm3 > 0 ? { volumen_cm3: Math.round(g.volumen_cm3 * k ** 3 * 10) / 10 } : {}),
+    }
+  }
 
   // Lee el archivo en el navegador (no se sube): lo muestra y toma sus medidas
   const elegirArchivo = async (f: File | undefined) => {
@@ -97,9 +112,11 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       const geo = await leerArchivoCad(f)
       if (!geo || !(geo.largo > 0) || !(geo.ancho > 0)) {
         setPieza(null)
+        piezaRef.current = null
         return setAvisoArchivo("No pude leer ese archivo. Sirven DXF, SVG, STL y OBJ; o captura las medidas a mano.")
       }
       setPieza({ nombre: f.name, geo })
+      piezaRef.current = { nombre: f.name, geo }
       archivoRef.current = f
       setMedidas({ ancho: cm(geo.ancho), largo: cm(geo.largo), alto: geo.tipo === "3d" ? cm(geo.alto, 0.1) : "" })
       if (pideAlto && geo.tipo !== "3d") setAvisoArchivo("Es un plano 2D: captura la altura de la pieza.")
@@ -128,6 +145,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       ancho,
       largo,
       ...(pideAlto ? { alto: Number(formData.get("alto")) } : {}),
+      ...datosArchivo(ancho),
       ...(opcion ? { [opcion.campo]: String(formData.get(opcion.campo) || "") } : {}),
       cantidad,
       piezas_mes_estimado: piezasMes,
@@ -256,14 +274,14 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           <input name="ancho" type="number" min={1} step="0.1" required value={medidas.ancho} onChange={(e) => setMedidas({ ...medidas, ancho: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          Largo (cm)
+          Alto (cm)
           <input name="largo" type="number" min={1} step="0.1" required value={medidas.largo} onChange={(e) => setMedidas({ ...medidas, largo: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       </div>
 
       {pideAlto && (
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          Alto (cm)
+          Profundidad (cm)
           <input name="alto" type="number" min={0.1} step="0.1" required value={medidas.alto} onChange={(e) => setMedidas({ ...medidas, alto: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       )}
