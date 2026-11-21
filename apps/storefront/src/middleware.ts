@@ -135,6 +135,13 @@ const continuar = (request: NextRequest, locale: string | null) => {
   if (locale) cabeceras.set('x-hetna-locale', locale.toLowerCase());
   cabeceras.set('x-hetna-ruta', request.nextUrl.pathname);
   const response = NextResponse.next({ request: { headers: cabeceras } });
+  // Páginas completas (no la navegación interna de Next): "no-transform" le dice
+  // a Cloudflare que no meta su script de detección de bots (JS detections),
+  // que en el plan gratis no se puede apagar y le costaba ~400 ms a cada página.
+  // Lo demás queda igual que lo que Next ya mandaba (sin guardar copia).
+  if (request.method === 'GET' && !request.headers.get('rsc')) {
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, max-age=0, must-revalidate, no-transform');
+  }
   // Carritos creados antes de la cookie hetna_carrito (lib/data/cookies.ts):
   // se les pone la bandera una vez para que el navegador sepa pedirlos.
   if (request.cookies.get('_medusa_cart_id')?.value && !request.cookies.get('hetna_carrito')) {
