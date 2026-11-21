@@ -45,6 +45,24 @@ export default function AccesosSolicitud({ token, s }: { token: string; s: Vista
       <h2 className="text-lg font-extrabold text-[#142033]">🔒 Privacidad de tu solicitud</h2>
       <p className="mt-1 text-sm text-[#40403A]">{MODALIDAD[s.modalidad || "publica"]}.{s.difundir_redes ? " Autorizaste difundir un resumen sin datos sensibles en redes." : ""}</p>
 
+      {(s as { privacidad?: { nda?: string } }).privacidad?.nda === "requerido" && (
+        <div className="mt-4 rounded-xl bg-[#FFF9F4] p-3">
+          <h3 className="text-sm font-bold text-[#142033]">🔏 Acuerdo de confidencialidad</h3>
+          {(s.ndas || []).length === 0 ? (
+            <p className="mt-1 text-sm text-[#40403A]">Ningún taller lo ha aceptado todavía. Sin aceptarlo, no ven tu descripción, planos ni fotos, ni pueden cotizar.</p>
+          ) : (
+            <ul className="mt-1 grid gap-1 text-sm text-[#40403A]">
+              {(s.ndas || []).map((n) => (
+                <li key={n.taller + n.aceptado_en}>
+                  <b>{n.taller}</b> lo aceptó el {new Date(n.aceptado_en).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}{" "}
+                  <span className="text-[#6B675C]">(versión {n.version})</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {accesos.length > 0 && (
         <div className="mt-4">
           <h3 className="text-sm font-bold text-[#142033]">Talleres que piden ver tus planos</h3>
