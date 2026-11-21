@@ -29,6 +29,7 @@ const INICIAL: Record<string, string> = {
   fotos: "publicas",
   ubicacion: "ciudad",
   contacto: "oculto",
+  nda: "no",
 }
 
 const MODALIDADES: { valor: string; titulo: string; texto: string }[] = [
@@ -117,6 +118,20 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
           </span>
         </div>
       )}
+
+      {/* Acuerdo de confidencialidad: para todos los clientes, sin membresía */}
+      <label className="flex items-start gap-2 rounded-xl border border-[#E7E4DC] p-3 text-sm text-[#40403A]">
+        <input
+          type="checkbox"
+          checked={p.nda === "requerido"}
+          onChange={(e) => setP((x) => ({ ...x, nda: e.target.checked ? "requerido" : "no" }))}
+          className="mt-1 accent-[#C2560A]"
+        />
+        <span>
+          <b>🔏 Pedir acuerdo de confidencialidad (NDA)</b>. Ningún taller ve tu descripción, planos ni fotos, ni puede cotizar, hasta aceptar el
+          acuerdo. Ves en tu liga qué talleres lo aceptaron y cuándo.
+        </span>
+      </label>
 
       <div className="rounded-xl border border-[#E7E4DC] bg-[#FAF9F6]">
         <button type="button" onClick={() => setAbierto((x) => !x)} className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[#142033]">
