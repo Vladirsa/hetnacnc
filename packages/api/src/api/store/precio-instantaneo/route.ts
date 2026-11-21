@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 import { precioMaterialParaCotizar } from "../../../lib/materiales-precios"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-
 import { precioDesglosado, type EntradaPrecio } from "../../../lib/precio-instantaneo"
-import { leerConfigPrecios } from "../../../lib/precios-config"
 import { tarifaDoblez } from "../../../lib/tarifa-doblez"
 
 // Precio desglosado y en vivo para las calculadoras públicas (/cotizar/*, guías):
@@ -27,8 +24,7 @@ export const POST = async (req: MedusaRequest<EntradaPrecio>, res: MedusaRespons
     volumen_cm3: Number(b.volumen_cm3) > 0 ? Math.min(1_000_000, Number(b.volumen_cm3)) : undefined,
   }
   entrada.precio_material = await precioMaterialParaCotizar(req.scope, entrada.servicio!, entrada.material, entrada.calibre)
-  const { cfg } = await leerConfigPrecios(req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION))
-  const r = precioDesglosado(entrada, cfg)
+  const r = precioDesglosado(entrada)
   if (!r.ok) return res.status(400).json({ message: r.mensaje })
   // Lámina con dobleces (STEP, estrategia 3.1): se suma el doblez al precio de
   // referencia que ponen los talleres; sin talleres con precio, sólo se informa.
