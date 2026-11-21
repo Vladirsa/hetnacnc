@@ -47,6 +47,10 @@ export default function Devoluciones() {
         <li>Te respondemos en horario de atención: {EMPRESA.horario}.</li>
         <li>Una vez recibido y revisado el producto, el reembolso se hace por el mismo medio de pago.</li>
       </ul>
+      <p>
+        Si hay un desacuerdo con el vendedor o el taller, revisa cómo media HETNA en{" "}
+        <LocalizedClientLink href="/reclamaciones">Reclamaciones y mediación</LocalizedClientLink>.
+      </p>
 
       <h2>Garantía</h2>
       <p>

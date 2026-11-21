@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agente «Monitor de precios de materiales»: cada semana busca el precio público
+Agente «Monitor de precios de materiales»: lunes y jueves busca el precio público
 de los materiales que más se cortan en CNC en México (MDF, triplay, acrílico,
 lámina de acero, aluminio, inoxidable, filamento) en tiendas y distribuidores,
 saca la mediana, el mínimo y el máximo y lo manda a n8n (webhook hetna-precios),
@@ -30,20 +30,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from buscar_prospectos import DATOS, UA, buscar_web, dominio_de  # noqa: E402
 
 # clave, nombre, búsqueda, palabras que debe tener el título (todas, sin acentos), rango MXN razonable
+def _mdf(e, r):
+    return (f"mdf_{e}", f"MDF {e} mm (hoja 1.22×2.44)", f"precio hoja MDF {e} mm 1.22 x 2.44", ["mdf", str(e)], r)
+
+
+# Las claves deben ser las mismas de packages/api/src/lib/materiales-precios.ts
 MATERIALES = [
-    ("mdf_3", "MDF 3 mm (hoja 1.22×2.44)", "precio hoja MDF 3 mm 1.22 x 2.44", ["mdf", "3"], (120, 700)),
-    ("mdf_6", "MDF 6 mm (hoja 1.22×2.44)", "precio hoja MDF 6 mm 1.22 x 2.44", ["mdf", "6"], (200, 900)),
-    ("mdf_9", "MDF 9 mm (hoja 1.22×2.44)", "precio hoja MDF 9 mm 1.22 x 2.44", ["mdf", "9"], (300, 1200)),
-    ("mdf_15", "MDF 15 mm (hoja 1.22×2.44)", "precio hoja MDF 15 mm 1.22 x 2.44", ["mdf", "15"], (450, 1700)),
-    ("mdf_18", "MDF 18 mm (hoja 1.22×2.44)", "precio hoja MDF 18 mm 1.22 x 2.44", ["mdf", "18"], (550, 2000)),
-    ("triplay_15", "Triplay pino 15 mm (hoja)", "precio triplay pino 15 mm 1.22 x 2.44", ["triplay", "15"], (400, 1800)),
-    ("acrilico_3", "Acrílico cristal 3 mm (hoja 1.22×2.44)", "precio lámina acrílico cristal 3 mm 1.22 x 2.44", ["acrilico", "3"], (600, 2500)),
-    ("acrilico_6", "Acrílico cristal 6 mm (hoja 1.22×2.44)", "precio lámina acrílico cristal 6 mm 1.22 x 2.44", ["acrilico", "6"], (1200, 4500)),
-    ("acero_cal14", "Lámina acero negro cal. 14 (4×8 ft)", "precio lámina negra calibre 14 4x8", ["negra", "14"], (900, 4000)),
-    ("acero_cal18", "Lámina galvanizada cal. 18 (4×8 ft)", "precio lámina galvanizada calibre 18 4x8", ["galvanizada", "18"], (500, 2500)),
-    ("inox_cal18", "Lámina inoxidable 304 cal. 18 (4×8 ft)", "precio lámina acero inoxidable 304 calibre 18 4x8", ["inox", "18"], (2000, 9000)),
-    ("aluminio_18", "Placa aluminio 1/8\" (4×8 ft)", "precio placa aluminio 1/8 4x8 hoja", ["aluminio", "1/8"], (2000, 9000)),
+    _mdf(3, (100, 700)), _mdf(6, (180, 900)), _mdf(9, (250, 1200)), _mdf(12, (330, 1500)), _mdf(15, (400, 1800)), _mdf(18, (480, 2100)), _mdf(25, (700, 3000)),
+    *[(f"triplay_{e}", f"Triplay pino {e} mm (hoja)", f"precio triplay pino {e} mm 1.22 x 2.44", ["triplay", str(e)], r)
+      for e, r in [(6, (200, 1000)), (9, (300, 1300)), (12, (380, 1600)), (15, (450, 1900)), (18, (550, 2300))]],
+    ("melamina_16", "Melamina blanca 16 mm (hoja)", "precio hoja melamina blanca 16 mm 1.22 x 2.44", ["melamina", "16"], (500, 2200)),
+    *[(f"acrilico_{e}", f"Acrílico cristal {e} mm (hoja 1.22×2.44)", f"precio lámina acrílico cristal {e} mm 1.22 x 2.44", ["acrilico", str(e)], r)
+      for e, r in [(2, (400, 1800)), (3, (600, 2500)), (4, (800, 3200)), (6, (1200, 4500)), (9, (1800, 6500)), (12, (2400, 8500))]],
+    ("acrilico_color_3", "Acrílico de color 3 mm (hoja)", "precio lámina acrílico color 3 mm 1.22 x 2.44", ["acrilico", "3"], (700, 3000)),
+    *[(f"pvc_{e}", f"PVC espumado {e} mm (hoja)", f"precio lámina PVC espumado {e} mm 1.22 x 2.44", ["pvc", str(e)], r)
+      for e, r in [(3, (200, 1200)), (6, (350, 1800)), (10, (550, 2800))]],
+    ("acm_3", "Aluminio compuesto ACM 3 mm (hoja)", "precio lámina aluminio compuesto ACM 3 mm 1.22 x 2.44", ["3"], (500, 2500)),
+    ("policarbonato_6", "Policarbonato celular 6 mm (hoja)", "precio policarbonato celular 6 mm 1.22 x 2.44", ["policarbonato", "6"], (300, 2000)),
+    *[(f"negra_cal{c}", f"Lámina negra cal. {c} (4×8 ft)", f"precio lámina negra calibre {c} 4x8", ["negra", str(c)], r)
+      for c, r in [(10, (2000, 7000)), (12, (1500, 5500)), (14, (900, 4000)), (16, (700, 3200)), (18, (550, 2500)), (20, (400, 2000))]],
+    *[(f"galv_cal{c}", f"Lámina galvanizada cal. {c} (4×8 ft)", f"precio lámina galvanizada calibre {c} 4x8", ["galvanizada", str(c)], r)
+      for c, r in [(18, (500, 2500)), (20, (400, 2000)), (22, (300, 1600)), (24, (250, 1300))]],
+    *[(f"inox_cal{c}", f"Lámina inoxidable 304 cal. {c} (4×8 ft)", f"precio lámina acero inoxidable 304 calibre {c} 4x8", ["inox", str(c)], r)
+      for c, r in [(14, (3500, 14000)), (16, (2800, 11000)), (18, (2000, 9000)), (20, (1600, 7000))]],
+    ("aluminio_116", 'Lámina aluminio 1/16" (4×8 ft)', "precio lámina aluminio 1/16 4x8", ["aluminio", "1/16"], (1200, 6000)),
+    ("aluminio_18", 'Placa aluminio 1/8" (4×8 ft)', "precio placa aluminio 1/8 4x8 hoja", ["aluminio", "1/8"], (2000, 9000)),
+    ("aluminio_14", 'Placa aluminio 1/4" (4×8 ft)', "precio placa aluminio 1/4 4x8", ["aluminio", "1/4"], (4000, 18000)),
     ("pla_1kg", "Filamento PLA 1 kg 1.75 mm", "precio filamento PLA 1kg 1.75 mm", ["pla", "1"], (220, 900)),
+    ("petg_1kg", "Filamento PETG 1 kg 1.75 mm", "precio filamento PETG 1kg 1.75 mm", ["petg", "1"], (250, 1000)),
+    ("abs_1kg", "Filamento ABS 1 kg 1.75 mm", "precio filamento ABS 1kg 1.75 mm", ["abs", "1"], (230, 950)),
+    ("tpu_1kg", "Filamento TPU 1 kg 1.75 mm", "precio filamento TPU flexible 1kg 1.75 mm", ["tpu"], (350, 1500)),
+    ("resina_1l", "Resina estándar 1 L", "precio resina impresora 3D estándar 1 litro", ["resina"], (300, 1500)),
 ]
 NO_TIENDA = ("youtube.", "facebook.", "instagram.", "tiktok.", "pinterest.", "wikipedia.", "reddit.", "listado.mercadolibre", "ebay.", "alibaba.", "aliexpress.", "/blog/", "/blogs/", "/noticias/")
 PRECIO_RE = re.compile(r"\$\s?(\d{1,3}(?:,\d{3})+|\d{2,6})(?:\.(\d{2}))?")

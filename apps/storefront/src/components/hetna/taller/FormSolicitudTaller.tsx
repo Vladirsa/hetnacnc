@@ -73,6 +73,8 @@ export type Prellenado = {
   material?: string
   archivo?: string // ruta relativa (/mx/disenar/...) de donde bajar el DXF
   nombreArchivo?: string
+  // "producto": viene de "Fabrícalo con un taller" en la ficha de un diseño de la tienda
+  desde?: string
   proceso?: string // "Corte láser", "Router CNC"…
   // Desde el estimador del cliente (/user/cotizar): el archivo ya está en el
   // bucket (no se vuelve a subir), la cantidad y la descripción vienen puestas
@@ -410,7 +412,15 @@ export default function FormSolicitudTaller({
           Cotizando con <strong className="text-[#142033]">{nombreTaller}</strong>
         </p>
       )}
-      {prellenado && (
+      {prellenado?.desde === "producto" && !prellenado.archivos?.length && (
+        <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
+          <strong className="text-[#0F7A4A]">Diseño de la tienda:</strong> {prellenado.pieza}
+          {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
+          {prellenado.material ? ` · ${prellenado.material}` : ""}. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
+          incluirá en su propuesta. Revisa la cantidad, pon tu ciudad y envía.
+        </div>
+      )}
+      {prellenado && !(prellenado.desde === "producto" && !prellenado.archivos?.length) && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
           <strong className="text-[#0F7A4A]">{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</strong> {prellenado.pieza}
           {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}

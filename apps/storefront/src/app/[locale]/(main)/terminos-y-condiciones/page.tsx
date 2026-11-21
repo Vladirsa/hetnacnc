@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function Terminos() {
   return (
-    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="14 de noviembre de 2026">
+    <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="20 de noviembre de 2026">
       <h2>1. Quiénes somos</h2>
       <p>
         {EMPRESA.nombreComercial} ({EMPRESA.sitio}) es una plataforma operada por {responsableLegal("es")}, con domicilio en {EMPRESA.domicilioCompleto}, donde clientes, vendedores y
@@ -44,8 +44,36 @@ export default function Terminos() {
       <h2>5. Vendedores y talleres</h2>
       <ul>
         <li>Deben publicar información real de sus productos, servicios, capacidades y tiempos de entrega.</li>
-        <li>Las ventas de la tienda y de la Academia (productos, diseños, cursos y libros) se cobran y gestionan dentro de la plataforma, con la comisión vigente de la lista de precios para vendedores. En ellas no está permitido compartir datos de contacto para cerrar la venta fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.</li>
-        <li>Las solicitudes de fabricación (licitaciones) son una conexión entre cliente y taller y no pagan comisión a HETNA: HETNA cobra a los talleres sus planes de suscripción. Antes de que el cliente elija una propuesta, la comunicación va por HETNA y los datos de contacto se ocultan; al elegir, el cliente decide si comparte su contacto con el taller elegido y pueden acordar el pago dentro o fuera de la plataforma.</li>
+        <li>
+          <strong>Qué cobra HETNA, según cómo se hace el negocio:</strong>
+          <ul>
+            <li>
+              <strong>Venta de productos en la tienda</strong> (máquinas, herramientas, materiales, piezas, diseños y archivos) y de la Academia (cursos y
+              libros): se cobran dentro de la plataforma y HETNA descuenta al vendedor la comisión de la{" "}
+              <LocalizedClientLink href="/terminos-vendedores#tarifas">lista de precios para vendedores</LocalizedClientLink>. No está permitido
+              compartir datos de contacto para cerrar estas ventas fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.
+            </li>
+            <li>
+              <strong>Contratación directa de servicios publicados en la tienda</strong> (un servicio con precio, como diseño, preparación para CAM o
+              maquila): se tratan igual que una venta de la tienda, con la misma comisión y las mismas reglas.
+            </li>
+            <li>
+              <strong>Trabajos que vienen de una solicitud de fabricación (licitación):</strong> son una conexión entre cliente y taller y no pagan
+              comisión a HETNA; HETNA cobra a los talleres sus planes de suscripción. Antes de que el cliente elija una propuesta, la comunicación va
+              por HETNA y los datos de contacto se ocultan; al elegir, el cliente decide si comparte su contacto con el taller elegido y pueden
+              acordar el pago dentro o fuera de la plataforma.
+            </li>
+            <li>
+              <strong>Protección del pago (pagar dentro de HETNA, incluido el pago a HETNA como respaldo y el acuerdo SafeDeal):</strong> es opcional
+              en las licitaciones y no tiene costo adicional de HETNA; sólo aplica la tarifa del medio de pago cuando el cliente paga directo a la
+              cuenta del taller. Lo que se paga fuera de la plataforma no tiene esta protección (cláusula 6).
+            </li>
+            <li>
+              <strong>Cobros en línea que un taller hace a sus propios clientes con la app del Cotizador:</strong> pagan la comisión por cobro que
+              indica la lista de precios según el plan del taller, con tope por cobro.
+            </li>
+          </ul>
+        </li>
         <li>Deben cumplir sus propias obligaciones fiscales.</li>
         <li>
           Además de estos términos, a los vendedores les aplican los{" "}

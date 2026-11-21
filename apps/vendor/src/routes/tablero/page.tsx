@@ -973,6 +973,96 @@ function InvitaTaller() {
   )
 }
 
+// Comparador de proveedores (packages/api/src/lib/comparador-proveedores.ts):
+// el taller escribe qué busca y recibe hasta 3 opciones comparadas.
+type OpcionProveedor = { proveedor: string; producto: string; precio: string; envio: string; garantia: string; pais: string; url: string; nota: string }
+function ComparadorProveedores() {
+  const [consulta, setConsulta] = useState("")
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState("")
+  const [r, setR] = useState<{ en_hetna: { nombre: string; liga: string }[]; opciones: OpcionProveedor[]; consejo: string } | null>(null)
+
+  const buscar = async () => {
+    setCargando(true)
+    setError("")
+    setR(null)
+    try {
+      const res = await fetch("/vendor/hetna-comparador", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consulta }),
+      })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.message || "No se pudo buscar.")
+      setR(d)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setCargando(false)
+    }
+  }
+
+  return (
+    <div style={{ ...S.card }}>
+      <p style={S.h2}>🔧 ¿Buscas una máquina, refacción o herramienta?</p>
+      <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
+        Escribe qué necesitas y te comparamos hasta 3 opciones (precio, envío y garantía), primero en HETNA y luego con distribuidores.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input
+          value={consulta}
+          onChange={(e) => setConsulta(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && consulta.trim().length >= 3 && !cargando) void buscar()
+          }}
+          placeholder="Ej.: husillo 2.2 kW enfriado por agua, fresa compresión 1/4, láser de fibra 1500 W"
+          style={{ ...S.input, flex: "1 1 300px", minWidth: 0 }}
+        />
+        <button type="button" style={{ ...S.btn, opacity: cargando || consulta.trim().length < 3 ? 0.5 : 1 }} disabled={cargando || consulta.trim().length < 3} onClick={() => void buscar()}>
+          {cargando ? "Buscando (≈1 min)…" : "Comparar"}
+        </button>
+      </div>
+      {error && <p style={{ color: "#B42318", fontSize: 13, margin: "8px 0 0" }}>{error}</p>}
+      {r && (
+        <div style={{ marginTop: 12 }}>
+          {r.en_hetna.length > 0 && (
+            <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+              <b>En HETNA:</b>{" "}
+              {r.en_hetna.slice(0, 3).map((p, i) => (
+                <span key={p.liga}>
+                  {i > 0 && " · "}
+                  <a href={p.liga} target="_blank" rel="noreferrer">
+                    {p.nombre}
+                  </a>
+                </span>
+              ))}
+            </p>
+          )}
+          {r.opciones.map((o) => (
+            <div key={o.url} style={{ borderTop: "1px solid #E7E4DC", padding: "8px 0", fontSize: 14 }}>
+              <p style={{ margin: 0, fontWeight: 700 }}>
+                {o.proveedor} <span style={{ fontWeight: 400, color: "#6B675C" }}>({o.pais})</span>
+              </p>
+              <p style={{ margin: "2px 0" }}>{o.producto}</p>
+              <p style={{ margin: "2px 0", color: "#40403A" }}>
+                💲 {o.precio} · 🚚 {o.envio} · 🛡 {o.garantia}
+              </p>
+              <p style={{ margin: "2px 0", color: "#6B675C", fontSize: 13 }}>{o.nota}</p>
+              <a href={o.url} target="_blank" rel="noreferrer nofollow" style={{ fontSize: 13 }}>
+                Ver en su página ↗
+              </a>
+            </div>
+          ))}
+          {!r.opciones.length && !r.en_hetna.length && <p style={{ fontSize: 14 }}>No encontré opciones claras. Prueba con otras palabras o la marca y el modelo.</p>}
+          {r.consejo && <p style={{ margin: "8px 0 0", fontSize: 14, background: "#F7F5F0", padding: 10, borderRadius: 8 }}>💡 {r.consejo}</p>}
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6B675C" }}>Precios tomados de las páginas de cada proveedor; confírmalos antes de comprar.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Agente SEO (packages/api/src/lib/seo-titulos.ts): títulos sugeridos con lo
 // que la gente busca en Google. El taller acepta o descarta cada uno.
 type SugerenciaSeo = { id: string; titulo: string; sugerencia: { titulo_visible: string; titulo_seo: string; meta_description: string; keyword_principal: string; motivo: string } }
@@ -1404,6 +1494,7 @@ export default function TableroPage() {
 
       <InvitaTaller />
       <SugerenciasSeo />
+      <ComparadorProveedores />
       <QueMejorarias />
 
       <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>

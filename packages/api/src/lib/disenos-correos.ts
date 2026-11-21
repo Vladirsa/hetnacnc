@@ -8,6 +8,11 @@
 //                   gastado ninguno: "tienes N créditos para diseñar".
 //   creditos_bajos  gastó créditos en los últimos 3 días y le queda 1 o ninguno:
 //                   "recarga" con el paquete más barato (máximo uno cada 14 días).
+//   sin_volver      guardó su último diseño hace 10 a 21 días y no ha vuelto (ni
+//                   diseño nuevo ni créditos gastados): segundo recordatorio.
+//
+// Si la persona tiene WhatsApp verificado con avisos activos, también le llega
+// un mensaje corto con la misma liga (DISENOS_WHATSAPP=off lo apaga).
 //
 // Mismas reglas que lib/marketing-correos.ts: nunca a quien se dio de baja, liga
 // de baja en cada correo, máximo un correo de marketing por persona cada 4 días,
@@ -22,8 +27,9 @@ import { STORE_URL, boton, esc, marco } from "./licitacion"
 import { T_PROMO, asegurarTablaPromo } from "./marketing-correos"
 import { PAQUETES } from "./creditos-compra"
 import { sendEmail } from "./resend"
+import { avisarWhatsapp } from "./whatsapp"
 
-export type TipoDiseno = "diseno_espera" | "regalo_sin_usar" | "creditos_bajos"
+export type TipoDiseno = "diseno_espera" | "regalo_sin_usar" | "creditos_bajos" | "sin_volver"
 export const disenosCorreosApagados = () => (process.env.DISENOS_CORREOS || "").toLowerCase() === "off"
 const maxDia = () => Math.max(0, Number(process.env.MARKETING_MAX_DIA) || 80)
 const DIAS_ENTRE_CORREOS = 4
@@ -78,6 +84,17 @@ export function correoDiseno(tipo: TipoDiseno, d: { nombre?: string | null; dise
             p(`¿Haces cocinas integrales? <a href="${esc(utm(herramientaUrl("cocina"), tipo))}" style="color:#C2560A">Arma una cocina en L o en U</a> con esquineros, ventanas y electrodomésticos.`)
         ),
       }
+    case "sin_volver":
+      return {
+        asunto: `¿Seguimos con «${(d.diseno || "tu diseño").slice(0, 40)}»?`,
+        html: marco(
+          "Tu diseño sigue guardado",
+          p(`${saludo(d.nombre)} hace unos días empezaste <b>${esc(d.diseno || "un diseño")}</b> en HETNA y ahí sigue, tal como lo dejaste.`) +
+            p("Si te atoraste en algo (medidas, uniones, herrajes o cómo bajar los archivos), contesta este correo y te ayudamos.") +
+            boton("Seguir con mi diseño", utm(herramientaUrl(d.herramienta || "mueble"), tipo)) +
+            p(`Mientras diseñas no gastas nada; los créditos sólo se usan al bajar los archivos. <a href="${esc(utm(`${STORE_URL}/mx/user/creditos`, tipo))}" style="color:#C2560A">Ver mis créditos</a>.`)
+        ),
+      }
     case "creditos_bajos":
       return {
         asunto: d.saldo ? `Te queda ${d.saldo} crédito para tus diseños` : "Te quedaste sin créditos para tus diseños",
@@ -88,6 +105,23 @@ export function correoDiseno(tipo: TipoDiseno, d: { nombre?: string | null; dise
             boton("Comprar créditos", utm(`${STORE_URL}/mx/user/creditos`, tipo))
         ),
       }
+  }
+}
+
+/** El mismo aviso, corto, para WhatsApp (sólo a quien lo verificó y tiene avisos activos). */
+export function whatsappDiseno(tipo: TipoDiseno, d: { diseno?: string; herramienta?: string; saldo?: number }) {
+  const diseno = (d.diseno || "tu diseño").slice(0, 40)
+  const liga = `${herramientaUrl(d.herramienta || "mueble")}?utm_source=whatsapp&utm_medium=mensaje&utm_campaign=${tipo}`
+  const creditos = `${STORE_URL}/mx/user/creditos?utm_source=whatsapp&utm_medium=mensaje&utm_campaign=${tipo}`
+  switch (tipo) {
+    case "diseno_espera":
+      return { titulo: "Tu diseño te espera", cuerpo: `«${diseno}» está guardado en HETNA. Ábrelo para sacar el presupuesto o los archivos para fabricar.`, url: liga }
+    case "sin_volver":
+      return { titulo: "¿Seguimos con tu diseño?", cuerpo: `«${diseno}» sigue guardado tal como lo dejaste. Si te atoraste en algo, contéstanos aquí y te ayudamos.`, url: liga }
+    case "regalo_sin_usar":
+      return { titulo: `Tienes ${d.saldo ?? 5} créditos de regalo`, cuerpo: "Alcanzan para bajar los archivos de varios muebles, listos para tu CNC.", url: liga }
+    case "creditos_bajos":
+      return { titulo: d.saldo ? `Te queda ${d.saldo} crédito` : "Te quedaste sin créditos", cuerpo: "Diseñar sigue siendo gratis; los créditos son para bajar los archivos. Recarga desde $" + PAQUETES.reduce((a, b) => (b.precio < a.precio ? b : a)).precio + ".", url: creditos }
   }
 }
 
@@ -104,6 +138,21 @@ export async function candidatosDiseno(knex: any, tipo: TipoDiseno): Promise<Can
          and not exists (select 1 from credit_ledger_entry l where l.customer_id = d.customer_id and l.type = 'consumo' and l.created_at >= d.actualizado and l.deleted_at is null)
        order by d.customer_id, d.actualizado desc`,
       [dias(7), dias(3)]
+    )
+    return rows
+  }
+  if (tipo === "sin_volver") {
+    if (!(await knex.schema.hasTable("hetna_disenos"))) return []
+    const { rows } = await knex.raw(
+      `select * from (
+         select distinct on (d.customer_id) d.customer_id, c.email as correo, c.first_name as nombre, d.id as ref, d.nombre as diseno, d.herramienta, d.actualizado
+         from hetna_disenos d join customer c on c.id = d.customer_id and c.deleted_at is null
+         where ${sinBaja}
+         order by d.customer_id, d.actualizado desc
+       ) u
+       where u.actualizado between ? and ?
+         and not exists (select 1 from credit_ledger_entry l where l.customer_id = u.customer_id and l.type = 'consumo' and l.created_at >= u.actualizado and l.deleted_at is null)`,
+      [dias(21), dias(10)]
     )
     return rows
   }
@@ -133,13 +182,13 @@ export async function candidatosDiseno(knex: any, tipo: TipoDiseno): Promise<Can
 
 export async function correrCorreosDiseno(knex: any, logger: any, o: { simular?: boolean } = {}) {
   await asegurarTablaPromo(knex)
-  const r: Record<TipoDiseno, number> & { omitidos: number } = { diseno_espera: 0, regalo_sin_usar: 0, creditos_bajos: 0, omitidos: 0 }
+  const r: Record<TipoDiseno, number> & { omitidos: number; whatsapp: number } = { diseno_espera: 0, regalo_sin_usar: 0, creditos_bajos: 0, sin_volver: 0, omitidos: 0, whatsapp: 0 }
   const hoy = new Date()
   hoy.setUTCHours(0, 0, 0, 0)
   const [{ n }] = (await knex(T_PROMO).where("created_at", ">=", hoy).count("* as n")) as any
   let presupuesto = maxDia() - Number(n)
   // lo más cerca de una venta primero: quien ya diseñó, luego quien se quedó sin créditos
-  for (const tipo of ["diseno_espera", "creditos_bajos", "regalo_sin_usar"] as TipoDiseno[]) {
+  for (const tipo of ["diseno_espera", "creditos_bajos", "regalo_sin_usar", "sin_volver"] as TipoDiseno[]) {
     for (const c of await candidatosDiseno(knex, tipo)) {
       if (presupuesto <= 0) return r
       const correo = String(c.correo || "").trim().toLowerCase()
@@ -162,6 +211,10 @@ export async function correrCorreosDiseno(knex: any, logger: any, o: { simular?:
         continue
       }
       await knex(T_PROMO).insert({ correo, tipo, ref: c.ref }).onConflict(["tipo", "ref", "correo"]).ignore()
+      if ((process.env.DISENOS_WHATSAPP || "").toLowerCase() !== "off") {
+        const w = whatsappDiseno(tipo, c)
+        r.whatsapp += await avisarWhatsapp(knex, { customerIds: [c.customer_id] }, w, logger)
+      }
       await avisarN8n(`correo_${tipo}`, { customer_id: c.customer_id, email: correo, nombre: c.nombre, diseno: c.diseno || null, saldo: c.saldo ?? null })
       r[tipo]++
       presupuesto--

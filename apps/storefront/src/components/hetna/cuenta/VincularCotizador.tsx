@@ -1,5 +1,6 @@
 "use client"
 
+import { LIMITE_COTIZACIONES_GRATIS } from "@/lib/hetna/app-taller"
 import { useEffect, useState } from "react"
 
 import {
@@ -108,7 +109,7 @@ export function VincularCotizador() {
       ) : (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con 5
+            Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con {LIMITE_COTIZACIONES_GRATIS}{" "}
             cotizaciones al mes. Si ya tienes un taller en el Cotizador con este correo, se une solo.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

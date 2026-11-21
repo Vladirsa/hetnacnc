@@ -12,9 +12,10 @@ const esc = (s) => String(s == null ? '' : s).split('&').join('&amp;').split('<'
 const pesos = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-MX');
 const lineas = [];
 const alertas = [];
+const sinPrecio = [];
 let conDato = 0;
 for (const m of body.materiales || []) {
-  if (!m.mediana) { lineas.push('• ' + esc(m.nombre) + ': sin precio esta semana'); continue; }
+  if (!m.mediana) { sinPrecio.push(esc(m.nombre)); continue; }
   conDato++;
   const a = anterior[m.clave];
   let cambio = '';
@@ -23,8 +24,7 @@ for (const m of body.materiales || []) {
     cambio = p === 0 ? ' (=)' : ' (' + (p > 0 ? '▲ ' : '▼ ') + Math.abs(p) + '%)';
     if (Math.abs(p) >= 5) alertas.push((p > 0 ? '🔺 ' : '🔻 ') + esc(m.nombre) + ': ' + pesos(a.mediana) + ' → ' + pesos(m.mediana));
   }
-  const barata = (m.fuentes || []).slice().sort((x, y) => x.precio - y.precio)[0];
-  lineas.push('• <b>' + esc(m.nombre) + '</b>: ' + pesos(m.mediana) + cambio + NL + '   ' + pesos(m.minimo) + ' a ' + pesos(m.maximo) + ' · ' + m.n + ' tienda(s)' + (barata ? ' · más barato: <a href="' + esc(barata.url) + '">' + esc(barata.tienda) + '</a>' : ''));
+  lineas.push('• ' + esc(m.nombre) + ': <b>' + pesos(m.mediana) + '</b>' + cambio);
 }
 const texto = [
   '<b>📈 Precios de materiales CNC · ' + fecha + '</b>',
@@ -32,7 +32,8 @@ const texto = [
   '',
   alertas.length ? '<b>Cambios de 5% o más</b>' + NL + alertas.join(NL) + NL : (Object.keys(anterior).length ? 'Sin cambios fuertes contra la medición anterior.' + NL : 'Primera medición: la próxima semana ya se compara.' + NL),
   lineas.join(NL),
+  sinPrecio.length ? NL + 'Sin precio esta vez (' + sinPrecio.length + '): ' + sinPrecio.join(', ') : '',
   '',
-  'Con esto puedes revisar las tarifas del cotizador y publicar el índice mensual.',
+  'Ya quedó en la base de la plataforma: lo usan el precio al instante de /cotizar y la pestaña «Precios de materiales» de los talleres.',
 ].join(NL).slice(0, 4000);
 return [{ json: { texto, conDato } }];

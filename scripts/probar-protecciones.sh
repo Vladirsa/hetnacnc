@@ -51,6 +51,23 @@ echo "== Recuperar contraseña no dice si el correo existe"
 c=$(codigo -X POST "$H/auth/customer/emailpass/reset-password" -H 'content-type: application/json' -d '{"identifier":"prueba-seguridad@hetnacnc.invalid"}')
 [ "$c" = 201 ] || [ "$c" = 200 ] || [ "$c" = 429 ] && bien "misma respuesta para un correo que no existe ($c)" || falla "respondió $c"
 
+echo "== La API pública no enseña datos privados de los talleres (auditoría 21 nov 2026)"
+# Necesita la llave pública de la tienda. En el VPS se toma sola del .env de la tienda.
+PK="${PK:-$(grep -h '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' "$(dirname "$0")/../apps/storefront/.env" "$(dirname "$0")/../apps/storefront/.env.local" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')}"
+if [ -z "$PK" ]; then
+  echo "  AVISO  sin llave pública (PK): córrelo en el VPS o con PK=... para esta prueba"
+else
+  for ruta in "/store/sellers?limit=20&fields=id,email,phone,metadata,payment_details.id" "/store/products?limit=20&fields=id,*seller,seller.payment_details.id"; do
+    cuerpo=$(curl -s -m 20 -H "x-publishable-api-key: $PK" "$H$ruta")
+    # Sólo se buscan los NOMBRES de los campos; no se imprime ningún valor
+    if echo "$cuerpo" | grep -q -E '"(email|phone|payment_details|terminos_ip|terminos_agente|tarjeta|correo_confirmado_email|consentimiento_bancario_en)"'; then
+      falla "${ruta%%\?*} devuelve datos privados del taller"
+    else
+      bien "${ruta%%\?*} sin correo, teléfono, banco ni metadata privada"
+    fi
+  done
+fi
+
 echo
 [ "$fallas" = 0 ] && echo "Todo BIEN." || echo "$fallas FALLA(S): revisa arriba."
 exit $([ "$fallas" = 0 ] && echo 0 || echo 1)

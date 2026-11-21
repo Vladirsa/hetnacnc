@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 
 import { leerArchivoCad, type GeoCad } from "@/lib/cotizador/archivo-cad"
@@ -41,7 +42,18 @@ function Paso({ n, titulo, children }: { n: number; titulo: string; children: Re
   )
 }
 
+// Los STL/OBJ/STEP se ven como pieza sólida que se puede girar (antes salía la
+// silueta en líneas sueltas, que parecían puntos). three.js sólo se baja si hay 3D.
+const VisorCad = dynamic(() => import("@/components/hetna/visor/VisorCad").then((m) => m.VisorCad), { ssr: false })
+
 function VistaPrevia({ geo }: { geo: GeoCad }) {
+  if (geo.tipo === "3d" && geo.malla) {
+    return (
+      <div className="min-w-0 overflow-hidden rounded-[12px]">
+        <VisorCad geo={geo} alto={260} />
+      </div>
+    )
+  }
   const ancho = Math.max(geo.largo, 1)
   const alto = Math.max(geo.ancho, 1)
   const trazo = Math.max(ancho, alto) / 300
@@ -350,7 +362,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             <div className="grid grid-cols-3 gap-2">
               {(["largo", "ancho", ...(tresD ? ["alto"] : [])] as ("largo" | "ancho" | "alto")[]).map((k) => (
                 <label key={k}>
-                  <span className={etiqueta}>{k[0].toUpperCase() + k.slice(1)}</span>
+                  <span className={etiqueta}>{{ largo: "Ancho", ancho: "Alto", alto: "Profundidad" }[k]}</span>
                   <input
                     className={campo}
                     inputMode="decimal"
