@@ -327,6 +327,12 @@ async function bajarMedia(mensajeId: string) {
 // Avisos (los mismos de las notificaciones al celular)
 // ---------------------------------------------------------------------
 
+/** Texto de un aviso tal como llega por WhatsApp. */
+export function textoAviso(aviso: { titulo: string; cuerpo: string; url?: string }) {
+  const liga = aviso.url ? (/^https?:\/\//.test(aviso.url) ? aviso.url : `${STORE_URL}${aviso.url.startsWith("/") ? "" : "/"}${aviso.url}`) : ""
+  return `*${aviso.titulo}*\n${aviso.cuerpo}${liga ? `\n\n${liga}` : ""}\n\n_Escribe BAJA para no recibir avisos._`
+}
+
 /** Aviso a talleres / clientes con WhatsApp verificado y avisos activos. Nunca truena el flujo que lo llama. */
 export async function avisarWhatsapp(knex: any, a: { sellerIds?: string[]; customerIds?: string[] }, aviso: { titulo: string; cuerpo: string; url?: string }, logger?: any) {
   try {
@@ -343,8 +349,7 @@ export async function avisarWhatsapp(knex: any, a: { sellerIds?: string[]; custo
       })
       .select("numero")
     if (!filas.length) return 0
-    const liga = aviso.url ? (/^https?:\/\//.test(aviso.url) ? aviso.url : `${STORE_URL}${aviso.url.startsWith("/") ? "" : "/"}${aviso.url}`) : ""
-    const texto = `*${aviso.titulo}*\n${aviso.cuerpo}${liga ? `\n\n${liga}` : ""}\n\n_Escribe BAJA para no recibir avisos._`
+    const texto = textoAviso(aviso)
     let n = 0
     for (const f of filas) {
       try {

@@ -32,34 +32,71 @@ archivo borrado se queda 30 días como versión oculta y se puede recuperar.
 **Guarda la contraseña de restic** (`RESTIC_PASSWORD` de `/root/.respaldo.env`)
 también en tu gestor de contraseñas: sin ella los respaldos no sirven.
 
-## 2. n8n y WhatsApp detrás de Cloudflare Access
+## 2. n8n y WhatsApp detrás de Cloudflare Access (HECHO el 21 nov 2026)
 
-`n8n.hetnacnc.com` y `whatsapp.hetnacnc.com` están abiertos a internet; sólo los
-protege su propia contraseña. Cloudflare Access pone una pantalla de acceso antes
-(un código a tu correo) sin costo para pocas personas.
+Los paneles de `n8n.hetnacnc.com` y `whatsapp.hetnacnc.com/manager` piden un
+código al correo del dueño (Cloudflare Zero Trust, plan Free, equipo
+`super-sound-1307`) antes de mostrar la pantalla de entrada. Así quedó:
 
-1. Cloudflare → **Zero Trust** → **Access** → **Applications** → **Add an application** → **Self-hosted**.
-2. **Application domain:** `n8n.hetnacnc.com`. **Session duration:** 24 hours.
-3. **Policy:** Action **Allow**, regla **Emails** → tu correo.
-4. **Exenciones (importante, o se rompen las automatizaciones):** crea una
-   segunda aplicación para el mismo dominio con **Path** `webhook` (y otra para
-   `webhook-test`) y política **Bypass** → **Everyone**. Por ahí llegan los
-   avisos de la tienda, de Meta y de WhatsApp a n8n.
-5. Repite para `whatsapp.hetnacnc.com` protegiendo **sólo** el panel
-   (`/manager`). No protejas el dominio completo: el API de la tienda le manda
-   los mensajes por `https://whatsapp.hetnacnc.com` y dejaría de enviar WhatsApp.
-6. **Prueba:** abre `https://n8n.hetnacnc.com` en una ventana privada (debe pedir
-   el código) y manda un mensaje de prueba por WhatsApp (debe seguir
-   contestando).
+**Políticas** (Zero Trust › Access › Políticas, reutilizables):
 
-Además, en n8n: **Settings** → **Personal** → **Enable 2FA**.
+| Política | Acción | Regla |
+|---|---|---|
+| `Solo dueño` | Allow | Emails: correo del dueño |
+| `Libre` | Bypass | Everyone |
+
+**Aplicaciones** (Zero Trust › Access › Aplicaciones, todas *Autohospedado*):
+
+| Aplicación | Nombres de host | Política |
+|---|---|---|
+| `n8n panel` | `n8n.hetnacnc.com` (sin ruta) | Solo dueño |
+| `WhatsApp panel` | `whatsapp.hetnacnc.com/manager` y `/manager/*` | Solo dueño |
+| `n8n automatizaciones libre` | `n8n.hetnacnc.com` con las rutas de abajo | Libre |
+
+Rutas libres de n8n (la ruta más específica gana sobre `n8n panel`):
+
+- Automatizaciones (avisos de la tienda, Meta, WhatsApp y formularios):
+  `webhook`, `webhook-test`, `webhook-waiting`, `form`, `form-test`, `form-waiting`.
+- Conexión de Claude con n8n (MCP y su autorización): `mcp-server`,
+  `rest/oauth2-credential`, `.well-known/oauth-protected-resource`,
+  `.well-known/oauth-authorization-server`, `mcp-oauth/token`, `mcp-oauth/register`.
+  `mcp-oauth/authorize` se queda protegida: ahí el dueño da el permiso desde el
+  navegador, después de pasar el código de Cloudflare.
+- Certificado de Let's Encrypt: `.well-known/acme-challenge`. Sin ésta,
+  `certbot renew` falla para n8n ("reader size limit exceeded").
+
+**No proteger todo `whatsapp.hetnacnc.com`:** el API de la tienda manda los
+mensajes por ese dominio. Sólo el panel (`/manager`).
+
+**Si se agrega una automatización que recibe avisos por otra ruta de n8n**,
+hay que sumarla a `n8n automatizaciones libre`.
+
+**Pruebas (en el servidor):**
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://n8n.hetnacnc.com/webhook/prueba-hetna
+```
+Debe dar 404 (llega a n8n). El panel debe dar 302 a `cloudflareaccess.com`:
+```bash
+curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" https://n8n.hetnacnc.com/
+```
+Lo mismo `https://whatsapp.hetnacnc.com/manager/` (302) y
+`https://whatsapp.hetnacnc.com/` (200). Y `certbot renew --dry-run` debe
+terminar con los tres certificados en *success*.
+
+**Si algo deja de funcionar:** desactivar o borrar la aplicación que lo causa
+en Access › Aplicaciones; el cambio es inmediato.
+
+Además: n8n con verificación en dos pasos (Settings › Personal › 2FA) y SSL/TLS
+de Cloudflare en **Completo (estricto)** (los certificados de Let's Encrypt del
+servidor cubren los cuatro dominios y se renuevan solos).
 
 ## 3. Repositorio de GitHub
 
 Ver `docs/seguridad/guia-github.md` (verificación en dos pasos, repositorio
 privado, proteger `main`).
 
-## 4. Llave de cifrado de las llaves guardadas
+## 4. Llave de cifrado de las llaves guardadas (HECHO el 21 nov 2026: llave puesta y tokens de redes cifrados)
 
 Después de desplegar, para cifrar los tokens de Mercado Pago, Facturapi y redes
 que se guardan en la base:

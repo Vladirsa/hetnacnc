@@ -9,9 +9,9 @@ describe("precio de referencia igual al de /cotizar", () => {
     return r.resultado.pvRecomendado
   }
   it("láser, router e impresión 3D", () => {
-    expect(total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 3, cantidad: 50 })).toBe(535)
-    expect(total({ servicio: "router", material: "MDF 18mm", ancho: 60, largo: 40, cantidad: 1 })).toBe(395)
-    expect(total({ servicio: "impresion_3d", material: "PLA", calidad: "Pieza funcional", ancho: 5, largo: 5, alto: 5, cantidad: 1 })).toBe(290)
+    expect(total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 3, cantidad: 50 })).toBe(360)
+    expect(total({ servicio: "router", material: "MDF 18mm", ancho: 60, largo: 40, cantidad: 1 })).toBe(340)
+    expect(total({ servicio: "impresion_3d", material: "PLA", calidad: "Pieza funcional", ancho: 5, largo: 5, alto: 5, cantidad: 1 })).toBe(270)
   })
   it("usa el volumen real del STL en vez de la caja", () => {
     const caja = total({ servicio: "impresion_3d", material: "PLA", ancho: 10, largo: 10, alto: 10, cantidad: 1 })
@@ -22,5 +22,21 @@ describe("precio de referencia igual al de /cotizar", () => {
     const simple = total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 30, largo: 30, cantidad: 1, corte_mm: 1200 })
     const calado = total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 30, largo: 30, cantidad: 1, corte_mm: 12000 })
     expect(calado).toBeGreaterThan(simple)
+  })
+  it("el margen no se cobra otra vez sobre el material (21 nov 2026)", () => {
+    // Subir el acero $10/kg debe subir el precio sólo lo que cuesta el material
+    // con su merma (15 %) y recargo (20 %), no además dividido entre (1 − margen).
+    const e = { servicio: "plasma", material: "Acero al carbón", calibre: "Placa (cal. 10 o más grueso)", ancho: 20, largo: 20, cantidad: 10 }
+    const base = precioInstantaneo(e as any)
+    const caro = precioInstantaneo(e as any, { preciosMaterial: { 'Acero 6 mm (1/4")': 44 } })
+    if (!base.ok || !caro.ok) throw new Error("sin precio")
+    const kg = base.estimado.gramos / 1000
+    const diff = caro.resultado.pvRecomendado - base.resultado.pvRecomendado
+    expect(Math.abs(diff - kg * 10 * 1.15 * 1.2)).toBeLessThanOrEqual(5)
+  })
+
+  it("50 piezas chicas no cuentan 50 minutos de manejo", () => {
+    const llaveros = total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 5, cantidad: 50 })
+    expect(llaveros).toBeLessThan(450)
   })
 })

@@ -210,6 +210,23 @@ export default defineMiddlewares({
           matcher: "/store/hetna-cloud/cam",
           middlewares: [authenticate("customer", ["session", "bearer"]), leerMultipart({ campos: { dxf: 1, gcode: 1 }, maxMb: 10 })],
         },
+        // Escanear (ingeniería inversa, lib/escanear.ts): sólo clientes con sesión;
+        // escaneos STL/OBJ/PLY y fotos hasta 95 MB (Nginx corta en 100 MB)
+        {
+          method: ["GET", "POST"],
+          matcher: "/store/escanear*",
+          middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
+        {
+          method: ["POST"],
+          matcher: "/store/escanear/:id/archivos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 95, forma: "lista" })],
+        },
+        {
+          method: ["POST"],
+          matcher: "/admin/escanear/:id/archivos",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 95, forma: "lista" })],
+        },
         // Fotos de evidencia del paquete desde el panel del taller (máx. 15 MB)
         {
           method: ["POST"],

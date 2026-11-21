@@ -693,6 +693,9 @@ export type Routes = {
             $provider: typeof import("@medusajs/medusa/api/hooks/payment/[provider]/route");
         };
         payout: typeof import("@mercurjs/core/api/hooks/payout/route");
+        academia: {
+            invitarBlog: typeof import("../src/api/hooks/academia/invitar-blog/route");
+        };
         altaTaller: {
             aprobar: typeof import("../src/api/hooks/alta-taller/aprobar/route");
             confirmar: typeof import("../src/api/hooks/alta-taller/confirmar/route");

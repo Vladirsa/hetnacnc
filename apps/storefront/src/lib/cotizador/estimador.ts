@@ -3,7 +3,10 @@
 // referencia de HETNA en vez de los costos de un taller. Da un RANGO, no un
 // precio: los talleres mandan su propuesta real por la licitación.
 //
-//   PRECIO = (material + máquina + operador + preparación + acabado + fijos) ÷ (1 − margen)
+//   PRECIO = (máquina + operador + preparación + acabado + fijos) ÷ (1 − margen) + material
+//   material = costo × (1 + merma) × (1 + recargo al material). El margen NO se
+//   vuelve a cobrar sobre el material: ya lleva su recargo (decisión de Vlado,
+//   21 nov 2026, tras comparar con precios de talleres en México).
 //   tiempo de máquina = metros de corte ÷ velocidad (+ perforaciones), área ÷
 //   velocidad de grabado, volumen a quitar ÷ remoción, o volumen ÷ cm³/h.
 //
@@ -102,7 +105,12 @@ const FIJOS_HORA = 60
 const FIJOS_BASE = FIJOS_HORA
 const MARGEN = 0.35
 const MARKUP_MATERIAL = 0.2
+// Manejo por pieza (sacarla de la hoja, limpiar, revisar), según su tamaño:
+// 9 s para un llavero y 1 min de 1,000 cm² en adelante.
 const MANEJO_MIN = 1
+const MANEJO_MIN_CHICA = 0.15
+const manejoPorPieza = (largoMm: number, anchoMm: number) =>
+  Math.min(MANEJO_MIN, Math.max(MANEJO_MIN_CHICA, (largoMm * anchoMm) / 100 / 1000))
 const RANGO = 0.15
 const MARGEN_BASE = MARGEN
 const MARKUP_BASE = MARKUP_MATERIAL
@@ -344,7 +352,7 @@ export function estimar(p: {
   const ac = ACABADOS.find((x) => x.clave === (p.acabado || "")) || ACABADOS[0]
   const areaM2 = (pieza.largo * pieza.ancho) / 1e6
   const tMaquina = tPieza * n
-  const tManejo = (MANEJO_MIN + ac.min) * n
+  const tManejo = (manejoPorPieza(pieza.largo, pieza.ancho) + ac.min) * n
   const tTotal = tMaquina + tManejo + maq.prep
   // Tiempo en que alguien del taller está ocupado con el pedido
   const tAtendido = (maq.desatendida ? 0 : tMaquina) + tManejo + maq.prep
@@ -354,7 +362,8 @@ export function estimar(p: {
   const costoAcabado = ac.pieza * n + ac.m2 * areaM2 * n
   const costoFijos = (tAtendido / 60) * FIJOS_HORA
   const costo = costoMaterial + costoMaquina + costoOperador + costoPrep + costoAcabado + costoFijos
-  const total = costo / (1 - MARGEN)
+  // El margen sobre máquina y trabajo; el material ya trae su merma y recargo.
+  const total = (costo - costoMaterial) / (1 - MARGEN) + costoMaterial
   const red = (v: number) => Math.round(v / 5) * 5
 
   return {
