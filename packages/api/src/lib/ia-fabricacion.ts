@@ -26,6 +26,7 @@ import { leerPlanApp } from "./licitacion-plan"
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto } from "./licitacion"
 import { asegurarPrivacidad, trabajoPublicoPrivado } from "./licitacion-privacidad"
 import { asegurarPropuestaFormal } from "./licitacion-propuesta"
+import { leerConfigPrecios } from "./precios-config"
 import { IMPRESION_CALIDAD, IMPRESION_MATERIAL, MATERIALES_LASER as MATERIALES_LASER_PUBLICOS, PLASMA_CALIBRE, SERVICIOS_SOPORTADOS, precioInstantaneo } from "./precio-instantaneo"
 import { MENSAJES_DIA, TOPE_MES_USD, contarMensaje, estadoUso, gastoDelMes, registrarUso } from "./ia-fabricacion-uso"
 
@@ -172,6 +173,7 @@ export async function ejecutarHerramienta(knex: any, nombre: string, entrada: an
   const e = entrada && typeof entrada === "object" ? entrada : {}
   try {
     if (nombre === "precio_instantaneo") {
+      const { cfg } = await leerConfigPrecios(knex)
       const r = precioInstantaneo({
         servicio: corto(e.servicio, 20),
         material: corto(e.material, 80),
@@ -181,7 +183,7 @@ export async function ejecutarHerramienta(knex: any, nombre: string, entrada: an
         calibre: corto(e.calibre, 60),
         calidad: corto(e.calidad, 40),
         cantidad: Math.min(Number(e.cantidad), 100_000),
-      })
+      }, cfg)
       if (!r.ok) return { texto: JSON.stringify({ error: r.mensaje }), error: true }
       return {
         texto: JSON.stringify({
