@@ -67,7 +67,7 @@ export const RUTAS_PAGINA: Record<string, Regla[]> = {
     r("GET", "/admin/hetna-verificacion"),
     r("GET", `/admin/hetna-verificacion/${ID}/archivos/${ID}`),
   ],
-  estrategia: [r("GET", "/admin/hetna-estrategia")],
+  estrategia: [r("GET", "/admin/hetna-estrategia"), r("GET", "/admin/hetna-fase4")],
   cotizador: [
     r("GET", "/admin/hetna-cotizador"),
     r("GET", "/admin/hetna-crecimiento"),
@@ -87,7 +87,7 @@ export const RUTAS_ACCION: Record<string, Regla[]> = {
   // "resolver_disputa" (reembolsos y liberar el pago al taller) queda para el dueño.
   licitaciones: [r("POST", `/admin/hetna-solicitudes/${ID}/accion`, ["aprobar", "pedir_info", "cancelar", "etapa", "nota"])],
   talleres: [r("POST", `/admin/hetna-verificacion/${ID}`)],
-  pedidos: [r("POST", `/admin/orders/${ID}/(cancel|complete)`)],
+  pedidos: [r("POST", `/admin/orders/${ID}/(cancel|complete)`), r("POST", "/admin/hetna-fase4")],
   distribuidores: [r("POST", "/admin/hetna-distribuidores"), r("POST", "/admin/hetna-creadores")],
 }
 

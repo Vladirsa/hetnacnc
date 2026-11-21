@@ -259,7 +259,10 @@ export async function prepararCobro(knex: any, s: any, p: any, logger?: any) {
   const pct = PCT_POR_PLAN[plan] ?? 0
   await knex(T_SOLICITUD).where({ id: s.id }).update({ comision_pct: pct, updated_at: knex.fn.now() })
   const cuenta = await cuentaTaller(p.taller_email, true)
-  const modo = cuenta.mp || (cuenta.paypal && paypalListo()) ? "taller" : "hetna"
+  // Fase 4 (lib/fase4.ts): con FASE4_ACTIVA=1 HETNA es el único responsable y
+  // cobra siempre (retiene y le paga al taller cuando el cliente confirma).
+  const fase4 = process.env.FASE4_ACTIVA === "1" && Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)
+  const modo = !fase4 && (cuenta.mp || (cuenta.paypal && paypalListo())) ? "taller" : "hetna"
   await knex(T_SOLICITUD).where({ id: s.id }).update({ cobro: modo, updated_at: knex.fn.now() })
   return { modo, pct, cuenta }
 }
