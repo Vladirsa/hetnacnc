@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SUBIDA, asegurarSubidas } from "../../../lib/archivo-seguro"
 import { leerEmpresa } from "../../../lib/cliente-empresa"
+import { avisarPorAprobar, clientesDelEquipo, necesitaAprobacion } from "../../../lib/empresa-equipo"
 import { afiliar, ligaActivar, tieneCuenta } from "../../../lib/afiliacion"
 import { bloqueAfiliacion } from "../../../lib/afiliacion-correos"
 import { sendEmail } from "../../../lib/resend"
@@ -152,7 +153,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         .join(`${T_SOLICITUD} as s`, "s.id", "u.usado_en")
         .whereIn("u.clave", archivos.map((a) => a.clave))
         .whereNull("u.borrado_en")
-        .where("s.cliente_id", clienteSesion)
+        .whereIn("s.cliente_id", await clientesDelEquipo(knex, clienteSesion))
         .select("u.clave")) as { clave: string }[]
       for (const f of suyas) validas.add(f.clave)
     }
@@ -251,6 +252,11 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   // taller ni sale en el tablero hasta que HETNA la aprueba, y sus 7 días
   // para recibir propuestas empiezan a contar desde la aprobación.
   const revision = revisionActiva()
+  // Empresas (2.4, parte 2): lo que pide un comprador con "aprobación de
+  // pedidos" activa nace en "por_aprobar" y no llega a ningún taller hasta
+  // que un administrador de su empresa lo aprueba (nunca se aprueba solo).
+  const porAprobar = await necesitaAprobacion(knex, (req as any).auth_context?.actor_id).catch(() => null)
+  const detenida = revision || Boolean(porAprobar)
   const token = nuevoToken()
   let folio = ""
   let sol: any = null
@@ -264,7 +270,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         token,
         modo,
         taller_id: taller?.id ?? null,
-        estado: revision ? "revision" : "abierta",
+        estado: porAprobar ? "por_aprobar" : revision ? "revision" : "abierta",
         trabajo,
         contacto,
         modalidad,
@@ -272,7 +278,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
         difundir_redes: difundirRedes,
         tipo,
         solo_verificados: soloVerificados,
-        cierra_en: revision ? null : new Date(Date.now() + DIAS_ABIERTA * 864e5),
+        cierra_en: detenida ? null : new Date(Date.now() + DIAS_ABIERTA * 864e5),
       })
       .returning(["id", "folio", "token", "modo", "taller_id", "trabajo", "contacto", "modalidad", "privacidad", "difundir_redes", "tipo", "solo_verificados"])
     sol = fila0
@@ -285,7 +291,9 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     const clienteId = (req as any).auth_context?.actor_id
     if (clienteId) await ligarCliente(knex, fila0.id, clienteId).catch(() => {})
     await cambiarEtapa(knex, sol, "nueva", { actor: "cliente", correo: false })
-    await cambiarEtapa(knex, sol, revision ? "en_revision" : "enviada_talleres", { actor: "sistema", correo: false })
+    await cambiarEtapa(knex, sol, detenida ? "en_revision" : "enviada_talleres", { actor: "sistema", correo: false })
+    if (porAprobar)
+      await avisarPorAprobar(knex, porAprobar, folio, [trabajo.servicio, trabajo.material, trabajo.cantidad, descripcion.slice(0, 200)].filter(Boolean).join(" · "), contacto.nombre || email).catch(() => null)
   } catch (e) {
     logger.error(`[licitacion] no se pudo guardar la solicitud: ${(e as Error).message}`)
     return res.status(500).json({ message: "No se pudo registrar tu solicitud. Intenta de nuevo en unos minutos." })
@@ -328,6 +336,8 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     token,
     taller: taller ? taller.name : null,
     revision,
+    // Empresas: espera la aprobación de un administrador de su empresa
+    por_aprobar: Boolean(porAprobar),
     // No se dice si ese correo ya tiene cuenta: este formulario no pide sesión
     // y servía para averiguar qué correos están registrados.
     afiliacion: afiliacion ? { numero: afiliacion.numero, activar: afiliacion.activar } : null,
@@ -372,7 +382,9 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       html: marco(
         "Recibimos tu solicitud",
         `<p style="margin:0 0 12px;color:#40403A">Hola${contacto.nombre ? ` ${esc(contacto.nombre)}` : ""}, tu folio es <strong>${esc(folio)}</strong>. ` +
-          (revision
+          (porAprobar
+            ? `Antes de enviarla a los talleres, un administrador de <strong>${esc(porAprobar.nombre)}</strong> tiene que aprobarla; ya le avisamos.`
+            : revision
             ? `Primero revisamos que tenga lo necesario para cotizar (normalmente en menos de ${horasRevision()} horas); si falta algo te escribimos. Luego la enviamos ` +
               (abierta ? `a los talleres de la red, que te mandan propuestas durante ${DIAS_ABIERTA} días.` : `a <strong>${esc(taller!.name)}</strong> para que te cotice.`)
             : abierta
@@ -391,7 +403,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   }
 
   // 3) Talleres y redes: ya, o cuando HETNA la apruebe
-  const avisados = revision ? 0 : await difundirSolicitud(knex, logger, sol)
+  const avisados = detenida ? 0 : await difundirSolicitud(knex, logger, sol)
 
   // 4) n8n
   const n8n = process.env.N8N_QUOTE_LEAD_WEBHOOK_URL

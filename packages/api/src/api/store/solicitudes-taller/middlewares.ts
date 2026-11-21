@@ -41,4 +41,9 @@ export const storeSolicitudesTallerMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/mi-empresa",
     middlewares: [authenticate("customer", ["session", "bearer"])],
   },
+  {
+    method: ["GET", "POST"],
+    matcher: "/store/mi-equipo",
+    middlewares: [authenticate("customer", ["session", "bearer"])],
+  },
 ]
