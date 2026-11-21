@@ -106,6 +106,10 @@ def alternas(clave: str, nombre: str) -> list[str]:
 EXCLUIR = re.compile(r"\b(pack|kit|paquete|lote|combo|mayoreo|x[2-9]|[2-9] (piezas|hojas|rollos|pzas))\b|impresion|instalacion|servicio de|renta")
 OTRO_TAMANO = re.compile(r"\b(3|5) ?pies\b|\b(3|4|5) ?x ?(10|12)\b|\b3 ?x ?8\b|\b(1|2) ?x ?(1|2)\b ?m")
 METAL_4X8 = ("negra_", "galv_", "inox_", "aluminio_")
+# Tiendas de otros países (precios en otra moneda): fuera
+TLD_EXTRANJERO = (".cl", ".co", ".ar", ".pe", ".ec", ".uy", ".py", ".bo", ".ve", ".gt", ".cr", ".es", ".br", ".com.co", ".com.ar", ".com.pe", ".com.br")
+# El MDF y el triplay con melamina u otra cara no son la hoja natural
+CON_CUBIERTA = re.compile(r"melamina|melaminico|chapado|enchapado|laminado|ranurado|hidrofugo|\brh\b|color")
 
 
 # Palabras que valen por otra en el título de la tienda
@@ -173,7 +177,7 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
             break
         url = r.get("href") or r.get("url") or ""
         dom = dominio_de(url)
-        if not url.startswith("http") or dom in vistos or any(x in url for x in NO_TIENDA):
+        if not url.startswith("http") or dom in vistos or any(x in url for x in NO_TIENDA) or dom.endswith(TLD_EXTRANJERO):
             continue
         texto_busqueda = sin_acentos((r.get("title", "") + " " + r.get("body", "")))
         h = pagina(url)
@@ -181,7 +185,7 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
         t = sin_acentos(titulo)
         if not all(coincide(p, t) for p in palabras):
             continue
-        if EXCLUIR.search(t) or (clave.startswith(METAL_4X8) and OTRO_TAMANO.search(t)):
+        if EXCLUIR.search(t) or (clave.startswith(METAL_4X8) and OTRO_TAMANO.search(t)) or (clave.startswith(("mdf_", "triplay_")) and CON_CUBIERTA.search(t)):
             continue
         p = precio_de(h)
         if p is None:  # sin dato estructurado: el precio que trae el resultado de búsqueda
@@ -196,6 +200,12 @@ def medir(clave: str, nombre: str, consulta: str, palabras: list[str], rango: tu
         if len(fuentes) >= 8:
             break
         time.sleep(1)
+    # Con 3 o más tiendas se quitan los precios muy alejados del resto (hojas de
+    # otro tamaño o mal leídas): fuera lo que está a menos de la mitad o a más
+    # de 1.8 veces la mediana.
+    if len(fuentes) >= 3:
+        med = statistics.median(f["precio"] for f in fuentes)
+        fuentes = [f for f in fuentes if med * 0.55 <= f["precio"] <= med * 1.8]
     precios = [f["precio"] for f in fuentes]
     return {
         "clave": clave, "nombre": nombre, "n": len(precios),
