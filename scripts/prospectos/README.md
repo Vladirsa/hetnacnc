@@ -243,15 +243,19 @@ Probar sin mandar nada: `.venv/bin/python cazar_solicitudes.py --probar --tanda 
 
 ## Agente «Monitor de precios de materiales»
 
-Cada lunes mide el precio público (páginas de producto de tiendas y distribuidores
-de México) de MDF 3/6/9/15/18 mm, triplay, acrílico 3/6 mm, lámina negra cal. 14,
-galvanizada cal. 18, inoxidable cal. 18, aluminio 1/8" y filamento PLA. Saca la
+Lunes y jueves mide el precio público (páginas de producto de tiendas y
+distribuidores de México) de 47 materiales: MDF, triplay, melamina, acrílico, PVC
+espumado, ACM, policarbonato, lámina negra, galvanizada e inoxidable, aluminio,
+filamentos y resina. n8n además los guarda en la base de la plataforma
+(`POST /admin/hetna-materiales/importar`, `lib/materiales-precios.ts`): de ahí salen la
+pestaña «Precios de materiales» de los talleres y el costo de material del precio
+al instante de /cotizar. Saca la
 mediana, mínimo y máximo y lo manda al flujo «Agente HETNA - Monitor de precios de
 materiales» (webhook `hetna-precios`), que guarda el historial en la tabla
 `precios_materiales` de n8n y te manda a Telegram los cambios de 5% o más.
 
 ```bash
-( crontab -l 2>/dev/null | grep -v correr_precios.sh ; echo "50 6 * * 1 $HOME/hetnacnc/scripts/prospectos/correr_precios.sh" ) | crontab -
+( crontab -l 2>/dev/null | grep -v correr_precios.sh ; echo "50 6 * * 1,4 $HOME/hetnacnc/scripts/prospectos/correr_precios.sh" ) | crontab -
 ```
 
 Probar un material: `.venv/bin/python precios_materiales.py --probar --solo mdf_15`

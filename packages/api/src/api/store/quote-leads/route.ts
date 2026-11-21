@@ -4,6 +4,7 @@ import { SERVICIOS_SOPORTADOS, precioInstantaneo } from "../../../lib/precio-ins
 import { sendEmail } from "../../../lib/resend"
 import { quoteLeadEmailHtml } from "../../../lib/email-templates"
 import { guardarEstimado } from "../../../lib/estimados"
+import { precioMaterialParaCotizar } from "../../../lib/materiales-precios"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 // Funnel público de ventas (job shop): calcula un estimado con el motor real
@@ -51,7 +52,8 @@ export const POST = async (req: MedusaRequest<QuoteLeadBody>, res: MedusaRespons
     perforaciones: Number(b.perforaciones) > 0 ? Math.min(100_000, Number(b.perforaciones)) : undefined,
     volumen_cm3: Number(b.volumen_cm3) > 0 ? Math.min(1_000_000, Number(b.volumen_cm3)) : undefined,
   }
-  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad, ...extra })
+  const precio_material = await precioMaterialParaCotizar(req.scope, String(servicio), material, calibre)
+  const precio = precioInstantaneo({ servicio, material, ancho, largo, alto, calibre, calidad, cantidad, ...extra, precio_material })
   if (!precio.ok) return res.status(400).json({ message: precio.mensaje })
   const { servicioCfg, resultado } = precio
 

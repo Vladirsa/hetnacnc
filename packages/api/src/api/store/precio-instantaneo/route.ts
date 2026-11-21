@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
+import { precioMaterialParaCotizar } from "../../../lib/materiales-precios"
 import { precioDesglosado, type EntradaPrecio } from "../../../lib/precio-instantaneo"
 
 // Precio desglosado y en vivo para las calculadoras públicas (/cotizar/*, guías):
@@ -21,6 +22,7 @@ export const POST = async (req: MedusaRequest<EntradaPrecio>, res: MedusaRespons
     perforaciones: Number(b.perforaciones) > 0 ? Math.min(100_000, Number(b.perforaciones)) : undefined,
     volumen_cm3: Number(b.volumen_cm3) > 0 ? Math.min(1_000_000, Number(b.volumen_cm3)) : undefined,
   }
+  entrada.precio_material = await precioMaterialParaCotizar(req.scope, entrada.servicio!, entrada.material, entrada.calibre)
   const r = precioDesglosado(entrada)
   if (!r.ok) return res.status(400).json({ message: r.mensaje })
   res.json(r.precio)

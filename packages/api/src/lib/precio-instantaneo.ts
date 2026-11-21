@@ -68,6 +68,17 @@ function materialPara(servicio: string, material = "", calibre = ""): { m: Mater
   return { m: mat(IMPRESION_MATERIAL[material] || "PLA") }
 }
 
+/** El precio de referencia del material, cambiado por el de mercado que mide el
+ *  agente de precios (por hoja según el tamaño de hoja del material, o por kg). */
+export function conPrecioDeMercado(m: MaterialRef, pm?: EntradaPrecio["precio_material"]): MaterialRef {
+  if (!pm || !m) return m
+  if (m.unidad === "hoja" && m.hoja && Number(pm.precio_m2) > 0) {
+    return { ...m, precio: Math.round(Number(pm.precio_m2) * ((m.hoja[0] * m.hoja[1]) / 1_000_000)) }
+  }
+  if (m.unidad === "kg" && Number(pm.precio_kg) > 0) return { ...m, precio: Math.round(Number(pm.precio_kg) * 100) / 100 }
+  return m
+}
+
 export type EntradaPrecio = {
   servicio?: string
   material?: string
@@ -77,6 +88,8 @@ export type EntradaPrecio = {
   calibre?: string
   calidad?: string
   cantidad?: number
+  /** Precio de mercado del material (base de precios, lib/materiales-precios.ts): reemplaza el de referencia */
+  precio_material?: { nombre?: string; precio_m2?: number | null; precio_kg?: number | null; fecha?: string | null } | null
   /** Del archivo del cliente (ya a la escala pedida): metros de corte en mm, entradas, volumen real */
   corte_mm?: number
   perforaciones?: number
@@ -109,7 +122,8 @@ export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
     perforaciones: Number(e.perforaciones) > 0 ? Math.round(Number(e.perforaciones)) : base.perforaciones,
     volumenCm3: Number(e.volumen_cm3) > 0 ? Number(e.volumen_cm3) : base.volumenCm3,
   }
-  const { m, aviso } = materialPara(servicio as string, material, calibre)
+  const { m: ref, aviso } = materialPara(servicio as string, material, calibre)
+  const m = conPrecioDeMercado(ref, e.precio_material)
   const r = estimar({ servicio: soporte.maquina, pieza, material: m, cantidad, relleno: es3D ? RELLENO_CALIDAD[calidad || ""] ?? 20 : undefined })
   if (!r.ok) return { ok: false, mensaje: r.motivo }
   return {
