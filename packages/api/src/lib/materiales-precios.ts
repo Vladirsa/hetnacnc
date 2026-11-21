@@ -15,7 +15,11 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 export const T_PRECIO = "hetna_precio_material"
 
 type Unidad = "hoja" | "kg" | "litro"
-export type Material = { clave: string; nombre: string; categoria: string; unidad: Unidad; ancho_m?: number; largo_m?: number }
+export type Material = { clave: string; nombre: string; categoria: string; unidad: Unidad; ancho_m?: number; largo_m?: number; espesor_mm?: number; densidad?: number }
+
+// Espesor de los calibres y de las placas (mm) y densidad (g/cm³), para pasar de
+// precio por hoja a precio por kg: kg por m² = espesor (mm) × densidad.
+const CALIBRE_MM: Record<number, number> = { 10: 3.42, 12: 2.66, 14: 1.9, 16: 1.52, 18: 1.21, 20: 0.91, 22: 0.76, 24: 0.61 }
 
 const HOJA = { unidad: "hoja" as const, ancho_m: 1.22, largo_m: 2.44 }
 const HOJA_4X8 = { unidad: "hoja" as const, ancho_m: 1.2192, largo_m: 2.4384 }
@@ -30,12 +34,12 @@ export const MATERIALES: Material[] = [
   ...[3, 6, 10].map((e) => ({ clave: `pvc_${e}`, nombre: `PVC espumado ${e} mm`, categoria: "Plásticos", ...HOJA })),
   { clave: "acm_3", nombre: "Aluminio compuesto (ACM) 3 mm", categoria: "Plásticos", ...HOJA },
   { clave: "policarbonato_6", nombre: "Policarbonato celular 6 mm", categoria: "Plásticos", ...HOJA },
-  ...[10, 12, 14, 16, 18, 20].map((c) => ({ clave: `negra_cal${c}`, nombre: `Lámina negra calibre ${c}`, categoria: "Metales", ...HOJA_4X8 })),
-  ...[18, 20, 22, 24].map((c) => ({ clave: `galv_cal${c}`, nombre: `Lámina galvanizada calibre ${c}`, categoria: "Metales", ...HOJA_4X8 })),
-  ...[14, 16, 18, 20].map((c) => ({ clave: `inox_cal${c}`, nombre: `Lámina inoxidable 304 calibre ${c}`, categoria: "Metales", ...HOJA_4X8 })),
-  { clave: "aluminio_116", nombre: 'Lámina de aluminio 1/16"', categoria: "Metales", ...HOJA_4X8 },
-  { clave: "aluminio_18", nombre: 'Placa de aluminio 1/8"', categoria: "Metales", ...HOJA_4X8 },
-  { clave: "aluminio_14", nombre: 'Placa de aluminio 1/4"', categoria: "Metales", ...HOJA_4X8 },
+  ...[10, 12, 14, 16, 18, 20].map((c) => ({ clave: `negra_cal${c}`, nombre: `Lámina negra calibre ${c}`, categoria: "Metales", ...HOJA_4X8, espesor_mm: CALIBRE_MM[c], densidad: 7.85 })),
+  ...[18, 20, 22, 24].map((c) => ({ clave: `galv_cal${c}`, nombre: `Lámina galvanizada calibre ${c}`, categoria: "Metales", ...HOJA_4X8, espesor_mm: CALIBRE_MM[c], densidad: 7.85 })),
+  ...[14, 16, 18, 20].map((c) => ({ clave: `inox_cal${c}`, nombre: `Lámina inoxidable 304 calibre ${c}`, categoria: "Metales", ...HOJA_4X8, espesor_mm: CALIBRE_MM[c], densidad: 7.9 })),
+  { clave: "aluminio_116", nombre: 'Lámina de aluminio 1/16"', categoria: "Metales", ...HOJA_4X8, espesor_mm: 1.59, densidad: 2.7 },
+  { clave: "aluminio_18", nombre: 'Placa de aluminio 1/8"', categoria: "Metales", ...HOJA_4X8, espesor_mm: 3.18, densidad: 2.7 },
+  { clave: "aluminio_14", nombre: 'Placa de aluminio 1/4"', categoria: "Metales", ...HOJA_4X8, espesor_mm: 6.35, densidad: 2.7 },
   { clave: "pla_1kg", nombre: "Filamento PLA 1.75 mm", categoria: "Impresión 3D", unidad: "kg" },
   { clave: "petg_1kg", nombre: "Filamento PETG 1.75 mm", categoria: "Impresión 3D", unidad: "kg" },
   { clave: "abs_1kg", nombre: "Filamento ABS 1.75 mm", categoria: "Impresión 3D", unidad: "kg" },
@@ -152,6 +156,13 @@ export async function estadisticasMateriales(knex) {
       cambio_pct: ult && ant && Number(ant.mediana) > 0 ? Math.round(((Number(ult.mediana) - Number(ant.mediana)) / Number(ant.mediana)) * 1000) / 10 : null,
       precio_m2: mediana && area ? r2(mediana / area) : null,
       precio_gramo: mediana && m.unidad === "kg" ? Math.round((mediana / 1000) * 10000) / 10000 : null,
+      // Por kg: filamentos (precio del rollo de 1 kg) y metales (hoja ÷ su peso)
+      precio_kg:
+        mediana && (m.unidad === "kg" || m.unidad === "litro")
+          ? mediana
+          : mediana && area && m.espesor_mm && m.densidad
+            ? r2(mediana / (area * m.espesor_mm * m.densidad))
+            : null,
       serie: serie.slice(-26).map((f) => ({ fecha: new Date(f.fecha).toISOString().slice(0, 10), mediana: Number(f.mediana) })),
       fuentes: typeof ult?.fuentes === "string" ? JSON.parse(ult.fuentes) : ult?.fuentes || [],
     }
@@ -178,7 +189,7 @@ export async function precioMaterialParaCotizar(container, servicio: string, mat
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
     const m = (await estadisticasEnCache(knex)).find((x) => x.clave === clave)
     if (!m?.mediana) return null
-    return { clave, nombre: m.nombre, precio_m2: m.precio_m2, precio_gramo: m.precio_gramo, fecha: m.fecha }
+    return { clave, nombre: m.nombre, precio_m2: m.precio_m2, precio_kg: m.precio_kg, fecha: m.fecha }
   } catch {
     return null
   }

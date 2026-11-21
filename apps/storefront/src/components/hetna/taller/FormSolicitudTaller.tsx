@@ -73,6 +73,8 @@ export type Prellenado = {
   material?: string
   archivo?: string // ruta relativa (/mx/disenar/...) de donde bajar el DXF
   nombreArchivo?: string
+  // "producto": viene de "Fabrícalo con un taller" en la ficha de un diseño de la tienda
+  desde?: string
   proceso?: string // "Corte láser", "Router CNC"…
   // Desde el estimador del cliente (/user/cotizar): el archivo ya está en el
   // bucket (no se vuelve a subir), la cantidad y la descripción vienen puestas
@@ -80,6 +82,8 @@ export type Prellenado = {
   archivos?: (ArchivoSubido & { geo?: string })[]
   cantidad?: string
   descripcion?: string
+  // "Repetir pedido" desde Mis piezas: folio de la solicitud original
+  repiteFolio?: string
 }
 
 const pesoLegible = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`)
@@ -314,6 +318,9 @@ export default function FormSolicitudTaller({
       medidas: v("medidas"),
       acabado: v("acabado"),
       tolerancia: v("tolerancia"),
+      orden_compra: v("orden_compra") || undefined,
+      con_factura: fd.get("con_factura") === "1",
+      repite_folio: prellenado?.repiteFolio || undefined,
       // Medidas leídas de los archivos en el navegador
       medidas_archivo: archivos
         .filter((a) => a.geo && a.subido)
@@ -405,7 +412,15 @@ export default function FormSolicitudTaller({
           Cotizando con <strong className="text-[#142033]">{nombreTaller}</strong>
         </p>
       )}
-      {prellenado && (
+      {prellenado?.desde === "producto" && !prellenado.archivos?.length && (
+        <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
+          <strong className="text-[#0F7A4A]">Diseño de la tienda:</strong> {prellenado.pieza}
+          {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
+          {prellenado.material ? ` · ${prellenado.material}` : ""}. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
+          incluirá en su propuesta. Revisa la cantidad, pon tu ciudad y envía.
+        </div>
+      )}
+      {prellenado && !(prellenado.desde === "producto" && !prellenado.archivos?.length) && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
           <strong className="text-[#0F7A4A]">{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</strong> {prellenado.pieza}
           {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
@@ -643,6 +658,22 @@ export default function FormSolicitudTaller({
               placeholder="Google Drive, Dropbox o WeTransfer"
             />
           </div>
+          {/* Empresas (estrategia 2.4): orden de compra y factura con los datos de Mi empresa */}
+          <div>
+            <label className={ETIQUETA} htmlFor="orden_compra">Orden de compra (opcional)</label>
+            <input id="orden_compra" name="orden_compra" className={CAMPO} maxLength={60} placeholder="Ej. OC-2026-0154" />
+          </div>
+          {conSesion && (
+            <div className="flex items-end">
+              <label className="flex items-start gap-2 text-sm text-[#40403A]">
+                <input type="checkbox" name="con_factura" value="1" className="mt-1 accent-[#C2560A]" />
+                <span>
+                  Necesito factura (CFDI) con los datos de{" "}
+                  <a href="/mx/user/empresa" target="_blank" className="font-semibold text-[#C2560A] underline">Mi empresa</a>
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       </fieldset>
 

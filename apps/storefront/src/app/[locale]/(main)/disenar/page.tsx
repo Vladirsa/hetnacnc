@@ -47,7 +47,7 @@ const SERVICIOS = [
   { icono: "cotizador", t: "Cotiza tu pieza", d: "Sube tu archivo y recibe precios de talleres CNC de todo México.", href: "/cotizar" },
   { icono: "tienda", t: "Fabrícamelo", d: "¿No tienes máquina? Un taller cerca de ti corta, graba o imprime tu diseño.", href: "/fabricacion" },
   { icono: "gcode", t: "DXF a G-code", d: "Pasadas, avance y revoluciones calculados para tu router o láser.", href: "/cam/subir" },
-  { icono: "aprender", t: "Aprende CNC", d: "Cursos, guías y el foro de la comunidad para resolver dudas.", href: "/aprendizaje-cnc" },
+  { icono: "aprender", t: "Aprende CNC", d: "Cursos, guías y el foro de la comunidad para resolver dudas.", href: "/servicios/aprendizaje-cnc" },
   { icono: "calculadora", t: "Calculadoras CNC", d: "Avance, velocidad de corte, costos y tiempos de maquinado.", href: "/calculadora-cnc" },
   { icono: "caja", t: "Talleres y vendedores", d: "Encuentra talleres verificados o vende tus productos y archivos.", href: "/talleres" },
 ]

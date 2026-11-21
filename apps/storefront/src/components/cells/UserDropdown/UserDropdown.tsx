@@ -162,6 +162,7 @@ export const UserDropdown = ({
                 <Opcion href="/herramientas-cnc" icono="🛠️">Herramientas CNC</Opcion>
                 <Opcion href="/user/cam" icono="🧭">Mis trabajos CAM</Opcion>
                 <Opcion href="/user/solicitudes" icono="🏭">Mis solicitudes de fabricación</Opcion>
+                <Opcion href="/user/piezas" icono="🔁">Mis piezas (repetir pedido)</Opcion>
                 <Opcion href="/cotizar" icono="📐">Cotizar una pieza</Opcion>
               </Grupo>
 

@@ -17,6 +17,7 @@
 // Reglas: precios siempre en MXN con IVA incluido; el cliente cotiza sin
 // registrarse, el taller necesita su cuenta para responder; nunca se muestran
 // datos de contacto del cliente (el servidor ya no los manda).
+import { PRECIO_PLAN } from "@/lib/hetna/app-taller"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -91,7 +92,6 @@ const ETAPAS: { clave: EtapaTaller; nombre: string }[] = [
 
 // Planes del Cotizador (MXN al mes). El cupo del servidor junta Pro e
 // Industrial como "pro" (los dos sin límite de cotizaciones).
-const PRECIO_PLAN: Record<string, string> = { gratis: "$0", taller: "$299", pro: "$599" }
 
 // ---------------------------------------------------------------------------
 // Utilidades
@@ -338,7 +338,7 @@ export function PanelTaller() {
             etiqueta="Por liberar en SafeDeal"
             valor={mxn(porLiberar)}
             icono={IC.escudo}
-            nota={nSafeDeal ? `${nSafeDeal} ${nSafeDeal === 1 ? "trabajo" : "trabajos"} · ya sin comisión` : "Nada apartado por ahora"}
+            nota={nSafeDeal ? `${nSafeDeal} ${nSafeDeal === 1 ? "trabajo" : "trabajos"} · lo que recibes completo` : "Nada apartado por ahora"}
           />
           <Indicador
             etiqueta="Calificación"

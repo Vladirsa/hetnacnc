@@ -268,6 +268,64 @@ export const GUIAS: Guia[] = [
     ],
   },
   {
+    slug: "torno-cnc",
+    titulo: "Servicio de torno CNC en México",
+    descripcion: "Torneado CNC de flechas, bujes, roscas y piezas de revolución en acero, aluminio, bronce y plásticos. Publica tu pieza y compara propuestas de talleres.",
+    h1: "Servicio de torno CNC",
+    intro: [
+      "El torno CNC hace piezas redondas o de revolución: flechas, bujes, pernos, coples, poleas, roscas y casquillos. La pieza gira y la herramienta corta, así que se logran diámetros y acabados muy precisos.",
+      "Publica tu pieza con plano o modelo 3D y talleres de torneado de México te mandan su precio, tiempo de entrega y garantía dentro de HETNA.",
+    ],
+    servicio: "Maquinado",
+    coincide: ["Maquinado", "Torno", "Torneado"],
+    materiales: ["Acero", "Aluminio", "Bronce", "Nylon"],
+    tipo: "Torneado CNC",
+    cta: { href: "/cotizar?servicio=Maquinado", texto: "Pedir propuestas" },
+    secciones: [
+      {
+        titulo: "Qué piezas se hacen en torno",
+        lista: [
+          "Flechas y ejes, con cambios de diámetro, chaflanes y cuñeros.",
+          "Bujes, casquillos y separadores.",
+          "Roscas exteriores e interiores (métricas, UNC/UNF, NPT).",
+          "Poleas, coples, pernos, tapones y conexiones.",
+          "Piezas con caras fresadas o barrenos laterales, si el torno tiene herramienta motorizada.",
+        ],
+      },
+      {
+        titulo: "Materiales comunes",
+        lista: [
+          "Acero al carbón (1018, 1045) y aceros aleados (4140) para flechas y piezas de esfuerzo.",
+          "Acero inoxidable (304, 316) para alimentos, agua y ambientes corrosivos.",
+          "Aluminio (6061) para piezas ligeras y prototipos.",
+          "Bronce y latón para bujes y piezas de desgaste.",
+          "Plásticos de ingeniería (nylon, acetal/Delrin, UHMW) para bujes, rodillos y piezas que no deben rayar.",
+        ],
+      },
+      {
+        titulo: "Qué incluir en tu solicitud",
+        lista: [
+          "Plano en PDF con diámetros, largos y tolerancias; o modelo 3D en STEP.",
+          "Material y, si aplica, tratamiento térmico o recubrimiento (pavonado, zincado, cromo duro).",
+          "Especificación de roscas (por ejemplo M20x1.5 o 3/4-10 UNC).",
+          "Cantidad: en lotes, el costo por pieza baja mucho porque el programa y la preparación se hacen una vez.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Qué tolerancia se puede lograr en torno CNC?", r: "En diámetros es común trabajar con ±0.02 a ±0.05 mm, y más fino en medidas críticas. Indica en el plano sólo las tolerancias que de verdad necesitas: apretar todas encarece la pieza." },
+      { p: "¿Qué archivo mando?", r: "Un plano en PDF con medidas y tolerancias es lo más útil para torneado. Un STEP ayuda a ver la forma. STL no trae medidas exactas de roscas ni diámetros." },
+      { p: "¿Hacen una sola pieza o sólo lotes?", r: "Depende del taller: algunos hacen piezas únicas y refacciones, otros prefieren lotes. En tu solicitud indica la cantidad y los talleres que la aceptan te mandan propuesta." },
+      { p: "¿Cuánto cobra HETNA?", r: "Publicar tu solicitud es gratis y los trabajos de solicitudes no pagan comisión. Cada propuesta trae precio, tiempos, condiciones de pago y garantía para que compares." },
+    ],
+    enlaces: [
+      { href: "/categories/maquinado-cnc", texto: "Maquinado CNC", detalle: "Talleres y trabajos abiertos" },
+      { href: "/cnc/maquinado-cnc-aluminio", texto: "Maquinado CNC de aluminio", detalle: "Aleaciones, procesos y tolerancias" },
+      { href: "/laboratorio-cam", texto: "CAM Studio", detalle: "Programas de torno CNC" },
+      { href: "/calculadora-cnc", texto: "Calculadora de avance y RPM", detalle: "Parámetros de partida" },
+    ],
+  },
+  {
     slug: "programacion-cam-5-ejes",
     titulo: "Programación CAM de 5 ejes: servicio en México",
     descripcion: "Programación CAM de 5 ejes simultáneos y 3+2: trayectorias, simulación y postprocesador para tu máquina. Cotiza con programadores de México.",

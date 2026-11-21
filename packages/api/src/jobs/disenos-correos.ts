@@ -12,8 +12,8 @@ export default async function disenosCorreos(container: MedusaContainer) {
   const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   try {
     const r = await correrCorreosDiseno(knex, logger)
-    const total = r.diseno_espera + r.regalo_sin_usar + r.creditos_bajos
-    if (total || r.omitidos) logger.info(`[disenos-correos] enviados ${total} (diseño espera ${r.diseno_espera}, regalo sin usar ${r.regalo_sin_usar}, créditos bajos ${r.creditos_bajos}); omitidos por frecuencia ${r.omitidos}`)
+    const total = r.diseno_espera + r.regalo_sin_usar + r.creditos_bajos + r.sin_volver
+    if (total || r.omitidos) logger.info(`[disenos-correos] enviados ${total} (diseño espera ${r.diseno_espera}, regalo sin usar ${r.regalo_sin_usar}, créditos bajos ${r.creditos_bajos}, sin volver ${r.sin_volver}; WhatsApp ${r.whatsapp}); omitidos por frecuencia ${r.omitidos}`)
   } catch (e) {
     logger.error(`[disenos-correos] falló la corrida: ${(e as Error).message}`)
   }

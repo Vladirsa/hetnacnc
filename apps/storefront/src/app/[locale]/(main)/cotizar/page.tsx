@@ -78,7 +78,7 @@ export default async function CotizarPage({
   // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
   const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
   const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined)
-  const prellenado = desde && pieza ? { pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso, cantidad: texto(cantidad, 60), descripcion: texto(nota, 1500) } : undefined
+  const prellenado = desde && pieza ? { desde, pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso, cantidad: texto(cantidad, 60), descripcion: texto(nota, 1500) } : undefined
 
   return (
     <main className="w-full bg-[#FAF9F6]">
@@ -92,7 +92,7 @@ export default async function CotizarPage({
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-            {t ? `Cotiza con ${t.nombre}` : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
+            {t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t

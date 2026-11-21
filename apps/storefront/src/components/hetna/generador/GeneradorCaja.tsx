@@ -29,6 +29,7 @@ import {
   r1,
 } from "@/components/hetna/estudio3d/Controles"
 import { mandarAFabricar, materialLaserPorEspesor, materialRouterMDF, mandarPaqueteACotizador, nombresDeArchivo } from "@/lib/generador/aCotizador"
+import { PrecioFabricar } from "./PrecioFabricar"
 import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, piezasPrueba, type Pieza, type TipoCaja } from "@/lib/generador/caja"
 import { piezasAGrupo3D } from "@/lib/generador/caja3d"
 
@@ -819,12 +820,17 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
         <Boton onClick={() => listo && imprimir()}>PDF</Boton>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Boton tipo="verde" onClick={fabricar}>
-          Fabrícamelo
-        </Boton>
-        <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
-      </div>
+      {listo && (
+        <PrecioFabricar
+          dxf={aDXF(r.piezas)}
+          nombreArchivo={nombreArchivo}
+          pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
+          medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
+          maquina={maquina === "router" ? "router" : "laser"}
+          espesorMm={esp}
+        />
+      )}
+      <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>Preguntar por WhatsApp</Boton>
       {aviso && <Aviso tipo="error">{aviso}</Aviso>}
     </>
   )

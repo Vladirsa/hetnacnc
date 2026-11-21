@@ -42,7 +42,8 @@ export const Chat = ({
     return null;
   }
 
-  if (!user?.id || !user?.email || !seller?.id || !seller?.email) {
+  // El correo del taller ya no es público: TalkJS conserva el que se guardó desde su panel
+  if (!user?.id || !user?.email || !seller?.id) {
     return null;
   }
 
@@ -79,7 +80,7 @@ export const Chat = ({
               supportUser={{
                 id: seller.id,
                 name: sellerName,
-                email: seller.email,
+                email: seller.email || null,
                 photoUrl: seller.logo || '/talkjs-placeholder.jpg',
                 role: 'seller'
               }}

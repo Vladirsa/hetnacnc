@@ -1,52 +1,82 @@
 // Precio al instante de HETNA (las calculadoras de /cotizar/corte-laser,
-// /router-cnc, /corte-plasma e /impresion-3d). Usa el motor real del Cotizador
-// CNC (cotizador-engine.ts) con las tarifas de cotizador-datos.json.
+// /router-cnc, /corte-plasma e /impresion-3d, las guías, el correo del
+// estimado y el asistente de IA).
 //
-// Es una función pura: no guarda nada ni manda correos. La usan la ruta
-// pública /store/quote-leads (que además registra el lead) y el asistente de
-// IA para talleres (lib/ia-fabricacion.ts).
-import { calcular } from "./cotizador-engine"
-import cotizadorDatos from "./cotizador-datos.json"
+// Desde el 21 nov 2026 usa el MISMO estimador que la calculadora de /cotizar
+// (estimador-referencia.ts): material + máquina + operador + preparación +
+// fijos ÷ (1 − margen), con metros de corte o volumen reales cuando el cliente
+// sube su archivo. Antes usaba las tarifas del taller de Vlado
+// (cotizador-datos.json) sin material ni mínimos: un llavero láser salía en
+// $0.89 y una pieza 3D se cobraba por la caja completa.
+//
+// Es una función pura: no guarda nada ni manda correos.
+import { estimar, MATERIALES, type MaterialRef, type Pieza, piezaAMano, type TipoMaquina } from "./estimador-referencia"
 
-// Lo que la calculadora pública le pregunta al cliente, en sus palabras, y
-// cómo se traduce a los parámetros del motor. Plasma e impresión 3D usan las
-// mismas tarifas que el Cotizador de los talleres (cotizador-datos.json).
+// Lo que la calculadora pública le pregunta al cliente, en sus palabras.
 export const PLASMA_MATERIAL: Record<string, string> = {
-  "Acero al carbón": "acero_negro",
+  "Acero al carbón": "acero",
   "Acero inoxidable": "inox",
   "Aluminio": "aluminio",
 }
 export const PLASMA_CALIBRE: Record<string, string> = {
-  "Lámina delgada (cal. 20 a 12)": "Cal 14",
-  "Placa (cal. 10 o más grueso)": "Cal 10",
+  "Lámina delgada (cal. 20 a 12)": "delgado",
+  "Placa (cal. 10 o más grueso)": "placa",
 }
 export const IMPRESION_MATERIAL: Record<string, string> = {
-  PLA: "pla",
-  PETG: "petg",
-  ABS: "abs",
-  "TPU (flexible)": "tpu",
+  PLA: "PLA",
+  PETG: "PETG",
+  ABS: "ABS / ASA",
+  "TPU (flexible)": "TPU flexible",
 }
+export const MATERIALES_LASER = ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílico, cuero, tela u otro"]
 export const IMPRESION_CALIDAD = ["Prototipo rápido", "Pieza funcional", "Alta calidad"]
+const RELLENO_CALIDAD: Record<string, number> = { "Prototipo rápido": 15, "Pieza funcional": 20, "Alta calidad": 35 }
 
-export const SERVICIOS_SOPORTADOS: Record<string, { tipoNombre: string; materialLaserPorMaterial?: Record<string, string> }> = {
-  laser_co2: {
-    tipoNombre: "Solo corte",
-    materialLaserPorMaterial: {
-      "MDF delgado (hasta 2.5mm)": "mdf_fino",
-      "MDF/Madera (3-5mm)": "mdf_medio",
-      "Acrílico, cuero, tela u otro": "otros",
-    },
-  },
-  router: {
-    tipoNombre: "Corte simple",
-  },
-  plasma: {
-    tipoNombre: "Corte por m²",
-  },
-  impresion_3d: {
-    // Se reemplaza por la calidad que elija el cliente.
-    tipoNombre: "Pieza funcional",
-  },
+const NOMBRES: Record<string, string> = { laser_co2: "Corte láser", router: "Router CNC", plasma: "Corte plasma", impresion_3d: "Impresión 3D" }
+export const SERVICIOS_SOPORTADOS: Record<string, { nombre: string; maquina: TipoMaquina }> = {
+  laser_co2: { nombre: NOMBRES.laser_co2, maquina: "laser_co2" },
+  router: { nombre: NOMBRES.router, maquina: "router" },
+  plasma: { nombre: NOMBRES.plasma, maquina: "plasma" },
+  impresion_3d: { nombre: NOMBRES.impresion_3d, maquina: "impresora_3d" },
+}
+
+const mat = (nombre: string) => MATERIALES.find((m) => m.nombre === nombre) as MaterialRef
+
+/** Material de referencia para lo que eligió el cliente (con aviso si es aproximado). */
+function materialPara(servicio: string, material = "", calibre = ""): { m: MaterialRef; aviso?: string } {
+  if (servicio === "laser_co2") {
+    if (/delgado/i.test(material)) return { m: mat("MDF 3 mm") }
+    if (/3-5/.test(material)) return { m: { ...mat("MDF 6 mm"), nombre: "MDF 4.5 mm", espesor: 4.5, precio: 230 } }
+    return { m: mat("Acrílico 3 mm"), aviso: "Se calculó con acrílico de 3 mm; cuero y tela suelen salir más baratos." }
+  }
+  if (servicio === "router") {
+    const mdf = material.match(/MDF\s*(\d+)/i)
+    if (mdf) return { m: mat(`MDF ${mdf[1]} mm`) || mat("MDF 15 mm") }
+    if (/acr[ií]lico/i.test(material)) return { m: mat("Acrílico 6 mm") }
+    if (/aluminio/i.test(material)) return { m: mat("Aluminio 3 mm") }
+    if (/pino|cedro|parota|encino|madera/i.test(material))
+      return { m: { ...mat("Triplay 18 mm"), nombre: `${material} 19 mm` }, aviso: "La madera sólida varía mucho de precio: el taller confirma el costo del material." }
+    return { m: mat("MDF 15 mm") }
+  }
+  if (servicio === "plasma") {
+    const placa = PLASMA_CALIBRE[calibre] === "placa"
+    const clave = PLASMA_MATERIAL[material] || "acero"
+    if (clave === "inox") return { m: mat("Inoxidable 3 mm") }
+    if (clave === "aluminio") return { m: mat(placa ? "Aluminio 6 mm" : "Aluminio 3 mm") }
+    return { m: mat(placa ? 'Acero 6 mm (1/4")' : "Acero cal. 14 (1.9 mm)") }
+  }
+  return { m: mat(IMPRESION_MATERIAL[material] || "PLA") }
+}
+
+/** El precio de referencia del material, cambiado por el de mercado que mide el
+ *  agente de precios (por hoja según el tamaño de hoja del material, o por kg). */
+export function conPrecioDeMercado(m: MaterialRef, pm?: EntradaPrecio["precio_material"]): MaterialRef {
+  if (!pm || !m) return m
+  if (m.unidad === "hoja" && m.hoja && Number(pm.precio_m2) > 0) {
+    return { ...m, precio: Math.round(Number(pm.precio_m2) * ((m.hoja[0] * m.hoja[1]) / 1_000_000)) }
+  }
+  if (m.unidad === "kg" && Number(pm.precio_kg) > 0) return { ...m, precio: Math.round(Number(pm.precio_kg) * 100) / 100 }
+  return m
 }
 
 export type EntradaPrecio = {
@@ -58,13 +88,19 @@ export type EntradaPrecio = {
   calibre?: string
   calidad?: string
   cantidad?: number
-  /** Precio de mercado del material (lib/materiales-precios.ts); sin él no se suma material */
-  precio_material?: { nombre?: string; precio_m2?: number | null; precio_gramo?: number | null } | null
+  /** Precio de mercado del material (base de precios, lib/materiales-precios.ts): reemplaza el de referencia */
+  precio_material?: { nombre?: string; precio_m2?: number | null; precio_kg?: number | null; fecha?: string | null } | null
+  /** Del archivo del cliente (ya a la escala pedida): metros de corte en mm, entradas, volumen real */
+  corte_mm?: number
+  perforaciones?: number
+  volumen_cm3?: number
 }
 
 export type PrecioInstantaneo =
-  | { ok: true; servicioCfg: any; resultado: any }
+  | { ok: true; servicioCfg: { nombre: string }; resultado: { pvMinimo: number; pvRecomendado: number; pvPremium: number; iva: number; total: number }; estimado: Extract<ReturnType<typeof estimar>, { ok: true }>; avisos: string[] }
   | { ok: false; mensaje: string }
+
+const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100
 
 export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
   const { servicio, material, calibre, calidad } = e
@@ -75,60 +111,32 @@ export function precioInstantaneo(e: EntradaPrecio): PrecioInstantaneo {
   const soporte = servicio ? SERVICIOS_SOPORTADOS[servicio] : undefined
   if (!soporte) return { ok: false, mensaje: "servicio debe ser 'laser_co2', 'router', 'plasma' o 'impresion_3d'" }
   if (!(ancho > 0) || !(largo > 0) || !(cantidad > 0)) return { ok: false, mensaje: "Faltan ancho, largo o cantidad." }
-  // La impresión 3D se cobra por volumen: sin la altura no hay precio.
+  // La impresión 3D se calcula por volumen: sin la altura no hay precio.
   if (servicio === "impresion_3d" && !(alto > 0)) return { ok: false, mensaje: "Para impresión 3D falta la altura de la pieza." }
 
-  const datos = cotizadorDatos as any
-  const servicioCfg = datos.servicios.find((s: any) => s.clave === servicio)
-  const nombreTipo =
-    servicio === "impresion_3d" && calidad && IMPRESION_CALIDAD.includes(calidad) ? calidad : soporte.tipoNombre
-  const tipo = servicioCfg.tipos.find((t: any) => t.n === nombreTipo)
-
-  const materialLaser =
-    servicio === "laser_co2" && material && soporte.materialLaserPorMaterial
-      ? soporte.materialLaserPorMaterial[material] || "otros"
-      : undefined
-
-  // Material a precio de mercado: en hojas, área de la pieza × precio por m² (el
-  // motor suma 15% de merma); en impresión 3D, el costo por gramo del filamento.
-  const pm = e.precio_material
-  const conMaterial: Record<string, unknown> = {}
-  let tarifas = servicioCfg.tarifas
-  if (pm && servicio === "impresion_3d" && Number(pm.precio_gramo) > 0) {
-    const clave = { pla: "costo_pla", petg: "costo_petg", abs: "costo_abs", tpu: "costo_tpu" }[IMPRESION_MATERIAL[material || ""] || "pla"]
-    if (clave) tarifas = { ...tarifas, [clave]: Number(pm.precio_gramo) }
-  } else if (pm && Number(pm.precio_m2) > 0) {
-    conMaterial.materialLibrePrecio = ((ancho * largo) / 10000) * Number(pm.precio_m2)
-    conMaterial.materialLibreNombre = pm.nombre || "Material"
+  const es3D = servicio === "impresion_3d"
+  const base = piezaAMano(largo * 10, ancho * 10, es3D ? alto * 10 : 0, "normal", es3D)
+  const pieza: Pieza = {
+    ...base,
+    metrosCorte: Number(e.corte_mm) > 0 ? Number(e.corte_mm) / 1000 : base.metrosCorte,
+    perforaciones: Number(e.perforaciones) > 0 ? Math.round(Number(e.perforaciones)) : base.perforaciones,
+    volumenCm3: Number(e.volumen_cm3) > 0 ? Number(e.volumen_cm3) : base.volumenCm3,
   }
-
-  const resultado = calcular({
-    ...conMaterial,
-    cfg: { tarifas, rangos: servicioCfg.rangos },
-    costos: datos.costos,
-    tipo: { nombre: tipo.n, formula: tipo.f, factor: tipo.k },
-    nombreServicio: servicioCfg.nombre,
-    emojiServicio: servicioCfg.emoji,
-    ancho,
-    largo,
-    cantidad,
-    materialLaser,
-    ...(servicio === "plasma"
-      ? {
-          material: PLASMA_MATERIAL[material || ""] || "acero_negro",
-          calibre: PLASMA_CALIBRE[calibre || ""] || "Cal 14",
-        }
-      : {}),
-    ...(servicio === "impresion_3d" ? { alto, materialImpresion: IMPRESION_MATERIAL[material || ""] || "pla" } : {}),
-    aplicarIva: true,
-  })
-  return { ok: true, servicioCfg, resultado }
+  const { m: ref, aviso } = materialPara(servicio as string, material, calibre)
+  const m = conPrecioDeMercado(ref, e.precio_material)
+  const r = estimar({ servicio: soporte.maquina, pieza, material: m, cantidad, relleno: es3D ? RELLENO_CALIDAD[calidad || ""] ?? 20 : undefined })
+  if (!r.ok) return { ok: false, mensaje: r.motivo }
+  return {
+    ok: true,
+    servicioCfg: { nombre: soporte.nombre },
+    resultado: { pvMinimo: r.min, pvRecomendado: r.total, pvPremium: r.max, iva: r2(r.total * 0.16), total: r2(r.total * 1.16) },
+    estimado: r,
+    avisos: [...(aviso ? [aviso] : []), ...r.avisos],
+  }
 }
 
-// ── Precio desglosado y en vivo (estrategia 1.2) ─────────────────────────
-// Lo que JLC o Ponoko muestran: cómo se forma el precio y cuánto baja la pieza
-// al pedir más. Sale del mismo motor (su "detalle": minutos × tarifa, m² ×
-// tarifa, mínimo por pedido, gramos); no se inventan partidas.
+// ── Precio desglosado y en vivo ────────────────────────────────────────
+// Cómo se forma el precio y cuánto baja la pieza al pedir más.
 
 export type PrecioDesglosado = {
   minimo: number
@@ -136,53 +144,28 @@ export type PrecioDesglosado = {
   maximo: number
   iva: number
   total: number
-  /** Cómo se calculó, en palabras (sale del detalle del motor) */
+  /** Cómo se calculó, en palabras */
   calculo: string[]
-  /** El pedido quedó en el cobro mínimo del servicio */
+  /** La preparación de la máquina pesa mucho: pedir más piezas baja el precio unitario */
   aplica_minimo: boolean
   por_volumen: { cantidad: number; unitario: number; total: number }[]
 }
 
-const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100
 const pesos = (n: number) => `$${(Math.round(n * 100) / 100).toLocaleString("es-MX", { maximumFractionDigits: 2 })}`
-const num = (n: number, d = 2) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("es-MX", { maximumFractionDigits: d })
 const CANTIDADES_VOLUMEN = [1, 10, 50, 100]
-
-function lineasCalculo(servicio: string, d: Record<string, number>, cantidad: number, recomendado: number): { calculo: string[]; minimo: boolean } {
-  const c: string[] = []
-  let minimo = false
-  const pz = cantidad === 1 ? "1 pieza" : `${cantidad} piezas`
-  if (servicio === "laser_co2") {
-    if (d.minutos_estimados) c.push(`Tiempo de corte estimado: ${num(d.minutos_estimados, 1)} min para ${pz}`)
-    if (d.tarifa_min) c.push(`Tarifa de máquina: ${pesos(d.tarifa_min)} por minuto`)
-  } else if (servicio === "router" || servicio === "plasma") {
-    if (d.area_m2) c.push(`Área a cortar: ${num(d.area_m2, 3)} m² por pieza × ${pz}`)
-    if (d.tarifa_m2) c.push(`Tarifa: ${pesos(d.tarifa_m2 * (d.material_factor || 1))} por m²${d.material_factor && d.material_factor !== 1 ? " (según el material)" : ""}`)
-    if (d.minimo_apertura) {
-      minimo = recomendado <= d.minimo_apertura + 0.01
-      c.push(`Cobro mínimo por pedido: ${pesos(d.minimo_apertura)}${minimo ? " (tu pedido quedó en el mínimo)" : ""}`)
-    }
-  } else if (servicio === "impresion_3d") {
-    if (d.volumen_cm3) c.push(`Volumen: ${num(d.volumen_cm3, 0)} cm³ por pieza`)
-    if (d.gramos_estimados) c.push(`Material estimado: ${num(d.gramos_estimados, 0)} g por pieza`)
-    if (d.tiempo_min) c.push(`Tiempo de impresión estimado: ${num(d.tiempo_min / 60, 1)} h por pieza`)
-    if (d.precio_minimo) {
-      minimo = recomendado <= d.precio_minimo + 0.01
-      c.push(`Precio mínimo: ${pesos(d.precio_minimo)}${minimo ? " (tu pedido quedó en el mínimo)" : ""}`)
-    }
-  }
-  if (d.__material) c.push(String(d.__material))
-  return { calculo: c, minimo }
-}
 
 export function precioDesglosado(e: EntradaPrecio): { ok: true; precio: PrecioDesglosado } | { ok: false; mensaje: string } {
   const p = precioInstantaneo(e)
   if (!p.ok) return p
-  const r = p.resultado
   const cantidad = Math.max(1, Math.round(Number(e.cantidad) || 1))
-  const detalle: any = { ...(r.detalle || {}) }
-  if (r.cm > 0) detalle.__material = `Material (${r.materialNombre || "a precio de mercado"}): ${pesos(r.cm)} con 15% de merma`
-  const { calculo, minimo } = lineasCalculo(String(e.servicio), detalle, cantidad, r.pvRecomendado)
+  const est = p.estimado
+  const aplica_minimo = est.partePrep >= 0.35
+  const calculo = [
+    `Tiempo de máquina: ${est.explicacion}`,
+    est.hojas > 0 ? `Material: ${est.piezasPorHoja} pieza(s) por hoja, ${pesos(est.costoMaterial)} incluido` : est.gramos > 0 ? `Material: ${Math.round(est.gramos)} g, ${pesos(est.costoMaterial)} incluido` : "",
+    aplica_minimo ? "La preparación de la máquina pesa mucho en pedidos chicos: con más piezas baja el precio de cada una" : "",
+    ...p.avisos,
+  ].filter(Boolean)
   const cantidades = [...new Set([...CANTIDADES_VOLUMEN, cantidad])].sort((a, b) => a - b)
   const por_volumen = cantidades
     .map((q) => {
@@ -195,13 +178,13 @@ export function precioDesglosado(e: EntradaPrecio): { ok: true; precio: PrecioDe
   return {
     ok: true,
     precio: {
-      minimo: r2(r.pvMinimo),
-      recomendado: r2(r.pvRecomendado),
-      maximo: r2(r.pvPremium),
-      iva: r2(r.iva),
-      total: r2(r.total),
+      minimo: r2(p.resultado.pvMinimo),
+      recomendado: r2(p.resultado.pvRecomendado),
+      maximo: r2(p.resultado.pvPremium),
+      iva: p.resultado.iva,
+      total: p.resultado.total,
       calculo,
-      aplica_minimo: minimo,
+      aplica_minimo,
       por_volumen,
     },
   }

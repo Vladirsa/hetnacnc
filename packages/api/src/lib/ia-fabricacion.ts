@@ -26,7 +26,7 @@ import { leerPlanApp } from "./licitacion-plan"
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto } from "./licitacion"
 import { asegurarPrivacidad, trabajoPublicoPrivado } from "./licitacion-privacidad"
 import { asegurarPropuestaFormal } from "./licitacion-propuesta"
-import { IMPRESION_CALIDAD, IMPRESION_MATERIAL, PLASMA_CALIBRE, SERVICIOS_SOPORTADOS, precioInstantaneo } from "./precio-instantaneo"
+import { IMPRESION_CALIDAD, IMPRESION_MATERIAL, MATERIALES_LASER as MATERIALES_LASER_PUBLICOS, PLASMA_CALIBRE, SERVICIOS_SOPORTADOS, precioInstantaneo } from "./precio-instantaneo"
 import { MENSAJES_DIA, TOPE_MES_USD, contarMensaje, estadoUso, gastoDelMes, registrarUso } from "./ia-fabricacion-uso"
 
 export const MODELO = () => (process.env.IA_FABRICACION_MODELO || "claude-haiku-5-5").trim()
@@ -103,7 +103,7 @@ export async function herramientasCalculadora(f: typeof fetch = fetch): Promise<
   }
 }
 
-const MATERIALES_LASER = Object.keys(SERVICIOS_SOPORTADOS.laser_co2.materialLaserPorMaterial || {})
+const MATERIALES_LASER = MATERIALES_LASER_PUBLICOS
 
 export const HERRAMIENTAS_HETNA: Herramienta[] = [
   {
