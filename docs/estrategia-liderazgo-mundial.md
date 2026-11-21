@@ -75,7 +75,7 @@ No cambia la operación. Cada punto se puede programar y desplegar por separado.
 | 3.2 ✅ (sin precio de material) | **Nesting real en el Cotizador**: cuántas piezas caben por hoja y el costo real de material. | Lantek, Almacam | 🛠️🏢 |
 | 3.3 ✅ (recomendación) | **Asignación automática de taller** por capacidad, cercanía, calificación y puntualidad, con opción "elige tú" o "HETNA elige". | Factorem, Laserhub | 🏢 |
 | 3.4 ✅ | **Precio dinámico por capacidad libre**: descuento si el taller tiene horas muertas esta semana. | Geomiq | 🛠️🏢 |
-| 3.5 | **Copiloto de compras con IA por WhatsApp para empresas**: "necesito 200 placas como la del mes pasado" y se arma el pedido. | Geomiq, Accio | 🏢 |
+| 3.5 ✅ (repetir pedido) | **Copiloto de compras con IA por WhatsApp para empresas**: "necesito 200 placas como la del mes pasado" y se arma el pedido. | Geomiq, Accio | 🏢 |
 
 ### Fase 4: HETNA responde (meses 6 a 12)
 

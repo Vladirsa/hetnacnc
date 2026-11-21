@@ -8,6 +8,7 @@ import type { Metadata } from "next"
 import { vistaPreviaWhatsapp } from "@/lib/publicidad/vista-previa"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
+import { verSolicitud } from "@/lib/cotizar/solicitud-taller"
 import { CotizadorCliente } from "@/components/hetna/cotizador/CotizadorCliente"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BloquePublicidad } from "@/components/hetna/disenar/BloquePublicidad"
@@ -69,16 +70,32 @@ export default async function CotizarPage({
     nota?: string
     // Desde la tienda: lo que se buscó y no había
     descripcion?: string
+    // Repetir un pedido anterior (liga que manda el agente de WhatsApp): token de la solicitud
+    repite?: string
   }>
 }) {
   const sp = await searchParams
-  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion, cantidad, nota } = sp
+  const { taller, servicio, necesidad, desde, pieza, medidas, material, archivo, proceso, descripcion, cantidad, nota, repite } = sp
   const descripcionInicial = typeof descripcion === "string" && descripcion.trim() ? descripcion.trim() : undefined
   const [t, talleres] = await Promise.all([taller ? tallerPorHandle(taller) : null, listarTalleres().catch(() => [])])
   // Lo que no es el taller elegido, para que "Cotizar con este taller" conserve la pieza
   const query = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "taller" && typeof v === "string") as [string, string][]).toString()
   const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined)
-  const prellenado = desde && pieza ? { desde, pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso, cantidad: texto(cantidad, 60), descripcion: texto(nota, 1500) } : undefined
+  // Repetir pedido (estrategia 3.5): la solicitud anterior ya llena, sin archivos
+  // (sin cuenta no se reusan: el cliente los vuelve a subir si hacen falta)
+  const anterior = typeof repite === "string" && /^[\w-]{8,80}$/.test(repite) ? await verSolicitud(repite).catch(() => null) : null
+  const t0 = anterior?.trabajo || null
+  const prellenado = t0
+    ? {
+        pieza: String(t0.descripcion || "Pieza").split(/[.\n]/)[0].slice(0, 80),
+        medidas: t0.medidas || undefined,
+        material: t0.material || undefined,
+        proceso: t0.servicio || undefined,
+        cantidad: t0.cantidad || undefined,
+        descripcion: String(t0.descripcion || "").slice(0, 1500) || undefined,
+        repiteFolio: anterior!.folio,
+      }
+    : desde && pieza ? { desde, pieza, medidas, material, archivo: archivo?.startsWith("/") ? archivo : undefined, proceso, cantidad: texto(cantidad, 60), descripcion: texto(nota, 1500) } : undefined
 
   return (
     <main className="w-full bg-[#FAF9F6]">

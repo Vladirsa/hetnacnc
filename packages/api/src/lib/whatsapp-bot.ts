@@ -26,6 +26,7 @@ import { mandarPrivado } from "./social-telegram"
 import { enviarTexto, normalizarNumero, whatsappListo } from "./whatsapp"
 import { IA_MODELO_WHATSAPP, modeloIA } from "./ia-modelo"
 import { ESQUEMA_ESTIMADO, REGLAS_ESTIMADO, calcularEstimado, catalogoEstimado } from "./whatsapp-estimado"
+import { ligaRepetir, pedidosDelNumero, textoPedidos, type PedidoAnterior } from "./whatsapp-repetir"
 
 export const T_CHAT = "hetna_whatsapp_chat"
 export const T_MSG = "hetna_whatsapp_msg"
@@ -154,10 +155,12 @@ const ESQUEMA = {
     avisar_equipo: { type: "boolean" },
     resumen_para_equipo: { type: "string" },
     estimado: ESQUEMA_ESTIMADO,
+    // Estrategia 3.5: folio del pedido anterior que el cliente quiere repetir (de la lista), o null
+    repetir_folio: { anyOf: [{ type: "string" }, { type: "null" }] },
   },
 }
 
-const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }[], perfil: any) =>
+const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = []) =>
   "Eres el agente de ventas del WhatsApp de HETNA CNC, marketplace mexicano de fabricación CNC con tienda de productos y herramientas para talleres. " +
   "Tu meta es convertir a quien escribe en cliente: entender qué necesita, recomendar lo que de verdad le sirve y llevarlo a la acción (comprar en la tienda, publicar su solicitud de cotización, probar el Cotizador, usar una herramienta, registrar su taller o anunciarse).\n\n" +
   "Cómo vendes:\n" +
@@ -178,10 +181,14 @@ const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }
   REGLAS_ESTIMADO + catalogoEstimado() + "\n\n" +
   "Datos de HETNA (lo único que puedes afirmar):\n- " + catalogo.join("\n- ") +
   "\n\nProductos de la tienda que coinciden con la conversación:\n" + (productos.length ? productos.map((p) => `- ${p.nombre}: ${p.liga}`).join("\n") : "(ninguno)") +
-  (perfil ? `\n\nLo que ya sabemos de este cliente: ${JSON.stringify(perfil)}` : "")
+  (perfil ? `\n\nLo que ya sabemos de este cliente: ${JSON.stringify(perfil)}` : "") +
+  (pedidos.length
+    ? textoPedidos(pedidos) +
+      "\nRepetir un pedido: si pide volver a pedir algo («otras 200 como la vez pasada», «lo mismo que en octubre», «repetir»), pon en repetir_folio el folio de la lista que corresponde y en respuesta dile que abajo va su pedido ya lleno para que confirme la cantidad y lo mande (no escribas ninguna liga: la pone el sistema). Si no está claro cuál, pregúntale cuál de los de la lista (por su descripción) y deja repetir_folio en null. Nunca inventes folios ni pedidos que no estén en la lista. Un cliente que repite es caliente."
+    : "")
 
 let ia: Anthropic | null = null
-export async function redactar(historia: { rol: string; texto: string }[], productos: { nombre: string; liga: string }[], perfil: any) {
+export async function redactar(historia: { rol: string; texto: string }[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = []) {
   ia ??= new Anthropic()
   // La conversación como turnos: cliente = user; agente y equipo = assistant
   const turnos: any[] = []
@@ -197,7 +204,7 @@ export async function redactar(historia: { rol: string; texto: string }[], produ
     ...modeloIA(IA_MODELO_WHATSAPP()),
     max_tokens: 1200,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-    system: SISTEMA(catalogoVentas(), productos, perfil),
+    system: SISTEMA(catalogoVentas(), productos, perfil, pedidos),
     messages: turnos,
   } as any)
   if (resp.stop_reason === "refusal") return { tipo: "pasar_a_persona", respuesta: "", perfil: null, temperatura: "tibio", avisar_equipo: true, resumen_para_equipo: "La IA no pudo contestar este mensaje." }
@@ -258,9 +265,10 @@ async function contestar(knex: any, numero: string, logger?: any) {
     if (!historia.length || historia[historia.length - 1].rol !== "cliente") return
     const textoCliente = historia.filter((x: any) => x.rol === "cliente").slice(-4).map((x: any) => x.texto).join(" ")
     const productos = await productosParecidos(knex, textoCliente).catch(() => [])
+    const pedidos = await pedidosDelNumero(knex, numero).catch(() => [])
     let r: any
     try {
-      r = await redactar(historia, productos, f?.perfil || null)
+      r = await redactar(historia, productos, f?.perfil || null, pedidos)
     } catch (e) {
       // Sin IA (sin saldo, caída): el cliente no se queda sin respuesta y el dueño se entera
       const msg = (e as Error).message || ""
@@ -288,6 +296,14 @@ async function contestar(knex: any, numero: string, logger?: any) {
         r.avisar_equipo = true
         r.resumen_para_equipo = `${r.resumen_para_equipo || ""} · Le dimos un aproximado: ${est.resumen}`.replace(/^ · /, "")
       }
+    }
+    // Repetir pedido: la liga la pone el código y sólo para un folio de ESTE número
+    const repetir = r.tipo === "responder" && r.repetir_folio ? pedidos.find((p) => p.folio === String(r.repetir_folio).trim().toUpperCase()) : null
+    if (repetir) {
+      respuesta = `${respuesta}\n\nTu pedido ${repetir.folio} ya lleno, sólo confirma la cantidad y envíalo: ${ligaRepetir(repetir)}`.trim()
+      r.temperatura = "caliente"
+      r.avisar_equipo = true
+      r.resumen_para_equipo = `${r.resumen_para_equipo || ""} · Quiere repetir ${repetir.folio} (${repetir.resumen}); le mandamos la liga.`.replace(/^ · /, "")
     }
     respuesta = conVistaPublicidad(respuesta)
     if (r.tipo === "ignorar" && !respuesta) return
