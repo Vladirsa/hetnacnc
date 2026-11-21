@@ -187,7 +187,11 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-extrabold text-[#142033]">{p.taller.nombre}</h3>
-                    {p.taller.verificado && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span>}
+                    {p.taller.verificado ? (
+                      <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Verificado</span>
+                    ) : (
+                      <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5 text-xs font-bold text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller">Registrado · sin verificar</span>
+                    )}
                     {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">⭐ Recomendada por HETNA</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
@@ -198,7 +202,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                       ? ` · ★ ${Number(p.taller.calificacion).toFixed(1)}${p.taller.resenas ? ` (${p.taller.resenas} ${p.taller.resenas === 1 ? "reseña" : "reseñas"})` : ""}`
                       : " · Sin reseñas todavía"}
                   </p>
-                  <HistorialMedido m={p.taller.medido} />
+                  <HistorialMedido m={p.taller.medido} calificacion={p.taller.calificacion} resenas={p.taller.resenas} />
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-extrabold text-[#142033]">{pesos(p.precio)} <span className="text-sm font-semibold text-[#6B675C]">{p.moneda || "MXN"}</span></p>
@@ -325,32 +329,39 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
   )
 }
 
-/** Historial medido del taller: lo que hizo en HETNA, no sólo lo que opinaron de él. */
-function HistorialMedido({ m }: { m?: Propuesta["taller"]["medido"] }) {
-  if (!m || !m.terminados)
-    return (
-      <p className="mt-1 text-xs text-[#6B675C]">
-        Sin trabajos terminados en HETNA todavía{m?.respuesta_horas != null ? ` · responde en ${textoRespuesta(m.respuesta_horas)}` : ""}
-      </p>
-    )
-  const datos = [
-    m.puntualidad_pct != null && `${m.puntualidad_pct}% a tiempo`,
-    `${m.terminados} ${m.terminados === 1 ? "trabajo terminado" : "trabajos terminados"}`,
-    m.reclamos > 0 && `${m.reclamos_resueltos} de ${m.reclamos} reclamos resueltos`,
-    m.respuesta_horas != null && `responde en ${textoRespuesta(m.respuesta_horas)}`,
-  ].filter(Boolean)
+/** Reputación del taller (auditoría 19 nov 2026, punto 4.3): lo que hizo en
+ *  HETNA, en cifras fáciles de comparar entre propuestas. */
+function HistorialMedido({ m, calificacion, resenas }: { m?: Propuesta["taller"]["medido"]; calificacion?: number | null; resenas?: number }) {
+  const celdas: [string, string, string?][] = [
+    ["Trabajos terminados", m?.terminados ? String(m.terminados) : "0", m?.terminados ? undefined : "Todavía ninguno en HETNA"],
+    ["Entregas a tiempo", m?.puntualidad_pct != null ? `${m.puntualidad_pct}%` : "—"],
+    ["Calificación", calificacion ? `★ ${Number(calificacion).toFixed(1)}` : "—", resenas ? `${resenas} ${resenas === 1 ? "reseña" : "reseñas"}` : "Sin reseñas"],
+    ["Responde en", m?.respuesta_horas != null ? textoRespuesta(m.respuesta_horas) : "—"],
+  ]
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-[#40403A]">
-      {m.suficiente && m.puntaje != null && (
-        <span
-          className={`rounded-full px-2 py-0.5 font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
-          title="Puntaje HETNA: trabajos terminados 30%, calidad calificada 30%, entregas a tiempo 25%, tiempo de respuesta 10%, reclamos 5%. Pagar plan o verificación no lo cambia."
-        >
-          Cumplimiento {m.puntaje}/100
-        </span>
-      )}
-      <span>{datos.join(" · ")}</span>
-      {!m.suficiente && <span className="text-[#6B675C]">(historial corto)</span>}
-    </p>
+    <div className="mt-2">
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {celdas.map(([t, v, nota]) => (
+          <div key={t} className="rounded-lg bg-[#F7F6F2] px-2.5 py-1.5">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#8A867B]">{t}</dt>
+            <dd className="m-0 text-[15px] font-extrabold text-[#142033]">{v}</dd>
+            {nota && <dd className="m-0 text-[11px] text-[#6B675C]">{nota}</dd>}
+          </div>
+        ))}
+      </dl>
+      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-[#40403A]">
+        {m?.suficiente && m.puntaje != null ? (
+          <span
+            className={`rounded-full px-2 py-0.5 font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
+            title="Puntaje HETNA: trabajos terminados 30%, calidad calificada 30%, entregas a tiempo 25%, tiempo de respuesta 10%, reclamos 5%. Pagar plan o verificación no lo cambia."
+          >
+            Cumplimiento {m.puntaje}/100
+          </span>
+        ) : (
+          <span className="text-[#6B675C]">El puntaje de cumplimiento aparece a partir de 3 trabajos terminados.</span>
+        )}
+        {m && m.reclamos > 0 && <span>{m.reclamos_resueltos} de {m.reclamos} reclamos resueltos</span>}
+      </p>
+    </div>
   )
 }
