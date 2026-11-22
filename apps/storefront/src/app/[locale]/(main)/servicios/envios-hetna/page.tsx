@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import CotizadorEnvio from "@/components/hetna/envios/CotizadorEnvio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { ligaWhatsApp } from "@/lib/hetna/empresa"
+import { EMPRESA, ligaWhatsApp } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/servicios/envios-hetna" },
@@ -128,6 +128,11 @@ const PREGUNTAS: [string, string][] = [
   [
     "¿Cuánto tarda la entrega?",
     "Cada opción muestra los días hábiles estimados. Dependen de la paquetería, el servicio (económico o rápido) y el destino.",
+  ],
+  [
+    // Mismo tiempo que en Google Merchant Center (Envíos y devoluciones)
+    "¿Cuánto tarda un pedido comprado en la tienda?",
+    `De ${EMPRESA.entregaTotal} días hábiles: ${EMPRESA.entregaPreparacion} días para que el taller prepare tu pedido y ${EMPRESA.entregaTransporte} días de paquetería. Antes de pagar ves el costo y los días exactos de la paquetería que elijas.`,
   ],
   [
     "¿Qué pasa si la paquetería dice que mi paquete pesa más?",

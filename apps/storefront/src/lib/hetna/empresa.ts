@@ -36,8 +36,14 @@ export const EMPRESA = {
     { nombre: "LinkedIn", url: "https://www.linkedin.com/in/roberto-vladimir-rivera-sanchez-armas-9531a117b/" },
     { nombre: "Grupo Router CNC México", url: "https://www.facebook.com/groups/routercncmexico" },
   ],
-  // Política de devoluciones (borrador; confirmar con Vlado y abogado)
-  diasDevolucion: 5, // días hábiles desde la entrega, productos físicos sin uso
+  // Política de devoluciones. DEBE coincidir con Google Merchant Center
+  // (Configuración › Envíos y devoluciones): si se cambia aquí, cambiarlo allá.
+  diasDevolucion: 7, // días naturales desde la entrega, productos físicos sin uso
+  diasReembolso: 10, // días naturales máximo para reembolsar, ya recibido y revisado el producto
+  // Tiempo de entrega de compras en la tienda. Igual que en Merchant Center.
+  entregaPreparacion: "3 a 5", // días hábiles para que el taller prepare el pedido
+  entregaTransporte: "2 a 5", // días hábiles de paquetería
+  entregaTotal: "5 a 10", // días hábiles en total
   actualizado: "7 de octubre de 2026",
   // Aviso de privacidad: versión y fecha en que entra en vigor (cambiar ambas al modificarlo)
   privacidadVersion: "2.6",

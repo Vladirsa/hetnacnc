@@ -2,6 +2,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { BotonPreferenciasCookies } from "@/components/hetna/AvisoCookies"
 import { SocialIcon } from "@/components/hetna/SocialIcon"
 import footerLinks from "@/data/footerLinks"
+import { EMPRESA } from "@/lib/hetna/empresa"
 
 const Columna = ({
   titulo,
@@ -93,6 +94,28 @@ export function Footer() {
           ))}
         </div>
       </div>
+      {/* Contacto visible en todas las páginas: Google Merchant Center lo pide
+          para confiar en la tienda (aviso "Información engañosa"). Datos en empresa.ts */}
+      <address
+        className="not-italic pt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[13px] text-[#9FACC2]"
+        data-testid="footer-contacto"
+      >
+        <span className="text-white font-semibold text-[13.5px]">Atención a clientes</span>
+        {EMPRESA.correo ? (
+          <a href={`mailto:${EMPRESA.correo}`} className="hover:text-white">
+            {EMPRESA.correo}
+          </a>
+        ) : null}
+        <a
+          href={`https://wa.me/${EMPRESA.whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white"
+        >
+          WhatsApp {EMPRESA.whatsappVisible}
+        </a>
+        <span>{EMPRESA.horario}</span>
+      </address>
       <div
         className="pt-5 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center"
         data-testid="footer-copyright"
