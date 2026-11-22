@@ -240,8 +240,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
         )}
       </div>
 
-      {/* Crece para llenar la columna: así no queda hueco debajo de las fotos */}
-      <div className="mt-3 flex flex-1 flex-col justify-center rounded-lg bg-[#F7F8FA] p-3" aria-live="polite">
+      <div className="mt-3 rounded-lg bg-[#F7F8FA] p-3" aria-live="polite">
         {!pieza ? (
           <p className="m-0 text-[13px] text-[#5B6370]">
             {faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe el ancho y el largo para ver el precio aproximado."}
@@ -279,9 +278,30 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       </LocalizedClientLink>
       <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#5B6370]">
         {fisico
-          ? "Precio orientativo. Cada taller manda su propuesta con precio, entrega y garantía, y pagas dentro de HETNA."
-          : "Precio orientativo. El taller necesita el archivo: cómpralo aquí y súbelo en tu solicitud. Pagas dentro de HETNA."}
+          ? "Precio orientativo: el precio real lo da cada taller en su propuesta."
+          : "Precio orientativo. El taller necesita el archivo: cómpralo aquí y súbelo en tu solicitud."}
       </p>
+
+      {/* Cómo funciona: esta parte crece cuando la columna de compra es más
+          alta, para que debajo de las fotos no quede hueco (antes crecía el
+          recuadro del precio y quedaba un espacio gris vacío). */}
+      <ol className="relative m-0 mt-3 flex flex-1 list-none flex-col justify-between gap-2 border-t border-[#EDEFF2] p-0 pt-3" aria-label="Cómo funciona">
+        {/* Línea que une los pasos (va detrás de los círculos) */}
+        <span aria-hidden="true" className="absolute bottom-6 left-[15px] top-7 w-0.5 bg-[#F6D3BC]" />
+        {[
+          ["1", "Elige material y medidas", "Ves un precio aproximado al momento."],
+          ["2", "Los talleres te mandan propuestas", "Cada una con precio, tiempo de entrega y garantía."],
+          ["3", "Eliges y pagas dentro de HETNA", "Con Mercado Pago, sin tratos por fuera."],
+        ].map(([n, t, d]) => (
+          <li key={n} className="flex items-start gap-3">
+            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDECE0] text-[14px] font-bold text-[#C2560A] ring-4 ring-white">{n}</span>
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-bold leading-snug text-[#1E2329]">{t}</span>
+              <span className="block text-[12.5px] leading-snug text-[#5B6370]">{d}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }
