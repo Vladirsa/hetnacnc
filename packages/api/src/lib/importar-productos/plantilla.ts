@@ -83,28 +83,52 @@ const EJEMPLOS: Partial<Record<Clave, string | number>>[] = [
   { agrupador: "pla-1kg", nombre: "Filamento PLA 1.75 mm 1 kg", categoria: "Filamentos", variante: "Color", valor: "Blanco", sku: "PLA-175-BLA", precio: 379, existencias: 0, peso: 1.3, largo: 21, ancho: 21, alto: 8 },
 ]
 
-function encabezado(ws: ExcelJS.Worksheet) {
-  ws.columns = COLUMNAS.map((c) => ({ header: c.titulo, key: c.clave, width: c.ancho }))
+type Columna = { clave: Clave; titulo: string; ancho: number; ayuda: string }
+
+// Versión para talleres (panel del taller › Publicar con Excel): las fotos se
+// suben en la misma página y en la celda va el NOMBRE del archivo, no una liga.
+export const TITULO_FOTOS_TALLER = "Fotos (nombre del archivo)"
+export const MAX_PRODUCTOS_TALLER = 25
+const columnasDe = (taller: boolean): Columna[] =>
+  COLUMNAS.map((c) =>
+    taller && c.clave === "imagenes"
+      ? { ...c, titulo: TITULO_FOTOS_TALLER, ayuda: "Nombre del archivo de cada foto (ej. fresa-6mm.jpg), separados por coma. Las fotos las subes en la misma página. La primera es la portada. Obligatoria en productos nuevos." }
+      : taller && c.clave === "nombre"
+        ? { ...c, ayuda: "Qué es, marca o material y la medida principal. 8 a 120 letras." }
+        : taller && c.clave === "marca"
+          ? { ...c, ayuda: "Recomendado: Google Shopping la pide. Vacío = el nombre de tu taller." }
+          : { ...c }
+  )
+
+function encabezado(ws: ExcelJS.Worksheet, cols: Columna[] = columnasDe(false)) {
+  ws.columns = cols.map((c) => ({ header: c.titulo, key: c.clave, width: c.ancho }))
   const f = ws.getRow(1)
   f.font = { bold: true, color: { argb: "FFFFFFFF" } }
   f.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF142033" } }
   f.alignment = { vertical: "middle", wrapText: true }
   f.height = 32
   ws.views = [{ state: "frozen", ySplit: 1 }]
-  COLUMNAS.forEach((c, i) => { f.getCell(i + 1).note = c.ayuda })
+  cols.forEach((c, i) => { f.getCell(i + 1).note = c.ayuda })
   // Como texto, para que Excel no le quite los ceros del inicio al código de barras
   ws.getColumn(COLUMNAS.findIndex((c) => c.clave === "gtin") + 1).numFmt = "@"
 }
 
 /** La plantilla: hoja "Productos" vacía para llenar, "Ejemplos" (no se importa) e "Instrucciones". */
-export async function plantillaProductos(categorias: string[] = []): Promise<Buffer> {
+export async function plantillaProductos(categorias: string[] = [], opc: { taller?: boolean } = {}): Promise<Buffer> {
+  const taller = opc.taller === true
+  const cols = columnasDe(taller)
   const wb = new ExcelJS.Workbook()
   wb.creator = "HETNA CNC"
   const ws = wb.addWorksheet(HOJA)
-  encabezado(ws)
+  encabezado(ws, cols)
   const ej = wb.addWorksheet("Ejemplos (no se importan)")
-  encabezado(ej)
-  for (const e of EJEMPLOS) ej.addRow(e)
+  encabezado(ej, cols)
+  for (const e of EJEMPLOS) {
+    if (!taller) { ej.addRow(e); continue }
+    // Para el taller: sin marca HETNA y con nombres de archivo en lugar de ligas
+    const { marca: _m, ...resto } = e
+    ej.addRow({ ...resto, ...(e.imagenes ? { imagenes: String(e.imagenes).split("/").pop() } : {}) })
+  }
   ej.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6B675C" } }
 
   const ins = wb.addWorksheet("Instrucciones")
@@ -112,7 +136,7 @@ export async function plantillaProductos(categorias: string[] = []): Promise<Buf
   ins.getColumn(2).width = 100
   const t = ins.addRow(["Cómo llenar la plantilla"])
   t.font = { bold: true, size: 14 }
-  for (const linea of [
+  const pasos: string[][] = [
     ["1.", 'Llena la hoja "Productos". La hoja "Ejemplos" es sólo para ver cómo se llena: NO se importa.'],
     ["2.", "Un renglón = una variante (una medida o un color). Si un producto viene en varias medidas, pon un renglón por medida con el mismo Agrupador."],
     ["3.", "Las columnas con * son obligatorias. Precio: el final con IVA incluido (la tienda no le suma IVA)."],
@@ -120,11 +144,15 @@ export async function plantillaProductos(categorias: string[] = []): Promise<Buf
     ["5.", "Al subir el archivo primero se revisa todo y ves los errores renglón por renglón. Nada se publica hasta que confirmas."],
     ["6.", "Si vuelves a subir un producto con el mismo Agrupador, se actualiza (nombre, descripción, precio, existencias…), no se duplica. Las celdas que dejes vacías se quedan como estaban; para borrar un dato (marca, código de barras, SEO…) hazlo en el panel."],
     ["7.", "Código de barras y número de parte: si el producto tiene varias medidas o colores, cada una tiene el suyo. Ponlos sólo si son iguales para todas, o sube cada medida como producto aparte (sin Agrupador y con nombre distinto)."],
-    ["8.", "Las fotos se copian a la tienda desde las ligas que pongas. Usa ligas directas a la imagen (terminan en .jpg, .png o .webp)."],
-  ]) ins.addRow(linea)
+    taller
+      ? ["8.", `Fotos: en la columna "${TITULO_FOTOS_TALLER}" escribe el nombre de cada archivo (ej. fresa-6mm.jpg). En la página de carga eliges esas fotos junto con este Excel. Fondo blanco, como en Publicar producto.`]
+      : ["8.", "Las fotos se copian a la tienda desde las ligas que pongas. Usa ligas directas a la imagen (terminan en .jpg, .png o .webp)."],
+  ]
+  if (taller) pasos.push(["9.", `Máximo ${MAX_PRODUCTOS_TALLER} productos por archivo. Si tienes más, súbelos en varios archivos.`])
+  for (const linea of pasos) ins.addRow(linea)
   ins.addRow([])
   ins.addRow(["Columna", "Qué poner"]).font = { bold: true }
-  for (const c of COLUMNAS) ins.addRow([c.titulo, c.ayuda])
+  for (const c of cols) ins.addRow([c.titulo, c.ayuda])
   if (categorias.length) {
     ins.addRow([])
     ins.addRow(["Categorías de la tienda", "Escríbelas tal cual (sin importar acentos ni mayúsculas)"]).font = { bold: true }
@@ -168,6 +196,9 @@ export function numero(v: unknown): number | null {
 
 const URL_OK = /^https?:\/\/[^\s]+$/i
 
+/** "Fotos/Fresa 6mm.JPG" → "fresa 6mm.jpg": así se comparan los nombres de archivo. */
+export const nombreFoto = (s: string) => String(s).split(/[\\/]/).pop()!.trim().toLowerCase()
+
 // Lo que escribe la gente → lo que entiende Google Shopping
 const CONDICIONES: Record<string, "new" | "used" | "refurbished"> = {
   nuevo: "new", nueva: "new", new: "new",
@@ -205,7 +236,13 @@ export function gtinDe(v: unknown): string | null | undefined {
 }
 
 /** Lee el Excel lleno: agrupa en productos y revisa cada renglón (sin tocar la base). */
-export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
+/**
+ * opc.fotos (talleres): nombre de archivo (en minúsculas) → liga de la foto ya
+ * subida. Con esto la columna de fotos lleva nombres de archivo, no ligas.
+ */
+export async function leerPlantilla(datos: Buffer, opc: { fotos?: Map<string, string> } = {}): Promise<Lectura> {
+  const fotos = opc.fotos
+  const minNombre = fotos ? 8 : 3
   const wb = new ExcelJS.Workbook()
   try {
     await wb.xlsx.load(datos as any)
@@ -219,7 +256,8 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
   const indice: Partial<Record<Clave, number>> = {}
   ws.getRow(1).eachCell((celda, col) => {
     const t = normalizar(texto(celda.value)).replace(/\s*\*$/, "")
-    const c = COLUMNAS.find((x) => normalizar(x.titulo).replace(/\s*\*$/, "") === t || normalizar(x.clave) === t)
+    const c = COLUMNAS.find((x) => normalizar(x.titulo).replace(/\s*\*$/, "") === t || normalizar(x.clave) === t) ||
+      (t === normalizar(TITULO_FOTOS_TALLER) || t === "fotos" ? COLUMNAS.find((x) => x.clave === "imagenes") : undefined)
     if (c && !indice[c.clave]) indice[c.clave] = col
   })
   const errores: Problema[] = []
@@ -252,7 +290,7 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
   for (const r of renglones) {
     const f = r._fila
     const nombre = texto(r.nombre)
-    if (nombre.length < 3 || nombre.length > 120) err(f, "nombre", "El nombre debe tener de 3 a 120 letras.")
+    if (nombre.length < minNombre || nombre.length > 120) err(f, "nombre", `El nombre debe tener de ${minNombre} a 120 letras.`)
     if (!texto(r.categoria)) err(f, "categoria", "Falta la categoría.")
     const sku = texto(r.sku).toUpperCase()
     if (!sku) err(f, "sku", "Falta el SKU.")
@@ -272,7 +310,10 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
       if (v === null || v <= 0) err(f, d, "La medida (cm) debe ser mayor a cero.")
     }
     for (const u of texto(r.imagenes).split(",").map((x) => x.trim()).filter(Boolean)) {
-      if (!URL_OK.test(u)) err(f, "imagenes", `"${u.slice(0, 60)}" no es una liga https válida.`)
+      if (fotos) {
+        if (URL_OK.test(u)) err(f, "imagenes", `"${u.slice(0, 60)}": aquí no se aceptan ligas. Elige la foto en la página y escribe su nombre de archivo.`)
+        else if (!fotos.has(nombreFoto(u))) err(f, "imagenes", `No elegiste la foto "${u.slice(0, 60)}". Agrégala junto con el Excel (mismo nombre de archivo).`)
+      } else if (!URL_OK.test(u)) err(f, "imagenes", `"${u.slice(0, 60)}" no es una liga https válida.`)
     }
     const est = normalizar(texto(r.estado))
     if (est && !["publicado", "borrador", "published", "draft"].includes(est)) err(f, "estado", 'Escribe "publicado" o "borrador".')
@@ -335,7 +376,9 @@ export async function leerPlantilla(datos: Buffer): Promise<Lectura> {
       gtin: gtinDe(p0.gtin) || null,
       mpn: texto(p0.mpn).slice(0, 70) || null,
       opcion: opcionTxt || PRESENTACION,
-      imagenes: texto(p0.imagenes).split(",").map((x) => x.trim()).filter((u) => URL_OK.test(u)).slice(0, 10),
+      imagenes: texto(p0.imagenes).split(",").map((x) => x.trim()).filter(Boolean)
+        .map((u) => (fotos ? fotos.get(nombreFoto(u)) : URL_OK.test(u) ? u : undefined))
+        .filter((u): u is string => Boolean(u)).slice(0, 10),
       estado: est === "borrador" || est === "draft" ? "draft" : est ? "published" : null,
       seo_titulo: seoT || null,
       seo_descripcion: seoD || null,

@@ -1347,6 +1347,8 @@ export type Routes = {
             };
         };
         hetnaPublicar: typeof import("../src/api/vendor/hetna-publicar/route") & {
+            excel: typeof import("../src/api/vendor/hetna-publicar/excel/route");
+            plantilla: typeof import("../src/api/vendor/hetna-publicar/plantilla/route");
             revisarFoto: typeof import("../src/api/vendor/hetna-publicar/revisar-foto/route");
         };
         hetnaPush: typeof import("../src/api/vendor/hetna-push/route");

@@ -13,6 +13,10 @@
 // (nombre, descripción, categoría, estado, fotos, precio y existencias de cada SKU).
 // Agregar o quitar medidas a un producto que ya existe NO se hace aquí (se reporta):
 // el flujo de Medusa reemplazaría las variantes y podría borrar las que tienen ventas.
+//
+// También lo usan los talleres (panel del taller › Publicar con Excel) con su
+// propia tienda: ahí sólo se reconocen y actualizan los productos de ESE taller.
+// Un agrupador o SKU de otro taller (o de HETNA) nunca se actualiza: es error.
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, updateProductsWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
@@ -21,7 +25,7 @@ import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
 
 import { camSellerHandle } from "../../modules/cam/catalog"
 import { aprovisionarEnvios } from "../envios-automaticos"
-import { descripcionAHtml } from "../publicar-rapido"
+import { almacenDelTaller, descripcionAHtml } from "../publicar-rapido"
 import { precioEnDolares } from "../publicar-diseno"
 import { normalizar, type Lectura, type Problema, type ProductoImport } from "./plantilla"
 
@@ -169,7 +173,36 @@ export function preciosOferta(precio: number, aceptaUsd: boolean) {
 
 export class ErrorImportar extends Error {}
 
-type Tienda = { sellerId: string; memberId: string; locationId: string; perfilId: string; canales: string[]; aceptaUsd: boolean }
+export type Tienda = { sellerId: string; memberId: string; locationId: string; perfilId: string; canales: string[]; aceptaUsd: boolean }
+
+async function perfilCanalesMonedas(container: MedusaContainer) {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data: perfiles } = await query.graph({ entity: "shipping_profile", fields: ["id", "name"] })
+  const perfil = ((perfiles as { id: string; name: string }[]).find((x) => x.name === "Marketplace Shipping") ||
+    (perfiles as { id: string; name: string }[]).find((x) => x.name !== "Producto digital"))
+  if (!perfil) throw new ErrorImportar("No hay perfil de envío para productos físicos.")
+  const { data: canales } = await query.graph({ entity: "sales_channel", fields: ["id"] })
+  const { data: stores } = await query.graph({ entity: "store", fields: ["supported_currencies.currency_code"] })
+  const monedas = ((stores[0]?.supported_currencies ?? []) as { currency_code?: string }[]).map((c) => c?.currency_code)
+  return { perfilId: perfil.id, canales: (canales as { id: string }[]).map((c) => c.id), aceptaUsd: monedas.includes("usd") }
+}
+
+/** La tienda de un taller: su almacén (se le crea si no tiene, como en Publicar producto). */
+export async function tiendaTaller(container: MedusaContainer, sellerId: string, memberId?: string): Promise<Tienda & { nombre: string; handle: string }> {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({ entity: "seller", fields: ["id", "name", "handle", "address.*", "stock_locations.id"], filters: { id: sellerId } })
+  const s = data[0] as unknown as { id: string; name: string; handle?: string; address?: Record<string, string | null>; stock_locations?: { id: string }[] } | undefined
+  if (!s) throw new ErrorImportar("No encontramos tu tienda. Vuelve a iniciar sesión.")
+  const locationId = await almacenDelTaller(container, s)
+  return { sellerId: s.id, memberId: memberId || "excel-taller", locationId, nombre: s.name, handle: s.handle || s.id, ...(await perfilCanalesMonedas(container)) }
+}
+
+/** Ids de los productos ligados a un taller. */
+export async function productosDelTaller(container: MedusaContainer, sellerId: string): Promise<Set<string>> {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({ entity: "seller", fields: ["id", "products.id"], filters: { id: sellerId } as Record<string, unknown> })
+  return new Set((((data[0] as any)?.products || []) as { id: string }[]).map((p) => p.id))
+}
 
 /** La tienda HETNA (seller con handle CAM_SELLER_HANDLE), su almacén, el perfil de envío físico y los canales. */
 export async function tiendaHetna(container: MedusaContainer): Promise<Tienda> {
@@ -189,14 +222,7 @@ export async function tiendaHetna(container: MedusaContainer): Promise<Tienda> {
     const { data: m } = await query.graph({ entity: "member", fields: ["id"], filters: { email: s.email } as Record<string, unknown> })
     memberId = (m[0] as { id?: string } | undefined)?.id
   }
-  const { data: perfiles } = await query.graph({ entity: "shipping_profile", fields: ["id", "name"] })
-  const perfil = ((perfiles as { id: string; name: string }[]).find((x) => x.name === "Marketplace Shipping") ||
-    (perfiles as { id: string; name: string }[]).find((x) => x.name !== "Producto digital"))
-  if (!perfil) throw new ErrorImportar("No hay perfil de envío para productos físicos.")
-  const { data: canales } = await query.graph({ entity: "sales_channel", fields: ["id"] })
-  const { data: stores } = await query.graph({ entity: "store", fields: ["supported_currencies.currency_code"] })
-  const monedas = ((stores[0]?.supported_currencies ?? []) as { currency_code?: string }[]).map((c) => c?.currency_code)
-  return { sellerId: s.id, memberId: memberId || "importador", locationId, perfilId: perfil.id, canales: (canales as { id: string }[]).map((c) => c.id), aceptaUsd: monedas.includes("usd") }
+  return { sellerId: s.id, memberId: memberId || "importador", locationId, ...(await perfilCanalesMonedas(container)) }
 }
 
 export async function categoriasTienda(container: MedusaContainer): Promise<Categoria[]> {
@@ -205,8 +231,12 @@ export async function categoriasTienda(container: MedusaContainer): Promise<Cate
   return data as Categoria[]
 }
 
-/** Revisión completa sin cambiar nada: plantilla + categorías + qué ya existe. */
-export async function revisar(container: MedusaContainer, lectura: Lectura): Promise<Plan> {
+/**
+ * Revisión completa sin cambiar nada: plantilla + categorías + qué ya existe.
+ * opc.sellerId (talleres): sólo cuentan como "ya existe" los productos de ese
+ * taller; los de otros nunca se actualizan (sus SKU salen como error).
+ */
+export async function revisar(container: MedusaContainer, lectura: Lectura, opc: { sellerId?: string } = {}): Promise<Plan> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const cats = await categoriasTienda(container)
   const handles = lectura.productos.map((p) => p.handle)
@@ -227,7 +257,22 @@ export async function revisar(container: MedusaContainer, lectura: Lectura): Pro
     const { data } = await query.graph({ entity: "product", fields: ["id", "handle", "variants.id", "variants.sku"], filters: { handle: faltan } })
     for (const p of data as Existente[]) existentes.set(p.handle, { id: p.id, handle: p.handle, variants: p.variants || [] })
   }
-  return planear(lectura, cats, existentes, skuEnProducto)
+  const ajenos = new Set<string>()
+  if (opc.sellerId && existentes.size) {
+    const propios = await productosDelTaller(container, opc.sellerId)
+    for (const [h, ex] of existentes) if (!propios.has(ex.id)) { existentes.delete(h); ajenos.add(h) }
+  }
+  const plan = planear(lectura, cats, existentes, skuEnProducto)
+  if (!ajenos.size) return plan
+  // Un identificador que ya es de otra tienda: error aquí, en la revisión, y no al escribir
+  const errores = [...plan.errores]
+  const pasos = plan.pasos.filter((paso) => {
+    if (!ajenos.has(paso.producto.handle)) return true
+    errores.push({ fila: paso.producto.filas[0], columna: "Agrupador", mensaje: "Ese agrupador (o ese SKU) ya lo usa otro producto de la tienda. Usa otro agrupador y otro SKU." })
+    return false
+  })
+  errores.sort((x, y) => (x.fila ?? 0) - (y.fila ?? 0))
+  return { ...plan, pasos, errores }
 }
 
 /** Copia las fotos a la tienda (almacenamiento de archivos de Medusa). Si una no baja, se usa su liga tal cual. */
@@ -278,13 +323,27 @@ async function ponerExistencias(container: MedusaContainer, offerId: string, loc
   else await inv.createInventoryLevels([{ inventory_item_id: itemId, location_id: locationId, stocked_quantity: cantidad }])
 }
 
+const conMetadata = <T extends { metadata: Record<string, unknown> }>(e: T, extra?: Record<string, unknown>): T =>
+  extra ? { ...e, metadata: { ...e.metadata, ...extra } } : e
+
 export type ResultadoProducto = { handle: string; nombre: string; accion: "creado" | "actualizado" | "error"; product_id?: string; ofertas: number; mensaje?: string }
 
 /** Ejecuta el plan. Cada producto va por separado: si uno falla, los demás siguen. */
-export async function importar(container: MedusaContainer, plan: Plan): Promise<{ resultados: ResultadoProducto[]; avisos: Problema[] }> {
+/**
+ * opc.tienda: la tienda que vende (por omisión, HETNA). Si se da, cada producto a
+ * actualizar se vuelve a comprobar contra esa tienda justo antes de escribir.
+ * opc.copiarImagenes = false: las fotos ya están en la tienda (subidas por el taller).
+ * opc.metadata: llaves extra para los productos (seller_id, publicado_con…).
+ */
+export async function importar(
+  container: MedusaContainer,
+  plan: Plan,
+  opc: { tienda?: Tienda; copiarImagenes?: boolean; metadata?: Record<string, unknown> } = {}
+): Promise<{ resultados: ResultadoProducto[]; avisos: Problema[] }> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-  const t = await tiendaHetna(container)
+  const t = opc.tienda ?? (await tiendaHetna(container))
+  const propios = opc.tienda ? await productosDelTaller(container, t.sellerId) : null
   const avisos: Problema[] = []
   const cacheImg = new Map<string, string>()
   const resultados: ResultadoProducto[] = []
@@ -292,13 +351,14 @@ export async function importar(container: MedusaContainer, plan: Plan): Promise<
   for (const paso of plan.pasos) {
     const p = paso.producto
     try {
-      const imagenes = await subirImagenes(container, p.imagenes, cacheImg, avisos, p.filas[0])
+      if (propios && paso.accion === "actualizar" && !propios.has(paso.existente!.id)) throw new Error("Ese producto no es de tu tienda.")
+      const imagenes = opc.copiarImagenes === false ? p.imagenes : await subirImagenes(container, p.imagenes, cacheImg, avisos, p.filas[0])
       const tagIds = await etiquetas(container, p.etiquetas)
       let productId: string
       let variantes: { id: string; sku: string | null }[]
       if (paso.accion === "crear") {
         const { result } = await createProductsWorkflow(container).run({
-          input: { products: [entradaCrear(p, { categoria_id: paso.categoria_id, perfil_id: t.perfilId, canales: t.canales, tag_ids: tagIds, imagenes }) as any] },
+          input: { products: [conMetadata(entradaCrear(p, { categoria_id: paso.categoria_id, perfil_id: t.perfilId, canales: t.canales, tag_ids: tagIds, imagenes }), opc.metadata) as any] },
         })
         productId = result[0].id
         variantes = (result[0].variants || []).map((v) => ({ id: v.id, sku: v.sku ?? null }))
@@ -320,7 +380,7 @@ export async function importar(container: MedusaContainer, plan: Plan): Promise<
               ...(imagenes.length ? { thumbnail: imagenes[0], images: imagenes.map((url) => ({ url })) } : {}),
               ...(tagIds.length ? { tag_ids: tagIds } : {}),
               ...medidasProducto(p),
-              metadata: metadataProducto(p),
+              metadata: { ...metadataProducto(p), ...(opc.metadata || {}) },
             } as any,
           },
         })
