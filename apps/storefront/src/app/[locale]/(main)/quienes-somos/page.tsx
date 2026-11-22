@@ -23,6 +23,25 @@ export default function QuienesSomos() {
       etiqueta="HETNA CNC"
       titulo="Quiénes somos"
       resumen="Un marketplace hecho por y para quienes trabajan con CNC en México."
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        url: "https://hetnacnc.com/mx/quienes-somos",
+        name: "Quiénes somos | HETNA CNC",
+        inLanguage: "es-MX",
+        mainEntity: {
+          "@type": "Organization",
+          "@id": "https://hetnacnc.com/#organization",
+          name: EMPRESA.nombreComercial,
+          url: EMPRESA.sitio,
+          logo: `${EMPRESA.sitio}/Logo.png`,
+          address: { "@type": "PostalAddress", addressLocality: EMPRESA.ciudad, addressRegion: EMPRESA.estado, addressCountry: "MX" },
+          telephone: `+${EMPRESA.telefono}`,
+          email: EMPRESA.correo,
+          areaServed: { "@type": "Country", name: "México" },
+          sameAs: EMPRESA.redes.filter((r) => !r.url.includes("/groups/") && !r.url.includes("linkedin.com/in/")).map((r) => r.url),
+        },
+      }}
     >
       <p className="text-lg font-semibold text-[#142033]">
         “No quieres hacer nada, yo te vendo el diseño. No quieres diseñar, yo te lo diseño. Quieres maquilarlo y no tienes
