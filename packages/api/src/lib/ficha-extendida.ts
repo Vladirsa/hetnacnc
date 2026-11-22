@@ -13,6 +13,10 @@
 //   vista_previa    string     URL pública de un modelo de MUESTRA (STL, OBJ, DXF o SVG)
 //                              para el visor 3D de la tienda; nunca el archivo que se vende
 //   fotos_fabricada string[]   fotos de la pieza ya fabricada (subidas al sitio)
+// Ficha universal (21 nov 2026, lib/hetna/tipo-producto.ts de la tienda):
+//   tipo_producto   herramienta | stock | tallado | corte | a_medida
+//   material, medida_principal, uso, entrega, tiempo_produccion, garantia  string
+//   incluye, no_incluye   string[]
 // La tienda acepta también el formato de texto que se escribía a mano en
 // Metadata ("Nombre|URL" por línea), así que aquí se leen los dos.
 //
@@ -24,7 +28,9 @@ import { updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { ocultarContacto, STORE_URL } from "./licitacion"
 
-export const LIMITES = { compatibilidad: 30, videos: 6, archivos: 12, faq: 15, fotos_fabricada: 8 }
+export const LIMITES = { compatibilidad: 30, videos: 6, archivos: 12, faq: 15, fotos_fabricada: 8, incluye: 15 }
+export const TIPOS_FISICOS = ["herramienta", "stock", "tallado", "corte", "a_medida"] as const
+export const CAMPOS_TEXTO = ["material", "medida_principal", "uso", "entrega", "tiempo_produccion", "garantia"] as const
 
 export type Ficha = {
   compatibilidad: string[]
@@ -37,6 +43,16 @@ export type Ficha = {
   tolerancia?: string
   vista_previa?: string
   fotos_fabricada?: string[]
+  // Ficha universal
+  tipo_producto?: string
+  material?: string
+  medida_principal?: string
+  uso?: string
+  entrega?: string
+  tiempo_produccion?: string
+  garantia?: string
+  incluye?: string[]
+  no_incluye?: string[]
 }
 
 const EXT_VISTA = /\.(stl|obj|dxf|svg)$/i
@@ -97,6 +113,10 @@ export function leerFicha(meta: Record<string, any> | null | undefined): Ficha {
     tolerancia: typeof m.tolerancia === "string" ? m.tolerancia : "",
     vista_previa: typeof m.vista_previa === "string" ? m.vista_previa : "",
     fotos_fabricada: lista(m.fotos_fabricada, /[\n\s,;]+/),
+    tipo_producto: TIPOS_FISICOS.includes(m.tipo_producto) ? m.tipo_producto : "",
+    ...Object.fromEntries(CAMPOS_TEXTO.map((k) => [k, typeof m[k] === "string" ? m[k] : ""])),
+    incluye: lista(m.incluye, /\n|;/),
+    no_incluye: lista(m.no_incluye, /\n|;/),
   }
 }
 
@@ -176,6 +196,18 @@ export function validarFicha(b: Record<string, any>): Ficha {
     }
     out.fotos_fabricada = fotos
   }
+  if ("tipo_producto" in b) {
+    const t = String(b.tipo_producto || "")
+    if (t && !TIPOS_FISICOS.includes(t)) throw new ErrorFicha("Tipo de producto no válido.")
+    out.tipo_producto = t
+  }
+  for (const k of CAMPOS_TEXTO) if (k in b) out[k] = texto(b[k], 160)
+  for (const k of ["incluye", "no_incluye"] as const) {
+    if (!(k in b)) continue
+    const l = [...new Set(arr(b[k]).map((x) => texto(x, 160)).filter(Boolean))]
+    if (l.length > LIMITES.incluye) throw new ErrorFicha(`Máximo ${LIMITES.incluye} renglones en "${k === "incluye" ? "Qué incluye" : "Qué no incluye"}".`)
+    out[k] = l
+  }
   return out
 }
 
@@ -227,6 +259,12 @@ export async function guardarFicha(container, sellerId: string, productId: strin
     if (ficha[k] !== undefined) meta[k] = ficha[k] || ""
   }
   if (ficha.fotos_fabricada !== undefined) meta.fotos_fabricada = ficha.fotos_fabricada.length ? ficha.fotos_fabricada : ""
+  for (const k of ["tipo_producto", ...CAMPOS_TEXTO] as const) {
+    if (ficha[k] !== undefined) meta[k] = ficha[k] || ""
+  }
+  for (const k of ["incluye", "no_incluye"] as const) {
+    if (ficha[k] !== undefined) meta[k] = ficha[k].length ? ficha[k] : ""
+  }
   meta.ficha_actualizada = new Date().toISOString()
   await updateProductsWorkflow(container).run({ input: { selector: { id: productId }, update: { metadata: meta } } })
   return leerFicha(meta)
