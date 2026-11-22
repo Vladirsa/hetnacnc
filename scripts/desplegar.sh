@@ -332,7 +332,13 @@ if [ -d /var/cache/nginx/hetna-paginas ]; then
     [ $(( $(date +%s) - inicio_web )) -ge 90 ] && break
     sleep 1
   done
-  find /var/cache/nginx/hetna-paginas -type f -delete 2>/dev/null || true
+  # Sin root (usuario hetna, docs/seguridad/usuario-sin-root.md) se usa la única
+  # regla de sudo que tiene: borrar las copias de esta carpeta.
+  if [ "$(id -u)" = 0 ]; then
+    find /var/cache/nginx/hetna-paginas -type f -delete 2>/dev/null || true
+  else
+    sudo -n /usr/bin/find /var/cache/nginx/hetna-paginas -type f -delete 2>/dev/null || true
+  fi
   echo "   microcaché de nginx vaciada (tienda nueva: ${codigo_web:-000} en $(( $(date +%s) - inicio_web ))s)"
 fi
 echo "$DIST_NUEVA" > apps/storefront/.dist-actual

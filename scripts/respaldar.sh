@@ -126,10 +126,12 @@ RUTAS=("$LOCAL")
 for r in /root/hetnacnc/packages/api/static /root/hetnacnc/packages/api/.medusa/server/static ${FILE_UPLOAD_DIR:-}; do
   [ -e "$r" ] && RUTAS+=("$(readlink -f "$r")")
 done
+# readlink -f también aquí: sin root (docs/seguridad/usuario-sin-root.md)
+# /root/hetna-privado es un enlace a /home/hetna, y restic guardaría sólo el enlace.
 for r in /root/hetna-privado \
          /root/hetnacnc/packages/api/.env /root/hetnacnc/packages/api/.env.production \
          /root/hetnacnc/apps/storefront/.env /root/hetnacnc/apps/storefront/.env.local /root/hetnacnc/apps/storefront/.env.production; do
-  [ -e "$r" ] && RUTAS+=("$r")
+  [ -e "$r" ] && RUTAS+=("$(readlink -f "$r")")
 done
 # Volúmenes de n8n (trae la llave con la que n8n cifra sus credenciales) y de
 # la sesión de WhatsApp: sin ellos habría que reconectar todo a mano
@@ -153,6 +155,11 @@ restic forget --tag diario --host srv2007412 --keep-daily 14 --keep-weekly 8 --k
 # Marca para el Centro de control: el respaldo de la tienda sí quedó en B2
 date '+%s %F %T' > "$LOCAL/ultimo-ok"
 chmod 644 "$LOCAL/ultimo-ok"
+# Copia que puede leer el API cuando corre sin root (no entra a /root):
+# RESPALDO_MARCA=/srv/hetna-estado/ultimo-ok en el .env del API.
+if [ -d /srv/hetna-estado ]; then
+  cp "$LOCAL/ultimo-ok" /srv/hetna-estado/ultimo-ok && chmod 644 /srv/hetna-estado/ultimo-ok
+fi
 
 if [ "$fallas_externas" -gt 0 ]; then
   echo "⚠ $(date '+%F %T') respaldo completo, pero $fallas_externas base(s) extra (Supabase, n8n o WhatsApp) fallaron"
