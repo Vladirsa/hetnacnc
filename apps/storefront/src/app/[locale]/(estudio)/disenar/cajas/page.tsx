@@ -10,7 +10,7 @@ import { DESTACADOS, TEXTO_GRUPOS, listarCajas, rutaArchivo } from "@/lib/hetna/
 const SITIO = "https://hetnacnc.com"
 
 export const metadata: Metadata = {
-  title: "Generador de cajas para láser y router CNC gratis: bisagras, cajones, divisores y más de 170 diseños",
+  title: "Generador de cajas gratis para láser y router CNC",
   description:
     "Más de 170 cajas y objetos gratis para láser y router CNC: juntas de dedo, bisagras, cajoneras, organizadores y más. Pon tus medidas y descarga DXF o SVG.",
   alternates: {

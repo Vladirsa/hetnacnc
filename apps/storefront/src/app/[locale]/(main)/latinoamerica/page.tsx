@@ -11,7 +11,7 @@ export const revalidate = 300
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/latinoamerica" },
-  title: "HETNA CNC llega a Latinoamérica: talleres fundadores por país",
+  title: { absolute: "HETNA CNC llega a Latinoamérica: talleres fundadores por país" },
   description:
     "Colombia, Chile, Perú, Argentina, Guatemala y más: apunta tu taller CNC como fundador o pide que HETNA abra en tu país. Fabricación a pedido, Cotizador para talleres y tienda CNC.",
 }

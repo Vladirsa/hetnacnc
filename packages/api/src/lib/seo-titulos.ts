@@ -29,7 +29,8 @@ import { mandarPrivado } from "./social-telegram"
 
 const DIA = 86_400_000
 const DIAS_ENTRE_REVISIONES = 60
-const MAX_TITULO = 65
+// La tienda agrega " | HETNA CNC" (12) a cada título: 52 + 12 ≈ 64, lo que Google muestra completo.
+const MAX_TITULO = 52
 const MAX_META = 155
 
 export const seoApagado = () => ["1", "true", "si"].includes(String(process.env.SEO_AGENTE_APAGADO || "").toLowerCase())
@@ -72,6 +73,11 @@ export function semillas(titulo: string, categoria?: string): string[] {
 }
 
 /** Recorta sin partir palabras. */
+/** Quita la marca al final ("… | HETNA CNC", "- HETNA"): la tienda ya la agrega. */
+export function sinMarca(s: string) {
+  return String(s || "").replace(/\s*[|\-–—·:]\s*HETNA(\s+CNC)?(\s+Digital\s+Factory)?\s*$/i, "").trim()
+}
+
 export function recortar(s: string, max: number) {
   const t = String(s || "").replace(/\s+/g, " ").trim()
   if (t.length <= max) return t
@@ -85,7 +91,7 @@ const ESQUEMA = {
   additionalProperties: false,
   required: ["titulo_seo", "meta_description", "keyword_principal", "titulo_visible", "motivo"],
   properties: {
-    titulo_seo: { type: "string", description: "Título para Google, máx. 65 caracteres, con la búsqueda principal al inicio. Sin mayúsculas sostenidas ni signos de más." },
+    titulo_seo: { type: "string", description: "Título para Google, máx. 52 caracteres, con la búsqueda principal al inicio. SIN la marca: la tienda agrega «| HETNA CNC» sola. Sin mayúsculas sostenidas ni signos de más." },
     meta_description: { type: "string", description: "Descripción para Google, máx. 155 caracteres: qué es, para qué sirve y un motivo para dar clic (envío, descarga inmediata, a la medida…). Sólo datos que estén en la ficha." },
     keyword_principal: { type: "string", description: "La búsqueda real (de la lista de Google) que mejor describe el producto." },
     titulo_visible: { type: "string", description: "Título para la página del producto, máx. 80 caracteres, claro y con la búsqueda principal; puede llevar medida o formato si la ficha lo dice." },
@@ -119,10 +125,10 @@ export async function proponerSeo(p: { titulo: string; descripcion?: string; cat
   if ((resp as any).stop_reason === "refusal") return null
   const r = JSON.parse((resp as any).content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
   return {
-    titulo_seo: recortar(r.titulo_seo, MAX_TITULO),
+    titulo_seo: recortar(sinMarca(r.titulo_seo), MAX_TITULO),
     meta_description: recortar(r.meta_description, MAX_META),
     keyword_principal: recortar(r.keyword_principal, 80),
-    titulo_visible: recortar(r.titulo_visible || r.titulo_seo, 80),
+    titulo_visible: recortar(sinMarca(r.titulo_visible || r.titulo_seo), 80),
     motivo: recortar(r.motivo, 200),
   }
 }

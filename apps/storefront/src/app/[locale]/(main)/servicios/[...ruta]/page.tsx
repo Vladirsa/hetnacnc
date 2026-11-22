@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ...alternates,
         languages: { "es-MX": alternates.canonical, "en-US": "https://hetnacnc.com/us/cotizador", "x-default": alternates.canonical },
       },
-      title: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller",
+      title: { absolute: "App HETNA CNC para talleres: cotiza, cobra y controla tu taller" },
       description: "App para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos, clientes, avances, gastos e inventario. Web y Android, gratis.",
     }
   }

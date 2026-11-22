@@ -24,3 +24,13 @@ describe("agente SEO", () => {
     expect(tocaRevisar({ seo_revisado: "2026-09-01T00:00:00Z" }, ahora)).toBe(true)
   })
 })
+
+describe("sinMarca", () => {
+  const { sinMarca } = require("../seo-titulos")
+  it("quita la marca al final, que la tienda ya agrega", () => {
+    expect(sinMarca("Programa CAM 3 ejes | HETNA CNC")).toBe("Programa CAM 3 ejes")
+    expect(sinMarca("Revisión CAM: sujeción | HETNA")).toBe("Revisión CAM: sujeción")
+    expect(sinMarca("Tabla de pino - HETNA CNC")).toBe("Tabla de pino")
+    expect(sinMarca("HETNA CNC en Chile: talleres")).toBe("HETNA CNC en Chile: talleres")
+  })
+})
