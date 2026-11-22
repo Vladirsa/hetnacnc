@@ -525,6 +525,13 @@ export type Routes = {
         disenosDigitales: {
             publicar: typeof import("../src/api/admin/disenos-digitales/publicar/route");
         };
+        escanear: typeof import("../src/api/admin/escanear/route") & {
+            $id: typeof import("../src/api/admin/escanear/[id]/route") & {
+                archivos: typeof import("../src/api/admin/escanear/[id]/archivos/route") & {
+                    $archivo: typeof import("../src/api/admin/escanear/[id]/archivos/[archivo]/route");
+                };
+            };
+        };
         hetnaAjustes: {
             $clave: typeof import("../src/api/admin/hetna-ajustes/[clave]/route");
         };
@@ -876,6 +883,13 @@ export type Routes = {
             cotizar: typeof import("../src/api/store/envios/cotizar/route");
             cp: {
                 $cp: typeof import("../src/api/store/envios/cp/[cp]/route");
+            };
+        };
+        escanear: typeof import("../src/api/store/escanear/route") & {
+            $id: typeof import("../src/api/store/escanear/[id]/route") & {
+                archivos: typeof import("../src/api/store/escanear/[id]/archivos/route") & {
+                    $archivo: typeof import("../src/api/store/escanear/[id]/archivos/[archivo]/route");
+                };
             };
         };
         escaneos: typeof import("../src/api/store/escaneos/route") & {
