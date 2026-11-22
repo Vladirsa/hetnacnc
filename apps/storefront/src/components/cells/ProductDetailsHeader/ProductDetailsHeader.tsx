@@ -28,6 +28,7 @@ import { convertToLocale } from "@/lib/helpers/money"
 import { toast } from "@/lib/helpers/toast"
 import { HttpTypes } from "@medusajs/types"
 import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
+import type { Fila, TipoProducto } from "@/lib/hetna/tipo-producto"
 import type { Cart } from "@/types/cart"
 import { SellerDTO } from "@mercurjs/types"
 
@@ -59,6 +60,7 @@ export const ProductDetailsHeader = ({
   tipo = "fisico",
   antesDeComprar,
   descarga = false,
+  universal,
 }: {
   product: HttpTypes.StoreProduct
   locale: string
@@ -72,6 +74,16 @@ export const ProductDetailsHeader = ({
   // Ficha de diseño para descargar: precio con "MXN", "Sin envío: es
   // descarga", botón "Comprar y descargar ahora" y nada de existencias.
   descarga?: boolean
+  // Ficha universal (lib/hetna/tipo-producto): tipo, SKU, 4 datos clave y la
+  // nota del precio. Lo que venga vacío no se dibuja.
+  universal?: {
+    tipo: TipoProducto
+    etiqueta: string
+    icono: string
+    sku?: string
+    datosClave?: Fila[]
+    notaPrecio?: string
+  }
 }) => {
   const fisico = tipo === "fisico"
   const { addToCart, onAddToCart, cart, isAddingItem } = useCartContext()
@@ -272,9 +284,42 @@ export const ProductDetailsHeader = ({
         </p>
       )}
 
+      {universal && (
+        <div className="mb-2 flex flex-wrap items-center gap-2" data-testid="product-tipo">
+          <span className="rounded-full bg-[#EEF1F6] px-2.5 py-1 text-[12px] font-bold text-[#142033]">
+            {universal.icono} {universal.etiqueta}
+          </span>
+          {(() => {
+            // Disponibilidad real: la de la oferta que gana, nunca inventada
+            const d =
+              universal.tipo === "digital"
+                ? { t: "Descarga inmediata", ok: true }
+                : universal.tipo === "servicio"
+                  ? { t: "Se entrega en línea", ok: true }
+                  : !hayOferta
+                    ? null
+                    : disponibles === 0
+                      ? { t: "Agotado", ok: false }
+                      : universal.tipo === "a_medida"
+                        ? { t: "Se fabrica bajo pedido", ok: true }
+                        : { t: "En existencia", ok: true }
+            return d ? (
+              <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${d.ok ? "bg-[#E8F5EC] text-[#17633A]" : "bg-[#FDECEA] text-[#9B3225]"}`}>
+                {d.ok ? "● " : ""}{d.t}
+              </span>
+            ) : null
+          })()}
+        </div>
+      )}
+
       <h1 className="text-[22px] font-bold leading-snug text-[#1B1B18] lg:text-[26px]" data-testid="product-title">
         {product.title}
       </h1>
+      {universal?.sku && (
+        <p className="mt-1 text-[12px] text-[#6B6A63]" data-testid="product-sku">
+          SKU: <span className="font-mono">{universal.sku}</span>
+        </p>
+      )}
 
       {esGratis ? (
         <DescargarGratis productId={product.id} />
@@ -325,7 +370,12 @@ export const ProductDetailsHeader = ({
             </div>
             {descarga ? (
               <p className="mt-1 text-[12.5px] text-[#6B6A63]" data-testid="product-precio-nota">
-                {ivaIncluido ? "IVA incluido · " : ""}Sin envío: es descarga
+                {universal?.notaPrecio ? `${universal.notaPrecio} · ` : ivaIncluido ? "IVA incluido · " : ""}Sin envío: es descarga
+              </p>
+            ) : universal?.notaPrecio ? (
+              <p className="mt-1 text-[12px] text-[#6B6A63]" data-testid="product-precio-nota">
+                {universal.notaPrecio}
+                {fisico ? " · El envío se calcula antes de pagar" : ""}
               </p>
             ) : (
               ivaIncluido && <p className="mt-1 text-[12px] text-[#6B6A63]">IVA incluido</p>
@@ -359,7 +409,19 @@ export const ProductDetailsHeader = ({
         )}
       </div>
 
-      {hasAnyPrice && (
+      {universal?.datosClave && universal.datosClave.length > 0 && (
+        <dl className="mt-4 grid grid-cols-2 gap-2" data-testid="product-datos-clave">
+          {universal.datosClave.map(([k, v]) => (
+            <div key={k} className="rounded-[10px] border border-[#E7E4DC] bg-[#FAF9F6] px-3 py-2">
+              <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-[#6B6A63]">{k}</dt>
+              <dd className="m-0 text-[14px] font-semibold leading-snug text-[#142033]">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {/* Sólo si hay algo que elegir: "Presentación: Única" no ayuda a nadie */}
+      {hasAnyPrice && (product.options || []).some((o) => (o.values?.length || 0) > 1) && (
         <ProductVariants product={product} selectedVariant={selectedVariant} />
       )}
 
@@ -379,7 +441,7 @@ export const ProductDetailsHeader = ({
             <button
               type="button"
               aria-label="Quitar uno"
-              className="flex h-9 w-9 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC]"
+              className="flex h-11 w-11 items-center justify-center text-[18px] lg:h-9 lg:w-9 leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC]"
               disabled={cantidadValida <= 1}
               onClick={() => setCantidad(cantidadValida - 1)}
             >
@@ -391,7 +453,7 @@ export const ProductDetailsHeader = ({
             <button
               type="button"
               aria-label="Agregar uno"
-              className="flex h-9 w-9 items-center justify-center text-[18px] leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC]"
+              className="flex h-11 w-11 items-center justify-center text-[18px] lg:h-9 lg:w-9 leading-none text-[#4A4943] hover:bg-[#F4F2EC] disabled:text-[#C7C4BC]"
               disabled={cantidadValida >= disponibles}
               onClick={() => setCantidad(cantidadValida + 1)}
             >
