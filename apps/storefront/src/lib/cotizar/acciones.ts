@@ -9,6 +9,9 @@
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 export type CotizarLeadInput = {
+  /** Medición: aceptó cookies de publicidad y el id del evento del Pixel (no viajan al backend) */
+  rastreo?: boolean
+  evento_id?: string
   servicio: "laser_co2" | "router" | "plasma" | "impresion_3d"
   material: string
   ancho: number
@@ -36,7 +39,8 @@ export type CotizarLeadResultado =
   | { ok: true; estimado: { minimo: number; recomendado: number; maximo: number }; volumenAlto: boolean; whatsappUrl: string }
   | { ok: false; mensaje: string }
 
-export async function cotizarLead(input: CotizarLeadInput): Promise<CotizarLeadResultado> {
+export async function cotizarLead(entrada: CotizarLeadInput): Promise<CotizarLeadResultado> {
+  const { rastreo, evento_id, ...input } = entrada
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/quote-leads`, {
       method: "POST",
@@ -51,6 +55,10 @@ export async function cotizarLead(input: CotizarLeadInput): Promise<CotizarLeadR
       return { ok: false, mensaje: body.message || "No se pudo calcular el estimado. Intenta de nuevo." }
     }
     const data = await res.json()
+    if (rastreo && evento_id && /^est_[\w-]{6,40}$/.test(evento_id)) {
+      const { reportarLeadMeta } = await import("@/lib/analytics/meta-lead")
+      await reportarLeadMeta({ eventId: evento_id, contenido: "Estimado al instante", email: input.email })
+    }
     return {
       ok: true,
       estimado: data.estimado,
