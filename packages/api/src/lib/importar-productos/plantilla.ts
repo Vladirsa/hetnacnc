@@ -285,7 +285,8 @@ export async function leerPlantilla(datos: Buffer, opc: { fotos?: Map<string, st
 
   const skus = new Map<string, number>()
   const grupos = new Map<string, Renglon[]>()
-  const err = (fila: number, clave: Clave, mensaje: string) => errores.push({ fila, columna: COLUMNAS.find((x) => x.clave === clave)!.titulo, mensaje })
+  const titulo = (clave: Clave) => (fotos && clave === "imagenes" ? TITULO_FOTOS_TALLER : COLUMNAS.find((x) => x.clave === clave)!.titulo)
+  const err = (fila: number, clave: Clave, mensaje: string) => errores.push({ fila, columna: titulo(clave), mensaje })
 
   for (const r of renglones) {
     const f = r._fila

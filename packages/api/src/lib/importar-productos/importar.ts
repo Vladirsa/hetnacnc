@@ -19,7 +19,7 @@
 // Un agrupador o SKU de otro taller (o de HETNA) nunca se actualiza: es error.
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import { createProductsWorkflow, updateProductsWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
+import { createProductsWorkflow, deleteProductsWorkflow, updateProductsWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
 import { createOffersWorkflow, updateOffersWorkflow } from "@mercurjs/core/workflows"
 import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
 
@@ -187,6 +187,15 @@ async function perfilCanalesMonedas(container: MedusaContainer) {
   return { perfilId: perfil.id, canales: (canales as { id: string }[]).map((c) => c.id), aceptaUsd: monedas.includes("usd") }
 }
 
+/** Nombre y handle del taller (sin crear nada). */
+export async function datosTaller(container: MedusaContainer, sellerId: string): Promise<{ nombre: string; handle: string }> {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({ entity: "seller", fields: ["id", "name", "handle"], filters: { id: sellerId } })
+  const s = data[0] as { id: string; name: string; handle?: string } | undefined
+  if (!s) throw new ErrorImportar("No encontramos tu tienda. Vuelve a iniciar sesión.")
+  return { nombre: s.name, handle: s.handle || s.id }
+}
+
 /** La tienda de un taller: su almacén (se le crea si no tiene, como en Publicar producto). */
 export async function tiendaTaller(container: MedusaContainer, sellerId: string, memberId?: string): Promise<Tienda & { nombre: string; handle: string }> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
@@ -197,11 +206,23 @@ export async function tiendaTaller(container: MedusaContainer, sellerId: string,
   return { sellerId: s.id, memberId: memberId || "excel-taller", locationId, nombre: s.name, handle: s.handle || s.id, ...(await perfilCanalesMonedas(container)) }
 }
 
-/** Ids de los productos ligados a un taller. */
-export async function productosDelTaller(container: MedusaContainer, sellerId: string): Promise<Set<string>> {
+/**
+ * De esos productos, los que son DE ese taller. La liga producto↔taller en Mercur
+ * quiere decir "puede venderlo", no "es el dueño" (el admin puede asignar un
+ * producto del catálogo a varios talleres). Por eso además debe ser el único
+ * taller ligado, o el producto debe haberlo publicado él (metadata.seller_id).
+ */
+export async function productosDelTaller(container: MedusaContainer, sellerId: string, ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set()
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const { data } = await query.graph({ entity: "seller", fields: ["id", "products.id"], filters: { id: sellerId } as Record<string, unknown> })
-  return new Set((((data[0] as any)?.products || []) as { id: string }[]).map((p) => p.id))
+  const { data } = await query.graph({ entity: "product", fields: ["id", "metadata", "sellers.id"], filters: { id: ids } })
+  const propios = new Set<string>()
+  for (const p of data as { id: string; metadata?: Record<string, unknown> | null; sellers?: { id: string }[] }[]) {
+    const ligas = (p.sellers || []).map((s) => s?.id).filter(Boolean)
+    if (!ligas.includes(sellerId)) continue
+    if (ligas.length === 1 || p.metadata?.seller_id === sellerId) propios.add(p.id)
+  }
+  return propios
 }
 
 /** La tienda HETNA (seller con handle CAM_SELLER_HANDLE), su almacén, el perfil de envío físico y los canales. */
@@ -259,7 +280,7 @@ export async function revisar(container: MedusaContainer, lectura: Lectura, opc:
   }
   const ajenos = new Set<string>()
   if (opc.sellerId && existentes.size) {
-    const propios = await productosDelTaller(container, opc.sellerId)
+    const propios = await productosDelTaller(container, opc.sellerId, [...existentes.values()].map((e) => e.id))
     for (const [h, ex] of existentes) if (!propios.has(ex.id)) { existentes.delete(h); ajenos.add(h) }
   }
   const plan = planear(lectura, cats, existentes, skuEnProducto)
@@ -343,7 +364,9 @@ export async function importar(
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const t = opc.tienda ?? (await tiendaHetna(container))
-  const propios = opc.tienda ? await productosDelTaller(container, t.sellerId) : null
+  const propios = opc.tienda
+    ? await productosDelTaller(container, t.sellerId, plan.pasos.filter((x) => x.existente).map((x) => x.existente!.id))
+    : null
   const avisos: Problema[] = []
   const cacheImg = new Map<string, string>()
   const resultados: ResultadoProducto[] = []
@@ -362,9 +385,15 @@ export async function importar(
         })
         productId = result[0].id
         variantes = (result[0].variants || []).map((v) => ({ id: v.id, sku: v.sku ?? null }))
-        await container.resolve(ContainerRegistrationKeys.LINK).create([
-          { [Modules.PRODUCT]: { product_id: productId }, [MercurModules.SELLER]: { seller_id: t.sellerId } },
-        ])
+        try {
+          await container.resolve(ContainerRegistrationKeys.LINK).create([
+            { [Modules.PRODUCT]: { product_id: productId }, [MercurModules.SELLER]: { seller_id: t.sellerId } },
+          ])
+        } catch (e) {
+          // Sin la liga quedaría un producto publicado sin dueño: se quita y se reporta
+          await deleteProductsWorkflow(container).run({ input: { ids: [productId] } }).catch(() => undefined)
+          throw e
+        }
       } else {
         productId = paso.existente!.id
         variantes = paso.existente!.variants

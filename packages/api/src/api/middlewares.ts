@@ -168,7 +168,7 @@ export default defineMiddlewares({
         {
           method: ["POST"],
           matcher: "/vendor/hetna-publicar/excel",
-          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
         },
         {
           method: ["POST"],

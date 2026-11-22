@@ -20,7 +20,7 @@ const cats: Categoria[] = [
 ]
 
 describe("Excel de productos para talleres", () => {
-  beforeAll(() => { delete process.env.FILE_BACKEND_URL })
+  beforeAll(() => { process.env.FILE_BACKEND_URL = BASE })
 
   it("la plantilla del taller pide fotos por nombre de archivo, sin la marca HETNA en los ejemplos", async () => {
     const wb = new ExcelJS.Workbook()
@@ -39,6 +39,8 @@ describe("Excel de productos para talleres", () => {
       "Fresa 6mm.JPG": `${BASE}/123-fresa.jpg`,
       "otra.jpg": "https://sitio-ajeno.com/foto.jpg",
       "rara.jpg": `${BASE}evil/x.jpg`,
+      "sube.jpg": `${BASE}/../secreto.jpg`,
+      "codificada.jpg": `${BASE}/%2e%2e/secreto.jpg`,
       "nada.jpg": 42,
     }))
     expect([...m.keys()]).toEqual(["fresa 6mm.jpg"])

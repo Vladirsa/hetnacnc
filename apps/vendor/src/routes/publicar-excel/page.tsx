@@ -53,8 +53,16 @@ async function enviar(excel, fotos, modo, soloValidos = false) {
   fd.append("modo", modo)
   if (soloValidos) fd.append("solo_validos", "1")
   const r = await fetch("/vendor/hetna-publicar/excel", { method: "POST", credentials: "include", body: fd })
-  const d = await r.json().catch(() => ({}))
+  const d = await r.json().catch(() => null)
   if (r.status === 401) throw new Error("Tu sesión terminó. Vuelve a entrar.")
+  if (!d) {
+    // Sin respuesta del servidor (p. ej. tardó demasiado): al publicar, puede que sí haya avanzado
+    throw new Error(
+      modo === "importar"
+        ? "La publicación está tardando más de lo normal. Espera 5 minutos y revisa tus productos antes de volver a intentar."
+        : "No se pudo revisar el archivo. Intenta de nuevo en un momento."
+    )
+  }
   if (!r.ok && !Array.isArray(d.errores)) throw new Error(d.message || "No se pudo revisar el archivo.")
   return d
 }
@@ -166,7 +174,7 @@ export default function PublicarExcel() {
     <div style={S.page}>
       <h1 style={S.h1}>Publicar con Excel</h1>
       <p style={S.sub}>
-        Sube muchos productos de una vez (hasta 25 por archivo). Primero se revisa todo y nada se publica hasta que confirmas. Para uno solo,
+        Sube muchos productos de una vez (hasta 25 productos y 100 renglones por archivo, de 2 MB como máximo). Primero se revisa todo y nada se publica hasta que confirmas. Para uno solo,
         usa <Link to="/publicar" style={{ color: C.naranja, fontWeight: 700 }}>Publicar producto</Link>.
       </p>
 
