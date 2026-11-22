@@ -1,4 +1,3 @@
-import { ProductAdditionalAttributes } from "@/components/cells/ProductAdditionalAttributes/ProductAdditionalAttributes"
 import { ProductDetailsFooter } from "@/components/cells/ProductDetailsFooter/ProductDetailsFooter"
 import { ProductDetailsHeader } from "@/components/cells/ProductDetailsHeader/ProductDetailsHeader"
 import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
@@ -23,6 +22,8 @@ import { esFichaDescarga, tipoFicha } from "@/lib/hetna/tipo-ficha"
 import { ColumnaDescarga } from "@/components/hetna/fichas/descarga/FichaDescarga"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
+import { EntregaGarantia, EspecificacionesFicha, IncluyeFicha } from "@/components/hetna/fichas/FichaUniversal"
+import { datosClave, limpiarDescripcion, notaPrecio, skuDe, tipoProducto, TIPOS_PRODUCTO } from "@/lib/hetna/tipo-producto"
 
 type Props = {
   product: HttpTypes.StoreProduct & {
@@ -48,6 +49,15 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
   const tipo = tipoFicha(product as any)
   const descarga = esFichaDescarga(product)
   const seller = ganadora?.seller
+  // Ficha universal: tipo, SKU, 4 datos clave y nota del precio
+  const tipoProd = tipoProducto(product as never)
+  const universal = {
+    tipo: tipoProd,
+    ...TIPOS_PRODUCTO[tipoProd],
+    sku: skuDe(product as never),
+    datosClave: datosClave(product as never),
+    notaPrecio: notaPrecio(seller as never),
+  }
 
   // El umbral de envío gratis del taller que gana el buybox -- el mismo que va
   // a cobrar. Va junto al precio porque es parte del precio de la decisión, no
@@ -92,6 +102,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         seller={seller}
         tipo={tipo}
         descarga={descarga}
+        universal={universal}
         antesDeComprar={
           tipo === "servicio" ? (
             <ResumenServicio metadata={product.metadata} />
@@ -142,20 +153,28 @@ export const ProductDetallesLargos = ({
   product: Props["product"]
   locale: string
   taller?: { name?: string | null; handle?: string | null }
-}) => (
+}) => {
+  // Sin lo que quedó vacío de la plantilla de publicar ("Qué incluye: --")
+  const descripcion = limpiarDescripcion(product?.description)
+  const tipo = tipoFicha(product as any)
+  return (
   <div className="flex flex-col gap-4">
-    <LoMasImportante descripcion={product?.description} />
+    <LoMasImportante descripcion={descripcion} />
     <PuntosDestacados
       product={product}
       locale={locale}
       taller={taller}
       atributos={product?.attribute_values || []}
     />
-    {tipoFicha(product as any) === "servicio" && <FichaServicio metadata={product?.metadata} />}
-    {tipoFicha(product as any) === "digital" && <FichaDigital metadata={product?.metadata} />}
-    <ProductPageDetails details={product?.description || ""} />
-    <ProductAdditionalAttributes attributes={product?.attribute_values || []} />
-    {tipoFicha(product as any) === "fisico" && <ProductDetailsShipping />}
+    {tipo === "servicio" && <FichaServicio metadata={product?.metadata} />}
+    {tipo === "digital" && <FichaDigital metadata={product?.metadata} />}
+    <ProductPageDetails details={descripcion} />
+    {/* La tabla junta los datos del taller y los atributos (antes iban aparte) */}
+    <EspecificacionesFicha product={product as never} />
+    <IncluyeFicha product={product as never} />
+    <EntregaGarantia product={product as never} />
+    {tipo === "fisico" && <ProductDetailsShipping />}
     <ProductDetailsFooter tags={product?.tags || []} posted={product?.created_at} />
   </div>
-)
+  )
+}

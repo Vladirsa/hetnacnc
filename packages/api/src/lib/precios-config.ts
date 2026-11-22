@@ -60,6 +60,7 @@ export function limpiarConfig(v: any): ConfigPrecios {
     ["margenPct", 0, 80],
     ["markupMaterialPct", 0, 300],
     ["rangoPct", 0, 50],
+    ["pedidoMinimo", 0, 100000],
   ]
   for (const [k, min, max] of campos) {
     const n = num(o[k], min, max)

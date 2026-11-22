@@ -19,12 +19,12 @@ export function VenderMas({ titulo, handle, locale, vistas }: { titulo: string; 
           href={whats}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg border border-[#25D366] px-3 py-2 text-sm font-bold text-[#128C4A] hover:bg-[#25D366]/10"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#25D366] px-3 py-2 text-sm font-bold text-[#128C4A] hover:bg-[#25D366]/10"
         >
           Compártelo por WhatsApp
         </a>
-        <a href={medida} className="inline-flex items-center gap-2 rounded-lg border border-[#C2560A] px-3 py-2 text-sm font-bold text-[#C2560A] hover:bg-[#C2560A]/10">
-          ¿Lo necesitas a la medida? Cotízalo con talleres
+        <a href={medida} className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#C2560A] px-3 py-2 text-sm font-bold text-[#C2560A] hover:bg-[#C2560A]/10" data-testid="product-cotizar-similar">
+          Cotizar algo similar o a tu medida
         </a>
       </div>
     </div>

@@ -6,6 +6,8 @@ Datos clave:
 - País: México. Idioma: español. Moneda: MXN.
 - Para clientes: comprar productos CNC, pedir cotizaciones de fabricación a varios talleres, encontrar talleres cercanos.
 - Para talleres y vendedores: publicar productos gratis (sólo pagan comisión al vender), recibir solicitudes de fabricación, app de cotización y nube de proyectos (HetNa Cloud).
+- Ubicación: Apizaco, Tlaxcala, México. Atiende y envía a toda la República.
+- Teléfono y WhatsApp: +52 221 707 6014. Correo: contacto@hetnacnc.com. Horario: lunes a viernes de 9:00 a 18:00 h (hora del centro de México).
 - Contacto: https://hetnacnc.com/mx/contacto
 
 ## Tienda
@@ -32,7 +34,43 @@ Datos clave:
 - [Diseñar 2D y 3D](https://hetnacnc.com/mx/disenar): estudios gratis para diseñar cajas con juntas para láser, letreros, llaveros, letras 3D, litofanías, vectorizar imágenes y extruir dibujos a 3D. Descarga en DXF, SVG y STL.
 - [Imagen a 3D con IA](https://hetnacnc.com/mx/disenar/imagen-a-3d): sube una foto y la inteligencia artificial crea un modelo 3D con textura en minutos; descarga GLB y STL para impresión 3D o router. El primer modelo de cada mes es gratis.
 - [Cajas para corte láser](https://hetnacnc.com/mx/disenar/cajas): generador de cajas con uniones finger joint a la medida.
+- [Cotizador CNC para talleres](https://hetnacnc.com/mx/servicios/cotizador-cnc): app para que los talleres de láser, router, plasma e impresión 3D coticen desde el celular: suben el archivo o escriben medidas, el sistema calcula con sus costos y su margen, y mandan la cotización en PDF por WhatsApp. Plan gratis con 5 cotizaciones al mes; planes de pago sin límite y con su logo.
 - [Copiloto IA CNC](https://hetnacnc.com/mx/servicios/copiloto-ia-cnc): asistente de IA para parámetros de corte, selección de herramienta, G-code y diagnóstico de fallas.
+
+## Herramientas de diseño (una por página)
+
+Todas funcionan en el navegador, sin instalar nada; casi todas son gratis y sin cuenta. Los archivos que generan (DXF, SVG, PDF, STL, STEP) se pueden mandar al Cotizador para ver el precio o a "Cotizar" para que un taller de la red los fabrique.
+
+- [Caja con juntas de dedo](https://hetnacnc.com/mx/disenar/caja-con-juntas): Medidas y espesor, y descargas la caja en DXF, SVG o PDF.
+- [Letras 3D en caja](https://hetnacnc.com/mx/disenar/letras-3d): Letras huecas para anuncios luminosos: MDF y acrílico, por capas, con hojas de corte listas.
+- [Letreros y nombres](https://hetnacnc.com/mx/disenar/letreros): Escribe el texto, elige la letra y descarga el DXF con las letras unidas.
+- [Llaveros y placas con nombre](https://hetnacnc.com/mx/disenar/llaveros): Nombre, letra y forma; DXF para láser o STL con relieve para imprimir.
+- [Rompecabezas](https://hetnacnc.com/mx/disenar/rompecabezas): Mide la placa, elige cuántas piezas y descarga las líneas de corte.
+- [Vectorizador de imágenes](https://hetnacnc.com/mx/disenar/vectorizador): Un logotipo o dibujo convertido en contornos DXF o SVG.
+- [Mueble desde una imagen](https://hetnacnc.com/mx/disenar/muebles-desde-imagen) (con créditos): Sube la foto o el plano de un mueble y sale listo para maquilar, visto armado en 3D.
+- [Molduras y tallados](https://hetnacnc.com/mx/disenar/molduras-tallados): Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.
+- [Muebles de ensamble sin tornillos](https://hetnacnc.com/mx/disenar/muebles-ensamble): Exhibidores, libreros y muebles de caja y espiga del catálogo, a tu medida y vistos armados en 3D.
+- [Cocina y muebles de melamina a la medida](https://hetnacnc.com/mx/disenar/despiece-muebles): Gabinetes de cocina, libreros, roperos, cómodas y burós: elige el modelo, cambia sus medidas y sale el despiece.
+- [Plantillas de empaque](https://hetnacnc.com/mx/disenar/plantillas-empaque): 35 modelos: cajas con tapa, pizza, pastel, bolsas con asas, sobres, tubos y más.
+- [Foto para grabado láser](https://hetnacnc.com/mx/disenar/grabado-foto): Tu foto tramada al tamaño y la resolución de tu láser.
+- [Litofanías y relieves 3D](https://hetnacnc.com/mx/disenar/litofania-relieve): Tu foto convertida en STL: litofanía o relieve para tallar.
+- [Patrones radiales](https://hetnacnc.com/mx/disenar/patrones-radiales): Mandalas y arte de pared en capas, listos para cortar.
+- [Convertidor y reescalador](https://hetnacnc.com/mx/disenar/convertidor): DXF a SVG y al revés, STEP a STL y STL a STEP, STL a OBJ, cambio de tamaño y de espesor.
+- [Partir modelo 3D](https://hetnacnc.com/mx/disenar/partir-3d): Imprime en grande: divide tu modelo en piezas que caben en la cama, con pernos o imanes.
+- [SVG o DXF a STL](https://hetnacnc.com/mx/disenar/svg-a-stl): Archivos de corte láser a 3D: corte, grabado y líneas marcadas por color; placa base para llaveros.
+- [Anidado de piezas](https://hetnacnc.com/mx/disenar/anidado-piezas): Acomoda muchas piezas en tus hojas de material para desperdiciar menos.
+- [Celosías y paneles decorativos](https://hetnacnc.com/mx/disenar/celosias): Paneles calados para divisores, puertas, plafones y fachadas: 10 patrones.
+- [Bisagra viva (madera flexible)](https://hetnacnc.com/mx/disenar/bisagra-viva): Cortes que dejan doblar el MDF: cajas redondeadas, lámparas y libretas.
+- [Código QR para grabar](https://hetnacnc.com/mx/disenar/codigo-qr): QR vectorial con texto y placa para grabar en láser o router.
+- [Rebanado en capas (3D a 2D)](https://hetnacnc.com/mx/disenar/rebanado-capas): Tu modelo 3D en capas numeradas para cortar y pegar, acomodadas en hojas.
+- [Engranes](https://hetnacnc.com/mx/disenar/engranes): Engranes rectos que sí engranan, con su par y la distancia entre centros.
+- [Relojes de pared](https://hetnacnc.com/mx/disenar/relojes): Carátulas con números romanos o arábigos y el hueco del mecanismo.
+- [Organizadores de cajón](https://hetnacnc.com/mx/disenar/organizador-cajon): Separadores a la medida del cajón que se encastran, para cubiertos, herramienta o fresas.
+- [Lámparas por capas](https://hetnacnc.com/mx/disenar/lamparas-capas): Costillas y anillos que se encastran, con el hueco del socket E27.
+- [Esténcil de letras](https://hetnacnc.com/mx/disenar/estencil-letras): Plantillas de texto con puentes para pintar cajas, bultos y señalética.
+- [Marcos y portarretratos](https://hetnacnc.com/mx/disenar/marcos-portarretratos): Marco por capas con ranura para vidrio y foto, nombre grabado y pata.
+- [Esferas navideñas con nombre](https://hetnacnc.com/mx/disenar/esferas-navidad): Adornos de Navidad personalizados: escribe los nombres y descarga una esfera por cada uno.
+- [Imagen a 3D con IA](https://hetnacnc.com/mx/disenar/imagen-a-3d) (con créditos): Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.
 
 ## Aprender
 

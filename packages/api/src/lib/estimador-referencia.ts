@@ -92,21 +92,27 @@ export function materialesPara(servicio: TipoMaquina): MaterialRef[] {
 // impresión. Antes se cobraban operador y fijos durante TODA la impresión y un
 // cubo de 10 cm salía en más de $10,000 (revisión de precios, 21 nov 2026).
 const MAQUINA_REF: Record<TipoMaquina, { costoHora: number; prep: number; perf: number; remocion?: number; impresion?: number; desatendida?: boolean }> = {
-  router: { costoHora: 350, prep: 15, perf: 2 },
-  laser_co2: { costoHora: 320, prep: 8, perf: 0.5 },
+  // Router y láser: promedio de talleres en México (21 nov 2026). Con operador
+  // y fijos quedan en ~$480/h el router y ~$10/min el láser, ya con margen.
+  router: { costoHora: 130, prep: 15, perf: 2 },
+  laser_co2: { costoHora: 220, prep: 8, perf: 0.5 },
   plasma: { costoHora: 480, prep: 10, perf: 1.5 },
   laser_fibra: { costoHora: 950, prep: 8, perf: 0.3 },
-  router_3d: { costoHora: 350, prep: 20, perf: 2, remocion: 15 },
+  router_3d: { costoHora: 130, prep: 20, perf: 2, remocion: 15 },
   // $/h de impresora: luz, desgaste, boquillas y piezas fallidas
   impresora_3d: { costoHora: 45, prep: 10, perf: 0, impresion: 12, desatendida: true },
 }
-const OPERADOR_HORA = 95
+// Operador CNC: $12,922 al mes ≈ $76/h (Jooble, nov 2026) más ~35 % de IMSS,
+// aguinaldo y vacaciones.
+const OPERADOR_HORA = 100
 const OPERADOR_BASE = OPERADOR_HORA
 // Gastos fijos del taller (renta, luz general, software) repartidos por hora
 // de trabajo de una máquina. Era 130 $/h: con eso la hora de router o láser
 // salía en ~$14–15/min, arriba de lo que cobra un taller en México
 // (~$8–13/min). Con 60 queda en ~$12–13/min (21 nov 2026).
-const FIJOS_HORA = 60
+// 21 nov 2026: 80 $/h, promedio de un taller chico (renta de 93–150 m² en
+// Puebla $18–26 mil al mes, más luz e internet) repartido por hora trabajada.
+const FIJOS_HORA = 80
 const FIJOS_BASE = FIJOS_HORA
 const MARGEN = 0.35
 const MARKUP_MATERIAL = 0.2
@@ -117,6 +123,9 @@ const MANEJO_MIN_CHICA = 0.15
 const manejoPorPieza = (largoMm: number, anchoMm: number) =>
   Math.min(MANEJO_MIN, Math.max(MANEJO_MIN_CHICA, (largoMm * anchoMm) / 100 / 1000))
 const RANGO = 0.15
+// Pedido mínimo: ningún trabajo sale en menos (sugerencia aprobada por Vlado,
+// 21 nov 2026). Se cambia en el panel; 0 = sin mínimo.
+const PEDIDO_MINIMO = 150
 const MARGEN_BASE = MARGEN
 const MARKUP_BASE = MARKUP_MATERIAL
 const RANGO_BASE = RANGO
@@ -132,6 +141,8 @@ export type ConfigPrecios = {
   margenPct?: number
   markupMaterialPct?: number
   rangoPct?: number
+  /** Pedido mínimo en pesos (sin IVA); 0 = sin mínimo */
+  pedidoMinimo?: number
   /** Precio por hoja o por kg, por nombre del material ("MDF 3 mm") */
   preciosMaterial?: Record<string, number>
 }
@@ -147,6 +158,7 @@ export function configDeFabrica() {
     margenPct: MARGEN * 100,
     markupMaterialPct: MARKUP_MATERIAL * 100,
     rangoPct: RANGO * 100,
+    pedidoMinimo: PEDIDO_MINIMO,
     preciosMaterial: Object.fromEntries(MATERIALES.map((m) => [m.nombre, m.precio])) as Record<string, number>,
   }
 }
@@ -275,6 +287,7 @@ export function estimar(p: {
   const MARGEN = entre(c.margenPct, 0, 80, MARGEN_BASE * 100) / 100
   const MARKUP_MATERIAL = entre(c.markupMaterialPct, 0, 300, MARKUP_BASE * 100) / 100
   const RANGO = entre(c.rangoPct, 0, 50, RANGO_BASE * 100) / 100
+  const MINIMO = entre(c.pedidoMinimo, 0, 100000, PEDIDO_MINIMO)
   const material = { ...p.material, precio: entre(c.preciosMaterial?.[p.material.nombre], 0, 1_000_000, p.material.precio) }
   const avisos: string[] = []
   let tPieza = 0
@@ -358,14 +371,16 @@ export function estimar(p: {
   const costoFijos = (tAtendido / 60) * FIJOS_HORA
   const costo = costoMaterial + costoMaquina + costoOperador + costoPrep + costoAcabado + costoFijos
   // El margen sobre máquina y trabajo; el material ya trae su merma y recargo.
-  const total = (costo - costoMaterial) / (1 - MARGEN) + costoMaterial
+  const calculado = (costo - costoMaterial) / (1 - MARGEN) + costoMaterial
+  const total = Math.max(calculado, MINIMO)
+  if (calculado < MINIMO) avisos.push(`Pedido mínimo: $${MINIMO}. Con más piezas aprovechas mejor ese mínimo.`)
   const red = (v: number) => Math.round(v / 5) * 5
 
   return {
     ok: true,
     precioPieza: total / n,
     total: red(total),
-    min: red(total * (1 - RANGO)),
+    min: red(Math.max(MINIMO, total * (1 - RANGO))),
     max: red(total * (1 + RANGO)),
     tiempoPiezaMin: tPieza,
     tiempoTotalMin: tTotal,

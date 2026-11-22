@@ -13,6 +13,7 @@ import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound } from "next/navigation"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { productoExtra } from "@/lib/hetna/producto-extra"
 import { VideoProducto } from "@/components/hetna/VenderMas"
 import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
@@ -105,6 +106,9 @@ export const ProductDetailsPage = async ({
   const vendedor = winnerOffer?.seller || prod.seller
 
   const pendienteDeEste = pendientes.find((p) => p.product_id === prod.id)
+  // Ficha universal: las reseñas sólo salen si existen (o si este cliente
+  // tiene una pendiente de escribir). Un "Todavía no hay reseñas" no ayuda.
+  const hayResenas = Boolean(resenas?.total || resenas?.resenas?.length || pendienteDeEste)
 
   // Diseño para descargar: galería con esquema, "Cómo funciona", pestañas y
   // preguntas (components/hetna/fichas/descarga). Sin existencias ni envíos.
@@ -112,7 +116,7 @@ export const ProductDetailsPage = async ({
   const largosDescarga = descarga ? (
     <div className="flex flex-col gap-6">
       <AbajoDescarga product={prod as never} fotosCompradores={(resenas?.resenas || []).flatMap((r) => r.fotos || [])} />
-      <ResenasProducto datos={resenas} productId={prod.id} pendiente={pendienteDeEste} />
+      {hayResenas && <ResenasProducto datos={resenas} productId={prod.id} pendiente={pendienteDeEste} />}
     </div>
   ) : null
 
@@ -147,6 +151,26 @@ export const ProductDetailsPage = async ({
         })}
       />
       <JsonLd id="ld-migas" datos={migas(rutaMigas)} />
+      {/* Migas de pan visibles (antes sólo iban en los datos para Google) */}
+      <nav aria-label="Migas de pan" className="mb-3 text-[13px] text-[#6B6A63]" data-testid="product-migas">
+        <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0">
+          <li>
+            <LocalizedClientLink href="/" className="hover:text-[#B34D07] hover:underline">Inicio</LocalizedClientLink>
+          </li>
+          {categoria?.name && categoria?.handle && (
+            <li className="flex items-center gap-1">
+              <span aria-hidden="true">›</span>
+              <LocalizedClientLink href={`/categories/${categoria.handle}`} className="hover:text-[#B34D07] hover:underline">
+                {categoria.name}
+              </LocalizedClientLink>
+            </li>
+          )}
+          <li className="flex min-w-0 items-center gap-1">
+            <span aria-hidden="true">›</span>
+            <span aria-current="page" className="truncate text-[#1B1B18]">{prod.title}</span>
+          </li>
+        </ol>
+      </nav>
       <div
         // Fotos de tamaño contenido, como Amazon o AliExpress (pedido de Vlado,
         // 21 nov 2026): la galería ocupa ~520–560 px y la información de compra
@@ -182,7 +206,7 @@ export const ProductDetailsPage = async ({
             locale={locale}
             taller={{ name: vendedor?.name, handle: vendedor?.handle }}
           />}
-          {!descarga && <div className="mt-4">
+          {!descarga && hayResenas && <div className="mt-4">
             <ResenasProducto
               datos={resenas}
               productId={prod.id}
