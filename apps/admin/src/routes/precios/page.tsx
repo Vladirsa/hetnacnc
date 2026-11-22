@@ -16,6 +16,7 @@ type Cfg = {
   margenPct?: number
   markupMaterialPct?: number
   rangoPct?: number
+  pedidoMinimo?: number
   preciosMaterial?: Record<string, number>
 }
 type Datos = {
@@ -67,6 +68,7 @@ export default function PreciosCalculadora() {
       fijosHora: txt(g.fijosHora),
       markupMaterialPct: txt(g.markupMaterialPct),
       rangoPct: txt(g.rangoPct),
+      pedidoMinimo: txt(g.pedidoMinimo),
     }
     for (const [k, m] of Object.entries(g.maquinas || {})) {
       x[`maq.${k}.costoHora`] = txt(m.costoHora)
@@ -97,6 +99,7 @@ export default function PreciosCalculadora() {
       fijosHora: n(f.fijosHora),
       markupMaterialPct: n(f.markupMaterialPct),
       rangoPct: n(f.rangoPct),
+      pedidoMinimo: n(f.pedidoMinimo),
       maquinas: {},
       preciosMaterial: {},
     }
@@ -174,7 +177,7 @@ export default function PreciosCalculadora() {
       <div style={S.caja}>
         <h2 style={S.h2}>General</h2>
         <p style={S.ayuda}>
-          Precio = (máquina + operador + preparación + gastos fijos) ÷ (1 − margen) + material. El material lleva su merma y el recargo al material, pero no vuelve a llevar el margen. El rango es lo que se muestra arriba y abajo del precio.
+          Precio = (máquina + operador + preparación + gastos fijos) ÷ (1 − margen) + material. El material lleva su merma y el recargo al material, pero no vuelve a llevar el margen. El rango es lo que se muestra arriba y abajo del precio. Ningún pedido sale en menos del pedido mínimo.
         </p>
         <div style={S.rejilla}>
           {campo("margenPct", "Margen de utilidad (%)", fab.margenPct, "%")}
@@ -182,6 +185,7 @@ export default function PreciosCalculadora() {
           {campo("fijosHora", "Gastos fijos ($ por hora)", fab.fijosHora)}
           {campo("markupMaterialPct", "Recargo al material (%)", fab.markupMaterialPct, "%")}
           {campo("rangoPct", "Rango mostrado (± %)", fab.rangoPct, "%")}
+          {campo("pedidoMinimo", "Pedido mínimo ($, 0 = sin mínimo)", fab.pedidoMinimo)}
         </div>
       </div>
 
