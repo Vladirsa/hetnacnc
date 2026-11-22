@@ -18,6 +18,35 @@ type Opciones = {
 }
 const PAQUETE_BASE = { largo: 30, ancho: 30, alto: 20, peso: 2 }
 
+/**
+ * Sólo los renglones del taller de esta opción. El hook
+ * workflows/hooks/envio-por-taller.ts pone en el contexto qué renglones son de
+ * cada almacén; sin él (o si el almacén no aparece) se usan todos, como antes.
+ */
+export function renglonesDelTaller(context: any): any[] {
+  const items = (context?.items || []) as any[]
+  const mapa = context?.hetna_renglones_por_almacen as Record<string, string[]> | undefined
+  const almacen = context?.from_location?.id as string | undefined
+  if (!mapa || !almacen || !Array.isArray(mapa[almacen])) return items
+  const ids = new Set(mapa[almacen])
+  return items.filter((i) => ids.has(i?.id))
+}
+
+/**
+ * De dónde sale el paquete: la dirección del taller (la misma con la que se
+ * compra la guía, lib/guias.ts; la pone el hook) o, si no viene, la del almacén.
+ * Si ninguna tiene código postal, la de HETNA (ENVIO_ORIGEN_CP).
+ */
+export function origenDe(context: any, opts: { origenCp: string; origenEstado?: string; origenMunicipio?: string; origenColonia?: string }) {
+  const almacen = context?.from_location?.id as string | undefined
+  const delTaller = almacen ? context?.hetna_origen_por_almacen?.[almacen] : undefined
+  for (const a of [delTaller, context?.from_location?.address]) {
+    const cp = String(a?.postal_code || "").replace(/\D/g, "")
+    if (cp.length === 5) return { cp, estado: a.province || undefined, ciudad: a.city || undefined, colonia: a.address_2 || undefined }
+  }
+  return { cp: opts.origenCp, estado: opts.origenEstado, ciudad: opts.origenMunicipio, colonia: opts.origenColonia }
+}
+
 export default class SkydropxProviderService extends AbstractFulfillmentProviderService {
   static identifier = "skydropx"
   protected cliente: SkydropxClient
@@ -45,11 +74,12 @@ export default class SkydropxProviderService extends AbstractFulfillmentProvider
   async calculatePrice(optionData: any, _data: any, context: any) {
     const cp = context?.shipping_address?.postal_code
     if (!cp) throw new Error("Falta el código postal de destino")
-    const { paquete, real } = armarPaquete(context?.items || [], PAQUETE_BASE)
+    const { paquete, real } = armarPaquete(renglonesDelTaller(context), PAQUETE_BASE)
+    const origen = origenDe(context, this.opts)
     // Mensaje de diagnóstico: permite ver en los registros si se usó el peso real o el paquete base
-    console.log(`[skydropx] cotizando CP ${cp} con paquete ${real ? "REAL" : "BASE"}: ${JSON.stringify(paquete)} opción ${optionData?.id}`)
+    console.log(`[skydropx] cotizando ${origen.cp} → CP ${cp} con paquete ${real ? "REAL" : "BASE"}: ${JSON.stringify(paquete)} opción ${optionData?.id}`)
     const cot = await this.cliente.cotizar(
-      { cp: this.opts.origenCp, estado: this.opts.origenEstado, ciudad: this.opts.origenMunicipio, colonia: this.opts.origenColonia },
+      origen,
       {
         cp,
         estado: context.shipping_address.province,

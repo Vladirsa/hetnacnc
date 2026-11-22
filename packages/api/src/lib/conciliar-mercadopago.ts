@@ -19,6 +19,7 @@ import { completeCartWithSplitOrdersWorkflow } from "@mercurjs/core/workflows"
 
 import { correosDeLaCasa } from "./cuentas-casa"
 import { esCuponHetna, motivoCupon } from "./cupones"
+import { marcarDigitalesSinEnvio } from "./envio-digital"
 import { STORE_URL, esc, fila, marco } from "./licitacion"
 import { sendEmail } from "./resend"
 
@@ -172,6 +173,8 @@ export async function conciliarMercadoPago(
          and ps.provider_id like 'pp_mercadopago%' and ps.deleted_at is null`,
       [JSON.stringify({ payment_id: pago.id }), cartId]
     )
+    // Igual que al completar desde la tienda (api/store/envio-perfil)
+    await marcarDigitalesSinEnvio(container, cartId).catch((e) => logger.warn(`[conciliar-mp] ${cartId}: no se marcaron los digitales: ${(e as Error).message}`))
     const { errors, result } = await completeCartWithSplitOrdersWorkflow(container).run({
       input: { cart_id: cartId },
       throwOnError: false,

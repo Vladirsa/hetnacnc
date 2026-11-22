@@ -95,9 +95,19 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
     if (!perfilesPorTaller.has(taller)) perfilesPorTaller.set(taller, new Set());
     perfilesPorTaller.get(taller)!.add(oferta.shipping_profile_id);
   }
+  // Perfiles digitales: los de las opciones "Entrega digital". Si el taller trae
+  // algún producto físico, sus digitales no necesitan envío (se marcan al pagar,
+  // lib/envio-digital.ts) y sólo se le ofrecen envíos físicos.
+  const perfilesDigitales = new Set(
+    (availableShippingMethods ?? [])
+      .filter((sm: any) => /entrega digital/i.test(String(sm?.name || '')) && sm?.shipping_profile_id)
+      .map((sm: any) => sm.shipping_profile_id as string)
+  );
   const perfilCorresponde = (sm: any) => {
     const perfiles = perfilesPorTaller.get(sm.seller_id);
-    return !perfiles || !sm.shipping_profile_id || perfiles.has(sm.shipping_profile_id);
+    if (!perfiles || !sm.shipping_profile_id) return true;
+    const fisicos = [...perfiles].filter(p => !perfilesDigitales.has(p));
+    return (fisicos.length ? fisicos : [...perfiles]).includes(sm.shipping_profile_id);
   };
 
   const _shippingMethods = availableShippingMethods?.filter(
