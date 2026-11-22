@@ -18,6 +18,7 @@ import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
@@ -190,6 +191,8 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
     case "talleres":
       return [
         ...(await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
+        // "Talleres CNC en <estado>": sólo los estados con suficientes empresas (lib/seo/estados.ts)
+        ...(await estadosIndexables()).map((x) => pagina(rutaEstado(x.ciudad), "weekly", 0.7, hoy)),
         // Perfiles no reclamados: sólo los que tienen descripción (los demás son noindex)
         ...(await directorioMexico())
           .filter((e) => e.servicios)
