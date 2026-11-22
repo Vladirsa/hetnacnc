@@ -52,7 +52,7 @@ const TIPOS = [
   ["", "Elige el tipo de producto"],
   ["stock", "📦 Producto físico en existencia"],
   ["herramienta", "🔧 Herramienta (fresas, brocas, refacciones)"],
-  ["tallado", "🪵 Tallado en madera"],
+  ["tallado", "🌲 Tallado en madera"],
   ["corte", "✂️ Corte en acrílico, láser o plasma"],
   ["a_medida", "🏭 Fabricación bajo pedido / a la medida"],
 ]
