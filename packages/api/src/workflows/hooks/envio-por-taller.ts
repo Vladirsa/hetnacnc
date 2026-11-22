@@ -46,8 +46,9 @@ async function renglonesPorAlmacen({ input }: { input: { cart_id?: string } }, {
       }
     }
     return new StepResponse({ [CLAVE_RENGLONES]: mapa, [CLAVE_ORIGENES]: origenes })
-  } catch {
+  } catch (e) {
     // Sin el mapa se cotiza como antes (todos los renglones del perfil)
+    container.resolve("logger").warn(`[envio-por-taller] ${cartId}: ${(e as Error).message}; se cotiza con todo el carrito`)
     return new StepResponse({})
   }
 }

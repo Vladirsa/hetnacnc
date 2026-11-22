@@ -37,12 +37,14 @@ describe("Físico + digital del mismo taller", () => {
   it("si sólo hay digitales, la entrega digital sí", () => {
     expect(perfilValido({ shipping_profile_id: "dig", seller_ids: ["s1"] }, [ofertas[1]], digitales)).toBe(true)
   })
-  it("los renglones digitales se marcan como 'no requiere envío'", () => {
+  it("los digitales de un taller con algo físico se marcan como 'no requiere envío'", () => {
     const renglones = [
-      { id: "r1", requires_shipping: true, offer: { shipping_profile_id: "fis" } },
-      { id: "r2", requires_shipping: true, offer: { shipping_profile_id: "dig" } },
-      { id: "r3", requires_shipping: false, offer: { shipping_profile_id: "dig" } },
-      { id: "r4", requires_shipping: true, offer: [{ shipping_profile_id: "dig" }] },
+      { id: "r1", requires_shipping: true, offer: { shipping_profile_id: "fis", seller_id: "s1" } },
+      { id: "r2", requires_shipping: true, offer: { shipping_profile_id: "dig", seller_id: "s1" } },
+      { id: "r3", requires_shipping: false, offer: { shipping_profile_id: "dig", seller_id: "s1" } },
+      { id: "r4", requires_shipping: true, offer: [{ shipping_profile_id: "dig", seller_id: "s1" }] },
+      // Taller sólo digital: sigue con su "Entrega digital"
+      { id: "r5", requires_shipping: true, offer: { shipping_profile_id: "dig", seller_id: "s2" } },
     ]
     expect(renglonesPorMarcar(renglones, digitales)).toEqual(["r2", "r4"])
   })

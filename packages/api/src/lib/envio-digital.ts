@@ -24,13 +24,20 @@ export async function perfilesDigitales(container: Pick<MedusaContainer, "resolv
   return new Set((data as Perfil[]).filter(esPerfilDigital).map((p) => p.id))
 }
 
-type Renglon = { id: string; requires_shipping?: boolean | null; offer?: { shipping_profile_id?: string | null } | { shipping_profile_id?: string | null }[] | null }
+type OfertaRenglon = { shipping_profile_id?: string | null; seller_id?: string | null }
+type Renglon = { id: string; requires_shipping?: boolean | null; offer?: OfertaRenglon | OfertaRenglon[] | null }
 const ofertaDe = (r: Renglon) => (Array.isArray(r.offer) ? r.offer[0] : r.offer) || null
 
-/** Renglones digitales que todavía dicen "requiere envío". */
+/**
+ * Renglones digitales que todavía dicen "requiere envío", SÓLO de talleres que
+ * también traen algo físico. Un taller sólo digital sigue eligiendo su
+ * "Entrega digital", como siempre.
+ */
 export function renglonesPorMarcar(renglones: Renglon[], digitales: Set<string>): string[] {
+  const esDigital = (r: Renglon) => digitales.has(String(ofertaDe(r)?.shipping_profile_id || ""))
+  const conFisico = new Set(renglones.filter((r) => !esDigital(r)).map((r) => String(ofertaDe(r)?.seller_id || "")))
   return renglones
-    .filter((r) => r.requires_shipping !== false && digitales.has(String(ofertaDe(r)?.shipping_profile_id || "")))
+    .filter((r) => r.requires_shipping !== false && esDigital(r) && conFisico.has(String(ofertaDe(r)?.seller_id || "")))
     .map((r) => r.id)
 }
 
@@ -41,7 +48,7 @@ export async function marcarDigitalesSinEnvio(container: Pick<MedusaContainer, "
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
     entity: "cart",
-    fields: ["id", "items.id", "items.requires_shipping", "items.offer.shipping_profile_id"],
+    fields: ["id", "items.id", "items.requires_shipping", "items.offer.shipping_profile_id", "items.offer.seller_id"],
     filters: { id: cartId },
   })
   const ids = renglonesPorMarcar(((data[0] as any)?.items || []) as Renglon[], digitales)
