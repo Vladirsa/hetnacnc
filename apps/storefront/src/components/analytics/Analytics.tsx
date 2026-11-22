@@ -116,6 +116,11 @@ export function Analytics() {
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${metaPixelId}');
             fbq('track', 'PageView');
+            // Eventos que pasaron antes de cargar el Pixel (vista de producto,
+            // carrito...). Ver fbqEvent en lib/analytics/events.ts.
+            (window.__hetnaFbqPendientes || []).splice(0).forEach(function (a) {
+              fbq.apply(null, a);
+            });
           `}
         </Script>
       )}

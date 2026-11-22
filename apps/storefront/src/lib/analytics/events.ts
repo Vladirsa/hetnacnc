@@ -8,6 +8,8 @@ declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     fbq?: (...args: unknown[]) => void;
+    // Eventos de Meta que llegaron antes de que cargara el Pixel (ver fbqEvent)
+    __hetnaFbqPendientes?: unknown[][];
   }
 }
 
@@ -91,13 +93,27 @@ export function nuevoEventoEstimado() {
   return `est_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Fila de espera del Pixel. El script de Meta carga tarde a propósito (con la
+// primera interacción o a los 8 s, y sólo con permiso de cookies; ver
+// components/analytics/Analytics.tsx). Antes, los eventos que pasaban antes de
+// eso se perdían: ViewContent se dispara al abrir el producto, así que Meta
+// casi nunca lo recibía (avisos "Faltan eventos de coincidencia de productos",
+// 22 nov 2026). Ahora esperan aquí y Analytics.tsx los manda en orden justo
+// después de fbq('init') y PageView. Si la persona nunca acepta cookies, la
+// fila se queda en memoria y se descarta al salir: no se manda nada a Meta.
+const MAX_PENDIENTES_META = 30;
+
 function fbqEvent(name: string, params: Record<string, unknown>, eventId?: string) {
-  if (typeof window !== 'undefined' && window.fbq) {
-    // eventID: el mismo que manda el servidor por la API de conversiones, para
-    // que Meta cuente la compra una sola vez (ver lib/analytics/meta-capi.ts).
-    if (eventId) window.fbq('track', name, params, { eventID: eventId });
-    else window.fbq('track', name, params);
+  if (typeof window === 'undefined') return;
+  // eventID: el mismo que manda el servidor por la API de conversiones, para
+  // que Meta cuente la compra una sola vez (ver lib/analytics/meta-capi.ts).
+  const args: unknown[] = eventId ? ['track', name, params, { eventID: eventId }] : ['track', name, params];
+  if (window.fbq) {
+    window.fbq(...args);
+    return;
   }
+  const fila = (window.__hetnaFbqPendientes ||= []);
+  if (fila.length < MAX_PENDIENTES_META) fila.push(args);
 }
 
 export function trackViewItem(item: AnalyticsItem, currency: string) {
