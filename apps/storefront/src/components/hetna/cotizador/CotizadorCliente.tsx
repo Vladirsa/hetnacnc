@@ -7,7 +7,9 @@
 // archivo ya subido y los datos pasan a la licitación (FormSolicitudTaller) y
 // los talleres mandan su precio real.
 import dynamic from "next/dynamic"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+
+import { trackEstimadoVisto } from "@/lib/analytics/events"
 
 import { type GeoCad, leerArchivoCad } from "@/lib/cotizador/archivo-cad"
 import {
@@ -70,6 +72,14 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
 
   const cfg = useConfigPrecios()
   const est = useMemo(() => (pieza && material ? estimar({ servicio, pieza, material, cantidad, acabado, relleno, cfg }) : null), [pieza, material, servicio, cantidad, acabado, relleno, cfg])
+
+  // Medición: una vez por visita, la primera vez que aparece un estimado
+  const medido = useRef(false)
+  useEffect(() => {
+    if (medido.current || !est?.ok) return
+    medido.current = true
+    trackEstimadoVisto(servicio, Boolean(geo && !aMano))
+  }, [est, servicio, geo, aMano])
 
   const elegirArchivo = async (f: File | undefined) => {
     if (!f) return
