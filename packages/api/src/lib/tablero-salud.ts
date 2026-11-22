@@ -1,5 +1,6 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 // Lo que el taller tiene que atender HOY y cómo lo ve el cliente:
 //
@@ -75,10 +76,7 @@ type Orden = {
   items?: { title?: string | null; quantity?: number; product_id?: string | null }[]
 }
 
-const pagada = (o: Orden) =>
-  (o.payment_collections || []).some((pc) =>
-    ["completed", "partially_captured", "authorized"].includes(String(pc?.status))
-  )
+const pagada = (o: Orden) => pedidoPagado(o as any)
 
 const primerEnvio = (o: Orden): number | null => {
   const fechas = (o.fulfillments || [])
@@ -130,7 +128,7 @@ export async function saludDelTaller(container: MedusaContainer, sellerId: strin
                 "status",
                 "total",
                 "created_at",
-                "payment_collections.status",
+                ...CAMPOS_PAGO,
                 "fulfillments.shipped_at",
                 "fulfillments.canceled_at",
                 "items.title",

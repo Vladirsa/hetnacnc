@@ -13,7 +13,7 @@ export const listCartShippingMethods = async (cartId: string, is_return: boolean
   return (sdk.store.shippingOptions
     .query({
       cart_id: cartId,
-      fields: '+service_zone.fulfillment_set.type,*service_zone.fulfillment_set.location.address',
+      fields: '+shipping_profile_id,+service_zone.fulfillment_set.type,*service_zone.fulfillment_set.location.address',
       fetchOptions: {
         headers: { ...(await getAuthHeaders()) },
         next,

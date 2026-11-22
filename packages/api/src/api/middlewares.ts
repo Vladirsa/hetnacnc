@@ -22,6 +22,7 @@ import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
+import { storeEnvioPerfilMiddlewares } from "./store/envio-perfil/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
 import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 import { storeVendedoresMiddlewares } from "./store/proteger-vendedores";
@@ -242,6 +243,7 @@ export default defineMiddlewares({
         ...storeForoMiddlewares,
         ...storeRastreoMiddlewares,
         ...storeCotizadorVinculoMiddlewares,
+        ...storeEnvioPerfilMiddlewares,
         ...storeVerificacionMiddlewares,
         ...storeCustomersMiddlewares,
         ...storeVendedoresMiddlewares,

@@ -26,6 +26,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_GUIAS, asegurarTablaGuias } from "./guias"
 import { T_SOBREPESO, asegurarTablaSobrepesos } from "./sobrepesos"
+import { CAMPOS_PAGO, pedidoPagado, pedidoReembolsado } from "./pago-pedido"
 
 export const T_SALDO = "hetna_saldo_taller"
 
@@ -81,7 +82,6 @@ export function netoTaller(f: { productos: any; envio: any; comision: any; envio
   return r2((Number(f.productos) || 0) - (Number(f.comision) || 0) + envio)
 }
 
-const PAGADO = new Set(["captured", "partially_captured", "authorized", "partially_authorized", "partially_refunded"])
 
 /**
  * Registra (una sola vez) un pedido en el saldo de su taller. Se llama al
@@ -97,13 +97,13 @@ export async function registrarVenta(c: MedusaContainer, orderId: string): Promi
   const { data: pedidos } = await query.graph({
     entity: "order",
     fields: [
-      "id", "display_id", "currency_code", "status", "payment_status", "shipping_total",
+      "id", "display_id", "currency_code", "status", ...CAMPOS_PAGO, "shipping_total",
       "items.id", "items.product_id", "items.quantity", "items.unit_price", "items.total",
     ],
     filters: { id: orderId },
   })
   const o = pedidos[0] as any
-  if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status))) return false
+  if (!o || o.status === "canceled" || !pedidoPagado(o)) return false
 
   const { data: vinculos } = await query.graph({
     entity: "order_seller",
@@ -244,11 +244,11 @@ export async function liberarRetenido(c: MedusaContainer, orderId: string): Prom
   const query = c.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
     entity: "order",
-    fields: ["id", "status", "payment_status", "fulfillments.delivered_at"],
+    fields: ["id", "status", ...CAMPOS_PAGO, "fulfillments.delivered_at"],
     filters: { id: orderId },
   })
   const o = data[0] as any
-  if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status)) || String(o.payment_status) === "partially_refunded") {
+  if (!o || o.status === "canceled" || !pedidoPagado(o) || pedidoReembolsado(o)) {
     throw new SaldoNoLiberable("Este pedido está cancelado o reembolsado: no se puede liberar.")
   }
   // Si se entregó mientras estaba retenido, marcarEntregado no lo anotó (sólo

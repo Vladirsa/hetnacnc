@@ -71,6 +71,10 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
   const [isPendingDeleteRow, startTransitionDeleteRow] = useTransition();
   // Opciones que ya se eligieron automáticamente (para no repetirlo ni ciclarse)
   const autoSeleccionadas = useRef<Set<string>>(new Set());
+  // Para qué lista de opciones ya llegaron los precios de la paquetería. Hasta
+  // entonces no se elige nada solo: en el primer render isLoadingPrices aún es
+  // false y la única opción "visible" podía ser una de precio fijo.
+  const [preciosDe, setPreciosDe] = useState<string>('');
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -78,8 +82,28 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
 
   const isOpen = searchParams.get('step') === 'delivery';
 
+  // Perfil de envío de las ofertas de cada taller en el carrito (misma regla que
+  // perfilValido en api/store/envio-perfil/middlewares.ts). Una opción de
+  // otro perfil (por ejemplo "Entrega digital" para un producto físico) no se
+  // muestra: Mercur rechazaría el pedido al final, ya con el pago hecho. El
+  // servidor también lo frena (api/store/envio-perfil/middlewares.ts).
+  const perfilesPorTaller = new Map<string, Set<string>>();
+  for (const item of (cart?.items ?? []) as any[]) {
+    const oferta = Array.isArray(item?.offer) ? item.offer[0] : item?.offer;
+    const taller = oferta?.seller_id || oferta?.seller?.id;
+    if (!taller || !oferta?.shipping_profile_id) continue;
+    if (!perfilesPorTaller.has(taller)) perfilesPorTaller.set(taller, new Set());
+    perfilesPorTaller.get(taller)!.add(oferta.shipping_profile_id);
+  }
+  const perfilCorresponde = (sm: any) => {
+    const perfiles = perfilesPorTaller.get(sm.seller_id);
+    return !perfiles || !sm.shipping_profile_id || perfiles.has(sm.shipping_profile_id);
+  };
+
   const _shippingMethods = availableShippingMethods?.filter(
-    sm => sm.rules?.find((rule: any) => rule.attribute === 'is_return')?.value !== 'true'
+    sm =>
+      sm.rules?.find((rule: any) => rule.attribute === 'is_return')?.value !== 'true' &&
+      perfilCorresponde(sm)
   );
 
   // Las opciones cuyo precio hay que preguntarle al backend, como una cadena
@@ -119,6 +143,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
         .forEach(p => (pricesMap[p.value?.id || ''] = p.value?.amount!));
 
       setCalculatedPricesMap(pricesMap);
+      setPreciosDe(`${cart.id}|${idsConPrecioCalculado}`);
       setIsLoadingPrices(false);
     });
 
@@ -232,6 +257,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
 
   useEffect(() => {
     if (!isOpen || isLoadingPrices || isPendingDeleteRow) return;
+    if (idsConPrecioCalculado && preciosDe !== `${cart.id}|${idsConPrecioCalculado}`) return;
     for (const key of filteredGroupedBySellerId) {
       const opciones = groupedBySellerId?.[key] ?? [];
       if (opciones.length !== 1) continue;
@@ -242,7 +268,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
       break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isLoadingPrices, isPendingDeleteRow, clavesDeTalleres, enviosYaElegidos]);
+  }, [isOpen, isLoadingPrices, isPendingDeleteRow, clavesDeTalleres, enviosYaElegidos, preciosDe, idsConPrecioCalculado, cart.id]);
 
   // Falta elegir envío: mientras eso pase, la compra no puede avanzar, así que
   // se dice aquí mismo y no sólo en el resumen de la derecha.

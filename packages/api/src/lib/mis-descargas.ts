@@ -11,6 +11,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { llaveDeProductoValida } from "./archivo-seguro"
 import { archivoDeProducto } from "./digital-delivery"
 import type { ArchivoEntrega } from "./pdf-entrega"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export type CompraDigital = {
   product_id: string
@@ -24,18 +25,17 @@ export type CompraDigital = {
   storage_key: string
 }
 
-const PAGADA = ["completed", "partially_captured"]
 
 export async function comprasDigitales(container: MedusaContainer, customerId: string): Promise<CompraDigital[]> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const { data: ordenes } = await query.graph({
     entity: "order",
-    fields: ["id", "display_id", "created_at", "status", "items.product_id", "items.title", "items.thumbnail", "payment_collections.status"],
+    fields: ["id", "display_id", "created_at", "status", "items.product_id", "items.title", "items.thumbnail", ...CAMPOS_PAGO],
     filters: { customer_id: customerId },
     pagination: { take: 300, order: { created_at: "DESC" } },
   })
   const pagadas = (ordenes as any[]).filter(
-    (o) => o.status !== "canceled" && (o.payment_collections || []).some((pc: any) => PAGADA.includes(pc?.status))
+    (o) => o.status !== "canceled" && pedidoPagado(o)
   )
   const ids = [...new Set(pagadas.flatMap((o) => (o.items || []).map((i: any) => i?.product_id)).filter(Boolean))]
   if (!ids.length) return []
@@ -84,12 +84,12 @@ export async function archivosDeOrden(
     data: [o],
   } = await query.graph({
     entity: "order",
-    fields: ["id", "display_id", "created_at", "email", "customer_id", "status", "items.product_id", "items.title", "payment_collections.status"],
+    fields: ["id", "display_id", "created_at", "email", "customer_id", "status", "items.product_id", "items.title", ...CAMPOS_PAGO],
     filters: { id: orderId },
   })
   const orden = o as any
   if (!orden || orden.customer_id !== customerId || orden.status === "canceled") return null
-  if (!(orden.payment_collections || []).some((pc: any) => PAGADA.includes(pc?.status))) return null
+  if (!pedidoPagado(orden)) return null
   const ids = [...new Set((orden.items || []).map((i: any) => i?.product_id).filter(Boolean))]
   if (!ids.length) return null
   const { data: productos } = await query.graph({ entity: "product", fields: ["id", "title", "metadata"], filters: { id: ids as string[] } })
