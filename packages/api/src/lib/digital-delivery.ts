@@ -7,6 +7,7 @@ import { digitalDownloadEmailHtml } from "./email-templates"
 import { STORE_URL } from "./licitacion"
 import { generarPdfEntrega, type ArchivoEntrega } from "./pdf-entrega"
 import { sendEmail } from "./resend"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const CONTACTO_HETNA = "contacto@hetnacnc.com"
 export const ligaMisDescargas = () => `${STORE_URL}/mx/user/descargas`
@@ -52,7 +53,7 @@ export async function deliverDigitalProductsForOrder(
       "items.id",
       "items.title",
       "items.product_id",
-      "payment_collections.status",
+      ...CAMPOS_PAGO,
     ],
     filters: { id: orderId },
   })
@@ -61,16 +62,10 @@ export async function deliverDigitalProductsForOrder(
     return
   }
 
-  // order.placed se dispara antes de autorizar el pago, asi que la mayoria
-  // de las veces este guard hace que esa rama no haga nada todavia: la
-  // entrega real ocurre cuando payment.captured llega despues. "completed"
-  // es el estado de payment_collections.status para una captura total
-  // (el campo conveniente order.payment_status de OrderDetailDTO no se
-  // puede pedir via query.graph en la entidad "order" generica).
-  const paymentCollections = order.payment_collections || []
-  const isPaid = paymentCollections.some(
-    (pc: any) => pc?.status === "completed" || pc?.status === "partially_captured"
-  )
+  // Regla única de pagado (lib/pago-pedido.ts): con Mercado Pago o PayPal el
+  // cobro ya está hecho al autorizar, así que la entrega sale en order.placed.
+  // Con otros proveedores espera a la captura (payment.captured).
+  const isPaid = pedidoPagado(order as any)
   if (!isPaid) {
     return
   }

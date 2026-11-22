@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const url = `https://hetnacnc.com/mx/aprendizaje-cnc/cursos/${curso.slug}`
   return {
-    title: `${curso.title} | Academia HETNA CNC`,
+    title: { absolute: `${curso.title} | Academia HETNA CNC` },
     description: (curso.description || `Curso de CNC: ${curso.title}`).slice(0, 160),
     alternates: { canonical: url },
     openGraph: {

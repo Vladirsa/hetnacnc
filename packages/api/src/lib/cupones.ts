@@ -24,6 +24,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { STORE_URL, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const CUPON_BIENVENIDA = () => (process.env.CUPON_BIENVENIDA || "BIENVENIDA").trim().toUpperCase()
 export const MONTO = () => Number(process.env.CUPON_MONTO || 100)
@@ -304,14 +305,14 @@ export async function darRecompensas(scope: Scope): Promise<{ dadas: number; rev
     try {
       const { data: ordenes } = await query.graph({
         entity: "order",
-        fields: ["id", "status", "created_at", "items.unit_price", "items.quantity", "payment_collections.status"],
+        fields: ["id", "status", "created_at", "items.unit_price", "items.quantity", ...CAMPOS_PAGO],
         filters: { customer_id: amigo.id },
       })
       const valen = (ordenes || []).filter(
         (o: any) =>
           o.status !== "canceled" &&
           new Date(o.created_at).getTime() <= limite.getTime() &&
-          (o.payment_collections || []).some((pc: any) => ["completed", "partially_captured", "authorized"].includes(pc?.status))
+          pedidoPagado(o)
       )
       // Pedidos con devolución no cuentan
       if (valen.length) {

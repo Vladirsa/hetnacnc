@@ -14,13 +14,12 @@
 // que usa el panel de métricas del vendedor: dos formas distintas de contar lo
 // mismo acabarían dando dos números distintos.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 const DIA = 24 * 60 * 60 * 1000
 
-const estaPagada = (orden) =>
-  (orden.payment_collections || []).some(
-    (pc) => pc?.status === "completed" || pc?.status === "partially_captured"
-  )
+// Un pedido dividido cancelado conserva el cobro del carrito: no cuenta como venta
+const estaPagada = (orden) => orden.status !== "canceled" && pedidoPagado(orden)
 
 const dentro = (iso, desde: number, hasta: number): boolean => {
   if (!iso) return false
@@ -82,10 +81,11 @@ export async function calcularResumenDiario(
     entity: "order",
     fields: [
       "id",
+      "status",
       "total",
       "currency_code",
       "created_at",
-      "payment_collections.status",
+      ...CAMPOS_PAGO,
     ],
   })
 

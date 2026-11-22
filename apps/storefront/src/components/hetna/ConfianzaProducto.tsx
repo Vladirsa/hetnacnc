@@ -15,7 +15,7 @@ export default function ConfianzaProducto({ tipo = "fisico" }: { tipo?: TipoFich
         : [
             pago,
             ["Envíos HETNA", "Ves el costo y los días de entrega antes de pagar."],
-            ["Devoluciones", `${EMPRESA.diasDevolucion} días hábiles en productos físicos sin uso.`],
+            ["Devoluciones", `${EMPRESA.diasDevolucion} días naturales en productos físicos sin uso.`],
           ]
   return (
     <ul className="my-4 grid gap-2 rounded-lg bg-[#F7F5EF] p-4 text-sm sm:grid-cols-1" data-testid="product-trust">

@@ -20,7 +20,7 @@ export const revalidate = 300
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres/unete" },
-  title: "Únete a la red de talleres CNC HETNA y recibe proyectos",
+  title: { absolute: "Únete a la red de talleres CNC HETNA y recibe proyectos" },
   description:
     "Registra tu taller CNC gratis y recibe solicitudes de corte, maquila y producción de clientes de todo México. Cotiza lo que te conviene y cobra en HETNA.",
 }

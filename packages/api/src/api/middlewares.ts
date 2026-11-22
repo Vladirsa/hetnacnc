@@ -22,6 +22,7 @@ import { leerMultipart } from "./cam-multipart";
 import { storeForoMiddlewares } from "./store/foro/middlewares";
 import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
+import { storeEnvioPerfilMiddlewares } from "./store/envio-perfil/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
 import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 import { storeVendedoresMiddlewares } from "./store/proteger-vendedores";
@@ -164,6 +165,12 @@ export default defineMiddlewares({
           matcher: "/admin/hetna-productos/importar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
         },
+        // Lo mismo para los talleres (panel del taller › Publicar con Excel)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-publicar/excel",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
+        },
         {
           method: ["POST"],
           matcher: "/admin/hetna-fabrica/video",
@@ -236,6 +243,7 @@ export default defineMiddlewares({
         ...storeForoMiddlewares,
         ...storeRastreoMiddlewares,
         ...storeCotizadorVinculoMiddlewares,
+        ...storeEnvioPerfilMiddlewares,
         ...storeVerificacionMiddlewares,
         ...storeCustomersMiddlewares,
         ...storeVendedoresMiddlewares,

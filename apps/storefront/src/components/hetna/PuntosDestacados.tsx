@@ -147,7 +147,7 @@ export const PuntosDestacados = ({
       </>
     ) : (
       <>
-        <span className="font-semibold">{EMPRESA.diasDevolucion} días hábiles</span> para
+        <span className="font-semibold">{EMPRESA.diasDevolucion} días naturales</span> para
         devolver, sin uso y en su empaque.{" "}
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
           Ver política

@@ -16,12 +16,12 @@ export default function Devoluciones() {
       etiqueta="Ayuda"
       titulo="Devoluciones y reembolsos"
       resumen="Qué puedes devolver, en qué plazo y cómo te reembolsamos."
-      actualizado="4 de noviembre de 2026"
+      actualizado="21 de noviembre de 2026"
     >
       <h2>Productos físicos</h2>
       <ul>
         <li>
-          Tienes <strong>{EMPRESA.diasDevolucion} días hábiles</strong> desde que recibes tu pedido para solicitar una devolución.
+          Tienes <strong>{EMPRESA.diasDevolucion} días naturales</strong> desde que recibes tu pedido para solicitar una devolución.
         </li>
         <li>El producto debe estar sin uso, completo y en su empaque original.</li>
         <li>Si el producto llegó dañado, incompleto o es distinto a lo que compraste, el envío de regreso no tiene costo para ti.</li>
@@ -46,6 +46,7 @@ export default function Devoluciones() {
         <li>Escríbenos por {medioContacto()} con tu número de pedido, fotos del producto y el motivo.</li>
         <li>Te respondemos en horario de atención: {EMPRESA.horario}.</li>
         <li>Una vez recibido y revisado el producto, el reembolso se hace por el mismo medio de pago.</li>
+        <li>{`El reembolso se realiza en un máximo de ${EMPRESA.diasReembolso} días naturales.`}</li>
       </ul>
       <p>
         Si hay un desacuerdo con el vendedor o el taller, revisa cómo media HETNA en{" "}

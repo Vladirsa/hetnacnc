@@ -7,9 +7,10 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ventasPorPublicacion } from "./social-estadisticas"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 const DIA = 864e5
-const pagada = (o: any) => (o.payment_collections || []).some((pc: any) => pc?.status === "completed" || pc?.status === "partially_captured")
+const pagada = (o: any) => pedidoPagado(o)
 
 export type Tablero = {
   desde: string
@@ -34,10 +35,10 @@ export async function calcularTablero(scope: any, logger?: any, ahora = Date.now
   const ini = new Date(ahora - 7 * DIA), ant = new Date(ahora - 14 * DIA)
 
   const ventas = await intento(async () => {
-    const { data } = await query.graph({ entity: "order", fields: ["id", "total", "created_at", "payment_collections.status"], filters: { created_at: { $gte: ant } } })
+    const { data } = await query.graph({ entity: "order", fields: ["id", "status", "total", "created_at", ...CAMPOS_PAGO], filters: { created_at: { $gte: ant } } })
     const r = { pedidos: 0, ingresos: 0, antes_pedidos: 0, antes_ingresos: 0 }
     for (const o of data || []) {
-      if (!pagada(o)) continue
+      if (o.status === "canceled" || !pagada(o)) continue
       const esta = new Date(o.created_at) >= ini
       r[esta ? "pedidos" : "antes_pedidos"]++
       r[esta ? "ingresos" : "antes_ingresos"] += Number(o.total) || 0

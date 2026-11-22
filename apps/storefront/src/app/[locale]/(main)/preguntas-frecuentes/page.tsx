@@ -39,7 +39,7 @@ const PREGUNTAS: { p: string; r: string }[] = [
   },
   {
     p: "¿Puedo devolver un producto?",
-    r: `Sí, en productos físicos sin uso dentro de ${EMPRESA.diasDevolucion} días hábiles después de recibirlos. Los trabajos fabricados a la medida y los diseños digitales descargados no tienen devolución, salvo defecto. Consulta la política completa de devoluciones.`,
+    r: `Sí, en productos físicos sin uso dentro de ${EMPRESA.diasDevolucion} días naturales después de recibirlos. Los trabajos fabricados a la medida y los diseños digitales descargados no tienen devolución, salvo defecto. Consulta la política completa de devoluciones.`,
   },
   {
     p: "¿Cómo rastreo mi pedido?",

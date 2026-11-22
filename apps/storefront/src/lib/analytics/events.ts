@@ -73,6 +73,24 @@ export function trackLeadCotizador(boton: string) {
   fbqEvent('Lead', { content_name: 'Cotizador', value: VALOR_LEAD_COTIZADOR, currency: 'MXN' });
 }
 
+// Conversión principal de HETNA: alguien pide fabricar (solicitud con folio) o
+// ve su estimado al instante (calculadoras). Sin valor en pesos: no hay precio
+// todavía. El servidor manda el mismo evento por la API de conversiones con el
+// mismo event_id (lib/analytics/meta-lead.ts).
+export function trackSolicitudFabricacion(folio: string, servicio?: string) {
+  gtagEvent('generate_lead', { lead_source: 'solicitud', servicio: servicio || '' });
+  fbqEvent('Lead', { content_name: 'Solicitud de fabricación', content_category: servicio || '' }, folio ? `sol_${folio}` : undefined);
+}
+
+export function trackEstimadoInstantaneo(servicio: string, eventId: string) {
+  gtagEvent('generate_lead', { lead_source: 'calculadora', servicio });
+  fbqEvent('Lead', { content_name: 'Estimado al instante', content_category: servicio }, eventId);
+}
+
+export function nuevoEventoEstimado() {
+  return `est_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function fbqEvent(name: string, params: Record<string, unknown>, eventId?: string) {
   if (typeof window !== 'undefined' && window.fbq) {
     // eventID: el mismo que manda el servidor por la API de conversiones, para

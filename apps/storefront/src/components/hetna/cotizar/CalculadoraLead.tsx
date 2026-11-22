@@ -9,6 +9,8 @@ import { procesoDe } from "@/lib/cotizador/revision-archivo"
 import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 import { RevisionArchivo } from "./RevisionArchivo"
 
+import { nuevoEventoEstimado, trackEstimadoInstantaneo } from "@/lib/analytics/events"
+import { permiteRastreo } from "@/lib/hetna/consentimiento"
 import { acabadosReferencia, cotizarLead, precioEnVivo, type AcabadoReferencia, type CotizarLeadInput, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
@@ -171,7 +173,11 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       cantidad,
     }
 
+    const rastreo = permiteRastreo()
+    const eventoId = nuevoEventoEstimado()
     const r = await cotizarLead({
+      rastreo,
+      evento_id: eventoId,
       servicio,
       material: String(formData.get("material") || ""),
       ancho,
@@ -190,6 +196,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       setEstado({ paso: "error", mensaje: r.mensaje })
       return
     }
+    if (rastreo) trackEstimadoInstantaneo(servicio, eventoId)
     setEstado({
       paso: "resultado",
       min: r.estimado.minimo,

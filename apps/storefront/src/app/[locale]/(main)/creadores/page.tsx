@@ -8,7 +8,7 @@ import { FormCreador } from "@/components/hetna/creador/FormCreador"
 // Panel → App → Creadores (packages/api/src/lib/creadores.ts).
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/creadores" },
-  title: "Programa de creadores CNC: tu código y tu página en HETNA",
+  title: { absolute: "Programa de creadores CNC: tu código y tu página en HETNA" },
   description:
     "¿Haces videos o cursos de router, láser o plasma? Únete al programa de creadores de HETNA CNC: tu audiencia recibe días gratis del Cotizador y tú ganas por cada taller que contrata.",
 }

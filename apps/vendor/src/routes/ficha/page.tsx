@@ -42,7 +42,22 @@ const S = {
   fila: { display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap" },
 }
 
-const vacia = () => ({ compatibilidad: [], videos: [], archivos: [], faq: [], medidas: "", tolerancia: "", vista_previa: "", fotos_fabricada: [] })
+const vacia = () => ({
+  compatibilidad: [], videos: [], archivos: [], faq: [], medidas: "", tolerancia: "", vista_previa: "", fotos_fabricada: [],
+  // Ficha universal (21 nov 2026)
+  tipo_producto: "", material: "", medida_principal: "", uso: "", entrega: "", tiempo_produccion: "", garantia: "", incluye: [], no_incluye: [],
+})
+// Tipos de producto físico de la ficha universal (los archivos y los servicios se reconocen solos)
+const TIPOS = [
+  ["", "Elige el tipo de producto"],
+  ["stock", "📦 Producto físico en existencia"],
+  ["herramienta", "🔧 Herramienta (fresas, brocas, refacciones)"],
+  ["tallado", "🌲 Tallado en madera"],
+  ["corte", "✂️ Corte en acrílico, láser o plasma"],
+  ["a_medida", "🏭 Fabricación bajo pedido / a la medida"],
+]
+const comoTexto = (v) => (Array.isArray(v) ? v.join("\n") : String(v || ""))
+const comoLista = (v) => comoTexto(v).split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
 const EXT_VISTA = /\.(stl|obj|dxf|svg)$/i
 const EXT_FOTO = /\.(jpe?g|png|webp)$/i
 const MAX_VISTA_MB = 15
@@ -181,6 +196,15 @@ function Editor({ producto, limites, alGuardar }) {
         tolerancia: f.tolerancia.trim(),
         vista_previa: f.vista_previa,
         fotos_fabricada: f.fotos_fabricada,
+        tipo_producto: f.tipo_producto || "",
+        material: (f.material || "").trim(),
+        medida_principal: (f.medida_principal || "").trim(),
+        uso: (f.uso || "").trim(),
+        entrega: (f.entrega || "").trim(),
+        tiempo_produccion: (f.tiempo_produccion || "").trim(),
+        garantia: (f.garantia || "").trim(),
+        incluye: comoLista(f.incluye),
+        no_incluye: comoLista(f.no_incluye),
       }
       const r = await fetch(`/vendor/hetna-ficha/${producto.id}`, {
         method: "POST",
@@ -202,6 +226,64 @@ function Editor({ producto, limites, alGuardar }) {
 
   return (
     <div style={{ borderTop: "1px solid #E7E4DC", marginTop: 14, paddingTop: 14 }}>
+      <section style={{ marginBottom: 18 }}>
+        <h3 style={S.h2}>Datos clave</h3>
+        <p style={S.ayuda}>
+          Salen junto al precio y en Especificaciones. Lo que dejes vacío no se muestra (nunca sale un espacio en blanco). En archivos digitales y
+          servicios no hace falta elegir tipo.
+        </p>
+        <div style={S.fila}>
+          <div style={{ flex: "1 1 260px" }}>
+            <label style={S.label}>Tipo de producto</label>
+            <select style={S.input} value={f.tipo_producto || ""} onChange={(e) => set("tipo_producto", e.target.value)}>
+              {TIPOS.map(([v, t]) => (
+                <option key={v} value={v}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Material</label>
+            <input style={S.input} value={f.material || ""} maxLength={160} placeholder="Ej. MDF 18 mm, carburo, acero de 1/4 pulgada" onChange={(e) => set("material", e.target.value)} />
+          </div>
+        </div>
+        <div style={S.fila}>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Medida principal</label>
+            <input style={S.input} value={f.medida_principal || ""} maxLength={160} placeholder="Ej. 25 × 15 cm, zanco 6 mm" onChange={(e) => set("medida_principal", e.target.value)} />
+          </div>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Uso o para qué sirve</label>
+            <input style={S.input} value={f.uso || ""} maxLength={160} placeholder="Ej. Corte de MDF y triplay" onChange={(e) => set("uso", e.target.value)} />
+          </div>
+        </div>
+        <div style={S.fila}>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Entrega</label>
+            <input style={S.input} value={f.entrega || ""} maxLength={160} placeholder="Ej. Sale en 1 a 2 días hábiles" onChange={(e) => set("entrega", e.target.value)} />
+          </div>
+          {f.tipo_producto === "a_medida" && (
+            <div style={{ flex: "1 1 220px" }}>
+              <label style={S.label}>Tiempo de producción</label>
+              <input style={S.input} value={f.tiempo_produccion || ""} maxLength={160} placeholder="Ej. 5 a 7 días hábiles" onChange={(e) => set("tiempo_produccion", e.target.value)} />
+            </div>
+          )}
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={S.label}>Garantía</label>
+            <input style={S.input} value={f.garantia || ""} maxLength={160} placeholder="Ej. 30 días por defecto de fabricación" onChange={(e) => set("garantia", e.target.value)} />
+          </div>
+        </div>
+        <div style={S.fila}>
+          <div style={{ flex: "1 1 260px" }}>
+            <label style={S.label}>Qué incluye (uno por renglón)</label>
+            <textarea style={S.area} value={comoTexto(f.incluye)} placeholder={"Ej.\nTabla tallada\nAcabado con barniz"} onChange={(e) => set("incluye", e.target.value)} />
+          </div>
+          <div style={{ flex: "1 1 260px" }}>
+            <label style={S.label}>Qué no incluye (uno por renglón)</label>
+            <textarea style={S.area} value={comoTexto(f.no_incluye)} placeholder={"Ej.\nSoporte de pared\nPersonalización con nombre"} onChange={(e) => set("no_incluye", e.target.value)} />
+          </div>
+        </div>
+      </section>
+
       <section style={{ marginBottom: 18 }}>
         <h3 style={S.h2}>Datos técnicos</h3>
         <p style={S.ayuda}>Salen en Especificaciones. Escribe sólo lo que puedas garantizar.</p>

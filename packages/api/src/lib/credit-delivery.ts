@@ -2,6 +2,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import type { IOrderModuleService, MedusaContainer } from "@medusajs/framework/types"
 
 import { grantCreditsWorkflow } from "../workflows/grant-credits"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 // Mismo patron que digital-delivery.ts: dos disparadores posibles
 // (order.placed / payment.captured), metadata.creditos_otorgados_en en la
@@ -25,7 +26,7 @@ export async function grantCreditsForOrder(container: MedusaContainer, orderId: 
       "items.title",
       "items.product_id",
       "items.quantity",
-      "payment_collections.status",
+      ...CAMPOS_PAGO,
     ],
     filters: { id: orderId },
   })
@@ -34,10 +35,7 @@ export async function grantCreditsForOrder(container: MedusaContainer, orderId: 
     return
   }
 
-  const paymentCollections = order.payment_collections || []
-  const isPaid = paymentCollections.some(
-    (pc: any) => pc?.status === "completed" || pc?.status === "partially_captured"
-  )
+  const isPaid = pedidoPagado(order as any)
   if (!isPaid) {
     return
   }
