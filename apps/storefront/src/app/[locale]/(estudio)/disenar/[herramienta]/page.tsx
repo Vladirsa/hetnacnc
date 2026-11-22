@@ -4,8 +4,11 @@ import { notFound } from "next/navigation"
 
 import { EscanearPieza } from "@/components/hetna/disenar/EscanearPieza"
 import { Herramienta } from "@/components/hetna/estudio/Herramienta"
+import { JsonLd } from "@/components/hetna/JsonLd"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
-import { ESCANEAR, buscarHerramientaDiseno } from "@/lib/hetna/disenar"
+import { ESCANEAR, ESTUDIOS, buscarHerramientaDiseno, estudioDe, type HerramientaDiseno } from "@/lib/hetna/disenar"
+import { migas } from "@/lib/hetna/schema"
 
 
 // Una herramienta abierta dentro del estudio 3D o 2D (pantalla completa). La
@@ -41,16 +44,85 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Datos estructurados: qué es la herramienta (aplicación web gratis de HETNA) y
+// dónde está (migas). Sólo datos reales: nada de calificaciones ni reseñas.
+const datosHerramienta = (h: HerramientaDiseno) => {
+  const url = `${SITIO}/mx/disenar/${h.slug}`
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "@id": `${url}#app`,
+      name: h.nombre,
+      alternateName: h.titulo,
+      description: h.descripcion,
+      url,
+      applicationCategory: "DesignApplication",
+      operatingSystem: "Navegador web",
+      browserRequirements: "Requiere JavaScript",
+      inLanguage: "es-MX",
+      ...(h.imagen ? { image: `${SITIO}${h.imagen}` } : {}),
+      ...(h.acceso === "gratis"
+        ? { isAccessibleForFree: true, offers: { "@type": "Offer", price: "0", priceCurrency: "MXN" } }
+        : {}),
+      provider: { "@type": "Organization", "@id": `${SITIO}/#organization`, name: "HETNA CNC", url: SITIO },
+    },
+    migas([
+      { nombre: "Inicio", ruta: `${SITIO}/mx` },
+      { nombre: "Diseñar", ruta: `${SITIO}/mx/disenar` },
+      { nombre: h.nombre },
+    ]),
+  ]
+}
+
+// Texto visible debajo de la herramienta (sale en el HTML del servidor): qué hace
+// y las demás herramientas del mismo estudio. Para quien llega desde el buscador
+// y para los buscadores e IA, que no ven lo que dibuja el navegador.
+function AcercaDe({ h }: { h: HerramientaDiseno }) {
+  const otras = ESTUDIOS[estudioDe(h.slug)].herramientas.filter((o) => o.slug !== h.slug)
+  return (
+    <section aria-labelledby="acerca-herramienta" className="border-t border-[#2B3648] bg-[#0D1015] px-4 py-6 text-[#C9CED6] lg:px-8">
+      <div className="mx-auto max-w-[920px]">
+        <h2 id="acerca-herramienta" className="m-0 text-[16px] font-semibold text-white">{h.titulo}</h2>
+        <p className="m-0 mt-1.5 text-[14px] leading-relaxed">{h.descripcion}</p>
+        <p className="m-0 mt-1.5 text-[13px] text-[#8D96A3]">
+          Herramienta {h.acceso === "gratis" ? "gratis" : "con créditos"} de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.
+        </p>
+        {otras.length > 0 && (
+          <nav aria-label="Más herramientas" className="mt-3 flex flex-wrap gap-2 text-[13px]">
+            {otras.map((o) => (
+              <LocalizedClientLink key={o.slug} href={`/disenar/${o.slug}`} className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
+                {o.corto}
+              </LocalizedClientLink>
+            ))}
+            <LocalizedClientLink href="/disenar" className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
+              Todas las herramientas
+            </LocalizedClientLink>
+          </nav>
+        )}
+      </div>
+    </section>
+  )
+}
+
 export default async function HerramientaDiseno({ params }: Props) {
   const { herramienta, locale } = await params
   if (herramienta === ESCANEAR) return <EscanearPieza locale={locale} />
   if (!SLUGS.has(herramienta)) notFound()
+  const h = buscarHerramientaDiseno(herramienta)
   // Las herramientas que ya tienen su propio estudio oscuro van tal cual; las
   // demás se pintan con el tema oscuro común (.tema-estudio, globals.css).
-  if (OSCURAS.has(herramienta)) return <Herramienta slug={herramienta} />
   return (
-    <div className="tema-estudio flex-1">
-      <Herramienta slug={herramienta} />
-    </div>
+    <>
+      {h && <JsonLd datos={datosHerramienta(h)} />}
+      {OSCURAS.has(herramienta) ? (
+        <Herramienta slug={herramienta} />
+      ) : (
+        <div className="tema-estudio flex-1">
+          <Herramienta slug={herramienta} />
+        </div>
+      )}
+      {h && <AcercaDe h={h} />}
+    </>
   )
 }
