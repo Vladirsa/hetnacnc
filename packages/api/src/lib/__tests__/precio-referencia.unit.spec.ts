@@ -9,9 +9,9 @@ describe("precio de referencia igual al de /cotizar", () => {
     return r.resultado.pvRecomendado
   }
   it("láser, router e impresión 3D", () => {
-    expect(total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 3, cantidad: 50 })).toBe(360)
-    expect(total({ servicio: "router", material: "MDF 18mm", ancho: 60, largo: 40, cantidad: 1 })).toBe(340)
-    expect(total({ servicio: "impresion_3d", material: "PLA", calidad: "Pieza funcional", ancho: 5, largo: 5, alto: 5, cantidad: 1 })).toBe(270)
+    expect(total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 3, cantidad: 50 })).toBe(315)
+    expect(total({ servicio: "router", material: "MDF 18mm", ancho: 60, largo: 40, cantidad: 1 })).toBe(250)
+    expect(total({ servicio: "impresion_3d", material: "PLA", calidad: "Pieza funcional", ancho: 5, largo: 5, alto: 5, cantidad: 1 })).toBe(280)
   })
   it("usa el volumen real del STL en vez de la caja", () => {
     const caja = total({ servicio: "impresion_3d", material: "PLA", ancho: 10, largo: 10, alto: 10, cantidad: 1 })
@@ -38,5 +38,15 @@ describe("precio de referencia igual al de /cotizar", () => {
   it("50 piezas chicas no cuentan 50 minutos de manejo", () => {
     const llaveros = total({ servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 5, largo: 5, cantidad: 50 })
     expect(llaveros).toBeLessThan(450)
+  })
+  it("pedido mínimo de $150, y 0 lo quita", () => {
+    const chico = { servicio: "laser_co2", material: "MDF delgado (hasta 2.5mm)", ancho: 3, largo: 3, cantidad: 1 }
+    const r = precioInstantaneo(chico as any)
+    if (!r.ok) throw new Error(r.mensaje)
+    expect(r.resultado.pvRecomendado).toBe(150)
+    expect(r.resultado.pvMinimo).toBeGreaterThanOrEqual(150)
+    const sin = precioInstantaneo(chico as any, { pedidoMinimo: 0 })
+    if (!sin.ok) throw new Error(sin.mensaje)
+    expect(sin.resultado.pvRecomendado).toBeLessThan(150)
   })
 })
