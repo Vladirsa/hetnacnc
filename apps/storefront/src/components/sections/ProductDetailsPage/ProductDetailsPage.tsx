@@ -151,6 +151,10 @@ export const ProductDetailsPage = async ({
         })}
       />
       <JsonLd id="ld-migas" datos={migas(rutaMigas)} />
+      {/* Opción A (elegida por Vlado, 22 nov 2026): toda la ficha centrada en
+          1280 px, con el mismo margen a los dos lados. En pantallas de 1920 px
+          ya no queda un hueco grande sólo a la derecha. */}
+      <div className="mx-auto w-full max-w-[1280px]" data-testid="product-ficha-centrada">
       {/* Migas de pan visibles (antes sólo iban en los datos para Google) */}
       <nav aria-label="Migas de pan" className="mb-3 text-[13px] text-[#6B6A63]" data-testid="product-migas">
         <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0">
@@ -189,7 +193,7 @@ export const ProductDetailsPage = async ({
         </div>
 
         <div className="lg:row-span-2" data-testid="product-details-container">
-          <div className="max-w-[640px]">
+          <div className="max-w-[680px]">
             <ProductDetails
               product={prod}
               locale={locale}
@@ -262,6 +266,7 @@ export const ProductDetailsPage = async ({
           <ProductosCompactos titulo="Descubre más productos" productos={masProductos as never} />
         </div>
       )}
+      </div>
     </>
   )
 }
