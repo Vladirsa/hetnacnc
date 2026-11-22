@@ -21,6 +21,7 @@ import { asegurarTablaBaja, ligaBaja, T_BAJA } from "./baja"
 import { CUPON_BIENVENIDA, MINIMO, MONTO, pesos } from "./cupones"
 import { STORE_URL, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
+import { PAGADO_SQL } from "./pago-pedido"
 
 export const T_PROMO = "hetna_correo_promo"
 export type TipoPromo = "recompra" | "primeros_pasos" | "reactivacion" | "novedades"
@@ -194,11 +195,8 @@ export type Candidato = {
 
 const dias = (n: number) => new Date(Date.now() - n * 86400000)
 
-// Órdenes pagadas y no canceladas (misma regla que la entrega digital)
-const PAGADA_SQL = `exists (select 1 from order_payment_collection opc
-  join payment_collection pc on pc.id = opc.payment_collection_id
-  where opc.order_id = o.id and opc.deleted_at is null and pc.deleted_at is null
-    and pc.status in ('completed','partially_captured'))`
+// Órdenes pagadas (misma regla que todo el sitio: lib/pago-pedido.ts)
+const PAGADA_SQL = PAGADO_SQL
 
 export async function candidatos(knex: any, tipo: TipoPromo, edicion: string): Promise<Candidato[]> {
   const sinBaja = (col: string) => `not exists (select 1 from ${T_BAJA} b where b.correo = lower(${col}))`

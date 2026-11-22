@@ -7,6 +7,7 @@ import { digitalDownloadEmailHtml } from "./email-templates"
 import { STORE_URL } from "./licitacion"
 import { generarPdfEntrega, type ArchivoEntrega } from "./pdf-entrega"
 import { sendEmail } from "./resend"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const CONTACTO_HETNA = "contacto@hetnacnc.com"
 export const ligaMisDescargas = () => `${STORE_URL}/mx/user/descargas`
@@ -52,7 +53,7 @@ export async function deliverDigitalProductsForOrder(
       "items.id",
       "items.title",
       "items.product_id",
-      "payment_collections.status",
+      ...CAMPOS_PAGO,
     ],
     filters: { id: orderId },
   })
@@ -67,10 +68,7 @@ export async function deliverDigitalProductsForOrder(
   // es el estado de payment_collections.status para una captura total
   // (el campo conveniente order.payment_status de OrderDetailDTO no se
   // puede pedir via query.graph en la entidad "order" generica).
-  const paymentCollections = order.payment_collections || []
-  const isPaid = paymentCollections.some(
-    (pc: any) => pc?.status === "completed" || pc?.status === "partially_captured"
-  )
+  const isPaid = pedidoPagado(order as any)
   if (!isPaid) {
     return
   }

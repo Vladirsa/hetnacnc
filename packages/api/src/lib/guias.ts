@@ -34,6 +34,7 @@ import { folioSobrepeso, sobrepesosPendientes } from "./sobrepesos"
 import { esc } from "./licitacion"
 import { sendEmail } from "./resend"
 import { pushACliente } from "./push"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const T_GUIAS = "hetna_guia"
 
@@ -242,13 +243,12 @@ const CAMPOS_PEDIDO = [
   "shipping_methods.name",
   "shipping_methods.amount",
   "shipping_methods.shipping_option_id",
-  "payment_collections.status",
+  ...CAMPOS_PAGO,
   "fulfillments.id",
   "fulfillments.canceled_at",
 ]
 
-const pagado = (p: Pedido) =>
-  (p.payment_collections || []).some((pc) => ["completed", "authorized", "partially_captured"].includes(pc?.status))
+const pagado = (p: Pedido) => pedidoPagado(p as any)
 
 // Opciones de envío que son de Envíos HETNA (proveedor Skydropx)
 async function opcionesHetna(c: MedusaContainer, ids: string[]): Promise<Map<string, { name: string }>> {
