@@ -120,12 +120,9 @@ no sabría leer los tokens.
 
 ## 5. Usuario propio para la tienda (en lugar de root)
 
-Hoy la tienda y el API corren como `root`. Si alguien encontrara una falla en el
-código, tendría el servidor completo. Lo ideal es un usuario sin privilegios,
-pero el cambio toca pm2, permisos de carpetas, Docker y el script de despliegue,
-y un error deja el sitio abajo. Recomendación: hacerlo en una ventana de
-mantenimiento, con el respaldo recién probado. Pídelo cuando quieras y se
-prepara paso a paso.
+Hoy la tienda y el API corren como `root`. La guía paso a paso para pasarlos al
+usuario `hetna` está en [usuario-sin-root.md](usuario-sin-root.md). Se hace en un
+horario tranquilo (unos 2 minutos sin tienda) y con el respaldo recién probado.
 
 ## 6. Decisiones pendientes del Cotizador
 
