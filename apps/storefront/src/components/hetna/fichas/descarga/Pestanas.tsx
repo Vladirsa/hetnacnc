@@ -5,11 +5,17 @@
 // que no está elegido.
 import { useState } from "react"
 
-export function Pestanas({ pestanas }: { pestanas: { clave: string; titulo: string; contenido: React.ReactNode }[] }) {
+export function Pestanas({
+  pestanas,
+  etiqueta = "Detalles del diseño",
+}: {
+  pestanas: { clave: string; titulo: string; contenido: React.ReactNode }[]
+  etiqueta?: string
+}) {
   const [activa, setActiva] = useState(pestanas[0]?.clave)
   return (
     <section className="rounded-md border border-[#D4D9DF] bg-white" data-testid="pestanas-ficha">
-      <div role="tablist" aria-label="Detalles del diseño" className="flex overflow-x-auto border-b border-[#D4D9DF]">
+      <div role="tablist" aria-label={etiqueta} className="flex overflow-x-auto border-b border-[#D4D9DF]">
         {pestanas.map((p) => (
           <button
             key={p.clave}

@@ -9,7 +9,6 @@
 import "@/components/hetna/tienda/fuentes-tienda.css"
 import Image from "@/lib/imagenes/Imagen"
 
-import FabricarDiseno from "./FabricarDiseno"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { caracteristicasDe } from "@/components/hetna/fichas/LoMasImportante"
 import { faq } from "@/lib/helpers/product-metadata"
@@ -238,14 +237,6 @@ export function AbajoDescarga({ product, fotosCompradores = [] }: { product: Pro
 
   return (
     <div className="flex flex-col gap-6">
-      <FabricarDiseno
-        titulo={product.title || "Diseño"}
-        handle={product.handle}
-        formatos={formatosDe(product)}
-        medidas={typeof product.metadata?.medidas === "string" ? (product.metadata.medidas as string) : undefined}
-        vistaPrevia={vistaPreviaDe(product.metadata)}
-      />
-
       <PiezaFabricada fotos={fotosFabricadaDe(product.metadata)} compradores={fotosCompradores.slice(0, 8)} />
 
       <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
