@@ -6,7 +6,7 @@ import { ligaWhatsApp } from "@/lib/hetna/empresa"
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/servicios/envios-hetna" },
-  title: "Envíos HETNA | Envíos para piezas, herramientas y materiales CNC en México",
+  title: "Envíos de piezas, herramientas y materiales CNC en México",
   description:
     "Envía piezas, herramientas y materiales a todo México. Compara paqueterías con precio final y días de entrega, paga en línea y recibe tu guía por correo.",
 }
