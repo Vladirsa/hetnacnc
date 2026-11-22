@@ -21,14 +21,16 @@ import { tipoFicha } from "./tipo-ficha"
 
 export type TipoProducto = "digital" | "herramienta" | "stock" | "tallado" | "corte" | "a_medida" | "servicio"
 
+// Íconos que se ven en cualquier Windows o celular: 🪵 (madera) no existe en
+// fuentes viejas y salía como una raya (21 nov 2026).
 export const TIPOS_PRODUCTO: Record<TipoProducto, { etiqueta: string; icono: string }> = {
   digital: { etiqueta: "Archivo digital", icono: "📁" },
   herramienta: { etiqueta: "Herramienta", icono: "🔧" },
   stock: { etiqueta: "Producto físico", icono: "📦" },
-  tallado: { etiqueta: "Tallado en madera", icono: "🪵" },
+  tallado: { etiqueta: "Tallado en madera", icono: "🌲" },
   corte: { etiqueta: "Corte CNC", icono: "✂️" },
   a_medida: { etiqueta: "Fabricación bajo pedido", icono: "🏭" },
-  servicio: { etiqueta: "Servicio en línea", icono: "🧑‍💻" },
+  servicio: { etiqueta: "Servicio en línea", icono: "💻" },
 }
 
 type Producto = {
