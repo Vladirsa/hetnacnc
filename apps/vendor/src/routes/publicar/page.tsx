@@ -8,6 +8,7 @@
 // Lo que va escribiendo se guarda en este navegador (localStorage), para que
 // no pierda nada si cierra la pestaña a la mitad.
 import { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 const Icono = (props) => (
@@ -357,6 +358,11 @@ const PublicarPage = () => {
       <p style={S.sub}>
         Paso {paso + 1} de {PASOS.length}: <b>{PASOS[paso]}</b>. Lo que escribas se guarda solo en este navegador.
       </p>
+      {paso === 0 && (
+        <p style={{ ...S.sub, marginTop: -10 }}>
+          ¿Tienes muchos productos? <Link to="/publicar-excel" style={{ color: "#C2560A", fontWeight: 700 }}>Súbelos de una vez con Excel</Link>.
+        </p>
+      )}
       {avisoAlta && (
         <div role="status" style={{ background: "#FFF6DB", border: "1px solid #F0D58A", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 14, lineHeight: 1.5 }}>
           <b>Todavía no puedes publicar.</b> {avisoAlta} Puedes ir llenando tu producto: se queda guardado en este navegador.

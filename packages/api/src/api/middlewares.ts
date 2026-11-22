@@ -164,6 +164,12 @@ export default defineMiddlewares({
           matcher: "/admin/hetna-productos/importar",
           middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 10, forma: "lista" })],
         },
+        // Lo mismo para los talleres (panel del taller › Publicar con Excel)
+        {
+          method: ["POST"],
+          matcher: "/vendor/hetna-publicar/excel",
+          middlewares: [leerMultipart({ campos: { archivo: 1 }, maxMb: 2, forma: "lista" })],
+        },
         {
           method: ["POST"],
           matcher: "/admin/hetna-fabrica/video",
