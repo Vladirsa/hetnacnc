@@ -9,6 +9,11 @@
 // vendedor (vista_previa) o, si no hay, de las medidas de la ficha. El precio
 // sale del mismo estimador de /cotizar (lib/cotizador/estimador.ts): es un
 // rango orientativo; el precio real lo dan los talleres en sus propuestas.
+//
+// 22 nov 2026 (Vlado): sale en TODOS los productos, digitales y físicos (en
+// un físico es "fabricar algo similar"), va debajo de las fotos, más chico, y
+// pide las tres medidas: ancho × largo × alto. En piezas planas el alto es
+// opcional (el grosor lo da el material).
 import { useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -25,6 +30,10 @@ type Props = {
   /** Texto de medidas de la ficha ("120 × 80 × 15 mm") */
   medidas?: string
   vistaPrevia?: { url: string; formato: FormatoVista } | null
+  /** Producto físico: se pide "algo similar" y se ofrecen todos los procesos */
+  fisico?: boolean
+  /** Proceso que sale elegido (p. ej. router para un tallado) */
+  procesoInicial?: TipoMaquina
 }
 
 const FORMATOS_3D = ["STL", "OBJ", "STEP", "3MF"]
@@ -39,12 +48,15 @@ export function leerMedidas(t?: string): { largo: number; ancho: number; alto: n
   return a > 0 && b > 0 ? { largo: a, ancho: b, alto: c || 0 } : null
 }
 
-const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-3 text-[15px] outline-none focus:border-[#E85D04]"
-const etiqueta = "block text-[13px] font-semibold text-[#1E2329]"
+const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-2.5 text-[14px] outline-none focus:border-[#E85D04]"
+const etiqueta = "block text-[12.5px] font-semibold text-[#1E2329]"
 
-export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia }: Props) {
-  const es3D = formatos.length > 0 && formatos.every((f) => FORMATOS_3D.includes(f))
-  const procesos: TipoMaquina[] = es3D ? ["impresora_3d"] : formatos.some((f) => FORMATOS_3D.includes(f)) ? ["laser_co2", "router", "plasma", "impresora_3d"] : ["laser_co2", "router", "plasma"]
+export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial }: Props) {
+  const es3D = !fisico && formatos.length > 0 && formatos.every((f) => FORMATOS_3D.includes(f))
+  const todos: TipoMaquina[] = ["laser_co2", "router", "plasma", "impresora_3d"]
+  const lista: TipoMaquina[] = fisico ? todos : es3D ? ["impresora_3d"] : formatos.some((f) => FORMATOS_3D.includes(f)) ? todos : ["laser_co2", "router", "plasma"]
+  // El proceso sugerido va primero
+  const procesos = procesoInicial && lista.includes(procesoInicial) ? [procesoInicial, ...lista.filter((p) => p !== procesoInicial)] : lista
 
   const [geo, setGeo] = useState<GeoCad | null>(null)
   useEffect(() => {
@@ -69,10 +81,10 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const [servicio, setServicio] = useState<TipoMaquina>(procesos[0])
   const mats = useMemo(() => materialesPara(servicio), [servicio])
   const [iMat, setIMat] = useState(0)
-  // Medidas como las piensa el cliente: ancho × alto. Si el diseño trae
-  // medidas, cambiar una ajusta la otra en proporción (escala `k`).
+  // Medidas: ancho × largo × alto. Si el diseño trae medidas, cambiar una
+  // ajusta las otras en proporción (escala `k`) para no deformarlo.
   const [k, setK] = useState(1)
-  const [manual, setManual] = useState({ ancho: "", alto: "" })
+  const [manual, setManual] = useState({ ancho: "", largo: "", alto: "" })
   const [cantidad, setCantidad] = useState("10")
   const [conGrabado, setConGrabado] = useState(false)
   const [texto, setTexto] = useState("")
@@ -86,8 +98,13 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       ? piezaAMano(deFicha.largo, deFicha.ancho, deFicha.alto, "normal", servicio === "impresora_3d")
       : null
   const num = (v: string) => parseFloat(v.replace(",", ".")) || 0
+  // Ancho y largo son obligatorios; el alto sólo en impresión 3D
+  const faltaAlto = servicio === "impresora_3d" && !(num(manual.alto) > 0)
   const piezaBase: Pieza | null =
-    base || (num(manual.ancho) > 0 && num(manual.alto) > 0 ? piezaAMano(num(manual.ancho), num(manual.alto), 0, "normal", servicio === "impresora_3d") : null)
+    base ||
+    (num(manual.ancho) > 0 && num(manual.largo) > 0 && !faltaAlto
+      ? piezaAMano(num(manual.ancho), num(manual.largo), num(manual.alto), "normal", servicio === "impresora_3d")
+      : null)
   const escala = base ? k : 1
   const pieza: Pieza | null = piezaBase
     ? {
@@ -111,9 +128,11 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
 
   const liga = (() => {
     if (!pieza || !material || !nombreServicio) return "/cotizar"
-    const med = `${Math.round(pieza.largo)} × ${Math.round(pieza.ancho)}${pieza.es3D && pieza.alto ? ` × ${Math.round(pieza.alto)}` : ""} mm`
+    const med = `${Math.round(pieza.largo)} × ${Math.round(pieza.ancho)}${pieza.alto ? ` × ${Math.round(pieza.alto)}` : ""} mm`
     const nota = [
-      `Fabricar el diseño de la tienda "${titulo}"${handle ? ` (hetnacnc.com/mx/products/${handle})` : ""}.`,
+      fisico
+        ? `Fabricar algo similar al producto "${titulo}"${handle ? ` (hetnacnc.com/mx/products/${handle})` : ""}.`
+        : `Fabricar el diseño de la tienda "${titulo}"${handle ? ` (hetnacnc.com/mx/products/${handle})` : ""}.`,
       `Proceso: ${nombreServicio.nombre}. Material: ${material.nombre}. Medidas: ${med}. Cantidad: ${n}.`,
       conGrabado && texto.trim() ? `Grabado: "${texto.trim().slice(0, 120)}".` : "",
       r?.ok ? `Precio aproximado de la calculadora: ${pesos(r.min)} a ${pesos(r.max)}.` : "",
@@ -124,16 +143,26 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
     return `/cotizar?${q.toString()}`
   })()
 
-  return (
-    <section id="fabricar" aria-labelledby="titulo-fabricar" className="scroll-mt-24 rounded-md border-2 border-[#E85D04] bg-white p-5">
-      <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
-        Fabrícalo con un taller
-      </h2>
-      <p className="m-0 mt-1 text-[14px] text-[#3A414B]">
-        Elige material, tamaño y cantidad: te damos un precio aproximado al momento y pides propuestas a los talleres de la red.
-      </p>
+  // Valor de cada medida en pantalla. Con diseño base: se escalan juntas.
+  const dims = [
+    { clave: "ancho", nombre: "Ancho", base: base?.largo },
+    { clave: "largo", nombre: "Largo", base: base?.ancho },
+    { clave: "alto", nombre: servicio === "impresora_3d" ? "Alto" : "Alto (opcional)", base: base?.alto },
+  ] as const
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+  return (
+    <section
+      id="fabricar"
+      aria-labelledby="titulo-fabricar"
+      className="flex h-full scroll-mt-24 flex-col rounded-xl border-2 border-[#E85D04] bg-white p-4"
+      data-testid="fabricar-con-taller"
+    >
+      <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[20px] font-bold uppercase leading-none text-[#1E2329]">
+        {fisico ? "Fabrícalo a tu medida con un taller" : "Fabrícalo con un taller"}
+      </h2>
+      <p className="m-0 mt-1 text-[13px] text-[#3A414B]">Precio aproximado al momento y propuestas de talleres de la red.</p>
+
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         <label className={etiqueta}>
           Proceso
           <select className={campo} value={servicio} onChange={(e) => setServicio(e.target.value as TipoMaquina)}>
@@ -154,93 +183,104 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
             ))}
           </select>
         </label>
-        <fieldset className="m-0 border-0 p-0 sm:col-span-2">
-          <legend className={etiqueta}>Medidas de la pieza (mm)</legend>
-          <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-            <label>
-              <span className="sr-only">Ancho en mm</span>
-              <input
-                className={campo + " mt-0"}
-                inputMode="decimal"
-                placeholder="Ancho"
-                value={base ? String(Math.round(base.largo * k)) : manual.ancho}
-                onChange={(e) => (base ? num(e.target.value) > 0 && setK(num(e.target.value) / base.largo) : setManual({ ...manual, ancho: e.target.value }))}
-              />
-            </label>
-            <span className="text-[16px] font-bold text-[#5B6370]" aria-hidden="true">×</span>
-            <label>
-              <span className="sr-only">Alto en mm</span>
-              <input
-                className={campo + " mt-0"}
-                inputMode="decimal"
-                placeholder="Alto"
-                value={base ? String(Math.round(base.ancho * k)) : manual.alto}
-                onChange={(e) => (base ? num(e.target.value) > 0 && setK(num(e.target.value) / base.ancho) : setManual({ ...manual, alto: e.target.value }))}
-              />
-            </label>
+        <fieldset className="col-span-2 m-0 border-0 p-0">
+          <legend className={etiqueta}>Medidas (mm)</legend>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {dims.map((d) => (
+              <label key={d.clave} className="block">
+                <span className="block text-[11.5px] text-[#5B6370]">{d.nombre}</span>
+                <input
+                  className={campo + " mt-0.5"}
+                  inputMode="decimal"
+                  placeholder={d.clave === "alto" && servicio !== "impresora_3d" ? "—" : "0"}
+                  value={base ? (d.base ? String(Math.round(d.base * k)) : "") : manual[d.clave]}
+                  disabled={Boolean(base) && !d.base}
+                  onChange={(e) =>
+                    base
+                      ? d.base && num(e.target.value) > 0 && setK(num(e.target.value) / d.base)
+                      : setManual({ ...manual, [d.clave]: e.target.value })
+                  }
+                />
+              </label>
+            ))}
           </div>
-          <span className="mt-1 block text-[12px] font-normal text-[#5B6370]">
-            {base
-              ? `Tamaño del diseño: ${Math.round(base.largo)} × ${Math.round(base.ancho)} mm. Si cambias una medida, la otra se ajusta para no deformarlo.`
-              : "Escribe el ancho y el alto que necesitas."}
-            {base && k !== 1 && (
-              <button type="button" onClick={() => setK(1)} className="ml-1 font-semibold text-[#E85D04] underline">
-                Volver al original
-              </button>
-            )}
-          </span>
+          {base && (
+            <span className="mt-1 block text-[11.5px] text-[#5B6370]">
+              Original: {Math.round(base.largo)} × {Math.round(base.ancho)}
+              {base.alto ? ` × ${Math.round(base.alto)}` : ""} mm · se escala en proporción.
+              {k !== 1 && (
+                <button type="button" onClick={() => setK(1)} className="ml-1 font-semibold text-[#E85D04] underline">
+                  Volver al original
+                </button>
+              )}
+            </span>
+          )}
         </fieldset>
         <label className={etiqueta}>
           Cantidad
           <input className={campo} inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
         </label>
-        {servicio !== "impresora_3d" && (
-          <div className="sm:col-span-2">
-            <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-[14px] font-semibold text-[#1E2329]">
-              <input type="checkbox" checked={conGrabado} onChange={(e) => setConGrabado(e.target.checked)} className="h-5 w-5 accent-[#E85D04]" />
-              Agregar grabado (un nombre, texto o fecha)
-            </label>
-            {conGrabado && (
-              <input className={campo} value={texto} maxLength={60} onChange={(e) => setTexto(e.target.value)} placeholder='Ej. "Familia López 2026"' />
-            )}
-          </div>
+        {servicio !== "impresora_3d" ? (
+          <label className="flex min-h-[44px] cursor-pointer items-end gap-2 pb-2.5 text-[13px] font-semibold text-[#1E2329]">
+            <input type="checkbox" checked={conGrabado} onChange={(e) => setConGrabado(e.target.checked)} className="h-5 w-5 accent-[#E85D04]" />
+            Con grabado
+          </label>
+        ) : (
+          <span />
+        )}
+        {conGrabado && servicio !== "impresora_3d" && (
+          <input
+            className={campo + " col-span-2 mt-0"}
+            value={texto}
+            maxLength={60}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder='Texto del grabado, ej. "Familia López 2026"'
+            aria-label="Texto del grabado"
+          />
         )}
       </div>
 
-      <div className="mt-4 rounded-md bg-[#F7F8FA] p-4" aria-live="polite">
+      {/* Crece para llenar la columna: así no queda hueco debajo de las fotos */}
+      <div className="mt-3 flex flex-1 flex-col justify-center rounded-lg bg-[#F7F8FA] p-3" aria-live="polite">
         {!pieza ? (
-          <p className="m-0 text-[14px] text-[#5B6370]">Escribe las medidas de la pieza (ancho × alto) para ver el precio aproximado.</p>
+          <p className="m-0 text-[13px] text-[#5B6370]">
+            {faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe el ancho y el largo para ver el precio aproximado."}
+          </p>
         ) : r && r.ok ? (
           <>
-            <p className="m-0 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">Precio aproximado</p>
-            <p className="m-0 mt-1 text-[28px] font-extrabold leading-none text-[#1E2329]">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">Precio aproximado</p>
+            <p className="m-0 mt-0.5 text-[22px] font-extrabold leading-none text-[#1E2329]">
               {pesos(r.min)} – {pesos(r.max)}
             </p>
-            <p className="m-0 mt-1 text-[13.5px] text-[#3A414B]">
-              {n > 1 ? `${n} piezas · unos ${pesos(r.precioPieza)} cada una · ` : ""}material y maquinado, más IVA, sin envío.
+            <p className="m-0 mt-1 text-[12.5px] text-[#3A414B]">
+              {n > 1 ? `${n} piezas · unos ${pesos(r.precioPieza)} c/u · ` : ""}material y maquinado, más IVA, sin envío.
             </p>
-            <p className="m-0 mt-2 text-[12.5px] text-[#5B6370]">Cómo se calculó: {r.explicacion}.</p>
             {r.avisos.map((a) => (
-              <p key={a} className="m-0 mt-1 text-[12.5px] text-[#9A5B00]">
+              <p key={a} className="m-0 mt-1 text-[12px] text-[#9A5B00]">
                 {a}
               </p>
             ))}
+            <details className="mt-1 text-[12px] text-[#5B6370]">
+              <summary className="cursor-pointer font-semibold">Cómo se calculó</summary>
+              <p className="m-0 mt-1">{r.explicacion}.</p>
+            </details>
           </>
         ) : (
-          <p className="m-0 text-[14px] text-[#9A5B00]">{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</p>
+          <p className="m-0 text-[13px] text-[#9A5B00]">{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</p>
         )}
       </div>
 
       <LocalizedClientLink
         href={liga}
         aria-disabled={!pieza}
-        className={`mt-4 flex min-h-[48px] w-full items-center justify-center rounded bg-[#E85D04] px-4 text-[15.5px] font-bold text-white hover:bg-[#C94F03] ${pieza ? "" : "pointer-events-none opacity-50"}`}
+        className={`mt-3 flex min-h-[46px] w-full items-center justify-center rounded-lg bg-[#E85D04] px-4 text-[15px] font-bold text-white hover:bg-[#C94F03] ${pieza ? "" : "pointer-events-none opacity-50"}`}
       >
         Pedir propuestas a talleres
       </LocalizedClientLink>
-      <p className="m-0 mt-2 text-[12.5px] text-[#5B6370]">
-        El precio es orientativo: cada taller manda su propuesta con precio, tiempo de entrega y garantía, y pagas dentro de HETNA. El taller necesita
-        el archivo: cómpralo aquí y súbelo en tu solicitud, o pide al taller que lo incluya en su propuesta.
+      <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#5B6370]">
+        {fisico
+          ? "Precio orientativo. Cada taller manda su propuesta con precio, entrega y garantía, y pagas dentro de HETNA."
+          : "Precio orientativo. El taller necesita el archivo: cómpralo aquí y súbelo en tu solicitud. Pagas dentro de HETNA."}
       </p>
     </section>
   )
