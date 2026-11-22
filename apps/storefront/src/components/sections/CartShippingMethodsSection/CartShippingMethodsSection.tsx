@@ -82,7 +82,8 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
 
   const isOpen = searchParams.get('step') === 'delivery';
 
-  // Perfil de envío de las ofertas de cada taller en el carrito. Una opción de
+  // Perfil de envío de las ofertas de cada taller en el carrito (misma regla que
+  // perfilValido en api/store/envio-perfil/middlewares.ts). Una opción de
   // otro perfil (por ejemplo "Entrega digital" para un producto físico) no se
   // muestra: Mercur rechazaría el pedido al final, ya con el pago hecho. El
   // servidor también lo frena (api/store/envio-perfil/middlewares.ts).
@@ -142,7 +143,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
         .forEach(p => (pricesMap[p.value?.id || ''] = p.value?.amount!));
 
       setCalculatedPricesMap(pricesMap);
-      setPreciosDe(idsConPrecioCalculado);
+      setPreciosDe(`${cart.id}|${idsConPrecioCalculado}`);
       setIsLoadingPrices(false);
     });
 
@@ -256,7 +257,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
 
   useEffect(() => {
     if (!isOpen || isLoadingPrices || isPendingDeleteRow) return;
-    if (idsConPrecioCalculado && preciosDe !== idsConPrecioCalculado) return;
+    if (idsConPrecioCalculado && preciosDe !== `${cart.id}|${idsConPrecioCalculado}`) return;
     for (const key of filteredGroupedBySellerId) {
       const opciones = groupedBySellerId?.[key] ?? [];
       if (opciones.length !== 1) continue;
@@ -267,7 +268,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
       break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isLoadingPrices, isPendingDeleteRow, clavesDeTalleres, enviosYaElegidos, preciosDe, idsConPrecioCalculado]);
+  }, [isOpen, isLoadingPrices, isPendingDeleteRow, clavesDeTalleres, enviosYaElegidos, preciosDe, idsConPrecioCalculado, cart.id]);
 
   // Falta elegir envío: mientras eso pase, la compra no puede avanzar, así que
   // se dice aquí mismo y no sólo en el resumen de la derecha.

@@ -18,7 +18,8 @@ import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 const DIA = 24 * 60 * 60 * 1000
 
-const estaPagada = (orden) => pedidoPagado(orden)
+// Un pedido dividido cancelado conserva el cobro del carrito: no cuenta como venta
+const estaPagada = (orden) => orden.status !== "canceled" && pedidoPagado(orden)
 
 const dentro = (iso, desde: number, hasta: number): boolean => {
   if (!iso) return false
@@ -80,6 +81,7 @@ export async function calcularResumenDiario(
     entity: "order",
     fields: [
       "id",
+      "status",
       "total",
       "currency_code",
       "created_at",

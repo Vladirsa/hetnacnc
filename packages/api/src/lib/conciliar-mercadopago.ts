@@ -18,6 +18,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { completeCartWithSplitOrdersWorkflow } from "@mercurjs/core/workflows"
 
 import { correosDeLaCasa } from "./cuentas-casa"
+import { esCuponHetna, motivoCupon } from "./cupones"
 import { STORE_URL, esc, fila, marco } from "./licitacion"
 import { sendEmail } from "./resend"
 
@@ -103,10 +104,63 @@ export async function conciliarMercadoPago(
       rows: [cart],
     } = await knex.raw(`select id, email, metadata from cart where id = ?`, [cartId])
     if (!cart) continue
-    const { rows: grupo } = await knex.raw(`select 1 from order_group where cart_id = ? and deleted_at is null limit 1`, [cartId])
-    if (grupo.length) continue
     const meta = (cart.metadata || {}) as Record<string, unknown>
     if (meta.mp_conciliacion_aviso === String(pago.id)) continue
+    const filas: [string, string][] = [
+      ["Pago de Mercado Pago", String(pago.id)],
+      ["Monto", `$${Number(pago.transaction_amount || 0).toFixed(2)}`],
+      ["Carrito", cartId],
+      ["Cliente", cart.email || "—"],
+    ]
+    const marcarAvisado = () =>
+      knex.raw(`update cart set metadata = coalesce(metadata, '{}'::jsonb) || ?::jsonb where id = ?`, [
+        JSON.stringify({ mp_conciliacion_aviso: String(pago.id) }),
+        cartId,
+      ])
+
+    const { rows: grupo } = await knex.raw(`select 1 from order_group where cart_id = ? and deleted_at is null limit 1`, [cartId])
+    if (grupo.length) {
+      // Ya hay pedido. Si la sesión quedó con OTRO pago aprobado, este es un cobro doble.
+      const { rows: sesiones } = await knex.raw(
+        `select ps.data->>'payment_id' as payment_id from payment_session ps
+         join cart_payment_collection cpc on cpc.payment_collection_id = ps.payment_collection_id and cpc.deleted_at is null
+         where cpc.cart_id = ? and ps.provider_id like 'pp_mercadopago%' and ps.deleted_at is null`,
+        [cartId]
+      )
+      const usados = new Set((sesiones as { payment_id: string | null }[]).map((s) => String(s.payment_id || "")).filter(Boolean))
+      if (usados.size && !usados.has(String(pago.id))) {
+        salida.avisos++
+        await marcarAvisado()
+        await avisar(
+          "Posible cobro DOBLE en Mercado Pago",
+          filas,
+          "Este carrito ya tiene pedido con otro pago, y Mercado Pago tiene este segundo pago aprobado. Revísalo en tu cuenta de Mercado Pago y, si es doble, reembólsalo desde ahí."
+        )
+      }
+      continue
+    }
+
+    // Los cupones de HETNA se revisan igual que al pagar en la tienda (api/store/hetna-cupones)
+    const { data: carritos } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
+      entity: "cart",
+      fields: ["id", "customer_id", "email", "items.unit_price", "items.quantity", "promotions.code"],
+      filters: { id: cartId },
+    })
+    const carrito = carritos[0] as any
+    let cuponMal: string | null = null
+    for (const codigo of ((carrito?.promotions || []) as { code?: string | null }[]).map((p) => p?.code || "").filter(esCuponHetna)) {
+      cuponMal = cuponMal || (await motivoCupon(container as any, carrito, codigo))
+    }
+    if (cuponMal) {
+      salida.avisos++
+      await marcarAvisado()
+      await avisar(
+        "Cobro de Mercado Pago SIN pedido: revisa y decide el reembolso",
+        [...filas, ["Motivo", `Cupón: ${cuponMal}`]],
+        "Mercado Pago cobró, pero el cupón del carrito ya no aplica, así que el pedido no se creó solo. Decide si lo surtes o lo reembolsas desde Mercado Pago."
+      )
+      continue
+    }
 
     // La sesión de pago del carrito apunta a ESTE pago aprobado: si el cliente pagó
     // una preferencia anterior (la referencia cambia cuando cambia el total),
@@ -122,12 +176,6 @@ export async function conciliarMercadoPago(
       input: { cart_id: cartId },
       throwOnError: false,
     })
-    const filas: [string, string][] = [
-      ["Pago de Mercado Pago", String(pago.id)],
-      ["Monto", `$${Number(pago.transaction_amount || 0).toFixed(2)}`],
-      ["Carrito", cartId],
-      ["Cliente", cart.email || "—"],
-    ]
     if (!errors?.length) {
       salida.completados++
       logger.info(`[conciliar-mp] pedido creado para ${cartId} (pago ${pago.id})`)
@@ -141,10 +189,7 @@ export async function conciliarMercadoPago(
     const motivo = (errors[0] as { error?: { message?: string } })?.error?.message || "error desconocido"
     salida.avisos++
     logger.warn(`[conciliar-mp] ${cartId} (pago ${pago.id}) no se pudo completar: ${motivo}`)
-    await knex.raw(`update cart set metadata = coalesce(metadata, '{}'::jsonb) || ?::jsonb where id = ?`, [
-      JSON.stringify({ mp_conciliacion_aviso: String(pago.id) }),
-      cartId,
-    ])
+    await marcarAvisado()
     await avisar(
       "Cobro de Mercado Pago SIN pedido: revisa y decide el reembolso",
       [...filas, ["Motivo", motivo]],

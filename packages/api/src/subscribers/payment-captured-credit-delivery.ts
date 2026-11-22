@@ -5,9 +5,11 @@ import type { IPaymentModuleService } from "@medusajs/framework/types"
 import { grantCreditsForOrder } from "../lib/credit-delivery"
 import { pedidosDelCobro } from "../lib/pago-pedido"
 
-// Mismo patron que payment-captured-digital-delivery.ts: payment.captured
-// solo trae el id del pago, se resuelve la orden via el link
-// order_payment_collection.
+// Captura después del pedido (proveedores que no cobran al autorizar, o una
+// captura manual desde el panel). payment.captured sólo trae el id del pago:
+// los pedidos se buscan por el cobro, directo o por el carrito (pedidos
+// divididos de Mercur, lib/pago-pedido.ts). La entrega no se repite: el pedido
+// guarda que ya se entregó.
 export default async function paymentCapturedCreditDelivery({ event, container }: SubscriberArgs<{ id: string }>) {
   const logger = container.resolve("logger")
 
