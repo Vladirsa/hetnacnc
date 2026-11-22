@@ -16,13 +16,14 @@ export const revalidate = 60
 const definicion = (clave: string) => CATEGORIAS.find((c) => c.clave === clave)
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; categoria: string }> }): Promise<Metadata> {
-  const { locale, categoria } = await params
+  const { categoria } = await params
   const c = definicion(categoria)
   if (!c) return {}
   return {
     title: `${c.nombre} · Tienda HETNA CNC`,
     description: c.descripcion,
-    alternates: { canonical: `https://hetnacnc.com/${locale}/tienda/${c.clave}` },
+    // La versión oficial de cada categoría es la de /mx (las de otros países son copias)
+    alternates: { canonical: `https://hetnacnc.com/mx/tienda/${c.clave}` },
   }
 }
 

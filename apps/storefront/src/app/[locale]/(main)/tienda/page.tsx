@@ -14,13 +14,13 @@ import { migas } from "@/lib/hetna/schema"
 
 export const revalidate = 60
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
-  const { locale } = await params
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Tienda CNC: diseños DXF, servicios CAM y fabricación a medida",
     description:
       "Compra diseños DXF y STL con descarga inmediata, contrata programación CAM de 3 a 5 ejes o cotiza corte láser, plasma, router y maquinado con talleres de México.",
-    alternates: { canonical: `https://hetnacnc.com/${locale}/tienda` },
+    // Todas las versiones por país (/us, /pe…) son la misma tienda: la oficial es /mx
+    alternates: { canonical: "https://hetnacnc.com/mx/tienda" },
     openGraph: { title: "Tienda HETNA CNC", images: [IMAGEN_OG] },
   }
 }
