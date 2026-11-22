@@ -63,8 +63,18 @@ export function descripcionAHtml(texto: string): string {
     if (lista.length) bloques.push(`<ul>${lista.map((l) => `<li>${escapar(l)}</li>`).join("")}</ul>`)
     lista = []
   }
-  for (const crudo of String(texto || "").split(/\r?\n/)) {
-    const r = crudo.trim()
+  // Lo que quedó vacío de la plantilla ("- " sin texto, "Material: " sin dato)
+  // no se publica: en la ficha salía "Qué incluye: --" (21 nov 2026).
+  const renglones = String(texto || "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => !/^[-•*]+$/.test(l))
+  const utiles = renglones.filter((l, i) => {
+    if (!/^[^:]{1,40}:$/.test(l)) return true
+    const sig = renglones.slice(i + 1).find(Boolean) || ""
+    return /^[-•*]\s*\S/.test(sig)
+  })
+  for (const r of utiles) {
     const vineta = r.match(/^[-•*]\s*(.+)$/)
     if (vineta) {
       lista.push(vineta[1])

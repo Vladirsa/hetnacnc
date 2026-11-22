@@ -13,7 +13,7 @@ import { getRegion } from './regions';
 // `calculated_price` / `inventory_quantity` depend on — dropping them (via an
 // unprefixed field) silently yields null prices and zero stock.
 const OFFER_FIELDS =
-  '+seller.logo,+seller.banner,+seller.is_premium,' +
+  '+seller.logo,+seller.banner,+seller.is_premium,+seller.metadata,' +
   '+calculated_price,+inventory_quantity,' +
   '+product.id,+product.title,+product.handle,+product.thumbnail';
 

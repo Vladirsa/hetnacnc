@@ -183,7 +183,7 @@ export default function PerfilTallerPage() {
   const [galeria, setGaleria] = useState([])
   const [subiendoGal, setSubiendoGal] = useState(false)
   const [f, setF] = useState({
-    lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", horario: "", anos: "",
+    lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", horario: "", anos: "", factura: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
     tarifas: {}, tipo_cuenta: "taller", marcas: "",
     // { clave: "precio desde" (texto libre, opcional) } de los acabados que hace
@@ -214,6 +214,7 @@ export default function PerfilTallerPage() {
           cp: p.cp || "",
           ofrece: Array.isArray(p.ofrece) ? p.ofrece : [],
           entrega: p.entrega || "",
+          factura: ["si", "no"].includes(p.factura) ? p.factura : "",
           horario: p.horario || "",
           anos: p.anos ?? "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
@@ -262,6 +263,8 @@ export default function PerfilTallerPage() {
       lat: undefined,
       lng: undefined,
       entrega: f.entrega.trim(),
+      // Ficha universal: la nota junto al precio ("IVA incluido · emite factura")
+      factura: ["si", "no"].includes(f.factura) ? f.factura : undefined,
       horario: (f.horario || "").trim().slice(0, 120),
       anos: f.anos === "" ? undefined : Number(f.anos),
       whatsapp: undefined,
@@ -412,6 +415,15 @@ export default function PerfilTallerPage() {
             <input style={S.input} type="number" min="0" value={f.anos} onChange={(e) => set("anos", e.target.value)} />
           </div>
         </div>
+        <label style={{ ...S.label, marginTop: 12 }}>¿Emites factura (CFDI)?</label>
+        <select style={S.input} value={f.factura || ""} onChange={(e) => set("factura", e.target.value)}>
+          <option value="">Prefiero no decirlo</option>
+          <option value="si">Sí: mis precios ya incluyen IVA y doy factura</option>
+          <option value="no">No emito factura</option>
+        </select>
+        <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>
+          Por ley el precio que publicas es el precio final que paga el cliente. Esto sólo agrega la nota en tus productos.
+        </p>
         <label style={{ ...S.label, marginTop: 12 }}>Horario de atención</label>
         <input style={S.input} value={f.horario || ""} onChange={(e) => set("horario", e.target.value)} placeholder="Ej. Lunes a viernes 9:00 a 18:00, sábado 9:00 a 14:00" maxLength={120} />
       </section>
