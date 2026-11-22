@@ -23,6 +23,7 @@ import type EnrollmentModuleService from "../modules/enrollment/service"
 import { enrollCustomerInCourseWorkflow } from "../workflows/enroll-customer-in-course"
 import { aprovisionarEnvios, obtenerPerfilDigital } from "./envios-automaticos"
 import { precioEnDolares } from "./publicar-diseno"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 // ---- Video: YouTube / Vimeo ----------------------------------------------
 
@@ -245,18 +246,17 @@ export async function inscribir(c: MedusaContainer, customerId: string, courseId
   }
 }
 
-const PAGADO = new Set(["captured", "partially_captured", "authorized", "partially_authorized"])
 
 /** Pedido pagado con cursos -> el comprador queda inscrito. */
 export async function inscribirPorPedido(c: MedusaContainer, orderId: string): Promise<number> {
   const query = c.resolve(ContainerRegistrationKeys.QUERY)
   const { data: pedidos } = await query.graph({
     entity: "order",
-    fields: ["id", "status", "payment_status", "customer_id", "items.product_id"],
+    fields: ["id", "status", ...CAMPOS_PAGO, "customer_id", "items.product_id"],
     filters: { id: orderId },
   })
   const o = pedidos[0] as any
-  if (!o?.customer_id || o.status === "canceled" || !PAGADO.has(String(o.payment_status))) return 0
+  if (!o?.customer_id || o.status === "canceled" || !pedidoPagado(o)) return 0
   const productIds = [...new Set(((o.items || []) as any[]).map((i) => i.product_id).filter(Boolean))]
   if (!productIds.length) return 0
 

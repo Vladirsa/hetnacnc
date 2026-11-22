@@ -18,6 +18,7 @@ import { randomBytes } from "crypto"
 
 import { planComision } from "./licitacion-cobro"
 import { T_PROPUESTA, T_SOLICITUD, asegurarTablas, folioTexto, ocultarContacto } from "./licitacion"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const T_CLIENTE = "hetna_cloud_cliente"
 export const T_PROYECTO = "hetna_cloud_proyecto"
@@ -429,16 +430,15 @@ export async function importarPedidos(scope: { resolve: (k: string) => any }, kn
   const { data: pedidos } = await query.graph({
     entity: "order",
     fields: [
-      "id", "display_id", "status", "payment_status", "created_at",
+      "id", "display_id", "status", ...CAMPOS_PAGO, "created_at",
       "shipping_address.first_name", "shipping_address.last_name", "shipping_address.company", "shipping_address.phone",
       "email", "items.title", "items.product_title", "items.variant_title", "items.quantity",
     ],
     filters: { id: faltan.slice(0, 200) } as any,
   })
-  const PAGADO = new Set(["captured", "partially_captured", "authorized", "partially_authorized"])
   let n = 0
   for (const o of (pedidos as any[])
-    .filter((o) => o.status !== "canceled" && PAGADO.has(String(o.payment_status)) && new Date(o.created_at).getTime() >= desde)
+    .filter((o) => o.status !== "canceled" && pedidoPagado(o) && new Date(o.created_at).getTime() >= desde)
     .slice(0, 50)) {
     const dir = o.shipping_address || {}
     const nombreCliente = [dir.first_name, dir.last_name].filter(Boolean).join(" ").trim() || String(o.email || "").split("@")[0] || "Cliente"

@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ESTADOS_MX, NOMBRE_TIPO, type TipoDirectorio, directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 
 // Directorio de empresas CNC de México que aún NO tienen cuenta en HETNA
 // (perfiles no reclamados, ver lib/hetna/directorio.ts). Siempre separado de los
@@ -26,7 +27,7 @@ export default async function DirectorioPage({
   searchParams: Promise<{ estado?: string; tipo?: string }>
 }) {
   const { estado = "", tipo = "" } = await searchParams
-  const [todas, talleres] = await Promise.all([directorioMexico(), listarTalleres().catch(() => [])])
+  const [todas, talleres, porEstado] = await Promise.all([directorioMexico(), listarTalleres().catch(() => []), estadosIndexables()])
   const estadoSel = ESTADOS_MX.includes(estado) ? estado : ""
   const tipoSel = (TIPOS as string[]).includes(tipo) ? (tipo as TipoDirectorio) : ""
   const lista = todas
@@ -100,6 +101,31 @@ export default async function DirectorioPage({
           </LocalizedClientLink>
         ))}
       </div>
+
+      {estadoSel && porEstado.some((x) => x.ciudad.estado === estadoSel) && (
+        <p className="mt-4 text-sm">
+          <LocalizedClientLink
+            href={rutaEstado(porEstado.find((x) => x.ciudad.estado === estadoSel)!.ciudad)}
+            className="font-semibold text-[#C2560A] underline"
+          >
+            Ver la página de talleres CNC en {estadoSel} con servicios y preguntas frecuentes →
+          </LocalizedClientLink>
+        </p>
+      )}
+      {!estadoSel && porEstado.length > 0 && (
+        <nav aria-label="Talleres CNC por estado" className="mt-6">
+          <p className="text-sm font-semibold text-[#142033]">Talleres CNC por estado</p>
+          <ul className="mt-2 flex flex-wrap gap-2 text-sm">
+            {porEstado.map((x) => (
+              <li key={x.ciudad.slug}>
+                <LocalizedClientLink href={rutaEstado(x.ciudad)} className="text-[#C2560A] hover:underline">
+                  Talleres CNC en {x.ciudad.estado}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
       <p className="mt-6 text-sm text-[#6B675C]">
         {lista.length} {lista.length === 1 ? "empresa" : "empresas"}

@@ -43,26 +43,27 @@ export function AvisoCookies() {
       className="fixed inset-x-0 bottom-16 z-[60] px-3 md:bottom-4"
       data-testid="aviso-cookies"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4 text-[#1B1B18] shadow-xl sm:flex-row sm:items-center">
-        <p className="text-sm leading-snug">
-          Usamos cookies necesarias para que el sitio funcione. Con tu permiso, también usamos cookies de estadística y de
-          publicidad para mejorar el sitio y mostrarte anuncios de HETNA.{" "}
+      <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-xl border border-[#E7E4DC] bg-white px-3 py-2.5 text-[#1B1B18] shadow-xl sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-3">
+        {/* Texto corto a propósito: en celular el aviso no debe tapar la portada
+            ni ser lo más grande de la pantalla (Google lo mide como el contenido principal). */}
+        <p className="text-[13px] leading-snug sm:text-sm">
+          Usamos cookies para que el sitio funcione y, con tu permiso, para estadísticas y anuncios.{" "}
           <LocalizedClientLink href="/aviso-de-privacidad#cookies" className="font-semibold text-[#B34D07] underline">
-            Más información sobre las cookies
+            Más información
           </LocalizedClientLink>
         </p>
         <div className="flex shrink-0 gap-2">
           <button
             type="button"
             onClick={() => elegir("necesarias")}
-            className="rounded-lg border border-[#142033] px-3 py-2 text-sm font-semibold text-[#142033]"
+            className="min-h-[40px] flex-1 rounded-lg border border-[#142033] px-3 text-sm font-semibold text-[#142033] sm:flex-none"
           >
             Solo necesarias
           </button>
           <button
             type="button"
             onClick={() => elegir("todas")}
-            className="rounded-lg bg-[#C2560A] px-3 py-2 text-sm font-semibold text-white"
+            className="min-h-[40px] flex-1 rounded-lg bg-[#C2560A] px-3 text-sm font-semibold text-white sm:flex-none"
           >
             Aceptar todas
           </button>

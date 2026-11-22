@@ -11,6 +11,7 @@ import { listarTalleres, ubicacion, type Taller } from "@/lib/hetna/talleres"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
 import { CIUDADES, GUIAS, enCiudad, type Ciudad, type Guia } from "@/lib/seo/guias"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
+import { rutaEstado } from "@/lib/seo/estados"
 
 const SITIO = "https://hetnacnc.com"
 
@@ -186,7 +187,9 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
                   </LocalizedClientLink>
                 ))}
               </div>
-              <LocalizedClientLink href="/talleres" className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">Ver todos los talleres →</LocalizedClientLink>
+              <LocalizedClientLink href={ciudad ? rutaEstado(ciudad) : "/talleres"} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
+                {ciudad ? `Todas las empresas CNC en ${ciudad.estado} →` : "Ver todos los talleres →"}
+              </LocalizedClientLink>
             </section>
           )}
 

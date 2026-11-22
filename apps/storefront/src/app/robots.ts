@@ -13,6 +13,15 @@ const PRIVADAS = [
   "/*/login",
   "/*/register",
   "/*/reset-password",
+  // Search Console (21 nov 2026): de 2,068 páginas "rastreadas sin indexar",
+  // ~90% eran archivos que genera el diseñador de cajas (miniaturas y DXF en
+  // /disenar/cajas/archivo/...) repetidos en cada país, más las mismas
+  // herramientas con medidas en la URL (?x=60&y=220...). Son combinaciones
+  // infinitas: Google gastaba ahí su tiempo de rastreo en vez de leer productos
+  // y talleres. La página de cada herramienta (sin parámetros) sí se rastrea.
+  "/*/disenar/cajas/archivo/",
+  "/*/disenar/*?",
+  "/*/cotizar?",
 ]
 
 // Buscadores con IA (ChatGPT, Claude, Perplexity, Gemini, Copilot, Apple,

@@ -13,6 +13,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, VENDOR_URL, boton, esc, fila, marco, nuevoId } from "./licitacion"
 import { sendEmail } from "./resend"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 export const T_FACTURA = "hetna_factura"
 
@@ -147,13 +148,13 @@ export async function solicitarFactura(c: MedusaContainer, customerId: string, o
     data: [p],
   } = await query.graph({
     entity: "order",
-    fields: ["id", "display_id", "customer_id", "status", "total", "created_at", "payment_collections.status"],
+    fields: ["id", "display_id", "customer_id", "status", "total", "created_at", ...CAMPOS_PAGO],
     filters: { id: orderId },
   })
   const pedido = p as any
   if (!pedido || pedido.customer_id !== customerId) throw new ErrorFactura("No encontramos ese pedido en tu cuenta.", 404)
   if (pedido.status === "canceled") throw new ErrorFactura("El pedido está cancelado.")
-  const pagado = (pedido.payment_collections || []).some((pc: any) => ["completed", "authorized", "partially_captured"].includes(pc?.status))
+  const pagado = pedidoPagado(pedido as any)
   if (!pagado) throw new ErrorFactura("Puedes pedir la factura cuando el pedido esté pagado.")
 
   const { data: ligas } = await query.graph({ entity: "order_seller", fields: ["seller_id"], filters: { order_id: orderId } })

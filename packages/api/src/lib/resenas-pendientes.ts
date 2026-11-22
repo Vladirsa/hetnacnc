@@ -1,5 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 // Qué significa "pendiente de reseñar", en un solo lugar.
 //
@@ -42,14 +43,11 @@ export const CAMPOS_ORDEN_PENDIENTES = [
   "items.product_handle",
   "items.title",
   "items.thumbnail",
-  "payment_collections.status",
+  ...CAMPOS_PAGO,
 ]
 
 // Una orden sin pago no da derecho a reseñar.
-export const estaPagada = (orden: OrdenLigera): boolean =>
-  (orden.payment_collections || []).some(
-    (pc) => pc?.status === "completed" || pc?.status === "partially_captured"
-  )
+export const estaPagada = (orden: OrdenLigera): boolean => pedidoPagado(orden as any)
 
 // Los productos que un cliente ya reseñó. Se va por los enlaces del dominio
 // Review de Mercur: cliente -> reseña -> producto.

@@ -20,6 +20,27 @@ Datos clave:
 - [Devoluciones](https://hetnacnc.com/mx/devoluciones)
 - [Preguntas frecuentes](https://hetnacnc.com/mx/preguntas-frecuentes)
 
+## Talleres CNC por estado
+
+Cada página reúne los talleres de HETNA y las empresas del directorio de ese estado, con los servicios que ofrecen (láser, router, plasma, maquinado) y cómo pedirles cotización.
+
+- [Talleres CNC en Ciudad de México](https://hetnacnc.com/mx/talleres/en/ciudad-de-mexico)
+- [Talleres CNC en Jalisco](https://hetnacnc.com/mx/talleres/en/jalisco)
+- [Talleres CNC en Nuevo León](https://hetnacnc.com/mx/talleres/en/nuevo-leon)
+- [Talleres CNC en Puebla](https://hetnacnc.com/mx/talleres/en/puebla)
+- [Talleres CNC en Querétaro](https://hetnacnc.com/mx/talleres/en/queretaro)
+- [Talleres CNC en Tlaxcala](https://hetnacnc.com/mx/talleres/en/tlaxcala)
+- [Talleres CNC en Estado de México](https://hetnacnc.com/mx/talleres/en/estado-de-mexico)
+- [Talleres CNC en Guanajuato](https://hetnacnc.com/mx/talleres/en/guanajuato)
+- [Talleres CNC en Aguascalientes](https://hetnacnc.com/mx/talleres/en/aguascalientes)
+- [Talleres CNC en San Luis Potosí](https://hetnacnc.com/mx/talleres/en/san-luis-potosi)
+- [Talleres CNC en Coahuila](https://hetnacnc.com/mx/talleres/en/coahuila)
+- [Talleres CNC en Chihuahua](https://hetnacnc.com/mx/talleres/en/chihuahua)
+- [Talleres CNC en Baja California](https://hetnacnc.com/mx/talleres/en/baja-california)
+- [Talleres CNC en Sonora](https://hetnacnc.com/mx/talleres/en/sonora)
+- [Talleres CNC en Veracruz](https://hetnacnc.com/mx/talleres/en/veracruz)
+- [Talleres CNC en Yucatán](https://hetnacnc.com/mx/talleres/en/yucatan)
+
 ## Fabricación a la medida
 
 - [Cotizar un trabajo de fabricación](https://hetnacnc.com/mx/cotizar): el cliente describe la pieza (corte láser, router, plasma, torno o impresión 3D), varios talleres mandan su propuesta con precio y tiempo de entrega, y el cliente elige y paga dentro de HETNA.

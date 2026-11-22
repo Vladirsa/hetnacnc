@@ -17,7 +17,11 @@ export const ProductDetailsShipping = () => {
             confirma el pago.
           </li>
           <li>
-            {EMPRESA.diasDevolucion} días hábiles para devolver un producto físico sin
+            {/* Mismo tiempo que en Google Merchant Center (Envíos y devoluciones) */}
+            {`Entrega estimada: ${EMPRESA.entregaTotal} días hábiles (${EMPRESA.entregaPreparacion} días para que el taller prepare tu pedido y ${EMPRESA.entregaTransporte} días de paquetería).`}
+          </li>
+          <li>
+            {EMPRESA.diasDevolucion} días naturales para devolver un producto físico sin
             uso. Si llegó dañado, incompleto o distinto, el envío de regreso no te
             cuesta.{' '}
             <LocalizedClientLink href="/devoluciones">

@@ -23,6 +23,7 @@ import { intentosFallidosAdmin } from "./bitacora-seguridad"
 import { T_GUIAS } from "./guias"
 import { STORE_URL } from "./licitacion"
 import { T_SOBREPESO } from "./sobrepesos"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
 const DIA = 86_400_000
 const HORA = 3_600_000
@@ -67,8 +68,7 @@ export type Aviso = {
   clave?: string // identidad estable para no repetir el aviso urgente (lib/control-aviso-clave.ts)
 }
 
-const pagada = (o) =>
-  (o.payment_collections || []).some((pc) => ["completed", "partially_captured", "authorized"].includes(pc?.status))
+const pagada = (o) => pedidoPagado(o)
 
 const en = (iso, desde: number, hasta: number) => {
   if (!iso) return false
@@ -121,7 +121,7 @@ export async function calcularCentroControl(container, { dias = 30 }: { dias?: n
             "created_at",
             "canceled_at",
             "email",
-            "payment_collections.status",
+            ...CAMPOS_PAGO,
             "fulfillments.id",
             "fulfillments.shipped_at",
             "fulfillments.canceled_at",

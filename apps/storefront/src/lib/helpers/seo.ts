@@ -36,7 +36,9 @@ export const generateProductMetadata = async (
   // usa el subtítulo, y al final el título del producto como antes.
   const meta = (product?.metadata || {}) as Record<string, unknown>
   const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : "")
-  const titulo = texto(meta.seo_title) || product?.title
+  // La plantilla del sitio ya agrega " | HETNA CNC": se quita si el título la trae
+  const sinMarca = (v: string) => v.replace(/\s*[|\-–—·:]\s*HETNA(\s+CNC)?(\s+Digital\s+Factory)?\s*$/i, "").trim()
+  const titulo = sinMarca(texto(meta.seo_title) || product?.title || "") || product?.title
   const descripcion =
     texto(meta.meta_description) ||
     texto(product?.subtitle) ||

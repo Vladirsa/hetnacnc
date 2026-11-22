@@ -10,7 +10,7 @@ import { calcularMonto, miles, PAQUETES_VISTAS, pesos, PRECIO_30_DIAS, PRECIO_MI
 import { ESPACIOS, ORDEN_ESPACIOS, nombreCorto } from "@/lib/publicidad/tipos"
 
 export const metadata: Metadata = {
-  title: { absolute: "Publicidad en HETNA CNC: anuncia tu taller o tu marca | HETNA CNC" },
+  title: { absolute: "Publicidad en HETNA CNC: anuncia tu taller o tu marca" },
   description:
     "Pon tu taller, tus productos o tu marca frente a la comunidad CNC de México. Elige el espacio, paga por semana, mes, año o por vistas, y mide tus clics en tu panel.",
   alternates: { canonical: "https://hetnacnc.com/mx/anunciate" },

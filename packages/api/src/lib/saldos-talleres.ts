@@ -26,6 +26,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_GUIAS, asegurarTablaGuias } from "./guias"
 import { T_SOBREPESO, asegurarTablaSobrepesos } from "./sobrepesos"
+import { CAMPOS_PAGO, pedidoPagado, pedidoReembolsado } from "./pago-pedido"
 
 export const T_SALDO = "hetna_saldo_taller"
 
@@ -81,7 +82,6 @@ export function netoTaller(f: { productos: any; envio: any; comision: any; envio
   return r2((Number(f.productos) || 0) - (Number(f.comision) || 0) + envio)
 }
 
-const PAGADO = new Set(["captured", "partially_captured", "authorized", "partially_authorized", "partially_refunded"])
 
 /**
  * Registra (una sola vez) un pedido en el saldo de su taller. Se llama al
@@ -97,13 +97,13 @@ export async function registrarVenta(c: MedusaContainer, orderId: string): Promi
   const { data: pedidos } = await query.graph({
     entity: "order",
     fields: [
-      "id", "display_id", "currency_code", "status", "payment_status", "shipping_total",
+      "id", "display_id", "currency_code", "status", ...CAMPOS_PAGO, "shipping_total",
       "items.id", "items.product_id", "items.quantity", "items.unit_price", "items.total",
     ],
     filters: { id: orderId },
   })
   const o = pedidos[0] as any
-  if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status))) return false
+  if (!o || o.status === "canceled" || !pedidoPagado(o)) return false
 
   const { data: vinculos } = await query.graph({
     entity: "order_seller",
@@ -177,6 +177,41 @@ export async function marcarEntregado(c: MedusaContainer, orderId: string, por: 
     .update({ entregado_en: ahora, entregado_por: por, disponible_en: libera, actualizado: knex.fn.now() })
 }
 
+/**
+ * Retiene lo que todavía no se le paga al taller (pendiente o disponible) si el
+ * pedido se canceló o se reembolsó (aunque sea en parte) DESPUÉS de registrarse.
+ * Sin esto, un reembolso hecho en Mercado Pago o PayPal sin cancelar el pedido
+ * se le seguía liberando y pagando al taller. Lo retenido se revisa a mano y se
+ * libera desde Pagos a talleres si procede (p. ej. un reembolso parcial).
+ * Va antes de liberarVencidos en la tarea de cada hora.
+ */
+export async function retenerReembolsados(c: MedusaContainer): Promise<number> {
+  const knex = knexDe(c)
+  await asegurarTablaSaldos(knex)
+  const ids: string[] = (await knex(T_SALDO).whereIn("estado", ["pendiente", "disponible"]).select("order_id"))
+    .map((f: any) => f.order_id)
+    .filter((id: string) => !esAjuste(id))
+  if (!ids.length) return 0
+  const query = c.resolve(ContainerRegistrationKeys.QUERY)
+  let n = 0
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data } = await query.graph({ entity: "order", fields: ["id", "status", ...CAMPOS_PAGO], filters: { id: ids.slice(i, i + 100) } })
+    for (const o of (data || []) as any[]) {
+      const motivo = motivoRetencion(o)
+      if (motivo) n += await retener(c, o.id, motivo)
+    }
+  }
+  return n
+}
+
+/** Por qué no se le debe pagar al taller este pedido (null si todo bien). */
+export function motivoRetencion(o: { status?: string | null } & Parameters<typeof pedidoReembolsado>[0]): string | null {
+  if (!o) return null
+  if (o.status === "canceled") return "Pedido cancelado después de registrarse: revisar antes de pagar."
+  if (pedidoReembolsado(o)) return "Pedido con reembolso (total o parcial) sin cancelar: revisar antes de pagar."
+  return null
+}
+
 /** Pasa a disponible lo que ya cumplió su plazo. Lo llama la tarea programada. */
 export async function liberarVencidos(c: MedusaContainer): Promise<number> {
   const knex = knexDe(c)
@@ -244,11 +279,11 @@ export async function liberarRetenido(c: MedusaContainer, orderId: string): Prom
   const query = c.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
     entity: "order",
-    fields: ["id", "status", "payment_status", "fulfillments.delivered_at"],
+    fields: ["id", "status", ...CAMPOS_PAGO, "fulfillments.delivered_at"],
     filters: { id: orderId },
   })
   const o = data[0] as any
-  if (!o || o.status === "canceled" || !PAGADO.has(String(o.payment_status)) || String(o.payment_status) === "partially_refunded") {
+  if (!o || o.status === "canceled" || !pedidoPagado(o) || pedidoReembolsado(o)) {
     throw new SaldoNoLiberable("Este pedido está cancelado o reembolsado: no se puede liberar.")
   }
   // Si se entregó mientras estaba retenido, marcarEntregado no lo anotó (sólo

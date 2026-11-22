@@ -151,6 +151,10 @@ export const ProductDetailsPage = async ({
         })}
       />
       <JsonLd id="ld-migas" datos={migas(rutaMigas)} />
+      {/* Opción A (elegida por Vlado, 22 nov 2026): toda la ficha centrada en
+          1280 px, con el mismo margen a los dos lados. En pantallas de 1920 px
+          ya no queda un hueco grande sólo a la derecha. */}
+      <div className="mx-auto w-full max-w-[1280px]" data-testid="product-ficha-centrada">
       {/* Migas de pan visibles (antes sólo iban en los datos para Google) */}
       <nav aria-label="Migas de pan" className="mb-3 text-[13px] text-[#6B6A63]" data-testid="product-migas">
         <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0">
@@ -174,8 +178,10 @@ export const ProductDetailsPage = async ({
       <div
         // Fotos de tamaño contenido, como Amazon o AliExpress (pedido de Vlado,
         // 21 nov 2026): la galería ocupa ~520–560 px y la información de compra
-        // el resto. La ficha larga va abajo, a todo lo ancho.
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
+        // el resto. La ficha larga va debajo de la foto. Filas "auto 1fr": si la
+        // columna de compra es más alta, el espacio sobrante va a la segunda
+        // fila y no abre un hueco entre la foto y la ficha larga.
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-10 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
         <div className="min-w-0" data-testid="product-gallery-container">
@@ -186,8 +192,8 @@ export const ProductDetailsPage = async ({
           )}
         </div>
 
-        <div data-testid="product-details-container">
-          <div className="max-w-[640px]">
+        <div className="lg:row-span-2" data-testid="product-details-container">
+          <div className="max-w-[680px]">
             <ProductDetails
               product={prod}
               locale={locale}
@@ -197,9 +203,12 @@ export const ProductDetailsPage = async ({
           </div>
         </div>
 
-        {/* La ficha larga va al final, a todo lo ancho (en celular, después del
-            botón de comprar). */}
-        <div className="min-w-0 lg:col-span-2">
+        {/* La ficha larga (descripción, especificaciones, qué incluye) va en la
+            columna izquierda, justo debajo de la foto: antes iba abajo a todo
+            lo ancho y debajo de la foto quedaba un hueco en blanco mientras la
+            columna de compra seguía (pedido de Vlado, 21 nov 2026: "todo
+            justificado"). En celular sigue después del botón de comprar. */}
+        <div className="min-w-0 lg:col-start-1">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}
@@ -257,6 +266,7 @@ export const ProductDetailsPage = async ({
           <ProductosCompactos titulo="Descubre más productos" productos={masProductos as never} />
         </div>
       )}
+      </div>
     </>
   )
 }
