@@ -22,6 +22,8 @@ import {
   TIENE_ARCHIVO,
 } from "@/lib/fabricacion/opciones"
 import { type AfiliacionNueva, type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
+import { trackSolicitudFabricacion } from "@/lib/analytics/events"
+import { permiteRastreo } from "@/lib/hetna/consentimiento"
 import { haySesionCliente } from "@/lib/data/customer"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
@@ -306,7 +308,9 @@ export default function FormSolicitudTaller({
     const fd = new FormData(e.currentTarget)
     const v = (k: string) => String(fd.get(k) || "").trim()
     setEstado("enviando")
+    const rastreo = permiteRastreo()
     const r = await enviarSolicitudTaller({
+      rastreo,
       crear_cuenta: !conSesion && crearCuenta,
       taller,
       abierta: !taller || abiertaOtros,
@@ -350,6 +354,7 @@ export default function FormSolicitudTaller({
       invitados: v("invitados"),
     })
     if (r.ok) {
+      if (rastreo) trackSolicitudFabricacion(r.folio || "", v("servicio") || necesidad)
       alEnviar?.({
         folio: r.folio || "",
         servicio: v("servicio") || necesidad,

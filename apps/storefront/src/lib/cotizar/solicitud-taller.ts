@@ -5,6 +5,7 @@
 
 import { getAuthHeaders } from "@/lib/data/cookies"
 import { eventoSocial } from "@/lib/hetna/social-evento"
+import { reportarLeadMeta } from "@/lib/analytics/meta-lead"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
@@ -12,6 +13,8 @@ const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9
 export type ArchivoSubido = { clave: string; nombre: string; tamano: number }
 
 export type SolicitudTallerInput = {
+  /** Medición: la persona aceptó cookies de publicidad (no viaja al backend) */
+  rastreo?: boolean
   taller?: string
   /** Sin sesión: crear la cuenta y dar número de afiliado (packages/api/src/lib/afiliacion.ts) */
   crear_cuenta?: boolean
@@ -64,8 +67,9 @@ export type SolicitudTallerResultado =
   | { ok: false; mensaje: string }
 
 export async function enviarSolicitudTaller(
-  input: SolicitudTallerInput
+  entrada: SolicitudTallerInput
 ): Promise<SolicitudTallerResultado> {
+  const { rastreo, ...input } = entrada
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-taller`, {
       method: "POST",
@@ -83,6 +87,9 @@ export async function enviarSolicitudTaller(
     }
     const body = await res.json().catch(() => ({}))
     await eventoSocial("solicitud", String(body.folio || ""))
+    // Lead para Meta (mismo event_id que el Pixel: sol_<folio>)
+    if (rastreo && body.folio)
+      await reportarLeadMeta({ eventId: `sol_${body.folio}`, contenido: "Solicitud de fabricación", email: input.email, telefono: input.whatsapp, ciudad: input.ciudad, estado: input.estado_mx, cp: input.cp })
     return { ok: true, folio: body.folio, afiliacion: body.afiliacion || null }
   } catch (e) {
     console.error("[cotizar] fallo llamando a solicitudes-taller", e)
