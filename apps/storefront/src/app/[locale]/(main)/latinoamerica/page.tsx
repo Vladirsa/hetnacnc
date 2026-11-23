@@ -41,7 +41,7 @@ export default async function LatinoamericaPage() {
           {totalMundo > 0 && (
             <p className="mt-4 text-sm text-white/80">
               Ya ubicamos {totalMundo.toLocaleString("es-MX")} empresas CNC en {grupos.length} países.{" "}
-              <a href="/mx/talleres/mundo" className="font-semibold text-[#F2A25F] underline">Ver todas por país</a>
+              <a href="/mx/talleres#directorio" className="font-semibold text-[#F2A25F] underline">Verlas en el mapa</a>
             </p>
           )}
           <div className="mt-6 flex flex-wrap gap-2">
