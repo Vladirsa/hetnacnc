@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 
-type Llave = { llave: string; nombre: string; revocada: boolean; desde: string | null; rutas: { metodo: string; ruta: string; veces: number; ultimo_estado: number | null; ultima: string }[] }
+type Llave = { llave: string; nombre: string; revocada: boolean; desde: string | null; rutas: { metodo: string; ruta: string; veces: number; ultimo_estado: number | null; ultima: string; permitida: boolean }[] }
 
 const cabeceras = (): Record<string, string> => {
   try {
@@ -21,26 +21,48 @@ const fecha = (s?: string | null) => (s ? new Date(s).toLocaleString("es-MX", { 
 
 const LlavesPage = () => {
   const [llaves, setLlaves] = useState<Llave[] | null>(null)
+  const [modo, setModo] = useState<"observar" | "cerrar">("observar")
   const [error, setError] = useState("")
 
-  useEffect(() => {
+  const cargar = () =>
     fetch("/admin/hetna-llaves", { credentials: "include", headers: cabeceras() })
       .then(async (r) => {
         const c = await r.json().catch(() => ({}))
         if (r.status === 401) throw new Error("No se pudo verificar tu sesión de administrador. Vuelve a entrar y recarga.")
         if (!r.ok) throw new Error(c?.message || `Error ${r.status}`)
         setLlaves(c.llaves || [])
+        setModo(c.modo === "cerrar" ? "cerrar" : "observar")
       })
       .catch((e) => setError(e.message))
+
+  useEffect(() => {
+    cargar()
   }, [])
+
+  async function cambiar(llave: string, metodo: string, ruta: string, permitida: boolean) {
+    setError("")
+    const r = await fetch("/admin/hetna-llaves", {
+      method: "POST", credentials: "include",
+      headers: { ...cabeceras(), "content-type": "application/json" },
+      body: JSON.stringify({ llave, metodo, ruta, permitida }),
+    })
+    const c = await r.json().catch(() => ({}))
+    if (!r.ok) return setError(c?.message || `Error ${r.status}`)
+    cargar()
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 4, color: C.texto }}>
       <div>
         <h1 style={{ margin: 0, fontSize: 22 }}>Llaves API</h1>
         <p style={{ margin: "4px 0 0", color: C.tenue, fontSize: 13 }}>
-          Qué usa cada clave secreta (n8n, bot de WhatsApp…). Por ahora sólo se observa: nada se bloquea. En dos semanas, con esta lista, cada llave queda limitada a lo que de verdad usa.
+          Qué usa cada clave secreta (n8n, bot de WhatsApp…). Cada función que usa una llave aparece aquí. Toca "Permitida" o "Bloqueada" para cambiarla.
         </p>
+      </div>
+      <div style={{ ...caja, background: modo === "cerrar" ? "rgba(15,122,74,.07)" : "rgba(194,86,10,.07)" }}>
+        {modo === "cerrar"
+          ? <span><b>Modo cerrar activo:</b> cada llave sólo usa lo marcado como permitido. Lo nuevo se bloquea y aparece aquí como "Bloqueada" para que lo permitas.</span>
+          : <span><b>Modo observar:</b> nada se bloquea. Cuando la lista esté completa, se activa el modo cerrar con <code>LLAVES_API_MODO=cerrar</code> en el .env del servidor.</span>}
       </div>
       {error && <p style={{ color: C.rojo, margin: 0 }}>{error}</p>}
       {llaves && llaves.length === 0 && <div style={caja}>Todavía no hay peticiones con clave API anotadas. Aparecen aquí unos minutos después de que n8n o el bot usen el servidor.</div>}
@@ -50,7 +72,7 @@ const LlavesPage = () => {
           <p style={{ margin: "2px 0 10px", color: C.tenue, fontSize: 12.5 }}>Observando desde {fecha(l.desde)} · {l.rutas.length} funciones</p>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
-              <tr style={{ textAlign: "left", color: C.tenue }}><th>Método</th><th>Ruta</th><th>Veces</th><th>Último resultado</th><th>Última vez</th></tr>
+              <tr style={{ textAlign: "left", color: C.tenue }}><th>Método</th><th>Ruta</th><th>Veces</th><th>Último resultado</th><th>Última vez</th><th>Permiso</th></tr>
             </thead>
             <tbody>
               {l.rutas.map((r) => (
@@ -60,6 +82,12 @@ const LlavesPage = () => {
                   <td>{r.veces}</td>
                   <td style={{ color: (r.ultimo_estado || 0) >= 400 ? C.rojo : undefined }}>{r.ultimo_estado ?? "—"}</td>
                   <td>{fecha(r.ultima)}</td>
+                  <td>
+                    <button onClick={() => cambiar(l.llave, r.metodo, r.ruta, !r.permitida)}
+                      style={{ cursor: "pointer", borderRadius: 8, padding: "3px 8px", fontSize: 12, fontWeight: 700, border: `1px solid ${C.borde}`, background: r.permitida ? "rgba(15,122,74,.1)" : "rgba(180,35,24,.1)", color: r.permitida ? "#0F7A4A" : C.rojo }}>
+                      {r.permitida ? "Permitida" : "Bloqueada"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

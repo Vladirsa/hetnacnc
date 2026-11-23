@@ -1,4 +1,4 @@
-import { _pendientesParaPruebas, anotarUso, patronRuta } from "../llaves-uso"
+import { _pendientesParaPruebas, anotarUso, llavePermitida, modoCerrar, patronRuta } from "../llaves-uso"
 
 describe("uso de llaves API", () => {
   it("cambia los ids de la ruta por :id", () => {
@@ -19,5 +19,17 @@ describe("uso de llaves API", () => {
     expect(g.veces).toBe(2)
     expect(g.estado).toBe(404)
     p.clear()
+  })
+
+  it("modo cerrar: sólo lo permitido; si la lista no se lee, deja pasar", () => {
+    expect(modoCerrar("cerrar")).toBe(true)
+    expect(modoCerrar(" Cerrar ")).toBe(true)
+    expect(modoCerrar("")).toBe(false)
+    expect(modoCerrar(undefined)).toBe(false)
+    const mapa = new Map([["apk_1", new Set(["GET /admin/orders/:id"])]])
+    expect(llavePermitida(mapa, "apk_1", "GET", "/admin/orders/:id")).toBe(true)
+    expect(llavePermitida(mapa, "apk_1", "POST", "/admin/orders/:id")).toBe(false)
+    expect(llavePermitida(mapa, "apk_2", "GET", "/admin/orders/:id")).toBe(false)
+    expect(llavePermitida(null, "apk_2", "GET", "/admin/x")).toBe(true)
   })
 })
