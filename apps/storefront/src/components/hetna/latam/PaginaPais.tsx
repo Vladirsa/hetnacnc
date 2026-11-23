@@ -35,6 +35,7 @@ export async function PaginaPais({ pais }: { pais: string }) {
             La red de talleres de router, láser y plasma de México se prepara para abrir en {p.nombre}
             {p.ciudades.length ? ` (${p.ciudades.slice(0, 3).join(", ")} y más)` : ""}. Abrimos primero donde más talleres y clientes se registren.
           </p>
+          {p.nota && <p className="mt-3 max-w-2xl text-base font-semibold text-[#F2C9A5]">{p.nota}</p>}
           {total > 0 && (
             <p className="mt-3 text-sm text-[#F2C9A5]">
               Ya {total === 1 ? "hay 1 registro" : `hay ${total} registros`} en {p.nombre}
