@@ -16,6 +16,7 @@ import { paramsDe } from "@/lib/helpers/busqueda-listado"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { SITIO_CANONICO, buildHreflangAlternates } from "@/lib/helpers/hreflang"
 import { PESTANAS, esIndexable, explorar, leerPestana } from "@/lib/hetna/explorar"
+import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 
 export const revalidate = 60
 
@@ -58,7 +59,16 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function TodosLosProductos({ params, searchParams }: Props) {
   const { locale } = await params
   const sp = paramsDe(await searchParams)
-  const [r, sugerencias] = await Promise.all([explorar(locale, sp), categoriasSugeridas()])
+  const [r, sugerencias, estados] = await Promise.all([
+    explorar(locale, sp),
+    categoriasSugeridas(),
+    // Sólo en la pestaña Talleres: enlaces a "Talleres CNC en <estado>"
+    leerPestana(sp.get("tipo")) === "talleres"
+      ? estadosIndexables()
+          .then((l) => l.map((x) => ({ nombre: x.ciudad.estado, ruta: rutaEstado(x.ciudad), total: x.total })).sort((a, b) => b.total - a.total))
+          .catch(() => [])
+      : Promise.resolve([]),
+  ])
   const info = PESTANAS.find((p) => p.id === r.pestana)!
   const url = `${SITIO_CANONICO}/mx/categories${r.pestana === "todo" ? "" : `?tipo=${r.pestana}`}`
 
@@ -102,7 +112,7 @@ export default async function TodosLosProductos({ params, searchParams }: Props)
 
       <AnunciosEspacio espacio="listado_productos" className="my-4" />
 
-      <Explorar r={r} sp={sp} locale={locale} sugerencias={sugerencias} />
+      <Explorar r={r} sp={sp} locale={locale} sugerencias={sugerencias} estados={estados} />
     </main>
   )
 }
