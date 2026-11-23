@@ -4,7 +4,7 @@ import DirectorioTalleres from "@/components/hetna/taller/DirectorioTalleres"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import ParaTalleres from "@/components/hetna/taller/ParaTalleres"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { contarPorEstado, directorioMexico } from "@/lib/hetna/directorio"
+import { contarPorEstado, contarPorPais, directorioMexico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { redPorEstado } from "@/lib/foro/red"
 
@@ -21,7 +21,7 @@ export default async function TalleresPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const [talleres, red, directorio] = await Promise.all([listarTalleres(), redPorEstado(), directorioMexico()])
+  const [talleres, red, directorio, paises] = await Promise.all([listarTalleres(), redPorEstado(), directorioMexico(), contarPorPais()])
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 lg:px-8">
@@ -59,12 +59,6 @@ export default async function TalleresPage({
             🏆 Ranking
           </LocalizedClientLink>
           <LocalizedClientLink
-            href="/talleres/mundo"
-            className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
-          >
-            🌎 En el mundo
-          </LocalizedClientLink>
-          <LocalizedClientLink
             href="/talleres/directorio"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
@@ -98,7 +92,7 @@ export default async function TalleresPage({
       {/* Talleres destacados: pagan por salir hasta arriba (se compra en /anunciate) */}
       <AnunciosEspacio espacio="directorio_talleres" titulo="Talleres destacados" columnas invitar className="mb-6" />
 
-      <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} />
+      <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} paises={paises} />
 
       {/* Para dueños de taller: cómo funciona, beneficios, perfiles,
           preguntas y registro, aquí mismo (la versión completa vive en

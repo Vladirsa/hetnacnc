@@ -154,7 +154,7 @@ export async function directorioPais(...nombres: string[]): Promise<EmpresaDirec
 }
 
 /** Todas las empresas del buscador, de todos los países, agrupadas por país (el de
- *  más empresas primero). Para /talleres/mundo y los contadores. */
+ *  más empresas primero). Para los contadores y el mapa. */
 export async function directorioPorPais(): Promise<{ pais: string; empresas: EmpresaDirectorio[] }[]> {
   const g = new Map<string, EmpresaDirectorio[]>()
   for (const e of await leerTodo()) {
@@ -167,6 +167,14 @@ export async function directorioPorPais(): Promise<{ pais: string; empresas: Emp
       empresas: empresas.sort((a, b) => (a.ciudad || "zzz").localeCompare(b.ciudad || "zzz") || a.empresa.localeCompare(b.empresa)),
     }))
     .sort((a, b) => b.empresas.length - a.empresas.length || a.pais.localeCompare(b.pais))
+}
+
+/** Para el mapa: cuántas empresas hay en cada país fuera de México (nunca nombres). */
+export type EmpresasPorPais = { pais: string; total: number }[]
+export async function contarPorPais(): Promise<EmpresasPorPais> {
+  return (await directorioPorPais())
+    .filter((g) => !mismoPais(g.pais, "México") && g.pais !== "Sin país")
+    .map((g) => ({ pais: g.pais, total: g.empresas.length }))
 }
 
 /** Cualquier país: para «Quitar este perfil», que también sale en las páginas de Latinoamérica. */

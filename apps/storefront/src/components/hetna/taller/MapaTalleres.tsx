@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import "leaflet/dist/leaflet.css"
 
 import type { RedPorEstado } from "@/lib/foro/red"
-import type { PorUnirse } from "@/lib/hetna/directorio"
+import type { EmpresasPorPais, PorUnirse } from "@/lib/hetna/directorio"
 import type { Taller } from "@/lib/hetna/talleres"
 
 // Mapa de la red CNC por estado, con un ícono por tipo (talleres verificados,
@@ -23,6 +23,19 @@ const CENTROS: Record<string, [number, number]> = {
   "Sinaloa": [25.17, -107.48], "Sonora": [29.3, -110.33], "Tabasco": [17.84, -92.62],
   "Tamaulipas": [24.27, -98.84], "Tlaxcala": [19.32, -98.24], "Veracruz": [19.17, -96.13],
   "Yucatán": [20.71, -89.09], "Zacatecas": [22.77, -102.58],
+}
+
+// Centro aproximado de cada país (empresas del buscador fuera de México). Sólo un
+// punto por país con cuántas hay: nunca ciudades ni direcciones.
+const CENTROS_PAIS: Record<string, [number, number]> = {
+  "estados unidos": [39.5, -98.35], "canada": [56.1, -106.3], "guatemala": [15.6, -90.3], "el salvador": [13.8, -88.9],
+  "honduras": [14.8, -86.6], "nicaragua": [12.9, -85.0], "costa rica": [9.9, -84.1], "panama": [8.6, -80.1],
+  "cuba": [21.8, -79.5], "republica dominicana": [18.9, -70.4], "puerto rico": [18.2, -66.5], "colombia": [4.6, -74.1],
+  "venezuela": [7.1, -66.2], "ecuador": [-1.5, -78.4], "peru": [-9.2, -75.0], "bolivia": [-16.7, -64.7],
+  "brasil": [-10.8, -52.9], "paraguay": [-23.4, -58.4], "uruguay": [-32.8, -56.0], "chile": [-33.4, -70.7],
+  "argentina": [-34.6, -64.0], "espana": [40.2, -3.7], "portugal": [39.6, -8.0], "francia": [46.6, 2.4],
+  "italia": [42.8, 12.6], "alemania": [51.2, 10.4], "turquia": [39.0, 35.2], "india": [22.0, 79.0],
+  "china": [35.0, 104.0], "taiwan": [23.7, 121.0], "corea del sur": [36.4, 127.9], "corea": [36.4, 127.9], "japon": [36.2, 138.3],
 }
 
 const sinAcentos = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
@@ -128,6 +141,7 @@ export default function MapaTalleres({
   talleres,
   red = {},
   porUnirse = {},
+  paises = [],
   locale = "mx",
   altura = 520,
   onEstado,
@@ -136,6 +150,8 @@ export default function MapaTalleres({
   red?: RedPorEstado
   /** Empresas del directorio (perfiles no reclamados) por estado */
   porUnirse?: PorUnirse
+  /** Empresas del buscador en otros países: un punto por país */
+  paises?: EmpresasPorPais
   locale?: string
   altura?: number
   /** Al elegir "Ver talleres" en un globo, filtra la lista por ese estado. */
@@ -175,6 +191,9 @@ export default function MapaTalleres({
     [datos]
   )
   const conTalleres = useMemo(() => agruparPorEstado(talleres), [talleres])
+  const enPaises = useMemo(() => paises.filter((p) => CENTROS_PAIS[sinAcentos(p.pais)] && p.total > 0), [paises])
+  const totalPaises = enPaises.reduce((a, p) => a + p.total, 0)
+  const mapaRef = useRef<import("leaflet").Map | undefined>(undefined)
 
   // Se guarda la función en una ref para no rehacer el mapa cuando cambia
   const alElegir = useRef(onEstado)
@@ -188,7 +207,9 @@ export default function MapaTalleres({
       const L = (await import("leaflet")).default
       if (!activo || !ref.current) return
 
-      mapa = L.map(ref.current, { scrollWheelZoom: false, maxZoom: 7, minZoom: 4 }).setView([23.6, -102.5], 5)
+      // Abre en México; al alejar se ven los puntos de los demás países
+      mapa = L.map(ref.current, { scrollWheelZoom: false, maxZoom: 7, minZoom: 2, worldCopyJump: true }).setView([23.6, -102.5], 5)
+      mapaRef.current = mapa
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 7,
         attribution: "&copy; OpenStreetMap",
@@ -285,6 +306,31 @@ export default function MapaTalleres({
         marcas.push({ estado, ancho, marker, linea, punto })
       }
 
+      // Otros países: un punto punteado (como «Empresas por unirse») con el número
+      const tipoPais = TIPOS.find((t) => t.id === "por_unirse")!
+      if (!ocultos.has("por_unirse")) {
+        for (const p of enPaises) {
+          const centro = CENTROS_PAIS[sinAcentos(p.pais)]
+          const icono = L.divIcon({
+            className: "",
+            html:
+              `<div style="position:relative;width:${TAM}px;height:${TAM}px;border-radius:50%;background:${tipoPais.color};border:2.5px dashed #fff;box-sizing:border-box;` +
+              `box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center" title="${esc(p.pais)}: ${p.total}">${svgIcono(tipoPais, 17)}` +
+              `<span style="position:absolute;top:-7px;right:-8px;min-width:19px;height:19px;padding:0 4px;border-radius:10px;background:#142033;color:#fff;font:700 11px/19px system-ui,sans-serif;text-align:center;border:2px solid #fff;box-sizing:border-box">${p.total}</span></div>`,
+            iconSize: [TAM, TAM],
+            iconAnchor: [TAM / 2, TAM / 2],
+            popupAnchor: [0, -TAM / 2],
+          })
+          L.marker(centro, { icon: icono, title: p.pais, alt: `Empresas CNC en ${p.pais}` })
+            .addTo(mapa)
+            .bindPopup(
+              `<strong style="color:#142033;font-size:15px">${esc(p.pais)}</strong>` +
+                `<div style="margin-top:6px;color:#40403A">${p.total} ${p.total === 1 ? "empresa CNC" : "empresas CNC"} por unirse a HETNA</div>` +
+                `<a href="/${locale}/latinoamerica" style="display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#C2560A">HETNA en más países →</a>`
+            )
+        }
+      }
+
       // Separa los grupos que se enciman (en píxeles del zoom actual)
       const acomodar = () => {
         if (!mapa) return
@@ -325,7 +371,7 @@ export default function MapaTalleres({
       activo = false
       mapa?.remove()
     }
-  }, [datos, ocultos, locale])
+  }, [datos, ocultos, locale, enPaises])
 
   const alternar = (id: Tipo) =>
     setOcultos((s) => {
@@ -351,6 +397,18 @@ export default function MapaTalleres({
         <strong>Talleres activos en HETNA: {totales.verificado + totales.fundador + totales.comunidad}</strong>
         {totales.por_unirse > 0 && (
           <span className="text-[#6B675C]"> · Empresas por unirse (todavía sin cuenta): {totales.por_unirse}</span>
+        )}
+        {totalPaises > 0 && (
+          <span className="text-[#6B675C]">
+            {" "}· En otros {enPaises.length} países: {totalPaises}{" "}
+            <button
+              type="button"
+              onClick={() => mapaRef.current?.flyTo([10, -60], 2)}
+              className="font-semibold text-[#C2560A] underline"
+            >
+              verlos en el mapa
+            </button>
+          </span>
         )}
       </p>
 

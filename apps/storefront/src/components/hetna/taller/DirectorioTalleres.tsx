@@ -12,7 +12,7 @@ import type { Taller } from "@/lib/hetna/talleres"
 import { TIPOS_MAQUINA, nombreTipoMaquina, tieneMaquina, ubicacion } from "@/lib/hetna/talleres"
 
 import type { RedPorEstado } from "@/lib/foro/red"
-import type { PorUnirse } from "@/lib/hetna/directorio"
+import type { EmpresasPorPais, PorUnirse } from "@/lib/hetna/directorio"
 
 import MapaTalleres from "./MapaTalleres"
 
@@ -27,11 +27,13 @@ export default function DirectorioTalleres({
   locale,
   red = {},
   porUnirse = {},
+  paises = [],
 }: {
   talleres: Taller[]
   locale: string
   red?: RedPorEstado
   porUnirse?: PorUnirse
+  paises?: EmpresasPorPais
 }) {
   const [q, setQ] = useState("")
   const [estado, setEstado] = useState("")
@@ -235,6 +237,7 @@ export default function DirectorioTalleres({
             talleres={filtrados}
             red={red}
             porUnirse={porUnirse}
+            paises={paises}
             locale={locale}
             altura={480}
             onEstado={(e) => {
