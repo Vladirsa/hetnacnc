@@ -6,6 +6,7 @@
 //   GET  /vendor/hetna-ficha        -> productos del taller con su ficha
 //   POST /vendor/hetna-ficha/:id    -> guarda (packages/api/src/lib/ficha-extendida.ts)
 import { useEffect, useMemo, useState } from "react"
+import { faltantesProducto } from "../../lib/datos-faltantes"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 const Icono = (props) => (
@@ -434,7 +435,15 @@ export default function FichaPage() {
   useEffect(() => {
     fetch("/vendor/hetna-ficha", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : r.json().then((d) => Promise.reject(d.message || r.status))))
-      .then(setDatos)
+      .then((d) => {
+        setDatos(d)
+        // Desde el aviso "Completa tus datos" del Inicio: /ficha?abrir=<id> abre ese producto
+        const id = new URLSearchParams(window.location.search).get("abrir")
+        if (id && (d.productos || []).some((p) => p.id === id)) {
+          setAbierto(id)
+          setTimeout(() => document.getElementById(`ficha-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50)
+        }
+      })
       .catch((e) => setError("No se pudieron cargar tus productos (" + e + ")."))
   }, [])
 
@@ -467,7 +476,7 @@ export default function FichaPage() {
       )}
 
       {lista.map((p) => (
-        <div key={p.id} style={S.card}>
+        <div key={p.id} id={`ficha-${p.id}`} style={S.card}>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {p.foto ? (
               <img src={p.foto} alt="" width={56} height={56} style={{ borderRadius: 8, objectFit: "cover", border: "1px solid #E7E4DC", flex: "0 0 auto" }} />
@@ -480,6 +489,9 @@ export default function FichaPage() {
                 {p.completa === 4 ? "Ficha completa" : `${p.completa} de 4 secciones`}
                 {p.estado !== "published" ? " · todavía no está publicado" : ""}
               </div>
+              {faltantesProducto(p).length > 0 && (
+                <div style={{ fontSize: 12.5, color: "#B34D07", marginTop: 2 }}>Falta: {faltantesProducto(p).join(", ")}</div>
+              )}
             </div>
             <button type="button" style={S.btn2} onClick={() => setAbierto(abierto === p.id ? null : p.id)}>
               {abierto === p.id ? "Cerrar" : p.completa ? "Editar ficha" : "Completar ficha"}
