@@ -6,6 +6,7 @@ import { conteoLatam } from "./latam"
 import { T_PROPUESTA, T_SOLICITUD } from "./licitacion"
 import { capacidadVigente } from "./capacidad-libre"
 import { agruparOrigenes, agruparRegistros } from "./origen-visita"
+import { enRiesgo } from "./respuesta-rapida"
 
 const DIA = 86_400_000
 const r1 = (x: number) => Math.round(x * 10) / 10
@@ -86,6 +87,8 @@ export async function tableroEstrategia(knex: any) {
       campana_precios: precios,
     },
     latam: paises,
+    // Abiertas sin propuesta con más de 2 h publicadas (lib/respuesta-rapida)
+    en_riesgo: await enRiesgo(knex).catch(() => []),
     // Registros de taller de los últimos 30 días por campaña
     talleres_origen: agruparRegistros(
       ((await knex("hetna_taller_prospecto").where("created_at", ">=", new Date(ahora - 30 * DIA)).select("datos").catch(() => [])) as any[])
