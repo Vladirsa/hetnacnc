@@ -59,6 +59,12 @@ export default async function TalleresPage({
             🏆 Ranking
           </LocalizedClientLink>
           <LocalizedClientLink
+            href="/talleres/mundo"
+            className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
+          >
+            🌎 En el mundo
+          </LocalizedClientLink>
+          <LocalizedClientLink
             href="/talleres/directorio"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
