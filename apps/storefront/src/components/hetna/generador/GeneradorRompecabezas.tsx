@@ -8,7 +8,6 @@ import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { hacerRompecabezas } from "@/lib/generador/rompecabezas"
 import { dibujoDXF, dibujoSVG } from "@/lib/generador/vectores"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10
 
@@ -90,7 +89,6 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
   const listo = !r.errores.length
   const vista = useMemo(() => (listo ? dibujoSVG(r.dibujo, "vista") : ""), [r, listo])
   const archivo = `rompecabezas-hetna-${r.piezas}-piezas-${semilla}`
-  const mensaje = `Hola HETNA CNC, quiero cotizar un rompecabezas:\n- Placa: ${ancho} × ${alto} mm\n- ${r.piezas} piezas (${columnas} × ${filas})${conMarco ? "\n- Con marco y base" : ""}`
 
   return (
     <div className="w-full bg-[#FAF9F6]">
@@ -204,16 +202,13 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
                 Fabrícamelo: que un taller lo corte
               </button>
               {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => descargar(`${archivo}.dxf`, dibujoDXF(r.dibujo), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                   Descargar DXF
                 </button>
                 <button type="button" onClick={() => descargar(`${archivo}.svg`, dibujoSVG(r.dibujo, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                   Descargar SVG
                 </button>
-                <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                  Pedir por WhatsApp
-                </a>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
                 ¿Quieres una foto en el rompecabezas? Prepárala en{" "}
