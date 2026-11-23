@@ -7,6 +7,8 @@ export type RegistroTallerInput = {
   /** Medición (no viajan al backend): aceptó cookies de publicidad y el id del evento del Pixel */
   rastreo?: boolean
   evento_id?: string
+  /** De dónde llegó la visita (lib/hetna/origen-visita.ts); sí viaja al backend */
+  origen?: { fuente: string; medio: string; campana: string; contenido: string } | null
   nombre_taller: string
   contacto?: string
   email: string

@@ -7,6 +7,7 @@ import { subirArchivo, type ArchivoGuardado } from "@/lib/subir-archivo"
 import { registrarTaller } from "@/lib/talleres/registro"
 import { nuevoEventoRegistro, trackRegistroTaller } from "@/lib/analytics/events"
 import { permiteRastreo } from "@/lib/hetna/consentimiento"
+import { leerOrigen } from "@/lib/hetna/origen-visita"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
 // Registro para unirse a la red de talleres. No es la cuenta del panel (ésa se
@@ -115,6 +116,7 @@ export default function FormRegistroTaller() {
     const r = await registrarTaller({
       rastreo,
       evento_id: eventoId,
+      origen: leerOrigen(),
       nombre_taller: v("nombre_taller"),
       contacto: v("contacto"),
       email: v("email"),

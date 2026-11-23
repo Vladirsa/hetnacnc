@@ -11,6 +11,7 @@ type Datos = {
   anterior: Periodo
   red: { talleres: number; puntualidad_pct: number | null; entregas_con_fecha: number; con_capacidad_libre: number; con_precios: number | null; campana_precios: { enviados: number; recordados: number; llenaron: number } | null }
   latam: { pais: string; talleres: number; clientes: number }[]
+  talleres_origen?: { fuente: string; campana: string; registros: number }[]
   metas: { puntualidad_pct: number; horas_primera_propuesta: number; archivos_detectados_pct: number }
 }
 
@@ -114,6 +115,25 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
                 <span className="whitespace-nowrap text-[#40403A]">
                   {o.solicitudes} solicitudes · {o.con_propuesta_elegida} eligieron taller
                 </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Tarjeta>
+
+      <Tarjeta>
+        <Titulo>De dónde vienen los talleres registrados (30 días)</Titulo>
+        {!d.talleres_origen?.length ? (
+          <Vacio>Todavía no hay registros de taller en los últimos 30 días.</Vacio>
+        ) : (
+          <ul className="divide-y divide-[#EFEDE6]">
+            {d.talleres_origen.map((o) => (
+              <li key={`${o.fuente}|${o.campana}`} className="flex justify-between gap-3 py-2 text-[13px]">
+                <span className="font-semibold">
+                  {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
+                  {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
+                </span>
+                <span className="whitespace-nowrap text-[#40403A]">{o.registros} registros</span>
               </li>
             ))}
           </ul>

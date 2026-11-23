@@ -20,6 +20,21 @@ export function limpiarOrigen(v: unknown): OrigenVisita | null {
   return r.fuente || r.campana ? r : null
 }
 
+/** Registros de taller por fuente y campaña (de más a menos). Pura. */
+export function agruparRegistros(regs: { datos?: any }[]) {
+  const m = new Map<string, { fuente: string; campana: string; registros: number }>()
+  for (const r of regs) {
+    const o = limpiarOrigen(r.datos?.origen)
+    const fuente = o?.fuente || "directo"
+    const campana = o?.campana || ""
+    const k = `${fuente}|${campana}`
+    const e = m.get(k) || { fuente, campana, registros: 0 }
+    e.registros++
+    m.set(k, e)
+  }
+  return [...m.values()].sort((a, b) => b.registros - a.registros)
+}
+
 /** Solicitudes por campaña (de la más a la menos), con cuántas eligieron propuesta. Pura. */
 export function agruparOrigenes(sols: { trabajo?: any; propuesta_elegida?: string | null }[]) {
   const m = new Map<string, { fuente: string; campana: string; solicitudes: number; con_propuesta_elegida: number }>()
