@@ -214,6 +214,8 @@ export function validarFicha(b: Record<string, any>): Ficha {
 type Producto = { id: string; title: string; handle: string; thumbnail: string | null; status: string; metadata: Record<string, any> | null }
 
 /** Productos del taller con su ficha actual. */
+const esVerdadero = (v: unknown) => v === true || v === "true"
+
 export async function productosDelTaller(container, sellerId: string) {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
@@ -234,6 +236,10 @@ export async function productosDelTaller(container, sellerId: string) {
         foto: p.thumbnail,
         estado: p.status,
         ficha: f,
+        // Para el aviso "Completa tus datos" del panel (lib/datos-faltantes.tsx):
+        // a un archivo no se le pide tiempo de entrega; a un servicio, ni material ni medida
+        digital: esVerdadero(p.metadata?.producto_digital),
+        servicio: !!p.metadata?.hetna_cam_service || esVerdadero(p.metadata?.producto_servicio) || esVerdadero(p.metadata?.producto_creditos_3d),
         completa: [f.compatibilidad.length > 0, f.videos.length > 0, f.archivos.length > 0, f.faq.length > 0].filter(Boolean).length,
       }
     })
