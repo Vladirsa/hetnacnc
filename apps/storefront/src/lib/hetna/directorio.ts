@@ -20,8 +20,13 @@ export type EmpresaDirectorio = {
   tipo: TipoDirectorio
   tamano: string
   pais: string
-  /** Estado oficial de México (normalizado) o "" si no se sabe */
+  /** Estado oficial de México (normalizado) o "" si no se sabe. Sale de la hoja o
+   *  de lo que la empresa dice de sí misma (nombre, servicios): se muestra en su perfil. */
   estado: string
+  /** Zona para el mapa y el filtro: el estado, o si no se sabe, la ciudad de la
+   *  búsqueda que la encontró ("taller de maquinados CNC en Saltillo"). Aproximada:
+   *  sólo cuenta empresas por estado, nunca se muestra como su dirección. */
+  zona: string
   ciudad: string
   servicios: string
   segmento: string
@@ -49,6 +54,50 @@ const ALIAS: Record<string, string> = {
   "ciudad de mexico": "Ciudad de México",
 }
 
+// Ciudades donde hay talleres CNC → su estado. Sirven cuando la hoja trae la
+// ciudad pero no el estado, y para leer la ubicación del nombre o los servicios.
+const CIUDADES: Record<string, string> = {
+  saltillo: "Coahuila", torreon: "Coahuila", "ramos arizpe": "Coahuila", monclova: "Coahuila", "piedras negras": "Coahuila",
+  leon: "Guanajuato", celaya: "Guanajuato", irapuato: "Guanajuato", salamanca: "Guanajuato", silao: "Guanajuato",
+  apizaco: "Tlaxcala", huamantla: "Tlaxcala", calpulalpan: "Tlaxcala",
+  guadalajara: "Jalisco", zapopan: "Jalisco", tlaquepaque: "Jalisco", tonala: "Jalisco", "el salto": "Jalisco",
+  monterrey: "Nuevo León", apodaca: "Nuevo León", "san nicolas de los garza": "Nuevo León", escobedo: "Nuevo León",
+  "santa catarina": "Nuevo León", "san pedro garza garcia": "Nuevo León", guadalupe: "Nuevo León",
+  toluca: "Estado de México", naucalpan: "Estado de México", tlalnepantla: "Estado de México", ecatepec: "Estado de México",
+  "cuautitlan izcalli": "Estado de México", nezahualcoyotl: "Estado de México", tultitlan: "Estado de México", lerma: "Estado de México",
+  cdmx: "Ciudad de México", iztapalapa: "Ciudad de México", azcapotzalco: "Ciudad de México", "gustavo a. madero": "Ciudad de México",
+  "san juan del rio": "Querétaro", "el marques": "Querétaro", corregidora: "Querétaro",
+  tijuana: "Baja California", mexicali: "Baja California", ensenada: "Baja California",
+  "ciudad juarez": "Chihuahua", juarez: "Chihuahua", "cd. juarez": "Chihuahua", delicias: "Chihuahua",
+  hermosillo: "Sonora", "ciudad obregon": "Sonora", nogales: "Sonora",
+  merida: "Yucatán", morelia: "Michoacán", uruapan: "Michoacán", cuernavaca: "Morelos",
+  pachuca: "Hidalgo", tulancingo: "Hidalgo", xalapa: "Veracruz", "coatzacoalcos": "Veracruz", orizaba: "Veracruz", cordoba: "Veracruz",
+  reynosa: "Tamaulipas", matamoros: "Tamaulipas", "nuevo laredo": "Tamaulipas", tampico: "Tamaulipas",
+  culiacan: "Sinaloa", mazatlan: "Sinaloa", "los mochis": "Sinaloa", cancun: "Quintana Roo",
+  "tuxtla gutierrez": "Chiapas", villahermosa: "Tabasco", tepic: "Nayarit", "la paz": "Baja California Sur",
+  tehuacan: "Puebla", "san martin texmelucan": "Puebla", cholula: "Puebla",
+}
+
+// Para buscar dentro de un texto sólo se usan nombres que no se confunden:
+// estados y ciudades de arriba, menos los que también son apellidos, calles o
+// colonias ("Av. Juárez", "Maquinados Guerrero", "Grupo León").
+const AMBIGUOS = new Set(["mexico", "hidalgo", "morelos", "guerrero", "juarez", "guadalupe", "leon", "cordoba", "la paz", "lerma", "corregidora", "el salto", "delicias", "matamoros", "nogales", "salamanca", "silao", "tonala", "escobedo", "el marques"])
+const EN_TEXTO: [RegExp, string][] = [
+  ...ESTADOS_MX.map((e) => [sinAcentos(e), e] as [string, string]),
+  ...Object.entries(CIUDADES),
+]
+  .filter(([n]) => !AMBIGUOS.has(n))
+  .sort((a, b) => b[0].length - a[0].length)
+  .map(([n, e]) => [new RegExp(`(^|[^a-z])${n.replace(/[.]/g, "\\.")}([^a-z]|$)`), e])
+
+/** Estado que se lee de un texto libre (nombre, servicios); "" si no aparece uno claro. */
+export function estadoEnTexto(...textos: (string | undefined)[]): string {
+  const t = sinAcentos(textos.filter(Boolean).join(" "))
+  if (!t) return ""
+  for (const [re, e] of EN_TEXTO) if (re.test(t)) return e
+  return ""
+}
+
 export function estadoMx(region?: string, ciudad?: string): string {
   for (const v of [region, ciudad]) {
     const n = sinAcentos(String(v || ""))
@@ -56,11 +105,12 @@ export function estadoMx(region?: string, ciudad?: string): string {
     const oficial = ESTADOS_MX.find((e) => sinAcentos(e) === n)
     if (oficial) return oficial
     if (ALIAS[n]) return ALIAS[n]
+    if (CIUDADES[n]) return CIUDADES[n]
   }
   return ""
 }
 
-type Crudo = Omit<EmpresaDirectorio, "estado"> & { region?: string }
+type Crudo = Omit<EmpresaDirectorio, "estado" | "zona"> & { region?: string }
 
 async function leerTodo(): Promise<EmpresaDirectorio[]> {
   try {
@@ -74,7 +124,12 @@ async function leerTodo(): Promise<EmpresaDirectorio[]> {
     const { empresas = [] } = (await res.json()) as { empresas?: Crudo[] }
     return empresas
       .filter((e) => e && e.slug && e.empresa)
-      .map(({ region, ...e }) => ({ ...e, estado: estadoMx(region, e.ciudad) }))
+      .map(({ region, ...e }) => {
+        // Si la hoja no trae estado ni una ciudad conocida, se busca en el nombre y
+        // los servicios ("Corte láser CDMX", "Maquinados en Saltillo").
+        const estado = estadoMx(region, e.ciudad) || estadoEnTexto(e.empresa, e.servicios)
+        return { ...e, estado, zona: estado || estadoEnTexto(e.segmento) }
+      })
   } catch {
     return []
   }
@@ -96,11 +151,11 @@ export type PorUnirse = Record<string, { total: number; municipios: [string, num
 export function contarPorEstado(empresas: EmpresaDirectorio[]): PorUnirse {
   const m = new Map<string, Map<string, number>>()
   for (const e of empresas) {
-    if (!e.estado) continue
+    if (!e.zona) continue
     const mun = e.ciudad || "Otros municipios"
-    const porMun = m.get(e.estado) ?? new Map<string, number>()
+    const porMun = m.get(e.zona) ?? new Map<string, number>()
     porMun.set(mun, (porMun.get(mun) ?? 0) + 1)
-    m.set(e.estado, porMun)
+    m.set(e.zona, porMun)
   }
   const salida: PorUnirse = {}
   for (const [estado, porMun] of m) {
