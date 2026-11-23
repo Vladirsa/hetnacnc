@@ -15,6 +15,9 @@ export type ArchivoSubido = { clave: string; nombre: string; tamano: number }
 export type SolicitudTallerInput = {
   /** Medición: la persona aceptó cookies de publicidad (no viaja al backend) */
   rastreo?: boolean
+  /** «Que HETNA elija por mí» y lo más que quiere pagar (los talleres no lo ven) */
+  hetna_elige?: boolean
+  tope_precio?: string
   /** De dónde llegó la visita (lib/hetna/origen-visita.ts) */
   origen?: { fuente: string; medio: string; campana: string; contenido: string } | null
   taller?: string
@@ -189,7 +192,7 @@ export type VistaSolicitud = {
   pago_estado: string | null
   propuestas: Propuesta[]
   /** Estrategia 3.3: la que mejor equilibra precio, plazo y cumplimiento del taller (lib/asignacion del API) */
-  recomendada?: { id: string; puntaje: number; razones: string[] } | null
+  recomendada?: { id: string; puntaje: number; razones: string[]; hetna_elige?: boolean } | null
   // Seguimiento (ver lib/seguimiento del API)
   etapa?: string
   etapa_nombre?: string
