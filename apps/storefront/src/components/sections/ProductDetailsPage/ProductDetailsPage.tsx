@@ -12,7 +12,7 @@ import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { productoExtra } from "@/lib/hetna/producto-extra"
 import { VideoProducto } from "@/components/hetna/VenderMas"
@@ -63,6 +63,11 @@ export const ProductDetailsPage = async ({
   // vacía, y además era la razón de que el contador de vistas nunca registrara
   // nada (sin ficha dibujada, no hay componente que avise).
   if (!prod) {
+    // Direcciones del sitio anterior o fichas renombradas: si hay un producto
+    // con casi el mismo nombre, se manda ahí con 308 (el buscador pasa el
+    // posicionamiento). Si no hay uno claramente igual, 404 honesto.
+    const sucesor = await fichaParecida(handle, locale)
+    if (sucesor) permanentRedirect(`/${locale}/products/${sucesor}`)
     notFound()
   }
 
@@ -295,4 +300,40 @@ export const ProductDetailsPage = async ({
       </div>
     </>
   )
+}
+
+// Palabras del handle que sirven para comparar (sin "de", "para", números sueltos…)
+const VACIAS = new Set(["de", "del", "la", "el", "los", "las", "para", "con", "y", "en", "a", "un", "una", "por", "pieza", "gratis"])
+const palabras = (h: string) =>
+  new Set(
+    decodeURIComponent(h)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !VACIAS.has(w) && !/^\d+$/.test(w))
+  )
+
+/** Handle de un producto actual casi igual al pedido, o null. */
+async function fichaParecida(handle: string, locale: string): Promise<string | null> {
+  const buscadas = palabras(handle)
+  if (buscadas.size < 2) return null
+  try {
+    const { response } = await listProducts({
+      countryCode: locale,
+      queryParams: { q: [...buscadas].slice(0, 6).join(" "), limit: 10 } as never,
+    })
+    let mejor: { handle: string; parecido: number } | null = null
+    for (const p of response.products) {
+      if (!p.handle) continue
+      const suyas = palabras(p.handle)
+      const comunes = [...buscadas].filter((w) => suyas.has(w)).length
+      // Jaccard: comunes / todas las distintas de los dos
+      const parecido = comunes / new Set([...buscadas, ...suyas]).size
+      if (!mejor || parecido > mejor.parecido) mejor = { handle: p.handle, parecido }
+    }
+    return mejor && mejor.parecido >= 0.6 ? mejor.handle : null
+  } catch {
+    return null
+  }
 }

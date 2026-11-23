@@ -224,6 +224,12 @@ const nextConfig: NextConfig = {
         destination: "/mx/products/:handle",
         permanent: true,
       },
+      // Fichas del sitio anterior (WooCommerce) que Google todavía tiene:
+      // /product/<slug>, /prod/<slug> y /producto/<slug>. Van a la ficha nueva
+      // con el mismo nombre; si ya no existe, la ficha busca la más parecida
+      // (ProductDetailsPage) y si no hay, da 404.
+      { source: "/:locale([a-z]{2})/:viejo(product|prod)/:handle", destination: "/:locale/products/:handle", permanent: true },
+      { source: "/:viejo(product|prod)/:handle", destination: "/mx/products/:handle", permanent: true },
     ]
   },
 
