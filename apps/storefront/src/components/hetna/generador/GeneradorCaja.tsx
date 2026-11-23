@@ -820,15 +820,19 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
         <Boton onClick={() => listo && imprimir()}>PDF</Boton>
       </div>
+      {/* En celular el precio va aquí; en computadora, en la barra debajo de la
+          vista, para no tapar los controles del diseño (Vlado, 23 nov 2026) */}
       {listo && (
-        <PrecioFabricar
-          dxf={aDXF(r.piezas)}
-          nombreArchivo={nombreArchivo}
-          pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
-          medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
-          maquina={maquina === "router" ? "router" : "laser"}
-          espesorMm={esp}
-        />
+        <div className="lg:hidden">
+          <PrecioFabricar
+            dxf={aDXF(r.piezas)}
+            nombreArchivo={nombreArchivo}
+            pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
+            medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
+            maquina={maquina === "router" ? "router" : "laser"}
+            espesorMm={esp}
+          />
+        </div>
       )}
       <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>Preguntar por WhatsApp</Boton>
       {aviso && <Aviso tipo="error">{aviso}</Aviso>}
@@ -952,6 +956,19 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       avisos={[]}
       pestanaInicial="vista"
       pie={pie}
+      barraFabricar={
+        listo ? (
+          <PrecioFabricar
+            barra
+            dxf={aDXF(r.piezas)}
+            nombreArchivo={nombreArchivo}
+            pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
+            medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
+            maquina={maquina === "router" ? "router" : "laser"}
+            espesorMm={esp}
+          />
+        ) : null
+      }
       medidasReales={listo ? r.armado : undefined}
       sinPieza={r.errores[0] || "Revisa las medidas del panel."}
       barra={
