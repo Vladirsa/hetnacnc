@@ -7,7 +7,6 @@ import { mandarAFabricar } from "@/lib/generador/aCotizador"
 
 import { type Difusion, type Estilo, type OpcionesGrabado, aGris, cobertura, grabar, pngConDPI } from "@/lib/generador/grabado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const MAX_PX = 25_000_000 // imagen final
 const MAX_VISTA = 1_200_000 // vista previa
@@ -221,11 +220,6 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
       if (!ok) setAvisoFabricar("La imagen es muy grande para mandarla así. Descarga el PNG y súbelo en la solicitud.")
     })
 
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar el grabado láser de una foto:\n` +
-    `- Tamaño: ${r1(anchoMM)} × ${r1(altoMM)} mm\n` +
-    `- Material: ${material}`
-
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
@@ -373,9 +367,6 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
               </button>
             </div>
             {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
-            <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="text-center text-[13px] font-semibold text-[#B34D07] hover:underline">
-              O pídelo por WhatsApp
-            </a>
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
               El PNG lleva guardada la resolución: LightBurn y otros programas lo abren al tamaño exacto. En el programa usa el modo «pasar» (threshold o pass-through) para que no vuelva a tramar la imagen.
             </p>
