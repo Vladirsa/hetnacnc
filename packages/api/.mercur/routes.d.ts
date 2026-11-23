@@ -650,6 +650,7 @@ export type Routes = {
             imagen: typeof import("../src/api/admin/hetna-subir-disenos/imagen/route");
             publicar: typeof import("../src/api/admin/hetna-subir-disenos/publicar/route");
         };
+        hetnaVentas: typeof import("../src/api/admin/hetna-ventas/route");
         hetnaVerificacion: typeof import("../src/api/admin/hetna-verificacion/route") & {
             $sellerId: typeof import("../src/api/admin/hetna-verificacion/[sellerId]/route") & {
                 archivos: {
@@ -955,6 +956,11 @@ export type Routes = {
         };
         packs: typeof import("../src/api/store/packs/route");
         precioInstantaneo: typeof import("../src/api/store/precio-instantaneo/route");
+        proveedor: {
+            ordenes: typeof import("../src/api/store/proveedor/ordenes/route") & {
+                $id: typeof import("../src/api/store/proveedor/ordenes/[id]/route");
+            };
+        };
         quoteLeads: typeof import("../src/api/store/quote-leads/route");
         recursosAcademia: typeof import("../src/api/store/recursos-academia/route");
         resenas: typeof import("../src/api/store/resenas/route") & {
@@ -1450,6 +1456,7 @@ export type Routes = {
         cotizadorComision: {
             paypal: typeof import("../src/api/api/cotizador-comision/paypal/route");
         };
+        cotizadorExportar: typeof import("../src/api/api/cotizador-exportar/route");
         cotizadorMarketing: typeof import("../src/api/api/cotizador-marketing/route") & {
             correr: typeof import("../src/api/api/cotizador-marketing/correr/route");
         };

@@ -53,6 +53,14 @@ const dinero = (n: number, moneda = "mxn") =>
   Number(n || 0).toLocaleString("es-MX", { style: "currency", currency: moneda.toUpperCase() })
 
 export const ligaPedido = (id: string) => `${STORE_URL}/mx/user/orders/${id}`
+
+/**
+ * Compra digital: sin envío, o sólo con "Entrega digital" (el taller de puros
+ * digitales la elige al pagar, lib/envios-automaticos.ts). Antes sólo contaba
+ * "sin envío" y a una compra digital le llegaba "el taller lo está preparando".
+ */
+export const esPedidoDigital = (metodos?: ({ name?: string | null } | null)[] | null) =>
+  !(metodos || []).length || (metodos || []).every((m) => /entrega digital/i.test(String(m?.name || "")))
 const PIE = `Escribe "Hola" en cualquier momento si tienes una duda. 💬\n_Escribe BAJA para no recibir avisos._`
 
 /** El texto de cada etapa. Corto, con el número de pedido y su liga, como las tiendas grandes. */
@@ -117,7 +125,7 @@ export async function datosPedido(container: any, orderId: string): Promise<Dato
     nombre,
     articulos: (o.items || []).reduce((a: number, i: any) => a + Number(i.quantity || 0), 0),
     total: dinero(o.total, o.currency_code || "mxn"),
-    digital: !(o.shipping_methods || []).length,
+    digital: esPedidoDigital(o.shipping_methods),
     entregado: (o.fulfillments || []).some((f: any) => !f.canceled_at && f.delivered_at),
     envio: String(o.shipping_methods?.[0]?.name || ""),
     paqueteria: String(guia?.paqueteria || ""),
