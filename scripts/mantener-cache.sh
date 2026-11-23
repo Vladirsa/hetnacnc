@@ -15,7 +15,7 @@ set -u
 SITIO="${SITIO:-https://hetnacnc.com}"
 PAGINAS="/mx /us /mx/cotizar /mx/cotizar/corte-laser /mx/cotizar/router-cnc /mx/cotizar/corte-plasma /mx/cotizar/impresion-3d
 /mx/talleres /mx/talleres/ranking /mx/calculadora-cnc /mx/herramientas-cnc /mx/fabricacion /mx/distribuidores
-/mx/latinoamerica /mx/creadores /mx/cnc"
+/mx/latinoamerica /mx/espana /mx/estados-unidos /mx/creadores /mx/cnc"
 
 exec 9>/tmp/hetna-mantener-cache.lock
 flock -n 9 || exit 0

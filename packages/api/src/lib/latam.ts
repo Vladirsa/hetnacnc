@@ -20,6 +20,8 @@ export const PAISES_LATAM: Record<string, { nombre: string; moneda: string; band
   bo: { nombre: "Bolivia", moneda: "BOB", bandera: "🇧🇴" },
   do: { nombre: "República Dominicana", moneda: "DOP", bandera: "🇩🇴" },
   es: { nombre: "España", moneda: "EUR", bandera: "🇪🇸" },
+  // EUA hispano (fase 5.2)
+  us: { nombre: "Estados Unidos", moneda: "USD", bandera: "🇺🇸" },
 }
 
 let lista = false

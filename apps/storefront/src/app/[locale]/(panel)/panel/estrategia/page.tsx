@@ -22,7 +22,7 @@ type Fase4 = {
   compensaciones: { solicitud_id: string; folio: string; total: number; dias_tarde: number; monto: number; estado: string; created_at: string }[]
 }
 
-const PAIS: Record<string, string> = { co: "🇨🇴 Colombia", cl: "🇨🇱 Chile", pe: "🇵🇪 Perú", ar: "🇦🇷 Argentina", gt: "🇬🇹 Guatemala", ec: "🇪🇨 Ecuador", cr: "🇨🇷 Costa Rica", bo: "🇧🇴 Bolivia", do: "🇩🇴 Rep. Dominicana", es: "🇪🇸 España" }
+const PAIS: Record<string, string> = { co: "🇨🇴 Colombia", cl: "🇨🇱 Chile", pe: "🇵🇪 Perú", ar: "🇦🇷 Argentina", gt: "🇬🇹 Guatemala", ec: "🇪🇨 Ecuador", cr: "🇨🇷 Costa Rica", bo: "🇧🇴 Bolivia", do: "🇩🇴 Rep. Dominicana", es: "🇪🇸 España", us: "🇺🇸 Estados Unidos" }
 
 const cambio = (a: number, b: number) => (b ? `${a >= b ? "+" : ""}${Math.round(((a - b) / b) * 100)} % vs. mes anterior` : a ? "nuevo este mes" : undefined)
 const horas = (h: number | null) => (h == null ? "—" : h < 1 ? `${Math.round(h * 60)} min` : h < 48 ? `${h} h` : `${Math.round(h / 24)} días`)
