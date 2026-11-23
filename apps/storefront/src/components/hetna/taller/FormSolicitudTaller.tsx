@@ -24,6 +24,7 @@ import {
 import { type AfiliacionNueva, type ArchivoSubido, enviarSolicitudTaller } from "@/lib/cotizar/solicitud-taller"
 import { trackSolicitudFabricacion } from "@/lib/analytics/events"
 import { permiteRastreo } from "@/lib/hetna/consentimiento"
+import { leerOrigen } from "@/lib/hetna/origen-visita"
 import { haySesionCliente } from "@/lib/data/customer"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
@@ -311,6 +312,7 @@ export default function FormSolicitudTaller({
     const rastreo = permiteRastreo()
     const r = await enviarSolicitudTaller({
       rastreo,
+      origen: leerOrigen(),
       crear_cuenta: !conSesion && crearCuenta,
       taller,
       abierta: !taller || abiertaOtros,

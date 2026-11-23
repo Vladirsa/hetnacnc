@@ -5,6 +5,7 @@ import { resumenCampanaPrecios } from "./campana-precios-talleres"
 import { conteoLatam } from "./latam"
 import { T_PROPUESTA, T_SOLICITUD } from "./licitacion"
 import { capacidadVigente } from "./capacidad-libre"
+import { agruparOrigenes } from "./origen-visita"
 
 const DIA = 86_400_000
 const r1 = (x: number) => Math.round(x * 10) / 10
@@ -36,8 +37,8 @@ async function periodo(knex: any, desde: Date, hasta: Date) {
     .where("created_at", ">=", desde)
     .where("created_at", "<", hasta)
     .whereRaw("coalesce(tipo, 'fabricacion') <> 'suministro'")
-    .select("id", "created_at", "trabajo")
-    .catch(() => knex(T_SOLICITUD).where("created_at", ">=", desde).where("created_at", "<", hasta).select("id", "created_at", "trabajo"))) as any[]
+    .select("id", "created_at", "trabajo", "propuesta_elegida")
+    .catch(() => knex(T_SOLICITUD).where("created_at", ">=", desde).where("created_at", "<", hasta).select("id", "created_at", "trabajo", "propuesta_elegida"))) as any[]
   const ids = sols.map((s) => s.id)
   const primeras = ids.length
     ? ((await knex(T_PROPUESTA).whereIn("solicitud_id", ids).groupBy("solicitud_id").select("solicitud_id").min({ primera: "created_at" })) as any[])
@@ -55,6 +56,8 @@ async function periodo(knex: any, desde: Date, hasta: Date) {
     talleres_activos: Number(talleresActivos?.n || 0),
     archivos_revisados: conArchivo.length,
     archivos_con_problema: conProblema.length,
+    // De dónde vinieron (anuncios, correo, Google, directo)
+    origenes: agruparOrigenes(sols),
   }
 }
 

@@ -5,8 +5,12 @@
 // direcciones, para que no se comparta ni se cuente otra vez al recargar.
 import { useEffect } from "react"
 
+import { guardarOrigen } from "@/lib/hetna/origen-visita"
+
 export function RastreoCorreo() {
   useEffect(() => {
+    // De dónde llegó (anuncio, correo, Google…) para el tablero de campañas
+    guardarOrigen(window.location.href, document.referrer)
     try {
       const u = new URL(window.location.href)
       const e = u.searchParams.get("e")
