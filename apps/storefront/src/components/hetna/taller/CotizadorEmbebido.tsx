@@ -5,19 +5,15 @@ import { useEffect, useRef, useState } from "react"
 import { usarAltoLibre } from "../usarAltoLibre"
 
 import { cargarEnCotizador } from "@/lib/generador/aCotizador"
-import {
-  tallerBorrar,
-  tallerCargar,
-  tallerEstado,
-  tallerGuardarConfig,
-  tallerRegistrar,
-} from "@/lib/taller/acciones"
 
-// Abre el Cotizador CNC como app a todo lo ancho, debajo del encabezado de la tienda.
-// La app (public/hetna-cotizador/app.html) habla con la tienda por este puente:
-// cargar/guardar la cuenta del taller, registrar cotizaciones y cambiar de pagina.
+// Abre el Cotizador CNC rápido (public/hetna-cotizador/app.html) a todo lo
+// ancho, debajo del encabezado de la tienda. Sólo en modo demostración: calcula
+// en el navegador y no guarda nada. El modo "cuenta" (guardaba en el esquema
+// viejo taller.*) se retiró: las cotizaciones de los talleres viven en la app
+// del Cotizador (Supabase). Si alguien quiere guardar, el modal de la app lo
+// manda a registrarse.
 
-type Modo = "cuenta" | "demo"
+type Modo = "demo"
 
 declare global {
   interface Window {
@@ -42,11 +38,6 @@ export const CotizadorEmbebido = ({
     const aqui = `/${locale}/servicios/cotizador-cnc`
     window.HETNA_PUENTE = {
       modo,
-      cargar: () => tallerCargar(),
-      guardarConfig: (c: Record<string, unknown>) => tallerGuardarConfig(c),
-      registrar: (p: Record<string, unknown>) => tallerRegistrar(p),
-      estado: (id: string, e: string) => tallerEstado(id, e),
-      borrar: (id: string) => tallerBorrar(id),
       whatsappHetna: "522217076014",
       irA: (destino: string) => {
         if (destino === "cerrar" && onCerrar) return onCerrar()

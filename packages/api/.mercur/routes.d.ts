@@ -850,16 +850,6 @@ export type Routes = {
             pruebas: typeof import("../src/api/store/cam/pruebas/route");
         };
         cotizadorVinculo: typeof import("../src/api/store/cotizador-vinculo/route");
-        cotizador: {
-            calcular: typeof import("../src/api/store/cotizador/calcular/route");
-            cotizaciones: typeof import("../src/api/store/cotizador/cotizaciones/route") & {
-                $id: typeof import("../src/api/store/cotizador/cotizaciones/[id]/route") & {
-                    enviar: typeof import("../src/api/store/cotizador/cotizaciones/[id]/enviar/route");
-                };
-            };
-            perfil: typeof import("../src/api/store/cotizador/perfil/route");
-            servicios: typeof import("../src/api/store/cotizador/servicios/route");
-        };
         courses: typeof import("../src/api/store/courses/route") & {
             $slug: typeof import("../src/api/store/courses/[slug]/route") & {
                 acceso: typeof import("../src/api/store/courses/[slug]/acceso/route");
