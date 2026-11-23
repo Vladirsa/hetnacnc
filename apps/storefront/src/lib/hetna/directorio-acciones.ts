@@ -3,7 +3,7 @@
 // Avisos del directorio de perfiles no reclamados (ver lib/hetna/directorio.ts).
 // Sólo mandan a n8n el slug y QUÉ se pidió; nunca el nombre, correo ni teléfono
 // del cliente. n8n limita los avisos (1 por empresa cada 7 días, 25 al día).
-import { empresaPorSlug } from "./directorio"
+import { empresaCualquierPais, empresaPorSlug } from "./directorio"
 
 const N8N = process.env.HETNA_N8N_WEBHOOKS || "https://n8n.hetnacnc.com/webhook"
 const corto = (s: unknown, n: number) => String(s ?? "").trim().slice(0, n)
@@ -49,7 +49,7 @@ export async function avisarInteresDirectorio(d: DatosInteres): Promise<boolean>
 
 /** «Quitar este perfil»: la confirmación llega al correo de la propia empresa. */
 export async function pedirRetiroDirectorio(slug: string): Promise<boolean> {
-  const empresa = await empresaPorSlug(slug)
+  const empresa = await empresaCualquierPais(slug)
   if (!empresa) return false
   return postar("hetna-directorio-quitar", { slug: empresa.slug })
 }

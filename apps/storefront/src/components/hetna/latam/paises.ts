@@ -1,6 +1,7 @@
 // Mismos países que packages/api/src/lib/latam.ts. `cotizador`: el Cotizador
 // para talleres ya funciona ahí con su moneda e impuesto (app: lib/services/pais.dart).
-export type PaisLatam = { clave: string; nombre: string; bandera: string; moneda: string; cotizador?: string; ciudades: string[]; nota?: string; region?: "latam" | "eua" | "europa" }
+export type PaisLatam = { clave: string; nombre: string; bandera: string; moneda: string; cotizador?: string; ciudades: string[]; nota?: string; region?: "latam" | "eua" | "europa"; en_hoja?: string[] }
+// `en_hoja`: otras formas en que el buscador escribe el país en la hoja de prospectos.
 
 export const PAISES_LATAM: PaisLatam[] = [
   { clave: "co", nombre: "Colombia", bandera: "🇨🇴", moneda: "pesos colombianos", cotizador: "pesos colombianos e IVA del 19%", ciudades: ["Bogotá", "Medellín", "Cali", "Barranquilla", "Bucaramanga"] },
@@ -11,8 +12,8 @@ export const PAISES_LATAM: PaisLatam[] = [
   { clave: "ec", nombre: "Ecuador", bandera: "🇪🇨", moneda: "dólares", ciudades: ["Quito", "Guayaquil", "Cuenca"] },
   { clave: "cr", nombre: "Costa Rica", bandera: "🇨🇷", moneda: "colones", ciudades: ["San José", "Alajuela", "Heredia"] },
   { clave: "bo", nombre: "Bolivia", bandera: "🇧🇴", moneda: "bolivianos", ciudades: ["Santa Cruz", "La Paz", "Cochabamba"] },
-  { clave: "do", nombre: "República Dominicana", bandera: "🇩🇴", moneda: "pesos dominicanos", ciudades: ["Santo Domingo", "Santiago de los Caballeros"] },
-  { clave: "es", nombre: "España", bandera: "🇪🇸", moneda: "euros", ciudades: ["Madrid", "Barcelona", "Valencia", "Sevilla"], region: "europa" },
+  { clave: "do", en_hoja: ["Republica Dominicana", "Dominicana"], nombre: "República Dominicana", bandera: "🇩🇴", moneda: "pesos dominicanos", ciudades: ["Santo Domingo", "Santiago de los Caballeros"] },
+  { clave: "es", nombre: "España", bandera: "🇪🇸", moneda: "euros", ciudades: ["Madrid", "Barcelona", "Valencia", "Sevilla"], region: "europa", en_hoja: ["Espana", "Spain"] },
   // EUA hispano (fase 5.2): talleres y clientes que trabajan en español
   {
     clave: "us",
@@ -22,7 +23,11 @@ export const PAISES_LATAM: PaisLatam[] = [
     ciudades: ["Los Ángeles", "Houston", "Dallas", "San Antonio", "Phoenix", "Chicago", "Miami"],
     nota: "Pensado para talleres y clientes hispanos: todo en español, de un taller a otro.",
     region: "eua",
+    en_hoja: ["EE. UU.", "EEUU", "USA", "United States"],
   },
+  { clave: "uy", nombre: "Uruguay", bandera: "🇺🇾", moneda: "pesos uruguayos", ciudades: ["Montevideo", "Canelones", "Maldonado"] },
+  { clave: "py", nombre: "Paraguay", bandera: "🇵🇾", moneda: "guaraníes", ciudades: ["Asunción", "Ciudad del Este", "Encarnación"] },
+  { clave: "sv", nombre: "El Salvador", bandera: "🇸🇻", moneda: "dólares", ciudades: ["San Salvador", "Santa Ana", "San Miguel"] },
 ]
 
 /** Dirección de la página de pre-registro de cada país (España y EUA con la suya propia). */
