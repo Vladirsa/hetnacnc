@@ -17,6 +17,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { STORE_URL, VENDOR_URL, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
 import { T_GUIAS } from "./guias"
+import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 import { esPedidoDigital } from "./whatsapp-pedidos"
 
 export const T_CORREO_PEDIDO = "hetna_correo_pedido"
@@ -25,15 +26,12 @@ export type EtapaCorreo = "recibido" | "en_camino" | "cancelado" | "taller_nuevo
 let listo = false
 async function asegurar(knex: any) {
   if (listo) return
-  if (!(await knex.schema.hasTable(T_CORREO_PEDIDO))) {
-    await knex.schema.createTable(T_CORREO_PEDIDO, (t: any) => {
-      t.text("order_id").notNullable()
-      t.text("etapa").notNullable()
-      t.text("para").notNullable()
-      t.timestamp("enviado_en", { useTz: true }).notNullable().defaultTo(knex.fn.now())
-      t.primary(["order_id", "etapa", "para"])
-    })
-  }
+  // "if not exists": Mercur emite order.placed de cada pedido dividido casi a la
+  // vez; con hasTable + createTable dos corridas chocaban y una perdía su correo
+  await knex.raw(`create table if not exists ${T_CORREO_PEDIDO} (
+    order_id text not null, etapa text not null, para text not null,
+    enviado_en timestamptz not null default now(),
+    primary key (order_id, etapa, para))`)
   listo = true
 }
 
@@ -55,6 +53,7 @@ export type Pedido = {
   envio: string
   direccion: string[]
   digital: boolean
+  pagado: boolean
   paqueteria: string
   guia: string
   rastreo: string
@@ -73,6 +72,7 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
       "items.title", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "shipping_methods.name",
       "fulfillments.canceled_at", "fulfillments.labels.tracking_number", "fulfillments.labels.tracking_url",
+      ...CAMPOS_PAGO,
     ],
     filters: { id: orderId },
   })
@@ -119,9 +119,11 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
     envio: String(o.shipping_methods?.[0]?.name || ""),
     direccion,
     digital: esPedidoDigital(o.shipping_methods),
+    pagado: pedidoPagado(o),
     paqueteria: String(guia?.paqueteria || ""),
     guia: String(guia?.guia || etiqueta?.tracking_number || ""),
-    rastreo: String(guia?.rastreo_url || etiqueta?.tracking_url || ""),
+    // Sólo ligas web: la liga de rastreo la puede escribir el taller y va en un botón
+    rastreo: /^https?:\/\//i.test(String(guia?.rastreo_url || etiqueta?.tracking_url || "")) ? String(guia?.rastreo_url || etiqueta?.tracking_url) : "",
   }
 }
 
@@ -166,7 +168,11 @@ export function correoCliente(etapa: Exclude<EtapaCorreo, "taller_nuevo">, d: Pe
       asunto: `Recibimos tu pedido ${d.numero} 📦`,
       html: marco(
         `Recibimos tu pedido ${d.numero}`,
-        p(`${hola} Tu pedido${deTaller} ya está confirmado. El taller lo está preparando y te avisaremos por correo cuando vaya en camino.`) +
+        p(
+          d.pagado
+            ? `${hola} Tu pedido${deTaller} ya está confirmado. El taller lo está preparando y te avisaremos por correo cuando vaya en camino.`
+            : `${hola} Recibimos tu pedido${deTaller}. Falta confirmar el pago: el taller se pondrá en contacto contigo. Cuando vaya en camino te avisaremos por correo.`
+        ) +
           tablaRenglones(d) +
           bloqueDireccion(d) +
           ligaCliente(d) +
@@ -206,9 +212,10 @@ export function correoTaller(d: Pedido): { asunto: string; html: string } {
     html: marco(
       `Pedido nuevo ${d.numero}`,
       p(
-        d.digital
-          ? "Vendiste un producto digital. Al cliente ya le llegó su descarga: no tienes que enviar nada."
-          : "Tienes un pedido nuevo para preparar. Cuando lo tengas listo, genera la guía desde tu panel: al cliente le llega el aviso de que va en camino."
+        (d.pagado ? "" : "<b>Pago pendiente:</b> ponte de acuerdo con el cliente antes de preparar el pedido. ") +
+          (d.digital
+            ? "Este pedido no lleva envío por paquetería. Revisa los detalles en tu panel."
+            : "Tienes un pedido nuevo para preparar. Cuando lo tengas listo, genera la guía desde tu panel: al cliente le llega el aviso de que va en camino.")
       ) +
         tablaRenglones(d) +
         bloqueDireccion(d) +
@@ -246,7 +253,7 @@ export async function correoPedido(container: any, orderId: string, etapas: Etap
       if (r?.sent) {
         n++
       } else {
-        // No salió: se libera para que un reintento lo mande
+        // No salió: se libera la reserva (si el mismo evento vuelve a llegar, se reintenta)
         await knex(T_CORREO_PEDIDO).where({ order_id: d.id, etapa, para: destino }).del().catch(() => null)
         logger?.warn?.(`[correo-pedido] ${d.numero} ${etapa}: ${r?.reason || "no se envió"}`)
       }

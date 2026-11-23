@@ -6,7 +6,7 @@ const base: Pedido = {
   taller: { id: "s1", nombre: "Taller <b>X</b>", email: "t@ejemplo.com" },
   renglones: [{ titulo: "Fresa <script>", presentacion: "6 mm", cantidad: 2, precio: "$100.00", foto: "" }],
   subtotal: "$100.00", envioCosto: "$50.00", total: "$150.00", envio: "Envío económico",
-  direccion: ["Ana López", "Calle 1", "Puebla, Puebla, 72000"], digital: false, paqueteria: "Estafeta", guia: "123", rastreo: "https://r.ejemplo.com/123",
+  direccion: ["Ana López", "Calle 1", "Puebla, Puebla, 72000"], digital: false, pagado: true, paqueteria: "Estafeta", guia: "123", rastreo: "https://r.ejemplo.com/123",
 }
 
 describe("Correos del pedido", () => {
@@ -31,7 +31,9 @@ describe("Correos del pedido", () => {
 
   it("taller: pedido nuevo con liga a su panel; digital no pide enviar", () => {
     expect(correoTaller(base).html).toContain("/orders/order_1")
-    expect(correoTaller({ ...base, digital: true }).html).toContain("no tienes que enviar nada")
+    expect(correoTaller({ ...base, digital: true }).html).toContain("no lleva envío por paquetería")
+    expect(correoTaller({ ...base, pagado: false }).html).toContain("Pago pendiente")
+    expect(correoCliente("recibido", { ...base, pagado: false }).html).toContain("Falta confirmar el pago")
   })
 
   it("compra digital: sin envío o sólo Entrega digital", () => {
