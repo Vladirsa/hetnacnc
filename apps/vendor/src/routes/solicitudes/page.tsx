@@ -969,15 +969,49 @@ function Contraofertas({ sol, alResponder }) {
   )
 }
 
+// Responder rápido: lo que casi siempre es igual en las propuestas de un taller
+// (garantía, condiciones de pago, vigencia, envío, anticipo) se recuerda de su
+// última propuesta en este navegador y se pone solo en la siguiente.
+const CLAVE_BASE = "hetna-propuesta-base"
+function leerBase() {
+  try {
+    return JSON.parse(localStorage.getItem(CLAVE_BASE) || "null") || null
+  } catch {
+    return null
+  }
+}
+function guardarBase(f) {
+  try {
+    const { condiciones_pago, garantia, vigencia_dias, incluye_envio, anticipo_pct, moneda } = f
+    localStorage.setItem(CLAVE_BASE, JSON.stringify({ condiciones_pago, garantia, vigencia_dias, incluye_envio, anticipo_pct, moneda }))
+  } catch {
+    /* sin localStorage: nada */
+  }
+}
+// Fecha de entrega a partir de los días de fabricación (hábiles: sin sábado ni domingo)
+function fechaDesdeDias(dias) {
+  const n = Math.round(Number(dias))
+  if (!(n >= 1 && n <= 365)) return ""
+  const d = new Date()
+  let quedan = n
+  while (quedan > 0) {
+    d.setDate(d.getDate() + 1)
+    if (d.getDay() !== 0 && d.getDay() !== 6) quedan--
+  }
+  return d.toISOString().slice(0, 10)
+}
+
 function FormPropuesta({ sol, alGuardar, cobroTaller }) {
   const p = sol.mi_propuesta
+  const base = p ? null : leerBase()
+  const materialPedido = sol.trabajo?.material ? `${sol.trabajo.material} (el que pidió el cliente)` : ""
   const [f, setF] = useState({
-    precio: p?.precio ?? "", dias: p?.dias ?? "", vigencia_dias: p?.vigencia_dias ?? 15,
-    incluye_envio: p?.incluye_envio ?? false, condiciones: p?.condiciones ?? "",
-    anticipo_pct: p?.anticipo_pct ?? 50,
+    precio: p?.precio ?? "", dias: p?.dias ?? "", vigencia_dias: p?.vigencia_dias ?? base?.vigencia_dias ?? 15,
+    incluye_envio: p?.incluye_envio ?? base?.incluye_envio ?? false, condiciones: p?.condiciones ?? "",
+    anticipo_pct: p?.anticipo_pct ?? base?.anticipo_pct ?? 50,
     // Licitaciones 3.0 (Fase 2): propuesta formal
-    moneda: p?.moneda ?? "MXN", materiales: p?.materiales ?? "", operaciones: p?.operaciones ?? "",
-    fecha_entrega: p?.fecha_entrega ?? "", condiciones_pago: p?.condiciones_pago ?? "", garantia: p?.garantia ?? "",
+    moneda: p?.moneda ?? base?.moneda ?? "MXN", materiales: p?.materiales ?? materialPedido, operaciones: p?.operaciones ?? "",
+    fecha_entrega: p?.fecha_entrega ?? "", condiciones_pago: p?.condiciones_pago ?? base?.condiciones_pago ?? "", garantia: p?.garantia ?? base?.garantia ?? "",
     observaciones: p?.observaciones ?? "",
     motivo_cambio: "",
   })
@@ -1014,6 +1048,9 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
   const [msg, setMsg] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
+  // Al escribir los días, la fecha de entrega se calcula sola (si no la cambió a mano)
+  const [fechaAMano, setFechaAMano] = useState(Boolean(p?.fecha_entrega))
+  const setDias = (v) => setF((x) => ({ ...x, dias: v, ...(fechaAMano ? {} : { fecha_entrega: fechaDesdeDias(v) }) }))
 
   const enviar = async () => {
     setEnviando(true)
@@ -1028,6 +1065,7 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
       })
       const d = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(d.message || String(r.status))
+      guardarBase(f)
       setMsg({ ok: true, t: d.actualizada ? "Propuesta actualizada." : "Propuesta enviada. Le avisamos al cliente." })
       alGuardar()
     } catch (e) {
@@ -1039,6 +1077,11 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
 
   return (
     <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
+      {base && (base.garantia || base.condiciones_pago) && (
+        <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#17633A", background: "#EEF7F0", padding: "8px 10px", borderRadius: 8 }}>
+          Pusimos tu garantía y condiciones de pago de tu última propuesta. Sólo escribe precio y días; revisa lo demás.
+        </p>
+      )}
       {p && (
         <div style={{ marginBottom: 10 }}>
           <label style={S.label}>Motivo del cambio (lo ve el cliente en el historial · versión {p.version || 1} → {(p.version || 1) + 1})</label>
@@ -1060,11 +1103,11 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
         </div>
         <div>
           <label style={S.label}>Días de fabricación *</label>
-          <input style={S.input} type="number" min="1" value={f.dias} onChange={(e) => set("dias", e.target.value)} placeholder="5" />
+          <input style={S.input} type="number" min="1" value={f.dias} onChange={(e) => setDias(e.target.value)} placeholder="5" />
         </div>
         <div>
           <label style={S.label}>Fecha estimada de entrega *</label>
-          <input style={S.input} type="date" min={new Date().toISOString().slice(0, 10)} value={f.fecha_entrega} onChange={(e) => set("fecha_entrega", e.target.value)} />
+          <input style={S.input} type="date" min={new Date().toISOString().slice(0, 10)} value={f.fecha_entrega} onChange={(e) => { setFechaAMano(true); set("fecha_entrega", e.target.value) }} />
         </div>
         <div>
           <label style={S.label}>Vigencia (días) *</label>
@@ -1244,12 +1287,28 @@ export default function SolicitudesPage() {
   const [cobroTaller, setCobroTaller] = useState(null)
   const [filtroCli, setFiltroCli] = useState(null)
 
+  // Desde el aviso del celular o del WhatsApp (?cotizar=<solicitud>): abre
+  // directo el formulario, una sola vez (se quita de la dirección)
+  const abrirDesdeAviso = (lista) => {
+    try {
+      const u = new URL(window.location.href)
+      const id = u.searchParams.get("cotizar")
+      if (!id) return
+      if (lista.some((s) => s.id === id && s.estado === "abierta")) setAbierta(id)
+      u.searchParams.delete("cotizar")
+      window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash)
+    } catch {
+      /* nada */
+    }
+  }
+
   const cargar = () =>
     // ocultas=1: también las que el taller marcó como "no puedo"; se separan aquí.
     fetch("/vendor/hetna-solicitudes?ocultas=1", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
         setDatos(d.solicitudes || [])
+        abrirDesdeAviso(d.solicitudes || [])
         setCupo(d.cupo || null)
         setCobroTaller(d.cobro_taller || null)
         setFiltroCli(d.filtro_clientes || null)

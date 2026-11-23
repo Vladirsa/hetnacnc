@@ -88,7 +88,7 @@ export async function avisoRapido(knex: any, logger: any, s: any) {
   const que = [t.servicio, t.material, t.cantidad && `${t.cantidad}`].filter(Boolean).join(" · ") || "fabricación"
   const ids = await talleresAvisados(knex, s)
   if (ids.length) {
-    const aviso = { titulo: "Un cliente espera tu precio ⏱", cuerpo: `${folio}: ${que}. Nadie ha cotizado todavía; la primera propuesta es la que más se elige.`, url: "/seller/solicitudes" }
+    const aviso = { titulo: "Un cliente espera tu precio ⏱", cuerpo: `${folio}: ${que}. Nadie ha cotizado todavía; la primera propuesta es la que más se elige.`, url: `/seller/solicitudes?cotizar=${encodeURIComponent(s.id)}` }
     await pushATalleres(knex, ids, { ...aviso, etiqueta: `rapida-${s.id}` }, logger).catch(() => null)
     await avisarWhatsapp(knex, { sellerIds: ids }, aviso, logger).catch(() => null)
   }

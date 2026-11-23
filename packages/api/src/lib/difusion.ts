@@ -203,7 +203,8 @@ export async function difundirSolicitud(
     {
       titulo: extra ? extra.titulo : taller && !abierta ? "Un cliente quiere tu cotización" : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
       cuerpo: `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}`,
-      url: "/seller/solicitudes",
+      // Abre directo el formulario de propuesta de esta solicitud
+      url: `/seller/solicitudes?cotizar=${encodeURIComponent(s.id)}`,
       etiqueta: `sol-${s.id}`,
     },
     logger
