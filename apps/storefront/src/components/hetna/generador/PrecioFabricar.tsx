@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
+import { puntosRevision } from "@/lib/cotizador/revision-archivo"
 import { precioEnVivo, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { leerDxf, type GeoCad } from "@/lib/cotizador/archivo-cad"
 import { mandarAFabricar, materialRouterMDF } from "@/lib/generador/aCotizador"
@@ -22,12 +23,15 @@ type Props = {
   maquina: "laser" | "router"
   /** Espesor del material en mm, para elegir el material de la tarifa */
   espesorMm?: number
+  /** Barra delgada debajo de la vista 3D (computadora). En el panel tapaba
+   *  los controles del diseño (Vlado, 23 nov 2026). */
+  barra?: boolean
 }
 
 const MATERIAL_LASER = (mm?: number) => (mm && mm <= 2.5 ? "MDF delgado (hasta 2.5mm)" : mm && mm > 5.5 ? "Acrílico, cuero, tela u otro" : "MDF/Madera (3-5mm)")
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
-export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, espesorMm }: Props) {
+export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, espesorMm, barra = false }: Props) {
   const { locale } = useParams<{ locale: string }>()
   const [cantidad, setCantidad] = useState(1)
   const [precio, setPrecio] = useState<PrecioEnVivo | null>(null)
@@ -76,6 +80,72 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
       proceso: maquina === "router" ? "Router CNC" : "Corte láser",
     })
     if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
+  }
+
+  if (barra) {
+    const puntos = puntosRevision(geo, { proceso: maquina, espesor_mm: espesorMm })
+    const problemas = puntos.filter((p) => p.nivel === "problema").length
+    const revisar = puntos.filter((p) => p.nivel === "revisar").length
+    return (
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#1F2937] bg-[#121923] px-4 py-2.5 text-[#E6EBF2]" data-testid="barra-fabricar">
+        <div className={`flex items-baseline gap-2 ${cargando ? "opacity-60" : ""}`}>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9AA6B8]">Precio aprox.</span>
+          {precio ? (
+            <>
+              <b className="text-[18px] text-white">
+                {pesos(precio.minimo)} – {pesos(precio.maximo)}
+              </b>
+              <span className="text-[12px] text-[#9AA6B8]">
+                + IVA{cantidad > 1 ? ` · ≈ ${pesos(precio.recomendado / cantidad)} c/u` : ""}
+              </span>
+            </>
+          ) : (
+            <span className="text-[13px] text-[#9AA6B8]">{cargando ? "Calculando…" : "Sin estimado"}</span>
+          )}
+        </div>
+        <label className="flex items-center gap-2 text-[12.5px] text-[#C9D2E0]">
+          Cantidad
+          <input
+            type="number"
+            min={1}
+            max={10000}
+            value={cantidad}
+            onChange={(e) => setCantidad(Math.max(1, Math.min(10000, Math.round(Number(e.target.value) || 1))))}
+            className="h-9 w-20 rounded-[8px] border border-[#2A3546] bg-[#0F151E] px-2.5 text-[14px] text-white"
+          />
+        </label>
+        {/* Revisión del archivo y hojas de material: se abren al tocar */}
+        <details className="relative">
+          <summary
+            className={`cursor-pointer list-none rounded-full border px-3 py-1.5 text-[12.5px] font-semibold ${
+              problemas ? "border-[#7A2A22] text-[#F6B8AE]" : revisar ? "border-[#6B5A2A] text-[#F2D29B]" : "border-[#245236] text-[#9FE0B5]"
+            }`}
+          >
+            {problemas ? `⚠ ${problemas === 1 ? "1 cosa por corregir" : `${problemas} cosas por corregir`}` : revisar ? `• ${revisar} por revisar` : "✓ Archivo revisado"}
+          </summary>
+          <div className="absolute bottom-full left-0 z-20 mb-2 flex w-[340px] flex-col gap-2 rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-3 text-[#1B1B18] shadow-xl">
+            {geo.largo > 0 && (
+              <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
+                <b className="text-[#1B1B18]">Material:</b>{" "}
+                {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
+              </p>
+            )}
+            <RevisionArchivo geo={geo} proceso={maquina} espesor_mm={espesorMm} />
+            <p className="m-0 text-[11.5px] text-[#7A776E]">
+              Estimado de referencia en {material}, sin envío. Al mandarlo, el archivo va cargado y los talleres te dan su precio final; tú eliges.
+            </p>
+          </div>
+        </details>
+        <button
+          type="button"
+          onClick={fabricar}
+          className="ml-auto flex min-h-[40px] items-center justify-center rounded-[10px] bg-[#FF6A1A] px-5 text-[14.5px] font-extrabold text-white hover:bg-[#E65C12]"
+        >
+          Mandar a fabricar
+        </button>
+        {aviso && <p className="m-0 w-full text-[12.5px] text-[#F6B8AE]">{aviso}</p>}
+      </div>
+    )
   }
 
   return (
