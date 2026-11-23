@@ -44,6 +44,7 @@ export const TABLAS_NEGOCIO = [
   "mantenimiento_tareas",
   "mantenimiento_registros",
   "paros_maquina",
+  "revisiones_calidad",
   "sim_servicios",
   "sim_tipos_trabajo",
   "sim_tarifas",
