@@ -261,15 +261,20 @@ function grupo<T>(
 ): Grupo {
   const elegidos = filtros.find((f) => f.clave === clave)?.elegidos ?? new Set<string>()
   const cuenta = new Map<string, { nombre: string; n: number }>()
+  // universo: cuántos resultados tienen algún valor en este grupo. Los que no
+  // tienen ninguno (productos sin taller asignado) no cuentan: si no, «Router 10
+  // de 15» parecía filtrar cuando los 10 con taller tienen todas las máquinas.
   let universo = 0
   for (const x of lista) {
     if (!cumpleTodos(x, filtros, clave)) continue
-    universo++
+    let tiene = false
     for (const [valor, nombre] of opcionesDe(x)) {
+      tiene = true
       const c = cuenta.get(valor) ?? { nombre, n: 0 }
       c.n++
       cuenta.set(valor, c)
     }
+    if (tiene) universo++
   }
   // Una opción elegida sigue visible aunque ya no tenga resultados (para poder quitarla)
   for (const v of elegidos) if (!cuenta.has(v)) cuenta.set(v, { nombre: v, n: 0 })
