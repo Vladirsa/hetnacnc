@@ -363,8 +363,38 @@ export default function MapaTalleres({
           m.punto.setStyle({ opacity: lejos ? 1 : 0, fillOpacity: lejos ? 1 : 0 })
         })
       }
-      acomodar()
-      mapa.on("zoomend", acomodar)
+      // Mapa alejado (para ver los demás países): los estados de México no caben
+      // y el acomodo los estiraba hasta Sudamérica. Abajo de zoom 5 se juntan en
+      // un solo punto «México»; al tocarlo vuelve a acercar.
+      const totalMx = TIPOS.filter((t) => !ocultos.has(t.id)).reduce((a, t) => a + [...datos[t.id].values()].reduce((b, g) => b + g.total, 0), 0)
+      const puntoMx = L.marker([23.6, -102.5], {
+        title: "México",
+        alt: "Red CNC en México",
+        icon: L.divIcon({
+          className: "",
+          html:
+            `<div style="position:relative;width:${TAM + 6}px;height:${TAM + 6}px;border-radius:50%;background:#C2560A;border:2.5px solid #fff;box-sizing:border-box;` +
+            `box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font:800 11px system-ui,sans-serif">MX` +
+            `<span style="position:absolute;top:-8px;right:-10px;min-width:21px;height:21px;padding:0 4px;border-radius:11px;background:#142033;color:#fff;font:700 11px/21px system-ui,sans-serif;text-align:center;border:2px solid #fff;box-sizing:border-box">${totalMx}</span></div>`,
+          iconSize: [TAM + 6, TAM + 6],
+          iconAnchor: [(TAM + 6) / 2, (TAM + 6) / 2],
+        }),
+      }).on("click", () => mapa?.flyTo([23.6, -102.5], 5))
+      const verPorEstado = () => {
+        if (!mapa) return
+        const lejos = mapa.getZoom() < 5
+        for (const m of marcas) {
+          for (const capa of [m.marker, m.linea, m.punto]) {
+            if (lejos) capa.remove()
+            else if (!mapa.hasLayer(capa)) capa.addTo(mapa)
+          }
+        }
+        if (lejos && totalMx) puntoMx.addTo(mapa)
+        else puntoMx.remove()
+        if (!lejos) acomodar()
+      }
+      verPorEstado()
+      mapa.on("zoomend", verPorEstado)
     })()
 
     return () => {
