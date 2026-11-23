@@ -63,7 +63,6 @@ const FORMATOS_TODOS: { id: string; nombre: string; para: string; ext: string; n
   },
 ]
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 // Otros diseños a la mano (los tipos de makercase y la caja propia en 3D)
 const OTROS: { id: string; nombre: string }[] = [
@@ -274,7 +273,6 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
     proceso: "Corte láser",
     archivo: rutaArchivo(locale, "generar", esquema.id, `formato=dxf&${query}`),
   }).toString()}`
-  const mensaje = `Hola HETNA CNC, quiero cotizar el corte de: ${esquema.nombre}${medidas ? ` de ${medidas} mm` : ""}, ${material || `material de ${valores.thickness ?? ""} mm`}.`
   // medidas para pasar a otro diseño
   const llevar = new URLSearchParams()
   for (const k of LLEGAN) if (valores[k] !== undefined && valores[k] !== "") llevar.set(k, typeof valores[k] === "boolean" ? (valores[k] ? "1" : "0") : String(valores[k]))
@@ -403,11 +401,10 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               </Boton>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <a href={fabricar} className="rounded-[8px] bg-[#16794F] px-2 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#12623F]">
               Fabrícamelo
             </a>
-            <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
           </div>
         </div>
       </aside>
@@ -486,7 +483,6 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                 <a href={fabricar} className="flex-1 rounded-[8px] bg-[#16794F] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#12623F]">
                   Fabrícamelo
                 </a>
-                <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
                 <LocalizedClientLink href="/cam/subir" className="flex-1 rounded-[8px] bg-[#2B3648] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#344158]">
                   DXF a G-code
                 </LocalizedClientLink>
