@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { FormLatam } from "@/components/hetna/latam/FormLatam"
-import { PAISES_LATAM } from "@/components/hetna/latam/paises"
+import { PAISES_LATAM, rutaPais } from "@/components/hetna/latam/paises"
 import { conteoLatam } from "@/lib/hetna/latam"
 
 // Fase 5: HETNA llega a Latinoamérica. Pre-registro de talleres fundadores y
@@ -36,10 +36,11 @@ export default async function LatinoamericaPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {PAISES_LATAM.map((p) => {
+              // EUA y España aparecen aquí también, cada uno con su página
               const c = conteo[p.clave]
               const n = c ? c.talleres + c.clientes : 0
               return (
-                <a key={p.clave} href={`/mx/latinoamerica/${p.clave}`} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
+                <a key={p.clave} href={rutaPais(p.clave)} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
                   {p.bandera} {p.nombre}
                   {n > 0 ? ` · ${n} ${n === 1 ? "registro" : "registros"}` : ""}
                 </a>
