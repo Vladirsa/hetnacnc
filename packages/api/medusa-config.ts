@@ -204,6 +204,10 @@ module.exports = withMercur({
       resolve: './src/modules/verificacion',
     },
     {
+      // Mercado Libre: cuenta conectada de cada taller y sus publicaciones (lib/mercadolibre.ts)
+      resolve: './src/modules/mercadolibre',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
