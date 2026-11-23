@@ -10,6 +10,7 @@ export type EspacioId =
   | "categorias_lateral"
   | "vista_whatsapp"
   | "ficha_producto"
+  | "ficha_lateral"
   | "tienda_banner"
   | "listado_productos"
   | "directorio_talleres"
@@ -112,6 +113,18 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
     ayuda: "Tarjeta en la columna de compra de cada producto, debajo del vendedor. Buena para talleres que fabrican o proveedores de material.",
     donde: "En la ficha de cada producto, junto al botón de compra: lo ve quien ya está decidido a comprar.",
   },
+  // Pedido de Vlado (23 nov 2026): el hueco bajo "Fabrícalo" en la columna
+  // izquierda de la ficha. Franja ancha y baja para no empujar las pestañas.
+  ficha_lateral: {
+    nombre: "Publicidad: ficha de producto (columna izquierda)",
+    medidas: "1200 × 300 px",
+    anchoMax: 1200,
+    max: 1,
+    ratio: "4 / 1",
+    publicidad: true,
+    ayuda: "Franja en la columna izquierda de cada producto, debajo de «Fabrícalo con un taller». Solo en computadora.",
+    donde: "En la ficha de cada producto, debajo de «Fabrícalo con un taller»: lo ve quien está por comprar o mandar a fabricar.",
+  },
   tienda_banner: {
     nombre: "Publicidad: tienda",
     medidas: "1200 × 300 px",
@@ -162,6 +175,7 @@ export const ORDEN_ESPACIOS: EspacioId[] = [
   "foro_lateral",
   "categorias_lateral",
   "ficha_producto",
+  "ficha_lateral",
   "directorio_talleres",
   "cotizar_disenar",
   "tienda_banner",

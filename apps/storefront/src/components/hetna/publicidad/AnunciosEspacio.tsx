@@ -17,6 +17,7 @@ export default async function AnunciosEspacio({
   invitar = false,
   titulo,
   columnas = false,
+  frase = "Anuncia tu taller o tus productos aquí",
 }: {
   espacio: string
   className?: string
@@ -25,6 +26,8 @@ export default async function AnunciosEspacio({
   titulo?: string
   // Tarjetas lado a lado (2-3 columnas en pantallas grandes) en vez de una columna
   columnas?: boolean
+  // Título del banner de invitación (cambia cuando hay dos en la misma página)
+  frase?: string
 }) {
   if (!esEspacio(espacio)) return null
   const piezas = await piezasDe(espacio)
@@ -64,7 +67,7 @@ export default async function AnunciosEspacio({
       </span>
       <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F2B98C]">Espacio disponible</span>
-        <span className="text-[16px] font-bold leading-snug">Anuncia tu taller o tus productos aquí</span>
+        <span className="text-[16px] font-bold leading-snug">{frase}</span>
         <span className="text-[12.5px] leading-snug text-white/75">
           Lo ven quienes buscan fabricación CNC · desde {pesos(calcularMonto(espacio, 7))} por semana
         </span>

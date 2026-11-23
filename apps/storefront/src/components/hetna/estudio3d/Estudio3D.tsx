@@ -126,6 +126,7 @@ export function Estudio3D({
   pestanaInicial,
   medidasReales,
   pie,
+  barraFabricar,
 }: {
   titulo: string
   subtitulo?: string
@@ -165,6 +166,8 @@ export function Estudio3D({
   medidasReales?: { ancho: number; fondo: number; alto: number }
   // acciones fijas al pie del panel (descargas, fabricar)
   pie?: React.ReactNode
+  // barra debajo de la vista, sólo en computadora (p. ej. precio y "Mandar a fabricar")
+  barraFabricar?: React.ReactNode
 }) {
   const contRef = useRef<HTMLDivElement>(null)
   const marcoRef = useRef<HTMLDivElement>(null)
@@ -890,6 +893,7 @@ export function Estudio3D({
           )}
           {barra}
         </div>
+        {barraFabricar && <div className="hidden lg:block">{barraFabricar}</div>}
       </div>
     </div>
   )

@@ -22,6 +22,7 @@ import { AbajoDescarga, ModificarDiseno, vistasGaleria } from "@/components/hetn
 import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
@@ -243,6 +244,15 @@ export const ProductDetailsPage = async ({
             {fabricar}
             {/* Diseños: pedir una modificación o cotizar la fabricación */}
             {descarga && <ModificarDiseno product={prod as never} vendedor={vendedor ? { handle: vendedor.handle, name: vendedor.name } : null} />}
+            {/* Publicidad en el hueco de la izquierda (solo computadora: en
+                celular ya sale la de "Patrocinado" en la columna de compra) */}
+            <AnunciosEspacio
+              espacio="ficha_lateral"
+              titulo="Patrocinado"
+              invitar
+              frase="¿Vendes material, fresas o máquinas? Anúncialo aquí"
+              className="hidden lg:block"
+            />
           </div>
         )}
 
