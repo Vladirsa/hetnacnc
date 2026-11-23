@@ -10,8 +10,9 @@ type Candidato = { tipo: "cliente" | "taller" | "licitacion" | "cotizador"; nomb
 type Accion = { clave: string; titulo: string; motivo: string; mensaje: string | null; liga?: string; ligas: { whatsapp: string | null; correo: string | null } }
 type Ficha = {
   claves: { correos: string[]; telefonos: string[] }
+  varias_personas: boolean
   clientes: { id: string; nombre: string; email: string | null; telefono: string | null; creado: string; correo_verificado: boolean }[]
-  pedidos: { cuantos: number; gastado: Record<string, number>; ultimo: string | null; recientes: { id: string; numero: number; estado: string; total: number; moneda: string; creado: string }[] }
+  pedidos: { cuantos: number; gastado: Record<string, number>; ultimo: string | null; recientes: { id: string; numero: number; estado: string; total: number; moneda: string; creado: string; pagado: boolean }[] }
   carritos: { id: string; total: number; moneda: string; actualizado: string; articulos: string[] }[]
   creditos: { saldo: number } | null
   reputacion: { promedio: number | null; evaluaciones: number } | null
@@ -71,6 +72,7 @@ const FichaPage = () => {
   const [acciones, setAcciones] = useState<Accion[]>([])
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState("")
+  const [avisos, setAvisos] = useState<string[]>([])
 
   async function buscar(e?: React.FormEvent) {
     e?.preventDefault()
@@ -79,8 +81,9 @@ const FichaPage = () => {
     setCargando(true)
     setFicha(null)
     try {
-      const r = await api<{ candidatos: Candidato[] }>(`?q=${encodeURIComponent(q.trim())}`)
+      const r = await api<{ candidatos: Candidato[]; errores?: string[] }>(`?q=${encodeURIComponent(q.trim())}`)
       setCandidatos(r.candidatos)
+      setAvisos(r.errores || [])
       // Un solo resultado claro: se abre directo
       const unicos = new Set(r.candidatos.map((c) => `${(c.email || "").toLowerCase()}|${(c.telefono || "").replace(/\D/g, "").slice(-10)}`))
       if (r.candidatos.length && unicos.size === 1) await abrir(r.candidatos[0])
@@ -137,6 +140,7 @@ const FichaPage = () => {
 
       {!f && candidatos && (
         <div style={caja}>
+          {avisos.length > 0 && <p style={{ margin: "0 0 8px", color: C.rojo, fontSize: 12.5 }}>No se pudo buscar en: {avisos.join(" · ")}</p>}
           {candidatos.length === 0 ? <p style={{ margin: 0, ...tenue }}>No encontramos a nadie con eso.</p> : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {candidatos.map((c, i) => (
@@ -188,12 +192,12 @@ const FichaPage = () => {
               ))}
               <div style={{ fontSize: 13.5 }}>
                 {f.pedidos.cuantos} pedido(s)
-                {Object.entries(f.pedidos.gastado).map(([m, n]) => <span key={m}> · {dinero(n, m)}</span>)}
+                {Object.entries(f.pedidos.gastado).map(([m, n]) => <span key={m}> · {dinero(n, m)} pagado</span>)}
                 {f.pedidos.ultimo && <span style={tenue}> · último {fecha(f.pedidos.ultimo)}</span>}
               </div>
               {f.pedidos.recientes.length > 0 && (
                 <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13 }}>
-                  {f.pedidos.recientes.map((o) => <li key={o.id}>#{o.numero} · {dinero(o.total, o.moneda)} · {o.estado} · <span style={tenue}>{fecha(o.creado)}</span></li>)}
+                  {f.pedidos.recientes.map((o) => <li key={o.id}>#{o.numero} · {dinero(o.total, o.moneda)} · {o.pagado ? "pagado" : "sin pagar"} · {o.estado} · <span style={tenue}>{fecha(o.creado)}</span></li>)}
                 </ul>
               )}
               {f.carritos.map((c) => <div key={c.id} style={{ marginTop: 6, fontSize: 13 }}>🛒 Carrito de {dinero(c.total, c.moneda)} ({fecha(c.actualizado)}): {c.articulos.join(", ")}</div>)}

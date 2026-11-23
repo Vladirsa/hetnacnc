@@ -2,6 +2,7 @@ import { interpretarBusqueda, ligasAccion, siguientesAcciones, ultimos10, type F
 
 const vacia = (extra: Partial<Ficha> = {}): Ficha => ({
   claves: { correos: ["ana@x.com"], telefonos: ["5512345678"] },
+  varias_personas: false,
   clientes: [{ id: "cus_1", nombre: "Ana López", email: "ana@x.com", telefono: "5512345678", creado: "2026-01-01T00:00:00Z", correo_verificado: true }],
   pedidos: { cuantos: 0, gastado: {}, ultimo: null, recientes: [] },
   carritos: [], creditos: null, reputacion: null, licitaciones: [], escanear: [], talleres: [], cotizador: [], proveedor: null,
@@ -44,6 +45,31 @@ describe("Ficha única", () => {
     expect(carrito.correo).toBe("ana@x.com")
   })
 
+  it("con dos números y BAJA en uno, nada por WhatsApp", () => {
+    const f = vacia({
+      whatsapp: { numeros: [{ numero: "525512345678", quien: "cliente", avisos: false, verificado: true }, { numero: "525598765432", quien: null, avisos: true, verificado: false }], mensajes: [] },
+      carritos: [{ id: "cart_1", email: "ana@x.com", total: 500, moneda: "mxn", actualizado: "2026-11-22T18:00:00Z", articulos: ["1× Acrílico"] }],
+    })
+    const carrito = siguientesAcciones(f, AHORA).find((a) => a.clave === "carrito")!
+    expect(carrito.whatsapp).toBeNull()
+  })
+
+  it("si junta a varias personas, no arma mensajes", () => {
+    const f = vacia({
+      varias_personas: true,
+      claves: { correos: ["ana@x.com", "beto@y.com"], telefonos: ["5512345678"] },
+      carritos: [{ id: "cart_1", email: "beto@y.com", total: 500, moneda: "mxn", actualizado: "2026-11-22T18:00:00Z", articulos: ["1× Acrílico"] }],
+    })
+    const a = siguientesAcciones(f, AHORA)
+    expect(a[0].clave).toBe("varias_personas")
+    for (const x of a) expect(ligasAccion(x)).toEqual({ whatsapp: null, correo: null })
+  })
+
+  it("el carrito se le escribe al correo del carrito", () => {
+    const f = vacia({ carritos: [{ id: "cart_1", email: "otro@x.com", total: 500, moneda: "mxn", actualizado: "2026-11-22T18:00:00Z", articulos: ["1× Acrílico"] }] })
+    expect(siguientesAcciones(f, AHORA).find((a) => a.clave === "carrito")!.correo).toBe("otro@x.com")
+  })
+
   it("no recuerda un carrito si ya compró después", () => {
     const f = vacia({
       pedidos: { cuantos: 1, gastado: { mxn: 900 }, ultimo: "2026-11-22T00:00:00Z", recientes: [] },
@@ -54,7 +80,7 @@ describe("Ficha única", () => {
 
   it("acciones internas sin mensaje: licitación sin propuestas y pago al taller", () => {
     const f = vacia({
-      licitaciones: [{ folio: "HET-00012", estado: "abierta", creado: "2026-11-18T00:00:00Z", descripcion: "Letrero", propuestas: 0, elegida: false }],
+      licitaciones: [{ folio: "HET-00012", estado: "abierta", creado: "2026-11-18T00:00:00Z", descripcion: "Letrero", propuestas: 0, elegida: false, liga: null }],
       talleres: [{ id: "sel_1", nombre: "Taller X", email: null, telefono: null, estado: "open", saldos: { mxn: { pendiente: 0, disponible: 1500, pagado: 0, retenido: 0 } }, propuestas: {}, resenas: { promedio: null, cuantas: 0 } }],
     })
     const a = siguientesAcciones(f, AHORA)

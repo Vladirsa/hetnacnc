@@ -15,7 +15,8 @@
 // una falla, las demás se muestran igual y la falla queda anotada.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { STORE_URL, asegurarTablas, folioTexto } from "./licitacion"
+import { asegurarTablas, folioTexto, ligaPropuestas, STORE_URL } from "./licitacion"
+import { CAMPOS_PAGO, pedidoPagado, pedidoReembolsado } from "./pago-pedido"
 import { NOMBRE_ESTADO, T_ESCANEAR, asegurarEscanear, folioEscanear } from "./escanear"
 import { resumenSaldos } from "./saldos-talleres"
 import { reputacionCliente } from "./trust"
@@ -59,9 +60,11 @@ const likeSeguro = (s: string) => `%${s.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
 
 export type Candidato = { tipo: "cliente" | "taller" | "licitacion" | "cotizador"; nombre: string; email: string | null; telefono: string | null; detalle: string }
 
-export async function buscarCandidatos(scope: any, q: string): Promise<Candidato[]> {
+export async function buscarCandidatos(scope: any, q: string): Promise<{ candidatos: Candidato[]; errores: string[] }> {
+  const errores: string[] = []
+  const falla = (donde: string) => (e: unknown) => errores.push(`${donde}: ${String((e as Error)?.message || e).slice(0, 160)}`)
   const b = interpretarBusqueda(q)
-  if (!b) return []
+  if (!b) return { candidatos: [], errores }
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const out: Candidato[] = []
   const nombre = (f: any) => [f.first_name, f.last_name].filter(Boolean).join(" ") || f.company_name || f.email || "Cliente"
@@ -73,7 +76,7 @@ export async function buscarCandidatos(scope: any, q: string): Promise<Candidato
     else if (b.tipo === "telefono") qc = qc.whereRaw(`${SQL_10("phone")} = ?`, [b.valor])
     else qc = qc.where((w: any) => w.whereILike("first_name", likeSeguro(b.valor)).orWhereILike("last_name", likeSeguro(b.valor)).orWhereILike("company_name", likeSeguro(b.valor)).orWhereILike("email", likeSeguro(b.valor)))
     for (const f of await qc) out.push({ tipo: "cliente", nombre: nombre(f), email: f.email || null, telefono: f.phone || null, detalle: `Cliente de la tienda desde ${String(f.created_at).slice(0, 10)}` })
-  } catch {}
+  } catch (e) { falla("Clientes")(e) }
 
   // Talleres que venden en la tienda
   try {
@@ -82,7 +85,7 @@ export async function buscarCandidatos(scope: any, q: string): Promise<Candidato
     else if (b.tipo === "telefono") qs = qs.whereRaw(`${SQL_10("phone")} = ?`, [b.valor])
     else qs = qs.where((w: any) => w.whereILike("name", likeSeguro(b.valor)).orWhereILike("email", likeSeguro(b.valor)))
     for (const f of await qs) out.push({ tipo: "taller", nombre: f.name || f.email || "Taller", email: f.email || null, telefono: f.phone || null, detalle: `Taller en la tienda (${f.status || "sin estado"})` })
-  } catch {}
+  } catch (e) { falla("Talleres")(e) }
 
   // Contactos de licitaciones (compradores sin cuenta)
   try {
@@ -95,7 +98,7 @@ export async function buscarCandidatos(scope: any, q: string): Promise<Candidato
       const c = f.contacto || {}
       out.push({ tipo: "licitacion", nombre: c.empresa || c.nombre || c.email || "Comprador", email: c.email || null, telefono: c.whatsapp || c.telefono || null, detalle: `Pidió ${folioTexto(f.folio)} el ${String(f.created_at).slice(0, 10)}` })
     }
-  } catch {}
+  } catch (e) { falla("Licitaciones")(e) }
 
   // Talleres de la app del Cotizador
   if (supabaseListo()) {
@@ -109,17 +112,18 @@ export async function buscarCandidatos(scope: any, q: string): Promise<Candidato
         if (b.tipo === "telefono" && ultimos10(f.telefono) !== b.valor) continue
         out.push({ tipo: "cotizador", nombre: f.nombre || f.correo || "Taller", email: f.correo || null, telefono: f.telefono || null, detalle: `Taller en la app del Cotizador (plan ${f.plan || "gratis"})` })
       }
-    } catch {}
+    } catch (e) { falla("Cotizador")(e) }
   }
 
   // Una persona puede salir varias veces (cliente y taller): se juntan por correo o teléfono
   const vistos = new Set<string>()
-  return out.filter((c) => {
+  const candidatos = out.filter((c) => {
     const k = `${c.tipo}|${(c.email || "").toLowerCase()}|${ultimos10(c.telefono)}|${c.nombre}`
     if (vistos.has(k)) return false
     vistos.add(k)
     return true
   }).slice(0, 30)
+  return { candidatos, errores }
 }
 
 // ---------------------------------------------------------------------
@@ -128,12 +132,14 @@ export async function buscarCandidatos(scope: any, q: string): Promise<Candidato
 
 export type Ficha = {
   claves: { correos: string[]; telefonos: string[] }
+  /** Más de una cuenta con distinto correo (p. ej. un teléfono compartido): no se arman mensajes. */
+  varias_personas: boolean
   clientes: { id: string; nombre: string; email: string | null; telefono: string | null; creado: string; correo_verificado: boolean }[]
-  pedidos: { cuantos: number; gastado: Record<string, number>; ultimo: string | null; recientes: { id: string; numero: number; estado: string; total: number; moneda: string; creado: string }[] }
+  pedidos: { cuantos: number; gastado: Record<string, number>; ultimo: string | null; recientes: { id: string; numero: number; estado: string; total: number; moneda: string; creado: string; pagado: boolean }[] }
   carritos: { id: string; email: string | null; total: number; moneda: string; actualizado: string; articulos: string[] }[]
   creditos: { saldo: number } | null
   reputacion: { promedio: number | null; evaluaciones: number } | null
-  licitaciones: { folio: string; estado: string; creado: string; descripcion: string; propuestas: number; elegida: boolean }[]
+  licitaciones: { folio: string; estado: string; creado: string; descripcion: string; propuestas: number; elegida: boolean; liga: string | null }[]
   escanear: { id: string; folio: string; titulo: string; estado: string; nombre_estado: string; creado: string }[]
   talleres: { id: string; nombre: string; email: string | null; telefono: string | null; estado: string | null; saldos: Record<string, Record<string, number>>; propuestas: Record<string, number>; resenas: { promedio: number | null; cuantas: number } }[]
   cotizador: { id: string; nombre: string | null; correo: string | null; telefono: string | null; plan: string | null; plan_efectivo: string; trial_hasta: string | null; creado: string | null }[]
@@ -191,6 +197,11 @@ export async function armarFicha(scope: any, entrada: { correo?: string | null; 
     filasTalleres = await parte(errores, "Talleres", buscarTalleres, filasTalleres)
   }
   const idsClientes = filasClientes.map((f) => String(f.id))
+  // Teléfonos tal como están guardados (para WhatsApp no se inventa la lada:
+  // normalizarNumero sólo acepta móviles de México)
+  const telefonosCrudos = sinDuplicados([String(entrada.telefono || ""), ...filasClientes.map((f) => String(f.phone || "")), ...filasTalleres.map((f) => String(f.phone || ""))])
+  const correosDeCuentas = sinDuplicados([...filasClientes, ...filasTalleres].map((f) => limpiaCorreo(f.email)))
+  const variasPersonas = correosDeCuentas.length > 1
   const idsTalleres = filasTalleres.map((f) => String(f.id))
 
   const clientes = filasClientes.map((f) => {
@@ -209,11 +220,13 @@ export async function armarFicha(scope: any, entrada: { correo?: string | null; 
     parte(errores, "Pedidos", async () => {
       if (!idsClientes.length && !correos.length) return { cuantos: 0, gastado: {}, ultimo: null, recientes: [] }
       const filtros = idsClientes.length ? { customer_id: idsClientes } : { email: correos }
-      const { data } = await query.graph({ entity: "order", fields: ["id", "display_id", "status", "total", "currency_code", "created_at"], filters: filtros, pagination: { take: 200, order: { created_at: "DESC" } } })
+      const { data } = await query.graph({ entity: "order", fields: ["id", "display_id", "status", "total", "currency_code", "created_at", ...CAMPOS_PAGO], filters: filtros, pagination: { take: 200, order: { created_at: "DESC" } } })
       const ordenes = (data || []).filter((o: any) => o.status !== "canceled" && o.status !== "draft")
+      // "Gastado" = sólo lo pagado y no reembolsado (la misma regla que la vista de Ventas)
+      const pagado = (o: any) => pedidoPagado(o) && !pedidoReembolsado(o)
       const gastado: Record<string, number> = {}
-      for (const o of ordenes) gastado[o.currency_code] = Math.round(((gastado[o.currency_code] || 0) + Number(o.total || 0)) * 100) / 100
-      const recientes = (data || []).slice(0, 8).map((o: any) => ({ id: o.id, numero: o.display_id, estado: o.status, total: Number(o.total || 0), moneda: o.currency_code, creado: new Date(o.created_at).toISOString() }))
+      for (const o of ordenes.filter(pagado)) gastado[o.currency_code] = Math.round(((gastado[o.currency_code] || 0) + Number(o.total || 0)) * 100) / 100
+      const recientes = (data || []).slice(0, 8).map((o: any) => ({ id: o.id, numero: o.display_id, estado: o.status, total: Number(o.total || 0), moneda: o.currency_code, creado: new Date(o.created_at).toISOString(), pagado: pagado(o) }))
       return { cuantos: ordenes.length, gastado, ultimo: ordenes[0] ? new Date(ordenes[0].created_at).toISOString() : null, recientes }
     }, { cuantos: 0, gastado: {}, ultimo: null, recientes: [] }),
 
@@ -253,12 +266,12 @@ export async function armarFicha(scope: any, entrada: { correo?: string | null; 
             w.orWhereRaw(`${SQL_10("s.contacto->>'whatsapp'")} in (${marcas}) or ${SQL_10("s.contacto->>'telefono'")} in (${marcas})`, [...telefonos, ...telefonos])
           }
         })
-        .select("s.id", "s.folio", "s.estado", "s.created_at", "s.trabajo", "s.propuesta_elegida",
+        .select("s.id", "s.folio", "s.estado", "s.created_at", "s.trabajo", "s.propuesta_elegida", "s.token",
           knex.raw("(select count(*) from hetna_propuesta p where p.solicitud_id = s.id) as propuestas"))
         .orderBy("s.created_at", "desc").limit(15)
       return filas.map((f: any) => {
         const t = typeof f.trabajo === "string" ? JSON.parse(f.trabajo || "{}") : f.trabajo || {}
-        return { folio: folioTexto(f.folio), estado: f.estado, creado: new Date(f.created_at).toISOString(), descripcion: String(t.descripcion || "").slice(0, 140), propuestas: Number(f.propuestas || 0), elegida: !!f.propuesta_elegida }
+        return { folio: folioTexto(f.folio), estado: f.estado, creado: new Date(f.created_at).toISOString(), descripcion: String(t.descripcion || "").slice(0, 140), propuestas: Number(f.propuestas || 0), elegida: !!f.propuesta_elegida, liga: f.token ? ligaPropuestas(f.token) : null }
       })
     }, []),
 
@@ -327,7 +340,7 @@ export async function armarFicha(scope: any, entrada: { correo?: string | null; 
 
     parte(errores, "WhatsApp", async () => {
       await asegurarWhatsapp(knex)
-      const numeros = sinDuplicados(telefonos.map((t) => normalizarNumero(t) || ""))
+      const numeros = sinDuplicados(telefonosCrudos.map((t) => normalizarNumero(t) || ""))
       const filas = await knex(T_WA).where((w: any) => {
         if (numeros.length) w.orWhereIn("numero", numeros)
         if (idsClientes.length) w.orWhereIn("customer_id", idsClientes)
@@ -347,7 +360,7 @@ export async function armarFicha(scope: any, entrada: { correo?: string | null; 
     }, { numeros: [], mensajes: [] }),
   ])
 
-  return { claves: { correos, telefonos }, clientes, pedidos, carritos, creditos, reputacion, licitaciones, escanear, talleres, cotizador, proveedor, whatsapp, errores }
+  return { claves: { correos, telefonos }, varias_personas: variasPersonas, clientes, pedidos, carritos, creditos, reputacion, licitaciones, escanear, talleres, cotizador, proveedor, whatsapp, errores }
 }
 
 // ---------------------------------------------------------------------
@@ -375,11 +388,20 @@ export function siguientesAcciones(f: Ficha, ahora = Date.now()): Accion[] {
   const out: Accion[] = []
   const nombre = (f.clientes[0]?.nombre || f.talleres[0]?.nombre || f.cotizador[0]?.nombre || "").split(" ")[0]
   const hola = nombre ? `Hola ${nombre}, ` : "Hola, "
-  // WhatsApp sólo a un número que no pidió BAJA
-  const wa = f.whatsapp.numeros.find((n) => n.avisos)?.numero || null
-  const bajaWa = f.whatsapp.numeros.length > 0 && f.whatsapp.numeros.every((n) => !n.avisos)
+  // Si pidió BAJA en cualquiera de sus números, nada por WhatsApp
+  const bajaWa = f.whatsapp.numeros.some((n) => !n.avisos)
+  const wa = bajaWa ? null : f.whatsapp.numeros[0]?.numero || null
   const correo = f.claves.correos[0] || null
-  const acc = (a: Omit<Accion, "whatsapp" | "correo">): Accion => ({ ...a, whatsapp: a.mensaje ? wa : null, correo: a.mensaje ? correo : null })
+  // Varias cuentas distintas (teléfono compartido): no se arma ningún mensaje
+  // para no escribirle a la persona equivocada.
+  const acc = (a: Omit<Accion, "whatsapp" | "correo">, destino?: string | null): Accion =>
+    f.varias_personas
+      ? { ...a, mensaje: null, whatsapp: null, correo: null }
+      : { ...a, whatsapp: a.mensaje ? wa : null, correo: a.mensaje ? destino || correo : null }
+
+  if (f.varias_personas) {
+    out.push({ clave: "varias_personas", prioridad: 110, titulo: "Esta búsqueda junta a varias personas", motivo: `Hay cuentas con distintos correos (${f.claves.correos.join(", ")}). Revisa cada una por su correo antes de escribir; aquí no se arman mensajes.`, mensaje: null, whatsapp: null, correo: null })
+  }
 
   if (bajaWa) {
     out.push({ clave: "baja_whatsapp", prioridad: 100, titulo: "Pidió no recibir WhatsApp", motivo: "Escribió BAJA. Si hay que contactarle, que sea por correo.", mensaje: null, whatsapp: null, correo: null })
@@ -396,7 +418,7 @@ export function siguientesAcciones(f: Ficha, ahora = Date.now()): Accion[] {
       motivo: `Lo dejó hace ${Math.max(1, Math.round(dias(carrito.actualizado, ahora)))} día(s): ${carrito.articulos.slice(0, 3).join(", ")}.`,
       asunto: "Tu carrito en HETNA CNC",
       mensaje: `${hola}vimos que dejaste en tu carrito ${carrito.articulos.slice(0, 2).join(" y ")}. ¿Te ayudamos con alguna duda de medidas, material o envío para terminar tu pedido? ${STORE_URL}/mx/cart`,
-    }))
+    }, carrito.email))
   }
 
   // Escanear: render esperando aprobación
@@ -418,7 +440,7 @@ export function siguientesAcciones(f: Ficha, ahora = Date.now()): Accion[] {
       out.push(acc({
         clave: `licitacion_elegir_${l.folio}`, prioridad: 75, titulo: `${l.folio}: tiene ${l.propuestas} propuesta(s) y no ha elegido`, motivo: l.descripcion,
         asunto: `Propuestas para tu trabajo ${l.folio}`,
-        mensaje: `${hola}tu trabajo ${l.folio} ya tiene ${l.propuestas} propuesta(s) de talleres. ¿Te ayudamos a comparar precio y tiempo para elegir? ${STORE_URL}/mx/trabajos/${l.folio}`,
+        mensaje: `${hola}tu trabajo ${l.folio} ya tiene ${l.propuestas} propuesta(s) de talleres. ¿Te ayudamos a comparar precio y tiempo para elegir?${l.liga ? ` ${l.liga}` : ""}`,
       }))
     }
   }
@@ -439,14 +461,14 @@ export function siguientesAcciones(f: Ficha, ahora = Date.now()): Accion[] {
       out.push(acc({
         clave: `prueba_${n.id}`, prioridad: 65, titulo: `Su prueba del Cotizador vence en ${Math.max(0, Math.ceil(vence))} día(s)`, motivo: n.nombre || "",
         asunto: "Tu prueba del Cotizador HETNA está por terminar",
-        mensaje: `${hola}tu prueba del Cotizador HETNA para ${n.nombre || "tu taller"} termina pronto. Si te ha servido, elige tu plan para no perder tus cotizaciones y pedidos: ${STORE_URL}/cotizador/`,
-      }))
+        mensaje: `${hola}tu prueba del Cotizador HETNA para ${n.nombre || "tu taller"} termina pronto. Después tu taller pasa al plan Gratis (5 cotizaciones al mes); tus clientes y cotizaciones siguen ahí. Si te ha servido, elige tu plan: ${STORE_URL}/cotizador/`,
+      }, n.correo))
     } else if (n.plan_efectivo === "gratis" && dias(n.creado, ahora) >= 14) {
       out.push(acc({
         clave: `gratis_${n.id}`, prioridad: 40, titulo: "Usa el Cotizador en plan gratis", motivo: `${n.nombre || "Su taller"} lleva ${Math.round(dias(n.creado, ahora))} días en el plan gratis.`,
         asunto: "Lo que te falta del Cotizador HETNA",
-        mensaje: `${hola}¿cómo te ha ido con el Cotizador HETNA? Con un plan pagado tienes cotizaciones sin límite, inventario, costos reales y factura. Si quieres, te ayudamos a configurarlo: ${STORE_URL}/cotizador/`,
-      }))
+        mensaje: `${hola}¿cómo te ha ido con el Cotizador HETNA? Con un plan pagado tienes cotizaciones ilimitadas (en Gratis son 5 al mes) y más herramientas para tu taller. Si quieres, te ayudamos a configurarlo: ${STORE_URL}/cotizador/`,
+      }, n.correo))
     }
   }
 

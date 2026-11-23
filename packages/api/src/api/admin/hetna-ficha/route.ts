@@ -6,5 +6,5 @@ import { buscarCandidatos } from "../../../lib/ficha-unica"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const q = String((req.query as any)?.q || "").slice(0, 120)
-  res.json({ candidatos: await buscarCandidatos(req.scope, q) })
+  res.json(await buscarCandidatos(req.scope, q))
 }
