@@ -36,10 +36,14 @@ export const TABLAS_NEGOCIO = [
   "gastos",
   "inventario_bodega",
   "movimientos_inventario",
+  "proveedores",
+  "ordenes_compra",
+  "orden_compra_recepciones",
   "maquinaria",
   "mano_obra",
   "mantenimiento_tareas",
   "mantenimiento_registros",
+  "paros_maquina",
   "sim_servicios",
   "sim_tipos_trabajo",
   "sim_tarifas",
@@ -73,6 +77,7 @@ export const TABLAS_HIJAS: { tabla: string; columna: string; padre: string }[] =
   { tabla: "pedido_fotos", columna: "pedido_id", padre: "pedidos" },
   { tabla: "preguntas_pedido", columna: "pedido_id", padre: "pedidos" },
   { tabla: "cliente_etiquetas", columna: "cliente_id", padre: "clientes" },
+  { tabla: "orden_compra_items", columna: "orden_id", padre: "ordenes_compra" },
 ]
 
 /** Nunca salen (llaves y secretos). */
