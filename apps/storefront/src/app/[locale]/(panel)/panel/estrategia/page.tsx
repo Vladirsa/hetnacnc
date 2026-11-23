@@ -12,6 +12,7 @@ type Datos = {
   red: { talleres: number; puntualidad_pct: number | null; entregas_con_fecha: number; con_capacidad_libre: number; con_precios: number | null; campana_precios: { enviados: number; recordados: number; llenaron: number } | null }
   latam: { pais: string; talleres: number; clientes: number }[]
   talleres_origen?: { fuente: string; campana: string; registros: number }[]
+  en_riesgo?: { folio: string; horas: number; que: string; ciudad: string; recordada: boolean; ronda: number }[]
   metas: { puntualidad_pct: number; horas_primera_propuesta: number; archivos_detectados_pct: number }
 }
 
@@ -99,6 +100,29 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
           )}
         </Tarjeta>
       )}
+
+      <Tarjeta>
+        <Titulo extra={<a href={`/${locale}/panel/licitaciones`} className="text-[12px] font-semibold text-[#C2560A]">Ver licitaciones →</a>}>
+          Solicitudes en riesgo: sin propuesta después de 2 h
+        </Titulo>
+        {!d.en_riesgo?.length ? (
+          <Vacio>Ninguna. Todas las solicitudes abiertas ya tienen al menos una propuesta (o llevan menos de 2 h).</Vacio>
+        ) : (
+          <ul className="divide-y divide-[#EFEDE6]">
+            {d.en_riesgo.map((r) => (
+              <li key={r.folio} className="flex justify-between gap-3 py-2 text-[13px]">
+                <a href={`/${locale}/panel/licitaciones?f=${encodeURIComponent(r.folio)}`} className="font-semibold text-[#142033] hover:text-[#C2560A]">
+                  {r.folio}
+                  <span className="font-normal text-[#6B675C]">{r.que ? ` · ${r.que}` : ""}{r.ciudad ? ` · ${r.ciudad}` : ""}</span>
+                </a>
+                <span className={`whitespace-nowrap ${r.horas >= 24 ? "font-semibold text-[#B3261E]" : "text-[#8A3B05]"}`}>
+                  {r.horas} h{r.recordada ? " · recordada" : ""}{r.ronda > 1 ? ` · ronda ${r.ronda}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Tarjeta>
 
       <Tarjeta>
         <Titulo>De dónde vienen las solicitudes (30 días)</Titulo>
