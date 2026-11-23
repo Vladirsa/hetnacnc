@@ -217,6 +217,12 @@ export default defineMiddlewares({
           matcher: "/store/hetna-cloud/cam",
           middlewares: [authenticate("customer", ["session", "bearer"]), leerMultipart({ campos: { dxf: 1, gcode: 1 }, maxMb: 10 })],
         },
+        // Panel de proveedores (lib/proveedor-panel.ts): sólo clientes con sesión
+        {
+          method: ["GET", "POST"],
+          matcher: "/store/proveedor*",
+          middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
         // Escanear (ingeniería inversa, lib/escanear.ts): sólo clientes con sesión;
         // escaneos STL/OBJ/PLY y fotos hasta 95 MB (Nginx corta en 100 MB)
         {

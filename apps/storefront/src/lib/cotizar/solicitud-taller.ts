@@ -15,6 +15,8 @@ export type ArchivoSubido = { clave: string; nombre: string; tamano: number }
 export type SolicitudTallerInput = {
   /** Medición: la persona aceptó cookies de publicidad (no viaja al backend) */
   rastreo?: boolean
+  /** De dónde llegó la visita (lib/hetna/origen-visita.ts) */
+  origen?: { fuente: string; medio: string; campana: string; contenido: string } | null
   taller?: string
   /** Sin sesión: crear la cuenta y dar número de afiliado (packages/api/src/lib/afiliacion.ts) */
   crear_cuenta?: boolean

@@ -89,6 +89,14 @@ export function trackEstimadoInstantaneo(servicio: string, eventId: string) {
   fbqEvent('Lead', { content_name: 'Estimado al instante', content_category: servicio }, eventId);
 }
 
+// Estimado visto en el cotizador de /cotizar (se calcula en el navegador, sin
+// correo): no es Lead, es el paso de en medio. Evento propio en Meta para
+// crear públicos ("vio su precio y no pidió propuestas").
+export function trackEstimadoVisto(servicio: string, conArchivo: boolean) {
+  gtagEvent('ver_estimado', { servicio, con_archivo: conArchivo });
+  if (typeof window !== 'undefined' && window.fbq) window.fbq('trackCustom', 'EstimadoVisto', { servicio, con_archivo: conArchivo });
+}
+
 export function nuevoEventoEstimado() {
   return `est_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }

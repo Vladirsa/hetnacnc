@@ -4,7 +4,8 @@ import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/
 import { MarcarCompensacion } from "@/components/hetna/panel/Fase4"
 import { adminFetch, exigirPagina } from "@/lib/panel/sesion"
 
-type Periodo = { solicitudes: number; con_propuesta: number; horas_primera_propuesta: number | null; talleres_activos: number; archivos_revisados: number; archivos_con_problema: number }
+type Origen = { fuente: string; campana: string; solicitudes: number; con_propuesta_elegida: number }
+type Periodo = { origenes?: Origen[]; solicitudes: number; con_propuesta: number; horas_primera_propuesta: number | null; talleres_activos: number; archivos_revisados: number; archivos_con_problema: number }
 type Datos = {
   actual: Periodo
   anterior: Periodo
@@ -97,6 +98,27 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
           )}
         </Tarjeta>
       )}
+
+      <Tarjeta>
+        <Titulo>De dónde vienen las solicitudes (30 días)</Titulo>
+        {!a.origenes?.length ? (
+          <Vacio>Todavía no hay solicitudes con origen. Las ligas de los anuncios llevan utm_source y utm_campaign; aquí se ve cuántas solicitudes trae cada campaña.</Vacio>
+        ) : (
+          <ul className="divide-y divide-[#EFEDE6]">
+            {a.origenes.map((o) => (
+              <li key={`${o.fuente}|${o.campana}`} className="flex justify-between gap-3 py-2 text-[13px]">
+                <span className="font-semibold">
+                  {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
+                  {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
+                </span>
+                <span className="whitespace-nowrap text-[#40403A]">
+                  {o.solicitudes} solicitudes · {o.con_propuesta_elegida} eligieron taller
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Tarjeta>
 
       <Tarjeta>
         <Titulo extra={<a href={`/${locale}/panel/cotizador/latam`} className="text-[12px] font-semibold text-[#C2560A]">Ver registros →</a>}>Latinoamérica: pre-registros</Titulo>

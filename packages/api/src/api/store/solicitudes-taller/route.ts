@@ -56,6 +56,8 @@ type Body = {
   orden_compra?: string
   con_factura?: string | boolean
   repite_folio?: string
+  // De dónde vino (utm de la última liga): lib/origen-visita.ts
+  origen?: unknown
   medidas_archivo?: string
   // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
   archivos?: { clave?: string; nombre?: string; tamano?: number; solo_elegido?: boolean }[] | string
@@ -188,6 +190,11 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     unidad: corto(b.unidad, 40),
     orden_compra: corto(b.orden_compra, 60),
     repite_folio: /^[A-Z]{0,4}-?\d{1,10}$/i.test(String(b.repite_folio || "")) ? corto(b.repite_folio, 20) : "",
+  }
+  {
+    const { limpiarOrigen } = require("../../../lib/origen-visita")
+    const o = limpiarOrigen(b.origen)
+    if (o) trabajo.origen = o
   }
   // Fase 4: exprés (sólo con la fase encendida y el sobreprecio definido)
   {
