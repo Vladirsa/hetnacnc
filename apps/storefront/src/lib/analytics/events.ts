@@ -97,6 +97,16 @@ export function trackEstimadoVisto(servicio: string, conArchivo: boolean) {
   if (typeof window !== 'undefined' && window.fbq) window.fbq('trackCustom', 'EstimadoVisto', { servicio, con_archivo: conArchivo });
 }
 
+// Un taller se registró en /talleres/unete: la conversión de la campaña de talleres
+export function trackRegistroTaller(eventId: string, servicios: string[]) {
+  gtagEvent('sign_up', { method: 'registro_taller', servicios: servicios.join(',') });
+  fbqEvent('CompleteRegistration', { content_name: 'Registro de taller', status: true }, eventId);
+}
+
+export function nuevoEventoRegistro() {
+  return `reg_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function nuevoEventoEstimado() {
   return `est_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
