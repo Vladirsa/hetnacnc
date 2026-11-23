@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     alternates: { canonical: `https://hetnacnc.com/mx/latinoamerica/${p.clave}` },
     title: { absolute: `HETNA CNC en ${p.nombre}: talleres de corte láser, router y plasma` },
-    description: `HETNA CNC se prepara para abrir en ${p.nombre}. Talleres de router, láser y plasma: apúntate como fundador. Clientes: avísenme cuando abran. Herramientas CNC gratis desde hoy.`,
+    description: `HETNA CNC se prepara para abrir en ${p.nombre}. Talleres de router, láser y plasma: apúntate como fundador. Clientes: te avisamos al abrir.`,
   }
 }
 

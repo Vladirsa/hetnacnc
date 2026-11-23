@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres/ranking" },
   title: "Ranking de talleres CNC en México",
   description:
-    "Los talleres CNC mejor evaluados por sus clientes en HETNA: corte láser, plasma, router, fresado y torno, impresión 3D y moldes, por estado. Sólo trabajos reales y pagados.",
+    "Los talleres CNC mejor evaluados por sus clientes en HETNA: láser, plasma, router, fresado, torno e impresión 3D, por estado. Sólo trabajos reales y pagados.",
 }
 
 const ESPECIALIDADES: { clave: string; nombre: string; re: RegExp }[] = [
