@@ -160,3 +160,41 @@ export async function acabadosReferencia(): Promise<AcabadoReferencia[]> {
     return []
   }
 }
+
+// ── "Mándame este estimado por correo" (cotizador de /cotizar) ───────────
+export type MandarEstimadoInput = {
+  email: string
+  acepta: boolean
+  sitio_web?: string
+  servicio: string
+  material: string
+  largo_mm: number
+  ancho_mm: number
+  cantidad: number
+  estimado_min: number
+  estimado_max: number
+  rastreo?: boolean
+  evento_id?: string
+}
+
+export async function mandarEstimadoCorreo(entrada: MandarEstimadoInput): Promise<{ ok: true } | { ok: false; mensaje: string }> {
+  const { rastreo, evento_id, ...input } = entrada
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/estimado-correo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string },
+      body: JSON.stringify(input),
+    })
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}))
+      return { ok: false, mensaje: b.message || "No pudimos mandar el correo. Intenta de nuevo." }
+    }
+    if (rastreo && evento_id && /^est_[\w-]{6,40}$/.test(evento_id)) {
+      const { reportarLeadMeta } = await import("@/lib/analytics/meta-lead")
+      await reportarLeadMeta({ eventId: evento_id, contenido: "Estimado por correo", email: input.email })
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, mensaje: "No pudimos mandar el correo. Intenta de nuevo." }
+  }
+}

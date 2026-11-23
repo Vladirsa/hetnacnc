@@ -897,6 +897,7 @@ export type Routes = {
             $id: typeof import("../src/api/store/escaneos/[id]/route");
             subida: typeof import("../src/api/store/escaneos/subida/route");
         };
+        estimadoCorreo: typeof import("../src/api/store/estimado-correo/route");
         expedientes: {
             $clave: typeof import("../src/api/store/expedientes/[clave]/route");
         };
@@ -1359,6 +1360,7 @@ export type Routes = {
         hetnaLicencias: typeof import("../src/api/vendor/hetna-licencias/route");
         hetnaMateriales: typeof import("../src/api/vendor/hetna-materiales/route");
         hetnaMensajes: typeof import("../src/api/vendor/hetna-mensajes/route");
+        hetnaMercadolibre: typeof import("../src/api/vendor/hetna-mercadolibre/route");
         hetnaOpinion: typeof import("../src/api/vendor/hetna-opinion/route");
         hetnaPanelTaller: typeof import("../src/api/vendor/hetna-panel-taller/route");
         hetnaPromocion: typeof import("../src/api/vendor/hetna-promocion/route") & {
@@ -1493,6 +1495,9 @@ export type Routes = {
         latamRegistro: typeof import("../src/api/api/latam-registro/route");
         licitacionPaypal: {
             $token: typeof import("../src/api/api/licitacion-paypal/[token]/route");
+        };
+        ml: {
+            callback: typeof import("../src/api/api/ml/callback/route");
         };
         mpComision: typeof import("../src/api/api/mp-comision/route");
         mpCotizacion: typeof import("../src/api/api/mp-cotizacion/route");
