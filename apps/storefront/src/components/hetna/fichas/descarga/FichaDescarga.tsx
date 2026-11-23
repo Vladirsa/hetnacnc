@@ -68,11 +68,11 @@ const Marca = ({ si }: { si: boolean }) => (
 
 /** Lo que se lee antes de pagar: pastillas, licencia y qué recibes. */
 export function ColumnaDescarga({ product, vendedor }: { product: Producto; vendedor?: { handle?: string | null; name?: string | null } | null }) {
+  // 23 nov 2026 (borrador aprobado): la licencia, "Qué recibes" y "Vendido
+  // por" van en las pestañas de abajo, y "¿Lo quieres ya fabricado?" debajo
+  // de "Fabrícalo"; en la columna de compra sólo quedan las características.
   const pastillas = caracteristicasDe(product.description)
-  const { licencia, piezas } = licenciaDe(product.metadata)
-  const fmt = formatos(product)
-  const programas = programasPara(formatosDe(product))
-  const otros = datosDigital(product.metadata).filas.filter(([k]) => k !== "Formatos incluidos")
+  if (!pastillas.length) return null
 
   return (
     <div className="mt-4 flex flex-col gap-4" data-testid="columna-descarga">
@@ -86,76 +86,14 @@ export function ColumnaDescarga({ product, vendedor }: { product: Producto; vend
         </ul>
       )}
 
-      <section className="rounded-md border border-[#D4D9DF] bg-white" aria-labelledby="titulo-licencia">
-        <div className="flex items-center justify-between gap-2 border-b border-[#D4D9DF] bg-[#1E2329] px-3 py-2 text-white">
-          <h2 id="titulo-licencia" className="fuente-condensada m-0 text-[18px] font-bold uppercase leading-none">
-            Licencia {licencia.nombre}
-          </h2>
-          {piezas ? <span className="fuente-mono text-[12px]">hasta {piezas.toLocaleString("es-MX")} piezas</span> : null}
-        </div>
-        <div className="p-3">
-          <p className="m-0 text-[13.5px] text-[#3A414B]">{licencia.resumen}</p>
-          <ul className="mt-2 grid gap-1.5">
-            {licencia.permisos.map((x) => (
-              <li key={x.que} className="flex gap-2 text-[13.5px] text-[#1E2329]">
-                <Marca si={x.si} />
-                <span>
-                  {x.que}
-                  {x.nota ? <span className="text-[#5B6370]"> ({x.nota})</span> : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <LocalizedClientLink href="/licencias-disenos" className="mt-2 inline-block text-[12.5px] font-semibold text-[#C24E03] underline">
-            Ver las tres licencias
-          </LocalizedClientLink>
-        </div>
-      </section>
+    </div>
+  )
+}
 
-      <section aria-labelledby="titulo-recibes">
-        <h2 id="titulo-recibes" className="fuente-condensada m-0 text-[18px] font-bold uppercase leading-none text-[#1E2329]">
-          Qué recibes
-        </h2>
-        <ul className="mt-2 grid gap-1.5 text-[13.5px] text-[#1E2329]">
-          <li className="flex gap-2">
-            <Marca si />
-            <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}, listo para tu CAM.</span>
-          </li>
-          {programas.length > 0 && (
-            <li className="flex gap-2">
-              <Marca si />
-              <span>
-                Se abre en: <b className="font-semibold">{programas.join(", ")}</b>
-                {" "}y cualquier programa que lea {formatosDe(product).join(" o ")}.
-              </span>
-            </li>
-          )}
-          {otros.map(([k, v]) => (
-            <li key={k} className="flex gap-2">
-              <Marca si />
-              <span>
-                {k}: {v}
-              </span>
-            </li>
-          ))}
-          <li className="flex gap-2">
-            <Marca si />
-            <span>
-              Lo descargas en{" "}
-              <LocalizedClientLink href="/user/descargas" className="font-semibold underline">
-                Mi cuenta › Mis descargas
-              </LocalizedClientLink>{" "}
-              en cuanto se confirma el pago.
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <Marca si />
-            <span>Licencia {licencia.nombre} a tu nombre.</span>
-          </li>
-        </ul>
-      </section>
-
-      <section className="rounded-md border border-dashed border-[#C5CCD3] bg-[#F7F8FA] p-3" aria-labelledby="titulo-modificar">
+/** "¿Lo quieres ya fabricado o con otras medidas?": va debajo de "Fabrícalo". */
+export function ModificarDiseno({ product, vendedor }: { product: Producto; vendedor?: { handle?: string | null; name?: string | null } | null }) {
+  return (
+      <section className="rounded-xl border border-dashed border-[#C5CCD3] bg-[#F7F8FA] p-4" aria-labelledby="titulo-modificar">
         <h2 id="titulo-modificar" className="m-0 text-[14.5px] font-bold text-[#1E2329]">
           ¿Lo quieres ya fabricado o con otras medidas?
         </h2>
@@ -175,7 +113,6 @@ export function ColumnaDescarga({ product, vendedor }: { product: Producto; vend
           Cotizar fabricación
         </a>
       </section>
-    </div>
   )
 }
 
@@ -228,46 +165,27 @@ const PASOS = [
 ]
 
 /** Lo que va debajo: cómo funciona, pestañas y preguntas frecuentes. */
-export function AbajoDescarga({ product, fotosCompradores = [] }: { product: Producto; fotosCompradores?: string[] }) {
+export function AbajoDescarga({
+  product,
+  fotosCompradores = [],
+  vendido,
+}: {
+  product: Producto
+  fotosCompradores?: string[]
+  /** Tarjeta del vendedor, para la pestaña "Vendido por" */
+  vendido?: React.ReactNode
+}) {
   const preguntas = faq(product.metadata)
   const pastillas = caracteristicasDe(product.description)
   const filas = datosDigital(product.metadata).filas
   const { licencia, piezas } = licenciaDe(product.metadata)
   const m = meta(product)
+  const fmt = formatos(product)
+  const programas = programasPara(formatosDe(product))
+  const otros = filas.filter(([k]) => k !== "Formatos incluidos")
 
   return (
     <div className="flex flex-col gap-6">
-      <PiezaFabricada fotos={fotosFabricadaDe(product.metadata)} compradores={fotosCompradores.slice(0, 8)} />
-
-      <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
-        <h2 id="titulo-como" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
-          Cómo funciona
-        </h2>
-        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
-          {PASOS.map((p) => (
-            <li key={p.n} className="flex gap-3 sm:flex-col sm:gap-2">
-              <span className="fuente-mono flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#E85D04] text-[15px] font-bold text-white">{p.n}</span>
-              <div>
-                <p className="m-0 text-[16px] font-bold text-[#1E2329]">{p.t}</p>
-                <p className="m-0 mt-0.5 text-[14px] leading-snug text-[#5B6370]">
-                  {p.n === "02" ? (
-                    <>
-                      El archivo aparece en{" "}
-                      <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#1E2329] underline">
-                        Mi cuenta › Mis descargas
-                      </LocalizedClientLink>{" "}
-                      en cuanto se confirma el pago.
-                    </>
-                  ) : (
-                    p.d
-                  )}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       <Pestanas
         pestanas={[
           {
@@ -343,8 +261,88 @@ export function AbajoDescarga({ product, fotosCompradores = [] }: { product: Pro
               </div>
             ),
           },
+          {
+            clave: "recibes",
+            titulo: "Qué recibes",
+            contenido: (
+          <section aria-labelledby="titulo-recibes">
+            <h2 id="titulo-recibes" className="sr-only">
+              Qué recibes
+            </h2>
+            <ul className="mt-2 grid gap-1.5 text-[13.5px] text-[#1E2329]">
+              <li className="flex gap-2">
+                <Marca si />
+                <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}, listo para tu CAM.</span>
+              </li>
+              {programas.length > 0 && (
+                <li className="flex gap-2">
+                  <Marca si />
+                  <span>
+                    Se abre en: <b className="font-semibold">{programas.join(", ")}</b>
+                    {" "}y cualquier programa que lea {formatosDe(product).join(" o ")}.
+                  </span>
+                </li>
+              )}
+              {otros.map(([k, v]) => (
+                <li key={k} className="flex gap-2">
+                  <Marca si />
+                  <span>
+                    {k}: {v}
+                  </span>
+                </li>
+              ))}
+              <li className="flex gap-2">
+                <Marca si />
+                <span>
+                  Lo descargas en{" "}
+                  <LocalizedClientLink href="/user/descargas" className="font-semibold underline">
+                    Mi cuenta › Mis descargas
+                  </LocalizedClientLink>{" "}
+                  en cuanto se confirma el pago.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <Marca si />
+                <span>Licencia {licencia.nombre} a tu nombre.</span>
+              </li>
+            </ul>
+          </section>
+            ),
+          },
+          ...(vendido ? [{ clave: "vendedor", titulo: "Vendido por", contenido: vendido }] : []),
         ]}
       />
+      <PiezaFabricada fotos={fotosFabricadaDe(product.metadata)} compradores={fotosCompradores.slice(0, 8)} />
+
+      <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
+        <h2 id="titulo-como" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
+          Cómo funciona
+        </h2>
+        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+          {PASOS.map((p) => (
+            <li key={p.n} className="flex gap-3 sm:flex-col sm:gap-2">
+              <span className="fuente-mono flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#E85D04] text-[15px] font-bold text-white">{p.n}</span>
+              <div>
+                <p className="m-0 text-[16px] font-bold text-[#1E2329]">{p.t}</p>
+                <p className="m-0 mt-0.5 text-[14px] leading-snug text-[#5B6370]">
+                  {p.n === "02" ? (
+                    <>
+                      El archivo aparece en{" "}
+                      <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#1E2329] underline">
+                        Mi cuenta › Mis descargas
+                      </LocalizedClientLink>{" "}
+                      en cuanto se confirma el pago.
+                    </>
+                  ) : (
+                    p.d
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
 
       {preguntas.length > 0 && (
         <section aria-labelledby="titulo-faq" className="rounded-md border border-[#D4D9DF] bg-white p-5">

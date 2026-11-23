@@ -14,7 +14,7 @@
 // un físico es "fabricar algo similar"), va debajo de las fotos, más chico, y
 // pide las tres medidas: ancho × largo × alto. En piezas planas el alto es
 // opcional (el grosor lo da el material).
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { type GeoCad, leerDxf, leerObj, leerStl, leerSvg } from "@/lib/cotizador/archivo-cad"
@@ -95,7 +95,14 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const base: Pieza | null = geo
     ? piezaDeGeo(geo, titulo)
     : deFicha
-      ? piezaAMano(deFicha.largo, deFicha.ancho, deFicha.alto, "normal", servicio === "impresora_3d")
+      ? {
+          ...piezaAMano(deFicha.largo, deFicha.ancho, deFicha.alto, "normal", servicio === "impresora_3d"),
+          // Sin modelo 3D sólo sabemos la caja que ocupa la pieza. Una pieza
+          // impresa llena ~20–40 % de su caja (un soporte en L, ~23 %), no el
+          // 60 % que se usa para piezas escritas a mano: con eso 10 soportes
+          // NEMA 23 salían en $6,000–8,000.
+          ...(servicio === "impresora_3d" ? { volumenCm3: ((deFicha.largo * deFicha.ancho * deFicha.alto) / 1000) * 0.3 } : {}),
+        }
       : null
   const num = (v: string) => parseFloat(v.replace(",", ".")) || 0
   // Ancho y largo son obligatorios; el alto sólo en impresión 3D
@@ -143,29 +150,35 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
     return `/cotizar?${q.toString()}`
   })()
 
-  // Valor de cada medida en pantalla. Con diseño base: se escalan juntas.
+  // Las tres medidas y la cantidad, en un solo renglón
   const dims = [
-    { clave: "ancho", nombre: "Ancho", base: base?.largo },
-    { clave: "largo", nombre: "Largo", base: base?.ancho },
-    { clave: "alto", nombre: servicio === "impresora_3d" ? "Alto" : "Alto (opcional)", base: base?.alto },
+    { clave: "ancho", nombre: "Ancho mm", base: base?.largo },
+    { clave: "largo", nombre: "Largo mm", base: base?.ancho },
+    { clave: "alto", nombre: servicio === "impresora_3d" ? "Alto mm" : "Alto (opc.)", base: base?.alto },
   ] as const
+  const [verCalculo, setVerCalculo] = useState(false)
 
+  // Versión corta (23 nov 2026, borrador aprobado por Vlado): proceso y
+  // material con buscador, medidas y cantidad en un renglón, y el precio
+  // junto al botón. El grabado y el "cómo se calculó" se abren aparte.
   return (
     <section
       id="fabricar"
       aria-labelledby="titulo-fabricar"
-      className="flex h-full scroll-mt-24 flex-col rounded-xl border-2 border-[#E85D04] bg-white p-4"
+      className="scroll-mt-24 rounded-xl border-2 border-[#E85D04] bg-white p-4"
       data-testid="fabricar-con-taller"
     >
-      <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[20px] font-bold uppercase leading-none text-[#1E2329]">
-        {fisico ? "Fabrícalo a tu medida con un taller" : "Fabrícalo con un taller"}
-      </h2>
-      <p className="m-0 mt-1 text-[13px] text-[#3A414B]">Precio aproximado al momento y propuestas de talleres de la red.</p>
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[19px] font-bold uppercase leading-none text-[#1E2329]">
+          {fisico ? "Fabrícalo a tu medida" : "Fabrícalo con un taller"}
+        </h2>
+        <span className="shrink-0 text-[12px] text-[#5B6370]">precio al momento</span>
+      </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        <label className={etiqueta}>
-          Proceso
-          <select className={campo} value={servicio} onChange={(e) => setServicio(e.target.value as TipoMaquina)}>
+      <div className="mt-2.5 grid grid-cols-[1fr_1.3fr] gap-2">
+        <label className="block">
+          <span className="sr-only">Proceso</span>
+          <select className={campo + " mt-0"} value={servicio} onChange={(e) => setServicio(e.target.value as TipoMaquina)}>
             {procesos.map((p) => (
               <option key={p} value={p}>
                 {SERVICIOS.find((s) => s.clave === p)?.nombre}
@@ -173,115 +186,220 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
             ))}
           </select>
         </label>
-        <label className={etiqueta}>
-          Material y grosor
-          <select className={campo} value={iMat} onChange={(e) => setIMat(Number(e.target.value))}>
-            {mats.map((m, i) => (
-              <option key={m.nombre} value={i}>
-                {m.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-        <fieldset className="col-span-2 m-0 border-0 p-0">
-          <legend className={etiqueta}>Medidas (mm)</legend>
-          <div className="mt-1 grid grid-cols-3 gap-2">
-            {dims.map((d) => (
-              <label key={d.clave} className="block">
-                <span className="block text-[11.5px] text-[#5B6370]">{d.nombre}</span>
-                <input
-                  className={campo + " mt-0.5"}
-                  inputMode="decimal"
-                  placeholder={d.clave === "alto" && servicio !== "impresora_3d" ? "—" : "0"}
-                  value={base ? (d.base ? String(Math.round(d.base * k)) : "") : manual[d.clave]}
-                  disabled={Boolean(base) && !d.base}
-                  onChange={(e) =>
-                    base
-                      ? d.base && num(e.target.value) > 0 && setK(num(e.target.value) / d.base)
-                      : setManual({ ...manual, [d.clave]: e.target.value })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-          {base && (
-            <span className="mt-1 block text-[11.5px] text-[#5B6370]">
-              Original: {Math.round(base.largo)} × {Math.round(base.ancho)}
-              {base.alto ? ` × ${Math.round(base.alto)}` : ""} mm · se escala en proporción.
-              {k !== 1 && (
-                <button type="button" onClick={() => setK(1)} className="ml-1 font-semibold text-[#E85D04] underline">
-                  Volver al original
-                </button>
-              )}
-            </span>
-          )}
-        </fieldset>
-        <label className={etiqueta}>
-          Cantidad
-          <input className={campo} inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
-        </label>
-        {servicio !== "impresora_3d" ? (
-          <label className="flex min-h-[44px] cursor-pointer items-end gap-2 pb-2.5 text-[13px] font-semibold text-[#1E2329]">
-            <input type="checkbox" checked={conGrabado} onChange={(e) => setConGrabado(e.target.checked)} className="h-5 w-5 accent-[#E85D04]" />
-            Con grabado
+        <BuscadorMaterial materiales={mats.map((m) => m.nombre)} claves={mats.map((m) => m.clave)} elegido={Math.min(iMat, mats.length - 1)} onElegir={setIMat} />
+      </div>
+
+      <div className="mt-2 grid grid-cols-4 gap-2">
+        {dims.map((d) => (
+          <label key={d.clave} className="block min-w-0">
+            <span className="block truncate text-[11px] text-[#5B6370]">{d.nombre}</span>
+            <input
+              className={campo + " mt-0.5"}
+              inputMode="decimal"
+              placeholder={d.clave === "alto" && servicio !== "impresora_3d" ? "—" : "0"}
+              value={base ? (d.base ? String(Math.round(d.base * k)) : "") : manual[d.clave]}
+              disabled={Boolean(base) && !d.base}
+              onChange={(e) =>
+                base ? d.base && num(e.target.value) > 0 && setK(num(e.target.value) / d.base) : setManual({ ...manual, [d.clave]: e.target.value })
+              }
+            />
           </label>
-        ) : (
-          <span />
-        )}
-        {conGrabado && servicio !== "impresora_3d" && (
-          <input
-            className={campo + " col-span-2 mt-0"}
-            value={texto}
-            maxLength={60}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder='Texto del grabado, ej. "Familia López 2026"'
-            aria-label="Texto del grabado"
-          />
-        )}
+        ))}
+        <label className="block min-w-0">
+          <span className="block text-[11px] text-[#5B6370]">Cantidad</span>
+          <input className={campo + " mt-0.5"} inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+        </label>
       </div>
 
-      {/* Crece para llenar la columna: así no queda hueco debajo de las fotos */}
-      <div className="mt-3 flex flex-1 flex-col justify-center rounded-lg bg-[#F7F8FA] p-3" aria-live="polite">
-        {!pieza ? (
-          <p className="m-0 text-[13px] text-[#5B6370]">
-            {faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe el ancho y el largo para ver el precio aproximado."}
-          </p>
-        ) : r && r.ok ? (
-          <>
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">Precio aproximado</p>
-            <p className="m-0 mt-0.5 text-[22px] font-extrabold leading-none text-[#1E2329]">
-              {pesos(r.min)} – {pesos(r.max)}
-            </p>
-            <p className="m-0 mt-1 text-[12.5px] text-[#3A414B]">
-              {n > 1 ? `${n} piezas · unos ${pesos(r.precioPieza)} c/u · ` : ""}material y maquinado, más IVA, sin envío.
-            </p>
-            {r.avisos.map((a) => (
-              <p key={a} className="m-0 mt-1 text-[12px] text-[#9A5B00]">
-                {a}
-              </p>
-            ))}
-            <details className="mt-1 text-[12px] text-[#5B6370]">
-              <summary className="cursor-pointer font-semibold">Cómo se calculó</summary>
-              <p className="m-0 mt-1">{r.explicacion}.</p>
-            </details>
-          </>
-        ) : (
-          <p className="m-0 text-[13px] text-[#9A5B00]">{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</p>
-        )}
+      {conGrabado && servicio !== "impresora_3d" && (
+        <input
+          className={campo}
+          value={texto}
+          maxLength={60}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder='Texto del grabado, ej. "Familia López 2026"'
+          aria-label="Texto del grabado"
+        />
+      )}
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+        <div className="min-w-[180px] flex-1 rounded-md bg-[#F7F8FA] px-3 py-2" aria-live="polite">
+          {!pieza ? (
+            <span className="text-[12.5px] text-[#5B6370]">{faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe ancho y largo para ver el precio."}</span>
+          ) : r && r.ok ? (
+            <span className="text-[12.5px] text-[#5B6370]">
+              <span className="text-[11px] font-bold uppercase tracking-wide">Aprox.</span>{" "}
+              <b className="text-[18px] text-[#1E2329]">
+                {pesos(r.min)} – {pesos(r.max)}
+              </b>{" "}
+              · {n} {n === 1 ? "pieza" : "pzas"}
+            </span>
+          ) : (
+            <span className="text-[12.5px] text-[#9A5B00]">{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</span>
+          )}
+        </div>
+        <LocalizedClientLink
+          href={liga}
+          aria-disabled={!pieza}
+          className={`flex min-h-[44px] items-center justify-center rounded-md bg-[#E85D04] px-4 text-[14px] font-bold text-white hover:bg-[#C94F03] ${pieza ? "" : "pointer-events-none opacity-50"}`}
+        >
+          Pedir propuestas →
+        </LocalizedClientLink>
       </div>
 
-      <LocalizedClientLink
-        href={liga}
-        aria-disabled={!pieza}
-        className={`mt-3 flex min-h-[46px] w-full items-center justify-center rounded-lg bg-[#E85D04] px-4 text-[15px] font-bold text-white hover:bg-[#C94F03] ${pieza ? "" : "pointer-events-none opacity-50"}`}
-      >
-        Pedir propuestas a talleres
-      </LocalizedClientLink>
+      {r && r.ok && r.avisos.length > 0 && (
+        <p className="m-0 mt-1.5 text-[12px] text-[#9A5B00]">{r.avisos.join(" ")}</p>
+      )}
+      {verCalculo && r && r.ok && (
+        <p className="m-0 mt-1.5 text-[12px] text-[#5B6370]">
+          {n > 1 ? `Unos ${pesos(r.precioPieza)} por pieza. ` : ""}Material y maquinado, más IVA, sin envío. {r.explicacion}.
+        </p>
+      )}
       <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#5B6370]">
-        {fisico
-          ? "Precio orientativo. Cada taller manda su propuesta con precio, entrega y garantía, y pagas dentro de HETNA."
-          : "Precio orientativo. El taller necesita el archivo: cómpralo aquí y súbelo en tu solicitud. Pagas dentro de HETNA."}
+        {servicio !== "impresora_3d" && (
+          <>
+            <button type="button" onClick={() => setConGrabado(!conGrabado)} className="font-semibold underline">
+              {conGrabado ? "Quitar grabado" : "+ Agregar grabado"}
+            </button>
+            {" · "}
+          </>
+        )}
+        <button type="button" onClick={() => setVerCalculo(!verCalculo)} className="font-semibold underline" aria-expanded={verCalculo}>
+          Cómo se calculó
+        </button>
+        {" · "}Precio orientativo; el real lo da cada taller.
+        {base && k !== 1 && (
+          <>
+            {" · "}
+            <button type="button" onClick={() => setK(1)} className="font-semibold text-[#E85D04] underline">
+              Medidas originales
+            </button>
+          </>
+        )}
       </p>
     </section>
+  )
+}
+
+// Grupos del buscador de material
+const GRUPOS: [string, (c: string) => boolean][] = [
+  ["Maderas sólidas", (c) => c === "madera"],
+  ["Tableros", (c) => ["mdf", "triplay", "melamina"].includes(c)],
+  ["Plásticos y espumas", (c) => ["acrilico", "pvc", "espuma"].includes(c)],
+  ["Metales", (c) => ["aluminio", "acero", "inox"].includes(c)],
+  ["Filamentos y resina", () => true],
+]
+const grupoDe = (c: string) => GRUPOS.find(([, f]) => f(c))![0]
+const sinAcentos = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+
+/** Selector de material con buscador: escribes "pino" o "acrí" y filtra; sin
+ *  escribir se ven todos, agrupados (maderas, tableros, plásticos, metales). */
+function BuscadorMaterial({
+  materiales,
+  claves,
+  elegido,
+  onElegir,
+}: {
+  materiales: string[]
+  claves: string[]
+  elegido: number
+  onElegir: (i: number) => void
+}) {
+  const id = useId()
+  const caja = useRef<HTMLDivElement>(null)
+  const [abierto, setAbierto] = useState(false)
+  const [q, setQ] = useState("")
+  const [activo, setActivo] = useState(0)
+
+  useEffect(() => {
+    if (!abierto) return
+    const fuera = (e: MouseEvent) => !caja.current?.contains(e.target as Node) && setAbierto(false)
+    document.addEventListener("mousedown", fuera)
+    return () => document.removeEventListener("mousedown", fuera)
+  }, [abierto])
+
+  const busca = sinAcentos(q.trim())
+  const lista = materiales
+    .map((nombre, i) => ({ nombre, i, grupo: grupoDe(claves[i]) }))
+    .filter((x) => !busca || sinAcentos(x.nombre).includes(busca) || sinAcentos(x.grupo).includes(busca))
+    .sort((a, b) => GRUPOS.findIndex(([g]) => g === a.grupo) - GRUPOS.findIndex(([g]) => g === b.grupo))
+
+  const elegir = (i: number) => {
+    onElegir(i)
+    setAbierto(false)
+    setQ("")
+  }
+
+  return (
+    <div ref={caja} className="relative">
+      <label className="block">
+        <span className="sr-only">Material y grosor</span>
+        <input
+          role="combobox"
+          aria-expanded={abierto}
+          aria-controls={`${id}-lista`}
+          aria-autocomplete="list"
+          className={campo + " mt-0 pr-7"}
+          value={abierto ? q : materiales[elegido] || ""}
+          placeholder="Buscar material…"
+          onFocus={() => {
+            setAbierto(true)
+            setQ("")
+            setActivo(0)
+          }}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setActivo(0)
+            setAbierto(true)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown") {
+              e.preventDefault()
+              setActivo((a) => Math.min(lista.length - 1, a + 1))
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault()
+              setActivo((a) => Math.max(0, a - 1))
+            } else if (e.key === "Enter" && abierto && lista[activo]) {
+              e.preventDefault()
+              elegir(lista[activo].i)
+            } else if (e.key === "Escape") {
+              setAbierto(false)
+            }
+          }}
+        />
+      </label>
+      <span aria-hidden="true" className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[12px] text-[#5B6370]">
+        ▾
+      </span>
+      {abierto && (
+        <ul
+          id={`${id}-lista`}
+          role="listbox"
+          className="absolute left-0 right-0 z-30 m-0 mt-1 max-h-[300px] list-none overflow-y-auto rounded-md border border-[#C5CCD3] bg-white p-0 shadow-lg"
+        >
+          {lista.length === 0 && <li className="px-3 py-2 text-[13px] text-[#5B6370]">Sin resultados. Prueba con otra palabra.</li>}
+          {lista.map((x, n) => (
+            <li key={x.i} role="presentation">
+              {(n === 0 || lista[n - 1].grupo !== x.grupo) && (
+                <span className="block bg-[#FAF9F6] px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-[#6B6A63]">{x.grupo}</span>
+              )}
+              <button
+                type="button"
+                role="option"
+                aria-selected={x.i === elegido}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => elegir(x.i)}
+                onMouseEnter={() => setActivo(n)}
+                className={`block min-h-[40px] w-full px-3 text-left text-[14px] ${n === activo ? "bg-[#FDECE0]" : ""} ${
+                  x.i === elegido ? "font-semibold" : ""
+                }`}
+              >
+                {x.nombre}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
