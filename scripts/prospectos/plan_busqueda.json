@@ -1,5 +1,5 @@
 {
-  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo). Desde el 18 nov 2026 incluye compradores: mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands, mantenimiento industrial y fabricantes de maquinaria. Desde el 20 nov 2026 incluye proveedores extranjeros (China, Taiwán, Turquía, Italia, España, Alemania, India, Corea, EE. UU.) que podrían vender en México por HETNA: van como tipo «Proveedor extranjero», con su propio correo, y la cuarta parte de cada tanda diaria se reserva para ellos.",
+  "_nota": "Combinaciones que recorre buscar_prospectos.py --auto: cada segmento x cada ciudad de su idioma. Cuando termina todas, vuelve a empezar (los sitios ya vistos se saltan). Desde el 15 nov 2026 incluye carpinterías, rotulistas, grabado láser, herrerías, impresión 3D y torno; y por cada búsqueda en español o portugués también busca perfiles de negocio en Instagram y Facebook (sólo los que publican teléfono o correo). Desde el 18 nov 2026 incluye compradores: mueblerías, arquitectos e interioristas, constructoras, exhibidores y stands, mantenimiento industrial y fabricantes de maquinaria. Desde el 20 nov 2026 incluye proveedores extranjeros (China, Taiwán, Turquía, Italia, España, Alemania, India, Corea, EE. UU.) que podrían vender en México por HETNA: van como tipo «Proveedor extranjero», con su propio correo, y la cuarta parte de cada tanda diaria se reserva para ellos. Desde el 24 nov 2026: 36 ciudades medianas más de México (Zapopan, Apodaca, Ramos Arizpe, Silao, San Juan del Río, Mazatlán, Tuxtla…), más ciudades de Latinoamérica y nuevos países: El Salvador, República Dominicana, Panamá, Honduras y Venezuela.",
   "segmentos": {
     "es": [
       [
@@ -220,7 +220,43 @@
         "Zacatecas",
         "Oaxaca",
         "Cuernavaca",
-        "Villahermosa"
+        "Villahermosa",
+        "Zapopan",
+        "Tlaquepaque",
+        "Apodaca",
+        "Guadalupe Nuevo León",
+        "Santa Catarina Nuevo León",
+        "Ecatepec",
+        "Cuautitlán Izcalli",
+        "Ramos Arizpe",
+        "Monclova",
+        "Piedras Negras",
+        "Nuevo Laredo",
+        "Silao",
+        "Salamanca Guanajuato",
+        "San Juan del Río",
+        "Lagos de Moreno",
+        "Tepatitlán",
+        "Zamora Michoacán",
+        "Uruapan",
+        "Colima",
+        "Manzanillo",
+        "Tepic",
+        "Mazatlán",
+        "Los Mochis",
+        "Ciudad Obregón",
+        "Nogales Sonora",
+        "Ensenada",
+        "La Paz Baja California Sur",
+        "Delicias Chihuahua",
+        "Tehuacán",
+        "Huamantla",
+        "Tulancingo",
+        "Orizaba",
+        "Córdoba Veracruz",
+        "Coatzacoalcos",
+        "Campeche",
+        "Tuxtla Gutiérrez"
       ]
     },
     "Estados Unidos": {
@@ -255,7 +291,11 @@
         "Cali",
         "Barranquilla",
         "Bucaramanga",
-        "Pereira"
+        "Pereira",
+        "Cartagena",
+        "Manizales",
+        "Cúcuta",
+        "Ibagué"
       ]
     },
     "Perú": {
@@ -263,7 +303,10 @@
       "lista": [
         "Lima",
         "Arequipa",
-        "Trujillo"
+        "Trujillo",
+        "Chiclayo",
+        "Piura",
+        "Cusco"
       ]
     },
     "Chile": {
@@ -272,7 +315,10 @@
         "Santiago",
         "Concepción",
         "Valparaíso",
-        "Antofagasta"
+        "Antofagasta",
+        "Temuco",
+        "Puerto Montt",
+        "Rancagua"
       ]
     },
     "Argentina": {
@@ -281,7 +327,11 @@
         "Buenos Aires",
         "Córdoba",
         "Rosario",
-        "Mendoza"
+        "Mendoza",
+        "La Plata",
+        "Mar del Plata",
+        "Tucumán",
+        "Santa Fe Argentina"
       ]
     },
     "Ecuador": {
@@ -289,38 +339,48 @@
       "lista": [
         "Quito",
         "Guayaquil",
-        "Cuenca"
+        "Cuenca",
+        "Ambato",
+        "Manta"
       ]
     },
     "Uruguay": {
       "idioma": "es",
       "lista": [
-        "Montevideo"
+        "Montevideo",
+        "Maldonado",
+        "Canelones"
       ]
     },
     "Paraguay": {
       "idioma": "es",
       "lista": [
-        "Asunción"
+        "Asunción",
+        "Ciudad del Este",
+        "Encarnación"
       ]
     },
     "Bolivia": {
       "idioma": "es",
       "lista": [
         "Santa Cruz de la Sierra",
-        "La Paz"
+        "La Paz",
+        "Cochabamba"
       ]
     },
     "Guatemala": {
       "idioma": "es",
       "lista": [
-        "Ciudad de Guatemala"
+        "Ciudad de Guatemala",
+        "Quetzaltenango"
       ]
     },
     "Costa Rica": {
       "idioma": "es",
       "lista": [
-        "San José Costa Rica"
+        "San José Costa Rica",
+        "Alajuela",
+        "Heredia Costa Rica"
       ]
     },
     "Brasil": {
@@ -426,6 +486,41 @@
         "Barcelona",
         "Valencia",
         "Zaragoza"
+      ]
+    },
+    "El Salvador": {
+      "idioma": "es",
+      "lista": [
+        "San Salvador",
+        "Santa Ana El Salvador"
+      ]
+    },
+    "República Dominicana": {
+      "idioma": "es",
+      "lista": [
+        "Santo Domingo",
+        "Santiago de los Caballeros"
+      ]
+    },
+    "Panamá": {
+      "idioma": "es",
+      "lista": [
+        "Ciudad de Panamá"
+      ]
+    },
+    "Honduras": {
+      "idioma": "es",
+      "lista": [
+        "San Pedro Sula",
+        "Tegucigalpa"
+      ]
+    },
+    "Venezuela": {
+      "idioma": "es",
+      "lista": [
+        "Valencia Carabobo",
+        "Caracas",
+        "Maracaibo"
       ]
     }
   }
