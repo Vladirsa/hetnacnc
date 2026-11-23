@@ -40,6 +40,7 @@ export async function PaginaPais({ pais }: { pais: string }) {
             La red de talleres de router, láser y plasma de México se prepara para abrir en {p.nombre}
             {p.ciudades.length ? ` (${p.ciudades.slice(0, 3).join(", ")} y más)` : ""}. Abrimos primero donde más talleres y clientes se registren.
           </p>
+          {p.nota && <p className="mt-3 max-w-2xl text-base font-semibold text-[#F2C9A5]">{p.nota}</p>}
           {empresas.length > 0 && (
             <p className="mt-3 text-sm text-white/80">
               Ya ubicamos {empresas.length} {empresas.length === 1 ? "empresa CNC" : "empresas CNC"} en {p.nombre}.{" "}

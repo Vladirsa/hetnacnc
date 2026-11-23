@@ -262,6 +262,9 @@ export const MERCADOS: Record<string, { nombre: string; zona: string; idioma: st
   pe: { nombre: "Perú", zona: "America/Lima", idioma: "es-PE", nota: "español de Perú, soles (PEN), milímetros" },
   ar: { nombre: "Argentina", zona: "America/Argentina/Buenos_Aires", idioma: "es-AR", nota: "español rioplatense (voseo), pesos argentinos (ARS), milímetros" },
   br: { nombre: "Brasil", zona: "America/Sao_Paulo", idioma: "pt-BR", nota: "portugués de Brasil, reales (BRL), milímetros" },
+  // Fase 5.2: pre-registro de EUA hispano y España (lib/latam-campana)
+  us_es: { nombre: "Hispanos en EE. UU.", zona: "America/Chicago", idioma: "es-US", nota: "español neutro para hispanos en EE. UU., dólares (USD), pulgadas y milímetros" },
+  es: { nombre: "España", zona: "Europe/Madrid", idioma: "es-ES", nota: "español de España (tú, no vosotros en los llamados a la acción), euros (EUR), milímetros" },
 }
 export const zonaDe = (mercado?: string | null) => MERCADOS[mercado || "mx"]?.zona || ZONA
 
