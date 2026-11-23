@@ -12,13 +12,17 @@ import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
 import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { productoExtra } from "@/lib/hetna/producto-extra"
 import { VideoProducto } from "@/components/hetna/VenderMas"
 import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
 import { GaleriaDescarga } from "@/components/hetna/fichas/descarga/GaleriaDescarga"
 import { AbajoDescarga, vistasGaleria } from "@/components/hetna/fichas/descarga/FichaDescarga"
+import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
+import { formatosDe } from "@/lib/hetna/formatos"
+import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
+import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -59,6 +63,11 @@ export const ProductDetailsPage = async ({
   // vacía, y además era la razón de que el contador de vistas nunca registrara
   // nada (sin ficha dibujada, no hay componente que avise).
   if (!prod) {
+    // Direcciones del sitio anterior o fichas renombradas: si hay un producto
+    // con casi el mismo nombre, se manda ahí con 308 (el buscador pasa el
+    // posicionamiento). Si no hay uno claramente igual, 404 honesto.
+    const sucesor = await fichaParecida(handle, locale)
+    if (sucesor) permanentRedirect(`/${locale}/products/${sucesor}`)
     notFound()
   }
 
@@ -120,6 +129,28 @@ export const ProductDetailsPage = async ({
     </div>
   ) : null
 
+  // "Fabrícalo con un taller" en todos los productos, menos los servicios
+  // (pedido de Vlado, 22 nov 2026). Va debajo de las fotos.
+  const tipoProd = tipoProducto(prod as never)
+  const metaProd = (prod.metadata || {}) as Record<string, unknown>
+  const textoMeta = (v: unknown) => (typeof v === "string" ? v : "")
+  const medidasProd =
+    textoMeta(metaProd.medidas) || textoMeta(metaProd.medida_principal) || campoDeDescripcion(prod.description, /^medidas?$/i) || undefined
+  const procesoSugerido =
+    tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
+  const fabricar =
+    tipoProd === "servicio" ? null : (
+      <FabricarDiseno
+        titulo={prod.title || "Producto"}
+        handle={prod.handle}
+        formatos={descarga ? formatosDe(prod as never) : []}
+        medidas={medidasProd}
+        vistaPrevia={descarga ? vistaPreviaDe(prod.metadata) : null}
+        fisico={!descarga}
+        procesoInicial={procesoSugerido}
+      />
+    )
+
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto
   const base = baseSitio()
   const categoria = (prod as { categories?: { name?: string | null; handle?: string | null }[] }).categories?.[0]
@@ -176,15 +207,17 @@ export const ProductDetailsPage = async ({
         </ol>
       </nav>
       <div
-        // Fotos de tamaño contenido, como Amazon o AliExpress (pedido de Vlado,
-        // 21 nov 2026): la galería ocupa ~520–560 px y la información de compra
-        // el resto. La ficha larga va debajo de la foto. Filas "auto 1fr": si la
-        // columna de compra es más alta, el espacio sobrante va a la segunda
-        // fila y no abre un hueco entre la foto y la ficha larga.
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-10 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
+        // Arriba, dos columnas parejas (pedido de Vlado, 22 nov 2026: "todo
+        // justificado, sin huecos"): a la izquierda las fotos y "Fabrícalo con
+        // un taller", que crece hasta donde termina la columna de compra; a la
+        // derecha la compra. Abajo, a todo lo ancho, las pestañas.
+        // Filas "auto 1fr auto": si la compra es más alta, lo que sobra lo toma
+        // la fila de "Fabrícalo" (que se estira), no un hueco. En celular el
+        // orden es fotos → compra → Fabrícalo → pestañas.
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
-        <div className="min-w-0" data-testid="product-gallery-container">
+        <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
           {descarga ? (
             <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} />
           ) : (
@@ -192,7 +225,7 @@ export const ProductDetailsPage = async ({
           )}
         </div>
 
-        <div className="lg:row-span-2" data-testid="product-details-container">
+        <div className="order-2 lg:col-start-2 lg:row-span-2 lg:row-start-1" data-testid="product-details-container">
           <div className="max-w-[680px]">
             <ProductDetails
               product={prod}
@@ -203,12 +236,10 @@ export const ProductDetailsPage = async ({
           </div>
         </div>
 
-        {/* La ficha larga (descripción, especificaciones, qué incluye) va en la
-            columna izquierda, justo debajo de la foto: antes iba abajo a todo
-            lo ancho y debajo de la foto quedaba un hueco en blanco mientras la
-            columna de compra seguía (pedido de Vlado, 21 nov 2026: "todo
-            justificado"). En celular sigue después del botón de comprar. */}
-        <div className="min-w-0 lg:col-start-1">
+        {fabricar && <div className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">{fabricar}</div>}
+
+        {/* Ficha larga a todo lo ancho, en pestañas */}
+        <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3 lg:mt-4">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}
@@ -269,4 +300,40 @@ export const ProductDetailsPage = async ({
       </div>
     </>
   )
+}
+
+// Palabras del handle que sirven para comparar (sin "de", "para", números sueltos…)
+const VACIAS = new Set(["de", "del", "la", "el", "los", "las", "para", "con", "y", "en", "a", "un", "una", "por", "pieza", "gratis"])
+const palabras = (h: string) =>
+  new Set(
+    decodeURIComponent(h)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !VACIAS.has(w) && !/^\d+$/.test(w))
+  )
+
+/** Handle de un producto actual casi igual al pedido, o null. */
+async function fichaParecida(handle: string, locale: string): Promise<string | null> {
+  const buscadas = palabras(handle)
+  if (buscadas.size < 2) return null
+  try {
+    const { response } = await listProducts({
+      countryCode: locale,
+      queryParams: { q: [...buscadas].slice(0, 6).join(" "), limit: 10 } as never,
+    })
+    let mejor: { handle: string; parecido: number } | null = null
+    for (const p of response.products) {
+      if (!p.handle) continue
+      const suyas = palabras(p.handle)
+      const comunes = [...buscadas].filter((w) => suyas.has(w)).length
+      // Jaccard: comunes / todas las distintas de los dos
+      const parecido = comunes / new Set([...buscadas, ...suyas]).size
+      if (!mejor || parecido > mejor.parecido) mejor = { handle: p.handle, parecido }
+    }
+    return mejor && mejor.parecido >= 0.6 ? mejor.handle : null
+  } catch {
+    return null
+  }
 }
