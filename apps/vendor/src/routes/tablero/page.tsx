@@ -745,6 +745,16 @@ function Foro({ datos }: { datos: RespuestaTablero }) {
   )
 }
 
+type EstadoAlta = {
+  estado: string
+  correo_confirmado: boolean
+  correo: string
+  puede_publicar: boolean
+  mensaje: string | null
+}
+
+// Aviso arriba del tablero mientras la tienda no esté aprobada: primero que
+// confirme su correo, luego que espere la revisión (lib/alta-taller.ts).
 function AvisoAlta({ onEstado }: { onEstado?: (a: EstadoAlta | null) => void }) {
   const [alta, setAlta] = useState<EstadoAlta | null>(null)
   const [nota, setNota] = useState("")

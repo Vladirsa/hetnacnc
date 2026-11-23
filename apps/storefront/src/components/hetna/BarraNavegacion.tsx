@@ -296,9 +296,10 @@ const MenuFabricacion = () => (
 // Comunidad (auditoría del 21 nov 2026: "Aprendizaje · Foro · Cursos ·
 // Recursos técnicos" agrupados, sin llenar la barra de enlaces sueltos)
 const COMUNIDAD = [
+  // Orden pedido por Vlado (23 nov 2026): primero el Foro, luego la Academia
+  { href: "/foro-cnc", titulo: "Foro CNC", texto: "Pregunta y ayuda a otros talleres" },
   { href: "/servicios/aprendizaje-cnc", titulo: "Academia", texto: "Cursos, libros y recursos técnicos" },
   { href: "/cnc", titulo: "Guías CNC", texto: "Router, láser, plasma, aluminio, CAM y DXF" },
-  { href: "/foro-cnc", titulo: "Foro CNC", texto: "Pregunta y ayuda a otros talleres" },
   { href: "/foro-cnc/blog", titulo: "Blog", texto: "Artículos y casos reales" },
 ]
 
