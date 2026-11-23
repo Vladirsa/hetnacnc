@@ -9,7 +9,6 @@ import { storeCoursesMiddlewares } from "./store/courses/middlewares";
 import { vendorCoursesMiddlewares } from "./vendor/courses/middlewares";
 import { storeCreditos3dMiddlewares } from "./store/creditos-3d/middlewares";
 import { storeMueblesMiddlewares } from "./store/muebles/middlewares";
-import { storeCotizadorMiddlewares } from "./store/cotizador/middlewares";
 import { storeEscaneosMiddlewares } from "./store/escaneos/middlewares";
 import { storeResenasMiddlewares } from "./store/resenas/middlewares";
 import { storeDescargasGratisMiddlewares } from "./store/descargas-gratis/middlewares";
@@ -116,7 +115,6 @@ export default defineMiddlewares({
         ...vendorCoursesMiddlewares,
         ...storeCreditos3dMiddlewares,
         ...storeMueblesMiddlewares,
-        ...storeCotizadorMiddlewares,
         ...storeEscaneosMiddlewares,
         ...storeResenasMiddlewares,
         ...storeDescargasGratisMiddlewares,
