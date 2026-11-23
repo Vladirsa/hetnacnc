@@ -1143,10 +1143,26 @@ function Configuracion({ datos, alGuardar }: { datos: Datos; alGuardar: () => vo
         <input type="number" min={0} max={365} value={c.borrar_medios_dias ?? 30} onChange={(e) => setC({ ...c, borrar_medios_dias: Number(e.target.value) })} style={{ width: 64, padding: "2px 6px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
         <span>días (0 = nunca). Las redes guardan su copia; no toca fotos de productos ni archivos de talleres, ni lo que sigue pendiente.</span>
       </div>
-      <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
-        <input type="checkbox" checked={(c.mercados_redes || ["mx"]).length > 1} onChange={(e) => setC({ ...c, mercados_redes: e.target.checked ? ["mx", "us", "co"] : ["mx"] })} />
-        Publicar también lo de otros mercados (EE. UU. en inglés, Colombia) en las cuentas de HETNA. Apagado: sólo México; lo demás queda en borrador.
-      </label>
+      <div style={{ fontSize: 14, marginTop: 6 }}>
+        Mercados que se publican en las cuentas de HETNA (los demás quedan en borrador). Colombia, Chile, Perú, Argentina, Hispanos en EE. UU. y España
+        reciben además la publicación semanal del pre-registro.
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
+          {[["mx", "México"], ["us", "EE. UU. (inglés)"], ["us_es", "Hispanos en EE. UU."], ["co", "Colombia"], ["cl", "Chile"], ["pe", "Perú"], ["ar", "Argentina"], ["es", "España"], ["br", "Brasil"]].map(([k, nombre]) => {
+            const lista = c.mercados_redes && c.mercados_redes.length ? c.mercados_redes : ["mx"]
+            return (
+              <label key={k} style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={lista.includes(k)}
+                  disabled={k === "mx"}
+                  onChange={(e) => setC({ ...c, mercados_redes: e.target.checked ? [...new Set([...lista, k])] : lista.filter((x) => x !== k) })}
+                />
+                {nombre}
+              </label>
+            )
+          })}
+        </div>
+      </div>
       <label style={{ display: "flex", gap: 8, fontSize: 14, alignItems: "center", marginTop: 6 }}>
         <input type="checkbox" checked={!!c.video_animado} onChange={(e) => setC({ ...c, video_animado: e.target.checked })} />
         Videos animados (estilo «¿Máquina parada?») para los reels y shorts del plan. Se hacen de 2 a 6 am los que salen en más de 24 h; si uno falla, sale el video de siempre
@@ -2126,7 +2142,7 @@ function Fabrica({ alCambiar, irA }: { alCambiar: () => void; irA: (v: string) =
             </label>
             <label>Mercado{" "}
               <select style={{ ...campo, width: "auto", padding: 5 }} value={f.mercado} onChange={(e) => setF({ ...f, mercado: e.target.value })}>
-                <option value="mx">México</option><option value="us">Estados Unidos</option><option value="co">Colombia</option><option value="cl">Chile</option><option value="pe">Perú</option><option value="ar">Argentina</option><option value="br">Brasil</option>
+                <option value="mx">México</option><option value="us">Estados Unidos</option><option value="co">Colombia</option><option value="cl">Chile</option><option value="pe">Perú</option><option value="ar">Argentina</option><option value="br">Brasil</option><option value="us_es">Hispanos en EE. UU.</option><option value="es">España</option>
               </select>
             </label>
             <label>Fondo{" "}
