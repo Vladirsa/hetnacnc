@@ -29,6 +29,10 @@ pg_dump "$HETNA_TALLER_DB" -n taller > ~/respaldo-taller-$(date +%F).sql
 
 ## 3. Borrar (sólo con los respaldos hechos y revisados)
 
+> Si el conteo muestra `con_plan` o `vigentes` mayor a 0, borrar
+> `cotizador_perfil` les quita las descargas gratis sin límite a esos clientes:
+> antes hay que ligarlos a la app del Cotizador o decidir que se acaba.
+
 Base de Medusa (`DATABASE_URL`):
 
 ```sql

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { usarAltoLibre } from "../usarAltoLibre"
 
 import { cargarEnCotizador } from "@/lib/generador/aCotizador"
+import { APP_TALLER } from "@/lib/hetna/app-taller"
 
 // Abre el Cotizador CNC rápido (public/hetna-cotizador/app.html) a todo lo
 // ancho, debajo del encabezado de la tienda. Sólo en modo demostración: calcula
@@ -43,7 +44,8 @@ export const CotizadorEmbebido = ({
         if (destino === "cerrar" && onCerrar) return onCerrar()
         const rutas: Record<string, string> = {
           tienda: `/${locale}`,
-          registro: `/${locale}/register?volver=${encodeURIComponent(aqui)}`,
+          // Para guardar cotizaciones: la app del Cotizador (la demo no guarda)
+          registro: APP_TALLER.registro,
           entrar: `/${locale}/login?volver=${encodeURIComponent(aqui)}`,
           cuenta: `/${locale}/user`,
         }
