@@ -13,7 +13,6 @@ import { Visor3D } from "./Visor3D"
 
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10
@@ -145,9 +144,6 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   const nombre = archivo ? `${archivo.nombre}-${r1(numero(alto))}mm` : "pieza"
   const vista2d = useMemo(() => (dibujo ? dibujoSVG(dibujo, "vista") : ""), [dibujo])
   const altoTotal = numero(alto) + (conBase ? numero(base) || 0 : 0)
-  const mensaje = med
-    ? `Hola HETNA CNC, quiero cotizar la impresión 3D de una pieza extruida:\n- Tamaño: ${r1(med.ancho)} × ${r1(med.alto)} × ${r1(altoTotal)} mm\n- ${r?.piezas || 0} pieza(s) en el archivo "${archivo?.nombre}"`
-    : ""
 
   return (
     <div className="w-full bg-[#FAF9F6]">
@@ -320,16 +316,13 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                   </button>
                   <BotonesCam nombre={nombre} dxf={() => dibujoDXF(dibujo)} stl={() => mallaSTL(r!.malla)} />
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => descargar(`${nombre}.stl`, mallaSTL(r!.malla), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                       Descargar STL
                     </button>
                     <button type="button" onClick={() => descargar(`${nombre}.svg`, dibujoSVG(dibujo, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                       SVG escalado
                     </button>
-                    <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                      Pedir por WhatsApp
-                    </a>
                   </div>
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
                     STL binario en milímetros, con las caras orientadas hacia afuera. Los contornos dentro de otro contorno se vuelven agujeros (la o, la a, el hueco del llavero).

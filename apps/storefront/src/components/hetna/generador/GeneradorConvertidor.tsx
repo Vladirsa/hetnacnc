@@ -30,7 +30,6 @@ type Archivo =
 
 type ModoEscala = "igual" | "espesor" | "ancho" | "porcentaje" | "unidades"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 30 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10
@@ -167,11 +166,6 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
       setHaciendoStep(false)
     }
   }
-  const mensaje = med
-    ? `Hola HETNA CNC, quiero cotizar el corte de mi archivo "${archivo?.nombre}":\n- Tamaño: ${r1(med.ancho)} x ${r1(med.alto)} mm\n- Longitud de corte: ${r2(med.largo / 1000)} m\n- Contornos: ${med.cerrados} cerrados, ${med.abiertos} abiertos`
-    : med3d
-      ? `Hola HETNA CNC, quiero cotizar mi pieza 3D "${archivo?.nombre}":\n- Tamaño: ${r1(med3d.x)} x ${r1(med3d.y)} x ${r1(med3d.z)} mm`
-      : ""
 
   return (
     <div className="w-full bg-[#FAF9F6]">
@@ -316,16 +310,13 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 </button>
                 <BotonesCam nombre={raiz} dxf={() => dibujoDXF(salida2d)} />
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.dxf`, dibujoDXF(salida2d), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar DXF
                   </button>
                   <button type="button" onClick={() => descargar(`${raiz}.svg`, dibujoSVG(salida2d, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar SVG
                   </button>
-                  <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                    Pedir por WhatsApp
-                  </a>
                 </div>
                 </>
               )}
@@ -377,7 +368,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 </button>
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <BotonesCam nombre={raiz} stl={() => mallaSTL(salida3d)} />
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.stl`, mallaSTL(salida3d), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     Descargar STL
                   </button>
@@ -387,9 +378,6 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   <button type="button" disabled={haciendoStep} onClick={bajarSTEP} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-60 text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     {haciendoStep ? "Preparando..." : "Descargar STEP"}
                   </button>
-                  <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                    Pedir por WhatsApp
-                  </a>
                 </div>
                 {archivo.formato !== "step" && (
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">

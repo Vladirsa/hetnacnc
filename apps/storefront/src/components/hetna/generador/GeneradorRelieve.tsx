@@ -12,7 +12,6 @@ import { type Profundidad, grisDeProfundidad, iaDisponible, pedirProfundidad } f
 
 import { EjemplosRelieve } from "./EjemplosRelieve"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const MAX_PUNTOS = 160_000 // malla de hasta ~32 MB en STL
 const CALIDADES = [
@@ -280,11 +279,6 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
     }, 50)
   }
 
-  const mensaje =
-    `Hola HETNA CNC, quiero ${modo === "litofania" ? "una litofanía impresa en 3D" : "un relieve maquinado en router"}:\n` +
-    (info ? `- Medidas: ${r1(info.ancho)} × ${r1(info.alto)} × ${r1(info.fondo)} mm\n` : "") +
-    (modo === "litofania" ? `- Forma: ${opciones.forma === "plano" ? "plana" : opciones.forma === "curvo" ? "curva" : "cilindro (lámpara)"}` : `- Profundidad: ${r1(nMax - nMin)} mm sobre base de ${r1(nMin)} mm`)
-
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
@@ -436,9 +430,6 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
             </div>
             {modo === "relieve" && valido && info && <BotonesCam nombre={archivo} stl={() => (ultima.current ? mallaSTL(ultima.current.a, ultima.current.o) : null)} />}
             {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
-            <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="text-center text-[13px] font-semibold text-[#B34D07] hover:underline">
-              {modo === "litofania" ? "O pídela por WhatsApp" : "O pídelo por WhatsApp"}
-            </a>
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
               {modo === "litofania"
                 ? "El STL es una pieza cerrada en mm, lista para tu programa de impresión (Cura, PrusaSlicer, Bambu Studio)."

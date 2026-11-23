@@ -29,7 +29,6 @@ import { type Dibujo, dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vec
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 // Modelos con nombre: mismas opciones, distinto punto de partida
 const MODELOS: { id: string; nombre: string; forma: FormaLlavero; texto: string; alto: string; fuente: string }[] = [
@@ -148,9 +147,6 @@ export function GeneradorLlaveros() {
       .toLowerCase() || "nombre"
   }`
   const formaNombre = FORMAS_LLAVERO.find((f) => f.id === forma)?.nombre
-  const mensaje = r
-    ? `Hola HETNA CNC, quiero cotizar llaveros con nombre:\n- Texto: ${texto}\n- Forma: ${formaNombre}\n- Tamaño: ${r1(r.ancho)} × ${r1(r.alto)} mm\n- Cantidad: ${piezas}`
-    : ""
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -334,7 +330,7 @@ export function GeneradorLlaveros() {
         <BotonesCam nombre={archivo} dxf={() => dibujoDXF(r!.dibujo)} stl={() => mallaSTL(r!.malla)} />
       </TarjetaExport>
 
-      <TarjetaExport titulo="¿Cuánto cuesta?" nota={`Precio para ${piezas} ${piezas === 1 ? "pieza" : "piezas"}, al instante o por WhatsApp.`}>
+      <TarjetaExport titulo="¿Cuánto cuesta?" nota={`Precio para ${piezas} ${piezas === 1 ? "pieza" : "piezas"}, al instante en el Cotizador.`}>
         <div className="flex gap-2">
           <Boton
             tipo="verde"
@@ -345,7 +341,6 @@ export function GeneradorLlaveros() {
           >
             Cotizador
           </Boton>
-          <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
         </div>
       </TarjetaExport>
 

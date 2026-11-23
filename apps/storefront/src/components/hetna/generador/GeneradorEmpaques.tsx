@@ -78,7 +78,6 @@ const ICONOS: Record<Gen, string> = {
   rombo: "M12 3l8 9-8 9-8-9z",
 }
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 const r1 = (x: number) => Math.round(x * 10) / 10
 
@@ -289,11 +288,6 @@ export function GeneradorEmpaques() {
     w.focus()
     setTimeout(() => w.print(), 300)
   }
-
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar una plantilla de ${def.nombre.toLowerCase()}:\n` +
-    campos.map((c) => `- ${ETIQUETAS[forma][c]}: ${v[c]}${SIN_UNIDAD.includes(c) ? "" : ` ${unidad}`}`).join("\n") +
-    (hoja ? `\n- Hoja necesaria: ${r1(hoja.ancho)} x ${r1(hoja.alto)} mm` : "")
 
   return (
     <div className="w-full bg-[#FAF9F6]">
@@ -555,7 +549,7 @@ export function GeneradorEmpaques() {
                 Fabrícamelo: que un taller la corte
               </button>
               {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => descargarHojas("dxf")}
@@ -577,14 +571,6 @@ export function GeneradorEmpaques() {
                 >
                   PDF / Imprimir
                 </button>
-                <a
-                  href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center"
-                >
-                  Pedir por WhatsApp
-                </a>
               </div>
               <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5">
                 <span className="text-[13px] font-semibold text-[#1B1B18]">¿Es más grande que tu hoja?</span>
