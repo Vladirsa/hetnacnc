@@ -7,7 +7,6 @@ import { saludDelTaller } from "../../../lib/tablero-salud"
 import {
   candidatosADescuento,
   catalogoDelTaller,
-  cotizadorDelTaller,
   mesDeMexico,
   productosMasVistos,
   resenasDelTaller,
@@ -23,7 +22,7 @@ import type TableroModuleService from "../../../modules/tablero/service"
 // consultas a fuentes distintas; pedirlas una por una desde el navegador
 // serían siete viajes y una pantalla que se arma a pedazos.
 //
-// Las piezas que pueden fallar solas (foro, cotizador, vistas) ya devuelven su
+// Las piezas que pueden fallar solas (foro, vistas) ya devuelven su
 // propio valor vacío en vez de lanzar: el taller tiene que poder ver sus
 // ventas aunque el foro ande caído.
 export const GET = async (req: VendorRequest, res: MedusaResponse) => {
@@ -40,10 +39,9 @@ export const GET = async (req: VendorRequest, res: MedusaResponse) => {
   // cuáles son suyos.
   const productoIds = [...new Set([...catalogo.keys(), ...ventas.por_producto.keys()])]
 
-  const [resenas, foro, cotizador, ranking, meta] = await Promise.all([
+  const [resenas, foro, ranking, meta] = await Promise.all([
     resenasDelTaller(req.scope, productoIds),
     actividadEnForo(sellerId),
-    cotizadorDelTaller(req.scope, sellerId),
     rankingDeTalleres(req.scope, sellerId),
     metaDelMes(req, sellerId),
   ])
@@ -92,7 +90,6 @@ export const GET = async (req: VendorRequest, res: MedusaResponse) => {
       .slice(0, 10),
     resenas,
     foro,
-    cotizador,
     ranking,
     catalogo_total: catalogo.size,
   })

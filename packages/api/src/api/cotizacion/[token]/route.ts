@@ -1,57 +1,22 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
-import { COTIZADOR_MODULE } from "../../../modules/cotizador"
-import CotizadorModuleService from "../../../modules/cotizador/service"
-import { cotizacionDocumentoHtml } from "../../../lib/cotizacion-documento"
+import { STORE_URL } from "../../../lib/licitacion"
 
-// Ruta pública: el cliente del taller no tiene cuenta aquí. Sirve el documento
-// completo y registra la primera vista, que es lo que alimenta el seguimiento
-// (enviada → vista → aceptada) y las alertas de día 3, 5 y 7.
-//
-// Vive FUERA de /store a propósito: Medusa exige el header
-// x-publishable-api-key en todo /store/*, y este link se abre dando clic desde
-// WhatsApp o un correo, sin headers. La defensa es el token aleatorio de 32
-// hex, no la ruta.
-//
-// Sólo sale lo que va en el documento: notas_internas y el desglose de costos
-// se quedan del lado del taller.
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const { token } = req.params
-  const cotizadorModuleService = req.scope.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
+// Ligas públicas de cotizaciones del módulo viejo "cotizador" de Medusa (ya
+// retirado: las cotizaciones de los talleres viven en la app del Cotizador y
+// sus ligas son /c/<token>). Quien abra una liga vieja ve este aviso en lugar
+// de un error.
+const AVISO = `<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Cotización no disponible · HETNA CNC</title>
+<style>body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#FAF9F6;color:#1B1B18;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}
+.caja{max-width:440px;background:#fff;border:1px solid #E7E4DC;border-radius:16px;padding:28px;text-align:center}
+h1{font-size:21px;margin:0 0 10px}p{font-size:15px;line-height:1.5;color:#40403A;margin:0 0 18px}
+a{display:inline-block;background:#C2560A;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px}</style></head>
+<body><div class="caja"><h1>Esta cotización ya no está disponible</h1>
+<p>La liga es de un sistema anterior. Pídele al taller que te mande una cotización nueva, o cotiza tu pieza directo en HETNA CNC.</p>
+<a href="${STORE_URL}/mx/cotizar">Cotizar en HETNA CNC</a></div></body></html>`
 
-  if (!token || !/^[a-f0-9]{32}$/.test(token)) {
-    return res.status(404).type("text/plain").send("Cotización no encontrada")
-  }
-
-  const [cotizacion] = await cotizadorModuleService.listCotizacions({ token_publico: token })
-  if (!cotizacion) {
-    return res.status(404).type("text/plain").send("Cotización no encontrada")
-  }
-
-  const perfil = await cotizadorModuleService.retrieveTallerPerfil(cotizacion.perfil_id)
-  const partidas = await cotizadorModuleService.listCotizacionPartidas(
-    { cotizacion_id: cotizacion.id },
-    { order: { posicion: "ASC" } }
-  )
-
-  const vencida =
-    cotizacion.vigencia_hasta instanceof Date
-      ? cotizacion.vigencia_hasta.getTime() < Date.now()
-      : Boolean(cotizacion.vigencia_hasta && new Date(cotizacion.vigencia_hasta).getTime() < Date.now())
-
-  if (cotizacion.estatus === "enviada") {
-    await cotizadorModuleService.updateCotizacions({
-      id: cotizacion.id,
-      estatus: vencida ? "vencida" : "vista",
-      vista_en: cotizacion.vista_en ?? new Date(),
-    } as any)
-  }
-
-  const html = cotizacionDocumentoHtml({
-    perfil: perfil as any,
-    cotizacion: cotizacion as any,
-    partidas: partidas as any,
-  })
-
-  res.status(200).type("text/html").send(html)
+export const GET = async (_req: MedusaRequest, res: MedusaResponse) => {
+  res.status(410).type("text/html").send(AVISO)
 }
