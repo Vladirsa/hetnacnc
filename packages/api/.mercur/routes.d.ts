@@ -592,6 +592,9 @@ export type Routes = {
             video: typeof import("../src/api/admin/hetna-fabrica/video/route");
         };
         hetnaFase4: typeof import("../src/api/admin/hetna-fase4/route");
+        hetnaFicha: typeof import("../src/api/admin/hetna-ficha/route") & {
+            detalle: typeof import("../src/api/admin/hetna-ficha/detalle/route");
+        };
         hetnaForoIa: typeof import("../src/api/admin/hetna-foro-ia/route");
         hetnaGrupos: typeof import("../src/api/admin/hetna-grupos/route");
         hetnaInteresTienda: typeof import("../src/api/admin/hetna-interes-tienda/route");
