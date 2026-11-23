@@ -10,6 +10,7 @@ import { T_WA, esPropio, mensajeEntrante, normalizarNumero } from "../../../lib/
 import { ponerAlDiaPedidos } from "../../../lib/whatsapp-pedidos"
 import { intentarResponder, pausarChat } from "../../../lib/whatsapp-bot"
 import { tokenValido } from "../../../lib/social-hub-token"
+import { atenderPropuestaWhatsapp } from "../../../lib/propuesta-whatsapp"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!tokenValido(req)) return res.status(401).json({ message: "No autorizado." })
@@ -33,6 +34,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       if (fila?.customer_id) setTimeout(() => void ponerAlDiaPedidos(req.scope, fila.customer_id, logger), 5000)
     }
     if (r.manejado) return res.json(r)
+    // Taller verificado que contesta un aviso con precio y días: su propuesta (lib/propuesta-whatsapp)
+    if (await atenderPropuestaWhatsapp(req.scope, knex, logger, m).catch((e: Error) => { logger.warn(`[propuesta-whatsapp] ${e.message}`); return false }))
+      return res.json({ manejado: true, accion: "propuesta" })
     // Si no era verificación, BAJA/ALTA ni fotos: el respondedor (si está encendido)
     if (await intentarResponder(knex, m, logger).catch(() => false)) return res.json({ manejado: true, accion: "respondedor" })
     res.json(r)

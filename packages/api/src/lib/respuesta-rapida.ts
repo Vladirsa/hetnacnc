@@ -12,7 +12,6 @@ import { T_PROPUESTA, T_RESPUESTA, T_SOLICITUD, STORE_URL, folioTexto } from "./
 import { modalidadDe } from "./licitacion-privacidad"
 import { pushATalleres } from "./push"
 import { mandarPrivado } from "./social-telegram"
-import { avisarWhatsapp } from "./whatsapp"
 
 const HORA = 3_600_000
 const DIAS_ABIERTA = 7
@@ -88,9 +87,9 @@ export async function avisoRapido(knex: any, logger: any, s: any) {
   const que = [t.servicio, t.material, t.cantidad && `${t.cantidad}`].filter(Boolean).join(" · ") || "fabricación"
   const ids = await talleresAvisados(knex, s)
   if (ids.length) {
-    const aviso = { titulo: "Un cliente espera tu precio ⏱", cuerpo: `${folio}: ${que}. Nadie ha cotizado todavía; la primera propuesta es la que más se elige.`, url: `/seller/solicitudes?cotizar=${encodeURIComponent(s.id)}` }
+    const aviso = { titulo: "Un cliente espera tu precio ⏱", cuerpo: `${folio}: ${que}. Nadie ha cotizado todavía; la primera propuesta es la que más se elige. Cotiza contestando al WhatsApp de HETNA con precio y días (ej. 1500, 3 días).`, url: `/seller/solicitudes?cotizar=${encodeURIComponent(s.id)}` }
+    // pushATalleres también manda el WhatsApp (verificado) con el mismo texto
     await pushATalleres(knex, ids, { ...aviso, etiqueta: `rapida-${s.id}` }, logger).catch(() => null)
-    await avisarWhatsapp(knex, { sellerIds: ids }, aviso, logger).catch(() => null)
   }
   const horas = horasPublicada(s.cierra_en)
   await mandarPrivado(knex, {

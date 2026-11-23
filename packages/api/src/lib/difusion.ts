@@ -202,7 +202,10 @@ export async function difundirSolicitud(
     destinos.map((d) => d.id),
     {
       titulo: extra ? extra.titulo : taller && !abierta ? "Un cliente quiere tu cotización" : suministro ? "Nueva solicitud de suministro" : "Nueva solicitud de fabricación",
-      cuerpo: `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}`,
+      cuerpo:
+        `${folio}: ${[trabajoTaller.servicio, trabajoTaller.material, trabajoTaller.ciudad || trabajoTaller.estado_mx].filter(Boolean).join(" · ") || "manda tu precio"}` +
+        // Propuesta por WhatsApp (lib/propuesta-whatsapp): sólo fabricación
+        (suministro ? "" : ". Puedes cotizar contestando al WhatsApp de HETNA con precio y días (ej. 1500, 3 días)."),
       // Abre directo el formulario de propuesta de esta solicitud
       url: `/seller/solicitudes?cotizar=${encodeURIComponent(s.id)}`,
       etiqueta: `sol-${s.id}`,
