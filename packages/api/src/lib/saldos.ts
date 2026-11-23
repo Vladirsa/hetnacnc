@@ -66,16 +66,31 @@ export async function asegurarTablasSaldos(knex) {
   listas = true
 }
 
-// La respuesta de Skydropx puede venir plana o en formato JSON:API
+// La respuesta de Skydropx puede venir plana o en formato JSON:API.
+// Ojo: un campo que no viene NO es saldo 0 (antes Number("") daba 0 y el
+// contador avisaba "te quedan $0" con saldo real de $352).
 const numero = (v) => {
-  const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""))
+  if (v === null || v === undefined || v === "" || typeof v === "boolean" || typeof v === "object") return null
+  const t = String(v).replace(/[^0-9.-]/g, "")
+  if (!t || t === "-" || t === ".") return null
+  const n = Number(t)
   return Number.isFinite(n) ? n : null
 }
-function saldoDe(j) {
-  const cands = [j?.balance, j?.data?.balance, j?.data?.attributes?.balance, j?.credits, j?.data?.attributes?.credits, j?.amount]
-  for (const c of cands) {
-    const n = numero(c)
-    if (n !== null) return n
+// Nombres posibles del saldo, del más confiable al menos
+const LLAVES_SALDO = ["balance", "available_balance", "available", "saldo", "credits", "credit", "current_balance", "amount", "total"]
+export function saldoDe(j) {
+  const raiz = Array.isArray(j?.data) ? j.data[0] : j?.data ?? j
+  const lugares = [j, raiz, raiz?.attributes, j?.data?.attributes, raiz?.balance, j?.balance].filter((x) => x && typeof x === "object")
+  for (const llave of LLAVES_SALDO) {
+    for (const o of lugares) {
+      const n = numero(o[llave])
+      if (n !== null) return n
+      // { balance: { amount: "352.17", currency: "MXN" } }
+      if (o[llave] && typeof o[llave] === "object") {
+        const m = numero(o[llave].amount ?? o[llave].value ?? o[llave].total)
+        if (m !== null) return m
+      }
+    }
   }
   return null
 }
@@ -88,6 +103,8 @@ export async function leerSaldoSkydropx(): Promise<number | null> {
   const j = await c.req("GET", "/finance/credits")
   const saldo = saldoDe(j)
   if (saldo !== null) cache = { saldo, leido: Date.now() }
+  // Si cambia el formato, que se vea en el log qué llegó (sin datos sensibles: sólo llaves)
+  else console.warn("[saldos] No encontré el saldo en la respuesta de Skydropx /finance/credits. Llaves:", JSON.stringify(Object.keys(j?.data?.attributes || j?.data || j || {})))
   return saldo
 }
 
@@ -117,6 +134,12 @@ export async function estadoSaldoSkydropx(container) {
   const saldo = await leerSaldoSkydropx()
   if (saldo === null) return null
 
+  // Lecturas falsas en $0 de antes de corregir saldoDe: si TODAS las anotadas son
+  // 0 y ahora hay saldo, se borran para que no cuente como una recarga.
+  if (saldo > 0) {
+    const real = await knex(T_LECTURA).where({ plataforma: "skydropx" }).where("saldo", "<>", 0).first()
+    if (!real) await knex(T_LECTURA).where({ plataforma: "skydropx", saldo: 0 }).del()
+  }
   const ultima = await knex(T_LECTURA).where({ plataforma: "skydropx" }).orderBy("leido", "desc").first()
   if (!ultima || Date.now() - new Date(ultima.leido).getTime() > 60 * 60_000) {
     await knex(T_LECTURA).insert({ plataforma: "skydropx", saldo })
