@@ -14,6 +14,7 @@ import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 import { AvisoRequisitos } from "../../lib/requisitos"
+import { AvisoDatosFaltantes } from "../../lib/datos-faltantes"
 import { ResumenInicio } from "./resumen-inicio"
 
 const Tablero = (props: { width?: number; height?: number }) => (
@@ -1424,6 +1425,7 @@ export default function TableroPage() {
 
       <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
       <AvisoRequisitos />
+      <AvisoDatosFaltantes />
 
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 
