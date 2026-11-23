@@ -102,10 +102,15 @@ export async function proveedoresDeCorreo(correo: string): Promise<string[]> {
   return (filas || []).filter((f) => String(f.email || "").trim().toLowerCase() === correo).map((f) => String(f.id))
 }
 
+/** Sólo órdenes que el taller sí le mandó: estado visible y con fecha de envío. */
+export const FILTRO_MANDADAS = `estado=in.(${ESTADOS_VISIBLES.join(",")})&enviada_en=not.is.null`
+
 const faltaColumna = (e: unknown) => /42703|PGRST204|column .* does not exist|Could not find/i.test(String((e as Error)?.message || e))
 
 async function leerOrdenes(filtro: string): Promise<{ filas: any[]; accionesActivas: boolean }> {
-  const base = `/rest/v1/ordenes_compra?${filtro}&estado=in.(${ESTADOS_VISIBLES.join(",")})&order=created_at.desc&limit=200`
+  // enviada_en: una orden cancelada o recibida sin haberse mandado nunca al
+  // proveedor (desde borrador) no le pertenece todavía; no se le muestra.
+  const base = `/rest/v1/ordenes_compra?${filtro}&${FILTRO_MANDADAS}&order=created_at.desc&limit=200`
   try {
     return { filas: await supa<any[]>(`${base}&select=${CAMPOS_BASE},${CAMPOS_PROVEEDOR}`), accionesActivas: true }
   } catch (e) {
@@ -163,7 +168,7 @@ export async function actuarSobreOrden(correo: string, ordenId: string, a: Accio
   const cambios = cambiosDeAccion(a, orden)
   // El filtro repite proveedor y estado para que nada cambie si la orden se
   // reasignó o se canceló entre la lectura y la escritura.
-  const r = await supa<any[]>(`/rest/v1/ordenes_compra?id=eq.${ordenId}&proveedor_id=in.(${ids.join(",")})&estado=in.(${ESTADOS_ACTIVOS.join(",")})`, {
+  const r = await supa<any[]>(`/rest/v1/ordenes_compra?id=eq.${ordenId}&proveedor_id=in.(${ids.join(",")})&estado=in.(${ESTADOS_ACTIVOS.join(",")})&enviada_en=not.is.null`, {
     method: "PATCH",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({ ...cambios, updated_at: new Date().toISOString() }),

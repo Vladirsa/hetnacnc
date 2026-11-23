@@ -1,4 +1,4 @@
-import { cambiosDeAccion, correoDeProveedor, escaparIlike, hoyMx, vistaOrden } from "../proveedor-panel"
+import { FILTRO_MANDADAS, cambiosDeAccion, correoDeProveedor, escaparIlike, hoyMx, vistaOrden } from "../proveedor-panel"
 
 const fila = (extra: Record<string, unknown> = {}) => ({
   id: "11111111-1111-1111-1111-111111111111",
@@ -23,6 +23,13 @@ describe("panel de proveedores", () => {
     expect(correoDeProveedor(nueva)).toBeNull()
     expect(correoDeProveedor({ ...nueva, metadata: { correo_verificado: true } })).toBe("prov@x.com")
     expect(correoDeProveedor(null)).toBeNull()
+    // Cuentas de antes de pedir confirmación: misma regla que el resto de la tienda
+    expect(correoDeProveedor({ ...nueva, created_at: "2026-01-10T00:00:00Z" })).toBe("prov@x.com")
+  })
+
+  it("nunca lee borradores ni órdenes que no se mandaron", () => {
+    expect(FILTRO_MANDADAS).toContain("enviada_en=not.is.null")
+    expect(FILTRO_MANDADAS).not.toContain("borrador")
   })
 
   it("la vista no expone el inventario del taller", () => {
