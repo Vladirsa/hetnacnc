@@ -186,8 +186,13 @@ export async function tokenDelTaller(container: any, sellerId: string): Promise<
         return t.access_token
       } catch (e) {
         if ((e as any).codigo === "invalid_grant") {
-          await svc.deleteMlCuentas([fresca.id]) // ya no sirve: que vuelva a conectar
-          throw new ErrorML("Tu conexión con Mercado Libre venció. Vuelve a conectar tu cuenta.", 409)
+          // Si otro proceso ya lo renovó, el guardado es otro y sí sirve: no se borra
+          const ahora = await leer()
+          if (ahora && ahora.refresh_token === fresca.refresh_token) {
+            await svc.deleteMlCuentas([fresca.id]) // ya no sirve: que vuelva a conectar
+            throw new ErrorML("Tu conexión con Mercado Libre venció. Vuelve a conectar tu cuenta.", 409)
+          }
+          if (ahora) return descifrar(ahora.access_token)
         }
         throw e
       }
@@ -285,7 +290,7 @@ export function limpiarDescripcion(html: string | null | undefined): string {
     .replace(/https?:\/\/\S+/gi, "")
     .replace(/\bwww\.\S+/gi, "")
     .replace(/\b[\w.-]+\.(com|mx|net|org)(\.mx)?\b\S*/gi, "")
-    .replace(/(\+?\d[\d\s().-]{7,}\d)/g, "")
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, (m) => (m.replace(/\D/g, "").length >= 10 ? "" : m))
     .replace(/^.*\b(whats\s?app|wa\.me|ll[aá]manos|escr[ií]benos|tel[eé]fono|correo|e-?mail|cel(ular)?:)\b.*$/gim, "")
     .replace(/[^\p{L}\p{N}\p{P}\p{Zs}\n°×±²³½¼¾$+=<>|~^`]/gu, "")
   return t
@@ -342,19 +347,33 @@ export function armarItem(b: Borrador) {
 // ── Lo que ve el taller ────────────────────────────────────────────────
 async function datosDelTaller(container: any, sellerId: string, productIds?: string[]) {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const { data: vendedores } = await query.graph({
-    entity: "seller",
-    fields: [
-      "id",
-      "products.id", "products.title", "products.handle", "products.status", "products.description", "products.thumbnail",
-      "products.images.url", "products.metadata",
-      "products.attribute_values.value", "products.attribute_values.attribute.name", "products.attribute_values.attribute.handle",
-    ],
-    filters: { id: sellerId },
-  })
-  let productos = ((vendedores?.[0]?.products || []) as ProductoTaller[]).filter(Boolean)
-  if (productIds) productos = productos.filter((p) => productIds.includes(p.id))
-  const ids = productos.map((p) => p.id)
+  const { data: vendedores } = await query.graph({ entity: "seller", fields: ["id", "products.id"], filters: { id: sellerId } })
+  let ids = ((vendedores?.[0]?.products || []) as { id: string }[]).filter(Boolean).map((p) => p.id)
+  if (productIds) ids = ids.filter((id) => productIds.includes(id))
+  const { data: filas } = ids.length
+    ? await query.graph({
+        entity: "product",
+        fields: ["id", "title", "handle", "status", "description", "thumbnail", "images.url", "metadata"],
+        filters: { id: ids },
+      })
+    : { data: [] }
+  const productos = (filas || []) as ProductoTaller[]
+  // Marca y modelo del producto (sólo para prellenar): si la consulta falla, no tumba la página
+  if (productIds && productos.length) {
+    try {
+      const { data: attrs } = await query.graph({
+        entity: "product",
+        fields: ["id", "attribute_values.value", "attribute_values.attribute.name", "attribute_values.attribute.handle"],
+        filters: { id: productos.map((p) => p.id) },
+      })
+      for (const a of (attrs || []) as ProductoTaller[]) {
+        const p = productos.find((x) => x.id === a.id)
+        if (p) p.attribute_values = a.attribute_values
+      }
+    } catch {
+      /* sin atributos: el taller los escribe */
+    }
+  }
   const { data: ofertas } = ids.length
     ? await query.graph({
         entity: "offer",
@@ -380,7 +399,7 @@ export async function estadoDelTaller(container: any, sellerId: string) {
   const motivo = motivoNoDisponible()
   const svc = servicio(container)
   const [cuenta] = motivo ? [] : await svc.listMlCuentas({ seller_id: sellerId })
-  const publicaciones = cuenta ? await svc.listMlPublicacions({ seller_id: sellerId }) : []
+  const publicaciones = cuenta ? await svc.listMlPublicacions({ seller_id: sellerId }, { take: 1000 }) : []
   const { productos, oferta, digitales } = await datosDelTaller(container, sellerId)
   return {
     disponible: !motivo,
@@ -407,6 +426,10 @@ export async function estadoDelTaller(container: any, sellerId: string) {
 /** Vista previa: categoría sugerida, título, precio, fotos y los datos que pide la categoría. */
 export async function vistaPrevia(container: any, sellerId: string, productId: string, categoriaElegida?: string) {
   const { token, cuenta } = await tokenDelTaller(container, sellerId)
+  // La etiqueta "user_product_seller" la pone Mercado Libre en cualquier momento: se revisa cada vez
+  const yo = await mlApi<{ tags?: string[] }>(token, "GET", "/users/me").catch(() => null)
+  const userProducts = yo ? (yo.tags || []).includes("user_product_seller") : !!cuenta.user_products
+  if (yo && userProducts !== !!cuenta.user_products) await servicio(container).updateMlCuentas({ id: cuenta.id, user_products: userProducts })
   const { productos, oferta, digitales } = await datosDelTaller(container, sellerId, [productId])
   const p = productos[0]
   if (!p) throw new ErrorML("Ese producto no es tuyo o ya no existe.", 404)
@@ -447,7 +470,7 @@ export async function vistaPrevia(container: any, sellerId: string, productId: s
     descripcion: limpiarDescripcion(p.description),
     requeridos,
     valores,
-    user_products: !!cuenta.user_products,
+    user_products: userProducts,
   }
 }
 

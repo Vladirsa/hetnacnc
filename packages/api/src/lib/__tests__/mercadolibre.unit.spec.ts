@@ -70,3 +70,10 @@ describe("mercadolibre", () => {
     expect(up.title).toBeUndefined()
   })
 })
+
+describe("mercadolibre: descripción con medidas", () => {
+  it("no borra listas de medidas cortas", () => {
+    expect(limpiarDescripcion("Diámetros: 3.175 - 4 - 6 - 8 mm")).toBe("Diámetros: 3.175 - 4 - 6 - 8 mm")
+    expect(limpiarDescripcion("Tablero 1220 x 2440 mm")).toBe("Tablero 1220 x 2440 mm")
+  })
+})
