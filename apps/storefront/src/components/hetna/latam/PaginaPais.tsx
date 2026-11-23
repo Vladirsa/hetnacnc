@@ -3,7 +3,9 @@ import { notFound } from "next/navigation"
 
 import { FormLatam } from "@/components/hetna/latam/FormLatam"
 import { PAISES_LATAM, paisPorClave, rutaPais } from "@/components/hetna/latam/paises"
+import { QuitarPerfil } from "@/components/hetna/taller/SolicitudDirectorio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { NOMBRE_TIPO, directorioPais } from "@/lib/hetna/directorio"
 import { conteoLatam } from "@/lib/hetna/latam"
 
 // Página de pre-registro de un país (fase 5): /latinoamerica/<país>, /espana y
@@ -23,7 +25,10 @@ export function metaPais(pais: string): Metadata {
 export async function PaginaPais({ pais }: { pais: string }) {
   const p = paisPorClave(pais)
   if (!p) notFound()
-  const conteo = (await conteoLatam())[p.clave]
+  // Empresas CNC del país que encontró el buscador (hoja de prospectos, en vivo):
+  // cada noche que encuentra más, aparecen aquí solas. Sólo datos públicos.
+  const [conteos, empresas] = await Promise.all([conteoLatam(), directorioPais(p.nombre, ...(p.en_hoja || []))])
+  const conteo = conteos[p.clave]
   const total = conteo ? conteo.talleres + conteo.clientes : 0
   return (
     <main className="w-full bg-[#FAF9F6]">
@@ -36,6 +41,12 @@ export async function PaginaPais({ pais }: { pais: string }) {
             {p.ciudades.length ? ` (${p.ciudades.slice(0, 3).join(", ")} y más)` : ""}. Abrimos primero donde más talleres y clientes se registren.
           </p>
           {p.nota && <p className="mt-3 max-w-2xl text-base font-semibold text-[#F2C9A5]">{p.nota}</p>}
+          {empresas.length > 0 && (
+            <p className="mt-3 text-sm text-white/80">
+              Ya ubicamos {empresas.length} {empresas.length === 1 ? "empresa CNC" : "empresas CNC"} en {p.nombre}.{" "}
+              <a href="#directorio" className="font-semibold text-[#F2A25F] underline">Ver la lista</a>
+            </p>
+          )}
           {total > 0 && (
             <p className="mt-3 text-sm text-[#F2C9A5]">
               Ya {total === 1 ? "hay 1 registro" : `hay ${total} registros`} en {p.nombre}
@@ -77,12 +88,38 @@ export async function PaginaPais({ pais }: { pais: string }) {
             </ul>
           </div>
         </div>
-        <div className="rounded-3xl border border-[#E7E4DC] bg-white p-6">
+        <div id="apuntate" className="scroll-mt-20 rounded-3xl border border-[#E7E4DC] bg-white p-6">
           <h2 className="text-xl font-extrabold text-[#142033]">Apúntate en {p.nombre}</h2>
           <p className="mb-4 mt-1 text-sm text-[#6B675C]">Sin costo. Te avisamos primero cuando abramos.</p>
           <FormLatam paisInicial={p.clave} />
         </div>
       </section>
+
+      {empresas.length > 0 && (
+        <section id="directorio" className="mx-auto max-w-[1000px] scroll-mt-20 px-4 pb-12 lg:px-6">
+          <h2 className="text-2xl font-extrabold text-[#142033]">Empresas CNC en {p.nombre}</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[#6B675C]">
+            Talleres, proveedores e instructores de {p.nombre} que todavía no forman parte de HETNA. Son perfiles no reclamados:
+            los datos son públicos y vienen del sitio web de cada empresa. ¿Es la tuya?{" "}
+            <a href="#apuntate" className="font-semibold text-[#C2560A] underline">Apúntate como fundador</a>.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {empresas.map((e) => (
+              <li key={e.slug} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
+                <p className="font-bold text-[#142033]">{e.empresa}</p>
+                <p className="mt-0.5 text-xs text-[#6B675C]">
+                  {NOMBRE_TIPO[e.tipo]}
+                  {e.ciudad ? ` · ${e.ciudad}` : ""} · <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5">Perfil no reclamado</span>
+                </p>
+                {e.servicios && <p className="mt-2 line-clamp-3 text-sm text-[#40403A]">{e.servicios}</p>}
+                <div className="mt-2 text-xs">
+                  <QuitarPerfil slug={e.slug} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mx-auto max-w-[1000px] px-4 pb-12 lg:px-6">
         <p className="text-sm text-[#6B675C]">

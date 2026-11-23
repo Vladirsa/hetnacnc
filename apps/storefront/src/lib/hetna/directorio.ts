@@ -140,6 +140,22 @@ export async function directorioMexico(): Promise<EmpresaDirectorio[]> {
   return (await leerTodo()).filter((e) => sinAcentos(e.pais) === "mexico")
 }
 
+/** Empresas de otro país (páginas /latinoamerica/<país>). `nombres`: cómo puede venir
+ *  escrito el país en la hoja ("Perú", "Peru"). Lo que el buscador agrega a la hoja
+ *  aparece solo: se lee en vivo con caché de 1 hora. */
+export async function directorioPais(...nombres: string[]): Promise<EmpresaDirectorio[]> {
+  const buscados = new Set(nombres.map(sinAcentos))
+  return (await leerTodo())
+    .filter((e) => buscados.has(sinAcentos(e.pais)))
+    .sort((a, b) => (a.ciudad || "zzz").localeCompare(b.ciudad || "zzz") || a.empresa.localeCompare(b.empresa))
+}
+
+/** Cualquier país: para «Quitar este perfil», que también sale en las páginas de Latinoamérica. */
+export async function empresaCualquierPais(slug: string): Promise<EmpresaDirectorio | null> {
+  const s = String(slug || "").toLowerCase()
+  return (await leerTodo()).find((e) => e.slug === s) || null
+}
+
 export async function empresaPorSlug(slug: string): Promise<EmpresaDirectorio | null> {
   const s = String(slug || "").toLowerCase()
   return (await directorioMexico()).find((e) => e.slug === s) || null

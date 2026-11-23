@@ -22,6 +22,9 @@ export const PAISES_LATAM: Record<string, { nombre: string; moneda: string; band
   es: { nombre: "España", moneda: "EUR", bandera: "🇪🇸" },
   // EUA hispano (fase 5.2)
   us: { nombre: "Estados Unidos", moneda: "USD", bandera: "🇺🇸" },
+  uy: { nombre: "Uruguay", moneda: "UYU", bandera: "🇺🇾" },
+  py: { nombre: "Paraguay", moneda: "PYG", bandera: "🇵🇾" },
+  sv: { nombre: "El Salvador", moneda: "USD", bandera: "🇸🇻" },
 }
 
 let lista = false
