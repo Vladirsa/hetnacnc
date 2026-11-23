@@ -77,6 +77,9 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
     .filter((cart) => {
       if (!cart.email || !cart.items?.length) return false
       if (cart.metadata?.abandoned_email_sent_at) return false
+      // Ya pagó y el pedido no se pudo crear solo (lib/conciliar-mercadopago.ts):
+      // no se le dice "dejaste algo en tu carrito" a quien ya pagó
+      if (cart.metadata?.mp_conciliacion_aviso) return false
 
       const updatedAt = new Date(cart.updated_at).getTime()
       return updatedAt <= upperBound.getTime() && updatedAt >= lowerBound.getTime()
@@ -124,6 +127,7 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
     .filter((cart) => {
       const primero = cart.metadata?.abandoned_email_sent_at
       if (!cart.email || !cart.items?.length || !primero || cart.metadata?.abandoned_second_sent_at) return false
+      if (cart.metadata?.mp_conciliacion_aviso) return false
       const desdePrimero = now - new Date(String(primero)).getTime()
       const desdeCambio = now - new Date(cart.updated_at).getTime()
       return desdePrimero >= SEGUNDO_HORAS * 3_600_000 && desdeCambio <= SEGUNDO_MAX_DIAS * 86_400_000
