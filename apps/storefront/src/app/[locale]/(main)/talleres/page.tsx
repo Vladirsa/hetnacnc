@@ -5,6 +5,15 @@ import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import ParaTalleres from "@/components/hetna/taller/ParaTalleres"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { contarPorEstado, contarPorPais, directorioMexico } from "@/lib/hetna/directorio"
+import { PAISES_LATAM, rutaPais } from "@/components/hetna/latam/paises"
+
+// Cada punto de país del mapa lleva a su página (/latinoamerica/co, /espana…) o,
+// si no tiene, a la lista de proveedores de importación (/importacion#china).
+const sinAc = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+const rutaDePais = (pais: string) => {
+  const p = PAISES_LATAM.find((x) => sinAc(x.nombre) === sinAc(pais) || (x.en_hoja || []).some((h) => sinAc(h) === sinAc(pais)))
+  return p ? rutaPais(p.clave) : `/mx/importacion#${sinAc(pais).replace(/[^a-z]+/g, "-")}`
+}
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { redPorEstado } from "@/lib/foro/red"
 
@@ -92,7 +101,7 @@ export default async function TalleresPage({
       {/* Talleres destacados: pagan por salir hasta arriba (se compra en /anunciate) */}
       <AnunciosEspacio espacio="directorio_talleres" titulo="Talleres destacados" columnas invitar className="mb-6" />
 
-      <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} paises={paises} />
+      <DirectorioTalleres talleres={talleres} locale={locale} red={red} porUnirse={contarPorEstado(directorio)} paises={paises.map((x) => ({ ...x, ruta: rutaDePais(x.pais) }))} />
 
       {/* Para dueños de taller: cómo funciona, beneficios, perfiles,
           preguntas y registro, aquí mismo (la versión completa vive en
