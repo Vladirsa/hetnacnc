@@ -144,4 +144,36 @@ G0 X100 Z50
 M30
 %`,
   },
+  {
+    id: "g71",
+    nombre: "6. Desbaste G71 y acabado G70",
+    explicacion: "Los ciclos favoritos del torno Fanuc: describes el perfil UNA vez (bloques N10 a N20) y G71 lo desbasta solo por capas dejando un sobrante; G70 le da la pasada de acabado.",
+    barra: { diametro: 40, largo: 80 },
+    inserto: { radioPunta: 0.4 },
+    codigo: `%
+(Perfil con chaflán y radio usando G71 y G70)
+G21 G99
+T0101
+G96 S200 M3
+G50 S2500
+G0 X42 Z2
+(G71 U = profundidad por pasada en radio, R = retiro)
+G71 U1.5 R0.5
+(P y Q: primer y último bloque del perfil; U y W: sobrante para el acabado)
+G71 P10 Q20 U0.5 W0.1 F0.25
+N10 G0 X16
+G1 X18 Z0 F0.1
+X20 Z-1
+Z-12
+G2 X26 Z-15 R3
+G1 X30
+Z-35
+N20 X42
+(Acabado: recorre el perfil N10 a N20 con su avance F0.1)
+G70 P10 Q20
+G0 X100 Z50
+M5
+M30
+%`,
+  },
 ]

@@ -237,6 +237,44 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     return true
   }
 
+  // Número de bloque (N) → índice de línea, para los ciclos G71/G70 (P y Q)
+  const mapaN = new Map<number, number>()
+  lineas.forEach((l, i) => {
+    const nb = palabras(l).find((w) => w.letra === "N")
+    if (nb && !mapaN.has(nb.valor)) mapaN.set(nb.valor, i)
+  })
+  let g71U = 1 // profundidad por pasada (radio)
+  let g71R = 0.5 // retiro
+
+  /**
+   * Trayectoria de los bloques del perfil (de la línea iNs a iNf) desde `desde`:
+   * G0/G1/G2/G3 con X/U/Z/W, R o I/K, y su F. No mueve la máquina: la usan G71 y G70.
+   */
+  const bloquesPerfil = (iNs: number, iNf: number, desde: PuntoT) => {
+    const tramos: { linea: number; tipo: MovimientoT["tipo"]; puntos: PuntoT[]; f: number | null }[] = []
+    let p = { ...desde }
+    let mov = 1
+    let fp: number | null = null
+    for (let k = iNs; k <= iNf; k++) {
+      const w = palabras(lineas[k]).filter((x) => x.letra !== "N")
+      const val = (l: string) => w.find((x) => x.letra === l)?.valor
+      const hay = (l: string) => w.some((x) => x.letra === l)
+      for (const x of w) if (x.letra === "G" && [0, 1, 2, 3].includes(x.valor)) mov = x.valor
+      if (hay("F")) fp = val("F")! * factor
+      if (!(hay("X") || hay("Z") || hay("U") || hay("W"))) continue
+      const b = {
+        x: hay("X") ? (val("X")! * factor) / 2 : hay("U") ? p.x + (val("U")! * factor) / 2 : p.x,
+        z: hay("Z") ? val("Z")! * factor : hay("W") ? p.z + val("W")! * factor : p.z,
+      }
+      if (mov === 2 || mov === 3) {
+        const c = hay("R") ? centroPorRXZ(p, b, val("R")! * factor, mov === 2) : hay("I") || hay("K") ? { x: p.x + (val("I") || 0) * factor, z: p.z + (val("K") || 0) * factor } : null
+        tramos.push({ linea: k + 1, tipo: "corte", puntos: c ? arcoXZ(p, b, c, mov === 2) : [p, b], f: fp })
+      } else tramos.push({ linea: k + 1, tipo: mov === 0 ? "rapido" : "corte", puntos: [p, b], f: fp })
+      p = b
+    }
+    return tramos
+  }
+
   for (let i = 0; i < lineas.length; i++) {
     const n = i + 1
     const crudo = lineas[i].trim()
@@ -249,6 +287,7 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     let terminar = false
     let g28 = false
     let esG50 = false
+    let g7x = 0
 
     for (const w of ws) {
       if (w.letra === "G") {
@@ -264,7 +303,8 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
         else if (g === 98) porVuelta = false
         else if (g === 99) porVuelta = true
         else if (g === 41 || g === 42) aviso(n, "comp", "G41/G42 (compensación de radio de punta): no se simula; el corte se dibuja con la punta programada.")
-        else if (g === 70 || g === 71 || g === 72 || g === 73) aviso(n, `g${g}`, `G${g} (ciclo de desbaste o acabado) todavía no se simula en esta versión: se ignora.`)
+        else if (g === 70 || g === 71) g7x = g
+        else if (g === 72 || g === 73) aviso(n, `g${g}`, `G${g} (desbaste de cara / repetición de perfil) todavía no se simula: se ignora. Usa G71 y G70.`)
         else if (g === 32 || g === 76 || g === 92) aviso(n, `g${g}`, `G${g} (roscado) todavía no se simula en esta versión: se ignora.`)
         else if (g === 91) aviso(n, "g91", "En el torno los movimientos relativos se escriben con U (en X) y W (en Z), no con G91.")
         else aviso(n, `g${g}`, `G${g} no se simula; se ignora.`)
@@ -282,6 +322,90 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
       else if (!"XZUWIKRPQ".includes(w.letra)) aviso(n, `l${w.letra}`, `La letra ${w.letra} no se reconoce en torno; se ignora.`)
     }
     if (esG50) continue // G50 S… sólo pone el tope de RPM
+
+    // ── G71 (desbaste por capas) y G70 (acabado) estilo Fanuc ──────────────
+    //   G71 U(prof. por pasada, radio) R(retiro)
+    //   G71 P(N inicio) Q(N fin) U(sobrante en X, diámetro) W(sobrante en Z) F…
+    //   G70 P(N inicio) Q(N fin)
+    if (g7x === 71 || g7x === 70) {
+      if (g7x === 71 && !(tiene("P") && tiene("Q"))) {
+        if (tiene("U")) g71U = Math.max(0.05, v("U")! * factor)
+        if (tiene("R")) g71R = Math.max(0, v("R")! * factor)
+        continue
+      }
+      const iNs = mapaN.get(v("P") ?? -1)
+      const iNf = mapaN.get(v("Q") ?? -1)
+      if (iNs === undefined || iNf === undefined || iNf < iNs) {
+        error(n, `G${g7x}: no encuentro los bloques N${v("P") ?? "?"} a N${v("Q") ?? "?"} del perfil. Numera el perfil con N y pon esos números en P y Q.`)
+        errores++
+        continue
+      }
+      const inicio = { ...pos }
+      const tramos = bloquesPerfil(iNs, iNf, inicio)
+      if (!tramos.length) {
+        error(n, `G${g7x}: el perfil entre N${v("P")} y N${v("Q")} no tiene movimientos.`)
+        errores++
+        continue
+      }
+      if (g7x === 70) {
+        // Acabado: recorre el perfil con su F (o la actual) y regresa al punto de inicio
+        const fAntes = f
+        for (const t of tramos) {
+          if (t.f) f = t.f
+          if (t.tipo === "corte" && faltaF(t.linea)) break
+          mover(t.linea, t.tipo, t.puntos)
+        }
+        const fin = tramos[tramos.length - 1].puntos.slice(-1)[0]
+        mover(n, "rapido", [fin, { x: inicio.x, z: fin.z }])
+        mover(n, "rapido", [{ x: inicio.x, z: fin.z }, inicio])
+        f = fAntes
+        pos = inicio
+        continue
+      }
+      // G71: desbaste por capas dejando el sobrante, y una pasada por el perfil con sobrante
+      faltaF(n)
+      const uS = ((v("U") ?? 0) * factor) / 2
+      const wS = (v("W") ?? 0) * factor
+      const contorno = tramos.flatMap((t, k) => (k === 0 ? t.puntos.slice(1) : t.puntos.slice(1))).map((p) => ({ x: p.x + uS, z: p.z + wS }))
+      const xMin = Math.min(...contorno.map((p) => p.x))
+      const zFin = contorno[contorno.length - 1].z
+      const finCapa = (xl: number) => {
+        // primera Z (desde la cara) donde el perfil llega al nivel xl
+        for (let k = 1; k < contorno.length; k++) {
+          const a = contorno[k - 1], b = contorno[k]
+          if (b.x >= xl - 1e-9 && a.x < xl) return b.x === a.x ? b.z : a.z + ((xl - a.x) / (b.x - a.x)) * (b.z - a.z)
+          if (a.x >= xl - 1e-9 && k === 1) return a.z
+        }
+        return zFin
+      }
+      let xl = inicio.x - g71U
+      let actual = { ...inicio }
+      let capas = 0
+      while (xl > xMin + 1e-6 && capas < 400 && !detenido) {
+        const zc = finCapa(xl)
+        if (zc < inicio.z - 1e-6) {
+          const a = { x: xl, z: inicio.z }
+          const b = { x: xl, z: zc }
+          const c = { x: Math.min(xl + g71R, inicio.x), z: Math.min(zc + g71R, inicio.z) }
+          mover(n, "rapido", [actual, a])
+          mover(n, "corte", [a, b])
+          mover(n, "corte", [b, c])
+          mover(n, "rapido", [c, { x: c.x, z: inicio.z }])
+          actual = { x: c.x, z: inicio.z }
+        }
+        xl -= g71U
+        capas++
+      }
+      // pasada por el perfil con el sobrante
+      mover(n, "rapido", [actual, contorno[0]])
+      for (let k = 1; k < contorno.length; k++) mover(n, "corte", [contorno[k - 1], contorno[k]])
+      const ultimo = contorno[contorno.length - 1]
+      mover(n, "rapido", [ultimo, { x: inicio.x, z: ultimo.z }])
+      mover(n, "rapido", [{ x: inicio.x, z: ultimo.z }, inicio])
+      pos = inicio
+      i = iNf // los bloques del perfil no se ejecutan solos: los usa el ciclo
+      continue
+    }
     if (movAhora !== null) {
       if ((movAhora === 90 || movAhora === 94) && !(ciclo && modo === movAhora)) ciclo = { inicio: { ...pos }, ultimo: null }
       if (movAhora !== 90 && movAhora !== 94) ciclo = null // otro G cancela el ciclo; sin G sigue el ciclo
