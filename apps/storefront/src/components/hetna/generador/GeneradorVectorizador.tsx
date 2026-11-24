@@ -39,7 +39,6 @@ import {
   vistaSVG,
 } from "@/lib/generador/trazado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const RESOLUCION = { normal: 900, alta: 1600 }
 const DETALLE = { alto: 0.6, medio: 1, bajo: 2 }
@@ -166,10 +165,6 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
   const altoMM = b && b.ancho ? (b.alto * anchoMM) / b.ancho : 0
   const listo = !!res && cuenta.contornos > 0 && anchoOk
   const archivo = `${nombre}-vector-${r1(anchoMM)}mm`
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar el corte o grabado de un diseño vectorizado:\n` +
-    `- Tamaño: ${r1(anchoMM)} × ${r1(altoMM)} mm\n` +
-    `- ${cuenta.contornos} contornos${res && res.capas.length > 1 ? `, ${res.capas.length} colores` : ""}`
 
   const opcionesPanel = imagen && (
     <>
@@ -399,7 +394,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                     </div>
                     <BotonesCam nombre={archivo} dxf={() => vectorDXF(res, anchoMM)} compacto />
                   </TarjetaExport>
-                  <TarjetaExport titulo="¿Cuánto cuesta cortarlo?" nota="Precio al instante o por WhatsApp.">
+                  <TarjetaExport titulo="¿Cuánto cuesta cortarlo?" nota="Ve el precio al instante en el Cotizador.">
                     <div className="flex gap-2">
                       <Boton
                         tipo="verde"
@@ -410,7 +405,6 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                       >
                         Cotizador
                       </Boton>
-                      <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
                     </div>
                   </TarjetaExport>
                 </div>

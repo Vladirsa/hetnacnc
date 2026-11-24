@@ -8,7 +8,6 @@ import { PrecioFabricar } from "./PrecioFabricar"
 import { type Fuente, type Letrero, type OpcionesLetrero, hacerLetrero, vistaLetrero } from "@/lib/generador/letreros"
 import { vectorDXF, vectorSVG } from "@/lib/generador/trazado"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const CDN = "https://cdn.jsdelivr.net/npm"
 const OPENTYPE = `${CDN}/opentype.js@1.3.4/dist/opentype.min.js`
 
@@ -209,11 +208,6 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
   const listo = !!res && res.ancho > 0
   const nombreFuente = propia ? propia.nombre : FUENTES.find((x) => x.id === fuenteId)?.nombre || ""
   const archivo = `letrero-hetna-${(texto.split("\n")[0] || "texto").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30).toLowerCase() || "texto"}`
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar un ${tipo === "placa" ? "letrero en placa" : "letrero recortado"}:\n` +
-    `- Texto: ${texto.replace(/\n/g, " / ")}\n` +
-    `- Tipografía: ${nombreFuente}\n` +
-    (res ? `- Tamaño: ${r1(res.ancho)} × ${r1(res.alto)} mm${tipo === "recorte" ? `, ${res.piezas} pieza(s)` : ""}` : "")
   const multilinea = texto.includes("\n")
 
   return (
@@ -373,18 +367,18 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
                 Ver precio al instante en el Cotizador
               </button>
-              <PrecioFabricar dxf={vectorDXF(res.vector, res.ancho)} nombreArchivo={archivo} pieza="Letrero" maquina={maquina} />
+              {/* Barra delgada de precio (como en el Studio de cajas, 23 nov 2026): la tarjeta grande ocupaba media columna */}
+              <div className="rounded-[12px] [&>div]:rounded-[12px] [&>div]:border-t-0">
+                <PrecioFabricar barra dxf={vectorDXF(res.vector, res.ancho)} nombreArchivo={archivo} pieza="Letrero" maquina={maquina} />
+              </div>
               {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => descargar(`${archivo}.dxf`, vectorDXF(res.vector, res.ancho), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                   Descargar DXF
                 </button>
                 <button type="button" onClick={() => descargar(`${archivo}.svg`, vectorSVG(res.vector, res.ancho), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                   Descargar SVG
                 </button>
-                <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                  Pedir por WhatsApp
-                </a>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
                 {tipo === "placa"

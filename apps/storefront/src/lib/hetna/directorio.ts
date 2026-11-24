@@ -143,11 +143,38 @@ export async function directorioMexico(): Promise<EmpresaDirectorio[]> {
 /** Empresas de otro país (páginas /latinoamerica/<país>). `nombres`: cómo puede venir
  *  escrito el país en la hoja ("Perú", "Peru"). Lo que el buscador agrega a la hoja
  *  aparece solo: se lee en vivo con caché de 1 hora. */
+/** Para comparar nombres de país escritos distinto ("Perú" / "Peru"). */
+export const mismoPais = (a: string, b: string) => sinAcentos(a) === sinAcentos(b)
+
 export async function directorioPais(...nombres: string[]): Promise<EmpresaDirectorio[]> {
   const buscados = new Set(nombres.map(sinAcentos))
   return (await leerTodo())
     .filter((e) => buscados.has(sinAcentos(e.pais)))
     .sort((a, b) => (a.ciudad || "zzz").localeCompare(b.ciudad || "zzz") || a.empresa.localeCompare(b.empresa))
+}
+
+/** Todas las empresas del buscador, de todos los países, agrupadas por país (el de
+ *  más empresas primero). Para los contadores y el mapa. */
+export async function directorioPorPais(): Promise<{ pais: string; empresas: EmpresaDirectorio[] }[]> {
+  const g = new Map<string, EmpresaDirectorio[]>()
+  for (const e of await leerTodo()) {
+    const pais = (e.pais || "").trim() || "Sin país"
+    g.set(pais, [...(g.get(pais) || []), e])
+  }
+  return [...g.entries()]
+    .map(([pais, empresas]) => ({
+      pais,
+      empresas: empresas.sort((a, b) => (a.ciudad || "zzz").localeCompare(b.ciudad || "zzz") || a.empresa.localeCompare(b.empresa)),
+    }))
+    .sort((a, b) => b.empresas.length - a.empresas.length || a.pais.localeCompare(b.pais))
+}
+
+/** Para el mapa: cuántas empresas hay en cada país fuera de México (nunca nombres). */
+export type EmpresasPorPais = { pais: string; total: number }[]
+export async function contarPorPais(): Promise<EmpresasPorPais> {
+  return (await directorioPorPais())
+    .filter((g) => !mismoPais(g.pais, "México") && g.pais !== "Sin país")
+    .map((g) => ({ pais: g.pais, total: g.empresas.length }))
 }
 
 /** Cualquier país: para «Quitar este perfil», que también sale en las páginas de Latinoamérica. */

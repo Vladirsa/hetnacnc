@@ -134,11 +134,14 @@ export function Explorar({
   sp,
   sugerencias,
   locale,
+  estados = [],
 }: {
   locale: string
   r: ResultadoExplorar
   sp: URLSearchParams
   sugerencias?: { nombre: string; handle: string }[]
+  // Páginas "Talleres CNC en <estado>" que ya existen e indexa Google
+  estados?: { nombre: string; ruta: string; total: number }[]
 }) {
   const base = "/categories"
   const info = PESTANAS.find((p) => p.id === r.pestana)!
@@ -317,6 +320,27 @@ export function Explorar({
           )}
 
           {r.paginas > 1 && <ProductsPagination pages={r.paginas} />}
+
+          {/* Enlaces a las páginas por estado: ayudan a Google a encontrarlas
+              y a quien busca un taller cerca */}
+          {r.pestana === "talleres" && estados.length > 0 && (
+            <nav aria-label="Talleres CNC por estado" className="mt-8 rounded-2xl border border-[#E2E5E9] bg-white p-5">
+              <h2 className="m-0 text-[16px] font-extrabold text-[#142033]">Talleres CNC por estado</h2>
+              <p className="m-0 mt-1 text-[13px] text-[#6B6A63]">Talleres de HETNA y empresas del directorio en cada estado, con qué servicios hacen.</p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {estados.map((e) => (
+                  <li key={e.ruta}>
+                    <LocalizedClientLink
+                      href={e.ruta}
+                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[#D4D9DF] bg-white px-3 text-[13px] font-semibold text-[#1E2329] hover:border-[#C2560A] hover:text-[#C2560A]"
+                    >
+                      {e.nombre} <span className="font-medium text-[#8A8F96]">{e.total}</span>
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
         </section>
       </div>
     </div>

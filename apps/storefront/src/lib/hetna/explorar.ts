@@ -99,7 +99,7 @@ export const slug = (s: string) =>
 // --------------------------------------------------------------- tipos
 
 export type Opcion = { valor: string; nombre: string; n: number; activa: boolean }
-export type Grupo = { clave: string; titulo: string; opciones: Opcion[] }
+export type Grupo = { clave: string; titulo: string; opciones: Opcion[]; universo?: number }
 export type Activo = { clave: string; valor: string; nombre: string }
 
 export type ResultadoExplorar = {
@@ -128,6 +128,9 @@ type Item = {
   talleres: Set<string>
   materiales: Map<string, string> // slug → nombre
 }
+
+// Categorías raíz que sólo agrupan el menú (no sirven como atajo)
+const CONTENEDORES = new Set(["tienda"])
 
 const MATERIALES_CONOCIDOS = ["MDF", "Acrílico", "Madera", "Pino", "Triplay", "Aluminio", "Acero", "Acero inoxidable", "Latón", "Cobre", "Nylon", "PVC", "Policarbonato", "Cuero", "Vidrio", "Piedra", "Foamboard", "Coroplast", "PLA", "PETG", "Resina"]
 
@@ -227,9 +230,13 @@ function materialesDe(p: HttpTypes.StoreProduct): Map<string, string> {
   return out
 }
 
-function pestanaDe(p: HttpTypes.StoreProduct): Item["pestana"] {
+function pestanaDe(p: HttpTypes.StoreProduct, deServicios: boolean): Item["pestana"] {
+  // Los paquetes de créditos 3D pagan el servicio de escaneo: no son un producto físico
+  const m = (p.metadata || {}) as Record<string, unknown>
+  if (m.producto_creditos_3d === true || m.producto_creditos_3d === "true") return "medida"
   const t = tipoProducto(p as never)
   if (t === "digital") return "disenos"
+  if (deServicios) return "medida"
   if (t === "a_medida" || t === "servicio") return "medida"
   return "productos"
 }
@@ -254,24 +261,37 @@ function grupo<T>(
 ): Grupo {
   const elegidos = filtros.find((f) => f.clave === clave)?.elegidos ?? new Set<string>()
   const cuenta = new Map<string, { nombre: string; n: number }>()
+  // universo: cuántos resultados tienen algún valor en este grupo. Los que no
+  // tienen ninguno (productos sin taller asignado) no cuentan: si no, «Router 10
+  // de 15» parecía filtrar cuando los 10 con taller tienen todas las máquinas.
+  let universo = 0
   for (const x of lista) {
     if (!cumpleTodos(x, filtros, clave)) continue
+    let tiene = false
     for (const [valor, nombre] of opcionesDe(x)) {
+      tiene = true
       const c = cuenta.get(valor) ?? { nombre, n: 0 }
       c.n++
       cuenta.set(valor, c)
     }
+    if (tiene) universo++
   }
   // Una opción elegida sigue visible aunque ya no tenga resultados (para poder quitarla)
   for (const v of elegidos) if (!cuenta.has(v)) cuenta.set(v, { nombre: v, n: 0 })
   const opciones = [...cuenta.entries()]
     .map(([valor, c]) => ({ valor, nombre: c.nombre, n: c.n, activa: elegidos.has(valor) }))
     .sort(orden ?? ((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre, "es")))
-  return { clave, titulo, opciones }
+  return { clave, titulo, opciones, universo }
 }
 
-// Un grupo con una sola opción y nada elegido no ayuda a filtrar: se esconde.
-const util = (g: Grupo) => g.opciones.some((o) => o.activa) || g.opciones.filter((o) => o.n > 0).length >= 2
+// Un grupo que no ayuda a filtrar se esconde: con una sola opción, o cuando
+// todas las opciones dan lo mismo que no filtrar (en producción, con un solo
+// taller, "Tipo de taller" salía con Router 10, Láser 10, Plasma 10… de 10).
+const util = (g: Grupo) => {
+  if (g.opciones.some((o) => o.activa)) return true
+  const con = g.opciones.filter((o) => o.n > 0)
+  return con.length >= 2 && (g.universo === undefined || con.some((o) => o.n < g.universo!))
+}
 
 // --------------------------------------------------------------- principal
 
@@ -304,10 +324,11 @@ export async function explorar(locale: string, sp: URLSearchParams): Promise<Res
   const items: Item[] = productos.map((p) => {
     const ts = [...(vendedores.get(p.id) ?? [])].map((id) => tallerPorId.get(id)).filter((t): t is Taller => !!t)
     const propias = ((p as { categories?: Cat[] | null }).categories ?? []).map((c) => catPorId.get(c.id) ?? c)
+    const handles = new Set(propias.flatMap((c) => ancestros(c).map((a) => a.handle)))
     return {
       p,
-      pestana: pestanaDe(p),
-      cats: new Set(propias.flatMap((c) => ancestros(c).map((a) => a.handle))),
+      pestana: pestanaDe(p, handles.has("servicios")),
+      cats: handles,
       estados: new Set(ts.map(estadoDeTaller).filter(Boolean)),
       maquinas: new Set(ts.flatMap((t) => [...maquinasDeTaller(t)])),
       talleres: new Set(ts.map((t) => t.handle)),
@@ -395,7 +416,15 @@ export async function explorar(locale: string, sp: URLSearchParams): Promise<Res
   const nCat = new Map(conteoCat.opciones.map((o) => [o.valor, o]))
   const hijas = (padre: string | null) =>
     cats.filter((c) => (c.parent_category_id ?? null) === padre && (nCat.get(c.handle)?.n ?? 0) > 0).map((c) => nCat.get(c.handle)!)
-  let nivel = hijas(null)
+  // "Tienda" es sólo el contenedor del menú (Máquinas, Herramientas,
+  // Materiales, Digital): en su lugar salen sus categorías.
+  const expandir = (lista: Opcion[]) =>
+    lista.flatMap((o) => {
+      const c = catPorHandle.get(o.valor)
+      const abajo = c && CONTENEDORES.has(c.handle) && !o.activa ? hijas(c.id) : []
+      return abajo.length ? abajo : [o]
+    })
+  let nivel = expandir(hijas(null))
   for (let i = 0; i < 3 && nivel.length === 1 && !nivel[0].activa; i++) {
     const sola = catPorHandle.get(nivel[0].valor)
     const abajo = sola ? hijas(sola.id) : []
