@@ -14,7 +14,7 @@
 // programa vacío no puede aprobar un grabado aunque toque poco material.
 import { interpretar, type Alarma, type Material } from "./gcode"
 import { Bloque, type Fresa } from "./material"
-import { interpretarTorno, Perfil } from "./torno"
+import { cortarMovimiento, interpretarTorno, Perfil } from "./torno"
 import type { Ejercicio } from "./ejercicios"
 
 export const MAX_CARACTERES = 100_000
@@ -51,7 +51,7 @@ function piezaFresa(codigo: string, material: Material, fresa: Fresa) {
 function piezaTorno(e: Extract<Ejercicio, { maquina: "torno" }>, codigo: string) {
   const r = interpretarTorno(codigo, e.barra, e.inserto)
   const p = new Perfil(e.barra, 0.1)
-  for (const m of r.movimientos) if (m.tipo === "corte") for (let i = 1; i < m.puntos.length; i++) p.cortar(m.puntos[i - 1], m.puntos[i], e.inserto)
+  for (const m of r.movimientos) if (m.tipo === "corte") for (let i = 1; i < m.puntos.length; i++) cortarMovimiento(p, m, m.puntos[i - 1], m.puntos[i], e.inserto)
   return { r, p }
 }
 
@@ -118,7 +118,7 @@ export function calificar(e: Ejercicio, codigo: string): Calificacion {
   }
 
   const fresa = e.maquina === "fresadora"
-  const { min, max } = banda(ref.datos, ref.nx, ref.ny, fresa ? VECINOS_FRESA : VECINOS_TORNO)
+  const { min, max } = banda(ref.datos, ref.nx, ref.ny, e.vecinos ?? (fresa ? VECINOS_FRESA : VECINOS_TORNO))
   const tol = fresa ? TOL_Z : TOL_R
   const inicial = fresa ? 0 : (e as Extract<Ejercicio, { maquina: "torno" }>).barra.diametro / 2
   // En la fresadora "cortar de más" es quedar más abajo (h menor); en el torno es radio menor: igual en los dos

@@ -7,7 +7,7 @@ import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EJEMPLOS_TORNO } from "@/lib/simulador/ejemplos-torno"
-import { INICIO_TORNO, interpretarTorno, Perfil, type Barra, type Inserto, type PuntoT } from "@/lib/simulador/torno"
+import { cortarMovimiento, INICIO_TORNO, interpretarTorno, Perfil, type Barra, type Inserto, type PuntoT } from "@/lib/simulador/torno"
 
 const Vista3D = dynamic(() => import("./Vista3DTorno"), {
   ssr: false,
@@ -119,7 +119,7 @@ export function SimuladorTorno({ inicial, alCambiarCodigo, aviso }: { inicial?: 
       const obj = m.puntos[r.punto]
       const d = Math.hypot(obj.x - r.pos.x, obj.z - r.pos.z)
       if (d <= resto) {
-        if (m.tipo === "corte") perfil.cortar(r.pos, obj, inserto)
+        if (m.tipo === "corte") cortarMovimiento(perfil, m, r.pos, obj, inserto)
         r.pos = obj
         r.recorrido += d
         resto -= d
@@ -132,7 +132,7 @@ export function SimuladorTorno({ inicial, alCambiarCodigo, aviso }: { inicial?: 
       } else {
         const t = resto / d
         const p = { x: r.pos.x + (obj.x - r.pos.x) * t, z: r.pos.z + (obj.z - r.pos.z) * t }
-        if (m.tipo === "corte") perfil.cortar(r.pos, p, inserto)
+        if (m.tipo === "corte") cortarMovimiento(perfil, m, r.pos, p, inserto)
         r.pos = p
         r.recorrido += resto
         resto = 0

@@ -122,3 +122,22 @@ M30`
     expect(r.alarmas.some((a) => /no encuentro los bloques N11/.test(a.mensaje))).toBe(true)
   })
 })
+
+describe("simulador: roscado", () => {
+  it("G92 a mano aprueba el ejercicio hecho con G76 (misma rosca)", () => {
+    const e = ex("t4-rosca")
+    const g92 = e.solucion.replace("G76 P010060 Q100 R0.05\nG76 X18.16 Z-20 P920 Q300 F1.5", "G92 X19.4 Z-20 F1.5\nX18.9\nX18.5\nX18.3\nX18.16\nX18.16")
+    const r = calificar(e, g92)
+    expect({ aprobado: r.aprobado, errores: r.errores.length }).toEqual({ aprobado: true, errores: 0 })
+  })
+  it("rosca poco profunda o sin roscar reprueba", () => {
+    const e = ex("t4-rosca")
+    expect(calificar(e, e.solucion.replace("X18.16 Z-20", "X18.6 Z-20")).aprobado).toBe(false)
+    expect(calificar(e, e.solucion.replace(/G76.*\n/g, "")).aprobado).toBe(false)
+  })
+  it("sin F el roscado da alarma", () => {
+    const e = ex("t4-rosca")
+    const r = calificar(e, e.solucion.replace(" F1.5", ""))
+    expect(r.errores.some((a) => /paso de la rosca/.test(a.mensaje))).toBe(true)
+  })
+})

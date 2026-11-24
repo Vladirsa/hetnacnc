@@ -25,6 +25,8 @@ export type MovimientoT = {
   rpm: number
   husillo: boolean
   herramienta: number
+  // Pase de roscado: avance = paso por vuelta; los surcos caen cada `paso` mm desde `fase`
+  rosca?: { paso: number; fase: number }
 }
 
 export type Barra = { diametro: number; largo: number } // material en bruto
@@ -104,12 +106,45 @@ export class Perfil {
     return quito
   }
 
+  /**
+   * Pase de roscado con inserto de 60°: el surco se repite cada `paso` mm a
+   * partir de `fase` (el husillo sincroniza todas las pasadas en el mismo hilo).
+   * En este modelo la rosca se ve como surcos anulares, que es lo que importa
+   * para medir: diámetro de fondo, de cresta y paso.
+   */
+  cortarRosca(a: PuntoT, b: PuntoT, paso: number, fase: number): boolean {
+    if (!(paso > 0)) return false
+    const zMin = Math.min(a.z, b.z), zMax = Math.max(a.z, b.z)
+    const flanco = Math.sqrt(3) // tan(60°): el radio del inserto sube 1.732 mm por cada mm de lado
+    const i0 = Math.max(0, Math.floor(-(zMax + paso / 2) / this.paso))
+    const i1 = Math.min(this.n - 1, Math.ceil(-(zMin - paso / 2) / this.paso))
+    let quito = false
+    for (let i = i0; i <= i1; i++) {
+      const z = -i * this.paso
+      const zc = fase - Math.round((fase - z) / paso) * paso // centro del surco más cercano
+      if (zc < zMin - 1e-9 || zc > zMax + 1e-9) continue
+      const t = zMax - zMin < 1e-9 ? 0 : (zc - a.z) / (b.z - a.z)
+      const xt = a.x + (b.x - a.x) * t
+      const rr = Math.max(0, xt + flanco * Math.abs(z - zc))
+      if (rr < this.r[i]) {
+        this.r[i] = rr
+        quito = true
+      }
+    }
+    return quito
+  }
+
   /** Volumen quitado en cm³. */
   volumenQuitado() {
     let s = 0
     for (let i = 0; i < this.n; i++) s += Math.PI * (this.radio0 ** 2 - this.r[i] ** 2) * this.paso
     return s / 1000
   }
+}
+
+/** Aplica un movimiento de corte (normal o de rosca) al perfil entre a y b. */
+export function cortarMovimiento(perfil: Perfil, m: Pick<MovimientoT, "rosca">, a: PuntoT, b: PuntoT, ins: Inserto) {
+  return m.rosca ? perfil.cortarRosca(a, b, m.rosca.paso, m.rosca.fase) : perfil.cortar(a, b, ins)
 }
 
 /** Puntos de un arco en el plano XZ (x = radio). horario = G2 (vista con X hacia arriba y Z a la derecha). */
@@ -184,7 +219,8 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     return rpm
   }
 
-  const mover = (linea: number, tipo: MovimientoT["tipo"], puntos: PuntoT[]) => {
+  // libre = salida del roscado: la herramienta sale del surco, no es choque
+  const mover = (linea: number, tipo: MovimientoT["tipo"], puntos: PuntoT[], rosca?: { paso: number; fase: number }, libre = false) => {
     if (puntos.length < 2 || detenido) return
     if (puntos.some((p) => !(Math.abs(p.x) <= RECORRIDO_MAX && Math.abs(p.z) <= RECORRIDO_MAX))) {
       error(linea, `Fuera de recorrido: la máquina no llega a ±${RECORRIDO_MAX} mm. Revisa las coordenadas (¿pulgadas en lugar de milímetros?).`)
@@ -202,12 +238,12 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
       return
     }
     const rpm = rpmEn(Math.min(...puntos.map((p) => p.x)))
-    const fMin = tipo === "rapido" ? RAPIDO_TORNO : porVuelta ? f * Math.max(rpm, 1) : f
+    const fMin = tipo === "rapido" ? RAPIDO_TORNO : rosca ? rosca.paso * Math.max(rpm, 1) : porVuelta ? f * Math.max(rpm, 1) : f
     tiempo += largo / Math.max(fMin, 1)
-    movimientos.push({ linea, tipo, puntos, fMin, rpm, husillo, herramienta })
+    movimientos.push({ linea, tipo, puntos, fMin, rpm, husillo, herramienta, ...(rosca ? { rosca } : {}) })
     // Choques y cortes indebidos contra el material que queda en este momento
     let toca = false
-    for (let i = 1; i < puntos.length && !toca; i++) {
+    for (let i = 1; i < puntos.length && !toca && !libre; i++) {
       const a = puntos[i - 1], b = puntos[i]
       const pasos = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.2))
       for (let k = 0; k <= pasos && !toca; k++) {
@@ -223,7 +259,11 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
       errores++
     }
     // Aunque haya error se marca lo que tocó, para no sumar alarmas falsas después
-    if (tipo === "corte" || toca) for (let i = 1; i < puntos.length; i++) perfil.cortar(puntos[i - 1], puntos[i], inserto)
+    if (tipo === "corte" || toca)
+      for (let i = 1; i < puntos.length; i++) {
+        if (rosca && tipo === "corte") perfil.cortarRosca(puntos[i - 1], puntos[i], rosca.paso, rosca.fase)
+        else perfil.cortar(puntos[i - 1], puntos[i], inserto)
+      }
     // Refrentar a X-1 o X-2 (pasar un poco del centro) es normal; más allá es error de programa
     if (Math.min(...puntos.map((p) => p.x)) < -1.5) aviso(linea, "centro", "La herramienta pasa más de 3 mm del centro de la pieza (X muy negativo): revisa el diámetro.")
   }
@@ -242,6 +282,9 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     if (nb && !mapaN.has(nb.valor)) mapaN.set(nb.valor, i)
   })
   let g71U = 1 // profundidad por pasada (radio)
+  let g76m = 1 // pasadas de acabado al fondo
+  let g76min = 0.05 // profundidad mínima por pasada (mm)
+  let g76fin = 0.05 // sobrante para la pasada de acabado (mm)
   let g71R = 0.5 // retiro
 
   /**
@@ -290,7 +333,7 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     for (const w of ws) {
       if (w.letra === "G") {
         const g = w.valor
-        if ([0, 1, 2, 3, 90, 94].includes(g)) movAhora = g
+        if ([0, 1, 2, 3, 32, 90, 92, 94].includes(g)) movAhora = g
         else if (g === 4 || g === 18 || g === 40 || g === 80) { /* aceptados */ }
         else if (g === 20) factor = 25.4
         else if (g === 21) factor = 1
@@ -303,7 +346,7 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
         else if (g === 41 || g === 42) aviso(n, "comp", "G41/G42 (compensación de radio de punta): no se simula; el corte se dibuja con la punta programada.")
         else if (g === 70 || g === 71) g7x = g
         else if (g === 72 || g === 73) aviso(n, `g${g}`, `G${g} (desbaste de cara / repetición de perfil) todavía no se simula: se ignora. Usa G71 y G70.`)
-        else if (g === 32 || g === 76 || g === 92) aviso(n, `g${g}`, `G${g} (roscado) todavía no se simula en esta versión: se ignora.`)
+        else if (g === 76) g7x = 76
         else if (g === 91) aviso(n, "g91", "En el torno los movimientos relativos se escriben con U (en X) y W (en Z), no con G91.")
         else aviso(n, `g${g}`, `G${g} no se simula; se ignora.`)
       } else if (w.letra === "M") {
@@ -325,6 +368,61 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
     //   G71 U(prof. por pasada, radio) R(retiro)
     //   G71 P(N inicio) Q(N fin) U(sobrante en X, diámetro) W(sobrante en Z) F…
     //   G70 P(N inicio) Q(N fin)
+    // ── G76: ciclo de roscado automático (dos bloques, estilo Fanuc) ────────
+    //   G76 P(mm rr aa) Q(prof. mínima, micras) R(sobrante de acabado, mm)
+    //   G76 X(diám. de fondo) Z(fin) P(altura del hilo, micras) Q(1.ª pasada, micras) F(paso)
+    if (g7x === 76) {
+      if (!(tiene("X") || tiene("U") || tiene("Z") || tiene("W"))) {
+        if (tiene("P")) g76m = Math.max(1, Math.floor(v("P")! / 10000) || 1)
+        if (tiene("Q")) g76min = Math.max(0.005, v("Q")! / 1000)
+        if (tiene("R")) g76fin = Math.max(0, v("R")! * factor)
+        continue
+      }
+      const paso = (v("F") ?? 0) * factor
+      if (!(paso > 0)) {
+        error(n, "G76: falta F, el paso de la rosca en mm (por ejemplo F1.5 para M20×1.5).")
+        errores++
+        continue
+      }
+      if (!husillo) {
+        error(n, "La herramienta toca la pieza con el husillo apagado. Enciéndelo con M3 y S antes de roscar.")
+        errores++
+      }
+      if (css) aviso(n, "g96-rosca", "Para roscar usa RPM fijas (G97): con G96 las revoluciones cambian y el hilo se puede echar a perder.")
+      const o = { ...pos }
+      const raiz = tiene("X") ? (v("X")! * factor) / 2 : tiene("U") ? pos.x + (v("U")! * factor) / 2 : pos.x
+      const zFin = tiene("Z") ? v("Z")! * factor : tiene("W") ? pos.z + v("W")! * factor : pos.z
+      const h = (v("P") ?? 0) / 1000
+      const d1 = Math.max(g76min, (v("Q") ?? 0) / 1000)
+      if (!(h > 0) || !(d1 > 0)) {
+        error(n, "G76: falta la altura del hilo (P, en micras) o la primera pasada (Q, en micras).")
+        errores++
+        continue
+      }
+      const cresta = raiz + h
+      // Pasadas cada vez más finas (√n) hasta la altura menos el sobrante, luego acabado
+      const profundidades: number[] = []
+      let prev = 0
+      for (let k = 1; k < 200; k++) {
+        let d = d1 * Math.sqrt(k)
+        if (d - prev < g76min) d = prev + g76min
+        if (d >= h - g76fin) break
+        profundidades.push(d)
+        prev = d
+      }
+      for (let k = 0; k < g76m; k++) profundidades.push(h)
+      if (g76fin > 0) profundidades.splice(profundidades.length - g76m, 0, h - g76fin)
+      for (const d of profundidades) {
+        const xp = cresta - d
+        mover(n, "rapido", [pos, { x: xp, z: o.z }])
+        mover(n, "corte", [{ x: xp, z: o.z }, { x: xp, z: zFin }], { paso, fase: o.z })
+        mover(n, "rapido", [{ x: xp, z: zFin }, { x: o.x, z: zFin }], undefined, true)
+        mover(n, "rapido", [{ x: o.x, z: zFin }, o])
+        pos = { ...o }
+      }
+      continue
+    }
+
     if (g7x === 71 || g7x === 70) {
       if (g7x === 71 && !(tiene("P") && tiene("Q"))) {
         if (tiene("U")) g71U = Math.max(0.05, v("U")! * factor)
@@ -405,8 +503,8 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
       continue
     }
     if (movAhora !== null) {
-      if ((movAhora === 90 || movAhora === 94) && !(ciclo && modo === movAhora)) ciclo = { inicio: { ...pos }, ultimo: null }
-      if (movAhora !== 90 && movAhora !== 94) ciclo = null // otro G cancela el ciclo; sin G sigue el ciclo
+      if ((movAhora === 90 || movAhora === 92 || movAhora === 94) && !(ciclo && modo === movAhora)) ciclo = { inicio: { ...pos }, ultimo: null }
+      if (movAhora !== 90 && movAhora !== 92 && movAhora !== 94) ciclo = null // otro G cancela el ciclo; sin G sigue el ciclo
       modo = movAhora
     }
 
@@ -462,7 +560,16 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
         }
         mover(n, "corte", c ? arcoXZ(pos, b, c, horario) : [pos, b])
         pos = b
-      } else if ((modo === 90 || modo === 94) && ciclo) {
+      } else if (modo === 32) {
+        // Pase de rosca suelto: F es el paso; la fase sale de la Z donde arranca
+        if (!(f > 0)) {
+          error(n, "G32: falta F, el paso de la rosca en mm.")
+          errores++
+        }
+        if (css) aviso(n, "g96-rosca", "Para roscar usa RPM fijas (G97): con G96 las revoluciones cambian y el hilo se puede echar a perder.")
+        mover(n, "corte", [pos, b], { paso: f, fase: pos.z })
+        pos = b
+      } else if ((modo === 90 || modo === 92 || modo === 94) && ciclo) {
         // Ciclos simples de Fanuc. El punto de inicio es donde estaba la herramienta.
         faltaF(n)
         const o = ciclo.inicio
@@ -472,7 +579,17 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
           if (!tiene("Z") && !tiene("W")) b.z = ciclo.ultimo.z
         }
         ciclo.ultimo = { ...b }
-        if (modo === 90) {
+        if (modo === 92) {
+          // Roscado: rápido a X, pase de rosca hasta Z (F = paso), salida y regreso
+          if (css) aviso(n, "g96-rosca", "Para roscar usa RPM fijas (G97): con G96 las revoluciones cambian y el hilo se puede echar a perder.")
+          const p1 = { x: b.x, z: o.z }
+          const p2 = { x: b.x, z: b.z }
+          const p3 = { x: o.x, z: b.z }
+          mover(n, "rapido", [pos, p1])
+          mover(n, "corte", [p1, p2], { paso: f, fase: o.z })
+          mover(n, "rapido", [p2, p3], undefined, true)
+          mover(n, "rapido", [p3, o])
+        } else if (modo === 90) {
           // Cilindrado: rápido a X, corte hasta Z, salida en X al diámetro de inicio, rápido de regreso en Z
           const p1 = { x: b.x, z: o.z }
           const p2 = { x: b.x, z: b.z }
