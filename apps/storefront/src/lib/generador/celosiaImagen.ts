@@ -28,6 +28,12 @@ export type OpcionesCelosiaImagen = {
   marco: number // mm sin calar alrededor
   /** Lo que se cortaría y toca la orilla de la foto es fondo (pared, mesa): se deja como material */
   fondo: boolean
+  /**
+   * Repetir: las 4 esquinas marcan UN módulo y se repite columnas × filas veces
+   * para llenar el panel. espejo = cada módulo vecino se voltea (para cuando
+   * la imagen es un cuarto o medio motivo). null = la imagen es el panel entero.
+   */
+  repetir: { columnas: number; filas: number; espejo: boolean } | null
   cortar: "oscuro" | "claro"
   umbral: number | null // 0–255; null = automático
   proceso: Proceso
@@ -309,7 +315,31 @@ export function hacerCelosiaImagen(im: Imagen, opciones: OpcionesCelosiaImagen, 
   const W2 = w + 2
   const H2 = h + 2
 
-  const enderezada = enderezar(g, im.width, im.height, o.esquinas, w, h)
+  const rep = o.repetir
+    ? { c: Math.round(acotar(o.repetir.columnas, 1, 60, 1)), f: Math.round(acotar(o.repetir.filas, 1, 60, 1)), espejo: o.repetir.espejo }
+    : null
+  let enderezada: Uint8Array
+  if (rep && (rep.c > 1 || rep.f > 1)) {
+    // Un módulo enderezado y se copia en mosaico sobre toda el área calada
+    const mw = Math.max(4, Math.round(w / rep.c))
+    const mh = Math.max(4, Math.round(h / rep.f))
+    const modulo = enderezar(g, im.width, im.height, o.esquinas, mw, mh)
+    enderezada = new Uint8Array(w * h)
+    // Píxel t de n (en el panel) → píxel del módulo de m, con cuantos módulos
+    const indice = (t: number, n: number, m: number, cuantos: number) => {
+      const s = ((t + 0.5) / n) * cuantos
+      const k = Math.min(Math.floor(s), cuantos - 1)
+      let f = s - k
+      if (rep.espejo && k % 2 === 1) f = 1 - f
+      return Math.min(m - 1, Math.max(0, Math.floor(f * m)))
+    }
+    const colX = Int32Array.from({ length: w }, (_, x) => indice(x, w, mw, rep.c))
+    for (let y = 0; y < h; y++) {
+      const fila = indice(y, h, mh, rep.f) * mw
+      for (let x = 0; x < w; x++) enderezada[y * w + x] = modulo[fila + colX[x]]
+    }
+    if (mw < 40 || mh < 40) avisos.push("Cada módulo queda muy chico para el detalle de la imagen: usa menos columnas o filas, o un panel más grande.")
+  } else enderezada = enderezar(g, im.width, im.height, o.esquinas, w, h)
   const umbral = o.umbral ?? umbralAutomatico(enderezada)
 
   // material = 1 donde NO se corta
@@ -323,7 +353,7 @@ export function hacerCelosiaImagen(im: Imagen, opciones: OpcionesCelosiaImagen, 
   // 0. Fondo: las zonas a cortar que tocan la orilla de la foto enderezada son
   //    la pared o la mesa que quedó dentro de las 4 esquinas, no parte del diseño
   let fondo = 0
-  if (o.fondo) {
+  if (o.fondo && !rep) {
     const cola: number[] = []
     const marcar = (x: number, y: number) => {
       const i = y * W2 + x
