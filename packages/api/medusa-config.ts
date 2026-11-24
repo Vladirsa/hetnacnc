@@ -205,6 +205,10 @@ module.exports = withMercur({
       resolve: './src/modules/mercadolibre',
     },
     {
+      // Simulador CNC: resultados de los ejercicios calificados (lib/simulador)
+      resolve: './src/modules/simulador',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [

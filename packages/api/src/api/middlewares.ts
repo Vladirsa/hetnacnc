@@ -102,6 +102,23 @@ export default defineMiddlewares({
         ...storeLearningArticlesMiddlewares,
         ...adminCoursesMiddlewares,
         ...storeCoursesMiddlewares,
+        // Simulador CNC: ejercicios calificados en el servidor (lib/simulador)
+        {
+            method: ["GET"],
+            matcher: "/store/simulador/ejercicios",
+            middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+        },
+        {
+            method: ["POST"],
+            matcher: "/store/simulador/ejercicios/:id/calificar",
+            bodyParser: { sizeLimit: "150kb" },
+            middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
+        {
+            method: ["GET"],
+            matcher: "/store/simulador/certificado",
+            middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
         {
             method: ["GET"],
             matcher: "/store/mi-membresia",

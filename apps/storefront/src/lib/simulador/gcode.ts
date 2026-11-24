@@ -39,6 +39,10 @@ export type Resultado = {
 }
 
 export const VELOCIDAD_RAPIDO = 5000 // mm/min (para estimar tiempo y animar)
+// Límites: protegen al navegador y al servidor (que califica) de programas absurdos
+export const RECORRIDO_MAX = 2000 // mm desde el cero en cualquier eje
+export const LARGO_TOTAL_MAX = 60_000 // mm de trayectoria en todo el programa
+export const LINEAS_MAX = 20_000
 export const Z_SEGURA = 10 // a dónde sube G28 y donde arranca la máquina
 
 const r3 = (n: number) => Math.round(n * 1000) / 1000
@@ -118,7 +122,7 @@ function entraAlMaterial(a: Punto, b: Punto, caja: ReturnType<typeof cajaMateria
 }
 
 export function interpretar(texto: string, material: Material): Resultado {
-  const lineas = String(texto || "").replace(/\r/g, "").split("\n")
+  const lineas = String(texto || "").replace(/\r/g, "").split("\n").slice(0, LINEAS_MAX)
   const caja = cajaMaterial(material)
   const movimientos: Movimiento[] = []
   const alarmas: Alarma[] = []
@@ -139,14 +143,33 @@ export function interpretar(texto: string, material: Material): Resultado {
   let husillo = false
   let herramienta = 0
   let retornoInicial = true // G98
+  // Ciclos de taladro: Z (fondo) y R (plano de acercamiento) se recuerdan entre líneas
+  let cicloZ: number | null = null
+  let cicloR: number | null = null
   let fin = lineas.length
   let tiempo = 0
   let errores = 0
+  let largoTotal = 0
+  let detenido = false
 
   const mover = (linea: number, tipo: Movimiento["tipo"], puntos: Punto[]) => {
-    if (puntos.length < 2) return
+    if (puntos.length < 2 || detenido) return
+    const fuera = puntos.find((p) => !(Math.abs(p.x) <= RECORRIDO_MAX && Math.abs(p.y) <= RECORRIDO_MAX && Math.abs(p.z) <= RECORRIDO_MAX))
+    if (fuera) {
+      alarmas.push({ linea, nivel: "error", mensaje: `Fuera de recorrido: la máquina no llega a ±${RECORRIDO_MAX} mm. Revisa las coordenadas (¿pulgadas en lugar de milímetros?).` })
+      errores++
+      detenido = true
+      return
+    }
     const largo = puntos.slice(1).reduce((acc, p, i) => acc + dist(puntos[i], p), 0)
     if (largo < 1e-9) return
+    largoTotal += largo
+    if (largoTotal > LARGO_TOTAL_MAX) {
+      alarmas.push({ linea, nivel: "error", mensaje: `El programa es demasiado largo para el simulador (más de ${LARGO_TOTAL_MAX / 1000} m de recorrido).` })
+      errores++
+      detenido = true
+      return
+    }
     tiempo += largo / (tipo === "rapido" ? VELOCIDAD_RAPIDO : Math.max(f, 1))
     movimientos.push({ linea, tipo, puntos, f: tipo === "rapido" ? 0 : f, s, husillo, herramienta })
     // Revisiones de seguridad (como alarmas de máquina)
@@ -199,7 +222,11 @@ export function interpretar(texto: string, material: Material): Resultado {
         else if (g === 40 || g === 43 || g === 49 || g === 94 || g === 64 || g === 61) { /* aceptados */ }
         else if (g === 41 || g === 42) avisoUnaVez(n, "comp", "G41/G42 (compensación de radio): no se simula; la trayectoria se dibuja por el centro de la fresa.")
         else if (g >= 53 && g <= 59.3) { /* cero de pieza: el del material */ }
-        else if (g === 80) modo = movAhora !== null ? movAhora : 1
+        else if (g === 80) {
+          modo = movAhora !== null ? movAhora : 1
+          cicloZ = null
+          cicloR = null
+        }
         else if (g === 81 || g === 82 || g === 83) movAhora = g
         else if (g === 90) absoluto = true
         else if (g === 91) absoluto = false
@@ -282,9 +309,12 @@ export function interpretar(texto: string, material: Material): Resultado {
       } else if (modo === 81 || modo === 82 || modo === 83) {
         // Ciclo de taladro: rápido a XY, rápido a R, avance a Z, regreso
         const zInicial = pos.z
-        const rPlano = valor("R") !== undefined ? (absoluto ? valor("R")! * factor : pos.z + valor("R")! * factor) : pos.z
-        const zFondo = valor("Z") !== undefined ? (absoluto ? valor("Z")! * factor : rPlano + valor("Z")! * factor) : pos.z
-        const xy = { x: destino().x, y: destino().y }
+        if (valor("R") !== undefined) cicloR = absoluto ? valor("R")! * factor : pos.z + valor("R")! * factor
+        const rPlano = cicloR ?? pos.z
+        if (valor("Z") !== undefined) cicloZ = absoluto ? valor("Z")! * factor : rPlano + valor("Z")! * factor
+        const zFondo = cicloZ ?? pos.z
+        const d = destino()
+        const xy = { x: d.x, y: d.y }
         if (f <= 0) {
           alarmas.push({ linea: n, nivel: "error", mensaje: "Falta el avance: escribe F (mm/min) para el ciclo de taladro." })
           errores++
@@ -301,7 +331,7 @@ export function interpretar(texto: string, material: Material): Resultado {
       }
     }
 
-    if (terminar) {
+    if (terminar || detenido) {
       fin = n
       break
     }
