@@ -85,3 +85,40 @@ describe("simulador: calificación", () => {
     expect(calificar(b, g1).aprobado).toBe(true)
   })
 })
+
+describe("simulador: torno G71/G70", () => {
+  const G71 = `G21 G99
+T0101
+G96 S200 M3
+G50 S2500
+G0 X42 Z2
+G71 U1.5 R0.5
+G71 P10 Q20 U0.5 W0.1 F0.25
+N10 G0 X16
+G1 X18 Z0 F0.1
+X20 Z-1
+Z-12
+G2 X26 Z-15 R3
+G1 X30
+Z-35
+N20 X42
+G70 P10 Q20
+G0 X100 Z50
+M5
+M30`
+  it("desbaste G71 + acabado G70 deja la pieza del plano", () => {
+    const e = ex("t3-perfil")
+    const r = calificar(e, G71)
+    expect({ aprobado: r.aprobado, calificacion: r.calificacion, errores: r.errores.length }).toEqual({ aprobado: true, calificacion: 100, errores: 0 })
+  })
+  it("sin G70 queda el sobrante de acabado", () => {
+    const r = calificar(ex("t3-perfil"), G71.replace("G70 P10 Q20\n", ""))
+    expect(r.aprobado).toBe(false)
+    expect(r.falta.peor).toBeCloseTo(0.5, 1)
+  })
+  it("P/Q que no existen dan alarma clara", () => {
+    const e = ex("t3-perfil")
+    const r = interpretarTorno(G71.replace("P10 Q20 U0.5", "P11 Q20 U0.5"), (e as any).barra, (e as any).inserto)
+    expect(r.alarmas.some((a) => /no encuentro los bloques N11/.test(a.mensaje))).toBe(true)
+  })
+})

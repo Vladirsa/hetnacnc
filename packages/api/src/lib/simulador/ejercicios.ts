@@ -204,7 +204,7 @@ M30`,
       "Diámetro 20 hasta Z-12, luego un radio de 3 mm (cóncavo) que sube al hombro en diámetro 26 a Z-15.",
       "Hombro: de diámetro 26 a 30 en Z-15. Diámetro 30 hasta Z-35.",
     ],
-    pista: "Desbasta con G90 sin entrar a la zona del radio y termina con un pase de acabado: G1 al chaflán, G1 Z-12, G2 X26 Z-15 R3, G1 X30, G1 Z-35.",
+    pista: "Lo más fácil: describe el perfil una vez (N10 a N20) y usa G71 para desbastar y G70 para el acabado. También puedes desbastar con G90 sin entrar a la zona del radio y terminar con G1/G2: chaflán, Z-12, G2 X26 Z-15 R3, X30, Z-35.",
     solucion: `G21 G99
 T0101
 G96 S200 M3
