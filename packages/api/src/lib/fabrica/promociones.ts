@@ -136,7 +136,7 @@ export const HERRAMIENTAS: Herramienta[] = [
     clave: "mandalas", nombre: "Mandalas en capas", ruta: "/mx/disenar/patrones-radiales", imagen: IMG2D("patrones-radiales.jpg"), tema: "laser", publico: "clientes_particulares",
     gancho: "Arte de pared en capas", frases: ["Capas escaladas y rotadas", "Listas para cortar en láser", "DXF o SVG gratis"], cta: "Hazlo gratis",
     texto: "Crea mandalas y patrones decorativos en capas escaladas y rotadas con una fórmula, para cortar en láser y armar arte de pared. Descarga DXF o SVG gratis en HETNA 2D Studio.",
-    en: { nombre: "Layered mandalas", gancho: "Layered wall art", frases: ["Scaled and rotated layers", "Ready to laser cut", "Free DXF or SVG"], cta: "Make it free", texto: "Create mandalas and decorative patterns in scaled and rotated layers from a formula, to laser cut and stack into wall art. Download the DXF or SVG for free in HETNA 2D Studio." },
+    en: { nombre: "Layered mandalas", gancho: "Layered wall art", frases: ["Scaled and rotated layers", "Ready to laser cut", "Free DXF or SVG"], cta: "Make it free", texto: "Create mandalas and decorative patterns in scaled and rotated layers from a formula, to laser cut into layered wall art. Download the DXF or SVG for free in HETNA 2D Studio." },
   },
   {
     clave: "bisagra_viva", nombre: "Bisagra viva", ruta: "/mx/disenar/bisagra-viva", imagen: IMG2D("bisagra-viva.jpg"), tema: "laser", publico: "clientes_particulares",
@@ -378,9 +378,14 @@ export async function promoBlog(scope: any, logger?: any) {
 /** Herramientas del Cotizador (lo que se monetiza): salen 4 de cada 7 días. */
 export const DEL_COTIZADOR = ["cotizador", "cotizador_whatsapp", "cotizador_gratis", "cotizador_prueba", "cotizador_factura", "cotizador_seguimiento"]
 
-/** HETNA 3D y 2D Studio (imagen a 3D con IA se cobra con créditos; lo demás es gratis). */
+/** HETNA 3D Studio (imagen a 3D con IA se cobra con créditos). */
+export const DEL_3D = ["imagen_3d", "litofania", "svg_stl", "letras_3d", "llaveros", "disenar"]
+
+/**
+ * HETNA 2D Studio: van con "las demás" (el sábado, sólo México). Así no le quitan
+ * turnos a imagen a 3D (lo que se cobra) y sus imágenes en español no salen en EE.UU.
+ */
 export const DEL_2D = ["celosia_imagen", "costillas", "voronoi", "caja_juntas", "mandalas", "bisagra_viva"]
-export const DEL_3D = ["imagen_3d", "litofania", "svg_stl", "letras_3d", "llaveros", "disenar", ...DEL_2D]
 
 /**
  * Qué herramienta sale cada día (0 = domingo):
