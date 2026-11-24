@@ -17,6 +17,7 @@ import { sdk } from "@/lib/client"
 import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { directorioMexico } from "@/lib/hetna/directorio"
+import { esSlugDirectorio } from "@/lib/hetna/slug-directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 import { listLearningArticles } from "@/lib/data/learning-articles"
@@ -203,9 +204,11 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         ...(await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
         // "Talleres CNC en <estado>": sólo los estados con suficientes empresas (lib/seo/estados.ts)
         ...(await estadosIndexables()).map((x) => pagina(rutaEstado(x.ciudad), "weekly", 0.7, hoy)),
-        // Perfiles no reclamados: sólo los que tienen descripción (los demás son noindex)
+        // Perfiles no reclamados: sólo los que tienen descripción (los demás son
+        // noindex) y cuyo slug la ruta [slug] puede servir tal cual: uno con
+        // diagonales o acentos daba 404 (24 nov 2026)
         ...(await directorioMexico())
-          .filter((e) => e.servicios)
+          .filter((e) => e.servicios && esSlugDirectorio(e.slug))
           .map((e) => pagina(`/talleres/directorio/${e.slug}`, "monthly", 0.3, hoy)),
       ]
     case "articulos": {
