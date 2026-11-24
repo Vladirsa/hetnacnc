@@ -15,7 +15,7 @@
 //                   pantalla) y lo deja en el Social Hub con título SEO,
 //                   descripción y la hora que mejor ha funcionado.
 //
-// Gasto: cada video cuesta centavos de dólar (imagen ~0.04 + video ~0.0175 por
+// Gasto: cada video cuesta centavos de dólar (imagen ~0.04 + video ~0.0375 por
 // segundo); hay un tope diario (ESTUDIO_TOPE_USD, por omisión 3) y si se
 // pasa, no se hace. Llave: FAL_KEY en el .env del backend.
 import Anthropic from "@anthropic-ai/sdk"
