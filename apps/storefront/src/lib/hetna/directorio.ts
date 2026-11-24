@@ -12,6 +12,8 @@
 // - BAJA, REGISTRADO y publicar = NO no llegan aquí (lo filtra n8n).
 // Si n8n no responde, todo esto desaparece de la página en silencio.
 
+import { esSlugDirectorio, slugDirectorio } from "./slug-directorio"
+
 export type TipoDirectorio = "taller" | "proveedor" | "instructor"
 
 export type EmpresaDirectorio = {
@@ -156,6 +158,11 @@ async function leerHoja(): Promise<EmpresaDirectorio[]> {
     const { empresas = [] } = (await res.json()) as { empresas?: Crudo[] }
     return empresas
       .filter((e) => e && e.slug && e.empresa)
+      // El slug se vuelve a normalizar aquí (lib/hetna/slug-directorio.ts) por si el
+      // flujo de n8n trae la regla vieja: una liga de Facebook dejaba diagonales en
+      // el slug y la página respondía 404. La regla es idempotente.
+      .map(({ region, slug, ...e }) => ({ ...e, region, slug: slugDirectorio(slug) }))
+      .filter((e) => esSlugDirectorio(e.slug))
       .map(({ region, ...e }) => {
         // Si la hoja no trae estado ni una ciudad conocida, se busca en el nombre y
         // los servicios ("Corte láser CDMX", "Maquinados en Saltillo").
@@ -222,12 +229,12 @@ export async function proveedoresImportacion(conPagina: string[]): Promise<{ pai
 
 /** Cualquier país: para «Quitar este perfil», que también sale en las páginas de Latinoamérica. */
 export async function empresaCualquierPais(slug: string): Promise<EmpresaDirectorio | null> {
-  const s = String(slug || "").toLowerCase()
+  const s = slugDirectorio(slug)
   return (await leerTodo()).find((e) => e.slug === s) || null
 }
 
 export async function empresaPorSlug(slug: string): Promise<EmpresaDirectorio | null> {
-  const s = String(slug || "").toLowerCase()
+  const s = slugDirectorio(slug)
   return (await directorioMexico()).find((e) => e.slug === s) || null
 }
 

@@ -3,7 +3,17 @@
 // teléfono, token ni notas. Fuera: BAJA, REGISTRADO (ya tienen su perfil real),
 // compradores, descartados y las filas con publicar = NO.
 // (No usa comun.js: sólo necesita estas dos funciones.)
-function slugDe(id) { return String(id || '').trim().toLowerCase().split('.').join('-'); }
+// Slug del perfil (/talleres/directorio/<slug>): minúsculas, sin acentos, sólo a-z,
+// 0-9 y guiones. Misma regla que apps/storefront/src/lib/hetna/slug-directorio.ts
+// (una prueba revisa que coincidan). Antes sólo cambiaba puntos por guiones y las
+// ligas de Facebook dejaban diagonales: esos perfiles daban 404.
+// (Sin barras invertidas: generar_flujo.py no las deja pasar; las marcas de acento
+// U+0300 a U+036F se arman con fromCharCode.)
+const MARCAS_ACENTO = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
+function slugDe(id) {
+  return String(id == null ? '' : id).normalize('NFD').replace(MARCAS_ACENTO, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120).replace(/-+$/, '');
+}
 function limpiar(s, max) {
   let t = String(s || '').trim();
   while (t.endsWith('.')) t = t.slice(0, -1);
