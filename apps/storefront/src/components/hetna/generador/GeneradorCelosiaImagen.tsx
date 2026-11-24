@@ -108,6 +108,10 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   const [marco, setMarco] = useState("30")
   const [barrenos, setBarrenos] = useState(true)
   const [fondo, setFondo] = useState(true)
+  const [modo, setModo] = useState<"pieza" | "modulo">("pieza")
+  const [columnas, setColumnas] = useState("4")
+  const [filas, setFilas] = useState("6")
+  const [espejo, setEspejo] = useState(false)
   const [diam, setDiam] = useState("8")
   // El resultado guarda con qué medidas y proceso se calculó: el nombre del
   // archivo siempre corresponde a la geometría que se descarga
@@ -176,6 +180,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     return w > 0 ? h / w : 1
   }
 
+  const repetir = modo === "modulo" ? { columnas: numero(columnas) || 1, filas: numero(filas) || 1, espejo } : null
+
   // Se calcula un momento después del último cambio, en un Web Worker para que
   // la página no se trabe; si llega un resultado viejo, se descarta
   useEffect(() => {
@@ -197,6 +203,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       islas,
       barrenos,
       fondo,
+      repetir,
       diametroBarreno: numero(diam) || 8,
     }
     const listo = (r: ResultadoCelosiaImagen) => {
@@ -243,7 +250,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       imagenEnviada.current = im
     }, 300)
     return () => clearTimeout(t)
-  }, [im, esquinas, ancho, alto, marco, cortar, umbralAuto, umbral, proceso, puente, hueco, islas, barrenos, diam, fondo, espesor])
+  }, [im, esquinas, ancho, alto, marco, cortar, umbralAuto, umbral, proceso, puente, hueco, islas, barrenos, diam, fondo, espesor, modo, columnas, filas, espejo])
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -257,6 +264,32 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       </Seccion>
       {im && (
         <>
+          <Seccion
+            titulo="¿Toda la imagen o un módulo?"
+            nota={
+              modo === "pieza"
+                ? "La imagen es el panel completo."
+                : "Pon las 4 esquinas sobre UNA repetición del diseño (un módulo) y se repite hasta llenar el panel. Con espejo, cada módulo vecino se voltea: úsalo si marcaste medio o un cuarto del motivo."
+            }
+          >
+            <Opciones<"pieza" | "modulo">
+              valor={modo}
+              cambiar={setModo}
+              opciones={[
+                { id: "pieza", nombre: "Toda la imagen" },
+                { id: "modulo", nombre: "Repetir un módulo" },
+              ]}
+            />
+            {modo === "modulo" && (
+              <>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <CampoNum etiqueta="Columnas" valor={columnas} cambiar={setColumnas} sufijo="" />
+                  <CampoNum etiqueta="Filas" valor={filas} cambiar={setFilas} sufijo="" />
+                </div>
+                <Interruptor etiqueta="Espejo (voltear módulos vecinos)" activo={espejo} cambiar={setEspejo} />
+              </>
+            )}
+          </Seccion>
           <Seccion titulo="2. Qué se corta">
             <Opciones<"oscuro" | "claro">
               valor={cortar}
@@ -267,7 +300,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
               ]}
             />
             <Interruptor etiqueta="Umbral automático" activo={umbralAuto} cambiar={setUmbralAuto} />
-            <Interruptor etiqueta="Ignorar el fondo (lo que toca la orilla de la foto)" activo={fondo} cambiar={setFondo} />
+            {modo === "pieza" && <Interruptor etiqueta="Ignorar el fondo (lo que toca la orilla de la foto)" activo={fondo} cambiar={setFondo} />}
             {!umbralAuto && (
               <label className="flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
                 <span>Umbral: {umbral}</span>
@@ -318,7 +351,12 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
             </div>
             <button
               type="button"
-              onClick={() => setAlto(String(Math.round((numero(ancho) || 600) * proporcion())))}
+              onClick={() => {
+                // El marco no lleva diseño: la proporción es la del área calada
+                const r = repetir ? (proporcion() * repetir.filas) / repetir.columnas : proporcion()
+                const m = Math.max(0, numero(marco) || 0)
+                setAlto(String(Math.round(2 * m + ((numero(ancho) || 600) - 2 * m) * r)))
+              }}
               className="mt-2 rounded-full bg-[#1C2431] px-3 py-1 text-[12px] text-[#C9D2E0] hover:bg-[#232D3D]"
             >
               Alto según la proporción de la imagen
@@ -355,7 +393,14 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       archivo={`celosia-${nombre || "imagen"}-${res?.medida ?? ""}`}
       pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
       material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
-      datos={res ? [["Huecos", String(res.r.huecos)]] : []}
+      datos={
+        res
+          ? [
+              ["Huecos", String(res.r.huecos)],
+              ...(res.r.modulo ? ([["Módulo", `${res.r.modulo.ancho} × ${res.r.modulo.alto} mm (${res.r.modulo.columnas}×${res.r.modulo.filas})`]] as [string, string][]) : []),
+            ]
+          : []
+      }
       vacio={<p className="text-center text-[14px] text-[#8A97AB]">Sube la imagen de la celosía que te gustó y aquí aparece el panel listo para cortar.</p>}
     />
   )
