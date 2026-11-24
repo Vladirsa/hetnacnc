@@ -11,7 +11,7 @@ import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
 import { puntosRevision } from "@/lib/cotizador/revision-archivo"
 import { precioEnVivo, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { leerDxf, type GeoCad } from "@/lib/cotizador/archivo-cad"
-import { mandarAFabricar, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { mandarAFabricar, materialLaserPrecio, materialRouterMDF } from "@/lib/generador/aCotizador"
 import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 
 type Props = {
@@ -28,7 +28,7 @@ type Props = {
   barra?: boolean
 }
 
-const MATERIAL_LASER = (mm?: number) => (mm && mm <= 2.5 ? "MDF delgado (hasta 2.5mm)" : mm && mm > 5.5 ? "Acrílico, cuero, tela u otro" : "MDF/Madera (3-5mm)")
+const MATERIAL_LASER = materialLaserPrecio
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
 export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, espesorMm, barra = false }: Props) {

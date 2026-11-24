@@ -10,7 +10,8 @@ import dynamic from "next/dynamic"
 
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { materialLaserPorEspesor, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { contextoMDF, materialLaserPrecio, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { largoCorte } from "@/lib/generador/geo2d"
 import { type Alturas, INICIO_COSTILLAS, type ModoCostillas, hacerCostillas } from "@/lib/generador/costillas"
 import { type Profundidad, grisDeProfundidad, iaDisponible, pedirProfundidad } from "@/lib/generador/profundidad-ia"
 import { desenfocar, gris } from "@/lib/generador/trazado"
@@ -237,6 +238,18 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
     if (!banca) datos.push(["Travesaños", String(r.travesanos)])
     else if (r.varillas) datos.push(["Varillas", `${r.varillas} de ${r.largoVarilla} mm`], ["Separadores", `${r.separadores} de ${Math.round(r.separacionReal * 10) / 10} mm`])
   }
+  // Precio aproximado: el material que ocupan las hojas, el corte y una perforación por contorno
+  const corte = useMemo(() => (r ? r.dibujo.trazos.filter((t) => t.capa === "corte") : []), [r])
+  const pedidoPrecio = r
+    ? {
+        servicio: r.fresa > 0 ? ("router" as const) : ("laser_co2" as const),
+        material: r.fresa > 0 ? materialRouterMDF(r.espesor) : materialLaserPrecio(r.espesor),
+        anchoMm: r.hoja.ancho,
+        largoMm: r.hoja.alto * r.hojas,
+        corte_mm: largoCorte(corte),
+        perforaciones: corte.length,
+      }
+    : undefined
   const m = r?.medidas
   const medida = m ? `${Math.round(m.largo)}x${Math.round(m.fondo)}x${Math.round(m.alto)}` : ""
   const nombrePieza = banca ? "Banca de costillas" : "Pared de costillas"
@@ -269,13 +282,8 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
       archivo={`costillas-${modo}-${subida?.nombre || "imagen"}-${medida}`}
       pieza={m ? `${nombrePieza} ${medida} mm, ${r.costillas} costillas de ${r.espesor} mm` : nombrePieza}
       material={r ? `MDF o triplay de ${r.espesor} mm` : undefined}
-      cotizar={
-        r
-          ? numero(fresa) > 0
-            ? { servicio: "router", tipo: "Corte complejo", material: materialRouterMDF(r.espesor), proceso: "Router CNC", nota: `${nombrePieza}: ${r.costillas} costillas, ${r.piezas} piezas en ${r.hojas} hojas.` }
-            : { servicio: "laser_co2", tipo: "Solo corte", material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(r.espesor) }, proceso: "Láser", nota: `${nombrePieza}: ${r.costillas} costillas, ${r.piezas} piezas en ${r.hojas} hojas.` }
-          : undefined
-      }
+      precio={pedidoPrecio}
+      cotizar={r ? { ...contextoMDF(r.fresa > 0 ? "router" : "laser", r.espesor), nota: `${nombrePieza}: ${r.costillas} costillas, ${r.piezas} piezas en ${r.hojas} hojas.` } : undefined}
       datos={datos}
       vacio={
         <p className="text-center text-[14px] text-[#8A97AB]">

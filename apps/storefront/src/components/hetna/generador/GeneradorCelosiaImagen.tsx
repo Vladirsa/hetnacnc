@@ -10,8 +10,9 @@ import { useEffect, useRef, useState } from "react"
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import { type Islas, type OpcionesCelosiaImagen, type Proceso, type ResultadoCelosiaImagen, hacerCelosiaImagen, minimosSugeridos } from "@/lib/generador/celosiaImagen"
-import { type ContextoCotizacion, materialLaserPorEspesor, materialRouterMDF } from "@/lib/generador/aCotizador"
-import type { P } from "@/lib/generador/geo2d"
+import { type PedidoPrecio } from "@/components/hetna/estudio/PrecioEstudio"
+import { type ContextoCotizacion, calibrePlasmaPrecio, contextoMDF, materialLaserPrecio, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { type P, largoCorte } from "@/lib/generador/geo2d"
 import type { Imagen } from "@/lib/generador/trazado"
 
 import { useImagenSubida } from "./useImagenSubida"
@@ -19,10 +20,27 @@ import { useImagenSubida } from "./useImagenSubida"
 const LADO_IMAGEN = 1400
 
 /** Lo que el Cotizador necesita saber del corte (claves de hetna/cotizador/datos.json). */
-function contextoCelosia(proceso: Proceso, espesor: number): ContextoCotizacion & { proceso: string } {
-  if (proceso === "plasma") return { servicio: "plasma", tipo: "Celosía/Calado", material: "Acero al carbon", proceso: "Plasma" }
-  if (proceso === "router") return { servicio: "router", material: materialRouterMDF(espesor), proceso: "Router CNC" }
-  return { servicio: "laser_co2", tipo: "Solo corte", material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(espesor) }, proceso: "Láser" }
+function contextoCelosia(proceso: Proceso, espesor: number): ContextoCotizacion {
+  // en plasma el metal se elige en el Cotizador; se sugiere el más común
+  if (proceso === "plasma") return { servicio: "plasma", tipo: "Celosía/Calado", material: "Acero al carbon" }
+  return contextoMDF(proceso === "router" ? "router" : "laser", espesor)
+}
+
+/** Lo que el precio en vivo necesita del panel (vocabulario de precio-instantaneo). */
+function pedidoCelosia(r: ResultadoCelosiaImagen, proceso: Proceso, espesor: number): PedidoPrecio | undefined {
+  const corte = r.dibujo.trazos.filter((t) => t.capa === "corte")
+  if (corte.length < 2) return undefined
+  const xs = corte[0].pts.map((p) => p[0])
+  const ys = corte[0].pts.map((p) => p[1])
+  const base = {
+    anchoMm: Math.max(...xs) - Math.min(...xs),
+    largoMm: Math.max(...ys) - Math.min(...ys),
+    corte_mm: largoCorte(corte),
+    perforaciones: corte.length - 1, // cada hueco y barreno; el contorno no
+  }
+  if (proceso === "plasma") return { ...base, servicio: "plasma", material: "Acero al carbón", calibre: calibrePlasmaPrecio(espesor) }
+  if (proceso === "router") return { ...base, servicio: "router", material: materialRouterMDF(espesor) }
+  return { ...base, servicio: "laser_co2", material: materialLaserPrecio(espesor) }
 }
 
 const NOMBRES_ESQUINA = ["arriba izquierda", "arriba derecha", "abajo derecha", "abajo izquierda"]
@@ -362,6 +380,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
       material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
       cotizar={res ? contextoCelosia(res.proceso, numero(res.espesor) || 3) : undefined}
+      precio={res ? pedidoCelosia(res.r, res.proceso, numero(res.espesor) || 3) : undefined}
       datos={
         res
           ? [

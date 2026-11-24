@@ -367,6 +367,8 @@ export function hacerCostillas(a: Alturas, o0: OpcionesCostillas) {
     piezas: p.grupos.length - r.noCaben,
     hojas: r.hojas,
     espesor: t,
+    fresa: o.fresa,
+    hoja,
     ...p.extras,
     medidas: { largo: o.largo, fondo: p.extras.fondo, alto: o.alto },
   }
