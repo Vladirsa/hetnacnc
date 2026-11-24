@@ -35,6 +35,14 @@ export function precioDiseno(v: unknown): number {
   return Math.max(PRECIO_MIN, Math.min(PRECIO_MAX, Math.round(base / 10) * 10))
 }
 
+// Regla del dueño: sus diseños se venden para que el cliente los use, fabrique y
+// venda lo que haga con ellos («Producción sin límite»). Se puede cambiar a mano
+// en la pantalla o con DISENOS_LICENCIA (personal | comercial_limitada | comercial_ampliada).
+const LICENCIAS = ["personal", "comercial_limitada", "comercial_ampliada"] as const
+export const LICENCIA_DUENO = (LICENCIAS as readonly string[]).includes(String(process.env.DISENOS_LICENCIA))
+  ? (process.env.DISENOS_LICENCIA as (typeof LICENCIAS)[number])
+  : "comercial_ampliada"
+
 export const falListo = () => !!(process.env.FAL_KEY || "").trim()
 
 /** SKU nuevo y único para un diseño subido desde el panel. */
@@ -188,7 +196,7 @@ const ESQUEMA = {
     meta_description: { type: "string", description: "Meta descripción para Google, 140 a 155 caracteres, con la palabra clave y una invitación a comprar o descargar." },
     faq: { type: "array", description: "3 preguntas frecuentes útiles con su respuesta corta.", items: { type: "object", additionalProperties: false, required: ["p", "r"], properties: { p: { type: "string" }, r: { type: "string" } } } },
     precio_mxn: { type: "number", description: "Precio en pesos (regla del dueño: de $30 a $250). Archivo sencillo: 30 a 60. Diseño elaborado o de ensamble: 70 a 150. Paquete de varios diseños: 150 a 250. Múltiplo de 10." },
-    licencia: { type: "string", enum: ["personal", "comercial_limitada", "comercial_ampliada"], description: "personal para decoración/uso propio; comercial_limitada si es un producto que un taller querría fabricar y vender." },
+    licencia: { type: "string", enum: ["personal", "comercial_limitada", "comercial_ampliada"], description: "Siempre comercial_ampliada: el dueño vende sus diseños para que el cliente los fabrique y venda sin límite." },
     nota: { type: "string", description: "Una línea para el dueño: qué revisar o qué dato falta (ej. 'confirma las medidas')." },
   },
 }
@@ -216,7 +224,7 @@ export async function proponerFicha(
     meta_description: "",
     faq: [],
     precio_mxn: 50,
-    licencia: "personal",
+    licencia: LICENCIA_DUENO,
     nota: "Sin IA en el servidor: llena la ficha a mano.",
   }
   if (!iaSocial()) return { ...vacia, handle: slug(`${vacia.titulo} ${e.sku || ""}`) }
@@ -258,7 +266,8 @@ export async function proponerFicha(
     meta_description: String(r.meta_description || "").slice(0, 160),
     faq: (Array.isArray(r.faq) ? r.faq : []).slice(0, 5).map((x: any) => ({ p: String(x.p || "").slice(0, 200), r: String(x.r || "").slice(0, 500) })),
     precio_mxn: precio,
-    licencia: ["personal", "comercial_limitada", "comercial_ampliada"].includes(r.licencia) ? r.licencia : "personal",
+    // La licencia la decide el dueño, no la IA
+    licencia: LICENCIA_DUENO,
     nota: String(r.nota || "").slice(0, 300),
   }
 }

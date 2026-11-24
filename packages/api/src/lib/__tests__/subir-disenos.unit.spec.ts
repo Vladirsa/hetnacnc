@@ -57,3 +57,9 @@ describe("precio de los diseños del dueño", () => {
     expect(precioDiseno(undefined)).toBe(50)
   })
 })
+
+describe("licencia de los diseños del dueño", () => {
+  it("por omisión: producción sin límite (el cliente fabrica y vende)", () => {
+    expect(require("../subir-disenos").LICENCIA_DUENO).toBe("comercial_ampliada")
+  })
+})
