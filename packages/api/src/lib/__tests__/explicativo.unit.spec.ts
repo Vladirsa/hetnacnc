@@ -87,3 +87,21 @@ describe("tiempos", () => {
     expect(r[0].dur - (10 + 0.45)).toBeLessThanOrEqual(1.61)
   })
 })
+
+describe("fotos", () => {
+  it("escena foto sin descripción ni producto se vuelve lista; máximo 3 fotos", () => {
+    const f = (o: any = {}) => escena({ tipo: "foto", foto: "a laser cutting", producto: "", ...o })
+    const g = validarGuion({ escenas: [escena(), f({ foto: "", puntos: ["a", "b"] }), f(), f(), f(), f({ puntos: [] })] })
+    const tipos = g.escenas.map((e: any) => e.tipo)
+    expect(tipos[1]).toBe("lista")
+    expect(tipos.filter((t: string) => t === "foto")).toHaveLength(3)
+  })
+  it("la capa de foto usa el archivo local y marca la imagen ilustrativa", () => {
+    const c = capasDe(escena({ tipo: "foto", foto_archivo: "/tmp/a b.jpg", foto_pie: "Corte <láser>", foto_ia: true }), "")
+    const html = c.map((x) => x[1]).join("")
+    expect(html).toContain("file:///tmp/a%20b.jpg")
+    expect(html).toContain("IMAGEN ILUSTRATIVA")
+    expect(html).toContain("Corte &lt;láser&gt;")
+    expect(capasDe(escena({ tipo: "foto" }), "")).toEqual([])
+  })
+})

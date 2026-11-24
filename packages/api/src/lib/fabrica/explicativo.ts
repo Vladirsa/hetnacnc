@@ -52,7 +52,7 @@ export const FRASE_FINAL = "*Guarda este video* y síguenos para el siguiente."
 // ---------------------------------------------------------------------
 
 const S = (d = "", max?: number) => ({ type: "string", description: d + (max ? ` (máximo ${max} caracteres)` : "") })
-const TIPOS = ["portada", "lista", "dibujo", "comparacion", "checklist"] as const
+const TIPOS = ["portada", "lista", "dibujo", "comparacion", "checklist", "foto"] as const
 const ESQUEMA = {
   type: "object", additionalProperties: false,
   required: ["tema", "serie", "titulo_seo", "descripcion", "hashtags", "cierre", "escenas"],
@@ -68,9 +68,9 @@ const ESQUEMA = {
       description: "de 7 a 9 escenas; la primera es tipo portada (el gancho)",
       items: {
         type: "object", additionalProperties: false,
-        required: ["tipo", "kicker", "titulo", "titulo_naranja", "dibujo", "etiqueta", "puntos", "mal", "bien", "frases"],
+        required: ["tipo", "kicker", "titulo", "titulo_naranja", "dibujo", "etiqueta", "puntos", "mal", "bien", "foto", "producto", "frases"],
         properties: {
-          tipo: { type: "string", enum: [...TIPOS], description: "portada = gancho con dibujo y sello; lista = 3 puntos numerados; dibujo = un dibujo técnico con su explicación; comparacion = mal contra bien; checklist = 3 pasos para revisar" },
+          tipo: { type: "string", enum: [...TIPOS], description: "portada = gancho con dibujo y sello; lista = 3 puntos numerados; dibujo = un dibujo técnico con su explicación; comparacion = mal contra bien; checklist = 3 pasos para revisar; foto = una fotografía de taller o de producto con un pie corto (usa 2 por video)" },
           kicker: S("etiqueta chica arriba del título, MAYÚSCULAS, ej. ERROR 1, LAS 3 CAUSAS", 20),
           titulo: S("primera línea del título", 16),
           titulo_naranja: S("segunda línea del título (va en naranja)", 16),
@@ -79,6 +79,8 @@ const ESQUEMA = {
           puntos: { type: "array", items: S("", 30), description: "lista y checklist: exactamente 3; dibujo: 2 datos cortos; otras: vacío" },
           mal: S("comparación: lo incorrecto", 26),
           bien: S("comparación: lo correcto", 26),
+          foto: S("tipo foto: descripción EN INGLÉS de la fotografía realista (ej. close-up of a CO2 laser cutting MDF in a small Mexican workshop, smoke, sparks); otras: vacío"),
+          producto: S("tipo foto, si conviene mostrar un producto de la tienda: 1 o 2 palabras para buscarlo (ej. láser, fresa, letrero, MDF); si no, vacío", 30),
           frases: { type: "array", items: S("", 120), description: "lo que dice la voz: 1 o 2 frases habladas de 8 a 18 palabras; marca con *asteriscos* las 2 a 4 palabras clave que se resaltan en naranja" },
         },
       },
@@ -92,7 +94,8 @@ const SISTEMA =
   "ESTRUCTURA: escena 1 portada = el gancho (un problema o pregunta que duele). Luego desarrollas: causas, cómo se ve cada error con un dibujo, comparaciones mal/bien y al final un checklist para que lo apliquen. El cierre con la oferta lo pone el sistema: tú NO escribas la escena de cierre ni menciones HETNA.\n" +
   "LONGITUD: en total entre 175 y 200 palabras sumando todas las frases (eso da 70 a 80 segundos); cuenta las palabras antes de terminar. Cada escena deja con ganas de la siguiente.\n" +
   "VERDAD: sólo enseña técnica ampliamente aceptada en CNC, láser, router, plasma, impresión 3D, materiales y archivos. No inventes cifras, precios, porcentajes, marcas, clientes ni testimonios. Si un dato depende de la máquina, dilo así («depende de tu máquina», «haz una prueba»).\n" +
-  "TEXTOS EN PANTALLA: muy cortos, respeta los máximos de caracteres. Los dibujos son de una biblioteca fija: elige el que mejor ilustre la escena."
+  "TEXTOS EN PANTALLA: muy cortos, respeta los máximos de caracteres. Los dibujos son de una biblioteca fija: elige el que mejor ilustre la escena.\n" +
+  "FOTOS: incluye 2 escenas tipo foto (no seguidas, no la primera): una del taller o la máquina haciendo lo que explicas y, si el tema lo permite, otra de un producto (pon la palabra en producto). En la escena foto, etiqueta = pie de foto corto."
 
 let ia: Anthropic | null = null
 export async function guionExplicativo(knex: any, tema?: string) {
@@ -148,6 +151,7 @@ export function validarGuion(g: any) {
       // Sin lo que necesita su plantilla, la escena se vuelve lista (o se descarta si tampoco hay puntos)
       if (tipo === "dibujo" && !dibujo) tipo = "lista"
       if (tipo === "comparacion" && (!corta(e?.mal, 26) || !corta(e?.bien, 26))) tipo = "lista"
+      if (tipo === "foto" && !String(e?.foto || "").trim() && !String(e?.producto || "").trim()) tipo = "lista"
       const frases = (Array.isArray(e?.frases) ? e.frases : []).map((f: any) => corta(f, 140)).filter((f: string) => contarPalabras(f) >= 2).slice(0, 2)
       return {
         tipo,
@@ -159,10 +163,15 @@ export function validarGuion(g: any) {
         puntos: tipo === "dibujo" ? puntos.slice(0, 2) : puntos.slice(0, 3),
         mal: corta(sinMarcas(e?.mal), 26),
         bien: corta(sinMarcas(e?.bien), 26),
+        foto: tipo === "foto" ? String(e?.foto || "").slice(0, 400) : "",
+        producto: tipo === "foto" ? corta(sinMarcas(e?.producto), 30) : "",
         frases,
       }
     })
-    .filter((e: any) => e.frases.length && (e.titulo || e.titulo_naranja) && (["portada", "dibujo", "comparacion"].includes(e.tipo) || e.puntos.length >= 2))
+    .filter((e: any) => e.frases.length && (e.titulo || e.titulo_naranja) && (["portada", "dibujo", "comparacion", "foto"].includes(e.tipo) || e.puntos.length >= 2))
+    // Máximo 3 fotos por video; las que sobran se vuelven lista (si tienen puntos) o se quitan
+    .map((e: any, _i: number, arr: any[]) => (e.tipo === "foto" && arr.filter((x: any) => x.tipo === "foto").indexOf(e) >= 3 ? { ...e, tipo: e.puntos.length >= 2 ? "lista" : "quitar" } : e))
+    .filter((e: any) => e.tipo !== "quitar")
     .slice(0, 9)
   const ci = Number.isInteger(g?.cierre) && CIERRES[g.cierre] ? g.cierre : 0
   const c = CIERRES[ci]
@@ -251,6 +260,15 @@ export function capasDe(e: any, logo: string): [number, string][] {
         [0.05, en(690, dib(e.dibujo))],
         ...(e.puntos.length ? [[0.4, en(1170, `<div style="display:flex;gap:22px;padding:0 36px">${e.puntos.map((p: string) => `<div class="fila" style="flex:1;font-size:${p.length > 18 ? 30 : 34}px;padding:22px 24px;gap:14px">${ICONO.punto}<span>${esc(p)}</span></div>`).join("")}</div>`)] as [number, string]] : []),
       ]
+    case "foto": {
+      if (!e.foto_archivo) return []
+      const url = `file://${encodeURI(e.foto_archivo)}`
+      return [
+        [0.03, en(600, `<div style="margin:0 20px;height:740px;border-radius:22px;background:#0A1120 url('${url}') center/cover no-repeat;box-shadow:0 20px 40px rgba(0,0,0,.45)"></div>`)],
+        ...(e.foto_pie ? [[0.35, en(1236, `<div style="margin:0 50px;display:flex;align-items:center;gap:16px;background:rgba(8,14,28,.9);border:2px solid rgba(255,255,255,.18);border-radius:16px;padding:16px 24px;font:800 ${e.foto_pie.length > 34 ? 30 : 36}px Archivo">${ICONO.punto}<span>${esc(e.foto_pie)}</span></div>`)] as [number, string]] : []),
+        ...(e.foto_ia ? [[0.0, en(612, `<div style="margin:0 34px;text-align:right"><span style="font:20px JBM;color:rgba(255,255,255,.8);background:rgba(0,0,0,.45);padding:6px 12px;border-radius:8px">IMAGEN ILUSTRATIVA</span></div>`)] as [number, string]] : []),
+      ]
+    }
     case "comparacion": {
       const lado = (mal: boolean, t: string) => `<div style="flex:none;width:420px;border:2px solid ${mal ? "rgba(255,90,78,.6)" : "rgba(62,224,122,.7)"};border-radius:22px;padding:40px 26px;text-align:center;background:rgba(18,30,54,.95);height:640px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px">
 <div class="etq">${mal ? "ASÍ NO" : "ASÍ SÍ"}</div><div style="transform:scale(2.6);margin:40px 0">${mal ? ICONO.mal : ICONO.ok}</div><div class="${mal ? "mal" : "ok"}" style="font:800 ${t.length > 18 ? 40 : 48}px/1.15 Archivo">${esc(t)}</div></div>`
@@ -318,6 +336,77 @@ async function dibujarEscena(e: any, i: number, total: number, serie: string, di
   }
   const nc = p.tiempos.length
   return { base: pngs[0], capas: pngs.slice(1, 1 + nc).map((png, k) => ({ png, t: p.tiempos[k] })), subs: pngs.slice(1 + nc) }
+}
+
+// ---------------------------------------------------------------------
+// Fotos: producto real de la tienda → foto con IA (FLUX, ~0.05 USD) → biblioteca
+// ---------------------------------------------------------------------
+
+const FOTOS_IA = () => Number(process.env.EXPLICATIVO_FOTOS_IA ?? 3)
+const USD_FOTO = 0.05
+
+async function productoDeTienda(knex: any, palabra: string) {
+  const p = String(palabra || "").trim()
+  if (!p) return null
+  return knex("product").whereNull("deleted_at").where({ status: "published" }).whereNotNull("thumbnail")
+    .where((q: any) => q.whereILike("title", `%${p}%`).orWhereILike("description", `%${p}%`))
+    .orderByRaw("random()").first("title", "thumbnail").catch(() => null)
+}
+
+/** Pone foto_archivo / foto_pie / foto_ia a cada escena foto (o la vuelve lista si no hubo foto). Regresa el costo. */
+export async function resolverFotos(knex: any, g: any, dir: string, logger?: any) {
+  let costo = 0
+  let ia = 0
+  for (const [i, e] of g.escenas.entries()) {
+    if (e.tipo !== "foto") continue
+    const archivo = path.join(dir, `foto${i}.jpg`)
+    try {
+      const prod = await productoDeTienda(knex, e.producto)
+      if (prod?.thumbnail) {
+        await bajarImagen(prod.thumbnail, archivo)
+        e.foto_archivo = archivo
+        e.foto_pie = corta(`En la tienda HETNA: ${prod.title}`, 46)
+        continue
+      }
+      if (e.foto && ia < FOTOS_IA()) {
+        const out = await require("./fal").fal(process.env.ESTUDIO_MODELO_IMAGEN || "fal-ai/flux-pro/v1.1", {
+          prompt: `${e.foto}. Realistic photo, small CNC workshop in Mexico, natural light, sharp detail, 35mm. No text, no letters, no logos, no watermarks.`,
+          image_size: { width: 1024, height: 832 }, num_images: 1, output_format: "jpeg",
+        }, 5)
+        ia++
+        costo += USD_FOTO
+        const url = out?.images?.[0]?.url
+        if (url) {
+          await bajarImagen(url, archivo)
+          e.foto_archivo = archivo
+          e.foto_pie = e.etiqueta ? corta(e.etiqueta.charAt(0) + e.etiqueta.slice(1).toLowerCase(), 46) : ""
+          e.foto_ia = true
+          continue
+        }
+      }
+      const { fondoDe, temaDe } = require("./index")
+      const fondo = await fondoDe(knex, temaDe(`${g.tema} ${e.titulo} ${e.titulo_naranja}`)).catch(() => null)
+      if (fondo) {
+        await bajarImagen(fondo, archivo)
+        e.foto_archivo = archivo
+        e.foto_pie = e.etiqueta ? corta(e.etiqueta.charAt(0) + e.etiqueta.slice(1).toLowerCase(), 46) : ""
+        continue
+      }
+    } catch (err) {
+      logger?.warn?.(`[explicativo] foto ${i}: ${(err as Error).message}`)
+    }
+  }
+  // Escenas foto sin foto: lista si tienen puntos; si no, se quitan (el cierre siempre queda)
+  g.escenas = g.escenas.map((e: any) => (e.tipo === "foto" && !e.foto_archivo ? (e.puntos.length >= 2 ? { ...e, tipo: "lista" } : null) : e)).filter(Boolean)
+  return costo
+}
+
+async function bajarImagen(url: string, archivo: string) {
+  const r = await fetch(url, { signal: AbortSignal.timeout(60_000) })
+  if (!r.ok) throw new Error(`No se pudo bajar la foto (${r.status})`)
+  const sharp = require("sharp")
+  // Se normaliza a JPG de 1024 px (algunas fotos de la tienda vienen en WebP o muy pesadas)
+  await sharp(Buffer.from(await r.arrayBuffer())).rotate().resize({ width: 1024, height: 832, fit: "cover" }).jpeg({ quality: 88 }).toFile(archivo)
 }
 
 // ---------------------------------------------------------------------
@@ -524,6 +613,8 @@ export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: b
     const g = await guionExplicativo(knex, o.tema)
     await knex("hetna_estudio").where({ id }).update({ guion: JSON.stringify(g), updated_at: new Date() })
     logger?.info?.(`[explicativo] guion: ${g.tema} (${g.palabras} palabras, ${g.escenas.length} escenas)`)
+    // Fotos antes de la voz: si una escena foto se queda sin foto, se quita y no se paga su voz
+    costo += await resolverFotos(knex, g, dir, logger)
     const v = await voces(g, dir)
     costo += v.costo
     await knex("hetna_estudio").where({ id }).update({ costo_usd: costo, updated_at: new Date() })
