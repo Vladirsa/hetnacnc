@@ -44,6 +44,7 @@ export type OpcionesTexturizador = {
   relieve: number // altura (o profundidad) del patrón
   modo: "alto" | "bajo"
   espejo: boolean
+  periodico?: boolean // rodillo: el patrón cierra sin costura a lo ancho (la vuelta)
 }
 
 export type ResultadoTexturizador = {
@@ -62,6 +63,7 @@ const deClipper = (p: CP[]): P[] => p.map((q) => [q.X / ESC, q.Y / ESC])
 
 function operar(tipo: number, sujeto: P[][], recorte: P[][]): P[][] {
   const c = new ClipperLib.Clipper()
+  c.StrictlySimple = true // sin picos ni aristas que regresan sobre sí (la costura del rodillo cierra limpia)
   const s = sujeto.filter((p) => p.length >= 3).map(aClipper)
   const r = recorte.filter((p) => p.length >= 3).map(aClipper)
   if (!s.length) return []
@@ -185,8 +187,21 @@ export function hacerTexturizador(fuente: Fuente | null, o: OpcionesTexturizador
   if (!secuencia.length) return vacio("Escribe una palabra o elige al menos un ícono.")
 
   // Filas: se llenan desde antes de la orilla hasta después, para que el recorte quede parejo
-  const dx = Math.max(0, o.espacioX)
+  let dx = Math.max(0, o.espacioX)
   const paso = o.tamano + Math.max(0, o.espacioY)
+  if (o.periodico) {
+    // la secuencia tiene que caber un número entero de veces en la vuelta
+    const suma = secuencia.reduce((a, p) => a + p.ancho, 0)
+    // lo más cerca de la separación pedida; se permite apretar hasta 40 % (mínimo 0.5 mm)
+    const ideal = o.ancho / (suma + secuencia.length * dx)
+    const sep = (v: number) => (o.ancho / v - suma) / secuencia.length
+    let veces = Math.max(1, Math.round(ideal))
+    if (sep(veces) < Math.max(0.5, dx * 0.4)) veces = Math.floor(ideal)
+    if (veces < 1) return vacio("El patrón es más largo que la vuelta del rodillo: baja el tamaño, quita palabras o usa un rodillo más grueso.")
+    const nuevo = sep(veces)
+    if (Math.abs(nuevo - dx) > 0.05) avisos.push(`La separación se ajustó a ${Math.round(nuevo * 10) / 10} mm para que el patrón cierre sin costura (${veces} ${veces === 1 ? "vez" : "veces"} por vuelta).`)
+    dx = nuevo
+  }
   const anchoSec = secuencia.reduce((a, p) => a + p.ancho + dx, 0)
   const elementos: P[][] = []
   let colocadas = 0
@@ -210,8 +225,9 @@ export function hacerTexturizador(fuente: Fuente | null, o: OpcionesTexturizador
 
   const placa = rectRedondo(0, 0, o.ancho, o.alto, o.radio)
   const m = Math.max(0, o.orilla)
-  const zona = m > 0 ? rectRedondo(m, m, o.ancho - m, o.alto - m, Math.max(0, o.radio - m)) : placa
-  if (m * 2 >= Math.min(o.ancho, o.alto)) return vacio("La orilla lisa es más grande que la placa.")
+  // en el rodillo la orilla lisa sólo va en los extremos (a lo ancho el patrón da la vuelta)
+  const zona = o.periodico ? rectRedondo(0, m, o.ancho, o.alto - m, 0) : m > 0 ? rectRedondo(m, m, o.ancho - m, o.alto - m, Math.max(0, o.radio - m)) : placa
+  if (m * 2 >= (o.periodico ? o.alto : Math.min(o.ancho, o.alto))) return vacio("La orilla lisa es más grande que la pieza.")
   const patron = intersectar(unir(elementos), [zona])
   if (!patron.length) return vacio("El patrón no cabe en la placa: baja el tamaño o la orilla.")
 
@@ -233,4 +249,140 @@ export function hacerTexturizador(fuente: Fuente | null, o: OpcionesTexturizador
   if (o.tamano < 6) avisos.push("Letras de menos de 6 mm pueden salir borrosas en una impresora FDM; en resina salen bien.")
   if (o.relieve < 0.6) avisos.push("Un relieve de menos de 0.6 mm casi no marca la masa: usa 0.8 a 1.5 mm.")
   return { dibujo, malla: { tris, avisos: [] }, piezas: colocadas, avisos, errores: [] }
+}
+
+// ── Rodillo ────────────────────────────────────────────────────────────────
+// Se arma la placa "desenrollada" (ancho = la vuelta, π·D) con el patrón que
+// cierra sin costura y se enrolla: X → ángulo, Z de la placa → radio. Queda de
+// pie (eje en Z), que es como se imprime sin soportes.
+export type OpcionesRodillo = Omit<OpcionesTexturizador, "ancho" | "alto" | "radio" | "grosor" | "periodico"> & {
+  diametro: number // donde se apoya el patrón (en "bajo", el exterior)
+  largo: number
+  eje: number // hueco central para el eje o los mangos
+}
+
+export type ResultadoRodillo = ResultadoTexturizador & { vuelta: number; diametroTotal: number }
+
+const PASO_CURVA = 1 // mm: cada triángulo se parte en tiras de este ancho antes de enrollar
+
+/** Parte los triángulos en tiras verticales (x = k·paso) sin dejar grietas. */
+function partirEnTiras(t: number[], paso: number): number[] {
+  const out: number[] = []
+  type V = [number, number, number]
+  const corte = (a: V, b: V, g: number): V => {
+    const [s, e] = a[0] < b[0] || (a[0] === b[0] && (a[1] < b[1] || (a[1] === b[1] && a[2] <= b[2]))) ? [a, b] : [b, a]
+    const k = (g - s[0]) / (e[0] - s[0])
+    return [g, s[1] + k * (e[1] - s[1]), s[2] + k * (e[2] - s[2])]
+  }
+  for (let i = 0; i < t.length; i += 9) {
+    const v: V[] = [[t[i], t[i + 1], t[i + 2]], [t[i + 3], t[i + 4], t[i + 5]], [t[i + 6], t[i + 7], t[i + 8]]]
+    const xs = v.map((p) => p[0])
+    const x0 = Math.min(...xs), x1 = Math.max(...xs)
+    const k0 = Math.floor(x0 / paso), k1 = Math.ceil(x1 / paso)
+    if (x1 - x0 < 1e-9 || k1 - k0 <= 1) {
+      for (let j = 0; j < 9; j++) out.push(t[i + j])
+      continue
+    }
+    for (let k = k0; k < k1; k++) {
+      const g0 = k * paso, g1 = (k + 1) * paso
+      const poli: V[] = []
+      for (let j = 0; j < 3; j++) {
+        const p = v[j], q = v[(j + 1) % 3]
+        if (p[0] >= g0 && p[0] <= g1) poli.push(p)
+        // cruces de la arista con los dos bordes de la tira, en orden de p a q
+        const cruces: V[] = []
+        for (const g of [g0, g1]) if ((p[0] - g) * (q[0] - g) < 0) cruces.push(corte(p, q, g))
+        if (cruces.length === 2 && Math.abs(cruces[0][0] - p[0]) > Math.abs(cruces[1][0] - p[0])) cruces.reverse()
+        poli.push(...cruces)
+      }
+      const lim = poli.filter((p, j) => {
+        const q = poli[(j + poli.length - 1) % poli.length]
+        return j === 0 ? true : Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]) > 1e-9
+      })
+      for (let j = 1; j + 1 < lim.length; j++) {
+        const a = lim[0], b = lim[j], c = lim[j + 1]
+        const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], wx = c[0] - a[0], wy = c[1] - a[1], wz = c[2] - a[2]
+        if (Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx) < 1e-10) continue
+        out.push(...a, ...b, ...c)
+      }
+    }
+  }
+  return out
+}
+
+// Sólo en relieve ("alto"): el patrón sobresale del rodillo y queda hundido en la masa.
+export function hacerRodillo(fuente: Fuente | null, entrada: OpcionesRodillo): ResultadoRodillo {
+  const o = { ...entrada, modo: "alto" as const }
+  const vacio = (e: string): ResultadoRodillo => ({ dibujo: { trazos: [], avisos: [], unidades: "mm" }, malla: { tris: [], avisos: [] }, piezas: 0, avisos: [], errores: [e], vuelta: 0, diametroTotal: 0 })
+  if (!(o.diametro >= 15 && o.diametro <= 150)) return vacio("El diámetro del rodillo debe estar entre 15 y 150 mm.")
+  if (!(o.largo >= 20 && o.largo <= 300)) return vacio("El largo del rodillo debe estar entre 20 y 300 mm.")
+  if (!(o.eje >= 3)) return vacio("El hueco del eje debe ser de al menos 3 mm.")
+  const pared = (o.diametro - o.eje) / 2
+  if (pared < 2) return vacio("La pared del rodillo queda muy delgada: sube el diámetro o baja el hueco del eje.")
+  const vuelta = Math.round(Math.PI * o.diametro * 1000) / 1000
+  const r = hacerTexturizador(fuente, { ...o, ancho: vuelta, alto: o.largo, radio: 0, grosor: pared, periodico: true })
+  if (r.errores.length) return { ...r, vuelta, diametroTotal: 0 }
+
+  // fuera las paredes de la costura (x = 0 y x = vuelta): ahí la pieza sigue
+  const t = r.malla.tris
+  const sinCostura: number[] = []
+  for (let i = 0; i < t.length; i += 9) {
+    const xs = [t[i], t[i + 3], t[i + 6]]
+    if (xs.every((x) => Math.abs(x) < 1e-6) || xs.every((x) => Math.abs(x - vuelta) < 1e-6)) continue
+    for (let j = 0; j < 9; j++) sinCostura.push(t[i + j])
+  }
+  const tiras = partirEnTiras(sinCostura, PASO_CURVA)
+  const rIn = o.eje / 2
+  const tris = new Array<number>(tiras.length)
+  for (let i = 0; i < tiras.length; i += 3) {
+    const a = tiras[i] >= vuelta - 1e-9 ? 0 : (2 * Math.PI * tiras[i]) / vuelta // la costura cierra exacta
+    const rad = rIn + tiras[i + 2]
+    tris[i] = rad * Math.cos(a)
+    tris[i + 1] = rad * Math.sin(a)
+    tris[i + 2] = tiras[i + 1]
+  }
+  const diametroTotal = o.diametro + 2 * o.relieve
+  return { ...r, malla: { tris, avisos: [] }, vuelta, diametroTotal }
+}
+
+// ── Accesorios ─────────────────────────────────────────────────────────────
+function cilindro(r: number, z0: number, z1: number, cx = 0, cy = 0, n = 64): number[] {
+  const t: number[] = []
+  for (let i = 0; i < n; i++) {
+    const a = (2 * Math.PI * i) / n, b = (2 * Math.PI * (i + 1)) / n
+    const p = [cx + r * Math.cos(a), cy + r * Math.sin(a)], q = [cx + r * Math.cos(b), cy + r * Math.sin(b)]
+    t.push(cx, cy, z1, p[0], p[1], z1, q[0], q[1], z1) // tapa de arriba
+    t.push(cx, cy, z0, q[0], q[1], z0, p[0], p[1], z0) // tapa de abajo
+    t.push(p[0], p[1], z0, q[0], q[1], z0, q[0], q[1], z1, p[0], p[1], z0, q[0], q[1], z1, p[0], p[1], z1) // costado
+  }
+  return t
+}
+
+function caja(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): number[] {
+  const v = (i: number): number[] => [i & 1 ? x1 : x0, i & 2 ? y1 : y0, i & 4 ? z1 : z0]
+  const caras = [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]]
+  const t: number[] = []
+  for (const [a, b, c, d] of caras) t.push(...v(a), ...v(b), ...v(c), ...v(a), ...v(c), ...v(d))
+  return t
+}
+
+export const HOLGURA_EJE = 0.4 // mm menos en el perno para que el rodillo gire
+
+/** Dos mangos: agarradera, tope y perno que entra al hueco del rodillo (uno por lado). */
+export function hacerMangos(eje: number, largoRodillo: number, diametroRodillo: number): Malla {
+  const perno = Math.max(1.2, (eje - HOLGURA_EJE) / 2)
+  const largoPerno = Math.max(10, largoRodillo / 2 - 1)
+  const tope = Math.min(diametroRodillo / 2 - 1, eje / 2 + 6)
+  const agarre = 12
+  const t: number[] = []
+  for (const cx of [-(agarre + 4), agarre + 4]) {
+    t.push(...cilindro(agarre, 0, 70, cx), ...cilindro(tope, 69.6, 73, cx), ...cilindro(perno, 72.6, 73 + largoPerno, cx, 0, 48))
+  }
+  return { tris: t, avisos: [] }
+}
+
+/** Dos guías para aplanar la masa al mismo grosor antes de texturizar. */
+export function hacerGuias(grosorMasa: number, largo = 200): Malla {
+  const h = Math.max(0.5, grosorMasa)
+  return { tris: [...caja(0, 0, 0, largo, 12, h), ...caja(0, 20, 0, largo, 32, h)], avisos: [] }
 }

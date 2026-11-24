@@ -1,9 +1,9 @@
 "use client"
 
-// Texturizador dentro del 3D Studio: una placa con un patrón repetido de
-// palabras e íconos, en relieve o hundido, para imprimir en 3D. Sirve para
-// texturizar barro, fondant, galletas o plastilina (con el espejo activado se
-// lee bien al presionar), o como placa decorativa.
+// Texturizador dentro del 3D Studio: una placa o un rodillo con un patrón
+// repetido de palabras e íconos, para imprimir en 3D. Sirve para texturizar
+// barro, fondant, galletas o plastilina (con el espejo activado se lee bien al
+// presionar). El rodillo trae sus accesorios: mangos y guías de grosor.
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -23,7 +23,15 @@ import {
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
-import { ICONOS_TEXTURA, type IconoTextura, hacerTexturizador } from "@/lib/generador/texturizador"
+import {
+  HOLGURA_EJE,
+  ICONOS_TEXTURA,
+  type IconoTextura,
+  hacerGuias,
+  hacerMangos,
+  hacerRodillo,
+  hacerTexturizador,
+} from "@/lib/generador/texturizador"
 import { type Dibujo, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -96,6 +104,11 @@ export function GeneradorTexturizador() {
   const [relieve, setRelieve] = useState("1.2")
   const [modo, setModo] = useState<"alto" | "bajo">("alto")
   const [espejo, setEspejo] = useState(true)
+  const [forma, setForma] = useState<"placa" | "rodillo">("placa")
+  const [diametro, setDiametro] = useState("40")
+  const [largo, setLargo] = useState("120")
+  const [eje, setEje] = useState("12")
+  const [grosorMasa, setGrosorMasa] = useState("3")
   const [aviso, setAviso] = useState("")
 
   useEffect(() => {
@@ -142,9 +155,23 @@ export function GeneradorTexturizador() {
   const alternarIcono = (id: IconoTextura) =>
     setIconos((l) => (l.includes(id) ? l.filter((x) => x !== id) : [...l, id]))
 
+  const rodillo = forma === "rodillo"
   const r = useMemo(() => {
     if (conTexto && !fuente) return null
     try {
+      const comun = {
+        palabras: listaPalabras,
+        iconos,
+        tamano: numero(tamano),
+        espacioX: numero(espacioX) || 0,
+        espacioY: numero(espacioY) || 0,
+        acomodo,
+        orilla: numero(orilla) || 0,
+        relieve: numero(relieve),
+        espejo,
+      }
+      if (rodillo)
+        return hacerRodillo(conTexto ? fuente : null, { ...comun, modo: "alto", diametro: numero(diametro), largo: numero(largo), eje: numero(eje) })
       return hacerTexturizador(conTexto ? fuente : null, {
         palabras: listaPalabras,
         iconos,
@@ -164,10 +191,13 @@ export function GeneradorTexturizador() {
     } catch {
       return null
     }
-  }, [fuente, conTexto, listaPalabras, iconos, ancho, alto, radio, tamano, espacioX, espacioY, acomodo, orilla, grosor, relieve, modo, espejo])
+  }, [fuente, conTexto, listaPalabras, iconos, ancho, alto, radio, tamano, espacioX, espacioY, acomodo, orilla, grosor, relieve, modo, espejo, rodillo, diametro, largo, eje])
 
   const listo = !!r && !r.errores.length
-  const vista2d = useMemo(() => (listo ? vistaTextura(r!.dibujo, modo === "bajo") : ""), [r, listo, modo])
+  const hundido = !rodillo && modo === "bajo"
+  const vista2d = useMemo(() => (listo ? vistaTextura(r!.dibujo, hundido) : ""), [r, listo, hundido])
+  const total = r && "diametroTotal" in r ? (r.diametroTotal as number) : 0
+  const vuelta = r && "vuelta" in r ? (r.vuelta as number) : 0
   const archivo = `texturizador-hetna-${
     (listaPalabras[0] || iconos[0] || "patron")
       .normalize("NFD")
@@ -177,11 +207,23 @@ export function GeneradorTexturizador() {
       .slice(0, 30)
       .toLowerCase() || "patron"
   }`
-  const medidas = `${r1(numero(ancho))} × ${r1(numero(alto))} mm`
+  const medidas = rodillo ? `Ø ${r1(total)} × ${r1(numero(largo))} mm` : `${r1(numero(ancho))} × ${r1(numero(alto))} mm`
   const altoTotal = modo === "alto" ? numero(grosor) + numero(relieve) : numero(grosor)
+  const nombreArchivo = rodillo ? archivo.replace("texturizador-", "rodillo-") : archivo
 
   const panel = (
     <div className="flex flex-col gap-4">
+      <Seccion titulo="¿Qué quieres hacer?">
+        <div className="grid grid-cols-2 gap-1.5">
+          <button type="button" onClick={() => setForma("placa")} aria-pressed={!rodillo} className={botonSel(!rodillo)}>
+            Placa
+          </button>
+          <button type="button" onClick={() => setForma("rodillo")} aria-pressed={rodillo} className={botonSel(rodillo)}>
+            Rodillo
+          </button>
+        </div>
+      </Seccion>
+
       <Seccion titulo="Empieza con un modelo">
         <div className="grid grid-cols-3 gap-1.5">
           {MODELOS.map((m) => (
@@ -251,14 +293,25 @@ export function GeneradorTexturizador() {
         </Seccion>
       )}
 
-      <Seccion titulo="Placa">
-        <div className="grid grid-cols-2 gap-2">
-          <CampoNum etiqueta="Ancho" valor={ancho} cambiar={setAncho} />
-          <CampoNum etiqueta="Alto" valor={alto} cambiar={setAlto} />
-          <CampoNum etiqueta="Esquinas" valor={radio} cambiar={setRadio} />
-          <CampoNum etiqueta="Orilla lisa (0 = sin)" valor={orilla} cambiar={setOrilla} />
-        </div>
-      </Seccion>
+      {rodillo ? (
+        <Seccion titulo="Rodillo" nota="El patrón da la vuelta completa sin costura. Se imprime de pie, sin soportes.">
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Diámetro" valor={diametro} cambiar={setDiametro} />
+            <CampoNum etiqueta="Largo" valor={largo} cambiar={setLargo} />
+            <CampoNum etiqueta="Hueco del eje" valor={eje} cambiar={setEje} />
+            <CampoNum etiqueta="Orilla lisa en los extremos" valor={orilla} cambiar={setOrilla} />
+          </div>
+        </Seccion>
+      ) : (
+        <Seccion titulo="Placa">
+          <div className="grid grid-cols-2 gap-2">
+            <CampoNum etiqueta="Ancho" valor={ancho} cambiar={setAncho} />
+            <CampoNum etiqueta="Alto" valor={alto} cambiar={setAlto} />
+            <CampoNum etiqueta="Esquinas" valor={radio} cambiar={setRadio} />
+            <CampoNum etiqueta="Orilla lisa (0 = sin)" valor={orilla} cambiar={setOrilla} />
+          </div>
+        </Seccion>
+      )}
 
       <Seccion titulo="Patrón">
         <div className="grid grid-cols-2 gap-1.5">
@@ -277,17 +330,19 @@ export function GeneradorTexturizador() {
       </Seccion>
 
       <Seccion titulo="Impresión 3D" nota="Con el espejo activado, el texto se lee bien al presionar la placa sobre barro, fondant o plastilina.">
-        <div className="grid grid-cols-2 gap-1.5">
-          <button type="button" onClick={() => setModo("alto")} aria-pressed={modo === "alto"} className={botonSel(modo === "alto")}>
-            En relieve
-          </button>
-          <button type="button" onClick={() => setModo("bajo")} aria-pressed={modo === "bajo"} className={botonSel(modo === "bajo")}>
-            Hundido
-          </button>
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <CampoNum etiqueta="Grosor de la placa" valor={grosor} cambiar={setGrosor} />
-          <CampoNum etiqueta={modo === "alto" ? "Altura del patrón" : "Profundidad"} valor={relieve} cambiar={setRelieve} />
+        {!rodillo && (
+          <div className="mb-2 grid grid-cols-2 gap-1.5">
+            <button type="button" onClick={() => setModo("alto")} aria-pressed={modo === "alto"} className={botonSel(modo === "alto")}>
+              En relieve
+            </button>
+            <button type="button" onClick={() => setModo("bajo")} aria-pressed={modo === "bajo"} className={botonSel(modo === "bajo")}>
+              Hundido
+            </button>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          {!rodillo && <CampoNum etiqueta="Grosor de la placa" valor={grosor} cambiar={setGrosor} />}
+          <CampoNum etiqueta={hundido ? "Profundidad" : "Altura del patrón"} valor={relieve} cambiar={setRelieve} />
         </div>
         <label className="mt-2 flex items-center gap-2 text-[13px] text-[#C9D2E0]">
           <input type="checkbox" checked={espejo} onChange={(e) => setEspejo(e.target.checked)} className="accent-[#C2560A]" />
@@ -312,18 +367,28 @@ export function GeneradorTexturizador() {
       ) : (
         <>
           <Datos
-            filas={[
-              ["Placa", medidas],
-              ["Piezas en el patrón", String(r!.piezas)],
-              ["Impresión 3D", `${r1(altoTotal)} mm de alto`],
-              ["Patrón", modo === "alto" ? `En relieve, ${r1(numero(relieve))} mm` : `Hundido, ${r1(numero(relieve))} mm`],
-            ]}
+            filas={
+              rodillo
+                ? [
+                    ["Rodillo", medidas],
+                    ["Una vuelta", `${r1(vuelta)} mm`],
+                    ["Piezas en el patrón", String(r!.piezas)],
+                    ["Hueco del eje", `${r1(numero(eje))} mm`],
+                  ]
+                : [
+                    ["Placa", medidas],
+                    ["Piezas en el patrón", String(r!.piezas)],
+                    ["Impresión 3D", `${r1(altoTotal)} mm de alto`],
+                    ["Patrón", modo === "alto" ? `En relieve, ${r1(numero(relieve))} mm` : `Hundido, ${r1(numero(relieve))} mm`],
+                  ]
+            }
           />
           <div
             className="flex min-h-[300px] flex-1 items-center justify-center rounded-[10px] bg-[#0F151E] p-6 [&>svg]:max-h-[460px] [&>svg]:w-full [&>svg]:max-w-[720px]"
             dangerouslySetInnerHTML={{ __html: vista2d }}
           />
           <p className="m-0 text-[12.5px] text-[#8A97AB]">
+            {rodillo ? "Así se ve el patrón desenrollado: una vuelta completa del rodillo. " : ""}
             {espejo ? "Se ve al revés a propósito: al presionarla, la marca queda al derecho." : "Sin espejo: se lee al derecho en la placa."}
           </p>
         </>
@@ -340,19 +405,59 @@ export function GeneradorTexturizador() {
         <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">En milímetros. STL listo para tu laminador; SVG con la placa y el patrón.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <TarjetaExport titulo="Para impresión 3D" nota="Imprime con la placa acostada y el patrón hacia arriba.">
+        <TarjetaExport
+          titulo="Para impresión 3D"
+          nota={rodillo ? "El rodillo de pie, sin soportes. Capas de 0.12 a 0.16 mm para que el patrón salga fino." : "Imprime con la placa acostada y el patrón hacia arriba."}
+        >
           <div className="flex gap-2">
-            <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, mallaSTL(r!.malla), "model/stl")}>
+            <Boton tipo="primario" onClick={() => descargar(`${nombreArchivo}.stl`, mallaSTL(r!.malla), "model/stl")}>
               STL
             </Boton>
           </div>
         </TarjetaExport>
-        <TarjetaExport titulo="Dibujo" nota="Placa (corte) y patrón (grabado) para láser o router.">
+        <TarjetaExport
+          titulo="Dibujo"
+          nota={rodillo ? "El patrón desenrollado (una vuelta), para imprimirlo en papel o grabarlo." : "Placa (corte) y patrón (grabado) para láser o router."}
+        >
           <div className="flex gap-2">
-            <Boton onClick={() => descargar(`${archivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}>SVG</Boton>
+            <Boton onClick={() => descargar(`${nombreArchivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}>SVG</Boton>
           </div>
         </TarjetaExport>
       </div>
+
+      {rodillo && (
+        <div className="flex flex-col gap-3">
+          <h3 className="m-0 text-[16px] font-bold">Accesorios</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TarjetaExport
+              titulo="Mangos (2)"
+              nota={`Uno por cada lado: el perno entra al hueco (${r1(numero(eje) - HOLGURA_EJE)} mm, ${HOLGURA_EJE} mm de holgura) y el rodillo gira. Imprímelos de pie, con 100 % de relleno en el perno.`}
+            >
+              <div className="flex gap-2">
+                <Boton
+                  tipo="primario"
+                  onClick={() => descargar(`${nombreArchivo}-mangos.stl`, mallaSTL(hacerMangos(numero(eje), numero(largo), numero(diametro))), "model/stl")}
+                >
+                  STL
+                </Boton>
+              </div>
+            </TarjetaExport>
+            <TarjetaExport titulo="Guías de grosor (2)" nota="Pon la masa entre las dos guías y pasa el rodillo encima: queda pareja, del grosor de la guía.">
+              <div className="flex items-end gap-2">
+                <span className="w-[120px]">
+                  <CampoNum etiqueta="Grosor de la masa" valor={grosorMasa} cambiar={setGrosorMasa} />
+                </span>
+                <Boton
+                  tipo="primario"
+                  onClick={() => descargar(`guias-${r1(numero(grosorMasa) || 3)}mm-hetna.stl`, mallaSTL(hacerGuias(numero(grosorMasa) || 3)), "model/stl")}
+                >
+                  STL
+                </Boton>
+              </div>
+            </TarjetaExport>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
         <span className="text-[15px] font-bold">¿No tienes impresora 3D?</span>
@@ -361,8 +466,8 @@ export function GeneradorTexturizador() {
           <Boton
             tipo="primario"
             onClick={() => {
-              const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL(r!.malla), locale, {
-                pieza: `Texturizador ${listaPalabras[0] ? `"${listaPalabras[0]}"` : "de íconos"}`,
+              const ok = mandarAFabricar(`${nombreArchivo}.stl`, mallaSTL(r!.malla), locale, {
+                pieza: `${rodillo ? "Rodillo texturizador" : "Texturizador"} ${listaPalabras[0] ? `"${listaPalabras[0]}"` : "de íconos"}`,
                 medidas,
                 proceso: "Impresión 3D",
               })
@@ -381,7 +486,7 @@ export function GeneradorTexturizador() {
     <Estudio3D
       llenar
       titulo={listaPalabras[0] || "Texturizador"}
-      subtitulo="Texturizador para impresión 3D"
+      subtitulo={rodillo ? "Rodillo texturizador" : "Texturizador para impresión 3D"}
       materialInicial="naranja"
       tris={listo ? r!.malla.tris : undefined}
       panel={panel}
