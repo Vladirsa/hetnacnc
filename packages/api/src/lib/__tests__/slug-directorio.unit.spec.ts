@@ -2,7 +2,15 @@ import { readFileSync } from "fs"
 import { join } from "path"
 import { runInNewContext } from "vm"
 
-import { esSlugDirectorio, slugDirectorio } from "../../../../../apps/storefront/src/lib/hetna/slug-directorio"
+// La regla vive en la tienda (apps/storefront/src/lib/hetna/slug-directorio.ts),
+// fuera de packages/api. Se carga con require en tiempo de ejecución para que el
+// build del API (tsc, rootDir = packages/api) no intente compilar ese archivo.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { esSlugDirectorio, slugDirectorio } = require(join(__dirname, "../../../../../apps/storefront/src/lib/hetna/slug-directorio")) as {
+  slugDirectorio: (id: unknown) => string
+  esSlugDirectorio: (slug: unknown) => boolean
+}
+
 
 // Slugs del directorio de perfiles no reclamados (/talleres/directorio/<slug>).
 // La regla vive en la tienda y, copiada, en los nodos Code de n8n que arman el
