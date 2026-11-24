@@ -282,6 +282,11 @@ const NOVEDADES = {
       cuerpo: '<p>En HETNA hay generadores gratis de archivos DXF (cajas con ensamble, celosías, letreros y placas), calculadoras de corte y un convertidor de archivos. Úsenlos aunque todavía no vendan con nosotros:</p>' +
         boton(liga('/disenar', r, r._paso), 'Abrir las herramientas'),
     }),
+    (r) => ({
+      asunto: 'Licitaciones sin comisión para su taller',
+      cuerpo: '<p>Si hoy pagan por cada contacto en sitios de solicitudes, vale la pena comparar: en HETNA los clientes publican su trabajo, la licitación llega a los talleres de su zona y ustedes cotizan sólo lo que les conviene, <b>sin pagar por contacto y sin comisión</b>.</p>' +
+        boton(liga('/talleres/unete', r, r._paso), 'Quiero recibir licitaciones'),
+    }),
   ],
   comprador: [
     (r) => ({
@@ -379,6 +384,82 @@ const EXPORTADOR = {
   },
 };
 
+// Talleres de servicio en México (corte láser, router, plasma, maquinado):
+// muchos pagan por cada contacto en sitios de solicitudes aunque el cliente no
+// conteste. A ellos les hablamos de las LICITACIONES de HETNA: les llegan los
+// trabajos de su zona, cotizan sólo lo que les conviene, sin pagar por contacto
+// y sin comisión (pedido de Vlado, 24 nov 2026). Se enlaza la página
+// "<servicio> en <estado>" (storefront: talleres/en/[ciudad]/[servicio]) para
+// que vean cómo los encuentran los clientes. Sustituye los correos 1 a 4 de
+// vendedor; desde el 5 siguen las novedades.
+const SERVICIOS_TALLER = [
+  { patron: /l[aá]ser/i, nombre: 'corte láser', slug: 'corte-laser' },
+  { patron: /plasma/i, nombre: 'corte plasma', slug: 'corte-plasma' },
+  { patron: /router|carpinter|\bmdf\b/i, nombre: 'router CNC', slug: 'router-cnc' },
+  { patron: /maquin|mecaniz|torno|fresad/i, nombre: 'maquinado CNC', slug: 'maquinado-cnc' },
+];
+// Estados con página "Talleres CNC en <estado>" (storefront lib/seo/guias.ts CIUDADES)
+const ESTADOS_PAGINA = ['Ciudad de México', 'Jalisco', 'Nuevo León', 'Puebla', 'Querétaro', 'Tlaxcala', 'Estado de México', 'Guanajuato', 'Aguascalientes', 'San Luis Potosí', 'Coahuila', 'Chihuahua', 'Baja California', 'Sonora', 'Michoacán', 'Veracruz', 'Yucatán', 'Quintana Roo', 'Sinaloa', 'Hidalgo'];
+const sinAcentos = (x) => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const ALIAS_ESTADO = { cdmx: 'Ciudad de México', df: 'Ciudad de México', 'distrito federal': 'Ciudad de México', edomex: 'Estado de México', mexico: 'Estado de México', guadalajara: 'Jalisco', zapopan: 'Jalisco', monterrey: 'Nuevo León', toluca: 'Estado de México', leon: 'Guanajuato', saltillo: 'Coahuila', tijuana: 'Baja California', merida: 'Yucatán', apizaco: 'Tlaxcala' };
+function estadoDe(r) {
+  for (const v of [r.region, r.ciudad]) {
+    const n = sinAcentos(v);
+    if (!n) continue;
+    const e = ESTADOS_PAGINA.find((x) => sinAcentos(x) === n) || ALIAS_ESTADO[n];
+    if (e) return e;
+  }
+  return '';
+}
+const slugEstado = (e) => sinAcentos(e).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function servicioTaller(r) {
+  if (!/^taller/i.test(String(r.tipo || ''))) return null;
+  if (r.pais && !/m[eé]xico/i.test(r.pais)) return null;
+  const texto = (r.productos_servicios || '') + ' ' + (r.segmento || '') + ' ' + (r.empresa || '');
+  return SERVICIOS_TALLER.find((x) => x.patron.test(texto)) || null;
+}
+function paginaZona(r, s) {
+  const e = estadoDe(r);
+  return e ? { ruta: '/talleres/en/' + slugEstado(e) + '/' + s.slug, texto: s.nombre.charAt(0).toUpperCase() + s.nombre.slice(1) + ' en ' + e, estado: e } : null;
+}
+const TALLER_SERVICIO = {
+  1: (r, s) => {
+    const z = paginaZona(r, s);
+    return {
+      asunto: r.empresa + ': trabajos de ' + s.nombre + (z ? ' en ' + z.estado : ' de su zona') + ' sin pagar por contacto',
+      cuerpo: '<p>Muchos talleres de ' + s.nombre + ' pagan por cada contacto en sitios de solicitudes, aunque el cliente nunca conteste.</p>' +
+        '<p>En <b>HETNA CNC</b> es distinto: el cliente publica su trabajo (archivo, material, medidas y cantidad) y la licitación les llega a los talleres de su zona. <b>Ustedes cotizan sólo lo que les conviene, sin pagar por el contacto y sin comisión en las licitaciones.</b></p>' +
+        '<ul><li>Registrar su taller es gratis.</li>' +
+        '<li>El cliente compara propuestas, elige y paga dentro de HETNA; ustedes facturan directo a su cliente.</li>' +
+        '<li>Su taller aparece en las páginas de ' + s.nombre + ' de su estado, donde llegan los clientes que buscan en Google.</li></ul>' +
+        boton(liga('/talleres/unete', r, 1), 'Quiero recibir licitaciones') +
+        (z ? '<p>Así ven los clientes a los talleres de su estado: <a href="' + liga(z.ruta, r, 1) + '">' + esc(z.texto) + '</a>.</p>' : ''),
+    };
+  },
+  2: (r, s) => ({
+    asunto: '¿Cuánto les cuesta cada cliente, ' + r.empresa + '?',
+    cuerpo: '<p>Les escribí hace unos días. Una cuenta rápida: si pagan por cada solicitud y cierran una de cada cinco, cada cliente les cuesta cinco contactos pagados.</p>' +
+      '<p>En HETNA las licitaciones no cobran comisión ni por contacto: el único costo es su tiempo para cotizar. Y para cotizar más rápido está el <b>Cotizador HETNA</b>, que tiene plan gratis.</p>' +
+      boton(liga('/talleres/unete', r, 2), 'Registrar mi taller gratis'),
+  }),
+  3: (r, s) => {
+    const z = paginaZona(r, s);
+    return {
+      asunto: 'Último correo: licitaciones de ' + s.nombre + (z ? ' en ' + z.estado : ''),
+      cuerpo: '<p>No quiero llenar su bandeja, así que éste es el último correo por ahora.</p>' +
+        '<p>Los trabajos que publican los clientes se ven aquí: <a href="' + liga('/trabajos', r, 3) + '">trabajos abiertos en HETNA</a>. Si quieren recibirlos y cotizar sin pagar por contacto, registren su taller:</p>' +
+        boton(liga('/talleres/unete', r, 3), 'Quiero recibir licitaciones') +
+        '<p>Si prefieren platicarlo, respondan este correo.</p>',
+    };
+  },
+  4: (r, s) => ({
+    asunto: r.empresa + ', ¿lo retomamos?',
+    cuerpo: '<p>Hace un par de meses les contamos de las licitaciones de HETNA CNC. Desde entonces se han sumado más clientes que buscan ' + s.nombre + '.</p>' +
+      '<p>Siguen siendo gratis y sin comisión: ustedes cotizan sólo lo que les conviene.</p>' +
+      boton(liga('/talleres/unete', r, 4), 'Registrar mi taller gratis'),
+  }),
+};
+
 // Encuesta de un clic (desde el correo 3, en español)
 const MOTIVOS = [
   ['ya_vendo', 'Ya vendo en otro lado'],
@@ -452,6 +533,8 @@ for (const c of candidatos) {
     plantilla = v === 0 ? t[seg][paso](datos) : otras[v - 1](datos);
   }
   if (r.tipo === 'Proveedor extranjero' && EXPORTADOR[idioma] && EXPORTADOR[idioma][paso]) plantilla = EXPORTADOR[idioma][paso]({ ...r, empresa, _v: 'x' });
+  const sTaller = idioma === 'es' && seg === 'vendedor' && TALLER_SERVICIO[paso] ? servicioTaller(r) : null;
+  if (sTaller) plantilla = TALLER_SERVICIO[paso]({ ...r, empresa, _v: 'l' }, sTaller);
   if (idioma === 'es' && r.segmento === 'solicitud' && SOLICITUD[paso]) plantilla = SOLICITUD[paso]({ ...r, empresa, _v: 's' });
   if (idioma === 'es' && paso >= 3) plantilla = { asunto: plantilla.asunto, cuerpo: plantilla.cuerpo + encuesta(r) };
   const urlBaja = BAJA + '?id=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(r.token || '');

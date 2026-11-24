@@ -19,7 +19,7 @@ import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { directorioMexico } from "@/lib/hetna/directorio"
 import { esSlugDirectorio } from "@/lib/hetna/slug-directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
-import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
+import { estadosIndexables, rutaEstado, rutaServicioEstado, serviciosEstadoIndexables } from "@/lib/seo/estados"
 import { listLearningArticles } from "@/lib/data/learning-articles"
 import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
@@ -204,6 +204,8 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         ...(await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
         // "Talleres CNC en <estado>": sólo los estados con suficientes empresas (lib/seo/estados.ts)
         ...(await estadosIndexables()).map((x) => pagina(rutaEstado(x.ciudad), "weekly", 0.7, hoy)),
+        // "Corte láser en <estado>", "Router CNC en <estado>"…: sólo con suficientes talleres de ese servicio
+        ...(await serviciosEstadoIndexables()).map((x) => pagina(rutaServicioEstado(x.ciudad, x.clave), "weekly", 0.7, hoy)),
         // Perfiles no reclamados: sólo los que tienen descripción (los demás son
         // noindex) y cuyo slug la ruta [slug] puede servir tal cual: uno con
         // diagonales o acentos daba 404 (24 nov 2026)
