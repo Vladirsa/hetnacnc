@@ -28,7 +28,7 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { contextoMDF, mandarAFabricar, mandarPaqueteACotizador, nombresDeArchivo } from "@/lib/generador/aCotizador"
+import { contextoMDF, mandarAFabricar, mandarPaqueteACotizador, nombresDeArchivo, procesoDeServicio } from "@/lib/generador/aCotizador"
 import { PrecioFabricar } from "./PrecioFabricar"
 import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, piezasPrueba, type Pieza, type TipoCaja } from "@/lib/generador/caja"
 import { piezasAGrupo3D } from "@/lib/generador/caja3d"
@@ -542,7 +542,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       !mandarAFabricar(`${nombreArchivo}.dxf`, aDXF(r.piezas), locale, {
         pieza: `Caja con juntas de dedo (${nombreTipo.toLowerCase()})`,
         medidas: `${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`,
-        proceso: maquina === "router" ? "Router CNC" : "Corte láser",
+        proceso: procesoDeServicio(maquina === "router" ? "router" : "laser_co2"),
       })
     )
       setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")

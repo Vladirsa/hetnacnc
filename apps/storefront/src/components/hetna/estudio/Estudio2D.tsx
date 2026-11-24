@@ -147,6 +147,25 @@ export function Estudio2D({
   const alArchivo = useMemo(() => (paraExportar ? { ...paraExportar, trazos: paraExportar.trazos.map((t) => ({ ...t, capa: renombrarCapa ? renombrarCapa(t.capa) : capaFinal(t.capa) })) } : null), [paraExportar, renombrarCapa])
   const b = useMemo(() => (dibujo && dibujo.trazos.length ? cajaDibujo(dibujo.trazos) : null), [dibujo])
   const medidas = useMemo(() => (paraExportar && paraExportar.trazos.length ? cajaDibujo(paraExportar.trazos) : null), [paraExportar])
+  // Precio en vivo: lo que dice la herramienta más las medidas de UNA pieza del
+  // dibujo (sin acomodo); con acomodo en hojas, por las copias pedidas
+  const entradaPrecio = useMemo(() => {
+    if (!precio || !dibujoOriginal) return null
+    const corte = dibujoOriginal.trazos.filter((t) => t.capa === "corte")
+    if (!corte.length) return null
+    const b = cajaDibujo(corte)
+    return {
+      servicio: precio.servicio,
+      material: precio.material,
+      calibre: precio.calibre,
+      ancho: Math.round(precio.anchoMm ?? b.x1 - b.x0) / 10,
+      largo: Math.round(precio.largoMm ?? b.y1 - b.y0) / 10,
+      cantidad: Math.max(1, Math.round((precio.cantidad ?? 1) * (acomodo ? copias : 1))),
+      corte_mm: Math.round(precio.corte_mm ?? largoCorte(corte)),
+      // un perforado por contorno cerrado que no es el de afuera
+      perforaciones: precio.perforaciones ?? Math.max(0, corte.filter((t) => t.cerrado).length - 1),
+    }
+  }, [precio, dibujoOriginal, acomodo, copias])
   const largo = useMemo(() => (paraExportar ? largoCorte(paraExportar.trazos.filter((t) => t.capa !== "grabado" && !t.capa.startsWith("BARRENO") && !t.capa.startsWith("CANTO") && t.capa !== "ETIQUETA" && !t.capa.startsWith("RANURA"))) : 0), [paraExportar])
 
   // Al cambiar el tamaño del dibujo, se vuelve a ajustar a la vista
@@ -311,7 +330,7 @@ export function Estudio2D({
           )}
         </Seccion>
         <Seccion titulo="¿No tienes máquina?" nota="Un taller de HETNA te lo corta y te lo manda.">
-          {precio && paraExportar?.trazos.length ? <PrecioEstudio pedido={precio} /> : null}
+          {entradaPrecio && <PrecioEstudio entrada={entradaPrecio} unidad={precio?.unidad} />}
           <div className="flex gap-2">
             <Boton
               tipo="verde"

@@ -4,14 +4,14 @@
 // Toma el DXF que acaba de generar la herramienta, lo revisa (revisión del
 // archivo, 1.1), muestra el precio en vivo con la cantidad (1.2) y lo manda a
 // la solicitud de fabricación con el archivo ya cargado.
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { RevisionArchivo } from "@/components/hetna/cotizar/RevisionArchivo"
 import { puntosRevision } from "@/lib/cotizador/revision-archivo"
-import { precioEnVivo, type PrecioEnVivo } from "@/lib/cotizar/acciones"
 import { leerDxf, type GeoCad } from "@/lib/cotizador/archivo-cad"
-import { mandarAFabricar, materialLaserPrecio, materialRouterMDF } from "@/lib/generador/aCotizador"
+import { pesos, usePrecioEnVivo } from "@/components/hetna/cotizar/usePrecioEnVivo"
+import { mandarAFabricar, precioMDF, procesoDeServicio } from "@/lib/generador/aCotizador"
 import { calcularHojas, SEPARACION, textoHojas } from "@/lib/cotizador/hojas"
 
 type Props = {
@@ -28,16 +28,11 @@ type Props = {
   barra?: boolean
 }
 
-const MATERIAL_LASER = materialLaserPrecio
-const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
 export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, espesorMm, barra = false }: Props) {
   const { locale } = useParams<{ locale: string }>()
   const [cantidad, setCantidad] = useState(1)
-  const [precio, setPrecio] = useState<PrecioEnVivo | null>(null)
-  const [cargando, setCargando] = useState(false)
   const [aviso, setAviso] = useState("")
-  const turno = useRef(0)
 
   const geo: GeoCad | null = useMemo(() => {
     try {
@@ -47,27 +42,13 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
     }
   }, [dxf])
 
-  const servicio = maquina === "router" ? "router" : "laser_co2"
-  const material = maquina === "router" ? materialRouterMDF(espesorMm || 15) : MATERIAL_LASER(espesorMm)
-
-  useEffect(() => {
-    if (!geo || !(geo.largo > 0 && geo.ancho > 0)) return setPrecio(null)
-    const mio = ++turno.current
-    setCargando(true)
-    const t = setTimeout(async () => {
-      const r = await precioEnVivo({
-        servicio,
-        material,
-        ancho: Math.max(1, Math.round(geo.ancho) / 10),
-        largo: Math.max(1, Math.round(geo.largo) / 10),
-        cantidad: Math.max(1, cantidad),
-      })
-      if (mio !== turno.current) return
-      setCargando(false)
-      setPrecio(r)
-    }, 400)
-    return () => clearTimeout(t)
-  }, [geo, servicio, material, cantidad])
+  const { servicio, material } = precioMDF(maquina, espesorMm)
+  const { precio, cargando } = usePrecioEnVivo(
+    geo && geo.largo > 0 && geo.ancho > 0
+      ? { servicio, material, ancho: Math.max(1, Math.round(geo.ancho) / 10), largo: Math.max(1, Math.round(geo.largo) / 10), cantidad: Math.max(1, cantidad) }
+      : null,
+    400,
+  )
 
   if (!geo) return null
 
@@ -77,7 +58,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
       pieza: cantidad > 1 ? `${cantidad} × ${pieza}` : pieza,
       medidas,
       material,
-      proceso: maquina === "router" ? "Router CNC" : "Corte láser",
+      proceso: procesoDeServicio(servicio),
     })
     if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
   }
