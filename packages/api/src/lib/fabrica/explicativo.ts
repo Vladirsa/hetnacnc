@@ -601,6 +601,7 @@ export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: b
   if (!explicativoListo()) return { hecho: false, motivo: "Falta FAL_KEY, la IA, FFmpeg o Chrome en el servidor" }
   if (est.VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo un video" }
   if (!o.forzar) {
+    if (await knex("hetna_estudio").where({ tipo: "explicativo", dia: est.diaMx() }).whereIn("estado", ["listo", "haciendo"]).first()) return { hecho: false, motivo: "Ya se hizo el explicativo de hoy" }
     const ult = await knex("hetna_estudio").where({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(2).pluck("estado")
     if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos explicativos fallaron: el automático se detuvo. Revisa el error y aprieta el botón." }
   }

@@ -613,7 +613,7 @@ export function EstudioDiario() {
         <b>📐 Explicativo</b>
         <span style={{ color: C.tenue }}>65 a 80 s con dibujos técnicos y voz (~0.15 USD). Queda en Pendientes y te llega a Telegram.</span>
         <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <input type="checkbox" checked={d.explicativo !== false} disabled={ocupado} onChange={async (e) => { try { setD(await api({ explicativo: e.target.checked })) } catch (er) { setNota({ ok: false, t: (er as Error).message }) } }} /> Lunes y jueves
+          <input type="checkbox" checked={d.explicativo !== false} disabled={ocupado} onChange={async (e) => { try { setD(await api({ explicativo: e.target.checked })) } catch (er) { setNota({ ok: false, t: (er as Error).message }) } }} /> Uno cada día
         </label>
         <input value={temaExp} onChange={(e) => setTemaExp(e.target.value)} placeholder="Tema (opcional): ej. cómo elegir la fresa" maxLength={200} style={{ flex: 1, minWidth: 200, padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
         <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { await api({ accion: "explicativo", tema: temaExp.trim() || undefined }); setTemaExp(""); setNota({ ok: true, t: "✓ Haciendo el explicativo: guion, voz y dibujos. Tarda de 3 a 8 minutos; llega a Pendientes y a Telegram." }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>📐 Hacer explicativo</button>
