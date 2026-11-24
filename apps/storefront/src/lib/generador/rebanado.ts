@@ -23,7 +23,7 @@ const SEG: Record<string, number[]> = {
   "0": [0, 1, 2, 3, 4, 5], "1": [1, 2], "2": [0, 1, 6, 4, 3], "3": [0, 1, 6, 2, 3], "4": [5, 6, 1, 2],
   "5": [0, 5, 6, 2, 3], "6": [0, 5, 4, 3, 2, 6], "7": [0, 1, 2], "8": [0, 1, 2, 3, 4, 5, 6], "9": [0, 1, 2, 3, 5, 6],
 }
-function numeroGrabado(n: number, x: number, y: number, alto: number): Trazo[] {
+export function numeroGrabado(n: number, x: number, y: number, alto: number): Trazo[] {
   const w = alto * 0.55
   const tramos: [P, P][] = [
     [[0, alto], [w, alto]], [[w, alto], [w, alto / 2]], [[w, alto / 2], [w, 0]], [[w, 0], [0, 0]],

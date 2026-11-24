@@ -25,7 +25,7 @@ const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/Gen
 const GeneradorPartir3D = dynamic(() => import("@/components/hetna/generador/GeneradorPartir3D").then((m) => m.GeneradorPartir3D))
 const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/GeneradorMuebles").then((m) => m.GeneradorMuebles))
 // desde imagen, ensamble sin tornillos y despiece de gabinetes: Muebles
-const MODO_MUEBLES: Record<string, "imagen" | "cocina" | "molduras"> = { "muebles-desde-imagen": "imagen", "molduras-tallados": "molduras", "muebles-ensamble": "imagen", "despiece-muebles": "cocina" }
+const MODO_MUEBLES: Record<string, "imagen" | "cocina" | "molduras" | "costillas"> = { "muebles-desde-imagen": "imagen", "molduras-tallados": "molduras", "costillas-desde-imagen": "costillas", "muebles-ensamble": "imagen", "despiece-muebles": "cocina" }
 // Patrones de corte (desde imagen, celosía, Voronoi, radial, bisagra): una sola herramienta con modos
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
 const MODO_PATRON: Record<string, "imagen" | "celosia" | "voronoi" | "radial" | "bisagra"> = { "celosia-desde-imagen": "imagen", celosias: "celosia", "patron-voronoi": "voronoi", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }

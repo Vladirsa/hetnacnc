@@ -2,17 +2,19 @@
 
 // Muebles (2D Studio): mueble desde una imagen o del catálogo (con IA), cocina
 // integral (biblioteca de gabinetes prefabricados que se ajustan a la medida) y
-// molduras y tallados. Cada modo conserva su dirección:
+// molduras y tallados, y costillas desde imagen (pared paramétrica o banca).
+// Cada modo conserva su dirección (/disenar/costillas-desde-imagen la de costillas):
 // /disenar/muebles-desde-imagen, /disenar/despiece-muebles (cocina) y
 // /disenar/molduras-tallados. /disenar/muebles-ensamble (el exhibidor sin
 // tornillos) abre Desde una imagen: el exhibidor está en su catálogo.
 import { useState } from "react"
 
+import { GeneradorCostillas } from "./GeneradorCostillas"
 import { GeneradorMolduras } from "./GeneradorMolduras"
 import { GeneradorTableros } from "./GeneradorTableros"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoMuebles = "imagen" | "cocina" | "molduras"
+export type ModoMuebles = "imagen" | "cocina" | "molduras" | "costillas"
 
 const MODOS: Modo<ModoMuebles>[] = [
   {
@@ -53,12 +55,20 @@ const MODOS: Modo<ModoMuebles>[] = [
       </>
     ),
   },
+  {
+    id: "costillas",
+    slug: "costillas-desde-imagen",
+    nombre: "Costillas desde imagen",
+    nota: "Pared paramétrica o banca de tablas que siguen tu imagen",
+    icono: <path d="M8 34V14c0-3 2-5 4-5s4 2 4 5v20M18 34V8c0-2 2-4 4-4s4 2 4 4v26M28 34V16c0-3 2-5 4-5s4 2 4 5v18" />,
+  },
 ]
 
 export function GeneradorMuebles({ modoInicial = "imagen" }: { modoInicial?: ModoMuebles }) {
   const [modo, setModo] = useState<ModoMuebles>(modoInicial)
   const cabecera = <SelectorModos titulo="Muebles" modos={MODOS} modo={modo} cambiar={setModo} />
   if (modo === "molduras") return <GeneradorMolduras cabecera={cabecera} />
+  if (modo === "costillas") return <GeneradorCostillas cabecera={cabecera} />
   // key: cada enfoque arranca con su propio mueble de inicio
   return <GeneradorTableros key={modo} cabecera={cabecera} enfoque={modo === "cocina" ? "cocina" : "imagen"} />
 }

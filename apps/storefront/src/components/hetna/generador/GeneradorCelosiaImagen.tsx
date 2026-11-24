@@ -13,22 +13,9 @@ import { type Islas, type OpcionesCelosiaImagen, type Proceso, type ResultadoCel
 import type { P } from "@/lib/generador/geo2d"
 import type { Imagen } from "@/lib/generador/trazado"
 
-const LADO_IMAGEN = 1400
+import { useImagenSubida } from "./useImagenSubida"
 
-function pixeles(img: HTMLImageElement): Imagen | null {
-  const s = Math.min(1, LADO_IMAGEN / Math.max(img.naturalWidth, img.naturalHeight))
-  const w = Math.max(1, Math.round(img.naturalWidth * s))
-  const h = Math.max(1, Math.round(img.naturalHeight * s))
-  const c = document.createElement("canvas")
-  c.width = w
-  c.height = h
-  const ctx = c.getContext("2d", { willReadFrequently: true })
-  if (!ctx) return null
-  ctx.imageSmoothingQuality = "high"
-  ctx.drawImage(img, 0, 0, w, h)
-  const d = ctx.getImageData(0, 0, w, h)
-  return { data: d.data, width: w, height: h }
-}
+const LADO_IMAGEN = 1400
 
 const NOMBRES_ESQUINA = ["arriba izquierda", "arriba derecha", "abajo derecha", "abajo izquierda"]
 
@@ -91,9 +78,6 @@ function Esquinas({ url, im, esquinas, cambiar }: { url: string; im: Imagen; esq
 }
 
 export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNode }) {
-  const [url, setUrl] = useState("")
-  const [nombre, setNombre] = useState("")
-  const [im, setIm] = useState<Imagen | null>(null)
   const [esquinas, setEsquinas] = useState<[P, P, P, P]>([[0, 0], [1, 0], [1, 1], [0, 1]])
   const [cortar, setCortar] = useState<"oscuro" | "claro">("oscuro")
   const [umbralAuto, setUmbralAuto] = useState(true)
@@ -117,19 +101,13 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   // archivo siempre corresponde a la geometría que se descarga
   const [res, setRes] = useState<{ r: ResultadoCelosiaImagen; medida: string; proceso: Proceso; espesor: string } | null>(null)
   const [calculando, setCalculando] = useState(false)
-  const [error, setError] = useState("")
-  const urlActual = useRef("")
-  const carga = useRef(0)
+  const [errorCalculo, setErrorCalculo] = useState("")
   const trabajador = useRef<Worker | null>(null)
   const imagenEnviada = useRef<Imagen | null>(null)
   const ultimo = useRef(0)
   const sinTrabajador = useRef(false)
 
-  // La URL de la imagen se libera al cambiarla y al salir
-  useEffect(() => () => {
-    if (urlActual.current) URL.revokeObjectURL(urlActual.current)
-    trabajador.current?.terminate()
-  }, [])
+  useEffect(() => () => trabajador.current?.terminate(), [])
 
   // Mínimos sugeridos al cambiar de proceso o de espesor (el cliente los puede editar)
   useEffect(() => {
@@ -138,39 +116,21 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     setHueco(String(Math.round(m.hueco * 10) / 10))
   }, [proceso, espesor])
 
-  const abrir = (f?: File) => {
-    if (!f) return
-    if (!/^image\/(png|jpeg|webp)$/.test(f.type)) return setError("Sube una imagen JPG, PNG o WEBP.")
-    const u = URL.createObjectURL(f)
-    const img = new Image()
-    const n = ++carga.current
-    const fallo = () => {
-      URL.revokeObjectURL(u)
-      if (n === carga.current) setError("No se pudo abrir esa imagen. Prueba con una captura de pantalla en PNG o JPG.")
-    }
-    img.onerror = fallo
-    img.onload = () => {
-      // Si mientras tanto eligieron otra imagen, ésta ya no cuenta
-      if (n !== carga.current) return URL.revokeObjectURL(u)
-      const p = pixeles(img)
-      if (!p) return fallo()
-      if (urlActual.current) URL.revokeObjectURL(urlActual.current)
-      urlActual.current = u
-      setError("")
-      setRes(null)
-      setIm(p)
-      setUrl(u)
-      setNombre(f.name.replace(/\.[^.]+$/, ""))
-      // Un poco hacia adentro, para que los 4 puntos se vean completos y se puedan agarrar
-      const mx = p.width * 0.04
-      const my = p.height * 0.04
-      setEsquinas([[mx, my], [p.width - mx, my], [p.width - mx, p.height - my], [mx, p.height - my]])
-      // Alto con la proporción de la imagen
-      const a = numero(ancho) || 600
-      setAlto(String(Math.round((a * p.height) / p.width)))
-    }
-    img.src = u
-  }
+  const { subida, error: errorImagen, abrir } = useImagenSubida(LADO_IMAGEN, ({ im: p }) => {
+    setRes(null)
+    setErrorCalculo("")
+    // Un poco hacia adentro, para que los 4 puntos se vean completos y se puedan agarrar
+    const mx = p.width * 0.04
+    const my = p.height * 0.04
+    setEsquinas([[mx, my], [p.width - mx, my], [p.width - mx, p.height - my], [mx, p.height - my]])
+    // Alto con la proporción de la imagen
+    const a = numero(ancho) || 600
+    setAlto(String(Math.round((a * p.height) / p.width)))
+  })
+  const im = subida?.im ?? null
+  const url = subida?.url ?? ""
+  const nombre = subida?.nombre ?? ""
+  const error = errorImagen || errorCalculo
 
   // Proporción de lo que se marcó con las esquinas (promedio de lados opuestos)
   const proporcion = () => {
@@ -208,11 +168,11 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     }
     const listo = (r: ResultadoCelosiaImagen) => {
       setRes({ r, medida, proceso, espesor })
-      setError("")
+      setErrorCalculo("")
       setCalculando(false)
     }
     const fallo = () => {
-      setError("No se pudo calcular el panel con estos datos. Revisa las medidas o mueve las esquinas.")
+      setErrorCalculo("No se pudo calcular el panel con estos datos. Revisa las medidas o mueve las esquinas.")
       setCalculando(false)
     }
     const aqui = () => {
