@@ -22,7 +22,11 @@ export async function AvisoImportacion({ handle, compacto = false }: { handle?: 
       <ul className="m-0 mt-1 list-none p-0 leading-relaxed">
         <li>📦 Puerta a puerta con paquetería internacional: {entregaImportacion(imp)}.</li>
         <li>✅ Impuestos de importación incluidos en el precio: no pagas nada extra al recibir.</li>
-        <li>🛡️ Pagas dentro de HETNA: si no llega o llega dañado, te devolvemos tu dinero.</li>
+        <li>
+          🛡️ Pagas dentro de HETNA: si no llega, llega dañado o es distinto, te devolvemos tu dinero. Por ser importación no hay
+          devolución por cambio de opinión.{" "}
+          <a href="/mx/devoluciones" className="underline">Ver reglas</a>
+        </li>
       </ul>
     </div>
   )

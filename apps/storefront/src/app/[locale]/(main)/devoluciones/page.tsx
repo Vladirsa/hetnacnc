@@ -16,7 +16,7 @@ export default function Devoluciones() {
       etiqueta="Ayuda"
       titulo="Devoluciones y reembolsos"
       resumen="Qué puedes devolver, en qué plazo y cómo te reembolsamos."
-      actualizado="21 de noviembre de 2026"
+      actualizado="24 de noviembre de 2026"
     >
       <h2>Productos físicos</h2>
       <ul>
@@ -26,6 +26,23 @@ export default function Devoluciones() {
         <li>El producto debe estar sin uso, completo y en su empaque original.</li>
         <li>Si el producto llegó dañado, incompleto o es distinto a lo que compraste, el envío de regreso no tiene costo para ti.</li>
         <li>Si la devolución es por cambio de opinión, el costo del envío de regreso lo cubre el cliente.</li>
+      </ul>
+
+      <h2>Productos de importación</h2>
+      <p>
+        Son los que un proveedor envía desde otro país, puerta a puerta y con los impuestos ya pagados. En la ficha dicen
+        «Producto de importación», desde qué país se envían y en cuántos días llegan.
+      </p>
+      <ul>
+        <li>
+          Si <strong>no llega, llega dañado, incompleto o es distinto</strong> a lo publicado, te devolvemos tu dinero completo y
+          el proveedor paga el regreso. Repórtalo dentro de los {EMPRESA.diasDevolucion} días naturales siguientes a la entrega, con fotos.
+        </li>
+        <li>
+          No se aceptan devoluciones por cambio de opinión, salvo en los casos que la ley lo exija. En ese caso el producto se
+          regresa al país de origen y el envío internacional de regreso corre por tu cuenta.
+        </li>
+        <li>Como pagas dentro de HETNA, el proveedor no recibe tu dinero hasta que el pedido se entrega bien.</li>
       </ul>
 
       <h2>Trabajos fabricados a la medida</h2>

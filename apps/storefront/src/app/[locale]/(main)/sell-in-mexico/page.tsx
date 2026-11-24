@@ -32,6 +32,7 @@ const PREGUNTAS = [
   ["Who pays import duties?", "You include them in your price and ship DDP (Delivered Duty Paid). The Mexican buyer pays nothing extra on delivery. This is what buyers expect and it converts much better."],
   ["How long should delivery take?", "Most suppliers quote 10 to 20 business days door to door by express courier. You set your own range; it is shown on every product."],
   ["Can I list in English or Chinese?", "Yes, upload in English; we help translate your listings to Spanish. 我们也可以帮助您把产品资料翻译成西班牙语。"],
+  ["What about returns?", "Imported products have no change-of-mind returns (except where the law requires it, with the buyer paying international return shipping). If the item never arrives, arrives damaged or differs from the listing, the buyer gets a full refund and you cover the return. Your payout is released once the order is delivered correctly."],
   ["What if the product is damaged or never arrives?", "The buyer opens a claim inside HETNA. That is why tracking numbers and good packaging matter: they protect you."],
 ]
 
