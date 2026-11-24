@@ -39,9 +39,9 @@ export type Calculadora = {
 }
 
 // Las mismas opciones que las páginas /cotizar/* (no cambiar una sin la otra)
-const CALC_LASER: Calculadora = { servicio: "laser_co2", titulo: "corte láser", materiales: ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílico, cuero, tela u otro"], servicioSolicitud: "Corte láser" }
-const CALC_ROUTER: Calculadora = { servicio: "router", titulo: "router CNC", materiales: ["MDF 3mm", "MDF 9mm", "MDF 15mm", "MDF 18mm", "Acrilico", "Pino", "Cedro", "Parota", "Encino", "Aluminio"], servicioSolicitud: "Corte CNC" }
-const CALC_PLASMA: Calculadora = {
+export const CALC_LASER: Calculadora = { servicio: "laser_co2", titulo: "corte láser", materiales: ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílico, cuero, tela u otro"], servicioSolicitud: "Corte láser" }
+export const CALC_ROUTER: Calculadora = { servicio: "router", titulo: "router CNC", materiales: ["MDF 3mm", "MDF 9mm", "MDF 15mm", "MDF 18mm", "Acrilico", "Pino", "Cedro", "Parota", "Encino", "Aluminio"], servicioSolicitud: "Corte CNC" }
+export const CALC_PLASMA: Calculadora = {
   servicio: "plasma",
   titulo: "corte plasma",
   materiales: ["Acero al carbón", "Acero inoxidable", "Aluminio"],

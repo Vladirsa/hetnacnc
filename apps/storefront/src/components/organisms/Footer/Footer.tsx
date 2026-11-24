@@ -46,6 +46,7 @@ export function Footer() {
     // un taller, no alguien que viene a comprar.
     { label: "Trabajos buscando taller", path: "/trabajos" },
     { label: "Cotizador para tu taller", path: "/servicios/cotizador-cnc" },
+    { label: "Planos de muebles para taller", path: "/planos" },
     { label: "Talleres fundadores", path: "/talleres/fundadores" },
     { label: "HETNA en Latinoamérica, EUA y España", path: "/latinoamerica" },
     { label: "Anúnciate en HETNA", path: "/anunciate" },

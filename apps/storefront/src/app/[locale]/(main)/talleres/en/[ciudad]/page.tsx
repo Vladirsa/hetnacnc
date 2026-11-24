@@ -10,7 +10,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { NOMBRE_TIPO } from "@/lib/hetna/directorio"
 import { migas } from "@/lib/hetna/schema"
 import { ubicacion } from "@/lib/hetna/talleres"
-import { MIN_EMPRESAS, SERVICIOS_ESTADO, ciudadPorEstadoSlug, datosEstado, estadosIndexables, limpiarServicios, rutaEstado } from "@/lib/seo/estados"
+import { MIN_EMPRESAS, SERVICIOS_ESTADO, ciudadPorEstadoSlug, datosEstado, estadosIndexables, filtrarServicio, limpiarServicios, rutaEstado, rutaServicioEstado } from "@/lib/seo/estados"
 
 export const revalidate = 3600
 
@@ -45,6 +45,8 @@ export default async function TalleresEnEstado({ params }: Props) {
 
   const url = `${SITIO}/mx${rutaEstado(c)}`
   const servicios = SERVICIOS_ESTADO.filter((s) => d.porServicio[s.clave] > 0)
+  // Página "<servicio> en <estado>" sólo donde hay talleres de servicio (no sólo proveedores)
+  const conPagina = new Set(servicios.filter((s) => filtrarServicio(d, s.clave).total > 0).map((s) => s.clave))
   const nTalleres = d.empresas.filter((e) => e.tipo === "taller").length + d.talleres.length
   const nProveedores = d.empresas.filter((e) => e.tipo === "proveedor").length
   const nCursos = d.empresas.filter((e) => e.tipo === "instructor").length
@@ -142,10 +144,16 @@ export default async function TalleresEnEstado({ params }: Props) {
             {servicios.map((s) => (
               <li key={s.clave} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
                 <p className="text-2xl font-extrabold text-[#C2560A]">{d.porServicio[s.clave]}</p>
-                <p className="font-semibold text-[#142033]">{s.nombre}</p>
+                {conPagina.has(s.clave) ? (
+                  <LocalizedClientLink href={rutaServicioEstado(c, s.clave)} className="font-semibold text-[#142033] hover:text-[#C2560A]">
+                    {s.nombre} en {c.estado} →
+                  </LocalizedClientLink>
+                ) : (
+                  <p className="font-semibold text-[#142033]">{s.nombre}</p>
+                )}
                 {s.guia && (
-                  <LocalizedClientLink href={`/cnc/${s.guia}/${c.slug}`} className="mt-1 inline-block text-sm font-semibold text-[#C2560A] hover:underline">
-                    Guía y precio →
+                  <LocalizedClientLink href={`/cnc/${s.guia}/${c.slug}`} className="mt-1 block text-sm text-[#6B675C] hover:underline">
+                    Guía de materiales
                   </LocalizedClientLink>
                 )}
               </li>

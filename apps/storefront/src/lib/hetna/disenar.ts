@@ -71,6 +71,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Llaveros, placas de mascota y adornos con nombre: elige letra y forma y descarga gratis el DXF para láser o el STL para impresión 3D.",
   },
   {
+    slug: "texturizador",
+    nombre: "Texturizador para impresión 3D",
+    texto: "Placa con un patrón de palabras e íconos para texturizar barro, fondant o plastilina.",
+    icono: "relieve",
+    acceso: "gratis",
+    titulo: "Texturizador 3D gratis: placa con patrón en STL",
+    descripcion:
+      "Haz una placa texturizadora con nombres, palabras e íconos repetidos (estrellas, corazones, huellitas, copos…), en relieve o hundida y en espejo para que se lea al presionar. Descarga gratis el STL para imprimir en 3D y úsala en barro, fondant, galletas o plastilina.",
+    meta: "Texturizador gratis para impresión 3D: placa con palabras e íconos repetidos, en relieve o hundida y en espejo. Descarga el STL al instante.",
+  },
+  {
     slug: "rompecabezas",
     nombre: "Rompecabezas",
     texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
@@ -420,6 +431,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
+      { slug: "texturizador", corto: "Texturizador" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },
     ],
