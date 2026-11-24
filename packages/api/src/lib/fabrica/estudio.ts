@@ -16,7 +16,7 @@
 //                   descripción y la hora que mejor ha funcionado.
 //
 // Gasto: cada video cuesta centavos de dólar (imagen ~0.04 + video ~0.0175 por
-// segundo); hay un tope diario (ESTUDIO_TOPE_USD, por omisión 1.5) y si se
+// segundo); hay un tope diario (ESTUDIO_TOPE_USD, por omisión 3) y si se
 // pasa, no se hace. Llave: FAL_KEY en el .env del backend.
 import Anthropic from "@anthropic-ai/sdk"
 import fs from "fs"
@@ -39,11 +39,13 @@ import { calificarVideo, escenaHiggsfield, motorHiggsfield } from "./higgsfield"
 export const T_ESTUDIO = "hetna_estudio"
 const FAL = () => (process.env.FAL_KEY || "").trim()
 export const estudioListo = () => !!FAL() && iaSocial() && ffmpegDisponible()
-const TOPE_USD = () => Number(process.env.ESTUDIO_TOPE_USD || 1.5)
+// 3 USD al día: un video de 7 escenas con H3 Max cuesta ≈ 1.9 USD
+const TOPE_USD = () => Number(process.env.ESTUDIO_TOPE_USD || 3)
 const MODELO_IMAGEN = () => process.env.ESTUDIO_MODELO_IMAGEN || "fal-ai/flux-pro/v1.1"
-const MODELO_VIDEO = () => process.env.ESTUDIO_MODELO_VIDEO || "minimax/h3-max-turbo/image-to-video"
+// H3 Max completo (23 nov 2026): más detalle en humo, chispas y metal que Turbo, al doble de precio por segundo (US$0.0375 vs 0.01875)
+const MODELO_VIDEO = () => process.env.ESTUDIO_MODELO_VIDEO || "minimax/h3-max/image-to-video"
 const USD_IMAGEN = 0.04
-const USD_VIDEO_SEG = 0.0175
+const USD_VIDEO_SEG = 0.0375 // H3 Max (Turbo era 0.01875)
 
 // ---------------------------------------------------------------------
 // Fórmulas (de las guías de copywriting que dio el dueño)
