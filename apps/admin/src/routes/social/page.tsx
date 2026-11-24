@@ -1297,7 +1297,7 @@ type Estrat = {
   publicos: { clave: string; nombre: string; objetivo: string; destino: string; pilares: string[] }[]
   mercados: { clave: string; nombre: string; zona: string; nota: string; pct: number; redes: string[] }[]
 }
-const NOMBRE_PUBLICO: Record<string, string> = { clientes_empresa: "Empresas", clientes_particulares: "Particulares", talleres: "Talleres", proveedores: "Proveedores" }
+const NOMBRE_PUBLICO: Record<string, string> = { clientes_empresa: "Empresas", clientes_particulares: "Particulares", talleres: "Talleres", proveedores: "Proveedores", comunidad: "Comunidad", estudio: "Herramienta de la semana" }
 const ESTADO_HUECO: Record<string, [string, string]> = {
   vacio: ["Sin contenido", C.tenue],
   borrador: ["Borrador por revisar", "#8A5A00"],
