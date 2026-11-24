@@ -86,6 +86,20 @@ export const SECCIONES: SeccionDiseno[] = [
     ],
   },
   {
+    id: "modelos-3d",
+    titulo: "Modelos 3D a tu medida",
+    subtitulo: "Para impresión 3D · mueve las medidas y descarga el STL, sin saber CAD",
+    ver: { texto: "Ver los 15", href: "/disenar/modelos-3d" },
+    tarjetas: [
+      { nombre: "Organizador de fresas y brocas", texto: "Agujeros a la medida de tus zancos.", href: "/disenar/modelos-3d?modelo=organizador-fresas", icono: "anidado", color: AZUL, acceso: "gratis", para: ["3d"], claves: "broca fresa end mill porta zanco router stl" },
+      { nombre: "Soporte de motor NEMA 17 / 23", texto: "Escuadra con refuerzos y barrenos.", href: "/disenar/modelos-3d?modelo=soporte-nema", icono: "cam", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "motor paso a paso stepper bracket stl" },
+      { nombre: "Charola con divisiones", texto: "Compartimentos para tornillos y piezas.", href: "/disenar/modelos-3d?modelo=charola-divisiones", icono: "anidado", color: AZUL, acceso: "gratis", para: ["3d"], claves: "bandeja organizador tornillos tuercas stl" },
+      { nombre: "Caja con tapa a presión", texto: "Caja y tapa listas para imprimir.", href: "/disenar/modelos-3d?modelo=caja-tapa", icono: "caja", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "estuche contenedor electronica stl" },
+      { nombre: "Abrazadera, escuadra y espaciadores", texto: "Herrajes de taller a tu medida.", href: "/disenar/modelos-3d?modelo=abrazadera-tubo", icono: "partir", color: AZUL, acceso: "gratis", para: ["3d"], claves: "clip tubo angulo separador buje brida stl" },
+      { nombre: "Macetas, lapiceros y soportes", texto: "Para casa y oficina.", href: "/disenar/modelos-3d?modelo=maceta", icono: "torno", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "maceta lapicero celular gancho stl" },
+    ],
+  },
+  {
     id: "taller",
     titulo: "Para el taller",
     subtitulo: "Muebles, anidado, rompecabezas, patrones y conversión de archivos",

@@ -210,6 +210,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     imagen: "/img/partir-3d/esfera-piezas.webp",
   },
   {
+    slug: "modelos-3d",
+    nombre: "Modelos 3D a tu medida",
+    texto: "Organizadores, soportes NEMA, abrazaderas, cajas, macetas y más: ajusta las medidas y descarga el STL.",
+    icono: "partir",
+    acceso: "gratis",
+    titulo: "Modelos 3D paramétricos para imprimir gratis",
+    descripcion:
+      "Elige un modelo para impresión 3D (organizador de fresas, soporte de motor NEMA 17/23, abrazadera de tubo, espaciador, brida, escuadra, charola con divisiones, caja con tapa, maceta, soporte de celular y más), ajusta sus medidas con deslizadores, míralo en 3D y descarga el STL cerrado, listo para tu impresora. O pide que un taller de HETNA te lo imprima. Sin saber CAD.",
+    meta: "Modelos 3D paramétricos gratis: ajusta las medidas de organizadores, soportes NEMA, abrazaderas, cajas y macetas y descarga el STL listo para imprimir.",
+  },
+  {
     slug: "svg-a-stl",
     nombre: "SVG o DXF a STL",
     texto: "Archivos de corte láser a 3D: corte, grabado y líneas marcadas por color; placa base para llaveros.",
@@ -410,6 +421,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
       { slug: "partir-3d", corto: "Partir modelo" },
+      { slug: "modelos-3d", corto: "Modelos a tu medida" },
     ],
   },
   "2d": {
