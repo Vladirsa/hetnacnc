@@ -21,6 +21,7 @@ import { esSlugDirectorio } from "@/lib/hetna/slug-directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 import { listLearningArticles } from "@/lib/data/learning-articles"
+import { PLANOS } from "@/lib/planos/modelos"
 import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { SITIO_CANONICO } from "@/lib/helpers/hreflang"
@@ -89,6 +90,8 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/talleres/fundadores", "weekly", 0.7],
   ["/talleres/ranking", "daily", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
+  ["/planos", "weekly", 0.7],
+  ...(PLANOS.map((p) => [`/planos/${p.slug}`, "monthly", 0.6]) as [string, Frecuencia, number][]),
   ["/anunciate", "monthly", 0.6],
   ["/quienes-somos", "monthly", 0.5],
   ["/contacto", "monthly", 0.5],
