@@ -38,6 +38,8 @@ export type FuncionPlan = { nombre: string; estado: EstadoFuncion; planes: [Celd
 export const FUNCIONES_PLANES: FuncionPlan[] = [
   { nombre: "Cotizaciones", estado: "disponible", planes: [`${LIMITE_COTIZACIONES_GRATIS} al mes`, "Sin límite", "Sin límite", "Sin límite"] },
   { nombre: "PDF de la cotización", estado: "disponible", planes: ["Con marca de agua HETNA CNC", "Con tu logo, sin marca de agua", "Con tu logo, sin marca de agua", "Con tu logo, sin marca de agua"] },
+  // Configuración → Diseño de tu cotización (Cotizador, PR #62 y #65)
+  { nombre: "Plantillas de cotización", estado: "disponible", planes: ["2: ticket para WhatsApp y clásica", "4, con QR para aceptar en línea", "Las 10: visual, por volumen, bilingüe, corporativa…", "Las 10: visual, por volumen, bilingüe, corporativa…"] },
   { nombre: "Cotización profesional (formato internacional)", estado: "disponible", planes: ["1 de muestra", "Sin límite", "Sin límite", "Sin límite"] },
   { nombre: "Sube DXF, SVG, STL u OBJ: medidas, plano y precio desde el archivo", estado: "disponible", planes: ["En la cotización de muestra", true, true, true] },
   { nombre: "Clientes, productos y avances", estado: "disponible", planes: [true, true, true, true] },
@@ -92,4 +94,3 @@ export const PLANES_APP: PlanApp[] = BASE_PLANES.map((b, i) => {
 
 /** Precio por clave de plan ("$299"), para el panel del taller y la cuenta. */
 export const PRECIO_PLAN: Record<string, string> = Object.fromEntries(BASE_PLANES.map((p) => [p.clave, p.precio]))
-
