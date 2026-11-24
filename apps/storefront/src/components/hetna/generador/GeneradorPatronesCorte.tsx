@@ -11,9 +11,10 @@ import { useState } from "react"
 import { GeneradorBisagra } from "./GeneradorBisagra"
 import { GeneradorCelosias } from "./GeneradorCelosias"
 import { GeneradorPatron } from "./GeneradorPatron"
+import { GeneradorVoronoi } from "./GeneradorVoronoi"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoPatron = "celosia" | "radial" | "bisagra"
+export type ModoPatron = "celosia" | "voronoi" | "radial" | "bisagra"
 
 const MODOS: Modo<ModoPatron>[] = [
   {
@@ -25,6 +26,18 @@ const MODOS: Modo<ModoPatron>[] = [
       <>
         <rect x="6" y="6" width="28" height="28" rx="2" />
         <path d="M14 10l3 5-3 5-3-5zM26 10l3 5-3 5-3-5zM20 20l3 5-3 5-3-5z" />
+      </>
+    ),
+  },
+  {
+    id: "voronoi",
+    slug: "patron-voronoi",
+    nombre: "Voronoi",
+    nota: "Celdas irregulares, como un panal desordenado",
+    icono: (
+      <>
+        <path d="M6 14l9-4 7 5-2 9-9 3z" />
+        <path d="M22 15l9-5 4 7-4 9-11-2zM11 27l9-3 11 2-2 8H13z" />
       </>
     ),
   },
@@ -59,6 +72,7 @@ export function GeneradorPatronesCorte({ modoInicial = "celosia" }: { modoInicia
   const cabecera = <SelectorModos titulo="Patrones de corte" modos={MODOS} modo={modo} cambiar={setModo} />
 
   if (modo === "radial") return <GeneradorPatron cabecera={cabecera} />
+  if (modo === "voronoi") return <GeneradorVoronoi cabecera={cabecera} />
   if (modo === "bisagra") return <GeneradorBisagra cabecera={cabecera} />
   return <GeneradorCelosias cabecera={cabecera} />
 }

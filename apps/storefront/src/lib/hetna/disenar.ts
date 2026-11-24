@@ -231,6 +231,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Diseña gratis celosías y paneles calados para divisores, puertas de closet, plafones y fachadas: 10 patrones, medidas, marco y puente entre huecos. Descarga DXF, SVG o PDF para router, láser o plasma.",
   },
   {
+    slug: "patron-voronoi",
+    nombre: "Patrón Voronoi",
+    texto: "Celdas irregulares para celosías, lámparas, mesas y mosaicos: cada clic, un diseño nuevo.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Generador de patrón Voronoi para láser y CNC",
+    descripcion:
+      "Crea gratis paneles y mosaicos con patrón Voronoi: rectángulo o círculo, cuántas celdas, puente, redondeo y dónde van más celdas. Cada clic da un diseño nuevo. Descarga DXF, SVG o PDF para láser, router o plasma.",
+    meta: "Genera gratis patrones Voronoi para celosías, lámparas y mosaicos: elige forma, celdas y puente y descarga el DXF o SVG para cortar.",
+  },
+  {
     slug: "bisagra-viva",
     nombre: "Bisagra viva (madera flexible)",
     texto: "Cortes que dejan doblar el MDF: cajas redondeadas, lámparas y libretas.",
