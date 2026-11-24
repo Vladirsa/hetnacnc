@@ -41,7 +41,10 @@ NO_EMPRESA = ("probados.", "plastico.com", "metalmecanica.com", "industriamart",
               "cylex", "infoisinfo", "guiamexico", "paginasamarillas", "directorio", "maquinadosenmexico", "agalmasourcing",
               "alibaba.", "made-in-china", "indiamart", "kompass", "europages", "thomasnet", "blogspot.", "wordpress.com",
               "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "mercadolibre.", "amazon.",
-              "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas")
+              "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas",
+              # Portales B2B de exportación (no son fabricantes): exporthub, tradekey, ec21…
+              "exporthub", "tradekey", "ec21.", "globalsources", "dhgate", "aliexpress", "tradeindia", "go4worldbusiness",
+              "hktdc", "ecvv", "diytrade", "tradewheel", "1688.com", "hisupplier", "machineryline", "directindustry")
 
 
 # Preferencia de modelos de Groq (se usa el primero que la cuenta tenga activo).

@@ -125,6 +125,10 @@ const REINTENTO_MS = 60_000
 let enCurso: { desde: number; promesa: Promise<EmpresaDirectorio[]> } | null = null
 let ultimaBuena: EmpresaDirectorio[] = []
 
+// Portales y directorios B2B que el buscador confundió con fabricantes (ExportHub…)
+const PORTAL = /\b(b2b|marketplace|trade portal|directory|directorio|buyers? and suppliers|online platform)\b|exporthub|tradekey|globalsources|ec21|dhgate|aliexpress|tradeindia/i
+const esPortal = (e: { empresa: string; slug: string; servicios?: string }) => PORTAL.test(`${e.empresa} ${e.slug} ${e.servicios || ""}`)
+
 function leerTodo(): Promise<EmpresaDirectorio[]> {
   const ahora = Date.now()
   if (enCurso && ahora - enCurso.desde < VIGENCIA_MS) return enCurso.promesa
@@ -155,7 +159,7 @@ async function leerHoja(): Promise<EmpresaDirectorio[]> {
     if (!res.ok) return []
     const { empresas = [] } = (await res.json()) as { empresas?: Crudo[] }
     return empresas
-      .filter((e) => e && e.slug && e.empresa)
+      .filter((e) => e && e.slug && e.empresa && !esPortal(e))
       .map(({ region, ...e }) => {
         // Si la hoja no trae estado ni una ciudad conocida, se busca en el nombre y
         // los servicios ("Corte láser CDMX", "Maquinados en Saltillo").
