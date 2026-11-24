@@ -46,8 +46,8 @@ export const EMPRESA = {
   entregaTotal: "5 a 10", // días hábiles en total
   actualizado: "7 de octubre de 2026",
   // Aviso de privacidad: versión y fecha en que entra en vigor (cambiar ambas al modificarlo)
-  privacidadVersion: "2.6",
-  privacidadVigencia: { es: "14 de noviembre de 2026", en: "November 14, 2026" },
+  privacidadVersion: "2.7",
+  privacidadVigencia: { es: "24 de noviembre de 2026", en: "November 24, 2026" },
 }
 
 export const ubicacionEmpresa = () => `${EMPRESA.ciudad}, ${EMPRESA.estado}, México`

@@ -93,6 +93,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/terminos-y-condiciones", "yearly", 0.2],
   ["/terminos-vendedores", "yearly", 0.2],
   ["/aviso-de-privacidad", "yearly", 0.2],
+  ["/eliminar-cuenta", "yearly", 0.1],
 ]
 
 // Categorías cuya página redirige a otra (categories/[category]/page.tsx).
