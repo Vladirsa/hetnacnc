@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { JsonLd } from "@/components/hetna/JsonLd"
-import { SimuladorCnc } from "@/components/hetna/simulador/SimuladorCnc"
+import { SimuladorModos } from "@/components/hetna/simulador/SimuladorModos"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { migas } from "@/lib/hetna/schema"
 
@@ -9,9 +9,9 @@ const URL_PAGINA = "https://hetnacnc.com/mx/cam/simulador"
 
 export const metadata: Metadata = {
   alternates: { canonical: URL_PAGINA },
-  title: "Simulador CNC gratis en línea: prueba tu G-code en 3D",
+  title: "Simulador CNC gratis: fresadora, router y torno en 3D",
   description:
-    "Simulador de fresadora y router CNC en el navegador: escribe o sube tu G-code, míralo cortar en 3D y encuentra choques y errores antes de usar tu máquina. Gratis.",
+    "Simulador de fresadora, router y torno CNC en el navegador: escribe o sube tu G-code, míralo cortar en 3D y encuentra choques y errores antes de usar tu máquina. Gratis.",
   openGraph: {
     type: "website",
     locale: "es_MX",
@@ -36,6 +36,18 @@ const CODIGOS: [string, string][] = [
   ["M30", "Fin del programa."],
 ]
 
+// Torno (lib/simulador/torno.ts)
+const CODIGOS_TORNO: [string, string][] = [
+  ["X / Z", "X es el DIÁMETRO (no el radio); Z va a lo largo y Z0 es la cara de la pieza."],
+  ["U / W", "Movimientos relativos en X (diámetro) y en Z."],
+  ["G90", "En torno es el ciclo de cilindrado: entra, corta hasta Z, sale y regresa. Para otra pasada basta escribir la nueva X."],
+  ["G94", "Ciclo de refrentado: corta la cara de afuera hacia el centro."],
+  ["G2 / G3", "Arcos con R, o con I (en radio) y K."],
+  ["G96 / G97", "Velocidad de corte constante en m/min (G96) o RPM fijas (G97). G50 S pone el tope de RPM."],
+  ["G98 / G99", "Avance en mm por minuto (G98) o en mm por vuelta (G99, el normal en torno)."],
+  ["T0101", "Herramienta 1 con su corrector 1."],
+]
+
 const PREGUNTAS = [
   {
     p: "¿Qué es un simulador CNC?",
@@ -48,6 +60,10 @@ const PREGUNTAS = [
   {
     p: "¿Sirve para mi router GRBL, Mach3 o mi fresadora Fanuc?",
     r: "Sí para aprender y revisar trayectorias: usa el G-code estándar ISO que comparten GRBL, Mach3, Mach4, LinuxCNC y los controles tipo Fanuc. Los ciclos especiales, macros y la compensación de radio (G41/G42) de cada marca no se simulan.",
+  },
+  {
+    p: "¿También simula torno CNC?",
+    r: "Sí: torno de 2 ejes estilo Fanuc, con X en diámetro, U y W, G96/G97, G98/G99 y los ciclos G90 (cilindrado) y G94 (refrentado). Los ciclos G71/G70 y las roscas llegan en una siguiente versión; si tu programa los trae, el simulador te avisa.",
   },
   {
     p: "¿Mi programa se sube a internet?",
@@ -63,7 +79,7 @@ export default function PaginaSimulador() {
           {
             "@context": "https://schema.org",
             "@type": "WebApplication",
-            name: "Simulador CNC de HETNA",
+            name: "Simulador CNC de HETNA (fresadora, router y torno)",
             url: URL_PAGINA,
             applicationCategory: "EducationalApplication",
             operatingSystem: "Navegador web",
@@ -87,19 +103,19 @@ export default function PaginaSimulador() {
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="m-0 text-[16px] font-bold">
           Simulador <span className="text-[#F28A3C]">CNC</span>{" "}
-          <span className="text-[12.5px] font-normal text-[#8A97AB]">fresadora y router de 3 ejes: escribe tu G-code y míralo cortar</span>
+          <span className="text-[12.5px] font-normal text-[#8A97AB]">fresadora, router y torno: escribe tu G-code y míralo cortar</span>
         </h1>
         <LocalizedClientLink href="/servicios/aprendizaje-cnc" className="text-[12.5px] font-semibold text-[#F28A3C] hover:underline">
           Cursos de la Academia →
         </LocalizedClientLink>
       </div>
 
-      <SimuladorCnc />
+      <SimuladorModos />
 
       <section className="mx-auto mt-8 max-w-[1000px] text-[#C9CED6]">
         <h2 className="text-[17px] font-bold text-white">Cómo se usa</h2>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-[14px]">
-          <li>Elige un ejercicio o escribe tu programa (también puedes abrir un archivo .nc, .gcode o .tap).</li>
+          <li>Elige la máquina (fresadora y router, o torno) y un ejercicio, o escribe tu programa (también puedes abrir un archivo .nc, .gcode o .tap).</li>
           <li>Pon las medidas de tu material y tu fresa. Z0 es la cara de arriba del material.</li>
           <li>Presiona <b>Ciclo de inicio</b>. Con <b>Bloque a bloque</b> la máquina se detiene en cada línea, como en una máquina real.</li>
           <li>Si hay un error, la máquina se detiene en esa línea y te dice qué corregir.</li>
@@ -110,6 +126,20 @@ export default function PaginaSimulador() {
           <table className="w-full text-left text-[13.5px]">
             <tbody>
               {CODIGOS.map(([c, d]) => (
+                <tr key={c} className="border-t border-[#2B3648]">
+                  <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]">{c}</td>
+                  <td className="py-1.5">{d}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="mt-6 text-[17px] font-bold text-white">En el torno</h2>
+        <div className="mt-2 overflow-x-auto">
+          <table className="w-full text-left text-[13.5px]">
+            <tbody>
+              {CODIGOS_TORNO.map(([c, d]) => (
                 <tr key={c} className="border-t border-[#2B3648]">
                   <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]">{c}</td>
                   <td className="py-1.5">{d}</td>
