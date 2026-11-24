@@ -94,3 +94,4 @@ export const PLANES_APP: PlanApp[] = BASE_PLANES.map((b, i) => {
 
 /** Precio por clave de plan ("$299"), para el panel del taller y la cuenta. */
 export const PRECIO_PLAN: Record<string, string> = Object.fromEntries(BASE_PLANES.map((p) => [p.clave, p.precio]))
+
