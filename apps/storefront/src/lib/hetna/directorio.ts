@@ -202,11 +202,22 @@ export async function directorioPorPais(): Promise<{ pais: string; empresas: Emp
 }
 
 /** Para el mapa: cuántas empresas hay en cada país fuera de México (nunca nombres). */
-export type EmpresasPorPais = { pais: string; total: number }[]
+export type EmpresasPorPais = { pais: string; total: number; ruta?: string }[]
 export async function contarPorPais(): Promise<EmpresasPorPais> {
   return (await directorioPorPais())
     .filter((g) => !mismoPais(g.pais, "México") && g.pais !== "Sin país")
     .map((g) => ({ pais: g.pais, total: g.empresas.length }))
+}
+
+/** Proveedores de importación: fabricantes y distribuidores de países que no tienen
+ *  página propia en HETNA (China, Taiwán, Turquía, Brasil…), agrupados por país.
+ *  `conPagina`: países que ya tienen su página (/latinoamerica/<país>, /espana…). */
+export async function proveedoresImportacion(conPagina: string[]): Promise<{ pais: string; empresas: EmpresaDirectorio[] }[]> {
+  const fuera = new Set(["mexico", ...conPagina.map(sinAcentos)])
+  return (await directorioPorPais())
+    .filter((g) => !fuera.has(sinAcentos(g.pais)) && g.pais !== "Sin país")
+    .map((g) => ({ pais: g.pais, empresas: g.empresas.filter((e) => e.tipo === "proveedor") }))
+    .filter((g) => g.empresas.length > 0)
 }
 
 /** Cualquier país: para «Quitar este perfil», que también sale en las páginas de Latinoamérica. */

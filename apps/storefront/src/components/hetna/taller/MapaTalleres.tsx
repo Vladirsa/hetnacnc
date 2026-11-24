@@ -326,7 +326,7 @@ export default function MapaTalleres({
             .bindPopup(
               `<strong style="color:#142033;font-size:15px">${esc(p.pais)}</strong>` +
                 `<div style="margin-top:6px;color:#40403A">${p.total} ${p.total === 1 ? "empresa CNC" : "empresas CNC"} por unirse a HETNA</div>` +
-                `<a href="/${locale}/latinoamerica" style="display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#C2560A">HETNA en más países →</a>`
+                `<a href="${esc(p.ruta || `/${locale}/latinoamerica`)}" style="display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#C2560A">${p.ruta && p.ruta.includes("/importacion") ? "Ver proveedores de importación →" : "Ver empresas de " + esc(p.pais) + " →"}</a>`
             )
         }
       }
