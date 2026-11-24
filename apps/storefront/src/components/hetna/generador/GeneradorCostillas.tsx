@@ -5,12 +5,12 @@
 // imagen, con ranuras o varillas para armar y las piezas numeradas en hojas.
 // El motor está en lib/generador/costillas.ts. La imagen no sale del navegador
 // (salvo si se pide la profundidad con IA, que se calcula en el servidor de HETNA).
-import { useEffect, useMemo, useState } from "react"
+import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { type Alturas, type ModoCostillas, hacerCostillas } from "@/lib/generador/costillas"
+import { type Alturas, INICIO_COSTILLAS, type ModoCostillas, hacerCostillas } from "@/lib/generador/costillas"
 import { type Profundidad, grisDeProfundidad, iaDisponible, pedirProfundidad } from "@/lib/generador/profundidad-ia"
 import { desenfocar, gris } from "@/lib/generador/trazado"
 
@@ -22,17 +22,14 @@ const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false })
 
 const LADO_IMAGEN = 600
 
-const INICIO: Record<ModoCostillas, { largo: string; alto: string; fondo: string; relieve: string }> = {
-  pared: { largo: "1200", alto: "900", fondo: "40", relieve: "100" },
-  banca: { largo: "1200", alto: "450", fondo: "400", relieve: "60" },
-}
+const INICIO = INICIO_COSTILLAS
 
 export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode }) {
   const [modo, setModo] = useState<ModoCostillas>("pared")
-  const [largo, setLargo] = useState(INICIO.pared.largo)
-  const [alto, setAlto] = useState(INICIO.pared.alto)
-  const [fondo, setFondo] = useState(INICIO.pared.fondo)
-  const [relieve, setRelieve] = useState(INICIO.pared.relieve)
+  const [largo, setLargo] = useState(String(INICIO.pared.largo))
+  const [alto, setAlto] = useState(String(INICIO.pared.alto))
+  const [fondo, setFondo] = useState(String(INICIO.pared.fondo))
+  const [relieve, setRelieve] = useState(String(INICIO.pared.relieve))
   const [espesor, setEspesor] = useState("18")
   const [separacion, setSeparacion] = useState("22")
   const [fresa, setFresa] = useState("6.35")
@@ -61,10 +58,10 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
 
   const cambiarModo = (m: ModoCostillas) => {
     setModo(m)
-    setLargo(INICIO[m].largo)
-    setAlto(INICIO[m].alto)
-    setFondo(INICIO[m].fondo)
-    setRelieve(INICIO[m].relieve)
+    setLargo(String(INICIO[m].largo))
+    setAlto(String(INICIO[m].alto))
+    setFondo(String(INICIO[m].fondo))
+    setRelieve(String(INICIO[m].relieve))
   }
 
   // Con la IA prendida se pide la profundidad una vez por imagen
@@ -100,30 +97,29 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
     return { datos, ancho: im.width, alto: im.height }
   }, [subida, altura, prof, invertir])
 
-  const r = useMemo(
-    () =>
-      alturas
-        ? hacerCostillas(alturas, {
-            modo,
-            largo: numero(largo),
-            alto: numero(alto),
-            fondo: numero(fondo),
-            relieve: numero(relieve),
-            espesor: numero(espesor),
-            separacion: numero(separacion),
-            fresa: numero(fresa),
-            holgura: numero(holgura),
-            travesanos: numero(travesanos),
-            anchoTravesano: numero(anchoTravesano),
-            grosorAsiento: numero(grosorAsiento),
-            pata: numero(pata),
-            varilla: numero(varilla),
-            hoja: { ancho: numero(hojaAncho), alto: numero(hojaAlto) },
-            numerar,
-          })
-        : null,
-    [alturas, modo, largo, alto, fondo, relieve, espesor, separacion, fresa, holgura, travesanos, anchoTravesano, grosorAsiento, pata, varilla, hojaAncho, hojaAlto, numerar],
-  )
+  const opciones = {
+    modo,
+    largo: numero(largo),
+    alto: numero(alto),
+    fondo: numero(fondo),
+    relieve: numero(relieve),
+    espesor: numero(espesor),
+    separacion: numero(separacion),
+    fresa: numero(fresa),
+    holgura: numero(holgura),
+    travesanos: numero(travesanos),
+    anchoTravesano: numero(anchoTravesano),
+    grosorAsiento: numero(grosorAsiento),
+    pata: numero(pata),
+    varilla: numero(varilla),
+    hoja: { ancho: numero(hojaAncho), alto: numero(hojaAlto) },
+    numerar,
+  }
+  // Los campos responden al instante; el mueble se recalcula sin trabar la página
+  const clave = JSON.stringify(opciones)
+  const claveDiferida = useDeferredValue(clave)
+  const alturasDiferidas = useDeferredValue(alturas)
+  const r = useMemo(() => (alturasDiferidas ? hacerCostillas(alturasDiferidas, JSON.parse(claveDiferida)) : null), [alturasDiferidas, claveDiferida])
   const tris = useMemo(() => (r ? trisCostillas(r.piezas3D, r.espesor) : []), [r])
 
   const banca = modo === "banca"
@@ -234,6 +230,12 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
     </div>
   )
 
+  const datos: [string, string][] = []
+  if (r) {
+    datos.push(["Costillas", `${r.costillas} (cada ${Math.round(r.paso * 10) / 10} mm)`], ["Piezas", String(r.piezas)], ["Hojas", String(r.hojas)])
+    if (!banca) datos.push(["Travesaños", String(r.travesanos)])
+    else if (r.varillas) datos.push(["Varillas", `${r.varillas} de ${r.largoVarilla} mm`], ["Separadores", `${r.separadores} de ${Math.round(r.separacionReal * 10) / 10} mm`])
+  }
   const m = r?.medidas
   const medida = m ? `${Math.round(m.largo)}x${Math.round(m.fondo)}x${Math.round(m.alto)}` : ""
   const nombrePieza = banca ? "Banca de costillas" : "Pared de costillas"
@@ -266,24 +268,16 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
       archivo={`costillas-${modo}-${subida?.nombre || "imagen"}-${medida}`}
       pieza={m ? `${nombrePieza} ${medida} mm, ${r.costillas} costillas de ${r.espesor} mm` : nombrePieza}
       material={r ? `MDF o triplay de ${r.espesor} mm` : undefined}
-      datos={
-        r
-          ? [
-              ["Costillas", `${r.costillas} (cada ${Math.round(r.paso * 10) / 10} mm)`],
-              ["Piezas", String(r.piezas)],
-              ["Hojas", String(r.hojas)],
-              ...(banca
-                ? r.largoVarilla
-                  ? ([
-                      ["Varillas", `${r.varillas} de ${r.largoVarilla} mm`],
-                      ["Separadores", `${r.separadores} de ${Math.round(r.separacionReal * 10) / 10} mm`],
-                    ] as [string, string][])
-                  : []
-                : ([["Travesaños", String(r.travesanos)]] as [string, string][])),
-            ]
-          : []
+      datos={datos}
+      vacio={
+        <p className="text-center text-[14px] text-[#8A97AB]">
+          {subida && altura === "ia"
+            ? estadoIA === "error"
+              ? "No se pudo calcular la profundidad con IA: reintenta o usa «Por brillo»."
+              : "La IA está calculando la profundidad…"
+            : `Sube una imagen y aquí aparece tu ${banca ? "banca" : "pared"} de costillas, en 3D y lista para cortar.`}
+        </p>
       }
-      vacio={<p className="text-center text-[14px] text-[#8A97AB]">Sube una imagen y aquí aparece tu {banca ? "banca" : "pared"} de costillas, en 3D y lista para cortar.</p>}
     />
   )
 }

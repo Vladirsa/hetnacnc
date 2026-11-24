@@ -4,19 +4,46 @@
 import { ShapeUtils, Vector2 } from "three"
 
 import type { Pieza3D } from "@/lib/generador/costillas"
+import { type P, area } from "@/lib/generador/geo2d"
 
-type P = [number, number]
+/**
+ * Quita puntos que casi no cambian la forma (Ramer–Douglas–Peucker, tolerancia
+ * en mm): el perfil de una costilla trae un punto cada 3 mm y en la vista
+ * basta con mucho menos; las esquinas de las ranuras se quedan.
+ */
+function simplificar(pts: P[], tol: number): P[] {
+  if (pts.length < 8) return pts
+  const quedan = new Uint8Array(pts.length)
+  const pila: [number, number][] = [[0, pts.length - 1]]
+  quedan[0] = quedan[pts.length - 1] = 1
+  while (pila.length) {
+    const [i, j] = pila.pop()!
+    const [ax, ay] = pts[i]
+    const [bx, by] = pts[j]
+    const largo = Math.hypot(bx - ax, by - ay) || 1
+    let peor = -1
+    let dist = tol
+    for (let k = i + 1; k < j; k++) {
+      const d = Math.abs((bx - ax) * (ay - pts[k][1]) - (ax - pts[k][0]) * (by - ay)) / largo
+      if (d > dist) { dist = d; peor = k }
+    }
+    if (peor >= 0) {
+      quedan[peor] = 1
+      pila.push([i, peor], [peor, j])
+    }
+  }
+  return pts.filter((_, k) => quedan[k])
+}
 
-const area = (p: P[]) => p.reduce((a, [x, y], i) => a + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0) / 2
-
-export function trisCostillas(piezas: Pieza3D[], espesor: number): number[] {
+export function trisCostillas(piezas: Pieza3D[], espesor: number, tol = 0.8): number[] {
   const tris: number[] = []
   const e = espesor / 2
   for (const pz of piezas) {
     // a coordenadas del mundo (mm, Z arriba): costilla en el plano (u, v) en x;
     // travesaño en el plano (x, u) a la altura z
     const mundo = ([a, b]: P, w: number): [number, number, number] => (pz.tipo === "costilla" ? [pz.pos + w, a, b] : [a, b, pz.pos + w])
-    const contorno = area(pz.contorno) < 0 ? [...pz.contorno].reverse() : pz.contorno
+    const simple = simplificar(pz.contorno, tol)
+    const contorno = area(simple) < 0 ? [...simple].reverse() : simple
     const huecos = pz.huecos.map((h) => (area(h) > 0 ? [...h].reverse() : h))
     const caras = ShapeUtils.triangulateShape(
       contorno.map(([x, y]) => new Vector2(x, y)),

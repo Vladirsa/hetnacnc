@@ -15,7 +15,7 @@
 //          un puente, se quitan o se dejan sueltas.
 //   4. Contornos de los huecos (vectorizador, lib/generador/trazado) → mm,
 //      más el contorno del panel y los barrenos.
-import { type P, type Trazo, circulo, curvasATrazos, dibujo, rect } from "@/lib/generador/geo2d"
+import { type P, type Trazo, acotar, circulo, curvasATrazos, dibujo, rect } from "@/lib/generador/geo2d"
 import { type Imagen, curvasDeMascara, desenfocar, gris, umbralAutomatico } from "@/lib/generador/trazado"
 
 export type Proceso = "plasma" | "laser" | "router"
@@ -299,8 +299,6 @@ function puentesAIslas(material: Uint8Array, w: number, h: number, r: number): {
 
 export const LADO_MAX = 900 // px del lado largo del área calada (detalle vs. rapidez)
 
-/** Número finito dentro de [min, max]; si no es número, el valor por omisión. */
-const acotar = (x: number, min: number, max: number, omision: number) => (Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : omision)
 
 export const MEDIDA_MAX = 6000 // mm: una lámina grande; más ya no es una pieza
 

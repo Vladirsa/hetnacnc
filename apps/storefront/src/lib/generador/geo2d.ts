@@ -9,6 +9,9 @@ export type { P, Trazo, Dibujo }
 
 const TOL = 0.05 // mm de error al pasar curvas a tramos rectos
 
+/** Número finito dentro de [min, max]; si no es número, el valor por omisión. */
+export const acotar = (x: number, min: number, max: number, omision: number) => (Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : omision)
+
 export const trazo = (pts: P[], cerrado = true, capa = "corte"): Trazo => ({ pts, cerrado, capa })
 
 export function rect(x0: number, y0: number, x1: number, y1: number, r = 0, capa = "corte"): Trazo {

@@ -118,6 +118,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
 
   const { subida, error: errorImagen, abrir } = useImagenSubida(LADO_IMAGEN, ({ im: p }) => {
     setRes(null)
+    setErrorCalculo("")
     // Un poco hacia adentro, para que los 4 puntos se vean completos y se puedan agarrar
     const mx = p.width * 0.04
     const my = p.height * 0.04

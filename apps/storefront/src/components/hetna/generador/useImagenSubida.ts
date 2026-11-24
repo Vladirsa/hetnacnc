@@ -63,5 +63,5 @@ export function useImagenSubida(lado: number, alCargar?: (s: ImagenSubida) => vo
     img.src = u
   }
 
-  return { subida, error, setError, abrir }
+  return { subida, error, abrir }
 }
