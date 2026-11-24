@@ -42,7 +42,7 @@ export type ResultadoLlavero = {
 }
 
 // curva (bezier) → puntos, con Y volteada (la fuente dibuja hacia abajo)
-function aplanar(c: Curva, paso = 0.3): P[] {
+export function aplanar(c: Curva, paso = 0.3): P[] {
   const pts: P[] = [[c.inicio[0], -c.inicio[1]]]
   let a: Pt = c.inicio
   for (const t of c.tramos) {

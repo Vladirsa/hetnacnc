@@ -9,7 +9,7 @@ declare module "clipper-lib" {
     }
     Clipper_CleanPolygons?: (paths: Path[], distancia: number) => Path[]
     PolyType: { ptSubject: number; ptClip: number }
-    ClipType: { ctUnion: number }
+    ClipType: { ctUnion: number; ctIntersection: number; ctDifference: number }
     PolyFillType: { pftNonZero: number; pftEvenOdd: number }
   }
   export default ClipperLib
