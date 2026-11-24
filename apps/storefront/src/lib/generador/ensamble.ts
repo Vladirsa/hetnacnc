@@ -179,7 +179,7 @@ function alivioT(Pp: P, V: P, N: P, r: number): P[] {
 export type TipoAlivio = "hueso" | "t" | "ninguno"
 
 // aplica alivios en las esquinas indicadas (índices) de un polígono
-function conAlivios(p: P[], r: number, esquina: (i: number, giro: number) => boolean, tipo: TipoAlivio = "hueso"): P[] {
+export function conAlivios(p: P[], r: number, esquina: (i: number, giro: number) => boolean, tipo: TipoAlivio = "hueso"): P[] {
   if (!(r > 0) || tipo === "ninguno") return p
   const out: P[] = []
   for (let i = 0; i < p.length; i++) {

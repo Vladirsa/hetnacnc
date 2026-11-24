@@ -102,6 +102,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Sube la foto o el plano de un mueble y la IA lo convierte en piezas con caja y espiga a tu medida, listas para cortar en router CNC.",
   },
   {
+    slug: "costillas-desde-imagen",
+    nombre: "Costillas desde imagen",
+    texto: "Pared paramétrica o banca de tablas paralelas que siguen tu imagen, vista armada en 3D.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Pared paramétrica y banca de costillas desde una imagen para CNC",
+    descripcion:
+      "Sube una imagen (una ola, una montaña, un logotipo o una foto con profundidad por IA) y sale una pared paramétrica, cabecera o banca hecha de costillas: cada tabla sigue la imagen. Ranuras a media madera o varillas roscadas, alivio para fresa, piezas numeradas y acomodadas en hojas, vista 3D y DXF para router CNC o láser.",
+    meta: "Sube una imagen y descarga gratis una pared paramétrica o banca de costillas en DXF, con ranuras, piezas numeradas y acomodo en hojas para router CNC.",
+  },
+  {
     slug: "molduras-tallados",
     nombre: "Molduras y tallados",
     texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
