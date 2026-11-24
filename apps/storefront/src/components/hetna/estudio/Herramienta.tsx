@@ -23,6 +23,7 @@ const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: 
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador/GeneradorTexturizador").then((m) => m.GeneradorTexturizador))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
+const GeneradorModelos3D = dynamic(() => import("@/components/hetna/generador/GeneradorModelos3D").then((m) => m.GeneradorModelos3D))
 const GeneradorPartir3D = dynamic(() => import("@/components/hetna/generador/GeneradorPartir3D").then((m) => m.GeneradorPartir3D))
 const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/GeneradorMuebles").then((m) => m.GeneradorMuebles))
 // desde imagen, ensamble sin tornillos y despiece de gabinetes: Muebles
@@ -41,6 +42,7 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "plantillas-empaque": GeneradorEmpaques,
   "organizador-cajon": GeneradorOrganizador,
   "partir-3d": GeneradorPartir3D,
+  "modelos-3d": GeneradorModelos3D,
 }
 
 export const HAY_HERRAMIENTA = new Set([...Object.keys(GENERADORES), ...Object.keys(MODO_PATRON), ...Object.keys(MODO_LETRERO), ...Object.keys(MODO_IMAGEN), ...Object.keys(MODO_ARCHIVOS), ...Object.keys(MODO_DECORACION), ...Object.keys(MODO_JUEGOS), ...Object.keys(MODO_MUEBLES)])
