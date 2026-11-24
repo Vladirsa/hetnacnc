@@ -48,6 +48,10 @@ desde el 26 de noviembre el nodo «Límite del día» sube solo a 40.
      Aclara que **cada vendedor factura (CFDI) a su cliente**.
    - **Instructores** → publicar cursos en la Academia HETNA.
    - **Compradores / servicios** → cotizar y publicar licitaciones de fabricación.
+   - **Talleres de servicio en México** (corte láser, router, plasma, maquinado, según
+     `productos_servicios`) → en lugar de los correos 1 a 4 de vendedor reciben los de
+     **licitaciones sin comisión ni pago por contacto** (`TALLER_SERVICIO`), con liga a la
+     página «<servicio> en <estado>» de su estado. Se miden con `utm_campaign=vendedor_p1l…`.
 2. +4 días: seguimiento corto.
 3. +6 días (día 10): último aviso (talleres fundadores) → `PAUSA`.
 4. +60 días: un recordatorio final → `FINALIZADO`.
