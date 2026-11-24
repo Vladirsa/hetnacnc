@@ -303,6 +303,12 @@ export default defineMiddlewares({
           matcher: "/api/cotizador-catalogo",
           middlewares: [leerMultipart({ campos: { archivos: 5 }, maxMb: 20 })],
         },
+        // Mandar la cotización por correo con su PDF (lib/cotizador-correo.ts)
+        {
+          method: ["POST"],
+          matcher: "/api/cotizador-correo",
+          middlewares: [leerMultipart({ campos: { pdf: 1 }, maxMb: 8 })],
+        },
         // CSD del taller (.cer y .key) para la factura electrónica: va directo a Facturapi
         {
           method: ["POST"],

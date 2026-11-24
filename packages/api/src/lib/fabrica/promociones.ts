@@ -24,6 +24,7 @@ import { cuatroPalabras, guionista, hfDisponible, horaTranquila, iconoPara, para
 
 export const T_PROMO = "hetna_promo"
 const IMG = (f: string) => `${STORE_URL}/img/herramientas/${f}`
+const IMG2D = (f: string) => `${STORE_URL}/img/estudio/${f}`
 
 type TextosHerramienta = { nombre: string; gancho: string; frases: string[]; cta: string; texto: string }
 export type Herramienta = TextosHerramienta & { clave: string; ruta: string; imagen: string | null; tema: string; publico: string; en?: TextosHerramienta }
@@ -105,6 +106,43 @@ export const HERRAMIENTAS: Herramienta[] = [
     gancho: "Llaveros con nombre en minutos", frases: ["Elige la letra y la forma", "DXF para láser o STL en relieve", "Con el agujero de la argolla"], cta: "Hazlos gratis",
     texto: "Haz llaveros, placas de mascota y adornos con nombre: elige la letra y la forma y descarga el DXF o SVG para láser o el STL con las letras en relieve. Gratis en HETNA 3D Studio.",
     en: { nombre: "Name keychains and tags", gancho: "Name keychains in minutes", frases: ["Pick the font and the shape", "DXF for laser or raised-letter STL", "With the key ring hole"], cta: "Make them free", texto: "Make keychains, pet tags and ornaments with names: pick the font and shape and download the DXF or SVG for laser or the STL with raised letters. Free in HETNA 3D Studio." },
+  },
+  // --- HETNA 2D Studio: generadores para cortar (imágenes hechas con la herramienta real, public/img/estudio) ---
+  {
+    clave: "celosia_imagen", nombre: "Celosía desde imagen", ruta: "/mx/disenar/celosia-desde-imagen", imagen: IMG2D("celosia-desde-imagen.jpg"), tema: "lamina", publico: "talleres",
+    gancho: "La celosía que viste en internet", frases: ["Sube la foto y marca 4 esquinas", "Ajusta huecos y puentes al plasma o láser", "Sale el DXF con marco y barrenos"], cta: "Hazla gratis en HETNA",
+    texto: "¿El cliente te mandó la foto de una celosía? Súbela a Celosía desde imagen, marca sus 4 esquinas y sale el panel en DXF con marco y barrenos, con los huecos y puentes al mínimo que corta tu plasma, láser o router. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Screen panel from an image", gancho: "That screen panel you saw online", frases: ["Upload the photo and mark 4 corners", "Holes and bridges sized for plasma or laser", "Get the DXF with frame and holes"], cta: "Make it free on HETNA", texto: "Got a photo of a decorative screen panel? Upload it to Screen panel from an image, mark its 4 corners and get the panel as a DXF with frame and mounting holes, with holes and bridges sized for your plasma, laser or router. Free in HETNA 2D Studio." },
+  },
+  {
+    clave: "costillas", nombre: "Costillas desde imagen", ruta: "/mx/disenar/costillas-desde-imagen", imagen: IMG2D("costillas-desde-imagen.jpg"), tema: "router", publico: "talleres",
+    gancho: "Una banca que sigue tu imagen", frases: ["Pared paramétrica o banca de costillas", "Vista armada en 3D", "Piezas numeradas y acomodadas en hojas"], cta: "Diséñala gratis",
+    texto: "Sube una imagen (una ola, montañas, un logotipo) y sale una pared paramétrica, cabecera o banca de costillas de MDF o triplay: la ves armada en 3D y bajas las piezas numeradas y acomodadas en hojas, con ranuras o barrenos para varilla. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Ribs from an image", gancho: "A bench shaped by your image", frases: ["Parametric wall or rib bench", "See it assembled in 3D", "Numbered parts nested on sheets"], cta: "Design it free", texto: "Upload an image (a wave, mountains, a logo) and get a parametric wall, headboard or bench made of MDF or plywood ribs: see it assembled in 3D and download numbered parts nested on sheets, with slots or rod holes. Free in HETNA 2D Studio." },
+  },
+  {
+    clave: "voronoi", nombre: "Patrón Voronoi", ruta: "/mx/disenar/patron-voronoi", imagen: IMG2D("patron-voronoi.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "Celdas orgánicas para cortar", frases: ["Panel calado o mosaico", "Rectángulo o círculo", "Un diseño distinto en cada clic"], cta: "Hazlo gratis",
+    texto: "Genera patrones Voronoi para lámparas, celosías y mosaicos: panel calado o piezas sueltas, en rectángulo o círculo, con más celdas al centro o en la orilla. Cada clic da un diseño distinto y bajas el DXF para láser, router o plasma. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Voronoi pattern", gancho: "Organic cells ready to cut", frases: ["Cut-out panel or mosaic", "Rectangle or circle", "A new design with every click"], cta: "Make it free", texto: "Generate Voronoi patterns for lamps, screens and mosaics: cut-out panel or loose pieces, rectangle or circle, with denser cells in the center or at the edge. Every click gives a new design and you download the DXF for laser, router or plasma. Free in HETNA 2D Studio." },
+  },
+  {
+    clave: "caja_juntas", nombre: "Caja con juntas de dedo", ruta: "/mx/disenar/caja-con-juntas", imagen: IMG2D("caja-con-juntas.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "Tu caja a la medida en un minuto", frases: ["Ancho, fondo, alto y espesor", "Juntas de dedo que sí embonan", "DXF, SVG o PDF y precio de corte"], cta: "Diséñala gratis",
+    texto: "Pon ancho, fondo, alto y espesor de MDF o acrílico y salen las piezas de la caja con juntas de dedo en DXF, SVG o PDF para láser o router, con un precio aproximado de corte y la opción de mandarla a fabricar. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Finger-joint box", gancho: "Your custom box in a minute", frases: ["Width, depth, height and thickness", "Finger joints that fit", "DXF, SVG or PDF plus a cut estimate"], cta: "Design it free", texto: "Enter width, depth, height and MDF or acrylic thickness and get the finger-joint box parts as DXF, SVG or PDF for laser or router, with an approximate cutting price and the option to have it made. Free in HETNA 2D Studio." },
+  },
+  {
+    clave: "mandalas", nombre: "Mandalas en capas", ruta: "/mx/disenar/patrones-radiales", imagen: IMG2D("patrones-radiales.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "Arte de pared en capas", frases: ["Capas escaladas y rotadas", "Listas para cortar en láser", "DXF o SVG gratis"], cta: "Hazlo gratis",
+    texto: "Crea mandalas y patrones decorativos en capas escaladas y rotadas con una fórmula, para cortar en láser y armar arte de pared. Descarga DXF o SVG gratis en HETNA 2D Studio.",
+    en: { nombre: "Layered mandalas", gancho: "Layered wall art", frases: ["Scaled and rotated layers", "Ready to laser cut", "Free DXF or SVG"], cta: "Make it free", texto: "Create mandalas and decorative patterns in scaled and rotated layers from a formula, to laser cut into layered wall art. Download the DXF or SVG for free in HETNA 2D Studio." },
+  },
+  {
+    clave: "bisagra_viva", nombre: "Bisagra viva", ruta: "/mx/disenar/bisagra-viva", imagen: IMG2D("bisagra-viva.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "MDF que se dobla", frases: ["Elige el radio y el ángulo", "Calcula la zona de cortes", "Cajas redondas, lámparas y libretas"], cta: "Hazla gratis",
+    texto: "Haz que el MDF o el triplay doble: eliges el radio y el ángulo de la curva y se calcula la zona de cortes para cajas con esquinas redondas, lámparas y portadas de libreta. Descarga DXF, SVG o PDF gratis en HETNA 2D Studio.",
+    en: { nombre: "Living hinge", gancho: "MDF that bends", frases: ["Pick the radius and angle", "It calculates the cut zone", "Round boxes, lamps and notebooks"], cta: "Make it free", texto: "Make MDF or plywood bend: pick the curve radius and angle and it calculates the cut zone for boxes with round corners, lamps and notebook covers. Download the DXF, SVG or PDF for free in HETNA 2D Studio." },
   },
   {
     clave: "disenar", nombre: "Estudio de diseño", ruta: "/mx/disenar", imagen: null, tema: "router", publico: "clientes_particulares",
@@ -342,6 +380,12 @@ export const DEL_COTIZADOR = ["cotizador", "cotizador_whatsapp", "cotizador_grat
 
 /** HETNA 3D Studio (imagen a 3D con IA se cobra con créditos). */
 export const DEL_3D = ["imagen_3d", "litofania", "svg_stl", "letras_3d", "llaveros", "disenar"]
+
+/**
+ * HETNA 2D Studio: van con "las demás" (el sábado, sólo México). Así no le quitan
+ * turnos a imagen a 3D (lo que se cobra) y sus imágenes en español no salen en EE.UU.
+ */
+export const DEL_2D = ["celosia_imagen", "costillas", "voronoi", "caja_juntas", "mandalas", "bisagra_viva"]
 
 /**
  * Qué herramienta sale cada día (0 = domingo):
