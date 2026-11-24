@@ -10,6 +10,7 @@ import { aprendizaje } from "./social-estadisticas"
 import { ganchoAlterno, oraciones } from "./fabrica/plan-material"
 import { mandarPrivado } from "./social-telegram"
 import { sendEmail } from "./resend"
+import { correosDeLaCasa } from "./cuentas-casa"
 
 export async function reciclar(knex: any, logger?: any, maximo = 2) {
   await asegurarSocial(knex)
@@ -48,13 +49,67 @@ export async function reciclar(knex: any, logger?: any, maximo = 2) {
 
 const n = (x: any) => Number(x || 0)
 
+/**
+ * Lo que falló en la semana, explicado (Vlado, 23 nov 2026: "¿por qué dice 33
+ * errores?"). Antes se sumaba todo junto: las que no salieron en ninguna red,
+ * las que salieron en unas redes y en otras no (parcial) y hasta las de
+ * Instagram que seguían procesándose. Ahora se separa y se dice por red cuántas
+ * fallaron y por qué (el mensaje más repetido).
+ */
+export async function erroresSemana(knex: any) {
+  const filas = await knex(T_POST)
+    .whereIn("estado", ["error", "parcial"])
+    .where("updated_at", ">=", knex.raw("now() - interval '7 days'"))
+    .select("id", "estado", "resultado")
+  let ninguna = 0
+  let parciales = 0
+  const porRed: Record<string, { n: number; motivos: Record<string, number> }> = {}
+  for (const f of filas) {
+    const res = (typeof f.resultado === "string" ? JSON.parse(f.resultado || "{}") : f.resultado) || {}
+    const fallas = Object.entries(res).filter(([, r]: any) => r && !r.ok && !r.pendiente && !r.manual)
+    if (!fallas.length) continue // sólo pendientes (Instagram procesando): no es error
+    if (f.estado === "error") ninguna++
+    else parciales++
+    for (const [red, r] of fallas as any) {
+      const motivo = String(r.error || "sin detalle").replace(/\s+/g, " ").trim().slice(0, 90)
+      porRed[red] = porRed[red] || { n: 0, motivos: {} }
+      porRed[red].n++
+      porRed[red].motivos[motivo] = (porRed[red].motivos[motivo] || 0) + 1
+    }
+  }
+  const redes = Object.entries(porRed)
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([red, d]) => ({ red, nombre: REDES[red]?.nombre || red, n: d.n, motivo: Object.entries(d.motivos).sort((a, b) => b[1] - a[1])[0]?.[0] || "" }))
+  return { ninguna, parciales, total: ninguna + parciales, redes }
+}
+
+/** Altas reales en toda la página en los últimos 7 días (no sólo las que llegaron por una liga de redes). */
+export async function altasSemana(knex: any) {
+  const casa = correosDeLaCasa().map((c) => c.toLowerCase())
+  const contar = async (tabla: string, extra?: (q: any) => any) => {
+    try {
+      let q = knex(tabla).whereNull("deleted_at").where("created_at", ">=", knex.raw("now() - interval '7 days'"))
+      if (casa.length) q = q.where((w: any) => w.whereNull("email").orWhereRaw(`lower(email) not in (${casa.map(() => "?").join(",")})`, casa))
+      if (extra) q = extra(q)
+      return Number((await q.count({ n: "*" }).first())?.n || 0)
+    } catch {
+      return null
+    }
+  }
+  return {
+    clientes: await contar("customer", (q) => q.where("has_account", true)),
+    talleres: await contar("seller"),
+  }
+}
+
 /** Texto del resumen semanal (también sirve para el panel). */
 export async function resumenSemanal(knex: any) {
   await asegurarSocial(knex)
   const m = await metricas(knex, 7)
   const tot = m.por_red.reduce((a: any, r: any) => ({ clics: a.clics + n(r.clics), cli: a.cli + n(r.registro_cliente), tal: a.tal + n(r.registro_taller), sol: a.sol + n(r.solicitud), ven: a.ven + n(r.venta) }), { clics: 0, cli: 0, tal: 0, sol: 0, ven: 0 })
   const publicadas = Number((await knex(T_POST).where("estado", "publicada").where("publicada_en", ">=", knex.raw("now() - interval '7 days'")).count({ n: "*" }).first())?.n || 0)
-  const errores = Number((await knex(T_POST).whereIn("estado", ["error", "parcial"]).where("updated_at", ">=", knex.raw("now() - interval '7 days'")).count({ n: "*" }).first())?.n || 0)
+  const err = await erroresSemana(knex).catch(() => ({ ninguna: 0, parciales: 0, total: 0, redes: [] as any[] }))
+  const altas = await altasSemana(knex)
   const programadas = Number((await knex(T_POST).where("estado", "programada").where("programada_para", "<=", knex.raw("now() + interval '7 days'")).count({ n: "*" }).first())?.n || 0)
   const borradores = Number((await knex(T_POST).where("estado", "borrador").where((q: any) => q.whereNull("programada_para").orWhere("programada_para", "<=", knex.raw("now() + interval '7 days'"))).count({ n: "*" }).first())?.n || 0)
   const ap = await aprendizaje(knex, 30).catch(() => null)
@@ -63,9 +118,16 @@ export async function resumenSemanal(knex: any) {
   return [
     "📊 HETNA · resumen de la semana",
     "",
-    `Publicadas: ${publicadas}${errores ? ` (con error: ${errores})` : ""}`,
+    `Publicadas: ${publicadas}`,
+    err.total
+      ? `⚠ Con fallas: ${err.total}${err.ninguna ? ` (${err.ninguna} no salieron en ninguna red` : " ("}${err.ninguna && err.parciales ? "; " : ""}${err.parciales ? `${err.parciales} salieron en unas redes y en otras no` : ""})` +
+        err.redes.slice(0, 4).map((r: any) => `\n• ${r.nombre}: ${r.n} — ${r.motivo}`).join("")
+      : "",
     `Clics en ligas: ${tot.clics}${porRed ? ` (${porRed})` : ""}`,
-    `Clientes nuevos: ${tot.cli} · Talleres nuevos: ${tot.tal} · Solicitudes: ${tot.sol} · Ventas: ${tot.ven}`,
+    `Desde tus redes: ${tot.cli} clientes · ${tot.tal} talleres · ${tot.sol} solicitudes · ${tot.ven} ventas`,
+    altas.clientes !== null || altas.talleres !== null
+      ? `En toda la página (7 días): ${altas.clientes ?? "?"} clientes nuevos · ${altas.talleres ?? "?"} talleres nuevos`
+      : "",
     top ? `\n🏆 Lo mejor: "${top.titulo}" en ${REDES[top.red]?.nombre || top.red} (❤ ${top.me_gusta} · 💬 ${top.comentarios} · ↗ ${top.compartidos})` : "",
     ap?.resumen?.length ? `\n🧠 Aprendido:\n• ${ap.resumen.slice(0, 3).join("\n• ")}` : "",
     "",
