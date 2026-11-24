@@ -192,7 +192,7 @@ const ESQUEMA = {
 let ia: Anthropic | null = null
 export async function guionista(knex: any, tipo: "educativo" | "novela") {
   ia ??= new Anthropic()
-  const recientes = await knex(T_ESTUDIO).whereIn("estado", ["listo", "haciendo"]).orderBy("created_at", "desc").limit(30).select("tipo", "guion")
+  const recientes = await knex(T_ESTUDIO).whereIn("estado", ["listo", "haciendo"]).whereNot({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(30).select("tipo", "guion")
   const temas = recientes.map((r: any) => r.guion?.tema).filter(Boolean)
   const tomas = recientes.flatMap((r: any) => (r.guion?.escenas || []).map((e: any) => e.toma)).slice(0, 60)
   const capitulos = recientes.filter((r: any) => r.tipo === "novela" && r.guion?.resumen_capitulo).map((r: any) => r.guion.resumen_capitulo).slice(0, 6).reverse()
@@ -262,10 +262,10 @@ const MODELO_VOZ = () => process.env.ESTUDIO_MODELO_VOZ || "fal-ai/minimax/speec
 const VOZ_ID = () => process.env.ESTUDIO_VOZ || "Determined_Man"
 const USD_VOZ_MIL = 0.1
 
-export async function vozEscena(texto: string) {
+export async function vozEscena(texto: string, voz?: string) {
   const out = await fal(MODELO_VOZ(), {
     prompt: texto,
-    voice_setting: { voice_id: VOZ_ID(), speed: 1.08, vol: 1, pitch: 0 },
+    voice_setting: { voice_id: voz || VOZ_ID(), speed: 1.08, vol: 1, pitch: 0 },
     language_boost: "Spanish",
     output_format: "url",
     audio_setting: { format: "mp3", sample_rate: 44100, bitrate: 128000, channel: 1 },
@@ -467,7 +467,8 @@ export async function recuperarVideos(knex: any) {
   return { recuperados: n }
 }
 
-const VUELTA = { activa: false }
+/** Un solo video a la vez (el diario y el explicativo comparten el candado). */
+export const VUELTA = { activa: false }
 
 export async function gastoDeHoy(knex: any) {
   const r = await knex(T_ESTUDIO).where({ dia: diaMx() }).sum({ s: "costo_usd" }).first().catch(() => null)
@@ -480,10 +481,10 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
   if (!estudioListo()) return { hecho: false, motivo: !FAL() ? "Falta FAL_KEY en el .env del backend" : !iaSocial() ? "Falta la IA (ANTHROPIC_API_KEY)" : "Falta FFmpeg en el servidor" }
   if (VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo uno" }
   const hoy = diaMx()
-  if (!o.forzar && (await knex(T_ESTUDIO).where({ dia: hoy }).whereIn("estado", ["listo", "haciendo"]).first())) return { hecho: false, motivo: "Ya se hizo el video de hoy" }
+  if (!o.forzar && (await knex(T_ESTUDIO).where({ dia: hoy }).whereNot({ tipo: "explicativo" }).whereIn("estado", ["listo", "haciendo"]).first())) return { hecho: false, motivo: "Ya se hizo el video de hoy" }
   // Freno: si los dos últimos fallaron, el automático no gasta más hasta que alguien lo revise (el botón sí funciona)
   if (!o.forzar) {
-    const ult = await knex(T_ESTUDIO).orderBy("created_at", "desc").limit(2).pluck("estado")
+    const ult = await knex(T_ESTUDIO).whereNot({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(2).pluck("estado")
     if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos videos fallaron: el automático se detuvo. Revisa el error y aprieta 'Hacer el de hoy'." }
   }
   const tipo = o.tipo || (tocaNovela() ? "novela" : "educativo")
@@ -607,7 +608,7 @@ export async function leerEstudioCfg(knex: any) {
 }
 export async function guardarEstudioCfg(knex: any, v: any) {
   const { T_CONFIG_S } = require("../social-hub")
-  await knex.raw(`insert into ?? (clave, valor) values ('estudio', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify({ activo: !!v.activo })])
+  await knex.raw(`insert into ?? (clave, valor) values ('estudio', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify({ ...(await leerEstudioCfg(knex)), ...v })])
 }
 
 export async function resumenEstudio(knex: any) {
@@ -619,6 +620,7 @@ export async function resumenEstudio(knex: any) {
     motor: motorHiggsfield() ? "Higgsfield (Seedance 2.5 + Virality Predictor)" : "fal.ai (MiniMax H3)",
     falta: !FAL() ? "FAL_KEY" : !iaSocial() ? "ANTHROPIC_API_KEY" : !ffmpegDisponible() ? "FFmpeg" : null,
     activo: !!(await leerEstudioCfg(knex)).activo,
+    explicativo: (await leerEstudioCfg(knex)).explicativo !== false,
     tope_dia: TOPE_USD(),
     gasto_hoy: +(await gastoDeHoy(knex)).toFixed(2),
     gasto_mes: +Number(mes?.s || 0).toFixed(2),

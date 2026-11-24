@@ -1838,6 +1838,7 @@ function EstudioDiario() {
   const [d, setD] = useState<any>(null)
   const [nota, setNota] = useState<{ ok: boolean; t: string } | null>(null)
   const [ocupado, setOcupado] = useState(false)
+  const [temaExp, setTemaExp] = useState("")
   const api = async (cuerpo?: unknown) => {
     const r = await fetch("/admin/hetna-fabrica/estudio", { credentials: "include", ...(cuerpo === undefined ? { headers: cabeceras() } : { method: "POST", headers: { ...cabeceras(), "content-type": "application/json" }, body: JSON.stringify(cuerpo) }) })
     const x = await r.json().catch(() => ({}))
@@ -1869,6 +1870,15 @@ function EstudioDiario() {
         <button type="button" style={boton("normal")} disabled={ocupado} title="Hace una imagen pro de muestra (cuesta ~0.06 USD)" onClick={async () => { setOcupado(true); setNota({ ok: true, t: "Haciendo la imagen de prueba (unos 30 segundos)…" }); try { const r = await api({ accion: "imagen_prueba" }); window.open(r.url, "_blank", "noopener"); setNota({ ok: true, t: `✓ Imagen de prueba lista: «${r.idea.linea1} ${r.idea.linea2}». Se abrió en otra pestaña.` }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>🖼️ Imagen pro de prueba</button>
         <button type="button" style={boton("normal")} disabled={ocupado} title="Busca en el servidor los videos que se hicieron pero no se guardaron por un error" onClick={async () => { setOcupado(true); try { const r = await api({ accion: "recuperar" }); setNota({ ok: true, t: r.recuperados ? `✓ Recuperé ${r.recuperados} videos: ábrelos con "Ver video" y publícalos si te gustan.` : "No encontré videos perdidos." }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Recuperar videos</button>
       </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13, marginTop: 8, borderTop: `1px solid ${C.borde}`, paddingTop: 8 }}>
+        <b>📐 Explicativo</b>
+        <span style={{ color: C.tenue }}>65 a 80 s con dibujos técnicos y voz (~0.15 USD). Queda en Pendientes y te llega a Telegram.</span>
+        <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <input type="checkbox" checked={d.explicativo !== false} disabled={ocupado} onChange={async (e) => { try { setD(await api({ explicativo: e.target.checked })) } catch (er) { setNota({ ok: false, t: (er as Error).message }) } }} /> Lunes y jueves
+        </label>
+        <input value={temaExp} onChange={(e) => setTemaExp(e.target.value)} placeholder="Tema (opcional): ej. cómo elegir la fresa" maxLength={200} style={{ flex: 1, minWidth: 200, padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
+        <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { await api({ accion: "explicativo", tema: temaExp.trim() || undefined }); setTemaExp(""); setNota({ ok: true, t: "✓ Haciendo el explicativo: guion, voz y dibujos. Tarda de 3 a 8 minutos; llega a Pendientes y a Telegram." }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>📐 Hacer explicativo</button>
+      </div>
       <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
         {d.listo ? <span style={{ color: C.verde, fontWeight: 600 }}>Listo para trabajar</span> : <span style={{ color: C.rojo, fontWeight: 600 }}>Falta {d.falta} en el servidor</span>}
         {" · "}Gasto hoy: {d.gasto_hoy} USD (tope {d.tope_dia}) · este mes: {d.gasto_mes} USD
@@ -1879,12 +1889,12 @@ function EstudioDiario() {
           {d.videos.map((v: any) => (
             <div key={v.id} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", borderTop: `1px solid ${C.borde}`, paddingTop: 4 }}>
               <span style={{ color: C.tenue }}>{v.dia}</span>
-              <span>{v.tipo === "novela" ? "🎬" : "🎓"}</span>
+              <span>{v.tipo === "novela" ? "🎬" : v.tipo === "explicativo" ? "📐" : "🎓"}</span>
               <b style={{ flex: 1, minWidth: 180 }}>{v.titulo || v.tema || "(guion en proceso)"}</b>
               <span style={{ color: v.estado === "listo" ? C.verde : v.estado === "error" ? C.rojo : C.tenue, fontWeight: 600 }}>{v.estado === "listo" ? "Listo" : v.estado === "error" ? "Error" : "Haciendo…"}</span>
               <span style={{ color: C.tenue }}>{v.costo.toFixed(2)} USD</span>
               {v.video && <a href={v.video} target="_blank" rel="noreferrer">Ver video</a>}
-              {v.publicable && <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { const r = await api({ accion: "publicar", id: v.id }); setNota({ ok: true, t: r.estado === "programada" ? `✓ Programado para las ${r.hora}:00` : "✓ Quedó en Pendientes del Social Hub para que lo apruebes" }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Publicar</button>}
+              {v.publicable && <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { const r = await api({ accion: "publicar", id: v.id }); setNota({ ok: true, t: r.estado === "programada" && r.hora != null ? `✓ Programado para las ${r.hora}:00` : "✓ Quedó en Pendientes del Social Hub para que lo apruebes" }); void cargar() } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>Publicar</button>}
               {v.error && <span style={{ color: C.rojo, width: "100%" }}>{v.error}</span>}
             </div>
           ))}
