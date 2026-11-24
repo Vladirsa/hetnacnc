@@ -87,20 +87,38 @@ export function homografia(q: [P, P, P, P]): number[] | null {
   return h ? [...h, 1] : null
 }
 
-/** Endereza el gris de la imagen al rectángulo de w×h píxeles. */
-export function enderezar(g: Uint8Array, iw: number, ih: number, q: [P, P, P, P], w: number, h: number): Uint8Array {
+export type Mosaico = { c: number; f: number; espejo: boolean }
+
+/** Coordenada 0–1 del panel → 0–1 dentro de su módulo (con espejo en los impares). */
+function plegar(s: number, cuantos: number, espejo: boolean) {
+  const t = s * cuantos
+  const k = Math.min(Math.floor(t), cuantos - 1)
+  const frac = t - k
+  return espejo && k % 2 === 1 ? 1 - frac : frac
+}
+
+/**
+ * Endereza el gris de la imagen al rectángulo de w×h píxeles. Con mosaico, las
+ * 4 esquinas son UN módulo y cada píxel del panel se pliega a su lugar dentro
+ * de él: el módulo se repite a resolución completa, sin costuras.
+ */
+export function enderezar(g: Uint8Array, iw: number, ih: number, q: [P, P, P, P], w: number, h: number, mosaico: Mosaico | null = null): Uint8Array {
   const H = homografia(q)
   const out = new Uint8Array(w * h).fill(255)
   if (!H) return out
   for (let y = 0; y < h; y++) {
-    const sy = (y + 0.5) / h
+    const sy = mosaico ? plegar((y + 0.5) / h, mosaico.f, mosaico.espejo) : (y + 0.5) / h
     for (let x = 0; x < w; x++) {
-      const sx = (x + 0.5) / w
+      const sx = mosaico ? plegar((x + 0.5) / w, mosaico.c, mosaico.espejo) : (x + 0.5) / w
       const den = H[6] * sx + H[7] * sy + H[8]
       if (!(den > 1e-12)) continue
-      const u = (H[0] * sx + H[1] * sy + H[2]) / den - 0.5
-      const v = (H[3] * sx + H[4] * sy + H[5]) / den - 0.5
-      if (!(u >= 0 && v >= 0 && u <= iw - 1 && v <= ih - 1)) continue
+      let u = (H[0] * sx + H[1] * sy + H[2]) / den - 0.5
+      let v = (H[3] * sx + H[4] * sy + H[5]) / den - 0.5
+      // Hasta un píxel fuera de la imagen se toma la orilla: si no, en el
+      // mosaico queda una costura sin cortar entre módulos
+      if (!(u >= -1 && v >= -1 && u <= iw && v <= ih)) continue
+      u = Math.min(iw - 1, Math.max(0, u))
+      v = Math.min(ih - 1, Math.max(0, v))
       const x0 = Math.floor(u)
       const y0 = Math.floor(v)
       const x1 = Math.min(iw - 1, x0 + 1)
@@ -302,7 +320,7 @@ export function hacerCelosiaImagen(im: Imagen, opciones: OpcionesCelosiaImagen, 
   const m = Math.max(0, Math.min(acotar(o.marco, 0, MEDIDA_MAX, 0), W / 2 - 5, H / 2 - 5))
   if (!esquinasValidas(o.esquinas)) {
     avisos.push("Las 4 esquinas se cruzan o están casi en línea: acomódalas en orden (arriba izquierda, arriba derecha, abajo derecha, abajo izquierda) sobre las esquinas del diseño.")
-    return { dibujo: dibujo([rect(0, 0, W, H)], avisos), huecos: 0, avisos, umbral: 0, mmpx: 0 }
+    return { dibujo: dibujo([rect(0, 0, W, H)], avisos), huecos: 0, avisos, umbral: 0, mmpx: 0, modulo: null }
   }
   const aw = W - 2 * m
   const ah = H - 2 * m
@@ -315,31 +333,13 @@ export function hacerCelosiaImagen(im: Imagen, opciones: OpcionesCelosiaImagen, 
   const W2 = w + 2
   const H2 = h + 2
 
-  const rep = o.repetir
-    ? { c: Math.round(acotar(o.repetir.columnas, 1, 60, 1)), f: Math.round(acotar(o.repetir.filas, 1, 60, 1)), espejo: o.repetir.espejo }
-    : null
-  let enderezada: Uint8Array
-  if (rep && (rep.c > 1 || rep.f > 1)) {
-    // Un módulo enderezado y se copia en mosaico sobre toda el área calada
-    const mw = Math.max(4, Math.round(w / rep.c))
-    const mh = Math.max(4, Math.round(h / rep.f))
-    const modulo = enderezar(g, im.width, im.height, o.esquinas, mw, mh)
-    enderezada = new Uint8Array(w * h)
-    // Píxel t de n (en el panel) → píxel del módulo de m, con cuantos módulos
-    const indice = (t: number, n: number, m: number, cuantos: number) => {
-      const s = ((t + 0.5) / n) * cuantos
-      const k = Math.min(Math.floor(s), cuantos - 1)
-      let f = s - k
-      if (rep.espejo && k % 2 === 1) f = 1 - f
-      return Math.min(m - 1, Math.max(0, Math.floor(f * m)))
-    }
-    const colX = Int32Array.from({ length: w }, (_, x) => indice(x, w, mw, rep.c))
-    for (let y = 0; y < h; y++) {
-      const fila = indice(y, h, mh, rep.f) * mw
-      for (let x = 0; x < w; x++) enderezada[y * w + x] = modulo[fila + colX[x]]
-    }
-    if (mw < 40 || mh < 40) avisos.push("Cada módulo queda muy chico para el detalle de la imagen: usa menos columnas o filas, o un panel más grande.")
-  } else enderezada = enderezar(g, im.width, im.height, o.esquinas, w, h)
+  // Mosaico: 1×1 es la imagen completa (con su fondo), no un módulo
+  const c = Math.round(acotar(o.repetir?.columnas ?? 1, 1, 60, 1))
+  const f = Math.round(acotar(o.repetir?.filas ?? 1, 1, 60, 1))
+  const rep: Mosaico | null = o.repetir && (c > 1 || f > 1) ? { c, f, espejo: o.repetir.espejo } : null
+  const enderezada = enderezar(g, im.width, im.height, o.esquinas, w, h, rep)
+  const modulo = rep ? { ancho: Math.round(aw / rep.c), alto: Math.round(ah / rep.f), columnas: rep.c, filas: rep.f } : null
+  if (rep && (w / rep.c < 40 || h / rep.f < 40)) avisos.push("Cada módulo queda muy chico para el detalle de la imagen: usa menos columnas o filas, o un panel más grande.")
   const umbral = o.umbral ?? umbralAutomatico(enderezada)
 
   // material = 1 donde NO se corta
@@ -434,7 +434,7 @@ export function hacerCelosiaImagen(im: Imagen, opciones: OpcionesCelosiaImagen, 
   if (!huecosTrazos.length) avisos.push("No quedó ningún hueco: prueba cortar lo claro en vez de lo oscuro, mueve el umbral o baja el hueco mínimo.")
   if (m < 10) avisos.push("Un marco de menos de 10 mm deja el panel frágil en la orilla.")
 
-  return { dibujo: dibujo(trazos, avisos), huecos: huecosTrazos.length, avisos, umbral, mmpx }
+  return { dibujo: dibujo(trazos, avisos), huecos: huecosTrazos.length, avisos, umbral, mmpx, modulo }
 }
 
 export type ResultadoCelosiaImagen = ReturnType<typeof hacerCelosiaImagen>

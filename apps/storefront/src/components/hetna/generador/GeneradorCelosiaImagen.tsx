@@ -115,7 +115,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   const [diam, setDiam] = useState("8")
   // El resultado guarda con qué medidas y proceso se calculó: el nombre del
   // archivo siempre corresponde a la geometría que se descarga
-  const [res, setRes] = useState<{ r: ResultadoCelosiaImagen; medida: string; proceso: Proceso; espesor: string; modulo: string } | null>(null)
+  const [res, setRes] = useState<{ r: ResultadoCelosiaImagen; medida: string; proceso: Proceso; espesor: string } | null>(null)
   const [calculando, setCalculando] = useState(false)
   const [error, setError] = useState("")
   const urlActual = useRef("")
@@ -180,6 +180,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     return w > 0 ? h / w : 1
   }
 
+  const repetir = modo === "modulo" ? { columnas: numero(columnas) || 1, filas: numero(filas) || 1, espejo } : null
+
   // Se calcula un momento después del último cambio, en un Web Worker para que
   // la página no se trabe; si llega un resultado viejo, se descarta
   useEffect(() => {
@@ -201,17 +203,11 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       islas,
       barrenos,
       fondo,
-      repetir: modo === "modulo" ? { columnas: numero(columnas) || 1, filas: numero(filas) || 1, espejo } : null,
+      repetir,
       diametroBarreno: numero(diam) || 8,
     }
     const listo = (r: ResultadoCelosiaImagen) => {
-      // Medida de cada módulo (área calada entre columnas y filas)
-      const m = Math.max(0, numero(marco) || 0)
-      const modulo =
-        modo === "modulo"
-          ? `${Math.round(((numero(ancho) || 600) - 2 * m) / (numero(columnas) || 1))} × ${Math.round(((numero(alto) || 600) - 2 * m) / (numero(filas) || 1))} mm`
-          : ""
-      setRes({ r, medida, proceso, espesor, modulo })
+      setRes({ r, medida, proceso, espesor })
       setError("")
       setCalculando(false)
     }
@@ -356,8 +352,10 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
             <button
               type="button"
               onClick={() => {
-                const r = modo === "modulo" ? (proporcion() * (numero(filas) || 1)) / (numero(columnas) || 1) : proporcion()
-                setAlto(String(Math.round((numero(ancho) || 600) * r)))
+                // El marco no lleva diseño: la proporción es la del área calada
+                const r = repetir ? (proporcion() * repetir.filas) / repetir.columnas : proporcion()
+                const m = Math.max(0, numero(marco) || 0)
+                setAlto(String(Math.round(2 * m + ((numero(ancho) || 600) - 2 * m) * r)))
               }}
               className="mt-2 rounded-full bg-[#1C2431] px-3 py-1 text-[12px] text-[#C9D2E0] hover:bg-[#232D3D]"
             >
@@ -395,7 +393,14 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       archivo={`celosia-${nombre || "imagen"}-${res?.medida ?? ""}`}
       pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
       material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
-      datos={res ? [["Huecos", String(res.r.huecos)], ...(res.modulo ? [["Módulo", res.modulo] as [string, string]] : [])] : []}
+      datos={
+        res
+          ? [
+              ["Huecos", String(res.r.huecos)],
+              ...(res.r.modulo ? ([["Módulo", `${res.r.modulo.ancho} × ${res.r.modulo.alto} mm (${res.r.modulo.columnas}×${res.r.modulo.filas})`]] as [string, string][]) : []),
+            ]
+          : []
+      }
       vacio={<p className="text-center text-[14px] text-[#8A97AB]">Sube la imagen de la celosía que te gustó y aquí aparece el panel listo para cortar.</p>}
     />
   )
