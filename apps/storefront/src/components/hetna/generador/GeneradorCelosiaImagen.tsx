@@ -119,6 +119,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   const trabajador = useRef<Worker | null>(null)
   const imagenEnviada = useRef<Imagen | null>(null)
   const ultimo = useRef(0)
+  const sinTrabajador = useRef(false)
 
   // La URL de la imagen se libera al cambiarla y al salir
   useEffect(() => () => {
@@ -179,6 +180,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   // la página no se trabe; si llega un resultado viejo, se descarta
   useEffect(() => {
     if (!im) return
+    // Desde este momento, cualquier resultado anterior ya no cuenta
+    const id = ++ultimo.current
     setCalculando(true)
     const medida = `${Math.round(numero(ancho) || 600)}x${Math.round(numero(alto) || 600)}`
     const opciones: OpcionesCelosiaImagen = {
@@ -205,25 +208,24 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       setError("No se pudo calcular el panel con estos datos. Revisa las medidas o mueve las esquinas.")
       setCalculando(false)
     }
+    const aqui = () => {
+      try {
+        listo(hacerCelosiaImagen(im, opciones))
+      } catch {
+        fallo()
+      }
+    }
     const t = setTimeout(() => {
-      const id = ++ultimo.current
-      if (!trabajador.current && typeof Worker !== "undefined") {
+      if (!trabajador.current && !sinTrabajador.current && typeof Worker !== "undefined") {
         try {
           trabajador.current = new Worker(new URL("../../../lib/generador/celosiaImagen.worker.ts", import.meta.url))
         } catch {
-          trabajador.current = null
+          sinTrabajador.current = true
         }
       }
       const w = trabajador.current
-      if (!w) {
-        // Sin Web Worker: se calcula aquí mismo
-        try {
-          listo(hacerCelosiaImagen(im, opciones))
-        } catch {
-          fallo()
-        }
-        return
-      }
+      // Sin Web Worker (navegador viejo o el script no cargó): se calcula aquí mismo
+      if (!w) return aqui()
       w.onmessage = (e: MessageEvent<{ id: number; resultado?: ResultadoCelosiaImagen; error?: string }>) => {
         if (e.data.id !== ultimo.current) return
         if (e.data.resultado) listo(e.data.resultado)
@@ -233,7 +235,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
         w.terminate()
         trabajador.current = null
         imagenEnviada.current = null
-        fallo()
+        sinTrabajador.current = true
+        if (id === ultimo.current) aqui()
       }
       const nueva = imagenEnviada.current !== im
       w.postMessage({ id, opciones, ...(nueva ? { imagen: im } : {}) })
