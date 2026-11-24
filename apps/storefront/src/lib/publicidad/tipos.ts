@@ -2,10 +2,6 @@
 // Este archivo NO toca la base de datos: lo pueden usar tanto el servidor como el navegador.
 
 export type EspacioId =
-  | "carrusel_principal"
-  | "banner_promo"
-  | "franja_inicio"
-  | "banner_herramientas"
   | "foro_lateral"
   | "categorias_lateral"
   | "vista_whatsapp"
@@ -27,50 +23,12 @@ export type ConfigEspacio = {
   donde: string // lo que lee el anunciante en /anunciate: dónde sale y quién lo ve
 }
 
+// Espacios que existen hoy en la página (revisado con Vlado, 23 nov 2026). Se
+// quitaron carrusel_principal, banner_promo, franja_inicio y banner_herramientas:
+// eran del inicio anterior y el inicio actual (HetnaHome) ya no los dibuja.
+// Si quedó algún anuncio guardado en ellos, el panel /dashboard/publicidad lo
+// enseña aparte para moverlo a otro espacio o borrarlo.
 export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
-  carrusel_principal: {
-    nombre: "Carrusel principal del inicio",
-    medidas: "1920 × 700 px (opcional para celular: 800 × 900 px)",
-    anchoMax: 1920,
-    max: 8,
-    ratio: "1920 / 700",
-    publicidad: false,
-    ayuda:
-      "Las imágenes grandes de arriba en la página de inicio. Si activas al menos una aquí, reemplazan las diapositivas de texto actuales.",
-    donde: "Lo primero que se ve en la página de inicio, en computadora y celular.",
-  },
-  banner_promo: {
-    nombre: "Banner promocional (2 tarjetas)",
-    medidas: "1200 × 600 px",
-    anchoMax: 1200,
-    max: 2,
-    ratio: "2 / 1",
-    publicidad: false,
-    ayuda:
-      "Dos tarjetas debajo de la barra de confianza. Orden 1 = izquierda, orden 2 = derecha. Si falta una, se muestra la tarjeta de siempre.",
-    donde: "Dos tarjetas grandes en el inicio, justo debajo del carrusel.",
-  },
-  franja_inicio: {
-    nombre: "Publicidad: franja del inicio",
-    medidas: "1200 × 300 px",
-    anchoMax: 1200,
-    max: 2,
-    ratio: "4 / 1",
-    publicidad: true,
-    ayuda: "Franja de publicidad debajo de las tarjetas promocionales. Ideal para anunciantes de pago.",
-    donde: "Franja ancha en el inicio, debajo de las tarjetas promocionales.",
-  },
-  banner_herramientas: {
-    nombre: "Banner de herramientas",
-    medidas: "1920 × 800 px",
-    anchoMax: 1920,
-    max: 1,
-    ratio: "12 / 5",
-    publicidad: false,
-    ayuda:
-      "Imagen de fondo del bloque de herramientas CNC. Si dejas título, subtítulo o botón vacíos, se conservan los textos de siempre.",
-    donde: "Fondo del bloque de herramientas CNC del inicio.",
-  },
   foro_lateral: {
     nombre: "Publicidad: columna derecha del foro",
     medidas: "600 × 500 px",
@@ -88,7 +46,7 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
     max: 2,
     ratio: "970 / 250",
     publicidad: true,
-    ayuda: "Banner horizontal arriba del listado de productos de cada categoría.",
+    ayuda: "Banner horizontal arriba del listado de productos de cada categoría (debajo del título y el texto de la categoría).",
     donde: "Arriba de los productos de cada categoría.",
   },
   vista_whatsapp: {
@@ -104,13 +62,13 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
   },
   // ---- Publicidad 2.0: donde está la gente que compra ----
   ficha_producto: {
-    nombre: "Publicidad: ficha de producto",
+    nombre: "Publicidad: ficha de producto (columna de compra)",
     medidas: "800 × 450 px",
     anchoMax: 900,
     max: 2,
     ratio: "16 / 9",
     publicidad: true,
-    ayuda: "Tarjeta en la columna de compra de cada producto, debajo del vendedor. Buena para talleres que fabrican o proveedores de material.",
+    ayuda: "Tarjeta «Patrocinado» en la columna de compra de cada producto, debajo de «Compártelo por WhatsApp» y «Cotizar algo similar». Buena para talleres que fabrican o proveedores de material.",
     donde: "En la ficha de cada producto, junto al botón de compra: lo ve quien ya está decidido a comprar.",
   },
   // Pedido de Vlado (23 nov 2026): el hueco bajo "Fabrícalo" en la columna
@@ -142,8 +100,8 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
     max: 2,
     ratio: "970 / 250",
     publicidad: true,
-    ayuda: "Banner arriba de Todos los productos y de los resultados de búsqueda.",
-    donde: "Arriba de Todos los productos y de los resultados de búsqueda.",
+    ayuda: "Banner arriba de Todos los productos (con sus pestañas Productos, Diseños, A tu medida y Talleres) y de los resultados de búsqueda.",
+    donde: "Arriba de Todos los productos y de los resultados de búsqueda, en todas sus pestañas.",
   },
   directorio_talleres: {
     nombre: "Taller destacado (directorio)",
@@ -168,10 +126,6 @@ export const ESPACIOS: Record<EspacioId, ConfigEspacio> = {
 }
 
 export const ORDEN_ESPACIOS: EspacioId[] = [
-  "carrusel_principal",
-  "banner_promo",
-  "franja_inicio",
-  "banner_herramientas",
   "foro_lateral",
   "categorias_lateral",
   "ficha_producto",
