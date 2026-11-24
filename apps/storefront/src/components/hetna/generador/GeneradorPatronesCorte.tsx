@@ -1,8 +1,8 @@
 "use client"
 
-// Patrones de corte (2D Studio): celosías, patrones radiales y bisagra viva
-// en una sola herramienta. Las tres son "un patrón que se repite o se escala
-// dentro de un área". Cada modo es la herramienta de antes tal cual (mismo
+// Patrones de corte (2D Studio): celosía desde imagen, celosías, Voronoi,
+// patrones radiales y bisagra viva en una sola herramienta: "un patrón que se
+// repite o se escala dentro de un área". Cada modo es la herramienta de antes tal cual (mismo
 // motor y mismos archivos); aquí sólo se elige el modo. Las direcciones viejas
 // siguen vivas y abren su modo; al cambiar de modo la dirección cambia para
 // que la liga que se comparte abra lo mismo.

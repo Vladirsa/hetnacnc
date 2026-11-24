@@ -17,7 +17,7 @@ export function BarraEstudio() {
     /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon"
       ? "caja-con-juntas"
       : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva" || params?.herramienta === "patron-voronoi" || params?.herramienta === "celosia-desde-imagen"
-        ? "celosias" // los tres modos de Patrones de corte
+        ? "celosias" // los modos de Patrones de corte
         : params?.herramienta === "estencil-letras" || params?.herramienta === "codigo-qr"
           ? "letreros" // los tres modos de Letreros y placas
           : params?.herramienta === "grabado-foto" || params?.herramienta === "litofania-relieve"

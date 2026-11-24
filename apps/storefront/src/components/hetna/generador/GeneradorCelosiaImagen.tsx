@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { type Islas, type Proceso, hacerCelosiaImagen, minimosSugeridos } from "@/lib/generador/celosiaImagen"
+import { type Islas, type OpcionesCelosiaImagen, type Proceso, type ResultadoCelosiaImagen, hacerCelosiaImagen, minimosSugeridos } from "@/lib/generador/celosiaImagen"
 import type { P } from "@/lib/generador/geo2d"
 import type { Imagen } from "@/lib/generador/trazado"
 
@@ -24,6 +24,7 @@ function pixeles(img: HTMLImageElement): Imagen | null {
   c.height = h
   const ctx = c.getContext("2d", { willReadFrequently: true })
   if (!ctx) return null
+  ctx.imageSmoothingQuality = "high"
   ctx.drawImage(img, 0, 0, w, h)
   const d = ctx.getImageData(0, 0, w, h)
   return { data: d.data, width: w, height: h }
@@ -34,22 +35,26 @@ const NOMBRES_ESQUINA = ["arriba izquierda", "arriba derecha", "abajo derecha", 
 /** La imagen con las 4 esquinas para arrastrar (ratón o dedo). */
 function Esquinas({ url, im, esquinas, cambiar }: { url: string; im: Imagen; esquinas: [P, P, P, P]; cambiar: (e: [P, P, P, P]) => void }) {
   const svg = useRef<SVGSVGElement>(null)
-  const [arrastra, setArrastra] = useState<number | null>(null)
+  const [arrastra, setArrastra] = useState<{ esquina: number; puntero: number } | null>(null)
   const actuales = useRef(esquinas)
   actuales.current = esquinas
   // El arrastre se sigue en toda la ventana: aunque el puntero salga de la imagen
   useEffect(() => {
     if (arrastra === null) return
     const mover = (e: PointerEvent) => {
-      if (!svg.current) return
+      if (e.pointerId !== arrastra.puntero || !svg.current) return
+      // Se soltó fuera de la ventana: ya no hay botón apretado
+      if (e.buttons === 0) return setArrastra(null)
       const r = svg.current.getBoundingClientRect()
       const x = Math.max(0, Math.min(im.width, ((e.clientX - r.left) / r.width) * im.width))
       const y = Math.max(0, Math.min(im.height, ((e.clientY - r.top) / r.height) * im.height))
       const n = [...actuales.current] as [P, P, P, P]
-      n[arrastra] = [x, y]
+      n[arrastra.esquina] = [x, y]
       cambiar(n)
     }
-    const soltar = () => setArrastra(null)
+    const soltar = (e: PointerEvent) => {
+      if (e.pointerId === arrastra.puntero) setArrastra(null)
+    }
     window.addEventListener("pointermove", mover)
     window.addEventListener("pointerup", soltar)
     window.addEventListener("pointercancel", soltar)
@@ -70,14 +75,14 @@ function Esquinas({ url, im, esquinas, cambiar }: { url: string; im: Imagen; esq
           cx={x}
           cy={y}
           r={radio}
-          fill={arrastra === i ? "#F28A3C" : "#C2560A"}
+          fill={arrastra?.esquina === i ? "#F28A3C" : "#C2560A"}
           stroke="#fff"
           strokeWidth={radio / 5}
           style={{ cursor: "grab" }}
           aria-label={`Esquina ${NOMBRES_ESQUINA[i]}`}
           onPointerDown={(e) => {
             e.preventDefault()
-            setArrastra(i)
+            if (!arrastra) setArrastra({ esquina: i, puntero: e.pointerId })
           }}
         />
       ))}
@@ -104,8 +109,22 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
   const [barrenos, setBarrenos] = useState(true)
   const [fondo, setFondo] = useState(true)
   const [diam, setDiam] = useState("8")
-  const [res, setRes] = useState<ReturnType<typeof hacerCelosiaImagen> | null>(null)
+  // El resultado guarda con qué medidas y proceso se calculó: el nombre del
+  // archivo siempre corresponde a la geometría que se descarga
+  const [res, setRes] = useState<{ r: ResultadoCelosiaImagen; medida: string; proceso: Proceso; espesor: string } | null>(null)
   const [calculando, setCalculando] = useState(false)
+  const [error, setError] = useState("")
+  const urlActual = useRef("")
+  const carga = useRef(0)
+  const trabajador = useRef<Worker | null>(null)
+  const imagenEnviada = useRef<Imagen | null>(null)
+  const ultimo = useRef(0)
+
+  // La URL de la imagen se libera al cambiarla y al salir
+  useEffect(() => () => {
+    if (urlActual.current) URL.revokeObjectURL(urlActual.current)
+    trabajador.current?.terminate()
+  }, [])
 
   // Mínimos sugeridos al cambiar de proceso o de espesor (el cliente los puede editar)
   useEffect(() => {
@@ -116,12 +135,24 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
 
   const abrir = (f?: File) => {
     if (!f) return
-    if (!/^image\//.test(f.type)) return
+    if (!/^image\/(png|jpeg|webp)$/.test(f.type)) return setError("Sube una imagen JPG, PNG o WEBP.")
     const u = URL.createObjectURL(f)
     const img = new Image()
+    const n = ++carga.current
+    const fallo = () => {
+      URL.revokeObjectURL(u)
+      if (n === carga.current) setError("No se pudo abrir esa imagen. Prueba con una captura de pantalla en PNG o JPG.")
+    }
+    img.onerror = fallo
     img.onload = () => {
+      // Si mientras tanto eligieron otra imagen, ésta ya no cuenta
+      if (n !== carga.current) return URL.revokeObjectURL(u)
       const p = pixeles(img)
-      if (!p) return
+      if (!p) return fallo()
+      if (urlActual.current) URL.revokeObjectURL(urlActual.current)
+      urlActual.current = u
+      setError("")
+      setRes(null)
       setIm(p)
       setUrl(u)
       setNombre(f.name.replace(/\.[^.]+$/, ""))
@@ -144,33 +175,72 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     return w > 0 ? h / w : 1
   }
 
-  // Se calcula un momento después del último cambio, para no trabar la página
+  // Se calcula un momento después del último cambio, en un Web Worker para que
+  // la página no se trabe; si llega un resultado viejo, se descarta
   useEffect(() => {
     if (!im) return
     setCalculando(true)
-    const t = setTimeout(() => {
-      setRes(
-        hacerCelosiaImagen(im, {
-          esquinas,
-          ancho: numero(ancho) || 600,
-          alto: numero(alto) || 600,
-          marco: numero(marco) || 0,
-          cortar,
-          umbral: umbralAuto ? null : umbral,
-          proceso,
-          puenteMin: Math.max(0.2, numero(puente) || 0.2),
-          huecoMin: Math.max(0.2, numero(hueco) || 0.2),
-          islas,
-          suave: true,
-          barrenos,
-          fondo,
-          diametroBarreno: numero(diam) || 8,
-        }),
-      )
+    const medida = `${Math.round(numero(ancho) || 600)}x${Math.round(numero(alto) || 600)}`
+    const opciones: OpcionesCelosiaImagen = {
+      esquinas,
+      ancho: numero(ancho) || 600,
+      alto: numero(alto) || 600,
+      marco: numero(marco) || 0,
+      cortar,
+      umbral: umbralAuto ? null : umbral,
+      proceso,
+      puenteMin: numero(puente) || 0.2,
+      huecoMin: numero(hueco) || 0.2,
+      islas,
+      barrenos,
+      fondo,
+      diametroBarreno: numero(diam) || 8,
+    }
+    const listo = (r: ResultadoCelosiaImagen) => {
+      setRes({ r, medida, proceso, espesor })
+      setError("")
       setCalculando(false)
-    }, 450)
+    }
+    const fallo = () => {
+      setError("No se pudo calcular el panel con estos datos. Revisa las medidas o mueve las esquinas.")
+      setCalculando(false)
+    }
+    const t = setTimeout(() => {
+      const id = ++ultimo.current
+      if (!trabajador.current && typeof Worker !== "undefined") {
+        try {
+          trabajador.current = new Worker(new URL("../../../lib/generador/celosiaImagen.worker.ts", import.meta.url))
+        } catch {
+          trabajador.current = null
+        }
+      }
+      const w = trabajador.current
+      if (!w) {
+        // Sin Web Worker: se calcula aquí mismo
+        try {
+          listo(hacerCelosiaImagen(im, opciones))
+        } catch {
+          fallo()
+        }
+        return
+      }
+      w.onmessage = (e: MessageEvent<{ id: number; resultado?: ResultadoCelosiaImagen; error?: string }>) => {
+        if (e.data.id !== ultimo.current) return
+        if (e.data.resultado) listo(e.data.resultado)
+        else fallo()
+      }
+      w.onerror = () => {
+        w.terminate()
+        trabajador.current = null
+        imagenEnviada.current = null
+        fallo()
+      }
+      const nueva = imagenEnviada.current !== im
+      w.postMessage({ id, opciones, ...(nueva ? { imagen: im } : {}) })
+      imagenEnviada.current = im
+    }, 300)
     return () => clearTimeout(t)
-  }, [im, esquinas, ancho, alto, marco, cortar, umbralAuto, umbral, proceso, puente, hueco, islas, barrenos, diam, fondo])
+  }, [im, esquinas, ancho, alto, marco, cortar, umbralAuto, umbral, proceso, puente, hueco, islas, barrenos, diam, fondo, espesor])
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -179,6 +249,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
           {im ? "Cambiar imagen" : "Subir imagen (JPG, PNG o WEBP)"}
           <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
+        {error && <p className="mt-2 text-[12.5px] text-[#F28A3C]">{error}</p>}
         {im && url && <div className="mt-2"><Esquinas url={url} im={im} esquinas={esquinas} cambiar={setEsquinas} /></div>}
       </Seccion>
       {im && (
@@ -258,7 +329,6 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     </div>
   )
 
-  const medida = `${Math.round(numero(ancho) || 0)}x${Math.round(numero(alto) || 0)}`
   return (
     <Estudio2D
       titulo="Celosía desde imagen"
@@ -277,12 +347,12 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
           {panel}
         </>
       }
-      dibujo={res?.dibujo ?? null}
-      avisos={res?.avisos ?? []}
-      archivo={`celosia-${nombre || "imagen"}-${medida}`}
-      pieza={`Celosía desde imagen ${medida} mm (${proceso}, ${espesor} mm)`}
-      material={`${proceso} ${espesor} mm`}
-      datos={res ? [["Huecos", String(res.huecos)]] : []}
+      dibujo={res?.r.dibujo ?? null}
+      avisos={res?.r.dibujo.avisos ?? []}
+      archivo={`celosia-${nombre || "imagen"}-${res?.medida ?? ""}`}
+      pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
+      material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
+      datos={res ? [["Huecos", String(res.r.huecos)]] : []}
       vacio={<p className="text-center text-[14px] text-[#8A97AB]">Sube la imagen de la celosía que te gustó y aquí aparece el panel listo para cortar.</p>}
     />
   )
