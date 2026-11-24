@@ -73,13 +73,13 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "texturizador",
     nombre: "Texturizador para impresión 3D",
-    texto: "Placa con un patrón de palabras e íconos para texturizar barro, fondant o plastilina.",
+    texto: "Placa o rodillo con un patrón de palabras e íconos para texturizar barro, fondant o plastilina.",
     icono: "relieve",
     acceso: "gratis",
-    titulo: "Texturizador 3D gratis: placa con patrón en STL",
+    titulo: "Texturizador 3D gratis: placa y rodillo con patrón en STL",
     descripcion:
-      "Haz una placa texturizadora con nombres, palabras e íconos repetidos (estrellas, corazones, huellitas, copos…), en relieve o hundida y en espejo para que se lea al presionar. Descarga gratis el STL para imprimir en 3D y úsala en barro, fondant, galletas o plastilina.",
-    meta: "Texturizador gratis para impresión 3D: placa con palabras e íconos repetidos, en relieve o hundida y en espejo. Descarga el STL al instante.",
+      "Haz una placa o un rodillo texturizador con nombres, palabras e íconos repetidos (estrellas, corazones, huellitas, copos…), en espejo para que se lea al presionar. El rodillo cierra el patrón sin costura y trae sus mangos y guías de grosor. Descarga gratis los STL para imprimir en 3D y úsalos en barro, fondant, galletas o plastilina.",
+    meta: "Texturizador gratis para impresión 3D: placa o rodillo con palabras e íconos repetidos, sin costura, con mangos y guías de grosor. Descarga los STL al instante.",
   },
   {
     slug: "rompecabezas",
