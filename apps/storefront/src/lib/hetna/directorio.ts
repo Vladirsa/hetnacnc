@@ -112,7 +112,39 @@ export function estadoMx(region?: string, ciudad?: string): string {
 
 type Crudo = Omit<EmpresaDirectorio, "estado" | "zona"> & { region?: string }
 
-async function leerTodo(): Promise<EmpresaDirectorio[]> {
+// Una sola lectura a la vez (24 nov 2026). Al desplegar, o cuando vencía la
+// caché, cada página que necesita el directorio (las ~60 ciudades de los
+// enlaces por estado, el mapa del sitio, /talleres…) lo pedía al mismo tiempo:
+// n8n recibió 60+ llamadas en un segundo, Google Sheets cortó por cuota (60
+// lecturas por minuto) y esas páginas se quedaban sin empresas. Ahora las
+// llamadas que llegan juntas comparten la misma lectura, el resultado se
+// guarda 10 minutos en memoria, y si la hoja falla se usa la última lista
+// buena (y se reintenta en un minuto).
+const VIGENCIA_MS = 10 * 60_000
+const REINTENTO_MS = 60_000
+let enCurso: { desde: number; promesa: Promise<EmpresaDirectorio[]> } | null = null
+let ultimaBuena: EmpresaDirectorio[] = []
+
+function leerTodo(): Promise<EmpresaDirectorio[]> {
+  const ahora = Date.now()
+  if (enCurso && ahora - enCurso.desde < VIGENCIA_MS) return enCurso.promesa
+  const actual = {
+    desde: ahora,
+    promesa: leerHoja().then((lista) => {
+      if (lista.length) {
+        ultimaBuena = lista
+        return lista
+      }
+      // Falló o vino vacía: se vuelve a intentar en un minuto, no en diez
+      actual.desde = Date.now() - VIGENCIA_MS + REINTENTO_MS
+      return ultimaBuena
+    }),
+  }
+  enCurso = actual
+  return actual.promesa
+}
+
+async function leerHoja(): Promise<EmpresaDirectorio[]> {
   try {
     const res = await fetch(URL_DIRECTORIO, {
       // Cloudflare rechaza clientes sin navegador conocido
