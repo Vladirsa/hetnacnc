@@ -83,3 +83,85 @@ export const estadosParaEnlaces = unstable_cache(
   ["estados-para-enlaces"],
   { revalidate: 3600, tags: ["directorio-talleres"] }
 )
+
+// ── Páginas por servicio y estado: /mx/talleres/en/<estado>/<servicio> ──
+// "Corte láser en Ciudad de México", "Router CNC en Jalisco"… Es lo que busca
+// quien hoy pide en sitios de contactos pagados: aquí llega directo a una
+// licitación de HETNA. Sólo cuentan los talleres de servicio (no los
+// proveedores de máquinas ni los cursos) y se indexa con MIN_EMPRESAS o más.
+export const PAGINAS_SERVICIO: Record<
+  ClaveServicio,
+  { slug: string; nombre: string; servicioSolicitud: string; cotizar: string | null; queHacen: string; enviar: string[] }
+> = {
+  laser: {
+    slug: "corte-laser",
+    nombre: "Corte láser",
+    servicioSolicitud: "Corte láser",
+    cotizar: "/cotizar/corte-laser",
+    queHacen: "corte y grabado láser de MDF, acrílico, madera, cartón, piel y tela: letreros, cajas, invitaciones, llaveros, piezas para maquetas y regalos personalizados",
+    enviar: ["Archivo DXF, SVG, AI o PDF vectorial (o una imagen y el taller te hace el archivo)", "Material y grosor (por ejemplo MDF 3 mm o acrílico 3 mm)", "Medidas de la pieza y cantidad", "Si lleva grabado y en qué cara"],
+  },
+  router: {
+    slug: "router-cnc",
+    nombre: "Router CNC",
+    servicioSolicitud: "Corte CNC",
+    cotizar: "/cotizar/router-cnc",
+    queHacen: "corte y tallado con router CNC de MDF, triplay, madera sólida, acrílico y aluminio: muebles, puertas, celosías, letras 3D, moldes y piezas de carpintería",
+    enviar: ["Archivo DXF, SVG o STL (o un dibujo con medidas)", "Material y grosor (por ejemplo MDF 18 mm o pino)", "Medidas, cantidad y si lleva tallado 3D", "Acabado: sólo corte, lijado, sellado o pintado"],
+  },
+  plasma: {
+    slug: "corte-plasma",
+    nombre: "Corte plasma",
+    servicioSolicitud: "Corte plasma",
+    cotizar: "/cotizar/corte-plasma",
+    queHacen: "corte plasma CNC de lámina y placa de acero al carbón, inoxidable y aluminio: letreros de metal, bases, cartelas, piezas para estructuras y decoración",
+    enviar: ["Archivo DXF a escala 1:1 en milímetros", "Material y calibre o grosor", "Medidas de la pieza y cantidad", "Si el taller pone la lámina o tú la llevas"],
+  },
+  maquinado: {
+    slug: "maquinado-cnc",
+    nombre: "Maquinado CNC",
+    servicioSolicitud: "Maquinado",
+    cotizar: null,
+    queHacen: "maquinado CNC en centro de maquinado, torno y fresadora: piezas de aluminio, acero, latón y plásticos de ingeniería, refacciones, prototipos y producción en serie",
+    enviar: ["Plano con medidas y tolerancias (PDF) y, si tienes, el modelo STEP", "Material (por ejemplo aluminio 6061 o acero 1018)", "Cantidad y fecha en que lo necesitas", "Acabado o tratamiento (anodizado, pavonado, temple…)"],
+  },
+}
+
+export const servicioPorSlug = (slug: string) =>
+  SERVICIOS_ESTADO.find((s) => PAGINAS_SERVICIO[s.clave].slug === slug)
+export const rutaServicioEstado = (c: Ciudad, clave: ClaveServicio) => `${rutaEstado(c)}/${PAGINAS_SERVICIO[clave].slug}`
+
+export type DatosServicioEstado = {
+  empresas: EmpresaDirectorio[]
+  talleres: Taller[]
+  total: number
+  municipios: [string, number][]
+}
+
+/** Los talleres de un estado que hacen ese servicio (sin proveedores ni cursos). */
+export function filtrarServicio(d: DatosEstado, clave: ClaveServicio): DatosServicioEstado {
+  const s = SERVICIOS_ESTADO.find((x) => x.clave === clave)!
+  const empresas = d.empresas.filter((e) => e.tipo === "taller" && s.patron.test(`${e.empresa} ${e.servicios}`))
+  const talleres = d.talleres.filter((t) => s.patron.test(t.perfil.servicios.join(" ")))
+  const conteo = new Map<string, number>()
+  for (const e of empresas) if (e.ciudad && e.ciudad !== d.ciudad.estado) conteo.set(e.ciudad, (conteo.get(e.ciudad) ?? 0) + 1)
+  for (const t of talleres) {
+    const m = (t.perfil.ciudad || "").trim()
+    if (m && m !== d.ciudad.estado) conteo.set(m, (conteo.get(m) ?? 0) + 1)
+  }
+  return { empresas, talleres, total: empresas.length + talleres.length, municipios: [...conteo.entries()].sort((a, b) => b[1] - a[1]) }
+}
+
+/** Servicio × estado que se indexan (mapa del sitio y enlaces). */
+export const serviciosEstadoIndexables = unstable_cache(
+  async () => {
+    const datos = await Promise.all(CIUDADES.map((c) => datosEstado(c)))
+    return datos.flatMap((d) =>
+      SERVICIOS_ESTADO.map((s) => ({ ciudad: d.ciudad, clave: s.clave, total: filtrarServicio(d, s.clave).total })).filter(
+        (x) => x.total >= MIN_EMPRESAS
+      )
+    )
+  },
+  ["servicios-estado-indexables"],
+  { revalidate: 3600, tags: ["directorio-talleres"] }
+)
