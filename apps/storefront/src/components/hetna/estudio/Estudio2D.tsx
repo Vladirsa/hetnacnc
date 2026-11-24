@@ -16,7 +16,7 @@ import { useParams } from "next/navigation"
 
 import { Aviso, Boton, Interruptor, Seccion } from "@/components/hetna/estudio3d/Controles"
 import { anidar, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
-import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { type ContextoCotizacion, mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
 import { cajaDibujo, largoCorte } from "@/lib/generador/geo2d"
 import { dibujoDXF, dibujoSVG, type Dibujo } from "@/lib/generador/vectores"
 import { capaFinal } from "@/lib/generador/capas"
@@ -57,6 +57,7 @@ export function Estudio2D({
   datos = [],
   pieza,
   material,
+  cotizar,
   sinHojas = false,
   descargas,
   vacio,
@@ -79,6 +80,9 @@ export function Estudio2D({
   // para Fabrícamelo
   pieza: string
   material?: string
+  // servicio, material y proceso ya elegidos en la herramienta: el Cotizador y
+  // Fabrícamelo abren con ellos puestos y el precio sale sin volver a capturar
+  cotizar?: ContextoCotizacion & { proceso?: string }
   // las líneas de "hoja" no se exportan
   sinHojas?: boolean
   // reemplaza los botones de descarga (p. ej. descarga con créditos); recibe la función que exporta
@@ -311,7 +315,7 @@ export function Estudio2D({
                 const medidasTxt = anidado?.hojas.length
                   ? `${anidado.hojas.length} ${anidado.hojas.length === 1 ? "hoja" : "hojas"} de ${HOJAS[hojaSel].ancho} × ${HOJAS[hojaSel].alto} mm (${anidado.totalPiezas} piezas, ${Math.round(anidado.aprovechamiento * 100)}% aprovechado)`
                   : `${Math.round(ancho)} × ${Math.round(alto)} mm`
-                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { pieza, medidas: medidasTxt, material }))
+                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { pieza, medidas: medidasTxt, material, proceso: cotizar?.proceso }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en Fabrícamelo.")
               }}
             >
@@ -320,7 +324,7 @@ export function Estudio2D({
             <Boton
               onClick={() => {
                 if (!paraExportar?.trazos.length) return
-                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio" }))
+                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio", ...cotizar }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo al cotizador.")
               }}
             >

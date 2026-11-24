@@ -10,12 +10,20 @@ import { useEffect, useRef, useState } from "react"
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import { type Islas, type OpcionesCelosiaImagen, type Proceso, type ResultadoCelosiaImagen, hacerCelosiaImagen, minimosSugeridos } from "@/lib/generador/celosiaImagen"
+import { type ContextoCotizacion, materialLaserPorEspesor, materialRouterMDF } from "@/lib/generador/aCotizador"
 import type { P } from "@/lib/generador/geo2d"
 import type { Imagen } from "@/lib/generador/trazado"
 
 import { useImagenSubida } from "./useImagenSubida"
 
 const LADO_IMAGEN = 1400
+
+/** Lo que el Cotizador necesita saber del corte (claves de hetna/cotizador/datos.json). */
+function contextoCelosia(proceso: Proceso, espesor: number): ContextoCotizacion & { proceso: string } {
+  if (proceso === "plasma") return { servicio: "plasma", tipo: "Celosía/Calado", material: "Acero al carbon", proceso: "Plasma" }
+  if (proceso === "router") return { servicio: "router", material: materialRouterMDF(espesor), proceso: "Router CNC" }
+  return { servicio: "laser_co2", tipo: "Solo corte", material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(espesor) }, proceso: "Láser" }
+}
 
 const NOMBRES_ESQUINA = ["arriba izquierda", "arriba derecha", "abajo derecha", "abajo izquierda"]
 
@@ -353,6 +361,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       archivo={`celosia-${nombre || "imagen"}-${res?.medida ?? ""}`}
       pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
       material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
+      cotizar={res ? contextoCelosia(res.proceso, numero(res.espesor) || 3) : undefined}
       datos={
         res
           ? [
