@@ -59,6 +59,10 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cotizar/impresion-3d", "weekly", 0.8],
   ["/fabricacion", "weekly", 0.9],
   ["/herramientas-cnc", "weekly", 0.9],
+  // Estaban fuera del mapa aunque se indexan (revisión del 25 nov 2026)
+  ["/calculadora-cnc", "weekly", 0.9],
+  ["/tienda", "daily", 0.8],
+  ["/distribuidores", "monthly", 0.5],
   ["/laboratorio-cam", "weekly", 0.8],
   // páginas para buscadores de las herramientas de diseño y CAM (lib/seo/programas.ts)
   ...PROGRAMAS.map((x) => [`/programas/${x.slug}`, "weekly", 0.8] as [string, Frecuencia, number]),

@@ -3,7 +3,7 @@
 //                                   | { accion: "google" | "tendencias" | "retencion" } | { accion: "referencia", url, nota? }
 //                                   | { hacer: true, tipo? }  (hacer el de hoy ahora, en segundo plano)
 //                                   | { accion: "explicativo", tema? } (video explicativo ahora, en segundo plano)
-//                                   | { explicativo: boolean }  (prender o apagar el explicativo de lunes y jueves)
+//                                   | { explicativo: boolean }  (prender o apagar el explicativo diario)
 // Estudio diario: guion → voz → escenas con IA de video → publicación (lib/fabrica/estudio).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
