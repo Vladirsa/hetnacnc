@@ -56,6 +56,41 @@ export const materialRouterMDF = (mm: number) => `MDF ${[3, 9, 15, 18].reduce((a
 
 export const materialLaserPorEspesor = (mm: number): "mdf_fino" | "mdf_medio" | "otros" => (mm <= 4.5 ? "mdf_fino" : mm <= 7.5 ? "mdf_medio" : "otros")
 
+// ── Precio en vivo (/store/precio-instantaneo): su vocabulario de materiales ──
+/** Material de láser para el precio en vivo según el espesor. */
+export const materialLaserPrecio = (mm?: number) => (mm && mm <= 2.5 ? "MDF delgado (hasta 2.5mm)" : mm && mm > 5.5 ? "Acrílico, cuero, tela u otro" : "MDF/Madera (3-5mm)")
+/** Calibre de plasma para el precio en vivo (claves de PLASMA_CALIBRE en el backend). */
+export const calibrePlasmaPrecio = (mm: number) => (mm <= 2.2 ? "Lámina delgada (cal. 20 a 12)" : mm <= 4.2 ? 'Lámina gruesa (1/8", 3 mm)' : "Placa (cal. 10 o más grueso)")
+/** Servicio y material del precio en vivo para MDF del espesor dado, en router o láser. */
+export const precioMDF = (maquina: "router" | "laser", mm?: number) =>
+  maquina === "router" ? { servicio: "router" as const, material: materialRouterMDF(mm || 15) } : { servicio: "laser_co2" as const, material: materialLaserPrecio(mm) }
+/** El mismo acero se escribe distinto en cada sistema: sin acento en el Cotizador, con acento en el precio en vivo. */
+export const ACERO_COTIZADOR = "Acero al carbon"
+export const ACERO_PRECIO = "Acero al carbón"
+
+/** Contexto del Cotizador para cortar MDF del espesor dado en router o en láser. */
+export function contextoMDF(maquina: "router" | "laser", mm: number): ContextoCotizacion {
+  return maquina === "router"
+    ? { servicio: "router", material: materialRouterMDF(mm) }
+    : { servicio: "laser_co2", tipo: "Solo corte", material: "MDF", opciones: { materialLaser: materialLaserPorEspesor(mm) } }
+}
+
+/** Servicio del Cotizador → servicio de la solicitud de Fabrícamelo (SERVICIOS_SOLICITUD). */
+export function procesoDeServicio(servicio?: ContextoCotizacion["servicio"]): string | undefined {
+  switch (servicio) {
+    case "laser_co2":
+      return "Corte láser"
+    case "plasma":
+      return "Corte plasma"
+    case "router":
+      return "Corte CNC"
+    case "impresion_3d":
+      return "Impresión 3D"
+    default:
+      return undefined
+  }
+}
+
 function guardarPaquete(p: PaqueteCotizacion & { t: number }): Promise<boolean> {
   return new Promise((ok) => {
     try {

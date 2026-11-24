@@ -965,6 +965,14 @@ export type Routes = {
             pendientes: typeof import("../src/api/store/resenas/pendientes/route");
             promedios: typeof import("../src/api/store/resenas/promedios/route");
         };
+        simulador: {
+            certificado: typeof import("../src/api/store/simulador/certificado/route");
+            ejercicios: typeof import("../src/api/store/simulador/ejercicios/route") & {
+                $id: {
+                    calificar: typeof import("../src/api/store/simulador/ejercicios/[id]/calificar/route");
+                };
+            };
+        };
         solicitudArchivos: typeof import("../src/api/store/solicitud-archivos/route") & {
             boleto: typeof import("../src/api/store/solicitud-archivos/boleto/route");
         };
