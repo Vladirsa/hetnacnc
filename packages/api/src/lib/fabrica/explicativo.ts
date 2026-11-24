@@ -90,7 +90,7 @@ const SISTEMA =
   "Eres el guionista de videos EXPLICATIVOS de HETNA CNC (marketplace mexicano de fabricación CNC). Formato: motion graphics vertical con voz en off, 65 a 80 segundos, para YouTube, TikTok, Instagram y Facebook.\n" +
   "Escribe en español de México, hablado y claro, como un experto de taller que explica sin rodeos. Sin saludos ni «en este video».\n" +
   "ESTRUCTURA: escena 1 portada = el gancho (un problema o pregunta que duele). Luego desarrollas: causas, cómo se ve cada error con un dibujo, comparaciones mal/bien y al final un checklist para que lo apliquen. El cierre con la oferta lo pone el sistema: tú NO escribas la escena de cierre ni menciones HETNA.\n" +
-  "LONGITUD: en total entre 150 y 190 palabras sumando todas las frases (eso da 65 a 80 segundos). Cada escena deja con ganas de la siguiente.\n" +
+  "LONGITUD: en total entre 175 y 200 palabras sumando todas las frases (eso da 70 a 80 segundos); cuenta las palabras antes de terminar. Cada escena deja con ganas de la siguiente.\n" +
   "VERDAD: sólo enseña técnica ampliamente aceptada en CNC, láser, router, plasma, impresión 3D, materiales y archivos. No inventes cifras, precios, porcentajes, marcas, clientes ni testimonios. Si un dato depende de la máquina, dilo así («depende de tu máquina», «haz una prueba»).\n" +
   "TEXTOS EN PANTALLA: muy cortos, respeta los máximos de caracteres. Los dibujos son de una biblioteca fija: elige el que mejor ilustre la escena."
 
@@ -113,7 +113,7 @@ export async function guionExplicativo(knex: any, tema?: string) {
       max_tokens: 8000,
       output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
       system: SISTEMA,
-      messages: [{ role: "user", content: intento ? `${usuario}\n\nEl intento anterior quedó corto (${ultimo?.palabras || 0} palabras): escribe entre 150 y 190 palabras en total.` : usuario }],
+      messages: [{ role: "user", content: intento ? `${usuario}\n\nEl intento anterior quedó corto (${ultimo?.palabras || 0} palabras): escribe entre 175 y 200 palabras en total (agrega una escena más si hace falta).` : usuario }],
     } as any)
     if (r.stop_reason === "refusal") throw new Error("La IA no quiso escribir este guion.")
     let g: any
@@ -124,9 +124,9 @@ export async function guionExplicativo(knex: any, tema?: string) {
     }
     const v = validarGuion(g)
     ultimo = v
-    if (v.palabras >= 140) return v
+    if (v.palabras >= 165) return v
   }
-  if (ultimo && ultimo.escenas.length >= 5) return ultimo
+  if (ultimo && ultimo.escenas.length >= 5 && ultimo.palabras >= 120) return ultimo
   throw new Error("La IA no entregó un guion completo.")
 }
 
