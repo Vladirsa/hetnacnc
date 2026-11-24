@@ -50,6 +50,7 @@ export function Footer() {
     { label: "HETNA en Latinoamérica, EUA y España", path: "/latinoamerica" },
     { label: "Anúnciate en HETNA", path: "/anunciate" },
     { label: "Términos para vendedores", path: "/terminos-vendedores" },
+    { label: "Eliminar mi cuenta", path: "/eliminar-cuenta" },
   ]
 
   // Guías CNC (lib/seo/guias.ts): enlaces internos a las páginas por búsqueda
