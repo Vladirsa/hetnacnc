@@ -21,7 +21,9 @@ type Estado = "listo" | "corriendo" | "pausa" | "alarma" | "terminado"
 const BTN = "rounded-[8px] px-3 py-2 text-[13px] font-bold transition disabled:opacity-40"
 const CAMPO = "w-full rounded-[8px] border border-[#2B3648] bg-[#0F151E] px-2 py-1.5 text-[13px] text-white"
 
-export function SimuladorTorno() {
+export type InicialTorno = { clave: number; codigo: string; barra: Barra; inserto: Inserto }
+
+export function SimuladorTorno({ inicial, alCambiarCodigo, aviso }: { inicial?: InicialTorno; alCambiarCodigo?: (codigo: string) => void; aviso?: React.ReactNode } = {}) {
   const [ejemploId, setEjemploId] = useState(EJEMPLOS_TORNO[0].id)
   const [codigo, setCodigo] = useState(EJEMPLOS_TORNO[0].codigo)
   const [barra, setBarra] = useState<Barra>(EJEMPLOS_TORNO[0].barra)
@@ -35,6 +37,30 @@ export function SimuladorTorno() {
   const [version, setVersion] = useState(0)
   const [progreso, setProgreso] = useState(0)
   const [alarmaActiva, setAlarmaActiva] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!inicial) return
+    setEjemploId("")
+    setBarra(inicial.barra)
+    setInserto(inicial.inserto)
+    setCodigo(inicial.codigo)
+  }, [inicial?.clave]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Avisa los cambios del programa (para guardarlo en el ejercicio), pero sólo
+  // después de haber cargado el del ejercicio: si no, lo pisaría el de ejemplo
+  const alCambiarRef = useRef(alCambiarCodigo)
+  alCambiarRef.current = alCambiarCodigo
+  const cargado = useRef(false)
+  useEffect(() => {
+    cargado.current = false
+  }, [inicial?.clave])
+  useEffect(() => {
+    if (!inicial) return
+    if (!cargado.current) {
+      if (codigo === inicial.codigo) cargado.current = true
+      return
+    }
+    alCambiarRef.current?.(codigo)
+  }, [codigo]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const resultado = useMemo(() => interpretarTorno(codigo, barra, inserto), [codigo, barra, inserto])
   const perfil = useMemo(() => new Perfil(barra, 0.1), [barra])
@@ -186,7 +212,8 @@ export function SimuladorTorno() {
   return (
     <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
       <section className="flex min-w-0 flex-col gap-3">
-        <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
+        {aviso}
+        <div className={`rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3 ${aviso ? "hidden" : ""}`}>
           <label className="text-[12px] font-semibold text-[#8A97AB]">Ejercicio de torno</label>
           <select className={CAMPO} value={ejemploId} onChange={(e) => cargarEjemplo(e.target.value)}>
             {!ejemploId && <option value="">Mi programa</option>}

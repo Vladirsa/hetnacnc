@@ -13,7 +13,7 @@
 // programa, así un rápido que pasa por donde ya se cortó no cuenta como choque.
 // Lo que no simula (G71/G70, roscas, compensación de radio) lo avisa.
 
-import { palabras, type Alarma } from "./gcode"
+import { LARGO_TOTAL_MAX, LINEAS_MAX, palabras, RECORRIDO_MAX, type Alarma } from "./gcode"
 
 export type PuntoT = { x: number; z: number } // x = RADIO (mm), z (mm)
 
@@ -148,7 +148,7 @@ function centroPorRXZ(a: PuntoT, b: PuntoT, R: number, horario: boolean) {
 }
 
 export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto): ResultadoT {
-  const lineas = String(texto || "").replace(/\r/g, "").split("\n")
+  const lineas = String(texto || "").replace(/\r/g, "").split("\n").slice(0, LINEAS_MAX)
   const perfil = new Perfil(barra, 0.1)
   const movimientos: MovimientoT[] = []
   const alarmas: Alarma[] = []
@@ -173,6 +173,8 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
   let tiempo = 0
   let errores = 0
   let ciclo: { inicio: PuntoT; ultimo: PuntoT | null } | null = null
+  let largoTotal = 0
+  let detenido = false
 
   const rpmEn = (radio: number) => {
     if (!css) return s
@@ -183,9 +185,22 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
   }
 
   const mover = (linea: number, tipo: MovimientoT["tipo"], puntos: PuntoT[]) => {
-    if (puntos.length < 2) return
+    if (puntos.length < 2 || detenido) return
+    if (puntos.some((p) => !(Math.abs(p.x) <= RECORRIDO_MAX && Math.abs(p.z) <= RECORRIDO_MAX))) {
+      error(linea, `Fuera de recorrido: la máquina no llega a ±${RECORRIDO_MAX} mm. Revisa las coordenadas (¿pulgadas en lugar de milímetros?).`)
+      errores++
+      detenido = true
+      return
+    }
     const largo = puntos.slice(1).reduce((acc, p, i) => acc + Math.hypot(p.x - puntos[i].x, p.z - puntos[i].z), 0)
     if (largo < 1e-9) return
+    largoTotal += largo
+    if (largoTotal > LARGO_TOTAL_MAX) {
+      error(linea, `El programa es demasiado largo para el simulador (más de ${LARGO_TOTAL_MAX / 1000} m de recorrido).`)
+      errores++
+      detenido = true
+      return
+    }
     const rpm = rpmEn(Math.min(...puntos.map((p) => p.x)))
     const fMin = tipo === "rapido" ? RAPIDO_TORNO : porVuelta ? f * Math.max(rpm, 1) : f
     tiempo += largo / Math.max(fMin, 1)
@@ -356,7 +371,7 @@ export function interpretarTorno(texto: string, barra: Barra, inserto: Inserto):
       }
     }
 
-    if (terminar) break
+    if (terminar || detenido) break
     if (errores > 50) {
       error(n, "Demasiados errores: el simulador se detuvo aquí.")
       break
