@@ -262,10 +262,10 @@ const MODELO_VOZ = () => process.env.ESTUDIO_MODELO_VOZ || "fal-ai/minimax/speec
 const VOZ_ID = () => process.env.ESTUDIO_VOZ || "Determined_Man"
 const USD_VOZ_MIL = 0.1
 
-export async function vozEscena(texto: string, voz?: string) {
+export async function vozEscena(texto: string, voz?: string, velocidad = 1.08) {
   const out = await fal(MODELO_VOZ(), {
     prompt: texto,
-    voice_setting: { voice_id: voz || VOZ_ID(), speed: 1.08, vol: 1, pitch: 0 },
+    voice_setting: { voice_id: voz || VOZ_ID(), speed: velocidad, vol: 1, pitch: 0 },
     language_boost: "Spanish",
     output_format: "url",
     audio_setting: { format: "mp3", sample_rate: 44100, bitrate: 128000, channel: 1 },
