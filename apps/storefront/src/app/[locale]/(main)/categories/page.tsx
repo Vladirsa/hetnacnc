@@ -16,7 +16,7 @@ import { paramsDe } from "@/lib/helpers/busqueda-listado"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { SITIO_CANONICO, buildHreflangAlternates } from "@/lib/helpers/hreflang"
 import { PESTANAS, esIndexable, explorar, leerPestana } from "@/lib/hetna/explorar"
-import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
+import { estadosParaEnlaces } from "@/lib/seo/estados"
 
 export const revalidate = 60
 
@@ -64,9 +64,7 @@ export default async function TodosLosProductos({ params, searchParams }: Props)
     categoriasSugeridas(),
     // Sólo en la pestaña Talleres: enlaces a "Talleres CNC en <estado>"
     leerPestana(sp.get("tipo")) === "talleres"
-      ? estadosIndexables()
-          .then((l) => l.map((x) => ({ nombre: x.ciudad.estado, ruta: rutaEstado(x.ciudad), total: x.total })).sort((a, b) => b.total - a.total))
-          .catch(() => [])
+      ? estadosParaEnlaces().catch(() => [])
       : Promise.resolve([]),
   ])
   const info = PESTANAS.find((p) => p.id === r.pestana)!

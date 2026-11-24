@@ -16,8 +16,8 @@ export function BarraEstudio() {
   const actual =
     /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon"
       ? "caja-con-juntas"
-      : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva"
-        ? "celosias" // los tres modos de Patrones de corte
+      : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva" || params?.herramienta === "patron-voronoi" || params?.herramienta === "celosia-desde-imagen"
+        ? "celosias" // los modos de Patrones de corte
         : params?.herramienta === "estencil-letras" || params?.herramienta === "codigo-qr"
           ? "letreros" // los tres modos de Letreros y placas
           : params?.herramienta === "grabado-foto" || params?.herramienta === "litofania-relieve"
@@ -26,7 +26,7 @@ export function BarraEstudio() {
               ? "convertidor" // Archivos
               : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas" || params?.herramienta === "esferas-navidad"
                 ? "relojes" // Decoración
-                : params?.herramienta === "muebles-ensamble" || params?.herramienta === "muebles-desde-imagen" || params?.herramienta === "molduras-tallados"
+                : params?.herramienta === "muebles-ensamble" || params?.herramienta === "muebles-desde-imagen" || params?.herramienta === "molduras-tallados" || params?.herramienta === "costillas-desde-imagen"
                   ? "despiece-muebles" // Muebles
                   : params?.herramienta === "engranes"
                   ? "rompecabezas" // Juegos y mecanismos

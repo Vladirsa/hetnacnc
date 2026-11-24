@@ -25,6 +25,24 @@ export const MAX_MB_ARCHIVO = 90
 export const MAX_MB_IMAGEN = 8
 export const EXTENSIONES = ["dxf", "svg", "dwg", "ai", "eps", "pdf", "stl", "step", "stp", "3mf", "obj", "crv", "crv3d", "zip", "rar", "nc", "tap", "gcode"]
 
+// Regla del dueño para sus archivos: de $30 (uno sencillo) a $250 (paquetes),
+// redondeado a múltiplos de 10. Lo que proponga la IA se ajusta a ese rango.
+export const PRECIO_MIN = Number(process.env.DISENOS_PRECIO_MIN) || 30
+export const PRECIO_MAX = Number(process.env.DISENOS_PRECIO_MAX) || 250
+export function precioDiseno(v: unknown): number {
+  const n = Number(v)
+  const base = Number.isFinite(n) && n > 0 ? n : 50
+  return Math.max(PRECIO_MIN, Math.min(PRECIO_MAX, Math.round(base / 10) * 10))
+}
+
+// Regla del dueño: sus diseños se venden para que el cliente los use, fabrique y
+// venda lo que haga con ellos («Producción sin límite»). Se puede cambiar a mano
+// en la pantalla o con DISENOS_LICENCIA (personal | comercial_limitada | comercial_ampliada).
+const LICENCIAS = ["personal", "comercial_limitada", "comercial_ampliada"] as const
+export const LICENCIA_DUENO = (LICENCIAS as readonly string[]).includes(String(process.env.DISENOS_LICENCIA))
+  ? (process.env.DISENOS_LICENCIA as (typeof LICENCIAS)[number])
+  : "comercial_ampliada"
+
 export const falListo = () => !!(process.env.FAL_KEY || "").trim()
 
 /** SKU nuevo y único para un diseño subido desde el panel. */
@@ -177,8 +195,8 @@ const ESQUEMA = {
     keyword_principal: { type: "string", description: "La búsqueda principal en Google, 2 a 5 palabras (ej. 'bandeja navideña dxf')." },
     meta_description: { type: "string", description: "Meta descripción para Google, 140 a 155 caracteres, con la palabra clave y una invitación a comprar o descargar." },
     faq: { type: "array", description: "3 preguntas frecuentes útiles con su respuesta corta.", items: { type: "object", additionalProperties: false, required: ["p", "r"], properties: { p: { type: "string" }, r: { type: "string" } } } },
-    precio_mxn: { type: "number", description: "Precio sugerido en pesos: 29 a 49 para piezas sencillas, 59 a 99 para diseños elaborados o de ensamble, 129 a 249 para paquetes. Termina en 9." },
-    licencia: { type: "string", enum: ["personal", "comercial_limitada", "comercial_ampliada"], description: "personal para decoración/uso propio; comercial_limitada si es un producto que un taller querría fabricar y vender." },
+    precio_mxn: { type: "number", description: "Precio en pesos (regla del dueño: de $30 a $250). Archivo sencillo: 30 a 60. Diseño elaborado o de ensamble: 70 a 150. Paquete de varios diseños: 150 a 250. Múltiplo de 10." },
+    licencia: { type: "string", enum: ["personal", "comercial_limitada", "comercial_ampliada"], description: "Siempre comercial_ampliada: el dueño vende sus diseños para que el cliente los fabrique y venda sin límite." },
     nota: { type: "string", description: "Una línea para el dueño: qué revisar o qué dato falta (ej. 'confirma las medidas')." },
   },
 }
@@ -205,8 +223,8 @@ export async function proponerFicha(
     keyword_principal: "",
     meta_description: "",
     faq: [],
-    precio_mxn: 49,
-    licencia: "personal",
+    precio_mxn: 50,
+    licencia: LICENCIA_DUENO,
     nota: "Sin IA en el servidor: llena la ficha a mano.",
   }
   if (!iaSocial()) return { ...vacia, handle: slug(`${vacia.titulo} ${e.sku || ""}`) }
@@ -233,7 +251,7 @@ export async function proponerFicha(
   if ((resp as any).stop_reason === "refusal") return { ...vacia, handle: slug(`${vacia.titulo} ${e.sku || ""}`), nota: "La IA no pudo describir este diseño: llénalo a mano." }
   const r = JSON.parse((resp as any).content.filter((b: any) => b.type === "text").map((b: any) => b.text).join(""))
   const titulo = String(r.titulo || vacia.titulo).slice(0, 120)
-  const precio = Math.max(19, Math.min(999, Math.round(Number(r.precio_mxn) || 49)))
+  const precio = precioDiseno(r.precio_mxn)
   return {
     titulo,
     titulo_seo: String(r.titulo_seo || titulo).slice(0, 70),
@@ -248,7 +266,8 @@ export async function proponerFicha(
     meta_description: String(r.meta_description || "").slice(0, 160),
     faq: (Array.isArray(r.faq) ? r.faq : []).slice(0, 5).map((x: any) => ({ p: String(x.p || "").slice(0, 200), r: String(x.r || "").slice(0, 500) })),
     precio_mxn: precio,
-    licencia: ["personal", "comercial_limitada", "comercial_ampliada"].includes(r.licencia) ? r.licencia : "personal",
+    // La licencia la decide el dueño, no la IA
+    licencia: LICENCIA_DUENO,
     nota: String(r.nota || "").slice(0, 300),
   }
 }

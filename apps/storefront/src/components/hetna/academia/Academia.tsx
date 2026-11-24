@@ -247,6 +247,23 @@ export function Academia({
         )}
 
         <LocalizedClientLink
+          href="/cam/simulador"
+          className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#0F151E] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
+        >
+          <span className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Nuevo · gratis · en el navegador</span>
+            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]">Simulador CNC: aprende G-code sin romper fresas</span>
+            <span className="max-w-[640px] text-[14.5px] leading-relaxed text-white/75">
+              Escribe o sube tu programa y mira cómo la fresa corta el material en 3D. La máquina virtual se detiene en los
+              choques y errores, como una de verdad. Con ejercicios para practicar.
+            </span>
+          </span>
+          <span className="shrink-0 self-start rounded-[10px] bg-[#F07A1A] px-5 py-3 text-[14.5px] font-extrabold text-white group-hover:brightness-110 sm:self-auto">
+            Abrir el simulador →
+          </span>
+        </LocalizedClientLink>
+
+        <LocalizedClientLink
           href="/disenar/despiece-muebles"
           className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#142033] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
         >

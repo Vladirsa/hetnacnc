@@ -343,8 +343,37 @@ export const avisoEs = (d: Datos): Seccion[] => [
     ],
   },
   {
+    id: "app",
+    titulo: "14. App HETNA CNC para talleres (Cotizador)",
+    bloques: [
+      {
+        p: "La app HETNA CNC (en Google Play, como APK y en hetnacnc.com/cotizador) es el sistema con el que un taller cotiza, cobra y controla su trabajo. Guarda los datos del taller y de su operación: cotizaciones, pedidos, clientes, productos, inventario, compras, gastos, máquinas y empleados.",
+      },
+      {
+        p: "Los datos de los clientes del taller (nombre, teléfono, correo, domicilio y lo que el taller anote) los captura el propio taller. HETNA los guarda por cuenta del taller (como encargado) y solo los usa para darle el servicio; no los usa para fines propios ni los comparte con otros talleres.",
+      },
+      {
+        tabla: {
+          cab: ["Permiso del teléfono", "Para qué se usa", "Qué se guarda"],
+          filas: [
+            ["Contactos (solo lectura)", "Elegir un cliente de tu agenda al cotizar. Solo se pide cuando tocas esa opción.", "La lista se lee en tu teléfono y no se sube. Solo se guarda el contacto que eliges (nombre, teléfono y correo)."],
+            ["Cámara", "Leer códigos QR y de barras (órdenes de trabajo e inventario).", "Nada: el lector no guarda fotos ni video."],
+            ["Notificaciones", "Avisarte de pedidos, pagos, mantenimientos y recordatorios.", "Un identificador del dispositivo de Firebase Cloud Messaging (Google), para poder enviarte los avisos."],
+            ["Archivos y fotos", "Subir lo que tú eliges: dibujos DXF o SVG, modelos STL, logos y fotos de productos.", "Solo los archivos que subes."],
+          ],
+        },
+      },
+      {
+        p: "La app no usa tu ubicación, no muestra publicidad y no vende tus datos.",
+      },
+      {
+        p: `Eliminar tu cuenta: puedes pedirlo desde la app (menú Más → Eliminar mi cuenta) o en hetnacnc.com/mx/eliminar-cuenta, o escribiéndonos por ${contactoEs(d)}. Se borran tu usuario y, si eres el administrador del taller, los datos del taller (cotizaciones, pedidos, clientes, inventario, empleados y archivos). Solo conservamos lo que la ley nos obligue a guardar (por ejemplo, facturas emitidas) y por el tiempo que lo exija; las copias de respaldo cifradas se borran cuando esos respaldos se renuevan. Lo hacemos en los plazos de la sección 9.`,
+      },
+    ],
+  },
+  {
     id: "cambios",
-    titulo: "14. Cambios a este aviso",
+    titulo: "15. Cambios a este aviso",
     bloques: [
       {
         p: "Si cambiamos este aviso, publicaremos la nueva versión en esta página con su fecha de vigencia. Si el cambio es importante (por ejemplo, una finalidad nueva que requiera tu consentimiento), además te avisaremos por correo o con un mensaje en el sitio antes de aplicarlo.",
@@ -653,8 +682,37 @@ export const avisoEn = (d: Datos): Seccion[] => [
     ],
   },
   {
+    id: "app",
+    titulo: "14. HETNA CNC app for shops (Cotizador)",
+    bloques: [
+      {
+        p: "The HETNA CNC app (on Google Play, as an APK and at hetnacnc.com/cotizador) is the system a shop uses to quote, get paid and run its work. It stores the shop's data and operations: quotes, orders, customers, products, inventory, purchases, expenses, machines and employees.",
+      },
+      {
+        p: "The shop's customers' data (name, phone, email, address and any notes) is entered by the shop itself. HETNA stores it on the shop's behalf (as a processor) and only uses it to provide the service; we do not use it for our own purposes or share it with other shops.",
+      },
+      {
+        tabla: {
+          cab: ["Phone permission", "What it is used for", "What is stored"],
+          filas: [
+            ["Contacts (read only)", "Pick a customer from your phone book when quoting. Only requested when you tap that option.", "The list is read on your phone and is not uploaded. Only the contact you pick is saved (name, phone and email)."],
+            ["Camera", "Scan QR codes and barcodes (work orders and inventory).", "Nothing: the scanner does not save photos or video."],
+            ["Notifications", "Alert you about orders, payments, maintenance and reminders.", "A Firebase Cloud Messaging (Google) device identifier, so we can send you alerts."],
+            ["Files and photos", "Upload what you choose: DXF or SVG drawings, STL models, logos and product photos.", "Only the files you upload."],
+          ],
+        },
+      },
+      {
+        p: "The app does not use your location, does not show ads and does not sell your data.",
+      },
+      {
+        p: `Deleting your account: you can request it from the app (More menu → Delete my account), at hetnacnc.com/mx/eliminar-cuenta, or by contacting us at ${contactoEn(d)}. We delete your user and, if you are the shop's administrator, the shop's data (quotes, orders, customers, inventory, employees and files). We only keep what the law requires us to keep (for example, issued invoices) and for as long as it requires; encrypted backup copies are deleted when those backups are rotated. We do it within the time frames in section 9.`,
+      },
+    ],
+  },
+  {
     id: "cambios",
-    titulo: "14. Changes to this notice",
+    titulo: "15. Changes to this notice",
     bloques: [
       {
         p: "If we change this notice, we will post the new version on this page with its effective date. If the change is significant (for example, a new purpose that requires your consent), we will also let you know by email or with a notice on the site before it applies.",
@@ -665,6 +723,12 @@ export const avisoEn = (d: Datos): Seccion[] => [
 
 // Historial de versiones (lo más nuevo arriba)
 export const HISTORIAL = [
+  {
+    version: "2.7",
+    fecha: "2026-11-24",
+    cambio: "Nueva sección 14 sobre la app HETNA CNC para talleres: datos que guarda, permisos del teléfono (contactos, cámara, notificaciones, archivos) y cómo eliminar tu cuenta.",
+    cambioEn: "New section 14 on the HETNA CNC app for shops: data it stores, phone permissions (contacts, camera, notifications, files) and how to delete your account.",
+  },
   {
     version: "2.6",
     fecha: "2026-11-14",

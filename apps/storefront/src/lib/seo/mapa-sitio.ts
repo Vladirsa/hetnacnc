@@ -66,6 +66,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/subir", "weekly", 0.6],
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],
+  ["/cam/simulador", "weekly", 0.7],
   ["/talleres", "weekly", 0.8],
   ["/creadores", "monthly", 0.5],
   ["/latinoamerica", "weekly", 0.6],
@@ -92,6 +93,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/terminos-y-condiciones", "yearly", 0.2],
   ["/terminos-vendedores", "yearly", 0.2],
   ["/aviso-de-privacidad", "yearly", 0.2],
+  ["/eliminar-cuenta", "yearly", 0.1],
 ]
 
 // Categorías cuya página redirige a otra (categories/[category]/page.tsx).

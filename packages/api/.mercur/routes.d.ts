@@ -602,6 +602,7 @@ export type Routes = {
         hetnaLicitaciones: {
             embudo: typeof import("../src/api/admin/hetna-licitaciones/embudo/route");
         };
+        hetnaLlaves: typeof import("../src/api/admin/hetna-llaves/route");
         hetnaMateriales: typeof import("../src/api/admin/hetna-materiales/route") & {
             importar: typeof import("../src/api/admin/hetna-materiales/importar/route");
         };

@@ -102,6 +102,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Sube la foto o el plano de un mueble y la IA lo convierte en piezas con caja y espiga a tu medida, listas para cortar en router CNC.",
   },
   {
+    slug: "costillas-desde-imagen",
+    nombre: "Costillas desde imagen",
+    texto: "Pared paramétrica o banca de tablas paralelas que siguen tu imagen, vista armada en 3D.",
+    icono: "mueble",
+    acceso: "gratis",
+    titulo: "Pared paramétrica y banca de costillas desde una imagen para CNC",
+    descripcion:
+      "Sube una imagen (una ola, una montaña, un logotipo o una foto con profundidad por IA) y sale una pared paramétrica, cabecera o banca hecha de costillas: cada tabla sigue la imagen. Ranuras a media madera o varillas roscadas, alivio para fresa, piezas numeradas y acomodadas en hojas, vista 3D y DXF para router CNC o láser.",
+    meta: "Sube una imagen y descarga gratis una pared paramétrica o banca de costillas en DXF, con ranuras, piezas numeradas y acomodo en hojas para router CNC.",
+  },
+  {
     slug: "molduras-tallados",
     nombre: "Molduras y tallados",
     texto: "Perfiles de moldura y paneles tallados en 3D, listos para el Laboratorio CAM.",
@@ -229,6 +240,28 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     titulo: "Celosías y paneles decorativos CNC gratis",
     descripcion:
       "Diseña gratis celosías y paneles calados para divisores, puertas de closet, plafones y fachadas: 10 patrones, medidas, marco y puente entre huecos. Descarga DXF, SVG o PDF para router, láser o plasma.",
+  },
+  {
+    slug: "celosia-desde-imagen",
+    nombre: "Celosía desde imagen",
+    texto: "Sube la foto de la celosía que te gustó y sale el panel listo para plasma, láser o router.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Celosía desde imagen: de foto a DXF para plasma y láser",
+    descripcion:
+      "Sube la foto o captura de una celosía, enderézala con 4 puntos y elige plasma, láser o router y el espesor: la app quita huecos que no se cortan, engruesa puentes delgados y une las piezas sueltas. Descarga gratis el panel con marco en DXF, SVG o PDF.",
+    meta: "Convierte la foto de una celosía en un panel listo para plasma, láser o router: revisa puentes, huecos e islas y descarga gratis el DXF.",
+  },
+  {
+    slug: "patron-voronoi",
+    nombre: "Patrón Voronoi",
+    texto: "Celdas irregulares para celosías, lámparas, mesas y mosaicos: cada clic, un diseño nuevo.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Generador de patrón Voronoi para láser y CNC",
+    descripcion:
+      "Crea gratis paneles y mosaicos con patrón Voronoi: rectángulo o círculo, cuántas celdas, puente, redondeo y dónde van más celdas. Cada clic da un diseño nuevo. Descarga DXF, SVG o PDF para láser, router o plasma.",
+    meta: "Genera gratis patrones Voronoi para celosías, lámparas y mosaicos: elige forma, celdas y puente y descarga el DXF o SVG para cortar.",
   },
   {
     slug: "bisagra-viva",

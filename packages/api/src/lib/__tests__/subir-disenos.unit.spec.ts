@@ -44,3 +44,22 @@ describe("imagen tal cual", () => {
     expect([meta.width, meta.height, meta.format]).toEqual([1200, 1200, "jpeg"])
   })
 })
+
+describe("precio de los diseños del dueño", () => {
+  const { precioDiseno } = require("../subir-disenos")
+  it("de $30 a $250, en múltiplos de 10", () => {
+    expect(precioDiseno(29)).toBe(30)
+    expect(precioDiseno(49)).toBe(50)
+    expect(precioDiseno(87)).toBe(90)
+    expect(precioDiseno(249)).toBe(250)
+    expect(precioDiseno(400)).toBe(250)
+    expect(precioDiseno(5)).toBe(30)
+    expect(precioDiseno(undefined)).toBe(50)
+  })
+})
+
+describe("licencia de los diseños del dueño", () => {
+  it("por omisión: producción sin límite (el cliente fabrica y vende)", () => {
+    expect(require("../subir-disenos").LICENCIA_DUENO).toBe("comercial_ampliada")
+  })
+})
