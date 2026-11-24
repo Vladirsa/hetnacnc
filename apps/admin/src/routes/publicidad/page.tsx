@@ -422,6 +422,12 @@ export default function PaginaPublicidad() {
               setEditando((b) => (b ? { ...b, espacio: esp, es_publicidad: datos.espacios[esp]?.publicidad ?? b.es_publicidad } : b))
             }}
           >
+            {/* Un anuncio guardado en un espacio que ya no existe: se ve aquí para moverlo */}
+            {!datos.orden.includes(editando.espacio) && (
+              <option value={editando.espacio} disabled>
+                {editando.espacio} (ya no existe en la página: elige otro)
+              </option>
+            )}
             {datos.orden.map((id) => (
               <option key={id} value={id}>
                 {datos.espacios[id]?.nombre ?? id}
@@ -446,26 +452,6 @@ export default function PaginaPublicidad() {
           onCambio={(u) => cambia("imagen_url", u)}
           jpg={editando.espacio === "vista_whatsapp"}
         />
-
-        {editando.espacio === "carrusel_principal" && (
-          <>
-            <CampoImagen
-              titulo="Imagen para celular (opcional)"
-              ayuda="Versión más vertical, 800 × 900 px aprox. Si no la subes, se usa la misma imagen."
-              valor={editando.imagen_movil_url}
-              anchoMax={900}
-              onCambio={(u) => cambia("imagen_movil_url", u)}
-            />
-            <Campo titulo="Video MP4 (opcional)">
-              <input
-                style={campo}
-                placeholder="https://…/video.mp4 (corto, menos de 5 MB)"
-                value={editando.video_url}
-                onChange={(e) => cambia("video_url", e.target.value)}
-              />
-            </Campo>
-          </>
-        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
           <Campo titulo="Título (opcional)">
@@ -575,7 +561,7 @@ export default function PaginaPublicidad() {
           </p>
         </div>
         {datos && (
-          <button type="button" style={boton(true)} onClick={() => setEditando(vacio("franja_inicio", datos.espacios.franja_inicio))}>
+          <button type="button" style={boton(true)} onClick={() => setEditando(vacio(datos.orden[0], datos.espacios[datos.orden[0]]))}>
             + Nuevo anuncio
           </button>
         )}
@@ -769,6 +755,42 @@ export default function PaginaPublicidad() {
             </section>
           )
         })}
+
+      {/* Anuncios guardados en espacios que la página ya no tiene (el inicio
+          anterior: carrusel, tarjetas promocionales, franja y banner de
+          herramientas). No se ven en ningún lado: muévelos o bórralos. */}
+      {datos &&
+        (() => {
+          const huerfanos = datos.piezas.filter((p) => !datos.orden.includes(p.espacio))
+          if (!huerfanos.length) return null
+          return (
+            <section style={{ ...caja, borderColor: "#e8b98f", background: "#fff8f1" }}>
+              <h2 style={{ margin: 0, fontSize: 17, color: C.texto }}>Anuncios en espacios que ya no existen</h2>
+              <p style={{ margin: "2px 0 12px", fontSize: 13, color: C.tenue }}>
+                Estos anuncios no se ven en la página. Ábrelos con «Editar» para pasarlos a otro espacio, o bórralos.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {huerfanos.map((p) => (
+                  <div key={p.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, padding: 10, border: `1px solid ${C.borde}`, borderRadius: 10, background: "#fff" }}>
+                    {p.imagen_url && <img src={p.imagen_url} alt="" style={{ width: 110, height: 56, objectFit: "cover", borderRadius: 6 }} />}
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <strong style={{ fontSize: 14, color: C.texto }}>{p.titulo || p.anunciante || "(sin título)"}</strong>
+                      <p style={{ margin: "2px 0 0", fontSize: 12.5, color: C.tenue }}>
+                        Estaba en «{p.espacio}» · {p.vistas} vistas · {p.clics} clics
+                      </p>
+                    </div>
+                    <button type="button" style={boton(false)} onClick={() => setEditando(aBorrador(p))}>
+                      Editar
+                    </button>
+                    <button type="button" style={boton(false, true)} onClick={() => void borrar(p)}>
+                      Borrar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        })()}
 
       <section style={{ ...caja, borderStyle: "dashed", fontSize: 14, color: C.texto }}>
         <strong>Cómo se vende:</strong> los precios por semana, mes, 3 meses, año y por vistas están en
