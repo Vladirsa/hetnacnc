@@ -1,7 +1,4 @@
-import { existsSync, readFileSync } from "fs"
-import { join } from "path"
-
-import { GUIAS, HERRAMIENTAS_SEMANA, PUBLICOS, REDES_MERCADO, instanteEn, lunesDe, puntuar } from "../estrategia"
+import { GUIAS, PUBLICOS, REDES_MERCADO, instanteEn, lunesDe, puntuar } from "../estrategia"
 import { MERCADOS, REDES, dentroDeHorario, horaEn } from "../social-hub"
 
 describe("Estrategia: guías, mercados y puntaje", () => {
@@ -11,21 +8,6 @@ describe("Estrategia: guías, mercados y puntaje", () => {
       expect((REDES as any)[r]).toBeDefined()
     }
     for (const g of Object.values(GUIAS)) for (const p of g.publicos) expect(PUBLICOS.some((x) => x.clave === p)).toBe(true)
-  })
-
-  it("la herramienta de la semana apunta a herramientas e imágenes que existen en la tienda", () => {
-    const tienda = join(__dirname, "../../../../../apps/storefront")
-    const pagina = readFileSync(join(tienda, "src/app/[locale]/(estudio)/disenar/[herramienta]/page.tsx"), "utf8")
-    const slugs = new Set([...(pagina.match(/const SLUGS = new Set\(\[([^\]]*)\]/)?.[1] || "").matchAll(/"([^"]+)"/g)].map((m) => m[1]))
-    expect(HERRAMIENTAS_SEMANA.length).toBeGreaterThan(0)
-    for (const h of HERRAMIENTAS_SEMANA) {
-      expect(slugs.has(h.slug)).toBe(true)
-      expect(existsSync(join(tienda, "public", h.imagen))).toBe(true)
-      expect(h.datos).toMatch(/^Gratis/)
-    }
-    // no entra en la rotación normal: sólo en su hueco semanal
-    for (const g of Object.values(GUIAS)) expect(g.publicos).not.toContain("estudio")
-    expect(PUBLICOS.find((p) => p.clave === "estudio")?.pilares).toEqual(HERRAMIENTAS_SEMANA.map((h) => h.pilar))
   })
 
   it("convierte hora local de cada mercado a UTC", () => {

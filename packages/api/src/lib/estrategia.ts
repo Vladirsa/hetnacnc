@@ -30,55 +30,6 @@ export const T_PLAN = "hetna_social_plan"
 // Públicos y temas
 // ---------------------------------------------------------------------
 
-// ---------------------------------------------------------------------
-// Herramienta de la semana (2D Studio): una publicación por semana en Facebook
-// e Instagram con la imagen de la herramienta y la liga directa. Los datos son
-// reales y verificables (lo que hace, que es gratis, que sale el DXF): la IA
-// no puede inventar nada fuera de eso. Las imágenes viven en la tienda
-// (apps/storefront/public/img/estudio).
-// ---------------------------------------------------------------------
-
-export type HerramientaSemana = { pilar: string; slug: string; imagen: string; datos: string }
-export const HERRAMIENTAS_SEMANA: HerramientaSemana[] = [
-  {
-    pilar: "Celosía desde imagen: la celosía que viste en internet, lista para plasma o láser",
-    slug: "celosia-desde-imagen",
-    imagen: "/img/estudio/celosia-desde-imagen.jpg",
-    datos: "Gratis en hetnacnc.com. Subes la foto o captura de una celosía, marcas sus 4 esquinas y sale el panel con marco y barrenos en DXF. Ajusta huecos y puentes al mínimo que corta el plasma, el láser o el router, une las piezas sueltas y puede repetir un módulo para paneles grandes. Muestra un precio aproximado de corte y un taller de HETNA lo puede cortar.",
-  },
-  {
-    pilar: "Costillas desde imagen: pared paramétrica o banca hecha de tablas que siguen tu imagen",
-    slug: "costillas-desde-imagen",
-    imagen: "/img/estudio/costillas-desde-imagen.jpg",
-    datos: "Gratis en hetnacnc.com. Subes una imagen (una ola, montañas, un logotipo) y sale una pared paramétrica, cabecera o banca de costillas de MDF o triplay: se ve armada en 3D y las piezas salen numeradas y acomodadas en hojas, con ranuras para armar o barrenos para varilla. Muestra un precio aproximado y un taller de HETNA la puede cortar.",
-  },
-  {
-    pilar: "Patrón Voronoi: celdas orgánicas para lámparas, celosías y mosaicos",
-    slug: "patron-voronoi",
-    imagen: "/img/estudio/patron-voronoi.jpg",
-    datos: "Gratis en hetnacnc.com. Genera patrones Voronoi para panel calado o piezas sueltas tipo mosaico, en rectángulo o círculo, con puente, redondeo y más celdas al centro o en la orilla. Cada clic en «Otro diseño» da uno distinto. Descarga DXF para láser, router o plasma.",
-  },
-  {
-    pilar: "Cajas con juntas de dedo a tu medida, listas para cortar",
-    slug: "caja-con-juntas",
-    imagen: "/img/estudio/caja-con-juntas.jpg",
-    datos: "Gratis en hetnacnc.com. Pones ancho, fondo, alto y espesor de MDF o acrílico y salen las piezas de la caja con juntas de dedo en DXF, SVG o PDF para láser o router, con precio aproximado de corte y opción de mandarla a fabricar con un taller de HETNA.",
-  },
-  {
-    pilar: "Mandalas y patrones radiales en capas para arte de pared",
-    slug: "patrones-radiales",
-    imagen: "/img/estudio/patrones-radiales.jpg",
-    datos: "Gratis en hetnacnc.com. Crea mandalas y patrones decorativos en capas escaladas y rotadas con una fórmula, para cortar en láser y armar arte de pared. Descarga DXF o SVG.",
-  },
-  {
-    pilar: "Bisagra viva: cortes que dejan doblar el MDF para cajas redondeadas y lámparas",
-    slug: "bisagra-viva",
-    imagen: "/img/estudio/bisagra-viva.jpg",
-    datos: "Gratis en hetnacnc.com. Eliges el radio y el ángulo de la curva y calcula la zona de cortes para que el MDF o el triplay doble: cajas con esquinas curvas, lámparas y portadas de libreta. Descarga DXF, SVG o PDF.",
-  },
-]
-export const herramientaDe = (pilar: string) => HERRAMIENTAS_SEMANA.find((h) => h.pilar === pilar)
-
 export type Publico = { clave: string; nombre: string; objetivo: string; destino: string; pilares: string[] }
 export const PUBLICOS: Publico[] = [
   {
@@ -111,11 +62,6 @@ export const PUBLICOS: Publico[] = [
     pilares: ["Lo más pedido del mes", "Demanda de materiales por región", "Cómo vender insumos y herramientas en HETNA", "Sube tus productos en minutos", "Lo básico que necesita un proveedor para vender en línea",
       // Publicidad en el sitio (espacios de 30 o 90 días, se pagan con Mercado Pago)
       "Anúnciate en HETNA: tu marca en el carrusel del inicio, banners y el foro"],
-  },
-  {
-    // Herramienta de la semana: no entra en la rotación de las redes; tiene su propio hueco semanal (generarPlan)
-    clave: "estudio", nombre: "Herramientas gratis del 2D Studio", objetivo: "que usen la herramienta y manden a cortar", destino: "/mx/disenar",
-    pilares: HERRAMIENTAS_SEMANA.map((h) => h.pilar),
   },
   {
     // Comunidad: el lado humano de emprender un taller o negocio (humor, empatía, pregunta a la audiencia).
@@ -411,21 +357,6 @@ export async function generarPlan(knex: any, semana = lunesDe(new Date(Date.now(
     }
   }
   const finales = recortarPorDia(filas, cfg.mercados)
-  // Herramienta de la semana: el sábado (fuera de la rotación de lunes a
-  // viernes, así no choca con el tope por día), en Facebook e Instagram de
-  // México, con la herramienta que menos ha salido; formato imagen
-  if ((cfg.mercados.mx || 0) > 0) {
-    const estudio = publicoDe(cfg, "estudio")
-    const pilar = estudio.pilares.length ? elegirPilar(estudio) : null
-    if (pilar && herramientaDe(pilar)) {
-      for (const [red, hora] of [["facebook", 11], ["instagram", 12]] as const) {
-        finales.push({
-          id: nuevoId("plan"), semana, fecha: instanteEn(sumarDias(semana, 5), hora, zonaDe("mx")), red, mercado: "mx",
-          publico: "estudio", pilar, formato: "imagen", estado: "vacio", emocion: "belleza",
-        })
-      }
-    }
-  }
   if (finales.length) await knex.batchInsert(T_PLAN, finales, 100)
   return { semana, creados: finales.length, recortados: filas.length - finales.length }
 }
@@ -439,10 +370,8 @@ let ia: Anthropic | null = null
 /** Texto base para un hueco: con IA (usando datos reales del sitio) o plantilla. */
 async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logger?: any) {
   const publico = publicoDe(cfg, slot.publico)
-  const herramienta = slot.publico === "estudio" ? herramientaDe(slot.pilar) : undefined
-  const plantilla = herramienta
-    ? `${slot.pilar}\n\n${herramienta.datos}\n\nPruébala gratis: {{liga}}`
-    : publico.clave === "comunidad"
+  const plantilla =
+    publico.clave === "comunidad"
       ? `${slot.pilar}\n\n¿A ti te ha pasado? Cuéntanos en comentarios. 👇`
       : `${slot.pilar}\n\n${publico.objetivo === "que se registren" ? "¿Tienes taller CNC? Recibe solicitudes de trabajo sin comisión:" : "Cotiza tu pieza en HETNA CNC:"} {{liga}}`
   if (!iaSocial()) return { texto: plantilla, ia: false }
@@ -483,7 +412,6 @@ async function ideaPara(slot: any, cfg: ConfigEstrategia, contexto: string, logg
           `Mercado: ${MERCADOS[slot.mercado]?.nombre} (${MERCADOS[slot.mercado]?.nota}).\nRed: ${REDES[slot.red]?.nombre}. Lo que premia: ${g?.claves}\n` +
           `Formato: ${slot.formato}. Público: ${publico.nombre} (objetivo: ${publico.objetivo}). Tema: ${slot.pilar}.\n` +
           (() => { const e = EMOCIONES.find((x) => x.clave === slot.emocion); return e ? `Emoción que vende: ${e.nombre} — ${e.como}. Prueba verificable: ${e.prueba}.\n` : "" })() +
-          (herramienta ? `\nLa publicación presenta esta herramienta gratuita de HETNA (sólo estos datos, no inventes funciones ni precios): ${herramienta.datos}\n` : "") +
           `\nContexto real de HETNA:\n${contexto}`,
       }],
     } as any)
@@ -533,17 +461,12 @@ export async function llenarPlan(knex: any, semana: string, logger?: any, limite
     // El guion del video va en notas: no se publica
     const [texto, guion] = idea.texto.split(/\n\s*GUION:\s*/i)
     const conLiga = texto.includes("{{liga}}") ? texto.trim() : `${texto.trim()}\n\n{{liga}}`
-    // La herramienta de la semana lleva su propia liga e imagen
-    const herramienta = h.publico === "estudio" ? herramientaDe(h.pilar) : undefined
-    const destino = herramienta
-      ? `${STORE_URL}/mx/disenar/${herramienta.slug}`
-      : `${STORE_URL}${h.mercado === "us" ? publico.destino.replace(/^\/mx/, "/us") : publico.destino}`
+    const destino = `${STORE_URL}${h.mercado === "us" ? publico.destino.replace(/^\/mx/, "/us") : publico.destino}`
     const postId = await crearPublicacion(
       knex,
       {
         origen: "manual", fuente: "plan", titulo: `${REDES[h.red]?.nombre} · ${h.pilar}`, texto_base: conLiga, url: destino, redes: [h.red], estado: "borrador",
         programada_para: h.fecha, mercado: h.mercado, textos: idea.ia ? { [h.red]: conLiga } : undefined, notas: guion ? `Guion: ${guion.trim()}` : undefined,
-        medios: herramienta ? [{ url: `${STORE_URL}${herramienta.imagen}`, tipo: "imagen" }] : undefined,
       },
       logger
     )
