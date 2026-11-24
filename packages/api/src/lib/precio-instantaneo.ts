@@ -20,6 +20,8 @@ export const PLASMA_MATERIAL: Record<string, string> = {
 }
 export const PLASMA_CALIBRE: Record<string, string> = {
   "Lámina delgada (cal. 20 a 12)": "delgado",
+  // 1/8" (≈3 mm): lo más común en celosías de plasma; antes caía en placa de 6 mm
+  'Lámina gruesa (1/8", 3 mm)': "medio",
   "Placa (cal. 10 o más grueso)": "placa",
 }
 export const IMPRESION_MATERIAL: Record<string, string> = {
@@ -59,11 +61,11 @@ function materialPara(servicio: string, material = "", calibre = ""): { m: Mater
     return { m: mat("MDF 15 mm") }
   }
   if (servicio === "plasma") {
-    const placa = PLASMA_CALIBRE[calibre] === "placa"
+    const grueso = PLASMA_CALIBRE[calibre]
     const clave = PLASMA_MATERIAL[material] || "acero"
     if (clave === "inox") return { m: mat("Inoxidable 3 mm") }
-    if (clave === "aluminio") return { m: mat(placa ? "Aluminio 6 mm" : "Aluminio 3 mm") }
-    return { m: mat(placa ? 'Acero 6 mm (1/4")' : "Acero cal. 14 (1.9 mm)") }
+    if (clave === "aluminio") return { m: mat(grueso === "placa" ? "Aluminio 6 mm" : "Aluminio 3 mm") }
+    return { m: mat(grueso === "placa" ? 'Acero 6 mm (1/4")' : grueso === "medio" ? 'Acero 3 mm (1/8")' : "Acero cal. 14 (1.9 mm)") }
   }
   return { m: mat(IMPRESION_MATERIAL[material] || "PLA") }
 }

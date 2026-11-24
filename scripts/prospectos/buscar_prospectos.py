@@ -182,6 +182,55 @@ def buscar_web(consulta: str, maximo: int, region: str = "mx-es", tiempo: str = 
     return []
 
 
+
+# País por el contacto: los perfiles de Instagram/Facebook (y algunos sitios) que
+# trae una búsqueda de "Hermosillo" pueden ser de Chile (+56) o de República
+# Dominicana (809). Si el teléfono o el dominio del correo dicen otro país, manda eso.
+LADAS = [("+593", "Ecuador"), ("+598", "Uruguay"), ("+595", "Paraguay"), ("+591", "Bolivia"), ("+502", "Guatemala"),
+         ("+503", "El Salvador"), ("+504", "Honduras"), ("+505", "Nicaragua"), ("+506", "Costa Rica"), ("+507", "Panamá"),
+         ("+52", "México"), ("+56", "Chile"), ("+57", "Colombia"), ("+51", "Perú"), ("+54", "Argentina"), ("+55", "Brasil"),
+         ("+58", "Venezuela"), ("+53", "Cuba"), ("+34", "España"), ("+351", "Portugal"), ("+86", "China"), ("+886", "Taiwán"),
+         ("+90", "Turquía"), ("+39", "Italia"), ("+49", "Alemania"), ("+91", "India"), ("+82", "Corea")]
+DOMINIOS_PAIS = [(".com.mx", "México"), (".mx", "México"), (".cl", "Chile"), (".com.co", "Colombia"), (".com.pe", "Perú"),
+                 (".pe", "Perú"), (".com.ar", "Argentina"), (".ar", "Argentina"), (".com.ec", "Ecuador"), (".ec", "Ecuador"),
+                 (".com.gt", "Guatemala"), (".gt", "Guatemala"), (".cr", "Costa Rica"), (".com.sv", "El Salvador"),
+                 (".hn", "Honduras"), (".com.pa", "Panamá"), (".com.do", "República Dominicana"), (".do", "República Dominicana"),
+                 (".com.br", "Brasil"), (".br", "Brasil"), (".com.uy", "Uruguay"), (".uy", "Uruguay"), (".com.py", "Paraguay"),
+                 (".py", "Paraguay"), (".bo", "Bolivia"), (".com.ve", "Venezuela"), (".ve", "Venezuela"), (".es", "España")]
+
+
+def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", dominio: str = "") -> str:
+    """País que dicen el teléfono (lada internacional) o el dominio; "" si no se sabe."""
+    for tel in (telefono, whatsapp):
+        t = re.sub(r"[^0-9+]", "", str(tel or ""))
+        if t.startswith("00"):
+            t = "+" + t[2:]
+        # Sin "+" pero con más de 10 dígitos: ya trae lada (56969659986)
+        if not t.startswith("+") and 11 <= len(t) <= 13:
+            t = "+" + t
+        if t.startswith("+1"):
+            area = t[2:5]
+            if area in ("809", "829", "849"):
+                return "República Dominicana"
+            if area in ("787", "939"):
+                return "Puerto Rico"
+            return "Estados Unidos"
+        if t.startswith("+"):
+            for lada, pais in LADAS:
+                if t.startswith(lada):
+                    return pais
+        # 10 dígitos sin lada que empiezan con 809/829/849: República Dominicana
+        if len(t) == 10 and t[:3] in ("809", "829", "849"):
+            return "República Dominicana"
+    for d in (str(email or "").split("@")[-1].lower(), str(dominio or "").lower()):
+        if not d or d.startswith(("ig-", "fb-")):
+            continue
+        for fin, pais in DOMINIOS_PAIS:
+            if d.endswith(fin):
+                return pais
+    return ""
+
+
 def buscar_sitios(consulta: str, maximo: int, cfg: dict) -> list[str]:
     """Busca sitios (Brave o ddgs, ver buscar_web) SIN gastar tokens de la IA (antes
     se usaba SearchGraph, que se comía el límite diario de Groq sólo para listar URLs)."""
@@ -441,6 +490,9 @@ def main() -> None:
             fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
             fila.update(tipo=tipo, pais=pais, idioma=idioma, web=url, dominio=dom, email=email,
                         segmento=consulta, fuente_url=c["fuente_url"])
+            real = pais_por_contacto(fila["telefono"], fila["whatsapp"], email, dom)
+            if real and real != pais and tipo != "Proveedor extranjero":
+                fila.update(pais=real, ciudad="", estado="")
             with SALIDA.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(fila, ensure_ascii=False) + "\n")
             vistos.update({dom, email} - {""})
@@ -461,6 +513,9 @@ def main() -> None:
                     # también trae negocios de otras ciudades y saldrían mal en el mapa.
                     en_texto = ciudad and ciudad.lower().split(" ")[0] in c.get("_texto", "")
                     fila.update(tipo=tipo, pais=pais, idioma=idioma, ciudad=ciudad if en_texto else "", segmento=consulta)
+                    real = pais_por_contacto(fila["telefono"], fila["whatsapp"], email, dom)
+                    if real and real != pais:
+                        fila.update(pais=real, ciudad="", estado="")
                     with SALIDA.open("a", encoding="utf-8") as f:
                         f.write(json.dumps(fila, ensure_ascii=False) + "\n")
                     vistos.update({dom, email} - {""})

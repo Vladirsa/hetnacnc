@@ -230,6 +230,29 @@ const nextConfig: NextConfig = {
       // (ProductDetailsPage) y si no hay, da 404.
       { source: "/:locale([a-z]{2})/:viejo(product|prod)/:handle", destination: "/:locale/products/:handle", permanent: true },
       { source: "/:viejo(product|prod)/:handle", destination: "/mx/products/:handle", permanent: true },
+      // Artículos del blog del sitio anterior (WordPress) que Google todavía
+      // tiene: cada uno va a la página de HETNA que contesta lo mismo.
+      ...(
+        [
+          ["que-diferencia-hay-entre-una-broca-una-fresa-y-un-cortador-para-los-router-cnc", "/mx/foro-cnc/blog/que-fresa-usar-para-mdf-router-cnc"],
+          ["guia-completa-sobre-tipos-de-fresas-para-router-cnc-y-sus-usos", "/mx/foro-cnc/blog/que-fresa-usar-para-mdf-router-cnc"],
+          ["cuales-son-los-cortadores-cnc-para-tu-maquina", "/mx/foro-cnc/blog/que-fresa-usar-para-mdf-router-cnc"],
+          ["cual-es-la-velocidad-de-corte-o-mecanizado-que-debo-ocupar-para-mis-trabajos-en-mi-router-cnc", "/mx/calculadora-cnc"],
+          ["que-materiales-puedes-cortar-con-un-router-cnc", "/mx/cnc/taller-router-cnc-mexico"],
+          ["compatibilidad-del-cnc-con-software-de-diseno-todo-lo-que-necesitas-saber", "/mx/laboratorio-cam"],
+          ["cuidado-y-mantenimiento-de-tablas-de-madera-guia-definitiva", "/mx/categories/madera-y-mdf"],
+          ["top-5-archivos-dxf-gratuitos-para-comenzar-en-el-corte-laser-cnc", "/mx/disenar"],
+        ] as const
+      ).flatMap(([viejo, nuevo]) => [
+        { source: `/${viejo}`, destination: nuevo, permanent: true },
+        { source: `/:locale([a-z]{2})/${viejo}`, destination: nuevo, permanent: true },
+      ]),
+      // Etiquetas y categorías de la tienda y del blog viejos
+      { source: "/:locale([a-z]{2})?/etiqueta/:slug*", destination: "/mx/categories/diseno-2d-3d", permanent: true },
+      { source: "/:locale([a-z]{2})?/:tipo(categoria-producto|product-category|etiqueta-producto|product-tag)/:slug*", destination: "/mx/categories/tienda", permanent: true },
+      { source: "/:locale([a-z]{2})?/:tipo(category|categoria|tag|author|autor)/:slug*", destination: "/mx/foro-cnc/blog", permanent: true },
+      { source: "/:locale([a-z]{2})?/:tipo(mi-cuenta|my-account)", destination: "/mx/user", permanent: true },
+      { source: "/:locale([a-z]{2})?/:tipo(carrito|cart-2)", destination: "/mx/cart", permanent: true },
     ]
   },
 

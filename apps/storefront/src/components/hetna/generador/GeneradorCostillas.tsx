@@ -10,6 +10,8 @@ import dynamic from "next/dynamic"
 
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
+import { contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
+import { largoCorte } from "@/lib/generador/geo2d"
 import { type Alturas, INICIO_COSTILLAS, type ModoCostillas, hacerCostillas } from "@/lib/generador/costillas"
 import { type Profundidad, grisDeProfundidad, iaDisponible, pedirProfundidad } from "@/lib/generador/profundidad-ia"
 import { desenfocar, gris } from "@/lib/generador/trazado"
@@ -236,6 +238,22 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
     if (!banca) datos.push(["Travesaños", String(r.travesanos)])
     else if (r.varillas) datos.push(["Varillas", `${r.varillas} de ${r.largoVarilla} mm`], ["Separadores", `${r.separadores} de ${Math.round(r.separacionReal * 10) / 10} mm`])
   }
+  // Precio aproximado: por hoja de material (lo que se compra), con el corte y
+  // las perforaciones repartidos; 10 mm menos por lado, que el estimador deja de orilla
+  const maquina = r && r.fresa > 0 ? "router" : "laser"
+  const corte = useMemo(() => (r ? r.dibujo.trazos.filter((t) => t.capa === "corte") : []), [r])
+  const pedidoPrecio =
+    r && r.hojas > 0
+      ? {
+          ...precioMDF(maquina, r.espesor),
+          anchoMm: r.hoja.ancho - 20,
+          largoMm: r.hoja.alto - 20,
+          cantidad: r.hojas,
+          unidad: "hojas" as const,
+          corte_mm: largoCorte(corte) / r.hojas,
+          perforaciones: Math.round(corte.length / r.hojas),
+        }
+      : undefined
   const m = r?.medidas
   const medida = m ? `${Math.round(m.largo)}x${Math.round(m.fondo)}x${Math.round(m.alto)}` : ""
   const nombrePieza = banca ? "Banca de costillas" : "Pared de costillas"
@@ -268,6 +286,8 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
       archivo={`costillas-${modo}-${subida?.nombre || "imagen"}-${medida}`}
       pieza={m ? `${nombrePieza} ${medida} mm, ${r.costillas} costillas de ${r.espesor} mm` : nombrePieza}
       material={r ? `MDF o triplay de ${r.espesor} mm` : undefined}
+      precio={pedidoPrecio}
+      cotizar={r ? { ...contextoMDF(maquina, r.espesor), nota: `${nombrePieza}: ${r.costillas} costillas, ${r.piezas} piezas en ${r.hojas} hojas.` } : undefined}
       datos={datos}
       vacio={
         <p className="text-center text-[14px] text-[#8A97AB]">

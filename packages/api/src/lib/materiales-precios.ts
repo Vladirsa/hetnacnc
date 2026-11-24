@@ -68,10 +68,12 @@ export function materialDelCotizador(servicio: string, material?: string, calibr
     return null
   }
   if (servicio === "plasma") {
-    const grueso = /placa|cal\. 10/i.test(String(calibre || ""))
-    if (m.includes("inox")) return grueso ? "inox_cal14" : "inox_cal18"
+    const c = String(calibre || "")
+    const grueso = /placa|cal\. 10/i.test(c)
+    const medio = /1\/8/.test(c) // lámina gruesa de 3 mm
+    if (m.includes("inox")) return grueso || medio ? "inox_cal14" : "inox_cal18"
     if (m.includes("alumin")) return grueso ? "aluminio_14" : "aluminio_18"
-    return grueso ? "negra_cal10" : "negra_cal14"
+    return grueso || medio ? "negra_cal10" : "negra_cal14"
   }
   if (servicio === "impresion_3d") {
     if (m.includes("petg")) return "petg_1kg"

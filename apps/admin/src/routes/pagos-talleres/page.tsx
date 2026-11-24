@@ -14,6 +14,8 @@ type Taller = {
   email: string | null
   titular: string | null
   cuenta: string | null
+  paypal?: string | null
+  pais_envio?: string | null
   tarjeta_verificada?: boolean
   moneda: string
   pendiente: number
@@ -136,7 +138,9 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
   const [msg, setMsg] = useState("")
   const [verPedidos, setVerPedidos] = useState(false)
   const pagar = async () => {
-    if (ref.trim().length < 4) return setMsg("Pon la clave de rastreo del SPEI.")
+    // Proveedor extranjero con PayPal: se le paga por PayPal (referencia = ID de la transacción)
+    const porPaypal = !!t.paypal && (!t.cuenta || !!t.pais_envio)
+    if (ref.trim().length < 4) return setMsg(porPaypal ? "Pon el ID de la transacción de PayPal." : "Pon la clave de rastreo del SPEI.")
     if (t.tarjeta_verificada === false && !confirm(`${t.nombre} no ha verificado su tarjeta. Lo recomendado es pedírsela antes de transferirle. ¿Marcar el pago de todos modos?`)) return
     if (!confirm(`¿Ya le transferiste ${dinero(t.disponible, t.moneda)} a ${t.nombre}?`)) return
     setTrabajando(true)
@@ -146,7 +150,7 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
       credentials: "include",
       headers: { ...cabeceras(), "content-type": "application/json" },
       // Lo que se vio y se transfirió: si el disponible cambió, el servidor no marca nada
-      body: JSON.stringify({ seller_id: t.seller_id, referencia: ref.trim(), metodo: "spei", total: t.disponible, moneda: t.moneda }),
+      body: JSON.stringify({ seller_id: t.seller_id, referencia: ref.trim(), metodo: porPaypal ? "paypal" : "spei", total: t.disponible, moneda: t.moneda }),
     }).catch(() => null)
     setTrabajando(false)
     if (r?.ok) {
@@ -163,8 +167,14 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
           <p style={{ margin: 0, fontWeight: 700 }}>{t.nombre}</p>
           <p style={S.meta}>{t.email || "sin correo"}</p>
           <p style={S.meta}>
-            Cuenta: {t.cuenta ? `${t.cuenta} · ${t.titular || "sin titular"}` : "⚠ el taller no ha guardado su cuenta"}
+            Cuenta: {t.cuenta ? `${t.cuenta} · ${t.titular || "sin titular"}` : t.paypal ? "—" : "⚠ el taller no ha guardado su cuenta"}
           </p>
+          {t.paypal && (
+            <p style={{ ...S.meta, fontWeight: 600 }}>
+              PayPal: {t.paypal}
+              {t.pais_envio ? ` · proveedor en ${t.pais_envio} (págale por PayPal)` : ""}
+            </p>
+          )}
           {t.tarjeta_verificada === false && (
             <p style={{ ...S.meta, color: "#9A6A06", fontWeight: 600 }}>⚠ No ha verificado su tarjeta: pídesela antes de transferirle.</p>
           )}
@@ -187,7 +197,7 @@ function Fila({ t, alPagar }: { t: Taller; alPagar: () => void }) {
       {verPedidos && <Pedidos sellerId={t.seller_id} moneda={t.moneda} alCambiar={alPagar} />}
       {t.disponible > 0 && (
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <input style={S.input} placeholder="Clave de rastreo del SPEI" value={ref} onChange={(e) => setRef(e.target.value)} />
+          <input style={S.input} placeholder={t.paypal && (!t.cuenta || t.pais_envio) ? "ID de la transacción de PayPal" : "Clave de rastreo del SPEI"} value={ref} onChange={(e) => setRef(e.target.value)} />
           <button style={S.btn} disabled={trabajando} onClick={pagar}>
             {trabajando ? "Guardando…" : "Marcar como pagado"}
           </button>

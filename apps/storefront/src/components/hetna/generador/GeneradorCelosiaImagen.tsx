@@ -10,12 +10,27 @@ import { useEffect, useRef, useState } from "react"
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import { type Islas, type OpcionesCelosiaImagen, type Proceso, type ResultadoCelosiaImagen, hacerCelosiaImagen, minimosSugeridos } from "@/lib/generador/celosiaImagen"
+import { type PedidoPrecio } from "@/components/hetna/estudio/PrecioEstudio"
+import { ACERO_COTIZADOR, ACERO_PRECIO, type ContextoCotizacion, calibrePlasmaPrecio, contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
 import type { P } from "@/lib/generador/geo2d"
 import type { Imagen } from "@/lib/generador/trazado"
 
 import { useImagenSubida } from "./useImagenSubida"
 
 const LADO_IMAGEN = 1400
+
+/** Lo que el Cotizador necesita saber del corte (claves de hetna/cotizador/datos.json). */
+function contextoCelosia(proceso: Proceso, espesor: number): ContextoCotizacion {
+  // en plasma el metal se elige en el Cotizador; se sugiere el más común
+  if (proceso === "plasma") return { servicio: "plasma", tipo: "Celosía/Calado", material: ACERO_COTIZADOR }
+  return contextoMDF(proceso === "router" ? "router" : "laser", espesor)
+}
+
+/** Servicio y material del precio en vivo (las medidas y el corte los pone Estudio2D). */
+function pedidoCelosia(proceso: Proceso, espesor: number): PedidoPrecio {
+  if (proceso === "plasma") return { servicio: "plasma", material: ACERO_PRECIO, calibre: calibrePlasmaPrecio(espesor) }
+  return precioMDF(proceso === "router" ? "router" : "laser", espesor)
+}
 
 const NOMBRES_ESQUINA = ["arriba izquierda", "arriba derecha", "abajo derecha", "abajo izquierda"]
 
@@ -353,6 +368,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       archivo={`celosia-${nombre || "imagen"}-${res?.medida ?? ""}`}
       pieza={res ? `Celosía desde imagen ${res.medida} mm (${res.proceso}, ${res.espesor} mm)` : "Celosía desde imagen"}
       material={res ? `${res.proceso} ${res.espesor} mm` : undefined}
+      cotizar={res ? contextoCelosia(res.proceso, numero(res.espesor) || 3) : undefined}
+      precio={res ? pedidoCelosia(res.proceso, numero(res.espesor) || 3) : undefined}
       datos={
         res
           ? [

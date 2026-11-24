@@ -16,7 +16,8 @@ import { useParams } from "next/navigation"
 
 import { Aviso, Boton, Interruptor, Seccion } from "@/components/hetna/estudio3d/Controles"
 import { anidar, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
-import { mandarACotizador, mandarAFabricar } from "@/lib/generador/aCotizador"
+import { type PedidoPrecio, PrecioEstudio } from "@/components/hetna/estudio/PrecioEstudio"
+import { type ContextoCotizacion, mandarACotizador, mandarAFabricar, procesoDeServicio } from "@/lib/generador/aCotizador"
 import { cajaDibujo, largoCorte } from "@/lib/generador/geo2d"
 import { dibujoDXF, dibujoSVG, type Dibujo } from "@/lib/generador/vectores"
 import { capaFinal } from "@/lib/generador/capas"
@@ -57,6 +58,8 @@ export function Estudio2D({
   datos = [],
   pieza,
   material,
+  cotizar,
+  precio,
   sinHojas = false,
   descargas,
   vacio,
@@ -76,9 +79,14 @@ export function Estudio2D({
   archivo: string
   avisos?: string[]
   datos?: [string, string][]
-  // para Fabrícamelo
+  // para Fabrícamelo (texto que lee el taller, no una clave del Cotizador)
   pieza: string
   material?: string
+  // servicio, tipo y material (claves del Cotizador) ya elegidos en la
+  // herramienta: el Cotizador abre con ellos y Fabrícamelo con el servicio
+  cotizar?: ContextoCotizacion
+  // precio aproximado en vivo del trabajo (si la herramienta sabe servicio y material)
+  precio?: PedidoPrecio
   // las líneas de "hoja" no se exportan
   sinHojas?: boolean
   // reemplaza los botones de descarga (p. ej. descarga con créditos); recibe la función que exporta
@@ -139,6 +147,25 @@ export function Estudio2D({
   const alArchivo = useMemo(() => (paraExportar ? { ...paraExportar, trazos: paraExportar.trazos.map((t) => ({ ...t, capa: renombrarCapa ? renombrarCapa(t.capa) : capaFinal(t.capa) })) } : null), [paraExportar, renombrarCapa])
   const b = useMemo(() => (dibujo && dibujo.trazos.length ? cajaDibujo(dibujo.trazos) : null), [dibujo])
   const medidas = useMemo(() => (paraExportar && paraExportar.trazos.length ? cajaDibujo(paraExportar.trazos) : null), [paraExportar])
+  // Precio en vivo: lo que dice la herramienta más las medidas de UNA pieza del
+  // dibujo (sin acomodo); con acomodo en hojas, por las copias pedidas
+  const entradaPrecio = useMemo(() => {
+    if (!precio || !dibujoOriginal) return null
+    const corte = dibujoOriginal.trazos.filter((t) => t.capa === "corte")
+    if (!corte.length) return null
+    const b = cajaDibujo(corte)
+    return {
+      servicio: precio.servicio,
+      material: precio.material,
+      calibre: precio.calibre,
+      ancho: Math.round(precio.anchoMm ?? b.x1 - b.x0) / 10,
+      largo: Math.round(precio.largoMm ?? b.y1 - b.y0) / 10,
+      cantidad: Math.max(1, Math.round((precio.cantidad ?? 1) * (acomodo ? copias : 1))),
+      corte_mm: Math.round(precio.corte_mm ?? largoCorte(corte)),
+      // un perforado por contorno cerrado que no es el de afuera
+      perforaciones: precio.perforaciones ?? Math.max(0, corte.filter((t) => t.cerrado).length - 1),
+    }
+  }, [precio, dibujoOriginal, acomodo, copias])
   const largo = useMemo(() => (paraExportar ? largoCorte(paraExportar.trazos.filter((t) => t.capa !== "grabado" && !t.capa.startsWith("BARRENO") && !t.capa.startsWith("CANTO") && t.capa !== "ETIQUETA" && !t.capa.startsWith("RANURA"))) : 0), [paraExportar])
 
   // Al cambiar el tamaño del dibujo, se vuelve a ajustar a la vista
@@ -303,6 +330,7 @@ export function Estudio2D({
           )}
         </Seccion>
         <Seccion titulo="¿No tienes máquina?" nota="Un taller de HETNA te lo corta y te lo manda.">
+          {entradaPrecio && <PrecioEstudio entrada={entradaPrecio} unidad={precio?.unidad} />}
           <div className="flex gap-2">
             <Boton
               tipo="verde"
@@ -311,7 +339,7 @@ export function Estudio2D({
                 const medidasTxt = anidado?.hojas.length
                   ? `${anidado.hojas.length} ${anidado.hojas.length === 1 ? "hoja" : "hojas"} de ${HOJAS[hojaSel].ancho} × ${HOJAS[hojaSel].alto} mm (${anidado.totalPiezas} piezas, ${Math.round(anidado.aprovechamiento * 100)}% aprovechado)`
                   : `${Math.round(ancho)} × ${Math.round(alto)} mm`
-                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { pieza, medidas: medidasTxt, material }))
+                if (!mandarAFabricar(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { pieza, medidas: medidasTxt, material, proceso: procesoDeServicio(cotizar?.servicio) }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en Fabrícamelo.")
               }}
             >
@@ -320,7 +348,7 @@ export function Estudio2D({
             <Boton
               onClick={() => {
                 if (!paraExportar?.trazos.length) return
-                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio" }))
+                if (!mandarACotizador(`${archivo}.dxf`, dibujoDXF(alArchivo!), locale, { origen: "2D Studio", ...cotizar }))
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo al cotizador.")
               }}
             >

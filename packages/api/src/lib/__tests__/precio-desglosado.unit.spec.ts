@@ -21,6 +21,20 @@ describe("precio desglosado", () => {
     const r = precioDesglosado({ servicio: "plasma", material: "Acero al carbón", calibre: "Placa (cal. 10 o más grueso)", ancho: 5, largo: 5, cantidad: 1 })
     expect(r.ok && r.precio.aplica_minimo).toBe(true)
   })
+  it("la lámina gruesa de 3 mm queda entre la delgada y la placa", () => {
+    const base = { servicio: "plasma", material: "Acero al carbón", ancho: 100, largo: 60, cantidad: 1, corte_mm: 50000, perforaciones: 400 }
+    const precio = (calibre: string) => {
+      const r = precioDesglosado({ ...base, calibre })
+      if (!r.ok) throw new Error(r.mensaje)
+      return (r.precio as { recomendado: number }).recomendado
+    }
+    const delgada = precio("Lámina delgada (cal. 20 a 12)")
+    const media = precio('Lámina gruesa (1/8", 3 mm)')
+    const placa = precio("Placa (cal. 10 o más grueso)")
+    expect(media).toBeGreaterThan(delgada)
+    expect(media).toBeLessThan(placa)
+  })
+
   it("rechaza datos incompletos", () => {
     expect(precioDesglosado({ servicio: "laser_co2", ancho: 0, largo: 10, cantidad: 1 }).ok).toBe(false)
     expect(precioDesglosado({ servicio: "otro", ancho: 10, largo: 10, cantidad: 1 }).ok).toBe(false)

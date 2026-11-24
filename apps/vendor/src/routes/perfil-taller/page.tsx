@@ -184,6 +184,7 @@ export default function PerfilTallerPage() {
   const [subiendoGal, setSubiendoGal] = useState(false)
   const [f, setF] = useState({
     lema: "", ciudad: "", estado: "", cp: "", ofrece: [], entrega: "", horario: "", anos: "", factura: "",
+    imp_activo: false, imp_pais: "", imp_min: "", imp_max: "", paypal: "",
     servicios: [], materiales: [], otrosMateriales: "", capacidades: "", maquinas: [],
     tarifas: {}, tipo_cuenta: "taller", marcas: "",
     // { clave: "precio desde" (texto libre, opcional) } de los acabados que hace
@@ -215,6 +216,12 @@ export default function PerfilTallerPage() {
           ofrece: Array.isArray(p.ofrece) ? p.ofrece : [],
           entrega: p.entrega || "",
           factura: ["si", "no"].includes(p.factura) ? p.factura : "",
+          // Vende desde otro país (envío puerta a puerta con impuestos pagados; se le paga por PayPal)
+          imp_activo: !!(p.importacion && p.importacion.pais),
+          imp_pais: (p.importacion && p.importacion.pais) || "",
+          imp_min: (p.importacion && p.importacion.entrega_min) || "",
+          imp_max: (p.importacion && p.importacion.entrega_max) || "",
+          paypal: typeof meta.cuenta_paypal === "string" ? meta.cuenta_paypal : "",
           horario: p.horario || "",
           anos: p.anos ?? "",
           servicios: Array.isArray(p.servicios) ? p.servicios : [],
@@ -265,6 +272,14 @@ export default function PerfilTallerPage() {
       entrega: f.entrega.trim(),
       // Ficha universal: la nota junto al precio ("IVA incluido · emite factura")
       factura: ["si", "no"].includes(f.factura) ? f.factura : undefined,
+      importacion:
+        f.imp_activo && f.imp_pais.trim()
+          ? {
+              pais: f.imp_pais.trim().slice(0, 40),
+              entrega_min: Number(f.imp_min) > 0 ? Math.round(Number(f.imp_min)) : undefined,
+              entrega_max: Number(f.imp_max) > 0 ? Math.round(Number(f.imp_max)) : undefined,
+            }
+          : undefined,
       horario: (f.horario || "").trim().slice(0, 120),
       anos: f.anos === "" ? undefined : Number(f.anos),
       whatsapp: undefined,
@@ -307,10 +322,11 @@ export default function PerfilTallerPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logo: logo || null, banner: banner || null, metadata: { ...metaBase, perfil } }),
+        // cuenta_paypal: privada (la API pública quita las llaves cuenta*), sólo para pagarle
+        body: JSON.stringify({ logo: logo || null, banner: banner || null, metadata: { ...metaBase, perfil, cuenta_paypal: (f.paypal || "").trim().slice(0, 120) || undefined } }),
       })
       if (!r.ok) throw new Error(String(r.status))
-      setMetaBase({ ...metaBase, perfil })
+      setMetaBase({ ...metaBase, perfil, cuenta_paypal: (f.paypal || "").trim() || undefined })
       setMsg({ ok: true, t: "Perfil guardado. Se verá en tu página pública en unos minutos." })
     } catch (e) {
       setMsg({ ok: false, t: "No se pudo guardar (" + e.message + "). Intenta de nuevo." })
@@ -426,6 +442,41 @@ export default function PerfilTallerPage() {
         </p>
         <label style={{ ...S.label, marginTop: 12 }}>Horario de atención</label>
         <input style={S.input} value={f.horario || ""} onChange={(e) => set("horario", e.target.value)} placeholder="Ej. Lunes a viernes 9:00 a 18:00, sábado 9:00 a 14:00" maxLength={120} />
+      </section>
+
+      <section style={S.card}>
+        <h2 style={S.h2}>Vendo desde otro país (importación) · I sell from abroad</h2>
+        <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+          <input type="checkbox" checked={!!f.imp_activo} onChange={(e) => set("imp_activo", e.target.checked)} />
+          Mis productos se envían desde otro país / My products ship from outside Mexico
+        </label>
+        {f.imp_activo && (
+          <>
+            <p style={{ fontSize: 13, color: "#40403A", margin: "8px 0" }}>
+              Envías <b>puerta a puerta con impuestos de importación pagados (DDP)</b> por DHL, FedEx, UPS o similar: el cliente no paga nada al recibir.
+              Tus productos se marcan «De importación» con el país y el tiempo de entrega. HETNA te paga por <b>PayPal</b>.
+              <br />
+              <i>Ship door to door with import duties paid (DDP). Your products show an «Imported» label with the country and delivery time. HETNA pays you via PayPal.</i>
+            </p>
+            <div style={S.grid}>
+              <div>
+                <label style={S.label}>País desde donde envías / Ship-from country</label>
+                <input style={S.input} value={f.imp_pais} onChange={(e) => set("imp_pais", e.target.value)} placeholder="China, Taiwán, Estados Unidos…" maxLength={40} />
+              </div>
+              <div>
+                <label style={S.label}>Entrega en días hábiles / Delivery (business days)</label>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input style={{ ...S.input, width: 80 }} type="number" min="1" value={f.imp_min} onChange={(e) => set("imp_min", e.target.value)} placeholder="10" />
+                  a / to
+                  <input style={{ ...S.input, width: 80 }} type="number" min="1" value={f.imp_max} onChange={(e) => set("imp_max", e.target.value)} placeholder="20" />
+                </div>
+              </div>
+            </div>
+            <label style={{ ...S.label, marginTop: 12 }}>Correo de tu cuenta PayPal (para pagarte) / PayPal email (for payouts)</label>
+            <input style={S.input} type="email" value={f.paypal || ""} onChange={(e) => set("paypal", e.target.value)} placeholder="sales@yourcompany.com" maxLength={120} />
+            <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>Privado: sólo lo ve HETNA para pagarte. / Private: only HETNA sees it.</p>
+          </>
+        )}
       </section>
 
       <section style={S.card}>

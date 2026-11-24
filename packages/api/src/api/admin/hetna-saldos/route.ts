@@ -49,6 +49,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           // Para hacer el SPEI: titular y cuenta/CLABE que el taller guardó en su panel
           titular: pd?.holder_name || null,
           cuenta: pd?.account_number || pd?.iban || null,
+          // Proveedor extranjero: se le paga por PayPal (perfil del taller > Vendo desde otro país)
+          paypal: typeof s.metadata?.cuenta_paypal === "string" && s.metadata.cuenta_paypal ? s.metadata.cuenta_paypal : null,
+          pais_envio: s.metadata?.perfil?.importacion?.pais || null,
           // La tarjeta ya no se pide para publicar: se revisa antes de transferir
           tarjeta_verificada: s.id ? (() => { const e = estadoRequisitos(s); return e.exento || e.tarjeta.ok })() : false,
         }

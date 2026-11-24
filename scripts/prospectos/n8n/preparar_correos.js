@@ -181,7 +181,7 @@ const T = {
         cuerpo: '<p>We came across ' + esc(r.empresa) + ' and think you would be a great fit for <b>HETNA CNC</b>, a marketplace 100% focused on CNC: machines, tooling, spare parts, machined parts, services and training, with buyers across Mexico and Latin America.</p>' +
           '<p>Listing is <b>free</b> and you only pay when you sell:</p>' + tablaComision('en') +
           '<p>You also receive <b>quote requests and manufacturing tenders</b> from buyers looking for exactly what you do. Each seller sells under its own name and invoices its customers directly.</p>' +
-          boton(liga('/talleres/unete', r, 1), 'Open my free store'),
+          boton(liga('/sell-in-mexico', r, 1), 'Open my free store'),
       }),
       2: (r) => ({ asunto: 'Quick follow-up, ' + r.empresa, cuerpo: '<p>Following up on my last email: Mexico imports billions in CNC tooling and services every year, and HETNA connects you with those buyers for a 6% fee and no monthly plan.</p>' + boton(liga('/talleres/unete', r, 2), 'See how it works') }),
       3: (r) => ({ asunto: 'Last note from HETNA CNC', cuerpo: '<p>This is my last email for now. If you would like to reach CNC buyers in Mexico and LatAm, you can join here or simply reply:</p>' + boton(liga('/talleres/unete', r, 3), 'Join HETNA CNC') }),
@@ -344,18 +344,19 @@ const EXPORTADOR = {
     1: (r) => ({
       asunto: r.empresa + ': sell into Mexico without opening an office',
       cuerpo: '<p>We are <b>HETNA CNC</b>, a Mexican marketplace 100% focused on CNC: machines, laser and plasma cutters, tooling, spare parts and services, with machine shops and manufacturers across Mexico buying every day.</p>' +
-        '<ul><li><b>No local entity needed to start:</b> list your products in English or Spanish; we help you with the Spanish listing and the buyer questions.</li>' +
+        '<ul><li><b>No local entity needed:</b> list in English; we help you with the Spanish listing and the buyer questions.</li>' +
+        '<li><b>Ship DDP door to door</b> (DHL, FedEx, UPS or your forwarder) and <b>get paid via PayPal</b>. Your products show an «Imported» label with your country and delivery time.</li>' +
         '<li><b>Free to list, 6% fee per sale</b> (5% on CNC machines). No monthly plan.</li>' +
         '<li><b>Quote requests and tenders</b> from Mexican shops looking for exactly what you make.</li>' +
         '<li>Mexico is one of the largest CNC markets in Latin America and imports most of its machines, tooling and spare parts.</li></ul>' +
         '<p>If you already ship to Mexico or have a distributor here, we can list through them too.</p>' +
-        boton(liga('/talleres/unete', r, 1), 'Open my free store'),
+        boton(liga('/sell-in-mexico', r, 1), 'Open my free store'),
     }),
     2: (r) => ({
       asunto: 'Mexican CNC buyers, ' + r.empresa,
-      cuerpo: '<p>Following up: shops on HETNA ask for machines, spindles, servo drives, end mills and laser parts every week. If you want to reach them for a 6% fee and no monthly plan, your store is free.</p>' +
+      cuerpo: '<p>Following up: shops on HETNA ask for machines, spindles, servo drives, end mills and laser parts every week. If you want to reach them for a 6% fee and no monthly plan, your store is free. You ship DDP from your country and we pay you via PayPal.</p>' +
         '<p>Reply to this email and we will help you upload your first products.</p>' +
-        boton(liga('/talleres/unete', r, 2), 'See how it works'),
+        boton(liga('/sell-in-mexico', r, 2), 'See how it works'),
     }),
   },
   es: {
@@ -363,6 +364,7 @@ const EXPORTADOR = {
       asunto: r.empresa + ': vendan en México sin abrir oficina',
       cuerpo: '<p>Somos <b>HETNA CNC</b>, el marketplace mexicano 100% especializado en CNC: máquinas, corte láser y plasma, herramientas, refacciones y servicios, con talleres y fabricantes de todo México comprando cada día.</p>' +
         '<ul><li><b>Sin abrir oficina para empezar:</b> publican sus productos y nosotros les ayudamos con las fichas y las preguntas de los compradores.</li>' +
+        '<li><b>Envían puerta a puerta con impuestos pagados (DDP)</b> y <b>les pagamos por PayPal</b>. Sus productos salen marcados «De importación» con su país y tiempo de entrega.</li>' +
         '<li><b>Publicar es gratis y pagan 6% por venta</b> (5% en máquinas CNC). Sin mensualidad.</li>' +
         '<li>Reciben <b>solicitudes de cotización y licitaciones</b> de talleres mexicanos que buscan justo lo que fabrican.</li></ul>' +
         '<p>Si ya tienen distribuidor en México, también puede publicar con nosotros.</p>' +
