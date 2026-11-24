@@ -19,10 +19,6 @@ import type { EspacioId } from "./tipos"
  * se suben aquí.
  */
 export const PRECIO_30_DIAS: Record<EspacioId, number> = {
-  carrusel_principal: 600,
-  banner_promo: 400,
-  franja_inicio: 300,
-  banner_herramientas: 250,
   foro_lateral: 150,
   categorias_lateral: 200,
   vista_whatsapp: 250,
@@ -55,10 +51,6 @@ export function calcularMonto(espacio: EspacioId, dias: number): number {
 // ---- Por vistas (CPM: precio por cada 1,000 vistas) ----
 // Una "vista" = el anuncio se mostró a una persona (una vez por sesión, sin robots).
 export const PRECIO_MIL_VISTAS: Record<EspacioId, number> = {
-  carrusel_principal: 180,
-  banner_promo: 150,
-  franja_inicio: 120,
-  banner_herramientas: 100,
   foro_lateral: 100,
   categorias_lateral: 100,
   vista_whatsapp: 120,
