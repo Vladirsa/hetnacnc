@@ -10,6 +10,7 @@ const PESTANAS = [
   { href: "/cam/subir", corto: "2D", nombre: "Router y láser" },
   { href: "/cam/lab", corto: "3D", nombre: "3, 4 y 5 ejes" },
   { href: "/cam/torno", corto: "Torno", nombre: "eje rotativo" },
+  { href: "/cam/simulador", corto: "Simulador", nombre: "prueba tu G-code" },
 ]
 
 export function BarraCam() {
