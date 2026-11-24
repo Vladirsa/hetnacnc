@@ -28,7 +28,7 @@ const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/Gene
 const MODO_MUEBLES: Record<string, "imagen" | "cocina" | "molduras"> = { "muebles-desde-imagen": "imagen", "molduras-tallados": "molduras", "muebles-ensamble": "imagen", "despiece-muebles": "cocina" }
 // celosías, patrones radiales y bisagra viva: una sola herramienta con modos
 const GeneradorPatronesCorte = dynamic(() => import("@/components/hetna/generador/GeneradorPatronesCorte").then((m) => m.GeneradorPatronesCorte))
-const MODO_PATRON: Record<string, "celosia" | "radial" | "bisagra"> = { celosias: "celosia", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
+const MODO_PATRON: Record<string, "celosia" | "voronoi" | "radial" | "bisagra"> = { celosias: "celosia", "patron-voronoi": "voronoi", "patrones-radiales": "radial", "bisagra-viva": "bisagra" }
 // el organizador de cajón ahora es un tipo de caja (separadores)
 const GeneradorOrganizador = dynamic(() => import("@/components/hetna/generador/GeneradorCaja").then((m) => m.GeneradorOrganizadorCaja))
 
