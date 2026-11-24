@@ -12,7 +12,18 @@ import type { Material } from "./gcode"
 import type { Fresa } from "./material"
 import type { Barra, Inserto } from "./torno"
 
-type Base = { id: string; version: number; titulo: string; nivel: "básico" | "intermedio"; enunciado: string[]; pista: string; solucion: string }
+type Base = {
+  id: string
+  version: number
+  titulo: string
+  nivel: "básico" | "intermedio"
+  enunciado: string[]
+  pista: string
+  solucion: string
+  // Celdas vecinas de la banda de tolerancia (por omisión 1 en fresadora, 2 en torno).
+  // En roscas va 0: los flancos son tan inclinados que la banda dejaría pasar un hilo poco profundo.
+  vecinos?: number
+}
 export type EjercicioFresa = Base & { maquina: "fresadora"; material: Material; fresa: Fresa }
 export type EjercicioTorno = Base & { maquina: "torno"; barra: Barra; inserto: Inserto }
 export type Ejercicio = EjercicioFresa | EjercicioTorno
@@ -137,6 +148,98 @@ M5
 M30`,
   },
   {
+    id: "f5-bolsillo-isla",
+    version: 1,
+    maquina: "fresadora",
+    nivel: "intermedio",
+    titulo: "Bolsillo con isla",
+    material: { ancho: 100, largo: 80, alto: 12, cero: "esquina" },
+    fresa: { diametro: 6, tipo: "plana" },
+    enunciado: [
+      "Material: 100 × 80 × 12 mm. Cero en la esquina inferior izquierda, Z0 arriba.",
+      "Fresa plana de 6 mm.",
+      "Vacía un bolsillo rectangular de 4 mm de profundidad cuyas ORILLAS van de X20 a X80 y de Y20 a Y60.",
+      "En medio debe quedar una isla sin cortar que va de X40 a X60 y de Y35 a Y45.",
+      "Las esquinas del bolsillo quedan redondeadas con el radio de la fresa (3 mm); el fondo, parejo y sin crestas.",
+    ],
+    pista: "El centro de la fresa va 3 mm adentro de las orillas: vueltas rectangulares alrededor de la isla (X37–63, Y32–48) y hacia afuera hasta X23–77, Y23–57, con un paso de 4 mm o menos para que no queden crestas en las esquinas.",
+    solucion: `G21 G90
+M3 S16000
+G0 Z5
+G0 X37 Y32
+G1 Z-4 F200
+G1 X63 F900
+G1 Y48
+G1 X37
+G1 Y32
+G1 X33 Y28
+G1 X67
+G1 Y52
+G1 X33
+G1 Y28
+G1 X29 Y24
+G1 X71
+G1 Y56
+G1 X29
+G1 Y24
+G1 X25 Y23
+G1 X75
+G1 Y57
+G1 X25
+G1 Y23
+G1 X23
+G1 X77
+G1 Y57
+G1 X23
+G1 Y23
+G0 Z5
+M5
+M30`,
+  },
+  {
+    id: "f6-grabado-he",
+    version: 1,
+    maquina: "fresadora",
+    nivel: "básico",
+    titulo: "Grabado en V: letras H y E",
+    material: { ancho: 80, largo: 70, alto: 6, cero: "esquina" },
+    fresa: { diametro: 6.35, tipo: "v", angulo: 60 },
+    enunciado: [
+      "Material: 80 × 70 × 6 mm. Cero en la esquina inferior izquierda, Z0 arriba.",
+      "Fresa en V de 60° (diámetro 6.35 mm). Profundidad del grabado: 1.5 mm.",
+      "Letra H: líneas de X15 Y15 a X15 Y55, de X35 Y15 a X35 Y55 y de X15 Y35 a X35 Y35.",
+      "Letra E: línea de X45 Y15 a X45 Y55, y tres brazos: de X45 Y55 a X65 Y55, de X45 Y35 a X60 Y35 y de X45 Y15 a X65 Y15.",
+    ],
+    pista: "Sube con G0 entre trazos (el rápido nunca dentro del material) y baja con G1 a Z-1.5 al inicio de cada línea.",
+    solucion: `G21 G90
+M3 S20000
+G0 Z3
+G0 X15 Y15
+G1 Z-1.5 F200
+G1 Y55 F800
+G0 Z3
+G0 X35 Y15
+G1 Z-1.5 F200
+G1 Y55 F800
+G0 Z3
+G0 X15 Y35
+G1 Z-1.5 F200
+G1 X35 F800
+G0 Z3
+G0 X65 Y55
+G1 Z-1.5 F200
+G1 X45 F800
+G1 Y15
+G1 X65
+G0 Z3
+G0 X45 Y35
+G1 Z-1.5 F200
+G1 X60 F800
+G0 Z3
+M5
+M30`,
+  },
+  {
     id: "t1-cilindrado",
     version: 1,
     maquina: "torno",
@@ -226,6 +329,41 @@ G2 X26 Z-15 R3
 G1 X30
 G1 Z-35
 G1 X42
+G0 X100 Z50
+M5
+M30`,
+  },
+  {
+    id: "t4-rosca",
+    version: 1,
+    vecinos: 0,
+    maquina: "torno",
+    nivel: "intermedio",
+    titulo: "Rosca M20 × 1.5",
+    barra: { diametro: 40, largo: 80 },
+    inserto: { radioPunta: 0.4 },
+    enunciado: [
+      "Barra de diámetro 40, 80 mm fuera del chuck. Z0 en la cara. X en diámetro.",
+      "Inserto de cilindrar con radio de punta 0.4 mm y herramienta de roscar a 60°.",
+      "Deja el diámetro 20 desde Z0 hasta Z-25.",
+      "Haz una rosca M20 × 1.5 desde la cara hasta Z-20: paso 1.5 mm, diámetro de fondo 18.16 (altura del hilo 0.92 mm por lado).",
+      "Arranca el roscado desde X22 Z5, para que el hilo quede en la misma posición que el plano.",
+    ],
+    pista: "Usa G97 (RPM fijas) para roscar. Con G76: G76 P010060 Q100 R0.05 y G76 X18.16 Z-20 P920 Q300 F1.5. Con G92 haces las pasadas a mano: X19.4, X18.9… hasta X18.16.",
+    solucion: `G21 G99
+T0101
+G97 S1000 M3
+G0 X42 Z2
+G90 X35 Z-25 F0.25
+X30
+X25
+X20
+G0 X100 Z50
+T0303
+G97 S600 M3
+G0 X22 Z5
+G76 P010060 Q100 R0.05
+G76 X18.16 Z-20 P920 Q300 F1.5
 G0 X100 Z50
 M5
 M30`,

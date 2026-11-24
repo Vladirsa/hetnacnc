@@ -44,6 +44,7 @@ const CODIGOS_TORNO: [string, string][] = [
   ["G94", "Ciclo de refrentado: corta la cara de afuera hacia el centro."],
   ["G71 / G70", "Desbaste por capas y acabado: describes el perfil una vez (bloques N…) y G71 U… R… / G71 P… Q… U… W… F… lo desbasta dejando un sobrante; G70 P… Q… le da el acabado."],
   ["G2 / G3", "Arcos con R, o con I (en radio) y K."],
+  ["G32 / G92 / G76", "Roscado: G32 es un pase suelto, G92 el ciclo por pasadas (F = paso) y G76 el ciclo automático de dos bloques (fondo X, altura P y primera pasada Q en micras). Rosca con RPM fijas (G97)."],
   ["G96 / G97", "Velocidad de corte constante en m/min (G96) o RPM fijas (G97). G50 S pone el tope de RPM."],
   ["G98 / G99", "Avance en mm por minuto (G98) o en mm por vuelta (G99, el normal en torno)."],
   ["T0101", "Herramienta 1 con su corrector 1."],
@@ -64,7 +65,7 @@ const PREGUNTAS = [
   },
   {
     p: "¿También simula torno CNC?",
-    r: "Sí: torno de 2 ejes estilo Fanuc, con X en diámetro, U y W, G96/G97, G98/G99 y los ciclos G90 (cilindrado), G94 (refrentado), G71 (desbaste) y G70 (acabado). También los ciclos de desbaste G71 y acabado G70 (formato Fanuc de dos bloques). Las roscas (G32, G76, G92) llegan en una siguiente versión; si tu programa las trae, el simulador te avisa.",
+    r: "Sí: torno de 2 ejes estilo Fanuc, con X en diámetro, U y W, G96/G97, G98/G99 y los ciclos G90 (cilindrado), G94 (refrentado), G71 (desbaste) y G70 (acabado). También los ciclos de desbaste G71 y acabado G70 (formato Fanuc de dos bloques). Y roscado con G32, G92 y G76.",
   },
   {
     p: "¿Mi programa se sube a internet?",

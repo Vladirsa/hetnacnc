@@ -176,4 +176,35 @@ M5
 M30
 %`,
   },
+  {
+    id: "rosca",
+    nombre: "7. Rosca M20 × 1.5 con G76",
+    explicacion: "Primero se deja el diámetro 20 y luego el ciclo G76 hace solo las pasadas de la rosca, cada vez más finas, hasta el diámetro de fondo (18.16). F es el paso: 1.5 mm por vuelta.",
+    barra: { diametro: 40, largo: 80 },
+    inserto: { radioPunta: 0.4 },
+    codigo: `%
+(Rosca M20 x 1.5 de 20 mm de largo)
+G21 G99
+T0101
+G97 S1000 M3
+G0 X42 Z2
+(Diámetro 20 de la rosca, 25 mm de largo)
+G90 X35 Z-25 F0.25
+X30
+X25
+X20
+G0 X100 Z50
+(Herramienta de roscar a 60 grados, RPM fijas con G97)
+T0303
+G97 S600 M3
+G0 X22 Z5
+(P010060: 1 pasada de acabado, sin chaflán, 60 grados; Q100: mínimo 0.1 mm; R0.05: sobrante)
+G76 P010060 Q100 R0.05
+(X: diámetro de fondo; P920: altura del hilo 0.92 mm; Q300: primera pasada 0.3 mm; F: paso)
+G76 X18.16 Z-20 P920 Q300 F1.5
+G0 X100 Z50
+M5
+M30
+%`,
+  },
 ]
