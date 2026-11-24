@@ -231,6 +231,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
       "Diseña gratis celosías y paneles calados para divisores, puertas de closet, plafones y fachadas: 10 patrones, medidas, marco y puente entre huecos. Descarga DXF, SVG o PDF para router, láser o plasma.",
   },
   {
+    slug: "celosia-desde-imagen",
+    nombre: "Celosía desde imagen",
+    texto: "Sube la foto de la celosía que te gustó y sale el panel listo para plasma, láser o router.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Celosía desde imagen: de foto a DXF para plasma y láser",
+    descripcion:
+      "Sube la foto o captura de una celosía, enderézala con 4 puntos y elige plasma, láser o router y el espesor: la app quita huecos que no se cortan, engruesa puentes delgados y une las piezas sueltas. Descarga gratis el panel con marco en DXF, SVG o PDF.",
+    meta: "Convierte la foto de una celosía en un panel listo para plasma, láser o router: revisa puentes, huecos e islas y descarga gratis el DXF.",
+  },
+  {
     slug: "patron-voronoi",
     nombre: "Patrón Voronoi",
     texto: "Celdas irregulares para celosías, lámparas, mesas y mosaicos: cada clic, un diseño nuevo.",

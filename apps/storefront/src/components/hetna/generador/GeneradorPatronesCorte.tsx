@@ -9,14 +9,28 @@
 import { useState } from "react"
 
 import { GeneradorBisagra } from "./GeneradorBisagra"
+import { GeneradorCelosiaImagen } from "./GeneradorCelosiaImagen"
 import { GeneradorCelosias } from "./GeneradorCelosias"
 import { GeneradorPatron } from "./GeneradorPatron"
 import { GeneradorVoronoi } from "./GeneradorVoronoi"
 import { SelectorModos, type Modo } from "./SelectorModos"
 
-export type ModoPatron = "celosia" | "voronoi" | "radial" | "bisagra"
+export type ModoPatron = "imagen" | "celosia" | "voronoi" | "radial" | "bisagra"
 
 const MODOS: Modo<ModoPatron>[] = [
+  {
+    id: "imagen",
+    slug: "celosia-desde-imagen",
+    nombre: "Desde imagen",
+    nota: "La celosía que viste en internet, lista para cortar",
+    icono: (
+      <>
+        <rect x="6" y="6" width="28" height="28" rx="2" />
+        <circle cx="15" cy="15" r="3" />
+        <path d="M34 25l-8-8L8 34" />
+      </>
+    ),
+  },
   {
     id: "celosia",
     slug: "celosias",
@@ -73,6 +87,7 @@ export function GeneradorPatronesCorte({ modoInicial = "celosia" }: { modoInicia
 
   if (modo === "radial") return <GeneradorPatron cabecera={cabecera} />
   if (modo === "voronoi") return <GeneradorVoronoi cabecera={cabecera} />
+  if (modo === "imagen") return <GeneradorCelosiaImagen cabecera={cabecera} />
   if (modo === "bisagra") return <GeneradorBisagra cabecera={cabecera} />
   return <GeneradorCelosias cabecera={cabecera} />
 }
