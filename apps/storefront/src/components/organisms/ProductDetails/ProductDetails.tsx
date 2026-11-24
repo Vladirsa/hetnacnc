@@ -137,7 +137,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
 
       <VenderMas titulo={product.title} handle={product.handle} locale={locale} vistas={vistas} />
 
-      <ProductDetailsSeller seller={seller} tipo={tipo} />
+      {/* "Vendido por" va en las pestañas de abajo (borrador aprobado, 23 nov 2026) */}
 
       {/* Publicidad (talleres, proveedores, marcas): se compra en /anunciate */}
       <AnunciosEspacio espacio="ficha_producto" titulo="Patrocinado" invitar />
@@ -150,10 +150,13 @@ export const ProductDetallesLargos = ({
   product,
   locale,
   taller,
+  vendido,
 }: {
   product: Props["product"]
   locale: string
   taller?: { name?: string | null; handle?: string | null }
+  /** Tarjeta del vendedor, para la pestaña "Vendido por" */
+  vendido?: React.ReactNode
 }) => {
   // Sin lo que quedó vacío de la plantilla de publicar ("Qué incluye: --")
   const descripcion = limpiarDescripcion(product?.description)
@@ -196,6 +199,7 @@ export const ProductDetallesLargos = ({
         </div>
       ),
     },
+    Boolean(vendido) && { clave: "vendedor", titulo: "Vendido por", contenido: vendido },
   ].filter(Boolean) as { clave: string; titulo: string; contenido: React.ReactNode }[]
   return (
     <div className="flex flex-col gap-4">

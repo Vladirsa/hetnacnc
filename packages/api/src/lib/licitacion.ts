@@ -263,6 +263,8 @@ export type Trabajo = {
   repite_folio?: string
   // Fase 4: servicio exprés con sobreprecio (FASE4_EXPRES_PCT)
   expres?: { pct: number } | null
+  // «Que HETNA elija por mí» (lib/hetna-elige): tope opcional en MXN
+  hetna_elige?: { tope: number | null } | null
   // De dónde vino el cliente (anuncio, correo…): lib/origen-visita.ts
   origen?: { fuente: string; medio: string; campana: string; contenido: string } | null
 }

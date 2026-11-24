@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 
 import { FormLatam } from "@/components/hetna/latam/FormLatam"
-import { PAISES_LATAM } from "@/components/hetna/latam/paises"
+import { PAISES_LATAM, rutaPais } from "@/components/hetna/latam/paises"
+import { directorioPorPais, mismoPais } from "@/lib/hetna/directorio"
 import { conteoLatam } from "@/lib/hetna/latam"
 
 // Fase 5: HETNA llega a Latinoamérica. Pre-registro de talleres fundadores y
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/latinoamerica" },
   title: { absolute: "HETNA CNC llega a Latinoamérica: talleres fundadores por país" },
   description:
-    "Colombia, Chile, Perú, Argentina, Guatemala y más: apunta tu taller CNC como fundador o pide que HETNA abra en tu país. Fabricación a pedido, Cotizador para talleres y tienda CNC.",
+    "Colombia, Chile, Perú, Argentina, Guatemala y más: apunta tu taller CNC como fundador o pide que HETNA abra en tu país.",
 }
 
 const QUE_ES = [
@@ -24,7 +25,10 @@ const QUE_ES = [
 ]
 
 export default async function LatinoamericaPage() {
-  const conteo = await conteoLatam()
+  const [conteo, grupos] = await Promise.all([conteoLatam(), directorioPorPais()])
+  const totalMundo = grupos.reduce((n, g) => n + g.empresas.length, 0)
+  const ubicadas = (p: (typeof PAISES_LATAM)[number]) =>
+    grupos.find((g) => mismoPais(g.pais, p.nombre) || (p.en_hoja || []).some((h) => mismoPais(h, g.pais)))?.empresas.length || 0
   return (
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
@@ -34,13 +38,22 @@ export default async function LatinoamericaPage() {
           <p className="mt-4 max-w-2xl text-lg text-white/75">
             La red de talleres CNC de México se abre a más países. Apunta tu taller como fundador o pide que abramos en tu país: abrimos primero donde más talleres y clientes se registren.
           </p>
+          {totalMundo > 0 && (
+            <p className="mt-4 text-sm text-white/80">
+              Ya ubicamos {totalMundo.toLocaleString("es-MX")} empresas CNC en {grupos.length} países.{" "}
+              <a href="/mx/talleres#directorio" className="font-semibold text-[#F2A25F] underline">Verlas en el mapa</a>
+            </p>
+          )}
           <div className="mt-6 flex flex-wrap gap-2">
             {PAISES_LATAM.map((p) => {
+              // EUA y España aparecen aquí también, cada uno con su página
               const c = conteo[p.clave]
               const n = c ? c.talleres + c.clientes : 0
+              const u = ubicadas(p)
               return (
-                <a key={p.clave} href={`/mx/latinoamerica/${p.clave}`} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
+                <a key={p.clave} href={rutaPais(p.clave)} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
                   {p.bandera} {p.nombre}
+                  {u > 0 ? ` · ${u} ${u === 1 ? "empresa" : "empresas"}` : ""}
                   {n > 0 ? ` · ${n} ${n === 1 ? "registro" : "registros"}` : ""}
                 </a>
               )

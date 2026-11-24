@@ -242,7 +242,6 @@ const leerProporciones = (texto: string) => {
   return v.length >= 2 ? v.slice(0, 12) : undefined
 }
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
 // Definidos fuera del generador: un componente creado dentro del render se
 // vuelve a montar en cada tecla y el campo pierde el foco.
@@ -537,13 +536,6 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
     setTimeout(() => w.print(), 300)
   }
 
-  const mensaje =
-    `Hola HETNA CNC, quiero cotizar el corte de una caja con juntas de dedo (${nombreTipo.toLowerCase()}):\n` +
-    `- Medidas exteriores: ${r1(ext.ancho)} x ${r1(ext.fondo)} x ${r1(ext.alto)} mm\n` +
-    `- Material: ${r1(esp)} mm de espesor\n` +
-    `- ${r.piezas.length} piezas${tapa ? " (con tapa)" : " (sin tapa)"}${columnas * filas > 1 ? `, ${columnas * filas} compartimentos` : ""}, ${hoja ? `hoja de ${r1(hoja.ancho)} x ${r1(hoja.alto)} mm` : ""}\n` +
-    `- Máquina: ${MAQUINAS[maquina].nombre}`
-
   const fabricar = () => {
     if (!listo) return
     if (
@@ -820,17 +812,20 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
         <Boton onClick={() => listo && imprimir()}>PDF</Boton>
       </div>
+      {/* En celular el precio va aquí; en computadora, en la barra debajo de la
+          vista, para no tapar los controles del diseño (Vlado, 23 nov 2026) */}
       {listo && (
-        <PrecioFabricar
-          dxf={aDXF(r.piezas)}
-          nombreArchivo={nombreArchivo}
-          pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
-          medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
-          maquina={maquina === "router" ? "router" : "laser"}
-          espesorMm={esp}
-        />
+        <div className="lg:hidden">
+          <PrecioFabricar
+            dxf={aDXF(r.piezas)}
+            nombreArchivo={nombreArchivo}
+            pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
+            medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
+            maquina={maquina === "router" ? "router" : "laser"}
+            espesorMm={esp}
+          />
+        </div>
       )}
-      <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>Preguntar por WhatsApp</Boton>
       {aviso && <Aviso tipo="error">{aviso}</Aviso>}
     </>
   )
@@ -881,7 +876,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             <Boton onClick={imprimir}>PDF</Boton>
           </div>
         </TarjetaExport>
-        <TarjetaExport titulo="¿Cuánto cuesta cortarla?" nota="Ve el precio al instante o pídela por WhatsApp.">
+        <TarjetaExport titulo="¿Cuánto cuesta cortarla?" nota="Ve el precio al instante en el Cotizador.">
           <div className="flex gap-2">
             <Boton
               tipo="verde"
@@ -912,7 +907,6 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             >
               Cotizador
             </Boton>
-            <Boton href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`}>WhatsApp</Boton>
           </div>
         </TarjetaExport>
       </div>
@@ -952,6 +946,19 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       avisos={[]}
       pestanaInicial="vista"
       pie={pie}
+      barraFabricar={
+        listo ? (
+          <PrecioFabricar
+            barra
+            dxf={aDXF(r.piezas)}
+            nombreArchivo={nombreArchivo}
+            pieza={`Caja con juntas de dedo (${nombreTipo.toLowerCase()})`}
+            medidas={`${r1(ext.ancho)} × ${r1(ext.fondo)} × ${r1(ext.alto)} mm`}
+            maquina={maquina === "router" ? "router" : "laser"}
+            espesorMm={esp}
+          />
+        ) : null
+      }
       medidasReales={listo ? r.armado : undefined}
       sinPieza={r.errores[0] || "Revisa las medidas del panel."}
       barra={

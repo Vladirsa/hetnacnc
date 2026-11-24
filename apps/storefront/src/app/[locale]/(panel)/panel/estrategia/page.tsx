@@ -11,6 +11,8 @@ type Datos = {
   anterior: Periodo
   red: { talleres: number; puntualidad_pct: number | null; entregas_con_fecha: number; con_capacidad_libre: number; con_precios: number | null; campana_precios: { enviados: number; recordados: number; llenaron: number } | null }
   latam: { pais: string; talleres: number; clientes: number }[]
+  talleres_origen?: { fuente: string; campana: string; registros: number }[]
+  en_riesgo?: { folio: string; horas: number; que: string; ciudad: string; recordada: boolean; ronda: number }[]
   metas: { puntualidad_pct: number; horas_primera_propuesta: number; archivos_detectados_pct: number }
 }
 
@@ -20,7 +22,7 @@ type Fase4 = {
   compensaciones: { solicitud_id: string; folio: string; total: number; dias_tarde: number; monto: number; estado: string; created_at: string }[]
 }
 
-const PAIS: Record<string, string> = { co: "🇨🇴 Colombia", cl: "🇨🇱 Chile", pe: "🇵🇪 Perú", ar: "🇦🇷 Argentina", gt: "🇬🇹 Guatemala", ec: "🇪🇨 Ecuador", cr: "🇨🇷 Costa Rica", bo: "🇧🇴 Bolivia", do: "🇩🇴 Rep. Dominicana", es: "🇪🇸 España" }
+const PAIS: Record<string, string> = { co: "🇨🇴 Colombia", cl: "🇨🇱 Chile", pe: "🇵🇪 Perú", ar: "🇦🇷 Argentina", gt: "🇬🇹 Guatemala", ec: "🇪🇨 Ecuador", cr: "🇨🇷 Costa Rica", bo: "🇧🇴 Bolivia", do: "🇩🇴 Rep. Dominicana", es: "🇪🇸 España", us: "🇺🇸 Estados Unidos" }
 
 const cambio = (a: number, b: number) => (b ? `${a >= b ? "+" : ""}${Math.round(((a - b) / b) * 100)} % vs. mes anterior` : a ? "nuevo este mes" : undefined)
 const horas = (h: number | null) => (h == null ? "—" : h < 1 ? `${Math.round(h * 60)} min` : h < 48 ? `${h} h` : `${Math.round(h / 24)} días`)
@@ -100,6 +102,29 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       )}
 
       <Tarjeta>
+        <Titulo extra={<a href={`/${locale}/panel/licitaciones`} className="text-[12px] font-semibold text-[#C2560A]">Ver licitaciones →</a>}>
+          Solicitudes en riesgo: sin propuesta después de 2 h
+        </Titulo>
+        {!d.en_riesgo?.length ? (
+          <Vacio>Ninguna. Todas las solicitudes abiertas ya tienen al menos una propuesta (o llevan menos de 2 h).</Vacio>
+        ) : (
+          <ul className="divide-y divide-[#EFEDE6]">
+            {d.en_riesgo.map((r) => (
+              <li key={r.folio} className="flex justify-between gap-3 py-2 text-[13px]">
+                <a href={`/${locale}/panel/licitaciones?f=${encodeURIComponent(r.folio)}`} className="font-semibold text-[#142033] hover:text-[#C2560A]">
+                  {r.folio}
+                  <span className="font-normal text-[#6B675C]">{r.que ? ` · ${r.que}` : ""}{r.ciudad ? ` · ${r.ciudad}` : ""}</span>
+                </a>
+                <span className={`whitespace-nowrap ${r.horas >= 24 ? "font-semibold text-[#B3261E]" : "text-[#8A3B05]"}`}>
+                  {r.horas} h{r.recordada ? " · recordada" : ""}{r.ronda > 1 ? ` · ronda ${r.ronda}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Tarjeta>
+
+      <Tarjeta>
         <Titulo>De dónde vienen las solicitudes (30 días)</Titulo>
         {!a.origenes?.length ? (
           <Vacio>Todavía no hay solicitudes con origen. Las ligas de los anuncios llevan utm_source y utm_campaign; aquí se ve cuántas solicitudes trae cada campaña.</Vacio>
@@ -114,6 +139,25 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
                 <span className="whitespace-nowrap text-[#40403A]">
                   {o.solicitudes} solicitudes · {o.con_propuesta_elegida} eligieron taller
                 </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Tarjeta>
+
+      <Tarjeta>
+        <Titulo>De dónde vienen los talleres registrados (30 días)</Titulo>
+        {!d.talleres_origen?.length ? (
+          <Vacio>Todavía no hay registros de taller en los últimos 30 días.</Vacio>
+        ) : (
+          <ul className="divide-y divide-[#EFEDE6]">
+            {d.talleres_origen.map((o) => (
+              <li key={`${o.fuente}|${o.campana}`} className="flex justify-between gap-3 py-2 text-[13px]">
+                <span className="font-semibold">
+                  {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
+                  {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
+                </span>
+                <span className="whitespace-nowrap text-[#40403A]">{o.registros} registros</span>
               </li>
             ))}
           </ul>

@@ -256,6 +256,10 @@ export function trabajoParaTaller(s: any, r: RelacionTaller) {
     cliente: clienteVisible(s),
     nda_requerido: p.nda === "requerido",
     nda_aceptado: !!r.nda,
+    // Internos del cliente: el taller no ve su presupuesto máximo para «HETNA
+    // elige» (cotizaría al tope) ni de qué anuncio llegó
+    hetna_elige: undefined,
+    origen: undefined,
   }
 }
 

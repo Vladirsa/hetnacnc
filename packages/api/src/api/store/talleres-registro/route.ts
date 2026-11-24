@@ -110,6 +110,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     portafolio: corto(b.portafolio, 300),
     comentarios: corto(b.comentarios, 1500),
     fotos,
+    // De dónde llegó (anuncio, correo…): lib/origen-visita.ts
+    origen: require("../../../lib/origen-visita").limpiarOrigen(b.origen),
   }
 
   try {

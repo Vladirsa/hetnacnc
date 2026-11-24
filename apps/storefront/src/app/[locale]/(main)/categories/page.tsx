@@ -1,175 +1,108 @@
-import { categoriasSugeridas } from "@/lib/hetna/catalogo"
-import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { Suspense } from "react"
+// /categories: todo el catálogo con pestañas (Todo · Productos · Diseños ·
+// A tu medida · Talleres) y filtros con conteo (opción C que eligió Vlado,
+// 23 nov 2026). Datos y filtros: lib/hetna/explorar.ts.
+//
+// SEO: sólo la pestaña sola (y su paginación) se indexa, cada una con su
+// título y descripción; una combinación de filtros es "noindex, follow" con
+// canónica a su pestaña, para que Google no la tome como página repetida.
+import type { Metadata } from "next"
 
+import { categoriasSugeridas } from "@/lib/hetna/catalogo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
-import { argsDeListado, claveListado, paramsDe } from "@/lib/helpers/busqueda-listado"
-import { SearchProductsListing, type ListadoInicial } from "@/components/sections/ProductListing/SearchProductsListing"
-import { ProductListing } from "@/components/sections/ProductListing/ProductListing"
-import isBot from "@/lib/helpers/isBot"
-import { headers } from "next/headers"
+import { Explorar } from "@/components/hetna/explorar/Explorar"
+import { paramsDe } from "@/lib/helpers/busqueda-listado"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
-import type { Metadata } from "next"
-import { listRegions } from "@/lib/data/regions"
-import { listProducts, searchProducts } from "@/lib/data/products"
-import { paraTarjeta } from "@/lib/helpers/tarjeta-producto"
-import {
-  buildHreflangAlternates,
-  getStorefrontLocales,
-} from "@/lib/helpers/hreflang"
+import { SITIO_CANONICO, buildHreflangAlternates } from "@/lib/helpers/hreflang"
+import { PESTANAS, esIndexable, explorar, leerPestana } from "@/lib/hetna/explorar"
+import { estadosParaEnlaces } from "@/lib/seo/estados"
 
 export const revalidate = 60
 
-export async function generateMetadata({
-  params,
-}: {
+type Props = {
   params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale } = await params
-  const headersList = await headers()
-  const host = headersList.get("host")
-  const protocol = headersList.get("x-forwarded-proto") || "https"
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
+  const sp = paramsDe(await searchParams)
+  const pestana = leerPestana(sp.get("tipo"))
+  const info = PESTANAS.find((p) => p.id === pestana)!
+  const pagina = Math.max(1, Number(sp.get("page")) || 1)
 
-  let locales: string[] = []
-  try {
-    locales = getStorefrontLocales(await listRegions())
-  } catch {
-    locales = [locale]
-  }
+  const qs = new URLSearchParams()
+  if (pestana !== "todo") qs.set("tipo", pestana)
+  const indexable = esIndexable(sp)
+  if (indexable && pagina > 1) qs.set("page", String(pagina))
+  const sufijo = qs.toString() ? `?${qs}` : ""
+  const { canonical, languages } = buildHreflangAlternates({ path: `/categories${sufijo}`, locale })
 
-  const { canonical, languages } = buildHreflangAlternates({
-    baseUrl,
-    path: "/categories",
-    locale,
-    locales,
-  })
-
-  const title = "Todos los productos"
-  const description = `Browse all products on ${
-    process.env.NEXT_PUBLIC_SITE_NAME || "our store"
-  }`
-
+  const titulo = pagina > 1 && indexable ? `${info.titulo} (página ${pagina})` : info.titulo
   return {
-    title,
-    description,
-    alternates: {
-      canonical,
-      languages,
-    },
-    robots: { index: true, follow: true },
+    title: titulo,
+    description: info.descripcion,
+    alternates: { canonical, languages },
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: {
-      title: `${title} | ${process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC"}`,
-      description,
+      title: `${titulo} | HETNA CNC`,
+      description: info.descripcion,
       url: canonical,
-      siteName: process.env.NEXT_PUBLIC_SITE_NAME || "HETNA CNC",
+      siteName: "HETNA CNC",
       type: "website",
       images: [IMAGEN_OG],
     },
   }
 }
 
-// La primera página del listado se trae en el servidor: así las fotos salen en el
-// HTML y no esperan a que el navegador cargue la página y vuelva a pedirlas.
-async function primeraPagina(locale: string, filtros: Record<string, string | string[] | undefined>): Promise<ListadoInicial | undefined> {
-  const args = argsDeListado(paramsDe(filtros))
-  try {
-    const r = await searchProducts({ ...args, countryCode: locale })
-    return { clave: claveListado(args, `${locale}|||`), products: r.products.map(paraTarjeta), count: r.count }
-  } catch {
-    return undefined // el navegador la pide como antes
-  }
-}
-
-async function AllCategories({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}) {
+export default async function TodosLosProductos({ params, searchParams }: Props) {
   const { locale } = await params
-  const filtros = await searchParams
-
-  const ua = (await headers()).get("user-agent") || ""
-  const bot = isBot(ua)
-  // La primera página se pide junto con la lista para buscadores y entra al HTML principal:
-  // dentro de un Suspense llegaba al final del documento, detrás de ~150 KB del resto de la página,
-  // y la primera foto tardaba en pintarse aunque ya estuviera descargada.
-  const inicialP = bot ? Promise.resolve(undefined) : primeraPagina(locale, filtros)
-
-  const breadcrumbsItems = [
-    {
-      path: "/categories",
-      label: "Todos los productos",
-    },
-  ]
-
-  const headersList = await headers()
-  const host = headersList.get("host")
-  const protocol = headersList.get("x-forwarded-proto") || "https"
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
-  const [
-    {
-      response: { products: jsonLdProducts },
-    },
-    inicial,
-  ] = await Promise.all([
-    listProducts({
-      countryCode: locale,
-      queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
-    }),
-    inicialP,
+  const sp = paramsDe(await searchParams)
+  const [r, sugerencias, estados] = await Promise.all([
+    explorar(locale, sp),
+    categoriasSugeridas(),
+    // Sólo en la pestaña Talleres: enlaces a "Talleres CNC en <estado>"
+    leerPestana(sp.get("tipo")) === "talleres"
+      ? estadosParaEnlaces().catch(() => [])
+      : Promise.resolve([]),
   ])
+  const info = PESTANAS.find((p) => p.id === r.pestana)!
+  const url = `${SITIO_CANONICO}/mx/categories${r.pestana === "todo" ? "" : `?tipo=${r.pestana}`}`
 
-  const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
-    "@type": "ListItem",
-    position: idx + 1,
-    url: `${baseUrl}/${locale}/products/${p.handle}`,
-    name: p.title,
-  }))
+  const lista =
+    r.pestana === "talleres"
+      ? r.talleres.slice(0, 12).map((t, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITIO_CANONICO}/mx/talleres/${t.handle}`, name: t.nombre }))
+      : r.productos.slice(0, 12).map((p, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITIO_CANONICO}/mx/products/${p.handle}`, name: p.title }))
+
+  const migas = [
+    { path: "/categories", label: "Todos los productos" },
+    ...(r.pestana === "todo" ? [] : [{ path: `/categories?tipo=${r.pestana}`, label: info.nombre }]),
+  ]
 
   return (
     <main className="container">
-      {/* <script> plano (no next/script): necesario en el HTML inicial para
-          crawlers que no esperan a la hidratación. */}
+      {/* <script> plano: en el HTML inicial para buscadores que no esperan a la hidratación */}
       <script
-        id="ld-breadcrumbs-categories"
+        id="ld-explorar"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              {
-                "@type": "ListItem",
-                position: 1,
-                name: "Todos los productos",
-                item: `${baseUrl}/${locale}/categories`,
-              },
-            ],
-          }).replace(/</g, "\\u003c"),
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: migas.map((m, i) => ({ "@type": "ListItem", position: i + 1, name: m.label, item: `${SITIO_CANONICO}/mx${m.path}` })),
+            },
+            { "@context": "https://schema.org", "@type": "ItemList", name: info.h1, url, itemListElement: lista },
+          ]).replace(/</g, "\\u003c"),
         }}
       />
-      <script
-        id="ld-itemlist-categories"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            itemListElement: itemList,
-          }).replace(/</g, "\\u003c"),
-        }}
-      />
-      <div className="hidden md:block mb-2">
-        <Breadcrumbs items={breadcrumbsItems} />
+      <div className="mb-2 hidden md:block">
+        <Breadcrumbs items={migas} />
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="heading-xl uppercase">Todos los productos</h1>
+        <h1 className="text-[26px] font-black leading-tight tracking-tight text-[#142033] sm:text-[32px]">{info.h1}</h1>
         <LocalizedClientLink href="/tienda" className="mb-1 text-[14px] font-bold text-[#B34D07] hover:underline">
           Ver la tienda por categorías →
         </LocalizedClientLink>
@@ -177,15 +110,7 @@ async function AllCategories({
 
       <AnunciosEspacio espacio="listado_productos" className="my-4" />
 
-      <Suspense fallback={<div data-testid="all-categories-page-loading"><ProductListingSkeleton /></div>}>
-        {bot ? (
-          <ProductListing showSidebar locale={locale} searchParams={filtros} />
-        ) : (
-          <SearchProductsListing locale={locale} inicial={inicial} sugerencias={await categoriasSugeridas()} />
-        )}
-      </Suspense>
+      <Explorar r={r} sp={sp} locale={locale} sugerencias={sugerencias} estados={estados} />
     </main>
   )
 }
-
-export default AllCategories

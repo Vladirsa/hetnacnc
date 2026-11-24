@@ -59,6 +59,15 @@ export const MATERIALES: MaterialRef[] = [
   { clave: "pvc", nombre: "PVC espumado 3 mm", espesor: 3, precio: 720, unidad: "hoja", hoja: [1220, 2440], densidad: 0.55, merma: 12 },
   { clave: "pvc", nombre: "PVC espumado 6 mm", espesor: 6, precio: 1250, unidad: "hoja", hoja: [1220, 2440], densidad: 0.55, merma: 12 },
   { clave: "espuma", nombre: "Espuma de alta densidad 50 mm", espesor: 50, precio: 900, unidad: "hoja", hoja: [1220, 2440], densidad: 0.05, merma: 10 },
+  // Maderas sólidas (23 nov 2026): se cotizan por tabla de 1" × 12" × 8'
+  // (19 × 300 × 2440 mm = 8 pies tabla). Precio promedio por pie tabla en
+  // México: pino #2 $33 (tabla de Home Depot a $265), cedro rojo ~$104
+  // ($90–125), parota ~$110 ($103–115), encino americano ~$145. Merma 20 %
+  // por nudos y veta. Se cambian en el panel "Precios calculadora".
+  { clave: "madera", nombre: "Pino 19 mm (tabla)", espesor: 19, precio: 265, unidad: "hoja", hoja: [300, 2440], densidad: 0.5, merma: 20 },
+  { clave: "madera", nombre: "Cedro rojo 19 mm (tabla)", espesor: 19, precio: 830, unidad: "hoja", hoja: [300, 2440], densidad: 0.45, merma: 20 },
+  { clave: "madera", nombre: "Parota 19 mm (tabla)", espesor: 19, precio: 880, unidad: "hoja", hoja: [300, 2440], densidad: 0.5, merma: 20 },
+  { clave: "madera", nombre: "Encino 19 mm (tabla)", espesor: 19, precio: 1160, unidad: "hoja", hoja: [300, 2440], densidad: 0.75, merma: 20 },
   { clave: "aluminio", nombre: "Aluminio 3 mm", espesor: 3, precio: 95, unidad: "kg", densidad: 2.7, merma: 15 },
   { clave: "aluminio", nombre: "Aluminio 6 mm", espesor: 6, precio: 95, unidad: "kg", densidad: 2.7, merma: 15 },
   { clave: "acero", nombre: "Acero cal. 14 (1.9 mm)", espesor: 1.9, precio: 34, unidad: "kg", densidad: 7.85, merma: 15 },
@@ -174,6 +183,8 @@ const CORTE: Record<string, Record<string, [number, number][]>> = {
     mdf: [[3, 4], [6, 3.5], [9, 3], [12, 2.5], [15, 2.2], [18, 2], [25, 1.4]],
     triplay: [[3, 3.6], [6, 3.2], [9, 2.7], [12, 2.2], [18, 1.8]],
     melamina: [[12, 2.4], [16, 2.0], [18, 1.9]],
+    // Madera sólida (23 nov 2026): más lenta que el MDF por la veta y los nudos
+    madera: [[12, 2.0], [19, 1.5], [25, 1.2], [38, 0.8]],
     acrilico: [[3, 2.5], [6, 1.5], [10, 1], [12, 0.8]],
     pvc: [[3, 4], [6, 3.5], [10, 2.5]],
     espuma: [[25, 5], [50, 3.5], [100, 2]],
@@ -195,7 +206,7 @@ const CORTE: Record<string, Record<string, [number, number][]>> = {
     aluminio: [[1, 6], [2, 3], [3, 2], [6, 0.6]],
   },
 }
-const REMOCION: Record<string, number> = { mdf: 20, triplay: 18, melamina: 18, acrilico: 8, pvc: 25, espuma: 60, aluminio: 2 }
+const REMOCION: Record<string, number> = { mdf: 20, triplay: 18, melamina: 18, madera: 15, acrilico: 8, pvc: 25, espuma: 60, aluminio: 2 }
 const IMPRESION: Record<string, number> = { pla: 12, petg: 10, abs: 10, tpu: 5, resina: 20 }
 
 function interpolar(t: [number, number][], e: number) {
@@ -349,8 +360,21 @@ export function estimar(p: {
     const b = Math.max(0, cols(pieza.ancho)) * Math.max(0, rows(pieza.largo))
     porHoja = Math.max(a, b)
     if (porHoja <= 0) {
-      avisos.push(`La pieza (${Math.round(pieza.largo)}×${Math.round(pieza.ancho)} mm) es más grande que la hoja de ${material.nombre}; el taller la cortará en secciones.`)
-      porHoja = 1
+      // Más grande que la hoja o la tabla: se cobra el área que ocupa (en
+      // madera sólida el taller pega tablas para hacer el panel)
+      const corto = Math.min(pieza.largo, pieza.ancho), largo = Math.max(pieza.largo, pieza.ancho)
+      const anchoUtil = Math.min(hl, ha) - 2 * marg, largoUtil = Math.max(hl, ha) - 2 * marg
+      if (material.clave === "madera" && largo <= largoUtil) {
+        // Tiras del ancho de la tabla, pegadas a lo largo
+        const tiras = Math.ceil(corto / anchoUtil)
+        const porTabla = Math.max(1, Math.floor((largoUtil + sep) / (largo + sep)))
+        porHoja = porTabla / tiras
+        avisos.push(`La pieza (${Math.round(pieza.largo)}×${Math.round(pieza.ancho)} mm) es más ancha que una tabla: el taller pega ${tiras} tiras para formar el panel.`)
+      } else {
+        const porPieza = Math.ceil(((pieza.largo * pieza.ancho) / (hl * ha)) * 1.1)
+        avisos.push(`La pieza (${Math.round(pieza.largo)}×${Math.round(pieza.ancho)} mm) es más grande que la ${material.clave === "madera" ? "tabla" : "hoja"} de ${material.nombre}; el taller la hará en secciones.`)
+        porHoja = 1 / porPieza
+      }
     }
     unidades = n / porHoja
     hojas = Math.ceil(unidades)

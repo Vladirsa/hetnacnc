@@ -31,9 +31,9 @@ export default async function DirectorioPage({
   const estadoSel = ESTADOS_MX.includes(estado) ? estado : ""
   const tipoSel = (TIPOS as string[]).includes(tipo) ? (tipo as TipoDirectorio) : ""
   const lista = todas
-    .filter((e) => (!estadoSel || e.estado === estadoSel) && (!tipoSel || e.tipo === tipoSel))
-    .sort((a, b) => (a.estado || "zzz").localeCompare(b.estado || "zzz") || a.empresa.localeCompare(b.empresa))
-  const estados = ESTADOS_MX.filter((e) => todas.some((x) => x.estado === e))
+    .filter((e) => (!estadoSel || e.zona === estadoSel) && (!tipoSel || e.tipo === tipoSel))
+    .sort((a, b) => (a.zona || "zzz").localeCompare(b.zona || "zzz") || a.empresa.localeCompare(b.empresa))
+  const estados = ESTADOS_MX.filter((e) => todas.some((x) => x.zona === e))
   const enHetna = estadoSel ? talleres.filter((t) => t.perfil.estado === estadoSel).length : talleres.length
   const liga = (q: { estado?: string; tipo?: string }) => {
     const p = new URLSearchParams()

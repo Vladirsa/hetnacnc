@@ -7,7 +7,6 @@ import { estaDeBaja, ligaBaja } from "./baja"
 import { VENDOR_URL, boton, esc, marco } from "./licitacion"
 import { pushATalleres } from "./push"
 import { sendEmail } from "./resend"
-import { avisarWhatsapp } from "./whatsapp"
 
 export const T_CAMPANA_PRECIOS = "hetna_campana_precios"
 const LOTE_DIA = Number(process.env.CAMPANA_PRECIOS_LOTE || 60)
@@ -113,8 +112,8 @@ export async function loteCampanaPrecios(knex: any, logger?: any, limite = LOTE_
   }
   if (avisados.length) {
     const aviso = { titulo: "Pon tus precios de acabados 💲", cuerpo: "Las solicitudes que piden tus acabados te llegan primero. Toma 2 minutos.", url: "/seller/perfil-taller" }
+    // pushATalleres también manda el WhatsApp (verificado)
     await pushATalleres(knex, avisados, { ...aviso, etiqueta: "campana-precios" }, logger).catch(() => null)
-    await avisarWhatsapp(knex, { sellerIds: avisados }, aviso, logger).catch(() => null)
   }
   return { enviados, recordatorios }
 }

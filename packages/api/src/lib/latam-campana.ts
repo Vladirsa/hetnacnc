@@ -7,7 +7,7 @@
 import { STORE_URL } from "./licitacion"
 import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, leerConfig, zonaDe } from "./social-hub"
 
-type Pais = { nombre: string; tu: "tu" | "vos"; cotizador?: string }
+type Pais = { nombre: string; tu: "tu" | "vos"; cotizador?: string; ruta?: string; para?: string }
 
 // Países con mercado en las redes (social-hub MERCADOS) y pre-registro abierto
 export const PAISES_CAMPANA: Record<string, Pais> = {
@@ -15,13 +15,16 @@ export const PAISES_CAMPANA: Record<string, Pais> = {
   cl: { nombre: "Chile", tu: "tu", cotizador: "pesos chilenos e IVA del 19%" },
   pe: { nombre: "Perú", tu: "tu", cotizador: "soles e IGV del 18%" },
   ar: { nombre: "Argentina", tu: "vos" },
+  // Fase 5.2 (páginas propias en la tienda)
+  us_es: { nombre: "Estados Unidos", tu: "tu", ruta: "estados-unidos", para: "talleres y clientes hispanos" },
+  es: { nombre: "España", tu: "tu", ruta: "espana" },
 }
 
 /** Texto de la semana para un país (3 enfoques que se turnan: taller, cliente, herramientas). */
 export function textoCampana(clave: string, semana: number): { titulo: string; texto: string; url: string } | null {
   const p = PAISES_CAMPANA[clave]
   if (!p) return null
-  const url = `${STORE_URL}/mx/latinoamerica/${clave}?utm_source=redes&utm_medium=social&utm_campaign=latam_${clave}`
+  const url = `${STORE_URL}/mx/${p.ruta || `latinoamerica/${clave}`}?utm_source=redes&utm_medium=social&utm_campaign=latam_${clave}`
   const vos = p.tu === "vos"
   const tienes = vos ? "tenés" : "tienes"
   const apuntate = vos ? "Anotate" : "Apúntate"
@@ -33,6 +36,7 @@ export function textoCampana(clave: string, semana: number): { titulo: string; t
       texto:
         `¿${vos ? "Tenés" : "Tienes"} un taller CNC en ${p.nombre}? HETNA CNC, la red de talleres de router, láser y plasma de México, se prepara para abrir en ${p.nombre}. ` +
         `${apuntate} gratis como taller fundador: los primeros talleres de cada país entran antes que nadie a recibir solicitudes de fabricación.` +
+        (p.para ? ` Pensado para ${p.para}, todo en español.` : "") +
         (p.cotizador ? ` Y el Cotizador para talleres ya funciona en ${p.nombre}, con ${p.cotizador}.` : ""),
     }
   if (enfoque === 1)

@@ -21,3 +21,14 @@ describe("agente del foro", () => {
     expect(await resolverForoIa(contenedor, 1, "publicar")).toEqual({ ok: false, message: "Ya no está pendiente." })
   })
 })
+
+describe("limpiarTexto", () => {
+  const { limpiarTexto } = require("../foro-agente")
+  it("quita la llave que sobra al final", () => {
+    expect(limpiarTexto("vacío o tornillos.}")).toBe("vacío o tornillos.")
+    expect(limpiarTexto('¿Qué fresa usan?"}')).toBe("¿Qué fresa usan?")
+    expect(limpiarTexto("texto normal (con paréntesis)")).toBe("texto normal (con paréntesis)")
+    expect(limpiarTexto("lista [1, 2]")).toBe("lista [1, 2]")
+    expect(limpiarTexto("medidas {ancho} y alto}")).toBe("medidas {ancho} y alto")
+  })
+})

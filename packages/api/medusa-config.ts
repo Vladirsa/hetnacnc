@@ -176,9 +176,6 @@ module.exports = withMercur({
       resolve: './src/modules/credit',
     },
     {
-      resolve: './src/modules/cotizador',
-    },
-    {
       resolve: './src/modules/escaneo',
     },
     {

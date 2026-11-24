@@ -197,7 +197,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                         ⚡ Máquina libre{p.taller.capacidad_libre.descuento_pct ? ` · ofrece hasta ${p.taller.capacidad_libre.descuento_pct}%` : ""}
                       </span>
                     )}
-                    {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">⭐ Recomendada por HETNA</span>}
+                    {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">{solicitud.recomendada?.hetna_elige ? "✓ HETNA la eligió para ti" : "⭐ Recomendada por HETNA"}</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
                   </div>

@@ -8,7 +8,6 @@ import { mandarAFabricar, mandarPaqueteACotizador, nombresDeArchivo } from "@/li
 import { type PiezaAnidar, anidar, hojaAnidadaSVG, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
 import { dibujoDXF, dibujoSVG, leerDXF, leerSVG, medidas, unir } from "@/lib/generador/vectores"
 
-const TELEFONO = process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 const LIMITE = 20 * 1024 * 1024
 const HOJAS = [
   { etiqueta: "Láser 600 × 400", ancho: 600, alto: 400 },
@@ -113,9 +112,6 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
   const dibujoTodo = useMemo(() => (r ? hojasComoDibujo(r, hoja) : null), [r, hoja.ancho, hoja.alto]) // eslint-disable-line react-hooks/exhaustive-deps
   const nombre = `anidado-hetna-${r1(hoja.ancho)}x${r1(hoja.alto)}`
   const colocadas = r ? r.hojas.reduce((s, h) => s + h.colocaciones.length, 0) : 0
-  const mensaje = r
-    ? `Hola HETNA CNC, quiero cotizar el corte de ${colocadas} piezas anidadas en ${r.hojas.length} hoja(s) de ${r1(hoja.ancho)} × ${r1(hoja.alto)} mm.`
-    : ""
 
   return (
     <div className="w-full bg-[#FAF9F6]">
@@ -263,16 +259,13 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
                   </button>
                   <BotonesCam nombre={nombre} dxf={() => dibujoDXF(dibujoTodo!)} />
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => descargar(`${nombre}.dxf`, dibujoDXF(dibujoTodo!), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                       Descargar DXF
                     </button>
                     <button type="button" onClick={() => descargar(`${nombre}.svg`, dibujoSVG(dibujoTodo!, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
                       Descargar SVG
                     </button>
-                    <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold py-3 rounded-[10px] text-[14px] text-center">
-                      Pedir por WhatsApp
-                    </a>
                   </div>
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
                     El acomodo usa el rectángulo que envuelve a cada pieza (con giro de 90° si lo permites). Las hojas van una junto a otra en el DXF, en capas HOJA y CORTE.

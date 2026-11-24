@@ -5,6 +5,9 @@ import { useRef, useState } from "react"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { subirArchivo, type ArchivoGuardado } from "@/lib/subir-archivo"
 import { registrarTaller } from "@/lib/talleres/registro"
+import { nuevoEventoRegistro, trackRegistroTaller } from "@/lib/analytics/events"
+import { permiteRastreo } from "@/lib/hetna/consentimiento"
+import { leerOrigen } from "@/lib/hetna/origen-visita"
 import { SERVICIOS_SOLICITUD } from "@/lib/trabajos/servicios"
 
 // Registro para unirse a la red de talleres. No es la cuenta del panel (ésa se
@@ -108,7 +111,12 @@ export default function FormRegistroTaller() {
     const fd = new FormData(e.currentTarget)
     const v = (k: string) => String(fd.get(k) || "").trim()
     setEstado("enviando")
+    const rastreo = permiteRastreo()
+    const eventoId = nuevoEventoRegistro()
     const r = await registrarTaller({
+      rastreo,
+      evento_id: eventoId,
+      origen: leerOrigen(),
       nombre_taller: v("nombre_taller"),
       contacto: v("contacto"),
       email: v("email"),
@@ -125,6 +133,7 @@ export default function FormRegistroTaller() {
       sitio_web: v("sitio_web"),
     })
     if (r.ok) {
+      if (rastreo) trackRegistroTaller(eventoId, servicios)
       setPanel(r.panel)
       setEstado("ok")
     } else {

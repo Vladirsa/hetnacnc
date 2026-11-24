@@ -58,6 +58,9 @@ type Body = {
   repite_folio?: string
   // De dónde vino (utm de la última liga): lib/origen-visita.ts
   origen?: unknown
+  // «Que HETNA elija por mí» y presupuesto máximo (lib/hetna-elige)
+  hetna_elige?: boolean
+  tope_precio?: number | string
   medidas_archivo?: string
   // Lo que devolvió /store/solicitud-archivos, uno por archivo subido.
   archivos?: { clave?: string; nombre?: string; tamano?: number; solo_elegido?: boolean }[] | string
@@ -190,6 +193,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     unidad: corto(b.unidad, 40),
     orden_compra: corto(b.orden_compra, 60),
     repite_folio: /^[A-Z]{0,4}-?\d{1,10}$/i.test(String(b.repite_folio || "")) ? corto(b.repite_folio, 20) : "",
+  }
+  if (b.hetna_elige === true) {
+    const tope = Math.round(Number(String(b.tope_precio ?? "").replace(/[^\d.]/g, "")))
+    trabajo.hetna_elige = { tope: tope > 0 && tope <= 50_000_000 ? tope : null }
   }
   {
     const { limpiarOrigen } = require("../../../lib/origen-visita")

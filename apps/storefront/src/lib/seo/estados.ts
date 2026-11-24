@@ -4,6 +4,8 @@
 // Regla anti "página puerta": sólo se indexan los estados con al menos
 // MIN_EMPRESAS empresas reales; los que tienen menos se ven (noindex) y los que
 // no tienen ninguna dan 404. Los conteos salen de los datos, nunca se inventan.
+import { unstable_cache } from "next/cache"
+
 import { directorioMexico, type EmpresaDirectorio } from "@/lib/hetna/directorio"
 import { listarTalleres, type Taller } from "@/lib/hetna/talleres"
 import { CIUDADES, enCiudad, type Ciudad } from "@/lib/seo/guias"
@@ -69,3 +71,15 @@ export async function estadosIndexables(): Promise<{ ciudad: Ciudad; total: numb
   const datos = await Promise.all(CIUDADES.map((c) => datosEstado(c)))
   return datos.filter((d) => d.total >= MIN_EMPRESAS).map((d) => ({ ciudad: d.ciudad, total: d.total }))
 }
+
+/** Para enlazar las páginas por estado (pestaña Talleres de /categories): nombre,
+ *  ruta y número de empresas, guardado 1 hora. Calcularlo en cada visita leía y
+ *  revisaba el directorio completo una vez por estado (≈0.5 s por visita). */
+export const estadosParaEnlaces = unstable_cache(
+  async () =>
+    (await estadosIndexables())
+      .map((x) => ({ nombre: x.ciudad.estado, ruta: rutaEstado(x.ciudad), total: x.total }))
+      .sort((a, b) => b.total - a.total),
+  ["estados-para-enlaces"],
+  { revalidate: 3600, tags: ["directorio-talleres"] }
+)

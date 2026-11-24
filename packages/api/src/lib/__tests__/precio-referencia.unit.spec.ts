@@ -1,4 +1,5 @@
 import { precioInstantaneo } from "../precio-instantaneo"
+import { estimar, MATERIALES, piezaAMano } from "../estimador-referencia"
 
 // Mismos resultados que la calculadora de /cotizar (apps/storefront/src/lib/cotizador/estimador.ts).
 // Si cambias el estimador en un lado, cambia el otro y actualiza estos números.
@@ -48,5 +49,18 @@ describe("precio de referencia igual al de /cotizar", () => {
     const sin = precioInstantaneo(chico as any, { pedidoMinimo: 0 })
     if (!sin.ok) throw new Error(sin.mensaje)
     expect(sin.resultado.pvRecomendado).toBeLessThan(150)
+  })
+  it("maderas sólidas en router: se cotizan por tabla y un panel ancho se arma con tiras (23 nov 2026)", () => {
+    const pino = MATERIALES.find((m) => m.nombre === "Pino 19 mm (tabla)")!
+    const encino = MATERIALES.find((m) => m.nombre === "Encino 19 mm (tabla)")!
+    const chica = estimar({ servicio: "router", pieza: piezaAMano(250, 150, 0, "normal", false), material: pino, cantidad: 10 })
+    if (!chica.ok) throw new Error(chica.motivo)
+    expect(chica.total).toBeGreaterThan(300)
+    const panel = estimar({ servicio: "router", pieza: piezaAMano(600, 400, 0, "normal", false), material: pino, cantidad: 1 })
+    if (!panel.ok) throw new Error(panel.motivo)
+    expect(panel.avisos.join(" ")).toMatch(/pega 2 tiras/)
+    const caro = estimar({ servicio: "router", pieza: piezaAMano(600, 400, 0, "normal", false), material: encino, cantidad: 1 })
+    if (!caro.ok) throw new Error(caro.motivo)
+    expect(caro.total).toBeGreaterThan(panel.total)
   })
 })

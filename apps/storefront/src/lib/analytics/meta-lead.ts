@@ -26,6 +26,8 @@ export function telefonoMeta(v: unknown): string | undefined {
 }
 
 export async function reportarLeadMeta(d: {
+  /** Lead (por omisión) o CompleteRegistration (registro de taller) */
+  evento?: "Lead" | "CompleteRegistration"
   eventId: string
   contenido: string
   email?: string
@@ -42,7 +44,7 @@ export async function reportarLeadMeta(d: {
     const galletas = await cookies()
     const em = norm(d.email)
     const evento = {
-      event_name: "Lead",
+      event_name: d.evento || "Lead",
       event_time: Math.floor(Date.now() / 1000),
       event_id: d.eventId,
       action_source: "website",

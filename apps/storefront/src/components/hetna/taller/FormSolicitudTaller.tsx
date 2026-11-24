@@ -115,6 +115,7 @@ export default function FormSolicitudTaller({
   const [estado, setEstado] = useState<"listo" | "enviando" | "ok" | "error">("listo")
   const [mensaje, setMensaje] = useState("")
   const [folio, setFolio] = useState("")
+  const [eligeHetna, setEligeHetna] = useState(false)
   // Alta rápida con número de afiliado: sólo se ofrece sin sesión
   const [conSesion, setConSesion] = useState(true)
   const [crearCuenta, setCrearCuenta] = useState(true)
@@ -330,6 +331,8 @@ export default function FormSolicitudTaller({
       tolerancia: v("tolerancia"),
       orden_compra: v("orden_compra") || undefined,
       con_factura: fd.get("con_factura") === "1",
+      hetna_elige: fd.get("hetna_elige") === "1",
+      tope_precio: v("tope_precio") || undefined,
       repite_folio: prellenado?.repiteFolio || undefined,
       // Medidas leídas de los archivos en el navegador
       medidas_archivo: archivos
@@ -680,6 +683,24 @@ export default function FormSolicitudTaller({
               placeholder="Google Drive, Dropbox o WeTransfer"
             />
           </div>
+          {/* «Que HETNA elija por mí» (lib/hetna-elige en el backend). Sólo si la solicitud es abierta a varios talleres */}
+          {(!taller || abiertaOtros) && (
+            <div className="sm:col-span-2 rounded-xl border border-[#E7E4DC] bg-[#FAF9F6] p-3">
+              <label className="flex items-start gap-2 text-sm text-[#40403A]">
+                <input type="checkbox" name="hetna_elige" value="1" className="mt-1 accent-[#C2560A]" onChange={(e) => setEligeHetna(e.target.checked)} />
+                <span>
+                  <b className="text-[#142033]">Que HETNA elija por mí.</b> Cuando lleguen propuestas, te mandamos la que mejor equilibra precio, tiempo y
+                  cumplimiento del taller. Tú sólo confirmas y pagas.
+                </span>
+              </label>
+              {eligeHetna && (
+                <div className="mt-2 pl-6">
+                  <label className={ETIQUETA} htmlFor="tope_precio">Lo más que quieres pagar (opcional, los talleres no lo ven)</label>
+                  <input id="tope_precio" name="tope_precio" inputMode="numeric" className={CAMPO} placeholder="Ej. 3000" />
+                </div>
+              )}
+            </div>
+          )}
           {/* Empresas (estrategia 2.4): orden de compra y factura con los datos de Mi empresa */}
           <div>
             <label className={ETIQUETA} htmlFor="orden_compra">Orden de compra (opcional)</label>

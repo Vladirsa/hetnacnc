@@ -1,10 +1,9 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 
-import { COTIZADOR_MODULE } from "../modules/cotizador"
 
 // Todo lo que el taller ve en su tablero y que vive dentro de Medusa: ventas,
-// vistas de ficha, catálogo, reseñas, cotizador y la meta del mes.
+// vistas de ficha, catálogo, reseñas y la meta del mes.
 //
 // Lo del foro va aparte (lib/foro-actividad.ts) porque sale de otra base, y el
 // ranking también (lib/tablero-ranking.ts) porque necesita a todos los talleres
@@ -369,104 +368,5 @@ export async function resenasDelTaller(
   } catch (e) {
     console.error("[tablero] reseñas:", e instanceof Error ? e.message : e)
     return { promedio: null, total: 0 }
-  }
-}
-
-export type CotizadorTaller = {
-  vinculado: boolean
-  plan: string | null
-  cotizaciones: number
-  enviadas: number
-  aceptadas: number
-  monto_aceptado: number
-  monto_en_juego: number
-  tasa_cierre: number | null
-}
-
-const COTIZADOR_VACIO: CotizadorTaller = {
-  vinculado: false,
-  plan: null,
-  cotizaciones: 0,
-  enviadas: 0,
-  aceptadas: 0,
-  monto_aceptado: 0,
-  monto_en_juego: 0,
-  tasa_cierre: null,
-}
-
-// El Cotizador se liga al taller por customer_id (es una cuenta de cliente de
-// la tienda), mientras que el panel del vendedor sólo conoce seller_id. El
-// puente es el correo: el mismo con el que el taller entra a vender es el que
-// usa para cotizar.
-export async function cotizadorDelTaller(
-  container: MedusaContainer,
-  sellerId: string
-): Promise<CotizadorTaller> {
-  const query = container.resolve(ContainerRegistrationKeys.QUERY)
-
-  try {
-    const { data: sellers } = await query.graph({
-      entity: "seller",
-      fields: ["id", "email"],
-      filters: { id: sellerId },
-    })
-    const correo = (sellers?.[0] as { email?: string })?.email
-    if (!correo) return COTIZADOR_VACIO
-
-    const { data: clientes } = await query.graph({
-      entity: "customer",
-      fields: ["id"],
-      filters: { email: correo },
-    })
-    const customerId = (clientes?.[0] as { id?: string })?.id
-    if (!customerId) return COTIZADOR_VACIO
-
-    // Directo al servicio del módulo: con query.graph("cotizador_perfil") Medusa
-    // buscaba "listCotizadorPerfils", que no existe (el modelo se registró como
-    // TallerPerfil), y esta parte del tablero siempre salía vacía.
-    const cotizador = container.resolve(COTIZADOR_MODULE) as {
-      listTallerPerfils: (f: Record<string, unknown>, c?: Record<string, unknown>) => Promise<{ id?: string; plan?: string }[]>
-      listCotizacions: (f: Record<string, unknown>, c?: Record<string, unknown>) => Promise<unknown[]>
-    }
-    const [perfil] = await cotizador.listTallerPerfils({ customer_id: customerId }, { take: 1, select: ["id", "plan"] })
-    if (!perfil?.id) return COTIZADOR_VACIO
-
-    const cotizaciones = await cotizador.listCotizacions(
-      { perfil_id: perfil.id },
-      { select: ["id", "estatus", "total"], take: 5000 }
-    )
-
-    let enviadas = 0
-    let aceptadas = 0
-    let montoAceptado = 0
-    let montoEnJuego = 0
-
-    for (const c of (cotizaciones || []) as unknown as { estatus: string; total: number }[]) {
-      const total = Number(c.total) || 0
-      if (c.estatus === "aceptada") {
-        aceptadas += 1
-        montoAceptado += total
-      }
-      // "En juego" es lo que ya salió del taller y todavía puede cerrarse. Un
-      // borrador no cuenta: no lo ha visto nadie.
-      if (c.estatus === "enviada" || c.estatus === "vista") {
-        montoEnJuego += total
-      }
-      if (c.estatus !== "borrador") enviadas += 1
-    }
-
-    return {
-      vinculado: true,
-      plan: perfil.plan ?? null,
-      cotizaciones: cotizaciones?.length || 0,
-      enviadas,
-      aceptadas,
-      monto_aceptado: montoAceptado,
-      monto_en_juego: montoEnJuego,
-      tasa_cierre: enviadas ? Number((aceptadas / enviadas).toFixed(3)) : null,
-    }
-  } catch (e) {
-    console.error("[tablero] cotizador:", e instanceof Error ? e.message : e)
-    return COTIZADOR_VACIO
   }
 }

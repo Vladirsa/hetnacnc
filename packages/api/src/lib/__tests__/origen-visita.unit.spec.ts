@@ -1,4 +1,4 @@
-import { agruparOrigenes, limpiarOrigen } from "../origen-visita"
+import { agruparOrigenes, agruparRegistros, limpiarOrigen } from "../origen-visita"
 
 describe("origen de la visita", () => {
   it("limpia lo que manda el navegador", () => {
@@ -11,6 +11,13 @@ describe("origen de la visita", () => {
     expect(limpiarOrigen({ medio: "x" })).toBeNull()
     expect(limpiarOrigen("meta")).toBeNull()
     expect(limpiarOrigen(null)).toBeNull()
+  })
+  it("agrupa los registros de taller", () => {
+    const r = agruparRegistros([{ datos: { origen: { fuente: "meta", campana: "talleres" } } }, { datos: { origen: { fuente: "meta", campana: "talleres" } } }, { datos: {} }])
+    expect(r).toEqual([
+      { fuente: "meta", campana: "talleres", registros: 2 },
+      { fuente: "directo", campana: "", registros: 1 },
+    ])
   })
   it("agrupa por fuente y campaña", () => {
     const r = agruparOrigenes([

@@ -4,7 +4,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { servicioTalleres } from "../../../../../lib/alta-taller"
 import { cupoLicitacion, mensajeSinCupo } from "../../../../../lib/licitacion-plan"
 import { sendEmail } from "../../../../../lib/resend"
-import { pushACliente } from "../../../../../lib/push"
+import { avisarPropuestaNueva } from "../../../../../lib/propuesta-aviso"
 import {
   T_PROPUESTA, T_SOLICITUD, asegurarTablas, boton, fila, folioTexto, ligaPropuestas, marco, nuevoId, ocultarContacto, recibePropuestas,
 } from "../../../../../lib/licitacion"
@@ -135,34 +135,5 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
   }
 
   // Aviso al cliente (solo la primera vez que este taller propone)
-  if (!previa) {
-    await pushACliente(
-      knex,
-      { customerId: s.cliente_id, email: s.contacto?.email },
-      {
-        titulo: "Tienes una nueva propuesta",
-        cuerpo: `${folioTexto(s.folio)}: $${precio.toLocaleString("es-MX")} ${formal.moneda}, entrega en ${dias} días. Compárala con las demás.`,
-        url: ligaPropuestas(s.token),
-        etiqueta: `sol-${s.id}`,
-      },
-      logger
-    )
-  }
-  if (!previa && s.contacto?.email) {
-    const folio = folioTexto(s.folio)
-    const r = await sendEmail({
-      to: s.contacto.email,
-      subject: `[${folio}] Recibiste una nueva propuesta`,
-      html: marco(
-        "Tienes una nueva propuesta",
-        `<table style="border-collapse:collapse;font-size:14px">` +
-          fila("Folio", folio) +
-          fila("Precio", `$${precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${formal.moneda}`) +
-          fila("Entrega", `${dias} días`) +
-          `</table>` +
-          boton("Comparar propuestas", ligaPropuestas(s.token))
-      ),
-    })
-    if (!r.sent) logger.info(`[licitacion] aviso de propuesta no enviado: ${r.reason}`)
-  }
+  if (!previa) await avisarPropuestaNueva(knex, logger, s, { precio, moneda: formal.moneda, dias })
 }

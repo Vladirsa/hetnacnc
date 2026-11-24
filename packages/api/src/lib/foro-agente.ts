@@ -69,6 +69,21 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 
 // ---------------------------------------------------------------- 1. Respondedor
 
+/** Quita restos de JSON que a veces quedan al final del texto («…tornillos.}»). */
+export function limpiarTexto(v: unknown): string {
+  let t = String(v ?? "").trim()
+  const cuenta = (c: string) => t.split(c).length - 1
+  // Sólo se quitan cierres sin pareja: «[1, 2]» se queda igual
+  for (let i = 0; i < 4; i++) {
+    const m = t.match(/[\s"'`,]*([}\]])[\s"'`,]*$/)
+    if (!m) break
+    const abre = m[1] === "}" ? "{" : "["
+    if (cuenta(abre) >= cuenta(m[1])) break
+    t = t.slice(0, t.length - m[0].length).trim()
+  }
+  return t.replace(/^["'`]+|["'`]+$/g, "").trim()
+}
+
 export async function redactarRespuesta(p: { titulo: string; cuerpo: string; seccion: string }): Promise<string> {
   ia ??= new Anthropic()
   const resp = await ia.beta.messages.create({
@@ -112,7 +127,7 @@ export async function correrRespondedor(container, o: { probar?: boolean } = {})
     if (vistos.has(String(t.id))) continue
     r.revisadas++
     if (r.nuevas >= 5) break
-    const texto = await redactarRespuesta({ titulo: t.titulo, cuerpo: t.cuerpo, seccion: t.seccion_nombre }).catch(() => "")
+    const texto = limpiarTexto(await redactarRespuesta({ titulo: t.titulo, cuerpo: t.cuerpo, seccion: t.seccion_nombre }).catch(() => ""))
     if (!texto) continue
     const url = `${STORE_URL}/mx/foro-cnc/${t.seccion}/${t.slug}`
     if (!o.probar) await knex(T_FORO_IA).insert({ tipo: "respuesta", tema_id: t.id, titulo: t.titulo, pregunta: String(t.cuerpo || "").slice(0, 4000), texto, url })
@@ -210,7 +225,7 @@ export async function correrInvestigador(container, o: { probar?: boolean } = {}
       external_links: fuentes,
     },
   ])
-  await knex(T_FORO_IA).insert({ tipo: "tema", seccion: SECCIONES.includes(a.seccion) ? a.seccion : "router-cnc", titulo: String(a.tema_foro_titulo).slice(0, 140), texto: String(a.tema_foro_cuerpo).slice(0, 3000), articulo_id: art?.id || null })
+  await knex(T_FORO_IA).insert({ tipo: "tema", seccion: SECCIONES.includes(a.seccion) ? a.seccion : "router-cnc", titulo: limpiarTexto(a.tema_foro_titulo).slice(0, 140), texto: limpiarTexto(a.tema_foro_cuerpo).slice(0, 3000), articulo_id: art?.id || null })
   await mandarPrivado(knex, {
     texto:
       `📚 Investigador de la Academia\n\n<b>${esc(a.titulo)}</b>\n${esc(a.tema)}\n\n` +

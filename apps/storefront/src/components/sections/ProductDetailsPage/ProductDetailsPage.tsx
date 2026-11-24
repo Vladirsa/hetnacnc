@@ -18,8 +18,11 @@ import { productoExtra } from "@/lib/hetna/producto-extra"
 import { VideoProducto } from "@/components/hetna/VenderMas"
 import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
 import { GaleriaDescarga } from "@/components/hetna/fichas/descarga/GaleriaDescarga"
-import { AbajoDescarga, vistasGaleria } from "@/components/hetna/fichas/descarga/FichaDescarga"
+import { AbajoDescarga, ModificarDiseno, vistasGaleria } from "@/components/hetna/fichas/descarga/FichaDescarga"
+import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
+import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
+import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
@@ -122,9 +125,11 @@ export const ProductDetailsPage = async ({
   // Diseño para descargar: galería con esquema, "Cómo funciona", pestañas y
   // preguntas (components/hetna/fichas/descarga). Sin existencias ni envíos.
   const descarga = esFichaDescarga(prod)
+  // Tarjeta del vendedor: va en la pestaña "Vendido por" (borrador aprobado, 23 nov 2026)
+  const vendido = vendedor ? <ProductDetailsSeller seller={vendedor as never} tipo={tipoFicha(prod as never)} /> : null
   const largosDescarga = descarga ? (
     <div className="flex flex-col gap-6">
-      <AbajoDescarga product={prod as never} fotosCompradores={(resenas?.resenas || []).flatMap((r) => r.fotos || [])} />
+      <AbajoDescarga product={prod as never} fotosCompradores={(resenas?.resenas || []).flatMap((r) => r.fotos || [])} vendido={vendido} />
       {hayResenas && <ResenasProducto datos={resenas} productId={prod.id} pendiente={pendienteDeEste} />}
     </div>
   ) : null
@@ -207,13 +212,11 @@ export const ProductDetailsPage = async ({
         </ol>
       </nav>
       <div
-        // Arriba, dos columnas parejas (pedido de Vlado, 22 nov 2026: "todo
-        // justificado, sin huecos"): a la izquierda las fotos y "Fabrícalo con
-        // un taller", que crece hasta donde termina la columna de compra; a la
-        // derecha la compra. Abajo, a todo lo ancho, las pestañas.
-        // Filas "auto 1fr auto": si la compra es más alta, lo que sobra lo toma
-        // la fila de "Fabrícalo" (que se estira), no un hueco. En celular el
-        // orden es fotos → compra → Fabrícalo → pestañas.
+        // Borrador aprobado por Vlado (23 nov 2026): a la izquierda las fotos,
+        // "Fabrícalo" (corto) y, en diseños, "¿Lo quieres ya fabricado?"; a la
+        // derecha la compra, sin licencia ni "Vendido por" (van en pestañas).
+        // Abajo, a todo lo ancho, las pestañas. En celular el orden es fotos →
+        // compra → Fabrícalo → pestañas.
         className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
@@ -236,7 +239,22 @@ export const ProductDetailsPage = async ({
           </div>
         </div>
 
-        {fabricar && <div className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">{fabricar}</div>}
+        {(fabricar || descarga) && (
+          <div className="order-3 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-2 lg:self-start">
+            {fabricar}
+            {/* Diseños: pedir una modificación o cotizar la fabricación */}
+            {descarga && <ModificarDiseno product={prod as never} vendedor={vendedor ? { handle: vendedor.handle, name: vendedor.name } : null} />}
+            {/* Publicidad en el hueco de la izquierda (solo computadora: en
+                celular ya sale la de "Patrocinado" en la columna de compra) */}
+            <AnunciosEspacio
+              espacio="ficha_lateral"
+              titulo="Patrocinado"
+              invitar
+              frase="¿Vendes material, fresas o máquinas? Anúncialo aquí"
+              className="hidden lg:block"
+            />
+          </div>
+        )}
 
         {/* Ficha larga a todo lo ancho, en pestañas */}
         <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3 lg:mt-4">
@@ -245,6 +263,7 @@ export const ProductDetailsPage = async ({
             product={prod}
             locale={locale}
             taller={{ name: vendedor?.name, handle: vendedor?.handle }}
+            vendido={vendido}
           />}
           {!descarga && hayResenas && <div className="mt-4">
             <ResenasProducto

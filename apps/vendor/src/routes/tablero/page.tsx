@@ -14,6 +14,7 @@ import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 import { AvisoRequisitos } from "../../lib/requisitos"
+import { AvisoDatosFaltantes } from "../../lib/datos-faltantes"
 import { ResumenInicio } from "./resumen-inicio"
 
 const Tablero = (props: { width?: number; height?: number }) => (
@@ -116,16 +117,6 @@ type RespuestaTablero = {
     votos_recibidos: number
     mejores_respuestas: number
     motivo?: "sin_configurar" | "sin_abrir" | "sin_perfil" | "error"
-  }
-  cotizador: {
-    vinculado: boolean
-    plan: string | null
-    cotizaciones: number
-    enviadas: number
-    aceptadas: number
-    monto_aceptado: number
-    monto_en_juego: number
-    tasa_cierre: number | null
   }
   ranking: {
     posicion: number | null
@@ -754,59 +745,6 @@ function Foro({ datos }: { datos: RespuestaTablero }) {
     </div>
   )
 }
-
-function Cotizador({ datos }: { datos: RespuestaTablero }) {
-  const c = datos.cotizador
-
-  return (
-    <div style={S.card}>
-      <h2 style={S.h2}>Tus cotizaciones</h2>
-      <p style={S.nota}>
-        Lo que cotizas y lo que vendes, juntos: una cotización aceptada es venta que ya está
-        comprometida.
-      </p>
-
-      {!c.vinculado && (
-        <p style={S.vacio}>
-          Tu cuenta de taller no está ligada al Cotizador. Se liga sola cuando entras al Cotizador
-          con el mismo correo que usas aquí.
-        </p>
-      )}
-
-      {c.vinculado && (
-        <>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
-            <div>
-              <p style={S.etiqueta}>Cerrado</p>
-              <p style={S.cifraChica}>{pesos(c.monto_aceptado, datos.moneda)}</p>
-              <p style={S.pie}>
-                {c.aceptadas} de {c.enviadas} enviadas
-              </p>
-            </div>
-            <div>
-              <p style={S.etiqueta}>En juego</p>
-              <p style={S.cifraChica}>{pesos(c.monto_en_juego, datos.moneda)}</p>
-              <p style={S.pie}>enviadas y sin responder</p>
-            </div>
-            <div>
-              <p style={S.etiqueta}>Tasa de cierre</p>
-              <p style={S.cifraChica}>{porcentaje(c.tasa_cierre, 0)}</p>
-              <p style={S.pie}>plan {c.plan || "gratis"}</p>
-            </div>
-          </div>
-          {c.monto_en_juego > 0 && (
-            <p style={S.pie}>
-              Tienes {pesos(c.monto_en_juego, datos.moneda)} esperando respuesta. Darle seguimiento
-              al día 3 es lo que más sube la tasa de cierre.
-            </p>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------- alta del taller
 
 type EstadoAlta = {
   estado: string
@@ -1487,6 +1425,7 @@ export default function TableroPage() {
 
       <AvisoAlta onEstado={(a) => setPuedePublicar(!!a?.puede_publicar)} />
       <AvisoRequisitos />
+      <AvisoDatosFaltantes />
 
       {puedePublicar && datos.total_productos === 0 && <PrimerProducto />}
 
@@ -1597,8 +1536,6 @@ export default function TableroPage() {
         <Ranking datos={datos} />
         <Foro datos={datos} />
       </div>
-
-      <Cotizador datos={datos} />
 
       <Tarifas />
     </div>

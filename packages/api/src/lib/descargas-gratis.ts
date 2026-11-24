@@ -1,8 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { COTIZADOR_MODULE } from "../modules/cotizador"
-import type CotizadorModuleService from "../modules/cotizador/service"
 import { DESCARGAS_MODULE } from "../modules/descargas"
 import type DescargasModuleService from "../modules/descargas/service"
 import { llaveDeProductoValida } from "./archivo-seguro"
@@ -63,23 +61,20 @@ const servicio = (container: MedusaContainer) =>
 
 export async function planDelCliente(container: MedusaContainer, customerId: string): Promise<string> {
   if (await esCuentaDeLaCasa(container, customerId)) return PLAN_DE_LA_CASA
+  const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   try {
-    // Al servicio del módulo y no con query.graph("cotizador_perfil"): con
-    // query.graph Medusa busca "listCotizadorPerfils", que no existe (el
-    // modelo se registró como TallerPerfil), y el plan siempre salía vacío.
-    const cotizador = container.resolve<CotizadorModuleService>(COTIZADOR_MODULE)
-    const [perfil] = await cotizador.listTallerPerfils(
-      { customer_id: customerId },
-      { take: 1, select: ["plan", "plan_hasta", "prueba_hasta"] }
-    )
+    // Plan del módulo viejo "cotizador" (ya retirado). Se lee su tabla directo
+    // mientras exista, para que quien tenga ahí un plan vigente no pierda las
+    // descargas sin límite; cuando la tabla se borre, este paso no hace nada.
+    const perfil = await knex("cotizador_perfil").where({ customer_id: customerId }).whereNull("deleted_at")
+      .select("plan", "plan_hasta", "prueba_hasta").first()
     const plan = perfil ? planEfectivo(perfil as PerfilParaPlan) : "gratis"
     if (PLANES_SIN_LIMITE.includes(plan)) return plan
   } catch {
-    // Sin Cotizador viejo: se revisa el de la app
+    // La tabla vieja ya no existe: se revisa el Cotizador de la app
   }
   // El taller del Cotizador (app) vinculado a esta cuenta: en prueba o con un
   // plan de pago, también baja sin límite. Ver lib/cotizador-vinculo.ts.
-  const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   const app = await planVinculado(knex, customerId)
   return app === "prueba" ? "taller" : app === "master" ? "industrial" : app
 }

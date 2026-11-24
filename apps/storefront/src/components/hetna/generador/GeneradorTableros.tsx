@@ -23,7 +23,6 @@ import { dibujoDXF } from "@/lib/generador/vectores"
 import { hacerZip } from "@/lib/generador/zip"
 import { mandarPaqueteACotizador, materialRouterMDF } from "@/lib/generador/aCotizador"
 import { listaCorte } from "@/lib/generador/planosTaller"
-import { tallerCargar } from "@/lib/taller/acciones"
 import { type DatosPresupuesto, abrirDocumento, htmlEtiquetas, htmlPlanos, htmlPresupuesto } from "@/lib/generador/planosTaller"
 import { GRUPOS_MODELO, MODELOS_COCINA, opcionesModelo } from "@/lib/generador/bibliotecaCocina"
 import { CATALOGO, miniaturaSVG } from "@/lib/generador/catalogoMuebles"
@@ -484,19 +483,13 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   // ---- precios: los del cotizador del taller llenan el costo del mueble ----
   const traerPreciosCotizador = async () => {
     setAvisoCotiz("")
+    // Precios del cotizador rápido de este navegador (el esquema viejo
+    // taller.* que los guardaba por cuenta se retiró)
     let mats: Record<string, number | null> = {}
     try {
-      const r = await tallerCargar()
-      if (r.ok) mats = ((r.config as { materiales?: Record<string, number | null> }).materiales || {}) as Record<string, number | null>
+      mats = (JSON.parse(localStorage.getItem("hetna-cotizador") || "null")?.materiales || {}) as Record<string, number | null>
     } catch {
-      // sin cuenta: se intenta con el cotizador de este navegador
-    }
-    if (!Object.values(mats).some((x) => Number(x) > 0)) {
-      try {
-        mats = (JSON.parse(localStorage.getItem("hetna-cotizador") || "null")?.materiales || {}) as Record<string, number | null>
-      } catch {
-        mats = {}
-      }
+      mats = {}
     }
     const grupoDe = (id: string) => (id.startsWith("melamina") ? "Melamina" : id.startsWith("mdf") || id === "hdf" ? "MDF" : id.startsWith("triplay") ? "Triplay" : id === "encino" ? "Madera sólida" : "")
     const hojaM2 = (TABLERO.ancho * TABLERO.largo) / 1e6

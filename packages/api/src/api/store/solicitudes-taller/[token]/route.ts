@@ -122,7 +122,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .sort((a, b) => b._peso - a._peso || a.precio - b.precio)
     .map(({ _peso, ...p }) => p)
   // Estrategia 3.3: la que mejor equilibra precio, plazo y cumplimiento del taller
-  const recomendada = recomendarPropuesta(propuestas as any)
+  // «Que HETNA elija por mí» (lib/hetna-elige): si HETNA ya eligió, ésa es la recomendada
+  const elegidaHetna = s.hetna_eleccion && propuestas.some((p: any) => p.id === s.hetna_eleccion.id) ? s.hetna_eleccion : null
+  const recomendada = elegidaHetna
+    ? { id: String(elegidaHetna.id), puntaje: 1, razones: Array.isArray(elegidaHetna.razones) ? elegidaHetna.razones : [], hetna_elige: true }
+    : recomendarPropuesta(propuestas as any)
 
   const etapa = etapaDe(s, propuestas.length)
   const eventos = (await knex(T_EVENTO)

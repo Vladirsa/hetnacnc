@@ -29,6 +29,7 @@ import { EXTENSIONES_ARCHIVO, MAX_MB_ARCHIVO } from "@/lib/fabricacion/opciones"
 import type { ArchivoSubido } from "@/lib/cotizar/solicitud-taller"
 import { subirArchivo } from "@/lib/subir-archivo"
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
+import { MandarEstimado } from "@/components/hetna/cotizador/MandarEstimado"
 
 // El cliente piensa en medidas: ancho × alto (y profundidad si es 3D), no en "largo"
 const ETIQ_MEDIDA = { largo: "Ancho", ancho: "Alto", alto: "Profundidad" } as const
@@ -276,6 +277,19 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
               </button>
               <p className="text-xs text-[#6B675C]">Gratis. Los talleres verificados de HETNA te mandan su precio y tiempo real; tú eliges y pagas protegido por HETNA.</p>
             </div>
+            {!pedir && (
+              <MandarEstimado
+                key={`${servicio}|${material.nombre}|${cantidad}|${Math.round(est.min)}`}
+                servicio={srv.nombre}
+                material={material.nombre}
+                largoMm={pieza.largo}
+                anchoMm={pieza.ancho}
+                cantidad={cantidad}
+                min={est.min}
+                max={est.max}
+                emailInicial={email}
+              />
+            )}
           </div>
         )}
       </div>
