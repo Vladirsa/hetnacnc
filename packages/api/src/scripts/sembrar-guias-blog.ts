@@ -5,9 +5,30 @@
 // Idempotente: si el slug ya existe, no lo toca (para no pisar lo que se haya
 // editado después en el dashboard). Las firma "Equipo HETNA": son artículos
 // de la casa, no preguntas de la comunidad.
+import { existsSync, readdirSync, readFileSync } from "fs"
+import { join, resolve } from "path"
 import type { ExecArgs } from "@medusajs/framework/types"
 
 import { servicioBlog } from "../lib/blog"
+import { leerGuiaMd } from "../lib/guias-md"
+
+// Guías escritas en docs/guias-blog/*.md (el mismo formato que se pega en el panel).
+// No son la guía fija de su sección (guia: false): salen como artículos normales.
+function guiasDeDocs(logger: any) {
+  const carpeta = [resolve(process.cwd(), "../../docs/guias-blog"), resolve(__dirname, "../../../../docs/guias-blog")].find((c) => existsSync(c))
+  if (!carpeta) {
+    logger.warn("[blog] no encontré docs/guias-blog")
+    return []
+  }
+  return readdirSync(carpeta)
+    .filter((f) => f.endsWith(".md"))
+    .sort()
+    .flatMap((f) => {
+      const g = leerGuiaMd(readFileSync(join(carpeta, f), "utf8"))
+      if (!g) logger.warn(`[blog] ${f}: le falta título, dirección, sección o contenido; no se publica`)
+      return g ? [g] : []
+    })
+}
 
 const GUIAS = [
   {
@@ -172,7 +193,8 @@ export default async function sembrarGuiasBlog({ container }: ExecArgs) {
   const logger = container.resolve("logger")
   const blog = servicioBlog(container)
   let nuevas = 0
-  for (const g of GUIAS) {
+  const todas = [...GUIAS.map((g) => ({ ...g, guia: true })), ...guiasDeDocs(logger).map((g) => ({ ...g, guia: false }))]
+  for (const g of todas) {
     const [existe] = await blog.listLearningArticles({ slug: g.slug }, { take: 1, withDeleted: true })
     if (existe) {
       logger.info(`[blog] ya existe: ${g.slug}`)
@@ -181,7 +203,6 @@ export default async function sembrarGuiasBlog({ container }: ExecArgs) {
     await blog.createLearningArticles({
       ...g,
       content_html: g.content_html.trim(),
-      guia: true,
       autor: "Equipo HETNA",
       source: "blog",
       published_at: new Date(),
