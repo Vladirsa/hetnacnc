@@ -32,7 +32,13 @@ export type Maquina = {
   detalle?: string
 }
 
+// Proveedor que vende desde otro país (decisión del 24 nov 2026): envía puerta a
+// puerta con impuestos pagados (DDP: DHL, FedEx, UPS…) y HETNA le paga por PayPal.
+export type Importacion = { pais: string; entrega_min?: number; entrega_max?: number }
+
 export type Perfil = {
+  // Si vende desde otro país: sus productos se marcan «De importación»
+  importacion?: Importacion
   // Licitaciones 3.0: taller (fabrica), proveedor (vende productos) o ambos
   tipo_cuenta?: "taller" | "proveedor" | "ambos"
   marcas?: string[]
@@ -162,7 +168,10 @@ export const leerPerfil = (metadata?: Record<string, unknown> | null): Perfil =>
         }))
         .filter((m) => m.nombre)
     : []
+  const imp = p.importacion && typeof p.importacion === "object" ? (p.importacion as Record<string, unknown>) : null
+  const pais = texto(imp?.pais)
   return {
+    importacion: pais && !/^m[eé]xico$/i.test(pais) ? { pais, entrega_min: num(imp?.entrega_min), entrega_max: num(imp?.entrega_max) } : undefined,
     tipo_cuenta: p.tipo_cuenta === "proveedor" || p.tipo_cuenta === "ambos" ? p.tipo_cuenta : "taller",
     marcas: lista(p.marcas).slice(0, 20),
     ciudad: texto(p.ciudad),
@@ -264,3 +273,11 @@ export const tallerPorHandle = async (handle: string): Promise<Taller | null> =>
 
 export const ubicacion = (p: Perfil) =>
   [p.ciudad, p.estado].filter(Boolean).join(", ")
+
+/** «llega en 10 a 20 días hábiles» (o lo que haya capturado el proveedor). */
+export const entregaImportacion = (i: Importacion) => {
+  const a = i.entrega_min, b = i.entrega_max
+  if (a && b && b > a) return `llega en ${a} a ${b} días hábiles`
+  if (a || b) return `llega en unos ${a || b} días hábiles`
+  return "llega en 10 a 20 días hábiles"
+}

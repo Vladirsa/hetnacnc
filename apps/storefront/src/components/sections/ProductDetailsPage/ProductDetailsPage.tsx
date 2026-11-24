@@ -20,6 +20,7 @@ import { esFichaDescarga } from "@/lib/hetna/tipo-ficha"
 import { GaleriaDescarga } from "@/components/hetna/fichas/descarga/GaleriaDescarga"
 import { AbajoDescarga, ModificarDiseno, vistasGaleria } from "@/components/hetna/fichas/descarga/FichaDescarga"
 import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
+import { AvisoImportacion } from "@/components/hetna/AvisoImportacion"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
@@ -230,6 +231,8 @@ export const ProductDetailsPage = async ({
 
         <div className="order-2 lg:col-start-2 lg:row-span-2 lg:row-start-1" data-testid="product-details-container">
           <div className="max-w-[680px]">
+            {/* Proveedor extranjero: de dónde viene, cuánto tarda e impuestos incluidos */}
+            {!descarga && <AvisoImportacion handle={vendedor?.handle} />}
             <ProductDetails
               product={prod}
               locale={locale}
