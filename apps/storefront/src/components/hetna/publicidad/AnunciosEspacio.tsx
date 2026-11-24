@@ -1,5 +1,5 @@
-// Muestra los anuncios vigentes de un espacio (franja del inicio, foro,
-// categorías, ficha de producto, tienda, directorio…).
+// Muestra los anuncios vigentes de un espacio (foro, fichas de producto,
+// categorías, tienda, directorio…).
 // Si no hay ninguno: no dibuja nada (no deja huecos), salvo que `invitar` esté
 // activo; entonces deja un banner "Anuncia tu taller aquí" que lleva a
 // /anunciate con el espacio ya elegido (así el espacio vacío se vende solo).
@@ -34,13 +34,8 @@ export default async function AnunciosEspacio({
   if (!piezas.length && !invitar) return null
 
   const cfg = ESPACIOS[espacio]
-  const franja = espacio === "franja_inicio"
-  const ratio = franja && piezas.length > 1 ? "2 / 1" : cfg.ratio
-  const contenedor = franja
-    ? `mx-auto grid w-full max-w-[1400px] gap-4 px-4 py-4 lg:px-8 ${piezas.length > 1 ? "md:grid-cols-2" : ""}`
-    : columnas
-      ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-      : "flex flex-col gap-3"
+  const ratio = cfg.ratio
+  const contenedor = columnas ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-3"
 
   // Banner que invita a anunciarse (pedido de Vlado, 22 nov 2026): antes era
   // una tarjeta punteada casi invisible ("Tu anuncio aquí"). Va en código y no
