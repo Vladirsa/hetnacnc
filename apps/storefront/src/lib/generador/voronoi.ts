@@ -33,7 +33,7 @@ export type OpcionesVoronoi = {
   radio: number // esquinas del panel (rectángulo)
 }
 
-export const MAX_CELDAS = 1500
+export const MAX_CELDAS = 800
 
 // Números al azar que se pueden repetir (mulberry32)
 export function azar(semilla: number) {
@@ -152,12 +152,9 @@ function contorno(o: OpcionesVoronoi, margen: number): P[] {
       return [o.ancho / 2 + R * Math.cos(a), o.ancho / 2 + R * Math.sin(a)] as P
     })
   }
-  return [
-    [margen, margen],
-    [o.ancho - margen, margen],
-    [o.ancho - margen, o.alto - margen],
-    [margen, o.alto - margen],
-  ]
+  // Con esquinas redondas, el área de las celdas también lleva su esquina
+  // redonda (si no, los huecos de las esquinas se salen del panel)
+  return rect(margen, margen, o.ancho - margen, o.alto - margen, Math.max(0, o.radio - margen)).pts
 }
 
 function dentroConvexo([x, y]: P, pol: P[]) {
@@ -174,24 +171,59 @@ function dentroConvexo([x, y]: P, pol: P[]) {
 /** Celdas de Voronoi de los puntos, recortadas al área (convexa). */
 export function celdasVoronoi(puntos: P[], area: P[]): P[][] {
   const base = ccw(area)
+  if (!puntos.length) return []
+  // Rejilla para encontrar vecinos sin revisar todos los puntos: se recorre por
+  // anillos de casillas, del más cercano al más lejano, y se para cuando el
+  // anillo ya está más lejos que el doble del radio de la celda.
+  const xs = base.map((v) => v[0])
+  const ys = base.map((v) => v[1])
+  const x0 = Math.min(...xs)
+  const y0 = Math.min(...ys)
+  const lado = Math.max(1e-6, Math.sqrt(((Math.max(...xs) - x0) * (Math.max(...ys) - y0)) / puntos.length))
+  const nx = Math.max(1, Math.ceil((Math.max(...xs) - x0) / lado) + 1)
+  const ny = Math.max(1, Math.ceil((Math.max(...ys) - y0) / lado) + 1)
+  const casillas: number[][] = Array.from({ length: nx * ny }, () => [])
+  const casilla = (p: P) => [Math.min(nx - 1, Math.max(0, Math.floor((p[0] - x0) / lado))), Math.min(ny - 1, Math.max(0, Math.floor((p[1] - y0) / lado)))]
+  puntos.forEach((p, i) => {
+    const [cx, cy] = casilla(p)
+    casillas[cy * nx + cx].push(i)
+  })
   return puntos.map((p, i) => {
-    // Primero los vecinos más cercanos: en cuanto un punto está a más del doble
-    // del radio de la celda, ya no puede recortarla.
-    const otros = puntos
-      .map((q, j) => ({ q, j, d: (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 }))
-      .filter((x) => x.j !== i)
-      .sort((a, b) => a.d - b.d)
+    const [cx, cy] = casilla(p)
     let cel = base
-    for (const { q, d } of otros) {
+    const radio2 = () => {
       let r2 = 0
       for (const v of cel) r2 = Math.max(r2, (v[0] - p[0]) ** 2 + (v[1] - p[1]) ** 2)
-      if (d > 4 * r2) break
-      // Mediatriz: más cerca de p que de q  ⇔  (q-p)·x <= (|q|²-|p|²)/2
-      const a = q[0] - p[0]
-      const b = q[1] - p[1]
-      const c = (q[0] * q[0] + q[1] * q[1] - p[0] * p[0] - p[1] * p[1]) / 2
-      cel = recortar(cel, a, b, c)
-      if (cel.length < 3) return []
+      return r2
+    }
+    for (let k = 0; k < Math.max(nx, ny); k++) {
+      // El anillo k está a al menos (k-1)·lado del punto
+      if (k > 1 && ((k - 1) * lado) ** 2 > 4 * radio2()) break
+      const anillo: { q: P; d: number }[] = []
+      for (let gy = cy - k; gy <= cy + k; gy++) {
+        if (gy < 0 || gy >= ny) continue
+        for (let gx = cx - k; gx <= cx + k; gx++) {
+          if (gx < 0 || gx >= nx) continue
+          if (Math.max(Math.abs(gx - cx), Math.abs(gy - cy)) !== k) continue
+          for (const j of casillas[gy * nx + gx]) {
+            if (j === i) continue
+            const q = puntos[j]
+            const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2
+            if (d < 1e-12) continue // punto repetido: no recorta
+            anillo.push({ q, d })
+          }
+        }
+      }
+      anillo.sort((a, b) => a.d - b.d)
+      for (const { q, d } of anillo) {
+        if (d > 4 * radio2()) continue
+        // Mediatriz: más cerca de p que de q  ⇔  (q-p)·x <= (|q|²-|p|²)/2
+        const a = q[0] - p[0]
+        const b = q[1] - p[1]
+        const c = (q[0] * q[0] + q[1] * q[1] - p[0] * p[0] - p[1] * p[1]) / 2
+        cel = recortar(cel, a, b, c)
+        if (cel.length < 3) return []
+      }
     }
     return cel
   })
@@ -223,6 +255,7 @@ export function repartirPuntos(o: OpcionesVoronoi, area: P[]): P[] {
     const p: P = [x0 + rnd() * (x1 - x0), y0 + rnd() * (y1 - y0)]
     if (!dentroConvexo(p, ccw(area))) continue
     if (rnd() > peso(o.densidad, p, cx, cy, rmax, o.alto)) continue
+    if (pts.some((q) => Math.abs(q[0] - p[0]) < 1e-6 && Math.abs(q[1] - p[1]) < 1e-6)) continue
     pts.push(p)
   }
   // Relajación de Lloyd: cada punto se mueve al centro de su celda. Con

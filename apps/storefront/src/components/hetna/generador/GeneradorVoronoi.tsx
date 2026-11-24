@@ -3,7 +3,7 @@
 // Patrón Voronoi (2D Studio › Patrones de corte): celdas irregulares para
 // celosías, lámparas, separadores, mesas y mosaicos. El motor está en
 // lib/generador/voronoi.ts; aquí sólo van los controles.
-import { useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 
 import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
@@ -30,6 +30,8 @@ export function GeneradorVoronoi({ cabecera }: { cabecera?: React.ReactNode }) {
   const [redondeo, setRedondeo] = useState("4")
   const [orden, setOrden] = useState(60)
   const [semilla, setSemilla] = useState(7)
+  // El deslizador se mueve al instante; el diseño se recalcula sin trabar la página
+  const ordenDiferido = useDeferredValue(orden)
 
   const r = useMemo(
     () =>
@@ -41,13 +43,13 @@ export function GeneradorVoronoi({ cabecera }: { cabecera?: React.ReactNode }) {
         alto: numero(alto) || 600,
         marco: numero(marco) || 0,
         radio: numero(radio) || 0,
-        celdas: Math.min(MAX_CELDAS, numero(celdas) || 120),
+        celdas: Math.min(MAX_CELDAS, Number.isFinite(numero(celdas)) ? numero(celdas) : 120),
         puente: numero(puente) || 0.2,
         redondeo: numero(redondeo) || 0,
-        orden: orden / 100,
+        orden: ordenDiferido / 100,
         semilla,
       }),
-    [forma, resultado, densidad, ancho, alto, marco, radio, celdas, puente, redondeo, orden, semilla],
+    [forma, resultado, densidad, ancho, alto, marco, radio, celdas, puente, redondeo, ordenDiferido, semilla],
   )
 
   const circ = forma === "circulo"
