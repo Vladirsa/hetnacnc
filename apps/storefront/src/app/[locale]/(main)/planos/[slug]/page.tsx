@@ -330,7 +330,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
             {cot.ok ? (
               <div className="rounded-xl bg-[#F6F1E7] p-3 text-[14px] text-[#142033]">
                 <p className="m-0 font-bold">Kit de piezas cortadas y lijadas{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</p>
-                <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]">aprox., más envío</span></p>
+                <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]">aprox. con IVA, más envío</span></p>
                 <p className="m-0 mt-1 text-[13px] text-[#40403A]">
                   {cot.piezas} piezas · {cot.hojas} {cot.hojas === 1 ? "hoja" : "hojas"} de triplay · peso con empaque ≈ {cot.pesoKg} kg · fabricación ≈ {cot.diasFabricacion} días hábiles más el envío
                 </p>

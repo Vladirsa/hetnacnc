@@ -79,7 +79,7 @@ function Editor({ plano, limites, alGuardar }) {
           <tr style={{ textAlign: "left", color: "#6B675C", fontSize: 12 }}>
             <th style={{ padding: "4px 6px" }}>Lo hago</th>
             <th>Acabado</th>
-            <th>Recomendado HETNA</th>
+            <th>Recomendado HETNA (con IVA)</th>
             <th>Tu precio</th>
             <th></th>
           </tr>
