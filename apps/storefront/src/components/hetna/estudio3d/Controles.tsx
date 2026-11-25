@@ -4,7 +4,6 @@
 // de opción, tarjetas y acciones. Los usan Cajas, Llaveros, Vectorizador y
 // las demás herramientas que viven dentro de Estudio3D, para que todas se vean
 // y se manejen igual.
-import * as THREE from "three"
 
 export const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 export const r1 = (x: number) => Math.round(x * 10) / 10
@@ -19,24 +18,6 @@ export function descargar(nombre: string, contenido: string | ArrayBuffer | Blob
   a.click()
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-/** Pasa un grupo de three.js (con sus transformaciones) a triángulos sueltos. */
-export function grupoATris(grupo: THREE.Object3D): number[] {
-  const tris: number[] = []
-  grupo.updateMatrixWorld(true)
-  const v = new THREE.Vector3()
-  grupo.traverse((o) => {
-    const m = o as THREE.Mesh
-    if (!m.isMesh || !m.geometry) return
-    const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry
-    const pos = g.getAttribute("position")
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld)
-      tris.push(v.x, v.y, v.z)
-    }
-  })
-  return tris
 }
 
 export const Etiqueta = ({ children }: { children: React.ReactNode }) => (

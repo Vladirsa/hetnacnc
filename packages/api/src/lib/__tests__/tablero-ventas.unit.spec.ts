@@ -20,6 +20,12 @@ describe("tablero de ventas", () => {
     expect(consejoTablero(base)).toMatch(/^Impulsa/)
     expect(consejoTablero({ ...base, publicaciones: null })).toMatch(/Cocina integral/)
   })
+  it("muestra el uso por herramienta y recomienda la que más gente manda a fabricar", () => {
+    const fila = (herramienta: string, n: number) => ({ herramienta, vista: 10 * n, descarga: 4 * n, cotizar: n, fabricar: n, correo: 1, cam: 0, solicitudes: 0 })
+    const t = { ...base, publicaciones: null, herramientas: [fila("celosias", 3), fila("engranes", 1)] }
+    expect(textoTablero(t)).toContain("Celosías y paneles decorativos: 30 · 12 · 6 · 1 · 0")
+    expect(consejoTablero(t)).toMatch(/^Celosías y paneles decorativos es la herramienta/)
+  })
   it("sale aunque falten bloques y el correo escapa el texto", () => {
     expect(textoTablero({ desde: "x", ventas: null, creditos: null, disenos: null, publicaciones: null })).toContain("Tablero")
     expect(htmlTablero(base, "https://x/dashboard")).toContain("&lt;en minutos&gt;")

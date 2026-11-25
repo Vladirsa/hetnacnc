@@ -17,6 +17,7 @@ import { useParams } from "next/navigation"
 import { Aviso, Boton, Interruptor, Seccion } from "@/components/hetna/estudio3d/Controles"
 import { anidar, hojasComoDibujo, separarPiezas } from "@/lib/generador/anidado"
 import { type PedidoPrecio, PrecioEstudio } from "@/components/hetna/estudio/PrecioEstudio"
+import { MandarDisenoCorreo } from "@/components/hetna/estudio/MandarDisenoCorreo"
 import { type ContextoCotizacion, mandarACotizador, mandarAFabricar, procesoDeServicio } from "@/lib/generador/aCotizador"
 import { cajaDibujo, largoCorte } from "@/lib/generador/geo2d"
 import { dibujoDXF, dibujoSVG, type Dibujo } from "@/lib/generador/vectores"
@@ -104,7 +105,9 @@ export function Estudio2D({
   // mensaje cuando todavía no se puede mandar al CAM (p. ej. falta pagar la descarga)
   camBloqueado?: string
 }) {
-  const { locale } = useParams<{ locale: string }>()
+  // herramienta: el slug de /disenar/[herramienta], para "Mándamelo por correo"
+  // (el servidor rechaza un slug que no está en su lista)
+  const { locale, herramienta: herramientaSlug } = useParams<{ locale: string; herramienta?: string }>()
   const cajaRef = useRef<HTMLDivElement>(null)
   const [vista, setVista] = useState<{ x: number; y: number; k: number }>({ x: 0, y: 0, k: 1 })
   // dedos (o ratón) sobre la vista: uno arrastra, dos hacen zoom
@@ -355,6 +358,16 @@ export function Estudio2D({
               Cotizar
             </Boton>
           </div>
+          {herramientaSlug && (
+            <MandarDisenoCorreo
+              herramienta={herramientaSlug}
+              archivo={archivo}
+              servicio={procesoDeServicio(cotizar?.servicio)}
+              // la descarga de pago no viaja por correo
+              dxf={descargas || camBloqueado ? undefined : () => (alArchivo?.trazos.length ? dibujoDXF(alArchivo) : null)}
+              precio={entradaPrecio}
+            />
+          )}
         </Seccion>
         <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]">Todo se calcula en tu navegador. Medidas en milímetros.</p>
       </aside>
