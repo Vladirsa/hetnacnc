@@ -23,6 +23,7 @@ export type DatosDisenoListo = {
   material: string
   medidas: string
   gramos: number | null
+  hetnaOfrece: string
 }
 
 export function DisenoListo({ d, leyendas, locale }: { d: DatosDisenoListo; leyendas: LeyendaTaller[]; locale: string }) {

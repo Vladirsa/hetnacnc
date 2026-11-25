@@ -48,7 +48,7 @@ export function leyendasDeTalleres(
   const porVariante = new Map(variantes.map((v) => [v.id, v]))
   const porTaller = new Map<string, { mejor: StoreOffer; precio: number; n: number }>()
   for (const o of offers) {
-    if (!isPurchasable(o) || !o.seller_id || (o.metadata as Record<string, unknown> | null)?.activa === false) continue
+    if (!isPurchasable(o) || !o.seller_id) continue
     const precio = getOfferAmount(o)!
     const ya = porTaller.get(o.seller_id)
     if (!ya) porTaller.set(o.seller_id, { mejor: o, precio, n: 1 })

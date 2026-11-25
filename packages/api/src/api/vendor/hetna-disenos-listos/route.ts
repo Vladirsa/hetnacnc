@@ -9,14 +9,13 @@
 // oferta la deja sin existencias (no se borra: puede tener ventas).
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { updateOffersWorkflow } from "@mercurjs/core/workflows"
+import { createOffersWorkflow, updateOffersWorkflow } from "@mercurjs/core/workflows"
+import type { CreateOfferDTO } from "@mercurjs/types"
 
 import { CALIDADES, COLORES, EXISTENCIAS_BAJO_PEDIDO, datoDeProducto, precioDiseno, type Calidad } from "../../../lib/disenos-listos"
 import { aprovisionarEnvios } from "../../../lib/envios-automaticos"
-import { ponerExistencias, tiendaTaller } from "../../../lib/importar-productos/importar"
-import { guardarOferta } from "../../../lib/ofertas-tienda"
-import { camSellerHandle } from "../../../modules/cam/catalog"
-import { destacadoHasta, planesDestacado } from "../../../lib/disenos-destacado"
+import { ponerExistencias, preciosOferta, tiendaTaller } from "../../../lib/importar-productos/importar"
+import { planesDestacado } from "../../../lib/disenos-destacado"
 import { leerConfigPrecios } from "../../../lib/precios-config"
 
 type Variante = { id: string; title?: string | null; sku?: string | null; options?: { value?: string | null; option?: { title?: string | null } | null }[] | null }
@@ -33,14 +32,10 @@ async function cargar(req: AuthenticatedMedusaRequest, sellerId: string, product
   // Los diseños listos son productos de HETNA con metadata.diseno_listo (handle hetna-…)
   const { data } = await query.graph({
     entity: "product",
-    fields: ["id", "handle", "title", "thumbnail", "metadata", "status", "sellers.handle", "variants.id", "variants.title", "variants.sku", "variants.options.value", "variants.options.option.title"],
+    fields: ["id", "handle", "title", "thumbnail", "metadata", "status", "variants.id", "variants.title", "variants.sku", "variants.options.value", "variants.options.option.title"],
     filters: (productId ? { id: productId } : { handle: { $like: "hetna-%" } }) as Record<string, unknown>,
   })
-  // sólo los de la tienda HETNA (un taller no puede colar un producto suyo aquí)
-  const hetna = camSellerHandle()
-  const productos = (data as (Producto & { status?: string; sellers?: { handle?: string }[] })[]).filter(
-    (p) => p.status === "published" && datoDeProducto(p) && (p.sellers || []).some((s) => s.handle === hetna)
-  )
+  const productos = (data as (Producto & { status?: string })[]).filter((p) => p.status === "published" && datoDeProducto(p))
   const variantes = productos.flatMap((p) => (p.variants || []).map((v) => v.id))
   const { data: ofertas } = variantes.length
     ? await query.graph({ entity: "offer", fields: ["id", "variant_id", "seller_id", "metadata", "prices.amount", "prices.currency_code", "inventory_item_link.inventory_item.location_levels.stocked_quantity"], filters: { seller_id: sellerId, variant_id: variantes } as Record<string, unknown> })
@@ -73,13 +68,19 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
           id: v.id,
           color: opcion(v, "Color"),
           calidad: opcion(v, "Calidad"),
-          mi_oferta: o ? { id: o.id, precio: precio ?? null, dias: Number(o.metadata?.dias) || null, activa: o.metadata?.activa !== false && existencias(o) > 0 } : null,
+          mi_oferta: o ? { id: o.id, precio: precio ?? null, dias: Number(o.metadata?.dias) || null, activa: existencias(o) > 0 } : null,
         }
       }),
     }
   })
   const s = await req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)("seller").where({ id: sellerId }).first("metadata")
-  res.json({ disenos, colores: COLORES, calidades: CALIDADES, destacado: { hasta: destacadoHasta(s?.metadata), planes: planesDestacado() } })
+  const hasta = s?.metadata?.destacado_disenos_hasta
+  res.json({
+    disenos,
+    colores: COLORES,
+    calidades: CALIDADES,
+    destacado: { hasta: hasta && new Date(hasta).getTime() > Date.now() ? hasta : null, planes: planesDestacado() },
+  })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -93,50 +94,51 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   if (!p) return res.status(404).json({ message: "Esa pieza no está en Piezas para imprimir." })
   const delProducto = new Set((p.variants || []).map((v) => v.id))
   const mias = new Map(ofertas.map((o) => [o.variant_id, o]))
-  // una entrada por combinación (repetirla crearía dos ofertas con el mismo SKU)
-  const pedidas = [...new Map((b.ofertas || []).slice(0, 40).map((o) => [o.variant_id, o])).values()]
-  const limpias: { v: Variante; precio: number; dias: number }[] = []
+  const pedidas = (b.ofertas || []).slice(0, 40)
   for (const o of pedidas) {
     if (!o.variant_id || !delProducto.has(o.variant_id)) return res.status(400).json({ message: "Esa combinación no es de esta pieza." })
     const precio = Math.round(Number(o.precio) * 100) / 100
     if (!(precio >= 10 && precio <= 100000)) return res.status(400).json({ message: "Pon un precio entre $10 y $100,000 (precio final, con IVA)." })
     const dias = Math.round(Number(o.dias))
     if (!(dias >= 1 && dias <= 30)) return res.status(400).json({ message: "Los días de impresión van de 1 a 30." })
-    limpias.push({ v: (p.variants || []).find((x) => x.id === o.variant_id)!, precio, dias })
   }
   const t = await tiendaTaller(req.scope, sellerId, memberId)
   let creadas = 0, actualizadas = 0, quitadas = 0
-  const fallas: string[] = []
-  for (const { v, precio, dias } of limpias) {
+  for (const o of pedidas) {
+    const v = (p.variants || []).find((x) => x.id === o.variant_id)!
+    const precios = preciosOferta(Math.round(Number(o.precio) * 100) / 100, t.aceptaUsd)
+    const metadata = { dias: Math.round(Number(o.dias)), color: opcion(v, "Color"), calidad: opcion(v, "Calidad") as Calidad, diseno_listo: true }
     const ya = mias.get(v.id)
-    try {
-      const r = await guardarOferta(req.scope, t, {
-        offerId: ya?.id,
-        variantId: v.id,
-        // SKU propio del taller (Mercur lo pide único por tienda)
-        sku: `${(v.sku || v.id).toUpperCase()}-${t.handle.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 10)}`,
-        precio,
-        existencias: EXISTENCIAS_BAJO_PEDIDO,
-        metadata: { dias, color: opcion(v, "Color"), calidad: opcion(v, "Calidad") as Calidad, diseno_listo: true, activa: true },
+    if (ya) {
+      await updateOffersWorkflow(req.scope).run({ input: { offers: [{ id: ya.id, prices: precios, metadata } as any] } })
+      await ponerExistencias(req.scope, ya.id, t.locationId, EXISTENCIAS_BAJO_PEDIDO)
+      actualizadas++
+    } else {
+      // SKU propio del taller (Mercur lo pide único por tienda)
+      const sku = `${(v.sku || v.id).toUpperCase()}-${t.handle.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 10)}`
+      await createOffersWorkflow(req.scope).run({
+        input: {
+          offers: [{
+            seller_id: t.sellerId, created_by: t.memberId, sku, variant_id: v.id, shipping_profile_id: t.perfilId,
+            manage_inventory: true, allow_backorder: false,
+            inventory_items: [{ sku, stock_levels: [{ location_id: t.locationId, stocked_quantity: EXISTENCIAS_BAJO_PEDIDO }] }],
+            prices: precios,
+            metadata,
+          } as CreateOfferDTO],
+        },
       })
-      r.accion === "creada" ? creadas++ : actualizadas++
-    } catch (e) {
-      req.scope.resolve("logger").warn(`[piezas-imprimir] ${sellerId} ${v.id}: ${(e as Error).message}`)
-      fallas.push(`${opcion(v, "Color")} ${opcion(v, "Calidad")}`)
+      creadas++
     }
   }
   for (const variantId of (b.quitar || []).slice(0, 40)) {
     const ya = mias.get(variantId)
     if (!ya || !delProducto.has(variantId)) continue
-    // primero sin existencias y luego la marca: el cambio de la oferta avisa a la tienda
     await ponerExistencias(req.scope, ya.id, t.locationId, 0)
-    await updateOffersWorkflow(req.scope).run({ input: { offers: [{ id: ya.id, metadata: { ...(ya.metadata || {}), activa: false } } as any] } })
     quitadas++
   }
   if (creadas) {
     // que el taller tenga con qué enviar desde su almacén
     await aprovisionarEnvios(req.scope, { sellerId, log: () => undefined }).catch(() => undefined)
   }
-  if (fallas.length) return res.status(207).json({ ok: false, creadas, actualizadas, quitadas, message: `No se pudieron guardar: ${fallas.join(", ")}. Lo demás sí quedó; intenta de nuevo.` })
   res.json({ ok: true, creadas, actualizadas, quitadas })
 }

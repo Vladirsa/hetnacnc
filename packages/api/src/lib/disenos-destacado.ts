@@ -8,7 +8,7 @@
 //
 // Precios: DESTACADO_PRECIO_7 y DESTACADO_PRECIO_30 (MXN, con IVA); si no, los
 // de PLANES_DESTACADO.
-import { STORE_URL, crearPreferenciaPago, nuevoId } from "./licitacion"
+import { STORE_URL, nuevoId } from "./licitacion"
 
 export const T_DESTACADO = "hetna_destacado_disenos"
 export const PLANES_DESTACADO: Record<number, number> = { 7: 199, 30: 599 }
@@ -45,84 +45,60 @@ export function nuevoHasta(vigente: unknown, dias: number, ahora = Date.now()) {
   return new Date(base + dias * DIA)
 }
 
-/** Hasta cuándo está destacado el taller (null si no o ya venció). */
-export function destacadoHasta(meta: Record<string, unknown> | null | undefined, ahora = Date.now()): string | null {
-  const v = meta?.destacado_disenos_hasta
-  const t = typeof v === "string" || typeof v === "number" ? new Date(v).getTime() : NaN
-  return Number.isFinite(t) && t > ahora ? new Date(t).toISOString() : null
-}
+const MP_API = "https://api.mercadopago.com"
+const mpToken = () => process.env.MERCADOPAGO_ACCESS_TOKEN || ""
 
-/** Crea el pedido de destacado y su liga de pago. url null si no hay Mercado Pago configurado. */
+/** Crea el pedido de destacado y su liga de pago. null si no hay Mercado Pago configurado. */
 export async function crearPagoDestacado(knex: any, sellerId: string, dias: number, email?: string | null) {
   const monto = precioDestacado(dias)
   if (!monto) throw new Error("Ese plan no existe.")
   await asegurarTablaDestacado(knex)
   const id = nuevoId("dst")
   await knex(T_DESTACADO).insert({ id, seller_id: sellerId, dias, monto })
-  const r = await crearPreferenciaPago({
-    solicitudId: id,
-    folio: id,
-    titulo: `Destacado ${dias} días en Piezas para imprimir · HETNA CNC`,
-    monto,
-    email: email || undefined,
-    retorno: `${STORE_URL}/seller/piezas-imprimir`,
-    referencia: `destacado:${id}`,
-    webhook: process.env.MP_WEBHOOK_ENVIO_URL || `${STORE_URL}/api/mp-envio`,
-    idempotencia: `dst-${id}`,
+  if (!mpToken()) return { id, url: null as string | null }
+  const r = await fetch(`${MP_API}/checkout/preferences`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${mpToken()}`, "Content-Type": "application/json", "X-Idempotency-Key": `dst-${id}` },
+    body: JSON.stringify({
+      items: [{ id, title: `Destacado ${dias} días en Piezas para imprimir · HETNA CNC`, quantity: 1, unit_price: monto, currency_id: "MXN" }],
+      payer: email ? { email } : undefined,
+      external_reference: `destacado:${id}`,
+      back_urls: { success: `${STORE_URL}/seller/piezas-imprimir`, failure: `${STORE_URL}/seller/piezas-imprimir`, pending: `${STORE_URL}/seller/piezas-imprimir` },
+      auto_return: "approved",
+      statement_descriptor: "HETNA CNC",
+      notification_url: process.env.MP_WEBHOOK_ENVIO_URL || `${STORE_URL}/api/mp-envio`,
+    }),
   })
-  return { id, url: r?.url ?? null }
+  if (!r.ok) throw new Error(`Mercado Pago respondió ${r.status}: ${(await r.text()).slice(0, 300)}`)
+  const d = (await r.json()) as { init_point: string; sandbox_init_point?: string }
+  return { id, url: (mpToken().startsWith("TEST-") && d.sandbox_init_point) || d.init_point }
 }
-
-/** Que la tienda vuelva a leer las ofertas (y la metadata de los talleres que traen). */
-async function revalidarOfertas(logger: any) {
-  const url = process.env.STOREFRONT_REVALIDATE_URL
-  const secret = process.env.STOREFRONT_REVALIDATE_SECRET
-  if (!url || !secret) return
-  await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-revalidate-secret": secret }, body: JSON.stringify({ tags: ["offers", "products"] }) }).catch((e) =>
-    logger.warn(`[destacado] no se pudo refrescar la tienda: ${(e as Error).message}`)
-  )
-}
-
-const pagoValido = (pago: any, monto: number) => pago.status === "approved" && pago.currency_id === "MXN" && Math.abs(Number(pago.transaction_amount || 0) - Number(monto)) <= 0.01
 
 /**
  * Aviso de pago (desde /api/mp-envio, external_reference "destacado:<id>"):
  * con el pago aprobado y el monto exacto, marca el pedido y extiende el
- * destacado del taller. El mismo aviso dos veces no suma dos veces; un SEGUNDO
- * pago de la misma liga (otro id de pago) sí suma sus días: se cobró.
+ * destacado del taller. Se puede llamar dos veces sin sumar dos veces.
  */
 export async function pagoDeDestacado(knex: any, logger: any, pago: any, id: string) {
   await asegurarTablaDestacado(knex)
   const p = await knex(T_DESTACADO).where({ id }).first()
-  if (!p) return
-  if (p.estado === "pagado" && p.pago_id === String(pago.id)) return // aviso repetido
-  if (!pagoValido(pago, Number(p.monto))) {
-    if (pago.status === "approved") logger.error(`[destacado] ${id} pago ${pago.id} con monto o moneda inesperados (${pago.transaction_amount} ${pago.currency_id}, esperado ${p.monto} MXN)`)
-    else logger.info(`[destacado] ${id} pago ${pago.id} en estado ${pago.status}`)
+  if (!p || p.estado === "pagado") return
+  if (pago.status !== "approved") {
+    logger.info(`[destacado] ${id} pago ${pago.id} en estado ${pago.status}`)
     return
   }
-  let aplicado = false
+  if (pago.currency_id !== "MXN" || Math.abs(Number(pago.transaction_amount || 0) - Number(p.monto)) > 0.01) {
+    logger.error(`[destacado] ${id} pago ${pago.id} con monto o moneda inesperados (${pago.transaction_amount} ${pago.currency_id}, esperado ${p.monto} MXN)`)
+    return
+  }
   await knex.transaction(async (trx: any) => {
-    let pedidoId = id
-    if (p.estado === "pagado") {
-      // la misma liga se pagó otra vez: otro pedido igual, ya pagado
-      const ya = await trx(T_DESTACADO).where({ pago_id: String(pago.id) }).first("id")
-      if (ya) return
-      pedidoId = nuevoId("dst")
-      await trx(T_DESTACADO).insert({ id: pedidoId, seller_id: p.seller_id, dias: p.dias, monto: p.monto, estado: "pagado", pago_id: String(pago.id) })
-      logger.warn(`[destacado] ${id}: segundo pago ${pago.id} de la misma liga; se suman sus días (${pedidoId})`)
-    } else {
-      // sólo uno gana si llegan dos avisos al mismo tiempo
-      const n = await trx(T_DESTACADO).where({ id, estado: "pendiente" }).update({ estado: "pagado", pago_id: String(pago.id), updated_at: trx.fn.now() })
-      if (!n) return
-    }
-    // FOR UPDATE: dos pagos del mismo taller a la vez no se pisan los días
-    const s = await trx("seller").where({ id: p.seller_id }).forUpdate().first("metadata")
+    // sólo uno gana si llegan dos avisos al mismo tiempo
+    const n = await trx(T_DESTACADO).where({ id, estado: "pendiente" }).update({ estado: "pagado", pago_id: String(pago.id), updated_at: trx.fn.now() })
+    if (!n) return
+    const s = await trx("seller").where({ id: p.seller_id }).first("metadata")
     const hasta = nuevoHasta(s?.metadata?.destacado_disenos_hasta, Number(p.dias))
-    await trx(T_DESTACADO).where({ id: pedidoId }).update({ hasta })
+    await trx(T_DESTACADO).where({ id }).update({ hasta })
     await trx.raw(`UPDATE seller SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('destacado_disenos_hasta', ?::text) WHERE id = ?`, [hasta.toISOString(), p.seller_id])
     logger.info(`[destacado] ${p.seller_id} destacado hasta ${hasta.toISOString()} (pago ${pago.id})`)
-    aplicado = true
   })
-  if (aplicado) await revalidarOfertas(logger)
 }

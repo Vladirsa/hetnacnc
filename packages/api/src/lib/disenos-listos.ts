@@ -13,8 +13,7 @@ import { readFileSync } from "fs"
 import { resolve } from "path"
 
 import type { ConfigPrecios } from "./estimador-referencia"
-import { IVA_GENERAL } from "./conta/parametros"
-import { precioInstantaneo } from "./precio-instantaneo"
+import { precioDesglosado, precioInstantaneo } from "./precio-instantaneo"
 
 export const COLORES = ["Negro", "Blanco", "Gris", "Rojo", "Azul", "Naranja"] as const
 export const CALIDADES = ["Estándar", "Alta"] as const
@@ -37,6 +36,7 @@ export type DatoDiseno = {
   texto: string
   valores: Record<string, number>
   material: string
+  calidad: string
   dias: number
   medidas_mm: [number, number, number]
   volumen_cm3: number
@@ -57,7 +57,7 @@ export const skuDiseno = (handle: string, color: string, calidad: string) =>
   `${handle.replace(/^hetna-/, "DL-")}-${quitarAcentos(color).slice(0, 3)}-${quitarAcentos(calidad).slice(0, 3)}`.toUpperCase()
 
 /** Precio final con IVA (como lo cobra la oferta), redondeado hacia arriba a múltiplos de $5. */
-export const precioFinal = (recomendado: number) => Math.ceil((recomendado * (1 + IVA_GENERAL)) / 5) * 5
+export const precioFinal = (recomendado: number) => Math.ceil((recomendado * 1.16) / 5) * 5
 
 /**
  * Precio recomendado de una pieza (1 unidad) con su calidad, por gramaje y
@@ -65,9 +65,11 @@ export const precioFinal = (recomendado: number) => Math.ceil((recomendado * (1 
  */
 export function precioDiseno(d: DatoDiseno, calidad: Calidad, cfg?: ConfigPrecios | null) {
   const [x, y, z] = d.medidas_mm
-  const i = precioInstantaneo({ servicio: "impresion_3d", material: d.material, calidad: CALIDAD_MOTOR[calidad], ancho: x / 10, largo: y / 10, alto: z / 10, volumen_cm3: d.volumen_cm3, cantidad: 1 }, cfg)
-  if (!i.ok) return null
-  return { precio: precioFinal(i.resultado.pvRecomendado), gramos: Math.round(i.estimado.gramos) }
+  const entrada = { servicio: "impresion_3d", material: d.material, calidad: CALIDAD_MOTOR[calidad], ancho: x / 10, largo: y / 10, alto: z / 10, volumen_cm3: d.volumen_cm3, cantidad: 1 }
+  const r = precioDesglosado(entrada, cfg)
+  const i = precioInstantaneo(entrada, cfg)
+  if (!r.ok || !i.ok) return null
+  return { precio: precioFinal(r.precio.recomendado), gramos: Math.round(i.estimado.gramos), aplica_minimo: r.precio.aplica_minimo }
 }
 
 /** Peso para la guía (kg) y medidas de la caja (cm, con 2 cm de holgura). */
@@ -114,17 +116,15 @@ export function metadataDiseno(d: DatoDiseno, gramos: number, precio: number) {
     medidas_mm: d.medidas_mm,
     volumen_cm3: d.volumen_cm3,
     dias: d.dias,
+    calidad_motor: d.calidad,
   }
 }
 
-/**
- * El diseño a partir de la metadata del producto publicado (para el panel del
- * taller). null si le falta algo: mejor no mostrar precio que uno inventado.
- */
+/** El diseño a partir de la metadata del producto publicado (para el panel del taller). */
 export function datoDeProducto(p: { handle: string; title?: string | null; metadata?: Record<string, unknown> | null }): DatoDiseno | null {
   const m = p.metadata || {}
   const medidas = m.medidas_mm as unknown
-  if (!m.diseno_listo || !Array.isArray(medidas) || medidas.length !== 3 || !(Number(m.volumen_cm3) > 0) || !m.material || !(Number(m.dias) > 0)) return null
+  if (!m.diseno_listo || !Array.isArray(medidas) || medidas.length !== 3 || !(Number(m.volumen_cm3) > 0)) return null
   return {
     handle: p.handle,
     herramienta: String(m.herramienta || ""),
@@ -132,8 +132,9 @@ export function datoDeProducto(p: { handle: string; title?: string | null; metad
     nombre: String(p.title || ""),
     texto: "",
     valores: (m.valores as Record<string, number>) || {},
-    material: String(m.material),
-    dias: Number(m.dias),
+    material: String(m.material || "PLA"),
+    calidad: String(m.calidad_motor || "Pieza funcional"),
+    dias: Number(m.dias) || 2,
     medidas_mm: medidas.map(Number) as [number, number, number],
     volumen_cm3: Number(m.volumen_cm3),
   }

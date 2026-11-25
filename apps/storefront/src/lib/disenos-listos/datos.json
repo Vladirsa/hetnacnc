@@ -14,6 +14,7 @@
       "plato": 1
     },
     "material": "PETG",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       205,
@@ -37,6 +38,7 @@
       "plato": 1
     },
     "material": "PETG",
+    "calidad": "Pieza funcional",
     "dias": 3,
     "medidas_mm": [
       310,
@@ -58,6 +60,7 @@
       "lados": 6
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       80,
@@ -79,6 +82,7 @@
       "cable": 14
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       80,
@@ -100,6 +104,7 @@
       "cable": 14
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       180,
@@ -120,6 +125,7 @@
       "alto": 5
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       95,
@@ -142,6 +148,7 @@
       "tornillo": 4
     },
     "material": "PETG",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       20,
@@ -166,6 +173,7 @@
       "profundidad": 20
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       96,
@@ -187,6 +195,7 @@
       "holgura": 0.3
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       106.9,
@@ -208,6 +217,7 @@
       "pared": 2
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       100,
@@ -230,6 +240,7 @@
       "holgura": 0.25
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       136,
@@ -249,6 +260,7 @@
       "alto": 10
     },
     "material": "PLA",
+    "calidad": "Pieza funcional",
     "dias": 2,
     "medidas_mm": [
       94.9,

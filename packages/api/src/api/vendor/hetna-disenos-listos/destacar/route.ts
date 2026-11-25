@@ -4,13 +4,13 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { crearPagoDestacado, planesDestacado, precioDestacado } from "../../../../lib/disenos-destacado"
+import { crearPagoDestacado, precioDestacado } from "../../../../lib/disenos-destacado"
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const sellerId = (req as any).seller_context?.seller_id
   if (!sellerId) return res.status(401).json({ message: "Sin taller." })
   const dias = Number((req.body as any)?.dias)
-  if (!precioDestacado(dias)) return res.status(400).json({ message: `Elige ${planesDestacado().map((p) => p.dias).join(" o ")} días.` })
+  if (!precioDestacado(dias)) return res.status(400).json({ message: "Elige 7 o 30 días." })
   const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   const s = await knex("seller").where({ id: sellerId }).first("email")
   try {

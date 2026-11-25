@@ -75,19 +75,16 @@ export const crearPreferenciaPago = async (p: {
   retorno: string
   // Licitaciones 2.0: "licitacion:<id>:<anticipo|resto|total>" (lib/licitacion-cobro.ts)
   referencia?: string
-  /** A dónde llega el aviso (otros cobros: destacado de talleres en /api/mp-envio) */
-  webhook?: string
-  idempotencia?: string
 }): Promise<{ id: string; url: string } | null> => {
   if (!mpDisponible()) return null
   // nginx manda /api/* a la API: el aviso llega a src/api/api/mp-licitacion
-  const webhook = p.webhook || process.env.MP_WEBHOOK_URL || `${STORE_URL}/api/mp-licitacion`
+  const webhook = process.env.MP_WEBHOOK_URL || `${STORE_URL}/api/mp-licitacion`
   const r = await fetch(`${MP_API}/checkout/preferences`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${mpToken()}`,
       "Content-Type": "application/json",
-      "X-Idempotency-Key": p.idempotencia || `lic-${p.solicitudId}`,
+      "X-Idempotency-Key": `lic-${p.solicitudId}`,
     },
     body: JSON.stringify({
       items: [{ id: p.folio, title: p.titulo.slice(0, 250), quantity: 1, unit_price: Math.round(p.monto * 100) / 100, currency_id: "MXN" }],

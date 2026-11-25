@@ -102,6 +102,7 @@ for (const d of DISENOS_LISTOS) {
     texto: m.texto,
     valores,
     material: d.material,
+    calidad: d.calidad,
     dias: d.dias,
     medidas_mm: malla.medidas.map((x) => Math.round(x * 10) / 10),
     volumen_cm3: Math.round(volumen * 100) / 100,
