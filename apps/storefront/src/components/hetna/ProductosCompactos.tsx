@@ -1,7 +1,8 @@
 // Rejilla compacta de productos: tarjetas chicas (foto cuadrada, nombre y
-// precio) para el final de la ficha ("Descubre más productos"). Caben de 3 en
-// celular a 8 por fila en computadora, para invitar a seguir viendo sin que
-// las fotos ocupen toda la pantalla.
+// precio) para la ficha: "Más de este taller", "Productos similares" y
+// "Descubre más productos". Caben de 3 en celular a 8 por fila en computadora,
+// para invitar a seguir viendo sin que las fotos ocupen toda la pantalla
+// (antes las dos primeras eran un carrusel de 4 fotos enormes).
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import Image from "@/lib/imagenes/Imagen"
@@ -14,17 +15,30 @@ type ProductoCompacto = {
   metadata?: Record<string, unknown> | null
 }
 
-export function ProductosCompactos({ titulo, productos }: { titulo: string; productos: ProductoCompacto[] }) {
+export function ProductosCompactos({
+  titulo,
+  productos,
+  verTodos = "/categories",
+}: {
+  titulo: string
+  productos: ProductoCompacto[]
+  /** Liga de "Ver todos" (la categoría, el taller…); null = sin liga. */
+  verTodos?: string | null
+}) {
   if (!productos.length) return null
+  // Un id distinto por sección (puede haber varias en la misma ficha)
+  const idTitulo = `titulo-${titulo.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`
   return (
-    <section className="w-full py-6" aria-labelledby="titulo-mas-productos">
+    <section className="w-full py-6" aria-labelledby={idTitulo}>
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 id="titulo-mas-productos" className="heading-md font-bold uppercase tracking-tight">
+        <h2 id={idTitulo} className="heading-md font-bold uppercase tracking-tight">
           {titulo}
         </h2>
-        <LocalizedClientLink href="/categories" className="shrink-0 text-[13.5px] font-bold text-[#B34D07] hover:underline">
-          Ver todos →
-        </LocalizedClientLink>
+        {verTodos && (
+          <LocalizedClientLink href={verTodos} className="shrink-0 text-[13.5px] font-bold text-[#B34D07] hover:underline">
+            Ver todos →
+          </LocalizedClientLink>
+        )}
       </div>
       <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 sm:gap-3">
         {productos.map((p) => {
