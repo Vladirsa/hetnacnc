@@ -90,7 +90,7 @@ export const SECCIONES: SeccionDiseno[] = [
     id: "modelos-3d",
     titulo: "Modelos 3D a tu medida",
     subtitulo: "Para impresión 3D · mueve las medidas y descarga el STL, sin saber CAD",
-    ver: { texto: "Ver los 33", href: "/disenar/modelos-3d" },
+    ver: { texto: "Ver los 43", href: "/disenar/modelos-3d" },
     tarjetas: [
       { nombre: "Organizador de fresas y brocas", texto: "Agujeros a la medida de tus zancos.", href: "/disenar/modelos-3d?modelo=organizador-fresas", icono: "anidado", color: AZUL, acceso: "gratis", para: ["3d"], claves: "broca fresa end mill porta zanco router stl" },
       { nombre: "Soporte de motor NEMA 17 / 23", texto: "Escuadra con refuerzos y barrenos.", href: "/disenar/modelos-3d?modelo=soporte-nema", icono: "cam", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "motor paso a paso stepper bracket stl" },
@@ -100,6 +100,8 @@ export const SECCIONES: SeccionDiseno[] = [
       { nombre: "Tapones para PTR y tubo", texto: "Regatones a presión a la medida de tu tubo.", href: "/disenar/modelos-3d?modelo=tapon-ptr", icono: "caja", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "tapon regaton ptr tubo cuadrado redondo pata mesa herreria stl" },
       { nombre: "Soporte de spindle y chumaceras", texto: "Abrazadera de husillo y soporte de rodamiento.", href: "/disenar/modelos-3d?modelo=soporte-husillo", icono: "cam", color: AZUL, acceso: "gratis", para: ["3d"], claves: "spindle husillo 52 65 80 chumacera rodamiento balero 608 stl" },
       { nombre: "Sujetador de mesa CNC", texto: "Clamp con ranura para tuerca T.", href: "/disenar/modelos-3d?modelo=mordaza-cnc", icono: "cam", color: AZUL, acceso: "gratis", para: ["3d"], claves: "clamp sujetador mordaza router hold down stl" },
+      { nombre: "Caja para Arduino, ESP32 o Raspberry", texto: "Postes para atornillar la tarjeta y ventilación.", href: "/disenar/modelos-3d?modelo=caja-electronica", icono: "caja", color: AZUL, acceso: "gratis", para: ["3d"], claves: "caja electronica arduino esp32 raspberry pcb gabinete stl" },
+      { nombre: "Bisagra y bujes", texto: "Bisagra de dos hojas y bujes con brida.", href: "/disenar/modelos-3d?modelo=bisagra", icono: "partir", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "bisagra buje casquillo brida stl" },
       { nombre: "Prueba de holguras", texto: "Calibra qué holgura usa tu impresora.", href: "/disenar/modelos-3d?modelo=prueba-holgura", icono: "anidado", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "tolerancia calibracion impresora ajuste stl" },
       { nombre: "Perilla con tuerca embebida", texto: "Para tornillos M3 a M12: prensas y topes.", href: "/disenar/modelos-3d?modelo=perilla-tuerca", icono: "torno", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "perilla knob tuerca m6 m8 prensa stl" },
       { nombre: "Macetas, lapiceros y soportes", texto: "Para casa y oficina.", href: "/disenar/modelos-3d?modelo=maceta", icono: "torno", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "maceta lapicero celular gancho stl" },

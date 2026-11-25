@@ -706,6 +706,216 @@ export const MODELOS: Modelo3D[] = [
     },
   },
   {
+    id: "llaves-allen",
+    nombre: "Organizador de llaves Allen",
+    texto: "Bloque con alojamientos hexagonales escalonados para tu juego de llaves Allen.",
+    categoria: "organizar",
+    claves: "llaves allen hexagonales juego organizador soporte",
+    params: [
+      { k: "menor", nombre: "Llave más chica (entre caras)", def: 1.5, min: 1, max: 6, paso: 0.5 },
+      { k: "mayor", nombre: "Llave más grande", def: 10, min: 3, max: 14, paso: 0.5 },
+      { k: "cantidad", nombre: "Cantidad de llaves", def: 9, min: 3, max: 15, unidad: "" },
+      { k: "holgura", nombre: "Holgura", def: 0.3, min: 0, max: 1, paso: 0.05 },
+    ],
+    construir: (p, k) => {
+      const n = Math.round(p.cantidad), mayor = Math.max(p.mayor, p.menor + 1)
+      const medidas = Array.from({ length: n }, (_, i) => p.menor + ((mayor - p.menor) * i) / (n - 1))
+      const alto = 20
+      let x = 6
+      const huecos = medidas.map((m) => {
+        const d = (m + p.holgura) / Math.cos(Math.PI / 6)
+        const h = k.cil(d, alto - 3, x + d / 2, 10, 3, 6)
+        x += d + 4
+        return h
+      })
+      return k.restar(k.bloque(x + 2, 20, alto, 0, 0, 0, 3), ...huecos)
+    },
+  },
+  {
+    id: "buje-brida",
+    nombre: "Buje con brida",
+    texto: "Buje con ceja para ejes, bisagras y pivotes; se mete a presión en un barreno.",
+    categoria: "taller",
+    claves: "buje casquillo bushing brida ceja eje pivote",
+    params: [
+      { k: "eje", nombre: "Diámetro del eje (interior)", def: 8, min: 2, max: 40, paso: 0.1 },
+      { k: "exterior", nombre: "Diámetro exterior", def: 12, min: 4, max: 60, paso: 0.1 },
+      { k: "largo", nombre: "Largo", def: 12, min: 3, max: 60 },
+      { k: "brida", nombre: "Diámetro de la brida", def: 18, min: 6, max: 80 },
+      { k: "ceja", nombre: "Espesor de la brida", def: 2, min: 1, max: 8, paso: 0.5 },
+    ],
+    construir: (p, k) => {
+      const ext = Math.max(p.exterior, p.eje + 1.6), br = Math.max(p.brida, ext + 2)
+      return k.restar(k.unir(k.cil(br, p.ceja), k.cil(ext, p.largo, 0, 0, p.ceja)), k.barreno(p.eje + 0.15, p.largo + p.ceja))
+    },
+  },
+  {
+    id: "bisagra",
+    nombre: "Bisagra de dos hojas",
+    texto: "Dos hojas con nudillos y barrenos avellanados; se unen con un clavo, tornillo o varilla como perno.",
+    categoria: "taller",
+    claves: "bisagra charnela puerta tapa caja hojas perno",
+    params: [
+      { k: "largo", nombre: "Largo", def: 50, min: 20, max: 150 },
+      { k: "ancho", nombre: "Ancho de cada hoja", def: 20, min: 10, max: 60 },
+      { k: "espesor", nombre: "Espesor", def: 3, min: 2, max: 6, paso: 0.1 },
+      { k: "perno", nombre: "Diámetro del perno", def: 3, min: 1.5, max: 8, paso: 0.1 },
+      { k: "nudillos", nombre: "Nudillos", def: 5, min: 3, max: 9, unidad: "" },
+    ],
+    construir: (p, k) => {
+      const n = Math.round(p.nudillos) | 1, dN = p.perno + 2 * 2, h = p.largo / n, e = p.espesor
+      const hoja = (par: boolean, y0: number) => {
+        const placa = k.bloque(p.largo, p.ancho, e, 0, y0, 0)
+        const nud = []
+        for (let i = 0; i < n; i++) if ((i % 2 === 0) === par) nud.push(k.mover(k.girar(k.cil(dN, h - 0.4, 0, 0, 0), 0, 90, 0), i * h + 0.2, y0 + (par ? 0 : p.ancho), dN / 2))
+        const pernoH = k.mover(k.girar(k.cil(p.perno + 0.3, p.largo + 2, 0, 0, 0), 0, 90, 0), -1, y0 + (par ? 0 : p.ancho), dN / 2)
+        const tornillos = [0.25, 0.75].map((f) => k.avellanado(3.5, 7, e, p.largo * f, y0 + p.ancho / 2))
+        return k.restar(k.unir(placa, ...nud), pernoH, ...tornillos)
+      }
+      return k.unir(hoja(true, 0), hoja(false, p.ancho + dN + 6))
+    },
+  },
+  {
+    id: "porta-filamento",
+    nombre: "Eje para carrete de filamento",
+    texto: "Eje con tope para montar carretes de filamento en la pared o arriba de la impresora.",
+    categoria: "taller",
+    claves: "carrete filamento spool holder impresora 3d soporte eje",
+    params: [
+      { k: "diametro", nombre: "Diámetro del eje (hueco del carrete − 2 mm)", def: 50, min: 20, max: 80 },
+      { k: "largo", nombre: "Largo del eje", def: 75, min: 40, max: 120 },
+      { k: "tornillo", nombre: "Barreno de montaje", def: 5, min: 3, max: 8, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const base = 5, D = p.diametro, tope = D + 30
+      const placa = k.cil(tope, base)
+      const eje = k.restar(k.cil(D, p.largo, 0, 0, base), k.cil(D - 6, p.largo, 0, 0, base + 3))
+      const labio = k.cono(D, D + 6, 4, 0, 0, base + p.largo - 4) // que el carrete no se salga
+      const tornillos = [0, 120, 240].map((a) => k.avellanado(p.tornillo, p.tornillo * 2, base, (Math.cos((a * Math.PI) / 180) * (D + 15)) / 2, (Math.sin((a * Math.PI) / 180) * (D + 15)) / 2))
+      return k.restar(k.unir(placa, eje, labio), ...tornillos)
+    },
+  },
+  {
+    id: "caja-electronica",
+    nombre: "Caja para tarjeta electrónica",
+    texto: "Caja con postes para atornillar Arduino, ESP32, Raspberry o tu tarjeta, con ventilación y salida de cables.",
+    categoria: "taller",
+    claves: "caja electronica arduino esp32 raspberry tarjeta pcb gabinete postes",
+    params: [
+      { k: "largo", nombre: "Largo de la tarjeta", def: 69, min: 20, max: 200 },
+      { k: "ancho", nombre: "Ancho de la tarjeta", def: 54, min: 15, max: 150 },
+      { k: "altoInt", nombre: "Alto libre", def: 25, min: 10, max: 80 },
+      { k: "margen", nombre: "Distancia del barreno a la orilla", def: 3.5, min: 2, max: 10, paso: 0.5 },
+      { k: "pared", nombre: "Pared", def: 2, min: 1.2, max: 4, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const w = p.pared, hueco = 3, poste = 6, alturaPoste = 5
+      const L = p.largo + 2 * hueco + 2 * w, A = p.ancho + 2 * hueco + 2 * w, H = p.altoInt + alturaPoste + w
+      let caja = k.restar(k.bloque(L, A, H, 0, 0, 0, 3), k.bloque(L - 2 * w, A - 2 * w, H, w, w, w))
+      const pos = [[p.margen, p.margen], [p.largo - p.margen, p.margen], [p.margen, p.ancho - p.margen], [p.largo - p.margen, p.ancho - p.margen]].map(([x, y]) => [w + hueco + x, w + hueco + y])
+      caja = k.unir(caja, ...pos.map(([x, y]) => k.restar(k.cil(poste, alturaPoste, x, y, w), k.cil(2.5, alturaPoste, x, y, w + 1))))
+      const rejilla = Array.from({ length: Math.max(1, Math.floor((L - 20) / 6)) }, (_, i) => k.bloque(2.5, w + 2, H * 0.4, 10 + i * 6, A - w - 1, H * 0.45))
+      const cable = k.bloque(12, w + 2, 8, L * 0.15, -1, w + alturaPoste)
+      return k.restar(caja, ...rejilla, cable)
+    },
+  },
+  {
+    id: "pasacables",
+    nombre: "Pasacables de escritorio",
+    texto: "Arillo con tapa ranurada para el barreno del escritorio por donde pasan los cables.",
+    categoria: "casa",
+    claves: "pasacables escritorio grommet cables oficina tapa barreno",
+    params: [
+      { k: "barreno", nombre: "Diámetro del barreno", def: 60, min: 20, max: 100 },
+      { k: "tablero", nombre: "Espesor del tablero", def: 18, min: 10, max: 40 },
+    ],
+    construir: (p, k) => {
+      const D = p.barreno, ceja = 2.5, labio = D + 10
+      const aro = k.restar(k.unir(k.cil(labio, ceja), k.cil(D - 0.4, p.tablero, 0, 0, ceja)), k.cil(D - 4, p.tablero + ceja + 2, 0, 0, -1))
+      // tapa con ranura para los cables, al lado
+      const tapa = k.restar(k.unir(k.cil(labio, 2), k.cil(D - 4.4, 5, 0, 0, 2)), k.bloque(D * 0.18, labio / 2 + 2, 10, -D * 0.09, D * 0.15, -1))
+      return k.unir(aro, k.mover(tapa, labio + 8, 0, 0))
+    },
+  },
+  {
+    id: "posavasos",
+    nombre: "Posavasos",
+    texto: "Posavasos redondo, cuadrado o hexagonal con ceja para que no escurra.",
+    categoria: "casa",
+    claves: "posavasos portavasos coaster cocina mesa regalo",
+    params: [
+      { k: "diametro", nombre: "Diámetro", def: 95, min: 60, max: 140 },
+      { k: "lados", nombre: "Lados (0 = redondo, 4, 6, 8)", def: 6, min: 0, max: 12, unidad: "" },
+      { k: "alto", nombre: "Alto", def: 5, min: 3, max: 10, paso: 0.5 },
+    ],
+    construir: (p, k) => {
+      const l = p.lados >= 3 ? Math.round(p.lados) : 0
+      const base = k.cil(p.diametro, p.alto, 0, 0, 0, l)
+      return k.restar(base, k.cil(p.diametro - 6, p.alto, 0, 0, 1.6, l))
+    },
+  },
+  {
+    id: "cunas-nivelacion",
+    nombre: "Cuñas de nivelación (juego)",
+    texto: "Juego de cuñas escalonadas para nivelar muebles, máquinas o calzar piezas en la mesa.",
+    categoria: "taller",
+    claves: "cuñas calzas nivelar shims mueble maquina mesa",
+    params: [
+      { k: "largo", nombre: "Largo", def: 80, min: 30, max: 150 },
+      { k: "ancho", nombre: "Ancho", def: 25, min: 10, max: 60 },
+      { k: "alto", nombre: "Alto máximo", def: 10, min: 3, max: 30 },
+      { k: "piezas", nombre: "Piezas", def: 4, min: 1, max: 8, unidad: "" },
+    ],
+    construir: (p, k) => {
+      const n = Math.round(p.piezas)
+      const cunas = Array.from({ length: n }, (_, i) => {
+        const h = (p.alto * (i + 1)) / n
+        return k.envolver(k.bloque(1, p.ancho, h, 0, i * (p.ancho + 5), 0), k.bloque(1, p.ancho, 0.8, p.largo - 1, i * (p.ancho + 5), 0))
+      })
+      return k.unir(...cunas)
+    },
+  },
+  {
+    id: "soporte-taladro",
+    nombre: "Soporte de pared para taladro",
+    texto: "Funda de pared para colgar el taladro o atornillador por la boca del mandril.",
+    categoria: "organizar",
+    claves: "soporte taladro atornillador pared colgar herramienta electrica",
+    params: [
+      { k: "mandril", nombre: "Diámetro del mandril", def: 40, min: 20, max: 70 },
+      { k: "salida", nombre: "Salida de la pared", def: 60, min: 40, max: 100 },
+      { k: "tornillo", nombre: "Barreno", def: 4.5, min: 3, max: 6, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const e = 5, D = p.mandril, ancho = D + 24
+      const placa = k.bloque(ancho, 70, e, -ancho / 2, 0, 0)
+      // impreso acostado: la placa va a la pared y la repisa (placa vertical aquí) lleva una ranura
+      // en U abierta al frente por donde entra el mandril
+      const ranura = k.unir(k.mover(k.girar(k.cil(D + 1, e + 4, 0, 0, 0), -90, 0, 0), 0, -2, p.salida - D / 2 - 6), k.bloque(D * 0.7, e + 4, D, -D * 0.35, -2, p.salida - D / 2))
+      const g = k.restar(k.unir(placa, k.bloque(ancho, e, p.salida, -ancho / 2, 0, 0)), ranura)
+      return k.restar(g, k.avellanado(p.tornillo, p.tornillo * 2, e, -ancho / 2 + 7, 50), k.avellanado(p.tornillo, p.tornillo * 2, e, ancho / 2 - 7, 50))
+    },
+  },
+  {
+    id: "clip-bolsa",
+    nombre: "Clip para bolsas",
+    texto: "Pinza a presión para cerrar bolsas de café, botanas o tornillería.",
+    categoria: "casa",
+    claves: "clip bolsa cerrar pinza cocina cafe botana",
+    params: [
+      { k: "largo", nombre: "Largo", def: 90, min: 40, max: 160 },
+      { k: "alto", nombre: "Alto", def: 10, min: 6, max: 20 },
+    ],
+    construir: (p, k) => {
+      // C de una pieza: dos brazos unidos por un aro elástico; la bolsa entra entre los brazos
+      const e = 2.6, g = 0.6
+      const brazoA = k.bloque(p.largo, e, p.alto, 0, 0, 0)
+      const brazoB = k.bloque(p.largo, e, p.alto, 0, e + g, 0)
+      const aro = k.restar(k.cil(2 * e + g + 4, p.alto, 0, e + g / 2, 0), k.cil(g + 2, p.alto + 2, 0, e + g / 2, -1), k.bloque(10, 20, p.alto + 2, 0, -5, -1))
+      return k.unir(brazoA, brazoB, aro)
+    },
+  },
+  {
     id: "gancho-pared",
     nombre: "Gancho de pared",
     texto: "Gancho en L con dos barrenos avellanados. Para cables, mangueras, mandiles o herramienta.",
