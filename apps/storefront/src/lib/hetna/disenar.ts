@@ -82,6 +82,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Texturizador gratis para impresión 3D: placa o rodillo con palabras e íconos repetidos, sin costura, con mangos y guías de grosor. Descarga los STL al instante.",
   },
   {
+    slug: "cortadores-galletas",
+    nombre: "Cortadores de galletas",
+    texto: "Corazón, estrella, nube, un nombre o tu dibujo: cortador con filo y sello para imprimir en 3D.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Cortadores de galletas para imprimir en 3D gratis (STL)",
+    descripcion:
+      "Haz tu propio cortador de galletas para impresión 3D: elige una figura (corazón, estrella, nube, pino, casita…), escribe un nombre o sube tu dibujo en SVG, ponle la medida y, si quieres, un sello con texto o ícono. Descarga gratis el STL del cortador (con filo y ceja) y el del sello.",
+    meta: "Generador gratis de cortadores de galletas para impresión 3D: figuras, nombres o tu propio dibujo, con sello de texto o ícono. Descarga el STL al instante.",
+  },
+  {
     slug: "rompecabezas",
     nombre: "Rompecabezas",
     texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
@@ -442,6 +453,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
       { slug: "texturizador", corto: "Texturizador" },
+      { slug: "cortadores-galletas", corto: "Cortadores de galletas" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "moldes-3d", corto: "Moldes" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },
