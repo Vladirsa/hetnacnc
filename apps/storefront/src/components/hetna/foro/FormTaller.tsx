@@ -8,6 +8,7 @@ import { useState, useTransition } from "react"
 
 import { guardarTaller } from "@/lib/foro/acciones-taller"
 import {
+  CALIBRES,
   type Equipo,
   MATERIALES_TALLER,
   MAX_EQUIPOS,
@@ -20,6 +21,8 @@ import {
   type TipoMaquina,
   type Trabajo,
   areaTrabajo,
+  esMetal,
+  etiquetaEspesor,
   urlFoto,
 } from "@/lib/foro/tipos"
 
@@ -36,6 +39,21 @@ const num = (v: string): number | null => {
   return v.trim() && Number.isFinite(n) && n > 0 ? n : null
 }
 const txt = (n: number | null) => (n == null ? "" : String(n))
+
+/** Metales: se elige el calibre (lámina) o la placa en pulgadas; se guarda en mm. */
+function SelectCalibre({ valor, onCambio, vacio, etiqueta: aria }: { valor: number | null; onCambio: (mm: number | null) => void; vacio: string; etiqueta: string }) {
+  const actual = CALIBRES.find((c) => valor != null && Math.abs(c.mm - valor) < 0.005)
+  return (
+    <select value={actual ? String(actual.mm) : ""} onChange={(e) => onCambio(e.target.value ? Number(e.target.value) : null)} aria-label={aria} className={campo}>
+      <option value="">{vacio}</option>
+      {CALIBRES.map((c) => (
+        <option key={c.etiqueta} value={c.mm}>
+          {c.etiqueta}
+        </option>
+      ))}
+    </select>
+  )
+}
 
 /** Botón Guardar con su aviso de error o "Guardado". */
 function Guardar({ onGuardar, pendiente, error, guardado }: { onGuardar: () => void; pendiente: boolean; error: string; guardado: boolean }) {
@@ -225,7 +243,9 @@ function Materiales({ inicial }: { inicial: MaterialEspesor[] }) {
     <section className={caja}>
       <div>
         <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Materiales y espesores</h2>
-        <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">Toca los materiales que trabajas y pon el espesor mínimo y máximo que cortas.</p>
+        <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">
+          Toca los materiales que trabajas y pon el espesor mínimo y máximo que cortas. En metales eliges el calibre de la lámina o la placa en pulgadas.
+        </p>
       </div>
       <div className="flex flex-wrap gap-2">
         {(Object.keys(MATERIALES_TALLER) as MaterialTaller[]).map((m) => {
@@ -247,10 +267,19 @@ function Materiales({ inicial }: { inicial: MaterialEspesor[] }) {
       {lista.length > 0 && (
         <div className="flex flex-col gap-2">
           {lista.map((x) => (
-            <div key={x.material} className="grid grid-cols-[1fr_88px_88px] items-center gap-2">
+            <div key={x.material} className={`grid items-center gap-2 ${esMetal(x.material) ? "grid-cols-[1fr_118px_118px]" : "grid-cols-[1fr_88px_88px]"}`}>
               <span className="text-[14.5px] font-semibold text-[#1B1B18]">{MATERIALES_TALLER[x.material]}</span>
-              <input inputMode="decimal" value={txt(x.min)} onChange={(e) => pon(x.material, { min: num(e.target.value) })} placeholder="Mín mm" aria-label={`Espesor mínimo de ${MATERIALES_TALLER[x.material]} en mm`} className={campo} />
-              <input inputMode="decimal" value={txt(x.max)} onChange={(e) => pon(x.material, { max: num(e.target.value) })} placeholder="Máx mm" aria-label={`Espesor máximo de ${MATERIALES_TALLER[x.material]} en mm`} className={campo} />
+              {esMetal(x.material) ? (
+                <>
+                  <SelectCalibre valor={x.min} onCambio={(mm) => pon(x.material, { min: mm })} vacio="Desde…" etiqueta={`Calibre más delgado de ${MATERIALES_TALLER[x.material]}`} />
+                  <SelectCalibre valor={x.max} onCambio={(mm) => pon(x.material, { max: mm })} vacio="Hasta…" etiqueta={`Calibre más grueso de ${MATERIALES_TALLER[x.material]}`} />
+                </>
+              ) : (
+                <>
+                  <input inputMode="decimal" value={txt(x.min)} onChange={(e) => pon(x.material, { min: num(e.target.value) })} placeholder="Mín mm" aria-label={`Espesor mínimo de ${MATERIALES_TALLER[x.material]} en mm`} className={campo} />
+                  <input inputMode="decimal" value={txt(x.max)} onChange={(e) => pon(x.material, { max: num(e.target.value) })} placeholder="Máx mm" aria-label={`Espesor máximo de ${MATERIALES_TALLER[x.material]} en mm`} className={campo} />
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -313,8 +342,12 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
                 </select>
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className={etiqueta}>Espesor (mm)</span>
-                <input inputMode="decimal" value={txt(t.espesor)} onChange={(e) => pon(t.id, { espesor: num(e.target.value) })} placeholder="Ej: 6" className={campo} />
+                <span className={etiqueta}>{esMetal(t.material) ? "Calibre" : "Espesor (mm)"}</span>
+                {esMetal(t.material) ? (
+                  <SelectCalibre valor={t.espesor} onCambio={(mm) => pon(t.id, { espesor: mm })} vacio="Elige…" etiqueta="Calibre o placa" />
+                ) : (
+                  <input inputMode="decimal" value={txt(t.espesor)} onChange={(e) => pon(t.id, { espesor: num(e.target.value) })} placeholder="Ej: 6" className={campo} />
+                )}
               </label>
             </div>
             <label className="flex flex-col gap-1.5">
@@ -368,7 +401,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-bold text-[#1B1B18] truncate">{t.titulo || "Trabajo sin título"}</span>
               <span className="block text-[13px] text-[#6B6A63] truncate">
-                {[t.material ? MATERIALES_TALLER[t.material] : "", t.espesor ? `${t.espesor} mm` : "", `${t.fotos.length} foto${t.fotos.length === 1 ? "" : "s"}`]
+                {[t.material ? MATERIALES_TALLER[t.material] : "", etiquetaEspesor(t.material, t.espesor), `${t.fotos.length} foto${t.fotos.length === 1 ? "" : "s"}`]
                   .filter(Boolean)
                   .join(" · ")}
               </span>

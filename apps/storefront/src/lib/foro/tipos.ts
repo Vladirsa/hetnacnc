@@ -242,6 +242,47 @@ export const MATERIALES_TALLER = {
 } as const
 export type MaterialTaller = keyof typeof MATERIALES_TALLER
 
+// Metales: la lámina se pide por calibre (cal. 18, cal. 14…) y la placa en
+// pulgadas, no en milímetros. Se guarda el espesor en mm (para buscar y
+// comparar) y se muestra con su nombre de calibre o pulgada.
+export const METALES: MaterialTaller[] = ["aluminio", "acero", "inoxidable", "cobre"]
+export const esMetal = (m: MaterialTaller | "" | null | undefined) => !!m && METALES.includes(m)
+// Calibres de lámina más usados en México (espesor de lámina de acero, mm)
+// y placa en pulgadas.
+export const CALIBRES: { etiqueta: string; mm: number }[] = [
+  { etiqueta: "cal. 30", mm: 0.31 },
+  { etiqueta: "cal. 28", mm: 0.38 },
+  { etiqueta: "cal. 26", mm: 0.45 },
+  { etiqueta: "cal. 24", mm: 0.61 },
+  { etiqueta: "cal. 22", mm: 0.76 },
+  { etiqueta: "cal. 20", mm: 0.91 },
+  { etiqueta: "cal. 18", mm: 1.21 },
+  { etiqueta: "cal. 16", mm: 1.52 },
+  { etiqueta: "cal. 14", mm: 1.9 },
+  { etiqueta: "cal. 12", mm: 2.66 },
+  { etiqueta: "cal. 11", mm: 3.04 },
+  { etiqueta: "cal. 10", mm: 3.42 },
+  { etiqueta: "cal. 8", mm: 4.18 },
+  { etiqueta: "cal. 7", mm: 4.55 },
+  { etiqueta: 'placa 3/16"', mm: 4.76 },
+  { etiqueta: 'placa 1/4"', mm: 6.35 },
+  { etiqueta: 'placa 5/16"', mm: 7.94 },
+  { etiqueta: 'placa 3/8"', mm: 9.53 },
+  { etiqueta: 'placa 1/2"', mm: 12.7 },
+  { etiqueta: 'placa 5/8"', mm: 15.88 },
+  { etiqueta: 'placa 3/4"', mm: 19.05 },
+  { etiqueta: 'placa 1"', mm: 25.4 },
+]
+/** "cal. 18" para metales (si coincide con un calibre o placa), si no "6 mm". */
+export function etiquetaEspesor(material: MaterialTaller | "" | null | undefined, mm: number | null): string {
+  if (!mm) return ""
+  if (esMetal(material)) {
+    const c = CALIBRES.find((x) => Math.abs(x.mm - mm) < 0.005)
+    if (c) return c.etiqueta
+  }
+  return `${mm.toLocaleString("es-MX")} mm`
+}
+
 /** Una máquina del taller. Medidas del área de trabajo en mm; todo opcional menos el tipo. */
 export type Equipo = {
   tipo: TipoMaquina
@@ -312,12 +353,14 @@ export const areaTrabajo = (e: Pick<Equipo, "largo" | "ancho" | "alto">) => {
   const m = [e.largo, e.ancho, e.alto].filter((x): x is number => typeof x === "number" && x > 0)
   return m.length ? `${m.map((x) => x.toLocaleString("es-MX")).join(" × ")} mm` : ""
 }
-/** "3 a 18 mm", "hasta 6 mm", "desde 1 mm" o "". */
-export const rangoEspesor = (m: Pick<MaterialEspesor, "min" | "max">) => {
-  const f = (x: number) => `${x.toLocaleString("es-MX")}`
-  if (m.min && m.max) return m.min === m.max ? `${f(m.min)} mm` : `${f(m.min)} a ${f(m.max)} mm`
-  if (m.max) return `hasta ${f(m.max)} mm`
-  if (m.min) return `desde ${f(m.min)} mm`
+/** "3 a 18 mm", "cal. 22 a cal. 14", "hasta 6 mm", "desde 1 mm" o "". */
+export const rangoEspesor = (m: Pick<MaterialEspesor, "min" | "max"> & { material?: MaterialTaller }) => {
+  const metal = esMetal(m.material)
+  const f = (x: number) => (metal ? etiquetaEspesor(m.material, x) : `${x.toLocaleString("es-MX")}`)
+  const mm = metal ? "" : " mm"
+  if (m.min && m.max) return m.min === m.max ? `${f(m.min)}${mm}` : `${f(m.min)} a ${f(m.max)}${mm}`
+  if (m.max) return `hasta ${f(m.max)}${mm}`
+  if (m.min) return `desde ${f(m.min)}${mm}`
   return ""
 }
 

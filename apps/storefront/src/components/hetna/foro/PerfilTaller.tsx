@@ -10,6 +10,7 @@ import {
   TODO_MEXICO,
   type Trabajo,
   areaTrabajo,
+  etiquetaEspesor,
   rangoEspesor,
   urlFoto,
 } from "@/lib/foro/tipos"
@@ -85,7 +86,7 @@ export function PortafolioTrabajos({ trabajos }: { trabajos: Trabajo[] }) {
             <p className="m-0 text-[15px] font-bold text-[#1B1B18]">{t.titulo}</p>
             {(t.material || t.espesor || t.maquina) && (
               <p className="m-0 text-[13px] text-[#6B6A63]">
-                {[t.material && MATERIALES_TALLER[t.material], t.espesor && `${t.espesor.toLocaleString("es-MX")} mm`, t.maquina && TIPOS_MAQUINA[t.maquina]]
+                {[t.material && MATERIALES_TALLER[t.material], etiquetaEspesor(t.material, t.espesor), t.maquina && TIPOS_MAQUINA[t.maquina]]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
