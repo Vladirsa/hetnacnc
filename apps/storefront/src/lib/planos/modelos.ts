@@ -366,6 +366,153 @@ function jardinera(): PiezaPlano[] {
   ]
 }
 
+
+// ── Tanda 4 ──────────────────────────────────────────────────────────────
+function estanteRetazos(): PiezaPlano[] {
+  const W = 1000, e = 18, H = 1200, D = 300
+  const piezas: PiezaPlano[] = [
+    p("Respaldo", 0, W, D - e, D, 0, H),
+    p("Base", 0, W, 0, D - e, 0, e),
+    p("Tope frontal", 0, W, 0, e, e, e + 100),
+  ]
+  for (let i = 0; i < 5; i++) {
+    const x = i * ((W - e) / 4)
+    piezas.push(p(`Divisor ${i + 1}`, x, x + e, e, D - e, e, i % 2 === 0 ? 900 : 700))
+  }
+  return piezas
+}
+
+function mesaRouter(): PiezaPlano[] {
+  const W = 800, D = 600, H = 900, e = 18, vuelo = 60
+  return [
+    p("Costado izquierdo", vuelo, vuelo + e, vuelo, D - vuelo, 0, H - 2 * e),
+    p("Costado derecho", W - vuelo - e, W - vuelo, vuelo, D - vuelo, 0, H - 2 * e),
+    p("Piso", vuelo + e, W - vuelo - e, vuelo, D - vuelo, 80, 80 + e),
+    p("Repisa", vuelo + e, W - vuelo - e, vuelo, D - vuelo, 420, 420 + e),
+    p("Respaldo", vuelo + e, W - vuelo - e, D - vuelo - e, D - vuelo, 80, H - 2 * e),
+    p("Base de la cubierta", 0, W, 0, D, H - 2 * e, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+    p("Guía (fence)", 100, W - 100, D - 200, D - 200 + e, H, H + 80),
+  ]
+}
+
+function gabinetePared(): PiezaPlano[] {
+  const W = 800, D = 300, H = 700, e = 18
+  const piezas: PiezaPlano[] = [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D - 6, 0, e),
+    p("Techo", e, W - e, 0, D - 6, H - e, H),
+    p("Repisa", e, W - e, 20, D - 6, H / 2 - e / 2, H / 2 + e / 2),
+    p("Respaldo", e, W - e, D - 6, D, e, H - e, "triplay-6"),
+  ]
+  piezas.push(p("Puerta izquierda", 2, W / 2 - 1, -e, 0, 2, H - 2), p("Puerta derecha", W / 2 + 1, W - 2, -e, 0, 2, H - 2))
+  return piezas
+}
+
+function mesaCompacta(): PiezaPlano[] {
+  const W = 1200, D = 600, H = 900, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H - 2 * e),
+    p("Costado derecho", W - e, W, 0, D, 0, H - 2 * e),
+    p("Faldón trasero", e, W - e, D - e, D, H - 2 * e - 150, H - 2 * e),
+    p("Faldón delantero", e, W - e, 0, e, H - 2 * e - 100, H - 2 * e),
+    p("Repisa baja", e, W - e, 0, D, 150, 150 + e),
+    p("Cubierta inferior", 0, W, 0, D, H - 2 * e, H - e),
+    p("Cubierta superior", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function mesaComedor(): PiezaPlano[] {
+  const W = 1600, D = 900, H = 750, e = 18, vuelo = 150
+  return [
+    p("Costado izquierdo", vuelo, vuelo + e, 100, D - 100, 0, H - 2 * e),
+    p("Costado derecho", W - vuelo - e, W - vuelo, 100, D - 100, 0, H - 2 * e),
+    p("Viga central", vuelo + e, W - vuelo - e, D / 2 - e / 2, D / 2 + e / 2, H - 2 * e - 150, H - 2 * e),
+    p("Pie central", vuelo + e, W - vuelo - e, D / 2 - 80, D / 2 + 80, 60, 60 + e),
+    p("Base de la cubierta", 0, W, 0, D, H - 2 * e, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function consola(): PiezaPlano[] {
+  const W = 1000, D = 300, H = 800, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H - e),
+    p("Costado derecho", W - e, W, 0, D, 0, H - e),
+    p("Faldón trasero", e, W - e, D - e, D, H - e - 120, H - e),
+    p("Repisa baja", e, W - e, 0, D, 120, 120 + e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function muebleTV(): PiezaPlano[] {
+  const W = 1500, D = 400, H = 500, e = 18, zoclo = 60
+  const piezas: PiezaPlano[] = [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D - 6, zoclo, zoclo + e),
+    p("Cubierta", e, W - e, 0, D, H - e, H),
+    p("Respaldo", e, W - e, D - 6, D, zoclo, H - e, "triplay-6"),
+    p("Zoclo", e, W - e, 20, 20 + e, 0, zoclo),
+  ]
+  const x1 = e + (W - 2 * e - 2 * e) / 3, x2 = x1 + e + (W - 2 * e - 2 * e) / 3
+  piezas.push(
+    p("División 1", x1, x1 + e, 0, D - 6, zoclo + e, H - e),
+    p("División 2", x2, x2 + e, 0, D - 6, zoclo + e, H - e),
+    p("Repisa central", x1 + e, x2, 0, D - 6, zoclo + e + 180, zoclo + e + 180 + e),
+    p("Puerta izquierda", 2, x1 + e / 2 - 1, -e, 0, zoclo + 2, H - 2),
+    p("Puerta derecha", x2 + e / 2 + 1, W - 2, -e, 0, zoclo + 2, H - 2),
+  )
+  return piezas
+}
+
+function baseCama(): PiezaPlano[] {
+  const W = 1000, L = 1950, e = 18, H = 350, alto = 250
+  const piezas: PiezaPlano[] = [
+    p("Larguero izquierdo", 0, e, 0, L, 100, 100 + alto),
+    p("Larguero derecho", W - e, W, 0, L, 100, 100 + alto),
+    p("Cabecera", 0, W, L, L + e, 0, 900),
+    p("Piecera", 0, W, -e, 0, 0, H),
+    p("Travesaño central", W / 2 - e / 2, W / 2 + e / 2, 0, L, 100, 100 + alto),
+  ]
+  for (let i = 0; i < 12; i++) {
+    const y = 40 + i * ((L - 120) / 11)
+    piezas.push(p(`Tablilla ${i + 1}`, e, W - e, y, y + 80, 100 + alto, 100 + alto + e))
+  }
+  // patas: una tabla de 80 × 100 mm en cada esquina, por dentro de los largueros
+  ;[[e, 0], [W - e - 80, 0], [e, L - e], [W - e - 80, L - e]].forEach(([x, y], i) => piezas.push(p(`Pata ${i + 1}`, x, x + 80, y, y + e, 0, 100)))
+  return piezas
+}
+
+function casitaPerro(): PiezaPlano[] {
+  const W = 700, D = 900, H = 650, e = 18
+  return [
+    p("Piso", 0, W, 0, D, 60, 60 + e),
+    p("Pared izquierda", 0, e, 0, D, 60 + e, H),
+    p("Pared derecha", W - e, W, 0, D, 60 + e, H),
+    p("Pared trasera", e, W - e, D - e, D, 60 + e, H),
+    p("Frente izquierdo", e, 200, 0, e, 60 + e, H),
+    p("Frente derecho", W - 200, W - e, 0, e, 60 + e, H),
+    p("Dintel", 200, W - 200, 0, e, H - 120, H),
+    p("Techo", -40, W + 40, -60, D + 40, H, H + e),
+    p("Patín izquierdo", 40, 40 + e, 40, D - 40, 0, 60),
+    p("Patín derecho", W - 40 - e, W - 40, 40, D - 40, 0, 60),
+  ]
+}
+
+function baulJuguetes(): PiezaPlano[] {
+  const W = 800, D = 420, H = 450, e = 18
+  return [
+    p("Fondo", e, W - e, e, D - e, 40, 40 + e),
+    p("Frente", 0, W, 0, e, 0, H - e),
+    p("Trasera", 0, W, D - e, D, 0, H - e),
+    p("Costado izquierdo", 0, e, e, D - e, 0, H - e),
+    p("Costado derecho", W - e, W, e, D - e, 0, H - e),
+    p("Tapa", 0, W, 0, D, H - e, H),
+  ]
+}
+
 export const PLANOS: Plano[] = [
   {
     categoria: "Taller",
@@ -745,6 +892,191 @@ export const PLANOS: Plano[] = [
     herrajes: ["Tornillos para exterior 1 1/2\" (aprox. 24)", "Pegamento para exterior", "Plástico o geotextil para el interior", "Sellador o barniz marino"],
     herramientas: ["Sierra o router CNC", "Taladro", "Brocha"],
     notas: ["Usa triplay marino o para exterior y séllalo por todos lados: el triplay común se deshace con la humedad."],
+  },
+  {
+    categoria: "Taller",
+    slug: "estante-para-retazos",
+    nombre: "Estante de pared para retazos",
+    resumen: "Estante de 1 × 1.2 m con divisores para guardar retazos y listones de pie.",
+    descripcion: "Ordena los retazos por tamaño y libera el piso. Se atornilla a la pared por el respaldo.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: estanteRetazos(),
+    pasos: [
+      { titulo: "Base y respaldo", nota: "El respaldo va atornillado a la pared, a taquete.", piezas: ["Base", "Respaldo"] },
+      { titulo: "Divisores", nota: "Alternan alto y bajo para meter piezas largas y cortas.", piezas: ["Divisor"] },
+      { titulo: "Tope frontal", nota: "Evita que los retazos resbalen.", piezas: ["Tope"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "Taquetes y pijas para muro", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Nivel"],
+    notas: ["Atorníllalo a la pared en al menos cuatro puntos: carga mucho peso."],
+  },
+  {
+    categoria: "Taller",
+    slug: "mesa-para-router",
+    nombre: "Mesa para router de mano",
+    resumen: "Gabinete de 80 × 60 × 90 cm con cubierta doble y guía para montar el router abajo.",
+    descripcion: "Convierte tu router de mano en una mesa: cubierta doble para que no se flexione, guía y gabinete para fresas y accesorios.",
+    nivel: "Intermedio",
+    horas: "5 a 6 h",
+    piezas: mesaRouter(),
+    pasos: [
+      { titulo: "Gabinete", nota: "Costados, piso, repisa y respaldo.", piezas: ["Costado", "Piso", "Repisa", "Respaldo"] },
+      { titulo: "Cubierta doble", nota: "Pega las dos capas y préndelas mientras seca.", piezas: ["Base de la cubierta", "Cubierta"] },
+      { titulo: "Guía", nota: "Va sujeta con prensas o perillas para moverla.", piezas: ["Guía"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "Placa base para router (de acrílico o aluminio)", "2 perillas y tornillos para la guía", "Pegamento blanco para madera"],
+    herramientas: ["Router CNC o sierra de banco", "Taladro", "Prensas", "Escuadra"],
+    notas: ["El hueco del router y la placa se cortan según tu modelo de router: no vienen en el plano."],
+  },
+  {
+    categoria: "Taller",
+    slug: "gabinete-de-pared",
+    nombre: "Gabinete de pared con puertas",
+    resumen: "Gabinete de 80 × 30 × 70 cm con dos puertas y repisa, para colgar en el taller.",
+    descripcion: "Guarda la herramienta lejos del polvo. Se cuelga con listón francés o atornillado a la pared.",
+    nivel: "Intermedio",
+    horas: "4 a 5 h",
+    piezas: gabinetePared(),
+    pasos: [
+      { titulo: "Casco", nota: "Costados, piso y techo.", piezas: ["Costado", "Piso", "Techo"] },
+      { titulo: "Repisa y respaldo", nota: "Cuadra el mueble antes de clavar el respaldo.", piezas: ["Repisa", "Respaldo"] },
+      { titulo: "Puertas", nota: "Con bisagras de cazoleta de 35 mm.", piezas: ["Puerta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "4 bisagras de cazoleta de 35 mm", "2 jaladeras", "Pegamento blanco para madera"],
+    herramientas: ["Router CNC o sierra", "Taladro con broca de cazoleta 35 mm", "Escuadra"],
+    notas: ["Deja 2 mm de holgura alrededor de las puertas."],
+  },
+  {
+    categoria: "Taller",
+    slug: "mesa-de-trabajo-compacta",
+    nombre: "Mesa de trabajo compacta",
+    resumen: "Mesa de 1.20 × 0.60 m con cubierta doble y repisa baja, para talleres chicos.",
+    descripcion: "Una mesa firme que cabe en cualquier rincón. La cubierta doble aguanta martillazos y prensas.",
+    nivel: "Fácil",
+    horas: "3 a 4 h",
+    piezas: mesaCompacta(),
+    pasos: [
+      { titulo: "Costados", nota: "Párelos a 1.20 m.", piezas: ["Costado"] },
+      { titulo: "Faldones", nota: "Uno atrás y otro adelante: le quitan el bamboleo.", piezas: ["Faldón"] },
+      { titulo: "Repisa baja", nota: "A 15 cm del piso.", piezas: ["Repisa"] },
+      { titulo: "Cubierta doble", nota: "Pega y atornilla las dos capas.", piezas: ["Cubierta inferior", "Cubierta superior"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Prensas"],
+    notas: ["Para una prensa de banco, refuerza la esquina con un taco debajo de la cubierta."],
+  },
+  {
+    categoria: "Casa",
+    slug: "mesa-de-comedor",
+    nombre: "Mesa de comedor de 1.60 m",
+    resumen: "Mesa de 160 × 90 × 75 cm para 6 personas, con costados de tablero y cubierta doble.",
+    descripcion: "Mesa de líneas rectas: dos costados de tablero, viga central y cubierta doble de 36 mm.",
+    nivel: "Intermedio",
+    horas: "5 a 6 h",
+    piezas: mesaComedor(),
+    pasos: [
+      { titulo: "Costados y pie central", nota: "El pie central amarra los costados abajo.", piezas: ["Costado", "Pie central"] },
+      { titulo: "Viga central", nota: "Va arriba, de costado a costado.", piezas: ["Viga"] },
+      { titulo: "Cubierta doble", nota: "Pega las dos capas con prensas y atorníllala desde abajo.", piezas: ["Base de la cubierta", "Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "Pegamento blanco para madera", "Barniz o laca para mesa"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Prensas", "Lijadora"],
+    notas: ["Lija y barniza la cubierta con tres manos: es la pieza que más se usa."],
+  },
+  {
+    categoria: "Casa",
+    slug: "consola-de-entrada",
+    nombre: "Consola de entrada",
+    resumen: "Mueble de 100 × 30 × 80 cm para la entrada: cubierta para llaves y repisa baja.",
+    descripcion: "Mueble angosto para el recibidor o detrás del sillón.",
+    nivel: "Fácil",
+    horas: "2 h",
+    piezas: consola(),
+    pasos: [
+      { titulo: "Costados", nota: "Las patas de la consola.", piezas: ["Costado"] },
+      { titulo: "Faldón y repisa", nota: "Amarran los costados.", piezas: ["Faldón", "Repisa"] },
+      { titulo: "Cubierta", nota: "Atornilla desde abajo.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 20)", "Pegamento blanco para madera", "Barniz o pintura"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Lijadora"],
+    notas: ["Por ser angosta, fíjala a la pared con una escuadra para que no se vuelque."],
+  },
+  {
+    categoria: "Casa",
+    slug: "mueble-para-tv",
+    nombre: "Mueble para TV",
+    resumen: "Mueble bajo de 150 × 40 × 50 cm con dos puertas y un hueco central para el decodificador.",
+    descripcion: "Mueble de sala con dos gabinetes con puerta a los lados y un hueco abierto al centro con repisa.",
+    nivel: "Intermedio",
+    horas: "5 a 6 h",
+    piezas: muebleTV(),
+    pasos: [
+      { titulo: "Casco", nota: "Costados, piso, cubierta y zoclo.", piezas: ["Costado", "Piso", "Cubierta", "Zoclo"] },
+      { titulo: "Divisiones y repisa", nota: "Forman los tres huecos.", piezas: ["División", "Repisa"] },
+      { titulo: "Respaldo", nota: "Haz un barreno para los cables.", piezas: ["Respaldo"] },
+      { titulo: "Puertas", nota: "Con bisagras de cazoleta.", piezas: ["Puerta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "4 bisagras de cazoleta de 35 mm", "2 jaladeras", "Pegamento blanco para madera"],
+    herramientas: ["Router CNC o sierra", "Taladro con broca de cazoleta 35 mm", "Escuadra"],
+    notas: ["Para una TV de más de 55\", alarga el mueble a 1.80 m."],
+  },
+  {
+    categoria: "Casa",
+    slug: "base-de-cama-individual",
+    nombre: "Base de cama individual",
+    resumen: "Base para colchón individual (100 × 190 cm) con cabecera, tablillas y travesaño central.",
+    descripcion: "Base firme de triplay con tablillas para que el colchón respire.",
+    nivel: "Intermedio",
+    horas: "5 a 6 h",
+    piezas: baseCama(),
+    pasos: [
+      { titulo: "Largueros y travesaño", nota: "Los tres van de cabecera a piecera.", piezas: ["Larguero", "Travesaño"] },
+      { titulo: "Cabecera y piecera", nota: "Atornilla los largueros a cabecera y piecera.", piezas: ["Cabecera", "Piecera"] },
+      { titulo: "Patas", nota: "En las cuatro esquinas, por dentro.", piezas: ["Pata"] },
+      { titulo: "Tablillas", nota: "A la misma distancia; atorníllalas a los largueros.", piezas: ["Tablilla"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 80)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["Para matrimonial, ensancha a 140 cm y pon dos travesaños."],
+  },
+  {
+    categoria: "Casa",
+    slug: "casita-para-perro",
+    nombre: "Casita para perro",
+    resumen: "Casita de 70 × 90 × 65 cm, levantada del piso y con techo de una sola pieza.",
+    descripcion: "Casita para perro mediano, separada del piso para que no le entre humedad.",
+    nivel: "Fácil",
+    horas: "3 a 4 h",
+    piezas: casitaPerro(),
+    pasos: [
+      { titulo: "Piso y patines", nota: "Los patines la separan del suelo.", piezas: ["Piso", "Patín"] },
+      { titulo: "Paredes", nota: "Laterales y trasera.", piezas: ["Pared"] },
+      { titulo: "Frente", nota: "Dos piezas y el dintel dejan la entrada.", piezas: ["Frente", "Dintel"] },
+      { titulo: "Techo", nota: "Sobresale para que escurra la lluvia.", piezas: ["Techo"] },
+    ],
+    herrajes: ["Tornillos para exterior 1 1/2\" (aprox. 40)", "Pegamento para exterior", "Impermeabilizante o lámina para el techo", "Pintura para exterior"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Brocha"],
+    notas: ["Usa triplay para exterior y pinta todas las caras antes de armar."],
+  },
+  {
+    categoria: "Casa",
+    slug: "baul-para-juguetes",
+    nombre: "Baúl para juguetes",
+    resumen: "Baúl de 80 × 42 × 45 cm con tapa, para guardar juguetes o cobijas.",
+    descripcion: "Caja grande con tapa que también sirve de banca.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: baulJuguetes(),
+    pasos: [
+      { titulo: "Frente y trasera", nota: "Las piezas largas.", piezas: ["Frente", "Trasera"] },
+      { titulo: "Costados", nota: "Entre frente y trasera.", piezas: ["Costado"] },
+      { titulo: "Fondo", nota: "Sobre listones o atornillado desde fuera.", piezas: ["Fondo"] },
+      { titulo: "Tapa", nota: "Con bisagras de piano y un soporte de tapa.", piezas: ["Tapa"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 24)", "Bisagra de piano de 80 cm", "Soporte de tapa de cierre lento (importante si lo usan niños)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Lijadora"],
+    notas: ["Usa un soporte de tapa de cierre lento para que no le caiga a nadie en los dedos."],
   },
 ]
 
