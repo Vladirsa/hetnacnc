@@ -611,6 +611,7 @@ export type Routes = {
         };
         hetnaMembresias: typeof import("../src/api/admin/hetna-membresias/route");
         hetnaOpiniones: typeof import("../src/api/admin/hetna-opiniones/route");
+        hetnaPlanos: typeof import("../src/api/admin/hetna-planos/route");
         hetnaPrecios: typeof import("../src/api/admin/hetna-precios/route");
         hetnaProductos: {
             importar: typeof import("../src/api/admin/hetna-productos/importar/route");
@@ -927,6 +928,9 @@ export type Routes = {
             };
         };
         hetnaPerfilUnico: typeof import("../src/api/store/hetna-perfil-unico/route");
+        hetnaPlanos: typeof import("../src/api/store/hetna-planos/route") & {
+            $slug: typeof import("../src/api/store/hetna-planos/[slug]/route");
+        };
         hetnaPrecios: typeof import("../src/api/store/hetna-precios/route");
         hetnaProductoExtra: typeof import("../src/api/store/hetna-producto-extra/route");
         hetnaPush: typeof import("../src/api/store/hetna-push/route");

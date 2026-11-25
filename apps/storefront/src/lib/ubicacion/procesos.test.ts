@@ -60,3 +60,16 @@ test("los servicios y máquinas de PROCESOS existen en el panel del taller", () 
     for (const m of p.maquinas) assert.ok(tipos.has(m), `${k}: la máquina "${m}" no está en TIPOS_MAQUINA`)
   }
 })
+
+test("el nombre manda en el orden: router CNC, láser, plasma, madera maciza", () => {
+  // títulos reales de la tienda
+  assert.deepEqual(
+    procesosDeProducto({ ...producto("Celosía hexagonal 600x600 mm en DXF: panel de panal en mosaico para CNC"), handle: "celosia-hexagonal-600-dxf-router-cnc" }),
+    ["router", "corte_laser"]
+  )
+  assert.deepEqual(procesosDeProducto(producto("Tabla de pino con silueta de pino, 25x15 cm, para regalo")), ["router", "corte_laser"])
+  assert.deepEqual(procesosDeProducto(producto("Letrero de acrílico cortado a láser")), ["corte_laser", "router"])
+  assert.deepEqual(procesosDeProducto(producto("Letrero de MDF para corte láser CNC")), ["corte_laser", "router"])
+  assert.deepEqual(procesosDeProducto(producto("Celosía de acero para corte plasma")), ["corte_plasma", "corte_laser", "router"])
+  assert.deepEqual(procesosDeProducto(producto("Celosía de MDF para muro")), ["corte_laser", "router"])
+})

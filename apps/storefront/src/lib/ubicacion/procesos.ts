@@ -33,7 +33,7 @@ export const PROCESOS: Record<Proceso, { nombre: string; servicios: string[]; ma
   torno: { nombre: "torno CNC", servicios: ["Maquinado"], maquinas: ["torno"], cotizar: "Maquinado" },
 }
 
-type ProductoMin = Parameters<typeof tipoProducto>[0] & { title?: string | null }
+type ProductoMin = Parameters<typeof tipoProducto>[0] & { title?: string | null; handle?: string | null }
 
 const texto = (v: unknown) => (typeof v === "string" ? v : "")
 
@@ -45,8 +45,36 @@ const TORNO = /torneado|torno/
 // Metal: el acrílico no cuenta aunque diga "lámina"
 const esMetal = (t: string) => /alumin|acero|inox|metal|cobre|laton/.test(t) || (/lamina/.test(t) && !/acrilic|mdf|madera|pvc|plastic/.test(t))
 
+// Madera maciza (tabla de pino, parota…): router; el láser es para tableros delgados
+const MADERA_MACIZA = /\b(pino|parota|encino|cedro|nogal|caoba|roble)\b|madera (maciza|solida)/
+
+/**
+ * Lo que dice el producto manda en el orden: "router" o "CNC" (sin "láser") en
+ * el nombre o el handle pone el router primero, "láser" el láser, "plasma" el plasma; una tabla de madera
+ * maciza va primero a router. El primero es el que sale elegido en "Fabrícalo".
+ */
+function priorizar(lista: Proceso[], t: string): Proceso[] {
+  const primero: Proceso | null = /\bplasma\b/.test(t)
+    ? "corte_plasma"
+    : /\blaser\b/.test(t)
+      ? "corte_laser"
+      : /\brouter\b|\bcnc\b|fresad|tallad/.test(t) || MADERA_MACIZA.test(t)
+        ? "router"
+        : null
+  return primero && lista.includes(primero) ? [primero, ...lista.filter((x) => x !== primero)] : lista
+}
+
 /** Procesos con que se fabrica el producto (vacío si no se fabrica: existencias, herramientas, servicios). */
 export function procesosDeProducto(p: ProductoMin | null | undefined): Proceso[] {
+  const r = procesosSinOrden(p)
+  if (r.length < 2 || !p) return r
+  const m = (p.metadata || {}) as Record<string, unknown>
+  if (texto(m.procesos)) return r // fijado a mano: se respeta su orden
+  // el handle cuenta: "celosia-hexagonal-600-dxf-router-cnc"
+  return priorizar(r, sinAcentos([p.title, texto(m.material), texto(p.handle).replace(/-/g, " ")].join(" ")))
+}
+
+function procesosSinOrden(p: ProductoMin | null | undefined): Proceso[] {
   if (!p) return []
   const m = (p.metadata || {}) as Record<string, unknown>
   const fijos = texto(m.procesos)
