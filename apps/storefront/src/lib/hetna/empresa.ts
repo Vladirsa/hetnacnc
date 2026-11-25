@@ -33,7 +33,7 @@ export const EMPRESA = {
     { nombre: "TikTok", url: "https://www.tiktok.com/@hetna_cnc" },
     { nombre: "X", url: "https://x.com/CncHetna" },
     { nombre: "YouTube", url: "https://www.youtube.com/channel/UCw3eWFopDZAzKa4mRIM8YoQ" },
-    { nombre: "LinkedIn", url: "https://www.linkedin.com/in/roberto-vladimir-rivera-sanchez-armas-9531a117b/" },
+    { nombre: "LinkedIn", url: "https://www.linkedin.com/in/roberto-rivera-cnc/" },
     { nombre: "Grupo Router CNC México", url: "https://www.facebook.com/groups/routercncmexico" },
   ],
   // Política de devoluciones. DEBE coincidir con Google Merchant Center
