@@ -4,7 +4,8 @@
 // la Biblioteca de planos (lib/planos-ofertas.ts en el API). Sale en la ficha
 // del producto y en la página del plano. El cliente elige el acabado y ve a
 // todos los talleres que lo hacen, con su precio, sus días de entrega y si dan
-// envío gratis, comparados con el precio recomendado por HETNA.
+// envío gratis, comparados con el precio recomendado por HETNA. Los talleres
+// destacados (pagan $199 por 7 días) salen primero con su insignia.
 //
 // A la medida (página del plano con ?ancho=…): el precio de cada taller se
 // ajusta en la misma proporción que cambia el costo de fabricarlo; es una
@@ -20,6 +21,13 @@ export type VariantePlano = { id: string; titulo: string; recomendado: number | 
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 })
 const red = (n: number) => Math.round(n / 5) * 5
+
+/** Taller destacado en planos (lo paga el taller: packages/api/src/lib/planos-destacado.ts). */
+export function esDestacado(o: StoreOffer, ahora = Date.now()): boolean {
+  const hasta = ((o.seller as { metadata?: Record<string, any> | null } | undefined)?.metadata?.destacado_planos as { hasta?: string } | undefined)?.hasta
+  const t = hasta ? Date.parse(hasta) : NaN
+  return Number.isFinite(t) && t > ahora
+}
 
 export default function TalleresPlano({
   offers,
@@ -48,7 +56,8 @@ export default function TalleresPlano({
     () =>
       offers
         .filter((o) => o.variant_id === elegida && getOfferAmount(o) !== null)
-        .sort((a, b) => (getOfferAmount(a)! - getOfferAmount(b)!) || ((a.leadtime_to_ship ?? 99) - (b.leadtime_to_ship ?? 99))),
+        // destacados primero; luego el precio más bajo y menos días
+        .sort((a, b) => Number(esDestacado(b)) - Number(esDestacado(a)) || (getOfferAmount(a)! - getOfferAmount(b)!) || ((a.leadtime_to_ship ?? 99) - (b.leadtime_to_ship ?? 99))),
     [offers, elegida]
   )
 
@@ -99,17 +108,20 @@ export default function TalleresPlano({
               const precio = red(getOfferAmount(o)! * factorMedida)
               const gratis = (o.metadata as Record<string, unknown> | null)?.envio_gratis === true
               const dias = o.leadtime_to_ship
+              const destacado = esDestacado(o)
+              const masBarato = getOfferAmount(o) === Math.min(...lista.map((x) => getOfferAmount(x)!))
               return (
-                <li key={o.id} className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${i === 0 ? "border-[#FF9F57] bg-[#FFF8F1]" : "border-[#EEECE6]"}`}>
+                <li key={o.id} className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${destacado || i === 0 ? "border-[#FF9F57] bg-[#FFF8F1]" : "border-[#EEECE6]"}`}>
                   <div className="min-w-[180px] flex-1">
                     <p className="m-0 text-[14.5px] text-[#142033]">
                       <b>{o.seller?.name || "Taller HETNA"}</b> te lo fabrica en <b>{pesos(precio)}</b>
                       {aMedida ? <span className="text-[12px] text-[#6B6A63]"> aprox.</span> : null}
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5 text-[12px]">
+                      {destacado ? <span className="rounded-full bg-[#FF6A1A] px-2 py-0.5 font-semibold text-white">★ Destacado</span> : null}
                       {gratis ? <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 font-semibold text-[#1E7B3A]">Envío gratis</span> : null}
                       {dias ? <span className="rounded-full bg-[#EEF1F6] px-2 py-0.5 font-semibold text-[#142033]">Lo tiene en {dias} {dias === 1 ? "día hábil" : "días hábiles"} + envío</span> : null}
-                      {i === 0 && lista.length > 1 ? <span className="rounded-full bg-[#FFE9D6] px-2 py-0.5 font-semibold text-[#B34D07]">Mejor precio</span> : null}
+                      {masBarato && lista.length > 1 ? <span className="rounded-full bg-[#FFE9D6] px-2 py-0.5 font-semibold text-[#B34D07]">Mejor precio</span> : null}
                     </div>
                   </div>
                   {aMedida ? (

@@ -1,8 +1,12 @@
 // Panel del taller > Ofertar en planos (lib/planos-ofertas.ts)
-//   GET  /vendor/hetna-planos -> { planos: PlanoTaller[], limites }
+//   GET  /vendor/hetna-planos -> { planos: PlanoTaller[], limites, destacado }
+//   POST /vendor/hetna-planos/destacado -> pago del destacado (destacado/route.ts)
 //   POST /vendor/hetna-planos { product_id, dias, envio_gratis, variantes: [{ variant_id, precio | null }] }
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+
+import { DIAS_DESTACADO_PLANOS, PRECIO_DESTACADO_PLANOS, destacadoPlanosHasta } from "../../../lib/planos-destacado"
 import { DIAS, ErrorOferta, PRECIO, guardarOfertaPlano, planosParaTaller, validarOfertaPlano } from "../../../lib/planos-ofertas"
 
 const vendedor = (req: AuthenticatedMedusaRequest) => {
@@ -14,7 +18,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const { sellerId } = vendedor(req)
   if (!sellerId) return res.status(401).json({ message: "Vuelve a iniciar sesión." })
   try {
-    res.json({ planos: await planosParaTaller(req.scope, sellerId), limites: { dias: DIAS, precio: PRECIO } })
+    const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
+    const s = await knex("seller").where({ id: sellerId }).first("id", "metadata")
+    res.json({
+      planos: await planosParaTaller(req.scope, sellerId),
+      limites: { dias: DIAS, precio: PRECIO },
+      destacado: { hasta: destacadoPlanosHasta(s), precio: PRECIO_DESTACADO_PLANOS, dias: DIAS_DESTACADO_PLANOS },
+    })
   } catch (e) {
     req.scope.resolve("logger").error(`[planos-ofertas] ${sellerId}: ${(e as Error).message}`)
     res.status(500).json({ message: "No se pudieron cargar los planos." })
