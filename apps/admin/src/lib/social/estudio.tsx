@@ -618,6 +618,14 @@ export function EstudioDiario() {
         <input value={temaExp} onChange={(e) => setTemaExp(e.target.value)} placeholder="Tema (opcional): ej. cómo elegir la fresa" maxLength={200} style={{ flex: 1, minWidth: 200, padding: "4px 8px", border: `1px solid ${C.borde}`, borderRadius: 6 }} />
         <button type="button" style={boton("primario")} disabled={ocupado} onClick={async () => { setOcupado(true); try { await api({ accion: "explicativo", tema: temaExp.trim() || undefined }); setTemaExp(""); setNota({ ok: true, t: "✓ Haciendo el explicativo: guion, voz y dibujos. Tarda de 3 a 8 minutos; llega a Pendientes y a Telegram." }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>📐 Hacer explicativo</button>
       </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13, marginTop: 6 }}>
+        <b>🎬 Video largo YouTube</b>
+        <span style={{ color: C.tenue }}>Horizontal, 4 a 6 minutos con capítulos (~0.80 USD). Usa el mismo campo de tema. Tarda de 30 a 60 minutos.</span>
+        <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <input type="checkbox" checked={d.largo !== false} disabled={ocupado} onChange={async (e) => { try { setD(await api({ largo: e.target.checked })) } catch (er) { setNota({ ok: false, t: (er as Error).message }) } }} /> Uno cada semana (domingo)
+        </label>
+        <button type="button" style={boton("normal")} disabled={ocupado} onClick={async () => { setOcupado(true); try { await api({ accion: "explicativo_largo", tema: temaExp.trim() || undefined }); setTemaExp(""); setNota({ ok: true, t: "✓ Haciendo el video largo para YouTube. Tarda de 30 a 60 minutos; llega a Pendientes y a Telegram." }) } catch (e) { setNota({ ok: false, t: `✗ ${(e as Error).message}` }) } finally { setOcupado(false) } }}>🎬 Hacer video largo</button>
+      </div>
       <div style={{ fontSize: 12, color: C.tenue, marginTop: 6 }}>
         {d.listo ? <span style={{ color: C.verde, fontWeight: 600 }}>Listo para trabajar</span> : <span style={{ color: C.rojo, fontWeight: 600 }}>Falta {d.falta} en el servidor</span>}
         {" · "}Gasto hoy: {d.gasto_hoy} USD (tope {d.tope_dia}) · este mes: {d.gasto_mes} USD
@@ -628,7 +636,7 @@ export function EstudioDiario() {
           {d.videos.map((v: any) => (
             <div key={v.id} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", borderTop: `1px solid ${C.borde}`, paddingTop: 4 }}>
               <span style={{ color: C.tenue }}>{v.dia}</span>
-              <span>{v.tipo === "novela" ? "🎬" : v.tipo === "explicativo" ? "📐" : "🎓"}</span>
+              <span>{v.tipo === "novela" ? "🎬" : v.tipo === "explicativo" ? "📐" : v.tipo === "explicativo_largo" ? "🎞️" : "🎓"}</span>
               <b style={{ flex: 1, minWidth: 180 }}>{v.titulo || v.tema || "(guion en proceso)"}</b>
               <span style={{ color: v.estado === "listo" ? C.verde : v.estado === "error" ? C.rojo : C.tenue, fontWeight: 600 }}>{v.estado === "listo" ? "Listo" : v.estado === "error" ? "Error" : "Haciendo…"}</span>
               <span style={{ color: C.tenue }}>{v.costo.toFixed(2)} USD</span>

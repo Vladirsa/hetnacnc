@@ -46,6 +46,7 @@ export const CIERRES = [
   { titulo: "Calculadora CNC gratis", sub: "RPM, avance y potencia", voz: "Calcula RPM, avance y potencia gratis con la calculadora de hetnacnc.com." },
 ]
 export const FRASE_FINAL = "*Guarda este video* y síguenos para el siguiente."
+export const FRASE_FINAL_LARGO = "Si te sirvió, *suscríbete* y déjanos en los comentarios qué tema quieres para el siguiente video."
 
 // ---------------------------------------------------------------------
 // 1. Guion (datos tipados)
@@ -98,10 +99,32 @@ const SISTEMA =
   "NUNCA pongas «a la venta», precios ni promociones en los textos: el cierre con la oferta lo pone el sistema.\n" +
   "FOTOS: incluye 2 escenas tipo foto (no seguidas, no la primera): una del taller o la máquina haciendo lo que explicas y, si el tema lo permite, otra de un producto (pon la palabra en producto). En la escena foto, etiqueta = pie de foto corto."
 
+// Versión LARGA para YouTube (16:9, 4 a 6 minutos, con capítulos): mismas plantillas
+// y reglas de verdad, más escenas agrupadas en capítulos.
+const ESQUEMA_LARGO = (() => {
+  const e = JSON.parse(JSON.stringify(ESQUEMA))
+  const it = e.properties.escenas.items
+  e.properties.escenas.description = "de 22 a 32 escenas agrupadas en 4 a 6 capítulos; la primera es tipo portada (el gancho)"
+  it.required.push("capitulo")
+  it.properties.capitulo = S("nombre corto del capítulo de la escena (el mismo en todas las escenas de ese capítulo), ej. Por qué pasa", 40)
+  it.properties.frases.description = "lo que dice la voz: 2 frases habladas de 10 a 22 palabras; marca con *asteriscos* las 2 a 4 palabras clave"
+  return e
+})()
+
+const SISTEMA_LARGO =
+  "Eres el guionista de videos EXPLICATIVOS LARGOS de HETNA CNC (marketplace mexicano de fabricación CNC) para YouTube: motion graphics horizontal con voz en off, de 4 a 6 minutos, dividido en capítulos.\n" +
+  "Escribe en español de México, hablado y claro, como un experto de taller que enseña a fondo sin rodeos. Sin saludos ni «en este video».\n" +
+  "ESTRUCTURA: capítulo 1 = el gancho y qué va a aprender (la escena 1 es portada). Después 3 a 4 capítulos que desarrollan el tema a fondo (causas, cómo se ve cada caso con dibujos, comparaciones mal/bien, fotos del taller) y un capítulo final con el checklist para aplicarlo. El cierre con la oferta lo pone el sistema: tú NO escribas la escena de cierre ni menciones HETNA.\n" +
+  "LONGITUD: en total entre 650 y 850 palabras sumando todas las frases (eso da 4 a 6 minutos); cuenta las palabras antes de terminar. Varía los tipos de escena para que no se vuelva monótono.\n" +
+  "VERDAD: sólo enseña técnica ampliamente aceptada en CNC, láser, router, plasma, impresión 3D, materiales y archivos. No inventes cifras, precios, porcentajes, marcas, clientes ni testimonios. Si un dato depende de la máquina, dilo así («depende de tu máquina», «haz una prueba»).\n" +
+  "TEXTOS EN PANTALLA: muy cortos, respeta los máximos de caracteres. Los dibujos son de una biblioteca fija: elige el que mejor ilustre la escena.\n" +
+  "NUNCA pongas «a la venta», precios ni promociones en los textos: el cierre con la oferta lo pone el sistema.\n" +
+  "FOTOS: incluye 4 a 6 escenas tipo foto repartidas en el video (del taller o la máquina haciendo lo que explicas y, si el tema lo permite, de productos: pon la palabra en producto). En la escena foto, etiqueta = pie de foto corto."
+
 let ia: Anthropic | null = null
-export async function guionExplicativo(knex: any, tema?: string) {
+export async function guionExplicativo(knex: any, tema?: string, largo = false) {
   ia ??= new Anthropic()
-  const recientes = await knex("hetna_estudio").where({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(30).select("guion").catch(() => [])
+  const recientes = await knex("hetna_estudio").whereIn("tipo", ["explicativo", "explicativo_largo"]).orderBy("created_at", "desc").limit(30).select("guion").catch(() => [])
   const temas = recientes.map((r: any) => r.guion?.tema).filter(Boolean)
   const ideas = await require("./estudio-datos").ideasParaGuion(knex).catch(() => ({ tendencias: [], referencias: [] }))
   const usuario = [
@@ -114,10 +137,10 @@ export async function guionExplicativo(knex: any, tema?: string) {
   for (let intento = 0; intento < 2; intento++) {
     const r = await ia.beta.messages.create({
       ...modeloIA(process.env.IA_MODELO_ESTUDIO || undefined),
-      max_tokens: 8000,
-      output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-      system: SISTEMA,
-      messages: [{ role: "user", content: intento ? `${usuario}\n\nEl intento anterior quedó corto (${ultimo?.palabras || 0} palabras): escribe entre 175 y 200 palabras en total (agrega una escena más si hace falta).` : usuario }],
+      max_tokens: largo ? 24000 : 8000,
+      output_config: { effort: "medium", format: { type: "json_schema", schema: largo ? ESQUEMA_LARGO : ESQUEMA } },
+      system: largo ? SISTEMA_LARGO : SISTEMA,
+      messages: [{ role: "user", content: intento ? `${usuario}\n\nEl intento anterior quedó corto (${ultimo?.palabras || 0} palabras): escribe entre ${largo ? "650 y 850" : "175 y 200"} palabras en total (agrega escenas si hace falta).` : usuario }],
     } as any)
     if (r.stop_reason === "refusal") throw new Error("La IA no quiso escribir este guion.")
     let g: any
@@ -126,11 +149,11 @@ export async function guionExplicativo(knex: any, tema?: string) {
     } catch {
       continue
     }
-    const v = validarGuion(g)
+    const v = validarGuion(g, { largo })
     ultimo = v
-    if (v.palabras >= 165) return v
+    if (v.palabras >= (largo ? 600 : 165)) return v
   }
-  if (ultimo && ultimo.escenas.length >= 5 && ultimo.palabras >= 120) return ultimo
+  if (ultimo && ultimo.escenas.length >= 5 && ultimo.palabras >= (largo ? 450 : 120)) return ultimo
   throw new Error("La IA no entregó un guion completo.")
 }
 
@@ -142,7 +165,7 @@ export const sinMarcas = (s: string) => String(s || "").replace(/\*/g, "")
 const contarPalabras = (s: string) => sinMarcas(s).split(/\s+/).filter(Boolean).length
 
 /** Limpia y acota el guion de la IA; agrega el cierre fijo con la oferta. Pura (se prueba). */
-export function validarGuion(g: any) {
+export function validarGuion(g: any, o: { largo?: boolean } = {}) {
   const escenas = (Array.isArray(g?.escenas) ? g.escenas : [])
     .map((e: any, i: number) => {
       let tipo = TIPOS.includes(e?.tipo) ? e.tipo : "lista"
@@ -166,18 +189,20 @@ export function validarGuion(g: any) {
         bien: corta(sinMarcas(e?.bien), 26),
         foto: tipo === "foto" ? String(e?.foto || "").slice(0, 400) : "",
         producto: tipo === "foto" ? corta(sinMarcas(e?.producto), 30) : "",
+        capitulo: o.largo ? corta(sinMarcas(e?.capitulo), 40) : "",
         frases,
       }
     })
     .filter((e: any) => e.frases.length && (e.titulo || e.titulo_naranja) && (["portada", "dibujo", "comparacion", "foto"].includes(e.tipo) || e.puntos.length >= 2))
     // Máximo 3 fotos por video; las que sobran se vuelven lista (si tienen puntos) o se quitan
-    .map((e: any, _i: number, arr: any[]) => (e.tipo === "foto" && arr.filter((x: any) => x.tipo === "foto").indexOf(e) >= 3 ? { ...e, tipo: e.puntos.length >= 2 ? "lista" : "quitar" } : e))
+    .map((e: any, _i: number, arr: any[]) => (e.tipo === "foto" && arr.filter((x: any) => x.tipo === "foto").indexOf(e) >= (o.largo ? 6 : 3) ? { ...e, tipo: e.puntos.length >= 2 ? "lista" : "quitar" } : e))
     .filter((e: any) => e.tipo !== "quitar")
-    .slice(0, 9)
+    .slice(0, o.largo ? 34 : 9)
   const ci = Number.isInteger(g?.cierre) && CIERRES[g.cierre] ? g.cierre : 0
   const c = CIERRES[ci]
-  escenas.push({ tipo: "cierre", kicker: "HETNA CNC", titulo: "¿Te sirvió?", titulo_naranja: "Hay más", dibujo: null, etiqueta: "", puntos: [c.titulo, c.sub], mal: "", bien: "", frases: [c.voz, FRASE_FINAL] })
+  escenas.push({ tipo: "cierre", kicker: "HETNA CNC", titulo: "¿Te sirvió?", titulo_naranja: "Hay más", dibujo: null, etiqueta: "", puntos: [c.titulo, c.sub], mal: "", bien: "", capitulo: o.largo ? "Cierre" : "", boton: o.largo ? "SUSCRÍBETE" : "GUARDA Y SÍGUENOS", frases: [c.voz, o.largo ? FRASE_FINAL_LARGO : FRASE_FINAL] })
   return {
+    formato: o.largo ? "largo" : "corto",
     tema: corta(g?.tema, 90) || "Explicativo CNC",
     serie: corta(sinMarcas(g?.serie), 24).toUpperCase() || "CNC EXPLICADO",
     titulo_seo: corta(g?.titulo_seo, 70) || corta(g?.tema, 70),
@@ -199,8 +224,21 @@ export const conEnfasis = (s: string) => esc(s).replace(/\*([^*]+)\*/g, "<em>$1<
 const tamTitulo = (l: string) => Math.max(84, Math.min(118, Math.floor(118 * 13 / Math.max(13, l.length))))
 const tamFila = (l: string) => (l.length > 26 ? 36 : l.length > 20 ? 40 : 46)
 
-function css(fuentes: string) {
+// Lienzo de cada formato
+export const LIENZO = { corto: { w: 1080, h: 1920 }, largo: { w: 1920, h: 1080 } }
+// En el horizontal, las capas (diseñadas para la tarjeta vertical: x 64..1016, y 580..1360)
+// se escalan dentro de la tarjeta de la derecha (x 840..1840, y 190..890).
+const TARJETA_H = { x: 840, y: 190, w: 1000, h: 700 }
+const ESCALA_H = Math.min(TARJETA_H.w / 952, TARJETA_H.h / 780)
+const envolverH = (html: string) => {
+  const x = TARJETA_H.x + (TARJETA_H.w - 952 * ESCALA_H) / 2 - 64 * ESCALA_H
+  const y = TARJETA_H.y + (TARJETA_H.h - 780 * ESCALA_H) / 2 - 580 * ESCALA_H
+  return `<div style="position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;transform:translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${ESCALA_H.toFixed(4)})">${html}</div>`
+}
+
+function css(fuentes: string, largo = false) {
   const f = (n: string) => `file://${path.join(fuentes, n)}`
+  const L = largo ? LIENZO.largo : LIENZO.corto
   return `<style>
 @font-face{font-family:Anton;src:url("${f("Anton-Regular.ttf")}")}
 @font-face{font-family:ArchivoN;font-weight:900;src:url("${f("Archivo-900.ttf")}")}
@@ -208,8 +246,19 @@ function css(fuentes: string) {
 @font-face{font-family:Archivo;font-weight:500;src:url("${f("Archivo-500.ttf")}")}
 @font-face{font-family:JBM;src:url("${f("JetBrainsMono-700.ttf")}")}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:1080px;background:transparent;font-family:Archivo,sans-serif;color:#fff}
-.hoja{position:relative;width:1080px;height:1920px;overflow:hidden}
+html,body{width:${L.w}px;background:transparent;font-family:Archivo,sans-serif;color:#fff}
+.hoja{position:relative;width:${L.w}px;height:${L.h}px;overflow:hidden}
+.hcab{position:absolute;top:44px;left:90px;right:80px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(255,255,255,.12);padding-bottom:18px}
+.hcab img{height:54px;background:#fff;border-radius:12px;padding:6px 12px}
+.hcab span{font:24px JBM;color:rgba(255,255,255,.55);letter-spacing:2px}
+.hizq{position:absolute;top:200px;left:90px;width:700px}
+.hizq .kick,.hizq .tit,.hizq .raya{position:static}
+.hizq .tit{margin-top:14px}.hizq .raya{margin-top:28px}
+.hcap{position:absolute;left:90px;width:700px;top:700px;font:30px JBM;color:rgba(255,255,255,.5);letter-spacing:2px;line-height:1.4}
+.hcap b{display:block;font:800 44px Archivo;color:#fff;letter-spacing:0;margin-top:6px}
+.hcard{position:absolute;left:${TARJETA_H.x}px;top:${TARJETA_H.y}px;width:${TARJETA_H.w}px;height:${TARJETA_H.h}px;border:2px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(18,30,54,.85);box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.hsub{position:absolute;left:90px;right:80px;top:918px;min-height:116px;border:2px solid rgba(255,255,255,.14);border-left:10px solid #FF8A2B;border-radius:18px;background:rgba(8,14,28,.92);padding:22px 30px;font-weight:800;line-height:1.22}
+.hsub em{font-style:normal;color:#FF8A2B}
 .fondo{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 35%,#13203A 0%,#0A1120 70%)}
 .rejilla{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:54px 54px}
 .cab{position:absolute;top:70px;left:64px;right:64px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(255,255,255,.12);padding-bottom:22px}
@@ -244,6 +293,17 @@ export function htmlBase(e: any, i: number, total: number, serie: string, logo: 
 <div class="tit" style="font-size:${tamTitulo("x".repeat(largo))}px">${esc(e.titulo)}<b>${esc(e.titulo_naranja)}</b></div><div class="raya"></div>
 <div class="card"></div>
 <div class="pie"><span>hetnacnc.com</span><span>${String(i + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}</span></div>`
+}
+
+/** Fondo horizontal (YouTube): título a la izquierda, tarjeta a la derecha, capítulo abajo. */
+export function htmlBaseLargo(e: any, i: number, total: number, serie: string, logo: string, capitulo?: { n: number; nombre: string }) {
+  const largo = Math.max(e.titulo.length, e.titulo_naranja.length)
+  const tam = Math.max(70, Math.min(104, Math.floor(104 * 12 / Math.max(12, largo))))
+  return `<div class="fondo"></div><div class="rejilla"></div>
+<div class="hcab"><img src="${logo}"><span>${esc(serie)} · hetnacnc.com · ${String(i + 1).padStart(2, "0")}/${String(total).padStart(2, "0")}</span></div>
+<div class="hizq"><div class="kick">${esc(e.kicker)}</div><div class="tit" style="font-size:${tam}px">${esc(e.titulo)}<b>${esc(e.titulo_naranja)}</b></div><div class="raya"></div></div>
+${capitulo?.nombre ? `<div class="hcap">CAPÍTULO ${capitulo.n}<b>${esc(capitulo.nombre)}</b></div>` : ""}
+<div class="hcard"></div>`
 }
 
 /** Capas que entran una por una: [fracción de la escena en que aparece, html]. */
@@ -284,7 +344,7 @@ export function capasDe(e: any, logo: string): [number, string][] {
       return [
         [0.05, en(640, `<div style="padding:0 40px;text-align:center"><div style="display:inline-block;background:#fff;border-radius:26px;padding:22px 40px;margin:30px 0 44px"><img src="${logo}" style="height:110px;display:block"></div>
 <div style="background:#FF8A2B;border-radius:24px;padding:34px 20px;box-shadow:0 14px 30px rgba(0,0,0,.4)"><div style="font:900 ${e.puntos[0].length > 22 ? 50 : 58}px ArchivoN;color:#0A1120">${esc(e.puntos[0])}</div><div style="font:800 40px Archivo;color:#fff;margin-top:10px">${esc(e.puntos[1] || "")}</div><div style="font:800 44px Archivo;color:#0A1120;margin-top:14px">hetnacnc.com</div></div></div>`)],
-        [0.55, en(1200, `<div style="margin:0 40px;display:flex;align-items:center;justify-content:center;gap:22px;border:3px solid #fff;border-radius:22px;padding:22px;font:900 46px ArchivoN">${ICONO.guardar}GUARDA Y SÍGUENOS</div>`)],
+        [0.55, en(1200, `<div style="margin:0 40px;display:flex;align-items:center;justify-content:center;gap:22px;border:3px solid #fff;border-radius:22px;padding:22px;font:900 46px ArchivoN">${ICONO.guardar}${esc(e.boton || "GUARDA Y SÍGUENOS")}</div>`)],
       ]
     default: // lista
       return e.puntos.map((p: string, k: number) => [[0.05, 0.28, 0.5][k], en(660 + k * 180, fila(`<div class="num" style="${k ? "background:#3A4A6B;color:#fff" : ""}">${k + 1}</div>`, p, k ? "" : "border-color:#FF8A2B;background:rgba(255,138,43,.1)"), "padding:0 36px")])
@@ -292,13 +352,16 @@ export function capasDe(e: any, logo: string): [number, string][] {
 }
 
 export const htmlSub = (t: string) => `<div class="sub" style="font-size:${sinMarcas(t).length > 95 ? 44 : 52}px">${conEnfasis(t)}</div>`
+export const htmlSubLargo = (t: string) => `<div class="hsub" style="font-size:${sinMarcas(t).length > 110 ? 34 : 40}px">${conEnfasis(t)}</div>`
 
 /** Página alta de la escena: base + capas + subtítulos, cada uno en su hoja de 1920 px. */
-export function paginaEscena(e: any, i: number, total: number, serie: string, o: { fuentes: string; logo: string }) {
+export function paginaEscena(e: any, i: number, total: number, serie: string, o: { fuentes: string; logo: string; largo?: boolean; capitulo?: { n: number; nombre: string } }) {
   const capas = capasDe(e, o.logo)
-  const hojas = [htmlBase(e, i, total, serie, o.logo), ...capas.map((c) => c[1]), ...e.frases.map((f: string) => htmlSub(f))]
+  const hojas = o.largo
+    ? [htmlBaseLargo(e, i, total, serie, o.logo, o.capitulo), ...capas.map((c) => envolverH(c[1])), ...e.frases.map((f: string) => htmlSubLargo(f))]
+    : [htmlBase(e, i, total, serie, o.logo), ...capas.map((c) => c[1]), ...e.frases.map((f: string) => htmlSub(f))]
   return {
-    html: `<!doctype html><html><head><meta charset="utf-8">${css(o.fuentes)}</head><body>${hojas.map((h) => `<div class="hoja">${h}</div>`).join("")}</body></html>`,
+    html: `<!doctype html><html><head><meta charset="utf-8">${css(o.fuentes, o.largo)}</head><body>${hojas.map((h) => `<div class="hoja">${h}</div>`).join("")}</body></html>`,
     hojas: hojas.length,
     tiempos: capas.map((c) => c[0]),
   }
@@ -308,11 +371,11 @@ export function paginaEscena(e: any, i: number, total: number, serie: string, o:
 // Dibujo con Chrome (una apertura por escena) y recorte con sharp
 // ---------------------------------------------------------------------
 
-function capturar(html: string, alto: number, salida: string) {
+function capturar(html: string, alto: number, salida: string, ancho = 1080) {
   return new Promise<void>((ok, mal) => {
     const bin = chromeBin()
     if (!bin) return mal(new Error("No hay Chrome en el servidor"))
-    const args = ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", `--window-size=1080,${alto}`, "--default-background-color=00000000", "--virtual-time-budget=8000", `--screenshot=${salida}`, `file://${html}`]
+    const args = ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", `--window-size=${ancho},${alto}`, "--default-background-color=00000000", "--virtual-time-budget=8000", `--screenshot=${salida}`, `file://${html}`]
     const usaNice = fs.existsSync("/usr/bin/nice")
     const c = spawn(usaNice ? "/usr/bin/nice" : bin, usaNice ? ["-n", "10", bin, ...args] : args, { stdio: "ignore", detached: true })
     const t = setTimeout(() => { try { process.kill(-c.pid!, "SIGKILL") } catch {} ; mal(new Error("Chrome tardó demasiado")) }, 90_000)
@@ -321,18 +384,19 @@ function capturar(html: string, alto: number, salida: string) {
   })
 }
 
-async function dibujarEscena(e: any, i: number, total: number, serie: string, dir: string, logo: string) {
+async function dibujarEscena(e: any, i: number, total: number, serie: string, dir: string, logo: string, o: { largo?: boolean; capitulo?: { n: number; nombre: string } } = {}) {
   const sharp = require("sharp")
-  const p = paginaEscena(e, i, total, serie, { fuentes: carpetaFuentes(), logo })
+  const L = o.largo ? LIENZO.largo : LIENZO.corto
+  const p = paginaEscena(e, i, total, serie, { fuentes: carpetaFuentes(), logo, largo: o.largo, capitulo: o.capitulo })
   const html = path.join(dir, `e${i}.html`)
   fs.writeFileSync(html, p.html)
-  const alto = p.hojas * 1920
+  const alto = p.hojas * L.h
   const todo = path.join(dir, `e${i}-todo.png`)
-  await capturar(html, alto, todo)
+  await capturar(html, alto, todo, L.w)
   const pngs: string[] = []
   for (let k = 0; k < p.hojas; k++) {
     const f = path.join(dir, `e${i}-${k}.png`)
-    await sharp(todo).extract({ left: 0, top: k * 1920, width: 1080, height: 1920 }).png().toFile(f)
+    await sharp(todo).extract({ left: 0, top: k * L.h, width: L.w, height: L.h }).png().toFile(f)
     pngs.push(f)
   }
   const nc = p.tiempos.length
@@ -483,11 +547,12 @@ export function tiempos(escenas: any[], dvoz: number[][], min = MIN_SEG) {
 // 4. Armado (port del prototipo aprobado)
 // ---------------------------------------------------------------------
 
-async function armarEscena(esc: any, vocesEscena: string[], t: any, salida: string) {
+async function armarEscena(esc: any, vocesEscena: string[], t: any, salida: string, largo = false) {
+  const L = largo ? LIENZO.largo : LIENZO.corto
   const dur = t.dur
   const habla = Math.max(t.habla, 0.5)
   const ins = ["-loop", "1", "-t", String(dur), "-i", esc.base]
-  const fc = [`[0:v]format=yuv420p,fps=${FPS},zoompan=z='1+0.018*on/${Math.round(dur * FPS)}':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=1080x1920:fps=${FPS}[b]`]
+  const fc = [`[0:v]format=yuv420p,fps=${FPS},zoompan=z='1+0.018*on/${Math.round(dur * FPS)}':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${L.w}x${L.h}:fps=${FPS}[b]`]
   let actual = "b"
   let k = 1
   esc.capas.forEach((c: any, j: number) => {
@@ -520,7 +585,8 @@ async function armarEscena(esc: any, vocesEscena: string[], t: any, salida: stri
   if (mezcla.length) fc.push(`${mezcla.join("")}amix=inputs=${mezcla.length}:normalize=0,apad=whole_dur=${dur},atrim=duration=${dur}[aa]`)
   else fc.push(`anullsrc=r=48000:cl=mono,atrim=duration=${dur}[aa]`)
   await correr([...ins, "-filter_complex", fc.join(";"), "-map", "[vv]", "-map", "[aa]", "-t", String(dur),
-    "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-r", String(FPS), "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", salida], 10 * 60_000)
+    // El largo son ~30 escenas: preset más rápido para no ocupar el servidor de la tienda por una hora
+    "-c:v", "libx264", "-crf", largo ? "20" : "18", "-preset", largo ? "veryfast" : "medium", "-r", String(FPS), "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", salida], 10 * 60_000)
 }
 
 /**
@@ -528,15 +594,18 @@ async function armarEscena(esc: any, vocesEscena: string[], t: any, salida: stri
  * Se puede llamar sin IA ni gasto (con voces de prueba) para revisar el diseño.
  */
 export async function producirExplicativo(g: any, vocesArchivos: string[][], dir: string) {
+  const largo = g.formato === "largo"
   const logoPng = path.resolve(carpetaFuentes(), "..", "marca", "logo-hetna.png")
   const logo = `data:image/png;base64,${fs.readFileSync(logoPng).toString("base64")}`
   const dvoz = vocesArchivos.map((vs) => (vs || []).filter(Boolean).map(duracion))
-  const tt = tiempos(g.escenas, dvoz)
+  // El largo no se rellena con pausas: su duración la da el guion
+  const tt = tiempos(g.escenas, dvoz, largo ? 0 : MIN_SEG)
+  const caps = numerarCapitulos(g.escenas)
   const partes: string[] = []
   for (const [i, e] of g.escenas.entries()) {
-    const capas = await dibujarEscena(e, i, g.escenas.length, g.serie, dir, logo)
+    const capas = await dibujarEscena(e, i, g.escenas.length, g.serie, dir, logo, { largo, capitulo: caps[i] })
     const out = path.join(dir, `esc${i}.mp4`)
-    await armarEscena(capas, (vocesArchivos[i] || []).filter(Boolean), tt[i], out)
+    await armarEscena(capas, (vocesArchivos[i] || []).filter(Boolean), tt[i], out, largo)
     partes.push(out)
     for (const f of [capas.base, ...capas.capas.map((c: any) => c.png), ...capas.subs, path.join(dir, `e${i}-todo.png`)]) fs.rmSync(f, { force: true })
   }
@@ -561,7 +630,41 @@ export async function producirExplicativo(g: any, vocesArchivos: string[][], dir
   const final = path.join(dir, "final.mp4")
   // El video ya está codificado: sólo se mezcla el audio (no se vuelve a codificar la imagen)
   await correr([...ins, "-filter_complex", fc.join(";"), "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", final], 10 * 60_000)
-  return { archivo: final, segundos: +total.toFixed(1) }
+  // Capítulos para la descripción de YouTube (inicio de la primera escena de cada uno)
+  let acc = 0
+  const inicios = tt.map((x) => { const a = acc; acc += x.dur; return a })
+  const capitulos = largo ? capitulosYoutube(g.escenas.map((e: any, i: number) => ({ nombre: caps[i]?.nombre || "", inicio: inicios[i] })), total) : []
+  return { archivo: final, segundos: +total.toFixed(1), capitulos }
+}
+
+/** Número y nombre del capítulo de cada escena (cambia cuando cambia el nombre). Pura. */
+export function numerarCapitulos(escenas: any[]): ({ n: number; nombre: string } | undefined)[] {
+  let n = 0
+  let previo = ""
+  return escenas.map((e) => {
+    const nombre = String(e?.capitulo || "").trim()
+    if (!nombre) return undefined
+    if (nombre !== previo) { n++; previo = nombre }
+    return { n, nombre }
+  })
+}
+
+const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`
+/**
+ * Capítulos con las reglas de YouTube: el primero en 0:00, al menos 3 y cada uno de 10 s
+ * o más (los muy cortos se juntan con el anterior). Si no se cumplen, no se ponen. Pura.
+ */
+export function capitulosYoutube(escenas: { nombre: string; inicio: number }[], total: number): string[] {
+  const caps: { nombre: string; inicio: number }[] = []
+  for (const e of escenas) {
+    if (!e.nombre || caps[caps.length - 1]?.nombre === e.nombre) continue
+    caps.push({ nombre: e.nombre, inicio: caps.length ? e.inicio : 0 })
+  }
+  // Se queda un capítulo sólo si el anterior ya duró 10 s; el último también debe durar 10 s
+  const buenos: { nombre: string; inicio: number }[] = []
+  for (const c of caps) if (!buenos.length || c.inicio - buenos[buenos.length - 1].inicio >= 10) buenos.push(c)
+  if (buenos.length > 1 && total - buenos[buenos.length - 1].inicio < 10) buenos.pop()
+  return buenos.length >= 3 ? buenos.map((c) => `${mmss(c.inicio)} ${c.nombre}`) : []
 }
 
 // ---------------------------------------------------------------------
@@ -570,8 +673,9 @@ export async function producirExplicativo(g: any, vocesArchivos: string[][], dir
 
 export function textosRedes(g: any) {
   const tags = (g.hashtags || []).slice(0, 5).map((h: string) => `#${h}`).join(" ")
+  const capitulos = (g.capitulos || []).length ? `\n\nCapítulos:\n${g.capitulos.join("\n")}` : ""
   return {
-    youtube: `${g.titulo_seo}\n${g.descripcion}\n\n${tags}`,
+    youtube: `${g.titulo_seo}\n${g.descripcion}${capitulos}\n\n${tags}`,
     facebook: `${g.titulo_seo}\n\n${g.descripcion}`,
     instagram: `${g.titulo_seo}\n\n${String(g.descripcion).replace(/\{\{liga\}\}/g, "liga en el perfil")}\n\n${tags}`,
     tiktok: `${g.titulo_seo} ${tags}`,
@@ -579,40 +683,54 @@ export function textosRedes(g: any) {
 }
 
 /** Crea el BORRADOR en el Social Hub (nunca programado: lo apruebas tú) y lo manda a Telegram. */
-export async function borradorExplicativo(knex: any, f: { id: string; guion: any; video_url: string }, logger?: any) {
+export async function borradorExplicativo(knex: any, f: { id: string; guion: any; video_url: string; miniatura?: string | null }, logger?: any) {
   const g = f.guion
+  const largo = g.formato === "largo"
   const textos = textosRedes(g)
   const post = await crearPublicacion(knex, {
-    origen: "manual", fuente: "estudio", titulo: `📐 Explicativo · ${g.tema}`, texto_base: textos.facebook,
-    textos, url: `${STORE_URL}/mx`, redes: ["youtube", "instagram", "tiktok", "facebook"], medios: [{ url: f.video_url, tipo: "video" }],
+    origen: "manual", fuente: "estudio", titulo: `${largo ? "🎬 YouTube largo" : "📐 Explicativo"} · ${g.tema}`, texto_base: textos.facebook,
+    textos, url: `${STORE_URL}/mx`,
+    // El horizontal no sirve para Reels, TikTok ni Shorts: sólo YouTube (video normal) y Facebook
+    redes: largo ? ["youtube", "facebook"] : ["youtube", "instagram", "tiktok", "facebook"],
+    medios: [{ url: f.video_url, tipo: "video", ...(largo ? { formato: "horizontal" } : {}) }],
     estado: "borrador", mercado: "mx",
   } as any, logger)
   await knex("hetna_estudio").where({ id: f.id }).update({ estado: "listo", post_id: post, error: null, updated_at: new Date() })
   try {
     const { mandarPrivado } = require("../social-telegram")
-    await mandarPrivado(knex, { texto: `📐 Video explicativo listo para revisar\n«${g.titulo_seo}»\n\nQuedó en Pendientes del Social Hub. Si te gusta, apruébalo ahí.`, video: f.video_url, post })
+    const dur = g.segundos ? ` (${mmss(g.segundos)} min)` : ""
+    await mandarPrivado(knex, {
+      texto: largo
+        ? `🎬 Video largo para YouTube listo para revisar${dur}\n«${g.titulo_seo}»\n\nQuedó en Pendientes del Social Hub.${f.miniatura ? `\nMiniatura sugerida: ${f.miniatura}` : ""}`
+        : `📐 Video explicativo listo para revisar\n«${g.titulo_seo}»\n\nQuedó en Pendientes del Social Hub. Si te gusta, apruébalo ahí.`,
+      video: f.video_url, post,
+    })
   } catch {}
   return { post }
 }
 
-export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: boolean; tema?: string } = {}) {
+export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: boolean; tema?: string; largo?: boolean } = {}) {
+  const tipo = o.largo ? "explicativo_largo" : "explicativo"
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   const est = require("./estudio")
   await est.asegurarEstudio(knex)
   if (!explicativoListo()) return { hecho: false, motivo: "Falta FAL_KEY, la IA, FFmpeg o Chrome en el servidor" }
   if (est.VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo un video" }
   if (!o.forzar) {
-    if (await knex("hetna_estudio").where({ tipo: "explicativo", dia: est.diaMx() }).whereIn("estado", ["listo", "haciendo"]).first()) return { hecho: false, motivo: "Ya se hizo el explicativo de hoy" }
-    const ult = await knex("hetna_estudio").where({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(2).pluck("estado")
+    if (o.largo) {
+      // El largo es semanal: si ya hay uno de los últimos 6 días, no se hace otro
+      if (await knex("hetna_estudio").where({ tipo }).whereIn("estado", ["listo", "haciendo"]).where("created_at", ">", new Date(Date.now() - 6 * 86_400_000)).first()) return { hecho: false, motivo: "Ya se hizo el video largo de esta semana" }
+    } else if (await knex("hetna_estudio").where({ tipo, dia: est.diaMx() }).whereIn("estado", ["listo", "haciendo"]).first()) return { hecho: false, motivo: "Ya se hizo el explicativo de hoy" }
+    const ult = await knex("hetna_estudio").where({ tipo }).orderBy("created_at", "desc").limit(2).pluck("estado")
     if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos explicativos fallaron: el automático se detuvo. Revisa el error y aprieta el botón." }
   }
   est.VUELTA.activa = true
   const id = nuevoId("estudio")
-  await knex("hetna_estudio").insert({ id, dia: est.diaMx(), tipo: "explicativo", estado: "haciendo" })
+  await knex("hetna_estudio").insert({ id, dia: est.diaMx(), tipo, estado: "haciendo" })
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hetna-explicativo-"))
   let costo = 0
   try {
-    const g = await guionExplicativo(knex, o.tema)
+    const g = await guionExplicativo(knex, o.tema, !!o.largo)
     await knex("hetna_estudio").where({ id }).update({ guion: JSON.stringify(g), updated_at: new Date() })
     logger?.info?.(`[explicativo] guion: ${g.tema} (${g.palabras} palabras, ${g.escenas.length} escenas)`)
     // Fotos antes de la voz: si una escena foto se queda sin foto, se quita y no se paga su voz
@@ -623,9 +741,20 @@ export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: b
     const r = await producirExplicativo(g, v.voces, dir)
     const url = await require("./index").subir(scope, `estudio-${id}.mp4`, "video/mp4", fs.readFileSync(r.archivo))
     g.segundos = r.segundos
+    g.capitulos = r.capitulos
+    // Miniatura sugerida para YouTube: el cuadro del gancho (segundo 2.5)
+    let miniatura: string | null = null
+    if (o.largo) {
+      try {
+        const jpg = path.join(dir, "miniatura.jpg")
+        await correr(["-ss", "2.5", "-i", r.archivo, "-frames:v", "1", "-q:v", "2", jpg])
+        miniatura = await require("./index").subir(scope, `estudio-${id}-miniatura.jpg`, "image/jpeg", fs.readFileSync(jpg))
+        g.miniatura = miniatura
+      } catch {}
+    }
     // Se guarda antes de crear el borrador: si algo falla después, no se pierde
     await knex("hetna_estudio").where({ id }).update({ guion: JSON.stringify(g), video_url: url, costo_usd: costo, updated_at: new Date() })
-    const { post } = await borradorExplicativo(knex, { id, guion: g, video_url: url }, logger)
+    const { post } = await borradorExplicativo(knex, { id, guion: g, video_url: url, miniatura }, logger)
     logger?.info?.(`[explicativo] listo: ${g.tema} · ${r.segundos} s · ${costo.toFixed(2)} USD`)
     return { hecho: true, id, tema: g.tema, segundos: r.segundos, costo_usd: +costo.toFixed(2), post }
   } catch (e) {

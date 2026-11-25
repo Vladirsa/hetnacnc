@@ -105,3 +105,40 @@ describe("fotos", () => {
     expect(capasDe(escena({ tipo: "foto" }), "")).toEqual([])
   })
 })
+
+describe("versión larga (YouTube horizontal)", () => {
+  const { numerarCapitulos, capitulosYoutube, paginaEscena: pagina, FRASE_FINAL_LARGO } = require("../fabrica/explicativo")
+  it("valida con capítulos, más escenas y cierre de suscripción", () => {
+    const muchas = Array.from({ length: 30 }, (_, i) => escena({ capitulo: `Cap ${Math.floor(i / 6) + 1}` }))
+    const g = validarGuion({ escenas: muchas }, { largo: true })
+    expect(g.formato).toBe("largo")
+    expect(g.escenas.length).toBe(31)
+    expect(g.escenas[3].capitulo).toBe("Cap 1")
+    expect(g.escenas[g.escenas.length - 1].frases[1]).toBe(FRASE_FINAL_LARGO)
+    expect(validarGuion({ escenas: muchas }).escenas.length).toBe(10) // el corto sigue con máximo 9 + cierre
+  })
+  it("numera los capítulos cuando cambia el nombre", () => {
+    expect(numerarCapitulos([{ capitulo: "A" }, { capitulo: "A" }, { capitulo: "B" }, { capitulo: "" }]))
+      .toEqual([{ n: 1, nombre: "A" }, { n: 1, nombre: "A" }, { n: 2, nombre: "B" }, undefined])
+  })
+  it("capítulos de YouTube: 0:00, al menos 3 y de 10 s o más", () => {
+    const e = [{ nombre: "Intro", inicio: 0 }, { nombre: "Causas", inicio: 25 }, { nombre: "Causas", inicio: 40 }, { nombre: "Corto", inicio: 70 }, { nombre: "Checklist", inicio: 75 }]
+    expect(capitulosYoutube(e, 200)).toEqual(["0:00 Intro", "0:25 Causas", "1:10 Corto"])
+    expect(capitulosYoutube([{ nombre: "A", inicio: 0 }, { nombre: "B", inicio: 3 }, { nombre: "C", inicio: 17 }, { nombre: "D", inicio: 40 }], 60)).toEqual(["0:00 A", "0:17 C", "0:40 D"])
+    expect(capitulosYoutube(e.slice(0, 2), 60)).toEqual([])
+  })
+  it("la página horizontal mide 1920×1080 y escala las capas dentro de la tarjeta", () => {
+    const p = pagina(escena({ capitulo: "Causas" }), 2, 25, "SERIE", { fuentes: "/f", logo: "data:,", largo: true, capitulo: { n: 2, nombre: "Causas" } })
+    expect(p.html).toContain("width:1920px")
+    expect(p.html).toContain("CAPÍTULO 2")
+    expect(p.html).toMatch(/transform:translate\([\d.]+px,-?[\d.]+px\) scale\(0\.\d+\)/)
+  })
+})
+
+describe("YouTube: video largo sin #Shorts", () => {
+  const { youtubeDe } = require("../social-hub")
+  it("el vertical lleva #Shorts y el horizontal no", () => {
+    expect(youtubeDe("Mi título\ndesc", "", "v.mp4").titulo).toBe("Mi título #Shorts")
+    expect(youtubeDe("Mi título\ndesc", "", "v.mp4", { largo: true }).titulo).toBe("Mi título")
+  })
+})

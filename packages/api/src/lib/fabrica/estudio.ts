@@ -192,7 +192,7 @@ const ESQUEMA = {
 let ia: Anthropic | null = null
 export async function guionista(knex: any, tipo: "educativo" | "novela") {
   ia ??= new Anthropic()
-  const recientes = await knex(T_ESTUDIO).whereIn("estado", ["listo", "haciendo"]).whereNot({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(30).select("tipo", "guion")
+  const recientes = await knex(T_ESTUDIO).whereIn("estado", ["listo", "haciendo"]).whereNotIn("tipo", ["explicativo", "explicativo_largo"]).orderBy("created_at", "desc").limit(30).select("tipo", "guion")
   const temas = recientes.map((r: any) => r.guion?.tema).filter(Boolean)
   const tomas = recientes.flatMap((r: any) => (r.guion?.escenas || []).map((e: any) => e.toma)).slice(0, 60)
   const capitulos = recientes.filter((r: any) => r.tipo === "novela" && r.guion?.resumen_capitulo).map((r: any) => r.guion.resumen_capitulo).slice(0, 6).reverse()
@@ -481,10 +481,10 @@ export async function videoDelDia(scope: any, logger?: any, o: { forzar?: boolea
   if (!estudioListo()) return { hecho: false, motivo: !FAL() ? "Falta FAL_KEY en el .env del backend" : !iaSocial() ? "Falta la IA (ANTHROPIC_API_KEY)" : "Falta FFmpeg en el servidor" }
   if (VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo uno" }
   const hoy = diaMx()
-  if (!o.forzar && (await knex(T_ESTUDIO).where({ dia: hoy }).whereNot({ tipo: "explicativo" }).whereIn("estado", ["listo", "haciendo"]).first())) return { hecho: false, motivo: "Ya se hizo el video de hoy" }
+  if (!o.forzar && (await knex(T_ESTUDIO).where({ dia: hoy }).whereNotIn("tipo", ["explicativo", "explicativo_largo"]).whereIn("estado", ["listo", "haciendo"]).first())) return { hecho: false, motivo: "Ya se hizo el video de hoy" }
   // Freno: si los dos últimos fallaron, el automático no gasta más hasta que alguien lo revise (el botón sí funciona)
   if (!o.forzar) {
-    const ult = await knex(T_ESTUDIO).whereNot({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(2).pluck("estado")
+    const ult = await knex(T_ESTUDIO).whereNotIn("tipo", ["explicativo", "explicativo_largo"]).orderBy("created_at", "desc").limit(2).pluck("estado")
     if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos videos fallaron: el automático se detuvo. Revisa el error y aprieta 'Hacer el de hoy'." }
   }
   const tipo = o.tipo || (tocaNovela() ? "novela" : "educativo")
@@ -621,6 +621,7 @@ export async function resumenEstudio(knex: any) {
     falta: !FAL() ? "FAL_KEY" : !iaSocial() ? "ANTHROPIC_API_KEY" : !ffmpegDisponible() ? "FFmpeg" : null,
     activo: !!(await leerEstudioCfg(knex)).activo,
     explicativo: (await leerEstudioCfg(knex)).explicativo !== false,
+    largo: (await leerEstudioCfg(knex)).largo !== false,
     tope_dia: TOPE_USD(),
     gasto_hoy: +(await gastoDeHoy(knex)).toFixed(2),
     gasto_mes: +Number(mes?.s || 0).toFixed(2),
