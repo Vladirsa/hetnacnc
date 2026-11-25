@@ -25,6 +25,7 @@ const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
 const GeneradorModelos3D = dynamic(() => import("@/components/hetna/generador/GeneradorModelos3D").then((m) => m.GeneradorModelos3D))
 const GeneradorPartir3D = dynamic(() => import("@/components/hetna/generador/GeneradorPartir3D").then((m) => m.GeneradorPartir3D))
+const GeneradorMoldes = dynamic(() => import("@/components/hetna/generador/GeneradorMoldes").then((m) => m.GeneradorMoldes))
 const GeneradorMuebles = dynamic(() => import("@/components/hetna/generador/GeneradorMuebles").then((m) => m.GeneradorMuebles))
 // desde imagen, ensamble sin tornillos y despiece de gabinetes: Muebles
 const MODO_MUEBLES: Record<string, "imagen" | "cocina" | "molduras" | "costillas"> = { "muebles-desde-imagen": "imagen", "molduras-tallados": "molduras", "costillas-desde-imagen": "costillas", "muebles-ensamble": "imagen", "despiece-muebles": "cocina" }
@@ -42,6 +43,7 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "plantillas-empaque": GeneradorEmpaques,
   "organizador-cajon": GeneradorOrganizador,
   "partir-3d": GeneradorPartir3D,
+  "moldes-3d": GeneradorMoldes,
   "modelos-3d": GeneradorModelos3D,
 }
 

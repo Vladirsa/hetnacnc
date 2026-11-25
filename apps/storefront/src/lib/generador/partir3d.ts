@@ -76,7 +76,7 @@ export function cabe(tam: number[], cama: number[]) {
 }
 
 // ── Malla <-> Manifold ────────────────────────────────────────────────────
-function aManifold(w: Wasm, m: Malla) {
+export function aManifold(w: Wasm, m: Malla) {
   const t = m.tris
   const idx = new Map<string, number>()
   const verts: number[] = []
@@ -105,7 +105,7 @@ function aManifold(w: Wasm, m: Malla) {
   return s
 }
 
-function aMalla(s: any): Malla {
+export function aMalla(s: any): Malla {
   const mesh = s.getMesh()
   const p = mesh.vertProperties as Float32Array
   const n = mesh.numProp as number

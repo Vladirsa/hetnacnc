@@ -221,6 +221,16 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     imagen: "/img/partir-3d/esfera-piezas.webp",
   },
   {
+    slug: "moldes-3d",
+    nombre: "Generador de moldes 3D",
+    texto: "Tu pieza en un molde para resina, yeso, concreto, jabón o silicona, listo para imprimir.",
+    icono: "partir",
+    acceso: "gratis",
+    titulo: "Generador de moldes 3D gratis: de STL a molde para resina, yeso o silicona",
+    descripcion:
+      "Sube tu STL, OBJ o STEP y descarga gratis el molde listo para imprimir: de dos partes con llaves de registro, bebedero y respiraderos, molde abierto para jabones y velas, o la caja para colar silicona. Calcula los mililitros que vas a vaciar. Sin subir tu archivo.",
+  },
+  {
     slug: "modelos-3d",
     nombre: "Modelos 3D a tu medida",
     texto: "Organizadores, soportes NEMA, abrazaderas, cajas, macetas y más: ajusta las medidas y descarga el STL.",
@@ -433,6 +443,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "llaveros", corto: "Llaveros y placas" },
       { slug: "texturizador", corto: "Texturizador" },
       { slug: "partir-3d", corto: "Partir modelo" },
+      { slug: "moldes-3d", corto: "Moldes" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },
     ],
   },

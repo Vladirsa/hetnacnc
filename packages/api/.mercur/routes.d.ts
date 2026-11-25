@@ -950,6 +950,7 @@ export type Routes = {
             tableros: typeof import("../src/api/store/muebles/tableros/route");
         };
         packs: typeof import("../src/api/store/packs/route");
+        planosCorreo: typeof import("../src/api/store/planos-correo/route");
         precioInstantaneo: typeof import("../src/api/store/precio-instantaneo/route");
         proveedor: {
             ordenes: typeof import("../src/api/store/proveedor/ordenes/route") & {
@@ -1460,6 +1461,7 @@ export type Routes = {
         cotizadorComision: {
             paypal: typeof import("../src/api/api/cotizador-comision/paypal/route");
         };
+        cotizadorCorreo: typeof import("../src/api/api/cotizador-correo/route");
         cotizadorExportar: typeof import("../src/api/api/cotizador-exportar/route");
         cotizadorMarketing: typeof import("../src/api/api/cotizador-marketing/route") & {
             correr: typeof import("../src/api/api/cotizador-marketing/correr/route");
