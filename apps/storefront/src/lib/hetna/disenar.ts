@@ -233,12 +233,12 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
   {
     slug: "modelos-3d",
     nombre: "Modelos 3D a tu medida",
-    texto: "25 modelos: soportes NEMA y de spindle, tapones para PTR, perillas, organizadores, cajas y más. Ajusta y descarga el STL.",
+    texto: "33 modelos: soportes NEMA y de spindle, clamps para mesa CNC, tapones para PTR, poleas, perillas, organizadores y más. Ajusta y descarga el STL.",
     icono: "partir",
     acceso: "gratis",
     titulo: "Modelos 3D paramétricos para imprimir gratis",
     descripcion:
-      "Elige uno de 25 modelos para impresión 3D (organizador de fresas, soporte de motor NEMA 17/23, soporte de spindle, chumacera para rodamiento, tapones para PTR y tubo redondo, perilla con tuerca, abrazadera, espaciador, brida, escuadra, charola con divisiones, caja con tapa, canaleta, porta puntas, maceta, ménsula para repisa y más), ajusta sus medidas con deslizadores, míralo en 3D y descarga el STL cerrado, listo para tu impresora. O pide que un taller de HETNA te lo imprima. Sin saber CAD.",
+      "Elige uno de 33 modelos para impresión 3D (sujetador de mesa CNC, guía para espigas, polea en V, rueda, prueba de holguras, contenedor apilable, organizador de fresas, soporte de motor NEMA 17/23, soporte de spindle, chumacera para rodamiento, tapones para PTR y tubo redondo, perilla con tuerca, abrazadera, espaciador, brida, escuadra, charola con divisiones, caja con tapa, canaleta, porta puntas, maceta, ménsula para repisa y más), ajusta sus medidas con deslizadores, míralo en 3D y descarga el STL cerrado, listo para tu impresora. O pide que un taller de HETNA te lo imprima. Sin saber CAD.",
     meta: "Modelos 3D paramétricos gratis: ajusta las medidas de organizadores, soportes NEMA, abrazaderas, cajas y macetas y descarga el STL listo para imprimir.",
   },
   {
