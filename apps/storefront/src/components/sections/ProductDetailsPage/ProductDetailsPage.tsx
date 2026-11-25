@@ -11,7 +11,6 @@ import { JsonLd } from "@/components/hetna/JsonLd"
 import { ResenasProducto } from "@/components/hetna/resenas/ResenasProducto"
 import { resenasDeProducto, resenasPendientes } from "@/lib/resenas/acciones"
 import { baseSitio, migas, productoSchema } from "@/lib/hetna/schema"
-import { HomeProductSection } from "../HomeProductSection/HomeProductSection"
 import { ProductosCompactos } from "@/components/hetna/ProductosCompactos"
 import { FichaProducto } from "@/components/hetna/FichaProducto"
 import { notFound, permanentRedirect } from "next/navigation"
@@ -124,13 +123,19 @@ export const ProductDetailsPage = async ({
 
   // Ofertas, reseñas y relacionados no dependen entre sí: se piden a la vez.
   // Antes iban uno tras otro y cada uno sumaba su espera a la de la ficha.
-  const categoriaId = (prod as { categories?: { id?: string }[] }).categories?.[0]?.id
-  const [{ offers }, resenas, pendientes, relacionados, extra, recientes] = await Promise.all([
+  const catPrincipal = (prod as { categories?: { id?: string; handle?: string }[] }).categories?.[0]
+  const categoriaId = catPrincipal?.id
+  const handlesTaller = (((prod as { seller?: { products?: unknown[] } }).seller?.products ?? []) as { id: string; handle?: string }[])
+    .filter((p) => p.id !== prod.id && p.handle)
+    .map((p) => p.handle as string)
+    .slice(0, 8)
+  const [{ offers }, resenas, pendientes, candidatos, extra, recientes, delTaller] = await Promise.all([
     listOffers({ productId: prod.id, countryCode: locale }),
     resenasDeProducto(prod.id),
     resenasPendientes(),
+    // Se piden más de los que se enseñan para poder variar (ver variados())
     categoriaId
-      ? listProducts({ countryCode: locale, category_id: categoriaId, queryParams: { limit: 8 } })
+      ? listProducts({ countryCode: locale, category_id: categoriaId, queryParams: { limit: 40 } })
           .then(({ response }) => response.products.filter((p) => p.id !== prod.id))
           .catch(() => [])
       : Promise.resolve([]),
@@ -140,9 +145,18 @@ export const ProductDetailsPage = async ({
     listProducts({ countryCode: locale, queryParams: { limit: 16, order: "-created_at" } as never })
       .then(({ response }) => response.products)
       .catch(() => []),
+    // "Más de este taller" con precio y foto (el taller trae sólo lo básico)
+    handlesTaller.length
+      ? listProducts({ countryCode: locale, queryParams: { handle: handlesTaller, limit: 8 } })
+          .then(({ response }) => response.products)
+          .catch(() => [])
+      : Promise.resolve([]),
   ])
+  // Similares variados: si una familia tiene muchos casi iguales (p. ej. 40
+  // rodillos texturizadores que sólo cambian el dibujo), no llenan la fila.
+  const relacionados = variados(candidatos, prod.title || "", 8)
   // Sin repetir lo que ya sale en "Más de este taller" o en los similares
-  const yaMostrados = new Set([prod.id, ...relacionados.map((p) => p.id), ...((prod.seller?.products ?? []) as { id: string }[]).map((p) => p.id)])
+  const yaMostrados = new Set([prod.id, ...relacionados.map((p) => p.id), ...delTaller.map((p) => p.id), ...((prod.seller?.products ?? []) as { id: string }[]).map((p) => p.id)])
   const masProductos = recientes.filter((p) => !yaMostrados.has(p.id)).slice(0, 12)
 
   const { cheapestPrice } = getProductPrice({ product: prod })
@@ -374,24 +388,23 @@ export const ProductDetailsPage = async ({
           "Productos similares" pero enseñaba los del MISMO taller, que no es
           lo mismo: una sirve para seguir comprándole a quien ya te convenció,
           y la otra para comparar contra lo demás de su categoría. */}
-      {Boolean(prod.seller?.products?.length) && (
+      {/* Tarjetas chicas (ProductosCompactos), no el carrusel de 4 fotos enormes */}
+      {delTaller.length > 0 && (
         <div className="mt-8">
-          <HomeProductSection
-            heading={
-              vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller"
-            }
-            products={prod.seller?.products}
-            locale={locale}
+          <ProductosCompactos
+            titulo={vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller"}
+            productos={delTaller as never}
+            verTodos={vendedor?.handle ? `/sellers/${vendedor.handle}` : null}
           />
         </div>
       )}
 
       {relacionados.length > 0 && (
         <div className="mt-4">
-          <HomeProductSection
-            heading={descarga ? "Otros diseños" : "Productos similares"}
-            products={relacionados as never}
-            locale={locale}
+          <ProductosCompactos
+            titulo={descarga ? "Otros diseños" : "Productos similares"}
+            productos={relacionados as never}
+            verTodos={catPrincipal?.handle ? `/categories/${catPrincipal.handle}` : "/categories"}
           />
         </div>
       )}
@@ -405,6 +418,38 @@ export const ProductDetailsPage = async ({
       </div>
     </>
   )
+}
+
+// Familia de un producto: sus dos primeras palabras ("Rodillo texturizador",
+// "Cortador galletas"). Sirve para que los similares no sean todos iguales.
+const familia = (titulo: string) =>
+  titulo
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !VACIAS.has(w))
+    .slice(0, 2)
+    .join(" ")
+
+/** Hasta `n` productos alternando familias: como mucho 2 de la misma familia
+ *  que la ficha y 2 de cada otra; si no alcanza, se completa con los que sobren. */
+function variados<T extends { id: string; title?: string | null }>(lista: T[], tituloFicha: string, n: number): T[] {
+  const propia = familia(tituloFicha)
+  const cuenta = new Map<string, number>()
+  const elegidos: T[] = []
+  const sobran: T[] = []
+  for (const p of lista) {
+    const f = familia(p.title || "")
+    const tope = 2
+    if ((cuenta.get(f) ?? 0) < tope && elegidos.length < n) {
+      elegidos.push(p)
+      cuenta.set(f, (cuenta.get(f) ?? 0) + 1)
+    } else sobran.push(p)
+  }
+  // Primero los de otras familias, al final los de la misma de la ficha
+  elegidos.sort((a, b) => Number(familia(a.title || "") === propia) - Number(familia(b.title || "") === propia))
+  return [...elegidos, ...sobran].slice(0, n)
 }
 
 // Palabras del handle que sirven para comparar (sin "de", "para", números sueltos…)

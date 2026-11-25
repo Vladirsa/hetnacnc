@@ -39,10 +39,11 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
    - En las piezas de pura pared (cortadores) el JSON lleva `"relleno": 100` para que los gramos salgan bien.
 4. Publica (en `packages/api`, en el servidor):
    ```
-   COLORES="Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
+   COLORES="ABS=Amarillo dorado;PLA-CF=Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
    ```
    - Es idempotente.
+   - Para corregir el color de ofertas de HETNA que ya existen (sin tocar precio ni días): agrega `ACTUALIZAR_COLORES=1`.
    - Crea la colección y los productos que falten.
-   - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES` (por ejemplo `COLORES="Negro"`). Sin `COLORES` no pone la oferta de HETNA.
+   - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES`, por material (`ABS=Amarillo dorado;PLA-CF=Negro`) o iguales para todos (`Negro`). Sin `COLORES` no pone la oferta de HETNA.
    - No cambia las ofertas que ya existan.
    - Si la foto o el modelo 3D cambiaron (huella sha1 en la metadata), los vuelve a subir. La foto sólo se cambia si es la que puso este script; una foto puesta a mano se respeta.

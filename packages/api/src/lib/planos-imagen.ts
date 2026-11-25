@@ -14,7 +14,7 @@ export async function pngLaminaPlano(slug: string, n: number): Promise<Buffer> {
   const r = await fetch(`${STORE_URL}/mx/planos/${encodeURIComponent(slug)}/redes/${n}`, { signal: AbortSignal.timeout(20_000) })
   if (!r.ok) throw new Error(`lámina ${n} de ${slug}: HTTP ${r.status}`)
   const svg = await r.text()
-  if (!svg.trimStart().startsWith("<svg")) throw new Error(`lámina ${n} de ${slug}: no es SVG`)
+  if (!svg.trimStart().startsWith("<svg") || !/<\/svg>\s*$/.test(svg)) throw new Error(`lámina ${n} de ${slug}: no es un SVG completo`)
   return sharp(Buffer.from(svg)).png().toBuffer()
 }
 
