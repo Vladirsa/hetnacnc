@@ -533,6 +533,179 @@ export const MODELOS: Modelo3D[] = [
     },
   },
   {
+    id: "mordaza-cnc",
+    nombre: "Sujetador de mesa CNC (clamp)",
+    texto: "Barra con ranura y escalón para sujetar piezas en la mesa del router con tornillo y tuerca T.",
+    categoria: "taller",
+    claves: "clamp sujetador mordaza mesa router cnc hold down tuerca t ranura",
+    params: [
+      { k: "largo", nombre: "Largo", def: 80, min: 40, max: 200 },
+      { k: "ancho", nombre: "Ancho", def: 25, min: 12, max: 60 },
+      { k: "alto", nombre: "Alto", def: 12, min: 6, max: 30 },
+      { k: "ranura", nombre: "Ancho de la ranura (tornillo)", def: 8.5, min: 4, max: 14, paso: 0.1 },
+      { k: "escalon", nombre: "Alto del escalón de apoyo", def: 8, min: 0, max: 40 },
+    ],
+    construir: (p, k) => {
+      const barra = k.bloque(p.largo, p.ancho, p.alto, 0, 0, 0, Math.min(3, p.ancho / 6))
+      const pie = p.escalon > 0 ? k.bloque(12, p.ancho, p.escalon, p.largo - 12, 0, -p.escalon) : null
+      // ranura alargada: envolvente de dos barrenos
+      const r1 = p.largo * 0.15, r2 = p.largo * 0.68
+      const ranura = k.envolver(k.barreno(p.ranura, p.alto, r1, p.ancho / 2), k.barreno(p.ranura, p.alto, r2, p.ancho / 2))
+      const g = pie ? k.unir(barra, pie) : barra
+      return k.restar(g, ranura)
+    },
+  },
+  {
+    id: "guia-espiga",
+    nombre: "Guía para barrenos de espiga",
+    texto: "Plantilla con tope para barrenar espigas (dowels) centradas en el canto del tablero.",
+    categoria: "taller",
+    claves: "guia espiga dowel jig barrenar canto tablero carpinteria melamina",
+    params: [
+      { k: "tablero", nombre: "Espesor del tablero", def: 18, min: 9, max: 40 },
+      { k: "broca", nombre: "Diámetro de la broca", def: 8, min: 4, max: 12, paso: 0.1 },
+      { k: "barrenos", nombre: "Barrenos", def: 3, min: 1, max: 6, unidad: "" },
+      { k: "separacion", nombre: "Separación entre barrenos", def: 32, min: 16, max: 64 },
+    ],
+    construir: (p, k) => {
+      const n = Math.round(p.barrenos), largo = (n - 1) * p.separacion + 30, alto = 20, tope = 6
+      const placa = k.bloque(largo, p.tablero + 2 * tope, alto)
+      // la placa se apoya sobre el canto; los topes abrazan las dos caras del tablero
+      const hueco = k.bloque(largo + 2, p.tablero + 0.3, 8, -1, tope - 0.15, -1)
+      const barrenos = Array.from({ length: n }, (_, i) => k.barreno(p.broca + 0.2, alto, 15 + i * p.separacion, tope + p.tablero / 2))
+      return k.restar(placa, hueco, ...barrenos)
+    },
+  },
+  {
+    id: "polea-v",
+    nombre: "Polea en V",
+    texto: "Polea con canal en V para banda o cordón, con barreno y opriesor.",
+    categoria: "taller",
+    claves: "polea v banda cordon eje rueda transmision",
+    params: [
+      { k: "diametro", nombre: "Diámetro exterior", def: 50, min: 15, max: 150 },
+      { k: "ancho", nombre: "Ancho", def: 12, min: 5, max: 40 },
+      { k: "profundidad", nombre: "Profundidad del canal", def: 4, min: 1, max: 15, paso: 0.5 },
+      { k: "eje", nombre: "Barreno del eje", def: 8, min: 2, max: 40, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const D = p.diametro, h = p.ancho, c = Math.min(p.profundidad, D / 2 - p.eje / 2 - 3)
+      const mitad = h / 2
+      // canal en V: dos conos encontrados restados a un cilindro
+      const v1 = k.cono(D + 0.01, D - 2 * c, mitad)
+      const v2 = k.cono(D - 2 * c, D + 0.01, mitad, 0, 0, mitad)
+      const canal = k.restar(k.cil(D + 2, h, 0, 0, 0), k.unir(v1, v2))
+      return k.restar(k.cil(D, h), canal, k.barreno(p.eje + 0.2, h))
+    },
+  },
+  {
+    id: "rodaja",
+    nombre: "Rueda / rodaja",
+    texto: "Rueda con barreno para eje y caja para rodamiento opcional: carritos, juguetes y plantillas.",
+    categoria: "taller",
+    claves: "rueda rodaja carrito eje rodamiento juguete",
+    params: [
+      { k: "diametro", nombre: "Diámetro", def: 40, min: 10, max: 150 },
+      { k: "ancho", nombre: "Ancho", def: 14, min: 4, max: 50 },
+      { k: "eje", nombre: "Barreno del eje", def: 6, min: 2, max: 30, paso: 0.1 },
+      { k: "rodamiento", nombre: "Caja para rodamiento (0 = sin; 608 = 22)", def: 0, min: 0, max: 60, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const ch = Math.min(1.5, p.ancho / 6)
+      const llanta = k.unir(k.cono(p.diametro - 2 * ch, p.diametro, ch), k.cil(p.diametro, p.ancho - 2 * ch, 0, 0, ch), k.cono(p.diametro, p.diametro - 2 * ch, ch, 0, 0, p.ancho - ch))
+      const huecos = [k.barreno(p.eje + 0.2, p.ancho)]
+      if (p.rodamiento > p.eje + 2 && p.rodamiento < p.diametro - 4) huecos.push(k.cil(p.rodamiento + 0.15, Math.min(7, p.ancho / 2), 0, 0, -0.01))
+      return k.restar(llanta, ...huecos)
+    },
+  },
+  {
+    id: "prueba-holgura",
+    nombre: "Prueba de holguras para tu impresora",
+    texto: "Placa con barrenos y pernos de 0.1 en 0.1 mm para saber qué holgura usar en tus piezas.",
+    categoria: "taller",
+    claves: "holgura tolerancia calibracion impresora 3d prueba ajuste",
+    params: [
+      { k: "diametro", nombre: "Diámetro del perno", def: 8, min: 3, max: 20, paso: 0.5 },
+      { k: "inicio", nombre: "Holgura inicial", def: 0.1, min: 0, max: 0.5, paso: 0.05 },
+      { k: "paso", nombre: "Aumento por barreno", def: 0.1, min: 0.05, max: 0.3, paso: 0.05 },
+      { k: "pruebas", nombre: "Número de barrenos", def: 6, min: 3, max: 10, unidad: "" },
+    ],
+    construir: (p, k) => {
+      const n = Math.round(p.pruebas), sep = p.diametro + 8, e = 4
+      const placa = k.bloque(n * sep + 6, sep + 6, e, 0, 0, 0, 2)
+      const huecos = Array.from({ length: n }, (_, i) => k.barreno(p.diametro + 2 * (p.inicio + i * p.paso), e, 3 + sep / 2 + i * sep, 3 + sep / 2))
+      // marca de cuál es el primero (el más justo): una muesca en la orilla
+      huecos.push(k.bloque(3, 3, e + 2, 3 + sep / 2 - 1.5, -1.5, -1))
+      // el perno de prueba, al lado de la placa
+      const perno = k.unir(k.cil(p.diametro + 6, 2, n * sep + 20, sep / 2 + 3), k.cil(p.diametro, 10, n * sep + 20, sep / 2 + 3, 2))
+      return k.unir(k.restar(placa, ...huecos), perno)
+    },
+  },
+  {
+    id: "contenedor-apilable",
+    nombre: "Contenedor apilable",
+    texto: "Caja abierta al frente que se apila: refacciones, tornillería y consumibles a la vista.",
+    categoria: "organizar",
+    claves: "contenedor apilable gaveta bin refacciones tornilleria almacen",
+    params: [
+      { k: "ancho", nombre: "Ancho", def: 100, min: 40, max: 250 },
+      { k: "fondo", nombre: "Fondo", def: 150, min: 50, max: 300 },
+      { k: "alto", nombre: "Alto", def: 70, min: 30, max: 200 },
+      { k: "pared", nombre: "Pared", def: 2, min: 1.2, max: 5, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const w = p.pared, W = p.ancho, F = p.fondo, H = p.alto
+      const caja = k.restar(k.bloque(W, F, H, 0, 0, 0, 3), k.bloque(W - 2 * w, F - 2 * w, H, w, w, w, Math.max(0, 3 - w)))
+      // boca al frente: recorte inclinado para meter la mano
+      const boca = k.envolver(k.bloque(W - 2 * w - 8, 1, H * 0.55, w + 4, -1, H * 0.45 + 1), k.bloque(W - 2 * w - 8, 1, 1, w + 4, F * 0.35, H + 1))
+      // ceja arriba para apilar: un marco que entra en la base del de arriba
+      const ceja = k.restar(k.bloque(W - 2 * w - 0.6, F - 2 * w - 0.6, 3, w + 0.3, w + 0.3, H), k.bloque(W - 4 * w, F - 4 * w, 5, 2 * w, 2 * w, H - 1))
+      return k.unir(k.restar(caja, boca), k.restar(ceja, k.envolver(k.bloque(W, 1, 6, 0, -1, H - 1), k.bloque(W, 1, 6, 0, F * 0.35 + 2, H - 1))))
+    },
+  },
+  {
+    id: "soporte-escoba",
+    nombre: "Soporte para mangos (escoba, herramienta)",
+    texto: "Pinza de pared que abraza mangos de escoba, rastrillo o herramienta larga.",
+    categoria: "casa",
+    claves: "soporte escoba trapeador mango herramienta pared colgar pinza",
+    params: [
+      { k: "diametro", nombre: "Diámetro del mango", def: 24, min: 10, max: 50 },
+      { k: "ancho", nombre: "Ancho", def: 18, min: 10, max: 40 },
+      { k: "pared", nombre: "Pared", def: 3.5, min: 2, max: 6, paso: 0.1 },
+      { k: "tornillo", nombre: "Barreno", def: 4.5, min: 3, max: 6, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const R = p.diametro / 2, e = p.pared, base = 6
+      const placa = k.bloque(2 * R + 2 * e + 16, p.ancho, base, -(R + e + 8), -p.ancho / 2, 0)
+      const anillo = k.mover(k.restar(k.girar(k.cil(2 * (R + e), p.ancho, 0, 0, -p.ancho / 2), 90, 0, 0), k.girar(k.cil(2 * R, p.ancho + 2, 0, 0, -p.ancho / 2 - 1), 90, 0, 0)), 0, 0, base + R - 1)
+      // boca un poco más chica que el mango para que entre a presión
+      const boca = k.bloque(p.diametro * 0.82, p.ancho + 2, R + e, -p.diametro * 0.41, -p.ancho / 2 - 1, base + R + R * 0.55)
+      const g = k.restar(k.unir(placa, anillo), boca)
+      return k.restar(g, k.avellanado(p.tornillo, p.tornillo * 2, base, -(R + e + 4), 0), k.avellanado(p.tornillo, p.tornillo * 2, base, R + e + 4, 0))
+    },
+  },
+  {
+    id: "separador-cajon",
+    nombre: "Separadores de cajón ajustables",
+    texto: "Tiras que se encastran a media altura para armar divisiones dentro de un cajón.",
+    categoria: "organizar",
+    claves: "separador cajon division organizador encastre tiras",
+    params: [
+      { k: "largo", nombre: "Largo de cada tira", def: 200, min: 60, max: 300 },
+      { k: "alto", nombre: "Alto", def: 50, min: 20, max: 120 },
+      { k: "espesor", nombre: "Espesor", def: 2.4, min: 1.6, max: 5, paso: 0.1 },
+      { k: "ranuras", nombre: "Ranuras por tira", def: 3, min: 1, max: 8, unidad: "" },
+    ],
+    construir: (p, k) => {
+      // dos tiras acostadas: una con ranuras desde arriba y otra desde abajo (se cruzan a media altura)
+      const n = Math.round(p.ranuras), paso = p.largo / (n + 1), r = p.espesor + 0.3
+      const tira = (desdeArriba: boolean, y0: number) =>
+        k.restar(k.bloque(p.largo, p.alto, p.espesor, 0, y0, 0), ...Array.from({ length: n }, (_, i) => k.bloque(r, p.alto / 2 + 0.5, p.espesor + 2, paso * (i + 1) - r / 2, desdeArriba ? y0 + p.alto / 2 : y0 - 0.5, -1)))
+      return k.unir(tira(true, 0), tira(false, p.alto + 6))
+    },
+  },
+  {
     id: "gancho-pared",
     nombre: "Gancho de pared",
     texto: "Gancho en L con dos barrenos avellanados. Para cables, mangueras, mandiles o herramienta.",
