@@ -18,7 +18,7 @@ import { MIN_DIRECTORIO, directorioDeGuia } from "@/lib/seo/directorio-guia"
 import { sdk } from "@/lib/client"
 import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
-import { directorioMexico } from "@/lib/hetna/directorio"
+import { directorioMexico, nombreVisible, sinAcentos } from "@/lib/hetna/directorio"
 import { esSlugDirectorio } from "@/lib/hetna/slug-directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { estadosIndexables, rutaEstado, rutaServicioEstado, serviciosEstadoIndexables } from "@/lib/seo/estados"
@@ -60,6 +60,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cotizar/corte-laser", "weekly", 0.8],
   ["/cotizar/corte-plasma", "weekly", 0.8],
   ["/cotizar/impresion-3d", "weekly", 0.8],
+  ["/cotizar/suministro", "weekly", 0.7], // faltaba en el mapa (auditoría 25 nov 2026)
   ["/fabricacion", "weekly", 0.9],
   ["/herramientas-cnc", "weekly", 0.9],
   // Estaban fuera del mapa aunque se indexan (revisión del 25 nov 2026)
@@ -92,6 +93,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/talleres/fundadores", "weekly", 0.7],
   ["/talleres/ranking", "daily", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
+  ["/servicios/envios-hetna/condiciones", "yearly", 0.3],
   ["/planos", "weekly", 0.7],
   ...(PLANOS.map((p) => [`/planos/${p.slug}`, "monthly", 0.6]) as [string, Frecuencia, number][]),
   ["/anunciate", "monthly", 0.6],
@@ -221,9 +223,20 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         // Perfiles no reclamados: sólo los que tienen descripción (los demás son
         // noindex) y cuyo slug la ruta [slug] puede servir tal cual: uno con
         // diagonales o acentos daba 404 (24 nov 2026)
-        ...(await directorioMexico())
-          .filter((e) => e.servicios && esSlugDirectorio(e.slug))
-          .map((e) => pagina(`/talleres/directorio/${e.slug}`, "monthly", 0.3, hoy)),
+        ...(await (async () => {
+          // Una sola URL por empresa: las repetidas (4atools.com y 4atools.mx) apuntan a su canónica
+          const todas = (await directorioMexico()).filter((e) => e.servicios && esSlugDirectorio(e.slug))
+          const vistas = new Set<string>()
+          return todas
+            .sort((a, b) => a.slug.localeCompare(b.slug))
+            .filter((e) => {
+              const k = `${sinAcentos(nombreVisible(e))}|${sinAcentos(e.ciudad || "")}`
+              if (vistas.has(k)) return false
+              vistas.add(k)
+              return true
+            })
+            .map((e) => pagina(`/talleres/directorio/${e.slug}`, "monthly", 0.3, hoy))
+        })()),
       ]
     case "articulos": {
       const [{ learning_articles }, { courses }, { trabajos }] = await Promise.all([

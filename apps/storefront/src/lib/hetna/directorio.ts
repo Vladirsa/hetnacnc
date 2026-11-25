@@ -240,6 +240,37 @@ export async function empresaCualquierPais(slug: string): Promise<EmpresaDirecto
   return (await leerTodo()).find((e) => e.slug === s) || null
 }
 
+// Nombres que en realidad son el título de la página de inicio de su sitio
+const GENERICO = /^(inicio|home|p[aá]gina principal|bienvenid[oa]s?|index|principal|welcome)$/i
+
+/**
+ * Nombre para mostrar y para el título de Google: sin el "Inicio" que traen algunos
+ * sitios, sin el texto de relleno tras "|" o " - " y de 60 caracteres como máximo.
+ * Si sólo queda algo genérico, se arma con el dominio del slug ("imprime3d-mx" → "Imprime3d").
+ */
+export function nombreVisible(e: Pick<EmpresaDirectorio, "empresa" | "slug">): string {
+  const partes = String(e.empresa || "").split(/\s+[|·–—-]\s+|\s*\|\s*/).map((x) => x.trim()).filter(Boolean)
+  const util = partes.find((x) => !GENERICO.test(x)) || ""
+  let nombre = util
+  if (!nombre) {
+    const base = String(e.slug || "").replace(/^(facebook-com-|fb-|www-)/, "").replace(/-(com|mx|net|org)(-mx)?$/, "").replace(/-/g, " ")
+    nombre = base.replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+  return nombre.length <= 60 ? nombre : nombre.slice(0, 60).replace(/\s+\S*$/, "")
+}
+
+/**
+ * Algunas empresas están dos veces (4atools.com y 4atools.mx; facebook.com/x y fb/x).
+ * La página canónica es la del primer slug (en orden alfabético) con el mismo nombre y ciudad,
+ * para que Google no las vea como contenido duplicado.
+ */
+export async function slugCanonico(e: EmpresaDirectorio): Promise<string> {
+  const clave = (x: EmpresaDirectorio) => `${sinAcentos(nombreVisible(x))}|${sinAcentos(x.ciudad || "")}`
+  const k = clave(e)
+  const iguales = (await directorioMexico()).filter((x) => clave(x) === k).map((x) => x.slug).sort()
+  return iguales[0] || e.slug
+}
+
 export async function empresaPorSlug(slug: string): Promise<EmpresaDirectorio | null> {
   const s = slugDirectorio(slug)
   return (await directorioMexico()).find((e) => e.slug === s) || null
