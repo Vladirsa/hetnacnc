@@ -344,7 +344,7 @@ const yaPromovidos = (knex: any, tipo: string, dias: number) => knex(T_PROMO).wh
 export async function promoProducto(scope: any, logger?: any) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarPromo(knex)
-  const p = await knex("product").whereNull("deleted_at").where({ status: "published" }).whereNotNull("thumbnail").whereNotIn("id", yaPromovidos(knex, "producto", 45)).orderBy("created_at", "desc").first("id", "title", "handle", "thumbnail", "description")
+  const p = await knex("product").whereNull("deleted_at").where({ status: "published" }).whereNotNull("thumbnail").whereRaw("coalesce(metadata->>'origen', '') <> 'plano'").whereNotIn("id", yaPromovidos(knex, "producto", 45)).orderBy("created_at", "desc").first("id", "title", "handle", "thumbnail", "description")
   if (!p) return null
   const imgs = await knex("image").where({ product_id: p.id }).whereNull("deleted_at").orderBy("rank").limit(4).pluck("url").catch(() => [])
   const fotos = [...new Set([p.thumbnail, ...imgs])].filter((u) => /^https:\/\//.test(String(u)))
