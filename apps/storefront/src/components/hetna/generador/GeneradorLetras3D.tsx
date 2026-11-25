@@ -2,6 +2,9 @@
 
 // Letras 3D en caja (anuncios y letras luminosas) dentro del Estudio 3D:
 // Diseño 2D (las hojas de corte), Vista 3D (la letra armada) y Exportación.
+//
+// 25 nov 2026: modo "Impresora 3D" (LetrasImpresion3D): letras de pie con base,
+// para colgar con plantilla de montaje, o huecas para LED. ?modo=impresion lo abre.
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -19,6 +22,7 @@ import {
 } from "@/lib/generador/letras3d"
 import type { Fuente } from "@/lib/generador/letreros"
 import { BotonesCam } from "./BotonesCam"
+import { LetrasImpresion3D } from "./LetrasImpresion3D"
 import { dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -65,7 +69,38 @@ const CampoNum = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: strin
   </label>
 )
 
+type Modo = "capas" | "impresion"
+
+/** Router/láser por capas o impresora 3D: el mismo selector arriba de los dos paneles. */
+function SelectorModo({ modo, cambiar }: { modo: Modo; cambiar: (m: Modo) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-1.5 rounded-[10px] bg-[#0F151E] p-1" role="tablist" aria-label="Cómo se fabrican">
+      {([["capas", "Router o láser"], ["impresion", "Impresora 3D"]] as const).map(([id, nombre]) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={modo === id}
+          onClick={() => cambiar(id)}
+          className={`rounded-[8px] py-2 text-[12.5px] font-bold ${modo === id ? "bg-[#C2560A] text-white" : "text-[#C9D2E0] hover:bg-[#1C2431]"}`}
+        >
+          {nombre}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function GeneradorLetras3D() {
+  // se carga sólo en el navegador (dynamic sin SSR), así que se puede leer la liga al iniciar
+  const [modo, setModo] = useState<Modo>(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("modo") === "impresion" ? "impresion" : "capas"
+  )
+  const selector = <SelectorModo modo={modo} cambiar={setModo} />
+  return modo === "impresion" ? <LetrasImpresion3D selector={selector} /> : <LetrasCapas selector={selector} />
+}
+
+function LetrasCapas({ selector }: { selector: React.ReactNode }) {
   const { locale } = useParams<{ locale: string }>()
   const [texto, setTexto] = useState("HETNA")
   const [fuenteId, setFuenteId] = useState("alfa-slab-one")
@@ -169,6 +204,7 @@ export function GeneradorLetras3D() {
 
   const panel = (
     <div className="flex flex-col gap-4">
+      {selector}
       <label className="flex flex-col gap-1.5">
         <Etiqueta>Texto</Etiqueta>
         <input

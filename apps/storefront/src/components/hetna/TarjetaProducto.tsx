@@ -277,7 +277,8 @@ export default function TarjetaProducto({
       {/* El atajo va FUERA del enlace: un <button> dentro de un <a> no es HTML
           válido y el clic se iría a la ficha. Se coloca sobre la esquina de la
           foto, a la altura que mide el recuadro de la imagen. */}
-      {vendedor?.ofertaId && precioOferta !== null && !agotado && (
+      {/* Sin atajo en lo que se pide con texto (llaveros, letras): el texto se escribe en la ficha */}
+      {vendedor?.ofertaId && precioOferta !== null && !agotado && !(product.metadata as Record<string, unknown> | null)?.personalizable && (
         <div className="absolute right-2 top-[96px] z-20 sm:top-[111px]">
           <BotonAgregarRapido
             ofertaId={vendedor.ofertaId}

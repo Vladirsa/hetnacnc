@@ -23,7 +23,9 @@ export const CartDropdownItem = ({
   const hayDescuento = lista > subtotal
 
   const color = typeof item.metadata?.color === "string" ? item.metadata.color : ""
-  const opciones = [...Object.entries(item.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : [])]
+  // + el texto de un llavero o unas letras personalizables (metadata.texto)
+  const textoPedido = typeof item.metadata?.texto === "string" ? item.metadata.texto : ""
+  const opciones = [...Object.entries(item.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : []), ...(textoPedido ? [["Texto", `«${textoPedido}»`] as [string, string]] : [])]
 
   return (
     <div className="flex gap-3 border-b border-[#EDEAE2] py-3 last:border-b-0">

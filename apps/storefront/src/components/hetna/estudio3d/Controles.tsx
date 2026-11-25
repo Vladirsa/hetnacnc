@@ -189,13 +189,15 @@ export const Boton = ({
   children,
   tipo = "secundario",
   href,
+  disabled = false,
 }: {
   onClick?: () => void
   children: React.ReactNode
   tipo?: "primario" | "secundario" | "verde"
   href?: string
+  disabled?: boolean
 }) => {
-  const clase = `flex-1 rounded-[8px] px-4 py-2 text-center text-[13px] font-semibold text-white ${
+  const clase = `flex-1 rounded-[8px] px-4 py-2 text-center text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${
     tipo === "primario"
       ? "bg-[#C2560A] hover:bg-[#A84A08]"
       : tipo === "verde"
@@ -207,7 +209,7 @@ export const Boton = ({
       {children}
     </a>
   ) : (
-    <button type="button" onClick={onClick} className={clase}>
+    <button type="button" onClick={onClick} disabled={disabled} className={clase}>
       {children}
     </button>
   )

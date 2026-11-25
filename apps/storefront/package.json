@@ -37,6 +37,7 @@
     "mathjs": "^15.2.0",
     "mmdb-lib": "3",
     "next": "15.5.29",
+    "pdf-lib": "1.17.1",
     "pg": "^8.11.3",
     "react": "^19.2.1",
     "react-country-flag": "^3.1.0",
