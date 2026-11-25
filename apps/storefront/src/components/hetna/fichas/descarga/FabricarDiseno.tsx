@@ -34,6 +34,8 @@ type Props = {
   fisico?: boolean
   /** Proceso que sale elegido (p. ej. router para un tallado) */
   procesoInicial?: TipoMaquina
+  /** Texto con el material del producto ("Pino", "MDF 6 mm"…): sale elegido el que más se parece */
+  materialInicial?: string
 }
 
 const FORMATOS_3D = ["STL", "OBJ", "STEP", "3MF"]
@@ -48,10 +50,29 @@ export function leerMedidas(t?: string): { largo: number; ancho: number; alto: n
   return a > 0 && b > 0 ? { largo: a, ancho: b, alto: c || 0 } : null
 }
 
+/**
+ * El material de la lista que más se parece al del producto: primero el tipo
+ * (pino, MDF, acrílico, aluminio…) y, entre esos, el grosor más cercano si el
+ * texto lo trae ("MDF 6 mm"). Si nada coincide, el primero de la lista.
+ */
+export function indiceMaterial(mats: { nombre: string; espesor: number }[], texto?: string): number {
+  const t = sinAcentos(texto || "")
+  if (!t || !mats.length) return 0
+  const palabra = (m: { nombre: string }) => sinAcentos(m.nombre).split(/[\s(]/)[0] // "pino", "mdf", "acrilico", "aluminio"…
+  const tipos = mats.map((m, i) => ({ i, m })).filter(({ m }) => {
+    const w = palabra(m)
+    return w.length > 2 && new RegExp(`\\b${w}`).test(t)
+  })
+  if (!tipos.length) return 0
+  const grosor = parseFloat((t.match(/(\d+(?:[.,]\d+)?)\s*mm\b/) || [])[1]?.replace(",", ".") || "")
+  if (!(grosor > 0) || grosor > 60) return tipos[0].i // "600 mm" es medida, no grosor
+  return tipos.reduce((a, b) => (Math.abs(b.m.espesor - grosor) < Math.abs(a.m.espesor - grosor) ? b : a)).i
+}
+
 const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-2.5 text-[14px] outline-none focus:border-[#E85D04]"
 const etiqueta = "block text-[12.5px] font-semibold text-[#1E2329]"
 
-export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial }: Props) {
+export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial, materialInicial }: Props) {
   const es3D = !fisico && formatos.length > 0 && formatos.every((f) => FORMATOS_3D.includes(f))
   const todos: TipoMaquina[] = ["laser_co2", "router", "plasma", "impresora_3d"]
   const lista: TipoMaquina[] = fisico ? todos : es3D ? ["impresora_3d"] : formatos.some((f) => FORMATOS_3D.includes(f)) ? todos : ["laser_co2", "router", "plasma"]
@@ -80,7 +101,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const deFicha = leerMedidas(medidas)
   const [servicio, setServicio] = useState<TipoMaquina>(procesos[0])
   const mats = useMemo(() => materialesPara(servicio), [servicio])
-  const [iMat, setIMat] = useState(0)
+  const [iMat, setIMat] = useState(() => indiceMaterial(materialesPara(procesos[0]), materialInicial))
   // Medidas: ancho × largo × alto. Si el diseño trae medidas, cambiar una
   // ajusta las otras en proporción (escala `k`) para no deformarlo.
   const [k, setK] = useState(1)
@@ -89,7 +110,15 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const [conGrabado, setConGrabado] = useState(false)
   const [texto, setTexto] = useState("")
 
-  useEffect(() => setIMat(0), [servicio])
+  // al cambiar de proceso, el material del producto si esa máquina lo corta
+  const primeraVez = useRef(true)
+  useEffect(() => {
+    if (primeraVez.current) {
+      primeraVez.current = false
+      return
+    }
+    setIMat(indiceMaterial(mats, materialInicial))
+  }, [mats, materialInicial])
 
   // Pieza base (tamaño original) y escala que eligió el cliente
   const base: Pieza | null = geo

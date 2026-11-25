@@ -198,3 +198,15 @@ export function notaPrecio(seller?: { metadata?: Record<string, unknown> | null 
   if (f === "no") return "Precio final · Este taller no emite factura"
   return "Precio final"
 }
+
+/**
+ * Medidas escritas en un texto como "600x600 mm", "25 x 15 cm" o
+ * "30×20×2 cm" → "600 × 600 mm" (lo que entiende "Fabrícalo"), o "".
+ */
+export function medidasEnTexto(t: string | null | undefined): string {
+  const m = String(t || "").match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)(?:\s*[x×]\s*(\d+(?:[.,]\d+)?))?\s*(mm|cm|m)\b/i)
+  if (!m) return ""
+  const k = m[4].toLowerCase() === "cm" ? 10 : m[4].toLowerCase() === "m" ? 1000 : 1
+  const n = [m[1], m[2], m[3]].filter(Boolean).map((x) => Math.round(parseFloat(String(x).replace(",", ".")) * k * 10) / 10)
+  return n.every((x) => x > 0) ? `${n.join(" × ")} mm` : ""
+}

@@ -28,7 +28,7 @@ import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { CompraFija } from "@/components/hetna/fichas/CompraFija"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
-import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
+import { campoDeDescripcion, medidasEnTexto, tipoProducto } from "@/lib/hetna/tipo-producto"
 import { datosImpresion, esImpresionBajoPedido } from "@/lib/data/impresion"
 import { ResumenImpresion, TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
 import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
@@ -197,7 +197,14 @@ export const ProductDetailsPage = async ({
   const metaProd = (prod.metadata || {}) as Record<string, unknown>
   const textoMeta = (v: unknown) => (typeof v === "string" ? v : "")
   const medidasProd =
-    textoMeta(metaProd.medidas) || textoMeta(metaProd.medida_principal) || campoDeDescripcion(prod.description, /^medidas?$/i) || undefined
+    textoMeta(metaProd.medidas) ||
+    textoMeta(metaProd.medida_principal) ||
+    campoDeDescripcion(prod.description, /^medidas?$/i) ||
+    // muchas fichas sólo traen la medida en el nombre ("Celosía 600x600 mm")
+    medidasEnTexto(prod.title) ||
+    undefined
+  // Material para "Fabrícalo": el de la ficha o, si no, lo que diga el nombre ("Tabla de pino…")
+  const materialProd = [textoMeta(metaProd.material), campoDeDescripcion(prod.description, /^material(es)?$/i), prod.title].filter(Boolean).join(" ")
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
   // Impresión 3D bajo pedido: en vez de "Fabrícalo", los talleres que ya lo
@@ -247,6 +254,7 @@ export const ProductDetailsPage = async ({
         vistaPrevia={descarga ? vistaPreviaDe(prod.metadata) : null}
         fisico={!descarga}
         procesoInicial={(procesosProd[0] && PROCESOS[procesosProd[0]].estimador) || procesoSugerido}
+        materialInicial={materialProd}
       />
       {talleresQueLoHacen.length > 0 && (
         <TalleresCerca talleres={talleresQueLoHacen} query={queryCotizar} procesos={procesosProd} limite={4} />
