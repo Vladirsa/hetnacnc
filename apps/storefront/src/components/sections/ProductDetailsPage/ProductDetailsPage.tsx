@@ -25,6 +25,7 @@ import { AvisoImportacion } from "@/components/hetna/AvisoImportacion"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
+import { CompraFija } from "@/components/hetna/fichas/CompraFija"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
@@ -314,7 +315,12 @@ export const ProductDetailsPage = async ({
         // derecha la compra, sin licencia ni "Vendido por" (van en pestañas).
         // Abajo, a todo lo ancho, las pestañas. En celular el orden es fotos →
         // compra → Fabrícalo → pestañas.
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
+        // Opción A (Vlado, 25 nov 2026, "que no haya espacios libres"): a la
+        // izquierda fotos → talleres/Fabrícalo → pestañas (Descripción,
+        // Especificaciones…) y reseñas; a la derecha la compra, que se queda
+        // a la vista al bajar (CompraFija). Antes las pestañas iban abajo a
+        // todo lo ancho y debajo de la foto quedaba un hueco grande.
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
@@ -325,7 +331,8 @@ export const ProductDetailsPage = async ({
           )}
         </div>
 
-        <div className="order-2 lg:col-start-2 lg:row-span-2 lg:row-start-1" data-testid="product-details-container">
+        <div className="order-2 lg:col-start-2 lg:row-span-3 lg:row-start-1" data-testid="product-details-container">
+          <CompraFija>
           <div className="max-w-[680px]">
             {/* Proveedor extranjero: de dónde viene, cuánto tarda e impuestos incluidos */}
             {!descarga && <AvisoImportacion handle={vendedor?.handle} />}
@@ -337,6 +344,7 @@ export const ProductDetailsPage = async ({
               compraPropia={compraImpresion}
             />
           </div>
+          </CompraFija>
         </div>
 
         {(fabricar || descarga) && (
@@ -356,8 +364,9 @@ export const ProductDetailsPage = async ({
           </div>
         )}
 
-        {/* Ficha larga a todo lo ancho, en pestañas */}
-        <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3 lg:mt-4">
+        {/* Ficha larga en pestañas: en computadora va debajo de la foto (columna
+            izquierda) para que no quede hueco; en celular, después de la compra */}
+        <div className="order-4 min-w-0 lg:col-start-1 lg:row-start-3">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}
