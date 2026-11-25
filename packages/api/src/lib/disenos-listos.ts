@@ -112,5 +112,30 @@ export function metadataDiseno(d: DatoDiseno, gramos: number, precio: number) {
     gramos,
     precio_recomendado: precio,
     hetna_ofrece: `${HETNA_OFRECE.color} · ${HETNA_OFRECE.calidad}`,
+    // para recalcular el precio recomendado sin datos.json (panel del taller)
+    medidas_mm: d.medidas_mm,
+    volumen_cm3: d.volumen_cm3,
+    dias: d.dias,
+    calidad_motor: d.calidad,
+  }
+}
+
+/** El diseño a partir de la metadata del producto publicado (para el panel del taller). */
+export function datoDeProducto(p: { handle: string; title?: string | null; metadata?: Record<string, unknown> | null }): DatoDiseno | null {
+  const m = p.metadata || {}
+  const medidas = m.medidas_mm as unknown
+  if (!m.diseno_listo || !Array.isArray(medidas) || medidas.length !== 3 || !(Number(m.volumen_cm3) > 0)) return null
+  return {
+    handle: p.handle,
+    herramienta: String(m.herramienta || ""),
+    modelo: String(m.modelo || ""),
+    nombre: String(p.title || ""),
+    texto: "",
+    valores: (m.valores as Record<string, number>) || {},
+    material: String(m.material || "PLA"),
+    calidad: String(m.calidad_motor || "Pieza funcional"),
+    dias: Number(m.dias) || 2,
+    medidas_mm: medidas.map(Number) as [number, number, number],
+    volumen_cm3: Number(m.volumen_cm3),
   }
 }
