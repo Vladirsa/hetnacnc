@@ -20,6 +20,8 @@ type Plano = {
   vista_previa: string
 }
 
+type Agente = { ia: boolean; corriendo: boolean; estado?: string; inicio?: string; fin?: string | null; creados?: number; bitacora?: string[] | null }
+
 const C = { borde: "var(--border-base, #e5e5e5)", fondo: "var(--bg-base, #ffffff)", tenue: "var(--fg-subtle, #6b6a63)", naranja: "#C2560A" }
 const caja: CSSProperties = { background: C.fondo, border: `1px solid ${C.borde}`, borderRadius: 12, padding: 16, marginBottom: 12 }
 const boton: CSSProperties = { background: C.naranja, color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer", fontSize: 14 }
@@ -99,12 +101,16 @@ function Tarjeta({ p, alTerminar }: { p: Plano; alTerminar: (m: string) => void 
 
 export default function PlanosIaPage() {
   const [planos, setPlanos] = useState<Plano[] | null>(null)
+  const [agente, setAgente] = useState<Agente | null>(null)
   const [aviso, setAviso] = useState("")
   const [json, setJson] = useState("")
   const [importando, setImportando] = useState(false)
   const cargar = () =>
     pedir()
-      .then((d) => setPlanos(d.planos))
+      .then((d) => {
+        setPlanos(d.planos)
+        setAgente(d.agente || null)
+      })
       .catch((e) => setAviso((e as Error).message))
   useEffect(() => {
     void cargar()
@@ -122,6 +128,15 @@ export default function PlanosIaPage() {
       setImportando(false)
     }
   }
+  const generar = async () => {
+    try {
+      await pedir({ generar: true })
+      setAviso("El agente está trabajando: investiga y diseña los planos (tarda de 10 a 30 minutos). Los borradores aparecen aquí; recarga en un rato.")
+      await cargar()
+    } catch (e) {
+      setAviso((e as Error).message)
+    }
+  }
   const borradores = (planos || []).filter((p) => p.estado === "borrador")
   const otros = (planos || []).filter((p) => p.estado !== "borrador")
 
@@ -133,6 +148,31 @@ export default function PlanosIaPage() {
         completo, revisa que tenga sentido como mueble y publícalo: sale en /planos, en la tienda con ofertas de talleres y en redes. Nada se publica solo.
       </p>
       {aviso && <div style={{ ...caja, fontSize: 14 }}>{aviso}</div>}
+      <div style={caja}>
+        <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Agente semanal (lunes 7:23)</p>
+        <p style={{ margin: "0 0 8px", fontSize: 13, color: C.tenue }}>
+          {!agente?.ia
+            ? "Falta la llave de IA (ANTHROPIC_API_KEY) en el servidor."
+            : agente.corriendo
+              ? "Trabajando ahora…"
+              : agente.inicio
+                ? `Última corrida: ${new Date(agente.inicio).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })} · ${agente.estado} · ${agente.creados || 0} planos nuevos`
+                : "Todavía no ha corrido."}
+        </p>
+        <button type="button" style={boton} disabled={!agente?.ia || agente?.corriendo} onClick={() => void generar()}>
+          Generar ahora
+        </button>
+        {agente?.bitacora?.length ? (
+          <details style={{ marginTop: 8 }}>
+            <summary style={{ cursor: "pointer", fontSize: 13 }}>Bitácora de la última corrida</summary>
+            <ul style={{ fontSize: 12, color: C.tenue, margin: "6px 0 0", paddingLeft: 18 }}>
+              {agente.bitacora.map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+      </div>
       <h2 style={{ fontSize: 16, margin: "16px 0 8px" }}>Por revisar ({borradores.length})</h2>
       {planos && !borradores.length && <p style={{ color: C.tenue, fontSize: 14 }}>No hay borradores.</p>}
       {borradores.map((p) => (
