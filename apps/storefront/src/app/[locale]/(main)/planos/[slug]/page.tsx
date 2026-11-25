@@ -5,11 +5,11 @@ import DescargaPlano from "@/components/hetna/planos/DescargaPlano"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
-import { MATERIALES_PLANO, PLANOS, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
+import { MATERIALES_PLANO, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
 
-export function generateStaticParams() {
-  return PLANOS.map((p) => ({ slug: p.slug }))
-}
+// Sin generateStaticParams: el layout raíz lee headers() y cookies(), así que
+// la página se arma en cada visita como el resto del sitio (prerenderizada
+// daba 500 en producción).
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
