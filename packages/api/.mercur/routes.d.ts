@@ -950,6 +950,7 @@ export type Routes = {
             tableros: typeof import("../src/api/store/muebles/tableros/route");
         };
         packs: typeof import("../src/api/store/packs/route");
+        planosCorreo: typeof import("../src/api/store/planos-correo/route");
         precioInstantaneo: typeof import("../src/api/store/precio-instantaneo/route");
         proveedor: {
             ordenes: typeof import("../src/api/store/proveedor/ordenes/route") & {
