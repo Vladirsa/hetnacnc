@@ -1,0 +1,161 @@
+// Productos de la Biblioteca de planos en la tienda: un producto maestro por
+// plano (catálogo compartido de Mercur), con variantes de acabado y color.
+// No se liga a ningún taller: cualquier taller puede ponerle su oferta (su
+// precio, sus días de entrega, su envío), y el cliente las ve juntas.
+//
+// Los datos (nombre, medidas, peso, precio recomendado por acabado) salen de
+// la tienda: GET {STORE_URL}/api/planos/catalogo (apps/storefront).
+import type { MedusaContainer } from "@medusajs/framework/types"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { createProductCategoriesWorkflow, createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
+
+import { subir } from "./fabrica"
+import { STORE_URL, esc } from "./licitacion"
+
+export type PlanoCatalogo = {
+  slug: string
+  nombre: string
+  categoria: string
+  resumen: string
+  descripcion: string
+  nivel: string
+  horas: string
+  herrajes: string[]
+  medidas_mm: { ancho: number; fondo: number; alto: number }
+  paquete_cm: { largo: number; ancho: number; alto: number }
+  peso_kg: number
+  piezas: number
+  hojas: number
+  dias_fabricacion: number
+  precios: Record<"lijado" | "sellado" | "pintura", number>
+  imagenes: string[]
+}
+
+/** Variantes que se crean: acabado + color (el color sólo si va pintado). */
+export const VARIANTES_PLANO = [
+  { codigo: "NAT", acabado: "Natural lijado", color: "Natural", precio: "lijado" },
+  { codigo: "SEL", acabado: "Sellado / barniz", color: "Natural", precio: "sellado" },
+  { codigo: "BLA", acabado: "Pintado", color: "Blanco", precio: "pintura" },
+  { codigo: "NEG", acabado: "Pintado", color: "Negro", precio: "pintura" },
+  { codigo: "GRI", acabado: "Pintado", color: "Gris", precio: "pintura" },
+  { codigo: "NOG", acabado: "Pintado", color: "Nogal", precio: "pintura" },
+] as const
+
+export const handlePlano = (slug: string) => `plano-${slug}`
+export const skuPlano = (slug: string, codigo: string) => `HETNA-PL-${slug.toUpperCase().slice(0, 40)}-${codigo}`
+
+export async function leerCatalogoPlanos(): Promise<PlanoCatalogo[]> {
+  const r = await fetch(`${STORE_URL}/api/planos/catalogo`, { headers: { accept: "application/json" } })
+  if (!r.ok) throw new Error(`No pude leer el catálogo de planos (${STORE_URL}/api/planos/catalogo): HTTP ${r.status}`)
+  const d = (await r.json()) as { planos?: PlanoCatalogo[] }
+  if (!Array.isArray(d.planos) || !d.planos.length) throw new Error("El catálogo de planos llegó vacío")
+  return d.planos
+}
+
+export function descripcionPlano(p: PlanoCatalogo) {
+  const liga = `${STORE_URL}/mx/planos/${p.slug}`
+  return [
+    `<p>${esc(p.resumen)}</p>`,
+    `<p>${esc(p.descripcion)}</p>`,
+    `<p><b>Qué recibes:</b> las ${p.piezas} piezas cortadas en router CNC en triplay de pino y lijadas, listas para armar (${p.medidas_mm.ancho} × ${p.medidas_mm.fondo} × ${p.medidas_mm.alto} mm armado). Los herrajes no van incluidos: ${esc(p.herrajes.join("; "))}.</p>`,
+    `<p><b>Armado:</b> nivel ${esc(p.nivel.toLowerCase())}, ${esc(p.horas)}, con el plano paso a paso.</p>`,
+    `<p>¿Lo quieres de otra medida o prefieres cortarlo tú? El plano es gratis, con lista de corte y DXF: <a href="${liga}">${liga.replace(/^https?:\/\//, "")}</a></p>`,
+  ].join("")
+}
+
+export async function categoriaPlanos(container: MedusaContainer) {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const nombre = process.env.PLANOS_CATEGORIA || "Muebles para armar"
+  const { data } = await query.graph({ entity: "product_category", fields: ["id", "name"], filters: { name: nombre } as any })
+  if (data[0]?.id) return data[0].id as string
+  const { result } = await createProductCategoriesWorkflow(container).run({
+    input: { product_categories: [{ name: nombre, handle: "muebles-para-armar", is_active: true, is_internal: false }] },
+  })
+  return result[0].id as string
+}
+
+const metadataDe = (p: PlanoCatalogo) => ({
+  tipo_producto: "a_medida",
+  origen: "plano",
+  plano_slug: p.slug,
+  precio_recomendado: p.precios,
+  tiempo_produccion: `${p.dias_fabricacion} días hábiles`,
+  material: "Triplay de pino",
+  medida_principal: `${p.medidas_mm.ancho} × ${p.medidas_mm.fondo} × ${p.medidas_mm.alto} mm`,
+})
+
+/**
+ * Crea (o actualiza el precio recomendado de) el producto de cada plano.
+ * Se crean como borrador salvo que publicar = true.
+ */
+export async function sincronizarProductosPlanos(container: MedusaContainer, o: { publicar?: boolean; solo?: string[] } = {}) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const planos = (await leerCatalogoPlanos()).filter((p) => !o.solo?.length || o.solo.includes(p.slug))
+  const { data: perfiles } = await query.graph({ entity: "shipping_profile", fields: ["id", "name"] })
+  const perfil = ((perfiles as { id: string; name: string }[]).find((x) => x.name === "Marketplace Shipping") ||
+    (perfiles as { id: string; name: string }[]).find((x) => x.name !== "Producto digital")) as { id: string } | undefined
+  if (!perfil?.id) throw new Error("No hay perfil de envío")
+  const { data: canales } = await query.graph({ entity: "sales_channel", fields: ["id"] })
+  const categoria = await categoriaPlanos(container)
+  let creados = 0, actualizados = 0
+
+  for (const p of planos) {
+    const handle = handlePlano(p.slug)
+    const { data: ya } = await query.graph({ entity: "product", fields: ["id", "status", "metadata"], filters: { handle } })
+    const medidas = { weight: p.peso_kg, length: p.paquete_cm.largo, width: p.paquete_cm.ancho, height: p.paquete_cm.alto }
+    if (ya[0]?.id) {
+      await updateProductsWorkflow(container).run({
+        input: {
+          selector: { id: ya[0].id },
+          update: { metadata: { ...((ya[0].metadata as Record<string, unknown>) || {}), ...metadataDe(p) }, ...medidas, ...(o.publicar ? { status: "published" as const } : {}) },
+        },
+      })
+      actualizados++
+      continue
+    }
+    const imagenes: string[] = []
+    for (const [i, ruta] of p.imagenes.entries()) {
+      const r = await fetch(`${STORE_URL}${ruta}`)
+      if (r.ok) imagenes.push(await subir(container, `plano-${p.slug}-${i + 1}.png`, "image/png", Buffer.from(await r.arrayBuffer())))
+    }
+    await createProductsWorkflow(container).run({
+      input: {
+        products: [
+          {
+            title: p.nombre,
+            subtitle: "Kit de piezas cortadas en CNC, listo para armar",
+            description: descripcionPlano(p),
+            handle,
+            status: o.publicar ? ("published" as const) : ("draft" as const),
+            discountable: true,
+            thumbnail: imagenes[0],
+            images: imagenes.map((url) => ({ url })),
+            shipping_profile_id: perfil.id,
+            category_ids: [categoria],
+            sales_channels: (canales as { id: string }[]).map((c) => ({ id: c.id })),
+            ...medidas,
+            metadata: metadataDe(p),
+            options: [
+              { title: "Acabado", values: [...new Set(VARIANTES_PLANO.map((v) => v.acabado))] },
+              { title: "Color", values: [...new Set(VARIANTES_PLANO.map((v) => v.color))] },
+            ],
+            variants: VARIANTES_PLANO.map((v) => ({
+              title: v.acabado === "Pintado" ? `Pintado ${v.color.toLowerCase()}` : v.acabado,
+              sku: skuPlano(p.slug, v.codigo),
+              // Las existencias y el precio viven en la oferta de cada taller (Mercur)
+              manage_inventory: false,
+              options: { Acabado: v.acabado, Color: v.color },
+              prices: [],
+              metadata: { precio_recomendado: p.precios[v.precio] },
+              ...medidas,
+            })),
+          },
+        ],
+      },
+    })
+    creados++
+    logger.info(`[planos-tienda] producto creado: ${handle}`)
+  }
+  return { creados, actualizados, total: planos.length }
+}

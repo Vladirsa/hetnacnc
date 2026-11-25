@@ -81,12 +81,49 @@ export function firmaVerificacionValida(id: string, exp: string, firma: string):
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+// ── Código de 6 dígitos (25 nov 2026) ───────────────────────────────────────
+// Va en el mismo correo que la liga, para quien abre el correo en el celular
+// pero se registró en la computadora. No se guarda: sale de la firma de la
+// cuenta y de la hora en que se mandó, y sirve CODIGO_HORAS. Para que no se
+// pueda adivinar, cada cuenta tiene CODIGO_MAX_FALLOS intentos fallidos al día
+// (se cuentan en customer.metadata.codigo_fallos, que el cliente no puede tocar).
+export const CODIGO_HORAS = 24
+export const CODIGO_MAX_FALLOS = 8
+const HORA = 3600_000
+
+export function codigoVerificacion(id: string, hora = Math.floor(Date.now() / HORA)): string {
+  const s = secretoLigas()
+  if (!s || !id) return ""
+  const h = createHmac("sha256", s).update(`codigo:${id}:${hora}`).digest()
+  return String(h.readUInt32BE(0) % 1_000_000).padStart(6, "0")
+}
+
+export function codigoValido(id: string, codigo: string, ahora = Date.now()): boolean {
+  const limpio = String(codigo || "").replace(/[^0-9]/g, "")
+  if (limpio.length !== 6) return false
+  const hora = Math.floor(ahora / HORA)
+  for (let i = 0; i < CODIGO_HORAS; i++) {
+    const esperado = codigoVerificacion(id, hora - i)
+    if (esperado && timingSafeEqual(Buffer.from(esperado), Buffer.from(limpio))) return true
+  }
+  return false
+}
+
+type Fallos = { n: number; desde: string }
+/** Fallos del día de esta cuenta (se reinician a las 24 h del primero). */
+export function fallosVigentes(meta: Record<string, unknown> | null | undefined, ahora = Date.now()): Fallos {
+  const f = (meta?.codigo_fallos || null) as Fallos | null
+  if (!f || !f.desde || ahora - new Date(f.desde).getTime() > 24 * HORA) return { n: 0, desde: new Date(ahora).toISOString() }
+  return { n: Number(f.n) || 0, desde: f.desde }
+}
+
 export async function mandarCorreoVerificacion(c: { id: string; email: string; first_name?: string | null }) {
   // El registro la manda dos veces casi juntas (el aviso de cuenta creada y
   // la tienda al ver que falta confirmar): sólo sale una por minuto.
   const liga = ligaVerificacion(c.id)
   if (!liga) return { sent: false, reason: "falta el secreto para firmar la liga (BAJA_SECRET)" }
   if (!puedeReenviar(c.id)) return { sent: false, reason: "ya se mandó hace menos de un minuto" }
+  const codigo = codigoVerificacion(c.id)
   return sendEmail({
     to: c.email,
     subject: "Confirma tu correo para activar tu cuenta de HETNA CNC",
@@ -94,6 +131,11 @@ export async function mandarCorreoVerificacion(c: { id: string; email: string; f
       "Confirma tu correo",
       `<p style="margin:0 0 12px;color:#40403A;line-height:1.5">${c.first_name ? `Hola ${esc(c.first_name)}:` : "Hola:"} gracias por crear tu cuenta en HETNA CNC. Para activarla, confirma que este correo es tuyo:</p>` +
         boton("Confirmar mi correo", liga) +
+        (codigo
+          ? `<p style="margin:18px 0 6px;color:#40403A;line-height:1.5">¿Te registraste en otro aparato? Escribe este código en la página donde creaste tu cuenta:</p>` +
+            `<p style="margin:0;font-size:30px;font-weight:700;letter-spacing:8px;color:#142033">${codigo}</p>` +
+            `<p style="margin:4px 0 0;color:#6B6A63;font-size:13px">El código sirve ${CODIGO_HORAS} horas.</p>`
+          : "") +
         `<p style="margin:16px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">La liga sirve ${VIGENCIA_DIAS} días. Si tú no creaste esta cuenta, ignora este correo.</p>`
     ),
   })

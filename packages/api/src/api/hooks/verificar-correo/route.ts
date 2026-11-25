@@ -2,6 +2,7 @@
 //   GET  /hooks/verificar-correo?c=<cliente>&e=<vence>&t=<firma>  -> sólo revisa la liga (no cambia nada)
 //   POST /hooks/verificar-correo  { c, e, t }                      -> confirma
 //   POST /hooks/verificar-correo  { email }                        -> reenvía la liga
+//   POST /hooks/verificar-correo  { email, codigo }                -> confirma con el código de 6 dígitos
 // El GET no confirma a propósito: los antivirus del correo abren las ligas
 // solos y con eso un extraño podía dejar confirmada una cuenta con correo ajeno.
 // El reenvío no dice si el correo existe (para no regalar qué correos tienen cuenta).
@@ -11,7 +12,10 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { ligarSolicitudesPorCorreo } from "../../../lib/afiliacion"
 
 import {
+  CODIGO_MAX_FALLOS,
   VERIFICAR_DESDE,
+  codigoValido,
+  fallosVigentes,
   firmaVerificacionValida,
   mandarCorreoVerificacion,
   requiereVerificacion,
@@ -39,11 +43,36 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 async function confirmar(req: MedusaRequest, res: MedusaResponse, d: Record<string, unknown>) {
   const r = await leer(req, d)
   if ("error" in r) return res.status(r.error).json({ ok: false, motivo: r.motivo })
-  const { c, clientes } = r
+  const ya = await marcarConfirmado(req, r.c, r.clientes)
+  res.json({ ok: true, ya })
+}
+
+/** Con el código de 6 dígitos del correo. No dice si el correo tiene cuenta. */
+async function confirmarConCodigo(req: MedusaRequest, res: MedusaResponse, correo: string, codigo: string) {
+  const clientes = req.scope.resolve(Modules.CUSTOMER) as any
+  const [c] = await clientes.listCustomers({ email: correo, has_account: true }, { take: 1 })
+  const malo = () => res.status(400).json({ ok: false, message: "El código no es correcto. Revisa el último correo que te mandamos." })
+  if (!c) return malo()
+  if (c.metadata?.correo_verificado === true) return res.json({ ok: true, ya: true })
+  const fallos = fallosVigentes(c.metadata)
+  if (fallos.n >= CODIGO_MAX_FALLOS) {
+    return res.status(429).json({ ok: false, message: "Demasiados intentos. Usa la liga del correo o intenta mañana." })
+  }
+  if (!codigoValido(c.id, codigo)) {
+    await clientes.updateCustomers(c.id, { metadata: { ...(c.metadata || {}), codigo_fallos: { n: fallos.n + 1, desde: fallos.desde } } })
+    return malo()
+  }
+  const ya = await marcarConfirmado(req, c, clientes)
+  res.json({ ok: true, ya })
+}
+
+/** Deja la cuenta confirmada (una sola vez) y hace lo que sigue. Devuelve true si ya lo estaba. */
+async function marcarConfirmado(req: MedusaRequest, c: any, clientes: any): Promise<boolean> {
   const ya = c.metadata?.correo_verificado === true
   if (!ya) {
+    const { codigo_fallos: _f, ...resto } = (c.metadata || {}) as Record<string, unknown>
     await clientes.updateCustomers(c.id, {
-      metadata: { ...(c.metadata || {}), correo_verificado: true, correo_verificado_en: new Date().toISOString() },
+      metadata: { ...resto, correo_verificado: true, correo_verificado_en: new Date().toISOString() },
     })
     req.scope.resolve("logger").info(`[verificar-correo] ${c.email} confirmó su correo`)
     // Con el correo confirmado, sus solicitudes enviadas sin cuenta pasan a
@@ -60,7 +89,7 @@ async function confirmar(req: MedusaRequest, res: MedusaResponse, d: Record<stri
       html: welcomeEmailHtml({ name: c.first_name || "" }),
     }).catch(() => undefined)
   }
-  res.json({ ok: true, ya })
+  return ya
 }
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -68,6 +97,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   // Con la firma de la liga (c, e, t) es la confirmación; con { email }, el reenvío.
   if (b.c || b.t) return confirmar(req, res, b)
   const correo = String(b.email || "").trim().toLowerCase()
+  if (b.codigo !== undefined) {
+    if (!correo.includes("@")) return res.status(400).json({ ok: false, message: "Falta el correo." })
+    return confirmarConCodigo(req, res, correo, String(b.codigo))
+  }
   if (correo.includes("@")) {
     const clientes = req.scope.resolve(Modules.CUSTOMER) as any
     const lista = await clientes.listCustomers({ email: correo, has_account: true }, { take: 1 })

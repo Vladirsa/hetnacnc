@@ -23,6 +23,19 @@ const PAQUETE_BASE = { largo: 30, ancho: 30, alto: 20, peso: 2 }
  * workflows/hooks/envio-por-taller.ts pone en el contexto qué renglones son de
  * cada almacén; sin él (o si el almacén no aparece) se usan todos, como antes.
  */
+/**
+ * Envío gratis del taller: todos sus renglones de este carrito vienen de
+ * ofertas con envío gratis (el taller paga la guía). Lo marca el hook
+ * workflows/hooks/envio-por-taller.ts.
+ */
+export function envioGratisDelTaller(context: any): boolean {
+  const gratis = context?.hetna_renglones_envio_gratis as string[] | undefined
+  if (!Array.isArray(gratis) || !gratis.length) return false
+  const renglones = renglonesDelTaller(context)
+  const ids = new Set(gratis)
+  return renglones.length > 0 && renglones.every((i) => ids.has(i?.id))
+}
+
 export function renglonesDelTaller(context: any): any[] {
   const items = (context?.items || []) as any[]
   const mapa = context?.hetna_renglones_por_almacen as Record<string, string[]> | undefined
@@ -74,6 +87,8 @@ export default class SkydropxProviderService extends AbstractFulfillmentProvider
   async calculatePrice(optionData: any, _data: any, context: any) {
     const cp = context?.shipping_address?.postal_code
     if (!cp) throw new Error("Falta el código postal de destino")
+    // el envío gratis del taller es el económico; el express se cobra
+    if (optionData?.id !== "envios-hetna-express" && envioGratisDelTaller(context)) return { calculated_amount: 0, is_calculated_price_tax_inclusive: true }
     const { paquete, real } = armarPaquete(renglonesDelTaller(context), PAQUETE_BASE)
     const origen = origenDe(context, this.opts)
     // Mensaje de diagnóstico: permite ver en los registros si se usó el peso real o el paquete base

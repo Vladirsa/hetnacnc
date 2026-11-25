@@ -22,7 +22,8 @@ export const CartDropdownItem = ({
   const lista = (item.compare_at_unit_price || 0) * item.quantity
   const hayDescuento = lista > subtotal
 
-  const opciones = Object.entries(item.variant_option_values ?? {})
+  const color = typeof item.metadata?.color === "string" ? item.metadata.color : ""
+  const opciones = [...Object.entries(item.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : [])]
 
   return (
     <div className="flex gap-3 border-b border-[#EDEAE2] py-3 last:border-b-0">

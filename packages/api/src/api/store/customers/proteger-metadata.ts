@@ -22,6 +22,8 @@ import { Modules } from "@medusajs/framework/utils"
 const PROTEGIDAS = [
   "correo_verificado",
   "correo_verificado_en",
+  // Intentos fallidos del código de 6 dígitos (lib/verificar-correo.ts)
+  "codigo_fallos",
   // Recomienda y gana (lib/cupones.ts): quién lo recomendó y su recompensa
   "codigo_recomienda",
   "referido_por",
@@ -77,7 +79,27 @@ function proteger(conCuenta: boolean) {
   }
 }
 
+// Nombre y apellidos obligatorios al crear la cuenta (25 nov 2026). El
+// formulario ya los pedía, pero sólo en el navegador: un robot que llamaba
+// directo a la API (o una cuenta que quedó a medias y se completaba al iniciar
+// sesión) quedaba registrada sin nombre. Debe traer al menos una letra.
+const LETRA = /\p{L}/u
+export function nombreValido(v: unknown): boolean {
+  const t = typeof v === "string" ? v.trim() : ""
+  return t.length >= 1 && t.length <= 80 && LETRA.test(t) && !/[<>{}]|https?:|www\./i.test(t)
+}
+
+function exigirNombre(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) {
+  const b = ((req as unknown as { body?: Meta }).body ?? {}) as Meta
+  if (!nombreValido(b.first_name) || !nombreValido(b.last_name)) {
+    return res.status(400).json({ type: "invalid_data", message: "Escribe tu nombre y tus apellidos para crear tu cuenta." })
+  }
+  b.first_name = String(b.first_name).trim()
+  b.last_name = String(b.last_name).trim()
+  next()
+}
+
 export const storeCustomersMiddlewares: MiddlewareRoute[] = [
-  { method: ["POST"], matcher: "/store/customers", middlewares: [proteger(false)] },
+  { method: ["POST"], matcher: "/store/customers", middlewares: [exigirNombre, proteger(false)] },
   { method: ["POST"], matcher: "/store/customers/me", middlewares: [authenticate("customer", ["session", "bearer"]), proteger(true)] },
 ]

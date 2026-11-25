@@ -10,6 +10,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 
 import { ESCANEAR, ESTUDIOS, buscarHerramientaDiseno, estudioDe, type HerramientaDiseno } from "@/lib/hetna/disenar"
 import { migas } from "@/lib/hetna/schema"
+import { CATEGORIAS, MODELOS } from "@/lib/generador/modelos3d"
 
 
 // Una herramienta abierta dentro del estudio 3D o 2D (pantalla completa). La
@@ -104,6 +105,21 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
               {GUIA_DE_HERRAMIENTA[h.slug][1]} →
             </LocalizedClientLink>
           </p>
+        )}
+        {h.slug === "modelos-3d" && (
+          // Cada modelo tiene su página (disenar/modelos-3d/[modelo]): ligas en el HTML para los buscadores
+          <div className="mt-3">
+            {CATEGORIAS.map((c) => (
+              <nav key={c.id} aria-label={c.nombre} className="mt-2 flex flex-wrap items-center gap-2 text-[13px]">
+                <span className="w-[120px] shrink-0 font-semibold text-white">{c.nombre}</span>
+                {MODELOS.filter((m) => m.categoria === c.id).map((m) => (
+                  <LocalizedClientLink key={m.id} href={`/disenar/modelos-3d/${m.id}`} className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
+                    {m.nombre}
+                  </LocalizedClientLink>
+                ))}
+              </nav>
+            ))}
+          </div>
         )}
         <p className="m-0 mt-1.5 text-[13px] text-[#8D96A3]">
           Herramienta {h.acceso === "gratis" ? "gratis" : "con créditos"} de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.

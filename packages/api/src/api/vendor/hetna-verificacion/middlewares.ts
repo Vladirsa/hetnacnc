@@ -58,6 +58,10 @@ const PROTEGIDAS = [
   "felicitado_primer_producto",
   // Bienvenida al aprobarse (lib/aprobar-taller.ts): se manda una sola vez
   "bienvenida_hetna_en",
+  // Taller destacado en Impresión 3D bajo pedido: sólo lo escribe el pago (lib/impresion-bajo-pedido.ts)
+  "destacado_impresion",
+  // Taller destacado en los planos de la tienda: sólo lo escribe el pago (lib/planos-destacado.ts)
+  "destacado_planos",
 ]
 const PROTEGIDAS_PERFIL = ["calificacion", "resenas"]
 

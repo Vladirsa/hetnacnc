@@ -30,6 +30,17 @@ describe("validarPedidoPlano", () => {
 
   it("la liga apunta a la página del plano", () => {
     expect(ligaPlano("caballetes-de-triplay")).toContain("/mx/planos/caballetes-de-triplay")
-    expect(Object.keys(PLANOS_NOMBRES)).toHaveLength(30)
+    expect(Object.keys(PLANOS_NOMBRES)).toHaveLength(40)
+  })
+})
+
+describe("aviso semanal de planos", () => {
+  it("el correo lleva la liga del plano con su campaña y escapa el nombre", () => {
+    const { correoAvisoHtml, ligaPlanoAviso } = require("../planos-correo")
+    expect(ligaPlanoAviso("librero-bajo")).toContain("utm_medium=aviso-semanal")
+    const html = correoAvisoHtml("librero-bajo", "<b>Ana</b>")
+    expect(html).toContain("Librero bajo de 1 m")
+    expect(html).toContain("/api/planos/librero-bajo/redes/1")
+    expect(html).not.toContain("<b>Ana</b>")
   })
 })

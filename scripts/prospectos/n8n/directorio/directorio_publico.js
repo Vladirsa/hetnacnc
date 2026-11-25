@@ -32,17 +32,19 @@ function tipoPublico(t) {
 const LADAS = [['+593', 'Ecuador'], ['+598', 'Uruguay'], ['+595', 'Paraguay'], ['+591', 'Bolivia'], ['+502', 'Guatemala'],
   ['+503', 'El Salvador'], ['+504', 'Honduras'], ['+505', 'Nicaragua'], ['+506', 'Costa Rica'], ['+507', 'Panamá'],
   ['+52', 'México'], ['+56', 'Chile'], ['+57', 'Colombia'], ['+51', 'Perú'], ['+54', 'Argentina'], ['+55', 'Brasil'],
-  ['+58', 'Venezuela'], ['+53', 'Cuba'], ['+34', 'España']];
+  ['+58', 'Venezuela'], ['+53', 'Cuba'], ['+34', 'España'], ['+351', 'Portugal'], ['+886', 'Taiwán'], ['+86', 'China'],
+  ['+90', 'Turquía'], ['+39', 'Italia'], ['+49', 'Alemania'], ['+91', 'India'], ['+82', 'Corea']];
 const DOMINIOS_PAIS = [['.com.mx', 'México'], ['.mx', 'México'], ['.cl', 'Chile'], ['.com.co', 'Colombia'], ['.com.pe', 'Perú'],
   ['.pe', 'Perú'], ['.com.ar', 'Argentina'], ['.ar', 'Argentina'], ['.com.ec', 'Ecuador'], ['.ec', 'Ecuador'], ['.gt', 'Guatemala'],
   ['.cr', 'Costa Rica'], ['.com.sv', 'El Salvador'], ['.hn', 'Honduras'], ['.com.pa', 'Panamá'], ['.do', 'República Dominicana'],
   ['.br', 'Brasil'], ['.uy', 'Uruguay'], ['.py', 'Paraguay'], ['.bo', 'Bolivia'], ['.ve', 'Venezuela'], ['.es', 'España']];
-function paisPorContacto(r) {
+function paisPorContacto(r, soloMx) {
   for (const tel of [r.telefono, r.whatsapp]) {
     let t = String(tel || '').replace(/[^0-9+]/g, '');
     if (t.startsWith('00')) t = '+' + t.slice(2);
     // Google Sheets guarda +56 9 6965 9986 como 56969659986: más de 10 dígitos ya trae lada
-    if (!t.startsWith('+') && t.length >= 11 && t.length <= 13) t = '+' + t;
+    // (no si empieza con 1: un celular chino sin lada también tiene 11 dígitos y empieza con 1)
+    if (!t.startsWith('+') && !t.startsWith('1') && t.length >= 11 && t.length <= 13) t = '+' + t;
     if (t.startsWith('+1')) {
       const a = t.slice(2, 5);
       if (a === '809' || a === '829' || a === '849') return 'República Dominicana';
@@ -53,7 +55,8 @@ function paisPorContacto(r) {
   }
   for (const d of [String(r.email || '').split('@').pop().toLowerCase(), String(r.dominio || '').toLowerCase()]) {
     if (!d || d.startsWith('ig-') || d.startsWith('fb-')) continue;
-    for (const [fin, p] of DOMINIOS_PAIS) if (d.endsWith(fin)) return p;
+    // Un proveedor extranjero puede tener sitio .es o .com.br para vender allá: sólo .mx cambia su país
+    for (const [fin, p] of DOMINIOS_PAIS) if (d.endsWith(fin) && (!soloMx || p === 'México')) return p;
   }
   return '';
 }
@@ -68,9 +71,13 @@ for (const it of $input.all()) {
   if (est === 'BAJA' || est === 'REGISTRADO') continue;
   if (String(r.publicar || '').trim().toUpperCase() === 'NO') continue;
   if (String(r.notas || '').toLowerCase().indexOf('descartado') >= 0) continue;
+  // Portales, directorios y tiendas en línea que el buscador confundió con talleres
+  const texto = (String(r.empresa || '') + ' ' + String(r.productos_servicios || '') + ' ' + String(r.dominio || '')).toLowerCase();
+  if (['marketplace', ' b2b', 'directorio de', 'encuentra los mejores', 'proveedores para la industria', 'ecommerce', 'e-commerce', 'miles de referencias', 'publica tus productos', 'tallerium', 'constru-mexico', 'marketb2b', 'tradekey', 'exporthub', 'tradeindia', 'tradewheel'].some((p) => texto.indexOf(p) >= 0)) continue;
   vistos[slug] = true;
-  // Los proveedores extranjeros ya traen su país; a los demás se les corrige si el contacto dice otro
-  const real = String(r.tipo || '').indexOf('extranjero') >= 0 ? '' : paisPorContacto(r);
+  // Si el teléfono o el dominio dicen otro país, manda eso (también en proveedores extranjeros:
+  // un «.mx» que salió en una búsqueda de China es mexicano)
+  const real = paisPorContacto(r, String(r.tipo || '').indexOf('extranjero') >= 0);
   const pais = real || r.pais;
   const otroPais = real && real !== r.pais;
   empresas.push({
