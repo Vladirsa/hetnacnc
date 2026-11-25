@@ -6,7 +6,6 @@ import { errorDefinitivo, unaVezALaVez } from "../../../lib/aviso-unico"
 import { STORE_URL, consultarPago, esc, fila, marco } from "../../../lib/licitacion"
 import { T_ENVIO, asegurarTablasEnvio, folioEnvio } from "../../../lib/envios"
 import { T_SOBREPESO, asegurarTablaSobrepesos, folioSobrepeso } from "../../../lib/sobrepesos"
-import { pagoDeDestacado } from "../../../lib/disenos-destacado"
 
 // Aviso de Mercado Pago para pagos de Envíos HETNA (external_reference "envio:<id>").
 // No confiamos en el cuerpo: consultamos el pago con nuestra llave y validamos monto y moneda.
@@ -45,7 +44,6 @@ async function procesar(knex: any, logger: any, pagoId: string) {
     const pago = await consultarPago(pagoId)
     const ref = String(pago.external_reference || "")
     if (ref.startsWith("sobrepeso:")) return await pagoDeSobrepeso(knex, logger, pago, ref.slice("sobrepeso:".length))
-    if (ref.startsWith("destacado:")) return await pagoDeDestacado(knex, logger, pago, ref.slice("destacado:".length))
     if (!ref.startsWith("envio:")) return
     await asegurarTablasEnvio(knex)
     const e = await knex(T_ENVIO).where({ id: ref.slice("envio:".length) }).first()

@@ -1339,9 +1339,6 @@ export type Routes = {
             };
         };
         hetnaComparador: typeof import("../src/api/vendor/hetna-comparador/route");
-        hetnaDisenosListos: typeof import("../src/api/vendor/hetna-disenos-listos/route") & {
-            destacar: typeof import("../src/api/vendor/hetna-disenos-listos/destacar/route");
-        };
         hetnaEnvios: typeof import("../src/api/vendor/hetna-envios/route");
         hetnaFacturas: typeof import("../src/api/vendor/hetna-facturas/route") & {
             $id: typeof import("../src/api/vendor/hetna-facturas/[id]/route") & {
