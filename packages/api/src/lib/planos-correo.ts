@@ -13,6 +13,12 @@ export const PLANOS_NOMBRES: Record<string, string> = {
   "cajonera-para-herrajes": "Cajonera para herrajes",
   "organizador-de-discos-de-lija": "Organizador para discos de lija",
   "caballetes-de-triplay": "Caballetes de triplay (par)",
+  "librero-alto": "Librero alto de 5 niveles",
+  "buro-con-cajon": "Buró con cajón",
+  "zapatera-3-niveles": "Zapatera de 3 niveles",
+  "escritorio-sencillo": "Escritorio sencillo",
+  "mesa-de-centro": "Mesa de centro con repisa",
+  "banca-de-entrada": "Banca de entrada con zapatero",
 }
 
 export type PedidoPlano = { email: string; plano: string; nombre: string | null; promos: boolean }
