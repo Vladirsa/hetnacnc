@@ -29,7 +29,44 @@ import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
 import { datosImpresion, esImpresionBajoPedido } from "@/lib/data/impresion"
-import { TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
+import { ResumenImpresion, TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
+import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
+import { listarTalleres, type Taller } from "@/lib/hetna/talleres"
+import { PROCESOS, procesosDeProducto, tallerHace } from "@/lib/ubicacion/procesos"
+
+/**
+ * Lo mínimo que usa "Talleres que te lo hacen": nombre, ciudad, estado, lo que
+ * ofrece, calificación y entrega. Va en el HTML de la ficha, así que nada de
+ * CP, tarifas, máquinas ni galería (se arma campo por campo para que un campo
+ * nuevo del perfil no se cuele).
+ */
+const tallerLigero = (t: Taller): Taller => ({
+  id: t.id,
+  handle: t.handle,
+  nombre: t.nombre,
+  logo: null,
+  banner: null,
+  fundador: false,
+  embajador: false,
+  verificado: t.verificado,
+  empresaVerificada: false,
+  certificaciones: [],
+  capacidadLibre: null,
+  perfil: {
+    ciudad: t.perfil.ciudad,
+    estado: t.perfil.estado,
+    ofrece: t.perfil.ofrece,
+    calificacion: t.perfil.calificacion,
+    entrega: t.perfil.entrega,
+    tarifas: {},
+    servicios: [],
+    capacidades: [],
+    maquinas: [],
+    materiales: [],
+    acabados: [],
+    galeria: [],
+  },
+})
 
 export const ProductDetailsPage = async ({
   handle,
@@ -167,12 +204,32 @@ export const ProductDetailsPage = async ({
   const impresion = esImpresionBajoPedido(prod.metadata) ? await datosImpresion(prod.id) : null
   // (va en la columna de compra, en lugar de los botones genéricos: así el
   // destacado sale primero donde se compra y el color viaja al carrito)
+  // 25 nov 2026 (Vlado): la lista de talleres va debajo de las fotos (sin
+  // huecos); en la columna de compra queda el resumen y la descarga gratis.
+  // Galería con miniaturas de vista 3D / esquema: diseños digitales y piezas
+  // de Impresión 3D (su STL va en vista_previa). Los demás físicos, la normal.
+  // (sólo si ya trae su STL: antes de volver a sembrar, la galería normal con zoom)
+  const galeriaConVistas = !!descarga || (!!impresion && !!vistaPreviaDe(prod.metadata))
   const compraImpresion = impresion ? (
-    <TalleresImpresion datos={impresion} locale={locale} herramienta={textoMeta(metaProd.herramienta_url) || null} />
+    <ResumenImpresion datos={impresion} herramienta={textoMeta(metaProd.herramienta_url) || null} />
   ) : null
   // Productos de la Biblioteca de planos: las ofertas de los talleres ("Taller X te lo fabrica en $Y")
   const planoSlug = metaProd.origen === "plano" ? textoMeta(metaProd.plano_slug) : ""
-  const fabricar = impresion ? null : planoSlug ? (
+  // "Talleres que te lo hacen" (25 nov 2026, Vlado): en los productos que se
+  // fabrican, los talleres con ese proceso (celosía → láser, router o plasma…).
+  // La lista va completa y el navegador la ordena por cercanía al cliente: la
+  // ficha está en caché y no puede llevar la ubicación de quien la ve.
+  const procesosProd = impresion || planoSlug || tipoProd === "servicio" ? [] : procesosDeProducto(prod as never)
+  const talleresQueLoHacen = procesosProd.length
+    ? (await listarTalleres().catch(() => [] as Taller[])).filter((t) => t.id !== vendedor?.id && tallerHace(t, procesosProd)).slice(0, 300).map(tallerLigero)
+    : []
+  const queryCotizar = new URLSearchParams({
+    ...(procesosProd[0] ? { servicio: PROCESOS[procesosProd[0]].cotizar } : {}),
+    descripcion: `fabricar "${prod.title || "este producto"}"${prod.handle ? ` (${baseSitio()}/${locale}/products/${prod.handle})` : ""}`,
+  }).toString()
+  const fabricar = impresion ? (
+    <TalleresImpresion datos={impresion} locale={locale} />
+  ) : planoSlug ? (
     <TalleresPlano
       offers={offers as StoreOffer[]}
       variantes={variantesPlano(prod as never)}
@@ -180,6 +237,7 @@ export const ProductDetailsPage = async ({
       slug={planoSlug}
     />
   ) : tipoProd === "servicio" ? null : (
+    <>
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}
@@ -187,8 +245,12 @@ export const ProductDetailsPage = async ({
         medidas={medidasProd}
         vistaPrevia={descarga ? vistaPreviaDe(prod.metadata) : null}
         fisico={!descarga}
-        procesoInicial={procesoSugerido}
+        procesoInicial={(procesosProd[0] && PROCESOS[procesosProd[0]].estimador) || procesoSugerido}
       />
+      {talleresQueLoHacen.length > 0 && (
+        <TalleresCerca talleres={talleresQueLoHacen} query={queryCotizar} procesos={procesosProd} limite={4} />
+      )}
+    </>
     )
 
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto
@@ -256,8 +318,8 @@ export const ProductDetailsPage = async ({
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
-          {descarga ? (
-            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} />
+          {galeriaConVistas ? (
+            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} digital={!!descarga} />
           ) : (
             <ProductGallery images={prod?.images || []} title={prod.title} />
           )}

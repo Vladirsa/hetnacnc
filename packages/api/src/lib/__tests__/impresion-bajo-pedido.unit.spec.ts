@@ -9,6 +9,7 @@ import {
   precioRecomendado,
   validarOferta,
 } from "../impresion-bajo-pedido"
+import { ubicacionPublica } from "../ubicacion-publica"
 
 const pieza = { volumen_cm3: 40, medidas_mm: [42, 42, 120] as [number, number, number] }
 
@@ -70,5 +71,13 @@ describe("impresión 3D bajo pedido", () => {
   it("sólo acepta referencias de pago de destacado", () => {
     expect(leerRefDestacado("destpago:sel_01ABC:a1b2c3d4")).toBe("sel_01ABC")
     expect(leerRefDestacado("verifpago:sel_01ABC:a1b2c3d4")).toBeNull()
+  })
+})
+
+describe("ubicacionPublica (ofertas de impresión)", () => {
+  it("da sólo ciudad y estado del perfil, nunca el CP ni otros datos", () => {
+    expect(ubicacionPublica({ perfil: { ciudad: " Puebla ", estado: "Puebla", cp: "72000", telefono: "222" } })).toEqual({ ciudad: "Puebla", estado: "Puebla" })
+    expect(ubicacionPublica({ perfil: { ciudad: 5, estado: "" } })).toEqual({ ciudad: undefined, estado: undefined })
+    expect(ubicacionPublica(null)).toEqual({ ciudad: undefined, estado: undefined })
   })
 })

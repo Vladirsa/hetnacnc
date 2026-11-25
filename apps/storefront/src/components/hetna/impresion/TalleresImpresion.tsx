@@ -2,8 +2,9 @@
 
 // Ficha de un diseño de "Impresión 3D bajo pedido": los talleres que lo
 // imprimen, cada uno con su material, precio, días, colores y envío. Los
-// destacados (pagan por salir primero) llevan insignia. Arriba, la liga para
-// bajar el archivo gratis o cambiarle las medidas en la herramienta.
+// destacados (pagan por salir primero) llevan insignia. La lista va debajo de
+// las fotos; en la columna de compra va ResumenImpresion (precio desde y la
+// liga para bajar el archivo gratis o cambiarle las medidas).
 import { useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -11,10 +12,13 @@ import { useCartContext } from "@/components/providers"
 import { trackAddToCart } from "@/lib/analytics/events"
 import type { DatosImpresion, OfertaImpresion } from "@/lib/data/impresion"
 import { toast } from "@/lib/helpers/toast"
+import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
+import { ETIQUETA_NIVEL, conNivel, textoUbicacion, type Nivel } from "@/lib/ubicacion/cercania"
+import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
-function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string } }) {
+function Oferta({ o, locale, producto, nivel }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string }; nivel: Nivel }) {
   const { addToCart, isAddingItem } = useCartContext()
   const [color, setColor] = useState(o.colores[0] || "")
   const [listo, setListo] = useState(false)
@@ -47,6 +51,12 @@ function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; p
         <span>
           <b>{o.material}</b>
         </span>
+        {(o.taller.ciudad || o.taller.estado) && (
+          <span data-testid="oferta-ubicacion">
+            📍 {textoUbicacion(o.taller)}
+            {ETIQUETA_NIVEL[nivel] && <b className="ml-1 rounded-full bg-[#FFE9D6] px-1.5 py-px text-[11.5px] text-[#8A3B05]">{ETIQUETA_NIVEL[nivel]}</b>}
+          </span>
+        )}
         {o.dias && <span>Listo para enviar en {o.dias} {o.dias === 1 ? "día hábil" : "días hábiles"}</span>}
         {o.envio_gratis ? (
           <span className="font-semibold text-[#1E7B3A]">Envío gratis</span>
@@ -80,31 +90,82 @@ function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; p
   )
 }
 
-export function TalleresImpresion({ datos, locale, herramienta }: { datos: DatosImpresion; locale: string; herramienta?: string | null }) {
+/** El cuadro de descarga gratis (va en la columna de compra, junto al resumen). */
+function DescargaGratis({ herramienta }: { herramienta: string }) {
+  return (
+    <div className="rounded-[12px] border border-[#C2560A]/40 bg-[#FDEEE1] p-3">
+      <p className="m-0 text-[14px] font-bold text-[#5A3A12]">¿Tienes impresora 3D? Descárgalo gratis</p>
+      <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cámbiale las medidas (o el texto, si lleva) y baja el STL sin costo.</p>
+      <LocalizedClientLink
+        href={herramienta}
+        className="mt-2 inline-block rounded-[8px] bg-[#142033] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#24324A]"
+      >
+        Descargar gratis o modificar las medidas
+      </LocalizedClientLink>
+    </div>
+  )
+}
+
+/**
+ * Columna de compra: precio desde, cuántos talleres y la liga a la lista de
+ * talleres (que va debajo de las fotos, id="talleres-impresion").
+ */
+export function ResumenImpresion({ datos, herramienta }: { datos: DatosImpresion; herramienta?: string | null }) {
+  const precios = datos.ofertas.map((o) => o.precio).filter((n) => n > 0)
+  const desde = precios.length ? Math.min(...precios) : null
+  const talleres = new Set(datos.ofertas.map((o) => o.taller.handle)).size
+  const dias = datos.ofertas.map((o) => o.dias).filter((n): n is number => !!n)
+  const masRapido = dias.length ? Math.min(...dias) : null
+  return (
+    <div className="flex flex-col gap-3" data-testid="resumen-impresion">
+      {desde !== null ? (
+        <div className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
+          <p className="m-0 text-[13px] text-[#6B6A63]">Impreso y enviado desde</p>
+          <p className="m-0 text-[28px] font-extrabold leading-tight text-[#B34D07]">{pesos(desde)}</p>
+          <p className="m-0 mt-1 text-[13px] text-[#40403A]">
+            {talleres} {talleres === 1 ? "taller lo imprime" : "talleres lo imprimen"}
+            {masRapido ? ` · listo desde ${masRapido} ${masRapido === 1 ? "día hábil" : "días hábiles"}` : ""}
+          </p>
+          <a
+            href="#talleres-impresion"
+            className="mt-3 flex w-full items-center justify-center rounded-sm bg-[#C2560A] py-3 text-[15px] font-bold text-white hover:bg-[#A9480A]"
+          >
+            Elegir taller, material y color
+          </a>
+        </div>
+      ) : (
+        <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-4 text-[14px] text-[#40403A]">
+          Todavía no hay talleres imprimiéndolo. <a href="#talleres-impresion" className="font-semibold text-[#B34D07] underline">Ver opciones</a>
+        </p>
+      )}
+      {herramienta && <DescargaGratis herramienta={herramienta} />}
+    </div>
+  )
+}
+
+export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; locale: string }) {
   const conOferta = useMemo(() => new Set(datos.ofertas.map((o) => o.material)), [datos.ofertas])
   const [material, setMaterial] = useState<string>("")
-  const lista = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
+  const { ubicacion, ponerCp, aviso } = useUbicacion()
+  // Los destacados (pagan por salir primero) van arriba; luego, del más cercano
+  // al más lejano; a igual cercanía, el orden del API (precio y días).
+  const lista = useMemo(() => {
+    const base = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
+    return conNivel(base, (o) => o.taller, ubicacion)
+      .sort((a, b) => Number(b.item.destacado) - Number(a.item.destacado) || a.nivel - b.nivel || a.i - b.i)
+      .map(({ item: o, nivel }) => ({ o, nivel }))
+  }, [datos.ofertas, material, ubicacion])
+  const hayUbicaciones = datos.ofertas.some((o) => o.taller.estado)
   const info = datos.materiales.find((m) => m.material === material)
 
   return (
-    <section className="flex flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FBFAF7] p-4" data-testid="talleres-impresion">
-      {herramienta && (
-        <div className="rounded-[12px] border border-[#C2560A]/40 bg-[#FDEEE1] p-3">
-          <p className="m-0 text-[14px] font-bold text-[#5A3A12]">¿Tienes impresora 3D? Descárgalo gratis</p>
-          <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cámbiale las medidas (o el texto, si lleva) y baja el STL sin costo.</p>
-          <LocalizedClientLink
-            href={herramienta}
-            className="mt-2 inline-block rounded-[8px] bg-[#142033] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#24324A]"
-          >
-            Descargar gratis o modificar las medidas
-          </LocalizedClientLink>
-        </div>
-      )}
-
+    <section id="talleres-impresion" className="flex scroll-mt-24 flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FBFAF7] p-4" data-testid="talleres-impresion">
       <div>
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo imprimen</h2>
         <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">Compara material, precio final, días y envío. Pagas dentro de HETNA.</p>
       </div>
+
+      {hayUbicaciones && <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />}
 
       {datos.materiales.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
@@ -133,12 +194,12 @@ export function TalleresImpresion({ datos, locale, herramienta }: { datos: Datos
 
       {lista.length ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {lista.map((o) => (
-            <Oferta key={o.offer_id} o={o} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo }} />
+          {lista.map(({ o, nivel }) => (
+            <Oferta key={o.offer_id} o={o} nivel={nivel} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo }} />
           ))}
         </ul>
       ) : (
-        <p className="m-0 text-[14px] text-[#40403A]">Todavía ningún taller lo imprime. Descárgalo gratis arriba o pide que te lo fabriquen.</p>
+        <p className="m-0 text-[14px] text-[#40403A]">Todavía ningún taller lo imprime. Descárgalo gratis (en el cuadro de compra) o pide que te lo fabriquen.</p>
       )}
 
       <p className="m-0 text-[12.5px] text-[#6B6A63]">

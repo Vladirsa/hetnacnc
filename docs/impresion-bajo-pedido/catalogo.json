@@ -12,6 +12,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-corazones-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-corazones-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -51,6 +52,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=luna%2Cestrella%2Ccirculo&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-lunas-estrellas-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-lunas-estrellas-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -91,6 +93,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=huella%2Ccorazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-huellitas-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-huellitas-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -130,6 +133,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=copo%2Cestrella&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-copos-navidad-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-copos-navidad-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -169,6 +173,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=rombo&fuente=montserrat&acomodo=cuadricula&espejo=1&tamano=8&espacioX=4&espacioY=4&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-rombos-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-rombos-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -207,6 +212,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-hecho-a-mano-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-hecho-a-mano-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -247,6 +253,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=TE+AMO&iconos=corazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-te-amo-impreso-3d.png",
+    "modelo_3d": "modelos/rodillo-texturizador-te-amo-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -287,6 +294,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=placa&palabras=&iconos=corazon%2Cflor%2Cestrella&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=12&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=120&alto=120&radio=4&grosor=3",
     "foto": "fotos/placa-texturizadora-galletas-impresa-3d.png",
+    "modelo_3d": "modelos/placa-texturizadora-galletas-impresa-3d.stl",
     "diseno": {
       "forma": "placa",
       "ancho": 120,
@@ -329,6 +337,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=placa&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=150&alto=100&radio=4&grosor=3",
     "foto": "fotos/placa-texturizadora-hecho-a-mano-impresa-3d.png",
+    "modelo_3d": "modelos/placa-texturizadora-hecho-a-mano-impresa-3d.stl",
     "diseno": {
       "forma": "placa",
       "ancho": 150,
@@ -371,6 +380,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?icono=corazon&tamano=70&sello=Te+amo&fuente=pacifico",
     "foto": "fotos/cortador-galletas-corazon-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-corazon-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -405,6 +415,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?icono=estrella&tamano=70",
     "foto": "fotos/cortador-galletas-estrella-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-estrella-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -434,6 +445,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?forma=nube&tamano=75",
     "foto": "fotos/cortador-galletas-nube-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-nube-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -463,6 +475,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?forma=arbol&tamano=80",
     "foto": "fotos/cortador-galletas-pino-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-pino-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -492,6 +505,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?forma=casa&tamano=70",
     "foto": "fotos/cortador-galletas-casita-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-casita-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -521,6 +535,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?icono=flor&tamano=65",
     "foto": "fotos/cortador-galletas-flor-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-flor-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -550,6 +565,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?icono=huella&tamano=60",
     "foto": "fotos/cortador-galletas-huellita-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-huellita-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -579,6 +595,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?icono=copo&tamano=70",
     "foto": "fotos/cortador-galletas-copo-nieve-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-copo-nieve-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -608,6 +625,7 @@
     ],
     "herramienta_url": "/disenar/cortadores-galletas?forma=redondo&tamano=65&selloIcono=estrella",
     "foto": "fotos/cortador-galletas-redondo-estrella-impreso-3d.png",
+    "modelo_3d": "modelos/cortador-galletas-redondo-estrella-impreso-3d.stl",
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -641,6 +659,7 @@
     ],
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/soporte-rodillo-texturizador-impreso-3d.png",
+    "modelo_3d": "modelos/soporte-rodillo-texturizador-impreso-3d.stl",
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -680,6 +699,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/maceta",
     "foto": "fotos/maceta-con-drenaje-impresa-3d.png",
+    "modelo_3d": "modelos/maceta-con-drenaje-impresa-3d.stl",
     "modelo": "maceta",
     "valores": {},
     "volumen_cm3": 82.5,
@@ -702,6 +722,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/maceta?arriba=160&abajo=120&alto=140&pared=2.4&drenaje=14",
     "foto": "fotos/maceta-grande-con-drenaje-impresa-3d.png",
+    "modelo_3d": "modelos/maceta-grande-con-drenaje-impresa-3d.stl",
     "modelo": "maceta",
     "valores": {
       "arriba": 160,
@@ -730,6 +751,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/porta-lapices",
     "foto": "fotos/lapicero-hexagonal-impreso-3d.png",
+    "modelo_3d": "modelos/lapicero-hexagonal-impreso-3d.stl",
     "modelo": "porta-lapices",
     "valores": {},
     "volumen_cm3": 54,
@@ -752,6 +774,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/soporte-celular",
     "foto": "fotos/soporte-celular-impreso-3d.png",
+    "modelo_3d": "modelos/soporte-celular-impreso-3d.stl",
     "modelo": "soporte-celular",
     "valores": {},
     "volumen_cm3": 89.5,
@@ -774,6 +797,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/soporte-celular?ancho=180&grosor=14",
     "foto": "fotos/soporte-tableta-impreso-3d.png",
+    "modelo_3d": "modelos/soporte-tableta-impreso-3d.stl",
     "modelo": "soporte-celular",
     "valores": {
       "ancho": 180,
@@ -799,6 +823,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/posavasos",
     "foto": "fotos/posavasos-impreso-3d.png",
+    "modelo_3d": "modelos/posavasos-impreso-3d.stl",
     "modelo": "posavasos",
     "valores": {},
     "volumen_cm3": 11.8,
@@ -821,6 +846,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/gancho-pared",
     "foto": "fotos/gancho-de-pared-impreso-3d.png",
+    "modelo_3d": "modelos/gancho-de-pared-impreso-3d.stl",
     "modelo": "gancho-pared",
     "valores": {},
     "volumen_cm3": 10.3,
@@ -843,6 +869,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/organizador-fresas",
     "foto": "fotos/organizador-fresas-brocas-impreso-3d.png",
+    "modelo_3d": "modelos/organizador-fresas-brocas-impreso-3d.stl",
     "modelo": "organizador-fresas",
     "valores": {},
     "volumen_cm3": 102.5,
@@ -865,6 +892,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/llaves-allen",
     "foto": "fotos/organizador-llaves-allen-impreso-3d.png",
+    "modelo_3d": "modelos/organizador-llaves-allen-impreso-3d.stl",
     "modelo": "llaves-allen",
     "valores": {},
     "volumen_cm3": 36.7,
@@ -887,6 +915,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/contenedor-apilable",
     "foto": "fotos/contenedor-apilable-impreso-3d.png",
+    "modelo_3d": "modelos/contenedor-apilable-impreso-3d.stl",
     "modelo": "contenedor-apilable",
     "valores": {},
     "volumen_cm3": 91.3,
@@ -909,6 +938,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/caja-tapa",
     "foto": "fotos/caja-tapa-presion-impresa-3d.png",
+    "modelo_3d": "modelos/caja-tapa-presion-impresa-3d.stl",
     "modelo": "caja-tapa",
     "valores": {},
     "volumen_cm3": 25.3,
@@ -931,6 +961,7 @@
     ],
     "herramienta_url": "/disenar/modelos-3d/clip-bolsa",
     "foto": "fotos/clip-para-bolsas-impreso-3d.png",
+    "modelo_3d": "modelos/clip-para-bolsas-impreso-3d.stl",
     "modelo": "clip-bolsa",
     "valores": {},
     "volumen_cm3": 5,

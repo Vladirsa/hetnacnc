@@ -21,7 +21,7 @@ export function VisorCad({ geo, alto = 260, oscuro = false }: { geo: GeoCad; alt
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl border"
-      style={{ height: alto, background: oscuro ? "#0B0F15" : "#FAF9F6", borderColor: oscuro ? "#2B3648" : "#E7E4DC" }}
+      style={{ height: alto, background: oscuro ? "#0B0F15" : "#FFFFFF", borderColor: oscuro ? "#2B3648" : "#E7E4DC" }}
     >
       {geo.tipo === "3d" && geo.malla ? <Vista3D malla={geo.malla} oscuro={oscuro} /> : <Vista2D trazos={geo.trazos} oscuro={oscuro} />}
       <span
@@ -105,7 +105,7 @@ function Vista3D({ malla, oscuro }: { malla: Float32Array; oscuro: boolean }) {
     import("three").then((THREE) => {
       if (!vivo || !el) return
       const esc = new THREE.Scene()
-      esc.background = new THREE.Color(oscuro ? 0x0b0f15 : 0xfaf9f6)
+      esc.background = new THREE.Color(oscuro ? 0x0b0f15 : 0xffffff)
       const cam = new THREE.PerspectiveCamera(40, el.clientWidth / Math.max(1, el.clientHeight), 0.1, 100000)
       const ren = new THREE.WebGLRenderer({ antialias: true })
       ren.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))

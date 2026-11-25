@@ -4,7 +4,7 @@ export type OfertaImpresion = {
   offer_id: string
   variant_id: string
   material: string
-  taller: { nombre: string; handle: string }
+  taller: { nombre: string; handle: string; ciudad?: string; estado?: string }
   precio: number
   dias: number | null
   colores: string[]

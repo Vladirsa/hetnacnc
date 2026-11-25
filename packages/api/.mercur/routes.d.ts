@@ -1344,6 +1344,7 @@ export type Routes = {
         };
         hetnaComparador: typeof import("../src/api/vendor/hetna-comparador/route");
         hetnaEnvios: typeof import("../src/api/vendor/hetna-envios/route");
+        hetnaEtiquetas: typeof import("../src/api/vendor/hetna-etiquetas/route");
         hetnaFacturas: typeof import("../src/api/vendor/hetna-facturas/route") & {
             $id: typeof import("../src/api/vendor/hetna-facturas/[id]/route") & {
                 archivo: typeof import("../src/api/vendor/hetna-facturas/[id]/archivo/route");
@@ -1525,6 +1526,11 @@ export type Routes = {
         mpVerificacion: typeof import("../src/api/api/mp-verificacion/route");
         paypalCotizacion: typeof import("../src/api/api/paypal-cotizacion/route");
         paypalSuscripcion: typeof import("../src/api/api/paypal-suscripcion/route");
+        planosRedes: {
+            $slug: {
+                $n: typeof import("../src/api/api/planos-redes/[slug]/[n]/route");
+            };
+        };
         relieveIa: typeof import("../src/api/api/relieve-ia/route");
         stripeWebhook: typeof import("../src/api/api/stripe-webhook/route");
         tallerPublico: typeof import("../src/api/api/taller-publico/route") & {

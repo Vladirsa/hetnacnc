@@ -7,6 +7,7 @@ import type { CreateOfferDTO } from "@mercurjs/types"
 import { randomBytes } from "crypto"
 
 import { aprovisionarEnvios } from "./envios-automaticos"
+import { ubicacionPublica } from "./ubicacion-publica"
 import { umbralesDeEnvioGratis } from "./envio-gratis"
 import {
   COLECCION_IMPRESION,
@@ -229,7 +230,8 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
         offer_id: o.id as string,
         variant_id: o.variant_id as string,
         material: material.get(o.variant_id)!,
-        taller: { nombre: o.seller.name as string, handle: o.seller.handle as string },
+        // ciudad y estado del perfil público del taller: la tienda ordena por cercanía al cliente
+        taller: { nombre: o.seller.name as string, handle: o.seller.handle as string, ...ubicacionPublica(o.seller.metadata) },
         precio,
         dias: d.dias,
         colores: d.colores,
