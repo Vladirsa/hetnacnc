@@ -11,6 +11,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, nuevoId } from "../licitacion"
 import { PLANOS_NOMBRES } from "../planos-correo"
+import { pngLaminaPlano } from "../planos-imagen"
 import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
 import { limpiar, oraciones, palabras } from "./plan-material"
@@ -462,7 +463,7 @@ export async function promocionesDelDia(scope: any, logger?: any) {
  * Plano de la semana (Biblioteca de planos, /planos): el siguiente plano que no
  * ha salido en redes — los más nuevos primero — como carrusel de 4 láminas
  * (portada, vista explotada, lista de corte y acomodo en la hoja). Las láminas
- * las dibuja la tienda en /mx/planos/[slug]/redes/[n] con el plano real.
+ * las dibuja la tienda en /mx/planos/[slug]/redes/[n] (SVG) y aquí se pasan a PNG.
  * Cuando ya salieron todos, repite el que tiene más tiempo sin salir.
  */
 export async function promoPlano(scope: any, logger?: any, slugForzado?: string) {
@@ -479,9 +480,7 @@ export async function promoPlano(scope: any, logger?: any, slugForzado?: string)
   const nombre = PLANOS_NOMBRES[slug]
   const medios: { url: string; tipo: string }[] = []
   for (const n of [1, 2, 3, 4]) {
-    const r = await fetch(`${STORE_URL}/mx/planos/${encodeURIComponent(slug)}/redes/${n}`)
-    if (!r.ok) throw new Error(`lámina ${n} de ${slug}: HTTP ${r.status}`)
-    const buf = Buffer.from(await r.arrayBuffer())
+    const buf = await pngLaminaPlano(slug, n)
     medios.push({ url: await subir(scope, `plano-${slug}-${Date.now()}-${n}.png`, "image/png", buf), tipo: "imagen" })
   }
   const c = await cuando(knex, 2, "mx")

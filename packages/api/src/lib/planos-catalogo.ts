@@ -10,6 +10,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createProductCategoriesWorkflow, createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { subir } from "./fabrica"
+import { pngLaminaPlano } from "./planos-imagen"
 import { STORE_URL, esc } from "./licitacion"
 
 export type PlanoCatalogo = {
@@ -74,6 +75,19 @@ export async function categoriaPlanos(container: MedusaContainer) {
   return result[0].id as string
 }
 
+/** Las 4 láminas del plano en PNG, subidas al almacenamiento de archivos. */
+async function imagenesPlano(container: MedusaContainer, slug: string, logger: { warn: (m: string) => void }) {
+  const urls: string[] = []
+  for (const n of [1, 2, 3, 4]) {
+    try {
+      urls.push(await subir(container, `plano-${slug}-${n}.png`, "image/png", await pngLaminaPlano(slug, n)))
+    } catch (e) {
+      logger.warn(`[planos-tienda] lámina ${n} de ${slug}: ${(e as Error).message}`)
+    }
+  }
+  return urls
+}
+
 const metadataDe = (p: PlanoCatalogo) => ({
   tipo_producto: "a_medida",
   origen: "plano",
@@ -102,23 +116,25 @@ export async function sincronizarProductosPlanos(container: MedusaContainer, o: 
 
   for (const p of planos) {
     const handle = handlePlano(p.slug)
-    const { data: ya } = await query.graph({ entity: "product", fields: ["id", "status", "metadata"], filters: { handle } })
+    const { data: ya } = await query.graph({ entity: "product", fields: ["id", "status", "metadata", "thumbnail"], filters: { handle } })
     const medidas = { weight: p.peso_kg, length: p.paquete_cm.largo, width: p.paquete_cm.ancho, height: p.paquete_cm.alto }
     if (ya[0]?.id) {
       await updateProductsWorkflow(container).run({
         input: {
           selector: { id: ya[0].id },
-          update: { metadata: { ...((ya[0].metadata as Record<string, unknown>) || {}), ...metadataDe(p) }, ...medidas, ...(o.publicar ? { status: "published" as const } : {}) },
+          update: {
+            metadata: { ...((ya[0].metadata as Record<string, unknown>) || {}), ...metadataDe(p) },
+            ...medidas,
+            ...(o.publicar ? { status: "published" as const } : {}),
+            // Si se creó sin fotos (la lámina falló), se ponen ahora
+            ...(!ya[0].thumbnail ? await (async () => { const im = await imagenesPlano(container, p.slug, logger); return im.length ? { thumbnail: im[0], images: im.map((url) => ({ url })) } : {} })() : {}),
+          },
         },
       })
       actualizados++
       continue
     }
-    const imagenes: string[] = []
-    for (const [i, ruta] of p.imagenes.entries()) {
-      const r = await fetch(`${STORE_URL}${ruta}`)
-      if (r.ok) imagenes.push(await subir(container, `plano-${p.slug}-${i + 1}.png`, "image/png", Buffer.from(await r.arrayBuffer())))
-    }
+    const imagenes = await imagenesPlano(container, p.slug, logger)
     await createProductsWorkflow(container).run({
       input: {
         products: [
