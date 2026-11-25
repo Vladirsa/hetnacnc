@@ -5,12 +5,20 @@
 // nunca se toma el que manda el navegador.
 //
 // Precio: el estimador de /cotizar (lib/cotizador/estimador.ts → estimarMueble)
-// con los ajustes del dueño (Panel de HETNA > Precios de la calculadora).
+// con los ajustes del dueño (Panel de HETNA > Precios de la calculadora), más IVA.
 // Peso: volumen real de cada pieza × densidad del triplay, más el empaque.
 import { estimarMueble, MATERIALES, type ConfigPrecios, type MaterialRef } from "@/lib/cotizador/estimador"
 
 import { acomodoPorMaterial, HOJA, listaCorte } from "./calculo"
 import { MATERIALES_PLANO, type MaterialPlano, type Plano } from "./modelos"
+
+/**
+ * IVA: el precio recomendado es el precio final al cliente, con IVA incluido
+ * (decisión del dueño, 25 nov 2026; igual que Impresión 3D bajo pedido). El
+ * estimador da precios sin IVA.
+ */
+export const IVA = 0.16
+const conIva = (n: number) => Math.round((n * (1 + IVA)) / 5) * 5
 
 /** Empaque (cartón, esquineros, playo) sobre el peso de la madera. */
 const EMPAQUE = 0.08
@@ -70,9 +78,9 @@ export function cotizarPlano(pl: Plano, cfg?: ConfigPrecios | null, acabado: "li
   const e = estimarMueble(grupos, { servicio: "router", acabado, cfg })
   const gramos = pl.piezas.reduce((s, q) => s + ((q.x1 - q.x0) * (q.y1 - q.y0) * (q.z1 - q.z0)) / 1000 * materialRef(q.material).densidad, 0) * k
   return {
-    precio: e.total,
-    min: e.min,
-    max: e.max,
+    precio: conIva(e.total),
+    min: conIva(e.min),
+    max: conIva(e.max),
     pesoKg: Math.round((gramos / 1000) * (1 + EMPAQUE) * 10) / 10,
     hojas: grupos.reduce((s, g) => s + g.hojasReales, 0),
     piezas: filas.reduce((s, f) => s + f.cantidad, 0),
