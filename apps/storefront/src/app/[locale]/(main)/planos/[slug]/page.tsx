@@ -4,8 +4,8 @@ import { notFound } from "next/navigation"
 import DescargaPlano from "@/components/hetna/planos/DescargaPlano"
 import MedidasPlano from "@/components/hetna/planos/MedidasPlano"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales, puntosBarrenos } from "@/lib/planos/calculo"
-import { tornilleria, unionesDe } from "@/lib/planos/uniones"
+import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales, puntosBarrenos, rectsRanuras } from "@/lib/planos/calculo"
+import { conRanuras, tornilleria, unionesDe } from "@/lib/planos/uniones"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
 import { medidasDe, medidasDeConsulta, redimensionarQueQuepa } from "@/lib/planos/medidas"
 import { buscarPlano } from "@/lib/planos/fuente"
@@ -88,9 +88,12 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
   const base = await buscarPlano(slug, borrador || undefined)
   if (!base) notFound()
   // "Modifica las medidas": ?ancho=&fondo=&alto= (mm)
-  const { plano: pl, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(consulta))
+  const { plano: medido, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(consulta))
+  // Uniones: «a tope» (tornillo) o «con ranuras» (?uniones=ranuras, lib/planos/uniones.ts)
+  const ranurado = consulta.uniones === "ranuras"
+  const pl = ranurado ? conRanuras(medido) : medido
   const original = medidasDe(base.piezas, base.ruedas)
-  const cambiado = pl !== base
+  const cambiado = medido !== base
   const [cfg, tienda] = await Promise.all([configPrecios(), ofertasDelPlano(slug, locale)])
 
   const m = medidasGenerales(pl)
@@ -115,8 +118,23 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
       t.cantidad += u.cantidad * (pl.juego?.cantidad ?? 1)
       m.set(clave, t)
     }
+    for (const r of pl.unionesRanura || []) {
+      const clave = `${base(pl.piezas[r.b].nombre)}|${base(pl.piezas[r.a].nombre)}|ranura|${r.prof}`
+      const t = m.get(clave) || { texto: `${base(pl.piezas[r.b].nombre)} → ${base(pl.piezas[r.a].nombre)}: ranura de ${r.prof} mm con pegamento`, cantidad: 0 }
+      t.cantidad += pl.juego?.cantidad ?? 1
+      m.set(clave, t)
+    }
     return [...m.values()]
   })()
+  const nRanuras = (pl.ranuras || []).reduce((s2, r) => s2 + r.length, 0) * (pl.juego?.cantidad ?? 1)
+  // liga que conserva las medidas y cambia el tipo de unión
+  const ligaUniones = (r: boolean) => {
+    const q = new URLSearchParams()
+    for (const k of ["ancho", "fondo", "alto"]) if (typeof consulta[k] === "string") q.set(k, consulta[k] as string)
+    if (r) q.set("uniones", "ranuras")
+    const t = q.toString()
+    return t ? `?${t}` : "?"
+  }
   // la tornillería exacta reemplaza las líneas aproximadas de tornillos y clavos
   const herrajes = [
     ...torn.tornillos.map((t) => `${t.cantidad} tornillos para madera de ${t.largo}`),
@@ -134,7 +152,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
   const factorMedida = (() => {
     if (!cambiado || !cot.ok) return 1
     try {
-      return cot.precio / cotizarPlano(base, cfg).precio
+      return cotizarPlano(medido, cfg).precio / cotizarPlano(base, cfg).precio
     } catch {
       return 1
     }
@@ -159,6 +177,18 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           </p>
         ) : null}
         <MedidasPlano key={`${m.ancho}-${m.fondo}-${m.alto}`} original={original} actual={m} ajustado={ajustado} />
+        <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-[#E7E4DC] bg-white p-3 text-[14px] print:hidden">
+          <span className="font-bold text-[#142033]">Uniones:</span>
+          <a href={ligaUniones(false)} className={`rounded-full px-3 py-1.5 font-semibold ${!ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}>A tope con tornillo</a>
+          <a href={ligaUniones(true)} className={`rounded-full px-3 py-1.5 font-semibold ${ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}>Con ranuras (router CNC)</a>
+          <span className="text-[12.5px] text-[#6B6A63]">
+            {ranurado
+              ? nRanuras
+                ? `${nRanuras} ranuras de 4 a 6 mm en costados y divisiones: las repisas, pisos y respaldos entran en ellas y quedan escuadrados. Ya vienen alargadas en la lista de corte y marcadas en el DXF.`
+                : "Este mueble no lleva costados donde poner ranuras: se arma a tope."
+              : "Cada unión con pegamento y tornillo, con sus barrenos guía."}
+          </span>
+        </div>
 
         <article id="lamina" className="overflow-hidden rounded-3xl bg-[#142033] p-5 text-white sm:p-8" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>
           <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-4">
@@ -215,7 +245,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {acs.flatMap((a) => a.acomodo.hojas.map((h, i) => (
                   <figure key={`${a.material}-${i}`} className="m-0 rounded-xl bg-[#FAF9F6] p-1.5">
-                    <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`, (c) => puntosBarrenos(c, filaDe.get(c.nombre))) }} />
+                    <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`, (c) => puntosBarrenos(c, filaDe.get(c.nombre)), (c) => rectsRanuras(c, filaDe.get(c.nombre))) }} />
                     <figcaption className="text-center text-[11px] text-[#6B6A63]">{a.nombre} · hoja {i + 1}</figcaption>
                   </figure>
                 )))}
@@ -245,6 +275,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
                     {torn.tornillos.map((t) => `${t.cantidad} tornillos de ${t.largo}`).join(" · ")}
                     {torn.clavos ? ` · ${torn.clavos} clavos o grapas` : ""}
                     {torn.barrenos ? ` · ${torn.barrenos} barrenos guía de 3 mm (en el DXF, capa «barrenos»; puntos naranjas en el acomodo)` : ""}
+                    {nRanuras ? ` · ${nRanuras} ranuras (en el DXF, capas «ranura_6mm» y «ranura_4mm»; rayadas en el acomodo)` : ""}
                   </p>
                   <ul className="m-0 mt-2 grid list-disc grid-cols-1 gap-x-6 pl-5 text-[12.5px] text-white/85 sm:grid-cols-2">
                     {resumenUniones.map((u) => (
@@ -292,7 +323,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
         ) : null}
 
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 print:hidden">
-          <DescargaPlano slug={pl.slug} nombre={cambiado ? `${pl.nombre} ${m.ancho}x${m.fondo}x${m.alto}` : pl.nombre} dxfs={dxfs} />
+          <DescargaPlano slug={pl.slug} nombre={`${pl.nombre}${cambiado ? ` ${m.ancho}x${m.fondo}x${m.alto}` : ""}${ranurado ? " con ranuras" : ""}`} dxfs={dxfs} />
           <div className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5">
             <p className="m-0 text-[16px] font-bold text-[#142033]">¿No tienes router o prefieres que te lo corten?</p>
             <p className="m-0 text-[14px] text-[#40403A]">Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</p>

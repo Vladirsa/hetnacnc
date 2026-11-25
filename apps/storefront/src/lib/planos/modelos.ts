@@ -41,7 +41,14 @@ export type Plano = {
   herrajes: string[]
   herramientas: string[]
   notas: string[]
+  /** Sólo en la versión «con ranuras» (uniones.ts → conRanuras): cajas de cada pieza, en sus coordenadas */
+  ranuras?: RanuraPieza[][]
+  /** Uniones hechas con ranura (para la sección de uniones) */
+  unionesRanura?: { a: number; b: number; prof: number }[]
 }
+
+/** Caja (ranura) en la cara de una pieza: u a lo largo, v a lo ancho, prof en mm. */
+export type RanuraPieza = { u0: number; u1: number; v0: number; v1: number; prof: number }
 
 const T18: MaterialPlano = "triplay-18"
 
