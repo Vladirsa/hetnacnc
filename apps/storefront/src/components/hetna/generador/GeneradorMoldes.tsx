@@ -22,8 +22,8 @@ const LIMITE = 60 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 
 const TIPOS: { id: TipoMolde; nombre: string; nota: string }[] = [
-  { id: "dos_partes", nombre: "Molde de 2 partes", nota: "Para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra, se vacía por el bebedero y se abre en dos." },
-  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, posavasos, macetas. La cara de arriba de tu pieza queda al aire." },
+  { id: "dos_partes", nombre: "Molde de 2 partes", nota: "Para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra con pinzas, se vacía por el bebedero y se abre en dos." },
+  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, posavasos. Con núcleo, macetas y vasos huecos con drenaje. La cara de arriba de tu pieza queda al aire." },
   { id: "caja_silicona", nombre: "Caja para silicona", nota: "La caja con tu pieza pegada al piso: la imprimes, vacías silicona y te queda un molde flexible para hacer muchas copias." },
 ]
 const ARRIBAS: { id: Arriba; nombre: string }[] = [
@@ -90,6 +90,11 @@ export function GeneradorMoldes() {
   const [diametroBebedero, setDiametroBebedero] = useState("8")
   const [respiraderos, setRespiraderos] = useState("2")
   const [espacio, setEspacio] = useState("10")
+  const [orejas, setOrejas] = useState(true)
+  const [hueco, setHueco] = useState(false)
+  const [grosorHueco, setGrosorHueco] = useState("8")
+  const [drenaje, setDrenaje] = useState(true)
+  const [diametroDrenaje, setDiametroDrenaje] = useState("10")
   const [res, setRes] = useState<ResultadoMolde | null>(null)
   const [calculando, setCalculando] = useState(false)
   const [separar, setSeparar] = useState(25)
@@ -103,7 +108,7 @@ export function GeneradorMoldes() {
     setPared(t === "caja_silicona" ? "3" : "10")
     // el molde abierto se llena por arriba: la cara plana de la pieza (casi
     // siempre la base) tiene que quedar arriba. Sólo si la persona no eligió ya.
-    if (!arribaElegido.current) setArriba(t === "abierto" ? "-z" : "z")
+    if (!arribaElegido.current) setArriba(t === "abierto" && !hueco ? "-z" : "z")
   }
 
   const abrir = async (f: File | undefined) => {
@@ -153,6 +158,11 @@ export function GeneradorMoldes() {
           respiraderos: numero(respiraderos),
           diametroRespiradero: OPCIONES_MOLDE.diametroRespiradero,
           espacio: numero(espacio),
+          orejas,
+          hueco,
+          grosorHueco: numero(grosorHueco),
+          drenaje,
+          diametroDrenaje: numero(diametroDrenaje),
         })
         if (n === turno.current) { setRes(r); setError("") }
       } catch (e) {
@@ -162,7 +172,7 @@ export function GeneradorMoldes() {
       }
     }, 400)
     return () => clearTimeout(reloj)
-  }, [malla, tipo, arriba, pared, particion, llaves, diametroLlave, bebedero, diametroBebedero, respiraderos, espacio])
+  }, [malla, tipo, arriba, pared, particion, llaves, diametroLlave, bebedero, diametroBebedero, respiraderos, espacio, orejas, hueco, grosorHueco, drenaje, diametroDrenaje])
 
   // Para la vista: arreglos estables (si no, el 3D se rehace en cada render)
   const piezasVista = useMemo(() => (res && res.piezas.length > 1 ? res.piezas.map((p) => ({ nombre: p.nombre, tris: p.malla.tris })) : null), [res])
@@ -176,10 +186,10 @@ export function GeneradorMoldes() {
       ? [
           `Molde de ${nombre} - hetnacnc.com/mx/disenar/moldes-3d`,
           "",
-          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? " (ya va volteada: se imprime con la cara de partición hacia arriba, sin soportes)" : ""}`),
+          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? (p.cama === "tapa" ? " (ya va volteada: se imprime con la tapa sobre la cama)" : " (ya va volteada: se imprime con la cara de partición hacia arriba, sin soportes)") : ""}`),
           "",
           res.tipo === "caja_silicona" ? `Silicona necesaria: unos ${res.colado} ml.` : `Material para vaciar: unos ${res.colado} ml por pieza.`,
-          res.tipo === "dos_partes" ? "Une las dos mitades con las llaves, sujétalas con ligas o prensas y vacía por el agujero más grande (bebedero); los chicos son respiraderos." : "",
+          res.tipo === "dos_partes" ? "Une las dos mitades con las llaves, sujétalas con pinzas de papelería en las orejas (o con ligas) y vacía por el agujero más grande (bebedero); los chicos son respiraderos." : "",
           "Usa desmoldante (vaselina, cera o spray) antes de vaciar. Para resina o silicona, imprime con 3 o más paredes y 20% de relleno o más.",
           "Si es para comida (chocolate, dulces): el plástico impreso no es apto para alimentos; úsalo para hacer un molde de silicona grado alimenticio y cuela en ese.",
         ].filter(Boolean).join("\r\n")
@@ -277,11 +287,37 @@ export function GeneradorMoldes() {
             )}
           </div>
 
+          {tipo === "abierto" && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-semibold text-[#1B1B18]">4. Pieza hueca</span>
+              <Casilla
+                etiqueta="Que salga hueca (macetas, vasos, lámparas de cemento)"
+                activa={hueco}
+                cambiar={(v) => {
+                  setHueco(v)
+                  // hueca va boca arriba (el núcleo entra por la boca); maciza, boca abajo
+                  if (!arribaElegido.current) setArriba(v ? "z" : "-z")
+                }}
+              />
+              {hueco && (
+                <>
+                  <span className="text-[12px] text-[#6B6A63]">Sale un núcleo con tapa que se mete por la boca. La pared queda del grosor que elijas donde la pieza es más ancha y más delgada donde se angosta. La boca de la pieza va hacia arriba y plana (paso 2). Para macetas, vasos y cajas; no para piezas con asas o salientes.</span>
+                  <Casilla etiqueta="Agujero de drenaje en el fondo" activa={drenaje} cambiar={setDrenaje} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Numero etiqueta="Pared de la pieza" valor={grosorHueco} cambiar={setGrosorHueco} />
+                    {drenaje && <Numero etiqueta="Drenaje" valor={diametroDrenaje} cambiar={setDiametroDrenaje} />}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {tipo === "dos_partes" && (
             <div className="flex flex-col gap-2">
               <span className="text-[13px] font-semibold text-[#1B1B18]">4. Para vaciar y que embone</span>
               <Casilla etiqueta="Llaves de registro (las mitades embonan)" activa={llaves} cambiar={setLlaves} />
               <Casilla etiqueta="Bebedero con embudo" activa={bebedero} cambiar={setBebedero} />
+              <Casilla etiqueta="Orejas para cerrarlo con pinzas de papelería" activa={orejas} cambiar={setOrejas} />
               <div className="grid grid-cols-3 gap-2">
                 {llaves && <Numero etiqueta="Llave" valor={diametroLlave} cambiar={setDiametroLlave} />}
                 {bebedero && <Numero etiqueta="Bebedero" valor={diametroBebedero} cambiar={setDiametroBebedero} />}
@@ -317,7 +353,9 @@ export function GeneradorMoldes() {
                 </div>
               ) : (
                 <div className="rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[12.5px] text-[#8A1C1C]" data-testid="desmoldeo">
-                  <b>⚠ Se va a atorar:</b> aprox. {Math.round(res.desmoldeo.atorado * 100)}% de la pieza no sale al abrir el molde (hay molde atrapado {res.tipo === "dos_partes" ? "entre la pieza y la partición" : "encima de la pieza"}).
+                  <b>⚠ Se va a atorar:</b> aprox. {Math.round(res.desmoldeo.atorado * 100)}% de la pieza no sale al abrir el molde {res.desmoldeo.nucleo
+                    ? "(el núcleo no sale: la boca de la pieza es más angosta que su interior; quítale lo hueco o usa la caja para silicona)."
+                    : `(hay molde atrapado ${res.tipo === "dos_partes" ? "entre la pieza y la partición" : "encima de la pieza"}).`}
                   <div className="mt-2 flex flex-wrap gap-2">
                     {res.desmoldeo.particion && (
                       <button type="button" onClick={() => setParticion(res.desmoldeo!.particion!.particion)} className="rounded-[8px] bg-[#142033] px-3 py-1.5 text-[12.5px] font-semibold text-white">
@@ -400,7 +438,7 @@ export function GeneradorMoldes() {
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {res.piezas.map((p) => (
                 <li key={p.nombre} className="rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5 text-[13.5px] text-[#1B1B18]">
-                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes" : ""}
+                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? (p.cama === "tapa" ? " · se descarga volteada: la tapa va sobre la cama" : " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes") : ""}
                 </li>
               ))}
             </ul>
