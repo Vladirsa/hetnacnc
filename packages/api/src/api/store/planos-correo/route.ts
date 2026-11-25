@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { estaDeBaja, ligaBaja } from "../../../lib/baja"
-import { PLANOS_NOMBRES, T_PLANOS, asegurarTablaPlanos, correoPlanoHtml, validarPedidoPlano } from "../../../lib/planos-correo"
+import { T_PLANOS, asegurarTablaPlanos, cargarNombresPlanos, correoPlanoHtml, nombrePlano, validarPedidoPlano } from "../../../lib/planos-correo"
 import { sendEmail } from "../../../lib/resend"
 
 // POST /store/planos-correo { email, plano, acepta, promos?, nombre? }
@@ -13,10 +13,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const logger = req.scope.resolve("logger")
   const b = (req.body || {}) as Record<string, unknown>
   if (b.sitio_web) return res.json({ ok: true }) // trampa para bots
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  await cargarNombresPlanos(knex)
   const v = validarPedidoPlano(b)
   if (!v.ok) return res.status(400).json({ message: v.mensaje })
   const d = v.datos
-  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarTablaPlanos(knex)
 
   const yaHoy = await knex(T_PLANOS)
@@ -30,7 +31,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const r = await sendEmail({
     to: d.email,
     bajaUrl: ligaBaja(d.email),
-    subject: `Tu plano gratis: ${PLANOS_NOMBRES[d.plano]} — HETNA CNC`,
+    subject: `Tu plano gratis: ${nombrePlano(d.plano)} — HETNA CNC`,
     html: correoPlanoHtml(d.plano, d.nombre),
   })
   if (!r.sent) logger.info(`[planos-correo] no enviado: ${r.reason}`)

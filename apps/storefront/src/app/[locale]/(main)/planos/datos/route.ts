@@ -4,7 +4,8 @@
 // Lleva el precio recomendado por HETNA de cada acabado (kit cortado), el peso
 // y las medidas del paquete, con los ajustes de precio del dueño.
 import { medidasDe } from "@/lib/planos/medidas"
-import { PLANOS } from "@/lib/planos/modelos"
+import { buscarPlano, todosLosPlanos } from "@/lib/planos/fuente"
+import type { Plano } from "@/lib/planos/modelos"
 import { ACABADOS_PLANO, cotizarPlano } from "@/lib/planos/precio"
 import { listaCorte } from "@/lib/planos/calculo"
 import type { ConfigPrecios } from "@/lib/cotizador/estimador"
@@ -23,9 +24,12 @@ async function configPrecios(): Promise<ConfigPrecios | null> {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const cfg = await configPrecios()
-  const planos = PLANOS.map((pl) => {
+  // ?solo=a,b: sólo esos planos, pedidos uno por uno sin caché (al aprobar uno nuevo)
+  const solo = (new URL(req.url).searchParams.get("solo") || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 20)
+  const lista: Plano[] = solo.length ? ((await Promise.all(solo.map((s) => buscarPlano(s)))).filter(Boolean) as Plano[]) : await todosLosPlanos()
+  const planos = lista.map((pl) => {
     const m = medidasDe(pl.piezas, pl.ruedas)
     const base = cotizarPlano(pl, cfg, "lijado")
     const filas = listaCorte(pl).filas

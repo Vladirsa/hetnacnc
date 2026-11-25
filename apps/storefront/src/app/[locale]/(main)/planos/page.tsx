@@ -3,7 +3,8 @@ import type { Metadata } from "next"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { acomodoPorMaterial, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
 import { cajasRuedas, svgArmado } from "@/lib/planos/dibujo"
-import { CATEGORIAS_PLANO, PLANOS } from "@/lib/planos/modelos"
+import { todosLosPlanos } from "@/lib/planos/fuente"
+import { CATEGORIAS_PLANO } from "@/lib/planos/modelos"
 
 // Biblioteca de planos HETNA: muebles de taller diseñados por HETNA, con
 // lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC.
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
     "Planos gratis de muebles para taller y casa: banco de trabajo, cajonera, librero, buró, escritorio y más. Con lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC.",
 }
 
-export default function Planos() {
+export default async function Planos() {
+  const PLANOS = await todosLosPlanos()
   return (
     <main className="w-full bg-[#FAF9F6]">
       <div className="mx-auto w-full max-w-[1180px] px-4 py-8 lg:px-6">
