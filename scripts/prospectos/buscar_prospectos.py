@@ -44,7 +44,9 @@ NO_EMPRESA = ("probados.", "plastico.com", "metalmecanica.com", "industriamart",
               "wikipedia.org", "tiktok.com", "x.com", "twitter.com", "google.", "yelp.", "indeed.", "paginasamarillas",
               # Portales B2B de exportación (no son fabricantes): exporthub, tradekey, ec21…
               "exporthub", "tradekey", "ec21.", "globalsources", "dhgate", "aliexpress", "tradeindia", "go4worldbusiness",
-              "hktdc", "ecvv", "diytrade", "tradewheel", "1688.com", "hisupplier", "machineryline", "directindustry")
+              "hktdc", "ecvv", "diytrade", "tradewheel", "1688.com", "hisupplier", "machineryline", "directindustry",
+              # Directorios y tiendas que no son talleres (tanda del 25 nov 2026)
+              "marketb2b", "tallerium", "constru-mexico", "impresoras3d.com", "goldsupplier.com")
 
 
 # Preferencia de modelos de Groq (se usa el primero que la cuenta tenga activo).
@@ -202,14 +204,28 @@ DOMINIOS_PAIS = [(".com.mx", "México"), (".mx", "México"), (".cl", "Chile"), (
                  (".py", "Paraguay"), (".bo", "Bolivia"), (".com.ve", "Venezuela"), (".ve", "Venezuela"), (".es", "España")]
 
 
-def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", dominio: str = "") -> str:
+# Portales, directorios y tiendas en línea que el buscador confunde con talleres:
+# se reconocen por cómo se describen a sí mismos.
+NO_TALLER_RE = re.compile(
+    r"\b(marketplace|b2b|directorio de|encuentra (a )?los mejores|proveedores para la industria|"
+    r"ecommerce|e-commerce|tienda en l[ií]nea de|miles de referencias|publica tus productos)\b", re.I)
+
+
+def no_es_empresa_cnc(c: dict) -> bool:
+    """True si el sitio se describe como portal, directorio o tienda en línea."""
+    texto = f"{c.get('empresa', '')} {c.get('productos_servicios', '')}"
+    return bool(NO_TALLER_RE.search(texto))
+
+
+def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", dominio: str = "", solo_mx: bool = False) -> str:
     """País que dicen el teléfono (lada internacional) o el dominio; "" si no se sabe."""
     for tel in (telefono, whatsapp):
         t = re.sub(r"[^0-9+]", "", str(tel or ""))
         if t.startswith("00"):
             t = "+" + t[2:]
         # Sin "+" pero con más de 10 dígitos: ya trae lada (56969659986)
-        if not t.startswith("+") and 11 <= len(t) <= 13:
+        # (no si empieza con 1: un celular chino sin lada también tiene 11 dígitos y empieza con 1)
+        if not t.startswith("+") and not t.startswith("1") and 11 <= len(t) <= 13:
             t = "+" + t
         if t.startswith("+1"):
             area = t[2:5]
@@ -228,8 +244,9 @@ def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", d
     for d in (str(email or "").split("@")[-1].lower(), str(dominio or "").lower()):
         if not d or d.startswith(("ig-", "fb-")):
             continue
+        # un proveedor extranjero puede tener sitio .es o .com.br: sólo .mx cambia su país
         for fin, pais in DOMINIOS_PAIS:
-            if d.endswith(fin):
+            if d.endswith(fin) and (not solo_mx or pais == "México"):
                 return pais
     return ""
 
@@ -490,12 +507,17 @@ def main() -> None:
                 email = ""  # no aparece literal en la página: se descarta
             if email in vistos:
                 continue
+            if no_es_empresa_cnc(c):
+                continue
             fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
             fila.update(tipo=tipo, pais=pais, idioma=idioma, web=url, dominio=dom, email=email,
                         segmento=consulta, fuente_url=c["fuente_url"])
-            real = pais_por_contacto(fila["telefono"], fila["whatsapp"], email, dom)
-            if real and real != pais and tipo != "Proveedor extranjero":
+            real = pais_por_contacto(fila["telefono"], fila["whatsapp"], email, dom, solo_mx=tipo == "Proveedor extranjero")
+            if real and real != pais:
                 fila.update(pais=real, ciudad="", estado="")
+                # Un «proveedor extranjero» que resulta ser de México es un proveedor local
+                if real == "México" and tipo == "Proveedor extranjero":
+                    fila.update(tipo="Proveedor", idioma="es")
             with SALIDA.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(fila, ensure_ascii=False) + "\n")
             vistos.update({dom, email} - {""})
@@ -510,6 +532,8 @@ def main() -> None:
                 for c in buscar_perfiles(consulta, red, max(3, args.max_por_consulta // 2)):
                     dom, email = c["dominio"], c["email"]
                     if dom in vistos or (email and email in vistos):
+                        continue
+                    if no_es_empresa_cnc(c):
                         continue
                     fila = {k: str(c.get(k) or "").strip() for k in CAMPOS}
                     # La ciudad de la búsqueda sólo se pone si el perfil la menciona: el buscador
