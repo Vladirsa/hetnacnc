@@ -39,6 +39,7 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
    COLORES="ABS=Amarillo dorado;PLA-CF=Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
    ```
    - Es idempotente.
+   - Para corregir el color de ofertas de HETNA que ya existen (sin tocar precio ni días): agrega `ACTUALIZAR_COLORES=1`.
    - Crea la colección y los productos que falten.
    - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES`, por material (`ABS=Amarillo dorado;PLA-CF=Negro`) o iguales para todos (`Negro`). Sin `COLORES` no pone la oferta de HETNA.
    - No cambia las ofertas que ya existan.
