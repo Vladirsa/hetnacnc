@@ -7,6 +7,7 @@ import { TablaTarifas } from "@/components/hetna/TablaTarifas"
 import { DIAS_CIERRE_AUTOMATICO, DIAS_HABILES_DECISION_DISPUTA, DIAS_RETRASO_CANCELACION } from "@/lib/hetna/promesas"
 
 // Términos y condiciones para vendedores y talleres (contrato del marketplace).
+// Versión 1.7 · 25 nov 2026 (el cliente libera el pago o reporta un problema con evidencia; reclamos hasta 7 días con descuento al taller, cláusulas 8 y 11).
 // Versión 1.6 · 19 nov 2026 (artículos de instructores en el blog bajan la comisión de cursos, cláusula 8).
 // Versión 1.5 · 12 nov 2026 (cancelaciones, retrasos, disputas y liberación de pagos en solicitudes de fabricación, cláusula 8).
 // Versión 1.4 · 12 nov 2026 (licitaciones como conexión sin comisión y protección sólo en pagos dentro, cláusula 8).
@@ -114,8 +115,8 @@ export default function TerminosVendedores() {
       <ul>
         <li>El cliente paga dentro de la plataforma (PayPal, Mercado Pago u otros medios que indique HETNA). HETNA recibe el pago por tu cuenta.</li>
         <li>HETNA te paga el importe de cada venta menos la comisión vigente y, en su caso, las retenciones de impuestos (cláusula 9) y los costos de envío que correspondan. La comisión depende del tipo de producto y está en la lista de precios de esta misma cláusula (abajo) y en tu panel, en Mi tablero. Publicar es gratis: sólo se cobra cuando vendes.</li>
-        <li>Cuándo se libera tu pago: los diseños y archivos digitales, en cuanto se confirma el pago del cliente; los productos físicos, 3 días después de que el pedido se entrega (lo marca el rastreo de la guía o el cliente al confirmar que lo recibió). Ves tu saldo pendiente, disponible y pagado en tu panel, en Mi saldo.</li>
-        <li>Si después hay una devolución, un contracargo o un reclamo procedente dentro del plazo que tiene el cliente, el importe se descuenta de tu siguiente pago. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
+        <li>Cuándo se libera tu pago: los diseños y archivos digitales, en cuanto se confirma el pago del cliente; los productos físicos, en cuanto el cliente toca «Todo bien, liberar pago» en su compra o, si no hace nada, 3 días después de que el pedido se entrega (lo marca el rastreo de la guía). Si el cliente toca «Tengo un problema», el pago se congela hasta que HETNA decide. Ves tu saldo pendiente, disponible y pagado en tu panel, en Mi saldo.</li>
+        <li>El cliente puede reportar un problema hasta 7 días naturales después de la entrega. Si el reclamo procede cuando tu pago ya se liberó o ya se te pagó, el reembolso (y la guía de regreso, cuando la culpa es tuya) se descuenta de tus siguientes ventas. Lo mismo aplica a una devolución o un contracargo procedente. HETNA puede retener pagos relacionados con una devolución, un contracargo, un reclamo o una sospecha de fraude, mientras se resuelve.</li>
         <li>Cursos, libros y PDF de la Academia HETNA: publicarlos es gratis. Si los cobras, HETNA cobra la comisión que indica la lista de precios (abajo) sobre el precio de cada venta y el resto se abona a tu saldo en cuanto se confirma el pago. Lo que publicas gratis no paga comisión.</li>
         <li>Artículos en el blog: si eres instructor y escribes artículos propios en el blog de HETNA (desde tu panel, sección Blog), cada artículo que HETNA aprueba baja la comisión de tus cursos como indica la lista de precios, durante el tiempo que ahí se señala. Aplica a ventas nuevas. HETNA puede rechazar o retirar artículos copiados, publicitarios o que no aporten, y entonces dejan de contar.</li>
         <li>Al publicar un libro, PDF o curso declaras que el contenido es tuyo o que tienes permiso para venderlo. HETNA puede retirar el que infrinja derechos de terceros (cláusula 7).</li>
@@ -164,7 +165,8 @@ export default function TerminosVendedores() {
       <h2>11. Devoluciones, garantías y atención al cliente</h2>
       <ul>
         <li>Debes respetar la <LocalizedClientLink href="/devoluciones">Política de devoluciones</LocalizedClientLink> de HETNA y las garantías que ofreces en tus publicaciones, así como la Ley Federal de Protección al Consumidor.</li>
-        <li>Debes responder las preguntas y reclamos de los clientes dentro de la plataforma, en un plazo máximo de 3 días hábiles.</li>
+        <li>Debes responder las preguntas y reclamos de los clientes dentro de la plataforma, en un plazo máximo de 3 días hábiles. Los reclamos de compras los respondes en tu panel, en Reclamos, con tu versión y tu evidencia (fotos del producto antes de enviarlo, del empaque, la guía). Si no respondes a tiempo, el reclamo se resuelve a favor del cliente.</li>
+        <li>En una devolución, la guía de regreso la pagas tú si el producto llegó dañado, incompleto, distinto, con defecto o no llegó; la paga el cliente si se arrepintió de la compra.</li>
         <li>Si una devolución o reembolso procede por causa tuya, el importe se descuenta de tus pagos.</li>
       </ul>
 
