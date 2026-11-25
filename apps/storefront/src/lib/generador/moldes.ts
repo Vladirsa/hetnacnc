@@ -55,6 +55,8 @@ export type PiezaMolde = {
   voltear: boolean
 }
 export type ResultadoMolde = {
+  /** Con qué tipo se armó (las opciones pueden haber cambiado después). */
+  tipo: TipoMolde
   piezas: PiezaMolde[]
   /** Pieza ya orientada, para la vista. */
   modelo: Malla
@@ -76,13 +78,50 @@ const GIROS: Record<Arriba, [number, number, number]> = { z: [0, 0, 0], "-z": [1
  * Puntos más altos de la pieza (para el bebedero y los respiraderos): el más
  * alto y luego los más altos que estén lejos de los ya elegidos.
  */
-export function puntosAltos(tris: number[], n: number, separacion: number): [number, number, number][] {
-  const vs: [number, number, number][] = []
-  for (let i = 0; i < tris.length; i += 3) vs.push([tris[i], tris[i + 1], tris[i + 2]])
-  vs.sort((a, b) => b[2] - a[2])
+export function puntosAltos(
+  tris: number[],
+  n: number,
+  separacion: number,
+  { zMin = -Infinity, evitar = [] }: { zMin?: number; evitar?: [number, number, number][] } = {},
+): [number, number, number][] {
+  // Rejilla en XY con el punto más alto de cada celda; una celda es "cima" si
+  // ninguna vecina es más alta. Así los respiraderos van a las crestas
+  // (donde se atrapa el aire) y no a la ladera del punto más alto.
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (let i = 0; i < tris.length; i += 3) {
+    x0 = Math.min(x0, tris[i]); x1 = Math.max(x1, tris[i])
+    y0 = Math.min(y0, tris[i + 1]); y1 = Math.max(y1, tris[i + 1])
+  }
+  if (!isFinite(x0)) return []
+  const lado = Math.max(1, separacion / 3)
+  const nx = Math.max(1, Math.ceil((x1 - x0) / lado) + 1), ny = Math.max(1, Math.ceil((y1 - y0) / lado) + 1)
+  const celdas = new Map<number, [number, number, number]>()
+  for (let i = 0; i < tris.length; i += 3) {
+    const k = Math.floor((tris[i] - x0) / lado) + nx * Math.floor((tris[i + 1] - y0) / lado)
+    const c = celdas.get(k)
+    if (!c || tris[i + 2] > c[2]) celdas.set(k, [tris[i], tris[i + 1], tris[i + 2]])
+  }
+  const cimas: [number, number, number][] = []
+  const resto: [number, number, number][] = []
+  celdas.forEach((v, k) => {
+    const cx = k % nx, cy = Math.floor(k / nx)
+    let cima = true
+    for (let dx = -1; dx <= 1 && cima; dx++)
+      for (let dy = -1; dy <= 1; dy++) {
+        if ((!dx && !dy) || cx + dx < 0 || cy + dy < 0 || cx + dx >= nx || cy + dy >= ny) continue
+        const w = celdas.get(cx + dx + nx * (cy + dy))
+        if (w && w[2] > v[2] + 1e-6) { cima = false; break }
+      }
+    ;(cima ? cimas : resto).push(v)
+  })
+  const porAltura = (a: [number, number, number], b: [number, number, number]) => b[2] - a[2]
+  cimas.sort(porAltura)
+  resto.sort(porAltura)
   const elegidos: [number, number, number][] = []
-  for (const v of vs) {
+  for (const v of [...cimas, ...resto]) {
     if (elegidos.length >= n) break
+    if (v[2] < zMin) continue
+    if (evitar.some(([x, y, r]) => Math.hypot(x - v[0], y - v[1]) < r)) continue
     if (elegidos.every((e) => Math.hypot(e[0] - v[0], e[1] - v[1]) >= separacion)) elegidos.push(v)
   }
   return elegidos
@@ -128,8 +167,8 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       // Caja abierta: piso + 4 paredes; la pieza pegada al piso (se imprimen juntas)
       const ix0 = x0 - espacio, iy0 = y0 - espacio, ix1 = x1 + espacio, iy1 = y1 + espacio
       const alto = H + espacio
-      const fuera = g(Manifold.cube([ix1 - ix0 + 2 * pared, iy1 - iy0 + 2 * pared, alto + pared]).translate([ix0 - pared, iy0 - pared, -pared]))
-      const hueco = g(Manifold.cube([ix1 - ix0, iy1 - iy0, alto + 1]).translate([ix0, iy0, 0]))
+      const fuera = g(g(Manifold.cube([ix1 - ix0 + 2 * pared, iy1 - iy0 + 2 * pared, alto + pared])).translate([ix0 - pared, iy0 - pared, -pared]))
+      const hueco = g(g(Manifold.cube([ix1 - ix0, iy1 - iy0, alto + 1])).translate([ix0, iy0, 0]))
       // la pieza baja 0.2 mm dentro del piso para que quede unida
       const caja = g(g(fuera.subtract(hueco)).add(g(pieza.translate([0, 0, -0.2]))))
       salida("caja-silicona", caja)
@@ -137,49 +176,70 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       avisos.push(`Llena la caja hasta ${r1(alto)} mm de alto: cubre la pieza con ${r1(espacio)} mm de silicona encima.`)
     } else if (tipo === "abierto") {
       // Bloque hasta un pelo abajo del tope de la pieza: la cara de arriba queda abierta
-      const bloque = g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + pared - 0.01]).translate([x0 - pared, y0 - pared, -pared]))
+      const bloque = g(g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + pared - 0.01])).translate([x0 - pared, y0 - pared, -pared]))
       salida("molde", g(bloque.subtract(pieza)))
+      // Si la pieza termina en punta o curva arriba, la boca casi no existe
+      const seccion = pieza.slice(H - 0.02)
+      const boca = seccion.area()
+      seccion.delete()
+      if (boca < 0.15 * (x1 - x0) * (y1 - y0))
+        avisos.push("La boca del molde quedó muy chica: la cara de arriba de la pieza casi no toca el borde. Gira la pieza (paso 2) para que su cara plana o más ancha quede hacia arriba.")
       avisos.push("Molde abierto: la cara de arriba de la pieza es la que queda al aire. Sirve para piezas que salen hacia arriba sin atorarse (sin partes que se metan por debajo).")
     } else {
       // Dos partes
       const zp = (H * particion) / 100
       particionZ = zp
-      const bloque = g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + 2 * pared]).translate([x0 - pared, y0 - pared, -pared]))
+      const bloque = g(g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + 2 * pared])).translate([x0 - pared, y0 - pared, -pared]))
       const zTope = H + pared
       let molde = g(bloque.subtract(pieza))
-      // Bebedero (con embudo) y respiraderos: de los puntos más altos de la pieza a la cara de arriba
+      // Llaves de registro: esferas en las cuatro esquinas, dentro de la pared
+      const dLlave = acotar(o.diametroLlave, 2, 30, 8)
+      const rk = Math.min(dLlave / 2, pared / 2 - 1.5)
+      const m = pared / 2
+      const esquinas: [number, number][] = [[x0 - m, y0 - m], [x1 + m, y0 - m], [x1 + m, y1 + m], [x0 - m, y1 + m]]
+      const conLlaves = o.llaves && rk >= 1.5
+      // Bebedero (con embudo) y respiraderos: de las cimas de la mitad de arriba a la cara de arriba
       const rb = acotar(o.diametroBebedero, 2, 40, 8) / 2
       const rv = acotar(o.diametroRespiradero, 1, 20, 3) / 2
       const nv = Math.round(acotar(o.respiraderos, 0, 4, 2))
-      const altos = puntosAltos(modelo.tris, (o.bebedero ? 1 : 0) + nv, Math.max(10, 4 * rb))
+      const pedidos = (o.bebedero ? 1 : 0) + nv
       const canales: any[] = []
-      altos.forEach((p, i) => {
-        const esBebedero = o.bebedero && i === 0
-        const r = esBebedero ? rb : rv
-        const desde = Math.max(zp + 0.5, p[2] - 0.8)
-        canales.push(g(Manifold.cylinder(zTope - desde + 0.1, r, r, SEG).translate([p[0], p[1], desde])))
-        if (esBebedero) {
-          const alto = Math.min(pared * 0.6, 3 * rb)
-          canales.push(g(Manifold.cylinder(alto + 0.1, r, 2 * r, SEG).translate([p[0], p[1], zTope - alto])))
+      if (pedidos && H - zp < 1) avisos.push("La partición quedó casi en el tope de la pieza: no caben bebedero ni respiraderos. Bájala.")
+      else if (pedidos) {
+        const rMax = o.bebedero ? rb : rv
+        const evitar: [number, number, number][] = conLlaves ? esquinas.map(([x, y]) => [x, y, rk + holgura + rMax + 1]) : []
+        const altos = puntosAltos(modelo.tris, pedidos * 3, Math.max(8, 4 * rv, 2 * (rb + rv) + 2), { zMin: zp + 1, evitar })
+        let colocados = 0
+        for (const p of altos) {
+          if (colocados >= pedidos) break
+          const esBebedero = o.bebedero && colocados === 0
+          const r = esBebedero ? rb : rv
+          const desde = Math.max(zp + 0.1, p[2] - 0.8)
+          const tubo = g(g(Manifold.cylinder(zTope - desde + 0.1, r, r, SEG)).translate([p[0], p[1], desde]))
+          // el canal tiene que tocar la cavidad, si no es un agujero ciego
+          if (g(tubo.intersect(pieza)).volume() < 0.01) continue
+          canales.push(tubo)
+          if (esBebedero) {
+            const alto = Math.min(pared * 0.6, 3 * rb)
+            canales.push(g(g(Manifold.cylinder(alto + 0.1, r, Math.min(2 * r, r + pared / 2), SEG)).translate([p[0], p[1], zTope - alto])))
+          }
+          colocados++
         }
-      })
-      if (o.bebedero && !altos.length) avisos.push("No se encontró dónde poner el bebedero: hazlo a mano en tu programa.")
-      if (nv && altos.length < (o.bebedero ? 1 : 0) + nv) avisos.push("La pieza es chica: cupieron menos respiraderos de los pedidos.")
+        if (o.bebedero && !colocados) avisos.push("No se encontró dónde poner el bebedero: hazlo a mano en tu programa o mueve la partición.")
+        else if (colocados < pedidos) avisos.push("La pieza es chica: cupieron menos respiraderos de los pedidos.")
+      }
       if (canales.length) molde = g(molde.subtract(g(Manifold.union(canales))))
       // Partir por el plano
       let abajo = g(molde.trimByPlane([0, 0, -1], -zp))
       let arriba = g(molde.trimByPlane([0, 0, 1], zp))
-      // Llaves de registro: esferas en las cuatro esquinas, dentro de la pared
       if (o.llaves) {
-        const rk = Math.min(acotar(o.diametroLlave, 2, 30, 8) / 2, pared / 2 - 1.5)
-        if (rk < 1.5) avisos.push(`La pared es muy delgada para las llaves de registro: súbela a ${Math.ceil(2 * (1.5 + 1.5))} mm o más.`)
+        if (!conLlaves) avisos.push(`La pared es muy delgada para las llaves de registro: súbela a ${Math.ceil(2 * (1.5 + 1.5))} mm o más.`)
         else {
-          if (rk < acotar(o.diametroLlave, 2, 30, 8) / 2) avisos.push(`Las llaves se achicaron a ${r1(2 * rk)} mm para que quepan en la pared de ${pared} mm.`)
-          const m = pared / 2
-          const esquinas: [number, number][] = [[x0 - m, y0 - m], [x1 + m, y0 - m], [x1 + m, y1 + m], [x0 - m, y1 + m]]
+          if (rk < dLlave / 2) avisos.push(`Las llaves se achicaron a ${r1(2 * rk)} mm para que quepan en la pared de ${pared} mm.`)
           for (const [x, y] of esquinas) {
             const bola = g(g(Manifold.sphere(rk, SEG)).translate([x, y, zp]))
-            abajo = g(abajo.add(g(bola.trimByPlane([0, 0, 1], zp))))
+            // la media esfera entra 0.2 mm en la mitad de abajo para quedar unida a ella
+            abajo = g(abajo.add(g(bola.trimByPlane([0, 0, 1], zp - 0.2))))
             arriba = g(arriba.subtract(g(g(Manifold.sphere(rk + holgura, SEG)).translate([x, y, zp]))))
           }
         }
@@ -190,13 +250,17 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       avisos.push(`El molde se parte a ${r1(zp)} mm de la base de la pieza. Si la pieza se atora al abrirlo, mueve la partición a la parte más ancha.`)
     }
 
-    return { piezas, modelo, colado: r1(colado / 1000), particionZ, avisos }
+    return { tipo, piezas, modelo, colado: r1(colado / 1000), particionZ, avisos }
   } finally {
     for (const x of basura) { try { (x as any)?.delete?.() } catch {} }
   }
 }
 
-/** La malla girada 180° en X y apoyada en z = 0 (para imprimir la mitad de arriba con la cara de partición sobre la cama). */
+/**
+ * La malla girada 180° en X y apoyada en z = 0: la mitad de arriba se imprime
+ * con su cara de afuera (la del bebedero) sobre la cama y la cara de partición
+ * hacia arriba, así la cavidad queda abierta y no lleva soportes.
+ */
 export function volteada(m: Malla): Malla {
   const t = m.tris
   let zMax = -Infinity

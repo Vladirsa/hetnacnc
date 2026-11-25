@@ -2,7 +2,7 @@
 
 // Generador de moldes (hetnacnc.com/mx/disenar/moldes-3d): sube tu pieza en
 // STL, OBJ o STEP y sale el molde para vaciar silicona, resina, yeso,
-// concreto, jabón o chocolate: de dos partes (con llaves, bebedero y
+// concreto, jabón o velas: de dos partes (con llaves, bebedero y
 // respiraderos), abierto, o la caja para colar silicona. El motor está en
 // lib/generador/moldes.ts. Tu archivo no sale del navegador.
 import dynamic from "next/dynamic"
@@ -17,11 +17,10 @@ const Vista = dynamic(() => import("./Partir3DVista"), { ssr: false, loading: ()
 
 const LIMITE = 60 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
-const r1 = (x: number) => Math.round(x * 10) / 10
 
 const TIPOS: { id: TipoMolde; nombre: string; nota: string }[] = [
   { id: "dos_partes", nombre: "Molde de 2 partes", nota: "Para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra, se vacía por el bebedero y se abre en dos." },
-  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, chocolates, posavasos, macetas. La cara de arriba de tu pieza queda al aire." },
+  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, posavasos, macetas. La cara de arriba de tu pieza queda al aire." },
   { id: "caja_silicona", nombre: "Caja para silicona", nota: "La caja con tu pieza pegada al piso: la imprimes, vacías silicona y te queda un molde flexible para hacer muchas copias." },
 ]
 const ARRIBAS: { id: Arriba; nombre: string }[] = [
@@ -29,8 +28,8 @@ const ARRIBAS: { id: Arriba; nombre: string }[] = [
   { id: "-z", nombre: "Boca abajo" },
   { id: "y", nombre: "Frente arriba" },
   { id: "-y", nombre: "Atrás arriba" },
-  { id: "x", nombre: "Lado der. arriba" },
-  { id: "-x", nombre: "Lado izq. arriba" },
+  { id: "x", nombre: "Lado izq. arriba" },
+  { id: "-x", nombre: "Lado der. arriba" },
 ]
 
 function descargar(nombre: string, contenido: BlobPart, tipo: string) {
@@ -92,17 +91,23 @@ export function GeneradorMoldes() {
   const [calculando, setCalculando] = useState(false)
   const [separar, setSeparar] = useState(25)
   const turno = useRef(0)
+  const turnoArchivo = useRef(0)
 
   const cambiarTipo = (t: TipoMolde) => {
     setTipo(t)
     // la caja de silicona lleva paredes delgadas; los moldes, gruesas
     setPared(t === "caja_silicona" ? "3" : "10")
+    // el molde abierto se llena por arriba: la cara plana de la pieza (casi
+    // siempre la base) tiene que quedar arriba
+    if (t === "abierto" && arriba === "z") setArriba("-z")
+    if (t !== "abierto" && arriba === "-z") setArriba("z")
   }
 
   const abrir = async (f: File | undefined) => {
     setError("")
     setAviso("")
     if (!f) return
+    const mio = ++turnoArchivo.current
     if (f.size > LIMITE) return setError("El archivo pesa más de 60 MB.")
     const ext = (f.name.split(".").pop() || "").toLowerCase()
     setCargando(ext === "step" || ext === "stp" ? "Abriendo el STEP con el motor CAD (la primera vez baja ~23 MB)..." : "Leyendo archivo...")
@@ -112,14 +117,15 @@ export function GeneradorMoldes() {
       else if (ext === "obj") m = leerOBJ(await f.text())
       else if (ext === "step" || ext === "stp") m = (await (await import("@/lib/generador/step")).leerSTEP(f, "normal")).malla
       else return setError("Formato no compatible. Sube un STL, OBJ o STEP.")
+      if (mio !== turnoArchivo.current) return // ya subieron otro
       if (m.tris.length < 36) return setError("El archivo no trae un modelo 3D.")
       setNombre(f.name.replace(/\.[^.]+$/, ""))
       setRes(null)
       setMalla(m)
     } catch (e) {
-      setError(ext === "step" || ext === "stp" ? (e as Error).message : "No pude leer el archivo. Revisa que no esté dañado.")
+      if (mio === turnoArchivo.current) setError(ext === "step" || ext === "stp" ? (e as Error).message : "No pude leer el archivo. Revisa que no esté dañado.")
     } finally {
-      setCargando("")
+      if (mio === turnoArchivo.current) setCargando("")
     }
   }
 
@@ -159,18 +165,19 @@ export function GeneradorMoldes() {
   const cortesVista = useMemo(() => (res?.particionZ != null ? [{ eje: 2 as const, pos: res.particionZ }] : []), [res])
   const modeloVista = useMemo(() => (res ? (res.piezas.length === 1 ? res.piezas[0].malla.tris : res.modelo.tris) : malla ? malla.tris : null), [res, malla])
 
-  // Cada pieza como se imprime (la de arriba volteada: la cara de partición sobre la cama)
+  // Cada pieza como se imprime (la de arriba volteada: la cara de partición hacia arriba, sin soportes)
   const archivos = () => (res ? res.piezas.map((p) => ({ nombre: `${nombre}-${p.nombre}.stl`, contenido: mallaSTL(p.voltear ? volteada(p.malla) : p.malla) })) : [])
   const leeme = () =>
     res
       ? [
           `Molde de ${nombre} - hetnacnc.com/mx/disenar/moldes-3d`,
           "",
-          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? " (ya va volteada para imprimir con la cara de partición sobre la cama)" : ""}`),
+          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? " (ya va volteada: se imprime con la cara de partición hacia arriba, sin soportes)" : ""}`),
           "",
-          tipo === "caja_silicona" ? `Silicona necesaria: unos ${res.colado} ml.` : `Material para vaciar: unos ${res.colado} ml por pieza.`,
-          tipo === "dos_partes" ? "Une las dos mitades con las llaves, sujétalas con ligas o prensas y vacía por el agujero más grande (bebedero); los chicos son respiraderos." : "",
+          res.tipo === "caja_silicona" ? `Silicona necesaria: unos ${res.colado} ml.` : `Material para vaciar: unos ${res.colado} ml por pieza.`,
+          res.tipo === "dos_partes" ? "Une las dos mitades con las llaves, sujétalas con ligas o prensas y vacía por el agujero más grande (bebedero); los chicos son respiraderos." : "",
           "Usa desmoldante (vaselina, cera o spray) antes de vaciar. Para resina o silicona, imprime con 3 o más paredes y 20% de relleno o más.",
+          "Si es para comida (chocolate, dulces): el plástico impreso no es apto para alimentos; úsalo para hacer un molde de silicona grado alimenticio y cuela en ese.",
         ].filter(Boolean).join("\r\n")
       : ""
   const bajarZip = async () => {
@@ -188,7 +195,7 @@ export function GeneradorMoldes() {
     for (const a of archivos()) z[a.nombre] = new Uint8Array(a.contenido)
     z["LEEME.txt"] = new TextEncoder().encode(leeme())
     const ok = mandarArchivosAFabricar([{ nombre: `${nombre}-molde.zip`, contenido: new Blob([zipSync(z, { level: 6 }) as unknown as BlobPart], { type: "application/zip" }) }], locale, {
-      pieza: `Molde de ${nombre} (${TIPOS.find((t) => t.id === tipo)?.nombre.toLowerCase()})`,
+      pieza: `Molde de ${nombre} (${TIPOS.find((t) => t.id === res.tipo)?.nombre.toLowerCase()})`,
       medidas: res.piezas.map((p) => `${p.nombre} ${p.tam.join("×")} mm`).join(", "),
       proceso: "Impresión 3D",
       cantidad: `${res.piezas.length} pieza(s)`,
@@ -212,7 +219,7 @@ export function GeneradorMoldes() {
         <span className="inline-block rounded-full bg-[#E6F4EC] px-3 py-1 text-[12px] font-bold tracking-wide text-[#16794F]">GRATIS · SIN MARCA DE AGUA</span>
         <h1 className="m-0 mt-2 font-display text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">Generador de moldes 3D</h1>
         <p className="m-0 mt-1 max-w-[760px] text-[15px] text-[#6B6A63]">
-          Sube tu pieza en STL, OBJ o STEP y sale el <strong className="text-[#1B1B18]">molde listo para imprimir</strong>: de dos partes con llaves, bebedero y respiraderos, abierto, o la caja para colar silicona. Para resina, yeso, concreto, jabón, velas o chocolate. Tu archivo no sale de tu navegador.
+          Sube tu pieza en STL, OBJ o STEP y sale el <strong className="text-[#1B1B18]">molde listo para imprimir</strong>: de dos partes con llaves, bebedero y respiraderos, abierto, o la caja para colar silicona. Para resina, yeso, concreto, jabón o velas. Tu archivo no sale de tu navegador.
         </p>
       </section>
 
@@ -282,7 +289,7 @@ export function GeneradorMoldes() {
           {res && (
             <div className="flex flex-col gap-2 border-t border-[#E7E4DC] pt-3">
               <p className="m-0 text-[13.5px] text-[#1B1B18]">
-                {tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} ml</b>
+                {res.tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} ml</b>
               </p>
               {res.avisos.map((a) => (
                 <p key={a} className="m-0 rounded-[10px] bg-[#FFF8F1] px-3 py-2 text-[12.5px] text-[#7A4A12]">
@@ -290,25 +297,26 @@ export function GeneradorMoldes() {
                 </p>
               ))}
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={bajarZip} className="rounded-[10px] bg-[#C2560A] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#A9480A]">
+                <button type="button" disabled={calculando} onClick={bajarZip} className="rounded-[10px] bg-[#C2560A] disabled:opacity-50 px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#A9480A]">
                   Descargar molde (ZIP)
                 </button>
                 {res.piezas.map((p) => (
                   <button
                     key={p.nombre}
                     type="button"
+                    disabled={calculando}
                     onClick={() => descargar(`${nombre}-${p.nombre}.stl`, mallaSTL(p.voltear ? volteada(p.malla) : p.malla), "model/stl")}
-                    className="rounded-[10px] border border-[#E7E4DC] px-3 py-2.5 text-[13px] font-semibold text-[#1B1B18] hover:border-[#C2560A]"
+                    className="rounded-[10px] border border-[#E7E4DC] px-3 py-2.5 text-[13px] disabled:opacity-50 font-semibold text-[#1B1B18] hover:border-[#C2560A]"
                   >
                     {p.nombre}.stl
                   </button>
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={fabricar} className="rounded-[10px] bg-[#16794F] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#12603F]">
+                <button type="button" disabled={calculando} onClick={fabricar} className="disabled:opacity-50 rounded-[10px] bg-[#16794F] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#12603F]">
                   Fabrícamelo
                 </button>
-                <button type="button" onClick={cotizar} className="rounded-[10px] border border-[#E7E4DC] px-4 py-2.5 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
+                <button type="button" disabled={calculando} onClick={cotizar} className="disabled:opacity-50 rounded-[10px] border border-[#E7E4DC] px-4 py-2.5 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
                   Cotizar impresión
                 </button>
               </div>
@@ -336,7 +344,7 @@ export function GeneradorMoldes() {
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {res.piezas.map((p) => (
                 <li key={p.nombre} className="rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5 text-[13.5px] text-[#1B1B18]">
-                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? " · se descarga volteada para imprimir sin soportes en la cara de partición" : ""}
+                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes" : ""}
                 </li>
               ))}
             </ul>
