@@ -4,7 +4,8 @@
 // producto trae sus medidas, un esquema dibujado con ellas (rotulado como
 // esquema: no se hace pasar por foto ni por el archivo). Si el vendedor subió
 // un modelo de muestra, una vista 3D que se puede girar. Sello "Descarga
-// inmediata" siempre visible.
+// inmediata" visible en los diseños digitales; también la usan las piezas de
+// Impresión 3D bajo pedido (digital=false: sin sello, su STL como vista 3D).
 import Image from "@/lib/imagenes/Imagen"
 import dynamic from "next/dynamic"
 import { useState } from "react"

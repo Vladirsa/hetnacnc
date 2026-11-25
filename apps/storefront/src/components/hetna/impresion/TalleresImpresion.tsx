@@ -2,8 +2,9 @@
 
 // Ficha de un diseño de "Impresión 3D bajo pedido": los talleres que lo
 // imprimen, cada uno con su material, precio, días, colores y envío. Los
-// destacados (pagan por salir primero) llevan insignia. Arriba, la liga para
-// bajar el archivo gratis o cambiarle las medidas en la herramienta.
+// destacados (pagan por salir primero) llevan insignia. La lista va debajo de
+// las fotos; en la columna de compra va ResumenImpresion (precio desde y la
+// liga para bajar el archivo gratis o cambiarle las medidas).
 import { useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -133,7 +134,7 @@ export function ResumenImpresion({ datos, herramienta }: { datos: DatosImpresion
   )
 }
 
-export function TalleresImpresion({ datos, locale, herramienta }: { datos: DatosImpresion; locale: string; herramienta?: string | null }) {
+export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; locale: string }) {
   const conOferta = useMemo(() => new Set(datos.ofertas.map((o) => o.material)), [datos.ofertas])
   const [material, setMaterial] = useState<string>("")
   const lista = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
@@ -141,8 +142,6 @@ export function TalleresImpresion({ datos, locale, herramienta }: { datos: Datos
 
   return (
     <section id="talleres-impresion" className="flex scroll-mt-24 flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FBFAF7] p-4" data-testid="talleres-impresion">
-      {herramienta && <DescargaGratis herramienta={herramienta} />}
-
       <div>
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo imprimen</h2>
         <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">Compara material, precio final, días y envío. Pagas dentro de HETNA.</p>
@@ -180,7 +179,7 @@ export function TalleresImpresion({ datos, locale, herramienta }: { datos: Datos
           ))}
         </ul>
       ) : (
-        <p className="m-0 text-[14px] text-[#40403A]">Todavía ningún taller lo imprime. Descárgalo gratis arriba o pide que te lo fabriquen.</p>
+        <p className="m-0 text-[14px] text-[#40403A]">Todavía ningún taller lo imprime. Descárgalo gratis (en el cuadro de compra) o pide que te lo fabriquen.</p>
       )}
 
       <p className="m-0 text-[12.5px] text-[#6B6A63]">

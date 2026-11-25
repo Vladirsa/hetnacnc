@@ -155,6 +155,9 @@ export const ProductDetailsPage = async ({
   // destacado sale primero donde se compra y el color viaja al carrito)
   // 25 nov 2026 (Vlado): la lista de talleres va debajo de las fotos (sin
   // huecos); en la columna de compra queda el resumen y la descarga gratis.
+  // Galería con miniaturas de vista 3D / esquema: diseños digitales y piezas
+  // de Impresión 3D (su STL va en vista_previa). Los demás físicos, la normal.
+  const galeriaConVistas = !!descarga || !!impresion
   const compraImpresion = impresion ? (
     <ResumenImpresion datos={impresion} herramienta={textoMeta(metaProd.herramienta_url) || null} />
   ) : null
@@ -246,7 +249,7 @@ export const ProductDetailsPage = async ({
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
-          {descarga || vistaPreviaDe(prod.metadata) ? (
+          {galeriaConVistas ? (
             <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} digital={!!descarga} />
           ) : (
             <ProductGallery images={prod?.images || []} title={prod.title} />

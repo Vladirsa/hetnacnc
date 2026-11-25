@@ -127,6 +127,10 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const categoria = (cats as any[]).find((c) => c.is_active !== false && !c.is_internal && (/impresi[oó]n[- ]3d/i.test(c.handle) || /impresi[oó]n 3d/i.test(c.name)))
   if (!categoria) logger.warn("[impresion] no hay categoría de Impresión 3D: los productos quedan sólo en la colección")
 
+  const archivos = container.resolve(Modules.FILE)
+  const subir = async (filename: string, mimeType: string, bytes: Buffer) =>
+    (await archivos.createFiles([{ filename, mimeType, content: bytes.toString("base64"), access: "public" }]))[0]
+
   let nuevos = 0, actualizados = 0, ofertas = 0
   for (const d of catalogo) {
     const metadata: Record<string, any> = {
@@ -137,46 +141,45 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       palabras_clave: d.etiquetas.join(", "),
       seller_id: hetna.id,
     }
-    const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
+    const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "images.url", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
     let producto = (existe as any[])[0]
     const previa = (producto?.metadata || {}) as Record<string, any>
 
     // Foto y vista 3D: se suben sólo si cambiaron (huella sha1 en la metadata)
+    // y sólo si las había puesto este script: lo que HETNA ponga a mano se respeta.
     const foto = join(carpeta, d.foto)
     const bytesFoto = existsSync(foto) ? readFileSync(foto) : null
-    const shaFoto = bytesFoto ? huella(bytesFoto) : null
+    if (!producto && !bytesFoto) {
+      logger.warn(`[impresion] ${d.handle}: falta la foto ${d.foto}; no se publica`)
+      continue
+    }
     const rutaStl = d.modelo_3d ? join(carpeta, d.modelo_3d) : ""
     const bytesStl = rutaStl && existsSync(rutaStl) ? readFileSync(rutaStl) : null
+    if (rutaStl && !bytesStl) logger.warn(`[impresion] ${d.handle}: falta el modelo 3D ${d.modelo_3d}; queda sin vista 3D`)
+    const shaFoto = bytesFoto ? huella(bytesFoto) : null
     const shaStl = bytesStl ? huella(bytesStl) : null
-    if (bytesStl && shaStl !== previa.vista_previa_sha) {
-      const [stl] = await container.resolve(Modules.FILE).createFiles([
-        { filename: `${d.handle}.stl`, mimeType: "model/stl", content: bytesStl.toString("base64"), access: "public" },
-      ])
+    const stlDelScript = !previa.vista_previa || !!previa.vista_previa_sha
+    if (bytesStl && shaStl !== previa.vista_previa_sha && stlDelScript) {
+      const stl = await subir(`${d.handle}.stl`, "model/stl", bytesStl)
       Object.assign(metadata, { vista_previa: stl.url, vista_previa_sha: shaStl })
     }
 
     if (producto) {
       const cambios: Record<string, any> = {}
-      // Sólo se cambia la foto que puso este script (si HETNA puso otra a mano, se respeta)
-      const fotoDelScript = previa.foto_url ? producto.thumbnail === previa.foto_url : String(producto.thumbnail || "").includes(d.handle)
+      // Productos sembrados antes de guardar foto_url: la portada del script lleva el handle en el nombre
+      const fotoDelScript = previa.foto_url ? producto.thumbnail === previa.foto_url : new RegExp(`/\\d+-${d.handle}\\.png$`).test(String(producto.thumbnail || ""))
       if (bytesFoto && shaFoto !== previa.foto_sha && fotoDelScript) {
-        const [archivo] = await container.resolve(Modules.FILE).createFiles([
-          { filename: `${d.handle}.png`, mimeType: "image/png", content: bytesFoto.toString("base64"), access: "public" },
-        ])
-        Object.assign(cambios, { thumbnail: archivo.url, images: [{ url: archivo.url }] })
+        const archivo = await subir(`${d.handle}.png`, "image/png", bytesFoto)
+        // se cambia sólo la portada; las demás imágenes del producto se quedan
+        const otras = ((producto.images || []) as { url: string }[]).filter((i) => i.url !== producto.thumbnail).map((i) => ({ url: i.url }))
+        Object.assign(cambios, { thumbnail: archivo.url, images: [{ url: archivo.url }, ...otras] })
         Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
         logger.info(`[impresion] ${d.handle}: foto nueva`)
       }
       await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { ...cambios, metadata: { ...previa, ...metadata } } } as any })
       actualizados++
     } else {
-      if (!bytesFoto) {
-        logger.warn(`[impresion] ${d.handle}: falta la foto ${d.foto}; no se publica`)
-        continue
-      }
-      const [archivo] = await container.resolve(Modules.FILE).createFiles([
-        { filename: `${d.handle}.png`, mimeType: "image/png", content: bytesFoto.toString("base64"), access: "public" },
-      ])
+      const archivo = await subir(`${d.handle}.png`, "image/png", bytesFoto as Buffer)
       Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
       const [x, y, z] = d.medidas_mm
       const caja = { length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 }
