@@ -162,10 +162,18 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string;
   const email = String(formData.get('email') || '').trim().toLowerCase();
   const datos = {
-    first_name: formData.get('first_name') as string,
-    last_name: formData.get('last_name') as string,
-    phone: formData.get('phone') as string
+    first_name: String(formData.get('first_name') || '').trim().slice(0, 80),
+    last_name: String(formData.get('last_name') || '').trim().slice(0, 80),
+    phone: String(formData.get('phone') || '').trim().slice(0, 30)
   };
+
+  // Trampa para robots: el campo «sitio_web» no se ve en la página, una persona
+  // nunca lo llena. Si viene lleno se contesta igual que siempre, sin crear nada.
+  if (String(formData.get('sitio_web') || '').trim()) return { verificar: email };
+  // El formulario ya los pide, pero aquí se revisa otra vez (no se confía en el navegador)
+  if (!/\p{L}/u.test(datos.first_name) || !/\p{L}/u.test(datos.last_name)) {
+    return 'Escribe tu nombre y tus apellidos.';
+  }
 
   try {
     let token: string;
@@ -219,8 +227,15 @@ export async function login(formData: FormData) {
 
   try {
     await setAuthToken(await entrarConCorreo(email, password));
-    // Cuenta que quedó a medias (identidad sin cliente): se completa aquí
-    await asegurarCliente(email, password, {}).catch(() => null);
+    // Cuenta que quedó a medias (identidad sin cliente): sin nombre no se
+    // puede completar aquí; se termina desde «Crear cuenta» con la misma contraseña.
+    if (!(await clienteDeLaSesion())) {
+      await removeAuthToken();
+      return {
+        success: false,
+        message: 'Te falta terminar tu registro: entra a "Crear cuenta" con este mismo correo y contraseña, y escribe tu nombre.'
+      };
+    }
 
     if (await faltaConfirmar()) {
       await removeAuthToken();

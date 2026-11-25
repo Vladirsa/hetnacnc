@@ -12,7 +12,7 @@ import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { signup } from "@/lib/data/customer"
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
 import { PasswordValidator } from "@/components/cells/PasswordValidator/PasswordValidator"
@@ -79,6 +79,8 @@ const Form = () => {
   useEffect(() => setVolver(leerVolver()), [])
   // Cuenta creada: falta confirmar el correo (no hay sesión hasta entonces)
   const [revisa, setRevisa] = useState<string | null>(null)
+  // Trampa para robots (campo escondido que una persona nunca llena)
+  const trampa = useRef<HTMLInputElement>(null)
 
   const {
     handleSubmit,
@@ -109,6 +111,7 @@ const Form = () => {
     // Con la lada del país: "+52 2217076014". Así se distingue México de
     // EE. UU. (+1) y de otros países al llamar o mandar WhatsApp.
     formData.append("phone", `${data.lada} ${data.phone}`)
+    formData.append("sitio_web", trampa.current?.value || "")
 
     let res: Awaited<ReturnType<typeof signup>>
     try {
@@ -164,6 +167,13 @@ const Form = () => {
           Crear cuenta
         </h1>
         <form onSubmit={enviar} noValidate data-testid="register-form">
+          {/* Trampa para robots: fuera de la vista y del teclado; si llega llena, no se crea la cuenta */}
+          <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+            <label>
+              Sitio web
+              <input ref={trampa} type="text" name="sitio_web" tabIndex={-1} autoComplete="off" defaultValue="" />
+            </label>
+          </div>
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <LabeledInput
               className="md:w-1/2"

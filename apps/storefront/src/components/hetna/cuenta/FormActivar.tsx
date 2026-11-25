@@ -79,8 +79,8 @@ export function FormActivar({ t, datos }: { t: string; datos: DatosActivacion })
       <details className="mt-3 text-sm text-[#40403A]">
         <summary className="cursor-pointer font-semibold text-[#6B675C]">Revisar mi nombre y WhatsApp</summary>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <input name="first_name" defaultValue={datos.first_name} placeholder="Nombre" className={CAMPO} autoComplete="given-name" />
-          <input name="last_name" defaultValue={datos.last_name} placeholder="Apellidos" className={CAMPO} autoComplete="family-name" />
+          <input name="first_name" defaultValue={datos.first_name} placeholder="Nombre" required className={CAMPO} autoComplete="given-name" />
+          <input name="last_name" defaultValue={datos.last_name} placeholder="Apellidos" required className={CAMPO} autoComplete="family-name" />
           <input name="phone" defaultValue={datos.telefono} placeholder="WhatsApp" className={`${CAMPO} sm:col-span-2`} autoComplete="tel" />
         </div>
       </details>
