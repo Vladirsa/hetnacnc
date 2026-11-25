@@ -865,8 +865,8 @@ export const GUIAS: Guia[] = [
       {
         titulo: "Qué tipo de molde te conviene",
         lista: [
-          "De dos partes: para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra, se vacía y se abre en dos.",
-          "Abierto: una sola pieza para objetos con una cara plana, como jabones, velas, posavasos o macetas.",
+          "De dos partes: para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra con pinzas de papelería en sus orejas, se vacía y se abre en dos.",
+          "Abierto: una sola pieza para objetos con una cara plana, como jabones, velas o posavasos. Con núcleo, la pieza sale hueca (macetas y vasos de cemento) y con agujero de drenaje.",
           "Caja para silicona: imprimes la caja con tu pieza adentro, vacías silicona y te queda un molde flexible para hacer muchas copias.",
         ],
       },

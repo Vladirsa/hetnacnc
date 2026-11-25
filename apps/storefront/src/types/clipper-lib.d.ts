@@ -9,6 +9,12 @@ declare module "clipper-lib" {
       StrictlySimple: boolean
     }
     Clipper_CleanPolygons?: (paths: Path[], distancia: number) => Path[]
+    ClipperOffset: new (miterLimit?: number, arcTolerance?: number) => {
+      AddPaths(paths: Path[], union: number, fin: number): void
+      Execute(solucion: Path[], delta: number): void
+    }
+    JoinType: { jtSquare: number; jtRound: number; jtMiter: number }
+    EndType: { etClosedPolygon: number; etClosedLine: number; etOpenButt: number; etOpenSquare: number; etOpenRound: number }
     PolyType: { ptSubject: number; ptClip: number }
     ClipType: { ctUnion: number; ctIntersection: number; ctDifference: number }
     PolyFillType: { pftNonZero: number; pftEvenOdd: number }

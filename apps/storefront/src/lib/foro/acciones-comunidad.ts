@@ -172,7 +172,7 @@ export async function enviarMensaje(usuario: string, cuerpo: string): Promise<Re
   try {
     const { rows } = await db().query(
       `select id, nombre from foro.perfiles where usuario = $1 and suspendido = false`,
-      [String(usuario || "").toLowerCase().slice(0, 30)]
+      [String(usuario || "").toLowerCase().slice(0, 60)]
     )
     const otro = rows[0]
     if (!otro) return { ok: false, error: "no_existe" }

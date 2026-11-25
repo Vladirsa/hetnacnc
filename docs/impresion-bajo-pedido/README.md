@@ -1,6 +1,6 @@
 # Impresión 3D bajo pedido
 
-Diseños propios de HETNA (hechos con el Texturizador) que se venden **impresos**. Cualquier taller con impresora pone su oferta (material, precio, días, colores) y el cliente elige.
+Diseños propios de HETNA (hechos con el Texturizador y con los Cortadores de galletas) que se venden **impresos**. Cualquier taller con impresora pone su oferta (material, precio, días, colores) y el cliente elige.
 
 ## Cómo funciona
 
@@ -30,7 +30,9 @@ Diseños propios de HETNA (hechos con el Texturizador) que se venden **impresos*
    - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm.
 3. Fotos: `fotos/<handle>.png`, de 1:1. Se toman del Texturizador con el diseño cargado:
    - abre `/disenar/texturizador?…` (la liga `herramienta_url` del JSON);
-   - agrega `&soporte=1` para ver el rodillo puesto en el soporte.
+   - agrega `&soporte=1` para ver el rodillo puesto en el soporte;
+   - los cortadores se abren en `/disenar/cortadores-galletas?…` (cortador y sello juntos en la vista 3D).
+   - En las piezas de pura pared (cortadores) el JSON lleva `"relleno": 100` para que los gramos salgan bien.
 4. Publica (en `packages/api`, en el servidor):
    ```
    COLORES="Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts

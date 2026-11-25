@@ -128,7 +128,7 @@ export const ligaPlanoAviso = (slug: string) => ligaPlano(slug).replace("utm_med
 
 export function correoAvisoHtml(slug: string, nombre: string | null) {
   const titulo = PLANOS_NOMBRES[slug] || "Nuevo plano"
-  const img = `${STORE_URL}/api/planos/${encodeURIComponent(slug)}/redes/1`
+  const img = `${STORE_URL}/api/planos-redes/${encodeURIComponent(slug)}/1`
   return marco(`Plano gratis de la semana: ${titulo}`,
     `<p style="margin:0 0 12px;color:#40403A;font-size:14px;line-height:1.5">${nombre ? `Hola ${esc(nombre)}: ` : ""}esta semana sumamos a la Biblioteca de planos HETNA el <b>${esc(titulo)}</b>. Trae lista de corte con medidas, acomodo en hojas de triplay, armado paso a paso y el DXF para router CNC.</p>` +
     `<a href="${ligaPlanoAviso(slug)}"><img src="${img}" alt="${esc(titulo)}" width="420" style="display:block;width:100%;max-width:420px;height:auto;margin:0 auto 14px;border-radius:10px"></a>` +

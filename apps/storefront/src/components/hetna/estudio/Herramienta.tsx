@@ -21,6 +21,7 @@ const GeneradorJuegos = dynamic(() => import("@/components/hetna/generador/Gener
 const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas: "rompecabezas", engranes: "engranes" }
 const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
+const GeneradorCortadores = dynamic(() => import("@/components/hetna/generador/GeneradorCortadores").then((m) => m.GeneradorCortadores))
 const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador/GeneradorTexturizador").then((m) => m.GeneradorTexturizador))
 const GeneradorLlaveros = dynamic(() => import("@/components/hetna/generador/GeneradorLlaveros").then((m) => m.GeneradorLlaveros))
 const GeneradorModelos3D = dynamic(() => import("@/components/hetna/generador/GeneradorModelos3D").then((m) => m.GeneradorModelos3D))
@@ -40,6 +41,7 @@ const GENERADORES: Record<string, React.ComponentType> = {
   "letras-3d": GeneradorLetras3D,
   llaveros: GeneradorLlaveros,
   texturizador: GeneradorTexturizador,
+  "cortadores-galletas": GeneradorCortadores,
   "plantillas-empaque": GeneradorEmpaques,
   "organizador-cajon": GeneradorOrganizador,
   "partir-3d": GeneradorPartir3D,

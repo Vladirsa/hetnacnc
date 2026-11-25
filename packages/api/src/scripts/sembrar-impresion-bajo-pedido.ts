@@ -41,18 +41,29 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte"
+  pieza: "pieza" | "soporte" | "cortador"
   etiquetas: string[]
   herramienta_url: string
   foto: string
   volumen_cm3: number
   medidas_mm: [number, number, number]
+  relleno?: number // 100 en piezas de pura pared (cortadores)
+  con_sello?: boolean
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 const mm = (m: number[]) => m.map((x) => Math.round(x)).join(" × ") + " mm"
 
 function descripcion(d: Diseno): string {
+  if (d.pieza === "cortador") {
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<p><strong>Cómo se usa:</strong> extiende la masa (con guías de grosor queda pareja), enharina un poco el filo y presiona el cortador hasta el fondo. La ceja de arriba es para apoyar los dedos.${d.con_sello ? " Antes de sacar la galleta, mete el sello dentro del cortador y presiona: deja el dibujo marcado." : ""}</p>`,
+      `<ul><li>Medida del cortador (con la ceja): ${mm(d.medidas_mm)}</li><li>${d.con_sello ? "Incluye el cortador y el sello." : "Incluye el cortador."}</li><li>Impreso en 3D bajo pedido por el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p><strong>Para alimentos:</strong> pide un material apto para contacto con alimentos y lávalo a mano con agua tibia; las piezas impresas no van al lavavajillas.</p>`,
+      `<p>¿Tienes impresora 3D? Descarga el cortador gratis y cámbiale la medida o el sello en la herramienta de HETNA.</p>`,
+    ].join("")
+  }
   const uso =
     d.pieza === "soporte"
       ? `<p><strong>Cómo se usa:</strong> mete el rodillo en el eje, ponle el seguro en C en la punta y rueda. Para cambiar de diseño quitas el seguro y cambias el rodillo. Trae 2 seguros (uno de repuesto).</p>`
@@ -107,7 +118,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   for (const d of catalogo) {
     const metadata = {
       impresion_bajo_pedido: true,
-      impresion: { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm },
+      impresion: { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm, ...(d.relleno ? { relleno: d.relleno } : {}) },
       herramienta_url: d.herramienta_url,
       medidas: mm(d.medidas_mm),
       palabras_clave: d.etiquetas.join(", "),
@@ -156,7 +167,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
                 manage_inventory: false, // las existencias viven en cada oferta (Mercur)
                 options: { [OPCION_MATERIAL]: m },
                 prices: [],
-                weight: (gramosPieza(d.volumen_cm3, m) + EMPAQUE_G) / 1000, // kg, como publicar-rapido
+                weight: (gramosPieza(d.volumen_cm3, m, d.relleno) + EMPAQUE_G) / 1000, // kg, como publicar-rapido
                 ...caja,
               })),
             },
@@ -175,7 +186,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     if (!COLORES_HETNA.length) continue
     const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
     const tiene = new Set((mias as any[]).map((o) => o.variant_id))
-    const pieza = { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm }
+    const pieza = { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm, relleno: d.relleno }
     const faltan = ((producto.variants || []) as { id: string; title: string }[])
       .filter((v) => MATERIALES_HETNA.includes(v.title) && !tiene.has(v.id))
       .map((v) => ({ variant_id: v.id, activa: true, precio: precioRecomendado(pieza, v.title) || 0, dias: DIAS_HETNA, colores: COLORES_HETNA }))

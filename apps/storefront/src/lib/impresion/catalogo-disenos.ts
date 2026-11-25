@@ -1,21 +1,31 @@
 // Catálogo de "Impresión 3D bajo pedido": diseños propios de HETNA hechos con
-// el Texturizador. De aquí salen (scripts/generar-catalogo-impresion.ts):
+// el Texturizador y con los Cortadores de galletas. De aquí salen (scripts/generar-catalogo-impresion.ts):
 // el volumen y las medidas de cada pieza, sus fotos y docs/impresion-bajo-
 // pedido/catalogo.json, que el API publica como productos de la tienda
 // (packages/api/src/scripts/sembrar-impresion-bajo-pedido.ts).
 //
 // Para agregar un diseño: súmalo aquí, corre el generador y luego el script
 // del API. El handle no se cambia una vez publicado (es la dirección de la ficha).
+import type { FormaClasica } from "@/lib/generador/cortadores"
+import type { IconoTextura } from "@/lib/generador/texturizador"
 import { aUrl, type DisenoTexturizador } from "@/lib/generador/texturizador-url"
+
+/** Un cortador de galletas del catálogo (lib/generador/cortadores.ts) */
+export type CortadorCatalogo = {
+  forma: { tipo: "icono"; icono: IconoTextura } | { tipo: "clasica"; forma: FormaClasica }
+  tamano: number
+  sello?: { tipo: "texto"; texto: string; fuente: string } | { tipo: "icono"; icono: IconoTextura }
+}
 
 export type DisenoCatalogo = {
   handle: string
   titulo: string
   /** Para quién y para qué (1 o 2 frases, sin promesas que no podamos cumplir) */
   resumen: string
-  /** "pieza" = el rodillo o la placa; "soporte" = el mango con eje para cambiar rodillos */
-  pieza: "pieza" | "soporte"
+  /** "pieza" = el rodillo o la placa; "soporte" = el mango con eje para cambiar rodillos; "cortador" = cortador de galletas */
+  pieza: "pieza" | "soporte" | "cortador"
   diseno: Partial<DisenoTexturizador>
+  cortador?: CortadorCatalogo
   etiquetas: string[]
 }
 
@@ -95,6 +105,32 @@ export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
     diseno: { ...PLACA, palabras: ["HECHO A MANO"], iconos: ["flor"], tamano: 8 },
     etiquetas: ["placa texturizadora", "hecho a mano", "jabón artesanal", "cuero"],
   },
+  // ── Cortadores de galletas ──
+  ...(
+    [
+      ["corazon", "icono", "corazon", 70, "Cortador de galletas de corazón con sello «Te amo»", "Corazón de 7 cm con sello «Te amo» para San Valentín, aniversarios y bodas.", { tipo: "texto", texto: "Te amo", fuente: "pacifico" }],
+      ["estrella", "icono", "estrella", 70, "Cortador de galletas de estrella", "Estrella de 7 cm para Navidad, fiestas infantiles y decoración con glaseado.", undefined],
+      ["nube", "clasica", "nube", 75, "Cortador de galletas de nube", "Nube de 7.5 cm para baby shower, fiestas infantiles y galletas decoradas.", undefined],
+      ["pino", "clasica", "arbol", 80, "Cortador de galletas de pino navideño", "Pino de 8 cm para galletas de Navidad.", undefined],
+      ["casita", "clasica", "casa", 70, "Cortador de galletas de casita", "Casita de 7 cm: galletas de jengibre, inauguraciones y Navidad.", undefined],
+      ["flor", "icono", "flor", 65, "Cortador de galletas de flor", "Flor de cinco pétalos de 6.5 cm para primavera, bodas y Día de las Madres.", undefined],
+      ["huellita", "icono", "huella", 60, "Cortador de galletas de huellita", "Huellita de 6 cm para galletas de mascotas y fiestas temáticas.", undefined],
+      ["copo-nieve", "icono", "copo", 70, "Cortador de galletas de copo de nieve", "Copo de nieve de 7 cm para galletas de invierno y Navidad.", undefined],
+      ["redondo-estrella", "clasica", "redondo", 65, "Cortador de galletas redondo con sello de estrella", "Galleta redonda de 6.5 cm con una estrella marcada al centro.", { tipo: "icono", icono: "estrella" }],
+    ] as [string, "icono" | "clasica", string, number, string, string, CortadorCatalogo["sello"]][]
+  ).map(([id, tipo, valor, tamano, titulo, resumen, sello]): DisenoCatalogo => ({
+    handle: `cortador-galletas-${id}-impreso-3d`,
+    titulo,
+    resumen,
+    pieza: "cortador",
+    diseno: {},
+    cortador: {
+      forma: tipo === "icono" ? { tipo: "icono", icono: valor as IconoTextura } : { tipo: "clasica", forma: valor as FormaClasica },
+      tamano,
+      ...(sello ? { sello } : {}),
+    },
+    etiquetas: ["cortador de galletas", "galletas decoradas", "repostería", id.replace(/-/g, " ")],
+  })),
   {
     handle: "soporte-rodillo-texturizador-impreso-3d",
     titulo: "Soporte con eje para rodillos texturizadores (cambia sólo el rodillo)",
@@ -107,4 +143,19 @@ export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
 ]
 
 /** Liga a la herramienta con el diseño cargado. */
-export const urlHerramienta = (d: DisenoCatalogo, extra = "") => `/disenar/texturizador?${aUrl(d.diseno)}${extra}`
+export function urlHerramienta(d: DisenoCatalogo, extra = ""): string {
+  if (d.pieza === "cortador" && d.cortador) {
+    const q = new URLSearchParams()
+    const f = d.cortador.forma
+    if (f.tipo === "icono") q.set("icono", f.icono)
+    else q.set("forma", f.forma)
+    q.set("tamano", String(d.cortador.tamano))
+    const s = d.cortador.sello
+    if (s?.tipo === "texto") {
+      q.set("sello", s.texto)
+      q.set("fuente", s.fuente)
+    } else if (s?.tipo === "icono") q.set("selloIcono", s.icono)
+    return `/disenar/cortadores-galletas?${q.toString()}${extra}`
+  }
+  return `/disenar/texturizador?${aUrl(d.diseno)}${extra}`
+}

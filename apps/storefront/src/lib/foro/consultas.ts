@@ -8,6 +8,7 @@ import { listarTalleres } from "@/lib/hetna/talleres"
 
 import { extracto, tieneVideo } from "./contenido"
 import { db, foroConfigurado } from "./db"
+import { leerEquipos, leerMateriales, leerPortafolio, leerZonas } from "./perfil-taller"
 import {
   type Autor,
   type MisVotos,
@@ -361,6 +362,12 @@ const aPerfil = (f: Fila): Perfil => ({
   abierto: f.abierto === true,
   correoAvisos: f.correo_avisos === "diario" || f.correo_avisos === "nunca" ? f.correo_avisos : "al_momento",
   resumenSemanal: f.resumen_semanal !== false,
+  // Perfil de taller (migración del 25 de noviembre): sin ella llegan vacíos
+  portada: f.portada_url || null,
+  zonas: leerZonas(f.zonas),
+  equipos: leerEquipos(f.equipos),
+  materiales: leerMateriales(f.materiales),
+  portafolio: leerPortafolio(f.portafolio),
   creado: fecha(f.creado),
   temas: Number(f.n_temas) || 0,
   respuestas: Number(f.n_respuestas) || 0,
@@ -385,6 +392,21 @@ export async function perfilPorUsuario(usuario: string): Promise<Perfil | null> 
   return intentar(async () => {
     const { rows } = await db().query(`${PERFIL_SQL} where p.usuario = $1`, [usuario.toLowerCase()])
     return rows[0] ? aPerfil(rows[0]) : null
+  })
+}
+
+// Liga vieja de un perfil (cambió su usuario o se alargó el límite de 30 a 60
+// letras): regresa el usuario de ahora para redirigir. null si no hay.
+export async function usuarioDeLigaVieja(usuario: string): Promise<string | null> {
+  const u = usuario.toLowerCase()
+  if (!/^[a-z0-9-]{3,60}$/.test(u)) return null
+  return intentar(async () => {
+    const { rows } = await db().query(
+      `select p.usuario from foro.usuarios_anteriores v join foro.perfiles p on p.id = v.perfil_id
+       where v.usuario = $1 and p.usuario <> $1 limit 1`,
+      [u]
+    )
+    return rows[0]?.usuario || null
   })
 }
 

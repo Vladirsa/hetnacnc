@@ -121,6 +121,17 @@ export function atoradoDosPartes(c: Columnas, zp: number) {
   return malas / c.tramos.length
 }
 
+/**
+ * Pieza hueca con el núcleo metido desde arriba (ya en su posición de colado):
+ * fracción de columnas donde queda pieza encima del hueco, o sea donde el
+ * núcleo no puede salir hacia arriba.
+ */
+export function nucleoAtorado(tris: ArrayLike<number>) {
+  const c = columnas(tris, 2, 1)
+  if (!c.tramos.length) return 0
+  return c.tramos.filter((t) => t.length > 1).length / c.tramos.length
+}
+
 /** La altura de partición (en % de la altura) con menos columnas atoradas; empata hacia la más cercana a `cerca`. */
 export function mejorParticion(c: Columnas, cerca = 50): { particion: number; atorado: number } {
   let mejor = { particion: cerca, atorado: Infinity }
@@ -138,6 +149,8 @@ export type Desmoldeo = {
   atorado: number
   /** No se pudo revisar (la malla tiene huecos o caras volteadas): no se dice nada. */
   dudoso?: boolean
+  /** Lo que se atora es el núcleo de la pieza hueca (la boca es más angosta que el interior). */
+  nucleo?: boolean
   /** Mejor altura de partición (%) para el lado elegido, si es mejor que la elegida (dos partes). */
   particion?: { particion: number; atorado: number }
   /** Mejor lado hacia arriba, si es mejor que el elegido (con su partición en dos partes). */

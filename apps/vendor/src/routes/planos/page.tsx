@@ -34,6 +34,7 @@ const S = {
   aviso: (ok) => ({ background: ok ? "#E6F4EA" : "#FDECEA", color: ok ? "#1E7B3A" : "#B3261E", borderRadius: 8, padding: "8px 12px", fontSize: 13, marginTop: 8 }),
 }
 
+const fecha = (iso) => (iso ? new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "long" }) : "")
 const pesos = (n) => (n == null ? "—" : Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }))
 
 function Editor({ plano, limites, alGuardar }) {
@@ -130,15 +131,49 @@ export default function OfertarPlanos() {
   const [q, setQ] = useState("")
   const [soloMias, setSoloMias] = useState(false)
 
+  const [aviso, setAviso] = useState(null)
+  const [pagando, setPagando] = useState(false)
+
+  const pedir = (ruta = "", init = {}) =>
+    fetch(`/vendor/hetna-planos${ruta}`, { credentials: "include", headers: { "Content-Type": "application/json" }, ...init }).then((r) =>
+      r.json().then((d) => (r.ok ? d : Promise.reject(new Error(d.message || "Error"))))
+    )
+
   const cargar = () =>
-    fetch("/vendor/hetna-planos", { credentials: "include" })
-      .then((r) => r.json().then((d) => (r.ok ? d : Promise.reject(new Error(d.message || "Error")))))
+    pedir()
       .then(setDatos)
       .catch((e) => setError(e.message))
 
   useEffect(() => {
-    cargar()
+    // Regreso de Mercado Pago del pago del destacado
+    const q = new URLSearchParams(window.location.search)
+    const pagoId = q.get("payment_id") || q.get("collection_id")
+    if (pagoId) {
+      pedir("/destacado", { method: "POST", body: JSON.stringify({ payment_id: pagoId }) })
+        .then((r) => setAviso(r.ok ? { ok: true, texto: `¡Listo! Eres taller destacado en planos hasta el ${fecha(r.hasta)}.` } : { ok: false, texto: r.motivo || "El pago todavía no se aprueba." }))
+        .catch((e) => setAviso({ ok: false, texto: e.message }))
+        .finally(() => {
+          window.history.replaceState(null, "", window.location.pathname)
+          cargar()
+        })
+    } else {
+      if (q.get("pago") === "error") setAviso({ ok: false, texto: "El pago no se completó. Puedes intentarlo de nuevo." })
+      cargar()
+    }
   }, [])
+
+  const destacar = async () => {
+    setPagando(true)
+    try {
+      const r = await pedir("/destacado", { method: "POST", body: "{}" })
+      if (r.url) window.location.href = r.url
+    } catch (e) {
+      setAviso({ ok: false, texto: e.message })
+      setPagando(false)
+    }
+  }
+
+  const ofertasActivas = (datos?.planos || []).reduce((n, p) => n + p.variantes.filter((v) => v.oferta).length, 0)
 
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase()
@@ -149,9 +184,27 @@ export default function OfertarPlanos() {
     <div style={S.page}>
       <h1 style={S.h1}>Ofertar en planos</h1>
       <p style={S.sub}>
-        Fabrica muebles de la Biblioteca de planos HETNA y véndelos en la tienda. Marca los acabados que haces y pon tu precio: te enseñamos el precio recomendado por HETNA (kit de piezas cortadas en CNC y lijadas, sin herrajes ni armado). El cliente ve las ofertas de todos los talleres juntas, con tu precio, tus días de entrega y si das envío gratis.
+        Fabrica muebles de la Biblioteca de planos HETNA y véndelos en la tienda. Marca los acabados que haces y pon tu precio: te enseñamos el precio recomendado por HETNA (kit de piezas cortadas en CNC y lijadas, sin herrajes ni armado). El cliente ve las ofertas de todos los talleres juntas, con tu precio, tus días de entrega y si das envío gratis. Tu precio es el precio final que paga el cliente (con IVA), sin el envío.
       </p>
+      {aviso ? <div style={S.aviso(aviso.ok)}>{aviso.texto}</div> : null}
       {error ? <div style={S.aviso(false)}>{error}</div> : null}
+      {datos?.destacado ? (
+        <div style={{ ...S.card, background: "#FFF8F1", borderColor: "#FFD3B0" }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>⭐ Sal primero: taller destacado en planos</div>
+          <p style={{ ...S.sub, margin: "4px 0 10px" }}>
+            Por {pesos(datos.destacado.precio)} cada {datos.destacado.dias} días sales primero, con la insignia <b>Destacado</b>, en todos los planos donde tienes oferta.
+          </p>
+          {datos.destacado.hasta ? (
+            <p style={{ fontSize: 14, margin: "0 0 10px" }}>
+              Eres destacado hasta el <b>{fecha(datos.destacado.hasta)}</b>. Si pagas otra vez, se suman {datos.destacado.dias} días.
+            </p>
+          ) : null}
+          <button type="button" style={S.btn} disabled={pagando} onClick={destacar}>
+            {pagando ? "Abriendo Mercado Pago…" : datos.destacado.hasta ? `Sumar ${datos.destacado.dias} días` : `Destacarme por ${pesos(datos.destacado.precio)}`}
+          </button>
+          {!ofertasActivas ? <div style={{ fontSize: 13, color: "#8A5A00", marginTop: 8 }}>Primero pon tu oferta en al menos un plano: el destacado sólo se ve donde ofertas.</div> : null}
+        </div>
+      ) : null}
       {!datos && !error ? <p style={S.sub}>Cargando planos…</p> : null}
       {datos && !datos.planos.length ? <p style={S.sub}>Todavía no hay planos en la tienda. Pronto los verás aquí.</p> : null}
       {datos?.planos.length ? (
