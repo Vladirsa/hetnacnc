@@ -79,7 +79,7 @@ export async function calcularTablero(scope: any, logger?: any, ahora = Date.now
     return { clics: v.totales.clics, pagos: v.totales.pagos, ingresos: v.totales.ingresos, top: v.publicaciones.slice(0, 3).map((p: any) => ({ titulo: p.titulo || "(sin título)", clics: p.clics, pagos: p.pagos, ingresos: p.ingresos })) }
   }, logger)
 
-  const herramientas = await intento(() => resumenUso(knex, ini), logger)
+  const herramientas = await intento(() => resumenUso(knex, ini, logger), logger)
 
   return { desde: ini.toISOString().slice(0, 10), ventas, creditos, disenos, herramientas, publicaciones }
 }
@@ -118,8 +118,9 @@ export function consejoTablero(t: Tablero) {
   const top = t.publicaciones?.top?.[0]
   if (top && (top.pagos || top.clics >= 20)) return `Impulsa «${top.titulo.slice(0, 50)}»: fue la que más ${top.pagos ? "vendió" : "visitas trajo"}. Puedes aprobarla como anuncio en Social Hub.`
   // la herramienta que más gente lleva a cotizar o fabricar
-  const vende = [...(t.herramientas || [])].sort((a, b) => b.cotizar + b.fabricar + b.solicitudes * 3 - (a.cotizar + a.fabricar + a.solicitudes * 3))[0]
-  if (vende && vende.cotizar + vende.fabricar >= 3) return `${nombreHerramienta(vende.herramienta)} es la herramienta que más gente manda a cotizar o fabricar: publícala en redes y anúnciala esta semana.`
+  const puntaje = (h: FilaUso) => h.cotizar + h.fabricar + h.solicitudes * 3
+  const vende = [...(t.herramientas || [])].sort((a, b) => puntaje(b) - puntaje(a))[0]
+  if (vende && puntaje(vende) >= 3) return `${nombreHerramienta(vende.herramienta)} es la herramienta que más gente manda a cotizar o fabricar: publícala en redes y anúnciala esta semana.`
   const h = t.disenos?.por_herramienta?.[0]
   if (h && h.n >= 3) return `${nombre(h.herramienta)} es la herramienta más usada: conviene publicar más sobre ella esta semana.`
   if (t.ventas && t.ventas.pedidos < t.ventas.antes_pedidos) return "Bajaron los pedidos: revisa que el carrito abandonado y las promociones estén prendidos."

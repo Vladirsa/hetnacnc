@@ -16,7 +16,6 @@ export function BotonesCam({ nombre, dxf, stl, compacto = false }: { nombre: str
   if (!dxf && !stl) return null
   const base = nombre.replace(/\.(dxf|stl|svg)$/i, "")
   const ir = async (tipo: "2d" | "3d") => {
-    avisarUso("cam")
     setAviso("")
     setEnviando(tipo)
     let ok = false
@@ -31,6 +30,7 @@ export function BotonesCam({ nombre, dxf, stl, compacto = false }: { nombre: str
     } catch {
       ok = false
     }
+    if (ok) avisarUso("cam")
     if (!ok) {
       setEnviando("")
       setAviso("No se pudo mandar. Descarga el archivo y súbelo en el CAM.")

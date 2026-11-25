@@ -2,7 +2,8 @@
 // trae visitas, descargas, cotizaciones y fabricación). Las acciones avisan con
 // un evento del navegador y ContarUsoHerramienta (en la página de la
 // herramienta) lo cuenta; así ninguna herramienta tiene que saber del tablero.
-export type EventoUso = "vista" | "descarga" | "cotizar" | "fabricar" | "correo" | "cam"
+export const EVENTOS_USO = ["vista", "descarga", "cotizar", "fabricar", "correo", "cam"] as const
+export type EventoUso = (typeof EVENTOS_USO)[number]
 export const EVENTO_USO = "hetna-uso-herramienta"
 
 /** Avisa que pasó algo en la herramienta abierta (no hace nada fuera del navegador). */

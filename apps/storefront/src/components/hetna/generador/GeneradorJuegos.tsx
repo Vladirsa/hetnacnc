@@ -7,9 +7,7 @@ import dynamic from "next/dynamic"
 import { useState } from "react"
 
 import { SelectorModos, type Modo } from "./SelectorModos"
-
-// Cada modo se baja sólo cuando se abre (antes se bajaban todos: la celosía
-// cargaba también la librería de fórmulas del mandala y el motor 3D)
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos juntos)
 const GeneradorEngranes = dynamic(() => import("./GeneradorEngranes").then((x) => x.GeneradorEngranes))
 const GeneradorRompecabezas = dynamic(() => import("./GeneradorRompecabezas").then((x) => x.GeneradorRompecabezas))
 

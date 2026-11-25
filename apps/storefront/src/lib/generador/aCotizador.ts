@@ -124,7 +124,6 @@ function guardarPaquete(p: PaqueteCotizacion & { t: number }): Promise<boolean> 
  * guardado. Nada se sube a un servidor.
  */
 export function mandarPaqueteACotizador(paquete: PaqueteCotizacion, locale: string): boolean {
-  avisarUso("cotizar")
   const piezas = paquete.piezas.filter((p) => p.contenido && (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength) > 0)
   if (!piezas.length) return false
   const total = piezas.reduce((s, p) => s + (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength), 0)
@@ -163,6 +162,7 @@ export function mandarPaqueteACotizador(paquete: PaqueteCotizacion, locale: stri
     }
     window.location.href = `/${locale}/servicios/cotizador-cnc?archivo=generador`
   })
+  avisarUso("cotizar") // ya va en camino (si no cupo, no cuenta)
   return true
 }
 
@@ -280,7 +280,6 @@ export function mandarAFabricar(
   locale: string,
   datos: { pieza: string; medidas?: string; material?: string; proceso?: string }
 ): boolean {
-  avisarUso("fabricar")
   let grande = false
   try {
     const binario = typeof contenido !== "string"
@@ -304,6 +303,7 @@ export function mandarAFabricar(
   // (lib/trabajos/servicios.ts): "Router CNC" ahí se llama "Corte CNC".
   const proceso = datos.proceso === "Router CNC" ? "Corte CNC" : datos.proceso
   if (proceso) q.set("proceso", proceso)
+  avisarUso("fabricar") // ya pasó las revisiones de tamaño
   const ir = () => {
     window.location.href = `/${locale}/cotizar?${q.toString()}`
   }
@@ -359,7 +359,6 @@ export function urlFabricar(locale: string, datos: DatosFabricar) {
  * abre cuando quedaron guardados. Devuelve false si no caben.
  */
 export function mandarArchivosAFabricar(archivos: { nombre: string; contenido: Blob | ArrayBuffer | string }[], locale: string, datos: DatosFabricar): boolean {
-  avisarUso("fabricar")
   if (!archivos.length || archivos.length > MAX_ARCHIVOS_FABRICAR || typeof indexedDB === "undefined") return false
   const blobs = archivos.map((a) => ({ nombre: a.nombre, blob: a.contenido instanceof Blob ? a.contenido : new Blob([a.contenido]) }))
   if (blobs.some((b) => b.blob.size > MAX_GRANDE)) return false
@@ -380,6 +379,7 @@ export function mandarArchivosAFabricar(archivos: { nombre: string; contenido: B
     )
     .catch(() => {}) // si falla, la solicitud abre igual con los datos y el cliente sube sus archivos
     .then(() => { window.location.href = urlFabricar(locale, datos) })
+  avisarUso("fabricar")
   return true
 }
 

@@ -55,7 +55,7 @@ export const CALC_3D: Calculadora = {
   titulo: "impresión 3D",
   materiales: ["PLA", "PETG", "ABS", "TPU (flexible)"],
   pideAlto: true,
-  opcion: { campo: "calidad", etiqueta: "Calidad", valores: ["Prototipo rápido", "Pieza funcional", "Alta calidad"] },
+  opcion: { campo: "calidad", etiqueta: "Calidad", valores: ["Prototipo rápido", "Pieza funcional", "Alta calidad"], inicial: "Pieza funcional" },
   servicioSolicitud: "Impresión 3D",
 }
 
@@ -958,7 +958,8 @@ export const GUIAS: Guia[] = [
 ]
 
 /** H1 de la guía en una ciudad: "Taller de router CNC en México" → "Taller de router CNC en Puebla". */
-export const h1EnCiudad = (g: Pick<Guia, "h1">, c: Pick<Ciudad, "nombre">) => `${g.h1.replace(/ en México$/, "")} en ${c.nombre}`
+export const h1SinPais = (g: Pick<Guia, "h1">) => g.h1.replace(/ en México$/, "")
+export const h1EnCiudad = (g: Pick<Guia, "h1">, c: Pick<Ciudad, "nombre">) => `${h1SinPais(g)} en ${c.nombre}`
 
 export const guiaPorSlug = (slug: string) => GUIAS.find((g) => g.slug === slug)
 export const ciudadPorSlug = (slug: string) => CIUDADES.find((c) => c.slug === slug)

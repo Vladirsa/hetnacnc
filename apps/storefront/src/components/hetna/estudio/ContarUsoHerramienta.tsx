@@ -7,9 +7,7 @@
 // cuánta gente lo hizo, no cuántos clics. No se manda nada personal.
 import { useEffect } from "react"
 
-import { EVENTO_USO, type EventoUso } from "@/lib/generador/uso"
-
-const EVENTOS: EventoUso[] = ["vista", "descarga", "cotizar", "fabricar", "correo", "cam"]
+import { EVENTOS_USO, EVENTO_USO, type EventoUso } from "@/lib/generador/uso"
 
 function contar(herramienta: string, evento: EventoUso) {
   try {
@@ -32,7 +30,7 @@ export function ContarUsoHerramienta({ herramienta }: { herramienta: string }) {
     contar(herramienta, "vista")
     const alAvisar = (e: Event) => {
       const ev = (e as CustomEvent).detail
-      if (EVENTOS.includes(ev)) contar(herramienta, ev)
+      if ((EVENTOS_USO as readonly string[]).includes(ev)) contar(herramienta, ev as EventoUso)
     }
     // las herramientas descargan creando un <a download> y dándole clic
     const alClic = (e: MouseEvent) => {

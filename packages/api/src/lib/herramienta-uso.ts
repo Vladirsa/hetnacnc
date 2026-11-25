@@ -7,6 +7,7 @@
 // El tablero de la semana (lib/tablero-ventas.ts) lo cruza con los correos de
 // "Mándamelo por correo" y con las solicitudes de fabricación que hicieron esas
 // personas, para ver qué herramienta termina en trabajo.
+import { T_ESTIMADO } from "./estimados"
 import { HERRAMIENTAS } from "./herramienta-correo"
 import { T_SOLICITUD } from "./licitacion"
 
@@ -40,26 +41,26 @@ export async function contarUso(knex: any, herramienta: string, evento: EventoUs
   )
 }
 
-export type FilaUso = { herramienta: string; vista: number; descarga: number; cotizar: number; fabricar: number; correo: number; cam: number; solicitudes: number }
+export type FilaUso = { herramienta: string; solicitudes: number } & Record<EventoUso, number>
 
 /**
  * Uso por herramienta desde `desde`, con las solicitudes de fabricación que
  * mandaron quienes se mandaron su diseño por correo (después de mandárselo).
  */
-export async function resumenUso(knex: any, desde: Date): Promise<FilaUso[]> {
+export async function resumenUso(knex: any, desde: Date, logger?: any): Promise<FilaUso[]> {
   await asegurarTablaUso(knex)
   const filas = new Map<string, FilaUso>()
   const fila = (h: string) => {
-    if (!filas.has(h)) filas.set(h, { herramienta: h, vista: 0, descarga: 0, cotizar: 0, fabricar: 0, correo: 0, cam: 0, solicitudes: 0 })
+    if (!filas.has(h)) filas.set(h, { herramienta: h, solicitudes: 0, ...(Object.fromEntries(EVENTOS_USO.map((e) => [e, 0])) as Record<EventoUso, number>) })
     return filas.get(h)!
   }
   const { rows } = await knex.raw(`SELECT herramienta, evento, sum(n)::int AS n FROM ${T_USO} WHERE dia >= ?::date GROUP BY 1, 2`, [desde.toISOString().slice(0, 10)])
-  for (const r of rows) if ((EVENTOS_USO as readonly string[]).includes(r.evento)) (fila(r.herramienta) as any)[r.evento] = Number(r.n) || 0
+  for (const r of rows) if ((EVENTOS_USO as readonly string[]).includes(r.evento)) fila(r.herramienta)[r.evento as EventoUso] = Number(r.n) || 0
   try {
-    if (await knex.schema.hasTable(T_SOLICITUD)) {
+    if ((await knex.schema.hasTable(T_SOLICITUD)) && (await knex.schema.hasTable(T_ESTIMADO))) {
       const s = await knex.raw(
         `SELECT e.herramienta, count(DISTINCT s.id)::int AS n
-           FROM hetna_estimado e
+           FROM ${T_ESTIMADO} e
            JOIN ${T_SOLICITUD} s ON lower(s.contacto->>'email') = e.email AND s.created_at >= e.created_at
           WHERE e.herramienta IS NOT NULL AND e.created_at >= ?
           GROUP BY 1`,
@@ -67,8 +68,9 @@ export async function resumenUso(knex: any, desde: Date): Promise<FilaUso[]> {
       )
       for (const r of s.rows) fila(r.herramienta).solicitudes = Number(r.n) || 0
     }
-  } catch {
-    // sin estimados o solicitudes todavía: el uso sale igual
+  } catch (e) {
+    // el uso sale igual; el tablero anota el motivo
+    logger?.warn?.(`[herramienta-uso] solicitudes: ${(e as Error).message}`)
   }
   return [...filas.values()].sort((a, b) => b.vista - a.vista || b.descarga - a.descarga)
 }

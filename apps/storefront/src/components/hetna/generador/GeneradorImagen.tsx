@@ -9,9 +9,7 @@ import dynamic from "next/dynamic"
 import { useState } from "react"
 
 import { SelectorModos, type Modo } from "./SelectorModos"
-
-// Cada modo se baja sólo cuando se abre (antes se bajaban todos: la celosía
-// cargaba también la librería de fórmulas del mandala y el motor 3D)
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos juntos)
 const GeneradorGrabado = dynamic(() => import("./GeneradorGrabado").then((x) => x.GeneradorGrabado))
 const GeneradorRelieve = dynamic(() => import("./GeneradorRelieve").then((x) => x.GeneradorRelieve))
 const GeneradorVectorizador = dynamic(() => import("./GeneradorVectorizador").then((x) => x.GeneradorVectorizador))

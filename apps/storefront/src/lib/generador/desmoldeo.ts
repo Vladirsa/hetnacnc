@@ -131,24 +131,26 @@ export const SIN_ATORAR = 0.01
  * partición elegidos, y busca una partición y un lado mejores.
  */
 export function revisarDesmoldeo(tris: ArrayLike<number>, tipo: "abierto" | "dos_partes", arriba: Arriba, particion: number): Desmoldeo {
-  const porLado = LADOS.map(([id, eje, signo]) => {
-    const c = columnas(tris, eje, signo)
-    if (tipo === "abierto") return { id, c, atorado: atoradoAbierto(c), particion: undefined as number | undefined }
-    const m = mejorParticion(c)
-    return { id, c, atorado: m.atorado, particion: m.particion }
-  })
-  const actual = porLado.find((l) => l.id === arriba) || porLado[0]
+  const lado = LADOS.find((l) => l[0] === arriba) || LADOS[0]
+  const cActual = columnas(tris, lado[1], lado[2])
   const r: Desmoldeo = {
-    atorado: tipo === "abierto" ? actual.atorado : atoradoDosPartes(actual.c, (actual.c.alto * particion) / 100),
+    atorado: tipo === "abierto" ? atoradoAbierto(cActual) : atoradoDosPartes(cActual, (cActual.alto * particion) / 100),
   }
-  if (tipo === "dos_partes" && r.atorado > SIN_ATORAR) {
-    const m = mejorParticion(actual.c, particion)
+  if (r.atorado <= SIN_ATORAR) return r // sale bien: no hay nada que sugerir
+  if (tipo === "dos_partes") {
+    const m = mejorParticion(cActual, particion)
     if (m.atorado < r.atorado - SIN_ATORAR) r.particion = m
   }
   const enActual = r.particion ? r.particion.atorado : r.atorado
-  if (enActual > SIN_ATORAR) {
-    const mejor = porLado.reduce((x, y) => (y.atorado < x.atorado - 1e-9 ? y : x))
-    if (mejor.id !== arriba && mejor.atorado < enActual - SIN_ATORAR) r.arriba = { arriba: mejor.id, atorado: mejor.atorado, particion: mejor.particion }
+  if (enActual <= SIN_ATORAR) return r
+  // Los otros cinco lados, con su mejor partición en dos partes
+  let mejor: Desmoldeo["arriba"]
+  for (const [id, eje, signo] of LADOS) {
+    if (id === lado[0]) continue
+    const c = columnas(tris, eje, signo)
+    const o = tipo === "abierto" ? { atorado: atoradoAbierto(c), particion: undefined } : mejorParticion(c)
+    if (!mejor || o.atorado < mejor.atorado - 1e-9) mejor = { arriba: id, atorado: o.atorado, particion: o.particion }
   }
+  if (mejor && mejor.atorado < enActual - SIN_ATORAR) r.arriba = mejor
   return r
 }
