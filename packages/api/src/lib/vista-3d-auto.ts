@@ -14,6 +14,10 @@ import { getSignedDownloadUrl } from "./backblaze"
 import { subir } from "./fabrica"
 
 export const MAX_TRIANGULOS = Number(process.env.VISTA3D_MAX_TRIANGULOS || 8000)
+// Sube cuando cambia cómo se arma la muestra: el job rehace las vistas automáticas viejas.
+// v2 (25 nov 2026): antes un modelo de menos de MAX_TRIANGULOS se subía COMPLETO
+// (el portavasos de panal quedó público tal cual); ahora siempre se degrada.
+export const VERSION_VISTA = 2
 const MAX_BYTES = 95 * 1024 * 1024
 
 /** Triángulos de un STL (binario o ASCII) como [x,y,z]*9 por triángulo. */
@@ -37,8 +41,11 @@ export function leerSTL(buf: Buffer): Float32Array {
 }
 
 /** Simplifica agrupando vértices en celdas de una rejilla (rápido y robusto con mallas sucias). */
-export function simplificar(entrada: Float32Array, maxTri = MAX_TRIANGULOS): Float32Array {
-  if (entrada.length / 9 <= maxTri) return entrada
+export function simplificar(entrada: Float32Array, maxTriPedido = MAX_TRIANGULOS): Float32Array {
+  // Siempre se degrada: a lo más la mitad de los triángulos del original (aunque
+  // ya sea chico) y, abajo, las medidas quedan en una rejilla gruesa. Así la
+  // muestra nunca es el archivo de venta.
+  const maxTri = Math.max(12, Math.min(maxTriPedido, Math.floor(entrada.length / 9 / 2)))
   // Un modelo enorme (esculturas de millones de triángulos) se muestrea primero:
   // la tarea corre en el mismo proceso que atiende el sitio y no debe trabarlo.
   const TOPE_ENTRADA = 200_000
@@ -88,7 +95,7 @@ export function simplificar(entrada: Float32Array, maxTri = MAX_TRIANGULOS): Flo
       }
     }
     res = new Float32Array(salida)
-    if (res.length / 9 <= maxTri) break
+    if (res.length / 9 <= maxTri && res.length >= 9 * 4) break
     celdas = Math.floor(celdas * 0.8)
   }
   return res

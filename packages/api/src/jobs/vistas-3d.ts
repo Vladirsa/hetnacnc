@@ -4,7 +4,7 @@
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
-import { generarVista3D } from "../lib/vista-3d-auto"
+import { VERSION_VISTA, generarVista3D } from "../lib/vista-3d-auto"
 
 const POR_VUELTA = 3
 
@@ -17,7 +17,11 @@ export default async function vistas3d(container: MedusaContainer) {
       .whereNull("deleted_at")
       .whereRaw("metadata->>'producto_digital' = 'true'")
       .whereRaw("(metadata->>'archivo_storage_key') ~* '\\.(stl|zip)$'")
-      .whereRaw("coalesce(metadata->>'vista_previa', '') = ''")
+      // Sin vista previa, o con una automática de una versión vieja (la manual del vendedor no se toca)
+      .whereRaw(
+        "(coalesce(metadata->>'vista_previa', '') = '' or (metadata->>'vista3d_auto' = 'true' and coalesce(metadata->>'vista3d_v', '1') <> ?))",
+        [String(VERSION_VISTA)]
+      )
       .whereRaw("coalesce(metadata->>'vista3d_error', '') = ''")
       .select("id", "handle", "metadata")
       .limit(POR_VUELTA)
@@ -26,7 +30,13 @@ export default async function vistas3d(container: MedusaContainer) {
       const meta = typeof f.metadata === "string" ? JSON.parse(f.metadata) : f.metadata || {}
       try {
         const url = await generarVista3D(container, { handle: f.handle, llave: String(meta.archivo_storage_key) })
-        await productos.updateProducts(f.id, { metadata: { ...meta, vista_previa: url, vista3d_auto: true } })
+        await productos.updateProducts(f.id, { metadata: { ...meta, vista_previa: url, vista3d_auto: true, vista3d_v: String(VERSION_VISTA) } })
+        // La muestra automática anterior se borra del almacenamiento (la v1 podía ser el modelo completo)
+        const vieja = meta.vista3d_auto === true && typeof meta.vista_previa === "string" ? meta.vista_previa : ""
+        if (vieja && vieja !== url) {
+          const llave = decodeURIComponent(vieja.split("?")[0].split("/").pop() || "")
+          if (llave.includes("vista3d-")) await (container.resolve(Modules.FILE) as any).deleteFiles(llave).catch(() => null)
+        }
         logger.info(`[vistas-3d] lista: ${f.handle}`)
       } catch (e) {
         const motivo = (e as Error).message.slice(0, 200)

@@ -41,9 +41,12 @@ describe("vista previa 3D automática", () => {
     expect(max).toBeLessThanOrEqual(50.01)
   })
 
-  it("no toca una malla que ya es chica", () => {
-    const t = esfera(10)
-    expect(simplificar(t, 8000)).toBe(t)
+  it("también degrada una malla chica: nunca sube el original", () => {
+    const t = esfera(30) // 1 800 triángulos, menos que el tope
+    const s = simplificar(t, 8000)
+    expect(s).not.toBe(t)
+    expect(s.length / 9).toBeLessThanOrEqual(900)
+    expect(s.length / 9).toBeGreaterThan(50)
   })
 
   it("saca el STL más grande de un ZIP y nada si no hay STL", () => {
