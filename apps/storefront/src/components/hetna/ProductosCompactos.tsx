@@ -19,19 +19,22 @@ export function ProductosCompactos({
   titulo,
   productos,
   verTodos = "/categories",
+  angosta = false,
 }: {
   titulo: string
   productos: ProductoCompacto[]
   /** Liga de "Ver todos" (la categoría, el taller…); null = sin liga. */
   verTodos?: string | null
+  /** En una columna angosta (bajo la foto de la ficha): 3 por fila siempre. */
+  angosta?: boolean
 }) {
   if (!productos.length) return null
   // Un id distinto por sección (puede haber varias en la misma ficha)
   const idTitulo = `titulo-${titulo.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`
   return (
-    <section className="w-full py-6" aria-labelledby={idTitulo}>
+    <section className={`w-full ${angosta ? "py-0" : "py-6"}`} aria-labelledby={idTitulo}>
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 id={idTitulo} className="heading-md font-bold uppercase tracking-tight">
+        <h2 id={idTitulo} className={`${angosta ? "text-[15px]" : "heading-md"} font-bold uppercase tracking-tight`}>
           {titulo}
         </h2>
         {verTodos && (
@@ -40,7 +43,7 @@ export function ProductosCompactos({
           </LocalizedClientLink>
         )}
       </div>
-      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 sm:gap-3">
+      <ul className={`grid grid-cols-3 gap-2 sm:gap-3 ${angosta ? "" : "sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"}`}>
         {productos.map((p) => {
           let precio: string | null = null
           try {
@@ -62,7 +65,7 @@ export function ProductosCompactos({
                       src={p.thumbnail}
                       alt={p.title || "Producto"}
                       fill
-                      sizes="(min-width: 1024px) 140px, (min-width: 768px) 16vw, 33vw"
+                      sizes={angosta ? "(min-width: 1024px) 190px, 33vw" : "(min-width: 1024px) 140px, (min-width: 768px) 16vw, 33vw"}
                       className="object-cover transition-transform group-hover:scale-[1.03]"
                     />
                   ) : null}
