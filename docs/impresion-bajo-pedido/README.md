@@ -33,9 +33,9 @@ Diseños propios de HETNA (hechos con el Texturizador) que se venden **impresos*
    - agrega `&soporte=1` para ver el rodillo puesto en el soporte.
 4. Publica (en `packages/api`, en el servidor):
    ```
-   ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
+   COLORES="Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
    ```
    - Es idempotente.
    - Crea la colección y los productos que falten.
-   - Pone la oferta de HETNA: ABS y PLA-CF, color Negro, 3 días hábiles, al precio recomendado.
+   - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES` (por ejemplo `COLORES="Negro"`). Sin `COLORES` no pone la oferta de HETNA.
    - No cambia las ofertas que ya existan.

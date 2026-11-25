@@ -59,6 +59,7 @@ export const ProductDetailsHeader = ({
   seller,
   tipo = "fisico",
   antesDeComprar,
+  compraPropia,
   descarga = false,
   universal,
 }: {
@@ -71,6 +72,9 @@ export const ProductDetailsHeader = ({
   tipo?: TipoFicha
   // Lo que hay que saber antes de pagar (p. ej. qué incluye un servicio)
   antesDeComprar?: React.ReactNode
+  /** La compra la resuelve otro bloque (Impresión 3D bajo pedido: lista de talleres
+   *  con su material y color). Reemplaza precio, presentaciones y botones. */
+  compraPropia?: React.ReactNode
   // Ficha de diseño para descargar: precio con "MXN", "Sin envío: es
   // descarga", botón "Comprar y descargar ahora" y nada de existencias.
   descarga?: boolean
@@ -323,6 +327,10 @@ export const ProductDetailsHeader = ({
 
       {esGratis ? (
         <DescargarGratis productId={product.id} />
+      ) : compraPropia ? (
+        <div className="mt-4" data-testid="product-compra-propia">
+          {compraPropia}
+        </div>
       ) : esCreditos ? (
         <div className="mt-4 rounded-[12px] bg-[#F7F5EF] px-4 py-4" data-testid="product-creditos-cta">
           <p className="m-0 text-[14px] text-[#4A4943]">
@@ -536,7 +544,7 @@ export const ProductDetailsHeader = ({
         />
       </div>
 
-      {otherOffersCount > 0 && (
+      {otherOffersCount > 0 && !compraPropia && (
         <button
           type="button"
           onClick={() => setIsCompareOpen(true)}

@@ -1,11 +1,14 @@
 // Publica el catálogo de "Impresión 3D bajo pedido" (docs/impresion-bajo-pedido/
 // catalogo.json + fotos) como productos maestros de la tienda, y pone las
-// ofertas de la tienda HETNA en ABS y PLA-CF (3 días hábiles, color Negro, al
-// precio recomendado). Los demás talleres ponen las suyas desde su panel
-// (/seller/imprimir).
+// ofertas de la tienda HETNA en ABS y PLA-CF (3 días hábiles, al precio
+// recomendado, en el color o colores de COLORES). Los demás talleres ponen las
+// suyas desde su panel (/seller/imprimir).
 //
 // Uso (en packages/api):
-//   ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
+//   COLORES="Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
+// COLORES: los colores en que HETNA imprime, separados por coma. Sin COLORES se
+// publican los productos pero no la oferta de HETNA (se puede poner después
+// desde el panel o volviendo a correr el script con COLORES).
 //
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
@@ -15,7 +18,6 @@ import { join, resolve } from "path"
 import type { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
-import { MercurModules } from "@mercurjs/types"
 
 import { camSellerHandle } from "../modules/cam/catalog"
 import {
@@ -28,10 +30,11 @@ import {
 } from "../lib/impresion-bajo-pedido"
 import { guardarOfertasTaller } from "../lib/impresion-catalogo"
 
-// La oferta de HETNA (lo que dijo Vlado el 25 nov 2026)
+// La oferta de HETNA (Vlado, 25 nov 2026: ABS y PLA-CF, 3 días hábiles). El color
+// lo da quien corre el script (COLORES), no se supone.
 const MATERIALES_HETNA = ["ABS", "PLA-CF"]
 const DIAS_HETNA = 3
-const COLORES_HETNA = ["Negro"]
+const COLORES_HETNA = String(process.env.COLORES || "").split(",").map((c) => c.trim()).filter(Boolean).slice(0, 12)
 const EMPAQUE_G = 120 // caja y relleno, para el peso del envío
 
 type Diseno = {
@@ -161,14 +164,15 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
         } as any,
       })
       producto = result[0]
-      await container.resolve(ContainerRegistrationKeys.LINK).create([
-        { [Modules.PRODUCT]: { product_id: producto.id }, [MercurModules.SELLER]: { seller_id: hetna.id } },
-      ])
+      // SIN liga producto↔taller: en Mercur esa liga es la lista de quién PUEDE
+      // venderlo (vacía = todos). Si se ligara a HETNA, ningún otro taller podría
+      // poner su oferta (docs de Mercur: master-products-and-offers).
       nuevos++
       logger.info(`[impresion] publicado ${d.handle}`)
     }
 
     // 3. Ofertas de HETNA (sólo las que faltan)
+    if (!COLORES_HETNA.length) continue
     const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
     const tiene = new Set((mias as any[]).map((o) => o.variant_id))
     const pieza = { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm }
@@ -181,5 +185,6 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       ofertas += faltan.length
     }
   }
+  if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="Negro" o ponlas en /seller/imprimir)')
   logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA`)
 }

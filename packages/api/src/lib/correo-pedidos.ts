@@ -69,7 +69,7 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
       "customer.first_name", "customer.has_account",
       "shipping_address.first_name", "shipping_address.last_name", "shipping_address.address_1", "shipping_address.address_2",
       "shipping_address.city", "shipping_address.province", "shipping_address.postal_code", "shipping_address.phone",
-      "items.title", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
+      "items.title", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail", "items.metadata",
       "shipping_methods.name",
       "fulfillments.canceled_at", "fulfillments.labels.tracking_number", "fulfillments.labels.tracking_url",
       ...CAMPOS_PAGO,
@@ -108,7 +108,13 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
     taller,
     renglones: (o.items || []).map((i: any) => ({
       titulo: String(i.product_title || i.title || ""),
-      presentacion: i.variant_title && !/^(única|default)/i.test(i.variant_title) ? String(i.variant_title) : "",
+      // + el color que eligió en una pieza de Impresión 3D bajo pedido (metadata.color del renglón)
+      presentacion: [
+        i.variant_title && !/^(única|default)/i.test(i.variant_title) ? String(i.variant_title) : "",
+        typeof i.metadata?.color === "string" && i.metadata.color ? `Color: ${String(i.metadata.color).slice(0, 24)}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
       cantidad: Number(i.quantity || 0),
       precio: dinero(Number(i.unit_price || 0) * Number(i.quantity || 0), moneda),
       foto: String(i.thumbnail || ""),

@@ -130,14 +130,16 @@ export async function guardarOfertasTaller(container: MedusaContainer, sellerId:
     // Una oferta con un pedido pendiente no se borra: el envío y las comisiones de
     // ese pedido todavía la leen (mismo criterio que lib/ofertas-sueltas.ts).
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
-    const { rows } = await knex.raw(
-      `select distinct l.offer_id from order_order_line_item_offer_offer l
-       join order_item oi on oi.item_id = l.order_line_item_id and oi.deleted_at is null
-       join "order" ord on ord.id = oi.order_id and ord.deleted_at is null
-       where l.offer_id = any(?) and l.deleted_at is null and ord.status not in ('completed', 'canceled', 'archived')`,
-      [quitar]
-    )
-    if ((rows as unknown[]).length) throw new ErrorImpresion("Tienes pedidos pendientes de ese material: entrégalos antes de dejar de ofrecerlo.")
+    const pendientes = await knex("order_order_line_item_offer_offer as l")
+      .join("order_item as oi", "oi.item_id", "l.order_line_item_id")
+      .join("order as ord", "ord.id", "oi.order_id")
+      .whereIn("l.offer_id", quitar)
+      .whereNull("l.deleted_at")
+      .whereNull("oi.deleted_at")
+      .whereNull("ord.deleted_at")
+      .whereNotIn("ord.status", ["completed", "canceled", "archived"])
+      .distinct("l.offer_id")
+    if ((pendientes as unknown[]).length) throw new ErrorImpresion("Tienes pedidos pendientes de ese material: entrégalos antes de dejar de ofrecerlo.")
     await deleteOffersWorkflow(container).run({ input: { ids: quitar } })
   }
 

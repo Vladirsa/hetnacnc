@@ -149,9 +149,12 @@ export const ProductDetailsPage = async ({
   // Impresión 3D bajo pedido: en vez de "Fabrícalo", los talleres que ya lo
   // imprimen (cada uno con su oferta) y la liga para bajarlo gratis.
   const impresion = esImpresionBajoPedido(prod.metadata) ? await datosImpresion(prod.id) : null
-  const fabricar = impresion ? (
+  // (va en la columna de compra, en lugar de los botones genéricos: así el
+  // destacado sale primero donde se compra y el color viaja al carrito)
+  const compraImpresion = impresion ? (
     <TalleresImpresion datos={impresion} locale={locale} herramienta={textoMeta(metaProd.herramienta_url) || null} />
-  ) : tipoProd === "servicio" ? null : (
+  ) : null
+  const fabricar = impresion ? null : tipoProd === "servicio" ? null : (
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}
@@ -244,6 +247,7 @@ export const ProductDetailsPage = async ({
               locale={locale}
               offers={offers as StoreOffer[]}
               vistas={extra.vistas_7d}
+              compraPropia={compraImpresion}
             />
           </div>
         </div>
