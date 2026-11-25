@@ -5,6 +5,7 @@
 // respaldo) se quedan del mismo grosor y los huecos entre ellos se estiran o
 // se encogen para llegar a la medida pedida. Así un librero más ancho sigue
 // teniendo costados de 18 mm y sólo crecen las repisas.
+import { HOJA, MARGEN, medidas } from "./calculo"
 import type { PiezaPlano, Plano } from "./modelos"
 
 export type Medidas = { ancho: number; fondo: number; alto: number }
@@ -89,4 +90,36 @@ export function medidasDeConsulta(q: Record<string, string | string[] | undefine
     return Number.isFinite(x) && x > 0 ? x : undefined
   }
   return { ancho: n("ancho"), fondo: n("fondo"), alto: n("alto") }
+}
+
+/** Cada pieza cabe en una hoja de 2440 × 1220 (con su margen). */
+export const cabeEnHoja = (piezas: PiezaPlano[]) =>
+  piezas.every((q) => {
+    const m = medidas(q)
+    return m.largo <= HOJA.largo - 2 * MARGEN && m.ancho <= HOJA.ancho - 2 * MARGEN
+  })
+
+/**
+ * Como redimensionar(), pero si alguna pieza ya no cabe en la hoja se queda
+ * con la medida más grande que sí cabe (entre la original y la pedida).
+ */
+export function redimensionarQueQuepa(pl: Plano, pedida: Partial<Medidas>): { plano: Plano; medidas: Medidas; ajustado: boolean } {
+  const ruedas = pl.ruedas ?? 0
+  const orig = medidasDe(pl.piezas, ruedas)
+  const m = limitar(orig, pedida)
+  const directo = redimensionar(pl, m)
+  if (cabeEnHoja(directo.piezas)) return { plano: directo, medidas: medidasDe(directo.piezas, ruedas), ajustado: false }
+  const mezcla = (t: number): Medidas => ({
+    ancho: Math.round(orig.ancho + (m.ancho - orig.ancho) * t),
+    fondo: Math.round(orig.fondo + (m.fondo - orig.fondo) * t),
+    alto: Math.round(orig.alto + (m.alto - orig.alto) * t),
+  })
+  let lo = 0, hi = 1
+  for (let i = 0; i < 20; i++) {
+    const t = (lo + hi) / 2
+    if (cabeEnHoja(redimensionar(pl, mezcla(t)).piezas)) lo = t
+    else hi = t
+  }
+  const plano = redimensionar(pl, mezcla(lo))
+  return { plano, medidas: medidasDe(plano.piezas, ruedas), ajustado: true }
 }

@@ -10,7 +10,7 @@ import { LIMITE, type Medidas } from "@/lib/planos/medidas"
 
 const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-2.5 text-[15px] outline-none focus:border-[#E85D04]"
 
-export default function MedidasPlano({ original, actual }: { original: Medidas; actual: Medidas }) {
+export default function MedidasPlano({ original, actual, ajustado = false }: { original: Medidas; actual: Medidas; ajustado?: boolean }) {
   const router = useRouter()
   const ruta = usePathname()
   const [v, setV] = useState<Medidas>(actual)
@@ -34,6 +34,11 @@ export default function MedidasPlano({ original, actual }: { original: Medidas; 
       <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">
         Cambia el ancho, fondo o alto (en mm) y se recalculan el dibujo, la lista de corte, el acomodo, el DXF y el precio. El triplay conserva su grosor. Entre {Math.round(LIMITE.min * 100)} % y {Math.round(LIMITE.max * 100)} % de la medida original.
       </p>
+      {ajustado ? (
+        <p className="m-0 mt-2 rounded-md bg-[#FFF4E5] px-3 py-2 text-[13px] text-[#8A4B00]">
+          Con esas medidas algunas piezas ya no caben en una hoja de triplay de 2440 × 1220 mm. Lo dejamos en la medida más grande que sí cabe: {actual.ancho} × {actual.fondo} × {actual.alto} mm.
+        </p>
+      ) : null}
       <div className="mt-3 grid grid-cols-3 gap-2 sm:max-w-[520px]">
         {(["ancho", "fondo", "alto"] as const).map((k) => (
           <label key={k} className="block text-[12.5px] font-semibold capitalize text-[#1E2329]">

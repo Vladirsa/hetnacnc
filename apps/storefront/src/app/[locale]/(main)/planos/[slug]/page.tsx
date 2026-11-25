@@ -6,8 +6,23 @@ import MedidasPlano from "@/components/hetna/planos/MedidasPlano"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
-import { medidasDe, medidasDeConsulta, redimensionar } from "@/lib/planos/medidas"
+import { medidasDe, medidasDeConsulta, redimensionarQueQuepa } from "@/lib/planos/medidas"
 import { MATERIALES_PLANO, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
+import { cotizarPlano } from "@/lib/planos/precio"
+import { pesos, type ConfigPrecios } from "@/lib/cotizador/estimador"
+
+// Ajustes de precio del dueño (Panel de HETNA > Precios de la calculadora)
+async function configPrecios(): Promise<ConfigPrecios | null> {
+  try {
+    const r = await fetch(`${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/store/hetna-precios`, {
+      headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
+      next: { revalidate: 300 },
+    })
+    return r.ok ? ((await r.json()).cfg as ConfigPrecios) || null : null
+  } catch {
+    return null
+  }
+}
 
 // Sin generateStaticParams: el layout raíz lee headers() y cookies(), así que
 // la página se arma en cada visita como el resto del sitio (prerenderizada
@@ -36,9 +51,10 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
   const base = planoPorSlug(slug)
   if (!base) notFound()
   // "Modifica las medidas": ?ancho=&fondo=&alto= (mm)
-  const pl = redimensionar(base, medidasDeConsulta(await searchParams))
+  const { plano: pl, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(await searchParams))
   const original = medidasDe(base.piezas, base.ruedas)
   const cambiado = pl !== base
+  const cfg = await configPrecios()
 
   const m = medidasGenerales(pl)
   const { filas } = listaCorte(pl)
@@ -49,6 +65,13 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
   const previas: Set<PiezaPlano>[] = []
   pasos.reduce((acum, s) => { previas.push(new Set(acum)); s.forEach((q) => acum.add(q)); return acum }, new Set<PiezaPlano>())
   const dxfs = dxfPlano(acs)
+  const cot = (() => {
+    try {
+      return { ok: true as const, ...cotizarPlano(pl, cfg) }
+    } catch {
+      return { ok: false as const }
+    }
+  })()
   const caja = "rounded-2xl border border-white/10 bg-[#1B2A42] p-4"
 
   return (
@@ -63,7 +86,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <span className="font-medium text-[#1B1B18]">{pl.nombre}</span>
         </div>
 
-        <MedidasPlano original={original} actual={m} />
+        <MedidasPlano key={`${m.ancho}-${m.fondo}-${m.alto}`} original={original} actual={m} ajustado={ajustado} />
 
         <article id="lamina" className="overflow-hidden rounded-3xl bg-[#142033] p-5 text-white sm:p-8" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>
           <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-4">
@@ -165,6 +188,16 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <div className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5">
             <p className="m-0 text-[16px] font-bold text-[#142033]">¿No tienes router o prefieres que te lo corten?</p>
             <p className="m-0 text-[14px] text-[#40403A]">Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</p>
+            {cot.ok ? (
+              <div className="rounded-xl bg-[#F6F1E7] p-3 text-[14px] text-[#142033]">
+                <p className="m-0 font-bold">Kit de piezas cortadas y lijadas{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</p>
+                <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]">aprox., más envío</span></p>
+                <p className="m-0 mt-1 text-[13px] text-[#40403A]">
+                  {cot.piezas} piezas · {cot.hojas} {cot.hojas === 1 ? "hoja" : "hojas"} de triplay · peso con empaque ≈ {cot.pesoKg} kg · fabricación ≈ {cot.diasFabricacion} días hábiles más el envío
+                </p>
+                <p className="m-0 mt-1 text-[12px] text-[#6B6A63]">Precio de referencia de router CNC en México; el taller confirma el precio final. No incluye herrajes ni armado.</p>
+              </div>
+            ) : null}
             <LocalizedClientLink href="/cotizar" className="inline-flex w-fit items-center rounded-[12px] bg-[#142033] px-5 py-3 text-[15px] font-bold text-white">
               Pedir que me lo fabriquen
             </LocalizedClientLink>

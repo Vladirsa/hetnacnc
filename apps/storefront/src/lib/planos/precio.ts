@@ -51,6 +51,7 @@ export function cotizarPlano(pl: Plano, cfg?: ConfigPrecios | null): CotizacionP
   const k = pl.juego?.cantidad ?? 1
   const { filas } = listaCorte(pl)
   const acs = acomodoPorMaterial(filas)
+  if (acs.some((a) => a.acomodo.noCaben.length)) throw new Error("Hay piezas que no caben en una hoja de 2440 × 1220")
   const grupos = acs.map((a) => {
     const material = materialRef(a.material, cfg)
     const piezas = filas.filter((f) => f.material === a.material).map((f) => ({ largo: f.largo, ancho: f.ancho, cantidad: f.cantidad }))
