@@ -207,6 +207,7 @@ main .rounded-md[role='combobox'] {
 /* Dinero y envíos */
 [data-testid='sidebar-nav-item-payouts']        { order: 30; }
 [data-testid='sidebar-nav-item-pagos-talleres'] { order: 31; }
+[data-testid='sidebar-nav-item-reclamos']       { order: 31; }
 [data-testid='sidebar-nav-item-envios']         { order: 32; }
 /* Apps HETNA */
 [data-testid='sidebar-nav-item-cotizador']      { order: 40; }

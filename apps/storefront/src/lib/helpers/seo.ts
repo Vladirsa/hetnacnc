@@ -39,9 +39,22 @@ export const generateProductMetadata = async (
   // La plantilla del sitio ya agrega " | HETNA CNC": se quita si el título la trae
   const sinMarca = (v: string) => v.replace(/\s*[|\-–—·:]\s*HETNA(\s+CNC)?(\s+Digital\s+Factory)?\s*$/i, "").trim()
   const titulo = sinMarca(texto(meta.seo_title) || product?.title || "") || product?.title
+  // Sin meta_description propia: título + subtítulo + primera frase de la descripción.
+  // Antes era sólo el subtítulo y 81 fichas compartían la misma ("Kit de piezas cortadas
+  // en CNC, listo para armar", "Impresión 3D bajo pedido"): Google las ve como duplicadas.
+  const frase = texto(product?.description)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s/)[0]
+    ?.trim() || ""
+  const armada = [product?.title, texto(product?.subtitle), frase]
+    .filter((x, i, arr) => x && arr.indexOf(x) === i && !(i > 0 && String(product?.title).includes(String(x))))
+    .join(". ")
+    .replace(/\.\./g, ".")
+  const corta = (v: string, n = 158) => (v.length <= n ? v : v.slice(0, n).replace(/\s+\S*$/, "") + "…")
   const descripcion =
     texto(meta.meta_description) ||
-    texto(product?.subtitle) ||
+    (armada ? corta(armada) : "") ||
     `${product?.title} - ${process.env.NEXT_PUBLIC_SITE_NAME}`
 
   return {

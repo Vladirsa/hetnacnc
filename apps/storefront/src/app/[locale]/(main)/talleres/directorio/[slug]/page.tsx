@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import { QuitarPerfil, SolicitudDirectorio } from "@/components/hetna/taller/SolicitudDirectorio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { descripcionCorta } from "@/lib/helpers/seo"
-import { NOMBRE_TIPO, empresaPorSlug } from "@/lib/hetna/directorio"
+import { NOMBRE_TIPO, empresaPorSlug, nombreVisible, slugCanonico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
 
 // Perfil NO RECLAMADO de una empresa del directorio (lib/hetna/directorio.ts).
@@ -21,10 +21,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const e = await empresaPorSlug(slug)
   if (!e) return { robots: { index: false } }
   const donde = [e.ciudad, e.estado].filter(Boolean).join(", ")
+  // Nombre limpio ("Inicio" del sitio fuera) y título corto: Google corta en ~60 caracteres
+  const nombre = nombreVisible(e)
+  const conLugar = `${nombre}${e.ciudad ? ` · ${e.ciudad}` : ""}`
+  const titulo = conLugar.length <= 44 ? `${conLugar} | Directorio CNC` : conLugar.length <= 60 ? conLugar : nombre
+  const canonico = await slugCanonico(e)
   return {
-    title: `${e.empresa}${donde ? ` · ${donde}` : ""} | Directorio CNC`,
-    description: descripcionCorta(`${e.empresa}: ${e.servicios || NOMBRE_TIPO[e.tipo]}${donde ? ` en ${donde}` : ""}. Pide cotización con HETNA CNC.`),
-    alternates: { canonical: `https://hetnacnc.com/mx/talleres/directorio/${e.slug}` },
+    title: titulo,
+    description: descripcionCorta(`${nombre}: ${e.servicios || NOMBRE_TIPO[e.tipo]}${donde ? ` en ${donde}` : ""}. Pide cotización con HETNA CNC.`),
+    alternates: { canonical: `https://hetnacnc.com/mx/talleres/directorio/${canonico}` },
     // Sin descripción de servicios la página es muy delgada para Google
     robots: e.servicios ? undefined : { index: false, follow: true },
   }

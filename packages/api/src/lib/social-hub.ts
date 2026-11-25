@@ -599,7 +599,7 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
         : red === "pinterest"
         ? await publicarPinterest(knex, { texto, titulo: p.titulo, imagen: imagen || imagenes[0], liga })
         : red === "youtube"
-        ? await enviarAN8n(youtubeDe(texto, p.titulo, video))
+        ? await enviarAN8n(youtubeDe(texto, p.titulo, video, { largo: medio?.formato === "horizontal" }))
         : red === "instagram_historia"
         ? await enviarAN8n({ red: "instagram", historia: true, texto: texto || p.titulo, imagen: video ? "" : imagen || imagenes[0] || "", video, url: liga, post_id: p.id })
         : await enviarAN8n({ red, texto, imagen, video, imagenes, url: liga, titulo: p.titulo, post_id: p.id })
@@ -638,12 +638,13 @@ export async function publicar(knex: any, postId: string, logger?: any, soloRede
   return { estado, resultado }
 }
 
-/** YouTube: primera línea = título (con #Shorts si cabe), el resto = descripción con la liga. */
-export function youtubeDe(texto: string, tituloPub: string, video: string) {
+/** YouTube: primera línea = título (con #Shorts si cabe), el resto = descripción con la liga.
+ *  `largo`: video horizontal (explicativo largo), se sube como video normal, sin #Shorts. */
+export function youtubeDe(texto: string, tituloPub: string, video: string, o: { largo?: boolean } = {}) {
   const lineas = String(texto || "").split("\n")
   const i = lineas.findIndex((l) => l.trim())
   const base = (i >= 0 ? lineas[i] : tituloPub).replace(/[<>]/g, "").trim()
-  const titulo = base.length <= 90 ? `${base} #Shorts` : base.slice(0, 100)
+  const titulo = o.largo ? base.slice(0, 100) : base.length <= 90 ? `${base} #Shorts` : base.slice(0, 100)
   const descripcion = (i >= 0 ? lineas.slice(i + 1) : lineas).join("\n").trim() || base
   return { red: "youtube", titulo, texto: descripcion.slice(0, 4900), video }
 }

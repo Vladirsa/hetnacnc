@@ -17,11 +17,11 @@ describe("No pagarle al taller lo reembolsado o cancelado", () => {
       const q: any = { _where: {} as any }
       q.where = (w: any) => { Object.assign(q._where, w); return q }
       q.whereIn = () => q
-      q.select = async () => filas
+      q.select = async () => (tabla === "hetna_reclamo_pedido" ? [] : filas)
       q.update = async () => { actualizados.push(q._where.order_id); return 1 }
       return q
     }
-    knex.schema = { hasTable: async () => true }
+    knex.schema = { hasTable: async () => true, hasColumn: async () => true }
     knex.fn = { now: () => "now" }
     const ordenes = [
       { id: "order_bien", status: "completed", ...pagado },

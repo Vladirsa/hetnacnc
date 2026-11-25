@@ -2,10 +2,12 @@
 // Para agregar una traduccion: "Texto en espanol": "English text",
 import { EN_HERRAMIENTAS } from "./en-herramientas"
 import { EN_PAGINAS } from "./en-paginas"
+import { EN_UI_AUDITORIA, REGLAS_UI_AUDITORIA } from "./en-ui-auditoria"
 
 export const EN: Record<string, string> = {
   // Primero, para que las entradas de abajo tengan prioridad
   ...EN_PAGINAS,
+  ...EN_UI_AUDITORIA,
   // Menú principal y buscador (problema 5 de la auditoría)
   "Fabricación": "Manufacturing",
   "Cotizar un trabajo": "Get a quote",
@@ -1635,6 +1637,7 @@ const REGLAS_PUBLICADO: [RegExp, string][] = [
 
 export const REGLAS: [RegExp, string][] = [
   ...REGLAS_PUBLICADO,
+  ...REGLAS_UI_AUDITORIA,
   [/^Enviar a (.+)$/, "Deliver to $1"],
   [/^CP (.+)$/, "ZIP $1"],
   [/^Comparar otras (\d+) ofertas$/, "Compare $1 other offers"],

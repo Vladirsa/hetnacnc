@@ -51,6 +51,7 @@ export const HERRAMIENTAS: Record<string, [string, boolean]> = {
   "estencil-letras": ["Esténcil de letras", false],
   "marcos-portarretratos": ["Marcos y portarretratos", false],
   "esferas-navidad": ["Esferas navideñas con nombre", false],
+  "cortadores-galletas": ["Cortadores de galletas", false],
   "imagen-a-3d": ["Imagen a 3D con IA", true],
 }
 
