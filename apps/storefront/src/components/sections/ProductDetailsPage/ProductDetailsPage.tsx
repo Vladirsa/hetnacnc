@@ -144,9 +144,8 @@ export const ProductDetailsPage = async ({
     textoMeta(metaProd.medidas) || textoMeta(metaProd.medida_principal) || campoDeDescripcion(prod.description, /^medidas?$/i) || undefined
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
-  // Los Diseños listos ya traen quién los imprime y su archivo (DisenoListo)
   const fabricar =
-    tipoProd === "servicio" || metaProd.diseno_listo === true ? null : (
+    tipoProd === "servicio" ? null : (
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}
