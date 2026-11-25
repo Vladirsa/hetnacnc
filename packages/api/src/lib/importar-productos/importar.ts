@@ -333,7 +333,7 @@ async function etiquetas(container: MedusaContainer, valores: string[]) {
 }
 
 /** Existencias de una oferta en el almacén de la tienda (crea el nivel si falta). */
-export async function ponerExistencias(container: MedusaContainer, offerId: string, locationId: string, cantidad: number) {
+async function ponerExistencias(container: MedusaContainer, offerId: string, locationId: string, cantidad: number) {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const inv = container.resolve(Modules.INVENTORY)
   const { data } = await query.graph({ entity: "offer", fields: ["id", "inventory_item_link.inventory_item.id"], filters: { id: offerId } })
