@@ -174,6 +174,23 @@ export async function guardarBorrador(knex: any, crudo: unknown, o: { origen?: "
   return { slug: plano.slug, revision }
 }
 
+/**
+ * Edita un borrador desde el panel (textos, piezas, pasos). Se vuelve a revisar
+ * la forma y la geometría con el motor de la tienda; si algo falla no se guarda
+ * y se regresan los errores. El slug no cambia.
+ */
+export async function editarBorrador(knex: any, slug: string, crudo: any) {
+  await asegurarBiblioteca(knex)
+  const f = await knex(T_BIBLIOTECA).where({ slug }).first("slug", "estado")
+  if (!f) throw new ErrorPlano("Ese plano no existe.")
+  if (f.estado !== "borrador") throw new ErrorPlano("Sólo se pueden editar borradores.")
+  const plano = normalizarPlano({ ...crudo, slug })
+  const revision = await revisarEnTienda(plano)
+  if (!revision.ok) throw new ErrorPlano(`No pasó la revisión: ${revision.errores.slice(0, 6).join(" · ")}`)
+  await knex(T_BIBLIOTECA).where({ slug }).update({ nombre: plano.nombre, categoria: plano.categoria, datos: JSON.stringify(plano), revision: JSON.stringify(revision) })
+  return { ok: true, slug, revision }
+}
+
 export async function listarBiblioteca(knex: any) {
   await asegurarBiblioteca(knex)
   const filas = await knex(T_BIBLIOTECA).orderByRaw("case estado when 'borrador' then 0 when 'publicado' then 1 else 2 end").orderBy("created_at", "desc").limit(200)
@@ -191,6 +208,8 @@ export async function listarBiblioteca(knex: any) {
     created_at: f.created_at,
     publicado_en: f.publicado_en,
     vista_previa: ligaVistaPrevia(f.slug),
+    // el plano completo, sólo de los borradores (para el editor del panel)
+    datos: f.estado === "borrador" ? f.datos : undefined,
   }))
 }
 

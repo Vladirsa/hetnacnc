@@ -1,7 +1,8 @@
 // Dashboard > Planos IA: planos de la Biblioteca guardados en la base de datos
 // (packages/api/src/lib/planos-biblioteca.ts). Los propone el agente semanal o
-// se importan a mano; nada se publica solo: aquí se ven en vista previa y se
-// publican o rechazan. Al publicar se crea su producto en la tienda.
+// se importan a mano; nada se publica solo: aquí se ven en vista previa, se
+// editan si hace falta y se publican o rechazan. Al publicar se crea su producto
+// en la tienda.
 import { useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 
@@ -18,7 +19,27 @@ type Plano = {
   created_at: string
   publicado_en: string | null
   vista_previa: string
+  datos?: DatosPlano
 }
+
+type Pieza = { nombre: string; material: string; x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }
+type DatosPlano = {
+  slug: string
+  categoria: string
+  nombre: string
+  resumen: string
+  descripcion: string
+  nivel: string
+  horas: string
+  ruedas?: number
+  juego?: { cantidad: number; nombre: string }
+  piezas: Pieza[]
+  pasos: { titulo: string; nota: string; piezas: string[] }[]
+  herrajes: string[]
+  herramientas: string[]
+  notas: string[]
+}
+const MATERIALES = ["triplay-18", "triplay-12", "triplay-9", "triplay-6"]
 
 type Agente = { ia: boolean; corriendo: boolean; estado?: string; inicio?: string; fin?: string | null; creados?: number; bitacora?: string[] | null }
 
@@ -49,9 +70,134 @@ const pedir = async (cuerpo?: unknown) => {
   return d
 }
 
+
+// Editor de un borrador: textos, piezas (medidas en mm: x = ancho, y = fondo
+// desde el frente, z = alto desde el piso) y pasos. Al guardar se vuelve a
+// revisar con el motor de la tienda; si algo falla, no se guarda.
+function Editor({ p, alGuardar, alCerrar }: { p: Plano; alGuardar: (m: string) => void; alCerrar: () => void }) {
+  const [d, setD] = useState<DatosPlano>(() => JSON.parse(JSON.stringify(p.datos)))
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState("")
+  const lineas = (a: string[]) => a.join("\n")
+  const deLineas = (t: string) => t.split("\n").map((x) => x.trim()).filter(Boolean)
+  const pieza = (i: number, c: Partial<Pieza>) => setD({ ...d, piezas: d.piezas.map((q, j) => (j === i ? { ...q, ...c } : q)) })
+  const paso = (i: number, c: Partial<DatosPlano["pasos"][number]>) => setD({ ...d, pasos: d.pasos.map((q, j) => (j === i ? { ...q, ...c } : q)) })
+  const guardar = async () => {
+    setGuardando(true)
+    setError("")
+    try {
+      await pedir({ slug: p.slug, editar: d })
+      alGuardar(`Guardado: ${d.nombre}. Pasó la revisión.`)
+    } catch (e) {
+      setError((e as Error).message)
+      setGuardando(false)
+    }
+  }
+  const num: CSSProperties = { ...campo, width: 70, padding: "4px 6px" }
+  const etiqueta: CSSProperties = { display: "block", fontSize: 12, fontWeight: 700, margin: "8px 0 2px" }
+  return (
+    <div style={{ marginTop: 10, borderTop: `1px solid ${C.borde}`, paddingTop: 10 }}>
+      <label style={etiqueta}>Nombre</label>
+      <input style={campo} value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} />
+      <label style={etiqueta}>Resumen</label>
+      <input style={campo} value={d.resumen} onChange={(e) => setD({ ...d, resumen: e.target.value })} />
+      <label style={etiqueta}>Descripción</label>
+      <textarea style={{ ...campo, minHeight: 60 }} value={d.descripcion} onChange={(e) => setD({ ...d, descripcion: e.target.value })} />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div>
+          <label style={etiqueta}>Categoría</label>
+          <select style={{ ...campo, width: 120 }} value={d.categoria} onChange={(e) => setD({ ...d, categoria: e.target.value })}>
+            <option>Taller</option>
+            <option>Casa</option>
+          </select>
+        </div>
+        <div>
+          <label style={etiqueta}>Nivel</label>
+          <select style={{ ...campo, width: 130 }} value={d.nivel} onChange={(e) => setD({ ...d, nivel: e.target.value })}>
+            <option>Fácil</option>
+            <option>Intermedio</option>
+          </select>
+        </div>
+        <div>
+          <label style={etiqueta}>Horas</label>
+          <input style={{ ...campo, width: 110 }} value={d.horas} onChange={(e) => setD({ ...d, horas: e.target.value })} />
+        </div>
+      </div>
+
+      <label style={etiqueta}>Piezas (mm · x = ancho, y = fondo desde el frente, z = alto desde el piso)</label>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ color: C.tenue }}>
+              <th align="left">Nombre</th><th>Material</th><th>x0</th><th>x1</th><th>y0</th><th>y1</th><th>z0</th><th>z1</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {d.piezas.map((q, i) => (
+              <tr key={i}>
+                <td><input style={{ ...campo, width: 170, padding: "4px 6px" }} value={q.nombre} onChange={(e) => pieza(i, { nombre: e.target.value })} /></td>
+                <td>
+                  <select style={{ ...campo, width: 110, padding: "4px 6px" }} value={q.material} onChange={(e) => pieza(i, { material: e.target.value })}>
+                    {MATERIALES.map((m) => <option key={m}>{m}</option>)}
+                  </select>
+                </td>
+                {(["x0", "x1", "y0", "y1", "z0", "z1"] as const).map((k) => (
+                  <td key={k}><input type="number" style={num} value={q[k]} onChange={(e) => pieza(i, { [k]: Number(e.target.value) })} /></td>
+                ))}
+                <td><button type="button" style={{ ...botonClaro, padding: "2px 8px" }} onClick={() => setD({ ...d, piezas: d.piezas.filter((_, j) => j !== i) })}>✕</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" style={{ ...botonClaro, marginTop: 6, padding: "4px 10px" }} onClick={() => setD({ ...d, piezas: [...d.piezas, { nombre: "Pieza nueva", material: "triplay-18", x0: 0, x1: 100, y0: 0, y1: 100, z0: 0, z1: 18 }] })}>
+        + Pieza
+      </button>
+
+      <label style={etiqueta}>Pasos (en «piezas» van nombres o prefijos separados por coma)</label>
+      {d.pasos.map((ps, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr auto", gap: 6, marginBottom: 6 }}>
+          <input style={campo} value={ps.titulo} onChange={(e) => paso(i, { titulo: e.target.value })} />
+          <input style={campo} value={ps.nota} onChange={(e) => paso(i, { nota: e.target.value })} />
+          <input style={campo} value={ps.piezas.join(", ")} onChange={(e) => paso(i, { piezas: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} />
+          <button type="button" style={{ ...botonClaro, padding: "2px 8px" }} onClick={() => setD({ ...d, pasos: d.pasos.filter((_, j) => j !== i) })}>✕</button>
+        </div>
+      ))}
+      <button type="button" style={{ ...botonClaro, padding: "4px 10px" }} onClick={() => setD({ ...d, pasos: [...d.pasos, { titulo: "Paso nuevo", nota: "", piezas: [] }] })}>
+        + Paso
+      </button>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <div>
+          <label style={etiqueta}>Herrajes (uno por renglón)</label>
+          <textarea style={{ ...campo, minHeight: 90 }} value={lineas(d.herrajes)} onChange={(e) => setD({ ...d, herrajes: deLineas(e.target.value) })} />
+        </div>
+        <div>
+          <label style={etiqueta}>Herramientas</label>
+          <textarea style={{ ...campo, minHeight: 90 }} value={lineas(d.herramientas)} onChange={(e) => setD({ ...d, herramientas: deLineas(e.target.value) })} />
+        </div>
+        <div>
+          <label style={etiqueta}>Notas</label>
+          <textarea style={{ ...campo, minHeight: 90 }} value={lineas(d.notas)} onChange={(e) => setD({ ...d, notas: deLineas(e.target.value) })} />
+        </div>
+      </div>
+      {error && <p style={{ color: "#B42318", fontSize: 13, margin: "8px 0 0" }}>{error}</p>}
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <button type="button" style={boton} disabled={guardando} onClick={() => void guardar()}>
+          {guardando ? "Revisando…" : "Guardar cambios"}
+        </button>
+        <button type="button" style={botonClaro} disabled={guardando} onClick={alCerrar}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function Tarjeta({ p, alTerminar }: { p: Plano; alTerminar: (m: string) => void }) {
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState("")
+  const [editando, setEditando] = useState(false)
   const accion = async (a: "publicar" | "rechazar") => {
     if (a === "publicar" && !confirm(`¿Publicar «${p.nombre}»? Saldrá en /planos, en la tienda y en redes.`)) return
     setOcupado(true)
@@ -92,9 +238,24 @@ function Tarjeta({ p, alTerminar }: { p: Plano; alTerminar: (m: string) => void 
             <button type="button" style={botonClaro} disabled={ocupado} onClick={() => void accion("rechazar")}>
               Rechazar
             </button>
+            {p.datos && !editando && (
+              <button type="button" style={botonClaro} onClick={() => setEditando(true)}>
+                Editar
+              </button>
+            )}
           </>
         )}
       </div>
+      {editando && p.datos && (
+        <Editor
+          p={p}
+          alCerrar={() => setEditando(false)}
+          alGuardar={(m) => {
+            setEditando(false)
+            alTerminar(m)
+          }}
+        />
+      )}
     </div>
   )
 }
