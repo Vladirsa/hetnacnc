@@ -41,12 +41,14 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte" | "cortador"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo"
   etiquetas: string[]
   herramienta_url: string
   foto: string
   volumen_cm3: number
   medidas_mm: [number, number, number]
+  /** sólo "modelo": cuántos cuerpos sueltos salen (maceta + plato = 2) */
+  piezas?: number
   relleno?: number // 100 en piezas de pura pared (cortadores)
   con_sello?: boolean
 }
@@ -64,6 +66,13 @@ function descripcion(d: Diseno): string {
       `<p>¿Tienes impresora 3D? Descarga el cortador gratis y cámbiale la medida o el sello en la herramienta de HETNA.</p>`,
     ].join("")
   }
+  // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
+  if (d.pieza === "modelo")
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>${(d.piezas || 1) > 1 ? `Sale en ${d.piezas} piezas; la más grande mide` : "Medidas de la pieza:"} ${mm(d.medidas_mm)}</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p>¿De otro tamaño? Abre el modelo en Modelos 3D de HETNA, cambia las medidas y baja el STL gratis, o pide que te lo impriman así.</p>`,
+    ].join("")
   const uso =
     d.pieza === "soporte"
       ? `<p><strong>Cómo se usa:</strong> mete el rodillo en el eje, ponle el seguro en C en la punta y rueda. Para cambiar de diseño quitas el seguro y cambias el rodillo. Trae 2 seguros (uno de repuesto).</p>`
