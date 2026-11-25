@@ -141,6 +141,8 @@ export function GeneradorModelos3D() {
                         step={paso}
                         onChange={(e) => setValores({ ...valores, [p.k]: Number(e.target.value) })}
                         className="w-[76px] rounded-[6px] border border-[#E7E4DC] px-2 py-0.5 text-right text-[13px]"
+                        // Fondo y letra fijos: dentro del estudio oscuro (.tema-estudio) el texto salía blanco sobre blanco
+                        style={{ background: "#1C2431", color: "#E6EBF2", borderColor: "#2B3648" }}
                       />
                       <span className="w-6 text-[12px] text-[#6B675C]">{p.unidad ?? "mm"}</span>
                     </span>
