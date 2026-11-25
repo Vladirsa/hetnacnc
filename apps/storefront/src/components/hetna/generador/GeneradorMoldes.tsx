@@ -9,6 +9,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
+import { MandarDisenoCorreo } from "@/components/hetna/estudio/MandarDisenoCorreo"
 import { mandarArchivosAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { type Arriba, OPCIONES_MOLDE, type ResultadoMolde, type TipoMolde, hacerMolde, volteada } from "@/lib/generador/moldes"
 import { leerOBJ, leerSTL, mallaSTL, type Malla } from "@/lib/generador/vectores"
@@ -321,6 +322,7 @@ export function GeneradorMoldes() {
                 </button>
               </div>
               {aviso && <p className="m-0 text-[12.5px] text-[#8A1C1C]">{aviso}</p>}
+              <MandarDisenoCorreo herramienta="moldes-3d" archivo={`${nombre}-molde`} servicio="Impresión 3D" oscuro={false} />
             </div>
           )}
         </section>

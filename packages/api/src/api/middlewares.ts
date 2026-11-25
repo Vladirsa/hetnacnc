@@ -81,6 +81,8 @@ export default defineMiddlewares({
         { method: ["POST"], matcher: "/admin/hetna-grupos", bodyParser: { sizeLimit: "8mb" } },
         // Solicitud desde foto (la imagen viaja en base64 dentro del JSON)
         { method: ["POST"], matcher: "/store/solicitud-foto", bodyParser: { sizeLimit: "8mb" } },
+        // "Mándamelo por correo" de las herramientas: trae el DXF (tope en lib/herramienta-correo.ts)
+        { method: ["POST"], matcher: "/store/herramienta-correo", bodyParser: { sizeLimit: "1mb" } },
         {
             matcher: "/api/auth/*",
             middlewares: [],

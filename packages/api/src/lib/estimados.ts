@@ -21,6 +21,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { estaDeBaja, ligaBaja } from "./baja"
 import { correosDeLaCasa } from "./cuentas-casa"
+import { ligaFabricar, nombreHerramienta, urlHerramienta } from "./herramienta-correo"
 import { STORE_URL, T_SOLICITUD, boton, esc, marco } from "./licitacion"
 import { sendEmail } from "./resend"
 import { mandarPrivado } from "./social-telegram"
@@ -54,7 +55,11 @@ export async function asegurarTablaEstimado(knex: any) {
       t.text("cerrado").nullable() // solicitud | baja | completo
       t.boolean("avisado").notNullable().defaultTo(false)
       t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+      t.text("herramienta").nullable()
     })
+  } else if (!(await knex.schema.hasColumn(T_ESTIMADO, "herramienta"))) {
+    // Estimados que vienen de una herramienta del Estudio (lib/herramienta-correo.ts)
+    await knex.schema.alterTable(T_ESTIMADO, (t: any) => t.text("herramienta").nullable())
   }
   listo = true
 }
@@ -72,6 +77,8 @@ export type NuevoEstimado = {
   piezas_mes?: number | null
   estimado_min?: number
   estimado_max?: number
+  /** slug de la herramienta del Estudio, si de ahí vino */
+  herramienta?: string | null
 }
 
 /** Guarda el estimado (o actualiza el de hoy de ese correo). Nunca lanza. */
@@ -93,6 +100,7 @@ export async function guardarEstimado(knex: any, e: NuevoEstimado) {
       piezas_mes: Number(e.piezas_mes) || null,
       estimado_min: Number(e.estimado_min) || null,
       estimado_max: Number(e.estimado_max) || null,
+      herramienta: e.herramienta ? String(e.herramienta).slice(0, 60) : null,
     }
     const hoy = await knex(T_ESTIMADO).where({ email }).where("created_at", ">", knex.raw("now() - interval '1 day'")).first("id")
     if (hoy) await knex(T_ESTIMADO).where({ id: hoy.id }).update(fila)
@@ -127,6 +135,7 @@ export function ligaSolicitud(e: any, toque: number) {
 }
 
 export function correoSeguimiento(e: any, toque: number) {
+  if (e.herramienta) return correoSeguimientoHerramienta(e, toque)
   const p = (x: string) => `<p style="margin:0 0 12px;color:#40403A;line-height:1.55">${x}</p>`
   const hola = e.nombre ? `Hola ${esc(String(e.nombre).split(" ")[0])},` : "Hola,"
   const pieza = `${esc(e.servicio)}${e.material ? ` en ${esc(e.material)}` : ""}${e.cantidad ? `, ${e.cantidad} pieza(s)` : ""}`
@@ -153,6 +162,39 @@ export function correoSeguimiento(e: any, toque: number) {
         p(`Te escribo por última vez sobre tu estimado de <b>${pieza}</b>. Si todavía lo necesitas, mándanos las medidas o una foto por WhatsApp y te ayudamos a encontrar el taller adecuado.`) +
         boton("Escribir por WhatsApp", wa) +
         `<p style="margin:16px 0 0"><a href="${esc(ligaSolicitud(e, 1))}" style="color:#C2560A;font-weight:700">O publica tu solicitud aquí →</a></p>`
+    ),
+  }
+}
+
+/** Seguimiento de quien se mandó su diseño desde una herramienta del Estudio. */
+function correoSeguimientoHerramienta(e: any, toque: number) {
+  const p = (x: string) => `<p style="margin:0 0 12px;color:#40403A;line-height:1.55">${x}</p>`
+  const hola = e.nombre ? `Hola ${esc(String(e.nombre).split(" ")[0])},` : "Hola,"
+  const nombre = esc(nombreHerramienta(e.herramienta))
+  const rango = e.estimado_min ? ` Te calculamos de ${pesos(e.estimado_min)} a ${pesos(e.estimado_max)} + IVA${e.material ? ` en ${esc(e.material)}` : ""}.` : ""
+  const volver = `${urlHerramienta(e.herramienta)}?utm_source=correo&utm_medium=seguimiento_herramienta&utm_campaign=herramienta_t${toque + 1}`
+  const wa = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola HETNA, hice un diseño en ${nombreHerramienta(e.herramienta)} y quiero que me lo fabriquen.`)}`
+  if (toque === 0) {
+    return {
+      asunto: "¿Te cortamos tu diseño?",
+      html: marco(
+        "¿Te lo fabricamos?",
+        p(hola) +
+          p(`Hace un par de días hiciste un diseño en <b>${nombre}</b>.${rango}`) +
+          p("Si no tienes máquina, publica tu solicitud y sube tu archivo: talleres verificados de tu zona te mandan su propuesta <b>sin costo</b> y tú eliges.") +
+          boton("Recibir propuestas de talleres", ligaFabricar(e, `herramienta_t1`)) +
+          `<p style="margin:16px 0 0"><a href="${esc(volver)}" style="color:#C2560A;font-weight:700">Volver a ${nombre} →</a></p>`
+      ),
+    }
+  }
+  return {
+    asunto: "Último aviso sobre tu diseño en HETNA CNC",
+    html: marco(
+      "¿Todavía quieres fabricarlo?",
+      p(hola) +
+        p(`Te escribo por última vez sobre tu diseño de <b>${nombre}</b>. Si quieres, mándanos el archivo por WhatsApp y te ayudamos a encontrar el taller adecuado.`) +
+        boton("Escribir por WhatsApp", wa) +
+        `<p style="margin:16px 0 0"><a href="${esc(ligaFabricar(e, "herramienta_t2"))}" style="color:#C2560A;font-weight:700">O publica tu solicitud aquí →</a></p>`
     ),
   }
 }

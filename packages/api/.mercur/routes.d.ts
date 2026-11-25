@@ -900,6 +900,7 @@ export type Routes = {
             aviso: typeof import("../src/api/store/foro/aviso/route");
             miTaller: typeof import("../src/api/store/foro/mi-taller/route");
         };
+        herramientaCorreo: typeof import("../src/api/store/herramienta-correo/route");
         hetnaAfiliacion: typeof import("../src/api/store/hetna-afiliacion/route") & {
             activar: typeof import("../src/api/store/hetna-afiliacion/activar/route");
         };
