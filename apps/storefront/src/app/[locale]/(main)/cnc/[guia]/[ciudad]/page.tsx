@@ -1,11 +1,13 @@
 // /mx/cnc/<guía>/<ciudad> — la guía enfocada en una ciudad (sólo las guías con
-// `ciudades`). Se indexa sólo si hay talleres de ese servicio en el estado:
-// sin talleres locales sería una página "puerta" (lib/seo/guias.ts).
+// `ciudades`). Se indexa sólo si hay talleres de ese servicio en el estado, o al
+// menos MIN_DIRECTORIO empresas del directorio que lo ofrecen ahí: sin empresas
+// locales sería una página "puerta" (lib/seo/guias.ts, lib/seo/directorio-guia.ts).
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { GuiaCnc, talleresDeGuia } from "@/components/hetna/guias/GuiaCnc"
 import { ciudadPorSlug, enCiudad, guiaPorSlug, h1EnCiudad } from "@/lib/seo/guias"
+import { MIN_DIRECTORIO, directorioDeGuia } from "@/lib/seo/directorio-guia"
 
 type Props = { params: Promise<{ locale: string; guia: string; ciudad: string }> }
 
@@ -19,13 +21,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const g = guiaPorSlug(p.guia)
   const c = ciudadPorSlug(p.ciudad)
   if (!g?.ciudades || !c) return {}
-  const locales = (await talleresDeGuia(g)).filter((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad))
+  const [talleres, directorio] = await Promise.all([talleresDeGuia(g), directorioDeGuia(g, c)])
+  const locales = talleres.filter((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad))
+  const indexable = locales.length > 0 || directorio.length >= MIN_DIRECTORIO
+  const cuantas = locales.length + directorio.length
   const url = `https://hetnacnc.com/mx/cnc/${g.slug}/${c.slug}`
   return {
     title: h1EnCiudad(g, c),
-    description: `${h1EnCiudad(g, c)}: ${locales.length ? `talleres en ${c.estado}` : "talleres con envío"}, espesores, cómo preparar tu archivo y precio al instante.`,
+    description: `${h1EnCiudad(g, c)}: ${indexable ? `${cuantas} talleres y empresas en ${c.estado}` : "talleres con envío"}, espesores, cómo preparar tu archivo y precio al instante.`,
     alternates: { canonical: url },
-    robots: locales.length ? { index: true, follow: true } : { index: false, follow: true },
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: true },
   }
 }
 

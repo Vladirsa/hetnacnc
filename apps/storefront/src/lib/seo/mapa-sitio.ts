@@ -14,6 +14,7 @@
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { MODELOS } from "@/lib/generador/modelos3d"
+import { MIN_DIRECTORIO, directorioDeGuia } from "@/lib/seo/directorio-guia"
 import { sdk } from "@/lib/client"
 import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
@@ -159,7 +160,12 @@ async function ciudadesIndexables(): Promise<string[]> {
   for (const g of GUIAS.filter((x) => x.ciudades)) {
     const delServicio = talleres.filter((t) => t.perfil.servicios.some((s) => g.coincide.includes(s)))
     for (const c of CIUDADES) {
-      if (delServicio.some((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad))) rutas.push(`/cnc/${g.slug}/${c.slug}`)
+      // Misma regla que la página (noindex si no): talleres de la red o empresas del directorio
+      if (
+        delServicio.some((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad)) ||
+        (await directorioDeGuia(g, c)).length >= MIN_DIRECTORIO
+      )
+        rutas.push(`/cnc/${g.slug}/${c.slug}`)
     }
   }
   return rutas

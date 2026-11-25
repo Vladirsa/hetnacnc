@@ -12,6 +12,7 @@ import { migas, servicioSchema } from "@/lib/hetna/schema"
 import { CIUDADES, GUIAS, enCiudad, h1EnCiudad, h1SinPais, type Ciudad, type Guia } from "@/lib/seo/guias"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { rutaEstado } from "@/lib/seo/estados"
+import { directorioDeGuia } from "@/lib/seo/directorio-guia"
 
 const SITIO = "https://hetnacnc.com"
 
@@ -25,9 +26,10 @@ export async function talleresDeGuia(g: Guia): Promise<Taller[]> {
 }
 
 export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad }) {
-  const [talleres, trabajos] = await Promise.all([
+  const [talleres, trabajos, directorio] = await Promise.all([
     talleresDeGuia(g),
     trabajosAbiertos({ servicio: g.servicio, limit: 4 }).catch(() => ({ trabajos: [] as never[] })),
+    ciudad ? directorioDeGuia(g, ciudad) : Promise.resolve([]),
   ])
   const locales = ciudad ? talleres.filter((t) => enCiudad(ciudad, t.perfil.estado, t.perfil.ciudad)) : []
   const mostrar = (ciudad ? [...locales, ...talleres.filter((t) => !locales.includes(t))] : talleres).slice(0, 6)
@@ -43,7 +45,12 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
                 .slice(0, 3)
                 .map((t) => t.nombre)
                 .join(", ")}). También puedes recibir propuestas de talleres de otros estados con envío.`
-            : `Todavía no hay talleres de la red en ${ciudad.estado}, pero los de otros estados envían a ${ciudad.nombre}. Publica tu trabajo y cada propuesta dirá si incluye el envío.`,
+            : directorio.length
+              ? `Hay ${directorio.length === 1 ? "una empresa" : `${directorio.length} empresas`} de ${h1SinPais(g).toLowerCase()} en ${ciudad.estado} en el directorio de HETNA (${directorio
+                  .slice(0, 3)
+                  .map((e) => e.empresa)
+                  .join(", ")}). Desde su perfil les pides cotización, y los talleres de la red de otros estados también envían a ${ciudad.nombre}.`
+              : `Todavía no hay talleres de la red en ${ciudad.estado}, pero los de otros estados envían a ${ciudad.nombre}. Publica tu trabajo y cada propuesta dirá si incluye el envío.`,
         },
         ...g.faqs,
       ]
@@ -172,6 +179,27 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
         </article>
 
         <aside className="grid content-start gap-6">
+          {ciudad && directorio.length > 0 && (
+            <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
+              <h2 className="text-base font-extrabold text-[#142033]">Empresas en {ciudad.estado}</h2>
+              <p className="mt-1 text-xs text-[#6B675C]">Del directorio de HETNA: en su perfil ves qué hacen y les pides cotización.</p>
+              <ul className="mt-3 grid gap-1">
+                {directorio.slice(0, 12).map((e) => (
+                  <li key={e.slug}>
+                    <LocalizedClientLink href={`/talleres/directorio/${e.slug}`} className="block rounded-lg px-2 py-1.5 hover:bg-[#FAF9F6]">
+                      <span className="block truncate text-sm font-bold text-[#142033]">{e.empresa}</span>
+                      {(e.ciudad || e.estado) && <span className="block truncate text-xs text-[#6B675C]">{[e.ciudad, e.estado].filter(Boolean).join(", ")}</span>}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+              {directorio.length > 12 && (
+                <LocalizedClientLink href={rutaEstado(ciudad)} className="mt-2 inline-block text-sm font-semibold text-[#C2560A]">
+                  Ver las {directorio.length} empresas →
+                </LocalizedClientLink>
+              )}
+            </section>
+          )}
           {mostrar.length > 0 && (
             <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <h2 className="text-base font-extrabold text-[#142033]">{ciudad && locales.length ? `Talleres en ${ciudad.estado} y con envío` : "Talleres de la red"}</h2>
