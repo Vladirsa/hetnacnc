@@ -32,11 +32,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const CAJA = "rounded-2xl border border-[#E7E4DC] bg-white p-6 sm:p-8"
 
+// Calculadora de precio al instante que corresponde a lo que hace la empresa
+function calculadoraDe(texto: string): { href: string; nombre: string } {
+  const t = texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+  if (/plasma|oxicorte/.test(t)) return { href: "/cotizar/corte-plasma", nombre: "corte plasma" }
+  if (/laser/.test(t)) return { href: "/cotizar/corte-laser", nombre: "corte láser" }
+  if (/impresion 3d|impresora 3d|3d print/.test(t)) return { href: "/cotizar/impresion-3d", nombre: "impresión 3D" }
+  return { href: "/cotizar/router-cnc", nombre: "router CNC" }
+}
+
 export default async function PerfilDirectorioPage({ params }: Props) {
   const { slug } = await params
   const e = await empresaPorSlug(slug)
   if (!e) notFound()
   const donde = [e.ciudad, e.estado].filter(Boolean).join(", ")
+  const calculadora = calculadoraDe(`${e.empresa} ${e.servicios || ""} ${e.segmento || ""}`)
   const cercanos = e.estado
     ? (await listarTalleres().catch(() => [])).filter((t) => t.perfil.estado === e.estado).slice(0, 4)
     : []
@@ -61,13 +71,26 @@ export default async function PerfilDirectorioPage({ params }: Props) {
           {e.tamano ? ` · Empresa ${e.tamano.toLowerCase()}` : ""}
         </p>
         {e.servicios && <p className="mt-4 text-[#1B1B18]">{e.servicios}</p>}
+        {/* Quien llega desde Google ve aquí mismo qué hacer (antes el formulario quedaba
+            fuera de la pantalla del celular y no había ningún botón arriba). */}
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <a href="#cotizar" className="inline-flex justify-center rounded-xl bg-[#C2560A] px-5 py-3 text-center font-bold text-white hover:brightness-110">
+            Pide cotización a {e.empresa.length > 28 ? "esta empresa" : e.empresa}
+          </a>
+          <LocalizedClientLink
+            href={calculadora.href}
+            className="inline-flex justify-center rounded-xl border-2 border-[#142033] px-5 py-3 text-center font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
+          >
+            Precio al instante de {calculadora.nombre}
+          </LocalizedClientLink>
+        </div>
         <p className="mt-4 text-[13px] text-[#6B675C]">
           Esta empresa todavía no es parte de HETNA. La información es pública y viene de su propio sitio web; no la ha
           revisado la empresa ni HETNA la verificó.
         </p>
       </header>
 
-      <section className={`${CAJA} mt-6`} id="cotizar">
+      <section className={`${CAJA} mt-6 scroll-mt-28`} id="cotizar">
         <h2 className="text-xl font-extrabold text-[#142033]">Pide una cotización</h2>
         <ol className="mt-3 grid gap-2 text-sm text-[#40403A] sm:grid-cols-3">
           <li className="rounded-xl bg-[#FAF8F3] p-3">
