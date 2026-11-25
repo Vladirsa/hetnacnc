@@ -39,6 +39,7 @@ export const vendorAltaMiddlewares: MiddlewareRoute[] = [
   { method: ["POST"], matcher: "/vendor/offers/batch", middlewares: [publicar] },
   { method: ["POST"], matcher: "/vendor/hetna-publicar", middlewares: [publicar] },
   { method: ["POST"], matcher: "/vendor/hetna-publicar/excel", middlewares: [publicar] },
+  { method: ["POST"], matcher: "/vendor/hetna-planos", middlewares: [publicar] },
   // Servicios: cursos, libros y propuestas de licitación
   { method: ["POST"], matcher: "/vendor/courses", middlewares: [publicar] },
   { method: ["POST"], matcher: "/vendor/hetna-libros", middlewares: [publicar] },
