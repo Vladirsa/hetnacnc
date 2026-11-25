@@ -213,6 +213,7 @@ main .rounded-md[role='combobox'] {
 /* Finanzas y envíos */
 [data-testid='sidebar-nav-item-payouts']      { order: 40; }
 [data-testid='sidebar-nav-item-saldo']        { order: 41; }
+[data-testid='sidebar-nav-item-reclamos']     { order: 41; }
 [data-testid='sidebar-nav-item-facturas']     { order: 42; }
 [data-testid='sidebar-nav-item-envios']       { order: 43; }
 [data-testid='sidebar-nav-item-guias']        { order: 44; }
