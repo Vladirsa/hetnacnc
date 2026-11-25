@@ -70,7 +70,7 @@ export function GeneradorCortadores() {
 
   useEffect(() => {
     instalarFuentesVista()
-    // /disenar/cortadores-galletas?forma=nube | ?icono=corazon | ?nombre=Sofia
+    // /disenar/cortadores-galletas?forma=nube | ?icono=corazon | ?nombre=Sofia (+ &tamano=, &sello=, &selloIcono=, &fuente=)
     const q = new URLSearchParams(window.location.search)
     const f = q.get("forma"), i = q.get("icono"), n = q.get("nombre")
     if (f && FORMAS_CLASICAS.some((x) => x.id === f)) {
@@ -85,6 +85,16 @@ export function GeneradorCortadores() {
     }
     const t = Number(q.get("tamano"))
     if (t >= 20 && t <= 200) setTamano(String(t))
+    // sello: ?sello=Te%20amo&fuente=pacifico  |  ?selloIcono=estrella
+    const st = q.get("sello"), si = q.get("selloIcono"), fu = q.get("fuente")
+    if (st) {
+      setTipoSello("texto")
+      setTextoSello(st.slice(0, 24))
+    } else if (si && ICONOS_TEXTURA.some((x) => x.id === si)) {
+      setTipoSello("icono")
+      setIconoSello(si as IconoTextura)
+    }
+    if (fu && FUENTES.some((x) => x.id === fu)) setFuenteId(fu)
   }, [])
 
   const usaFuente = tipo === "nombre" || tipoSello === "texto"

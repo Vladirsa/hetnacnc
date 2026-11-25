@@ -98,7 +98,7 @@ export async function panelTaller(container: MedusaContainer, sellerId: string) 
           variant_id: v.id,
           material: v.title,
           recomendado: pieza ? precioRecomendado(pieza, v.title) : null,
-          gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title) : null,
+          gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title, pieza.relleno) : null,
           oferta: o ? { id: o.id, precio: precioDeOferta(o), dias: d?.dias ?? null, colores: d?.colores ?? [] } : null,
         }
       }),
@@ -245,7 +245,7 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
     materiales: producto.variants.map((v) => ({
       variant_id: v.id,
       material: v.title,
-      gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title) : null,
+      gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title, pieza.relleno) : null,
       recomendado: pieza ? precioRecomendado(pieza, v.title) : null,
     })),
     ofertas: ordenarOfertas(lista),

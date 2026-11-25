@@ -18,6 +18,7 @@ import { join, resolve } from "path"
 import sharp from "sharp"
 
 import { FUENTES } from "@/lib/generador/fuentes"
+import { hacerCortador } from "@/lib/generador/cortadores"
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta, type DisenoCatalogo } from "@/lib/impresion/catalogo-disenos"
 import { construirMalla, limpiarValores, modeloPorId, valoresIniciales } from "@/lib/generador/modelos3d"
@@ -97,12 +98,16 @@ async function mallaModelo(d: DisenoCatalogo) {
     wasm = await Module({ locateFile: () => resolve(__dirname, "../node_modules/manifold-3d/manifold.wasm") })
     wasm.setup()
   }
-  const malla = await construirMalla(m, limpiarValores(m, { ...valoresIniciales(m), ...(d.valores || {}) }), wasm)
+  const pedidos = { ...valoresIniciales(m), ...(d.valores || {}) }
+  const limpios = limpiarValores(m, pedidos)
+  for (const [k, v] of Object.entries(d.valores || {}))
+    if (limpios[k] !== v) throw new Error(`${d.handle}: la medida ${k}=${v} no existe en ${m.id} o está fuera de rango`)
+  const malla = await construirMalla(m, limpios, wasm)
   if (!malla.cerrado) throw new Error(`${d.handle}: la malla no salió cerrada`)
   return malla.tris
 }
 
-const previos: any[] = existsSync(SALIDA) ? JSON.parse(readFileSync(SALIDA, "utf8")) : []
+const previos: any[] = SOLO_MODELOS && existsSync(SALIDA) ? JSON.parse(readFileSync(SALIDA, "utf8")) : []
 
 function fuente(id: string) {
   const t = FUENTES.find((f) => f.id === id)
@@ -130,15 +135,43 @@ function medir(t: number[]) {
   return { volumen_cm3: r1(Math.abs(v) / 1000), medidas_mm: [0, 1, 2].map((j) => r1(max[j] - min[j])) as [number, number, number] }
 }
 
+/** Separa una malla en sus cuerpos sueltos (triángulos unidos por vértices compartidos). */
+function separarPiezas(t: number[]): number[][] {
+  const n = t.length / 9
+  const padre = Array.from({ length: n }, (_, i) => i)
+  const raiz = (i: number): number => (padre[i] === i ? i : (padre[i] = raiz(padre[i])))
+  const visto = new Map<string, number>()
+  for (let i = 0; i < n; i++)
+    for (let v = 0; v < 3; v++) {
+      const o = i * 9 + v * 3
+      const k = `${t[o].toFixed(4)},${t[o + 1].toFixed(4)},${t[o + 2].toFixed(4)}`
+      const j = visto.get(k)
+      if (j === undefined) visto.set(k, i)
+      else padre[raiz(i)] = raiz(j)
+    }
+  const grupos = new Map<number, number[]>()
+  for (let i = 0; i < n; i++) {
+    const r = raiz(i)
+    let g = grupos.get(r)
+    if (!g) grupos.set(r, (g = []))
+    for (let k = 0; k < 9; k++) g.push(t[i * 9 + k])
+  }
+  return [...grupos.values()]
+}
+
 async function generar() {
 const salida: any[] = []
 for (const d of CATALOGO_IMPRESION) {
   if (d.pieza === "modelo") {
     const tris = await mallaModelo(d)
+    // volumen de todo lo que se imprime; medidas de la pieza más grande (la
+    // maceta sin su plato, la caja sin su tapa), no de todo acomodado en la cama
     const m = medir(tris)
+    const partes = separarPiezas(tris)
+    const mayor = partes.map(medir).sort((a, b) => b.volumen_cm3 - a.volumen_cm3)[0]
     writeFileSync(join(FOTOS, `${d.handle}.png`), await fotoPieza(tris))
-    console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm (foto lista)`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, modelo: d.modelo, valores: d.valores || {}, ...m })
+    console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${partes.length} pieza(s), la mayor ${mayor.medidas_mm.join(" × ")} mm (foto lista)`)
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length })
     continue
   }
   if (SOLO_MODELOS) {
@@ -152,6 +185,22 @@ for (const d of CATALOGO_IMPRESION) {
   const comun = { palabras: o.palabras || [], iconos: o.iconos || [], tamano: o.tamano, espacioX: o.espacioX, espacioY: o.espacioY, acomodo: o.acomodo, orilla: o.orilla, relieve: o.relieve, modo: o.modo || "alto", espejo: o.espejo }
   let tris: number[]
   let avisos: string[] = []
+  if (d.pieza === "cortador" && d.cortador) {
+    const c = d.cortador
+    const fs = c.sello?.tipo === "texto" ? fuente(c.sello.fuente) : null
+    const r = hacerCortador(c.forma, fs, {
+      tamano: c.tamano, altura: 14, pared: 1.2, ceja: 4, grosorCeja: 2,
+      sello: c.sello?.tipo === "texto" ? { tipo: "texto", texto: c.sello.texto } : c.sello?.tipo === "icono" ? { tipo: "icono", icono: c.sello.icono } : { tipo: "ninguno" },
+      relieveSello: 1.5,
+    })
+    if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
+    // el volumen es de las dos piezas (cortador + sello), la medida es la del cortador
+    const m = medir([...r.cortador.tris, ...(r.sello?.tris || [])])
+    const mc = medir(r.cortador.tris)
+    console.log(`${d.handle}: ${m.volumen_cm3} cm³, cortador ${mc.medidas_mm.join(" × ")} mm${r.sello ? " + sello" : ""}${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello })
+    continue
+  }
   if (d.pieza === "soporte") {
     const r = hacerRodillo(f, { ...comun, modo: "alto", diametro: o.diametro, largo: o.largo, eje: o.eje })
     tris = hacerSoporte(o.eje, o.largo, Math.ceil(r.diametroTotal + 10)).tris

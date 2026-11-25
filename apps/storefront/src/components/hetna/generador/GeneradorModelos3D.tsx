@@ -47,8 +47,9 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     const v = valoresIniciales(m)
     let cambia = !!q.get("modelo")
     for (const p of m.params) {
-      const n = Number(q.get(p.k))
-      if (q.has(p.k) && Number.isFinite(n)) {
+      const t = q.get(p.k)?.trim()
+      const n = Number(t)
+      if (t && Number.isFinite(n)) {
         v[p.k] = n
         cambia = true
       }
