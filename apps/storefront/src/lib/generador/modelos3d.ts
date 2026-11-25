@@ -31,6 +31,8 @@ export type Kit = {
   avellanado: (d: number, cabeza: number, h: number, x: number, y: number) => S
   unir: (...s: S[]) => S
   restar: (a: S, ...s: S[]) => S
+  /** Envolvente convexa (como estirar una liga alrededor de las piezas): cuñas, refuerzos. */
+  envolver: (...s: S[]) => S
   mover: (s: S, x: number, y: number, z: number) => S
   girar: (s: S, rx: number, ry: number, rz: number) => S
 }
@@ -310,6 +312,227 @@ export const MODELOS: Modelo3D[] = [
     },
   },
   {
+    id: "perilla-tuerca",
+    nombre: "Perilla con tuerca embebida",
+    texto: "Perilla moleteada con alojamiento hexagonal para tuerca M5, M6 u M8: prensas, guías y topes.",
+    categoria: "taller",
+    claves: "perilla knob mariposa tuerca m6 m8 prensa guia tope apriete",
+    params: [
+      { k: "diametro", nombre: "Diámetro de la perilla", def: 35, min: 15, max: 80 },
+      { k: "alto", nombre: "Alto", def: 14, min: 6, max: 40 },
+      { k: "metrica", nombre: "Tornillo (M)", def: 6, min: 3, max: 12, unidad: "" },
+      { k: "lobulos", nombre: "Muescas de agarre", def: 8, min: 0, max: 16, unidad: "" },
+    ],
+    construir: (p, k) => {
+      // tuerca métrica: entre caras ≈ 1.6 × M (M6 = 10 mm) y alto ≈ 0.8 × M, con holgura
+      const M = Math.round(p.metrica)
+      const entreCaras = { 3: 5.5, 4: 7, 5: 8, 6: 10, 8: 13, 10: 16, 12: 18 }[M] || M * 1.6
+      const hTuerca = Math.min(p.alto - 2, M * 0.8 + 0.4)
+      const dHex = (entreCaras + 0.3) / Math.cos(Math.PI / 6)
+      let g = k.cil(p.diametro, p.alto)
+      const n = Math.round(p.lobulos)
+      const huecos = []
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 2 * Math.PI
+        huecos.push(k.cil(p.diametro * 0.22, p.alto + 2, (Math.cos(a) * p.diametro) / 2, (Math.sin(a) * p.diametro) / 2, -1))
+      }
+      huecos.push(k.barreno(M + 0.4, p.alto), k.girar(k.cil(dHex, hTuerca + 1, 0, 0, -1, 6), 0, 0, 30))
+      return k.restar(g, ...huecos)
+    },
+  },
+  {
+    id: "tapon-ptr",
+    nombre: "Tapón para PTR / tubo cuadrado",
+    texto: "Tapa con aletas que entra a presión en el PTR: patas de mesa, bancos y estructuras.",
+    categoria: "taller",
+    claves: "tapon ptr tubo cuadrado rectangular regaton pata mesa estructura herreria",
+    params: [
+      { k: "ancho", nombre: "Ancho exterior del PTR", def: 25.4, min: 10, max: 100, paso: 0.1 },
+      { k: "alto", nombre: "Alto exterior del PTR (cuadrado = igual)", def: 25.4, min: 10, max: 150, paso: 0.1 },
+      { k: "calibre", nombre: "Espesor de pared del PTR", def: 1.5, min: 0.8, max: 6, paso: 0.1 },
+      { k: "inserto", nombre: "Largo del inserto", def: 12, min: 5, max: 30 },
+    ],
+    construir: (p, k) => {
+      const tapa = 3, iw = p.ancho - 2 * p.calibre, ih = p.alto - 2 * p.calibre
+      const cabeza = k.bloque(p.ancho, p.alto, tapa, 0, 0, 0, Math.min(2, p.ancho / 8))
+      // inserto hueco con 3 costillas por lado que muerden la pared
+      const pared = 1.6
+      const cuerpo = k.restar(k.bloque(iw - 0.6, ih - 0.6, p.inserto, p.calibre + 0.3, p.calibre + 0.3, tapa), k.bloque(iw - 0.6 - 2 * pared, ih - 0.6 - 2 * pared, p.inserto + 1, p.calibre + 0.3 + pared, p.calibre + 0.3 + pared, tapa))
+      const costillas = []
+      for (const z of [0.35, 0.65, 0.92]) {
+        const zz = tapa + p.inserto * z
+        costillas.push(k.restar(k.bloque(iw + 0.4, ih + 0.4, 0.8, p.calibre - 0.2, p.calibre - 0.2, zz), k.bloque(iw - 2 * pared, ih - 2 * pared, 2, p.calibre + pared, p.calibre + pared, zz - 0.5)))
+      }
+      return k.unir(cabeza, cuerpo, ...costillas)
+    },
+  },
+  {
+    id: "tapon-tubo-redondo",
+    nombre: "Tapón para tubo redondo",
+    texto: "Regatón redondo a presión para tubo de herrería, mueble o barandal.",
+    categoria: "taller",
+    claves: "tapon regaton tubo redondo pata silla mueble barandal herreria",
+    params: [
+      { k: "diametro", nombre: "Diámetro exterior del tubo", def: 25.4, min: 8, max: 120, paso: 0.1 },
+      { k: "calibre", nombre: "Espesor de pared del tubo", def: 1.5, min: 0.8, max: 6, paso: 0.1 },
+      { k: "inserto", nombre: "Largo del inserto", def: 12, min: 5, max: 30 },
+    ],
+    construir: (p, k) => {
+      const tapa = 3, di = p.diametro - 2 * p.calibre, pared = 1.6
+      const cabeza = k.unir(k.cono(p.diametro - 1.5, p.diametro, 1.5), k.cil(p.diametro, tapa - 1.5, 0, 0, 1.5))
+      const cuerpo = k.restar(k.cil(di - 0.6, p.inserto, 0, 0, tapa), k.cil(di - 0.6 - 2 * pared, p.inserto + 1, 0, 0, tapa))
+      const aros = [0.35, 0.65, 0.92].map((z) => k.restar(k.cil(di + 0.4, 0.8, 0, 0, tapa + p.inserto * z), k.cil(di - 2 * pared, 2, 0, 0, tapa + p.inserto * z - 0.5)))
+      return k.unir(cabeza, cuerpo, ...aros)
+    },
+  },
+  {
+    id: "soporte-husillo",
+    nombre: "Soporte de husillo / spindle",
+    texto: "Abrazadera para spindle de 52, 65, 80 mm o el que tengas, con tornillo de apriete y barrenos de montaje.",
+    categoria: "taller",
+    claves: "spindle husillo router cnc abrazadera 52 65 80 mm montaje fresadora",
+    params: [
+      { k: "diametro", nombre: "Diámetro del spindle", def: 52, min: 20, max: 110, paso: 0.5 },
+      { k: "alto", nombre: "Alto de la abrazadera", def: 30, min: 12, max: 80 },
+      { k: "pared", nombre: "Pared", def: 8, min: 4, max: 20 },
+      { k: "tornillo", nombre: "Barreno de montaje", def: 5.5, min: 3, max: 9, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const R = p.diametro / 2, e = p.pared, W = p.diametro + 2 * e
+      const placa = 10 // placa trasera de montaje
+      const anillo = k.cil(W, p.alto, 0, 0, 0)
+      const respaldo = k.bloque(W + 20, placa, p.alto, -W / 2 - 10, -R - e - placa + 2, 0)
+      const oreja = k.bloque(16, e + 12, p.alto, -8, R - 2, 0) // lengüeta de apriete al frente
+      let g = k.unir(anillo, respaldo, oreja)
+      const corte = k.bloque(2, e + 16, p.alto + 2, -1, R - 4, -1) // ranura para que cierre
+      const apriete = k.mover(k.girar(k.cil(p.tornillo * 0.8, 20, 0, 0, 0), 0, 90, 0), -10, R + e / 2 + 4, p.alto / 2)
+      const montaje = [-1, 1].flatMap((sx) => [0.3, 0.7].map((zf) => k.mover(k.girar(k.cil(p.tornillo, placa + 4, 0, 0, 0), -90, 0, 0), sx * (W / 2 + 4), -R - e - placa, p.alto * zf)))
+      g = k.restar(g, k.barreno(p.diametro + 0.3, p.alto), corte, apriete, ...montaje)
+      return g
+    },
+  },
+  {
+    id: "soporte-rodamiento",
+    nombre: "Soporte para rodamiento (chumacera)",
+    texto: "Chumacera de piso para rodamiento 608, 6000, 6200 o el que uses, con dos barrenos.",
+    categoria: "taller",
+    claves: "chumacera rodamiento balero 608 6200 6000 eje soporte pillow block",
+    params: [
+      { k: "exterior", nombre: "Diámetro exterior del rodamiento", def: 22, min: 8, max: 80, paso: 0.1 },
+      { k: "ancho", nombre: "Ancho del rodamiento", def: 7, min: 3, max: 30, paso: 0.1 },
+      { k: "eje", nombre: "Paso del eje", def: 10, min: 3, max: 60, paso: 0.1 },
+      { k: "tornillo", nombre: "Barreno de la base", def: 5.5, min: 3, max: 10, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const e = 5, D = p.exterior + 2 * e, alto = D / 2 + e + 2, L = D + 4 * p.tornillo + 8, prof = p.ancho + 4
+      const cuerpo = k.unir(k.bloque(L, prof, e, -L / 2, -prof / 2, 0), k.bloque(D, prof, alto, -D / 2, -prof / 2, 0), k.mover(k.girar(k.cil(D, prof, 0, 0, -prof / 2), 90, 0, 0), 0, 0, alto))
+      const asiento = k.mover(k.girar(k.cil(p.exterior + 0.15, p.ancho, 0, 0, -p.ancho / 2), 90, 0, 0), 0, 0, alto)
+      const paso = k.mover(k.girar(k.cil(Math.min(p.eje + 1, p.exterior - 2), prof + 2, 0, 0, -prof / 2 - 1), 90, 0, 0), 0, 0, alto)
+      const base = [-1, 1].map((sx) => k.barreno(p.tornillo, e, sx * (L / 2 - p.tornillo * 1.5 - 2), 0))
+      return k.restar(cuerpo, asiento, paso, ...base)
+    },
+  },
+  {
+    id: "porta-puntas",
+    nombre: "Porta puntas hexagonales 1/4\"",
+    texto: "Bloque con alojamientos hexagonales para puntas de desarmador y brocas de 1/4\".",
+    categoria: "organizar",
+    claves: "puntas desarmador bits hexagonal 1/4 atornillador organizador",
+    params: [
+      { k: "columnas", nombre: "Columnas", def: 8, min: 1, max: 20, unidad: "" },
+      { k: "filas", nombre: "Filas", def: 2, min: 1, max: 8, unidad: "" },
+      { k: "holgura", nombre: "Holgura", def: 0.3, min: 0, max: 1, paso: 0.05 },
+      { k: "alto", nombre: "Alto del bloque", def: 18, min: 10, max: 40 },
+    ],
+    construir: (p, k) => {
+      const entreCaras = 6.35 + p.holgura, dHex = entreCaras / Math.cos(Math.PI / 6), sep = 11
+      const c = Math.round(p.columnas), f = Math.round(p.filas), prof = Math.min(12, p.alto - 3)
+      const huecos = []
+      for (let i = 0; i < c; i++) for (let j = 0; j < f; j++) huecos.push(k.cil(dHex, prof + 1, sep / 2 + 2 + i * sep, sep / 2 + 2 + j * sep, p.alto - prof, 6))
+      return k.restar(k.bloque(c * sep + 4, f * sep + 4, p.alto, 0, 0, 0, 2), ...huecos)
+    },
+  },
+  {
+    id: "canaleta",
+    nombre: "Canaleta para cables",
+    texto: "Canal en U con barrenos para atornillar bajo la mesa o en la máquina, y tapa a presión.",
+    categoria: "organizar",
+    claves: "canaleta cables ducto escritorio maquina cnc orden",
+    params: [
+      { k: "largo", nombre: "Largo", def: 150, min: 40, max: 300 },
+      { k: "ancho", nombre: "Ancho interior", def: 20, min: 8, max: 60 },
+      { k: "alto", nombre: "Alto interior", def: 15, min: 6, max: 50 },
+      { k: "pared", nombre: "Pared", def: 1.6, min: 1, max: 4, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      const w = p.pared, W = p.ancho + 2 * w
+      const canal = k.restar(k.bloque(p.largo, W, p.alto + w), k.bloque(p.largo + 2, p.ancho, p.alto + 1, -1, w, w))
+      const tornillos = [0.15, 0.5, 0.85].map((f) => k.barreno(3.5, w, p.largo * f, W / 2))
+      const tapa = k.unir(k.bloque(p.largo, W, w, 0, 0, 0), k.bloque(p.largo, 1.2, 3, 0, w + 0.15, w), k.bloque(p.largo, 1.2, 3, 0, W - w - 1.35, w))
+      return k.unir(k.restar(canal, ...tornillos), k.mover(tapa, 0, W + 6, 0))
+    },
+  },
+  {
+    id: "porta-pilas",
+    nombre: "Organizador de pilas",
+    texto: "Bloque para pilas AA, AAA, 18650 o del diámetro que quieras.",
+    categoria: "organizar",
+    claves: "pilas baterias aa aaa 18650 organizador",
+    params: [
+      { k: "diametro", nombre: "Diámetro de la pila (AA 14.5, AAA 10.5, 18650 18.5)", def: 14.5, min: 8, max: 35, paso: 0.1 },
+      { k: "columnas", nombre: "Columnas", def: 6, min: 1, max: 15, unidad: "" },
+      { k: "filas", nombre: "Filas", def: 2, min: 1, max: 10, unidad: "" },
+      { k: "profundidad", nombre: "Profundidad", def: 25, min: 8, max: 60 },
+    ],
+    construir: (p, k) => {
+      const d = p.diametro + 0.6, sep = d + 2.4, c = Math.round(p.columnas), f = Math.round(p.filas)
+      const alto = p.profundidad + 3
+      const huecos = []
+      for (let i = 0; i < c; i++) for (let j = 0; j < f; j++) huecos.push(k.cil(d, p.profundidad + 1, sep / 2 + 1.5 + i * sep, sep / 2 + 1.5 + j * sep, 3))
+      return k.restar(k.bloque(c * sep + 3, f * sep + 3, alto, 0, 0, 0, 3), ...huecos)
+    },
+  },
+  {
+    id: "repisa-escuadra",
+    nombre: "Ménsula para repisa",
+    texto: "Escuadra triangular con refuerzo para repisas de madera o melamina, con barrenos avellanados.",
+    categoria: "casa",
+    claves: "mensula escuadra repisa estante soporte pared melamina madera",
+    params: [
+      { k: "lado", nombre: "Largo de cada lado", def: 120, min: 50, max: 250 },
+      { k: "ancho", nombre: "Ancho", def: 25, min: 12, max: 60 },
+      { k: "espesor", nombre: "Espesor", def: 6, min: 3, max: 15 },
+      { k: "tornillo", nombre: "Barreno", def: 4.5, min: 3, max: 7, paso: 0.1 },
+    ],
+    construir: (p, k) => {
+      // impresa acostada: dos brazos en L y un refuerzo diagonal (envolvente de dos cuadros)
+      const L = p.lado, e = p.espesor, a = p.ancho, r = a * 0.8
+      const brazos = k.unir(k.bloque(L, a, e), k.bloque(a, L, e))
+      const diagonal = k.envolver(k.bloque(r, r, e, L * 0.78 - r / 2, a / 2 - r / 2 + a * 0.1, 0), k.bloque(r, r, e, a / 2 - r / 2 + a * 0.1, L * 0.78 - r / 2, 0))
+      const g = k.restar(k.unir(brazos, diagonal), k.bloque(L, L, e + 2, -L, -1, -1), k.bloque(L, L, e + 2, -1, -L, -1))
+      const huecos = [0.35, 0.8].flatMap((f) => [k.avellanado(p.tornillo, p.tornillo * 2, e, L * f, a / 2), k.avellanado(p.tornillo, p.tornillo * 2, e, a / 2, L * f)])
+      return k.restar(g, ...huecos)
+    },
+  },
+  {
+    id: "tope-puerta",
+    nombre: "Tope de puerta",
+    texto: "Cuña antiderrapante para detener puertas, con canales en la base.",
+    categoria: "casa",
+    claves: "tope puerta cuña detener casa oficina",
+    params: [
+      { k: "largo", nombre: "Largo", def: 110, min: 50, max: 200 },
+      { k: "ancho", nombre: "Ancho", def: 35, min: 15, max: 80 },
+      { k: "alto", nombre: "Alto", def: 22, min: 8, max: 60 },
+    ],
+    construir: (p, k) => {
+      // cuña: envolvente entre el lado alto y una orilla delgada; canales abajo para que agarre
+      const cuna = k.envolver(k.bloque(1, p.ancho, p.alto), k.bloque(1, p.ancho, 1.2, p.largo - 1, 0, 0))
+      const canales = Array.from({ length: Math.floor((p.largo - 12) / 12) }, (_, i) => k.bloque(2, p.ancho + 2, 0.8, 6 + i * 12, -1, -0.01))
+      return k.restar(cuna, ...canales)
+    },
+  },
+  {
     id: "gancho-pared",
     nombre: "Gancho de pared",
     texto: "Gancho en L con dos barrenos avellanados. Para cables, mangueras, mandiles o herramienta.",
@@ -430,7 +653,8 @@ function hacerKit(w: Wasm, vivos: S[]): Kit {
   const restar = (a: S, ...s: S[]) => (s.length ? v(a.subtract(unir(...s))) : a)
   const mover = (s: S, x: number, y: number, z: number) => v(s.translate([x, y, z]))
   const girar = (s: S, rx: number, ry: number, rz: number) => v(s.rotate([rx, ry, rz]))
-  return { bloque, cil, cono, barreno, avellanado, unir, restar, mover, girar }
+  const envolver = (...s: S[]) => v(M.hull(s))
+  return { bloque, cil, cono, barreno, avellanado, unir, restar, mover, girar, envolver }
 }
 
 export type MallaModelo = { tris: number[]; medidas: [number, number, number]; cerrado: boolean }
