@@ -10,6 +10,8 @@
 // PLA-CF=Negro", varios colores con coma) o los mismos para todos ("Negro"). Sin COLORES se
 // publican los productos pero no la oferta de HETNA (se puede poner después
 // desde el panel o volviendo a correr el script con COLORES).
+// ACTUALIZAR_COLORES=1: además corrige el color de las ofertas de HETNA que ya
+// existen (sin tocar su precio ni sus días).
 //
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
@@ -29,6 +31,8 @@ import {
   precioRecomendado,
   TITULO_COLECCION_IMPRESION,
 } from "../lib/impresion-bajo-pedido"
+import { updateOffersWorkflow } from "@mercurjs/core/workflows"
+
 import { guardarOfertasTaller } from "../lib/impresion-catalogo"
 
 // La oferta de HETNA (Vlado, 25 nov 2026: ABS y PLA-CF, 3 días hábiles). El color
@@ -47,6 +51,7 @@ export function coloresHetna(material: string, texto = TEXTO_COLORES): string[] 
   }
   return []
 }
+const ACTUALIZAR_COLORES = process.env.ACTUALIZAR_COLORES === "1"
 const COLORES_HETNA = MATERIALES_HETNA.some((m) => coloresHetna(m).length) ? ["ok"] : []
 const EMPAQUE_G = 120 // caja y relleno, para el peso del envío
 
@@ -136,7 +141,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const categoria = (cats as any[]).find((c) => c.is_active !== false && !c.is_internal && (/impresi[oó]n[- ]3d/i.test(c.handle) || /impresi[oó]n 3d/i.test(c.name)))
   if (!categoria) logger.warn("[impresion] no hay categoría de Impresión 3D: los productos quedan sólo en la colección")
 
-  let nuevos = 0, actualizados = 0, ofertas = 0
+  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0
   for (const d of catalogo) {
     const metadata = {
       impresion_bajo_pedido: true,
@@ -206,8 +211,22 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
 
     // 3. Ofertas de HETNA (sólo las que faltan)
     if (!COLORES_HETNA.length) continue
-    const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
+    const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id", "metadata"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
     const tiene = new Set((mias as any[]).map((o) => o.variant_id))
+    // ACTUALIZAR_COLORES=1: corrige sólo los colores de las ofertas de HETNA que ya
+    // existen (el precio y los días que pusiste en el panel no se tocan)
+    if (ACTUALIZAR_COLORES) {
+      const material = new Map(((producto.variants || []) as { id: string; title: string }[]).map((v) => [v.id, v.title]))
+      const cambiar = (mias as any[])
+        .map((o) => ({ o, colores: coloresHetna(material.get(o.variant_id) || "") }))
+        .filter(({ o, colores }) => colores.length && JSON.stringify(o.metadata?.colores || []) !== JSON.stringify(colores))
+      if (cambiar.length) {
+        await updateOffersWorkflow(container).run({
+          input: { offers: cambiar.map(({ o, colores }) => ({ id: o.id, metadata: { ...(o.metadata || {}), colores } })) as any },
+        })
+        colores += cambiar.length
+      }
+    }
     const pieza = { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm, relleno: d.relleno }
     const faltan = ((producto.variants || []) as { id: string; title: string }[])
       .filter((v) => MATERIALES_HETNA.includes(v.title) && !tiene.has(v.id) && coloresHetna(v.title).length)
@@ -219,5 +238,5 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     }
   }
   if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="ABS=Amarillo dorado;PLA-CF=Negro" o ponlas en /seller/imprimir)')
-  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA`)
+  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}`)
 }
