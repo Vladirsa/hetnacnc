@@ -13,6 +13,7 @@
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
 // no se toca (el precio que hayas puesto en tu panel se respeta).
+import { createHash } from "crypto"
 import { existsSync, readFileSync } from "fs"
 import { join, resolve } from "path"
 import type { ExecArgs } from "@medusajs/framework/types"
@@ -45,6 +46,8 @@ type Diseno = {
   etiquetas: string[]
   herramienta_url: string
   foto: string
+  /** STL (simplificado) para girar la pieza en la ficha */
+  modelo_3d?: string
   volumen_cm3: number
   medidas_mm: [number, number, number]
   /** sólo "modelo": cuántos cuerpos sueltos salen (maceta + plato = 2) */
@@ -54,6 +57,7 @@ type Diseno = {
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+const huella = (b: Buffer) => createHash("sha1").update(b).digest("hex")
 const mm = (m: number[]) => m.map((x) => Math.round(x)).join(" × ") + " mm"
 
 function descripcion(d: Diseno): string {
@@ -125,7 +129,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
 
   let nuevos = 0, actualizados = 0, ofertas = 0
   for (const d of catalogo) {
-    const metadata = {
+    const metadata: Record<string, any> = {
       impresion_bajo_pedido: true,
       impresion: { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm, ...(d.relleno ? { relleno: d.relleno } : {}) },
       herramienta_url: d.herramienta_url,
@@ -133,21 +137,47 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       palabras_clave: d.etiquetas.join(", "),
       seller_id: hetna.id,
     }
-    const { data: existe } = await query.graph({ entity: "product", fields: ["id", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
+    const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
     let producto = (existe as any[])[0]
+    const previa = (producto?.metadata || {}) as Record<string, any>
+
+    // Foto y vista 3D: se suben sólo si cambiaron (huella sha1 en la metadata)
+    const foto = join(carpeta, d.foto)
+    const bytesFoto = existsSync(foto) ? readFileSync(foto) : null
+    const shaFoto = bytesFoto ? huella(bytesFoto) : null
+    const rutaStl = d.modelo_3d ? join(carpeta, d.modelo_3d) : ""
+    const bytesStl = rutaStl && existsSync(rutaStl) ? readFileSync(rutaStl) : null
+    const shaStl = bytesStl ? huella(bytesStl) : null
+    if (bytesStl && shaStl !== previa.vista_previa_sha) {
+      const [stl] = await container.resolve(Modules.FILE).createFiles([
+        { filename: `${d.handle}.stl`, mimeType: "model/stl", content: bytesStl.toString("base64"), access: "public" },
+      ])
+      Object.assign(metadata, { vista_previa: stl.url, vista_previa_sha: shaStl })
+    }
 
     if (producto) {
-      await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { metadata: { ...(producto.metadata || {}), ...metadata } } } as any })
+      const cambios: Record<string, any> = {}
+      // Sólo se cambia la foto que puso este script (si HETNA puso otra a mano, se respeta)
+      const fotoDelScript = previa.foto_url ? producto.thumbnail === previa.foto_url : String(producto.thumbnail || "").includes(d.handle)
+      if (bytesFoto && shaFoto !== previa.foto_sha && fotoDelScript) {
+        const [archivo] = await container.resolve(Modules.FILE).createFiles([
+          { filename: `${d.handle}.png`, mimeType: "image/png", content: bytesFoto.toString("base64"), access: "public" },
+        ])
+        Object.assign(cambios, { thumbnail: archivo.url, images: [{ url: archivo.url }] })
+        Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
+        logger.info(`[impresion] ${d.handle}: foto nueva`)
+      }
+      await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { ...cambios, metadata: { ...previa, ...metadata } } } as any })
       actualizados++
     } else {
-      const foto = join(carpeta, d.foto)
-      if (!existsSync(foto)) {
+      if (!bytesFoto) {
         logger.warn(`[impresion] ${d.handle}: falta la foto ${d.foto}; no se publica`)
         continue
       }
       const [archivo] = await container.resolve(Modules.FILE).createFiles([
-        { filename: `${d.handle}.png`, mimeType: "image/png", content: readFileSync(foto).toString("base64"), access: "public" },
+        { filename: `${d.handle}.png`, mimeType: "image/png", content: bytesFoto.toString("base64"), access: "public" },
       ])
+      Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
       const [x, y, z] = d.medidas_mm
       const caja = { length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 }
       const valores = MATERIALES_IMPRESION.map((m) => m.valor)

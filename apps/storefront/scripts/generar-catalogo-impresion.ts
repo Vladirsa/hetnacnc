@@ -13,7 +13,7 @@
 //
 // SOLO_MODELOS=1: rehace sólo las piezas de Modelos 3D y deja como están en
 // catalogo.json los rodillos y placas (no hacen falta las tipografías).
-import { existsSync, readFileSync, writeFileSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { join, resolve } from "path"
 import sharp from "sharp"
 
@@ -37,10 +37,12 @@ const opentype = {
 const DIR = process.env.FUENTES_DIR || ""
 const SALIDA = resolve(__dirname, "../../../docs/impresion-bajo-pedido/catalogo.json")
 const FOTOS = resolve(__dirname, "../../../docs/impresion-bajo-pedido/fotos")
+const MODELOS = resolve(__dirname, "../../../docs/impresion-bajo-pedido/modelos")
+mkdirSync(MODELOS, { recursive: true })
 const SOLO_MODELOS = process.env.SOLO_MODELOS === "1"
 
 /**
- * Foto de una pieza de Modelos 3D: vista isométrica con sombreado plano y
+ * Foto de una pieza: vista isométrica con sombreado plano y
  * búfer de profundidad, dibujada al doble y reducida (bordes suaves).
  */
 async function fotoPieza(t: number[], lado = 1000, color = [194, 86, 10]) {
@@ -58,7 +60,7 @@ async function fotoPieza(t: number[], lado = 1000, color = [194, 86, 10]) {
   const ox = (S - (x1 - x0) * k) / 2, oy = (S - (y1 - y0) * k) / 2
   const px = (p: [number, number, number]) => [ox + (p[0] - x0) * k, S - oy - (p[1] - y0) * k, p[2]]
   const img = Buffer.alloc(S * S * 3)
-  for (let i = 0; i < S * S; i++) img.set([247, 245, 239], i * 3)
+  img.fill(255) // fondo blanco, como piden las fotos de la tienda (utils/fondo-blanco.ts en el API)
   const prof = new Float32Array(S * S).fill(Infinity)
   const luz = [-0.4, 0.5, 0.75], nl = Math.hypot(...luz)
   for (let i = 0; i < t.length; i += 9) {
@@ -87,6 +89,62 @@ async function fotoPieza(t: number[], lado = 1000, color = [194, 86, 10]) {
       }
   }
   return sharp(img, { raw: { width: S, height: S, channels: 3 } }).resize(lado, lado).png({ compressionLevel: 9 }).toBuffer()
+}
+
+/** Recorre `t` para que quede a la derecha de `ref`, con 10 mm de espacio. */
+function aLaDerecha(t: number[], ref: number[]) {
+  let maxRef = -Infinity, minT = Infinity
+  for (let i = 0; i < ref.length; i += 3) maxRef = Math.max(maxRef, ref[i])
+  for (let i = 0; i < t.length; i += 3) minT = Math.min(minT, t[i])
+  const dx = maxRef + 10 - minT
+  return t.map((v, i) => (i % 3 === 0 ? v + dx : v))
+}
+
+/** STL binario de la malla (lo que se gira en la vista 3D de la ficha). */
+function stlBinario(t: number[]): Buffer {
+  const n = t.length / 9
+  const b = Buffer.alloc(84 + n * 50)
+  b.write("HETNA impresion bajo pedido", 0)
+  b.writeUInt32LE(n, 80)
+  for (let i = 0; i < n; i++) {
+    const o = 84 + i * 50
+    for (let k = 0; k < 9; k++) b.writeFloatLE(t[i * 9 + k], o + 12 + k * 4)
+  }
+  return b
+}
+
+// El STL de la vista 3D va simplificado (máx. TRIS_VISTA triángulos, ~1 MB)
+// para que cargue rápido en celular; la foto usa la malla completa. Simplifica
+// con meshoptimizer de npm: MESHOPT_JS=/ruta/node_modules/meshoptimizer.
+const TRIS_VISTA = 20000
+let simplificador: any = null
+async function simplificar(t: number[]): Promise<number[]> {
+  if (t.length / 9 <= TRIS_VISTA) return t
+  if (!process.env.MESHOPT_JS) throw new Error("Falta MESHOPT_JS (ruta a node_modules/meshoptimizer) para simplificar las vistas 3D")
+  if (!simplificador) {
+    const { pathToFileURL } = await import("url")
+    simplificador = (await import(pathToFileURL(join(process.env.MESHOPT_JS, "meshopt_simplifier.js")).href)).MeshoptSimplifier
+    await simplificador.ready
+  }
+  // malla indexada: un vértice por posición
+  const idx = new Map<string, number>(), pos: number[] = [], ind = new Uint32Array(t.length / 3)
+  for (let i = 0; i < t.length; i += 3) {
+    const k = `${t[i].toFixed(4)},${t[i + 1].toFixed(4)},${t[i + 2].toFixed(4)}`
+    let j = idx.get(k)
+    if (j === undefined) idx.set(k, (j = pos.length / 3)), pos.push(t[i], t[i + 1], t[i + 2])
+    ind[i / 3] = j
+  }
+  const [salida] = simplificador.simplify(ind, new Float32Array(pos), 3, TRIS_VISTA * 3, 0.01, [])
+  const r: number[] = []
+  for (const j of salida) r.push(pos[j * 3], pos[j * 3 + 1], pos[j * 3 + 2])
+  return r
+}
+
+/** Escribe la foto (fondo blanco) y el STL de la pieza; regresa la ruta del STL para el JSON. */
+async function guardarVista(handle: string, tris: number[]) {
+  writeFileSync(join(FOTOS, `${handle}.png`), await fotoPieza(tris))
+  writeFileSync(join(MODELOS, `${handle}.stl`), stlBinario(await simplificar(tris)))
+  return { modelo_3d: `modelos/${handle}.stl` }
 }
 
 let wasm: any = null
@@ -169,9 +227,9 @@ for (const d of CATALOGO_IMPRESION) {
     const m = medir(tris)
     const partes = separarPiezas(tris)
     const mayor = partes.map(medir).sort((a, b) => b.volumen_cm3 - a.volumen_cm3)[0]
-    writeFileSync(join(FOTOS, `${d.handle}.png`), await fotoPieza(tris))
+    const vista = await guardarVista(d.handle, tris)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${partes.length} pieza(s), la mayor ${mayor.medidas_mm.join(" × ")} mm (foto lista)`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length })
     continue
   }
   if (SOLO_MODELOS) {
@@ -198,7 +256,9 @@ for (const d of CATALOGO_IMPRESION) {
     const m = medir([...r.cortador.tris, ...(r.sello?.tris || [])])
     const mc = medir(r.cortador.tris)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, cortador ${mc.medidas_mm.join(" × ")} mm${r.sello ? " + sello" : ""}${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello })
+    // cortador y sello lado a lado (en el archivo el sello va dentro del cortador)
+    const vista = await guardarVista(d.handle, [...r.cortador.tris, ...(r.sello ? aLaDerecha(r.sello.tris, r.cortador.tris) : [])])
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello })
     continue
   }
   if (d.pieza === "soporte") {
@@ -225,6 +285,7 @@ for (const d of CATALOGO_IMPRESION) {
     etiquetas: d.etiquetas,
     herramienta_url: urlHerramienta(d),
     foto: `fotos/${d.handle}.png`,
+    ...(await guardarVista(d.handle, tris)),
     diseno: d.diseno,
     ...m,
   })

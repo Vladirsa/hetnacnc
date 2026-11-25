@@ -80,6 +80,59 @@ function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; p
   )
 }
 
+/** El cuadro de descarga gratis (va en la columna de compra, junto al resumen). */
+function DescargaGratis({ herramienta }: { herramienta: string }) {
+  return (
+    <div className="rounded-[12px] border border-[#C2560A]/40 bg-[#FDEEE1] p-3">
+      <p className="m-0 text-[14px] font-bold text-[#5A3A12]">¿Tienes impresora 3D? Descárgalo gratis</p>
+      <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cámbiale las medidas (o el texto, si lleva) y baja el STL sin costo.</p>
+      <LocalizedClientLink
+        href={herramienta}
+        className="mt-2 inline-block rounded-[8px] bg-[#142033] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#24324A]"
+      >
+        Descargar gratis o modificar las medidas
+      </LocalizedClientLink>
+    </div>
+  )
+}
+
+/**
+ * Columna de compra: precio desde, cuántos talleres y la liga a la lista de
+ * talleres (que va debajo de las fotos, id="talleres-impresion").
+ */
+export function ResumenImpresion({ datos, herramienta }: { datos: DatosImpresion; herramienta?: string | null }) {
+  const precios = datos.ofertas.map((o) => o.precio).filter((n) => n > 0)
+  const desde = precios.length ? Math.min(...precios) : null
+  const talleres = new Set(datos.ofertas.map((o) => o.taller.handle)).size
+  const dias = datos.ofertas.map((o) => o.dias).filter((n): n is number => !!n)
+  const masRapido = dias.length ? Math.min(...dias) : null
+  return (
+    <div className="flex flex-col gap-3" data-testid="resumen-impresion">
+      {desde !== null ? (
+        <div className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
+          <p className="m-0 text-[13px] text-[#6B6A63]">Impreso y enviado desde</p>
+          <p className="m-0 text-[28px] font-extrabold leading-tight text-[#B34D07]">{pesos(desde)}</p>
+          <p className="m-0 mt-1 text-[13px] text-[#40403A]">
+            {talleres} {talleres === 1 ? "taller lo imprime" : "talleres lo imprimen"}
+            {masRapido ? ` · listo desde ${masRapido} ${masRapido === 1 ? "día hábil" : "días hábiles"}` : ""}
+          </p>
+          <a
+            href="#talleres-impresion"
+            className="mt-3 flex w-full items-center justify-center rounded-sm bg-[#C2560A] py-3 text-[15px] font-bold text-white hover:bg-[#A9480A]"
+          >
+            Elegir taller, material y color
+          </a>
+        </div>
+      ) : (
+        <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-4 text-[14px] text-[#40403A]">
+          Todavía no hay talleres imprimiéndolo. <a href="#talleres-impresion" className="font-semibold text-[#B34D07] underline">Ver opciones</a>
+        </p>
+      )}
+      {herramienta && <DescargaGratis herramienta={herramienta} />}
+    </div>
+  )
+}
+
 export function TalleresImpresion({ datos, locale, herramienta }: { datos: DatosImpresion; locale: string; herramienta?: string | null }) {
   const conOferta = useMemo(() => new Set(datos.ofertas.map((o) => o.material)), [datos.ofertas])
   const [material, setMaterial] = useState<string>("")
@@ -87,19 +140,8 @@ export function TalleresImpresion({ datos, locale, herramienta }: { datos: Datos
   const info = datos.materiales.find((m) => m.material === material)
 
   return (
-    <section className="flex flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FBFAF7] p-4" data-testid="talleres-impresion">
-      {herramienta && (
-        <div className="rounded-[12px] border border-[#C2560A]/40 bg-[#FDEEE1] p-3">
-          <p className="m-0 text-[14px] font-bold text-[#5A3A12]">¿Tienes impresora 3D? Descárgalo gratis</p>
-          <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cámbiale las medidas (o el texto, si lleva) y baja el STL sin costo.</p>
-          <LocalizedClientLink
-            href={herramienta}
-            className="mt-2 inline-block rounded-[8px] bg-[#142033] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#24324A]"
-          >
-            Descargar gratis o modificar las medidas
-          </LocalizedClientLink>
-        </div>
-      )}
+    <section id="talleres-impresion" className="flex scroll-mt-24 flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FBFAF7] p-4" data-testid="talleres-impresion">
+      {herramienta && <DescargaGratis herramienta={herramienta} />}
 
       <div>
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo imprimen</h2>

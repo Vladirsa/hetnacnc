@@ -19,7 +19,8 @@ export type VistaGaleria =
   | { clave: string; tipo: "esquema"; svg: string; titulo: string }
   | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string }
 
-export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; titulo: string }) {
+/** digital=false: producto físico con vista 3D (p. ej. Impresión 3D bajo pedido): sin "Descarga inmediata". */
+export function GaleriaDescarga({ vistas, titulo, digital = true }: { vistas: VistaGaleria[]; titulo: string; digital?: boolean }) {
   const [i, setI] = useState(0)
   if (!vistas.length) return null
   const v = vistas[Math.min(i, vistas.length - 1)]
@@ -27,7 +28,7 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
 
   return (
     <div className="flex flex-col gap-3" data-testid="galeria-descarga">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-[#D4D9DF] bg-[#F4F5F7]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-[#D4D9DF] bg-white">
         {v.tipo === "foto" ? (
           <Image
             src={v.url}
@@ -43,17 +44,17 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
           <div className="absolute inset-0 flex items-center justify-center p-2 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: v.svg }} />
         )}
 
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded bg-[#1E2329] px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.06em] text-white shadow">
+        {digital && <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded bg-[#1E2329] px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.06em] text-white shadow">
           <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
             <path d="M10 3v10m0 0l-4-4m4 4l4-4M4 17h12" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Descarga inmediata
-        </span>
+        </span>}
 
         <span className={`pointer-events-none absolute ${v.tipo === "modelo" ? "right-3 top-3" : "bottom-3 left-3"} max-w-[80%] rounded bg-white/95 px-2.5 py-1 text-[12.5px] font-semibold text-[#1E2329] shadow-sm`}>
           {v.titulo}
           {v.tipo === "esquema" && <span className="font-normal text-[#5B6370]"> · esquema con las medidas del archivo</span>}
-          {v.tipo === "modelo" && <span className="font-normal text-[#5B6370]"> · modelo de muestra del vendedor</span>}
+          {v.tipo === "modelo" && <span className="font-normal text-[#5B6370]">{digital ? " · modelo de muestra del vendedor" : " · gírala con el dedo o el mouse"}</span>}
         </span>
 
         {vistas.length > 1 && (
@@ -87,7 +88,7 @@ export function GaleriaDescarga({ vistas, titulo }: { vistas: VistaGaleria[]; ti
                 onClick={() => setI(n)}
                 aria-label={x.titulo}
                 aria-current={n === i}
-                className={`relative block aspect-square w-full overflow-hidden rounded border-2 bg-[#F4F5F7] ${n === i ? "border-[#E85D04]" : "border-transparent hover:border-[#C5CCD3]"}`}
+                className={`relative block aspect-square w-full overflow-hidden rounded border-2 bg-white ${n === i ? "border-[#E85D04]" : "border-transparent hover:border-[#C5CCD3]"}`}
               >
                 {x.tipo === "foto" ? (
                   <Image src={x.url} alt="" fill sizes="120px" className="object-cover" />

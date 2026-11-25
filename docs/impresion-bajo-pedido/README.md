@@ -18,21 +18,24 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
   - Se guarda en `seller.metadata.destacado_impresion`, una llave protegida que el taller no puede escribir.
   - El taller destacado sale primero y con insignia en la ficha.
   - Para cambiar el precio, usa la variable `PRECIO_DESTACADO_IMPRESION`.
-- **Ficha:** en lugar de "Fabrícalo" sale "Talleres que te lo imprimen", más la liga para descargarlo gratis o cambiarle las medidas en la herramienta.
+- **Ficha:**
+  - Debajo de las fotos (con la vista 3D para girar la pieza) sale "Talleres que te lo imprimen".
+  - En la columna de compra van el precio desde, cuántos talleres lo imprimen y la liga para descargarlo gratis o cambiarle las medidas en la herramienta.
 
 ## Publicar o actualizar el catálogo
 
 1. Edita `apps/storefront/src/lib/impresion/catalogo-disenos.ts`.
-2. Genera `catalogo.json` (volumen y medidas de cada pieza). Se corre en `apps/storefront`:
+2. Genera `catalogo.json` (volumen y medidas de cada pieza), las fotos y los modelos 3D. Se corre en `apps/storefront`:
    ```
-   FUENTES_DIR=/ruta/fuentes OPENTYPE_JS=/ruta/opentype.js/dist/opentype.js npx tsx scripts/generar-catalogo-impresion.ts
+   FUENTES_DIR=/ruta/fuentes OPENTYPE_JS=/ruta/opentype.js/dist/opentype.js MESHOPT_JS=/ruta/node_modules/meshoptimizer npx tsx scripts/generar-catalogo-impresion.ts
    ```
-   - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm.
-   - Para rehacer sólo las piezas de Modelos 3D (sin tipografías): `SOLO_MODELOS=1 npx tsx scripts/generar-catalogo-impresion.ts`. Sus fotos las dibuja el mismo script.
-3. Fotos de rodillos y placas: `fotos/<handle>.png`, de 1:1. Se toman del Texturizador con el diseño cargado:
-   - abre `/disenar/texturizador?…` (la liga `herramienta_url` del JSON);
-   - agrega `&soporte=1` para ver el rodillo puesto en el soporte;
-   - los cortadores se abren en `/disenar/cortadores-galletas?…` (cortador y sello juntos en la vista 3D).
+   - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm (montserrat y pacifico para el catálogo actual).
+   - `MESHOPT_JS` es el paquete `meshoptimizer` de npm: simplifica el modelo 3D de la ficha a 20 mil triángulos (~1 MB) para que cargue rápido en celular.
+   - Para rehacer sólo las piezas de Modelos 3D (sin tipografías): `SOLO_MODELOS=1 npx tsx scripts/generar-catalogo-impresion.ts`.
+3. Fotos y vista 3D: el mismo script las dibuja de la malla.
+   - `fotos/<handle>.png`: 1000 × 1000, vista isométrica, **fondo blanco** (la regla de la tienda, `utils/fondo-blanco.ts`).
+   - `modelos/<handle>.stl`: el modelo que el cliente gira en la ficha ("Vista 3D").
+   - Los cortadores salen con el sello a un lado.
    - En las piezas de pura pared (cortadores) el JSON lleva `"relleno": 100` para que los gramos salgan bien.
 4. Publica (en `packages/api`, en el servidor):
    ```
@@ -42,3 +45,4 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
    - Crea la colección y los productos que falten.
    - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES` (por ejemplo `COLORES="Negro"`). Sin `COLORES` no pone la oferta de HETNA.
    - No cambia las ofertas que ya existan.
+   - Si la foto o el modelo 3D cambiaron (huella sha1 en la metadata), los vuelve a subir. La foto sólo se cambia si es la que puso este script; una foto puesta a mano se respeta.

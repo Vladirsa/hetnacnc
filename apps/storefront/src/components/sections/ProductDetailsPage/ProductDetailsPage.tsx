@@ -30,7 +30,7 @@ import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
 import { datosImpresion, esImpresionBajoPedido } from "@/lib/data/impresion"
-import { TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
+import { ResumenImpresion, TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -153,12 +153,16 @@ export const ProductDetailsPage = async ({
   const impresion = esImpresionBajoPedido(prod.metadata) ? await datosImpresion(prod.id) : null
   // (va en la columna de compra, en lugar de los botones genéricos: así el
   // destacado sale primero donde se compra y el color viaja al carrito)
+  // 25 nov 2026 (Vlado): la lista de talleres va debajo de las fotos (sin
+  // huecos); en la columna de compra queda el resumen y la descarga gratis.
   const compraImpresion = impresion ? (
-    <TalleresImpresion datos={impresion} locale={locale} herramienta={textoMeta(metaProd.herramienta_url) || null} />
+    <ResumenImpresion datos={impresion} herramienta={textoMeta(metaProd.herramienta_url) || null} />
   ) : null
   // Productos de la Biblioteca de planos: las ofertas de los talleres ("Taller X te lo fabrica en $Y")
   const planoSlug = metaProd.origen === "plano" ? textoMeta(metaProd.plano_slug) : ""
-  const fabricar = impresion ? null : planoSlug ? (
+  const fabricar = impresion ? (
+    <TalleresImpresion datos={impresion} locale={locale} />
+  ) : planoSlug ? (
     <TalleresPlano
       offers={offers as StoreOffer[]}
       variantes={variantesPlano(prod as never)}
@@ -242,8 +246,8 @@ export const ProductDetailsPage = async ({
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
-          {descarga ? (
-            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} />
+          {descarga || vistaPreviaDe(prod.metadata) ? (
+            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} digital={!!descarga} />
           ) : (
             <ProductGallery images={prod?.images || []} title={prod.title} />
           )}
