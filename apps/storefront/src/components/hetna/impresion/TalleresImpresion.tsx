@@ -91,7 +91,7 @@ export function TalleresImpresion({ datos, locale, herramienta }: { datos: Datos
       {herramienta && (
         <div className="rounded-[12px] border border-[#C2560A]/40 bg-[#FDEEE1] p-3">
           <p className="m-0 text-[14px] font-bold text-[#5A3A12]">¿Tienes impresora 3D? Descárgalo gratis</p>
-          <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cambia el texto o las medidas y baja el STL sin costo.</p>
+          <p className="m-0 mt-0.5 text-[13px] text-[#5A3A12]">Ábrelo en la herramienta, cámbiale las medidas (o el texto, si lleva) y baja el STL sin costo.</p>
           <LocalizedClientLink
             href={herramienta}
             className="mt-2 inline-block rounded-[8px] bg-[#142033] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#24324A]"

@@ -5,10 +5,13 @@
 // suyas desde su panel (/seller/imprimir).
 //
 // Uso (en packages/api):
-//   COLORES="Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
-// COLORES: los colores en que HETNA imprime, separados por coma. Sin COLORES se
+//   COLORES="ABS=Amarillo dorado;PLA-CF=Negro" ./node_modules/.bin/medusa exec ./src/scripts/sembrar-impresion-bajo-pedido.ts
+// COLORES: los colores en que HETNA imprime. Por material ("ABS=Amarillo dorado;
+// PLA-CF=Negro", varios colores con coma) o los mismos para todos ("Negro"). Sin COLORES se
 // publican los productos pero no la oferta de HETNA (se puede poner después
 // desde el panel o volviendo a correr el script con COLORES).
+// ACTUALIZAR_COLORES=1: además corrige el color de las ofertas de HETNA que ya
+// existen (sin tocar su precio ni sus días).
 //
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
@@ -28,25 +31,42 @@ import {
   precioRecomendado,
   TITULO_COLECCION_IMPRESION,
 } from "../lib/impresion-bajo-pedido"
+import { updateOffersWorkflow } from "@mercurjs/core/workflows"
+
 import { guardarOfertasTaller } from "../lib/impresion-catalogo"
 
 // La oferta de HETNA (Vlado, 25 nov 2026: ABS y PLA-CF, 3 días hábiles). El color
 // lo da quien corre el script (COLORES), no se supone.
 const MATERIALES_HETNA = ["ABS", "PLA-CF"]
 const DIAS_HETNA = 3
-const COLORES_HETNA = String(process.env.COLORES || "").split(",").map((c) => c.trim()).filter(Boolean).slice(0, 12)
+const lista = (t: string) => t.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 12)
+const TEXTO_COLORES = String(process.env.COLORES || "").trim()
+/** Colores de HETNA para un material ([] = no lo ofrece). */
+export function coloresHetna(material: string, texto = TEXTO_COLORES): string[] {
+  if (!texto) return []
+  if (!texto.includes("=")) return lista(texto)
+  for (const parte of texto.split(";")) {
+    const [mat, colores] = parte.split("=")
+    if (mat && colores && mat.trim().toUpperCase() === material.toUpperCase()) return lista(colores)
+  }
+  return []
+}
+const ACTUALIZAR_COLORES = process.env.ACTUALIZAR_COLORES === "1"
+const COLORES_HETNA = MATERIALES_HETNA.some((m) => coloresHetna(m).length) ? ["ok"] : []
 const EMPAQUE_G = 120 // caja y relleno, para el peso del envío
 
 type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte" | "cortador"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo"
   etiquetas: string[]
   herramienta_url: string
   foto: string
   volumen_cm3: number
   medidas_mm: [number, number, number]
+  /** sólo "modelo": cuántos cuerpos sueltos salen (maceta + plato = 2) */
+  piezas?: number
   relleno?: number // 100 en piezas de pura pared (cortadores)
   con_sello?: boolean
 }
@@ -64,6 +84,13 @@ function descripcion(d: Diseno): string {
       `<p>¿Tienes impresora 3D? Descarga el cortador gratis y cámbiale la medida o el sello en la herramienta de HETNA.</p>`,
     ].join("")
   }
+  // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
+  if (d.pieza === "modelo")
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>${(d.piezas || 1) > 1 ? `Sale en ${d.piezas} piezas; la más grande mide` : "Medidas de la pieza:"} ${mm(d.medidas_mm)}</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p>¿De otro tamaño? Abre el modelo en Modelos 3D de HETNA, cambia las medidas y baja el STL gratis, o pide que te lo impriman así.</p>`,
+    ].join("")
   const uso =
     d.pieza === "soporte"
       ? `<p><strong>Cómo se usa:</strong> mete el rodillo en el eje, ponle el seguro en C en la punta y rueda. Para cambiar de diseño quitas el seguro y cambias el rodillo. Trae 2 seguros (uno de repuesto).</p>`
@@ -114,7 +141,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const categoria = (cats as any[]).find((c) => c.is_active !== false && !c.is_internal && (/impresi[oó]n[- ]3d/i.test(c.handle) || /impresi[oó]n 3d/i.test(c.name)))
   if (!categoria) logger.warn("[impresion] no hay categoría de Impresión 3D: los productos quedan sólo en la colección")
 
-  let nuevos = 0, actualizados = 0, ofertas = 0
+  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0
   for (const d of catalogo) {
     const metadata = {
       impresion_bajo_pedido: true,
@@ -184,18 +211,32 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
 
     // 3. Ofertas de HETNA (sólo las que faltan)
     if (!COLORES_HETNA.length) continue
-    const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
+    const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id", "metadata"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
     const tiene = new Set((mias as any[]).map((o) => o.variant_id))
+    // ACTUALIZAR_COLORES=1: corrige sólo los colores de las ofertas de HETNA que ya
+    // existen (el precio y los días que pusiste en el panel no se tocan)
+    if (ACTUALIZAR_COLORES) {
+      const material = new Map(((producto.variants || []) as { id: string; title: string }[]).map((v) => [v.id, v.title]))
+      const cambiar = (mias as any[])
+        .map((o) => ({ o, colores: coloresHetna(material.get(o.variant_id) || "") }))
+        .filter(({ o, colores }) => colores.length && JSON.stringify(o.metadata?.colores || []) !== JSON.stringify(colores))
+      if (cambiar.length) {
+        await updateOffersWorkflow(container).run({
+          input: { offers: cambiar.map(({ o, colores }) => ({ id: o.id, metadata: { ...(o.metadata || {}), colores } })) as any },
+        })
+        colores += cambiar.length
+      }
+    }
     const pieza = { volumen_cm3: d.volumen_cm3, medidas_mm: d.medidas_mm, relleno: d.relleno }
     const faltan = ((producto.variants || []) as { id: string; title: string }[])
-      .filter((v) => MATERIALES_HETNA.includes(v.title) && !tiene.has(v.id))
-      .map((v) => ({ variant_id: v.id, activa: true, precio: precioRecomendado(pieza, v.title) || 0, dias: DIAS_HETNA, colores: COLORES_HETNA }))
+      .filter((v) => MATERIALES_HETNA.includes(v.title) && !tiene.has(v.id) && coloresHetna(v.title).length)
+      .map((v) => ({ variant_id: v.id, activa: true, precio: precioRecomendado(pieza, v.title) || 0, dias: DIAS_HETNA, colores: coloresHetna(v.title) }))
       .filter((o) => o.precio > 0)
     if (faltan.length) {
       await guardarOfertasTaller(container, hetna.id, "sembrar-impresion", faltan)
       ofertas += faltan.length
     }
   }
-  if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="Negro" o ponlas en /seller/imprimir)')
-  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA`)
+  if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="ABS=Amarillo dorado;PLA-CF=Negro" o ponlas en /seller/imprimir)')
+  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}`)
 }
