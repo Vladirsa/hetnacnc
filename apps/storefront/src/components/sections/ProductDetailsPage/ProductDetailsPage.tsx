@@ -25,7 +25,6 @@ import { AvisoImportacion } from "@/components/hetna/AvisoImportacion"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
-import { CompraFija } from "@/components/hetna/fichas/CompraFija"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
@@ -265,6 +264,24 @@ export const ProductDetailsPage = async ({
     { nombre: prod.title },
   ]
 
+  // Opción C: bajo la foto (computadora) va "Más de este taller"; si el
+  // taller no tiene más productos, los similares. Hasta 6, en tarjetas chicas.
+  const listaLateral = delTaller.length
+    ? {
+        clave: "taller" as const,
+        titulo: vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller",
+        productos: delTaller.slice(0, 6),
+        verTodos: vendedor?.handle ? `/sellers/${vendedor.handle}` : null,
+      }
+    : relacionados.length
+      ? {
+          clave: "similares" as const,
+          titulo: descarga ? "Otros diseños" : "Productos similares",
+          productos: relacionados.slice(0, 6),
+          verTodos: catPrincipal?.handle ? `/categories/${catPrincipal.handle}` : "/categories",
+        }
+      : null
+
   return (
     <>
       <TrackEvent
@@ -315,12 +332,12 @@ export const ProductDetailsPage = async ({
         // derecha la compra, sin licencia ni "Vendido por" (van en pestañas).
         // Abajo, a todo lo ancho, las pestañas. En celular el orden es fotos →
         // compra → Fabrícalo → pestañas.
-        // Opción A (Vlado, 25 nov 2026, "que no haya espacios libres"): a la
-        // izquierda fotos → talleres/Fabrícalo → pestañas (Descripción,
-        // Especificaciones…) y reseñas; a la derecha la compra, que se queda
-        // a la vista al bajar (CompraFija). Antes las pestañas iban abajo a
-        // todo lo ancho y debajo de la foto quedaba un hueco grande.
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
+        // Opción C (Vlado, 25 nov 2026, "que no haya espacios libres"; la A
+        // no le gustó): debajo de la foto, talleres/Fabrícalo, productos en
+        // tarjetas chicas ("Más de este taller" o similares) y el anuncio, para
+        // llenar el lado izquierdo mientras sigue la columna de compra. Las
+        // pestañas vuelven abajo a todo lo ancho.
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
@@ -331,8 +348,7 @@ export const ProductDetailsPage = async ({
           )}
         </div>
 
-        <div className="order-2 lg:col-start-2 lg:row-span-3 lg:row-start-1" data-testid="product-details-container">
-          <CompraFija>
+        <div className="order-2 lg:col-start-2 lg:row-span-2 lg:row-start-1" data-testid="product-details-container">
           <div className="max-w-[680px]">
             {/* Proveedor extranjero: de dónde viene, cuánto tarda e impuestos incluidos */}
             {!descarga && <AvisoImportacion handle={vendedor?.handle} />}
@@ -344,14 +360,24 @@ export const ProductDetailsPage = async ({
               compraPropia={compraImpresion}
             />
           </div>
-          </CompraFija>
         </div>
 
-        {(fabricar || descarga) && (
-          <div className="order-3 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-2 lg:self-start">
+        <div className="order-3 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-2 lg:self-start">
             {fabricar}
             {/* Diseños: pedir una modificación o cotizar la fabricación */}
             {descarga && <ModificarDiseno product={prod as never} vendedor={vendedor ? { handle: vendedor.handle, name: vendedor.name } : null} />}
+            {/* Productos en tarjetas chicas bajo la foto (sólo computadora; en
+                celular salen abajo a todo lo ancho) */}
+            {listaLateral && (
+              <div className="hidden lg:block">
+                <ProductosCompactos
+                  titulo={listaLateral.titulo}
+                  productos={listaLateral.productos as never}
+                  verTodos={listaLateral.verTodos}
+                  angosta
+                />
+              </div>
+            )}
             {/* Publicidad en el hueco de la izquierda (solo computadora: en
                 celular ya sale la de "Patrocinado" en la columna de compra) */}
             <AnunciosEspacio
@@ -361,12 +387,10 @@ export const ProductDetailsPage = async ({
               frase="¿Vendes material, fresas o máquinas? Anúncialo aquí"
               className="hidden lg:block"
             />
-          </div>
-        )}
+        </div>
 
-        {/* Ficha larga en pestañas: en computadora va debajo de la foto (columna
-            izquierda) para que no quede hueco; en celular, después de la compra */}
-        <div className="order-4 min-w-0 lg:col-start-1 lg:row-start-3">
+        {/* Ficha larga a todo lo ancho, en pestañas */}
+        <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3 lg:mt-4">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}
@@ -398,8 +422,9 @@ export const ProductDetailsPage = async ({
           lo mismo: una sirve para seguir comprándole a quien ya te convenció,
           y la otra para comparar contra lo demás de su categoría. */}
       {/* Tarjetas chicas (ProductosCompactos), no el carrusel de 4 fotos enormes */}
+      {/* En computadora, la lista que ya salió bajo la foto no se repite aquí */}
       {delTaller.length > 0 && (
-        <div className="mt-8">
+        <div className={`mt-8 ${listaLateral?.clave === "taller" ? "lg:hidden" : ""}`}>
           <ProductosCompactos
             titulo={vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller"}
             productos={delTaller as never}
@@ -409,7 +434,7 @@ export const ProductDetailsPage = async ({
       )}
 
       {relacionados.length > 0 && (
-        <div className="mt-4">
+        <div className={`mt-4 ${listaLateral?.clave === "similares" ? "lg:hidden" : ""}`}>
           <ProductosCompactos
             titulo={descarga ? "Otros diseños" : "Productos similares"}
             productos={relacionados as never}

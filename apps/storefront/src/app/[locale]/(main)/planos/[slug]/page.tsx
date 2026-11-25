@@ -4,7 +4,8 @@ import { notFound } from "next/navigation"
 import DescargaPlano from "@/components/hetna/planos/DescargaPlano"
 import MedidasPlano from "@/components/hetna/planos/MedidasPlano"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
+import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales, puntosBarrenos } from "@/lib/planos/calculo"
+import { tornilleria, unionesDe } from "@/lib/planos/uniones"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
 import { medidasDe, medidasDeConsulta, redimensionarQueQuepa } from "@/lib/planos/medidas"
 import { buscarPlano } from "@/lib/planos/fuente"
@@ -61,6 +62,18 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   }
 }
 
+// Detalle de la unión a tope: la pieza A presenta su cara, el tornillo entra al canto de B
+const DETALLE_TOPE =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 200" role="img" aria-label="Unión a tope con tornillo" style="width:100%;height:auto">' +
+  '<rect x="30" y="40" width="40" height="140" fill="#E9C995" stroke="#6B4E2A" stroke-width="2"/>' +
+  '<rect x="70" y="100" width="160" height="40" fill="#F1DDB5" stroke="#6B4E2A" stroke-width="2"/>' +
+  '<rect x="14" y="116" width="96" height="8" fill="#5A6472"/><path d="M14 112 L14 128 L8 120 Z" fill="#5A6472"/>' +
+  '<line x1="22" y1="112" x2="22" y2="128" stroke="#FAF9F6" stroke-width="2"/>' +
+  '<text x="50" y="30" font-size="13" font-family="Inter,Arial,sans-serif" text-anchor="middle" fill="#142033">A (cara)</text>' +
+  '<text x="150" y="92" font-size="13" font-family="Inter,Arial,sans-serif" text-anchor="middle" fill="#142033">B (canto)</text>' +
+  '<text x="130" y="170" font-size="12" font-family="Inter,Arial,sans-serif" text-anchor="middle" fill="#6B6A63">barreno guía de 3 mm en A</text>' +
+  "</svg>"
+
 const Titulo = ({ n, children }: { n: string; children: React.ReactNode }) => (
   <h2 className="m-0 flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-wide text-[#FF9F57]">
     <span className="rounded bg-[#FF6A1A] px-1.5 text-[12px] text-white">{n}</span>
@@ -88,7 +101,28 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
   const ruedas = cajasRuedas(pl.piezas, pl.ruedas)
   const previas: Set<PiezaPlano>[] = []
   pasos.reduce((acum, s) => { previas.push(new Set(acum)); s.forEach((q) => acum.add(q)); return acum }, new Set<PiezaPlano>())
-  const dxfs = dxfPlano(acs)
+  const dxfs = dxfPlano(acs, filas)
+  const filaDe = new Map(filas.map((f) => [f.letra, f]))
+  // Uniones: tornillos y clavos calculados de la geometría (lib/planos/uniones.ts)
+  const uniones = unionesDe(pl)
+  const torn = tornilleria(pl, uniones)
+  const resumenUniones = (() => {
+    const base = (n: string) => n.replace(/\s\d+(?=\s·|$)/, "").trim()
+    const m = new Map<string, { texto: string; cantidad: number }>()
+    for (const u of uniones.uniones) {
+      const clave = `${base(pl.piezas[u.a].nombre)}|${base(pl.piezas[u.b].nombre)}|${u.fijacion}|${u.largoTornillo || ""}`
+      const t = m.get(clave) || { texto: `${base(pl.piezas[u.a].nombre)} → ${base(pl.piezas[u.b].nombre)}: ${u.fijacion === "tornillo" ? `tornillo de ${u.largoTornillo}` : "clavo o grapa"}`, cantidad: 0 }
+      t.cantidad += u.cantidad * (pl.juego?.cantidad ?? 1)
+      m.set(clave, t)
+    }
+    return [...m.values()]
+  })()
+  // la tornillería exacta reemplaza las líneas aproximadas de tornillos y clavos
+  const herrajes = [
+    ...torn.tornillos.map((t) => `${t.cantidad} tornillos para madera de ${t.largo}`),
+    ...(torn.clavos ? [`${torn.clavos} clavos de 3/4" o grapas`] : []),
+    ...pl.herrajes.filter((h) => !(torn.tornillos.length && /^tornillos para madera/i.test(h)) && !(torn.clavos && /^(clavos|grapas)/i.test(h))),
+  ]
   const cot = (() => {
     try {
       return { ok: true as const, ...cotizarPlano(pl, cfg) }
@@ -181,7 +215,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {acs.flatMap((a) => a.acomodo.hojas.map((h, i) => (
                   <figure key={`${a.material}-${i}`} className="m-0 rounded-xl bg-[#FAF9F6] p-1.5">
-                    <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`) }} />
+                    <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`, (c) => puntosBarrenos(c, filaDe.get(c.nombre))) }} />
                     <figcaption className="text-center text-[11px] text-[#6B6A63]">{a.nombre} · hoja {i + 1}</figcaption>
                   </figure>
                 )))}
@@ -202,17 +236,41 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
             </ol>
           </section>
 
+          {resumenUniones.length ? (
+            <section className={`${caja} mt-4`}>
+              <Titulo n="6">Uniones y tornillería</Titulo>
+              <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-[1fr_260px]">
+                <div>
+                  <p className="m-0 text-[13px] text-white/80">
+                    {torn.tornillos.map((t) => `${t.cantidad} tornillos de ${t.largo}`).join(" · ")}
+                    {torn.clavos ? ` · ${torn.clavos} clavos o grapas` : ""}
+                    {torn.barrenos ? ` · ${torn.barrenos} barrenos guía de 3 mm (en el DXF, capa «barrenos»; puntos naranjas en el acomodo)` : ""}
+                  </p>
+                  <ul className="m-0 mt-2 grid list-disc grid-cols-1 gap-x-6 pl-5 text-[12.5px] text-white/85 sm:grid-cols-2">
+                    {resumenUniones.map((u) => (
+                      <li key={u.texto}>
+                        {u.texto} <b>×{u.cantidad}</b>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="m-0 mt-2 text-[11.5px] text-white/60">Unión a tope con pegamento blanco y tornillo. Avellana los barrenos para que la cabeza quede al ras; los clavos o grapas son para respaldos y fondos delgados. Puertas y tapas van con bisagras.</p>
+                </div>
+                <div className="rounded-xl bg-[#FAF9F6] p-2" dangerouslySetInnerHTML={{ __html: DETALLE_TOPE }} />
+              </div>
+            </section>
+          ) : null}
+
           <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className={caja}>
-              <Titulo n="6">Herrajes</Titulo>
-              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{pl.herrajes.map((h) => <li key={h}>{h}</li>)}</ul>
+              <Titulo n="7">Herrajes</Titulo>
+              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{herrajes.map((h) => <li key={h}>{h}</li>)}</ul>
             </div>
             <div className={caja}>
-              <Titulo n="7">Herramientas</Titulo>
+              <Titulo n="8">Herramientas</Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{pl.herramientas.map((h) => <li key={h}>{h}</li>)}</ul>
             </div>
             <div className={caja}>
-              <Titulo n="8">Notas</Titulo>
+              <Titulo n="9">Notas</Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">
                 {pl.notas.map((h) => <li key={h}>{h}</li>)}
                 <li>Revisa el grosor real de tu triplay antes de cortar.</li>
