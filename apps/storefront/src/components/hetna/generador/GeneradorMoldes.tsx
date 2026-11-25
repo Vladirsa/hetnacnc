@@ -27,10 +27,10 @@ const TIPOS: { id: TipoMolde; nombre: string; nota: string }[] = [
 const ARRIBAS: { id: Arriba; nombre: string }[] = [
   { id: "z", nombre: "Como viene" },
   { id: "-z", nombre: "Boca abajo" },
-  { id: "y", nombre: "Frente arriba" },
-  { id: "-y", nombre: "Atrás arriba" },
-  { id: "x", nombre: "Lado izq. arriba" },
-  { id: "-x", nombre: "Lado der. arriba" },
+  { id: "-y", nombre: "Frente arriba" },
+  { id: "y", nombre: "Atrás arriba" },
+  { id: "x", nombre: "Lado der. arriba" },
+  { id: "-x", nombre: "Lado izq. arriba" },
 ]
 
 function descargar(nombre: string, contenido: BlobPart, tipo: string) {
@@ -93,15 +93,15 @@ export function GeneradorMoldes() {
   const [separar, setSeparar] = useState(25)
   const turno = useRef(0)
   const turnoArchivo = useRef(0)
+  const arribaElegido = useRef(false)
 
   const cambiarTipo = (t: TipoMolde) => {
     setTipo(t)
     // la caja de silicona lleva paredes delgadas; los moldes, gruesas
     setPared(t === "caja_silicona" ? "3" : "10")
     // el molde abierto se llena por arriba: la cara plana de la pieza (casi
-    // siempre la base) tiene que quedar arriba
-    if (t === "abierto" && arriba === "z") setArriba("-z")
-    if (t !== "abierto" && arriba === "-z") setArriba("z")
+    // siempre la base) tiene que quedar arriba. Sólo si la persona no eligió ya.
+    if (!arribaElegido.current) setArriba(t === "abierto" ? "-z" : "z")
   }
 
   const abrir = async (f: File | undefined) => {
@@ -250,7 +250,7 @@ export function GeneradorMoldes() {
             <span className="text-[13px] font-semibold text-[#1B1B18]">2. Qué lado va hacia arriba</span>
             <div className="flex flex-wrap gap-1.5">
               {ARRIBAS.map((a) => (
-                <Opcion key={a.id} activa={arriba === a.id} onClick={() => setArriba(a.id)}>
+                <Opcion key={a.id} activa={arriba === a.id} onClick={() => { arribaElegido.current = true; setArriba(a.id) }}>
                   {a.nombre}
                 </Opcion>
               ))}

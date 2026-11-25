@@ -57,9 +57,10 @@ export async function asegurarTablaEstimado(knex: any) {
       t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
       t.text("herramienta").nullable()
     })
-  } else if (!(await knex.schema.hasColumn(T_ESTIMADO, "herramienta"))) {
-    // Estimados que vienen de una herramienta del Estudio (lib/herramienta-correo.ts)
-    await knex.schema.alterTable(T_ESTIMADO, (t: any) => t.text("herramienta").nullable())
+  } else {
+    // Estimados que vienen de una herramienta del Estudio (lib/herramienta-correo.ts).
+    // IF NOT EXISTS: dos instancias que arrancan juntas no chocan.
+    await knex.raw(`ALTER TABLE ${T_ESTIMADO} ADD COLUMN IF NOT EXISTS herramienta text`)
   }
   listo = true
 }
@@ -102,7 +103,13 @@ export async function guardarEstimado(knex: any, e: NuevoEstimado) {
       estimado_max: Number(e.estimado_max) || null,
       herramienta: e.herramienta ? String(e.herramienta).slice(0, 60) : null,
     }
-    const hoy = await knex(T_ESTIMADO).where({ email }).where("created_at", ">", knex.raw("now() - interval '1 day'")).first("id")
+    // Los de una herramienta van en su propia fila: no pisan el estimado de
+    // /cotizar del mismo día (teléfono, ciudad, volumen) ni al revés
+    const hoy = await knex(T_ESTIMADO)
+      .where({ email })
+      .where((q: any) => (fila.herramienta ? q.where("herramienta", fila.herramienta) : q.whereNull("herramienta")))
+      .where("created_at", ">", knex.raw("now() - interval '1 day'"))
+      .first("id")
     if (hoy) await knex(T_ESTIMADO).where({ id: hoy.id }).update(fila)
     else await knex(T_ESTIMADO).insert(fila)
   } catch {
@@ -274,6 +281,7 @@ export async function correrReactivador(container: MedusaContainer, o: { probar?
   const montoAlto = Number(process.env.ESTIMADOS_MONTO_ALTO) || 5000
   const grandes = (await knex(T_ESTIMADO)
     .where({ avisado: false })
+    .whereNull("herramienta") // los de herramientas traen medidas que pone el visitante
     .where("created_at", ">", new Date(ahora.getTime() - 3 * DIA))
     .where((q: any) => q.where("estimado_max", ">=", montoAlto).orWhere("piezas_mes", ">=", 100))
     .orderBy("estimado_max", "desc")

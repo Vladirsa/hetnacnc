@@ -105,9 +105,9 @@ export function Estudio2D({
   // mensaje cuando todavía no se puede mandar al CAM (p. ej. falta pagar la descarga)
   camBloqueado?: string
 }) {
-  const { locale, herramienta: slugHerramienta, generador } = useParams<{ locale: string; herramienta?: string; generador?: string }>()
-  // para "Mándamelo por correo": las cajas viven en /disenar/cajas/[generador]
-  const herramientaSlug = slugHerramienta || (generador ? "caja-con-juntas" : "")
+  // herramienta: el slug de /disenar/[herramienta], para "Mándamelo por correo"
+  // (el servidor rechaza un slug que no está en su lista)
+  const { locale, herramienta: herramientaSlug } = useParams<{ locale: string; herramienta?: string }>()
   const cajaRef = useRef<HTMLDivElement>(null)
   const [vista, setVista] = useState<{ x: number; y: number; k: number }>({ x: 0, y: 0, k: 1 })
   // dedos (o ratón) sobre la vista: uno arrastra, dos hacen zoom

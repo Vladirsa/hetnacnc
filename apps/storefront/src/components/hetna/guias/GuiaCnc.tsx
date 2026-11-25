@@ -129,6 +129,7 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
             tituloServicio={g.calculadora.titulo}
             materiales={g.calculadora.materiales}
             opcion={g.calculadora.opcion}
+            pideAlto={g.calculadora.pideAlto}
             servicioSolicitud={g.calculadora.servicioSolicitud}
           />
         </section>

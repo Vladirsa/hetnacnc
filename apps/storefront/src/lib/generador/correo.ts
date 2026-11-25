@@ -3,6 +3,8 @@
 // "Mándamelo por correo" de las herramientas del Estudio: llama al backend
 // (POST /store/herramienta-correo), que manda el archivo y el precio y deja el
 // seguimiento de 2 y 7 días al Reactivador de estimados.
+import { cabeceraIpCliente } from "@/lib/seguridad/ip-firmada"
+
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 export type DisenoCorreoInput = {
@@ -20,7 +22,8 @@ export async function mandarDisenoCorreo(input: DisenoCorreoInput): Promise<{ ok
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/herramienta-correo`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string },
+      // con la IP del visitante firmada: los topes por IP del API la necesitan
+      headers: { "Content-Type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string, ...(await cabeceraIpCliente()) },
       body: JSON.stringify(input),
     })
     if (!res.ok) {

@@ -72,12 +72,16 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 const SEG = 32
 
 /** Gira el modelo para que el lado elegido quede hacia +Z (matriz 4×4 en columnas, como manifold). */
-const GIROS: Record<Arriba, [number, number, number]> = { z: [0, 0, 0], "-z": [180, 0, 0], y: [-90, 0, 0], "-y": [90, 0, 0], x: [0, 90, 0], "-x": [0, -90, 0] }
+const GIROS: Record<Arriba, [number, number, number]> = { z: [0, 0, 0], "-z": [180, 0, 0], y: [90, 0, 0], "-y": [-90, 0, 0], x: [0, -90, 0], "-x": [0, 90, 0] }
 
 /**
- * Puntos más altos de la pieza (para el bebedero y los respiraderos): el más
- * alto y luego los más altos que estén lejos de los ya elegidos.
+ * Puntos para el bebedero y los respiraderos: primero las cimas (puntos más
+ * altos que sus vecinos en una rejilla en XY), de la más alta a la más baja, y
+ * luego el resto; siempre separados entre sí y lejos de las zonas a evitar.
  */
+// candidatos de más por canal: algunos no tocan la cavidad y se descartan
+const CANDIDATOS_POR_CANAL = 3
+
 export function puntosAltos(
   tris: number[],
   n: number,
@@ -179,9 +183,7 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       const bloque = g(g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + pared - 0.01])).translate([x0 - pared, y0 - pared, -pared]))
       salida("molde", g(bloque.subtract(pieza)))
       // Si la pieza termina en punta o curva arriba, la boca casi no existe
-      const seccion = pieza.slice(H - 0.02)
-      const boca = seccion.area()
-      seccion.delete()
+      const boca = g(pieza.slice(H - 0.02)).area()
       if (boca < 0.15 * (x1 - x0) * (y1 - y0))
         avisos.push("La boca del molde quedó muy chica: la cara de arriba de la pieza casi no toca el borde. Gira la pieza (paso 2) para que su cara plana o más ancha quede hacia arriba.")
       avisos.push("Molde abierto: la cara de arriba de la pieza es la que queda al aire. Sirve para piezas que salen hacia arriba sin atorarse (sin partes que se metan por debajo).")
@@ -208,7 +210,7 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       else if (pedidos) {
         const rMax = o.bebedero ? rb : rv
         const evitar: [number, number, number][] = conLlaves ? esquinas.map(([x, y]) => [x, y, rk + holgura + rMax + 1]) : []
-        const altos = puntosAltos(modelo.tris, pedidos * 3, Math.max(8, 4 * rv, 2 * (rb + rv) + 2), { zMin: zp + 1, evitar })
+        const altos = puntosAltos(modelo.tris, pedidos * CANDIDATOS_POR_CANAL, Math.max(8, 4 * rv, 2 * (rb + rv) + 2), { zMin: zp + 1, evitar })
         let colocados = 0
         for (const p of altos) {
           if (colocados >= pedidos) break

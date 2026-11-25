@@ -61,9 +61,36 @@ export const urlHerramienta = (slug: string) => `${STORE_URL}/mx/disenar/${slug}
 export const DXF_MAX = 700_000
 // DXF de texto: grupos "0 / SECTION" al principio y sólo caracteres imprimibles
 // (latin-1 para nombres de capa con acento)
-const PARECE_DXF = /^\s*0\r?\n\s*SECTION\r?\n/
+const PARECE_DXF = /^\s{0,8}0\r?\n\s{0,8}SECTION\r?\n/
 const SOLO_TEXTO = /^[\t\r\n\x20-\x7E -ÿ]*$/
-export const esDxf = (s: string) => s.length > 20 && s.length <= DXF_MAX && PARECE_DXF.test(s) && SOLO_TEXTO.test(s) && /\n\s*EOF\s*$/.test(s)
+// El final se revisa sólo en los últimos caracteres: una regex con \s* sobre
+// todo el texto retrocede de forma cuadrática y congela el servidor
+export const esDxf = (s: string) =>
+  s.length > 20 && s.length <= DXF_MAX && PARECE_DXF.test(s.slice(0, 64)) && /\nEOF$/.test(s.slice(-64).trimEnd()) && SOLO_TEXTO.test(s)
+
+/** Cada correo mandado (para los topes por correo e IP). */
+export const T_ENVIOS = "hetna_herramienta_envio"
+let enviosListo = false
+export async function asegurarTablaEnvios(knex: any) {
+  if (enviosListo) return
+  if (!(await knex.schema.hasTable(T_ENVIOS))) {
+    await knex.schema
+      .createTable(T_ENVIOS, (t: any) => {
+        t.increments("id").primary()
+        t.text("email").notNullable().index()
+        t.text("herramienta").notNullable()
+        t.text("ip").nullable().index()
+        t.boolean("enviado").notNullable().defaultTo(true) // false: se frenó por un tope
+        t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
+      })
+      .catch(async (e: unknown) => {
+        if (!(await knex.schema.hasTable(T_ENVIOS))) throw e // otra instancia la creó al mismo tiempo
+      })
+  }
+  enviosListo = true
+}
+/** Topes al día: correos mandados por dirección y por dirección y herramienta; intentos por IP. */
+export const TOPES = { porCorreo: 3, porHerramienta: 1, porIp: 10 }
 
 const SERVICIOS_PRECIO = ["laser_co2", "plasma", "router", "impresion_3d", "fibra", "oxicorte", "waterjet"]
 
@@ -123,7 +150,7 @@ const pesos = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 const p = (t: string) => `<p style="margin:0 0 12px;color:#40403A;line-height:1.6">${t}</p>`
 
 /** Liga a Fabrícamelo con la herramienta y el trabajo ya escritos. */
-export function ligaFabricar(d: { herramienta: string; servicio?: string | null; material?: string | null }, campana: string) {
+export function ligaFabricar(d: { herramienta: string; material?: string | null }, campana: string) {
   const q = new URLSearchParams({
     desde: "herramienta",
     pieza: `${nombreHerramienta(d.herramienta)}${d.material ? ` en ${d.material}` : ""}`,
@@ -147,12 +174,12 @@ export function correoHerramientaHtml(d: PedidoHerramienta, precio: Pick<PrecioD
         p(
           d.dxf
             ? `Te mandamos adjunto <b>${esc(d.archivo)}.dxf</b>, el diseño que hiciste en <b>${esc(nombre)}</b>. Ábrelo en tu programa de corte o en el CAM de HETNA.`
-            : `Guardamos el enlace a <b>${esc(nombre)}</b> para que vuelvas a tu diseño cuando quieras.`
+            : `Te dejamos el enlace a <b>${esc(nombre)}</b> para que regreses cuando quieras y lo tengas a la mano para fabricarlo.`
         ) +
         (precio
           ? p(`<b>¿Te lo cortamos?</b> Hacerlo en ${esc(d.precio?.material || "el material que elegiste")}${piezas} cuesta aprox. <b>${pesos(precio.minimo)} a ${pesos(precio.maximo)}</b> + IVA, con material. Talleres verificados te mandan su precio final y tú eliges.`)
           : p("<b>¿No tienes máquina?</b> Un taller de HETNA te lo fabrica: mándanos tu archivo y te llegan propuestas sin costo."))
-        + boton("Que me lo fabriquen", ligaFabricar({ herramienta: d.herramienta, servicio: d.servicio, material: d.precio?.material }, "herramienta_envio")) +
+        + boton("Que me lo fabriquen", ligaFabricar({ herramienta: d.herramienta, material: d.precio?.material }, "herramienta_envio")) +
         `<p style="margin:16px 0 0"><a href="${esc(urlHerramienta(d.herramienta))}?utm_source=correo&utm_medium=herramienta&utm_campaign=herramienta_envio" style="color:#C2560A;font-weight:700">Volver a ${esc(nombre)} →</a></p>` +
         `<p style="margin:16px 0 0;color:#6B675C;font-size:13px">Te escribimos un par de veces más por si necesitas ayuda para fabricarlo. Puedes darte de baja con la liga de abajo.</p>`
     ),

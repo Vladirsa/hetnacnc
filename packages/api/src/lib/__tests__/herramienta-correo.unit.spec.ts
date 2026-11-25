@@ -26,6 +26,13 @@ describe("Mándamelo por correo (herramientas del Estudio)", () => {
     expect(esDxf(dxf.replace("ENTITIES", "ENTITIES\n" + "x".repeat(DXF_MAX)))).toBe(false)
   })
 
+  it("no se congela con un texto armado para que la revisión retroceda", () => {
+    const malo = "0\nSECTION\n" + "\n ".repeat(340_000) + "x"
+    const t = Date.now()
+    expect(esDxf(malo)).toBe(false)
+    expect(Date.now() - t).toBeLessThan(200)
+  })
+
   it("valida permiso, correo y herramienta; limpia el nombre del archivo", () => {
     expect(validarHerramientaCorreo({ ...base, acepta: false }).ok).toBe(false)
     expect(validarHerramientaCorreo({ ...base, email: "no-es-correo" }).ok).toBe(false)
