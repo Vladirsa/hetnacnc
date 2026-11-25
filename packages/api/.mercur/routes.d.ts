@@ -1460,6 +1460,7 @@ export type Routes = {
         cotizadorComision: {
             paypal: typeof import("../src/api/api/cotizador-comision/paypal/route");
         };
+        cotizadorCorreo: typeof import("../src/api/api/cotizador-correo/route");
         cotizadorExportar: typeof import("../src/api/api/cotizador-exportar/route");
         cotizadorMarketing: typeof import("../src/api/api/cotizador-marketing/route") & {
             correr: typeof import("../src/api/api/cotizador-marketing/correr/route");
