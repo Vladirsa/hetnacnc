@@ -135,13 +135,14 @@ export async function guionExplicativo(knex: any, tema?: string, largo = false) 
   ].filter(Boolean).join("\n")
   let ultimo: any = null
   for (let intento = 0; intento < 2; intento++) {
-    const r = await ia.beta.messages.create({
+    // Con streaming: el SDK no permite pedir respuestas largas (guion de 4 a 6 min) sin él
+    const r: any = await ia.beta.messages.stream({
       ...modeloIA(process.env.IA_MODELO_ESTUDIO || undefined),
       max_tokens: largo ? 24000 : 8000,
       output_config: { effort: "medium", format: { type: "json_schema", schema: largo ? ESQUEMA_LARGO : ESQUEMA } },
       system: largo ? SISTEMA_LARGO : SISTEMA,
       messages: [{ role: "user", content: intento ? `${usuario}\n\nEl intento anterior quedó corto (${ultimo?.palabras || 0} palabras): escribe entre ${largo ? "650 y 850" : "175 y 200"} palabras en total (agrega escenas si hace falta).` : usuario }],
-    } as any)
+    } as any).finalMessage()
     if (r.stop_reason === "refusal") throw new Error("La IA no quiso escribir este guion.")
     let g: any
     try {
