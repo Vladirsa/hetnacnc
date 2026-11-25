@@ -140,13 +140,15 @@ export function svgPaso(piezas: PiezaPlano[], previas: Set<PiezaPlano>, nuevas: 
 }
 
 /** Una hoja de 2440 × 1220 con sus piezas acomodadas y la letra de cada una. */
-export function svgHoja(h: HojaAcomodada, titulo: string) {
+/** barrenos: dónde caen los barrenos guía de cada pieza colocada (calculo.ts → puntosBarrenos). */
+export function svgHoja(h: HojaAcomodada, titulo: string, barrenos?: (c: HojaAcomodada["colocadas"][number]) => [number, number][]) {
   const m = 60
   const rects = h.colocadas.map((c) => {
     const t = Math.min(c.w, c.h) * 0.45
     const tam = Math.max(40, Math.min(110, t))
     return `<rect x="${f(c.x)}" y="${f(c.y)}" width="${f(c.w)}" height="${f(c.h)}" fill="#F1DDB5" stroke="#6B4E2A" stroke-width="4"/>` +
-      `<text x="${f(c.x + c.w / 2)}" y="${f(c.y + c.h / 2)}" font-size="${f(tam)}" font-family="Inter,Arial,sans-serif" font-weight="800" fill="#142033" text-anchor="middle" dominant-baseline="middle">${esc(c.nombre)}</text>`
+      `<text x="${f(c.x + c.w / 2)}" y="${f(c.y + c.h / 2)}" font-size="${f(tam)}" font-family="Inter,Arial,sans-serif" font-weight="800" fill="#142033" text-anchor="middle" dominant-baseline="middle">${esc(c.nombre)}</text>` +
+      (barrenos ? barrenos(c).map(([x, y]) => `<circle cx="${f(x)}" cy="${f(y)}" r="9" fill="#B34D07"/>`).join("") : "")
   }).join("")
   const cuerpo = `<rect x="0" y="0" width="${HOJA.largo}" height="${HOJA.ancho}" fill="#FFFFFF" stroke="#142033" stroke-width="8"/>${rects}` +
     `<text x="${HOJA.largo / 2}" y="${HOJA.ancho + 48}" font-size="40" font-family="Inter,Arial,sans-serif" fill="#6B6A63" text-anchor="middle">2440 mm</text>` +
