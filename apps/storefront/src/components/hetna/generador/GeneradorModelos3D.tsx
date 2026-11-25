@@ -6,7 +6,7 @@
 // lib/generador/modelos3d.ts (manifold-3d: sólidos cerrados, sin errores de malla).
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Visor3D } from "@/components/hetna/generador/Visor3D"
 import { mandarArchivosAFabricar } from "@/lib/generador/aCotizador"
@@ -46,18 +46,48 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     }
   }, [])
 
+  // El modelo se arma en un Web Worker (lib/generador/modelos3d.worker.ts) para
+  // que la página no se trabe; sin Worker, aquí mismo.
+  const trabajador = useRef<Worker | null>(null)
+  const sinTrabajador = useRef(false)
+  const ultimo = useRef(0)
+  useEffect(() => () => trabajador.current?.terminate(), [])
+
   // Se arma de nuevo cada vez que cambia una medida (con un respiro para no trabar los deslizadores)
   useEffect(() => {
-    let vivo = true
+    const id = ++ultimo.current
+    const listo = (m: MallaModelo) => id === ultimo.current && (setMalla(m), setError(""))
+    const fallo = () => id === ultimo.current && setError("No se pudo armar el modelo con esas medidas. Prueba con otras.")
+    const aqui = () => construirMalla(modelo, valores).then(listo).catch(fallo)
     const t = setTimeout(() => {
-      construirMalla(modelo, valores)
-        .then((m) => vivo && (setMalla(m), setError("")))
-        .catch(() => vivo && setError("No se pudo armar el modelo con esas medidas. Prueba con otras."))
+      if (!trabajador.current && !sinTrabajador.current && typeof Worker !== "undefined") {
+        try {
+          trabajador.current = new Worker(new URL("../../../lib/generador/modelos3d.worker.ts", import.meta.url))
+        } catch {
+          sinTrabajador.current = true
+        }
+      }
+      const w = trabajador.current
+      if (!w) return void aqui()
+      w.onmessage = (e: MessageEvent<{ id: number; malla?: MallaModelo; error?: string }>) => {
+        if (e.data.id !== ultimo.current) return
+        if (e.data.malla) return void listo(e.data.malla)
+        // Si en el Worker no se pudo (p. ej. el navegador no deja WASM ahí), se arma aquí;
+        // si son las medidas, aquí también falla y sale el aviso.
+        w.terminate()
+        trabajador.current = null
+        sinTrabajador.current = true
+        void aqui()
+      }
+      w.onerror = () => {
+        w.terminate()
+        trabajador.current = null
+        sinTrabajador.current = true
+        if (id === ultimo.current) void aqui()
+      }
+      w.postMessage({ id, modelo: modelo.id, valores })
     }, 120)
-    return () => {
-      vivo = false
-      clearTimeout(t)
-    }
+    return () => clearTimeout(t)
   }, [modelo, valores])
 
   const elegir = (m: Modelo3D) => {
