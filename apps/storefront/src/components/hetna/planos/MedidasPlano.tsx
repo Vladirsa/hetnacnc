@@ -3,7 +3,7 @@
 // "Modifica las medidas" de un plano: el cliente escribe ancho, fondo y alto y
 // la página se vuelve a dibujar con esas medidas (?ancho=&fondo=&alto=). Los
 // espesores del triplay no cambian: sólo se estiran los huecos (lib/planos/medidas.ts).
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 
 import { LIMITE, type Medidas } from "@/lib/planos/medidas"
@@ -13,13 +13,18 @@ const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-wh
 export default function MedidasPlano({ original, actual, ajustado = false }: { original: Medidas; actual: Medidas; ajustado?: boolean }) {
   const router = useRouter()
   const ruta = usePathname()
+  // conserva el tipo de unión elegido (?uniones=ranuras)
+  const extra = useSearchParams().get("uniones") === "ranuras" ? "uniones=ranuras" : ""
   const [v, setV] = useState<Medidas>(actual)
   const [cargando, iniciar] = useTransition()
   const cambiado = (["ancho", "fondo", "alto"] as const).some((k) => actual[k] !== original[k])
 
   const ir = (m: Medidas | null) =>
     iniciar(() => {
-      router.replace(m ? `${ruta}?ancho=${Math.round(m.ancho)}&fondo=${Math.round(m.fondo)}&alto=${Math.round(m.alto)}` : ruta, { scroll: false })
+      router.replace(
+        m ? `${ruta}?ancho=${Math.round(m.ancho)}&fondo=${Math.round(m.fondo)}&alto=${Math.round(m.alto)}${extra ? `&${extra}` : ""}` : `${ruta}${extra ? `?${extra}` : ""}`,
+        { scroll: false }
+      )
     })
 
   return (

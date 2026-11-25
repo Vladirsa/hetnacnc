@@ -11,7 +11,7 @@
 // Cara con cara (listón sobre tablero, cubierta doble): tornillo desde la pieza
 // chica hacia la grande, en una o dos filas.
 // Posiciones: a 50 mm de cada orilla y a lo más cada 200 mm (clavos cada 150 mm).
-import { MATERIALES_PLANO, type PiezaPlano, type Plano } from "./modelos"
+import { MATERIALES_PLANO, type PiezaPlano, type Plano, type RanuraPieza } from "./modelos"
 
 export type Fijacion = "tornillo" | "clavo"
 export type Union = { a: number; b: number; fijacion: Fijacion; cantidad: number; largoTornillo: string | null }
@@ -106,20 +106,23 @@ export function unionesDe(pl: Plano): ResultadoUniones {
 }
 
 /** Firma de los barrenos de una pieza que no cambia si la pieza se voltea (para agrupar piezas iguales). */
-export function firmaBarrenos(q: PiezaPlano, b: Barreno[]): { firma: string; barrenos: Barreno[] } {
+export function firmaBarrenos(q: PiezaPlano, b: Barreno[], cajas: RanuraPieza[] = []): { firma: string; barrenos: Barreno[]; ranuras: RanuraPieza[] } {
   const [, ev, eu] = ejesPieza(q)
   const L = mide(q, eu), W = mide(q, ev)
-  const variantes: Barreno[][] = [
-    b,
-    b.map((p) => ({ u: L - p.u, v: p.v })),
-    b.map((p) => ({ u: p.u, v: W - p.v })),
-    b.map((p) => ({ u: L - p.u, v: W - p.v })),
+  type V = { b: Barreno[]; r: RanuraPieza[] }
+  const fu = (u: number) => L - u, fv = (v: number) => W - v
+  const variantes: V[] = [
+    { b, r: cajas },
+    { b: b.map((p) => ({ u: fu(p.u), v: p.v })), r: cajas.map((c) => ({ ...c, u0: fu(c.u1), u1: fu(c.u0) })) },
+    { b: b.map((p) => ({ u: p.u, v: fv(p.v) })), r: cajas.map((c) => ({ ...c, v0: fv(c.v1), v1: fv(c.v0) })) },
+    { b: b.map((p) => ({ u: fu(p.u), v: fv(p.v) })), r: cajas.map((c) => ({ ...c, u0: fu(c.u1), u1: fu(c.u0), v0: fv(c.v1), v1: fv(c.v0) })) },
   ]
-  if (Math.abs(L - W) < 0.5) variantes.push(...variantes.map((vs) => vs.map((p) => ({ u: p.v, v: p.u }))))
-  const texto = (vs: Barreno[]) => vs.map((p) => `${Math.round(p.u)},${Math.round(p.v)}`).sort().join(";")
+  if (Math.abs(L - W) < 0.5) variantes.push(...variantes.map((x) => ({ b: x.b.map((p) => ({ u: p.v, v: p.u })), r: x.r.map((c) => ({ u0: c.v0, u1: c.v1, v0: c.u0, v1: c.u1, prof: c.prof })) })))
+  const texto = (x: V) =>
+    x.b.map((p) => `${Math.round(p.u)},${Math.round(p.v)}`).sort().join(";") + "|" + x.r.map((c) => `${Math.round(c.u0)},${Math.round(c.u1)},${Math.round(c.v0)},${Math.round(c.v1)},${c.prof}`).sort().join(";")
   let mejor = variantes[0]
-  for (const vs of variantes) if (texto(vs) < texto(mejor)) mejor = vs
-  return { firma: texto(mejor), barrenos: mejor }
+  for (const x of variantes) if (texto(x) < texto(mejor)) mejor = x
+  return { firma: texto(mejor), barrenos: mejor.b, ranuras: mejor.r }
 }
 
 export type Tornilleria = { tornillos: { largo: string; cantidad: number }[]; clavos: number; barrenos: number }
@@ -138,4 +141,45 @@ export function tornilleria(pl: Plano, r: ResultadoUniones = unionesDe(pl)): Tor
     clavos,
     barrenos: r.barrenos.reduce((s, b) => s + b.length, 0) * k,
   }
+}
+
+// ── Ranuras (cajas) ─────────────────────────────────────────────────────────
+// Versión «con ranuras» de un plano: repisas, pisos, techos, respaldos y zoclos
+// que entran de canto en un costado o división vertical (grosor en x) de 12 o
+// 18 mm entran en una caja de 4 o 6 mm, y se alargan lo mismo. El mueble se
+// escuadra solo y aguanta más; esas uniones van con pegamento (sin tornillo).
+// Las demás uniones (cubierta sobre costados, etc.) siguen con tornillo.
+const PROF_RANURA: Record<number, number> = { 18: 6, 12: 4 }
+
+export function conRanuras(pl: Plano): Plano {
+  const P = pl.piezas.map((q) => ({ ...q }))
+  const ranuras: RanuraPieza[][] = P.map(() => [])
+  const hechas: { a: number; b: number; prof: number }[] = []
+  const ejes = pl.piezas.map(ejesPieza)
+  const orig = pl.piezas
+  for (let i = 0; i < orig.length; i++) {
+    for (let j = 0; j < orig.length; j++) {
+      if (i === j) continue
+      const A = orig[i], B = orig[j]
+      // A: costado o división (grosor en x); B entra de canto por x
+      if (ejes[i][0] !== "x" || ejes[j][0] === "x") continue
+      if (movil(A) || movil(B) || /caj[oó]n/i.test(A.nombre) || /caj[oó]n/i.test(B.nombre)) continue
+      const prof = PROF_RANURA[MATERIALES_PLANO[A.material].grosor]
+      if (!prof) continue
+      if (!(solapa(A, B, "y") > TOL && solapa(A, B, "z") > TOL)) continue
+      const deDerecha = Math.abs(B.x0 - A.x1) <= TOL // B empieza donde termina A
+      const deIzquierda = Math.abs(B.x1 - A.x0) <= TOL
+      if (!deDerecha && !deIzquierda) continue
+      // B se alarga hacia A
+      if (deDerecha) P[j].x0 -= prof
+      else P[j].x1 += prof
+      // caja en A, en sus coordenadas (u = su largo, v = su ancho, ejes y/z)
+      const [, ev, eu] = ejes[i]
+      const r = (e: Eje) => [Math.max(lo(A, e), lo(B, e)) - lo(A, e), Math.min(hi(A, e), hi(B, e)) - lo(A, e)]
+      const [u0, u1] = r(eu), [v0, v1] = r(ev)
+      ranuras[i].push({ u0: Math.round(u0 * 10) / 10, u1: Math.round(u1 * 10) / 10, v0: Math.round(v0 * 10) / 10, v1: Math.round(v1 * 10) / 10, prof })
+      hechas.push({ a: i, b: j, prof })
+    }
+  }
+  return { ...pl, piezas: P, ranuras, unionesRanura: hechas }
 }
