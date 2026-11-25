@@ -12,6 +12,11 @@ export const TarjetaArticulo = ({ a, compacta = false }: { a: ArticuloResumen; c
     href={urlArticulo(a.slug)}
     className={`group bg-white border border-[#E7E4DC] rounded-[14px] hover:border-[#C2560A] transition flex flex-col ${compacta ? "p-3.5 gap-1" : "p-4 gap-2"}`}
   >
+    {/* Portada (lib/blog-portadas.ts en el API la genera si falta) */}
+    {!compacta && a.cover_image_url && (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={a.cover_image_url} alt="" loading="lazy" width={640} height={360} className="-mx-4 -mt-4 mb-1 aspect-video w-[calc(100%+2rem)] max-w-none rounded-t-[14px] object-cover" />
+    )}
     <span className="flex items-center gap-2 text-[11.5px] font-bold uppercase tracking-wide">
       <span className={a.guia ? "text-[#16794F]" : "text-[#C2560A]"}>{a.guia ? "Guía" : "Artículo"}</span>
       <span className="text-[#9A978C] normal-case font-medium tracking-normal">{fechaCorta(a.published_at)}</span>

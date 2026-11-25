@@ -24,7 +24,7 @@ export default function Reclamaciones() {
       etiqueta="Ayuda"
       titulo="Reclamaciones y mediación"
       resumen="Qué hacer si algo sale mal con una compra o un trabajo de fabricación, y cómo decide HETNA."
-      actualizado="21 de noviembre de 2026"
+      actualizado="25 de noviembre de 2026"
     >
       <h2>1. Qué cubre esta política</h2>
       <ul>
@@ -47,15 +47,20 @@ export default function Reclamaciones() {
           evidencia, más rápida la decisión.
         </li>
         <li>
-          <strong>En compras de la tienda</strong>, escríbenos por {medioContacto()} con tu número de pedido, fotos y el motivo. Los plazos de devolución están
-          en la <LocalizedClientLink href="/devoluciones">Política de devoluciones</LocalizedClientLink>.
+          <strong>En compras de la tienda</strong>, desde <LocalizedClientLink href="/user/orders">Mis compras</LocalizedClientLink>: abre el pedido y toca
+          «Tengo un problema», elige el motivo, explícalo y sube fotos o video. Puedes hacerlo hasta {EMPRESA.diasDevolucion} días naturales después de la
+          entrega (después, sólo garantía). Si no puedes entrar a tu cuenta, escríbenos por {medioContacto()}. Los plazos de devolución están en la{" "}
+          <LocalizedClientLink href="/devoluciones">Política de devoluciones</LocalizedClientLink>.
         </li>
       </ol>
 
       <h2>3. Cómo media HETNA</h2>
       <ol>
         <li>Recibimos la reclamación y avisamos a la otra parte.</li>
-        <li>Pedimos evidencia a las dos partes y les damos oportunidad de responder.</li>
+        <li>
+          Pedimos evidencia a las dos partes y les damos oportunidad de responder. En compras de la tienda, el vendedor tiene 3 días hábiles para responder
+          desde su panel; si no responde, el caso se resuelve a favor del cliente.
+        </li>
         <li>Proponemos un arreglo: corregir o volver a fabricar, reembolso parcial o reembolso total.</li>
         <li>
           Si no hay acuerdo, HETNA decide en un objetivo de {DIAS_HABILES_DECISION_DISPUTA} días hábiles (un caso complejo puede tardar más y se avisa). La
@@ -105,6 +110,17 @@ export default function Reclamaciones() {
       </p>
 
       <h2>5. Cuándo se libera el pago al taller</h2>
+      <h3>Compras de la tienda</h3>
+      <ul>
+        <li>Cuando el cliente toca «Todo bien, liberar pago» en su compra: confirma que llegó completo y en buen estado.</li>
+        <li>Si el cliente no hace nada, {EMPRESA.diasLiberacion} días después de la entrega.</li>
+        <li>
+          Si el cliente reporta un problema, el pago se congela hasta que HETNA decide. Si el reclamo llega cuando el pago ya se liberó (hasta el día{" "}
+          {EMPRESA.diasDevolucion}) y procede, el reembolso y la guía de regreso a cargo del vendedor se descuentan de sus siguientes ventas.
+        </li>
+        <li>La guía de regreso la paga el vendedor si la culpa fue suya, y el cliente si se arrepintió de la compra.</li>
+      </ul>
+      <h3>Trabajos de fabricación</h3>
       <ul>
         <li>Cuando el cliente confirma que recibió.</li>
         <li>

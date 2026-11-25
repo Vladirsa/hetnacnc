@@ -91,7 +91,14 @@ export default async function ArticuloBlog({ params }: Props) {
             </p>
             <h1 className="m-0 font-display text-[26px] sm:text-[34px] leading-[1.2] font-bold text-[#1B1B18]">{a.title}</h1>
             <p className="m-0 text-[16px] text-[#55544D] leading-relaxed">{a.excerpt}</p>
-            {video && <VideoLigero video={video} />}
+            {video ? (
+              <VideoLigero video={video} />
+            ) : (
+              a.cover_image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={a.cover_image_url} alt={a.title} width={1024} height={576} fetchPriority="high" className="w-full aspect-video rounded-[14px] object-cover" />
+              )
+            )}
             <div
               className="prose-blog text-[15.5px] leading-[1.75] text-[#1B1B18]"
               dangerouslySetInnerHTML={{ __html: a.content_html }}

@@ -10,6 +10,10 @@ import { EMPRESA, medioContacto } from "@/lib/hetna/empresa"
 // y el dinero del cliente queda retenido hasta que recibe bien, así que el
 // reembolso sale de ese pago y no de HETNA. Debe coincidir con /reclamaciones
 // (mediación, liberación del pago) y con los Términos y condiciones.
+// 25 nov 2026 (tarde): el reporte ya se hace desde la compra ("Tengo un
+// problema", packages/api/src/lib/reclamos-pedido.ts) y el pago se libera
+// con "Todo bien, liberar pago" o solo a los 3 días de la entrega (opción C:
+// lo que se devuelva entre el día 4 y el 7 se le descuenta al vendedor).
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/devoluciones" },
@@ -33,7 +37,7 @@ export default function Devoluciones() {
       <ul>
         <li>
           <strong>Tu pago está protegido.</strong> Cuando compras dentro de HETNA, el vendedor o taller no recibe tu dinero hasta que
-          confirmas que te llegó bien (o pasa el plazo sin que reportes un problema).
+          tocas «Todo bien, liberar pago» en tu compra. Si no haces nada, se libera solo {EMPRESA.diasLiberacion} días después de la entrega.
         </li>
         <li>
           <strong>Quien resuelve es el vendedor o taller.</strong> Cada producto lo vende y lo envía un vendedor o taller registrado: es
@@ -45,8 +49,8 @@ export default function Devoluciones() {
           entrega, con fotos o video. Te recomendamos grabar el desempaque.
         </li>
         <li>
-          <strong>Reporta antes de confirmar que recibiste.</strong> Al confirmar, el pago se libera al vendedor y el caso se vuelve una
-          reclamación de garantía.
+          <strong>Reporta antes de liberar el pago.</strong> Al tocar «Todo bien, liberar pago» confirmas que llegó completo y en buen estado:
+          después sólo queda la garantía.
         </li>
       </ul>
 
@@ -161,21 +165,28 @@ export default function Devoluciones() {
           Cuando el problema es del vendedor (dañado, incompleto, distinto, no llegó), el reembolso sale del pago que HETNA tiene retenido y
           el vendedor cubre los envíos.
         </li>
+        <li>
+          Si reportas cuando el pago ya se le liberó al vendedor (hasta el día {EMPRESA.diasDevolucion} después de la entrega) y el reclamo
+          procede, igual se te reembolsa: HETNA se lo descuenta al vendedor de sus siguientes ventas.
+        </li>
       </ul>
 
       <h2>Cómo solicitarla</h2>
       <ol>
         <li>
-          Escríbenos por {medioContacto()} con tu número de pedido, el motivo y tus fotos o video.
+          Entra a <LocalizedClientLink href="/user/orders">Mis compras</LocalizedClientLink>, abre el pedido y toca «Tengo un problema».
+          Elige el motivo, explica qué pasó y sube fotos o video (obligatorio, salvo si no te llegó).
         </li>
         <li>
-          Avisamos al vendedor o taller, que tiene {DIAS_RESPUESTA} días hábiles para responder con una solución.
+          Congelamos el pago y avisamos al vendedor o taller, que tiene {DIAS_RESPUESTA} días hábiles para responder con su versión y su
+          evidencia. Si no responde a tiempo, el caso se resuelve a tu favor.
         </li>
         <li>
-          Si el vendedor no responde a tiempo o no hay acuerdo, HETNA revisa la evidencia de los dos y decide. Mientras el caso esté
-          abierto, el pago no se libera.
+          HETNA revisa la evidencia de los dos y decide: liberar el pago al vendedor, reembolso parcial o reembolso total. Te avisamos por
+          correo y lo ves en tu compra.
         </li>
       </ol>
+      <p>Si no puedes entrar a tu cuenta, escríbenos por {medioContacto()} con tu número de pedido.</p>
       <p>Atendemos en horario: {EMPRESA.horario}.</p>
 
       <h2>Garantía</h2>
