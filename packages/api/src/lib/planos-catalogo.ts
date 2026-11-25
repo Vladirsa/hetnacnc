@@ -10,6 +10,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createProductCategoriesWorkflow, createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { subir } from "./fabrica"
+import { cargarNombresPlanos } from "./planos-correo"
 import { pngLaminaPlano } from "./planos-imagen"
 import { STORE_URL, esc } from "./licitacion"
 
@@ -45,8 +46,10 @@ export const VARIANTES_PLANO = [
 export const handlePlano = (slug: string) => `plano-${slug}`
 export const skuPlano = (slug: string, codigo: string) => `HETNA-PL-${slug.toUpperCase().slice(0, 40)}-${codigo}`
 
-export async function leerCatalogoPlanos(): Promise<PlanoCatalogo[]> {
-  const r = await fetch(`${STORE_URL}/mx/planos/datos`, { headers: { accept: "application/json" } })
+/** solo: lee sólo esos planos (sin la caché de la página: sirve justo al aprobar uno nuevo). */
+export async function leerCatalogoPlanos(solo?: string[]): Promise<PlanoCatalogo[]> {
+  const q = solo?.length ? `?solo=${encodeURIComponent(solo.join(","))}&t=${Date.now()}` : ""
+  const r = await fetch(`${STORE_URL}/mx/planos/datos${q}`, { headers: { accept: "application/json" } })
   if (!r.ok) throw new Error(`No pude leer el catálogo de planos (${STORE_URL}/mx/planos/datos): HTTP ${r.status}`)
   const d = (await r.json()) as { planos?: PlanoCatalogo[] }
   if (!Array.isArray(d.planos) || !d.planos.length) throw new Error("El catálogo de planos llegó vacío")
@@ -105,7 +108,8 @@ const metadataDe = (p: PlanoCatalogo) => ({
 export async function sincronizarProductosPlanos(container: MedusaContainer, o: { publicar?: boolean; solo?: string[] } = {}) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const planos = (await leerCatalogoPlanos()).filter((p) => !o.solo?.length || o.solo.includes(p.slug))
+  await cargarNombresPlanos(container.resolve(ContainerRegistrationKeys.PG_CONNECTION), true)
+  const planos = (await leerCatalogoPlanos(o.solo)).filter((p) => !o.solo?.length || o.solo.includes(p.slug))
   const { data: perfiles } = await query.graph({ entity: "shipping_profile", fields: ["id", "name"] })
   const perfil = ((perfiles as { id: string; name: string }[]).find((x) => x.name === "Marketplace Shipping") ||
     (perfiles as { id: string; name: string }[]).find((x) => x.name !== "Producto digital")) as { id: string } | undefined

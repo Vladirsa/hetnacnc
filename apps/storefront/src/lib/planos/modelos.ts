@@ -59,7 +59,7 @@ function bancoMovil(): PiezaPlano[] {
     p("Piso", 0, W, 0, D, zPiso, zPiso + e),
     p("Costado izquierdo", 0, e, 0, D, zPiso + e, zPiso + e + alto),
     p("Costado derecho", W - e, W, 0, D, zPiso + e, zPiso + e + alto),
-    ...divs.map((x, i) => p(`División ${i + 1}`, x - e / 2, x + e / 2, 0, D, zPiso + e, zPiso + e + alto)),
+    ...divs.map((x, i) => p(`División ${i + 1}`, x - e / 2, x + e / 2, 0, D - e, zPiso + e, zPiso + e + alto)),
     p("Travesaño trasero", e, W - e, D - e, D, zTecho - 100, zTecho),
   ]
   const huecos: [number, number][] = [[e, divs[0] - e / 2], [divs[0] + e / 2, divs[1] - e / 2], [divs[1] + e / 2, W - e]]
@@ -78,8 +78,8 @@ function carroTableros(): PiezaPlano[] {
     p("Cabecera izquierda", 0, e, 0, D, z0, H),
     p("Cabecera derecha", W - e, W, 0, D, z0, H),
     p("Panel central", e, W - e, yc - e / 2, yc + e / 2, z0, H - 20),
-    p("Divisor delantero", W / 2 - e / 2, W / 2 + e / 2, 0, yc - e / 2, z0, z0 + 520),
-    p("Divisor trasero", W / 2 - e / 2, W / 2 + e / 2, yc + e / 2, D, z0, z0 + 520),
+    p("Divisor delantero", W / 2 - e / 2, W / 2 + e / 2, e, yc - e / 2, z0, z0 + 520),
+    p("Divisor trasero", W / 2 - e / 2, W / 2 + e / 2, yc + e / 2, D - e, z0, z0 + 520),
     p("Tope delantero", e, W - e, 0, e, z0, z0 + 110),
     p("Tope trasero", e, W - e, D - e, D, z0, z0 + 110),
   ]
@@ -170,7 +170,7 @@ function caballete(): PiezaPlano[] {
   return [
     p("Pata izquierda", 0, e, 0, 500, 0, H - e),
     p("Pata derecha", L - e, L, 0, 500, 0, H - e),
-    p("Alma", e, L - e, yc - e / 2, yc + e / 2, 120, H - e),
+    p("Alma", e, L - e, yc - e / 2, yc + e / 2, 120 + e, H - e),
     p("Viga superior", 0, L, yc - 60, yc + 60, H - e, H),
     p("Refuerzo inferior", e, L - e, yc - 60, yc + 60, 120, 120 + e),
   ]
@@ -387,8 +387,8 @@ function mesaRouter(): PiezaPlano[] {
   return [
     p("Costado izquierdo", vuelo, vuelo + e, vuelo, D - vuelo, 0, H - 2 * e),
     p("Costado derecho", W - vuelo - e, W - vuelo, vuelo, D - vuelo, 0, H - 2 * e),
-    p("Piso", vuelo + e, W - vuelo - e, vuelo, D - vuelo, 80, 80 + e),
-    p("Repisa", vuelo + e, W - vuelo - e, vuelo, D - vuelo, 420, 420 + e),
+    p("Piso", vuelo + e, W - vuelo - e, vuelo, D - vuelo - e, 80, 80 + e),
+    p("Repisa", vuelo + e, W - vuelo - e, vuelo, D - vuelo - e, 420, 420 + e),
     p("Respaldo", vuelo + e, W - vuelo - e, D - vuelo - e, D - vuelo, 80, H - 2 * e),
     p("Base de la cubierta", 0, W, 0, D, H - 2 * e, H - e),
     p("Cubierta", 0, W, 0, D, H - e, H),

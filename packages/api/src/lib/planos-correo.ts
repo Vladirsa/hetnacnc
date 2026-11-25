@@ -1,7 +1,8 @@
 // Biblioteca de planos HETNA (storefront /planos): "Bájalo gratis con tu correo".
 // Guarda quién pidió qué plano (con su permiso) y le manda la liga por correo.
 // La lista de planos vive en el storefront (apps/storefront/src/lib/planos/modelos.ts);
-// aquí sólo los nombres, para el asunto del correo. Al agregar un plano, súmalo aquí.
+// aquí sólo los nombres, para el asunto del correo. Al agregar un plano al código,
+// súmalo aquí; los de la base de datos se suman solos (cargarNombresPlanos).
 import { STORE_URL, boton, esc, marco } from "./licitacion"
 
 export const T_PLANOS = "hetna_planos_descargas"
@@ -59,6 +60,36 @@ export const PLANOS_NOMBRES: Record<string, string> = {
   "mesa-para-ninos": "Mesa para niños",
 }
 
+// Planos publicados desde la base de datos (lib/planos-biblioteca.ts: los que
+// diseña el agente y aprueba el dueño). Se suman a los de arriba, que viven en
+// el código. Se leen de la base a lo más cada minuto: quien vaya a usar
+// nombrePlano() o todosLosSlugs() llama antes a cargarNombresPlanos(knex).
+export const T_BIBLIOTECA = "hetna_planos_biblioteca"
+const EXTRA = new Map<string, string>()
+let leidoEn = 0
+
+export async function cargarNombresPlanos(knex: any, forzar = false) {
+  if (!forzar && Date.now() - leidoEn < 60_000) return
+  try {
+    if (!(await knex.schema.hasTable(T_BIBLIOTECA))) {
+      leidoEn = Date.now()
+      return
+    }
+    const filas: { slug: string; nombre: string }[] = await knex(T_BIBLIOTECA).where({ estado: "publicado" }).orderBy("publicado_en", "asc").select("slug", "nombre")
+    EXTRA.clear()
+    for (const f of filas) if (!PLANOS_NOMBRES[f.slug]) EXTRA.set(f.slug, f.nombre)
+    leidoEn = Date.now()
+  } catch {
+    // sin la base se sigue con los planos del código
+  }
+}
+
+/** Nombre del plano (código o base de datos); null si no existe o no está publicado. */
+export const nombrePlano = (slug: string): string | null => PLANOS_NOMBRES[slug] || EXTRA.get(slug) || null
+
+/** Todos los slugs publicados, en orden de alta (los del código primero). */
+export const todosLosSlugs = () => [...Object.keys(PLANOS_NOMBRES), ...EXTRA.keys()]
+
 export type PedidoPlano = { email: string; plano: string; nombre: string | null; promos: boolean }
 
 const corto = (v: unknown, n: number) => String(v ?? "").trim().slice(0, n)
@@ -68,7 +99,7 @@ export function validarPedidoPlano(b: Record<string, unknown>): { ok: true; dato
   const email = corto(b.email, 160).toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, mensaje: "Revisa tu correo." }
   const plano = corto(b.plano, 80)
-  if (!PLANOS_NOMBRES[plano]) return { ok: false, mensaje: "Ese plano no existe." }
+  if (!nombrePlano(plano)) return { ok: false, mensaje: "Ese plano no existe." }
   return { ok: true, datos: { email, plano, nombre: corto(b.nombre, 80) || null, promos: b.promos === true } }
 }
 
@@ -92,7 +123,7 @@ export async function asegurarTablaPlanos(knex: any) {
 export const ligaPlano = (slug: string) => `${STORE_URL}/mx/planos/${encodeURIComponent(slug)}?utm_source=correo&utm_medium=planos&utm_campaign=${encodeURIComponent(slug)}`
 
 export function correoPlanoHtml(slug: string, nombre: string | null) {
-  const titulo = PLANOS_NOMBRES[slug] || "Tu plano"
+  const titulo = nombrePlano(slug) || "Tu plano"
   return marco(`${titulo}: tu plano gratis`,
     `<p style="margin:0 0 12px;color:#40403A;font-size:14px;line-height:1.5">${nombre ? `Hola ${esc(nombre)}, a` : "A"}quí está tu plano. En la página puedes guardarlo en PDF y bajar el DXF para cortarlo en router CNC.</p>` +
     boton("Abrir mi plano", ligaPlano(slug)) +
@@ -137,7 +168,7 @@ export async function suscritosPendientes(knex: any, slug: string, limite = LOTE
 export const ligaPlanoAviso = (slug: string) => ligaPlano(slug).replace("utm_medium=planos", "utm_medium=aviso-semanal")
 
 export function correoAvisoHtml(slug: string, nombre: string | null) {
-  const titulo = PLANOS_NOMBRES[slug] || "Nuevo plano"
+  const titulo = nombrePlano(slug) || "Nuevo plano"
   const img = `${STORE_URL}/api/planos-redes/${encodeURIComponent(slug)}/1`
   return marco(`Plano gratis de la semana: ${titulo}`,
     `<p style="margin:0 0 12px;color:#40403A;font-size:14px;line-height:1.5">${nombre ? `Hola ${esc(nombre)}: ` : ""}esta semana sumamos a la Biblioteca de planos HETNA el <b>${esc(titulo)}</b>. Trae lista de corte con medidas, acomodo en hojas de triplay, armado paso a paso y el DXF para router CNC.</p>` +

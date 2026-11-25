@@ -10,7 +10,7 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, nuevoId } from "../licitacion"
-import { PLANOS_NOMBRES } from "../planos-correo"
+import { cargarNombresPlanos, nombrePlano, todosLosSlugs } from "../planos-correo"
 import { pngLaminaPlano } from "../planos-imagen"
 import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
@@ -469,15 +469,16 @@ export async function promocionesDelDia(scope: any, logger?: any) {
 export async function promoPlano(scope: any, logger?: any, slugForzado?: string) {
   const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
   await asegurarPromo(knex)
-  const slugs = Object.keys(PLANOS_NOMBRES).reverse() // los últimos agregados, primero
-  let slug = slugForzado && PLANOS_NOMBRES[slugForzado] ? slugForzado : null
+  await cargarNombresPlanos(knex)
+  const slugs = todosLosSlugs().reverse() // los últimos agregados, primero
+  let slug = slugForzado && nombrePlano(slugForzado) ? slugForzado : null
   if (!slug) {
     const filas = await knex(T_PROMO).where({ tipo: "plano" }).groupBy("ref").select("ref", knex.raw("max(created_at) as ultimo"))
     const ultimo = new Map(filas.map((f: any) => [f.ref, new Date(f.ultimo).getTime()]))
     slug = slugs.find((s) => !ultimo.has(s)) || [...slugs].sort((a, b) => (ultimo.get(a) || 0) - (ultimo.get(b) || 0))[0]
   }
   if (!slug) return null
-  const nombre = PLANOS_NOMBRES[slug]
+  const nombre = nombrePlano(slug)!
   const medios: { url: string; tipo: string }[] = []
   for (const n of [1, 2, 3, 4]) {
     const buf = await pngLaminaPlano(slug, n)

@@ -7,7 +7,8 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
 import { medidasDe, medidasDeConsulta, redimensionarQueQuepa } from "@/lib/planos/medidas"
-import { MATERIALES_PLANO, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
+import { buscarPlano } from "@/lib/planos/fuente"
+import { MATERIALES_PLANO, type PiezaPlano } from "@/lib/planos/modelos"
 import { cotizarPlano } from "@/lib/planos/precio"
 import { pesos, type ConfigPrecios } from "@/lib/cotizador/estimador"
 import TalleresPlano from "@/components/hetna/planos/TalleresPlano"
@@ -46,11 +47,14 @@ async function configPrecios(): Promise<ConfigPrecios | null> {
 // la página se arma en cada visita como el resto del sitio (prerenderizada
 // daba 500 en producción).
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
   const { slug } = await params
-  const pl = planoPorSlug(slug)
+  const borrador = String((await searchParams).borrador || "")
+  const pl = await buscarPlano(slug, borrador || undefined)
   if (!pl) return {}
   return {
+    // la vista previa de un borrador no se indexa
+    ...(borrador ? { robots: { index: false, follow: false } } : {}),
     alternates: { canonical: `https://hetnacnc.com/mx/planos/${pl.slug}` },
     title: `Plano gratis: ${pl.nombre} (lista de corte y DXF)`,
     description: `${pl.resumen} Plano con lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC.`,
@@ -66,10 +70,12 @@ const Titulo = ({ n, children }: { n: string; children: React.ReactNode }) => (
 
 export default async function PlanoPagina({ params, searchParams }: { params: Promise<{ slug: string; locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { slug, locale } = await params
-  const base = planoPorSlug(slug)
+  const consulta = await searchParams
+  const borrador = typeof consulta.borrador === "string" ? consulta.borrador : ""
+  const base = await buscarPlano(slug, borrador || undefined)
   if (!base) notFound()
   // "Modifica las medidas": ?ancho=&fondo=&alto= (mm)
-  const { plano: pl, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(await searchParams))
+  const { plano: pl, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(consulta))
   const original = medidasDe(base.piezas, base.ruedas)
   const cambiado = pl !== base
   const [cfg, tienda] = await Promise.all([configPrecios(), ofertasDelPlano(slug, locale)])
@@ -113,6 +119,11 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <span className="font-medium text-[#1B1B18]">{pl.nombre}</span>
         </div>
 
+        {borrador ? (
+          <p className="mb-4 rounded-xl border border-[#FFD3B0] bg-[#FFF4E5] px-4 py-3 text-[14px] font-semibold text-[#8A4B00] print:hidden">
+            Vista previa de un borrador: todavía no está publicado. Apruébalo o recházalo en el panel (Planos IA).
+          </p>
+        ) : null}
         <MedidasPlano key={`${m.ancho}-${m.fondo}-${m.alto}`} original={original} actual={m} ajustado={ajustado} />
 
         <article id="lamina" className="overflow-hidden rounded-3xl bg-[#142033] p-5 text-white sm:p-8" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>

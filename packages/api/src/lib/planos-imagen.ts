@@ -4,9 +4,10 @@
 import sharp from "sharp"
 
 import { STORE_URL } from "./licitacion"
-import { PLANOS_NOMBRES } from "./planos-correo"
+import { nombrePlano } from "./planos-correo"
 
-export const laminaValida = (slug: string, n: number) => Boolean(PLANOS_NOMBRES[slug]) && Number.isInteger(n) && n >= 1 && n <= 4
+/** Quien la use con planos de la base de datos llama antes a cargarNombresPlanos(knex). */
+export const laminaValida = (slug: string, n: number) => Boolean(nombrePlano(slug)) && Number.isInteger(n) && n >= 1 && n <= 4
 
 /** PNG 1080 × 1350 de la lámina n (1 a 4) del plano. */
 export async function pngLaminaPlano(slug: string, n: number): Promise<Buffer> {
