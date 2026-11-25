@@ -2,6 +2,8 @@ import { ProductGallery } from "@/components/organisms/ProductGallery/ProductGal
 import { ProductDetails, ProductDetallesLargos } from "@/components/organisms/ProductDetails/ProductDetails"
 import { listProducts } from "@/lib/data/products"
 import { listOffers } from "@/lib/data/offers"
+import TalleresPlano from "@/components/hetna/planos/TalleresPlano"
+import { variantesPlano } from "@/lib/planos/tienda"
 import { getBuyboxWinner, getOfferAmount, getOfferStock, rankOffers, StoreOffer } from "@/lib/helpers/buybox"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { TrackEvent } from "@/components/analytics/TrackEvent"
@@ -144,8 +146,16 @@ export const ProductDetailsPage = async ({
     textoMeta(metaProd.medidas) || textoMeta(metaProd.medida_principal) || campoDeDescripcion(prod.description, /^medidas?$/i) || undefined
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
-  const fabricar =
-    tipoProd === "servicio" ? null : (
+  // Productos de la Biblioteca de planos: las ofertas de los talleres ("Taller X te lo fabrica en $Y")
+  const planoSlug = metaProd.origen === "plano" ? textoMeta(metaProd.plano_slug) : ""
+  const fabricar = planoSlug ? (
+    <TalleresPlano
+      offers={offers as StoreOffer[]}
+      variantes={variantesPlano(prod as never)}
+      locale={locale}
+      slug={planoSlug}
+    />
+  ) : tipoProd === "servicio" ? null : (
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}

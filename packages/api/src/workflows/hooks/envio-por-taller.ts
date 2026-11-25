@@ -17,17 +17,21 @@ import {
 
 export const CLAVE_RENGLONES = "hetna_renglones_por_almacen"
 export const CLAVE_ORIGENES = "hetna_origen_por_almacen"
+// Renglones cuya oferta trae envío gratis (lo pone el taller en "Ofertar en planos")
+export const CLAVE_GRATIS = "hetna_renglones_envio_gratis"
 
 async function renglonesPorAlmacen({ input }: { input: { cart_id?: string } }, { container }: { container: any }) {
   const cartId = input?.cart_id
   if (!cartId) return new StepResponse({})
   try {
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const { data: carritos } = await query.graph({ entity: "cart", fields: ["id", "items.id", "items.offer.seller_id"], filters: { id: cartId } })
+    const { data: carritos } = await query.graph({ entity: "cart", fields: ["id", "items.id", "items.offer.seller_id", "items.offer.metadata"], filters: { id: cartId } })
     const porTaller = new Map<string, string[]>()
+    const gratis: string[] = []
     for (const r of ((carritos[0] as any)?.items || []) as any[]) {
       const oferta = Array.isArray(r?.offer) ? r.offer[0] : r?.offer
       if (!oferta?.seller_id) continue
+      if (oferta.metadata?.envio_gratis === true) gratis.push(r.id)
       porTaller.set(oferta.seller_id, [...(porTaller.get(oferta.seller_id) || []), r.id])
     }
     if (!porTaller.size) return new StepResponse({})
@@ -45,7 +49,7 @@ async function renglonesPorAlmacen({ input }: { input: { cart_id?: string } }, {
         if (t.address) origenes[l.id] = t.address
       }
     }
-    return new StepResponse({ [CLAVE_RENGLONES]: mapa, [CLAVE_ORIGENES]: origenes })
+    return new StepResponse({ [CLAVE_RENGLONES]: mapa, [CLAVE_ORIGENES]: origenes, [CLAVE_GRATIS]: gratis })
   } catch (e) {
     // Sin el mapa se cotiza como antes (todos los renglones del perfil)
     container.resolve("logger").warn(`[envio-por-taller] ${cartId}: ${(e as Error).message}; se cotiza con todo el carrito`)
