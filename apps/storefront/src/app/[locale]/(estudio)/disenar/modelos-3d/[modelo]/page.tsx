@@ -16,9 +16,9 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; modelo: string }> }
 
-export function generateStaticParams() {
-  return MODELOS.map((m) => ({ modelo: m.id }))
-}
+// Se arma al momento, como las demás herramientas del estudio: el marco del
+// estudio lee datos de la visita y una página pregenerada (generateStaticParams)
+// daba error 500 en producción.
 
 const rango = (p: Modelo3D["params"][number]) => `${p.min} a ${p.max}${p.unidad ?? " mm"}`
 const url = (m: Modelo3D) => `${SITIO}/mx/disenar/modelos-3d/${m.id}`
