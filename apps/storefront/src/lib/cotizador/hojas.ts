@@ -20,12 +20,14 @@ export type ResultadoHojas = {
 // Hoja estándar de MDF, triplay, acrílico y lámina en México: 4 × 8 pies
 export const HOJA_ESTANDAR = { largo: 2440, ancho: 1220 }
 
-// Separación entre piezas y orilla por proceso (mm). Son supuestos razonables
-// del corte, no del material: se muestran junto al resultado.
+// Separación entre piezas y orilla (mm). Es LA MISMA que usa el precio
+// (estimador.ts y, en el backend, estimador-referencia.ts): antes el texto
+// "caben X por hoja" usaba 10/15 mm y el precio 6/10 mm, y no cuadraban.
+export const SEPARACION_HOJA = { sep: 6, orilla: 10 }
 export const SEPARACION: Record<string, { sep: number; orilla: number }> = {
-  laser_co2: { sep: 3, orilla: 10 },
-  router: { sep: 10, orilla: 15 },
-  plasma: { sep: 10, orilla: 15 },
+  laser_co2: SEPARACION_HOJA,
+  router: SEPARACION_HOJA,
+  plasma: SEPARACION_HOJA,
 }
 
 const cuantas = (disponible: number, pieza: number, sep: number) => (pieza <= 0 || disponible < pieza ? 0 : Math.floor((disponible + sep) / (pieza + sep)))

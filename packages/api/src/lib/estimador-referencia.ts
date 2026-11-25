@@ -355,7 +355,7 @@ export function estimar(p: {
     unidades = gramos / 1000
   } else if (material.hoja) {
     const [hl, ha] = material.hoja
-    const sep = 6, marg = 10
+    const sep = 6, marg = 10 // igual que SEPARACION_HOJA del sitio (storefront lib/cotizador/hojas.ts)
     const cols = (pl: number) => Math.floor((hl - 2 * marg + sep) / (pl + sep))
     const rows = (pa: number) => Math.floor((ha - 2 * marg + sep) / (pa + sep))
     const a = Math.max(0, cols(pieza.largo)) * Math.max(0, rows(pieza.ancho))

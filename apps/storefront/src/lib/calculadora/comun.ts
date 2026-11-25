@@ -58,8 +58,26 @@ export type Preset = { id: string; nombre: string; detalle?: string; valores: Re
 // ---------- utilidades ----------
 export const num = (v: unknown): number | undefined => {
   if (v === null || v === undefined || v === "") return undefined
-  const n = typeof v === "number" ? v : Number(String(v).replace(",", "."))
+  const n = typeof v === "number" ? v : leerNumero(String(v))
   return Number.isFinite(n) ? n : undefined
+}
+
+/**
+ * Lee un número escrito a mano: "1,5" → 1.5, "1,250" → 1250, "1,250.5" → 1250.5,
+ * "1.250,5" → 1250.5, "1,250,5" → 1250.5. Antes sólo cambiaba la primera coma
+ * por punto y "1,250,5" daba un número absurdo o vacío.
+ */
+export function leerNumero(texto: string): number {
+  const t = texto.trim().replace(/[\s$]/g, "")
+  if (!t) return NaN
+  const ultimo = Math.max(t.lastIndexOf(","), t.lastIndexOf("."))
+  if (ultimo < 0) return Number(t)
+  const despues = t.slice(ultimo + 1)
+  const separadores = (t.match(/[.,]/g) || []).length
+  // Un solo separador seguido de exactamente 3 dígitos ("1,250"): son miles; si no, es el decimal
+  const esMiles = separadores === 1 ? /^\d{3}$/.test(despues) && t[ultimo] === "," : /^\d{3}$/.test(despues) && new Set(t.match(/[.,]/g)).size === 1
+  if (esMiles) return Number(t.replace(/[.,]/g, ""))
+  return Number(t.slice(0, ultimo).replace(/[.,]/g, "") + "." + despues)
 }
 export const txt = (v: unknown) => (typeof v === "string" ? v.trim() : v === undefined || v === null ? "" : String(v))
 export const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x))

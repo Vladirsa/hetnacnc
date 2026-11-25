@@ -332,8 +332,15 @@ export function anticipoDe(c): number {
   if (c.anticipo_monto != null && Number(c.anticipo_monto) > 0) return Math.round(Number(c.anticipo_monto) * 100) / 100
   const total = num(c.total)
   const m = String(c.metodo_pago || "")
-  const pct = m.match(/(\d{1,3})\s*%\s*(de\s+)?anticipo/i) || m.match(/anticipo\s*(?:de\s*)?(\d{1,3})\s*%/i)
-  if (pct) return Math.round(total * Number(pct[1])) / 100
+  // Pago total por adelantado ("Pago total anticipado", "100 % anticipado"): el anticipo es el total
+  if (/(pago\s+(total|completo|de\s+contado)|100\s*%)\s*(anticipad|por\s+adelantado|adelantad|antes\s+de)/i.test(m)) return Math.round(total * 100) / 100
+  // Acepta decimales con punto o coma ("33.5 %", "33,5 %"): antes "33.5 %" se leía como "5 %"
+  const N = "(\\d{1,3}(?:[.,]\\d{1,2})?)"
+  const pct = m.match(new RegExp(`(?<![\\d.,])${N}\\s*%\\s*(?:de\\s+)?anticipo`, "i")) || m.match(new RegExp(`anticipo\\s*(?:del?\\s*)?${N}\\s*%`, "i"))
+  if (pct) {
+    const p = Math.min(100, Number(pct[1].replace(",", ".")))
+    if (p > 0) return Math.round(total * p) / 100
+  }
   const monto = m.match(/anticipo\s+de\s+\$?\s*([\d,]+(?:\.\d+)?)/i)
   if (monto) return Math.min(total, Number(monto[1].replace(/,/g, "")))
   return 0

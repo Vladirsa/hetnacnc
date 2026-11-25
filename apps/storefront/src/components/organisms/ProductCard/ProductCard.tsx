@@ -91,9 +91,11 @@ export const ProductCard = ({
               <p className="font-medium" data-testid="product-card-current-price">
                 {((product as { metadata?: Record<string, unknown> | null }).metadata)?.archivo_gratis === true
                   ? "Gratis"
-                  : cheapestPrice?.calculated_price}
+                  : !cheapestPrice || !(Number(cheapestPrice.calculated_price_number) > 0)
+                    ? <span className="text-[#6B6A63]">Próximamente</span>
+                    : cheapestPrice.calculated_price}
               </p>
-              {cheapestPrice?.calculated_price !==
+              {Number(cheapestPrice?.calculated_price_number) > 0 && cheapestPrice?.calculated_price !==
                 cheapestPrice?.original_price && (
                 <p className="text-sm text-gray-500 line-through" data-testid="product-card-original-price">
                   {cheapestPrice?.original_price}

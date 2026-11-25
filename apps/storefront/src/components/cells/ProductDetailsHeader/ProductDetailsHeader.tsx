@@ -1,6 +1,7 @@
 "use client"
 
 import { origenDe } from "@/lib/hetna/origen"
+import { ligaWhatsApp } from "@/lib/hetna/empresa"
 import { useEffect, useRef, useState } from "react"
 
 import { useRouter } from "next/navigation"
@@ -394,8 +395,13 @@ export const ProductDetailsHeader = ({
             {variantPrice!.calculated_price}
           </span>
         ) : (
-          <span className="text-[14px] text-[#6B6A63]" data-testid="product-price-unavailable">
-            No disponible en tu región
+          // Sin precio en esta región (p. ej. planos digitales que aún no se venden en México):
+          // antes decía "No disponible en tu región" junto a $0 y parecía error o regalo
+          <span className="flex flex-wrap items-center gap-2 text-[14px] text-[#6B6A63]" data-testid="product-price-unavailable">
+            <b className="text-[#1B1B18]">Próximamente</b>
+            <a href={ligaWhatsApp(`Hola, me interesa «${product.title}». ¿Me avisan cuando esté disponible?`)} target="_blank" rel="noopener" className="font-semibold text-[#E8590C] underline">
+              Avísame por WhatsApp
+            </a>
           </span>
         )}
 
