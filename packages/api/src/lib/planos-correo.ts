@@ -47,6 +47,16 @@ export const PLANOS_NOMBRES: Record<string, string> = {
   "macetero-escalonado": "Macetero escalonado de 3 niveles",
   "especiero-de-pared": "Especiero de pared",
   "comedero-elevado": "Comedero elevado para perro",
+  "gabinete-para-taladro-de-banco": "Gabinete para taladro de banco",
+  "mesa-de-apoyo-para-sierra": "Mesa de apoyo para sierra de banco",
+  "repisa-porta-rollos": "Repisa porta rollos de lija y cinta",
+  "mesa-de-ensamble-baja": "Mesa de ensamble baja",
+  "caja-organizadora-con-tapa": "Caja organizadora con tapa",
+  "mesa-lateral": "Mesa lateral",
+  "perchero-de-pared-con-repisa": "Perchero de pared con repisa",
+  "organizador-de-escritorio": "Organizador de escritorio",
+  "cava-para-9-botellas": "Cava para 9 botellas",
+  "mesa-para-ninos": "Mesa para niños",
 }
 
 export type PedidoPlano = { email: string; plano: string; nombre: string | null; promos: boolean }
