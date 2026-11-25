@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { GuiaCnc, talleresDeGuia } from "@/components/hetna/guias/GuiaCnc"
-import { ciudadPorSlug, enCiudad, guiaPorSlug } from "@/lib/seo/guias"
+import { ciudadPorSlug, enCiudad, guiaPorSlug, h1EnCiudad } from "@/lib/seo/guias"
 
 type Props = { params: Promise<{ locale: string; guia: string; ciudad: string }> }
 
@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locales = (await talleresDeGuia(g)).filter((t) => enCiudad(c, t.perfil.estado, t.perfil.ciudad))
   const url = `https://hetnacnc.com/mx/cnc/${g.slug}/${c.slug}`
   return {
-    title: `${g.h1} en ${c.nombre}`,
-    description: `${g.h1} en ${c.nombre}: ${locales.length ? `talleres en ${c.estado}` : "talleres con envío"}, espesores, cómo preparar tu archivo y precio al instante.`,
+    title: h1EnCiudad(g, c),
+    description: `${h1EnCiudad(g, c)}: ${locales.length ? `talleres en ${c.estado}` : "talleres con envío"}, espesores, cómo preparar tu archivo y precio al instante.`,
     alternates: { canonical: url },
     robots: locales.length ? { index: true, follow: true } : { index: false, follow: true },
   }

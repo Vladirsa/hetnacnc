@@ -7,12 +7,15 @@
 // /disenar/muebles-desde-imagen, /disenar/despiece-muebles (cocina) y
 // /disenar/molduras-tallados. /disenar/muebles-ensamble (el exhibidor sin
 // tornillos) abre Desde una imagen: el exhibidor está en su catálogo.
+import dynamic from "next/dynamic"
 import { useState } from "react"
 
-import { GeneradorCostillas } from "./GeneradorCostillas"
-import { GeneradorMolduras } from "./GeneradorMolduras"
-import { GeneradorTableros } from "./GeneradorTableros"
 import { SelectorModos, type Modo } from "./SelectorModos"
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos juntos)
+const GeneradorCostillas = dynamic(() => import("./GeneradorCostillas").then((x) => x.GeneradorCostillas))
+const GeneradorMolduras = dynamic(() => import("./GeneradorMolduras").then((x) => x.GeneradorMolduras))
+const GeneradorTableros = dynamic(() => import("./GeneradorTableros").then((x) => x.GeneradorTableros))
+
 
 export type ModoMuebles = "imagen" | "cocina" | "molduras" | "costillas"
 

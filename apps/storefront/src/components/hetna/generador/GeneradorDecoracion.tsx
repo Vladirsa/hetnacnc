@@ -4,13 +4,16 @@
 // lámparas por capas en una sola herramienta. Las tres son piezas decorativas
 // para regalo o venta. Cada modo es la herramienta de antes tal cual (mismo
 // motor y mismos archivos). Las direcciones viejas siguen vivas y abren su modo.
+import dynamic from "next/dynamic"
 import { useState } from "react"
 
-import { GeneradorEsferas } from "./GeneradorEsferas"
-import { GeneradorLamparas } from "./GeneradorLamparas"
-import { GeneradorMarcos } from "./GeneradorMarcos"
-import { GeneradorRelojes } from "./GeneradorRelojes"
 import { SelectorModos, type Modo } from "./SelectorModos"
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos juntos)
+const GeneradorEsferas = dynamic(() => import("./GeneradorEsferas").then((x) => x.GeneradorEsferas))
+const GeneradorLamparas = dynamic(() => import("./GeneradorLamparas").then((x) => x.GeneradorLamparas))
+const GeneradorMarcos = dynamic(() => import("./GeneradorMarcos").then((x) => x.GeneradorMarcos))
+const GeneradorRelojes = dynamic(() => import("./GeneradorRelojes").then((x) => x.GeneradorRelojes))
+
 
 export type ModoDecoracion = "reloj" | "marco" | "lampara" | "esfera"
 

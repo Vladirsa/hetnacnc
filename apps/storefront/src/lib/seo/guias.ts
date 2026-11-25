@@ -36,6 +36,7 @@ export type Calculadora = {
   materiales: string[]
   servicioSolicitud: string
   opcion?: { campo: "calibre" | "calidad"; etiqueta: string; valores: string[]; inicial?: string }
+  pideAlto?: boolean
 }
 
 // Las mismas opciones que las páginas /cotizar/* (no cambiar una sin la otra)
@@ -47,6 +48,15 @@ export const CALC_PLASMA: Calculadora = {
   materiales: ["Acero al carbón", "Acero inoxidable", "Aluminio"],
   opcion: { campo: "calibre", etiqueta: "Grosor", valores: ["Lámina delgada (cal. 20 a 12)", "Placa (cal. 10 o más grueso)"] },
   servicioSolicitud: "Corte plasma",
+}
+
+export const CALC_3D: Calculadora = {
+  servicio: "impresion_3d",
+  titulo: "impresión 3D",
+  materiales: ["PLA", "PETG", "ABS", "TPU (flexible)"],
+  pideAlto: true,
+  opcion: { campo: "calidad", etiqueta: "Calidad", valores: ["Prototipo rápido", "Pieza funcional", "Alta calidad"], inicial: "Pieza funcional" },
+  servicioSolicitud: "Impresión 3D",
 }
 
 export type Ciudad = { slug: string; nombre: string; estado: string; alias: string[] }
@@ -667,7 +677,289 @@ export const GUIAS: Guia[] = [
       { href: "/cotizar/corte-plasma", texto: "Precio de corte plasma", detalle: "Estimado al instante" },
     ],
   },
+  {
+    slug: "impresion-3d",
+    titulo: "Impresión 3D en México: precio al instante",
+    descripcion: "Imprime tu pieza en 3D en PLA, PETG, ABS o TPU con talleres de México. Sube tu STL, ve el precio aproximado al instante y elige al taller.",
+    h1: "Servicio de impresión 3D en México",
+    intro: [
+      "La impresión 3D fabrica una pieza capa por capa a partir de un archivo STL, OBJ o STEP. Sirve para prototipos, refacciones que ya no se venden, piezas personalizadas, maquetas, moldes y lotes cortos sin pagar herramental.",
+      "En HETNA ves el precio aproximado al instante con las medidas de tu pieza, o publicas tu trabajo para que varios talleres de impresión 3D te manden su propuesta. Comparas precio, material y tiempo de entrega, y pagas dentro de la plataforma.",
+    ],
+    servicio: "Impresión 3D",
+    coincide: ["Impresión 3D", "Impresion 3D", "Prototipado"],
+    materiales: ["PLA", "PETG", "ABS", "TPU", "Resina"],
+    tipo: "Impresión 3D bajo pedido",
+    cta: { href: "/cotizar/impresion-3d", texto: "Ver precio al instante" },
+    ciudades: true,
+    calculadora: CALC_3D,
+    secciones: [
+      {
+        titulo: "Qué material elegir",
+        lista: [
+          "PLA: el más económico y fácil de imprimir. Bueno para prototipos, maquetas y piezas decorativas; se ablanda con el calor (no lo dejes dentro de un coche al sol).",
+          "PETG: más resistente a golpes, a la humedad y al calor que el PLA. Buena opción para piezas funcionales y exteriores.",
+          "ABS: aguanta más temperatura y se puede lijar y pegar con acetona; pide un taller con impresora cerrada.",
+          "TPU: flexible, para empaques, fundas, topes y piezas que se doblan.",
+          "Resina (SLA/DLP): detalle muy fino y superficie lisa para joyería, miniaturas, odontología y moldes maestros.",
+        ],
+      },
+      {
+        titulo: "De qué depende el precio",
+        lista: [
+          "Volumen y tamaño de la pieza: cuánto material usa y cuántas horas de máquina.",
+          "Calidad: una capa más delgada se ve mejor pero tarda más.",
+          "Relleno y paredes: una pieza funcional lleva más material por dentro que una maqueta.",
+          "Soportes: las partes en voladizo necesitan soportes que se imprimen y se retiran.",
+          "Acabado: lijado, primer, pintura o pulido se cotizan aparte.",
+        ],
+      },
+      {
+        titulo: "Cómo pedirlo bien",
+        lista: [
+          "Manda el archivo en STL, OBJ o STEP, en milímetros y como sólido cerrado.",
+          "Indica para qué es la pieza (decorativa, funcional, a la intemperie, con calor): el taller te recomienda material y relleno.",
+          "Si la pieza es más grande que la cama de la impresora, pártela con pernos con la herramienta gratis de HETNA.",
+          "Si sólo tienes una foto o una pieza rota, publica tu trabajo con fotos y medidas: hay talleres que modelan.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Cuánto tarda una impresión 3D?", r: "Desde unas horas para piezas chicas hasta varios días para piezas grandes o lotes. Cada taller te dice su tiempo de entrega en la propuesta." },
+      { p: "¿Qué tan resistente es una pieza impresa?", r: "Depende del material, el relleno y la orientación de impresión. Para piezas que cargan peso pide PETG o ABS con más paredes y relleno, y dile al taller cómo se va a usar." },
+      { p: "¿Pueden imprimir una pieza que no tengo en archivo?", r: "Sí, si publicas tu trabajo con fotos y medidas. Algunos talleres modelan la pieza (o la escanean) y te cotizan el diseño junto con la impresión." },
+      { p: "¿Hay un tamaño máximo?", r: "Cada impresora tiene su volumen; una de escritorio suele imprimir piezas de unos 20 a 30 cm por lado. Las piezas más grandes se imprimen en partes y se pegan o atornillan." },
+    ],
+    enlaces: [
+      { href: "/disenar/partir-3d", texto: "Partir modelo 3D", detalle: "Para piezas más grandes que la cama" },
+      { href: "/disenar/moldes-3d", texto: "Generador de moldes", detalle: "De tu STL a molde para resina o silicona" },
+      { href: "/disenar/modelos-3d", texto: "Modelos 3D a tu medida", detalle: "Gratis, listos para imprimir" },
+      { href: "/cotizar/impresion-3d", texto: "Precio de impresión 3D", detalle: "Estimado al instante" },
+    ],
+  },
+  {
+    slug: "celosias-mdf-a-medida",
+    titulo: "Celosías de MDF a medida: diseño y corte CNC",
+    descripcion: "Diseña tu celosía de MDF a la medida gratis y mándala a cortar en router CNC o láser. Paneles decorativos, plafones y divisiones con precio al instante.",
+    h1: "Celosías de MDF a medida",
+    intro: [
+      "Una celosía es un panel calado con un patrón repetido: sirve como divisor de espacios, cabecera, plafón, puerta de clóset, cubre-radiador o fachada decorativa. En MDF se corta con router CNC (paneles grandes y gruesos) o con láser (piezas delgadas y detalle fino).",
+      "En HETNA diseñas la celosía gratis a tu medida, con el patrón, el marco y los barrenos que quieras, y la descargas en DXF. Si no tienes máquina, ves el precio aproximado aquí mismo y un taller de tu zona te la corta.",
+    ],
+    servicio: "Corte CNC",
+    coincide: ["Corte CNC", "Fresado de madera", "Corte láser"],
+    materiales: ["MDF", "Triplay", "Madera"],
+    tipo: "Corte CNC de celosías decorativas",
+    cta: { href: "/disenar/celosias", texto: "Diseñar mi celosía gratis" },
+    calculadora: CALC_ROUTER,
+    secciones: [
+      {
+        titulo: "Router CNC o láser: cuál conviene",
+        lista: [
+          "Router CNC: para paneles de 9 a 18 mm y medidas grandes (hasta un tablero completo de 1220 × 2440 mm). Es lo usual en divisores, cabeceras y puertas.",
+          "Láser: para MDF de 3 a 6 mm, patrones muy finos y piezas chicas como lámparas, cuadros o plafones ligeros.",
+          "En router, las esquinas interiores quedan redondeadas con el radio de la fresa: los patrones con puntas muy agudas se ven mejor en láser.",
+        ],
+      },
+      {
+        titulo: "Medidas que conviene cuidar",
+        lista: [
+          "Puente (el material entre dos huecos): en MDF de 9 mm o más, deja al menos 5 mm para que el panel no se rompa al manejarlo.",
+          "Marco: un marco liso de 30 a 50 mm alrededor le da rigidez y deja dónde atornillar.",
+          "Barrenos: si va fija a la pared o a un bastidor, agrégalos desde el diseño.",
+          "Acabado: el MDF se pinta muy bien; pide sellador antes de la pintura para que los cantos calados no absorban de más.",
+        ],
+      },
+      {
+        titulo: "De qué depende el precio",
+        lista: [
+          "Longitud total de corte: un patrón con muchos huecos chicos tarda más que uno con pocos huecos grandes.",
+          "Espesor del MDF y número de tableros.",
+          "Cantidad de paneles iguales y si llevan pintura o barniz.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Puedo hacer una celosía a partir de una foto o un dibujo?", r: "Sí. Con la herramienta Celosía desde imagen subes la foto y sale el patrón en DXF; el generador respeta un puente mínimo para que el panel no quede frágil." },
+      { p: "¿Se puede hacer en metal?", r: "Sí, en lámina de acero se corta con plasma o láser de fibra. El mismo diseño sirve; pide el precio con corte plasma." },
+      { p: "¿Qué tan grande puede ser?", r: "En router, hasta el tamaño de un tablero (1220 × 2440 mm). Si necesitas más, el diseño se divide en paneles que se unen en obra." },
+    ],
+    enlaces: [
+      { href: "/disenar/celosias", texto: "Generador de celosías", detalle: "Patrones, marco y barrenos, gratis" },
+      { href: "/disenar/celosia-desde-imagen", texto: "Celosía desde imagen", detalle: "De foto a DXF" },
+      { href: "/cnc/taller-router-cnc-mexico", texto: "Taller de router CNC", detalle: "Corte y tallado de tableros" },
+      { href: "/cnc/corte-laser-mdf", texto: "Corte láser de MDF", detalle: "Para piezas delgadas" },
+    ],
+  },
+  {
+    slug: "letras-3d-acrilico",
+    titulo: "Letras 3D de acrílico y MDF para anuncios",
+    descripcion: "Letras 3D de acrílico o MDF cortadas en láser para anuncios, recepciones y eventos. Diséñalas gratis, ve el precio al instante y elige al taller.",
+    h1: "Letras 3D de acrílico y MDF",
+    intro: [
+      "Las letras 3D dan volumen a un logotipo o un nombre: se usan en recepciones, fachadas, locales, bodas y eventos. Las más comunes se cortan en láser en acrílico de 3 a 10 mm o en MDF, y se separan de la pared con separadores para que proyecten sombra.",
+      "Con el generador gratis de HETNA escribes el texto, eliges la letra y el tamaño, y descargas el archivo. Aquí mismo ves el precio aproximado del corte y un taller te las fabrica.",
+    ],
+    servicio: "Corte láser",
+    coincide: ["Corte láser", "Grabado láser", "Anuncios"],
+    materiales: ["Acrílico", "MDF"],
+    tipo: "Corte láser de letras 3D",
+    cta: { href: "/disenar/letras-3d", texto: "Diseñar mis letras gratis" },
+    calculadora: CALC_LASER,
+    secciones: [
+      {
+        titulo: "Materiales y acabados",
+        lista: [
+          "Acrílico de color o cristal: brillante y resistente a la humedad, ideal para interiores y logotipos.",
+          "Acrílico espejo: plateado o dorado, para recepciones y eventos; se raya fácil, pide que lo entreguen con su película protectora.",
+          "MDF: económico y fácil de pintar del color exacto de tu marca; sólo para interiores.",
+          "Letras en caja (con tapa y costados): más volumen y la opción de iluminarlas por dentro.",
+        ],
+      },
+      {
+        titulo: "Cómo pedirlas bien",
+        lista: [
+          "Convierte el texto a contornos (curvas) en tu programa: si mandas la tipografía como texto, el taller puede no tenerla.",
+          "Indica la altura de la letra más alta y el espesor del material.",
+          "Cuida los trazos delgados: en acrílico de 3 mm, una línea de menos de 2 mm se rompe con facilidad.",
+          "Di cómo se van a instalar: cinta doble cara, separadores o pernos (llevan barrenos).",
+        ],
+      },
+      {
+        titulo: "De qué depende el precio",
+        lista: [
+          "El largo del contorno de todas las letras y el material.",
+          "El espesor: el acrílico de 10 mm corta más lento que el de 3 mm.",
+          "Pintura, separadores, iluminación e instalación, que se cotizan aparte.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Las puedo poner en exterior?", r: "El acrílico aguanta la intemperie mejor que el MDF; para fachadas al sol directo pregunta al taller por acrílico con protección UV o por letras de metal." },
+      { p: "¿Pueden iluminarse?", r: "Sí, con letras en caja de acrílico translúcido y tira LED por dentro. Descríbelo al publicar tu trabajo para que el taller te cotice el armado." },
+      { p: "¿Qué tamaño mínimo de letra conviene?", r: "Para que se lea y no se rompa, letras de al menos 3 a 5 cm de alto en acrílico de 3 mm; si la tipografía es muy delgada, más grandes." },
+    ],
+    enlaces: [
+      { href: "/disenar/letras-3d", texto: "Generador de letras 3D", detalle: "Gratis, DXF y STL" },
+      { href: "/disenar/letreros", texto: "Letreros y nombres", detalle: "Placas y anuncios planos" },
+      { href: "/cnc/corte-laser-acrilico", texto: "Corte láser de acrílico", detalle: "Cast, extruido y espejo" },
+      { href: "/cotizar/corte-laser", texto: "Precio de corte láser", detalle: "Estimado al instante" },
+    ],
+  },
+  {
+    slug: "moldes-3d-resina",
+    titulo: "Moldes 3D para resina, yeso y silicona",
+    descripcion: "Convierte tu pieza en un molde de dos partes, abierto o caja para silicona, gratis. Imprímelo o pide que un taller lo fabrique con precio al instante.",
+    h1: "Moldes 3D para resina, yeso y silicona",
+    intro: [
+      "Un molde impreso en 3D permite sacar varias copias de una pieza en resina, yeso, concreto, jabón o cera. Se hace a partir del modelo 3D de la pieza: el molde de dos partes lleva llaves para que embone, un bebedero para vaciar y respiraderos para que salga el aire.",
+      "Con el generador gratis de HETNA subes tu STL, OBJ o STEP y sale el molde listo para imprimir. Si no tienes impresora, ves aquí el precio aproximado y un taller de impresión 3D te lo fabrica.",
+    ],
+    servicio: "Impresión 3D",
+    coincide: ["Impresión 3D", "Impresion 3D", "Prototipado"],
+    materiales: ["PLA", "PETG", "Resina"],
+    tipo: "Impresión 3D de moldes",
+    cta: { href: "/disenar/moldes-3d", texto: "Hacer mi molde gratis" },
+    calculadora: CALC_3D,
+    secciones: [
+      {
+        titulo: "Qué tipo de molde te conviene",
+        lista: [
+          "De dos partes: para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra, se vacía y se abre en dos.",
+          "Abierto: una sola pieza para objetos con una cara plana, como jabones, velas, posavasos o macetas.",
+          "Caja para silicona: imprimes la caja con tu pieza adentro, vacías silicona y te queda un molde flexible para hacer muchas copias.",
+        ],
+      },
+      {
+        titulo: "Consejos para que salga bien",
+        lista: [
+          "Pon la partición en la parte más ancha de la pieza para que salga sin atorarse.",
+          "Imprime el molde con 3 o más paredes y 20% de relleno o más, para que no se filtre la resina.",
+          "Usa desmoldante (vaselina, cera o spray) antes de vaciar.",
+          "Para comida (chocolate, dulces), el plástico impreso no es apto: imprime la pieza o la caja y haz el molde final en silicona grado alimenticio.",
+        ],
+      },
+      {
+        titulo: "De qué depende el precio",
+        lista: [
+          "El tamaño del molde y el material: el molde lleva una pared alrededor de la pieza, así que ocupa más que la pieza sola.",
+          "La calidad de impresión: una superficie más lisa en la cavidad da copias más limpias.",
+          "Si pides también la silicona o el vaciado de las copias, que se cotizan aparte.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿Necesito saber modelar en 3D?", r: "No. Basta con el archivo de la pieza (STL, OBJ o STEP). Si no lo tienes, puedes buscar uno libre o pedir que un taller lo modele o lo escanee." },
+      { p: "¿Cuántas copias aguanta un molde impreso?", r: "Depende del material de vaciado y del desmoldante; para muchas copias conviene la caja para silicona, que da un molde flexible y duradero." },
+      { p: "¿Sirve para concreto o yeso?", r: "Sí. Para concreto usa paredes más gruesas y desmoldante, y deja fraguar el tiempo completo antes de abrir." },
+    ],
+    enlaces: [
+      { href: "/disenar/moldes-3d", texto: "Generador de moldes 3D", detalle: "Dos partes, abierto o caja para silicona" },
+      { href: "/disenar/partir-3d", texto: "Partir modelo 3D", detalle: "Si el molde no cabe en la impresora" },
+      { href: "/cnc/impresion-3d", texto: "Servicio de impresión 3D", detalle: "Materiales y talleres" },
+      { href: "/cotizar/impresion-3d", texto: "Precio de impresión 3D", detalle: "Estimado al instante" },
+    ],
+  },
+  {
+    slug: "grabado-laser",
+    titulo: "Grabado láser en madera, acrílico y piel",
+    descripcion: "Grabado láser de logotipos, nombres y fotos en madera, MDF, acrílico, piel y vidrio. Ve el precio aproximado al instante y elige un taller de México.",
+    h1: "Grabado láser en madera, acrílico, piel y vidrio",
+    intro: [
+      "El grabado láser marca un diseño en la superficie del material sin atravesarlo: logotipos, nombres, fotos, números de serie o textos. Se usa en regalos, promocionales, placas, empaques, artesanías y piezas de producción.",
+      "En HETNA ves el precio aproximado al instante o publicas tu trabajo para que varios talleres con láser te manden su propuesta. Si tu diseño es una foto, prepárala gratis con la herramienta de foto para grabado.",
+    ],
+    servicio: "Corte láser",
+    coincide: ["Corte láser", "Grabado láser"],
+    materiales: ["MDF", "Madera", "Acrílico", "Piel"],
+    tipo: "Grabado láser",
+    cta: { href: "/cotizar/corte-laser", texto: "Ver precio al instante" },
+    calculadora: CALC_LASER,
+    secciones: [
+      {
+        titulo: "Qué se puede grabar",
+        lista: [
+          "Madera y MDF: el grabado queda oscuro y con buen contraste; es lo más común en regalos y placas.",
+          "Acrílico: el grabado queda blanco esmerilado; por la parte de atrás del acrílico cristal se ve de frente sin desgastarse.",
+          "Piel y cuero: carteras, llaveros, parches y libretas.",
+          "Vidrio y cristal: el láser de CO2 deja un esmerilado fino en copas, botellas y trofeos.",
+          "Metal: el acero inoxidable y el aluminio anodizado se marcan con láser de fibra; pídelo como grabado en metal.",
+        ],
+      },
+      {
+        titulo: "Cómo preparar tu archivo",
+        lista: [
+          "Logotipos y textos: en vectores (DXF, SVG, PDF vectorial) y con el texto convertido a curvas.",
+          "Fotos: en buena resolución; con la herramienta de foto para grabado se convierten a puntos (tramado) para que el láser las reproduzca.",
+          "Indica el tamaño final del grabado y el material, y si además hay que cortar la pieza.",
+        ],
+      },
+      {
+        titulo: "De qué depende el precio",
+        lista: [
+          "El área grabada: grabar una superficie llena tarda mucho más que marcar un contorno.",
+          "La cantidad de piezas y si el taller pone el material.",
+          "Si la pieza es cilíndrica (termos, copas), necesita un accesorio rotativo.",
+        ],
+      },
+    ],
+    faqs: [
+      { p: "¿El grabado se borra?", r: "No, el láser quita o quema una capa del material, así que no se despinta. En piezas pintadas se puede rellenar el grabado con color." },
+      { p: "¿Pueden grabar en piezas que yo llevo?", r: "Muchos talleres sí. Descríbelo al publicar tu trabajo (material, tamaño y cuántas piezas) para que te digan si su máquina lo permite." },
+      { p: "¿Se puede grabar una foto?", r: "Sí, en madera, MDF y acrílico dan muy buen resultado. Prepárala gratis con la herramienta de foto para grabado láser." },
+    ],
+    enlaces: [
+      { href: "/disenar/grabado-foto", texto: "Foto para grabado láser", detalle: "Tramado Jarvis y DPI, gratis" },
+      { href: "/disenar/codigo-qr", texto: "Código QR para grabar", detalle: "DXF y SVG listos" },
+      { href: "/cnc/corte-laser-mdf", texto: "Corte láser de MDF", detalle: "Espesores y usos" },
+      { href: "/cnc/preparar-archivo-corte-laser", texto: "Preparar archivo para láser", detalle: "Revisión gratis" },
+    ],
+  },
 ]
+
+/** H1 de la guía en una ciudad: "Taller de router CNC en México" → "Taller de router CNC en Puebla". */
+export const h1SinPais = (g: Pick<Guia, "h1">) => g.h1.replace(/ en México$/, "")
+export const h1EnCiudad = (g: Pick<Guia, "h1">, c: Pick<Ciudad, "nombre">) => `${h1SinPais(g)} en ${c.nombre}`
 
 export const guiaPorSlug = (slug: string) => GUIAS.find((g) => g.slug === slug)
 export const ciudadPorSlug = (slug: string) => CIUDADES.find((c) => c.slug === slug)

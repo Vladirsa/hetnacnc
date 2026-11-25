@@ -24,6 +24,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   await asegurarTablaEstimado(knex)
   const yaHoy = await knex(T_ESTIMADO)
     .where({ email: e.email })
+    .whereNull("herramienta") // "Mándamelo por correo" de las herramientas va aparte
     .where("created_at", ">", knex.raw("now() - interval '1 day'"))
     .first("id")
     .catch(() => null)

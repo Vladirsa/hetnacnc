@@ -2,6 +2,8 @@
 // Se guarda un momento en el navegador (sessionStorage), se abre el Cotizador
 // y este lo carga solo en su botón de "subir archivo". Nada se sube a un servidor.
 
+import { avisarUso } from "./uso"
+
 const CLAVE = "hetna-archivo-para-cotizar"
 const VIGENCIA = 10 * 60 * 1000 // 10 minutos
 const MAXIMO = 3.5 * 1024 * 1024 // sessionStorage aguanta ~5 MB
@@ -160,6 +162,7 @@ export function mandarPaqueteACotizador(paquete: PaqueteCotizacion, locale: stri
     }
     window.location.href = `/${locale}/servicios/cotizador-cnc?archivo=generador`
   })
+  avisarUso("cotizar") // ya va en camino (si no cupo, no cuenta)
   return true
 }
 
@@ -300,6 +303,7 @@ export function mandarAFabricar(
   // (lib/trabajos/servicios.ts): "Router CNC" ahí se llama "Corte CNC".
   const proceso = datos.proceso === "Router CNC" ? "Corte CNC" : datos.proceso
   if (proceso) q.set("proceso", proceso)
+  avisarUso("fabricar") // ya pasó las revisiones de tamaño
   const ir = () => {
     window.location.href = `/${locale}/cotizar?${q.toString()}`
   }
@@ -375,6 +379,7 @@ export function mandarArchivosAFabricar(archivos: { nombre: string; contenido: B
     )
     .catch(() => {}) // si falla, la solicitud abre igual con los datos y el cliente sube sus archivos
     .then(() => { window.location.href = urlFabricar(locale, datos) })
+  avisarUso("fabricar")
   return true
 }
 

@@ -5,13 +5,16 @@
 // STL u OBJ) y después eliges: convertir o escalar, acomodar en hojas,
 // rebanar en capas o extruir a 3D. Cada modo es la herramienta de antes tal
 // cual. Las direcciones viejas siguen vivas y abren su modo.
+import dynamic from "next/dynamic"
 import { useState } from "react"
 
-import { GeneradorAnidado } from "./GeneradorAnidado"
-import { GeneradorConvertidor } from "./GeneradorConvertidor"
-import { GeneradorExtruir } from "./GeneradorExtruir"
-import { GeneradorRebanado } from "./GeneradorRebanado"
 import { SelectorModos, type Modo } from "./SelectorModos"
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos juntos)
+const GeneradorAnidado = dynamic(() => import("./GeneradorAnidado").then((x) => x.GeneradorAnidado))
+const GeneradorConvertidor = dynamic(() => import("./GeneradorConvertidor").then((x) => x.GeneradorConvertidor))
+const GeneradorExtruir = dynamic(() => import("./GeneradorExtruir").then((x) => x.GeneradorExtruir))
+const GeneradorRebanado = dynamic(() => import("./GeneradorRebanado").then((x) => x.GeneradorRebanado))
+
 
 export type ModoArchivos = "convertir" | "anidar" | "rebanar" | "extruir"
 
