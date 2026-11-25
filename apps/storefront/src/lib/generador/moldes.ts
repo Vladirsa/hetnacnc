@@ -3,15 +3,18 @@
 //   - dos_partes: bloque alrededor de la pieza partido en dos a la altura que
 //     se elija, con llaves de registro (esferas) para que embonen, bebedero con
 //     embudo para vaciar y respiraderos para que salga el aire.
+//     Con orejas en la unión para cerrarlo con pinzas de papelería.
 //   - abierto: molde de una pieza, abierto por arriba (para piezas con una
-//     cara plana: jabones, velas, posavasos, macetas).
+//     cara plana: jabones, velas, posavasos, macetas). Puede llevar núcleo
+//     para que la pieza salga hueca (maceta de cemento boca abajo) y un perno
+//     de drenaje que deja el agujero de desagüe.
 //   - caja_silicona: la caja para colar silicona alrededor de tu pieza, con la
 //     pieza pegada al piso (se imprimen juntas); luego haces el molde de
 //     silicona dentro.
 // Usa manifold-3d (el mismo de Partir 3D): restas y cortes exactos en el
 // navegador. Todo en milímetros. Z hacia arriba.
 import { aMalla, aManifold, cargarManifold } from "@/lib/generador/partir3d"
-import { type Desmoldeo, revisarDesmoldeo } from "@/lib/generador/desmoldeo"
+import { type Desmoldeo, nucleoAtorado, revisarDesmoldeo } from "@/lib/generador/desmoldeo"
 import type { Malla } from "@/lib/generador/vectores"
 
 export type TipoMolde = "dos_partes" | "abierto" | "caja_silicona"
@@ -31,6 +34,11 @@ export type OpcionesMolde = {
   respiraderos: number // cuántos (0–4)
   diametroRespiradero: number
   espacio: number // mm de silicona alrededor de la pieza (caja_silicona)
+  orejas: boolean // pestañas en la unión para cerrar con pinzas (dos_partes)
+  hueco: boolean // núcleo para que la pieza salga hueca (abierto)
+  grosorHueco: number // mm de pared de la pieza hueca
+  drenaje: boolean // perno que deja el agujero de desagüe (con hueco)
+  diametroDrenaje: number
 }
 
 export const OPCIONES_MOLDE: OpcionesMolde = {
@@ -46,6 +54,11 @@ export const OPCIONES_MOLDE: OpcionesMolde = {
   respiraderos: 2,
   diametroRespiradero: 3,
   espacio: 10,
+  orejas: true,
+  hueco: false,
+  grosorHueco: 8,
+  drenaje: true,
+  diametroDrenaje: 10,
 }
 
 export type PiezaMolde = {
@@ -171,6 +184,8 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
     }
     let colado = volPieza
     let particionZ: number | null = null
+    // con núcleo: la pieza que de verdad sale (hueca), para revisar el desmoldeo
+    let hueca: any = null
 
     if (tipo === "caja_silicona") {
       // Caja abierta: piso + 4 paredes; la pieza pegada al piso (se imprimen juntas)
@@ -186,7 +201,63 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
     } else if (tipo === "abierto") {
       // Bloque hasta un pelo abajo del tope de la pieza: la cara de arriba queda abierta
       const bloque = g(g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + pared - 0.01])).translate([x0 - pared, y0 - pared, -pared]))
-      salida("molde", g(bloque.subtract(pieza)))
+      let molde = g(bloque.subtract(pieza))
+      if (o.hueco) {
+        // Pieza hueca (maceta de cemento): la pieza va boca arriba en el molde y
+        // un núcleo aparte cuelga de una tapa que se apoya en el borde del molde
+        // (con 4 pernos para centrarla). Se cuela el material, se mete el núcleo
+        // y el sobrante sube por los agujeros de la tapa.
+        const grosor = acotar(o.grosorHueco, 2, 60, 8)
+        const ancho = x1 - x0, largo = y1 - y0
+        if (ancho - 2 * grosor < 4 || largo - 2 * grosor < 4 || H - grosor < 4) {
+          avisos.push(`La pieza es muy chica para hacerla hueca con pared de ${grosor} mm: baja el grosor.`)
+        } else {
+          // la pieza encogida desde su centro: pared = grosor en la parte más ancha, fondo = grosor
+          const sx = (ancho - 2 * grosor) / ancho, sy = (largo - 2 * grosor) / largo
+          const nucleo = g(g(pieza.scale([sx, sy, (H - grosor) / H])).translate([0, 0, grosor]))
+          hueca = g(pieza.subtract(nucleo))
+          colado = hueca.volume()
+          const tapaAlto = 4
+          const huella = (z0: number, alto: number) => g(g(Manifold.cube([ancho + 2 * pared, largo + 2 * pared, alto])).translate([x0 - pared, y0 - pared, z0]))
+          // el núcleo sube 0.2 mm dentro de la tapa para quedar unido
+          let pieNucleo = g(g(nucleo.intersect(huella(grosor, H - grosor + 0.2))).add(huella(H, tapaAlto)))
+          // pernos de centrado en las esquinas (en la pared del molde)
+          const rp = Math.min(2.5, pared / 2 - 1)
+          if (rp >= 1) {
+            const m = pared / 2
+            for (const [x, y] of [[x0 - m, y0 - m], [x1 + m, y0 - m], [x1 + m, y1 + m], [x0 - m, y1 + m]] as [number, number][]) {
+              pieNucleo = g(pieNucleo.add(g(g(Manifold.cylinder(4.2, rp, rp * 0.8, SEG)).translate([x, y, H - 4]))))
+              molde = g(molde.subtract(g(g(Manifold.cylinder(5.2, rp + holgura, rp + holgura, SEG)).translate([x, y, H - 5]))))
+            }
+          }
+          // agujeros en la tapa sobre la pared de la pieza, para que salga el sobrante
+          const rh = Math.min(5, grosor * 0.45)
+          let agujeros = 0
+          for (const [x, y] of [[x1 - grosor / 2, 0], [x0 + grosor / 2, 0], [0, y1 - grosor / 2], [0, y0 + grosor / 2]] as [number, number][]) {
+            const tubo = g(g(Manifold.cylinder(tapaAlto + 2, rh, rh, SEG)).translate([x, y, H - 1]))
+            if (g(tubo.intersect(hueca)).volume() < 0.01) continue // ahí no hay pared
+            pieNucleo = g(pieNucleo.subtract(tubo))
+            agujeros++
+          }
+          if (o.drenaje) {
+            // perno un poco cónico (sale fácil) desde la punta del núcleo hasta el piso del molde
+            const rd = Math.min(acotar(o.diametroDrenaje, 3, 40, 10) / 2, (Math.min(ancho, largo) - 2 * grosor) / 4)
+            const perno = g(g(Manifold.cylinder(grosor + 1, rd * 0.85, rd, SEG)).translate([0, 0, 0.01]))
+            if (g(perno.intersect(hueca)).volume() < 0.01 || g(nucleo.intersect(g(perno.translate([0, 0, 0.5])))).volume() < 0.01)
+              avisos.push("No se encontró dónde poner el drenaje en el centro del fondo: hazlo con taladro después.")
+            else {
+              pieNucleo = g(pieNucleo.add(perno))
+              colado -= g(perno.intersect(hueca)).volume()
+              avisos.push(`Drenaje de ${r1(2 * rd)} mm en el centro del fondo.`)
+            }
+          }
+          salida("nucleo", pieNucleo, true)
+          avisos.push(
+            `Pieza hueca: pared de ~${grosor} mm en la parte más ancha y ${grosor} mm de fondo (si la forma se angosta, la pared queda más delgada ahí). Cuela el material, mete el núcleo con la tapa sobre el molde${agujeros ? " (el sobrante sale por los agujeros)" : ""} y, ya seco, saca primero el núcleo y luego la pieza.`
+          )
+        }
+      }
+      salida("molde", molde)
       avisos.push("Molde abierto: la cara de arriba de la pieza es la que queda al aire.")
     } else {
       // Dos partes
@@ -247,6 +318,39 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
           }
         }
       }
+      if (o.orejas) {
+        // Orejas para pinzas de papelería: una pestaña por lado a media pared,
+        // lejos de las llaves de las esquinas. Por debajo llevan un chaflán a 45°
+        // para imprimirse sin soportes (cada mitad se imprime con la unión arriba).
+        const t = 5, L0 = 12
+        const bx0 = x0 - pared, bx1 = x1 + pared, by0 = y0 - pared, by1 = y1 + pared
+        const zAbajo = zp + pared, zArriba = H - zp + pared // alto de cada mitad
+        const lados: { u: [number, number]; centro: [number, number]; largo: number }[] = [
+          { u: [1, 0], centro: [bx1, (by0 + by1) / 2], largo: by1 - by0 },
+          { u: [-1, 0], centro: [bx0, (by0 + by1) / 2], largo: by1 - by0 },
+          { u: [0, 1], centro: [(bx0 + bx1) / 2, by1], largo: bx1 - bx0 },
+          { u: [0, -1], centro: [(bx0 + bx1) / 2, by0], largo: bx1 - bx0 },
+        ]
+        const oreja = (l: (typeof lados)[number], sentido: 1 | -1, altoMitad: number) => {
+          const L = Math.max(4, Math.min(L0, altoMitad - t - 1))
+          const ancho = Math.min(30, l.largo * 0.4)
+          const v: [number, number] = [-l.u[1], l.u[0]]
+          const pt = (afuera: number, lado: number, dz: number): [number, number, number] => [
+            l.centro[0] + l.u[0] * afuera + v[0] * lado,
+            l.centro[1] + l.u[1] * afuera + v[1] * lado,
+            zp + sentido * dz, // dz es 0 o negativo: sentido 1 baja, -1 sube
+          ]
+          const pts: [number, number, number][] = []
+          for (const lado of [-ancho / 2, ancho / 2]) {
+            pts.push(pt(-0.3, lado, 0), pt(L, lado, 0), pt(L, lado, -t), pt(-0.3, lado, -t - L))
+          }
+          return g(Manifold.hull(pts))
+        }
+        // sentido 1: la oreja baja desde la unión (mitad de abajo); -1: sube (mitad de arriba)
+        abajo = g(abajo.add(g(Manifold.union(lados.map((l) => oreja(l, 1, zAbajo))))))
+        arriba = g(arriba.add(g(Manifold.union(lados.map((l) => oreja(l, -1, zArriba))))))
+        avisos.push("Cierra el molde con 4 pinzas de papelería (clips binder) en las orejas.")
+      }
       if (abajo.isEmpty() || arriba.isEmpty()) throw new Error("No se pudo partir el molde a esa altura. Prueba otra altura de partición.")
       salida("molde-abajo", abajo)
       salida("molde-arriba", arriba, true)
@@ -255,7 +359,13 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
 
     // ¿Sale sin atorarse? Se revisa sobre la pieza sin girar (las sugerencias
     // de lado son las mismas opciones del paso 2)
-    const desmoldeo = tipo === "caja_silicona" ? null : revisarDesmoldeo(sinGirar.tris, tipo, o.arriba, particion)
+    // Con núcleo, la que sale es la pieza hueca y en esta posición: no hay otro lado que sugerir
+    let desmoldeo = tipo === "caja_silicona" ? null : revisarDesmoldeo(sinGirar.tris, tipo, o.arriba, particion)
+    if (desmoldeo && hueca) {
+      // además el núcleo tiene que salir hacia arriba: nada de la pieza encima de él
+      const n = nucleoAtorado(aMalla(hueca).tris)
+      if (n > desmoldeo.atorado) desmoldeo = { ...desmoldeo, atorado: n, nucleo: true }
+    }
     return { tipo, piezas, modelo, colado: r1(colado / 1000), particionZ, desmoldeo, avisos }
   } finally {
     for (const x of basura) { try { (x as any)?.delete?.() } catch {} }
