@@ -9,6 +9,7 @@ import {
   precioRecomendado,
   validarOferta,
 } from "../impresion-bajo-pedido"
+import { ubicacionPublica } from "../ubicacion-publica"
 
 const pieza = { volumen_cm3: 40, medidas_mm: [42, 42, 120] as [number, number, number] }
 
@@ -74,8 +75,6 @@ describe("impresión 3D bajo pedido", () => {
 })
 
 describe("ubicacionPublica (ofertas de impresión)", () => {
-  // import tardío: impresion-catalogo arrastra workflows de Medusa
-  const { ubicacionPublica } = jest.requireActual("../impresion-catalogo")
   it("da sólo ciudad y estado del perfil, nunca el CP ni otros datos", () => {
     expect(ubicacionPublica({ perfil: { ciudad: " Puebla ", estado: "Puebla", cp: "72000", telefono: "222" } })).toEqual({ ciudad: "Puebla", estado: "Puebla" })
     expect(ubicacionPublica({ perfil: { ciudad: 5, estado: "" } })).toEqual({ ciudad: undefined, estado: undefined })

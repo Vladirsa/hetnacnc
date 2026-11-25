@@ -44,7 +44,7 @@ export const ESTADOS_MX = [
   "Yucatán", "Zacatecas",
 ]
 
-const sinAcentos = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
+export const sinAcentos = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
 
 // Abreviaturas y ciudades que a veces llegan en lugar del estado
 const ALIAS: Record<string, string> = {
@@ -54,6 +54,9 @@ const ALIAS: Record<string, string> = {
   coah: "Coahuila", chih: "Chihuahua", slp: "San Luis Potosí", ver: "Veracruz", yuc: "Yucatán",
   guadalajara: "Jalisco", zapopan: "Jalisco", tlaquepaque: "Jalisco", monterrey: "Nuevo León",
   "ciudad de mexico": "Ciudad de México",
+  // Nombres largos del catálogo de códigos postales (SEPOMEX) y de la base de IP (DB-IP, en inglés)
+  "coahuila de zaragoza": "Coahuila", "michoacan de ocampo": "Michoacán", "veracruz de ignacio de la llave": "Veracruz",
+  "mexico city": "Ciudad de México", "state of mexico": "Estado de México", "baja california norte": "Baja California",
 }
 
 // Ciudades donde hay talleres CNC → su estado. Sirven cuando la hoja trae la

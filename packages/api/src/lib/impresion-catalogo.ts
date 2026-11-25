@@ -7,6 +7,7 @@ import type { CreateOfferDTO } from "@mercurjs/types"
 import { randomBytes } from "crypto"
 
 import { aprovisionarEnvios } from "./envios-automaticos"
+import { ubicacionPublica } from "./ubicacion-publica"
 import { umbralesDeEnvioGratis } from "./envio-gratis"
 import {
   COLECCION_IMPRESION,
@@ -251,11 +252,4 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
     })),
     ofertas: ordenarOfertas(lista),
   }
-}
-
-/** Ciudad y estado del perfil público del taller (metadata.perfil), sólo si son texto. */
-export function ubicacionPublica(metadata: any): { ciudad?: string; estado?: string } {
-  const p = metadata?.perfil || {}
-  const t = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined)
-  return { ciudad: t(p.ciudad, 80), estado: t(p.estado, 40) }
 }

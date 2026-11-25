@@ -1,17 +1,30 @@
 "use client"
 
-// Renglón "Talleres cerca de: Puebla, Puebla · Cambiar" con el campo para el
-// código postal. Lo usan las listas de talleres de la ficha.
+// Renglón "📍 Cerca de Puebla, Puebla · Cambiar" con el campo para el código
+// postal (listas de talleres de la ficha: TalleresCerca, TalleresImpresion y
+// TalleresPlano). CreditoIp: el crédito que pide la licencia de DB-IP (CC BY
+// 4.0) donde se use la ubicación aproximada por IP.
 import { useState } from "react"
 
+import { textoUbicacion } from "@/lib/ubicacion/cercania"
 import type { Ubicacion } from "@/lib/ubicacion/useUbicacion"
+
+export const CreditoIp = () => (
+  <span className="text-[#6B6A63]">
+    {" "}(aproximado,{" "}
+    <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="underline">
+      IP Geolocation by DB-IP
+    </a>
+    )
+  </span>
+)
 
 export function TuUbicacion({ ubicacion, ponerCp, aviso }: { ubicacion: Ubicacion | null; ponerCp: (cp: string) => Promise<boolean>; aviso: string }) {
   const [editar, setEditar] = useState(false)
   const [cp, setCp] = useState("")
   const [buscando, setBuscando] = useState(false)
 
-  const lugar = ubicacion ? [ubicacion.municipio, ubicacion.estado].filter(Boolean).join(", ") : ""
+  const lugar = textoUbicacion(ubicacion)
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!/^\d{5}$/.test(cp)) return
@@ -25,16 +38,7 @@ export function TuUbicacion({ ubicacion, ponerCp, aviso }: { ubicacion: Ubicacio
     return (
       <p className="m-0 text-[12.5px] text-[#40403A]" data-testid="tu-ubicacion">
         📍 Cerca de <b>{lugar}</b>
-        {ubicacion.fuente === "ip" && (
-          // La base de IP es de DB-IP (CC BY 4.0): su licencia pide dar el crédito
-          <span className="text-[#6B6A63]">
-            {" "}(aproximado,{" "}
-            <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="underline">
-              IP Geolocation by DB-IP
-            </a>
-            )
-          </span>
-        )}
+        {ubicacion.fuente === "ip" && <CreditoIp />}
         {" · "}
         <button type="button" onClick={() => setEditar(true)} className="font-semibold text-[#B34D07] underline">
           {ubicacion.fuente === "ip" ? "Pon tu código postal" : "Cambiar"}

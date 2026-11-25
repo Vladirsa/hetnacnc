@@ -13,7 +13,7 @@ import { trackAddToCart } from "@/lib/analytics/events"
 import type { DatosImpresion, OfertaImpresion } from "@/lib/data/impresion"
 import { toast } from "@/lib/helpers/toast"
 import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
-import { ETIQUETA_NIVEL, nivelCercania, type Nivel } from "@/lib/ubicacion/cercania"
+import { ETIQUETA_NIVEL, conNivel, textoUbicacion, type Nivel } from "@/lib/ubicacion/cercania"
 import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
@@ -53,7 +53,7 @@ function Oferta({ o, locale, producto, nivel }: { o: OfertaImpresion; locale: st
         </span>
         {(o.taller.ciudad || o.taller.estado) && (
           <span data-testid="oferta-ubicacion">
-            📍 {[o.taller.ciudad, o.taller.estado].filter(Boolean).join(", ")}
+            📍 {textoUbicacion(o.taller)}
             {ETIQUETA_NIVEL[nivel] && <b className="ml-1 rounded-full bg-[#FFE9D6] px-1.5 py-px text-[11.5px] text-[#8A3B05]">{ETIQUETA_NIVEL[nivel]}</b>}
           </span>
         )}
@@ -151,9 +151,9 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
   // al más lejano; a igual cercanía, el orden del API (precio y días).
   const lista = useMemo(() => {
     const base = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
-    return base
-      .map((o, i) => ({ o, i, nivel: nivelCercania(o.taller, ubicacion) }))
-      .sort((a, b) => Number(b.o.destacado) - Number(a.o.destacado) || a.nivel - b.nivel || a.i - b.i)
+    return conNivel(base, (o) => o.taller, ubicacion)
+      .sort((a, b) => Number(b.item.destacado) - Number(a.item.destacado) || a.nivel - b.nivel || a.i - b.i)
+      .map(({ item: o, nivel }) => ({ o, nivel }))
   }, [datos.ofertas, material, ubicacion])
   const hayUbicaciones = datos.ofertas.some((o) => o.taller.estado)
   const info = datos.materiales.find((m) => m.material === material)
@@ -165,7 +165,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
         <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">Compara material, precio final, días y envío. Pagas dentro de HETNA.</p>
       </div>
 
-      {hayUbicaciones && datos.ofertas.length > 1 && <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />}
+      {hayUbicaciones && <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />}
 
       {datos.materiales.length > 1 && (
         <div className="flex flex-wrap gap-1.5">

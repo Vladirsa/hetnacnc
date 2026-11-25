@@ -35,13 +35,38 @@ import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
 import { listarTalleres, type Taller } from "@/lib/hetna/talleres"
 import { PROCESOS, procesosDeProducto, tallerHace } from "@/lib/ubicacion/procesos"
 
-/** Sólo lo que usa la lista de talleres (sin galería, acabados ni tarifas de otros procesos). */
+/**
+ * Lo mínimo que usa "Talleres que te lo hacen": nombre, ciudad, estado, lo que
+ * ofrece, calificación y entrega. Va en el HTML de la ficha, así que nada de
+ * CP, tarifas, máquinas ni galería (se arma campo por campo para que un campo
+ * nuevo del perfil no se cuele).
+ */
 const tallerLigero = (t: Taller): Taller => ({
-  ...t,
-  descripcion: undefined,
+  id: t.id,
+  handle: t.handle,
+  nombre: t.nombre,
+  logo: null,
   banner: null,
+  fundador: false,
+  embajador: false,
+  verificado: t.verificado,
+  empresaVerificada: false,
   certificaciones: [],
-  perfil: { ...t.perfil, galeria: [], acabados: [], indicadores: undefined, medido: undefined, marcas: [] },
+  capacidadLibre: null,
+  perfil: {
+    ciudad: t.perfil.ciudad,
+    estado: t.perfil.estado,
+    ofrece: t.perfil.ofrece,
+    calificacion: t.perfil.calificacion,
+    entrega: t.perfil.entrega,
+    tarifas: {},
+    servicios: [],
+    capacidades: [],
+    maquinas: [],
+    materiales: [],
+    acabados: [],
+    galeria: [],
+  },
 })
 
 export const ProductDetailsPage = async ({
@@ -181,12 +206,11 @@ export const ProductDetailsPage = async ({
   // ficha está en caché y no puede llevar la ubicación de quien la ve.
   const procesosProd = impresion || planoSlug || tipoProd === "servicio" ? [] : procesosDeProducto(prod as never)
   const talleresQueLoHacen = procesosProd.length
-    ? (await listarTalleres().catch(() => [] as Taller[])).filter((t) => t.id !== vendedor?.id && tallerHace(t, procesosProd)).slice(0, 80).map(tallerLigero)
+    ? (await listarTalleres().catch(() => [] as Taller[])).filter((t) => t.id !== vendedor?.id && tallerHace(t, procesosProd)).slice(0, 300).map(tallerLigero)
     : []
   const queryCotizar = new URLSearchParams({
-    desde: "producto",
-    proceso: procesosProd[0] ? PROCESOS[procesosProd[0]].cotizar : "",
-    descripcion: `fabricar "${prod.title || "este producto"}"${prod.handle ? ` (hetnacnc.com/mx/products/${prod.handle})` : ""}`,
+    ...(procesosProd[0] ? { servicio: PROCESOS[procesosProd[0]].cotizar } : {}),
+    descripcion: `fabricar "${prod.title || "este producto"}"${prod.handle ? ` (${baseSitio()}/${locale}/products/${prod.handle})` : ""}`,
   }).toString()
   const fabricar = impresion ? (
     <TalleresImpresion datos={impresion} locale={locale} />
@@ -206,7 +230,7 @@ export const ProductDetailsPage = async ({
         medidas={medidasProd}
         vistaPrevia={descarga ? vistaPreviaDe(prod.metadata) : null}
         fisico={!descarga}
-        procesoInicial={procesoSugerido}
+        procesoInicial={(procesosProd[0] && PROCESOS[procesosProd[0]].estimador) || procesoSugerido}
       />
       {talleresQueLoHacen.length > 0 && (
         <TalleresCerca talleres={talleresQueLoHacen} query={queryCotizar} procesos={procesosProd} limite={4} />

@@ -1,23 +1,27 @@
 // Qué tan cerca está un taller del cliente, sin coordenadas: los perfiles de
-// taller guardan municipio, estado y código postal (panel del taller, "Perfil
-// del taller"), y del cliente sabemos su código postal (→ municipio y estado
-// con /store/envios/cp) o, si no lo ha dado, el estado aproximado por su IP.
+// taller guardan municipio y estado (panel del taller, "Perfil del taller"), y
+// del cliente sabemos su código postal (→ municipio y estado con
+// /store/envios/cp) o, si no lo ha dado, el estado aproximado por su IP.
 //
-//   0 = en tu municipio (mismo código postal o mismo municipio y estado)
+//   0 = en tu municipio (mismo municipio y estado)
 //   1 = en tu estado
 //   2 = en un estado vecino
 //   3 = más lejos
 //   4 = no sabemos (el taller no puso su ubicación o no sabemos la del cliente)
 //
-// Los estados vecinos salen de @webrek/mx-geo (MIT, geometrías de INEGI),
-// copiados aquí por clave INEGI para no cargar el paquete en la tienda.
-import { estadoMx } from "@/lib/hetna/directorio"
+// No se compara el código postal del taller: no todas las listas lo reciben
+// (las ofertas de impresión mandan sólo ciudad y estado) y así la regla es la
+// misma en todas.
+//
+// Los estados vecinos salen de @webrek/mx-geo 0.9.1 (vecinos.json, MIT,
+// geometrías de INEGI), copiados aquí por clave INEGI para no cargar el paquete.
+import { ESTADOS_MX, estadoMx, sinAcentos } from "@/lib/hetna/directorio"
 
 export type UbicacionCliente = { cp?: string; municipio?: string; estado?: string }
-export type UbicacionTaller = { cp?: string; ciudad?: string; estado?: string }
+export type UbicacionTaller = { ciudad?: string; estado?: string }
 export type Nivel = 0 | 1 | 2 | 3 | 4
 
-// Clave INEGI → nombre como en ESTADOS_MX (lib/hetna/directorio.ts)
+// Clave INEGI → nombre como en ESTADOS_MX
 const CLAVES: Record<string, string> = {
   "01": "Aguascalientes", "02": "Baja California", "03": "Baja California Sur", "04": "Campeche",
   "05": "Coahuila", "06": "Colima", "07": "Chiapas", "08": "Chihuahua", "09": "Ciudad de México",
@@ -28,8 +32,7 @@ const CLAVES: Record<string, string> = {
   "30": "Veracruz", "31": "Yucatán", "32": "Zacatecas",
 }
 
-// @webrek/mx-geo 0.9.1, vecinos.json
-const VECINOS: Record<string, string[]> = {
+const VECINOS_INEGI: Record<string, string[]> = {
   "01": ["14", "32"], "02": ["03", "26"], "03": ["02"], "04": ["23", "27", "31"], "05": ["08", "10", "19", "32"],
   "06": ["14", "16"], "07": ["20", "27", "30"], "08": ["05", "10", "25", "26"], "09": ["15", "17"],
   "10": ["05", "08", "18", "25", "32"], "11": ["14", "16", "22", "24", "32"], "12": ["15", "16", "17", "20", "21"],
@@ -42,43 +45,39 @@ const VECINOS: Record<string, string[]> = {
   "30": ["07", "13", "20", "21", "24", "27", "28"], "31": ["04", "23"], "32": ["01", "05", "10", "11", "14", "18", "19", "24"],
 }
 
-const sinAcentos = (s?: string) => (s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim()
-
-// Nombres que usa el catálogo de códigos postales (SEPOMEX) y no están en estadoMx
-// ni los que trae la base de IP (DB-IP, en inglés)
-const LARGOS: Record<string, string> = {
-  "coahuila de zaragoza": "Coahuila", "michoacan de ocampo": "Michoacán", "veracruz de ignacio de la llave": "Veracruz",
-  "mexico city": "Ciudad de México", "state of mexico": "Estado de México", "estado de mexico": "Estado de México",
-  "baja california norte": "Baja California",
-}
+// Nombre del estado → nombres de sus vecinos (se arma una vez al cargar)
+const VECINOS = new Map(Object.entries(VECINOS_INEGI).map(([k, v]) => [CLAVES[k], new Set(v.map((x) => CLAVES[x]))]))
+if (VECINOS.size !== ESTADOS_MX.length || ESTADOS_MX.some((e) => !VECINOS.has(e))) throw new Error("cercania: la tabla de vecinos no cuadra con ESTADOS_MX")
 
 /** Nombre del estado como en ESTADOS_MX ("Michoacán de Ocampo" → "Michoacán", "CDMX" → "Ciudad de México"), o "". */
-export function normalizarEstado(texto?: string): string {
-  const n = sinAcentos(texto)
-  if (!n) return ""
-  return LARGOS[n] || estadoMx(texto) || ""
-}
-
-const claveDe = (estado?: string) => {
-  const nombre = normalizarEstado(estado)
-  return Object.keys(CLAVES).find((k) => CLAVES[k] === nombre) || ""
-}
+export const normalizarEstado = (texto?: string) => estadoMx(texto)
 
 /** ¿Son estados vecinos? (acepta nombres en cualquier forma que entienda normalizarEstado) */
-export function sonVecinos(a?: string, b?: string): boolean {
-  const ka = claveDe(a), kb = claveDe(b)
-  return !!ka && !!kb && (VECINOS[ka] || []).includes(kb)
+export const sonVecinos = (a?: string, b?: string) => !!VECINOS.get(normalizarEstado(a))?.has(normalizarEstado(b))
+
+/** "Apizaco, Tlaxcala" */
+export const textoUbicacion = (u: { ciudad?: string; municipio?: string; estado?: string } | null | undefined) =>
+  u ? [u.ciudad ?? u.municipio, u.estado].filter(Boolean).join(", ") : ""
+
+/** Ciudad y estado del perfil público de un taller (seller.metadata.perfil). */
+export function ubicacionDePerfil(metadata: unknown): UbicacionTaller {
+  const p = ((metadata as { perfil?: Record<string, unknown> } | null)?.perfil || {}) as Record<string, unknown>
+  const t = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined)
+  return { ciudad: t(p.ciudad), estado: t(p.estado) }
 }
 
 export function nivelCercania(t: UbicacionTaller, u: UbicacionCliente | null | undefined): Nivel {
   if (!u) return 4
   const eu = normalizarEstado(u.estado), et = normalizarEstado(t.estado)
-  if (u.cp && t.cp && u.cp === t.cp) return 0
   if (!eu || !et) return 4
   if (eu !== et) return sonVecinos(eu, et) ? 2 : 3
   if (u.municipio && t.ciudad && sinAcentos(u.municipio) === sinAcentos(t.ciudad)) return 0
   return 1
 }
+
+/** Cada elemento con su nivel, calculado una sola vez (cada lista arma su propio orden). */
+export const conNivel = <T,>(lista: T[], ubic: (x: T) => UbicacionTaller, u: UbicacionCliente | null | undefined) =>
+  lista.map((item, i) => ({ item, i, nivel: nivelCercania(ubic(item), u) }))
 
 export const ETIQUETA_NIVEL: Record<Nivel, string | null> = {
   0: "En tu municipio",
@@ -86,17 +85,6 @@ export const ETIQUETA_NIVEL: Record<Nivel, string | null> = {
   2: "Estado vecino",
   3: null,
   4: null,
-}
-
-/**
- * Ordena por cercanía y, a igual cercanía, por `desempate` (p. ej. destacado,
- * verificado o precio). Estable: lo que empata queda en su orden original.
- */
-export function ordenarPorCercania<T extends object>(lista: T[], ubic: (x: T) => UbicacionTaller, u: UbicacionCliente | null | undefined, desempate?: (a: T, b: T) => number): (T & { nivel: Nivel })[] {
-  return lista
-    .map((x, i) => ({ x, i, nivel: nivelCercania(ubic(x), u) }))
-    .sort((a, b) => a.nivel - b.nivel || (desempate ? desempate(a.x, b.x) : 0) || a.i - b.i)
-    .map(({ x, nivel }) => ({ ...x, nivel }))
 }
 
 /** ¿Hay al menos uno en el municipio o en el estado del cliente? */

@@ -19,20 +19,24 @@ import { ipDe } from "@/lib/seguridad/ip-cliente"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-type Registro = CityResponse
+// Una sola lectura del archivo (pesa ~130 MB) aunque lleguen muchas visitas a la
+// vez: todas esperan la misma promesa. Cada minuto se revisa si el script
+// mensual lo cambió.
+let carga: { mtime: number; reader: Promise<Reader<CityResponse> | null> } | null = null
+let revisado = 0
 
-let base: { reader: Reader<Registro>; mtime: number } | null = null
-
-async function lector(): Promise<Reader<Registro> | null> {
+async function lector(): Promise<Reader<CityResponse> | null> {
   const ruta = process.env.DBIP_CIUDAD_MMDB || join(homedir(), "hetna-data", "dbip-city-lite.mmdb")
+  if (carga && Date.now() - revisado < 60_000) return carga.reader
+  revisado = Date.now()
   try {
     const { mtimeMs } = await stat(ruta)
-    // se vuelve a leer cuando el script mensual cambia el archivo
-    if (!base || base.mtime !== mtimeMs) base = { reader: new Reader<Registro>(await readFile(ruta)), mtime: mtimeMs }
-    return base.reader
+    if (!carga || carga.mtime !== mtimeMs)
+      carga = { mtime: mtimeMs, reader: readFile(ruta).then((b) => new Reader<CityResponse>(b)).catch(() => null) }
   } catch {
-    return null
+    carga = null // no hay base: sólo código postal
   }
+  return carga ? carga.reader : null
 }
 
 const privada = { "Cache-Control": "private, no-store", Vary: "X-Forwarded-For" }
@@ -40,7 +44,7 @@ const privada = { "Cache-Control": "private, no-store", Vary: "X-Forwarded-For" 
 export async function GET(req: Request) {
   const ip = ipDe(req.headers)
   const r = ip ? await lector() : null
-  let dato: Registro | null = null
+  let dato: CityResponse | null = null
   try {
     dato = r ? r.get(ip) : null
   } catch {

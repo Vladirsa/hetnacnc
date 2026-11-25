@@ -1,5 +1,6 @@
 "use client"
 
+import { EVENTO as EVENTO_UBICACION } from "@/lib/ubicacion/useUbicacion"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
@@ -182,7 +183,7 @@ export default function FormSolicitudTaller({
     const municipio = r.info.municipio || r.info.ciudad
     setCiudad(municipio)
     setEstadoMx(r.info.estado)
-    window.dispatchEvent(new CustomEvent("hetna:ubicacion", { detail: { cp: limpio, municipio, estado: r.info.estado } }))
+    window.dispatchEvent(new CustomEvent(EVENTO_UBICACION, { detail: { cp: limpio, municipio, estado: r.info.estado } }))
   }
 
   // El archivo que generó la herramienta se baja y se sube como si el

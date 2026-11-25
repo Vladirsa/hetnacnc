@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
+import { CreditoIp, TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
 import { type MedidaPieza, estimar, pesos } from "@/lib/hetna/estimado"
 import type { Taller } from "@/lib/hetna/talleres"
-import { ETIQUETA_NIVEL, hayCerca, nivelCercania, type Nivel } from "@/lib/ubicacion/cercania"
-import { nombreProcesos, tallerHace, type Proceso } from "@/lib/ubicacion/procesos"
+import { ETIQUETA_NIVEL, conNivel, hayCerca, textoUbicacion, type Nivel } from "@/lib/ubicacion/cercania"
+import { nombreProcesos, type Proceso } from "@/lib/ubicacion/procesos"
 import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 // Lista "talleres cerca de ti" junto al formulario de /cotizar y en la ficha de
@@ -33,14 +33,17 @@ const ETIQUETA_OFRECE: Record<string, string> = {
 }
 
 // "Todo incluido": diseña o ajusta el archivo y además entrega (local o envío)
+const COLOR_NIVEL: Partial<Record<Nivel, string>> = { 0: "bg-[#FF6A1A] text-white", 1: "bg-[#FFC53D] text-[#142033]", 2: "bg-[#E7E4DC] text-[#142033]" }
+
 const todoIncluido = (ofrece: string[]) => ofrece.includes("diseno") && (ofrece.includes("entrega_local") || ofrece.includes("envio"))
 
 // `query`: los parámetros actuales de /cotizar (pieza, material, archivo…) para
 // que al elegir un taller la solicitud siga prellenada.
 //
-// En la ficha (`procesos`): filtra por los procesos del producto, trae su propio
-// campo de código postal y, si nadie está en el estado del cliente, ofrece
-// mandar la solicitud a los talleres de la red.
+// En la ficha (`procesos`): la lista ya viene filtrada por los procesos del
+// producto (ProductDetailsPage); aquí sólo se nombran, trae su propio campo de
+// código postal y, si nadie está en el estado del cliente, ofrece mandar la
+// solicitud a toda la red.
 type Props = { talleres: Taller[]; proceso?: string; query: string; procesos?: Proceso[]; limite?: number }
 
 export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }: Props) => {
@@ -61,32 +64,32 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
   const lista = useMemo(() => {
     const hacen = talleres.filter(
       (t) =>
-        (enFicha ? tallerHace(t, procesos) : !proceso || !t.perfil.servicios.length || t.perfil.servicios.includes(proceso)) &&
+        (enFicha || !proceso || !t.perfil.servicios.length || t.perfil.servicios.includes(proceso)) &&
         (!soloTodo || todoIncluido(t.perfil.ofrece))
     )
-    // Más lejos que un estado vecino: primero los que envían a todo México
-    const nivel = (t: Taller): number => {
-      const n = nivelCercania(t.perfil, u)
-      return n >= 3 && !t.perfil.ofrece.includes("envio") ? n + 0.5 : n
-    }
     const precio = (t: Taller) => {
       const tarifa = proceso ? t.perfil.tarifas[proceso] : undefined
       return tarifa && pieza?.medida ? estimar(tarifa, pieza.medida, pieza.cantidad) : null
     }
-    return hacen
-      .map((t) => ({ t, n: nivel(t), precio: precio(t) }))
-      .sort((a, b) => a.n - b.n || Number(b.t.verificado) - Number(a.t.verificado) || (b.t.perfil.calificacion || 0) - (a.t.perfil.calificacion || 0))
+    // del más cercano al más lejano; más allá de los estados vecinos, primero
+    // los que envían a todo México; luego verificados y mejor calificados
+    const lejosSinEnvio = (n: Nivel, t: Taller) => Number(n >= 3 && !t.perfil.ofrece.includes("envio"))
+    return conNivel(hacen, (t) => t.perfil, u)
+      .sort(
+        (a, b) =>
+          a.nivel - b.nivel ||
+          lejosSinEnvio(a.nivel, a.item) - lejosSinEnvio(b.nivel, b.item) ||
+          Number(b.item.verificado) - Number(a.item.verificado) ||
+          (b.item.perfil.calificacion || 0) - (a.item.perfil.calificacion || 0)
+      )
       .slice(0, limite)
-  }, [talleres, proceso, procesos, enFicha, u, pieza, soloTodo, limite])
+      .map(({ item: t, nivel: n }) => ({ t, n, precio: precio(t) }))
+  }, [talleres, proceso, enFicha, u, pieza, soloTodo, limite])
 
   if (!lista.length && !soloTodo) return null
 
-  const COLOR: Partial<Record<Nivel, string>> = { 0: "bg-[#FF6A1A] text-white", 1: "bg-[#FFC53D] text-[#142033]", 2: "bg-[#E7E4DC] text-[#142033]" }
-  const etiqueta = (n: number) => {
-    const k = Math.floor(n) as Nivel
-    return ETIQUETA_NIVEL[k] ? [ETIQUETA_NIVEL[k] as string, COLOR[k] || ""] : null
-  }
-  const cerca = hayCerca(lista.map((x) => Math.floor(x.n) as Nivel))
+  const etiqueta = (n: Nivel) => (ETIQUETA_NIVEL[n] ? [ETIQUETA_NIVEL[n] as string, COLOR_NIVEL[n] || ""] : null)
+  const cerca = hayCerca(lista.map((x) => x.n))
   const hayEstimados = lista.some((x) => x.precio !== null)
 
   return (
@@ -103,7 +106,8 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
         <>
           <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">Talleres cerca de ti</p>
           <p className="mt-1 text-[13px] text-[#6B675C]">
-            {u ? `Para ${[u.municipio, u.estado].filter(Boolean).join(", ")}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
+            {u ? `Para ${textoUbicacion(u)}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
+            {u?.fuente === "ip" && <CreditoIp />}
           </p>
         </>
       )}
@@ -135,7 +139,7 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
                       )}
                     </div>
                     <p className="text-[12px] text-[#6B675C]">
-                      {[t.perfil.ciudad, t.perfil.estado].filter(Boolean).join(", ")}
+                      {textoUbicacion(t.perfil)}
                       {t.perfil.calificacion ? ` · ★ ${t.perfil.calificacion.toFixed(1)}` : ""}
                       {t.perfil.entrega ? ` · ${t.perfil.entrega}` : ""}
                     </p>
