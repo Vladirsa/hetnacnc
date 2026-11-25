@@ -111,7 +111,8 @@ export function svgArmado(piezas: PiezaPlano[], titulo: string, ruedas: Caja[] =
     cota(iso(X0, Y0, Z0), iso(X1, Y0, Z0), `${f(X1 - X0)} mm`, [d * 0.5, d * 0.85], t) +
     cota(iso(X1, Y0, Z0), iso(X1, Y1, Z0), `${f(Y1 - Y0)} mm`, [d * 0.5, -d * 0.85 + d], t) +
     cota(iso(X0, Y0, Z0), iso(X0, Y0, Z1), `${f(Z1 - Z0)} mm`, [-d * 1.1, 0], t)
-  return svg(cuerpo, l, tam * 0.17, titulo)
+  // un poco más de margen a la izquierda: ahí va la cota del alto
+  return svg(cuerpo, { ...l, x0: l.x0 - tam * 0.1 }, tam * 0.17, titulo)
 }
 
 /** Vista explotada: cada pieza se separa del centro del mueble. */
