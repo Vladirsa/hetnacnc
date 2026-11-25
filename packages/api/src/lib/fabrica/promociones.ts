@@ -486,10 +486,10 @@ export async function promoPlano(scope: any, logger?: any, slugForzado?: string)
   const c = await cuando(knex, 2, "mx")
   const url = `${STORE_URL}/mx/planos/${slug}`
   const texto =
-    `Plano gratis de la semana: ${nombre}.\n\n` +
+    `Plano gratis HETNA: ${nombre}.\n\n` +
     `Trae la lista de corte con medidas, el acomodo en hojas de triplay de 2440 × 1220, el armado paso a paso y el DXF para tu router CNC.\n\n` +
-    `Bájalo gratis con tu correo: {{liga}}\n\n¿No tienes router? Un taller de HETNA te lo fabrica.`
-  const id = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Plano de la semana · ${nombre}`, texto_base: texto, url, redes: ["instagram", "facebook"], estado: c.estado, programada_para: c.fecha, mercado: "mx", medios }, logger)
+    `Bájalo gratis con tu correo y cámbiale las medidas: {{liga}}\n\n¿No tienes router? Un taller de HETNA te lo fabrica y te lo manda.`
+  const id = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Plano gratis · ${nombre}`, texto_base: texto, url, redes: ["instagram", "facebook"], estado: c.estado, programada_para: c.fecha, mercado: "mx", medios }, logger)
   await knex(T_PROMO).insert({ id: nuevoId("promo"), tipo: "plano", ref: slug, posts: JSON.stringify([id]) })
   logger?.info?.(`[promo] plano de la semana: ${slug} (${c.estado})`)
   return { slug, post: id }

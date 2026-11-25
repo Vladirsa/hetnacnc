@@ -30,7 +30,7 @@ describe("validarPedidoPlano", () => {
 
   it("la liga apunta a la página del plano", () => {
     expect(ligaPlano("caballetes-de-triplay")).toContain("/mx/planos/caballetes-de-triplay")
-    expect(Object.keys(PLANOS_NOMBRES)).toHaveLength(40)
+    expect(Object.keys(PLANOS_NOMBRES)).toHaveLength(50)
   })
 })
 

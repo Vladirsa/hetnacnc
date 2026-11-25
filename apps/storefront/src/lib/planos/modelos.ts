@@ -654,6 +654,136 @@ function comederoElevado(): PiezaPlano[] {
   ]
 }
 
+// ── Tanda 6 ──────────────────────────────────────────────────────────────
+function gabineteTaladro(): PiezaPlano[] {
+  const W = 600, D = 500, H = 750, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H - e),
+    p("Costado derecho", W - e, W, 0, D, 0, H - e),
+    p("Zoclo", e, W - e, 20, 20 + e, 0, 80),
+    p("Piso", e, W - e, 0, D - 9, 80, 80 + e),
+    p("Repisa", e, W - e, 0, D - 9, 400, 400 + e),
+    p("Respaldo", e, W - e, D - 9, D, 80, H - e, "triplay-9"),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+    p("Puerta", 2, W - 2, -e, 0, 82, H - e - 2),
+  ]
+}
+
+function mesaApoyoSierra(): PiezaPlano[] {
+  const W = 1200, D = 600, H = 860, e = 18
+  return [
+    p("Pata izquierda", 60, 60 + e, 40, D - 40, 0, H - e),
+    p("Pata derecha", W - 60 - e, W - 60, 40, D - 40, 0, H - e),
+    p("Travesaño bajo", 60 + e, W - 60 - e, D / 2 - 50, D / 2 + 50, 150, 150 + e),
+    p("Faldón frontal", 60 + e, W - 60 - e, 40, 40 + e, H - e - 100, H - e),
+    p("Faldón trasero", 60 + e, W - 60 - e, D - 40 - e, D - 40, H - e - 100, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function repisaRollos(): PiezaPlano[] {
+  const W = 900, D = 220, e = 18
+  return [
+    p("Riel de pared", 0, W, D - e, D, 0, 150),
+    p("Ménsula izquierda", 40, 40 + e, 0, D - e, 0, 150),
+    p("Ménsula derecha", W - 40 - e, W - 40, 0, D - e, 0, 150),
+    p("Repisa", 0, W, 0, D, 150, 150 + e),
+  ]
+}
+
+function mesaEnsamble(): PiezaPlano[] {
+  const W = 1200, D = 800, H = 600, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H - e),
+    p("Costado derecho", W - e, W, 0, D, 0, H - e),
+    p("Repisa", e, W - e, 0, D, 150, 150 + e),
+    p("Travesaño trasero", e, W - e, D - e, D, H - e - 120, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function cajaConTapa(): PiezaPlano[] {
+  const W = 500, D = 300, H = 250, e = 12, t = 60
+  const T12: MaterialPlano = "triplay-12"
+  return [
+    p("Fondo", 0, W, 0, D, 0, e, T12),
+    p("Frente", 0, W, 0, e, e, H - t, T12),
+    p("Trasera", 0, W, D - e, D, e, H - t, T12),
+    p("Costado izquierdo", 0, e, e, D - e, e, H - t, T12),
+    p("Costado derecho", W - e, W, e, D - e, e, H - t, T12),
+    p("Tapa · frente", 0, W, 0, e, H - t, H - e, T12),
+    p("Tapa · trasera", 0, W, D - e, D, H - t, H - e, T12),
+    p("Tapa · costado izq.", 0, e, e, D - e, H - t, H - e, T12),
+    p("Tapa · costado der.", W - e, W, e, D - e, H - t, H - e, T12),
+    p("Tapa · cubierta", 0, W, 0, D, H - e, H, T12),
+  ]
+}
+
+function mesaLateral(): PiezaPlano[] {
+  const W = 450, D = 450, H = 550, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H - e),
+    p("Costado derecho", W - e, W, 0, D, 0, H - e),
+    p("Repisa", e, W - e, 0, D, 120, 120 + e),
+    p("Travesaño", e, W - e, D - e, D, H - e - 80, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function percheroPared(): PiezaPlano[] {
+  const W = 800, D = 220, e = 18
+  return [
+    p("Tablero de ganchos", 0, W, D - e, D, 0, 300),
+    p("Ménsula izquierda", 60, 60 + e, 0, D - e, 150, 300),
+    p("Ménsula derecha", W - 60 - e, W - 60, 0, D - e, 150, 300),
+    p("Repisa", 0, W, 0, D, 300, 300 + e),
+  ]
+}
+
+function organizadorEscritorio(): PiezaPlano[] {
+  const W = 400, D = 200, H = 150, e = 12
+  const T12: MaterialPlano = "triplay-12"
+  return [
+    p("Base", 0, W, 0, D, 0, e, T12),
+    p("Costado izquierdo", 0, e, 0, D, e, H, T12),
+    p("Costado derecho", W - e, W, 0, D, e, H, T12),
+    p("Trasera", e, W - e, D - e, D, e, H, T12),
+    p("Frente bajo", e, W - e, 0, e, e, 60, T12),
+    p("División 1", 130 - 6, 130 + 6, e, D - e, e, H - 30, T12),
+    p("División 2", 270 - 6, 270 + 6, e, D - e, e, H - 30, T12),
+  ]
+}
+
+function cavaVino(): PiezaPlano[] {
+  const c = 120, e = 18, D = 300
+  const W = 3 * c + 4 * e, H = W
+  const filas = [e, e + c + e, e + 2 * (c + e)] // piso de cada fila
+  const piezas: PiezaPlano[] = [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D, 0, e),
+    p("Techo", e, W - e, 0, D, H - e, H),
+    p("Repisa 1", e, W - e, 0, D - 6, e + c, e + c + e),
+    p("Repisa 2", e, W - e, 0, D - 6, e + 2 * c + e, e + 2 * c + 2 * e),
+  ]
+  let k = 1
+  for (const z of filas) for (const x of [e + c, e + 2 * c + e]) piezas.push(p(`División ${k++}`, x, x + e, 0, D - 6, z, z + c))
+  piezas.push(p("Respaldo", e, W - e, D - 6, D, e, H - e, "triplay-6"))
+  return piezas
+}
+
+function mesaNinos(): PiezaPlano[] {
+  const W = 600, D = 600, H = 500, e = 18
+  return [
+    p("Pata izquierda", 40, 40 + e, 40, D - 40, 0, H - e),
+    p("Pata derecha", W - 40 - e, W - 40, 40, D - 40, 0, H - e),
+    p("Travesaño", 40 + e, W - 40 - e, D / 2 - 40, D / 2 + 40, 120, 120 + e),
+    p("Faldón frontal", 40 + e, W - 40 - e, 40, 40 + e, H - e - 80, H - e),
+    p("Faldón trasero", 40 + e, W - 40 - e, D - 40 - e, D - 40, H - e - 80, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
 export const PLANOS: Plano[] = [
   {
     categoria: "Taller",
@@ -1402,6 +1532,190 @@ export const PLANOS: Plano[] = [
     herrajes: ["Tornillos para madera 1 1/2\" (aprox. 16)", "2 platos de acero inoxidable con ceja", "Pegamento blanco para madera", "Barniz o pintura lavable"],
     herramientas: ["Sierra o router CNC", "Caladora", "Taladro"],
     notas: ["Mide el diámetro de tus platos bajo la ceja: ese es el hueco que hay que cortar.", "Para perros grandes, súbelo a 40 cm."],
+  },
+  {
+    categoria: "Taller",
+    slug: "gabinete-para-taladro-de-banco",
+    nombre: "Gabinete para taladro de banco",
+    resumen: "Gabinete de 60 × 50 × 75 cm con puerta y repisa: el taladro arriba y las brocas guardadas abajo.",
+    descripcion: "Una base firme a buena altura para el taladro de banco o el esmeril, con espacio cerrado para brocas, prensas y accesorios.",
+    nivel: "Intermedio",
+    horas: "4 a 5 h",
+    piezas: gabineteTaladro(),
+    pasos: [
+      { titulo: "Casco", nota: "Costados, zoclo y piso; revisa la escuadra.", piezas: ["Costado", "Zoclo", "Piso"] },
+      { titulo: "Repisa", nota: "A la altura de tus cajas de brocas.", piezas: ["Repisa"] },
+      { titulo: "Respaldo", nota: "Lo escuadra y le quita el bamboleo.", piezas: ["Respaldo"] },
+      { titulo: "Cubierta", nota: "Atornillada desde abajo; el taladro se fija a ella con tornillos pasados.", piezas: ["Cubierta"] },
+      { titulo: "Puerta", nota: "Con bisagras de cazoleta o de piano.", piezas: ["Puerta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "2 bisagras de cazoleta o 1 de piano", "1 jaladera", "4 tornillos pasados para fijar el taladro", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["Fíjalo a la pared o al piso si tu taladro es alto: así no se vence."],
+  },
+  {
+    categoria: "Taller",
+    slug: "mesa-de-apoyo-para-sierra",
+    nombre: "Mesa de apoyo para sierra de banco",
+    resumen: "Mesa de 1.20 × 0.60 m a 86 cm de alto para recibir los tableros al salir de la sierra.",
+    descripcion: "Detrás de la sierra de banco sostiene la pieza al terminar el corte, para que no se caiga ni se levante. Ajusta el alto a tu sierra.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: mesaApoyoSierra(),
+    pasos: [
+      { titulo: "Patas y travesaño", nota: "El travesaño bajo une las dos patas.", piezas: ["Pata", "Travesaño"] },
+      { titulo: "Faldones", nota: "Arriba, al frente y atrás: le dan rigidez.", piezas: ["Faldón"] },
+      { titulo: "Cubierta", nota: "Debe quedar 2 o 3 mm abajo de la mesa de tu sierra.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "4 niveladores de rosca (opcional)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Nivel"],
+    notas: ["Mide el alto de tu sierra y cambia el alto en «Modifica las medidas» antes de cortar."],
+  },
+  {
+    categoria: "Taller",
+    slug: "repisa-porta-rollos",
+    nombre: "Repisa porta rollos de lija y cinta",
+    resumen: "Repisa de pared de 90 cm con una varilla abajo para rollos de lija, cinta y papel.",
+    descripcion: "Los rollos quedan colgados y se cortan a la medida; arriba, una repisa para lo demás.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: repisaRollos(),
+    pasos: [
+      { titulo: "Riel de pared", nota: "Va atornillado a la pared, a nivel.", piezas: ["Riel"] },
+      { titulo: "Ménsulas", nota: "Barrénalas antes para la varilla de 1\".", piezas: ["Ménsula"] },
+      { titulo: "Repisa", nota: "Encima de riel y ménsulas.", piezas: ["Repisa"] },
+    ],
+    herrajes: ["Varilla o tubo de 1\" × 90 cm", "Tornillos para madera 1 1/2\" (aprox. 12)", "4 taquetes y pijas para la pared", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Broca de pala de 1\"", "Nivel"],
+    notas: ["Pon la varilla a unos 8 cm del frente para que los rollos giren sin tocar la pared."],
+  },
+  {
+    categoria: "Taller",
+    slug: "mesa-de-ensamble-baja",
+    nombre: "Mesa de ensamble baja",
+    resumen: "Mesa de 1.20 × 0.80 m a 60 cm de alto para armar muebles y cajas grandes cómodamente.",
+    descripcion: "Más baja que el banco de trabajo: los muebles grandes quedan a la altura de las manos al armarlos, lijarlos o pintarlos.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: mesaEnsamble(),
+    pasos: [
+      { titulo: "Costados y repisa", nota: "La repisa baja amarra los costados.", piezas: ["Costado", "Repisa"] },
+      { titulo: "Travesaño trasero", nota: "No lo omitas: le quita el bamboleo.", piezas: ["Travesaño"] },
+      { titulo: "Cubierta", nota: "Puedes forrarla con alfombra para no rayar los muebles.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["Si la vas a mover seguido, ponle 4 ruedas con freno debajo de los costados."],
+  },
+  {
+    categoria: "Taller",
+    slug: "caja-organizadora-con-tapa",
+    nombre: "Caja organizadora con tapa",
+    resumen: "Caja de 50 × 30 × 25 cm con tapa que se corta del mismo casco: para guardar o llevar herramienta.",
+    descripcion: "Se arma como una caja cerrada y luego se separa la tapa; así cierra perfecto. Con bisagras y un cierre queda lista para transportar.",
+    nivel: "Intermedio",
+    horas: "2 a 3 h",
+    piezas: cajaConTapa(),
+    pasos: [
+      { titulo: "Fondo", nota: "La base de la caja.", piezas: ["Fondo"] },
+      { titulo: "Frente y trasera", nota: "Pegadas y clavadas al fondo.", piezas: ["Frente", "Trasera"] },
+      { titulo: "Costados", nota: "Entre frente y trasera.", piezas: ["Costado"] },
+      { titulo: "Tapa", nota: "Arma la tapa con sus cuatro lados y la cubierta; luego bisagras y cierre.", piezas: ["Tapa"] },
+    ],
+    herrajes: ["Clavos o grapas de 1 1/4\" (aprox. 40)", "2 bisagras de 1 1/2\"", "1 cierre de palanca", "1 jaladera o asa", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Martillo o engrapadora", "Desarmador"],
+    notas: ["Lija las orillas de la tapa para que cierre sin trabarse."],
+  },
+  {
+    categoria: "Casa",
+    slug: "mesa-lateral",
+    nombre: "Mesa lateral",
+    resumen: "Mesa de 45 × 45 × 55 cm con repisa abajo, para junto al sillón o la cama.",
+    descripcion: "Mesa auxiliar de líneas rectas: la cubierta para la lámpara o el café y la repisa para revistas.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: mesaLateral(),
+    pasos: [
+      { titulo: "Costados y repisa", nota: "La repisa los mantiene a escuadra.", piezas: ["Costado", "Repisa"] },
+      { titulo: "Travesaño", nota: "Atrás, arriba.", piezas: ["Travesaño"] },
+      { titulo: "Cubierta", nota: "Atornillada desde abajo con escuadras o tornillos ocultos.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 16)", "Pegamento blanco para madera", "Barniz o pintura"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Lijadora"],
+    notas: ["Cubre los cantos con cubrecanto de madera para un acabado más fino."],
+  },
+  {
+    categoria: "Casa",
+    slug: "perchero-de-pared-con-repisa",
+    nombre: "Perchero de pared con repisa",
+    resumen: "Perchero de 80 cm con repisa arriba y espacio para 5 ganchos: para la entrada o el cuarto.",
+    descripcion: "Chamarras y bolsas en los ganchos; llaves, lentes y gorras en la repisa.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: percheroPared(),
+    pasos: [
+      { titulo: "Tablero", nota: "Marca dónde van los ganchos antes de armar.", piezas: ["Tablero"] },
+      { titulo: "Ménsulas", nota: "Pegadas y atornilladas por detrás del tablero.", piezas: ["Ménsula"] },
+      { titulo: "Repisa", nota: "Encima de tablero y ménsulas.", piezas: ["Repisa"] },
+    ],
+    herrajes: ["5 ganchos para ropa", "Tornillos para madera 1 1/4\" (aprox. 12)", "4 taquetes y pijas para la pared", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Nivel"],
+    notas: ["Atorníllalo a la pared en los montantes o con taquetes para carga pesada."],
+  },
+  {
+    categoria: "Casa",
+    slug: "organizador-de-escritorio",
+    nombre: "Organizador de escritorio",
+    resumen: "Organizador de 40 × 20 × 15 cm con tres compartimentos para plumas, notas y el celular.",
+    descripcion: "Pequeño, para ordenar el escritorio de la oficina o de la escuela. Buen proyecto para empezar.",
+    nivel: "Fácil",
+    horas: "1 h",
+    piezas: organizadorEscritorio(),
+    pasos: [
+      { titulo: "Base y costados", nota: "Pegados y clavados.", piezas: ["Base", "Costado"] },
+      { titulo: "Trasera y frente", nota: "El frente es bajo para alcanzar las cosas.", piezas: ["Trasera", "Frente"] },
+      { titulo: "Divisiones", nota: "A 13 y 27 cm del lado izquierdo.", piezas: ["División"] },
+    ],
+    herrajes: ["Clavos o grapas de 1\" (aprox. 20)", "Pegamento blanco para madera", "Barniz"],
+    herramientas: ["Sierra o router CNC", "Martillo o engrapadora", "Lija"],
+    notas: ["Con router CNC puedes grabar un nombre o un logo en el frente."],
+  },
+  {
+    categoria: "Casa",
+    slug: "cava-para-9-botellas",
+    nombre: "Cava para 9 botellas",
+    resumen: "Cava de 43 × 30 × 43 cm con 9 casilleros: cada botella acostada en su lugar.",
+    descripcion: "Para la cocina, el comedor o encima de un mueble. Se puede apilar una sobre otra para más botellas.",
+    nivel: "Intermedio",
+    horas: "2 a 3 h",
+    piezas: cavaVino(),
+    pasos: [
+      { titulo: "Casco", nota: "Costados, piso y techo.", piezas: ["Costado", "Piso", "Techo"] },
+      { titulo: "Repisas", nota: "Dividen las tres filas.", piezas: ["Repisa"] },
+      { titulo: "Divisiones", nota: "Dos por fila, a 12 cm entre sí.", piezas: ["División"] },
+      { titulo: "Respaldo", nota: "Tope para que las botellas no se salgan por atrás.", piezas: ["Respaldo"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "Clavos de 3/4\" para el respaldo", "Pegamento blanco para madera", "Barniz"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["Los casilleros de 12 cm reciben botellas de vino estándar; para botellas más gruesas, ensánchala en «Modifica las medidas»."],
+  },
+  {
+    categoria: "Casa",
+    slug: "mesa-para-ninos",
+    nombre: "Mesa para niños",
+    resumen: "Mesa de 60 × 60 cm a 50 cm de alto para dibujar, jugar y hacer la tarea.",
+    descripcion: "Mesa firme a la altura de niños de 3 a 7 años, con faldones que la hacen resistente a los golpes.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: mesaNinos(),
+    pasos: [
+      { titulo: "Patas y travesaño", nota: "El travesaño bajo sirve para apoyar los pies.", piezas: ["Pata", "Travesaño"] },
+      { titulo: "Faldones", nota: "Arriba, al frente y atrás.", piezas: ["Faldón"] },
+      { titulo: "Cubierta", nota: "Redondea las esquinas y lija muy bien los cantos.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 24)", "Pegamento blanco para madera", "Pintura o barniz no tóxico"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Lijadora"],
+    notas: ["Redondea todas las esquinas (radio de 2 cm o más) y usa acabados no tóxicos."],
   },
 ]
 
