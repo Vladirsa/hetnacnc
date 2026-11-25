@@ -23,6 +23,8 @@ import { ColumnaDescarga } from "@/components/hetna/fichas/descarga/FichaDescarg
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
 import { EntregaGarantia, EspecificacionesFicha, IncluyeFicha } from "@/components/hetna/fichas/FichaUniversal"
+import { DisenoListo } from "@/components/hetna/disenos-listos/DisenoListo"
+import { leyendasDeTalleres } from "@/lib/disenos-listos/ofertas"
 import { datosClave, especificaciones, incluyeDe, limpiarDescripcion, notaPrecio, skuDe, tipoProducto, TIPOS_PRODUCTO } from "@/lib/hetna/tipo-producto"
 import { Pestanas } from "@/components/hetna/fichas/descarga/Pestanas"
 
@@ -89,6 +91,14 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
     pack.categorias.some((c) => categoriasDelProducto.has(c.id))
   )
 
+  // Diseños listos (lib/disenos-listos): quién la imprime y en cuánto, el
+  // archivo gratis y la liga para cambiar las medidas
+  const md = (product.metadata || {}) as Record<string, unknown>
+  const disenoListo = md.diseno_listo === true || md.diseno_listo === "true"
+  const leyendas = disenoListo
+    ? leyendasDeTalleres(offers, ((product as { variants?: unknown[] }).variants || []) as never, await umbralesDeEnvioGratis(offers.map((o) => o.seller_id).filter(Boolean) as string[]))
+    : []
+
   return (
     <div className="flex flex-col gap-4">
       {/* No dibuja nada: avisa que se abrió esta ficha, para que el taller
@@ -107,6 +117,21 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         antesDeComprar={
           tipo === "servicio" ? (
             <ResumenServicio metadata={product.metadata} />
+          ) : disenoListo ? (
+            <DisenoListo
+              locale={locale}
+              leyendas={leyendas}
+              d={{
+                handle: product.handle,
+                modelo: String(md.modelo || ""),
+                valores: (md.valores && typeof md.valores === "object" ? md.valores : {}) as Record<string, number>,
+                medidasUrl: String(md.medidas_url || "/disenar/modelos-3d"),
+                material: String(md.material || ""),
+                medidas: String(md.medidas || ""),
+                gramos: Number(md.gramos) || null,
+                hetnaOfrece: String(md.hetna_ofrece || ""),
+              }}
+            />
           ) : descarga ? (
             <ColumnaDescarga product={product as never} vendedor={seller ? { handle: seller.handle, name: seller.name } : null} />
           ) : undefined

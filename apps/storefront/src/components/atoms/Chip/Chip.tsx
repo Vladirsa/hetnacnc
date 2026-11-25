@@ -1,5 +1,17 @@
 import { cn } from '@/lib/utils';
 
+// Nombres de color en español (las opciones "Color" de los productos) a su
+// tono; si el valor ya es un color CSS (#hex, rgb…) se usa tal cual.
+const COLORES_ES: Record<string, string> = {
+  negro: '#1B1B18', blanco: '#FFFFFF', gris: '#9A9A96', plata: '#C0C0C0', rojo: '#C62828', azul: '#1E5BB8',
+  naranja: '#F07C1E', verde: '#2E7D32', amarillo: '#F5C518', rosa: '#E91E8C', morado: '#6A3FA0', cafe: '#6D4C41',
+  dorado: '#C9A227', transparente: 'rgba(255,255,255,0.4)',
+};
+const tono = (v: unknown) => {
+  const t = String(v ?? '').trim();
+  return COLORES_ES[t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()] || t;
+};
+
 interface ChipProps {
   value?: React.ReactNode | string;
   selected?: boolean;
@@ -53,8 +65,9 @@ export function Chip({
             disabled && 'bg-disabled'
           )}
           style={{
-            backgroundColor: (value || '').toString(),
+            backgroundColor: tono(value),
           }}
+          title={String(value ?? '')}
         />
       ) : (
         value
