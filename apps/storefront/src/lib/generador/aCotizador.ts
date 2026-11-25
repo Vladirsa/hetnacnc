@@ -42,11 +42,15 @@ export type ContextoCotizacion = {
 export type PaqueteCotizacion = ContextoCotizacion & { proyecto: string; origen: string; piezas: PiezaPaquete[] }
 
 /** Material de láser CO2 del cotizador según el espesor de MDF (mm). */
+/** "Sofía Pérez" → "sofia-perez" (sin acentos ni símbolos, hasta 40 letras); vacío → `respaldo`. */
+export const slugArchivo = (texto: string, respaldo = "archivo") =>
+  (texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || respaldo).slice(0, 40)
+
 /** Nombre de archivo limpio y único dentro de un proyecto ("Lateral izquierdo" → "lateral-izquierdo.dxf"). */
 export function nombresDeArchivo(nombres: string[], ext: string): string[] {
   const usados = new Map<string, number>()
   return nombres.map((n) => {
-    const base = (n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "pieza").slice(0, 40)
+    const base = slugArchivo(n, "pieza")
     const k = (usados.get(base) || 0) + 1
     usados.set(base, k)
     return `${k > 1 ? `${base}-${k}` : base}.${ext}`

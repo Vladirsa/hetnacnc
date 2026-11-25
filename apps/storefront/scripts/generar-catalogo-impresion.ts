@@ -20,8 +20,8 @@ import sharp from "sharp"
 import { FUENTES } from "@/lib/generador/fuentes"
 import { mallaSTL } from "@/lib/generador/vectores"
 import { hacerCortador } from "@/lib/generador/cortadores"
-import { hacerLlavero } from "@/lib/generador/llaveros"
-import { hacerLetrasImpresion } from "@/lib/generador/letras3dImpresion"
+import { OPCIONES_LLAVERO_FABRICA, hacerLlavero } from "@/lib/generador/llaveros"
+import { OPCIONES_IMPRESION_FABRICA, hacerLetrasImpresion, pararMalla } from "@/lib/generador/letras3dImpresion"
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta, type DisenoCatalogo } from "@/lib/impresion/catalogo-disenos"
 import { construirMalla, limpiarValores, modeloPorId, valoresIniciales } from "@/lib/generador/modelos3d"
@@ -242,36 +242,22 @@ for (const d of CATALOGO_IMPRESION) {
   let avisos: string[] = []
   if (d.pieza === "letras" && d.letras) {
     const l = d.letras
-    const r = hacerLetrasImpresion(fuente(l.fuente), { texto: l.texto, alto: l.alto, espaciado: 3, profundidad: l.profundidad, estilo: l.estilo, barreno: 8, pared: 1.6, frente: 1.2 })
+    const r = hacerLetrasImpresion(fuente(l.fuente), { ...OPCIONES_IMPRESION_FABRICA, texto: l.texto, alto: l.alto, profundidad: l.profundidad, estilo: l.estilo })
     if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
-    // Foto y vista 3D paradas, de frente. Las de colgar y LED vienen boca abajo
-    // y en espejo (como se imprimen): se giran 180° sobre Y y luego se paran
-    let t = r.tris
-    if (l.estilo !== "pie") {
-      t = t.slice()
-      for (let i = 0; i < t.length; i += 3) {
-        const x = -t[i], y = t[i + 1], z = l.profundidad - t[i + 2]
-        t[i] = x
-        t[i + 1] = -z
-        t[i + 2] = y
-      }
-    }
+    // Foto y vista 3D paradas y de frente (las de pie ya lo están)
+    const t = l.estilo === "pie" ? r.trisVista : pararMalla(r.trisVista)
     const m = medir(t)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t)), diseno: l, ...m, personalizable: true })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t)), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
     continue
   }
   if (d.pieza === "llavero" && d.llavero) {
-    // mismas medidas que la herramienta de llaveros trae de fábrica
     const l = d.llavero
-    const r = hacerLlavero(fuente(l.fuente), {
-      texto: l.texto, alto: l.alto, espaciado: 0, forma: l.forma, margen: 4, radio: 5, argolla: 4.5, grosor: 3, relieve: 1.5,
-      icono: l.icono, escalaRenglones: l.escala,
-    })
+    const r = hacerLlavero(fuente(l.fuente), { ...OPCIONES_LLAVERO_FABRICA, texto: l.texto, alto: l.alto, forma: l.forma, icono: l.icono, escalaRenglones: l.escala })
     if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
     const m = medir(r.malla.tris)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris)), diseno: l, ...m, personalizable: true })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris)), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
     continue
   }
   if (d.pieza === "cortador" && d.cortador) {

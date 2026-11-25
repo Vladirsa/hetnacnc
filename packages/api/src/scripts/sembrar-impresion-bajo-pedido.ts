@@ -64,8 +64,11 @@ type Diseno = {
   titulo: string
   resumen: string
   pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras"
-  /** llaveros y placas: se piden con el texto del cliente */
+  /** llaveros y letras: se piden con el texto del cliente, de hasta max_texto letras */
   personalizable?: boolean
+  max_texto?: number
+  /** letras 3D: cómo van (pie, pared, luz) */
+  diseno?: { estilo?: string }
   etiquetas: string[]
   herramienta_url: string
   foto: string
@@ -93,10 +96,9 @@ function descripcion(d: Diseno): string {
       `<p>¿Tienes impresora 3D? Descarga el cortador gratis y cámbiale la medida o el sello en la herramienta de HETNA.</p>`,
     ].join("")
   }
-  // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
   // Letras 3D: también con el texto del cliente
   if (d.pieza === "letras") {
-    const estilo = (d as { diseno?: { estilo?: string } }).diseno?.estilo
+    const estilo = d.diseno?.estilo
     const como =
       estilo === "pie"
         ? "Van unidas en una base para pararse en la mesa o la repisa (una sola pieza)."
@@ -106,7 +108,7 @@ function descripcion(d: Diseno): string {
     return [
       `<p>${esc(d.resumen)}</p>`,
       `<ul><li>${como}</li><li>Medida del modelo de la foto: ${mm(d.medidas_mm)} (el largo cambia según tu palabra).</li><li>Se imprimen en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
-      `<p><strong>Cómo se pide:</strong> escribe tu palabra o nombre al agregarlas al carrito. El precio de la ficha es para la palabra de la foto; si la tuya es mucho más larga, el taller te avisa la diferencia antes de imprimir.</p>`,
+      `<p><strong>Cómo se pide:</strong> escribe tu palabra o nombre (hasta ${d.max_texto || 8} letras) al agregarlas al carrito. Para más letras o más grandes, ábrelas en la herramienta y pide la cotización.</p>`,
       `<p>¿Otro tamaño o letra? Ábrelas en la herramienta de Letras 3D de HETNA y baja el STL gratis.</p>`,
     ].join("")
   }
@@ -115,9 +117,10 @@ function descripcion(d: Diseno): string {
     return [
       `<p>${esc(d.resumen)}</p>`,
       `<ul><li>Medida del modelo de la foto: ${mm(d.medidas_mm)} (cambia según el largo del texto).</li><li>Letras en relieve y argolla para el llavero o el collar.</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
-      `<p><strong>Cómo se pide:</strong> escribe el nombre o el texto al agregarlo al carrito y el taller lo imprime así.</p>`,
+      `<p><strong>Cómo se pide:</strong> escribe el nombre o el texto (hasta ${d.max_texto || 20} letras) al agregarlo al carrito y el taller lo imprime así.</p>`,
       `<p>¿Quieres otra forma, un ícono o tu logo? Ábrelo en la herramienta de llaveros de HETNA, ajústalo y baja el archivo gratis, o pide varios.</p>`,
     ].join("")
+  // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
   if (d.pieza === "modelo")
     return [
       `<p>${esc(d.resumen)}</p>`,
@@ -187,7 +190,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       medidas: mm(d.medidas_mm),
       palabras_clave: d.etiquetas.join(", "),
       seller_id: hetna.id,
-      ...(d.personalizable ? { personalizable: true } : {}),
+      ...(d.personalizable ? { personalizable: true, ...(d.max_texto ? { max_texto: d.max_texto } : {}) } : {}),
     }
     const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "images.url", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
     let producto = (existe as any[])[0]

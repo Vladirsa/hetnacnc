@@ -108,12 +108,12 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
     taller,
     renglones: (o.items || []).map((i: any) => ({
       titulo: String(i.product_title || i.title || ""),
-      // + el color (y en llaveros, el texto) que eligió en una pieza de Impresión 3D bajo pedido (metadata del renglón)
+      // + el color (y en llaveros y letras, el texto) que eligió en una pieza de Impresión 3D bajo pedido (metadata del renglón)
       presentacion: [
         i.variant_title && !/^(única|default)/i.test(i.variant_title) ? String(i.variant_title) : "",
         typeof i.metadata?.color === "string" && i.metadata.color ? `Color: ${String(i.metadata.color).slice(0, 24)}` : "",
-        // + el texto que pidió en un llavero o placa personalizable
-        typeof i.metadata?.texto === "string" && i.metadata.texto.trim() ? `Texto: «${String(i.metadata.texto).trim().slice(0, 60)}»` : "",
+        // + el texto que pidió en un llavero o unas letras (ya revisado al agregarlo: api/store/carts/texto-personalizado.ts)
+        typeof i.metadata?.texto === "string" && i.metadata.texto.trim() ? `Texto: «${String(i.metadata.texto).trim()}»` : "",
       ]
         .filter(Boolean)
         .join(" · "),

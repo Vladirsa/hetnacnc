@@ -42,6 +42,8 @@ export async function logoDeArchivo(archivo: File): Promise<P[][]> {
       i.src = url
     })
     const w0 = img.naturalWidth || 300, h0 = img.naturalHeight || 300
+    // una imagen enorme (p. ej. 30000 × 30000) puede tumbar la pestaña al dibujarla
+    if (w0 * h0 > 40_000_000) throw new Error("La imagen del logo es demasiado grande: usa una de menos de 6000 × 6000 px.")
     const k = LADO / Math.max(w0, h0)
     const w = Math.max(8, Math.round(w0 * k)), h = Math.max(8, Math.round(h0 * k))
     // 4 px de orilla blanca para que los contornos cierren aunque el logo toque el borde

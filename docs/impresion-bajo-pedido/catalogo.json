@@ -989,7 +989,8 @@
       "texto": "Sofía",
       "forma": "rect",
       "fuente": "pacifico",
-      "alto": 12
+      "alto": 12,
+      "maxTexto": 12
     },
     "volumen_cm3": 3.8,
     "medidas_mm": [
@@ -997,7 +998,8 @@
       25.1,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 12
   },
   {
     "handle": "llavero-corazon-con-nombre-impreso-3d",
@@ -1016,7 +1018,8 @@
       "texto": "Mamá",
       "forma": "corazon",
       "fuente": "lobster",
-      "alto": 11
+      "alto": 11,
+      "maxTexto": 10
     },
     "volumen_cm3": 5.8,
     "medidas_mm": [
@@ -1024,7 +1027,8 @@
       54.9,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 10
   },
   {
     "handle": "placa-mascota-con-nombre-impresa-3d",
@@ -1046,7 +1050,8 @@
       "fuente": "montserrat",
       "alto": 9,
       "icono": "huella",
-      "escala": 45
+      "escala": 45,
+      "maxTexto": 30
     },
     "volumen_cm3": 11,
     "medidas_mm": [
@@ -1054,7 +1059,8 @@
       70.5,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 30
   },
   {
     "handle": "etiqueta-maleta-con-nombre-impresa-3d",
@@ -1073,7 +1079,8 @@
       "texto": "VIAJE",
       "forma": "etiqueta",
       "fuente": "bebas-neue",
-      "alto": 14
+      "alto": 14,
+      "maxTexto": 12
     },
     "volumen_cm3": 3.1,
     "medidas_mm": [
@@ -1081,7 +1088,8 @@
       22.1,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 12
   },
   {
     "handle": "llavero-inicial-estrella-impreso-3d",
@@ -1101,7 +1109,8 @@
       "forma": "circulo",
       "fuente": "cinzel",
       "alto": 16,
-      "icono": "estrella"
+      "icono": "estrella",
+      "maxTexto": 2
     },
     "volumen_cm3": 6.3,
     "medidas_mm": [
@@ -1109,7 +1118,8 @@
       54.4,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 2
   },
   {
     "handle": "llavero-negocio-impreso-3d",
@@ -1129,7 +1139,8 @@
       "texto": "TU MARCA",
       "forma": "rect",
       "fuente": "oswald",
-      "alto": 11
+      "alto": 11,
+      "maxTexto": 16
     },
     "volumen_cm3": 4.7,
     "medidas_mm": [
@@ -1137,7 +1148,8 @@
       19.3,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 16
   },
   {
     "handle": "placa-puerta-con-nombre-impresa-3d",
@@ -1157,7 +1169,8 @@
       "texto": "Taller",
       "forma": "rect",
       "fuente": "oswald",
-      "alto": 22
+      "alto": 22,
+      "maxTexto": 14
     },
     "volumen_cm3": 7.9,
     "medidas_mm": [
@@ -1165,7 +1178,8 @@
       30.3,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 14
   },
   {
     "handle": "adorno-con-fecha-impreso-3d",
@@ -1185,7 +1199,8 @@
       "texto": "2026",
       "forma": "ovalo",
       "fuente": "cinzel",
-      "alto": 16
+      "alto": 16,
+      "maxTexto": 12
     },
     "volumen_cm3": 6.4,
     "medidas_mm": [
@@ -1193,7 +1208,8 @@
       31.4,
       4.5
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 12
   },
   {
     "handle": "letras-love-de-pie-impresas-3d",
@@ -1214,20 +1230,22 @@
       "estilo": "pie",
       "fuente": "alfa-slab-one",
       "alto": 60,
-      "profundidad": 12
+      "profundidad": 12,
+      "maxTexto": 5
     },
     "volumen_cm3": 148.9,
     "medidas_mm": [
       243.6,
       36,
-      66.2
+      65.4
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 5
   },
   {
     "handle": "letras-home-de-pie-impresas-3d",
     "titulo": "Letras HOME de pie",
-    "resumen": "Letras de 6 cm con base para la sala o la entrada. Escribe otra palabra si la quieres distinta.",
+    "resumen": "Letras de 5 cm con base para la sala o la entrada. Escribe otra palabra si la quieres distinta.",
     "pieza": "letras",
     "etiquetas": [
       "letras decorativas",
@@ -1235,23 +1253,25 @@
       "casa",
       "decoración"
     ],
-    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=HOME&estilo=pie&fuente=montserrat&alto=60&profundidad=12",
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=HOME&estilo=pie&fuente=montserrat&alto=50&profundidad=12",
     "foto": "fotos/letras-home-de-pie-impresas-3d.png",
     "modelo_3d": "modelos/letras-home-de-pie-impresas-3d.stl",
     "diseno": {
       "texto": "HOME",
       "estilo": "pie",
       "fuente": "montserrat",
-      "alto": 60,
-      "profundidad": 12
+      "alto": 50,
+      "profundidad": 12,
+      "maxTexto": 5
     },
-    "volumen_cm3": 159.5,
+    "volumen_cm3": 117.1,
     "medidas_mm": [
-      292.5,
+      247.3,
       36,
-      66.4
+      55.2
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 5
   },
   {
     "handle": "letras-xv-anos-de-pie-impresas-3d",
@@ -1272,15 +1292,17 @@
       "estilo": "pie",
       "fuente": "cinzel",
       "alto": 100,
-      "profundidad": 15
+      "profundidad": 15,
+      "maxTexto": 3
     },
     "volumen_cm3": 137.4,
     "medidas_mm": [
       231.4,
       39,
-      106.9
+      106.1
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 3
   },
   {
     "handle": "letras-familia-pared-impresas-3d",
@@ -1301,7 +1323,8 @@
       "estilo": "pared",
       "fuente": "montserrat",
       "alto": 80,
-      "profundidad": 12
+      "profundidad": 12,
+      "maxTexto": 8
     },
     "volumen_cm3": 257.3,
     "medidas_mm": [
@@ -1309,7 +1332,8 @@
       12,
       80
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 8
   },
   {
     "handle": "letras-nombre-pared-impresas-3d",
@@ -1330,7 +1354,8 @@
       "estilo": "pared",
       "fuente": "alfa-slab-one",
       "alto": 100,
-      "profundidad": 14
+      "profundidad": 14,
+      "maxTexto": 8
     },
     "volumen_cm3": 430.6,
     "medidas_mm": [
@@ -1338,7 +1363,8 @@
       14,
       103.6
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 8
   },
   {
     "handle": "letras-huecas-led-impresas-3d",
@@ -1359,7 +1385,8 @@
       "estilo": "luz",
       "fuente": "alfa-slab-one",
       "alto": 100,
-      "profundidad": 25
+      "profundidad": 25,
+      "maxTexto": 6
     },
     "volumen_cm3": 116.4,
     "medidas_mm": [
@@ -1367,6 +1394,7 @@
       25,
       103.6
     ],
-    "personalizable": true
+    "personalizable": true,
+    "max_texto": 6
   }
 ]

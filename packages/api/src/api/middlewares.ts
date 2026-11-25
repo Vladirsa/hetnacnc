@@ -25,6 +25,7 @@ import { storeEnvioPerfilMiddlewares } from "./store/envio-perfil/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
 import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 import { storeVendedoresMiddlewares } from "./store/proteger-vendedores";
+import { storeTextoPersonalizadoMiddlewares } from "./store/carts/texto-personalizado";
 import { storeHetnaPedidosMiddlewares } from "./store/hetna-pedidos/middlewares";
 import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
 import { adminSubirDisenosMiddlewares } from "./admin/hetna-subir-disenos/middlewares";
@@ -272,6 +273,7 @@ export default defineMiddlewares({
         ...storeVerificacionMiddlewares,
         ...storeCustomersMiddlewares,
         ...storeVendedoresMiddlewares,
+        ...storeTextoPersonalizadoMiddlewares,
         ...storeHetnaPedidosMiddlewares,
         ...storeSolicitudesTallerMiddlewares,
         ...storeCuponesMiddlewares,

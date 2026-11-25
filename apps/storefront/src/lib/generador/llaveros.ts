@@ -9,6 +9,7 @@
 // ícono y/o el logo del cliente (contornos sacados de su imagen).
 
 import { extruir } from "@/lib/generador/extruir"
+import { caja } from "@/lib/generador/geo2d"
 import { unirContornos } from "@/lib/generador/unirContornos"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import type { Curva, Pt } from "@/lib/generador/trazado"
@@ -24,6 +25,9 @@ export const FORMAS_LLAVERO: { id: FormaLlavero; nombre: string }[] = [
   { id: "etiqueta", nombre: "Etiqueta" },
   { id: "corazon", nombre: "Corazón" },
 ]
+
+/** Lo que la herramienta trae de fábrica (también lo usa el catálogo de impresión). */
+export const OPCIONES_LLAVERO_FABRICA = { espaciado: 0, margen: 4, radio: 5, argolla: 4.5, grosor: 3, relieve: 1.5 }
 
 export type OpcionesLlavero = {
   texto: string
@@ -119,10 +123,7 @@ function etiqueta(x0: number, y0: number, x1: number, y1: number, r: number, pun
   return pts
 }
 
-const cajaDe = (c: P[][]) => {
-  const xs = c.flat().map((p) => p[0]), ys = c.flat().map((p) => p[1])
-  return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }
-}
+const cajaDe = (c: P[][]) => caja(c.flat())
 const mover = (c: P[][], dx: number, dy: number, k = 1): P[][] => c.map((p) => p.map(([x, y]) => [x * k + dx, y * k + dy] as P))
 
 /** Texto (renglones 2+ con su escala), y a la izquierda el logo y el ícono, unidos y en mm. */
@@ -175,9 +176,7 @@ export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlave
 
   const letras = contenido(fuente, o)
   if (!letras.length) return vacio(o.texto.trim() ? "La tipografía no tiene esas letras." : "El logo no tiene contornos: prueba con una imagen de más contraste.")
-  const xs = letras.flat().map((p) => p[0])
-  const ys = letras.flat().map((p) => p[1])
-  const tx0 = Math.min(...xs), tx1 = Math.max(...xs), ty0 = Math.min(...ys), ty1 = Math.max(...ys)
+  const { x0: tx0, x1: tx1, y0: ty0, y1: ty1 } = cajaDe(letras)
   const tw = tx1 - tx0, th = ty1 - ty0
   const m = Math.max(1, o.margen)
   const d = Math.max(0, o.argolla)

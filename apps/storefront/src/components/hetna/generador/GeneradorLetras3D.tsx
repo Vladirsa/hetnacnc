@@ -92,12 +92,12 @@ function SelectorModo({ modo, cambiar }: { modo: Modo; cambiar: (m: Modo) => voi
 }
 
 export function GeneradorLetras3D() {
-  const [modo, setModo] = useState<Modo>("capas")
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("modo") === "impresion") setModo("impresion")
-  }, [])
-  if (modo === "impresion") return <LetrasImpresion3D selector={<SelectorModo modo={modo} cambiar={setModo} />} />
-  return <LetrasCapas selector={<SelectorModo modo={modo} cambiar={setModo} />} />
+  // se carga sólo en el navegador (dynamic sin SSR), así que se puede leer la liga al iniciar
+  const [modo, setModo] = useState<Modo>(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("modo") === "impresion" ? "impresion" : "capas"
+  )
+  const selector = <SelectorModo modo={modo} cambiar={setModo} />
+  return modo === "impresion" ? <LetrasImpresion3D selector={selector} /> : <LetrasCapas selector={selector} />
 }
 
 function LetrasCapas({ selector }: { selector: React.ReactNode }) {

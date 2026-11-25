@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { test } from "node:test"
 
-import { hacerLlavero, type OpcionesLlavero } from "./llaveros"
+import { OPCIONES_LLAVERO_FABRICA, hacerLlavero, type OpcionesLlavero } from "./llaveros"
 import { contornosDeMascara, mascaraDeImagen } from "./logoContornos"
 
 const DIR = process.env.FUENTES_DIR || ""
@@ -13,7 +13,7 @@ const ruta = join(DIR, "montserrat", "files", "montserrat-latin-800-normal.woff"
 const hay = !!DIR && existsSync(ruta) && !!process.env.OPENTYPE_JS
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fuente = () => { const b = readFileSync(ruta); return require(process.env.OPENTYPE_JS!).parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)) }
-const base: OpcionesLlavero = { texto: "Max", alto: 12, espaciado: 0, forma: "rect", margen: 4, radio: 5, argolla: 4.5, grosor: 3, relieve: 1.5 }
+const base: OpcionesLlavero = { ...OPCIONES_LLAVERO_FABRICA, texto: "Max", alto: 12, forma: "rect" }
 
 // Un "logo" de prueba: cuadro negro con un hueco blanco (como una O cuadrada)
 function logoPrueba() {

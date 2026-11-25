@@ -4,7 +4,8 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { test } from "node:test"
 
-import { hacerLetrasImpresion, type OpcionesImpresion } from "./letras3dImpresion"
+import { volumenMalla as volumen } from "./vectores"
+import { OPCIONES_IMPRESION_FABRICA, hacerLetrasImpresion, type OpcionesImpresion } from "./letras3dImpresion"
 
 const DIR = process.env.FUENTES_DIR || ""
 const ruta = join(DIR, "montserrat", "files", "montserrat-latin-800-normal.woff")
@@ -12,16 +13,7 @@ const hay = !!DIR && existsSync(ruta) && !!process.env.OPENTYPE_JS
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fuente = () => { const b = readFileSync(ruta); return require(process.env.OPENTYPE_JS!).parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)) }
 
-/** Volumen con signo (cm³): positivo si las caras miran hacia afuera */
-const volumen = (t: number[]) => {
-  let v = 0
-  for (let i = 0; i < t.length; i += 9) {
-    const [ax, ay, az, bx, by, bz, cx, cy, cz] = t.slice(i, i + 9)
-    v += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6
-  }
-  return v / 1000
-}
-const base: OpcionesImpresion = { texto: "HOLA", alto: 50, espaciado: 2, profundidad: 15, estilo: "pie", barreno: 8, pared: 1.6, frente: 1.2 }
+const base: OpcionesImpresion = { ...OPCIONES_IMPRESION_FABRICA, texto: "HOLA", alto: 50, profundidad: 15, estilo: "pie" }
 
 test("los tres estilos dan mallas con volumen positivo y del tamaño esperado", { skip: !hay && "faltan FUENTES_DIR/OPENTYPE_JS" }, () => {
   const f = fuente()
@@ -39,6 +31,22 @@ test("los tres estilos dan mallas con volumen positivo y del tamaño esperado", 
   // H, O, L, A: al menos un barreno por letra; la O (ancha) dos o uno
   assert.ok(pared.barrenos.length >= 4)
   assert.ok(Math.abs(pie.alto - 50) < 3)
+})
+
+test("de pie: cada letra se mete en la base (ninguna queda en el aire)", { skip: !hay && "faltan FUENTES_DIR/OPENTYPE_JS" }, () => {
+  // HOME: la O baja de la línea base; la H, la M y la E no deben quedar arriba de la base (4 mm)
+  const r = hacerLetrasImpresion(fuente(), { ...base, texto: "HOME", alto: 60 })
+  const t = r.tris
+  // cada letra ocupa su tramo en x (no se enciman); la base sólo tiene vértices en sus esquinas, fuera de esos tramos
+  const minZPorTramo = new Map<string, number>()
+  for (const l of r.letras) {
+    const xs = l.contornos.flat().map((p) => p[0])
+    const x0 = Math.min(...xs), x1 = Math.max(...xs)
+    let z = Infinity
+    for (let i = 0; i < t.length; i += 3) if (t[i] >= x0 && t[i] <= x1) z = Math.min(z, t[i + 2])
+    minZPorTramo.set(l.letra, z)
+  }
+  for (const [, z] of minZPorTramo) assert.ok(z <= 4, `una letra empieza en z=${z.toFixed(2)} (arriba de la base)`)
 })
 
 test("acentos en letras de pie avisan que quedan sueltos", { skip: !hay && "faltan FUENTES_DIR/OPENTYPE_JS" }, () => {
@@ -61,4 +69,11 @@ test("plantilla de montaje: PDF a tamaño real repartido en hojas carta", { skip
   const { columnas, filas } = repartoHojas(r.ancho + 30, r.alto + 30)
   assert.equal(doc.getPageCount(), columnas * filas)
   assert.ok(Math.abs(doc.getPage(0).getWidth() - 612) < 1, "hoja carta")
+})
+
+test("plantilla: un tramo largo que cruza la hoja también se dibuja (recorte)", async () => {
+  const { recortar } = await import("./plantillaMontaje")
+  // palo de una I de 600 mm que atraviesa una hoja de 0..200 sin tener extremos dentro
+  assert.deepEqual(recortar([-100, 50], [500, 50], 0, 0, 200, 100), [[0, 50], [200, 50]])
+  assert.equal(recortar([-100, 150], [500, 150], 0, 0, 200, 100), null)
 })

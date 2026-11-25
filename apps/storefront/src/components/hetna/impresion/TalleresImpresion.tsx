@@ -18,18 +18,18 @@ import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
-/** Largo máximo del texto de un llavero o placa personalizable */
-export const MAX_TEXTO = 40
+/** Largo máximo del texto si el producto no trae el suyo (el API revisa lo mismo) */
+const MAX_TEXTO = 40
 
-function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string; personalizable?: boolean }; nivel: Nivel; texto: string }) {
+function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string; personalizable: boolean; max: number }; nivel: Nivel; texto: string }) {
   const { addToCart, isAddingItem } = useCartContext()
   const [color, setColor] = useState(o.colores[0] || "")
   const [listo, setListo] = useState(false)
 
   const agregar = async () => {
     try {
-      // llaveros y placas: el texto del cliente viaja en el renglón (el taller lo ve en el pedido)
-      const t = texto.trim().slice(0, MAX_TEXTO)
+      // llaveros y letras: el texto del cliente viaja en el renglón (el taller lo ve en el pedido)
+      const t = texto.trim().slice(0, producto.max)
       if (producto.personalizable && !t) {
         toast.error({ title: "Falta el texto", description: "Escribe arriba el nombre o el texto que quieres en la pieza." })
         document.getElementById("texto-personalizado")?.focus()
@@ -39,7 +39,7 @@ function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; loc
       await addToCart({ offerId: o.offer_id, quantity: 1, countryCode: locale, metadata: Object.keys(metadata).length ? metadata : undefined })
       trackAddToCart({ item_id: producto.id, item_name: producto.titulo, price: o.precio, quantity: 1 }, "mxn")
       setListo(true)
-      toast.success({ title: "Agregado al carrito", description: `${o.material}${color ? ` · ${color}` : ""}${producto.personalizable ? ` · «${texto.trim().slice(0, MAX_TEXTO)}»` : ""} · ${o.taller.nombre}` })
+      toast.success({ title: "Agregado al carrito", description: `${o.material}${color ? ` · ${color}` : ""}${producto.personalizable ? ` · «${texto.trim().slice(0, producto.max)}»` : ""} · ${o.taller.nombre}` })
     } catch (e) {
       toast.error({ title: "No se pudo agregar", description: e instanceof Error ? e.message : "Intenta de nuevo." })
     }
@@ -159,6 +159,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
   const [material, setMaterial] = useState<string>("")
   const { ubicacion, ponerCp, aviso } = useUbicacion()
   const [texto, setTexto] = useState("")
+  const maxTexto = datos.producto.max_texto || MAX_TEXTO
   // Los destacados (pagan por salir primero) van arriba; luego, del más cercano
   // al más lejano; a igual cercanía, el orden del API (precio y días).
   const lista = useMemo(() => {
@@ -183,13 +184,15 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
           <input
             id="texto-personalizado"
             value={texto}
-            onChange={(e) => setTexto(e.target.value.slice(0, MAX_TEXTO))}
-            maxLength={MAX_TEXTO}
+            onChange={(e) => setTexto(e.target.value.slice(0, maxTexto))}
+            maxLength={maxTexto}
             placeholder="Escribe el nombre como lo quieres"
             className="min-h-[44px] rounded-[10px] border border-[#D9D5C9] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]"
             data-testid="texto-personalizado"
           />
-          <span className="text-[12px] text-[#6B6A63]">Sale con la forma y la letra de la foto. Revisa mayúsculas y acentos: se imprime tal cual.</span>
+          <span className="text-[12px] text-[#6B6A63]">
+            Hasta {maxTexto} {maxTexto === 1 ? "letra" : "letras"} ({texto.trim().length}/{maxTexto}). Sale con la forma y la letra de la foto; revisa mayúsculas y acentos: se imprime tal cual.
+          </span>
         </label>
       )}
 
@@ -223,7 +226,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
       {lista.length ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {lista.map(({ o, nivel }) => (
-            <Oferta key={o.offer_id} o={o} nivel={nivel} texto={texto} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo, personalizable: datos.producto.personalizable }} />
+            <Oferta key={o.offer_id} o={o} nivel={nivel} texto={texto} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo, personalizable: datos.producto.personalizable, max: maxTexto }} />
           ))}
         </ul>
       ) : (

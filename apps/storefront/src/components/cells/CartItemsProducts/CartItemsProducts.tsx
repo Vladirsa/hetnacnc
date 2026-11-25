@@ -42,7 +42,9 @@ export const CartItemsProducts = ({
       {validProducts.map((product) => {
         // + el color que eligió en una pieza de impresión bajo pedido (metadata.color)
         const color = typeof product.metadata?.color === "string" ? product.metadata.color : ""
-        const options = [...Object.entries(product.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : [])]
+  // + el texto de un llavero o unas letras personalizables (metadata.texto)
+  const textoPedido = typeof product.metadata?.texto === "string" ? product.metadata.texto : ""
+        const options = [...Object.entries(product.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : []), ...(textoPedido ? [["Texto", `«${textoPedido}»`] as [string, string]] : [])]
 
         const subtotal = product.subtotal ?? 0
         const comparar = (product.compare_at_unit_price || 0) * product.quantity

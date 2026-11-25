@@ -8,47 +8,49 @@ import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Etiqueta, Seccion, TarjetaExport, descargar, numero, r1 } from "@/components/hetna/estudio3d/Controles"
-import { mandarAFabricar } from "@/lib/generador/aCotizador"
+import { mandarAFabricar, slugArchivo } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente } from "@/lib/generador/fuentes"
-import { ESTILOS_IMPRESION, type EstiloImpresion, hacerLetrasImpresion } from "@/lib/generador/letras3dImpresion"
+import { ESTILOS_IMPRESION, type EstiloImpresion, OPCIONES_IMPRESION_FABRICA as FABRICA, hacerLetrasImpresion } from "@/lib/generador/letras3dImpresion"
 import type { Fuente } from "@/lib/generador/letreros"
-import { mallaSTL } from "@/lib/generador/vectores"
+import { mallaSTL, volumenMalla } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
-type Props = { selector: React.ReactNode; textoInicial?: string }
+type Props = { selector: React.ReactNode }
+
+const MAX_TEXTO = 24
 
 /** Lee de la liga ?texto=&estilo=&alto=&fuente=&profundidad= (catálogo de impresión: "modificar"). */
 function deLaLiga() {
-  if (typeof window === "undefined") return {}
   const q = new URLSearchParams(window.location.search)
-  const n = (k: string) => {
+  // número positivo de la liga, dentro de lo que dejan los controles
+  const n = (k: string, max: number) => {
     const v = Number(q.get(k))
-    return q.get(k)?.trim() && Number.isFinite(v) && v > 0 ? String(v) : undefined
+    return q.get(k)?.trim() && Number.isFinite(v) && v > 0 ? String(Math.min(max, v)) : undefined
   }
   const e = q.get("estilo")
   return {
-    texto: q.get("texto")?.slice(0, 24) || undefined,
+    texto: q.get("texto")?.slice(0, MAX_TEXTO) || undefined,
     estilo: ESTILOS_IMPRESION.some((x) => x.id === e) ? (e as EstiloImpresion) : undefined,
     fuente: FUENTES.some((f) => f.id === q.get("fuente")) ? q.get("fuente")! : undefined,
-    alto: n("alto"),
-    profundidad: n("profundidad"),
+    alto: n("alto", 1000),
+    profundidad: n("profundidad", 200),
   }
 }
 
-export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
+export function LetrasImpresion3D({ selector }: Props) {
   const { locale } = useParams<{ locale: string }>()
-  const [texto, setTexto] = useState(textoInicial)
+  const [texto, setTexto] = useState("HOLA")
   const [fuenteId, setFuenteId] = useState("alfa-slab-one")
   const [fuente, setFuente] = useState<Fuente | null>(null)
   const [errorFuente, setErrorFuente] = useState("")
   const [estilo, setEstilo] = useState<EstiloImpresion>("pie")
   const [alto, setAlto] = useState("60")
-  const [espaciado, setEspaciado] = useState("3")
+  const [espaciado, setEspaciado] = useState(String(FABRICA.espaciado))
   const [profundidad, setProfundidad] = useState("12")
-  const [barreno, setBarreno] = useState("8")
-  const [pared, setPared] = useState("1.6")
-  const [frente, setFrente] = useState("1.2")
+  const [barreno, setBarreno] = useState(String(FABRICA.barreno))
+  const [pared, setPared] = useState(String(FABRICA.pared))
+  const [frente, setFrente] = useState(String(FABRICA.frente))
   const [aviso, setAviso] = useState("")
   const [armandoPdf, setArmandoPdf] = useState(false)
 
@@ -82,9 +84,9 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
         espaciado: numero(espaciado) || 0,
         profundidad: numero(profundidad),
         estilo,
-        barreno: numero(barreno) || 8,
-        pared: numero(pared) || 1.6,
-        frente: numero(frente) || 1.2,
+        barreno: numero(barreno) || FABRICA.barreno,
+        pared: numero(pared) || FABRICA.pared,
+        frente: numero(frente) || FABRICA.frente,
       })
     } catch (e) {
       console.error("[letras-3d impresión]", e)
@@ -93,22 +95,11 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
   }, [fuente, texto, alto, espaciado, profundidad, estilo, barreno, pared, frente])
   const listo = !!r && !r.errores.length
 
-  // Vista: las de colgar y las de LED se imprimen boca abajo y en espejo; para
-  // verlas de frente se giran 180° sobre Y (x → −x, z → fondo − z)
-  const vista = useMemo(() => {
-    if (!listo) return undefined
-    if (estilo === "pie") return r!.tris
-    const t = r!.tris.slice()
-    const z1 = numero(profundidad)
-    for (let i = 0; i < t.length; i += 3) {
-      t[i] = -t[i]
-      t[i + 2] = z1 - t[i + 2]
-    }
-    return t
-  }, [listo, r, estilo, profundidad])
+  const estiloActual = ESTILOS_IMPRESION.find((e) => e.id === estilo)
+  const stl = () => mallaSTL({ tris: r!.tris, avisos: [] })
 
-  const archivo = `letras-3d-impresion-${texto.trim().replace(/[^\w]+/g, "-").toLowerCase() || "hetna"}`
-  const gramos = listo ? Math.round(Math.abs(volumenCm3(r!.tris)) * 1.24 * 0.45) : 0 // PLA, ~45 % lleno (paredes + 20 % de relleno)
+  const archivo = `letras-3d-impresion-${slugArchivo(texto, "hetna")}`
+  const gramos = listo ? Math.round(Math.abs(volumenMalla(r!.tris)) * 1.24 * 0.45) : 0 // PLA, ~45 % lleno (paredes + 20 % de relleno)
 
   const bajarPlantilla = async () => {
     if (!listo) return
@@ -132,7 +123,7 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
         <Etiqueta>Texto</Etiqueta>
         <input
           value={texto}
-          onChange={(e) => setTexto(e.target.value.slice(0, 24))}
+          onChange={(e) => setTexto(e.target.value.slice(0, MAX_TEXTO))}
           className="rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
         />
       </label>
@@ -168,7 +159,7 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
             </button>
           ))}
         </div>
-        <span className="text-[11.5px] text-[#8A97AB]">{ESTILOS_IMPRESION.find((e) => e.id === estilo)?.detalle}</span>
+        <span className="text-[11.5px] text-[#8A97AB]">{estiloActual?.detalle}</span>
       </Seccion>
 
       <div className="grid grid-cols-2 gap-2">
@@ -212,7 +203,7 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
               : "El frente va en la cama (imprímelo en blanco o natural para que pase la luz); atrás quedan abiertas para la tira LED."
         }
       >
-        <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, mallaSTL({ tris: r!.tris, avisos: [] }), "model/stl")}>
+        <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, stl(), "model/stl")}>
           STL
         </Boton>
       </TarjetaExport>
@@ -231,8 +222,8 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
         <Boton
           tipo="primario"
           onClick={() => {
-            const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL({ tris: r!.tris, avisos: [] }), locale, {
-              pieza: `Letras 3D "${texto}" (${ESTILOS_IMPRESION.find((e) => e.id === estilo)?.nombre.toLowerCase()})`,
+            const ok = mandarAFabricar(`${archivo}.stl`, stl(), locale, {
+              pieza: `Letras 3D "${texto}" (${estiloActual?.nombre.toLowerCase()})`,
               medidas: `${r1(r!.ancho)} × ${r1(r!.alto)} × ${r1(numero(profundidad))} mm`,
               proceso: "Impresión 3D",
             })
@@ -253,20 +244,11 @@ export function LetrasImpresion3D({ selector, textoInicial = "HOLA" }: Props) {
       subtitulo="Letras 3D para impresora"
       materialInicial="naranja"
       dePie={estilo !== "pie"}
-      tris={vista}
+      tris={listo ? r!.trisVista : undefined}
       panel={panel}
       exportacion={exportacion}
       avisos={listo ? r!.avisos : []}
-      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} mm · {ESTILOS_IMPRESION.find((e) => e.id === estilo)?.nombre}</span> : null}
+      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} mm · {estiloActual?.nombre}</span> : null}
     />
   )
-}
-
-function volumenCm3(t: number[]) {
-  let v = 0
-  for (let i = 0; i < t.length; i += 9) {
-    const [ax, ay, az, bx, by, bz, cx, cy, cz] = t.slice(i, i + 9)
-    v += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6
-  }
-  return v / 1000
 }

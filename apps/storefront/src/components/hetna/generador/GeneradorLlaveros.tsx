@@ -26,10 +26,10 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor } from "@/lib/generador/aCotizador"
+import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor, nombresDeArchivo, slugArchivo } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
-import { FORMAS_LLAVERO, type FormaLlavero, type OpcionesLlavero, hacerLlavero } from "@/lib/generador/llaveros"
+import { FORMAS_LLAVERO, type FormaLlavero, OPCIONES_LLAVERO_FABRICA as FABRICA, type OpcionesLlavero, hacerLlavero } from "@/lib/generador/llaveros"
 import { TIPOS_LOGO, logoDeArchivo } from "@/lib/generador/logoContornos"
 import { ICONOS_TEXTURA, type IconoTextura } from "@/lib/generador/texturizador"
 import type { P } from "@/lib/generador/vectores"
@@ -39,10 +39,9 @@ const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D")
 
 
 const MAX_NOMBRES = 200
-
-/** "Sofía Pérez" → "sofia-perez" (nombre de archivo) */
-const nombreArchivo = (t: string) =>
-  `llavero-${t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30).toLowerCase() || "nombre"}`
+const MAX_TEXTO = 60
+/** Topes de lo que llega por la liga (lo mismo que dejan los controles) */
+const TOPES: Record<string, [number, number]> = { alto: [5, 60], escala: [40, 100], grosor: [0.6, 20], relieve: [0, 10] }
 
 // Modelos con nombre: mismas opciones, distinto punto de partida
 const MODELOS: { id: string; nombre: string; forma: FormaLlavero; texto: string; alto: string; fuente: string }[] = [
@@ -87,12 +86,12 @@ export function GeneradorLlaveros() {
   const [error, setError] = useState("")
   const [forma, setForma] = useState<FormaLlavero>("rect")
   const [alto, setAlto] = useState("12")
-  const [espaciado, setEspaciado] = useState("0")
-  const [margen, setMargen] = useState("4")
-  const [radio, setRadio] = useState("5")
-  const [argolla, setArgolla] = useState("4.5")
-  const [grosor, setGrosor] = useState("3")
-  const [relieve, setRelieve] = useState("1.5")
+  const [espaciado, setEspaciado] = useState(String(FABRICA.espaciado))
+  const [margen, setMargen] = useState(String(FABRICA.margen))
+  const [radio, setRadio] = useState(String(FABRICA.radio))
+  const [argolla, setArgolla] = useState(String(FABRICA.argolla))
+  const [grosor, setGrosor] = useState(String(FABRICA.grosor))
+  const [relieve, setRelieve] = useState(String(FABRICA.relieve))
   const [cantidad, setCantidad] = useState("1")
   const [aviso, setAviso] = useState("")
   const [escala2, setEscala2] = useState("60")
@@ -108,7 +107,7 @@ export function GeneradorLlaveros() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     const t = q.get("texto")
-    if (t) setTexto(t.slice(0, 60))
+    if (t) setTexto(t.slice(0, MAX_TEXTO))
     const f = q.get("forma")
     if (f && FORMAS_LLAVERO.some((x) => x.id === f)) setForma(f as FormaLlavero)
     const fu = q.get("fuente")
@@ -117,7 +116,8 @@ export function GeneradorLlaveros() {
     if (ic && ICONOS_TEXTURA.some((x) => x.id === ic)) setIcono(ic as IconoTextura)
     for (const [k, poner] of [["alto", setAlto], ["escala", setEscala2], ["grosor", setGrosor], ["relieve", setRelieve]] as const) {
       const v = Number(q.get(k))
-      if (q.get(k)?.trim() && Number.isFinite(v) && v > 0) poner(String(v))
+      const [min, max] = TOPES[k]
+      if (q.get(k)?.trim() && Number.isFinite(v) && v > 0) poner(String(Math.min(max, Math.max(min, v))))
     }
   }, [])
 
@@ -198,15 +198,7 @@ export function GeneradorLlaveros() {
   const vista2d = useMemo(() => (listo ? vistaLlavero(r!.dibujo) : ""), [r, listo])
   const piezas = Math.max(1, Math.round(numero(cantidad) || 1))
   const primerRenglon = texto.split("\n")[0] || "nombre"
-  const archivo = `llavero-hetna-${
-    primerRenglon
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-zA-Z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 30)
-      .toLowerCase() || "nombre"
-  }`
+  const archivo = `llavero-hetna-${slugArchivo(primerRenglon, "nombre")}`
   const formaNombre = FORMAS_LLAVERO.find((f) => f.id === forma)?.nombre
 
   const panel = (
@@ -232,7 +224,7 @@ export function GeneradorLlaveros() {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           rows={2}
-          maxLength={60}
+          maxLength={MAX_TEXTO}
           className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
         />
         <span className="text-[11.5px] text-[#8A97AB]">Enter para un segundo renglón (por ejemplo, el teléfono en la placa de mascota).</span>
@@ -409,7 +401,7 @@ export function GeneradorLlaveros() {
   // debajo, los demás renglones del texto actual (p. ej. el teléfono)
   const listaNombres = nombres
     .split(/\r?\n/)
-    .map((n) => n.trim())
+    .map((n) => n.trim().slice(0, MAX_TEXTO))
     .filter(Boolean)
     .slice(0, MAX_NOMBRES)
   const zipNombres = async (tipo: "stl" | "dxf") => {
@@ -420,20 +412,18 @@ export function GeneradorLlaveros() {
       const { zipSync, strToU8 } = await import("fflate")
       const resto = texto.split("\n").slice(1).join("\n")
       const z: Record<string, Uint8Array> = {}
-      const usados = new Map<string, number>()
       const fallaron: string[] = []
+      const listos: { nombre: string; x: ReturnType<typeof hacerLlavero> }[] = []
       for (const n of listaNombres) {
         const x = hacerLlavero(fuente, { ...opciones, texto: resto ? `${n}\n${resto}` : n })
-        if (x.errores.length) {
-          fallaron.push(n)
-          continue
-        }
-        const base = nombreArchivo(n)
-        const k = (usados.get(base) || 0) + 1
-        usados.set(base, k)
-        const nombre = `${base}${k > 1 ? `-${k}` : ""}.${tipo}`
-        z[nombre] = tipo === "stl" ? new Uint8Array(mallaSTL(x.malla)) : strToU8(dibujoDXF(x.dibujo))
+        if (x.errores.length) fallaron.push(n)
+        else listos.push({ nombre: n, x })
       }
+      // nombres de archivo limpios y sin repetir ("ana", "ana-2"…)
+      nombresDeArchivo(listos.map((l) => `llavero-${l.nombre}`), tipo).forEach((nombre, i) => {
+        const { x } = listos[i]
+        z[nombre] = tipo === "stl" ? new Uint8Array(mallaSTL(x.malla)) : strToU8(dibujoDXF(x.dibujo))
+      })
       if (!Object.keys(z).length) throw new Error("Ningún nombre se pudo armar con esta tipografía.")
       descargar(`llaveros-hetna-${listaNombres.length}.zip`, new Blob([zipSync(z, { level: 6 }) as unknown as BlobPart], { type: "application/zip" }), "application/zip")
       if (fallaron.length) setAviso(`No se pudieron armar: ${fallaron.slice(0, 5).join(", ")}${fallaron.length > 5 ? "…" : ""} (la tipografía no tiene esas letras).`)
@@ -479,10 +469,10 @@ export function GeneradorLlaveros() {
           data-testid="nombres-llaveros"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <Boton tipo="primario" onClick={() => zipNombres("stl")}>
+          <Boton tipo="primario" disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("stl")}>
             {armandoZip ? "Armando…" : `ZIP con ${listaNombres.length || 0} STL`}
           </Boton>
-          <Boton onClick={() => zipNombres("dxf")}>{`ZIP con ${listaNombres.length || 0} DXF`}</Boton>
+          <Boton disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("dxf")}>{`ZIP con ${listaNombres.length || 0} DXF`}</Boton>
         </div>
       </TarjetaExport>
 
