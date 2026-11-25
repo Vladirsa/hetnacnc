@@ -10,6 +10,7 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, nuevoId } from "../licitacion"
+import { PLANOS_NOMBRES } from "../planos-correo"
 import { T_POST, asegurarSocial, crearPublicacion, dentroDeHorario, leerConfig, ligaPara, urlCorta, zonaDe } from "../social-hub"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
 import { limpiar, oraciones, palabras } from "./plan-material"
@@ -455,4 +456,42 @@ export async function promocionesDelDia(scope: any, logger?: any) {
   if (dia === 0 || dia === 2) await intenta("talleres listos", () => op.talleresListos(scope, logger))
   if (hechos.length) logger?.info?.(`[promo] hechas: ${hechos.join(", ")}`)
   return hechos
+}
+
+/**
+ * Plano de la semana (Biblioteca de planos, /planos): el siguiente plano que no
+ * ha salido en redes — los más nuevos primero — como carrusel de 4 láminas
+ * (portada, vista explotada, lista de corte y acomodo en la hoja). Las láminas
+ * las dibuja la tienda en /api/planos/[slug]/redes/[n] con el plano real.
+ * Cuando ya salieron todos, repite el que tiene más tiempo sin salir.
+ */
+export async function promoPlano(scope: any, logger?: any, slugForzado?: string) {
+  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+  await asegurarPromo(knex)
+  const slugs = Object.keys(PLANOS_NOMBRES).reverse() // los últimos agregados, primero
+  let slug = slugForzado && PLANOS_NOMBRES[slugForzado] ? slugForzado : null
+  if (!slug) {
+    const filas = await knex(T_PROMO).where({ tipo: "plano" }).groupBy("ref").select("ref", knex.raw("max(created_at) as ultimo"))
+    const ultimo = new Map(filas.map((f: any) => [f.ref, new Date(f.ultimo).getTime()]))
+    slug = slugs.find((s) => !ultimo.has(s)) || [...slugs].sort((a, b) => (ultimo.get(a) || 0) - (ultimo.get(b) || 0))[0]
+  }
+  if (!slug) return null
+  const nombre = PLANOS_NOMBRES[slug]
+  const medios: { url: string; tipo: string }[] = []
+  for (const n of [1, 2, 3, 4]) {
+    const r = await fetch(`${STORE_URL}/api/planos/${encodeURIComponent(slug)}/redes/${n}`)
+    if (!r.ok) throw new Error(`lámina ${n} de ${slug}: HTTP ${r.status}`)
+    const buf = Buffer.from(await r.arrayBuffer())
+    medios.push({ url: await subir(scope, `plano-${slug}-${Date.now()}-${n}.png`, "image/png", buf), tipo: "imagen" })
+  }
+  const c = await cuando(knex, 2, "mx")
+  const url = `${STORE_URL}/mx/planos/${slug}`
+  const texto =
+    `Plano gratis de la semana: ${nombre}.\n\n` +
+    `Trae la lista de corte con medidas, el acomodo en hojas de triplay de 2440 × 1220, el armado paso a paso y el DXF para tu router CNC.\n\n` +
+    `Bájalo gratis con tu correo: {{liga}}\n\n¿No tienes router? Un taller de HETNA te lo fabrica.`
+  const id = await crearPublicacion(knex, { origen: "manual", fuente: "promo", titulo: `Plano de la semana · ${nombre}`, texto_base: texto, url, redes: ["instagram", "facebook"], estado: c.estado, programada_para: c.fecha, mercado: "mx", medios }, logger)
+  await knex(T_PROMO).insert({ id: nuevoId("promo"), tipo: "plano", ref: slug, posts: JSON.stringify([id]) })
+  logger?.info?.(`[promo] plano de la semana: ${slug} (${c.estado})`)
+  return { slug, post: id }
 }

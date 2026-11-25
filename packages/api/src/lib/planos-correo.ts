@@ -37,6 +37,16 @@ export const PLANOS_NOMBRES: Record<string, string> = {
   "base-de-cama-individual": "Base de cama individual",
   "casita-para-perro": "Casita para perro",
   "baul-para-juguetes": "Baúl para juguetes",
+  "estante-para-pinturas": "Estante para pinturas y químicos",
+  "caja-organizadora-con-divisiones": "Caja organizadora con 6 divisiones",
+  "banco-alto-de-taller": "Banco alto de taller",
+  "carro-para-aspiradora": "Carro para aspiradora y separador ciclónico",
+  "estante-para-cargadores": "Estante de pared para cargadores de baterías",
+  "cajon-bajo-cama": "Cajón con ruedas para debajo de la cama",
+  "librero-bajo": "Librero bajo de 1 m",
+  "macetero-escalonado": "Macetero escalonado de 3 niveles",
+  "especiero-de-pared": "Especiero de pared",
+  "comedero-elevado": "Comedero elevado para perro",
 }
 
 export type PedidoPlano = { email: string; plano: string; nombre: string | null; promos: boolean }
@@ -77,4 +87,51 @@ export function correoPlanoHtml(slug: string, nombre: string | null) {
     `<p style="margin:0 0 12px;color:#40403A;font-size:14px;line-height:1.5">${nombre ? `Hola ${esc(nombre)}, a` : "A"}quí está tu plano. En la página puedes guardarlo en PDF y bajar el DXF para cortarlo en router CNC.</p>` +
     boton("Abrir mi plano", ligaPlano(slug)) +
     `<p style="margin:14px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">¿No tienes router o prefieres que te lo corten? En HETNA CNC un taller te lo fabrica: pide propuestas en <a href="${STORE_URL}/mx/cotizar" style="color:#B34D07">hetnacnc.com/mx/cotizar</a>.</p>`)
+}
+
+// ---------------------------------------------------------------------------
+// Aviso semanal a suscritos: "Nuevo plano gratis". Sólo a quien marcó la casilla
+// de novedades (promos = true) al bajar un plano, una vez por plano, en lotes,
+// y respetando las bajas. No se le avisa del plano que ya bajó.
+export const T_PLANOS_AVISOS = "hetna_planos_avisos"
+export const LOTE_AVISOS = Number(process.env.PLANOS_AVISO_LOTE || 150)
+
+let avisosLista = false
+export async function asegurarTablaAvisos(knex: any) {
+  if (avisosLista) return
+  await asegurarTablaPlanos(knex)
+  if (!(await knex.schema.hasTable(T_PLANOS_AVISOS))) {
+    await knex.schema.createTable(T_PLANOS_AVISOS, (t: any) => {
+      t.text("plano").notNullable()
+      t.text("email").notNullable()
+      t.timestamp("enviado_en").notNullable().defaultTo(knex.fn.now())
+      t.primary(["plano", "email"])
+    })
+  }
+  avisosLista = true
+}
+
+/** Suscritos que todavía no reciben el aviso de este plano (ni lo bajaron ya). */
+export async function suscritosPendientes(knex: any, slug: string, limite = LOTE_AVISOS): Promise<{ email: string; nombre: string | null }[]> {
+  await asegurarTablaAvisos(knex)
+  return knex(T_PLANOS)
+    .where({ promos: true })
+    .whereNotIn("email", knex(T_PLANOS_AVISOS).where({ plano: slug }).select("email"))
+    .whereNotIn("email", knex(T_PLANOS).where({ plano: slug }).select("email"))
+    .groupBy("email")
+    .select("email", knex.raw("max(nombre) as nombre"))
+    .orderByRaw("min(created_at)")
+    .limit(limite)
+}
+
+export const ligaPlanoAviso = (slug: string) => ligaPlano(slug).replace("utm_medium=planos", "utm_medium=aviso-semanal")
+
+export function correoAvisoHtml(slug: string, nombre: string | null) {
+  const titulo = PLANOS_NOMBRES[slug] || "Nuevo plano"
+  const img = `${STORE_URL}/api/planos/${encodeURIComponent(slug)}/redes/1`
+  return marco(`Plano gratis de la semana: ${titulo}`,
+    `<p style="margin:0 0 12px;color:#40403A;font-size:14px;line-height:1.5">${nombre ? `Hola ${esc(nombre)}: ` : ""}esta semana sumamos a la Biblioteca de planos HETNA el <b>${esc(titulo)}</b>. Trae lista de corte con medidas, acomodo en hojas de triplay, armado paso a paso y el DXF para router CNC.</p>` +
+    `<a href="${ligaPlanoAviso(slug)}"><img src="${img}" alt="${esc(titulo)}" width="420" style="display:block;width:100%;max-width:420px;height:auto;margin:0 auto 14px;border-radius:10px"></a>` +
+    boton("Ver el plano gratis", ligaPlanoAviso(slug)) +
+    `<p style="margin:14px 0 0;color:#6B6A63;font-size:13px;line-height:1.5">Te llega porque pediste recibir novedades al bajar un plano en hetnacnc.com. Todos los planos: <a href="${STORE_URL}/mx/planos" style="color:#B34D07">hetnacnc.com/mx/planos</a>.</p>`)
 }
