@@ -194,7 +194,8 @@ export const ProductDetailsPage = async ({
   // huecos); en la columna de compra queda el resumen y la descarga gratis.
   // Galería con miniaturas de vista 3D / esquema: diseños digitales y piezas
   // de Impresión 3D (su STL va en vista_previa). Los demás físicos, la normal.
-  const galeriaConVistas = !!descarga || !!impresion
+  // (sólo si ya trae su STL: antes de volver a sembrar, la galería normal con zoom)
+  const galeriaConVistas = !!descarga || (!!impresion && !!vistaPreviaDe(prod.metadata))
   const compraImpresion = impresion ? (
     <ResumenImpresion datos={impresion} herramienta={textoMeta(metaProd.herramienta_url) || null} />
   ) : null

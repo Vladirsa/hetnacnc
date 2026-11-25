@@ -74,7 +74,9 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
     // del más cercano al más lejano; más allá de los estados vecinos, primero
     // los que envían a todo México; luego verificados y mejor calificados
     const lejosSinEnvio = (n: Nivel, t: Taller) => Number(n >= 3 && !t.perfil.ofrece.includes("envio"))
+    // En /cotizar los perfiles traen el CP: el mismo CP que el cliente es "en tu municipio"
     return conNivel(hacen, (t) => t.perfil, u)
+      .map((x) => (u?.cp && x.item.perfil.cp === u.cp ? { ...x, nivel: 0 as Nivel } : x))
       .sort(
         (a, b) =>
           a.nivel - b.nivel ||
@@ -90,6 +92,7 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
 
   const etiqueta = (n: Nivel) => (ETIQUETA_NIVEL[n] ? [ETIQUETA_NIVEL[n] as string, COLOR_NIVEL[n] || ""] : null)
   const cerca = hayCerca(lista.map((x) => x.n))
+  const enMunicipio = lista.some((x) => x.n === 0)
   const hayEstimados = lista.some((x) => x.precio !== null)
 
   return (
@@ -166,11 +169,14 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
           })}
         </ul>
       )}
-      {enFicha && u && !cerca && (
+      {enFicha && u && (!cerca || (!!u.municipio && !enMunicipio)) && (
         <div className="mt-3 rounded-xl bg-[#FFF4EA] px-3 py-2.5 text-[13px] text-[#5A3A12]" data-testid="sin-talleres-cerca">
-          Todavía no hay talleres de {nombreProcesos(procesos)} en {u.estado}. Los de arriba te lo mandan por paquetería, o{" "}
+          {cerca
+            ? "No hay uno en tu municipio, pero los de tu estado te lo mandan o lo recoges cerca."
+            : `Todavía no hay talleres de ${nombreProcesos(procesos)} en ${u.estado}. Los de arriba te lo mandan por paquetería.`}{" "}
+          También puedes{" "}
           <LocalizedClientLink href={`/cotizar${query ? `?${query}` : ""}`} className="font-bold text-[#B34D07] underline">
-            pide cotización a toda la red
+            pedir cotización a toda la red
           </LocalizedClientLink>{" "}
           y te contesta quien pueda hacerlo.
         </div>

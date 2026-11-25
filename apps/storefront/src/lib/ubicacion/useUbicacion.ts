@@ -15,7 +15,8 @@ import { useCallback, useEffect, useState } from "react"
 import { buscarCP } from "@/lib/envios/cotizar"
 import { normalizarEstado, type UbicacionCliente } from "@/lib/ubicacion/cercania"
 
-export type Ubicacion = UbicacionCliente & { fuente: "cp" | "ip" }
+/** `ciudad` sólo se muestra (viene de la IP y no es confiable para decir "en tu municipio"). */
+export type Ubicacion = UbicacionCliente & { fuente: "cp" | "ip"; ciudad?: string }
 
 /** El código postal del cliente: { cp, municipio, estado } */
 export const EVENTO = "hetna:ubicacion"
@@ -71,7 +72,7 @@ export function useUbicacion() {
         .then((r) => (r.ok ? r.json() : {}))
         .then((d: { estado?: string; ciudad?: string }) => {
           if (!d?.estado) return
-          const v: Ubicacion = { estado: d.estado, municipio: d.ciudad || "", fuente: "ip" }
+          const v: Ubicacion = { estado: d.estado, ciudad: d.ciudad || undefined, fuente: "ip" }
           guardar("session", CLAVE_IP, v)
           window.dispatchEvent(new CustomEvent(EVENTO_IP, { detail: v }))
         })

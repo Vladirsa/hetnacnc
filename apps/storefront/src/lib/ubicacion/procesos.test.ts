@@ -20,6 +20,10 @@ test("procesos de lo que se fabrica", () => {
   assert.deepEqual(procesosDeProducto(producto("Pieza maquilada en aluminio", { tipo_producto: "a_medida" })), ["maquinado_metal", "router"])
   assert.deepEqual(procesosDeProducto(producto("Relieve 3D de la Virgen en madera")), ["router"])
   assert.deepEqual(procesosDeProducto(producto("Llavero impreso en 3D")), ["impresion_3d"])
+  assert.deepEqual(procesosDeProducto(producto("Organizador de cables STL", { producto_digital: true })), ["impresion_3d"])
+  // un relieve en STL es para router, no para imprimir
+  assert.deepEqual(procesosDeProducto(producto("Relieve 3D STL para router CNC")), ["router"])
+  assert.deepEqual(procesosDeProducto(producto("Escudo de armas", {}, ["Modelos STL para CNC"])), ["router"])
   assert.deepEqual(procesosDeProducto(producto("Maceta", { impresion_bajo_pedido: true })), ["impresion_3d"])
   assert.deepEqual(procesosDeProducto(producto("Lo que sea", { procesos: "torno, corte_laser, nada" })), ["torno", "corte_laser"])
 })

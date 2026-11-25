@@ -39,7 +39,8 @@ const texto = (v: unknown) => (typeof v === "string" ? v : "")
 
 const CORTE = /celosi|letrero|calad|silueta|plantilla|stencil|corte (laser|plasma|cnc)|cortad[oa] (en|a) (laser|plasma|cnc)/
 const TALLADO = /tallad|relieve|maquilad|maquinad|fresad|molde|bajo relieve/
-const IMPRESO = /impres[oa] (en )?3d|impresion 3d|\bstl\b/
+const IMPRESO = /impres[oa] (en )?3d|impresion 3d|para imprimir/
+const STL = /\bstl\b/ // un STL suelto: impresión, salvo que hable de router o relieve
 const TORNO = /torneado|torno/
 // Metal: el acrílico no cuenta aunque diga "lámina"
 const esMetal = (t: string) => /alumin|acero|inox|metal|cobre|laton/.test(t) || (/lamina/.test(t) && !/acrilic|mdf|madera|pvc|plastic/.test(t))
@@ -63,7 +64,8 @@ export function procesosDeProducto(p: ProductoMin | null | undefined): Proceso[]
   if (IMPRESO.test(t)) return ["impresion_3d"]
   if (TORNO.test(t)) return ["torno", "maquinado_metal"]
   if (tipo === "corte" || CORTE.test(t)) return metal ? ["corte_plasma", "corte_laser", "router"] : ["corte_laser", "router"]
-  if (tipo === "tallado" || TALLADO.test(t)) return metal ? ["maquinado_metal", "router"] : ["router"]
+  if (tipo === "tallado" || TALLADO.test(t) || (STL.test(t) && /router|cnc/.test(t))) return metal ? ["maquinado_metal", "router"] : ["router"]
+  if (STL.test(t)) return ["impresion_3d"]
   // Pieza bajo pedido sin más pistas: lo más común
   if (tipo === "a_medida") return metal ? ["maquinado_metal", "corte_plasma"] : ["router", "corte_laser"]
   return [] // sin pistas de que se fabrique
