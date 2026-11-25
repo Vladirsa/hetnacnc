@@ -108,7 +108,7 @@ export function GeneradorMoldes() {
     setPared(t === "caja_silicona" ? "3" : "10")
     // el molde abierto se llena por arriba: la cara plana de la pieza (casi
     // siempre la base) tiene que quedar arriba. Sólo si la persona no eligió ya.
-    if (!arribaElegido.current) setArriba(t === "abierto" ? "-z" : "z")
+    if (!arribaElegido.current) setArriba(t === "abierto" && !hueco ? "-z" : "z")
   }
 
   const abrir = async (f: File | undefined) => {
@@ -186,7 +186,7 @@ export function GeneradorMoldes() {
       ? [
           `Molde de ${nombre} - hetnacnc.com/mx/disenar/moldes-3d`,
           "",
-          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? (p.nombre === "nucleo" ? " (ya va volteada: se imprime con la tapa sobre la cama)" : " (ya va volteada: se imprime con la cara de partición hacia arriba, sin soportes)") : ""}`),
+          ...res.piezas.map((p) => `${p.nombre}: ${p.tam.join(" x ")} mm${p.voltear ? (p.cama === "tapa" ? " (ya va volteada: se imprime con la tapa sobre la cama)" : " (ya va volteada: se imprime con la cara de partición hacia arriba, sin soportes)") : ""}`),
           "",
           res.tipo === "caja_silicona" ? `Silicona necesaria: unos ${res.colado} ml.` : `Material para vaciar: unos ${res.colado} ml por pieza.`,
           res.tipo === "dos_partes" ? "Une las dos mitades con las llaves, sujétalas con pinzas de papelería en las orejas (o con ligas) y vacía por el agujero más grande (bebedero); los chicos son respiraderos." : "",
@@ -295,13 +295,13 @@ export function GeneradorMoldes() {
                 activa={hueco}
                 cambiar={(v) => {
                   setHueco(v)
-                  // hueca va boca arriba: el núcleo entra por la boca
-                  if (v && !arribaElegido.current) setArriba("z")
+                  // hueca va boca arriba (el núcleo entra por la boca); maciza, boca abajo
+                  if (!arribaElegido.current) setArriba(v ? "z" : "-z")
                 }}
               />
               {hueco && (
                 <>
-                  <span className="text-[12px] text-[#6B6A63]">Sale un núcleo con tapa que se mete por la boca: la pieza queda con la pared que elijas. Pon la boca de la pieza hacia arriba (paso 2).</span>
+                  <span className="text-[12px] text-[#6B6A63]">Sale un núcleo con tapa que se mete por la boca. La pared queda del grosor que elijas donde la pieza es más ancha y más delgada donde se angosta. La boca de la pieza va hacia arriba y plana (paso 2). Para macetas, vasos y cajas; no para piezas con asas o salientes.</span>
                   <Casilla etiqueta="Agujero de drenaje en el fondo" activa={drenaje} cambiar={setDrenaje} />
                   <div className="grid grid-cols-2 gap-2">
                     <Numero etiqueta="Pared de la pieza" valor={grosorHueco} cambiar={setGrosorHueco} />
@@ -438,7 +438,7 @@ export function GeneradorMoldes() {
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {res.piezas.map((p) => (
                 <li key={p.nombre} className="rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5 text-[13.5px] text-[#1B1B18]">
-                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? (p.nombre === "nucleo" ? " · se descarga volteada: la tapa va sobre la cama" : " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes") : ""}
+                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? (p.cama === "tapa" ? " · se descarga volteada: la tapa va sobre la cama" : " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes") : ""}
                 </li>
               ))}
             </ul>
