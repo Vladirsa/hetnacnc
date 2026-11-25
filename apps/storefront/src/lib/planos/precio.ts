@@ -47,7 +47,15 @@ export type CotizacionPlano = {
   diasFabricacion: number
 }
 
-export function cotizarPlano(pl: Plano, cfg?: ConfigPrecios | null): CotizacionPlano {
+/** Acabados que se ofrecen en los productos de planos (claves de ACABADOS del estimador). */
+export const ACABADOS_PLANO = [
+  { clave: "lijado", nombre: "Natural lijado" },
+  { clave: "sellado", nombre: "Sellado / barniz" },
+  { clave: "pintura", nombre: "Pintado" },
+] as const
+export const COLORES_PINTURA = ["Blanco", "Negro", "Gris", "Nogal"] as const
+
+export function cotizarPlano(pl: Plano, cfg?: ConfigPrecios | null, acabado: "lijado" | "sellado" | "pintura" = "lijado"): CotizacionPlano {
   const k = pl.juego?.cantidad ?? 1
   const { filas } = listaCorte(pl)
   const acs = acomodoPorMaterial(filas)
@@ -59,7 +67,7 @@ export function cotizarPlano(pl: Plano, cfg?: ConfigPrecios | null): CotizacionP
     const area = piezas.reduce((s, p) => s + p.largo * p.ancho * p.cantidad, 0) / (HOJA.largo * HOJA.ancho)
     return { material, piezas, hojasReales: a.acomodo.hojas.length, hojas: Math.min(a.acomodo.hojas.length, area * (1 + material.merma / 100)) }
   })
-  const e = estimarMueble(grupos, { servicio: "router", acabado: "lijado", cfg })
+  const e = estimarMueble(grupos, { servicio: "router", acabado, cfg })
   const gramos = pl.piezas.reduce((s, q) => s + ((q.x1 - q.x0) * (q.y1 - q.y0) * (q.z1 - q.z0)) / 1000 * materialRef(q.material).densidad, 0) * k
   return {
     precio: e.total,
