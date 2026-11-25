@@ -16,7 +16,6 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; modelo: string }> }
 
-export const dynamicParams = false
 export function generateStaticParams() {
   return MODELOS.map((m) => ({ modelo: m.id }))
 }
