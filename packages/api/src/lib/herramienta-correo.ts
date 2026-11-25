@@ -88,7 +88,23 @@ export async function asegurarTablaEnvios(knex: any) {
       })
   }
   enviosListo = true
+  // limpieza: los topes sólo miran el último día
+  await knex(T_ENVIOS).where("created_at", "<", knex.raw("now() - interval '30 days'")).del().catch(() => undefined)
 }
+/**
+ * Llave del correo para los topes: sin "+etiqueta" y, en Gmail, sin puntos
+ * (ana.p+1@gmail.com y anap@gmail.com son el mismo buzón).
+ */
+export function correoParaTope(email: string) {
+  const [u, d = ""] = email.toLowerCase().split("@")
+  const dominio = d === "googlemail.com" ? "gmail.com" : d
+  let usuario = u.split("+")[0]
+  if (dominio === "gmail.com") usuario = usuario.replace(/\./g, "")
+  return `${usuario}@${dominio}`
+}
+/** IP para los topes: en IPv6 cuenta la red /64 (un mismo cliente tiene muchas). */
+export const ipParaTope = (ip: string) => (ip.includes(":") ? ip.split(":").slice(0, 4).join(":") + "::/64" : ip)
+
 /** Topes al día: correos mandados por dirección y por dirección y herramienta; intentos por IP. */
 export const TOPES = { porCorreo: 3, porHerramienta: 1, porIp: 10 }
 

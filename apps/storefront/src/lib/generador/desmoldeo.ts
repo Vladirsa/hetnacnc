@@ -16,8 +16,11 @@
 // atora, la fresa ve toda la cavidad. No toma en cuenta el radio de la fresa.
 import type { Arriba } from "./moldes"
 
-/** Tramos [entra, sale] de la pieza en cada columna (coordenada "arriba"), ya empezando en 0. */
-export type Columnas = { tramos: [number, number][][]; alto: number }
+/**
+ * Tramos [entra, sale] de la pieza en cada columna (coordenada "arriba"), ya
+ * empezando en 0, y cuántas columnas no se pudieron leer (malla con huecos).
+ */
+export type Columnas = { tramos: [number, number][][]; alto: number; dudosas: number }
 
 const CELDAS = 80
 
@@ -38,10 +41,11 @@ export function columnas(tris: ArrayLike<number>, eje: 0 | 1 | 2, signo: 1 | -1,
     if (w < z0) z0 = w
     if (w > z1) z1 = w
   }
-  if (!isFinite(a0)) return { tramos: [], alto: 0 }
+  if (!isFinite(a0)) return { tramos: [], alto: 0, dudosas: 0 }
   const lado = Math.max(a1 - a0, b1 - b0) / celdas || 1
   const na = Math.max(1, Math.ceil((a1 - a0) / lado)), nb = Math.max(1, Math.ceil((b1 - b0) / lado))
-  const cruces: number[][] = Array.from({ length: na * nb }, () => [])
+  // cada cruce: altura y si el rayo (de abajo hacia arriba) entra (+1) o sale (-1)
+  const cruces: [number, number][][] = Array.from({ length: na * nb }, () => [])
   // centro de cada celda corrido un poco para no caer justo en aristas o vértices
   const cu = (i: number) => a0 + (i + 0.5013) * lado
   const cv = (j: number) => b0 + (j + 0.4987) * lado
@@ -51,6 +55,9 @@ export function columnas(tris: ArrayLike<number>, eje: 0 | 1 | 2, signo: 1 | -1,
     const wx = tris[t + 6 + a], wy = tris[t + 6 + b], wz = signo * tris[t + 6 + eje]
     const d = (vy - wy) * (ux - wx) + (wx - vx) * (uy - wy)
     if (Math.abs(d) < 1e-12) continue // triángulo de canto: el rayo no lo cruza
+    // componente "arriba" de la normal: (a × b) da +eje, salvo x × z = −y
+    const nArriba = ((vx - ux) * (wy - uy) - (vy - uy) * (wx - ux)) * (eje === 1 ? -1 : 1) * signo
+    const sentido = nArriba < 0 ? 1 : -1 // cara que mira abajo: por ahí se entra
     const i0 = Math.max(0, Math.floor((Math.min(ux, vx, wx) - a0) / lado - 0.5013))
     const i1 = Math.min(na - 1, Math.ceil((Math.max(ux, vx, wx) - a0) / lado))
     const j0 = Math.max(0, Math.floor((Math.min(uy, vy, wy) - b0) / lado - 0.4987))
@@ -63,23 +70,35 @@ export function columnas(tris: ArrayLike<number>, eje: 0 | 1 | 2, signo: 1 | -1,
         const l2 = ((wy - uy) * (x - wx) + (ux - wx) * (y - wy)) / d
         const l3 = 1 - l1 - l2
         if (l1 < 0 || l2 < 0 || l3 < 0) continue
-        cruces[i + na * j].push(l1 * uz + l2 * vz + l3 * wz - z0)
+        cruces[i + na * j].push([l1 * uz + l2 * vz + l3 * wz - z0, sentido])
       }
     }
   }
+  // Se cuenta por sentido (dentro = contador distinto de 0), no por pares:
+  // dos cuerpos encimados en el mismo archivo cuentan como uno solo
   const tramos: [number, number][][] = []
+  let dudosas = 0
   for (const c of cruces) {
     if (!c.length) continue
-    c.sort((p, q) => p - q)
-    // cruces repetidos (el rayo tocó una arista compartida) se cuentan una vez
-    const u: number[] = []
-    for (const z of c) if (!u.length || z - u[u.length - 1] > 1e-6) u.push(z)
-    if (u.length % 2) continue // columna dudosa (tocó un borde): no se cuenta
+    c.sort((p, q) => p[0] - q[0] || p[1] - q[1])
     const t: [number, number][] = []
-    for (let k = 0; k < u.length; k += 2) t.push([u[k], u[k + 1]])
-    tramos.push(t)
+    let dentro = 0, desde = 0, previo: [number, number] | null = null
+    for (const x of c) {
+      // el rayo tocó una arista compartida: el mismo cruce sale dos veces
+      if (previo && x[1] === previo[1] && x[0] - previo[0] < 1e-6) continue
+      previo = x
+      const antes = dentro
+      dentro += x[1]
+      if (antes === 0 && dentro !== 0) desde = x[0]
+      else if (antes !== 0 && dentro === 0) {
+        if (t.length && desde - t[t.length - 1][1] < 1e-6) t[t.length - 1][1] = x[0] // tramos que se tocan: uno solo
+        else t.push([desde, x[0]])
+      }
+    }
+    if (dentro !== 0 || !t.length) dudosas++ // la malla no cierra en esta columna
+    else tramos.push(t)
   }
-  return { tramos, alto: z1 - z0 }
+  return { tramos, alto: z1 - z0, dudosas }
 }
 
 const tolerancia = (alto: number) => Math.max(0.2, alto * 0.005)
@@ -117,6 +136,8 @@ const LADOS: [Arriba, 0 | 1 | 2, 1 | -1][] = [["z", 2, 1], ["-z", 2, -1], ["y", 
 export type Desmoldeo = {
   /** Fracción (0 a 1) de la pieza que se atora con las opciones elegidas. */
   atorado: number
+  /** No se pudo revisar (la malla tiene huecos o caras volteadas): no se dice nada. */
+  dudoso?: boolean
   /** Mejor altura de partición (%) para el lado elegido, si es mejor que la elegida (dos partes). */
   particion?: { particion: number; atorado: number }
   /** Mejor lado hacia arriba, si es mejor que el elegido (con su partición en dos partes). */
@@ -133,6 +154,7 @@ export const SIN_ATORAR = 0.01
 export function revisarDesmoldeo(tris: ArrayLike<number>, tipo: "abierto" | "dos_partes", arriba: Arriba, particion: number): Desmoldeo {
   const lado = LADOS.find((l) => l[0] === arriba) || LADOS[0]
   const cActual = columnas(tris, lado[1], lado[2])
+  if (!cActual.tramos.length || cActual.dudosas > 0.2 * (cActual.tramos.length + cActual.dudosas)) return { atorado: 0, dudoso: true }
   const r: Desmoldeo = {
     atorado: tipo === "abierto" ? atoradoAbierto(cActual) : atoradoDosPartes(cActual, (cActual.alto * particion) / 100),
   }

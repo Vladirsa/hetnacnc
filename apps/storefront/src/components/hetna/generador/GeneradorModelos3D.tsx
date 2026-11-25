@@ -22,7 +22,9 @@ function descargar(nombre: string, datos: ArrayBuffer) {
   const a = document.createElement("a")
   a.href = url
   a.download = nombre
+  document.body.appendChild(a) // que el clic llegue al documento (lo cuenta el tablero)
   a.click()
+  a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
 

@@ -151,6 +151,8 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
     // 1. La pieza, orientada y con su base en z = 0, centrada en x/y
     let pieza = g(aManifold(w, entrada))
     if (pieza.isEmpty()) throw new Error("El modelo quedó vacío al leerlo. Revisa que sea un sólido cerrado.")
+    // la pieza ya leída y sin girar (caras orientadas hacia afuera), para revisar el desmoldeo
+    const sinGirar = aMalla(pieza)
     const [gx, gy, gz] = GIROS[o.arriba] || GIROS.z
     if (gx || gy || gz) pieza = g(pieza.rotate([gx, gy, gz]))
     const b0 = pieza.boundingBox()
@@ -251,9 +253,9 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       avisos.push(`El molde se parte a ${r1(zp)} mm de la base de la pieza.`)
     }
 
-    // ¿Sale sin atorarse? Se revisa sobre la pieza original (las sugerencias
+    // ¿Sale sin atorarse? Se revisa sobre la pieza sin girar (las sugerencias
     // de lado son las mismas opciones del paso 2)
-    const desmoldeo = tipo === "caja_silicona" ? null : revisarDesmoldeo(entrada.tris, tipo, o.arriba, particion)
+    const desmoldeo = tipo === "caja_silicona" ? null : revisarDesmoldeo(sinGirar.tris, tipo, o.arriba, particion)
     return { tipo, piezas, modelo, colado: r1(colado / 1000), particionZ, desmoldeo, avisos }
   } finally {
     for (const x of basura) { try { (x as any)?.delete?.() } catch {} }

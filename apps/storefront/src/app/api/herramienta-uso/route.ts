@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { cabeceraIpCliente } from "@/lib/seguridad/ip-firmada"
+
 // Puente del navegador al backend para contar el uso de una herramienta del
 // Estudio (components/hetna/estudio/ContarUsoHerramienta.tsx). Igual que
 // /api/vistas: sin exponer la clave publicable y contestando 200 siempre.
@@ -13,7 +15,8 @@ export async function POST(req: NextRequest) {
     if (herramienta && evento)
       await fetch(`${MEDUSA_BACKEND_URL}/store/herramienta-uso`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string },
+        // con la IP del visitante firmada: el API pone su tope por IP
+        headers: { "Content-Type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string, ...(await cabeceraIpCliente()) },
         body: JSON.stringify({ herramienta, evento }),
         cache: "no-store",
       })

@@ -111,6 +111,7 @@ export function GeneradorMoldes() {
     setAviso("")
     if (!f) return
     const mio = ++turnoArchivo.current
+    arribaElegido.current = false // pieza nueva: vuelve la orientación sugerida por tipo
     if (f.size > LIMITE) return setError("El archivo pesa más de 60 MB.")
     const ext = (f.name.split(".").pop() || "").toLowerCase()
     setCargando(ext === "step" || ext === "stp" ? "Abriendo el STEP con el motor CAD (la primera vez baja ~23 MB)..." : "Leyendo archivo...")
@@ -294,7 +295,12 @@ export function GeneradorMoldes() {
               <p className="m-0 text-[13.5px] text-[#1B1B18]">
                 {res.tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} ml</b>
               </p>
-              {res.desmoldeo && (res.desmoldeo.atorado <= SIN_ATORAR ? (
+              {res.desmoldeo?.dudoso && (
+                <p className="m-0 rounded-[10px] bg-[#FFF8F1] px-3 py-2 text-[12.5px] text-[#7A4A12]" data-testid="desmoldeo">
+                  No pudimos revisar si la pieza se atora: el archivo tiene huecos o caras volteadas. Revísalo en tu programa o prueba la caja para silicona.
+                </p>
+              )}
+              {res.desmoldeo && !res.desmoldeo.dudoso && (res.desmoldeo.atorado <= SIN_ATORAR ? (
                 <div className="rounded-[10px] bg-[#E6F4EC] px-3 py-2 text-[12.5px] text-[#16794F]" data-testid="desmoldeo">
                   <b>✓ La pieza sale sin atorarse.</b>{" "}
                   {res.tipo === "dos_partes"
