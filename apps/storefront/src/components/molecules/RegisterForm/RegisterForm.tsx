@@ -11,7 +11,8 @@ import { zodResolver } from "@/lib/helpers/zod-resolver"
 import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { registerFormSchema, RegisterFormData } from "./schema"
-import { signup } from "@/lib/data/customer"
+import { login, signup } from "@/lib/data/customer"
+import { CampoCodigo } from "@/components/hetna/cuenta/CampoCodigo"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
@@ -139,6 +140,16 @@ const Form = () => {
     }
   }
 
+  // Con el código ya confirmado: entra solo con el correo y la contraseña que acaba de escribir
+  const entrarTrasConfirmar = async () => {
+    const fd = new FormData()
+    fd.append("email", getValues("email"))
+    fd.append("password", getValues("password"))
+    const r = await login(fd).catch(() => null)
+    const destino = leerVolver() || "/user"
+    window.location.href = r && r.success ? destino : `/login?volver=${encodeURIComponent(destino)}`
+  }
+
   if (revisa) {
     return (
       <main className="container" data-testid="register-page">
@@ -146,8 +157,9 @@ const Form = () => {
           <p className="text-[44px] leading-none m-0" aria-hidden="true">📧</p>
           <h1 className="heading-md text-primary uppercase mt-4 mb-3">Revisa tu correo</h1>
           <p className="text-md m-0">
-            Te mandamos una liga a <b>{revisa}</b> para confirmar tu cuenta. Ábrela y después inicia sesión.
+            Te mandamos una liga y un código a <b>{revisa}</b> para confirmar tu cuenta. Abre la liga, o escribe aquí el código.
           </p>
+          <CampoCodigo email={revisa} alConfirmar={entrarTrasConfirmar} />
           <p className="text-md text-secondary mt-3 mb-0">
             Si no llega en unos minutos, revisa spam o promociones. Desde &quot;Iniciar sesión&quot; puedes pedir que te la
             mandemos otra vez.

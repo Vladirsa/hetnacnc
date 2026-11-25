@@ -22,6 +22,8 @@ import { Modules } from "@medusajs/framework/utils"
 const PROTEGIDAS = [
   "correo_verificado",
   "correo_verificado_en",
+  // Intentos fallidos del código de 6 dígitos (lib/verificar-correo.ts)
+  "codigo_fallos",
   // Recomienda y gana (lib/cupones.ts): quién lo recomendó y su recompensa
   "codigo_recomienda",
   "referido_por",
