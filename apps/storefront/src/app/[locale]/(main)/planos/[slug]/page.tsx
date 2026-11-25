@@ -10,6 +10,24 @@ import { medidasDe, medidasDeConsulta, redimensionarQueQuepa } from "@/lib/plano
 import { MATERIALES_PLANO, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
 import { cotizarPlano } from "@/lib/planos/precio"
 import { pesos, type ConfigPrecios } from "@/lib/cotizador/estimador"
+import TalleresPlano from "@/components/hetna/planos/TalleresPlano"
+import { listOffers } from "@/lib/data/offers"
+import { listProducts } from "@/lib/data/products"
+import type { StoreOffer } from "@/lib/helpers/buybox"
+import { variantesPlano } from "@/lib/planos/tienda"
+
+// El producto del plano en la tienda (plano-<slug>) con las ofertas de los talleres
+async function ofertasDelPlano(slug: string, locale: string) {
+  try {
+    const { response } = await listProducts({ countryCode: locale, queryParams: { handle: [`plano-${slug}`], limit: 1 } as never })
+    const prod = response.products[0]
+    if (!prod) return null
+    const { offers } = await listOffers({ productId: prod.id, countryCode: locale })
+    return { prod, offers: offers as StoreOffer[] }
+  } catch {
+    return null
+  }
+}
 
 // Ajustes de precio del dueño (Panel de HETNA > Precios de la calculadora)
 async function configPrecios(): Promise<ConfigPrecios | null> {
@@ -46,15 +64,15 @@ const Titulo = ({ n, children }: { n: string; children: React.ReactNode }) => (
   </h2>
 )
 
-export default async function PlanoPagina({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { slug } = await params
+export default async function PlanoPagina({ params, searchParams }: { params: Promise<{ slug: string; locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { slug, locale } = await params
   const base = planoPorSlug(slug)
   if (!base) notFound()
   // "Modifica las medidas": ?ancho=&fondo=&alto= (mm)
   const { plano: pl, ajustado } = redimensionarQueQuepa(base, medidasDeConsulta(await searchParams))
   const original = medidasDe(base.piezas, base.ruedas)
   const cambiado = pl !== base
-  const cfg = await configPrecios()
+  const [cfg, tienda] = await Promise.all([configPrecios(), ofertasDelPlano(slug, locale)])
 
   const m = medidasGenerales(pl)
   const { filas } = listaCorte(pl)
@@ -70,6 +88,15 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
       return { ok: true as const, ...cotizarPlano(pl, cfg) }
     } catch {
       return { ok: false as const }
+    }
+  })()
+  // A la medida: los precios de los talleres se ajustan como cambia el costo de fabricarlo
+  const factorMedida = (() => {
+    if (!cambiado || !cot.ok) return 1
+    try {
+      return cot.precio / cotizarPlano(base, cfg).precio
+    } catch {
+      return 1
     }
   })()
   const caja = "rounded-2xl border border-white/10 bg-[#1B2A42] p-4"
@@ -182,6 +209,18 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
             </div>
           </section>
         </article>
+
+        {tienda ? (
+          <div className="mt-6 print:hidden">
+            <TalleresPlano
+              offers={tienda.offers}
+              variantes={variantesPlano(tienda.prod as never)}
+              locale={locale}
+              factorMedida={factorMedida}
+              medidaTexto={`${m.ancho} × ${m.fondo} × ${m.alto} mm`}
+            />
+          </div>
+        ) : null}
 
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 print:hidden">
           <DescargaPlano slug={pl.slug} nombre={cambiado ? `${pl.nombre} ${m.ancho}x${m.fondo}x${m.alto}` : pl.nombre} dxfs={dxfs} />

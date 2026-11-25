@@ -29,6 +29,8 @@ export const IMPRESION_MATERIAL: Record<string, string> = {
   PETG: "PETG",
   ABS: "ABS / ASA",
   "TPU (flexible)": "TPU flexible",
+  "PLA-CF": "PLA-CF (fibra de carbono)",
+  Resina: "Resina (SLA)",
 }
 export const MATERIALES_LASER = ["MDF delgado (hasta 2.5mm)", "MDF/Madera (3-5mm)", "Acrílico, cuero, tela u otro"]
 export const IMPRESION_CALIDAD = ["Prototipo rápido", "Pieza funcional", "Alta calidad"]

@@ -112,7 +112,7 @@ function Editor({ plano, limites, alGuardar }) {
         </label>
         <label style={{ fontSize: 14, display: "flex", gap: 6, alignItems: "center" }}>
           <input type="checkbox" checked={envio} onChange={(e) => setEnvio(e.target.checked)} />
-          Ofrezco envío gratis (yo pago la guía)
+          Ofrezco envío gratis por paquetería (yo pago la guía)
         </label>
         <button type="button" style={S.btn} disabled={guardando} onClick={guardar}>
           {guardando ? "Guardando…" : "Guardar oferta"}

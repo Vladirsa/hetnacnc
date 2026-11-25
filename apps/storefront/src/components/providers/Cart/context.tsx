@@ -11,6 +11,7 @@ interface CartContextInterface {
     offerId: string;
     quantity: number;
     countryCode: string;
+    metadata?: Record<string, string>;
   }) => Promise<Cart | null>;
   removeCartItem: (lineId: string) => Promise<void>;
   updateCartItem: (lineId: string, quantity: number) => Promise<void>;

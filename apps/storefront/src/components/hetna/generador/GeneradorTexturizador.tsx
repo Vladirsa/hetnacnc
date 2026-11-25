@@ -34,6 +34,7 @@ import {
   hacerSoporte,
   hacerTexturizador,
 } from "@/lib/generador/texturizador"
+import { deUrl } from "@/lib/generador/texturizador-url"
 import { type Dibujo, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -116,6 +117,22 @@ export function GeneradorTexturizador() {
 
   useEffect(() => {
     instalarFuentesVista()
+    // /disenar/texturizador?forma=rodillo&palabras=… abre ese diseño (fichas de Impresión 3D bajo pedido)
+    const d = deUrl(window.location.search)
+    const txt = (n?: number) => (n === undefined ? undefined : String(n))
+    if (d.forma) setForma(d.forma)
+    if (d.palabras) setPalabras(d.palabras.join(", "))
+    if (d.iconos) setIconos(d.iconos)
+    if (d.fuente && FUENTES.some((f) => f.id === d.fuente)) setFuenteId(d.fuente)
+    if (d.acomodo) setAcomodo(d.acomodo)
+    if (d.modo) setModo(d.modo)
+    if (d.espejo !== undefined) setEspejo(d.espejo)
+    const pares: [number | undefined, (v: string) => void][] = [
+      [d.tamano, setTamano], [d.espacioX, setEspacioX], [d.espacioY, setEspacioY], [d.orilla, setOrilla], [d.relieve, setRelieve],
+      [d.ancho, setAncho], [d.alto, setAlto], [d.radio, setRadio], [d.grosor, setGrosor], [d.diametro, setDiametro], [d.largo, setLargo], [d.eje, setEje],
+    ]
+    for (const [v, poner] of pares) if (v !== undefined) poner(txt(v)!)
+    if (new URLSearchParams(window.location.search).get("soporte") === "1") setVerSoporte(true)
   }, [])
 
   const listaPalabras = useMemo(
@@ -497,6 +514,9 @@ export function GeneradorTexturizador() {
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
         <span className="text-[15px] font-bold">¿No tienes impresora 3D?</span>
         <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA la imprime y te la envía.</span>
+        <a href={`/${locale}/collections/impresion-3d-bajo-pedido`} className="text-[13px] font-semibold text-[#F2D29B] underline">
+          O compra uno de nuestros diseños ya listos, impreso por el taller que elijas
+        </a>
         <div className="flex gap-2">
           <Boton
             tipo="primario"

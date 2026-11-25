@@ -159,11 +159,14 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
 export async function addToCart({
   offerId,
   quantity,
-  countryCode
+  countryCode,
+  metadata
 }: {
   offerId: string;
   quantity: number;
   countryCode: string;
+  /** Datos extra del renglón (p. ej. el color de una pieza impresa); Mercur les agrega offer_id */
+  metadata?: Record<string, string>;
 }) {
   if (!offerId) {
     throw new Error('Missing offer ID when adding to cart');
@@ -182,8 +185,11 @@ export async function addToCart({
   // Line items are offer-scoped: the same variant sold by two sellers are two
   // distinct offers and two distinct lines. Dedup by the offer stamped on
   // `metadata.offer_id` (requested by `retrieveCart`).
+  // Con datos extra (el color), sólo se suma al renglón que tenga los mismos.
   const currentItem = cart.items?.find(
-    item => item.metadata?.offer_id === offerId
+    item =>
+      item.metadata?.offer_id === offerId &&
+      Object.entries(metadata || {}).every(([k, v]) => item.metadata?.[k] === v)
   );
 
   if (currentItem) {
@@ -205,6 +211,7 @@ export async function addToCart({
         $id: cart.id,
         offer_id: offerId,
         quantity,
+        ...(metadata && Object.keys(metadata).length ? { metadata } : {}),
         fetchOptions: { headers }
       } as never) as unknown as Promise<{ cart: HttpTypes.StoreCart }>)
       .then(async () => {

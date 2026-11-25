@@ -150,11 +150,13 @@ export function CartProvider({ cart, children }: CartProviderProps) {
   const addToCart = async ({
     offerId,
     quantity,
-    countryCode
+    countryCode,
+    metadata
   }: {
     offerId: string;
     quantity: number;
     countryCode: string;
+    metadata?: Record<string, string>;
   }) => {
     setIsAddingItem(true);
     setIsUpdating(true);
@@ -163,7 +165,8 @@ export function CartProvider({ cart, children }: CartProviderProps) {
       await apiAddToCart({
         offerId,
         quantity,
-        countryCode
+        countryCode,
+        metadata
       });
       // Se devuelve el carrito ya actualizado: "Comprar ahora" decide con él
       return await refreshCart();
