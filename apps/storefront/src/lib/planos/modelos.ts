@@ -513,6 +513,147 @@ function baulJuguetes(): PiezaPlano[] {
   ]
 }
 
+// ── Tanda 5 ──────────────────────────────────────────────────────────────
+function estantePinturas(): PiezaPlano[] {
+  const W = 900, D = 300, H = 1500, e = 18
+  const niveles = [80, 420, 760, 1100]
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    ...niveles.map((z, i) => p(`Repisa ${i + 1}`, e, W - e, 0, D - e, z, z + e)),
+    p("Techo", e, W - e, 0, D - e, H - e, H),
+    p("Zoclo", e, W - e, 0, e, 0, 80),
+    ...niveles.slice(1).map((z, i) => p(`Tope ${i + 1}`, e, W - e, 0, 9, z + e, z + e + 50, "triplay-9")),
+    p("Travesaño trasero alto", e, W - e, D - e, D, H - 120, H - e),
+    p("Travesaño trasero bajo", e, W - e, D - e, D, 300, 400),
+  ]
+}
+
+function cajaDivisiones(): PiezaPlano[] {
+  const W = 420, D = 300, H = 110, e = 12
+  const T12: MaterialPlano = "triplay-12"
+  const cols = [W / 3, (2 * W) / 3]
+  return [
+    p("Fondo", 0, W, 0, D, 0, 6, "triplay-6"),
+    p("Frente", 0, W, 0, e, 6, H, T12),
+    p("Trasera", 0, W, D - e, D, 6, H, T12),
+    p("Costado izquierdo", 0, e, e, D - e, 6, H, T12),
+    p("Costado derecho", W - e, W, e, D - e, 6, H, T12),
+    p("Separador largo", e, W - e, D / 2 - 3, D / 2 + 3, 6, H - 20, "triplay-6"),
+    ...cols.flatMap((x, i) => [
+      p(`Separador corto ${i + 1}`, x - 3, x + 3, e, D / 2 - 3, 6, H - 20, "triplay-6"),
+      p(`Separador corto ${i + 3}`, x - 3, x + 3, D / 2 + 3, D - e, 6, H - 20, "triplay-6"),
+    ]),
+  ]
+}
+
+function bancoAlto(): PiezaPlano[] {
+  const W = 420, D = 320, H = 650, e = 18
+  return [
+    p("Pata izquierda", 30, 30 + e, 0, D, 0, H - e),
+    p("Pata derecha", W - 30 - e, W - 30, 0, D, 0, H - e),
+    p("Travesaño bajo", 30 + e, W - 30 - e, D / 2 - 40, D / 2 + 40, 180, 180 + e),
+    p("Faldón frontal", 30 + e, W - 30 - e, 20, 20 + e, H - e - 80, H - e),
+    p("Faldón trasero", 30 + e, W - 30 - e, D - 20 - e, D - 20, H - e - 80, H - e),
+    p("Asiento", 0, W, 0, D, H - e, H),
+  ]
+}
+
+function carroAspiradora(): PiezaPlano[] {
+  const W = 600, D = 500, e = 18, ruedas = 80, H = 900
+  const z0 = ruedas
+  return [
+    p("Base", 0, W, 0, D, z0, z0 + e),
+    p("Costado izquierdo", 0, e, 0, D, z0 + e, H),
+    p("Costado derecho", W - e, W, 0, D, z0 + e, H),
+    p("Respaldo", e, W - e, D - e, D, z0 + e, H),
+    p("Repisa media", e, W - e, 0, D - e, 560, 560 + e),
+    p("Cubierta", 0, W, 0, D, H, H + e),
+    p("Tope frontal", e, W - e, 0, e, z0 + e, z0 + e + 60),
+    p("Agarradera", e, W - e, D, D + e, H - 120, H - 40),
+  ]
+}
+
+function estanteCargadores(): PiezaPlano[] {
+  const W = 800, D = 250, H = 500, e = 18
+  return [
+    p("Respaldo", e, W - e, D - 9, D, e, H - e, "triplay-9"),
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D - 9, 0, e),
+    p("Repisa", e, W - e, 0, D - 9, 240, 240 + e),
+    p("Techo", e, W - e, 0, D - 9, H - e, H),
+    p("Tope", e, W - e, 0, 9, e, e + 40, "triplay-9"),
+    p("Listón francés", e, W - e, D, D + e, H - 140, H - 40),
+  ]
+}
+
+function cajonBajoCama(): PiezaPlano[] {
+  const W = 900, D = 600, H = 180, e = 12, ruedas = 40
+  const T12: MaterialPlano = "triplay-12"
+  const z0 = ruedas, zf = z0 + e
+  return [
+    p("Fondo", 0, W, 0, D, z0, zf, T12),
+    p("Frente", 0, W, 0, e, zf, z0 + H, T12),
+    p("Trasera", 0, W, D - e, D, zf, z0 + H - 20, T12),
+    p("Costado izquierdo", 0, e, e, D - e, zf, z0 + H - 20, T12),
+    p("Costado derecho", W - e, W, e, D - e, zf, z0 + H - 20, T12),
+    p("Divisor", W / 2 - 6, W / 2 + 6, e, D - e, zf, z0 + H - 40, T12),
+  ]
+}
+
+function libreroBajo(): PiezaPlano[] {
+  const W = 1000, D = 300, H = 800, e = 18
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D - 6, 60, 60 + e),
+    p("Repisa", e, W - e, 0, D - 6, 420, 420 + e),
+    p("Cubierta", 0, W, 0, D, H, H + e),
+    p("Zoclo", e, W - e, 20, 20 + e, 0, 60),
+    p("Respaldo", e, W - e, D - 6, D, 60, H, "triplay-6"),
+  ]
+}
+
+function maceteroEscalonado(): PiezaPlano[] {
+  const W = 800, e = 18
+  const escalones = [ // [y0, y1, z]
+    [0, 260, 260],
+    [240, 500, 520],
+    [480, 740, 780],
+  ]
+  return [
+    p("Costado izquierdo", 0, e, 0, 740, 0, 780),
+    p("Costado derecho", W - e, W, 0, 740, 0, 780),
+    ...escalones.map(([y0, y1, z], i) => p(`Escalón ${i + 1}`, e, W - e, y0, y1, z - e, z)),
+    ...escalones.map(([, y1, z], i) => p(`Contrahuella ${i + 1}`, e, W - e, y1 - e - 20, y1 - 20, z - e - 120, z - e)),
+  ]
+}
+
+function especiero(): PiezaPlano[] {
+  const W = 500, D = 110, H = 600, e = 12
+  const T12: MaterialPlano = "triplay-12"
+  const niveles = [0, 200, 400]
+  return [
+    p("Respaldo", e, W - e, D - 6, D, 0, H, "triplay-6"),
+    p("Costado izquierdo", 0, e, 0, D, 0, H, T12),
+    p("Costado derecho", W - e, W, 0, D, 0, H, T12),
+    ...niveles.map((z, i) => p(`Repisa ${i + 1}`, e, W - e, 0, D - 6, z, z + e, T12)),
+    ...niveles.map((z, i) => p(`Barandal ${i + 1}`, e, W - e, 0, 6, z + 50, z + 80, "triplay-6")),
+  ]
+}
+
+function comederoElevado(): PiezaPlano[] {
+  const W = 560, D = 300, H = 300, e = 18
+  return [
+    p("Frente", 0, W, 0, e, 0, H - e),
+    p("Trasera", 0, W, D - e, D, 0, H - e),
+    p("Costado izquierdo", 0, e, e, D - e, 0, H - e),
+    p("Costado derecho", W - e, W, e, D - e, 0, H - e),
+    p("Cubierta", 0, W, 0, D, H - e, H),
+  ]
+}
+
 export const PLANOS: Plano[] = [
   {
     categoria: "Taller",
@@ -1077,6 +1218,190 @@ export const PLANOS: Plano[] = [
     herrajes: ["Tornillos para madera 1 1/2\" (aprox. 24)", "Bisagra de piano de 80 cm", "Soporte de tapa de cierre lento (importante si lo usan niños)", "Pegamento blanco para madera"],
     herramientas: ["Sierra o router CNC", "Taladro", "Lijadora"],
     notas: ["Usa un soporte de tapa de cierre lento para que no le caiga a nadie en los dedos."],
+  },
+  {
+    categoria: "Taller",
+    slug: "estante-para-pinturas",
+    nombre: "Estante para pinturas y químicos",
+    resumen: "Estante abierto de 90 × 30 × 150 cm con cuatro repisas y topes para que no se caigan los botes.",
+    descripcion: "Para tener a la mano pinturas, selladores, thinner y pegamentos, lejos del área de corte. Los topes al frente detienen los botes.",
+    nivel: "Fácil",
+    horas: "3 a 4 h",
+    piezas: estantePinturas(),
+    pasos: [
+      { titulo: "Costados y repisa de abajo", nota: "Atornilla la repisa baja y el zoclo entre los costados.", piezas: ["Costado", "Repisa 1", "Zoclo"] },
+      { titulo: "Repisas", nota: "Marca las alturas en los dos costados a la vez para que queden parejas.", piezas: ["Repisa"] },
+      { titulo: "Techo y travesaños", nota: "Los travesaños de atrás le dan rigidez y sirven para fijarlo a la pared.", piezas: ["Techo", "Travesaño"] },
+      { titulo: "Topes", nota: "Pégalos y clávalos al frente de cada repisa.", piezas: ["Tope"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 50)", "Clavos o grapas de 1\" para los topes", "2 taquetes y pijas para fijarlo a la pared", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Escuadra", "Flexómetro"],
+    notas: ["Fíjalo siempre a la pared: lleno de botes pesa mucho.", "Guarda los solventes lejos de chispas y de la estufa."],
+  },
+  {
+    categoria: "Taller",
+    slug: "caja-organizadora-con-divisiones",
+    nombre: "Caja organizadora con 6 divisiones",
+    resumen: "Charola de 42 × 30 × 11 cm con seis compartimentos para tornillos, taquetes y brocas.",
+    descripcion: "Caja baja para tener los tornillos separados por medida sobre el banco. Los separadores entran a media madera, uno dentro del otro.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: cajaDivisiones(),
+    pasos: [
+      { titulo: "Frente, trasera y costados", nota: "Pega y clava los costados entre frente y trasera.", piezas: ["Frente", "Trasera", "Costado"] },
+      { titulo: "Fondo", nota: "Pégalo y clávalo por debajo; revisa la escuadra antes de que seque.", piezas: ["Fondo"] },
+      { titulo: "Separadores", nota: "Haz ranuras a media altura para que el largo y los cortos se crucen.", piezas: ["Separador"] },
+    ],
+    herrajes: ["Clavos o grapas de 1\" (aprox. 30)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Martillo o engrapadora", "Lija"],
+    notas: ["Con router CNC haz las ranuras de los separadores del ancho real del triplay de 6 mm."],
+  },
+  {
+    categoria: "Taller",
+    slug: "banco-alto-de-taller",
+    nombre: "Banco alto de taller",
+    resumen: "Banco de 65 cm de alto para sentarte en el banco de trabajo, de una sola hoja de triplay.",
+    descripcion: "Banco firme de dos patas de tablero, con faldones bajo el asiento y un travesaño abajo que sirve de reposapiés.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: bancoAlto(),
+    pasos: [
+      { titulo: "Patas y travesaño", nota: "Atornilla el travesaño bajo entre las patas.", piezas: ["Pata", "Travesaño"] },
+      { titulo: "Faldones", nota: "Arriba, al frente y atrás: le quitan el bamboleo.", piezas: ["Faldón"] },
+      { titulo: "Asiento", nota: "Atornilla desde abajo a través de los faldones o con escuadras.", piezas: ["Asiento"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 24)", "4 escuadras metálicas pequeñas (opcional)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Lijadora"],
+    notas: ["Redondea las esquinas del asiento y lija bien los cantos."],
+  },
+  {
+    categoria: "Taller",
+    slug: "carro-para-aspiradora",
+    nombre: "Carro para aspiradora y separador ciclónico",
+    resumen: "Carro de 60 × 50 cm con ruedas: la aspiradora abajo y el separador o el bote arriba.",
+    descripcion: "Junta la aspiradora de taller y el separador de polvo en un solo carro que llevas a cada máquina. Arriba queda una cubierta para el separador.",
+    nivel: "Intermedio",
+    horas: "4 a 5 h",
+    ruedas: 80,
+    piezas: carroAspiradora(),
+    pasos: [
+      { titulo: "Base", nota: "Atornilla las ruedas a la base antes de armar.", piezas: ["Base"] },
+      { titulo: "Costados y respaldo", nota: "Forman el casco; revisa la escuadra.", piezas: ["Costado", "Respaldo"] },
+      { titulo: "Repisa media y tope", nota: "Mide tu aspiradora y ajusta la altura de la repisa.", piezas: ["Repisa", "Tope"] },
+      { titulo: "Cubierta y agarradera", nota: "Haz en la cubierta el hueco para tu separador o bote.", piezas: ["Cubierta", "Agarradera"] },
+    ],
+    herrajes: ["4 ruedas giratorias de 3\" (2 con freno)", "Tornillos para madera 1 1/2\" (aprox. 50)", "Tornillos para las ruedas", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Caladora o sierra de copa"],
+    notas: ["Las medidas son para una aspiradora de unos 40 L: compruébalas con la tuya antes de cortar."],
+  },
+  {
+    categoria: "Taller",
+    slug: "estante-para-cargadores",
+    nombre: "Estante de pared para cargadores de baterías",
+    resumen: "Gabinete abierto de 80 × 25 × 50 cm que cuelga del listón francés, con dos niveles para cargadores y baterías.",
+    descripcion: "Un lugar fijo para cargar las baterías de las herramientas inalámbricas, con los cables por detrás.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: estanteCargadores(),
+    pasos: [
+      { titulo: "Casco", nota: "Piso y techo entre los costados.", piezas: ["Costado", "Piso", "Techo"] },
+      { titulo: "Repisa y respaldo", nota: "Antes del respaldo, barrena huecos de 35 mm para pasar los cables.", piezas: ["Repisa", "Respaldo"] },
+      { titulo: "Tope y listón francés", nota: "El listón va con el corte a 45° hacia abajo, contra la pared.", piezas: ["Tope", "Listón"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/4\" (aprox. 40)", "Regleta con supresor de picos", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Broca de copa de 35 mm"],
+    notas: ["Deja espacio alrededor de los cargadores para que se ventilen.", "No lo pongas junto a la zona de lijado: el polvo y los cargadores no se llevan."],
+  },
+  {
+    categoria: "Casa",
+    slug: "cajon-bajo-cama",
+    nombre: "Cajón con ruedas para debajo de la cama",
+    resumen: "Cajón de 90 × 60 × 22 cm con ruedas y división al centro para aprovechar el espacio bajo la cama.",
+    descripcion: "Guarda ropa de temporada, cobijas o juguetes y sácalo jalando el frente.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    ruedas: 40,
+    piezas: cajonBajoCama(),
+    pasos: [
+      { titulo: "Fondo", nota: "Atornilla las 4 ruedas fijas o de rodaja por debajo.", piezas: ["Fondo"] },
+      { titulo: "Costados y trasera", nota: "Pega y atornilla sobre el fondo.", piezas: ["Costado", "Trasera"] },
+      { titulo: "Frente y divisor", nota: "El frente es más alto que los costados: ahí va la jaladera o un hueco para la mano.", piezas: ["Frente", "Divisor"] },
+    ],
+    herrajes: ["4 rodajas de 1 1/2\" de bajo perfil", "Tornillos para madera 1 1/4\" (aprox. 30)", "1 jaladera", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador"],
+    notas: ["Mide el espacio libre bajo tu cama: el cajón con ruedas mide 22 cm de alto."],
+  },
+  {
+    categoria: "Casa",
+    slug: "librero-bajo",
+    nombre: "Librero bajo de 1 m",
+    resumen: "Librero de 100 × 30 × 82 cm con dos niveles y cubierta, para bajo una ventana o junto al sillón.",
+    descripcion: "Mueble bajo y sencillo con respaldo de 6 mm y zoclo, que también sirve de mesa lateral.",
+    nivel: "Fácil",
+    horas: "3 a 4 h",
+    piezas: libreroBajo(),
+    pasos: [
+      { titulo: "Costados, piso y zoclo", nota: "El zoclo va un poco metido para que no se patee.", piezas: ["Costado", "Piso", "Zoclo"] },
+      { titulo: "Repisa", nota: "Fija o sobre soportes de repisa.", piezas: ["Repisa"] },
+      { titulo: "Respaldo y cubierta", nota: "El respaldo lo escuadra; la cubierta sobresale en los lados.", piezas: ["Respaldo", "Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 30)", "Clavos de 3/4\" para el respaldo", "Pegamento blanco para madera"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["Cubre los cantos con cubrecanto o lija y barniza para un buen acabado."],
+  },
+  {
+    categoria: "Casa",
+    slug: "macetero-escalonado",
+    nombre: "Macetero escalonado de 3 niveles",
+    resumen: "Escalera para plantas de 80 cm de ancho con tres escalones, para patio, balcón o junto a la ventana.",
+    descripcion: "Pone cada maceta a su altura para que a todas les dé el sol.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    piezas: maceteroEscalonado(),
+    pasos: [
+      { titulo: "Costados", nota: "Si cortas en CNC, recorta el perfil escalonado en los costados.", piezas: ["Costado"] },
+      { titulo: "Contrahuellas", nota: "Unen los costados y cargan los escalones.", piezas: ["Contrahuella"] },
+      { titulo: "Escalones", nota: "Atornilla desde arriba a costados y contrahuellas.", piezas: ["Escalón"] },
+    ],
+    herrajes: ["Tornillos para exterior 1 1/2\" (aprox. 30)", "Pegamento para exterior", "Sellador o pintura para exterior"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Brocha"],
+    notas: ["Usa triplay para exterior y sella todas las caras: el agua de riego lo hincha.", "Pon platos bajo las macetas."],
+  },
+  {
+    categoria: "Casa",
+    slug: "especiero-de-pared",
+    nombre: "Especiero de pared",
+    resumen: "Repisa de 50 × 60 cm con tres niveles y barandales para frascos de especias.",
+    descripcion: "Repisa poco profunda para la cocina: los frascos quedan a la vista y el barandal los detiene.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: especiero(),
+    pasos: [
+      { titulo: "Costados y repisas", nota: "Marca las tres alturas en los dos costados a la vez.", piezas: ["Costado", "Repisa"] },
+      { titulo: "Respaldo", nota: "Clávalo por detrás; de ahí se cuelga.", piezas: ["Respaldo"] },
+      { titulo: "Barandales", nota: "Pégalos al frente de los costados.", piezas: ["Barandal"] },
+    ],
+    herrajes: ["Clavos o grapas de 1\" (aprox. 30)", "2 colgadores o taquetes con pijas", "Pegamento blanco para madera", "Barniz apto para cocina"],
+    herramientas: ["Sierra o router CNC", "Martillo o engrapadora", "Lija"],
+    notas: ["Barnízalo para que la grasa de la cocina no lo manche."],
+  },
+  {
+    categoria: "Casa",
+    slug: "comedero-elevado",
+    nombre: "Comedero elevado para perro",
+    resumen: "Base de 56 × 30 × 30 cm para dos platos, a buena altura para perros medianos.",
+    descripcion: "Caja firme con dos huecos en la cubierta para platos de acero inoxidable.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: comederoElevado(),
+    pasos: [
+      { titulo: "Frente y trasera", nota: "Las piezas largas.", piezas: ["Frente", "Trasera"] },
+      { titulo: "Costados", nota: "Entre frente y trasera.", piezas: ["Costado"] },
+      { titulo: "Cubierta", nota: "Corta los dos huecos a la medida de tus platos (con CNC o caladora) antes de atornillarla.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 16)", "2 platos de acero inoxidable con ceja", "Pegamento blanco para madera", "Barniz o pintura lavable"],
+    herramientas: ["Sierra o router CNC", "Caladora", "Taladro"],
+    notas: ["Mide el diámetro de tus platos bajo la ceja: ese es el hueco que hay que cortar.", "Para perros grandes, súbelo a 40 cm."],
   },
 ]
 
