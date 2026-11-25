@@ -4,7 +4,7 @@
 // precio, sus días de entrega, su envío), y el cliente las ve juntas.
 //
 // Los datos (nombre, medidas, peso, precio recomendado por acabado) salen de
-// la tienda: GET {STORE_URL}/api/planos/catalogo (apps/storefront).
+// la tienda: GET {STORE_URL}/mx/planos/datos (apps/storefront).
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createProductCategoriesWorkflow, createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
@@ -45,8 +45,8 @@ export const handlePlano = (slug: string) => `plano-${slug}`
 export const skuPlano = (slug: string, codigo: string) => `HETNA-PL-${slug.toUpperCase().slice(0, 40)}-${codigo}`
 
 export async function leerCatalogoPlanos(): Promise<PlanoCatalogo[]> {
-  const r = await fetch(`${STORE_URL}/api/planos/catalogo`, { headers: { accept: "application/json" } })
-  if (!r.ok) throw new Error(`No pude leer el catálogo de planos (${STORE_URL}/api/planos/catalogo): HTTP ${r.status}`)
+  const r = await fetch(`${STORE_URL}/mx/planos/datos`, { headers: { accept: "application/json" } })
+  if (!r.ok) throw new Error(`No pude leer el catálogo de planos (${STORE_URL}/mx/planos/datos): HTTP ${r.status}`)
   const d = (await r.json()) as { planos?: PlanoCatalogo[] }
   if (!Array.isArray(d.planos) || !d.planos.length) throw new Error("El catálogo de planos llegó vacío")
   return d.planos

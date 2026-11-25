@@ -49,7 +49,7 @@ export async function GET() {
       hojas: base.hojas,
       dias_fabricacion: base.diasFabricacion,
       precios: Object.fromEntries(ACABADOS_PLANO.map((a) => [a.clave, a.clave === "lijado" ? base.precio : cotizarPlano(pl, cfg, a.clave).precio])),
-      imagenes: [1, 2, 3, 4].map((n) => `/api/planos/${pl.slug}/redes/${n}`),
+      imagenes: [1, 2, 3, 4].map((n) => `/mx/planos/${pl.slug}/redes/${n}`),
     }
   })
   return Response.json({ planos }, { headers: { "Cache-Control": "no-store" } })
