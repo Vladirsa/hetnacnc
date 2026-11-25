@@ -40,6 +40,7 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
    ```
    - Es idempotente.
    - Para corregir el color de ofertas de HETNA que ya existen (sin tocar precio ni días): agrega `ACTUALIZAR_COLORES=1`.
+   - Para volver a subir la foto de productos ya publicados: `ACTUALIZAR_FOTOS="handle1,handle2"` (o `todas`).
    - Crea la colección y los productos que falten.
    - Pone la oferta de HETNA: ABS y PLA-CF, 3 días hábiles, al precio recomendado, en los colores de `COLORES`, por material (`ABS=Amarillo dorado;PLA-CF=Negro`) o iguales para todos (`Negro`). Sin `COLORES` no pone la oferta de HETNA.
    - No cambia las ofertas que ya existan.
