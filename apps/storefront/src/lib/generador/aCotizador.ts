@@ -2,6 +2,8 @@
 // Se guarda un momento en el navegador (sessionStorage), se abre el Cotizador
 // y este lo carga solo en su botón de "subir archivo". Nada se sube a un servidor.
 
+import { avisarUso } from "./uso"
+
 const CLAVE = "hetna-archivo-para-cotizar"
 const VIGENCIA = 10 * 60 * 1000 // 10 minutos
 const MAXIMO = 3.5 * 1024 * 1024 // sessionStorage aguanta ~5 MB
@@ -122,6 +124,7 @@ function guardarPaquete(p: PaqueteCotizacion & { t: number }): Promise<boolean> 
  * guardado. Nada se sube a un servidor.
  */
 export function mandarPaqueteACotizador(paquete: PaqueteCotizacion, locale: string): boolean {
+  avisarUso("cotizar")
   const piezas = paquete.piezas.filter((p) => p.contenido && (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength) > 0)
   if (!piezas.length) return false
   const total = piezas.reduce((s, p) => s + (typeof p.contenido === "string" ? p.contenido.length : p.contenido.byteLength), 0)
@@ -277,6 +280,7 @@ export function mandarAFabricar(
   locale: string,
   datos: { pieza: string; medidas?: string; material?: string; proceso?: string }
 ): boolean {
+  avisarUso("fabricar")
   let grande = false
   try {
     const binario = typeof contenido !== "string"
@@ -355,6 +359,7 @@ export function urlFabricar(locale: string, datos: DatosFabricar) {
  * abre cuando quedaron guardados. Devuelve false si no caben.
  */
 export function mandarArchivosAFabricar(archivos: { nombre: string; contenido: Blob | ArrayBuffer | string }[], locale: string, datos: DatosFabricar): boolean {
+  avisarUso("fabricar")
   if (!archivos.length || archivos.length > MAX_ARCHIVOS_FABRICAR || typeof indexedDB === "undefined") return false
   const blobs = archivos.map((a) => ({ nombre: a.nombre, blob: a.contenido instanceof Blob ? a.contenido : new Blob([a.contenido]) }))
   if (blobs.some((b) => b.blob.size > MAX_GRANDE)) return false

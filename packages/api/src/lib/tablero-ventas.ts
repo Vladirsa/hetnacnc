@@ -6,6 +6,8 @@
 // los demás salen igual.
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { nombreHerramienta } from "./herramienta-correo"
+import { type FilaUso, resumenUso } from "./herramienta-uso"
 import { ventasPorPublicacion } from "./social-estadisticas"
 import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 
@@ -17,6 +19,7 @@ export type Tablero = {
   ventas: { pedidos: number; ingresos: number; antes_pedidos: number; antes_ingresos: number } | null
   creditos: { compras: number; vendidos: number; gastados: number; antes_compras: number } | null
   disenos: { total: number; antes: number; por_herramienta: { herramienta: string; n: number }[] } | null
+  herramientas?: FilaUso[] | null
   publicaciones: { clics: number; pagos: number; ingresos: number; top: { titulo: string; clics: number; pagos: number; ingresos: number }[] } | null
 }
 
@@ -76,7 +79,9 @@ export async function calcularTablero(scope: any, logger?: any, ahora = Date.now
     return { clics: v.totales.clics, pagos: v.totales.pagos, ingresos: v.totales.ingresos, top: v.publicaciones.slice(0, 3).map((p: any) => ({ titulo: p.titulo || "(sin título)", clics: p.clics, pagos: p.pagos, ingresos: p.ingresos })) }
   }, logger)
 
-  return { desde: ini.toISOString().slice(0, 10), ventas, creditos, disenos, publicaciones }
+  const herramientas = await intento(() => resumenUso(knex, ini), logger)
+
+  return { desde: ini.toISOString().slice(0, 10), ventas, creditos, disenos, herramientas, publicaciones }
 }
 
 const pesos = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
@@ -93,6 +98,12 @@ export function textoTablero(t: Tablero) {
     l.push(`📐 Diseños guardados: ${t.disenos.total} (${cambio(t.disenos.total, t.disenos.antes)})`)
     for (const h of t.disenos.por_herramienta.slice(0, 4)) l.push(`   · ${nombre(h.herramienta)}: ${h.n}`)
   }
+  if (t.herramientas?.length) {
+    // abrir → descargar → cotizar/fabricar → correo → solicitud
+    l.push("", "🧰 Herramientas (personas): abren · descargan · cotizan o fabrican · correo · solicitudes")
+    for (const h of t.herramientas.slice(0, 8))
+      l.push(`   · ${nombreHerramienta(h.herramienta)}: ${h.vista} · ${h.descarga} · ${h.cotizar + h.fabricar} · ${h.correo} · ${h.solicitudes}`)
+  }
   if (t.publicaciones) {
     l.push("", `📣 Publicaciones: ${t.publicaciones.clics} clics · ${t.publicaciones.pagos} pagos · ${pesos(t.publicaciones.ingresos)}`)
     t.publicaciones.top.forEach((p, i) => l.push(`   ${i + 1}. ${p.titulo.slice(0, 60)} — ${p.clics} clics${p.pagos ? ` · ${p.pagos} pagos` : ""}`))
@@ -106,6 +117,9 @@ export function textoTablero(t: Tablero) {
 export function consejoTablero(t: Tablero) {
   const top = t.publicaciones?.top?.[0]
   if (top && (top.pagos || top.clics >= 20)) return `Impulsa «${top.titulo.slice(0, 50)}»: fue la que más ${top.pagos ? "vendió" : "visitas trajo"}. Puedes aprobarla como anuncio en Social Hub.`
+  // la herramienta que más gente lleva a cotizar o fabricar
+  const vende = [...(t.herramientas || [])].sort((a, b) => b.cotizar + b.fabricar + b.solicitudes * 3 - (a.cotizar + a.fabricar + a.solicitudes * 3))[0]
+  if (vende && vende.cotizar + vende.fabricar >= 3) return `${nombreHerramienta(vende.herramienta)} es la herramienta que más gente manda a cotizar o fabricar: publícala en redes y anúnciala esta semana.`
   const h = t.disenos?.por_herramienta?.[0]
   if (h && h.n >= 3) return `${nombre(h.herramienta)} es la herramienta más usada: conviene publicar más sobre ella esta semana.`
   if (t.ventas && t.ventas.pedidos < t.ventas.antes_pedidos) return "Bajaron los pedidos: revisa que el carrito abandonado y las promociones estén prendidos."

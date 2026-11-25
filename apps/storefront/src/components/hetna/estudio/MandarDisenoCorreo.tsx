@@ -7,6 +7,7 @@
 import { useState } from "react"
 
 import { type DisenoCorreoInput, mandarDisenoCorreo } from "@/lib/generador/correo"
+import { avisarUso } from "@/lib/generador/uso"
 
 /** Tope del DXF que viaja en el correo (igual que DXF_MAX del servidor). */
 const DXF_MAX = 700_000
@@ -68,6 +69,7 @@ export function MandarDisenoCorreo({
       setMensaje(r.mensaje)
       return
     }
+    avisarUso("correo")
     setEstado("listo")
   }
 

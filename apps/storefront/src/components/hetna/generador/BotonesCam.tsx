@@ -3,6 +3,7 @@
 // Mandar lo que hizo el cliente directo al CAM de HETNA, sin descargar y volver
 // a subir: el DXF al CAM Studio 2D (corte láser o router: perfiles, cajas y
 // barrenos) y el STL al Laboratorio CAM 3, 4 y 5 ejes (desbaste y acabado).
+import { avisarUso } from "@/lib/generador/uso"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 
@@ -15,6 +16,7 @@ export function BotonesCam({ nombre, dxf, stl, compacto = false }: { nombre: str
   if (!dxf && !stl) return null
   const base = nombre.replace(/\.(dxf|stl|svg)$/i, "")
   const ir = async (tipo: "2d" | "3d") => {
+    avisarUso("cam")
     setAviso("")
     setEnviando(tipo)
     let ok = false

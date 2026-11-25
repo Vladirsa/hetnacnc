@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { EscanearPieza } from "@/components/hetna/disenar/EscanearPieza"
 import { Herramienta } from "@/components/hetna/estudio/Herramienta"
 import { JsonLd } from "@/components/hetna/JsonLd"
+import { ContarUsoHerramienta } from "@/components/hetna/estudio/ContarUsoHerramienta"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 import { ESCANEAR, ESTUDIOS, buscarHerramientaDiseno, estudioDe, type HerramientaDiseno } from "@/lib/hetna/disenar"
@@ -134,6 +135,7 @@ export default async function HerramientaDiseno({ params }: Props) {
   return (
     <>
       {h && <JsonLd datos={datosHerramienta(h)} />}
+      <ContarUsoHerramienta herramienta={herramienta} />
       {OSCURAS.has(herramienta) ? (
         <Herramienta slug={herramienta} />
       ) : (
