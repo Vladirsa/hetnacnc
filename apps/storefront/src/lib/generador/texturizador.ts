@@ -386,3 +386,81 @@ export function hacerGuias(grosorMasa: number, largo = 200): Malla {
   const h = Math.max(0.5, grosorMasa)
   return { tris: [...caja(0, 0, 0, largo, 12, h), ...caja(0, 20, 0, largo, 32, h)], avisos: [] }
 }
+
+// ── Soporte para cambiar sólo el rodillo ───────────────────────────────────
+// Mango de un solo brazo, como el de un rodillo de pintura: una placa plana
+// (agarradera + brazo) con un eje que sale hacia arriba. El rodillo entra en el
+// eje y lo detiene un seguro en forma de C que se mete en la ranura de la
+// punta. Sirve para todos los rodillos con el mismo hueco y largo, y con un
+// diámetro de hasta `diametroMax`. Todo se imprime acostado, sin soportes.
+function extruirContornos(contornos: P[][], alto: number, z0 = 0): number[] {
+  const r = extruir({ trazos: contornos.map((pts) => ({ pts, cerrado: true, capa: "X" })), avisos: [], unidades: "mm" }, { alto, base: 0, margenBase: 0, redondearBase: 0, espejo: false })
+  const t = r.malla.tris
+  if (z0) for (let i = 2; i < t.length; i += 3) t[i] += z0
+  return t
+}
+
+export type MedidasSoporte = { radioEje: number; ranura: number; alturaEje: number; separacion: number; diametroMax: number }
+
+export function medidasSoporte(eje: number, largoRodillo: number, diametroMax: number): MedidasSoporte {
+  const radioEje = Math.max(1.4, (eje - HOLGURA_EJE) / 2)
+  return {
+    radioEje,
+    ranura: Math.max(0.8, radioEje - 0.9),
+    alturaEje: largoRodillo + 0.6, // de la arandela a la ranura
+    separacion: diametroMax / 2 + 8, // del eje a la agarradera
+    diametroMax,
+  }
+}
+
+const GROSOR_PLACA_SOPORTE = 8
+const ARANDELA = 3
+/** Altura a la que queda la base del rodillo montado en el soporte (para la vista armada). */
+export const APOYO_RODILLO = GROSOR_PLACA_SOPORTE + ARANDELA
+
+export function hacerSoporte(eje: number, largoRodillo: number, diametroMax: number): Malla {
+  const m = medidasSoporte(eje, largoRodillo, diametroMax)
+  const T = GROSOR_PLACA_SOPORTE
+  const sep = m.separacion
+  // placa: cabeza redonda en el eje, brazo y agarradera
+  const placa = unir([
+    circ(0, 0, m.radioEje + 7, m.radioEje + 7, 48),
+    rectRedondo(-7, -sep - 2, 7, 0, 0),
+    rectRedondo(-12, -sep - 115, 12, -sep, 10),
+  ])
+  const t: number[] = [...extruirContornos(placa, T)]
+  const z1 = T + ARANDELA // donde se apoya el rodillo
+  const zr = z1 + m.alturaEje // ranura
+  t.push(
+    ...cilindro(m.radioEje + 4, T - 0.2, z1), // arandela
+    ...cilindro(m.radioEje, z1 - 0.2, zr, 0, 0, 48), // eje
+    ...cilindro(m.ranura, zr - 0.2, zr + 1.8, 0, 0, 48), // ranura del seguro
+    ...cilindro(m.radioEje - 0.2, zr + 1.6, zr + 3.6, 0, 0, 48) // punta
+  )
+  // dos seguros en C (uno de repuesto), al lado de la placa
+  for (const [k, cy] of [[0, -20], [1, -45]] as const) {
+    void k
+    t.push(...extruirContornos([seguroC(m.ranura)].map((c) => c.map(([x, y]) => [x + m.diametroMax / 2 + 25, y + cy] as P)), 1.5))
+  }
+  return { tris: t, avisos: [] }
+}
+
+/** Seguro en C: entra a presión en la ranura (la boca es 85 % del diámetro). */
+function seguroC(rRanura: number): P[] {
+  const rIn = rRanura
+  const rOut = rRanura + 3.5
+  const boca = rRanura * 0.85
+  const aOut = Math.asin(boca / rOut)
+  const aIn = Math.asin(boca / rIn)
+  const pts: P[] = []
+  const n = 40
+  for (let i = 0; i <= n; i++) {
+    const a = aOut + ((2 * Math.PI - 2 * aOut) * i) / n
+    pts.push([rOut * Math.cos(a), rOut * Math.sin(a)])
+  }
+  for (let i = 0; i <= n; i++) {
+    const a = 2 * Math.PI - aIn - ((2 * Math.PI - 2 * aIn) * i) / n
+    pts.push([rIn * Math.cos(a), rIn * Math.sin(a)])
+  }
+  return pts
+}
