@@ -127,7 +127,14 @@ export default function FormSolicitudTaller({
   // registrada con todos sus datos, el WhatsApp sólo la acompaña.
   const [resumen, setResumen] = useState("")
   const [necesidad, setNecesidad] = useState<string>(
-    NECESIDADES.some((n) => n.valor === necesidadInicial) ? necesidadInicial! : prellenado ? "Cortar piezas" : ""
+    NECESIDADES.some((n) => n.valor === necesidadInicial)
+      ? necesidadInicial!
+      : // Un modelo para imprimir en 3D no se «corta»: sale como pieza terminada
+        prellenado?.proceso === "Impresión 3D"
+        ? "Pieza terminada"
+        : prellenado
+          ? "Cortar piezas"
+          : ""
   )
   const [tieneArchivo, setTieneArchivo] = useState<string>(prellenado ? "Tengo archivo profesional" : "")
   const [archivos, setArchivos] = useState<Pendiente[]>(() =>

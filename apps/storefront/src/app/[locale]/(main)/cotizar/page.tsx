@@ -109,7 +109,7 @@ export default async function CotizarPage({
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-            {t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
+            {t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado?.proceso === "Impresión 3D" ? "Fabrícamelo: elige quién la imprime" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
             {t

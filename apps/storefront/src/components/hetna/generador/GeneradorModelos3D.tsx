@@ -5,7 +5,7 @@
 // que un taller de HETNA lo imprima. Los modelos y su geometría viven en
 // lib/generador/modelos3d.ts (manifold-3d: sólidos cerrados, sin errores de malla).
 import dynamic from "next/dynamic"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
 import { Visor3D } from "@/components/hetna/generador/Visor3D"
@@ -28,10 +28,10 @@ function descargar(nombre: string, datos: ArrayBuffer) {
   setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
 
-export function GeneradorModelos3D() {
+// `inicial`: la página de un modelo (/disenar/modelos-3d/<id>) abre ya en ese modelo
+export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
   const { locale } = useParams<{ locale: string }>()
-  const router = useRouter()
-  const [modelo, setModelo] = useState<Modelo3D>(MODELOS[0])
+  const [modelo, setModelo] = useState<Modelo3D>(() => (inicial && modeloPorId(inicial)) || MODELOS[0])
   const [valores, setValores] = useState<Record<string, number>>(() => valoresIniciales(modelo))
   const [malla, setMalla] = useState<MallaModelo | null>(null)
   const [error, setError] = useState("")
@@ -65,7 +65,8 @@ export function GeneradorModelos3D() {
     setValores(valoresIniciales(m))
     setMalla(null)
     setAviso("")
-    router.replace(`?modelo=${m.id}`, { scroll: false })
+    // Cada modelo tiene su página: la dirección cambia sin recargar (se puede compartir)
+    window.history.replaceState(null, "", `/${locale}/disenar/modelos-3d/${m.id}`)
   }
 
   const nombreArchivo = useMemo(() => {
@@ -92,7 +93,7 @@ export function GeneradorModelos3D() {
     <main className="flex-1 bg-[#FAF9F6]">
       <div className="mx-auto max-w-[1280px] px-4 py-6 lg:px-8">
         <p className="m-0 text-[12px] font-bold uppercase tracking-[.18em] text-[#0EA5E9]">Impresión 3D · paramétrico</p>
-        <h1 className="font-display m-0 mt-1 text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">Modelos 3D a tu medida</h1>
+        <h1 className="font-display m-0 mt-1 text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">{inicial ? `${modelo.nombre}: modelo 3D a tu medida` : "Modelos 3D a tu medida"}</h1>
         <p className="m-0 mt-1 max-w-3xl text-[15px] text-[#4A4943]">
           Elige un modelo, ajusta sus medidas y descarga el STL listo para imprimir, sin saber CAD. O pide que un taller de HETNA te lo imprima.
         </p>
