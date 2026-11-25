@@ -971,5 +971,228 @@
       10
     ],
     "piezas": 1
+  },
+  {
+    "handle": "llavero-con-nombre-impreso-3d",
+    "titulo": "Llavero con nombre",
+    "resumen": "Llavero con el nombre que quieras en letra cursiva y en relieve. Escribe el nombre al agregarlo al carrito.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero con nombre",
+      "regalo",
+      "personalizado"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Sof%C3%ADa&forma=rect&fuente=pacifico&alto=12",
+    "foto": "fotos/llavero-con-nombre-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-con-nombre-impreso-3d.stl",
+    "diseno": {
+      "texto": "Sofía",
+      "forma": "rect",
+      "fuente": "pacifico",
+      "alto": 12
+    },
+    "volumen_cm3": 3.8,
+    "medidas_mm": [
+      48.2,
+      25.1,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "llavero-corazon-con-nombre-impreso-3d",
+    "titulo": "Llavero de corazón con nombre",
+    "resumen": "Corazón con el nombre o la palabra que quieras en relieve. Para mamá, para tu pareja o para recuerdos.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero corazón",
+      "día de las madres",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Mam%C3%A1&forma=corazon&fuente=lobster&alto=11",
+    "foto": "fotos/llavero-corazon-con-nombre-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-corazon-con-nombre-impreso-3d.stl",
+    "diseno": {
+      "texto": "Mamá",
+      "forma": "corazon",
+      "fuente": "lobster",
+      "alto": 11
+    },
+    "volumen_cm3": 5.8,
+    "medidas_mm": [
+      55,
+      54.9,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "placa-mascota-con-nombre-impresa-3d",
+    "titulo": "Placa para mascota con nombre y teléfono",
+    "resumen": "Placa redonda con huellita, el nombre de tu mascota y tu teléfono abajo, con argolla para el collar.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "placa mascota",
+      "perro",
+      "gato",
+      "collar"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Max%0A55+1234+5678&forma=circulo&fuente=montserrat&alto=9&icono=huella&escala=45",
+    "foto": "fotos/placa-mascota-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/placa-mascota-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "Max\n55 1234 5678",
+      "forma": "circulo",
+      "fuente": "montserrat",
+      "alto": 9,
+      "icono": "huella",
+      "escala": 45
+    },
+    "volumen_cm3": 11,
+    "medidas_mm": [
+      66.6,
+      70.5,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "etiqueta-maleta-con-nombre-impresa-3d",
+    "titulo": "Etiqueta para maleta con nombre",
+    "resumen": "Etiqueta con punta y argolla para la maleta o la mochila, con el nombre grande para encontrarla rápido.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "etiqueta maleta",
+      "viaje",
+      "mochila"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=VIAJE&forma=etiqueta&fuente=bebas-neue&alto=14",
+    "foto": "fotos/etiqueta-maleta-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/etiqueta-maleta-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "VIAJE",
+      "forma": "etiqueta",
+      "fuente": "bebas-neue",
+      "alto": 14
+    },
+    "volumen_cm3": 3.1,
+    "medidas_mm": [
+      48.3,
+      22.1,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "llavero-inicial-estrella-impreso-3d",
+    "titulo": "Llavero con inicial y estrella",
+    "resumen": "Llavero redondo con una estrella y tu inicial. Escribe la letra al agregarlo al carrito.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero inicial",
+      "letra",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=A&forma=circulo&fuente=cinzel&alto=16&icono=estrella",
+    "foto": "fotos/llavero-inicial-estrella-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-inicial-estrella-impreso-3d.stl",
+    "diseno": {
+      "texto": "A",
+      "forma": "circulo",
+      "fuente": "cinzel",
+      "alto": 16,
+      "icono": "estrella"
+    },
+    "volumen_cm3": 6.3,
+    "medidas_mm": [
+      50.4,
+      54.4,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "llavero-negocio-impreso-3d",
+    "titulo": "Llavero para tu negocio o evento",
+    "resumen": "Llavero rectangular con el nombre de tu marca o evento. Ideal para regalar a clientes: pide varios y súbele tu logo en la herramienta.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llaveros personalizados",
+      "promocionales",
+      "negocio",
+      "evento"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=TU+MARCA&forma=rect&fuente=oswald&alto=11",
+    "foto": "fotos/llavero-negocio-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-negocio-impreso-3d.stl",
+    "diseno": {
+      "texto": "TU MARCA",
+      "forma": "rect",
+      "fuente": "oswald",
+      "alto": 11
+    },
+    "volumen_cm3": 4.7,
+    "medidas_mm": [
+      74.2,
+      19.3,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "placa-puerta-con-nombre-impresa-3d",
+    "titulo": "Placa para puerta con nombre",
+    "resumen": "Placa rectangular para la puerta del cuarto, la oficina o el taller, con letras en relieve.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "placa puerta",
+      "letrero",
+      "cuarto",
+      "oficina"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Taller&forma=rect&fuente=oswald&alto=22",
+    "foto": "fotos/placa-puerta-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/placa-puerta-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "Taller",
+      "forma": "rect",
+      "fuente": "oswald",
+      "alto": 22
+    },
+    "volumen_cm3": 7.9,
+    "medidas_mm": [
+      76.8,
+      30.3,
+      4.5
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "adorno-con-fecha-impreso-3d",
+    "titulo": "Adorno ovalado con fecha o nombre",
+    "resumen": "Adorno ovalado con la fecha o el nombre que quieras, para recuerdos de boda, XV años o bautizo.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "recuerdos",
+      "boda",
+      "xv años",
+      "bautizo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=2026&forma=ovalo&fuente=cinzel&alto=16",
+    "foto": "fotos/adorno-con-fecha-impreso-3d.png",
+    "modelo_3d": "modelos/adorno-con-fecha-impreso-3d.stl",
+    "diseno": {
+      "texto": "2026",
+      "forma": "ovalo",
+      "fuente": "cinzel",
+      "alto": 16
+    },
+    "volumen_cm3": 6.4,
+    "medidas_mm": [
+      79.5,
+      31.4,
+      4.5
+    ],
+    "personalizable": true
   }
 ]

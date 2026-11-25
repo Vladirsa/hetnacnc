@@ -20,6 +20,7 @@ import sharp from "sharp"
 import { FUENTES } from "@/lib/generador/fuentes"
 import { mallaSTL } from "@/lib/generador/vectores"
 import { hacerCortador } from "@/lib/generador/cortadores"
+import { hacerLlavero } from "@/lib/generador/llaveros"
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta, type DisenoCatalogo } from "@/lib/impresion/catalogo-disenos"
 import { construirMalla, limpiarValores, modeloPorId, valoresIniciales } from "@/lib/generador/modelos3d"
@@ -233,11 +234,24 @@ for (const d of CATALOGO_IMPRESION) {
     salida.push(previo)
     continue
   }
-  const o = d.diseno as any
+  const o = (d.diseno || {}) as any
   const f = o.palabras?.length ? fuente(o.fuente || "montserrat") : null
   const comun = { palabras: o.palabras || [], iconos: o.iconos || [], tamano: o.tamano, espacioX: o.espacioX, espacioY: o.espacioY, acomodo: o.acomodo, orilla: o.orilla, relieve: o.relieve, modo: o.modo || "alto", espejo: o.espejo }
   let tris: number[]
   let avisos: string[] = []
+  if (d.pieza === "llavero" && d.llavero) {
+    // mismas medidas que la herramienta de llaveros trae de fábrica
+    const l = d.llavero
+    const r = hacerLlavero(fuente(l.fuente), {
+      texto: l.texto, alto: l.alto, espaciado: 0, forma: l.forma, margen: 4, radio: 5, argolla: 4.5, grosor: 3, relieve: 1.5,
+      icono: l.icono, escalaRenglones: l.escala,
+    })
+    if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
+    const m = medir(r.malla.tris)
+    console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris)), diseno: l, ...m, personalizable: true })
+    continue
+  }
   if (d.pieza === "cortador" && d.cortador) {
     const c = d.cortador
     const fs = c.sello?.tipo === "texto" ? fuente(c.sello.fuente) : null

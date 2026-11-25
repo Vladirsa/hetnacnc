@@ -3,12 +3,17 @@
 //  - Para láser: DXF/SVG con capa CORTE (placa y agujero) y capa GRABADO (texto).
 //  - Para impresión 3D: STL con la placa y las letras en relieve.
 // Todo en milímetros, Y hacia arriba, calculado en el navegador.
+//
+// 25 nov 2026: los renglones después del primero pueden ir más chicos (el
+// teléfono en la placa de mascota), y a la izquierda del texto puede ir un
+// ícono y/o el logo del cliente (contornos sacados de su imagen).
 
 import { extruir } from "@/lib/generador/extruir"
 import { unirContornos } from "@/lib/generador/unirContornos"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import type { Curva, Pt } from "@/lib/generador/trazado"
 import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
+import { figura, type IconoTextura } from "@/lib/generador/texturizador"
 
 export type FormaLlavero = "rect" | "ovalo" | "circulo" | "etiqueta" | "corazon"
 
@@ -30,6 +35,14 @@ export type OpcionesLlavero = {
   argolla: number // diámetro del agujero (0 = sin agujero)
   grosor: number // placa (STL)
   relieve: number // letras sobre la placa (STL)
+  /** % del alto para los renglones después del primero (100 = mismo tamaño) */
+  escalaRenglones?: number
+  /** ícono a la izquierda del texto */
+  icono?: IconoTextura | ""
+  /** logo del cliente: contornos en cualquier escala (Y hacia arriba); se ajusta a altoLogo */
+  logo?: P[][] | null
+  /** alto del logo y del ícono en mm (0 = el del bloque de texto) */
+  altoLogo?: number
 }
 
 export type ResultadoLlavero = {
@@ -106,17 +119,62 @@ function etiqueta(x0: number, y0: number, x1: number, y1: number, r: number, pun
   return pts
 }
 
+const cajaDe = (c: P[][]) => {
+  const xs = c.flat().map((p) => p[0]), ys = c.flat().map((p) => p[1])
+  return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }
+}
+const mover = (c: P[][], dx: number, dy: number, k = 1): P[][] => c.map((p) => p.map(([x, y]) => [x * k + dx, y * k + dy] as P))
+
+/** Texto (renglones 2+ con su escala), y a la izquierda el logo y el ícono, unidos y en mm. */
+function contenido(fuente: Fuente, o: OpcionesLlavero): P[][] {
+  const partes: P[][][] = []
+  // Texto: el primer renglón al alto pedido y los demás a escalaRenglones %
+  const renglones = o.texto.replace(/\r/g, "").split("\n")
+  const escala = Math.max(0.3, Math.min(1, (o.escalaRenglones ?? 100) / 100))
+  let bloque: P[][] = []
+  let y = 0
+  renglones.forEach((r, j) => {
+    if (!r.trim()) return
+    const alto = j === 0 ? o.alto : o.alto * escala
+    const t = textoACurvas(fuente, { texto: r, alto, espaciado: o.espaciado, interlineado: 1.4, alineacion: "centro" })
+    const c = t.curvas.map((x) => aplanar(x)).filter((p) => p.length >= 3)
+    if (!c.length) return
+    const b = cajaDe(c)
+    // cada renglón centrado en x y debajo del anterior (separación de 40 % de su alto)
+    if (bloque.length) y -= alto * 0.4
+    bloque = [...bloque, ...mover(c, -(b.x0 + b.x1) / 2, y - b.y1)]
+    y -= b.y1 - b.y0
+  })
+  // unidas: en letra cursiva las letras se enciman y, sin unir, se "borran" pedazos
+  if (bloque.length) partes.push(unirContornos(bloque))
+  const altoBloque = partes.length ? (() => { const b = cajaDe(partes[0]); return b.y1 - b.y0 })() : o.alto
+  const altoFig = o.altoLogo && o.altoLogo > 0 ? o.altoLogo : Math.max(o.alto, altoBloque)
+  const aIzquierda = (c: P[][]) => {
+    if (!c.length) return
+    const b = cajaDe(c)
+    const k = altoFig / Math.max(1e-6, b.y1 - b.y0)
+    const fig = mover(c, -b.x0 * k, -((b.y0 + b.y1) / 2) * k, k)
+    if (!partes.length) return void partes.push(fig)
+    // pegado a la izquierda de lo que ya hay, con un hueco de 25 % del alto
+    const actual = cajaDe(partes.flat())
+    const fb = cajaDe(fig)
+    partes.unshift(mover(fig, actual.x0 - altoFig * 0.25 - fb.x1, (actual.y0 + actual.y1) / 2))
+  }
+  if (o.icono) aIzquierda(unirContornos(figura(o.icono)))
+  if (o.logo?.length) aIzquierda(o.logo)
+  return partes.flat()
+}
+
 export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlavero {
   const errores: string[] = []
   const avisos: string[] = []
   const vacio = (e: string): ResultadoLlavero => ({ dibujo: { trazos: [], avisos: [], unidades: "mm" }, malla: { tris: [], avisos: [] }, ancho: 0, alto: 0, avisos, errores: [e] })
-  if (!o.texto.trim()) return vacio("Escribe el nombre o texto del llavero.")
+  const hayLogo = !!o.logo?.length
+  if (!o.texto.trim() && !hayLogo && !o.icono) return vacio("Escribe el nombre o texto del llavero.")
   if (!(o.alto > 0)) return vacio("Escribe el alto de las letras.")
 
-  const t = textoACurvas(fuente, { texto: o.texto, alto: o.alto, espaciado: o.espaciado, interlineado: 1.4, alineacion: "centro" })
-  // unidas: en letra cursiva las letras se enciman y, sin unir, se "borran" pedazos
-  const letras = unirContornos(t.curvas.map((c) => aplanar(c)).filter((p) => p.length >= 3))
-  if (!letras.length) return vacio("La tipografía no tiene esas letras.")
+  const letras = contenido(fuente, o)
+  if (!letras.length) return vacio(o.texto.trim() ? "La tipografía no tiene esas letras." : "El logo no tiene contornos: prueba con una imagen de más contraste.")
   const xs = letras.flat().map((p) => p[0])
   const ys = letras.flat().map((p) => p[1])
   const tx0 = Math.min(...xs), tx1 = Math.max(...xs), ty0 = Math.min(...ys), ty1 = Math.max(...ys)
@@ -125,9 +183,8 @@ export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlave
   const d = Math.max(0, o.argolla)
   const zona = d > 0 ? d + 2 * 2.2 : 0 // ancho que ocupa la argolla con su pared
 
-  // centro del texto en el origen
-  const mover = (pts: P[], dx: number, dy: number): P[] => pts.map(([x, y]) => [x + dx, y + dy])
-  const texto = letras.map((p) => mover(p, -(tx0 + tx1) / 2, -(ty0 + ty1) / 2))
+  // centro del contenido en el origen
+  const texto = mover(letras, -(tx0 + tx1) / 2, -(ty0 + ty1) / 2)
 
   let placa: P[]
   let hoyo: P[] | null = null

@@ -243,7 +243,8 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
     .filter((o) => o.precio != null)
 
   return {
-    producto: { id: producto.id, handle: producto.handle, titulo: producto.title },
+    // llaveros y placas: el cliente escribe su texto al agregarlo (va en metadata.texto del renglón)
+    producto: { id: producto.id, handle: producto.handle, titulo: producto.title, personalizable: producto.metadata?.personalizable === true },
     materiales: producto.variants.map((v) => ({
       variant_id: v.id,
       material: v.title,

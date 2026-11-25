@@ -63,7 +63,9 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte" | "cortador" | "modelo"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero"
+  /** llaveros y placas: se piden con el texto del cliente */
+  personalizable?: boolean
   etiquetas: string[]
   herramienta_url: string
   foto: string
@@ -92,6 +94,14 @@ function descripcion(d: Diseno): string {
     ].join("")
   }
   // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
+  // Llaveros y placas: el cliente escribe su nombre al agregarlo al carrito
+  if (d.pieza === "llavero")
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>Medida del modelo de la foto: ${mm(d.medidas_mm)} (cambia según el largo del texto).</li><li>Letras en relieve y argolla para el llavero o el collar.</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p><strong>Cómo se pide:</strong> escribe el nombre o el texto al agregarlo al carrito y el taller lo imprime así.</p>`,
+      `<p>¿Quieres otra forma, un ícono o tu logo? Ábrelo en la herramienta de llaveros de HETNA, ajústalo y baja el archivo gratis, o pide varios.</p>`,
+    ].join("")
   if (d.pieza === "modelo")
     return [
       `<p>${esc(d.resumen)}</p>`,
@@ -161,6 +171,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       medidas: mm(d.medidas_mm),
       palabras_clave: d.etiquetas.join(", "),
       seller_id: hetna.id,
+      ...(d.personalizable ? { personalizable: true } : {}),
     }
     const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "images.url", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
     let producto = (existe as any[])[0]

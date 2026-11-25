@@ -14,7 +14,7 @@ export type OfertaImpresion = {
 }
 export type MaterialImpresion = { variant_id: string; material: string; gramos: number | null; recomendado: number | null }
 export type DatosImpresion = {
-  producto: { id: string; handle: string; titulo: string }
+  producto: { id: string; handle: string; titulo: string; personalizable?: boolean }
   materiales: MaterialImpresion[]
   ofertas: OfertaImpresion[]
 }
