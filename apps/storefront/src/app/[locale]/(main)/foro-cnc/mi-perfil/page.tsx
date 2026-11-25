@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { FormPerfil } from "@/components/hetna/foro/FormPerfil"
+import { FormTaller } from "@/components/hetna/foro/FormTaller"
 import { FormRed } from "@/components/hetna/foro/RedCliente"
 import { FormPreferencias } from "@/components/hetna/foro/ComunidadCliente"
 import { ForoCerrado, Migas } from "@/components/hetna/foro/Piezas"
@@ -76,13 +77,20 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
                 bio: p?.bio || "",
                 ciudad: p?.ciudad || "",
                 estadoMx: p?.estadoMx || "",
-                redes: p?.redes || {},
-                maquinas: p?.maquinas || [],
+                zonas: p?.zonas || [],
                 software: p?.software || [],
                 foto: p?.foto || null,
+                portada: p?.portada || null,
               }}
             />
           </div>
+          {/* Máquinas, materiales y portafolio (perfil de taller). Un cliente que
+              sólo busca quién le fabrique no necesita esta parte. */}
+          {p && p.tipo !== "cliente" && (
+            <div id="taller" className="scroll-mt-4">
+              <FormTaller equipos={p.equipos} materiales={p.materiales} portafolio={p.portafolio} />
+            </div>
+          )}
           {p && (
             <div id="curriculum" className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-7 scroll-mt-4">
               <FormRed inicial={{ aptitudes: p.aptitudes, trayectoria: p.trayectoria, abierto: p.abierto, titular: p.titular }} />
