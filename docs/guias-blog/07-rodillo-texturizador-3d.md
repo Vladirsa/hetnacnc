@@ -6,7 +6,7 @@ Sección del foro: Impresión 3D
 Autor: Equipo HETNA
 Resumen: Diseña gratis un rodillo o una placa texturizadora con nombres e íconos, imprímela en 3D sin soportes y úsala en arcilla polimérica, plastilina, jabón o fondant. Con mangos, guías de grosor y consejos para que la textura marque parejo.
 Título para Google: Rodillo texturizador con nombre en impresión 3D | HETNA
-Descripción para Google: Cómo hacer un rodillo texturizador personalizado: diseño gratis en STL con nombres e íconos, sin costura, con mangos y guías de grosor. Cómo imprimirlo y usarlo en arcilla y fondant.
+Descripción para Google: Haz un rodillo texturizador con tu nombre: STL gratis sin costura, con mangos y guías de grosor. Cómo imprimirlo y usarlo en arcilla y fondant.
 
 ----- CONTENIDO (copiar desde aquí) -----
 
