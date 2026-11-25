@@ -24,12 +24,14 @@ import { mandarAFabricar } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
 import {
+  APOYO_RODILLO,
   HOLGURA_EJE,
   ICONOS_TEXTURA,
   type IconoTextura,
   hacerGuias,
   hacerMangos,
   hacerRodillo,
+  hacerSoporte,
   hacerTexturizador,
 } from "@/lib/generador/texturizador"
 import { type Dibujo, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
@@ -109,6 +111,7 @@ export function GeneradorTexturizador() {
   const [largo, setLargo] = useState("120")
   const [eje, setEje] = useState("12")
   const [grosorMasa, setGrosorMasa] = useState("3")
+  const [verSoporte, setVerSoporte] = useState(false)
   const [aviso, setAviso] = useState("")
 
   useEffect(() => {
@@ -198,6 +201,15 @@ export function GeneradorTexturizador() {
   const vista2d = useMemo(() => (listo ? vistaTextura(r!.dibujo, hundido) : ""), [r, listo, hundido])
   const total = r && "diametroTotal" in r ? (r.diametroTotal as number) : 0
   const vuelta = r && "vuelta" in r ? (r.vuelta as number) : 0
+  const diametroSoporte = Math.ceil(total + 10)
+  // vista armada: el rodillo puesto en su soporte
+  const tris3d = useMemo(() => {
+    if (!listo) return undefined
+    if (!rodillo || !verSoporte) return r!.malla.tris
+    const rod = r!.malla.tris.slice()
+    for (let i = 2; i < rod.length; i += 3) rod[i] += APOYO_RODILLO
+    return [...hacerSoporte(numero(eje), numero(largo), diametroSoporte).tris, ...rod]
+  }, [r, listo, rodillo, verSoporte, eje, largo, diametroSoporte])
   const archivo = `texturizador-hetna-${
     (listaPalabras[0] || iconos[0] || "patron")
       .normalize("NFD")
@@ -301,6 +313,10 @@ export function GeneradorTexturizador() {
             <CampoNum etiqueta="Hueco del eje" valor={eje} cambiar={setEje} />
             <CampoNum etiqueta="Orilla lisa en los extremos" valor={orilla} cambiar={setOrilla} />
           </div>
+          <label className="mt-2 flex items-center gap-2 text-[13px] text-[#C9D2E0]">
+            <input type="checkbox" checked={verSoporte} onChange={(e) => setVerSoporte(e.target.checked)} className="accent-[#C2560A]" />
+            Ver en 3D puesto en su soporte
+          </label>
         </Seccion>
       ) : (
         <Seccion titulo="Placa">
@@ -442,6 +458,25 @@ export function GeneradorTexturizador() {
                 </Boton>
               </div>
             </TarjetaExport>
+            <TarjetaExport
+              titulo="Soporte (sólo cambias el rodillo)"
+              nota={`Mango con eje: el rodillo entra en el eje y lo detiene un seguro en C (vienen 2). Sirve para todos tus rodillos con hueco de ${r1(numero(eje))} mm, largo de ${r1(numero(largo))} mm y hasta Ø ${diametroSoporte} mm. Imprímelo acostado, con 100 % de relleno.`}
+            >
+              <div className="flex gap-2">
+                <Boton
+                  tipo="primario"
+                  onClick={() =>
+                    descargar(
+                      `soporte-rodillo-eje${r1(numero(eje))}-largo${r1(numero(largo))}-hetna.stl`,
+                      mallaSTL(hacerSoporte(numero(eje), numero(largo), diametroSoporte)),
+                      "model/stl"
+                    )
+                  }
+                >
+                  STL
+                </Boton>
+              </div>
+            </TarjetaExport>
             <TarjetaExport titulo="Guías de grosor (2)" nota="Pon la masa entre las dos guías y pasa el rodillo encima: queda pareja, del grosor de la guía.">
               <div className="flex items-end gap-2">
                 <span className="w-[120px]">
@@ -488,7 +523,7 @@ export function GeneradorTexturizador() {
       titulo={listaPalabras[0] || "Texturizador"}
       subtitulo={rodillo ? "Rodillo texturizador" : "Texturizador para impresión 3D"}
       materialInicial="naranja"
-      tris={listo ? r!.malla.tris : undefined}
+      tris={tris3d}
       panel={panel}
       diseno2d={diseno2d}
       exportacion={exportacion}
