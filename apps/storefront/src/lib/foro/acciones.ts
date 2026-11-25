@@ -10,7 +10,8 @@ import { claveError, db } from "./db"
 import { revisarTexto } from "./filtro"
 import { getAuthHeaders } from "@/lib/data/cookies"
 import { avisarRedes } from "@/lib/hetna/avisar-redes"
-import { ES_NEGOCIO, type Evento, type Red, REDES, TIPOS_NEGOCIO, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
+import { contactoProhibido, leerZonas } from "./perfil-taller"
+import { ES_NEGOCIO, type Evento, MAX_ACERCA, MAX_USUARIO, type Red, REDES, TIPOS_NEGOCIO, USUARIO_VALIDO, esTipoCuenta, esTipoTema, urlFoto, urlTema } from "./tipos"
 
 type Res<T = {}> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -113,14 +114,54 @@ function redValida(red: Red, v: string): string | null {
 }
 
 export async function usuarioDisponible(usuario: string): Promise<{ disponible: boolean }> {
-  const u = texto(usuario, 30).toLowerCase()
+  const u = texto(usuario, MAX_USUARIO).toLowerCase()
   const s = await sesionForo()
-  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(u) || apartado(u, s?.correo)) return { disponible: false }
+  if (!USUARIO_VALIDO.test(u) || apartado(u, s?.correo)) return { disponible: false }
   try {
     const { rows } = await db().query(`select cliente_id from foro.perfiles where usuario = $1`, [u])
-    return { disponible: !rows[0] || rows[0].cliente_id === s?.clienteId }
+    if (rows[0] && rows[0].cliente_id !== s?.clienteId) return { disponible: false }
+    // Tampoco la liga vieja de otra persona (redirige a su perfil)
+    const viejo = await db()
+      .query(`select perfil_id from foro.usuarios_anteriores where usuario = $1`, [u])
+      .catch(() => ({ rows: [] as { perfil_id: string }[] }))
+    return { disponible: !viejo.rows[0] || viejo.rows[0].perfil_id === s?.perfil?.id }
   } catch {
     return { disponible: false }
+  }
+}
+
+// Portada, zonas que atiende y liga vieja (migración del 25 de noviembre). Si
+// la migración aún no se corre, lo demás del perfil ya quedó guardado.
+async function guardarPortadaYZonas(perfilId: string, d: Record<string, unknown>, anterior: string | undefined, usuario: string) {
+  const sinMigracion = (e: unknown) => {
+    const code = (e as { code?: string }).code
+    if (code !== "42703" && code !== "42P01") throw e
+  }
+  const sets: string[] = []
+  const vals: unknown[] = [perfilId]
+  if (d.portada === null) sets.push("portada_url = null")
+  else if (esId(d.portada)) {
+    const [f] = await fotosPropias(perfilId, [d.portada])
+    if (f) {
+      vals.push(urlFoto(f))
+      sets.push(`portada_url = $${vals.length}`)
+    }
+  }
+  if (Array.isArray(d.zonas)) {
+    vals.push(leerZonas(d.zonas))
+    sets.push(`zonas = $${vals.length}`)
+  }
+  if (sets.length) await db().query(`update foro.perfiles set ${sets.join(", ")} where id = $1`, vals).catch(sinMigracion)
+  // Cambió su usuario: la liga vieja redirige a la nueva y nadie más la puede tomar
+  if (anterior && anterior !== usuario) {
+    await db()
+      .query(
+        `insert into foro.usuarios_anteriores (usuario, perfil_id) values ($1, $2)
+         on conflict (usuario) do update set perfil_id = excluded.perfil_id, creado = now()`,
+        [anterior, perfilId]
+      )
+      .catch(sinMigracion)
+    await db().query(`delete from foro.usuarios_anteriores where usuario = $1`, [usuario]).catch(sinMigracion)
   }
 }
 
@@ -129,24 +170,25 @@ export async function guardarPerfil(d: Record<string, unknown>): Promise<Res<{ u
   if (!s) return { ok: false, error: "sin_sesion" }
   if (s.perfil?.suspendido) return { ok: false, error: "perfil_suspendido" }
 
-  const usuario = texto(d.usuario, 30).toLowerCase()
-  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(usuario))
-    return { ok: false, error: "El usuario lleva de 3 a 30 letras minúsculas, números o guiones, sin espacios." }
+  const usuario = texto(d.usuario, MAX_USUARIO).toLowerCase().replace(/-+$/, "")
+  if (!USUARIO_VALIDO.test(usuario))
+    return { ok: false, error: `El usuario lleva de 3 a ${MAX_USUARIO} letras minúsculas, números o guiones, sin espacios.` }
+  if (!(await usuarioDisponible(usuario)).disponible) return { ok: false, error: "usuario_ocupado" }
   if (apartado(usuario, s.correo)) return { ok: false, error: "usuario_ocupado" }
   const nombre = revisarTexto(texto(d.nombre, 80)).texto
   if (nombre.length < 2) return { ok: false, error: "Escribe tu nombre o el de tu taller." }
   if (!esTipoCuenta(d.tipo)) return { ok: false, error: "Elige qué tipo de cuenta eres." }
 
-  const bio = revisarTexto(texto(d.bio, 1000)).texto
-  const redesEntrada = (d.redes && typeof d.redes === "object" ? d.redes : {}) as Record<string, unknown>
-  const redes: Partial<Record<Red, string>> = {}
-  for (const red of Object.keys(REDES) as Red[]) {
-    const v = texto(redesEntrada[red], 200)
-    if (!v) continue
-    const url = redValida(red, v)
-    if (!url) return { ok: false, error: `Revisa la liga de ${REDES[red].nombre}.` }
-    redes[red] = url
-  }
+  // Ni teléfono, ni WhatsApp, ni correo, ni redes en el perfil (mismo filtro del chat)
+  const prohibido =
+    contactoProhibido([d.nombre], "tu nombre") ||
+    contactoProhibido([d.bio], "\"Acerca de\"") ||
+    contactoProhibido([d.ciudad], "la ciudad")
+  if (prohibido) return { ok: false, error: prohibido }
+  // "Acerca de": hasta 2,000 letras con la migración del 25 de noviembre (antes 1,000)
+  const bio = revisarTexto(texto(d.bio, MAX_ACERCA)).texto
+  // Redes sociales y página web: ya no se piden ni se muestran (el contacto es
+  // sólo por Mensaje o Pedir cotización). Lo que ya estaba guardado no se borra.
 
   let fotoUrl: string | null = s.perfil?.foto ?? null
   if (d.foto === null) fotoUrl = null
@@ -155,24 +197,28 @@ export async function guardarPerfil(d: Record<string, unknown>): Promise<Res<{ u
     if (f) fotoUrl = urlFoto(f)
   }
 
+  // La lista vieja de máquinas (texto) se conserva si el formulario no la manda
+  const maquinas = Array.isArray(d.maquinas) ? lista(d.maquinas, 12, 60) : s.perfil?.maquinas || []
   const valores = [
-    usuario, nombre, d.tipo, bio, texto(d.ciudad, 80), texto(d.estadoMx, 40), JSON.stringify(redes),
-    lista(d.maquinas, 12, 60), lista(d.software, 12, 40), fotoUrl,
+    usuario, nombre, d.tipo, bio, revisarTexto(texto(d.ciudad, 80)).texto, texto(d.estadoMx, 40),
+    maquinas, lista(d.software, 12, 40), fotoUrl,
   ]
   try {
+    const anterior = s.perfil?.usuario
     if (s.perfil) {
       await db().query(
         `update foro.perfiles set usuario = $2, nombre = $3, tipo = $4, bio = $5, ciudad = $6, estado_mx = $7,
-           redes = $8::jsonb, maquinas = $9, software = $10, foto_url = $11 where id = $1`,
+           maquinas = $8, software = $9, foto_url = $10 where id = $1`,
         [s.perfil.id, ...valores]
       )
     } else {
       await db().query(
-        `insert into foro.perfiles (cliente_id, usuario, nombre, tipo, bio, ciudad, estado_mx, redes, maquinas, software, foto_url)
-         values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)`,
+        `insert into foro.perfiles (cliente_id, usuario, nombre, tipo, bio, ciudad, estado_mx, maquinas, software, foto_url)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [s.clienteId, ...valores]
       )
     }
+    if (s.perfil) await guardarPortadaYZonas(s.perfil.id, d, anterior, usuario)
     return { ok: true, usuario }
   } catch (e) {
     return fallo(e)
