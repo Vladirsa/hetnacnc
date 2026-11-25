@@ -75,6 +75,18 @@ const datosHerramienta = (h: HerramientaDiseno) => {
   ]
 }
 
+// Guía con precio y talleres para mandar a fabricar lo que sale de la herramienta (lib/seo/guias.ts)
+const GUIA_DE_HERRAMIENTA: Record<string, [string, string]> = {
+  celosias: ["celosias-mdf-a-medida", "¿No tienes máquina? Celosías de MDF a medida con precio al instante"],
+  "celosia-desde-imagen": ["celosias-mdf-a-medida", "¿No tienes máquina? Celosías de MDF a medida con precio al instante"],
+  "letras-3d": ["letras-3d-acrilico", "¿No tienes máquina? Letras 3D de acrílico y MDF con precio al instante"],
+  "moldes-3d": ["moldes-3d-resina", "¿No tienes impresora? Moldes impresos en 3D con precio al instante"],
+  "partir-3d": ["impresion-3d", "¿No tienes impresora? Impresión 3D con precio al instante"],
+  "modelos-3d": ["impresion-3d", "¿No tienes impresora? Impresión 3D con precio al instante"],
+  "grabado-foto": ["grabado-laser", "¿No tienes láser? Grabado láser con precio al instante"],
+  "codigo-qr": ["grabado-laser", "¿No tienes láser? Grabado láser con precio al instante"],
+}
+
 // Texto visible debajo de la herramienta (sale en el HTML del servidor): qué hace
 // y las demás herramientas del mismo estudio. Para quien llega desde el buscador
 // y para los buscadores e IA, que no ven lo que dibuja el navegador.
@@ -85,6 +97,13 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
       <div className="mx-auto max-w-[920px]">
         <h2 id="acerca-herramienta" className="m-0 text-[16px] font-semibold text-white">{h.titulo}</h2>
         <p className="m-0 mt-1.5 text-[14px] leading-relaxed">{h.descripcion}</p>
+        {GUIA_DE_HERRAMIENTA[h.slug] && (
+          <p className="m-0 mt-1.5 text-[14px]">
+            <LocalizedClientLink href={`/cnc/${GUIA_DE_HERRAMIENTA[h.slug][0]}`} className="font-semibold text-[#FF8A47] hover:text-white">
+              {GUIA_DE_HERRAMIENTA[h.slug][1]} →
+            </LocalizedClientLink>
+          </p>
+        )}
         <p className="m-0 mt-1.5 text-[13px] text-[#8D96A3]">
           Herramienta {h.acceso === "gratis" ? "gratis" : "con créditos"} de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.
         </p>

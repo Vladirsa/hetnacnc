@@ -9,7 +9,7 @@ import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres, ubicacion, type Taller } from "@/lib/hetna/talleres"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
-import { CIUDADES, GUIAS, enCiudad, type Ciudad, type Guia } from "@/lib/seo/guias"
+import { CIUDADES, GUIAS, enCiudad, h1EnCiudad, type Ciudad, type Guia } from "@/lib/seo/guias"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { rutaEstado } from "@/lib/seo/estados"
 
@@ -32,12 +32,12 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
   const locales = ciudad ? talleres.filter((t) => enCiudad(ciudad, t.perfil.estado, t.perfil.ciudad)) : []
   const mostrar = (ciudad ? [...locales, ...talleres.filter((t) => !locales.includes(t))] : talleres).slice(0, 6)
   const ruta = `/mx/cnc/${g.slug}${ciudad ? `/${ciudad.slug}` : ""}`
-  const h1 = ciudad ? `${g.h1} en ${ciudad.nombre}` : g.h1
+  const h1 = ciudad ? h1EnCiudad(g, ciudad) : g.h1
 
   const faqs = ciudad
     ? [
         {
-          p: `¿Hay talleres de ${g.h1.toLowerCase()} en ${ciudad.nombre}?`,
+          p: `¿Hay talleres de ${g.h1.replace(/ en México$/, "").toLowerCase()} en ${ciudad.nombre}?`,
           r: locales.length
             ? `Sí: ${locales.length === 1 ? "hay un taller" : `hay ${locales.length} talleres`} de la red en ${ciudad.estado} (${locales
                 .slice(0, 3)

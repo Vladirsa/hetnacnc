@@ -679,7 +679,7 @@ export const GUIAS: Guia[] = [
   },
   {
     slug: "impresion-3d",
-    titulo: "Servicio de impresión 3D en México: precio al instante",
+    titulo: "Impresión 3D en México: precio al instante",
     descripcion: "Imprime tu pieza en 3D en PLA, PETG, ABS o TPU con talleres de México. Sube tu STL, ve el precio aproximado al instante y elige al taller.",
     h1: "Servicio de impresión 3D en México",
     intro: [
@@ -739,7 +739,7 @@ export const GUIAS: Guia[] = [
   },
   {
     slug: "celosias-mdf-a-medida",
-    titulo: "Celosías de MDF a medida: diseño gratis y corte CNC",
+    titulo: "Celosías de MDF a medida: diseño y corte CNC",
     descripcion: "Diseña tu celosía de MDF a la medida gratis y mándala a cortar en router CNC o láser. Paneles decorativos, plafones y divisiones con precio al instante.",
     h1: "Celosías de MDF a medida",
     intro: [
@@ -793,7 +793,7 @@ export const GUIAS: Guia[] = [
   },
   {
     slug: "letras-3d-acrilico",
-    titulo: "Letras 3D de acrílico y MDF para anuncios y logotipos",
+    titulo: "Letras 3D de acrílico y MDF para anuncios",
     descripcion: "Letras 3D de acrílico o MDF cortadas en láser para anuncios, recepciones y eventos. Diséñalas gratis, ve el precio al instante y elige al taller.",
     h1: "Letras 3D de acrílico y MDF",
     intro: [
@@ -848,7 +848,7 @@ export const GUIAS: Guia[] = [
   },
   {
     slug: "moldes-3d-resina",
-    titulo: "Moldes 3D para resina, yeso y silicona a partir de tu STL",
+    titulo: "Moldes 3D para resina, yeso y silicona",
     descripcion: "Convierte tu pieza en un molde de dos partes, abierto o caja para silicona, gratis. Imprímelo o pide que un taller lo fabrique con precio al instante.",
     h1: "Moldes 3D para resina, yeso y silicona",
     intro: [
@@ -902,7 +902,7 @@ export const GUIAS: Guia[] = [
   },
   {
     slug: "grabado-laser",
-    titulo: "Grabado láser en madera, acrílico, piel y vidrio",
+    titulo: "Grabado láser en madera, acrílico y piel",
     descripcion: "Grabado láser de logotipos, nombres y fotos en madera, MDF, acrílico, piel y vidrio. Ve el precio aproximado al instante y elige un taller de México.",
     h1: "Grabado láser en madera, acrílico, piel y vidrio",
     intro: [
@@ -956,6 +956,9 @@ export const GUIAS: Guia[] = [
     ],
   },
 ]
+
+/** H1 de la guía en una ciudad: "Taller de router CNC en México" → "Taller de router CNC en Puebla". */
+export const h1EnCiudad = (g: Pick<Guia, "h1">, c: Pick<Ciudad, "nombre">) => `${g.h1.replace(/ en México$/, "")} en ${c.nombre}`
 
 export const guiaPorSlug = (slug: string) => GUIAS.find((g) => g.slug === slug)
 export const ciudadPorSlug = (slug: string) => CIUDADES.find((c) => c.slug === slug)
