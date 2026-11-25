@@ -33,6 +33,8 @@ type Props = {
   locale: string
   offers?: StoreOffer[]
   vistas?: number // aperturas de la ficha en 7 días (para "N visitas esta semana")
+  /** Impresión 3D bajo pedido: la lista de talleres va donde se compra */
+  compraPropia?: React.ReactNode
 }
 
 // La columna de la derecha: sólo lo que hace falta para decidir la compra.
@@ -42,7 +44,7 @@ type Props = {
 // scroll mientras se lee la ficha, y un bloque pegajoso más alto que la
 // pantalla nunca se ve pegado. Con la descripción adentro medía el doble de la
 // ventana.
-export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 }: Props) => {
+export const ProductDetails = async ({ product, locale, offers = [], vistas = 0, compraPropia }: Props) => {
   // Los productos maestros no tienen vendedor: el que se enseña sale de la
   // oferta que gana el buybox.
   const ganadora = getBuyboxWinner(rankOffers(offers))
@@ -104,6 +106,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
         tipo={tipo}
         descarga={descarga}
         universal={universal}
+        compraPropia={compraPropia}
         antesDeComprar={
           tipo === "servicio" ? (
             <ResumenServicio metadata={product.metadata} />

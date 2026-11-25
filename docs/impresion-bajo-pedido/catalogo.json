@@ -1,0 +1,400 @@
+[
+  {
+    "handle": "rodillo-texturizador-corazones-impreso-3d",
+    "titulo": "Rodillo texturizador de corazones y flores",
+    "resumen": "Para arcilla polimérica, plastilina, jabón o fondant: deja un patrón de corazones y flores que da la vuelta sin costura.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "arcilla polimérica",
+      "fondant",
+      "corazones"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-corazones-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "corazon",
+        "flor"
+      ],
+      "tamano": 10
+    },
+    "volumen_cm3": 141.3,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-lunas-estrellas-impreso-3d",
+    "titulo": "Rodillo texturizador de lunas y estrellas",
+    "resumen": "Patrón de lunas, estrellas y puntos para aretes de arcilla, jabones y galletas.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "arcilla polimérica",
+      "estrellas",
+      "lunas"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=luna%2Cestrella%2Ccirculo&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-lunas-estrellas-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "luna",
+        "estrella",
+        "circulo"
+      ],
+      "tamano": 9
+    },
+    "volumen_cm3": 139.5,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-huellitas-impreso-3d",
+    "titulo": "Rodillo texturizador de huellitas",
+    "resumen": "Huellitas y corazones para productos de mascotas, galletas para perro o piezas de arcilla.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "mascotas",
+      "huellitas",
+      "galletas"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=huella%2Ccorazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-huellitas-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "huella",
+        "corazon"
+      ],
+      "tamano": 10
+    },
+    "volumen_cm3": 140.9,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-copos-navidad-impreso-3d",
+    "titulo": "Rodillo texturizador navideño de copos y estrellas",
+    "resumen": "Copos de nieve y estrellas para galletas, fondant y adornos de temporada.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "navidad",
+      "copos de nieve",
+      "fondant"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=copo%2Cestrella&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-copos-navidad-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "copo",
+        "estrella"
+      ],
+      "tamano": 10
+    },
+    "volumen_cm3": 139.5,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-rombos-impreso-3d",
+    "titulo": "Rodillo texturizador geométrico de rombos",
+    "resumen": "Patrón geométrico de rombos en cuadrícula para arcilla, cerámica y cuero.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "geométrico",
+      "rombos",
+      "cerámica"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=rombo&fuente=montserrat&acomodo=cuadricula&espejo=1&tamano=8&espacioX=4&espacioY=4&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-rombos-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "cuadricula",
+      "fuente": "montserrat",
+      "espacioX": 4,
+      "espacioY": 4,
+      "palabras": [],
+      "iconos": [
+        "rombo"
+      ],
+      "tamano": 8
+    },
+    "volumen_cm3": 140.7,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-hecho-a-mano-impreso-3d",
+    "titulo": "Rodillo texturizador «Hecho a mano»",
+    "resumen": "Marca tus jabones, velas y piezas de arcilla con la leyenda «Hecho a mano» y flores.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "hecho a mano",
+      "jabón artesanal",
+      "velas"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-hecho-a-mano-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [
+        "HECHO A MANO"
+      ],
+      "iconos": [
+        "flor"
+      ],
+      "tamano": 9
+    },
+    "volumen_cm3": 142.8,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "rodillo-texturizador-te-amo-impreso-3d",
+    "titulo": "Rodillo texturizador «Te amo» con corazones",
+    "resumen": "Para galletas, fondant y regalos de San Valentín o aniversario.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "rodillo texturizador",
+      "san valentín",
+      "te amo",
+      "galletas"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=TE+AMO&iconos=corazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/rodillo-texturizador-te-amo-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [
+        "TE AMO"
+      ],
+      "iconos": [
+        "corazon"
+      ],
+      "tamano": 8
+    },
+    "volumen_cm3": 142.2,
+    "medidas_mm": [
+      42.4,
+      42.4,
+      120
+    ]
+  },
+  {
+    "handle": "placa-texturizadora-galletas-impresa-3d",
+    "titulo": "Placa texturizadora para galletas: corazones, flores y estrellas",
+    "resumen": "Placa de 12 × 12 cm para presionar sobre fondant, galletas o arcilla.",
+    "pieza": "pieza",
+    "etiquetas": [
+      "placa texturizadora",
+      "galletas",
+      "fondant",
+      "sello"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=placa&palabras=&iconos=corazon%2Cflor%2Cestrella&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=12&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=120&alto=120&radio=4&grosor=3",
+    "foto": "fotos/placa-texturizadora-galletas-impresa-3d.png",
+    "diseno": {
+      "forma": "placa",
+      "ancho": 120,
+      "alto": 120,
+      "radio": 4,
+      "grosor": 3,
+      "relieve": 1.2,
+      "modo": "alto",
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "corazon",
+        "flor",
+        "estrella"
+      ],
+      "tamano": 12
+    },
+    "volumen_cm3": 47.3,
+    "medidas_mm": [
+      120,
+      120,
+      4.2
+    ]
+  },
+  {
+    "handle": "placa-texturizadora-hecho-a-mano-impresa-3d",
+    "titulo": "Placa texturizadora «Hecho a mano»",
+    "resumen": "Placa de 15 × 10 cm para marcar jabones, arcilla o cuero con «Hecho a mano».",
+    "pieza": "pieza",
+    "etiquetas": [
+      "placa texturizadora",
+      "hecho a mano",
+      "jabón artesanal",
+      "cuero"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=placa&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=150&alto=100&radio=4&grosor=3",
+    "foto": "fotos/placa-texturizadora-hecho-a-mano-impresa-3d.png",
+    "diseno": {
+      "forma": "placa",
+      "ancho": 150,
+      "alto": 100,
+      "radio": 4,
+      "grosor": 3,
+      "relieve": 1.2,
+      "modo": "alto",
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [
+        "HECHO A MANO"
+      ],
+      "iconos": [
+        "flor"
+      ],
+      "tamano": 8
+    },
+    "volumen_cm3": 50.2,
+    "medidas_mm": [
+      150,
+      100,
+      4.2
+    ]
+  },
+  {
+    "handle": "soporte-rodillo-texturizador-impreso-3d",
+    "titulo": "Soporte con eje para rodillos texturizadores (cambia sólo el rodillo)",
+    "resumen": "Mango con eje y seguro en C: pones el rodillo, lo aseguras y ruedas. Sirve para todos los rodillos de este catálogo (hueco de 12 mm, 120 mm de largo).",
+    "pieza": "soporte",
+    "etiquetas": [
+      "soporte rodillo",
+      "mango",
+      "rodillo texturizador",
+      "accesorio"
+    ],
+    "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
+    "foto": "fotos/soporte-rodillo-texturizador-impreso-3d.png",
+    "diseno": {
+      "forma": "rodillo",
+      "diametro": 40,
+      "largo": 120,
+      "eje": 12,
+      "relieve": 1.2,
+      "orilla": 0,
+      "espejo": true,
+      "acomodo": "intercalado",
+      "fuente": "montserrat",
+      "espacioX": 5,
+      "espacioY": 6,
+      "palabras": [],
+      "iconos": [
+        "corazon",
+        "flor"
+      ],
+      "tamano": 10
+    },
+    "volumen_cm3": 42.4,
+    "medidas_mm": [
+      71.6,
+      162.3,
+      135.2
+    ]
+  }
+]
