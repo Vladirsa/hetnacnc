@@ -19,6 +19,14 @@ export const PLANOS_NOMBRES: Record<string, string> = {
   "escritorio-sencillo": "Escritorio sencillo",
   "mesa-de-centro": "Mesa de centro con repisa",
   "banca-de-entrada": "Banca de entrada con zapatero",
+  "estacion-para-ingletadora": "Estación para ingletadora",
+  "porta-sargentos-de-pared": "Porta sargentos de pared",
+  "caja-de-herramientas": "Caja de herramientas portátil",
+  "carro-de-herramientas": "Carro de herramientas",
+  "repisa-de-pared": "Repisa de pared de 3 niveles",
+  "banco-escalera": "Banco escalera de 2 peldaños",
+  "cubos-organizadores-3x3": "Cubos organizadores 3 × 3",
+  "jardinera": "Jardinera de 80 × 40 cm",
 }
 
 export type PedidoPlano = { email: string; plano: string; nombre: string | null; promos: boolean }

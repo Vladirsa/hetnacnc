@@ -251,6 +251,121 @@ function banca(): PiezaPlano[] {
   ]
 }
 
+
+// ── Tanda 3 ──────────────────────────────────────────────────────────────
+function estacionIngletadora(): PiezaPlano[] {
+  const e = 18, D = 600, Hm = 900, Wm = 700, Wc = 600, zPlat = 800
+  const piezas: PiezaPlano[] = []
+  const modulo = (x: number, lado: string) => {
+    piezas.push(
+      p(`Costado exterior ${lado}`, lado === "izq." ? x : x + Wm - e, lado === "izq." ? x + e : x + Wm, 0, D, 0, Hm - e),
+      p(`Costado interior ${lado}`, lado === "izq." ? x + Wm - e : x, lado === "izq." ? x + Wm : x + e, 0, D, 0, Hm - e),
+      p(`Piso ${lado}`, x + e, x + Wm - e, 0, D - e, 80, 80 + e),
+      p(`Repisa ${lado}`, x + e, x + Wm - e, 0, D - e, 460, 460 + e),
+      p(`Respaldo ${lado}`, x + e, x + Wm - e, D - e, D, 80, Hm - e),
+      p(`Cubierta ${lado}`, x, x + Wm, 0, D, Hm - e, Hm),
+    )
+  }
+  modulo(0, "izq.")
+  modulo(Wm + Wc, "der.")
+  piezas.push(
+    p("Plataforma de la ingletadora", Wm, Wm + Wc, 0, D, zPlat - e, zPlat),
+    p("Travesaño de la plataforma", Wm, Wm + Wc, D - 100, D - 100 + e, zPlat - e - 120, zPlat - e),
+  )
+  return piezas
+}
+
+function portaSargentos(): PiezaPlano[] {
+  const W = 1000, e = 18, H = 300
+  const piezas: PiezaPlano[] = [p("Respaldo", 0, W, 220, 220 + e, 0, H)]
+  for (let i = 0; i < 6; i++) {
+    const x = 60 + i * ((W - 120 - e) / 5)
+    piezas.push(p(`Brazo ${i + 1}`, x, x + e, 0, 220, H - 110, H - 30))
+  }
+  piezas.push(p("Listón de pared", 0, W, 220 + e, 220 + 2 * e, H - 90, H - 10))
+  return piezas
+}
+
+function cajaHerramientas(): PiezaPlano[] {
+  const W = 500, D = 250, e = 18, Hl = 160, Hc = 280
+  return [
+    p("Fondo", 0, W, 0, D, 0, e),
+    p("Cabecera izquierda", 0, e, 0, D, e, Hc),
+    p("Cabecera derecha", W - e, W, 0, D, e, Hc),
+    p("Costado delantero", e, W - e, 0, e, e, Hl),
+    p("Costado trasero", e, W - e, D - e, D, e, Hl),
+    p("Agarradera", e, W - e, D / 2 - e / 2, D / 2 + e / 2, Hc - 50, Hc - 10),
+  ]
+}
+
+function carroHerramientas(): PiezaPlano[] {
+  const W = 600, D = 450, e = 18, ruedas = 100, H = 900
+  const z0 = ruedas
+  return [
+    p("Costado izquierdo", 0, e, 0, D, z0, H),
+    p("Costado derecho", W - e, W, 0, D, z0, H),
+    p("Repisa baja", e, W - e, 0, D, z0, z0 + e),
+    p("Repisa media", e, W - e, 0, D, z0 + 360, z0 + 360 + e),
+    p("Cubierta", e, W - e, 0, D, H - e, H),
+    p("Tope trasero de la cubierta", e, W - e, D - e, D, H, H + 60),
+    p("Agarradera", -60, 0, D / 2 - e / 2, D / 2 + e / 2, H - 140, H - 60),
+  ]
+}
+
+function repisaPared(): PiezaPlano[] {
+  const W = 900, D = 200, e = 18, H = 600
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Repisa baja", e, W - e, 0, D, 0, e),
+    p("Repisa media", e, W - e, 0, D, H / 2 - e / 2, H / 2 + e / 2),
+    p("Repisa alta", e, W - e, 0, D, H - e, H),
+    p("Travesaño colgador", e, W - e, D - e, D, H - e - 80, H - e),
+  ]
+}
+
+function bancoEscalera(): PiezaPlano[] {
+  const W = 420, D = 450, e = 18, H = 450
+  return [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Peldaño bajo", e, W - e, 0, D / 2, H / 2 - e, H / 2),
+    p("Peldaño alto", e, W - e, D / 2, D, H - e, H),
+    p("Contrahuella baja", e, W - e, 0, e, 0, H / 2 - e),
+    p("Contrahuella alta", e, W - e, D / 2, D / 2 + e, H / 2, H - e),
+    p("Travesaño trasero", e, W - e, D - e, D, 60, 160),
+  ]
+}
+
+function cubos3x3(): PiezaPlano[] {
+  const W = 1000, D = 350, H = 1000, e = 18, n = 3
+  const piezas: PiezaPlano[] = [
+    p("Costado izquierdo", 0, e, 0, D, 0, H),
+    p("Costado derecho", W - e, W, 0, D, 0, H),
+    p("Piso", e, W - e, 0, D - 6, 0, e),
+    p("Techo", e, W - e, 0, D - 6, H - e, H),
+    p("Respaldo", e, W - e, D - 6, D, e, H - e, "triplay-6"),
+  ]
+  const hueco = (W - 2 * e - (n - 1) * e) / n, alto = (H - 2 * e - (n - 1) * e) / n
+  for (let f = 1; f < n; f++) { const z = e + f * alto + (f - 1) * e; piezas.push(p(`Entrepaño ${f}`, e, W - e, 0, D - 6, z, z + e)) }
+  for (let f = 0; f < n; f++) {
+    const z = e + f * (alto + e)
+    for (let c = 1; c < n; c++) { const x = e + c * hueco + (c - 1) * e; piezas.push(p(`División ${f * (n - 1) + c}`, x, x + e, 0, D - 6, z, z + alto)) }
+  }
+  return piezas
+}
+
+function jardinera(): PiezaPlano[] {
+  const W = 800, D = 400, H = 400, e = 18
+  return [
+    p("Fondo", e, W - e, e, D - e, 60, 60 + e),
+    p("Frente", 0, W, 0, e, 0, H),
+    p("Trasera", 0, W, D - e, D, 0, H),
+    p("Cabecera izquierda", 0, e, e, D - e, 0, H),
+    p("Cabecera derecha", W - e, W, e, D - e, 0, H),
+  ]
+}
+
 export const PLANOS: Plano[] = [
   {
     categoria: "Taller",
@@ -481,6 +596,155 @@ export const PLANOS: Plano[] = [
     herrajes: ["Tornillos para madera 1 1/2\" (aprox. 20)", "Pasta para madera", "Pegamento blanco para madera"],
     herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Lijadora"],
     notas: ["Para más de 1.20 m de largo, agrega un costado al centro."],
+  },
+  {
+    categoria: "Taller",
+    slug: "estacion-para-ingletadora",
+    nombre: "Estación para ingletadora",
+    resumen: "Mesa de 2 m con dos módulos de guardado y la ingletadora al centro, al ras de las alas.",
+    descripcion: "Las alas sostienen tablas largas al cortar y quedan a la altura de la mesa de la ingletadora. Abajo, dos módulos con repisa para guardar.",
+    nivel: "Intermedio",
+    horas: "6 a 8 h",
+    piezas: estacionIngletadora(),
+    pasos: [
+      { titulo: "Módulo izquierdo", nota: "Costados, piso, repisa y respaldo.", piezas: ["Costado exterior izq.", "Costado interior izq.", "Piso izq.", "Repisa izq.", "Respaldo izq."] },
+      { titulo: "Módulo derecho", nota: "Igual que el izquierdo.", piezas: ["Costado exterior der.", "Costado interior der.", "Piso der.", "Repisa der.", "Respaldo der."] },
+      { titulo: "Plataforma", nota: "Entre los dos módulos, a la altura que deje la mesa de tu ingletadora al ras de las alas.", piezas: ["Plataforma", "Travesaño"] },
+      { titulo: "Cubiertas", nota: "Atornilla desde abajo.", piezas: ["Cubierta"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 80)", "Pegamento blanco para madera", "Niveladores o ruedas (opcional)"],
+    herramientas: ["Sierra circular o router CNC", "Taladro atornillador", "Nivel y escuadra"],
+    notas: ["Mide la altura de la mesa de tu ingletadora y ajusta la altura de la plataforma (aquí, 10 cm abajo de las alas)."],
+  },
+  {
+    categoria: "Taller",
+    slug: "porta-sargentos-de-pared",
+    nombre: "Porta sargentos de pared",
+    resumen: "Soporte de 1 m con seis brazos para colgar sargentos y prensas.",
+    descripcion: "Libera la mesa: los sargentos quedan colgados y a la mano. Se cuelga con listón francés o directo a la pared.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: portaSargentos(),
+    pasos: [
+      { titulo: "Respaldo", nota: "Corta el respaldo a medida.", piezas: ["Respaldo"] },
+      { titulo: "Brazos", nota: "Pega y atornilla cada brazo desde atrás del respaldo.", piezas: ["Brazo"] },
+      { titulo: "Listón de pared", nota: "Atornillado a la pared, a taquete.", piezas: ["Listón"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 20)", "Taquetes y pijas para muro", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Nivel"],
+    notas: ["Para sargentos pesados, atornilla el respaldo a dos montantes o con cuatro taquetes."],
+  },
+  {
+    categoria: "Taller",
+    slug: "caja-de-herramientas",
+    nombre: "Caja de herramientas portátil",
+    resumen: "Caja abierta de 50 × 25 cm con agarradera para llevar herramienta de mano.",
+    descripcion: "La caja de carpintero de siempre: ligera, firme y con todo a la vista.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: cajaHerramientas(),
+    pasos: [
+      { titulo: "Fondo y cabeceras", nota: "Las cabeceras van sobre el fondo.", piezas: ["Fondo", "Cabecera"] },
+      { titulo: "Costados", nota: "Entre las cabeceras.", piezas: ["Costado"] },
+      { titulo: "Agarradera", nota: "Atornilla desde fuera de las cabeceras.", piezas: ["Agarradera"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/4\" (aprox. 16)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Lija"],
+    notas: ["Redondea la agarradera con lija o con una fresa de media caña para que no lastime la mano."],
+  },
+  {
+    categoria: "Taller",
+    slug: "carro-de-herramientas",
+    nombre: "Carro de herramientas",
+    resumen: "Carrito de 60 × 45 × 90 cm con tres niveles y ruedas para mover herramienta.",
+    descripcion: "Lleva las herramientas del trabajo de hoy a donde estés trabajando. La cubierta tiene tope para que nada se caiga.",
+    nivel: "Fácil",
+    horas: "2 a 3 h",
+    ruedas: 100,
+    piezas: carroHerramientas(),
+    pasos: [
+      { titulo: "Costados y repisa baja", nota: "Atornilla las ruedas a la repisa baja primero.", piezas: ["Costado", "Repisa baja"] },
+      { titulo: "Repisa media", nota: "A la altura que te sirva.", piezas: ["Repisa media"] },
+      { titulo: "Cubierta y tope", nota: "El tope evita que rueden las herramientas.", piezas: ["Cubierta", "Tope"] },
+      { titulo: "Agarradera", nota: "En un costado, para empujarlo.", piezas: ["Agarradera"] },
+    ],
+    herrajes: ["4 ruedas giratorias de 2\" a 3\" (2 con freno)", "Tornillos para madera 1 1/2\" (aprox. 30)", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Escuadra"],
+    notas: ["La agarradera se dibuja como bloque; puede ser un tubo o una jaladera grande."],
+  },
+  {
+    categoria: "Casa",
+    slug: "repisa-de-pared",
+    nombre: "Repisa de pared de 3 niveles",
+    resumen: "Repisa de 90 × 20 × 60 cm para cocina, baño o recámara.",
+    descripcion: "Repisa abierta para especias, libros o plantas. Se cuelga del travesaño trasero.",
+    nivel: "Fácil",
+    horas: "1 a 2 h",
+    piezas: repisaPared(),
+    pasos: [
+      { titulo: "Costados", nota: "Marca la altura de cada repisa.", piezas: ["Costado"] },
+      { titulo: "Repisas", nota: "Pega y atornilla desde los costados.", piezas: ["Repisa"] },
+      { titulo: "Travesaño colgador", nota: "Por aquí se atornilla a la pared.", piezas: ["Travesaño"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 16)", "Taquetes y pijas para muro", "Pasta para madera", "Barniz o pintura"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Nivel"],
+    notas: ["Atorníllala a la pared por el travesaño, con taquetes adecuados para tu muro."],
+  },
+  {
+    categoria: "Casa",
+    slug: "banco-escalera",
+    nombre: "Banco escalera de 2 peldaños",
+    resumen: "Escalón de 42 × 45 × 45 cm para alcanzar la alacena o para los niños en el baño.",
+    descripcion: "Dos peldaños firmes, cerrados al frente. También sirve como banquito.",
+    nivel: "Fácil",
+    horas: "2 h",
+    piezas: bancoEscalera(),
+    pasos: [
+      { titulo: "Costados", nota: "Las dos piezas laterales.", piezas: ["Costado"] },
+      { titulo: "Contrahuellas", nota: "Cierran el frente de cada escalón.", piezas: ["Contrahuella"] },
+      { titulo: "Peldaños", nota: "Pega y atornilla; avellana los tornillos.", piezas: ["Peldaño"] },
+      { titulo: "Travesaño trasero", nota: "Le quita el bamboleo.", piezas: ["Travesaño"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 24)", "Pegamento blanco para madera", "Antiderrapante para los peldaños (opcional)"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Lijadora"],
+    notas: ["Los costados se dibujan rectos; si quieres, córtalos en escalón siguiendo los peldaños."],
+  },
+  {
+    categoria: "Casa",
+    slug: "cubos-organizadores-3x3",
+    nombre: "Cubos organizadores 3 × 3",
+    resumen: "Mueble de 1 × 1 m con nueve cubos para canastas, libros o juguetes.",
+    descripcion: "El clásico organizador de cubos: va en recámara, sala o cuarto de juegos, de pie o acostado.",
+    nivel: "Intermedio",
+    horas: "4 a 5 h",
+    piezas: cubos3x3(),
+    pasos: [
+      { titulo: "Casco", nota: "Costados, piso y techo.", piezas: ["Costado", "Piso", "Techo"] },
+      { titulo: "Entrepaños", nota: "Usa un taco espaciador para que queden parejos.", piezas: ["Entrepaño"] },
+      { titulo: "Divisiones", nota: "Entre cada entrepaño.", piezas: ["División"] },
+      { titulo: "Respaldo", nota: "Cuadra el mueble antes de clavarlo.", piezas: ["Respaldo"] },
+    ],
+    herrajes: ["Tornillos para madera 1 1/2\" (aprox. 40)", "Clavo sin cabeza 1\"", "Pegamento blanco para madera"],
+    herramientas: ["Sierra o router CNC", "Taladro atornillador", "Prensas", "Escuadra"],
+    notas: ["Los cubos de 30 cm aceptan las canastas de tela más comunes."],
+  },
+  {
+    categoria: "Casa",
+    slug: "jardinera",
+    nombre: "Jardinera de 80 × 40 cm",
+    resumen: "Macetero rectangular para plantas, hierbas o un huerto pequeño.",
+    descripcion: "Jardinera para patio o terraza, con el fondo levantado para que escurra el agua.",
+    nivel: "Fácil",
+    horas: "2 h",
+    piezas: jardinera(),
+    pasos: [
+      { titulo: "Frente y trasera", nota: "Las dos piezas largas.", piezas: ["Frente", "Trasera"] },
+      { titulo: "Cabeceras", nota: "Entre el frente y la trasera.", piezas: ["Cabecera"] },
+      { titulo: "Fondo", nota: "Haz barrenos de 10 mm cada 10 cm para el drenaje.", piezas: ["Fondo"] },
+    ],
+    herrajes: ["Tornillos para exterior 1 1/2\" (aprox. 24)", "Pegamento para exterior", "Plástico o geotextil para el interior", "Sellador o barniz marino"],
+    herramientas: ["Sierra o router CNC", "Taladro", "Brocha"],
+    notas: ["Usa triplay marino o para exterior y séllalo por todos lados: el triplay común se deshace con la humedad."],
   },
 ]
 
