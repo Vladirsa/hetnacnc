@@ -14,6 +14,7 @@ import { Alert } from '@/components/atoms/Alert/Alert';
 import { LabeledInput } from '@/components/cells/LabeledInput/LabeledInput'
 import { login, reenviarConfirmacion, transferCart } from '@/lib/data/customer';
 import { toast } from '@/lib/helpers/toast';
+import { CampoCodigo } from '@/components/hetna/cuenta/CampoCodigo';
 
 import { LoginFormData, loginFormSchema } from './schema';
 
@@ -134,6 +135,8 @@ const Form = () => {
               >
                 {reenviado ? 'Listo, te la volvimos a mandar.' : 'Volver a mandar la liga'}
               </button>
+              {/* Con el código confirmado, se vuelve a intentar entrar con lo que ya escribió */}
+              <CampoCodigo email={porConfirmar.email} alConfirmar={() => handleSubmit(submit)()} />
             </div>
           )}
           <form

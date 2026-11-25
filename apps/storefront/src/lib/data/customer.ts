@@ -122,6 +122,24 @@ async function faltaConfirmar(): Promise<boolean> {
   }
 }
 
+/** Confirma la cuenta con el código de 6 dígitos que llega en el correo. */
+export async function confirmarConCodigo(email: string, codigo: string): Promise<{ ok: boolean; mensaje?: string }> {
+  const limpio = String(codigo || '').replace(/[^0-9]/g, '');
+  if (limpio.length !== 6) return { ok: false, mensaje: 'El código tiene 6 números.' };
+  try {
+    const r = await fetch(`${BACKEND}/hooks/verificar-correo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email || '').trim().toLowerCase(), codigo: limpio }),
+      cache: 'no-store'
+    });
+    const d = (await r.json().catch(() => ({}))) as { ok?: boolean; message?: string };
+    return r.ok && d.ok ? { ok: true } : { ok: false, mensaje: d.message || 'No se pudo confirmar. Intenta de nuevo.' };
+  } catch {
+    return { ok: false, mensaje: 'No se pudo conectar. Intenta de nuevo.' };
+  }
+}
+
 /** Vuelve a mandar la liga de confirmación (el servidor no dice si el correo existe). */
 export async function reenviarConfirmacion(email: string): Promise<void> {
   await fetch(`${BACKEND}/hooks/verificar-correo`, {
