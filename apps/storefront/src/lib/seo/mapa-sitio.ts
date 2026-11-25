@@ -13,6 +13,7 @@
 // de /us, que tiene título y descripción propios en inglés.
 import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
+import { MODELOS } from "@/lib/generador/modelos3d"
 import { sdk } from "@/lib/client"
 import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
@@ -182,6 +183,8 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         })(),
         ...FIJAS.filter(([r]) => r !== "").map(([r, f, p]) => pagina(r, f, p, hoy)),
         ...HERRAMIENTAS_DISENO.map((h) => pagina(`/disenar/${h.slug}`, "weekly", 0.8, hoy)),
+        // Una página por modelo 3D paramétrico (STL gratis a la medida)
+        ...MODELOS.map((m) => pagina(`/disenar/modelos-3d/${m.id}`, "monthly", 0.7, hoy)),
         // Guías CNC; de las ciudades sólo las que tienen talleres de ese
         // servicio en su estado (las demás llevan noindex: cnc/[guia]/[ciudad])
         pagina("/cnc", "weekly", 0.8, hoy),
