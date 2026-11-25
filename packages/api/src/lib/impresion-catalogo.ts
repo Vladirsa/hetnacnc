@@ -229,7 +229,8 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
         offer_id: o.id as string,
         variant_id: o.variant_id as string,
         material: material.get(o.variant_id)!,
-        taller: { nombre: o.seller.name as string, handle: o.seller.handle as string },
+        // ciudad y estado del perfil público del taller: la tienda ordena por cercanía al cliente
+        taller: { nombre: o.seller.name as string, handle: o.seller.handle as string, ...ubicacionPublica(o.seller.metadata) },
         precio,
         dias: d.dias,
         colores: d.colores,
@@ -250,4 +251,11 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
     })),
     ofertas: ordenarOfertas(lista),
   }
+}
+
+/** Ciudad y estado del perfil público del taller (metadata.perfil), sólo si son texto. */
+export function ubicacionPublica(metadata: any): { ciudad?: string; estado?: string } {
+  const p = metadata?.perfil || {}
+  const t = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined)
+  return { ciudad: t(p.ciudad, 80), estado: t(p.estado, 40) }
 }

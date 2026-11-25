@@ -3,24 +3,28 @@
 import { useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
 import { type MedidaPieza, estimar, pesos } from "@/lib/hetna/estimado"
 import type { Taller } from "@/lib/hetna/talleres"
+import { ETIQUETA_NIVEL, hayCerca, nivelCercania, type Nivel } from "@/lib/ubicacion/cercania"
+import { nombreProcesos, tallerHace, type Proceso } from "@/lib/ubicacion/procesos"
+import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
-// Lista "talleres cerca de ti" junto al formulario de /cotizar. Se ordena por
-// cercanía con lo que el cliente escribe en el formulario (código postal →
-// municipio y estado, que llegan por el evento "hetna:ubicacion"). Mientras no
-// hay ubicación, muestra los talleres que hacen ese proceso.
+// Lista "talleres cerca de ti" junto al formulario de /cotizar y en la ficha de
+// los productos que se fabrican (25 nov 2026: celosías → corte láser, router o
+// plasma; maquilados → router o fresadora…, ver lib/ubicacion/procesos.ts).
+// Se ordena por cercanía (lib/ubicacion/cercania.ts) con la ubicación del
+// cliente (lib/ubicacion/useUbicacion.ts): su código postal (del formulario de
+// /cotizar o del campo de esta lista) o, mientras no lo da, su estado
+// aproximado por IP.
 //
-// La cercanía es por municipio y estado, no por kilómetros: los perfiles de
-// taller guardan municipio, estado y código postal, no coordenadas.
+// La cercanía es por municipio, estado y estados vecinos, no por kilómetros:
+// los perfiles de taller guardan municipio, estado y código postal, no coordenadas.
 //
 // Si la pieza viene de "Fabrícamelo" (evento "hetna:pieza": medidas del archivo
 // y cantidad), cada taller que publicó tarifas muestra un precio estimado.
 
-type Ubicacion = { cp: string; municipio: string; estado: string }
 type Pieza = { medida: MedidaPieza | null; cantidad: number }
-
-const norm = (v?: string) => (v || "").trim().toLowerCase()
 
 const ETIQUETA_OFRECE: Record<string, string> = {
   diseno: "Diseño incluido",
@@ -33,35 +37,37 @@ const todoIncluido = (ofrece: string[]) => ofrece.includes("diseno") && (ofrece.
 
 // `query`: los parámetros actuales de /cotizar (pieza, material, archivo…) para
 // que al elegir un taller la solicitud siga prellenada.
-export const TalleresCerca = ({ talleres, proceso, query }: { talleres: Taller[]; proceso?: string; query: string }) => {
+//
+// En la ficha (`procesos`): filtra por los procesos del producto, trae su propio
+// campo de código postal y, si nadie está en el estado del cliente, ofrece
+// mandar la solicitud a los talleres de la red.
+type Props = { talleres: Taller[]; proceso?: string; query: string; procesos?: Proceso[]; limite?: number }
+
+export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }: Props) => {
   const cotizarCon = (handle: string) => `/cotizar?taller=${encodeURIComponent(handle)}${query ? `&${query}` : ""}`
-  const [u, setU] = useState<Ubicacion | null>(null)
+  const enFicha = !!procesos?.length
+  const { ubicacion: u, ponerCp, aviso } = useUbicacion()
   const [pieza, setPieza] = useState<Pieza | null>(null)
   const [soloTodo, setSoloTodo] = useState(false)
 
   useEffect(() => {
-    const f = (e: Event) => setU((e as CustomEvent<Ubicacion>).detail)
     const g = (e: Event) => setPieza((e as CustomEvent<Pieza>).detail)
-    window.addEventListener("hetna:ubicacion", f)
     window.addEventListener("hetna:pieza", g)
-    return () => {
-      window.removeEventListener("hetna:ubicacion", f)
-      window.removeEventListener("hetna:pieza", g)
-    }
+    return () => window.removeEventListener("hetna:pieza", g)
   }, [])
 
   const hayTodo = talleres.some((t) => todoIncluido(t.perfil.ofrece))
 
   const lista = useMemo(() => {
     const hacen = talleres.filter(
-      (t) => (!proceso || !t.perfil.servicios.length || t.perfil.servicios.includes(proceso)) && (!soloTodo || todoIncluido(t.perfil.ofrece))
+      (t) =>
+        (enFicha ? tallerHace(t, procesos) : !proceso || !t.perfil.servicios.length || t.perfil.servicios.includes(proceso)) &&
+        (!soloTodo || todoIncluido(t.perfil.ofrece))
     )
-    const nivel = (t: Taller) => {
-      if (!u) return 3
-      if (norm(t.perfil.cp) === norm(u.cp) && u.cp) return 0
-      if (norm(t.perfil.ciudad) === norm(u.municipio) && u.municipio) return 0
-      if (norm(t.perfil.estado) === norm(u.estado) && u.estado) return 1
-      return t.perfil.ofrece.includes("envio") ? 2 : 3
+    // Más lejos que un estado vecino: primero los que envían a todo México
+    const nivel = (t: Taller): number => {
+      const n = nivelCercania(t.perfil, u)
+      return n >= 3 && !t.perfil.ofrece.includes("envio") ? n + 0.5 : n
     }
     const precio = (t: Taller) => {
       const tarifa = proceso ? t.perfil.tarifas[proceso] : undefined
@@ -70,21 +76,37 @@ export const TalleresCerca = ({ talleres, proceso, query }: { talleres: Taller[]
     return hacen
       .map((t) => ({ t, n: nivel(t), precio: precio(t) }))
       .sort((a, b) => a.n - b.n || Number(b.t.verificado) - Number(a.t.verificado) || (b.t.perfil.calificacion || 0) - (a.t.perfil.calificacion || 0))
-      .slice(0, 5)
-  }, [talleres, proceso, u, pieza, soloTodo])
+      .slice(0, limite)
+  }, [talleres, proceso, procesos, enFicha, u, pieza, soloTodo, limite])
 
   if (!lista.length && !soloTodo) return null
 
-  const etiqueta = (n: number) =>
-    n === 0 ? ["En tu municipio", "bg-[#FF6A1A] text-white"] : n === 1 ? ["En tu estado", "bg-[#FFC53D] text-[#142033]"] : null
+  const COLOR: Partial<Record<Nivel, string>> = { 0: "bg-[#FF6A1A] text-white", 1: "bg-[#FFC53D] text-[#142033]", 2: "bg-[#E7E4DC] text-[#142033]" }
+  const etiqueta = (n: number) => {
+    const k = Math.floor(n) as Nivel
+    return ETIQUETA_NIVEL[k] ? [ETIQUETA_NIVEL[k] as string, COLOR[k] || ""] : null
+  }
+  const cerca = hayCerca(lista.map((x) => Math.floor(x.n) as Nivel))
   const hayEstimados = lista.some((x) => x.precio !== null)
 
   return (
     <div className="rounded-2xl border-2 border-[#FFD5B8] bg-white p-4">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">Talleres cerca de ti</p>
-      <p className="mt-1 text-[13px] text-[#6B675C]">
-        {u ? `Para ${u.municipio}, ${u.estado}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
-      </p>
+      {enFicha ? (
+        <>
+          <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo hacen</h2>
+          <p className="mt-0.5 text-[13px] text-[#6B675C]">Talleres de la red con {nombreProcesos(procesos)}. Elige uno y le llega tu solicitud con este producto.</p>
+          <div className="mt-2">
+            <TuUbicacion ubicacion={u} ponerCp={ponerCp} aviso={aviso} />
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">Talleres cerca de ti</p>
+          <p className="mt-1 text-[13px] text-[#6B675C]">
+            {u ? `Para ${[u.municipio, u.estado].filter(Boolean).join(", ")}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
+          </p>
+        </>
+      )}
       {hayTodo && (
         <label className="mt-2 flex cursor-pointer items-center gap-2 text-[13px] text-[#142033]">
           <input type="checkbox" checked={soloTodo} onChange={(e) => setSoloTodo(e.target.checked)} className="accent-[#C2560A]" />
@@ -139,6 +161,15 @@ export const TalleresCerca = ({ talleres, proceso, query }: { talleres: Taller[]
             )
           })}
         </ul>
+      )}
+      {enFicha && u && !cerca && (
+        <div className="mt-3 rounded-xl bg-[#FFF4EA] px-3 py-2.5 text-[13px] text-[#5A3A12]" data-testid="sin-talleres-cerca">
+          Todavía no hay talleres de {nombreProcesos(procesos)} en {u.estado}. Los de arriba te lo mandan por paquetería, o{" "}
+          <LocalizedClientLink href={`/cotizar${query ? `?${query}` : ""}`} className="font-bold text-[#B34D07] underline">
+            pide cotización a toda la red
+          </LocalizedClientLink>{" "}
+          y te contesta quien pueda hacerlo.
+        </div>
       )}
       {hayEstimados && (
         <p className="mt-2 text-[11.5px] text-[#9A978C]">

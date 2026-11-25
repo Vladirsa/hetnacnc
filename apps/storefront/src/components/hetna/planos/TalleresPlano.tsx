@@ -16,6 +16,9 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { useCartContext } from "@/components/providers"
 import { getOfferAmount, isPurchasable, type StoreOffer } from "@/lib/helpers/buybox"
 import { toast } from "@/lib/helpers/toast"
+import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
+import { ETIQUETA_NIVEL, nivelCercania, type UbicacionTaller } from "@/lib/ubicacion/cercania"
+import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 export type VariantePlano = { id: string; titulo: string; recomendado: number | null }
 
@@ -23,6 +26,13 @@ const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", curr
 const red = (n: number) => Math.round(n / 5) * 5
 
 /** Taller destacado en planos (lo paga el taller: packages/api/src/lib/planos-destacado.ts). */
+/** Ciudad, estado y CP del perfil público del taller que hace la oferta. */
+const ubicacionDe = (o: StoreOffer): UbicacionTaller => {
+  const p = ((o.seller as { metadata?: Record<string, any> | null } | undefined)?.metadata?.perfil || {}) as Record<string, unknown>
+  const t = (v: unknown) => (typeof v === "string" ? v : undefined)
+  return { ciudad: t(p.ciudad), estado: t(p.estado), cp: t(p.cp) }
+}
+
 export function esDestacado(o: StoreOffer, ahora = Date.now()): boolean {
   const hasta = ((o.seller as { metadata?: Record<string, any> | null } | undefined)?.metadata?.destacado_planos as { hasta?: string } | undefined)?.hasta
   const t = hasta ? Date.parse(hasta) : NaN
@@ -52,14 +62,22 @@ export default function TalleresPlano({
   const aMedida = Math.abs(factorMedida - 1) > 0.005
   const variante = variantes.find((v) => v.id === elegida)
 
+  const { ubicacion, ponerCp, aviso } = useUbicacion()
   const lista = useMemo(
     () =>
       offers
         .filter((o) => o.variant_id === elegida && getOfferAmount(o) !== null)
-        // destacados primero; luego el precio más bajo y menos días
-        .sort((a, b) => Number(esDestacado(b)) - Number(esDestacado(a)) || (getOfferAmount(a)! - getOfferAmount(b)!) || ((a.leadtime_to_ship ?? 99) - (b.leadtime_to_ship ?? 99))),
-    [offers, elegida]
+        // destacados primero; luego el más cercano al cliente, el precio más bajo y menos días
+        .sort(
+          (a, b) =>
+            Number(esDestacado(b)) - Number(esDestacado(a)) ||
+            nivelCercania(ubicacionDe(a), ubicacion) - nivelCercania(ubicacionDe(b), ubicacion) ||
+            getOfferAmount(a)! - getOfferAmount(b)! ||
+            (a.leadtime_to_ship ?? 99) - (b.leadtime_to_ship ?? 99)
+        ),
+    [offers, elegida, ubicacion]
   )
+  const hayUbicaciones = offers.some((o) => ubicacionDe(o).estado)
 
   async function agregar(o: StoreOffer) {
     setAgregando(o.id)
@@ -103,8 +121,15 @@ export default function TalleresPlano({
               Precio recomendado por HETNA: {pesos(red(variante.recomendado * factorMedida))}
             </p>
           ) : null}
+          {hayUbicaciones && lista.length > 1 && (
+            <div className="mt-2">
+              <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />
+            </div>
+          )}
           <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
             {lista.map((o, i) => {
+              const lugar = ubicacionDe(o)
+              const cerca = ETIQUETA_NIVEL[nivelCercania(lugar, ubicacion)]
               const precio = red(getOfferAmount(o)! * factorMedida)
               const gratis = (o.metadata as Record<string, unknown> | null)?.envio_gratis === true
               const dias = o.leadtime_to_ship
@@ -119,6 +144,12 @@ export default function TalleresPlano({
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5 text-[12px]">
                       {destacado ? <span className="rounded-full bg-[#FF6A1A] px-2 py-0.5 font-semibold text-white">★ Destacado</span> : null}
+                      {lugar.estado ? (
+                        <span className="rounded-full bg-[#F3F1EA] px-2 py-0.5 font-semibold text-[#40403A]">
+                          📍 {[lugar.ciudad, lugar.estado].filter(Boolean).join(", ")}
+                          {cerca ? ` · ${cerca}` : ""}
+                        </span>
+                      ) : null}
                       {gratis ? <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 font-semibold text-[#1E7B3A]">Envío gratis</span> : null}
                       {dias ? <span className="rounded-full bg-[#EEF1F6] px-2 py-0.5 font-semibold text-[#142033]">Lo tiene en {dias} {dias === 1 ? "día hábil" : "días hábiles"} + envío</span> : null}
                       {masBarato && lista.length > 1 ? <span className="rounded-full bg-[#FFE9D6] px-2 py-0.5 font-semibold text-[#B34D07]">Mejor precio</span> : null}

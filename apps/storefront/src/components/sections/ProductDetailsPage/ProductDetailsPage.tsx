@@ -31,6 +31,18 @@ import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
 import { datosImpresion, esImpresionBajoPedido } from "@/lib/data/impresion"
 import { ResumenImpresion, TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
+import { TalleresCerca } from "@/components/hetna/taller/TalleresCerca"
+import { listarTalleres, type Taller } from "@/lib/hetna/talleres"
+import { PROCESOS, procesosDeProducto, tallerHace } from "@/lib/ubicacion/procesos"
+
+/** Sólo lo que usa la lista de talleres (sin galería, acabados ni tarifas de otros procesos). */
+const tallerLigero = (t: Taller): Taller => ({
+  ...t,
+  descripcion: undefined,
+  banner: null,
+  certificaciones: [],
+  perfil: { ...t.perfil, galeria: [], acabados: [], indicadores: undefined, medido: undefined, marcas: [] },
+})
 
 export const ProductDetailsPage = async ({
   handle,
@@ -163,6 +175,19 @@ export const ProductDetailsPage = async ({
   ) : null
   // Productos de la Biblioteca de planos: las ofertas de los talleres ("Taller X te lo fabrica en $Y")
   const planoSlug = metaProd.origen === "plano" ? textoMeta(metaProd.plano_slug) : ""
+  // "Talleres que te lo hacen" (25 nov 2026, Vlado): en los productos que se
+  // fabrican, los talleres con ese proceso (celosía → láser, router o plasma…).
+  // La lista va completa y el navegador la ordena por cercanía al cliente: la
+  // ficha está en caché y no puede llevar la ubicación de quien la ve.
+  const procesosProd = impresion || planoSlug || tipoProd === "servicio" ? [] : procesosDeProducto(prod as never)
+  const talleresQueLoHacen = procesosProd.length
+    ? (await listarTalleres().catch(() => [] as Taller[])).filter((t) => t.id !== vendedor?.id && tallerHace(t, procesosProd)).slice(0, 80).map(tallerLigero)
+    : []
+  const queryCotizar = new URLSearchParams({
+    desde: "producto",
+    proceso: procesosProd[0] ? PROCESOS[procesosProd[0]].cotizar : "",
+    descripcion: `fabricar "${prod.title || "este producto"}"${prod.handle ? ` (hetnacnc.com/mx/products/${prod.handle})` : ""}`,
+  }).toString()
   const fabricar = impresion ? (
     <TalleresImpresion datos={impresion} locale={locale} />
   ) : planoSlug ? (
@@ -173,6 +198,7 @@ export const ProductDetailsPage = async ({
       slug={planoSlug}
     />
   ) : tipoProd === "servicio" ? null : (
+    <>
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}
@@ -182,6 +208,10 @@ export const ProductDetailsPage = async ({
         fisico={!descarga}
         procesoInicial={procesoSugerido}
       />
+      {talleresQueLoHacen.length > 0 && (
+        <TalleresCerca talleres={talleresQueLoHacen} query={queryCotizar} procesos={procesosProd} limite={4} />
+      )}
+    </>
     )
 
   // Migas de pan: Inicio > Categoría (si el producto tiene) > Producto

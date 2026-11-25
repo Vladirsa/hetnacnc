@@ -12,10 +12,13 @@ import { useCartContext } from "@/components/providers"
 import { trackAddToCart } from "@/lib/analytics/events"
 import type { DatosImpresion, OfertaImpresion } from "@/lib/data/impresion"
 import { toast } from "@/lib/helpers/toast"
+import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
+import { ETIQUETA_NIVEL, nivelCercania, type Nivel } from "@/lib/ubicacion/cercania"
+import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
-function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string } }) {
+function Oferta({ o, locale, producto, nivel }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string }; nivel: Nivel }) {
   const { addToCart, isAddingItem } = useCartContext()
   const [color, setColor] = useState(o.colores[0] || "")
   const [listo, setListo] = useState(false)
@@ -48,6 +51,12 @@ function Oferta({ o, locale, producto }: { o: OfertaImpresion; locale: string; p
         <span>
           <b>{o.material}</b>
         </span>
+        {(o.taller.ciudad || o.taller.estado) && (
+          <span data-testid="oferta-ubicacion">
+            📍 {[o.taller.ciudad, o.taller.estado].filter(Boolean).join(", ")}
+            {ETIQUETA_NIVEL[nivel] && <b className="ml-1 rounded-full bg-[#FFE9D6] px-1.5 py-px text-[11.5px] text-[#8A3B05]">{ETIQUETA_NIVEL[nivel]}</b>}
+          </span>
+        )}
         {o.dias && <span>Listo para enviar en {o.dias} {o.dias === 1 ? "día hábil" : "días hábiles"}</span>}
         {o.envio_gratis ? (
           <span className="font-semibold text-[#1E7B3A]">Envío gratis</span>
@@ -137,7 +146,16 @@ export function ResumenImpresion({ datos, herramienta }: { datos: DatosImpresion
 export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; locale: string }) {
   const conOferta = useMemo(() => new Set(datos.ofertas.map((o) => o.material)), [datos.ofertas])
   const [material, setMaterial] = useState<string>("")
-  const lista = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
+  const { ubicacion, ponerCp, aviso } = useUbicacion()
+  // Los destacados (pagan por salir primero) van arriba; luego, del más cercano
+  // al más lejano; a igual cercanía, el orden del API (precio y días).
+  const lista = useMemo(() => {
+    const base = material ? datos.ofertas.filter((o) => o.material === material) : datos.ofertas
+    return base
+      .map((o, i) => ({ o, i, nivel: nivelCercania(o.taller, ubicacion) }))
+      .sort((a, b) => Number(b.o.destacado) - Number(a.o.destacado) || a.nivel - b.nivel || a.i - b.i)
+  }, [datos.ofertas, material, ubicacion])
+  const hayUbicaciones = datos.ofertas.some((o) => o.taller.estado)
   const info = datos.materiales.find((m) => m.material === material)
 
   return (
@@ -146,6 +164,8 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo imprimen</h2>
         <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">Compara material, precio final, días y envío. Pagas dentro de HETNA.</p>
       </div>
+
+      {hayUbicaciones && datos.ofertas.length > 1 && <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />}
 
       {datos.materiales.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
@@ -174,8 +194,8 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
 
       {lista.length ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {lista.map((o) => (
-            <Oferta key={o.offer_id} o={o} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo }} />
+          {lista.map(({ o, nivel }) => (
+            <Oferta key={o.offer_id} o={o} nivel={nivel} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo }} />
           ))}
         </ul>
       ) : (

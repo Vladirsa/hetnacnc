@@ -72,3 +72,13 @@ describe("impresión 3D bajo pedido", () => {
     expect(leerRefDestacado("verifpago:sel_01ABC:a1b2c3d4")).toBeNull()
   })
 })
+
+describe("ubicacionPublica (ofertas de impresión)", () => {
+  // import tardío: impresion-catalogo arrastra workflows de Medusa
+  const { ubicacionPublica } = jest.requireActual("../impresion-catalogo")
+  it("da sólo ciudad y estado del perfil, nunca el CP ni otros datos", () => {
+    expect(ubicacionPublica({ perfil: { ciudad: " Puebla ", estado: "Puebla", cp: "72000", telefono: "222" } })).toEqual({ ciudad: "Puebla", estado: "Puebla" })
+    expect(ubicacionPublica({ perfil: { ciudad: 5, estado: "" } })).toEqual({ ciudad: undefined, estado: undefined })
+    expect(ubicacionPublica(null)).toEqual({ ciudad: undefined, estado: undefined })
+  })
+})
