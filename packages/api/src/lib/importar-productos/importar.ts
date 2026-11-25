@@ -20,13 +20,14 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, deleteProductsWorkflow, updateProductsWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
-import { createOffersWorkflow, updateOffersWorkflow } from "@mercurjs/core/workflows"
-import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
+import { MercurModules } from "@mercurjs/types"
 
 import { camSellerHandle } from "../../modules/cam/catalog"
 import { aprovisionarEnvios } from "../envios-automaticos"
 import { almacenDelTaller, descripcionAHtml } from "../publicar-rapido"
-import { precioEnDolares } from "../publicar-diseno"
+import { guardarOferta } from "../ofertas-tienda"
+// Antes vivían aquí: el importador, el panel del taller y los Diseños listos las comparten
+export { ponerExistencias, preciosOferta } from "../ofertas-tienda"
 import { normalizar, type Lectura, type Problema, type ProductoImport } from "./plantilla"
 
 // ── Planeación (pura: se prueba sin base) ────────────────────────────────
@@ -161,12 +162,6 @@ export function entradaCrear(p: ProductoImport, ctx: { categoria_id: string; per
       weight: v.peso_kg, length: v.largo_cm, width: v.ancho_cm, height: v.alto_cm,
     })),
   }
-}
-
-export function preciosOferta(precio: number, aceptaUsd: boolean) {
-  const precios = [{ currency_code: "mxn", amount: precio }]
-  if (aceptaUsd) precios.push({ currency_code: "usd", amount: precioEnDolares(precio) })
-  return precios
 }
 
 // ── Contra Medusa ─────────────────────────────────────────────────────────
@@ -333,17 +328,6 @@ async function etiquetas(container: MedusaContainer, valores: string[]) {
 }
 
 /** Existencias de una oferta en el almacén de la tienda (crea el nivel si falta). */
-export async function ponerExistencias(container: MedusaContainer, offerId: string, locationId: string, cantidad: number) {
-  const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const inv = container.resolve(Modules.INVENTORY)
-  const { data } = await query.graph({ entity: "offer", fields: ["id", "inventory_item_link.inventory_item.id"], filters: { id: offerId } })
-  const itemId = (data[0] as any)?.inventory_item_link?.[0]?.inventory_item?.id as string | undefined
-  if (!itemId) throw new Error("la oferta no tiene inventario ligado")
-  const niveles = await inv.listInventoryLevels({ inventory_item_id: itemId, location_id: locationId })
-  if (niveles.length) await inv.updateInventoryLevels([{ inventory_item_id: itemId, location_id: locationId, stocked_quantity: cantidad }])
-  else await inv.createInventoryLevels([{ inventory_item_id: itemId, location_id: locationId, stocked_quantity: cantidad }])
-}
-
 const conMetadata = <T extends { metadata: Record<string, unknown> }>(e: T, extra?: Record<string, unknown>): T =>
   extra ? { ...e, metadata: { ...e.metadata, ...extra } } : e
 
@@ -423,23 +407,7 @@ export async function importar(
       for (const v of p.variantes) {
         const variante = variantes.find((x) => (x.sku || "").toUpperCase() === v.sku)
         if (!variante) continue
-        const precios = preciosOferta(v.precio, t.aceptaUsd)
-        const offerId = propias.get(variante.id)
-        if (offerId) {
-          await updateOffersWorkflow(container).run({ input: { offers: [{ id: offerId, prices: precios } as any] } })
-          await ponerExistencias(container, offerId, t.locationId, v.existencias)
-        } else {
-          await createOffersWorkflow(container).run({
-            input: {
-              offers: [{
-                seller_id: t.sellerId, created_by: t.memberId, sku: v.sku, variant_id: variante.id, shipping_profile_id: t.perfilId,
-                manage_inventory: true, allow_backorder: false,
-                inventory_items: [{ sku: v.sku, stock_levels: [{ location_id: t.locationId, stocked_quantity: v.existencias }] }],
-                prices: precios,
-              } as CreateOfferDTO],
-            },
-          })
-        }
+        await guardarOferta(container, t, { offerId: propias.get(variante.id), variantId: variante.id, sku: v.sku, precio: v.precio, existencias: v.existencias })
         nOfertas++
       }
       resultados.push({ handle: p.handle, nombre: p.nombre, accion: paso.accion === "crear" ? "creado" : "actualizado", product_id: productId, ofertas: nOfertas })

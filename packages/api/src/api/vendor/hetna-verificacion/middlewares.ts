@@ -18,7 +18,7 @@ import { MercurModules } from "@mercurjs/types"
 import { leerMultipart } from "../../cam-multipart"
 import { MAX_MB } from "../../../lib/verificacion-archivos"
 
-const PROTEGIDAS = [
+export const PROTEGIDAS = [
   "verificado",
   // Fase 3: empresa verificada, pago de verificación y certificaciones aprobadas
   "empresa_verificada",
@@ -29,6 +29,8 @@ const PROTEGIDAS = [
   "fundador",
   "fundador_desde",
   "plan_pro_hasta",
+  // Destacado pagado en Piezas para imprimir (lib/disenos-destacado.ts): sólo lo escribe el aviso de pago
+  "destacado_disenos_hasta",
   "prueba",
   // Constancias legales: cuándo aceptó los términos y autorizó sus datos bancarios
   "terminos_vendedor_en",

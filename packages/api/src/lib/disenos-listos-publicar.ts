@@ -9,13 +9,13 @@ import { join } from "path"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, deleteProductsWorkflow, updateProductsWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
-import { createOffersWorkflow, updateOffersWorkflow } from "@mercurjs/core/workflows"
-import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
+import { MercurModules } from "@mercurjs/types"
 
 import {
   CALIDADES, COLORES, EXISTENCIAS_BAJO_PEDIDO, HETNA_OFRECE, descripcionDiseno, empaque, leerDatos, metadataDiseno, precioDiseno, rutaImagenes, skuDiseno, type DatoDiseno,
 } from "./disenos-listos"
-import { ponerExistencias, preciosOferta, tiendaHetna } from "./importar-productos/importar"
+import { tiendaHetna } from "./importar-productos/importar"
+import { guardarOferta } from "./ofertas-tienda"
 import { leerConfigPrecios } from "./precios-config"
 import { descripcionAHtml } from "./publicar-rapido"
 
@@ -31,7 +31,10 @@ async function categoriaImpresion(container: MedusaContainer) {
 /** Sube la imagen del diseño sólo si cambió (huella en la metadata). */
 async function imagen(container: MedusaContainer, d: DatoDiseno, anterior?: { url?: string | null; huella?: unknown }) {
   const ruta = join(rutaImagenes(), `${d.handle}.png`)
-  if (!existsSync(ruta)) return null
+  if (!existsSync(ruta)) {
+    container.resolve(ContainerRegistrationKeys.LOGGER).warn(`[disenos-listos] ${d.handle}: no está la imagen ${ruta} (corre el script de la tienda o pon DISENOS_LISTOS_IMAGENES)`)
+    return null
+  }
   const buf = readFileSync(ruta)
   const huella = createHash("sha1").update(buf).digest("hex").slice(0, 16)
   if (anterior?.url && anterior.huella === huella) return { url: anterior.url, huella }
@@ -56,8 +59,10 @@ export async function publicarDisenosListos(container: MedusaContainer, opc: { h
       const precio = precioDiseno(d, HETNA_OFRECE.calidad, cfg)
       if (!precio) throw new Error("el motor de precios no pudo calcularla")
       const caja = empaque(d, precio.gramos)
-      const { data: ya } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "metadata", "variants.id", "variants.sku"], filters: { handle: d.handle } })
-      const existente = ya[0] as { id: string; thumbnail?: string | null; metadata?: Record<string, unknown> | null; variants: { id: string; sku: string | null }[] } | undefined
+      const { data: ya } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "metadata", "sellers.id", "variants.id", "variants.sku"], filters: { handle: d.handle } })
+      const existente = ya[0] as { id: string; thumbnail?: string | null; metadata?: Record<string, unknown> | null; sellers?: { id: string }[]; variants: { id: string; sku: string | null }[] } | undefined
+      // un producto con ese handle que no es de la tienda HETNA no se toca
+      if (existente && !(existente.sellers || []).some((s) => s.id === t.sellerId)) throw new Error("ya existe un producto con ese handle que no es de la tienda HETNA")
       const img = await imagen(container, d, { url: existente?.thumbnail, huella: existente?.metadata?.imagen_huella })
       const metadata = { ...metadataDiseno(d, precio.gramos, precio.precio), ...(img ? { imagen_huella: img.huella } : {}) }
       const comun = {
@@ -117,24 +122,14 @@ export async function publicarDisenosListos(container: MedusaContainer, opc: { h
       if (!variante) throw new Error(`no tiene la variante ${sku}`)
       const { data: ofertas } = await query.graph({ entity: "offer", fields: ["id", "seller_id"], filters: { variant_id: variante.id } })
       const propia = (ofertas as { id: string; seller_id: string }[]).find((o) => o.seller_id === t.sellerId)
-      const precios = preciosOferta(precio.precio, t.aceptaUsd)
-      const metaOferta = { dias: d.dias, color: HETNA_OFRECE.color, calidad: HETNA_OFRECE.calidad }
-      if (propia) {
-        await updateOffersWorkflow(container).run({ input: { offers: [{ id: propia.id, prices: precios, metadata: metaOferta } as any] } })
-        await ponerExistencias(container, propia.id, t.locationId, EXISTENCIAS_BAJO_PEDIDO)
-      } else {
-        await createOffersWorkflow(container).run({
-          input: {
-            offers: [{
-              seller_id: t.sellerId, created_by: t.memberId, sku, variant_id: variante.id, shipping_profile_id: t.perfilId,
-              manage_inventory: true, allow_backorder: false,
-              inventory_items: [{ sku, stock_levels: [{ location_id: t.locationId, stocked_quantity: EXISTENCIAS_BAJO_PEDIDO }] }],
-              prices: precios,
-              metadata: metaOferta,
-            } as CreateOfferDTO],
-          },
-        })
-      }
+      await guardarOferta(container, t, {
+        offerId: propia?.id,
+        variantId: variante.id,
+        sku,
+        precio: precio.precio,
+        existencias: EXISTENCIAS_BAJO_PEDIDO,
+        metadata: { dias: d.dias, color: HETNA_OFRECE.color, calidad: HETNA_OFRECE.calidad, activa: true },
+      })
       resultados.push({ handle: d.handle, accion: existente ? "actualizado" : "creado", precio: precio.precio, gramos: precio.gramos })
     } catch (e) {
       logger.warn(`[disenos-listos] ${d.handle}: ${(e as Error).message}`)

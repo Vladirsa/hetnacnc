@@ -23,6 +23,7 @@ import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/Pr
 import { AvisoImportacion } from "@/components/hetna/AvisoImportacion"
 import { tipoFicha } from "@/lib/hetna/tipo-ficha"
 import FabricarDiseno from "@/components/hetna/fichas/descarga/FabricarDiseno"
+import { esDisenoListo } from "@/lib/disenos-listos/catalogo"
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
@@ -146,7 +147,7 @@ export const ProductDetailsPage = async ({
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
   // Los Diseños listos ya traen quién los imprime y su archivo (DisenoListo)
   const fabricar =
-    tipoProd === "servicio" || metaProd.diseno_listo === true ? null : (
+    tipoProd === "servicio" || esDisenoListo(metaProd) ? null : (
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}

@@ -68,7 +68,11 @@ function TarjetaDiseno({ d, colores, calidades, recargar }: { d: Diseno; colores
         body: JSON.stringify({ product_id: d.product_id, ofertas, quitar }),
       })
       const b = await r.json().catch(() => ({}))
-      if (!r.ok) return setMsg(b.message || "No se pudo guardar.")
+      if (!r.ok || b.ok === false) {
+        setMsg(b.message || "No se pudo guardar.")
+        if (b.ok === false) recargar() // lo que sí quedó
+        return
+      }
       setMsg(`Listo: ${b.creadas + b.actualizadas} combinación(es) ofrecida(s)${b.quitadas ? `, ${b.quitadas} quitada(s)` : ""}.`)
       recargar()
     } catch {

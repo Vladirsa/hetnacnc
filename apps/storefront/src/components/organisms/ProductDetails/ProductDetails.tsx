@@ -24,6 +24,7 @@ import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { LoMasImportante } from "@/components/hetna/fichas/LoMasImportante"
 import { EntregaGarantia, EspecificacionesFicha, IncluyeFicha } from "@/components/hetna/fichas/FichaUniversal"
 import { DisenoListo } from "@/components/hetna/disenos-listos/DisenoListo"
+import { esDisenoListo } from "@/lib/disenos-listos/catalogo"
 import { leyendasDeTalleres } from "@/lib/disenos-listos/ofertas"
 import { datosClave, especificaciones, incluyeDe, limpiarDescripcion, notaPrecio, skuDe, tipoProducto, TIPOS_PRODUCTO } from "@/lib/hetna/tipo-producto"
 import { Pestanas } from "@/components/hetna/fichas/descarga/Pestanas"
@@ -67,8 +68,13 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
   // un adorno de confianza.
   // Umbral y packs del taller se piden al mismo tiempo: la ficha no espera
   // una consulta detrás de la otra.
-  const [umbrales, todosLosPacks] = seller?.id
-    ? await Promise.all([umbralesDeEnvioGratis([seller.id]), packsDeTalleres([seller.id])])
+  // En los Diseños listos también hacen falta los umbrales de todos los
+  // talleres que ofrecen la pieza ("envío gratis desde…" en cada leyenda)
+  const md = (product.metadata || {}) as Record<string, unknown>
+  const disenoListo = esDisenoListo(md)
+  const idsUmbral = [...new Set([seller?.id, ...(disenoListo ? offers.map((o) => o.seller_id) : [])].filter(Boolean) as string[])]
+  const [umbrales, todosLosPacks] = idsUmbral.length
+    ? await Promise.all([umbralesDeEnvioGratis(idsUmbral), seller?.id ? packsDeTalleres([seller.id]) : Promise.resolve([] as Awaited<ReturnType<typeof packsDeTalleres>>)])
     : [{} as Awaited<ReturnType<typeof umbralesDeEnvioGratis>>, [] as Awaited<ReturnType<typeof packsDeTalleres>>]
   const envioGratisDesde = seller?.id ? umbrales[seller.id]?.gratis_desde : null
   const moneda = ganadora?.calculated_price?.currency_code || "mxn"
@@ -93,11 +99,7 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
 
   // Diseños listos (lib/disenos-listos): quién la imprime y en cuánto, el
   // archivo gratis y la liga para cambiar las medidas
-  const md = (product.metadata || {}) as Record<string, unknown>
-  const disenoListo = md.diseno_listo === true || md.diseno_listo === "true"
-  const leyendas = disenoListo
-    ? leyendasDeTalleres(offers, ((product as { variants?: unknown[] }).variants || []) as never, await umbralesDeEnvioGratis(offers.map((o) => o.seller_id).filter(Boolean) as string[]))
-    : []
+  const leyendas = disenoListo ? leyendasDeTalleres(offers, ((product as { variants?: unknown[] }).variants || []) as never, umbrales) : []
 
   return (
     <div className="flex flex-col gap-4">
@@ -129,7 +131,6 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0 
                 material: String(md.material || ""),
                 medidas: String(md.medidas || ""),
                 gramos: Number(md.gramos) || null,
-                hetnaOfrece: String(md.hetna_ofrece || ""),
               }}
             />
           ) : descarga ? (
