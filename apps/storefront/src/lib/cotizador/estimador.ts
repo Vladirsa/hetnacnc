@@ -75,11 +75,13 @@ export const MATERIALES: MaterialRef[] = [
   { clave: "abs", nombre: "ABS / ASA", espesor: 0, precio: 520, unidad: "kg", densidad: 1.04, merma: 5 },
   { clave: "tpu", nombre: "TPU flexible", espesor: 0, precio: 750, unidad: "kg", densidad: 1.21, merma: 5 },
   { clave: "resina", nombre: "Resina (SLA)", espesor: 0, precio: 950, unidad: "kg", densidad: 1.1, merma: 8 },
+  // PLA con fibra de carbono: más rígido y mate; desgasta la boquilla (se imprime con boquilla endurecida)
+  { clave: "placf", nombre: "PLA-CF (fibra de carbono)", espesor: 0, precio: 850, unidad: "kg", densidad: 1.3, merma: 5 },
 ]
 
 export function materialesPara(servicio: TipoMaquina): MaterialRef[] {
   const grupo = (c: string) =>
-    ["pla", "petg", "abs", "tpu", "resina"].includes(c) ? "filamento" : ["aluminio", "acero", "inox"].includes(c) ? "metal" : "tabla"
+    ["pla", "petg", "abs", "tpu", "resina", "placf"].includes(c) ? "filamento" : ["aluminio", "acero", "inox"].includes(c) ? "metal" : "tabla"
   return MATERIALES.filter((m) => {
     const g = grupo(m.clave)
     if (servicio === "impresora_3d") return g === "filamento"
@@ -202,7 +204,7 @@ const CORTE: Record<string, Record<string, [number, number][]>> = {
   },
 }
 const REMOCION: Record<string, number> = { mdf: 20, triplay: 18, melamina: 18, madera: 15, acrilico: 8, pvc: 25, espuma: 60, aluminio: 2 }
-const IMPRESION: Record<string, number> = { pla: 12, petg: 10, abs: 10, tpu: 5, resina: 20 }
+const IMPRESION: Record<string, number> = { pla: 12, petg: 10, abs: 10, tpu: 5, resina: 20, placf: 10 }
 
 function interpolar(t: [number, number][], e: number) {
   if (e <= t[0][0]) return t[0][1]

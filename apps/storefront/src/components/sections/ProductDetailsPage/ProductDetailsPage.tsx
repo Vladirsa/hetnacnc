@@ -27,6 +27,8 @@ import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
 import { formatosDe } from "@/lib/hetna/formatos"
 import { vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { campoDeDescripcion, tipoProducto } from "@/lib/hetna/tipo-producto"
+import { datosImpresion, esImpresionBajoPedido } from "@/lib/data/impresion"
+import { TalleresImpresion } from "@/components/hetna/impresion/TalleresImpresion"
 
 export const ProductDetailsPage = async ({
   handle,
@@ -144,8 +146,12 @@ export const ProductDetailsPage = async ({
     textoMeta(metaProd.medidas) || textoMeta(metaProd.medida_principal) || campoDeDescripcion(prod.description, /^medidas?$/i) || undefined
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
-  const fabricar =
-    tipoProd === "servicio" ? null : (
+  // Impresión 3D bajo pedido: en vez de "Fabrícalo", los talleres que ya lo
+  // imprimen (cada uno con su oferta) y la liga para bajarlo gratis.
+  const impresion = esImpresionBajoPedido(prod.metadata) ? await datosImpresion(prod.id) : null
+  const fabricar = impresion ? (
+    <TalleresImpresion datos={impresion} locale={locale} herramienta={textoMeta(metaProd.herramienta_url) || null} />
+  ) : tipoProd === "servicio" ? null : (
       <FabricarDiseno
         titulo={prod.title || "Producto"}
         handle={prod.handle}

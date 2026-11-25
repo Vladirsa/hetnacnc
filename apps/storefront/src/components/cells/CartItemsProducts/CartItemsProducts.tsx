@@ -40,7 +40,9 @@ export const CartItemsProducts = ({
   return (
     <div className="divide-y divide-[#EDEAE2] rounded-b-[12px] border border-t-0 border-[#E7E4DC] bg-white">
       {validProducts.map((product) => {
-        const options = Object.entries(product.variant_option_values ?? {})
+        // + el color que eligió en una pieza de impresión bajo pedido (metadata.color)
+        const color = typeof product.metadata?.color === "string" ? product.metadata.color : ""
+        const options = [...Object.entries(product.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : [])]
 
         const subtotal = product.subtotal ?? 0
         const comparar = (product.compare_at_unit_price || 0) * product.quantity
