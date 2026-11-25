@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { PROTECTED_ROUTES } from './lib/constants';
 import { isTokenExpired } from './lib/helpers/token';
+import { slugDirectorio } from './lib/hetna/slug-directorio';
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL;
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
@@ -160,10 +161,36 @@ const continuar = (request: NextRequest, locale: string | null) => {
   return response;
 };
 
+// Perfiles del directorio con slug viejo (24 nov 2026): las ligas de Facebook
+// dejaban diagonales y acentos en el slug ("facebook-com/p/dispro-impresión-…")
+// y la ruta [slug] respondía 404. Ahora el slug se normaliza
+// (lib/hetna/slug-directorio.ts); la dirección vieja manda con 301 a la nueva
+// para no perder lo que Google ya tenía.
+const DIRECTORIO_VIEJO = /^\/([a-z]{2})\/talleres\/directorio\/(.+?)\/?$/;
+
+function redirigirSlugViejo(request: NextRequest): NextResponse | null {
+  const m = DIRECTORIO_VIEJO.exec(request.nextUrl.pathname);
+  if (!m) return null;
+  let crudo = m[2];
+  try {
+    crudo = decodeURIComponent(crudo);
+  } catch {
+    // %-codificación rota: se normaliza tal cual
+  }
+  const nuevo = slugDirectorio(crudo);
+  if (!nuevo || nuevo === crudo) return null;
+  const url = request.nextUrl.clone();
+  url.pathname = `/${m[1]}/talleres/directorio/${nuevo}`;
+  return NextResponse.redirect(url, 301);
+}
+
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.includes('.')) {
     return NextResponse.next();
   }
+
+  const slugViejo = redirigirSlugViejo(request);
+  if (slugViejo) return slugViejo;
 
   const { pathname } = request.nextUrl;
   const cacheIdCookie = request.cookies.get('_medusa_cache_id');

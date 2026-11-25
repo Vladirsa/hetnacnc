@@ -3,7 +3,17 @@ const SITIO = 'https://www.hetnacnc.com';
 const BAJA = 'https://n8n.hetnacnc.com/webhook/hetna-prospectos-baja';
 const DOMICILIO = 'HETNA CNC · Col. Centro, Apizaco, Tlaxcala, México';
 const NL = String.fromCharCode(10);
-function slugDe(id) { return String(id || '').trim().toLowerCase().split('.').join('-'); }
+// Slug del perfil (/talleres/directorio/<slug>): minúsculas, sin acentos, sólo a-z,
+// 0-9 y guiones. Misma regla que apps/storefront/src/lib/hetna/slug-directorio.ts
+// (una prueba revisa que coincidan). Antes sólo cambiaba puntos por guiones y las
+// ligas de Facebook dejaban diagonales: esos perfiles daban 404.
+// (Sin barras invertidas: generar_flujo.py no las deja pasar; las marcas de acento
+// U+0300 a U+036F se arman con fromCharCode.)
+const MARCAS_ACENTO = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
+function slugDe(id) {
+  return String(id == null ? '' : id).normalize('NFD').replace(MARCAS_ACENTO, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120).replace(/-+$/, '');
+}
 function esc(s) {
   return String(s || '').split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;').split("'").join('&#39;');
 }

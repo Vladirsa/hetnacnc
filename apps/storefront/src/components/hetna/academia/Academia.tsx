@@ -242,6 +242,13 @@ export function Academia({
                 Planos, guías, videos y programas que recomendamos de otros sitios. Se abren en su página original.
               </p>
             </div>
+            <LocalizedClientLink href="/planos" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#142033] p-5 text-white hover:bg-[#1B2A42]">
+              <span>
+                <span className="block text-[16px] font-bold">Planos HETNA de muebles para taller</span>
+                <span className="block text-[13.5px] text-white/80">Lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC. Gratis.</span>
+              </span>
+              <span className="rounded-[10px] bg-[#FF6A1A] px-4 py-2 text-[14px] font-bold">Ver planos</span>
+            </LocalizedClientLink>
             <BibliotecaRecursos recursos={recursos} />
           </section>
         )}

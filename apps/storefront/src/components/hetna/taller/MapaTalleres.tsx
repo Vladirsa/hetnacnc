@@ -208,7 +208,7 @@ export default function MapaTalleres({
       if (!activo || !ref.current) return
 
       // Abre en México; al alejar se ven los puntos de los demás países
-      mapa = L.map(ref.current, { scrollWheelZoom: false, maxZoom: 7, minZoom: 2, worldCopyJump: true }).setView([23.6, -102.5], 5)
+      mapa = L.map(ref.current, { scrollWheelZoom: false, maxZoom: 7, minZoom: 1, worldCopyJump: true }).setView([23.6, -102.5], 5)
       mapaRef.current = mapa
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 7,
@@ -326,7 +326,7 @@ export default function MapaTalleres({
             .bindPopup(
               `<strong style="color:#142033;font-size:15px">${esc(p.pais)}</strong>` +
                 `<div style="margin-top:6px;color:#40403A">${p.total} ${p.total === 1 ? "empresa CNC" : "empresas CNC"} por unirse a HETNA</div>` +
-                `<a href="/${locale}/latinoamerica" style="display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#C2560A">HETNA en más países →</a>`
+                `<a href="${esc(p.ruta || `/${locale}/latinoamerica`)}" style="display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#C2560A">${p.ruta && p.ruta.includes("/importacion") ? "Ver proveedores de importación →" : "Ver empresas de " + esc(p.pais) + " →"}</a>`
             )
         }
       }
@@ -433,7 +433,13 @@ export default function MapaTalleres({
             {" "}· En otros {enPaises.length} países: {totalPaises}{" "}
             <button
               type="button"
-              onClick={() => mapaRef.current?.flyTo([10, -60], 2)}
+              onClick={() =>
+                // Encuadra México y todos los países con empresas (China queda del otro lado del mundo)
+                mapaRef.current?.flyToBounds(
+                  [[23.6, -102.5] as [number, number], ...enPaises.map((p) => CENTROS_PAIS[sinAcentos(p.pais)])],
+                  { padding: [30, 30], maxZoom: 4 }
+                )
+              }
               className="font-semibold text-[#C2560A] underline"
             >
               verlos en el mapa

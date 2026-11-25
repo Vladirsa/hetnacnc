@@ -3,7 +3,7 @@
 // Al taller sólo le decimos QUÉ se pide y DÓNDE (nunca quién ni su contacto) y lo
 // invitamos a reclamar su perfil. Máximo 1 aviso por empresa cada 7 días y 25 al día.
 const b = $('Interés de un cliente').first().json.body || {};
-const slug = String(b.slug || '').trim().toLowerCase();
+const slug = slugDe(b.slug);
 const filas = $input.all().map((i) => i.json);
 const r = filas.find((f) => slugDe(f.id) === slug);
 const hoy = $now.setZone('America/Mexico_City').toISODate();

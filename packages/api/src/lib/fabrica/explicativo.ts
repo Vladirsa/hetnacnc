@@ -95,6 +95,7 @@ const SISTEMA =
   "LONGITUD: en total entre 175 y 200 palabras sumando todas las frases (eso da 70 a 80 segundos); cuenta las palabras antes de terminar. Cada escena deja con ganas de la siguiente.\n" +
   "VERDAD: sólo enseña técnica ampliamente aceptada en CNC, láser, router, plasma, impresión 3D, materiales y archivos. No inventes cifras, precios, porcentajes, marcas, clientes ni testimonios. Si un dato depende de la máquina, dilo así («depende de tu máquina», «haz una prueba»).\n" +
   "TEXTOS EN PANTALLA: muy cortos, respeta los máximos de caracteres. Los dibujos son de una biblioteca fija: elige el que mejor ilustre la escena.\n" +
+  "NUNCA pongas «a la venta», precios ni promociones en los textos: el cierre con la oferta lo pone el sistema.\n" +
   "FOTOS: incluye 2 escenas tipo foto (no seguidas, no la primera): una del taller o la máquina haciendo lo que explicas y, si el tema lo permite, otra de un producto (pon la palabra en producto). En la escena foto, etiqueta = pie de foto corto."
 
 let ia: Anthropic | null = null
@@ -432,7 +433,7 @@ async function voces(g: any, dir: string) {
   let costo = 0
   for (let a = 0; a < lista.length; a += 4) {
     await Promise.all(lista.slice(a, a + 4).map(async (x: any) => {
-      const v = await vozEscena(x.texto, VOZ_EXPLICATIVO())
+      const v = await vozEscena(x.texto, VOZ_EXPLICATIVO(), Number(process.env.EXPLICATIVO_VELOCIDAD || 1))
       const f = path.join(dir, `v${x.i}-${x.k}.mp3`)
       await bajar(v.url, f)
       out[x.i][x.k] = f
@@ -601,6 +602,7 @@ export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: b
   if (!explicativoListo()) return { hecho: false, motivo: "Falta FAL_KEY, la IA, FFmpeg o Chrome en el servidor" }
   if (est.VUELTA.activa) return { hecho: false, motivo: "Ya se está haciendo un video" }
   if (!o.forzar) {
+    if (await knex("hetna_estudio").where({ tipo: "explicativo", dia: est.diaMx() }).whereIn("estado", ["listo", "haciendo"]).first()) return { hecho: false, motivo: "Ya se hizo el explicativo de hoy" }
     const ult = await knex("hetna_estudio").where({ tipo: "explicativo" }).orderBy("created_at", "desc").limit(2).pluck("estado")
     if (ult.length === 2 && ult.every((x: string) => x === "error")) return { hecho: false, motivo: "Los dos últimos explicativos fallaron: el automático se detuvo. Revisa el error y aprieta el botón." }
   }

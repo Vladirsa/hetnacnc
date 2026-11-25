@@ -4,7 +4,7 @@
 // mismo de la campaña: página con botón "Confirmar baja"). Si no tiene correo,
 // te avisa por Telegram para que lo retires a mano (publicar = NO).
 const b = $('Quitar perfil').first().json.body || {};
-const slug = String(b.slug || '').trim().toLowerCase();
+const slug = slugDe(b.slug);
 const filas = $input.all().map((i) => i.json);
 const r = filas.find((f) => slugDe(f.id) === slug);
 const hoy = $now.setZone('America/Mexico_City').toISODate();

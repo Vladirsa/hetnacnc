@@ -17,9 +17,11 @@ import { sdk } from "@/lib/client"
 import { categoriasConProductos, tieneContenido } from "@/lib/hetna/catalogo"
 import { secciones, temasParaMapa } from "@/lib/foro/consultas"
 import { directorioMexico } from "@/lib/hetna/directorio"
+import { esSlugDirectorio } from "@/lib/hetna/slug-directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
-import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
+import { estadosIndexables, rutaEstado, rutaServicioEstado, serviciosEstadoIndexables } from "@/lib/seo/estados"
 import { listLearningArticles } from "@/lib/data/learning-articles"
+import { PLANOS } from "@/lib/planos/modelos"
 import { listCourses } from "@/lib/data/courses"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { SITIO_CANONICO } from "@/lib/helpers/hreflang"
@@ -58,6 +60,10 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cotizar/impresion-3d", "weekly", 0.8],
   ["/fabricacion", "weekly", 0.9],
   ["/herramientas-cnc", "weekly", 0.9],
+  // Estaban fuera del mapa aunque se indexan (revisión del 25 nov 2026)
+  ["/calculadora-cnc", "weekly", 0.9],
+  ["/tienda", "daily", 0.8],
+  ["/distribuidores", "monthly", 0.5],
   ["/laboratorio-cam", "weekly", 0.8],
   // páginas para buscadores de las herramientas de diseño y CAM (lib/seo/programas.ts)
   ...PROGRAMAS.map((x) => [`/programas/${x.slug}`, "weekly", 0.8] as [string, Frecuencia, number]),
@@ -69,6 +75,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/cam/simulador", "weekly", 0.7],
   ["/talleres", "weekly", 0.8],
   ["/sell-in-mexico", "monthly", 0.5],
+  ["/importacion", "weekly", 0.5],
   ["/creadores", "monthly", 0.5],
   ["/latinoamerica", "weekly", 0.6],
   ...(["co", "cl", "pe", "ar", "gt", "ec", "cr", "bo", "do", "uy", "py", "sv"].map((c) => [`/latinoamerica/${c}`, "weekly", 0.5]) as [string, Frecuencia, number][]),
@@ -83,6 +90,8 @@ const FIJAS: [string, Frecuencia, number][] = [
   ["/talleres/fundadores", "weekly", 0.7],
   ["/talleres/ranking", "daily", 0.7],
   ["/servicios/envios-hetna", "monthly", 0.6],
+  ["/planos", "weekly", 0.7],
+  ...(PLANOS.map((p) => [`/planos/${p.slug}`, "monthly", 0.6]) as [string, Frecuencia, number][]),
   ["/anunciate", "monthly", 0.6],
   ["/quienes-somos", "monthly", 0.5],
   ["/contacto", "monthly", 0.5],
@@ -198,9 +207,13 @@ export async function entradasMapa(archivo: ArchivoMapa): Promise<Entrada[]> {
         ...(await listarTalleres().catch(() => [])).map((t) => pagina(`/talleres/${t.handle}`, "weekly", 0.6, hoy)),
         // "Talleres CNC en <estado>": sólo los estados con suficientes empresas (lib/seo/estados.ts)
         ...(await estadosIndexables()).map((x) => pagina(rutaEstado(x.ciudad), "weekly", 0.7, hoy)),
-        // Perfiles no reclamados: sólo los que tienen descripción (los demás son noindex)
+        // "Corte láser en <estado>", "Router CNC en <estado>"…: sólo con suficientes talleres de ese servicio
+        ...(await serviciosEstadoIndexables()).map((x) => pagina(rutaServicioEstado(x.ciudad, x.clave), "weekly", 0.7, hoy)),
+        // Perfiles no reclamados: sólo los que tienen descripción (los demás son
+        // noindex) y cuyo slug la ruta [slug] puede servir tal cual: uno con
+        // diagonales o acentos daba 404 (24 nov 2026)
         ...(await directorioMexico())
-          .filter((e) => e.servicios)
+          .filter((e) => e.servicios && esSlugDirectorio(e.slug))
           .map((e) => pagina(`/talleres/directorio/${e.slug}`, "monthly", 0.3, hoy)),
       ]
     case "articulos": {

@@ -17,11 +17,11 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; herramienta: string }> }
 
-const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen", "partir-3d", "moldes-3d"])
+const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "texturizador", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen", "partir-3d", "moldes-3d", "modelos-3d"])
 
 // "letreros" se pinta oscuro dentro de Letreros y placas (los tres modos)
 // las herramientas que juntan varias (Imagen, Archivos) ponen su propio tema
-const OSCURAS = new Set(["rompecabezas", "letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "grabado-foto", "litofania-relieve", "convertidor", "anidado-piezas", "svg-a-stl", "llaveros", "vectorizador", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "despiece-muebles", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen"])
+const OSCURAS = new Set(["rompecabezas", "letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "grabado-foto", "litofania-relieve", "convertidor", "anidado-piezas", "svg-a-stl", "llaveros", "texturizador", "vectorizador", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "despiece-muebles", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen"])
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params

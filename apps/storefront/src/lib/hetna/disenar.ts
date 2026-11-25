@@ -71,6 +71,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Llaveros, placas de mascota y adornos con nombre: elige letra y forma y descarga gratis el DXF para láser o el STL para impresión 3D.",
   },
   {
+    slug: "texturizador",
+    nombre: "Texturizador para impresión 3D",
+    texto: "Placa o rodillo con un patrón de palabras e íconos para texturizar barro, fondant o plastilina.",
+    icono: "relieve",
+    acceso: "gratis",
+    titulo: "Texturizador 3D gratis: placa y rodillo con patrón en STL",
+    descripcion:
+      "Haz una placa o un rodillo texturizador con nombres, palabras e íconos repetidos (estrellas, corazones, huellitas, copos…), en espejo para que se lea al presionar. El rodillo cierra el patrón sin costura y trae sus mangos y guías de grosor. Descarga gratis los STL para imprimir en 3D y úsalos en barro, fondant, galletas o plastilina.",
+    meta: "Texturizador gratis para impresión 3D: placa o rodillo con palabras e íconos repetidos, sin costura, con mangos y guías de grosor. Descarga los STL al instante.",
+  },
+  {
     slug: "rompecabezas",
     nombre: "Rompecabezas",
     texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
@@ -218,6 +229,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     titulo: "Generador de moldes 3D gratis: de STL a molde para resina, yeso o silicona",
     descripcion:
       "Sube tu STL, OBJ o STEP y descarga gratis el molde listo para imprimir: de dos partes con llaves de registro, bebedero y respiraderos, molde abierto para jabones y velas, o la caja para colar silicona. Calcula los mililitros que vas a vaciar. Sin subir tu archivo.",
+  },
+  {
+    slug: "modelos-3d",
+    nombre: "Modelos 3D a tu medida",
+    texto: "Organizadores, soportes NEMA, abrazaderas, cajas, macetas y más: ajusta las medidas y descarga el STL.",
+    icono: "partir",
+    acceso: "gratis",
+    titulo: "Modelos 3D paramétricos para imprimir gratis",
+    descripcion:
+      "Elige un modelo para impresión 3D (organizador de fresas, soporte de motor NEMA 17/23, abrazadera de tubo, espaciador, brida, escuadra, charola con divisiones, caja con tapa, maceta, soporte de celular y más), ajusta sus medidas con deslizadores, míralo en 3D y descarga el STL cerrado, listo para tu impresora. O pide que un taller de HETNA te lo imprima. Sin saber CAD.",
+    meta: "Modelos 3D paramétricos gratis: ajusta las medidas de organizadores, soportes NEMA, abrazaderas, cajas y macetas y descarga el STL listo para imprimir.",
   },
   {
     slug: "svg-a-stl",
@@ -419,8 +441,10 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: ESCANEAR, corto: "Imagen a 3D" },
       { slug: "letras-3d", corto: "Letras 3D" },
       { slug: "llaveros", corto: "Llaveros y placas" },
+      { slug: "texturizador", corto: "Texturizador" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "moldes-3d", corto: "Moldes" },
+      { slug: "modelos-3d", corto: "Modelos a tu medida" },
     ],
   },
   "2d": {
