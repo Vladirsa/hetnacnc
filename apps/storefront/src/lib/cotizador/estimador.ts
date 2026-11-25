@@ -422,3 +422,48 @@ export function estimar(p: {
 }
 
 export const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 })
+
+// ── Mueble completo (Biblioteca de planos: "Cómpralo hecho") ──────────────
+// Varias piezas de varios materiales que salen de hojas ya acomodadas
+// (lib/planos/calculo.ts). Mismo motor que estimar(), pero el material se cobra
+// por las hojas que diga quien llama (pueden ser fracción, ya con merma) y la
+// preparación una vez por material.
+export type GrupoMueble = { material: MaterialRef; hojas: number; piezas: { largo: number; ancho: number; cantidad: number }[] }
+export type EstimadoMueble = { total: number; min: number; max: number; minutosMaquina: number; minutosTotal: number; costoMaterial: number }
+
+export function estimarMueble(grupos: GrupoMueble[], o: { servicio?: TipoMaquina; acabado?: string; cfg?: ConfigPrecios | null } = {}): EstimadoMueble {
+  const servicio = o.servicio || "router"
+  const c = o.cfg || {}
+  const ajusteMaq = c.maquinas?.[servicio] || {}
+  const costoHora = entre(ajusteMaq.costoHora, 0, 100000, MAQUINA_REF[servicio].costoHora)
+  const prep = entre(ajusteMaq.prep, 0, 600, MAQUINA_REF[servicio].prep)
+  const vel = entre(ajusteMaq.velocidadPct, 10, 500, 100) / 100
+  const operador = entre(c.operadorHora, 0, 10000, OPERADOR_BASE)
+  const fijos = entre(c.fijosHora, 0, 10000, FIJOS_BASE)
+  const margen = entre(c.margenPct, 0, 80, MARGEN_BASE * 100) / 100
+  const markup = entre(c.markupMaterialPct, 0, 300, MARKUP_BASE * 100) / 100
+  const rango = entre(c.rangoPct, 0, 50, RANGO_BASE * 100) / 100
+  const minimo = entre(c.pedidoMinimo, 0, 100000, PEDIDO_MINIMO)
+  const ac = ACABADOS.find((x) => x.clave === (o.acabado || "")) || ACABADOS[0]
+  let tMaq = 0, tManejo = 0, tPrep = 0, costoMaterial = 0, costoAcabado = 0
+  for (const g of grupos) {
+    const precio = entre(c.preciosMaterial?.[g.material.nombre], 0, 1_000_000, g.material.precio)
+    costoMaterial += g.hojas * precio * (1 + markup)
+    const tabla = CORTE[servicio]?.[g.material.clave]
+    const velCorte = tabla ? interpolar(tabla, g.material.espesor) * vel : 1
+    for (const p of g.piezas) {
+      tMaq += ((2 * (p.largo + p.ancho)) / 1000 / velCorte + MAQUINA_REF[servicio].perf / 60) * p.cantidad
+      tManejo += (manejoPorPieza(p.largo, p.ancho) + ac.min) * p.cantidad
+      costoAcabado += (ac.pieza + (ac.m2 * p.largo * p.ancho) / 1e6) * p.cantidad
+    }
+    tPrep += prep
+  }
+  const costoMaquina = (tMaq / 60) * costoHora
+  const costoOperador = ((tMaq + tManejo) / 60) * operador
+  const costoPrep = (tPrep / 60) * (costoHora + operador)
+  const costoFijos = ((tMaq + tManejo + tPrep) / 60) * fijos
+  const trabajo = costoMaquina + costoOperador + costoPrep + costoAcabado + costoFijos
+  const total = Math.max(trabajo / (1 - margen) + costoMaterial, minimo)
+  const red = (v: number) => Math.round(v / 5) * 5
+  return { total: red(total), min: red(Math.max(minimo, total * (1 - rango))), max: red(total * (1 + rango)), minutosMaquina: tMaq, minutosTotal: tMaq + tManejo + tPrep, costoMaterial }
+}

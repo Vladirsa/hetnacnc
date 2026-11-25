@@ -2,9 +2,11 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import DescargaPlano from "@/components/hetna/planos/DescargaPlano"
+import MedidasPlano from "@/components/hetna/planos/MedidasPlano"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { acomodoPorMaterial, dxfPlano, hojasNecesarias, listaCorte, medidasGenerales } from "@/lib/planos/calculo"
 import { cajasRuedas, piezasPorPaso, svgArmado, svgExplotado, svgHoja, svgPaso } from "@/lib/planos/dibujo"
+import { medidasDe, medidasDeConsulta, redimensionar } from "@/lib/planos/medidas"
 import { MATERIALES_PLANO, planoPorSlug, type PiezaPlano } from "@/lib/planos/modelos"
 
 // Sin generateStaticParams: el layout raíz lee headers() y cookies(), así que
@@ -29,10 +31,14 @@ const Titulo = ({ n, children }: { n: string; children: React.ReactNode }) => (
   </h2>
 )
 
-export default async function PlanoPagina({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PlanoPagina({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { slug } = await params
-  const pl = planoPorSlug(slug)
-  if (!pl) notFound()
+  const base = planoPorSlug(slug)
+  if (!base) notFound()
+  // "Modifica las medidas": ?ancho=&fondo=&alto= (mm)
+  const pl = redimensionar(base, medidasDeConsulta(await searchParams))
+  const original = medidasDe(base.piezas, base.ruedas)
+  const cambiado = pl !== base
 
   const m = medidasGenerales(pl)
   const { filas } = listaCorte(pl)
@@ -57,6 +63,8 @@ export default async function PlanoPagina({ params }: { params: Promise<{ slug: 
           <span className="font-medium text-[#1B1B18]">{pl.nombre}</span>
         </div>
 
+        <MedidasPlano original={original} actual={m} />
+
         <article id="lamina" className="overflow-hidden rounded-3xl bg-[#142033] p-5 text-white sm:p-8" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>
           <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-4">
             <div>
@@ -67,6 +75,7 @@ export default async function PlanoPagina({ params }: { params: Promise<{ slug: 
             <p className="m-0 text-[13px] text-white/75">
               {m.ancho} × {m.fondo} × {m.alto} mm · {pl.nivel} · {pl.horas}
               {pl.juego ? ` · se cortan ${pl.juego.cantidad} ${pl.juego.nombre}` : ""}
+              {cambiado ? <span className="block text-[#FF9F57]">Medidas modificadas (original: {original.ancho} × {original.fondo} × {original.alto} mm)</span> : null}
             </p>
           </header>
 
@@ -152,7 +161,7 @@ export default async function PlanoPagina({ params }: { params: Promise<{ slug: 
         </article>
 
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 print:hidden">
-          <DescargaPlano slug={pl.slug} nombre={pl.nombre} dxfs={dxfs} />
+          <DescargaPlano slug={pl.slug} nombre={cambiado ? `${pl.nombre} ${m.ancho}x${m.fondo}x${m.alto}` : pl.nombre} dxfs={dxfs} />
           <div className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5">
             <p className="m-0 text-[16px] font-bold text-[#142033]">¿No tienes router o prefieres que te lo corten?</p>
             <p className="m-0 text-[14px] text-[#40403A]">Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</p>
