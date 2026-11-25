@@ -36,7 +36,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await leerTema(seccion, slug, sesion?.perfil?.id)
   if (!t) return { title: { absolute: "Tema no encontrado | Foro CNC México" }, robots: { index: false } }
   const url = `${SITIO}/mx${urlTema(t)}`
-  const descripcion = extracto(t.cuerpo, 155)
+  // Los temas de arranque empiezan con un aviso genérico ("Pregunta frecuente de
+  // la comunidad… respuesta de arranque…") que Google mostraba como descripción
+  // en todos (Search Console, 25 nov 2026: el de G96/G97 salió 97 veces sin un
+  // clic). Se quita, y si hay mejor respuesta, su inicio va en la descripción.
+  const pregunta = t.cuerpo.replace(/^Pregunta frecuente de la comunidad[^\n]*?compártela abajo\.?\s*/i, "")
+  let respuesta = ""
+  if (t.mejorRespuestaId) {
+    const r = (await leerRespuestas(t.id).catch(() => [])).find((x) => x.id === t.mejorRespuestaId)
+    if (r) respuesta = extracto(r.cuerpo, 150)
+  }
+  const descripcion = respuesta
+    ? extracto(`${extracto(pregunta, 60)} Respuesta: ${respuesta}`, 155)
+    : extracto(pregunta || t.cuerpo, 155)
   return {
     title: { absolute: `${t.titulo} | Foro CNC México` },
     description: descripcion,
