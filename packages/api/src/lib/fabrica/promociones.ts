@@ -462,7 +462,7 @@ export async function promocionesDelDia(scope: any, logger?: any) {
  * Plano de la semana (Biblioteca de planos, /planos): el siguiente plano que no
  * ha salido en redes — los más nuevos primero — como carrusel de 4 láminas
  * (portada, vista explotada, lista de corte y acomodo en la hoja). Las láminas
- * las dibuja la tienda en /api/planos/[slug]/redes/[n] con el plano real.
+ * las dibuja la tienda en /mx/planos/[slug]/redes/[n] con el plano real.
  * Cuando ya salieron todos, repite el que tiene más tiempo sin salir.
  */
 export async function promoPlano(scope: any, logger?: any, slugForzado?: string) {
@@ -479,7 +479,7 @@ export async function promoPlano(scope: any, logger?: any, slugForzado?: string)
   const nombre = PLANOS_NOMBRES[slug]
   const medios: { url: string; tipo: string }[] = []
   for (const n of [1, 2, 3, 4]) {
-    const r = await fetch(`${STORE_URL}/api/planos/${encodeURIComponent(slug)}/redes/${n}`)
+    const r = await fetch(`${STORE_URL}/mx/planos/${encodeURIComponent(slug)}/redes/${n}`)
     if (!r.ok) throw new Error(`lámina ${n} de ${slug}: HTTP ${r.status}`)
     const buf = Buffer.from(await r.arrayBuffer())
     medios.push({ url: await subir(scope, `plano-${slug}-${Date.now()}-${n}.png`, "image/png", buf), tipo: "imagen" })

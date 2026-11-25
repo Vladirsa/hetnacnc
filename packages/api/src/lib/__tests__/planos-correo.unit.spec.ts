@@ -40,7 +40,7 @@ describe("aviso semanal de planos", () => {
     expect(ligaPlanoAviso("librero-bajo")).toContain("utm_medium=aviso-semanal")
     const html = correoAvisoHtml("librero-bajo", "<b>Ana</b>")
     expect(html).toContain("Librero bajo de 1 m")
-    expect(html).toContain("/api/planos/librero-bajo/redes/1")
+    expect(html).toContain("/mx/planos/librero-bajo/redes/1")
     expect(html).not.toContain("<b>Ana</b>")
   })
 })

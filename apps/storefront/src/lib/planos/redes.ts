@@ -1,7 +1,7 @@
 // Carrusel para redes de un plano HETNA (1080 × 1350, 4:5): portada, vista
 // explotada, lista de corte y acomodo en la hoja. Lo pide el promotor semanal
 // del backend (lib/fabrica/promociones.ts → promoPlano) por
-// /api/planos/[slug]/redes/[n] y lo publica en Facebook e Instagram.
+// /mx/planos/[slug]/redes/[n] y lo publica en Facebook e Instagram.
 import { acomodoPorMaterial, hojasNecesarias, listaCorte, medidasGenerales } from "./calculo"
 import { cajasRuedas, svgArmado, svgExplotado, svgHoja } from "./dibujo"
 import type { Plano } from "./modelos"
