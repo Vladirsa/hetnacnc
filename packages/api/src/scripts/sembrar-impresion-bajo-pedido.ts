@@ -12,6 +12,8 @@
 // desde el panel o volviendo a correr el script con COLORES).
 // ACTUALIZAR_COLORES=1: además corrige el color de las ofertas de HETNA que ya
 // existen (sin tocar su precio ni sus días).
+// ACTUALIZAR_FOTOS="handle1,handle2" (o "todas"): vuelve a subir la foto de esos
+// productos desde docs/impresion-bajo-pedido/fotos y la pone de portada.
 //
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
@@ -52,6 +54,7 @@ export function coloresHetna(material: string, texto = TEXTO_COLORES): string[] 
   return []
 }
 const ACTUALIZAR_COLORES = process.env.ACTUALIZAR_COLORES === "1"
+const FOTOS_A_CAMBIAR = new Set(String(process.env.ACTUALIZAR_FOTOS || "").split(",").map((h) => h.trim()).filter(Boolean))
 const COLORES_HETNA = MATERIALES_HETNA.some((m) => coloresHetna(m).length) ? ["ok"] : []
 const EMPAQUE_G = 120 // caja y relleno, para el peso del envío
 
@@ -141,7 +144,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const categoria = (cats as any[]).find((c) => c.is_active !== false && !c.is_internal && (/impresi[oó]n[- ]3d/i.test(c.handle) || /impresi[oó]n 3d/i.test(c.name)))
   if (!categoria) logger.warn("[impresion] no hay categoría de Impresión 3D: los productos quedan sólo en la colección")
 
-  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0
+  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0, fotosCambiadas = 0
   for (const d of catalogo) {
     const metadata = {
       impresion_bajo_pedido: true,
@@ -155,7 +158,17 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     let producto = (existe as any[])[0]
 
     if (producto) {
-      await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { metadata: { ...(producto.metadata || {}), ...metadata } } } as any })
+      // ACTUALIZAR_FOTOS="handle1,handle2" (o "todas"): sube otra vez la foto y la pone de portada
+      let fotos = {}
+      const fotoNueva = join(carpeta, d.foto)
+      if ((FOTOS_A_CAMBIAR.has("todas") || FOTOS_A_CAMBIAR.has(d.handle)) && existsSync(fotoNueva)) {
+        const [archivo] = await container.resolve(Modules.FILE).createFiles([
+          { filename: `${d.handle}-${Date.now()}.png`, mimeType: "image/png", content: readFileSync(fotoNueva).toString("base64"), access: "public" },
+        ])
+        fotos = { thumbnail: archivo.url, images: [{ url: archivo.url }] }
+        fotosCambiadas++
+      }
+      await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { metadata: { ...(producto.metadata || {}), ...metadata }, ...fotos } } as any })
       actualizados++
     } else {
       const foto = join(carpeta, d.foto)
@@ -238,5 +251,5 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     }
   }
   if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="ABS=Amarillo dorado;PLA-CF=Negro" o ponlas en /seller/imprimir)')
-  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}`)
+  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}${FOTOS_A_CAMBIAR.size ? `, ${fotosCambiadas} fotos cambiadas` : ""}`)
 }
