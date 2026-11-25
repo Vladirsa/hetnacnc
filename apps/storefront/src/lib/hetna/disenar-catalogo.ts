@@ -81,6 +81,7 @@ export const SECCIONES: SeccionDiseno[] = [
       { nombre: "Foto para grabado láser", texto: "Tramada al tamaño y DPI de tu láser.", href: "/disenar/grabado-foto", icono: "grabado", color: AZUL2, acceso: "gratis", para: ["laser"] },
       { nombre: "Foto a relieve o litofanía", texto: "STL para tallar o imprimir.", href: "/disenar/litofania-relieve", icono: "relieve", color: AZUL2, acceso: "gratis", para: ["3d", "router"], claves: "lámpara" },
       { nombre: "Partir modelo 3D", texto: "No cabe en tu impresora: en piezas con pernos.", href: "/disenar/partir-3d", icono: "partir", color: AZUL, acceso: "gratis", para: ["3d"], claves: "dividir cortar stl grande piezas pernos imanes split cama impresora" },
+      { nombre: "Generador de moldes 3D", texto: "Tu pieza en un molde de 2 partes o caja para silicona.", href: "/disenar/moldes-3d", icono: "partir", color: AZUL, acceso: "gratis", para: ["3d"], claves: "molde moldes silicona resina yeso concreto jabón jabon vela chocolate colado vaciado stl negativo" },
       { nombre: "SVG o DXF a STL", texto: "Extruye logos y letras; llaveros con placa.", href: "/disenar/svg-a-stl", icono: "extruir", color: MORADO, acceso: "gratis", para: ["3d", "router"], claves: "llavero sello 3d" },
       { nombre: "Imagen a 3D con IA", texto: "Una foto → modelo 3D con textura.", href: "/disenar/imagen-a-3d", icono: "ia", color: AMARILLO, acceso: "creditos", para: ["3d", "router"], claves: "escaneo refacción" },
     ],
