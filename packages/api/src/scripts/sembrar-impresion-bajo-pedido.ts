@@ -41,7 +41,7 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte"
+  pieza: "pieza" | "soporte" | "modelo"
   etiquetas: string[]
   herramienta_url: string
   foto: string
@@ -53,6 +53,13 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const mm = (m: number[]) => m.map((x) => Math.round(x)).join(" × ") + " mm"
 
 function descripcion(d: Diseno): string {
+  // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
+  if (d.pieza === "modelo")
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>Medidas de la pieza: ${mm(d.medidas_mm)}</li><li>Impresa en 3D bajo pedido por el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p>¿La quieres de otro tamaño? Ábrela en Modelos 3D de HETNA, cambia las medidas y baja el STL gratis, o pide que te la impriman así.</p>`,
+    ].join("")
   const uso =
     d.pieza === "soporte"
       ? `<p><strong>Cómo se usa:</strong> mete el rodillo en el eje, ponle el seguro en C en la punta y rueda. Para cambiar de diseño quitas el seguro y cambias el rodillo. Trae 2 seguros (uno de repuesto).</p>`

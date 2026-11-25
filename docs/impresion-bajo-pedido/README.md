@@ -1,6 +1,6 @@
 # Impresión 3D bajo pedido
 
-Diseños propios de HETNA (hechos con el Texturizador) que se venden **impresos**. Cualquier taller con impresora pone su oferta (material, precio, días, colores) y el cliente elige.
+Diseños propios de HETNA (hechos con el Texturizador y con Modelos 3D: macetas, soportes, organizadores…) que se venden **impresos**. Cualquier taller con impresora pone su oferta (material, precio, días, colores) y el cliente elige.
 
 ## Cómo funciona
 
@@ -28,7 +28,8 @@ Diseños propios de HETNA (hechos con el Texturizador) que se venden **impresos*
    FUENTES_DIR=/ruta/fuentes OPENTYPE_JS=/ruta/opentype.js/dist/opentype.js npx tsx scripts/generar-catalogo-impresion.ts
    ```
    - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm.
-3. Fotos: `fotos/<handle>.png`, de 1:1. Se toman del Texturizador con el diseño cargado:
+   - Para rehacer sólo las piezas de Modelos 3D (sin tipografías): `SOLO_MODELOS=1 npx tsx scripts/generar-catalogo-impresion.ts`. Sus fotos las dibuja el mismo script.
+3. Fotos de rodillos y placas: `fotos/<handle>.png`, de 1:1. Se toman del Texturizador con el diseño cargado:
    - abre `/disenar/texturizador?…` (la liga `herramienta_url` del JSON);
    - agrega `&soporte=1` para ver el rodillo puesto en el soporte.
 4. Publica (en `packages/api`, en el servidor):

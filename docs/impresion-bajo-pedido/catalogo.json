@@ -396,5 +396,267 @@
       162.3,
       135.2
     ]
+  },
+  {
+    "handle": "maceta-con-drenaje-impresa-3d",
+    "titulo": "Maceta con drenaje y plato",
+    "resumen": "Maceta de 10 cm con barreno de drenaje y su plato para que no escurra. Para suculentas, cactus y plantas chicas.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "maceta",
+      "suculentas",
+      "drenaje",
+      "plantas"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=maceta",
+    "foto": "fotos/maceta-con-drenaje-impresa-3d.png",
+    "modelo": "maceta",
+    "valores": {},
+    "volumen_cm3": 82.5,
+    "medidas_mm": [
+      205,
+      100,
+      90
+    ]
+  },
+  {
+    "handle": "maceta-grande-con-drenaje-impresa-3d",
+    "titulo": "Maceta grande con drenaje y plato",
+    "resumen": "Maceta de 16 cm con barreno de drenaje y plato, para plantas de interior medianas.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "maceta grande",
+      "plantas de interior",
+      "drenaje"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=maceta&arriba=160&abajo=120&alto=140&pared=2.4&drenaje=14",
+    "foto": "fotos/maceta-grande-con-drenaje-impresa-3d.png",
+    "modelo": "maceta",
+    "valores": {
+      "arriba": 160,
+      "abajo": 120,
+      "alto": 140,
+      "pared": 2.4,
+      "drenaje": 14
+    },
+    "volumen_cm3": 236.7,
+    "medidas_mm": [
+      310,
+      160,
+      140
+    ]
+  },
+  {
+    "handle": "lapicero-hexagonal-impreso-3d",
+    "titulo": "Lapicero hexagonal para escritorio",
+    "resumen": "Lapicero de seis lados para plumas, lápices y brochas.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "lapicero",
+      "escritorio",
+      "organizador"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=porta-lapices",
+    "foto": "fotos/lapicero-hexagonal-impreso-3d.png",
+    "modelo": "porta-lapices",
+    "valores": {},
+    "volumen_cm3": 54,
+    "medidas_mm": [
+      80,
+      69.3,
+      100
+    ]
+  },
+  {
+    "handle": "soporte-celular-impreso-3d",
+    "titulo": "Soporte para celular con paso de cable",
+    "resumen": "Detiene el celular inclinado para videollamadas o recetas; deja pasar el cable para cargarlo.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "soporte celular",
+      "escritorio",
+      "videollamadas"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=soporte-celular",
+    "foto": "fotos/soporte-celular-impreso-3d.png",
+    "modelo": "soporte-celular",
+    "valores": {},
+    "volumen_cm3": 89.5,
+    "medidas_mm": [
+      80,
+      90,
+      92.6
+    ]
+  },
+  {
+    "handle": "soporte-tableta-impreso-3d",
+    "titulo": "Soporte para tableta con paso de cable",
+    "resumen": "Detiene la tableta inclinada en el escritorio o la cocina, con paso para el cable.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "soporte tableta",
+      "ipad",
+      "cocina"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=soporte-celular&ancho=180&grosor=14",
+    "foto": "fotos/soporte-tableta-impreso-3d.png",
+    "modelo": "soporte-celular",
+    "valores": {
+      "ancho": 180,
+      "grosor": 14
+    },
+    "volumen_cm3": 204.6,
+    "medidas_mm": [
+      180,
+      90,
+      92.6
+    ]
+  },
+  {
+    "handle": "posavasos-impreso-3d",
+    "titulo": "Posavasos",
+    "resumen": "Posavasos para proteger la mesa de vasos y tazas.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "posavasos",
+      "mesa",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=posavasos",
+    "foto": "fotos/posavasos-impreso-3d.png",
+    "modelo": "posavasos",
+    "valores": {},
+    "volumen_cm3": 11.8,
+    "medidas_mm": [
+      95,
+      82.3,
+      5
+    ]
+  },
+  {
+    "handle": "gancho-de-pared-impreso-3d",
+    "titulo": "Gancho de pared",
+    "resumen": "Gancho para llaves, bolsas o herramienta; se fija con dos tornillos.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "gancho",
+      "pared",
+      "llaves"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=gancho-pared",
+    "foto": "fotos/gancho-de-pared-impreso-3d.png",
+    "modelo": "gancho-pared",
+    "valores": {},
+    "volumen_cm3": 10.3,
+    "medidas_mm": [
+      20,
+      60,
+      40
+    ]
+  },
+  {
+    "handle": "organizador-fresas-brocas-impreso-3d",
+    "titulo": "Organizador de fresas y brocas",
+    "resumen": "Base con barrenos para tener ordenadas las fresas y brocas junto a la máquina.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "organizador fresas",
+      "brocas",
+      "taller cnc"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=organizador-fresas",
+    "foto": "fotos/organizador-fresas-brocas-impreso-3d.png",
+    "modelo": "organizador-fresas",
+    "valores": {},
+    "volumen_cm3": 102.5,
+    "medidas_mm": [
+      96,
+      48,
+      25
+    ]
+  },
+  {
+    "handle": "organizador-llaves-allen-impreso-3d",
+    "titulo": "Organizador de llaves Allen",
+    "resumen": "Mantiene las llaves Allen por tamaño y a la mano.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "llaves allen",
+      "taller",
+      "organizador"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=llaves-allen",
+    "foto": "fotos/organizador-llaves-allen-impreso-3d.png",
+    "modelo": "llaves-allen",
+    "valores": {},
+    "volumen_cm3": 36.7,
+    "medidas_mm": [
+      106.9,
+      20,
+      20
+    ]
+  },
+  {
+    "handle": "contenedor-apilable-impreso-3d",
+    "titulo": "Contenedor apilable",
+    "resumen": "Contenedor que se apila para tornillería, piezas chicas o material de oficina.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "contenedor",
+      "apilable",
+      "tornillería"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=contenedor-apilable",
+    "foto": "fotos/contenedor-apilable-impreso-3d.png",
+    "modelo": "contenedor-apilable",
+    "valores": {},
+    "volumen_cm3": 91.3,
+    "medidas_mm": [
+      100,
+      150,
+      73
+    ]
+  },
+  {
+    "handle": "caja-tapa-presion-impresa-3d",
+    "titulo": "Caja con tapa a presión",
+    "resumen": "Caja chica con tapa que cierra a presión, para piezas, joyería o refacciones.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "caja",
+      "tapa a presión",
+      "organizador"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=caja-tapa",
+    "foto": "fotos/caja-tapa-presion-impresa-3d.png",
+    "modelo": "caja-tapa",
+    "valores": {},
+    "volumen_cm3": 25.3,
+    "medidas_mm": [
+      136,
+      44,
+      32
+    ]
+  },
+  {
+    "handle": "clip-para-bolsas-impreso-3d",
+    "titulo": "Clip para bolsas",
+    "resumen": "Cierra bolsas de café, botanas o croquetas para que no se humedezcan.",
+    "pieza": "modelo",
+    "etiquetas": [
+      "clip bolsas",
+      "cocina",
+      "despensa"
+    ],
+    "herramienta_url": "/disenar/modelos-3d?modelo=clip-bolsa",
+    "foto": "fotos/clip-para-bolsas-impreso-3d.png",
+    "modelo": "clip-bolsa",
+    "valores": {},
+    "volumen_cm3": 5,
+    "medidas_mm": [
+      94.9,
+      9.8,
+      10
+    ]
   }
 ]

@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Visor3D } from "@/components/hetna/generador/Visor3D"
 import { mandarArchivosAFabricar } from "@/lib/generador/aCotizador"
-import { CATEGORIAS, MODELOS, construirMalla, modeloPorId, valoresIniciales, type MallaModelo, type Modelo3D } from "@/lib/generador/modelos3d"
+import { CATEGORIAS, MODELOS, construirMalla, limpiarValores, modeloPorId, valoresIniciales, type MallaModelo, type Modelo3D } from "@/lib/generador/modelos3d"
 import { mallaSTL } from "@/lib/generador/vectores"
 
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false, loading: () => <div className="h-full w-full bg-[#F7F3EE]" /> })
@@ -37,14 +37,26 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
   const [error, setError] = useState("")
   const [aviso, setAviso] = useState("")
 
-  // /disenar/modelos-3d?modelo=maceta abre ese modelo (sin useSearchParams: la página es estática)
+  // /disenar/modelos-3d?modelo=maceta abre ese modelo (sin useSearchParams: la página es estática).
+  // Con medidas en la liga (?modelo=maceta&alto=140…) abre con ésas: las piezas de
+  // Impresión 3D bajo pedido mandan aquí para "modificar las medidas".
   useEffect(() => {
-    const m = modeloPorId(new URLSearchParams(window.location.search).get("modelo") || "")
-    if (m) {
-      setModelo(m)
-      setValores(valoresIniciales(m))
+    const q = new URLSearchParams(window.location.search)
+    const m = modeloPorId(q.get("modelo") || "") || (inicial ? modeloPorId(inicial) : undefined)
+    if (!m) return
+    const v = valoresIniciales(m)
+    let cambia = !!q.get("modelo")
+    for (const p of m.params) {
+      const n = Number(q.get(p.k))
+      if (q.has(p.k) && Number.isFinite(n)) {
+        v[p.k] = n
+        cambia = true
+      }
     }
-  }, [])
+    if (!cambia) return
+    setModelo(m)
+    setValores(limpiarValores(m, v))
+  }, [inicial])
 
   // El modelo se arma en un Web Worker (lib/generador/modelos3d.worker.ts) para
   // que la página no se trabe; sin Worker, aquí mismo.

@@ -1,5 +1,5 @@
 // Catálogo de "Impresión 3D bajo pedido": diseños propios de HETNA hechos con
-// el Texturizador. De aquí salen (scripts/generar-catalogo-impresion.ts):
+// el Texturizador y con Modelos 3D (macetas, soportes, organizadores…). De aquí salen (scripts/generar-catalogo-impresion.ts):
 // el volumen y las medidas de cada pieza, sus fotos y docs/impresion-bajo-
 // pedido/catalogo.json, que el API publica como productos de la tienda
 // (packages/api/src/scripts/sembrar-impresion-bajo-pedido.ts).
@@ -13,14 +13,39 @@ export type DisenoCatalogo = {
   titulo: string
   /** Para quién y para qué (1 o 2 frases, sin promesas que no podamos cumplir) */
   resumen: string
-  /** "pieza" = el rodillo o la placa; "soporte" = el mango con eje para cambiar rodillos */
-  pieza: "pieza" | "soporte"
-  diseno: Partial<DisenoTexturizador>
+  /**
+   * "pieza" = rodillo o placa del Texturizador; "soporte" = el mango con eje;
+   * "modelo" = un modelo paramétrico de Modelos 3D (modelo + valores)
+   */
+  pieza: "pieza" | "soporte" | "modelo"
+  diseno?: Partial<DisenoTexturizador>
+  /** sólo "modelo": id en lib/generador/modelos3d.ts y medidas distintas a las de fábrica */
+  modelo?: string
+  valores?: Record<string, number>
   etiquetas: string[]
 }
 
 const RODILLO: Partial<DisenoTexturizador> = { forma: "rodillo", diametro: 40, largo: 120, eje: 12, relieve: 1.2, orilla: 0, espejo: true, acomodo: "intercalado", fuente: "montserrat", espacioX: 5, espacioY: 6 }
 const PLACA: Partial<DisenoTexturizador> = { forma: "placa", ancho: 150, alto: 100, radio: 4, grosor: 3, relieve: 1.2, modo: "alto", orilla: 0, espejo: true, acomodo: "intercalado", fuente: "montserrat", espacioX: 5, espacioY: 6 }
+
+// Piezas de Modelos 3D (25 nov 2026): cosas de casa, escritorio y taller
+const modelo = (handle: string, titulo: string, resumen: string, m: string, etiquetas: string[], valores?: Record<string, number>): DisenoCatalogo => ({
+  handle, titulo, resumen, pieza: "modelo", modelo: m, ...(valores ? { valores } : {}), etiquetas,
+})
+const MODELOS_IMPRESION: DisenoCatalogo[] = [
+  modelo("maceta-con-drenaje-impresa-3d", "Maceta con drenaje y plato", "Maceta de 10 cm con barreno de drenaje y su plato para que no escurra. Para suculentas, cactus y plantas chicas.", "maceta", ["maceta", "suculentas", "drenaje", "plantas"]),
+  modelo("maceta-grande-con-drenaje-impresa-3d", "Maceta grande con drenaje y plato", "Maceta de 16 cm con barreno de drenaje y plato, para plantas de interior medianas.", "maceta", ["maceta grande", "plantas de interior", "drenaje"], { arriba: 160, abajo: 120, alto: 140, pared: 2.4, drenaje: 14 }),
+  modelo("lapicero-hexagonal-impreso-3d", "Lapicero hexagonal para escritorio", "Lapicero de seis lados para plumas, lápices y brochas.", "porta-lapices", ["lapicero", "escritorio", "organizador"]),
+  modelo("soporte-celular-impreso-3d", "Soporte para celular con paso de cable", "Detiene el celular inclinado para videollamadas o recetas; deja pasar el cable para cargarlo.", "soporte-celular", ["soporte celular", "escritorio", "videollamadas"]),
+  modelo("soporte-tableta-impreso-3d", "Soporte para tableta con paso de cable", "Detiene la tableta inclinada en el escritorio o la cocina, con paso para el cable.", "soporte-celular", ["soporte tableta", "ipad", "cocina"], { ancho: 180, grosor: 14 }),
+  modelo("posavasos-impreso-3d", "Posavasos", "Posavasos para proteger la mesa de vasos y tazas.", "posavasos", ["posavasos", "mesa", "regalo"]),
+  modelo("gancho-de-pared-impreso-3d", "Gancho de pared", "Gancho para llaves, bolsas o herramienta; se fija con dos tornillos.", "gancho-pared", ["gancho", "pared", "llaves"]),
+  modelo("organizador-fresas-brocas-impreso-3d", "Organizador de fresas y brocas", "Base con barrenos para tener ordenadas las fresas y brocas junto a la máquina.", "organizador-fresas", ["organizador fresas", "brocas", "taller cnc"]),
+  modelo("organizador-llaves-allen-impreso-3d", "Organizador de llaves Allen", "Mantiene las llaves Allen por tamaño y a la mano.", "llaves-allen", ["llaves allen", "taller", "organizador"]),
+  modelo("contenedor-apilable-impreso-3d", "Contenedor apilable", "Contenedor que se apila para tornillería, piezas chicas o material de oficina.", "contenedor-apilable", ["contenedor", "apilable", "tornillería"]),
+  modelo("caja-tapa-presion-impresa-3d", "Caja con tapa a presión", "Caja chica con tapa que cierra a presión, para piezas, joyería o refacciones.", "caja-tapa", ["caja", "tapa a presión", "organizador"]),
+  modelo("clip-para-bolsas-impreso-3d", "Clip para bolsas", "Cierra bolsas de café, botanas o croquetas para que no se humedezcan.", "clip-bolsa", ["clip bolsas", "cocina", "despensa"]),
+]
 
 export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
   {
@@ -106,5 +131,14 @@ export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
   },
 ]
 
+CATALOGO_IMPRESION.push(...MODELOS_IMPRESION)
+
 /** Liga a la herramienta con el diseño cargado. */
-export const urlHerramienta = (d: DisenoCatalogo, extra = "") => `/disenar/texturizador?${aUrl(d.diseno)}${extra}`
+export function urlHerramienta(d: DisenoCatalogo, extra = "") {
+  if (d.pieza === "modelo") {
+    const q = new URLSearchParams({ modelo: d.modelo || "" })
+    for (const [k, v] of Object.entries(d.valores || {})) q.set(k, String(v))
+    return `/disenar/modelos-3d?${q.toString()}${extra}`
+  }
+  return `/disenar/texturizador?${aUrl(d.diseno || {})}${extra}`
+}
