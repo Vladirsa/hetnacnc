@@ -2,11 +2,12 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { FacturaPedido } from "@/components/hetna/cuenta/Facturacion"
-import { YaLoRecibi } from "@/components/hetna/cuenta/YaLoRecibi"
+import { EntregaPedido } from "@/components/hetna/cuenta/EntregaPedido"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { OrderDetailsSection } from "@/components/sections/OrderDetailsSection/OrderDetailsSection"
 import { leerFiscal, misFacturas } from "@/lib/cuenta/facturas"
+import { estadoEntrega } from "@/lib/cuenta/reclamo"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { retrieveOrderGroup } from "@/lib/data/orders"
 
@@ -16,8 +17,6 @@ export const metadata: Metadata = {
 }
 
 const PAGADO = ["authorized", "captured", "partially_captured", "partially_authorized"]
-// Ya salió del taller pero no hay confirmación de entrega: se le pide al comprador
-const EN_CAMINO = ["shipped", "partially_shipped", "fulfilled", "partially_fulfilled"]
 
 export default async function DetalleCompra({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -31,6 +30,9 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
   ])
   const pedidos: any[] = orderGroup?.orders || []
   const porPedido = new Map(facturas.map((f) => [f.order_id, f]))
+  // "Todo bien, liberar pago" / "Tengo un problema" de cada pedido físico pagado
+  const activos = pedidos.filter((o) => o.status !== "canceled" && PAGADO.includes(o.payment_status))
+  const entregas = await Promise.all(activos.map((o) => estadoEntrega(o.id)))
 
   return (
     <main className="container pb-16">
@@ -63,11 +65,10 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
             </section>
           )}
 
-          {pedidos
-            .filter((o) => o.status !== "canceled" && PAGADO.includes(o.payment_status) && EN_CAMINO.includes(o.fulfillment_status))
-            .map((o) => (
-              <YaLoRecibi key={`r-${o.id}`} orderId={o.id} taller={o.seller?.name || "el taller"} />
-            ))}
+          {activos.map((o, i) => {
+            const e = entregas[i]
+            return e?.fisico ? <EntregaPedido key={`e-${o.id}`} estadoInicial={e} taller={o.seller?.name || "el taller"} /> : null
+          })}
 
           <OrderDetailsSection orderGroup={orderGroup} />
         </div>

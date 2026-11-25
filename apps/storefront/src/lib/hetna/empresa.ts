@@ -39,6 +39,7 @@ export const EMPRESA = {
   // Política de devoluciones. DEBE coincidir con Google Merchant Center
   // (Configuración › Envíos y devoluciones): si se cambia aquí, cambiarlo allá.
   diasDevolucion: 7, // días naturales desde la entrega, productos físicos sin uso
+  diasLiberacion: 3, // días después de la entrega en que el pago al vendedor se libera solo (DIAS_LIBERACION de la API)
   diasReembolso: 10, // días naturales máximo para reembolsar, ya recibido y revisado el producto
   // Tiempo de entrega de compras en la tienda. Igual que en Merchant Center.
   entregaPreparacion: "3 a 5", // días hábiles para que el taller prepare el pedido

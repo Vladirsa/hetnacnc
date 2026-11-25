@@ -73,6 +73,12 @@ export async function asegurarTablaSaldos(knex: any) {
       t.timestamp("actualizado", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
+  // El comprador liberó el pago ("Todo bien, liberar pago", lib/reclamos-pedido.ts)
+  if (!(await knex.schema.hasColumn(T_SALDO, "aceptado_en"))) {
+    await knex.schema.alterTable(T_SALDO, (t: any) => {
+      t.timestamp("aceptado_en", { useTz: true })
+    })
+  }
   lista = true
 }
 
@@ -191,11 +197,19 @@ export async function retenerReembolsados(c: MedusaContainer): Promise<number> {
   const ids: string[] = (await knex(T_SALDO).whereIn("estado", ["pendiente", "disponible"]).select("order_id"))
     .map((f: any) => f.order_id)
     .filter((id: string) => !esAjuste(id))
-  if (!ids.length) return 0
+  // Un reclamo que HETNA ya resolvió liberando el pago (completo o con un
+  // reembolso parcial descontado aparte) no se vuelve a retener por ese reembolso.
+  const resueltos = new Set<string>(
+    (await knex.schema.hasTable(T_RECLAMO))
+      ? (await knex(T_RECLAMO).whereIn("decision", ["liberar", "reembolso_parcial"]).select("order_id")).map((f: any) => f.order_id)
+      : []
+  )
+  const revisar = ids.filter((id) => !resueltos.has(id))
+  if (!revisar.length) return 0
   const query = c.resolve(ContainerRegistrationKeys.QUERY)
   let n = 0
-  for (let i = 0; i < ids.length; i += 100) {
-    const { data } = await query.graph({ entity: "order", fields: ["id", "status", ...CAMPOS_PAGO], filters: { id: ids.slice(i, i + 100) } })
+  for (let i = 0; i < revisar.length; i += 100) {
+    const { data } = await query.graph({ entity: "order", fields: ["id", "status", ...CAMPOS_PAGO], filters: { id: revisar.slice(i, i + 100) } })
     for (const o of (data || []) as any[]) {
       const motivo = motivoRetencion(o)
       if (motivo) n += await retener(c, o.id, motivo)
@@ -319,7 +333,14 @@ export async function liberarRetenido(c: MedusaContainer, orderId: string): Prom
 // "descontado" antes de esto no tienen renglón y no se vuelven a descontar
 // (pudieron descontarse a mano).
 export const PREFIJO_SOBREPESO = "sobrepeso:"
-export const esAjuste = (orderId: string) => String(orderId || "").startsWith(PREFIJO_SOBREPESO)
+// Descuento por un reclamo de compra resuelto con reembolso o guía de regreso
+// a cargo del taller (lib/reclamos-pedido.ts): mismo mecanismo que el sobrepeso.
+export const PREFIJO_RECLAMO = "reclamo:"
+export const T_RECLAMO = "hetna_reclamo_pedido"
+export const esAjuste = (orderId: string) => {
+  const id = String(orderId || "")
+  return id.startsWith(PREFIJO_SOBREPESO) || id.startsWith(PREFIJO_RECLAMO)
+}
 export const ajusteSobrepesoId = (sobrepesoId: string) => `${PREFIJO_SOBREPESO}${sobrepesoId}`
 
 /** Renglón del saldo que descuenta un sobrepeso (monto en MXN). */
@@ -455,8 +476,9 @@ export function filaParaRespuesta(f: any) {
     pago_referencia: f.pago_referencia,
     motivo: f.motivo,
     creado: f.creado,
-    // Descuento por sobrepeso (renglón negativo), no una venta
+    // Descuento por sobrepeso o por reclamo (renglón negativo), no una venta
     ajuste: esAjuste(f.order_id),
+    aceptado_en: f.aceptado_en ?? null,
   }
 }
 

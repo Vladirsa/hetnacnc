@@ -54,8 +54,9 @@ export default function SaldoPage() {
     <div style={S.page}>
       <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}>Mi saldo</h1>
       <p style={S.meta}>
-        Diseños digitales: disponibles al momento. Productos físicos: disponibles {datos.dias_liberacion} días después de
-        entregados. HETNA te transfiere lo disponible a la cuenta que guardaste en tu perfil.
+        Diseños digitales: disponibles al momento. Productos físicos: disponibles en cuanto el cliente libera el pago, o
+        solos {datos.dias_liberacion} días después de entregados. Si el cliente reporta un problema, el pago se congela
+        (ve Reclamos). HETNA te transfiere lo disponible a la cuenta que guardaste en tu perfil.
       </p>
 
       {monedas.length === 0 ? (
@@ -100,8 +101,8 @@ export default function SaldoPage() {
                 {datos.movimientos.map((f) => (
                   <tr key={f.order_id} style={{ borderTop: "1px solid #EFECE4" }}>
                     <td style={{ padding: "8px" }}>
-                      {/* Descuento por sobrepeso de una guía de HETNA: resta de tu siguiente pago */}
-                      {f.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}>{f.motivo || "Descuento por sobrepeso"}</span> : <>#{f.display_id ?? "—"}{f.digital ? " · digital" : ""}</>}
+                      {/* Descuento por sobrepeso de una guía de HETNA o por un reclamo: resta de tu siguiente pago */}
+                      {f.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}>{f.motivo || "Descuento"}</span> : <>#{f.display_id ?? "—"}{f.digital ? " · digital" : ""}</>}
                     </td>
                     <td style={{ padding: "8px" }}>{dinero(f.productos, f.moneda)}</td>
                     <td style={{ padding: "8px" }}>−{dinero(f.comision, f.moneda)}</td>
@@ -110,6 +111,7 @@ export default function SaldoPage() {
                       <span style={{ background: COLOR[f.estado]?.bg, color: COLOR[f.estado]?.c, borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>
                         {f.estado_nombre}
                       </span>
+                      {f.aceptado_en && <span style={{ display: "block", ...S.meta }}>El cliente liberó el pago</span>}
                       {f.estado === "pendiente" && f.disponible_en && (
                         <span style={{ display: "block", ...S.meta }}>Se libera el {fecha(f.disponible_en)}</span>
                       )}
