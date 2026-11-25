@@ -63,7 +63,7 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras"
   /** llaveros y placas: se piden con el texto del cliente */
   personalizable?: boolean
   etiquetas: string[]
@@ -94,6 +94,22 @@ function descripcion(d: Diseno): string {
     ].join("")
   }
   // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
+  // Letras 3D: también con el texto del cliente
+  if (d.pieza === "letras") {
+    const estilo = (d as { diseno?: { estilo?: string } }).diseno?.estilo
+    const como =
+      estilo === "pie"
+        ? "Van unidas en una base para pararse en la mesa o la repisa (una sola pieza)."
+        : estilo === "pared"
+          ? "Sueltas para colgar: cada letra trae un barreno oculto atrás para el clavo. En la herramienta bajas gratis la plantilla de montaje a tamaño real."
+          : "Huecas por atrás para meter tira LED (no incluida); el frente delgado deja pasar la luz si se imprimen en blanco o natural."
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>${como}</li><li>Medida del modelo de la foto: ${mm(d.medidas_mm)} (el largo cambia según tu palabra).</li><li>Se imprimen en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p><strong>Cómo se pide:</strong> escribe tu palabra o nombre al agregarlas al carrito. El precio de la ficha es para la palabra de la foto; si la tuya es mucho más larga, el taller te avisa la diferencia antes de imprimir.</p>`,
+      `<p>¿Otro tamaño o letra? Ábrelas en la herramienta de Letras 3D de HETNA y baja el STL gratis.</p>`,
+    ].join("")
+  }
   // Llaveros y placas: el cliente escribe su nombre al agregarlo al carrito
   if (d.pieza === "llavero")
     return [

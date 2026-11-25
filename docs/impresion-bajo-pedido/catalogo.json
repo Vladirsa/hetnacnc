@@ -1194,5 +1194,179 @@
       4.5
     ],
     "personalizable": true
+  },
+  {
+    "handle": "letras-love-de-pie-impresas-3d",
+    "titulo": "Letras LOVE de pie",
+    "resumen": "Letras de 6 cm unidas en una base, para la repisa, el escritorio o la mesa de dulces. Puedes pedirlas con otra palabra.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras decorativas",
+      "love",
+      "regalo",
+      "decoración"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=LOVE&estilo=pie&fuente=alfa-slab-one&alto=60&profundidad=12",
+    "foto": "fotos/letras-love-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-love-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "LOVE",
+      "estilo": "pie",
+      "fuente": "alfa-slab-one",
+      "alto": 60,
+      "profundidad": 12
+    },
+    "volumen_cm3": 148.9,
+    "medidas_mm": [
+      243.6,
+      36,
+      66.2
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "letras-home-de-pie-impresas-3d",
+    "titulo": "Letras HOME de pie",
+    "resumen": "Letras de 6 cm con base para la sala o la entrada. Escribe otra palabra si la quieres distinta.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras decorativas",
+      "home",
+      "casa",
+      "decoración"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=HOME&estilo=pie&fuente=montserrat&alto=60&profundidad=12",
+    "foto": "fotos/letras-home-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-home-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "HOME",
+      "estilo": "pie",
+      "fuente": "montserrat",
+      "alto": 60,
+      "profundidad": 12
+    },
+    "volumen_cm3": 159.5,
+    "medidas_mm": [
+      292.5,
+      36,
+      66.4
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "letras-xv-anos-de-pie-impresas-3d",
+    "titulo": "Letras XV para mesa de XV años",
+    "resumen": "Letras XV de 10 cm con base, para la mesa principal o de pastel. También con tu nombre o con iniciales.",
+    "pieza": "letras",
+    "etiquetas": [
+      "xv años",
+      "fiesta",
+      "mesa de pastel",
+      "decoración de eventos"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=XV&estilo=pie&fuente=cinzel&alto=100&profundidad=15",
+    "foto": "fotos/letras-xv-anos-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-xv-anos-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "XV",
+      "estilo": "pie",
+      "fuente": "cinzel",
+      "alto": 100,
+      "profundidad": 15
+    },
+    "volumen_cm3": 137.4,
+    "medidas_mm": [
+      231.4,
+      39,
+      106.9
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "letras-familia-pared-impresas-3d",
+    "titulo": "Letras FAMILIA para pared",
+    "resumen": "Letras sueltas de 8 cm para colgar, con barreno oculto atrás. Incluye la plantilla de montaje para que queden derechas.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras para pared",
+      "familia",
+      "decoración",
+      "sala"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=FAMILIA&estilo=pared&fuente=montserrat&alto=80&profundidad=12",
+    "foto": "fotos/letras-familia-pared-impresas-3d.png",
+    "modelo_3d": "modelos/letras-familia-pared-impresas-3d.stl",
+    "diseno": {
+      "texto": "FAMILIA",
+      "estilo": "pared",
+      "fuente": "montserrat",
+      "alto": 80,
+      "profundidad": 12
+    },
+    "volumen_cm3": 257.3,
+    "medidas_mm": [
+      520.9,
+      12,
+      80
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "letras-nombre-pared-impresas-3d",
+    "titulo": "Letras con tu nombre para pared",
+    "resumen": "Tu nombre o el de tu negocio en letras de 10 cm para colgar, con barreno oculto atrás y plantilla de montaje.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras con nombre",
+      "cuarto de niños",
+      "negocio",
+      "pared"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=SOFIA&estilo=pared&fuente=alfa-slab-one&alto=100&profundidad=14",
+    "foto": "fotos/letras-nombre-pared-impresas-3d.png",
+    "modelo_3d": "modelos/letras-nombre-pared-impresas-3d.stl",
+    "diseno": {
+      "texto": "SOFIA",
+      "estilo": "pared",
+      "fuente": "alfa-slab-one",
+      "alto": 100,
+      "profundidad": 14
+    },
+    "volumen_cm3": 430.6,
+    "medidas_mm": [
+      436.7,
+      14,
+      103.6
+    ],
+    "personalizable": true
+  },
+  {
+    "handle": "letras-huecas-led-impresas-3d",
+    "titulo": "Letras huecas para LED",
+    "resumen": "Letras de 10 cm huecas por atrás para meter tira LED; el frente delgado deja pasar la luz. Para negocios y fiestas.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras luminosas",
+      "led",
+      "anuncio",
+      "negocio"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=OPEN&estilo=luz&fuente=alfa-slab-one&alto=100&profundidad=25",
+    "foto": "fotos/letras-huecas-led-impresas-3d.png",
+    "modelo_3d": "modelos/letras-huecas-led-impresas-3d.stl",
+    "diseno": {
+      "texto": "OPEN",
+      "estilo": "luz",
+      "fuente": "alfa-slab-one",
+      "alto": 100,
+      "profundidad": 25
+    },
+    "volumen_cm3": 116.4,
+    "medidas_mm": [
+      414.3,
+      25,
+      103.6
+    ],
+    "personalizable": true
   }
 ]

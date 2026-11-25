@@ -28,6 +28,13 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
 - Son `personalizable`: en la ficha el cliente escribe su nombre antes de agregarlo, y va en `metadata.texto` del renglón. El taller lo ve en el correo del pedido como «Texto: …».
 - "Modificar" abre `/disenar/llaveros?texto=…&forma=…&fuente=…`, donde puede cambiar la forma, poner un ícono o su logo, o bajar muchos nombres en un ZIP.
 
+## Letras 3D listas
+
+- Están en `LETRAS_IMPRESION` y se arman con `lib/generador/letras3dImpresion.ts` (de pie con base, para colgar o huecas para LED).
+- También son `personalizables`: el cliente escribe su palabra al agregarlas.
+- Las fotos y la vista 3D salen paradas y de frente. El STL que baja el cliente en la herramienta viene en la posición para imprimir.
+- "Modificar" abre `/disenar/letras-3d?modo=impresion&texto=…&estilo=…`. Las de colgar traen la plantilla de montaje en PDF a tamaño real.
+
 ## Publicar o actualizar el catálogo
 
 1. Edita `apps/storefront/src/lib/impresion/catalogo-disenos.ts`.
@@ -35,7 +42,7 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
    ```
    FUENTES_DIR=/ruta/fuentes OPENTYPE_JS=/ruta/opentype.js/dist/opentype.js MESHOPT_JS=/ruta/node_modules/meshoptimizer npx tsx scripts/generar-catalogo-impresion.ts
    ```
-   - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm (montserrat, pacifico, lobster, bebas-neue, oswald y cinzel para el catálogo actual).
+   - `FUENTES_DIR` tiene los paquetes `@fontsource/*` de npm (montserrat, pacifico, lobster, bebas-neue, oswald, cinzel y alfa-slab-one para el catálogo actual).
    - `OPENTYPE_JS`: `opentype.js@1.3.4`, la misma que usa la página (la 2.x no lee Oswald).
    - `MESHOPT_JS` es el paquete `meshoptimizer` de npm: simplifica el modelo 3D de la ficha a 20 mil triángulos (~1 MB) para que cargue rápido en celular.
    - Para rehacer sólo las piezas de Modelos 3D (sin tipografías): `SOLO_MODELOS=1 npx tsx scripts/generar-catalogo-impresion.ts`.

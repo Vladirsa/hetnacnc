@@ -8,6 +8,7 @@
 // Para agregar un diseño: súmalo aquí, corre el generador y luego el script
 // del API. El handle no se cambia una vez publicado (es la dirección de la ficha).
 import type { FormaClasica } from "@/lib/generador/cortadores"
+import type { EstiloImpresion } from "@/lib/generador/letras3dImpresion"
 import type { FormaLlavero } from "@/lib/generador/llaveros"
 import type { IconoTextura } from "@/lib/generador/texturizador"
 import { aUrl, type DisenoTexturizador } from "@/lib/generador/texturizador-url"
@@ -30,6 +31,15 @@ export type LlaveroCatalogo = {
   escala?: number
 }
 
+/** Letras 3D para impresora (lib/generador/letras3dImpresion.ts); se personalizan con el texto del cliente */
+export type LetrasCatalogo = {
+  texto: string
+  estilo: EstiloImpresion
+  fuente: string
+  alto: number
+  profundidad: number
+}
+
 export type DisenoCatalogo = {
   handle: string
   titulo: string
@@ -38,9 +48,10 @@ export type DisenoCatalogo = {
   /**
    * "pieza" = rodillo o placa del Texturizador; "soporte" = el mango con eje;
    * "cortador" = cortador de galletas; "modelo" = un modelo paramétrico de
-   * Modelos 3D (modelo + valores); "llavero" = llavero o placa con nombre
+   * Modelos 3D (modelo + valores); "llavero" = llavero o placa con nombre;
+   * "letras" = letras 3D para impresora
    */
-  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras"
   /** rodillos, placas y soporte */
   diseno?: Partial<DisenoTexturizador>
   cortador?: CortadorCatalogo
@@ -48,6 +59,7 @@ export type DisenoCatalogo = {
   modelo?: string
   valores?: Record<string, number>
   llavero?: LlaveroCatalogo
+  letras?: LetrasCatalogo
   etiquetas: string[]
 }
 
@@ -87,6 +99,20 @@ const LLAVEROS_IMPRESION: DisenoCatalogo[] = [
   llavero("llavero-negocio-impreso-3d", "Llavero para tu negocio o evento", "Llavero rectangular con el nombre de tu marca o evento. Ideal para regalar a clientes: pide varios y súbele tu logo en la herramienta.", { texto: "TU MARCA", forma: "rect", fuente: "oswald", alto: 11 }, ["llaveros personalizados", "promocionales", "negocio", "evento"]),
   llavero("placa-puerta-con-nombre-impresa-3d", "Placa para puerta con nombre", "Placa rectangular para la puerta del cuarto, la oficina o el taller, con letras en relieve.", { texto: "Taller", forma: "rect", fuente: "oswald", alto: 22 }, ["placa puerta", "letrero", "cuarto", "oficina"]),
   llavero("adorno-con-fecha-impreso-3d", "Adorno ovalado con fecha o nombre", "Adorno ovalado con la fecha o el nombre que quieras, para recuerdos de boda, XV años o bautizo.", { texto: "2026", forma: "ovalo", fuente: "cinzel", alto: 16 }, ["recuerdos", "boda", "xv años", "bautizo"]),
+]
+
+// Letras 3D listas (25 nov 2026): de pie para mesa, para colgar o huecas para
+// LED. También personalizables: el cliente escribe su palabra al agregarlas.
+const letras = (handle: string, titulo: string, resumen: string, l: LetrasCatalogo, etiquetas: string[]): DisenoCatalogo => ({
+  handle, titulo, resumen, pieza: "letras", letras: l, etiquetas,
+})
+const LETRAS_IMPRESION: DisenoCatalogo[] = [
+  letras("letras-love-de-pie-impresas-3d", "Letras LOVE de pie", "Letras de 6 cm unidas en una base, para la repisa, el escritorio o la mesa de dulces. Puedes pedirlas con otra palabra.", { texto: "LOVE", estilo: "pie", fuente: "alfa-slab-one", alto: 60, profundidad: 12 }, ["letras decorativas", "love", "regalo", "decoración"]),
+  letras("letras-home-de-pie-impresas-3d", "Letras HOME de pie", "Letras de 6 cm con base para la sala o la entrada. Escribe otra palabra si la quieres distinta.", { texto: "HOME", estilo: "pie", fuente: "montserrat", alto: 60, profundidad: 12 }, ["letras decorativas", "home", "casa", "decoración"]),
+  letras("letras-xv-anos-de-pie-impresas-3d", "Letras XV para mesa de XV años", "Letras XV de 10 cm con base, para la mesa principal o de pastel. También con tu nombre o con iniciales.", { texto: "XV", estilo: "pie", fuente: "cinzel", alto: 100, profundidad: 15 }, ["xv años", "fiesta", "mesa de pastel", "decoración de eventos"]),
+  letras("letras-familia-pared-impresas-3d", "Letras FAMILIA para pared", "Letras sueltas de 8 cm para colgar, con barreno oculto atrás. Incluye la plantilla de montaje para que queden derechas.", { texto: "FAMILIA", estilo: "pared", fuente: "montserrat", alto: 80, profundidad: 12 }, ["letras para pared", "familia", "decoración", "sala"]),
+  letras("letras-nombre-pared-impresas-3d", "Letras con tu nombre para pared", "Tu nombre o el de tu negocio en letras de 10 cm para colgar, con barreno oculto atrás y plantilla de montaje.", { texto: "SOFIA", estilo: "pared", fuente: "alfa-slab-one", alto: 100, profundidad: 14 }, ["letras con nombre", "cuarto de niños", "negocio", "pared"]),
+  letras("letras-huecas-led-impresas-3d", "Letras huecas para LED", "Letras de 10 cm huecas por atrás para meter tira LED; el frente delgado deja pasar la luz. Para negocios y fiestas.", { texto: "OPEN", estilo: "luz", fuente: "alfa-slab-one", alto: 100, profundidad: 25 }, ["letras luminosas", "led", "anuncio", "negocio"]),
 ]
 
 export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
@@ -199,6 +225,7 @@ export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
   },
   ...MODELOS_IMPRESION,
   ...LLAVEROS_IMPRESION,
+  ...LETRAS_IMPRESION,
 ]
 
 /** Liga a la herramienta con el diseño cargado. */
@@ -215,6 +242,11 @@ export function urlHerramienta(d: DisenoCatalogo, extra = ""): string {
       q.set("fuente", s.fuente)
     } else if (s?.tipo === "icono") q.set("selloIcono", s.icono)
     return `/disenar/cortadores-galletas?${q.toString()}${extra}`
+  }
+  if (d.pieza === "letras" && d.letras) {
+    const l = d.letras
+    const q = new URLSearchParams({ modo: "impresion", texto: l.texto, estilo: l.estilo, fuente: l.fuente, alto: String(l.alto), profundidad: String(l.profundidad) })
+    return `/disenar/letras-3d?${q.toString()}${extra}`
   }
   if (d.pieza === "llavero" && d.llavero) {
     const l = d.llavero
