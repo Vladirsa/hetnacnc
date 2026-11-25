@@ -195,8 +195,13 @@ export const PagarCompra = ({ cart, conPaypal = false, soloDigital = false }: { 
             Al pagar confirmas que leíste y aceptas los{" "}
             <LocalizedClientLink href="/terminos-y-condiciones" className="underline">
               términos y condiciones
+            </LocalizedClientLink>{" "}
+            y la{" "}
+            <LocalizedClientLink href="/devoluciones" className="underline">
+              política de devoluciones
             </LocalizedClientLink>
-            .
+            . El vendedor recibe tu pago cuando confirmas que te llegó bien; si algo llega dañado, incompleto o distinto, repórtalo en
+            48 horas con fotos.
           </p>
         </div>
       </section>

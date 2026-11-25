@@ -31,8 +31,11 @@ import { IMPRESION_CALIDAD, IMPRESION_MATERIAL, MATERIALES_LASER as MATERIALES_L
 import { MENSAJES_DIA, TOPE_MES_USD, contarMensaje, estadoUso, gastoDelMes, registrarUso } from "./ia-fabricacion-uso"
 
 export const MODELO = () => (process.env.IA_FABRICACION_MODELO || "claude-haiku-5-5").trim()
+// Apagado por omisión desde el 25 nov 2026: el dueño pidió quitar el «Asistente IA»
+// del panel de talleres (se borró apps/vendor/src/routes/asistente-ia). Para
+// volver a prenderlo: IA_FABRICACION=on en el .env del API.
 export const iaFabricacionEncendida = () =>
-  !!process.env.ANTHROPIC_API_KEY && (process.env.IA_FABRICACION || "").toLowerCase() !== "off"
+  !!process.env.ANTHROPIC_API_KEY && (process.env.IA_FABRICACION || "").toLowerCase() === "on"
 
 // ---------------------------------------------------------------- plan
 
