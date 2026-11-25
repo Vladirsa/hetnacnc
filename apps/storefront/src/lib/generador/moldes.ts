@@ -11,6 +11,7 @@
 // Usa manifold-3d (el mismo de Partir 3D): restas y cortes exactos en el
 // navegador. Todo en milímetros. Z hacia arriba.
 import { aMalla, aManifold, cargarManifold } from "@/lib/generador/partir3d"
+import { type Desmoldeo, revisarDesmoldeo } from "@/lib/generador/desmoldeo"
 import type { Malla } from "@/lib/generador/vectores"
 
 export type TipoMolde = "dos_partes" | "abierto" | "caja_silicona"
@@ -51,7 +52,7 @@ export type PiezaMolde = {
   nombre: string
   malla: Malla
   tam: [number, number, number]
-  /** Se imprime volteada (la cara de partición sobre la cama). */
+  /** Se imprime volteada (la cara de afuera sobre la cama y la de partición hacia arriba). */
   voltear: boolean
 }
 export type ResultadoMolde = {
@@ -64,6 +65,8 @@ export type ResultadoMolde = {
   colado: number
   /** Altura (mm) del plano de partición, para separar las mitades en la vista. */
   particionZ: number | null
+  /** ¿Sale sin atorarse? (abierto y dos partes; lib/generador/desmoldeo.ts) */
+  desmoldeo: Desmoldeo | null
   avisos: string[]
 }
 
@@ -182,11 +185,7 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       // Bloque hasta un pelo abajo del tope de la pieza: la cara de arriba queda abierta
       const bloque = g(g(Manifold.cube([x1 - x0 + 2 * pared, y1 - y0 + 2 * pared, H + pared - 0.01])).translate([x0 - pared, y0 - pared, -pared]))
       salida("molde", g(bloque.subtract(pieza)))
-      // Si la pieza termina en punta o curva arriba, la boca casi no existe
-      const boca = g(pieza.slice(H - 0.02)).area()
-      if (boca < 0.15 * (x1 - x0) * (y1 - y0))
-        avisos.push("La boca del molde quedó muy chica: la cara de arriba de la pieza casi no toca el borde. Gira la pieza (paso 2) para que su cara plana o más ancha quede hacia arriba.")
-      avisos.push("Molde abierto: la cara de arriba de la pieza es la que queda al aire. Sirve para piezas que salen hacia arriba sin atorarse (sin partes que se metan por debajo).")
+      avisos.push("Molde abierto: la cara de arriba de la pieza es la que queda al aire.")
     } else {
       // Dos partes
       const zp = (H * particion) / 100
@@ -249,10 +248,13 @@ export async function hacerMolde(entrada: Malla, o0: Partial<OpcionesMolde>): Pr
       if (abajo.isEmpty() || arriba.isEmpty()) throw new Error("No se pudo partir el molde a esa altura. Prueba otra altura de partición.")
       salida("molde-abajo", abajo)
       salida("molde-arriba", arriba, true)
-      avisos.push(`El molde se parte a ${r1(zp)} mm de la base de la pieza. Si la pieza se atora al abrirlo, mueve la partición a la parte más ancha.`)
+      avisos.push(`El molde se parte a ${r1(zp)} mm de la base de la pieza.`)
     }
 
-    return { tipo, piezas, modelo, colado: r1(colado / 1000), particionZ, avisos }
+    // ¿Sale sin atorarse? Se revisa sobre la pieza original (las sugerencias
+    // de lado son las mismas opciones del paso 2)
+    const desmoldeo = tipo === "caja_silicona" ? null : revisarDesmoldeo(entrada.tris, tipo, o.arriba, particion)
+    return { tipo, piezas, modelo, colado: r1(colado / 1000), particionZ, desmoldeo, avisos }
   } finally {
     for (const x of basura) { try { (x as any)?.delete?.() } catch {} }
   }

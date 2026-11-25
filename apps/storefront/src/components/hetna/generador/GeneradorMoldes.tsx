@@ -10,6 +10,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { MandarDisenoCorreo } from "@/components/hetna/estudio/MandarDisenoCorreo"
+import { BotonesCam } from "@/components/hetna/generador/BotonesCam"
+import { SIN_ATORAR } from "@/lib/generador/desmoldeo"
 import { mandarArchivosAFabricar, mandarPaqueteACotizador } from "@/lib/generador/aCotizador"
 import { type Arriba, OPCIONES_MOLDE, type ResultadoMolde, type TipoMolde, hacerMolde, volteada } from "@/lib/generador/moldes"
 import { leerOBJ, leerSTL, mallaSTL, type Malla } from "@/lib/generador/vectores"
@@ -232,7 +234,7 @@ export function GeneradorMoldes() {
             <input type="file" accept=".stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {cargando && <p className="m-0 text-[13px] text-[#C2560A]">{cargando}</p>}
-          {error && <p className="m-0 rounded-[10px] bg-[#FDECEA] px-3 py-2 text-[13px] text-[#8A1C1C]">{error}</p>}
+          {error && <p className="m-0 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[13px] text-[#8A1C1C]">{error}</p>}
 
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-semibold text-[#1B1B18]">1. Tipo de molde</span>
@@ -292,6 +294,52 @@ export function GeneradorMoldes() {
               <p className="m-0 text-[13.5px] text-[#1B1B18]">
                 {res.tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} ml</b>
               </p>
+              {res.desmoldeo && (res.desmoldeo.atorado <= SIN_ATORAR ? (
+                <div className="rounded-[10px] bg-[#E6F4EC] px-3 py-2 text-[12.5px] text-[#16794F]" data-testid="desmoldeo">
+                  <b>✓ La pieza sale sin atorarse.</b>{" "}
+                  {res.tipo === "dos_partes"
+                    ? "Las dos mitades también se pueden maquinar en un CNC de 3 ejes desde su cara de partición (en aluminio, MDF o cera)."
+                    : "El molde también se puede maquinar en un CNC de 3 ejes desde arriba (en aluminio, MDF o cera)."}
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    {res.piezas.map((p) => (
+                      <div key={p.nombre} className="flex items-center gap-2">
+                        <span className="w-[92px] shrink-0 font-semibold">{p.nombre}</span>
+                        <BotonesCam compacto nombre={`${nombre}-${p.nombre}`} stl={() => mallaSTL(p.voltear ? volteada(p.malla) : p.malla)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[12.5px] text-[#8A1C1C]" data-testid="desmoldeo">
+                  <b>⚠ Se va a atorar:</b> aprox. {Math.round(res.desmoldeo.atorado * 100)}% de la pieza no sale al abrir el molde (hay molde atrapado {res.tipo === "dos_partes" ? "entre la pieza y la partición" : "encima de la pieza"}).
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {res.desmoldeo.particion && (
+                      <button type="button" onClick={() => setParticion(res.desmoldeo!.particion!.particion)} className="rounded-[8px] bg-[#142033] px-3 py-1.5 text-[12.5px] font-semibold text-white">
+                        Partir al {res.desmoldeo.particion.particion}%{res.desmoldeo.particion.atorado > SIN_ATORAR ? ` (se atora ${Math.round(res.desmoldeo.particion.atorado * 100)}%)` : " (sale bien)"}
+                      </button>
+                    )}
+                    {res.desmoldeo.arriba && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const s = res.desmoldeo!.arriba!
+                          arribaElegido.current = true
+                          setArriba(s.arriba)
+                          if (s.particion) setParticion(s.particion)
+                        }}
+                        className="rounded-[8px] bg-[#142033] px-3 py-1.5 text-[12.5px] font-semibold text-white"
+                      >
+                        Girar: {ARRIBAS.find((a) => a.id === res.desmoldeo!.arriba!.arriba)?.nombre}
+                        {res.desmoldeo.arriba.particion ? ` y partir al ${res.desmoldeo.arriba.particion}%` : ""}
+                        {res.desmoldeo.arriba.atorado > SIN_ATORAR ? ` (se atora ${Math.round(res.desmoldeo.arriba.atorado * 100)}%)` : " (sale bien)"}
+                      </button>
+                    )}
+                    {!res.desmoldeo.particion && !res.desmoldeo.arriba && (
+                      <span>Ningún lado ni altura la deja salir completa: usa la caja para silicona (el molde flexible sí sale) o parte la pieza.</span>
+                    )}
+                  </div>
+                </div>
+              ))}
               {res.avisos.map((a) => (
                 <p key={a} className="m-0 rounded-[10px] bg-[#FFF8F1] px-3 py-2 text-[12.5px] text-[#7A4A12]">
                   {a}
@@ -322,7 +370,7 @@ export function GeneradorMoldes() {
                 </button>
               </div>
               {aviso && <p className="m-0 text-[12.5px] text-[#8A1C1C]">{aviso}</p>}
-              <MandarDisenoCorreo herramienta="moldes-3d" archivo={`${nombre}-molde`} servicio="Impresión 3D" oscuro={false} />
+              <MandarDisenoCorreo herramienta="moldes-3d" archivo={`${nombre}-molde`} servicio="Impresión 3D" />
             </div>
           )}
         </section>
