@@ -22,8 +22,8 @@ const LIMITE = 60 * 1024 * 1024
 const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 
 const TIPOS: { id: TipoMolde; nombre: string; nota: string }[] = [
-  { id: "dos_partes", nombre: "Molde de 2 partes", nota: "Para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra, se vacía por el bebedero y se abre en dos." },
-  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, posavasos, macetas. La cara de arriba de tu pieza queda al aire." },
+  { id: "dos_partes", nombre: "Molde de 2 partes", nota: "Para piezas con volumen por todos lados (figuras, perillas, piezas mecánicas). Se cierra con pinzas, se vacía por el bebedero y se abre en dos." },
+  { id: "abierto", nombre: "Molde abierto", nota: "Una sola pieza, abierta por arriba: jabones, velas, posavasos. Con núcleo, macetas y vasos huecos con drenaje. La cara de arriba de tu pieza queda al aire." },
   { id: "caja_silicona", nombre: "Caja para silicona", nota: "La caja con tu pieza pegada al piso: la imprimes, vacías silicona y te queda un molde flexible para hacer muchas copias." },
 ]
 const ARRIBAS: { id: Arriba; nombre: string }[] = [
