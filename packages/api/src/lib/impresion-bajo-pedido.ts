@@ -60,7 +60,8 @@ export function extenderDestacado(hastaActual: string | null, ahora = Date.now()
 }
 
 // ── Datos de la pieza y precio recomendado ───────────────────────────────
-export type DatosPieza = { volumen_cm3: number; medidas_mm: [number, number, number] }
+/** relleno: % con que se imprime (20 por omisión; 100 en piezas de pura pared, como un cortador) */
+export type DatosPieza = { volumen_cm3: number; medidas_mm: [number, number, number]; relleno?: number }
 
 /** Lo que el producto guarda de la pieza (metadata.impresion), validado. */
 export function datosPieza(producto: any): DatosPieza | null {
@@ -68,7 +69,8 @@ export function datosPieza(producto: any): DatosPieza | null {
   const v = Number(d?.volumen_cm3)
   const m = Array.isArray(d?.medidas_mm) ? d.medidas_mm.map(Number) : []
   if (!(v > 0) || m.length !== 3 || !m.every((x: number) => x > 0)) return null
-  return { volumen_cm3: v, medidas_mm: [m[0], m[1], m[2]] }
+  const relleno = Number(d?.relleno)
+  return { volumen_cm3: v, medidas_mm: [m[0], m[1], m[2]], ...(relleno > 0 && relleno <= 100 ? { relleno } : {}) }
 }
 
 /** Gramos de filamento de la pieza (sin soportes), con la densidad del material. */

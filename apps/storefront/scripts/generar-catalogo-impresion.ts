@@ -12,6 +12,7 @@ import { existsSync, readFileSync, writeFileSync } from "fs"
 import { join, resolve } from "path"
 
 import { FUENTES } from "@/lib/generador/fuentes"
+import { hacerCortador } from "@/lib/generador/cortadores"
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta } from "@/lib/impresion/catalogo-disenos"
 
@@ -54,6 +55,21 @@ const salida = CATALOGO_IMPRESION.map((d) => {
   const comun = { palabras: o.palabras || [], iconos: o.iconos || [], tamano: o.tamano, espacioX: o.espacioX, espacioY: o.espacioY, acomodo: o.acomodo, orilla: o.orilla, relieve: o.relieve, modo: o.modo || "alto", espejo: o.espejo }
   let tris: number[]
   let avisos: string[] = []
+  if (d.pieza === "cortador" && d.cortador) {
+    const c = d.cortador
+    const fs = c.sello?.tipo === "texto" ? fuente(c.sello.fuente) : null
+    const r = hacerCortador(c.forma, fs, {
+      tamano: c.tamano, altura: 14, pared: 1.2, ceja: 4, grosorCeja: 2,
+      sello: c.sello?.tipo === "texto" ? { tipo: "texto", texto: c.sello.texto } : c.sello?.tipo === "icono" ? { tipo: "icono", icono: c.sello.icono } : { tipo: "ninguno" },
+      relieveSello: 1.5,
+    })
+    if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
+    // el volumen es de las dos piezas (cortador + sello), la medida es la del cortador
+    const m = medir([...r.cortador.tris, ...(r.sello?.tris || [])])
+    const mc = medir(r.cortador.tris)
+    console.log(`${d.handle}: ${m.volumen_cm3} cm³, cortador ${mc.medidas_mm.join(" × ")} mm${r.sello ? " + sello" : ""}${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
+    return { handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello }
+  }
   if (d.pieza === "soporte") {
     const r = hacerRodillo(f, { ...comun, modo: "alto", diametro: o.diametro, largo: o.largo, eje: o.eje })
     tris = hacerSoporte(o.eje, o.largo, Math.ceil(r.diametroTotal + 10)).tris

@@ -359,6 +359,276 @@
     ]
   },
   {
+    "handle": "cortador-galletas-corazon-impreso-3d",
+    "titulo": "Cortador de galletas de corazón con sello «Te amo»",
+    "resumen": "Corazón de 7 cm con sello «Te amo» para San Valentín, aniversarios y bodas.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "corazon"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?icono=corazon&tamano=70&sello=Te+amo&fuente=pacifico",
+    "foto": "fotos/cortador-galletas-corazon-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "icono",
+        "icono": "corazon"
+      },
+      "tamano": 70,
+      "sello": {
+        "tipo": "texto",
+        "texto": "Te amo",
+        "fuente": "pacifico"
+      }
+    },
+    "volumen_cm3": 13.6,
+    "medidas_mm": [
+      80.3,
+      73.6,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": true
+  },
+  {
+    "handle": "cortador-galletas-estrella-impreso-3d",
+    "titulo": "Cortador de galletas de estrella",
+    "resumen": "Estrella de 7 cm para Navidad, fiestas infantiles y decoración con glaseado.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "estrella"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?icono=estrella&tamano=70",
+    "foto": "fotos/cortador-galletas-estrella-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "icono",
+        "icono": "estrella"
+      },
+      "tamano": 70
+    },
+    "volumen_cm3": 7,
+    "medidas_mm": [
+      80.4,
+      77,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-nube-impreso-3d",
+    "titulo": "Cortador de galletas de nube",
+    "resumen": "Nube de 7.5 cm para baby shower, fiestas infantiles y galletas decoradas.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "nube"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?forma=nube&tamano=75",
+    "foto": "fotos/cortador-galletas-nube-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "clasica",
+        "forma": "nube"
+      },
+      "tamano": 75
+    },
+    "volumen_cm3": 6,
+    "medidas_mm": [
+      85.4,
+      67,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-pino-impreso-3d",
+    "titulo": "Cortador de galletas de pino navideño",
+    "resumen": "Pino de 8 cm para galletas de Navidad.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "pino"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?forma=arbol&tamano=80",
+    "foto": "fotos/cortador-galletas-pino-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "clasica",
+        "forma": "arbol"
+      },
+      "tamano": 80
+    },
+    "volumen_cm3": 7.6,
+    "medidas_mm": [
+      78.4,
+      90.4,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-casita-impreso-3d",
+    "titulo": "Cortador de galletas de casita",
+    "resumen": "Casita de 7 cm: galletas de jengibre, inauguraciones y Navidad.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "casita"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?forma=casa&tamano=70",
+    "foto": "fotos/cortador-galletas-casita-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "clasica",
+        "forma": "casa"
+      },
+      "tamano": 70
+    },
+    "volumen_cm3": 6.4,
+    "medidas_mm": [
+      79.8,
+      80.4,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-flor-impreso-3d",
+    "titulo": "Cortador de galletas de flor",
+    "resumen": "Flor de cinco pétalos de 6.5 cm para primavera, bodas y Día de las Madres.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "flor"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?icono=flor&tamano=65",
+    "foto": "fotos/cortador-galletas-flor-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "icono",
+        "icono": "flor"
+      },
+      "tamano": 65
+    },
+    "volumen_cm3": 5.8,
+    "medidas_mm": [
+      75.4,
+      73.5,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-huellita-impreso-3d",
+    "titulo": "Cortador de galletas de huellita",
+    "resumen": "Huellita de 6 cm para galletas de mascotas y fiestas temáticas.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "huellita"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?icono=huella&tamano=60",
+    "foto": "fotos/cortador-galletas-huellita-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "icono",
+        "icono": "huella"
+      },
+      "tamano": 60
+    },
+    "volumen_cm3": 5.6,
+    "medidas_mm": [
+      68.9,
+      70.4,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-copo-nieve-impreso-3d",
+    "titulo": "Cortador de galletas de copo de nieve",
+    "resumen": "Copo de nieve de 7 cm para galletas de invierno y Navidad.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "copo nieve"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?icono=copo&tamano=70",
+    "foto": "fotos/cortador-galletas-copo-nieve-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "icono",
+        "icono": "copo"
+      },
+      "tamano": 70
+    },
+    "volumen_cm3": 10.1,
+    "medidas_mm": [
+      80.4,
+      74.5,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": false
+  },
+  {
+    "handle": "cortador-galletas-redondo-estrella-impreso-3d",
+    "titulo": "Cortador de galletas redondo con sello de estrella",
+    "resumen": "Galleta redonda de 6.5 cm con una estrella marcada al centro.",
+    "pieza": "cortador",
+    "etiquetas": [
+      "cortador de galletas",
+      "galletas decoradas",
+      "repostería",
+      "redondo estrella"
+    ],
+    "herramienta_url": "/disenar/cortadores-galletas?forma=redondo&tamano=65&selloIcono=estrella",
+    "foto": "fotos/cortador-galletas-redondo-estrella-impreso-3d.png",
+    "diseno": {
+      "forma": {
+        "tipo": "clasica",
+        "forma": "redondo"
+      },
+      "tamano": 65,
+      "sello": {
+        "tipo": "icono",
+        "icono": "estrella"
+      }
+    },
+    "volumen_cm3": 15.7,
+    "medidas_mm": [
+      75.4,
+      75.4,
+      14
+    ],
+    "relleno": 100,
+    "con_sello": true
+  },
+  {
     "handle": "soporte-rodillo-texturizador-impreso-3d",
     "titulo": "Soporte con eje para rodillos texturizadores (cambia sólo el rodillo)",
     "resumen": "Mango con eje y seguro en C: pones el rodillo, lo aseguras y ruedas. Sirve para todos los rodillos de este catálogo (hueco de 12 mm, 120 mm de largo).",
