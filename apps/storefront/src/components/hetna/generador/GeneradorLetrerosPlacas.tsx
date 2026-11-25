@@ -4,12 +4,17 @@
 // herramienta. Las tres son "texto (o un QR) sobre una placa" y comparten las
 // tipografías. Cada modo es la herramienta de antes tal cual (mismo motor y
 // mismos archivos). Las direcciones viejas siguen vivas y abren su modo.
+import dynamic from "next/dynamic"
 import { useState } from "react"
 
-import { GeneradorEstencil } from "./GeneradorEstencil"
-import { GeneradorLetrero } from "./GeneradorLetrero"
-import { GeneradorQR } from "./GeneradorQR"
 import { SelectorModos, type Modo } from "./SelectorModos"
+
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos: la celosía
+// cargaba también la librería de fórmulas del mandala y el motor 3D)
+const GeneradorEstencil = dynamic(() => import("./GeneradorEstencil").then((x) => x.GeneradorEstencil))
+const GeneradorLetrero = dynamic(() => import("./GeneradorLetrero").then((x) => x.GeneradorLetrero))
+const GeneradorQR = dynamic(() => import("./GeneradorQR").then((x) => x.GeneradorQR))
+
 
 export type ModoLetrero = "letrero" | "estencil" | "qr"
 

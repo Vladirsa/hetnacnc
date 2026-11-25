@@ -24,10 +24,10 @@ import {
   Opciones,
   TarjetaExport,
   descargar,
-  grupoATris,
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
+import { grupoATris } from "@/components/hetna/estudio3d/grupoATris"
 import { contextoMDF, mandarAFabricar, mandarPaqueteACotizador, nombresDeArchivo, procesoDeServicio } from "@/lib/generador/aCotizador"
 import { PrecioFabricar } from "./PrecioFabricar"
 import { aDXF, aSVG, acomodar, areaMaterial, dedoAutomatico, generarCaja, piezasPrueba, type Pieza, type TipoCaja } from "@/lib/generador/caja"

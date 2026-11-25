@@ -6,14 +6,19 @@
 // motor y mismos archivos); aquí sólo se elige el modo. Las direcciones viejas
 // siguen vivas y abren su modo; al cambiar de modo la dirección cambia para
 // que la liga que se comparte abra lo mismo.
+import dynamic from "next/dynamic"
 import { useState } from "react"
 
-import { GeneradorBisagra } from "./GeneradorBisagra"
-import { GeneradorCelosiaImagen } from "./GeneradorCelosiaImagen"
-import { GeneradorCelosias } from "./GeneradorCelosias"
-import { GeneradorPatron } from "./GeneradorPatron"
-import { GeneradorVoronoi } from "./GeneradorVoronoi"
 import { SelectorModos, type Modo } from "./SelectorModos"
+
+// Cada modo se baja sólo cuando se abre (antes se bajaban todos: la celosía
+// cargaba también la librería de fórmulas del mandala y el motor 3D)
+const GeneradorBisagra = dynamic(() => import("./GeneradorBisagra").then((x) => x.GeneradorBisagra))
+const GeneradorCelosiaImagen = dynamic(() => import("./GeneradorCelosiaImagen").then((x) => x.GeneradorCelosiaImagen))
+const GeneradorCelosias = dynamic(() => import("./GeneradorCelosias").then((x) => x.GeneradorCelosias))
+const GeneradorPatron = dynamic(() => import("./GeneradorPatron").then((x) => x.GeneradorPatron))
+const GeneradorVoronoi = dynamic(() => import("./GeneradorVoronoi").then((x) => x.GeneradorVoronoi))
+
 
 export type ModoPatron = "imagen" | "celosia" | "voronoi" | "radial" | "bisagra"
 
