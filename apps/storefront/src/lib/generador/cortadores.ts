@@ -25,7 +25,14 @@ type CP = { X: number; Y: number }
 const aC = (p: P[]): CP[] => p.map(([x, y]) => ({ X: Math.round(x * ESC), Y: Math.round(y * ESC) }))
 const deC = (p: CP[]): P[] => p.map((q) => [q.X / ESC, q.Y / ESC])
 
-function operar(tipo: number, a: P[][], b: P[][]): P[][] {
+// Limpieza de puntos casi repetidos (en unidades de clipper, 1 = 0.001):
+// mínima mientras las figuras están en escala 1 (si no, se comería las curvas
+// de una nube o de un pino) y de 0.01 mm ya en milímetros (evita aristas
+// sueltas en la malla del cortador).
+const FINO = 1.5
+const MM = 0.01 * ESC
+
+function operar(tipo: number, a: P[][], b: P[][], limpiar = FINO): P[][] {
   const c = new ClipperLib.Clipper()
   c.StrictlySimple = true
   const s = a.filter((p) => p.length >= 3).map(aC)
@@ -35,20 +42,21 @@ function operar(tipo: number, a: P[][], b: P[][]): P[][] {
   if (r.length) c.AddPaths(r, ClipperLib.PolyType.ptClip, true)
   const sol: CP[][] = []
   c.Execute(tipo, sol, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero)
-  const limpio: CP[][] = (ClipperLib as any).Clipper.CleanPolygons(sol, 0.01 * ESC)
+  const limpio: CP[][] = (ClipperLib as any).Clipper.CleanPolygons(sol, limpiar)
   return limpio.filter((p) => p.length >= 3).map(deC)
 }
-const unir = (a: P[][]) => operar(ClipperLib.ClipType.ctUnion, a, [])
-const restar = (a: P[][], b: P[][]) => operar(ClipperLib.ClipType.ctDifference, a, b)
+const unir = (a: P[][], limpiar = FINO) => operar(ClipperLib.ClipType.ctUnion, a, [], limpiar)
+const restar = (a: P[][], b: P[][], limpiar = FINO) => operar(ClipperLib.ClipType.ctDifference, a, b, limpiar)
 
 /** Engorda (d > 0) o adelgaza (d < 0) los contornos, con esquinas redondas. */
-export function desplazar(a: P[][], d: number): P[][] {
-  const o = new ClipperLib.ClipperOffset(2, 0.02 * ESC)
-  o.AddPaths(unir(a).map(aC), ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon)
+export function desplazar(a: P[][], d: number, limpiar = FINO): P[][] {
+  // precisión de las esquinas redondas: fina en escala 1, de 0.02 mm en milímetros
+  const o = new ClipperLib.ClipperOffset(2, limpiar === FINO ? 0.25 : 0.02 * ESC)
+  o.AddPaths(unir(a, limpiar).map(aC), ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon)
   const sol: CP[][] = []
   o.Execute(sol, d * ESC)
   // fuera puntos casi repetidos (dejan aristas sueltas en la malla)
-  const limpio: CP[][] = (ClipperLib as any).Clipper.CleanPolygons(sol, 0.01 * ESC)
+  const limpio: CP[][] = (ClipperLib as any).Clipper.CleanPolygons(sol, limpiar)
   return limpio.filter((p) => p.length >= 3).map(deC)
 }
 
@@ -98,7 +106,8 @@ function clasica(f: FormaClasica): P[][] {
     case "hexagono":
       return [poligono(6, 0.5, 0)]
     case "nube":
-      return unir([circ(-0.27, -0.05, 0.2), circ(-0.05, 0.1, 0.26), circ(0.24, 0.02, 0.22), circ(0, -0.12, 0.22), [[-0.45, -0.25], [0.45, -0.25], [0.45, -0.05], [-0.45, -0.05]]])
+      // tres bultos arriba y la base plana, con las esquinas de abajo redondeadas
+      return desplazar(unir([circ(-0.28, -0.04, 0.19), circ(-0.04, 0.1, 0.26), circ(0.25, 0.01, 0.21), [[-0.43, -0.23], [0.42, -0.23], [0.42, -0.03], [-0.43, -0.03]]]), 0.02)
     case "arbol":
       return desplazar(
         unir([
@@ -157,11 +166,11 @@ export function silueta(forma: FormaCortador, fuente: Fuente | null, tamano: num
   c = c.map((p) => p.map(([x, y]) => [(x - (b.x0 + b.x1) / 2) * k, (y - (b.y0 + b.y1) / 2) * k] as P))
   // sólo la silueta de afuera (los huecos de adentro no se cortan)
   const afuera = (a: P[][]) => a.filter((p) => area(p) > 0)
-  let partes = afuera(unir(c))
+  let partes = afuera(unir(c, MM))
   if (partes.length > 1) {
     // se cierran los espacios entre partes: engordar y adelgazar lo mismo
     for (const r of [tamano * 0.04, tamano * 0.07, tamano * 0.11]) {
-      partes = afuera(desplazar(desplazar(partes, r), -r))
+      partes = afuera(desplazar(desplazar(partes, r, MM), -r, MM))
       if (partes.length <= 1) break
     }
     if (partes.length > 1) {
@@ -228,13 +237,13 @@ export function hacerCortador(forma: FormaCortador, fuente: Fuente | null, o: Op
 
   // pared: anillo pegado por dentro al contorno; los últimos FILO mm, más delgada
   const filo = Math.max(0.4, o.pared / 2)
-  const pared = restar(desplazar(forma0, o.pared), forma0)
-  const punta = restar(desplazar(forma0, filo), forma0)
+  const pared = restar(desplazar(forma0, o.pared, MM), forma0, MM)
+  const punta = restar(desplazar(forma0, filo, MM), forma0, MM)
   const tris: number[] = [...extruirContornos(pared, o.altura - FILO), ...extruirContornos(punta, FILO + 0.01, o.altura - FILO - 0.01)]
-  if (o.ceja > 0) tris.push(...extruirContornos(restar(desplazar(forma0, o.pared + o.ceja), forma0), o.grosorCeja))
+  if (o.ceja > 0) tris.push(...extruirContornos(restar(desplazar(forma0, o.pared + o.ceja, MM), forma0, MM), o.grosorCeja))
 
   // partes demasiado angostas: la pared se encima consigo misma
-  const angosta = desplazar(forma0, -o.pared * 1.5)
+  const angosta = desplazar(forma0, -o.pared * 1.5, MM)
   if (!angosta.length || caja(angosta).x1 - caja(angosta).x0 < o.pared) avisos.push("La forma es muy angosta para esta pared: súbele el tamaño.")
   if (o.altura - FILO < 6) avisos.push("Un cortador de menos de 8 mm de alto no corta masas gruesas.")
 
@@ -242,7 +251,7 @@ export function hacerCortador(forma: FormaCortador, fuente: Fuente | null, o: Op
   // sello
   let sello: Malla | null = null
   if (o.sello.tipo !== "ninguno") {
-    const placa = desplazar(forma0, -HOLGURA_SELLO)
+    const placa = desplazar(forma0, -HOLGURA_SELLO, MM)
     if (!placa.length) avisos.push("La galleta es muy chica para el sello.")
     else {
       const bp = caja(placa)
@@ -251,14 +260,14 @@ export function hacerCortador(forma: FormaCortador, fuente: Fuente | null, o: Op
       if (o.sello.tipo === "icono") dibujo = figura(o.sello.icono)
       else if (fuente && o.sello.texto.trim()) {
         const t = textoACurvas(fuente, { texto: o.sello.texto.trim().slice(0, 24), alto: 10, espaciado: 0, interlineado: 1.3, alineacion: "centro" })
-        dibujo = unir(t.curvas.map((k) => aplanar(k, 0.12)).filter((p) => p.length >= 3))
+        dibujo = unir(t.curvas.map((k) => aplanar(k, 0.12)).filter((p) => p.length >= 3), MM)
       } else if (!fuente) avisos.push("Cargando la tipografía del sello…")
       if (dibujo.length) {
         const bd = caja(dibujo)
         const kd = libre / Math.max(bd.x1 - bd.x0, bd.y1 - bd.y0)
         // centrado y en espejo (para que en la galleta se lea al derecho)
         const cx = (bp.x0 + bp.x1) / 2, cy = (bp.y0 + bp.y1) / 2
-        const det = operar(ClipperLib.ClipType.ctIntersection, dibujo.map((p) => p.map(([x, y]) => [cx - (x - (bd.x0 + bd.x1) / 2) * kd, cy + (y - (bd.y0 + bd.y1) / 2) * kd] as P)), desplazar(placa, -1))
+        const det = operar(ClipperLib.ClipType.ctIntersection, dibujo.map((p) => p.map(([x, y]) => [cx - (x - (bd.x0 + bd.x1) / 2) * kd, cy + (y - (bd.y0 + bd.y1) / 2) * kd] as P)), desplazar(placa, -1, MM), MM)
         const GROSOR = 3
         // el sello se dibuja al lado del cortador en la vista y en el STL
         const dx = o.tamano + o.pared * 2 + o.ceja * 2 + 10

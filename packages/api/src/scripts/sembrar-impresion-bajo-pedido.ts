@@ -12,6 +12,8 @@
 // desde el panel o volviendo a correr el script con COLORES).
 // ACTUALIZAR_COLORES=1: además corrige el color de las ofertas de HETNA que ya
 // existen (sin tocar su precio ni sus días).
+// ACTUALIZAR_FOTOS="handle1,handle2" (o "todas"): vuelve a subir la foto de esos
+// productos desde docs/impresion-bajo-pedido/fotos y la pone de portada.
 //
 // Es idempotente: un producto que ya existe (mismo handle) sólo actualiza sus
 // datos de pieza y la liga a la herramienta; una oferta de HETNA que ya existe
@@ -53,6 +55,7 @@ export function coloresHetna(material: string, texto = TEXTO_COLORES): string[] 
   return []
 }
 const ACTUALIZAR_COLORES = process.env.ACTUALIZAR_COLORES === "1"
+const FOTOS_A_CAMBIAR = new Set(String(process.env.ACTUALIZAR_FOTOS || "").split(",").map((h) => h.trim()).filter(Boolean))
 const COLORES_HETNA = MATERIALES_HETNA.some((m) => coloresHetna(m).length) ? ["ok"] : []
 const EMPAQUE_G = 120 // caja y relleno, para el peso del envío
 
@@ -149,7 +152,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const subir = async (filename: string, mimeType: string, bytes: Buffer) =>
     (await archivos.createFiles([{ filename, mimeType, content: bytes.toString("base64"), access: "public" }]))[0]
 
-  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0
+  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0, fotosCambiadas = 0
   for (const d of catalogo) {
     const metadata: Record<string, any> = {
       impresion_bajo_pedido: true,
@@ -185,13 +188,19 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     if (producto) {
       const cambios: Record<string, any> = {}
       // Productos sembrados antes de guardar foto_url: la portada del script lleva el handle en el nombre
-      const fotoDelScript = previa.foto_url ? producto.thumbnail === previa.foto_url : new RegExp(`/\\d+-${d.handle}\\.png$`).test(String(producto.thumbnail || ""))
-      if (bytesFoto && shaFoto !== previa.foto_sha && fotoDelScript) {
+      // ("<hora>-<handle>.png" o, con ACTUALIZAR_FOTOS de antes, "<hora>-<handle>-<hora>.png")
+      const fotoDelScript = previa.foto_url
+        ? producto.thumbnail === previa.foto_url
+        : new RegExp(`/\\d+-${d.handle}(-\\d+)?\\.png$`).test(String(producto.thumbnail || ""))
+      // ACTUALIZAR_FOTOS="handle1,handle2" (o "todas"): sube la foto aunque no haya cambiado o la hayan puesto a mano
+      const forzar = FOTOS_A_CAMBIAR.has("todas") || FOTOS_A_CAMBIAR.has(d.handle)
+      if (bytesFoto && (forzar || (shaFoto !== previa.foto_sha && fotoDelScript))) {
         const archivo = await subir(`${d.handle}.png`, "image/png", bytesFoto)
         // se cambia sólo la portada; las demás imágenes del producto se quedan
         const otras = ((producto.images || []) as { url: string }[]).filter((i) => i.url !== producto.thumbnail).map((i) => ({ url: i.url }))
         Object.assign(cambios, { thumbnail: archivo.url, images: [{ url: archivo.url }, ...otras] })
         Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
+        fotosCambiadas++
         logger.info(`[impresion] ${d.handle}: foto nueva`)
       }
       await updateProductsWorkflow(container).run({ input: { selector: { id: producto.id }, update: { ...cambios, metadata: { ...previa, ...metadata } } } as any })
@@ -271,5 +280,5 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     }
   }
   if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="ABS=Amarillo dorado;PLA-CF=Negro" o ponlas en /seller/imprimir)')
-  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}`)
+  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}, ${fotosCambiadas} fotos nuevas`)
 }
