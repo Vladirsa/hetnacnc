@@ -30,15 +30,20 @@ function renglones(t: string, n: number) {
   return out
 }
 
+// Con una lista y join(""), no con plantillas sumadas: el minificador de Next
+// (SWC) plegaba `...${H}">` + `<rect ...` y se comía el texto después de 1350
+// (el SVG salía roto sólo en producción).
 function marco(cuerpo: string, num: number, total: number) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-    `<rect width="${W}" height="${H}" fill="#FAF9F6"/>` +
-    `<rect x="0" y="0" width="${W}" height="14" fill="#FF6A1A"/>` +
-    cuerpo +
-    `<rect x="0" y="${H - 96}" width="${W}" height="96" fill="#142033"/>` +
-    texto("hetnacnc.com/planos", 60, H - 36, 34, { color: "#FFFFFF", peso: 800 }) +
-    texto(`${num} / ${total}`, W - 60, H - 36, 30, { color: "#FF9F57", anclaje: "end" }) +
-    `</svg>`
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="', W, '" height="', H, '" viewBox="0 0 ', W, " ", H, '">',
+    '<rect width="', W, '" height="', H, '" fill="#FAF9F6"/>',
+    '<rect x="0" y="0" width="', W, '" height="14" fill="#FF6A1A"/>',
+    cuerpo,
+    '<rect x="0" y="', H - 96, '" width="', W, '" height="96" fill="#142033"/>',
+    texto("hetnacnc.com/planos", 60, H - 36, 34, { color: "#FFFFFF", peso: 800 }),
+    texto(`${num} / ${total}`, W - 60, H - 36, 30, { color: "#FF9F57", anclaje: "end" }),
+    "</svg>",
+  ].join("")
 }
 
 export function svgRedes(pl: Plano, n: number): string | null {
