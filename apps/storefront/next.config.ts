@@ -187,7 +187,9 @@ const nextConfig: NextConfig = {
       { source: "/:locale([a-z]{2})/seller", destination: "/seller/", permanent: false },
       { source: "/:locale([a-z]{2})/seller/:ruta*", destination: "/seller/:ruta*", permanent: false },
       { source: "/:locale([a-z]{2})/sellers", destination: "/:locale/talleres", permanent: false },
-      { source: "/app/android", destination: "https://github.com/Vladirsa/Cotizador/releases/latest/download/HetnaCNC_arm64.apk", permanent: false },
+      // El APK de GitHub da 404 al público (el repo es privado): mientras la app no esté en
+      // Google Play, /app/android lleva a la página de la app con la versión web (auditoría 25 nov 2026)
+      { source: "/app/android", destination: "/mx/servicios/cotizador-cnc#instalar", permanent: false },
       { source: "/app/ios", destination: "/mx/servicios/cotizador-cnc#instalar", permanent: false },
       // Herramientas CNC: /cam y la página del Generador se juntaron en
       // /herramientas-cnc; el servicio de maquinado ahora vive en Fabricación.

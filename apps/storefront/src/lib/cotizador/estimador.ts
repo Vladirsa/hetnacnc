@@ -12,6 +12,7 @@
 //
 // Corre en el navegador: nada se manda al servidor hasta que el cliente pide
 // propuestas.
+import { SEPARACION_HOJA } from "./hojas"
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
 
 export type TipoMaquina = "router" | "laser_co2" | "plasma" | "laser_fibra" | "router_3d" | "impresora_3d"
@@ -360,7 +361,7 @@ export function estimar(p: {
     unidades = gramos / 1000
   } else if (material.hoja) {
     const [hl, ha] = material.hoja
-    const sep = 6, marg = 10
+    const { sep, orilla: marg } = SEPARACION_HOJA // la misma del texto "caben X por hoja"
     const cols = (pl: number) => Math.floor((hl - 2 * marg + sep) / (pl + sep))
     const rows = (pa: number) => Math.floor((ha - 2 * marg + sep) / (pa + sep))
     const a = Math.max(0, cols(pieza.largo)) * Math.max(0, rows(pieza.ancho))

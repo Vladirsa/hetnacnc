@@ -103,6 +103,13 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
   // Páginas viejas (sin `metodos`) sólo tenían Mercado Pago
   const metodos = c.anticipo.metodos || { mercadopago: c.anticipo.se_puede_pagar, paypal: false }
   const moneda = c.moneda || "MXN"
+  // Base gravable que de verdad pagó IVA; si coincide con subtotal − descuento + envío, el IVA ya incluye el envío
+  const totales = (() => {
+    const desc = (c.descuento_pct ? (c.subtotal * c.descuento_pct) / 100 : 0) + (c.descuento_fijo || 0)
+    const base = c.iva && c.iva_pct ? Math.round((c.iva / (c.iva_pct / 100)) * 100) / 100 : 0
+    const conEnvio = c.subtotal - desc + (c.envio || 0)
+    return { base, ivaConEnvio: !c.iva || !c.envio || Math.abs(base - conEnvio) < Math.abs(base - (conEnvio - c.envio)) }
+  })()
   const resta = Math.max(0, c.anticipo.monto - c.anticipo.pagado)
   const aceptada = Boolean(c.aceptada) || c.estado === "Aprobada" || c.estado === "Pedido"
   const rechazada = c.estado === "Rechazada"
@@ -170,8 +177,11 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           <Fila k="Subtotal" v={mxn(c.subtotal)} />
           {c.descuento_pct ? <Fila k={`Descuento ${c.descuento_pct}%`} v={`− ${mxn((c.subtotal * c.descuento_pct) / 100)}`} /> : null}
           {c.descuento_fijo ? <Fila k="Descuento" v={`− ${mxn(c.descuento_fijo)}`} /> : null}
-          {c.envio ? <Fila k="Envío" v={mxn(c.envio)} /> : null}
+          {/* El envío va antes del IVA sólo si el IVA lo incluye (base gravable = lo que de verdad pagó IVA) */}
+          {c.envio && totales.ivaConEnvio ? <Fila k="Envío" v={mxn(c.envio)} /> : null}
+          {c.iva && totales.base ? <Fila k="Base gravable" v={mxn(totales.base)} /> : null}
           {c.iva ? <Fila k={`${moneda === "PEN" ? "IGV" : moneda === "USD" ? "Impuesto" : "IVA"} ${c.iva_pct}%`} v={mxn(c.iva)} /> : null}
+          {c.envio && !totales.ivaConEnvio ? <Fila k={c.iva ? "Envío (sin IVA)" : "Envío"} v={mxn(c.envio)} /> : null}
           <div className="flex justify-between pt-1 text-[18px] font-bold text-[#142033]">
             <dt>Total</dt>
             <dd className="m-0">{mxn(c.total)} {moneda}</dd>

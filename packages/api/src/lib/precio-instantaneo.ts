@@ -58,8 +58,15 @@ function materialPara(servicio: string, material = "", calibre = ""): { m: Mater
     if (mdf) return { m: mat(`MDF ${mdf[1]} mm`) || mat("MDF 15 mm") }
     if (/acr[ií]lico/i.test(material)) return { m: mat("Acrílico 6 mm") }
     if (/aluminio/i.test(material)) return { m: mat("Aluminio 3 mm") }
-    if (/pino|cedro|parota|encino|madera/i.test(material))
-      return { m: { ...mat("Triplay 18 mm"), nombre: `${material} 19 mm` }, aviso: "La madera sólida varía mucho de precio: el taller confirma el costo del material." }
+    if (/triplay|contrachapad/i.test(material)) return { m: mat("Triplay 18 mm") }
+    // Maderas sólidas: cada una con su precio real por tabla (antes todas salían con el del triplay:
+    // un encino de 30×60 cm costaba $255 en vez de ~$985)
+    const madera = material.match(/pino|cedro|parota|encino/i)?.[0]?.toLowerCase()
+    if (madera || /madera/i.test(material)) {
+      const nombres: Record<string, string> = { pino: "Pino 19 mm (tabla)", cedro: "Cedro rojo 19 mm (tabla)", parota: "Parota 19 mm (tabla)", encino: "Encino 19 mm (tabla)" }
+      const nombre = nombres[madera || "pino"] || nombres.pino
+      return { m: mat(nombre), aviso: madera ? "La madera sólida varía de precio según el aserradero: el taller confirma el costo del material." : "Se calculó con pino; otras maderas sólidas (cedro, parota, encino) cuestan más." }
+    }
     return { m: mat("MDF 15 mm") }
   }
   if (servicio === "plasma") {
