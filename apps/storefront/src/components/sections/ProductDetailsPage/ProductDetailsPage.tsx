@@ -264,20 +264,21 @@ export const ProductDetailsPage = async ({
     { nombre: prod.title },
   ]
 
-  // Opción C: bajo la foto (computadora) va "Más de este taller"; si el
-  // taller no tiene más productos, los similares. Hasta 6, en tarjetas chicas.
+  // Lista de productos que va justo después de foto + compra, a TODO lo ancho
+  // (Vlado, 25 nov 2026: en la columna de la foto dejaba espacio libre a la
+  // derecha). "Más de este taller"; si el taller no tiene más, los similares.
   const listaLateral = delTaller.length
     ? {
         clave: "taller" as const,
         titulo: vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller",
-        productos: delTaller.slice(0, 6),
+        productos: delTaller.slice(0, 8),
         verTodos: vendedor?.handle ? `/sellers/${vendedor.handle}` : null,
       }
     : relacionados.length
       ? {
           clave: "similares" as const,
           titulo: descarga ? "Otros diseños" : "Productos similares",
-          productos: relacionados.slice(0, 6),
+          productos: relacionados.slice(0, 8),
           verTodos: catPrincipal?.handle ? `/categories/${catPrincipal.handle}` : "/categories",
         }
       : null
@@ -337,7 +338,7 @@ export const ProductDetailsPage = async ({
         // tarjetas chicas ("Más de este taller" o similares) y el anuncio, para
         // llenar el lado izquierdo mientras sigue la columna de compra. Las
         // pestañas vuelven abajo a todo lo ancho.
-        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr_auto_auto] lg:items-stretch lg:gap-x-10 lg:gap-y-4 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
         data-testid="product-details-page"
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
@@ -366,18 +367,6 @@ export const ProductDetailsPage = async ({
             {fabricar}
             {/* Diseños: pedir una modificación o cotizar la fabricación */}
             {descarga && <ModificarDiseno product={prod as never} vendedor={vendedor ? { handle: vendedor.handle, name: vendedor.name } : null} />}
-            {/* Productos en tarjetas chicas bajo la foto (sólo computadora; en
-                celular salen abajo a todo lo ancho) */}
-            {listaLateral && (
-              <div className="hidden lg:block">
-                <ProductosCompactos
-                  titulo={listaLateral.titulo}
-                  productos={listaLateral.productos as never}
-                  verTodos={listaLateral.verTodos}
-                  angosta
-                />
-              </div>
-            )}
             {/* Publicidad en el hueco de la izquierda (solo computadora: en
                 celular ya sale la de "Patrocinado" en la columna de compra) */}
             <AnunciosEspacio
@@ -389,8 +378,15 @@ export const ProductDetailsPage = async ({
             />
         </div>
 
+        {/* Productos a todo lo ancho, después de foto + compra (8 por fila) */}
+        {listaLateral && (
+          <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3">
+            <ProductosCompactos titulo={listaLateral.titulo} productos={listaLateral.productos as never} verTodos={listaLateral.verTodos} />
+          </div>
+        )}
+
         {/* Ficha larga a todo lo ancho, en pestañas */}
-        <div className="order-4 min-w-0 lg:col-span-2 lg:row-start-3 lg:mt-4">
+        <div className="order-5 min-w-0 lg:col-span-2 lg:row-start-4 lg:mt-2">
           {largosDescarga}
           {!descarga && <ProductDetallesLargos
             product={prod}
@@ -422,9 +418,9 @@ export const ProductDetailsPage = async ({
           lo mismo: una sirve para seguir comprándole a quien ya te convenció,
           y la otra para comparar contra lo demás de su categoría. */}
       {/* Tarjetas chicas (ProductosCompactos), no el carrusel de 4 fotos enormes */}
-      {/* En computadora, la lista que ya salió bajo la foto no se repite aquí */}
-      {delTaller.length > 0 && (
-        <div className={`mt-8 ${listaLateral?.clave === "taller" ? "lg:hidden" : ""}`}>
+      {/* La lista que ya salió arriba (después de foto + compra) no se repite */}
+      {delTaller.length > 0 && listaLateral?.clave !== "taller" && (
+        <div className="mt-8">
           <ProductosCompactos
             titulo={vendedor?.name ? `Más de ${vendedor.name}` : "Más de este taller"}
             productos={delTaller as never}
@@ -433,8 +429,8 @@ export const ProductDetailsPage = async ({
         </div>
       )}
 
-      {relacionados.length > 0 && (
-        <div className={`mt-4 ${listaLateral?.clave === "similares" ? "lg:hidden" : ""}`}>
+      {relacionados.length > 0 && listaLateral?.clave !== "similares" && (
+        <div className="mt-4">
           <ProductosCompactos
             titulo={descarga ? "Otros diseños" : "Productos similares"}
             productos={relacionados as never}
