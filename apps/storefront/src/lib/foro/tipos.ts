@@ -211,6 +211,116 @@ export const urlRed = "/foro-cnc/red"
 export const urlEmpleos = "/foro-cnc/empleos"
 export const SECCION_EMPLEOS = "empleos-proyectos"
 
+// ---------------------------------------------------------------------
+// Perfil de taller (tipo LinkedIn): máquinas, materiales, zonas y portafolio
+// ---------------------------------------------------------------------
+
+export const TIPOS_MAQUINA = {
+  router: "Router CNC",
+  laser_co2: "Láser CO2",
+  laser_fibra: "Láser de fibra",
+  plasma: "Plasma",
+  torno: "Torno CNC",
+  fresadora: "Fresadora / centro de maquinado",
+  impresora_3d: "Impresora 3D",
+  otra: "Otra",
+} as const
+export type TipoMaquina = keyof typeof TIPOS_MAQUINA
+
+export const MATERIALES_TALLER = {
+  mdf: "MDF",
+  madera: "Madera",
+  acrilico: "Acrílico",
+  aluminio: "Aluminio",
+  acero: "Acero",
+  inoxidable: "Inoxidable",
+  cobre: "Cobre",
+  plastico: "Plástico",
+  piel: "Piel",
+  tela: "Tela",
+  otro: "Otro",
+} as const
+export type MaterialTaller = keyof typeof MATERIALES_TALLER
+
+/** Una máquina del taller. Medidas del área de trabajo en mm; todo opcional menos el tipo. */
+export type Equipo = {
+  tipo: TipoMaquina
+  modelo: string
+  largo: number | null
+  ancho: number | null
+  alto: number | null
+  potencia: number | null
+  unidad: "W" | "A"
+  foto: string | null // id de foro.fotos
+}
+/** Material que trabaja y en qué espesores (mm). */
+export type MaterialEspesor = { material: MaterialTaller; min: number | null; max: number | null }
+/** Un trabajo del portafolio: de 1 a 5 fotos. */
+export type Trabajo = {
+  id: string
+  titulo: string
+  material: MaterialTaller | ""
+  espesor: number | null
+  maquina: TipoMaquina | ""
+  detalle: string
+  fotos: string[] // ids de foro.fotos
+}
+
+export const MAX_EQUIPOS = 12
+export const MAX_TRABAJOS = 30
+export const MAX_FOTOS_TRABAJO = 5
+export const MAX_ACERCA = 2000
+export const TODO_MEXICO = "Todo México"
+
+// La liga del perfil (usuario): de 3 a 60 letras minúsculas, números o guiones
+export const USUARIO_VALIDO = /^[a-z0-9][a-z0-9-]{2,59}$/
+export const MAX_USUARIO = 60
+
+/** Sugiere el usuario con el nombre, sin cortar palabras a la mitad:
+ *  "Roberto Vladimir Rivera Sanchez" -> "roberto-vladimir-rivera-sanchez". */
+export function usuarioDeNombre(nombre: string): string {
+  const palabras = nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+  let u = ""
+  for (const w of palabras) {
+    const siguiente = u ? `${u}-${w}` : w
+    if (siguiente.length > MAX_USUARIO) break
+    u = siguiente
+  }
+  // Una sola palabra más larga que el máximo: ahí sí no queda de otra
+  return u || (palabras[0] || "").slice(0, MAX_USUARIO)
+}
+
+/** Limpia lo que escribe la persona en el campo de usuario (sin cortar todavía). */
+export const limpiarUsuario = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .slice(0, MAX_USUARIO)
+
+/** "1300 × 2500 × 200 mm", sin las medidas que falten. */
+export const areaTrabajo = (e: Pick<Equipo, "largo" | "ancho" | "alto">) => {
+  const m = [e.largo, e.ancho, e.alto].filter((x): x is number => typeof x === "number" && x > 0)
+  return m.length ? `${m.map((x) => x.toLocaleString("es-MX")).join(" × ")} mm` : ""
+}
+/** "3 a 18 mm", "hasta 6 mm", "desde 1 mm" o "". */
+export const rangoEspesor = (m: Pick<MaterialEspesor, "min" | "max">) => {
+  const f = (x: number) => `${x.toLocaleString("es-MX")}`
+  if (m.min && m.max) return m.min === m.max ? `${f(m.min)} mm` : `${f(m.min)} a ${f(m.max)} mm`
+  if (m.max) return `hasta ${f(m.max)} mm`
+  if (m.min) return `desde ${f(m.min)} mm`
+  return ""
+}
+
 export type Perfil = Autor & {
   bio: string
   ciudad: string
@@ -226,6 +336,12 @@ export type Perfil = Autor & {
   abierto: boolean
   correoAvisos: CorreoAvisos
   resumenSemanal: boolean
+  // Perfil de taller (migración del 25 de noviembre); antes de correrla vienen vacíos
+  portada: string | null
+  zonas: string[]
+  equipos: Equipo[]
+  materiales: MaterialEspesor[]
+  portafolio: Trabajo[]
   creado: string
   temas: number
   respuestas: number
@@ -265,6 +381,7 @@ export const MENSAJES: Record<string, string> = {
   mensaje_spam: "Tu mensaje parece publicidad o spam. Escríbelo de otra forma.",
   no_es_evento: "Esto no es un evento.",
   ya_pedido: "Ya le pediste a esta persona que responda.",
+  perfil_taller_no_activo: "Esta parte del perfil se activa muy pronto. Intenta más tarde.",
   error: "Algo salió mal. Intenta de nuevo.",
 }
 
