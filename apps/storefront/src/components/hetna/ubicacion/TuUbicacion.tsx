@@ -25,7 +25,16 @@ export function TuUbicacion({ ubicacion, ponerCp, aviso }: { ubicacion: Ubicacio
     return (
       <p className="m-0 text-[12.5px] text-[#40403A]" data-testid="tu-ubicacion">
         📍 Cerca de <b>{lugar}</b>
-        {ubicacion.fuente === "ip" && <span className="text-[#6B6A63]"> (aproximado)</span>}
+        {ubicacion.fuente === "ip" && (
+          // La base de IP es de DB-IP (CC BY 4.0): su licencia pide dar el crédito
+          <span className="text-[#6B6A63]">
+            {" "}(aproximado,{" "}
+            <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="underline">
+              IP Geolocation by DB-IP
+            </a>
+            )
+          </span>
+        )}
         {" · "}
         <button type="button" onClick={() => setEditar(true)} className="font-semibold text-[#B34D07] underline">
           {ubicacion.fuente === "ip" ? "Pon tu código postal" : "Cambiar"}
