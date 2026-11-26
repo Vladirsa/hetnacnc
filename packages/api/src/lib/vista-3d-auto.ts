@@ -8,6 +8,11 @@
 // sube sólo esa muestra. El original nunca se expone: la muestra sirve para
 // ver la forma, no para fabricar con calidad.
 // La corre jobs/vistas-3d.ts.
+import { execFileSync } from "child_process"
+import { mkdtempSync, rmSync, writeFileSync } from "fs"
+import { tmpdir } from "os"
+import { join } from "path"
+
 import { unzipSync } from "fflate"
 
 import { getSignedDownloadUrl } from "./backblaze"
@@ -126,11 +131,42 @@ export function stlDe(nombre: string, buf: Buffer): Buffer | null {
   const n = nombre.toLowerCase()
   if (n.endsWith(".stl")) return buf
   if (n.endsWith(".zip")) {
-    const dentro = unzipSync(new Uint8Array(buf), { filter: (f) => f.name.toLowerCase().endsWith(".stl") && !f.name.startsWith("__MACOSX") })
-    const mayor = Object.values(dentro).sort((a, b) => b.length - a.length)[0]
-    return mayor ? Buffer.from(mayor) : null
+    try {
+      const dentro = unzipSync(new Uint8Array(buf), { filter: (f) => f.name.toLowerCase().endsWith(".stl") && !f.name.startsWith("__MACOSX") })
+      const mayor = Object.values(dentro).sort((a, b) => b.length - a.length)[0]
+      return mayor ? Buffer.from(mayor) : null
+    } catch (e) {
+      // fflate no abre ZIP con Deflate64 (Windows lo usa en archivos grandes): «invalid distance».
+      // Respaldo: el programa unzip del servidor (Info-ZIP sí lo entiende).
+      const conUnzip = stlConUnzip(buf)
+      if (conUnzip) return conUnzip
+      throw e
+    }
   }
   return null
+}
+
+/** El STL más grande de un ZIP usando el programa `unzip` (null si no está instalado o no hay STL). */
+export function stlConUnzip(buf: Buffer): Buffer | null {
+  const dir = mkdtempSync(join(tmpdir(), "vista3d-"))
+  try {
+    const zip = join(dir, "a.zip")
+    writeFileSync(zip, buf)
+    const lista = execFileSync("unzip", ["-Z", "-l", zip], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 60_000 })
+    // Líneas: permisos versión so tamaño tipo comp fecha hora nombre
+    const stls = lista
+      .split("\n")
+      .map((l) => l.trim().split(/\s+/))
+      .filter((c) => c.length >= 10 && /\.stl$/i.test(c.slice(9).join(" ")) && !c.slice(9).join(" ").startsWith("__MACOSX"))
+      .map((c) => ({ nombre: c.slice(9).join(" "), tam: Number(c[3]) || 0 }))
+      .sort((a, b) => b.tam - a.tam)
+    if (!stls.length) return null
+    return execFileSync("unzip", ["-p", zip, stls[0].nombre], { maxBuffer: MAX_BYTES * 4, timeout: 120_000 })
+  } catch {
+    return null
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 /** Genera y sube la muestra; devuelve su URL pública. */
