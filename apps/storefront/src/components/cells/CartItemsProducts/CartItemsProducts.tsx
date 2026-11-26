@@ -10,6 +10,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { UpdateCartItemButton } from "@/components/molecules/UpdateCartItemButton/UpdateCartItemButton"
 import { filterValidCartItems } from "@/lib/helpers/filter-valid-cart-items"
 import { convertToLocale } from "@/lib/helpers/money"
+import { detalleRenglon } from "@/lib/impresion/detalle-renglon"
 
 // Cuántas piezas quedan para que valga la pena avisarlo. Arriba de esto el
 // número no cambia la decisión de nadie; abajo, sí.
@@ -40,11 +41,8 @@ export const CartItemsProducts = ({
   return (
     <div className="divide-y divide-[#EDEAE2] rounded-b-[12px] border border-t-0 border-[#E7E4DC] bg-white">
       {validProducts.map((product) => {
-        // + el color que eligió en una pieza de impresión bajo pedido (metadata.color)
-        const color = typeof product.metadata?.color === "string" ? product.metadata.color : ""
-  // + el texto de un llavero o unas letras personalizables (metadata.texto)
-  const textoPedido = typeof product.metadata?.texto === "string" ? product.metadata.texto : ""
-        const options = [...Object.entries(product.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : []), ...(textoPedido ? [["Texto", `«${textoPedido}»`] as [string, string]] : [])]
+        // + color, colores por parte y texto de una pieza de Impresión 3D bajo pedido
+        const options = [...Object.entries(product.variant_option_values ?? {}), ...detalleRenglon(product.metadata)]
 
         const subtotal = product.subtotal ?? 0
         const comparar = (product.compare_at_unit_price || 0) * product.quantity

@@ -124,7 +124,7 @@ function Diseno({ d, alGuardar }) {
                     <input style={S.input} inputMode="numeric" disabled={!f.activa} value={f.dias} onChange={(e) => cambiar(m.variant_id, "dias", e.target.value)} />
                   </td>
                   <td style={S.td}>
-                    <input style={S.input} disabled={!f.activa} placeholder="Negro, Blanco" value={f.colores} onChange={(e) => cambiar(m.variant_id, "colores", e.target.value)} />
+                    <input style={S.input} disabled={!f.activa} placeholder={m.material.endsWith("2 colores") ? "Al menos 2: Negro, Blanco, Rojo" : "Negro, Blanco"} value={f.colores} onChange={(e) => cambiar(m.variant_id, "colores", e.target.value)} />
                   </td>
                 </tr>
               )
@@ -192,6 +192,10 @@ export default function ImprimirDisenos() {
         Diseños listos para imprimir en 3D que ya están en la tienda. Elige cuáles imprimes, en qué material, a qué precio, en cuántos días y en qué
         colores. Cada material que actives es una oferta tuya: el cliente compara talleres y te compra a ti. El precio recomendado sale del volumen real
         de la pieza; tú pones el tuyo. Es el precio final que paga el cliente (con IVA), sin el envío.
+      </p>
+      <p style={S.sub}>
+        <b>¿Tienes impresora multicolor (AMS, MMU)?</b> Las piezas de dos partes (llaveros, letras, texturizadores…) tienen los materiales
+        "· 2 colores": pon ahí tu precio y al menos dos colores. El cliente elige el color de cada parte y lo ves en la página del pedido.
       </p>
 
       {aviso?.ok ? <div style={S.ok}>{aviso.ok}</div> : null}
