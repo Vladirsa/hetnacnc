@@ -41,6 +41,14 @@ export function trabajaMaterial(materialesTaller: unknown, pedido?: string) {
   })
 }
 
+export const SERVICIO_DISENO = "Diseño CAD/CAM"
+/** ¿El cliente necesita que le dibujen la pieza o le preparen el archivo? */
+export function pideDisenoTrabajo(t: Pick<Trabajo, "tiene_archivo" | "necesidad" | "servicio"> | null | undefined) {
+  if (!t) return false
+  if (t.servicio === SERVICIO_DISENO || t.necesidad === "Diseño") return true
+  return /necesito dise|boceto|idea/i.test(t.tiene_archivo || "")
+}
+
 // Talleres que pueden hacer una solicitud abierta, del más al menos indicado
 // (material, municipio, estado y posicionamiento). Sin tope: quien difunde
 // decide cuántos avisa. Respeta los filtros del cliente y de cada taller.
@@ -56,6 +64,10 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
   // "Otro" no es un servicio que un taller pueda tener en su perfil: si
   // se compara literal, la solicitud no le llega a nadie.
   const servicioPedido = trabajo.servicio && trabajo.servicio !== "Otro" ? trabajo.servicio : ""
+  // Si el cliente no tiene archivo (boceto, idea o "necesito diseño"), también
+  // les llega a quienes hacen Diseño CAD/CAM aunque no corten ese proceso:
+  // diseñadores e ingenieros de la red que cotizan el diseño por proyecto.
+  const pideDiseno = pideDisenoTrabajo(trabajo)
   // Licitaciones 3.0 (Fase 2): el suministro va a proveedores; la
   // fabricación, a talleres. "Ambos" recibe las dos.
   const tipoCuenta = (x: { metadata: any }) => String(x.metadata?.perfil?.tipo_cuenta || "taller")
@@ -70,7 +82,12 @@ export async function candidatosAbiertos(knex: any, s: any, excluir?: string | n
     if (suministro) return t === "proveedor" || t === "ambos"
     if (t === "proveedor") return false
     const servicios: string[] = x.metadata?.perfil?.servicios || []
-    return !servicioPedido || !servicios.length || servicios.includes(servicioPedido)
+    return (
+      !servicioPedido ||
+      !servicios.length ||
+      servicios.includes(servicioPedido) ||
+      (pideDiseno && servicios.includes(SERVICIO_DISENO))
+    )
   })
   // Con el tope de avisos, el orden decide quién se entera. Primero los
   // que trabajan el material que pide el cliente (si el taller lo puso
