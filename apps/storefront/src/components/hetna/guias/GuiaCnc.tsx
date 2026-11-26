@@ -117,33 +117,27 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
         </div>
       </section>
 
-      {g.calculadora && (
-        <section id="precio" className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,480px)]">
-          <div>
-            <h2 className="text-xl font-extrabold text-[#142033]">
-              Precio al instante{ciudad ? ` en ${ciudad.nombre}` : ""}
-            </h2>
-            <p className="mt-2 text-[#40403A]">
-              Sube tu archivo (DXF, SVG, STL u OBJ) o escribe las medidas. Lo revisamos al momento —contornos abiertos, líneas duplicadas, textos sin
-              convertir, agujeros muy chicos— y te damos un rango de precio sin crear cuenta.
-            </p>
-            <p className="mt-2 text-sm text-[#6B675C]">
-              El estimado sirve para decidir; el precio final lo dan los talleres en sus propuestas{ciudad ? `, incluido el envío a ${ciudad.nombre} si no recoges` : ""}.
-            </p>
-          </div>
-          <CalculadoraLead
-            servicio={g.calculadora.servicio}
-            tituloServicio={g.calculadora.titulo}
-            materiales={g.calculadora.materiales}
-            opcion={g.calculadora.opcion}
-            pideAlto={g.calculadora.pideAlto}
-            servicioSolicitud={g.calculadora.servicioSolicitud}
-          />
-        </section>
-      )}
-
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <article className="grid gap-6">
+      {/* Texto de la guía a la izquierda; calculadora y accesos a la derecha. Antes la
+          calculadora iba sola junto a un párrafo corto y dejaba un hueco grande.
+          En celular las dos columnas se "abren" (display: contents) y el orden queda:
+          intro → calculadora → guía → accesos. */}
+      <div className={`mt-8 grid items-start gap-8 ${g.calculadora ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]" : "lg:grid-cols-[minmax(0,1fr)_320px]"}`}>
+        <article className="contents lg:grid lg:content-start lg:gap-6">
+          {g.calculadora && (
+            <section id="precio" className="order-1">
+              <h2 className="text-xl font-extrabold text-[#142033]">
+                Precio al instante{ciudad ? ` en ${ciudad.nombre}` : ""}
+              </h2>
+              <p className="mt-2 text-[#40403A]">
+                Sube tu archivo (DXF, SVG, STL u OBJ) o escribe las medidas en la calculadora. Lo revisamos al momento —contornos abiertos, líneas
+                duplicadas, textos sin convertir, agujeros muy chicos— y te damos un rango de precio sin crear cuenta.
+              </p>
+              <p className="mt-2 text-sm text-[#6B675C]">
+                El estimado sirve para decidir; el precio final lo dan los talleres en sus propuestas{ciudad ? `, incluido el envío a ${ciudad.nombre} si no recoges` : ""}.
+              </p>
+            </section>
+          )}
+          <div className="order-3 grid content-start gap-6">
           {g.secciones.map((s) => (
             <section key={s.titulo}>
               <h2 className="text-xl font-extrabold text-[#142033]">{s.titulo}</h2>
@@ -176,9 +170,23 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
               </details>
             ))}
           </section>
+          </div>
         </article>
 
-        <aside className="grid content-start gap-6">
+        <aside className="contents lg:grid lg:content-start lg:gap-6">
+          {g.calculadora && (
+            <div className="order-2">
+            <CalculadoraLead
+              servicio={g.calculadora.servicio}
+              tituloServicio={g.calculadora.titulo}
+              materiales={g.calculadora.materiales}
+              opcion={g.calculadora.opcion}
+              pideAlto={g.calculadora.pideAlto}
+              servicioSolicitud={g.calculadora.servicioSolicitud}
+            />
+            </div>
+          )}
+          <div className="order-4 grid content-start gap-6">
           {ciudad && directorio.length > 0 && (
             <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <h2 className="text-base font-extrabold text-[#142033]">Empresas en {ciudad.estado}</h2>
@@ -259,6 +267,7 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
               ))}
             </ul>
           </section>
+          </div>
         </aside>
       </div>
     </main>
