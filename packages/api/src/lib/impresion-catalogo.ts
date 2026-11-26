@@ -60,7 +60,11 @@ export async function productosImpresion(container: MedusaContainer, filtro: { i
     handle: p.handle,
     thumbnail: p.thumbnail ?? null,
     metadata: p.metadata ?? null,
-    variants: ((p.variants || []) as Variante[]).filter((v) => MATERIALES_IMPRESION.some((m) => m.valor === leerMaterial(v.title).base)),
+    // las variantes "· 2 colores" sólo cuentan si el producto dice cuáles son sus dos partes
+    variants: ((p.variants || []) as Variante[]).filter((v) => {
+      const { base, dosColores } = leerMaterial(v.title)
+      return MATERIALES_IMPRESION.some((m) => m.valor === base) && (!dosColores || !!gruposColor(p))
+    }),
   }))
 }
 
@@ -100,6 +104,7 @@ export async function panelTaller(container: MedusaContainer, sellerId: string) 
         return {
           variant_id: v.id,
           material: v.title,
+          dos_colores: leerMaterial(v.title).dosColores,
           recomendado: pieza ? precioRecomendado(pieza, v.title) : null,
           gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title, pieza.relleno) : null,
           oferta: o ? { id: o.id, precio: precioDeOferta(o), dias: d?.dias ?? null, colores: d?.colores ?? [] } : null,

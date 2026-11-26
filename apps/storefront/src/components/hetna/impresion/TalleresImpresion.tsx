@@ -12,6 +12,7 @@ import { useCartContext } from "@/components/providers"
 import { trackAddToCart } from "@/lib/analytics/events"
 import type { DatosImpresion, OfertaImpresion } from "@/lib/data/impresion"
 import { toast } from "@/lib/helpers/toast"
+import { detalleRenglon } from "@/lib/impresion/detalle-renglon"
 import { TuUbicacion } from "@/components/hetna/ubicacion/TuUbicacion"
 import { ETIQUETA_NIVEL, conNivel, textoUbicacion, type Nivel } from "@/lib/ubicacion/cercania"
 import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
@@ -38,14 +39,12 @@ function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; loc
         document.getElementById("texto-personalizado")?.focus()
         return
       }
-      const metadata = {
-        ...(grupos ? { colores: { [grupos[0]]: porParte[0], [grupos[1]]: porParte[1] } } : color ? { color } : {}),
-        ...(producto.personalizable ? { texto: t } : {}),
-      }
+      const elegido = grupos ? { colores: { [grupos[0]]: porParte[0], [grupos[1]]: porParte[1] } } : color ? { color } : {}
+      const metadata = { ...elegido, ...(producto.personalizable ? { texto: t } : {}) }
       await addToCart({ offerId: o.offer_id, quantity: 1, countryCode: locale, metadata: Object.keys(metadata).length ? metadata : undefined })
       trackAddToCart({ item_id: producto.id, item_name: producto.titulo, price: o.precio, quantity: 1 }, "mxn")
       setListo(true)
-      const tono = grupos ? ` · ${grupos[0]}: ${porParte[0]}, ${grupos[1]}: ${porParte[1]}` : color ? ` · ${color}` : ""
+      const tono = detalleRenglon(elegido).map(([k, v]) => ` · ${k === "Color" ? v : `${k}: ${v}`}`).join("")
       toast.success({ title: "Agregado al carrito", description: `${o.material}${tono}${producto.personalizable ? ` · «${texto.trim().slice(0, producto.max)}»` : ""} · ${o.taller.nombre}` })
     } catch (e) {
       toast.error({ title: "No se pudo agregar", description: e instanceof Error ? e.message : "Intenta de nuevo." })

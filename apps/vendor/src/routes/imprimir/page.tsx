@@ -124,7 +124,7 @@ function Diseno({ d, alGuardar }) {
                     <input style={S.input} inputMode="numeric" disabled={!f.activa} value={f.dias} onChange={(e) => cambiar(m.variant_id, "dias", e.target.value)} />
                   </td>
                   <td style={S.td}>
-                    <input style={S.input} disabled={!f.activa} placeholder={m.material.endsWith("2 colores") ? "Al menos 2: Negro, Blanco, Rojo" : "Negro, Blanco"} value={f.colores} onChange={(e) => cambiar(m.variant_id, "colores", e.target.value)} />
+                    <input style={S.input} disabled={!f.activa} placeholder={m.dos_colores ? "Al menos 2: Negro, Blanco, Rojo" : "Negro, Blanco"} value={f.colores} onChange={(e) => cambiar(m.variant_id, "colores", e.target.value)} />
                   </td>
                 </tr>
               )

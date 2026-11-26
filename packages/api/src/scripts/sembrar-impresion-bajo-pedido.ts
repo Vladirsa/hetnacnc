@@ -147,6 +147,8 @@ function descripcion(d: Diseno): string {
   ].join("")
 }
 
+/** Caja de envío (cm) a partir de las medidas de la pieza (mm). */
+const cajaDe = ([x, y, z]: [number, number, number]) => ({ length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 })
 const skuVariante = (corto: string, material: string) => `HETNA-3D-${corto}-${material.replace(/[^A-Za-z0-9]/g, "")}`
 const cortoDe = (handle: string) => handle.replace(/-impres[oa]-3d$/, "").replace(/[^a-z0-9]+/g, "-").slice(0, 28).toUpperCase()
 
@@ -170,8 +172,7 @@ async function asegurarDosColores(container: any, productId: string, d: Diseno):
   await setProductProductOptionsWorkflow(container).run({
     input: { product_id: productId, update: [{ product_option_id: opcion.id, add: faltan.map((m) => idDe.get(m) || { value: m }) }] } as any,
   })
-  const [x, y, z] = d.medidas_mm
-  const caja = { length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 }
+  const caja = cajaDe(d.medidas_mm)
   await createProductVariantsWorkflow(container).run({
     input: {
       product_variants: faltan.map((m) => ({
@@ -297,9 +298,9 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     } else {
       const archivo = await subir(`${d.handle}.png`, "image/png", bytesFoto as Buffer)
       Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
-      const [x, y, z] = d.medidas_mm
-      const caja = { length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 }
-      const valores = [...MATERIALES_IMPRESION.map((m) => m.valor), ...(metadata.grupos_color ? MATERIALES_DOS_COLORES.map((m) => m + SUFIJO_DOS_COLORES) : [])]
+      const caja = cajaDe(d.medidas_mm)
+      // (las variantes "· 2 colores" se agregan abajo, con asegurarDosColores, igual que a los que ya existen)
+      const valores = MATERIALES_IMPRESION.map((m) => m.valor)
       const corto = cortoDe(d.handle)
       const { result } = await createProductsWorkflow(container).run({
         input: {
