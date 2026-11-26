@@ -4,6 +4,8 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Paquete } from "@/lib/hetna/talleres"
 
+import { Modelo3DPaquete } from "./Modelo3DPaquete"
+
 const pesos = (n: number) => `$${n.toLocaleString("es-MX")}`
 
 export const ligaPaquete = (handle: string, p: Paquete) => `/talleres/${handle}?tab=cotizar&paquete=${p.id}`
@@ -22,6 +24,7 @@ export function TarjetaPaquete({ p, handle, taller }: { p: Paquete; handle: stri
         {p.entrega_dias ? ` · ${p.entrega_dias} ${p.entrega_dias === 1 ? "día hábil" : "días hábiles"}` : ""}
       </p>
       {p.descripcion && <p className="mt-2 line-clamp-3 text-[13px] text-[#40403A]">{p.descripcion}</p>}
+      {p.modelo_3d && <Modelo3DPaquete url={p.modelo_3d} />}
       <div className="mt-auto pt-3">
         <LocalizedClientLink
           href={ligaPaquete(handle, p)}
