@@ -42,6 +42,8 @@ export default function MisServiciosPage() {
   const [lista, setLista] = useState([])
   const [msg, setMsg] = useState(null)
   const [guardando, setGuardando] = useState(false)
+  // Índice del servicio cuyo modelo 3D se está subiendo
+  const [subiendo, setSubiendo] = useState(-1)
 
   useEffect(() => {
     fetch("/vendor/hetna-paquetes", { credentials: "include" })
@@ -55,6 +57,26 @@ export default function MisServiciosPage() {
 
   const cambiar = (i, campo, v) => setLista((l) => l.map((p, j) => (j === i ? { ...p, [campo]: v } : p)))
   const quitar = (i) => setLista((l) => l.filter((_, j) => j !== i))
+
+  async function subirModelo(i, archivo) {
+    if (!archivo) return
+    if (archivo.size > 25 * 1024 * 1024) return setMsg({ ok: false, t: "El modelo pesa más de 25 MB." })
+    setSubiendo(i)
+    setMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append("archivo", archivo)
+      const res = await fetch("/vendor/hetna-paquetes/modelo", { method: "POST", credentials: "include", body: fd })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok || !d.url) throw new Error(d.message || "No se pudo subir el modelo.")
+      cambiar(i, "modelo_3d", d.url)
+      setMsg({ ok: true, t: "Modelo 3D listo. Toca «Guardar servicios» para publicarlo." })
+    } catch (e) {
+      setMsg({ ok: false, t: e.message })
+    } finally {
+      setSubiendo(-1)
+    }
+  }
 
   async function guardar() {
     setGuardando(true)
@@ -150,6 +172,24 @@ export default function MisServiciosPage() {
               onChange={(e) => cambiar(i, "descripcion", e.target.value)}
               placeholder="Formatos que entregas, rondas de cambios, qué necesitas del cliente…"
             />
+            <label style={S.label}>Modelo 3D de muestra (opcional)</label>
+            {p.modelo_3d ? (
+              <p style={{ ...S.meta, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ color: "#1E7B3A", fontWeight: 700 }}>✓ Modelo 3D listo</span>
+                <button type="button" onClick={() => cambiar(i, "modelo_3d", null)} style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }}>
+                  Quitar modelo
+                </button>
+              </p>
+            ) : (
+              <div>
+                <input type="file" accept=".stl,.zip" disabled={subiendo !== -1} onChange={(e) => subirModelo(i, e.target.files?.[0])} />
+                <p style={S.meta}>
+                  {subiendo === i
+                    ? "Preparando la muestra 3D…"
+                    : "Sube un STL (o ZIP con STL) de un trabajo tuyo, hasta 25 MB. El cliente lo gira en 3D antes de cotizar. Publicamos una versión simplificada; tu archivo original no se guarda ni se puede descargar."}
+                </p>
+              </div>
+            )}
           </div>
         ))}
 
