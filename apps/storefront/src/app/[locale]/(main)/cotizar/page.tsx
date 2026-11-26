@@ -133,6 +133,8 @@ export default async function CotizarPage({
             // grabado, volumen o trabajos sin medidas, la solicitud completa.
             <div className="grid content-start gap-6">
               <CotizadorCliente />
+              {/* Debajo del cotizador, para que no quede un hueco junto a la columna derecha */}
+              <Accesos columnas />
               <details className="rounded-[18px] border border-[#E7E4DC] bg-white p-5" open={Boolean(servicio || necesidad || descripcionInicial)}>
                 <summary className="cursor-pointer text-[16px] font-bold text-[#142033]">
                   ¿Necesitas diseño, grabado, producción por volumen o no tienes medidas? Llena la solicitud completa
@@ -147,36 +149,46 @@ export default async function CotizarPage({
           <aside className="grid content-start gap-4">
             <EjemploCotizacion />
             <TalleresCerca talleres={talleres.filter((x) => x.handle !== t?.handle)} proceso={proceso || servicio} query={query} />
-            <LocalizedClientLink
-              href="/cotizar/suministro"
-              className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <p className="font-bold text-[#142033]">📦 ¿Necesitas material o insumos? →</p>
-              <p className="mt-1 text-sm text-[#40403A]">Lámina, MDF, acrílico, fresas o consumibles: los proveedores te cotizan.</p>
-            </LocalizedClientLink>
-            <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
-            {CALCULADORAS.map((c) => (
-              <LocalizedClientLink
-                key={c.href}
-                href={c.href}
-                className="rounded-2xl border border-[#E7E4DC] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <p className="font-bold text-[#142033]">{c.titulo} →</p>
-                <p className="mt-1 text-sm text-[#6B675C]">{c.texto}</p>
-              </LocalizedClientLink>
-            ))}
-            <LocalizedClientLink
-              href="/talleres"
-              className="rounded-2xl bg-[#142033] p-5 text-white transition hover:-translate-y-0.5"
-            >
-              <p className="font-bold">Ver directorio de talleres →</p>
-              <p className="mt-1 text-sm text-white/70">Elige un taller por servicio, material o estado.</p>
-            </LocalizedClientLink>
+            {/* Con taller o datos prellenados el formulario ya es largo: los accesos van a la derecha */}
+            {(t || prellenado) && <Accesos />}
             <BloquePublicidad />
           </aside>
         </div>
         <CasosReales compacto />
       </div>
     </main>
+  )
+}
+
+// Material e insumos, precios al instante por proceso y el directorio. En dos
+// columnas cuando van bajo el cotizador (columna ancha); en una, en la lateral.
+function Accesos({ columnas = false }: { columnas?: boolean }) {
+  return (
+    <div className="grid content-start gap-4">
+      <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
+      <div className={`grid gap-4 ${columnas ? "sm:grid-cols-2" : ""}`}>
+        {CALCULADORAS.map((c) => (
+          <LocalizedClientLink
+            key={c.href}
+            href={c.href}
+            className="rounded-2xl border border-[#E7E4DC] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <p className="font-bold text-[#142033]">{c.titulo} →</p>
+            <p className="mt-1 text-sm text-[#6B675C]">{c.texto}</p>
+          </LocalizedClientLink>
+        ))}
+        <LocalizedClientLink
+          href="/cotizar/suministro"
+          className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <p className="font-bold text-[#142033]">📦 ¿Necesitas material o insumos? →</p>
+          <p className="mt-1 text-sm text-[#40403A]">Lámina, MDF, acrílico, fresas o consumibles: los proveedores te cotizan.</p>
+        </LocalizedClientLink>
+        <LocalizedClientLink href="/talleres" className="rounded-2xl bg-[#142033] p-5 text-white transition hover:-translate-y-0.5">
+          <p className="font-bold">Ver directorio de talleres →</p>
+          <p className="mt-1 text-sm text-white/70">Elige un taller por servicio, material o estado.</p>
+        </LocalizedClientLink>
+      </div>
+    </div>
   )
 }
