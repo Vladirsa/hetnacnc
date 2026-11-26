@@ -125,7 +125,32 @@ export type Taller = {
   // Estrategia 3.4: avisó que tiene máquina libre (vence sola)
   capacidadLibre: CapacidadLibre | null
   perfil: Perfil
+  // Servicios con precio "desde" (panel > Mis servicios; packages/api/src/lib/paquetes-servicio.ts)
+  paquetes: Paquete[]
 }
+
+export type Paquete = {
+  id: string
+  titulo: string
+  desde: number
+  entrega_dias: number | null
+  descripcion: string
+  categoria: "diseno-2d-3d" | "programacion-cam" | "otro"
+}
+
+// Lo valida la API al guardar; aquí sólo se filtra lo que no tenga forma
+const leerPaquetes = (v: unknown): Paquete[] =>
+  (Array.isArray(v) ? v : [])
+    .filter((x: any) => x && typeof x.id === "string" && typeof x.titulo === "string" && Number(x.desde) > 0)
+    .slice(0, 12)
+    .map((x: any) => ({
+      id: x.id,
+      titulo: String(x.titulo).slice(0, 80),
+      desde: Number(x.desde),
+      entrega_dias: Number(x.entrega_dias) > 0 ? Number(x.entrega_dias) : null,
+      descripcion: String(x.descripcion || "").slice(0, 600),
+      categoria: ["diseno-2d-3d", "programacion-cam"].includes(x.categoria) ? x.categoria : "otro",
+    }))
 
 type SellerCrudo = {
   id: string
@@ -215,6 +240,7 @@ export const aTaller = (s: SellerCrudo): Taller => ({
     (c: any) => c && c.nombre && (!c.vigencia || new Date(c.vigencia).getTime() >= Date.now() - 86_400_000)
   ),
   perfil: leerPerfil(s.metadata),
+  paquetes: leerPaquetes(s.metadata?.paquetes),
 })
 
 // Cuentas de prueba (metadata.prueba = true) no se muestran al público.
