@@ -163,8 +163,9 @@ export default function DirectorioTalleres({
         )}
       </p>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div className="order-2 grid content-start gap-4 lg:order-1">
+      {/* grid-cols-1 = minmax(0,1fr): en celular las tarjetas no se salen de la pantalla */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="order-2 grid min-w-0 grid-cols-1 content-start gap-4 lg:order-1">
           {filtrados.length === 0 && (
             <div className="rounded-2xl border border-dashed border-[#E7E4DC] p-8 text-center text-[#6B675C]">
               No hay talleres con esos filtros.
@@ -213,7 +214,7 @@ export default function DirectorioTalleres({
                     </span>
                   ))}
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <LocalizedClientLink
                     href={`/talleres/${t.handle}`}
                     className="rounded-lg border border-[#142033] px-3 py-1.5 text-sm font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
